@@ -49,7 +49,7 @@ var (
 		"extension":        extension,
 		"wrapPost":         wrapPost,
 		"renderPostLink":   renderPostLink,
-		"renderBody": renderBody,
+		"renderBody":       renderBody,
 	}
 
 	isTest bool
@@ -85,12 +85,18 @@ func ParseTemplates() error {
 		fns  template.FuncMap
 	}{
 		// Order matters. Dependencies must come before dependents.
+		{"captcha", nil, nil},
+		{"threadForm", []string{"captcha"}, nil},
 		{"article", nil, postFunctions},
 		{"index", nil, nil},
 		{"noscript", nil, nil},
-		{"board", nil, template.FuncMap{
-			"thumbPath": thumbPath,
-		}},
+		{
+			"board",
+			[]string{"threadForm", "captcha"},
+			template.FuncMap{
+				"thumbPath": thumbPath,
+			},
+		},
 		{"thread", []string{"article"}, postFunctions},
 	}
 

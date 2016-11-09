@@ -55,7 +55,7 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	if r.URL.Query().Get("noscript") != "true" {
+	if !isNoscript(r) {
 		serveIndexTemplate(w, r)
 		return
 	}
@@ -72,6 +72,10 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	serveHTML(w, r, data, etag)
 }
 
+func isNoscript(r *http.Request) bool {
+	return r.URL.Query().Get("noscript") == "true"
+}
+
 // Asserts a thread exists on the specific board and renders the index template
 func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	id, ok := validateThread(w, r, p)
@@ -79,7 +83,7 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	if r.URL.Query().Get("noscript") != "true" {
+	if !isNoscript(r) {
 		serveIndexTemplate(w, r)
 		return
 	}

@@ -18,9 +18,10 @@ type noscriptVars struct {
 }
 
 type boardVars struct {
-	IsAll                 bool
-	Banner, Notice, Title string
-	Threads               types.BoardThreads
+	IsAll, NeedImage                  bool
+	Banner, Notice, Title, CaptchaKey string
+	Threads                           types.BoardThreads
+	Boards                            []config.BoardTitle
 }
 
 type threadVars struct {
@@ -36,13 +37,21 @@ func Board(b string, data *types.Board) ([]byte, error) {
 	sort.Sort(data.Threads) // Sort by last reply time
 
 	v := boardVars{
-		IsAll:   b == "all",
-		Notice:  conf.Notice,
-		Title:   title,
-		Threads: data.Threads,
+		IsAll:     b == "all",
+		NeedImage: !conf.TextOnly,
+		Notice:    conf.Notice,
+		Title:     title,
+		Threads:   data.Threads,
 	}
 	if len(conf.Banners) != 0 {
 		v.Banner = conf.Banners[rand.Intn(len(conf.Banners))]
+	}
+	gConf := config.Get()
+	if gConf.Captcha {
+		v.CaptchaKey = gConf.CaptchaPublicKey
+	}
+	if v.IsAll {
+		v.Boards = config.GetBoardTitles()
 	}
 
 	err := tmpl["board"].Execute(w, v)

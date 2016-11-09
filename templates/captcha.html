@@ -1,0 +1,7 @@
+{{with .}}
+	<div class="captcha-container">
+		<iframe src="http://api.solvemedia.com/papi/challenge.noscript?k={{.}}"
+		height="300" width="500" frameborder="0"></iframe>
+		<input name="adcopy_challenge" type="text" placeholder="Paste code here">
+	</div>
+{{end}}

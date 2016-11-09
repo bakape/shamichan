@@ -2,16 +2,12 @@ package server
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
-	r "github.com/dancannon/gorethink"
 )
 
 var genericImage = &types.Image{
@@ -236,27 +232,22 @@ func TestServeBoardConfigs(t *testing.T) {
 }
 
 func TestServeBoardList(t *testing.T) {
-	assertTableClear(t, "boards")
-
-	// No boards
-	rec, req := newPair("/json/boardList")
-	router.ServeHTTP(rec, req)
-	assertBody(t, rec, "[]")
-
-	assertInsert(t, "boards", []config.BoardConfigs{
-		{
-			ID: "a",
+	config.ClearBoards()
+	conf := [...][2]string{
+		{"a", "Animu"},
+		{"g", "Technology"},
+	}
+	for _, c := range conf {
+		_, err := config.SetBoardConfigs(config.BoardConfigs{
+			ID: c[0],
 			BoardPublic: config.BoardPublic{
-				Title: "Animu",
+				Title: c[1],
 			},
-		},
-		{
-			ID: "g",
-			BoardPublic: config.BoardPublic{
-				Title: "Technology",
-			},
-		},
-	})
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 
 	std := removeIndentation(`
 [
@@ -270,7 +261,7 @@ func TestServeBoardList(t *testing.T) {
 	}
 ]`)
 
-	rec, req = newPair("/json/boardList")
+	rec, req := newPair("/json/boardList")
 	router.ServeHTTP(rec, req)
 	assertBody(t, rec, std)
 }
@@ -313,114 +304,6 @@ func TestServeStaffPosition(t *testing.T) {
 			router.ServeHTTP(rec, req)
 			assertCode(t, rec, 200)
 			assertBody(t, rec, c.res)
-		})
-	}
-}
-
-func TestSpoilerImage(t *testing.T) {
-	assertTableClear(t, "posts")
-
-	const password = "123"
-	hash, err := auth.BcryptHash(password, 6)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assertInsert(t, "posts", []types.DatabasePost{
-		{
-			Password: hash,
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
-					ID: 1,
-					Image: &types.Image{
-						ImageCommon: types.ImageCommon{
-							SHA1: "123",
-						},
-					},
-				},
-			},
-		},
-		{
-			Password: hash,
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
-					ID: 2,
-				},
-			},
-		},
-		{
-			Password: hash,
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
-					ID: 3,
-					Image: &types.Image{
-						ImageCommon: types.ImageCommon{
-							SHA1: "123",
-						},
-						Spoiler: true,
-					},
-				},
-			},
-		},
-		{
-			Password: hash,
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
-					ID: 4,
-					Image: &types.Image{
-						ImageCommon: types.ImageCommon{
-							SHA1: "123",
-						},
-					},
-				},
-			},
-		},
-	})
-
-	cases := [...]struct {
-		name      string
-		id        int64
-		password  string
-		code      int
-		spoilered bool
-	}{
-		{"no image", 2, password, 400, false},
-		{"wrong password", 4, "122", 403, false},
-		{"success", 1, password, 200, true},
-		{"already spoilered", 3, password, 200, true},
-	}
-
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-
-			data := spoilerRequest{
-				ID:       c.id,
-				Password: c.password,
-			}
-			rec, req := newJSONPair(t, "/json/spoiler", data)
-			router.ServeHTTP(rec, req)
-
-			assertCode(t, rec, c.code)
-
-			var spoilered bool
-			msg := []byte("11" + strconv.Itoa(int(c.id)))
-			post := db.FindPost(c.id)
-			q := r.And(
-				post.Field("log").Contains(msg),
-				post.Field("image").Field("spoiler"),
-			)
-			if err := db.One(q, &spoilered); err != nil {
-				t.Fatal(err)
-			}
-			if spoilered != spoilered {
-				t.Errorf(
-					"spoiler mismatch: expected %v; got %v",
-					c.spoilered,
-					spoilered,
-				)
-			}
 		})
 	}
 }

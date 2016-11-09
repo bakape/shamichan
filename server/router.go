@@ -74,8 +74,11 @@ func createRouter() http.Handler {
 	json.GET("/boardConfig/:board", serveBoardConfigs)
 	json.GET("/boardList", wrapHandler(serveBoardList))
 	json.GET("/positions/:position/:user", serveStaffPositions)
-	json.POST("/spoiler", wrapHandler(spoilerImage))
 	json.GET("/boardTimestamps", wrapHandler(serveBoardTimestamps))
+
+	// Public POST API
+	r.POST("/createThread", wrapHandler(createThread))
+	r.POST("/spoiler", wrapHandler(spoilerImage))
 
 	// Administration JSON API for logged in users
 	admin := r.NewGroup("/admin")

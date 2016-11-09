@@ -1,16 +1,16 @@
 // Utility functions and classes for rendering forms
 
-import {HTML, makeAttrs, makeFrag, extend} from './util'
-import View, {ViewAttrs} from './view'
+import { HTML, makeAttrs, makeFrag, extend } from './util'
+import View, { ViewAttrs } from './view'
 import Model from './model'
-import {write, read, importTemplate} from './render'
-import {ui} from './lang'
-import {config} from './state'
+import { write, read, importTemplate } from './render'
+import { ui } from './lang'
+import { config } from './state'
 import CaptchaView from './captcha'
 
-type StringMap = {[key: string]: string}
+type StringMap = { [key: string]: string }
 
-export const enum inputType {boolean, number, string, select, multiline, map}
+export const enum inputType { boolean, number, string, select, multiline, map }
 
 // Spec of a single input element for board and server control panels
 export type InputSpec = {
@@ -21,7 +21,7 @@ export type InputSpec = {
 	placeholders?: boolean // Render placeholders inside input elements
 	tooltip?: string
 	pattern?: string
-	value?: number|string|boolean|StringMap
+	value?: number | string | boolean | StringMap
 	min?: number
 	max?: number
 	maxLength?: number
@@ -49,39 +49,39 @@ export function renderInput(spec: InputSpec): [string, string] {
 	}
 
 	switch (spec.type) {
-	case inputType.boolean:
-		attrs['type'] = 'checkbox'
-		if (spec.value) {
-			attrs["checked"] = ""
-		}
-		break
-	case inputType.number:
-		attrs["type"] = 'number'
-		if (spec.value !== undefined) {
-			attrs['value'] = spec.value.toString()
-		}
-		for (let prop of ['min', 'max']) {
-			if (prop in spec) {
-				attrs[prop] = spec[prop].toString()
+		case inputType.boolean:
+			attrs['type'] = 'checkbox'
+			if (spec.value) {
+				attrs["checked"] = ""
 			}
-		}
-		break
-	case inputType.string:
-		attrs["type"] = "text"
-		attrs["value"] = spec.value as string || ""
-		if (spec.pattern) {
-			attrs["pattern"] = spec.pattern
-		}
-		if ("maxLength" in spec) {
-			attrs["maxlength"] = spec.maxLength.toString()
-		}
-		break
-	case inputType.select:
-		return renderSelect(spec)
-	case inputType.multiline:
-		return renderTextArea(spec, attrs)
-	case inputType.map:
-		return renderMap(spec)
+			break
+		case inputType.number:
+			attrs["type"] = 'number'
+			if (spec.value !== undefined) {
+				attrs['value'] = spec.value.toString()
+			}
+			for (let prop of ['min', 'max']) {
+				if (prop in spec) {
+					attrs[prop] = spec[prop].toString()
+				}
+			}
+			break
+		case inputType.string:
+			attrs["type"] = "text"
+			attrs["value"] = spec.value as string || ""
+			if (spec.pattern) {
+				attrs["pattern"] = spec.pattern
+			}
+			if ("maxLength" in spec) {
+				attrs["maxlength"] = spec.maxLength.toString()
+			}
+			break
+		case inputType.select:
+			return renderSelect(spec)
+		case inputType.multiline:
+			return renderTextArea(spec, attrs)
+		case inputType.map:
+			return renderMap(spec)
 	}
 
 	return [renderLabel(spec), `<input ${makeAttrs(attrs)}>`]
@@ -113,8 +113,8 @@ function renderTextArea(spec: InputSpec, attrs: StringMap): [string, string] {
 	if (spec.value) {
 		read(() =>
 			(document
-			.querySelector(`textarea[name=${spec.name}]`) as HTMLInputElement)
-			.value = spec.value as string)
+				.querySelector(`textarea[name=${spec.name}]`) as HTMLInputElement)
+				.value = spec.value as string)
 	}
 
 	return [
@@ -151,7 +151,7 @@ function renderKeyValuePair(key: string, value: string): string {
 
 function renderLabel(spec: InputSpec): string {
 	return HTML
-	`<label for="${spec.name}" title="${spec.tooltip || ""}">
+		`<label for="${spec.name}" title="${spec.tooltip || ""}">
 		${spec.label}:
 	</label>
 	<br>`
@@ -240,13 +240,13 @@ export class FormView extends View<Model> {
 	addMapInput(event: Event) {
 		write(() =>
 			(event.target as Element)
-			.before(makeFrag(renderKeyValuePair("", ""))))
+				.before(makeFrag(renderKeyValuePair("", ""))))
 	}
 
 	// Remove a map key-vale input field pair
 	removeMapInput(event: Event) {
 		write(() =>
 			(event.target as Element)
-			.closest("span").remove())
+				.closest("span").remove())
 	}
 }

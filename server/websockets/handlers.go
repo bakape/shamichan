@@ -70,7 +70,7 @@ var (
 	isTest bool
 
 	errInvalidStructure = errors.New("invalid message structure")
-	errInValidCaptcha   = errors.New("no captcha provided")
+	errInValidCaptcha   = errors.New("invalid captcha provided")
 
 	// Lookup table for message handlers
 	handlers = map[MessageType]handler{

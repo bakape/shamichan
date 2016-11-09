@@ -9,13 +9,24 @@ import (
 
 func TestParseLinks(t *testing.T) {
 	assertTableClear(t, "posts")
-	assertInsert(t, "posts", types.DatabasePost{
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
-				ID: 4,
+	assertInsert(t, "posts", []types.DatabasePost{
+		{
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 8,
+				},
+				OP:    2,
+				Board: "a",
 			},
-			OP:    2,
-			Board: "a",
+		},
+		{
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 6,
+				},
+				OP:    2,
+				Board: "a",
+			},
 		},
 	})
 
@@ -26,9 +37,13 @@ func TestParseLinks(t *testing.T) {
 		{"no links", "foo bar baz", nil},
 		{
 			"valid links",
-			" >>>1  >>4 ",
+			" >>>1  >>6 >>>>8",
 			types.LinkMap{
-				4: types.Link{
+				6: types.Link{
+					OP:    2,
+					Board: "a",
+				},
+				8: types.Link{
 					OP:    2,
 					Board: "a",
 				},

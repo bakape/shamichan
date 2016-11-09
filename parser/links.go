@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"bytes"
 	"regexp"
 	"strconv"
 
@@ -9,17 +10,24 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-var linkRegexp = regexp.MustCompile(`(?:^| )>{2,}(\d+)\b`)
+var linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
 
 // Extract post links from a text fragment, verify and retrieve their
 // parenthood
 func parseLinks(frag []byte) (types.LinkMap, error) {
-	matches := linkRegexp.FindAllSubmatch(frag, -1)
-	if matches == nil {
-		return nil, nil
-	}
-	links := make(types.LinkMap, len(matches))
-	for _, match := range matches {
+	var links types.LinkMap
+
+	// TODO: Do this in-place w/o creating any garbage slices
+	for _, word := range bytes.Split(frag, []byte{' '}) {
+		if len(word) == 0 || word[0] != '>' {
+			continue
+		}
+
+		match := linkRegexp.FindSubmatch(word)
+		if match == nil {
+			continue
+		}
+
 		id, err := strconv.ParseInt(string(match[1]), 10, 64)
 		if err != nil {
 			return nil, err
@@ -37,9 +45,16 @@ func parseLinks(frag []byte) (types.LinkMap, error) {
 			}
 			return nil, err
 		}
-		links[id] = types.Link{
+
+		link := types.Link{
 			OP:    parenthood.OP,
 			Board: parenthood.Board,
+		}
+
+		if links == nil {
+			links = types.LinkMap{id: link}
+		} else {
+			links[id] = link
 		}
 	}
 

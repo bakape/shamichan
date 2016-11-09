@@ -22,8 +22,8 @@ var (
 		Size:     300792,
 	}
 
-	sampleImagelessThreadCreationRequest = threadCreationRequest{
-		postCreationCommon: postCreationCommon{
+	sampleImagelessThreadCreationRequest = ThreadCreationRequest{
+		ReplyCreationRequest: ReplyCreationRequest{
 			Name:     "name",
 			Password: "123",
 		},
@@ -78,7 +78,7 @@ func TestInsertThread(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			req := threadCreationRequest{
+			req := ThreadCreationRequest{
 				Board: c.board,
 			}
 			err := insertThread(marshalJSON(t, req), new(Client))
@@ -134,11 +134,11 @@ func testCreateThread(t *testing.T) {
 		},
 	}
 
-	req := threadCreationRequest{
-		postCreationCommon: postCreationCommon{
+	req := ThreadCreationRequest{
+		ReplyCreationRequest: ReplyCreationRequest{
 			Name:     "name",
 			Password: "123",
-			Image: imageRequest{
+			Image: ImageRequest{
 				Name:    "foo.jpeg",
 				Token:   token,
 				Spoiler: true,
@@ -326,13 +326,11 @@ func TestPostCreationValidations(t *testing.T) {
 		t.Run(c.testName, func(t *testing.T) {
 			t.Parallel()
 
-			req := replyCreationRequest{
+			req := ReplyCreationRequest{
 				Body: c.text,
-				postCreationCommon: postCreationCommon{
-					Image: imageRequest{
-						Name:  c.name,
-						Token: c.token,
-					},
+				Image: ImageRequest{
+					Name:  c.name,
+					Token: c.token,
 				},
 			}
 			err := insertPost(marshalJSON(t, req), cl)
@@ -359,7 +357,7 @@ func TestPostCreationOnLockedThread(t *testing.T) {
 	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 
-	req := replyCreationRequest{
+	req := ReplyCreationRequest{
 		Body: "a",
 	}
 	if err := insertPost(marshalJSON(t, req), cl); err != errThreadIsLocked {
@@ -383,16 +381,14 @@ func TestPostCreation(t *testing.T) {
 	defer Clients.Clear()
 	cl.IP = "::1"
 
-	req := replyCreationRequest{
-		Body: "Δ",
-		postCreationCommon: postCreationCommon{
-			Password: "123",
-			Email:    "wew lad",
-			Image: imageRequest{
-				Name:    "foo.jpeg",
-				Token:   token,
-				Spoiler: true,
-			},
+	req := ReplyCreationRequest{
+		Body:     "Δ",
+		Password: "123",
+		Email:    "wew lad",
+		Image: ImageRequest{
+			Name:    "foo.jpeg",
+			Token:   token,
+			Spoiler: true,
 		},
 	}
 
@@ -502,11 +498,9 @@ func TestTextOnlyPostCreation(t *testing.T) {
 	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 
-	req := replyCreationRequest{
-		Body: "a",
-		postCreationCommon: postCreationCommon{
-			Password: "123",
-		},
+	req := ReplyCreationRequest{
+		Body:     "a",
+		Password: "123",
 	}
 
 	if err := insertPost(marshalJSON(t, req), cl); err != nil {
@@ -541,11 +535,9 @@ func BenchmarkPostCreation(b *testing.B) {
 	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 
-	req := replyCreationRequest{
-		Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-		postCreationCommon: postCreationCommon{
-			Password: "123",
-		},
+	req := ReplyCreationRequest{
+		Body:     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+		Password: "123",
 	}
 
 	b.ResetTimer()
@@ -580,11 +572,9 @@ func TestPostCreationForcedAnon(t *testing.T) {
 	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 
-	req := replyCreationRequest{
-		Body: "a",
-		postCreationCommon: postCreationCommon{
-			Password: "123",
-		},
+	req := ReplyCreationRequest{
+		Body:     "a",
+		Password: "123",
 	}
 
 	if err := insertPost(marshalJSON(t, req), cl); err != nil {
@@ -615,43 +605,4 @@ func assertImageCounter(t *testing.T, id int64, ctr int) {
 	if res != ctr {
 		t.Errorf("unexpected thread image counter: %d : %d", ctr, res)
 	}
-}
-
-func TestPostCreationWithNewlines(t *testing.T) {
-	assertTableClear(t, "main", "threads", "posts")
-	assertInsert(t, "threads", types.DatabaseThread{
-		ID:    1,
-		Board: "a",
-	})
-	populateMainTable(t)
-	setBoardConfigs(t, true)
-
-	sv := newWSServer(t)
-	defer sv.Close()
-	cl, _ := sv.NewClient()
-	Clients.add(cl, SyncID{1, "a"})
-	defer Clients.Clear()
-
-	req := replyCreationRequest{
-		Body: "abc\nd",
-		postCreationCommon: postCreationCommon{
-			Password: "123",
-		},
-	}
-	if err := insertPost(marshalJSON(t, req), cl); err != nil {
-		t.Fatal(err)
-	}
-
-	var then int64
-	if err := db.One(db.FindPost(6).Field("time"), &then); err != nil {
-		t.Fatal(err)
-	}
-
-	log := []string{
-		"03[6,10]",
-		`05{"id":6,"start":0,"len":0,"text":"d"}`,
-	}
-	assertRepLog(t, 6, log)
-
-	assertBody(t, 6, "abc\nd")
 }

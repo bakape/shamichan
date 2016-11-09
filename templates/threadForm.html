@@ -1,0 +1,29 @@
+<form class="new-thread-form">
+	{{if .IsAll}}
+		<select name="board">
+			{{range .Boards}}
+				<option value="{{.ID}}">
+					{{.ID}} - {{.Title}}
+				</option>
+			{{end}}
+		</select>
+		<br>
+	{{end}}
+	<input name="subject" title="" placeholder="Subject" required type="text" value="" maxlength="100">
+	<br>
+	{{if or .IsAll .NeedImage}}
+		<span class="upload-container">
+			<span>
+				<input type="checkbox" name="spoiler">
+				<label for="spoiler" class="spoiler">
+					Spoiler
+				</label>
+			</span>
+			<br>
+			<input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3">
+			<br>
+		</span>
+	{{end}}
+	{{template "captcha" .CaptchaKey}}
+	<input type="submit" value="Submit">
+</form>

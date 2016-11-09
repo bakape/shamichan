@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/auth"
@@ -32,25 +31,24 @@ const (
 	invalidInsertionCaptcha
 )
 
-type threadCreationRequest struct {
-	postCreationCommon
+// ThreadCreationRequest contains data for creating a new thread
+type ThreadCreationRequest struct {
+	ReplyCreationRequest
 	Subject, Board string
 	types.Captcha
 }
 
-type postCreationCommon struct {
-	Image                       imageRequest
-	Name, Email, Auth, Password string
+// ReplyCreationRequest contains common fields for both thread and reply
+// creation
+type ReplyCreationRequest struct {
+	Image                             ImageRequest
+	Name, Email, Auth, Password, Body string
 }
 
-type imageRequest struct {
+// ImageRequest contains data for allocating an image
+type ImageRequest struct {
 	Spoiler     bool
 	Token, Name string
-}
-
-type replyCreationRequest struct {
-	postCreationCommon
-	Body string
 }
 
 // Response to a thread creation request
@@ -64,63 +62,18 @@ func insertThread(data []byte, c *Client) (err error) {
 	if err := closePreviousPost(c); err != nil {
 		return err
 	}
-	var req threadCreationRequest
+	var req ThreadCreationRequest
 	if err := decodeMessage(data, &req); err != nil {
 		return err
 	}
-	if !auth.IsNonMetaBoard(req.Board) {
-		return errInvalidBoard
-	}
-	if !authenticateCaptcha(req.Captcha, c.IP) {
-		return c.sendMessage(MessageInsertThread, threadCreationResponse{
-			Code: invalidInsertionCaptcha,
-		})
-	}
 
-	conf, err := getBoardConfig(req.Board)
+	id, now, err := ConstructThread(req, c.IP, false)
 	if err != nil {
-		return err
-	}
-
-	post, now, err := constructPost(req.postCreationCommon, conf.ForcedAnon, c)
-	if err != nil {
-		return err
-	}
-	post.Board = req.Board
-	thread := types.DatabaseThread{
-		ReplyTime: now,
-		Board:     req.Board,
-	}
-	thread.Subject, err = parser.ParseSubject(req.Subject)
-	if err != nil {
-		return err
-	}
-
-	// Perform this last, so there are less dangling images because of an error
-	if !conf.TextOnly {
-		img := req.Image
-		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
-		thread.ImageCtr = 1
-		if err != nil {
-			return err
+		if err == errInValidCaptcha {
+			return c.sendMessage(MessageInsertThread, threadCreationResponse{
+				Code: invalidInsertionCaptcha,
+			})
 		}
-	}
-
-	id, err := db.ReservePostID()
-	if err != nil {
-		return err
-	}
-	thread.ID = id
-	post.ID = id
-	post.OP = id
-
-	if err := db.Insert("posts", post); err != nil {
-		return err
-	}
-	if err := db.Insert("threads", thread); err != nil {
-		return err
-	}
-	if err := db.IncrementBoardCounter(req.Board); err != nil {
 		return err
 	}
 
@@ -129,7 +82,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		op:       id,
 		time:     now,
 		board:    req.Board,
-		hasImage: !conf.TextOnly,
+		hasImage: req.Image.Token != "",
 	}
 
 	msg := threadCreationResponse{
@@ -139,13 +92,86 @@ func insertThread(data []byte, c *Client) (err error) {
 	return c.sendMessage(MessageInsertThread, msg)
 }
 
+// ConstructThread creates a new tread and writes it to the database. Returns
+// the ID of the thread and its creation timestamp
+func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
+	id, timeStamp int64, err error,
+) {
+	if !auth.IsNonMetaBoard(req.Board) {
+		err = errInvalidBoard
+		return
+	}
+	if !authenticateCaptcha(req.Captcha, ip) {
+		err = errInValidCaptcha
+		return
+	}
+
+	conf, err := getBoardConfig(req.Board)
+	if err != nil {
+		return
+	}
+
+	post, timeStamp, _, err := constructPost(
+		req.ReplyCreationRequest,
+		conf.ForcedAnon,
+		parseBody,
+		ip,
+		req.Board,
+	)
+	if err != nil {
+		return
+	}
+	post.Board = req.Board
+	thread := types.DatabaseThread{
+		ReplyTime: timeStamp,
+		Board:     req.Board,
+	}
+	thread.Subject, err = parser.ParseSubject(req.Subject)
+	if err != nil {
+		return
+	}
+
+	// Perform this last, so there are less dangling images because of an error
+	if !conf.TextOnly {
+		img := req.Image
+		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
+		thread.ImageCtr = 1
+		if err != nil {
+			return
+		}
+	}
+
+	id, err = db.ReservePostID()
+	if err != nil {
+		return
+	}
+	thread.ID = id
+	post.ID = id
+	post.OP = id
+
+	err = db.Insert("posts", post)
+	if err != nil {
+		return
+	}
+	err = db.Insert("threads", thread)
+	if err != nil {
+		return
+	}
+	err = db.IncrementBoardCounter(req.Board)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 // Insert a new post into the database
 func insertPost(data []byte, c *Client) error {
 	if err := closePreviousPost(c); err != nil {
 		return err
 	}
 
-	var req replyCreationRequest
+	var req ReplyCreationRequest
 	if err := decodeMessage(data, &req); err != nil {
 		return err
 	}
@@ -175,23 +201,17 @@ func insertPost(data []byte, c *Client) error {
 		return errThreadIsLocked
 	}
 
-	post, now, err := constructPost(req.postCreationCommon, conf.ForcedAnon, c)
+	post, now, bodyLength, err := constructPost(
+		req,
+		conf.ForcedAnon,
+		true,
+		c.IP,
+		sync.Board,
+	)
 	if err != nil {
 		return err
 	}
 
-	// If the post contains a newline, slice till it and commit the remainder
-	// separately as a splice
-	var forSplicing string
-	iNewline := strings.IndexRune(req.Body, '\n')
-	if iNewline > -1 {
-		forSplicing = req.Body[iNewline+1:]
-		req.Body = req.Body[:iNewline]
-	}
-	post.Body = req.Body
-
-	post.OP = sync.OP
-	post.Board = sync.Board
 	post.ID, err = db.ReservePostID()
 	if err != nil {
 		return err
@@ -232,19 +252,20 @@ func insertPost(data []byte, c *Client) error {
 		op:         sync.OP,
 		time:       now,
 		board:      sync.Board,
-		Buffer:     *bytes.NewBuffer([]byte(post.Body)),
-		bodyLength: utf8.RuneCountInString(post.Body),
+		Buffer:     *bytes.NewBufferString(lastLine(post.Body)),
+		bodyLength: bodyLength,
 		hasImage:   !noImage,
 	}
 
-	if forSplicing != "" {
-		if err := parseLine(c, true); err != nil {
-			return err
-		}
-		return spliceLine(spliceRequest{Text: []rune(forSplicing)}, c)
-	}
-
 	return nil
+}
+
+func lastLine(s string) string {
+	i := strings.LastIndexByte(s, '\n')
+	if i == -1 {
+		return s
+	}
+	return s[i+1:]
 }
 
 // If the client has a previous post, close it silently
@@ -265,8 +286,11 @@ func getBoardConfig(board string) (conf config.PostParseConfigs, err error) {
 }
 
 // Construct the common parts of the new post for both threads and replies
-func constructPost(req postCreationCommon, forcedAnon bool, c *Client) (
-	post types.DatabasePost, now int64, err error,
+func constructPost(
+	req ReplyCreationRequest, forcedAnon, parseBody bool,
+	ip, board string,
+) (
+	post types.DatabasePost, now int64, bodyLength int, err error,
 ) {
 	now = time.Now().Unix()
 	post = types.DatabasePost{
@@ -278,18 +302,35 @@ func constructPost(req postCreationCommon, forcedAnon bool, c *Client) (
 			},
 		},
 		LastUpdated: now,
-		IP:          c.IP,
+		IP:          ip,
 	}
+
 	if !forcedAnon {
 		post.Name, post.Trip, err = parser.ParseName(req.Name)
 		if err != nil {
 			return
 		}
 	}
+
+	if parseBody {
+		buf := []byte(req.Body)
+		bodyLength = utf8.RuneCount(buf)
+		if bodyLength > parser.MaxLengthBody {
+			err = parser.ErrBodyTooLong
+			return
+		}
+		post.Links, post.Commands, err = parser.ParseBody(buf, board)
+		if err != nil {
+			return
+		}
+		post.Body = req.Body
+	}
+
 	err = parser.VerifyPostPassword(req.Password)
 	if err != nil {
 		return
 	}
+
 	post.Password, err = auth.BcryptHash(req.Password, 6)
 
 	// TODO: Staff title verification

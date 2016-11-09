@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
-	"strings"
 	"testing"
 	"time"
 
@@ -757,7 +756,7 @@ func TestSplice(t *testing.T) {
 				bodyLength: utf8.RuneCountInString(c.init),
 				board:      "a",
 				time:       time.Now().Unix(),
-				Buffer:     *bytes.NewBuffer([]byte(lastLine(c.init))),
+				Buffer:     *bytes.NewBufferString(lastLine(c.init)),
 			}
 
 			req := spliceRequest{
@@ -782,14 +781,6 @@ func TestSplice(t *testing.T) {
 			assertRepLog(t, 2, c.log)
 		})
 	}
-}
-
-func lastLine(s string) string {
-	i := strings.LastIndexByte(s, '\n')
-	if i == -1 {
-		return s
-	}
-	return s[i+1:]
 }
 
 func TestCloseOldOpenPost(t *testing.T) {
@@ -864,7 +855,7 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 		time:  time.Now().Unix(),
 	}
 
-	req := imageRequest{
+	req := ImageRequest{
 		Name:  "foo.jpeg",
 		Token: "123",
 	}
@@ -907,7 +898,7 @@ func TestInsertImage(t *testing.T) {
 		time:  time.Now().Unix(),
 	}
 
-	req := imageRequest{
+	req := ImageRequest{
 		Name:  "foo.jpeg",
 		Token: token,
 	}

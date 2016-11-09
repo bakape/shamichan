@@ -144,7 +144,7 @@ export default class UploadForm {
 
 // Spoiler a post's image.
 export async function spoilerImage({id}: Post) {
-	await postJSON("/json/spoiler", {
+	await postJSON("/spoiler", {
 		id,
 		password: identity.postPassword,
 	})

@@ -431,7 +431,7 @@ func insertImage(data []byte, c *Client) error {
 		return errHasImage
 	}
 
-	var req imageRequest
+	var req ImageRequest
 	if err := decodeMessage(data, &req); err != nil {
 		return err
 	}

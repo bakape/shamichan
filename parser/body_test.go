@@ -46,3 +46,53 @@ func TestParseLine(t *testing.T) {
 		}
 	})
 }
+
+func TestParseBody(t *testing.T) {
+	assertTableClear(t, "posts")
+	assertInsert(t, "posts", []types.DatabasePost{
+		{
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 8,
+				},
+				OP:    2,
+				Board: "a",
+			},
+		},
+		{
+			StandalonePost: types.StandalonePost{
+				Post: types.Post{
+					ID: 6,
+				},
+				OP:    2,
+				Board: "a",
+			},
+		},
+	})
+	config.SetBoardConfigs(config.BoardConfigs{
+		ID: "a",
+		BoardPublic: config.BoardPublic{
+			PostParseConfigs: config.PostParseConfigs{
+				HashCommands: true,
+			},
+		},
+	})
+
+	links, com, err := ParseBody([]byte("#flip\n>>8\n>>>6 #flip\n#flip"), "a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if l := len(com); l != 2 {
+		t.Errorf("unexpected command count: %d", l)
+	}
+	AssertDeepEquals(t, links, types.LinkMap{
+		8: types.Link{
+			OP:    2,
+			Board: "a",
+		},
+		6: types.Link{
+			OP:    2,
+			Board: "a",
+		},
+	})
+}

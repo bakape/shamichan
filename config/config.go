@@ -167,6 +167,12 @@ type PostParseConfigs struct {
 	HashCommands bool `json:"hashCommands" gorethink:"hashCommands"`
 }
 
+// BoardTitle contains a board's ID and title
+type BoardTitle struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+}
+
 // Generate /all/ board configs
 func init() {
 	var err error
@@ -227,6 +233,21 @@ func GetBoardConfigs(b string) BoardConfContainer {
 	boardMu.RLock()
 	defer boardMu.RUnlock()
 	return boardConfigs[b]
+}
+
+// GetBoardTitles returns a slice of all existing boards and their titles
+func GetBoardTitles() []BoardTitle {
+	boardMu.RLock()
+	defer boardMu.RUnlock()
+
+	bt := make([]BoardTitle, 0, len(boardConfigs))
+	for id, conf := range boardConfigs {
+		bt = append(bt, BoardTitle{
+			ID:    id,
+			Title: conf.Title,
+		})
+	}
+	return bt
 }
 
 // GetBoards returns an array of currently existing boards

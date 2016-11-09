@@ -269,7 +269,7 @@ func TestNoImageUploaded(t *testing.T) {
 	req := newRequest(t, b, w)
 	req.Header.Set("Content-Length", "300792")
 
-	code, _, err := newImageUpload(req)
+	code, _, err := ParseUpload(req)
 	if err != http.ErrMissingFile {
 		UnexpectedError(t, err)
 	}
@@ -282,7 +282,7 @@ func TestThumbNailReuse(t *testing.T) {
 
 	for i := 1; i <= 2; i++ {
 		req := newJPEGRequest(t)
-		code, _, err := newImageUpload(req)
+		code, _, err := ParseUpload(req)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -299,7 +299,7 @@ func TestUploadImageHash(t *testing.T) {
 	std := assets.StdJPEG
 
 	req := newJPEGRequest(t)
-	code, _, err := newImageUpload(req)
+	code, _, err := ParseUpload(req)
 	if err != nil {
 		t.Fatal(err)
 	}

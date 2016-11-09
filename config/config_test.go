@@ -144,3 +144,23 @@ func testBoardConfChange(t *testing.T, conf BoardConfigs) {
 		t.Fatal("expected change")
 	}
 }
+
+func TestGetBoardTitles(t *testing.T) {
+	ClearBoards()
+	_, err := SetBoardConfigs(BoardConfigs{
+		ID: "a",
+		BoardPublic: BoardPublic{
+			Title: "Animu & Mango",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	AssertDeepEquals(t, GetBoardTitles(), []BoardTitle{
+		{
+			ID:    "a",
+			Title: "Animu & Mango",
+		},
+	})
+}

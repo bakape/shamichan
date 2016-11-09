@@ -9,7 +9,6 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/types"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
@@ -267,21 +266,7 @@ func allBoardData(w http.ResponseWriter, r *http.Request) (
 
 // Serve a JSON array of all available boards and their titles
 func serveBoardList(res http.ResponseWriter, req *http.Request) {
-	type boardEntries []struct {
-		ID    string `json:"id"`
-		Title string `json:"title"`
-	}
-
-	var list boardEntries
-	q := r.Table("boards").Pluck("id", "title")
-	if err := db.All(q, &list); err != nil {
-		text500(res, req, err)
-		return
-	}
-	if list == nil { // Ensure always serving an array
-		list = boardEntries{}
-	}
-	serveJSON(res, req, "", list)
+	serveJSON(res, req, "", config.GetBoardTitles())
 }
 
 // Fetch an array of boards a certain user holds a certain position on
@@ -311,51 +296,6 @@ func serveStaffPositions(
 	}
 
 	serveJSON(res, req, "", boards)
-}
-
-// Spoiler an already allocated image
-func spoilerImage(w http.ResponseWriter, req *http.Request) {
-	var msg spoilerRequest
-	if !decodeJSON(w, req, &msg) {
-		return
-	}
-
-	var res struct {
-		Image    types.Image
-		Password []byte
-	}
-	q := db.FindPost(msg.ID).Pluck("image", "password").Default(nil)
-	if err := db.One(q, &res); err != nil {
-		text500(w, req, err)
-		return
-	}
-
-	if res.Image.SHA1 == "" {
-		text400(w, errNoImage)
-		return
-	}
-	if res.Image.Spoiler { // Already spoilered. NOOP.
-		return
-	}
-	if err := auth.BcryptCompare(msg.Password, res.Password); err != nil {
-		text403(w, err)
-		return
-	}
-
-	logMsg, err := websockets.EncodeMessage(websockets.MessageSpoiler, msg.ID)
-	if err != nil {
-		text500(w, req, err)
-		return
-	}
-
-	update := map[string]bool{
-		"spoiler": true,
-	}
-	err = websockets.UpdatePost(msg.ID, "image", update, logMsg)
-	if err != nil {
-		text500(w, req, err)
-		return
-	}
 }
 
 // Serve boards' last update timestamps. A board with no  posts will produce

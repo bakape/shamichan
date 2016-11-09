@@ -60,9 +60,9 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxSize)
 	w.Header().Set("Access-Control-Allow-Origin", config.AllowedOrigin)
 
-	code, id, err := newImageUpload(r)
+	code, id, err := ParseUpload(r)
 	if err != nil {
-		logError(w, r, code, err)
+		LogError(w, r, code, err)
 	}
 	w.Write([]byte(id))
 }
@@ -75,7 +75,7 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 func UploadImageHash(w http.ResponseWriter, req *http.Request) {
 	buf, err := ioutil.ReadAll(http.MaxBytesReader(w, req.Body, 40))
 	if err != nil {
-		logError(w, req, 500, err)
+		LogError(w, req, 500, err)
 		return
 	}
 	hash := string(buf)
@@ -85,43 +85,34 @@ func UploadImageHash(w http.ResponseWriter, req *http.Request) {
 		w.Write([]byte("-1"))
 		return
 	} else if err != nil {
-		logError(w, req, 500, err)
+		LogError(w, req, 500, err)
 		return
 	}
 
 	code, token, err := db.NewImageToken(hash)
 	if err != nil {
-		logError(w, req, code, err)
+		LogError(w, req, code, err)
 	}
 	w.Write([]byte(token))
 }
 
-// Send the client its error and log it
-func logError(w http.ResponseWriter, r *http.Request, code int, err error) {
+// LogError send the client file upload errors and logs them server-side
+func LogError(w http.ResponseWriter, r *http.Request, code int, err error) {
 	text := err.Error()
 	http.Error(w, text, code)
 	log.Printf("upload error: %s: %s\n", auth.GetIP(r), text)
 }
 
-// Separate function for cleaner error handling. Returns the HTTP status code of
-// the response and error, if any.
-func newImageUpload(req *http.Request) (int, string, error) {
-	// Remove temporary files, when function returns
-	defer func() {
-		if req.MultipartForm != nil {
-			if err := req.MultipartForm.RemoveAll(); err != nil {
-				log.Printf("couldn't remove temporary files: %s\n", err)
-			}
-		}
-	}()
-
-	err := parseUploadForm(req)
-	if err != nil {
+// ParseUpload parses the upload form. Separate function for cleaner error
+// handling and reusability. Returns the HTTP status code of the response and an
+// error, if any.
+func ParseUpload(req *http.Request) (int, string, error) {
+	if err := parseUploadForm(req); err != nil {
 		return 400, "", err
 	}
 
-	// TODO: A scheduler based on available RAM, so we don't run out of memory,
-	// with concurrent burst loads.
+	// TODO: A scheduler based on available RAM, so we don't run out of memory
+	// with concurrent burst loads
 
 	file, _, err := req.FormFile("image")
 	if err != nil {
