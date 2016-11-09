@@ -160,7 +160,7 @@ export class ReplyFormModel extends Post implements FormModel {
 		}
 
 		write(() =>
-			this.view.$cancel.remove())
+			this.view.cancel.remove())
 
 		const data = await this.view.uploadFile(file)
 
@@ -248,7 +248,7 @@ export class FormModel {
 		const lenDiff = val.length - old.length,
 			exceeding = this.bodyLength + lenDiff - 2000
 
-		// If exceeding max body length, shorten the value, trim $input and try
+		// If exceeding max body length, shorten the value, trim input and try
 		// again
 		if (exceeding > 0) {
 			this.view.trimInput(exceeding)
@@ -307,7 +307,7 @@ export class FormModel {
 		this.send(message.backspace, null)
 	}
 
-	// Commit any other $input change that is not an append or backspace
+	// Commit any other input change that is not an append or backspace
 	commitSplice(v: string, lenDiff: number) {
 		// Convert to arrays of chars to deal with multibyte unicode chars
 		const old = Array.from(this.inputState.line),

@@ -9,7 +9,7 @@ import { parseTerminatedLine } from "../render/body"
 import { renderHeader, renderName } from "../render/posts"
 import { write } from "../../render"
 import { ui } from "../../lang"
-import { $threadContainer } from "../../page/thread"
+import { threadContainer } from "../../page/thread"
 import { postSM, postEvent } from "./main"
 import UploadForm, { FileData } from "./upload"
 import identity from "./identity"
@@ -17,24 +17,24 @@ import { atBottom, scrollToBottom } from "../../scroll"
 
 // Element at the bottom of the thread to keep the fixed reply form from
 // overlapping any other posts, when scrolled till bottom
-let $bottomSpacer: HTMLElement
+let bottomSpacer: HTMLElement
 
 // Post creation and update view
 export class FormView extends PostView implements UploadForm {
 	el: HTMLElement
 	model: ReplyFormModel
 	inputLock: boolean
-	$input: HTMLSpanElement
-	$done: HTMLInputElement
-	$cancel: HTMLInputElement
+	input: HTMLSpanElement
+	done: HTMLInputElement
+	cancel: HTMLInputElement
 	observer: MutationObserver
-	$postControls: Element
+	postControls: Element
 	previousHeight: number
 
 	// UploadForm properties
-	$spoiler: HTMLSpanElement
-	$uploadStatus: HTMLSpanElement
-	$uploadInput: HTMLInputElement
+	spoiler: HTMLSpanElement
+	uploadStatus: HTMLSpanElement
+	uploadInput: HTMLInputElement
 	renderUploadForm: () => void
 	uploadFile: (file?: File) => Promise<FileData>
 	upload: (file: File) => Promise<string>
@@ -55,7 +55,7 @@ export class FormView extends PostView implements UploadForm {
 	// Render extra input fields for inputting text and optionally uploading
 	// images
 	renderInputs(isOP: boolean) {
-		this.$input = document.createElement("span")
+		this.input = document.createElement("span")
 		const attrs: { [key: string]: string } = {
 			id: "text-input",
 			name: "body",
@@ -64,44 +64,44 @@ export class FormView extends PostView implements UploadForm {
 		if (isMobile) {
 			attrs["autocomplete"] = ""
 		}
-		setAttrs(this.$input, attrs)
+		setAttrs(this.input, attrs)
 
 		// Always make sure the input span always has at least 1 character, so
 		// it does not float onto the image, if any.
-		this.$input.textContent = "\u200b"
-		this.$input.addEventListener("input", (event: Event) => {
+		this.input.textContent = "\u200b"
+		this.input.addEventListener("input", (event: Event) => {
 			event.stopImmediatePropagation()
 			this.onInput((event.target as Element).textContent)
 		})
-		this.$input.addEventListener("keydown", (event: KeyboardEvent) =>
+		this.input.addEventListener("keydown", (event: KeyboardEvent) =>
 			this.onKeyDown(event))
 
-		this.$postControls = document.createElement("div")
-		this.$postControls.id = "post-controls"
-		this.$postControls
+		this.postControls = document.createElement("div")
+		this.postControls.id = "post-controls"
+		this.postControls
 			.append(isOP ? this.renderDone() : this.renderDraft())
 
 		write(() => {
-			this.$blockquote.innerHTML = ""
-			this.$blockquote.append(this.$input)
-			this.el.querySelector(".post-container").append(this.$postControls)
-			this.$input.focus()
+			this.blockquote.innerHTML = ""
+			this.blockquote.append(this.input)
+			this.el.querySelector(".post-container").append(this.postControls)
+			this.input.focus()
 		})
 	}
 
 	// Additional controls and header contents for unallocated draft forms
 	renderDraft(): DocumentFragment {
 		const frag = document.createDocumentFragment()
-		const $cancel = this.createButton(
+		const cancel = this.createButton(
 			"cancel",
 			postSM.feeder(postEvent.done),
 		)
-		frag.append($cancel)
+		frag.append(cancel)
 
 		if (!boardConfig.textOnly) {
 			this.renderUploadForm()
-			frag.append(this.$uploadInput, this.$spoiler, this.$uploadStatus)
-			this.$uploadInput.addEventListener("change", () =>
+			frag.append(this.uploadInput, this.spoiler, this.uploadStatus)
+			this.uploadInput.addEventListener("change", () =>
 				this.model.uploadFile())
 		}
 
@@ -142,15 +142,15 @@ export class FormView extends PostView implements UploadForm {
 			value: ui[name],
 		})
 		el.addEventListener("click", clickHandler)
-		return this["$" + name] = el
+		return this[name] = el
 	}
 
 	// Initialize extra elements for a draft unallocated post
 	initDraft() {
 		this.el.querySelector("header").classList.add("temporary")
-		$bottomSpacer = document.getElementById("bottom-spacer")
+		bottomSpacer = document.getElementById("bottom-spacer")
 
-		// Keep this post and $bottomSpacer the same height
+		// Keep this post and bottomSpacer the same height
 		this.observer = new MutationObserver(() =>
 			write(() =>
 				this.resizeSpacer()))
@@ -162,21 +162,21 @@ export class FormView extends PostView implements UploadForm {
 		})
 
 		write(() => {
-			$threadContainer.append(this.el)
-			this.$input.focus()
+			threadContainer.append(this.el)
+			this.input.focus()
 			this.resizeSpacer()
 		})
 	}
 
-	// Resize $bottomSpacer to the same top position as this post
+	// Resize bottomSpacer to the same top position as this post
 	resizeSpacer() {
 		// Not a reply
-		if (!$bottomSpacer) {
+		if (!bottomSpacer) {
 			return
 		}
 
 		// Avoid spacer being seen, if thread is too short to fill the viewport
-		if ($threadContainer.offsetHeight < window.innerHeight) {
+		if (threadContainer.offsetHeight < window.innerHeight) {
 			return
 		}
 
@@ -186,36 +186,36 @@ export class FormView extends PostView implements UploadForm {
 			return
 		}
 		this.previousHeight = height
-		$bottomSpacer.style.height = `calc(${height}px - 2.1em)`
+		bottomSpacer.style.height = `calc(${height}px - 2.1em)`
 	}
 
 	removeUploadForm() {
 		write(() => {
-			this.$uploadInput.remove()
-			this.$uploadStatus.remove()
+			this.uploadInput.remove()
+			this.uploadStatus.remove()
 		})
 	}
 
-	// Handle input events on $input
-	onInput(val: string = this.$input.textContent) {
+	// Handle input events on input
+	onInput(val: string = this.input.textContent) {
 		if (this.inputLock) {
 			return
 		}
 		if (val === "") {
 			this.lockInput(() =>
-				this.$input.textContent = "\u200b")
+				this.input.textContent = "\u200b")
 		}
 		this.model.parseInput(val.replace("\u200b", ""))
 	}
 
-	// Ignore any oninput events on $input during supplied function call
+	// Ignore any oninput events on input during supplied function call
 	lockInput(fn: () => void) {
 		this.inputLock = true
 		fn()
 		this.inputLock = false
 	}
 
-	// Handle keydown events on $input
+	// Handle keydown events on input
 	onKeyDown(event: KeyboardEvent) {
 		if (event.which === 13) { // Enter
 			event.preventDefault()
@@ -223,22 +223,22 @@ export class FormView extends PostView implements UploadForm {
 		}
 	}
 
-	// Trim $input from the end by the supplied length
+	// Trim input from the end by the supplied length
 	trimInput(length: number) {
-		let val = this.$input.textContent.slice(0, -length) || "\u200b"
+		let val = this.input.textContent.slice(0, -length) || "\u200b"
 		write(() =>
 			this.lockInput(() =>
-				this.$input.textContent = val))
+				this.input.textContent = val))
 	}
 
 
 	// Replace the current line and set the cursor to the input's end
 	replaceLine(line: string) {
 		write(() => {
-			this.$input.textContent = line || "\u200b"
+			this.input.textContent = line || "\u200b"
 			const range = document.createRange(),
 				sel = window.getSelection()
-			range.setEndAfter(this.$input.lastChild)
+			range.setEndAfter(this.input.lastChild)
 			range.collapse(false)
 			sel.removeAllRanges()
 			sel.addRange(range)
@@ -251,13 +251,13 @@ export class FormView extends PostView implements UploadForm {
 		const {line} = this.model.inputState,
 			frag = makeFrag(parseTerminatedLine(line, this.model))
 		write(() => {
-			this.$input.before(frag)
+			this.input.before(frag)
 			this.lockInput(() =>
-				this.$input.textContent = "\u200b")
+				this.input.textContent = "\u200b")
 		})
 	}
 
-	// Inject lines before $input and set $input contents to the lastLine
+	// Inject lines before input and set input contents to the lastLine
 	injectLines(lines: string[], lastLine: string) {
 		const frag = document.createDocumentFragment()
 		for (let line of lines) {
@@ -265,28 +265,28 @@ export class FormView extends PostView implements UploadForm {
 			frag.append(el)
 		}
 		write(() =>
-			this.$input.before(frag))
+			this.input.before(frag))
 		this.replaceLine(lastLine)
 	}
 
-	// Parse and replace the temporary like closed by $input with a proper
+	// Parse and replace the temporary like closed by input with a proper
 	// parsed line
 	terminateLine(num: number) {
 		const html = parseTerminatedLine(this.model.lastBodyLine(), this.model),
 			frag = makeFrag(html)
 		write(() =>
-			this.$blockquote.children[num].replaceWith(frag))
+			this.blockquote.children[num].replaceWith(frag))
 	}
 
 	// Transform form into a generic post. Removes any dangling form controls
 	// and frees up references.
 	cleanUp() {
 		this.el.classList.remove("reply-form")
-		if (this.$postControls) {
-			this.$postControls.remove()
+		if (this.postControls) {
+			this.postControls.remove()
 		}
-		if ($bottomSpacer) {
-			$bottomSpacer.style.height = ""
+		if (bottomSpacer) {
+			bottomSpacer.style.height = ""
 			if (atBottom) {
 				scrollToBottom()
 			}
@@ -294,15 +294,15 @@ export class FormView extends PostView implements UploadForm {
 		if (this.observer) {
 			this.observer.disconnect()
 		}
-		this.$postControls
-			= $bottomSpacer
+		this.postControls
+			= bottomSpacer
 			= this.observer
-			= this.$done
-			= this.$cancel
-			= this.$input
-			= this.$uploadInput
-			= this.$uploadStatus
-			= this.$spoiler
+			= this.done
+			= this.cancel
+			= this.input
+			= this.uploadInput
+			= this.uploadStatus
+			= this.spoiler
 			= null
 	}
 
@@ -316,19 +316,19 @@ export class FormView extends PostView implements UploadForm {
 	renderError() {
 		write(() =>
 			(this.el.classList.add("errored"),
-				this.$input.setAttribute("contenteditable", "false")))
+				this.input.setAttribute("contenteditable", "false")))
 	}
 
 	// Transition into allocated post
 	renderAlloc() {
 		this.id = "p" + this.model.id
-		const $header = this.el.querySelector("header")
+		const header = this.el.querySelector("header")
 		write(() => {
 			this.el.id = this.id as string
-			$header.classList.remove("temporary")
-			renderHeader($header, this.model)
-			this.$cancel.remove()
-			this.$postControls.prepend(this.renderDone())
+			header.classList.remove("temporary")
+			renderHeader(header, this.model)
+			this.cancel.remove()
+			this.postControls.prepend(this.renderDone())
 		})
 	}
 
@@ -348,15 +348,15 @@ export class FormView extends PostView implements UploadForm {
 
 	// Insert image into the open post
 	insertImage() {
-		this.renderImage()
+		this.renderImage(false, true)
 		this.removeUploadForm()
 
-		const {$spoiler} = this
+		const {spoiler} = this
 		if (this.model.image.spoiler) {
 			write(() =>
-				$spoiler.remove())
+				spoiler.remove())
 		} else {
-			$spoiler.addEventListener("change", () => this.spoilerImage(), {
+			spoiler.addEventListener("change", () => this.spoilerImage(), {
 				passive: true,
 			})
 		}
@@ -367,7 +367,7 @@ applyMixins(FormView, UploadForm)
 
 // FormView of an OP post
 export class OPFormView extends FormView implements OPView {
-	$omit: Element
+	omit: Element
 	model: any
 	renderOmit: () => void
 

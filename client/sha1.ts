@@ -216,8 +216,8 @@ function padLen(len: number) {
 }
 
 function padZeroes(bin: Int32Array, len: number) {
-    for (let i$2 = len >> 2; i$2 < bin.length; i$2++) {
-        bin[i$2] = 0
+    for (let i = len >> 2; i < bin.length; i++) {
+        bin[i] = 0
     }
 }
 
@@ -240,7 +240,7 @@ function convertBuffer(
     off: number,
 ) {
     const buf = new Uint8Array(data)
-    let i$2: number
+    let i: number
     const om = off % 4,
         lm = len % 4,
         j = len - lm
@@ -257,8 +257,8 @@ function convertBuffer(
                 H8[off | 0] = buf[start + 3]
         }
     }
-    for (i$2 = 4 - om; i$2 < j; i$2 = i$2 += 4 | 0) {
-        H32[off + i$2 >> 2] = buf[start + i$2] << 24 | buf[start + i$2 + 1] << 16 | buf[start + i$2 + 2] << 8 | buf[start + i$2 + 3]
+    for (i = 4 - om; i < j; i = i += 4 | 0) {
+        H32[off + i >> 2] = buf[start + i] << 24 | buf[start + i + 1] << 16 | buf[start + i + 2] << 8 | buf[start + i + 3]
     }
     switch (lm) {
         case 3:

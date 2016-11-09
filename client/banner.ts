@@ -14,7 +14,7 @@ export const bannerModals: {[key: string]: BannerModal} = {}
 
 // View of the modal currently displayed, if any
 let visible: BannerModal
-const $overlay = document.querySelector("#modal-overlay")
+const overlay = document.querySelector("#modal-overlay")
 
 // Highlight options button by fading out and in, if no options are set
 function highlightBanner(name: string) {
@@ -56,7 +56,7 @@ export class BannerModal extends Modal<Model> {
 			.querySelector('#banner-' + (this.id as string).split('-')[0])
 			.addEventListener('click', () => this.toggle(), {capture: true})
 		write(() =>
-			$overlay.append(this.el))
+			overlay.append(this.el))
 	}
 
 	// Inert the HTML into the element and set flag to true for lazy rendering
@@ -89,14 +89,14 @@ export class BannerModal extends Modal<Model> {
 			(this as any).render()
 		}
 		write(() =>
-			(this.el as HTMLElement).style.display = 'block')
+			this.el.style.display = 'block')
 		visible = this
 	}
 
 	// Hide the element
 	hide() {
 		write(() =>
-			(this.el as HTMLElement).style.display = 'none')
+			this.el.style.display = 'none')
 		visible = null
 	}
 }

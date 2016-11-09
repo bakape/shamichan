@@ -13,8 +13,8 @@ export let panel: OptionsPanel
 
 // View of the options panel
 export default class OptionsPanel extends TabbedModal {
-	$hidden: Element
-	$import: HTMLInputElement
+	hidden: Element
+	import: HTMLInputElement
 
 	constructor() {
 		super({ id: 'options' })
@@ -37,9 +37,9 @@ export default class OptionsPanel extends TabbedModal {
 		write(() =>
 			this.assignValues())
 		read(() => {
-			this.$hidden = this.el.querySelector('#hidden')
+			this.hidden = this.el.querySelector('#hidden')
 			this.renderHidden(hidden.size)
-			this.$import =
+			this.import =
 				this.el.querySelector("#importSettings") as HTMLInputElement
 		})
 	}
@@ -132,16 +132,16 @@ export default class OptionsPanel extends TabbedModal {
 	// Import options from uploaded JSON file
 	importConfigs(event: Event) {
 		// Proxy to hidden file input
-		this.$import.click()
+		this.import.click()
 		const handler = () =>
 			this.importConfigFile()
-		this.$import.addEventListener("change", handler, { once: true })
+		this.import.addEventListener("change", handler, { once: true })
 	}
 
 	// After the file has been uploaded, parse it and import the configs
 	async importConfigFile() {
 		const reader = new FileReader()
-		reader.readAsText(this.$import.files[0])
+		reader.readAsText(this.import.files[0])
 		const event = await load(reader) as any
 
 		// In case of corruption
@@ -168,7 +168,7 @@ export default class OptionsPanel extends TabbedModal {
 			return
 		}
 		write(() => {
-			const el = this.$hidden
+			const el = this.hidden
 			el.textContent = el.textContent.replace(/\d+$/, count.toString())
 		})
 	}

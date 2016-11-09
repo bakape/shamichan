@@ -1,12 +1,12 @@
 // Stores the state of the web application
 
-import {emitChanges, ChangeEmitter} from './model'
-import {Post} from './posts/models'
+import { emitChanges, ChangeEmitter } from './model'
+import { Post } from './posts/models'
 import PostCollection from './posts/collection'
-import {getClosestID} from './util'
-import {readIDs, storeID} from './db'
-import {write} from './render'
-import {send} from './connection'
+import { getClosestID } from './util'
+import { readIDs, storeID } from './db'
+import { write } from './render'
+import { send } from './connection'
 
 // Server-wide global configurations
 interface Configs extends ChangeEmitter {
@@ -19,7 +19,7 @@ interface Configs extends ChangeEmitter {
 	defaultCSS: string
 	FAQ: string
 	captchaPublicKey: string
-	links: {[key: string]: string}
+	links: { [key: string]: string }
 }
 
 // Board-specific configurations
@@ -47,7 +47,7 @@ export interface PageState extends ChangeEmitter {
 }
 
 const thirtyDays = 30 * 24 * 60 * 60 * 1000,
-	$loading = document.querySelector('#loading-image') as HTMLElement
+	loading = document.getElementById('loading-image')
 
 // Configuration passed from the server. Some values can be changed during
 // runtime.
@@ -133,12 +133,12 @@ export function getModel(el: Element): Post {
 }
 
 // Display or hide the loading animation
-export function displayLoading(loading: boolean) {
+export function displayLoading(display: boolean) {
 	write(() =>
-		$loading.style.display = loading ? 'block' : 'none')
+		loading.style.display = display ? 'block' : 'none')
 }
 
 ; (window as any).debugMode = () => {
 	debug = true
-	; (window as any).send = send
+		; (window as any).send = send
 }

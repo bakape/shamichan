@@ -1,6 +1,6 @@
 // File upload via drag and drop
 
-import {$threads} from "../../render"
+import {threads} from "../../render"
 import {postSM, postEvent, postModel} from "./main"
 import {page, boardConfig} from "../../state"
 import {ReplyFormModel} from "./model"
@@ -40,6 +40,6 @@ function stopDefault(e: Event) {
 
 // Bind listeners
 for (let event of ["dragenter", "dragexit", "dragover"]) {
-	$threads.addEventListener(event, stopDefault)
+	threads.addEventListener(event, stopDefault)
 }
-$threads.addEventListener("drop", onDrop)
+threads.addEventListener("drop", onDrop)

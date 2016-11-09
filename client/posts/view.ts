@@ -11,8 +11,8 @@ import ImageHandler from "./images"
 // Base post view class
 export default class PostView extends ImageHandler {
 	// Only exist on open posts
-	$buffer: Node        // Text node being written to
-	$blockquote: Element // Entire text body of post
+	buffer: Node        // Text node being written to
+	blockquote: Element // Entire text body of post
 
 	constructor(model: Post) {
 		let cls = 'glass'
@@ -54,21 +54,21 @@ export default class PostView extends ImageHandler {
 	renderContents(container: NodeSelector&ParentNode) {
 		renderPost(container, this.model)
 		if (this.model.editing) {
-			this.$blockquote = container.querySelector("blockquote")
-			this.findBuffer(this.$blockquote.lastChild)
+			this.blockquote = container.querySelector("blockquote")
+			this.findBuffer(this.blockquote.lastChild)
 		}
 	}
 
 	// Find the text buffer in an open line
-	findBuffer($b: Node) {
+	findBuffer(b: Node) {
 		const {state} = this.model
 		if (state.quote) {
-			$b = $b.lastChild
+			b = b.lastChild
 		}
 		if (state.spoiler) {
-			$b = $b.lastChild
+			b = b.lastChild
 		}
-		this.$buffer = $b
+		this.buffer = b
 	}
 
 	// Remove the element from the DOM and detach from its model, allowing the
@@ -94,23 +94,23 @@ export default class PostView extends ImageHandler {
 
 	// Return the last line of the text body
 	lastLine(): Element {
-		const ch = this.$blockquote.children
+		const ch = this.blockquote.children
 		return ch[ch.length - 1]
 	}
 
 	// Append a string to the current text buffer
 	appendString(s: string) {
 		write(() =>
-			this.$buffer.append(s))
+			this.buffer.append(s))
 	}
 
 	// Remove one character from the current buffer
 	backspace() {
 		write(() => {
 			// Merge multiple successive nodes created by appendString()
-			this.$buffer.normalize()
-			const $text = this.$buffer.lastChild
-			$text.textContent = $text.textContent.slice(0, -1)
+			this.buffer.normalize()
+			const text = this.buffer.lastChild
+			text.textContent = text.textContent.slice(0, -1)
 		})
 	}
 
@@ -120,8 +120,8 @@ export default class PostView extends ImageHandler {
 			frag = makeFrag(parseTerminatedLine(line, this.model))
 		write(() => {
 			this.lastLine().replaceWith(frag)
-			this.$buffer = document.createElement("span")
-			this.$blockquote.append(this.$buffer)
+			this.buffer = document.createElement("span")
+			this.blockquote.append(this.buffer)
 		})
 	}
 
@@ -139,7 +139,7 @@ export default class PostView extends ImageHandler {
 		write(() => {
 			this.el.classList.remove("editing")
 			this.lastLine().replaceWith(frag)
-			this.$buffer = this.$blockquote = null
+			this.buffer = this.blockquote = null
 		})
 	}
 
@@ -174,9 +174,9 @@ export class OPView extends PostView {
 	// Also attach the omitted post and image indicator
 	render() {
 		super.render()
-		const $omit = document.createElement("span")
-		$omit.setAttribute("class", "omit")
-		this.el.querySelector(".post-container").append($omit)
+		const omit = document.createElement("span")
+		omit.setAttribute("class", "omit")
+		this.el.querySelector(".post-container").append(omit)
 	}
 
 	// Render posts and images omitted indicator

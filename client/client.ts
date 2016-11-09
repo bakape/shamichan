@@ -5,7 +5,7 @@ import { posts } from './state'
 import { Post, PostLinks, Command, PostData, ImageData } from './posts/models'
 import { ReplyFormModel, OPFormModel } from "./posts/posting/model"
 import PostView from "./posts/view"
-import { $threadContainer } from "./page/thread"
+import { threadContainer } from "./page/thread"
 import { write } from "./render"
 import { postAdded } from "./tab"
 import { deferInit } from "./defer"
@@ -63,7 +63,7 @@ export function insertPost(data: PostData) {
 
 	// Find last allocated post and insert after it
 	write(() => {
-		const last = $threadContainer.lastElementChild
+		const last = threadContainer.lastElementChild
 		if (last.id === "p0") {
 			last.before(view.el)
 		} else {

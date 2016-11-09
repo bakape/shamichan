@@ -3,8 +3,8 @@
 import { connSM, connState } from "./connection"
 import { deferInit } from "./defer"
 
-const $title = document.head.querySelector("title"),
-	$favicon = document.head.querySelector("#favicon"),
+const titleEl = document.head.querySelector("title"),
+	faviconEl = document.head.querySelector("#favicon"),
 	urlBase = "/assets/favicons/"
 
 let title: string,
@@ -59,8 +59,8 @@ function resolve() {
 // Write tab title and favicon to DOM. If we use requestAnimationFrame here,
 // this will never render on a hidden document.
 function apply(prefix: string, favicon: string) {
-	$title.innerHTML = prefix + title
-	$favicon.setAttribute("href", favicon)
+	titleEl.innerHTML = prefix + title
+	faviconEl.setAttribute("href", favicon)
 }
 
 // Account for immediate reconnection and only render favicon, if not

@@ -28,37 +28,37 @@ const acceptedFormats = commaList([
 export default class UploadForm {
 	el: Element
 	model: Model
-	$spoiler: HTMLSpanElement
-	$uploadStatus: Element
-	$uploadInput: HTMLInputElement
+	spoiler: HTMLSpanElement
+	uploadStatus: Element
+	uploadInput: HTMLInputElement
 
 	// Initialize the mixin by rendering and assigning the various upload form
 	// elements
 	renderUploadForm() {
-		this.$uploadInput = document.createElement("input")
-		setAttrs(this.$uploadInput, {
+		this.uploadInput = document.createElement("input")
+		setAttrs(this.uploadInput, {
 			type: "file",
 			name: "image",
 			accept: acceptedFormats,
 			required: "",
 		})
 
-		this.$spoiler = document.createElement("span")
+		this.spoiler = document.createElement("span")
 		const html = HTML
 			`<input type="checkbox" name="spoiler">
 			<label for="spoiler" class="spoiler">
 				${lang.spoiler}
 			</label>`
-		this.$spoiler.append(makeFrag(html))
+		this.spoiler.append(makeFrag(html))
 
-		this.$uploadStatus = document.createElement("strong")
-		this.$uploadStatus.setAttribute("class", "upload-status")
+		this.uploadStatus = document.createElement("strong")
+		this.uploadStatus.setAttribute("class", "upload-status")
 	}
 
-	// Read the file from $uploadInput and send as a POST request to the server.
+	// Read the file from uploadInput and send as a POST request to the server.
 	// Returns image request data, if upload succeeded.
 	async uploadFile(
-		file: File = this.$uploadInput.files[0]
+		file: File = this.uploadInput.files[0]
 	): Promise<FileData> {
 		if (!navigator.onLine) {
 			return null
@@ -101,7 +101,7 @@ export default class UploadForm {
 		const formData = new FormData()
 		formData.append("image", file)
 		write(() =>
-			this.$uploadInput.style.display = "none")
+			this.uploadInput.style.display = "none")
 
 		// Not using fetch, because no ProgressEvent support
 		const xhr = new XMLHttpRequest()
@@ -113,8 +113,8 @@ export default class UploadForm {
 
 		if (xhr.status !== 200) {
 			write(() => {
-				this.$uploadStatus.textContent = xhr.response
-				this.$uploadInput.style.display = ""
+				this.uploadStatus.textContent = xhr.response
+				this.uploadInput.style.display = ""
 			})
 			return ""
 		}
@@ -131,14 +131,14 @@ export default class UploadForm {
 			s = `${Math.floor(loaded / total * 100)}% ${lang.uploadProgress}`
 		}
 		write(() =>
-			this.$uploadStatus.textContent = s)
+			this.uploadStatus.textContent = s)
 	}
 
 	// Spoiler an image file after it has already been allocated
 	async spoilerImage() {
 		await spoilerImage(this.model as Post)
 		write(() =>
-			this.$spoiler.remove())
+			this.spoiler.remove())
 	}
 }
 

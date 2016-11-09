@@ -4,7 +4,7 @@ import { boardConfig, page } from '../state'
 import { ThreadData } from '../posts/models'
 import { renderThumbnail } from '../posts/render/image'
 import options from '../options'
-import { write, $threads, importTemplate } from '../render'
+import { write, threads, importTemplate } from '../render'
 import { setTitle } from "../tab"
 import { formatText, renderNotice } from "./common"
 import { renderTime } from "../posts/render/posts"
@@ -45,7 +45,7 @@ export default function cachetAndRender(threads: ThreadData[], ctr: number) {
 }
 
 // Render a board page's HTML
-function render(threads: ThreadData[]) {
+function render(data: ThreadData[]) {
 	const frag = importTemplate("board")
 
 	// Apply board title to tab and header
@@ -55,7 +55,7 @@ function render(threads: ThreadData[]) {
 
 	const {banners} = boardConfig
 	if (banners.length) {
-		const banner = frag.querySelector(".image-banner") as HTMLElement
+		const banner = frag.querySelector(".image-banner")
 		banner.hidden = false
 		banner
 			.firstElementChild
@@ -65,13 +65,13 @@ function render(threads: ThreadData[]) {
 	// Render rules container aside
 	const {rules} = boardConfig
 	if (!rules || page.board === "all") {
-		(frag.querySelector("#rules") as HTMLElement).style.display = "none"
+		frag.querySelector("#rules").style.display = "none"
 	} else {
-		const $rc = frag.querySelector("#rules-container")
+		const rc = frag.querySelector("#rules-container")
 		if (!rules) {
-			$rc.append("God's in his heaven. All is right with the world.")
+			rc.append("God's in his heaven. All is right with the world.")
 		} else {
-			$rc.append(formatText(rules))
+			rc.append(formatText(rules))
 		}
 	}
 
@@ -87,10 +87,10 @@ function render(threads: ThreadData[]) {
 	renderRefreshButton(frag.querySelector("#refresh"))
 
 	renderNotice(frag)
-	frag.querySelector("#catalog").append(renderThreads("", threads))
+	frag.querySelector("#catalog").append(renderThreads("", data))
 
-	$threads.innerHTML = ""
-	$threads.append(frag)
+	threads.innerHTML = ""
+	threads.append(frag)
 }
 
 // Sort, filter and render all threads on a board
@@ -133,16 +133,16 @@ function renderThread(thread: ThreadData): DocumentFragment {
 		}
 	}
 
-	const $links = frag.querySelector(".thread-links")
-	const $board = $links.querySelector(".board") as HTMLElement
-	$board.hidden = false
-	$board.textContent = `/${thread.board}/`
-	$links
+	const links = frag.querySelector(".thread-links"),
+		board = links.querySelector(".board")
+	board.hidden = false
+	board.textContent = `/${thread.board}/`
+	links
 		.querySelector(".counters")
 		.textContent = `${thread.postCtr}/${thread.imageCtr}`
-	const $lastN = $links.querySelector("a.history")
-	$lastN.setAttribute("href", `${href}?last=50`)
-	$lastN.textContent = `${navigation.last} 50`
+	const lastN = links.querySelector("a.history")
+	lastN.setAttribute("href", `${href}?last=50`)
+	lastN.textContent = `${navigation.last} 50`
 
 	frag.querySelector("h3").innerHTML = `「${escape(thread.subject)}」`
 
@@ -159,17 +159,17 @@ function renderRefreshButton(el: Element) {
 
 // Toggle the [Rules] container expansion or contraction
 function toggleRules(e: MouseEvent) {
-	const $el = e.target as HTMLElement,
-		$aside = $el.closest("aside")
-	if ($aside.classList.contains("expanded")) {
+	const el = e.target as HTMLElement,
+		aside = el.closest("aside")
+	if (aside.classList.contains("expanded")) {
 		write(() => {
-			$aside.classList.remove("expanded")
-			$el.textContent = ui.rules
+			aside.classList.remove("expanded")
+			el.textContent = ui.rules
 		})
 	} else {
 		write(() => {
-			$aside.classList.add("expanded")
-			$el.textContent = ui.close
+			aside.classList.add("expanded")
+			el.textContent = ui.close
 		})
 	}
 }
@@ -178,13 +178,13 @@ function toggleRules(e: MouseEvent) {
 function onSortChange(e: Event) {
 	localStorage.setItem("catalogSort", (e.target as HTMLInputElement).value)
 	const filter =
-		($threads.querySelector("input[name=search]") as HTMLInputElement)
+		(threads.querySelector("input[name=search]") as HTMLInputElement)
 			.value
 	writeThreads(renderThreads(filter, data))
 }
 
 function writeThreads(threads: DocumentFragment) {
-	const cat = $threads.querySelector("#catalog")
+	const cat = threads.querySelector("#catalog")
 	cat.innerHTML = ""
 	cat.append(threads)
 }
@@ -210,26 +210,26 @@ setInterval(() => {
 		refreshBoard()
 	} else {
 		write(() =>
-			renderRefreshButton($threads.querySelector("#refresh")))
+			renderRefreshButton(threads.querySelector("#refresh")))
 	}
 }, 60000)
 
-on($threads, "click", toggleRules, {
+on(threads, "click", toggleRules, {
 	passive: true,
 	selector: "#rules a",
 })
 
-on($threads, "change", onSortChange, {
+on(threads, "change", onSortChange, {
 	passive: true,
 	selector: "select[name=sortMode]",
 })
 
-on($threads, "input", onSearchChange, {
+on(threads, "input", onSearchChange, {
 	passive: true,
 	selector: "input[name=search]",
 })
 
-on($threads, "click", refreshBoard, {
+on(threads, "click", refreshBoard, {
 	passive: true,
 	selector: "#refresh",
 })

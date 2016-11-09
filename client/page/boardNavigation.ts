@@ -7,8 +7,8 @@ import { ui } from '../lang'
 import { formatHeader } from './board'
 
 const selected = new Set<string>(),
-	$panel = document.getElementById("left-panel"),
-	$spacer = document.getElementById("left-spacer")
+	panel = document.getElementById("left-panel"),
+	spacer = document.getElementById("left-spacer")
 
 let boards: BoardEntry[],
 	navigation: BoardNavigation,
@@ -140,7 +140,7 @@ class BoardSelectionPanel extends View<Model> {
 		write(() => {
 			this.parentEl.textContent = "-"
 			this.el.innerHTML = html
-			$panel.append(this.el)
+			panel.append(this.el)
 		})
 	}
 
@@ -177,10 +177,9 @@ class BoardSelectionPanel extends View<Model> {
 		}
 
 		write(() => {
-			const els = this.el.querySelectorAll(`.input-span`) as HTMLElement[]
-			for (let el of els) {
+			for (let el of this.el.querySelectorAll(`.input-span`)) {
 				let display: string
-				if (matched.indexOf(el.getAttribute("data-id")) > -1) {
+				if (matched.includes(el.getAttribute("data-id"))) {
 					display = "block"
 				} else {
 					display = "none"
@@ -199,15 +198,15 @@ function persistSelected() {
 
 // Shift thread to the right, when the side panel is rendered or mutated
 function shiftThread() {
-	const w = $panel.offsetWidth
+	const w = panel.offsetWidth
 	if (w === lastPanelWidth) {
 		return
 	}
 	lastPanelWidth = w
-	$spacer.style.width = w + "px"
+	spacer.style.width = w + "px"
 }
 
-new MutationObserver(shiftThread).observe($panel, {
+new MutationObserver(shiftThread).observe(panel, {
 	childList: true,
 	attributes: true,
 	characterData: true,

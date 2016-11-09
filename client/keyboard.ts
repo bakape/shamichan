@@ -5,6 +5,7 @@ import { postForm, postSM, postEvent } from "./posts/posting/main"
 import { toggleExpandAll } from "./posts/images"
 import { page } from "./state"
 import { scrollToElement } from "./scroll"
+import navigate from "./history"
 
 // Bind keyboard event listener to the document
 export default function bindListener() {
@@ -26,7 +27,7 @@ function handleShortcut(event: KeyboardEvent) {
 			const tf = document
 				.querySelector("aside:not(.expanded) .new-thread-button")
 			if (tf) {
-				(tf as HTMLElement).click()
+				tf.click()
 				scrollToElement(tf)
 			}
 			break
@@ -44,6 +45,9 @@ function handleShortcut(event: KeyboardEvent) {
 		case options.workMode:
 			options.workModeToggle = !options.workModeToggle
 			break
+		case 38:
+			navigateUp()
+			break
 		default:
 			caught = false
 	}
@@ -51,5 +55,18 @@ function handleShortcut(event: KeyboardEvent) {
 	if (caught) {
 		event.stopImmediatePropagation()
 		event.preventDefault()
+	}
+}
+
+// Navigate one level up the board tree, if possible
+function navigateUp() {
+	let url: string
+	if (page.thread) {
+		url = `/${page.board}/`
+	} else if (page.board !== "all") {
+		url = "/all/"
+	}
+	if (url) {
+		navigate(url, null, true)
 	}
 }

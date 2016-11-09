@@ -1,18 +1,18 @@
-import AccountFormView, {newRequest, LoginCredentials} from "./common"
-import {BoardConfigs} from "../state"
-import {InputSpec, renderInput, inputType} from '../forms'
-import {admin as lang, fetchAdminPack} from '../lang'
-import {table, makeFrag, makeEl, on} from "../util"
-import {fetchJSON, fetchBoardList, postJSON} from "../json"
-import {loginID, sessionToken} from "./login"
-import {write} from "../render"
-import {formatHeader} from "../page/board"
+import AccountFormView, { newRequest, LoginCredentials } from "./common"
+import { BoardConfigs } from "../state"
+import { InputSpec, renderInput, inputType } from '../forms'
+import { admin as lang, fetchAdminPack } from '../lang'
+import { table, makeFrag, makeEl, on } from "../util"
+import { fetchJSON, fetchBoardList, postJSON } from "../json"
+import { loginID, sessionToken } from "./login"
+import { write } from "../render"
+import { formatHeader } from "../page/board"
 
 // Board configurations that include a subset not available publically
 interface PrivateBoardConfigs extends BoardConfigs {
 	banners: string[]
 	eightball: string[]
-	staff: {[position: string]: string[]}
+	staff: { [position: string]: string[] }
 }
 
 // Request to set the board configs to a new values
@@ -88,8 +88,8 @@ export default class BoardConfigPanel extends AccountFormView {
 		}
 		super(attrs, () =>
 			this.extractRequest()
-			.catch(err =>
-				this.renderFormResponse(err)))
+				.catch(err =>
+					this.renderFormResponse(err)))
 		this.renderSelection()
 			.catch(err =>
 				this.renderFormResponse(err))
@@ -123,22 +123,20 @@ export default class BoardConfigPanel extends AccountFormView {
 		}
 		html += "<br></span>"
 
-		const $board = makeEl(html)
-		const handler = (event: MouseEvent) =>
-			($board.remove(),
-			(this.el.querySelector("input[type=submit]") as HTMLElement)
-				.style.display = "",
-			this.renderConfigs(
-				(event.target as Element)
-				.getAttribute("data-value")))
-		on($board, "click", handler, {
+		const board = makeEl(html)
+		const handler = (event: MouseEvent) => {
+			board.remove()
+			this.el.querySelector("input[type=submit]").style.display = ""
+			const val = (event.target as Element).getAttribute("data-value")
+			this.renderConfigs(val)
+		}
+		on(board, "click", handler, {
 			capture: true,
 			selector: "a",
 		})
 
-		this.renderForm($board)
-		; (this.el.querySelector("input[type=submit]") as HTMLElement)
-			.style.display = "none"
+		this.renderForm(board)
+		this.el.querySelector("input[type=submit]").style.display = "none"
 	}
 
 	// Render the configuration input elements
@@ -169,11 +167,11 @@ export default class BoardConfigPanel extends AccountFormView {
 			const el = this.el
 				.querySelector(`[name=${name}]`) as HTMLInputElement
 			switch (type) {
-			case inputType.boolean:
-				req[name] = el.checked
-				break
-			default:
-				req[name] = el.value
+				case inputType.boolean:
+					req[name] = el.checked
+					break
+				default:
+					req[name] = el.value
 			}
 		}
 		req.eightball = (req.eightball as any).split("\n").slice(0, 100)

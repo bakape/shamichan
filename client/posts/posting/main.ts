@@ -5,7 +5,7 @@ import { Post } from "../models"
 import { FormView } from "./view"
 import FSM from "../../fsm"
 import { connState, connSM } from "../../connection"
-import { write, $threads } from "../../render"
+import { write, threads } from "../../render"
 import { posts as lang } from "../../lang"
 import { on, getClosestID } from "../../util"
 import { deferInit } from "../../defer"
@@ -49,7 +49,7 @@ export const postSM = new FSM<postState, postEvent>(postState.none)
 // Find the post creation button and style it, if any
 function stylePostControls(fn: (el: HTMLElement) => void) {
 	write(() => {
-		const el = $threads.querySelector("aside.posting") as HTMLElement
+		const el = threads.querySelector("aside.posting")
 		if (el) {
 			fn(el)
 		}
@@ -191,12 +191,12 @@ deferInit(() => {
 	})
 
 	// Handle clicks on the [Reply] button
-	on($threads, "click", postSM.feeder(postEvent.open), {
+	on(threads, "click", postSM.feeder(postEvent.open), {
 		selector: "aside.posting a",
 	})
 
 	// Handle clicks on post quoting links
-	on($threads, "click", quotePost, {
+	on(threads, "click", quotePost, {
 		selector: "a.quote",
 		passive: true,
 	})

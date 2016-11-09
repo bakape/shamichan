@@ -3,12 +3,12 @@
 import { page } from "./state"
 import options from "./options"
 import { deferInit } from "./defer"
-import { $threads } from "./render"
+import { threads } from "./render"
 
-const $banner = document.getElementById("banner")
+const banner = document.getElementById("banner")
 
-let $lock: HTMLElement,
-	$reference: Element,
+let lock: HTMLElement,
+	reference: Element,
 	ticking: boolean
 
 // Indicates if the page is scrolled to its bottom
@@ -29,7 +29,7 @@ export function scrollToAnchor() {
 
 // Scroll to particular element and compensate for the banner height
 export function scrollToElement(el: HTMLElement) {
-	window.scrollTo(0, el.offsetTop - $banner.offsetHeight - 5)
+	window.scrollTo(0, el.offsetTop - banner.offsetHeight - 5)
 }
 
 function scrollToTop() {
@@ -53,12 +53,12 @@ export function followDOM(func: () => void) {
 		return scrollToBottom()
 	}
 	// Element was removed or something
-	if (!elExists($reference)) {
+	if (!elExists(reference)) {
 		return
 	}
 
 	// Only compensate, if the height increased above the viewport
-	const delta = topDistance($reference, true) - previous
+	const delta = topDistance(reference, true) - previous
 	if (delta) {
 		window.scrollBy(0, delta)
 	}
@@ -78,11 +78,11 @@ export function checkBottom() {
 	}
 	atBottom = window.innerHeight + window.scrollY
 		>= document.documentElement.offsetHeight
-	if (!$lock) {
-		$lock = document.querySelector("#lock") as HTMLElement
+	if (!lock) {
+		lock = document.querySelector("#lock")
 	}
-	if ($lock) {
-		$lock.style.visibility = atBottom ? "visible" : "hidden"
+	if (lock) {
+		lock.style.visibility = atBottom ? "visible" : "hidden"
 	}
 }
 
@@ -103,8 +103,8 @@ function topDistance(el: Element, skipCheck: boolean): number | null {
 
 // Returns distance of viewport to current reference element
 function referenceDistance(): number {
-	if (elExists($reference)) {
-		const bounds = topDistance($reference, false)
+	if (elExists(reference)) {
+		const bounds = topDistance(reference, false)
 		if (bounds !== null) {
 			return bounds
 		}
@@ -113,10 +113,10 @@ function referenceDistance(): number {
 	// Find new reference element (first inside viewport). Account for empty
 	// boards.
 	for (let sel of ["article", "#threads"]) {
-		for (let el of $threads.querySelectorAll(sel)) {
+		for (let el of threads.querySelectorAll(sel)) {
 			const bounds = topDistance(el, false)
 			if (bounds !== null) {
-				$reference = el
+				reference = el
 				return bounds
 			}
 		}

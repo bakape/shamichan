@@ -6,7 +6,7 @@ import { config, displayLoading } from './state'
 import { HTML, load } from './util'
 import { getObj, putObj } from './db'
 import { write } from './render'
-import { $threadContainer } from "./page/thread"
+import { threadContainer } from "./page/thread"
 
 type BackgroundStore = {
 	id: string
@@ -51,9 +51,10 @@ for (let param of ['theme', 'workModeToggle']) {
 
 // Central render function. Resets state and renders the appropriate background.
 export function render(bg?: BackgroundStore) {
-	write(() =>
-		(container.innerHTML = '',
-			style.innerHTML = ''))
+	write(() => {
+		container.innerHTML = ''
+		style.innerHTML = ''
+	})
 
 	let showOPBG = false
 	if (options.illyaDance && config.illyaDance) {
@@ -83,12 +84,12 @@ function renderIllya() {
 
 // Wrap the OP in a background for better visibility
 function toggleOPBackground(on: boolean) {
-	if ($threadContainer) {
+	if (threadContainer) {
 		write(() => {
 			if (on) {
-				$threadContainer.classList.add("custom-BG")
+				threadContainer.classList.add("custom-BG")
 			} else {
-				$threadContainer.classList.remove("custom-BG")
+				threadContainer.classList.remove("custom-BG")
 			}
 		})
 	}
