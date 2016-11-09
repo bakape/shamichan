@@ -121,7 +121,6 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	if err != nil {
 		return
 	}
-	post.Board = req.Board
 	thread := types.DatabaseThread{
 		ReplyTime: timeStamp,
 		Board:     req.Board,
@@ -212,6 +211,7 @@ func insertPost(data []byte, c *Client) error {
 		return err
 	}
 
+	post.OP = sync.OP
 	post.ID, err = db.ReservePostID()
 	if err != nil {
 		return err
@@ -287,7 +287,8 @@ func getBoardConfig(board string) (conf config.PostParseConfigs, err error) {
 
 // Construct the common parts of the new post for both threads and replies
 func constructPost(
-	req ReplyCreationRequest, forcedAnon, parseBody bool,
+	req ReplyCreationRequest,
+	forcedAnon, parseBody bool,
 	ip, board string,
 ) (
 	post types.DatabasePost, now int64, bodyLength int, err error,
@@ -300,6 +301,7 @@ func constructPost(
 				Time:    now,
 				Email:   parser.FormatEmail(req.Email),
 			},
+			Board: board,
 		},
 		LastUpdated: now,
 		IP:          ip,

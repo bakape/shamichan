@@ -421,16 +421,19 @@ func TestPostCreation(t *testing.T) {
 			OP:    1,
 			Board: "a",
 		},
+		IP:          "::1",
 		LastUpdated: then,
 	}
 
-	var post types.Post
+	var post types.DatabasePost
 	if err := db.One(db.FindPost(6), &post); err != nil {
 		t.Fatal(err)
 	}
 	AssertDeepEquals(t, *post.Image, *stdPost.Image)
 	stdPost.Image = post.Image
-	AssertDeepEquals(t, post, stdPost.Post)
+	stdPost.Password = post.Password
+	stdPost.Log = post.Log
+	AssertDeepEquals(t, post, stdPost)
 
 	assertIP(t, 6, "::1")
 
