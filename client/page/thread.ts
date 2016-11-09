@@ -2,7 +2,7 @@ import { escape } from '../util'
 import { ThreadData, PostData, Post, OP } from '../posts/models'
 import PostView, { OPView } from '../posts/view'
 import { page, posts as postCollection, hidden } from '../state'
-import { $threads, importTemplate } from '../render'
+import { threads, importTemplate } from '../render'
 import options from "../options"
 import { setTitle } from "../tab"
 import { expandAll } from "../posts/images"
@@ -11,7 +11,7 @@ import { renderNotice } from "./common"
 import { updateSyncTimestamp } from "../connection"
 
 // Container for all rendered posts
-export let $threadContainer: HTMLElement
+export let threadContainer: HTMLElement
 
 // Render the HTML of a thread page
 export default function renderThread(thread: ThreadData) {
@@ -23,9 +23,9 @@ export default function renderThread(thread: ThreadData) {
 	setTitle(title)
 	frag.querySelector("h1").innerHTML = title
 
-	$threadContainer = frag.querySelector("#thread-container") as HTMLElement
+	threadContainer = frag.querySelector("#thread-container")
 	if (!options.workModeToggle && (options.userBG || options.illyaDance)) {
-		$threadContainer.classList.add("custom-BG")
+		threadContainer.classList.add("custom-BG")
 	}
 	const els: Element[] = [],
 		{posts} = thread
@@ -49,7 +49,7 @@ export default function renderThread(thread: ThreadData) {
 			els.push(createPost(post))
 		}
 	}
-	$threadContainer.append(...els)
+	threadContainer.append(...els)
 
 	renderNotice(frag)
 
@@ -57,8 +57,8 @@ export default function renderThread(thread: ThreadData) {
 		opView.renderOmit()
 	}
 
-	$threads.innerHTML = ""
-	$threads.append(frag)
+	threads.innerHTML = ""
+	threads.append(frag)
 }
 
 function createPost(data: PostData): Element {

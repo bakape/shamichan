@@ -1,6 +1,6 @@
 import { on, inputValue, applyMixins, makeFrag } from '../../util'
 import { fetchBoardList, fetchBoarConfigs } from "../../json"
-import { write, $threads } from '../../render'
+import { write, threads } from '../../render'
 import { FormView, inputType, renderInput, InputSpec } from '../../forms'
 import { Captcha } from '../../captcha'
 import { PostCredentials, newAllocRequest } from './identity'
@@ -27,24 +27,24 @@ type ThreadCreationResponse = {
 
 // Bind event listener to the thread containerThreadForm
 export default () =>
-	on($threads, "click", e => new ThreadForm(e), {
+	on(threads, "click", e => new ThreadForm(e), {
 		selector: ".new-thread-button",
 	})
 
 // Form view for creating new threads
 class ThreadForm extends FormView implements UploadForm {
-	$aside: Element
-	$board: HTMLSelectElement
-	$uploadContainer: HTMLSpanElement
+	aside: Element
+	board: HTMLSelectElement
+	uploadContainer: HTMLSpanElement
 	selectedBoard: string
 
 	// Does the board require an OP image?
 	needImage: boolean = !boardConfig.textOnly
 
 	// UploadForm properties
-	$spoiler: HTMLSpanElement
-	$uploadStatus: Element
-	$uploadInput: HTMLInputElement
+	spoiler: HTMLSpanElement
+	uploadStatus: Element
+	uploadInput: HTMLInputElement
 	renderUploadForm: () => void
 	uploadFile: () => Promise<FileData>
 	upload: (file: File) => Promise<string>
@@ -54,7 +54,7 @@ class ThreadForm extends FormView implements UploadForm {
 	constructor(event: Event) {
 		super({ class: "new-thread-form" }, () =>
 			this.sendRequest())
-		this.$aside = (event.target as Element).closest("aside")
+		this.aside = (event.target as Element).closest("aside")
 		this.render()
 		handlers[message.insertThread] = (msg: ThreadCreationResponse) =>
 			this.handleResponse(msg)
@@ -82,26 +82,27 @@ class ThreadForm extends FormView implements UploadForm {
 		// Render image upload controls
 		if (!boardConfig.textOnly) {
 			this.renderUploadForm()
-			this.$uploadContainer = document.createElement("span")
-			this.$uploadContainer.setAttribute("class", "upload-container")
-			this.$uploadContainer.append(
-				this.$spoiler,
-				this.$uploadStatus,
+			this.uploadContainer = document.createElement("span")
+			this.uploadContainer.setAttribute("class", "upload-container")
+			this.uploadContainer.append(
+				this.spoiler,
+				this.uploadStatus,
 				document.createElement("br"),
-				this.$uploadInput,
+				this.uploadInput,
 				document.createElement("br"),
 			)
 			if (!this.needImage) {
-				this.$uploadContainer.style.display = "none"
+				this.uploadContainer.style.display = "none"
 			}
-			frag.append(this.$uploadContainer)
+			frag.append(this.uploadContainer)
 		}
 
 		this.renderForm(frag)
-		write(() =>
-			(this.$aside.classList.add("expanded"),
-				this.$aside.append(this.el),
-				(this.el.querySelector("input, select") as HTMLElement).focus()))
+		write(() => {
+			this.aside.classList.add("expanded")
+			this.aside.append(this.el)
+			this.el.querySelector("input, select").focus()
+		})
 	}
 
 	// Initialize the board selection input for the /all/ board and return its
@@ -126,9 +127,9 @@ class ThreadForm extends FormView implements UploadForm {
 		const frag = makeFrag(html)
 
 		// Assign and bind event listener for changes to the board selection
-		this.$board = frag
+		this.board = frag
 			.querySelector("select[name=board]") as HTMLSelectElement
-		on(this.$board, "input", () =>
+		on(this.board, "input", () =>
 			this.toggleUploadForm())
 
 		return frag
@@ -142,29 +143,29 @@ class ThreadForm extends FormView implements UploadForm {
 			display = textOnly ? "none" : ""
 		this.needImage = !textOnly
 		write(() => {
-			(this.$uploadContainer as HTMLElement).style.display = display
-			this.$uploadInput.disabled = textOnly
+			this.uploadContainer.style.display = display
+			this.uploadInput.disabled = textOnly
 		})
 	}
 
 	// Retrieve the currently selected board, if on the /all/ board
 	getSelectedBoard(): string {
-		return this.$board.value.match(/^(\w+) -/)[1]
+		return this.board.value.match(/^(\w+) -/)[1]
 	}
 
 	// Reset new thread form to initial state
 	remove() {
 		super.remove()
 		write(() =>
-			this.$aside.classList.remove("expanded"))
+			this.aside.classList.remove("expanded"))
 	}
 
 	async sendRequest() {
 		write(() => {
 			this.el.querySelector("input[type=submit]").remove()
 			this.el.querySelector("input[name=cancel]").remove()
-			if (this.$uploadContainer) {
-				this.$uploadContainer.querySelector("br:last-child").remove()
+			if (this.uploadContainer) {
+				this.uploadContainer.querySelector("br:last-child").remove()
 			}
 		})
 

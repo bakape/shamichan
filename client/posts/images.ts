@@ -1,7 +1,7 @@
 import { Post, fileTypes } from "./models"
 import View from "../view"
 import { renderFigcaption, renderImage, sourcePath, } from "./render/image"
-import { write, $threads } from "../render"
+import { write, threads } from "../render"
 import options from "../options"
 import { setAttrs, on } from "../util"
 import { getModel, posts } from "../state"
@@ -75,16 +75,15 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes.mp4:
 			case fileTypes.webm:
 				write(() => {
-					const $v = this.el.querySelector("video")
-					if ($v) {
-						$v.remove()
+					const v = this.el.querySelector("video")
+					if (v) {
+						v.remove()
 					}
-					const $a = this.el.querySelector("audio")
-					if ($a) {
-						$a.remove()
+					const a = this.el.querySelector("audio")
+					if (a) {
+						a.remove()
 					}
-					(this.el.querySelector("figure img") as HTMLElement)
-						.hidden = false
+					this.el.querySelector("figure img").hidden = false
 				})
 				break
 		}
@@ -202,9 +201,9 @@ export function toggleExpandAll() {
 	expandAll = !expandAll
 
 	write(() => {
-		const $e = $threads.querySelector("#expand-images")
-		if ($e) {
-			$e.textContent = expandAll ? lang.contract : lang.expand
+		const e = threads.querySelector("#expand-images")
+		if (e) {
+			e.textContent = expandAll ? lang.contract : lang.expand
 		}
 	})
 
@@ -238,16 +237,16 @@ function shouldAutoExpand(model: Post): boolean {
 }
 
 deferInit(() => {
-	on($threads, "click", handleImageClick, {
+	on(threads, "click", handleImageClick, {
 		selector: "img, video",
 	})
 
-	on($threads, "click", toggleHiddenThumbnail, {
+	on(threads, "click", toggleHiddenThumbnail, {
 		passive: true,
 		selector: ".image-toggle",
 	})
 
-	on($threads, "click", toggleExpandAll, {
+	on(threads, "click", toggleExpandAll, {
 		passive: true,
 		selector: "#expand-images",
 	})

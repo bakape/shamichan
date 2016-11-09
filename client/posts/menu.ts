@@ -1,7 +1,7 @@
 import View from "../view"
 import { Post } from "./models"
 import { getModel, mine } from "../state"
-import { $threads, write } from "../render"
+import { threads, write } from "../render"
 import { on, outerWidth } from "../util"
 import * as lang from "../lang"
 import { hidePost } from "./hide"
@@ -39,16 +39,16 @@ const actions: { [key: string]: ItemSpec } = {
 // Post header drop down menu
 class MenuView extends View<Post> {
 	el: HTMLElement
-	$parent: ControlButton
+	parent: ControlButton
 
-	constructor($parent: ControlButton, model: Post) {
+	constructor(parent: ControlButton, model: Post) {
 		super({
 			model,
 			tag: "ul",
 			class: "popup-menu glass",
 		})
-		this.$parent = $parent
-		$parent._popup_menu = this
+		this.parent = parent
+		parent._popup_menu = this
 		this.render()
 		this.on("click", e => this.handleClick(e), {
 			passive: true,
@@ -61,15 +61,15 @@ class MenuView extends View<Post> {
 			if (!shouldRender(this.model)) {
 				continue
 			}
-			const $li = document.createElement("li")
-			$li.setAttribute("data-id", key)
-			$li.textContent = text
-			this.el.append($li)
+			const li = document.createElement("li")
+			li.setAttribute("data-id", key)
+			li.textContent = text
+			this.el.append(li)
 		}
 
-		const {el, $parent} = this
+		const {el, parent} = this
 		write(() =>
-			$parent.append(el))
+			parent.append(el))
 
 		// Calculate position. Can't use CSS translate, because it shifts
 		// the background.
@@ -88,7 +88,7 @@ class MenuView extends View<Post> {
 
 	// Also dereference from parent .control element
 	remove() {
-		this.$parent._popup_menu = null
+		this.parent._popup_menu = null
 		super.remove()
 	}
 }
@@ -108,7 +108,7 @@ function openMenu(e: Event) {
 }
 
 export default function bind() {
-	on($threads, "click", openMenu, {
+	on(threads, "click", openMenu, {
 		passive: true,
 		selector: ".control, .control svg, .control svg path",
 	})

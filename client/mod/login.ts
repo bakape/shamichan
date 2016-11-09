@@ -139,8 +139,7 @@ export default class AccountPanel extends TabbedModal {
 	toggleMenu(show: boolean) {
 		const display = show ? "" : "none"
 		write(() =>
-			(this.el.querySelector(".menu") as HTMLElement)
-			.style.display = display)
+			this.el.querySelector(".menu").style.display = display)
 	}
 }
 

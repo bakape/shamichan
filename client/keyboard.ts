@@ -27,7 +27,7 @@ function handleShortcut(event: KeyboardEvent) {
 			const tf = document
 				.querySelector("aside:not(.expanded) .new-thread-button")
 			if (tf) {
-				(tf as HTMLElement).click()
+				tf.click()
 				scrollToElement(tf)
 			}
 			break

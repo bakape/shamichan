@@ -4,7 +4,7 @@
 
 import { posts, page } from "../state"
 import options from "../options"
-import { $threads, write } from "../render"
+import { threads, write } from "../render"
 import { fileTypes, Post } from "../posts/models"
 
 // Listen for changes on the options object and call appropriate handlers on
@@ -44,8 +44,8 @@ function renderImages() {
 			display = "none"
 		}
 		write(() => {
-			for (let el of $threads.querySelectorAll(".expanded")) {
-				(el as HTMLElement).style.display = display
+			for (let el of threads.querySelectorAll(".expanded")) {
+				el.style.display = display
 			}
 		})
 	} else {

@@ -1,5 +1,5 @@
 import { makeAttrs, makeFrag } from "../util"
-import { $threads, write } from "../render"
+import { threads, write } from "../render"
 import { on } from "../util"
 import { fetchJSON } from "../json"
 import { deferInit } from "../defer"
@@ -130,12 +130,12 @@ async function toggleExpansion(e: MouseEvent) {
 }
 
 deferInit(() => {
-	on($threads, "mouseover", fetchMeta, {
+	on(threads, "mouseover", fetchMeta, {
 		passive: true,
 		selector: ".embed",
 	})
 
-	on($threads, "click", toggleExpansion, {
+	on(threads, "click", toggleExpansion, {
 		selector: ".embed",
 	})
 })

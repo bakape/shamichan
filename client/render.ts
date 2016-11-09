@@ -8,7 +8,7 @@ import {followDOM} from "./scroll"
 type Operation = () => void
 
 // Cached element containing the banners, posts, catalog and other board HTML
-export const $threads = document.querySelector("#threads") as HTMLElement
+export const threads = document.getElementById("threads")
 
 // Holds cached references to all out HTML template tags' contents
 const templates: {[name: string]: DocumentFragment} = {}

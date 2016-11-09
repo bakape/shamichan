@@ -13,7 +13,7 @@ type RadioData = {
 	[index: string]: string|number
 }
 
-let $el = document.querySelector('#banner-center'),
+let el = document.getElementById('banner-center'),
 	data: RadioData = {} as RadioData
 
 // Fetch JSON from R/a/dio's API and rerender the banner, if different data
@@ -41,7 +41,7 @@ async function fetchData() {
 function render() {
 	if (!options.nowPlaying) {
 		write(() =>
-			$el.innerHTML = "")
+			el.innerHTML = "")
 		return
 	}
 
@@ -61,7 +61,7 @@ function render() {
 			</b>
 		</a>`
 	write(() =>
-		$el.innerHTML = html)
+		el.innerHTML = html)
 }
 
 fetchData()

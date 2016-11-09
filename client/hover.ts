@@ -118,7 +118,7 @@ class PostPreview extends ImageHandler {
 	renderUpdates() {
 		const el = clonePost(this.source)
 		this.el.replaceWith(el)
-		this.el = el as HTMLElement
+		this.el = el
 		this.render()
 	}
 

@@ -42,7 +42,7 @@ export default class CaptchaView extends View<Model> {
 	constructor(el: HTMLElement) {
 		super({el})
 		this.el.id = this.id = `captcha-${captchaCounter++}`
-		; (this.el as HTMLElement).hidden = false
+		this.el.hidden = false
 		this.render()
 
 		// Render the captcha widget only after the input field is focused
