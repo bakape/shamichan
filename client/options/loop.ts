@@ -53,7 +53,7 @@ function renderImages() {
 			({image}) =>
 				!!image,
 			({view}) =>
-				view.renderImage(),
+				view.renderImage(false, true),
 		)
 	}
 }
@@ -64,7 +64,7 @@ function toggleSpoilers() {
 		({image}) =>
 			!!image && image.spoiler,
 		({view}) =>
-			view.renderImage(),
+			view.renderImage(false, true),
 	)
 }
 
@@ -74,7 +74,7 @@ function toggleAutoGIF() {
 		({image}) =>
 			!!image && image.fileType === fileTypes.gif,
 		({view}) =>
-			view.renderImage(),
+			view.renderImage(false, true),
 	)
 }
 

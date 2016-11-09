@@ -348,7 +348,7 @@ export class FormView extends PostView implements UploadForm {
 
 	// Insert image into the open post
 	insertImage() {
-		this.renderImage()
+		this.renderImage(false, true)
 		this.removeUploadForm()
 
 		const {$spoiler} = this

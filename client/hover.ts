@@ -1,7 +1,6 @@
 // Post and image hover previews
 
 import { emitChanges, ChangeEmitter } from "./model"
-import View from "./view"
 import { posts, getModel } from "./state"
 import { hook } from "./hooks"
 import options from "./options"
@@ -9,12 +8,13 @@ import { setAttrs, getClosestID } from "./util"
 import { fetchJSON } from "./json"
 import { PostData, Post } from "./posts/models"
 import PostView from "./posts/view"
+import  ImageHandler from "./posts/images"
 
 interface MouseMove extends ChangeEmitter {
 	event: MouseEvent
 }
 
-const $overlay = document.querySelector("#hover-overlay")
+const overlay = document.querySelector("#hover-overlay")
 
 // Currently displayed preview, if any
 let postPreview: PostPreview,
@@ -28,17 +28,21 @@ const mouseMove = emitChanges<MouseMove>({
 } as MouseMove)
 
 // Post hover preview view
-class PostPreview extends View<any> {
+class PostPreview extends ImageHandler {
 	el: HTMLElement
 	clickHandler: EventListener
 	observer: MutationObserver
-	$parent: HTMLAnchorElement
-	$source: HTMLElement
+	parent: HTMLAnchorElement
+	source: HTMLElement
+	sourceModel: Post
 
-	constructor(el: HTMLElement, parent: HTMLAnchorElement) {
+	constructor(model: Post, parent: HTMLAnchorElement) {
+		const {el} = model.view
 		super({ el: clonePost(el) })
-		this.$parent = parent
-		this.$source = el
+		this.parent = parent
+		this.model = Object.assign({}, model)
+		this.sourceModel = model
+		this.source = el
 
 		// Remove on parent click
 		this.clickHandler = () =>
@@ -62,24 +66,36 @@ class PostPreview extends View<any> {
 
 	render() {
 		// Underline reverse post links in preview
-		const linksPost = ">>" + getClosestID(this.$parent)
+		const patt = new RegExp(`[>\/]` + getClosestID(this.parent))
 		for (let el of this.el.querySelectorAll("a.history")) {
-			if (!el.textContent.includes(linksPost)) {
+			if (!patt.test(el.textContent)) {
 				continue
 			}
 			el.classList.add("referenced")
 		}
 
-		if ($overlay.firstChild) {
-			$overlay.firstChild.remove()
+		// Contract any expanded open thumbnails
+		const img = this.sourceModel.image
+		if (img && img.expanded) {
+			// Clone parent model's image and render contracted thumbnail
+			this.model.image = Object.assign({}, this.sourceModel.image)
+			this.contractImage(false, false)
 		}
-		$overlay.append(this.el)
+
+		const fc = overlay.firstChild
+		if (fc !== this.el) {
+			if (fc) {
+				fc.remove()
+			}
+			overlay.append(this.el)
+		}
+
 		this.position()
 	}
 
 	// Position the preview element relative to it's parent link
 	position() {
-		const rect = this.$parent.getBoundingClientRect()
+		const rect = this.parent.getBoundingClientRect()
 
 		// The preview will never take up more than 100% screen width, so no
 		// need for checking horizontal overflow. Must be applied before
@@ -100,7 +116,7 @@ class PostPreview extends View<any> {
 	// Reclone and reposition on update. This is pretty expensive, but good
 	// enough, because only one post will ever be previewed at a time
 	renderUpdates() {
-		const el = clonePost(this.$source)
+		const el = clonePost(this.source)
 		this.el.replaceWith(el)
 		this.el = el as HTMLElement
 		this.render()
@@ -109,7 +125,7 @@ class PostPreview extends View<any> {
 	// Remove reference to this view from the parent element and module
 	remove() {
 		this.observer.disconnect()
-		this.$parent.removeEventListener("click", this.clickHandler)
+		this.parent.removeEventListener("click", this.clickHandler)
 		postPreview = null
 		super.remove()
 	}
@@ -186,7 +202,7 @@ function renderImagePreview(event: MouseEvent) {
 		loop: "",
 	})
 	imagePreview = el
-	$overlay.append(el)
+	overlay.append(el)
 }
 
 async function renderPostPreview(event: MouseEvent) {
@@ -213,7 +229,7 @@ async function renderPostPreview(event: MouseEvent) {
 		post = new Post(data)
 		new PostView(post)
 	}
-	postPreview = new PostPreview(post.view.el, target)
+	postPreview = new PostPreview(post, target)
 }
 
 // Bind mouse movement event listener

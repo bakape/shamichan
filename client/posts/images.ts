@@ -15,20 +15,27 @@ export let expandAll = false
 
 // Mixin for image expansion and related functionality
 export default class ImageHandler extends View<Post> {
-	// Render the figure and figcaption of a post. Optionally set reveal to
-	// true, if in hidden thumbnail mode, to reveal the thumbnail.
-	renderImage(reveal?: boolean) {
-		const img = this.model.image
-		write(() =>
-			(renderFigcaption(this.el.querySelector("figcaption"), img, reveal),
-				renderImage(this.el.querySelector("figure"), img, reveal)))
+	// Render the figure and figcaption of a post. Set reveal to true, if in
+	// hidden thumbnail mode, to reveal the thumbnail. Set delay to false to
+	// only write the changes to DOM on the next animation frame.
+	renderImage(reveal: boolean, delay: boolean) {
+		const fn = () => {
+			const img = this.model.image
+			renderFigcaption(this.el.querySelector("figcaption"), img, reveal)
+			renderImage(this.el.querySelector("figure"), img, reveal)
+		}
+		if (delay) {
+			write(fn)
+		} else {
+			fn()
+		}
 	}
 
 	toggleImageExpansion(event: Event) {
 		const img = this.model.image
 		if (img.expanded) {
 			event.preventDefault()
-			return this.contractImage(false)
+			return this.contractImage(true, true)
 		}
 
 		switch (img.fileType) {
@@ -57,7 +64,9 @@ export default class ImageHandler extends View<Post> {
 		}
 	}
 
-	contractImage(noScroll: boolean) {
+	// Contract an image and optionally omit scrolling to post and delay the
+	// rendering of the change to the next animation frame.
+	contractImage(scroll: boolean, delay: boolean) {
 		const img = this.model.image
 
 		switch (img.fileType) {
@@ -80,11 +89,11 @@ export default class ImageHandler extends View<Post> {
 				break
 		}
 
-		this.renderImage()
+		this.renderImage(false, delay)
 
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
-		if (img.tallerThanViewport && !noScroll) {
+		if (img.tallerThanViewport && scroll) {
 			scrollToElement(this.el)
 		}
 
@@ -184,7 +193,7 @@ function toggleHiddenThumbnail(event: Event) {
 		return
 	}
 	const {revealed} = model.image
-	model.view.renderImage(!revealed)
+	model.view.renderImage(!revealed, true)
 	model.image.revealed = !revealed
 }
 
@@ -207,7 +216,7 @@ export function toggleExpandAll() {
 		if (expandAll) {
 			post.view.expandImage(null, true)
 		} else {
-			post.view.contractImage(true)
+			post.view.contractImage(false, true)
 		}
 	}
 }
