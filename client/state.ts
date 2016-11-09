@@ -56,9 +56,6 @@ export const config: Configs = (window as any).config
 // Currently existing boards
 export let boards: string[] = (window as any).boards
 
-// Indicates, if in mobile mode. Determined server-side.
-export const isMobile: boolean = (window as any).isMobile
-
 export let boardConfig: BoardConfigs = emitChanges({} as BoardConfigs)
 
 // Load initial page state
@@ -139,6 +136,6 @@ export function displayLoading(display: boolean) {
 }
 
 ; (window as any).debugMode = () => {
-	debug = true
-		; (window as any).send = send
+	debug = true;
+	(window as any).send = send
 }

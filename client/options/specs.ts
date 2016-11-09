@@ -1,6 +1,6 @@
 // Specs for individual option models
 
-import { config, isMobile } from '../state'
+import { config } from '../state'
 import { opts as lang } from '../lang'
 import { loadModule, makeEl } from '../util'
 import { write } from "../render"
@@ -110,20 +110,17 @@ export const specs = (): OptionSpec[] => {
 		{
 			id: 'imageHover',
 			default: true,
-			noLoad: isMobile,
 			tab: tabs.general
 		},
 		// WebM hover expansion
 		{
 			id: 'webmHover',
-			noLoad: isMobile,
 			tab: tabs.general
 		},
 
 		// Animated GIF thumbnails
 		{
 			id: 'autogif',
-			noLoad: isMobile,
 			tab: tabs.style,
 		},
 
@@ -138,7 +135,6 @@ export const specs = (): OptionSpec[] => {
 		{
 			id: "notification",
 			tab: tabs.general,
-			noLoad: isMobile,
 			default: true,
 			exec(enabled: boolean) {
 				if (enabled && Notification.permission !== "granted") {
@@ -163,7 +159,7 @@ export const specs = (): OptionSpec[] => {
 		// R/a/dio now playing banner
 		{
 			id: 'nowPlaying',
-			noLoad: isMobile || !config.radio,
+			noLoad: !config.radio,
 			tab: tabs.fun,
 			default: true,
 			noExecOnStart: true,
@@ -175,7 +171,7 @@ export const specs = (): OptionSpec[] => {
 		// Illya dance in the background
 		{
 			id: 'illyaDance',
-			noLoad: isMobile || !config.illyaDance,
+			noLoad:  !config.illyaDance,
 			tab: tabs.fun,
 			noExecOnStart: true,
 			exec: renderBackground,
@@ -183,7 +179,7 @@ export const specs = (): OptionSpec[] => {
 		// Mute Illya dance
 		{
 			id: 'illyaDanceMute',
-			noLoad: isMobile || !config.illyaDance,
+			noLoad:  !config.illyaDance,
 			tab: tabs.fun,
 			noExecOnStart: true,
 			exec: renderBackground,
@@ -230,7 +226,6 @@ export const specs = (): OptionSpec[] => {
 		// Custom user-set background
 		{
 			id: 'userBG',
-			noLoad: isMobile,
 			tab: tabs.style,
 			noExecOnStart: true,
 			exec: renderBackground,
@@ -238,7 +233,6 @@ export const specs = (): OptionSpec[] => {
 		// Upload field for the custom background image
 		{
 			id: 'userBGImage',
-			noLoad: isMobile,
 			type: optionType.image,
 			tab: tabs.style
 		},
@@ -274,7 +268,6 @@ export const specs = (): OptionSpec[] => {
 	for (let spec of keySpecs as OptionSpec[]) {
 		spec.type = optionType.shortcut
 		spec.tab = tabs.shortcuts
-		spec.noLoad = isMobile
 		opts.push(spec)
 	}
 

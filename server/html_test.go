@@ -8,44 +8,23 @@ import (
 )
 
 func TestServeIndexTemplate(t *testing.T) {
-	const (
-		desktopUA = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
-		mobileUA  = "Mozilla/5.0 (Linux; Android 4.1.1; Galaxy Nexus Build/JRO03C) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19"
-	)
 	desktop := templates.Store{
 		HTML: []byte("desktop"),
 		Hash: "dhash",
 	}
-	mobile := templates.Store{
-		HTML: []byte("mobile"),
-		Hash: "mhash",
-	}
 	templates.Set("index", desktop)
-	templates.Set("mobile", mobile)
 	headers := map[string]string{
 		"Content-Type": "text/html",
 	}
 	setBoards(t, "a")
 
-	t.Run("desktop", func(t *testing.T) {
+	t.Run("initial", func(t *testing.T) {
 		t.Parallel()
 
 		rec, req := newPair("/a/")
-		req.Header.Set("User-Agent", desktopUA)
 		router.ServeHTTP(rec, req)
 		assertBody(t, rec, string(desktop.HTML))
 		assertEtag(t, rec, desktop.Hash)
-		assertHeaders(t, rec, headers)
-	})
-
-	t.Run("mobile", func(t *testing.T) {
-		t.Parallel()
-
-		rec, req := newPair("/a/")
-		req.Header.Set("User-Agent", mobileUA)
-		router.ServeHTTP(rec, req)
-		assertBody(t, rec, string(mobile.HTML))
-		assertEtag(t, rec, mobile.Hash+"-mobile")
 		assertHeaders(t, rec, headers)
 	})
 

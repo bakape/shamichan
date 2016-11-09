@@ -5,29 +5,16 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/templates"
-	"github.com/mssola/user_agent"
 )
 
 // Serves the standard HTML for desktop or mobile pages
 func serveIndexTemplate(w http.ResponseWriter, r *http.Request) {
-	isMobile := user_agent.New(r.UserAgent()).Mobile()
-	var template templates.Store
-	if isMobile {
-		template = templates.Get("mobile")
-	} else {
-		template = templates.Get("index")
-	}
-	etag := template.Hash
-	if isMobile {
-		etag += "-mobile"
-	}
-
+	tmpl := templates.Get("index")
 	// If etags match, no need to rerender
-	if checkClientEtag(w, r, etag) {
+	if checkClientEtag(w, r, tmpl.Hash) {
 		return
 	}
-
-	serveHTML(w, r, template.HTML, etag)
+	serveHTML(w, r, tmpl.HTML, tmpl.Hash)
 }
 
 // Apply headers and write HTML to client

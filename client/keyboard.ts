@@ -8,9 +8,7 @@ import { scrollToElement } from "./scroll"
 import navigate from "./history"
 
 // Bind keyboard event listener to the document
-export default function bindListener() {
-	document.addEventListener("keydown", handleShortcut)
-}
+document.addEventListener("keydown", handleShortcut)
 
 function handleShortcut(event: KeyboardEvent) {
 	if (!event.altKey) {

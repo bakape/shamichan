@@ -1,6 +1,6 @@
 // Desktop notifications on reply and such
 
-import { storeSeenReply, isMobile } from "./state"
+import { storeSeenReply } from "./state"
 import options from "./options"
 import { posts as lang } from "./lang"
 import { thumbPath } from "./posts/render/image"
@@ -20,15 +20,7 @@ export default function notifyAboutReply(post: Post) {
 	}
 	repliedToMe()
 
-	if ("vibrate" in navigator) {
-		navigator.vibrate(1000)
-	}
-
-	if (
-		isMobile
-		|| !options.notification
-		|| Notification.permission !== "granted"
-	) {
+	if (!options.notification || Notification.permission !== "granted") {
 		return
 	}
 
@@ -44,6 +36,7 @@ export default function notifyAboutReply(post: Post) {
 	const n = new Notification(lang.quoted, {
 		icon,
 		body: post.body,
+		vibrate: true,
 	})
 	n.onclick = () => {
 		n.close()

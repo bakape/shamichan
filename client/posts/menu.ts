@@ -15,7 +15,7 @@ interface ControlButton extends Element {
 type ItemSpec = {
 	text: string
 	shouldRender: (m: Post) => boolean
-	handler: (m: Post) => void|Promise<void>
+	handler: (m: Post) => void | Promise<void>
 }
 
 // Actions to be performed by the items in the popup menu
@@ -107,9 +107,7 @@ function openMenu(e: Event) {
 	}
 }
 
-export default function bind() {
-	on(threads, "click", openMenu, {
-		passive: true,
-		selector: ".control, .control svg, .control svg path",
-	})
-}
+on(threads, "click", openMenu, {
+	passive: true,
+	selector: ".control, .control svg, .control svg path",
+})

@@ -87,6 +87,7 @@ declare class Notification {
 interface NotificationOptions {
 	body?: string
 	icon?: string
+	vibrate?: boolean
 }
 
 interface Array<T> {

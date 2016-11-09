@@ -9,22 +9,20 @@ import { fileTypes, Post } from "../posts/models"
 
 // Listen for changes on the options object and call appropriate handlers on
 // all applicable posts
-export default function assignListeners() {
-	const handlers: { [key: string]: () => void } = {
-		workModeToggle: renderImages,
-		hideThumbs: renderImages,
-		spoilers: toggleSpoilers,
-		autogif: toggleAutoGIF,
-		anonymise: toggleAnonymisation,
-		relativeTime: renderTime,
-	}
-	for (let key in handlers) {
-		options.onChange(key, handlers[key])
-	}
-
-	// Rerender time every minute, if relative time is set
-	setInterval(renderTime, 60000)
+const handlers: { [key: string]: () => void } = {
+	workModeToggle: renderImages,
+	hideThumbs: renderImages,
+	spoilers: toggleSpoilers,
+	autogif: toggleAutoGIF,
+	anonymise: toggleAnonymisation,
+	relativeTime: renderTime,
 }
+for (let key in handlers) {
+	options.onChange(key, handlers[key])
+}
+
+// Rerender time every minute, if relative time is set
+setInterval(renderTime, 60000)
 
 // Loop over all posts after filtering with `test`
 function loopPosts(test: (post: Post) => boolean, fn: (post: Post) => void) {

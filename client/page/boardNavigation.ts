@@ -16,13 +16,12 @@ let boards: BoardEntry[],
 	lastPanelWidth: number
 
 // View for navigating between boards and selecting w
-export default class BoardNavigation extends View<Model> {
+class BoardNavigation extends View<Model> {
 	constructor() {
 		super({
 			id: "board-navigation",
 			tag: "nav",
 		})
-		navigation = this
 
 		this.render()
 		this.onClick({
@@ -220,3 +219,6 @@ if (sel) {
 		selected.add(b)
 	}
 }
+
+// Start the module
+navigation = new BoardNavigation()

@@ -10,7 +10,6 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
-	"github.com/dchest/htmlmin"
 )
 
 var (
@@ -64,7 +63,7 @@ type Store struct {
 
 // Template variables
 type vars struct {
-	IsMobile, Captcha             bool
+	Captcha                       bool
 	Config                        template.JS
 	Email, ConfigHash, DefaultCSS string
 	ImageSearch                   []imageSearch
@@ -142,7 +141,7 @@ func ParseTemplates() error {
 // hashes and stores them
 func Compile() error {
 	// Only one for now, but there will be more later
-	index, mobile, err := indexTemplate()
+	index, err := buildIndexTemplate()
 	if err != nil {
 		return err
 	}
@@ -150,13 +149,11 @@ func Compile() error {
 	mu.Lock()
 	defer mu.Unlock()
 	resources["index"] = index
-	resources["mobile"] = mobile
 	return nil
 }
 
-// indexTemplate compiles the HTML template for thread and board pages of the
-// imageboard
-func indexTemplate() (desktop Store, mobile Store, err error) {
+// buildIndexTemplate constructs the HTML template array, minifies and hashes it
+func buildIndexTemplate() (store Store, err error) {
 	clientJSON, hash := config.GetClient()
 	conf := config.Get()
 
@@ -171,36 +168,14 @@ func indexTemplate() (desktop Store, mobile Store, err error) {
 		Boards:      config.GetBoards(),
 	}
 
-	// Right now the desktop and mobile templates are almost identical. This
-	// will change, when we get a dedicated mobile GUI.
-	desktop, err = buildIndexTemplate(v, false)
+	w := new(bytes.Buffer)
+	err = tmpl["index"].Execute(w, v)
 	if err != nil {
 		return
 	}
-	mobile, err = buildIndexTemplate(v, true)
-	return
-}
+	buf := w.Bytes()
 
-// buildIndexTemplate constructs the HTML template array, minifies and hashes it
-func buildIndexTemplate(vars vars, isMobile bool) (store Store, err error) {
-	vars.IsMobile = isMobile
-	buffer := new(bytes.Buffer)
-	err = tmpl["index"].Execute(buffer, vars)
-	if err != nil {
-		return
-	}
-
-	minified, err := htmlmin.Minify(buffer.Bytes(), &htmlmin.Options{
-		MinifyScripts: true,
-	})
-	if err != nil {
-		return
-	}
-
-	// Also strip all newlines
-	minified = bytes.Replace(minified, []byte{'\n'}, []byte{}, -1)
-
-	return Store{minified, util.HashBuffer(minified)}, nil
+	return Store{buf, util.HashBuffer(buf)}, nil
 }
 
 // Get retrieves a compiled template by its name

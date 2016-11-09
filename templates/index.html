@@ -37,11 +37,9 @@
 	<script>
 		var config = {{.Config}},
 			configHash = '{{.ConfigHash}}',
-			boards = {{.Boards}},
-			isMobile = {{.IsMobile}};
+			boards = {{.Boards}};
 		if (localStorage.theme !== config.DefaultCSS) {
-			document.getElementById('theme').href =
-				'/assets/css/' + localStorage.theme + '.css'
+			document.getElementById('theme').href = '/assets/css/' + localStorage.theme + '.css'
 		}
 	</script>
 	<!-- Templates for our various views !-->

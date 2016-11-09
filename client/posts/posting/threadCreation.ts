@@ -25,12 +25,6 @@ type ThreadCreationResponse = {
 	id: number
 }
 
-// Bind event listener to the thread containerThreadForm
-export default () =>
-	on(threads, "click", e => new ThreadForm(e), {
-		selector: ".new-thread-button",
-	})
-
 // Form view for creating new threads
 class ThreadForm extends FormView implements UploadForm {
 	aside: Element
@@ -210,3 +204,7 @@ function renderField(spec: InputSpec): string {
 	spec.placeholders = true
 	return renderInput(spec)[1] + "<br>"
 }
+
+on(threads, "click", e => new ThreadForm(e), {
+	selector: ".new-thread-button",
+})
