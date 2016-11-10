@@ -127,7 +127,7 @@ function terminateTags(state: TextState, newLine: boolean): string {
 // Parse a line that is still being edited
 export function parseOpenLine(state: TextState): string {
     if (!state.line) {
-        return ""
+        return "<span></span>"
     }
     return initLine(state.line, state)
         + parseSpoilers(state.line, state, escape)

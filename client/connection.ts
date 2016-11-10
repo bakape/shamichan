@@ -189,7 +189,7 @@ export function updateSyncTimestamp() {
 
 function prepareToSync(): connState {
 	renderStatus(syncStatus.connecting)
-	synchronise(true)
+	synchronise(true).catch(connSM.feeder(connEvent.close))
 	attemptTimer = setTimeout(resetAttempts, 10000) as any
 	return connState.syncing
 }

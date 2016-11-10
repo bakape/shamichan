@@ -1,11 +1,11 @@
-import {Post, OP} from './models'
-import {mine, posts, page} from '../state'
-import {makeFrag, pluralize, HTML} from '../util'
-import renderPost, {renderName, renderTime} from './render/posts'
-import {parseOpenLine, parseTerminatedLine} from './render/body'
-import {write, importTemplate} from '../render'
-import {renderBacklinks} from './render/etc'
-import {posts as lang, navigation} from '../lang'
+import { Post, OP } from './models'
+import { mine, posts, page } from '../state'
+import { makeFrag, pluralize, HTML } from '../util'
+import renderPost, { renderName, renderTime } from './render/posts'
+import { parseOpenLine, parseTerminatedLine } from './render/body'
+import { write, importTemplate } from '../render'
+import { renderBacklinks } from './render/etc'
+import { posts as lang, navigation } from '../lang'
 import ImageHandler from "./images"
 
 // Base post view class
@@ -51,11 +51,17 @@ export default class PostView extends ImageHandler {
 	}
 
 	// Render post into a container and find buffer positions
-	renderContents(container: NodeSelector&ParentNode) {
+	renderContents(container: NodeSelector & ParentNode) {
 		renderPost(container, this.model)
 		if (this.model.editing) {
 			this.blockquote = container.querySelector("blockquote")
-			this.findBuffer(this.blockquote.lastChild)
+			let buf = this.blockquote.lastChild
+			if (!buf) {
+				this.buffer = document.createElement("span")
+				this.blockquote.append(this.buffer)
+			} else {
+				this.findBuffer(buf)
+			}
 		}
 	}
 
@@ -67,6 +73,9 @@ export default class PostView extends ImageHandler {
 		}
 		if (state.spoiler) {
 			b = b.lastChild
+		}
+		if (!b) {
+
 		}
 		this.buffer = b
 	}
@@ -89,13 +98,24 @@ export default class PostView extends ImageHandler {
 		const frag = makeFrag(parseOpenLine(this.model.state))
 		this.findBuffer(frag.firstChild)
 		write(() =>
-			this.lastLine().replaceWith(frag))
+			this.replaceLastLine(frag))
 	}
 
 	// Return the last line of the text body
 	lastLine(): Element {
 		const ch = this.blockquote.children
 		return ch[ch.length - 1]
+    }
+
+	// Replace the contents of the last line, accounting for the possibility of
+    // there being no lines
+	replaceLastLine(node: Node) {
+		const ll = this.lastLine()
+		if (ll) {
+			ll.replaceWith(node)
+        } else {
+			this.blockquote.append(node)
+		}
 	}
 
 	// Append a string to the current text buffer
@@ -119,7 +139,7 @@ export default class PostView extends ImageHandler {
 		const line = this.model.state.line.slice(0, -1),
 			frag = makeFrag(parseTerminatedLine(line, this.model))
 		write(() => {
-			this.lastLine().replaceWith(frag)
+			this.replaceLastLine(frag)
 			this.buffer = document.createElement("span")
 			this.blockquote.append(this.buffer)
 		})
@@ -138,7 +158,7 @@ export default class PostView extends ImageHandler {
 			frag = makeFrag(html)
 		write(() => {
 			this.el.classList.remove("editing")
-			this.lastLine().replaceWith(frag)
+			this.replaceLastLine(frag)
 			this.buffer = this.blockquote = null
 		})
 	}

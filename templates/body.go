@@ -3,12 +3,13 @@ package templates
 import (
 	"bytes"
 	"fmt"
-	"github.com/bakape/meguca/config"
 	"html"
 	"html/template"
 	"net/url"
 	"regexp"
 	"strconv"
+
+	"github.com/bakape/meguca/config"
 )
 
 var (
@@ -283,6 +284,7 @@ func (c *postContext) terminateTags(newLine bool) {
 // Parse a line that is still being edited
 func (c *postContext) parseOpenLine(line []byte) {
 	if len(line) == 0 {
+		c.WriteString("<span></span>")
 		return
 	}
 	c.initLine(line[0])
