@@ -1,10 +1,11 @@
 package templates
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/types"
-	"testing"
 )
 
 func TestRenderBody(t *testing.T) {
@@ -72,7 +73,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name:    "trailing empty open line",
 			in:      "foo\n",
-			out:     "<span>foo<br></span>",
+			out:     "<span>foo<br></span><span></span>",
 			editing: true,
 		},
 		{
