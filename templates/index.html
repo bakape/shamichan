@@ -66,14 +66,14 @@
 	<link rel="manifest" href="/assets/mobile/manifest.json">
 	<!-- Main and theme-specific stylesheets !-->
 	<link rel="stylesheet" href="/assets/css/base.css">
-	<link rel="stylesheet" id="theme" href="/assets/css/{{.DefaultCSS}}.css">
+	<link rel="stylesheet" id="theme-css" href="/assets/css/{{.DefaultCSS}}.css">
 	<!-- Configuration injection and theme adjustment!-->
 	<script>
 		var config = {{.Config}},
 			configHash = '{{.ConfigHash}}',
 			boards = {{.Boards}};
 		if (localStorage.theme !== config.DefaultCSS) {
-			document.getElementById('theme').href = '/assets/css/' + localStorage.theme + '.css'
+			document.getElementById('theme-css').href = '/assets/css/' + localStorage.theme + '.css'
 		}
 	</script>
 	<!-- Templates for our various views !-->

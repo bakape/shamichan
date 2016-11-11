@@ -141,7 +141,7 @@ export const specs: { [id: string]: OptionSpec } = {
 				return
 			}
 			document
-				.getElementById('theme')
+				.getElementById('theme-css')
 				.setAttribute('href', `/assets/css/${theme}.css`)
 		},
 	},
