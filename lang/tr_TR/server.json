@@ -1,1 +1,35 @@
-{}
+{
+	"forms": {
+		"name": [
+			"Name",
+			"Name to attach to new posts"
+		],
+		"email": [
+			"Email",
+			"Email to include in new posts"
+		],
+		"postPassword": [
+			"Password",
+			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+		]
+	},
+	"mod": {
+		"id": "Login",
+		"register": "Register",
+		"logout": "Logout",
+		"logoutAll": "Log out all devices",
+		"changePassword": "Change password",
+		"oldPassword": "Old password",
+		"newPassword": "New password",
+		"password": "Password",
+		"repeat": "Repeat",
+		"mustMatch": "Passwords must match",
+		"nameTaken": "Login name already taken",
+		"wrongCredentials": "Incorrect login name or password",
+		"wrongPassword": "Incorrect password",
+		"theFuck": "SOMEBODY FUCKED UP",
+		"configureServer": "Configure server",
+		"createBoard": "Create board",
+		"configureBoard": "Configure board"
+	}
+}

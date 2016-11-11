@@ -1,11 +1,7 @@
 // Name, email, tripcode and staff title persistence and postform propagation
 
 import { emitChanges, ChangeEmitter } from '../../model'
-import { defer } from '../../defer'
-import { BannerModal } from '../../banner'
-import { identity as lang } from '../../lang'
-import { table, randomID } from '../../util'
-import { inputType, renderInput } from '../../forms'
+import { randomID } from '../../util'
 
 interface Identity extends ChangeEmitter {
 	name: string
@@ -23,14 +19,6 @@ export interface PostCredentials {
 	[index: string]: any
 }
 
-// Maximum lengths of input fields
-const maxLengths: { [key: string]: number } = {
-	name: 50,
-	email: 100,
-	auth: 50,
-	postPassword: 50
-}
-
 // Values of the name and tripcode fields
 const identity = emitChanges({} as Identity)
 export default identity
@@ -46,41 +34,41 @@ if (!stored) {
 }
 identity.postPassword = stored
 
-// Name and email input panel
-class IdentityPanel extends BannerModal {
-	constructor() {
-		super({ id: "identity" })
-		this.on("input", e =>
-			this.onInput(e))
-	}
+// // Name and email input panel
+// class IdentityPanel extends BannerModal {
+// 	constructor() {
+// 		super({ id: "identity" })
+// 		this.on("input", e =>
+// 			this.onInput(e))
+// 	}
 
-	render() {
-		const html = table(["name", "email", "postPassword"], name => {
-			const [label, tooltip] = lang[name]
-			return renderInput({
-				name,
-				label,
-				tooltip,
-				type: inputType.string,
-				value: identity[name],
-				maxLength: maxLengths[name],
-			})
-		})
+// 	render() {
+// 		const html = table(["name", "email", "postPassword"], name => {
+// 			const [label, tooltip] = lang[name]
+// 			return renderInput({
+// 				name,
+// 				label,
+// 				tooltip,
+// 				type: inputType.string,
+// 				value: identity[name],
+// 				maxLength: maxLengths[name],
+// 			})
+// 		})
 
-		this.lazyRender(html)
-	}
+// 		this.lazyRender(html)
+// 	}
 
-	onInput(event: Event) {
-		const el = event.target as HTMLInputElement,
-			name = el.getAttribute("name"),
-			val = el.value
-		localStorage.setItem(name, val)
-		identity[name] = val
-	}
-}
+// 	onInput(event: Event) {
+// 		const el = event.target as HTMLInputElement,
+// 			name = el.getAttribute("name"),
+// 			val = el.value
+// 		localStorage.setItem(name, val)
+// 		identity[name] = val
+// 	}
+// }
 
-defer(() =>
-	new IdentityPanel())
+// defer(() =>
+// 	new IdentityPanel())
 
 // Generate a new base post allocation request
 export function newAllocRequest(): PostCredentials {

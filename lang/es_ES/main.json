@@ -14,12 +14,17 @@
 		"spoiler": "Spoiler",
 		"and": "and",
 		"omitted": "omitted",
-		"post": ["post", "posts"],
-		"image": ["image", "images"],
+		"post": [
+			"post",
+			"posts"
+		],
+		"image": [
+			"image",
+			"images"
+		],
 		"unfinishedPost": "You have an unfinished post",
 		"thumbnailing": "Thumbnailing..."
 	},
-
 	"ui": {
 		"cancel": "Cancelar",
 		"done": "Hecho",
@@ -44,7 +49,6 @@
 			"File count"
 		]
 	},
-
 	"banner": {
 		"worksBestWith": "funciona mejor con",
 		"options": "Options",
@@ -55,18 +59,16 @@
 		"googleSong": "Clock para googlear la cancion",
 		"sync": "Connection status"
 	},
-
 	"images": {
 		"show": "Mostrar",
 		"hide": "Hide",
 		"expand": "Ampliar imágenes",
 		"contract": "Contract Images"
 	},
-
 	"navigation": {
 		"seeAll": "Mostrar todos",
 		"report": "Reportar",
-		"focus":  "Centrar",
+		"focus": "Centrar",
 		"last": "Últimos",
 		"bottom": "Abajo",
 		"expand": "Ampliar",
@@ -77,7 +79,6 @@
 		"catalogOmit": "Respuestas/Imagenes",
 		"rescan": "Rescan"
 	},
-
 	"reports": {
 		"post": "Reportando post",
 		"reporting": "Reportando...",
@@ -85,74 +86,80 @@
 		"setup": "Obteniendo reCAPTCHA...",
 		"loadError": "No se pudo cargar reCATPCHA"
 	},
-
 	"time": {
-		"week": ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"],
+		"week": [
+			"Dom",
+			"Lun",
+			"Mar",
+			"Mie",
+			"Jue",
+			"Vie",
+			"Sab"
+		],
 		"calendar": [
-			"Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep",
-			"Oct", "Nov", "Dic"
+			"Ene",
+			"Feb",
+			"Mar",
+			"Abr",
+			"May",
+			"Jun",
+			"Jul",
+			"Ago",
+			"Sep",
+			"Oct",
+			"Nov",
+			"Dic"
 		],
 		"justNow": "ahora mismo",
-		"minute": ["minute", "minutes"],
-		"hour": ["hour", "hours"],
-		"day": ["day", "days"],
-		"month": ["month", "months"],
-		"year": ["year", "years"],
+		"minute": [
+			"minute",
+			"minutes"
+		],
+		"hour": [
+			"hour",
+			"hours"
+		],
+		"day": [
+			"day",
+			"days"
+		],
+		"month": [
+			"month",
+			"months"
+		],
+		"year": [
+			"year",
+			"years"
+		],
 		"in": "in",
 		"ago": "ago"
 	},
-
-	"sync": ["disconnected", "connecting", "syncing", "synced", "desynced"],
-
+	"sync": [
+		"disconnected",
+		"connecting",
+		"syncing",
+		"synced",
+		"desynced"
+	],
 	"syncwatch": {
 		"starting": "Syncwatch empezando end 10 segundos",
 		"finished": "Terminado"
 	},
-
-	"mod": {
-		"id": "Login",
-		"register": "Register",
-		"logout": "Logout",
-		"logoutAll": "Log out all devices",
-		"changePassword": "Change password",
-		"oldPassword": "Old password",
-		"newPassword": "New password",
-		"password": "Password",
-		"repeat": "Repeat",
-		"mustMatch": "Passwords must match",
-		"nameTaken": "Login name already taken",
-		"wrongCredentials": "Incorrect login name or password",
-		"wrongPassword": "Incorrect password",
-		"theFuck": "SOMEBODY FUCKED UP",
-		"configureServer": "Configure server",
-		"createBoard": "Create board",
-		"configureBoard": "Configure board"
-	},
-
-	"identity": {
-		"name": [
-			"Name",
-			"Name to attach to new posts"
-		],
-		"email": [
-			"Email",
-			"Email to include in new posts"
-		],
-		"postPassword": [
-			"Password",
-			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
-		]
-	},
-
 	"opts": {
-		"tabs": ["General", "Estilo", "Búsqueda", "Entretenimiento", "Atajos"],
+		"tabs": [
+			"General",
+			"Estilo",
+			"Búsqueda",
+			"Entretenimiento",
+			"Atajos"
+		],
 		"modes": {
 			"none": "ninguno",
 			"width": "ajustar a anchura",
 			"screen": "fit to screen"
 		},
 		"importConfig": {
-			"done":"Import successfull. The page will now reload.",
+			"done": "Import successfull. The page will now reload.",
 			"corrupt": "Import failed. File corrupt"
 		},
 		"langApplied": "Opciones de idioma applicadas. La pagina sera recargada ahora.",
@@ -166,7 +173,7 @@
 				"Importar opciones desde archivo"
 			],
 			"hidden": [
-				"Escondido: 0",
+				"Escondido:",
 				"Limpiar posts escondidos"
 			],
 			"hideThumbs": [
@@ -273,11 +280,26 @@
 				"Modo de trabajo",
 				"Esconde las imágenes y deshabilita el fondo personalizado."
 			],
-			"google": ["Google", "Google búsqueda de imágenes"],
-			"iqdb": ["IQDB", "iqdb.org búsqueda de imágenes"],
-			"saucenao": ["SauceNao", "saucenao.com búsqueda de imágenes"],
-			"desustorage": ["DesuStorage", "desustorage.org búsqueda de imágenes"],
-			"exhentai": ["Exhentai", "exhentai.org búsqueda de imágenes"]
+			"google": [
+				"Google",
+				"Google búsqueda de imágenes"
+			],
+			"iqdb": [
+				"IQDB",
+				"iqdb.org búsqueda de imágenes"
+			],
+			"saucenao": [
+				"SauceNao",
+				"saucenao.com búsqueda de imágenes"
+			],
+			"desustorage": [
+				"DesuStorage",
+				"desustorage.org búsqueda de imágenes"
+			],
+			"exhentai": [
+				"Exhentai",
+				"exhentai.org búsqueda de imágenes"
+			]
 		}
 	}
 }

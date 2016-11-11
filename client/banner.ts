@@ -1,12 +1,11 @@
 // Handles all things related to the top banner
 
-import {config} from './state'
 import {defer} from './defer'
 import Modal from './modal'
 import {ViewAttrs} from './view'
 import {banner as lang} from './lang'
 import {write} from './render'
-import {find, HTML} from './util'
+import {find} from './util'
 import Model from './model'
 
 // Stores the views of all BannerModal instances
@@ -131,34 +130,6 @@ export class TabbedModal extends BannerModal {
 		})
 	}
 }
-
-// FAQ and information panel
-class FAQPanel extends BannerModal {
-	constructor() {
-		super({id: "FAQ"})
-	}
-
-	render() {
-		const html = HTML
-			`meguca is licensed under the&nbsp;
-			<a href="https://www.gnu.org/licenses/agpl.html" target="_blank">
-				GNU Affero General Public License
-			</a>
-			<br>
-			Source code repository:&nbsp;
-			<a href="https://github.com/bakape/meguca" target="_blank">
-				github.com/bakape/meguca
-			</a>
-			<hr>
-			${config.FAQ.replace(/\n/g, "<br>")}`
-
-		this.lazyRender(html)
-	}
-}
-
-// Frequently asked questions and other information modal
-defer(() =>
-	new FAQPanel())
 
 // Apply localized hover tooltips to banner links
 function localizeTitles() {

@@ -1,1 +1,35 @@
-{}
+{
+	"forms": {
+		"name": [
+			"Meno",
+			"Name to attach to new posts"
+		],
+		"email": [
+			"Email",
+			"Email to include in new posts"
+		],
+		"postPassword": [
+			"Heslo",
+			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+		]
+	},
+	"mod": {
+		"id": "Prihlásiť",
+		"register": "Registrovať",
+		"logout": "Odhlásiť",
+		"logoutAll": "Odhlásiť zo všetkých zariadení",
+		"changePassword": "Zmeniť heslo",
+		"oldPassword": "Staré heslo",
+		"newPassword": "Nové heslo",
+		"password": "Heslo",
+		"repeat": "Zopakuj",
+		"mustMatch": "Heslá sa musia zhodovať",
+		"nameTaken": "Prihlasovacie meno sa už používa",
+		"wrongCredentials": "Nesprávne heslo alebo prihlasovacie meno",
+		"wrongPassword": "Nesprávne heslo",
+		"theFuck": "NIEKTO SA POSRAL",
+		"configureServer": "Nastaviť server",
+		"createBoard": "Vytvoriť dosku",
+		"configureBoard": "Nastaviť dosku"
+	}
+}

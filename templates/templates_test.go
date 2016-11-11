@@ -24,6 +24,7 @@ func init() {
 
 func TestCompileTemplates(t *testing.T) {
 	config.SetClient([]byte{1}, "hash")
+	(*config.Get()).Captcha = true
 	Set("index", Store{})
 
 	if err := Compile(); err != nil {

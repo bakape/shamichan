@@ -59,7 +59,7 @@ export default class CaptchaView extends View<Model> {
 
 
 	render() {
-		// We need different IDs on all our elements because the spec is
+		// We need different IDs on all our elements, because the spec is
 		// retarded
 		for (let el of this.el.querySelectorAll("*[data-id]")) {
 			el.id = `${el.getAttribute("data-id")}-${this.id}`

@@ -14,12 +14,17 @@
 		"spoiler": "Spoiler",
 		"and": "a",
 		"omitted": "vynechané",
-		"post": ["plagát", "plagáty"],
-		"image": ["obrázok", "obrázky"],
+		"post": [
+			"plagát",
+			"plagáty"
+		],
+		"image": [
+			"obrázok",
+			"obrázky"
+		],
 		"unfinishedPost": "Más nedokončený plagát",
 		"thumbnailing": "Odtlačkujem..."
 	},
-
 	"ui": {
 		"cancel": "Zrušiť",
 		"done": "Hotovo",
@@ -45,7 +50,6 @@
 			"Počtu súborov"
 		]
 	},
-
 	"banner": {
 		"worksBestWith": "works best with",
 		"options": "Options",
@@ -56,14 +60,12 @@
 		"googleSong": "Click to google song",
 		"sync": "Connection status"
 	},
-
 	"images": {
 		"show": "Zobraziť",
 		"hide": "Schovať",
 		"expand": "Expandovať obrázky",
 		"contract": "Zmenšiť obrázky"
 	},
-
 	"navigation": {
 		"seeAll": "Zobraziť všetky",
 		"report": "Nahlásiť",
@@ -78,7 +80,6 @@
 		"catalogOmit": "Odpovede/Obrázky",
 		"rescan": "Znovu naskenovať"
 	},
-
 	"reports": {
 		"post": "Reporting post",
 		"reporting": "Reporting...",
@@ -86,74 +87,80 @@
 		"setup": "Obtaining reCAPTCHA...",
 		"loadError": "Couldn't load reCATPCHA"
 	},
-
 	"time": {
-		"week": ["Nedeľa", "Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok", "Sobota"],
+		"week": [
+			"Nedeľa",
+			"Pondelok",
+			"Utorok",
+			"Streda",
+			"Štvrtok",
+			"Piatok",
+			"Sobota"
+		],
 		"calendar": [
-			"Jan", "Feb", "Mar", "Apr", "Máj", "Jún", "Júl", "Aug", "Sep",
-			"Okt", "Nov", "Dec"
+			"Jan",
+			"Feb",
+			"Mar",
+			"Apr",
+			"Máj",
+			"Jún",
+			"Júl",
+			"Aug",
+			"Sep",
+			"Okt",
+			"Nov",
+			"Dec"
 		],
 		"justNow": "Práve teraz",
-		"minute": ["minúta", "minúty"],
-		"hour": ["hodina", "hodín"],
-		"day": ["deň", "dní"],
-		"month": ["mesiac", "mesiacov"],
-		"year": ["rok", "rokov"],
+		"minute": [
+			"minúta",
+			"minúty"
+		],
+		"hour": [
+			"hodina",
+			"hodín"
+		],
+		"day": [
+			"deň",
+			"dní"
+		],
+		"month": [
+			"mesiac",
+			"mesiacov"
+		],
+		"year": [
+			"rok",
+			"rokov"
+		],
 		"in": "v",
 		"ago": "pred"
 	},
-
-	"sync": ["odpojený", "pripája sa", "synchronizuje sa", "zosynchronizovaný", "desynchronizovaný"],
-
+	"sync": [
+		"odpojený",
+		"pripája sa",
+		"synchronizuje sa",
+		"zosynchronizovaný",
+		"desynchronizovaný"
+	],
 	"syncwatch": {
 		"starting": "Syncwatch starting in 10 seconds",
 		"finished": "Finished"
 	},
-
-	"mod": {
-		"id": "Prihlásiť",
-		"register": "Registrovať",
-		"logout": "Odhlásiť",
-		"logoutAll": "Odhlásiť zo všetkých zariadení",
-		"changePassword": "Zmeniť heslo",
-		"oldPassword": "Staré heslo",
-		"newPassword": "Nové heslo",
-		"password": "Heslo",
-		"repeat": "Zopakuj",
-		"mustMatch": "Heslá sa musia zhodovať",
-		"nameTaken": "Prihlasovacie meno sa už používa",
-		"wrongCredentials": "Nesprávne heslo alebo prihlasovacie meno",
-		"wrongPassword": "Nesprávne heslo",
-		"theFuck": "NIEKTO SA POSRAL",
-		"configureServer": "Nastaviť server",
-		"createBoard": "Vytvoriť dosku",
-		"configureBoard": "Nastaviť dosku"
-	},
-
-	"identity": {
-		"name": [
-			"Meno",
-			"Name to attach to new posts"
-		],
-		"email": [
-			"Email",
-			"Email to include in new posts"
-		],
-		"postPassword": [
-			"Heslo",
-			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
-		]
-	},
-
 	"opts": {
-		"tabs": ["General", "Style", "Image Search", "Fun", "Shortcuts"],
+		"tabs": [
+			"General",
+			"Style",
+			"Image Search",
+			"Fun",
+			"Shortcuts"
+		],
 		"modes": {
 			"none": "none",
 			"width": "fit to width",
 			"screen": "fit to screen"
 		},
 		"importConfig": {
-			"done":"Import successfull. The page will now reload.",
+			"done": "Import successfull. The page will now reload.",
 			"corrupt": "Import failed. File corrupt"
 		},
 		"langApplied": "Language settings applied. The page will now reload.",
@@ -167,7 +174,7 @@
 				"Importovať nastavenia zo súboru"
 			],
 			"hidden": [
-				"Schovaných: 0",
+				"Schovaných:",
 				"Vyčistiť zoznam schovaných plagátov"
 			],
 			"hideThumbs": [
@@ -274,11 +281,26 @@
 				"Work mode",
 				"Hides images and disables user background"
 			],
-			"google": ["Google", "Google image search"],
-			"iqdb": ["IQDB", "iqdb.org image search"],
-			"saucenao": ["SauceNao", "saucenao.com image search"],
-			"desustorage": ["DesuStorage", "desustorage.org image search"],
-			"exhentai": ["Exhentai", "exhentai.org image search"]
+			"google": [
+				"Google",
+				"Google image search"
+			],
+			"iqdb": [
+				"IQDB",
+				"iqdb.org image search"
+			],
+			"saucenao": [
+				"SauceNao",
+				"saucenao.com image search"
+			],
+			"desustorage": [
+				"DesuStorage",
+				"desustorage.org image search"
+			],
+			"exhentai": [
+				"Exhentai",
+				"exhentai.org image search"
+			]
 		}
 	}
 }

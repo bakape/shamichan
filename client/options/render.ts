@@ -135,7 +135,6 @@ function renderMenu({id, list}: OptionSpec): string {
 	return html
 }
 
-// Hidden post reset, Export and Import links to first tab
 function renderExtras(): string {
 	let html = '<br>'
 	const links = ['export', 'import', 'hidden']
@@ -147,7 +146,7 @@ function renderExtras(): string {
 			</a> `
 	}
 
-	// Hidden file input for uploading the JSON
+	//
 	const attrs = {
 		type: 'file',
 		id: 'importSettings',

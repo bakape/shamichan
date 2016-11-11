@@ -14,12 +14,17 @@
 		"spoiler": "Spoiler",
 		"and": "and",
 		"omitted": "omitted",
-		"post": ["cevap", "cevaplar"],
-		"image": ["resim", "resimler"],
+		"post": [
+			"cevap",
+			"cevaplar"
+		],
+		"image": [
+			"resim",
+			"resimler"
+		],
 		"unfinishedPost": "You have an unfinished post",
 		"thumbnailing": "Thumbnailing..."
 	},
-
 	"ui": {
 		"cancel": "İptal",
 		"done": "Tamam",
@@ -44,7 +49,6 @@
 			"File count"
 		]
 	},
-
 	"banner": {
 		"worksBestWith": "en iyi bu browserlar ile uyumludur",
 		"options": "Options",
@@ -55,17 +59,15 @@
 		"googleSong": "Şarkıyı googleda aratmak için tıklayın",
 		"sync": "Connection status"
 	},
-
 	"images": {
 		"show": "Göster",
 		"hide": "Gizle",
 		"expand": "Expand Images",
 		"contract": "Contract Images"
 	},
-
 	"navigation": {
 		"seeAll": "Hepsini göster",
-		"report":"İspiyonla",
+		"report": "İspiyonla",
 		"focus": "Odakla",
 		"last": "Son",
 		"bottom": "Alt",
@@ -77,7 +79,6 @@
 		"catalogOmit": "Cevaplar/Resimler",
 		"rescan": "Tara"
 	},
-
 	"reports": {
 		"post": "Gönderi ispiyonlanıyor",
 		"reporting": "İspiyonlanıyor...",
@@ -85,74 +86,80 @@
 		"setup": "reCAPTCHA alınıyor...",
 		"loadError": "reCATPCHA yüklenemedi"
 	},
-
 	"time": {
-		"week": ["Paz", "Pzt", "Sal", "Çrş", "Prş", "Cu", "Cts"],
+		"week": [
+			"Paz",
+			"Pzt",
+			"Sal",
+			"Çrş",
+			"Prş",
+			"Cu",
+			"Cts"
+		],
 		"calendar": [
-			"Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl",
-			"Eki", "Kas", "Ara"
+			"Oca",
+			"Şub",
+			"Mar",
+			"Nis",
+			"May",
+			"Haz",
+			"Tem",
+			"Ağu",
+			"Eyl",
+			"Eki",
+			"Kas",
+			"Ara"
 		],
 		"justNow": "şimdi",
-		"minute": ["dakika", "dakika"],
-		"hour": ["saat", "saatler"],
-		"day": ["gün", "günler"],
-		"month": ["ay", "ay"],
-		"year": ["yıl", "yıl"],
+		"minute": [
+			"dakika",
+			"dakika"
+		],
+		"hour": [
+			"saat",
+			"saatler"
+		],
+		"day": [
+			"gün",
+			"günler"
+		],
+		"month": [
+			"ay",
+			"ay"
+		],
+		"year": [
+			"yıl",
+			"yıl"
+		],
 		"in": "in",
 		"ago": "ago"
 	},
-
-	"sync": ["disconnected", "connecting", "syncing", "synced", "desynced"],
-
+	"sync": [
+		"disconnected",
+		"connecting",
+		"syncing",
+		"synced",
+		"desynced"
+	],
 	"syncwatch": {
 		"starting": "Syncwatch 10 saniye içinde başlıyor",
 		"finished": "Bitti"
 	},
-
-	"mod": {
-		"id": "Login",
-		"register": "Register",
-		"logout": "Logout",
-		"logoutAll": "Log out all devices",
-		"changePassword": "Change password",
-		"oldPassword": "Old password",
-		"newPassword": "New password",
-		"password": "Password",
-		"repeat": "Repeat",
-		"mustMatch": "Passwords must match",
-		"nameTaken": "Login name already taken",
-		"wrongCredentials": "Incorrect login name or password",
-		"wrongPassword": "Incorrect password",
-		"theFuck": "SOMEBODY FUCKED UP",
-		"configureServer": "Configure server",
-		"createBoard": "Create board",
-		"configureBoard": "Configure board"
-	},
-
-	"identity": {
-		"name": [
-			"Name",
-			"Name to attach to new posts"
-		],
-		"email": [
-			"Email",
-			"Email to include in new posts"
-		],
-		"postPassword": [
-			"Password",
-			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
-		]
-	},
-
 	"opts": {
-		"tabs": ["Genel", "Stil", "ResimAra", "Eğlence", "Kısayollar"],
+		"tabs": [
+			"Genel",
+			"Stil",
+			"ResimAra",
+			"Eğlence",
+			"Kısayollar"
+		],
 		"modes": {
 			"none": "yok",
-			"width":  "genişlemeye sığdır",
+			"width": "genişlemeye sığdır",
 			"screen": "fit to screen"
 		},
 		"importConfig": {
-			"done":"Import successfull. The page will now reload.",
+			"done": "Import successfull. The page will now reload.",
 			"corrupt": "Import failed. File corrupt"
 		},
 		"langApplied": "Dil ayarları uygulandı. Şimdi sayfayı yenileyeceğiz.",
@@ -166,7 +173,7 @@
 				"Ayarları dosyadan al"
 			],
 			"hidden": [
-				"Gizli: 0",
+				"Gizli:",
 				"Gizli girdileri temizle"
 			],
 			"hideThumbs": [
@@ -273,11 +280,26 @@
 				"İş modu",
 				"Resimleri gizler, temayı ve arkaplanı sıfırlar"
 			],
-			"google": ["Google", "Google resim arama"],
-			"iqdb": ["IQDB", "iqdb.org resim arama"],
-			"saucenao": ["SauceNao", "saucenao.com resim arama"],
-			"desustorage": ["DesuStorage", "desustorage.org resim arama"],
-			"exhentai": ["Exhentai", "exhentai.org resim arama"]
+			"google": [
+				"Google",
+				"Google resim arama"
+			],
+			"iqdb": [
+				"IQDB",
+				"iqdb.org resim arama"
+			],
+			"saucenao": [
+				"SauceNao",
+				"saucenao.com resim arama"
+			],
+			"desustorage": [
+				"DesuStorage",
+				"desustorage.org resim arama"
+			],
+			"exhentai": [
+				"Exhentai",
+				"exhentai.org resim arama"
+			]
 		}
 	}
 }

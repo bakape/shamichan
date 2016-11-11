@@ -1,13 +1,13 @@
 // Login/logout facilities for the account system
 
-import {TabbedModal} from '../banner'
-import {write, read} from '../render'
-import {defer} from '../defer'
-import {mod as lang, ui} from '../lang'
-import {loadModule, inputValue, HTML, makeFrag} from '../util'
-import {handlers, send, message} from '../connection'
-import {FormView} from '../forms'
-import {renderFields, validatePasswordMatch} from './common'
+import { TabbedModal } from '../banner'
+import { write, read } from '../render'
+import { defer } from '../defer'
+import { mod as lang, ui } from '../lang'
+import { loadModule, inputValue, HTML, makeFrag } from '../util'
+import { handlers, send, message } from '../connection'
+import { FormView } from '../forms'
+import { renderFields, validatePasswordMatch } from './common'
 
 // Login/Registration response received from the server
 type LoginResponse = {
@@ -40,7 +40,7 @@ export default class AccountPanel extends TabbedModal {
 	render: () => void
 
 	constructor() {
-		super({id: "account-panel"})
+		super({ id: "account-panel" })
 		accountPanel = this
 
 		this.onClick({
@@ -51,14 +51,14 @@ export default class AccountPanel extends TabbedModal {
 			"#logoutAll": () =>
 				alert("TODO"),
 
-			"#changePassword":  this.loadConditionalView("mod/changePassword"),
+			"#changePassword": this.loadConditionalView("mod/changePassword"),
 			"#configureServer": this.loadConditionalView("mod/admin"),
 			"#createBoard": this.loadConditionalView("mod/createBoard"),
 			"#configureBoard": this.loadConditionalView("mod/configureBoard"),
 		})
 
 		this.render = this.renderInitial
-		handlers[message.authenticate]  = (success: boolean) => {
+		handlers[message.authenticate] = (success: boolean) => {
 			if (success) {
 				this.render = this.renderControls
 				if (this.isRendered) {
@@ -132,7 +132,7 @@ export default class AccountPanel extends TabbedModal {
 		return () =>
 			loadModule(path).then(m =>
 				(this.toggleMenu(false),
-				new m.default()))
+					new m.default()))
 	}
 
 	// Either hide or show the selection menu
@@ -149,7 +149,7 @@ defer(() =>
 // Common functionality of LoginForm and RegistrationForm
 class BaseLoginForm extends FormView {
 	constructor(handler: () => void) {
-		super({noCancel: true}, handler)
+		super({ noCancel: true }, handler)
 	}
 
 	// Extract and send login ID and password and captcha (if any) from a form
@@ -168,25 +168,25 @@ class BaseLoginForm extends FormView {
 	loginResponse({code, session}: LoginResponse) {
 		let text: string
 		switch (code) {
-		case responseCode.success:
-			sessionToken = session
-			localStorage.setItem("sessionToken", session)
-			localStorage.setItem("loginID", loginID)
-			accountPanel.renderControls()
-			return
-		case responseCode.nameTaken:
-			text = lang.nameTaken
-			break
-		case responseCode.wrongCredentials:
-			text = lang.wrongCredentials
-			break
-		case responseCode.invalidCaptcha:
-			text = ui.invalidCaptcha
-			break
-		default:
-			// These response codes are never supposed to make it here, because
-			// of HTML5 form validation
-			text = lang.theFuck
+			case responseCode.success:
+				sessionToken = session
+				localStorage.setItem("sessionToken", session)
+				localStorage.setItem("loginID", loginID)
+				accountPanel.renderControls()
+				return
+			case responseCode.nameTaken:
+				text = lang.nameTaken
+				break
+			case responseCode.wrongCredentials:
+				text = lang.wrongCredentials
+				break
+			case responseCode.invalidCaptcha:
+				text = ui.invalidCaptcha
+				break
+			default:
+				// These response codes are never supposed to make it here, because
+				// of HTML5 form validation
+				text = lang.theFuck
 		}
 
 		this.reloadCaptcha(code)

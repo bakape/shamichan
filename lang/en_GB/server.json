@@ -1,1 +1,219 @@
-{}
+{
+	"focusForCaptcha": "Focus to load captcha",
+	"forms": {
+		"name": [
+			"Name",
+			"Name to attach to new posts"
+		],
+		"email": [
+			"Email",
+			"Email to include in new posts"
+		],
+		"postPassword": [
+			"Password",
+			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+		],
+		"id": [
+			"Login",
+			""
+		],
+		"register": [
+			"Register",
+			""
+		],
+		"password": [
+			"Password",
+			""
+		],
+		"repeat": [
+			"Repeat",
+			""
+		],
+		"export": [
+			"Export",
+			"Export options to file"
+		],
+		"import": [
+			"Import",
+			"Import options from file"
+		],
+		"hidden": [
+			"Hidden:",
+			"Clear hidden posts"
+		],
+		"hideThumbs": [
+			"Hide thumbnails",
+			"Display a [Show] button in place of thumbnails"
+		],
+		"lang": [
+			"Language",
+			"Change interface language"
+		],
+		"inlineFit": [
+			"Expansion",
+			"Expand images inside the parent post and resize according to setting"
+		],
+		"thumbs": [
+			"Thumbnails",
+			"Set thumbnail style:\nSmall: 125x125, small file size;\nSharp: 125x125, more detailed;\nHide: hide all images;"
+		],
+		"imageHover": [
+			"Image Hover Expansion",
+			"Display image previews on hover"
+		],
+		"webmHover": [
+			"WebM Hover Expansion",
+			"Display WebM previews on hover. Requires Image Hover Expansion enabled."
+		],
+		"autogif": [
+			"Animated GIF Thumbnails",
+			"Animate GIF thumbnails"
+		],
+		"spoilers": [
+			"Image Spoilers",
+			"Don't spoiler images"
+		],
+		"notification": [
+			"Desktop Notifications",
+			"Get desktop notifications when quoted or a syncwatch is about to start"
+		],
+		"anonymise": [
+			"Anonymise",
+			"Display all posters as anonymous"
+		],
+		"relativeTime": [
+			"Relative Timestamps",
+			"Relative post timestamps. Ex.: '1 hour ago'"
+		],
+		"nowPlaying": [
+			"Now Playing Banner",
+			"Currently playing song on r/a/dio and other stream information in the top banner."
+		],
+		"illyaDance": [
+			"Illya Dance",
+			"Dancing loli in the background"
+		],
+		"illyaDanceMute": [
+			"Mute Illya",
+			"Mute dancing loli"
+		],
+		"horizontalPosting": [
+			"Horizontal Posting",
+			"38chan nostalgia"
+		],
+		"replyRight": [
+			"[Reply] at Right",
+			"Move Reply button to the right side of the page"
+		],
+		"theme": [
+			"Theme",
+			"Select CSS theme"
+		],
+		"userBG": [
+			"Custom Background",
+			"Toggle custom page background"
+		],
+		"userBGImage": [
+			"",
+			"Image to use as the background"
+		],
+		"alwaysLock": [
+			"Always Lock to Bottom",
+			"Lock scrolling to page bottom even when tab is hidden"
+		],
+		"newPost": [
+			"New Post",
+			"Open new post"
+		],
+		"toggleSpoiler": [
+			"Image Spoiler",
+			"Toggle spoiler in the open post"
+		],
+		"done": [
+			"Finish Post",
+			"Close open post"
+		],
+		"expandAll": [
+			"Expand All Images",
+			"Expand all images. Webm, PDF and MP3 and your own post aren't affected. New post images are also expanded."
+		],
+		"workMode": [
+			"Work mode",
+			"Hides images and disables user background"
+		],
+		"workModeToggle": [
+			"Work mode",
+			"Hides images and disables user background"
+		],
+		"google": [
+			"Google",
+			"Google image search"
+		],
+		"iqdb": [
+			"IQDB",
+			"iqdb.org image search"
+		],
+		"saucenao": [
+			"SauceNao",
+			"saucenao.com image search"
+		],
+		"desustorage": [
+			"DesuStorage",
+			"desustorage.org image search"
+		],
+		"exhentai": [
+			"Exhentai",
+			"exhentai.org image search"
+		]
+	},
+	"options": {
+		"none": "none",
+		"width": "fit to width",
+		"screen": "fit to screen"
+	},
+	"mod": {
+		"logout": "Logout",
+		"logoutAll": "Log out all devices",
+		"changePassword": "Change password",
+		"createBoard": "Create board",
+		"configureBoard": "Configure board",
+		"oldPassword": "Old password",
+		"newPassword": "New password",
+		"mustMatch": "Passwords must match",
+		"nameTaken": "Login name already taken",
+		"wrongCredentials": "Incorrect login name or password",
+		"wrongPassword": "Incorrect password",
+		"theFuck": "SOMEBODY FUCKED UP",
+		"configureServer": "Configure server"
+	},
+	"ui": {
+		"cancel": "Cancel",
+		"done": "Done",
+		"send": "Send",
+		"add": "Add",
+		"apply": "Apply",
+		"search": "Search",
+		"invalidCaptcha": "Invalid captcha",
+		"reloadCaptcha": "Click to reload",
+		"submit": "Submit",
+		"rules": "Rules",
+		"close": "Close",
+		"showNotice": "Show Notice",
+		"sortMode": "Sort threads by",
+		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
+		"refresh": "Refresh"
+	},
+	"sortModes": [
+		"Last reply time",
+		"Creation time",
+		"Reply count",
+		"File count"
+	],
+	"tabs": [
+		"General",
+		"Style",
+		"Image Search",
+		"Fun",
+		"Shortcuts"
+	]
+}

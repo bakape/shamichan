@@ -6,9 +6,11 @@ import (
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/lang"
 	"github.com/bakape/meguca/util"
 )
 
@@ -22,16 +24,6 @@ var (
 
 	// clientFileHash is the combined, shortened MD5 hash of all client files
 	clientFileHash string
-
-	imageSearchEngines = []imageSearch{
-		{"google", "G"},
-		{"iqdb", "Iq"},
-		{"saucenao", "Sn"},
-		{"desustorage", "Ds"},
-		{"exhentai", "Ex"},
-	}
-
-	sortModes = []string{"lastReply", "creation", "replyCount", "fileCount"}
 
 	mu sync.RWMutex
 
@@ -66,6 +58,10 @@ type vars struct {
 	Captcha                       bool
 	Config                        template.JS
 	Email, ConfigHash, DefaultCSS string
+	FAQ                           template.HTML
+	Lang                          lang.Pack
+	Identity, Login, Register     []inputSpec
+	Options                       [][]inputSpec
 	ImageSearch                   []imageSearch
 	SortModes, Boards             []string
 }
@@ -87,7 +83,12 @@ func ParseTemplates() error {
 		{"captcha", nil, nil},
 		{"threadForm", []string{"captcha"}, nil},
 		{"article", nil, postFunctions},
-		{"index", nil, nil},
+		{"index", nil, template.FuncMap{
+			"table":  renderTable,
+			"bundle": bundle,
+			"input":  renderInput,
+			"label":  renderLabel,
+		}},
 		{"noscript", nil, nil},
 		{
 			"board",
@@ -158,14 +159,28 @@ func buildIndexTemplate() (store Store, err error) {
 	conf := config.Get()
 
 	v := vars{
-		Config:      template.JS(clientJSON),
-		ConfigHash:  hash,
-		Captcha:     conf.Captcha,
-		Email:       conf.FeedbackEmail,
-		DefaultCSS:  conf.DefaultCSS,
-		ImageSearch: imageSearchEngines,
-		SortModes:   sortModes,
-		Boards:      config.GetBoards(),
+		Config:     template.JS(clientJSON),
+		ConfigHash: hash,
+		Captcha:    conf.Captcha,
+		Email:      conf.FeedbackEmail,
+		DefaultCSS: conf.DefaultCSS,
+		FAQ:        template.HTML(strings.Replace(conf.FAQ, "\n", "<br>", -1)),
+		Boards:     config.GetBoards(),
+		ImageSearch: []imageSearch{
+			{"google", "G"},
+			{"iqdb", "Iq"},
+			{"saucenao", "Sn"},
+			{"desustorage", "Ds"},
+			{"exhentai", "Ex"},
+		},
+		SortModes: []string{
+			"lastReply", "creation", "replyCount", "fileCount",
+		},
+		Identity: specs["identity"],
+		Login:    specs["login"],
+		Register: specs["register"],
+		Options:  optionSpecs,
+		Lang:     lang.Packs["en_GB"],
 	}
 
 	w := new(bytes.Buffer)
@@ -190,4 +205,9 @@ func Set(name string, s Store) {
 	mu.Lock()
 	defer mu.Unlock()
 	resources[name] = s
+}
+
+// Bundles several values for passing down template pipelines together
+func bundle(vals ...interface{}) []interface{} {
+	return vals
 }

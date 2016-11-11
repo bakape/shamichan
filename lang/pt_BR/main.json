@@ -14,12 +14,17 @@
 		"spoiler": "Spoiler",
 		"and": "and",
 		"omitted": "omitted",
-		"post": ["post", "posts"],
-		"image": ["image", "images"],
+		"post": [
+			"post",
+			"posts"
+		],
+		"image": [
+			"image",
+			"images"
+		],
 		"unfinishedPost": "You have an unfinished post",
 		"thumbnailing": "Thumbnailing..."
 	},
-
 	"ui": {
 		"cancel": "Cancelar",
 		"done": "Feito",
@@ -44,7 +49,6 @@
 			"File count"
 		]
 	},
-
 	"banner": {
 		"worksBestWith": "funciona melhor com",
 		"options": "Options",
@@ -55,14 +59,12 @@
 		"googleSong": "Clique para pesquisar (google) a música",
 		"sync": "Connection status"
 	},
-
 	"images": {
 		"show": "Exibir",
 		"hide": "Esconder",
 		"expand": "Expand Images",
 		"contract": "Contract Images"
 	},
-
 	"navigation": {
 		"seeAll": "Ver todos",
 		"report": "Reportar",
@@ -77,7 +79,6 @@
 		"catalogOmit": "Respostas/Imagens",
 		"rescan": "Rescan"
 	},
-
 	"reports": {
 		"post": "Reportando post",
 		"reporting": "Reportando...",
@@ -85,74 +86,80 @@
 		"setup": "Obtendo reCAPTCHA...",
 		"loadError": "Não foi possível carregar o reCATPCHA"
 	},
-
 	"time": {
-		"week": ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"],
+		"week": [
+			"Dom",
+			"Seg",
+			"Ter",
+			"Qua",
+			"Qui",
+			"Sex",
+			"Sab"
+		],
 		"calendar": [
-			"Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set",
-			"Out", "Nov", "Dez"
+			"Jan",
+			"Fev",
+			"Mar",
+			"Abr",
+			"Mai",
+			"Jun",
+			"Jul",
+			"Ago",
+			"Set",
+			"Out",
+			"Nov",
+			"Dez"
 		],
 		"justNow": "agora mesmo",
-		"minute": ["minute", "minutes"],
-		"hour": ["hour", "hours"],
-		"day": ["day", "days"],
-		"month": ["month", "months"],
-		"year": ["year", "years"],
+		"minute": [
+			"minute",
+			"minutes"
+		],
+		"hour": [
+			"hour",
+			"hours"
+		],
+		"day": [
+			"day",
+			"days"
+		],
+		"month": [
+			"month",
+			"months"
+		],
+		"year": [
+			"year",
+			"years"
+		],
 		"in": "in",
 		"ago": "ago"
 	},
-
-	"sync": ["disconnected", "connecting", "syncing", "synced", "desynced"],
-
+	"sync": [
+		"disconnected",
+		"connecting",
+		"syncing",
+		"synced",
+		"desynced"
+	],
 	"syncwatch": {
 		"starting": "Syncwatch começará em 10 segundos",
 		"finished": "Terminado"
 	},
-
-	"mod": {
-		"id": "Login",
-		"register": "Register",
-		"logout": "Logout",
-		"logoutAll": "Log out all devices",
-		"changePassword": "Change password",
-		"oldPassword": "Old password",
-		"newPassword": "New password",
-		"password": "Password",
-		"repeat": "Repeat",
-		"mustMatch": "Passwords must match",
-		"nameTaken": "Login name already taken",
-		"wrongCredentials": "Incorrect login name or password",
-		"wrongPassword": "Incorrect password",
-		"theFuck": "SOMEBODY FUCKED UP",
-		"configureServer": "Configure server",
-		"createBoard": "Create board",
-		"configureBoard": "Configure board"
-	},
-
-	"identity": {
-		"name": [
-			"Name",
-			"Name to attach to new posts"
-		],
-		"email": [
-			"Email",
-			"Email to include in new posts"
-		],
-		"postPassword": [
-			"Password",
-			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
-		]
-	},
-
 	"opts": {
-		"tabs": ["Geral", "Aparência", "Pesquisa", "Diversão", "Atalhos"],
+		"tabs": [
+			"Geral",
+			"Aparência",
+			"Pesquisa",
+			"Diversão",
+			"Atalhos"
+		],
 		"modes": {
 			"none": "nenhum",
 			"width": "ajustar à largura",
 			"screen": "fit to screen"
 		},
 		"importConfig": {
-			"done":"Import successfull. The page will now reload.",
+			"done": "Import successfull. The page will now reload.",
 			"corrupt": "Import failed. File corrupt"
 		},
 		"langApplied": "Configurações de linguagem foram mudadas. Esta página recarregará agora.",
@@ -166,7 +173,7 @@
 				"Importar opções de arquivo"
 			],
 			"hidden": [
-				"Escondidos: 0",
+				"Escondidos:",
 				"Limpa os posts escondidos"
 			],
 			"hideThumbs": [
@@ -273,11 +280,26 @@
 				"Work mode",
 				"Hides images and disables user background"
 			],
-			"google": ["Google", "Google pesquisa de Imagens"],
-			"iqdb": ["IQDB", "iqdb.org pesquisa de Imagens"],
-			"saucenao": ["SauceNao", "saucenao.com pesquisa de Imagens"],
-			"desustorage": ["DesuStorage", "desustorage.org pesquisa de Imagens"],
-			"exhentai": ["Exhentai", "exhentai.org pesquisa de Imagens"]
+			"google": [
+				"Google",
+				"Google pesquisa de Imagens"
+			],
+			"iqdb": [
+				"IQDB",
+				"iqdb.org pesquisa de Imagens"
+			],
+			"saucenao": [
+				"SauceNao",
+				"saucenao.com pesquisa de Imagens"
+			],
+			"desustorage": [
+				"DesuStorage",
+				"desustorage.org pesquisa de Imagens"
+			],
+			"exhentai": [
+				"Exhentai",
+				"exhentai.org pesquisa de Imagens"
+			]
 		}
 	}
 }

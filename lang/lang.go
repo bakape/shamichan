@@ -7,8 +7,7 @@ import (
 )
 
 var (
-	// LangDir is the path to the language pack directory. Overrideable
-	// for tests.
+	// Dir is the path to the language pack directory. Overrideable for tests.
 	Dir = "lang"
 
 	// Packs contains all loaded language packs
@@ -16,7 +15,12 @@ var (
 )
 
 // Pack contains a localization language pack for a single language
-type Pack struct{}
+type Pack struct {
+	FocusForCaptcha  string
+	Tabs             []string
+	Forms            map[string][2]string
+	Mod, UI, Options map[string]string
+}
 
 // Load loads and parses all JSON language packs
 func Load() error {
@@ -25,7 +29,7 @@ func Load() error {
 		return err
 	}
 
-	packs := make(map[string]Pack, len(dirs)-2)
+	Packs = make(map[string]Pack, len(dirs)-2)
 	for _, d := range dirs {
 		if !d.IsDir() {
 			continue
@@ -40,7 +44,7 @@ func Load() error {
 		if err := json.Unmarshal(buf, &p); err != nil {
 			return err
 		}
-		packs[lang] = p
+		Packs[lang] = p
 	}
 
 	return nil

@@ -1,9 +1,10 @@
 package templates
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/types"
-	"testing"
 )
 
 func TestBoard(t *testing.T) {

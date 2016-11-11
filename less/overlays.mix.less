@@ -173,8 +173,11 @@
 		width: 10em;
 	}
 	input.full-width {
-		width: 100%;
+		width: ~"calc(100% - 1px)";
 		box-sizing: border-box;
+	}
+	#modal-overlay > & {
+		display: none;
 	}
 }
 
@@ -195,10 +198,6 @@
 
 .modal, #banner, .side-panel:not(:empty), .reply-form, .popup-menu, .preview {
 	box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
-}
-
-.banner-modal {
-	display: none;
 }
 
 .preview {
