@@ -2,7 +2,7 @@
 
 import stackBlur from './stackBlur'
 import options from './options'
-import { config, displayLoading } from './state'
+import { displayLoading } from './state'
 import { HTML, load } from './util'
 import { getObj, putObj } from './db'
 import { write } from './render'
@@ -38,9 +38,10 @@ const colourMap: { [key: string]: BackgroundGradients } = {
 }
 
 container.id = 'user-background'
-write(() =>
-	(document.body.append(container),
-		document.head.append(style)))
+write(() => {
+	document.body.append(container)
+	document.head.append(style)
+})
 
 // Listen to  changes in related options, that do not call render() directly
 const handler = () =>
@@ -57,7 +58,7 @@ export function render(bg?: BackgroundStore) {
 	})
 
 	let showOPBG = false
-	if (options.illyaDance && config.illyaDance) {
+	if (options.illyaDance) {
 		renderIllya()
 		showOPBG = true
 	} else if (options.userBG && !options.workModeToggle) {

@@ -151,7 +151,7 @@ func (w *htmlWriter) writeSelect(spec inputSpec) {
 
 	for _, o := range spec.options {
 		w.WriteString("<option")
-		w.writeAttr("value", spec.id)
+		w.writeAttr("value", o)
 		if o == val {
 			w.writeAttr("selected", "selected")
 		}

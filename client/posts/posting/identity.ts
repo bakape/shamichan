@@ -2,6 +2,8 @@
 
 import { emitChanges, ChangeEmitter } from '../../model'
 import { randomID } from '../../util'
+import { BannerModal } from "../../banner"
+import { write } from "../../render"
 
 interface Identity extends ChangeEmitter {
 	name: string
@@ -34,41 +36,34 @@ if (!stored) {
 }
 identity.postPassword = stored
 
-// // Name and email input panel
-// class IdentityPanel extends BannerModal {
-// 	constructor() {
-// 		super({ id: "identity" })
-// 		this.on("input", e =>
-// 			this.onInput(e))
-// 	}
+// Name and email input panel
+class IdentityPanel extends BannerModal {
+	constructor() {
+		super(document.getElementById("identity"))
+		this.on("input", e =>
+			this.onInput(e))
+		this.assignValues()
+	}
 
-// 	render() {
-// 		const html = table(["name", "email", "postPassword"], name => {
-// 			const [label, tooltip] = lang[name]
-// 			return renderInput({
-// 				name,
-// 				label,
-// 				tooltip,
-// 				type: inputType.string,
-// 				value: identity[name],
-// 				maxLength: maxLengths[name],
-// 			})
-// 		})
+	assignValues() {
+		write(() => {
+			for (let key of ["name", "email", "postPassword"]) {
+				(this.el.querySelector(`input[name=${key}]`) as HTMLInputElement)
+					.value = identity[key]
+			}
+		})
+	}
 
-// 		this.lazyRender(html)
-// 	}
+	onInput(event: Event) {
+		const el = event.target as HTMLInputElement,
+			name = el.getAttribute("name"),
+			val = el.value
+		localStorage.setItem(name, val)
+		identity[name] = val
+	}
+}
 
-// 	onInput(event: Event) {
-// 		const el = event.target as HTMLInputElement,
-// 			name = el.getAttribute("name"),
-// 			val = el.value
-// 		localStorage.setItem(name, val)
-// 		identity[name] = val
-// 	}
-// }
-
-// defer(() =>
-// 	new IdentityPanel())
+new IdentityPanel()
 
 // Generate a new base post allocation request
 export function newAllocRequest(): PostCredentials {

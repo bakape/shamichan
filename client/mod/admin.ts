@@ -8,9 +8,7 @@ import { langs, themes } from '../options/specs'
 type ServerConfigs = {
 	pruneThreads: boolean
 	pruneBoards: boolean
-	radio: boolean
 	hats: boolean
-	illyaDance: boolean
 	pyu: boolean
 	maxWidth: number
 	maxHeight: number
@@ -89,14 +87,6 @@ const specs: InputSpec[] = [
 		name: "defaultCSS",
 		type: inputType.select,
 		choices: themes,
-	},
-	{
-		name: "radio",
-		type: inputType.boolean,
-	},
-	{
-		name: "illyaDance",
-		type: inputType.boolean,
 	},
 	{
 		name: "pyu",

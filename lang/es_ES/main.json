@@ -173,7 +173,7 @@
 				"Importar opciones desde archivo"
 			],
 			"hidden": [
-				"Escondido:",
+				"Escondido: 0",
 				"Limpiar posts escondidos"
 			],
 			"hideThumbs": [

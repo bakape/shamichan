@@ -10,9 +10,7 @@ import { send } from './connection'
 
 // Server-wide global configurations
 interface Configs extends ChangeEmitter {
-	radio: boolean
 	hats: boolean
-	illyaDance: boolean
 	captcha: boolean
 	mature: boolean // Website intended for mature audiences
 	defaultLang: string

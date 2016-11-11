@@ -1,10 +1,9 @@
 import { TabbedModal } from '../banner'
-import renderContents from './render'
 import { models, default as options } from '../options'
 import { optionType } from './specs'
 import { loadModule, load } from '../util'
 import { opts as lang } from '../lang'
-import { write, read } from '../render'
+import { write } from '../render'
 import { clearHidden } from "../posts/hide"
 import { hidden } from "../state"
 
@@ -13,12 +12,16 @@ export let panel: OptionsPanel
 
 // View of the options panel
 export default class OptionsPanel extends TabbedModal {
-	hidden: Element
+	hidden: HTMLElement
 	import: HTMLInputElement
 
 	constructor() {
-		super({ id: 'options' })
+		super(document.getElementById("options"))
 		panel = this
+		this.hidden = document.getElementById('hidden')
+		this.import = this.el
+			.querySelector("#importSettings") as HTMLInputElement
+
 		this.onClick({
 			'#export': () =>
 				this.exportConfigs(),
@@ -29,19 +32,9 @@ export default class OptionsPanel extends TabbedModal {
 		this.on('change', e =>
 			this.applyChange(e))
 
-	}
-
-	// Render the contents of the options panel and insert it into the DOM
-	render() {
-		this.lazyRender(renderContents())
+		this.renderHidden(hidden.size)
 		write(() =>
 			this.assignValues())
-		read(() => {
-			this.hidden = this.el.querySelector('#hidden')
-			this.renderHidden(hidden.size)
-			this.import =
-				this.el.querySelector("#importSettings") as HTMLInputElement
-		})
 	}
 
 	// Assign loaded option settings to the respective elements in the options
@@ -57,12 +50,7 @@ export default class OptionsPanel extends TabbedModal {
 	// Assign a single option value. Called on changes to the options externally
 	// not from the options panel
 	assignValue(id: string, type: optionType, val: any) {
-		const el = this.el.querySelector('#' + id) as HTMLInputElement
-
-		// Panel not rendered yet
-		if (!el) {
-			return
-		}
+		const el = document.getElementById(id) as HTMLInputElement
 
 		switch (type) {
 			case optionType.checkbox:
@@ -164,9 +152,6 @@ export default class OptionsPanel extends TabbedModal {
 
 	// Render Hidden posts counter
 	renderHidden(count: number) {
-		if (!this.isRendered) {
-			return
-		}
 		write(() => {
 			const el = this.hidden
 			el.textContent = el.textContent.replace(/\d+$/, count.toString())

@@ -63,7 +63,7 @@ type vars struct {
 	Identity, Login, Register     []inputSpec
 	Options                       [][]inputSpec
 	ImageSearch                   []imageSearch
-	SortModes, Boards             []string
+	SortModes, Boards, FormMenu   []string
 }
 
 // Definition for an image search link
@@ -175,6 +175,10 @@ func buildIndexTemplate() (store Store, err error) {
 		},
 		SortModes: []string{
 			"lastReply", "creation", "replyCount", "fileCount",
+		},
+		FormMenu: []string{
+			"logout", "logoutAll", "changePassword", "createBoard",
+			"configureBoard", "configureServer",
 		},
 		Identity: specs["identity"],
 		Login:    specs["login"],

@@ -50,13 +50,9 @@ class OptionModel {
 	spec: OptionSpec
 
 	// Create new option model from template spec
-	constructor(spec: OptionSpec) {
-		// Condition for loading option. Optional.
-		if (spec.noLoad) {
-			return
-		}
+	constructor(id: string, spec: OptionSpec) {
 		this.spec = spec
-		this.id = this.spec.id
+		this.id = id
 
 		// No type = checkbox + default false
 		if (!spec.type) {
@@ -131,8 +127,8 @@ class OptionModel {
 // Initialize options system
 deferInit(() => {
 	// Populate option model collection and central model
-	for (let spec of specs()) {
-		new OptionModel(spec)
+	for (let id in specs) {
+		new OptionModel(id, specs[id])
 	}
 
 	// Conditionally load and execute optional modules

@@ -1,19 +1,16 @@
 // Handles all things related to the top banner
 
-import {defer} from './defer'
-import Modal from './modal'
-import {ViewAttrs} from './view'
-import {banner as lang} from './lang'
-import {write} from './render'
-import {find} from './util'
-import Model from './model'
+import { defer } from './defer'
+import { banner as lang } from './lang'
+import { write } from './render'
+import View from "./view"
+import Model from "./model"
 
 // Stores the views of all BannerModal instances
-export const bannerModals: {[key: string]: BannerModal} = {}
+export const bannerModals: { [key: string]: BannerModal } = {}
 
 // View of the modal currently displayed, if any
 let visible: BannerModal
-const overlay = document.querySelector("#modal-overlay")
 
 // Highlight options button by fading out and in, if no options are set
 function highlightBanner(name: string) {
@@ -34,36 +31,18 @@ function highlightBanner(name: string) {
 
 defer(() =>
 	["options", "FAQ", "identity", "account"]
-	.forEach(highlightBanner))
+		.forEach(highlightBanner))
 
 // A modal element, that is positioned fixed right beneath the banner
-export class BannerModal extends Modal<Model> {
-	// Are the contents already rendered? Used for lazy rendering.
-	isRendered: boolean
-
-	constructor(args: ViewAttrs) {
-		let cls = "banner-modal"
-		if (args.class) {
-			cls += " " + args.class
-		}
-		args.class = cls
-		super(args)
+export class BannerModal extends View<Model> {
+	constructor(el: HTMLElement) {
+		super({ el })
 		bannerModals[this.id] = this
 
 		// Add click listener to the toggle button of the modal in the banner
 		document
 			.querySelector('#banner-' + (this.id as string).split('-')[0])
-			.addEventListener('click', () => this.toggle(), {capture: true})
-		write(() =>
-			overlay.append(this.el))
-	}
-
-	// Inert the HTML into the element and set flag to true for lazy rendering
-	lazyRender(html: string) {
-		write(() => {
-			this.el.innerHTML = html
-			this.isRendered = true
-		})
+			.addEventListener('click', () => this.toggle(), { capture: true })
 	}
 
 	// Show the element, if hidden, hide - if shown. Hide already visible
@@ -82,11 +61,6 @@ export class BannerModal extends Modal<Model> {
 
 	// Unhide the element. If the element has not been rendered yet, do it.
 	show() {
-		if (!this.isRendered) {
-			// All child classes must implement the .render() method.
-			// Tell TS to fuck off for this one.
-			(this as any).render()
-		}
 		write(() =>
 			this.el.style.display = 'block')
 		visible = this
@@ -102,8 +76,8 @@ export class BannerModal extends Modal<Model> {
 
 // A view that supports switching between multiple tabs
 export class TabbedModal extends BannerModal {
-	constructor(args: ViewAttrs) {
-		super(args)
+	constructor(el: HTMLElement) {
+		super(el)
 		this.onClick({
 			'.tab-link': e =>
 				this.switchTab(e),
@@ -123,10 +97,12 @@ export class TabbedModal extends BannerModal {
 			// Select the new one
 			el.classList.add('tab-sel')
 			const id = el.getAttribute('data-id')
-			find<Element>(this.el.querySelector(".tab-cont").children, li =>
-				li.getAttribute('data-id') === id
-			)
-				.classList.add('tab-sel')
+			for (let el of this.el.querySelectorAll(`.tab-cont > div`)) {
+				if (el.getAttribute("data-id") !== id) {
+					continue
+				}
+				el.classList.add("tab-sel")
+			}
 		})
 	}
 }
@@ -139,11 +115,13 @@ function localizeTitles() {
 	setTitle('sync', 'sync')
 }
 
+new BannerModal(document.getElementById("FAQ"))
+
 defer(localizeTitles)
 
 // Set the title of an element to a localized string
 export function setTitle(id: string, langID: string) {
 	write(() =>
 		document.querySelector('#' + id)
-		.setAttribute('title', lang[langID]))
+			.setAttribute('title', lang[langID]))
 }

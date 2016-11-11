@@ -49,6 +49,7 @@
 			</a>
 		{{end}}
 	</div>
+	<hr>
 {{end}}
 
 <!doctype html>
@@ -267,20 +268,29 @@
 			</div>
 			<!-- Account login and registration -->
 			<div id="account-panel" class="modal glass">
-				{{$f := .Lang.Forms}}
-				{{template "tabButts" (bundle (index $f "id" 0) (index $f "register" 0))}}
-				<hr>
-				<div class="tab-cont">
-					<div class="tab-sel" data-id="0">
-						{{table .Login .Lang}}
-						{{template "captcha" (bundle "login" $)}}
-						<input type="submit" value="{{index .Lang.UI "submit"}}">
+				<div id="login-forms">
+					{{$f := .Lang.Forms}}
+					{{template "tabButts" (bundle (index $f "id" 0) (index $f "register" 0))}}
+					<div class="tab-cont">
+						<div class="tab-sel" data-id="0">
+							{{table .Login .Lang}}
+							{{template "captcha" (bundle "login" $)}}
+							<input type="submit" value="{{index .Lang.UI "submit"}}">
+						</div>
+						<div data-id="1">
+							{{table .Register .Lang}}
+							{{template "captcha" (bundle "register" $)}}
+							<input type="submit" value="{{index .Lang.UI "submit"}}">
+						</div>
 					</div>
-					<div data-id="1">
-						{{table .Register .Lang}}
-						{{template "captcha" (bundle "register" $)}}}
-						<input type="submit" value="{{index .Lang.UI "submit"}}">
-					</div>
+				</div>
+				<div id="form-selection" class="hidden">
+					{{range .FormMenu}}
+						<a id="{{.}}">
+							{{index $.Lang.Mod .}}
+						</a>
+						<br>
+					{{end}}
 				</div>
 			</div>
 			<!-- Options panel -->

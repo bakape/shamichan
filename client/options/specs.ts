@@ -8,13 +8,7 @@ import { write } from "../render"
 // Types of option models
 export const enum optionType { checkbox, number, image, shortcut, menu }
 
-// Options panel display tabs
-export const enum tabs { general, style, imagesearch, fun, shortcuts }
-
 // Can't  use enums for ones below, because they persist to localStorage
-
-// Thumbnail expansion modes
-export const thumbExpansions = ['none', 'width', 'screen']
 
 // Available themes. Change this, when adding any new ones.
 export const themes = [
@@ -29,18 +23,9 @@ export type OptionValue = boolean | string | number
 
 // Full schema of the option interface
 export type OptionSpec = {
-	// Identifier of the option. Used for DOM element and localStorage tagging
-	id: string
-
 	// Type of option. Determines storage and rendering method. Defaults to
 	// 'checkbox', if omitted.
 	type?: optionType
-
-	// Index of the tab the option belong to
-	tab: tabs
-
-	// Items to place in a <select> list
-	list?: string[]
 
 	// Default value. false, if omitted.
 	default?: OptionValue
@@ -51,227 +36,166 @@ export type OptionSpec = {
 	// Should the function not be executed on model population?
 	noExecOnStart?: boolean
 
-	// Condition, when not to display and execute the option
-	noLoad?: boolean
-
 	// Function that validates the users input
 	validation?: (val: OptionValue) => boolean
-
-	// Don't show the option to the user in the option's panel
-	hidden?: boolean
 }
 
-// Same handler fot toggling Illya dance, adn user backgrounds
-const renderBackground = () =>
+// Same handler fot toggling Illya dance, and user backgrounds
+function renderBackground() {
 	loadModule('background').then(m =>
 		m.render())
+}
 
-// Option position in the options panel is defined by order in the
-// array. A function, so we can ensure it is not created before state.ts is
-// loaded.
-export const specs = (): OptionSpec[] => {
-	const opts = [
-		// Language selection
-		{
-			id: 'lang',
-			type: optionType.menu,
-			list: langs,
-			tab: tabs.general,
-			default: config.defaultLang,
-			noExecOnStart: true,
-			exec() {
-				alert(lang.langApplied)
-				location.reload()
-			},
+// Specifications of option behavior, where needed. Some properties defined as
+// getters to prevent race with "state" module
+export const specs: { [id: string]: OptionSpec } = {
+	// Language selection
+	lang: {
+		type: optionType.menu,
+		get default() {
+			return config.defaultLang
 		},
-
-		// Thumbnail inline expansion mode
-		{
-			id: 'inlineFit',
-			type: optionType.menu,
-			list: thumbExpansions,
-			tab: tabs.style,
-			default: 'width'
+		noExecOnStart: true,
+		exec() {
+			alert(lang.langApplied)
+			location.reload()
 		},
-
-		// Hide thumbnails, until explicitly revealed
-		{
-			id: 'hideThumbs',
-			tab: tabs.style,
+	},
+	// Thumbnail inline expansion mode
+	inlineFit: {
+		type: optionType.menu,
+		default: "width",
+	},
+	// Hide thumbnails
+	hideThumbs: {},
+	// Boss key toggle
+	workModeToggle: {
+		type: optionType.checkbox,
+		default: false,
+		exec: toggleHeadStyle("work-mode", ".image-banner{display: none;}"),
+	},
+	// Image hover expansion
+	imageHover: {},
+	// WebM hover expansion
+	webmHover: {},
+	// Animated GIF thumbnails
+	autogif: {},
+	// Enable thumbnail spoilers
+	spoilers: {
+		default: true,
+	},
+	// Desktop Notifications
+	notification: {
+		default: true,
+		exec(enabled: boolean) {
+			if (enabled && Notification.permission !== "granted") {
+				Notification.requestPermission()
+			}
 		},
-
-		{
-			id: "workModeToggle",
-			tab: tabs.style,
-			exec: toggleHeadStyle("work-mode", ".image-banner{display: none;}"),
+	},
+	// Anonymise all poster names
+	anonymise: {},
+	// Relative post timestamps
+	relativeTime: {},
+	// R/a/dio now playing banner
+	nowPlaying: {
+		noExecOnStart: true,
+		exec() {
+			loadModule("r-a-dio")
 		},
-
-		// Image hover expansion
-		{
-			id: 'imageHover',
-			default: true,
-			tab: tabs.general
+	},
+	// Illya dance in the background
+	illyaDance: {
+		noExecOnStart: true,
+		exec: renderBackground,
+	},
+	// Mute Illya dance
+	illyaDanceMute: {
+		noExecOnStart: true,
+		exec: renderBackground,
+	},
+	// Tile posts horizontally too
+	horizontalPosting: {
+		exec: toggleHeadStyle(
+			'horizontal',
+			'article,aside{display:inline-block;}'
+			+ '#thread-container{display:block;}'
+		)
+	},
+	// Move [Reply] to the right side of the screen
+	replyRight: {
+		exec: toggleHeadStyle(
+			'reply-at-right',
+			'aside.posting{margin: -26px 0 2px auto;}'
+		)
+	},
+	// Change theme
+	theme: {
+		type: optionType.menu,
+		get default() {
+			return config.defaultCSS
 		},
-		// WebM hover expansion
-		{
-			id: 'webmHover',
-			tab: tabs.general
+		noExecOnStart: true,
+		exec(theme: string) {
+			if (!theme) {
+				return
+			}
+			document
+				.getElementById('theme')
+				.setAttribute('href', `/assets/css/${theme}.css`)
 		},
-
-		// Animated GIF thumbnails
-		{
-			id: 'autogif',
-			tab: tabs.style,
-		},
-
-		// Enable thumbnail spoilers
-		{
-			id: 'spoilers',
-			tab: tabs.style,
-			default: true,
-		},
-
-		// Desktop Notifications
-		{
-			id: "notification",
-			tab: tabs.general,
-			default: true,
-			exec(enabled: boolean) {
-				if (enabled && Notification.permission !== "granted") {
-					Notification.requestPermission()
-				}
-			},
-		},
-
-		// Anonymise all poster names
-		{
-			id: 'anonymise',
-			tab: tabs.general,
-		},
-
-		// Relative post timestamps
-		{
-			id: 'relativeTime',
-			tab: tabs.general,
-			default: false,
-		},
-
-		// R/a/dio now playing banner
-		{
-			id: 'nowPlaying',
-			noLoad: !config.radio,
-			tab: tabs.fun,
-			default: true,
-			noExecOnStart: true,
-			exec() {
-				loadModule("r-a-dio")
-			},
-		},
-
-		// Illya dance in the background
-		{
-			id: 'illyaDance',
-			noLoad:  !config.illyaDance,
-			tab: tabs.fun,
-			noExecOnStart: true,
-			exec: renderBackground,
-		},
-		// Mute Illya dance
-		{
-			id: 'illyaDanceMute',
-			noLoad:  !config.illyaDance,
-			tab: tabs.fun,
-			noExecOnStart: true,
-			exec: renderBackground,
-		},
-
-		// Tile posts horizontally too
-		{
-			id: 'horizontalPosting',
-			tab: tabs.fun,
-			exec: toggleHeadStyle(
-				'horizontal',
-				'article,aside{display:inline-block;}'
-				+ '#thread-container{display:block;}'
-			)
-		},
-		// Move [Reply] to the right side of the screen
-		{
-			id: 'replyRight',
-			tab: tabs.style,
-			exec: toggleHeadStyle(
-				'reply-at-right',
-				'aside.posting{margin: -26px 0 2px auto;}'
-			)
-		},
-
-		// Change theme
-		{
-			id: 'theme',
-			type: optionType.menu,
-			list: themes,
-			tab: tabs.style,
-			default: config.defaultCSS,
-			noExecOnStart: true,
-			exec(theme: string) {
-				if (!theme) {
-					return
-				}
-				document
-					.getElementById('theme')
-					.setAttribute('href', `/assets/css/${theme}.css`)
-			},
-		},
-
-		// Custom user-set background
-		{
-			id: 'userBG',
-			tab: tabs.style,
-			noExecOnStart: true,
-			exec: renderBackground,
-		},
-		// Upload field for the custom background image
-		{
-			id: 'userBGImage',
-			type: optionType.image,
-			tab: tabs.style
-		},
-
-		// Lock thread scrolling to bottom, when bottom in view, even when the
-		// tab is hidden
-		{
-			id: 'alwaysLock',
-			tab: tabs.general
-		},
-	]
-
+	},
+	// Custom user-set background
+	userBG: {
+		noExecOnStart: true,
+		exec: renderBackground,
+	},
+	// Upload field for the custom background image
+	userBGImage: {
+		type: optionType.image,
+	},
+	// Lock thread scrolling to bottom, when bottom in view, even when the
+	// tab is hidden
+	alwaysLock: {},
 	// Image search link toggles
-	const engines = ['google', 'iqdb', 'saucenao', 'desustorage', 'exhentai']
-	for (let engine of engines) {
-		opts.push({
-			id: engine,
-			tab: 2,
-			default: engine === 'google',
-			exec: toggleImageSearch(engine)
-		})
-	}
-
+	google: {
+		default: true,
+		exec: toggleImageSearch("google"),
+	},
+	iqdb: {
+		exec: toggleImageSearch("iqdb"),
+	},
+	saucenao: {
+		default: true,
+		exec: toggleImageSearch("saucenao"),
+	},
+	desustorage: {
+		exec: toggleImageSearch("desustorage"),
+	},
+	exhentai: {
+		exec: toggleImageSearch("exhentai"),
+	},
 	// Shortcut keys
-	const keySpecs: any[] = [
-		{ id: 'newPost', default: 78 },
-		{ id: 'done', default: 83 },
-		{ id: 'toggleSpoiler', default: 73 },
-		{ id: 'expandAll', default: 69 },
-		{ id: 'workMode', default: 66 },
-	]
-
-	for (let spec of keySpecs as OptionSpec[]) {
-		spec.type = optionType.shortcut
-		spec.tab = tabs.shortcuts
-		opts.push(spec)
-	}
-
-	return opts
+	newPost: {
+		default: 78,
+		type: optionType.shortcut,
+	},
+	done: {
+		default: 83,
+		type: optionType.shortcut,
+	},
+	toggleSpoiler: {
+		default: 73,
+		type: optionType.shortcut,
+	},
+	expandAll: {
+		default: 69,
+		type: optionType.shortcut,
+	},
+	workMode: {
+		default: 66,
+		type: optionType.shortcut,
+	},
 }
 
 // Create a function that toggles the visibility of an image search link

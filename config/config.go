@@ -113,9 +113,7 @@ type Configs struct {
 
 // Public contains configurations exposeable through public availability APIs
 type Public struct {
-	Radio            bool   `json:"radio" gorethink:"radio"`
 	Hats             bool   `json:"hats" gorethink:"hats"`
-	IllyaDance       bool   `json:"illyaDance" gorethink:"illyaDance"`
 	Captcha          bool   `json:"captcha" gorethink:"captcha"`
 	Mature           bool   `json:"mature" gorethink:"mature"`
 	DefaultLang      string `json:"defaultLang" gorethink:"defaultLang"`

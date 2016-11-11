@@ -38,7 +38,7 @@
 			"Import options from file"
 		],
 		"hidden": [
-			"Hidden:",
+			"Hidden: 0",
 			"Clear hidden posts"
 		],
 		"hideThumbs": [
@@ -174,17 +174,17 @@
 	"mod": {
 		"logout": "Logout",
 		"logoutAll": "Log out all devices",
-		"changePassword": "Change password",
 		"createBoard": "Create board",
 		"configureBoard": "Configure board",
+		"configureServer": "Configure server",
+		"changePassword": "Change password",
 		"oldPassword": "Old password",
 		"newPassword": "New password",
 		"mustMatch": "Passwords must match",
 		"nameTaken": "Login name already taken",
 		"wrongCredentials": "Incorrect login name or password",
 		"wrongPassword": "Incorrect password",
-		"theFuck": "SOMEBODY FUCKED UP",
-		"configureServer": "Configure server"
+		"theFuck": "SOMEBODY FUCKED UP"
 	},
 	"ui": {
 		"cancel": "Cancel",
