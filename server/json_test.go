@@ -67,32 +67,7 @@ func TestDetectLastN(t *testing.T) {
 }
 
 func TestPostJSON(t *testing.T) {
-	assertTableClear(t, "main", "posts", "threads")
-	assertInsert(t, "main", []map[string]interface{}{
-		{
-			"id":      "info",
-			"postCtr": 8,
-		},
-		{
-			"id": "boardCtrs",
-			"a":  7,
-		},
-	})
-	assertInsert(t, "threads", types.DatabaseThread{
-		ID:    1,
-		Board: "a",
-	})
-	assertInsert(t, "posts", types.DatabasePost{
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
-				ID: 1,
-			},
-			Board: "a",
-			OP:    1,
-		},
-		LastUpdated: 11,
-	})
-
+	setupPosts(t)
 	setBoards(t, "a")
 
 	const postEtag = "qO18VR0TvaL71iNdrFmaIQ"
@@ -190,6 +165,35 @@ func TestPostJSON(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Setup the database for testing post-related paths
+func setupPosts(t *testing.T) {
+		assertTableClear(t, "main", "posts", "threads")
+	assertInsert(t, "main", []map[string]interface{}{
+		{
+			"id":      "info",
+			"postCtr": 8,
+		},
+		{
+			"id": "boardCtrs",
+			"a":  7,
+		},
+	})
+	assertInsert(t, "threads", types.DatabaseThread{
+		ID:    1,
+		Board: "a",
+	})
+	assertInsert(t, "posts", types.DatabasePost{
+		StandalonePost: types.StandalonePost{
+			Post: types.Post{
+				ID: 1,
+			},
+			Board: "a",
+			OP:    1,
+		},
+		LastUpdated: 11,
+	})
 }
 
 func TestServeBoardConfigs(t *testing.T) {

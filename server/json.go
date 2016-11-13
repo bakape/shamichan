@@ -138,7 +138,7 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	if !ok {
 		return
 	}
-	data, etag, ok := threadData(w, r, id)
+	data, etag, ok := threadData(w, r, id, "", "")
 	if !ok {
 		return
 	}
@@ -174,9 +174,15 @@ func validateThread(
 	return id, true
 }
 
-// Retrieves thread data from the database and the associated etag header. If an
-// error occurred and the calling function should return, ok = false.
-func threadData(w http.ResponseWriter, r *http.Request, id int64) (
+// Retrieves thread data from the database and the associated etag header.  Can
+// receive optional language ID and hash to attach to etag. If an error occurred
+// and the calling function should return, ok = false.
+func threadData(
+	w http.ResponseWriter,
+	r *http.Request,
+	id int64,
+	lang, hash string,
+) (
 	data *types.Thread, etag string, ok bool,
 ) {
 	counter, err := db.ThreadCounter(id)
@@ -184,7 +190,7 @@ func threadData(w http.ResponseWriter, r *http.Request, id int64) (
 		text500(w, r, err)
 		return
 	}
-	etag = etagStart(counter)
+	etag = formatEtag(counter, lang, hash)
 	if checkClientEtag(w, r, etag) {
 		return
 	}
@@ -198,6 +204,26 @@ func threadData(w http.ResponseWriter, r *http.Request, id int64) (
 	return data, etag, true
 }
 
+// Combine the progress counter and optional configuration hash into a weak etag
+func formatEtag(ctr int64, lang, hash string) string {
+	c := strconv.FormatInt(ctr, 10)
+	buf := make([]byte, 2, 9+len(c)+len(hash))
+	buf[0] = 'W'
+	buf[1] = '/'
+	buf = append(buf, c...)
+
+	if lang != "" {
+		buf = append(buf, '-')
+		buf = append(buf, lang...)
+	}
+	if hash != "" {
+		buf = append(buf, '-')
+		buf = append(buf, hash...)
+	}
+
+	return string(buf)
+}
+
 // Serves board page JSON
 func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	b := p["board"]
@@ -206,20 +232,21 @@ func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	data, etag, ok := boardData(w, r, b)
+	data, etag, ok := boardData(w, r, b, "", "")
 	if !ok {
 		return
 	}
 	serveJSON(w, r, etag, data)
 }
 
-// Retrieves board data from the database and the associated etag header. If an
-// error occurred and the calling function should return, ok = false.
-func boardData(w http.ResponseWriter, r *http.Request, b string) (
-	data *types.Board, etag string, ok bool,
+// Retrieves board data from the database and the associated etag header. Can
+// receive optional language ID and hash to attach to the etag. If an error
+// occurred and the calling function should return, ok = false.
+func boardData(w http.ResponseWriter, r *http.Request, b, lang, hash string) (
+	data types.Board, etag string, ok bool,
 ) {
 	if b == "all" {
-		return allBoardData(w, r)
+		return allBoardData(w, r, lang, hash)
 	}
 
 	counter, err := db.BoardCounter(b)
@@ -227,7 +254,7 @@ func boardData(w http.ResponseWriter, r *http.Request, b string) (
 		text500(w, r, err)
 		return
 	}
-	etag = etagStart(counter)
+	etag = formatEtag(counter, lang, hash)
 	if checkClientEtag(w, r, etag) {
 		return
 	}
@@ -242,15 +269,15 @@ func boardData(w http.ResponseWriter, r *http.Request, b string) (
 }
 
 // Same as boardData(), but for the /all/ metaboard
-func allBoardData(w http.ResponseWriter, r *http.Request) (
-	data *types.Board, etag string, ok bool,
+func allBoardData(w http.ResponseWriter, r *http.Request, lang, hash string) (
+	data types.Board, etag string, ok bool,
 ) {
 	counter, err := db.PostCounter()
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
-	etag = etagStart(counter)
+	etag = formatEtag(counter, lang, hash)
 	if checkClientEtag(w, r, etag) {
 		return
 	}

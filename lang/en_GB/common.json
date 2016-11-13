@@ -1,0 +1,15 @@
+{
+	"posts": {
+		"anon": "Anonymous"
+	},
+	"plurals": {
+		"post": [
+			"post",
+			"posts"
+		],
+		"image": [
+			"image",
+			"images"
+		]
+	}
+}

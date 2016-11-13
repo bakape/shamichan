@@ -1,17 +1,13 @@
 {
 	"posts": {
-		"anon": "Anonymous",
-		"newThread": "New thread",
 		"reply": "Reply",
 		"you": "(You)",
 		"OP": "(OP)",
 		"locked": "locked",
-		"subject": "Subject",
 		"uploadProgress": "uploaded...",
 		"thread_locked": "This thread is locked.",
 		"quoted": "You have been quoted",
 		"board": "Board",
-		"spoiler": "Spoiler",
 		"and": "and",
 		"omitted": "omitted",
 		"post": [
@@ -26,27 +22,14 @@
 		"thumbnailing": "Thumbnailing..."
 	},
 	"ui": {
-		"cancel": "Cancel",
 		"done": "Done",
 		"send": "Send",
 		"add": "Add",
 		"apply": "Apply",
-		"search": "Search",
 		"invalidCaptcha": "Invalid captcha",
 		"reloadCaptcha": "Click to reload",
-		"submit": "Submit",
-		"rules": "Rules",
 		"close": "Close",
-		"showNotice": "Show Notice",
-		"sortMode": "Sort threads by",
-		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
-		"refresh": "Refresh",
-		"sortModes": [
-			"Last reply time",
-			"Creation time",
-			"Reply count",
-			"File count"
-		]
+		"refresh": "Refresh"
 	},
 	"banner": {
 		"worksBestWith": "works best with",
@@ -68,14 +51,12 @@
 		"seeAll": "See all",
 		"report": "Report",
 		"focus": "Focus",
-		"last": "Last",
 		"bottom": "Bottom",
 		"expand": "Expand",
 		"catalog": "Catalog",
 		"return": "Return",
 		"top": "Top",
 		"lockedToBottom": "Locked to bottom",
-		"catalogOmit": "Replies/Images",
 		"rescan": "Rescan"
 	},
 	"reports": {

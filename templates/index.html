@@ -7,40 +7,6 @@
 	</figure>
 {{end}}
 
-{{define "notice"}}
-	<div id="notice" class="expandable">
-		<span class="act">
-			<a></a>
-		</span>
-		<span>
-			<br>
-		</span>
-	</div>
-{{end}}
-
-{{ define "captcha"}}
-	{{$k := index . 0}}
-	{{$ := index . 1}}
-	{{if $.Captcha}}
-		<div class="captcha-container">
-			<div id="adcopy-outer-{{$k}}">
-				<div id="adcopy-puzzle-image-{{$k}}" class="captcha-image"></div>
-				<div id="adcopy-puzzle-audio-{{$k}}" class="hidden"></div>
-				<div id="adcopy-pixel-image-{{$k}}" class="hidden"></div>
-				<div>
-					<span id="adcopy-instr-{{$k}}" class="hidden"></span>
-				</div>
-				<input id="adcopy_response-{{$k}}" name="adcopy_response" class="full-width" type="text" placeholder="{{$.Lang.FocusForCaptcha}}">
-				<input type="hidden" name="adcopy_challenge" id="adcopy_challenge-{{$k}}" hidden>
-				<a id="adcopy-link-refresh-{{$k}}" class="hidden"></a>
-				<a id="adcopy-link-audio-{{$k}}" class="hidden"></a>
-				<a id="adcopy-link-image-{{$k}}" class="hidden"></a>
-				<a id="adcopy-link-info-{{$k}}" class="hidden"></a>
-			</div>
-		</div>
-	{{end}}
-{{end}}
-
 {{define "tabButts"}}
 	<div class="tab-butts">
 		{{range $i, $l := .}}
@@ -58,16 +24,20 @@
 	<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
 	<meta name="application-name" content="meguca">
 	<meta name="description" content="Realtime imageboard">
-	<noscript>
-		<meta http-equiv="refresh" content="0.05; url=?noscript=true">
-	</noscript>
 	<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico">
-	<title></title>
+	<!-- Only expanded in the second parse of the template -->
+	<title>
+		{{"{{.Title}}"}}
+	</title>
 	<link rel="manifest" href="/assets/mobile/manifest.json">
-	<!-- Main and theme-specific stylesheets !-->
+	<!-- Main and theme-specific stylesheets -->
 	<link rel="stylesheet" href="/assets/css/base.css">
 	<link rel="stylesheet" id="theme-css" href="/assets/css/{{.DefaultCSS}}.css">
-	<!-- Configuration injection and theme adjustment!-->
+	<!-- Hide various elements that are disfunctional without JS -->
+	<noscript>
+		<link rel="stylesheet" href="/assets/css/noscript.css">
+	</noscript>
+	<!-- Configuration injection and theme adjustment -->
 	<script>
 		var config = {{.Config}},
 			configHash = '{{.ConfigHash}}',
@@ -76,7 +46,7 @@
 			document.getElementById('theme-css').href = '/assets/css/' + localStorage.theme + '.css'
 		}
 	</script>
-	<!-- Templates for our various views !-->
+	<!-- Templates for our various views -->
 	<template name="article">
 		<header class="spaced">
 			<h3 hidden></h3>
@@ -112,43 +82,8 @@
 		</div>
 		<small></small>
 	</template>
-	<template name="board">
-		<h1 class="image-banner" hidden>
-			<img>
-		</h1>
-		<h1 class="page-title"></h1>
-		{{template "notice"}}
-		<span class="aside-container">
-			<aside id="thread-form-container" class="act glass">
-				<a class="new-thread-button"></a>
-			</aside>
-			<aside class="act glass">
-				<a id="refresh"></a>
-			</aside>
-			<aside id="rules" class="glass expandable">
-				<span class="act">
-					<a></a>
-				</span>
-				<span id="rules-container">
-					<br>
-				</span>
-			</aside>
-			<span id="catalog-controls" class="margin-spaced">
-				<input type="text" name="search">
-				<select name="sortMode">
-					{{range .SortModes}}
-						<option value="{{.}}"></option>
-					{{end}}
-				</select>
-			</span>
-		</span>
-		<hr>
-		<div id="catalog"></div>
-		<hr>
-	</template>
 	<template name="thread">
 		<h1 class="page-title"></h1>
-		{{template "notice"}}
 		<span class="act" id="top">
 			<a href="#bottom"></a>
 		</span>
@@ -210,14 +145,36 @@
 	</template>
 </head>
 <body>
-	<!-- Loading indicator image !-->
+	<!-- Loading indicator image -->
 	<image src="/assets/loading.gif" id="loading-image">
 	<div id="overlay-container">
-		<!-- Top banner !-->
+		<!-- Top banner -->
 		<span id="banner" class="glass">
-			<!-- For r/a/dio stream status and such !-->
-			<b id="banner-center"></b>
-			<!-- Various buttons, that unhide modal windows !-->
+			<!-- Top banner -->
+			<nav id="board-navigation">
+				<noscript>
+					[
+					<a href="/all/" class="history reload">
+						all
+					</a>
+					{{range $i, $board := .Boards}}
+						&nbsp;/&nbsp;
+						<a href="/{{$board}}/" class="history reload">
+							{{$board}}
+						</a>
+					{{end}}
+					]
+				</noscript>
+			</nav>
+			<!-- For r/a/dio stream status and such -->
+			<b id="banner-center">
+				<noscript>
+					<b>
+						{{index .Lang.UI "enableJS"}}
+					</b>
+				</noscript>
+			</b>
+			<!-- Various buttons, that unhide modal windows -->
 			<a id="banner-options" class="banner-float">
 				<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
 				  <path d="M3.5 0l-.5 1.19c-.1.03-.19.08-.28.13l-1.19-.5-.72.72.5 1.19c-.05.1-.09.18-.13.28l-1.19.5v1l1.19.5c.04.1.08.18.13.28l-.5 1.19.72.72 1.19-.5c.09.04.18.09.28.13l.5 1.19h1l.5-1.19c.09-.04.19-.08.28-.13l1.19.5.72-.72-.5-1.19c.04-.09.09-.19.13-.28l1.19-.5v-1l-1.19-.5c-.03-.09-.08-.19-.13-.28l.5-1.19-.72-.72-1.19.5c-.09-.04-.19-.09-.28-.13l-.5-1.19h-1zm.5 2.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5z"/>
@@ -243,10 +200,10 @@
 					<path d="M0 0v1l4 2 4-2v-1h-8zm0 2v4h8v-4l-4 2-4-2z" transform="translate(0 1)" />
 				</svg>
 			</a>
-			<!-- Websocket connection status indicator !-->
+			<!-- Websocket connection status indicator -->
 			<b id="sync" class="banner-float"></b>
 		</span>
-		<!-- For modal windows !-->
+		<!-- For modal windows -->
 		<div id="modal-overlay" class="overlay">
 			<!-- Information panel -->
 			<div id="FAQ" class="modal glass">
@@ -274,12 +231,12 @@
 					<div class="tab-cont">
 						<div class="tab-sel" data-id="0">
 							{{table .Login .Lang}}
-							{{template "captcha" (bundle "login" $)}}
+							{{template "captcha" (bundle "login" "" $)}}
 							<input type="submit" value="{{index .Lang.UI "submit"}}">
 						</div>
 						<div data-id="1">
 							{{table .Register .Lang}}
-							{{template "captcha" (bundle "register" $)}}
+							{{template "captcha" (bundle "register" "" $)}}
 							<input type="submit" value="{{index .Lang.UI "submit"}}">
 						</div>
 					</div>
@@ -324,24 +281,25 @@
 			</div>
 		</div>
 	</div>
-	<!-- For hover previews !-->
+	<!-- For hover previews -->
 	<div class="overlay" id="hover-overlay"></div>
 	<div id="page-container">
 		<section id="left-panel" class="side-panel glass"></section>
 		<!-- Used to move #threads to the side, when a #left-panel is shown -->
 		<div id="left-spacer" class="side-spacer"></div>
+		<!-- Contains posts, page naviagation, title, image banner and the catalog -->
+		<!-- Is injected on the second parse of this template -->
 		<section id="threads">
-			<!-- Contains posts, page naviagation, title, image banner and the catalog !-->
-			<div id="threads"></div>
+			{{"{{.Threads}}"}}
 		</section>
 		<section id="right-panel" class="side-panel glass"></section>
 		<div id="right-spacer" class="side-spacer"></div>
 	</div>
-	<!-- Dynamic module loader!-->
 	<script src="/assets/js/vendor/system.js"></script>
+	<!-- Dynamic module loader -->
 	<script src="/assets/js/scripts/loader.js"></script>
 	{{if .Captcha}}
-		<!-- Captcha script !-->
+		<!-- Captcha script -->
 		<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>
 	{{end}}
 </body>

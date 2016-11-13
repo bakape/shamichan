@@ -4,18 +4,10 @@ import (
 	"net/http"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/lang"
 	"github.com/bakape/meguca/templates"
 )
-
-// Serves the standard HTML for desktop or mobile pages
-func serveIndexTemplate(w http.ResponseWriter, r *http.Request) {
-	tmpl := templates.Get("index")
-	// If etags match, no need to rerender
-	if checkClientEtag(w, r, tmpl.Hash) {
-		return
-	}
-	serveHTML(w, r, tmpl.HTML, tmpl.Hash)
-}
 
 // Apply headers and write HTML to client
 func serveHTML(
@@ -42,47 +34,41 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	if !isNoscript(r) {
-		serveIndexTemplate(w, r)
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
 		return
 	}
 
-	board, etag, ok := boardData(w, r, b)
+	_, hash := config.GetClient()
+	board, etag, ok := boardData(w, r, b, lp.ID, hash)
 	if !ok {
 		return
 	}
-	data, err := templates.Board(b, board)
+
+	data, err := templates.Board(b, lp, board)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
 	serveHTML(w, r, data, etag)
-}
-
-func isNoscript(r *http.Request) bool {
-	return r.URL.Query().Get("noscript") == "true"
 }
 
 // Asserts a thread exists on the specific board and renders the index template
 func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	id, ok := validateThread(w, r, p)
+	_, ok := validateThread(w, r, p)
 	if !ok {
 		return
 	}
 
-	if !isNoscript(r) {
-		serveIndexTemplate(w, r)
-		return
-	}
-
-	thread, etag, ok := threadData(w, r, id)
-	if !ok {
-		return
-	}
-	data, err := templates.Thread(thread)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	serveHTML(w, r, data, etag)
+	// thread, etag, ok := threadData(w, r, id)
+	// if !ok {
+	// 	return
+	// }
+	// data, err := templates.Thread(thread)
+	// if err != nil {
+	// 	text500(w, r, err)
+	// 	return
+	// }
+	// serveHTML(w, r, data, etag)
 }

@@ -7,7 +7,6 @@ import (
 	"runtime/debug"
 
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/util"
 )
 
 // Base set of HTTP headers for both HTML and JSON
@@ -15,11 +14,6 @@ var vanillaHeaders = map[string]string{
 	"X-Frame-Options": "sameorigin",
 	"Cache-Control":   "max-age=0, must-revalidate",
 	"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
-}
-
-// Build the main part of the etag
-func etagStart(counter int64) string {
-	return "W/" + util.IDToString(counter)
 }
 
 // Check is any of the etags the client provides in the "If-None-Match" header

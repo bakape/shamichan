@@ -1,5 +1,4 @@
 {
-	"focusForCaptcha": "Focus to load captcha",
 	"forms": {
 		"name": [
 			"Name",
@@ -187,21 +186,20 @@
 		"theFuck": "SOMEBODY FUCKED UP"
 	},
 	"ui": {
-		"cancel": "Cancel",
-		"done": "Done",
-		"send": "Send",
-		"add": "Add",
-		"apply": "Apply",
-		"search": "Search",
-		"invalidCaptcha": "Invalid captcha",
-		"reloadCaptcha": "Click to reload",
+		"focusForCaptcha": "Focus to load captcha",
+		"enableJS": "Enable JavaScript for more functionality",
 		"submit": "Submit",
-		"rules": "Rules",
-		"close": "Close",
+		"cancel": "Cancel",
 		"showNotice": "Show Notice",
-		"sortMode": "Sort threads by",
+		"newThread": "New thread",
+		"subject": "Subject",
+		"spoiler": "Spoiler",
+		"rules": "Show Rules",
+		"search": "Search",
 		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
-		"refresh": "Refresh"
+		"sortMode": "Sort threads by",
+		"catalogOmit": "Replies/Images",
+		"last": "Last"
 	},
 	"sortModes": [
 		"Last reply time",

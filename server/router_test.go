@@ -6,9 +6,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/lang"
+	"github.com/bakape/meguca/templates"
+	"github.com/bakape/meguca/util"
 	"github.com/dimfeld/httptreemux"
 )
 
@@ -22,7 +26,13 @@ func init() {
 	imageWebRoot = "testdata"
 	db.DBName = "meguca_test_server"
 	db.IsTest = true
-	if err := db.LoadDB(); err != nil {
+	templates.TemplateRoot = filepath.Join("..", "templates")
+	lang.Dir = filepath.Join("..", "lang")
+
+	fns := []func() error{
+		db.LoadDB, lang.Load, templates.ParseTemplates, templates.Compile,
+	}
+	if err := util.Waterfall(fns); err != nil {
 		panic(err)
 	}
 }

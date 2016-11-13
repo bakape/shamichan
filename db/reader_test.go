@@ -145,7 +145,7 @@ func testGetAllBoard(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, board, &std)
+	AssertDeepEquals(t, board, std)
 }
 
 func testGetBoard(t *testing.T) {
@@ -189,7 +189,7 @@ func testGetBoard(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			AssertDeepEquals(t, board, &c.std)
+			AssertDeepEquals(t, board, c.std)
 		})
 	}
 }

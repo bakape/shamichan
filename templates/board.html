@@ -3,36 +3,87 @@
 		<img src="/assets/banners/{{.}}">
 	</h1>
 {{end}}
-<h1 class="page-title">{{.Title}}</h1>
-{{with .Notice}}
-	<span id="notice">
-		<span>{{.}}</span>
-	</span>
-{{end}}
+<h1 class="page-title">
+	{{.Title}}
+</h1>
+{{template "hover-reveal" bundle .Notice (index $.Lang.UI "showNotice")}}
+{{template "hover-reveal" bundle .Rules (index $.Lang.UI "rules")}}
 <span class="aside-container">
-	{{template "threadForm" .}}
+	<aside id="thread-form-container" class="glass">
+		<span class="act">
+			<a class="new-thread-button">
+				{{index .Lang.UI "newThread"}}
+			</a>
+		</span>
+		<form id="new-thread-form" action="/createThread" class="hidden">
+			{{if .IsAll}}
+				<select name="board" required>
+					{{range .Boards}}
+						<option value="{{.ID}}">
+							{{.ID}} - {{.Title}}
+						</option>
+					{{end}}
+				</select>
+				<br>
+			{{end}}
+			<input name="subject" placeholder="{{index .Lang.UI "subject"}}" required type="text" maxlength="100">
+			<br>
+			{{if or .IsAll .NeedImage}}
+				<span class="upload-container">
+					<span>
+						<label class="spoiler">
+							<input type="checkbox" name="spoiler">
+							{{index .Lang.UI "spoiler"}}
+						</label>
+					</span>
+					<strong class="upload-status"></strong>
+					<br>
+					<input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3" {{if .NeedImage}}required{{end}}>
+					<br>
+				</span>
+			{{end}}
+			{{template "captcha" (bundle "new-thread" .CaptchaKey $)}}
+			<input type="submit" value="{{index .Lang.UI "submit"}}">
+			<input type="button" name="cancel" value="{{index .Lang.UI "cancel"}}">
+		</form>
+		<aside class="act glass">
+			<a id="refresh"></a>
+		</aside>
+		<span id="catalog-controls" class="margin-spaced">
+			<input type="text" name="search" placeholder="{{index .Lang.UI "search"}}" title="{{index .Lang.UI "searchTooltip"}}">
+			<select name="sortMode">
+				{{range $i, $s :=  (bundle "lastReply" "creation" "replyCount" "fileCount")}}
+					<option value="{{$s}}">
+						{{index $.Lang.SortModes $i}}
+					</option>
+				{{end}}
+			</select>
+		</span>
+	</aside>
 </span>
 <hr>
 <div id="catalog">
 	{{range .Threads}}
-		<article class="glass">
+		<article id="p{{.ID}}" class="glass">
 			{{if .Image}}
 				<figure>
-					<a href="../{{.Board}}/{{.ID}}?noscript=true">
+					<a class="history" href="/{{.Board}}/{{.ID}}">
 						<img src="{{thumbPath .Image}}">
 					</a>
 				</figure>
 			{{end}}
 			<small class="spaced thread-links">
 				{{if $.IsAll}}
-					<b class="board">/{{.Board}}/</b>
+					<b class="board">
+						/{{.Board}}/
+					</b>
 				{{end}}
-				<span class="counters" title="Replies/Images">
+				<span class="counters" title="{{index $.Lang.UI "catalogOmit"}}">
 					{{.PostCtr}}/{{.ImageCtr}}
 				</span>
 				<span class="act">
-					<a class="history" href="../{{.Board}}/{{.ID}}?noscript=true&last=50">
-						Last 50
+					<a class="history" href="/{{.Board}}/{{.ID}}?last=50">
+						{{index $.Lang.UI "last"}} 50
 					</a>
 				</span>
 			</small>

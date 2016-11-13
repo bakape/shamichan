@@ -11,7 +11,6 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/util"
 )
 
 var (
@@ -19,8 +18,8 @@ var (
 	// in tests.
 	TemplateRoot = "templates"
 
-	// resources contains all available templates
-	resources = make(map[string]Store, 2)
+	// resources contains compiled index templates for every language
+	indexTemplates = make(map[string]*template.Template, 6)
 
 	// clientFileHash is the combined, shortened MD5 hash of all client files
 	clientFileHash string
@@ -30,28 +29,21 @@ var (
 	// Contains all compiled HTML templates
 	tmpl = make(map[string]*template.Template)
 
-	// Template functions for rendering posts
-	postFunctions = template.FuncMap{
-		"thumbPath":        thumbPath,
-		"renderTime":       renderTime,
-		"readableLength":   readableLength,
-		"readableFileSize": readableFileSize,
-		"sourcePath":       sourcePath,
-		"extension":        extension,
-		"wrapPost":         wrapPost,
-		"renderPostLink":   renderPostLink,
-		"renderBody":       renderBody,
-	}
+	// // Template functions for rendering posts
+	// postFunctions = template.FuncMap{
+	// 	"thumbPath":        thumbPath,
+	// 	"renderTime":       renderTime,
+	// 	"readableLength":   readableLength,
+	// 	"readableFileSize": readableFileSize,
+	// 	"sourcePath":       sourcePath,
+	// 	"extension":        extension,
+	// 	"wrapPost":         wrapPost,
+	// 	"renderPostLink":   renderPostLink,
+	// 	"renderBody":       renderBody,
+	// }
 
 	isTest bool
 )
-
-// Store stores the compiled HTML template and the corresponding truncated MD5
-// hash of said template
-type Store struct {
-	HTML []byte
-	Hash string
-}
 
 // Template variables
 type vars struct {
@@ -63,7 +55,13 @@ type vars struct {
 	Identity, Login, Register     []inputSpec
 	Options                       [][]inputSpec
 	ImageSearch                   []imageSearch
-	SortModes, Boards, FormMenu   []string
+	Boards, FormMenu   []string
+}
+
+// Variables for the second pass template execution
+type secondPassVars struct {
+	Title   string
+	Threads template.HTML
 }
 
 // Definition for an image search link
@@ -81,23 +79,27 @@ func ParseTemplates() error {
 	}{
 		// Order matters. Dependencies must come before dependents.
 		{"captcha", nil, nil},
-		{"threadForm", []string{"captcha"}, nil},
-		{"article", nil, postFunctions},
-		{"index", nil, template.FuncMap{
-			"table":  renderTable,
-			"bundle": bundle,
-			"input":  renderInput,
-			"label":  renderLabel,
-		}},
-		{"noscript", nil, nil},
+		{"hover-reveal", nil, nil},
+		// {"article", nil, postFunctions},
 		{
-			"board",
-			[]string{"threadForm", "captcha"},
+			"index",
+			[]string{"captcha"},
 			template.FuncMap{
-				"thumbPath": thumbPath,
+				"table":  renderTable,
+				"bundle": bundle,
+				"input":  renderInput,
+				"label":  renderLabel,
 			},
 		},
-		{"thread", []string{"article"}, postFunctions},
+		{
+			"board",
+			[]string{"captcha", "hover-reveal"},
+			template.FuncMap{
+				"thumbPath": thumbPath,
+				"bundle":    bundle,
+			},
+		},
+		// {"thread", []string{"article"}, postFunctions},
 	}
 
 	for _, s := range specs {
@@ -141,20 +143,20 @@ func ParseTemplates() error {
 // Compile reads template HTML from disk, injects dynamic variables,
 // hashes and stores them
 func Compile() error {
-	// Only one for now, but there will be more later
-	index, err := buildIndexTemplate()
+	// TODO: Build templates for all languages
+	index, err := buildIndexTemplate(lang.Packs["en_GB"])
 	if err != nil {
 		return err
 	}
 
 	mu.Lock()
 	defer mu.Unlock()
-	resources["index"] = index
+	indexTemplates["en_GB"] = index
 	return nil
 }
 
 // buildIndexTemplate constructs the HTML template array, minifies and hashes it
-func buildIndexTemplate() (store Store, err error) {
+func buildIndexTemplate(lang lang.Pack) (*template.Template, error) {
 	clientJSON, hash := config.GetClient()
 	conf := config.Get()
 
@@ -173,9 +175,6 @@ func buildIndexTemplate() (store Store, err error) {
 			{"desustorage", "Ds"},
 			{"exhentai", "Ex"},
 		},
-		SortModes: []string{
-			"lastReply", "creation", "replyCount", "fileCount",
-		},
 		FormMenu: []string{
 			"logout", "logoutAll", "changePassword", "createBoard",
 			"configureBoard", "configureServer",
@@ -184,31 +183,25 @@ func buildIndexTemplate() (store Store, err error) {
 		Login:    specs["login"],
 		Register: specs["register"],
 		Options:  optionSpecs,
-		Lang:     lang.Packs["en_GB"],
+		Lang:     lang,
 	}
 
 	w := new(bytes.Buffer)
-	err = tmpl["index"].Execute(w, v)
+	err := tmpl["index"].Execute(w, v)
 	if err != nil {
-		return
+		return nil, err
 	}
-	buf := w.Bytes()
 
-	return Store{buf, util.HashBuffer(buf)}, nil
-}
+	// Second template compile pass
+	firstPass := w.String()
+	w.Reset()
+	t := template.New("")
+	t, err = t.Parse(firstPass)
+	if err != nil {
+		return nil, err
+	}
 
-// Get retrieves a compiled template by its name
-func Get(name string) Store {
-	mu.RLock()
-	defer mu.RUnlock()
-	return resources[name]
-}
-
-// Set sets a template to the specified value. Only use in tests.
-func Set(name string, s Store) {
-	mu.Lock()
-	defer mu.Unlock()
-	resources[name] = s
+	return t, nil
 }
 
 // Bundles several values for passing down template pipelines together

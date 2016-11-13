@@ -85,10 +85,10 @@ func GetPost(id int64) (post types.StandalonePost, err error) {
 }
 
 // GetBoard retrieves all OPs of a single board
-func GetBoard(board string) (*types.Board, error) {
-	ctr, err := BoardCounter(board)
+func GetBoard(board string) (data types.Board, err error) {
+	data.Ctr, err = BoardCounter(board)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	q := r.
@@ -98,19 +98,19 @@ func GetBoard(board string) (*types.Board, error) {
 		Zip().
 		Without(omitForBoards).
 		Merge(mergeLastUpdated)
-	out := &types.Board{Ctr: ctr}
-	err = All(q, &out.Threads)
+	err = All(q, &data.Threads)
 
-	return out, err
+	return
 }
 
 // GetAllBoard retrieves all threads for the "/all/" meta-board
-func GetAllBoard() (board *types.Board, err error) {
+func GetAllBoard() (board types.Board, err error) {
 	ctr, err := PostCounter()
 	if err != nil {
 		return
 	}
-	board = &types.Board{Ctr: ctr}
+	board.Ctr = ctr
+
 	err = All(getAllBoard, &board.Threads)
 	return
 }

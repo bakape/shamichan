@@ -122,8 +122,17 @@ hr {
 	clear: both;
 }
 
-.expandable {
-	&:not(.expanded) span:last-child {
+// TODO: Need a touchscreen override for this
+.hover-reveal {
+	&:hover {
+		& > span:first-child {
+			display: none;
+		}
+		& > span:last-child {
+			display: block;
+		}
+	}
+	& > span:last-child {
 		display: none;
 	}
 }

@@ -1,0 +1,13 @@
+{{$text := index . 0}}
+{{$label := index . 1}}
+{{with $text}}
+	<span class="hover-reveal">
+		<span class="act">
+			{{$label}}
+		</span>
+		<span>
+			{{$text}}
+		</span>
+	</span>
+	<br>
+{{end}}

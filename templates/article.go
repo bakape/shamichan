@@ -3,27 +3,38 @@ package templates
 import (
 	"bytes"
 	"fmt"
-	"github.com/bakape/meguca/types"
 	"html/template"
 	"strconv"
 	"time"
+
+	"github.com/bakape/meguca/lang"
+	"github.com/bakape/meguca/types"
 )
 
 // Allows passing additional information to thread-related templates
 type postContext struct {
+	bytes.Buffer
+	types.Post
 	state struct { // Body parser state
 		spoiler, quote bool
 		iDice          int
 	}
-	bytes.Buffer
-	OP int64
-	types.Post
+	OP    int64
+	Board string
+	Lang  lang.Pack
 }
 
-func wrapPost(p types.Post, op int64, board string) *postContext {
+func wrapPost(
+	p types.Post,
+	op int64,
+	board string,
+	lang lang.Pack,
+) *postContext {
 	return &postContext{
-		OP:   op,
-		Post: p,
+		Post:  p,
+		OP:    op,
+		Board: board,
+		Lang:  lang,
 	}
 }
 
@@ -84,7 +95,7 @@ func renderPostLink(id, op int64, board string, cross bool) template.HTML {
 		url = fmt.Sprintf("#p%d", id)
 	} else {
 		text = fmt.Sprintf(">/%s/%d", board, id)
-		url = fmt.Sprintf("/%s/%d?noscript=true#p%d", board, op, id)
+		url = fmt.Sprintf("/%s/%d#p%d", board, op, id)
 	}
 	return template.HTML(fmt.Sprintf("<a href=\"%s\">>>%s</a>", url, text))
 }
