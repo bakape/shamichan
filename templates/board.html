@@ -45,8 +45,8 @@
 			<input type="button" name="cancel" value="{{index .Lang.UI "cancel"}}">
 		</form>
 	</aside>
-	<aside class="act glass">
-		<a id="refresh"></a>
+	<aside id="refresh" class="act glass">
+		<a></a>
 	</aside>
 	{{template "hover-reveal" bundle .Notice (index $.Lang.UI "showNotice")}}
 	{{template "hover-reveal" bundle .Rules (index $.Lang.UI "rules")}}

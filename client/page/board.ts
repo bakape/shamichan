@@ -61,7 +61,7 @@ export function render(frag: NodeSelector) {
 	(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
 		.value = sortMode
 
-	renderRefreshButton(frag.querySelector("#refresh"))
+	renderRefreshButton(frag.querySelector("#refresh > a"))
 	sortThreads(frag.querySelector("#catalog"), true)
 }
 
@@ -148,7 +148,7 @@ setInterval(() => {
 		refreshBoard()
 	} else {
 		write(() =>
-			renderRefreshButton(threads.querySelector("#refresh")))
+			renderRefreshButton(threads.querySelector("#refresh > a")))
 	}
 }, 600000)
 
@@ -162,5 +162,5 @@ on(threads, "input", onSearchChange, {
 })
 on(threads, "click", refreshBoard, {
 	passive: true,
-	selector: "#refresh",
+	selector: "#refresh > a",
 })

@@ -1,8 +1,6 @@
-#notice > span.act,
-	.banner-float,
+.banner-float,
 	#loading-image,
-	aside > span.act,
-	aside.act,
+	#refresh,
 	#catalog-controls,
 	input[name="adcopy_response"]
 {
@@ -12,6 +10,9 @@
 #thread-form-container {
 	background: none;
 	border: none;
+	& > span.act {
+		display: none;
+	}
 }
 
 #new-thread-form {
