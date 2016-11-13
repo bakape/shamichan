@@ -50,7 +50,6 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 	getPosts := r.
 		Table("posts").
 		GetAllByIndex("op", id).
-		OrderBy(r.Desc("replyTime")).
 		CoerceTo("array")
 
 	// Only fetch last N number of replies
@@ -99,7 +98,7 @@ func GetBoard(board string) (data types.Board, err error) {
 		Zip().
 		Without(omitForBoards).
 		Merge(mergeLastUpdated).
-		OrderBy("replyTime")
+		OrderBy(r.Desc("replyTime"))
 	err = All(q, &data.Threads)
 
 	return
