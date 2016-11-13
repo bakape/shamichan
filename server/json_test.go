@@ -169,7 +169,7 @@ func TestPostJSON(t *testing.T) {
 
 // Setup the database for testing post-related paths
 func setupPosts(t *testing.T) {
-		assertTableClear(t, "main", "posts", "threads")
+	assertTableClear(t, "main", "posts", "threads")
 	assertInsert(t, "main", []map[string]interface{}{
 		{
 			"id":      "info",
@@ -239,7 +239,6 @@ func TestServeBoardList(t *testing.T) {
 	config.ClearBoards()
 	conf := [...][2]string{
 		{"a", "Animu"},
-		{"g", "Technology"},
 	}
 	for _, c := range conf {
 		_, err := config.SetBoardConfigs(config.BoardConfigs{
@@ -258,10 +257,6 @@ func TestServeBoardList(t *testing.T) {
 	{
 		"id":"a",
 		"title":"Animu"
-	},
-	{
-		"id":"g",
-		"title":"Technology"
 	}
 ]`)
 

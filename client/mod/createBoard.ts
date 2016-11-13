@@ -1,8 +1,8 @@
-import {renderInput, InputSpec, inputType} from '../forms'
+import { renderInput, InputSpec, inputType } from '../forms'
 import AccountFormView from './common'
-import {send, message, handlers} from '../connection'
-import {inputValue, table, makeFrag} from '../util'
-import {admin as lang, mod, fetchAdminPack, ui} from '../lang'
+import { send, message, handlers } from '../connection'
+import { inputValue, table, makeFrag } from '../util'
+import { admin as lang, mod, ui } from '../lang'
 
 // Response codes for board creation requests
 const enum responseCode {
@@ -18,8 +18,7 @@ export default class BoardCreationPanel extends AccountFormView {
 	constructor() {
 		super({}, () =>
 			this.sendRequest())
-		fetchAdminPack().then(() =>
-			this.render())
+		this.render()
 		handlers[message.createBoard] = (res: responseCode) =>
 			this.handleResponse(res)
 	}
@@ -64,17 +63,17 @@ export default class BoardCreationPanel extends AccountFormView {
 	handleResponse(res: responseCode) {
 		let text: string
 		switch (res) {
-		case responseCode.success:
-			this.remove()
-			return
-		case responseCode.boardNameTaken:
-			text = lang.boardNameTaken
-			break
-		case responseCode.invalidCaptcha:
-			text = ui.invalidCaptcha
-			break
-		default:
-			text = mod.theFuck // Should not happen
+			case responseCode.success:
+				this.remove()
+				return
+			case responseCode.boardNameTaken:
+				text = lang.boardNameTaken
+				break
+			case responseCode.invalidCaptcha:
+				text = ui.invalidCaptcha
+				break
+			default:
+				text = mod.theFuck // Should not happen
 		}
 
 		this.reloadCaptcha(res)

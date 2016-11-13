@@ -3,8 +3,6 @@ package server
 import (
 	"testing"
 
-	"fmt"
-
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/types"
 )
@@ -46,12 +44,13 @@ func TestBoardHTML(t *testing.T) {
 	(*config.Get()).DefaultLang = "en_GB"
 
 	cases := [...]struct {
-		name, board string
-		code        int
+		name, url string
+		code      int
 	}{
-		{"/all/ board", "all", 200},
-		{"regular board", "a", 200},
-		{"non-existent board", "b", 404},
+		{"/all/ board", "/all/", 200},
+		{"regular board", "/a/", 200},
+		{"without index template", "/a/?noIndex=true", 200},
+		{"non-existent board", "/b/", 404},
 	}
 
 	for i := range cases {
@@ -59,7 +58,7 @@ func TestBoardHTML(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newPair(fmt.Sprintf("/%s/", c.board))
+			rec, req := newPair(c.url)
 			router.ServeHTTP(rec, req)
 			assertCode(t, rec, c.code)
 		})

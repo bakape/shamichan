@@ -2,7 +2,7 @@ import View from '../view'
 import Model from '../model'
 import { write } from '../render'
 import { HTML, makeAttrs } from '../util'
-import { fetchBoardList, BoardEntry } from "../json"
+import { fetchBoardList, BoardEntry } from "../fetch"
 import { ui } from '../lang'
 import { formatHeader } from './board'
 

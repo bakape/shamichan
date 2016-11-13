@@ -46,7 +46,8 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	data, err := templates.Board(b, lp, board)
+	withIndex := r.URL.Query().Get("noIndex") != "true"
+	data, err := templates.Board(b, lp, withIndex, board)
 	if err != nil {
 		text500(w, r, err)
 		return

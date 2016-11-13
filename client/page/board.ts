@@ -1,207 +1,145 @@
-import { random, escape, on } from '../util'
-import { navigation, ui, time } from '../lang'
-import { boardConfig, page } from '../state'
-import { ThreadData } from '../posts/models'
-import { renderThumbnail } from '../posts/render/image'
+import { escape, on, makeFrag } from '../util'
+import { ui, time } from '../lang'
+import { page } from '../state'
 import options from '../options'
-import { write, threads, importTemplate } from '../render'
+import { write, threads } from '../render'
 import { setTitle } from "../tab"
-import { formatText, renderNotice } from "./common"
 import { renderTime } from "../posts/render/posts"
-import { fetchBoard } from "../json"
+import { fetchBoard } from "../fetch"
 
-type SortFunction = (a: ThreadData, b: ThreadData) => number
+type SortFunction = (a: HTMLElement, b: HTMLElement) => number
 
 // Thread sort functions
 const sorts: { [name: string]: SortFunction } = {
-	lastReply: (a, b) =>
-		b.replyTime - a.replyTime,
-	creation: (a, b) =>
-		b.time - a.time,
-	replyCount: (a, b) =>
-		b.postCtr - a.postCtr,
-	fileCount: (a, b) =>
-		b.imageCtr - a.imageCtr,
+	lastReply: subtract("replyTime"),
+	creation: subtract("time"),
+	replyCount: subtract("postCtr"),
+	fileCount: subtract("imageCtr"),
 }
 
-// Cached data of the current board's threads
-let data: ThreadData[],
-	// Unix time of last board page render. Used for automatic refreshes.
-	lastRender: number,
-	// Progress counter of the current board. Used for skipping useless renders.
-	progressCounter: number
+// Unix time of last board page render. Used for automatic refreshes.
+let lastFetch = Date.now() / 1000
+
+// Sort threads by embedded data
+function subtract(attr: string): (a: HTMLElement, b: HTMLElement) => number {
+	attr = "data-" + attr
+	return (a, b) =>
+		parseInt(b.getAttribute(attr)) - parseInt(a.getAttribute(attr))
+}
 
 // Format a board name and title into canonical board header format
 export function formatHeader(name: string, title: string): string {
 	return `/${name}/ - ${escape(title)}`
 }
 
-// Cache the current board contents and render the thread
-export default function cachetAndRender(threads: ThreadData[], ctr: number) {
-	data = threads
-	progressCounter = ctr
-	lastRender = Math.floor(Date.now() / 1000)
-	render(threads)
+// Render a board fresh board from string
+export function renderFresh(html: string) {
+	lastFetch = Math.floor(Date.now() / 1000)
+
+	const frag = makeFrag(html)
+	render(frag)
+	threads.innerHTML = ""
+	threads.append(frag)
 }
 
-// Render a board page's HTML
-function render(data: ThreadData[]) {
-	const frag = importTemplate("board")
+// Apply client-side modifications to a board page's HTML
+export function render(frag: NodeSelector) {
 
-	// Apply board title to tab and header
-	const title = formatHeader(page.board, boardConfig.title)
-	setTitle(title)
-	frag.querySelector(".page-title").innerHTML = title
+	// Apply board title to tab
+	setTitle(frag.querySelector("#page-title").textContent)
 
-	const {banners} = boardConfig
-	if (banners.length) {
-		const banner = frag.querySelector(".image-banner")
-		banner.hidden = false
-		banner
-			.firstElementChild
-			.setAttribute("src", `/assets/banners/${random(banners)}`)
-	}
-
-	// Render rules container aside
-	const {rules} = boardConfig
-	if (!rules || page.board === "all") {
-		frag.querySelector("#rules").style.display = "none"
-	} else {
-		const rc = frag.querySelector("#rules-container")
-		if (!rules) {
-			rc.append("God's in his heaven. All is right with the world.")
-		} else {
-			rc.append(formatText(rules))
-		}
-	}
-
-
+	// Set sort mode <select> to correspond with setting
 	let sortMode = localStorage.getItem("catalogSort")
 	// "bump" is a legacy sort mode. Account for clients explicitly set to it.
-	if (!sortMode || sortMode === "bump") {
+	if (sortMode === "bump") {
+		sortMode = ""
+		localStorage.removeItem("catalogSort")
+	}
+	if (!sortMode) {
 		sortMode = "lastReply"
 	}
 	(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
 		.value = sortMode
 
 	renderRefreshButton(frag.querySelector("#refresh"))
-
-	renderNotice(frag)
-	frag.querySelector("#catalog").append(renderThreads("", data))
-
-	threads.innerHTML = ""
-	threads.append(frag)
+	sortThreads(frag.querySelector("#catalog"), true)
 }
 
-// Sort, filter and render all threads on a board
-function renderThreads(
-	filter: string,
-	threads: ThreadData[],
-): DocumentFragment {
-	if (filter) {
-		const r = new RegExp(filter, "i")
-		threads = threads.filter(({board, subject}) =>
-			r.test(`/${board}/`) || r.test(subject))
-	}
+// Sort all threads on a board
+export function sortThreads(frag: ParentNode, initial: boolean) {
+	let threads = Array.from(frag.children)
 
-	const sortFunc = sorts[localStorage.getItem("catalogSort")]
-		|| sorts["lastReply"]
-	threads = threads.sort(sortFunc)
-
-	const frag = document.createDocumentFragment(),
-		threadEls: DocumentFragment[] = new Array(threads.length)
-	for (let i = 0; i < threads.length; i++) {
-		threadEls[i] = renderThread(threads[i])
-	}
-	frag.append(...threadEls)
-	return frag
-}
-
-// Render a single thread for the thread catalog
-function renderThread(thread: ThreadData): DocumentFragment {
-	const frag = importTemplate("catalog-thread"),
-		href = `../${thread.board}/${thread.id}`
-
-	frag.firstElementChild.id = "p" + thread.id
-
-	if (thread.image) {
-		thread.image.large = true // Display larger thumbnails
-		if (!options.hideThumbs && !options.workModeToggle) {
-			const fig = frag.querySelector("figure")
-			fig.hidden = false
-			renderThumbnail(fig.querySelector("a"), thread.image, href)
+	if (options.hideThumbs || options.workModeToggle) {
+		for (let el of threads) {
+			el.querySelector(".expanded").style.display = "none"
 		}
 	}
 
-	const links = frag.querySelector(".thread-links"),
-		board = links.querySelector(".board")
-	board.hidden = false
-	board.textContent = `/${thread.board}/`
-	links
-		.querySelector(".counters")
-		.textContent = `${thread.postCtr}/${thread.imageCtr}`
-	const lastN = links.querySelector("a.history")
-	lastN.setAttribute("href", `${href}?last=50`)
-	lastN.textContent = `${navigation.last} 50`
+	let sortMode = localStorage.getItem("catalogSort")
+	if (!sortMode || sortMode === "bump") {
+		sortMode = "lastReply"
+	}
 
-	frag.querySelector("h3").innerHTML = `「${escape(thread.subject)}」`
+	// Already sorted as needed
+	if (initial && sortMode === "lastReply") {
+		return
+	}
 
-	return frag
+	for (let el of threads) {
+		el.remove()
+	}
+	threads = threads.sort(sorts[sortMode])
+	frag.append(...threads)
 }
 
 // Render the board refresh button text
 function renderRefreshButton(el: Element) {
-	renderTime(el, lastRender, true)
+	renderTime(el, lastFetch, true)
 	if (el.textContent === time.justNow) {
 		el.textContent = ui.refresh
-	}
-}
-
-// Toggle the [Rules] container expansion or contraction
-function toggleRules(e: MouseEvent) {
-	const el = e.target as HTMLElement,
-		aside = el.closest("aside")
-	if (aside.classList.contains("expanded")) {
-		write(() => {
-			aside.classList.remove("expanded")
-			el.textContent = ui.rules
-		})
-	} else {
-		write(() => {
-			aside.classList.add("expanded")
-			el.textContent = ui.close
-		})
 	}
 }
 
 // Persist thread sort order mode to localStorage and rerender threads
 function onSortChange(e: Event) {
 	localStorage.setItem("catalogSort", (e.target as HTMLInputElement).value)
-	const filter =
-		(threads.querySelector("input[name=search]") as HTMLInputElement)
-			.value
-	writeThreads(renderThreads(filter, data))
+	sortThreads(document.getElementById("catalog"), false)
 }
 
-function writeThreads(threads: DocumentFragment) {
-	const cat = threads.querySelector("#catalog")
-	cat.innerHTML = ""
-	cat.append(threads)
-}
-
-// Refilter and rerender threads on search input change
 function onSearchChange(e: Event) {
-	const threads = renderThreads((e.target as HTMLInputElement).value, data)
-	writeThreads(threads)
+	const filter = (e.target as HTMLInputElement).value
+	filterThreads(filter, document.getElementById("catalog"))
 }
+
+// Filter against board and subject and toggle thread visibility
+function filterThreads(filter: string, catalog: ParentNode) {
+	const r = new RegExp(filter, "i")
+
+	for (let el of Array.from(catalog.children) as HTMLElement[]) {
+		let display = "none"
+
+		const board = el.querySelector(".board")
+		if (board && r.test(board.textContent)) {
+			display = ""
+		} else {
+			const subject = el.querySelector("h3").textContent.slice(1, -1)
+			if (r.test(subject)) {
+				display = ""
+			}
+		}
+
+		el.style.display = display
+	}
+}
+
 
 // Fetch and rerender board contents
 async function refreshBoard() {
-	const {ctr, threads} = await fetchBoard(page.board)
-	cachetAndRender(threads, ctr)
+	renderFresh(await fetchBoard(page.board))
 }
 
 // Update refresh timer or refresh board, if document hidden, each minute
+// TODO: Replace with SSE
 setInterval(() => {
 	if (page.thread) {
 		return
@@ -212,23 +150,16 @@ setInterval(() => {
 		write(() =>
 			renderRefreshButton(threads.querySelector("#refresh")))
 	}
-}, 60000)
-
-on(threads, "click", toggleRules, {
-	passive: true,
-	selector: "#rules a",
-})
+}, 600000)
 
 on(threads, "change", onSortChange, {
 	passive: true,
 	selector: "select[name=sortMode]",
 })
-
 on(threads, "input", onSearchChange, {
 	passive: true,
 	selector: "input[name=search]",
 })
-
 on(threads, "click", refreshBoard, {
 	passive: true,
 	selector: "#refresh",

@@ -4,25 +4,21 @@ import { displayLoading, loadFromDB, page } from './state'
 import { initTemplates } from "./render"
 import { start as connect } from './connection'
 import { open } from './db'
-import loadPage from './page/common'
+import { render as renderBoard } from './page/board'
 import { exec, init } from './defer'
 import { loadModule } from "./util"
 import { checkBottom, scrollToAnchor } from "./scroll"
 
 // Load all stateful modules in dependency order
 async function start() {
-	// Load asynchronously and concurently as fast as possible
-	let renderPage: () => void
-	const ready = new Promise<void>((resolve) =>
-		renderPage = resolve)
-	const pageLoader = loadPage(page, ready)
-
 	initTemplates()
 	await open()
 	await loadFromDB()
 	init()
-	renderPage()
-	await pageLoader
+	if (!page.thread) {
+		const frag = document.getElementById("threads")
+		renderBoard(frag)
+	}
 	scrollToAnchor()
 	checkBottom()
 	connect()
@@ -39,5 +35,7 @@ async function start() {
 	}
 }
 
-start().catch(err =>
-	alert(err.message))
+start().catch(err => {
+	alert(err.message)
+	throw err
+})

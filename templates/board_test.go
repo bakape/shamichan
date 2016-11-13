@@ -13,7 +13,7 @@ func TestBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := Board("all", lang.Packs["en_GB"], types.Board{
+	_, err := Board("all", lang.Packs["en_GB"], true, types.Board{
 		Threads: types.BoardThreads{
 			{
 				ID:      1,

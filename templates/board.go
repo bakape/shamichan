@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"math/rand"
-	"sort"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
@@ -15,19 +14,24 @@ import (
 type boardVars struct {
 	IsAll, NeedImage, Captcha                bool
 	Banner, Notice, Rules, Title, CaptchaKey string
-	SortModes []string
+	SortModes                                []string
 	Threads                                  types.BoardThreads
 	Boards                                   []config.BoardTitle
 	Lang                                     lang.Pack
 }
 
-// Board renders board page HTML for noscript browsers
-func Board(b string, lang lang.Pack, data types.Board) ([]byte, error) {
+// Board renders board page HTML for noscript browsers. withIndex specifies, if
+// the rendered board page should be embedded in the index page
+func Board(
+	b string,
+	lang lang.Pack,
+	withIndex bool,
+	data types.Board,
+) ([]byte, error) {
 	w := new(bytes.Buffer)
 	conf := config.Get()
 	boardConf := config.GetBoardConfigs(b)
 	title := fmt.Sprintf("/%s/ - %s", b, boardConf.Title)
-	sort.Sort(data.Threads) // Sort by last reply time
 
 	v := boardVars{
 		IsAll:      b == "all",
@@ -50,6 +54,10 @@ func Board(b string, lang lang.Pack, data types.Board) ([]byte, error) {
 	err := tmpl["board"].Execute(w, v)
 	if err != nil {
 		return nil, err
+	}
+
+	if !withIndex {
+		return w.Bytes(), nil
 	}
 
 	return execIndex(w, lang.ID, title)

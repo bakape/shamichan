@@ -1,10 +1,8 @@
 // Provides type-safe and selective mappings for the language packs
 
 import {makeEl, HTML} from './util'
-import {fetchJSON} from "./json"
 import {write} from './render'
 import {defer} from './defer'
-import options from './options'
 
 type LanguagePack = {
 	posts: LnPosts
@@ -206,12 +204,3 @@ function languageCSS() {
 }
 
 defer(languageCSS)
-
-// Fetch the administrator language pack
-export async function fetchAdminPack(): Promise<LnAdmin> {
-	if (admin) {
-		return admin
-	}
-	const path = `/assets/lang/${options.lang}/admin.json`
-	return admin = await fetchJSON<LnAdmin>(path)
-}

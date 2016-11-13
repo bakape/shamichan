@@ -7,7 +7,7 @@ import { write } from './render'
 import { authenticate } from './mod/login'
 import { PostData } from "./posts/models"
 import { insertPost } from "./client"
-import { fetchThread } from "./json"
+import { fetchThread } from "./fetch"
 import identity from "./posts/posting/identity"
 import { postSM, postEvent, postState, postModel } from "./posts/posting/main"
 

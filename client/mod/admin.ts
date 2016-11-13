@@ -1,7 +1,7 @@
 import { handlers, send, message } from '../connection'
 import { InputSpec, renderInput, inputType } from '../forms'
 import AccountFormView from './common'
-import { admin as lang, fetchAdminPack } from '../lang'
+import { admin as lang } from '../lang'
 import { table, makeFrag } from '../util'
 import { langs, themes } from '../options/specs'
 
@@ -202,9 +202,8 @@ export default class ConfigPanel extends AccountFormView {
 	}
 
 	// Handle server response
-	async handleResponse(conf: ServerConfigs) {
+	handleResponse(conf: ServerConfigs) {
 		delete handlers[message.configServer]
-		await fetchAdminPack()
 		this.render(conf)
 	}
 }

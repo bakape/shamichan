@@ -305,18 +305,6 @@ export function pluralize(num: number, word: string[]): string {
 	return `${num} ${word[num === 1 || num === -1 ? 0 : 1]}`
 }
 
-// Produce simple numeric hash of a string for quick comparison purposes
-export function hashString(s: string): number {
-	if (s.length === 0) {
-		return 0
-	}
-	let hash = 0
-	for (let i = 0; i < s.length; i++) {
-		hash = ((hash << 5) - hash) + s.codePointAt(i)
-	}
-	return hash
-}
-
 // Encodes an ArrayBuffer to a hex string
 export function bufferToHex(buf: ArrayBuffer): string {
 	const b = new Uint8Array(buf),

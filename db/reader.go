@@ -13,7 +13,8 @@ var (
 			EqJoin("id", r.Table("posts")).
 			Zip().
 			Without(omitForBoards).
-			Merge(mergeLastUpdated)
+			Merge(mergeLastUpdated).
+			OrderBy(r.Desc("replyTime"))
 
 	// Gets the most recently updated post timestamp from thread
 	getLastUpdated = r.
@@ -49,7 +50,7 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 	getPosts := r.
 		Table("posts").
 		GetAllByIndex("op", id).
-		OrderBy("id").
+		OrderBy(r.Desc("replyTime")).
 		CoerceTo("array")
 
 	// Only fetch last N number of replies
@@ -97,7 +98,8 @@ func GetBoard(board string) (data types.Board, err error) {
 		EqJoin("id", r.Table("posts")).
 		Zip().
 		Without(omitForBoards).
-		Merge(mergeLastUpdated)
+		Merge(mergeLastUpdated).
+		OrderBy("replyTime")
 	err = All(q, &data.Threads)
 
 	return

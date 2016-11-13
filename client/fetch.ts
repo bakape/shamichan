@@ -3,12 +3,6 @@
 import { BoardConfigs } from './state'
 import { ThreadData } from "./posts/models"
 
-// Data of a single board retrieved from the server through `/json/:board`
-export type BoardData = {
-	ctr: number
-	threads: ThreadData[]
-}
-
 // Single entry of the array, fetched through `/json/boardList`
 export type BoardEntry = {
 	id: string
@@ -17,33 +11,45 @@ export type BoardEntry = {
 
 // Fetches and decodes a JSON response from the API
 export async function fetchJSON<T>(url: string): Promise<T> {
+	return await (await fetchResource(url)).json()
+}
+
+async function fetchResource(url: string): Promise<Response> {
 	const res = await fetch(url)
 	await handleError(res)
-	return await res.json()
+	return res
+}
+
+export async function fetchHTML(url: string): Promise<string> {
+	return await (await fetchResource(url)).text()
 }
 
 // Send a POST request with a JSON body to the server
 export async function postJSON(url: string, body: any): Promise<Response> {
-	const res = await fetch(url, {
+	const res = await postResource(url, {
 		method: "POST",
 		body: JSON.stringify(body),
 	})
+	return res
+}
+
+async function postResource(url: string, opts: RequestInit): Promise<Response> {
+	const res = await fetch(url, opts)
 	await handleError(res)
 	return res
 }
 
 // Send a POST request with a text body to the server
 export async function postText(url: string, text: string): Promise<string> {
-	const res = await fetch(url, {
+	const res = await postResource(url, {
 		method: "POST",
 		body: text,
 	})
-	await handleError(res)
 	return await res.text()
 }
 
 // Throw the status text of a Response as an error on HTTP errors
-export async function handleError(res: Response) {
+async function handleError(res: Response) {
 	if (!res.ok) {
 		throw new Error(await res.text())
 	}
@@ -61,9 +67,9 @@ export async function fetchBoarConfigs(board: string): Promise<BoardConfigs> {
 	return await fetchJSON<BoardConfigs>(`/json/boardConfig/${board}`)
 }
 
-// Fetch JSON data of a board page
-export async function fetchBoard(board: string): Promise<BoardData> {
-	return await fetchJSON<BoardData>(`/json/${board}/`)
+// Fetch HTML of a board page
+export async function fetchBoard(board: string): Promise<string> {
+	return await fetchHTML(`/${board}/?noIndex=true`)
 }
 
 // Fetch thread JSON data

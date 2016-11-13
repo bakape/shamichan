@@ -3,7 +3,7 @@ import {
 	HTML, commaList, load, setAttrs, makeFrag, bufferToHex
 } from '../../util'
 import { write } from '../../render'
-import { postJSON, postText } from "../../json"
+import { postJSON, postText } from "../../fetch"
 import Model from "../../model"
 import identity from "./identity"
 import { Post } from "../models"

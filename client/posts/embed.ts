@@ -1,7 +1,7 @@
 import { makeAttrs, makeFrag } from "../util"
 import { threads, write } from "../render"
 import { on } from "../util"
-import { fetchJSON } from "../json"
+import { fetchJSON } from "../fetch"
 import { deferInit } from "../defer"
 
 type OEmbedDoc = {

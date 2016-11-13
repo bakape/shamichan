@@ -3,7 +3,7 @@
 		<img src="/assets/banners/{{.}}">
 	</h1>
 {{end}}
-<h1 class="page-title">
+<h1 id="page-title">
 	{{.Title}}
 </h1>
 {{template "hover-reveal" bundle .Notice (index $.Lang.UI "showNotice")}}
@@ -46,29 +46,29 @@
 			<input type="submit" value="{{index .Lang.UI "submit"}}">
 			<input type="button" name="cancel" value="{{index .Lang.UI "cancel"}}">
 		</form>
-		<aside class="act glass">
-			<a id="refresh"></a>
-		</aside>
-		<span id="catalog-controls" class="margin-spaced">
-			<input type="text" name="search" placeholder="{{index .Lang.UI "search"}}" title="{{index .Lang.UI "searchTooltip"}}">
-			<select name="sortMode">
-				{{range $i, $s :=  (bundle "lastReply" "creation" "replyCount" "fileCount")}}
-					<option value="{{$s}}">
-						{{index $.Lang.SortModes $i}}
-					</option>
-				{{end}}
-			</select>
-		</span>
 	</aside>
+	<aside class="act glass">
+		<a id="refresh"></a>
+	</aside>
+	<span id="catalog-controls" class="margin-spaced">
+		<input type="text" name="search" placeholder="{{index .Lang.UI "search"}}" title="{{index .Lang.UI "searchTooltip"}}">
+		<select name="sortMode">
+			{{range $i, $s :=  (bundle "lastReply" "creation" "replyCount" "fileCount")}}
+				<option value="{{$s}}">
+					{{index $.Lang.SortModes $i}}
+				</option>
+			{{end}}
+		</select>
+	</span>
 </span>
 <hr>
 <div id="catalog">
 	{{range .Threads}}
-		<article id="p{{.ID}}" class="glass">
+		<article id="p{{.ID}}" class="glass" data-replyTime="{{.ReplyTime}}" data-time="{{.Time}}" data-postCtr="{{.PostCtr}}" data-imageCtr="{{.ImageCtr}}">
 			{{if .Image}}
 				<figure>
 					<a class="history" href="/{{.Board}}/{{.ID}}">
-						<img src="{{thumbPath .Image}}">
+						<img src="{{thumbPath .Image}}" class="expanded">
 					</a>
 				</figure>
 			{{end}}

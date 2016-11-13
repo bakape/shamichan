@@ -163,15 +163,3 @@ type Command struct {
 	Type CommandType `json:"type" gorethink:"type"`
 	Val  interface{} `json:"val" gorethink:"val"`
 }
-
-func (b BoardThreads) Len() int {
-	return len(b)
-}
-
-func (b BoardThreads) Less(i, j int) bool {
-	return b[i].ReplyTime > b[j].ReplyTime
-}
-
-func (b BoardThreads) Swap(i, j int) {
-	b[i], b[j] = b[j], b[i]
-}

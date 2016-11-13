@@ -1,9 +1,9 @@
 import AccountFormView, { newRequest, LoginCredentials } from "./common"
 import { BoardConfigs } from "../state"
 import { InputSpec, renderInput, inputType } from '../forms'
-import { admin as lang, fetchAdminPack } from '../lang'
+import { admin as lang } from '../lang'
 import { table, makeFrag, makeEl, on } from "../util"
-import { fetchJSON, fetchBoardList, postJSON } from "../json"
+import { fetchJSON, fetchBoardList, postJSON } from "../fetch"
 import { loginID, sessionToken } from "./login"
 import { write } from "../render"
 import { formatHeader } from "../page/board"
@@ -98,11 +98,9 @@ export default class BoardConfigPanel extends AccountFormView {
 	// Render the radio element for picking the board you want to configure
 	async renderSelection() {
 		const path = `/json/positions/owners/${loginID}`,
-			fLang = fetchAdminPack(),
 			fBoards = fetchJSON<string[]>(path),
-			fBoardList = fetchBoardList()
-		await fLang
-		const boards = (await fBoards).sort()
+			fBoardList = fetchBoardList(),
+			boards = (await fBoards).sort()
 		let boardList = await fBoardList
 
 		if (!boards.length) {
