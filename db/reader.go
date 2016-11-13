@@ -50,6 +50,7 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 	getPosts := r.
 		Table("posts").
 		GetAllByIndex("op", id).
+		OrderBy("id").
 		CoerceTo("array")
 
 	// Only fetch last N number of replies
