@@ -124,16 +124,12 @@ hr {
 
 // TODO: Need a touchscreen override for this
 .hover-reveal {
-	&:hover {
-		& > span:first-child {
-			display: none;
-		}
-		& > span:last-child {
-			display: block;
-		}
-	}
 	& > span:last-child {
 		display: none;
+	}
+	&:hover > span:last-child {
+		display: block;
+		position: absolute;
 	}
 }
 

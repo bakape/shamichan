@@ -6,8 +6,6 @@
 <h1 id="page-title">
 	{{.Title}}
 </h1>
-{{template "hover-reveal" bundle .Notice (index $.Lang.UI "showNotice")}}
-{{template "hover-reveal" bundle .Rules (index $.Lang.UI "rules")}}
 <span class="aside-container">
 	<aside id="thread-form-container" class="glass">
 		<span class="act">
@@ -50,6 +48,8 @@
 	<aside class="act glass">
 		<a id="refresh"></a>
 	</aside>
+	{{template "hover-reveal" bundle .Notice (index $.Lang.UI "showNotice")}}
+	{{template "hover-reveal" bundle .Rules (index $.Lang.UI "rules")}}
 	<span id="catalog-controls" class="margin-spaced">
 		<input type="text" name="search" placeholder="{{index .Lang.UI "search"}}" title="{{index .Lang.UI "searchTooltip"}}">
 		<select name="sortMode">
