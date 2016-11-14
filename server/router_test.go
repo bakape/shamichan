@@ -30,7 +30,7 @@ func init() {
 	lang.Dir = filepath.Join("..", "lang")
 
 	fns := []func() error{
-		db.LoadDB, lang.Load, templates.ParseTemplates, templates.Compile,
+		db.LoadDB, lang.Load, templates.Parse, templates.Compile,
 	}
 	if err := util.Waterfall(fns); err != nil {
 		panic(err)

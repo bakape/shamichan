@@ -56,9 +56,9 @@ type imageSearch struct {
 	ID, Abbrev string
 }
 
-// ParseTemplates reads all HTML templates from disk, strips whitespace and
-// parses them into the global template map
-func ParseTemplates() error {
+// Parse reads all HTML templates from disk, strips whitespace and parses them
+// into the global template map
+func Parse() error {
 	specs := [...]struct {
 		name string
 		deps []string
@@ -130,16 +130,19 @@ func ParseTemplates() error {
 
 // Compile reads template HTML from disk, injects dynamic variables,
 // hashes and stores them
-func Compile() error {
-	// TODO: Build templates for all languages
-	index, err := buildIndexTemplate(lang.Packs["en_GB"])
-	if err != nil {
-		return err
+func Compile() (err error) {
+	t := make(map[string]*template.Template, len(lang.Packs))
+	for id := range lang.Packs {
+		t[id], err = buildIndexTemplate(lang.Packs[id])
+		if err != nil {
+			return err
+		}
 	}
 
 	mu.Lock()
-	defer mu.Unlock()
-	indexTemplates["en_GB"] = index
+	indexTemplates = t
+	mu.Unlock()
+
 	return nil
 }
 

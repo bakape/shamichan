@@ -144,7 +144,7 @@ func startServer() {
 	wg.Wait()
 	wg.Add(3)
 	go func() {
-		logFatal(templates.ParseTemplates)
+		logFatal(templates.Parse)
 		logFatal(templates.Compile)
 		wg.Done()
 	}()

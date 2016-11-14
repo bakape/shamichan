@@ -56,7 +56,10 @@ export const specs: { [id: string]: OptionSpec } = {
 			return config.defaultLang
 		},
 		noExecOnStart: true,
-		exec() {
+		exec(ln: string) {
+			// Expire 10 years from now
+			const t = new Date(new Date().getFullYear() + 10, 11)
+			document.cookie = `lang=${ln};expires${t.toUTCString()};path=/`
 			alert(lang.langApplied)
 			location.reload()
 		},
