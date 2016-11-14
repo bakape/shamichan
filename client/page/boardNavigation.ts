@@ -1,38 +1,31 @@
 import View from '../view'
 import Model from '../model'
 import { write } from '../render'
-import { HTML, makeAttrs } from '../util'
-import { fetchBoardList, BoardEntry } from "../fetch"
-import { ui } from '../lang'
-import { formatHeader } from './board'
+import { HTML, makeFrag } from '../util'
+import { fetchHTML } from "../fetch"
 
 const selected = new Set<string>(),
 	panel = document.getElementById("left-panel"),
 	spacer = document.getElementById("left-spacer")
 
-let boards: BoardEntry[],
-	navigation: BoardNavigation,
+let navigation: BoardNavigation,
 	selectionPanel: BoardSelectionPanel,
 	lastPanelWidth: number
 
 // View for navigating between boards and selecting w
 class BoardNavigation extends View<Model> {
 	constructor() {
-		super({
-			id: "board-navigation",
-			tag: "nav",
-		})
-
+		super({ el: document.getElementById("board-navigation") })
 		this.render()
 		this.onClick({
 			".board-selection": e =>
-				this.toggleBoardSelectionPanel(e.target as Element),
+				this.togglePanel(e.target as Element),
 		})
 	}
 
 	render() {
 		let html = "["
-		const boards = ["all", ...selected]
+		const boards = ["all", ...Array.from(selected).sort()]
 		for (let i = 0; i < boards.length; i++) {
 			if (i !== 0) {
 				html += " / "
@@ -50,12 +43,13 @@ class BoardNavigation extends View<Model> {
 			]
 			</nav>`
 
-		write(() =>
-			(this.el.innerHTML = html,
-				document.querySelector("#banner").prepend(this.el)))
+		write(() => {
+			this.el.innerHTML = html
+			document.querySelector("#banner").prepend(this.el)
+		})
 	}
 
-	toggleBoardSelectionPanel(el: Element) {
+	togglePanel(el: Element) {
 		if (selectionPanel) {
 			selectionPanel.remove()
 			selectionPanel = null
@@ -79,66 +73,36 @@ class BoardSelectionPanel extends View<Model> {
 		})
 		this.on("submit", e =>
 			this.submit(e))
-		this.on('input', e => this.search(e), {
+		this.on("input", e => this.search(e), {
 			selector: 'input[name=search]'
 		})
 	}
 
 	// Fetch the board list from the server and render the selection form
 	async render() {
-		boards = await fetchBoardList()
+		const frag = makeFrag(await fetchHTML("/forms/boardNavigation"))
+		const boards = Array
+			.from(frag.querySelectorAll("input[type=checkbox]"))
+			.map(b =>
+				b.getAttribute("name"))
 
-		// Assert all selected boards still exist. If not, deselect them.
-		const boardIDs = boards.map(board =>
-			board.id)
-		for (let sel of selected) {
-			if (boardIDs.indexOf(sel) === -1) {
-				selected.delete(sel)
-				persistSelected()
-				navigation.render()
+		// Check all selected boards.
+		// Assert all selected boards still exist.If not, deselect them.
+		for (let s of selected) {
+			if (boards.includes(s)) {
+				(frag.querySelector(`input[name=${s}]`) as HTMLInputElement)
+					.checked = true
+				continue
 			}
+			selected.delete(s)
+			persistSelected()
+			navigation.render()
 		}
-
-		let boardList = ""
-		for (let {id, title} of boards) {
-			const attrs: { [key: string]: string } = {
-				type: "checkbox",
-				name: id
-			}
-			if (selected.has(id)) {
-				attrs["checked"] = ""
-			}
-			boardList += HTML
-				`<span class="input-span" data-id="${id}">
-					<input ${makeAttrs(attrs)}>
-					<label for="${id}">
-						<a class="history" href="/${id}/">
-							${formatHeader(id, title)}
-						</a>
-					</label>
-					<br>
-				</span>`
-		}
-
-		const searchAttrs = {
-			type: "text",
-			name: "search",
-			placeholder: ui.search,
-			class: "full-width",
-		}
-		const html = HTML
-			`<input ${makeAttrs(searchAttrs)}>
-			<br>
-			<form>
-				<input type="submit" value="${ui.apply}">
-				<input type="button" name="cancel" value="${ui.cancel}">
-				<br>
-				${boardList}
-			</form>`
 
 		write(() => {
 			this.parentEl.textContent = "-"
-			this.el.innerHTML = html
+			this.el.innerHTML = ""
+			this.el.append(frag)
 			panel.append(this.el)
 		})
 	}
@@ -167,18 +131,12 @@ class BoardSelectionPanel extends View<Model> {
 	// Hide board entries that do not match the search field string
 	search(event: Event) {
 		const term = (event.target as HTMLInputElement).value.trim(),
-			regex = new RegExp(term, 'i'),
-			matched: string[] = []
-		for (let {id, title} of boards) {
-			if (regex.test(id) || regex.test(title) || term === `/${id}/`) {
-				matched.push(id)
-			}
-		}
+			regexp = new RegExp(term, 'i')
 
 		write(() => {
-			for (let el of this.el.querySelectorAll(`.input-span`)) {
+			for (let el of this.el.querySelectorAll("label")) {
 				let display: string
-				if (matched.includes(el.getAttribute("data-id"))) {
+				if (regexp.test(el.querySelector("a").textContent)) {
 					display = "block"
 				} else {
 					display = "none"

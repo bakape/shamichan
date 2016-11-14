@@ -1,12 +1,12 @@
 package templates
 
 import (
-	"testing"
-
 	"path/filepath"
+	"testing"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
+	"github.com/bakape/meguca/util"
 )
 
 func init() {
@@ -22,11 +22,8 @@ func init() {
 	config.Set(config.Configs{})
 
 	lang.Dir = filepath.Join("..", "lang")
-	if err := lang.Load(); err != nil {
-		panic(err)
-	}
-
-	if err := ParseTemplates(); err != nil {
+	fns := []func() error{lang.Load, ParseTemplates, Compile}
+	if err := util.Waterfall(fns); err != nil {
 		panic(err)
 	}
 }

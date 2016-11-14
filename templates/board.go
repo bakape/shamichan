@@ -11,20 +11,11 @@ import (
 	"github.com/bakape/meguca/types"
 )
 
-type boardVars struct {
-	IsAll, NeedImage, Captcha                bool
-	Banner, Notice, Rules, Title, CaptchaKey string
-	SortModes                                []string
-	Threads                                  types.BoardThreads
-	Boards                                   []config.BoardTitle
-	Lang                                     lang.Pack
-}
-
 // Board renders board page HTML for noscript browsers. withIndex specifies, if
 // the rendered board page should be embedded in the index page
 func Board(
 	b string,
-	lang lang.Pack,
+	ln lang.Pack,
 	withIndex bool,
 	data types.Board,
 ) ([]byte, error) {
@@ -33,14 +24,21 @@ func Board(
 	boardConf := config.GetBoardConfigs(b)
 	title := fmt.Sprintf("/%s/ - %s", b, boardConf.Title)
 
-	v := boardVars{
+	v := struct {
+		IsAll, NeedImage, Captcha                bool
+		Banner, Notice, Rules, Title, CaptchaKey string
+		SortModes                                []string
+		Threads                                  types.BoardThreads
+		Boards                                   config.BoardTitles
+		Lang                                     lang.Pack
+	}{
 		IsAll:      b == "all",
 		NeedImage:  !boardConf.TextOnly,
 		Notice:     boardConf.Notice,
 		Rules:      boardConf.Rules,
 		Title:      title,
 		Threads:    data.Threads,
-		Lang:       lang,
+		Lang:       ln,
 		Captcha:    conf.Captcha,
 		CaptchaKey: conf.CaptchaPublicKey,
 	}
@@ -60,7 +58,7 @@ func Board(
 		return w.Bytes(), nil
 	}
 
-	return execIndex(w, lang.ID, title)
+	return execIndex(w, ln.ID, title)
 }
 
 // Execute and index template in the second pass
@@ -76,9 +74,5 @@ func execIndex(w *bytes.Buffer, lang, title string) ([]byte, error) {
 		Title:   title,
 		Threads: template.HTML(html),
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	return w.Bytes(), nil
+	return w.Bytes(), err
 }

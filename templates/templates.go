@@ -45,19 +45,6 @@ var (
 	isTest bool
 )
 
-// Template variables
-type vars struct {
-	Captcha                       bool
-	Config                        template.JS
-	Email, ConfigHash, DefaultCSS string
-	FAQ                           template.HTML
-	Lang                          lang.Pack
-	Identity, Login, Register     []inputSpec
-	Options                       [][]inputSpec
-	ImageSearch                   []imageSearch
-	Boards, FormMenu   []string
-}
-
 // Variables for the second pass template execution
 type secondPassVars struct {
 	Title   string
@@ -80,6 +67,7 @@ func ParseTemplates() error {
 		// Order matters. Dependencies must come before dependents.
 		{"captcha", nil, nil},
 		{"hover-reveal", nil, nil},
+		{"boardNavigation", nil, nil},
 		// {"article", nil, postFunctions},
 		{
 			"index",
@@ -156,11 +144,21 @@ func Compile() error {
 }
 
 // buildIndexTemplate constructs the HTML template array, minifies and hashes it
-func buildIndexTemplate(lang lang.Pack) (*template.Template, error) {
+func buildIndexTemplate(ln lang.Pack) (*template.Template, error) {
 	clientJSON, hash := config.GetClient()
 	conf := config.Get()
 
-	v := vars{
+	v := struct {
+		Captcha                       bool
+		Config                        template.JS
+		Email, ConfigHash, DefaultCSS string
+		FAQ                           template.HTML
+		Lang                          lang.Pack
+		Identity, Login, Register     []inputSpec
+		Options                       [][]inputSpec
+		ImageSearch                   []imageSearch
+		Boards, FormMenu              []string
+	}{
 		Config:     template.JS(clientJSON),
 		ConfigHash: hash,
 		Captcha:    conf.Captcha,
@@ -183,7 +181,7 @@ func buildIndexTemplate(lang lang.Pack) (*template.Template, error) {
 		Login:    specs["login"],
 		Register: specs["register"],
 		Options:  optionSpecs,
-		Lang:     lang,
+		Lang:     ln,
 	}
 
 	w := new(bytes.Buffer)
@@ -195,7 +193,7 @@ func buildIndexTemplate(lang lang.Pack) (*template.Template, error) {
 	// Second template compile pass
 	firstPass := w.String()
 	w.Reset()
-	t := template.New("")
+	t := template.New(ln.ID)
 	t, err = t.Parse(firstPass)
 	if err != nil {
 		return nil, err

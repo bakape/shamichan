@@ -147,20 +147,35 @@ func testBoardConfChange(t *testing.T, conf BoardConfigs) {
 
 func TestGetBoardTitles(t *testing.T) {
 	ClearBoards()
-	_, err := SetBoardConfigs(BoardConfigs{
-		ID: "a",
-		BoardPublic: BoardPublic{
-			Title: "Animu & Mango",
+
+	conf := [...]BoardConfigs{
+		{
+			ID: "g",
+			BoardPublic: BoardPublic{
+				Title: "Techloligy",
+			},
 		},
-	})
-	if err != nil {
-		t.Fatal(err)
+		{
+			ID: "a",
+			BoardPublic: BoardPublic{
+				Title: "Animu & Mango",
+			},
+		},
+	}
+	for _, c := range conf {
+		if _, err := SetBoardConfigs(c); err != nil {
+			t.Fatal(err)
+		}
 	}
 
-	AssertDeepEquals(t, GetBoardTitles(), []BoardTitle{
+	AssertDeepEquals(t, GetBoardTitles(), BoardTitles{
 		{
 			ID:    "a",
 			Title: "Animu & Mango",
+		},
+		{
+			ID:    "g",
+			Title: "Techloligy",
 		},
 	})
 }

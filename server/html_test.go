@@ -64,3 +64,11 @@ func TestBoardHTML(t *testing.T) {
 		})
 	}
 }
+
+func TestBoardNavigation(t *testing.T) {
+	(*config.Get()).DefaultLang = "en_GB"
+
+	rec, req := newPair("/forms/boardNavigation")
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 200)
+}

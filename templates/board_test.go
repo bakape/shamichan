@@ -9,10 +9,6 @@ import (
 )
 
 func TestBoard(t *testing.T) {
-	if err := Compile(); err != nil {
-		t.Fatal(err)
-	}
-
 	_, err := Board("all", lang.Packs["en_GB"], true, types.Board{
 		Threads: types.BoardThreads{
 			{

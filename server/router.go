@@ -64,6 +64,7 @@ func createRouter() http.Handler {
 	r.GET("/", wrapHandler(redirectToDefault))
 	r.GET("/:board/", boardHTML)
 	r.GET("/:board/:thread", threadHTML)
+	r.GET("/forms/boardNavigation", wrapHandler(boardNavigation))
 
 	// JSON API
 	json := r.NewGroup("/json")

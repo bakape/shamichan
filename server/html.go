@@ -20,7 +20,9 @@ func serveHTML(
 	for key, val := range vanillaHeaders {
 		head.Set(key, val)
 	}
-	head.Set("ETag", etag)
+	if etag != "" {
+		head.Set("ETag", etag)
+	}
 	head.Set("Content-Type", "text/html")
 
 	writeData(w, r, data)
@@ -72,4 +74,19 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	// 	return
 	// }
 	// serveHTML(w, r, data, etag)
+}
+
+// Render a board selection and navigation panel and write HTML to client
+func boardNavigation(w http.ResponseWriter, r *http.Request) {
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	data, err := templates.BoardNavigation(lp)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	serveHTML(w, r, data, "")
 }

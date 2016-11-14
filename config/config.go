@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"sort"
+
 	"github.com/bakape/meguca/util"
 )
 
@@ -171,6 +173,9 @@ type BoardTitle struct {
 	Title string `json:"title"`
 }
 
+// BoardTitles implements sort.Interface
+type BoardTitles []BoardTitle
+
 // Generate /all/ board configs
 func init() {
 	var err error
@@ -178,6 +183,18 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (b BoardTitles) Len() int {
+	return len(b)
+}
+
+func (b BoardTitles) Less(i, j int) bool {
+	return b[i].ID < b[j].ID
+}
+
+func (b BoardTitles) Swap(i, j int) {
+	b[i], b[j] = b[j], b[i]
 }
 
 // Get returns a pointer to the current server configuration struct. Callers
@@ -234,17 +251,19 @@ func GetBoardConfigs(b string) BoardConfContainer {
 }
 
 // GetBoardTitles returns a slice of all existing boards and their titles
-func GetBoardTitles() []BoardTitle {
+func GetBoardTitles() BoardTitles {
 	boardMu.RLock()
 	defer boardMu.RUnlock()
 
-	bt := make([]BoardTitle, 0, len(boardConfigs))
+	bt := make(BoardTitles, 0, len(boardConfigs))
 	for id, conf := range boardConfigs {
 		bt = append(bt, BoardTitle{
 			ID:    id,
 			Title: conf.Title,
 		})
 	}
+
+	sort.Sort(bt)
 	return bt
 }
 
