@@ -26,7 +26,7 @@
 		"send": "Send",
 		"add": "Add",
 		"invalidCaptcha": "Invalid captcha",
-		"reloadCaptcha": "Click to reload",
+		"mustMatch": "Passwords must match",
 		"close": "Close",
 		"refresh": "Refresh"
 	},

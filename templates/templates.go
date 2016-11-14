@@ -160,7 +160,7 @@ func buildIndexTemplate(ln lang.Pack) (*template.Template, error) {
 		Identity, Login, Register     []inputSpec
 		Options                       [][]inputSpec
 		ImageSearch                   []imageSearch
-		Boards, FormMenu              []string
+		Boards              []string
 	}{
 		Config:     template.JS(clientJSON),
 		ConfigHash: hash,
@@ -175,10 +175,6 @@ func buildIndexTemplate(ln lang.Pack) (*template.Template, error) {
 			{"saucenao", "Sn"},
 			{"desustorage", "Ds"},
 			{"exhentai", "Ex"},
-		},
-		FormMenu: []string{
-			"logout", "logoutAll", "changePassword", "createBoard",
-			"configureBoard", "configureServer",
 		},
 		Identity: specs["identity"],
 		Login:    specs["login"],

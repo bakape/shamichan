@@ -1,11 +1,10 @@
 // Utility functions and classes for rendering forms
 
 import { HTML, makeAttrs, makeFrag, extend } from './util'
-import View, { ViewAttrs } from './view'
+import View from './view'
 import Model from './model'
-import { write, read, importTemplate } from './render'
+import { write, read } from './render'
 import { ui } from './lang'
-import { config } from './state'
 import CaptchaView from './captcha'
 
 type StringMap = { [key: string]: string }
@@ -30,79 +29,8 @@ export type InputSpec = {
 	[index: string]: any
 }
 
-export interface FormViewAttrs extends ViewAttrs {
-	noCaptcha?: boolean
-	noCancel?: boolean
-}
-
-// Render a form input element for consumption by ../util.table
-export function renderInput(spec: InputSpec): [string, string] {
-	const attrs: StringMap = {
-		name: spec.name,
-		title: spec.tooltip || "",
-	}
-	if (spec.placeholders) {
-		attrs["placeholder"] = spec.label
-	}
-	if (spec.required) {
-		attrs["required"] = ""
-	}
-
-	switch (spec.type) {
-		case inputType.boolean:
-			attrs['type'] = 'checkbox'
-			if (spec.value) {
-				attrs["checked"] = ""
-			}
-			break
-		case inputType.number:
-			attrs["type"] = 'number'
-			if (spec.value !== undefined) {
-				attrs['value'] = spec.value.toString()
-			}
-			for (let prop of ['min', 'max']) {
-				if (prop in spec) {
-					attrs[prop] = spec[prop].toString()
-				}
-			}
-			break
-		case inputType.string:
-			attrs["type"] = "text"
-			attrs["value"] = spec.value as string || ""
-			if (spec.pattern) {
-				attrs["pattern"] = spec.pattern
-			}
-			if ("maxLength" in spec) {
-				attrs["maxlength"] = spec.maxLength.toString()
-			}
-			break
-		case inputType.select:
-			return renderSelect(spec)
-		case inputType.multiline:
-			return renderTextArea(spec, attrs)
-		case inputType.map:
-			return renderMap(spec)
-	}
-
-	return [renderLabel(spec), `<input ${makeAttrs(attrs)}>`]
-}
-
-// Render a dropdown selection menu
-function renderSelect(spec: InputSpec): [string, string] {
-	let html = `<select title="${spec.tooltip || ""}" name="${spec.name}">`
-	for (let item of spec.choices) {
-		html += `<option value="${item}"`
-		if (item === spec.value) {
-			html += `selected="selected"`
-		}
-		html += `>${item}</option>`
-	}
-	html += "</select>"
-	return [renderLabel(spec), html]
-}
-
 // Render a multiline input textarea
-function renderTextArea(spec: InputSpec, attrs: StringMap): [string, string] {
+export function renderTextArea(spec: InputSpec, attrs: StringMap): [string, string] {
 	attrs["rows"] = (spec.rows || 3).toString()
 	if ("maxLength" in spec) {
 		attrs["maxlength"] = spec.maxLength.toString()
@@ -124,7 +52,7 @@ function renderTextArea(spec: InputSpec, attrs: StringMap): [string, string] {
 }
 
 // Render a subform for assigning map-like data
-function renderMap(spec: InputSpec): [string, string] {
+export function renderMap(spec: InputSpec): [string, string] {
 	let html = `<div name="${spec.name}" title="${spec.tooltip || ""}">`
 	if (spec.value) {
 		for (let key in spec.value as StringMap) {
@@ -159,18 +87,12 @@ function renderLabel(spec: InputSpec): string {
 
 // Generic input form view with optional captcha support
 export class FormView extends View<Model> {
-	handleForm: () => void // Function used for sending the form to the client
-	captcha: CaptchaView
-	noCaptcha: boolean
-	noCancel: boolean
-	noSubmit: boolean
+	private handleForm: () => void // Function used for sending the form to the client
+	private captcha: CaptchaView
 
-	constructor(attrs: FormViewAttrs, handler: () => void) {
-		attrs.tag = "form"
-		super(attrs)
+	constructor(el: HTMLElement, handler: () => void) {
+		super({ el })
 		this.handleForm = handler
-		this.noCaptcha = attrs.noCaptcha
-		this.noCancel = attrs.noCancel
 		this.onClick({
 			"input[name=cancel]": () =>
 				this.remove(),
@@ -179,37 +101,23 @@ export class FormView extends View<Model> {
 			".map-add": e =>
 				this.addMapInput(e),
 		})
-		this.on('submit', e =>
+		this.on("submit", e =>
 			this.submit(e))
-	}
 
-	// Render a form field and embed the input fields inside it
-	renderForm(fields: Node) {
-		const frag = importTemplate("form")
-		if (this.noCancel) {
-			(frag.querySelector("input[name=cancel]") as HTMLInputElement)
-				.hidden = true
+		const captcha = this.el.querySelector(".captcha-container")
+		if (captcha) {
+			this.captcha = new CaptchaView(captcha)
 		}
-		if (this.noSubmit) {
-			(frag.querySelector("input[type=submit]") as HTMLInputElement)
-				.hidden = true
-		}
-		if (config.captcha && !this.noCaptcha) {
-			this.captcha =
-				new CaptchaView(frag.querySelector(".captcha-container"))
-		}
-		frag.prepend(fields)
-		this.el.append(frag)
 	}
 
 	// Submit form to server. Pass it to the assigned handler function
-	submit(event: Event) {
+	private submit(event: Event) {
 		event.preventDefault()
 		this.handleForm()
 	}
 
 	// Also destroy captcha, if any
-	remove() {
+	public remove() {
 		if (this.captcha) {
 			this.captcha.remove()
 		}
@@ -217,34 +125,34 @@ export class FormView extends View<Model> {
 	}
 
 	// Inject captcha data into the request struct, if any
-	injectCaptcha(req: {}) {
+	protected injectCaptcha(req: {}) {
 		if (this.captcha) {
 			extend(req, this.captcha.data())
 		}
 	}
 
 	// Render a text comment about the response status below the form
-	renderFormResponse(text: string) {
+	protected renderFormResponse(text: string) {
 		write(() =>
 			this.el.querySelector(".form-response").textContent = text)
 	}
 
 	// Load a new captcha, if present and response code is not 0
-	reloadCaptcha(code: number) {
+	protected reloadCaptcha(code: number) {
 		if (code !== 0 && this.captcha) {
 			this.captcha.reload()
 		}
 	}
 
 	// Render an additional map key-value input field pair
-	addMapInput(event: Event) {
+	protected addMapInput(event: Event) {
 		write(() =>
 			(event.target as Element)
 				.before(makeFrag(renderKeyValuePair("", ""))))
 	}
 
 	// Remove a map key-vale input field pair
-	removeMapInput(event: Event) {
+	protected removeMapInput(event: Event) {
 		write(() =>
 			(event.target as Element)
 				.closest("span").remove())

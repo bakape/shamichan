@@ -108,41 +108,6 @@
 		</span>
 		<span id="lock"></span>
 	</template>
-	<template name="catalog-thread">
-		<article class="glass">
-			{{template "figure"}}
-			<small class="spaced thread-links">
-				<b class="board" hidden></b>
-				<span class="counters"></span>
-				<span class="act">
-					<a class="history"></a>
-				</span>
-			</small>
-			<br>
-			<h3></h3>
-		</article>
-	</template>
-	<template name="form">
-		<div class="captcha-container" hidden>
-			<div data-id="adcopy-outer">
-				<div data-id="adcopy-puzzle-image" class="captcha-image"></div>
-				<div data-id="adcopy-puzzle-audio" class="hidden"></div>
-				<div data-id="adcopy-pixel-image" class="hidden"></div>
-				<div>
-					<span data-id="adcopy-instr" class="hidden"></span>
-				</div>
-				<input data-id="adcopy_response" name="adcopy_response" class="full-width" type="text" hidden>
-				<input type="hidden" name="adcopy_challenge" data-id="adcopy_challenge" hidden>
-				<a data-id="adcopy-link-refresh" class="hidden"></a>
-				<a data-id="adcopy-link-audio" class="hidden"></a>
-				<a data-id="adcopy-link-image" class="hidden"></a>
-				<a data-id="adcopy-link-info" class="hidden"></a>
-			</div>
-		</div>
-		<input type="submit">
-		<input type="button" name="cancel">
-		<div class="form-response admin"></div>
-	</template>
 </head>
 <body>
 	<!-- Loading indicator image -->
@@ -230,24 +195,34 @@
 					{{template "tabButts" (bundle (index $f "id" 0) (index $f "register" 0))}}
 					<div class="tab-cont">
 						<div class="tab-sel" data-id="0">
-							{{table .Login .Lang}}
-							{{template "captcha" (bundle "login" "" $)}}
-							<input type="submit" value="{{index .Lang.UI "submit"}}">
+							<form id="login-form">
+								{{table .Login .Lang}}
+								{{template "captcha" (bundle "login" "" $)}}
+								<input type="submit" value="{{index .Lang.UI "submit"}}">
+							</form>
 						</div>
 						<div data-id="1">
-							{{table .Register .Lang}}
-							{{template "captcha" (bundle "register" "" $)}}
-							<input type="submit" value="{{index .Lang.UI "submit"}}">
+							<form id="registration-form">
+								{{table .Register .Lang}}
+								{{template "captcha" (bundle "register" "" $)}}
+								<input type="submit" value="{{index .Lang.UI "submit"}}">
+							</form>
 						</div>
 					</div>
 				</div>
 				<div id="form-selection" class="hidden">
-					{{range .FormMenu}}
+					{{range bundle "logout" "logoutAll" "changePassword" "createBoard" "configureBoard"}}
 						<a id="{{.}}">
 							{{index $.Lang.Mod .}}
 						</a>
 						<br>
 					{{end}}
+					<span>
+						<a id="configureServer">
+							{{index $.Lang.Mod "configureServer"}}
+						</a>
+						<br>
+					</span>
 				</div>
 			</div>
 			<!-- Options panel -->
@@ -296,11 +271,10 @@
 		<div id="right-spacer" class="side-spacer"></div>
 	</div>
 	<script src="/assets/js/vendor/system.js"></script>
-	<!-- Dynamic module loader -->
-	<script src="/assets/js/scripts/loader.js"></script>
 	<!-- Captcha provider scripts -->
 	{{if .Captcha}}
-		<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/_puzzle.js"></script>
 		<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>
 	{{end}}
+	<!-- Dynamic module loader -->
+	<script src="/assets/js/scripts/loader.js"></script>
 </body>

@@ -1,16 +1,19 @@
-// Login/logout facilities for the account system
+// Login/logout/registration facilities for the account system
 
 import { TabbedModal } from '../banner'
 import { write } from '../render'
-import { loadModule } from '../util'
+import { loadModule, inputValue } from '../util'
 import { handlers, send, message } from '../connection'
 import { defer } from "../defer"
+import { FormView } from "../forms"
+import { mod as lang, ui } from "../lang"
+import { validatePasswordMatch } from "./common"
 
-// // Login/Registration response received from the server
-// type LoginResponse = {
-// 	code: responseCode
-// 	session: string // Session ID token
-// }
+// Login/Registration response received from the server
+type LoginResponse = {
+	code: responseCode
+	session: string // Session ID token
+}
 
 // Response codes for logging in, registration and password changing
 export const enum responseCode {
@@ -51,6 +54,9 @@ export default class AccountPanel extends TabbedModal {
 			"#configureBoard": this.loadConditionalView("mod/configureBoard"),
 		})
 
+		new LoginForm(document.getElementById("login-form"))
+		new RegistrationForm(document.getElementById("registration-form"))
+
 		handlers[message.authenticate] = (success: boolean) => {
 			if (!success) {
 				localStorage.removeItem("sessionToken")
@@ -61,22 +67,22 @@ export default class AccountPanel extends TabbedModal {
 	}
 
 	// Display the form selection menu
-	displayMenu() {
+	public displayMenu() {
 		write(() => {
 			document.getElementById("login-forms").style.display = "none"
 
-			const m = document.getElementById("form-menu")
-			m.style.display = "block"
+			const el = document.getElementById("form-selection")
+			el.style.display = "block"
 
 			// Hide server configuration link, unless logged in as "admin"
 			if (loginID !== "admin") {
-				m.querySelector("a:last-of-type").style.display = "none"
+				(el.lastElementChild as HTMLElement).style.display = "none"
 			}
 		})
 	}
 
 	// Log out of the user account
-	logout() {
+	private logout() {
 		localStorage.removeItem("sessionToken")
 		localStorage.removeItem("loginID")
 		location.reload()
@@ -84,7 +90,7 @@ export default class AccountPanel extends TabbedModal {
 
 	// Create handler for dynamically loading and rendering conditional view
 	// modules
-	loadConditionalView(path: string): EventListener {
+	private loadConditionalView(path: string): EventListener {
 		return () =>
 			loadModule(path).then(m => {
 				this.toggleMenu(false)
@@ -93,7 +99,7 @@ export default class AccountPanel extends TabbedModal {
 	}
 
 	// Either hide or show the selection menu
-	toggleMenu(show: boolean) {
+	private toggleMenu(show: boolean) {
 		const display = show ? "" : "none"
 		write(() =>
 			this.el.querySelector(".menu").style.display = display)
@@ -103,79 +109,74 @@ export default class AccountPanel extends TabbedModal {
 defer(() =>
 	new AccountPanel())
 
-// // Common functionality of LoginForm and RegistrationForm
-// class BaseLoginForm extends FormView {
-// 	constructor(handler: () => void) {
-// 		super({ noCancel: true }, handler)
-// 	}
+// Common functionality of LoginForm and RegistrationForm
+class BaseLoginForm extends FormView {
+	constructor(el: HTMLElement, handler: () => void) {
+		super(el, handler)
+	}
 
-// 	// Extract and send login ID and password and captcha (if any) from a form
-// 	sendRequest(type: message) {
-// 		const req: any = {}
-// 		for (let key of ['id', 'password']) {
-// 			req[key] = inputValue(this.el, key)
-// 		}
-// 		this.injectCaptcha(req)
-// 		loginID = req.id
-// 		send(type, req)
-// 	}
+	// Extract and send login ID and password and captcha (if any) from a form
+	protected sendRequest(type: message) {
+		const req: any = {}
+		for (let key of ['id', 'password']) {
+			req[key] = inputValue(this.el, key)
+		}
+		this.injectCaptcha(req)
+		loginID = req.id
+		send(type, req)
+	}
 
-// 	// Handle the login request response from the server.
-// 	// Both registration and login requests reply with the same message type
-// 	loginResponse({code, session}: LoginResponse) {
-// 		let text: string
-// 		switch (code) {
-// 			case responseCode.success:
-// 				sessionToken = session
-// 				localStorage.setItem("sessionToken", session)
-// 				localStorage.setItem("loginID", loginID)
-// 				accountPanel.displayMenu()
-// 				return
-// 			case responseCode.nameTaken:
-// 				text = lang.nameTaken
-// 				break
-// 			case responseCode.wrongCredentials:
-// 				text = lang.wrongCredentials
-// 				break
-// 			case responseCode.invalidCaptcha:
-// 				text = ui.invalidCaptcha
-// 				break
-// 			default:
-// 				// These response codes are never supposed to make it here, because
-// 				// of HTML5 form validation
-// 				text = lang.theFuck
-// 		}
+	// Handle the login request response from the server.
+	// Both registration and login requests reply with the same message type
+	protected loginResponse({code, session}: LoginResponse) {
+		let text: string
+		switch (code) {
+			case responseCode.success:
+				sessionToken = session
+				localStorage.setItem("sessionToken", session)
+				localStorage.setItem("loginID", loginID)
+				accountPanel.displayMenu()
+				return
+			case responseCode.nameTaken:
+				text = lang.nameTaken
+				break
+			case responseCode.wrongCredentials:
+				text = lang.wrongCredentials
+				break
+			case responseCode.invalidCaptcha:
+				text = ui.invalidCaptcha
+				break
+			default:
+				// These response codes are never supposed to make it here, because
+				// of HTML5 form validation
+				text = lang.theFuck
+		}
 
-// 		this.reloadCaptcha(code)
-// 		this.renderFormResponse(text)
-// 	}
-// }
+		this.reloadCaptcha(code)
+		this.renderFormResponse(text)
+	}
+}
 
-// // Form for logging into to an existing account
-// class LoginForm extends BaseLoginForm {
-// 	constructor() {
-// 		super(() =>
-// 			this.sendRequest(message.login))
-// 		this.renderForm(makeFrag(renderFields("id", "password")))
+// Form for logging into to an existing account
+class LoginForm extends BaseLoginForm {
+	constructor(el: HTMLElement) {
+		super(el, () =>
+			this.sendRequest(message.login))
+		handlers[message.login] = (msg: LoginResponse) =>
+			this.loginResponse(msg)
+	}
+}
 
-// 		handlers[message.login] = (msg: LoginResponse) =>
-// 			this.loginResponse(msg)
-// 	}
-// }
-
-// // Form for registering a new user account
-// class RegistrationForm extends BaseLoginForm {
-// 	constructor() {
-// 		super(() =>
-// 			this.sendRequest(message.register))
-// 		this.renderForm(makeFrag(renderFields("id", "password", "repeat")))
-// 		read(() =>
-// 			validatePasswordMatch(this.el, "password", "repeat"))
-
-// 		handlers[message.register] = (msg: LoginResponse) =>
-// 			this.loginResponse(msg)
-// 	}
-// }
+// Form for registering a new user account
+class RegistrationForm extends BaseLoginForm {
+	constructor(el: HTMLElement) {
+		super(el, () =>
+			this.sendRequest(message.register))
+		validatePasswordMatch(this.el, "password", "repeat")
+		handlers[message.register] = (msg: LoginResponse) =>
+			this.loginResponse(msg)
+	}
+}
 
 // Send the authentication request to the server
 export function authenticate() {

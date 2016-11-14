@@ -67,6 +67,7 @@ type LnUI = {
 	done: string
 	send: string
 	add: string
+	mustMatch: string
 	apply: string
 	search: string
 	invalidCaptcha: string

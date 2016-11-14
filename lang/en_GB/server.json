@@ -179,7 +179,6 @@
 		"changePassword": "Change password",
 		"oldPassword": "Old password",
 		"newPassword": "New password",
-		"mustMatch": "Passwords must match",
 		"nameTaken": "Login name already taken",
 		"wrongCredentials": "Incorrect login name or password",
 		"wrongPassword": "Incorrect password",
@@ -187,6 +186,7 @@
 	},
 	"ui": {
 		"focusForCaptcha": "Focus to load captcha",
+		"reloadCaptcha": "Click to reload",
 		"enableJS": "Enable JavaScript for more functionality",
 		"submit": "Submit",
 		"cancel": "Cancel",

@@ -4,7 +4,7 @@
 {{if $.Captcha}}
 	<div class="captcha-container">
 		<div id="adcopy-outer-{{$id}}">
-			<div id="adcopy-puzzle-image-{{$id}}" class="captcha-image"></div>
+			<div id="adcopy-puzzle-image-{{$id}}" class="captcha-image" title="{{index $.Lang.UI "reloadCaptcha"}}"></div>
 			<div id="adcopy-puzzle-audio-{{$id}}" class="hidden"></div>
 			<div id="adcopy-pixel-image-{{$id}}" class="hidden"></div>
 			<div>

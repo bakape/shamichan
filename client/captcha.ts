@@ -1,11 +1,11 @@
 import View from './view'
 import Model from './model'
-import {write} from './render'
-import {config} from './state'
+import { write } from './render'
+import { config } from './state'
 
 // Solve Media AJAX API controller
 // https://portal.solvemedia.com/portal/help/pub/ajax
-interface ACPuzzleController  {
+interface ACPuzzleController {
 	create(
 		key: string,
 		elID: string,
@@ -31,19 +31,13 @@ export interface Captcha {
 	captchaID: string
 }
 
-// For generating unique IDs for every captcha
-let captchaCounter = 0
-
 // Wrapper around Solve Media's captcha service AJAX API
 export default class CaptchaView extends View<Model> {
-	widget: ACPuzzleController
-	id: string
+	public id: string
+	private widget: ACPuzzleController
 
 	constructor(el: HTMLElement) {
-		super({el})
-		this.el.id = this.id = `captcha-${captchaCounter++}`
-		this.el.hidden = false
-		this.render()
+		super({ el })
 
 		// Render the captcha widget only after the input field is focused
 		this.el
@@ -57,22 +51,8 @@ export default class CaptchaView extends View<Model> {
 		})
 	}
 
-
-	render() {
-		// We need different IDs on all our elements, because the spec is
-		// retarded
-		for (let el of this.el.querySelectorAll("*[data-id]")) {
-			el.id = `${el.getAttribute("data-id")}-${this.id}`
-		}
-
-		// Reenable input fields
-		for (let el of this.el.querySelectorAll("input")) {
-			(el as HTMLInputElement).hidden = false
-		}
-	}
-
 	// Render the actual captcha
-	renderWidget() {
+	private renderWidget() {
 		this.widget = ACPuzzle.create(config.captchaPublicKey, this.id, {
 			id: this.id,
 			multi: true,
@@ -81,11 +61,11 @@ export default class CaptchaView extends View<Model> {
 	}
 
 	// Load a new captcha
-	reload() {
+	public reload() {
 		this.widget.reload()
 	}
 
-	remove() {
+	public remove() {
 		if (this.widget) {
 			write(() =>
 				this.widget.destroy())
@@ -94,7 +74,7 @@ export default class CaptchaView extends View<Model> {
 	}
 
 	// Returns the data from the captcha widget
-	data(): Captcha {
+	public data(): Captcha {
 		return {
 			captcha: this.widget.get_response(),
 			captchaID: this.widget.get_challenge(),

@@ -3,7 +3,7 @@
 // Also contains utilities for HTML template tags.
 
 import * as lang from './lang'
-import {followDOM} from "./scroll"
+import { followDOM } from "./scroll"
 
 type Operation = () => void
 
@@ -11,7 +11,7 @@ type Operation = () => void
 export const threads = document.getElementById("threads")
 
 // Holds cached references to all out HTML template tags' contents
-const templates: {[name: string]: DocumentFragment} = {}
+const templates: { [name: string]: DocumentFragment } = {}
 
 let readStack: Operation[] = [],
 	writeStack: Operation[] = [],
@@ -39,17 +39,6 @@ export function initTemplates() {
 		}
 		frag.querySelector("aside.posting a").textContent = lang.posts.reply
 		frag.querySelector("#lock").textContent = lang.navigation.lockedToBottom
-	}
-	{
-		const frag = templates["form"]
-		; (frag.querySelector("input[type=submit]") as HTMLInputElement)
-			.value = lang.ui.submit
-		; (frag.querySelector("input[name=cancel]") as HTMLInputElement)
-			.value = lang.ui.cancel
-		frag.querySelector(".captcha-image")
-			.setAttribute("title", lang.ui.reloadCaptcha)
-		frag.querySelector("input[name=adcopy_response]")
-			.setAttribute("placeholder", lang.ui.focusForCaptcha)
 	}
 }
 
