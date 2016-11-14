@@ -85,7 +85,7 @@ func configureBoard(w http.ResponseWriter, req *http.Request) {
 		"owners": {msg.UserID},
 	}
 
-	q := r.Table("boards").Get(msg.ID).Replace(conf)
+	q := r.Table("boards").Get(msg.ID).Update(conf)
 	if err := db.Write(q); err != nil {
 		text500(w, req, err)
 		return
