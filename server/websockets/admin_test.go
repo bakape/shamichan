@@ -123,6 +123,7 @@ func TestBoardCreation(t *testing.T) {
 	if err := db.One(r.Table("boards").Get(id), &board); err != nil {
 		t.Fatal(err)
 	}
+
 	std := config.DatabaseBoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID: id,
@@ -137,7 +138,9 @@ func TestBoardCreation(t *testing.T) {
 			},
 		},
 	}
-	if !board.Created.Before(time.Now()) {
+
+	c := board.Created
+	if !c.Before(time.Now()) || c.Unix() == 0 {
 		t.Errorf("invalid board creation time: %#v", board.Created)
 	}
 	AssertDeepEquals(t, board.BoardConfigs, std.BoardConfigs)
