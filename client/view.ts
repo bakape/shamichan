@@ -1,8 +1,8 @@
-import {on, OnOptions} from './util'
+import { on, OnOptions } from './util'
 import Model from './model'
-import {write} from './render'
+import { write } from './render'
 
-export interface ViewAttrs {
+type ViewAttrs = {
 	el?: HTMLElement
 	model?: Model
 	tag?: string
@@ -12,9 +12,9 @@ export interface ViewAttrs {
 
 // Generic view class, that all over view classes extend
 export default class View<M> {
-	model: M
-	el: HTMLElement
-	id: string|number
+	protected model: M
+	public el: HTMLElement
+	public id: string | number
 
 	// Creates a new View and binds it to the target model, id any. If no
 	// element supplied, creates a new one from the attributes.
@@ -41,22 +41,22 @@ export default class View<M> {
 	}
 
 	// Remove the from the DOM without causing a redraw
-	remove() {
+	public remove() {
 		write(() =>
 			this.el.remove())
 	}
 
 	// Add  optionally selector-specific event listeners to the view
-	on(type: string, fn: EventListener, opts?: OnOptions) {
+	protected on(type: string, fn: EventListener, opts?: OnOptions) {
 		on(this.el, type, fn, opts)
 	}
 
 	// Shorthand for adding multiple click event listeners as an object.
 	// We use those the most, so nice to have. Also prevents default behavior
 	// from triggering.
-	onClick(events: {[selector: string]: EventListener}) {
+	protected onClick(events: { [selector: string]: EventListener }) {
 		for (let selector in events) {
-			this.on('click', events[selector], {selector, capture: true})
+			this.on('click', events[selector], { selector, capture: true })
 		}
 	}
 }

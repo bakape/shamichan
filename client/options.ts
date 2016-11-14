@@ -46,8 +46,8 @@ export const models: { [key: string]: OptionModel } = {}
 
 // Controller for each individual option
 class OptionModel {
-	id: string
-	spec: OptionSpec
+	public id: string
+	public spec: OptionSpec
 
 	// Create new option model from template spec
 	constructor(id: string, spec: OptionSpec) {
@@ -70,12 +70,12 @@ class OptionModel {
 	}
 
 	// Read value from localStorage
-	read(): string {
+	private read(): string {
 		return localStorage.getItem(this.id) || ""
 	}
 
 	// Retrieve option value from storage and parse result. If none, return
-	get(): OptionValue {
+	public get(): OptionValue {
 		const stored = this.read()
 		if (!stored) {
 			return this.spec.default
@@ -95,20 +95,20 @@ class OptionModel {
 	}
 
 	// Handler to be executed on field change in central options storage model
-	onChange(val: OptionValue) {
+	private onChange(val: OptionValue) {
 		this.execute(val)
 		this.set(val)
 	}
 
 	// Execute handler function, if any
-	execute(val: OptionValue) {
+	public execute(val: OptionValue) {
 		if (this.spec.exec) {
 			this.spec.exec(val)
 		}
 	}
 
 	// Write value to localStorage, if needed
-	set(val: OptionValue) {
+	public set(val: OptionValue) {
 		if (val !== this.spec.default || this.read()) {
 			localStorage.setItem(this.id, val.toString())
 		}
@@ -116,7 +116,7 @@ class OptionModel {
 	}
 
 	// Perform value validation, if any. Otherwise return true.
-	validate(val: OptionValue): boolean {
+	public validate(val: OptionValue): boolean {
 		if (this.spec.validation) {
 			return this.spec.validation(val)
 		}

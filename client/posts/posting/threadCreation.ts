@@ -1,210 +1,210 @@
-import { on, inputValue, applyMixins, makeFrag } from '../../util'
-import { fetchBoardList, fetchBoarConfigs } from "../../fetch"
-import { write, threads } from '../../render'
-import { FormView, inputType, renderInput, InputSpec } from '../../forms'
-import { Captcha } from '../../captcha'
-import { PostCredentials, newAllocRequest } from './identity'
-import { page, boardConfig } from '../../state'
-import { posts as lang, ui } from '../../lang'
-import { send, message, handlers } from '../../connection'
-import UploadForm, { FileData } from './upload'
-import navigate from '../../history'
-import { OPFormModel } from './model'
+// import { on, inputValue, applyMixins, makeFrag } from '../../util'
+// import { fetchBoardList, fetchBoarConfigs } from "../../fetch"
+// import { write, threads } from '../../render'
+// import { FormView, inputType, renderInput, InputSpec } from '../../forms'
+// import { Captcha } from '../../captcha'
+// import { PostCredentials, newAllocRequest } from './identity'
+// import { page, boardConfig } from '../../state'
+// import { posts as lang, ui } from '../../lang'
+// import { send, message, handlers } from '../../connection'
+// import UploadForm, { FileData } from './upload'
+// import navigate from '../../history'
+// import { OPFormModel } from './model'
 
-interface ThreadCreationRequest extends PostCredentials, Captcha {
-	subject: string
-	board: string
-	image?: FileData
-}
+// interface ThreadCreationRequest extends PostCredentials, Captcha {
+// 	subject: string
+// 	board: string
+// 	image?: FileData
+// }
 
-// Response codes for thread and post insertion requests
-export const enum responseCode { success, invalidCaptcha }
+// // Response codes for thread and post insertion requests
+// export const enum responseCode { success, invalidCaptcha }
 
-type ThreadCreationResponse = {
-	code: responseCode
-	id: number
-}
+// type ThreadCreationResponse = {
+// 	code: responseCode
+// 	id: number
+// }
 
-// Form view for creating new threads
-class ThreadForm extends FormView implements UploadForm {
-	aside: Element
-	board: HTMLSelectElement
-	uploadContainer: HTMLSpanElement
-	selectedBoard: string
+// // Form view for creating new threads
+// class ThreadForm extends FormView implements UploadForm {
+// 	aside: Element
+// 	board: HTMLSelectElement
+// 	uploadContainer: HTMLSpanElement
+// 	selectedBoard: string
 
-	// Does the board require an OP image?
-	needImage: boolean = !boardConfig.textOnly
+// 	// Does the board require an OP image?
+// 	needImage: boolean = !boardConfig.textOnly
 
-	// UploadForm properties
-	spoiler: HTMLSpanElement
-	uploadStatus: Element
-	uploadInput: HTMLInputElement
-	renderUploadForm: () => void
-	uploadFile: () => Promise<FileData>
-	upload: (file: File) => Promise<string>
-	renderProgress: (event: ProgressEvent) => void
-	spoilerImage: () => Promise<void>
+// 	// UploadForm properties
+// 	spoiler: HTMLSpanElement
+// 	uploadStatus: Element
+// 	uploadInput: HTMLInputElement
+// 	renderUploadForm: () => void
+// 	uploadFile: () => Promise<FileData>
+// 	upload: (file: File) => Promise<string>
+// 	renderProgress: (event: ProgressEvent) => void
+// 	spoilerImage: () => Promise<void>
 
-	constructor(event: Event) {
-		super({ class: "new-thread-form" }, () =>
-			this.sendRequest())
-		this.aside = (event.target as Element).closest("aside")
-		this.render()
-		handlers[message.insertThread] = (msg: ThreadCreationResponse) =>
-			this.handleResponse(msg)
-	}
+// 	constructor(event: Event) {
+// 		super({ class: "new-thread-form" }, () =>
+// 			this.sendRequest())
+// 		this.aside = (event.target as Element).closest("aside")
+// 		this.render()
+// 		handlers[message.insertThread] = (msg: ThreadCreationResponse) =>
+// 			this.handleResponse(msg)
+// 	}
 
-	// Render the element, hide the parent element's existing contents and
-	// hide the "["..."]" encasing it
-	async render() {
-		const frag = document.createDocumentFragment()
+// 	// Render the element, hide the parent element's existing contents and
+// 	// hide the "["..."]" encasing it
+// 	async render() {
+// 		const frag = document.createDocumentFragment()
 
-		// Have the user to select the target board, if on the "/all/"
-		// metaboard
-		if (page.board === "all") {
-			frag.append(await this.initBoardSelection())
-		}
+// 		// Have the user to select the target board, if on the "/all/"
+// 		// metaboard
+// 		if (page.board === "all") {
+// 			frag.append(await this.initBoardSelection())
+// 		}
 
-		const html = renderField({
-			name: "subject",
-			type: inputType.string,
-			maxLength: 100,
-			required: true,
-		})
-		frag.append(makeFrag(html))
+// 		const html = renderField({
+// 			name: "subject",
+// 			type: inputType.string,
+// 			maxLength: 100,
+// 			required: true,
+// 		})
+// 		frag.append(makeFrag(html))
 
-		// Render image upload controls
-		if (!boardConfig.textOnly) {
-			this.renderUploadForm()
-			this.uploadContainer = document.createElement("span")
-			this.uploadContainer.setAttribute("class", "upload-container")
-			this.uploadContainer.append(
-				this.spoiler,
-				this.uploadStatus,
-				document.createElement("br"),
-				this.uploadInput,
-				document.createElement("br"),
-			)
-			if (!this.needImage) {
-				this.uploadContainer.style.display = "none"
-			}
-			frag.append(this.uploadContainer)
-		}
+// 		// Render image upload controls
+// 		if (!boardConfig.textOnly) {
+// 			this.renderUploadForm()
+// 			this.uploadContainer = document.createElement("span")
+// 			this.uploadContainer.setAttribute("class", "upload-container")
+// 			this.uploadContainer.append(
+// 				this.spoiler,
+// 				this.uploadStatus,
+// 				document.createElement("br"),
+// 				this.uploadInput,
+// 				document.createElement("br"),
+// 			)
+// 			if (!this.needImage) {
+// 				this.uploadContainer.style.display = "none"
+// 			}
+// 			frag.append(this.uploadContainer)
+// 		}
 
-		this.renderForm(frag)
-		write(() => {
-			this.aside.classList.add("expanded")
-			this.aside.append(this.el)
-			this.el.querySelector("input, select").focus()
-		})
-	}
+// 		this.renderForm(frag)
+// 		write(() => {
+// 			this.aside.classList.add("expanded")
+// 			this.aside.append(this.el)
+// 			this.el.querySelector("input, select").focus()
+// 		})
+// 	}
 
-	// Initialize the board selection input for the /all/ board and return its
-	// HTML
-	async initBoardSelection(): Promise<DocumentFragment> {
-		// TODO: Some kind of more elegant selection panel
+// 	// Initialize the board selection input for the /all/ board and return its
+// 	// HTML
+// 	async initBoardSelection(): Promise<DocumentFragment> {
+// 		// TODO: Some kind of more elegant selection panel
 
-		// Hide the image upload controls, if the first board on the list
-		// is a text-only board
-		const boards = await fetchBoardList(),
-			[first] = boards
-		if (first && (await fetchBoarConfigs(first.id)).textOnly) {
-			this.needImage = false
-		}
+// 		// Hide the image upload controls, if the first board on the list
+// 		// is a text-only board
+// 		const boards = await fetchBoardList(),
+// 			[first] = boards
+// 		if (first && (await fetchBoarConfigs(first.id)).textOnly) {
+// 			this.needImage = false
+// 		}
 
-		const html = renderField({
-			name: "board",
-			type: inputType.select,
-			choices: boards.map(({title, id}) =>
-				`${id} - ${title}`),
-		})
-		const frag = makeFrag(html)
+// 		const html = renderField({
+// 			name: "board",
+// 			type: inputType.select,
+// 			choices: boards.map(({title, id}) =>
+// 				`${id} - ${title}`),
+// 		})
+// 		const frag = makeFrag(html)
 
-		// Assign and bind event listener for changes to the board selection
-		this.board = frag
-			.querySelector("select[name=board]") as HTMLSelectElement
-		on(this.board, "input", () =>
-			this.toggleUploadForm())
+// 		// Assign and bind event listener for changes to the board selection
+// 		this.board = frag
+// 			.querySelector("select[name=board]") as HTMLSelectElement
+// 		on(this.board, "input", () =>
+// 			this.toggleUploadForm())
 
-		return frag
-	}
+// 		return frag
+// 	}
 
-	// When on the /all/ board, you may possibly post to boards that are
-	// configured text-only. If a text-only board is selected, hide the upload
-	// inputs.
-	async toggleUploadForm() {
-		const {textOnly} = await fetchBoarConfigs(this.getSelectedBoard()),
-			display = textOnly ? "none" : ""
-		this.needImage = !textOnly
-		write(() => {
-			this.uploadContainer.style.display = display
-			this.uploadInput.disabled = textOnly
-		})
-	}
+// 	// When on the /all/ board, you may possibly post to boards that are
+// 	// configured text-only. If a text-only board is selected, hide the upload
+// 	// inputs.
+// 	async toggleUploadForm() {
+// 		const {textOnly} = await fetchBoarConfigs(this.getSelectedBoard()),
+// 			display = textOnly ? "none" : ""
+// 		this.needImage = !textOnly
+// 		write(() => {
+// 			this.uploadContainer.style.display = display
+// 			this.uploadInput.disabled = textOnly
+// 		})
+// 	}
 
-	// Retrieve the currently selected board, if on the /all/ board
-	getSelectedBoard(): string {
-		return this.board.value.match(/^(\w+) -/)[1]
-	}
+// 	// Retrieve the currently selected board, if on the /all/ board
+// 	getSelectedBoard(): string {
+// 		return this.board.value.match(/^(\w+) -/)[1]
+// 	}
 
-	// Reset new thread form to initial state
-	remove() {
-		super.remove()
-		write(() =>
-			this.aside.classList.remove("expanded"))
-	}
+// 	// Reset new thread form to initial state
+// 	remove() {
+// 		super.remove()
+// 		write(() =>
+// 			this.aside.classList.remove("expanded"))
+// 	}
 
-	async sendRequest() {
-		write(() => {
-			this.el.querySelector("input[type=submit]").remove()
-			this.el.querySelector("input[name=cancel]").remove()
-			if (this.uploadContainer) {
-				this.uploadContainer.querySelector("br:last-child").remove()
-			}
-		})
+// 	async sendRequest() {
+// 		write(() => {
+// 			this.el.querySelector("input[type=submit]").remove()
+// 			this.el.querySelector("input[name=cancel]").remove()
+// 			if (this.uploadContainer) {
+// 				this.uploadContainer.querySelector("br:last-child").remove()
+// 			}
+// 		})
 
-		const req = newAllocRequest() as ThreadCreationRequest
+// 		const req = newAllocRequest() as ThreadCreationRequest
 
-		if (this.needImage) {
-			req.image = await this.uploadFile()
-			if (!req.image) {
-				this.reloadCaptcha(1)
-				return
-			}
-		}
+// 		if (this.needImage) {
+// 			req.image = await this.uploadFile()
+// 			if (!req.image) {
+// 				this.reloadCaptcha(1)
+// 				return
+// 			}
+// 		}
 
-		req.subject = inputValue(this.el, "subject")
-		this.selectedBoard = req.board =
-			page.board === "all"
-				? this.getSelectedBoard()
-				: page.board
-		this.injectCaptcha(req)
-		send(message.insertThread, req)
-	}
+// 		req.subject = inputValue(this.el, "subject")
+// 		this.selectedBoard = req.board =
+// 			page.board === "all"
+// 				? this.getSelectedBoard()
+// 				: page.board
+// 		this.injectCaptcha(req)
+// 		send(message.insertThread, req)
+// 	}
 
-	async handleResponse({code, id}: ThreadCreationResponse) {
-		switch (code) {
-			case responseCode.success:
-				await navigate(`/${this.selectedBoard}/${id}`, null, true)
-				new OPFormModel(id)
-				break
-			case responseCode.invalidCaptcha:
-				this.renderFormResponse(ui.invalidCaptcha)
-				this.reloadCaptcha(code)
-				break
-		}
-	}
-}
+// 	async handleResponse({code, id}: ThreadCreationResponse) {
+// 		switch (code) {
+// 			case responseCode.success:
+// 				await navigate(`/${this.selectedBoard}/${id}`, null, true)
+// 				new OPFormModel(id)
+// 				break
+// 			case responseCode.invalidCaptcha:
+// 				this.renderFormResponse(ui.invalidCaptcha)
+// 				this.reloadCaptcha(code)
+// 				break
+// 		}
+// 	}
+// }
 
-applyMixins(ThreadForm, UploadForm)
+// applyMixins(ThreadForm, UploadForm)
 
-// Render a single field of the form
-function renderField(spec: InputSpec): string {
-	spec.label = lang[spec.name]
-	spec.placeholders = true
-	return renderInput(spec)[1] + "<br>"
-}
+// // Render a single field of the form
+// function renderField(spec: InputSpec): string {
+// 	spec.label = lang[spec.name]
+// 	spec.placeholders = true
+// 	return renderInput(spec)[1] + "<br>"
+// }
 
-on(threads, "click", e => new ThreadForm(e), {
-	selector: ".new-thread-button",
-})
+// on(threads, "click", e => new ThreadForm(e), {
+// 	selector: ".new-thread-button",
+// })

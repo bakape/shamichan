@@ -23,7 +23,7 @@ class BoardNavigation extends View<Model> {
 		})
 	}
 
-	render() {
+	public render() {
 		let html = "["
 		const boards = ["all", ...Array.from(selected).sort()]
 		for (let i = 0; i < boards.length; i++) {
@@ -49,7 +49,7 @@ class BoardNavigation extends View<Model> {
 		})
 	}
 
-	togglePanel(el: Element) {
+	private togglePanel(el: Element) {
 		if (selectionPanel) {
 			selectionPanel.remove()
 			selectionPanel = null
@@ -79,7 +79,7 @@ class BoardSelectionPanel extends View<Model> {
 	}
 
 	// Fetch the board list from the server and render the selection form
-	async render() {
+	private async render() {
 		const frag = makeFrag(await fetchHTML("/forms/boardNavigation"))
 		const boards = Array
 			.from(frag.querySelectorAll("input[type=checkbox]"))
@@ -107,7 +107,7 @@ class BoardSelectionPanel extends View<Model> {
 		})
 	}
 
-	remove() {
+	public remove() {
 		write(() =>
 			this.parentEl.textContent = "+")
 		selectionPanel = null
@@ -115,7 +115,7 @@ class BoardSelectionPanel extends View<Model> {
 	}
 
 	// Handle form submission
-	submit(event: Event) {
+	private submit(event: Event) {
 		event.preventDefault()
 		selected.clear()
 		for (let el of this.el.querySelectorAll("input[type=checkbox]")) {
@@ -129,7 +129,7 @@ class BoardSelectionPanel extends View<Model> {
 	}
 
 	// Hide board entries that do not match the search field string
-	search(event: Event) {
+	private search(event: Event) {
 		const term = (event.target as HTMLInputElement).value.trim(),
 			regexp = new RegExp(term, 'i')
 

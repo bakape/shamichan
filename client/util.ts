@@ -39,10 +39,10 @@ export function random<T>(array: T[]): T {
 
 // Simple map of sets with automatic array creation and removal
 export class SetMap<V> {
-	map: { [key: string]: Set<V> } = {}
+	private map: { [key: string]: Set<V> } = {}
 
 	// Add item to key
-	add(key: string, item: V) {
+	public add(key: string, item: V) {
 		if (!(key in this.map)) {
 			this.map[key] = new Set()
 		}
@@ -50,7 +50,7 @@ export class SetMap<V> {
 	}
 
 	// Remove an item from a key
-	remove(key: string, item: V) {
+	public remove(key: string, item: V) {
 		const set = this.map[key]
 		if (!set) {
 			return
@@ -62,7 +62,7 @@ export class SetMap<V> {
 	}
 
 	// Execute a function for each item under a key
-	forEach(key: string, fn: (item: V) => void) {
+	public forEach(key: string, fn: (item: V) => void) {
 		const set = this.map[key]
 		if (!set) {
 			return

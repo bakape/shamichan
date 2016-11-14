@@ -45,7 +45,7 @@ class IdentityPanel extends BannerModal {
 		this.assignValues()
 	}
 
-	assignValues() {
+	private assignValues() {
 		write(() => {
 			for (let key of ["name", "email", "postPassword"]) {
 				(this.el.querySelector(`input[name=${key}]`) as HTMLInputElement)
@@ -54,7 +54,7 @@ class IdentityPanel extends BannerModal {
 		})
 	}
 
-	onInput(event: Event) {
+	private onInput(event: Event) {
 		const el = event.target as HTMLInputElement,
 			name = el.getAttribute("name"),
 			val = el.value

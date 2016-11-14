@@ -11,8 +11,8 @@ import ImageHandler from "./images"
 // Base post view class
 export default class PostView extends ImageHandler {
 	// Only exist on open posts
-	buffer: Node        // Text node being written to
-	blockquote: Element // Entire text body of post
+	private buffer: Node        // Text node being written to
+	protected blockquote: Element // Entire text body of post
 
 	constructor(model: Post) {
 		let cls = 'glass'
@@ -66,7 +66,7 @@ export default class PostView extends ImageHandler {
 	}
 
 	// Find the text buffer in an open line
-	findBuffer(b: Node) {
+	private findBuffer(b: Node) {
 		const {state} = this.model
 		if (state.quote) {
 			b = b.lastChild
@@ -82,19 +82,19 @@ export default class PostView extends ImageHandler {
 
 	// Remove the element from the DOM and detach from its model, allowing the
 	// PostView instance to be garbage collected
-	remove() {
+	public remove() {
 		this.unbind()
 		super.remove()
 	}
 
 	// Remove the model's cross references, but don't remove the element from
 	// the DOM
-	unbind() {
+	public unbind() {
 		this.model.view = this.model = null
 	}
 
 	// Replace the current line with a reparsed fragment
-	reparseLine() {
+	public reparseLine() {
 		const frag = makeFrag(parseOpenLine(this.model.state))
 		this.findBuffer(frag.firstChild)
 		write(() =>
@@ -102,30 +102,30 @@ export default class PostView extends ImageHandler {
 	}
 
 	// Return the last line of the text body
-	lastLine(): Element {
+	private lastLine(): Element {
 		const ch = this.blockquote.children
 		return ch[ch.length - 1]
-    }
+	}
 
 	// Replace the contents of the last line, accounting for the possibility of
-    // there being no lines
-	replaceLastLine(node: Node) {
+	// there being no lines
+	private replaceLastLine(node: Node) {
 		const ll = this.lastLine()
 		if (ll) {
 			ll.replaceWith(node)
-        } else {
+		} else {
 			this.blockquote.append(node)
 		}
 	}
 
 	// Append a string to the current text buffer
-	appendString(s: string) {
+	public appendString(s: string) {
 		write(() =>
 			this.buffer.append(s))
 	}
 
 	// Remove one character from the current buffer
-	backspace() {
+	public backspace() {
 		write(() => {
 			// Merge multiple successive nodes created by appendString()
 			this.buffer.normalize()
@@ -135,7 +135,7 @@ export default class PostView extends ImageHandler {
 	}
 
 	// Start a new line and reparse the old one
-	startNewLine() {
+	public startNewLine() {
 		const line = this.model.state.line.slice(0, -1),
 			frag = makeFrag(parseTerminatedLine(line, this.model))
 		write(() => {
@@ -146,14 +146,14 @@ export default class PostView extends ImageHandler {
 	}
 
 	// Render links to posts linking to this post
-	renderBacklinks() {
+	public renderBacklinks() {
 		const html = renderBacklinks(this.model.backlinks)
 		write(() =>
 			this.el.querySelector("small").innerHTML = html)
 	}
 
 	// Close an open post and clean up
-	closePost() {
+	public closePost() {
 		const html = parseTerminatedLine(this.model.state.line, this.model),
 			frag = makeFrag(html)
 		write(() => {
@@ -164,20 +164,20 @@ export default class PostView extends ImageHandler {
 	}
 
 	// Render the name, tripcode and email in the header
-	renderName() {
+	public renderName() {
 		write(() =>
 			renderName(this.el.querySelector(".name"), this.model))
 	}
 
 	// Render the <time> element in the header
-	renderTime() {
+	public renderTime() {
 		write(() =>
 			renderTime(this.el.querySelector("time"), this.model.time, false))
 	}
 
 	// Add highlight to post because it linked a post the client made, the
 	// client made it or similar.
-	addHighlight() {
+	public addHighlight() {
 		write(() =>
 			this.el.classList.add("highlight"))
 	}

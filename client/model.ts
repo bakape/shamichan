@@ -12,7 +12,7 @@ export interface ChangeEmitter {
 
 // Generic model class, that all other model classes extend
 export default class Model {
-	id: number
+	public id: number
 
 	[index: string]: any
 }

@@ -12,8 +12,8 @@ export let panel: OptionsPanel
 
 // View of the options panel
 export default class OptionsPanel extends TabbedModal {
-	hidden: HTMLElement
-	import: HTMLInputElement
+	private hidden: HTMLElement
+	private import: HTMLInputElement
 
 	constructor() {
 		super(document.getElementById("options"))
@@ -39,7 +39,7 @@ export default class OptionsPanel extends TabbedModal {
 
 	// Assign loaded option settings to the respective elements in the options
 	// panel
-	assignValues() {
+	private assignValues() {
 		for (let id in models) {
 			const model = models[id],
 				val = model.get()
@@ -49,7 +49,7 @@ export default class OptionsPanel extends TabbedModal {
 
 	// Assign a single option value. Called on changes to the options externally
 	// not from the options panel
-	assignValue(id: string, type: optionType, val: any) {
+	public assignValue(id: string, type: optionType, val: any) {
 		const el = document.getElementById(id) as HTMLInputElement
 
 		switch (type) {
@@ -69,7 +69,7 @@ export default class OptionsPanel extends TabbedModal {
 
 	// Propagate options panel changes through
 	// options-panel -> options -> OptionModel
-	applyChange(event: Event) {
+	private applyChange(event: Event) {
 		const el = event.target as HTMLInputElement,
 			id = el.getAttribute('id'),
 			model = models[id]
@@ -108,7 +108,7 @@ export default class OptionsPanel extends TabbedModal {
 	}
 
 	// Dump options to JSON file and upload to user
-	exportConfigs() {
+	private exportConfigs() {
 		const a = document.getElementById('export')
 		const blob = new Blob([JSON.stringify(localStorage)], {
 			type: 'octet/stream'
@@ -118,7 +118,7 @@ export default class OptionsPanel extends TabbedModal {
 	}
 
 	// Import options from uploaded JSON file
-	importConfigs(event: Event) {
+	private importConfigs(event: Event) {
 		// Proxy to hidden file input
 		this.import.click()
 		const handler = () =>
@@ -127,7 +127,7 @@ export default class OptionsPanel extends TabbedModal {
 	}
 
 	// After the file has been uploaded, parse it and import the configs
-	async importConfigFile() {
+	private async importConfigFile() {
 		const reader = new FileReader()
 		reader.readAsText(this.import.files[0])
 		const event = await load(reader) as any
@@ -151,7 +151,7 @@ export default class OptionsPanel extends TabbedModal {
 	}
 
 	// Render Hidden posts counter
-	renderHidden(count: number) {
+	public renderHidden(count: number) {
 		write(() => {
 			const el = this.hidden
 			el.textContent = el.textContent.replace(/\d+$/, count.toString())

@@ -38,8 +38,8 @@ const actions: { [key: string]: ItemSpec } = {
 
 // Post header drop down menu
 class MenuView extends View<Post> {
-	el: HTMLElement
-	parent: ControlButton
+	public el: HTMLElement
+	private parent: ControlButton
 
 	constructor(parent: ControlButton, model: Post) {
 		super({
@@ -55,7 +55,7 @@ class MenuView extends View<Post> {
 		})
 	}
 
-	render() {
+	private render() {
 		for (let key in actions) {
 			const {shouldRender, text} = actions[key]
 			if (!shouldRender(this.model)) {
@@ -80,14 +80,14 @@ class MenuView extends View<Post> {
 	}
 
 	// Run appropriate handler on click or simply remove the menu
-	handleClick(e: Event) {
+	private handleClick(e: Event) {
 		actions[(e.target as Element).getAttribute('data-id')]
 			.handler(this.model)
 		this.remove()
 	}
 
 	// Also dereference from parent .control element
-	remove() {
+	public remove() {
 		this.parent._popup_menu = null
 		super.remove()
 	}

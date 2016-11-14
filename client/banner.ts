@@ -47,7 +47,7 @@ export class BannerModal extends View<Model> {
 
 	// Show the element, if hidden, hide - if shown. Hide already visible
 	// banner modal, if any.
-	toggle() {
+	private toggle() {
 		if (visible) {
 			const old = visible
 			visible.hide()
@@ -60,14 +60,14 @@ export class BannerModal extends View<Model> {
 	}
 
 	// Unhide the element. If the element has not been rendered yet, do it.
-	show() {
+	private show() {
 		write(() =>
 			this.el.style.display = 'block')
 		visible = this
 	}
 
 	// Hide the element
-	hide() {
+	private hide() {
 		write(() =>
 			this.el.style.display = 'none')
 		visible = null
@@ -85,7 +85,7 @@ export class TabbedModal extends BannerModal {
 	}
 
 	// Switch to a tab, when clicking the tab butt
-	switchTab(event: Event) {
+	private switchTab(event: Event) {
 		write(() => {
 			const el = event.target as Element
 

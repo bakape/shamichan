@@ -18,7 +18,7 @@ export default class ImageHandler extends View<Post> {
 	// Render the figure and figcaption of a post. Set reveal to true, if in
 	// hidden thumbnail mode, to reveal the thumbnail. Set delay to false to
 	// only write the changes to DOM on the next animation frame.
-	renderImage(reveal: boolean, delay: boolean) {
+	public renderImage(reveal: boolean, delay: boolean) {
 		const fn = () => {
 			const img = this.model.image
 			renderFigcaption(this.el.querySelector("figcaption"), img, reveal)
@@ -31,7 +31,7 @@ export default class ImageHandler extends View<Post> {
 		}
 	}
 
-	toggleImageExpansion(event: Event) {
+	public toggleImageExpansion(event: Event) {
 		const img = this.model.image
 		if (img.expanded) {
 			event.preventDefault()
@@ -58,7 +58,7 @@ export default class ImageHandler extends View<Post> {
 	}
 
 	// Automatically expand an image, if expandAll is set
-	autoExpandImage() {
+	public autoExpandImage() {
 		if (expandAll && shouldAutoExpand(this.model)) {
 			this.expandImage(null, true)
 		}
@@ -66,7 +66,7 @@ export default class ImageHandler extends View<Post> {
 
 	// Contract an image and optionally omit scrolling to post and delay the
 	// rendering of the change to the next animation frame.
-	contractImage(scroll: boolean, delay: boolean) {
+	public contractImage(scroll: boolean, delay: boolean) {
 		const img = this.model.image
 
 		switch (img.fileType) {
@@ -99,7 +99,7 @@ export default class ImageHandler extends View<Post> {
 		img.expanded = img.tallerThanViewport = img.revealed = false
 	}
 
-	expandImage(event: Event | null, noScroll: boolean) {
+	public expandImage(event: Event | null, noScroll: boolean) {
 		const mode = options.inlineFit,
 			img = this.model.image
 		let cls = "expanded "
@@ -157,7 +157,7 @@ export default class ImageHandler extends View<Post> {
 	}
 
 	// Render audio controls for uploaded MP3 files
-	renderAudio() {
+	private renderAudio() {
 		const el = document.createElement("audio"),
 			img = this.model.image
 		setAttrs(el, {

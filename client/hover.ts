@@ -29,12 +29,12 @@ const mouseMove = emitChanges<MouseMove>({
 
 // Post hover preview view
 class PostPreview extends ImageHandler {
-	el: HTMLElement
-	clickHandler: EventListener
-	observer: MutationObserver
-	parent: HTMLAnchorElement
-	source: HTMLElement
-	sourceModel: Post
+	public el: HTMLElement
+	private clickHandler: EventListener
+	private observer: MutationObserver
+	private parent: HTMLAnchorElement
+	private source: HTMLElement
+	private sourceModel: Post
 
 	constructor(model: Post, parent: HTMLAnchorElement) {
 		const {el} = model.view
@@ -64,7 +64,7 @@ class PostPreview extends ImageHandler {
 		this.render()
 	}
 
-	render() {
+	private render() {
 		// Underline reverse post links in preview
 		const patt = new RegExp(`[>\/]` + getClosestID(this.parent))
 		for (let el of this.el.querySelectorAll("a.history")) {
@@ -94,7 +94,7 @@ class PostPreview extends ImageHandler {
 	}
 
 	// Position the preview element relative to it's parent link
-	position() {
+	private position() {
 		const rect = this.parent.getBoundingClientRect()
 
 		// The preview will never take up more than 100% screen width, so no
@@ -115,7 +115,7 @@ class PostPreview extends ImageHandler {
 
 	// Reclone and reposition on update. This is pretty expensive, but good
 	// enough, because only one post will ever be previewed at a time
-	renderUpdates() {
+	private renderUpdates() {
 		const el = clonePost(this.source)
 		this.el.replaceWith(el)
 		this.el = el
@@ -123,7 +123,7 @@ class PostPreview extends ImageHandler {
 	}
 
 	// Remove reference to this view from the parent element and module
-	remove() {
+	public remove() {
 		this.observer.disconnect()
 		this.parent.removeEventListener("click", this.clickHandler)
 		postPreview = null
