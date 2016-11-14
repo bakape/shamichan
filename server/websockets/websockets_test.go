@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/gorilla/websocket"
@@ -242,35 +241,6 @@ func TestHandleMessage(t *testing.T) {
 func assertHandlerError(t *testing.T, cl *Client, msg []byte, prefix string) {
 	err := cl.handleMessage(websocket.TextMessage, msg)
 	assertErrorPrefix(t, err, prefix)
-}
-
-func TestCheckOrigin(t *testing.T) {
-	config.AllowedOrigin = "fubar.com"
-	defer func() {
-		config.AllowedOrigin = ""
-	}()
-
-	if !CheckOrigin(newRequest()) {
-		t.Errorf("not passed with no header")
-	}
-
-	req := newRequest()
-	req.Header.Set("Origin", "111111")
-	if CheckOrigin(req) {
-		t.Error("passed with invalid header")
-	}
-
-	req = newRequest()
-	req.Header.Set("Origin", "http://fubar.com")
-	if !CheckOrigin(req) {
-		t.Error("not passed with valid origin")
-	}
-
-	req = newRequest()
-	req.Header.Set("Origin", "http://fubar.ru")
-	if CheckOrigin(req) {
-		t.Error("passed with invalid origin")
-	}
 }
 
 func TestInvalidMessage(t *testing.T) {

@@ -298,8 +298,9 @@
 	<script src="/assets/js/vendor/system.js"></script>
 	<!-- Dynamic module loader -->
 	<script src="/assets/js/scripts/loader.js"></script>
+	<!-- Captcha provider scripts -->
 	{{if .Captcha}}
-		<!-- Captcha script -->
+		<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/_puzzle.js"></script>
 		<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>
 	{{end}}
 </body>

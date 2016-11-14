@@ -63,7 +63,6 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 func createThread(w http.ResponseWriter, r *http.Request) {
 	maxSize := config.Get().MaxSize*1024*1024 + jsonLimit
 	r.Body = http.MaxBytesReader(w, r.Body, maxSize)
-	w.Header().Set("Access-Control-Allow-Origin", config.AllowedOrigin)
 
 	code, token, err := imager.ParseUpload(r)
 	if err != nil {
