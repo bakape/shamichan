@@ -94,7 +94,7 @@ export function read(href: string): PageState {
 }
 
 // Load post number sets from the database
-export function loadFromDB(): Promise<void> {
+export function loadFromDB(): Promise<Set<number>[]> {
 	return Promise.all([
 		readIDs("mine").then(ids =>
 			mine = new Set(ids)),
