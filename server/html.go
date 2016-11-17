@@ -3,6 +3,8 @@ package server
 import (
 	"net/http"
 
+	"sort"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
@@ -13,9 +15,14 @@ import (
 func serveHTML(
 	w http.ResponseWriter,
 	r *http.Request,
-	data []byte,
 	etag string,
+	data []byte,
+	err error,
 ) {
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
 	head := w.Header()
 	for key, val := range vanillaHeaders {
 		head.Set(key, val)
@@ -50,11 +57,7 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 
 	withIndex := r.URL.Query().Get("noIndex") != "true"
 	data, err := templates.Board(b, lp, withIndex, board)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	serveHTML(w, r, data, etag)
+	serveHTML(w, r, etag, data, err)
 }
 
 // Asserts a thread exists on the specific board and renders the index template
@@ -84,9 +87,54 @@ func boardNavigation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data, err := templates.BoardNavigation(lp)
+	serveHTML(w, r, "", data, err)
+}
+
+// Serve a form for selecting one of several boards owned by the user
+func ownedBoardSelection(
+	w http.ResponseWriter,
+	r *http.Request,
+	p map[string]string,
+) {
+	userID := p["userID"]
+
+	var owned config.BoardTitles
+	for _, c := range config.GetAllBoardConfigs() {
+		for _, o := range c.Staff["owners"] {
+			if o == userID {
+				owned = append(owned, config.BoardTitle{
+					ID:    c.ID,
+					Title: c.Title,
+				})
+				break
+			}
+		}
+	}
+	sort.Sort(owned)
+
+	lp, err := lang.Get(w, r)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
-	serveHTML(w, r, data, "")
+
+	data, err := templates.OwnedBoard(owned, lp)
+	serveHTML(w, r, "", data, err)
+}
+
+// Renders a form for configuring a board owned by the user
+func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
+	conf, isValid := boardConfData(w, r)
+	if !isValid {
+		return
+	}
+
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	data, err := templates.ConfigureBoard(conf, lp)
+	serveHTML(w, r, "", data, err)
 }

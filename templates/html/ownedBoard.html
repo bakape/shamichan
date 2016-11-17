@@ -1,0 +1,17 @@
+{{if .Boards}}
+	<select name="boards" required>
+		{{range .Boards}}
+			<option value="{{.ID}}">
+				/{{.ID}}/ - {{.Title}}
+			</option>
+		{{end}}
+	</select>
+	<br>
+	<input type="submit" value="{{index .Lang.UI "submit"}}">
+{{else}}
+	{{index .Lang.UI "ownNoBoards"}}
+	<br>
+	<br>
+{{end}}
+<input type="button" name="cancel" value="{{index .Lang.UI "cancel"}}">
+<div class="form-response admin"></div>

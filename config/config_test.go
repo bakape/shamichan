@@ -67,7 +67,7 @@ func TestSetGetAddRemoveBoardConfigs(t *testing.T) {
 	std := BoardConfigs{
 		ID: "a",
 		BoardPublic: BoardPublic{
-			Spoilers: true,
+			CodeTags: true,
 		},
 	}
 
@@ -90,6 +90,7 @@ func TestSetGetAddRemoveBoardConfigs(t *testing.T) {
 	if !IsBoard("a") {
 		t.Fatal("board does not exist")
 	}
+	AssertDeepEquals(t, len(GetAllBoardConfigs()), 1)
 
 	RemoveBoard("a")
 	AssertDeepEquals(t, GetBoardConfigs("a"), BoardConfContainer{})
@@ -104,7 +105,7 @@ func TestSetMatchingBoardConfigs(t *testing.T) {
 	conf := BoardConfigs{
 		ID: "a",
 		BoardPublic: BoardPublic{
-			Spoilers: true,
+			CodeTags: true,
 		},
 	}
 
@@ -126,7 +127,7 @@ func TestSetDifferentBoardConfigs(t *testing.T) {
 	conf := BoardConfigs{
 		ID: "a",
 		BoardPublic: BoardPublic{
-			Spoilers: true,
+			CodeTags: true,
 		},
 	}
 

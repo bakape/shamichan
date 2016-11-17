@@ -55,6 +55,42 @@ var specs = map[string][]inputSpec{
 			noID:      true,
 		},
 	},
+	"configureBoard": {
+		{id: "readOnly"},
+		{id: "textOnly"},
+		{id: "forcedAnon"},
+		{id: "hashCommands"},
+
+		// TODO: Code tags
+
+		{
+			id:        "title",
+			typ:       _string,
+			maxLength: 100,
+		},
+		{
+			id:        "notice",
+			typ:       _textarea,
+			rows:      5,
+			maxLength: 500,
+		},
+		{
+			id:        "rules",
+			typ:       _textarea,
+			rows:      5,
+			maxLength: 5000,
+		},
+		{
+			id:        "eightball",
+			typ:       _textarea,
+			rows:      5,
+			maxLength: 2000,
+		},
+
+		// TODO: Banner upload
+		// TODO: Staff configuration
+
+	},
 }
 
 // Specs of option inputs grouped by tab

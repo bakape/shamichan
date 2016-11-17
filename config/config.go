@@ -32,7 +32,6 @@ var (
 				PostParseConfigs: PostParseConfigs{
 					HashCommands: true,
 				},
-				Spoilers: true,
 				CodeTags: true,
 				Spoiler:  "default.jpg",
 				Title:    "Aggregator metaboard",
@@ -48,10 +47,6 @@ var (
 	// Hash of the global configs. Used for live reloading configuration on the
 	// client.
 	hash string
-
-	// AllowedOrigin stores the accepted client origin for websocket and file
-	// upload requests. Set only on server start.
-	AllowedOrigin string
 
 	// Defaults contains the default server configuration values
 	Defaults = Configs{
@@ -136,7 +131,6 @@ type BoardConfigs struct {
 // BoardPublic contains publically accessible board-specific configurations
 type BoardPublic struct {
 	PostParseConfigs
-	Spoilers bool     `json:"spoilers" gorethink:"spoilers"`
 	CodeTags bool     `json:"codeTags" gorethink:"codeTags"`
 	Spoiler  string   `json:"spoiler" gorethink:"spoiler"`
 	Title    string   `json:"title" gorethink:"title"`
@@ -240,7 +234,8 @@ func SetClient(json []byte, cHash string) {
 }
 
 // GetBoardConfigs returns board-specific configurations for a board combined
-// with pregenerated public JSON of these configurations and their hash
+// with pregenerated public JSON of these configurations and their hash. Do
+// not modify the retrieved struct.
 func GetBoardConfigs(b string) BoardConfContainer {
 	if b == "all" {
 		return AllBoardConfigs
@@ -248,6 +243,19 @@ func GetBoardConfigs(b string) BoardConfContainer {
 	boardMu.RLock()
 	defer boardMu.RUnlock()
 	return boardConfigs[b]
+}
+
+// GetAllBoardConfigs returns board-specific configurations for all boards. Do
+// not modify the retrieved structs.
+func GetAllBoardConfigs() []BoardConfContainer {
+	boardMu.RLock()
+	defer boardMu.RUnlock()
+
+	conf := make([]BoardConfContainer, 0, len(boardConfigs))
+	for _, c := range boardConfigs {
+		conf = append(conf, c)
+	}
+	return conf
 }
 
 // GetBoardTitles returns a slice of all existing boards and their titles

@@ -1,11 +1,8 @@
 import { ui } from '../lang'
-
-// Specification for a single account management field
-type FieldSpec = {
-	type: string
-	name: string
-	maxLength: number
-}
+import FormView from "../forms"
+import { ViewAttrs } from "../view"
+import { accountPanel, loginID, sessionToken } from "./login"
+import { write } from "../render"
 
 // Common fields for authenticating `/admin` API request
 export interface LoginCredentials {
@@ -13,49 +10,13 @@ export interface LoginCredentials {
 	session: string
 }
 
-// Specs for all available account management fields
-const fieldSpecs: { [key: string]: FieldSpec } = {
-	id: {
-		type: "text",
-		name: "id",
-		maxLength: 20,
-	},
+// Create a new base request for private logged in AJAX queries
+export function newRequest<T extends LoginCredentials>(): T {
+	return {
+		userID: loginID,
+		session: sessionToken,
+	} as T
 }
-
-// Populate map with repeating password entires
-for (let name of ["password", "repeat", "oldPassword", "newPassword"]) {
-	fieldSpecs[name] = {
-		name,
-		type: "password",
-		maxLength: 30,
-	}
-}
-
-// // Create a new base request for private logged in AJAX queries
-// export function newRequest<T extends LoginCredentials>(): T {
-// 	return {
-// 		userID: loginID,
-// 		session: sessionToken,
-// 	} as T
-// }
-
-// // Render account management input fields from specs
-// export function renderFields(...names: string[]): string {
-// 	const fields = names.map(name =>
-// 		fieldSpecs[name])
-// 	return table(fields, ({type, name, maxLength}) => {
-// 		const attrs = {
-// 			type,
-// 			name,
-// 			maxlength: maxLength.toString(),
-// 			required: "",
-// 		}
-// 		return [
-// 			`<label for="${name}">${lang[name]}:</label>`,
-// 			`<input ${makeAttrs(attrs)}>`,
-// 		]
-// 	})
-// }
 
 // Set a password match validator function for 2 input elements, that are
 // children of the passed element.
@@ -74,24 +35,23 @@ function findInputEl(parent: Element, name: string): HTMLInputElement {
 	return parent.querySelector(`input[name=${name}]`) as HTMLInputElement
 }
 
-// // Generic input form that is embedded into AccountPanel
-// export default class AccountFormView extends FormView {
-// 	constructor(attrs: FormViewAttrs, handler: () => void) {
-// 		super(attrs, handler)
-// 	}
+// Generic input form that is embedded into AccountPanel
+export default class AccountFormView extends FormView {
+	constructor(attrs: ViewAttrs, handler: () => void) {
+		super(attrs, handler)
+	}
 
-// 	// Render a form field and embed the input fields inside it. Then append it
-// 	// to the parent view.
-// 	renderForm(fields: Node) {
-// 		super.renderForm(fields)
-// 		accountPanel.toggleMenu(false)
-// 		write(() =>
-// 			accountPanel.el.append(this.el))
-// 	}
+	// Render a form field and embed the input fields inside it. Then append it
+	// to the parent view.
+	protected render() {
+		accountPanel.toggleMenu(false)
+		write(() =>
+			accountPanel.el.append(this.el))
+	}
 
-// 	// Unhide the parent AccountPanel, when this view is removed
-// 	remove() {
-// 		super.remove()
-// 		accountPanel.toggleMenu(true)
-// 	}
-// }
+	// Unhide the parent AccountPanel, when this view is removed
+	public remove() {
+		super.remove()
+		accountPanel.toggleMenu(true)
+	}
+}

@@ -5,7 +5,7 @@ import { write } from '../render'
 import { loadModule, inputValue } from '../util'
 import { handlers, send, message } from '../connection'
 import { defer } from "../defer"
-import { FormView } from "../forms"
+import FormView from "../forms"
 import { mod as lang, ui } from "../lang"
 import { validatePasswordMatch } from "./common"
 
@@ -99,10 +99,10 @@ export default class AccountPanel extends TabbedModal {
 	}
 
 	// Either hide or show the selection menu
-	private toggleMenu(show: boolean) {
-		const display = show ? "" : "none"
+	public toggleMenu(show: boolean) {
+		const display = show ? "block" : "none"
 		write(() =>
-			this.el.querySelector(".menu").style.display = display)
+			document.getElementById("form-selection").style.display = display)
 	}
 }
 
@@ -112,7 +112,7 @@ defer(() =>
 // Common functionality of LoginForm and RegistrationForm
 class BaseLoginForm extends FormView {
 	constructor(el: HTMLElement, handler: () => void) {
-		super(el, handler)
+		super({ el }, handler)
 	}
 
 	// Extract and send login ID and password and captcha (if any) from a form

@@ -108,6 +108,9 @@
 		</span>
 		<span id="lock"></span>
 	</template>
+	<template name="keyValue">
+		{{template "keyValue" bundle "" ""}}
+	</template>
 </head>
 <body>
 	<!-- Loading indicator image -->
@@ -199,6 +202,7 @@
 								{{table .Login .Lang}}
 								{{template "captcha" (bundle "login" "" $)}}
 								<input type="submit" value="{{index .Lang.UI "submit"}}">
+								<div class="form-response admin"></div>
 							</form>
 						</div>
 						<div data-id="1">
@@ -206,6 +210,7 @@
 								{{table .Register .Lang}}
 								{{template "captcha" (bundle "register" "" $)}}
 								<input type="submit" value="{{index .Lang.UI "submit"}}">
+								<div class="form-response admin"></div>
 							</form>
 						</div>
 					</div>

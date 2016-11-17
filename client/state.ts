@@ -26,7 +26,6 @@ export interface BoardConfigs extends ChangeEmitter {
 	textOnly: boolean
 	forcedAnon: boolean
 	hashCommands: boolean
-	spoilers: boolean     // Text spoilers
 	codeTags: boolean
 	spoiler: string       //Image spoiler
 	title: string
@@ -88,7 +87,7 @@ export function read(href: string): PageState {
 }
 
 // Load post number sets from the database
-export function loadFromDB(): Promise<void> {
+export function loadFromDB(): Promise<Set<number>[]> {
 	return Promise.all([
 		readIDs("mine").then(ids =>
 			mine = new Set(ids)),

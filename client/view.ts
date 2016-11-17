@@ -2,7 +2,7 @@ import { on, OnOptions } from './util'
 import Model from './model'
 import { write } from './render'
 
-type ViewAttrs = {
+export type ViewAttrs = {
 	el?: HTMLElement
 	model?: Model
 	tag?: string

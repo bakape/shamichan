@@ -60,18 +60,33 @@ type imageSearch struct {
 // into the global template map
 func Parse() error {
 	specs := [...]struct {
-		name string
+		id   string
 		deps []string
 		fns  template.FuncMap
 	}{
 		// Order matters. Dependencies must come before dependents.
-		{"captcha", nil, nil},
-		{"hover-reveal", nil, nil},
-		{"boardNavigation", nil, nil},
+		{id: "captcha"},
+		{id: "hover-reveal"},
+		{id: "boardNavigation"},
+		{id: "ownedBoard"},
+		{
+			id: "configureBoard",
+			fns: template.FuncMap{
+				"table": renderTable,
+			},
+		},
+		{id: "keyValue"},
+		{
+			"map",
+			[]string{"keyValue"},
+			template.FuncMap{
+				"bundle": bundle,
+			},
+		},
 		// {"article", nil, postFunctions},
 		{
 			"index",
-			[]string{"captcha"},
+			[]string{"captcha", "keyValue"},
 			template.FuncMap{
 				"table":  renderTable,
 				"bundle": bundle,
@@ -91,7 +106,7 @@ func Parse() error {
 	}
 
 	for _, s := range specs {
-		path := filepath.Join(TemplateRoot, s.name+".html")
+		path := filepath.Join(TemplateRoot, "html", s.id+".html")
 		b, err := ioutil.ReadFile(path)
 		if err != nil {
 			return err
@@ -111,7 +126,7 @@ func Parse() error {
 			min = b
 		}
 
-		t := template.New(s.name).Funcs(s.fns)
+		t := template.New(s.id).Funcs(s.fns)
 		for _, d := range s.deps {
 			_, err := t.AddParseTree(d, tmpl[d].Tree)
 			if err != nil {
@@ -122,7 +137,7 @@ func Parse() error {
 		if err != nil {
 			return err
 		}
-		tmpl[s.name] = t
+		tmpl[s.id] = t
 	}
 
 	return nil
@@ -160,7 +175,7 @@ func buildIndexTemplate(ln lang.Pack) (*template.Template, error) {
 		Identity, Login, Register     []inputSpec
 		Options                       [][]inputSpec
 		ImageSearch                   []imageSearch
-		Boards              []string
+		Boards                        []string
 	}{
 		Config:     template.JS(clientJSON),
 		ConfigHash: hash,

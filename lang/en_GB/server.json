@@ -163,6 +163,138 @@
 		"exhentai": [
 			"Exhentai",
 			"exhentai.org image search"
+		],
+		"pruneThreads": [
+			"Prune threads",
+			"Delete threads that have not had any posts in N days"
+		],
+		"threadExpiry": [
+			"Thread expiry time",
+			"Number of days without new posts before a thread is deleted"
+		],
+		"pruneBoards": [
+			"Prune boards",
+			"Delete boards that have not had any new posts for N days"
+		],
+		"boardExpiry": [
+			"Board expiry time",
+			"Number of days without new posts before a board is deleted"
+		],
+		"pyu": [
+			"#pyu",
+			"Don't ask"
+		],
+		"hats": [
+			"Hats on images",
+			"Attach hats to all image thumbnails"
+		],
+		"maxWidth": [
+			"Image width limit",
+			"Maximum width of uploaded images"
+		],
+		"maxHeight": [
+			"Image height limit",
+			"Maximum height of uploaded images"
+		],
+		"maxSize": [
+			"Image size limit",
+			"Maximum size of uploaded images in MB"
+		],
+		"JPEGQuality": [
+			"JPEG thumbnail quality",
+			"Quality of image JPEG thumbnails"
+		],
+		"PNGQuality": [
+			"PNG thumbnail compression",
+			"Lossy compression level of PNG thumbnails. Higher is lossier."
+		],
+		"sessionExpiry": [
+			"Account session expiry",
+			"Time in days until user accounts are automatically logged out"
+		],
+		"salt": [
+			"Secure salt",
+			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 characters long."
+		],
+		"feedbackEmail": [
+			"Feedback email",
+			"User feedback email to display in the top banner"
+		],
+		"FAQ": [
+			"Information panel text",
+			"Entries for the banner's Frequently Asked Questions list and information modal"
+		],
+		"defaultLang": [
+			"Default language",
+			"Language pack to load by default"
+		],
+		"defaultCSS": [
+			"Default theme",
+			"Theme to load by default, when none is set by the client"
+		],
+		"links": [
+			"External links",
+			"Add, remove or edit external >>>/4chan/-type references"
+		],
+		"boardName": [
+			"Board name",
+			"Name of the new board. Can contain up to 3 lowercase Latin letters or numbers."
+		],
+		"boardTitle": [
+			"Board title",
+			"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
+		],
+		"captcha": [
+			"Captcha",
+			"Ask users to complete a captcha for certain tasks like registration and thread creation"
+		],
+		"captchaPublicKey": [
+			"Captcha public key",
+			"Key used for communicating with external captcha service"
+		],
+		"captchaPrivateKey": [
+			"Captcha private key",
+			"Key used for authenticating solved captchas server-side"
+		],
+		"readOnly": [
+			"Read only",
+			"Disable post creation"
+		],
+		"textOnly": [
+			"Text only",
+			"Disable file uploads"
+		],
+		"forcedAnon": [
+			"Forced Anonymous",
+			"Disable user names, tripcodes and emails on posts"
+		],
+		"hashCommands": [
+			"Hash commands",
+			"Enable #dice, #flip, #8ball, etc."
+		],
+		"codeTags": [
+			"Code tags",
+			"Enable code tags for embedding programming code"
+		],
+		"title": [
+			"Board title",
+			"Short descriptive title of the board"
+		],
+		"notice": [
+			"Notice",
+			"Short informational message displayed at the top of the page"
+		],
+		"eightball": [
+			"#8ball answers",
+			"List of answers for the #8ball hash command. One answer per line. Can contain up to 100 answers and 2000 characters total."
+		],
+		"rules": [
+			"Rules",
+			"Board rules to display in the rule modal window"
+		],
+		"mature": [
+			"Mature content",
+			"Inform the user the website contains mature content on first visit"
 		]
 	},
 	"options": {
@@ -191,11 +323,15 @@
 		"submit": "Submit",
 		"cancel": "Cancel",
 		"apply": "Apply",
+		"done": "Done",
+		"send": "Send",
+		"add": "Add",
 		"showNotice": "Show Notice",
 		"newThread": "New thread",
 		"subject": "Subject",
 		"spoiler": "Spoiler",
 		"rules": "Show Rules",
+		"ownNoBoards": "You don't own any boards",
 		"search": "Search",
 		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
 		"sortMode": "Sort threads by",

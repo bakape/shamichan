@@ -22,9 +22,6 @@
 		"thumbnailing": "Thumbnailing..."
 	},
 	"ui": {
-		"done": "Done",
-		"send": "Send",
-		"add": "Add",
 		"invalidCaptcha": "Invalid captcha",
 		"mustMatch": "Passwords must match",
 		"close": "Close",

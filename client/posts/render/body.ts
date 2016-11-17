@@ -1,4 +1,4 @@
-import { config, boards, boardConfig } from '../../state'
+import { config, boards } from '../../state'
 import { renderPostLink } from './etc'
 import { PostData, PostLinks, TextState } from '../models'
 import { escape } from '../../util'
@@ -78,10 +78,6 @@ function parseSpoilers(
     state: TextState,
     fn: (frag: string) => string,
 ): string {
-    if (!boardConfig.spoilers) {
-        return fn(frag)
-    }
-
     let html = ""
     while (true) {
         const i = frag.indexOf("**")

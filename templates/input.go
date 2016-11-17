@@ -4,8 +4,11 @@ package templates
 
 import (
 	"bytes"
+	"html"
 	"html/template"
 	"strconv"
+
+	"strings"
 
 	"github.com/bakape/meguca/lang"
 )
@@ -41,7 +44,7 @@ type htmlWriter struct {
 }
 
 // Write an element attribute to the buffer
-func (w *htmlWriter) writeAttr(key, val string) {
+func (w *htmlWriter) attr(key, val string) {
 	w.WriteByte(' ')
 	w.WriteString(key)
 	if val != "" {
@@ -51,16 +54,20 @@ func (w *htmlWriter) writeAttr(key, val string) {
 	}
 }
 
-func (w *htmlWriter) writeType(val string) {
-	w.writeAttr("type", val)
+func (w *htmlWriter) typ(val string) {
+	w.attr("type", val)
 }
 
 // Write an input element from the spec to the buffer
-func (w *htmlWriter) writeInput(spec inputSpec) {
+func (w *htmlWriter) input(spec inputSpec) error {
 	cont := false
 	switch spec.typ {
 	case _select:
-		w.writeSelect(spec)
+		w.sel(spec)
+	case _textarea:
+		w.textArea(spec)
+	case _map:
+		return w.writeMap(spec)
 	case _shortcut:
 		w.WriteString("Alt+")
 		cont = true
@@ -68,80 +75,79 @@ func (w *htmlWriter) writeInput(spec inputSpec) {
 		cont = true
 	}
 	if !cont {
-		return
+		return nil
 	}
 
-	w.writeTag("input", spec)
+	w.tag("input", spec)
 
 	switch spec.typ {
 	case _bool:
-		w.writeType("checkbox")
-		if spec.val != nil {
-			w.writeAttr("checked", "")
+		w.typ("checkbox")
+		if spec.val != nil && spec.val.(bool) {
+			w.attr("checked", "")
 		}
 	case _number:
-		w.writeType("number")
+		w.typ("number")
 		if spec.val != nil {
-			w.writeAttr("value", strconv.Itoa(spec.val.(int)))
+			w.attr("value", strconv.Itoa(spec.val.(int)))
 		}
-		if spec.min != 0 {
-			// Zero is the nil value, so when we actually actually want "0",
-			// pass -1
-			if spec.min == -1 {
-				spec.min = 0
-			}
-			w.writeAttr("min", strconv.Itoa(spec.min))
-		}
+		w.attr("min", strconv.Itoa(spec.min))
 		if spec.max != 0 {
-			w.writeAttr("max", strconv.Itoa(spec.max))
+			w.attr("max", strconv.Itoa(spec.max))
 		}
 	case _password, _string:
 		if spec.typ == _string {
-			w.writeType("text")
+			w.typ("text")
 		} else {
-			w.writeType("password")
+			w.typ("password")
 		}
 		if spec.val != nil {
-			w.writeAttr("value", spec.val.(string))
+			w.attr("value", spec.val.(string))
 		}
 		if spec.pattern != "" {
-			w.writeAttr("pattern", spec.pattern)
+			w.attr("pattern", spec.pattern)
 		}
 		if spec.maxLength != 0 {
-			w.writeAttr("maxlength", strconv.Itoa(spec.maxLength))
+			w.attr("maxlength", strconv.Itoa(spec.maxLength))
 		}
 	case _image:
-		w.writeType("file")
-		w.writeAttr("accept", "image/png,image/gif,image/jpeg")
+		w.typ("file")
+		w.attr("accept", "image/png,image/gif,image/jpeg")
 	case _shortcut:
-		w.writeAttr("maxlength", "1")
-		w.writeAttr("class", "shortcut")
+		w.attr("maxlength", "1")
+		w.attr("class", "shortcut")
 	}
 
 	w.WriteByte('>')
+	return nil
 }
 
 // Write the element tag and the common parts of all input element types to
 // buffer
-func (w *htmlWriter) writeTag(tag string, spec inputSpec) {
+func (w *htmlWriter) tag(tag string, spec inputSpec) {
 	w.WriteByte('<')
 	w.WriteString(tag)
-	w.writeAttr("name", spec.id)
+	w.attr("name", spec.id)
 	if !spec.noID { // To not conflict with non-unique labels
-		w.writeAttr("id", spec.id)
+		w.attr("id", spec.id)
 	}
-	w.writeAttr("title", w.lang.Forms[spec.id][1])
+	w.attr("title", w.lang.Forms[spec.id][1])
 	if spec.placeholder {
-		w.writeAttr("placeholder", w.lang.Forms[spec.id][0])
+		w.attr("placeholder", w.lang.Forms[spec.id][0])
 	}
 	if spec.required {
-		w.writeAttr("required", "")
+		w.attr("required", "")
 	}
 }
 
+// Write an HTML-escaped string to buffer
+func (w *htmlWriter) escape(s string) {
+	w.WriteString(html.EscapeString(s))
+}
+
 // Write a select element to buffer
-func (w *htmlWriter) writeSelect(spec inputSpec) {
-	w.writeTag("select", spec)
+func (w *htmlWriter) sel(spec inputSpec) {
+	w.tag("select", spec)
 	w.WriteByte('>')
 
 	var val string
@@ -151,9 +157,9 @@ func (w *htmlWriter) writeSelect(spec inputSpec) {
 
 	for _, o := range spec.options {
 		w.WriteString("<option")
-		w.writeAttr("value", o)
+		w.attr("value", o)
 		if o == val {
-			w.writeAttr("selected", "selected")
+			w.attr("selected", "selected")
 		}
 		w.WriteByte('>')
 
@@ -169,15 +175,48 @@ func (w *htmlWriter) writeSelect(spec inputSpec) {
 	w.WriteString("</select>")
 }
 
+// Render a text area input element
+func (w *htmlWriter) textArea(spec inputSpec) {
+	w.tag("textarea", spec)
+	if spec.maxLength != 0 {
+		w.attr("maxlength", strconv.Itoa(spec.maxLength))
+	}
+	if spec.rows == 0 {
+		spec.rows = 3
+	}
+	w.attr("rows", strconv.Itoa(spec.rows))
+	w.WriteByte('>')
+
+	switch spec.val.(type) {
+	case string:
+		w.escape(spec.val.(string))
+	case []string:
+		w.escape(strings.Join(spec.val.([]string), "\n"))
+	}
+
+	w.WriteString("</textarea>")
+}
+
+// Write a subform for inputting a key-value string map to buffer
+func (w *htmlWriter) writeMap(spec inputSpec) error {
+	return tmpl["map"].Execute(w, struct {
+		Spec inputSpec
+		Lang lang.Pack
+	}{
+		Spec: spec,
+		Lang: w.lang,
+	})
+}
+
 // Write an input element label from the spec to the buffer
-func (w *htmlWriter) writeLabel(spec inputSpec) {
+func (w *htmlWriter) label(spec inputSpec) {
 	ln := w.lang.Forms[spec.id]
 
 	w.WriteString("<label")
 	if !spec.noID {
-		w.writeAttr("for", spec.id)
+		w.attr("for", spec.id)
 	}
-	w.writeAttr("title", ln[1])
+	w.attr("title", ln[1])
 	w.WriteByte('>')
 
 	w.WriteString(ln[0])
@@ -193,9 +232,9 @@ func renderTable(specs []inputSpec, lang lang.Pack) template.HTML {
 
 	for _, spec := range specs {
 		w.WriteString("<tr><td>")
-		w.writeLabel(spec)
+		w.label(spec)
 		w.WriteString("</td><td>")
-		w.writeInput(spec)
+		w.input(spec)
 		w.WriteString("</td></tr>")
 	}
 
@@ -205,12 +244,14 @@ func renderTable(specs []inputSpec, lang lang.Pack) template.HTML {
 }
 
 // Render a single input element
-func renderInput(spec inputSpec, lang lang.Pack) template.HTML {
+func renderInput(spec inputSpec, lang lang.Pack) (template.HTML, error) {
 	w := htmlWriter{
 		lang: lang,
 	}
-	w.writeInput(spec)
-	return template.HTML(w.String())
+	if err := w.input(spec); err != nil {
+		return template.HTML(""), err
+	}
+	return template.HTML(w.String()), nil
 }
 
 // Render a single label for an input element
@@ -218,6 +259,6 @@ func renderLabel(spec inputSpec, lang lang.Pack) template.HTML {
 	w := htmlWriter{
 		lang: lang,
 	}
-	w.writeLabel(spec)
+	w.label(spec)
 	return template.HTML(w.String())
 }

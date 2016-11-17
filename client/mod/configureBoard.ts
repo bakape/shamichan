@@ -1,180 +1,108 @@
-// import AccountFormView, { newRequest, LoginCredentials } from "./common"
-// import { BoardConfigs } from "../state"
-// import { InputSpec, renderInput, inputType } from '../forms'
-// import { admin as lang } from '../lang'
-// import { table, makeFrag, makeEl, on } from "../util"
-// import { fetchJSON, fetchBoardList, postJSON } from "../fetch"
-// import { loginID, sessionToken } from "./login"
-// import { write } from "../render"
-// import { formatHeader } from "../page/board"
+import AccountFormView, { newRequest, LoginCredentials } from "./common"
+import { BoardConfigs } from "../state"
+import { makeFrag } from "../util"
+import { postJSON, fetchHTML } from "../fetch"
+import { loginID, sessionToken } from "./login"
+import { write } from "../render"
+import View from "../view"
 
-// // Board configurations that include a subset not available publically
-// interface PrivateBoardConfigs extends BoardConfigs {
-// 	banners: string[]
-// 	eightball: string[]
-// 	staff: { [position: string]: string[] }
-// }
+// Board configurations that include a subset not available publically
+interface PrivateBoardConfigs extends BoardConfigs {
+    banners: string[]
+    eightball: string[]
+    staff: { [position: string]: string[] }
+}
 
-// // Request to set the board configs to a new values
-// interface SettingRequest extends LoginCredentials, PrivateBoardConfigs {
-// 	id: string
-// }
+// Request to set the board configs to a new values
+interface SettingRequest extends LoginCredentials, PrivateBoardConfigs {
+    id: string
+}
 
-// const specs: InputSpec[] = [
-// 	{
-// 		name: "readOnly",
-// 		type: inputType.boolean,
-// 	},
-// 	{
-// 		name: "textOnly",
-// 		type: inputType.boolean,
-// 	},
-// 	{
-// 		name: "forcedAnon",
-// 		type: inputType.boolean,
-// 	},
-// 	{
-// 		name: "hashCommands",
-// 		type: inputType.boolean,
-// 	},
-// 	{
-// 		name: "spoilers",
-// 		type: inputType.boolean,
-// 	},
-// 	{
-// 		name: "codeTags",
-// 		type: inputType.boolean,
-// 	},
+// Board configuration panel
+export default class BoardConfigPanel extends AccountFormView {
+    private board: string
+    private boardSelector: OwnedBoardSelection
 
-// 	// TODO: Spoiler upload
+    constructor() {
+        const attrs = {
+            tag: "form",
+            class: "wide-fields",
+        }
+        super(attrs, () =>
+            this.extractRequest()
+                .catch(err =>
+                    this.renderFormResponse(err)))
+        this.boardSelector = new OwnedBoardSelection(this)
+        super.render()
+    }
 
-// 	{
-// 		name: "title",
-// 		type: inputType.string,
-// 		maxLength: 100,
-// 	},
-// 	{
-// 		name: "notice",
-// 		type: inputType.multiline,
-// 		rows: 5,
-// 		maxLength: 500,
-// 	},
-// 	{
-// 		name: "rules",
-// 		type: inputType.multiline,
-// 		rows: 5,
-// 		maxLength: 5000,
-// 	},
-// 	{
-// 		name: "eightball",
-// 		type: inputType.multiline,
-// 		rows: 5,
-// 		maxLength: 2000,
-// 	}
+    // Render the configuration input elements
+    public async renderConfigs(board: string) {
+        this.board = board
+        const res = await postJSON("/forms/configureBoard", {
+            userID: loginID,
+            session: sessionToken,
+            id: board,
+        })
+        const frag = makeFrag(await res.text())
+        write(() =>
+            this.el.append(frag))
+    }
 
-// 	// TODO: Banner upload
-// 	// TODO: Staff configuration
+    // Extract form data and send a request to apply the new configs
+    private async extractRequest() {
+        const req = newRequest<SettingRequest>()
+        req.id = this.board
 
-// ]
+        for (let el of this.el.querySelectorAll("input")) {
+            const id = el.getAttribute("name")
+            switch (el.getAttribute("type")) {
+                case "checkbox":
+                    req[id] = el.checked
+                    break
+                case "text":
+                    req[id] = el.value
+					break
+            }
+        }
 
-// // Board configuration panel
-// export default class BoardConfigPanel extends AccountFormView {
-// 	board: string
+		for (let el of this.el.querySelectorAll("textarea")) {
+            const id = el.getAttribute("name")
+			req[id] = el.value
+			if (id === "eightball") {
+				req[id] = req[id].split("\n").slice(0, 100)
+            }
+		}
 
-// 	constructor() {
-// 		const attrs = {
-// 			class: "wide-fields",
-// 			noCaptcha: true,
-// 		}
-// 		super(attrs, () =>
-// 			this.extractRequest()
-// 				.catch(err =>
-// 					this.renderFormResponse(err)))
-// 		this.renderSelection()
-// 			.catch(err =>
-// 				this.renderFormResponse(err))
-// 	}
+        await postJSON("/admin/configureBoard", req)
+        this.remove()
+    }
+}
 
-// 	// Render the radio element for picking the board you want to configure
-// 	async renderSelection() {
-// 		const path = `/json/positions/owners/${loginID}`,
-// 			fBoards = fetchJSON<string[]>(path),
-// 			fBoardList = fetchBoardList(),
-// 			boards = (await fBoards).sort()
-// 		let boardList = await fBoardList
+// Render the <select> for picking the owned board you want to manipulate
+class OwnedBoardSelection extends View<null> {
+    private parent: BoardConfigPanel
 
-// 		if (!boards.length) {
-// 			this.noSubmit = true
-// 			const html = lang["ownNoBoards"] as string + "<br><br>"
-// 			this.renderForm(makeFrag(html))
-// 			return
-// 		}
+    constructor(parent: BoardConfigPanel) {
+        super({ tag: "form" })
+        this.parent = parent
+        this.on("submit", e =>
+            this.onSubmit(e))
+        this.render()
+    }
 
-// 		// Filter boards we do not own from the list
-// 		boardList = boardList.filter(board =>
-// 			boards.indexOf(board.id) > -1)
+    private async render() {
+        const html = await fetchHTML(`/forms/ownedBoards/${loginID}`)
+        this.el.append(makeFrag(html))
+        write(() =>
+            this.parent.el.append(this.el))
+    }
 
-// 		let html = "<span>"
-// 		for (let board of boardList) {
-// 			const header = formatHeader(board.id, board.title)
-// 			html += ` <a data-value="${board.id}"}>${header}</a><br>`
-// 		}
-// 		html += "<br></span>"
-
-// 		const board = makeEl(html)
-// 		const handler = (event: MouseEvent) => {
-// 			board.remove()
-// 			this.el.querySelector("input[type=submit]").style.display = ""
-// 			const val = (event.target as Element).getAttribute("data-value")
-// 			this.renderConfigs(val)
-// 		}
-// 		on(board, "click", handler, {
-// 			capture: true,
-// 			selector: "a",
-// 		})
-
-// 		this.renderForm(board)
-// 		this.el.querySelector("input[type=submit]").style.display = "none"
-// 	}
-
-// 	// Render the configuration input elements
-// 	async renderConfigs(board: string) {
-// 		this.board = board
-// 		const res = await postJSON("/admin/boardConfig", {
-// 			userID: loginID,
-// 			session: sessionToken,
-// 			id: board,
-// 		})
-// 		const conf: PrivateBoardConfigs = await res.json()
-// 		conf.eightball = conf.eightball.join("\n") as any
-
-// 		const html = table(specs, spec => {
-// 			[spec.label, spec.tooltip] = lang[spec.name]
-// 			spec.value = conf[spec.name]
-// 			return renderInput(spec)
-// 		})
-// 		write(() =>
-// 			this.el.prepend(makeFrag(html)))
-// 	}
-
-// 	// Extract form data and send a request to apply the new configs
-// 	async extractRequest() {
-// 		const req = newRequest<SettingRequest>()
-// 		req.id = this.board
-// 		for (let {name, type} of specs) {
-// 			const el = this.el
-// 				.querySelector(`[name=${name}]`) as HTMLInputElement
-// 			switch (type) {
-// 				case inputType.boolean:
-// 					req[name] = el.checked
-// 					break
-// 				default:
-// 					req[name] = el.value
-// 			}
-// 		}
-// 		req.eightball = (req.eightball as any).split("\n").slice(0, 100)
-
-// 		await postJSON("/admin/configureBoard", req)
-// 		this.remove()
-// 	}
-// }
+    private onSubmit(e: Event) {
+        e.preventDefault()
+        e.stopPropagation()
+        const board = (e.target as Element).querySelector("select").value
+        this.parent.renderConfigs(board)
+        this.remove()
+    }
+}

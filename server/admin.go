@@ -174,18 +174,34 @@ func validateConfigs(w http.ResponseWriter, conf config.BoardConfigs) bool {
 // unexposed ones. Intended to be used before setting the the configs with
 // configureBoard().
 func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
-	var msg boardConfigRequest
+	conf, isValid := boardConfData(w, r)
+	if !isValid {
+		return
+	}
+	serveJSON(w, r, "", conf)
+}
+
+// Determine, if the client has access rights to the configurations, and return
+// them, if so
+func boardConfData(w http.ResponseWriter, r *http.Request) (
+	config.BoardConfigs, bool,
+) {
+	var (
+		msg  boardConfigRequest
+		conf config.BoardConfigs
+	)
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
 		isBoardOwner(w, r, msg.ID, msg.UserID)
 	if !isValid {
-		return
+		return conf, false
 	}
 
-	conf := config.GetBoardConfigs(msg.ID)
+	conf = config.GetBoardConfigs(msg.ID).BoardConfigs
 	if conf.ID == "" {
 		text404(w)
-		return
+		return conf, false
 	}
-	serveJSON(w, r, "", conf.BoardConfigs)
+
+	return conf, true
 }

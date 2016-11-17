@@ -105,7 +105,7 @@ func TestPostJSON(t *testing.T) {
 		{
 			"invalid thread number",
 			"/a/www",
-			"", 400, "",
+			"", 404, "",
 		},
 		{
 			"nonexistent thread",

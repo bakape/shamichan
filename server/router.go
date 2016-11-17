@@ -64,7 +64,12 @@ func createRouter() http.Handler {
 	r.GET("/", wrapHandler(redirectToDefault))
 	r.GET("/:board/", boardHTML)
 	r.GET("/:board/:thread", threadHTML)
-	r.GET("/forms/boardNavigation", wrapHandler(boardNavigation))
+
+	// API for retrieving various localized HTML forms
+	forms := r.NewGroup("/forms")
+	forms.GET("/boardNavigation", wrapHandler(boardNavigation))
+	forms.GET("/ownedBoards/:userID", ownedBoardSelection)
+	forms.POST("/configureBoard", wrapHandler(boardConfigurationForm))
 
 	// JSON API
 	json := r.NewGroup("/json")

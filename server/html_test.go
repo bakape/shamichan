@@ -20,7 +20,7 @@ func TestThreadHTML(t *testing.T) {
 
 		rec, req := newPair("/a/www")
 		router.ServeHTTP(rec, req)
-		assertCode(t, rec, 400)
+		assertCode(t, rec, 404)
 	})
 	t.Run("nonexistent thread", func(t *testing.T) {
 		t.Parallel()
@@ -69,6 +69,75 @@ func TestBoardNavigation(t *testing.T) {
 	(*config.Get()).DefaultLang = "en_GB"
 
 	rec, req := newPair("/forms/boardNavigation")
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 200)
+}
+
+func TestOwnedBoardSelection(t *testing.T) {
+	config.ClearBoards()
+	conf := [...]config.BoardConfigs{
+		{
+			ID: "a",
+			Staff: map[string][]string{
+				"owners": {"foo", "admin"},
+			},
+		},
+		{
+			ID: "c",
+			Staff: map[string][]string{
+				"owners": {"admin"},
+			},
+		},
+	}
+	for _, c := range conf {
+		if _, err := config.SetBoardConfigs(c); err != nil {
+			t.Fatal(err)
+		}
+	}
+	(*config.Get()).DefaultLang = "en_GB"
+
+	cases := [...]struct {
+		name, id string
+	}{
+		{"no owned boards", "bar"},
+		{"one owned board", "foo"},
+		{"multiple owned boards", "admin"},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			rec, req := newPair("/forms/ownedBoards/" + c.id)
+			router.ServeHTTP(rec, req)
+			assertCode(t, rec, 200)
+		})
+	}
+}
+
+func TestBoardConfigurationForm(t *testing.T) {
+	assertTableClear(t, "accounts")
+	writeSampleUser(t)
+	config.ClearBoards()
+
+	conf := config.BoardConfigs{
+		ID: "a",
+		Staff: map[string][]string{
+			"owners": {"user1"},
+		},
+	}
+	_, err := config.SetBoardConfigs(conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	(*config.Get()).DefaultLang = "en_GB"
+
+	rec, req := newJSONPair(t, "/forms/configureBoard", boardConfigRequest{
+		ID:               "a",
+		loginCredentials: sampleLoginCredentials,
+	})
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
 }

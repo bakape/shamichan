@@ -157,7 +157,7 @@ func validateThread(
 	var err error
 	id, err = strconv.ParseInt(p["thread"], 10, 64)
 	if err != nil {
-		text400(w, err)
+		text404(w)
 		return
 	}
 
