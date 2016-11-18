@@ -24,7 +24,7 @@ License: GNU AGPL
     - Optional automatic deletion of unused threads and boards
     - Automatic HTTP(S) and magnet URL linkification
 * Files and images
-    - JPEG, PNG, APNG, WEBM, MP3, MP4 and OGG supported
+    - JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, ZIP, 7Z, TAR.GZ and TAR.XZ supported
     - Transparent PNG and GIF thumbnails
     - Configurable size limits
     - Inbuilt reverse image search

@@ -169,12 +169,16 @@ function renderImagePreview(event: MouseEvent) {
 		return
 	}
 	const src = link.getAttribute("href"),
-		ext = src.slice(src.lastIndexOf(".") + 1)
+		ext = src.slice(src.indexOf(".") + 1)
 	let tag: string
 
 	switch (ext) {
 		case "pdf": // Nothing to preview for PDF or MP3
 		case "mp3":
+		case "zip":
+		case "7z":
+		case "tar.gz":
+		case "tar.xz":
 			return clear()
 		case "webm":
 			if (!options.webmHover) {
@@ -185,7 +189,7 @@ function renderImagePreview(event: MouseEvent) {
 		case "mp4":
 		case "ogg":
 			const model = getModel(link)
-			// No video OGG are treated just like MP3
+			// No video OGG and MP4 are treated just like MP3
 			if (!model || !model.image.video) {
 				return clear()
 			}

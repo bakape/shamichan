@@ -21,6 +21,10 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
+func init() {
+	isTest = true
+}
+
 func newMultiWriter() (*bytes.Buffer, *multipart.Writer) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)

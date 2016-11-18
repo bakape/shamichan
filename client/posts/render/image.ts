@@ -139,7 +139,7 @@ export function sourcePath(SHA1: string, fileType: fileTypes): string {
 }
 
 // Render a name + download link of an image
-function imageLink(el: Element, data: ImageData) {
+export function imageLink(el: Element, data: ImageData) {
 	let {name} = data
 	const {fileType} = data,
 		ext = fileTypes[fileType],

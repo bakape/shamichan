@@ -1,6 +1,8 @@
 import { Post, fileTypes } from "./models"
 import View from "../view"
-import { renderFigcaption, renderImage, sourcePath, } from "./render/image"
+import {
+	renderFigcaption, renderImage, sourcePath, imageLink,
+} from "./render/image"
 import { write, threads } from "../render"
 import options from "../options"
 import { setAttrs, on } from "../util"
@@ -39,10 +41,16 @@ export default class ImageHandler extends View<Post> {
 		}
 
 		switch (img.fileType) {
+			// Simply download the file
 			case fileTypes.pdf:
+			case fileTypes.zip:
+			case fileTypes["7z"]:
+			case fileTypes["tar.gz"]:
+			case fileTypes["tar.xz"]:
 				event.preventDefault()
-				window.open(sourcePath(img.SHA1, img.fileType), "_blank")
-				return
+				const a  = document.createElement("a")
+				imageLink(a, getModel(event.target as Element).image)
+				return a.click()
 			case fileTypes.mp3:
 				event.preventDefault()
 				return this.renderAudio()
@@ -226,14 +234,13 @@ function shouldAutoExpand(model: Post): boolean {
 		return false
 	}
 	switch (model.image.fileType) {
-		case fileTypes.mp3:
-		case fileTypes.mp4:
-		case fileTypes.ogg:
-		case fileTypes.pdf:
-		case fileTypes.webm:
+		case fileTypes.jpg:
+		case fileTypes.png:
+		case fileTypes.gif:
+			return true
+		default:
 			return false
 	}
-	return true
 }
 
 deferInit(() => {

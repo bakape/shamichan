@@ -3,7 +3,6 @@ package websockets
 import (
 	"bytes"
 	"errors"
-	"path/filepath"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -364,9 +363,17 @@ func getImage(token, name string, spoiler bool) (img *types.Image, err error) {
 		return
 	}
 
+	// Trim on the first dot in the file name. Not using filepath.Ext(), because
+	// it does not handle compound extensions like ".tar.gz"
+	switch i := strings.IndexByte(name, '.'); i {
+	case -1:
+	default:
+		name = name[:i]
+	}
+
 	return &types.Image{
 		ImageCommon: imgCommon,
 		Spoiler:     spoiler,
-		Name:        strings.TrimSuffix(name, filepath.Ext(name)),
+		Name:        name,
 	}, nil
 }

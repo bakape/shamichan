@@ -18,7 +18,7 @@ import (
 func TestMain(m *testing.M) {
 	db.DBName = "meguca_test_imager"
 	db.IsTest = true
-	assetRoot = "testdata"
+	assetRoot = filepath.Join("..", "www")
 	config.Set(config.Configs{})
 	if err := db.LoadDB(); err != nil {
 		panic(err)

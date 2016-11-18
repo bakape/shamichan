@@ -22,6 +22,8 @@ const acceptedFormats = commaList([
 	"video/ogg", "audio/ogg", "application/ogg",
 	"video/mp4", "audio/mp4",
 	"audio/mp3",
+	"application/zip", "application/x-7z-compressed",
+	"application/x-xz", "application/x-gzip",
 ])
 
 // Mixin for handling file uploads

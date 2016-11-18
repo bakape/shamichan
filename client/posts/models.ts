@@ -89,7 +89,9 @@ export interface ImageData {
 }
 
 // Possible file types of a post image
-export enum fileTypes { jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg }
+export enum fileTypes {
+	jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz",
+}
 
 // Generic post model
 export class Post extends Model implements PostData {

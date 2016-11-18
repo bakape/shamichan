@@ -29,6 +29,7 @@ var (
 		"video/webm":      types.WEBM,
 		"application/ogg": types.OGG,
 		"video/mp4":       types.MP4,
+		"application/zip": types.ZIP,
 	}
 
 	// File type tests for types not supported by http.DetectContentType
@@ -36,12 +37,17 @@ var (
 		test  func([]byte) (bool, error)
 		fType uint8
 	}{
+		{detectTarGZ, types.TGZ},
+		{detectTarXZ, types.TXZ},
+		{detect7z, types.SevenZip},
 		{detectSVG, types.SVG},
 		{detectMP3, types.MP3},
 	}
 
 	errTooLarge        = errors.New("file too large")
 	errInvalidFileHash = errors.New("invalid file hash")
+
+	isTest bool
 )
 
 // Response from a thumbnail generation performed concurently
@@ -99,7 +105,9 @@ func UploadImageHash(w http.ResponseWriter, req *http.Request) {
 func LogError(w http.ResponseWriter, r *http.Request, code int, err error) {
 	text := err.Error()
 	http.Error(w, text, code)
-	log.Printf("upload error: %s: %s\n", auth.GetIP(r), text)
+	if !isTest {
+		log.Printf("upload error: %s: %s\n", auth.GetIP(r), text)
+	}
 }
 
 // ParseUpload parses the upload form. Separate function for cleaner error
@@ -231,6 +239,8 @@ func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 			res = processOGG(data)
 		case types.MP4:
 			res = processMP4(data)
+		case types.ZIP, types.SevenZip, types.TGZ, types.TXZ:
+			res = processArchive()
 		case types.JPEG, types.PNG, types.GIF:
 			res.thumb, res.dims, res.err = processImage(data)
 		}
