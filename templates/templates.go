@@ -70,8 +70,17 @@ func Parse() error {
 		{id: "boardNavigation"},
 		{id: "ownedBoard"},
 		{
-			id: "configureBoard",
-			fns: template.FuncMap{
+			"createBoard",
+			[]string{"captcha"},
+			template.FuncMap{
+				"bundle": bundle,
+				"table":  renderTable,
+			},
+		},
+		{
+			"configureBoard",
+			nil,
+			template.FuncMap{
 				"table": renderTable,
 			},
 		},

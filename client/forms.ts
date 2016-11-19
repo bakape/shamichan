@@ -58,8 +58,8 @@ export default class FormView extends View<null> {
 	}
 
 	// Load a new captcha, if present and response code is not 0
-	protected reloadCaptcha(code: number) {
-		if (code !== 0 && this.captcha) {
+	protected reloadCaptcha() {
+		if (this.captcha) {
 			this.captcha.reload()
 		}
 	}

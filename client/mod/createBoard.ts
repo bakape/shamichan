@@ -1,82 +1,43 @@
-// import { renderInput, InputSpec, inputType } from '../forms'
-// import AccountFormView from './common'
-// import { send, message, handlers } from '../connection'
-// import { inputValue, table, makeFrag } from '../util'
-// import { admin as lang, mod, ui } from '../lang'
+import AccountFormView, { newRequest, LoginCredentials } from './common'
+import { makeFrag, inputValue } from '../util'
+import { fetchHTML, postJSON } from "../fetch"
 
-// // Response codes for board creation requests
-// const enum responseCode {
-// 	success,
-// 	invalidBoardName,
-// 	boardNameTaken,
-// 	titleTooLong,
-// 	invalidCaptcha,
-// }
+interface BoardCreationRequest extends LoginCredentials {
+	name: string
+	title: string
+}
 
-// // Panel view for creating boards
-// export default class BoardCreationPanel extends AccountFormView {
-// 	constructor() {
-// 		super({}, () =>
-// 			this.sendRequest())
-// 		this.render()
-// 		handlers[message.createBoard] = (res: responseCode) =>
-// 			this.handleResponse(res)
-// 	}
+// Panel view for creating boards
+export default class BoardCreationPanel extends AccountFormView {
+	constructor() {
+		super({ tag: "form" }, () =>
+			this.onSubmit())
+		this.render()
+	}
 
-// 	render() {
-// 		const html = table(['boardName', 'boardTitle'], name => {
-// 			const [label, tooltip] = lang[name]
-// 			const spec: InputSpec = {
-// 				name,
-// 				label,
-// 				tooltip,
-// 				type: inputType.string,
-// 				minLength: 1,
-// 			}
-// 			if (name === "boardName") {
-// 				spec.maxLength = 3
-// 				spec.pattern = "^[a-z0-9]{1,3}$"
-// 			} else {
-// 				spec.maxLength = 100
-// 			}
+	protected async render() {
+		const [html, err] = await fetchHTML("/forms/createBoard")
+		if (err) {
+			throw err
+		}
+		this.el.append(makeFrag(html))
+		super.render()
+	}
 
-// 			return renderInput(spec)
-// 		})
+	private async onSubmit() {
+		const req = newRequest<BoardCreationRequest>()
+		req.name = inputValue(this.el, 'boardName')
+		req.title = inputValue(this.el, 'boardTitle')
+		this.injectCaptcha(req)
 
-// 		this.renderForm(makeFrag(html))
-// 	}
-
-// 	remove() {
-// 		delete handlers[message.createBoard]
-// 		super.remove()
-// 	}
-
-// 	sendRequest() {
-// 		const req = {
-// 			name: inputValue(this.el, 'boardName'),
-// 			title: inputValue(this.el, 'boardTitle'),
-// 		}
-// 		this.injectCaptcha(req)
-// 		send(message.createBoard, req)
-// 	}
-
-// 	handleResponse(res: responseCode) {
-// 		let text: string
-// 		switch (res) {
-// 			case responseCode.success:
-// 				this.remove()
-// 				return
-// 			case responseCode.boardNameTaken:
-// 				text = lang.boardNameTaken
-// 				break
-// 			case responseCode.invalidCaptcha:
-// 				text = ui.invalidCaptcha
-// 				break
-// 			default:
-// 				text = mod.theFuck // Should not happen
-// 		}
-
-// 		this.reloadCaptcha(res)
-// 		this.renderFormResponse(text)
-// 	}
-// }
+		const res = await postJSON("/admin/createBoard", req)
+		switch (res.status) {
+			case 200:
+				this.remove()
+				break
+			default:
+				this.reloadCaptcha()
+				this.renderFormResponse(await res.text())
+		}
+	}
+}

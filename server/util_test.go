@@ -14,10 +14,6 @@ import (
 	"github.com/bakape/meguca/db"
 )
 
-const (
-	notFound = "404 Not found\n"
-)
-
 func newRequest(url string) *http.Request {
 	return httptest.NewRequest("GET", url, nil)
 }
@@ -53,7 +49,7 @@ func assertEtag(t *testing.T, rec *httptest.ResponseRecorder, etag string) {
 func assertBody(t *testing.T, rec *httptest.ResponseRecorder, body string) {
 	if s := rec.Body.String(); s != body {
 		t.Errorf(
-			"unexpected response body:\nexpected: %s\ngot:      %s",
+			"unexpected response body:\nexpected: `%s`\ngot:      `%s`",
 			body,
 			s,
 		)
@@ -106,7 +102,7 @@ func TestText404(t *testing.T) {
 	rec, req := newPair("/lalala/")
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 404)
-	assertBody(t, rec, notFound)
+	assertBody(t, rec, "404 not found\n")
 }
 
 func TestText500(t *testing.T) {
@@ -116,7 +112,7 @@ func TestText500(t *testing.T) {
 	req.RemoteAddr = "::1"
 	text500(rec, req, errors.New("foo"))
 	assertCode(t, rec, 500)
-	assertBody(t, rec, "500 Internal server error: foo\n")
+	assertBody(t, rec, "500 foo\n")
 }
 
 func TestText40X(t *testing.T) {
@@ -125,10 +121,9 @@ func TestText40X(t *testing.T) {
 	cases := [...]struct {
 		code int
 		fn   func(http.ResponseWriter, error)
-		msg  string
 	}{
-		{400, text400, "Bad request"},
-		{403, text403, "Forbidden"},
+		{400, text400},
+		{403, text403},
 	}
 
 	for i := range cases {
@@ -139,7 +134,7 @@ func TestText40X(t *testing.T) {
 			rec := httptest.NewRecorder()
 			c.fn(rec, errors.New("foo"))
 			assertCode(t, rec, c.code)
-			assertBody(t, rec, fmt.Sprintf("%d %s: foo\n", c.code, c.msg))
+			assertBody(t, rec, fmt.Sprintf("%d foo\n", c.code))
 		})
 	}
 }

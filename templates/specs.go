@@ -91,6 +91,21 @@ var specs = map[string][]inputSpec{
 		// TODO: Staff configuration
 
 	},
+	"createBoard": {
+		{
+			id:        "boardName",
+			typ:       _string,
+			required:  true,
+			pattern:   "^[a-z0-9]{1,3}$",
+			maxLength: 3,
+		},
+		{
+			id:        "boardTitle",
+			typ:       _string,
+			required:  true,
+			maxLength: 100,
+		},
+	},
 }
 
 // Specs of option inputs grouped by tab

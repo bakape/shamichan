@@ -67,7 +67,7 @@ func TestPanicHandler(t *testing.T) {
 	log.SetOutput(os.Stdout)
 
 	assertCode(t, rec, 500)
-	assertBody(t, rec, "500 Internal server error: foo\n")
+	assertBody(t, rec, "500 foo\n")
 }
 
 func TestGzip(t *testing.T) {

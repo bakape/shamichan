@@ -138,3 +138,15 @@ func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
 	data, err := templates.ConfigureBoard(conf, lp)
 	serveHTML(w, r, "", data, err)
 }
+
+// Renders a form for creating new boards
+func boardCreationForm(w http.ResponseWriter, r *http.Request) {
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	data, err := templates.CreateBoard(lp)
+	serveHTML(w, r, "", data, err)
+}

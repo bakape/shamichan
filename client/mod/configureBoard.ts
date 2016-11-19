@@ -92,7 +92,10 @@ class OwnedBoardSelection extends View<null> {
     }
 
     private async render() {
-        const html = await fetchHTML(`/forms/ownedBoards/${loginID}`)
+        const [html, err] = await fetchHTML(`/forms/ownedBoards/${loginID}`)
+        if (err) {
+            throw err
+        }
         this.el.append(makeFrag(html))
         write(() =>
             this.parent.el.append(this.el))

@@ -135,7 +135,11 @@ function filterThreads(filter: string, catalog: ParentNode) {
 
 // Fetch and rerender board contents
 async function refreshBoard() {
-	renderFresh(await fetchBoard(page.board))
+	const [html, err] = await fetchBoard(page.board)
+	if (err) {
+		throw err
+	}
+	renderFresh(html)
 }
 
 // Update refresh timer or refresh board, if document hidden, each minute

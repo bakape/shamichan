@@ -62,10 +62,12 @@ function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
 	return async (el: Element) => {
 		const url = "https://noembed.com/embed?url="
 			+ encodeURI(el.getAttribute("href"))
-		const {title, html} = await fetchJSON<OEmbedDoc>(url)
-
-		el.textContent = `[${provider[type]}] ${title}`
-		el.setAttribute("data-html", encodeURIComponent(html.trim()))
+		const [data, err] = await fetchJSON<OEmbedDoc>(url)
+		if (err) {
+			return console.warn(err)
+		}
+		el.textContent = `[${provider[type]}] ${data.title}`
+		el.setAttribute("data-html", encodeURIComponent(data.html.trim()))
 	}
 }
 

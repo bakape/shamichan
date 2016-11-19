@@ -140,7 +140,7 @@ func TestNotLoggedIn(t *testing.T) {
 	t.Parallel()
 
 	cl := new(Client)
-	fns := [...]handler{logOut, logOutAll, changePassword, createBoard}
+	fns := [...]handler{logOut, logOutAll, changePassword}
 	for _, fn := range fns {
 		if err := fn(nil, cl); err != errNotLoggedIn {
 			UnexpectedError(t, err)

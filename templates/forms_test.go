@@ -36,3 +36,9 @@ func TestConfigureBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestCreateBoard(t *testing.T) {
+	if _, err := CreateBoard(lang.Packs["en_GB"]); err != nil {
+		t.Fatal(err)
+	}
+}

@@ -1,16 +1,16 @@
 // R/a/dio integration
 
-import {HTML, makeAttrs, isMatch} from './util'
-import {fetchJSON} from "./fetch"
+import { HTML, makeAttrs, isMatch } from './util'
+import { fetchJSON } from "./fetch"
 import options from './options'
-import {write} from './render'
-import {banner as lang} from './lang'
+import { write } from './render'
+import { banner as lang } from './lang'
 
 type RadioData = {
 	np: string
 	listeners: number
 	dj: string
-	[index: string]: string|number
+	[index: string]: string | number
 }
 
 let el = document.getElementById('banner-center'),
@@ -19,6 +19,10 @@ let el = document.getElementById('banner-center'),
 // Fetch JSON from R/a/dio's API and rerender the banner, if different data
 // received
 async function fetchData() {
+	const [res, err] = await fetchJSON<any>('https://r-a-d.io/api')
+	if (!err) {
+		return console.warn(err)
+	}
 	const {
 		main: {
 			np,
@@ -27,10 +31,10 @@ async function fetchData() {
 				djname: dj,
 			},
 		},
-	} =
-		await fetchJSON<any>('https://r-a-d.io/api')
+	}
+		= res
 
-	const newData: RadioData = {np, listeners, dj}
+	const newData: RadioData = { np, listeners, dj }
 	if (!isMatch(newData, data)) {
 		data = newData
 		render()

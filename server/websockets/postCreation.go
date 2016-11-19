@@ -100,7 +100,7 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 		err = errInvalidBoard
 		return
 	}
-	if !authenticateCaptcha(req.Captcha, ip) {
+	if !auth.AuthenticateCaptcha(req.Captcha, ip) {
 		err = errInValidCaptcha
 		return
 	}

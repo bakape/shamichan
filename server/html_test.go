@@ -141,3 +141,11 @@ func TestBoardConfigurationForm(t *testing.T) {
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
 }
+
+func TestBoardCreationForm(t *testing.T) {
+	(*config.Get()).DefaultLang = "en_GB"
+
+	rec, req := newPair("/forms/createBoard")
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 200)
+}

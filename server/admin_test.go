@@ -283,3 +283,116 @@ func genString(len int) string {
 	}
 	return buf.String()
 }
+
+func TestValidateBoardCreation(t *testing.T) {
+	assertTableClear(t, "boards", "accounts")
+	assertInsert(t, "boards", db.Document{ID: "a"})
+	writeSampleUser(t)
+
+	cases := [...]struct {
+		name, id, title string
+		err             error
+	}{
+		{
+			name:  "board name too long",
+			id:    "abcd",
+			title: "foo",
+			err:   errInvalidBoardName,
+		},
+		{
+			name:  "empty board name",
+			id:    "",
+			title: "foo",
+			err:   errInvalidBoardName,
+		},
+		{
+			name:  "invalid chars in board name",
+			id:    ":^)",
+			title: "foo",
+			err:   errInvalidBoardName,
+		},
+		{
+			name:  "reserved key 'id' as board name",
+			id:    "id",
+			title: "foo",
+			err:   errInvalidBoardName,
+		},
+		{
+			name:  "title too long",
+			id:    "b",
+			title: genString(101),
+			err:   errTitleTooLong,
+		},
+		{
+			name:  "board name taken",
+			id:    "a",
+			title: "foo",
+			err:   errBoardNameTaken,
+		},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			msg := boardCreationRequest{
+				Name:             c.id,
+				Title:            c.title,
+				loginCredentials: sampleLoginCredentials,
+			}
+			rec, req := newJSONPair(t, "/admin/createBoard", msg)
+			router.ServeHTTP(rec, req)
+
+			assertCode(t, rec, 400)
+			assertBody(t, rec, fmt.Sprintf("400 %s\n", c.err))
+		})
+	}
+}
+
+func TestBoardCreation(t *testing.T) {
+	assertTableClear(t, "boards", "accounts")
+	writeSampleUser(t)
+
+	const (
+		id     = "a"
+		userID = "user1"
+		title  = "/a/ - Animu & Mango"
+	)
+
+	msg := boardCreationRequest{
+		Name:             id,
+		Title:            title,
+		loginCredentials: sampleLoginCredentials,
+	}
+	rec, req := newJSONPair(t, "/admin/createBoard", msg)
+	router.ServeHTTP(rec, req)
+
+	assertCode(t, rec, 200)
+
+	var board config.DatabaseBoardConfigs
+	if err := db.One(r.Table("boards").Get(id), &board); err != nil {
+		t.Fatal(err)
+	}
+
+	std := config.DatabaseBoardConfigs{
+		BoardConfigs: config.BoardConfigs{
+			ID: id,
+			BoardPublic: config.BoardPublic{
+				Spoiler: "default.jpg",
+				Title:   title,
+				Banners: []string{},
+			},
+			Eightball: config.EightballDefaults,
+			Staff: map[string][]string{
+				"owners": []string{userID},
+			},
+		},
+	}
+
+	c := board.Created
+	if !c.Before(time.Now()) || c.Unix() == 0 {
+		t.Errorf("invalid board creation time: %#v", board.Created)
+	}
+	AssertDeepEquals(t, board.BoardConfigs, std.BoardConfigs)
+}

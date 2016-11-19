@@ -1,0 +1,5 @@
+{{table .Specs .Lang}}
+{{template "captcha" bundle "create-board" "" .}}
+<input type="submit" value="{{index .Lang.UI "submit"}}">
+<input type="button" name="cancel" value="{{index .Lang.UI "cancel"}}">
+<div class="form-response admin"></div>

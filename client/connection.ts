@@ -43,7 +43,7 @@ export const enum message {
 
 	// Board and server administration
 	configServer,
-	createBoard,
+	_, // Legacy. Left to preserve numbering.
 
 	// Send new post ID to client
 	postID,
@@ -198,26 +198,7 @@ function prepareToSync(): connState {
 // subscribe to the appropriate event feeds and optionally try to send a logged
 // in user session authentication request.
 export async function synchronise(auth: boolean) {
-	// If thread data is too old because of disconnect, computer suspension or
-	// resuming old tabs, refetch and sync differences. The actual deadline
-	// is 30 seconds, but a ten second buffer is probably sound.
-	if (page.thread && Date.now() - syncTimestamp > 20000) {
-		const {board, thread} = page,
-			// Always fetch the full thread
-			data = await fetchThread(board, thread, 0)
-		insertPost(data)
-		// ID of the first non-OP post that we have rendered, or OP, if none
-		const firstID = Object.keys(posts.models).sort()[1] || page.thread
-		for (let post of data.posts) {
-			// Filter posts that we never retrieved in lastN mode
-			if (!posts.has(post.id) && post.id < firstID) {
-				continue
-			}
-			insertPost(post)
-		}
-		delete data.posts
-	}
-
+	await fetchBacklog()
 	send(message.synchronise, {
 		board: page.board,
 		thread: page.thread,
@@ -239,6 +220,34 @@ export async function synchronise(auth: boolean) {
 			postSM.feed(postEvent.abandon)
 		}
 	}
+}
+
+// If thread data is too old because of disconnect, computer suspension or
+// resuming old tabs, refetch and sync differences. The actual deadline
+// is 30 seconds, but a ten second buffer is probably sound.
+async function fetchBacklog() {
+	if (!page.thread || Date.now() - syncTimestamp < 20000) {
+		return
+	}
+
+	const {board, thread} = page,
+		// Always fetch the full thread
+		[data, err] = await fetchThread(board, thread, 0)
+	if (err) {
+		alert(err)
+		return
+	}
+	insertPost(data)
+	// ID of the first non-OP post that we have rendered, or OP, if none
+	const firstID = Object.keys(posts.models).sort()[1] || page.thread
+	for (let post of data.posts) {
+		// Filter posts that we never retrieved in lastN mode
+		if (!posts.has(post.id) && post.id < firstID) {
+			continue
+		}
+		insertPost(post)
+	}
+	delete data.posts
 }
 
 // Reset the reconnection attempt counter and timers

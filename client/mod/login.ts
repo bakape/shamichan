@@ -152,7 +152,7 @@ class BaseLoginForm extends FormView {
 				text = lang.theFuck
 		}
 
-		this.reloadCaptcha(code)
+		this.reloadCaptcha()
 		this.renderFormResponse(text)
 	}
 }

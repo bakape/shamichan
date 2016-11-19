@@ -70,6 +70,7 @@ func createRouter() http.Handler {
 	forms.GET("/boardNavigation", wrapHandler(boardNavigation))
 	forms.GET("/ownedBoards/:userID", ownedBoardSelection)
 	forms.POST("/configureBoard", wrapHandler(boardConfigurationForm))
+	forms.GET("/createBoard", wrapHandler(boardCreationForm))
 
 	// JSON API
 	json := r.NewGroup("/json")
@@ -90,6 +91,7 @@ func createRouter() http.Handler {
 	admin := r.NewGroup("/admin")
 	admin.POST("/configureBoard", wrapHandler(configureBoard))
 	admin.POST("/boardConfig", wrapHandler(servePrivateBoardConfigs))
+	admin.POST("/createBoard", wrapHandler(createBoard))
 
 	// Assets
 	r.GET("/assets/*path", serveAssets)

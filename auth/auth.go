@@ -3,14 +3,19 @@
 package auth
 
 import (
+	"bufio"
 	"encoding/base64"
+	"errors"
+	"log"
 	"math/rand"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/types"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -44,6 +49,16 @@ type Session struct {
 type Ident struct {
 	UserID string
 	IP     string
+}
+
+// Error during authenticating a captcha. These are not reported to the client,
+// only logged.
+type errCaptcha struct {
+	error
+}
+
+func (e errCaptcha) Error() string {
+	return "captcha: " + e.error.Error()
 }
 
 // LookUpIdent determine access rights of an IP
@@ -108,4 +123,50 @@ func BcryptHash(password string, rounds int) ([]byte, error) {
 // BcryptCompare compares a bcrypt hash with a user-supplied string
 func BcryptCompare(password string, hash []byte) error {
 	return bcrypt.CompareHashAndPassword(hash, []byte(password))
+}
+
+// AuthenticateCaptcha posts a request to the SolveMedia API to authenticate a
+// captcha
+func AuthenticateCaptcha(captcha types.Captcha, ip string) bool {
+	conf := config.Get()
+
+	// Captchas disabled or running tests. Can not use API, when testing
+	if !conf.Captcha {
+		return true
+	}
+
+	if captcha.Captcha == "" || captcha.CaptchaID == "" {
+		return false
+	}
+
+	data := url.Values{
+		"privatekey": {conf.CaptchaPrivateKey},
+		"challenge":  {captcha.CaptchaID},
+		"response":   {captcha.Captcha},
+		"remoteip":   {ip},
+	}
+	res, err := http.PostForm("http://verify.solvemedia.com/papi/verify", data)
+	if err != nil {
+		printCaptchaError(err)
+		return false
+	}
+	defer res.Body.Close()
+
+	reader := bufio.NewReader(res.Body)
+	status, err := reader.ReadString('\n')
+	if err != nil {
+		printCaptchaError(err)
+		return false
+	}
+	if status[:len(status)-1] != "true" {
+		reason, _ := reader.ReadString('\n')
+		printCaptchaError(errors.New(reason[:len(reason)-1]))
+		return false
+	}
+
+	return true
+}
+
+func printCaptchaError(err error) {
+	log.Println(errCaptcha{err})
 }

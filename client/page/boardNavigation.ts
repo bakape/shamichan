@@ -80,7 +80,11 @@ class BoardSelectionPanel extends View<Model> {
 
 	// Fetch the board list from the server and render the selection form
 	private async render() {
-		const frag = makeFrag(await fetchHTML("/forms/boardNavigation"))
+		const [html, err] = await fetchHTML("/forms/boardNavigation")
+		if (err) {
+			throw err
+		}
+		const frag = makeFrag(html)
 		const boards = Array
 			.from(frag.querySelectorAll("input[type=checkbox]"))
 			.map(b =>

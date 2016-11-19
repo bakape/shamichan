@@ -8,10 +8,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
+	"time"
 
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
+	"github.com/bakape/meguca/types"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -33,6 +37,11 @@ var (
 	errTitleTooLong     = parser.ErrTooLong("board title")
 	errNoticeTooLong    = parser.ErrTooLong("notice")
 	errRulesTooLong     = parser.ErrTooLong("rules")
+	errInvalidBoardName = errors.New("invalid board name")
+	errInvalidCaptcha   = errors.New("invalid captcha")
+	errBoardNameTaken   = errors.New("board name taken")
+
+	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,3}$`)
 )
 
 // Embed in every request that needs authentication
@@ -50,6 +59,12 @@ type boardConfigSettingRequest struct {
 type boardConfigRequest struct {
 	loginCredentials
 	ID string `json:"id"`
+}
+
+type boardCreationRequest struct {
+	Name, Title string
+	loginCredentials
+	types.Captcha
 }
 
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
@@ -204,4 +219,54 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 	}
 
 	return conf, true
+}
+
+// Handle requests to create a board
+func createBoard(w http.ResponseWriter, req *http.Request) {
+	var msg boardCreationRequest
+	valid := decodeJSON(w, req, &msg) &&
+		isLoggedIn(w, req, msg.UserID, msg.Session)
+	if !valid {
+		return
+	}
+
+	// Validate request data
+	var err error
+	switch {
+	// "id" is a reserved key name in the database
+	case msg.Name == "id", !boardNameValidation.MatchString(msg.Name):
+		err = errInvalidBoardName
+	case len(msg.Title) > 100:
+		err = errTitleTooLong
+	case !auth.AuthenticateCaptcha(msg.Captcha, auth.GetIP(req)):
+		err = errInvalidCaptcha
+	}
+	if err != nil {
+		text400(w, err)
+		return
+	}
+
+	q := r.Table("boards").Insert(config.DatabaseBoardConfigs{
+		Created: time.Now(),
+		BoardConfigs: config.BoardConfigs{
+			BoardPublic: config.BoardPublic{
+				Title:   msg.Title,
+				Spoiler: "default.jpg",
+				Banners: []string{},
+			},
+			ID:        msg.Name,
+			Eightball: config.EightballDefaults,
+			Staff: map[string][]string{
+				"owners": []string{msg.UserID},
+			},
+		},
+	})
+
+	err = db.Write(q)
+	switch {
+	case r.IsConflictErr(err):
+		text400(w, errBoardNameTaken)
+	case err != nil:
+		text500(w, req, err)
+	}
 }

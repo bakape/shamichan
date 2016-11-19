@@ -10,9 +10,12 @@ export default async function (
 	{board, thread, lastN}: PageState,
 	ready: Promise<void>
 ) {
-	const data = thread
+	const [data, err] = thread
 		? await fetchThread(board, thread, lastN)
 		: await fetchBoard(board)
+	if (err) {
+		throw err
+	}
 
 	await ready
 

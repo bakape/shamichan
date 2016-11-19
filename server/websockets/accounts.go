@@ -37,7 +37,6 @@ const (
 
 var (
 	errAlreadyLoggedIn = errors.New("already logged in")
-	errNotLoggedIn     = errors.New("not logged in")
 )
 
 // Request struct for logging in to an existing or registering a new account
@@ -125,7 +124,7 @@ func checkPasswordAndCaptcha(password, ip string, captcha types.Captcha) (
 		code = passwordTooShort
 	case len(password) > maxPasswordLength:
 		code = passwordTooLong
-	case !authenticateCaptcha(captcha, ip):
+	case !auth.AuthenticateCaptcha(captcha, ip):
 		code = invalidCaptcha
 	}
 	return
@@ -174,7 +173,7 @@ func login(data []byte, c *Client) error {
 		return err
 	}
 
-	if !authenticateCaptcha(req.Captcha, c.IP) {
+	if !auth.AuthenticateCaptcha(req.Captcha, c.IP) {
 		return c.sendMessage(MessageLogin, loginResponse{
 			Code: invalidCaptcha,
 		})

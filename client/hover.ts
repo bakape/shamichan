@@ -8,7 +8,7 @@ import { setAttrs, getClosestID } from "./util"
 import { fetchJSON } from "./fetch"
 import { PostData, Post } from "./posts/models"
 import PostView from "./posts/view"
-import  ImageHandler from "./posts/images"
+import ImageHandler from "./posts/images"
 
 interface MouseMove extends ChangeEmitter {
 	event: MouseEvent
@@ -223,15 +223,11 @@ async function renderPostPreview(event: MouseEvent) {
 	if (!post) {
 		// Try to fetch from server, if this post is not currently displayed
 		// due to lastN or in a different thread
-		let data: PostData
-		try {
-			data = await fetchJSON<PostData>(`/json/post/${m[1]}`)
-		} catch (e) {
-			return
+		const [data, err] = await fetchJSON<PostData>(`/json/post/${m[1]}`)
+		if (!err) {
+			post = new Post(data)
+			new PostView(post)
 		}
-
-		post = new Post(data)
-		new PostView(post)
 	}
 	postPreview = new PostPreview(post, target)
 }

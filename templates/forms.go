@@ -16,6 +16,11 @@ type boardList struct {
 	Lang   lang.Pack
 }
 
+type formSpecs struct {
+	Specs []inputSpec
+	Lang  lang.Pack
+}
+
 // BoardNavigation renders a board selection and search form
 func BoardNavigation(ln lang.Pack) ([]byte, error) {
 	return exec("boardNavigation", boardList{
@@ -40,6 +45,20 @@ func OwnedBoard(boards config.BoardTitles, ln lang.Pack) ([]byte, error) {
 	})
 }
 
+// CreateBoard renders a the form for creating new boards
+func CreateBoard(ln lang.Pack) ([]byte, error) {
+	return exec("createBoard", struct {
+		Captcha bool
+		formSpecs
+	}{
+		Captcha: config.Get().Captcha,
+		formSpecs: formSpecs{
+			Specs: specs["createBoard"],
+			Lang:  ln,
+		},
+	})
+}
+
 // ConfigureBoard renders a form for setting board configurations
 func ConfigureBoard(conf config.BoardConfigs, ln lang.Pack) ([]byte, error) {
 	// Copy over all spec structs, so the mutations don't affect them
@@ -53,10 +72,7 @@ func ConfigureBoard(conf config.BoardConfigs, ln lang.Pack) ([]byte, error) {
 		withValues[i].val = v.FieldByName(strings.Title(s.id)).Interface()
 	}
 
-	return exec("configureBoard", struct {
-		Specs []inputSpec
-		Lang  lang.Pack
-	}{
+	return exec("configureBoard", formSpecs{
 		Specs: withValues,
 		Lang:  ln,
 	})

@@ -2,12 +2,10 @@ package websockets
 
 import (
 	"testing"
-	"time"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
-	r "github.com/dancannon/gorethink"
 )
 
 func TestNotAdmin(t *testing.T) {
@@ -69,79 +67,4 @@ func TestServerConfigSetting(t *testing.T) {
 	std := config.Defaults
 	std.DefaultCSS = "ashita"
 	AssertDeepEquals(t, conf, std)
-}
-
-func TestValidateBoardCreation(t *testing.T) {
-	assertTableClear(t, "boards")
-	assertInsert(t, "boards", db.Document{ID: "a"})
-
-	cases := [...]struct {
-		name, boardName, title, response string
-	}{
-		{"board name too long", "abcd", "foo", "401"},
-		{"empty board name", "", "foo", "401"},
-		{"invalid chars in board name", ":^)", "foo", "401"},
-		{"reserved key 'id' as board name", "id", "foo", "401"},
-		{"title too long", "a", genString(101), "403"},
-		{"board name taken", "a", "foo", "402"},
-	}
-
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-
-			req := boardCreationRequest{
-				Name:  c.boardName,
-				Title: c.title,
-			}
-			assertLoggedInResponse(t, req, createBoard, "123", c.response)
-		})
-	}
-}
-
-func TestBoardCreation(t *testing.T) {
-	assertTableClear(t, "main", "boards")
-
-	const (
-		id     = "a"
-		userID = "123"
-		title  = "/a/ - Animu & Mango"
-	)
-	assertInsert(t, "main", db.ConfigDocument{
-		Document: db.Document{ID: "config"},
-		Configs:  config.Defaults,
-	})
-
-	req := boardCreationRequest{
-		Name:  id,
-		Title: title,
-	}
-	assertLoggedInResponse(t, req, createBoard, userID, "400")
-
-	var board config.DatabaseBoardConfigs
-	if err := db.One(r.Table("boards").Get(id), &board); err != nil {
-		t.Fatal(err)
-	}
-
-	std := config.DatabaseBoardConfigs{
-		BoardConfigs: config.BoardConfigs{
-			ID: id,
-			BoardPublic: config.BoardPublic{
-				Spoiler: "default.jpg",
-				Title:   title,
-				Banners: []string{},
-			},
-			Eightball: config.EightballDefaults,
-			Staff: map[string][]string{
-				"owners": []string{userID},
-			},
-		},
-	}
-
-	c := board.Created
-	if !c.Before(time.Now()) || c.Unix() == 0 {
-		t.Errorf("invalid board creation time: %#v", board.Created)
-	}
-	AssertDeepEquals(t, board.BoardConfigs, std.BoardConfigs)
 }
