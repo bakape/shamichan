@@ -1,22 +1,10 @@
-import AccountFormView, { newRequest, LoginCredentials } from "./common"
-import { BoardConfigs } from "../state"
-import { makeFrag } from "../util"
+import AccountFormView from "./common"
+import { newRequest, extractForm } from "./common"
+import { makeFrag, extend } from "../util"
 import { postJSON, fetchHTML } from "../fetch"
 import { loginID, sessionToken } from "./login"
 import { write } from "../render"
 import View from "../view"
-
-// Board configurations that include a subset not available publically
-interface PrivateBoardConfigs extends BoardConfigs {
-    banners: string[]
-    eightball: string[]
-    staff: { [position: string]: string[] }
-}
-
-// Request to set the board configs to a new values
-interface SettingRequest extends LoginCredentials, PrivateBoardConfigs {
-    id: string
-}
 
 // Board configuration panel
 export default class BoardConfigPanel extends AccountFormView {
@@ -51,31 +39,14 @@ export default class BoardConfigPanel extends AccountFormView {
 
     // Extract form data and send a request to apply the new configs
     private async extractRequest() {
-        const req = newRequest<SettingRequest>()
-        req.id = this.board
+        const req = newRequest()
+        req["id"] = this.board
+        extend(req, extractForm(this.el))
 
-        for (let el of this.el.querySelectorAll("input")) {
-            const id = el.getAttribute("name")
-            switch (el.getAttribute("type")) {
-                case "checkbox":
-                    req[id] = el.checked
-                    break
-                case "text":
-                    req[id] = el.value
-					break
-            }
-        }
+        // TODO: Some kind of form for inputting arrays
+        req["eightball"] = req["eightball"].split("\n").slice(0, 100)
 
-		for (let el of this.el.querySelectorAll("textarea")) {
-            const id = el.getAttribute("name")
-			req[id] = el.value
-			if (id === "eightball") {
-				req[id] = req[id].split("\n").slice(0, 100)
-            }
-		}
-
-        await postJSON("/admin/configureBoard", req)
-        this.remove()
+        this.postJSON("/admin/configureBoard", req)
     }
 }
 

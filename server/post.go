@@ -62,7 +62,7 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 // Create a thread with a finished OP and immediately close it
 func createThread(w http.ResponseWriter, r *http.Request) {
 	maxSize := config.Get().MaxSize*1024*1024 + jsonLimit
-	r.Body = http.MaxBytesReader(w, r.Body, maxSize)
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxSize))
 
 	code, token, err := imager.ParseUpload(r)
 	if err != nil {

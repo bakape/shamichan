@@ -49,7 +49,7 @@ export default class AccountPanel extends TabbedModal {
 				alert("TODO"),
 
 			"#changePassword": this.loadConditionalView("mod/changePassword"),
-			"#configureServer": this.loadConditionalView("mod/admin"),
+			"#configureServer": this.loadConditionalView("mod/configureServer"),
 			"#createBoard": this.loadConditionalView("mod/createBoard"),
 			"#configureBoard": this.loadConditionalView("mod/configureBoard"),
 		})

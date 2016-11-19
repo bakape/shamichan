@@ -92,20 +92,20 @@ All hash commands need to be input on their own line`
 // Configs stores the global server configuration
 type Configs struct {
 	Public
-	PruneThreads      bool   `json:"pruneThreads" gorethink:"pruneThreads"`
-	PruneBoards       bool   `json:"pruneBoards" gorethink:"pruneBoards"`
-	Pyu               bool   `json:"pyu" gorethink:"pyu"`
-	MaxWidth          uint16 `json:"maxWidth" gorethink:"maxWidth"`
-	MaxHeight         uint16 `json:"maxHeight" gorethink:"maxHeight"`
-	JPEGQuality       int
-	PNGQuality        int
-	ThreadExpiry      uint          `json:"threadExpiry" gorethink:"threadExpiry"`
-	BoardExpiry       uint          `json:"boardExpiry" gorethink:"boardExpiry"`
-	MaxSize           int64         `json:"maxSize" gorethink:"maxSize"`
-	Salt              string        `json:"salt" gorethink:"salt"`
-	FeedbackEmail     string        `json:"feedbackEmail" gorethink:"feedbackEmail"`
-	CaptchaPrivateKey string        `json:"captchaPrivateKey" gorethink:"captchaPrivateKey"`
-	SessionExpiry     time.Duration `json:"sessionExpiry" gorethink:"sessionExpiry"`
+	PruneThreads      bool `json:"pruneThreads" gorethink:"pruneThreads"`
+	PruneBoards       bool `json:"pruneBoards" gorethink:"pruneBoards"`
+	Pyu               bool `json:"pyu" gorethink:"pyu"`
+	JPEGQuality       uint
+	PNGQuality        uint
+	MaxWidth          uint   `json:"maxWidth" gorethink:"maxWidth"`
+	MaxHeight         uint   `json:"maxHeight" gorethink:"maxHeight"`
+	ThreadExpiry      uint   `json:"threadExpiry" gorethink:"threadExpiry"`
+	BoardExpiry       uint   `json:"boardExpiry" gorethink:"boardExpiry"`
+	MaxSize           uint   `json:"maxSize" gorethink:"maxSize"`
+	SessionExpiry     uint   `json:"sessionExpiry" gorethink:"sessionExpiry"`
+	Salt              string `json:"salt" gorethink:"salt"`
+	FeedbackEmail     string `json:"feedbackEmail" gorethink:"feedbackEmail"`
+	CaptchaPrivateKey string `json:"captchaPrivateKey" gorethink:"captchaPrivateKey"`
 }
 
 // Public contains configurations exposeable through public availability APIs

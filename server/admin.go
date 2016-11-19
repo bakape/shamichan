@@ -16,7 +16,7 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/types"
-	r "github.com/dancannon/gorethink"
+	"github.com/dancannon/gorethink"
 )
 
 const (
@@ -40,6 +40,8 @@ var (
 	errInvalidBoardName = errors.New("invalid board name")
 	errInvalidCaptcha   = errors.New("invalid captcha")
 	errBoardNameTaken   = errors.New("board name taken")
+	errInvalidCreds     = errors.New("invalid login credentials")
+	errAccessDenied     = errors.New("access denied")
 
 	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,3}$`)
 )
@@ -61,6 +63,11 @@ type boardConfigRequest struct {
 	ID string `json:"id"`
 }
 
+type configSettingRequest struct {
+	loginCredentials
+	config.Configs
+}
+
 type boardCreationRequest struct {
 	Name, Title string
 	loginCredentials
@@ -80,12 +87,12 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
 }
 
 // Set board-specific configurations to the user's owned board
-func configureBoard(w http.ResponseWriter, req *http.Request) {
+func configureBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardConfigSettingRequest
-	isValid := decodeJSON(w, req, &msg) &&
-		isLoggedIn(w, req, msg.UserID, msg.Session) &&
-		isBoardOwner(w, req, msg.ID, msg.UserID) &&
-		validateConfigs(w, msg.BoardConfigs)
+	isValid := decodeJSON(w, r, &msg) &&
+		isLoggedIn(w, r, msg.UserID, msg.Session) &&
+		isBoardOwner(w, r, msg.ID, msg.UserID) &&
+		validateBoardConfigs(w, msg.BoardConfigs)
 	if !isValid {
 		return
 	}
@@ -100,9 +107,9 @@ func configureBoard(w http.ResponseWriter, req *http.Request) {
 		"owners": {msg.UserID},
 	}
 
-	q := r.Table("boards").Get(msg.ID).Update(conf)
+	q := gorethink.Table("boards").Get(msg.ID).Update(conf)
 	if err := db.Write(q); err != nil {
-		text500(w, req, err)
+		text500(w, r, err)
 		return
 	}
 }
@@ -110,26 +117,26 @@ func configureBoard(w http.ResponseWriter, req *http.Request) {
 // Assert the user login session ID is valid
 func isLoggedIn(
 	w http.ResponseWriter,
-	req *http.Request,
+	r *http.Request,
 	user, session string,
 ) bool {
 	var isValid bool
-	q := r.
+	q := gorethink.
 		Table("accounts").
 		Get(user).
 		Field("sessions").
-		Map(func(session r.Term) r.Term {
+		Map(func(session gorethink.Term) gorethink.Term {
 			return session.Field("token")
 		}).
 		Contains(session).
 		Default(false)
 	if err := db.One(q, &isValid); err != nil {
-		text500(w, req, err)
+		text500(w, r, err)
 		return false
 	}
 
 	if !isValid {
-		http.Error(w, "403 Invalid login credentials", 403)
+		text403(w, errInvalidCreds)
 		return false
 	}
 
@@ -158,7 +165,10 @@ func isBoardOwner(
 }
 
 // Validate length limit compliance of various fields
-func validateConfigs(w http.ResponseWriter, conf config.BoardConfigs) bool {
+func validateBoardConfigs(
+	w http.ResponseWriter,
+	conf config.BoardConfigs,
+) bool {
 	totalLen := 0
 	for _, answer := range conf.Eightball {
 		totalLen += len(answer)
@@ -196,6 +206,31 @@ func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
 	serveJSON(w, r, "", conf)
 }
 
+// Serve the current server configurations. Available only to the "admin"
+// account
+func servePrivateServerConfigs(w http.ResponseWriter, r *http.Request) {
+	var msg loginCredentials
+	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg) {
+		return
+	}
+	serveJSON(w, r, "", config.Get())
+}
+
+func isAdmin(
+	w http.ResponseWriter,
+	r *http.Request,
+	msg loginCredentials,
+) bool {
+	if !(isLoggedIn(w, r, msg.UserID, msg.Session)) {
+		return false
+	}
+	if msg.UserID != "admin" {
+		text403(w, errAccessDenied)
+		return false
+	}
+	return true
+}
+
 // Determine, if the client has access rights to the configurations, and return
 // them, if so
 func boardConfData(w http.ResponseWriter, r *http.Request) (
@@ -222,10 +257,10 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 }
 
 // Handle requests to create a board
-func createBoard(w http.ResponseWriter, req *http.Request) {
+func createBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardCreationRequest
-	valid := decodeJSON(w, req, &msg) &&
-		isLoggedIn(w, req, msg.UserID, msg.Session)
+	valid := decodeJSON(w, r, &msg) &&
+		isLoggedIn(w, r, msg.UserID, msg.Session)
 	if !valid {
 		return
 	}
@@ -238,7 +273,7 @@ func createBoard(w http.ResponseWriter, req *http.Request) {
 		err = errInvalidBoardName
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
-	case !auth.AuthenticateCaptcha(msg.Captcha, auth.GetIP(req)):
+	case !auth.AuthenticateCaptcha(msg.Captcha, auth.GetIP(r)):
 		err = errInvalidCaptcha
 	}
 	if err != nil {
@@ -246,7 +281,7 @@ func createBoard(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	q := r.Table("boards").Insert(config.DatabaseBoardConfigs{
+	q := gorethink.Table("boards").Insert(config.DatabaseBoardConfigs{
 		Created: time.Now(),
 		BoardConfigs: config.BoardConfigs{
 			BoardPublic: config.BoardPublic{
@@ -264,9 +299,28 @@ func createBoard(w http.ResponseWriter, req *http.Request) {
 
 	err = db.Write(q)
 	switch {
-	case r.IsConflictErr(err):
+	case gorethink.IsConflictErr(err):
 		text400(w, errBoardNameTaken)
 	case err != nil:
-		text500(w, req, err)
+		text500(w, r, err)
+	}
+}
+
+// Set the server configuration to match the one sent from the admin account
+// user
+func configureServer(w http.ResponseWriter, r *http.Request) {
+	var msg configSettingRequest
+	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg.loginCredentials) {
+		return
+	}
+
+	q := db.GetMain("config").
+		Replace(func(doc gorethink.Term) gorethink.Term {
+			return gorethink.Expr(msg.Configs).Merge(map[string]string{
+				"id": "config",
+			})
+		})
+	if err := db.Write(q); err != nil {
+		text500(w, r, err)
 	}
 }

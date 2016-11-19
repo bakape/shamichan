@@ -63,7 +63,7 @@ type thumbResponse struct {
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
 	maxSize := config.Get().MaxSize * 1024 * 1024
-	r.Body = http.MaxBytesReader(w, r.Body, maxSize)
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxSize))
 
 	code, id, err := ParseUpload(r)
 	if err != nil {
@@ -151,11 +151,11 @@ func ParseUpload(req *http.Request) (int, string, error) {
 
 // Parse and validate the form of the upload request
 func parseUploadForm(req *http.Request) error {
-	length, err := strconv.ParseInt(req.Header.Get("Content-Length"), 10, 64)
+	length, err := strconv.ParseUint(req.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
 		return err
 	}
-	if length > config.Get().MaxSize*1024*1024 {
+	if length > uint64(config.Get().MaxSize*1024*1024) {
 		return errTooLarge
 	}
 	return req.ParseMultipartForm(0)

@@ -20,7 +20,7 @@ let el = document.getElementById('banner-center'),
 // received
 async function fetchData() {
 	const [res, err] = await fetchJSON<any>('https://r-a-d.io/api')
-	if (!err) {
+	if (err) {
 		return console.warn(err)
 	}
 	const {

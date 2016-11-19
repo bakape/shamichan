@@ -271,7 +271,7 @@ func populateDB() error {
 		return util.WrapError("initializing database", err)
 	}
 
-	if err := createAdminAccount(); err != nil {
+	if err := CreateAdminAccount(); err != nil {
 		return err
 	}
 
@@ -338,8 +338,9 @@ func waitForIndex(table string) func() error {
 	}
 }
 
-// Create the admin account and write it to the database
-func createAdminAccount() error {
+// CreateAdminAccount writes a fresh admin account with the default password to
+// the database
+func CreateAdminAccount() error {
 	hash, err := auth.BcryptHash("password", 10)
 	if err != nil {
 		return err

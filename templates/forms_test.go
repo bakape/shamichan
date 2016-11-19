@@ -15,6 +15,7 @@ func TestBoardNavigation(t *testing.T) {
 }
 
 func TestOwnedBoard(t *testing.T) {
+	t.Parallel()
 	conf := config.BoardTitles{
 		{
 			ID:    "a",
@@ -38,7 +39,19 @@ func TestConfigureBoard(t *testing.T) {
 }
 
 func TestCreateBoard(t *testing.T) {
+	t.Parallel()
 	if _, err := CreateBoard(lang.Packs["en_GB"]); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestConfigureServer(t *testing.T) {
+	t.Parallel()
+	_, err := ConfigureServer(
+		config.Defaults,
+		lang.Packs["en_GB"],
+	)
+	if err != nil {
 		t.Fatal(err)
 	}
 }

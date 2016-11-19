@@ -41,7 +41,7 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 // Log an error together with the client's IP and stack trace
 func logError(r *http.Request, err interface{}) {
 	if !isTest { // Do not pollute test output with logs
-		log.Printf("server: %s: %#v\n%s", auth.GetIP(r), err, debug.Stack())
+		log.Printf("server: %s: %s\n%s", auth.GetIP(r), err, debug.Stack())
 	}
 }
 

@@ -150,3 +150,20 @@ func boardCreationForm(w http.ResponseWriter, r *http.Request) {
 	data, err := templates.CreateBoard(lp)
 	serveHTML(w, r, "", data, err)
 }
+
+// Render the form for configuring the server
+func serverConfigurationForm(w http.ResponseWriter, r *http.Request) {
+	var msg loginCredentials
+	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg) {
+		return
+	}
+
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	data, err := templates.ConfigureServer((*config.Get()), lp)
+	serveHTML(w, r, "", data, err)
+}

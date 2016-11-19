@@ -1,11 +1,6 @@
-import AccountFormView, { newRequest, LoginCredentials } from './common'
+import AccountFormView, { newRequest } from './common'
 import { makeFrag, inputValue } from '../util'
-import { fetchHTML, postJSON } from "../fetch"
-
-interface BoardCreationRequest extends LoginCredentials {
-	name: string
-	title: string
-}
+import { fetchHTML } from "../fetch"
 
 // Panel view for creating boards
 export default class BoardCreationPanel extends AccountFormView {
@@ -25,19 +20,11 @@ export default class BoardCreationPanel extends AccountFormView {
 	}
 
 	private async onSubmit() {
-		const req = newRequest<BoardCreationRequest>()
-		req.name = inputValue(this.el, 'boardName')
-		req.title = inputValue(this.el, 'boardTitle')
+		const req = newRequest()
+		req["name"] = inputValue(this.el, 'boardName')
+		req["title"] = inputValue(this.el, 'boardTitle')
 		this.injectCaptcha(req)
 
-		const res = await postJSON("/admin/createBoard", req)
-		switch (res.status) {
-			case 200:
-				this.remove()
-				break
-			default:
-				this.reloadCaptcha()
-				this.renderFormResponse(await res.text())
-		}
+		this.postJSON("/admin/createBoard", req)
 	}
 }

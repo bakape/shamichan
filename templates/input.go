@@ -28,14 +28,15 @@ const (
 	_shortcut
 )
 
-// Spec of an option passed into the rendering function
+// Spec of an option passed into the rendering function. All fields are
+// exported, so that they can be passed directly to "html/template".
 type inputSpec struct {
-	typ                         inputType
-	required, placeholder, noID bool
-	min, max, maxLength, rows   int
-	id, pattern                 string
-	options                     []string
-	val                         interface{}
+	Type                        inputType
+	Required, Placeholder, NoID bool
+	Min, Max, MaxLength, Rows   int
+	ID, Pattern                 string
+	Options                     []string
+	Val                         interface{}
 }
 
 type htmlWriter struct {
@@ -61,7 +62,7 @@ func (w *htmlWriter) typ(val string) {
 // Write an input element from the spec to the buffer
 func (w *htmlWriter) input(spec inputSpec) error {
 	cont := false
-	switch spec.typ {
+	switch spec.Type {
 	case _select:
 		w.sel(spec)
 	case _textarea:
@@ -80,35 +81,36 @@ func (w *htmlWriter) input(spec inputSpec) error {
 
 	w.tag("input", spec)
 
-	switch spec.typ {
+	switch spec.Type {
 	case _bool:
 		w.typ("checkbox")
-		if spec.val != nil && spec.val.(bool) {
+		if spec.Val != nil && spec.Val.(bool) {
 			w.attr("checked", "")
 		}
 	case _number:
 		w.typ("number")
-		if spec.val != nil {
-			w.attr("value", strconv.Itoa(spec.val.(int)))
+		if spec.Val != nil {
+			cast := uint64(spec.Val.(uint))
+			w.attr("value", strconv.FormatUint(cast, 10))
 		}
-		w.attr("min", strconv.Itoa(spec.min))
-		if spec.max != 0 {
-			w.attr("max", strconv.Itoa(spec.max))
+		w.attr("min", strconv.Itoa(spec.Min))
+		if spec.Max != 0 {
+			w.attr("max", strconv.Itoa(spec.Max))
 		}
 	case _password, _string:
-		if spec.typ == _string {
+		if spec.Type == _string {
 			w.typ("text")
 		} else {
 			w.typ("password")
 		}
-		if spec.val != nil {
-			w.attr("value", spec.val.(string))
+		if spec.Val != nil {
+			w.attr("value", spec.Val.(string))
 		}
-		if spec.pattern != "" {
-			w.attr("pattern", spec.pattern)
+		if spec.Pattern != "" {
+			w.attr("pattern", spec.Pattern)
 		}
-		if spec.maxLength != 0 {
-			w.attr("maxlength", strconv.Itoa(spec.maxLength))
+		if spec.MaxLength != 0 {
+			w.attr("maxlength", strconv.Itoa(spec.MaxLength))
 		}
 	case _image:
 		w.typ("file")
@@ -127,15 +129,15 @@ func (w *htmlWriter) input(spec inputSpec) error {
 func (w *htmlWriter) tag(tag string, spec inputSpec) {
 	w.WriteByte('<')
 	w.WriteString(tag)
-	w.attr("name", spec.id)
-	if !spec.noID { // To not conflict with non-unique labels
-		w.attr("id", spec.id)
+	w.attr("name", spec.ID)
+	if !spec.NoID { // To not conflict with non-unique labels
+		w.attr("id", spec.ID)
 	}
-	w.attr("title", w.lang.Forms[spec.id][1])
-	if spec.placeholder {
-		w.attr("placeholder", w.lang.Forms[spec.id][0])
+	w.attr("title", w.lang.Forms[spec.ID][1])
+	if spec.Placeholder {
+		w.attr("placeholder", w.lang.Forms[spec.ID][0])
 	}
-	if spec.required {
+	if spec.Required {
 		w.attr("required", "")
 	}
 }
@@ -151,11 +153,11 @@ func (w *htmlWriter) sel(spec inputSpec) {
 	w.WriteByte('>')
 
 	var val string
-	if spec.val != nil {
-		val = spec.val.(string)
+	if spec.Val != nil {
+		val = spec.Val.(string)
 	}
 
-	for _, o := range spec.options {
+	for _, o := range spec.Options {
 		w.WriteString("<option")
 		w.attr("value", o)
 		if o == val {
@@ -163,7 +165,7 @@ func (w *htmlWriter) sel(spec inputSpec) {
 		}
 		w.WriteByte('>')
 
-		label, ok := w.lang.Options[spec.id]
+		label, ok := w.lang.Options[spec.ID]
 		if !ok {
 			label = o
 		}
@@ -178,20 +180,20 @@ func (w *htmlWriter) sel(spec inputSpec) {
 // Render a text area input element
 func (w *htmlWriter) textArea(spec inputSpec) {
 	w.tag("textarea", spec)
-	if spec.maxLength != 0 {
-		w.attr("maxlength", strconv.Itoa(spec.maxLength))
+	if spec.MaxLength != 0 {
+		w.attr("maxlength", strconv.Itoa(spec.MaxLength))
 	}
-	if spec.rows == 0 {
-		spec.rows = 3
+	if spec.Rows == 0 {
+		spec.Rows = 3
 	}
-	w.attr("rows", strconv.Itoa(spec.rows))
+	w.attr("rows", strconv.Itoa(spec.Rows))
 	w.WriteByte('>')
 
-	switch spec.val.(type) {
+	switch spec.Val.(type) {
 	case string:
-		w.escape(spec.val.(string))
+		w.escape(spec.Val.(string))
 	case []string:
-		w.escape(strings.Join(spec.val.([]string), "\n"))
+		w.escape(strings.Join(spec.Val.([]string), "\n"))
 	}
 
 	w.WriteString("</textarea>")
@@ -210,11 +212,11 @@ func (w *htmlWriter) writeMap(spec inputSpec) error {
 
 // Write an input element label from the spec to the buffer
 func (w *htmlWriter) label(spec inputSpec) {
-	ln := w.lang.Forms[spec.id]
+	ln := w.lang.Forms[spec.ID]
 
 	w.WriteString("<label")
-	if !spec.noID {
-		w.attr("for", spec.id)
+	if !spec.NoID {
+		w.attr("for", spec.ID)
 	}
 	w.attr("title", ln[1])
 	w.WriteByte('>')
@@ -224,7 +226,7 @@ func (w *htmlWriter) label(spec inputSpec) {
 }
 
 // Render a table containing {label input_element} pairs
-func renderTable(specs []inputSpec, lang lang.Pack) template.HTML {
+func renderTable(specs []inputSpec, lang lang.Pack) (template.HTML, error) {
 	w := htmlWriter{
 		lang: lang,
 	}
@@ -234,13 +236,15 @@ func renderTable(specs []inputSpec, lang lang.Pack) template.HTML {
 		w.WriteString("<tr><td>")
 		w.label(spec)
 		w.WriteString("</td><td>")
-		w.input(spec)
+		if err := w.input(spec); err != nil {
+			return "", err
+		}
 		w.WriteString("</td></tr>")
 	}
 
 	w.WriteString("</table>")
 
-	return template.HTML(w.String())
+	return template.HTML(w.String()), nil
 }
 
 // Render a single input element
@@ -248,10 +252,8 @@ func renderInput(spec inputSpec, lang lang.Pack) (template.HTML, error) {
 	w := htmlWriter{
 		lang: lang,
 	}
-	if err := w.input(spec); err != nil {
-		return template.HTML(""), err
-	}
-	return template.HTML(w.String()), nil
+	err := w.input(spec)
+	return template.HTML(w.String()), err
 }
 
 // Render a single label for an input element

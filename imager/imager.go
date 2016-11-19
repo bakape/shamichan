@@ -26,8 +26,8 @@ func InitImager() error {
 	}
 
 	conf := config.Get()
-	imager.JPEGOptions = jpeg.Options{Quality: conf.JPEGQuality}
-	imager.PNGQuantization = conf.PNGQuality
+	imager.JPEGOptions = jpeg.Options{Quality: int(conf.JPEGQuality)}
+	imager.PNGQuantization = int(conf.PNGQuality)
 
 	return nil // To comply to the rest of the initialization functions
 }
@@ -68,11 +68,11 @@ func verifyAndScale(src image.Image, format string) ([]byte, [4]uint16, error) {
 func verifyDimensions(img image.Image) (dims [4]uint16, err error) {
 	dims[0], dims[1] = getDims(img)
 	conf := config.Get()
-	if dims[0] > conf.MaxWidth {
+	if dims[0] > uint16(conf.MaxWidth) {
 		err = errTooWide
 		return
 	}
-	if dims[1] > conf.MaxHeight {
+	if dims[1] > uint16(conf.MaxHeight) {
 		err = errTooTall
 	}
 	return

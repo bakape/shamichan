@@ -2,89 +2,102 @@
 
 package templates
 
+var (
+	// Available language packs. Change this, when adding any new ones.
+	langs = []string{
+		"en_GB", "es_ES", "pt_BR", "sk_SK", "tr_TR", "uk_UA",
+	}
+
+	// Available themes. Change this, when adding any new ones.
+	themes = []string{
+		"moe", "gar", "mawaru", "moon", "ashita", "console", "tea",
+		"higan", "ocean", "rave", "glass",
+	}
+)
+
 var specs = map[string][]inputSpec{
 	"identity": {
 		{
-			id:        "name",
-			typ:       _string,
-			maxLength: 50,
+			ID:        "name",
+			Type:      _string,
+			MaxLength: 50,
 		},
 		{
-			id:        "email",
-			typ:       _string,
-			maxLength: 100,
+			ID:        "email",
+			Type:      _string,
+			MaxLength: 100,
 		},
 		{
-			id:        "postPassword",
-			typ:       _password,
-			maxLength: 50,
-			required:  true,
+			ID:        "postPassword",
+			Type:      _password,
+			MaxLength: 50,
+			Required:  true,
 		},
 	},
 	"login": {
 		{
-			id:        "id",
-			typ:       _string,
-			maxLength: 20,
-			noID:      true,
+			ID:        "id",
+			Type:      _string,
+			MaxLength: 20,
+			NoID:      true,
 		},
 		{
-			id:        "password",
-			typ:       _password,
-			maxLength: 30,
-			noID:      true,
+			ID:        "password",
+			Type:      _password,
+			MaxLength: 30,
+			NoID:      true,
 		},
 	},
 	"register": {
 		{
-			id:        "id",
-			typ:       _string,
-			maxLength: 20,
-			noID:      true,
+			ID:        "id",
+			Type:      _string,
+			MaxLength: 20,
+			NoID:      true,
 		},
 		{
-			id:        "password",
-			typ:       _password,
-			maxLength: 30,
-			noID:      true,
+			ID:        "password",
+			Type:      _password,
+			MaxLength: 30,
+			NoID:      true,
 		},
 		{
-			id:        "repeat",
-			typ:       _password,
-			maxLength: 30,
-			noID:      true,
+			ID:        "repeat",
+			Type:      _password,
+			MaxLength: 30,
+			NoID:      true,
 		},
 	},
 	"configureBoard": {
-		{id: "readOnly"},
-		{id: "textOnly"},
-		{id: "forcedAnon"},
-		{id: "hashCommands"},
+		{ID: "readOnly"},
+		{ID: "textOnly"},
+		{ID: "forcedAnon"},
+		{ID: "hashCommands"},
 
 		// TODO: Code tags
 
 		{
-			id:        "title",
-			typ:       _string,
-			maxLength: 100,
+			ID:        "title",
+			Type:      _string,
+			MaxLength: 100,
 		},
 		{
-			id:        "notice",
-			typ:       _textarea,
-			rows:      5,
-			maxLength: 500,
+			ID:        "notice",
+			Type:      _textarea,
+			Rows:      5,
+			MaxLength: 500,
 		},
 		{
-			id:        "rules",
-			typ:       _textarea,
-			rows:      5,
-			maxLength: 5000,
+			ID:        "rules",
+			Type:      _textarea,
+			Rows:      5,
+			MaxLength: 5000,
 		},
 		{
-			id:        "eightball",
-			typ:       _textarea,
-			rows:      5,
-			maxLength: 2000,
+			ID:        "eightball",
+			Type:      _textarea,
+			Rows:      5,
+			MaxLength: 2000,
 		},
 
 		// TODO: Banner upload
@@ -93,17 +106,109 @@ var specs = map[string][]inputSpec{
 	},
 	"createBoard": {
 		{
-			id:        "boardName",
-			typ:       _string,
-			required:  true,
-			pattern:   "^[a-z0-9]{1,3}$",
-			maxLength: 3,
+			ID:        "boardName",
+			Type:      _string,
+			Required:  true,
+			Pattern:   "^[a-z0-9]{1,3}$",
+			MaxLength: 3,
 		},
 		{
-			id:        "boardTitle",
-			typ:       _string,
-			required:  true,
-			maxLength: 100,
+			ID:        "boardTitle",
+			Type:      _string,
+			Required:  true,
+			MaxLength: 100,
+		},
+	},
+	"configureServer": {
+		{ID: "mature"},
+		{ID: "pruneThreads"},
+		{
+			ID:       "threadExpiry",
+			Type:     _number,
+			Min:      1,
+			Required: true,
+		},
+		{ID: "pruneBoards"},
+		{
+			ID:       "boardExpiry",
+			Type:     _number,
+			Min:      1,
+			Required: true,
+		},
+		{
+			ID:   "salt",
+			Type: _string,
+		},
+		{ID: "captcha"},
+		{
+			ID:   "captchaPublicKey",
+			Type: _string,
+		},
+		{
+			ID:   "captchaPrivateKey",
+			Type: _string,
+		},
+		{
+			ID:       "sessionExpiry",
+			Type:     _number,
+			Min:      1,
+			Required: true,
+		},
+		{
+			ID:   "feedbackEmail",
+			Type: _string,
+		},
+		{
+			ID:      "defaultLang",
+			Type:    _select,
+			Options: langs,
+		},
+		{
+			ID:      "defaultCSS",
+			Type:    _select,
+			Options: themes,
+		},
+		{ID: "pyu"},
+		{ID: "hats"},
+		{
+			ID:       "maxWidth",
+			Type:     _number,
+			Min:      1,
+			Required: true,
+		},
+		{
+			ID:       "maxHeight",
+			Type:     _number,
+			Min:      1,
+			Required: true,
+		},
+		{
+			ID:       "maxSize",
+			Type:     _number,
+			Min:      1,
+			Required: true,
+		},
+		{
+			ID:       "JPEGQuality",
+			Type:     _number,
+			Min:      1,
+			Required: true,
+			Max:      100,
+		},
+		{
+			ID:       "PNGQuality",
+			Type:     _number,
+			Min:      1,
+			Required: true,
+		},
+		{
+			ID:   "FAQ",
+			Type: _textarea,
+			Rows: 5,
+		},
+		{
+			ID:   "links",
+			Type: _map,
 		},
 	},
 }
@@ -112,79 +217,72 @@ var specs = map[string][]inputSpec{
 var optionSpecs = [][]inputSpec{
 	{
 		{
-			id:  "lang",
-			typ: _select,
-			// Available language packs. Change this, when adding any new ones.
-			options: []string{
-				"en_GB", "es_ES", "pt_BR", "sk_SK", "tr_TR", "uk_UA",
-			},
+			ID:      "lang",
+			Type:    _select,
+			Options: langs,
 		},
-		{id: "imageHover"},
-		{id: "webmHover"},
-		{id: "notification"},
-		{id: "anonymise"},
-		{id: "relativeTime"},
-		{id: "alwaysLock"},
+		{ID: "imageHover"},
+		{ID: "webmHover"},
+		{ID: "notification"},
+		{ID: "anonymise"},
+		{ID: "relativeTime"},
+		{ID: "alwaysLock"},
 	},
 	{
 		{
-			id:      "inlineFit",
-			typ:     _select,
-			options: []string{"none", "width", "screen"},
+			ID:      "inlineFit",
+			Type:    _select,
+			Options: []string{"none", "width", "screen"},
 		},
-		{id: "hideThumbs"},
-		{id: "workModeToggle"},
-		{id: "autogif"},
-		{id: "spoilers"},
-		{id: "replyRight"},
+		{ID: "hideThumbs"},
+		{ID: "workModeToggle"},
+		{ID: "autogif"},
+		{ID: "spoilers"},
+		{ID: "replyRight"},
 		{
-			id:  "theme",
-			typ: _select,
-			// Available themes. Change this, when adding any new ones.
-			options: []string{
-				"moe", "gar", "mawaru", "moon", "ashita", "console", "tea",
-				"higan", "ocean", "rave", "glass",
-			},
+			ID:      "theme",
+			Type:    _select,
+			Options: themes,
 		},
-		{id: "userBG"},
+		{ID: "userBG"},
 		{
-			id:  "userBGImage",
-			typ: _image,
+			ID:   "userBGImage",
+			Type: _image,
 		},
 	},
 	{
-		{id: "google"},
-		{id: "iqdb"},
-		{id: "saucenao"},
-		{id: "desustorage"},
-		{id: "exhentai"},
+		{ID: "google"},
+		{ID: "iqdb"},
+		{ID: "saucenao"},
+		{ID: "desustorage"},
+		{ID: "exhentai"},
 	},
 	{
-		{id: "nowPlaying"},
-		{id: "illyaDance"},
-		{id: "illyaDanceMute"},
-		{id: "horizontalPosting"},
+		{ID: "nowPlaying"},
+		{ID: "illyaDance"},
+		{ID: "illyaDanceMute"},
+		{ID: "horizontalPosting"},
 	},
 	{
 		{
-			id:  "newPost",
-			typ: _shortcut,
+			ID:   "newPost",
+			Type: _shortcut,
 		},
 		{
-			id:  "done",
-			typ: _shortcut,
+			ID:   "done",
+			Type: _shortcut,
 		},
 		{
-			id:  "toggleSpoiler",
-			typ: _shortcut,
+			ID:   "toggleSpoiler",
+			Type: _shortcut,
 		},
 		{
-			id:  "expandAll",
-			typ: _shortcut,
+			ID:   "expandAll",
+			Type: _shortcut,
 		},
 		{
-			id:  "workMode",
-			typ: _shortcut,
+			ID:   "workMode",
+			Type: _shortcut,
 		},
 	},
 }

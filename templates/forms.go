@@ -61,19 +61,29 @@ func CreateBoard(ln lang.Pack) ([]byte, error) {
 
 // ConfigureBoard renders a form for setting board configurations
 func ConfigureBoard(conf config.BoardConfigs, ln lang.Pack) ([]byte, error) {
+	return configurationTable(reflect.ValueOf(conf), "configureBoard", ln)
+}
+
+func configurationTable(v reflect.Value, key string, ln lang.Pack) (
+	[]byte, error,
+) {
 	// Copy over all spec structs, so the mutations don't affect them
-	noValues := specs["configureBoard"]
+	noValues := specs[key]
 	withValues := make([]inputSpec, len(noValues))
 	copy(withValues, noValues)
 
 	// Assign values to all specs
-	v := reflect.ValueOf(conf)
 	for i, s := range withValues {
-		withValues[i].val = v.FieldByName(strings.Title(s.id)).Interface()
+		withValues[i].Val = v.FieldByName(strings.Title(s.ID)).Interface()
 	}
 
-	return exec("configureBoard", formSpecs{
+	return exec("configTable", formSpecs{
 		Specs: withValues,
 		Lang:  ln,
 	})
+}
+
+// ConfigureServer renders the form for changing server configurations
+func ConfigureServer(conf config.Configs, ln lang.Pack) ([]byte, error) {
+	return configurationTable(reflect.ValueOf(conf), "configureServer", ln)
 }

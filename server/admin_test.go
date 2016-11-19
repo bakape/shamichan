@@ -17,10 +17,16 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-var sampleLoginCredentials = loginCredentials{
-	UserID:  "user1",
-	Session: "token1",
-}
+var (
+	sampleLoginCreds = loginCredentials{
+		UserID:  "user1",
+		Session: "token1",
+	}
+	adminLoginCreds = loginCredentials{
+		UserID:  "admin",
+		Session: "adminSession",
+	}
+)
 
 func TestIsLoggedIn(t *testing.T) {
 	assertTableClear(t, "accounts")
@@ -61,7 +67,7 @@ func TestIsLoggedIn(t *testing.T) {
 			}
 			if !c.isValid {
 				assertCode(t, rec, 403)
-				assertBody(t, rec, "403 Invalid login credentials\n")
+				assertBody(t, rec, "403 invalid login credentials\n")
 			}
 		})
 	}
@@ -70,17 +76,19 @@ func TestIsLoggedIn(t *testing.T) {
 func TestNotLoggedIn(t *testing.T) {
 	assertTableClear(t, "accounts")
 
-	fns := [...]http.HandlerFunc{configureBoard, servePrivateBoardConfigs}
+	fns := [...]http.HandlerFunc{
+		configureBoard, servePrivateBoardConfigs, servePrivateServerConfigs,
+	}
 
 	for i := range fns {
 		fn := fns[i]
 		t.Run("", func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/", sampleLoginCredentials)
+			rec, req := newJSONPair(t, "/", sampleLoginCreds)
 			fn(rec, req)
 			assertCode(t, rec, 403)
-			assertBody(t, rec, "403 Invalid login credentials\n")
+			assertBody(t, rec, "403 invalid login credentials\n")
 		})
 	}
 }
@@ -107,7 +115,7 @@ func TestNotBoardOwner(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/", sampleLoginCredentials)
+			rec, req := newJSONPair(t, "/", sampleLoginCreds)
 			fn(rec, req)
 			assertCode(t, rec, 403)
 			assertBody(t, rec, "403 Not board owner\n")
@@ -149,7 +157,7 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 
 	rec, req := newJSONPair(t, "/admin/boardConfig", boardConfigRequest{
 		ID:               "a",
-		loginCredentials: sampleLoginCredentials,
+		loginCredentials: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)
 	assertBody(t, rec, string(marshalJSON(t, conf)))
@@ -190,7 +198,7 @@ func TestBoardConfiguration(t *testing.T) {
 	writeSampleUser(t)
 
 	data := boardConfigSettingRequest{
-		loginCredentials: sampleLoginCredentials,
+		loginCredentials: sampleLoginCreds,
 		BoardConfigs:     conf,
 	}
 	rec, req := newJSONPair(t, "/admin/configureBoard", data)
@@ -203,7 +211,7 @@ func TestBoardConfiguration(t *testing.T) {
 	AssertDeepEquals(t, res, conf)
 }
 
-func TestValidateConfigs(t *testing.T) {
+func TestValidateBoardConfigs(t *testing.T) {
 	t.Parallel()
 
 	cases := [...]struct {
@@ -265,7 +273,7 @@ func TestValidateConfigs(t *testing.T) {
 			t.Parallel()
 
 			rec := httptest.NewRecorder()
-			if b := validateConfigs(rec, c.BoardConfigs); b != (c.err == nil) {
+			if b := validateBoardConfigs(rec, c.BoardConfigs); b != (c.err == nil) {
 				t.Fatal("unexpected result")
 			}
 			if c.err != nil {
@@ -339,7 +347,7 @@ func TestValidateBoardCreation(t *testing.T) {
 			msg := boardCreationRequest{
 				Name:             c.id,
 				Title:            c.title,
-				loginCredentials: sampleLoginCredentials,
+				loginCredentials: sampleLoginCreds,
 			}
 			rec, req := newJSONPair(t, "/admin/createBoard", msg)
 			router.ServeHTTP(rec, req)
@@ -363,7 +371,7 @@ func TestBoardCreation(t *testing.T) {
 	msg := boardCreationRequest{
 		Name:             id,
 		Title:            title,
-		loginCredentials: sampleLoginCredentials,
+		loginCredentials: sampleLoginCreds,
 	}
 	rec, req := newJSONPair(t, "/admin/createBoard", msg)
 	router.ServeHTTP(rec, req)
@@ -395,4 +403,86 @@ func TestBoardCreation(t *testing.T) {
 		t.Errorf("invalid board creation time: %#v", board.Created)
 	}
 	AssertDeepEquals(t, board.BoardConfigs, std.BoardConfigs)
+}
+
+func TestServePrivateServerConfigs(t *testing.T) {
+	assertTableClear(t, "accounts")
+	writeSampleUser(t)
+	writeAdminAccount(t)
+	config.Set(config.Defaults)
+
+	cases := [...]struct {
+		name string
+		loginCredentials
+		code int
+		err  error
+	}{
+		{
+			name:             "not admin",
+			loginCredentials: sampleLoginCreds,
+			code:             403,
+			err:              errAccessDenied,
+		},
+		{
+			name:             "admin",
+			loginCredentials: adminLoginCreds,
+			code:             200,
+		},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			rec, req := newJSONPair(t, "/admin/config", c.loginCredentials)
+			router.ServeHTTP(rec, req)
+
+			assertCode(t, rec, c.code)
+			if c.err != nil {
+				assertBody(t, rec, fmt.Sprintf("%d %s\n", c.code, c.err))
+			}
+		})
+	}
+}
+
+func writeAdminAccount(t *testing.T) {
+	assertInsert(t, "accounts", auth.User{
+		ID: "admin",
+		Sessions: []auth.Session{
+			{
+				Token:   "adminSession",
+				Expires: time.Now().Add(time.Hour),
+			},
+		},
+	})
+}
+
+func TestServerConfigSetting(t *testing.T) {
+	assertTableClear(t, "main", "accounts")
+	assertInsert(t, "main", db.ConfigDocument{
+		Document: db.Document{
+			ID: "config",
+		},
+		Configs: config.Defaults,
+	})
+	writeAdminAccount(t)
+
+	msg := configSettingRequest{
+		loginCredentials: adminLoginCreds,
+		Configs:          config.Defaults,
+	}
+	msg.DefaultCSS = "ashita"
+	rec, req := newJSONPair(t, "/admin/configureServer", msg)
+	router.ServeHTTP(rec, req)
+
+	assertCode(t, rec, 200)
+
+	var conf config.Configs
+	if err := db.One(db.GetMain("config"), &conf); err != nil {
+		t.Fatal(err)
+	}
+	std := config.Defaults
+	std.DefaultCSS = "ashita"
+	AssertDeepEquals(t, conf, std)
 }

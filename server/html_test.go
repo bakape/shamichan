@@ -136,7 +136,7 @@ func TestBoardConfigurationForm(t *testing.T) {
 
 	rec, req := newJSONPair(t, "/forms/configureBoard", boardConfigRequest{
 		ID:               "a",
-		loginCredentials: sampleLoginCredentials,
+		loginCredentials: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
@@ -146,6 +146,16 @@ func TestBoardCreationForm(t *testing.T) {
 	(*config.Get()).DefaultLang = "en_GB"
 
 	rec, req := newPair("/forms/createBoard")
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 200)
+}
+
+func TestServerConfigurationForm(t *testing.T) {
+	assertTableClear(t, "accounts")
+	writeAdminAccount(t)
+	(*config.Get()).DefaultLang = "en_GB"
+
+	rec, req := newJSONPair(t, "/forms/configureServer", adminLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
 }

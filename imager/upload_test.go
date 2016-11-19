@@ -346,7 +346,7 @@ func TestErrorPassing(t *testing.T) {
 	NewImageUpload(rec, req)
 
 	assertCode(t, rec.Code, 400)
-	const errMsg = "strconv.ParseInt: parsing \"\": invalid syntax\n"
+	const errMsg = "strconv.ParseUint: parsing \"\": invalid syntax\n"
 	if s := rec.Body.String(); s != errMsg {
 		t.Errorf("unexpected body: `%s`", s)
 	}

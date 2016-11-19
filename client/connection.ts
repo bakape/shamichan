@@ -41,9 +41,7 @@ export const enum message {
 	logoutAll,
 	changePassword,
 
-	// Board and server administration
-	configServer,
-	_, // Legacy. Left to preserve numbering.
+	_, _1, // Legacy. Left to preserve numbering.
 
 	// Send new post ID to client
 	postID,

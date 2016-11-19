@@ -43,9 +43,8 @@ const (
 	MessageLogOutAll
 	MessageChangePassword
 
-	// Board administration
-	MessageConfigServer
 	_ // Legacy. Left to preserve numbering.
+	_
 
 	// Send new post ID to client
 	MessagePostID
@@ -75,7 +74,6 @@ var (
 		MessageLogout:         logOut,
 		MessageLogOutAll:      logOutAll,
 		MessageChangePassword: changePassword,
-		MessageConfigServer:   configServer,
 		MessageInsertThread:   insertThread,
 		MessageAppend:         appendRune,
 		MessageBackspace:      backspace,

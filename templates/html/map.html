@@ -1,5 +1,5 @@
-<div class="map-form" name="{{.Spec.name}}" title="{{.Spec.title}}">
-	{{range $k, $v := .Spec.val}}
+<div class="map-form" name="{{.Spec.ID}}" title="{{index .Lang.Forms .Spec.ID 1}}">
+	{{range $k, $v := .Spec.Val}}
 		{{template "keyValue" bundle $k $v}}
 	{{end}}
 	<a class="map-add">
