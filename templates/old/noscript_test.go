@@ -3,18 +3,18 @@ package templates
 // func TestThread(t *testing.T) {
 // 	img := assets.StdJPEG
 // 	img.Length = 20
-// 	_, err := Thread(&types.Thread{
+// 	_, err := Thread(&common.Thread{
 // 		Board:   "a",
 // 		Subject: "foo",
-// 		Post: types.Post{
+// 		Post: common.Post{
 // 			ID:    1,
 // 			Image: &img,
 // 		},
-// 		Posts: []types.Post{
+// 		Posts: []common.Post{
 // 			{
 // 				ID:   2,
 // 				Body: "bar",
-// 				Backlinks: types.LinkMap{
+// 				Backlinks: common.LinkMap{
 // 					3: {
 // 						OP:    1,
 // 						Board: "a",

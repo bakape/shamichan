@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 func TestMain(m *testing.M) {
@@ -29,8 +29,8 @@ func resetDirs(t *testing.T) {
 func TestGetFilePaths(t *testing.T) {
 	t.Parallel()
 
-	webm := GetFilePaths("jingai", types.WEBM)
-	jpeg := GetFilePaths("modoki", types.JPEG)
+	webm := GetFilePaths("jingai", common.WEBM)
+	jpeg := GetFilePaths("modoki", common.JPEG)
 
 	cases := [...]struct {
 		name, got, expected string
@@ -60,8 +60,8 @@ func TestDeleteAssets(t *testing.T) {
 		testName, name string
 		fileType       uint8
 	}{
-		{"JPEG", "foo", types.JPEG},
-		{"PNG", "bar", types.PNG},
+		{"JPEG", "foo", common.JPEG},
+		{"PNG", "bar", common.PNG},
 	}
 
 	for i := range cases {
@@ -97,7 +97,7 @@ func TestDeleteAssets(t *testing.T) {
 func TestDeleteMissingAssets(t *testing.T) {
 	resetDirs(t)
 
-	if err := Delete("akarin", types.PNG); err != nil {
+	if err := Delete("akarin", common.PNG); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -119,7 +119,7 @@ func TestWriteAssets(t *testing.T) {
 
 	const (
 		name     = "foo"
-		fileType = types.JPEG
+		fileType = common.JPEG
 	)
 	std := [...][]byte{
 		{1, 2, 3},

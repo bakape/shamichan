@@ -7,13 +7,13 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
 func TestValidateOp(t *testing.T) {
 	assertTableClear(t, "threads")
-	assertInsert(t, "threads", types.DatabaseThread{
+	assertInsert(t, "threads", common.DatabaseThread{
 		ID:    1,
 		Board: "a",
 	})
@@ -60,20 +60,20 @@ func TestPostCounter(t *testing.T) {
 
 func TestThreadCounter(t *testing.T) {
 	assertTableClear(t, "posts")
-	assertInsert(t, "posts", []types.DatabasePost{
+	assertInsert(t, "posts", []common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
+			StandalonePost: common.StandalonePost{
 				OP: 1,
-				Post: types.Post{
+				Post: common.Post{
 					ID: 1,
 				},
 			},
 			LastUpdated: 54,
 		},
 		{
-			StandalonePost: types.StandalonePost{
+			StandalonePost: common.StandalonePost{
 				OP: 1,
-				Post: types.Post{
+				Post: common.Post{
 					ID: 2,
 				},
 			},

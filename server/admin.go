@@ -12,10 +12,9 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/parser"
-	"github.com/bakape/meguca/types"
 	"github.com/dancannon/gorethink"
 )
 
@@ -33,10 +32,10 @@ const (
 
 var (
 	errTooManyAnswers   = errors.New("too many eightball answers")
-	errEightballTooLong = parser.ErrTooLong("eightball")
-	errTitleTooLong     = parser.ErrTooLong("board title")
-	errNoticeTooLong    = parser.ErrTooLong("notice")
-	errRulesTooLong     = parser.ErrTooLong("rules")
+	errEightballTooLong = common.ErrTooLong("eightball")
+	errTitleTooLong     = common.ErrTooLong("board title")
+	errNoticeTooLong    = common.ErrTooLong("notice")
+	errRulesTooLong     = common.ErrTooLong("rules")
 	errInvalidBoardName = errors.New("invalid board name")
 	errInvalidCaptcha   = errors.New("invalid captcha")
 	errBoardNameTaken   = errors.New("board name taken")
@@ -71,7 +70,7 @@ type configSettingRequest struct {
 type boardCreationRequest struct {
 	Name, Title string
 	loginCredentials
-	types.Captcha
+	common.Captcha
 }
 
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
@@ -112,35 +111,6 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 		text500(w, r, err)
 		return
 	}
-}
-
-// Assert the user login session ID is valid
-func isLoggedIn(
-	w http.ResponseWriter,
-	r *http.Request,
-	user, session string,
-) bool {
-	var isValid bool
-	q := gorethink.
-		Table("accounts").
-		Get(user).
-		Field("sessions").
-		Map(func(session gorethink.Term) gorethink.Term {
-			return session.Field("token")
-		}).
-		Contains(session).
-		Default(false)
-	if err := db.One(q, &isValid); err != nil {
-		text500(w, r, err)
-		return false
-	}
-
-	if !isValid {
-		text403(w, errInvalidCreds)
-		return false
-	}
-
-	return true
 }
 
 // Assert the user is one of the board's owners

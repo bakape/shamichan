@@ -78,7 +78,7 @@ func Parse() error {
 			},
 		},
 		{
-			"configTable",
+			"tableForm",
 			nil,
 			template.FuncMap{
 				"table": renderTable,

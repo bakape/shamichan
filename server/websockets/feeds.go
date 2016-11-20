@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -59,7 +59,7 @@ type feedUpdate struct {
 }
 
 type timestampedPost struct {
-	types.Post
+	common.Post
 	OP          int64 `json:"-"`
 	LastUpdated int64 `json:"-"`
 }

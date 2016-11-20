@@ -7,7 +7,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 func TestFlip(t *testing.T) {
@@ -17,7 +17,7 @@ func TestFlip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if com.Type != types.Flip {
+	if com.Type != common.Flip {
 		t.Fatalf("unexpected command type: %d", com.Type)
 	}
 	if k := reflect.TypeOf(com.Val).Kind(); k != reflect.Bool {
@@ -51,7 +51,7 @@ func TestDice(t *testing.T) {
 					t.Fatalf("unexpected value: %#v", com.Val)
 				}
 			} else {
-				if com.Type != types.Dice {
+				if com.Type != common.Dice {
 					t.Fatalf("unexpected command type: %d", com.Type)
 				}
 				val := com.Val.([]uint16)
@@ -74,7 +74,7 @@ func Test8ball(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if com.Type != types.EightBall {
+	if com.Type != common.EightBall {
 		t.Fatalf("unexpected command type: %d", com.Type)
 	}
 	val := com.Val.(string)
@@ -94,7 +94,7 @@ func TestPyu(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			AssertDeepEquals(t, com, types.Command{})
+			AssertDeepEquals(t, com, common.Command{})
 		}
 	})
 
@@ -104,12 +104,12 @@ func TestPyu(t *testing.T) {
 		cases := [...]struct {
 			name string
 			in   []byte
-			Type types.CommandType
+			Type common.CommandType
 			Val  int
 		}{
-			{"count on zero", pcountCommand, types.Pcount, 0},
-			{"increment", pyuCommand, types.Pyu, 1},
-			{"count", pcountCommand, types.Pcount, 1},
+			{"count on zero", pcountCommand, common.Pcount, 0},
+			{"increment", pyuCommand, common.Pyu, 1},
+			{"count", pcountCommand, common.Pcount, 1},
 		}
 
 		for i := range cases {
@@ -119,7 +119,7 @@ func TestPyu(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				AssertDeepEquals(t, com, types.Command{
+				AssertDeepEquals(t, com, common.Command{
 					Type: c.Type,
 					Val:  c.Val,
 				})

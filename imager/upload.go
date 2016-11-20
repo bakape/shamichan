@@ -16,20 +16,20 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
 var (
 	// Map of net/http MIME types to the constants used internally
 	mimeTypes = map[string]uint8{
-		"image/jpeg":      types.JPEG,
-		"image/png":       types.PNG,
-		"image/gif":       types.GIF,
-		"video/webm":      types.WEBM,
-		"application/ogg": types.OGG,
-		"video/mp4":       types.MP4,
-		"application/zip": types.ZIP,
+		"image/jpeg":      common.JPEG,
+		"image/png":       common.PNG,
+		"image/gif":       common.GIF,
+		"video/webm":      common.WEBM,
+		"application/ogg": common.OGG,
+		"video/mp4":       common.MP4,
+		"application/zip": common.ZIP,
 	}
 
 	// File type tests for types not supported by http.DetectContentType
@@ -37,11 +37,11 @@ var (
 		test  func([]byte) (bool, error)
 		fType uint8
 	}{
-		{detectTarGZ, types.TGZ},
-		{detectTarXZ, types.TXZ},
-		{detect7z, types.SevenZip},
-		{detectSVG, types.SVG},
-		{detectMP3, types.MP3},
+		{detectTarGZ, common.TGZ},
+		{detectTarXZ, common.TXZ},
+		{detect7z, common.SevenZip},
+		{detectSVG, common.SVG},
+		{detectMP3, common.MP3},
 	}
 
 	errTooLarge        = errors.New("file too large")
@@ -163,7 +163,7 @@ func parseUploadForm(req *http.Request) error {
 
 // Create a new thumbnail, commit its resources to the DB and filesystem, and
 // pass the image data to the client.
-func newThumbnail(data []byte, img types.ImageCommon) (int, string, error) {
+func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
 	fileType, err := detectFileType(data)
 	if err != nil {
 		return 400, "", err
@@ -173,7 +173,7 @@ func newThumbnail(data []byte, img types.ImageCommon) (int, string, error) {
 	md5 := genMD5(data)
 	thumb := processFile(data, fileType)
 
-	if fileType == types.PNG {
+	if fileType == common.PNG {
 		img.APNG = apngdetector.Detect(data)
 	}
 
@@ -231,17 +231,17 @@ func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 	go func() {
 		var res thumbResponse
 		switch fileType {
-		case types.WEBM:
+		case common.WEBM:
 			res = processWebm(data)
-		case types.MP3:
+		case common.MP3:
 			res = processMP3(data)
-		case types.OGG:
+		case common.OGG:
 			res = processOGG(data)
-		case types.MP4:
+		case common.MP4:
 			res = processMP4(data)
-		case types.ZIP, types.SevenZip, types.TGZ, types.TXZ:
+		case common.ZIP, common.SevenZip, common.TGZ, common.TXZ:
 			res = processArchive()
-		case types.JPEG, types.PNG, types.GIF:
+		case common.JPEG, common.PNG, common.GIF:
 			res.thumb, res.dims, res.err = processImage(data)
 		}
 

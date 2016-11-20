@@ -8,7 +8,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 // Board renders board page HTML for noscript browsers. withIndex specifies, if
@@ -17,7 +17,7 @@ func Board(
 	b string,
 	ln lang.Pack,
 	withIndex bool,
-	data types.Board,
+	data common.Board,
 ) ([]byte, error) {
 	w := new(bytes.Buffer)
 	conf := config.Get()
@@ -28,7 +28,7 @@ func Board(
 		IsAll, NeedImage, Captcha                bool
 		Banner, Notice, Rules, Title, CaptchaKey string
 		SortModes                                []string
-		Threads                                  types.BoardThreads
+		Threads                                  common.BoardThreads
 		Boards                                   config.BoardTitles
 		Lang                                     lang.Pack
 	}{

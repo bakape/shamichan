@@ -8,13 +8,13 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
 var (
 	// JPEG sample image standard struct
-	stdJPEG = types.ImageCommon{
+	stdJPEG = common.ImageCommon{
 		SHA1:     "012a2f912c9ee93ceb0ccb8684a29ec571990a94",
 		FileType: 0,
 		Dims:     [4]uint16{1, 1, 1, 1},
@@ -109,21 +109,21 @@ func testCreateThread(t *testing.T) {
 	defer Clients.Clear()
 	cl.IP = "::1"
 
-	stdThread := types.DatabaseThread{
+	stdThread := common.DatabaseThread{
 		ID:       6,
 		Subject:  "subject",
 		Board:    "c",
 		ImageCtr: 1,
 	}
-	stdPost := types.DatabasePost{
+	stdPost := common.DatabasePost{
 		IP:  "::1",
 		Log: [][]byte{},
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
 				Editing: true,
 				ID:      6,
 				Name:    "name",
-				Image: &types.Image{
+				Image: &common.Image{
 					Spoiler:     true,
 					ImageCommon: stdJPEG,
 					Name:        "foo",
@@ -155,8 +155,8 @@ func testCreateThread(t *testing.T) {
 	assertIP(t, 6, "::1")
 
 	var (
-		thread types.DatabaseThread
-		post   types.DatabasePost
+		thread common.DatabaseThread
+		post   common.DatabasePost
 	)
 	if err := db.One(db.FindThread(6), &thread); err != nil {
 		t.Fatal(err)
@@ -396,7 +396,7 @@ func TestPostCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertMessage(t, wcl, "416")
+	assertMessage(t, wcl, encodeMessageType(MessagePostID)+"6")
 
 	// Get the time value from the DB and normalize against it
 	var then int64
@@ -404,15 +404,15 @@ func TestPostCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stdPost := types.DatabasePost{
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
+	stdPost := common.DatabasePost{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
 				Editing: true,
 				ID:      6,
 				Time:    then,
 				Body:    "Δ",
 				Email:   "wew lad",
-				Image: &types.Image{
+				Image: &common.Image{
 					Name:        "foo",
 					Spoiler:     true,
 					ImageCommon: stdJPEG,
@@ -425,7 +425,7 @@ func TestPostCreation(t *testing.T) {
 		LastUpdated: then,
 	}
 
-	var post types.DatabasePost
+	var post common.DatabasePost
 	if err := db.One(db.FindPost(6), &post); err != nil {
 		t.Fatal(err)
 	}
@@ -481,7 +481,7 @@ func TestPostCreation(t *testing.T) {
 func prepareForPostCreation(t testing.TB) {
 	now := time.Now().Unix()
 	assertTableClear(t, "main", "threads", "posts")
-	assertInsert(t, "threads", types.DatabaseThread{
+	assertInsert(t, "threads", common.DatabaseThread{
 		ID:        1,
 		Board:     "a",
 		PostCtr:   0,

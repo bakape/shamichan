@@ -11,7 +11,7 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/server/websockets"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 // Spoiler an already allocated image
@@ -22,7 +22,7 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 	}
 
 	var res struct {
-		Image    types.Image
+		Image    common.Image
 		Password []byte
 	}
 	q := db.FindPost(msg.ID).Pluck("image", "password").Default(nil)
@@ -82,7 +82,7 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	req := websockets.ThreadCreationRequest{
 		Subject: f.Get("subject"),
 		Board:   f.Get("board"),
-		Captcha: types.Captcha{
+		Captcha: common.Captcha{
 			Captcha:   f.Get("captcha"),
 			CaptchaID: "manual_challenge",
 		},

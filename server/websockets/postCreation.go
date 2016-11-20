@@ -11,7 +11,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -34,7 +34,7 @@ const (
 type ThreadCreationRequest struct {
 	ReplyCreationRequest
 	Subject, Board string
-	types.Captcha
+	common.Captcha
 }
 
 // ReplyCreationRequest contains common fields for both thread and reply
@@ -120,7 +120,7 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	if err != nil {
 		return
 	}
-	thread := types.DatabaseThread{
+	thread := common.DatabaseThread{
 		ReplyTime: timeStamp,
 		Board:     req.Board,
 	}
@@ -290,12 +290,12 @@ func constructPost(
 	forcedAnon, parseBody bool,
 	ip, board string,
 ) (
-	post types.DatabasePost, now int64, bodyLength int, err error,
+	post common.DatabasePost, now int64, bodyLength int, err error,
 ) {
 	now = time.Now().Unix()
-	post = types.DatabasePost{
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
+	post = common.DatabasePost{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
 				Editing: true,
 				Time:    now,
 				Email:   parser.FormatEmail(req.Email),
@@ -316,8 +316,8 @@ func constructPost(
 	if parseBody {
 		buf := []byte(req.Body)
 		bodyLength = utf8.RuneCount(buf)
-		if bodyLength > parser.MaxLengthBody {
-			err = parser.ErrBodyTooLong
+		if bodyLength > common.MaxLenBody {
+			err = common.ErrBodyTooLong
 			return
 		}
 		post.Links, post.Commands, err = parser.ParseBody(buf, board)
@@ -342,7 +342,7 @@ func constructPost(
 // Performs some validations and retrieves processed image data by token ID.
 // Embeds spoiler and image name in result struct. The last extension is
 // stripped from the name.
-func getImage(token, name string, spoiler bool) (img *types.Image, err error) {
+func getImage(token, name string, spoiler bool) (img *common.Image, err error) {
 	switch {
 	case len(token) > 127, token == "": // RethinkDB key length limit
 		err = errInvalidImageToken
@@ -371,7 +371,7 @@ func getImage(token, name string, spoiler bool) (img *types.Image, err error) {
 		name = name[:i]
 	}
 
-	return &types.Image{
+	return &common.Image{
 		ImageCommon: imgCommon,
 		Spoiler:     spoiler,
 		Name:        name,

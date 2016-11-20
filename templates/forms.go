@@ -77,7 +77,7 @@ func configurationTable(v reflect.Value, key string, ln lang.Pack) (
 		withValues[i].Val = v.FieldByName(strings.Title(s.ID)).Interface()
 	}
 
-	return exec("configTable", formSpecs{
+	return exec("tableForm", formSpecs{
 		Specs: withValues,
 		Lang:  ln,
 	})
@@ -86,4 +86,12 @@ func configurationTable(v reflect.Value, key string, ln lang.Pack) (
 // ConfigureServer renders the form for changing server configurations
 func ConfigureServer(conf config.Configs, ln lang.Pack) ([]byte, error) {
 	return configurationTable(reflect.ValueOf(conf), "configureServer", ln)
+}
+
+// ChangePassword renders a form for changing an account's password
+func ChangePassword(ln lang.Pack) ([]byte, error) {
+	return exec("tableForm", formSpecs{
+		Specs: specs["changePassword"],
+		Lang:  ln,
+	})
 }

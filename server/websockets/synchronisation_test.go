@@ -9,14 +9,14 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 func TestOldFeedClosing(t *testing.T) {
 	assertTableClear(t, "posts")
-	assertInsert(t, "posts", types.DatabasePost{
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
+	assertInsert(t, "posts", common.DatabasePost{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
 				ID: 1,
 			},
 			OP: 1,
@@ -98,13 +98,13 @@ func TestInvalidThreadSync(t *testing.T) {
 
 func TestSyncToThread(t *testing.T) {
 	assertTableClear(t, "threads", "posts")
-	assertInsert(t, "threads", types.DatabaseThread{
+	assertInsert(t, "threads", common.DatabaseThread{
 		ID:    1,
 		Board: "a",
 	})
-	assertInsert(t, "posts", types.DatabasePost{
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
+	assertInsert(t, "posts", common.DatabasePost{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
 				ID:   1,
 				Body: "foo",
 			},
@@ -161,10 +161,10 @@ func TestReclaimPost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertInsert(t, "posts", []types.DatabasePost{
+	assertInsert(t, "posts", []common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					Editing: true,
 					Image:   &assets.StdJPEG,
 					ID:      1,
@@ -177,8 +177,8 @@ func TestReclaimPost(t *testing.T) {
 			Password: hash,
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					Editing: false,
 					ID:      2,
 				},

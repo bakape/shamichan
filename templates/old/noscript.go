@@ -8,7 +8,7 @@ package templates
 
 // type threadVars struct {
 // 	Notice, Title string
-// 	Thread        *types.Thread
+// 	Thread        *common.Thread
 // }
 
 // // Common part of both thread and board noscript pages
@@ -27,7 +27,7 @@ package templates
 // }
 
 // // Thread renders thread page HTML for noscript browsers
-// func Thread(t *types.Thread) ([]byte, error) {
+// func Thread(t *common.Thread) ([]byte, error) {
 // 	w := new(bytes.Buffer)
 // 	conf := config.GetBoardConfigs(t.Board)
 // 	title := fmt.Sprintf("/%s/ - %s (#%d)", t.Board, t.Subject, t.ID)

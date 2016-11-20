@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 func TestDetectArchive(t *testing.T) {
@@ -18,22 +18,22 @@ func TestDetectArchive(t *testing.T) {
 		{
 			name: "ZIP",
 			file: "sample.zip",
-			typ:  types.ZIP,
+			typ:  common.ZIP,
 		},
 		{
 			name: "7zip",
 			file: "sample.7z",
-			typ:  types.SevenZip,
+			typ:  common.SevenZip,
 		},
 		{
 			name: "tar.gz",
 			file: "sample.tar.gz",
-			typ:  types.TGZ,
+			typ:  common.TGZ,
 		},
 		{
 			name: "tar.xz",
 			file: "sample.tar.xz",
-			typ:  types.TXZ,
+			typ:  common.TXZ,
 		},
 		{
 			name: "file too small",

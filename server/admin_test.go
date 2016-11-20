@@ -17,80 +17,9 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-var (
-	sampleLoginCreds = loginCredentials{
-		UserID:  "user1",
-		Session: "token1",
-	}
-	adminLoginCreds = loginCredentials{
-		UserID:  "admin",
-		Session: "adminSession",
-	}
-)
-
-func TestIsLoggedIn(t *testing.T) {
-	assertTableClear(t, "accounts")
-	assertInsert(t, "accounts", []auth.User{
-		{
-			ID: "user1",
-			Sessions: []auth.Session{
-				{
-					Token:   "token1",
-					Expires: time.Now().Add(time.Hour),
-				},
-			},
-		},
-		{
-			ID:       "user2",
-			Sessions: []auth.Session{},
-		},
-	})
-
-	cases := [...]struct {
-		name, user, session string
-		isValid             bool
-	}{
-		{"valid", "user1", "token1", true},
-		{"invalid session", "user2", "token2", false},
-		{"not registered", "nope", "token3", false},
-	}
-
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-
-			rec, req := newPair("/")
-			isValid := isLoggedIn(rec, req, c.user, c.session)
-			if isValid != c.isValid {
-				LogUnexpected(t, c.isValid, isValid)
-			}
-			if !c.isValid {
-				assertCode(t, rec, 403)
-				assertBody(t, rec, "403 invalid login credentials\n")
-			}
-		})
-	}
-}
-
-func TestNotLoggedIn(t *testing.T) {
-	assertTableClear(t, "accounts")
-
-	fns := [...]http.HandlerFunc{
-		configureBoard, servePrivateBoardConfigs, servePrivateServerConfigs,
-	}
-
-	for i := range fns {
-		fn := fns[i]
-		t.Run("", func(t *testing.T) {
-			t.Parallel()
-
-			rec, req := newJSONPair(t, "/", sampleLoginCreds)
-			fn(rec, req)
-			assertCode(t, rec, 403)
-			assertBody(t, rec, "403 invalid login credentials\n")
-		})
-	}
+var adminLoginCreds = loginCredentials{
+	UserID:  "admin",
+	Session: genSession(),
 }
 
 func newJSONPair(t *testing.T, url string, data interface{}) (
@@ -121,18 +50,6 @@ func TestNotBoardOwner(t *testing.T) {
 			assertBody(t, rec, "403 Not board owner\n")
 		})
 	}
-}
-
-func writeSampleUser(t *testing.T) {
-	assertInsert(t, "accounts", auth.User{
-		ID: "user1",
-		Sessions: []auth.Session{
-			{
-				Token:   "token1",
-				Expires: time.Now().Add(time.Hour),
-			},
-		},
-	})
 }
 
 func TestServePrivateBoardConfigs(t *testing.T) {
@@ -285,11 +202,11 @@ func TestValidateBoardConfigs(t *testing.T) {
 }
 
 func genString(len int) string {
-	var buf bytes.Buffer
+	buf := make([]byte, len)
 	for i := 0; i < len; i++ {
-		buf.WriteRune(rune(rand.Intn(128)))
+		buf[i] = byte(rand.Intn(128))
 	}
-	return buf.String()
+	return string(buf)
 }
 
 func TestValidateBoardCreation(t *testing.T) {
@@ -448,10 +365,10 @@ func TestServePrivateServerConfigs(t *testing.T) {
 
 func writeAdminAccount(t *testing.T) {
 	assertInsert(t, "accounts", auth.User{
-		ID: "admin",
+		ID: adminLoginCreds.UserID,
 		Sessions: []auth.Session{
 			{
-				Token:   "adminSession",
+				Token:   adminLoginCreds.Session,
 				Expires: time.Now().Add(time.Hour),
 			},
 		},

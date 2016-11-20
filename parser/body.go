@@ -1,3 +1,4 @@
+// Package parser parses and verifies user-sent post data
 package parser
 
 import (
@@ -5,21 +6,17 @@ import (
 	"regexp"
 
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 var (
 	// CommandRegexp matches any hash command in a line
 	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount)$`)
-
-	// ErrBodyTooLong is returned, when a post text body has exceeded
-	// MaxLengthBody
-	ErrBodyTooLong = ErrTooLong("post body")
 )
 
 // ParseBody parses the entire post text body for commands and links
 func ParseBody(body []byte, board string) (
-	links types.LinkMap, com []types.Command, err error,
+	links common.LinkMap, com []common.Command, err error,
 ) {
 	parseCommands := config.GetBoardConfigs(board).HashCommands
 	for _, line := range bytes.Split(body, []byte{'\n'}) {
@@ -46,13 +43,13 @@ func ParseBody(body []byte, board string) (
 
 // ParseLine parses a full text line of a post
 func ParseLine(line []byte, board string) (
-	types.LinkMap, types.Command, error,
+	common.LinkMap, common.Command, error,
 ) {
 	return parseLine(line, board, config.GetBoardConfigs(board).HashCommands)
 }
 
 func parseLine(line []byte, board string, parseCommands bool) (
-	links types.LinkMap, com types.Command, err error,
+	links common.LinkMap, com common.Command, err error,
 ) {
 	if len(line) == 0 {
 		return

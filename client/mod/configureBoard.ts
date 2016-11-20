@@ -46,7 +46,7 @@ export default class BoardConfigPanel extends AccountFormView {
         // TODO: Some kind of form for inputting arrays
         req["eightball"] = req["eightball"].split("\n").slice(0, 100)
 
-        this.postJSON("/admin/configureBoard", req)
+        this.postResponse("/admin/configureBoard", req)
     }
 }
 

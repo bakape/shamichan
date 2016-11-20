@@ -1,4 +1,4 @@
-package types
+package common
 
 // Captcha stores captcha data for request messages that require it, if captchas
 // s are enabled

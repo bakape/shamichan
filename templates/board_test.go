@@ -5,12 +5,12 @@ import (
 
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 func TestBoard(t *testing.T) {
-	_, err := Board("all", lang.Packs["en_GB"], true, types.Board{
-		Threads: types.BoardThreads{
+	_, err := Board("all", lang.Packs["en_GB"], true, common.Board{
+		Threads: common.BoardThreads{
 			{
 				ID:      1,
 				Board:   "a",

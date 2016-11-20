@@ -2,6 +2,10 @@
 
 package templates
 
+import (
+	"github.com/bakape/meguca/common"
+)
+
 var (
 	// Available language packs. Change this, when adding any new ones.
 	langs = []string{
@@ -20,17 +24,17 @@ var specs = map[string][]inputSpec{
 		{
 			ID:        "name",
 			Type:      _string,
-			MaxLength: 50,
+			MaxLength: common.MaxLenName,
 		},
 		{
 			ID:        "email",
 			Type:      _string,
-			MaxLength: 100,
+			MaxLength: common.MaxLenEmail,
 		},
 		{
 			ID:        "postPassword",
 			Type:      _password,
-			MaxLength: 50,
+			MaxLength: common.MaxLenPassword,
 			Required:  true,
 		},
 	},
@@ -38,34 +42,62 @@ var specs = map[string][]inputSpec{
 		{
 			ID:        "id",
 			Type:      _string,
-			MaxLength: 20,
+			MaxLength: common.MaxLenUserID,
 			NoID:      true,
+			Required:  true,
 		},
 		{
 			ID:        "password",
 			Type:      _password,
-			MaxLength: 30,
+			MaxLength: common.MaxLenPassword,
 			NoID:      true,
+			Required:  true,
 		},
 	},
 	"register": {
 		{
 			ID:        "id",
 			Type:      _string,
-			MaxLength: 20,
+			MaxLength: common.MaxLenUserID,
 			NoID:      true,
+			Required:  true,
 		},
 		{
 			ID:        "password",
 			Type:      _password,
-			MaxLength: 30,
+			MaxLength: common.MaxLenPassword,
 			NoID:      true,
+			Required:  true,
 		},
 		{
 			ID:        "repeat",
 			Type:      _password,
-			MaxLength: 30,
+			MaxLength: common.MaxLenPassword,
 			NoID:      true,
+			Required:  true,
+		},
+	},
+	"changePassword": {
+		{
+			ID:        "oldPassword",
+			Type:      _password,
+			MaxLength: common.MaxLenPassword,
+			NoID:      true,
+			Required:  true,
+		},
+		{
+			ID:        "newPassword",
+			Type:      _password,
+			MaxLength: common.MaxLenPassword,
+			NoID:      true,
+			Required:  true,
+		},
+		{
+			ID:        "repeat",
+			Type:      _password,
+			MaxLength: common.MaxLenPassword,
+			NoID:      true,
+			Required:  true,
 		},
 	},
 	"configureBoard": {
@@ -79,25 +111,25 @@ var specs = map[string][]inputSpec{
 		{
 			ID:        "title",
 			Type:      _string,
-			MaxLength: 100,
+			MaxLength: common.MaxLenBoardTitle,
 		},
 		{
 			ID:        "notice",
 			Type:      _textarea,
 			Rows:      5,
-			MaxLength: 500,
+			MaxLength: common.MaxLenNotice,
 		},
 		{
 			ID:        "rules",
 			Type:      _textarea,
 			Rows:      5,
-			MaxLength: 5000,
+			MaxLength: common.MaxLenRules,
 		},
 		{
 			ID:        "eightball",
 			Type:      _textarea,
 			Rows:      5,
-			MaxLength: 2000,
+			MaxLength: common.MaxLenEightball,
 		},
 
 		// TODO: Banner upload
@@ -110,13 +142,13 @@ var specs = map[string][]inputSpec{
 			Type:      _string,
 			Required:  true,
 			Pattern:   "^[a-z0-9]{1,3}$",
-			MaxLength: 3,
+			MaxLength: common.MaxLenBoardID,
 		},
 		{
 			ID:        "boardTitle",
 			Type:      _string,
 			Required:  true,
-			MaxLength: 100,
+			MaxLength: common.MaxLenBoardTitle,
 		},
 	},
 	"configureServer": {

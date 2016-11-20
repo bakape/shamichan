@@ -5,9 +5,11 @@ import (
 	"testing"
 	"time"
 
+	"strconv"
+
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -40,12 +42,12 @@ func TestAddingFeeds(t *testing.T) {
 func TestStreamUpdates(t *testing.T) {
 	assertTableClear(t, "posts", "threads")
 	feeds.Clear()
-	assertInsert(t, "threads", types.DatabaseThread{
+	assertInsert(t, "threads", common.DatabaseThread{
 		ID:    1,
 		Board: "a",
 	})
 	post := timestampedPost{
-		Post: types.Post{
+		Post: common.Post{
 			ID: 1,
 		},
 		OP:          1,
@@ -61,8 +63,8 @@ func TestStreamUpdates(t *testing.T) {
 	defer feeds.Clear()
 
 	assertMessage(t, wcl, "30{}")
-	assertInsert(t, "posts", types.DatabasePost{
-		StandalonePost: types.StandalonePost{
+	assertInsert(t, "posts", common.DatabasePost{
+		StandalonePost: common.StandalonePost{
 			Post: post.Post,
 			OP:   post.OP,
 		},
@@ -84,7 +86,7 @@ func TestStreamUpdates(t *testing.T) {
 	sv.Add(1)
 	go readListenErrors(t, cl2, sv)
 	feeds.Add <- subRequest{1, cl2}
-	std := encodeMessage(t, MessageSynchronise, map[int64]types.Post{
+	std := encodeMessage(t, MessageSynchronise, map[int64]common.Post{
 		1: post.Post,
 	})
 	assertMessage(t, wcl2, std)
@@ -98,7 +100,7 @@ func TestBufferUpdate(t *testing.T) {
 	t.Parallel()
 
 	stdPost := timestampedPost{
-		Post: types.Post{
+		Post: common.Post{
 			ID: 1,
 		},
 		OP: 1,
@@ -190,10 +192,14 @@ func TestFlushMultipleMessages(t *testing.T) {
 	}
 
 	feeds.flushBuffers()
-	assertMessage(t, wcl, `42`+msg)
+	assertMessage(t, wcl, encodeMessageType(MessageConcat)+msg)
 
 	cl.Close(nil)
 	sv.Wait()
+}
+
+func encodeMessageType(typ MessageType) string {
+	return strconv.Itoa(int(typ))
 }
 
 func TestFeedCleanUp(t *testing.T) {

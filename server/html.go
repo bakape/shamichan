@@ -81,12 +81,21 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 
 // Render a board selection and navigation panel and write HTML to client
 func boardNavigation(w http.ResponseWriter, r *http.Request) {
+	staticTemplate(w, r, templates.BoardNavigation)
+}
+
+// Execute a simple template, that only accepts a language pack argument
+func staticTemplate(
+	w http.ResponseWriter,
+	r *http.Request,
+	fn func(lang.Pack) ([]byte, error),
+) {
 	lp, err := lang.Get(w, r)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
-	data, err := templates.BoardNavigation(lp)
+	data, err := fn(lp)
 	serveHTML(w, r, "", data, err)
 }
 
@@ -141,14 +150,7 @@ func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
 
 // Renders a form for creating new boards
 func boardCreationForm(w http.ResponseWriter, r *http.Request) {
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
-	data, err := templates.CreateBoard(lp)
-	serveHTML(w, r, "", data, err)
+	staticTemplate(w, r, templates.CreateBoard)
 }
 
 // Render the form for configuring the server
@@ -166,4 +168,9 @@ func serverConfigurationForm(w http.ResponseWriter, r *http.Request) {
 
 	data, err := templates.ConfigureServer((*config.Get()), lp)
 	serveHTML(w, r, "", data, err)
+}
+
+// Render a form to change an account password
+func changePasswordForm(w http.ResponseWriter, r *http.Request) {
+	staticTemplate(w, r, templates.ChangePassword)
 }

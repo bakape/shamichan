@@ -5,7 +5,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 func TestParseLine(t *testing.T) {
@@ -21,7 +21,7 @@ func TestParseLine(t *testing.T) {
 		if links != nil {
 			t.Fatalf("unexpected links: %#v", links)
 		}
-		AssertDeepEquals(t, com, types.Command{})
+		AssertDeepEquals(t, com, common.Command{})
 	})
 
 	t.Run("commands enabled", func(t *testing.T) {
@@ -41,7 +41,7 @@ func TestParseLine(t *testing.T) {
 		if links != nil {
 			t.Fatalf("unexpected links: %#v", links)
 		}
-		if com.Type != types.Flip {
+		if com.Type != common.Flip {
 			t.Fatalf("unexpected command type: %d", com.Type)
 		}
 	})
@@ -49,10 +49,10 @@ func TestParseLine(t *testing.T) {
 
 func TestParseBody(t *testing.T) {
 	assertTableClear(t, "posts")
-	assertInsert(t, "posts", []types.DatabasePost{
+	assertInsert(t, "posts", []common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 8,
 				},
 				OP:    2,
@@ -60,8 +60,8 @@ func TestParseBody(t *testing.T) {
 			},
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 6,
 				},
 				OP:    2,
@@ -85,12 +85,12 @@ func TestParseBody(t *testing.T) {
 	if l := len(com); l != 2 {
 		t.Errorf("unexpected command count: %d", l)
 	}
-	AssertDeepEquals(t, links, types.LinkMap{
-		8: types.Link{
+	AssertDeepEquals(t, links, common.LinkMap{
+		8: common.Link{
 			OP:    2,
 			Board: "a",
 		},
-		6: types.Link{
+		6: common.Link{
 			OP:    2,
 			Board: "a",
 		},

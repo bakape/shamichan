@@ -183,9 +183,6 @@ func (w *htmlWriter) textArea(spec inputSpec) {
 	if spec.MaxLength != 0 {
 		w.attr("maxlength", strconv.Itoa(spec.MaxLength))
 	}
-	if spec.Rows == 0 {
-		spec.Rows = 3
-	}
 	w.attr("rows", strconv.Itoa(spec.Rows))
 	w.WriteByte('>')
 

@@ -3,7 +3,8 @@ import FormView from "../forms"
 import { ViewAttrs } from "../view"
 import { accountPanel, loginID, sessionToken } from "./login"
 import { write } from "../render"
-import { postJSON } from "../fetch"
+import { postJSON, fetchHTML } from "../fetch"
+import { makeFrag } from "../util"
 
 // Create a new base request for private logged in AJAX queries
 export function newRequest(): { [key: string]: any } {
@@ -44,6 +45,17 @@ export default class AccountFormView extends FormView {
 			accountPanel.el.append(this.el))
 	}
 
+	// Render a simple publically available form, that does not require to
+	// submit any private information
+	protected async renderPublicForm(url: string) {
+		const [html, err] = await fetchHTML(url)
+		if (err) {
+			throw err
+		}
+		this.el.append(makeFrag(html))
+		this.render()
+	}
+
 	// Unhide the parent AccountPanel, when this view is removed
 	public remove() {
 		super.remove()
@@ -52,7 +64,7 @@ export default class AccountFormView extends FormView {
 
 	// Send a POST request with a JSON body to the server and remove the view.
 	// In case of errors, render them to the .form-response
-	protected async postJSON(url: string, data: any) {
+	protected async postResponse(url: string, data: any) {
 		const res = await postJSON(url, data)
 		if (res.status !== 200) {
 			this.renderFormResponse(await res.text())

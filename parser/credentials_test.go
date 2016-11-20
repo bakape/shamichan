@@ -5,6 +5,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/common"
 )
 
 func TestParseName(t *testing.T) {
@@ -42,8 +43,8 @@ func TestParseName(t *testing.T) {
 
 	t.Run("name too long", func(t *testing.T) {
 		t.Parallel()
-		_, _, err := ParseName(genString(maxLengthName + 1))
-		if err != errNameTooLong {
+		_, _, err := ParseName(genString(common.MaxLenName + 1))
+		if err != common.ErrNameTooLong {
 			UnexpectedError(t, err)
 		}
 	})
@@ -62,7 +63,7 @@ func TestParseSubject(t *testing.T) {
 		},
 		{
 			"subject too long",
-			genString(maxLengthSubject + 1), "", errSubjectTooLong,
+			genString(common.MaxLenSubject + 1), "", common.ErrSubjectTooLong,
 		},
 		{
 			"valid",
@@ -95,15 +96,18 @@ func TestVerifyPostPassword(t *testing.T) {
 	}{
 		{
 			"no password",
-			"", errNoPostPassword,
+			"",
+			errNoPostPassword,
 		},
 		{
 			"too long",
-			genString(maxLengthPostPassword + 1), errPostPasswordTooLong,
+			genString(common.MaxLenPostPassword + 1),
+			common.ErrPostPasswordTooLong,
 		},
 		{
 			"valid",
-			genString(maxLengthPostPassword), nil,
+			genString(common.MaxLenPostPassword),
+			nil,
 		},
 	}
 
@@ -125,7 +129,7 @@ func TestFormatEmail(t *testing.T) {
 	}{
 		{"empty", "", ""},
 		{"normal", "foo", "foo"},
-		{"too long", genString(maxLengthEmail + 1), ""},
+		{"too long", genString(common.MaxLenEmail + 1), ""},
 	}
 	for i := range cases {
 		c := cases[i]

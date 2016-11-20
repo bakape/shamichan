@@ -9,7 +9,7 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
@@ -183,7 +183,7 @@ func threadData(
 	id int64,
 	lang, hash string,
 ) (
-	data *types.Thread, etag string, ok bool,
+	data *common.Thread, etag string, ok bool,
 ) {
 	counter, err := db.ThreadCounter(id)
 	if err != nil {
@@ -243,7 +243,7 @@ func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 // receive optional language ID and hash to attach to the etag. If an error
 // occurred and the calling function should return, ok = false.
 func boardData(w http.ResponseWriter, r *http.Request, b, lang, hash string) (
-	data types.Board, etag string, ok bool,
+	data common.Board, etag string, ok bool,
 ) {
 	if b == "all" {
 		return allBoardData(w, r, lang, hash)
@@ -270,7 +270,7 @@ func boardData(w http.ResponseWriter, r *http.Request, b, lang, hash string) (
 
 // Same as boardData(), but for the /all/ metaboard
 func allBoardData(w http.ResponseWriter, r *http.Request, lang, hash string) (
-	data types.Board, etag string, ok bool,
+	data common.Board, etag string, ok bool,
 ) {
 	counter, err := db.PostCounter()
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -36,13 +36,14 @@ const (
 )
 
 var (
+	errNotLoggedIn     = errors.New("not logged in")
 	errAlreadyLoggedIn = errors.New("already logged in")
 )
 
 // Request struct for logging in to an existing or registering a new account
 type loginRequest struct {
 	ID, Password string
-	types.Captcha
+	common.Captcha
 }
 
 type loginResponse struct {
@@ -52,11 +53,6 @@ type loginResponse struct {
 
 type authenticationRequest struct {
 	ID, Session string
-}
-
-type passwordChangeRequest struct {
-	Old, New string
-	types.Captcha
 }
 
 // Register a new user account
@@ -116,7 +112,7 @@ func handleRegistration(req loginRequest, c *Client) (
 }
 
 // Check password length and authenticate captcha, if needed
-func checkPasswordAndCaptcha(password, ip string, captcha types.Captcha) (
+func checkPasswordAndCaptcha(password, ip string, captcha common.Captcha) (
 	code loginResponseCode,
 ) {
 	switch {
@@ -272,55 +268,4 @@ func logOutAll(_ []byte, c *Client) error {
 			"sessions": []string{},
 		})
 	return commitLogout(query, c)
-}
-
-// Change the account password
-func changePassword(data []byte, c *Client) error {
-	if !c.isLoggedIn() {
-		return errNotLoggedIn
-	}
-
-	var req passwordChangeRequest
-	if err := decodeMessage(data, &req); err != nil {
-		return err
-	}
-
-	code := checkPasswordAndCaptcha(req.New, c.IP, req.Captcha)
-	if code > 0 {
-		return c.sendMessage(MessageChangePassword, code)
-	}
-
-	// Get old hash
-	hash, err := db.GetLoginHash(c.UserID)
-	if err != nil {
-		return err
-	}
-
-	// Validate old password
-	err = auth.BcryptCompare(req.Old, hash)
-	switch err {
-	case nil:
-	case bcrypt.ErrMismatchedHashAndPassword:
-		code = wrongCredentials
-	default:
-		return err
-	}
-
-	// If old password matched, write new hash to DB
-	if code == 0 {
-		hash, err := auth.BcryptHash(req.New, 10)
-		if err != nil {
-			return err
-		}
-
-		q := db.GetAccount(c.UserID).
-			Update(map[string][]byte{
-				"password": hash,
-			})
-		if err := db.Write(q); err != nil {
-			return err
-		}
-	}
-
-	return c.sendMessage(MessageChangePassword, code)
 }

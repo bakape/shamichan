@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -40,7 +40,7 @@ var (
 )
 
 // GetThread retrieves public thread data from the database
-func GetThread(id int64, lastN int) (*types.Thread, error) {
+func GetThread(id int64, lastN int) (*common.Thread, error) {
 	q := r.
 		Table("threads").
 		GetAll(id). // Can not join after Get(). Meh.
@@ -64,7 +64,7 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 	}).
 		Without("ip", "op", "password")
 
-	var thread types.Thread
+	var thread common.Thread
 	if err := One(q, &thread); err != nil {
 		return nil, err
 	}
@@ -79,14 +79,14 @@ func GetThread(id int64, lastN int) (*types.Thread, error) {
 }
 
 // GetPost reads a single post from the database
-func GetPost(id int64) (post types.StandalonePost, err error) {
+func GetPost(id int64) (post common.StandalonePost, err error) {
 	q := FindPost(id).Without(omitForPosts).Default(nil)
 	err = One(q, &post)
 	return
 }
 
 // GetBoard retrieves all OPs of a single board
-func GetBoard(board string) (data types.Board, err error) {
+func GetBoard(board string) (data common.Board, err error) {
 	data.Ctr, err = BoardCounter(board)
 	if err != nil {
 		return
@@ -106,7 +106,7 @@ func GetBoard(board string) (data types.Board, err error) {
 }
 
 // GetAllBoard retrieves all threads for the "/all/" meta-board
-func GetAllBoard() (board types.Board, err error) {
+func GetAllBoard() (board common.Board, err error) {
 	ctr, err := PostCounter()
 	if err != nil {
 		return

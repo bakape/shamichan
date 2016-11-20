@@ -4,15 +4,15 @@ import (
 	"testing"
 
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 func TestParseLinks(t *testing.T) {
 	assertTableClear(t, "posts")
-	assertInsert(t, "posts", []types.DatabasePost{
+	assertInsert(t, "posts", []common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 8,
 				},
 				OP:    2,
@@ -20,8 +20,8 @@ func TestParseLinks(t *testing.T) {
 			},
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 6,
 				},
 				OP:    2,
@@ -32,18 +32,18 @@ func TestParseLinks(t *testing.T) {
 
 	cases := [...]struct {
 		name, in string
-		links    types.LinkMap
+		links    common.LinkMap
 	}{
 		{"no links", "foo bar baz", nil},
 		{
 			"valid links",
 			" >>>1  >>6 >>>>8",
-			types.LinkMap{
-				6: types.Link{
+			common.LinkMap{
+				6: common.Link{
 					OP:    2,
 					Board: "a",
 				},
-				8: types.Link{
+				8: common.Link{
 					OP:    2,
 					Board: "a",
 				},

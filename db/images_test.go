@@ -11,7 +11,7 @@ import (
 
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -77,8 +77,8 @@ func testFindImageThumb(t *testing.T) {
 	t.Parallel()
 
 	const id = "foo"
-	thumbnailed := types.ProtoImage{
-		ImageCommon: types.ImageCommon{
+	thumbnailed := common.ProtoImage{
+		ImageCommon: common.ImageCommon{
 			SHA1: id,
 		},
 		Posts: 1,
@@ -104,8 +104,8 @@ func testDecrementRefCount(t *testing.T) {
 	t.Parallel()
 
 	const id = "nano desu"
-	assertInsert(t, "images", types.ProtoImage{
-		ImageCommon: types.ImageCommon{
+	assertInsert(t, "images", common.ProtoImage{
+		ImageCommon: common.ImageCommon{
 			SHA1: id,
 		},
 		Posts: 2,
@@ -123,14 +123,14 @@ func testRemoveImage(t *testing.T) {
 	defer setupImageDirs(t)()
 
 	const id = "fuwa fuwa fuwari"
-	assertInsert(t, "images", types.ProtoImage{
-		ImageCommon: types.ImageCommon{
-			FileType: types.JPEG,
+	assertInsert(t, "images", common.ProtoImage{
+		ImageCommon: common.ImageCommon{
+			FileType: common.JPEG,
 			SHA1:     id,
 		},
 		Posts: 1,
 	})
-	at := newAllocationTester(t, "sample.jpg", id, types.JPEG)
+	at := newAllocationTester(t, "sample.jpg", id, common.JPEG)
 	at.Allocate()
 
 	if err := DeallocateImage(id); err != nil {
@@ -156,7 +156,7 @@ func TestCleanUpFailedAllocation(t *testing.T) {
 	defer setupImageDirs(t)()
 
 	const id = "123"
-	at := newAllocationTester(t, "sample.jpg", id, types.JPEG)
+	at := newAllocationTester(t, "sample.jpg", id, common.JPEG)
 	at.Allocate()
 	path := filepath.Join("images", "thumb", id+".jpg")
 	if err := os.Remove(path); err != nil {
@@ -164,9 +164,9 @@ func TestCleanUpFailedAllocation(t *testing.T) {
 	}
 
 	err := errors.New("foo")
-	img := types.ImageCommon{
+	img := common.ImageCommon{
 		SHA1:     id,
-		FileType: types.JPEG,
+		FileType: common.JPEG,
 	}
 
 	if reErr := cleanUpFailedAllocation(img, err); reErr != err {
@@ -184,9 +184,9 @@ func TestAllocateImage(t *testing.T) {
 	for i, name := range [...]string{"sample", "thumb"} {
 		files[i] = readSample(t, name+".jpg")
 	}
-	img := types.ImageCommon{
+	img := common.ImageCommon{
 		SHA1:     id,
-		FileType: types.JPEG,
+		FileType: common.JPEG,
 	}
 
 	if err := AllocateImage(files[0], files[1], img); err != nil {
@@ -195,7 +195,7 @@ func TestAllocateImage(t *testing.T) {
 
 	// Assert files and remove them
 	t.Run("files", func(t *testing.T) {
-		for i, path := range assets.GetFilePaths(id, types.JPEG) {
+		for i, path := range assets.GetFilePaths(id, common.JPEG) {
 			buf, err := ioutil.ReadFile(path)
 			if err != nil {
 				t.Error(err)
@@ -208,11 +208,11 @@ func TestAllocateImage(t *testing.T) {
 
 	// Assert database document
 	t.Run("db document", func(t *testing.T) {
-		var doc types.ProtoImage
+		var doc common.ProtoImage
 		if err := One(GetImage(id), &doc); err != nil {
 			t.Fatal(err)
 		}
-		std := types.ProtoImage{
+		std := common.ProtoImage{
 			ImageCommon: img,
 			Posts:       1,
 		}
@@ -235,7 +235,7 @@ func TestUseImageToken(t *testing.T) {
 	assertTableClear(t, "images", "imageTokens")
 
 	const name = "foo.jpeg"
-	assertInsert(t, "images", types.ProtoImage{
+	assertInsert(t, "images", common.ProtoImage{
 		ImageCommon: assets.StdJPEG.ImageCommon,
 		Posts:       1,
 	})

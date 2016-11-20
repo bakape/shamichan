@@ -11,7 +11,7 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -109,7 +109,7 @@ func reclaimPost(data []byte, c *Client) error {
 		return err
 	}
 
-	var post types.DatabasePost
+	var post common.DatabasePost
 	err := db.One(db.FindPost(req.ID).Default(nil), &post)
 	if err != nil && err != r.ErrEmptyResult {
 		return err

@@ -7,11 +7,11 @@ import (
 
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
-var genericImage = &types.Image{
-	ImageCommon: types.ImageCommon{
+var genericImage = &common.Image{
+	ImageCommon: common.ImageCommon{
 		SHA1: "foo",
 	},
 }
@@ -180,13 +180,13 @@ func setupPosts(t *testing.T) {
 			"a":  7,
 		},
 	})
-	assertInsert(t, "threads", types.DatabaseThread{
+	assertInsert(t, "threads", common.DatabaseThread{
 		ID:    1,
 		Board: "a",
 	})
-	assertInsert(t, "posts", types.DatabasePost{
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
+	assertInsert(t, "posts", common.DatabasePost{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
 				ID: 1,
 			},
 			Board: "a",
@@ -310,30 +310,30 @@ func TestServeStaffPosition(t *testing.T) {
 func TestServeBoardTimeStamps(t *testing.T) {
 	setBoards(t, "a", "c")
 	assertTableClear(t, "posts")
-	assertInsert(t, "posts", []types.DatabasePost{
+	assertInsert(t, "posts", []common.DatabasePost{
 		{
 			LastUpdated: 1,
-			StandalonePost: types.StandalonePost{
+			StandalonePost: common.StandalonePost{
 				Board: "a",
-				Post: types.Post{
+				Post: common.Post{
 					ID: 11,
 				},
 			},
 		},
 		{
 			LastUpdated: 2,
-			StandalonePost: types.StandalonePost{
+			StandalonePost: common.StandalonePost{
 				Board: "a",
-				Post: types.Post{
+				Post: common.Post{
 					ID: 22,
 				},
 			},
 		},
 		{
 			LastUpdated: 3,
-			StandalonePost: types.StandalonePost{
+			StandalonePost: common.StandalonePost{
 				Board: "c",
-				Post: types.Post{
+				Post: common.Post{
 					ID: 33,
 				},
 			},

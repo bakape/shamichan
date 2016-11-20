@@ -140,7 +140,7 @@ func TestNotLoggedIn(t *testing.T) {
 	t.Parallel()
 
 	cl := new(Client)
-	fns := [...]handler{logOut, logOutAll, changePassword}
+	fns := [...]handler{logOut, logOutAll}
 	for _, fn := range fns {
 		if err := fn(nil, cl); err != errNotLoggedIn {
 			UnexpectedError(t, err)
@@ -319,46 +319,6 @@ func TestLogOutAll(t *testing.T) {
 	}
 	user.Sessions = []auth.Session{}
 	AssertDeepEquals(t, res, user)
-}
-
-func TestChangePassword(t *testing.T) {
-	assertTableClear(t, "accounts")
-
-	const (
-		id  = "123"
-		old = "123456"
-		new = "654321"
-	)
-	hash, err := auth.BcryptHash(old, 10)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := db.RegisterAccount(id, hash); err != nil {
-		t.Fatal(err)
-	}
-
-	// Wrong password
-	req := passwordChangeRequest{
-		Old: "1234567",
-		New: new,
-	}
-	assertLoggedInResponse(t, req, changePassword, id, "382")
-
-	// Correct password
-	req = passwordChangeRequest{
-		Old: old,
-		New: new,
-	}
-	assertLoggedInResponse(t, req, changePassword, id, "380")
-
-	// Assert new hash matches new password
-	hash, err = db.GetLoginHash(id)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := auth.BcryptCompare(new, hash); err != nil {
-		t.Fatal(err)
-	}
 }
 
 func assertLoggedInResponse(

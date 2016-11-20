@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 const fileCreationFlags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
@@ -14,10 +14,10 @@ const fileCreationFlags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
 // Only used in tests, but we still need them exported
 var (
 	//  StdJPEG is a JPEG sample image standard struct. Only used in tests.
-	StdJPEG = types.Image{
-		ImageCommon: types.ImageCommon{
+	StdJPEG = common.Image{
+		ImageCommon: common.ImageCommon{
 			SHA1:     "012a2f912c9ee93ceb0ccb8684a29ec571990a94",
-			FileType: types.JPEG,
+			FileType: common.JPEG,
 			Dims:     StdDims["jpeg"],
 			MD5:      "60e41092581f7b329b057b8402caa8a7",
 			Size:     300792,
@@ -38,10 +38,10 @@ var (
 // GetFilePaths generates file paths of the source file and its thumbnail
 func GetFilePaths(name string, fileType uint8) (paths [2]string) {
 	thumbExtension := "png"
-	if fileType == types.JPEG {
+	if fileType == common.JPEG {
 		thumbExtension = "jpg"
 	}
-	paths[0] = fmt.Sprintf("images/src/%s.%s", name, types.Extensions[fileType])
+	paths[0] = fmt.Sprintf("images/src/%s.%s", name, common.Extensions[fileType])
 	paths[1] = fmt.Sprintf("images/thumb/%s.%s", name, thumbExtension)
 
 	for i := range paths {

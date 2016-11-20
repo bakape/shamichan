@@ -6,14 +6,12 @@ import (
 
 	"github.com/aquilax/tripcode"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/common"
 )
 
 var (
-	errNoPostPassword      = errors.New("no post password")
-	errNoSubject           = errors.New("no subject")
-	errNameTooLong         = ErrTooLong("name")
-	errSubjectTooLong      = ErrTooLong("subject")
-	errPostPasswordTooLong = ErrTooLong("post password")
+	errNoPostPassword = errors.New("no post password")
+	errNoSubject      = errors.New("no subject")
 )
 
 // ParseName parses the name field into a name and tripcode, if any
@@ -21,8 +19,8 @@ func ParseName(name string) (string, string, error) {
 	if name == "" {
 		return name, name, nil
 	}
-	if len(name) > maxLengthName {
-		return "", "", errNameTooLong
+	if len(name) > common.MaxLenName {
+		return "", "", common.ErrNameTooLong
 	}
 	name = strings.TrimSpace(name)
 
@@ -46,15 +44,15 @@ func ParseSubject(s string) (string, error) {
 	if s == "" {
 		return s, errNoSubject
 	}
-	if len(s) > maxLengthSubject {
-		return s, errSubjectTooLong
+	if len(s) > common.MaxLenSubject {
+		return s, common.ErrSubjectTooLong
 	}
 	return strings.TrimSpace(s), nil
 }
 
 // FormatEmail validates and checks
 func FormatEmail(email string) string {
-	if email == "" || len(email) > maxLengthEmail {
+	if email == "" || len(email) > common.MaxLenEmail {
 		return ""
 	}
 	return strings.TrimSpace(email)
@@ -66,8 +64,8 @@ func VerifyPostPassword(s string) error {
 	if s == "" {
 		return errNoPostPassword
 	}
-	if len(s) > maxLengthPostPassword {
-		return errPostPasswordTooLong
+	if len(s) > common.MaxLenPostPassword {
+		return common.ErrPostPasswordTooLong
 	}
 	return nil
 }

@@ -5,17 +5,17 @@ import (
 	"testing"
 
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
 func TestReader(t *testing.T) {
 	assertTableClear(t, "posts", "threads", "main")
 
-	assertInsert(t, "posts", []types.DatabasePost{
+	assertInsert(t, "posts", []common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 1,
 				},
 				OP:    1,
@@ -25,9 +25,9 @@ func TestReader(t *testing.T) {
 			Log:         [][]byte{{1, 2, 3}},
 		},
 		{
-			StandalonePost: types.StandalonePost{
+			StandalonePost: common.StandalonePost{
 
-				Post: types.Post{
+				Post: common.Post{
 					ID:   2,
 					Body: "foo",
 				},
@@ -38,8 +38,8 @@ func TestReader(t *testing.T) {
 			Log:         [][]byte{{3, 4, 5}},
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 4,
 				},
 				OP:    1,
@@ -49,8 +49,8 @@ func TestReader(t *testing.T) {
 			Log:         [][]byte{{1}},
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 3,
 				},
 				OP:    3,
@@ -61,7 +61,7 @@ func TestReader(t *testing.T) {
 		},
 	})
 
-	assertInsert(t, "threads", []types.DatabaseThread{
+	assertInsert(t, "threads", []common.DatabaseThread{
 		{
 			ID:      1,
 			Board:   "a",
@@ -100,13 +100,13 @@ func testGetPost(t *testing.T) {
 	if err != r.ErrEmptyResult {
 		UnexpectedError(t, err)
 	}
-	if !reflect.DeepEqual(post, types.StandalonePost{}) {
+	if !reflect.DeepEqual(post, common.StandalonePost{}) {
 		t.Errorf("post not empty: %#v", post)
 	}
 
 	// Valid read
-	std := types.StandalonePost{
-		Post: types.Post{
+	std := common.StandalonePost{
+		Post: common.Post{
 			ID:   2,
 			Body: "foo",
 		},
@@ -123,9 +123,9 @@ func testGetPost(t *testing.T) {
 func testGetAllBoard(t *testing.T) {
 	t.Parallel()
 
-	std := types.Board{
+	std := common.Board{
 		Ctr: 3,
-		Threads: types.BoardThreads{
+		Threads: common.BoardThreads{
 			{
 				ID:          1,
 				PostCtr:     3,
@@ -153,14 +153,14 @@ func testGetBoard(t *testing.T) {
 
 	cases := [...]struct {
 		name, id string
-		std      types.Board
+		std      common.Board
 	}{
 		{
 			name: "full",
 			id:   "c",
-			std: types.Board{
+			std: common.Board{
 				Ctr: 1,
-				Threads: types.BoardThreads{
+				Threads: common.BoardThreads{
 					{
 						ID:          3,
 						PostCtr:     1,
@@ -173,7 +173,7 @@ func testGetBoard(t *testing.T) {
 		{
 			name: "empty",
 			id:   "z",
-			std: types.Board{
+			std: common.Board{
 				Ctr:     0,
 				Threads: nil,
 			},
@@ -197,14 +197,14 @@ func testGetBoard(t *testing.T) {
 func testGetThread(t *testing.T) {
 	t.Parallel()
 
-	thread1 := types.Thread{
+	thread1 := common.Thread{
 		PostCtr:     3,
 		LastUpdated: 3,
-		Post: types.Post{
+		Post: common.Post{
 			ID: 1,
 		},
 		Board: "a",
-		Posts: []types.Post{
+		Posts: []common.Post{
 			{
 				ID:   2,
 				Body: "foo",
@@ -221,7 +221,7 @@ func testGetThread(t *testing.T) {
 		name  string
 		id    int64
 		lastN int
-		std   *types.Thread
+		std   *common.Thread
 		err   error
 	}{
 		{
@@ -238,14 +238,14 @@ func testGetThread(t *testing.T) {
 		{
 			name: "no replies ;_;",
 			id:   3,
-			std: &types.Thread{
+			std: &common.Thread{
 				PostCtr: 1,
-				Post: types.Post{
+				Post: common.Post{
 					ID: 3,
 				},
 				Board:       "c",
 				LastUpdated: 4,
-				Posts:       []types.Post{},
+				Posts:       []common.Post{},
 			},
 		},
 		{

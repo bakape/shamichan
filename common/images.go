@@ -1,4 +1,4 @@
-package types
+package common
 
 // Supported file formats
 const (

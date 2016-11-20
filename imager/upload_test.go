@@ -17,7 +17,7 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -88,7 +88,7 @@ func newJPEGRequest(t *testing.T) *http.Request {
 	return req
 }
 
-func getImageRecord(t *testing.T, id string) (res types.ImageCommon) {
+func getImageRecord(t *testing.T, id string) (res common.ImageCommon) {
 	if err := db.One(db.GetImage(id), &res); err != nil {
 		t.Fatal(err)
 	}
@@ -144,7 +144,7 @@ func TestDetectFileType(t *testing.T) {
 	t.Parallel()
 
 	// Supported file types
-	for c, e := range types.Extensions {
+	for c, e := range common.Extensions {
 		code := c
 		ext := e
 		t.Run(ext, func(t *testing.T) {
@@ -212,7 +212,7 @@ func TestSuccessfulFormParse(t *testing.T) {
 func TestWrongFileType(t *testing.T) {
 	data := readSample(t, "sample.txt")
 
-	code, _, err := newThumbnail(data, types.ImageCommon{})
+	code, _, err := newThumbnail(data, common.ImageCommon{})
 
 	if s := fmt.Sprint(err); !strings.HasPrefix(s, "unsupported file type") {
 		UnexpectedError(t, err)
@@ -229,18 +229,18 @@ func TestNewThumbnail(t *testing.T) {
 	NewImageUpload(rec, req)
 	assertCode(t, rec.Code, 200)
 
-	std := types.ProtoImage{
+	std := common.ProtoImage{
 		ImageCommon: assets.StdJPEG.ImageCommon,
 		Posts:       1,
 	}
-	var img types.ProtoImage
+	var img common.ProtoImage
 	if err := db.One(r.Table("images").Get(std.SHA1), &img); err != nil {
 		t.Fatal(err)
 	}
 	AssertDeepEquals(t, img, std)
 
 	assertImageToken(t, rec.Body.String(), std.SHA1, assets.StdJPEG.Name)
-	assertFiles(t, "sample.jpg", std.SHA1, types.JPEG)
+	assertFiles(t, "sample.jpg", std.SHA1, common.JPEG)
 }
 
 func TestAPNGThumbnailing(t *testing.T) {
@@ -252,7 +252,7 @@ func TestAPNGThumbnailing(t *testing.T) {
 		t.Run(ext, func(t *testing.T) {
 			t.Parallel()
 
-			img := types.ImageCommon{
+			img := common.ImageCommon{
 				SHA1: ext,
 			}
 			data := readSample(t, "sample."+ext)

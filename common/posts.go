@@ -1,5 +1,6 @@
-// Package types contains common shared types used throughout the project
-package types
+// Package common contains common shared types, variables and constants used
+// throughout the project
+package common
 
 import (
 	"bytes"

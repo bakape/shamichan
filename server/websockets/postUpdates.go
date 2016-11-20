@@ -9,7 +9,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
@@ -54,18 +54,18 @@ type spliceResponse struct {
 // a post
 type linkMessage struct {
 	ID    int64         `json:"id"`
-	Links types.LinkMap `json:"links"`
+	Links common.LinkMap `json:"links"`
 }
 
 // Message sent to all clients to inject a command result into a model
 type commandMessage struct {
 	ID int64 `json:"id"`
-	types.Command
+	common.Command
 }
 
 // Message that signals and insertion of an image into an existing post
 type imageMessage struct {
-	types.Image
+	common.Image
 	ID int64 `json:"id"`
 }
 
@@ -97,8 +97,8 @@ func appendRune(data []byte, c *Client) error {
 	} else if !has {
 		return nil
 	}
-	if c.openPost.bodyLength+1 > parser.MaxLengthBody {
-		return parser.ErrBodyTooLong
+	if c.openPost.bodyLength+1 > common.MaxLenBody {
+		return common.ErrBodyTooLong
 	}
 	var char rune
 	if err := decodeMessage(data, &char); err != nil {
@@ -185,7 +185,7 @@ func parseLine(c *Client, insertNewline bool) error {
 }
 
 // Write a hash command to the database
-func writeCommand(comm types.Command, c *Client) error {
+func writeCommand(comm common.Command, c *Client) error {
 	msg, err := EncodeMessage(MessageCommand, commandMessage{
 		ID:      c.openPost.id,
 		Command: comm,
@@ -193,12 +193,12 @@ func writeCommand(comm types.Command, c *Client) error {
 	if err != nil {
 		return err
 	}
-	q := r.Row.Field("commands").Default([]types.Command{}).Append(comm)
+	q := r.Row.Field("commands").Default([]common.Command{}).Append(comm)
 	return c.updatePost("commands", q, msg)
 }
 
 // Write new links to other posts to the database
-func writeLinks(links types.LinkMap, c *Client) error {
+func writeLinks(links common.LinkMap, c *Client) error {
 	msg, err := EncodeMessage(MessageLink, linkMessage{
 		ID:    c.openPost.id,
 		Links: links,
@@ -229,7 +229,7 @@ func writeLinks(links types.LinkMap, c *Client) error {
 func writeBacklink(id, op int64, board string, destID int64) error {
 	msg, err := EncodeMessage(MessageBacklink, linkMessage{
 		ID: destID,
-		Links: types.LinkMap{
+		Links: common.LinkMap{
 			id: {
 				OP:    op,
 				Board: board,
@@ -241,8 +241,8 @@ func writeBacklink(id, op int64, board string, destID int64) error {
 	}
 
 	update := map[string]interface{}{
-		"backlinks": map[string]types.Link{
-			util.IDToString(id): types.Link{
+		"backlinks": map[string]common.Link{
+			util.IDToString(id): common.Link{
 				OP:    op,
 				Board: board,
 			},
@@ -318,7 +318,7 @@ func spliceText(data []byte, c *Client) error {
 		return errInvalidSpliceCoords
 	case req.Len == 0 && len(req.Text) == 0:
 		return errSpliceNOOP // This does nothing. Client-side error.
-	case len(req.Text) > parser.MaxLengthBody:
+	case len(req.Text) > common.MaxLenBody:
 		return errSpliceTooLong // Nice try, kid
 	}
 
@@ -371,12 +371,12 @@ func spliceLine(req spliceRequest, c *Client) error {
 	}
 
 	// Goes over max post length. Trim the end.
-	exceeding := c.openPost.bodyLength - parser.MaxLengthBody
+	exceeding := c.openPost.bodyLength - common.MaxLenBody
 	if exceeding > 0 {
 		end = end[:len(end)-exceeding]
 		res.Len = -1
 		res.Text = string(end)
-		c.openPost.bodyLength = parser.MaxLengthBody
+		c.openPost.bodyLength = common.MaxLenBody
 	}
 
 	c.openPost.Reset()

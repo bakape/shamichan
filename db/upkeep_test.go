@@ -8,7 +8,7 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -80,10 +80,10 @@ func TestOpenPostClosing(t *testing.T) {
 
 	tooOld := time.Now().Add(-time.Minute * 31).Unix()
 	log := [][]byte{[]byte{1, 2, 3}}
-	posts := []types.DatabasePost{
+	posts := []common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID:      1,
 					Editing: true,
 					Time:    tooOld,
@@ -92,8 +92,8 @@ func TestOpenPostClosing(t *testing.T) {
 			Log: log,
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID:      2,
 					Editing: true,
 					Time:    time.Now().Unix(),
@@ -160,10 +160,10 @@ func TestImageTokenExpiry(t *testing.T) {
 	assertTableClear(t, "images")
 
 	const SHA1 = "123"
-	assertInsert(t, "images", types.ProtoImage{
-		ImageCommon: types.ImageCommon{
+	assertInsert(t, "images", common.ProtoImage{
+		ImageCommon: common.ImageCommon{
 			SHA1:     "123",
-			FileType: types.JPEG,
+			FileType: common.JPEG,
 		},
 		Posts: 7,
 	})
@@ -209,22 +209,22 @@ func TestDeleteThread(t *testing.T) {
 func deleteThreadWithoutImages(t *testing.T) {
 	t.Parallel()
 
-	assertInsert(t, "threads", types.DatabaseThread{
+	assertInsert(t, "threads", common.DatabaseThread{
 		ID: 1,
 	})
 
-	posts := [...]types.DatabasePost{
+	posts := [...]common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 1,
 				},
 				OP: 1,
 			},
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 2,
 				},
 				OP: 1,
@@ -271,15 +271,15 @@ func deleteMissingThread(t *testing.T) {
 func deleteThreadWithImages(t *testing.T) {
 	t.Parallel()
 
-	images := [...]types.ProtoImage{
+	images := [...]common.ProtoImage{
 		{
-			ImageCommon: types.ImageCommon{
+			ImageCommon: common.ImageCommon{
 				SHA1: "111",
 			},
 			Posts: 7,
 		},
 		{
-			ImageCommon: types.ImageCommon{
+			ImageCommon: common.ImageCommon{
 				SHA1: "122",
 			},
 			Posts: 8,
@@ -287,18 +287,18 @@ func deleteThreadWithImages(t *testing.T) {
 	}
 	assertInsert(t, "images", images)
 
-	assertInsert(t, "threads", types.DatabaseThread{
+	assertInsert(t, "threads", common.DatabaseThread{
 		ID: 11,
 	})
 
-	posts := [...]types.DatabasePost{
+	posts := [...]common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
+			StandalonePost: common.StandalonePost{
 				OP: 11,
-				Post: types.Post{
+				Post: common.Post{
 					ID: 11,
-					Image: &types.Image{
-						ImageCommon: types.ImageCommon{
+					Image: &common.Image{
+						ImageCommon: common.ImageCommon{
 							SHA1: "111",
 						},
 					},
@@ -306,12 +306,12 @@ func deleteThreadWithImages(t *testing.T) {
 			},
 		},
 		{
-			StandalonePost: types.StandalonePost{
+			StandalonePost: common.StandalonePost{
 				OP: 11,
-				Post: types.Post{
+				Post: common.Post{
 					ID: 12,
-					Image: &types.Image{
-						ImageCommon: types.ImageCommon{
+					Image: &common.Image{
+						ImageCommon: common.ImageCommon{
 							SHA1: "122",
 						},
 					},
@@ -425,7 +425,7 @@ func testDeleteUnusedBoards(t *testing.T) {
 	}
 	assertInsert(t, "boards", boards)
 
-	threads := [...]types.DatabaseThread{
+	threads := [...]common.DatabaseThread{
 		{
 			ID:    1,
 			Board: "a",
@@ -437,10 +437,10 @@ func testDeleteUnusedBoards(t *testing.T) {
 	}
 	assertInsert(t, "threads", threads)
 
-	posts := [...]types.DatabasePost{
+	posts := [...]common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID:   1,
 					Time: expired.Unix(),
 				},
@@ -449,8 +449,8 @@ func testDeleteUnusedBoards(t *testing.T) {
 			},
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID:   3,
 					Time: expired.Unix(),
 				},
@@ -459,8 +459,8 @@ func testDeleteUnusedBoards(t *testing.T) {
 			},
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID:   4,
 					Time: fresh.Unix(),
 				},
@@ -518,14 +518,14 @@ func TestDeleteOldThreads(t *testing.T) {
 		}
 	})
 
-	assertInsert(t, "threads", []types.DatabaseThread{
+	assertInsert(t, "threads", []common.DatabaseThread{
 		{ID: 1},
 		{ID: 2},
 	})
-	assertInsert(t, "posts", []types.DatabasePost{
+	assertInsert(t, "posts", []common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID:   1,
 					Time: time.Now().Add(-eightDays).Unix(),
 				},
@@ -533,8 +533,8 @@ func TestDeleteOldThreads(t *testing.T) {
 			},
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID:   2,
 					Time: time.Now().Unix(),
 				},

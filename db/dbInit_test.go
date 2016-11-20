@@ -7,7 +7,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -215,17 +215,17 @@ func TestUpgrade15to16(t *testing.T) {
 		},
 	})
 
-	stdThreads := []types.DatabaseThread{
+	stdThreads := []common.DatabaseThread{
 		{
 			ID:    11,
 			Board: "a",
 		},
 	}
 	now := time.Now().Unix()
-	stdPosts := []types.DatabasePost{
+	stdPosts := []common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID:   11,
 					Body: "foo",
 				},
@@ -235,8 +235,8 @@ func TestUpgrade15to16(t *testing.T) {
 			Log: [][]byte{},
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID:   12,
 					Body: "bar",
 				},
@@ -252,8 +252,8 @@ func TestUpgrade15to16(t *testing.T) {
 	}
 
 	var (
-		threads []types.DatabaseThread
-		posts   []types.DatabasePost
+		threads []common.DatabaseThread
+		posts   []common.DatabasePost
 	)
 	if err := All(r.Table("threads"), &threads); err != nil {
 		t.Fatal(err)

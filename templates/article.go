@@ -8,13 +8,13 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 // Allows passing additional information to thread-related templates
 type postContext struct {
 	bytes.Buffer
-	types.Post
+	common.Post
 	state struct { // Body parser state
 		spoiler, quote bool
 		iDice          int
@@ -25,7 +25,7 @@ type postContext struct {
 }
 
 func wrapPost(
-	p types.Post,
+	p common.Post,
 	op int64,
 	board string,
 	lang lang.Pack,
@@ -39,9 +39,9 @@ func wrapPost(
 }
 
 // Returns the HTTP path to the thumbnail of an image
-func thumbPath(img types.Image) string {
+func thumbPath(img common.Image) string {
 	var ext string
-	if img.FileType == types.JPEG {
+	if img.FileType == common.JPEG {
 		ext = "jpg"
 	} else {
 		ext = "png"
@@ -50,16 +50,16 @@ func thumbPath(img types.Image) string {
 }
 
 // Returns the HTTP path to the source file
-func sourcePath(img types.Image) string {
+func sourcePath(img common.Image) string {
 	return fmt.Sprintf(
 		"/images/src/%s.%s",
 		img.SHA1,
-		types.Extensions[img.FileType],
+		common.Extensions[img.FileType],
 	)
 }
 
 func extension(fileType uint8) string {
-	return types.Extensions[fileType]
+	return common.Extensions[fileType]
 }
 
 // Renders the post creation time field

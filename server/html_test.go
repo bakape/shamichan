@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 func TestThreadHTML(t *testing.T) {
 	assertTableClear(t, "threads")
-	assertInsert(t, "threads", types.DatabaseThread{
+	assertInsert(t, "threads", common.DatabaseThread{
 		ID:    1,
 		Board: "a",
 	})
@@ -63,14 +63,6 @@ func TestBoardHTML(t *testing.T) {
 			assertCode(t, rec, c.code)
 		})
 	}
-}
-
-func TestBoardNavigation(t *testing.T) {
-	(*config.Get()).DefaultLang = "en_GB"
-
-	rec, req := newPair("/forms/boardNavigation")
-	router.ServeHTTP(rec, req)
-	assertCode(t, rec, 200)
 }
 
 func TestOwnedBoardSelection(t *testing.T) {
@@ -142,12 +134,27 @@ func TestBoardConfigurationForm(t *testing.T) {
 	assertCode(t, rec, 200)
 }
 
-func TestBoardCreationForm(t *testing.T) {
+func TestStaticTemplates(t *testing.T) {
 	(*config.Get()).DefaultLang = "en_GB"
 
-	rec, req := newPair("/forms/createBoard")
-	router.ServeHTTP(rec, req)
-	assertCode(t, rec, 200)
+	cases := [...]struct {
+		name, url string
+	}{
+		{"create board", "/forms/createBoard"},
+		{"board navigation panel", "/forms/boardNavigation"},
+		{"change password", "/forms/changePassword"},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			rec, req := newPair(c.url)
+			router.ServeHTTP(rec, req)
+			assertCode(t, rec, 200)
+		})
+	}
 }
 
 func TestServerConfigurationForm(t *testing.T) {

@@ -11,7 +11,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -55,22 +55,22 @@ func init() {
 }
 
 // Parse a matched hash command
-func parseCommand(match []byte, board string) (types.Command, error) {
+func parseCommand(match []byte, board string) (common.Command, error) {
 
 	// TODO: #syncwatch
 
-	var com types.Command
+	var com common.Command
 	switch {
 
 	// Coin flip
 	case bytes.Equal(match, flipCommand):
-		com.Type = types.Flip
+		com.Type = common.Flip
 		com.Val = rand.Intn(2) == 0
 		return com, nil
 
 	// 8ball
 	case bytes.Equal(match, eightballCommand):
-		com.Type = types.EightBall
+		com.Type = common.EightBall
 
 		// Select random string from the the 8ball answer array
 		answers := config.GetBoardConfigs(board).Eightball
@@ -90,7 +90,7 @@ func parseCommand(match []byte, board string) (types.Command, error) {
 			return com, nil
 		}
 		var res int
-		com.Type = types.Pyu
+		com.Type = common.Pyu
 		err := db.One(pyuQuery, &res)
 		com.Val = res
 		return com, err
@@ -101,7 +101,7 @@ func parseCommand(match []byte, board string) (types.Command, error) {
 			return com, nil
 		}
 		var res int
-		com.Type = types.Pcount
+		com.Type = common.Pcount
 		err := db.One(pcountQuery, &res)
 		com.Val = res
 		return com, err
@@ -111,7 +111,7 @@ func parseCommand(match []byte, board string) (types.Command, error) {
 		val, err := parseDice(match)
 		switch err {
 		case nil:
-			com.Type = types.Dice
+			com.Type = common.Dice
 			com.Val = val
 			return com, nil
 		case errTooManyRolls, errDieTooBig: // Consider command invalid

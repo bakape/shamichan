@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
@@ -38,7 +38,7 @@ type allocationToken struct {
 // returns it, if it exists. Otherwise, returns an empty struct. To ensure the
 // image is not deallocated by another thread/process, the reference counter
 // of the image will be incremented.
-func FindImageThumb(hash string) (img types.ImageCommon, err error) {
+func FindImageThumb(hash string) (img common.ImageCommon, err error) {
 	query := GetImage(hash).
 		Update(incrementImageRefCount, r.UpdateOpts{ReturnChanges: true}).
 		Field("changes").
@@ -72,7 +72,7 @@ func NewImageToken(SHA1 string) (code int, token string, err error) {
 // UseImageToken deletes a document from the "imageTokens" table and uses and
 // returns the Image document from the "images" table, the token was created
 // for. If no token exists, returns ErrInvalidToken.
-func UseImageToken(id string) (img types.ImageCommon, err error) {
+func UseImageToken(id string) (img common.ImageCommon, err error) {
 	q := r.
 		Table("imageTokens").
 		Get(id).
@@ -134,7 +134,7 @@ func DeallocateImage(id string) error {
 
 // AllocateImage allocates an image's file resources to their respective served
 // directories and write its data to the database
-func AllocateImage(src, thumb []byte, img types.ImageCommon) error {
+func AllocateImage(src, thumb []byte, img common.ImageCommon) error {
 	err := assets.Write(img.SHA1, img.FileType, src, thumb)
 	if err != nil {
 		return cleanUpFailedAllocation(img, err)
@@ -144,7 +144,7 @@ func AllocateImage(src, thumb []byte, img types.ImageCommon) error {
 	// same time by multiple clients.
 	query := r.
 		Table("images").
-		Insert(types.ProtoImage{
+		Insert(common.ProtoImage{
 			ImageCommon: img,
 			Posts:       1,
 		})
@@ -156,7 +156,7 @@ func AllocateImage(src, thumb []byte, img types.ImageCommon) error {
 }
 
 // Delete any dangling image files in case of a failed image allocation
-func cleanUpFailedAllocation(img types.ImageCommon, err error) error {
+func cleanUpFailedAllocation(img common.ImageCommon, err error) error {
 	delErr := assets.Delete(img.SHA1, img.FileType)
 	if delErr != nil {
 		err = util.WrapError(err.Error(), delErr)

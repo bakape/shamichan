@@ -6,7 +6,7 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -19,14 +19,14 @@ func TestSpoilerImage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertInsert(t, "posts", []types.DatabasePost{
+	assertInsert(t, "posts", []common.DatabasePost{
 		{
 			Password: hash,
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 1,
-					Image: &types.Image{
-						ImageCommon: types.ImageCommon{
+					Image: &common.Image{
+						ImageCommon: common.ImageCommon{
 							SHA1: "123",
 						},
 					},
@@ -35,19 +35,19 @@ func TestSpoilerImage(t *testing.T) {
 		},
 		{
 			Password: hash,
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 2,
 				},
 			},
 		},
 		{
 			Password: hash,
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 3,
-					Image: &types.Image{
-						ImageCommon: types.ImageCommon{
+					Image: &common.Image{
+						ImageCommon: common.ImageCommon{
 							SHA1: "123",
 						},
 						Spoiler: true,
@@ -57,11 +57,11 @@ func TestSpoilerImage(t *testing.T) {
 		},
 		{
 			Password: hash,
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 4,
-					Image: &types.Image{
-						ImageCommon: types.ImageCommon{
+					Image: &common.Image{
+						ImageCommon: common.ImageCommon{
 							SHA1: "123",
 						},
 					},

@@ -13,9 +13,8 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/parser"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 )
 
 // Sample wall of text
@@ -57,9 +56,9 @@ var (
 		"bar",
 	}
 
-	samplePost = types.DatabasePost{
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
+	samplePost = common.DatabasePost{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
 				Editing: true,
 				ID:      2,
 				Body:    "abc",
@@ -73,18 +72,18 @@ var (
 
 func TestWriteBacklinks(t *testing.T) {
 	assertTableClear(t, "posts")
-	assertInsert(t, "posts", []types.DatabasePost{
+	assertInsert(t, "posts", []common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 1,
 				},
 			},
 			Log: dummyLog,
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 2,
 				},
 			},
@@ -99,7 +98,7 @@ func TestWriteBacklinks(t *testing.T) {
 	}
 
 	// Assert each existing post had a backlink inserted
-	std := types.Link{
+	std := common.Link{
 		OP:    9,
 		Board: "a",
 	}
@@ -109,7 +108,7 @@ func TestWriteBacklinks(t *testing.T) {
 		t.Run(fmt.Sprintf("post %d", id), func(t *testing.T) {
 			t.Parallel()
 
-			var link types.Link
+			var link common.Link
 			q := db.FindPost(id).Field("backlinks").Field("10")
 			if err := db.One(q, &link); err != nil {
 				t.Fatal(err)
@@ -120,7 +119,7 @@ func TestWriteBacklinks(t *testing.T) {
 
 			msg, err := EncodeMessage(MessageBacklink, linkMessage{
 				ID: id,
-				Links: types.LinkMap{
+				Links: common.LinkMap{
 					10: {
 						OP:    9,
 						Board: "a",
@@ -192,9 +191,9 @@ func TestAppendBodyTooLong(t *testing.T) {
 	cl.openPost = openPost{
 		id:         1,
 		time:       time.Now().Unix(),
-		bodyLength: parser.MaxLengthBody,
+		bodyLength: common.MaxLenBody,
 	}
-	if err := appendRune(nil, cl); err != parser.ErrBodyTooLong {
+	if err := appendRune(nil, cl); err != common.ErrBodyTooLong {
 		UnexpectedError(t, err)
 	}
 }
@@ -308,10 +307,10 @@ func TestAppendNewline(t *testing.T) {
 
 func TestAppendNewlineWithHashCommand(t *testing.T) {
 	assertTableClear(t, "posts")
-	assertInsert(t, "posts", types.DatabasePost{
+	assertInsert(t, "posts", common.DatabasePost{
 		Log: dummyLog,
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
 				ID:   2,
 				Body: "#flip",
 			},
@@ -345,12 +344,12 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 	t.Run("command type", func(t *testing.T) {
 		t.Parallel()
 
-		var typ types.CommandType
+		var typ common.CommandType
 		q := db.FindPost(2).Field("commands").AtIndex(0).Field("type")
 		if err := db.One(q, &typ); err != nil {
 			t.Fatal(err)
 		}
-		if typ != types.Flip {
+		if typ != common.Flip {
 			t.Errorf("unexpected command type: %d", typ)
 		}
 	})
@@ -386,10 +385,10 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 
 func TestAppendNewlineWithLinks(t *testing.T) {
 	assertTableClear(t, "posts")
-	assertInsert(t, "posts", []types.DatabasePost{
+	assertInsert(t, "posts", []common.DatabasePost{
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID:   2,
 					Body: " >>22 ",
 				},
@@ -399,8 +398,8 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 			Log: [][]byte{},
 		},
 		{
-			StandalonePost: types.StandalonePost{
-				Post: types.Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
 					ID: 22,
 				},
 				OP:    21,
@@ -431,7 +430,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 		id    int64
 		log   []string
 		field string
-		val   types.LinkMap
+		val   common.LinkMap
 	}{
 		{
 			id: 2,
@@ -440,7 +439,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 				`03[2,10]`,
 			},
 			field: "links",
-			val: types.LinkMap{
+			val: common.LinkMap{
 				22: {
 					OP:    21,
 					Board: "c",
@@ -453,7 +452,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 				`08{"id":22,"links":{"2":{"op":1,"board":"a"}}}`,
 			},
 			field: "backlinks",
-			val: types.LinkMap{
+			val: common.LinkMap{
 				2: {
 					OP:    1,
 					Board: "a",
@@ -469,7 +468,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 
 			assertRepLog(t, s.id, s.log)
 
-			var links types.LinkMap
+			var links common.LinkMap
 			q := db.FindPost(s.id).Field(s.field)
 			if err := db.One(q, &links); err != nil {
 				t.Fatal(err)
@@ -736,9 +735,9 @@ func TestSplice(t *testing.T) {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			assertTableClear(t, "posts")
-			assertInsert(t, "posts", types.DatabasePost{
-				StandalonePost: types.StandalonePost{
-					Post: types.Post{
+			assertInsert(t, "posts", common.DatabasePost{
+				StandalonePost: common.StandalonePost{
+					Post: common.Post{
 						Editing: true,
 						ID:      2,
 						Body:    c.init,
@@ -787,9 +786,9 @@ func TestCloseOldOpenPost(t *testing.T) {
 	assertTableClear(t, "posts")
 
 	then := time.Now().Add(time.Minute * -30).Unix()
-	assertInsert(t, "posts", types.DatabasePost{
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
+	assertInsert(t, "posts", common.DatabasePost{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
 				Editing: true,
 				ID:      1,
 				Time:    then,
@@ -867,14 +866,14 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 func TestInsertImage(t *testing.T) {
 	assertTableClear(t, "posts", "threads", "images", "imageTokens")
 	setBoardConfigs(t, false)
-	assertInsert(t, "threads", types.DatabaseThread{
+	assertInsert(t, "threads", common.DatabaseThread{
 		ID:      1,
 		Board:   "a",
 		PostCtr: 1,
 	})
-	assertInsert(t, "posts", types.DatabasePost{
-		StandalonePost: types.StandalonePost{
-			Post: types.Post{
+	assertInsert(t, "posts", common.DatabasePost{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
 				ID: 2,
 			},
 			Board: "a",
@@ -906,7 +905,7 @@ func TestInsertImage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	std := types.Image{
+	std := common.Image{
 		Name:        "foo",
 		ImageCommon: stdJPEG,
 	}
@@ -920,7 +919,7 @@ func TestInsertImage(t *testing.T) {
 	assertRepLog(t, 2, []string{string(msg)})
 	assertImageCounter(t, 1, 1)
 
-	var res types.Image
+	var res common.Image
 	q := db.FindPost(2).Field("image")
 	if err := db.One(q, &res); err != nil {
 		t.Fatal(err)

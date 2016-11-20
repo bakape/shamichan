@@ -39,9 +39,6 @@ export const enum message {
 	authenticate,
 	logout,
 	logoutAll,
-	changePassword,
-
-	_, _1, // Legacy. Left to preserve numbering.
 
 	// Send new post ID to client
 	postID,

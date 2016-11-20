@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -127,7 +127,7 @@ func BcryptCompare(password string, hash []byte) error {
 
 // AuthenticateCaptcha posts a request to the SolveMedia API to authenticate a
 // captcha
-func AuthenticateCaptcha(captcha types.Captcha, ip string) bool {
+func AuthenticateCaptcha(captcha common.Captcha, ip string) bool {
 	conf := config.Get()
 
 	// Captchas disabled or running tests. Can not use API, when testing

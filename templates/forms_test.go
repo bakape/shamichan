@@ -55,3 +55,11 @@ func TestConfigureServer(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestChangePassword(t *testing.T) {
+	t.Parallel()
+	_, err := ChangePassword(lang.Packs["en_GB"])
+	if err != nil {
+		t.Fatal(err)
+	}
+}

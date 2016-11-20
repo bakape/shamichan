@@ -1,22 +1,12 @@
 import AccountFormView, { newRequest } from './common'
-import { makeFrag, inputValue } from '../util'
-import { fetchHTML } from "../fetch"
+import { inputValue } from '../util'
 
 // Panel view for creating boards
 export default class BoardCreationPanel extends AccountFormView {
 	constructor() {
 		super({ tag: "form" }, () =>
 			this.onSubmit())
-		this.render()
-	}
-
-	protected async render() {
-		const [html, err] = await fetchHTML("/forms/createBoard")
-		if (err) {
-			throw err
-		}
-		this.el.append(makeFrag(html))
-		super.render()
+		this.renderPublicForm("/forms/createBoard")
 	}
 
 	private async onSubmit() {
@@ -25,6 +15,6 @@ export default class BoardCreationPanel extends AccountFormView {
 		req["title"] = inputValue(this.el, 'boardTitle')
 		this.injectCaptcha(req)
 
-		this.postJSON("/admin/createBoard", req)
+		this.postResponse("/admin/createBoard", req)
 	}
 }

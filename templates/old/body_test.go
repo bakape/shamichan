@@ -16,8 +16,8 @@ package templates
 // 		name, in, out, string string
 // 		editing               bool
 // 		op                    int64
-// 		links                 types.LinkMap
-// 		commands              []types.Command
+// 		links                 common.LinkMap
+// 		commands              []common.Command
 // 	}{
 // 		{
 // 			name: "closed post",
@@ -73,13 +73,13 @@ package templates
 // 			in:   "#flip\n#flip",
 // 			out: "<span><strong>#flip (true)</strong><br></span>" +
 // 				"<span><strong>#flip (false)</strong><br></span>",
-// 			commands: []types.Command{
+// 			commands: []common.Command{
 // 				{
-// 					Type: types.Flip,
+// 					Type: common.Flip,
 // 					Val:  true,
 // 				},
 // 				{
-// 					Type: types.Flip,
+// 					Type: common.Flip,
 // 					Val:  false,
 // 				},
 // 			},
@@ -88,9 +88,9 @@ package templates
 // 			name: "#8ball",
 // 			in:   "#8ball",
 // 			out:  "<span><strong>#8ball (bar)</strong><br></span>",
-// 			commands: []types.Command{
+// 			commands: []common.Command{
 // 				{
-// 					Type: types.EightBall,
+// 					Type: common.EightBall,
 // 					Val:  "bar",
 // 				},
 // 			},
@@ -99,9 +99,9 @@ package templates
 // 			name: "#pyu",
 // 			in:   "#pyu",
 // 			out:  "<span><strong>#pyu (1)</strong><br></span>",
-// 			commands: []types.Command{
+// 			commands: []common.Command{
 // 				{
-// 					Type: types.Pyu,
+// 					Type: common.Pyu,
 // 					Val:  int64(1),
 // 				},
 // 			},
@@ -110,9 +110,9 @@ package templates
 // 			name: "#pcount",
 // 			in:   "#pcount",
 // 			out:  "<span><strong>#pcount (2)</strong><br></span>",
-// 			commands: []types.Command{
+// 			commands: []common.Command{
 // 				{
-// 					Type: types.Pcount,
+// 					Type: common.Pcount,
 // 					Val:  int64(2),
 // 				},
 // 			},
@@ -121,9 +121,9 @@ package templates
 // 			name: "single roll dice",
 // 			in:   "#d20",
 // 			out:  "<span><strong>#d20 (22)</strong><br></span>",
-// 			commands: []types.Command{
+// 			commands: []common.Command{
 // 				{
-// 					Type: types.Dice,
+// 					Type: common.Dice,
 // 					// This is how values are decoded from the database
 // 					Val: []interface{}{float64(22)},
 // 				},
@@ -133,9 +133,9 @@ package templates
 // 			name: "multiple roll dice",
 // 			in:   "#2d20",
 // 			out:  "<span><strong>#2d20 (22 + 33 = 55)</strong><br></span>",
-// 			commands: []types.Command{
+// 			commands: []common.Command{
 // 				{
-// 					Type: types.Dice,
+// 					Type: common.Dice,
 // 					Val:  []interface{}{float64(22), float64(33)},
 // 				},
 // 			},
@@ -144,9 +144,9 @@ package templates
 // 			name: "too many dice rolls",
 // 			in:   "#11d20",
 // 			out:  "<span>#11d20<br></span>",
-// 			commands: []types.Command{
+// 			commands: []common.Command{
 // 				{
-// 					Type: types.Dice,
+// 					Type: common.Dice,
 // 					Val:  []interface{}{float64(22), float64(33)},
 // 				},
 // 			},
@@ -155,9 +155,9 @@ package templates
 // 			name: "too many dice faces",
 // 			in:   "#2d101",
 // 			out:  "<span>#2d101<br></span>",
-// 			commands: []types.Command{
+// 			commands: []common.Command{
 // 				{
-// 					Type: types.Dice,
+// 					Type: common.Dice,
 // 					Val:  []interface{}{float64(22), float64(33)},
 // 				},
 // 			},
@@ -172,9 +172,9 @@ package templates
 // 			in:   "#flip\n#flip",
 // 			out: "<span><strong>#flip (true)</strong><br></span>" +
 // 				"<span>#flip<br></span>",
-// 			commands: []types.Command{
+// 			commands: []common.Command{
 // 				{
-// 					Type: types.Flip,
+// 					Type: common.Flip,
 // 					Val:  true,
 // 				},
 // 			},
@@ -188,7 +188,7 @@ package templates
 // 			name: "1 invalid link",
 // 			in:   ">>20",
 // 			out:  "<span><em>>>20</em><br></span>",
-// 			links: types.LinkMap{
+// 			links: common.LinkMap{
 // 				21: {
 // 					Board: "a",
 // 					OP:    21,
@@ -200,7 +200,7 @@ package templates
 // 			in:   ">>21",
 // 			out:  `<span><em><a href="#p21">>>21</a></em><br></span>`,
 // 			op:   21,
-// 			links: types.LinkMap{
+// 			links: common.LinkMap{
 // 				21: {
 // 					Board: "a",
 // 					OP:    21,
@@ -212,7 +212,7 @@ package templates
 // 			in:   ">>>>21",
 // 			out:  `<span><em>>><a href="#p21">>>21</a></em><br></span>`,
 // 			op:   21,
-// 			links: types.LinkMap{
+// 			links: common.LinkMap{
 // 				21: {
 // 					Board: "a",
 // 					OP:    21,
@@ -224,7 +224,7 @@ package templates
 // 			in:   ">>21",
 // 			out:  `<span><em><a href="/a/21?noscript=true#p21">>>>/a/21</a></em><br></span>`,
 // 			op:   22,
-// 			links: types.LinkMap{
+// 			links: common.LinkMap{
 // 				21: {
 // 					Board: "a",
 // 					OP:    21,
@@ -284,7 +284,7 @@ package templates
 // 			t.Parallel()
 
 // 			pc := &postContext{
-// 				Post: types.Post{
+// 				Post: common.Post{
 // 					Body:     c.in,
 // 					Editing:  c.editing,
 // 					Links:    c.links,

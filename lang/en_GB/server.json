@@ -295,6 +295,14 @@
 		"mature": [
 			"Mature content",
 			"Inform the user the website contains mature content on first visit"
+		],
+		"oldPassword": [
+			"Old password",
+			""
+		],
+		"newPassword": [
+			"New password",
+			""
 		]
 	},
 	"options": {
@@ -309,8 +317,6 @@
 		"configureBoard": "Configure board",
 		"configureServer": "Configure server",
 		"changePassword": "Change password",
-		"oldPassword": "Old password",
-		"newPassword": "New password",
 		"nameTaken": "Login name already taken",
 		"wrongCredentials": "Incorrect login name or password",
 		"wrongPassword": "Incorrect password",

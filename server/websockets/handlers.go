@@ -41,10 +41,6 @@ const (
 	MessageAuthenticate
 	MessageLogout
 	MessageLogOutAll
-	MessageChangePassword
-
-	_ // Legacy. Left to preserve numbering.
-	_
 
 	// Send new post ID to client
 	MessagePostID
@@ -66,22 +62,21 @@ var (
 
 	// Lookup table for message handlers
 	handlers = map[MessageType]handler{
-		MessageSynchronise:    synchronise,
-		MessageReclaim:        reclaimPost,
-		MessageRegister:       register,
-		MessageLogin:          login,
-		MessageAuthenticate:   authenticateSession,
-		MessageLogout:         logOut,
-		MessageLogOutAll:      logOutAll,
-		MessageChangePassword: changePassword,
-		MessageInsertThread:   insertThread,
-		MessageAppend:         appendRune,
-		MessageBackspace:      backspace,
-		MessageClosePost:      closePost,
-		MessageSplice:         spliceText,
-		MessageInsertPost:     insertPost,
-		MessageInsertImage:    insertImage,
-		MessageNOOP:           noop,
+		MessageSynchronise:  synchronise,
+		MessageReclaim:      reclaimPost,
+		MessageRegister:     register,
+		MessageLogin:        login,
+		MessageAuthenticate: authenticateSession,
+		MessageLogout:       logOut,
+		MessageLogOutAll:    logOutAll,
+		MessageInsertThread: insertThread,
+		MessageAppend:       appendRune,
+		MessageBackspace:    backspace,
+		MessageClosePost:    closePost,
+		MessageSplice:       spliceText,
+		MessageInsertPost:   insertPost,
+		MessageInsertImage:  insertImage,
+		MessageNOOP:         noop,
 	}
 )
 

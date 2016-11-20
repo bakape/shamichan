@@ -16,10 +16,7 @@ export default class ConfigPanel extends AccountFormView {
 
 	// Request current configuration and render the panel
 	protected async render() {
-		const res = await postJSON(
-			"/forms/configureServer",
-			newRequest(),
-		)
+		const res = await postJSON("/forms/configureServer", newRequest())
 		if (res.status !== 200) {
 			throw await res.text()
 		}
@@ -31,6 +28,6 @@ export default class ConfigPanel extends AccountFormView {
 	private async postConfigs() {
 		const req = newRequest()
 		extend(req, extractForm(this.el))
-		this.postJSON("/admin/configureServer", req)
+		this.postResponse("/admin/configureServer", req)
 	}
 }

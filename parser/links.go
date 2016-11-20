@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/types"
+	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -14,8 +14,8 @@ var linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
 
 // Extract post links from a text fragment, verify and retrieve their
 // parenthood
-func parseLinks(frag []byte) (types.LinkMap, error) {
-	var links types.LinkMap
+func parseLinks(frag []byte) (common.LinkMap, error) {
+	var links common.LinkMap
 
 	// TODO: Do this in-place w/o creating any garbage slices
 	for _, word := range bytes.Split(frag, []byte{' '}) {
@@ -46,13 +46,13 @@ func parseLinks(frag []byte) (types.LinkMap, error) {
 			return nil, err
 		}
 
-		link := types.Link{
+		link := common.Link{
 			OP:    parenthood.OP,
 			Board: parenthood.Board,
 		}
 
 		if links == nil {
-			links = types.LinkMap{id: link}
+			links = common.LinkMap{id: link}
 		} else {
 			links[id] = link
 		}
