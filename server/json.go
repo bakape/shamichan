@@ -384,3 +384,9 @@ func serveBoardTimestamps(w http.ResponseWriter, req *http.Request) {
 	}
 	serveJSON(w, req, "", ctrs)
 }
+
+// Serve map of internal file type enums to extensions. Needed for
+// version-independent backwards compatibility with external applications.
+func serveExtensionMap(w http.ResponseWriter, r *http.Request) {
+	serveJSON(w, r, "", types.Extensions)
+}
