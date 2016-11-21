@@ -19,7 +19,7 @@ export type PostLinks = { [id: number]: PostLink }
 // Data of any post. In addition to server-sent JSON includes the state
 // property.
 export interface PostData {
-	editing: boolean
+	editing?: boolean
 	image?: ImageData
 	time: number
 	id: number
@@ -44,7 +44,7 @@ export type TextState = {
 }
 
 // Types of hash command entries
-export const enum commandType { dice, flip, eightBall, syncWatch, pyu }
+export const enum commandType { dice, flip, eightBall, syncWatch, pyu, pcount }
 
 // Single hash command result delivered from the server
 export interface Command {
