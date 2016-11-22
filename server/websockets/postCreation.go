@@ -8,10 +8,10 @@ import (
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
-	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -66,7 +66,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		return err
 	}
 
-	id, now, err := ConstructThread(req, c.IP, false)
+	id, now, err := ConstructThread(req, c.ip, false)
 	if err != nil {
 		if err == errInValidCaptcha {
 			return c.sendMessage(MessageInsertThread, threadCreationResponse{
@@ -203,7 +203,7 @@ func insertPost(data []byte, c *Client) error {
 		req,
 		conf.ForcedAnon,
 		true,
-		c.IP,
+		c.ip,
 		sync.Board,
 	)
 	if err != nil {

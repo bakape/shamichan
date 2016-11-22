@@ -51,9 +51,6 @@ type Client struct {
 	// contention on Clients.
 	synced bool
 
-	// Client identity information
-	auth.Ident
-
 	// Post currently open by the client
 	openPost openPost
 
@@ -65,6 +62,9 @@ type Client struct {
 
 	// Token of an authenticated user session, if any
 	sessionToken string
+
+	// Client IP
+	ip string
 
 	// Internal message receiver channel
 	receive chan receivedMessage
@@ -109,7 +109,7 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn, req *http.Request) *Client {
 	return &Client{
-		Ident:   auth.LookUpIdent(req),
+		ip:      auth.LookUpIdent(req).IP,
 		close:   make(chan error, 2),
 		receive: make(chan receivedMessage),
 		// Allows for ~6 seconds of messages at 0.2 second intervals, until the
@@ -289,7 +289,7 @@ func (c *Client) runHandler(typ MessageType, msg []byte) error {
 
 // logError writes the client's websocket error to the error log (or stdout)
 func (c *Client) logError(err error) {
-	log.Printf("error by %s: %v\n", c.IP, err)
+	log.Printf("error by %s: %v\n", c.ip, err)
 }
 
 // Close closes a websocket connection with the provided status code and

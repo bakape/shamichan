@@ -144,7 +144,7 @@ func TestLogError(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	cl.IP = ip
+	cl.ip = ip
 
 	log := captureLog(func() {
 		cl.logError(errors.New(msg))

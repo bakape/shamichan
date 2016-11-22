@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"testing"
-
 	"strconv"
+	"testing"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"

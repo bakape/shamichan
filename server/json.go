@@ -7,11 +7,11 @@ import (
 	"strconv"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/util"
-	r "github.com/dancannon/gorethink"
+	"github.com/dancannon/gorethink"
 )
 
 var (
@@ -68,8 +68,8 @@ func writeJSON(
 // Validate the client's last N posts to display setting. To allow for better
 // caching the only valid values are 5 and 50. 5 is for index-like thread
 // previews and 50 is for short threads.
-func detectLastN(req *http.Request) int {
-	if q := req.URL.Query().Get("last"); q != "" {
+func detectLastN(r *http.Request) int {
+	if q := r.URL.Query().Get("last"); q != "" {
 		n, err := strconv.Atoi(q)
 		if err == nil && (n == 50 || n == 5) {
 			return n
@@ -104,11 +104,11 @@ func servePost(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	serveJSON(w, r, "", post)
 }
 
-func respondToJSONError(w http.ResponseWriter, req *http.Request, err error) {
-	if err == r.ErrEmptyResult {
+func respondToJSONError(w http.ResponseWriter, r *http.Request, err error) {
+	if err == gorethink.ErrEmptyResult {
 		text404(w)
 	} else {
-		text500(w, req, err)
+		text500(w, r, err)
 	}
 }
 
@@ -298,22 +298,22 @@ func serveBoardList(res http.ResponseWriter, req *http.Request) {
 
 // Fetch an array of boards a certain user holds a certain position on
 func serveStaffPositions(
-	res http.ResponseWriter,
-	req *http.Request,
-	params map[string]string,
+	w http.ResponseWriter,
+	r *http.Request,
+	p map[string]string,
 ) {
-	q := r.
+	q := gorethink.
 		Table("boards").
-		Filter(r.Row.
+		Filter(gorethink.Row.
 			Field("staff").
-			Field(params["position"]).
-			Contains(params["user"]),
+			Field(p["position"]).
+			Contains(p["user"]),
 		).
 		Field("id").
 		CoerceTo("array")
 	var boards []string
 	if err := db.All(q, &boards); err != nil {
-		text500(res, req, err)
+		text500(w, r, err)
 		return
 	}
 
@@ -322,18 +322,18 @@ func serveStaffPositions(
 		boards = []string{}
 	}
 
-	serveJSON(res, req, "", boards)
+	serveJSON(w, r, "", boards)
 }
 
 // Serve boards' last update timestamps. A board with no  posts will produce
 // zero.
-func serveBoardTimestamps(w http.ResponseWriter, req *http.Request) {
-	q := r.
+func serveBoardTimestamps(w http.ResponseWriter, r *http.Request) {
+	q := gorethink.
 		Expr(config.GetBoards()).
-		Map(func(b r.Term) r.Term {
-			return r.Object(
+		Map(func(b gorethink.Term) gorethink.Term {
+			return gorethink.Object(
 				b,
-				r.
+				gorethink.
 					Table("posts").
 					GetAllByIndex("board", b).
 					Field("lastUpdated").
@@ -341,19 +341,19 @@ func serveBoardTimestamps(w http.ResponseWriter, req *http.Request) {
 					Default(0),
 			)
 		}).
-		Reduce(func(a, b r.Term) r.Term {
+		Reduce(func(a, b gorethink.Term) gorethink.Term {
 			return a.Merge(b)
 		})
 	var ctrs map[string]uint64
 	if err := db.One(q, &ctrs); err != nil {
-		text500(w, req, err)
+		text500(w, r, err)
 		return
 	}
-	serveJSON(w, req, "", ctrs)
+	serveJSON(w, r, "", ctrs)
 }
 
 // Serve map of internal file type enums to extensions. Needed for
 // version-independent backwards compatibility with external applications.
 func serveExtensionMap(w http.ResponseWriter, r *http.Request) {
-	serveJSON(w, r, "", types.Extensions)
+	serveJSON(w, r, "", common.Extensions)
 }

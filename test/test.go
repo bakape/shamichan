@@ -4,6 +4,7 @@ package test
 import (
 	"bytes"
 	"io/ioutil"
+	"math/rand"
 	"reflect"
 	"testing"
 )
@@ -42,4 +43,13 @@ func AssertBufferEquals(t *testing.T, buf, std []byte) {
 	if !bytes.Equal(buf, std) {
 		t.Fatalf("files not equal: `%s` : `%s`", string(std), string(buf))
 	}
+}
+
+// GenString produces a random ASCII character string of passed length
+func GenString(len int) string {
+	buf := make([]byte, len)
+	for i := 0; i < len; i++ {
+		buf[i] = byte(rand.Intn(128))
+	}
+	return string(buf)
 }

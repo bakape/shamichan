@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,10 +13,10 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
-	r "github.com/dancannon/gorethink"
+	"github.com/dancannon/gorethink"
 )
 
-var adminLoginCreds = loginCredentials{
+var adminLoginCreds = sessionCreds{
 	UserID:  "admin",
 	Session: genSession(),
 }
@@ -73,8 +72,8 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 	}
 
 	rec, req := newJSONPair(t, "/admin/boardConfig", boardConfigRequest{
-		ID:               "a",
-		loginCredentials: sampleLoginCreds,
+		ID:           "a",
+		sessionCreds: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)
 	assertBody(t, rec, string(marshalJSON(t, conf)))
@@ -115,14 +114,14 @@ func TestBoardConfiguration(t *testing.T) {
 	writeSampleUser(t)
 
 	data := boardConfigSettingRequest{
-		loginCredentials: sampleLoginCreds,
-		BoardConfigs:     conf,
+		sessionCreds: sampleLoginCreds,
+		BoardConfigs: conf,
 	}
 	rec, req := newJSONPair(t, "/admin/configureBoard", data)
 	router.ServeHTTP(rec, req)
 
 	var res config.BoardConfigs
-	if err := db.One(r.Table("boards").Get(board), &res); err != nil {
+	if err := db.One(gorethink.Table("boards").Get(board), &res); err != nil {
 		t.Fatal(err)
 	}
 	AssertDeepEquals(t, res, conf)
@@ -151,7 +150,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 		{
 			"compound eightball length to big",
 			config.BoardConfigs{
-				Eightball: []string{genString(maxEightballLen + 1)},
+				Eightball: []string{GenString(maxEightballLen + 1)},
 			},
 			errEightballTooLong,
 		},
@@ -159,7 +158,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			"notice too long",
 			config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
-					Notice: genString(maxNoticeLen + 1),
+					Notice: GenString(maxNoticeLen + 1),
 				},
 			},
 			errNoticeTooLong,
@@ -168,7 +167,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			"rules too long",
 			config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
-					Rules: genString(maxRulesLen + 1),
+					Rules: GenString(maxRulesLen + 1),
 				},
 			},
 			errRulesTooLong,
@@ -177,7 +176,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			"title too long",
 			config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
-					Title: genString(maxTitleLen + 1),
+					Title: GenString(maxTitleLen + 1),
 				},
 			},
 			errTitleTooLong,
@@ -199,14 +198,6 @@ func TestValidateBoardConfigs(t *testing.T) {
 			}
 		})
 	}
-}
-
-func genString(len int) string {
-	buf := make([]byte, len)
-	for i := 0; i < len; i++ {
-		buf[i] = byte(rand.Intn(128))
-	}
-	return string(buf)
 }
 
 func TestValidateBoardCreation(t *testing.T) {
@@ -245,7 +236,7 @@ func TestValidateBoardCreation(t *testing.T) {
 		{
 			name:  "title too long",
 			id:    "b",
-			title: genString(101),
+			title: GenString(101),
 			err:   errTitleTooLong,
 		},
 		{
@@ -262,9 +253,9 @@ func TestValidateBoardCreation(t *testing.T) {
 			t.Parallel()
 
 			msg := boardCreationRequest{
-				Name:             c.id,
-				Title:            c.title,
-				loginCredentials: sampleLoginCreds,
+				Name:         c.id,
+				Title:        c.title,
+				sessionCreds: sampleLoginCreds,
 			}
 			rec, req := newJSONPair(t, "/admin/createBoard", msg)
 			router.ServeHTTP(rec, req)
@@ -286,9 +277,9 @@ func TestBoardCreation(t *testing.T) {
 	)
 
 	msg := boardCreationRequest{
-		Name:             id,
-		Title:            title,
-		loginCredentials: sampleLoginCreds,
+		Name:         id,
+		Title:        title,
+		sessionCreds: sampleLoginCreds,
 	}
 	rec, req := newJSONPair(t, "/admin/createBoard", msg)
 	router.ServeHTTP(rec, req)
@@ -296,7 +287,7 @@ func TestBoardCreation(t *testing.T) {
 	assertCode(t, rec, 200)
 
 	var board config.DatabaseBoardConfigs
-	if err := db.One(r.Table("boards").Get(id), &board); err != nil {
+	if err := db.One(gorethink.Table("boards").Get(id), &board); err != nil {
 		t.Fatal(err)
 	}
 
@@ -330,20 +321,20 @@ func TestServePrivateServerConfigs(t *testing.T) {
 
 	cases := [...]struct {
 		name string
-		loginCredentials
+		sessionCreds
 		code int
 		err  error
 	}{
 		{
-			name:             "not admin",
-			loginCredentials: sampleLoginCreds,
-			code:             403,
-			err:              errAccessDenied,
+			name:         "not admin",
+			sessionCreds: sampleLoginCreds,
+			code:         403,
+			err:          errAccessDenied,
 		},
 		{
-			name:             "admin",
-			loginCredentials: adminLoginCreds,
-			code:             200,
+			name:         "admin",
+			sessionCreds: adminLoginCreds,
+			code:         200,
 		},
 	}
 
@@ -352,7 +343,7 @@ func TestServePrivateServerConfigs(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/admin/config", c.loginCredentials)
+			rec, req := newJSONPair(t, "/admin/config", c.sessionCreds)
 			router.ServeHTTP(rec, req)
 
 			assertCode(t, rec, c.code)
@@ -386,8 +377,8 @@ func TestServerConfigSetting(t *testing.T) {
 	writeAdminAccount(t)
 
 	msg := configSettingRequest{
-		loginCredentials: adminLoginCreds,
-		Configs:          config.Defaults,
+		sessionCreds: adminLoginCreds,
+		Configs:      config.Defaults,
 	}
 	msg.DefaultCSS = "ashita"
 	rec, req := newJSONPair(t, "/admin/configureServer", msg)

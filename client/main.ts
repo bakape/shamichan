@@ -27,8 +27,8 @@ async function start() {
 
 	// Load auxiliary modules
 	const modules = [
-		"etc", "hover", "posts/posting/drop", "options/loop", "keyboard",
-		"posts/menu", "page/boardNavigation",
+		"mod/login", "etc", "hover", "posts/posting/drop", "options/loop",
+		"keyboard", "posts/menu", "page/boardNavigation",
 	]
 	for (let m of modules) {
 		loadModule(m)

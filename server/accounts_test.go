@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"net/http/httptest"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
@@ -14,7 +16,7 @@ import (
 
 const samplePassword = "123456"
 
-var sampleLoginCreds = loginCredentials{
+var sampleLoginCreds = sessionCreds{
 	UserID:  "user1",
 	Session: genSession(),
 }
@@ -37,7 +39,7 @@ func writeSampleUser(t *testing.T) {
 }
 
 func genSession() string {
-	return genString(common.LenSession)
+	return GenString(common.LenSession)
 }
 
 func TestIsLoggedIn(t *testing.T) {
@@ -80,10 +82,21 @@ func TestIsLoggedIn(t *testing.T) {
 				LogUnexpected(t, c.isValid, isValid)
 			}
 			if !c.isValid {
-				assertCode(t, rec, 403)
-				assertBody(t, rec, "403 invalid login credentials\n")
+				assertError(t, rec, 403, errInvalidCreds)
 			}
 		})
+	}
+}
+
+func assertError(
+	t *testing.T,
+	rec *httptest.ResponseRecorder,
+	code int,
+	err error,
+) {
+	assertCode(t, rec, code)
+	if err != nil {
+		assertBody(t, rec, fmt.Sprintf("%d %s\n", code, err))
 	}
 }
 
@@ -102,8 +115,7 @@ func TestNotLoggedIn(t *testing.T) {
 
 			rec, req := newJSONPair(t, "/", sampleLoginCreds)
 			fn(rec, req)
-			assertCode(t, rec, 403)
-			assertBody(t, rec, "403 invalid login credentials\n")
+			assertError(t, rec, 403, errInvalidCreds)
 		})
 	}
 }
@@ -129,7 +141,7 @@ func TestChangePassword(t *testing.T) {
 		{
 			name: "new password too long",
 			old:  samplePassword,
-			new:  genString(common.MaxLenPassword + 1),
+			new:  GenString(common.MaxLenPassword + 1),
 			code: 400,
 			err:  errInvalidPassword,
 		},
@@ -152,18 +164,15 @@ func TestChangePassword(t *testing.T) {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			msg := passwordChangeRequest{
-				loginCredentials: sampleLoginCreds,
-				Old:              c.old,
-				New:              c.new,
+				sessionCreds: sampleLoginCreds,
+				Old:          c.old,
+				New:          c.new,
 			}
 			rec, req := newJSONPair(t, "/admin/changePassword", msg)
 
 			router.ServeHTTP(rec, req)
 
-			assertCode(t, rec, c.code)
-			if c.err != nil {
-				assertBody(t, rec, fmt.Sprintf("%d %s\n", c.code, c.err))
-			}
+			assertError(t, rec, c.code, c.err)
 		})
 	}
 
@@ -176,3 +185,279 @@ func TestChangePassword(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRegistrationValidations(t *testing.T) {
+	assertTableClear(t, "accounts")
+
+	cases := [...]struct {
+		name, id, password string
+		code               int
+		err                error
+	}{
+		{
+			name:     "no ID",
+			id:       "",
+			password: "123456",
+			code:     400,
+			err:      errInvalidUserID,
+		},
+		{
+			name:     "id too long",
+			id:       GenString(common.MaxLenUserID + 1),
+			password: "123456",
+			code:     400,
+			err:      errInvalidUserID,
+		},
+		{
+			name:     "no password",
+			id:       "123",
+			password: "",
+			code:     400,
+			err:      errInvalidPassword,
+		},
+		{
+			name:     "password too long",
+			id:       "123",
+			password: GenString(common.MaxLenPassword + 1),
+			code:     400,
+			err:      errInvalidPassword,
+		},
+		{
+			name:     "valid",
+			id:       "123",
+			password: "456",
+			code:     200,
+		},
+		{
+			name:     "id already taken",
+			id:       "123",
+			password: "456",
+			code:     400,
+			err:      errUserIDTaken,
+		},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			rec, req := newJSONPair(t, "/admin/register", loginRequest{
+				loginCreds: loginCreds{
+					ID:       c.id,
+					Password: c.password,
+				},
+			})
+			router.ServeHTTP(rec, req)
+
+			assertError(t, rec, c.code, c.err)
+			if c.err == nil {
+				assertLogin(t, c.id, rec.Body.String())
+			}
+		})
+	}
+}
+
+func assertLogin(t *testing.T, user, session string) {
+	var contains bool
+	q := db.GetAccount(user).Field("sessions").Field("token").Contains(session)
+	if err := db.One(q, &contains); err != nil {
+		t.Fatal(err)
+	}
+	if !contains {
+		t.Fatal("session not created")
+	}
+}
+
+func TestLogin(t *testing.T) {
+	assertTableClear(t, "accounts")
+
+	const (
+		id       = "123"
+		password = "123456"
+	)
+	hash, err := auth.BcryptHash(password, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.RegisterAccount(id, hash); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := [...]struct {
+		name, id, password string
+		code               int
+		err                error
+	}{
+		{
+			name:     "invalid ID",
+			id:       id + "1",
+			password: password,
+			code:     403,
+			err:      errInvalidCreds,
+		},
+		{
+			name:     "invalid password",
+			id:       id,
+			password: password + "1",
+			code:     403,
+			err:      errInvalidCreds,
+		},
+		{
+			name:     "valid",
+			id:       id,
+			password: password,
+			code:     200,
+		},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			rec, req := newJSONPair(t, "/admin/login", loginRequest{
+				loginCreds: loginCreds{
+					ID:       c.id,
+					Password: c.password,
+				},
+			})
+			router.ServeHTTP(rec, req)
+
+			assertError(t, rec, c.code, c.err)
+			if c.err == nil {
+				assertLogin(t, c.id, rec.Body.String())
+			}
+		})
+	}
+}
+
+// func TestAuthentication(t *testing.T) {
+// 	assertTableClear(t, "accounts")
+
+// 	const (
+// 		id      = "123"
+// 		session = "foo"
+// 	)
+// 	assertInsert(t, "accounts", auth.User{
+// 		ID: id,
+// 		Sessions: []auth.Session{
+// 			{
+// 				Token:   session,
+// 				Expires: time.Now().Add(30 * 24 * time.Hour),
+// 			},
+// 		},
+// 	})
+
+// 	sv := newWSServer(t)
+// 	defer sv.Close()
+// 	cl, wcl := sv.NewClient()
+// 	data := marshalJSON(t, authenticationRequest{
+// 		ID:      id,
+// 		Session: session,
+// 	})
+
+// 	if err := authenticateSession(data, cl); err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	if cl.sessionToken != session {
+// 		LogUnexpected(t, session, cl.sessionToken)
+// 	}
+// 	if cl.UserID != id {
+// 		LogUnexpected(t, id, cl.UserID)
+// 	}
+// 	assertMessage(t, wcl, "35true")
+
+// 	t.Run("invalid session", func(t *testing.T) {
+// 		t.Parallel()
+
+// 		const id = "abcdefg"
+// 		req := authenticationRequest{
+// 			ID: id,
+// 		}
+// 		if err := db.RegisterAccount(id, []byte("bar")); err != nil {
+// 			t.Fatal(err)
+// 		}
+
+// 		assertHandlerResponse(t, req, authenticateSession, "35false")
+// 	})
+
+// 	t.Run("nonexistent user", func(t *testing.T) {
+// 		t.Parallel()
+
+// 		req := authenticationRequest{
+// 			ID: "dASDFSDSSD",
+// 		}
+// 		assertHandlerResponse(t, req, authenticateSession, "35false")
+// 	})
+// }
+
+// func TestLogOut(t *testing.T) {
+// 	assertTableClear(t, "accounts")
+
+// 	const id = "123"
+// 	sessions := []auth.Session{
+// 		{Token: "foo"},
+// 		{Token: "bar"},
+// 	}
+// 	assertInsert(t, "accounts", auth.User{
+// 		ID:       id,
+// 		Sessions: sessions,
+// 	})
+
+// 	assertLogout(t, id, logOut)
+
+// 	// Assert database user document
+// 	var res []auth.Session
+// 	if err := db.All(db.GetAccount(id).Field("sessions"), &res); err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	res[0].Expires = time.Time{}
+// 	std := []auth.Session{sessions[1]}
+// 	AssertDeepEquals(t, res, std)
+// }
+
+// func assertLogout(t *testing.T, id string, fn handler) {
+// 	sv := newWSServer(t)
+// 	defer sv.Close()
+// 	cl, wcl := sv.NewClient()
+
+// 	cl.UserID = id
+// 	cl.sessionToken = "foo"
+
+// 	if err := fn(nil, cl); err != nil {
+// 		t.Fatal(err)
+// 	}
+
+// 	assertMessage(t, wcl, "36true")
+// 	if cl.UserID != "" {
+// 		t.Fatal("user id retained")
+// 	}
+// 	if cl.sessionToken != "" {
+// 		t.Fatal("user token retained")
+// 	}
+// }
+
+// func TestLogOutAll(t *testing.T) {
+// 	assertTableClear(t, "accounts")
+
+// 	const id = "123"
+// 	sessions := []auth.Session{
+// 		{Token: "foo"},
+// 		{Token: "bar"},
+// 	}
+// 	user := auth.User{
+// 		ID:       id,
+// 		Sessions: sessions,
+// 		Password: []byte{1, 2, 3},
+// 	}
+// 	assertInsert(t, "accounts", user)
+
+// 	assertLogout(t, id, logOutAll)
+
+// 	// Assert database user document
+// 	var res auth.User
+// 	if err := db.One(db.GetAccount(id), &res); err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	user.Sessions = []auth.Session{}
+// 	AssertDeepEquals(t, res, user)
+// }

@@ -7,7 +7,8 @@ import CaptchaView from './captcha'
 
 // Generic input form view with optional captcha support
 export default class FormView extends View<null> {
-	private handleForm: () => void // Function used for sending the form to the client
+	// Function used for sending the form to the client
+	private handleForm: () => void
 	private captcha: CaptchaView
 
 	constructor(attrs: ViewAttrs, handler: () => void) {
@@ -83,7 +84,6 @@ export default class FormView extends View<null> {
 	// Remove a map key-vale input field pair
 	protected removeMapInput(event: Event) {
 		write(() =>
-			(event.target as Element)
-				.closest("span").remove())
+			(event.target as Element).closest("span").remove())
 	}
 }

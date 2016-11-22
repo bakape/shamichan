@@ -1,10 +1,14 @@
 import { ui } from '../lang'
 import FormView from "../forms"
 import { ViewAttrs } from "../view"
-import { accountPanel, loginID, sessionToken } from "./login"
+import { accountPanel, loginID, sessionToken, reset } from "./login"
 import { write } from "../render"
-import { postJSON, fetchHTML } from "../fetch"
+import { postJSON } from "../fetch"
 import { makeFrag } from "../util"
+
+interface Removable {
+	remove(): void
+}
 
 // Create a new base request for private logged in AJAX queries
 export function newRequest(): { [key: string]: any } {
@@ -13,6 +17,7 @@ export function newRequest(): { [key: string]: any } {
 		session: sessionToken,
 	}
 }
+
 
 // Set a password match validator function for 2 input elements, that are
 // children of the passed element.
@@ -48,12 +53,18 @@ export default class AccountFormView extends FormView {
 	// Render a simple publically available form, that does not require to
 	// submit any private information
 	protected async renderPublicForm(url: string) {
-		const [html, err] = await fetchHTML(url)
-		if (err) {
-			throw err
+		const res = await fetch(url)
+		switch (res.status) {
+			case 200:
+				this.el.append(makeFrag(await res.text()))
+				this.render()
+				break
+			case 403:
+				handle403(this)
+				break
+			default:
+				throw await res.text()
 		}
-		this.el.append(makeFrag(html))
-		this.render()
 	}
 
 	// Unhide the parent AccountPanel, when this view is removed
@@ -66,13 +77,27 @@ export default class AccountFormView extends FormView {
 	// In case of errors, render them to the .form-response
 	protected async postResponse(url: string, data: any) {
 		const res = await postJSON(url, data)
-		if (res.status !== 200) {
-			this.renderFormResponse(await res.text())
-			this.reloadCaptcha()
-		} else {
-			this.remove()
+		switch (res.status) {
+			case 200:
+				this.remove()
+				break
+			case 403:
+				handle403(this)
+				break
+			default:
+				this.renderFormResponse(await res.text())
+				this.reloadCaptcha()
 		}
 	}
+}
+
+// Reset any views and state on 403, which means an inconsistency between the
+// client's assumptions about its permissions and the actual permissions stored
+// in the database (likely because of session expiry).
+export function handle403(rem: Removable) {
+	rem.remove()
+	reset()
+	alert(ui.sessionExpired)
 }
 
 // Extract values from an input form

@@ -1,4 +1,4 @@
-import AccountFormView, { newRequest, extractForm } from './common'
+import AccountFormView, { newRequest, extractForm, handle403 } from './common'
 import { makeFrag, extend } from '../util'
 import { postJSON } from "../fetch"
 
@@ -17,11 +17,17 @@ export default class ConfigPanel extends AccountFormView {
 	// Request current configuration and render the panel
 	protected async render() {
 		const res = await postJSON("/forms/configureServer", newRequest())
-		if (res.status !== 200) {
-			throw await res.text()
+		switch (res.status) {
+			case 200:
+				this.el.append(makeFrag(await res.text()))
+				super.render()
+				break
+			case 403:
+				handle403(this)
+				break
+			default:
+				throw await res.text()
 		}
-		this.el.append(makeFrag(await res.text()))
-		super.render()
 	}
 
 	// Extract and send the configuration struct from the form

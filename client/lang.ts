@@ -35,7 +35,6 @@ export const posts = lang.posts,
 	mod = lang.mod,
 	opts = lang.opts,
 	identity = lang.identity
-export let admin: LnAdmin
 
 type StringTuple = [string, string]
 
@@ -80,7 +79,7 @@ type LnUI = {
 	sortMode: string
 	searchTooltip: string
 	refresh: string
-	sortModes: string[]
+	sessionExpired: string
 	[index: string]: any
 }
 
@@ -171,11 +170,6 @@ type LnMod = {
 	createBoard: string
 	configureBoard: string
 	[index: string]: string
-}
-
-type LnAdmin = {
-	boardNameTaken: string
-	[index: string]: StringTuple|string
 }
 
 type LnOpts = {

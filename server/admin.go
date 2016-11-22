@@ -37,39 +37,32 @@ var (
 	errNoticeTooLong    = common.ErrTooLong("notice")
 	errRulesTooLong     = common.ErrTooLong("rules")
 	errInvalidBoardName = errors.New("invalid board name")
-	errInvalidCaptcha   = errors.New("invalid captcha")
 	errBoardNameTaken   = errors.New("board name taken")
-	errInvalidCreds     = errors.New("invalid login credentials")
 	errAccessDenied     = errors.New("access denied")
 
 	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,3}$`)
 )
 
-// Embed in every request that needs authentication
-type loginCredentials struct {
-	UserID, Session string
-}
-
 // Request to set the board-specific configuration for a board
 type boardConfigSettingRequest struct {
-	loginCredentials
+	sessionCreds
 	config.BoardConfigs
 }
 
 // Request for the current non-public board configuration
 type boardConfigRequest struct {
-	loginCredentials
+	sessionCreds
 	ID string `json:"id"`
 }
 
 type configSettingRequest struct {
-	loginCredentials
+	sessionCreds
 	config.Configs
 }
 
 type boardCreationRequest struct {
 	Name, Title string
-	loginCredentials
+	sessionCreds
 	common.Captcha
 }
 
@@ -179,7 +172,7 @@ func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
 // Serve the current server configurations. Available only to the "admin"
 // account
 func servePrivateServerConfigs(w http.ResponseWriter, r *http.Request) {
-	var msg loginCredentials
+	var msg sessionCreds
 	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg) {
 		return
 	}
@@ -189,7 +182,7 @@ func servePrivateServerConfigs(w http.ResponseWriter, r *http.Request) {
 func isAdmin(
 	w http.ResponseWriter,
 	r *http.Request,
-	msg loginCredentials,
+	msg sessionCreds,
 ) bool {
 	if !(isLoggedIn(w, r, msg.UserID, msg.Session)) {
 		return false
@@ -280,7 +273,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 // user
 func configureServer(w http.ResponseWriter, r *http.Request) {
 	var msg configSettingRequest
-	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg.loginCredentials) {
+	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg.sessionCreds) {
 		return
 	}
 

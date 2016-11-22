@@ -4,7 +4,6 @@ import FSM from './fsm'
 import { debug, page, posts } from './state'
 import { sync as lang } from './lang'
 import { write } from './render'
-import { authenticate } from './mod/login'
 import { PostData } from "./posts/models"
 import { insertPost } from "./client"
 import { fetchThread } from "./fetch"
@@ -31,14 +30,6 @@ export const enum message {
 	// >= 30 are miscellaneous and do not write to post models
 	synchronise = 30,
 	reclaim,
-	_,
-
-	// Account management
-	register,
-	login,
-	authenticate,
-	logout,
-	logoutAll,
 
 	// Send new post ID to client
 	postID,
@@ -184,7 +175,7 @@ export function updateSyncTimestamp() {
 
 function prepareToSync(): connState {
 	renderStatus(syncStatus.connecting)
-	synchronise(true).catch(connSM.feeder(connEvent.close))
+	synchronise().catch(connSM.feeder(connEvent.close))
 	attemptTimer = setTimeout(resetAttempts, 10000) as any
 	return connState.syncing
 }
@@ -192,15 +183,12 @@ function prepareToSync(): connState {
 // Send a requests to the server to synchronise to the current page and
 // subscribe to the appropriate event feeds and optionally try to send a logged
 // in user session authentication request.
-export async function synchronise(auth: boolean) {
+export async function synchronise() {
 	await fetchBacklog()
 	send(message.synchronise, {
 		board: page.board,
 		thread: page.thread,
 	})
-	if (auth) {
-		authenticate()
-	}
 
 	// Reclaim a post lost after disconnecting, going on standby, resuming
 	// browser tab, etc.

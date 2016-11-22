@@ -25,7 +25,8 @@
 		"invalidCaptcha": "Invalid captcha",
 		"mustMatch": "Passwords must match",
 		"close": "Close",
-		"refresh": "Refresh"
+		"refresh": "Refresh",
+		"sessionExpired": "Login session expired"
 	},
 	"banner": {
 		"options": "Options",

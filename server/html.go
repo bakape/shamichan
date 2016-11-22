@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-
 	"sort"
 
 	"github.com/bakape/meguca/auth"
@@ -155,7 +154,7 @@ func boardCreationForm(w http.ResponseWriter, r *http.Request) {
 
 // Render the form for configuring the server
 func serverConfigurationForm(w http.ResponseWriter, r *http.Request) {
-	var msg loginCredentials
+	var msg sessionCreds
 	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg) {
 		return
 	}

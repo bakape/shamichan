@@ -92,6 +92,8 @@ func createRouter() http.Handler {
 
 	// Administration JSON API for logged in users
 	admin := r.NewGroup("/admin")
+	admin.POST("/register", wrapHandler(register))
+	admin.POST("/login", wrapHandler(login))
 	admin.POST("/changePassword", wrapHandler(changePassword))
 	admin.POST("/boardConfig", wrapHandler(servePrivateBoardConfigs))
 	admin.POST("/configureBoard", wrapHandler(configureBoard))

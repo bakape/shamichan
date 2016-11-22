@@ -7,17 +7,17 @@ import (
 	"strconv"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/server/websockets"
-	"github.com/bakape/meguca/common"
 )
 
 // Spoiler an already allocated image
-func spoilerImage(w http.ResponseWriter, req *http.Request) {
+func spoilerImage(w http.ResponseWriter, r *http.Request) {
 	var msg spoilerRequest
-	if !decodeJSON(w, req, &msg) {
+	if !decodeJSON(w, r, &msg) {
 		return
 	}
 
@@ -27,7 +27,7 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 	}
 	q := db.FindPost(msg.ID).Pluck("image", "password").Default(nil)
 	if err := db.One(q, &res); err != nil {
-		text500(w, req, err)
+		text500(w, r, err)
 		return
 	}
 
@@ -45,7 +45,7 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 
 	logMsg, err := websockets.EncodeMessage(websockets.MessageSpoiler, msg.ID)
 	if err != nil {
-		text500(w, req, err)
+		text500(w, r, err)
 		return
 	}
 
@@ -54,7 +54,7 @@ func spoilerImage(w http.ResponseWriter, req *http.Request) {
 	}
 	err = websockets.UpdatePost(msg.ID, "image", update, logMsg)
 	if err != nil {
-		text500(w, req, err)
+		text500(w, r, err)
 		return
 	}
 }

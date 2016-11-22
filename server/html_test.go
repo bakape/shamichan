@@ -3,8 +3,8 @@ package server
 import (
 	"testing"
 
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 )
 
 func TestThreadHTML(t *testing.T) {
@@ -127,8 +127,8 @@ func TestBoardConfigurationForm(t *testing.T) {
 	(*config.Get()).DefaultLang = "en_GB"
 
 	rec, req := newJSONPair(t, "/forms/configureBoard", boardConfigRequest{
-		ID:               "a",
-		loginCredentials: sampleLoginCreds,
+		ID:           "a",
+		sessionCreds: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)

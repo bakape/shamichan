@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
-
 	"syscall"
+	"time"
 
 	"github.com/bakape/meguca/util"
 )

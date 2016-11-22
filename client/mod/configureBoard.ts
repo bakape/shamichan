@@ -1,8 +1,8 @@
 import AccountFormView from "./common"
-import { newRequest, extractForm } from "./common"
+import { newRequest, extractForm, handle403 } from "./common"
 import { makeFrag, extend } from "../util"
-import { postJSON, fetchHTML } from "../fetch"
-import { loginID, sessionToken } from "./login"
+import { postJSON } from "../fetch"
+import { loginID } from "./login"
 import { write } from "../render"
 import View from "../view"
 
@@ -27,14 +27,23 @@ export default class BoardConfigPanel extends AccountFormView {
     // Render the configuration input elements
     public async renderConfigs(board: string) {
         this.board = board
-        const res = await postJSON("/forms/configureBoard", {
-            userID: loginID,
-            session: sessionToken,
-            id: board,
-        })
-        const frag = makeFrag(await res.text())
-        write(() =>
-            this.el.append(frag))
+
+        const req = newRequest()
+        req["id"] = board
+
+        const res = await postJSON("/forms/configureBoard", req)
+        switch (res.status) {
+            case 200:
+                const frag = makeFrag(await res.text())
+                write(() =>
+                    this.el.append(frag))
+                break
+            case 403:
+                handle403(this)
+                break
+            default:
+                throw await res.text()
+        }
     }
 
     // Extract form data and send a request to apply the new configs
@@ -63,13 +72,19 @@ class OwnedBoardSelection extends View<null> {
     }
 
     private async render() {
-        const [html, err] = await fetchHTML(`/forms/ownedBoards/${loginID}`)
-        if (err) {
-            throw err
+        const res = await fetch(`/forms/ownedBoards/${loginID}`)
+        switch (res.status) {
+            case 200:
+                this.el.append(makeFrag(await res.text()))
+                write(() =>
+                    this.parent.el.append(this.el))
+                break
+            case 403:
+                handle403(this.parent)
+                break
+            default:
+                throw await res.text()
         }
-        this.el.append(makeFrag(html))
-        write(() =>
-            this.parent.el.append(this.el))
     }
 
     private onSubmit(e: Event) {

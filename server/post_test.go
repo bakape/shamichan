@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/common"
-	r "github.com/dancannon/gorethink"
+	"github.com/bakape/meguca/db"
+	"github.com/dancannon/gorethink"
 )
 
 func TestSpoilerImage(t *testing.T) {
@@ -100,7 +100,7 @@ func TestSpoilerImage(t *testing.T) {
 			var spoilered bool
 			msg := []byte("11" + strconv.Itoa(int(c.id)))
 			post := db.FindPost(c.id)
-			q := r.And(
+			q := gorethink.And(
 				post.Field("log").Contains(msg),
 				post.Field("image").Field("spoiler"),
 			)

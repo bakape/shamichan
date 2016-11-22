@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -107,7 +107,7 @@ func testCreateThread(t *testing.T) {
 		Board: "all",
 	})
 	defer Clients.Clear()
-	cl.IP = "::1"
+	cl.ip = "::1"
 
 	stdThread := common.DatabaseThread{
 		ID:       6,
@@ -261,9 +261,9 @@ func TestGetInvalidImage(t *testing.T) {
 		err                   error
 	}{
 		{"empty token", "", name, errInvalidImageToken},
-		{"token too long", genString(128), name, errInvalidImageToken},
+		{"token too long", GenString(128), name, errInvalidImageToken},
 		{"no image name", token, "", errNoImageName},
-		{"image name too long", token, genString(201), errImageNameTooLong},
+		{"image name too long", token, GenString(201), errImageNameTooLong},
 		{"no token in DB", token, name, errInvalidImageToken},
 	}
 
@@ -379,7 +379,7 @@ func TestPostCreation(t *testing.T) {
 	cl, wcl := sv.NewClient()
 	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
-	cl.IP = "::1"
+	cl.ip = "::1"
 
 	req := ReplyCreationRequest{
 		Body:     "Δ",

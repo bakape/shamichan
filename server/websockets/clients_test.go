@@ -84,9 +84,9 @@ func TestCountByIP(t *testing.T) {
 		cls[i] = cl
 		m.add(cl, id)
 	}
-	cls[0].IP = "foo"
-	cls[1].IP = "foo"
-	cls[2].IP = "bar"
+	cls[0].ip = "foo"
+	cls[1].ip = "foo"
+	cls[2].ip = "bar"
 
 	if count := m.CountByIP(); count != 2 {
 		LogUnexpected(t, 2, count)

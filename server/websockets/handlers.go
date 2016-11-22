@@ -33,14 +33,6 @@ const (
 	// Update feeds
 	MessageSynchronise MessageType = 30 + iota
 	MessageReclaim
-	_
-
-	// Account management
-	MessageRegister
-	MessageLogin
-	MessageAuthenticate
-	MessageLogout
-	MessageLogOutAll
 
 	// Send new post ID to client
 	MessagePostID
@@ -64,11 +56,6 @@ var (
 	handlers = map[MessageType]handler{
 		MessageSynchronise:  synchronise,
 		MessageReclaim:      reclaimPost,
-		MessageRegister:     register,
-		MessageLogin:        login,
-		MessageAuthenticate: authenticateSession,
-		MessageLogout:       logOut,
-		MessageLogOutAll:    logOutAll,
 		MessageInsertThread: insertThread,
 		MessageAppend:       appendRune,
 		MessageBackspace:    backspace,

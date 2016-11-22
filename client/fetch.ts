@@ -18,16 +18,6 @@ export async function fetchJSON<T>(url: string): Promise<[T, string]> {
 	return [await res.json(), ""]
 }
 
-// Fetches HTML from the server. Returns a tuple of the fetched resource and
-// error, if any
-export async function fetchHTML(url: string): Promise<[string, string]> {
-	const res = await fetch(url)
-	if (res.status !== 200) {
-		return ["", await res.text()]
-	}
-	return [await res.text(), ""]
-}
-
 // Send a POST request with a JSON body to the server
 export async function postJSON(url: string, body: any): Promise<Response> {
 	return await fetch(url, {
@@ -50,6 +40,16 @@ export async function postText(
 		return [rt, ""]
 	}
 	return ["", rt]
+}
+
+// Fetches HTML from the server. Returns a tuple of the fetched resource and
+// error, if any
+export async function fetchHTML(url: string): Promise<[string, string]> {
+	const res = await fetch(url)
+	if (res.status !== 200) {
+		return ["", await res.text()]
+	}
+	return [await res.text(), ""]
 }
 
 // Fetch HTML of a board page
