@@ -10,6 +10,7 @@ must always be "synchronize".
 - All complex payloads, such as JSON objects are JSON stringified
 
 #Server to client
+
 | Code | Name | Payload type | Description |
 |:----:|--------------|---------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | 0 | invalid | string | Convey an unrecoverable error. Only used on client protocol violations or server errors. The connection is terminated after writing this message. You should either fix your client implementation or report a server bug, if this message is encountered.  |
@@ -30,6 +31,7 @@ must always be "synchronize".
 | 42 | concat | * | Contains several null-byte concatenated messages. Used for limiting the rate of update frames sent from the server.  |
 
 ##ThreadCreationResponse
+
 | Field | Type | Required | Description                                                                           |
 |-------|------|----------|---------------------------------------------------------------------------------------|
 | code  | uint | +        | Error code for the thread creation attempt. 0 for no error and 1 for invalid captcha. |
@@ -38,6 +40,7 @@ must always be "synchronize".
 ##SpliceMessage
 Mimics the behavior of JavaScript's [Array.prototype.splice](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
 method.
+
 | Field | Type | Required | Description |
 |-------|--------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | start | uint | + | Start position in the current line to begin splicing from |
@@ -45,6 +48,7 @@ method.
 | text | string | + | String to insert in the start position, after the "len" of the string has been deleted |
 
 ##LinkMessage
+
 | Field | Type | Required | Description |
 |-------|----------------------------------|----------|-------------------------------------------|
 | id | uint | + | ID of the target post |
@@ -52,12 +56,14 @@ method.
 
 ##CommandMessage
 extends [Command](common.md#command)
+
 | Field | Type | Required | Description |
 |-------|------|----------|-----------------------|
 | id | uint | + | ID of the target post |
 
 ##ImageMessage
 extends [Image](common.md#image)
+
 | Field | Type | Required | Description |
 |-------|------|----------|-----------------------|
 | id | uint | + | ID of the target post |
