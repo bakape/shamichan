@@ -6,6 +6,7 @@ omitted.
 
 ##Post
 Generic post object
+
 | Field     | Type                    | Required | Description                                                                                         |
 |-----------|-------------------------|:--------:|-----------------------------------------------------------------------------------------------------|
 | editing   | bool                    | -        | describes, if the post is still open and its text body editable by the original creator of the post |
@@ -22,6 +23,7 @@ Generic post object
 
 ##Image
 Uploaded file data attached to post
+
 | Field    | Type                    | Required | Description                                                                                                                        |
 |----------|-------------------------|:--------:|------------------------------------------------------------------------------------------------------------------------------------|
 | apng     | bool                    | -        | describes, if file is an animated PNG                                                                                              |
@@ -40,6 +42,7 @@ Uploaded file data attached to post
 Enum representing all available file types an uploaded file can be. These are
 also the canonical file extensions of these types. The extensions of thumbnails
 is `.png` for all file types, except for `jpg`, in which case it is `.jpg`.
+
 ```
 jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz"
 ```
@@ -47,6 +50,7 @@ jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz"
 ##PostLinks
 Map of linked post IDs to their parenthood data. Each map key contains the
 following object:
+
 | Field | Type   | Required | Description                      |
 |-------|--------|:--------:|----------------------------------|
 | board | string | +        | parent board of the linked post  |
@@ -56,10 +60,12 @@ following object:
 Results of an executed hash command. Several different object types implement
 this common interface and cary data appropriate to their command type. The
 "type" field defines which type of command is stored, according to enum:
+
 ```
 dice, flip, eightBall, syncWatch, pyu, pcount
 ```
 The "val" field contains the following data for each command type:
+
 | enum      | Value type | Description                                                                         |
 |-----------|------------|-------------------------------------------------------------------------------------|
 | dice      | []uint     | Array of dice rolls. Maximum number of rolls is 10 and each roll can not exceed 100 |
