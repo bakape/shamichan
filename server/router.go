@@ -80,6 +80,7 @@ func createRouter() http.Handler {
 	json.GET("/:board/:thread", threadJSON)
 	json.GET("/post/:post", servePost)
 	json.GET("/config", wrapHandler(serveConfigs))
+	json.GET("/extensions", wrapHandler(serveExtensionMap))
 	json.GET("/boardConfig/:board", serveBoardConfigs)
 	json.GET("/boardList", wrapHandler(serveBoardList))
 	json.GET("/positions/:position/:user", serveStaffPositions)

@@ -344,3 +344,10 @@ func TestServeBoardTimeStamps(t *testing.T) {
 	router.ServeHTTP(rec, req)
 	assertBody(t, rec, `{"a":2,"c":3}`)
 }
+
+func TestServeExtensionMap(t *testing.T) {
+	t.Parallel()
+	rec, req := newPair("/json/extensions")
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 200)
+}

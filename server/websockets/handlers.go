@@ -33,7 +33,7 @@ const (
 	// Update feeds
 	MessageSynchronise MessageType = 30 + iota
 	MessageReclaim
-	MessageSwitchSync
+	_
 
 	// Account management
 	MessageRegister

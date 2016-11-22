@@ -22,6 +22,6 @@
     "gulp-util": "^3.0.4",
     "systemjs": "^0.19.9",
     "typescript": "^2.0.0",
-    "whatwg-fetch": "^1.0.0"
+    "whatwg-fetch": "^2.0.1"
   }
 }
