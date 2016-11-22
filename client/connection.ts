@@ -31,7 +31,7 @@ export const enum message {
 	// >= 30 are miscellaneous and do not write to post models
 	synchronise = 30,
 	reclaim,
-	switchSync,
+	_,
 
 	// Account management
 	register,

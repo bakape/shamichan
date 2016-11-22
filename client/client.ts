@@ -44,8 +44,9 @@ function handle(id: number, fn: (m: Post) => void) {
 }
 
 // Insert a post into the models and DOM. The passed post may already exist and
-// be rendered, in which case it is a possibly updated version, that sync the
-// client's state to the update stream.
+// be rendered, in which case it is a possibly updated version, that syncs the
+// client's state to the update stream. In that case the client must rerender
+// posts or deduplicate appropriately.
 export function insertPost(data: PostData) {
 	const existing = posts.get(data.id)
 	if (existing) {
