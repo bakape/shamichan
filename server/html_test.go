@@ -8,12 +8,22 @@ import (
 )
 
 func TestThreadHTML(t *testing.T) {
-	assertTableClear(t, "threads")
+	assertTableClear(t, "threads", "posts")
 	assertInsert(t, "threads", common.DatabaseThread{
 		ID:    1,
 		Board: "a",
 	})
+	assertInsert(t, "posts", common.DatabasePost{
+		StandalonePost: common.StandalonePost{
+			OP:    1,
+			Board: "a",
+			Post: common.Post{
+				ID: 1,
+			},
+		},
+	})
 	setBoards(t, "a")
+	(*config.Get()).DefaultLang = "en_GB"
 
 	cases := [...]struct {
 		name, url string
