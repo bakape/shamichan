@@ -4,7 +4,7 @@ import { TabbedModal } from '../banner'
 import { write } from '../render'
 import { loadModule, inputValue } from '../util'
 import FormView from "../forms"
-import { validatePasswordMatch } from "./common"
+import { validatePasswordMatch, newRequest } from "./common"
 import { postJSON } from "../fetch"
 
 // User ID and session ID currently in use
@@ -20,12 +20,10 @@ class AccountPanel extends TabbedModal {
 		accountPanel = this
 
 		this.onClick({
-			'#logout': reset,
-
-			// TODO: Log out all devices
+			'#logout': () =>
+				logout("/admin/logout"),
 			"#logoutAll": () =>
-				alert("TODO"),
-
+				logout("/admin/logoutAll"),
 			"#changePassword": this.loadConditionalView("mod/changePassword"),
 			"#configureServer": this.loadConditionalView("mod/configureServer"),
 			"#createBoard": this.loadConditionalView("mod/createBoard"),
@@ -83,6 +81,19 @@ export function reset() {
 			el.textContent = ""
 		}
 	})
+}
+
+// Terminate the user session(s) server-side and reset the panel
+async function logout(url: string) {
+	const res = await postJSON(url, newRequest())
+	switch (res.status) {
+		case 200:
+		case 403: // Does not really matter, if the session already expired
+			reset()
+			break
+		default:
+			throw await res.text()
+	}
 }
 
 // Common functionality of login and registration forms

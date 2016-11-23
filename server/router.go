@@ -94,6 +94,8 @@ func createRouter() http.Handler {
 	admin := r.NewGroup("/admin")
 	admin.POST("/register", wrapHandler(register))
 	admin.POST("/login", wrapHandler(login))
+	admin.POST("/logout", wrapHandler(logout))
+	admin.POST("/logoutAll", wrapHandler(logoutAll))
 	admin.POST("/changePassword", wrapHandler(changePassword))
 	admin.POST("/boardConfig", wrapHandler(servePrivateBoardConfigs))
 	admin.POST("/configureBoard", wrapHandler(configureBoard))

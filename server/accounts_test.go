@@ -3,10 +3,9 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
-
-	"net/http/httptest"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
@@ -330,134 +329,91 @@ func TestLogin(t *testing.T) {
 	}
 }
 
-// func TestAuthentication(t *testing.T) {
-// 	assertTableClear(t, "accounts")
+func TestLogout(t *testing.T) {
+	assertTableClear(t, "accounts")
 
-// 	const (
-// 		id      = "123"
-// 		session = "foo"
-// 	)
-// 	assertInsert(t, "accounts", auth.User{
-// 		ID: id,
-// 		Sessions: []auth.Session{
-// 			{
-// 				Token:   session,
-// 				Expires: time.Now().Add(30 * 24 * time.Hour),
-// 			},
-// 		},
-// 	})
+	const id = "123"
+	sessions := []auth.Session{
+		{Token: genSession()},
+		{Token: genSession()},
+	}
+	assertInsert(t, "accounts", auth.User{
+		ID:       id,
+		Sessions: sessions,
+	})
 
-// 	sv := newWSServer(t)
-// 	defer sv.Close()
-// 	cl, wcl := sv.NewClient()
-// 	data := marshalJSON(t, authenticationRequest{
-// 		ID:      id,
-// 		Session: session,
-// 	})
+	cases := [...]struct {
+		name, token string
+		code        int
+		err         error
+	}{
+		{
+			name:  "not logged in",
+			token: genSession(),
+			code:  403,
+			err:   errInvalidCreds,
+		},
+		{
+			name:  "valid",
+			token: sessions[0].Token,
+			code:  200,
+		},
+	}
 
-// 	if err := authenticateSession(data, cl); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	if cl.sessionToken != session {
-// 		LogUnexpected(t, session, cl.sessionToken)
-// 	}
-// 	if cl.UserID != id {
-// 		LogUnexpected(t, id, cl.UserID)
-// 	}
-// 	assertMessage(t, wcl, "35true")
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 
-// 	t.Run("invalid session", func(t *testing.T) {
-// 		t.Parallel()
+			rec, req := newJSONPair(t, "/admin/logout", sessionCreds{
+				UserID:  id,
+				Session: c.token,
+			})
+			router.ServeHTTP(rec, req)
 
-// 		const id = "abcdefg"
-// 		req := authenticationRequest{
-// 			ID: id,
-// 		}
-// 		if err := db.RegisterAccount(id, []byte("bar")); err != nil {
-// 			t.Fatal(err)
-// 		}
+			assertError(t, rec, c.code, c.err)
 
-// 		assertHandlerResponse(t, req, authenticateSession, "35false")
-// 	})
+			// Assert database user document
+			if c.err == nil {
+				var res []auth.Session
+				err := db.All(db.GetAccount(id).Field("sessions"), &res)
+				if err != nil {
+					t.Fatal(err)
+				}
+				res[0].Expires = time.Time{} // Normalize time
+				AssertDeepEquals(t, res, []auth.Session{sessions[1]})
+			}
+		})
+	}
+}
 
-// 	t.Run("nonexistent user", func(t *testing.T) {
-// 		t.Parallel()
+func TestLogoutAll(t *testing.T) {
+	assertTableClear(t, "accounts")
 
-// 		req := authenticationRequest{
-// 			ID: "dASDFSDSSD",
-// 		}
-// 		assertHandlerResponse(t, req, authenticateSession, "35false")
-// 	})
-// }
+	const id = "123"
+	sessions := []auth.Session{
+		{Token: genSession()},
+		{Token: genSession()},
+	}
+	user := auth.User{
+		ID:       id,
+		Sessions: sessions,
+		Password: []byte{1, 2, 3},
+	}
+	assertInsert(t, "accounts", user)
 
-// func TestLogOut(t *testing.T) {
-// 	assertTableClear(t, "accounts")
+	rec, req := newJSONPair(t, "/admin/logoutAll", sessionCreds{
+		UserID:  id,
+		Session: sessions[0].Token,
+	})
+	router.ServeHTTP(rec, req)
 
-// 	const id = "123"
-// 	sessions := []auth.Session{
-// 		{Token: "foo"},
-// 		{Token: "bar"},
-// 	}
-// 	assertInsert(t, "accounts", auth.User{
-// 		ID:       id,
-// 		Sessions: sessions,
-// 	})
+	assertCode(t, rec, 200)
 
-// 	assertLogout(t, id, logOut)
-
-// 	// Assert database user document
-// 	var res []auth.Session
-// 	if err := db.All(db.GetAccount(id).Field("sessions"), &res); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	res[0].Expires = time.Time{}
-// 	std := []auth.Session{sessions[1]}
-// 	AssertDeepEquals(t, res, std)
-// }
-
-// func assertLogout(t *testing.T, id string, fn handler) {
-// 	sv := newWSServer(t)
-// 	defer sv.Close()
-// 	cl, wcl := sv.NewClient()
-
-// 	cl.UserID = id
-// 	cl.sessionToken = "foo"
-
-// 	if err := fn(nil, cl); err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	assertMessage(t, wcl, "36true")
-// 	if cl.UserID != "" {
-// 		t.Fatal("user id retained")
-// 	}
-// 	if cl.sessionToken != "" {
-// 		t.Fatal("user token retained")
-// 	}
-// }
-
-// func TestLogOutAll(t *testing.T) {
-// 	assertTableClear(t, "accounts")
-
-// 	const id = "123"
-// 	sessions := []auth.Session{
-// 		{Token: "foo"},
-// 		{Token: "bar"},
-// 	}
-// 	user := auth.User{
-// 		ID:       id,
-// 		Sessions: sessions,
-// 		Password: []byte{1, 2, 3},
-// 	}
-// 	assertInsert(t, "accounts", user)
-
-// 	assertLogout(t, id, logOutAll)
-
-// 	// Assert database user document
-// 	var res auth.User
-// 	if err := db.One(db.GetAccount(id), &res); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	user.Sessions = []auth.Session{}
-// 	AssertDeepEquals(t, res, user)
-// }
+	var res auth.User
+	if err := db.One(db.GetAccount(id), &res); err != nil {
+		t.Fatal(err)
+	}
+	user.Sessions = []auth.Session{}
+	AssertDeepEquals(t, res, user)
+}

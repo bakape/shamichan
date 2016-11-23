@@ -36,10 +36,6 @@ type sessionCreds struct {
 	UserID, Session string
 }
 
-// type authenticationRequest struct {
-// 	ID, Session string
-// }
-
 type passwordChangeRequest struct {
 	sessionCreds
 	common.Captcha
@@ -141,47 +137,44 @@ func login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// // Log out user from session and remove the session key from the database
-// func logOut(_ []byte, c *Client) error {
-// 	if !c.isLoggedIn() {
-// 		return errNotLoggedIn
-// 	}
+// Log out user from session and remove the session key from the database
+func logout(w http.ResponseWriter, r *http.Request) {
+	commitLogout(w, r, func(req sessionCreds) gorethink.Term {
+		// Remove current session from user's session document
+		return db.GetAccount(req.UserID).Update(map[string]gorethink.Term{
+			"sessions": gorethink.Row.
+				Field("sessions").
+				Filter(func(s gorethink.Term) gorethink.Term {
+					return s.Field("token").Eq(req.Session).Not()
+				}),
+		})
+	})
+}
 
-// 	// Remove current session from user's session document
-// 	query := db.GetAccount(c.UserID).
-// 		Update(map[string]r.Term{
-// 			"sessions": r.Row.
-// 				Field("sessions").
-// 				Filter(func(s r.Term) r.Term {
-// 					return s.Field("token").Eq(c.sessionToken).Not()
-// 				}),
-// 		})
-// 	return commitLogout(query, c)
-// }
+// Common part of both logout endpoints
+func commitLogout(
+	w http.ResponseWriter,
+	r *http.Request,
+	fn func(sessionCreds) gorethink.Term,
+) {
+	var req sessionCreds
+	if !decodeJSON(w, r, &req) || !isLoggedIn(w, r, req.UserID, req.Session) {
+		return
+	}
 
-// // Common part of both logout functions
-// func commitLogout(query r.Term, c *Client) error {
-// 	c.UserID = ""
-// 	c.sessionToken = ""
-// 	if err := db.Write(query); err != nil {
-// 		return err
-// 	}
+	if err := db.Write(fn(req)); err != nil {
+		text500(w, r, err)
+	}
+}
 
-// 	return c.sendMessage(MessageLogout, true)
-// }
-
-// // Log out all sessions of the specific user
-// func logOutAll(_ []byte, c *Client) error {
-// 	if !c.isLoggedIn() {
-// 		return errNotLoggedIn
-// 	}
-
-// 	query := db.GetAccount(c.UserID).
-// 		Update(map[string][]string{
-// 			"sessions": []string{},
-// 		})
-// 	return commitLogout(query, c)
-// }
+// Log out all sessions of the specific user
+func logoutAll(w http.ResponseWriter, r *http.Request) {
+	commitLogout(w, r, func(req sessionCreds) gorethink.Term {
+		return db.GetAccount(req.UserID).Update(map[string][]string{
+			"sessions": []string{},
+		})
+	})
+}
 
 // Change the account password
 func changePassword(w http.ResponseWriter, r *http.Request) {
@@ -262,9 +255,7 @@ func isLoggedIn(
 		Table("accounts").
 		Get(user).
 		Field("sessions").
-		Map(func(session gorethink.Term) gorethink.Term {
-			return session.Field("token")
-		}).
+		Field("token").
 		Contains(session).
 		Default(false)
 	if err := db.One(q, &isValid); err != nil {
