@@ -9,6 +9,8 @@ import (
 	"strings"
 	"sync"
 
+	"sort"
+
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
 )
@@ -179,6 +181,9 @@ func buildIndexTemplate(ln lang.Pack) (*template.Template, error) {
 	clientJSON, hash := config.GetClient()
 	conf := config.Get()
 
+	boards := config.GetBoards()
+	sort.Strings(boards)
+
 	v := struct {
 		Captcha                       bool
 		Config                        template.JS
@@ -196,7 +201,7 @@ func buildIndexTemplate(ln lang.Pack) (*template.Template, error) {
 		Email:      conf.FeedbackEmail,
 		DefaultCSS: conf.DefaultCSS,
 		FAQ:        template.HTML(strings.Replace(conf.FAQ, "\n", "<br>", -1)),
-		Boards:     config.GetBoards(),
+		Boards:     boards,
 		ImageSearch: []imageSearch{
 			{"google", "G"},
 			{"iqdb", "Iq"},
