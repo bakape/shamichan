@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/common"
+	. "github.com/bakape/meguca/test"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -221,24 +221,24 @@ func testGetThread(t *testing.T) {
 		name  string
 		id    int64
 		lastN int
-		std   *common.Thread
+		std   common.Thread
 		err   error
 	}{
 		{
 			name: "full",
 			id:   1,
-			std:  &thread1,
+			std:  thread1,
 		},
 		{
 			name:  "last 1 reply",
 			id:    1,
 			lastN: 1,
-			std:   &sliced,
+			std:   sliced,
 		},
 		{
 			name: "no replies ;_;",
 			id:   3,
-			std: &common.Thread{
+			std: common.Thread{
 				PostCtr: 1,
 				Post: common.Post{
 					ID: 3,

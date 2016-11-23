@@ -183,7 +183,7 @@ func threadData(
 	id int64,
 	lang, hash string,
 ) (
-	data *common.Thread, etag string, ok bool,
+	data common.Thread, etag string, ok bool,
 ) {
 	counter, err := db.ThreadCounter(id)
 	if err != nil {

@@ -3,38 +3,66 @@ package templates
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"html/template"
+	"net/url"
 	"strconv"
 	"time"
 
-	"github.com/bakape/meguca/lang"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/lang"
 )
+
+type htmlWriter struct {
+	bytes.Buffer
+}
 
 // Allows passing additional information to thread-related templates
 type postContext struct {
-	bytes.Buffer
 	common.Post
-	state struct { // Body parser state
-		spoiler, quote bool
-		iDice          int
+	OP             int64
+	Board, Subject string
+	Lang           lang.Pack
+}
+
+// Write an element attribute to the buffer
+func (w *htmlWriter) attr(key, val string) {
+	w.WriteByte(' ')
+	w.WriteString(key)
+	if val != "" {
+		w.WriteString(`="`)
+		w.WriteString(val)
+		w.WriteByte('"')
 	}
-	OP    int64
-	Board string
-	Lang  lang.Pack
+}
+
+// Write an HTML-escaped string to buffer
+func (w *htmlWriter) escape(s string) {
+	w.WriteString(html.EscapeString(s))
+}
+
+// Write an URL-query-escaped string to buffer
+func (w *htmlWriter) queryEscape(s string) {
+	w.WriteString(url.QueryEscape(s))
+}
+
+// Outputs the buffer contents as a HTML string
+func (w *htmlWriter) HTML() template.HTML {
+	return template.HTML(w.String())
 }
 
 func wrapPost(
 	p common.Post,
 	op int64,
-	board string,
+	board, subject string,
 	lang lang.Pack,
-) *postContext {
-	return &postContext{
-		Post:  p,
-		OP:    op,
-		Board: board,
-		Lang:  lang,
+) postContext {
+	return postContext{
+		Post:    p,
+		OP:      op,
+		Board:   board,
+		Subject: subject,
+		Lang:    lang,
 	}
 }
 

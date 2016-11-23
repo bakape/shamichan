@@ -3,8 +3,6 @@
 package templates
 
 import (
-	"bytes"
-	"html"
 	"html/template"
 	"strconv"
 
@@ -39,28 +37,18 @@ type inputSpec struct {
 	Val                         interface{}
 }
 
-type htmlWriter struct {
-	bytes.Buffer
+// For constructing various HTML input forms
+type formWriter struct {
+	htmlWriter
 	lang lang.Pack
 }
 
-// Write an element attribute to the buffer
-func (w *htmlWriter) attr(key, val string) {
-	w.WriteByte(' ')
-	w.WriteString(key)
-	if val != "" {
-		w.WriteString(`="`)
-		w.WriteString(val)
-		w.WriteByte('"')
-	}
-}
-
-func (w *htmlWriter) typ(val string) {
+func (w *formWriter) typ(val string) {
 	w.attr("type", val)
 }
 
 // Write an input element from the spec to the buffer
-func (w *htmlWriter) input(spec inputSpec) error {
+func (w *formWriter) input(spec inputSpec) error {
 	cont := false
 	switch spec.Type {
 	case _select:
@@ -126,7 +114,7 @@ func (w *htmlWriter) input(spec inputSpec) error {
 
 // Write the element tag and the common parts of all input element types to
 // buffer
-func (w *htmlWriter) tag(tag string, spec inputSpec) {
+func (w *formWriter) tag(tag string, spec inputSpec) {
 	w.WriteByte('<')
 	w.WriteString(tag)
 	w.attr("name", spec.ID)
@@ -142,13 +130,8 @@ func (w *htmlWriter) tag(tag string, spec inputSpec) {
 	}
 }
 
-// Write an HTML-escaped string to buffer
-func (w *htmlWriter) escape(s string) {
-	w.WriteString(html.EscapeString(s))
-}
-
 // Write a select element to buffer
-func (w *htmlWriter) sel(spec inputSpec) {
+func (w *formWriter) sel(spec inputSpec) {
 	w.tag("select", spec)
 	w.WriteByte('>')
 
@@ -178,7 +161,7 @@ func (w *htmlWriter) sel(spec inputSpec) {
 }
 
 // Render a text area input element
-func (w *htmlWriter) textArea(spec inputSpec) {
+func (w *formWriter) textArea(spec inputSpec) {
 	w.tag("textarea", spec)
 	if spec.MaxLength != 0 {
 		w.attr("maxlength", strconv.Itoa(spec.MaxLength))
@@ -197,7 +180,7 @@ func (w *htmlWriter) textArea(spec inputSpec) {
 }
 
 // Write a subform for inputting a key-value string map to buffer
-func (w *htmlWriter) writeMap(spec inputSpec) error {
+func (w *formWriter) writeMap(spec inputSpec) error {
 	return tmpl["map"].Execute(w, struct {
 		Spec inputSpec
 		Lang lang.Pack
@@ -208,7 +191,7 @@ func (w *htmlWriter) writeMap(spec inputSpec) error {
 }
 
 // Write an input element label from the spec to the buffer
-func (w *htmlWriter) label(spec inputSpec) {
+func (w *formWriter) label(spec inputSpec) {
 	ln := w.lang.Forms[spec.ID]
 
 	w.WriteString("<label")
@@ -224,7 +207,7 @@ func (w *htmlWriter) label(spec inputSpec) {
 
 // Render a table containing {label input_element} pairs
 func renderTable(specs []inputSpec, lang lang.Pack) (template.HTML, error) {
-	w := htmlWriter{
+	w := formWriter{
 		lang: lang,
 	}
 	w.WriteString("<table>")
@@ -241,23 +224,23 @@ func renderTable(specs []inputSpec, lang lang.Pack) (template.HTML, error) {
 
 	w.WriteString("</table>")
 
-	return template.HTML(w.String()), nil
+	return w.HTML(), nil
 }
 
 // Render a single input element
 func renderInput(spec inputSpec, lang lang.Pack) (template.HTML, error) {
-	w := htmlWriter{
+	w := formWriter{
 		lang: lang,
 	}
 	err := w.input(spec)
-	return template.HTML(w.String()), err
+	return w.HTML(), err
 }
 
 // Render a single label for an input element
 func renderLabel(spec inputSpec, lang lang.Pack) template.HTML {
-	w := htmlWriter{
+	w := formWriter{
 		lang: lang,
 	}
 	w.label(spec)
-	return template.HTML(w.String())
+	return w.HTML()
 }

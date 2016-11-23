@@ -1,16 +1,7 @@
-<style>
-	.image-search{
-		display: initial;
-	}
-	figure img {
-		max-width: 125px;
-		max-height: 125px;
-	}
-</style>
 <h1 id="page-title">
 	{{.Title}}
 </h1>
-{{with .Notice}}
+{{with .Conf.Notice}}
 	<span id="notice">
 		<span>
 			{{.}}
@@ -25,9 +16,9 @@ TODO: Post form<br>
 </span>
 <hr>
 <div id="thread-container">
-	{{template "article" (wrapPost .Thread.Post .Thread.ID .Thread.Board)}}
+	{{template "article" (wrapPost .Thread.Post .Thread.ID .Thread.Board .Thread.Subject .Lang)}}
 	{{range .Thread.Posts}}
-		{{template "article" (wrapPost . $.Thread.ID $.Thread.Board)}}
+		{{template "article" (wrapPost . $.Thread.ID $.Thread.Board $.Thread.Subject $.Lang)}}
 	{{end}}
 </div>
 <hr>

@@ -40,7 +40,7 @@ var (
 )
 
 // GetThread retrieves public thread data from the database
-func GetThread(id int64, lastN int) (*common.Thread, error) {
+func GetThread(id int64, lastN int) (common.Thread, error) {
 	q := r.
 		Table("threads").
 		GetAll(id). // Can not join after Get(). Meh.
@@ -66,7 +66,7 @@ func GetThread(id int64, lastN int) (*common.Thread, error) {
 
 	var thread common.Thread
 	if err := One(q, &thread); err != nil {
-		return nil, err
+		return thread, err
 	}
 
 	// Remove OP from posts slice to prevent possible duplication. Post might
@@ -75,7 +75,7 @@ func GetThread(id int64, lastN int) (*common.Thread, error) {
 		thread.Posts = thread.Posts[1:]
 	}
 
-	return &thread, nil
+	return thread, nil
 }
 
 // GetPost reads a single post from the database

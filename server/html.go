@@ -54,28 +54,36 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	withIndex := r.URL.Query().Get("noIndex") != "true"
-	data, err := templates.Board(b, lp, withIndex, board)
+	data, err := templates.Board(b, lp, withIndex(r), board)
 	serveHTML(w, r, etag, data, err)
+}
+
+// Returns, if the noIndex query string is not set
+func withIndex(r *http.Request) bool {
+	return r.URL.Query().Get("noIndex") != "true"
 }
 
 // Asserts a thread exists on the specific board and renders the index template
 func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	_, ok := validateThread(w, r, p)
+	id, ok := validateThread(w, r, p)
 	if !ok {
 		return
 	}
 
-	// thread, etag, ok := threadData(w, r, id)
-	// if !ok {
-	// 	return
-	// }
-	// data, err := templates.Thread(thread)
-	// if err != nil {
-	// 	text500(w, r, err)
-	// 	return
-	// }
-	// serveHTML(w, r, data, etag)
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	_, hash := config.GetClient()
+	thread, etag, ok := threadData(w, r, id, lp.ID, hash)
+	if !ok {
+		return
+	}
+
+	data, err := templates.Thread(lp, withIndex(r), thread)
+	serveHTML(w, r, etag, data, err)
 }
 
 // Render a board selection and navigation panel and write HTML to client

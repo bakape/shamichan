@@ -29,18 +29,18 @@ var (
 	// Contains all compiled HTML templates
 	tmpl = make(map[string]*template.Template)
 
-	// // Template functions for rendering posts
-	// postFunctions = template.FuncMap{
-	// 	"thumbPath":        thumbPath,
-	// 	"renderTime":       renderTime,
-	// 	"readableLength":   readableLength,
-	// 	"readableFileSize": readableFileSize,
-	// 	"sourcePath":       sourcePath,
-	// 	"extension":        extension,
-	// 	"wrapPost":         wrapPost,
-	// 	"renderPostLink":   renderPostLink,
-	// 	"renderBody":       renderBody,
-	// }
+	// Template functions for rendering posts
+	postFunctions = template.FuncMap{
+		"thumbPath":        thumbPath,
+		"renderTime":       renderTime,
+		"readableLength":   readableLength,
+		"readableFileSize": readableFileSize,
+		"sourcePath":       sourcePath,
+		"extension":        extension,
+		"wrapPost":         wrapPost,
+		"renderPostLink":   renderPostLink,
+		"renderBody":       renderBody,
+	}
 
 	isTest bool
 )
@@ -92,7 +92,7 @@ func Parse() error {
 				"bundle": bundle,
 			},
 		},
-		// {"article", nil, postFunctions},
+		{"article", nil, postFunctions},
 		{
 			"index",
 			[]string{"captcha", "keyValue"},
@@ -111,7 +111,11 @@ func Parse() error {
 				"bundle":    bundle,
 			},
 		},
-		// {"thread", []string{"article"}, postFunctions},
+		{
+			"thread",
+			[]string{"article", "captcha"},
+			postFunctions,
+		},
 	}
 
 	for _, s := range specs {
