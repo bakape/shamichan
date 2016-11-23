@@ -15,27 +15,25 @@ func TestThreadHTML(t *testing.T) {
 	})
 	setBoards(t, "a")
 
-	t.Run("unparsable thread number", func(t *testing.T) {
-		t.Parallel()
+	cases := [...]struct {
+		name, url string
+		code      int
+	}{
+		{"unparsable thread number", "/a/www", 404},
+		{"nonexistent thread", "/a/22", 404},
+		{"thread exists", "/a/1", 200},
+	}
 
-		rec, req := newPair("/a/www")
-		router.ServeHTTP(rec, req)
-		assertCode(t, rec, 404)
-	})
-	t.Run("nonexistent thread", func(t *testing.T) {
-		t.Parallel()
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 
-		rec, req := newPair("/a/22")
-		router.ServeHTTP(rec, req)
-		assertCode(t, rec, 404)
-	})
-	t.Run("thread exists", func(t *testing.T) {
-		t.Parallel()
-
-		rec, req := newPair("/a/1")
-		router.ServeHTTP(rec, req)
-		assertCode(t, rec, 200)
-	})
+			rec, req := newPair(c.url)
+			router.ServeHTTP(rec, req)
+			assertCode(t, rec, c.code)
+		})
+	}
 }
 
 func TestBoardHTML(t *testing.T) {
