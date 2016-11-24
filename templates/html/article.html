@@ -1,5 +1,10 @@
 <article id="p{{.ID}}" class="glass{{if .Editing}} editing{{end}}">
 	<header class="spaced">
+		{{with .Subject}}
+			<h3>
+				「{{.}}」
+			</h3>
+		{{end}}
 		<b class="name"{{if .Auth}} class="admin"{{end}}>
 			{{if .Email}}
 				<a href="mailto:{{urlquery .Email}}" target="_blank" class="email">

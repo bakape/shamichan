@@ -18,7 +18,7 @@ TODO: Post form<br>
 <div id="thread-container">
 	{{template "article" (wrapPost .Thread.Post .Thread.ID .Thread.Board .Thread.Subject .Lang)}}
 	{{range .Thread.Posts}}
-		{{template "article" (wrapPost . $.Thread.ID $.Thread.Board $.Thread.Subject $.Lang)}}
+		{{template "article" (wrapPost . $.Thread.ID $.Thread.Board "" $.Lang)}}
 	{{end}}
 </div>
 <hr>
