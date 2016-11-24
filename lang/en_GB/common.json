@@ -4,7 +4,10 @@
 		"show": "Show",
 		"hide": "Hide",
 		"expand": "Expand Images",
-		"contract": "Contract Images"
+		"contract": "Contract Images",
+		"justNow": "just now",
+		"in": "in",
+		"ago": "ago"
 	},
 	"plurals": {
 		"post": [
@@ -14,6 +17,51 @@
 		"image": [
 			"image",
 			"images"
+		],
+		"minute": [
+			"minute",
+			"minutes"
+		],
+		"hour": [
+			"hour",
+			"hours"
+		],
+		"day": [
+			"day",
+			"days"
+		],
+		"month": [
+			"month",
+			"months"
+		],
+		"year": [
+			"year",
+			"years"
+		]
+	},
+	"time": {
+		"week": [
+			"Sun",
+			"Mon",
+			"Tue",
+			"Wed",
+			"Thu",
+			"Fri",
+			"Sat"
+		],
+		"calendar": [
+			"Jan",
+			"Feb",
+			"Mar",
+			"Apr",
+			"May",
+			"Jun",
+			"Jul",
+			"Aug",
+			"Sep",
+			"Oct",
+			"Nov",
+			"Dec"
 		]
 	}
 }

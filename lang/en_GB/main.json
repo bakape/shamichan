@@ -43,54 +43,6 @@
 		"setup": "Obtaining reCAPTCHA...",
 		"loadError": "Couldn't load captcha"
 	},
-	"time": {
-		"week": [
-			"Sun",
-			"Mon",
-			"Tue",
-			"Wed",
-			"Thu",
-			"Fri",
-			"Sat"
-		],
-		"calendar": [
-			"Jan",
-			"Feb",
-			"Mar",
-			"Apr",
-			"May",
-			"Jun",
-			"Jul",
-			"Aug",
-			"Sep",
-			"Oct",
-			"Nov",
-			"Dec"
-		],
-		"justNow": "just now",
-		"minute": [
-			"minute",
-			"minutes"
-		],
-		"hour": [
-			"hour",
-			"hours"
-		],
-		"day": [
-			"day",
-			"days"
-		],
-		"month": [
-			"month",
-			"months"
-		],
-		"year": [
-			"year",
-			"years"
-		],
-		"in": "in",
-		"ago": "ago"
-	},
 	"sync": [
 		"disconnected",
 		"connecting",

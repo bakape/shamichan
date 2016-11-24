@@ -34,7 +34,7 @@ var (
 	// Template functions for rendering posts
 	postFunctions = template.FuncMap{
 		"thumbPath":        thumbPath,
-		"renderTime":       renderTime,
+		"formatTime":       formatTime,
 		"readableLength":   readableLength,
 		"readableFileSize": readableFileSize,
 		"sourcePath":       sourcePath,

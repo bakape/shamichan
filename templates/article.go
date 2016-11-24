@@ -91,8 +91,35 @@ func extension(fileType uint8) string {
 }
 
 // Renders the post creation time field
-func renderTime(sec int64) string {
-	return time.Unix(sec, 0).Format("2 Jan 2006 (Mon) 15:04")
+func formatTime(sec int64, lang map[string][]string) template.HTML {
+	t := time.Unix(sec, 0)
+	year, m, day := t.Date()
+	weekday := lang["week"][int(t.Weekday())]
+	month := lang["calendar"][int(m)]
+
+	// Premature optimization
+	buf := make([]byte, 0, 17+len(weekday)+len(month))
+	buf = pad(buf, day)
+	buf = append(buf, ' ')
+	buf = append(buf, month...)
+	buf = append(buf, ' ')
+	buf = append(buf, strconv.Itoa(year)...)
+	buf = append(buf, " ("...)
+	buf = append(buf, weekday...)
+	buf = append(buf, ") "...)
+	buf = pad(buf, t.Hour())
+	buf = append(buf, ':')
+	buf = pad(buf, t.Minute())
+
+	return template.HTML(buf)
+}
+
+// Stringify an int and left-pad to at least double digits
+func pad(buf []byte, i int) []byte {
+	if i < 10 {
+		buf = append(buf, '0')
+	}
+	return append(buf, strconv.Itoa(i)...)
 }
 
 // Renders a human-readable representation video/audio length

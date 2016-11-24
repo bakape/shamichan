@@ -28,10 +28,14 @@ type Pack struct {
 	Tabs, SortModes []string
 	Forms           map[string][2]string
 	UI, Options     map[string]string
-	Common          struct {
-		Posts   map[string]string
-		Plurals map[string][2]string
-	}
+	Common
+}
+
+// Common contains localization common to both the server and the client
+type Common struct {
+	Posts   map[string]string
+	Plurals map[string][2]string
+	Time    map[string][]string
 }
 
 // Load loads and parses all JSON language packs
