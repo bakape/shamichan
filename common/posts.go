@@ -72,7 +72,6 @@ type BoardThreads []struct {
 	Name        string `json:"name,omitempty" gorethink:"name,omitempty"`
 	Trip        string `json:"trip,omitempty" gorethink:"trip,omitempty"`
 	Auth        string `json:"auth,omitempty" gorethink:"auth,omitempty"`
-	Email       string `json:"email,omitempty" gorethink:"email,omitempty"`
 	Image       *Image `json:"image,omitempty" gorethink:"image,omitempty"`
 	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
 	Board       string `json:"board" gorethink:"board"`
@@ -116,7 +115,6 @@ type Post struct {
 	Name      string    `json:"name,omitempty" gorethink:"name,omitempty"`
 	Trip      string    `json:"trip,omitempty" gorethink:"trip,omitempty"`
 	Auth      string    `json:"auth,omitempty" gorethink:"auth,omitempty"`
-	Email     string    `json:"email,omitempty" gorethink:"email,omitempty"`
 	Image     *Image    `json:"image,omitempty" gorethink:"image,omitempty"`
 	Backlinks LinkMap   `json:"backlinks,omitempty" gorethink:"backlinks,omitempty"`
 	Links     LinkMap   `json:"links,omitempty" gorethink:"links,omitempty"`

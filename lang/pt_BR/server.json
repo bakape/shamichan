@@ -4,10 +4,6 @@
 			"Name",
 			"Name to attach to new posts"
 		],
-		"email": [
-			"Email",
-			"Email to include in new posts"
-		],
 		"postPassword": [
 			"Password",
 			"Password used for post or image deletion after creation and reopening open posts after a disconnect"

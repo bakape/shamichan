@@ -1,11 +1,11 @@
-import {escape, pluralize, pad, makeAttrs} from '../../util'
-import {renderImage, renderFigcaption} from './image'
-import {renderBacklinks} from './etc'
-import {renderBody} from './body'
-import {PostData, ThreadData} from '../models'
-import {posts as lang, time as timeLang} from '../../lang'
+import { escape, pluralize, pad } from '../../util'
+import { renderImage, renderFigcaption } from './image'
+import { renderBacklinks } from './etc'
+import { renderBody } from './body'
+import { PostData, ThreadData } from '../models'
+import { posts as lang, time as timeLang } from '../../lang'
 import options from '../../options'
-import {PostCredentials} from "../posting/identity"
+import { PostCredentials } from "../posting/identity"
 
 // Populate post template
 export default function (
@@ -44,22 +44,13 @@ export function renderHeader(frag: NodeSelector, data: PostData) {
 // Render the name of a post's poster
 export function renderName(
 	el: Element,
-	{trip, name, auth, email}: PostCredentials,
+	{trip, name, auth}: PostCredentials,
 ) {
 	if (options.anonymise) {
 		el.innerHTML = lang.anon
 		return
 	}
 	let html = ""
-
-	if (email) {
-		const attrs = {
-			class: "email",
-			href: "mailto:" + encodeURI(email),
-			target: "_blank",
-		}
-		html += `<a ${makeAttrs(attrs)}>`
-	}
 
 	if (name || !trip) {
 		if (name) {
@@ -74,9 +65,6 @@ export function renderName(
 
 	if (trip) {
 		html += `<code>!${escape(trip)}</code>`
-	}
-	if (email) {
-		html += "</a>"
 	}
 	if (auth) { // Render staff title
 		el.classList.add("admin")
@@ -107,7 +95,7 @@ function readableTime(time: number): string {
 	let d = new Date(time * 1000)
 	return `${pad(d.getDate())} ${timeLang.calendar[d.getMonth()]} `
 		+ `${d.getFullYear()} (${timeLang.week[d.getDay()]}) `
-		+`${pad(d.getHours())}:${pad(d.getMinutes())}`
+		+ `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 // Renders readable elapsed time since post

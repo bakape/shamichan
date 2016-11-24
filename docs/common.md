@@ -15,7 +15,6 @@ Generic post object
 | body      | string                  | +        | text body of post                                                                                   |
 | name      | string                  | -        | poster name                                                                                         |
 | trip      | string                  | -        | poster tripcode                                                                                     |
-| email     | string                  | -        | poster email                                                                                        |
 | backlinks | [PostLinks](#postlinks) | -        | posts linking to this post                                                                          |
 | links     | [PostLinks](#postlinks) | -        | posts this post is linking                                                                          |
 | commands  | [[]Command](#command)   | -        | results of hash commands, such as #flip                                                             |

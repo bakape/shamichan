@@ -3,7 +3,6 @@ package common
 // Maximum lengths of various string input fields
 const (
 	MaxLenName         = 50
-	MaxLenEmail        = 100
 	MaxLenAuth         = 50
 	MaxLenPostPassword = 50
 	MaxLenSubject      = 100

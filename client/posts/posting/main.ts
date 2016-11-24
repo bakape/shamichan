@@ -201,8 +201,6 @@ deferInit(() => {
 		passive: true,
 	})
 
-	// Trigger update on name and email change
-	for (let key of ["name", "email"]) {
-		identity.onChange(key, updateIdentity)
-	}
+	// Trigger update on name change
+	identity.onChange("name", updateIdentity)
 })

@@ -41,7 +41,7 @@ type ThreadCreationRequest struct {
 // creation
 type ReplyCreationRequest struct {
 	Image                             ImageRequest
-	Name, Email, Auth, Password, Body string
+	Name, Auth, Password, Body string
 }
 
 // ImageRequest contains data for allocating an image
@@ -298,7 +298,6 @@ func constructPost(
 			Post: common.Post{
 				Editing: true,
 				Time:    now,
-				Email:   parser.FormatEmail(req.Email),
 			},
 			Board: board,
 		},

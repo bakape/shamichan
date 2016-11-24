@@ -50,14 +50,6 @@ func ParseSubject(s string) (string, error) {
 	return strings.TrimSpace(s), nil
 }
 
-// FormatEmail validates and checks
-func FormatEmail(email string) string {
-	if email == "" || len(email) > common.MaxLenEmail {
-		return ""
-	}
-	return strings.TrimSpace(email)
-}
-
 // VerifyPostPassword verifies a post password exists does not surpass the
 // maximum allowed length
 func VerifyPostPassword(s string) error {

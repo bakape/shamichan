@@ -93,7 +93,6 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 				Name:    header.Filename,
 			},
 			Name:     f.Get("name"),
-			Email:    f.Get("email"),
 			Auth:     f.Get("auth"),
 			Password: f.Get("password"),
 			Body:     f.Get("body"),

@@ -79,8 +79,8 @@ function toggleAutoGIF() {
 // Self-delusion tripfag filter
 function toggleAnonymisation() {
 	loopPosts(
-		({name, trip, email, auth}) =>
-			!!name || !!trip || !!auth || !!email,
+		({name, trip, auth}) =>
+			!!name || !!trip || !!auth,
 		({view}) =>
 			view.renderName(),
 	)

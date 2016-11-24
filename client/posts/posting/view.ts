@@ -109,7 +109,7 @@ export class FormView extends PostView implements UploadForm {
     // Render a temporary view of the identity fields, so the user can see what
     // credentials he is about to post with
     renderIdentity() {
-        let {name, email} = identity,
+        let {name} = identity,
             trip = ""
         const iHash = name.indexOf("#")
         if (iHash !== -1) {
@@ -119,7 +119,6 @@ export class FormView extends PostView implements UploadForm {
         renderName(this.el.querySelector(".name"), {
             trip,
             name: name.trim(),
-            email: email.trim(),
             auth: undefined,
         })
     }

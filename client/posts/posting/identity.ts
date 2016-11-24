@@ -1,4 +1,4 @@
-// Name, email, tripcode and staff title persistence and postform propagation
+// Name, tripcode and staff title persistence and postform propagation
 
 import { emitChanges, ChangeEmitter } from '../../model'
 import { randomID } from '../../util'
@@ -7,7 +7,6 @@ import { write } from "../../render"
 
 interface Identity extends ChangeEmitter {
 	name: string
-	email: string
 	postPassword: string
 	[index: string]: any
 }
@@ -15,7 +14,6 @@ interface Identity extends ChangeEmitter {
 // Base of any post allocation request
 export interface PostCredentials {
 	name?: string
-	email?: string
 	auth?: string // TODO
 	password?: string
 	[index: string]: any
@@ -26,9 +24,7 @@ const identity = emitChanges({} as Identity)
 export default identity
 
 // Load from localStorage or initialize
-for (let name of ["name", "email"]) {
-	identity[name] = localStorage.getItem(name) || ""
-}
+identity.name = localStorage.getItem("name") || ""
 let stored = localStorage.getItem("postPassword")
 if (!stored) {
 	stored = randomID(32)
@@ -36,7 +32,7 @@ if (!stored) {
 }
 identity.postPassword = stored
 
-// Name and email input panel
+// Poster identity input panel
 class IdentityPanel extends BannerModal {
 	constructor() {
 		super(document.getElementById("identity"))
@@ -47,7 +43,7 @@ class IdentityPanel extends BannerModal {
 
 	private assignValues() {
 		write(() => {
-			for (let key of ["name", "email", "postPassword"]) {
+			for (let key of ["name", "postPassword"]) {
 				(this.el.querySelector(`input[name=${key}]`) as HTMLInputElement)
 					.value = identity[key]
 			}
@@ -71,11 +67,8 @@ export function newAllocRequest(): PostCredentials {
 		password: identity.postPassword,
 	} as any
 
-	for (let key of ["name", "email"]) {
-		const val = identity[key]
-		if (val) {
-			req[key] = val
-		}
+	if (identity.name) {
+		req["name"] = identity.name
 	}
 
 	return req

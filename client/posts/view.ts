@@ -163,7 +163,7 @@ export default class PostView extends ImageHandler {
 		})
 	}
 
-	// Render the name, tripcode and email in the header
+	// Render the name and tripcode in the header
 	public renderName() {
 		write(() =>
 			renderName(this.el.querySelector(".name"), this.model))

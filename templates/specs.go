@@ -27,11 +27,6 @@ var specs = map[string][]inputSpec{
 			MaxLength: common.MaxLenName,
 		},
 		{
-			ID:        "email",
-			Type:      _string,
-			MaxLength: common.MaxLenEmail,
-		},
-		{
 			ID:        "postPassword",
 			Type:      _password,
 			MaxLength: common.MaxLenPassword,

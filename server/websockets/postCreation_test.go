@@ -384,7 +384,6 @@ func TestPostCreation(t *testing.T) {
 	req := ReplyCreationRequest{
 		Body:     "Δ",
 		Password: "123",
-		Email:    "wew lad",
 		Image: ImageRequest{
 			Name:    "foo.jpeg",
 			Token:   token,
@@ -411,7 +410,6 @@ func TestPostCreation(t *testing.T) {
 				ID:      6,
 				Time:    then,
 				Body:    "Δ",
-				Email:   "wew lad",
 				Image: &common.Image{
 					Name:        "foo",
 					Spoiler:     true,

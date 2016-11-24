@@ -27,7 +27,6 @@ export interface PostData {
 	name?: string
 	trip?: string
 	auth?: string
-	email?: string
 	state: TextState
 	backlinks?: PostLinks
 	links?: PostLinks
@@ -106,7 +105,6 @@ export class Post extends Model implements PostData {
 	name: string
 	trip: string
 	auth: string
-	email: string
 	state: TextState
 	backlinks: PostLinks
 	commands: Command[]

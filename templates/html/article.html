@@ -6,9 +6,6 @@
 			</h3>
 		{{end}}
 		<b class="name"{{if .Auth}} class="admin"{{end}}>
-			{{if .Email}}
-				<a href="mailto:{{urlquery .Email}}" target="_blank" class="email">
-			{{end}}
 			{{if (or .Name (eq .Trip ""))}}
 				{{if .Name}}
 					{{.Name}}
@@ -26,9 +23,6 @@
 			{{end}}
 			{{with .Auth}}
 				## {{.}}
-			{{end}}
-			{{if .Email}}
-				</a>
 			{{end}}
 		</b>
 		<time>

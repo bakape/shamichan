@@ -3,9 +3,9 @@ package parser
 import (
 	"testing"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/common"
 )
 
 func TestParseName(t *testing.T) {
@@ -116,26 +116,6 @@ func TestVerifyPostPassword(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			if err := VerifyPostPassword(c.in); err != c.err {
 				UnexpectedError(t, err)
-			}
-		})
-	}
-}
-
-func TestFormatEmail(t *testing.T) {
-	t.Parallel()
-
-	cases := [...]struct {
-		name, in, out string
-	}{
-		{"empty", "", ""},
-		{"normal", "foo", "foo"},
-		{"too long", genString(common.MaxLenEmail + 1), ""},
-	}
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.name, func(t *testing.T) {
-			if s := FormatEmail(c.in); s != c.out {
-				LogUnexpected(t, c.out, s)
 			}
 		})
 	}
