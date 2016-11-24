@@ -1,6 +1,10 @@
 {
 	"posts": {
-		"anon": "Anonymous"
+		"anon": "Anonymous",
+		"show": "Show",
+		"hide": "Hide",
+		"expand": "Expand Images",
+		"contract": "Contract Images"
 	},
 	"plurals": {
 		"post": [

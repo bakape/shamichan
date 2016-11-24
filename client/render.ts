@@ -17,31 +17,6 @@ let readStack: Operation[] = [],
 	writeStack: Operation[] = [],
 	scheduled: boolean
 
-// Assign language-specific strings to templates
-export function initTemplates() {
-	// Initialize and populate templates with language pack values
-	for (let el of document.head.querySelectorAll("template")) {
-		templates[el.getAttribute("name")] = (el as HTMLTemplateElement).content
-	}
-	{
-		const frag = templates["thread"]
-		const actText = [
-			"",
-			lang.navigation.bottom,
-			"",
-			lang.navigation.return,
-			lang.navigation.top,
-			`${lang.navigation.last} 50`,
-		]
-		const actEls = frag.querySelectorAll("span a")
-		for (let i = 0; i < actEls.length; i++) {
-			actEls[i].textContent = actText[i]
-		}
-		frag.querySelector("aside.posting a").textContent = lang.posts.reply
-		frag.querySelector("#lock").textContent = lang.navigation.lockedToBottom
-	}
-}
-
 // Import a prepared template and return it's HTML contents
 export function importTemplate(name: string): DocumentFragment {
 	return document.importNode(templates[name], true) as DocumentFragment
@@ -81,4 +56,9 @@ function flush() {
 	for (let i = 0; i < reads.length; i++) {
 		reads[i]()
 	}
+}
+
+// Load HTML templates
+for (let el of document.head.querySelectorAll("template")) {
+	templates[el.getAttribute("name")] = (el as HTMLTemplateElement).content
 }

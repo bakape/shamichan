@@ -310,25 +310,20 @@
 		"width": "fit to width",
 		"screen": "fit to screen"
 	},
-	"mod": {
+	"ui": {
 		"logout": "Logout",
 		"logoutAll": "Log out all devices",
 		"createBoard": "Create board",
 		"configureBoard": "Configure board",
 		"configureServer": "Configure server",
 		"changePassword": "Change password",
-		"nameTaken": "Login name already taken",
-		"wrongCredentials": "Incorrect login name or password",
-		"wrongPassword": "Incorrect password",
-		"theFuck": "SOMEBODY FUCKED UP"
-	},
-	"ui": {
 		"focusForCaptcha": "Focus to load captcha",
 		"reloadCaptcha": "Click to reload",
 		"enableJS": "Enable JavaScript for more functionality",
 		"submit": "Submit",
 		"cancel": "Cancel",
 		"apply": "Apply",
+		"reply": "Reply",
 		"done": "Done",
 		"send": "Send",
 		"add": "Add",
@@ -342,7 +337,17 @@
 		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
 		"sortMode": "Sort threads by",
 		"catalogOmit": "Replies/Images",
-		"last": "Last"
+		"last": "Last",
+		"seeAll": "See all",
+		"report": "Report",
+		"focus": "Focus",
+		"bottom": "Bottom",
+		"expand": "Expand",
+		"catalog": "Catalog",
+		"return": "Return",
+		"top": "Top",
+		"lockedToBottom": "Locked to bottom",
+		"rescan": "Rescan"
 	},
 	"sortModes": [
 		"Last reply time",

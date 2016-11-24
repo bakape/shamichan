@@ -255,6 +255,6 @@ deferInit(() => {
 
 	on(threads, "click", toggleExpandAll, {
 		passive: true,
-		selector: "#expand-images",
+		selector: "#expand-images a",
 	})
 })

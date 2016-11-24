@@ -1,18 +1,18 @@
 <h1 id="page-title">
 	{{.Title}}
 </h1>
-{{with .Conf.Notice}}
-	<span id="notice">
-		<span>
-			{{.}}
-		</span>
+<span class="aside-container">
+	TODO: Post form &nbsp;
+	<span class="act" id="top">
+		<a href="#bottom">
+			{{index .Lang.UI "bottom"}}
+		</a>
 	</span>
-{{end}}
-TODO: Post form<br>
-<span class="act" id="top">
-	<a href="#bottom">
-		Bottom
-	</a>
+	<span id="expand-images" class="act">
+		<a>
+			{{index .Lang.Common.Posts "expand"}}
+		</a>
+	</span>
 </span>
 <hr>
 <div id="thread-container">
@@ -21,19 +21,28 @@ TODO: Post form<br>
 		{{template "article" (wrapPost . $.Thread.ID $.Thread.Board "" $.Lang)}}
 	{{end}}
 </div>
+<div id="bottom-spacer"></div>
+<aside class="act posting">
+	<a>
+		{{index .Lang.UI "reply"}}
+	</a>
+</aside>
 <hr>
 <span class="act" id="bottom">
 	<a href="." class="history">
-		Return
+		{{index .Lang.UI "return"}}
 	</a>
 </span>
 <span class="act">
 	<a href="#top">
-		Top
+		{{index .Lang.UI "top"}}
 	</a>
 </span>
 <span class="act">
-	<a href="?last=50&noscript=true" class="history">
-		Last 50
+	<a href="?last=50" class="history reload">
+		{{index .Lang.UI "last"}} 50
 	</a>
+</span>
+<span id="lock" class="hidden">
+	{{index .Lang.UI "lockedToBottom"}}
 </span>

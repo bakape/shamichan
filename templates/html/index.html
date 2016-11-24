@@ -214,13 +214,13 @@
 				<div id="form-selection" class="hidden">
 					{{range bundle "logout" "logoutAll" "changePassword" "createBoard" "configureBoard"}}
 						<a id="{{.}}">
-							{{index $.Lang.Mod .}}
+							{{index $.Lang.UI .}}
 						</a>
 						<br>
 					{{end}}
 					<span>
 						<a id="configureServer">
-							{{index $.Lang.Mod "configureServer"}}
+							{{index $.Lang.UI "configureServer"}}
 						</a>
 						<br>
 					</span>

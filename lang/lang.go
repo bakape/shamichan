@@ -24,11 +24,11 @@ var (
 
 // Pack contains a localization language pack for a single language
 type Pack struct {
-	ID               string
-	Tabs, SortModes  []string
-	Forms            map[string][2]string
-	Mod, UI, Options map[string]string
-	Common           struct {
+	ID              string
+	Tabs, SortModes []string
+	Forms           map[string][2]string
+	UI, Options     map[string]string
+	Common          struct {
 		Posts   map[string]string
 		Plurals map[string][2]string
 	}

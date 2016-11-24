@@ -1,6 +1,5 @@
 {
 	"posts": {
-		"reply": "Reply",
 		"you": "(You)",
 		"OP": "(OP)",
 		"locked": "locked",
@@ -36,24 +35,6 @@
 		"feedback": "Feedback",
 		"googleSong": "Click to google song",
 		"sync": "Connection status"
-	},
-	"images": {
-		"show": "Show",
-		"hide": "Hide",
-		"expand": "Expand Images",
-		"contract": "Contract Images"
-	},
-	"navigation": {
-		"seeAll": "See all",
-		"report": "Report",
-		"focus": "Focus",
-		"bottom": "Bottom",
-		"expand": "Expand",
-		"catalog": "Catalog",
-		"return": "Return",
-		"top": "Top",
-		"lockedToBottom": "Locked to bottom",
-		"rescan": "Rescan"
 	},
 	"reports": {
 		"post": "Reporting post",
