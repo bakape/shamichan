@@ -141,23 +141,13 @@ export function sourcePath(SHA1: string, fileType: fileTypes): string {
 // Render a name + download link of an image
 export function imageLink(el: Element, data: ImageData) {
 	let {name} = data
-	const {fileType} = data,
-		ext = fileTypes[fileType],
-		fullName = `${escape(name)}.${ext}`,
-		tooLong = name.length >= 38
-	const attrs: { [key: string]: string } = {
-		href: sourcePath(data.SHA1, data.fileType),
-		download: fullName,
-	}
+	const {SHA1, fileType} = data
+	name = `${escape(name)}.${fileTypes[fileType]}`
 
-	if (tooLong) {
-		name = `${escape(name.slice(0, 30))}(&hellip;).${ext}`
-		attrs['title'] = fullName
-	} else {
-		name = fullName
-	}
-
-	setAttrs(el, attrs)
+	setAttrs(el, {
+		href: sourcePath(SHA1, fileType),
+		download: name,
+	})
 	el.innerHTML = name
 }
 

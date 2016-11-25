@@ -67,8 +67,9 @@
 				{{index .Dims 0}}x{{index .Dims 1}}
 				)
 			</span>
-			<a href="{{sourcePath .FileType .SHA1}}" download="{{.Name}}.{{extension .FileType}}">
-				{{.Name}}.{{extension .FileType}}
+			{{$name := print .Name "." (extension .FileType)}}
+			<a href="{{sourcePath .FileType .SHA1}}" download="{{$name}}">
+				{{$name}}
 			</a>
 		</figcaption>
 	{{end}}
