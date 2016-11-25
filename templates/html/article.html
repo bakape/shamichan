@@ -26,7 +26,7 @@
 			{{end}}
 		</b>
 		<time>
-			{{formatTime .Time .Lang.Common.Time}}
+			{{formatTime .Time .Lang.Time}}
 		</time>
 		<nav>
 			<a href="#p{{.ID}}">
@@ -90,8 +90,9 @@
 	</div>
 	{{with .Backlinks}}
 		<small>
+			{{$op := index $.Lang.Posts "op"}}
 			{{range $id, $link := .}}
-				{{renderPostLink $id $link.OP $link.Board (ne $link.OP $.OP)}}
+				{{renderPostLink $id $link.OP $link.Board $op (ne $link.OP $.OP)}}
 			{{end}}
 		</small>
 	{{end}}

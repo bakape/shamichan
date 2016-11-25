@@ -1,26 +1,13 @@
 {
 	"posts": {
-		"you": "(You)",
-		"OP": "(OP)",
-		"locked": "locked",
-		"uploadProgress": "uploaded...",
-		"thread_locked": "This thread is locked.",
-		"quoted": "You have been quoted",
-		"board": "Board",
-		"and": "and",
-		"omitted": "omitted",
-		"post": [
-			"post",
-			"posts"
-		],
-		"image": [
-			"image",
-			"images"
-		],
-		"unfinishedPost": "You have an unfinished post",
-		"thumbnailing": "Thumbnailing..."
+		"board": "Board"
 	},
 	"ui": {
+		"unfinishedPost": "You have an unfinished post",
+		"thumbnailing": "Thumbnailing...",
+		"quoted": "You have been quoted",
+		"uploadProgress": "uploaded...",
+		"thread_locked": "This thread is locked.",
 		"invalidCaptcha": "Invalid captcha",
 		"mustMatch": "Passwords must match",
 		"close": "Close",

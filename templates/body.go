@@ -161,8 +161,14 @@ func (c *bodyContext) parsePostLink(m [][]byte) {
 	if len(m[1]) != 0 { // Write extra quotes
 		c.Write(m[1])
 	}
-	t := renderPostLink(id, verified.OP, verified.Board, verified.OP != c.OP)
-	c.WriteString(string(t))
+	html := renderPostLink(
+		id,
+		verified.OP,
+		verified.Board,
+		c.Lang.Posts["OP"],
+		verified.OP != c.OP,
+	)
+	c.WriteString(string(html))
 }
 
 // Parse internal or customly set reference URL

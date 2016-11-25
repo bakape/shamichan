@@ -5,6 +5,7 @@ import (
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/lang"
 	. "github.com/bakape/meguca/test"
 )
 
@@ -206,7 +207,19 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "valid link",
 			in:   ">>21",
-			out:  `<span><em><a href="#p21">>>21</a></em><br></span>`,
+			out:  `<span><em><a class="history" href="#p21">>>21</a></em><br></span>`,
+			op:   20,
+			links: common.LinkMap{
+				21: {
+					Board: "a",
+					OP:    20,
+				},
+			},
+		},
+		{
+			name: "valid link to OP",
+			in:   ">>21",
+			out:  `<span><em><a class="history" href="#p21">>>21 (OP)</a></em><br></span>`,
 			op:   21,
 			links: common.LinkMap{
 				21: {
@@ -218,24 +231,24 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "valid link with extra quotes",
 			in:   ">>>>21",
-			out:  `<span><em>>><a href="#p21">>>21</a></em><br></span>`,
-			op:   21,
+			out:  `<span><em>>><a class="history" href="#p21">>>21</a></em><br></span>`,
+			op:   20,
 			links: common.LinkMap{
 				21: {
 					Board: "a",
-					OP:    21,
+					OP:    20,
 				},
 			},
 		},
 		{
 			name: "valid cross-thread link",
 			in:   ">>21",
-			out:  `<span><em><a href="/a/21#p21">>>>/a/21</a></em><br></span>`,
-			op:   22,
+			out:  `<span><em><a class="history" href="/a/22#p21">>>>/a/21</a></em><br></span>`,
+			op:   20,
 			links: common.LinkMap{
 				21: {
 					Board: "a",
-					OP:    21,
+					OP:    22,
 				},
 			},
 		},
@@ -298,7 +311,8 @@ func TestRenderBody(t *testing.T) {
 					Links:    c.links,
 					Commands: c.commands,
 				},
-				OP: c.op,
+				Lang: lang.Packs["en_GB"].Common,
+				OP:   c.op,
 			}
 			if s := string(renderBody(pc)); s != c.out {
 				LogUnexpected(t, c.out, s)

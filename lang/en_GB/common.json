@@ -5,9 +5,14 @@
 		"hide": "Hide",
 		"expand": "Expand Images",
 		"contract": "Contract Images",
+		"OP": "(OP)",
+		"locked": "locked",
 		"justNow": "just now",
 		"in": "in",
-		"ago": "ago"
+		"ago": "ago",
+		"you": "(You)",
+		"and": "and",
+		"omitted": "omitted"
 	},
 	"plurals": {
 		"post": [

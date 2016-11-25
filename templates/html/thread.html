@@ -16,9 +16,9 @@
 </span>
 <hr>
 <div id="thread-container">
-	{{template "article" (wrapPost .Thread.Post .Thread.ID .Thread.Board .Thread.Subject .Lang)}}
+	{{template "article" (wrapPost .Thread.Post .Thread.ID .Thread.Board .Thread.Subject .Lang.Common)}}
 	{{range .Thread.Posts}}
-		{{template "article" (wrapPost . $.Thread.ID $.Thread.Board "" $.Lang)}}
+		{{template "article" (wrapPost . $.Thread.ID $.Thread.Board "" $.Lang.Common)}}
 	{{end}}
 </div>
 <div id="bottom-spacer"></div>

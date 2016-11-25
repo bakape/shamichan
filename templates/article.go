@@ -22,7 +22,7 @@ type postContext struct {
 	common.Post
 	OP             int64
 	Board, Subject string
-	Lang           lang.Pack
+	Lang           lang.Common
 }
 
 // Write an element attribute to the buffer
@@ -55,7 +55,7 @@ func wrapPost(
 	p common.Post,
 	op int64,
 	board, subject string,
-	lang lang.Pack,
+	lang lang.Common,
 ) postContext {
 	return postContext{
 		Post:    p,
@@ -143,14 +143,42 @@ func readableFileSize(s int) string {
 }
 
 // Render a link to another post. Can optionally be cross-thread.
-func renderPostLink(id, op int64, board string, cross bool) template.HTML {
-	var text, url string
-	if !cross {
-		text = strconv.FormatInt(id, 10)
-		url = fmt.Sprintf("#p%d", id)
-	} else {
-		text = fmt.Sprintf(">/%s/%d", board, id)
-		url = fmt.Sprintf("/%s/%d#p%d", board, op, id)
+func renderPostLink(
+	id, op int64,
+	board, OPLang string,
+	cross bool,
+) template.HTML {
+	var w htmlWriter
+
+	w.WriteString(`<a class="history" href="`)
+
+	// More premature optimization ahead
+
+	// Write href
+	if cross {
+		w.WriteByte('/')
+		w.WriteString(board)
+		w.WriteByte('/')
+		w.WriteString(strconv.FormatInt(op, 10))
 	}
-	return template.HTML(fmt.Sprintf("<a href=\"%s\">>>%s</a>", url, text))
+	w.WriteString("#p")
+	idStr := strconv.FormatInt(id, 10)
+	w.WriteString(idStr)
+	w.WriteString(`">>>`)
+
+	// Write text
+	if cross {
+		w.WriteString(">/")
+		w.WriteString(board)
+		w.WriteByte('/')
+	}
+	w.WriteString(idStr)
+	if id == op { // OP of this thread
+		w.WriteByte(' ')
+		w.WriteString(OPLang)
+	}
+
+	w.WriteString("</a>")
+
+	return w.HTML()
 }
