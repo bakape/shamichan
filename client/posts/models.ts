@@ -71,7 +71,6 @@ export interface ImageData {
 	audio: boolean
 	video: boolean
 	spoiler: boolean
-	large: boolean              // Added at runtime to render larger thumbnails
 	expanded: boolean           // Thumbnail is expanded
 	tallerThanViewport: boolean // Image is taller than the current viewport
 	revealed: boolean           // Revealing a hidden image with [Show]
@@ -209,10 +208,6 @@ export class Post extends Model implements PostData {
 		// "editing":false is omitted to reduce payload. Override explicitly.
 		if (!data.editing) {
 			this.editing = false
-		}
-		// Keep a bigger thumbnail for OPs
-		if (data.image && data.id === page.thread) {
-			data.image.large = true
 		}
 		write(() =>
 			this.view.renderContents(this.view.el))

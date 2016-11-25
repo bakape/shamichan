@@ -77,9 +77,10 @@
 			<figure>
 				<a target="_blank" href="{{sourcePath .}}">
 					{{if .Spoiler}}
+						<!-- TODO: board-specific server-side spoiler rendering -->
 						<img src="/assets/spoil/default.jpg">
 					{{else}}
-						<img src="{{thumbPath .}}">
+						<img src="{{thumbPath .FileType .SHA1}}">
 					{{end}}
 				</a>
 			</figure>

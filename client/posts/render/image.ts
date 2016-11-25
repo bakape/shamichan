@@ -178,12 +178,6 @@ export function renderThumbnail(el: Element, data: ImageData, href: string) {
 		thumb = thumbPath(data.SHA1, data.fileType)
 	}
 
-	// Downscale thumbnail for higher DPI, unless specified not to
-	if (!data.large && (thumbWidth > 125 || thumbHeight > 125)) {
-		thumbWidth *= 0.8333
-		thumbHeight *= 0.8333
-	}
-
 	const linkAttrs: { [key: string]: string } = {
 		href: href || src
 	}

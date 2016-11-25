@@ -12,6 +12,10 @@ a.referenced {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
+	article:not(:first-child) figure img:not(.expanded) {
+		max-width: 125px;
+		max-height: 125px;
+	}
 }
 
 article {

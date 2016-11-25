@@ -67,14 +67,21 @@ func wrapPost(
 }
 
 // Returns the HTTP path to the thumbnail of an image
-func thumbPath(img common.Image) string {
+func thumbPath(fileType uint8, SHA1 string) template.HTML {
+	buf := make([]byte, 14, 58)
+	copy(buf, "/images/thumb/")
+	buf = append(buf, SHA1...)
+	buf = append(buf, '.')
+
 	var ext string
-	if img.FileType == common.JPEG {
+	if fileType == common.JPEG {
 		ext = "jpg"
 	} else {
 		ext = "png"
 	}
-	return fmt.Sprintf("/images/thumb/%s.%s", img.SHA1, ext)
+	buf = append(buf, ext...)
+
+	return template.HTML(buf)
 }
 
 // Returns the HTTP path to the source file

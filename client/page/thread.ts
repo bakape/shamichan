@@ -33,11 +33,6 @@ export default function renderThread(thread: ThreadData) {
 		{posts} = thread
 	delete thread.posts // Reduce strain on the GC. We won't be using these.
 
-	// Render larger thumbnail for the OP
-	if (thread.image) {
-		thread.image.large = true
-	}
-
 	frag.querySelector("#expand-images")
 		.textContent = expandAll ? lang.contract : lang.expand
 
