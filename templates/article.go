@@ -134,23 +134,32 @@ func pad(buf []byte, i int) []byte {
 }
 
 // Renders a human-readable representation video/audio length
-func readableLength(l uint32) string {
+func readableLength(l uint32) template.HTML {
 	if l < 60 {
-		return fmt.Sprintf("0:%02d", l)
+		return template.HTML(fmt.Sprintf("0:%02d", l))
 	}
 	min := l / 60
-	return fmt.Sprintf("%02d:%02d", min, l-min)
+	return template.HTML(fmt.Sprintf("%02d:%02d", min, l-min))
 }
 
-// Renders a human-readable representation of file size
-func readableFileSize(s int) string {
-	if s < (1 << 10) {
-		return fmt.Sprintf("%d B", s)
+// Formats a human-readable representation of file size
+func readableFileSize(s int) template.HTML {
+	format := func(n, end string) template.HTML {
+		l := len(n)
+		buf := make([]byte, l, l+len(end))
+		copy(buf, n)
+		return template.HTML(append(buf, end...))
 	}
-	if s < (1 << 20) {
-		return fmt.Sprintf("%d KB", s/(1<<10))
+
+	switch {
+	case s < (1 << 10):
+		return format(strconv.Itoa(s), " B")
+	case s < (1 << 20):
+		return format(strconv.Itoa(s/(1<<10)), " KB")
+	default:
+		n := strconv.FormatFloat(float64(s)/(1<<20), 'f', 1, 32)
+		return format(n, " MB")
 	}
-	return fmt.Sprintf("%.1f MB", float32(s)/(1<<20))
 }
 
 // Render a link to another post. Can optionally be cross-thread.
