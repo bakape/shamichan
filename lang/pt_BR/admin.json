@@ -21,10 +21,6 @@
 		"#pyu",
 		"Don't ask"
 	],
-	"hats": [
-		"Hats on images",
-		"Attach hats to all image thumbnails"
-	],
 	"maxWidth": [
 		"Image width limit",
 		"Maximum width of uploaded images"

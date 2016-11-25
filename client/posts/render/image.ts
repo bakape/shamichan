@@ -1,4 +1,4 @@
-import { config, boardConfig } from '../../state'
+import { boardConfig } from '../../state'
 import options from '../../options'
 import { commaList, escape, setAttrs, pad } from '../../util'
 import { ImageData, fileTypes } from '../models'
@@ -44,7 +44,7 @@ export function renderImage(
 ) {
 	const showThumb = (!options.hideThumbs && !options.workModeToggle) || reveal
 	el.hidden = !showThumb
-	if (config.hats && showThumb) {
+	if (showThumb) {
 		(el.firstElementChild as HTMLElement).hidden = false
 	}
 	if (showThumb) {

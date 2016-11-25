@@ -21,10 +21,6 @@
 		"#pyu",
 		"Nepýtaj sa"
 	],
-	"hats": [
-		"Klobúčiky na obrázkoch",
-		"Attach hats to all image thumbnails"
-	],
 	"maxWidth": [
 		"Limit na výšky obrázka",
 		"Maximum width of uploaded images"

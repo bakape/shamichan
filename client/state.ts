@@ -10,7 +10,6 @@ import { send } from './connection'
 
 // Server-wide global configurations
 interface Configs extends ChangeEmitter {
-	hats: boolean
 	captcha: boolean
 	mature: boolean // Website intended for mature audiences
 	defaultLang: string

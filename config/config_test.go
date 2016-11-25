@@ -16,7 +16,7 @@ func TestSetGet(t *testing.T) {
 	Clear()
 	conf := Configs{
 		Public: Public{
-			Hats: true,
+			Mature: true,
 		},
 	}
 

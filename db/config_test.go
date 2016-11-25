@@ -26,7 +26,7 @@ func TestUpdateConfigs(t *testing.T) {
 	config.Set(config.Configs{})
 
 	std := config.Configs{}
-	std.Hats = true
+	std.Mature = true
 	if err := updateConfigs(std); err != nil {
 		t.Fatal(err)
 	}

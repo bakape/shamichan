@@ -196,7 +196,6 @@ var specs = map[string][]inputSpec{
 			Options: themes,
 		},
 		{ID: "pyu"},
-		{ID: "hats"},
 		{
 			ID:       "maxWidth",
 			Type:     _number,
