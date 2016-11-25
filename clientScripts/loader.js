@@ -160,7 +160,7 @@
 	var xhr = new XMLHttpRequest()
 	var langPath = '/assets/lang/'
 		+ (localStorage.lang || config.defaultLang)
-		+ '/main.json'
+		+ '/common.json'
 	xhr.open('GET', langPath)
 	xhr.responseType = 'json'
 	xhr.onload = function () {

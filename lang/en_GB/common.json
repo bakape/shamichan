@@ -1,23 +1,27 @@
 {
 	"posts": {
-		"anon": "Anonymous",
-		"show": "Show",
-		"hide": "Hide",
-		"expand": "Expand Images",
-		"contract": "Contract Images",
 		"OP": "(OP)",
-		"locked": "locked",
-		"justNow": "just now",
-		"in": "in",
 		"ago": "ago",
-		"you": "(You)",
 		"and": "and",
-		"omitted": "omitted"
+		"anon": "Anonymous",
+		"contract": "Contract Images",
+		"expand": "Expand Images",
+		"hide": "Hide",
+		"in": "in",
+		"justNow": "just now",
+		"locked": "locked",
+		"omitted": "omitted",
+		"show": "Show",
+		"you": "(You)"
 	},
 	"plurals": {
-		"post": [
-			"post",
-			"posts"
+		"day": [
+			"day",
+			"days"
+		],
+		"hour": [
+			"hour",
+			"hours"
 		],
 		"image": [
 			"image",
@@ -27,17 +31,13 @@
 			"minute",
 			"minutes"
 		],
-		"hour": [
-			"hour",
-			"hours"
-		],
-		"day": [
-			"day",
-			"days"
-		],
 		"month": [
 			"month",
 			"months"
+		],
+		"post": [
+			"post",
+			"posts"
 		],
 		"year": [
 			"year",
@@ -45,15 +45,6 @@
 		]
 	},
 	"time": {
-		"week": [
-			"Sun",
-			"Mon",
-			"Tue",
-			"Wed",
-			"Thu",
-			"Fri",
-			"Sat"
-		],
 		"calendar": [
 			"Jan",
 			"Feb",
@@ -67,6 +58,43 @@
 			"Oct",
 			"Nov",
 			"Dec"
+		],
+		"week": [
+			"Sun",
+			"Mon",
+			"Tue",
+			"Wed",
+			"Thu",
+			"Fri",
+			"Sat"
 		]
+	},
+	"ui": {
+		"mustMatch": "Passwords must match",
+		"quoted": "You have been quoted",
+		"refresh": "Refresh",
+		"sessionExpired": "Login session expired",
+		"thread_locked": "This thread is locked.",
+		"thumbnailing": "Thumbnailing...",
+		"unfinishedPost": "You have an unfinished post",
+		"uploadProgress": "uploaded..."
+	},
+	"sync": [
+		"disconnected",
+		"connecting",
+		"syncing",
+		"synced",
+		"desynced"
+	],
+	"syncwatch": {
+		"starting": "Syncwatch starting in 10 seconds",
+		"finished": "Finished"
+	},
+	"opts": {
+		"importConfig": {
+			"done": "Import successful. The page will now reload.",
+			"corrupt": "Import failed. File corrupt"
+		},
+		"langApplied": "Language settings applied. The page will now reload."
 	}
 }
