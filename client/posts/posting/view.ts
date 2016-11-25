@@ -8,7 +8,6 @@ import { setAttrs, makeFrag, applyMixins } from "../../util"
 import { parseTerminatedLine } from "../render/body"
 import { renderHeader, renderName } from "../render/posts"
 import { write } from "../../render"
-import { ui } from "../../lang"
 import { threadContainer } from "../../page/thread"
 import { postSM, postEvent } from "./main"
 import UploadForm, { FileData } from "./upload"
@@ -134,7 +133,7 @@ export class FormView extends PostView implements UploadForm {
         setAttrs(el, {
             name,
             type: "button",
-            value: ui[name],
+            value: "TODO",
         })
         el.addEventListener("click", clickHandler)
         return this[name] = el

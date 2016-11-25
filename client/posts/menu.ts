@@ -3,7 +3,7 @@ import { Post } from "./models"
 import { getModel, mine } from "../state"
 import { threads, write } from "../render"
 import { on, outerWidth } from "../util"
-import * as lang from "../lang"
+import lang from "../lang"
 import { hidePost } from "./hide"
 import { spoilerImage } from "./posting/upload"
 
@@ -21,14 +21,14 @@ type ItemSpec = {
 // Actions to be performed by the items in the popup menu
 const actions: { [key: string]: ItemSpec } = {
 	hide: {
-		text: lang.images.hide,
+		text: lang.posts["hide"],
 		shouldRender(m) {
 			return true
 		},
 		handler: hidePost,
 	},
 	spoiler: {
-		text: lang.posts.spoiler,
+		text: lang.posts["spoiler"],
 		shouldRender({id, image}) {
 			return !!image && !image.spoiler && mine.has(id)
 		},

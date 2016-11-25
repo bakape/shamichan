@@ -2,7 +2,7 @@ import { TabbedModal } from '../banner'
 import { models, default as options } from '../options'
 import { optionType } from './specs'
 import { loadModule, load } from '../util'
-import { opts as lang } from '../lang'
+import lang from '../lang'
 import { write } from '../render'
 import { clearHidden } from "../posts/hide"
 import { hidden } from "../state"
@@ -138,7 +138,7 @@ export default class OptionsPanel extends TabbedModal {
 			json = JSON.parse(event.target.result)
 		}
 		catch (err) {
-			alert(lang.importConfig.corrupt)
+			alert(lang.opts.importConfig["corrupt"])
 			return
 		}
 
@@ -146,7 +146,7 @@ export default class OptionsPanel extends TabbedModal {
 		for (let key in json) {
 			localStorage.setItem(key, json[key])
 		}
-		alert(lang.importConfig.done)
+		alert(lang.opts.importConfig["done"])
 		location.reload()
 	}
 

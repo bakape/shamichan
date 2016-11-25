@@ -6,7 +6,7 @@ import { threads, importTemplate } from '../render'
 import options from "../options"
 import { setTitle } from "../tab"
 import { expandAll } from "../posts/images"
-import { images as lang } from "../lang"
+import lang from "../lang"
 import { updateSyncTimestamp } from "../connection"
 
 // Container for all rendered posts
@@ -34,7 +34,7 @@ export default function renderThread(thread: ThreadData) {
 	delete thread.posts // Reduce strain on the GC. We won't be using these.
 
 	frag.querySelector("#expand-images")
-		.textContent = expandAll ? lang.contract : lang.expand
+		.textContent = lang.ui[expandAll ? "contract" : "expand"]
 
 	const opModel = new OP(thread),
 		opView = new OPView(opModel)

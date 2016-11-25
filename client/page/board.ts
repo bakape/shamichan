@@ -1,5 +1,5 @@
 import { escape, on, makeFrag } from '../util'
-import { ui, time } from '../lang'
+import lang from '../lang'
 import { page } from '../state'
 import options from '../options'
 import { write, threads } from '../render'
@@ -95,8 +95,8 @@ export function sortThreads(frag: ParentNode, initial: boolean) {
 // Render the board refresh button text
 function renderRefreshButton(el: Element) {
 	renderTime(el, lastFetch, true)
-	if (el.textContent === time.justNow) {
-		el.textContent = ui.refresh
+	if (el.textContent === lang.posts["justNow"]) {
+		el.textContent = lang.ui["refresh"]
 	}
 }
 

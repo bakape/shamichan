@@ -1,11 +1,11 @@
 import { Post, OP } from './models'
-import { mine, posts, page } from '../state'
+import { mine, posts } from '../state'
 import { makeFrag, pluralize, HTML } from '../util'
 import renderPost, { renderName, renderTime } from './render/posts'
 import { parseOpenLine, parseTerminatedLine } from './render/body'
 import { write, importTemplate } from '../render'
 import { renderBacklinks } from './render/etc'
-import { posts as lang, navigation } from '../lang'
+import lang from '../lang'
 import ImageHandler from "./images"
 
 // Base post view class
@@ -216,17 +216,20 @@ export class OPView extends PostView {
 		if (replyOmit === 0) {
 			return
 		}
-		let html = pluralize(replyOmit, lang.post)
+		let html = pluralize(replyOmit, lang.plurals["post"])
 		if (imageOmit !== 0) {
-			html += ` ${lang.and} ${pluralize(imageOmit, lang.image)}`
+			const imgStr = pluralize(imageOmit, lang.plurals["image"])
+			html += ` ${lang.posts["and"]} ${imgStr}`
 		}
 		html += HTML
-			` ${lang.omitted}&nbsp;
-			<span class="act">
-				<a href="${page.thread.toString()}" class="history">
-					${navigation.seeAll}
-				</a>
-			<span>`
+		"TODO: Template"
+		// ` ${lang.posts["omitted]}&nbsp;
+		// 	<span class="act">
+		// 		<a href="${page.thread.toString()}" class="history">
+		// 			${navigation.seeAll}
+		// 		</a>
+		// 	<span>`
+
 		write(() =>
 			this.el.querySelector(".omit").innerHTML = html)
 	}

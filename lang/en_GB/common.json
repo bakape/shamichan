@@ -77,7 +77,8 @@
 		"thread_locked": "This thread is locked.",
 		"thumbnailing": "Thumbnailing...",
 		"unfinishedPost": "You have an unfinished post",
-		"uploadProgress": "uploaded..."
+		"uploadProgress": "uploaded...",
+		"googleSong": "Click to google song"
 	},
 	"sync": [
 		"disconnected",

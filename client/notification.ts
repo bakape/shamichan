@@ -2,7 +2,7 @@
 
 import { storeSeenReply } from "./state"
 import options from "./options"
-import { posts as lang } from "./lang"
+import lang from "./lang"
 import { thumbPath } from "./posts/render/image"
 import { repliedToMe } from "./tab"
 import { Post } from "./posts/models"
@@ -33,7 +33,7 @@ export default function notifyAboutReply(post: Post) {
 			icon = defaultIcon
 		}
 	}
-	const n = new Notification(lang.quoted, {
+	const n = new Notification(lang.ui["quoted"], {
 		icon,
 		body: post.body,
 		vibrate: true,

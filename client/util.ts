@@ -301,7 +301,7 @@ export function isMatch(a: AnyHash, b: AnyHash): boolean {
 
 // Return either the singular or plural form of a translation, depending on
 // number
-export function pluralize(num: number, word: string[]): string {
+export function pluralize(num: number, word: [string, string]): string {
 	return `${num} ${word[num === 1 || num === -1 ? 0 : 1]}`
 }
 

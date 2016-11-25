@@ -3,7 +3,7 @@ import { renderImage, renderFigcaption } from './image'
 import { renderBacklinks } from './etc'
 import { renderBody } from './body'
 import { PostData, ThreadData } from '../models'
-import { posts as lang, time as timeLang } from '../../lang'
+import lang from '../../lang'
 import options from '../../options'
 import { PostCredentials } from "../posting/identity"
 
@@ -47,7 +47,7 @@ export function renderName(
 	{trip, name, auth}: PostCredentials,
 ) {
 	if (options.anonymise) {
-		el.innerHTML = lang.anon
+		el.innerHTML = lang.posts["anon"]
 		return
 	}
 	let html = ""
@@ -56,7 +56,7 @@ export function renderName(
 		if (name) {
 			html += escape(name)
 		} else {
-			html += lang.anon
+			html += lang.posts["anon"]
 		}
 		if (trip) {
 			html += ' '
@@ -93,8 +93,8 @@ export function renderTime(el: Element, time: number, forceRelative: boolean) {
 // Renders classic absolute timestamp
 function readableTime(time: number): string {
 	let d = new Date(time * 1000)
-	return `${pad(d.getDate())} ${timeLang.calendar[d.getMonth()]} `
-		+ `${d.getFullYear()} (${timeLang.week[d.getDay()]}) `
+	return `${pad(d.getDate())} ${lang.time.calendar[d.getMonth()]} `
+		+ `${d.getFullYear()} (${lang.time.week[d.getDay()]}) `
 		+ `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
@@ -104,7 +104,7 @@ function relativeTime(then: number, now: number): string {
 		isFuture = false
 	if (time < 1) {
 		if (time > -5) { // Assume to be client clock imprecision
-			return timeLang.justNow
+			return lang.posts["justNow"]
 		}
 		else {
 			isFuture = true
@@ -116,16 +116,19 @@ function relativeTime(then: number, now: number): string {
 		unit = ['minute', 'hour', 'day', 'month']
 	for (let i = 0; i < divide.length; i++) {
 		if (time < divide[i]) {
-			return ago(time, timeLang[unit[i]] as string[], isFuture)
+			return ago(time, lang.plurals[unit[i]], isFuture)
 		}
 		time = Math.floor(time / divide[i])
 	}
 
-	return ago(time, timeLang.year, isFuture)
+	return ago(time, lang.plurals["year"], isFuture)
 }
 
 // Renders "56 minutes ago" or "in 56 minutes" like relative time text
-function ago(time: number, units: string[], isFuture: boolean): string {
+function ago(time: number, units: [string, string], isFuture: boolean): string {
 	const count = pluralize(time, units)
-	return isFuture ? `${timeLang.in} ${count}` : `${count} ${timeLang.ago}`
+	if (isFuture) {
+		return `${lang.posts["in"]} ${count}`
+	}
+	return `${count} ${lang.posts["ago"]}`
 }

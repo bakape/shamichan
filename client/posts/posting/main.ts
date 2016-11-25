@@ -6,7 +6,7 @@ import { FormView } from "./view"
 import FSM from "../../fsm"
 import { connState, connSM } from "../../connection"
 import { write, threads } from "../../render"
-import { posts as lang } from "../../lang"
+import lang from "../../lang"
 import { on, getClosestID } from "../../util"
 import { deferInit } from "../../defer"
 import identity from "./identity"
@@ -60,7 +60,7 @@ function stylePostControls(fn: (el: HTMLElement) => void) {
 // unfinished allocated post.
 function bindNagging() {
 	window.onbeforeunload = (event: BeforeUnloadEvent) =>
-		event.returnValue = lang.unfinishedPost
+		event.returnValue = lang.ui["unfinishedPost"]
 }
 
 // Insert target post's number as a link into the text body

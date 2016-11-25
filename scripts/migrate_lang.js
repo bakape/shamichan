@@ -7,7 +7,7 @@ const en = {
     common: readJSON("lang/en_GB/common.json", "utf8"),
 }
 const targets = ["es_ES", "pt_BR", "sk_SK", "tr_TR", "uk_UA"],
-    files = ["main", "server", "admin"]
+    files = ["common", "server"]
 
 for (let t of targets) {
     const source = {
@@ -26,7 +26,7 @@ for (let t of targets) {
     for (let key in dest) {
         const path = `${dir}/${key}.json`
         fs.unlinkSync(path)
-        fs.writeFileSync(path, JSON.stringify(dest[key]))
+        fs.writeFileSync(path, JSON.stringify(dest[key], null, "\t"))
     }
 }
 

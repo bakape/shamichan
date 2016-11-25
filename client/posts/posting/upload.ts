@@ -1,7 +1,5 @@
-import { posts as lang } from '../../lang'
-import {
-    HTML, commaList, load, setAttrs, makeFrag, bufferToHex
-} from '../../util'
+import lang from '../../lang'
+import { HTML, commaList, load, setAttrs, makeFrag, bufferToHex } from '../../util'
 import { write } from '../../render'
 import { postJSON, postText } from "../../fetch"
 import Model from "../../model"
@@ -49,7 +47,7 @@ export default class UploadForm {
         const html = HTML
             `<input type="checkbox" name="spoiler">
 			<label for="spoiler" class="spoiler">
-				${lang.spoiler}
+				TODO: Form template
 			</label>`
         this.spoiler.append(makeFrag(html))
 
@@ -131,9 +129,10 @@ export default class UploadForm {
     renderProgress({total, loaded}: ProgressEvent) {
         let s: string
         if (loaded === total) {
-            s = lang.thumbnailing
+            s = lang.ui["thumbnailing"]
         } else {
-            s = `${Math.floor(loaded / total * 100)}% ${lang.uploadProgress}`
+            const n = Math.floor(loaded / total * 100)
+            s = `${n}% ${lang.ui["uploadProgress"]}`
         }
         write(() =>
             this.uploadStatus.textContent = s)

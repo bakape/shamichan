@@ -1,4 +1,4 @@
-import { ui } from '../lang'
+import lang from '../lang'
 import FormView from "../forms"
 import { ViewAttrs } from "../view"
 import { accountPanel, loginID, sessionToken, reset } from "./login"
@@ -25,10 +25,10 @@ export function validatePasswordMatch(
 	parent: Element, name1: string, name2: string
 ) {
 	const el1 = findInputEl(parent, name1),
-		el2 = findInputEl(parent, name2)
-	const fn = () =>
-		el2.setCustomValidity(el2.value !== el1.value ? ui.mustMatch : "")
-	el1.onchange = el2.onchange = fn
+		el2 = findInputEl(parent, name2),
+		v = el2.value !== el1.value ? lang.ui["mustMatch"] : ""
+	el1.onchange = el2.onchange = () =>
+		el2.setCustomValidity(v)
 }
 
 // Find an input element by name within a parent form element
@@ -97,7 +97,7 @@ export default class AccountFormView extends FormView {
 export function handle403(rem: Removable) {
 	rem.remove()
 	reset()
-	alert(ui.sessionExpired)
+	alert(lang.ui["sessionExpired"])
 }
 
 // Extract values from an input form

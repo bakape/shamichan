@@ -1,14 +1,12 @@
 import { Post, fileTypes } from "./models"
 import View from "../view"
-import {
-	renderFigcaption, renderImage, sourcePath, imageLink,
-} from "./render/image"
+import { renderFigcaption, renderImage, sourcePath, imageLink } from "./render/image"
 import { write, threads } from "../render"
 import options from "../options"
 import { setAttrs, on } from "../util"
 import { getModel, posts } from "../state"
 import { trigger } from "../hooks"
-import { images as lang } from "../lang"
+import lang from "../lang"
 import { deferInit } from "../defer"
 import { scrollToElement } from "../scroll"
 
@@ -48,7 +46,7 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes["tar.gz"]:
 			case fileTypes["tar.xz"]:
 				event.preventDefault()
-				const a  = document.createElement("a")
+				const a = document.createElement("a")
 				imageLink(a, getModel(event.target as Element).image)
 				return a.click()
 			case fileTypes.mp3:
@@ -211,7 +209,7 @@ export function toggleExpandAll() {
 	write(() => {
 		const e = threads.querySelector("#expand-images")
 		if (e) {
-			e.textContent = expandAll ? lang.contract : lang.expand
+			e.textContent = lang.ui[expandAll ? "contract" : "expand"]
 		}
 	})
 

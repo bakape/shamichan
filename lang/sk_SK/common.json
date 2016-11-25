@@ -77,7 +77,8 @@
 		"thread_locked": "Toto vlákno je zamknuté.",
 		"thumbnailing": "Odtlačkujem...",
 		"unfinishedPost": "Más nedokončený plagát",
-		"uploadProgress": "odoslané..."
+		"uploadProgress": "odoslané...",
+		"googleSong": "Click to google song"
 	},
 	"sync": [
 		"odpojený",

@@ -2,7 +2,7 @@
 
 import FSM from './fsm'
 import { debug, page, posts } from './state'
-import { sync as lang } from './lang'
+import lang from './lang'
 import { write } from './render'
 import { PostData } from "./posts/models"
 import { insertPost } from "./client"
@@ -109,7 +109,7 @@ function nullSocket() {
 // Render connection status indicator
 function renderStatus(status: syncStatus) {
 	write(() =>
-		syncEl.textContent = lang[status])
+		syncEl.textContent = lang.sync[status])
 }
 
 // Send a message to the server. If msg is null, it is omitted from sent

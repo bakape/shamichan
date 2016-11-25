@@ -77,7 +77,8 @@
 		"thread_locked": "Este hilo esta cerrado.",
 		"thumbnailing": "Thumbnailing...",
 		"unfinishedPost": "You have an unfinished post",
-		"uploadProgress": "uploaded..."
+		"uploadProgress": "uploaded...",
+		"googleSong": "Clock para googlear la cancion"
 	},
 	"sync": [
 		"disconnected",

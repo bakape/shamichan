@@ -77,7 +77,8 @@
 		"thread_locked": "Este tópico está trancado.",
 		"thumbnailing": "Thumbnailing...",
 		"unfinishedPost": "You have an unfinished post",
-		"uploadProgress": "uploaded..."
+		"uploadProgress": "uploaded...",
+		"googleSong": "Clique para pesquisar (google) a música"
 	},
 	"sync": [
 		"disconnected",

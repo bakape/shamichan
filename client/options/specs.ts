@@ -1,7 +1,7 @@
 // Specs for individual option models
 
 import { config } from '../state'
-import { opts as lang } from '../lang'
+import lang from '../lang'
 import { loadModule, makeEl } from '../util'
 import { write } from "../render"
 
@@ -60,7 +60,7 @@ export const specs: { [id: string]: OptionSpec } = {
 			// Expire 10 years from now
 			const t = new Date(new Date().getFullYear() + 10, 11)
 			document.cookie = `lang=${ln};expires${t.toUTCString()};path=/`
-			alert(lang.langApplied)
+			alert(lang.opts["langApplied"])
 			location.reload()
 		},
 	},

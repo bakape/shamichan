@@ -77,7 +77,8 @@
 		"thread_locked": "Bu konu kilitlendi.",
 		"thumbnailing": "Thumbnailing...",
 		"unfinishedPost": "You have an unfinished post",
-		"uploadProgress": "uploaded..."
+		"uploadProgress": "uploaded...",
+		"googleSong": "Şarkıyı googleda aratmak için tıklayın"
 	},
 	"sync": [
 		"disconnected",

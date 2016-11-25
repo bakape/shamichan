@@ -77,7 +77,8 @@
 		"thread_locked": "Цей тред закрито.",
 		"thumbnailing": "Прев'ювання..",
 		"unfinishedPost": "Ви маєте незакінчений пост",
-		"uploadProgress": "завантаження..."
+		"uploadProgress": "завантаження...",
+		"googleSong": "Клікніть для гугль пісні"
 	},
 	"sync": [
 		"Від'єднано",
