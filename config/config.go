@@ -60,6 +60,7 @@ var (
 		SessionExpiry: 30,
 		Salt:          "LALALALALALALALALALALALALALALALALALALALA",
 		FeedbackEmail: "admin@email.com",
+		RootURL:       "http://localhost",
 		Public: Public{
 			DefaultCSS:  "moe",
 			FAQ:         defaultFAQ,
@@ -103,6 +104,7 @@ type Configs struct {
 	BoardExpiry       uint   `json:"boardExpiry" gorethink:"boardExpiry"`
 	MaxSize           uint   `json:"maxSize" gorethink:"maxSize"`
 	SessionExpiry     uint   `json:"sessionExpiry" gorethink:"sessionExpiry"`
+	RootURL           string `json:"rootURL" gorethink:"rootURL"`
 	Salt              string `json:"salt" gorethink:"salt"`
 	FeedbackEmail     string `json:"feedbackEmail" gorethink:"feedbackEmail"`
 	CaptchaPrivateKey string `json:"captchaPrivateKey" gorethink:"captchaPrivateKey"`

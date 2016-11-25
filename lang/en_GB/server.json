@@ -295,6 +295,10 @@
 		"newPassword": [
 			"New password",
 			""
+		],
+		"rootURL": [
+			"Root URL",
+			"Root URL of the imageboard. Required for some image search providers to work."
 		]
 	},
 	"options": {

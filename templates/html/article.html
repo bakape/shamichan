@@ -43,12 +43,22 @@
 		</a>
 	</header>
 	{{with .Image}}
+		{{$src := urlquery (print $.Root "/" (sourcePath .FileType .SHA1))}}
 		<figcaption class="spaced">
 			<span class="spaced image-search-container">
+				<a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url={{$src}}">
+					G
+				</a>
+				<a class="image-search iqdb" target="_blank" rel="nofollow" href="http://iqdb.org/?url={{$src}}">
+					Iq
+				</a>
+				<a class="image-search saucenao" target="_blank" rel="nofollow" href="http://saucenao.com/search.php?db=999&url={{$src}}">
+					Sn
+				</a>
 				<a class="image-search" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{{.MD5}}">
 					Ds
 				</a>
-				<a class="image-search" target="_blank" rel="nofollow" href="http://exhentai.org/?fs_similar=1&amp;fs_exp=1&amp;f_shash={{.SHA1}}">
+				<a class="image-search" target="_blank" rel="nofollow" href="http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash={{.SHA1}}">
 					Ex
 				</a>
 			</span>

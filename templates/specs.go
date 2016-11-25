@@ -163,6 +163,10 @@ var specs = map[string][]inputSpec{
 			Required: true,
 		},
 		{
+			ID:   "rootURL",
+			Type: _string,
+		},
+		{
 			ID:   "salt",
 			Type: _string,
 		},

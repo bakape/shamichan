@@ -20,9 +20,25 @@ type htmlWriter struct {
 // Allows passing additional information to thread-related templates
 type postContext struct {
 	common.Post
-	OP             int64
-	Board, Subject string
-	Lang           lang.Common
+	OP                   int64
+	Board, Subject, Root string
+	Lang                 lang.Common
+}
+
+func wrapPost(
+	p common.Post,
+	op int64,
+	board, subject, root string,
+	lang lang.Common,
+) postContext {
+	return postContext{
+		Post:    p,
+		OP:      op,
+		Board:   board,
+		Subject: subject,
+		Root:    root,
+		Lang:    lang,
+	}
 }
 
 // Write an element attribute to the buffer
@@ -49,21 +65,6 @@ func (w *htmlWriter) queryEscape(s string) {
 // Outputs the buffer contents as a HTML string
 func (w *htmlWriter) HTML() template.HTML {
 	return template.HTML(w.String())
-}
-
-func wrapPost(
-	p common.Post,
-	op int64,
-	board, subject string,
-	lang lang.Common,
-) postContext {
-	return postContext{
-		Post:    p,
-		OP:      op,
-		Board:   board,
-		Subject: subject,
-		Lang:    lang,
-	}
 }
 
 // Returns the HTTP path to the thumbnail of an image

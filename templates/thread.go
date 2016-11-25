@@ -9,20 +9,19 @@ import (
 	"github.com/bakape/meguca/lang"
 )
 
-type threadVars struct {
-	Title  string
-	Thread common.Thread
-	Conf   config.BoardPublic
-	Lang   lang.Pack
-}
-
 // Thread renders thread page HTML for noscript browsers
 func Thread(ln lang.Pack, withIndex bool, t common.Thread) ([]byte, error) {
 	w := new(bytes.Buffer)
 	conf := config.GetBoardConfigs(t.Board)
 	title := fmt.Sprintf("/%s/ - %s (#%d)", t.Board, t.Subject, t.ID)
 
-	v := threadVars{
+	v := struct {
+		Title, Root string
+		Thread      common.Thread
+		Conf        config.BoardPublic
+		Lang        lang.Pack
+	}{
+		Root:   config.Get().RootURL,
 		Title:  title,
 		Thread: t,
 		Conf:   conf.BoardPublic,
