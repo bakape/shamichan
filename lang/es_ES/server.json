@@ -1,31 +1,368 @@
 {
 	"forms": {
+		"FAQ": [
+			"Information panel text",
+			"Entries for the banner's Frequently Asked Questions list and information modal"
+		],
+		"JPEGQuality": [
+			"JPEG thumbnail quality",
+			"Quality of image JPEG thumbnails"
+		],
+		"PNGQuality": [
+			"PNG thumbnail compression",
+			"Lossy compression level of PNG thumbnails. Higher is lossier."
+		],
+		"alwaysLock": [
+			"Siempre bloquear a la parte inferior",
+			"Bloquea scrolling a la parte inferior de la pagina incluso cuando la pestaña esta escondida"
+		],
+		"anonymise": [
+			"Anonimizar",
+			"Muestra todos los posters como anónimo"
+		],
+		"autogif": [
+			"Thumbnail de GIF animado",
+			"Anima thumbnails de GIF"
+		],
+		"boardExpiry": [
+			"Board expiry time",
+			"Number of days without new posts before a board is deleted"
+		],
+		"boardName": [
+			"Board name",
+			"Name of the new board. Can contain up to 3 lowercase Latin letters or numbers."
+		],
+		"boardTitle": [
+			"Board title",
+			"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
+		],
+		"captcha": [
+			"Captcha",
+			"Ask users to complete a captcha for certain tasks like registration and thread creation"
+		],
+		"captchaPrivateKey": [
+			"Captcha private key",
+			"Key used for authenticating solved captchas server-side"
+		],
+		"captchaPublicKey": [
+			"Captcha public key",
+			"Key used for communicating with external captcha service"
+		],
+		"codeTags": [
+			"Code tags",
+			"Enable code tags for embedding programming code"
+		],
+		"defaultCSS": [
+			"Default theme",
+			"Theme to load by default, when none is set by the client"
+		],
+		"defaultLang": [
+			"Default language",
+			"Language pack to load by default"
+		],
+		"desustorage": [
+			"DesuStorage",
+			"desustorage.org búsqueda de imágenes"
+		],
+		"done": [
+			"Cierra post",
+			"Cierra el post abierto"
+		],
+		"eightball": [
+			"#8ball answers",
+			"List of answers for the #8ball hash command. One answer per line. Can contain up to 100 answers and 2000 characters total."
+		],
+		"exhentai": [
+			"Exhentai",
+			"exhentai.org búsqueda de imágenes"
+		],
+		"expandAll": [
+			"Expandir todas las imágenes",
+			"Expande todas las imagenes. Webm, PDF y MP3 y tu propio post no son afectados. Nuevos posts también son expandidos."
+		],
+		"export": [
+			"Exportar",
+			"Exportar opciones a archivo"
+		],
+		"feedbackEmail": [
+			"Feedback email",
+			"User feedback email to display in the top banner"
+		],
+		"forcedAnon": [
+			"Forced Anonymous",
+			"Disable user names, tripcodes and emails on posts"
+		],
+		"google": [
+			"Google",
+			"Google búsqueda de imágenes"
+		],
+		"hashCommands": [
+			"Hash commands",
+			"Enable #dice, #flip, #8ball, etc."
+		],
+		"hidden": [
+			"Escondido: 0",
+			"Limpiar posts escondidos"
+		],
+		"hideThumbs": [
+			"Hide thumbnails",
+			"Display a [Show] button in place of thumbnails"
+		],
+		"horizontalPosting": [
+			"Posting horizontal",
+			"Nostalgia de 38chan"
+		],
+		"id": [
+			"Login",
+			""
+		],
+		"illyaDance": [
+			"Illya Dance",
+			"Loli bailando en el fondo."
+		],
+		"illyaDanceMute": [
+			"Mute Illya",
+			"Loli bailando sin sonido"
+		],
+		"imageHover": [
+			"Expansion de imagen al pasar el ratón",
+			"Muestra una previsualización de la imagen al pasar"
+		],
+		"import": [
+			"Importar",
+			"Importar opciones desde archivo"
+		],
+		"inlineFit": [
+			"Expansion",
+			"Expand images inside the parent post and resize according to setting"
+		],
+		"iqdb": [
+			"IQDB",
+			"iqdb.org búsqueda de imágenes"
+		],
+		"lang": [
+			"Idioma",
+			"Cambia a diferentes idiomas"
+		],
+		"links": [
+			"External links",
+			"Add, remove or edit external >>>/4chan/-type references"
+		],
+		"mature": [
+			"Mature content",
+			"Inform the user the website contains mature content on first visit"
+		],
+		"maxHeight": [
+			"Image height limit",
+			"Maximum height of uploaded images"
+		],
+		"maxSize": [
+			"Image size limit",
+			"Maximum size of uploaded images in MB"
+		],
+		"maxWidth": [
+			"Image width limit",
+			"Maximum width of uploaded images"
+		],
 		"name": [
 			"Name",
 			"Name to attach to new posts"
 		],
+		"newPassword": [
+			"New password",
+			""
+		],
+		"newPost": [
+			"Nuevo post",
+			"Abre nuevo post"
+		],
+		"notice": [
+			"Notice",
+			"Short informational message displayed at the top of the page"
+		],
+		"notification": [
+			"Notificaciones de escritorio",
+			"Recibe notificaciones de escritorio cuando eres citado o un syncwatch esta a punto de comenzar"
+		],
+		"nowPlaying": [
+			"Reproducción actual Banner",
+			"La canción reproduciéndose ahora en r/a/dio y otra información sobre el stream en el banner de encima."
+		],
+		"oldPassword": [
+			"Old password",
+			""
+		],
+		"password": [
+			"Password",
+			""
+		],
 		"postPassword": [
 			"Password",
 			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+		],
+		"pruneBoards": [
+			"Prune boards",
+			"Delete boards that have not had any new posts for N days"
+		],
+		"pruneThreads": [
+			"Prune threads",
+			"Delete threads that have not had any posts in N days"
+		],
+		"pyu": [
+			"#pyu",
+			"Don't ask"
+		],
+		"readOnly": [
+			"Read only",
+			"Disable post creation"
+		],
+		"register": [
+			"Register",
+			""
+		],
+		"relativeTime": [
+			"Estampas de tiempo relativas",
+			"Estampas de tempo relativas. Ex.: '1 hora atrás'"
+		],
+		"repeat": [
+			"Repeat",
+			""
+		],
+		"replyRight": [
+			"[Responder] a la derecha",
+			" Mueve el botón Responder a la derecha de la pagina"
+		],
+		"rootURL": [
+			"Root URL",
+			"Root URL of the imageboard. Required for some image search providers to work."
+		],
+		"rules": [
+			"Rules",
+			"Board rules to display in the rule modal window"
+		],
+		"salt": [
+			"Secure salt",
+			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 characters long."
+		],
+		"saucenao": [
+			"SauceNao",
+			"saucenao.com búsqueda de imágenes"
+		],
+		"sessionExpiry": [
+			"Account session expiry",
+			"Time in days until user accounts are automatically logged out"
+		],
+		"spoilers": [
+			"Text spoilers",
+			"Enable use of ** to spoiler blocks of text"
+		],
+		"textOnly": [
+			"Text only",
+			"Disable file uploads"
+		],
+		"theme": [
+			"Tema",
+			"Selecciona tema de CSS"
+		],
+		"threadExpiry": [
+			"Thread expiry time",
+			"Number of days without new posts before a thread is deleted"
+		],
+		"thumbs": [
+			"Thumbnails",
+			"Establecer tamaño de thumbnail:\nPequeño: 125x125, tamaño de imagen pequeño;\nAgudo: 125x125, mas detallado;\nEsconder: Esconde todas las imágenes;"
+		],
+		"title": [
+			"Board title",
+			"Short descriptive title of the board"
+		],
+		"toggleSpoiler": [
+			"Spoiler de imagen",
+			"Activa spoiler en el post abierto"
+		],
+		"userBG": [
+			"Fondo personalizado",
+			"Activa fondo de pagina personalizado"
+		],
+		"userBGImage": [
+			"",
+			"Imagen para usar como fondo personalizado"
+		],
+		"webmHover": [
+			"Expansión de WebM al pasar el ratón",
+			"Muestra una previsualización del WebM al pasar. Requiere tener Expansion de imagen al pasar el ratón activado."
+		],
+		"workMode": [
+			"Modo de trabajo",
+			"Esconde las imágenes y deshabilita el fondo personalizado."
+		],
+		"workModeToggle": [
+			"Modo de trabajo",
+			"Esconde las imágenes y deshabilita el fondo personalizado."
 		]
 	},
-	"mod": {
-		"id": "Login",
-		"register": "Register",
-		"logout": "Logout",
-		"logoutAll": "Log out all devices",
+	"options": {
+		"none": "ninguno",
+		"width": "ajustar a anchura",
+		"screen": "fit to screen"
+	},
+	"ui": {
+		"FAQ": "Information",
+		"account": "Account and board management",
+		"add": "Add",
+		"apply": "Apply",
+		"bottom": "Abajo",
+		"cancel": "Cancelar",
+		"catalog": "Catalog",
+		"catalogOmit": "Respuestas/Imagenes",
 		"changePassword": "Change password",
-		"oldPassword": "Old password",
-		"newPassword": "New password",
-		"password": "Password",
-		"repeat": "Repeat",
-		"mustMatch": "Passwords must match",
-		"nameTaken": "Login name already taken",
-		"wrongCredentials": "Incorrect login name or password",
-		"wrongPassword": "Incorrect password",
-		"theFuck": "SOMEBODY FUCKED UP",
+		"configureBoard": "Configure board",
 		"configureServer": "Configure server",
 		"createBoard": "Create board",
-		"configureBoard": "Configure board"
-	}
+		"done": "Import successfull. The page will now reload.",
+		"enableJS": "Enable JavaScript for more functionality",
+		"expand": "Ampliar",
+		"feedback": "Feedback",
+		"focus": "Centrar",
+		"focusForCaptcha": "Focus to load captcha",
+		"googleSong": "Clock para googlear la cancion",
+		"identity": "Identity",
+		"last": "Últimos",
+		"lockedToBottom": "Pegado al fondo",
+		"logout": "Logout",
+		"logoutAll": "Log out all devices",
+		"newThread": "Nuevo Hilo",
+		"options": "Options",
+		"ownNoBoards": "You don't own any boards",
+		"reloadCaptcha": "Click to reload",
+		"reply": "Respuesta",
+		"report": "Reportar",
+		"rescan": "Rescan",
+		"return": "Regresar",
+		"rules": "Rules",
+		"search": "Buscar",
+		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
+		"seeAll": "Mostrar todos",
+		"send": "Enviar",
+		"showNotice": "Show Notice",
+		"sortMode": "Sort threads by",
+		"spoiler": "Spoiler",
+		"subject": "Sujeto",
+		"submit": "Submit",
+		"sync": "Connection status",
+		"top": "Arriba"
+	},
+	"sortModes": [
+		"Last reply time",
+		"Creation time",
+		"Reply count",
+		"File count"
+	],
+	"tabs": [
+		"General",
+		"Estilo",
+		"Búsqueda",
+		"Entretenimiento",
+		"Atajos"
+	]
 }

@@ -1,1 +1,100 @@
-{}
+{
+	"posts": {
+		"OP": "(PP)",
+		"ago": "pred",
+		"and": "a",
+		"anon": "Janonymous",
+		"contract": "Zmenšiť obrázky",
+		"expand": "Expandovať",
+		"hide": "Schovať",
+		"in": "v",
+		"justNow": "Práve teraz",
+		"locked": "zamknuté",
+		"omitted": "vynechané",
+		"show": "Zobraziť",
+		"you": "(Ty)"
+	},
+	"plurals": {
+		"day": [
+			"deň",
+			"dní"
+		],
+		"hour": [
+			"hodina",
+			"hodín"
+		],
+		"image": [
+			"obrázok",
+			"obrázky"
+		],
+		"minute": [
+			"minúta",
+			"minúty"
+		],
+		"month": [
+			"mesiac",
+			"mesiacov"
+		],
+		"post": [
+			"plagát",
+			"plagáty"
+		],
+		"year": [
+			"rok",
+			"rokov"
+		]
+	},
+	"time": {
+		"calendar": [
+			"Jan",
+			"Feb",
+			"Mar",
+			"Apr",
+			"Máj",
+			"Jún",
+			"Júl",
+			"Aug",
+			"Sep",
+			"Okt",
+			"Nov",
+			"Dec"
+		],
+		"week": [
+			"Nedeľa",
+			"Pondelok",
+			"Utorok",
+			"Streda",
+			"Štvrtok",
+			"Piatok",
+			"Sobota"
+		]
+	},
+	"ui": {
+		"mustMatch": "Heslá sa musia zhodovať",
+		"quoted": "Niekto ťa citoval.",
+		"refresh": "Obnoviť",
+		"sessionExpired": "Login session expired",
+		"thread_locked": "Toto vlákno je zamknuté.",
+		"thumbnailing": "Odtlačkujem...",
+		"unfinishedPost": "Más nedokončený plagát",
+		"uploadProgress": "odoslané..."
+	},
+	"sync": [
+		"odpojený",
+		"pripája sa",
+		"synchronizuje sa",
+		"zosynchronizovaný",
+		"desynchronizovaný"
+	],
+	"syncwatch": {
+		"starting": "Syncwatch starting in 10 seconds",
+		"finished": "Finished"
+	},
+	"opts": {
+		"importConfig": {
+			"done": "Import successfull. The page will now reload.",
+			"corrupt": "Import failed. File corrupt"
+		},
+		"langApplied": "Language settings applied. The page will now reload."
+	}
+}

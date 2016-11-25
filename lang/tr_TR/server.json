@@ -1,31 +1,368 @@
 {
 	"forms": {
+		"FAQ": [
+			"Information panel text",
+			"Entries for the banner's Frequently Asked Questions list and information modal"
+		],
+		"JPEGQuality": [
+			"JPEG thumbnail quality",
+			"Quality of image JPEG thumbnails"
+		],
+		"PNGQuality": [
+			"PNG thumbnail compression",
+			"Lossy compression level of PNG thumbnails. Higher is lossier."
+		],
+		"alwaysLock": [
+			"Her zaman aşağıda kal",
+			"Her zaman aşağıda kal"
+		],
+		"anonymise": [
+			"Anonim yap",
+			"Herkesi anonim göster"
+		],
+		"autogif": [
+			"Hareketli GIF küçükresimleri",
+			"GIF küçükresimleri hareket etsin"
+		],
+		"boardExpiry": [
+			"Board expiry time",
+			"Number of days without new posts before a board is deleted"
+		],
+		"boardName": [
+			"Board name",
+			"Name of the new board. Can contain up to 3 lowercase Latin letters or numbers."
+		],
+		"boardTitle": [
+			"Board title",
+			"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
+		],
+		"captcha": [
+			"Captcha",
+			"Ask users to complete a captcha for certain tasks like registration and thread creation"
+		],
+		"captchaPrivateKey": [
+			"Captcha private key",
+			"Key used for authenticating solved captchas server-side"
+		],
+		"captchaPublicKey": [
+			"Captcha public key",
+			"Key used for communicating with external captcha service"
+		],
+		"codeTags": [
+			"Code tags",
+			"Enable code tags for embedding programming code"
+		],
+		"defaultCSS": [
+			"Default theme",
+			"Theme to load by default, when none is set by the client"
+		],
+		"defaultLang": [
+			"Default language",
+			"Language pack to load by default"
+		],
+		"desustorage": [
+			"DesuStorage",
+			"desustorage.org resim arama"
+		],
+		"done": [
+			"Bitir",
+			"kapat"
+		],
+		"eightball": [
+			"#8ball answers",
+			"List of answers for the #8ball hash command. One answer per line. Can contain up to 100 answers and 2000 characters total."
+		],
+		"exhentai": [
+			"Exhentai",
+			"exhentai.org resim arama"
+		],
+		"expandAll": [
+			"Bütün resimleri genişlet",
+			"Yeni girdiler dahil bütün resimleri genişletir."
+		],
+		"export": [
+			"Dışarı al",
+			"Ayarları dosyayı al"
+		],
+		"feedbackEmail": [
+			"Feedback email",
+			"User feedback email to display in the top banner"
+		],
+		"forcedAnon": [
+			"Forced Anonymous",
+			"Disable user names, tripcodes and emails on posts"
+		],
+		"google": [
+			"Google",
+			"Google resim arama"
+		],
+		"hashCommands": [
+			"Hash commands",
+			"Enable #dice, #flip, #8ball, etc."
+		],
+		"hidden": [
+			"Gizli: 0",
+			"Gizli girdileri temizle"
+		],
+		"hideThumbs": [
+			"Hide thumbnails",
+			"Display a [Show] button in place of thumbnails"
+		],
+		"horizontalPosting": [
+			"Enine girdiler",
+			"Enine girdiler"
+		],
+		"id": [
+			"Login",
+			""
+		],
+		"illyaDance": [
+			"Illya Dans",
+			"Arkaplanda dans eden loli"
+		],
+		"illyaDanceMute": [
+			"Illya dans etmesin",
+			"Illya dans etmesin"
+		],
+		"imageHover": [
+			"Üstündeyken genişlet(Resim)",
+			"Fare üstüne geldiğinde resimleri genişlet"
+		],
+		"import": [
+			"İçeri al",
+			"Ayarları dosyadan al"
+		],
+		"inlineFit": [
+			"Genişler",
+			"İlk gönderideki resimleri genişlet ve ayarlara göre boyutlandır"
+		],
+		"iqdb": [
+			"IQDB",
+			"iqdb.org resim arama"
+		],
+		"lang": [
+			"Dil",
+			"Dili değiştir"
+		],
+		"links": [
+			"Extrenal links",
+			"Add, remove or edit external >>>/4chan/-type references"
+		],
+		"mature": [
+			"Mature content",
+			"Inform the user the website contains mature content on first visit"
+		],
+		"maxHeight": [
+			"Image height limit",
+			"Maximum height of uploaded images"
+		],
+		"maxSize": [
+			"Image size limit",
+			"Maximum size of uploaded images in MB"
+		],
+		"maxWidth": [
+			"Image width limit",
+			"Maximum width of uploaded images"
+		],
 		"name": [
 			"Name",
 			"Name to attach to new posts"
 		],
+		"newPassword": [
+			"New password",
+			""
+		],
+		"newPost": [
+			"Yeni gönderi",
+			"Yeni gönderiyi aç"
+		],
+		"notice": [
+			"Notice",
+			"Short informational message displayed at the top of the page"
+		],
+		"notification": [
+			"Masaüstü uyarıları",
+			"Alıntı yapıldığında veya syncwatch başladığında uyarıları al"
+		],
+		"nowPlaying": [
+			"Şimdi Çalınan",
+			"Şimdi çalınan şarkıyı göster"
+		],
+		"oldPassword": [
+			"Old password",
+			""
+		],
+		"password": [
+			"Password",
+			""
+		],
 		"postPassword": [
 			"Password",
 			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+		],
+		"pruneBoards": [
+			"Prune boards",
+			"Delete boards that have not had any new posts for N days"
+		],
+		"pruneThreads": [
+			"Prune threads",
+			"Delete threads that have not had any posts in N days"
+		],
+		"pyu": [
+			"#pyu",
+			"Don't ask"
+		],
+		"readOnly": [
+			"Read only",
+			"Disable post creation"
+		],
+		"register": [
+			"Register",
+			""
+		],
+		"relativeTime": [
+			"Saat/Zaman",
+			"Zamanı 1 saat önceydi gibi göster"
+		],
+		"repeat": [
+			"Repeat",
+			""
+		],
+		"replyRight": [
+			"[Cevapla] sağ tarafta",
+			"Cevapla tuşuna sağ alta gönder"
+		],
+		"rootURL": [
+			"Root URL",
+			"Root URL of the imageboard. Required for some image search providers to work."
+		],
+		"rules": [
+			"Rules",
+			"Board rules to display in the rule modal window"
+		],
+		"salt": [
+			"Secure salt",
+			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
+		],
+		"saucenao": [
+			"SauceNao",
+			"saucenao.com resim arama"
+		],
+		"sessionExpiry": [
+			"Account session expiry",
+			"Time in days until user accoubts are automatically logged out"
+		],
+		"spoilers": [
+			"Text spoilers",
+			"Enable use of ** to spoiler blocks of text"
+		],
+		"textOnly": [
+			"Text only",
+			"Disable file uploads"
+		],
+		"theme": [
+			"Tema",
+			"Temayı seç"
+		],
+		"threadExpiry": [
+			"Thread expiry time",
+			"Number of days without new posts before a thread is deleted"
+		],
+		"thumbs": [
+			"Küçükresimler",
+			"Küçük resim ayarı:\nKüçük: 125x125, küçük dosya boyutu;\nKeskin: 125x125, daha detaylı görüntü;\nGizli: tüm resimleri gizle;"
+		],
+		"title": [
+			"Board title",
+			"Short descriptive title of the board"
+		],
+		"toggleSpoiler": [
+			"Resim spoiler",
+			"Spoiler ekle"
+		],
+		"userBG": [
+			"Kişisel arkaplan",
+			"Kişisel arkaplanı ayarla"
+		],
+		"userBGImage": [
+			"",
+			"Arkaplan için resim seç"
+		],
+		"webmHover": [
+			"Üstündeyken genişlet(WebM)",
+			"Fare üstüne geldiğinde WebMleri genişlet. Resim ayarı açık olmalıdır"
+		],
+		"workMode": [
+			"İş modu",
+			"Resimleri gizler, temayı ve arkaplanı sıfırlar"
+		],
+		"workModeToggle": [
+			"İş modu",
+			"Resimleri gizler, temayı ve arkaplanı sıfırlar"
 		]
 	},
-	"mod": {
-		"id": "Login",
-		"register": "Register",
-		"logout": "Logout",
-		"logoutAll": "Log out all devices",
+	"options": {
+		"none": "yok",
+		"width": "genişlemeye sığdır",
+		"screen": "fit to screen"
+	},
+	"ui": {
+		"FAQ": "Information",
+		"account": "Account and board management",
+		"add": "Add",
+		"apply": "Apply",
+		"bottom": "Alt",
+		"cancel": "İptal",
+		"catalog": "Catalog",
+		"catalogOmit": "Cevaplar/Resimler",
 		"changePassword": "Change password",
-		"oldPassword": "Old password",
-		"newPassword": "New password",
-		"password": "Password",
-		"repeat": "Repeat",
-		"mustMatch": "Passwords must match",
-		"nameTaken": "Login name already taken",
-		"wrongCredentials": "Incorrect login name or password",
-		"wrongPassword": "Incorrect password",
-		"theFuck": "SOMEBODY FUCKED UP",
+		"configureBoard": "Configure board",
 		"configureServer": "Configure server",
 		"createBoard": "Create board",
-		"configureBoard": "Configure board"
-	}
+		"done": "Import successfull. The page will now reload.",
+		"enableJS": "Enable JavaScript for more functionality",
+		"expand": "Genişlet",
+		"feedback": "Feedback",
+		"focus": "Odakla",
+		"focusForCaptcha": "Focus to load captcha",
+		"googleSong": "Şarkıyı googleda aratmak için tıklayın",
+		"identity": "Identity",
+		"last": "Son",
+		"lockedToBottom": "Aşağı gönderildi",
+		"logout": "Logout",
+		"logoutAll": "Log out all devices",
+		"newThread": "Yeni konu",
+		"options": "Options",
+		"ownNoBoards": "You don't own any boards",
+		"reloadCaptcha": "Click to reload",
+		"reply": "Cevapla",
+		"report": "İspiyonla",
+		"rescan": "Tara",
+		"return": "Geri Dön",
+		"rules": "Rules",
+		"search": "Ara",
+		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
+		"seeAll": "Hepsini göster",
+		"send": "Gönder",
+		"showNotice": "Show Notice",
+		"sortMode": "Sort threads by",
+		"spoiler": "Spoiler",
+		"subject": "Konu",
+		"submit": "Submit",
+		"sync": "Connection status",
+		"top": "Üst"
+	},
+	"sortModes": [
+		"Last reply time",
+		"Creation time",
+		"Reply count",
+		"File count"
+	],
+	"tabs": [
+		"Genel",
+		"Stil",
+		"ResimAra",
+		"Eğlence",
+		"Kısayollar"
+	]
 }

@@ -1,1 +1,100 @@
-{}
+{
+	"posts": {
+		"OP": "(OP)",
+		"ago": "ago",
+		"and": "and",
+		"anon": "Anónimo",
+		"contract": "Contract Images",
+		"expand": "Ampliar",
+		"hide": "Hide",
+		"in": "in",
+		"justNow": "ahora mismo",
+		"locked": "Cerrado",
+		"omitted": "omitted",
+		"show": "Mostrar",
+		"you": "(Tu)"
+	},
+	"plurals": {
+		"day": [
+			"day",
+			"days"
+		],
+		"hour": [
+			"hour",
+			"hours"
+		],
+		"image": [
+			"image",
+			"images"
+		],
+		"minute": [
+			"minute",
+			"minutes"
+		],
+		"month": [
+			"month",
+			"months"
+		],
+		"post": [
+			"post",
+			"posts"
+		],
+		"year": [
+			"year",
+			"years"
+		]
+	},
+	"time": {
+		"calendar": [
+			"Ene",
+			"Feb",
+			"Mar",
+			"Abr",
+			"May",
+			"Jun",
+			"Jul",
+			"Ago",
+			"Sep",
+			"Oct",
+			"Nov",
+			"Dic"
+		],
+		"week": [
+			"Dom",
+			"Lun",
+			"Mar",
+			"Mie",
+			"Jue",
+			"Vie",
+			"Sab"
+		]
+	},
+	"ui": {
+		"mustMatch": "Passwords must match",
+		"quoted": "Has sido citado",
+		"refresh": "Refresh",
+		"sessionExpired": "Login session expired",
+		"thread_locked": "Este hilo esta cerrado.",
+		"thumbnailing": "Thumbnailing...",
+		"unfinishedPost": "You have an unfinished post",
+		"uploadProgress": "uploaded..."
+	},
+	"sync": [
+		"disconnected",
+		"connecting",
+		"syncing",
+		"synced",
+		"desynced"
+	],
+	"syncwatch": {
+		"starting": "Syncwatch empezando end 10 segundos",
+		"finished": "Terminado"
+	},
+	"opts": {
+		"importConfig": {
+			"done": "Import successfull. The page will now reload.",
+			"corrupt": "Import failed. File corrupt"
+		},
+		"langApplied": "Opciones de idioma applicadas. La pagina sera recargada ahora."
+	}
+}

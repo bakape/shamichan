@@ -1,31 +1,369 @@
 {
 	"forms": {
+		"FAQ": [
+			"Information panel text",
+			"Entries for the banner's Frequently Asked Questions list and information modal"
+		],
+		"JPEGQuality": [
+			"JPEG kompresia náhľadu",
+			"Kvalita JPEG náhľadov"
+		],
+		"PNGQuality": [
+			"PNG kompresia náhľadu",
+			"Stratová kompresia PNG náhľadov. Vyššia je horšia"
+		],
+		"alwaysLock": [
+			"Always Lock to Bottom",
+			"Lock scrolling to page bottom even when tab is hidden"
+		],
+		"anonymise": [
+			"Anonymise",
+			"Display all posters as anonymous"
+		],
+		"autogif": [
+			"Animated GIF Thumbnails",
+			"Animate GIF thumbnails"
+		],
+		"boardExpiry": [
+			"Board expiry time",
+			"Number of days without new posts before a board is deleted"
+		],
+		"boardName": [
+			"Názov dosky",
+			"Názov novej dosky. Môže obsahovať maximálne 3 malé latinské písmena alebo čísla."
+		],
+		"boardTitle": [
+			"Titúlok dosky",
+			"Titúlok novej dosky ako napríklad 'Politika & Sranie'. Maximálne 100 znakov."
+		],
+		"captcha": [
+			"Kapča",
+			"Ask users to complete a captcha for certain tasks like registration and thread creation"
+		],
+		"captchaPrivateKey": [
+			"Kapča súkromný kľúč",
+			"Kľúč používaný na autentizáciu vyriešených kapčí na strane servera"
+		],
+		"captchaPublicKey": [
+			"Kapča verejný kľúč",
+			"Kľúč používaný na komunikáciu s externou kapča službou"
+		],
+		"codeTags": [
+			"Code tags",
+			"Enable code tags for embedding programming code"
+		],
+		"defaultCSS": [
+			"Východzia téma",
+			"Téma ktorú načítať, keď klient žiadnú nezvolil"
+		],
+		"defaultLang": [
+			"Východzí jazyk",
+			"Jazyk ktorý použíť ako východzí"
+		],
+		"desustorage": [
+			"DesuStorage",
+			"desustorage.org image search"
+		],
+		"done": [
+			"Dokončiťt plagát",
+			"Zatvoriť otvorený plagát"
+		],
+		"eightball": [
+			"#8ball odpoveďe",
+			"List of answers for the #8ball hash command. One answer per line. Can contain up to 100 answers and 2000 characters total."
+		],
+		"exhentai": [
+			"Exhentai",
+			"exhentai.org image search"
+		],
+		"expandAll": [
+			"Expand All Images",
+			"Expand all images. Webm, PDF and MP3 and your own post aren't affected. New post images are also expanded."
+		],
+		"export": [
+			"Exportovať",
+			"Exportovať nastavenia do súboru"
+		],
+		"feedbackEmail": [
+			"Email na spätnú väzbu",
+			"User feedback email to display in the top banner"
+		],
+		"forcedAnon": [
+			"Vynútená anonymita",
+			"Zruš uživateľské mená, výletokódy a emaily v plagátoch"
+		],
+		"google": [
+			"Google",
+			"Google image search"
+		],
+		"hashCommands": [
+			"Hash príkazy",
+			"Povoliť #dice, #flip, #8ball, etc."
+		],
+		"hidden": [
+			"Schovaných: 0",
+			"Vyčistiť zoznam schovaných plagátov"
+		],
+		"hideThumbs": [
+			"Schovať náhľady",
+			"Display a [Show] button in place of thumbnails"
+		],
+		"horizontalPosting": [
+			"Horizontal Posting",
+			"38chan nostalgia"
+		],
+		"id": [
+			"Login",
+			""
+		],
+		"illyaDance": [
+			"Illya Dance",
+			"Dancing loli in the background"
+		],
+		"illyaDanceMute": [
+			"Mute Illya",
+			"Mute dancing loli"
+		],
+		"imageHover": [
+			"Expandovať obrázky pod kurzorom",
+			"Display image previews on hover"
+		],
+		"import": [
+			"Importovať",
+			"Importovať nastavenia zo súboru"
+		],
+		"inlineFit": [
+			"Expandovať",
+			"Expand images inside the parent post and resize according to setting"
+		],
+		"iqdb": [
+			"IQDB",
+			"iqdb.org image search"
+		],
+		"lang": [
+			"Jazyk",
+			"Change interface language"
+		],
+		"links": [
+			"Externé odkazy",
+			"Pridať, zmazať alebo editovať externé >>>/4chan/ odkazy"
+		],
+		"mature": [
+			"Mature content",
+			"Inform the user the website contains mature content on first visit"
+		],
+		"maxHeight": [
+			"Limit na šírku obrázka",
+			"Maximum height of uploaded images"
+		],
+		"maxSize": [
+			"Limit na veľkosť obrázkov",
+			"Maximálna veľkosť obrázku v MB"
+		],
+		"maxWidth": [
+			"Limit na výšky obrázka",
+			"Maximum width of uploaded images"
+		],
 		"name": [
 			"Meno",
 			"Name to attach to new posts"
 		],
+		"newPassword": [
+			"New password",
+			""
+		],
+		"newPost": [
+			"Nový plagát",
+			"Otvoriť nový plagát"
+		],
+		"notice": [
+			"Oznámenie",
+			"Krátka informačná správa zobrazená na vrchu dosky"
+		],
+		"notification": [
+			"Desktop Notifications",
+			"Get desktop notifications when quoted or a syncwatch is about to start"
+		],
+		"nowPlaying": [
+			"Now Playing Banner",
+			"Currently playing song on r/a/dio and other stream information in the top banner."
+		],
+		"oldPassword": [
+			"Old password",
+			""
+		],
+		"password": [
+			"Password",
+			""
+		],
 		"postPassword": [
 			"Heslo",
 			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+		],
+		"pruneBoards": [
+			"Prune boards",
+			"Delete boards that have not had any new posts for N days"
+		],
+		"pruneThreads": [
+			"Prune threads",
+			"Delete threads that have not had any posts in N days"
+		],
+		"pyu": [
+			"#pyu",
+			"Nepýtaj sa"
+		],
+		"readOnly": [
+			"Len na čítanie",
+			"Zakázať prispievanie"
+		],
+		"register": [
+			"Register",
+			""
+		],
+		"relativeTime": [
+			"Relative Timestamps",
+			"Relative post timestamps. Ex.: '1 hour ago'"
+		],
+		"repeat": [
+			"Repeat",
+			""
+		],
+		"replyRight": [
+			"[Reply] at Right",
+			"Move Reply button to the right side of the page"
+		],
+		"rootURL": [
+			"Root URL",
+			"Root URL of the imageboard. Required for some image search providers to work."
+		],
+		"rules": [
+			"Pravítka",
+			"Board rules to display in the rule modal window"
+		],
+		"salt": [
+			"Bezpečná soľ",
+			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
+		],
+		"saucenao": [
+			"SauceNao",
+			"saucenao.com image search"
+		],
+		"sessionExpiry": [
+			"Vypršanie sedenia pre účet",
+			"Čas v počte dňoch, kedy sa uživateľské účty automaticky odhlásia"
+		],
+		"spoilers": [
+			"Textové spojlere",
+			"Povoľ používanie ** na spojlerovanie blokov textu"
+		],
+		"textOnly": [
+			"Len text",
+			"Zakázať odosielanie súborov"
+		],
+		"theme": [
+			"Theme",
+			"Select CSS theme"
+		],
+		"threadExpiry": [
+			"Thread expiry time",
+			"Number of days without new posts before a thread is deleted"
+		],
+		"thumbs": [
+			"Thumbnails",
+			"Set thumbnail style:\nSmall: 125x125, small file size;\nSharp: 125x125, more detailed;\nHide: hide all images;"
+		],
+		"title": [
+			"Titúlok dosky",
+			"Krátky popis do dosky"
+		],
+		"toggleSpoiler": [
+			"Spojler obrázka",
+			"Prepnúť spojler obrázka v novom plagáte"
+		],
+		"userBG": [
+			"Custom Background",
+			"Toggle custom page background"
+		],
+		"userBGImage": [
+			"",
+			"Image to use as the background"
+		],
+		"webmHover": [
+			"Expandovať WebM pod kurzorom",
+			"Display WebM previews on hover. Requires Image Hover Expansion enabled."
+		],
+		"workMode": [
+			"Work mode",
+			"Hides images and disables user background"
+		],
+		"workModeToggle": [
+			"Work mode",
+			"Hides images and disables user background"
 		]
 	},
-	"mod": {
-		"id": "Prihlásiť",
-		"register": "Registrovať",
-		"logout": "Odhlásiť",
-		"logoutAll": "Odhlásiť zo všetkých zariadení",
+	"options": {
+		"none": "none",
+		"width": "fit to width",
+		"screen": "fit to screen"
+	},
+	"ui": {
+		"FAQ": "Information",
+		"account": "Account and board management",
+		"add": "Pridať",
+		"apply": "Použiť",
+		"bottom": "Dolu",
+		"cancel": "Zrušiť",
+		"catalog": "Katalóg",
+		"catalogOmit": "Odpovede/Obrázky",
 		"changePassword": "Zmeniť heslo",
-		"oldPassword": "Staré heslo",
-		"newPassword": "Nové heslo",
-		"password": "Heslo",
-		"repeat": "Zopakuj",
-		"mustMatch": "Heslá sa musia zhodovať",
-		"nameTaken": "Prihlasovacie meno sa už používa",
-		"wrongCredentials": "Nesprávne heslo alebo prihlasovacie meno",
-		"wrongPassword": "Nesprávne heslo",
-		"theFuck": "NIEKTO SA POSRAL",
+		"configureBoard": "Nastaviť dosku",
 		"configureServer": "Nastaviť server",
 		"createBoard": "Vytvoriť dosku",
-		"configureBoard": "Nastaviť dosku"
-	}
+		"done": "Import successfull. The page will now reload.",
+		"enableJS": "Enable JavaScript for more functionality",
+		"expand": "Expandovať",
+		"feedback": "Feedback",
+		"focus": "Zamerať",
+		"focusForCaptcha": "Fokus na nahranie kapči",
+		"googleSong": "Click to google song",
+		"identity": "Identity",
+		"last": "Posledné",
+		"lockedToBottom": "Zamknuté na spodok",
+		"logout": "Odhlásiť",
+		"logoutAll": "Odhlásiť zo všetkých zariadení",
+		"newThread": "Nové vlákno",
+		"options": "Options",
+		"ownNoBoards": "Nevlastníš žiadne dosky",
+		"reloadCaptcha": "Klikni pre znovunačítanie",
+		"reply": "Odpovedať",
+		"report": "Nahlásiť",
+		"rescan": "Znovu naskenovať",
+		"return": "Návrat",
+		"rules": "Pravidlá",
+		"search": "Hľadať",
+		"searchTooltip": "Vytriediť dosky podľa predmetu alebo názvu. Prijíma ja regulárne výrazy.",
+		"seeAll": "Zobraziť všetky",
+		"send": "Odoslané",
+		"showNotice": "Ukázať upozornenie",
+		"sortMode": "Zoradiť vlákna podľa",
+		"spoiler": "Spoiler",
+		"subject": "Predmet",
+		"submit": "Odoslať",
+		"sync": "Connection status",
+		"top": "Vrch"
+	},
+	"sortModes": [
+		"Drgnutia",
+		"Posledného príspevku",
+		"Čas vytvorenia",
+		"Počtu odpovedí",
+		"Počtu súborov"
+	],
+	"tabs": [
+		"General",
+		"Style",
+		"Image Search",
+		"Fun",
+		"Shortcuts"
+	]
 }

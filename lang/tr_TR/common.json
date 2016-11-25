@@ -1,1 +1,100 @@
-{}
+{
+	"posts": {
+		"OP": "(OP)",
+		"ago": "ago",
+		"and": "and",
+		"anon": "Anon",
+		"contract": "Contract Images",
+		"expand": "Genişlet",
+		"hide": "Gizle",
+		"in": "in",
+		"justNow": "şimdi",
+		"locked": "kilitli",
+		"omitted": "omitted",
+		"show": "Göster",
+		"you": "(Sen)"
+	},
+	"plurals": {
+		"day": [
+			"gün",
+			"günler"
+		],
+		"hour": [
+			"saat",
+			"saatler"
+		],
+		"image": [
+			"resim",
+			"resimler"
+		],
+		"minute": [
+			"dakika",
+			"dakika"
+		],
+		"month": [
+			"ay",
+			"ay"
+		],
+		"post": [
+			"cevap",
+			"cevaplar"
+		],
+		"year": [
+			"yıl",
+			"yıl"
+		]
+	},
+	"time": {
+		"calendar": [
+			"Oca",
+			"Şub",
+			"Mar",
+			"Nis",
+			"May",
+			"Haz",
+			"Tem",
+			"Ağu",
+			"Eyl",
+			"Eki",
+			"Kas",
+			"Ara"
+		],
+		"week": [
+			"Paz",
+			"Pzt",
+			"Sal",
+			"Çrş",
+			"Prş",
+			"Cu",
+			"Cts"
+		]
+	},
+	"ui": {
+		"mustMatch": "Passwords must match",
+		"quoted": "Biri sizden alıntı yaptı",
+		"refresh": "Refresh",
+		"sessionExpired": "Login session expired",
+		"thread_locked": "Bu konu kilitlendi.",
+		"thumbnailing": "Thumbnailing...",
+		"unfinishedPost": "You have an unfinished post",
+		"uploadProgress": "uploaded..."
+	},
+	"sync": [
+		"disconnected",
+		"connecting",
+		"syncing",
+		"synced",
+		"desynced"
+	],
+	"syncwatch": {
+		"starting": "Syncwatch 10 saniye içinde başlıyor",
+		"finished": "Bitti"
+	},
+	"opts": {
+		"importConfig": {
+			"done": "Import successfull. The page will now reload.",
+			"corrupt": "Import failed. File corrupt"
+		},
+		"langApplied": "Dil ayarları uygulandı. Şimdi sayfayı yenileyeceğiz."
+	}
+}
