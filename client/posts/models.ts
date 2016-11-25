@@ -3,7 +3,7 @@ import { extend } from '../util'
 import Collection from './collection'
 import PostView from './view'
 import { SpliceResponse } from '../client'
-import { mine, seenReplies, page } from "../state"
+import { mine, seenReplies } from "../state"
 import notifyAboutReply from "../notification"
 import { write } from "../render"
 

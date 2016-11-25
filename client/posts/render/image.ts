@@ -48,7 +48,7 @@ export function renderImage(
 		(el.firstElementChild as HTMLElement).hidden = false
 	}
 	if (showThumb) {
-		renderThumbnail(el.lastElementChild, data, "")
+		renderThumbnail(el.lastElementChild, data)
 	}
 }
 
@@ -65,10 +65,10 @@ export function renderFigcaption(
 	if (data.length) {
 		list.push(readableLength(data.length))
 	}
-	list.push(readableFilesize(data.size), `${data.dims[0]}x${data.dims[1]}`)
 	if (data.apng) {
 		list.push('APNG')
 	}
+	list.push(readableFilesize(data.size), `${data.dims[0]}x${data.dims[1]}`)
 
 	const [hToggle, , info, link] = Array.from(el.children) as HTMLElement[]
 	if (!options.hideThumbs && !options.workModeToggle) {
@@ -162,15 +162,13 @@ export function imageLink(el: Element, data: ImageData) {
 }
 
 // Render the actual thumbnail image
-export function renderThumbnail(el: Element, data: ImageData, href: string) {
+export function renderThumbnail(el: Element, data: ImageData) {
 	const src = sourcePath(data.SHA1, data.fileType)
-	let thumb: string,
-		[, , thumbWidth, thumbHeight] = data.dims
+	let thumb: string
 
 	if (data.spoiler && options.spoilers) {
 		// Spoilered and spoilers enabled
 		thumb = '/assets/spoil/' + boardConfig.spoiler
-		thumbWidth = thumbHeight = 125
 	} else if (data.fileType === fileTypes.gif && options.autogif) {
 		// Animated GIF thumbnails
 		thumb = src
@@ -178,26 +176,9 @@ export function renderThumbnail(el: Element, data: ImageData, href: string) {
 		thumb = thumbPath(data.SHA1, data.fileType)
 	}
 
-	const linkAttrs: { [key: string]: string } = {
-		href: href || src
-	}
-	const imgAttrs: { [key: string]: string } = {
+	el.setAttribute("href", src)
+	setAttrs(el.firstElementChild, {
 		src: thumb,
-		width: thumbWidth.toString(),
-		height: thumbHeight.toString()
-	}
-
-	// Catalog pages
-	if (href) {
-		// Handle the thumbnails with the HTML5 History controller
-		linkAttrs['class'] = 'history'
-		// No image hover previews
-		imgAttrs['class'] = 'expanded'
-	} else {
-		linkAttrs["target"] = "_blank"
-		imgAttrs["class"] = "" // Remove any existing classes
-	}
-
-	setAttrs(el, linkAttrs)
-	setAttrs(el.firstElementChild, imgAttrs)
+		class: "", // Remove any existing classes
+	})
 }

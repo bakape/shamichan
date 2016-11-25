@@ -67,7 +67,7 @@
 				{{index .Dims 0}}x{{index .Dims 1}}
 				)
 			</span>
-			<a href="{{sourcePath .}}" download="{{.Name}}.{{extension .FileType}}">
+			<a href="{{sourcePath .FileType .SHA1}}" download="{{.Name}}.{{extension .FileType}}">
 				{{.Name}}.{{extension .FileType}}
 			</a>
 		</figcaption>
@@ -75,7 +75,8 @@
 	<div class="post-container">
 		{{with .Image}}
 			<figure>
-				<a target="_blank" href="{{sourcePath .}}">
+				<!-- We are actually calling sourcePath twice, but there does not seem to be a way to store it in an outher scope variable, without calling sourcePath even on posts without images -->
+				<a target="_blank" href="{{sourcePath .FileType .SHA1}}">
 					{{if .Spoiler}}
 						<!-- TODO: board-specific server-side spoiler rendering -->
 						<img src="/assets/spoil/default.jpg">

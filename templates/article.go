@@ -85,16 +85,20 @@ func thumbPath(fileType uint8, SHA1 string) template.HTML {
 }
 
 // Returns the HTTP path to the source file
-func sourcePath(img common.Image) string {
-	return fmt.Sprintf(
-		"/images/src/%s.%s",
-		img.SHA1,
-		common.Extensions[img.FileType],
-	)
+func sourcePath(fileType uint8, SHA1 string) template.HTML {
+	ext := common.Extensions[fileType]
+
+	buf := make([]byte, 12, 53+len(ext))
+	copy(buf, "/images/src/")
+	buf = append(buf, SHA1...)
+	buf = append(buf, '.')
+	buf = append(buf, ext...)
+
+	return template.HTML(buf)
 }
 
-func extension(fileType uint8) string {
-	return common.Extensions[fileType]
+func extension(fileType uint8) template.HTML {
+	return template.HTML(common.Extensions[fileType])
 }
 
 // Renders the post creation time field
