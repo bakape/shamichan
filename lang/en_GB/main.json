@@ -14,15 +14,6 @@
 		"refresh": "Refresh",
 		"sessionExpired": "Login session expired"
 	},
-	"banner": {
-		"options": "Options",
-		"identity": "Identity",
-		"account": "Account and board management",
-		"FAQ": "Information",
-		"feedback": "Feedback",
-		"googleSong": "Click to google song",
-		"sync": "Connection status"
-	},
 	"reports": {
 		"post": "Reporting post",
 		"reporting": "Reporting...",

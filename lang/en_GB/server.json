@@ -339,7 +339,14 @@
 		"return": "Return",
 		"top": "Top",
 		"lockedToBottom": "Locked to bottom",
-		"rescan": "Rescan"
+		"rescan": "Rescan",
+		"options": "Options",
+		"identity": "Identity",
+		"account": "Account and board management",
+		"FAQ": "Information",
+		"feedback": "Feedback",
+		"googleSong": "Click to google song",
+		"sync": "Connection status"
 	},
 	"sortModes": [
 		"Last reply time",

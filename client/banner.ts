@@ -1,7 +1,6 @@
 // Handles all things related to the top banner
 
 import { defer } from './defer'
-import { banner as lang } from './lang'
 import { write } from './render'
 import View from "./view"
 import Model from "./model"
@@ -107,21 +106,4 @@ export class TabbedModal extends BannerModal {
 	}
 }
 
-// Apply localized hover tooltips to banner links
-function localizeTitles() {
-	for (let id of ['feedback', 'FAQ', 'identity', 'options', 'account']) {
-		setTitle('banner-' + id, id)
-	}
-	setTitle('sync', 'sync')
-}
-
 new BannerModal(document.getElementById("FAQ"))
-
-defer(localizeTitles)
-
-// Set the title of an element to a localized string
-export function setTitle(id: string, langID: string) {
-	write(() =>
-		document.querySelector('#' + id)
-			.setAttribute('title', lang[langID]))
-}
