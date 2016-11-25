@@ -21,6 +21,9 @@
 		{{template "article" (wrapPost . $.Thread.ID $.Thread.Board "" $.Root $.Lang.Common)}}
 	{{end}}
 </div>
+<script id="postData" type="application/json">
+	{{.JSON}}
+</script>
 <div id="bottom-spacer"></div>
 <aside class="act posting">
 	<a>
