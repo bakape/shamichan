@@ -71,7 +71,7 @@ func writeJSON(
 func detectLastN(r *http.Request) int {
 	if q := r.URL.Query().Get("last"); q != "" {
 		n, err := strconv.Atoi(q)
-		if err == nil && (n == 50 || n == 5) {
+		if err == nil && (n == 100 || n == 5) {
 			return n
 		}
 	}
