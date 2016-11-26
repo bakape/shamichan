@@ -42,7 +42,6 @@ export default class UploadForm {
 			type: "file",
 			name: "image",
 			accept: acceptedFormats,
-			required: "",
 		})
 
 		this.spoiler = document.createElement("span")

@@ -24,7 +24,7 @@ func AssertDeepEquals(t *testing.T, res, std interface{}) {
 
 // UnexpectedError fails the test with an unexpected error message
 func UnexpectedError(t *testing.T, err error) {
-	t.Fatalf("unexpected error: %#v", err)
+	t.Fatalf("unexpected error: %s", err)
 }
 
 // AssertFileEquals reads a file from disk and asserts it equals the standard

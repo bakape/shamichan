@@ -37,9 +37,7 @@ class ThreadForm extends FormView implements UploadForm {
 	board: HTMLSelectElement
 	uploadContainer: HTMLSpanElement
 	selectedBoard: string
-
-	// Does the board require an OP image?
-	needImage: boolean = !boardConfig.textOnly
+	canUploadImage: boolean = !boardConfig.textOnly
 
 	// UploadForm properties
 	spoiler: HTMLSpanElement
@@ -91,7 +89,7 @@ class ThreadForm extends FormView implements UploadForm {
 				this.uploadInput,
 				document.createElement("br"),
 			)
-			if (!this.needImage) {
+			if (!this.canUploadImage) {
 				this.uploadContainer.style.display = "none"
 			}
 			frag.append(this.uploadContainer)
@@ -115,7 +113,7 @@ class ThreadForm extends FormView implements UploadForm {
 		const boards = await fetchBoardList(),
 			[first] = boards
 		if (first && (await fetchBoarConfigs(first.id)).textOnly) {
-			this.needImage = false
+			this.canUploadImage = false
 		}
 
 		const html = renderField({
@@ -141,7 +139,7 @@ class ThreadForm extends FormView implements UploadForm {
 	async toggleUploadForm() {
 		const {textOnly} = await fetchBoarConfigs(this.getSelectedBoard()),
 			display = textOnly ? "none" : ""
-		this.needImage = !textOnly
+		this.canUploadImage = !textOnly
 		write(() => {
 			this.uploadContainer.style.display = display
 			this.uploadInput.disabled = textOnly
@@ -171,7 +169,7 @@ class ThreadForm extends FormView implements UploadForm {
 
 		const req = newAllocRequest() as ThreadCreationRequest
 
-		if (this.needImage) {
+		if (this.canUploadImage && this.uploadInput.files.length) {
 			req.image = await this.uploadFile()
 			if (!req.image) {
 				this.reloadCaptcha(1)

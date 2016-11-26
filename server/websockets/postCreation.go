@@ -96,7 +96,8 @@ func insertThread(data []byte, c *Client) (err error) {
 	}
 
 	// Perform this last, so there are less dangling images because of an error
-	if !conf.TextOnly {
+	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
+	if hasImage {
 		img := req.Image
 		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
 		thread.ImageCtr = 1
@@ -128,7 +129,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		op:       id,
 		time:     now,
 		board:    req.Board,
-		hasImage: !conf.TextOnly,
+		hasImage: hasImage,
 	}
 
 	msg := threadCreationResponse{
@@ -156,8 +157,8 @@ func insertPost(data []byte, c *Client) error {
 	}
 
 	// Post must have either at least one character or an image to be allocated
-	noImage := conf.TextOnly || req.Image.Token == "" || req.Image.Name == ""
-	if req.Body == "" && noImage {
+	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
+	if req.Body == "" && !hasImage {
 		return errNoTextOrImage
 	}
 
@@ -200,7 +201,7 @@ func insertPost(data []byte, c *Client) error {
 	updates["postCtr"] = r.Row.Field("postCtr").Add(1)
 	updates["replyTime"] = now
 
-	if !noImage {
+	if hasImage {
 		img := req.Image
 		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
 		if err != nil {
@@ -233,7 +234,7 @@ func insertPost(data []byte, c *Client) error {
 		board:      sync.Board,
 		Buffer:     *bytes.NewBuffer([]byte(post.Body)),
 		bodyLength: utf8.RuneCountInString(post.Body),
-		hasImage:   !noImage,
+		hasImage:   hasImage,
 	}
 
 	if forSplicing != "" {
@@ -299,32 +300,26 @@ func constructPost(req postCreationCommon, forcedAnon bool, c *Client) (
 // Performs some validations and retrieves processed image data by token ID.
 // Embeds spoiler and image name in result struct. The last extension is
 // stripped from the name.
-func getImage(token, name string, spoiler bool) (img *types.Image, err error) {
+func getImage(token, name string, spoiler bool) (*types.Image, error) {
 	switch {
-	case len(token) > 127, token == "": // RethinkDB key length limit
-		err = errInvalidImageToken
-	case name == "":
-		err = errNoImageName
+	case len(token) > 127: // RethinkDB key length limit
+		return nil, errInvalidImageToken
 	case len(name) > 200:
-		err = errImageNameTooLong
-	}
-	if err != nil {
-		return
+		return nil, errImageNameTooLong
 	}
 
 	imgCommon, err := db.UseImageToken(token)
-	if err != nil {
-		if err == db.ErrInvalidToken {
-			err = errInvalidImageToken
-		}
-		return
+	switch err {
+	case nil:
+	case db.ErrInvalidToken:
+		return nil, errInvalidImageToken
+	default:
+		return nil, err
 	}
 
 	// Trim on the first dot in the file name. Not using filepath.Ext(), because
 	// it does not handle compound extensions like ".tar.gz"
-	switch i := strings.IndexByte(name, '.'); i {
-	case -1:
-	default:
+	if i := strings.IndexByte(name, '.'); i != -1 {
 		name = name[:i]
 	}
 
