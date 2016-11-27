@@ -127,6 +127,3 @@ thumbnails
 proper Go workspace set up, you can simply `export GOPATH=$(pwd)/.build` to
 temporarily assign `.build` as your Go workspace in the current shell. This will
 allow you to use native go commands such as `go test` and `go build`.
-
-## Documentation
-* docs/nginx.config.example - nginx configuration example
