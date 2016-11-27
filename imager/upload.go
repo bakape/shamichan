@@ -64,7 +64,6 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
 	maxSize := config.Get().MaxSize * 1024 * 1024
 	r.Body = http.MaxBytesReader(w, r.Body, maxSize)
-	w.Header().Set("Access-Control-Allow-Origin", config.AllowedOrigin)
 
 	code, id, err := newImageUpload(r)
 	if err != nil {

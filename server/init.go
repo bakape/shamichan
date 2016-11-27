@@ -11,7 +11,6 @@ import (
 	"runtime"
 
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/server/websockets"
@@ -69,12 +68,6 @@ func Start() {
 			"-ssl-key to be set",
 	)
 	flag.StringVar(&sslCert, "ssl-cert", "", "path to SSL certificate")
-	flag.StringVar(
-		&config.AllowedOrigin,
-		"origin",
-		"localhost:8000",
-		"outward origin of the server. Must match location.host in the browser.",
-	)
 	flag.BoolVar(
 		&auth.IsReverseProxied,
 		"reverse-proxied",

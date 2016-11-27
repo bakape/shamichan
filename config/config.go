@@ -47,10 +47,6 @@ var (
 	// client.
 	hash string
 
-	// AllowedOrigin stores the accepted client origin for websocket and file
-	// upload requests. Set only on server start.
-	AllowedOrigin string
-
 	// Defaults contains the default server configuration values
 	Defaults = Configs{
 		ThreadExpiry:  14,

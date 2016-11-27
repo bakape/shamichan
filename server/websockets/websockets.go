@@ -8,12 +8,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	"github.com/gorilla/websocket"
 )
@@ -26,7 +24,6 @@ var (
 
 	upgrader = websocket.Upgrader{
 		HandshakeTimeout: 5 * time.Second,
-		CheckOrigin:      CheckOrigin,
 	}
 )
 
@@ -91,20 +88,6 @@ type openPost struct {
 	bodyLength   int
 	id, op, time int64
 	board        string
-}
-
-// CheckOrigin asserts the client matches the origin specified by the server or
-// has none.
-func CheckOrigin(req *http.Request) bool {
-	origin := req.Header.Get("Origin")
-	if origin == "" {
-		return true
-	}
-	u, err := url.Parse(origin)
-	if err != nil {
-		return false
-	}
-	return u.Host == config.AllowedOrigin
 }
 
 // Handler is an http.HandleFunc that responds to new websocket connection
