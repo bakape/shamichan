@@ -24,6 +24,9 @@ var (
 
 	upgrader = websocket.Upgrader{
 		HandshakeTimeout: 5 * time.Second,
+		CheckOrigin: func(_ *http.Request) bool {
+			return true
+		},
 	}
 )
 
