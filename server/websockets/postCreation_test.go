@@ -260,9 +260,7 @@ func TestGetInvalidImage(t *testing.T) {
 		testName, token, name string
 		err                   error
 	}{
-		{"empty token", "", name, errInvalidImageToken},
 		{"token too long", GenString(128), name, errInvalidImageToken},
-		{"no image name", token, "", errNoImageName},
 		{"image name too long", token, GenString(201), errImageNameTooLong},
 		{"no token in DB", token, name, errInvalidImageToken},
 	}
@@ -315,10 +313,10 @@ func TestPostCreationValidations(t *testing.T) {
 	Clients.add(cl, SyncID{1, "a"})
 
 	cases := [...]struct {
-		testName, text, token, name string
+		testName, token, name string
 	}{
-		{"no token", "", "", "abc"},
-		{"no image name", "", "abc", ""},
+		{"no token", "", "abc"},
+		{"no image name", "abc", ""},
 	}
 
 	for i := range cases {
@@ -327,7 +325,6 @@ func TestPostCreationValidations(t *testing.T) {
 			t.Parallel()
 
 			req := ReplyCreationRequest{
-				Body: c.text,
 				Image: ImageRequest{
 					Name:  c.name,
 					Token: c.token,

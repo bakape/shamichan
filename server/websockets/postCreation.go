@@ -40,7 +40,7 @@ type ThreadCreationRequest struct {
 // ReplyCreationRequest contains common fields for both thread and reply
 // creation
 type ReplyCreationRequest struct {
-	Image                             ImageRequest
+	Image                      ImageRequest
 	Name, Auth, Password, Body string
 }
 
@@ -66,7 +66,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		return err
 	}
 
-	id, now, err := ConstructThread(req, c.ip, false)
+	id, now, hasImage, err := ConstructThread(req, c.ip, false)
 	if err != nil {
 		if err == errInValidCaptcha {
 			return c.sendMessage(MessageInsertThread, threadCreationResponse{
@@ -81,7 +81,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		op:       id,
 		time:     now,
 		board:    req.Board,
-		hasImage: req.Image.Token != "",
+		hasImage: hasImage,
 	}
 
 	msg := threadCreationResponse{
@@ -94,7 +94,7 @@ func insertThread(data []byte, c *Client) (err error) {
 // ConstructThread creates a new tread and writes it to the database. Returns
 // the ID of the thread and its creation timestamp
 func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
-	id, timeStamp int64, err error,
+	id, timeStamp int64, hasImage bool, err error,
 ) {
 	if !auth.IsNonMetaBoard(req.Board) {
 		err = errInvalidBoard
@@ -130,7 +130,8 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	}
 
 	// Perform this last, so there are less dangling images because of an error
-	if !conf.TextOnly {
+	hasImage = !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
+	if hasImage {
 		img := req.Image
 		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
 		thread.ImageCtr = 1
@@ -156,10 +157,6 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 		return
 	}
 	err = db.IncrementBoardCounter(req.Board)
-	if err != nil {
-		return
-	}
-
 	return
 }
 
@@ -181,21 +178,17 @@ func insertPost(data []byte, c *Client) error {
 	}
 
 	// Post must have either at least one character or an image to be allocated
-	noImage := conf.TextOnly || req.Image.Token == "" || req.Image.Name == ""
-	if req.Body == "" && noImage {
+	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
+	if req.Body == "" && !hasImage {
 		return errNoTextOrImage
 	}
 
-	// Check thread is not locked and retrieve the post counter
-	var threadAttrs struct {
-		Locked  bool
-		PostCtr int
-	}
-	q := r.Table("threads").Get(sync.OP).Pluck("locked", "postCtr")
-	if err := db.One(q, &threadAttrs); err != nil {
+	var locked bool
+	q := r.Table("threads").Get(sync.OP).Field("locked").Default(false)
+	if err := db.One(q, &locked); err != nil {
 		return err
 	}
-	if threadAttrs.Locked {
+	if locked {
 		return errThreadIsLocked
 	}
 
@@ -220,7 +213,7 @@ func insertPost(data []byte, c *Client) error {
 	updates["postCtr"] = r.Row.Field("postCtr").Add(1)
 	updates["replyTime"] = now
 
-	if !noImage {
+	if hasImage {
 		img := req.Image
 		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
 		if err != nil {
@@ -253,7 +246,7 @@ func insertPost(data []byte, c *Client) error {
 		board:      sync.Board,
 		Buffer:     *bytes.NewBufferString(lastLine(post.Body)),
 		bodyLength: bodyLength,
-		hasImage:   !noImage,
+		hasImage:   hasImage,
 	}
 
 	return nil
@@ -343,30 +336,24 @@ func constructPost(
 // stripped from the name.
 func getImage(token, name string, spoiler bool) (img *common.Image, err error) {
 	switch {
-	case len(token) > 127, token == "": // RethinkDB key length limit
-		err = errInvalidImageToken
-	case name == "":
-		err = errNoImageName
+	case len(token) > 127: // RethinkDB key length limit
+		return nil, errInvalidImageToken
 	case len(name) > 200:
-		err = errImageNameTooLong
-	}
-	if err != nil {
-		return
+		return nil, errImageNameTooLong
 	}
 
 	imgCommon, err := db.UseImageToken(token)
-	if err != nil {
-		if err == db.ErrInvalidToken {
-			err = errInvalidImageToken
-		}
-		return
+	switch err {
+	case nil:
+	case db.ErrInvalidToken:
+		return nil, errInvalidImageToken
+	default:
+		return nil, err
 	}
 
 	// Trim on the first dot in the file name. Not using filepath.Ext(), because
 	// it does not handle compound extensions like ".tar.gz"
-	switch i := strings.IndexByte(name, '.'); i {
-	case -1:
-	default:
+	if i := strings.IndexByte(name, '.'); i != -1 {
 		name = name[:i]
 	}
 

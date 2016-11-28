@@ -6,9 +6,9 @@ import (
 	"html/template"
 	"math/rand"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/common"
 )
 
 // Board renders board page HTML for noscript browsers. withIndex specifies, if
@@ -25,22 +25,22 @@ func Board(
 	title := fmt.Sprintf("/%s/ - %s", b, boardConf.Title)
 
 	v := struct {
-		IsAll, NeedImage, Captcha                bool
+		IsAll, ImagesAllowed, Captcha            bool
 		Banner, Notice, Rules, Title, CaptchaKey string
 		SortModes                                []string
 		Threads                                  common.BoardThreads
 		Boards                                   config.BoardTitles
 		Lang                                     lang.Pack
 	}{
-		IsAll:      b == "all",
-		NeedImage:  !boardConf.TextOnly,
-		Notice:     boardConf.Notice,
-		Rules:      boardConf.Rules,
-		Title:      title,
-		Threads:    data.Threads,
-		Lang:       ln,
-		Captcha:    conf.Captcha,
-		CaptchaKey: conf.CaptchaPublicKey,
+		IsAll:         b == "all",
+		ImagesAllowed: !boardConf.TextOnly,
+		Notice:        boardConf.Notice,
+		Rules:         boardConf.Rules,
+		Title:         title,
+		Threads:       data.Threads,
+		Lang:          ln,
+		Captcha:       conf.Captcha,
+		CaptchaKey:    conf.CaptchaPublicKey,
 	}
 	if len(boardConf.Banners) != 0 {
 		v.Banner = boardConf.Banners[rand.Intn(len(boardConf.Banners))]

@@ -14,9 +14,9 @@ import (
 
 	"github.com/Soreil/apngdetector"
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 

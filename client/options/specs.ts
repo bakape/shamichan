@@ -13,7 +13,7 @@ export const enum optionType { checkbox, number, image, shortcut, menu }
 // Available themes. Change this, when adding any new ones.
 export const themes = [
 	'moe', 'gar', 'mawaru', 'moon', 'ashita', 'console', 'tea', 'higan',
-	'ocean', 'rave', 'glass',
+	'ocean', 'rave', 'glass', "inumi",
 ]
 
 // Available language packs. Change this, when adding any new ones.

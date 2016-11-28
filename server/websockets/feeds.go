@@ -49,6 +49,10 @@ type updateFeed struct {
 	clients []*Client
 	// Cache of posts updated within the last 30 s
 	cache map[int64]timestampedPost
+	// Cached JSON of `cache`. Prevents duplicating work, when encoding the same
+	// posts to JSON. Especially useful on server start, when many clients
+	// request synchronization at once. Set to null on any change of `cache`.
+	cacheJSON []byte
 }
 
 // Change feed update message
@@ -125,9 +129,17 @@ func (f *feedContainer) addClient(id int64, cl *Client) {
 	}
 	feed.clients = append(feed.clients, cl)
 
-	msg, err := EncodeMessage(MessageSynchronise, feed.cache)
-	if err != nil {
-		cl.Close(err)
+	var msg []byte
+	if feed.cacheJSON != nil {
+		msg = feed.cacheJSON
+	} else {
+		var err error
+		msg, err = EncodeMessage(MessageSynchronise, feed.cache)
+		if err != nil {
+			cl.Close(err)
+		} else {
+			feed.cacheJSON = msg
+		}
 	}
 	cl.Send(msg)
 }
@@ -169,6 +181,7 @@ func (f *feedContainer) cleanUp(time int64) {
 		for id, post := range feed.cache {
 			if post.LastUpdated < time {
 				delete(feed.cache, id)
+				feed.cacheJSON = nil
 			}
 		}
 
@@ -278,12 +291,14 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) {
 		}
 		feed.writeToBuffer(data)
 		feed.cache[update.ID] = update.timestampedPost
+		feed.cacheJSON = nil
 	// New replication log messages
 	case postUpdated:
 		for _, msg := range update.Log {
 			feed.writeToBuffer(msg)
 		}
 		feed.cache[update.ID] = update.timestampedPost
+		feed.cacheJSON = nil
 	}
 }
 

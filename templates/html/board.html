@@ -26,7 +26,7 @@
 			{{end}}
 			<input name="subject" placeholder="{{index .Lang.UI "subject"}}" required type="text" maxlength="100">
 			<br>
-			{{if or .IsAll .NeedImage}}
+			{{if or .IsAll .ImagesAllowed}}
 				<span class="upload-container">
 					<span>
 						<label class="spoiler">
@@ -36,7 +36,7 @@
 					</span>
 					<strong class="upload-status"></strong>
 					<br>
-					<input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip" {{if .NeedImage}}required{{end}}>
+					<input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip">
 					<br>
 				</span>
 			{{end}}

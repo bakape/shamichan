@@ -1,6 +1,3 @@
-var common = require('../common');
-var hooks = require('../util/hooks');
-
 // Send server time to client
 hooks.hook('clientSynced', function(info, cb){
 	var time = Date.now();

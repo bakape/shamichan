@@ -1,5 +1,5 @@
 // import { on, inputValue, applyMixins, makeFrag } from '../../util'
-// import { fetchBoardList, fetchBoarConfigs } from "../../fetch"
+// import { fetchBoardList, fetchBoarConfigs } from "../../json"
 // import { write, threads } from '../../render'
 // import { FormView, inputType, renderInput, InputSpec } from '../../forms'
 // import { Captcha } from '../../captcha'
@@ -25,15 +25,19 @@
 // 	id: number
 // }
 
+// // Bind event listener to the thread containerThreadForm
+// export default () =>
+// 	on(threads, "click", e => new ThreadForm(e), {
+// 		selector: ".new-thread-button",
+// 	})
+
 // // Form view for creating new threads
 // class ThreadForm extends FormView implements UploadForm {
 // 	aside: Element
 // 	board: HTMLSelectElement
 // 	uploadContainer: HTMLSpanElement
 // 	selectedBoard: string
-
-// 	// Does the board require an OP image?
-// 	needImage: boolean = !boardConfig.textOnly
+// 	canUploadImage: boolean = !boardConfig.textOnly
 
 // 	// UploadForm properties
 // 	spoiler: HTMLSpanElement
@@ -85,7 +89,7 @@
 // 				this.uploadInput,
 // 				document.createElement("br"),
 // 			)
-// 			if (!this.needImage) {
+// 			if (!this.canUploadImage) {
 // 				this.uploadContainer.style.display = "none"
 // 			}
 // 			frag.append(this.uploadContainer)
@@ -109,7 +113,7 @@
 // 		const boards = await fetchBoardList(),
 // 			[first] = boards
 // 		if (first && (await fetchBoarConfigs(first.id)).textOnly) {
-// 			this.needImage = false
+// 			this.canUploadImage = false
 // 		}
 
 // 		const html = renderField({
@@ -135,7 +139,7 @@
 // 	async toggleUploadForm() {
 // 		const {textOnly} = await fetchBoarConfigs(this.getSelectedBoard()),
 // 			display = textOnly ? "none" : ""
-// 		this.needImage = !textOnly
+// 		this.canUploadImage = !textOnly
 // 		write(() => {
 // 			this.uploadContainer.style.display = display
 // 			this.uploadInput.disabled = textOnly
@@ -165,7 +169,7 @@
 
 // 		const req = newAllocRequest() as ThreadCreationRequest
 
-// 		if (this.needImage) {
+// 		if (this.canUploadImage && this.uploadInput.files.length) {
 // 			req.image = await this.uploadFile()
 // 			if (!req.image) {
 // 				this.reloadCaptcha(1)
@@ -204,7 +208,3 @@
 // 	spec.placeholders = true
 // 	return renderInput(spec)[1] + "<br>"
 // }
-
-// on(threads, "click", e => new ThreadForm(e), {
-// 	selector: ".new-thread-button",
-// })

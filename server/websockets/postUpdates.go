@@ -45,7 +45,7 @@ type spliceCoords struct {
 }
 
 // Response to a spliceRequest. Sent to all listening clients.
-type spliceResponse struct {
+type spliceMessage struct {
 	ID int64 `json:"id"`
 	spliceRequestString
 }
@@ -342,7 +342,7 @@ func spliceLine(req spliceRequest, c *Client) error {
 		end = append(req.Text, old[req.Start+req.Len:]...)
 		c.openPost.bodyLength += -req.Len + len(req.Text)
 	}
-	res := spliceResponse{
+	res := spliceMessage{
 		ID: c.openPost.id,
 		spliceRequestString: spliceRequestString{
 			spliceCoords: req.spliceCoords,

@@ -99,12 +99,12 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	id, _, err := websockets.ConstructThread(req, auth.GetIP(r), true)
+	id, _, _, err := websockets.ConstructThread(req, auth.GetIP(r), true)
 	if err != nil {
 		// TODO: Not all codes are actually 400. Need to differentiate.
 		text400(w, err)
 		return
 	}
 
-	w.Write(strconv.AppendInt(nil, id, 10))
+	w.Write([]byte(strconv.FormatInt(id, 10)))
 }
