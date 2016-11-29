@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
@@ -139,12 +140,18 @@ func startServer() {
 		templates.ParseTemplates,
 		templates.Compile,
 		imager.InitImager,
-		startWebServer,
 	}
 	for _, fn := range fns {
 		err := fn()
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+
+	// Wait 1 second for the caches to populate. Prevents reconnecting clients
+	// from swarming the update feed on server restart.
+	time.Sleep(time.Second)
+	if err := startWebServer(); err != nil {
+		log.Fatal(err)
 	}
 }
