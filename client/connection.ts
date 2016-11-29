@@ -1,7 +1,7 @@
 // Handles Websocket connectivity and messaging
 
 import FSM from './fsm'
-import { debug, page, posts } from './state'
+import { debug, page } from './state'
 import { sync as lang } from './lang'
 import { write } from './render'
 import { authenticate } from './mod/login'
@@ -206,15 +206,7 @@ export async function synchronise(auth: boolean) {
 			// Always fetch the full thread
 			data = await fetchThread(board, thread, 0)
 		insertPost(data)
-		// ID of the first non-OP post that we have rendered, or OP, if none
-		const firstID = Object.keys(posts.models).sort()[1] || page.thread
-		for (let post of data.posts) {
-			// Filter posts that we never retrieved in lastN mode
-			if (!posts.has(post.id) && post.id < firstID) {
-				continue
-			}
-			insertPost(post)
-		}
+		data.posts.forEach(insertPost)
 		delete data.posts
 	}
 

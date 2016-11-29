@@ -65,7 +65,7 @@ export let boardConfig: BoardConfigs = emitChanges({} as BoardConfigs)
 export const page = emitChanges<PageState>(read(location.href))
 
 // All posts currently displayed
-export const posts = new PostCollection()
+export const posts = new PostCollection([])
 
 // Posts I made in any tab
 export let mine: Set<number>
