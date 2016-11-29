@@ -7,13 +7,16 @@ import (
 	"log"
 	"time"
 
+	"encoding/base64"
+	"encoding/hex"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 17
+const dbVersion = 18
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -58,6 +61,7 @@ var (
 	secondaryIndices = [...]struct {
 		table, index string
 	}{
+		{"imageTokens", "expires"},
 		{"threads", "board"},
 		{"posts", "op"},
 		{"posts", "board"},
@@ -166,6 +170,11 @@ func verifyDBVersion() error {
 		if err := waitForIndex("posts")(); err != nil {
 			return err
 		}
+		fallthrough
+	case 17:
+		if err := upgrade17to18(); err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("incompatible database version: %d", version)
 	}
@@ -235,6 +244,76 @@ func upgrade15to16() error {
 	}
 
 	return CreateIndices()
+}
+
+func upgrade17to18() error {
+	hexToBase64 := func(h string) (string, error) {
+		raw, err := hex.DecodeString(h)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode hash: %s", h)
+		}
+		return base64.RawURLEncoding.EncodeToString(raw), nil
+	}
+
+	// Convert all hex MD5 to base64 MD5
+	var images []struct {
+		SHA1, MD5 string
+	}
+	q := r.Table("images").Pluck("SHA1", "MD5")
+	if err := All(q, &images); err != nil {
+		return err
+	}
+	for _, img := range images {
+		b64, err := hexToBase64(img.MD5)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		q := r.Table("images").Get(img.SHA1).Update(map[string]string{
+			"MD5": b64,
+		})
+		if err := Write(q); err != nil {
+			return err
+		}
+	}
+
+	// And for posts themselves
+	var posts []struct {
+		ID  int64
+		MD5 string
+	}
+	q = r.
+		Table("posts").
+		HasFields("image").
+		Map(func(p r.Term) map[string]r.Term {
+			return map[string]r.Term{
+				"id":  p.Field("id"),
+				"MD5": p.Field("image").Field("MD5"),
+			}
+		})
+	if err := All(q, &posts); err != nil {
+		return err
+	}
+	for _, p := range posts {
+		b64, err := hexToBase64(p.MD5)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		q := r.Table("posts").Get(p.ID).Update(map[string]map[string]string{
+			"image": {
+				"MD5": b64,
+			},
+		})
+		if err := Write(q); err != nil {
+			return err
+		}
+	}
+
+	return WriteAll([]r.Term{
+		r.Table("imageTokens").IndexCreate("expires"),
+		incrementVersion,
+	})
 }
 
 // InitDB initialize a rethinkDB database

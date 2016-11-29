@@ -38,19 +38,15 @@ var postClosingQuery = r.
 
 var expireImageTokensQuery = r.
 	Table("imageTokens").
-	Filter(r.Row.Field("expires").Lt(r.Now())).
+	Between(r.MinVal, r.Now(), r.BetweenOpts{
+		Index: "expires",
+	}).
 	Delete(r.DeleteOpts{ReturnChanges: true}).
 	Do(func(d r.Term) r.Term {
-		return d.
-			Field("deleted").
-			Eq(0).
-			Branch(
-				r.Expr([]string{}),
-				d.
-					Field("changes").
-					Field("old_val").
-					Field("SHA1"),
-			)
+		return d.Field("deleted").Eq(0).Branch(
+			r.Expr([]string{}),
+			d.Field("changes").Field("old_val").Field("SHA1"),
+		)
 	})
 
 // Run database clean up tasks at server start and regular intervals. Must be
