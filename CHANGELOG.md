@@ -2,6 +2,27 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v2.7.0 - 2016-11-29
+* Fix
+	- Not compiling due to TypeScript type checker regression
+	- Images expanding in post previews
+	- Uncaught synchronization errors on connectivity loss
+	- Boards not deleting themselves after expiry
+	- Reply form taking too much viewport height
+	- CloudFlare IP forwarding Nginx sample configs
+	- Unshown posts inserting to thread bottom in Last N posts display mode
+* Add
+	- Alt+up keybind to navigate to the upper board level
+	- Margin to embedded content
+	- ZIP, 7Zip, TAR.GZ and TAR.XZ archive upload support
+	- Websocket protocol documentation
+	- "Inumi" dark Material Design theme
+* Change
+	- Make images optional for thread creation
+* Remove
+	- Websocket connection origin restrictions
+	- "--origin" CLI parameter
+
 ##v2.6.1 - 2016-11-02
 * Fix
 	- Splicing of multibyte character unicode strings
