@@ -81,6 +81,13 @@
 				<span class="counters" title="{{index $.Lang.UI "catalogOmit"}}">
 					{{.PostCtr}}/{{.ImageCtr}}
 				</span>
+				{{if .Image}}{{else}}
+					<span class="act">
+						<a class="history" href="/{{.Board}}/{{.ID}}">
+							{{index $.Lang.UI "expand"}}
+						</a>
+					</span>
+				{{end}}
 				<span class="act">
 					<a class="history" href="/{{.Board}}/{{.ID}}?last=100">
 						{{index $.Lang.UI "last"}} 100
