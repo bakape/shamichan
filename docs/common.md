@@ -34,8 +34,8 @@ Uploaded file data attached to post
 | length | uint | - | Length of stream in seconds. Only used for audio and video files. |
 | size | uint | + | size of originally uploaded file in bytes |
 | dims | [4]uint | + | 4 item array containing the dimensions of the uploaded file and its thumbnail - [width, height, thumbnail_width, thumbnail_height] |
-| MD5 | string | + | MD5 hash of the originally uploaded file |
-| SHA1 | string | + | SHA1 hash of the originally uploaded file |
+| MD5 | string | + | MD5 hash of the originally uploaded file. Encoded to unpadded base64 URL encoding. |
+| SHA1 | string | + | SHA1 hash of the originally uploaded file. Encoded to hex. |
 | name | string | + | file name the user uploaded the file with without extension |
 
 ##fileTypes

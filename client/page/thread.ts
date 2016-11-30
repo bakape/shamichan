@@ -40,6 +40,7 @@ export default function renderThread(thread: ThreadData) {
 		opView = new OPView(opModel)
 	els.push(opView.el)
 	postCollection.addOP(opModel)
+	postCollection.lowestID = posts.length ? posts[0].id : opModel.id
 
 	for (let post of posts) {
 		if (!hidden.has(post.id)) {

@@ -4,6 +4,7 @@ package imager
 import (
 	"crypto/md5"
 	"crypto/sha1"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -256,7 +257,7 @@ func genMD5(data []byte) <-chan string {
 	ch := make(chan string)
 	go func() {
 		sum := md5.Sum(data)
-		ch <- hex.EncodeToString(sum[:])
+		ch <- base64.RawURLEncoding.EncodeToString(sum[:])
 	}()
 	return ch
 }

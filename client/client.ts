@@ -48,6 +48,12 @@ function handle(id: number, fn: (m: Post) => void) {
 // client's state to the update stream. In that case the client must rerender
 // posts or deduplicate appropriately.
 export function insertPost(data: PostData) {
+	// It is possible to receive insertion updates for posts that are not
+	// currently displayed, because of the Last N setting. Skip them.
+	if (data.id < posts.lowestID) {
+		return
+	}
+
 	const existing = posts.get(data.id)
 	if (existing) {
 		if (existing instanceof ReplyFormModel) {

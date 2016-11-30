@@ -1,12 +1,13 @@
 import { Post, OP } from './models'
 
-// Holds a collection of models
+// Holds a collection of Post models
 export default class PostCollection {
 	public models: { [key: string]: Post } = {}
+	public lowestID: number = 0 // Lowest post ID, excluding OP
 	public op: OP
 
 	// Creates a new Collection instance, with optional starting set of models
-	constructor(models?: Post[]) {
+	constructor(models: Post[]) {
 		if (models) {
 			for (let model of models) {
 				this.add(model)
@@ -44,6 +45,7 @@ export default class PostCollection {
 		}
 		this.models = {}
 		this.op = null
+		this.lowestID = 0
 	}
 
 	// Return weather a post exists in the collection

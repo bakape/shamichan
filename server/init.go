@@ -10,6 +10,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
@@ -152,6 +153,10 @@ func startServer() {
 	load(wg, websockets.Listen)
 
 	wg.Wait()
+
+	// Wait 1 second for the caches to populate. Prevents reconnecting clients
+	// from swarming the update feed on server restart.
+	time.Sleep(time.Second)
 
 	logFatal(startWebServer)
 }

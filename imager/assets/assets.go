@@ -19,7 +19,7 @@ var (
 			SHA1:     "012a2f912c9ee93ceb0ccb8684a29ec571990a94",
 			FileType: common.JPEG,
 			Dims:     StdDims["jpeg"],
-			MD5:      "60e41092581f7b329b057b8402caa8a7",
+			MD5:      "YOQQklgfezKbBXuEAsqopw",
 			Size:     300792,
 		},
 		Name:    "sample.jpg",
