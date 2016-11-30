@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v2.7.1 - 2016-11-30
+* Fix
+	- Backspace corrupting posts, when tab hidden
+	- Catalog sorting and searching
+
 ##v2.7.0 - 2016-11-29
 * Fix
 	- Not compiling due to TypeScript type checker regression
