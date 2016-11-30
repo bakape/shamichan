@@ -183,10 +183,10 @@ function onSortChange(e: Event) {
 	writeThreads(renderThreads(filter, data))
 }
 
-function writeThreads(threads: DocumentFragment) {
+function writeThreads(formated: DocumentFragment) {
 	const cat = threads.querySelector("#catalog")
 	cat.innerHTML = ""
-	cat.append(threads)
+	cat.append(formated)
 }
 
 // Refilter and rerender threads on search input change
