@@ -75,7 +75,7 @@ export default class PostView extends ImageHandler {
 			b = b.lastChild
 		}
 		if (!b) {
-
+			b = this.lastLine()
 		}
 		this.buffer = b
 	}
@@ -129,8 +129,7 @@ export default class PostView extends ImageHandler {
 		write(() => {
 			// Merge multiple successive nodes created by appendString()
 			this.buffer.normalize()
-			const text = this.buffer.lastChild
-			text.textContent = text.textContent.slice(0, -1)
+			this.buffer.textContent = this.buffer.textContent.slice(0, -1)
 		})
 	}
 
