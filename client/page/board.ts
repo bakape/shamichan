@@ -64,7 +64,7 @@ export function render(frag: NodeSelector, writeNow: boolean) {
 
 // Sort all threads on a board
 export function sortThreads(frag: DocumentFragment, initial: boolean) {
-	let threads = Array.from(frag.children)
+	let threads = Array.from(frag.querySelectorAll("article"))
 
 	if (options.hideThumbs || options.workModeToggle) {
 		for (let el of frag.querySelectorAll("img.expanded")) {
@@ -109,10 +109,10 @@ function onSearchChange(e: Event) {
 }
 
 // Filter against board and subject and toggle thread visibility
-function filterThreads(filter: string, catalog: ParentNode) {
+function filterThreads(filter: string, catalog: DocumentFragment) {
 	const r = new RegExp(filter, "i")
 
-	for (let el of Array.from(catalog.children) as HTMLElement[]) {
+	for (let el of catalog.querySelectorAll("article")) {
 		let display = "none"
 
 		const board = el.querySelector(".board")
