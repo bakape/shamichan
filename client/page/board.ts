@@ -63,12 +63,12 @@ export function render(frag: NodeSelector, writeNow: boolean) {
 }
 
 // Sort all threads on a board
-export function sortThreads(frag: ParentNode, initial: boolean) {
+export function sortThreads(frag: DocumentFragment, initial: boolean) {
 	let threads = Array.from(frag.children)
 
 	if (options.hideThumbs || options.workModeToggle) {
-		for (let el of threads) {
-			el.querySelector(".expanded").style.display = "none"
+		for (let el of frag.querySelectorAll("img.expanded")) {
+			el.style.display = "none"
 		}
 	}
 
