@@ -68,11 +68,13 @@
 			{{if .Image}}
 				<figure>
 					<a class="history" href="/{{.Board}}/{{.ID}}">
-						{{if .Image.Spoiler}}
-							<img src="/assets/spoil/default.jpg">
-						{{else}}
-							<img src="{{thumbPath .Image.FileType .Image.SHA1}}">
-						{{end}}
+						<img class="expanded" src="
+							{{if .Image.Spoiler}}
+								/assets/spoil/default.jpg
+							{{else}}
+								{{thumbPath .Image.FileType .Image.SHA1}}
+							{{end}}
+						">
 					</a>
 				</figure>
 			{{end}}
