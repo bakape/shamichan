@@ -6,7 +6,7 @@ import { PostLinks } from '../models'
 
 // Render a link to other posts
 export function renderPostLink(num: number, board: string, op: number): string {
-    let html = `<a class="history" href="`
+    let html = `<a class="history" data-id="${num}" href="`
     const cross = op !== page.thread
 
     if (cross) {

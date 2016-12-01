@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/common"
 )
 
 func TestOldFeedClosing(t *testing.T) {
@@ -188,7 +188,7 @@ func TestReclaimPost(t *testing.T) {
 
 	cases := [...]struct {
 		name     string
-		id       int64
+		id       uint64
 		password string
 		code     int
 	}{

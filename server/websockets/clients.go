@@ -19,7 +19,7 @@ type ClientMap struct {
 // SyncID contains the board and thread the client are currently synced to. If
 // the client is on the board page, thread = 0.
 type SyncID struct {
-	OP    int64
+	OP    uint64
 	Board string
 }
 

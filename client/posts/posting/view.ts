@@ -1,8 +1,8 @@
 // View classes for post authoring
 
-import PostView, { OPView } from "../view"
+import PostView from "../view"
 import { ReplyFormModel } from "./model"
-import { Post, OP } from "../models"
+import { Post } from "../models"
 import { boardConfig } from "../../state"
 import { setAttrs, makeFrag, applyMixins } from "../../util"
 import { parseTerminatedLine } from "../render/body"
@@ -19,7 +19,7 @@ import { atBottom, scrollToBottom } from "../../scroll"
 let bottomSpacer: HTMLElement
 
 // Post creation and update view
-export class FormView extends PostView implements UploadForm {
+export default class FormView extends PostView implements UploadForm {
     el: HTMLElement
     model: ReplyFormModel
     inputLock: boolean
@@ -43,7 +43,7 @@ export class FormView extends PostView implements UploadForm {
     [index: string]: any
 
     constructor(model: Post, isOP: boolean) {
-        super(model)
+        super(model, null)
         this.renderInputs(isOP)
         if (!isOP) {
             this.el.classList.add("reply-form")
@@ -358,16 +358,3 @@ export class FormView extends PostView implements UploadForm {
 }
 
 applyMixins(FormView, UploadForm)
-
-// FormView of an OP post
-export class OPFormView extends FormView implements OPView {
-    omit: Element
-    model: any
-    renderOmit: () => void
-
-    constructor(model: OP) {
-        super(model, true)
-    }
-}
-
-applyMixins(OPFormView, OPView)

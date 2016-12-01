@@ -10,8 +10,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
 	r "github.com/dancannon/gorethink"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -23,12 +23,12 @@ var (
 )
 
 type syncRequest struct {
-	Thread int64
+	Thread uint64
 	Board  string
 }
 
 type reclaimRequest struct {
-	ID       int64
+	ID       uint64
 	Password string
 }
 
@@ -64,7 +64,7 @@ func syncToBoard(board string, c *Client) error {
 }
 
 // Register the client with the central client storage data structure
-func registerSync(board string, op int64, c *Client) {
+func registerSync(board string, op uint64, c *Client) {
 	id := SyncID{
 		OP:    op,
 		Board: board,
@@ -78,7 +78,7 @@ func registerSync(board string, op int64, c *Client) {
 
 // Sends a response to the client's synchronization request with any missed
 // messages and starts streaming in updates.
-func syncToThread(board string, thread int64, c *Client) error {
+func syncToThread(board string, thread uint64, c *Client) error {
 	valid, err := db.ValidateOP(thread, board)
 	if err != nil {
 		return err

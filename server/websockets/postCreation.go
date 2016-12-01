@@ -52,8 +52,8 @@ type ImageRequest struct {
 
 // Response to a thread creation request
 type threadCreationResponse struct {
-	Code int   `json:"code"`
-	ID   int64 `json:"id"`
+	Code int    `json:"code"`
+	ID   uint64 `json:"id"`
 }
 
 // Insert a new thread into the database
@@ -94,7 +94,7 @@ func insertThread(data []byte, c *Client) (err error) {
 // ConstructThread creates a new tread and writes it to the database. Returns
 // the ID of the thread and its creation timestamp
 func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
-	id, timeStamp int64, hasImage bool, err error,
+	id uint64, timeStamp int64, hasImage bool, err error,
 ) {
 	if !auth.IsNonMetaBoard(req.Board) {
 		err = errInvalidBoard

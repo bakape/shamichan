@@ -11,10 +11,10 @@ import (
 
 	"unicode/utf8"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/common"
 )
 
 // Sample wall of text
@@ -91,7 +91,7 @@ func TestWriteBacklinks(t *testing.T) {
 		},
 	})
 
-	for _, dest := range [...]int64{1, 2, 8} {
+	for _, dest := range [...]uint64{1, 2, 8} {
 		if err := writeBacklink(10, 9, "a", dest); err != nil {
 			t.Fatalf("write post %d backlink: %s", dest, err)
 		}
@@ -103,7 +103,7 @@ func TestWriteBacklinks(t *testing.T) {
 		Board: "a",
 	}
 
-	for _, i := range [...]int64{1, 2} {
+	for _, i := range [...]uint64{1, 2} {
 		id := i
 		t.Run(fmt.Sprintf("post %d", id), func(t *testing.T) {
 			t.Parallel()
@@ -231,7 +231,7 @@ func assertOpenPost(t *testing.T, cl *Client, len int, buf string) {
 	}
 }
 
-func assertBody(t *testing.T, id int64, body string) {
+func assertBody(t *testing.T, id uint64, body string) {
 	var res string
 	q := db.FindPost(id).Field("body")
 	if err := db.One(q, &res); err != nil {
@@ -242,7 +242,7 @@ func assertBody(t *testing.T, id int64, body string) {
 	}
 }
 
-func assertRepLog(t *testing.T, id int64, log []string) {
+func assertRepLog(t *testing.T, id uint64, log []string) {
 	var res [][]byte
 	q := db.FindPost(id).Field("log")
 	if err := db.All(q, &res); err != nil {
@@ -427,7 +427,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 	}
 
 	std := [...]struct {
-		id    int64
+		id    uint64
 		log   []string
 		field string
 		val   common.LinkMap
@@ -528,7 +528,7 @@ func TestClosePost(t *testing.T) {
 	assertPostClosed(t, 2)
 }
 
-func assertPostClosed(t *testing.T, id int64) {
+func assertPostClosed(t *testing.T, id uint64) {
 	var editing bool
 	q := db.FindPost(id).Field("editing")
 	if err := db.One(q, &editing); err != nil {

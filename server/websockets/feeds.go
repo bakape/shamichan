@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -36,7 +36,7 @@ type feedContainer struct {
 	// Current database change feed cursor
 	cursor *r.Cursor
 	// Map of thread IDs to their feeds
-	feeds map[int64]*updateFeed
+	feeds map[uint64]*updateFeed
 }
 
 // A feed with synchronization logic of a certain thread
@@ -48,7 +48,7 @@ type updateFeed struct {
 	// Subscribed clients
 	clients []*Client
 	// Cache of posts updated within the last 30 s
-	cache map[int64]timestampedPost
+	cache map[uint64]timestampedPost
 	// Cached JSON of `cache`. Prevents duplicating work, when encoding the same
 	// posts to JSON. Especially useful on server start, when many clients
 	// request synchronization at once. Set to null on any change of `cache`.
@@ -64,13 +64,13 @@ type feedUpdate struct {
 
 type timestampedPost struct {
 	common.Post
-	OP          int64 `json:"-"`
-	LastUpdated int64 `json:"-"`
+	OP          uint64 `json:"-"`
+	LastUpdated int64  `json:"-"`
 }
 
 // Request to add or remove a client to a subscription
 type subRequest struct {
-	id     int64
+	id     uint64
 	client *Client
 }
 
@@ -92,7 +92,7 @@ func newFeedContainer() feedContainer {
 		read:   make(chan feedUpdate),
 
 		// 100 len map to avoid some possible reallocation as the server starts
-		feeds: make(map[int64]*updateFeed, 100),
+		feeds: make(map[uint64]*updateFeed, 100),
 	}
 }
 
@@ -109,7 +109,7 @@ func (f *feedContainer) loop() {
 		case update := <-f.read:
 			f.bufferUpdate(update)
 		case <-f.clear:
-			f.feeds = make(map[int64]*updateFeed, 1)
+			f.feeds = make(map[uint64]*updateFeed, 1)
 		case t := <-cleanUp:
 			f.cleanUp(t.Unix())
 		case <-send:
@@ -119,11 +119,11 @@ func (f *feedContainer) loop() {
 }
 
 // Add client and send it posts updated within the last 30 seconds
-func (f *feedContainer) addClient(id int64, cl *Client) {
+func (f *feedContainer) addClient(id uint64, cl *Client) {
 	feed, ok := f.feeds[id]
 	if !ok {
 		feed = &updateFeed{
-			cache: make(map[int64]timestampedPost, 4),
+			cache: make(map[uint64]timestampedPost, 4),
 		}
 		f.feeds[id] = feed
 	}
@@ -145,7 +145,7 @@ func (f *feedContainer) addClient(id int64, cl *Client) {
 }
 
 // Remove client from subscribers
-func (f *feedContainer) removeClient(id int64, cl *Client) {
+func (f *feedContainer) removeClient(id uint64, cl *Client) {
 	feed := f.feeds[id]
 	for i, c := range feed.clients {
 		if c == cl {
@@ -274,7 +274,7 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) {
 	feed, ok := f.feeds[update.OP]
 	if !ok {
 		feed = &updateFeed{
-			cache: make(map[int64]timestampedPost, 4),
+			cache: make(map[uint64]timestampedPost, 4),
 		}
 		f.feeds[update.OP] = feed
 	}

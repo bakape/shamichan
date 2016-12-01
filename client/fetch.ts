@@ -57,9 +57,24 @@ export async function fetchBoard(board: string): Promise<[string, string]> {
 	return await fetchHTML(`/${board}/?noIndex=true`)
 }
 
-// Fetch thread JSON data
+// Fetch HTML of a thread page
 export async function fetchThread(
-	board: string, thread: number, lastN: number,
+	board: string,
+	thread: number,
+	lastN: number,
+): Promise<[string, string]> {
+	let url = `/${board}/${thread}?noIndex=true`
+	if (lastN) {
+		url += `&last=${lastN}`
+	}
+	return await fetchHTML(url)
+}
+
+// Fetch thread JSON data
+export async function fetchThreadJSON(
+	board: string,
+	thread: number,
+	lastN: number,
 ): Promise<[ThreadData, string]> {
 	let url = `/json/${board}/${thread}`
 	if (lastN) {

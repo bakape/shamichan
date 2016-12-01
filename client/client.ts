@@ -66,7 +66,7 @@ export function insertPost(data: PostData) {
 
 	const model = new Post(data)
 	posts.add(model)
-	const view = new PostView(model)
+	const view = new PostView(model, null)
 
 	// Find last allocated post and insert after it
 	write(() => {

@@ -1,8 +1,11 @@
 import { fetchBoard, fetchThread } from "../fetch"
-import { PageState, posts } from '../state'
+import { PageState, posts, boardConfig } from '../state'
 import renderThread from './thread'
 import { renderFresh as renderBoard } from './board'
-import { ThreadData } from '../posts/models'
+import { makeFrag } from "../util"
+import { setTitle } from "../tab"
+import { setExpandAll } from "../posts/images"
+import { write } from "../render"
 
 // Load a page (either board or thread) and render it once the ready promise
 // has been resolved
@@ -10,7 +13,7 @@ export default async function (
 	{board, thread, lastN}: PageState,
 	ready: Promise<void>
 ) {
-	const [data, err] = thread
+	const [html, err] = thread
 		? await fetchThread(board, thread, lastN)
 		: await fetchBoard(board)
 	if (err) {
@@ -20,10 +23,29 @@ export default async function (
 	await ready
 
 	posts.clear()
+	const frag = makeFrag(html)
+	extractConfigs(frag)
+	// Apply board title to tab
+	setTitle(frag.querySelector("#page-title").textContent)
+	setExpandAll(false)
 
 	if (thread) {
-		renderThread(data as ThreadData)
+		renderThread(frag, true)
 	} else {
-		renderBoard(data as string)
+		renderBoard(frag)
 	}
+}
+
+// Find board configurations in the HTML and apply them
+export function extractConfigs(ns: NodeSelector) {
+	const conf = ns.querySelector("#board-configs").textContent
+	boardConfig.replaceWith(JSON.parse(conf))
+}
+
+export function maybeWriteNow(writeNow: boolean, fn: () => void) {
+    if (writeNow) {
+        fn()
+    } else {
+        write(fn)
+    }
 }

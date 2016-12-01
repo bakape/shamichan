@@ -70,18 +70,18 @@ func All(query r.Term, res interface{}) error {
 }
 
 // FindPost finds a post only by ID number
-func FindPost(id int64) r.Term {
+func FindPost(id uint64) r.Term {
 	return r.Table("posts").Get(id)
 }
 
 // ValidateOP confirms the specified thread exists on specific board
-func ValidateOP(id int64, board string) (valid bool, err error) {
+func ValidateOP(id uint64, board string) (valid bool, err error) {
 	err = One(FindThread(id).Field("board").Eq(board).Default(false), &valid)
 	return
 }
 
 // FindThread is a  shorthand for retrieving a document from the "threads" table
-func FindThread(id int64) r.Term {
+func FindThread(id uint64) r.Term {
 	return r.Table("threads").Get(id)
 }
 
@@ -107,20 +107,20 @@ func Insert(table string, doc interface{}) error {
 }
 
 // PostCounter retrieves the current global post count
-func PostCounter() (counter int64, err error) {
+func PostCounter() (counter uint64, err error) {
 	err = One(GetMain("info").Field("postCtr"), &counter)
 	return
 }
 
 // BoardCounter retrieves the history or "progress" counter of a board
-func BoardCounter(board string) (counter int64, err error) {
+func BoardCounter(board string) (counter uint64, err error) {
 	err = One(GetMain("boardCtrs").Field(board).Default(0), &counter)
 	return
 }
 
 // ThreadCounter retrieves the post counter of a thread to get a rough estimate
 // of the thread's progress
-func ThreadCounter(id int64) (counter int64, err error) {
+func ThreadCounter(id uint64) (counter uint64, err error) {
 	q := r.
 		Table("posts").
 		GetAllByIndex("op", id).
@@ -152,7 +152,7 @@ func GetLoginHash(id string) (hash []byte, err error) {
 }
 
 // ReservePostID reserves a post ID number for post and thread creation
-func ReservePostID() (id int64, err error) {
+func ReservePostID() (id uint64, err error) {
 	err = One(postReservationQuery, &id)
 	return
 }

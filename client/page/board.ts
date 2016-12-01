@@ -3,9 +3,9 @@ import lang from '../lang'
 import { page } from '../state'
 import options from '../options'
 import { write, threads } from '../render'
-import { setTitle } from "../tab"
 import { renderTime } from "../posts/render/posts"
 import { fetchBoard } from "../fetch"
+import { maybeWriteNow } from "./common"
 
 type SortFunction = (a: HTMLElement, b: HTMLElement) => number
 
@@ -32,22 +32,17 @@ export function formatHeader(name: string, title: string): string {
 	return `/${name}/ - ${escape(title)}`
 }
 
-// Render a board fresh board from string
-export function renderFresh(html: string) {
+// Render a board fresh board from parsed document fragment
+export function renderFresh(frag: DocumentFragment) {
 	lastFetch = Math.floor(Date.now() / 1000)
-
-	const frag = makeFrag(html)
-	render(frag)
+	render(frag, true)
 	threads.innerHTML = ""
 	threads.append(frag)
 }
 
-// Apply client-side modifications to a board page's HTML
-export function render(frag: NodeSelector) {
-
-	// Apply board title to tab
-	setTitle(frag.querySelector("#page-title").textContent)
-
+// Apply client-side modifications to a board page's HTML. writeNow specifies,
+// if the write to the DOM fragment should not be delayed.
+export function render(frag: NodeSelector, writeNow: boolean) {
 	// Set sort mode <select> to correspond with setting
 	let sortMode = localStorage.getItem("catalogSort")
 	// "bump" is a legacy sort mode. Account for clients explicitly set to it.
@@ -58,11 +53,13 @@ export function render(frag: NodeSelector) {
 	if (!sortMode) {
 		sortMode = "lastReply"
 	}
-	(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
-		.value = sortMode
 
-	renderRefreshButton(frag.querySelector("#refresh > a"))
-	sortThreads(frag.querySelector("#catalog"), true)
+	maybeWriteNow(writeNow, () => {
+		(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
+			.value = sortMode
+		renderRefreshButton(frag.querySelector("#refresh > a"))
+		sortThreads(frag.querySelector("#catalog"), true)
+	})
 }
 
 // Sort all threads on a board
@@ -139,7 +136,7 @@ async function refreshBoard() {
 	if (err) {
 		throw err
 	}
-	renderFresh(html)
+	renderFresh(makeFrag(html))
 }
 
 // Update refresh timer or refresh board, if document hidden, each minute

@@ -106,5 +106,5 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(strconv.FormatInt(id, 10)))
+	w.Write([]byte(strconv.FormatUint(id, 10)))
 }

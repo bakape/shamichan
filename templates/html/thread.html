@@ -16,13 +16,16 @@
 </span>
 <hr>
 <div id="thread-container">
-	{{template "article" (wrapPost .Thread.Post .Thread.ID .Thread.Board .Thread.Subject .Root .Lang.Common)}}
+	{{template "article" (wrapPost .Thread.Post .Thread.ID .Omit .ImageOmit .Thread.Board .Thread.Subject .Root .Lang.Common)}}
 	{{range .Thread.Posts}}
-		{{template "article" (wrapPost . $.Thread.ID $.Thread.Board "" $.Root $.Lang.Common)}}
+		{{template "article" (wrapPost . $.Thread.ID 0 0 $.Thread.Board "" $.Root $.Lang.Common)}}
 	{{end}}
 </div>
-<script id="postData" type="application/json">
+<script id="post-data" type="application/json">
 	{{.JSON}}
+</script>
+<script id="board-configs" type="application/json">
+	{{.ConfigJSON}}
 </script>
 <div id="bottom-spacer"></div>
 <aside class="act posting">

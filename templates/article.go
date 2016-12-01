@@ -20,24 +20,28 @@ type htmlWriter struct {
 // Allows passing additional information to thread-related templates
 type postContext struct {
 	common.Post
-	OP                   int64
+	OP                   uint64
+	Omit, ImageOmit      int
 	Board, Subject, Root string
 	Lang                 lang.Common
 }
 
 func wrapPost(
 	p common.Post,
-	op int64,
+	op uint64,
+	omit, imageOmit int,
 	board, subject, root string,
 	lang lang.Common,
 ) postContext {
 	return postContext{
-		Post:    p,
-		OP:      op,
-		Board:   board,
-		Subject: subject,
-		Root:    root,
-		Lang:    lang,
+		Post:      p,
+		OP:        op,
+		Omit:      omit,
+		ImageOmit: imageOmit,
+		Board:     board,
+		Subject:   subject,
+		Root:      root,
+		Lang:      lang,
 	}
 }
 
@@ -143,6 +147,23 @@ func readableLength(l uint32) template.HTML {
 	return template.HTML(fmt.Sprintf("%02d:%02d", min, l-min))
 }
 
+// Return the singular or plural of a localized countable
+func pluralize(n int, lang [2]string) template.HTML {
+	num := strconv.Itoa(n)
+	var word string
+	if n == 1 {
+		word = lang[0]
+	} else {
+		word = lang[1]
+	}
+
+	l := len(num) + 1
+	buf := make([]byte, l, l+len(word))
+	copy(buf, num)
+	buf[l-1] = ' '
+	return template.HTML(append(buf, word...))
+}
+
 // Formats a human-readable representation of file size
 func readableFileSize(s int) template.HTML {
 	format := func(n, end string) template.HTML {
@@ -165,13 +186,16 @@ func readableFileSize(s int) template.HTML {
 
 // Render a link to another post. Can optionally be cross-thread.
 func renderPostLink(
-	id, op int64,
+	id, op uint64,
 	board, OPLang string,
 	cross bool,
 ) template.HTML {
 	var w htmlWriter
 
-	w.WriteString(`<a class="history" href="`)
+	w.WriteString(`<a class="history" data-id=`)
+	idStr := strconv.FormatUint(id, 10)
+	w.WriteString(idStr)
+	w.WriteString(` href="`)
 
 	// More premature optimization ahead
 
@@ -180,10 +204,9 @@ func renderPostLink(
 		w.WriteByte('/')
 		w.WriteString(board)
 		w.WriteByte('/')
-		w.WriteString(strconv.FormatInt(op, 10))
+		w.WriteString(strconv.FormatUint(op, 10))
 	}
 	w.WriteString("#p")
-	idStr := strconv.FormatInt(id, 10)
 	w.WriteString(idStr)
 	w.WriteString(`">>>`)
 

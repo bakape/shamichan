@@ -23,19 +23,40 @@ func Thread(ln lang.Pack, withIndex bool, t common.Thread) ([]byte, error) {
 		return nil, err
 	}
 
+	// Calculate omitted posts and images
+	var (
+		omit    = int(t.PostCtr) - len(t.Posts)
+		imgOmit uint32
+	)
+	if omit != 0 {
+		imgOmit = t.ImageCtr
+		if t.Image != nil {
+			imgOmit--
+		}
+		for _, p := range t.Posts {
+			if p.Image != nil {
+				imgOmit--
+			}
+		}
+	}
+
 	v := struct {
-		Title, Root string
-		Thread      common.Thread
-		Conf        config.BoardPublic
-		Lang        lang.Pack
-		JSON        template.JS
+		Title, Root      string
+		Thread           common.Thread
+		Conf             config.BoardPublic
+		Omit, ImageOmit  int
+		Lang             lang.Pack
+		JSON, ConfigJSON template.JS
 	}{
-		Root:   config.Get().RootURL,
-		Title:  title,
-		Thread: t,
-		Conf:   conf.BoardPublic,
-		Lang:   ln,
-		JSON:   template.JS(postData),
+		Root:       config.Get().RootURL,
+		Title:      title,
+		Thread:     t,
+		Omit:       omit,
+		ImageOmit:  int(imgOmit),
+		Conf:       conf.BoardPublic,
+		Lang:       ln,
+		JSON:       template.JS(postData),
+		ConfigJSON: template.JS(conf.JSON),
 	}
 
 	if err = tmpl["thread"].Execute(w, v); err != nil {

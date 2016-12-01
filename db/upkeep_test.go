@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -109,7 +109,7 @@ func TestOpenPostClosing(t *testing.T) {
 
 	cases := [...]struct {
 		name    string
-		id      int64
+		id      uint64
 		editing bool
 	}{
 		{"closed", 1, false},
@@ -242,7 +242,7 @@ func deleteThreadWithoutImages(t *testing.T) {
 		assertDeleted(t, FindThread(1), true)
 	})
 
-	for i := int64(1); i <= 2; i++ {
+	for i := uint64(1); i <= 2; i++ {
 		id := i
 		t.Run(fmt.Sprintf("post %d", id), func(t *testing.T) {
 			t.Parallel()
@@ -331,7 +331,7 @@ func deleteThreadWithImages(t *testing.T) {
 	})
 
 	cases := [...]struct {
-		id       int64
+		id       uint64
 		sha1     string
 		refCount int
 	}{
@@ -479,7 +479,7 @@ func testDeleteUnusedBoards(t *testing.T) {
 		name    string
 		deleted bool
 		board   string
-		id      int64
+		id      uint64
 	}{
 		{"deleted", true, "a", 1},
 		{"untouched", false, "c", 3},
@@ -557,7 +557,7 @@ func TestDeleteOldThreads(t *testing.T) {
 		if err := deleteOldThreads(); err != nil {
 			t.Fatal(err)
 		}
-		for i := int64(1); i <= 2; i++ {
+		for i := uint64(1); i <= 2; i++ {
 			assertDeleted(t, FindPost(i), i == 1)
 			assertDeleted(t, FindThread(i), i == 1)
 		}

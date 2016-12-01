@@ -72,7 +72,7 @@ func TestSpoilerImage(t *testing.T) {
 
 	cases := [...]struct {
 		name      string
-		id        int64
+		id        uint64
 		password  string
 		code      int
 		spoilered bool

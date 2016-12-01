@@ -226,6 +226,11 @@ export function toggleExpandAll() {
 	}
 }
 
+// Externally set the value of expandAll
+export function setExpandAll(b: boolean) {
+	expandAll = b
+}
+
 // Resolve, if post should be automatically expanded or contracted
 function shouldAutoExpand(model: Post): boolean {
 	if (!model.image) {

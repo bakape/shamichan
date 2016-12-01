@@ -40,7 +40,7 @@ var (
 )
 
 // GetThread retrieves public thread data from the database
-func GetThread(id int64, lastN int) (common.Thread, error) {
+func GetThread(id uint64, lastN int) (common.Thread, error) {
 	q := r.
 		Table("threads").
 		GetAll(id). // Can not join after Get(). Meh.
@@ -79,7 +79,7 @@ func GetThread(id int64, lastN int) (common.Thread, error) {
 }
 
 // GetPost reads a single post from the database
-func GetPost(id int64) (post common.StandalonePost, err error) {
+func GetPost(id uint64) (post common.StandalonePost, err error) {
 	q := FindPost(id).Without(omitForPosts).Default(nil)
 	err = One(q, &post)
 	return

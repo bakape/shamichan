@@ -12,7 +12,7 @@ export type ViewAttrs = {
 
 // Generic view class, that all over view classes extend
 export default class View<M> {
-	protected model: M
+	public model: M
 	public el: HTMLElement
 	public id: string | number
 

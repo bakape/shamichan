@@ -2,8 +2,8 @@
 // the results to the server
 
 import { message, send, handlers } from "../../connection"
-import { OP, Post, TextState, ThreadData, ImageData, PostData } from "../models"
-import { FormView, OPFormView } from "./view"
+import { Post, TextState, ThreadData, ImageData, PostData } from "../models"
+import FormView from "./view"
 import { posts, storeMine } from "../../state"
 import { postSM, postEvent, postState } from "./main"
 import { applyMixins, extend } from "../../util"
@@ -22,7 +22,7 @@ interface PostCreationRequest extends PostCredentials {
 }
 
 // Form Model of an OP post
-export class OPFormModel extends OP implements FormModel {
+export class OPFormModel extends Post implements FormModel {
 	sentAllocRequest: boolean
 	bodyLength: number
 	parsedLines: number
@@ -47,7 +47,7 @@ export class OPFormModel extends OP implements FormModel {
 	constructor(id: number) {
 		storeMine(id)
 
-		const oldModel = posts.get(id) as OP,
+		const oldModel = posts.get(id),
 			oldView = oldModel.view
 		oldView.unbind()
 
@@ -55,8 +55,8 @@ export class OPFormModel extends OP implements FormModel {
 		super(extractAttrs(oldModel) as ThreadData)
 
 		// Replace old model and view pair with the postForm pair
-		posts.addOP(this)
-		const view = new OPFormView(this)
+		posts.add(this)
+		const view = new FormView(this, true)
 		oldView.el.replaceWith(view.el)
 
 		postSM.feed(postEvent.hijack, { view, model: this })

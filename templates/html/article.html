@@ -45,6 +45,9 @@
 	{{with .Image}}
 		{{$src := urlquery (print $.Root "/" (sourcePath .FileType .SHA1))}}
 		<figcaption class="spaced">
+			<a class="image-toggle act" hidden>
+				{{index $.Lang.Posts "show"}}
+			</a>
 			<span class="spaced image-search-container">
 				<a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url={{$src}}">
 					G
@@ -101,6 +104,20 @@
 			{{renderBody .}}
 		</blockquote>
 	</div>
+	{{if .Omit}}
+		<span class="omit">
+			{{pluralize .Omit (index .Lang.Plurals "post")}}
+			{{if .ImageOmit}}
+				 {{index .Lang.Posts "and"}} {{pluralize .ImageOmit (index .Lang.Plurals "image")}}
+			{{end}}
+			{{index .Lang.Posts "omitted"}}&nbsp;
+			<span class="act">
+				<a href="{{.OP}}" class="history">
+					{{index .Lang.Posts "seeAll"}}
+				</a>
+			</span>
+		</span>
+	{{end}}
 	{{with .Backlinks}}
 		<small>
 			{{$op := index $.Lang.Posts "op"}}

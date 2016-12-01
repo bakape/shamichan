@@ -1,19 +1,9 @@
-import { Post, OP } from './models'
+import { Post } from './models'
 
 // Holds a collection of Post models
 export default class PostCollection {
 	public models: { [key: string]: Post } = {}
 	public lowestID: number = 0 // Lowest post ID, excluding OP
-	public op: OP
-
-	// Creates a new Collection instance, with optional starting set of models
-	constructor(models: Post[]) {
-		if (models) {
-			for (let model of models) {
-				this.add(model)
-			}
-		}
-	}
 
 	// Retrieve a model by its ID
 	public get(id: number): Post {
@@ -24,12 +14,6 @@ export default class PostCollection {
 	public add(model: Post) {
 		this.models[model.id] = model
 		model.collection = this
-	}
-
-	// Add the OP of a thread to the collection
-	public addOP(model: OP) {
-		this.op = model
-		this.add(model)
 	}
 
 	// Remove model from the collection
@@ -44,7 +28,6 @@ export default class PostCollection {
 			delete this.models[id].collection
 		}
 		this.models = {}
-		this.op = null
 		this.lowestID = 0
 	}
 

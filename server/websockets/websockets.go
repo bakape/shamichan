@@ -58,7 +58,7 @@ type Client struct {
 	openPost openPost
 
 	// Currently subscribed to update feed, if any
-	feedID int64
+	feedID uint64
 
 	// Underlying websocket connection
 	conn *websocket.Conn
@@ -88,9 +88,10 @@ type receivedMessage struct {
 type openPost struct {
 	hasImage bool
 	bytes.Buffer
-	bodyLength   int
-	id, op, time int64
-	board        string
+	bodyLength int
+	id, op     uint64
+	time       int64
+	board      string
 }
 
 // Handler is an http.HandleFunc that responds to new websocket connection

@@ -6,11 +6,12 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"strconv"
+
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/parser"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/util"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -46,27 +47,27 @@ type spliceCoords struct {
 
 // Response to a spliceRequest. Sent to all listening clients.
 type spliceMessage struct {
-	ID int64 `json:"id"`
+	ID uint64 `json:"id"`
 	spliceRequestString
 }
 
 // Message sent to listening clients about a link or backlink insertion into
 // a post
 type linkMessage struct {
-	ID    int64         `json:"id"`
+	ID    uint64         `json:"id"`
 	Links common.LinkMap `json:"links"`
 }
 
 // Message sent to all clients to inject a command result into a model
 type commandMessage struct {
-	ID int64 `json:"id"`
+	ID uint64 `json:"id"`
 	common.Command
 }
 
 // Message that signals and insertion of an image into an existing post
 type imageMessage struct {
 	common.Image
-	ID int64 `json:"id"`
+	ID uint64 `json:"id"`
 }
 
 // Custom unmarshaling of string -> []rune
@@ -110,7 +111,7 @@ func appendRune(data []byte, c *Client) error {
 	}
 
 	id := c.openPost.id
-	msg, err := EncodeMessage(MessageAppend, [2]int64{id, int64(char)})
+	msg, err := EncodeMessage(MessageAppend, [2]uint64{id, uint64(char)})
 	if err != nil {
 		return err
 	}
@@ -131,7 +132,7 @@ func (c *Client) updatePost(key string, val interface{}, msg []byte) error {
 
 // UpdatePost post updates a single field of an existing post with the
 // appropriate replication log update and timestamp modification.
-func UpdatePost(id int64, key string, val interface{}, msg []byte) error {
+func UpdatePost(id uint64, key string, val interface{}, msg []byte) error {
 	update := map[string]interface{}{
 		key:           val,
 		"log":         appendLog(msg),
@@ -168,9 +169,9 @@ func parseLine(c *Client, insertNewline bool) error {
 	}
 
 	if insertNewline {
-		msg, err := EncodeMessage(MessageAppend, [2]int64{
+		msg, err := EncodeMessage(MessageAppend, [2]uint64{
 			c.openPost.id,
-			int64('\n'),
+			uint64('\n'),
 		})
 		if err != nil {
 			return err
@@ -226,7 +227,7 @@ func writeLinks(links common.LinkMap, c *Client) error {
 
 // Writes the location data of the post linking a post to the the post being
 // linked
-func writeBacklink(id, op int64, board string, destID int64) error {
+func writeBacklink(id, op uint64, board string, destID uint64) error {
 	msg, err := EncodeMessage(MessageBacklink, linkMessage{
 		ID: destID,
 		Links: common.LinkMap{
@@ -242,7 +243,7 @@ func writeBacklink(id, op int64, board string, destID int64) error {
 
 	update := map[string]interface{}{
 		"backlinks": map[string]common.Link{
-			util.IDToString(id): common.Link{
+			strconv.FormatUint(id, 10): common.Link{
 				OP:    op,
 				Board: board,
 			},

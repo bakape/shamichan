@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -28,13 +28,13 @@ func parseLinks(frag []byte) (common.LinkMap, error) {
 			continue
 		}
 
-		id, err := strconv.ParseInt(string(match[1]), 10, 64)
+		id, err := strconv.ParseUint(string(match[1]), 10, 64)
 		if err != nil {
 			return nil, err
 		}
 
 		var parenthood struct {
-			OP    int64
+			OP    uint64
 			Board string
 		}
 		q := db.FindPost(id).Pluck("op", "board").Default(nil)

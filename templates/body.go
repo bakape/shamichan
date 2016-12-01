@@ -151,7 +151,7 @@ func (c *bodyContext) parsePostLink(m [][]byte) {
 		return
 	}
 
-	id, _ := strconv.ParseInt(string(m[2]), 10, 64)
+	id, _ := strconv.ParseUint(string(m[2]), 10, 64)
 	verified, ok := c.Links[id]
 	if !ok {
 		c.Write(m[0])

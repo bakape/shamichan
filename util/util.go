@@ -5,7 +5,6 @@ package util
 import (
 	"crypto/md5"
 	"encoding/base64"
-	"strconv"
 )
 
 // WrapError wraps error types to create compound error chains
@@ -45,9 +44,4 @@ func Waterfall(fns []func() error) (err error) {
 func HashBuffer(buf []byte) string {
 	hash := md5.Sum(buf)
 	return base64.RawStdEncoding.EncodeToString(hash[:])
-}
-
-// IDToString is a  helper for converting a post ID to a string for JSON keys
-func IDToString(id int64) string {
-	return strconv.FormatInt(id, 10)
 }

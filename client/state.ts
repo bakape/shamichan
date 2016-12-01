@@ -58,7 +58,7 @@ export let boardConfig: BoardConfigs = emitChanges({} as BoardConfigs)
 export const page = emitChanges<PageState>(read(location.href))
 
 // All posts currently displayed
-export const posts = new PostCollection([])
+export const posts = new PostCollection()
 
 // Posts I made in any tab
 export let mine: Set<number>
@@ -80,7 +80,7 @@ export function read(href: string): PageState {
 	return {
 		href,
 		board: decodeURIComponent(board),
-		thread: thread ? parseInt(thread[1]) : 0,
+		thread: thread ? parseInt(thread) : 0,
 		lastN: lastN ? parseInt(lastN[1]) : 0,
 	} as PageState
 }

@@ -31,6 +31,7 @@ func Board(
 		Threads                                  common.BoardThreads
 		Boards                                   config.BoardTitles
 		Lang                                     lang.Pack
+		ConfigJSON                               template.JS
 	}{
 		IsAll:         b == "all",
 		ImagesAllowed: !boardConf.TextOnly,
@@ -41,6 +42,7 @@ func Board(
 		Lang:          ln,
 		Captcha:       conf.Captcha,
 		CaptchaKey:    conf.CaptchaPublicKey,
+		ConfigJSON:    template.JS(boardConf.JSON),
 	}
 	if len(boardConf.Banners) != 0 {
 		v.Banner = boardConf.Banners[rand.Intn(len(boardConf.Banners))]

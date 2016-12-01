@@ -6,8 +6,8 @@ import (
 	"bytes"
 
 	"github.com/bakape/meguca/auth"
-	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/common"
+	. "github.com/bakape/meguca/test"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -19,7 +19,7 @@ func TestValidateOp(t *testing.T) {
 	})
 
 	samples := [...]struct {
-		id      int64
+		id      uint64
 		board   string
 		isValid bool
 	}{
@@ -159,7 +159,7 @@ func TestReservePostID(t *testing.T) {
 		"postCtr": 0,
 	})
 
-	for i := int64(1); i <= 2; i++ {
+	for i := uint64(1); i <= 2; i++ {
 		id, err := ReservePostID()
 		if err != nil {
 			t.Fatal(err)
@@ -175,7 +175,7 @@ func TestIncrementBoardCounter(t *testing.T) {
 	assertInsert(t, "main", Document{"boardCtrs"})
 
 	// Check both a fresh board counter and incrementing an existing one
-	for i := int64(1); i <= 2; i++ {
+	for i := uint64(1); i <= 2; i++ {
 		if err := IncrementBoardCounter("a"); err != nil {
 			t.Fatal(err)
 		}

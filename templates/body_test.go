@@ -24,7 +24,7 @@ func TestRenderBody(t *testing.T) {
 	cases := [...]struct {
 		name, in, out, string string
 		editing               bool
-		op                    int64
+		op                    uint64
 		links                 common.LinkMap
 		commands              []common.Command
 	}{

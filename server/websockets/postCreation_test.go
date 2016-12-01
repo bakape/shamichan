@@ -237,7 +237,7 @@ func setBoardConfigs(t testing.TB, textOnly bool) {
 	}
 }
 
-func assertIP(t *testing.T, id int64, ip string) {
+func assertIP(t *testing.T, id uint64, ip string) {
 	q := db.FindPost(id).Field("ip")
 	var res string
 	if err := db.One(q, &res); err != nil {
@@ -594,7 +594,7 @@ func TestPostCreationForcedAnon(t *testing.T) {
 	}
 }
 
-func assertImageCounter(t *testing.T, id int64, ctr int) {
+func assertImageCounter(t *testing.T, id uint64, ctr int) {
 	var res int
 	q := db.FindThread(id).Field("imageCtr")
 	if err := db.One(q, &res); err != nil {

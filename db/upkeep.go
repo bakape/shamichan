@@ -146,7 +146,7 @@ func deleteUnusedBoards() error {
 	}
 
 	for _, board := range expired {
-		var threads []int64
+		var threads []uint64
 		q := r.Table("threads").GetAllByIndex("board", board).Field("id")
 		if err := All(q, &threads); err != nil {
 			return err
@@ -189,7 +189,7 @@ func deleteOldThreads() error {
 		Field("group").
 		Default(nil)
 
-	var expired []int64
+	var expired []uint64
 	if err := All(q, &expired); err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func deleteOldThreads() error {
 
 // DeleteThread deletes a thread from the database and deallocated any freed up
 // images
-func DeleteThread(id int64) error {
+func DeleteThread(id uint64) error {
 	if err := Write(FindThread(id).Delete()); err != nil {
 		return err
 	}

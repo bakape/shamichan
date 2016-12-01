@@ -219,7 +219,7 @@ func testGetThread(t *testing.T) {
 
 	cases := [...]struct {
 		name  string
-		id    int64
+		id    uint64
 		lastN int
 		std   common.Thread
 		err   error

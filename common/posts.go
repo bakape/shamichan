@@ -35,7 +35,7 @@ const (
 
 // Board stores board metadata and the OPs of all threads
 type Board struct {
-	Ctr     int64        `json:"ctr"`
+	Ctr     uint64       `json:"ctr"`
 	Threads BoardThreads `json:"threads"`
 }
 
@@ -82,11 +82,11 @@ type BoardThreads []struct {
 // its opening post data and its contained posts. The composite type itself is
 // not stored in the database.
 type Thread struct {
-	Locked   bool  `json:"locked,omitempty" gorethink:"locked"`
-	Archived bool  `json:"archived,omitempty" gorethink:"archived"`
-	Sticky   bool  `json:"sticky,omitempty" gorethink:"sticky"`
-	PostCtr  int16 `json:"postCtr" gorethink:"postCtr"`
-	ImageCtr int16 `json:"imageCtr" gorethink:"imageCtr"`
+	Locked   bool   `json:"locked,omitempty" gorethink:"locked"`
+	Archived bool   `json:"archived,omitempty" gorethink:"archived"`
+	Sticky   bool   `json:"sticky,omitempty" gorethink:"sticky"`
+	PostCtr  uint32 `json:"postCtr" gorethink:"postCtr"`
+	ImageCtr uint32 `json:"imageCtr" gorethink:"imageCtr"`
 	Post
 	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
 	LastUpdated int64  `json:"lastUpdated" gorethink:"lastUpdated"`
@@ -97,9 +97,9 @@ type Thread struct {
 
 // DatabaseThread is a template for writing new threads to the database
 type DatabaseThread struct {
-	PostCtr   int    `gorethink:"postCtr"`
-	ImageCtr  int    `gorethink:"imageCtr"`
-	ID        int64  `gorethink:"id"`
+	PostCtr   uint32 `gorethink:"postCtr"`
+	ImageCtr  uint32 `gorethink:"imageCtr"`
+	ID        uint64 `gorethink:"id"`
 	ReplyTime int64  `gorethink:"replyTime"`
 	Subject   string `gorethink:"subject"`
 	Board     string `gorethink:"board"`
@@ -109,7 +109,7 @@ type DatabaseThread struct {
 // reply.
 type Post struct {
 	Editing   bool      `json:"editing,omitempty" gorethink:"editing"`
-	ID        int64     `json:"id" gorethink:"id"`
+	ID        uint64    `json:"id" gorethink:"id"`
 	Time      int64     `json:"time" gorethink:"time"`
 	Body      string    `json:"body" gorethink:"body"`
 	Name      string    `json:"name,omitempty" gorethink:"name,omitempty"`
@@ -126,7 +126,7 @@ type Post struct {
 // with unknown parenthood.
 type StandalonePost struct {
 	Post
-	OP    int64  `json:"op" gorethink:"op"`
+	OP    uint64 `json:"op" gorethink:"op"`
 	Board string `json:"board" gorethink:"board"`
 }
 
@@ -142,11 +142,11 @@ type DatabasePost struct {
 
 // LinkMap contains a map of post numbers, this tread is linking, to
 // corresponding Link structs
-type LinkMap map[int64]Link
+type LinkMap map[uint64]Link
 
 // Link stores the target post's parent board and parent thread
 type Link struct {
-	OP    int64  `json:"op" gorethink:"op"`
+	OP    uint64 `json:"op" gorethink:"op"`
 	Board string `json:"board" gorethink:"board"`
 }
 

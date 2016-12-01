@@ -230,7 +230,6 @@ export class Post extends Model implements PostData {
 			if (!seenReplies.has(this.id)) {
 				notifyAboutReply(this)
 			}
-			this.view.addHighlight()
 		}
 	}
 
@@ -275,22 +274,5 @@ export class Post extends Model implements PostData {
 		this.resetState()
 		this.view.closePost()
 		this.state = null
-	}
-}
-
-// Model of the opening post of a thread
-export class OP extends Post implements ThreadData {
-	locked: boolean
-	archived: boolean
-	sticky: boolean
-	postCtr: number
-	imageCtr: number
-	logCtr: number
-	replyTime: number
-	subject: string
-	board: string
-
-	constructor(data: ThreadData) {
-		super(data)
 	}
 }

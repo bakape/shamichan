@@ -7,9 +7,9 @@ import (
 
 	"strconv"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -216,18 +216,18 @@ func TestFeedCleanUp(t *testing.T) {
 	}
 	feeds := newFeedContainer()
 	feeds.cursor = new(r.Cursor)
-	feeds.feeds = map[int64]*updateFeed{
+	feeds.feeds = map[uint64]*updateFeed{
 		1: {}, // No clients or cache
 		2: { // No cache, has clients
 			clients: cls,
 		},
 		3: { // Cache expired
-			cache: map[int64]timestampedPost{
+			cache: map[uint64]timestampedPost{
 				1: stale,
 			},
 		},
 		4: { // Not fully expired
-			cache: map[int64]timestampedPost{
+			cache: map[uint64]timestampedPost{
 				1: stale,
 				2: fresh,
 			},
@@ -236,12 +236,12 @@ func TestFeedCleanUp(t *testing.T) {
 
 	feeds.cleanUp(now)
 
-	std := map[int64]*updateFeed{
+	std := map[uint64]*updateFeed{
 		2: {
 			clients: cls,
 		},
 		4: {
-			cache: map[int64]timestampedPost{
+			cache: map[uint64]timestampedPost{
 				2: fresh,
 			},
 		},

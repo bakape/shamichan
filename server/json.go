@@ -20,7 +20,7 @@ var (
 
 // Request to spoiler an already allocated image that the sender has created
 type spoilerRequest struct {
-	ID       int64
+	ID       uint64
 	Password string
 }
 
@@ -89,7 +89,7 @@ func serveConfigs(w http.ResponseWriter, r *http.Request) {
 
 // Serve a single post as JSON
 func servePost(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	id, err := strconv.ParseInt(p["post"], 10, 64)
+	id, err := strconv.ParseUint(p["post"], 10, 64)
 	if err != nil {
 		text400(w, err)
 		return
@@ -152,10 +152,10 @@ func validateThread(
 	w http.ResponseWriter,
 	r *http.Request,
 	p map[string]string,
-) (id int64, ok bool) {
+) (id uint64, ok bool) {
 	board := p["board"]
 	var err error
-	id, err = strconv.ParseInt(p["thread"], 10, 64)
+	id, err = strconv.ParseUint(p["thread"], 10, 64)
 	if err != nil {
 		text404(w)
 		return
@@ -180,7 +180,7 @@ func validateThread(
 func threadData(
 	w http.ResponseWriter,
 	r *http.Request,
-	id int64,
+	id uint64,
 	lang, hash string,
 ) (
 	data common.Thread, etag string, ok bool,
@@ -205,8 +205,8 @@ func threadData(
 }
 
 // Combine the progress counter and optional configuration hash into a weak etag
-func formatEtag(ctr int64, lang, hash string) string {
-	c := strconv.FormatInt(ctr, 10)
+func formatEtag(ctr uint64, lang, hash string) string {
+	c := strconv.FormatUint(ctr, 10)
 	buf := make([]byte, 2, 9+len(c)+len(hash))
 	buf[0] = 'W'
 	buf[1] = '/'

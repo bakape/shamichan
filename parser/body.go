@@ -5,8 +5,8 @@ import (
 	"bytes"
 	"regexp"
 
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 )
 
 var (

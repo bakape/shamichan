@@ -91,7 +91,9 @@ function renderTime() {
 	if (!options.relativeTime) {
 		return
 	}
-	for (let {view} of posts) {
-		view.renderTime()
-	}
+	write(() => {
+		for (let {view} of posts) {
+			view.renderTime()
+		}
+	})
 }

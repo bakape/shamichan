@@ -226,7 +226,7 @@ async function renderPostPreview(event: MouseEvent) {
 		const [data, err] = await fetchJSON<PostData>(`/json/post/${m[1]}`)
 		if (!err) {
 			post = new Post(data)
-			new PostView(post)
+			new PostView(post, null)
 		}
 	}
 	postPreview = new PostPreview(post, target)

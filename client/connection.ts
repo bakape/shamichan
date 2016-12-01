@@ -6,7 +6,7 @@ import lang from './lang'
 import { write } from './render'
 import { PostData } from "./posts/models"
 import { insertPost } from "./client"
-import { fetchThread } from "./fetch"
+import { fetchThreadJSON } from "./fetch"
 import identity from "./posts/posting/identity"
 import { postSM, postEvent, postState, postModel } from "./posts/posting/main"
 
@@ -216,7 +216,7 @@ async function fetchBacklog() {
 
 	const {board, thread} = page,
 		// Always fetch the full thread
-		[data, err] = await fetchThread(board, thread, 0)
+		[data, err] = await fetchThreadJSON(board, thread, 0)
 	if (err) {
 		alert(err)
 		return

@@ -25,14 +25,6 @@ func TestHashBuffer(t *testing.T) {
 	}
 }
 
-func TestIDToString(t *testing.T) {
-	t.Parallel()
-
-	if s := IDToString(1); s != "1" {
-		t.Fatalf("unexpected: %s", s)
-	}
-}
-
 func TestWaterfall(t *testing.T) {
 	// All pass
 	var wasRun int
