@@ -9,6 +9,7 @@ import { extractConfigs } from "./page/common"
 import { exec, init } from './defer'
 import { loadModule } from "./util"
 import { checkBottom, scrollToAnchor } from "./scroll"
+import { setTitle } from "./tab"
 
 // Load all stateful modules in dependency order
 async function start() {
@@ -29,6 +30,7 @@ async function start() {
 	checkBottom()
 	connect()
 	exec()
+	setTitle(frag.querySelector("#page-title").textContent)
 	displayLoading(false)
 
 	// Load auxiliary modules
