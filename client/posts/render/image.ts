@@ -3,6 +3,7 @@ import options from '../../options'
 import { commaList, escape, setAttrs, pad } from '../../util'
 import { ImageData, fileTypes } from '../models'
 import lang from '../../lang'
+import { importTemplate } from "../../render"
 
 // Specs for handling image search link clicks
 type ImageSearchSpec = {
@@ -54,10 +55,16 @@ export function renderImage(
 
 // Render the information caption above the image
 export function renderFigcaption(
-    el: HTMLElement,
+    post: DocumentFragment,
     data: ImageData,
     reveal: boolean,
 ) {
+    let el = post.querySelector("figcaption")
+    if (!el) {
+        el = importTemplate("figcaption").firstChild as HTMLElement
+        post.firstElementChild.after(el)
+    }
+
     const list: string[] = []
     if (data.audio) {
         list.push('\u266B')

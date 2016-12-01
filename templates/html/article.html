@@ -45,9 +45,7 @@
 	{{with .Image}}
 		{{$src := urlquery (print $.Root "/" (sourcePath .FileType .SHA1))}}
 		<figcaption class="spaced">
-			<a class="image-toggle act" hidden>
-				{{index $.Lang.Posts "show"}}
-			</a>
+			<a class="image-toggle act" hidden></a>
 			<span class="spaced image-search-container">
 				<a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url={{$src}}">
 					G

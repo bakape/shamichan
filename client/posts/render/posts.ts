@@ -9,7 +9,7 @@ import { PostCredentials } from "../posting/identity"
 
 // Populate post template
 export default function (
-	frag: NodeSelector & ParentNode,
+	frag: DocumentFragment,
 	data: PostData | ThreadData,
 ) {
 	if ((data as ThreadData).subject) {
@@ -24,7 +24,7 @@ export default function (
 	renderHeader(frag, data)
 
 	if (data.image) {
-		renderFigcaption(frag.querySelector("figcaption"), data.image, false)
+		renderFigcaption(frag, data.image, false)
 		renderImage(frag.querySelector("figure"), data.image, false)
 	}
 }

@@ -42,7 +42,7 @@ export default class PostView extends ImageHandler {
     }
 
     // Render post into a container and find buffer positions
-    public renderContents(container: NodeSelector & ParentNode) {
+    public renderContents(container: DocumentFragment) {
         renderPost(container, this.model)
         if (this.model.editing) {
             this.blockquote = container.querySelector("blockquote")

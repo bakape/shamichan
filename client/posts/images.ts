@@ -21,7 +21,7 @@ export default class ImageHandler extends View<Post> {
 	public renderImage(reveal: boolean, delay: boolean) {
 		const fn = () => {
 			const img = this.model.image
-			renderFigcaption(this.el.querySelector("figcaption"), img, reveal)
+			renderFigcaption(this.el, img, reveal)
 			renderImage(this.el.querySelector("figure"), img, reveal)
 		}
 		if (delay) {

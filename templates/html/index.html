@@ -55,18 +55,6 @@
 				</svg>
 			</a>
 		</header>
-		<figcaption class="spaced" hidden>
-			<a class="image-toggle act" hidden></a>
-			<span class="spaced image-search-container">
-				{{range .ImageSearch}}
-					<a class="image-search {{.ID}}" target="_blank" rel="nofollow">
-						{{.Abbrev}}
-					</a>
-				{{end}}
-			</span>
-			<span></span>
-			<a></a>
-		</figcaption>
 		<div class="post-container">
 			<figure hidden>
 				<a target="_blank">
@@ -79,6 +67,20 @@
 	</template>
 	<template name="keyValue">
 		{{template "keyValue" bundle "" ""}}
+	</template>
+	<template name="figcaption">
+		<figcaption class="spaced">
+			<a class="image-toggle act" hidden></a>
+			<span class="spaced image-search-container">
+				{{range .ImageSearch}}
+					<a class="image-search {{.ID}}" target="_blank" rel="nofollow">
+						{{.Abbrev}}
+					</a>
+				{{end}}
+			</span>
+			<span></span>
+			<a></a>
+		</figcaption>
 	</template>
 </head>
 <body>
