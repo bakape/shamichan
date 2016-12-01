@@ -1,159 +1,159 @@
 {
 	"posts": {
 		"anon": "Anonymous",
-		"newThread": "New thread",
-		"reply": "Reply",
-		"you": "(You)",
+		"newThread": "Nowy temat",
+		"reply": "Odpowiedź",
+		"you": "(Ty)",
 		"OP": "(OP)",
-		"locked": "locked",
-		"subject": "Subject",
-		"uploadProgress": "uploaded...",
-		"thread_locked": "This thread is locked.",
-		"quoted": "You have been quoted",
-		"board": "Board",
-		"spoiler": "Spoiler",
-		"and": "and",
-		"omitted": "omitted",
-		"post": ["post", "posts"],
-		"image": ["image", "images"],
-		"unfinishedPost": "You have an unfinished post",
-		"thumbnailing": "Thumbnailing..."
+		"locked": "zablokowany",
+		"subject": "Temat",
+		"uploadProgress": "przesłano...",
+		"thread_locked": "Temat został zamknięty.",
+		"quoted": "Zostałeś zacytowany",
+		"board": "Dział",
+		"spoiler": "Spojler",
+		"and": "i",
+		"omitted": "pominęto",
+		"post": ["post", "postpostów"],
+		"image": ["obrazek", "obrazków"],
+		"unfinishedPost": "Masz niezakończony post",
+		"thumbnailing": "Miniaturyzowanie..."
 	},
 
 	"ui": {
-		"cancel": "Cancel",
-		"done": "Done",
-		"send": "Send",
-		"add": "Add",
-		"apply": "Apply",
-		"search": "Search",
-		"invalidCaptcha": "Invalid captcha",
-		"focusForCaptcha": "Focus to load captcha",
-		"reloadCaptcha": "Click to reload",
-		"submit": "Submit",
-		"rules": "Rules",
-		"close": "Close",
-		"showNotice": "Show Notice",
-		"sortMode": "Sort threads by",
-		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
-		"refresh": "Refresh",
+		"cancel": "Cofnij",
+		"done": "Skończ",
+		"send": "Wyślij",
+		"add": "Dodaj",
+		"apply": "Zatwierdź",
+		"search": "Wyszukaj",
+		"invalidCaptcha": "Nieprawidłowa captcha",
+		"focusForCaptcha": "Kliknij, aby załadować captchę",
+		"reloadCaptcha": "Kliknij, żeby odświeżyć",
+		"submit": "Zatwierdź",
+		"rules": "Zasady",
+		"close": "Zamknij",
+		"showNotice": "Pokaż powiadomienie",
+		"sortMode": "Sortuj tematy po",
+		"searchTooltip": "Filtruj tematy po tytule lub nazwie działu. Wyrażenia regularne są akceptowane.",
+		"refresh": "Odśwież",
 		"sortModes": [
-			"Last reply time",
-			"Creation time",
-			"Reply count",
-			"File count"
+			"Czas ostatniej odpowiedzi",
+			"Czas utworzenia",
+			"Liczba odpowiedzi",
+			"Liczba obrazków"
 		]
 	},
 
 	"banner": {
-		"worksBestWith": "works best with",
-		"options": "Options",
-		"identity": "Identity",
-		"account": "Account and board management",
-		"FAQ": "Information",
-		"feedback": "Feedback",
-		"googleSong": "Click to google song",
-		"sync": "Connection status"
+		"worksBestWith": "najlepiej działa z",
+		"options": "Ustawienia",
+		"identity": "Konto",
+		"account": "Konto i zarządzanie działami",
+		"FAQ": "Informacje",
+		"feedback": "Kontakt",
+		"googleSong": "Kliknij, żeby wyszukać piosenkę",
+		"sync": "Status połączenia"
 	},
 
 	"images": {
-		"show": "Show",
-		"hide": "Hide",
-		"expand": "Expand Images",
-		"contract": "Contract Images"
+		"show": "Pokaż",
+		"hide": "Ukryj",
+		"expand": "Otwórz wszystkie obrazki",
+		"contract": "Kontraktuj obrazki"
 	},
 
 	"navigation": {
-		"seeAll": "See all",
-		"report": "Report",
-		"focus": "Focus",
-		"last": "Last",
-		"bottom": "Bottom",
-		"expand": "Expand",
-		"catalog": "Catalog",
-		"return": "Return",
-		"top": "Top",
-		"lockedToBottom": "Locked to bottom",
-		"catalogOmit": "Replies/Images",
-		"rescan": "Rescan"
+		"seeAll": "Pokaż wszystkie",
+		"report": "Zgłoś",
+		"focus": "Skup",
+		"last": "Ostatni",
+		"bottom": "Na dół",
+		"expand": "Otwórz",
+		"catalog": "Katalog",
+		"return": "Powrót",
+		"top": "Na górę",
+		"lockedToBottom": "Jesteś na samym dole",
+		"catalogOmit": "Odpowiedzi/Obrazki",
+		"rescan": "Przeskanuj"
 	},
 
 	"reports": {
-		"post": "Reporting post",
-		"reporting": "Reporting...",
-		"submitted": "Report submitted!",
-		"setup": "Obtaining reCAPTCHA...",
-		"loadError": "Couldn't load reCATPCHA"
+		"post": "Zgłoszenie postu",
+		"reporting": "Zgłaszam...",
+		"submitted": "Zgłoszenie przesłane!",
+		"setup": "Otrzymywanie reCAPTCHA...",
+		"loadError": "Nie udało się załadować reCATPCHA"
 	},
 
 	"time": {
-		"week": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+		"week": ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"],
 		"calendar": [
-			"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-			"Oct", "Nov", "Dec"
+			"Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień",
+			"Październik", "Listopad", "Grudzień"
 		],
-		"justNow": "just now",
-		"minute": ["minute", "minutes"],
-		"hour": ["hour", "hours"],
-		"day": ["day", "days"],
-		"month": ["month", "months"],
-		"year": ["year", "years"],
-		"in": "in",
-		"ago": "ago"
+		"justNow": "przed chwilą",
+		"minute": ["minutę", "minut"],
+		"hour": ["godzinę", "godzin"],
+		"day": ["dzień", "dni"],
+		"month": ["miesiąc", "miesiące"],
+		"year": ["rok", "lat"],
+		"in": "w",
+		"ago": "temu"
 	},
 
-	"sync": ["disconnected", "connecting", "syncing", "synced", "desynced"],
+	"sync": ["odłączono", "trwa łączenie", "synchronizacja", "zsynchronizowano", "brak synchronizacji"],
 
 	"syncwatch": {
-		"starting": "Syncwatch starting in 10 seconds",
-		"finished": "Finished"
+		"starting": "Synchronizacja nastąpi za 10 sekund",
+		"finished": "Zakończono"
 	},
 
 	"mod": {
-		"id": "Login",
-		"register": "Register",
-		"logout": "Logout",
-		"logoutAll": "Log out all devices",
-		"changePassword": "Change password",
-		"oldPassword": "Old password",
-		"newPassword": "New password",
-		"password": "Password",
-		"repeat": "Repeat",
-		"mustMatch": "Passwords must match",
-		"nameTaken": "Login name already taken",
-		"wrongCredentials": "Incorrect login name or password",
-		"wrongPassword": "Incorrect password",
-		"theFuck": "SOMEBODY FUCKED UP",
-		"configureServer": "Configure server",
-		"createBoard": "Create board",
-		"configureBoard": "Configure board"
+		"id": "Logowanie",
+		"register": "Rejestracja",
+		"logout": "Wyloguj",
+		"logoutAll": "Wyloguj ze wszystkich urządzeń",
+		"changePassword": "Zmień hasło",
+		"oldPassword": "Stare hasło",
+		"newPassword": "Nowe hasło",
+		"password": "Hasło",
+		"repeat": "Powtórz hasło",
+		"mustMatch": "Podane hasła muszą być takie same",
+		"nameTaken": "Podany login jest już zajęty",
+		"wrongCredentials": "Nieprawidłowy login lub hasło",
+		"wrongPassword": "Nieprawidłowe hasło",
+		"theFuck": "KTOŚ COŚ SPIERDOLIŁ",
+		"configureServer": "Konfiguracja serwera",
+		"createBoard": "Tworzenie działu",
+		"configureBoard": "Konfiguracja działu"
 	},
 
 	"identity": {
 		"name": [
-			"Name",
-			"Name to attach to new posts"
+			"Login",
+			"Imię, które będzie używane przy nowych postach"
 		],
 		"email": [
 			"Email",
-			"Email to include in new posts"
+			"Email, który będzie używany przy nowych postach"
 		],
 		"postPassword": [
-			"Password",
-			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+			"Hasło",
+			"Hasło używane do usuwania postów i obrazków, po ich utworzeniu, a także otwieraniu postów po rozłączeniu"
 		]
 	},
 
 	"opts": {
-		"tabs": ["General", "Style", "Image Search", "Fun", "Shortcuts"],
+		"tabs": ["Ogólne", "Styl", "Wyszukiwanie obrazu", "Zabawa", "Skróty"],
 		"modes": {
-			"none": "none",
-			"width": "fit to width",
-			"screen": "fit to screen"
+			"none": "brak",
+			"width": "dopasuj do szerokości",
+			"screen": "dopasuj do ekranu"
 		},
 		"importConfig": {
-			"done":"Import successfull. The page will now reload.",
-			"corrupt": "Import failed. File corrupt"
+			"done":"Importowanie zakończone sukcesem. Strona zostanie teraz odświeżona",
+			"corrupt": "Importowanie nieudane. Plik uszkodzony."
 		},
 		"langApplied": "Language settings applied. The page will now reload.",
 		"labels": {
