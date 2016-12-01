@@ -8,6 +8,7 @@
 		"newLine": "LF",
 		"removeComments": true,
 		"noImplicitAny": true,
+		"noImplicitThis": true,
 		"noUnusedLocals": true
 	}
 }

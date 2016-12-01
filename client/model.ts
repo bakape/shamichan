@@ -56,7 +56,7 @@ export function emitChanges<T extends ChangeEmitter>(obj: T): T {
 
 // Replace the properties of a ChangeEmitter without triggering updates on
 // unchanged keys
-function replaceWith(newObj: ChangeEmitter) {
+function replaceWith<T extends ChangeEmitter>(this: T, newObj: T) {
 	for (let key in newObj) {
 		const newProp = newObj[key]
 		if (newProp !== this[key]) {
