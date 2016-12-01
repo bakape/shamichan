@@ -108,7 +108,7 @@
 			{{if .ImageOmit}}
 				 {{index .Lang.Posts "and"}} {{pluralize .ImageOmit (index .Lang.Plurals "image")}}
 			{{end}}
-			{{index .Lang.Posts "omitted"}}&nbsp;
+			&nbsp;{{index .Lang.Posts "omitted"}}&nbsp;
 			<span class="act">
 				<a href="{{.OP}}" class="history">
 					{{index .Lang.Posts "seeAll"}}
