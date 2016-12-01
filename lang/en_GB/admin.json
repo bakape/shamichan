@@ -55,7 +55,7 @@
 	],
 	"sessionExpiry": [
 		"Account session expiry",
-		"Time in days until user accoubts are automatically logged out"
+		"Time in days until user accounts are automatically logged out"
 	],
 	"salt": [
 		"Secure salt",
