@@ -22,7 +22,11 @@ for (let key in handlers) {
 }
 
 // Rerender time every minute, if relative time is set
-setInterval(renderTime, 60000)
+setInterval(() => {
+	if (options.relativeTime) {
+		renderTime()
+	}
+}, 60000)
 
 // Loop over all posts after filtering with `test`
 function loopPosts(test: (post: Post) => boolean, fn: (post: Post) => void) {
@@ -88,9 +92,6 @@ function toggleAnonymisation() {
 
 // Rerender all timestamps on posts, if set to relative time
 function renderTime() {
-	if (!options.relativeTime) {
-		return
-	}
 	write(() => {
 		for (let {view} of posts) {
 			view.renderTime()
