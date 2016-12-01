@@ -7,7 +7,7 @@
 	],
 	"threadExpiry": [
 		"Czas wygaśnięcia tematu",
-		"Liczba dni po których temat bez odpowiedzi zostanie usunięty"
+		"Liczba dni, po których temat bez odpowiedzi zostanie usunięty"
 	],
 	"pruneBoards": [
 		"Usuń działy",
@@ -15,11 +15,11 @@
 	],
 	"boardExpiry": [
 		"Czas wygaśnięcia działu",
-		"Liczba dni po których dział bez odpowiedzi zostanie usunięty"
+		"Liczba dni, po których dział bez odpowiedzi zostanie usunięty"
 	],
 	"radio": [
 		"Integracja z R/a/dio",
-		"Enable 'Now playing' song display in the top banner and the #queue hash command"
+		"Włącz ukazywanie aktualnie odgrywanej piosenki w górnej części strony i komendę z kratką #queue"
 	],
 	"pyu": [
 		"#pyu",
@@ -55,94 +55,94 @@
 	],
 	"sessionExpiry": [
 		"Wygaśnięcie sesji konta",
-		"Czas w dniach po jakim konta są automatycznie wylogowywane"
+		"Czas w dniach, po jakim konta są automatycznie wylogowywane"
 	],
 	"salt": [
-		"Secure salt",
-		"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
+		"Bezpieczna sól",
+		"Sól zabezpieczająca tripkody. Najlepiej, żeby miała co najmniej 4 znaki."
 	],
 	"feedbackEmail": [
-		"Feedback email",
-		"User feedback email to display in the top banner"
+		"Mail kontaktowy",
+		"Mail kontaktowy znajdujący się na górze strony."
 	],
 	"FAQ": [
-		"Information panel text",
-		"Entries for the banner's Frequently Asked Questions list and information modal"
+		"Panel informacyjny",
+		"Wpisy związane z najczęściej zadawanymi pytaniami i innymi informacjami"
 	],
 	"defaultLang": [
-		"Default language",
-		"Language pack to load by default"
+		"Domyślny język",
+		"Domyślnie używany język"
 	],
 	"defaultCSS": [
-		"Default theme",
-		"Theme to load by default, when none is set by the client"
+		"Domyslny styl",
+		"Domyślnie ładowany styl, jeśli użytkownik nie wybierze innego"
 	],
 	"links": [
-		"Extrenal links",
-		"Add, remove or edit external >>>/4chan/-type references"
+		"Linki zewnętrzne",
+		"Dodaj, usuń lub edytuj linki zewnętrzne w stylu >>>/4chana/"
 	],
 	"boardName": [
-		"Board name",
-		"Name of the new board. Can contain up to 3 lowercase Latin letters or numbers."
+		"Nazwa działu",
+		"Nazwa nowego działu. Może zawierać do trzech małych liter łacińskich i liczb."
 	],
 	"boardTitle": [
-		"Board title",
-		"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
+		"Tytuł działu",
+		"Tytuł nowego działu, coś jak 'Animu & Mango'. Do 100 znaków."
 	],
 	"captcha": [
 		"Captcha",
-		"Ask users to complete a captcha for certain tasks like registration and thread creation"
+		"Poproś użytkownika o wypełnienie captchy przy takich rzeczach jak rejestracja i tworzenie tematu"
 	],
 	"captchaPublicKey": [
-		"Captcha public key",
-		"Key used for communicating with external captcha service"
+		"Klucz publiczny captchy",
+		"Klucz używany do komunikacji z zewnętrznym serwisem captchy"
 	],
 	"captchaPrivateKey": [
-		"Captcha private key",
-		"Key used for authenticating solved captchas server-side"
+		"Klucz prywatny captchy",
+		"Klucz używany do uwierzytelnienia rozwiązanych captch z serwerem"
 	],
 	"readOnly": [
-		"Read only",
-		"Disable post creation"
+		"Tylko do odczytu",
+		"Wyłącz możliwość postowania"
 	],
 	"textOnly": [
-		"Text only",
-		"Disable file uploads"
+		"Tylko tekst",
+		"Wyłącz przesyłanie plików"
 	],
 	"forcedAnon": [
-		"Forced Anonymous",
-		"Disable user names, tripcodes and emails on posts"
+		"Wymuszona anonimowość",
+		"Wyłącz nazwy użytkowników, tripkody i maile w postach"
 	],
 	"hashCommands": [
-		"Hash commands",
-		"Enable #dice, #flip, #8ball, etc."
+		"Komendy z kratką",
+		"Włącz #dice, #flip, #8ball, itp."
 	],
 	"spoilers": [
-		"Text spoilers",
-		"Enable use of ** to spoiler blocks of text"
+		"Tekstowe spojlery",
+		"Włącz używanie **, aby zaspojlerować kawałek tekstu"
 	],
 	"codeTags": [
-		"Code tags",
-		"Enable code tags for embedding programming code"
+		"Tag kodu",
+		"Włącz tag kodu służący do lepszego formatowania języków programowania"
 	],
 	"title": [
-		"Board title",
-		"Short descriptive title of the board"
+		"Nazwa działu",
+		"Krótka, opisowa nazwa działu"
 	],
 	"notice": [
-		"Notice",
-		"Short informational message displayed at the top of the page"
+		"Ogłoszenie",
+		"Krótka informacja pokazywana na górze strony"
 	],
 	"eightball": [
-		"#8ball answers",
-		"List of answers for the #8ball hash command. One answer per line. Can contain up to 100 answers and 2000 characters total."
+		"Odpowiedzi #8ball",
+		"Lista odpowiedzi komendy #8ball. Jedna odpowiedź na linijkę. Może zawierać maksymalnie 100 odpowiedzi i 2000 znaków."
 	],
 	"rules": [
-		"Rules",
-		"Board rules to display in the rule modal window"
+		"Zasady",
+		"Zasady działu pokazywane w oknie zasad"
 	],
 	"mature": [
-		"Mature content",
-		"Inform the user the website contains mature content on first visit"
+		"Treści dla dorosłych",
+		"Przy pierwszej wizycie poinformuj użytkownika o treściach dla dorosłych na tej stronie"
 	]
 }
