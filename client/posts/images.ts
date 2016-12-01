@@ -22,7 +22,7 @@ export default class ImageHandler extends View<Post> {
 		const fn = () => {
 			const img = this.model.image
 			renderFigcaption(this.el, img, reveal)
-			renderImage(this.el.querySelector("figure"), img, reveal)
+			renderImage(this.el, img, reveal)
 		}
 		if (delay) {
 			write(fn)

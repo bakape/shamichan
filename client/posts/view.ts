@@ -30,7 +30,7 @@ export default class PostView extends ImageHandler {
         this.model.view = this
         if (!el) {
             this.render()
-        	this.autoExpandImage()
+            this.autoExpandImage()
         }
     }
 
@@ -137,9 +137,8 @@ export default class PostView extends ImageHandler {
 
     // Render links to posts linking to this post
     public renderBacklinks() {
-        const html = renderBacklinks(this.model.backlinks)
         write(() =>
-            this.el.querySelector("small").innerHTML = html)
+            renderBacklinks(this.el, this.model.backlinks))
     }
 
     // Close an open post and clean up

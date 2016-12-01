@@ -49,10 +49,17 @@ export function renderPostLink(num: number, board: string, op: number): string {
 // }
 
 // Render links to posts that are linking to the target post
-export function renderBacklinks(links: PostLinks): string {
+export function renderBacklinks(post: DocumentFragment, links: PostLinks) {
     if (!links) {
-        return ''
+        return
     }
+
+    let el = post.querySelector("small")
+    if (!el) {
+        el = document.createElement("small")
+        post.append(el)
+    }
+
     let html = ''
     for (let id in links) {
         const {board, op} = links[id]
@@ -61,5 +68,6 @@ export function renderBacklinks(links: PostLinks): string {
         }
         html += renderPostLink(parseInt(id), board, op)
     }
-    return html
+
+    el.innerHTML = html
 }

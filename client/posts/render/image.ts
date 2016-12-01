@@ -39,10 +39,16 @@ const ISSpecs: ImageSearchSpec[] = [
 
 // Render a thumbnail of an image, according to configuration settings
 export function renderImage(
-    el: HTMLElement,
+    post: DocumentFragment,
     data: ImageData,
     reveal: boolean,
 ) {
+    let el = post.querySelector("figure")
+    if (!el) {
+        el = importTemplate("figure").firstChild as HTMLElement
+        post.querySelector(".post-container").prepend(el)
+    }
+
     const showThumb = (!options.hideThumbs && !options.workModeToggle) || reveal
     el.hidden = !showThumb
     if (showThumb) {

@@ -19,13 +19,13 @@ export default function (
 	}
 
 	frag.querySelector("blockquote").innerHTML = renderBody(data)
-	frag.querySelector("small").innerHTML = renderBacklinks(data.backlinks)
+	renderBacklinks(frag, data.backlinks)
 
 	renderHeader(frag, data)
 
 	if (data.image) {
 		renderFigcaption(frag, data.image, false)
-		renderImage(frag.querySelector("figure"), data.image, false)
+		renderImage(frag, data.image, false)
 	}
 }
 
