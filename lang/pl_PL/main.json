@@ -1,0 +1,283 @@
+{
+	"posts": {
+		"anon": "Anonymous",
+		"newThread": "New thread",
+		"reply": "Reply",
+		"you": "(You)",
+		"OP": "(OP)",
+		"locked": "locked",
+		"subject": "Subject",
+		"uploadProgress": "uploaded...",
+		"thread_locked": "This thread is locked.",
+		"quoted": "You have been quoted",
+		"board": "Board",
+		"spoiler": "Spoiler",
+		"and": "and",
+		"omitted": "omitted",
+		"post": ["post", "posts"],
+		"image": ["image", "images"],
+		"unfinishedPost": "You have an unfinished post",
+		"thumbnailing": "Thumbnailing..."
+	},
+
+	"ui": {
+		"cancel": "Cancel",
+		"done": "Done",
+		"send": "Send",
+		"add": "Add",
+		"apply": "Apply",
+		"search": "Search",
+		"invalidCaptcha": "Invalid captcha",
+		"focusForCaptcha": "Focus to load captcha",
+		"reloadCaptcha": "Click to reload",
+		"submit": "Submit",
+		"rules": "Rules",
+		"close": "Close",
+		"showNotice": "Show Notice",
+		"sortMode": "Sort threads by",
+		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
+		"refresh": "Refresh",
+		"sortModes": [
+			"Last reply time",
+			"Creation time",
+			"Reply count",
+			"File count"
+		]
+	},
+
+	"banner": {
+		"worksBestWith": "works best with",
+		"options": "Options",
+		"identity": "Identity",
+		"account": "Account and board management",
+		"FAQ": "Information",
+		"feedback": "Feedback",
+		"googleSong": "Click to google song",
+		"sync": "Connection status"
+	},
+
+	"images": {
+		"show": "Show",
+		"hide": "Hide",
+		"expand": "Expand Images",
+		"contract": "Contract Images"
+	},
+
+	"navigation": {
+		"seeAll": "See all",
+		"report": "Report",
+		"focus": "Focus",
+		"last": "Last",
+		"bottom": "Bottom",
+		"expand": "Expand",
+		"catalog": "Catalog",
+		"return": "Return",
+		"top": "Top",
+		"lockedToBottom": "Locked to bottom",
+		"catalogOmit": "Replies/Images",
+		"rescan": "Rescan"
+	},
+
+	"reports": {
+		"post": "Reporting post",
+		"reporting": "Reporting...",
+		"submitted": "Report submitted!",
+		"setup": "Obtaining reCAPTCHA...",
+		"loadError": "Couldn't load reCATPCHA"
+	},
+
+	"time": {
+		"week": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+		"calendar": [
+			"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+			"Oct", "Nov", "Dec"
+		],
+		"justNow": "just now",
+		"minute": ["minute", "minutes"],
+		"hour": ["hour", "hours"],
+		"day": ["day", "days"],
+		"month": ["month", "months"],
+		"year": ["year", "years"],
+		"in": "in",
+		"ago": "ago"
+	},
+
+	"sync": ["disconnected", "connecting", "syncing", "synced", "desynced"],
+
+	"syncwatch": {
+		"starting": "Syncwatch starting in 10 seconds",
+		"finished": "Finished"
+	},
+
+	"mod": {
+		"id": "Login",
+		"register": "Register",
+		"logout": "Logout",
+		"logoutAll": "Log out all devices",
+		"changePassword": "Change password",
+		"oldPassword": "Old password",
+		"newPassword": "New password",
+		"password": "Password",
+		"repeat": "Repeat",
+		"mustMatch": "Passwords must match",
+		"nameTaken": "Login name already taken",
+		"wrongCredentials": "Incorrect login name or password",
+		"wrongPassword": "Incorrect password",
+		"theFuck": "SOMEBODY FUCKED UP",
+		"configureServer": "Configure server",
+		"createBoard": "Create board",
+		"configureBoard": "Configure board"
+	},
+
+	"identity": {
+		"name": [
+			"Name",
+			"Name to attach to new posts"
+		],
+		"email": [
+			"Email",
+			"Email to include in new posts"
+		],
+		"postPassword": [
+			"Password",
+			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+		]
+	},
+
+	"opts": {
+		"tabs": ["General", "Style", "Image Search", "Fun", "Shortcuts"],
+		"modes": {
+			"none": "none",
+			"width": "fit to width",
+			"screen": "fit to screen"
+		},
+		"importConfig": {
+			"done":"Import successfull. The page will now reload.",
+			"corrupt": "Import failed. File corrupt"
+		},
+		"langApplied": "Language settings applied. The page will now reload.",
+		"labels": {
+			"export": [
+				"Export",
+				"Export options to file"
+			],
+			"import": [
+				"Import",
+				"Import options from file"
+			],
+			"hidden": [
+				"Hidden: 0",
+				"Clear hidden posts"
+			],
+			"hideThumbs": [
+				"Hide thumbnails",
+				"Display a [Show] button in place of thumbnails"
+			],
+			"lang": [
+				"Language",
+				"Change interface language"
+			],
+			"inlineFit": [
+				"Expansion",
+				"Expand images inside the parent post and resize according to setting"
+			],
+			"thumbs": [
+				"Thumbnails",
+				"Set thumbnail style:\nSmall: 125x125, small file size;\nSharp: 125x125, more detailed;\nHide: hide all images;"
+			],
+			"imageHover": [
+				"Image Hover Expansion",
+				"Display image previews on hover"
+			],
+			"webmHover": [
+				"WebM Hover Expansion",
+				"Display WebM previews on hover. Requires Image Hover Expansion enabled."
+			],
+			"autogif": [
+				"Animated GIF Thumbnails",
+				"Animate GIF thumbnails"
+			],
+			"spoilers": [
+				"Image Spoilers",
+				"Don't spoiler images"
+			],
+			"notification": [
+				"Desktop Notifications",
+				"Get desktop notifications when quoted or a syncwatch is about to start"
+			],
+			"anonymise": [
+				"Anonymise",
+				"Display all posters as anonymous"
+			],
+			"relativeTime": [
+				"Relative Timestamps",
+				"Relative post timestamps. Ex.: '1 hour ago'"
+			],
+			"nowPlaying": [
+				"Now Playing Banner",
+				"Currently playing song on r/a/dio and other stream information in the top banner."
+			],
+			"illyaDance": [
+				"Illya Dance",
+				"Dancing loli in the background"
+			],
+			"illyaDanceMute": [
+				"Mute Illya",
+				"Mute dancing loli"
+			],
+			"horizontalPosting": [
+				"Horizontal Posting",
+				"38chan nostalgia"
+			],
+			"replyRight": [
+				"[Reply] at Right",
+				"Move Reply button to the right side of the page"
+			],
+			"theme": [
+				"Theme",
+				"Select CSS theme"
+			],
+			"userBG": [
+				"Custom Background",
+				"Toggle custom page background"
+			],
+			"userBGImage": [
+				"",
+				"Image to use as the background"
+			],
+			"alwaysLock": [
+				"Always Lock to Bottom",
+				"Lock scrolling to page bottom even when tab is hidden"
+			],
+			"newPost": [
+				"New Post",
+				"Open new post"
+			],
+			"toggleSpoiler": [
+				"Image Spoiler",
+				"Toggle spoiler in the open post"
+			],
+			"done": [
+				"Finish Post",
+				"Close open post"
+			],
+			"expandAll": [
+				"Expand All Images",
+				"Expand all images. Webm, PDF and MP3 and your own post aren't affected. New post images are also expanded."
+			],
+			"workMode": [
+				"Work mode",
+				"Hides images and disables user background"
+			],
+			"workModeToggle": [
+				"Work mode",
+				"Hides images and disables user background"
+			],
+			"google": ["Google", "Google image search"],
+			"iqdb": ["IQDB", "iqdb.org image search"],
+			"saucenao": ["SauceNao", "saucenao.com image search"],
+			"desustorage": ["DesuStorage", "desustorage.org image search"],
+			"exhentai": ["Exhentai", "exhentai.org image search"]
+		}
+	}
+}
