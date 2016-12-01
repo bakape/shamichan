@@ -14,8 +14,8 @@ var (
 
 	// Available themes. Change this, when adding any new ones.
 	themes = []string{
-		"moe", "gar", "mawaru", "moon", "ashita", "console", "tea",
-		"higan", "ocean", "rave", "glass",
+		"ashita", "console", "gar", "glass", "higan", "inumi", "mawaru", "moe",
+		"moon", "ocean", "rave", "tea",
 	}
 )
 
