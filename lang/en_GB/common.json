@@ -12,6 +12,7 @@
 		"locked": "locked",
 		"omitted": "omitted",
 		"seeAll": "See all",
+		"spoiler": "Spoiler",
 		"show": "Show",
 		"you": "(You)"
 	},
@@ -74,7 +75,7 @@
 		"mustMatch": "Passwords must match",
 		"invalidCaptcha": "Invalid captcha",
 		"quoted": "You have been quoted",
-		"refresh": "Refresh",
+	"refresh": "Refresh",
 		"sessionExpired": "Login session expired",
 		"thread_locked": "This thread is locked.",
 		"thumbnailing": "Thumbnailing...",
