@@ -50,12 +50,6 @@ type ImageRequest struct {
 	Token, Name string
 }
 
-// Response to a thread creation request
-type threadCreationResponse struct {
-	Code int    `json:"code"`
-	ID   uint64 `json:"id"`
-}
-
 // Insert a new thread into the database
 func insertThread(data []byte, c *Client) (err error) {
 	if err := closePreviousPost(c); err != nil {
@@ -67,12 +61,11 @@ func insertThread(data []byte, c *Client) (err error) {
 	}
 
 	id, now, hasImage, err := ConstructThread(req, c.ip, false)
-	if err != nil {
-		if err == errInValidCaptcha {
-			return c.sendMessage(MessageInsertThread, threadCreationResponse{
-				Code: invalidInsertionCaptcha,
-			})
-		}
+	switch err {
+	case nil:
+	case errInValidCaptcha:
+		return c.sendMessage(MessagePostID, -1)
+	default:
 		return err
 	}
 
@@ -84,11 +77,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		hasImage: hasImage,
 	}
 
-	msg := threadCreationResponse{
-		Code: postCreated,
-		ID:   id,
-	}
-	return c.sendMessage(MessageInsertThread, msg)
+	return c.sendMessage(MessagePostID, id)
 }
 
 // ConstructThread creates a new tread and writes it to the database. Returns

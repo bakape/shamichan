@@ -1,16 +1,16 @@
 // View classes for post authoring
 
 import PostView from "../view"
-import { ReplyFormModel } from "./model"
+import FormModel from "./model"
 import { Post } from "../models"
 import { boardConfig } from "../../state"
-import { setAttrs, makeFrag, applyMixins } from "../../util"
+import { setAttrs, makeFrag } from "../../util"
 import { parseTerminatedLine } from "../render/body"
 import { renderHeader, renderName } from "../render/posts"
 import { write } from "../../render"
 import { threadContainer } from "../../page/thread"
 import { postSM, postEvent } from "./main"
-import UploadForm, { FileData } from "./upload"
+import UploadForm from "./upload"
 import identity from "./identity"
 import { atBottom, scrollToBottom } from "../../scroll"
 
@@ -19,28 +19,16 @@ import { atBottom, scrollToBottom } from "../../scroll"
 let bottomSpacer: HTMLElement
 
 // Post creation and update view
-export default class FormView extends PostView implements UploadForm {
-    el: HTMLElement
-    model: ReplyFormModel
-    inputLock: boolean
-    input: HTMLSpanElement
-    done: HTMLInputElement
-    cancel: HTMLInputElement
-    observer: MutationObserver
-    postControls: Element
-    previousHeight: number
-
-    // UploadForm properties
-    spoiler: HTMLSpanElement
-    uploadStatus: HTMLSpanElement
-    uploadInput: HTMLInputElement
-    renderUploadForm: () => void
-    uploadFile: (file?: File) => Promise<FileData>
-    upload: (file: File) => Promise<string>
-    renderProgress: (event: ProgressEvent) => void
-    spoilerImage: () => Promise<void>
-
-    [index: string]: any
+export default class FormView extends PostView {
+    public model: FormModel
+    private inputLock: boolean
+    private input: HTMLSpanElement
+    private done: HTMLInputElement
+    public cancel: HTMLInputElement
+    private observer: MutationObserver
+    private postControls: Element
+    private previousHeight: number
+    public upload: UploadForm
 
     constructor(model: Post, isOP: boolean) {
         super(model, null)
@@ -53,7 +41,7 @@ export default class FormView extends PostView implements UploadForm {
 
     // Render extra input fields for inputting text and optionally uploading
     // images
-    renderInputs(isOP: boolean) {
+    private renderInputs(isOP: boolean) {
         this.input = document.createElement("span")
         setAttrs(this.input, {
             id: "text-input",
@@ -85,7 +73,7 @@ export default class FormView extends PostView implements UploadForm {
     }
 
     // Additional controls and header contents for unallocated draft forms
-    renderDraft(): DocumentFragment {
+    private renderDraft(): DocumentFragment {
         const frag = document.createDocumentFragment()
         const cancel = this.createButton(
             "cancel",
@@ -94,9 +82,8 @@ export default class FormView extends PostView implements UploadForm {
         frag.append(cancel)
 
         if (!boardConfig.textOnly) {
-            this.renderUploadForm()
-            frag.append(this.uploadInput, this.spoiler, this.uploadStatus)
-            this.uploadInput.addEventListener("change", () =>
+            this.upload = new UploadForm(this.model, this.el)
+            this.upload.input.addEventListener("change", () =>
                 this.model.uploadFile())
         }
 
@@ -107,7 +94,7 @@ export default class FormView extends PostView implements UploadForm {
 
     // Render a temporary view of the identity fields, so the user can see what
     // credentials he is about to post with
-    renderIdentity() {
+    public renderIdentity() {
         let {name} = identity,
             trip = ""
         const iHash = name.indexOf("#")
@@ -123,12 +110,12 @@ export default class FormView extends PostView implements UploadForm {
     }
 
     // Button for closing allocated posts
-    renderDone(): HTMLInputElement {
+    private renderDone(): HTMLInputElement {
         return this.createButton("done", postSM.feeder(postEvent.done))
     }
 
     // Create a clickable button element
-    createButton(name: string, clickHandler: () => void): HTMLInputElement {
+    private createButton(name: string, clickHandler: () => void): HTMLInputElement {
         const el = document.createElement("input")
         setAttrs(el, {
             name,
@@ -140,7 +127,7 @@ export default class FormView extends PostView implements UploadForm {
     }
 
     // Initialize extra elements for a draft unallocated post
-    initDraft() {
+    private initDraft() {
         this.el.querySelector("header").classList.add("temporary")
         bottomSpacer = document.getElementById("bottom-spacer")
 
@@ -163,7 +150,7 @@ export default class FormView extends PostView implements UploadForm {
     }
 
     // Resize bottomSpacer to the same top position as this post
-    resizeSpacer() {
+    private resizeSpacer() {
         // Not a reply
         if (!bottomSpacer) {
             return
@@ -183,15 +170,15 @@ export default class FormView extends PostView implements UploadForm {
         bottomSpacer.style.height = `calc(${height}px - 2.1em)`
     }
 
-    removeUploadForm() {
+    private removeUploadForm() {
         write(() => {
-            this.uploadInput.remove()
-            this.uploadStatus.remove()
+            this.upload.input.remove()
+            this.upload.status.remove()
         })
     }
 
     // Handle input events on input
-    onInput(val: string = this.input.textContent) {
+    private onInput(val: string = this.input.textContent) {
         if (this.inputLock) {
             return
         }
@@ -203,14 +190,14 @@ export default class FormView extends PostView implements UploadForm {
     }
 
     // Ignore any oninput events on input during supplied function call
-    lockInput(fn: () => void) {
+    private lockInput(fn: () => void) {
         this.inputLock = true
         fn()
         this.inputLock = false
     }
 
     // Handle keydown events on input
-    onKeyDown(event: KeyboardEvent) {
+    private onKeyDown(event: KeyboardEvent) {
         if (event.which === 13) { // Enter
             event.preventDefault()
             return this.onInput(this.model.inputState.line + "\n")
@@ -218,7 +205,7 @@ export default class FormView extends PostView implements UploadForm {
     }
 
     // Trim input from the end by the supplied length
-    trimInput(length: number) {
+    public trimInput(length: number) {
         let val = this.input.textContent.slice(0, -length) || "\u200b"
         write(() =>
             this.lockInput(() =>
@@ -227,7 +214,7 @@ export default class FormView extends PostView implements UploadForm {
 
 
     // Replace the current line and set the cursor to the input's end
-    replaceLine(line: string) {
+    public replaceLine(line: string) {
         write(() => {
             this.input.textContent = line || "\u200b"
             const range = document.createRange(),
@@ -241,7 +228,7 @@ export default class FormView extends PostView implements UploadForm {
     }
 
     // Start a new line in the input field and close the previous one
-    startNewLine() {
+    public startNewLine() {
         const {line} = this.model.inputState,
             frag = makeFrag(parseTerminatedLine(line, this.model))
         write(() => {
@@ -252,7 +239,7 @@ export default class FormView extends PostView implements UploadForm {
     }
 
     // Inject lines before input and set input contents to the lastLine
-    injectLines(lines: string[], lastLine: string) {
+    public injectLines(lines: string[], lastLine: string) {
         const frag = document.createDocumentFragment()
         for (let line of lines) {
             const el = makeFrag(parseTerminatedLine(line, this.model))
@@ -265,7 +252,7 @@ export default class FormView extends PostView implements UploadForm {
 
     // Parse and replace the temporary like closed by input with a proper
     // parsed line
-    terminateLine(num: number) {
+    public terminateLine(num: number) {
         const html = parseTerminatedLine(this.model.lastBodyLine(), this.model),
             frag = makeFrag(html)
         write(() =>
@@ -274,7 +261,7 @@ export default class FormView extends PostView implements UploadForm {
 
     // Transform form into a generic post. Removes any dangling form controls
     // and frees up references.
-    cleanUp() {
+    public cleanUp() {
         this.el.classList.remove("reply-form")
         if (this.postControls) {
             this.postControls.remove()
@@ -294,27 +281,25 @@ export default class FormView extends PostView implements UploadForm {
             = this.done
             = this.cancel
             = this.input
-            = this.uploadInput
-            = this.uploadStatus
-            = this.spoiler
+            = this.upload
             = null
     }
 
     // Clean up on form removal
-    remove() {
+    public remove() {
         super.remove()
         this.cleanUp()
     }
 
     // Lock the post form after a critical error occurs
-    renderError() {
+    public renderError() {
         write(() =>
             (this.el.classList.add("errored"),
                 this.input.setAttribute("contenteditable", "false")))
     }
 
     // Transition into allocated post
-    renderAlloc() {
+    public renderAlloc() {
         this.id = "p" + this.model.id
         const header = this.el.querySelector("header")
         write(() => {
@@ -327,7 +312,7 @@ export default class FormView extends PostView implements UploadForm {
     }
 
     // Toggle the spoiler input checkbox
-    toggleSpoiler() {
+    public toggleSpoiler() {
         // Can only turn a spoiler on, if image already allocated
         if (this.model.image && this.model.image.spoiler) {
             return
@@ -341,20 +326,20 @@ export default class FormView extends PostView implements UploadForm {
     }
 
     // Insert image into the open post
-    insertImage() {
+    public insertImage() {
         this.renderImage(false, true)
         this.removeUploadForm()
 
-        const {spoiler} = this
+        const {spoiler} = this.upload
         if (this.model.image.spoiler) {
             write(() =>
                 spoiler.remove())
         } else {
-            spoiler.addEventListener("change", () => this.spoilerImage(), {
+            const fn = () =>
+                this.upload.spoilerImage()
+            spoiler.addEventListener("change", fn, {
                 passive: true,
             })
         }
     }
 }
-
-applyMixins(FormView, UploadForm)

@@ -72,6 +72,7 @@
 	},
 	"ui": {
 		"mustMatch": "Passwords must match",
+		"invalidCaptcha": "Invalid captcha",
 		"quoted": "Você foi quotado",
 		"refresh": "Refresh",
 		"sessionExpired": "Login session expired",

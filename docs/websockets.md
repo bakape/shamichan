@@ -14,7 +14,6 @@ must always be "synchronize".
 | Code | Name | Payload type | Description |
 |:---:|---|---|---|
 | 0 | invalid | string | Convey an unrecoverable error. Only used on client protocol violations or server errors. The connection is terminated after writing this message. You should either fix your client implementation or report a server bug, if this message is encountered. |
-| 1 | insertThread | [ThreadCreationResponse](#threadcreationresponse) | Response to a thread creation request |
 | 2 | insertPost | [Post](common.md#post) | Post insertion into the thread. The passed post may already exist and be rendered, in which case it is a possibly updated version of the post, that syncs the client's state to the update stream. In that case the client must rerender or deduplicate appropriately. |
 | 3 | append | [2]uint | Append a character to the current line of the post. The first array item is the ID of the target post. The seconds is a character encoded as UTF-8 character code. |
 | 4 | backspace | uint | Remove one character from the end of the line of the post specified by ID. |
@@ -27,15 +26,8 @@ must always be "synchronize".
 | 11 | spoiler | uint | Spoiler the image of the post specified by ID |
 | 30 | synchronize | map[uint][Post](common.md#post) | Response to a synchronization request. Contains a map of posts updated in the thread in the last 30 seconds. These are meant to bring the client up to sync with the update stream server-side. Consequently the client must ensure his existing post data is not more than 30 seconds old before synchronization. |
 | 31 | reclaim | uint | Response to a request to reclaim a post lost after disconnecting from the server. 0 denotes success and the client is henceforth able to write to said post, as before the disconnect.1 denotes the post is unrecoverable. |
-| 41 | postID | uint | Returns the post ID of the client's freshly allocated post. A response to a post insertion request. |
+| 41 | postID | int | Returns the post ID of the client's freshly allocated post. A response to a post or thread insertion request. -1 denotes invalid captcha. |
 | 42 | concat | * | Contains several null-byte concatenated messages. Used for limiting the rate of update frames sent from the server. |
-
-##ThreadCreationResponse
-
-| Field | Type | Required | Description |
-|---|---|---|---|
-| code | uint | + | Error code for the thread creation attempt. 0 for no error and 1 for invalid captcha. |
-| id | uint | + | ID of the newly created thread |
 
 ##SpliceMessage
 

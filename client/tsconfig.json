@@ -9,6 +9,7 @@
 		"removeComments": true,
 		"noImplicitAny": true,
 		"noImplicitThis": true,
+		"suppressImplicitAnyIndexErrors": true,
 		"noUnusedLocals": true
 	}
 }

@@ -3,7 +3,7 @@
 import {threads} from "../../render"
 import {postSM, postEvent, postModel} from "./main"
 import {page, boardConfig} from "../../state"
-import {ReplyFormModel} from "./model"
+import FormModel from "./model"
 
 // Handle file drop
 function onDrop(e: DragEvent) {
@@ -26,7 +26,7 @@ function onDrop(e: DragEvent) {
 
 	// Neither disconnected, errored or already has image
 	if (postModel && !postModel.image) {
-		(postModel as ReplyFormModel).uploadFile(files[0])
+		(postModel as FormModel).uploadFile(files[0])
 	}
 }
 

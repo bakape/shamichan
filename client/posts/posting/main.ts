@@ -1,7 +1,6 @@
 // Contains the FSM and core API for accessing the post authoring system
 
-import { FormModel, ReplyFormModel } from "./model"
-import { Post } from "../models"
+import FormModel from "./model"
 import FormView from "./view"
 import FSM from "../../fsm"
 import { connState, connSM } from "../../connection"
@@ -14,13 +13,13 @@ import { boardConfig } from "../../state"
 
 // Sent to the FSM via the "open" and "hijack" events
 export type FormMessage = {
-	model: FormModel & Post,
+	model: FormModel,
 	view: FormView,
 }
 
 // Current post form view and model instances
 export let postForm: FormView,
-	postModel: FormModel & Post
+	postModel: FormModel
 
 // Post authoring finite state machine
 export const enum postState {
@@ -166,7 +165,7 @@ deferInit(() => {
 
 	// Open a new post creation form, if none open
 	postSM.act(postState.ready, postEvent.open, () => {
-		postModel = new ReplyFormModel()
+		postModel = new FormModel(0)
 		postForm = new FormView(postModel, false)
 		return postState.draft
 	})

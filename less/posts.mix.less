@@ -159,14 +159,22 @@ header {
 
 #thread-form-container.expanded {
 	padding: 0.7em;
-	& > a {
+	& > span.act {
 		display: none;
+	}
+	& > form {
+		display: block;
 	}
 }
 
 #new-thread-form {
 	input[type=text] {
 		width: 20em;
+	}
+	&.sending {
+		input[type=submit], input[name=cancel], br:last-child {
+			 display: none;
+		}
 	}
 }
 

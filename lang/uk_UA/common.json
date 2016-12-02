@@ -72,6 +72,7 @@
 	},
 	"ui": {
 		"mustMatch": "Паролі мають співпадати",
+		"invalidCaptcha": "Invalid captcha",
 		"quoted": "Вас було процитовано",
 		"refresh": "Оновити",
 		"sessionExpired": "Login session expired",

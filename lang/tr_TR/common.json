@@ -72,6 +72,7 @@
 	},
 	"ui": {
 		"mustMatch": "Passwords must match",
+		"invalidCaptcha": "Invalid captcha",
 		"quoted": "Biri sizden alıntı yaptı",
 		"refresh": "Refresh",
 		"sessionExpired": "Login session expired",

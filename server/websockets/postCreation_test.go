@@ -151,7 +151,7 @@ func testCreateThread(t *testing.T) {
 	if err := insertThread(data, cl); err != nil {
 		t.Fatal(err)
 	}
-	assertMessage(t, wcl, `01{"code":0,"id":6}`)
+	assertMessage(t, wcl, `326`)
 	assertIP(t, 6, "::1")
 
 	var (
@@ -195,7 +195,7 @@ func testCreateThreadTextOnly(t *testing.T) {
 	if err := insertThread(data, cl); err != nil {
 		t.Fatal(err)
 	}
-	assertMessage(t, wcl, `01{"code":0,"id":7}`)
+	assertMessage(t, wcl, `327`)
 	if cl.openPost.hasImage {
 		t.Error("image inserted")
 	}
@@ -299,7 +299,7 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertMessage(t, wcl, `01{"code":0,"id":6}`)
+	assertMessage(t, wcl, `326`)
 	assertRepLog(t, 2, append(strDummyLog, "062"))
 	assertPostClosed(t, 2)
 }

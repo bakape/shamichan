@@ -3,7 +3,7 @@
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts } from './state'
 import { Post, PostLinks, Command, PostData, ImageData } from './posts/models'
-import { ReplyFormModel, OPFormModel } from "./posts/posting/model"
+import FormModel from "./posts/posting/model"
 import PostView from "./posts/view"
 import { threadContainer } from "./page/thread"
 import { write } from "./render"
@@ -56,9 +56,9 @@ export function insertPost(data: PostData) {
 
 	const existing = posts.get(data.id)
 	if (existing) {
-		if (existing instanceof ReplyFormModel) {
+		if (existing instanceof FormModel && !existing.isAllocated) {
 			existing.onAllocation(data)
-		} else if (!(existing instanceof OPFormModel)) {
+		} else {
 			existing.extend(data)
 		}
 		return

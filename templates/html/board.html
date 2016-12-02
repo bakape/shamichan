@@ -28,8 +28,8 @@
 			<br>
 			{{if or .IsAll .ImagesAllowed}}
 				<span class="upload-container">
-					<span>
-						<label class="spoiler">
+					<span data-id="spoiler">
+						<label>
 							<input type="checkbox" name="spoiler">
 							{{index .Lang.UI "spoiler"}}
 						</label>
@@ -40,7 +40,7 @@
 					<br>
 				</span>
 			{{end}}
-			{{template "captcha" (bundle "new-thread" .CaptchaKey $)}}
+			{{template "captcha" bundle "new-thread" .CaptchaKey $}}
 			<input type="submit" value="{{index .Lang.UI "submit"}}">
 			<input type="button" name="cancel" value="{{index .Lang.UI "cancel"}}">
 		</form>

@@ -72,6 +72,7 @@
 	},
 	"ui": {
 		"mustMatch": "Heslá sa musia zhodovať",
+		"invalidCaptcha": "Invalid captcha",
 		"quoted": "Niekto ťa citoval.",
 		"refresh": "Obnoviť",
 		"sessionExpired": "Login session expired",

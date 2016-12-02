@@ -1,63 +1,37 @@
 import lang from '../../lang'
-import { HTML, commaList, load, setAttrs, makeFrag, bufferToHex } from '../../util'
+import { load, bufferToHex } from '../../util'
 import { write } from '../../render'
 import { postJSON, postText } from "../../fetch"
-import Model from "../../model"
 import identity from "./identity"
 import { Post } from "../models"
+import View from "../../view"
 
-// Uploaded file data to be embedded in thread and reply creation or appendage
-// requests
+// Uploaded file data to be embedded in thread and reply creation or file
+// insertion requests
 export type FileData = {
     token: string
     name: string
     spoiler?: boolean
 }
 
-const acceptedFormats = commaList([
-    "image/png", "image/gif", "image/jpeg",
-    "video/webm",
-    "video/ogg", "audio/ogg", "application/ogg",
-    "video/mp4", "audio/mp4",
-    "audio/mp3",
-    "application/zip", "application/x-7z-compressed",
-    "application/x-xz", "application/x-gzip",
-])
-
 // Mixin for handling file uploads
-export default class UploadForm {
-    el: Element
-    model: Model
-    spoiler: HTMLSpanElement
-    uploadStatus: Element
-    uploadInput: HTMLInputElement
+export default class UploadForm extends View<Post> {
+    public spoiler: HTMLElement
+    public status: HTMLElement
+    public input: HTMLInputElement
 
-    // Initialize the mixin by rendering and assigning the various upload form
-    // elements
-    renderUploadForm() {
-        this.uploadInput = document.createElement("input")
-        setAttrs(this.uploadInput, {
-            type: "file",
-            name: "image",
-            accept: acceptedFormats,
-        })
-
-        this.spoiler = document.createElement("span")
-        const html = HTML
-            `<input type="checkbox" name="spoiler">
-			<label for="spoiler" class="spoiler">
-				TODO: Form template
-			</label>`
-        this.spoiler.append(makeFrag(html))
-
-        this.uploadStatus = document.createElement("strong")
-        this.uploadStatus.setAttribute("class", "upload-status")
+    constructor(model: Post, parent: HTMLElement) {
+        const el = parent.querySelector(".upload-container")
+        super({ el, model })
+        this.spoiler = el.querySelector(`span[data-id="spoiler"]`)
+        this.status = el.querySelector(".upload-status")
+        this.input = el.querySelector("input[name=image]") as HTMLInputElement
     }
 
-    // Read the file from uploadInput and send as a POST request to the server.
+    // Read the file from input and send as a POST request to the server.
     // Returns image request data, if upload succeeded.
-    async uploadFile(
-        file: File = this.uploadInput.files[0]
+    public async uploadFile(
+        file: File = this.input.files[0],
     ): Promise<FileData> {
         if (!navigator.onLine) {
             return null
@@ -99,11 +73,11 @@ export default class UploadForm {
     }
 
     // Upload file to server and return the file allocation token
-    async upload(file: File): Promise<string> {
+    private async upload(file: File): Promise<string> {
         const formData = new FormData()
         formData.append("image", file)
         write(() =>
-            this.uploadInput.style.display = "none")
+            this.input.style.display = "none")
 
         // Not using fetch, because no ProgressEvent support
         const xhr = new XMLHttpRequest()
@@ -115,8 +89,8 @@ export default class UploadForm {
 
         if (xhr.status !== 200) {
             write(() => {
-                this.uploadStatus.textContent = xhr.response
-                this.uploadInput.style.display = ""
+                this.status.textContent = xhr.response
+                this.input.style.display = ""
             })
             return ""
         }
@@ -125,7 +99,7 @@ export default class UploadForm {
     }
 
     // Render client-side upload progress
-    renderProgress({total, loaded}: ProgressEvent) {
+    private renderProgress({total, loaded}: ProgressEvent) {
         let s: string
         if (loaded === total) {
             s = lang.ui["thumbnailing"]
@@ -134,11 +108,11 @@ export default class UploadForm {
             s = `${n}% ${lang.ui["uploadProgress"]}`
         }
         write(() =>
-            this.uploadStatus.textContent = s)
+            this.status.textContent = s)
     }
 
     // Spoiler an image file after it has already been allocated
-    async spoilerImage() {
+    public async spoilerImage() {
         await spoilerImage(this.model as Post)
         write(() =>
             this.spoiler.remove())

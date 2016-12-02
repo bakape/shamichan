@@ -111,7 +111,8 @@ func formatTime(sec int64, lang map[string][]string) template.HTML {
 	t := time.Unix(sec, 0)
 	year, m, day := t.Date()
 	weekday := lang["week"][int(t.Weekday())]
-	month := lang["calendar"][int(m)]
+	// Months are 1-indexed for some fucking reason
+	month := lang["calendar"][int(m)-1]
 
 	// Premature optimization
 	buf := make([]byte, 0, 17+len(weekday)+len(month))

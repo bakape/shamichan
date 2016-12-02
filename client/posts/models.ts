@@ -97,17 +97,17 @@ export class Post extends Model implements PostData {
 	view: PostView
 
 	// PostData properties
-	editing: boolean
-	image: ImageData
-	time: number
-	body: string
-	name: string
-	trip: string
-	auth: string
-	state: TextState
-	backlinks: PostLinks
-	commands: Command[]
-	links: PostLinks
+	public editing: boolean
+	public image: ImageData
+	public time: number
+	public body: string
+	public name: string
+	public trip: string
+	public auth: string
+	public state: TextState
+	public backlinks: PostLinks
+	public commands: Command[]
+	public links: PostLinks
 
 	constructor(attrs: PostData) {
 		super()
@@ -116,7 +116,7 @@ export class Post extends Model implements PostData {
 
 	// Remove the model from its collection, detach all references and allow to
 	// be garbage collected.
-	remove() {
+	public remove() {
 		if (this.collection) {
 			this.collection.remove(this)
 		}
@@ -126,7 +126,7 @@ export class Post extends Model implements PostData {
 	}
 
 	// Append a character to the text body
-	append(code: number) {
+	public append(code: number) {
 		const char = String.fromCodePoint(code),
 			{state, view} = this
 		this.body += char
@@ -147,12 +147,12 @@ export class Post extends Model implements PostData {
 	}
 
 	// Reset spoiler and quote state of the line
-	resetState() {
+	protected resetState() {
 		this.state.spoiler = this.state.quote = false
 	}
 
 	// Backspace one character in the current line
-	backspace() {
+	public backspace() {
 		const {state, view} = this,
 			needReparse = state.line === ">" || state.line.endsWith("**")
 		state.line = state.line.slice(0, -1)
@@ -166,7 +166,7 @@ export class Post extends Model implements PostData {
 	}
 
 	// Splice the current open line of text
-	splice(msg: SpliceResponse) {
+	public splice(msg: SpliceResponse) {
 		const {state} = this
 		state.line = this.spliceLine(state.line, msg)
 		this.resetState()
@@ -174,7 +174,10 @@ export class Post extends Model implements PostData {
 	}
 
 	// Extra method for code reuse in post forms
-	spliceLine(line: string, {start, len, text}: SpliceResponse): string {
+	protected spliceLine(
+		line: string,
+		{start, len, text}: SpliceResponse,
+	): string {
 		// Must use arrays of chars to properly splice multibyte unicode
 		const keep = Array.from(line).slice(0, start),
 			t = Array.from(text)
@@ -194,7 +197,7 @@ export class Post extends Model implements PostData {
 	}
 
 	// Extend a field on the model, if it exists. Assign if it doesn't
-	extendField(key: string, obj: {}) {
+	public extendField(key: string, obj: {}) {
 		if (this[key]) {
 			extend(this[key], obj)
 		} else {
@@ -203,7 +206,7 @@ export class Post extends Model implements PostData {
 	}
 
 	// Extend all fields in the model and rerender
-	extend(data: PostData) {
+	public extend(data: PostData) {
 		extend(this, data)
 		// "editing":false is omitted to reduce payload. Override explicitly.
 		if (!data.editing) {
@@ -214,14 +217,14 @@ export class Post extends Model implements PostData {
 	}
 
 	// Insert data about a link to another post into the model
-	insertLink(links: PostLinks) {
+	public insertLink(links: PostLinks) {
 		this.checkRepliedToMe(links)
 		this.extendField("links", links)
 	}
 
 	// Check if this post replied to one of the user's posts and trigger
 	// handlers
-	checkRepliedToMe(links: PostLinks) {
+	public checkRepliedToMe(links: PostLinks) {
 		for (let key in links) {
 			if (!mine.has(parseInt(key))) {
 				continue
@@ -234,13 +237,13 @@ export class Post extends Model implements PostData {
 	}
 
 	// Insert data about another post linking this post into the model
-	insertBacklink(links: PostLinks) {
+	public insertBacklink(links: PostLinks) {
 		this.extendField("backlinks", links)
 		this.view.renderBacklinks()
 	}
 
 	// Insert a new command result into the model
-	insertCommand(comm: Command) {
+	public insertCommand(comm: Command) {
 		if (!this.commands) {
 			this.commands = [comm]
 		} else {
@@ -249,20 +252,20 @@ export class Post extends Model implements PostData {
 	}
 
 	// Insert an image into an existing post
-	insertImage(img: ImageData) {
+	public insertImage(img: ImageData) {
 		this.image = img
 		this.view.renderImage(false, true)
 		this.view.autoExpandImage()
 	}
 
 	// Spoiler an already allocated image
-	spoilerImage() {
+	public spoilerImage() {
 		this.image.spoiler = true
 		this.view.renderImage(false, true)
 	}
 
 	// Close an open post and reparse its last line
-	closePost() {
+	public closePost() {
 		// Posts may be closed from multiple sources. It may be the user
 		// closing the post manually, the scheduled cleanup task closing or
 		// the check done when writing to open posts. Therefore some

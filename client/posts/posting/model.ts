@@ -2,210 +2,83 @@
 // the results to the server
 
 import { message, send, handlers } from "../../connection"
-import { Post, TextState, ThreadData, ImageData, PostData } from "../models"
+import { Post, TextState, ImageData, PostData } from "../models"
 import FormView from "./view"
 import { posts, storeMine } from "../../state"
 import { postSM, postEvent, postState } from "./main"
-import { applyMixins, extend } from "../../util"
-import PostView from "../view"
+import { extend } from "../../util"
 import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
-import { newAllocRequest, PostCredentials } from "./identity"
+import { newAllocRequest } from "./identity"
 import { write } from "../../render"
 
 // A message created while disconnected for later sending
 type BufferedMessage = [message, any]
 
-interface PostCreationRequest extends PostCredentials {
-	image?: FileData
-	body?: string
-}
-
 // Form Model of an OP post
-export class OPFormModel extends Post implements FormModel {
-	sentAllocRequest: boolean
-	bodyLength: number
-	parsedLines: number
-	view: FormView
-	inputState: TextState
-	messageBuffer: BufferedMessage[]
+export default class FormModel extends Post {
+	private sentAllocRequest: boolean
+	public isAllocated: boolean
 
-	abandon: () => void
-	addReference: (id: number) => void
-	commitChar: (char: string) => void
-	commitBackspace: () => void
-	commitClose: () => void
-	commitSplice: (val: string) => void
-	flushBuffer: () => void
-	init: () => void
-	lastBodyLine: () => string
-	parseInput: (val: string) => void
-	reformatInput: (val: string) => void
-	requestAlloc: (body: string | null, image: FileData | null) => void
-	send: (type: message, msg: any) => void
+	// Compound length of the input text body
+	private bodyLength: number
 
-	constructor(id: number) {
-		storeMine(id)
+	// Number of closed, committed and parsed lines
+	private parsedLines: number
 
-		const oldModel = posts.get(id),
-			oldView = oldModel.view
-		oldView.unbind()
-
-		// Copy the parent model's state and data
-		super(extractAttrs(oldModel) as ThreadData)
-
-		// Replace old model and view pair with the postForm pair
-		posts.add(this)
-		const view = new FormView(this, true)
-		oldView.el.replaceWith(view.el)
-
-		postSM.feed(postEvent.hijack, { view, model: this })
-		this.sentAllocRequest = true
-
-		this.init()
-	}
-}
-
-// Form model for regular reply posts
-export class ReplyFormModel extends Post implements FormModel {
-	isAllocated: boolean
-	sentAllocRequest: boolean
-	bodyLength: number
-	parsedLines: number
-	view: FormView
-	inputState: TextState
-	messageBuffer: BufferedMessage[]
-
-	abandon: () => void
-	addReference: (id: number) => void
-	commitChar: (char: string) => void
-	commitBackspace: () => void
-	commitClose: () => void
-	commitSplice: (val: string) => void
-	flushBuffer: () => void
-	init: () => void
-	lastBodyLine: () => string
-	parseInput: (val: string) => void
-	reformatInput: (val: string) => void
-	send: (type: message, msg: any) => void
-
-	constructor() {
-		super({
-			id: 0,
-			editing: true,
-			time: Date.now(),
-			body: "",
-			state: {
-				spoiler: false,
-				quote: false,
-				iDice: 0,
-			},
-		})
-
-		this.init()
-	}
-
-	// Request allocation of a draft post to the server
-	requestAlloc(body: string | null, image: FileData | null) {
-		this.sentAllocRequest = true
-		const req = newAllocRequest() as PostCreationRequest
-
-		if (body) {
-			req.body = body
-			this.body = body
-			this.bodyLength = body.length
-			this.inputState.line = body
-			this.reformatInput(body)
-		}
-
-		if (image) {
-			req.image = image
-		}
-
-		send(message.insertPost, req)
-		handlers[message.postID] = (id: number) => {
-			this.setID(id)
-			delete handlers[message.postID]
-		}
-	}
-
-	// Set post ID and add to the post collection
-	setID(id: number) {
-		this.id = id
-		postSM.feed(postEvent.alloc)
-		posts.add(this)
-	}
-
-	// Handle draft post allocation
-	onAllocation(data: PostData) {
-		// May sometimes be called multiple times, because of reconnects
-		if (this.isAllocated) {
-			return
-		}
-
-		this.isAllocated = true
-		extend(this, data)
-		this.view.renderAlloc()
-		storeMine(data.id)
-		if (data.image) {
-			this.insertImage(this.image)
-		}
-	}
-
-	// Upload the file and request its allocation
-	async uploadFile(file?: File) {
-		// Already have image
-		if (this.image) {
-			return
-		}
-
-		write(() =>
-			this.view.cancel.remove())
-
-		const data = await this.view.uploadFile(file)
-
-		// Upload failed or image added while thumbnailing
-		if (!data || this.image) {
-			return
-		}
-
-		if (!this.sentAllocRequest) {
-			this.requestAlloc(null, data)
-		} else {
-			send(message.insertImage, data)
-		}
-	}
-
-	// Insert the uploaded image into the model
-	insertImage(img: ImageData) {
-		this.image = img
-		this.view.insertImage()
-	}
-}
-
-// Override mixin for post authoring models
-export class FormModel {
-	sentAllocRequest: boolean
-	bodyLength: number        // Compound length of the input text body
-	parsedLines: number       // Number of closed, committed and parsed lines
-	body: string
-	view: PostView & FormView
-	state: TextState          // State of the underlying normal post model
+	public view: FormView
 
 	// State of line being edited. Must be separated to not affect the
 	// asynchronous updates of committed lines
-	inputState: TextState
+	public inputState: TextState
+
+	// State of the underlying normal post model
+	public state: TextState
 
 	// Buffer for messages committed during connection outage
-	messageBuffer: BufferedMessage[]
+	private messageBuffer: BufferedMessage[]
 
-	closePost: () => void
-	spliceLine: (line: string, msg: SpliceResponse) => string
-	resetState: () => void
-	requestAlloc: (body: string | null, image: FileData | null) => void
+	// Pass and ID, if you wish to hijack an existing model. To create a new
+	// model pass zero.
+	constructor(id: number) {
+		if (id !== 0) {
+			storeMine(id)
 
-	// Initialize state
-	init() {
+			const oldModel = posts.get(id),
+				oldView = oldModel.view
+			oldView.unbind()
+
+			// Copy the parent model's state and data
+			const attrs = {} as PostData
+			for (let key in oldModel) {
+				if (typeof oldModel[key] !== "function") {
+					attrs[key] = oldModel[key]
+				}
+			}
+			super(attrs)
+
+			// Replace old model and view pair with the postForm pair
+			posts.add(this)
+			const view = new FormView(this, true)
+			oldView.el.replaceWith(view.el)
+
+			postSM.feed(postEvent.hijack, { view, model: this })
+			this.sentAllocRequest = this.isAllocated = true
+		} else {
+			super({
+				id: 0,
+				editing: true,
+				time: Date.now(),
+				body: "",
+				state: {
+					spoiler: false,
+					quote: false,
+					iDice: 0,
+				},
+			})
+		}
+
+		// Initialize state
 		this.bodyLength = this.parsedLines = 0
 		this.inputState = {
 			quote: false,
@@ -218,7 +91,7 @@ export class FormModel {
 
 	// Append a character to the model's body and reparse the line, if it's a
 	// newline
-	append(code: number) {
+	public append(code: number) {
 		const char = String.fromCodePoint(code)
 		if (char === "\n") {
 			this.view.terminateLine(this.parsedLines++)
@@ -227,17 +100,17 @@ export class FormModel {
 	}
 
 	// Remove the last character from the model's body
-	backspace() {
+	public backspace() {
 		this.body = this.body.slice(0, -1)
 	}
 
 	// Splice the last line of the body
-	splice(msg: SpliceResponse) {
+	public splice(msg: SpliceResponse) {
 		this.spliceLine(this.lastBodyLine(), msg)
 	}
 
 	// Compare new value to old and generate appropriate commands
-	parseInput(val: string): void {
+	public parseInput(val: string): void {
 		const old = this.inputState.line
 
 		// Rendering hack shenanigans - ignore
@@ -270,7 +143,7 @@ export class FormModel {
 	}
 
 	// Commit a character appendage to the end of the line to the server
-	commitChar(char: string) {
+	private commitChar(char: string) {
 		this.bodyLength++
 		if (char === "\n") {
 			this.resetState()
@@ -283,7 +156,7 @@ export class FormModel {
 	}
 
 	// Optionally buffer all data, if currently disconnected
-	send(type: message, msg: any) {
+	private send(type: message, msg: any) {
 		if (postSM.state === postState.halted) {
 			this.messageBuffer.push([type, msg])
 		} else {
@@ -292,7 +165,7 @@ export class FormModel {
 	}
 
 	// Flush any buffered messages to the server
-	flushBuffer() {
+	public flushBuffer() {
 		for (let [type, msg] of this.messageBuffer) {
 			send(type, msg)
 		}
@@ -301,14 +174,14 @@ export class FormModel {
 
 	// Send a message about removing the last character of the line to the
 	// server
-	commitBackspace() {
+	private commitBackspace() {
 		this.inputState.line = this.inputState.line.slice(0, -1)
 		this.bodyLength--
 		this.send(message.backspace, null)
 	}
 
 	// Commit any other input change that is not an append or backspace
-	commitSplice(v: string, lenDiff: number) {
+	private commitSplice(v: string, lenDiff: number) {
 		// Convert to arrays of chars to deal with multibyte unicode chars
 		const old = Array.from(this.inputState.line),
 			val = Array.from(v)
@@ -342,7 +215,7 @@ export class FormModel {
 	}
 
 	// Reformat the text, if the input contains newlines
-	reformatInput(val: string) {
+	private reformatInput(val: string) {
 		if (val.indexOf("\n") === -1) {
 			return
 		}
@@ -353,7 +226,7 @@ export class FormModel {
 	}
 
 	// Close the form and revert to regular post
-	commitClose() {
+	public commitClose() {
 		// Normalize state
 		this.state.line = this.inputState.line
 		this.view.cleanUp()
@@ -362,20 +235,20 @@ export class FormModel {
 
 	// Turn post form into a regular post, because it has expired after a
 	// period of posting ability loss
-	abandon() {
+	public abandon() {
 		this.state.line = this.inputState.line
 		this.view.cleanUp()
 		this.closePost()
 	}
 
 	// Return the last line of the body
-	lastBodyLine(): string {
+	public lastBodyLine(): string {
 		const i = this.body.lastIndexOf("\n")
 		return this.body.slice(i + 1)
 	}
 
 	// Add a link to the target post in the input
-	addReference(id: number) {
+	public addReference(id: number) {
 		let s = ""
 		const {line} = this.inputState
 
@@ -389,18 +262,81 @@ export class FormModel {
 		s += `>>${id} `
 		this.view.replaceLine(this.inputState.line + s)
 	}
-}
 
-applyMixins(OPFormModel, FormModel)
-applyMixins(ReplyFormModel, FormModel)
+	// Request allocation of a draft post to the server
+	private requestAlloc(body: string | null, image: FileData | null) {
+		this.sentAllocRequest = true
+		const req = newAllocRequest()
 
-// Extract all non-function attributes from a model
-function extractAttrs(src: { [key: string]: any }): { [key: string]: any } {
-	const attrs: { [key: string]: any } = {}
-	for (let key in src) {
-		if (typeof src[key] !== "function") {
-			attrs[key] = src[key]
+		if (body) {
+			req["body"] = body
+			this.body = body
+			this.bodyLength = body.length
+			this.inputState.line = body
+			this.reformatInput(body)
+		}
+
+		if (image) {
+			req["image"] = image
+		}
+
+		send(message.insertPost, req)
+		handlers[message.postID] = (id: number) => {
+			this.setID(id)
+			delete handlers[message.postID]
 		}
 	}
-	return attrs
+
+	// Set post ID and add to the post collection
+	private setID(id: number) {
+		this.id = id
+		postSM.feed(postEvent.alloc)
+		posts.add(this)
+	}
+
+	// Handle draft post allocation
+	public onAllocation(data: PostData) {
+		// May sometimes be called multiple times, because of reconnects
+		if (this.isAllocated) {
+			return
+		}
+
+		this.isAllocated = true
+		extend(this, data)
+		this.view.renderAlloc()
+		storeMine(data.id)
+		if (data.image) {
+			this.insertImage(this.image)
+		}
+	}
+
+	// Upload the file and request its allocation
+	public async uploadFile(file?: File) {
+		// Already have image
+		if (this.image) {
+			return
+		}
+
+		write(() =>
+			this.view.cancel.remove())
+
+		const data = await this.view.upload.uploadFile(file)
+
+		// Upload failed or image added while thumbnailing
+		if (!data || this.image) {
+			return
+		}
+
+		if (!this.sentAllocRequest) {
+			this.requestAlloc(null, data)
+		} else {
+			send(message.insertImage, data)
+		}
+	}
+
+	// Insert the uploaded image into the model
+	public insertImage(img: ImageData) {
+		this.image = img
+		this.view.insertImage()
+	}
 }
