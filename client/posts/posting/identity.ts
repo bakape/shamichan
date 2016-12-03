@@ -20,8 +20,7 @@ export interface PostCredentials {
 }
 
 // Values of the name and tripcode fields
-const identity = emitChanges({} as Identity)
-export default identity
+let identity = {} as Identity
 
 // Load from localStorage or initialize
 identity.name = localStorage.getItem("name") || ""
@@ -31,6 +30,7 @@ if (!stored) {
 	localStorage.setItem("postPassword", stored)
 }
 identity.postPassword = stored
+export default identity = emitChanges(identity)
 
 // Poster identity input panel
 class IdentityPanel extends BannerModal {

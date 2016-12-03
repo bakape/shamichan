@@ -98,7 +98,7 @@ function toggleOPBackground(on: boolean) {
 
 // Render a custom user-set background apply blurred glass to elements, if
 // needed.
-async function renderBackground(bg?: BackgroundStore) {
+async function renderBackground(bg?: BackgroundStore): Promise<void> {
 	if (!bg) {
 		bg = await getObj<BackgroundStore>("main", "background")
 		if (!bg.normal || !bg.blurred) {

@@ -1,5 +1,5 @@
 import { fetchBoard, fetchThread } from "../fetch"
-import { PageState, posts, boardConfig } from '../state'
+import { PageState, posts, setBoardConfig } from '../state'
 import renderThread from './thread'
 import { renderFresh as renderBoard } from './board'
 import { makeFrag } from "../util"
@@ -39,13 +39,13 @@ export default async function (
 // Find board configurations in the HTML and apply them
 export function extractConfigs(ns: NodeSelector) {
 	const conf = ns.querySelector("#board-configs").textContent
-	boardConfig.replaceWith(JSON.parse(conf))
+	setBoardConfig(JSON.parse(conf))
 }
 
 export function maybeWriteNow(writeNow: boolean, fn: () => void) {
-    if (writeNow) {
-        fn()
-    } else {
-        write(fn)
-    }
+	if (writeNow) {
+		fn()
+	} else {
+		write(fn)
+	}
 }

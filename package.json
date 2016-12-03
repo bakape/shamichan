@@ -6,6 +6,8 @@
     "url": "https://github.com/bakape/meguca.git"
   },
   "dependencies": {
+    "babel-polyfill": "^6.16.0",
+    "babel-preset-latest": "^6.16.0",
     "core-js": "^2.4.1",
     "dom4": "^1.8.3",
     "fs-extra": "^1.0.0",
@@ -20,6 +22,7 @@
     "gulp-typescript": "^3.0.2",
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.4",
+    "proxy-polyfill": "^0.1.6",
     "systemjs": "^0.19.9",
     "typescript": "^2.0.0",
     "whatwg-fetch": "^2.0.1"

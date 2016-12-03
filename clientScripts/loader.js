@@ -1,4 +1,4 @@
-// Selects and loads the client files and polyfills, if any
+// Selects and loads the client files and polyfills, if any. Use only ES5.
 
 (function () {
 	// Check if the client is an automated crawler
@@ -27,8 +27,7 @@
 		localStorage.setItem("termsAccepted", "true")
 	}
 
-	// Tests that can not be compensated by polyfills
-	var strictTests = [
+	var es6Tests = [
 		// Arrow functions
 		'return (()=>5)()===5;',
 
@@ -84,22 +83,14 @@
 		+ 'return passed;'
 	]
 
-	var legacy,
-		scriptCount = 0,
+	var scriptCount = 0,
 		polyfills = []
-	var kys = "Please consider installing the latest stable version of "
-		+ "one these alternatives: "
-		+ "Google Chrome, Chromium, Mozilla Firefox, Opera, "
-		+ "Microsoft Edge or Safari."
-	var kysMobile = "Please install the latest version of Chrome for Android or"
-		+ "upgrade your iOS or Windows Mobile operating system."
 
-	for (var i = 0; i < strictTests.length; i++) {
-		if (!check(strictTests[i])) {
-			var text = "Your browser is too outdated. "
-				+ (isMobile ? kysMobile : kys)
-			alert(text)
-			return
+	for (var i = 0; i < es6Tests.length; i++) {
+		if (!check(es6Tests[i])) {
+			window.legacy = true
+			polyfills.push("vendor/polyfill.min")
+			break
 		}
 	}
 
@@ -111,28 +102,26 @@
 	var DOMMethods = [
 		// DOM level 4 methods
 		'Element.prototype.remove',
+		'Element.prototype.contains',
+		'Element.prototype.matches',
 
-		// DOM 3 query methods
+		// DOM level 3 query methods
 		'Element.prototype.querySelector',
 		'Element.prototype.querySelectorAll'
 	]
 	var DOMUpToDate = true
 	for (var i = 0; i < DOMMethods.length; i++) {
 		if (!checkFunction(DOMMethods[i])) {
-			polyfills.push('vendor/dom4')
 			DOMUpToDate = false
 			break
 		}
 	}
 
-	// Iterable NodeList
-	if (!checkFunction('NodeList.prototype[Symbol.iterator]')) {
-		NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator]
-	}
-
-	// Minimalistic DOM polyfill for modern browsers
-	if (DOMUpToDate) {
+	if (DOMUpToDate && !window.legacy) {
+		// Minimalistic DOM polyfill for modern browsers
 		polyfills.push('scripts/polyfill')
+	} else {
+		polyfills.push('vendor/dom4')
 	}
 
 	// Stdlib functions and methods
@@ -140,7 +129,7 @@
 		"Set",
 		"Map",
 		'Promise',
-		'Proxy',
+		"Symbol",
 		"Array.from",
 		'Array.prototype.includes',
 		"String.prototype.includes",
@@ -151,6 +140,10 @@
 			polyfills.push("vendor/core.min")
 			break
 		}
+	}
+
+	if (!checkFunction("Proxy")) {
+		polyfills.push("vendor/proxy.min")
 	}
 
 	var head = document.getElementsByTagName('head')[0]
@@ -210,24 +203,30 @@
 	}
 
 	function loadClient() {
+		var meta = {}
+		meta["es5/*"] = meta["es6/*"] = { format: "register" }
 		System.config({
 			baseURL: '/assets/js',
 			defaultJSExtensions: true,
-			meta: {
-				"es6/*": {
-					format: "register"
-				}
-			}
+			meta: meta
 		})
 
-		System.import('es6/main').catch(function (err) {
+		// Iterable NodeList
+		if (!checkFunction('NodeList.prototype[Symbol.iterator]')) {
+			NodeList.prototype[Symbol.iterator] =
+				Array.prototype[Symbol.iterator]
+		}
+
+		var base = window.legacy ? "es5/" : "es6/"
+
+		System.import(base + 'main').catch(function (err) {
 			alert(err)
 			throw err
 		})
 
 		// Web Crypto API polyfill
 		if (!checkFunction("window.crypto.subtle.digest")) {
-			System.import("es6/sha1")
+			System.import(base + "sha1")
 		}
 
 		if ('serviceWorker' in navigator) {

@@ -38,7 +38,12 @@ interface Options extends ChangeEmitter {
 }
 
 // Central options storage model
-let options: Options
+let options = {} as Options
+// Need to define all properties ahead of time for the ES5 Proxy polyfill to
+// work
+for (let k in specs) {
+	options[k] = undefined
+}
 export default options = emitChanges({} as Options)
 
 // All loaded option models

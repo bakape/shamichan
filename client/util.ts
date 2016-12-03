@@ -242,7 +242,7 @@ export function load(loader: Loader): Promise<Event> {
 
 // Dynamically lead a System module
 export function loadModule(path: string): Promise<any> {
-	return System.import(`es6/${path}`)
+	return System.import(`${(window as any).legacy ? "es5" : "es6"}/${path}`)
 }
 
 const escapeMap: { [key: string]: string } = {

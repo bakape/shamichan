@@ -2,7 +2,8 @@
 
 'use strict'
 
-const cache = require('gulp-cached'),
+const babel = require("gulp-babel"),
+	cache = require('gulp-cached'),
 	fs = require('fs-extra'),
 	gulp = require('gulp'),
 	gutil = require('gulp-util'),
@@ -23,12 +24,9 @@ const watch = gutil.env.w
 // Dependency tasks for the default tasks
 const tasks = []
 
-const tsProject = ts.createProject('client/tsconfig.json', {
-	typescript: require("typescript"),
-})
-
 // Client JS files
-buildClient()
+buildES6()
+buildES5()
 
 // Various little scripts
 createTask('scripts', 'clientScripts/*.js', src =>
@@ -76,7 +74,9 @@ gulp.task('vendor', () => {
 		'systemjs/dist/system-polyfills.js.map',
 		'dom4/build/dom4.js',
 		'core-js/client/core.min.js',
-		'core-js/client/core.min.js.map'
+		'core-js/client/core.min.js.map',
+		"babel-polyfill/dist/polyfill.min.js",
+		"proxy-polyfill/proxy.min.js"
 	]
 	for (let path of paths) {
 		const split = path.split('/'),
@@ -97,22 +97,41 @@ compileVendor('fetch', 'node_modules/whatwg-fetch/fetch.js')
 gulp.task('default', tasks)
 
 // Builds the client files of the appropriate ECMAScript version
-function buildClient() {
-	const name = 'client',
-		path = 'client/**/*.ts'
+function buildES6() {
+	const name = 'es6'
 	tasks.push(name)
 	gulp.task(name, () =>
-		gulp.src(path)
-			.pipe(sourcemaps.init())
-			.pipe(tsProject())
-			.on('error', handleError)
+		buildClient()
 			.pipe(sourcemaps.write('maps'))
 			.pipe(gulp.dest('www/js/es6')))
 
 	// Recompile on source update, if running with the `-w` flag
 	if (watch) {
-		gulp.watch(path, [name])
+		gulp.watch('client/**/*.ts', [name])
 	}
+}
+
+// Build legacy ES5 client for old browsers
+function buildES5() {
+	const name = "es5"
+	tasks.push(name)
+	gulp.task(name, () =>
+		buildClient()
+			.pipe(babel({
+				presets: ['latest'],
+			}))
+			.pipe(uglify())
+			.pipe(sourcemaps.write('maps'))
+			.pipe(gulp.dest('www/js/es5')))
+}
+
+function buildClient() {
+	return gulp.src('client/**/*.ts')
+		.pipe(sourcemaps.init())
+		.pipe(ts.createProject('client/tsconfig.json', {
+			typescript: require("typescript"),
+		})())
+		.on('error', handleError)
 }
 
 // Simply log the error on continuos builds, but fail the build and exit with

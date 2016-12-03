@@ -1,5 +1,3 @@
-// Utility functions and classes for rendering forms
-
 import { extend } from './util'
 import View, { ViewAttrs } from './view'
 import { write, importTemplate } from './render'

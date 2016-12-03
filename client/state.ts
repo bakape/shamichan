@@ -9,7 +9,7 @@ import { write } from './render'
 import { send } from './connection'
 
 // Server-wide global configurations
-interface Configs extends ChangeEmitter {
+interface Configs {
 	captcha: boolean
 	mature: boolean // Website intended for mature audiences
 	defaultLang: string
@@ -20,7 +20,7 @@ interface Configs extends ChangeEmitter {
 }
 
 // Board-specific configurations
-export interface BoardConfigs extends ChangeEmitter {
+export interface BoardConfigs {
 	readOnly: boolean
 	textOnly: boolean
 	forcedAnon: boolean
@@ -52,7 +52,7 @@ export const config: Configs = (window as any).config
 // Currently existing boards
 export let boards: string[] = (window as any).boards
 
-export let boardConfig: BoardConfigs = emitChanges({} as BoardConfigs)
+export let boardConfig: BoardConfigs
 
 // Load initial page state
 export const page = emitChanges<PageState>(read(location.href))
@@ -113,6 +113,10 @@ export function storeSeenReply(id: number) {
 export function storeHidden(id: number) {
 	hidden.add(id)
 	storeID("hidden", id, thirtyDays)
+}
+
+export function setBoardConfig(c: BoardConfigs) {
+	boardConfig = c
 }
 
 // Retrieve model of closest parent post
