@@ -1,5 +1,3 @@
-// View classes for post authoring
-
 import PostView from "../view"
 import FormModel from "./model"
 import { Post } from "../models"
@@ -7,7 +5,7 @@ import { boardConfig } from "../../state"
 import { setAttrs, makeFrag } from "../../util"
 import { parseTerminatedLine } from "../render/body"
 import { renderHeader, renderName } from "../render/posts"
-import { write } from "../../render"
+import { write, importTemplate } from "../../render"
 import { threadContainer } from "../../page/thread"
 import { postSM, postEvent } from "./main"
 import UploadForm from "./upload"
@@ -22,9 +20,9 @@ let bottomSpacer: HTMLElement
 export default class FormView extends PostView {
     public model: FormModel
     private inputLock: boolean
-    private input: HTMLSpanElement
-    private done: HTMLInputElement
-    public cancel: HTMLInputElement
+    private input: HTMLElement
+    private done: HTMLElement
+    public cancel: HTMLElement
     private observer: MutationObserver
     private postControls: Element
     private previousHeight: number
@@ -59,37 +57,30 @@ export default class FormView extends PostView {
         this.input.addEventListener("keydown", (event: KeyboardEvent) =>
             this.onKeyDown(event))
 
-        this.postControls = document.createElement("div")
-        this.postControls.id = "post-controls"
-        this.postControls
-            .append(isOP ? this.renderDone() : this.renderDraft())
+        this.postControls = importTemplate("post-controls").firstElementChild
+        this.el.querySelector(".post-container").append(this.postControls)
+
+        this.done = this.el.querySelector("input[name=done]")
+        this.done.addEventListener("click", postSM.feeder(postEvent.done))
+        this.cancel = this.el.querySelector("input[name=cancel]")
+        this.cancel.addEventListener("click", postSM.feeder(postEvent.done))
+
+        if (isOP) {
+            this.showDone()
+        } else {
+            if (!boardConfig.textOnly) {
+                this.upload = new UploadForm(this.model, this.el)
+                this.upload.input.addEventListener("change", () =>
+                    this.model.uploadFile())
+            }
+            this.renderIdentity()
+        }
 
         write(() => {
             this.blockquote.innerHTML = ""
             this.blockquote.append(this.input)
-            this.el.querySelector(".post-container").append(this.postControls)
             this.input.focus()
         })
-    }
-
-    // Additional controls and header contents for unallocated draft forms
-    private renderDraft(): DocumentFragment {
-        const frag = document.createDocumentFragment()
-        const cancel = this.createButton(
-            "cancel",
-            postSM.feeder(postEvent.done),
-        )
-        frag.append(cancel)
-
-        if (!boardConfig.textOnly) {
-            this.upload = new UploadForm(this.model, this.el)
-            this.upload.input.addEventListener("change", () =>
-                this.model.uploadFile())
-        }
-
-        this.renderIdentity()
-
-        return frag
     }
 
     // Render a temporary view of the identity fields, so the user can see what
@@ -109,21 +100,10 @@ export default class FormView extends PostView {
         })
     }
 
-    // Button for closing allocated posts
-    private renderDone(): HTMLInputElement {
-        return this.createButton("done", postSM.feeder(postEvent.done))
-    }
-
-    // Create a clickable button element
-    private createButton(name: string, clickHandler: () => void): HTMLInputElement {
-        const el = document.createElement("input")
-        setAttrs(el, {
-            name,
-            type: "button",
-            value: "TODO",
-        })
-        el.addEventListener("click", clickHandler)
-        return this[name] = el
+    // Show button for closing allocated posts
+    private showDone() {
+        this.cancel.hidden = true
+        this.done.hidden = false
     }
 
     // Initialize extra elements for a draft unallocated post
@@ -153,11 +133,6 @@ export default class FormView extends PostView {
     private resizeSpacer() {
         // Not a reply
         if (!bottomSpacer) {
-            return
-        }
-
-        // Avoid spacer being seen, if thread is too short to fill the viewport
-        if (threadContainer.offsetHeight < window.innerHeight) {
             return
         }
 
@@ -306,8 +281,7 @@ export default class FormView extends PostView {
             this.el.id = this.id as string
             header.classList.remove("temporary")
             renderHeader(header, this.model)
-            this.cancel.remove()
-            this.postControls.prepend(this.renderDone())
+            this.showDone()
         })
     }
 

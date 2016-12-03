@@ -1,6 +1,3 @@
-// Logic for manipulating the views and FSM of post authoring and communicated
-// the results to the server
-
 import { message, send, handlers } from "../../connection"
 import { Post, TextState, ImageData, PostData } from "../models"
 import FormView from "./view"

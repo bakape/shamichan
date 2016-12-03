@@ -22,6 +22,7 @@ export default class UploadForm extends View<Post> {
 
     constructor(model: Post, parent: HTMLElement) {
         const el = parent.querySelector(".upload-container")
+        el.hidden = false
         super({ el, model })
         this.spoiler = el.querySelector(`span[data-id="spoiler"]`)
         this.status = el.querySelector(".upload-status")
