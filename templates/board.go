@@ -27,7 +27,6 @@ func Board(
 	v := struct {
 		IsAll, ImagesAllowed, Captcha            bool
 		Banner, Notice, Rules, Title, CaptchaKey string
-		SortModes                                []string
 		Threads                                  common.BoardThreads
 		Boards                                   config.BoardTitles
 		Lang                                     lang.Pack
