@@ -20,28 +20,24 @@ type htmlWriter struct {
 // Allows passing additional information to thread-related templates
 type postContext struct {
 	common.Post
-	OP                   uint64
-	Omit, ImageOmit      int
-	Board, Subject, Root string
-	Lang                 lang.Common
+	OP              uint64
+	Omit, ImageOmit int
+	Subject, Root   string
 }
 
 func wrapPost(
 	p common.Post,
 	op uint64,
 	omit, imageOmit int,
-	board, subject, root string,
-	lang lang.Common,
+	subject, root string,
 ) postContext {
 	return postContext{
 		Post:      p,
 		OP:        op,
 		Omit:      omit,
 		ImageOmit: imageOmit,
-		Board:     board,
 		Subject:   subject,
 		Root:      root,
-		Lang:      lang,
 	}
 }
 
@@ -107,12 +103,14 @@ func extension(fileType uint8) template.HTML {
 }
 
 // Renders the post creation time field
-func formatTime(sec int64, lang map[string][]string) template.HTML {
+func formatTime(sec int64) template.HTML {
+	ln := lang.Packs["en_GB"].Common.Time
+
 	t := time.Unix(sec, 0)
 	year, m, day := t.Date()
-	weekday := lang["week"][int(t.Weekday())]
+	weekday := ln["week"][int(t.Weekday())]
 	// Months are 1-indexed for some fucking reason
-	month := lang["calendar"][int(m)-1]
+	month := ln["calendar"][int(m)-1]
 
 	// Premature optimization
 	buf := make([]byte, 0, 17+len(weekday)+len(month))
@@ -171,7 +169,7 @@ func readableFileSize(s int) template.HTML {
 // Render a link to another post. Can optionally be cross-thread.
 func renderPostLink(
 	id, op uint64,
-	board, OPLang string,
+	board string,
 	cross bool,
 ) template.HTML {
 	var w htmlWriter
@@ -201,10 +199,6 @@ func renderPostLink(
 		w.WriteByte('/')
 	}
 	w.WriteString(idStr)
-	if id == op { // OP of this thread
-		w.WriteByte(' ')
-		w.WriteString(OPLang)
-	}
 
 	w.WriteString("</a>")
 

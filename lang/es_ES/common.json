@@ -1,6 +1,5 @@
 {
 	"posts": {
-		"OP": "(OP)",
 		"ago": "ago",
 		"and": "and",
 		"anon": "Anónimo",
@@ -12,6 +11,7 @@
 		"locked": "Cerrado",
 		"omitted": "omitted",
 		"seeAll": "Mostrar todos",
+		"spoiler": "Spoiler",
 		"show": "Mostrar",
 		"you": "(Tu)"
 	},

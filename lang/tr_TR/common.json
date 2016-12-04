@@ -1,6 +1,5 @@
 {
 	"posts": {
-		"OP": "(OP)",
 		"ago": "ago",
 		"and": "and",
 		"anon": "Anon",
@@ -12,6 +11,7 @@
 		"locked": "kilitli",
 		"omitted": "omitted",
 		"seeAll": "Hepsini göster",
+		"spoiler": "Spoiler",
 		"show": "Göster",
 		"you": "(Sen)"
 	},

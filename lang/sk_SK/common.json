@@ -1,6 +1,5 @@
 {
 	"posts": {
-		"OP": "(PP)",
 		"ago": "pred",
 		"and": "a",
 		"anon": "Janonymous",
@@ -12,6 +11,7 @@
 		"locked": "zamknuté",
 		"omitted": "vynechané",
 		"seeAll": "Zobraziť všetky",
+		"spoiler": "Spoiler",
 		"show": "Zobraziť",
 		"you": "(Ty)"
 	},

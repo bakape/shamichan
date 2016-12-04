@@ -165,7 +165,6 @@ func (c *bodyContext) parsePostLink(m [][]byte) {
 		id,
 		verified.OP,
 		verified.Board,
-		c.Lang.Posts["OP"],
 		verified.OP != c.OP,
 	)
 	c.WriteString(string(html))

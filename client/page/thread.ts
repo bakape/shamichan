@@ -14,7 +14,7 @@ export let threadContainer: HTMLElement
 
 // Render the HTML of a thread page. writeNow specifies, if the write to the DOM
 // fragment should not be delayed.
-export default function (frag: DocumentFragment, writeNow: boolean) {
+export default function(frag: DocumentFragment, writeNow: boolean) {
     updateSyncTimestamp()
 
     threadContainer = frag.querySelector("#thread-container")
@@ -33,6 +33,7 @@ export default function (frag: DocumentFragment, writeNow: boolean) {
     postCollection.lowestID = posts.length ? posts[0].id : data.id
 
     localizeOmitted(frag, writeNow)
+    localizeAnonymous(frag, writeNow)
 
     for (let post of posts) {
         extractPost(post, frag, writeNow)
@@ -141,5 +142,25 @@ function localizeOmitted(frag: DocumentFragment, writeNow: boolean) {
     maybeWriteNow(writeNow, () => {
         el.firstChild.replaceWith(text)
         el.querySelector("a.history").textContent = lang.posts["seeAll"]
+    })
+}
+
+// Localize posts without a poster name or tripcode
+function localizeAnonymous(frag: DocumentFragment, writeNow: boolean) {
+    // Server renders in en_GB
+    if (options.lang === "en_GB") {
+        return
+    }
+
+    const toMod: Element[] = []
+    for (let el of frag.querySelectorAll(".name")) {
+        if (el.textContent === "Anonymous") {
+            toMod.push(el)
+        }
+    }
+    maybeWriteNow(writeNow, () => {
+        for (let el of toMod) {
+            el.textContent = lang.posts["anon"]
+        }
     })
 }

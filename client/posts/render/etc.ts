@@ -19,9 +19,6 @@ export function renderPostLink(num: number, board: string, op: number): string {
     }
     html += num
 
-    if (num === op) { // OP of this thread
-        html += " " + lang.posts["OP"]
-    }
     if (mine.has(num)) { // Post, I made
         html += ' ' + lang.posts["you"]
     }
