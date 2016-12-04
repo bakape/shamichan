@@ -110,8 +110,9 @@ func Parse() error {
 			"board",
 			[]string{"captcha", "hover-reveal"},
 			template.FuncMap{
-				"thumbPath": thumbPath,
-				"bundle":    bundle,
+				"thumbPath":   thumbPath,
+				"bundle":      bundle,
+				"renderInput": renderInput,
 			},
 		},
 		{

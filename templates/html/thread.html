@@ -2,7 +2,6 @@
 	{{.Title}}
 </h1>
 <span class="aside-container">
-	TODO: Post form &nbsp;
 	<span class="act" id="top">
 		<a href="#bottom">
 			{{index .Lang.UI "bottom"}}
@@ -14,6 +13,9 @@
 		</a>
 	</span>
 </span>
+<noscript>
+	TODO: Noscript post creation
+</noscript>
 <hr>
 <div id="thread-container">
 	{{template "article" (wrapPost .Thread.Post .Thread.ID .Omit .ImageOmit .Thread.Board .Thread.Subject .Root .Lang.Common)}}

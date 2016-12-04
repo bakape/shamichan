@@ -26,6 +26,12 @@
 			{{end}}
 			<input name="subject" placeholder="{{index .Lang.UI "subject"}}" required type="text" maxlength="100">
 			<br>
+			<noscript>
+				{{range .NoscriptPostCreation}}
+					{{renderInput . $.Lang}}
+					<br>
+				{{end}}
+			</noscript>
 			{{if or .IsAll .ImagesAllowed}}
 				<span class="upload-container">
 					<span data-id="spoiler">
@@ -61,6 +67,9 @@
 		</select>
 	</span>
 </span>
+<noscript>
+	TODO: Noscript thread creation
+</noscript>
 <hr>
 <div id="catalog">
 	{{range .Threads}}

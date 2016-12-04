@@ -32,17 +32,19 @@ func Board(
 		Boards                                   config.BoardTitles
 		Lang                                     lang.Pack
 		ConfigJSON                               template.JS
+		NoscriptPostCreation                     []inputSpec
 	}{
-		IsAll:         b == "all",
-		ImagesAllowed: !boardConf.TextOnly,
-		Notice:        boardConf.Notice,
-		Rules:         boardConf.Rules,
-		Title:         title,
-		Threads:       data.Threads,
-		Lang:          ln,
-		Captcha:       conf.Captcha,
-		CaptchaKey:    conf.CaptchaPublicKey,
-		ConfigJSON:    template.JS(boardConf.JSON),
+		IsAll:                b == "all",
+		ImagesAllowed:        !boardConf.TextOnly,
+		Notice:               boardConf.Notice,
+		Rules:                boardConf.Rules,
+		Title:                title,
+		Threads:              data.Threads,
+		Lang:                 ln,
+		Captcha:              conf.Captcha,
+		CaptchaKey:           conf.CaptchaPublicKey,
+		ConfigJSON:           template.JS(boardConf.JSON),
+		NoscriptPostCreation: specs["noscriptPostCreation"],
 	}
 	if len(boardConf.Banners) != 0 {
 		v.Banner = boardConf.Banners[rand.Intn(len(boardConf.Banners))]

@@ -33,6 +33,27 @@ var specs = map[string][]inputSpec{
 			Required:  true,
 		},
 	},
+	"noscriptPostCreation": {
+		{
+			ID:          "name",
+			Type:        _string,
+			MaxLength:   common.MaxLenName,
+			Placeholder: true,
+		},
+		{
+			ID:        "body",
+			Type:      _textarea,
+			Rows:      5,
+			MaxLength: common.MaxLenBody,
+		},
+		{
+			ID:          "postPassword",
+			Type:        _password,
+			MaxLength:   common.MaxLenPassword,
+			Required:    true,
+			Placeholder: true,
+		},
+	},
 	"login": {
 		{
 			ID:        "id",
