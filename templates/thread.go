@@ -2,9 +2,8 @@ package templates
 
 import (
 	"bytes"
-	"fmt"
-
 	"encoding/json"
+	"fmt"
 	"html/template"
 
 	"github.com/bakape/meguca/common"

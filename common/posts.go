@@ -64,30 +64,30 @@ type BoardThreads []struct {
 	Locked      bool   `json:"locked,omitempty" gorethink:"locked"`
 	Archived    bool   `json:"archived,omitempty" gorethink:"archived"`
 	Sticky      bool   `json:"sticky,omitempty" gorethink:"sticky"`
-	PostCtr     int16  `json:"postCtr" gorethink:"postCtr"`
-	ImageCtr    int16  `json:"imageCtr" gorethink:"imageCtr"`
-	ID          int64  `json:"id" gorethink:"id"`
+	PostCtr     uint32 `json:"postCtr" gorethink:"postCtr"`
+	ImageCtr    uint32 `json:"imageCtr" gorethink:"imageCtr"`
+	ID          uint64 `json:"id" gorethink:"id"`
 	Time        int64  `json:"time" gorethink:"time"`
 	LastUpdated int64  `json:"lastUpdated" gorethink:"lastUpdated"`
+	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
 	Name        string `json:"name,omitempty" gorethink:"name,omitempty"`
 	Trip        string `json:"trip,omitempty" gorethink:"trip,omitempty"`
 	Auth        string `json:"auth,omitempty" gorethink:"auth,omitempty"`
-	Image       *Image `json:"image,omitempty" gorethink:"image,omitempty"`
-	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
 	Board       string `json:"board" gorethink:"board"`
 	Subject     string `json:"subject" gorethink:"subject"`
+	Image       *Image `json:"image,omitempty" gorethink:"image,omitempty"`
 }
 
 // Thread is a transport/export wrapper that stores both the thread metadata,
 // its opening post data and its contained posts. The composite type itself is
 // not stored in the database.
 type Thread struct {
-	Locked   bool   `json:"locked,omitempty" gorethink:"locked"`
-	Archived bool   `json:"archived,omitempty" gorethink:"archived"`
-	Sticky   bool   `json:"sticky,omitempty" gorethink:"sticky"`
-	PostCtr  uint32 `json:"postCtr" gorethink:"postCtr"`
-	ImageCtr uint32 `json:"imageCtr" gorethink:"imageCtr"`
+	Locked   bool `json:"locked,omitempty" gorethink:"locked"`
+	Archived bool `json:"archived,omitempty" gorethink:"archived"`
+	Sticky   bool `json:"sticky,omitempty" gorethink:"sticky"`
 	Post
+	PostCtr     uint32 `json:"postCtr" gorethink:"postCtr"`
+	ImageCtr    uint32 `json:"imageCtr" gorethink:"imageCtr"`
 	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
 	LastUpdated int64  `json:"lastUpdated" gorethink:"lastUpdated"`
 	Subject     string `json:"subject" gorethink:"subject"`
@@ -134,10 +134,10 @@ type StandalonePost struct {
 // Password fields, which are never exposed publically through Post.
 type DatabasePost struct {
 	StandalonePost
+	LastUpdated int64    `json:"lastUpdated" gorethink:"lastUpdated"`
 	IP          string   `gorethink:"ip"`
 	Password    []byte   `gorethink:"password"`
 	Log         [][]byte `gorethink:"log"`
-	LastUpdated int64    `json:"lastUpdated" gorethink:"lastUpdated"`
 }
 
 // LinkMap contains a map of post numbers, this tread is linking, to
