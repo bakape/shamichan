@@ -42,7 +42,6 @@ var (
 		"wrapPost":         wrapPost,
 		"renderPostLink":   renderPostLink,
 		"renderBody":       renderBody,
-		"pluralize":        pluralize,
 	}
 
 	isTest bool

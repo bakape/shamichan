@@ -7,13 +7,14 @@ import lang from "../lang"
 import { updateSyncTimestamp } from "../connection"
 import notifyAboutReply from "../notification"
 import { maybeWriteNow } from "./common"
+import { pluralize } from "../util"
 
 // Container for all rendered posts
 export let threadContainer: HTMLElement
 
 // Render the HTML of a thread page. writeNow specifies, if the write to the DOM
 // fragment should not be delayed.
-export default function(frag: DocumentFragment, writeNow: boolean) {
+export default function (frag: DocumentFragment, writeNow: boolean) {
     updateSyncTimestamp()
 
     threadContainer = frag.querySelector("#thread-container")
@@ -30,6 +31,8 @@ export default function(frag: DocumentFragment, writeNow: boolean) {
 
     extractPost(data, frag, writeNow)
     postCollection.lowestID = posts.length ? posts[0].id : data.id
+
+    localizeOmitted(frag, writeNow)
 
     for (let post of posts) {
         extractPost(post, frag, writeNow)
@@ -85,7 +88,7 @@ function formatPost(view: PostView) {
             options.hideThumbs
             || options.workModeToggle
             || (image.spoiler && !options.spoilers)
-			|| (image.fileType === fileTypes.gif && options.autogif)
+            || (image.fileType === fileTypes.gif && options.autogif)
         if (should) {
             view.renderImage(false, false)
         }
@@ -113,4 +116,30 @@ function addYou(view: PostView) {
             }
         }
     }
+}
+
+// Localize omitted post and image span
+function localizeOmitted(frag: DocumentFragment, writeNow: boolean) {
+    // Server renders in en_GB
+    if (options.lang === "en_GB") {
+        return
+    }
+    const el = frag.querySelector(".omit")
+    if (!el) {
+        return
+    }
+
+    const posts = parseInt(el.getAttribute("data-omit")),
+        images = parseInt(el.getAttribute("data-image-omit"))
+    let text = pluralize(posts, lang.plurals["post"])
+    if (images) {
+        text += ` ${lang.posts["and"]} `
+            + pluralize(images, lang.plurals["image"])
+    }
+    text += ` ${lang.posts["omitted"]} `
+
+    maybeWriteNow(writeNow, () => {
+        el.firstChild.replaceWith(text)
+        el.querySelector("a.history").textContent = lang.posts["seeAll"]
+    })
 }

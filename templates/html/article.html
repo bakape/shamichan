@@ -103,15 +103,15 @@
 		</blockquote>
 	</div>
 	{{if .Omit}}
-		<span class="omit">
-			{{pluralize .Omit (index .Lang.Plurals "post")}}
+		<span class="omit" data-omit="{{.Omit}}" data-image-omit="{{.ImageOmit}}">
+			{{.Omit}} post{{if gt .Omit 1}}s{{end}}
 			{{if .ImageOmit}}
-				 {{index .Lang.Posts "and"}} {{pluralize .ImageOmit (index .Lang.Plurals "image")}}
+				 and {{.ImageOmit}} image{{if gt .ImageOmit 1}}s{{end}}
 			{{end}}
-			&nbsp;{{index .Lang.Posts "omitted"}}&nbsp;
+			 omitted&nbsp;
 			<span class="act">
 				<a href="{{.OP}}" class="history">
-					{{index .Lang.Posts "seeAll"}}
+					See All
 				</a>
 			</span>
 		</span>

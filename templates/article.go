@@ -148,23 +148,6 @@ func readableLength(l uint32) template.HTML {
 	return template.HTML(fmt.Sprintf("%02d:%02d", min, l-min))
 }
 
-// Return the singular or plural of a localized countable
-func pluralize(n int, lang [2]string) template.HTML {
-	num := strconv.Itoa(n)
-	var word string
-	if n == 1 {
-		word = lang[0]
-	} else {
-		word = lang[1]
-	}
-
-	l := len(num) + 1
-	buf := make([]byte, l, l+len(word))
-	copy(buf, num)
-	buf[l-1] = ' '
-	return template.HTML(append(buf, word...))
-}
-
 // Formats a human-readable representation of file size
 func readableFileSize(s int) template.HTML {
 	format := func(n, end string) template.HTML {
