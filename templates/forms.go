@@ -21,14 +21,6 @@ type formSpecs struct {
 	Lang  lang.Pack
 }
 
-// BoardNavigation renders a board selection and search form
-func BoardNavigation(ln lang.Pack) ([]byte, error) {
-	return exec("boardNavigation", boardList{
-		Boards: config.GetBoardTitles(),
-		Lang:   ln,
-	})
-}
-
 // Execute a template by id with the provided variables
 func exec(id string, vars interface{}) ([]byte, error) {
 	var w bytes.Buffer

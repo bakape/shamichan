@@ -88,7 +88,12 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 
 // Render a board selection and navigation panel and write HTML to client
 func boardNavigation(w http.ResponseWriter, r *http.Request) {
-	staticTemplate(w, r, templates.BoardNavigation)
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	serveHTML(w, r, "", []byte(templates.BoardNavigation(lp.UI)), nil)
 }
 
 // Execute a simple template, that only accepts a language pack argument
@@ -134,7 +139,7 @@ func ownedBoardSelection(
 		return
 	}
 
-	serveHTML(w, r, "", []byte(templates.OwnedBoard(owned, lp.UI)), err)
+	serveHTML(w, r, "", []byte(templates.OwnedBoard(owned, lp.UI)), nil)
 }
 
 // Renders a form for configuring a board owned by the user

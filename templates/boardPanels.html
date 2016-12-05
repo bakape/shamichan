@@ -1,0 +1,51 @@
+{% import "github.com/bakape/meguca/config" %}
+
+OwnedBoard renders a form for selecting one of several boards owned by the
+user
+{% func OwnedBoard(boards config.BoardTitles, lang map[string]string) %}
+	{% stripspace %}
+		{% if len(boards) != 0 %}
+			<select name="boards" required>
+				{% for _, b := range boards %}
+					<option value="{%s= b.ID %}">
+						{%= formatTitle(b.ID, b.Title) %}
+					</option>
+				{% endfor %}
+			</select>
+			<br>
+			<input type="submit" value="{%s= lang["submit"] %}">
+		{% else %}
+			{%s= lang["ownNoBoards"] %}
+			<br>
+			<br>
+		{% endif %}
+		<input type="button" name="cancel" value="{%s= lang["cancel"] %}">
+		<div class="form-response admin"></div>
+	{% endstripspace %}
+{% endfunc %}
+
+{% func formatTitle(id, title string) %}
+	/{%s= id %}/ - {%s title %}
+{% endfunc %}
+
+BoardNavigation renders a board selection and search form
+{% func BoardNavigation(lang map[string]string) %}
+	{% stripspace %}
+		<input type="text" class="full-width" name="search" placeholder="{%s= lang["search"] %}">
+		<br>
+		<form>
+			<input type="submit" value="{%s= lang["apply"] %}">
+			<input type="button" name="cancel" value="{%s= lang["cancel"] %}">
+			<br>
+			{% for _, b := range config.GetBoardTitles() %}
+				<label>
+					<input type="checkbox" name="{%s= b.ID %}">
+					<a href="/{%s= b.ID %}/" class="history">
+						{%= formatTitle(b.ID, b.Title) %}
+					</a>
+					<br>
+				</label>
+			{% endfor %}
+		</form>
+	{% endstripspace %}
+{% endfunc %}

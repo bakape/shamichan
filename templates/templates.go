@@ -70,7 +70,6 @@ func Parse() error {
 		// Order matters. Dependencies must come before dependents.
 		{id: "captcha"},
 		{id: "hover-reveal"},
-		{id: "boardNavigation"},
 		{
 			"createBoard",
 			[]string{"captcha"},

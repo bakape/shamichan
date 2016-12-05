@@ -8,10 +8,7 @@ import (
 )
 
 func TestBoardNavigation(t *testing.T) {
-	_, err := BoardNavigation(lang.Packs["en_GB"])
-	if err != nil {
-		t.Fatal(err)
-	}
+	BoardNavigation(lang.Packs["en_GB"].UI)
 }
 
 func TestOwnedBoard(t *testing.T) {
