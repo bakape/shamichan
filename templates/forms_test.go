@@ -22,10 +22,7 @@ func TestOwnedBoard(t *testing.T) {
 			Title: "Animu & Mango",
 		},
 	}
-	_, err := OwnedBoard(conf, lang.Packs["en_GB"])
-	if err != nil {
-		t.Fatal(err)
-	}
+	OwnedBoard(conf, lang.Packs["en_GB"].UI)
 }
 
 func TestConfigureBoard(t *testing.T) {

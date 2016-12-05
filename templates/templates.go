@@ -71,7 +71,6 @@ func Parse() error {
 		{id: "captcha"},
 		{id: "hover-reveal"},
 		{id: "boardNavigation"},
-		{id: "ownedBoard"},
 		{
 			"createBoard",
 			[]string{"captcha"},

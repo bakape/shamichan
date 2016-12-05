@@ -36,15 +36,6 @@ func exec(id string, vars interface{}) ([]byte, error) {
 	return w.Bytes(), err
 }
 
-// OwnedBoard renders a form for selecting one of several boards owned by the
-// user
-func OwnedBoard(boards config.BoardTitles, ln lang.Pack) ([]byte, error) {
-	return exec("ownedBoard", boardList{
-		Boards: boards,
-		Lang:   ln,
-	})
-}
-
 // CreateBoard renders a the form for creating new boards
 func CreateBoard(ln lang.Pack) ([]byte, error) {
 	return exec("createBoard", struct {

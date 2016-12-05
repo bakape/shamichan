@@ -134,8 +134,7 @@ func ownedBoardSelection(
 		return
 	}
 
-	data, err := templates.OwnedBoard(owned, lp)
-	serveHTML(w, r, "", data, err)
+	serveHTML(w, r, "", []byte(templates.OwnedBoard(owned, lp.UI)), err)
 }
 
 // Renders a form for configuring a board owned by the user
