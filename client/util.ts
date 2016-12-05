@@ -1,7 +1,5 @@
 // Various utility functions
 
-type AnyHash = { [key: string]: any }
-
 // Options for the on() addEventListener() wrapper
 export interface OnOptions extends EventListenerOptions {
 	selector?: string
@@ -181,10 +179,21 @@ export function commaList(items: string[]): string {
 	return html
 }
 
-// Copy all properties from the source object to the destination object
+// Copy all properties from the source object to the destination object. Nested
+// objects are extended recursively.
 export function extend(dest: {}, source: {}) {
 	for (let key in source) {
-		(dest as AnyHash)[key] = (source as AnyHash)[key]
+		const val = source[key]
+		if (typeof val === "object" && val !== null) {
+			const d = dest[key]
+			if (d) {
+				extend(d, val)
+			} else {
+				dest[key] = val
+			}
+		} else {
+			dest[key] = val
+		}
 	}
 }
 
@@ -204,7 +213,7 @@ export function groupBy<T extends Object>(array: T[], prop: string)
 	: { [key: string]: T[] } {
 	const groups: { [key: string]: T[] } = {}
 	for (let item of array) {
-		const dest = (item as AnyHash)[prop]
+		const dest = item[prop]
 		if (dest in groups) {
 			groups[dest].push(item)
 		} else {
@@ -290,7 +299,7 @@ export function applyMixins(dest: any, ...mixins: any[]) {
 }
 
 // Compares all keys on a with keys on b for equality
-export function isMatch(a: AnyHash, b: AnyHash): boolean {
+export function isMatch(a: {}, b: {}): boolean {
 	for (let key in a) {
 		if (a[key] !== b[key]) {
 			return false

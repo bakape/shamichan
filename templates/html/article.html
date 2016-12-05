@@ -93,7 +93,8 @@
 						<!-- TODO: board-specific server-side spoiler rendering -->
 						<img src="/assets/spoil/default.jpg">
 					{{else}}
-						<img src="{{thumbPath .FileType .SHA1}}">
+						{{$dims := correctDims $.Subject (index .Dims 2) (index .Dims 3)}}
+						<img src="{{thumbPath .FileType .SHA1}}" width="{{$dims.W}}" height="{{$dims.H}}">
 					{{end}}
 				</a>
 			</figure>

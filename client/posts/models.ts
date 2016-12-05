@@ -71,19 +71,20 @@ export interface ImageData {
 	audio: boolean
 	video: boolean
 	spoiler: boolean
-	expanded: boolean           // Thumbnail is expanded
-	tallerThanViewport: boolean // Image is taller than the current viewport
-	revealed: boolean           // Revealing a hidden image with [Show]
 	fileType: fileTypes
 	length?: number
 	size: number
-
 	// [width, height, thumbnail_width, thumbnail_height]
 	dims: [number, number, number, number]
 	MD5: string
 	SHA1: string
 	name: string
-	[index: string]: any
+
+	// Added client-side
+	large: boolean              // Render larger thumbnails
+	expanded: boolean           // Thumbnail is expanded
+	tallerThanViewport: boolean // Image is taller than the current viewport
+	revealed: boolean           // Revealing a hidden image with [Show]
 }
 
 // Possible file types of a post image

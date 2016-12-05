@@ -42,6 +42,7 @@ var (
 		"wrapPost":         wrapPost,
 		"renderPostLink":   renderPostLink,
 		"renderBody":       renderBody,
+		"correctDims":      correctDims,
 	}
 
 	isTest bool

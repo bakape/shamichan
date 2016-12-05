@@ -167,7 +167,8 @@ export function imageLink(el: Element, data: ImageData) {
 // Render the actual thumbnail image
 export function renderThumbnail(el: Element, data: ImageData) {
     const src = sourcePath(data.SHA1, data.fileType)
-    let thumb: string
+    let thumb: string,
+        [, , thumbWidth, thumbHeight] = data.dims
 
     if (data.spoiler && options.spoilers) {
         // Spoilered and spoilers enabled
@@ -179,9 +180,17 @@ export function renderThumbnail(el: Element, data: ImageData) {
         thumb = thumbPath(data.SHA1, data.fileType)
     }
 
+    // Downscale thumbnail for higher DPI, unless specified not to
+    if (!data.large && (thumbWidth > 125 || thumbHeight > 125)) {
+        thumbWidth *= 0.8333
+        thumbHeight *= 0.8333
+    }
+
     el.setAttribute("href", src)
     setAttrs(el.firstElementChild, {
         src: thumb,
+        width: thumbWidth.toString(),
+        height: thumbHeight.toString(),
         class: "", // Remove any existing classes
     })
 }

@@ -25,6 +25,10 @@ type postContext struct {
 	Subject, Root   string
 }
 
+type dimensions struct {
+	W, H uint16
+}
+
 func wrapPost(
 	p common.Post,
 	op uint64,
@@ -203,4 +207,13 @@ func renderPostLink(
 	w.WriteString("</a>")
 
 	return w.HTML()
+}
+
+// Correct thumbnail dimensions for smaller reply thumbnails
+func correctDims(subject string, w, h uint16) dimensions {
+	if subject != "" && (w > 125 || h > 125) {
+		w = uint16(float32(w) * 0.8333)
+		h *= uint16(float32(h) * 0.8333)
+	}
+	return dimensions{w, h}
 }

@@ -31,6 +31,9 @@ export default function(frag: DocumentFragment, writeNow: boolean) {
 
     extractPost(data, frag, writeNow)
     postCollection.lowestID = posts.length ? posts[0].id : data.id
+    if (data.image) {
+        data.image.large = true
+    }
 
     localizeOmitted(frag, writeNow)
     localizeAnonymous(frag, writeNow)
