@@ -28,20 +28,6 @@ func exec(id string, vars interface{}) ([]byte, error) {
 	return w.Bytes(), err
 }
 
-// CreateBoard renders a the form for creating new boards
-func CreateBoard(ln lang.Pack) ([]byte, error) {
-	return exec("createBoard", struct {
-		Captcha bool
-		formSpecs
-	}{
-		Captcha: config.Get().Captcha,
-		formSpecs: formSpecs{
-			Specs: specs["createBoard"],
-			Lang:  ln,
-		},
-	})
-}
-
 // ConfigureBoard renders a form for setting board configurations
 func ConfigureBoard(conf config.BoardConfigs, ln lang.Pack) ([]byte, error) {
 	return configurationTable(reflect.ValueOf(conf), "configureBoard", ln)

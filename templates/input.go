@@ -206,7 +206,7 @@ func (w *formWriter) label(spec inputSpec) {
 }
 
 // Render a table containing {label input_element} pairs
-func renderTable(specs []inputSpec, lang lang.Pack) (template.HTML, error) {
+func renderTable(specs []inputSpec, lang lang.Pack) string {
 	w := formWriter{
 		lang: lang,
 	}
@@ -216,15 +216,13 @@ func renderTable(specs []inputSpec, lang lang.Pack) (template.HTML, error) {
 		w.WriteString("<tr><td>")
 		w.label(spec)
 		w.WriteString("</td><td>")
-		if err := w.input(spec); err != nil {
-			return "", err
-		}
+		w.input(spec)
 		w.WriteString("</td></tr>")
 	}
 
 	w.WriteString("</table>")
 
-	return w.HTML(), nil
+	return w.String()
 }
 
 // Render a single input element

@@ -58,14 +58,6 @@ func Parse() error {
 		{id: "captcha"},
 		{id: "hover-reveal"},
 		{
-			"createBoard",
-			[]string{"captcha"},
-			template.FuncMap{
-				"bundle": bundle,
-				"table":  renderTable,
-			},
-		},
-		{
 			"tableForm",
 			nil,
 			template.FuncMap{
@@ -84,7 +76,9 @@ func Parse() error {
 			"index",
 			[]string{"captcha", "keyValue"},
 			template.FuncMap{
-				"table":  renderTable,
+				"table": func(s []inputSpec, ln lang.Pack) template.HTML {
+					return template.HTML(renderTable(s, ln))
+				},
 				"bundle": bundle,
 				"input":  renderInput,
 				"label":  renderLabel,

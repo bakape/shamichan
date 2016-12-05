@@ -161,7 +161,12 @@ func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
 
 // Renders a form for creating new boards
 func boardCreationForm(w http.ResponseWriter, r *http.Request) {
-	staticTemplate(w, r, templates.CreateBoard)
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	serveHTML(w, r, "", []byte(templates.CreateBoard(lp)), nil)
 }
 
 // Render the form for configuring the server
