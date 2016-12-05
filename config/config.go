@@ -5,10 +5,9 @@ package config
 
 import (
 	"encoding/json"
+	"sort"
 	"sync"
 	"time"
-
-	"sort"
 
 	"github.com/bakape/meguca/util"
 )

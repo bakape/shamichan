@@ -74,7 +74,7 @@
 		"mustMatch": "Passwords must match",
 		"invalidCaptcha": "Invalid captcha",
 		"quoted": "You have been quoted",
-	"refresh": "Refresh",
+		"refresh": "Refresh",
 		"sessionExpired": "Login session expired",
 		"thread_locked": "This thread is locked.",
 		"thumbnailing": "Thumbnailing...",

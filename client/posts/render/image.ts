@@ -173,6 +173,7 @@ export function renderThumbnail(el: Element, data: ImageData) {
     if (data.spoiler && options.spoilers) {
         // Spoilered and spoilers enabled
         thumb = '/assets/spoil/' + boardConfig.spoiler
+        thumbHeight = thumbWidth = 150
     } else if (data.fileType === fileTypes.gif && options.autogif) {
         // Animated GIF thumbnails
         thumb = src

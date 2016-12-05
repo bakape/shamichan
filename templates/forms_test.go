@@ -34,9 +34,7 @@ func TestConfigureBoard(t *testing.T) {
 
 func TestCreateBoard(t *testing.T) {
 	t.Parallel()
-	if _, err := CreateBoard(lang.Packs["en_GB"]); err != nil {
-		t.Fatal(err)
-	}
+	CreateBoard(lang.Packs["en_GB"])
 }
 
 func TestConfigureServer(t *testing.T) {

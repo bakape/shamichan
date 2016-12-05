@@ -11,7 +11,6 @@ import (
 
 	"sort"
 
-	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
 )
@@ -91,15 +90,6 @@ func Parse() error {
 				"thumbPath":   thumbPath,
 				"bundle":      bundle,
 				"renderInput": renderInput,
-			},
-		},
-		{
-			"thread",
-			[]string{"captcha"},
-			template.FuncMap{
-				"renderArticle": func(p common.Post, op uint64, omit, imageOmit int, subject, root string) template.HTML {
-					return template.HTML(renderArticle(p, op, omit, imageOmit, subject, root))
-				},
 			},
 		},
 	}
