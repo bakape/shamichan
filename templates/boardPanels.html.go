@@ -25,191 +25,179 @@ var (
 
 //line templates/boardPanels.html:5
 func StreamOwnedBoard(qw422016 *qt422016.Writer, boards config.BoardTitles, lang map[string]string) {
-	//line templates/boardPanels.html:5
-	qw422016.N().S(`
-	`)
-	//line templates/boardPanels.html:7
+	//line templates/boardPanels.html:6
 	if len(boards) != 0 {
-		//line templates/boardPanels.html:7
+		//line templates/boardPanels.html:6
 		qw422016.N().S(`<select name="boards" required>`)
-		//line templates/boardPanels.html:9
+		//line templates/boardPanels.html:8
 		for _, b := range boards {
-			//line templates/boardPanels.html:9
+			//line templates/boardPanels.html:8
 			qw422016.N().S(`<option value="`)
-			//line templates/boardPanels.html:10
+			//line templates/boardPanels.html:9
 			qw422016.N().S(b.ID)
-			//line templates/boardPanels.html:10
+			//line templates/boardPanels.html:9
 			qw422016.N().S(`">`)
-			//line templates/boardPanels.html:11
+			//line templates/boardPanels.html:10
 			streamformatTitle(qw422016, b.ID, b.Title)
-			//line templates/boardPanels.html:11
+			//line templates/boardPanels.html:10
 			qw422016.N().S(`</option>`)
-			//line templates/boardPanels.html:13
+			//line templates/boardPanels.html:12
 		}
-		//line templates/boardPanels.html:13
+		//line templates/boardPanels.html:12
 		qw422016.N().S(`</select><br><input type="submit" value="`)
-		//line templates/boardPanels.html:16
+		//line templates/boardPanels.html:15
 		qw422016.N().S(lang["submit"])
-		//line templates/boardPanels.html:16
+		//line templates/boardPanels.html:15
 		qw422016.N().S(`">`)
-		//line templates/boardPanels.html:17
+		//line templates/boardPanels.html:16
 	} else {
-		//line templates/boardPanels.html:18
+		//line templates/boardPanels.html:17
 		qw422016.N().S(lang["ownNoBoards"])
-		//line templates/boardPanels.html:18
+		//line templates/boardPanels.html:17
 		qw422016.N().S(`<br><br>`)
-		//line templates/boardPanels.html:21
+		//line templates/boardPanels.html:20
 	}
-	//line templates/boardPanels.html:21
+	//line templates/boardPanels.html:20
 	qw422016.N().S(`<input type="button" name="cancel" value="`)
-	//line templates/boardPanels.html:22
+	//line templates/boardPanels.html:21
 	qw422016.N().S(lang["cancel"])
-	//line templates/boardPanels.html:22
+	//line templates/boardPanels.html:21
 	qw422016.N().S(`"><div class="form-response admin"></div>`)
-	//line templates/boardPanels.html:24
+//line templates/boardPanels.html:23
+}
+
+//line templates/boardPanels.html:23
+func WriteOwnedBoard(qq422016 qtio422016.Writer, boards config.BoardTitles, lang map[string]string) {
+	//line templates/boardPanels.html:23
+	qw422016 := qt422016.AcquireWriter(qq422016)
+	//line templates/boardPanels.html:23
+	StreamOwnedBoard(qw422016, boards, lang)
+	//line templates/boardPanels.html:23
+	qt422016.ReleaseWriter(qw422016)
+//line templates/boardPanels.html:23
+}
+
+//line templates/boardPanels.html:23
+func OwnedBoard(boards config.BoardTitles, lang map[string]string) string {
+	//line templates/boardPanels.html:23
+	qb422016 := qt422016.AcquireByteBuffer()
+	//line templates/boardPanels.html:23
+	WriteOwnedBoard(qb422016, boards, lang)
+	//line templates/boardPanels.html:23
+	qs422016 := string(qb422016.B)
+	//line templates/boardPanels.html:23
+	qt422016.ReleaseByteBuffer(qb422016)
+	//line templates/boardPanels.html:23
+	return qs422016
+//line templates/boardPanels.html:23
+}
+
+//line templates/boardPanels.html:25
+func streamformatTitle(qw422016 *qt422016.Writer, id, title string) {
+	//line templates/boardPanels.html:25
+	qw422016.N().S(`
+	/`)
+	//line templates/boardPanels.html:26
+	qw422016.N().S(id)
+	//line templates/boardPanels.html:26
+	qw422016.N().S(`/ - `)
+	//line templates/boardPanels.html:26
+	qw422016.E().S(title)
+	//line templates/boardPanels.html:26
 	qw422016.N().S(`
 `)
-//line templates/boardPanels.html:25
-}
-
-//line templates/boardPanels.html:25
-func WriteOwnedBoard(qq422016 qtio422016.Writer, boards config.BoardTitles, lang map[string]string) {
-	//line templates/boardPanels.html:25
-	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line templates/boardPanels.html:25
-	StreamOwnedBoard(qw422016, boards, lang)
-	//line templates/boardPanels.html:25
-	qt422016.ReleaseWriter(qw422016)
-//line templates/boardPanels.html:25
-}
-
-//line templates/boardPanels.html:25
-func OwnedBoard(boards config.BoardTitles, lang map[string]string) string {
-	//line templates/boardPanels.html:25
-	qb422016 := qt422016.AcquireByteBuffer()
-	//line templates/boardPanels.html:25
-	WriteOwnedBoard(qb422016, boards, lang)
-	//line templates/boardPanels.html:25
-	qs422016 := string(qb422016.B)
-	//line templates/boardPanels.html:25
-	qt422016.ReleaseByteBuffer(qb422016)
-	//line templates/boardPanels.html:25
-	return qs422016
-//line templates/boardPanels.html:25
+//line templates/boardPanels.html:27
 }
 
 //line templates/boardPanels.html:27
-func streamformatTitle(qw422016 *qt422016.Writer, id, title string) {
-	//line templates/boardPanels.html:27
-	qw422016.N().S(`
-	/`)
-	//line templates/boardPanels.html:28
-	qw422016.N().S(id)
-	//line templates/boardPanels.html:28
-	qw422016.N().S(`/ - `)
-	//line templates/boardPanels.html:28
-	qw422016.E().S(title)
-	//line templates/boardPanels.html:28
-	qw422016.N().S(`
-`)
-//line templates/boardPanels.html:29
-}
-
-//line templates/boardPanels.html:29
 func writeformatTitle(qq422016 qtio422016.Writer, id, title string) {
-	//line templates/boardPanels.html:29
+	//line templates/boardPanels.html:27
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line templates/boardPanels.html:29
+	//line templates/boardPanels.html:27
 	streamformatTitle(qw422016, id, title)
-	//line templates/boardPanels.html:29
+	//line templates/boardPanels.html:27
 	qt422016.ReleaseWriter(qw422016)
-//line templates/boardPanels.html:29
+//line templates/boardPanels.html:27
 }
 
-//line templates/boardPanels.html:29
+//line templates/boardPanels.html:27
 func formatTitle(id, title string) string {
-	//line templates/boardPanels.html:29
+	//line templates/boardPanels.html:27
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line templates/boardPanels.html:29
+	//line templates/boardPanels.html:27
 	writeformatTitle(qb422016, id, title)
-	//line templates/boardPanels.html:29
+	//line templates/boardPanels.html:27
 	qs422016 := string(qb422016.B)
-	//line templates/boardPanels.html:29
+	//line templates/boardPanels.html:27
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line templates/boardPanels.html:29
+	//line templates/boardPanels.html:27
 	return qs422016
-//line templates/boardPanels.html:29
+//line templates/boardPanels.html:27
 }
 
 // BoardNavigation renders a board selection and search form
 
-//line templates/boardPanels.html:32
+//line templates/boardPanels.html:30
 func StreamBoardNavigation(qw422016 *qt422016.Writer, lang map[string]string) {
-	//line templates/boardPanels.html:32
-	qw422016.N().S(`
-	`)
-	//line templates/boardPanels.html:33
+	//line templates/boardPanels.html:30
 	qw422016.N().S(`<input type="text" class="full-width" name="search" placeholder="`)
-	//line templates/boardPanels.html:34
+	//line templates/boardPanels.html:31
 	qw422016.N().S(lang["search"])
-	//line templates/boardPanels.html:34
+	//line templates/boardPanels.html:31
 	qw422016.N().S(`"><br><form><input type="submit" value="`)
-	//line templates/boardPanels.html:37
+	//line templates/boardPanels.html:34
 	qw422016.N().S(lang["apply"])
-	//line templates/boardPanels.html:37
+	//line templates/boardPanels.html:34
 	qw422016.N().S(`"><input type="button" name="cancel" value="`)
-	//line templates/boardPanels.html:38
+	//line templates/boardPanels.html:35
 	qw422016.N().S(lang["cancel"])
-	//line templates/boardPanels.html:38
+	//line templates/boardPanels.html:35
 	qw422016.N().S(`"><br>`)
-	//line templates/boardPanels.html:40
+	//line templates/boardPanels.html:37
 	for _, b := range config.GetBoardTitles() {
-		//line templates/boardPanels.html:40
+		//line templates/boardPanels.html:37
 		qw422016.N().S(`<label><input type="checkbox" name="`)
-		//line templates/boardPanels.html:42
+		//line templates/boardPanels.html:39
 		qw422016.N().S(b.ID)
-		//line templates/boardPanels.html:42
+		//line templates/boardPanels.html:39
 		qw422016.N().S(`"><a href="/`)
-		//line templates/boardPanels.html:43
+		//line templates/boardPanels.html:40
 		qw422016.N().S(b.ID)
-		//line templates/boardPanels.html:43
+		//line templates/boardPanels.html:40
 		qw422016.N().S(`/" class="history">`)
-		//line templates/boardPanels.html:44
+		//line templates/boardPanels.html:41
 		streamformatTitle(qw422016, b.ID, b.Title)
-		//line templates/boardPanels.html:44
+		//line templates/boardPanels.html:41
 		qw422016.N().S(`</a><br></label>`)
-		//line templates/boardPanels.html:48
+		//line templates/boardPanels.html:45
 	}
-	//line templates/boardPanels.html:48
+	//line templates/boardPanels.html:45
 	qw422016.N().S(`</form>`)
-	//line templates/boardPanels.html:50
-	qw422016.N().S(`
-`)
-//line templates/boardPanels.html:51
+//line templates/boardPanels.html:47
 }
 
-//line templates/boardPanels.html:51
+//line templates/boardPanels.html:47
 func WriteBoardNavigation(qq422016 qtio422016.Writer, lang map[string]string) {
-	//line templates/boardPanels.html:51
+	//line templates/boardPanels.html:47
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line templates/boardPanels.html:51
+	//line templates/boardPanels.html:47
 	StreamBoardNavigation(qw422016, lang)
-	//line templates/boardPanels.html:51
+	//line templates/boardPanels.html:47
 	qt422016.ReleaseWriter(qw422016)
-//line templates/boardPanels.html:51
+//line templates/boardPanels.html:47
 }
 
-//line templates/boardPanels.html:51
+//line templates/boardPanels.html:47
 func BoardNavigation(lang map[string]string) string {
-	//line templates/boardPanels.html:51
+	//line templates/boardPanels.html:47
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line templates/boardPanels.html:51
+	//line templates/boardPanels.html:47
 	WriteBoardNavigation(qb422016, lang)
-	//line templates/boardPanels.html:51
+	//line templates/boardPanels.html:47
 	qs422016 := string(qb422016.B)
-	//line templates/boardPanels.html:51
+	//line templates/boardPanels.html:47
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line templates/boardPanels.html:51
+	//line templates/boardPanels.html:47
 	return qs422016
-//line templates/boardPanels.html:51
+//line templates/boardPanels.html:47
 }

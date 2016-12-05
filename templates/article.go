@@ -2,7 +2,6 @@ package templates
 
 import (
 	"bytes"
-	"fmt"
 	"html"
 	"html/template"
 	"net/url"
@@ -23,26 +22,6 @@ type postContext struct {
 	OP              uint64
 	Omit, ImageOmit int
 	Subject, Root   string
-}
-
-type dimensions struct {
-	W, H uint16
-}
-
-func wrapPost(
-	p common.Post,
-	op uint64,
-	omit, imageOmit int,
-	subject, root string,
-) postContext {
-	return postContext{
-		Post:      p,
-		OP:        op,
-		Omit:      omit,
-		ImageOmit: imageOmit,
-		Subject:   subject,
-		Root:      root,
-	}
 }
 
 // Write an element attribute to the buffer
@@ -72,7 +51,7 @@ func (w *htmlWriter) HTML() template.HTML {
 }
 
 // Returns the HTTP path to the thumbnail of an image
-func thumbPath(fileType uint8, SHA1 string) template.HTML {
+func thumbPath(fileType uint8, SHA1 string) string {
 	buf := make([]byte, 14, 58)
 	copy(buf, "/images/thumb/")
 	buf = append(buf, SHA1...)
@@ -86,11 +65,11 @@ func thumbPath(fileType uint8, SHA1 string) template.HTML {
 	}
 	buf = append(buf, ext...)
 
-	return template.HTML(buf)
+	return string(buf)
 }
 
 // Returns the HTTP path to the source file
-func sourcePath(fileType uint8, SHA1 string) template.HTML {
+func sourcePath(fileType uint8, SHA1 string) string {
 	ext := common.Extensions[fileType]
 
 	buf := make([]byte, 12, 53+len(ext))
@@ -99,15 +78,21 @@ func sourcePath(fileType uint8, SHA1 string) template.HTML {
 	buf = append(buf, '.')
 	buf = append(buf, ext...)
 
-	return template.HTML(buf)
+	return string(buf)
 }
 
-func extension(fileType uint8) template.HTML {
-	return template.HTML(common.Extensions[fileType])
+// Returns image name with proper extension
+func imageName(fileType uint8, name string) string {
+	ext := common.Extensions[fileType]
+	l := len(name)
+	buf := make([]byte, l, l+1+len(ext))
+	copy(buf, name)
+	buf = append(buf, '.')
+	return html.EscapeString(string(append(buf, ext...)))
 }
 
 // Renders the post creation time field
-func formatTime(sec int64) template.HTML {
+func formatTime(sec int64) string {
 	ln := lang.Packs["en_GB"].Common.Time
 
 	t := time.Unix(sec, 0)
@@ -130,7 +115,7 @@ func formatTime(sec int64) template.HTML {
 	buf = append(buf, ':')
 	buf = pad(buf, t.Minute())
 
-	return template.HTML(buf)
+	return string(buf)
 }
 
 // Stringify an int and left-pad to at least double digits
@@ -141,22 +126,13 @@ func pad(buf []byte, i int) []byte {
 	return append(buf, strconv.Itoa(i)...)
 }
 
-// Renders a human-readable representation video/audio length
-func readableLength(l uint32) template.HTML {
-	if l < 60 {
-		return template.HTML(fmt.Sprintf("0:%02d", l))
-	}
-	min := l / 60
-	return template.HTML(fmt.Sprintf("%02d:%02d", min, l-min))
-}
-
 // Formats a human-readable representation of file size
-func readableFileSize(s int) template.HTML {
-	format := func(n, end string) template.HTML {
+func readableFileSize(s int) string {
+	format := func(n, end string) string {
 		l := len(n)
 		buf := make([]byte, l, l+len(end))
 		copy(buf, n)
-		return template.HTML(append(buf, end...))
+		return string(append(buf, end...))
 	}
 
 	switch {
@@ -171,11 +147,7 @@ func readableFileSize(s int) template.HTML {
 }
 
 // Render a link to another post. Can optionally be cross-thread.
-func renderPostLink(
-	id, op uint64,
-	board string,
-	cross bool,
-) template.HTML {
+func renderPostLink(id, op uint64, board string, cross bool) string {
 	var w htmlWriter
 
 	w.WriteString(`<a class="history" data-id=`)
@@ -206,14 +178,14 @@ func renderPostLink(
 
 	w.WriteString("</a>")
 
-	return w.HTML()
+	return w.String()
 }
 
 // Correct thumbnail dimensions for smaller reply thumbnails
-func correctDims(subject string, w, h uint16) dimensions {
-	if subject != "" && (w > 125 || h > 125) {
+func correctDims(large bool, w, h uint16) (string, string) {
+	if !large && (w > 125 || h > 125) {
 		w = uint16(float32(w) * 0.8333)
-		h *= uint16(float32(h) * 0.8333)
+		h = uint16(float32(h) * 0.8333)
 	}
-	return dimensions{w, h}
+	return strconv.FormatUint(uint64(w), 10), strconv.FormatUint(uint64(h), 10)
 }

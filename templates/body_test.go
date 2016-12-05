@@ -291,16 +291,13 @@ func TestRenderBody(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			pc := postContext{
-				Post: common.Post{
-					Body:     c.in,
-					Editing:  c.editing,
-					Links:    c.links,
-					Commands: c.commands,
-				},
-				OP: c.op,
+			p := common.Post{
+				Body:     c.in,
+				Editing:  c.editing,
+				Links:    c.links,
+				Commands: c.commands,
 			}
-			if s := string(renderBody(pc)); s != c.out {
+			if s := renderBody(p, c.op); s != c.out {
 				LogUnexpected(t, c.out, s)
 			}
 		})

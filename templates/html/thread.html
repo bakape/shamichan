@@ -18,9 +18,9 @@
 </noscript>
 <hr>
 <div id="thread-container">
-	{{template "article" (wrapPost .Thread.Post .Thread.ID .Omit .ImageOmit .Thread.Subject .Root)}}
+	{{renderArticle .Thread.Post .Thread.ID .Omit .ImageOmit .Thread.Subject .Root}}
 	{{range .Thread.Posts}}
-		{{template "article" (wrapPost . $.Thread.ID 0 0 "" $.Root)}}
+		{{renderArticle . $.Thread.ID 0 0 "" $.Root}}
 	{{end}}
 </div>
 <script id="post-data" type="application/json">

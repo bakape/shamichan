@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"html"
-	"html/template"
 	"net/url"
 	"regexp"
 	"strconv"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 )
 
@@ -27,14 +27,16 @@ type bodyContext struct {
 		spoiler, quote bool
 		iDice          int
 	}
-	postContext
+	common.Post
+	OP uint64
 	htmlWriter
 }
 
 // Render the text body of a post
-func renderBody(p postContext) template.HTML {
+func renderBody(p common.Post, op uint64) string {
 	c := bodyContext{
-		postContext: p,
+		Post: p,
+		OP:   op,
 	}
 
 	lines := bytes.Split([]byte(c.Body), []byte{'\n'})
@@ -48,7 +50,7 @@ func renderBody(p postContext) template.HTML {
 			c.parseTerminatedLine(line)
 		}
 	}
-	return c.HTML()
+	return c.String()
 }
 
 // Parse a line that is no longer being edited

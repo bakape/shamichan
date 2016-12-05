@@ -11,6 +11,7 @@ import (
 
 	"sort"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
 )
@@ -30,20 +31,6 @@ var (
 
 	// Contains all compiled HTML templates
 	tmpl = make(map[string]*template.Template)
-
-	// Template functions for rendering posts
-	postFunctions = template.FuncMap{
-		"thumbPath":        thumbPath,
-		"formatTime":       formatTime,
-		"readableLength":   readableLength,
-		"readableFileSize": readableFileSize,
-		"sourcePath":       sourcePath,
-		"extension":        extension,
-		"wrapPost":         wrapPost,
-		"renderPostLink":   renderPostLink,
-		"renderBody":       renderBody,
-		"correctDims":      correctDims,
-	}
 
 	isTest bool
 )
@@ -93,7 +80,6 @@ func Parse() error {
 				"bundle": bundle,
 			},
 		},
-		{"article", nil, postFunctions},
 		{
 			"index",
 			[]string{"captcha", "keyValue"},
@@ -115,8 +101,12 @@ func Parse() error {
 		},
 		{
 			"thread",
-			[]string{"article", "captcha"},
-			postFunctions,
+			[]string{"captcha"},
+			template.FuncMap{
+				"renderArticle": func(p common.Post, op uint64, omit, imageOmit int, subject, root string) template.HTML {
+					return template.HTML(renderArticle(p, op, omit, imageOmit, subject, root))
+				},
+			},
 		},
 	}
 
