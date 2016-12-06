@@ -27,8 +27,8 @@ const container = document.createElement('div'),
 const colourMap: { [key: string]: BackgroundGradients } = {
 	glass: {
 		normal: 'rgba(40, 42, 46, 0.5)',
-		editing: 'rgba(145, 145, 145, 0.5)',
-		highlight: 'rgba(57, 59, 65, .5)',
+		editing: 'rgba(105, 105, 105, 0.5)',
+		highlight: 'rgba(64, 67, 73, .5)',
 	},
 	ocean: {
 		normal: 'rgba(28, 29, 34, 0.78)',

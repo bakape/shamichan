@@ -1,6 +1,6 @@
 @import "common.mix.less";
 @link: #C8C8D9;
-@postBG: rgba(40, 42, 46, 0.7);
+@postBG: rgba(40, 42, 46, 0.9);
 @border: 1px solid fade(@link, 5%);
 @bold: white;
 @admin: #f00000;
@@ -17,16 +17,17 @@ article, aside, .popup-menu, .modal, .side-panel {
 
 article {
 	&.editing {
-		background-color: rgba(145, 145, 145, 0.5);
+		background-color: rgba(105, 105, 105, 0.9);
 	}
 	&.highlight:not(.editing) {
-		background-color: lighten(@postBG, 7%);
+		background-color: lighten(@postBG, 10%);
 	}
 }
 
 body {
     color:white;
-    background-color: rgba(40, 42, 46, 0.5);
+    background: url("/assets/css/glass-bg.jpg") no-repeat fixed center;
+	background-size: cover;
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
 }
