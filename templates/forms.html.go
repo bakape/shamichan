@@ -347,3 +347,152 @@ func captcha(id string, lang map[string]string) string {
 	return qs422016
 //line forms.html:86
 }
+
+// Form for inputing key-value map-like data
+
+//line forms.html:89
+func streamkeyValueForm(qw422016 *qt422016.Writer, k, v string) {
+	//line forms.html:89
+	qw422016.N().S(`<span><input type="text" class="map-field" value="`)
+	//line forms.html:91
+	qw422016.E().S(k)
+	//line forms.html:91
+	qw422016.N().S(`"><input type="text" class="map-field" value="`)
+	//line forms.html:92
+	qw422016.E().S(v)
+	//line forms.html:92
+	qw422016.N().S(`"><a class="map-remove">[X]</a><br></span>`)
+//line forms.html:98
+}
+
+//line forms.html:98
+func writekeyValueForm(qq422016 qtio422016.Writer, k, v string) {
+	//line forms.html:98
+	qw422016 := qt422016.AcquireWriter(qq422016)
+	//line forms.html:98
+	streamkeyValueForm(qw422016, k, v)
+	//line forms.html:98
+	qt422016.ReleaseWriter(qw422016)
+//line forms.html:98
+}
+
+//line forms.html:98
+func keyValueForm(k, v string) string {
+	//line forms.html:98
+	qb422016 := qt422016.AcquireByteBuffer()
+	//line forms.html:98
+	writekeyValueForm(qb422016, k, v)
+	//line forms.html:98
+	qs422016 := string(qb422016.B)
+	//line forms.html:98
+	qt422016.ReleaseByteBuffer(qb422016)
+	//line forms.html:98
+	return qs422016
+//line forms.html:98
+}
+
+// Form fommatted as a tabel, with cancel and submit buttons
+
+//line forms.html:101
+func streamtableForm(qw422016 *qt422016.Writer, specs []inputSpec, needCaptcha bool, ln lang.Pack) {
+	//line forms.html:102
+	qw422016.N().S(renderTable(specs, ln))
+	//line forms.html:103
+	if needCaptcha {
+		//line forms.html:104
+		streamcaptcha(qw422016, "ajax", ln.UI)
+		//line forms.html:105
+	}
+	//line forms.html:105
+	qw422016.N().S(`<input type="submit" value="`)
+	//line forms.html:106
+	qw422016.N().S(ln.UI["submit"])
+	//line forms.html:106
+	qw422016.N().S(`"><input type="button" name="cancel" value="`)
+	//line forms.html:107
+	qw422016.N().S(ln.UI["cancel"])
+	//line forms.html:107
+	qw422016.N().S(`"><div class="form-response admin"></div>`)
+//line forms.html:109
+}
+
+//line forms.html:109
+func writetableForm(qq422016 qtio422016.Writer, specs []inputSpec, needCaptcha bool, ln lang.Pack) {
+	//line forms.html:109
+	qw422016 := qt422016.AcquireWriter(qq422016)
+	//line forms.html:109
+	streamtableForm(qw422016, specs, needCaptcha, ln)
+	//line forms.html:109
+	qt422016.ReleaseWriter(qw422016)
+//line forms.html:109
+}
+
+//line forms.html:109
+func tableForm(specs []inputSpec, needCaptcha bool, ln lang.Pack) string {
+	//line forms.html:109
+	qb422016 := qt422016.AcquireByteBuffer()
+	//line forms.html:109
+	writetableForm(qb422016, specs, needCaptcha, ln)
+	//line forms.html:109
+	qs422016 := string(qb422016.B)
+	//line forms.html:109
+	qt422016.ReleaseByteBuffer(qb422016)
+	//line forms.html:109
+	return qs422016
+//line forms.html:109
+}
+
+// Render a map form for inputting map-like data
+
+//line forms.html:112
+func streamrenderMap(qw422016 *qt422016.Writer, spec inputSpec, ln lang.Pack) {
+	//line forms.html:112
+	qw422016.N().S(`<div class="map-form" name="`)
+	//line forms.html:113
+	qw422016.N().S(spec.ID)
+	//line forms.html:113
+	qw422016.N().S(`" title="`)
+	//line forms.html:113
+	qw422016.N().S(ln.Forms[spec.ID][1])
+	//line forms.html:113
+	qw422016.N().S(`">`)
+	//line forms.html:114
+	for k, v := range spec.Val.(map[string]string) {
+		//line forms.html:115
+		streamkeyValueForm(qw422016, k, v)
+		//line forms.html:116
+	}
+	//line forms.html:116
+	qw422016.N().S(`<a class="map-add">`)
+	//line forms.html:118
+	qw422016.N().S(ln.UI["add"])
+	//line forms.html:118
+	qw422016.N().S(`</a><br></div>`)
+//line forms.html:122
+}
+
+//line forms.html:122
+func writerenderMap(qq422016 qtio422016.Writer, spec inputSpec, ln lang.Pack) {
+	//line forms.html:122
+	qw422016 := qt422016.AcquireWriter(qq422016)
+	//line forms.html:122
+	streamrenderMap(qw422016, spec, ln)
+	//line forms.html:122
+	qt422016.ReleaseWriter(qw422016)
+//line forms.html:122
+}
+
+//line forms.html:122
+func renderMap(spec inputSpec, ln lang.Pack) string {
+	//line forms.html:122
+	qb422016 := qt422016.AcquireByteBuffer()
+	//line forms.html:122
+	writerenderMap(qb422016, spec, ln)
+	//line forms.html:122
+	qs422016 := string(qb422016.B)
+	//line forms.html:122
+	qt422016.ReleaseByteBuffer(qb422016)
+	//line forms.html:122
+	return qs422016
+//line forms.html:122
+}

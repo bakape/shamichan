@@ -3,9 +3,7 @@
 package templates
 
 import (
-	"html/template"
 	"strconv"
-
 	"strings"
 
 	"github.com/bakape/meguca/lang"
@@ -48,7 +46,7 @@ func (w *formWriter) typ(val string) {
 }
 
 // Write an input element from the spec to the buffer
-func (w *formWriter) input(spec inputSpec) error {
+func (w *formWriter) input(spec inputSpec) {
 	cont := false
 	switch spec.Type {
 	case _select:
@@ -56,7 +54,7 @@ func (w *formWriter) input(spec inputSpec) error {
 	case _textarea:
 		w.textArea(spec)
 	case _map:
-		return w.writeMap(spec)
+		w.WriteString(renderMap(spec, w.lang))
 	case _shortcut:
 		w.WriteString("Alt+")
 		cont = true
@@ -64,7 +62,7 @@ func (w *formWriter) input(spec inputSpec) error {
 		cont = true
 	}
 	if !cont {
-		return nil
+		return
 	}
 
 	w.tag("input", spec)
@@ -109,7 +107,6 @@ func (w *formWriter) input(spec inputSpec) error {
 	}
 
 	w.WriteByte('>')
-	return nil
 }
 
 // Write the element tag and the common parts of all input element types to
@@ -179,17 +176,6 @@ func (w *formWriter) textArea(spec inputSpec) {
 	w.WriteString("</textarea>")
 }
 
-// Write a subform for inputting a key-value string map to buffer
-func (w *formWriter) writeMap(spec inputSpec) error {
-	return tmpl["map"].Execute(w, struct {
-		Spec inputSpec
-		Lang lang.Pack
-	}{
-		Spec: spec,
-		Lang: w.lang,
-	})
-}
-
 // Write an input element label from the spec to the buffer
 func (w *formWriter) label(spec inputSpec) {
 	ln := w.lang.Forms[spec.ID]
@@ -235,10 +221,10 @@ func renderInput(spec inputSpec, lang lang.Pack) string {
 }
 
 // Render a single label for an input element
-func renderLabel(spec inputSpec, lang lang.Pack) template.HTML {
+func renderLabel(spec inputSpec, lang lang.Pack) string {
 	w := formWriter{
 		lang: lang,
 	}
 	w.label(spec)
-	return w.HTML()
+	return w.String()
 }

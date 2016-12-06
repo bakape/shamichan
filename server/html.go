@@ -100,15 +100,14 @@ func boardNavigation(w http.ResponseWriter, r *http.Request) {
 func staticTemplate(
 	w http.ResponseWriter,
 	r *http.Request,
-	fn func(lang.Pack) ([]byte, error),
+	fn func(lang.Pack) string,
 ) {
 	lp, err := lang.Get(w, r)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
-	data, err := fn(lp)
-	serveHTML(w, r, "", data, err)
+	serveHTML(w, r, "", []byte(fn(lp)), nil)
 }
 
 // Serve a form for selecting one of several boards owned by the user
@@ -155,8 +154,8 @@ func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := templates.ConfigureBoard(conf, lp)
-	serveHTML(w, r, "", data, err)
+	data := []byte(templates.ConfigureBoard(conf, lp))
+	serveHTML(w, r, "", data, nil)
 }
 
 // Renders a form for creating new boards
@@ -182,8 +181,8 @@ func serverConfigurationForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := templates.ConfigureServer((*config.Get()), lp)
-	serveHTML(w, r, "", data, err)
+	data := []byte(templates.ConfigureServer((*config.Get()), lp))
+	serveHTML(w, r, "", data, nil)
 }
 
 // Render a form to change an account password

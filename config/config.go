@@ -283,6 +283,7 @@ func GetBoards() []string {
 	for b := range boardConfigs {
 		boards = append(boards, b)
 	}
+	sort.Strings(boards)
 	return boards
 }
 

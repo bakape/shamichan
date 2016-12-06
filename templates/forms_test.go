@@ -23,13 +23,7 @@ func TestOwnedBoard(t *testing.T) {
 }
 
 func TestConfigureBoard(t *testing.T) {
-	_, err := ConfigureBoard(
-		config.AllBoardConfigs.BoardConfigs,
-		lang.Packs["en_GB"],
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ConfigureBoard(config.AllBoardConfigs.BoardConfigs, lang.Packs["en_GB"])
 }
 
 func TestCreateBoard(t *testing.T) {
@@ -39,19 +33,10 @@ func TestCreateBoard(t *testing.T) {
 
 func TestConfigureServer(t *testing.T) {
 	t.Parallel()
-	_, err := ConfigureServer(
-		config.Defaults,
-		lang.Packs["en_GB"],
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	ConfigureServer(config.Defaults, lang.Packs["en_GB"])
 }
 
 func TestChangePassword(t *testing.T) {
 	t.Parallel()
-	_, err := ChangePassword(lang.Packs["en_GB"])
-	if err != nil {
-		t.Fatal(err)
-	}
+	ChangePassword(lang.Packs["en_GB"])
 }

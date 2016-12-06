@@ -26,12 +26,9 @@ func init() {
 	imageWebRoot = "testdata"
 	db.DBName = "meguca_test_server"
 	db.IsTest = true
-	templates.TemplateRoot = filepath.Join("..", "templates")
 	lang.Dir = filepath.Join("..", "lang")
 
-	fns := []func() error{
-		db.LoadDB, lang.Load, templates.Parse, templates.Compile,
-	}
+	fns := []func() error{db.LoadDB, lang.Load, templates.Compile}
 	if err := util.Waterfall(fns); err != nil {
 		panic(err)
 	}

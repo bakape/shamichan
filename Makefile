@@ -131,9 +131,8 @@ endif
 # Copy generated package contents for archiving
 package_copy:
 	rm -rf .package
-	mkdir -p .package/templates .package/images/src .package/images/thumb
+	mkdir -p .package/images/src .package/images/thumb
 	cp -r docs scripts www CHANGELOG.md README.md LICENSE .package/
-	cp -r templates/html .package/templates/
 
 # Cross-compile from Unix into a Windows_amd64 static binary
 # Needs Go checkout dfbbe06a205e7048a8541c4c97b250c24c40db96 or later. At the
