@@ -1,0 +1,147 @@
+{% import "strconv" %}
+{% import "github.com/bakape/meguca/config" %}
+{% import "github.com/bakape/meguca/common" %}
+{% import "github.com/bakape/meguca/lang" %}
+
+{% func renderBoard(b common.Board, id, title string, conf config.BoardConfContainer, ln lang.Pack) %}{% stripspace %}
+	{% comment %}
+		Not implemented yet
+		<h1 class="image-banner">
+			<img src="/assets/banners/{%u conf.Banner %}">
+		</h1>
+	{% endcomment %}
+	<h1 id="page-title">
+		{%s title %}
+	</h1>
+	<span class="aside-container">
+		<aside id="thread-form-container" class="glass">
+			<span class="act">
+				<a class="new-thread-button">
+					{%s= ln.UI["newThread"] %}
+				</a>
+			</span>
+			<form id="new-thread-form" action="/createThread" class="hidden">
+				{% if id == "all" %}
+					<select name="board" required>
+						{% for _, b := range config.GetBoardTitles() %}
+							<option value="{%s= b.ID %}">
+								{%= formatTitle(b.ID, b.Title) %}
+							</option>
+						{% endfor %}
+					</select>
+					<br>
+				{% endif %}
+				<input name="subject" placeholder="{%s= ln.UI["subject"] %}" required type="text" maxlength="100">
+				<br>
+				<noscript>
+					{% for _, s := range specs["noscriptPostCreation"] %}
+						{%s= renderInput(s, ln) %}
+						<br>
+					{% endfor %}
+				</noscript>
+				{% if id == "all" || !conf.TextOnly %}
+					<span class="upload-container">
+						<span data-id="spoiler">
+							<label>
+								<input type="checkbox" name="spoiler">
+								{%s= ln.Common.Posts["spoiler"] %}
+							</label>
+						</span>
+						<strong class="upload-status"></strong>
+						<br>
+						<input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip">
+						<br>
+					</span>
+				{% endif %}
+				{%= captcha("new-thread", ln.UI) %}
+				<input type="submit" value="{%s= ln.UI["submit"] %}">
+				<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
+			</form>
+		</aside>
+		<aside id="refresh" class="act glass">
+			<a>
+				{%s= ln.Common.UI["refresh"] %}
+			</a>
+		</aside>
+		{%= hoverReveal(conf.Notice, ln.UI["notice"]) %}
+		{%= hoverReveal(conf.Rules, ln.UI["rules"]) %}
+		<span id="catalog-controls" class="margin-spaced">
+			<input type="text" name="search" placeholder="{%s= ln.UI["search"] %}" title="{%s= ln.UI["searchTooltip"] %}">
+			<select name="sortMode">
+				{% for i, s := range [...]string{"lastReply", "creation", "replyCount", "fileCount"} %}
+					<option value="{%s= s %}">
+						{%s= ln.SortModes[i] %}
+					</option>
+				{% endfor %}
+			</select>
+		</span>
+	</span>
+	<noscript>TODO: Noscript thread creation</noscript>
+	<hr>
+	<div id="catalog">
+		{% for _, t := range b.Threads %}
+			{% code idStr:= strconv.FormatUint(t.ID, 10) %}
+			{% code postCtr := strconv.FormatUint(uint64(t.PostCtr), 10) %}
+			{% code imgCtr := strconv.FormatUint(uint64(t.ImageCtr), 10) %}
+			<article id="p{%s= idStr %}" class="glass" data-replyTime="{%s= strconv.FormatInt(t.ReplyTime, 10) %}" data-time="{%s= strconv.FormatInt(t.Time, 10) %}" data-postCtr="{%s= postCtr %}" data-imageCtr="{%s= imgCtr %}">
+				{% if t.Image != nil %}
+					<figure>
+						{% code img := *t.Image %}
+						<a class="history" href="/{%s= t.Board %}/{%s= idStr %}">
+							{% if img.Spoiler %}
+								<img src="/assets/spoil/default.jpg" width="125" height="125" class="expanded">
+							{% else %}
+								<img width="{%s= strconv.FormatUint(uint64(img.Dims[2]), 10) %}" height="{%s= strconv.FormatUint(uint64(img.Dims[3]), 10) %}" class="expanded" src="{%s= thumbPath(img.FileType, img.SHA1) %}">
+							{% endif %}
+						</a>
+					</figure>
+				{% endif %}
+				<small class="spaced thread-links">
+					{% if id == "all" %}
+						<b class="board">
+							/{%s= t.Board %}/
+						</b>
+					{% endif %}
+					<span class="counters">
+						{%s= postCtr %}/{%s= imgCtr %}
+					</span>
+					{% if t.Image == nil %}
+						<span class="act">
+							<a class="history" href="/{%s= t.Board %}/{%s= idStr %}">
+								{%s= ln.UI["expand"] %}
+							</a>
+						</span>
+					{% endif %}
+					<span class="act">
+						<a class="history" href="/{%s= t.Board %}/{%s= idStr %}?last=100">
+							{%s= ln.UI["last"] %} 100
+						</a>
+					</span>
+				</small>
+				<br>
+				<h3>
+					「{%s t.Subject %}」
+				</h3>
+			</article>
+		{% endfor %}
+		<script id="board-configs" type="application/json">
+			{%z= conf.JSON %}
+		</script>
+	</div>
+	<hr>
+{% endstripspace %}{% endfunc %}
+
+Notice widget, that reveals text on hover
+{% func hoverReveal(text, label string) %}{% stripspace %}
+	{% if text == "" %}
+		{% return %}
+	{% endif %}
+	<aside class="glass hover-reveal">
+		<span class="act">
+			{%s= label %}
+		</span>
+		<span class="popup-menu glass">
+			{%s text %}
+		</span>
+	</aside>
+{% endstripspace %}{% endfunc %}

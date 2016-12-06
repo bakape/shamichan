@@ -4,29 +4,31 @@
 OwnedBoard renders a form for selecting one of several boards owned by the
 user
 {% func OwnedBoard(boards config.BoardTitles, lang map[string]string) %}{% stripspace %}
-		{% if len(boards) != 0 %}
-			<select name="boards" required>
-				{% for _, b := range boards %}
-					<option value="{%s= b.ID %}">{%= formatTitle(b.ID, b.Title) %}</option>
-				{% endfor %}
-			</select>
-			<br>
-			<input type="submit" value="{%s= lang["submit"] %}">
-		{% else %}
-			{%s= lang["ownNoBoards"] %}
-			<br>
-			<br>
-		{% endif %}
-		<input type="button" name="cancel" value="{%s= lang["cancel"] %}">
-		<div class="form-response admin"></div>
+	{% if len(boards) != 0 %}
+		<select name="boards" required>
+			{% for _, b := range boards %}
+				<option value="{%s= b.ID %}">
+					{%= formatTitle(b.ID, b.Title) %}
+				</option>
+			{% endfor %}
+		</select>
+		<br>
+		<input type="submit" value="{%s= lang["submit"] %}">
+	{% else %}
+		{%s= lang["ownNoBoards"] %}
+		<br>
+		<br>
+	{% endif %}
+	<input type="button" name="cancel" value="{%s= lang["cancel"] %}">
+	<div class="form-response admin"></div>
 {% endstripspace %}{% endfunc %}
 
-{% func formatTitle(id, title string) %}
+{% func formatTitle(id, title string) %}{% stripspace %}
 	/{%s= id %}/ - {%s title %}
-{% endfunc %}
+{% endstripspace %}{% endfunc %}
 
 BoardNavigation renders a board selection and search form
-{% func BoardNavigation(lang map[string]string) %}
+{% func BoardNavigation(lang map[string]string) %}{% stripspace %}
 	<input type="text" class="full-width" name="search" placeholder="{%s= lang["search"] %}">
 	<br>
 	<form>
@@ -36,25 +38,25 @@ BoardNavigation renders a board selection and search form
 		{% for _, b := range config.GetBoardTitles() %}
 			<label>
 				<input type="checkbox" name="{%s= b.ID %}">
-				<a href="/{%s= b.ID %}/" class="history">{%= formatTitle(b.ID, b.Title) %}</a>
+				<a href="/{%s= b.ID %}/" class="history">
+					{%= formatTitle(b.ID, b.Title) %}
+				</a>
 				<br>
 			</label>
 		{% endfor %}
 	</form>
-{% endfunc %}
+{% endstripspace %}{% endfunc %}
 
 CreateBoard renders a the form for creating new boards
-{% func CreateBoard(ln lang.Pack) %}
+{% func CreateBoard(ln lang.Pack) %}{% stripspace %}
 	{%s= renderTable(specs["createBoard"], ln) %}
-	{% stripspace %}
-		<input type="submit" value="{%s= ln.UI["submit"] %}">
-		<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
-	{% endstripspace %}
+	<input type="submit" value="{%s= ln.UI["submit"] %}">
+	<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
 	{%= captcha("create-board", ln.UI) %}
 	<div class="form-response admin"></div>
-{% endfunc %}
+{% endstripspace %}{% endfunc %}
 
-{% func captcha(id string, lang map[string]string) %}
+{% func captcha(id string, lang map[string]string) %}{% stripspace %}
 	{% code conf := config.Get() %}
 	{% if !conf.Captcha %}
 		{% return %}
@@ -81,5 +83,4 @@ CreateBoard renders a the form for creating new boards
 			</noscript>
 		</div>
 	</div>
-{% endfunc %}
-
+{% endstripspace %}{% endfunc %}

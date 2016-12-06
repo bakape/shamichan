@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 
@@ -40,6 +39,5 @@ func Thread(ln lang.Pack, withIndex bool, t common.Thread) ([]byte, error) {
 	if !withIndex {
 		return []byte(html), nil
 	}
-
-	return execIndex(bytes.NewBufferString(html), ln.ID, title)
+	return execIndex(html, title, ln.ID)
 }

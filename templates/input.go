@@ -226,12 +226,12 @@ func renderTable(specs []inputSpec, lang lang.Pack) string {
 }
 
 // Render a single input element
-func renderInput(spec inputSpec, lang lang.Pack) (template.HTML, error) {
+func renderInput(spec inputSpec, lang lang.Pack) string {
 	w := formWriter{
 		lang: lang,
 	}
-	err := w.input(spec)
-	return w.HTML(), err
+	w.input(spec)
+	return w.String()
 }
 
 // Render a single label for an input element

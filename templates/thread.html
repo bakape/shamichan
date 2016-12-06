@@ -2,17 +2,25 @@
 {% import "github.com/bakape/meguca/common" %}
 {% import "github.com/bakape/meguca/config" %}
 
-{% func renderThread(t common.Thread, json []byte, title string, omit, imageOmit int, ln lang.Pack) %}
-	<h1 id="page-title">{%s title %}</h1>
+{% func renderThread(t common.Thread, json []byte, title string, omit, imageOmit int, ln lang.Pack) %}{% stripspace %}
+	<h1 id="page-title">
+		{%s title %}
+	</h1>
 	<span class="aside-container">
 		<span class="act" id="top">
-			<a href="#bottom">{%s= ln.UI["bottom"] %}</a>
+			<a href="#bottom">
+				{%s= ln.UI["bottom"] %}
+			</a>
 		</span>
 		<span id="expand-images" class="act">
-			<a>{%s= ln.Common.Posts["expand"] %}</a>
+			<a>
+				{%s= ln.Common.Posts["expand"] %}
+			</a>
 		</span>
 	</span>
-	<noscript>TODO: Noscript post creation</noscript>
+	<noscript>
+		TODO: Noscript post creation
+	</noscript>
 	<hr>
 	<div id="thread-container">
 		{% code root := config.Get().RootURL %}
@@ -21,24 +29,37 @@
 			{%= renderArticle(p, t.ID, 0, 0, "", root) %}
 		{% endfor %}
 	</div>
-	<script id="post-data" type="application/json">{%z= json %}</script>
-	<script id="board-configs" type="application/json">{%z= config.GetBoardConfigs(t.Board).JSON %}</script>
+	<script id="post-data" type="application/json">
+		{%z= json %}
+	</script>
+	<script id="board-configs" type="application/json">
+		{%z= config.GetBoardConfigs(t.Board).JSON %}
+	</script>
 	<div id="bottom-spacer"></div>
 	<aside class="act posting">
-		<a>{%s= ln.UI["reply"] %}</a>
+		<a>
+			{%s= ln.UI["reply"] %}
+		</a>
 	</aside>
 	<hr>
 	<span class="aside-container">
 		<span class="act" id="bottom">
-			<a href="." class="history">{%s= ln.UI["return"] %}</a>
+			<a href="." class="history">
+				{%s= ln.UI["return"] %}
+			</a>
 		</span>
 		<span class="act">
-			<a href="#top">{%s= ln.UI["top"] %}</a>
+			<a href="#top">
+				{%s= ln.UI["top"] %}
+			</a>
 		</span>
 		<span class="act">
-			<a href="?last=100" class="history reload">{%s= ln.UI["last"] %} 100</a>
+			<a href="?last=100" class="history reload">
+				{%s= ln.UI["last"] %} 100
+			</a>
 		</span>
-		<span id="lock" style="visibilty: hidden;">{%s= ln.UI["lockedToBottom"] %}</span>
+		<span id="lock" style="visibilty: hidden;">
+			{%s= ln.UI["lockedToBottom"] %}
+		</span>
 	</span>
-{% endfunc %}
-
+{% endstripspace %}{% endfunc %}

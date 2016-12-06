@@ -2,37 +2,45 @@
 {% import "strconv" %}
 {% import "github.com/bakape/meguca/common" %}
 
-{% func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string) %}{% collapsespace %}
+{% func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
 	<article id="p{%s= id %}" class="glass{% if p.Editing %} editing{% endif %}">
 		<header class="spaced">
 			{% if subject != "" %}
-				<h3>「{%s subject %}」</h3>
+				<h3>
+					「{%s subject %}」
+				</h3>
 			{% endif %}
 			<b class="name"{% if p.Auth != "" %} class="admin"{% endif %}>
-				{% stripspace %}
-					{% if p.Name != "" || p.Trip == "" %}
-						{% if p.Name != "" %}
-							{%s p.Name %}
-						{% else %}
-							Anonymous
-						{% endif %}
-						{% if p.Trip != "" %}
-							{% space %}
-						{% endif %}
+				{% if p.Name != "" || p.Trip == "" %}
+					{% if p.Name != "" %}
+						{%s p.Name %}
+					{% else %}
+						Anonymous
 					{% endif %}
 					{% if p.Trip != "" %}
-						<code>!{%s p.Trip %}</code>
+						{% space %}
 					{% endif %}
-					{% if p.Auth != "" %}
-						##{% space %}{%s p.Auth %}
-					{% endif %}
-				{% endstripspace %}
+				{% endif %}
+				{% if p.Trip != "" %}
+					<code>
+						!{%s p.Trip %}
+					</code>
+				{% endif %}
+				{% if p.Auth != "" %}
+					##{% space %}{%s p.Auth %}
+				{% endif %}
 			</b>
-			<time>{%s= formatTime(p.Time) %}</time>
+			<time>
+				{%s= formatTime(p.Time) %}
+			</time>
 			<nav>
-				<a href="#p{%s= id %}">No.</a>
-				<a class="quote" href="#p{%s= id %}">{%s= id %}</a>
+				<a href="#p{%s= id %}">
+					No.
+				</a>
+				<a class="quote" href="#p{%s= id %}">
+					{%s= id %}
+				</a>
 			</nav>
 			<a class="control">
 				<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
@@ -47,40 +55,50 @@
 			<figcaption class="spaced">
 				<a class="image-toggle act" hidden></a>
 				<span class="spaced image-search-container">
-					<a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url={%s= src %}">G</a>
-					<a class="image-search iqdb" target="_blank" rel="nofollow" href="http://iqdb.org/?url={%s= src %}">Iq</a>
-					<a class="image-search saucenao" target="_blank" rel="nofollow" href="http://saucenao.com/search.php?db=999&url={%s= src %}">Sn</a>
-					<a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{%s= img.MD5 %}">Ds</a>
-					<a class="image-search exhentai" target="_blank" rel="nofollow" href="http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash={%s= img.SHA1 %}">Ex</a>
+					<a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url={%s= src %}">
+						G
+					</a>
+					<a class="image-search iqdb" target="_blank" rel="nofollow" href="http://iqdb.org/?url={%s= src %}">
+						Iq
+					</a>
+					<a class="image-search saucenao" target="_blank" rel="nofollow" href="http://saucenao.com/search.php?db=999&url={%s= src %}">
+						Sn
+					</a>
+					<a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{%s= img.MD5 %}">
+						Ds
+					</a>
+					<a class="image-search exhentai" target="_blank" rel="nofollow" href="http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash={%s= img.SHA1 %}">
+						Ex
+					</a>
 				</span>
 				<span>
-					{% stripspace %}
-						(
-						{% if img.Audio %}
-							♫,{% space %}
+					(
+					{% if img.Audio %}
+						♫,{% space %}
+					{% endif %}
+					{% if img.Length != 0 %}
+						{% code l := img.Length %}
+						{% if l < 60 %}
+							{%s= fmt.Sprintf("0:%02d", l) %}
+						{% else %}
+							{% code min := l / 6 %}
+							{%s= fmt.Sprintf("%02d:%02d", min, l-min) %}
 						{% endif %}
-						{% if img.Length != 0 %}
-							{% code l := img.Length %}
-							{% if l < 60 %}
-								{%s= fmt.Sprintf("0:%02d", l) %}
-							{% else %}
-								{% code min := l / 6 %}
-								{%s= fmt.Sprintf("%02d:%02d", min, l-min) %}
-							{% endif %}
-							,{% space %}
-						{% endif %}
-						{% if img.APNG %}
-							APNG,{% space %}
-						{% endif %}
-						{%s= readableFileSize(img.Size) %},{% space %}
-						{%s= strconv.FormatUint(uint64(img.Dims[0]), 10) %}
-						x
-						{%s= strconv.FormatUint(uint64(img.Dims[1]), 10) %}
-						)
-					{% endstripspace %}
+						,{% space %}
+					{% endif %}
+					{% if img.APNG %}
+						APNG,{% space %}
+					{% endif %}
+					{%s= readableFileSize(img.Size) %},{% space %}
+					{%s= strconv.FormatUint(uint64(img.Dims[0]), 10) %}
+					x
+					{%s= strconv.FormatUint(uint64(img.Dims[1]), 10) %}
+					)
 				</span>
 				{% code name := imageName(img.FileType, img.Name) %}
-				<a href="{%s= src %}" download="{%s= name %}">{%s= name %}</a>
+				<a href="{%s= src %}" download="{%s= name %}">
+					{%s= name %}
+				</a>
 			</figcaption>
 		{% endif %}
 		<div class="post-container">
@@ -98,18 +116,20 @@
 					</a>
 				</figure>
 			{% endif %}
-			<blockquote>{%s= renderBody(p, op) %}</blockquote>
+			<blockquote>
+				{%s= renderBody(p, op) %}
+			</blockquote>
 		</div>
 		{% if omit != 0 %}
 			<span class="omit" data-omit="{%d omit %}" data-image-omit="{%d imageOmit %}">
-				{% stripspace %}
-					{%d omit %}{% space %}post{% if omit > 1 %}s{% endif %}
-					{% space %}and{% space %}{%d imageOmit %}
-					{% space %}image{% if imageOmit > 1 %}s{% endif %}
-					omitted{% space %}
-				{% endstripspace %}
+				{%d omit %}{% space %}post{% if omit > 1 %}s{% endif %}
+				{% space %}and{% space %}{%d imageOmit %}
+				{% space %}image{% if imageOmit > 1 %}s{% endif %}
+				omitted{% space %}
 				<span class="act">
-					<a href="{%s= strconv.FormatUint(op, 10) %}" class="history">See All</a>
+					<a href="{%s= strconv.FormatUint(op, 10) %}" class="history">
+						See All
+					</a>
 				</span>
 			</span>
 		{% endif %}
@@ -121,4 +141,4 @@
 			</small>
 		{% endif %}
 	</article>
-{% endcollapsespace %}{% endfunc %}
+{% endstripspace %}{% endfunc %}

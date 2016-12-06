@@ -1,3 +1,5 @@
+//go:generate qtc --ext html
+
 // Package templates generates and stores HTML templates
 package templates
 
@@ -6,10 +8,9 @@ import (
 	"html/template"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
-
-	"sort"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
@@ -55,7 +56,6 @@ func Parse() error {
 	}{
 		// Order matters. Dependencies must come before dependents.
 		{id: "captcha"},
-		{id: "hover-reveal"},
 		{
 			"tableForm",
 			nil,
@@ -79,17 +79,10 @@ func Parse() error {
 					return template.HTML(renderTable(s, ln))
 				},
 				"bundle": bundle,
-				"input":  renderInput,
-				"label":  renderLabel,
-			},
-		},
-		{
-			"board",
-			[]string{"captcha", "hover-reveal"},
-			template.FuncMap{
-				"thumbPath":   thumbPath,
-				"bundle":      bundle,
-				"renderInput": renderInput,
+				"input": func(s inputSpec, ln lang.Pack) template.HTML {
+					return template.HTML(renderInput(s, ln))
+				},
+				"label": renderLabel,
 			},
 		},
 	}
