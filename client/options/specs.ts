@@ -78,7 +78,9 @@ export const specs: { [id: string]: OptionSpec } = {
 		exec: toggleHeadStyle("work-mode", ".image-banner{display: none;}"),
 	},
 	// Image hover expansion
-	imageHover: {},
+	imageHover: {
+		default: true,
+	},
 	// WebM hover expansion
 	webmHover: {},
 	// Animated GIF thumbnails
