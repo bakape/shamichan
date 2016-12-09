@@ -83,7 +83,7 @@
 						{"exhentai", "Ex"},
 					} %}
 					{% for _, e := range engines %}
-						<a class="image-search {%s= e[0] %}" target="_blank" rel="nofollow">
+						<a class="image-search{% space %}{%s= e[0] %}" target="_blank" rel="nofollow">
 							{%s= e[1] %}
 						</a>
 					{% endfor %}

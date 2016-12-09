@@ -91,6 +91,8 @@ func streamrenderIndex(qw422016 *qt422016.Writer, ln lang.Pack) {
 		//line index.html:85
 		qw422016.N().S(`<a class="image-search`)
 		//line index.html:86
+		qw422016.N().S(` `)
+		//line index.html:86
 		qw422016.N().S(e[0])
 		//line index.html:86
 		qw422016.N().S(`" target="_blank" rel="nofollow">`)

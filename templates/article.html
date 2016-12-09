@@ -51,17 +51,18 @@
 		{% code var src string %}
 		{% if p.Image != nil %}
 			{% code img := *p.Image %}
-			{% code src = sourcePath(img.FileType, img.SHA1) %}
+			{% code src =  sourcePath(img.FileType, img.SHA1) %}
+			{% code ISSrc := root + src %}
 			<figcaption class="spaced">
 				<a class="image-toggle act" hidden></a>
 				<span class="spaced image-search-container">
-					<a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url={%s= src %}">
+					<a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url={%s= ISSrc %}">
 						G
 					</a>
-					<a class="image-search iqdb" target="_blank" rel="nofollow" href="http://iqdb.org/?url={%s= src %}">
+					<a class="image-search iqdb" target="_blank" rel="nofollow" href="http://iqdb.org/?url={%s= ISSrc %}">
 						Iq
 					</a>
-					<a class="image-search saucenao" target="_blank" rel="nofollow" href="http://saucenao.com/search.php?db=999&url={%s= src %}">
+					<a class="image-search saucenao" target="_blank" rel="nofollow" href="http://saucenao.com/search.php?db=999&url={%s= ISSrc %}">
 						Sn
 					</a>
 					<a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{%s= img.MD5 %}">
