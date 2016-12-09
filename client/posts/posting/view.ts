@@ -234,6 +234,15 @@ export default class FormView extends PostView {
             this.blockquote.children[num].replaceWith(frag))
     }
 
+    // Need to rerender entire post, because the client's actions introduce
+    // desync from server
+    public closePost() {
+        write(() => {
+            this.el.classList.remove("editing")
+            this.renderContents(this.el)
+        })
+    }
+
     // Transform form into a generic post. Removes any dangling form controls
     // and frees up references.
     public cleanUp() {

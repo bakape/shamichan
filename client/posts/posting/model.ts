@@ -224,9 +224,12 @@ export default class FormModel extends Post {
 
 	// Close the form and revert to regular post
 	public commitClose() {
-		// Normalize state
+		// Normalize state. The editing attribute remains true, which will cause
+		// a close message from the server to close the post one more time and
+		// re-render its contents.
 		this.state.line = this.inputState.line
 		this.view.cleanUp()
+		this.view.closePost()
 		this.send(message.closePost, null)
 	}
 
