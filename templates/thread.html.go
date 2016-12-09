@@ -29,7 +29,7 @@ var (
 //line thread.html:5
 func streamrenderThread(qw422016 *qt422016.Writer, postHTML []byte, ln lang.Pack) {
 	//line thread.html:5
-	qw422016.N().S(`<span class="aside-container"><span class="act" id="top"><a href="#bottom">`)
+	qw422016.N().S(`<span class="aside-container top-margin"><span class="act" id="top"><a href="#bottom">`)
 	//line thread.html:9
 	qw422016.N().S(ln.UI["bottom"])
 	//line thread.html:9
