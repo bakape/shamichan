@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/lang"
@@ -50,6 +51,7 @@ func Start() {
 		":8000",
 		"address to listen on for incoming HTTP connections",
 	)
+	flag.Float64Var(&cache.Size, "c", 1<<7, "cache size in MB")
 	flag.StringVar(
 		&db.DBName,
 		"d",
@@ -87,6 +89,9 @@ func Start() {
 
 	// Parse command line arguments
 	flag.Parse()
+	if cache.Size < 0 {
+		log.Fatal("cache size must be a positive number")
+	}
 	arg := flag.Arg(0)
 	if arg == "" {
 		arg = "debug"

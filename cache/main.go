@@ -18,8 +18,8 @@ var (
 	// Mutable for quicker testing.
 	expiryTime int64 = 25
 
-	// CacheSize sets the maximum size of cache before evicting unread data
-	CacheSize = 1 << 28
+	// Size sets the maximum size of cache before evicting unread data in MB
+	Size float64 = 1 << 7
 )
 
 // Key stores the ID of either a thread or board page
@@ -77,7 +77,7 @@ func updateUsedSize(delta int) {
 
 	totalUsed += delta
 
-	if totalUsed > CacheSize {
+	if totalUsed > int(Size)*(1<<20) {
 		s := ll.Remove(ll.Back()).(*store)
 		delete(cache, s.key)
 
