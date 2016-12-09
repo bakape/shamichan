@@ -46,6 +46,14 @@ interface HTMLElement {
 	): void
 }
 
+interface HTMLInputElement {
+	addEventListener(
+		type: string,
+		handler: EventListener,
+		options?: boolean | EventListenerOptions
+	): void
+}
+
 interface Node extends ChildNode, ParentNode {
 	addEventListener(
 		type: string,

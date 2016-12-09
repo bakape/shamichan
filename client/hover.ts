@@ -32,11 +32,11 @@ class PostPreview extends ImageHandler {
 	el: HTMLElement
 	clickHandler: EventListener
 	observer: MutationObserver
-	parent: HTMLAnchorElement
+	parent: HTMLElement
 	source: HTMLElement
 	sourceModel: Post
 
-	constructor(model: Post, parent: HTMLAnchorElement) {
+	constructor(model: Post, parent: HTMLElement) {
 		const {el} = model.view
 		super({ el: clonePost(el) })
 		this.parent = parent

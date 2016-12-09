@@ -32,7 +32,7 @@ export class FormView extends PostView implements UploadForm {
 	previousHeight: number
 
 	// UploadForm properties
-	spoiler: HTMLSpanElement
+	spoiler: HTMLElement
 	uploadStatus: HTMLSpanElement
 	uploadInput: HTMLInputElement
 	renderUploadForm: () => void
