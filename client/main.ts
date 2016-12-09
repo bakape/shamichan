@@ -1,15 +1,17 @@
 // Client entry point
 
-import { displayLoading, loadFromDB, page } from './state'
+import { displayLoading, loadFromDB, page, posts } from './state'
 import { start as connect } from './connection'
 import { open } from './db'
 import { render as renderBoard } from './page/board'
-import renderThread from "./page/thread"
+import renderThread, { setThreadTitle } from "./page/thread"
 import { extractConfigs } from "./page/common"
 import { exec, init } from './defer'
 import { loadModule } from "./util"
 import { checkBottom, scrollToAnchor } from "./scroll"
+import { ThreadData } from "./posts/models"
 import { setTitle } from "./tab"
+import { Post } from "./posts/models"
 
 // Load all stateful modules in dependency order
 async function start() {
@@ -30,7 +32,13 @@ async function start() {
 	checkBottom()
 	connect()
 	exec()
-	setTitle(frag.querySelector("#page-title").textContent)
+
+	if (page.thread) {
+		setThreadTitle(posts.get(page.thread) as Post & ThreadData)
+	} else {
+		setTitle(frag.querySelector("#page-title").textContent)
+	}
+
 	displayLoading(false)
 
 	// Load auxiliary modules

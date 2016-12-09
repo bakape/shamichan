@@ -211,14 +211,9 @@ func testCreateThreadTextOnly(t *testing.T) {
 }
 
 func populateMainTable(t testing.TB) {
-	assertInsert(t, "main", []map[string]interface{}{
-		{
-			"id":      "info",
-			"postCtr": 5,
-		},
-		{
-			"id": "boardCtrs",
-		},
+	assertInsert(t, "main", map[string]interface{}{
+		"id":      "info",
+		"postCtr": 5,
 	})
 }
 
@@ -451,15 +446,6 @@ func TestPostCreation(t *testing.T) {
 	}
 	if attrs != stdAttrs {
 		LogUnexpected(t, stdAttrs, attrs)
-	}
-
-	var boardCtr int
-	q = db.GetMain("boardCtrs").Field("a")
-	if err := db.One(q, &boardCtr); err != nil {
-		t.Fatal(err)
-	}
-	if boardCtr != 1 {
-		t.Errorf("unexpected board counter: %d", boardCtr)
 	}
 
 	AssertDeepEquals(t, cl.openPost, openPost{

@@ -6,6 +6,7 @@ import { write, threads } from '../render'
 import { renderTime } from "../posts/render/posts"
 import { fetchBoard } from "../fetch"
 import { maybeWriteNow } from "./common"
+import { setTitle } from "../tab"
 
 type SortFunction = (a: HTMLElement, b: HTMLElement) => number
 
@@ -54,7 +55,18 @@ export function render(frag: NodeSelector, writeNow: boolean) {
 		sortMode = "lastReply"
 	}
 
+	// Apply board title to tab
+	setTitle(frag.querySelector("#page-title").textContent)
+
 	maybeWriteNow(writeNow, () => {
+		// Add extra localizations
+		for (let el of frag.querySelectorAll(".counters")) {
+			el.setAttribute("title", lang.ui["postsImages"])
+		}
+		for (let el of frag.querySelectorAll(".lastN-link")) {
+			el.textContent = `${lang.ui["last"]} 100`
+		}
+
 		(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
 			.value = sortMode
 		renderRefreshButton(frag.querySelector("#refresh > a"))

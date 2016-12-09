@@ -3,11 +3,13 @@ package server
 import (
 	"testing"
 
+	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 )
 
 func TestThreadHTML(t *testing.T) {
+	cache.Clear()
 	assertTableClear(t, "threads", "posts")
 	assertInsert(t, "threads", common.DatabaseThread{
 		ID:    1,
@@ -47,6 +49,7 @@ func TestThreadHTML(t *testing.T) {
 }
 
 func TestBoardHTML(t *testing.T) {
+	cache.Clear()
 	setupPosts(t)
 	setBoards(t, "a")
 	(*config.Get()).DefaultLang = "en_GB"

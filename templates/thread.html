@@ -2,10 +2,7 @@
 {% import "github.com/bakape/meguca/common" %}
 {% import "github.com/bakape/meguca/config" %}
 
-{% func renderThread(t common.Thread, json []byte, title string, omit, imageOmit int, ln lang.Pack) %}{% stripspace %}
-	<h1 id="page-title">
-		{%s title %}
-	</h1>
+{% func renderThread(postHTML []byte, ln lang.Pack) %}{% stripspace %}
 	<span class="aside-container">
 		<span class="act" id="top">
 			<a href="#bottom">
@@ -22,19 +19,7 @@
 		TODO: Noscript post creation
 	</noscript>
 	<hr>
-	<div id="thread-container">
-		{% code root := config.Get().RootURL %}
-		{%= renderArticle(t.Post, t.ID, omit, imageOmit, t.Subject, root) %}
-		{% for _, p := range t.Posts %}
-			{%= renderArticle(p, t.ID, 0, 0, "", root) %}
-		{% endfor %}
-	</div>
-	<script id="post-data" type="application/json">
-		{%z= json %}
-	</script>
-	<script id="board-configs" type="application/json">
-		{%z= config.GetBoardConfigs(t.Board).JSON %}
-	</script>
+	{%z= postHTML %}
 	<div id="bottom-spacer"></div>
 	<aside class="act posting glass">
 		<a>
@@ -55,11 +40,29 @@
 		</span>
 		<span class="act">
 			<a href="?last=100" class="history reload">
-				{%s= ln.UI["last"] %} 100
+				{%s= ln.Common.UI["last"] %} 100
 			</a>
 		</span>
 		<span id="lock" style="visibilty: hidden;">
 			{%s= ln.UI["lockedToBottom"] %}
 		</span>
 	</span>
+{% endstripspace %}{% endfunc %}
+
+ThreadPosts renders the post content of a thread. Separate function to allow
+caching of generated posts.
+{% func ThreadPosts(t common.Thread, json []byte, omit, imageOmit int) %}{% stripspace %}
+	<div id="thread-container">
+		{% code root := config.Get().RootURL %}
+		{%= renderArticle(t.Post, t.ID, omit, imageOmit, t.Subject, root) %}
+		{% for _, p := range t.Posts %}
+			{%= renderArticle(p, t.ID, 0, 0, "", root) %}
+		{% endfor %}
+	</div>
+	<script id="post-data" type="application/json">
+		{%z= json %}
+	</script>
+	<script id="board-configs" type="application/json">
+		{%z= config.GetBoardConfigs(t.Board).JSON %}
+	</script>
 {% endstripspace %}{% endfunc %}

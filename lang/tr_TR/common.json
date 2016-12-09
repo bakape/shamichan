@@ -3,7 +3,8 @@
 		"ago": "ago",
 		"and": "and",
 		"anon": "Anon",
-		"contract": "Contract Images",
+		"contractImages": "Contract Images",
+		"expandImages": "Expand Images",
 		"expand": "Genişlet",
 		"hide": "Gizle",
 		"in": "in",
@@ -80,7 +81,9 @@
 		"thumbnailing": "Thumbnailing...",
 		"unfinishedPost": "You have an unfinished post",
 		"uploadProgress": "uploaded...",
-		"googleSong": "Şarkıyı googleda aratmak için tıklayın"
+		"googleSong": "Şarkıyı googleda aratmak için tıklayın",
+		"last": "Son",
+		"postsImages": "Posts/Images"
 	},
 	"sync": [
 		"disconnected",

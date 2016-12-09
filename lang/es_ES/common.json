@@ -3,7 +3,8 @@
 		"ago": "ago",
 		"and": "and",
 		"anon": "Anónimo",
-		"contract": "Contract Images",
+		"contractImages": "Contract Images",
+		"expandImages": "Expand Images",
 		"expand": "Ampliar",
 		"hide": "Hide",
 		"in": "in",
@@ -80,7 +81,9 @@
 		"thumbnailing": "Thumbnailing...",
 		"unfinishedPost": "You have an unfinished post",
 		"uploadProgress": "uploaded...",
-		"googleSong": "Clock para googlear la cancion"
+		"googleSong": "Clock para googlear la cancion",
+		"last": "Últimos",
+		"postsImages": "Posts/Images"
 	},
 	"sync": [
 		"disconnected",

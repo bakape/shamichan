@@ -42,22 +42,6 @@ func TestValidateOp(t *testing.T) {
 	}
 }
 
-func TestPostCounter(t *testing.T) {
-	assertTableClear(t, "main")
-	assertInsert(t, "main", infoDocument{
-		Document: Document{"info"},
-		PostCtr:  1,
-	})
-
-	ctr, err := PostCounter()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if ctr != 1 {
-		t.Fatalf("expected: 1, got: %d", ctr)
-	}
-}
-
 func TestThreadCounter(t *testing.T) {
 	assertTableClear(t, "posts")
 	assertInsert(t, "posts", []common.DatabasePost{
@@ -82,6 +66,38 @@ func TestThreadCounter(t *testing.T) {
 	})
 
 	ctr, err := ThreadCounter(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ctr != 55 {
+		LogUnexpected(t, 55, ctr)
+	}
+}
+
+func TestBoardCounter(t *testing.T) {
+	assertTableClear(t, "posts")
+	assertInsert(t, "posts", []common.DatabasePost{
+		{
+			StandalonePost: common.StandalonePost{
+				Board: "a",
+				Post: common.Post{
+					ID: 1,
+				},
+			},
+			LastUpdated: 54,
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Board: "a",
+				Post: common.Post{
+					ID: 2,
+				},
+			},
+			LastUpdated: 55,
+		},
+	})
+
+	ctr, err := BoardCounter("a")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,26 +182,6 @@ func TestReservePostID(t *testing.T) {
 		}
 		if id != i {
 			LogUnexpected(t, i, id)
-		}
-	}
-}
-
-func TestIncrementBoardCounter(t *testing.T) {
-	assertTableClear(t, "main")
-	assertInsert(t, "main", Document{"boardCtrs"})
-
-	// Check both a fresh board counter and incrementing an existing one
-	for i := uint64(1); i <= 2; i++ {
-		if err := IncrementBoardCounter("a"); err != nil {
-			t.Fatal(err)
-		}
-
-		ctr, err := BoardCounter("a")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if ctr != i {
-			LogUnexpected(t, i, ctr)
 		}
 	}
 }

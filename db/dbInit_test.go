@@ -124,14 +124,9 @@ func TestPopulateDB(t *testing.T) {
 		}
 	})
 
-	t.Run("boardCtrs", func(t *testing.T) {
-		t.Parallel()
-		assertExists(t, GetAccount("admin"))
-	})
-
 	t.Run("admin account", func(t *testing.T) {
 		t.Parallel()
-		assertExists(t, GetMain("info"))
+		assertExists(t, GetAccount("admin"))
 	})
 
 	t.Run("config", func(t *testing.T) {

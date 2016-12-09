@@ -3,7 +3,6 @@ import { PageState, posts, setBoardConfig } from '../state'
 import renderThread from './thread'
 import { renderFresh as renderBoard } from './board'
 import { makeFrag } from "../util"
-import { setTitle } from "../tab"
 import { setExpandAll } from "../posts/images"
 import { write } from "../render"
 
@@ -25,8 +24,6 @@ export default async function (
 	posts.clear()
 	const frag = makeFrag(html)
 	extractConfigs(frag)
-	// Apply board title to tab
-	setTitle(frag.querySelector("#page-title").textContent)
 	setExpandAll(false)
 
 	if (thread) {

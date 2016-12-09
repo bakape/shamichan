@@ -142,10 +142,6 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 		return
 	}
 	err = db.Insert("threads", thread)
-	if err != nil {
-		return
-	}
-	err = db.IncrementBoardCounter(req.Board)
 	return
 }
 
@@ -222,9 +218,6 @@ func insertPost(data []byte, c *Client) error {
 	}
 	q = r.Table("threads").Get(sync.OP).Update(updates)
 	if err := db.Write(q); err != nil {
-		return err
-	}
-	if err := db.IncrementBoardCounter(sync.Board); err != nil {
 		return err
 	}
 

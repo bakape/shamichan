@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/lang"
 	"github.com/bakape/meguca/templates"
@@ -48,14 +49,20 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	_, hash := config.GetClient()
-	board, etag, ok := boardData(w, r, b, lp.ID, hash)
-	if !ok {
+	html, ctr, err := cache.GetHTML(cache.BoardKey(b), boardCache)
+	if err != nil {
+		text500(w, r, err)
 		return
 	}
 
-	data, err := templates.Board(b, lp, withIndex(r), board)
-	serveHTML(w, r, etag, data, err)
+	_, hash := config.GetClient()
+	etag := formatEtag(ctr, lp.ID, hash)
+	if checkClientEtag(w, r, etag) {
+		return
+	}
+
+	html, err = templates.Board(b, lp, withIndex(r), html)
+	serveHTML(w, r, etag, html, err)
 }
 
 // Returns, if the noIndex query string is not set
@@ -76,14 +83,21 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	_, hash := config.GetClient()
-	thread, etag, ok := threadData(w, r, id, lp.ID, hash)
-	if !ok {
+	k := cache.ThreadKey(id, detectLastN(r))
+	html, ctr, err := cache.GetHTML(k, threadCache)
+	if err != nil {
+		respondToJSONError(w, r, err)
 		return
 	}
 
-	data, err := templates.Thread(lp, withIndex(r), thread)
-	serveHTML(w, r, etag, data, err)
+	_, hash := config.GetClient()
+	etag := formatEtag(ctr, lp.ID, hash)
+	if checkClientEtag(w, r, etag) {
+		return
+	}
+
+	html, err = templates.Thread(lp, withIndex(r), html)
+	serveHTML(w, r, etag, html, err)
 }
 
 // Render a board selection and navigation panel and write HTML to client

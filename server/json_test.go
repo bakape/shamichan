@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
@@ -69,6 +70,7 @@ func TestDetectLastN(t *testing.T) {
 func TestPostJSON(t *testing.T) {
 	setupPosts(t)
 	setBoards(t, "a")
+	cache.Clear()
 
 	const postEtag = "qO18VR0TvaL71iNdrFmaIQ"
 
@@ -130,22 +132,22 @@ func TestPostJSON(t *testing.T) {
 		{
 			"valid board",
 			"/a/",
-			"", 200, "W/7",
+			"", 200, "W/11",
 		},
 		{
 			"board etag matches",
 			"/a/",
-			"W/7", 304, "",
+			"W/11", 304, "",
 		},
 		{
 			"all board",
 			"/all/",
-			"", 200, "W/8",
+			"", 200, "W/11",
 		},
 		{
 			"/all/ board etag matches",
 			"/all/",
-			"W/8", 304, "",
+			"W/11", 304, "",
 		},
 	}
 
@@ -170,15 +172,9 @@ func TestPostJSON(t *testing.T) {
 // Setup the database for testing post-related paths
 func setupPosts(t *testing.T) {
 	assertTableClear(t, "main", "posts", "threads")
-	assertInsert(t, "main", []map[string]interface{}{
-		{
-			"id":      "info",
-			"postCtr": 8,
-		},
-		{
-			"id": "boardCtrs",
-			"a":  7,
-		},
+	assertInsert(t, "main", map[string]interface{}{
+		"id":      "info",
+		"postCtr": 8,
 	})
 	assertInsert(t, "threads", common.DatabaseThread{
 		ID:    1,
@@ -305,44 +301,6 @@ func TestServeStaffPosition(t *testing.T) {
 			assertBody(t, rec, c.res)
 		})
 	}
-}
-
-func TestServeBoardTimeStamps(t *testing.T) {
-	setBoards(t, "a", "c")
-	assertTableClear(t, "posts")
-	assertInsert(t, "posts", []common.DatabasePost{
-		{
-			LastUpdated: 1,
-			StandalonePost: common.StandalonePost{
-				Board: "a",
-				Post: common.Post{
-					ID: 11,
-				},
-			},
-		},
-		{
-			LastUpdated: 2,
-			StandalonePost: common.StandalonePost{
-				Board: "a",
-				Post: common.Post{
-					ID: 22,
-				},
-			},
-		},
-		{
-			LastUpdated: 3,
-			StandalonePost: common.StandalonePost{
-				Board: "c",
-				Post: common.Post{
-					ID: 33,
-				},
-			},
-		},
-	})
-
-	rec, req := newPair("/json/boardTimestamps")
-	router.ServeHTTP(rec, req)
-	assertBody(t, rec, `{"a":2,"c":3}`)
 }
 
 func TestServeExtensionMap(t *testing.T) {

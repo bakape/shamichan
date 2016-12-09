@@ -30,7 +30,7 @@ var (
 )
 
 //line board.html:6
-func streamrenderBoard(qw422016 *qt422016.Writer, b common.Board, id, title string, conf config.BoardConfContainer, ln lang.Pack) {
+func streamrenderBoard(qw422016 *qt422016.Writer, threadHTML []byte, id, title string, conf config.BoardConfContainer, ln lang.Pack) {
 	//line board.html:12
 	qw422016.N().S(`<h1 id="page-title">`)
 	//line board.html:14
@@ -136,221 +136,241 @@ func streamrenderBoard(qw422016 *qt422016.Writer, b common.Board, id, title stri
 	//line board.html:75
 	qw422016.N().S(`</select></span></span><noscript>TODO: Noscript thread creation</noscript><hr><div id="catalog">`)
 	//line board.html:82
-	for _, t := range b.Threads {
-		//line board.html:83
+	qw422016.N().Z(threadHTML)
+	//line board.html:82
+	qw422016.N().S(`<script id="board-configs" type="application/json">`)
+	//line board.html:84
+	qw422016.N().Z(conf.JSON)
+	//line board.html:84
+	qw422016.N().S(`</script></div><hr>`)
+//line board.html:88
+}
+
+//line board.html:88
+func writerenderBoard(qq422016 qtio422016.Writer, threadHTML []byte, id, title string, conf config.BoardConfContainer, ln lang.Pack) {
+	//line board.html:88
+	qw422016 := qt422016.AcquireWriter(qq422016)
+	//line board.html:88
+	streamrenderBoard(qw422016, threadHTML, id, title, conf, ln)
+	//line board.html:88
+	qt422016.ReleaseWriter(qw422016)
+//line board.html:88
+}
+
+//line board.html:88
+func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, ln lang.Pack) string {
+	//line board.html:88
+	qb422016 := qt422016.AcquireByteBuffer()
+	//line board.html:88
+	writerenderBoard(qb422016, threadHTML, id, title, conf, ln)
+	//line board.html:88
+	qs422016 := string(qb422016.B)
+	//line board.html:88
+	qt422016.ReleaseByteBuffer(qb422016)
+	//line board.html:88
+	return qs422016
+//line board.html:88
+}
+
+// CatalogThreads renders thread content for a catalog page. Separate function to
+// allow caching of generated posts.
+
+//line board.html:92
+func StreamCatalogThreads(qw422016 *qt422016.Writer, b common.Board) {
+	//line board.html:93
+	for _, t := range b {
+		//line board.html:94
 		idStr := strconv.FormatUint(t.ID, 10)
 
-		//line board.html:84
+		//line board.html:95
 		postCtr := strconv.FormatUint(uint64(t.PostCtr), 10)
 
-		//line board.html:85
+		//line board.html:96
 		imgCtr := strconv.FormatUint(uint64(t.ImageCtr), 10)
 
-		//line board.html:85
+		//line board.html:96
 		qw422016.N().S(`<article id="p`)
-		//line board.html:86
+		//line board.html:97
 		qw422016.N().S(idStr)
-		//line board.html:86
+		//line board.html:97
 		qw422016.N().S(`" class="glass" data-replyTime="`)
-		//line board.html:86
+		//line board.html:97
 		qw422016.N().S(strconv.FormatInt(t.ReplyTime, 10))
-		//line board.html:86
+		//line board.html:97
 		qw422016.N().S(`" data-time="`)
-		//line board.html:86
+		//line board.html:97
 		qw422016.N().S(strconv.FormatInt(t.Time, 10))
-		//line board.html:86
+		//line board.html:97
 		qw422016.N().S(`" data-postCtr="`)
-		//line board.html:86
+		//line board.html:97
 		qw422016.N().S(postCtr)
-		//line board.html:86
+		//line board.html:97
 		qw422016.N().S(`" data-imageCtr="`)
-		//line board.html:86
+		//line board.html:97
 		qw422016.N().S(imgCtr)
-		//line board.html:86
+		//line board.html:97
 		qw422016.N().S(`">`)
-		//line board.html:87
+		//line board.html:98
 		if t.Image != nil {
-			//line board.html:87
+			//line board.html:98
 			qw422016.N().S(`<figure>`)
-			//line board.html:89
+			//line board.html:100
 			img := *t.Image
 
-			//line board.html:89
-			qw422016.N().S(`<a class="history" href="/`)
-			//line board.html:90
-			qw422016.N().S(t.Board)
-			//line board.html:90
-			qw422016.N().S(`/`)
-			//line board.html:90
-			qw422016.N().S(idStr)
-			//line board.html:90
-			qw422016.N().S(`">`)
-			//line board.html:91
-			if img.Spoiler {
-				//line board.html:91
-				qw422016.N().S(`<img src="/assets/spoil/default.jpg" width="125" height="125" class="expanded">`)
-				//line board.html:93
-			} else {
-				//line board.html:93
-				qw422016.N().S(`<img width="`)
-				//line board.html:94
-				qw422016.N().S(strconv.FormatUint(uint64(img.Dims[2]), 10))
-				//line board.html:94
-				qw422016.N().S(`" height="`)
-				//line board.html:94
-				qw422016.N().S(strconv.FormatUint(uint64(img.Dims[3]), 10))
-				//line board.html:94
-				qw422016.N().S(`" class="expanded" src="`)
-				//line board.html:94
-				qw422016.N().S(thumbPath(img.FileType, img.SHA1))
-				//line board.html:94
-				qw422016.N().S(`">`)
-				//line board.html:95
-			}
-			//line board.html:95
-			qw422016.N().S(`</a></figure>`)
-			//line board.html:98
-		}
-		//line board.html:98
-		qw422016.N().S(`<small class="spaced thread-links">`)
-		//line board.html:100
-		if id == "all" {
 			//line board.html:100
-			qw422016.N().S(`<b class="board">/`)
-			//line board.html:102
+			qw422016.N().S(`<a class="history" href="/`)
+			//line board.html:101
 			qw422016.N().S(t.Board)
-			//line board.html:102
-			qw422016.N().S(`/</b>`)
-			//line board.html:104
-		}
-		//line board.html:104
-		qw422016.N().S(`<span class="counters">`)
-		//line board.html:106
-		qw422016.N().S(postCtr)
-		//line board.html:106
-		qw422016.N().S(`/`)
-		//line board.html:106
-		qw422016.N().S(imgCtr)
-		//line board.html:106
-		qw422016.N().S(`</span>`)
-		//line board.html:108
-		if t.Image == nil {
-			//line board.html:108
-			qw422016.N().S(`<span class="act"><a class="history" href="/`)
-			//line board.html:110
-			qw422016.N().S(t.Board)
-			//line board.html:110
+			//line board.html:101
 			qw422016.N().S(`/`)
-			//line board.html:110
+			//line board.html:101
 			qw422016.N().S(idStr)
-			//line board.html:110
+			//line board.html:101
 			qw422016.N().S(`">`)
-			//line board.html:111
-			qw422016.N().S(ln.UI["expand"])
-			//line board.html:111
-			qw422016.N().S(`</a></span>`)
-			//line board.html:114
+			//line board.html:102
+			if img.Spoiler {
+				//line board.html:102
+				qw422016.N().S(`<img src="/assets/spoil/default.jpg" width="150" height="150" class="expanded">`)
+				//line board.html:104
+			} else {
+				//line board.html:104
+				qw422016.N().S(`<img width="`)
+				//line board.html:105
+				qw422016.N().S(strconv.FormatUint(uint64(img.Dims[2]), 10))
+				//line board.html:105
+				qw422016.N().S(`" height="`)
+				//line board.html:105
+				qw422016.N().S(strconv.FormatUint(uint64(img.Dims[3]), 10))
+				//line board.html:105
+				qw422016.N().S(`" class="expanded" src="`)
+				//line board.html:105
+				qw422016.N().S(thumbPath(img.FileType, img.SHA1))
+				//line board.html:105
+				qw422016.N().S(`">`)
+				//line board.html:106
+			}
+			//line board.html:106
+			qw422016.N().S(`</a></figure>`)
+			//line board.html:109
 		}
-		//line board.html:114
-		qw422016.N().S(`<span class="act"><a class="history" href="/`)
-		//line board.html:116
+		//line board.html:109
+		qw422016.N().S(`<small class="spaced thread-links"><b class="board">/`)
+		//line board.html:112
 		qw422016.N().S(t.Board)
-		//line board.html:116
+		//line board.html:112
+		qw422016.N().S(`/</b><span class="counters">`)
+		//line board.html:115
+		qw422016.N().S(postCtr)
+		//line board.html:115
 		qw422016.N().S(`/`)
-		//line board.html:116
+		//line board.html:115
+		qw422016.N().S(imgCtr)
+		//line board.html:115
+		qw422016.N().S(`</span>`)
+		//line board.html:117
+		if t.Image == nil {
+			//line board.html:117
+			qw422016.N().S(`<span class="act"><a class="history expand-link" href="/`)
+			//line board.html:119
+			qw422016.N().S(t.Board)
+			//line board.html:119
+			qw422016.N().S(`/`)
+			//line board.html:119
+			qw422016.N().S(idStr)
+			//line board.html:119
+			qw422016.N().S(`">Expand</a></span>`)
+			//line board.html:123
+		}
+		//line board.html:123
+		qw422016.N().S(`<span class="act"><a class="history lastN-link" href="/`)
+		//line board.html:125
+		qw422016.N().S(t.Board)
+		//line board.html:125
+		qw422016.N().S(`/`)
+		//line board.html:125
 		qw422016.N().S(idStr)
-		//line board.html:116
-		qw422016.N().S(`?last=100">`)
-		//line board.html:117
-		qw422016.N().S(ln.UI["last"])
-		//line board.html:117
-		qw422016.N().S(`100</a></span></small><br><h3>「`)
-		//line board.html:123
+		//line board.html:125
+		qw422016.N().S(`?last=100">Last 100</a></span></small><br><h3>「`)
+		//line board.html:132
 		qw422016.E().S(t.Subject)
-		//line board.html:123
+		//line board.html:132
 		qw422016.N().S(`」</h3></article>`)
-		//line board.html:126
+		//line board.html:135
 	}
-	//line board.html:126
-	qw422016.N().S(`<script id="board-configs" type="application/json">`)
-	//line board.html:128
-	qw422016.N().Z(conf.JSON)
-	//line board.html:128
-	qw422016.N().S(`</script></div><hr>`)
-//line board.html:132
+//line board.html:136
 }
 
-//line board.html:132
-func writerenderBoard(qq422016 qtio422016.Writer, b common.Board, id, title string, conf config.BoardConfContainer, ln lang.Pack) {
-	//line board.html:132
+//line board.html:136
+func WriteCatalogThreads(qq422016 qtio422016.Writer, b common.Board) {
+	//line board.html:136
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line board.html:132
-	streamrenderBoard(qw422016, b, id, title, conf, ln)
-	//line board.html:132
+	//line board.html:136
+	StreamCatalogThreads(qw422016, b)
+	//line board.html:136
 	qt422016.ReleaseWriter(qw422016)
-//line board.html:132
+//line board.html:136
 }
 
-//line board.html:132
-func renderBoard(b common.Board, id, title string, conf config.BoardConfContainer, ln lang.Pack) string {
-	//line board.html:132
+//line board.html:136
+func CatalogThreads(b common.Board) string {
+	//line board.html:136
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line board.html:132
-	writerenderBoard(qb422016, b, id, title, conf, ln)
-	//line board.html:132
+	//line board.html:136
+	WriteCatalogThreads(qb422016, b)
+	//line board.html:136
 	qs422016 := string(qb422016.B)
-	//line board.html:132
+	//line board.html:136
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line board.html:132
+	//line board.html:136
 	return qs422016
-//line board.html:132
+//line board.html:136
 }
 
 // Notice widget, that reveals text on hover
 
-//line board.html:135
+//line board.html:139
 func streamhoverReveal(qw422016 *qt422016.Writer, text, label string) {
-	//line board.html:136
+	//line board.html:140
 	if text == "" {
-		//line board.html:137
+		//line board.html:141
 		return
-		//line board.html:138
+		//line board.html:142
 	}
-	//line board.html:138
+	//line board.html:142
 	qw422016.N().S(`<aside class="glass hover-reveal"><span class="act">`)
-	//line board.html:141
+	//line board.html:145
 	qw422016.N().S(label)
-	//line board.html:141
+	//line board.html:145
 	qw422016.N().S(`</span><span class="popup-menu glass">`)
-	//line board.html:144
+	//line board.html:148
 	qw422016.E().S(text)
-	//line board.html:144
+	//line board.html:148
 	qw422016.N().S(`</span></aside>`)
-//line board.html:147
+//line board.html:151
 }
 
-//line board.html:147
+//line board.html:151
 func writehoverReveal(qq422016 qtio422016.Writer, text, label string) {
-	//line board.html:147
+	//line board.html:151
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line board.html:147
+	//line board.html:151
 	streamhoverReveal(qw422016, text, label)
-	//line board.html:147
+	//line board.html:151
 	qt422016.ReleaseWriter(qw422016)
-//line board.html:147
+//line board.html:151
 }
 
-//line board.html:147
+//line board.html:151
 func hoverReveal(text, label string) string {
-	//line board.html:147
+	//line board.html:151
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line board.html:147
+	//line board.html:151
 	writehoverReveal(qb422016, text, label)
-	//line board.html:147
+	//line board.html:151
 	qs422016 := string(qb422016.B)
-	//line board.html:147
+	//line board.html:151
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line board.html:147
+	//line board.html:151
 	return qs422016
-//line board.html:147
+//line board.html:151
 }

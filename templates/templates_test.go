@@ -37,21 +37,22 @@ func TestCompileTemplates(t *testing.T) {
 }
 
 func TestBoard(t *testing.T) {
-	_, err := Board("all", lang.Packs["en_GB"], true, common.Board{
-		Threads: common.BoardThreads{
-			{
-				ID:      1,
-				Board:   "a",
-				Subject: "foo",
-			},
-			{
-				ID:      2,
-				Board:   "c",
-				Subject: "bar",
-				Image:   &assets.StdJPEG,
-			},
+	board := common.Board{
+		{
+			ID:      1,
+			Board:   "a",
+			Subject: "foo",
 		},
-	})
+		{
+			ID:      2,
+			Board:   "c",
+			Subject: "bar",
+			Image:   &assets.StdJPEG,
+		},
+	}
+	html := CatalogThreads(board)
+
+	_, err := Board("all", lang.Packs["en_GB"], true, []byte(html))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +61,7 @@ func TestBoard(t *testing.T) {
 func TestThread(t *testing.T) {
 	img := assets.StdJPEG
 	img.Length = 20
-	_, err := Thread(lang.Packs["en_GB"], true, common.Thread{
+	thread := common.Thread{
 		Board:   "a",
 		Subject: "foo",
 		Post: common.Post{
@@ -88,7 +89,11 @@ func TestThread(t *testing.T) {
 				Editing: true,
 			},
 		},
-	})
+	}
+
+	oPosts, oImages := CalculateOmit(thread)
+	html := ThreadPosts(thread, nil, oPosts, oImages)
+	_, err := Thread(lang.Packs["en_GB"], true, []byte(html))
 	if err != nil {
 		t.Fatal(err)
 	}

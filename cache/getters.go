@@ -118,9 +118,5 @@ func ThreadKey(id uint64, lastN int) Key {
 
 // BoardKey encodes a key for a board page resource
 func BoardKey(b string) Key {
-	var id [3]byte
-	for i := 0; i < len(b) && i < 3; i++ {
-		id[i] = b[i]
-	}
-	return Key{Board: id}
+	return Key{Board: b}
 }

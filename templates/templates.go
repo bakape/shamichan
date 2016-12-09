@@ -5,12 +5,10 @@ package templates
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
+	"html"
 	"sync"
 	"text/template"
-
-	"html"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -50,13 +48,13 @@ func Board(
 	b string,
 	ln lang.Pack,
 	withIndex bool,
-	data common.Board,
+	threadHTML []byte,
 ) ([]byte, error) {
 	boardConf := config.GetBoardConfigs(b)
 	title := fmt.Sprintf("/%s/ - %s", b, boardConf.Title)
 	title = html.EscapeString(title)
 
-	html := renderBoard(data, b, title, boardConf, ln)
+	html := renderBoard(threadHTML, b, title, boardConf, ln)
 
 	if !withIndex {
 		return []byte(html), nil
@@ -65,16 +63,16 @@ func Board(
 }
 
 // Thread renders thread page HTML for noscript browsers
-func Thread(ln lang.Pack, withIndex bool, t common.Thread) ([]byte, error) {
-	title := fmt.Sprintf("/%s/ - %s (#%d)", t.Board, t.Subject, t.ID)
-	title = html.EscapeString(title)
-
-	postData, err := json.Marshal(t)
-	if err != nil {
-		return nil, err
+func Thread(ln lang.Pack, withIndex bool, postHTML []byte) ([]byte, error) {
+	html := renderThread(postHTML, ln)
+	if !withIndex {
+		return []byte(html), nil
 	}
+	return execIndex(html, "", ln.ID)
+}
 
-	// Calculate omitted posts and images
+// CalculateOmit returns the omitted post and image counts for a thread
+func CalculateOmit(t common.Thread) (int, int) {
 	var (
 		omit    = int(t.PostCtr) - len(t.Posts)
 		imgOmit uint32
@@ -90,13 +88,7 @@ func Thread(ln lang.Pack, withIndex bool, t common.Thread) ([]byte, error) {
 			}
 		}
 	}
-
-	html := renderThread(t, postData, title, omit, int(imgOmit), ln)
-
-	if !withIndex {
-		return []byte(html), nil
-	}
-	return execIndex(html, title, ln.ID)
+	return omit, int(imgOmit)
 }
 
 // Execute and index template in the second pass

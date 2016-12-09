@@ -7,14 +7,15 @@ import lang from "../lang"
 import { updateSyncTimestamp } from "../connection"
 import notifyAboutReply from "../notification"
 import { maybeWriteNow } from "./common"
-import { pluralize } from "../util"
+import { pluralize, escape } from "../util"
+import { setTitle } from "../tab"
 
 // Container for all rendered posts
 export let threadContainer: HTMLElement
 
 // Render the HTML of a thread page. writeNow specifies, if the write to the DOM
 // fragment should not be delayed.
-export default function(frag: DocumentFragment, writeNow: boolean) {
+export default function (frag: DocumentFragment, writeNow: boolean) {
     updateSyncTimestamp()
 
     threadContainer = frag.querySelector("#thread-container")
@@ -35,25 +36,34 @@ export default function(frag: DocumentFragment, writeNow: boolean) {
         data.image.large = true
     }
 
+    // Extra client-side localizations. Not done server-side for better
+    // cacheability.
     localizeOmitted(frag, writeNow)
-    localizeAnonymous(frag, writeNow)
-
-    for (let post of posts) {
-        extractPost(post, frag, writeNow)
-    }
-
     if (options.anonymise) {
         maybeWriteNow(writeNow, () => {
             for (let el of frag.querySelectorAll(".name")) {
                 el.textContent = lang.posts["anon"]
             }
         })
+    } else {
+        localizeAnonymous(frag, writeNow)
+    }
+
+    setThreadTitle(data)
+
+    for (let post of posts) {
+        extractPost(post, frag, writeNow)
     }
 
     if (writeNow) {
         threads.innerHTML = ""
         threads.append(frag)
     }
+}
+
+// Set thread title to tab
+export function setThreadTitle(data: ThreadData) {
+    setTitle(`/${data.board}/ - ${data.subject} (#${data.id})`)
 }
 
 // Extract post model and view from the HTML fragment and apply client-specific

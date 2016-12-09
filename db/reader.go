@@ -87,11 +87,6 @@ func GetPost(id uint64) (post common.StandalonePost, err error) {
 
 // GetBoard retrieves all OPs of a single board
 func GetBoard(board string) (data common.Board, err error) {
-	data.Ctr, err = BoardCounter(board)
-	if err != nil {
-		return
-	}
-
 	q := r.
 		Table("threads").
 		GetAllByIndex("board", board).
@@ -100,19 +95,21 @@ func GetBoard(board string) (data common.Board, err error) {
 		Without(omitForBoards).
 		Merge(mergeLastUpdated).
 		OrderBy(r.Desc("replyTime"))
-	err = All(q, &data.Threads)
+	err = All(q, &data)
+
+	// So that JSON always produces and array
+	if data == nil {
+		data = common.Board{}
+	}
 
 	return
 }
 
 // GetAllBoard retrieves all threads for the "/all/" meta-board
-func GetAllBoard() (board common.Board, err error) {
-	ctr, err := PostCounter()
-	if err != nil {
-		return
+func GetAllBoard() (data common.Board, err error) {
+	err = All(getAllBoard, &data)
+	if data == nil {
+		data = common.Board{}
 	}
-	board.Ctr = ctr
-
-	err = All(getAllBoard, &board.Threads)
 	return
 }

@@ -48,19 +48,4 @@ func TestMarshalUnmarshalCommands(t *testing.T) {
 			}
 		})
 	}
-
-}
-
-func TestMarshalEmptyBoard(t *testing.T) {
-	t.Parallel()
-
-	b := Board{}
-	data, err := json.Marshal(&b)
-	if err != nil {
-		t.Fatal(err)
-	}
-	const std = `{"ctr":0,"threads":[]}`
-	if s := string(data); s != std {
-		LogUnexpected(t, std, s)
-	}
 }

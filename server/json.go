@@ -7,15 +7,55 @@ import (
 	"strconv"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/dancannon/gorethink"
 )
 
 var (
 	errNoImage = errors.New("post has no image")
+
+	threadCache = cache.FrontEnd{
+		GetCounter: func(k cache.Key) (uint64, error) {
+			return db.ThreadCounter(k.ID)
+		},
+		GetFresh: func(k cache.Key) (interface{}, error) {
+			return db.GetThread(k.ID, int(k.LastN))
+		},
+		RenderHTML: func(data interface{}, json []byte) []byte {
+			thread := data.(common.Thread)
+			oPosts, oImages := templates.CalculateOmit(thread)
+			return []byte(templates.ThreadPosts(thread, json, oPosts, oImages))
+		},
+	}
+	boardCache = cache.FrontEnd{
+		GetCounter: func(k cache.Key) (uint64, error) {
+			if k.Board == "all" {
+				var ctr uint64
+				q := gorethink.
+					Table("posts").
+					Field("lastUpdated").
+					Max().
+					Default(0)
+				err := db.One(q, &ctr)
+				return ctr, err
+			}
+			return db.BoardCounter(k.Board)
+		},
+		GetFresh: func(k cache.Key) (interface{}, error) {
+			if k.Board == "all" {
+				return db.GetAllBoard()
+			}
+			return db.GetBoard(k.Board)
+		},
+		RenderHTML: func(data interface{}, json []byte) []byte {
+			return []byte(templates.CatalogThreads(data.(common.Board)))
+		},
+	}
 )
 
 // Request to spoiler an already allocated image that the sender has created
@@ -138,8 +178,16 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	if !ok {
 		return
 	}
-	data, etag, ok := threadData(w, r, id, "", "")
-	if !ok {
+
+	k := cache.ThreadKey(id, detectLastN(r))
+	data, ctr, err := cache.GetJSON(k, threadCache)
+	if err != nil {
+		respondToJSONError(w, r, err)
+		return
+	}
+
+	etag := formatEtag(ctr, "", "")
+	if checkClientEtag(w, r, etag) {
 		return
 	}
 
@@ -174,36 +222,6 @@ func validateThread(
 	return id, true
 }
 
-// Retrieves thread data from the database and the associated etag header.  Can
-// receive optional language ID and hash to attach to etag. If an error occurred
-// and the calling function should return, ok = false.
-func threadData(
-	w http.ResponseWriter,
-	r *http.Request,
-	id uint64,
-	lang, hash string,
-) (
-	data common.Thread, etag string, ok bool,
-) {
-	counter, err := db.ThreadCounter(id)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	etag = formatEtag(counter, lang, hash)
-	if checkClientEtag(w, r, etag) {
-		return
-	}
-
-	data, err = db.GetThread(id, detectLastN(r))
-	if err != nil {
-		respondToJSONError(w, r, err)
-		return
-	}
-
-	return data, etag, true
-}
-
 // Combine the progress counter and optional configuration hash into a weak etag
 func formatEtag(ctr uint64, lang, hash string) string {
 	c := strconv.FormatUint(ctr, 10)
@@ -232,63 +250,18 @@ func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	data, etag, ok := boardData(w, r, b, "", "")
-	if !ok {
+	data, ctr, err := cache.GetJSON(cache.BoardKey(b), boardCache)
+	if err != nil {
+		text500(w, r, err)
 		return
 	}
+
+	etag := formatEtag(ctr, "", "")
+	if checkClientEtag(w, r, etag) {
+		return
+	}
+
 	serveJSON(w, r, etag, data)
-}
-
-// Retrieves board data from the database and the associated etag header. Can
-// receive optional language ID and hash to attach to the etag. If an error
-// occurred and the calling function should return, ok = false.
-func boardData(w http.ResponseWriter, r *http.Request, b, lang, hash string) (
-	data common.Board, etag string, ok bool,
-) {
-	if b == "all" {
-		return allBoardData(w, r, lang, hash)
-	}
-
-	counter, err := db.BoardCounter(b)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	etag = formatEtag(counter, lang, hash)
-	if checkClientEtag(w, r, etag) {
-		return
-	}
-
-	data, err = db.GetBoard(b)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
-	return data, etag, true
-}
-
-// Same as boardData(), but for the /all/ metaboard
-func allBoardData(w http.ResponseWriter, r *http.Request, lang, hash string) (
-	data common.Board, etag string, ok bool,
-) {
-	counter, err := db.PostCounter()
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	etag = formatEtag(counter, lang, hash)
-	if checkClientEtag(w, r, etag) {
-		return
-	}
-
-	data, err = db.GetAllBoard()
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
-	return data, etag, true
 }
 
 // Serve a JSON array of all available boards and their titles
@@ -323,33 +296,6 @@ func serveStaffPositions(
 	}
 
 	serveJSON(w, r, "", boards)
-}
-
-// Serve boards' last update timestamps. A board with no  posts will produce
-// zero.
-func serveBoardTimestamps(w http.ResponseWriter, r *http.Request) {
-	q := gorethink.
-		Expr(config.GetBoards()).
-		Map(func(b gorethink.Term) gorethink.Term {
-			return gorethink.Object(
-				b,
-				gorethink.
-					Table("posts").
-					GetAllByIndex("board", b).
-					Field("lastUpdated").
-					Max().
-					Default(0),
-			)
-		}).
-		Reduce(func(a, b gorethink.Term) gorethink.Term {
-			return a.Merge(b)
-		})
-	var ctrs map[string]uint64
-	if err := db.One(q, &ctrs); err != nil {
-		text500(w, r, err)
-		return
-	}
-	serveJSON(w, r, "", ctrs)
 }
 
 // Serve map of internal file type enums to extensions. Needed for

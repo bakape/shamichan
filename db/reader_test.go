@@ -74,16 +74,9 @@ func TestReader(t *testing.T) {
 		},
 	})
 
-	assertInsert(t, "main", []map[string]interface{}{
-		{
-			"id":      "info",
-			"postCtr": 3,
-		},
-		{
-			"id": "boardCtrs",
-			"a":  2,
-			"c":  1,
-		},
+	assertInsert(t, "main", map[string]interface{}{
+		"id":      "info",
+		"postCtr": 3,
 	})
 
 	t.Run("GetPost", testGetPost)
@@ -124,20 +117,17 @@ func testGetAllBoard(t *testing.T) {
 	t.Parallel()
 
 	std := common.Board{
-		Ctr: 3,
-		Threads: common.BoardThreads{
-			{
-				ID:          1,
-				PostCtr:     3,
-				Board:       "a",
-				LastUpdated: 3,
-			},
-			{
-				ID:          3,
-				PostCtr:     1,
-				Board:       "c",
-				LastUpdated: 4,
-			},
+		{
+			ID:          1,
+			PostCtr:     3,
+			Board:       "a",
+			LastUpdated: 3,
+		},
+		{
+			ID:          3,
+			PostCtr:     1,
+			Board:       "c",
+			LastUpdated: 4,
 		},
 	}
 
@@ -159,24 +149,18 @@ func testGetBoard(t *testing.T) {
 			name: "full",
 			id:   "c",
 			std: common.Board{
-				Ctr: 1,
-				Threads: common.BoardThreads{
-					{
-						ID:          3,
-						PostCtr:     1,
-						Board:       "c",
-						LastUpdated: 4,
-					},
+				{
+					ID:          3,
+					PostCtr:     1,
+					Board:       "c",
+					LastUpdated: 4,
 				},
 			},
 		},
 		{
 			name: "empty",
 			id:   "z",
-			std: common.Board{
-				Ctr:     0,
-				Threads: nil,
-			},
+			std:  common.Board{},
 		},
 	}
 

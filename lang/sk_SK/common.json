@@ -3,7 +3,8 @@
 		"ago": "pred",
 		"and": "a",
 		"anon": "Janonymous",
-		"contract": "Zmenšiť obrázky",
+		"contractImages": "Contract Images",
+		"expandImages": "Expand Images",
 		"expand": "Expandovať",
 		"hide": "Schovať",
 		"in": "v",
@@ -80,7 +81,9 @@
 		"thumbnailing": "Odtlačkujem...",
 		"unfinishedPost": "Más nedokončený plagát",
 		"uploadProgress": "odoslané...",
-		"googleSong": "Click to google song"
+		"googleSong": "Click to google song",
+		"last": "Posledné",
+		"postsImages": "Posts/Images"
 	},
 	"sync": [
 		"odpojený",

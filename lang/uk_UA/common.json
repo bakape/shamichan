@@ -3,7 +3,8 @@
 		"ago": "тому",
 		"and": "та",
 		"anon": "Анонім",
-		"contract": "Приховати зображення",
+		"contractImages": "Contract Images",
+		"expandImages": "Expand Images",
 		"expand": "Розгорнути",
 		"hide": "Сховати",
 		"in": "у",
@@ -80,7 +81,9 @@
 		"thumbnailing": "Прев'ювання..",
 		"unfinishedPost": "Ви маєте незакінчений пост",
 		"uploadProgress": "завантаження...",
-		"googleSong": "Клікніть для гугль пісні"
+		"googleSong": "Клікніть для гугль пісні",
+		"last": "Останні",
+		"postsImages": "Posts/Images"
 	},
 	"sync": [
 		"Від'єднано",

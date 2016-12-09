@@ -2,12 +2,6 @@
 // throughout the project
 package common
 
-import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-)
-
 // CommandType are the various struct types of hash commands and their
 // responses, such as dice rolls, #flip, #8ball, etc.
 type CommandType uint8
@@ -33,34 +27,9 @@ const (
 	Pcount
 )
 
-// Board stores board metadata and the OPs of all threads
-type Board struct {
-	Ctr     uint64       `json:"ctr"`
-	Threads BoardThreads `json:"threads"`
-}
-
-// MarshalJSON ensures b.Threads is marshalled to a JSON array even when nil
-func (b *Board) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	fmt.Fprintf(&buf, `{"ctr":%d,"threads":`, b.Ctr)
-
-	if b.Threads == nil {
-		buf.WriteString("[]}")
-		return buf.Bytes(), nil
-	}
-
-	data, err := json.Marshal(b.Threads)
-	if err != nil {
-		return nil, err
-	}
-	buf.Write(data)
-	buf.WriteRune('}')
-	return buf.Bytes(), nil
-}
-
-// BoardThreads is an array stripped down version of Thread for whole-board
-// retrieval queries. Reduces server memory usage and served JSON payload.
-type BoardThreads []struct {
+// Board is an array stripped down version of Thread for whole-board retrieval
+// queries. Reduces server memory usage and served JSON payload.
+type Board []struct {
 	Locked      bool   `json:"locked,omitempty" gorethink:"locked"`
 	Archived    bool   `json:"archived,omitempty" gorethink:"archived"`
 	Sticky      bool   `json:"sticky,omitempty" gorethink:"sticky"`

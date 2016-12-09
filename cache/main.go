@@ -25,7 +25,7 @@ var (
 // Key stores the ID of either a thread or board page
 type Key struct {
 	LastN uint8
-	Board [3]byte
+	Board string
 	ID    uint64
 }
 

@@ -106,15 +106,15 @@ func Insert(table string, doc interface{}) error {
 	return Write(r.Table(table).Insert(doc))
 }
 
-// PostCounter retrieves the current global post count
-func PostCounter() (counter uint64, err error) {
-	err = One(GetMain("info").Field("postCtr"), &counter)
-	return
-}
-
 // BoardCounter retrieves the history or "progress" counter of a board
 func BoardCounter(board string) (counter uint64, err error) {
-	err = One(GetMain("boardCtrs").Field(board).Default(0), &counter)
+	q := r.
+		Table("posts").
+		GetAllByIndex("board", board).
+		Field("lastUpdated").
+		Max().
+		Default(0)
+	err = One(q, &counter)
 	return
 }
 
@@ -155,14 +155,4 @@ func GetLoginHash(id string) (hash []byte, err error) {
 func ReservePostID() (id uint64, err error) {
 	err = One(postReservationQuery, &id)
 	return
-}
-
-// IncrementBoardCounter increments the progress counter of a board by 1. To be
-// used on post and thread creation
-func IncrementBoardCounter(board string) error {
-	q := GetMain("boardCtrs").
-		Update(map[string]r.Term{
-			board: r.Row.Field(board).Default(0).Add(1),
-		})
-	return Write(q)
 }
