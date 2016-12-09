@@ -53,8 +53,9 @@ export default class CaptchaView extends View<Model> {
 
 	// Render the actual captcha
 	private renderWidget() {
-		this.widget = ACPuzzle.create(config.captchaPublicKey, this.id, {
-			id: this.id,
+		const id = this.id.replace("captcha-", "")
+		this.widget = ACPuzzle.create(config.captchaPublicKey, id, {
+			id,
 			multi: true,
 			theme: "custom",
 		})
