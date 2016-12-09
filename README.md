@@ -112,6 +112,7 @@ the password "password"
 * Run `make`
 
 ##Development
+* See `/docs/` for more documentation
 * `./meguca` or `./meguca debug` run the server in development mode
 * `make server` and `make client` build the server and client separately
 * `make watch` watches the file system for changes and incrementally rebuilds

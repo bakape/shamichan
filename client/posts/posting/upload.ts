@@ -50,7 +50,7 @@ export default class UploadForm extends View<Post> {
         if (err) {
             throw err
         }
-        if (res !== "-1") {
+        if (res) {
             token = res
         } else {
             // If there is none, upload file like normal

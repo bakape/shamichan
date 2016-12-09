@@ -1,6 +1,7 @@
 Documentation of the WebSocket API. For commonly used JSON types in the API see
 [common.md](common.md).
 
+- All communications are done through the `/socket` relative address
 - The API only uses textual WebSocket frames for communication
 - Only one message is transmitted per frame
 - Each frame starts with two bytes with the ASCII-encoded message number. If the

@@ -118,16 +118,20 @@ func testGetAllBoard(t *testing.T) {
 
 	std := common.Board{
 		{
-			ID:          1,
-			PostCtr:     3,
-			Board:       "a",
-			LastUpdated: 3,
+			ID: 1,
+			ThreadCommon: common.ThreadCommon{
+				PostCtr:     3,
+				Board:       "a",
+				LastUpdated: 3,
+			},
 		},
 		{
-			ID:          3,
-			PostCtr:     1,
-			Board:       "c",
-			LastUpdated: 4,
+			ID: 3,
+			ThreadCommon: common.ThreadCommon{
+				PostCtr:     1,
+				Board:       "c",
+				LastUpdated: 4,
+			},
 		},
 	}
 
@@ -150,10 +154,12 @@ func testGetBoard(t *testing.T) {
 			id:   "c",
 			std: common.Board{
 				{
-					ID:          3,
-					PostCtr:     1,
-					Board:       "c",
-					LastUpdated: 4,
+					ID: 3,
+					ThreadCommon: common.ThreadCommon{
+						PostCtr:     1,
+						Board:       "c",
+						LastUpdated: 4,
+					},
 				},
 			},
 		},
@@ -182,12 +188,14 @@ func testGetThread(t *testing.T) {
 	t.Parallel()
 
 	thread1 := common.Thread{
-		PostCtr:     3,
-		LastUpdated: 3,
+		ThreadCommon: common.ThreadCommon{
+			PostCtr:     3,
+			LastUpdated: 3,
+			Board:       "a",
+		},
 		Post: common.Post{
 			ID: 1,
 		},
-		Board: "a",
 		Posts: []common.Post{
 			{
 				ID:   2,
@@ -223,13 +231,15 @@ func testGetThread(t *testing.T) {
 			name: "no replies ;_;",
 			id:   3,
 			std: common.Thread{
-				PostCtr: 1,
+				ThreadCommon: common.ThreadCommon{
+					PostCtr:     1,
+					Board:       "c",
+					LastUpdated: 4,
+				},
 				Post: common.Post{
 					ID: 3,
 				},
-				Board:       "c",
-				LastUpdated: 4,
-				Posts:       []common.Post{},
+				Posts: []common.Post{},
 			},
 		},
 		{

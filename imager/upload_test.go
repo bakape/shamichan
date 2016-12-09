@@ -13,11 +13,11 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -330,7 +330,7 @@ func TestUploadImageHashNoHash(t *testing.T) {
 	if rec.Code != 200 {
 		t.Errorf("unexpected status code: %d", rec.Code)
 	}
-	if s := rec.Body.String(); s != "-1" {
+	if s := rec.Body.String(); s != "" {
 		t.Errorf("unexpected response body: `%s`", s)
 	}
 }

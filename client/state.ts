@@ -14,7 +14,6 @@ interface Configs {
 	mature: boolean // Website intended for mature audiences
 	defaultLang: string
 	defaultCSS: string
-	FAQ: string
 	captchaPublicKey: string
 	links: { [key: string]: string }
 }

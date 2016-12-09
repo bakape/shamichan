@@ -29,39 +29,39 @@ const (
 
 // Board is an array stripped down version of Thread for whole-board retrieval
 // queries. Reduces server memory usage and served JSON payload.
-type Board []struct {
+type Board []BoardThread
+
+// BoardThread is a stripped down version of Thread for board catalog queries
+type BoardThread struct {
+	ThreadCommon
+	ID    uint64 `json:"id" gorethink:"id"`
+	Time  int64  `json:"time" gorethink:"time"`
+	Name  string `json:"name,omitempty" gorethink:"name,omitempty"`
+	Trip  string `json:"trip,omitempty" gorethink:"trip,omitempty"`
+	Auth  string `json:"auth,omitempty" gorethink:"auth,omitempty"`
+	Image *Image `json:"image,omitempty" gorethink:"image,omitempty"`
+}
+
+// ThreadCommon contains common fields of both BoardThread and Thread
+type ThreadCommon struct {
 	Locked      bool   `json:"locked,omitempty" gorethink:"locked"`
 	Archived    bool   `json:"archived,omitempty" gorethink:"archived"`
 	Sticky      bool   `json:"sticky,omitempty" gorethink:"sticky"`
 	PostCtr     uint32 `json:"postCtr" gorethink:"postCtr"`
 	ImageCtr    uint32 `json:"imageCtr" gorethink:"imageCtr"`
-	ID          uint64 `json:"id" gorethink:"id"`
-	Time        int64  `json:"time" gorethink:"time"`
-	LastUpdated int64  `json:"lastUpdated" gorethink:"lastUpdated"`
 	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
-	Name        string `json:"name,omitempty" gorethink:"name,omitempty"`
-	Trip        string `json:"trip,omitempty" gorethink:"trip,omitempty"`
-	Auth        string `json:"auth,omitempty" gorethink:"auth,omitempty"`
-	Board       string `json:"board" gorethink:"board"`
+	LastUpdated int64  `json:"lastUpdated" gorethink:"lastUpdated"`
 	Subject     string `json:"subject" gorethink:"subject"`
-	Image       *Image `json:"image,omitempty" gorethink:"image,omitempty"`
+	Board       string `json:"board" gorethink:"board"`
 }
 
 // Thread is a transport/export wrapper that stores both the thread metadata,
 // its opening post data and its contained posts. The composite type itself is
 // not stored in the database.
 type Thread struct {
-	Locked   bool `json:"locked,omitempty" gorethink:"locked"`
-	Archived bool `json:"archived,omitempty" gorethink:"archived"`
-	Sticky   bool `json:"sticky,omitempty" gorethink:"sticky"`
 	Post
-	PostCtr     uint32 `json:"postCtr" gorethink:"postCtr"`
-	ImageCtr    uint32 `json:"imageCtr" gorethink:"imageCtr"`
-	ReplyTime   int64  `json:"replyTime" gorethink:"replyTime"`
-	LastUpdated int64  `json:"lastUpdated" gorethink:"lastUpdated"`
-	Subject     string `json:"subject" gorethink:"subject"`
-	Board       string `json:"board" gorethink:"board"`
-	Posts       []Post `json:"posts" gorethink:"posts"`
+	ThreadCommon
+	Posts []Post `json:"posts" gorethink:"posts"`
 }
 
 // DatabaseThread is a template for writing new threads to the database

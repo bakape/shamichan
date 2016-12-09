@@ -60,9 +60,9 @@ var (
 		Salt:          "LALALALALALALALALALALALALALALALALALALALA",
 		FeedbackEmail: "admin@email.com",
 		RootURL:       "http://localhost",
+		FAQ:           defaultFAQ,
 		Public: Public{
 			DefaultCSS:  "moe",
-			FAQ:         defaultFAQ,
 			DefaultLang: "en_GB",
 			Links:       map[string]string{"4chan": "http://www.4chan.org/"},
 		},
@@ -107,16 +107,16 @@ type Configs struct {
 	Salt              string `json:"salt" gorethink:"salt"`
 	FeedbackEmail     string `json:"feedbackEmail" gorethink:"feedbackEmail"`
 	CaptchaPrivateKey string `json:"captchaPrivateKey" gorethink:"captchaPrivateKey"`
+	FAQ               string
 }
 
 // Public contains configurations exposeable through public availability APIs
 type Public struct {
-	Captcha          bool   `json:"captcha" gorethink:"captcha"`
-	Mature           bool   `json:"mature" gorethink:"mature"`
-	DefaultLang      string `json:"defaultLang" gorethink:"defaultLang"`
-	DefaultCSS       string `json:"defaultCSS" gorethink:"defaultCSS"`
-	CaptchaPublicKey string `json:"captchaPublicKey" gorethink:"captchaPublicKey"`
-	FAQ              string
+	Captcha          bool              `json:"captcha" gorethink:"captcha"`
+	Mature           bool              `json:"mature" gorethink:"mature"`
+	DefaultLang      string            `json:"defaultLang" gorethink:"defaultLang"`
+	DefaultCSS       string            `json:"defaultCSS" gorethink:"defaultCSS"`
+	CaptchaPublicKey string            `json:"captchaPublicKey" gorethink:"captchaPublicKey"`
 	Links            map[string]string `json:"links" gorethink:"links"`
 }
 

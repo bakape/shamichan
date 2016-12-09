@@ -88,7 +88,6 @@ func UploadImageHash(w http.ResponseWriter, req *http.Request) {
 
 	_, err = db.FindImageThumb(hash)
 	if err == r.ErrEmptyResult {
-		w.Write([]byte("-1"))
 		return
 	} else if err != nil {
 		LogError(w, req, 500, err)
