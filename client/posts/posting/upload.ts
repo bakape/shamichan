@@ -14,6 +14,11 @@ export type FileData = {
     spoiler?: boolean
 }
 
+interface LoadProgress {
+    total: number
+    loaded: number
+}
+
 // Mixin for handling file uploads
 export default class UploadForm extends View<Post> {
     public spoiler: HTMLElement
@@ -39,6 +44,14 @@ export default class UploadForm extends View<Post> {
         }
 
         let token: string
+
+        write(() => {
+            this.input.style.display = "none"
+            this.renderProgress({
+                total: 1,
+                loaded: 0,
+            })
+        })
 
         // First send a an SHA1 hash to the server, in case it already has the
         // file thumbnailed and we don't need to upload.
@@ -77,8 +90,6 @@ export default class UploadForm extends View<Post> {
     private async upload(file: File): Promise<string> {
         const formData = new FormData()
         formData.append("image", file)
-        write(() =>
-            this.input.style.display = "none")
 
         // Not using fetch, because no ProgressEvent support
         const xhr = new XMLHttpRequest()
@@ -100,7 +111,7 @@ export default class UploadForm extends View<Post> {
     }
 
     // Render client-side upload progress
-    private renderProgress({total, loaded}: ProgressEvent) {
+    private renderProgress({total, loaded}: LoadProgress) {
         let s: string
         if (loaded === total) {
             s = lang.ui["thumbnailing"]
