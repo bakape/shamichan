@@ -56,8 +56,10 @@ export function insertPost(data: PostData) {
 
 	const existing = posts.get(data.id)
 	if (existing) {
-		if (existing instanceof FormModel && !existing.isAllocated) {
-			existing.onAllocation(data)
+		if (existing instanceof FormModel) {
+			if (!existing.isAllocated) {
+				existing.onAllocation(data)
+			}
 		} else {
 			existing.extend(data)
 		}
