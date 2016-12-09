@@ -22,23 +22,26 @@ var (
 var specs = map[string][]inputSpec{
 	"identity": {
 		{
-			ID:        "name",
-			Type:      _string,
-			MaxLength: common.MaxLenName,
+			ID:             "name",
+			Type:           _string,
+			MaxLength:      common.MaxLenName,
+			NoAutoComplete: true,
 		},
 		{
-			ID:        "postPassword",
-			Type:      _password,
-			MaxLength: common.MaxLenPassword,
-			Required:  true,
+			ID:             "postPassword",
+			Type:           _password,
+			MaxLength:      common.MaxLenPassword,
+			Required:       true,
+			NoAutoComplete: true,
 		},
 	},
 	"noscriptPostCreation": {
 		{
-			ID:          "name",
-			Type:        _string,
-			MaxLength:   common.MaxLenName,
-			Placeholder: true,
+			ID:             "name",
+			Type:           _string,
+			MaxLength:      common.MaxLenName,
+			Placeholder:    true,
+			NoAutoComplete: true,
 		},
 		{
 			ID:        "body",
@@ -47,11 +50,12 @@ var specs = map[string][]inputSpec{
 			MaxLength: common.MaxLenBody,
 		},
 		{
-			ID:          "postPassword",
-			Type:        _password,
-			MaxLength:   common.MaxLenPassword,
-			Required:    true,
-			Placeholder: true,
+			ID:             "postPassword",
+			Type:           _password,
+			MaxLength:      common.MaxLenPassword,
+			Required:       true,
+			Placeholder:    true,
+			NoAutoComplete: true,
 		},
 	},
 	"login": {

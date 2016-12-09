@@ -27,12 +27,12 @@ const (
 // Spec of an option passed into the rendering function. All fields are
 // exported, so that they can be passed directly to "html/template".
 type inputSpec struct {
-	Type                        inputType
-	Required, Placeholder, NoID bool
-	Min, Max, MaxLength, Rows   int
-	ID, Pattern                 string
-	Options                     []string
-	Val                         interface{}
+	Type                                        inputType
+	Required, Placeholder, NoID, NoAutoComplete bool
+	Min, Max, MaxLength, Rows                   int
+	ID, Pattern                                 string
+	Options                                     []string
+	Val                                         interface{}
 }
 
 // For constructing various HTML input forms
@@ -97,6 +97,9 @@ func (w *formWriter) input(spec inputSpec) {
 		}
 		if spec.MaxLength != 0 {
 			w.attr("maxlength", strconv.Itoa(spec.MaxLength))
+		}
+		if spec.NoAutoComplete {
+			w.attr("autocomplete", "off")
 		}
 	case _image:
 		w.typ("file")
