@@ -40,6 +40,8 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 	//line article.html:7
 	if p.Editing {
 		//line article.html:7
+		qw422016.N().S(` `)
+		//line article.html:7
 		qw422016.N().S(`editing`)
 		//line article.html:7
 	}
@@ -59,6 +61,8 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 	qw422016.N().S(`<b class="name"`)
 	//line article.html:14
 	if p.Auth != "" {
+		//line article.html:14
+		qw422016.N().S(` `)
 		//line article.html:14
 		qw422016.N().S(`class="admin"`)
 		//line article.html:14

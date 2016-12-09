@@ -30,6 +30,8 @@ func streamtabButts(qw422016 *qt422016.Writer, names []string) {
 		//line util.html:5
 		if i == 0 {
 			//line util.html:5
+			qw422016.N().S(` `)
+			//line util.html:5
 			qw422016.N().S(`tab-sel`)
 			//line util.html:5
 		}

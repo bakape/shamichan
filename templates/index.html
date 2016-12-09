@@ -258,7 +258,7 @@
 					{%= tabButts(ln.Tabs) %}
 					<div class="tab-cont">
 						{% for i, sp := range optionSpecs %}
-							<div data-id="{%d i %}" {% if i == 0 %} class="tab-sel"{% endif %}>
+							<div data-id="{%d i %}"{% if i == 0 %}{% space %}class="tab-sel"{% endif %}>
 								{% for _, s := range sp %}
 									{%s= renderInput(s, ln) %}
 									{%s= renderLabel(s, ln) %}

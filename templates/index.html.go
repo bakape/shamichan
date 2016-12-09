@@ -266,6 +266,8 @@ func streamrenderIndex(qw422016 *qt422016.Writer, ln lang.Pack) {
 		//line index.html:261
 		if i == 0 {
 			//line index.html:261
+			qw422016.N().S(` `)
+			//line index.html:261
 			qw422016.N().S(`class="tab-sel"`)
 			//line index.html:261
 		}
