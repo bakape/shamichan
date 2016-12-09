@@ -262,7 +262,11 @@ func streamcaptcha(qw422016 *qt422016.Writer, id string, lang map[string]string)
 		//line forms.html:63
 	}
 	//line forms.html:63
-	qw422016.N().S(`<div class="captcha-container"><div id="adcopy-outer-`)
+	qw422016.N().S(`<div class="captcha-container" id="captcha-`)
+	//line forms.html:64
+	qw422016.N().S(id)
+	//line forms.html:64
+	qw422016.N().S(`"><div id="adcopy-outer-`)
 	//line forms.html:65
 	qw422016.N().S(id)
 	//line forms.html:65

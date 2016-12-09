@@ -61,7 +61,7 @@ CreateBoard renders a the form for creating new boards
 	{% if !conf.Captcha %}
 		{% return %}
 	{% endif %}
-	<div class="captcha-container">
+	<div class="captcha-container" id="captcha-{%s= id %}">
 		<div id="adcopy-outer-{%s= id %}">
 			<div id="adcopy-puzzle-image-{%s= id %}" class="captcha-image" title="{%s= lang["reloadCaptcha"] %}"></div>
 			<div id="adcopy-puzzle-audio-{%s= id %}" class="hidden"></div>
