@@ -63,7 +63,7 @@ export default function (frag: DocumentFragment, writeNow: boolean) {
 
 // Set thread title to tab
 export function setThreadTitle(data: ThreadData) {
-    setTitle(`/${data.board}/ - ${data.subject} (#${data.id})`)
+    setTitle(`/${data.board}/ - ${escape(data.subject)} (#${data.id})`)
 }
 
 // Extract post model and view from the HTML fragment and apply client-specific
