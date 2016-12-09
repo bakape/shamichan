@@ -15,7 +15,6 @@ Generic post object
 | body | string | + | text body of post |
 | name | string | - | poster name |
 | trip | string | - | poster tripcode |
-| email | string | - | poster email |
 | backlinks | [PostLinks](#postlinks) | - | posts linking to this post |
 | links | [PostLinks](#postlinks) | - | posts this post is linking |
 | commands | [[]Command](#command) | - | results of hash commands, such as #flip |
@@ -41,7 +40,7 @@ Uploaded file data attached to post
 ##fileTypes
 Enum representing all available file types an uploaded file can be. These are
 also the canonical file extensions of these types. The extensions of thumbnails
-is `.png` for all file types, except for `jpg`, in which case it is `.jpg`.
+is `.png` for all file types, except for `.jpg`, in which case it is `.jpg`.
 
 ```
 jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz"

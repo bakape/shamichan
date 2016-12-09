@@ -18,7 +18,7 @@ must always be "synchronize".
 | 3 | append | [2]uint | Append a character to the current line of the post. The first array item is the ID of the target post. The seconds is a character encoded as UTF-8 character code. |
 | 4 | backspace | uint | Remove one character from the end of the line of the post specified by ID. |
 | 5 | splice | [SpliceMessage](#splicemessage) | Splice the current open line. Used for all text mutations, that are neither "append" or "backspace". |
-| 6 | closePost | uint | Close the post specified by ID. This message may be received for already closed posts, due to asynchronous nature of the eventual synchronisation algorithm. |
+| 6 | closePost | uint | Close the post specified by ID. This message may be received for already closed posts, due to asynchronous nature of the eventual synchronization algorithm. |
 | 7 | link | [LinkMessage](#linkmessage) | Insert a link into the specified post's link map. This message is always sent before the message to close an open line, so that any links are available, when the line is parsed. |
 | 8 | backlink | [LinkMessage](#linkmessage) | Add a backlink to the post specified by ID. |
 | 9 | command | [CommandMessage](#commandmessage) | Append a command result to the specified post's array. Insert a link into the specified post's link map. This message is always sent before the message to close an open line, so that any command results are available, when the line is parsed. |
@@ -26,8 +26,8 @@ must always be "synchronize".
 | 11 | spoiler | uint | Spoiler the image of the post specified by ID |
 | 30 | synchronize | map[uint][Post](common.md#post) | Response to a synchronization request. Contains a map of posts updated in the thread in the last 30 seconds. These are meant to bring the client up to sync with the update stream server-side. Consequently the client must ensure his existing post data is not more than 30 seconds old before synchronization. |
 | 31 | reclaim | uint | Response to a request to reclaim a post lost after disconnecting from the server. 0 denotes success and the client is henceforth able to write to said post, as before the disconnect.1 denotes the post is unrecoverable. |
-| 41 | postID | int | Returns the post ID of the client's freshly allocated post. A response to a post or thread insertion request. -1 denotes invalid captcha. |
-| 42 | concat | * | Contains several null-byte concatenated messages. Used for limiting the rate of update frames sent from the server. |
+| 32 | postID | int | Returns the post ID of the client's freshly allocated post. A response to a post or thread insertion request. -1 denotes invalid captcha. |
+| 33 | concat | * | Contains several null-byte concatenated messages. Used for limiting the rate of update frames sent from the server. |
 
 ##SpliceMessage
 

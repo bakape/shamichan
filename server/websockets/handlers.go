@@ -25,12 +25,10 @@ const (
 	MessageCommand
 	MessageInsertImage
 	MessageSpoiler
-	MessageDelete
 )
 
 // >= 30 are miscellaneous and do not write to post models
 const (
-	// Update feeds
 	MessageSynchronise MessageType = 30 + iota
 	MessageReclaim
 
