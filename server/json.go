@@ -90,9 +90,9 @@ func writeJSON(
 ) {
 	if etag == "" {
 		etag = util.HashBuffer(buf)
-		if checkClientEtag(w, r, etag) {
-			return
-		}
+	}
+	if checkClientEtag(w, r, etag) {
+		return
 	}
 
 	head := w.Header()
@@ -121,9 +121,6 @@ func detectLastN(r *http.Request) int {
 // Serve public configuration information as JSON
 func serveConfigs(w http.ResponseWriter, r *http.Request) {
 	buf, etag := config.GetClient()
-	if checkClientEtag(w, r, etag) {
-		return
-	}
 	writeJSON(w, r, etag, buf)
 }
 
@@ -186,12 +183,7 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	etag := formatEtag(ctr, "", "")
-	if checkClientEtag(w, r, etag) {
-		return
-	}
-
-	serveJSON(w, r, etag, data)
+	writeJSON(w, r, formatEtag(ctr, "", ""), data)
 }
 
 // Confirms a the thread exists on the board and returns its ID. If an error
@@ -256,12 +248,7 @@ func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	etag := formatEtag(ctr, "", "")
-	if checkClientEtag(w, r, etag) {
-		return
-	}
-
-	serveJSON(w, r, etag, data)
+	writeJSON(w, r, formatEtag(ctr, "", ""), data)
 }
 
 // Serve a JSON array of all available boards and their titles
