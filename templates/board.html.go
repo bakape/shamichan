@@ -106,7 +106,7 @@ func streamrenderBoard(qw422016 *qt422016.Writer, threadHTML []byte, id, title s
 	//line board.html:63
 	qw422016.N().S(`</a></aside>`)
 	//line board.html:66
-	streamhoverReveal(qw422016, conf.Notice, ln.UI["notice"])
+	streamhoverReveal(qw422016, conf.Notice, ln.UI["showNotice"])
 	//line board.html:67
 	streamhoverReveal(qw422016, conf.Rules, ln.UI["rules"])
 	//line board.html:67
