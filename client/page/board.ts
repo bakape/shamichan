@@ -5,7 +5,6 @@ import options from '../options'
 import { write, threads } from '../render'
 import { renderTime } from "../posts/render/posts"
 import { fetchBoard } from "../fetch"
-import { maybeWriteNow } from "./common"
 import { setTitle } from "../tab"
 
 type SortFunction = (a: HTMLElement, b: HTMLElement) => number
@@ -36,14 +35,14 @@ export function formatHeader(name: string, title: string): string {
 // Render a board fresh board from parsed document fragment
 export function renderFresh(frag: DocumentFragment) {
 	lastFetch = Math.floor(Date.now() / 1000)
-	render(frag, true)
+	render(frag)
 	threads.innerHTML = ""
 	threads.append(frag)
 }
 
 // Apply client-side modifications to a board page's HTML. writeNow specifies,
 // if the write to the DOM fragment should not be delayed.
-export function render(frag: NodeSelector, writeNow: boolean) {
+export function render(frag: NodeSelector) {
 	// Set sort mode <select> to correspond with setting
 	let sortMode = localStorage.getItem("catalogSort")
 	// "bump" is a legacy sort mode. Account for clients explicitly set to it.
@@ -58,20 +57,18 @@ export function render(frag: NodeSelector, writeNow: boolean) {
 	// Apply board title to tab
 	setTitle(frag.querySelector("#page-title").textContent)
 
-	maybeWriteNow(writeNow, () => {
-		// Add extra localizations
-		for (let el of frag.querySelectorAll(".counters")) {
-			el.setAttribute("title", lang.ui["postsImages"])
-		}
-		for (let el of frag.querySelectorAll(".lastN-link")) {
-			el.textContent = `${lang.ui["last"]} 100`
-		}
+	// Add extra localizations
+	for (let el of frag.querySelectorAll(".counters")) {
+		el.setAttribute("title", lang.ui["postsImages"])
+	}
+	for (let el of frag.querySelectorAll(".lastN-link")) {
+		el.textContent = `${lang.ui["last"]} 100`
+	}
 
-		(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
-			.value = sortMode
-		renderRefreshButton(frag.querySelector("#refresh > a"))
-		sortThreads(frag.querySelector("#catalog"), true)
-	})
+	(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
+		.value = sortMode
+	renderRefreshButton(frag.querySelector("#refresh > a"))
+	sortThreads(frag.querySelector("#catalog"), true)
 }
 
 // Sort all threads on a board

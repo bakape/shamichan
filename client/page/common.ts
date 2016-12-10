@@ -4,7 +4,6 @@ import renderThread from './thread'
 import { renderFresh as renderBoard } from './board'
 import { makeFrag } from "../util"
 import { setExpandAll } from "../posts/images"
-import { write } from "../render"
 
 // Load a page (either board or thread) and render it once the ready promise
 // has been resolved
@@ -37,12 +36,4 @@ export default async function (
 export function extractConfigs(ns: NodeSelector) {
 	const conf = ns.querySelector("#board-configs").textContent
 	setBoardConfig(JSON.parse(conf))
-}
-
-export function maybeWriteNow(writeNow: boolean, fn: () => void) {
-	if (writeNow) {
-		fn()
-	} else {
-		write(fn)
-	}
 }
