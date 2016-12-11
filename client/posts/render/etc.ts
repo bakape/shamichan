@@ -54,15 +54,13 @@ export function renderBacklinks(post: DocumentFragment, links: PostLinks) {
     let el = post.querySelector("small")
     if (!el) {
         el = document.createElement("small")
+        el.classList.add("spaced")
         post.append(el)
     }
 
     let html = ''
     for (let id in links) {
         const {board, op} = links[id]
-        if (html) {
-            html += ' '
-        }
         html += renderPostLink(parseInt(id), board, op)
     }
 

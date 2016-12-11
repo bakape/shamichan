@@ -20,10 +20,12 @@ article {
 	}
 	small {
 		padding-top: 0.5em;
+		word-break: break-word;
+		overflow-wrap: break-word;
 	}
 	blockquote {
 		word-break: break-word;
-		min-width: 20em;
+		min-width: 15em;
 
 		// Prevent useless newlines from displaying
 		br + br, & > br:last-child, & > br:first-child {
@@ -84,6 +86,7 @@ em {
 
 figcaption {
 	margin: 2px 0;
+	word-break: break-all;
 }
 
 .image-search {

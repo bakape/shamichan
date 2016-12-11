@@ -341,7 +341,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 	//line article.html:137
 	if p.Backlinks != nil {
 		//line article.html:137
-		qw422016.N().S(`<small>`)
+		qw422016.N().S(`<small class="spaced">`)
 		//line article.html:139
 		for id, link := range p.Backlinks {
 			//line article.html:140
