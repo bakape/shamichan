@@ -12,6 +12,13 @@ import (
 	"github.com/bakape/meguca/config"
 )
 
+// Embeddable URL types
+const (
+	youTube = iota
+	soundCloud
+	vimeo
+)
+
 var (
 	commandRegexp   = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount)$`)
 	diceRegexp      = regexp.MustCompile(`^(\d*)d(\d+)$`)
@@ -20,6 +27,33 @@ var (
 	urlRegexp       = regexp.MustCompile(
 		`^(?:magnet:\?|https?:\/\/)[-a-zA-Z0-9@:%_\+\.~#\?&\/=]+$`,
 	)
+
+	providers = map[int]string{
+		youTube:    "Youtube",
+		soundCloud: "SoundCloud",
+		vimeo:      "Vimeo",
+	}
+	embedPatterns = [...]struct {
+		typ  int
+		patt *regexp.Regexp
+	}{
+		{
+			youTube,
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=([^&]+)`),
+		},
+		{
+			youTube,
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/([a-zA-Z0-9_-]+)`),
+		},
+		{
+			soundCloud,
+			regexp.MustCompile(`https?:\/\/soundcloud.com\/.*`),
+		},
+		{
+			vimeo,
+			regexp.MustCompile(`https?:\/\/(?:www\.)?vimeo\.com\/.+`),
+		},
+	}
 )
 
 type bodyContext struct {
@@ -208,6 +242,7 @@ func (c *bodyContext) parseURL(bit []byte) {
 	switch {
 	case !urlRegexp.Match(bit):
 		c.escape(bit)
+	case c.parseEmbeds(bit):
 	case bit[0] == 'm': // Don't open a new tab for magnet links
 		fmt.Fprintf(
 			c,
@@ -218,6 +253,24 @@ func (c *bodyContext) parseURL(bit []byte) {
 	default:
 		c.newTabLink(s, s)
 	}
+}
+
+// Parse select embeddable URLs. Returns, if any found.
+func (c *bodyContext) parseEmbeds(b []byte) bool {
+	for _, t := range embedPatterns {
+		if !t.patt.Match(b) {
+			continue
+		}
+		fmt.Fprintf(
+			c,
+			`<em><a class="embed" target="_blank" data-type="%d" href="%s">[%s] ???</a></em>`,
+			t.typ,
+			url.QueryEscape(string(b)),
+			providers[t.typ],
+		)
+		return true
+	}
+	return false
 }
 
 // Write an HTML-escaped string to buffer

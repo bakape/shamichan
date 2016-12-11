@@ -284,6 +284,26 @@ func TestRenderBody(t *testing.T) {
 			in:   "<>&",
 			out:  "<span>&lt;&gt;&amp;<br></span>",
 		},
+		{
+			name: "youtube embed",
+			in:   "https://www.youtube.com/watch?v=z0f4Wgi94eo",
+			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dz0f4Wgi94eo\">[Youtube] ???</a></em><br></span>",
+		},
+		{
+			name: "youtu.be embed",
+			in:   "https://youtu.be/z0f4Wgi94eo",
+			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https%3A%2F%2Fyoutu.be%2Fz0f4Wgi94eo\">[Youtube] ???</a></em><br></span>",
+		},
+		{
+			name: "soundcloud embed",
+			in:   "https://soundcloud.com/cd_oblongar",
+			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"1\" href=\"https%3A%2F%2Fsoundcloud.com%2Fcd_oblongar\">[SoundCloud] ???</a></em><br></span>",
+		},
+		{
+			name: "vimeo embed",
+			in:   "https://vimeo.com/174312494",
+			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https%3A%2F%2Fvimeo.com%2F174312494\">[Vimeo] ???</a></em><br></span>",
+		},
 	}
 
 	for i := range cases {

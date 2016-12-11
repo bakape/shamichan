@@ -10,7 +10,7 @@ type OEmbedDoc = {
 }
 
 // Types of different embeds by provider
-enum provider { Youtube, SoundCloud, Vimeo, Twitch }
+enum provider { Youtube, SoundCloud, Vimeo }
 
 // Matching patterns and their respective providers
 const patterns: [provider, RegExp][] = [
@@ -48,7 +48,7 @@ for (let p of ["Youtube", "SoundCloud", "Vimeo"]) {
 function formatNoEmbed(type: provider): (s: string) => string {
 	return (href: string) => {
 		const attrs = {
-			href,
+			href: encodeURI(href),
 			class: "embed",
 			target: "_blank",
 			"data-type": type.toString(),
@@ -60,9 +60,8 @@ function formatNoEmbed(type: provider): (s: string) => string {
 // fetcher for the noembed.com meta-provider
 function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
 	return async (el: Element) => {
-		const url = "https://noembed.com/embed?url="
-			+ encodeURI(el.getAttribute("href"))
-		const [data, err] = await fetchJSON<OEmbedDoc>(url)
+		const url = "https://noembed.com/embed?url=" + el.getAttribute("href"),
+			[data, err] = await fetchJSON<OEmbedDoc>(url)
 		if (err) {
 			return console.warn(err)
 		}

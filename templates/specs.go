@@ -269,7 +269,7 @@ var specs = map[string][]inputSpec{
 }
 
 // Specs of option inputs grouped by tab
-var optionSpecs = [][]inputSpec{
+var optionSpecs = [...][]inputSpec{
 	{
 		{
 			ID:      "lang",
