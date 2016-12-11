@@ -46,9 +46,7 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes["tar.gz"]:
 			case fileTypes["tar.xz"]:
 				event.preventDefault()
-				const a = document.createElement("a")
-				imageLink(a, getModel(event.target as Element).image)
-				return a.click()
+				return this.el.querySelector("figcaption a[download]").click()
 			case fileTypes.mp3:
 				event.preventDefault()
 				return this.renderAudio()
