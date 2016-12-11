@@ -1,6 +1,6 @@
 import { Post, fileTypes } from "./models"
 import View from "../view"
-import { renderFigcaption, renderImage, sourcePath, imageLink } from "./render/image"
+import { renderFigcaption, renderImage, sourcePath } from "./render/image"
 import { write, threads } from "../render"
 import options from "../options"
 import { setAttrs, on } from "../util"
