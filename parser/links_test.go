@@ -3,8 +3,8 @@ package parser
 import (
 	"testing"
 
-	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/common"
+	. "github.com/bakape/meguca/test"
 )
 
 func TestParseLinks(t *testing.T) {
@@ -57,7 +57,7 @@ func TestParseLinks(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			links, err := parseLinks([]byte(c.in))
+			links, err := parseLinks(c.in)
 			if err != nil {
 				t.Fatal(err)
 			}

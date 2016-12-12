@@ -288,13 +288,12 @@ func constructPost(
 	}
 
 	if parseBody {
-		buf := []byte(req.Body)
-		bodyLength = utf8.RuneCount(buf)
+		bodyLength = utf8.RuneCountInString(req.Body)
 		if bodyLength > common.MaxLenBody {
 			err = common.ErrBodyTooLong
 			return
 		}
-		post.Links, post.Commands, err = parser.ParseBody(buf, board)
+		post.Links, post.Commands, err = parser.ParseBody(req.Body, board)
 		if err != nil {
 			return
 		}

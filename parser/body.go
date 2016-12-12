@@ -2,8 +2,8 @@
 package parser
 
 import (
-	"bytes"
 	"regexp"
+	"strings"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -15,11 +15,11 @@ var (
 )
 
 // ParseBody parses the entire post text body for commands and links
-func ParseBody(body []byte, board string) (
+func ParseBody(body, board string) (
 	links common.LinkMap, com []common.Command, err error,
 ) {
 	parseCommands := config.GetBoardConfigs(board).HashCommands
-	for _, line := range bytes.Split(body, []byte{'\n'}) {
+	for _, line := range strings.Split(body, "\n") {
 		l, c, err := parseLine(line, board, parseCommands)
 		if err != nil {
 			return nil, nil, err
@@ -42,13 +42,11 @@ func ParseBody(body []byte, board string) (
 }
 
 // ParseLine parses a full text line of a post
-func ParseLine(line []byte, board string) (
-	common.LinkMap, common.Command, error,
-) {
+func ParseLine(line, board string) (common.LinkMap, common.Command, error) {
 	return parseLine(line, board, config.GetBoardConfigs(board).HashCommands)
 }
 
-func parseLine(line []byte, board string, parseCommands bool) (
+func parseLine(line, board string, parseCommands bool) (
 	links common.LinkMap, com common.Command, err error,
 ) {
 	if len(line) == 0 {
@@ -56,7 +54,7 @@ func parseLine(line []byte, board string, parseCommands bool) (
 	}
 
 	if parseCommands && line[0] == '#' {
-		if m := CommandRegexp.FindSubmatch(line); m != nil {
+		if m := CommandRegexp.FindStringSubmatch(line); m != nil {
 			com, err = parseCommand(m[1], board)
 			if err != nil {
 				return

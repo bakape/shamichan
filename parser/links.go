@@ -1,9 +1,9 @@
 package parser
 
 import (
-	"bytes"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
@@ -14,16 +14,16 @@ var linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
 
 // Extract post links from a text fragment, verify and retrieve their
 // parenthood
-func parseLinks(frag []byte) (common.LinkMap, error) {
+func parseLinks(frag string) (common.LinkMap, error) {
 	var links common.LinkMap
 
 	// TODO: Do this in-place w/o creating any garbage slices
-	for _, word := range bytes.Split(frag, []byte{' '}) {
+	for _, word := range strings.Split(frag, " ") {
 		if len(word) == 0 || word[0] != '>' {
 			continue
 		}
 
-		match := linkRegexp.FindSubmatch(word)
+		match := linkRegexp.FindStringSubmatch(word)
 		if match == nil {
 			continue
 		}

@@ -152,11 +152,11 @@ func appendLog(msg []byte) r.Term {
 // and similar.
 func parseLine(c *Client, insertNewline bool) error {
 	c.openPost.bodyLength++
-	links, comm, err := parser.ParseLine(c.openPost.Bytes(), c.openPost.board)
+	links, comm, err := parser.ParseLine(c.openPost.String(), c.openPost.board)
 	if err != nil {
 		return err
 	}
-	defer c.openPost.Reset()
+	c.openPost.Reset()
 
 	switch {
 	case comm.Val != nil:

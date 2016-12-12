@@ -4,16 +4,16 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/common"
 )
 
 func TestFlip(t *testing.T) {
 	t.Parallel()
 
-	com, err := parseCommand([]byte("flip"), "a")
+	com, err := parseCommand("flip", "a")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestDice(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			com, err := parseCommand([]byte(c.in), "a")
+			com, err := parseCommand(c.in, "a")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -70,7 +70,7 @@ func Test8ball(t *testing.T) {
 		Eightball: answers,
 	})
 
-	com, err := parseCommand([]byte("8ball"), "a")
+	com, err := parseCommand("8ball", "a")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func TestPyu(t *testing.T) {
 
 	t.Run("disabled", func(t *testing.T) {
 		(*config.Get()).Pyu = false
-		for _, in := range [...][]byte{pyuCommand, pcountCommand} {
+		for _, in := range [...]string{"pyu", "pcount"} {
 			com, err := parseCommand(in, "a")
 			if err != nil {
 				t.Error(err)
@@ -102,14 +102,13 @@ func TestPyu(t *testing.T) {
 		(*config.Get()).Pyu = true
 
 		cases := [...]struct {
-			name string
-			in   []byte
-			Type common.CommandType
-			Val  int
+			name, in string
+			Type     common.CommandType
+			Val      int
 		}{
-			{"count on zero", pcountCommand, common.Pcount, 0},
-			{"increment", pyuCommand, common.Pyu, 1},
-			{"count", pcountCommand, common.Pcount, 1},
+			{"count on zero", "pcount", common.Pcount, 0},
+			{"increment", "pyu", common.Pyu, 1},
+			{"count", "pcount", common.Pcount, 1},
 		}
 
 		for i := range cases {

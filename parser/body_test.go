@@ -3,9 +3,9 @@ package parser
 import (
 	"testing"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/common"
 )
 
 func TestParseLine(t *testing.T) {
@@ -14,7 +14,7 @@ func TestParseLine(t *testing.T) {
 	})
 
 	t.Run("commands disabled", func(t *testing.T) {
-		links, com, err := ParseLine([]byte("#flip"), "a")
+		links, com, err := ParseLine("#flip", "a")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -34,7 +34,7 @@ func TestParseLine(t *testing.T) {
 			},
 		})
 
-		links, com, err := ParseLine([]byte("#flip"), "a")
+		links, com, err := ParseLine("#flip", "a")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -78,7 +78,7 @@ func TestParseBody(t *testing.T) {
 		},
 	})
 
-	links, com, err := ParseBody([]byte("#flip\n>>8\n>>>6 #flip\n#flip"), "a")
+	links, com, err := ParseBody("#flip\n>>8\n>>>6 #flip\n#flip", "a")
 	if err != nil {
 		t.Fatal(err)
 	}

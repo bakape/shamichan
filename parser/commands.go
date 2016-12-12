@@ -3,15 +3,14 @@
 package parser
 
 import (
-	"bytes"
 	"math/rand"
 	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -21,14 +20,8 @@ var (
 	errTooManyRolls = diceError(0)
 	errDieTooBig    = diceError(1)
 
-	flipCommand      = []byte("flip")
-	eightballCommand = []byte("8ball")
-	pyuCommand       = []byte("pyu")
-	pcountCommand    = []byte("pcount")
-
 	pcountQuery = db.GetMain("info").Field("pyu").Default(0)
-
-	pyuQuery = db.
+	pyuQuery    = db.
 			GetMain("info").
 			Update(
 			map[string]r.Term{
@@ -55,21 +48,21 @@ func init() {
 }
 
 // Parse a matched hash command
-func parseCommand(match []byte, board string) (common.Command, error) {
+func parseCommand(match, board string) (common.Command, error) {
 
 	// TODO: #syncwatch
 
 	var com common.Command
-	switch {
+	switch match {
 
 	// Coin flip
-	case bytes.Equal(match, flipCommand):
+	case "flip":
 		com.Type = common.Flip
 		com.Val = rand.Intn(2) == 0
 		return com, nil
 
 	// 8ball
-	case bytes.Equal(match, eightballCommand):
+	case "8ball":
 		com.Type = common.EightBall
 
 		// Select random string from the the 8ball answer array
@@ -85,7 +78,7 @@ func parseCommand(match []byte, board string) (common.Command, error) {
 		return com, nil
 
 	// Increment pyu counter
-	case bytes.Equal(match, pyuCommand):
+	case "pyu":
 		if !config.Get().Pyu {
 			return com, nil
 		}
@@ -96,7 +89,7 @@ func parseCommand(match []byte, board string) (common.Command, error) {
 		return com, err
 
 	// Return current pyu count
-	case bytes.Equal(match, pcountCommand):
+	case "pcount":
 		if !config.Get().Pyu {
 			return com, nil
 		}
@@ -123,8 +116,8 @@ func parseCommand(match []byte, board string) (common.Command, error) {
 }
 
 // Parse dice throw commands
-func parseDice(match []byte) ([]uint16, error) {
-	dice := diceRegexp.FindSubmatch(match)
+func parseDice(match string) ([]uint16, error) {
+	dice := diceRegexp.FindStringSubmatch(match)
 
 	var rolls int
 	if len(dice[1]) == 0 {
