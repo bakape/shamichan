@@ -51,8 +51,8 @@ CreateBoard renders a the form for creating new boards
 {% func CreateBoard(ln lang.Pack) %}{% stripspace %}
 	{%s= renderTable(specs["createBoard"], ln) %}
 	<input type="submit" value="{%s= ln.UI["submit"] %}">
-	<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
 	{%= captcha("create-board", ln.UI) %}
+	<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
 	<div class="form-response admin"></div>
 {% endstripspace %}{% endfunc %}
 
@@ -75,12 +75,14 @@ CreateBoard renders a the form for creating new boards
 			<a id="adcopy-link-audio-{%s= id %}" class="hidden"></a>
 			<a id="adcopy-link-image-{%s= id %}" class="hidden"></a>
 			<a id="adcopy-link-info-{%s= id %}" class="hidden"></a>
-			<noscript>
-				<iframe src="http://api.solvemedia.com/papi/challenge.noscript?k={%s= conf.CaptchaPublicKey %}"
-		height="260" width="350" frameborder="0"></iframe>
-				<br>
-				<input name="adcopy_challenge" type="text" required>
-			</noscript>
+			<!-- Temporary, till better noscript support >
+				<noscript>
+					<iframe src="https://api-secure.solvemedia.com/papi/challenge.noscript?k={%s= conf.CaptchaPublicKey %}"
+			height="260" width="350" frameborder="0"></iframe>
+					<br>
+					<input name="adcopy_challenge" type="text" required>
+				</noscript>
+			<-->
 		</div>
 	</div>
 {% endstripspace %}{% endfunc %}
@@ -97,7 +99,7 @@ Form for inputing key-value map-like data
 	</span>
 {% endstripspace %}{% endfunc %}
 
-Form fommatted as a tabel, with cancel and submit buttons
+Form fommatted as a table, with cancel and submit buttons
 {% func tableForm(specs []inputSpec, needCaptcha bool, ln lang.Pack) %}{% stripspace %}
 	{%s= renderTable(specs, ln) %}
 	{% if needCaptcha %}

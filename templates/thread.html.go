@@ -35,7 +35,7 @@ func streamrenderThread(qw422016 *qt422016.Writer, postHTML []byte, ln lang.Pack
 	//line thread.html:9
 	qw422016.N().S(`</a></span><span id="expand-images" class="act"><a>`)
 	//line thread.html:14
-	qw422016.N().S(ln.Common.Posts["expand"])
+	qw422016.N().S(ln.Common.Posts["expandImages"])
 	//line thread.html:14
 	qw422016.N().S(`</a></span></span><noscript>TODO: Noscript post creation</noscript><hr>`)
 	//line thread.html:22
