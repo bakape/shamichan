@@ -34,7 +34,7 @@ func streamrenderBoard(qw422016 *qt422016.Writer, threadHTML []byte, id, title s
 	//line board.html:12
 	qw422016.N().S(`<h1 id="page-title">`)
 	//line board.html:14
-	qw422016.E().S(title)
+	qw422016.N().S(title)
 	//line board.html:14
 	qw422016.N().S(`</h1><span class="aside-container"><aside id="thread-form-container" class="glass"><span class="act"><a class="new-thread-button">`)
 	//line board.html:20

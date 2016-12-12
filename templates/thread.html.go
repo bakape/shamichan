@@ -57,6 +57,8 @@ func streamrenderThread(qw422016 *qt422016.Writer, postHTML []byte, ln lang.Pack
 	//line thread.html:43
 	qw422016.N().S(ln.Common.UI["last"])
 	//line thread.html:43
+	qw422016.N().S(` `)
+	//line thread.html:43
 	qw422016.N().S(`100</a></span><span id="lock" style="visibilty: hidden;">`)
 	//line thread.html:47
 	qw422016.N().S(ln.UI["lockedToBottom"])
