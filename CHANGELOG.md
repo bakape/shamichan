@@ -2,6 +2,31 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v3.0.0 - 2016-12-12
+* BREAKING:
+	- Changed CLI flags to shorter one letter variants
+	- Removed `--origin` CLI flag
+	- Restructured JSON API and websocket protocol. See `docs/` for changes.
+* Change
+	- More efficient hybrid server- and client-side rendering
+	- More compact [Rules] and [Notice] widgets
+	- Revert valid Last N posts parameters to 5 and 100
+* Add
+	- inumi theme
+	- Polish language pack (partial)
+	- HTML, JSON and DB query LRU cache
+	- [Expand] button to catalog threads without images
+	- Read-only site usability with JavaScript disabled
+	- Full site functionality with outdated browsers like PaleMoon
+* Remove
+	- Client origin checking
+	- Email field for post creation
+	- Image hats
+	- Image link shortening in figcaption
+* Fix
+	- Relative timestamps not toggling off without refresh
+	- Downloading archives on thumbnail click in FireFox
+
 ##v2.7.1 - 2016-11-30
 * Fix
 	- Backspace corrupting posts, when tab hidden

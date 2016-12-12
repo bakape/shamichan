@@ -38,7 +38,10 @@ License: GNU AGPL
     - No frameworks and optimized code on both client and server
     - Fast video and audio processing through C bindings to ffmpeg
     - On-demand lazy client module loading and rendering
+    - Inbuilt custom LRU cache
 * Client UI
+    - Works with all modern and most outdated browsers (such as PaleMoon)
+    - Read-only functionality preserved with JavaScript disabled
     - Scrolling compensation prevents post updates from moving the viewport
     - Inbuilt DOM update batching to reduce redraws
     - Multiple themes
@@ -54,8 +57,8 @@ License: GNU AGPL
     - Client almost entirely localized in multiple languages
     - More languages can be added by editing simple JSON files
 * Miscellaneous
+    - Documented public JSON API and WebSocket protocol
     - Optional R/a/dio Now Playing banner
-    - Public JSON API
 
 ##Runtime dependencies
 * [RethinkDB](https://rethinkdb.com/docs/install/).
