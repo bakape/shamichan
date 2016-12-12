@@ -1,0 +1,106 @@
+{
+	"posts": {
+		"ago": "temu",
+		"and": "i",
+		"anon": "Anonymous",
+		"contractImages": "Contract Images",
+		"expandImages": "Expand Images",
+		"expand": "Otwórz",
+		"hide": "Ukryj",
+		"in": "w",
+		"justNow": "przed chwilą",
+		"locked": "zablokowany",
+		"omitted": "pominęto",
+		"seeAll": "Pokaż wszystkie",
+		"spoiler": "Spojler",
+		"show": "Pokaż",
+		"you": "(Ty)"
+	},
+	"plurals": {
+		"day": [
+			"dzień",
+			"dni"
+		],
+		"hour": [
+			"godzinę",
+			"godzin"
+		],
+		"image": [
+			"obrazek",
+			"obrazków"
+		],
+		"minute": [
+			"minutę",
+			"minut"
+		],
+		"month": [
+			"miesiąc",
+			"miesiące"
+		],
+		"post": [
+			"post",
+			"postpostów"
+		],
+		"year": [
+			"rok",
+			"lat"
+		]
+	},
+	"time": {
+		"calendar": [
+			"Styczeń",
+			"Luty",
+			"Marzec",
+			"Kwiecień",
+			"Maj",
+			"Czerwiec",
+			"Lipiec",
+			"Sierpień",
+			"Wrzesień",
+			"Październik",
+			"Listopad",
+			"Grudzień"
+		],
+		"week": [
+			"Niedziela",
+			"Poniedziałek",
+			"Wtorek",
+			"Środa",
+			"Czwartek",
+			"Piątek",
+			"Sobota"
+		]
+	},
+	"ui": {
+		"mustMatch": "Podane hasła muszą być takie same",
+		"invalidCaptcha": "Nieprawidłowa captcha",
+		"quoted": "Zostałeś zacytowany",
+		"refresh": "Odśwież",
+		"sessionExpired": "Login session expired",
+		"thread_locked": "Temat został zamknięty.",
+		"thumbnailing": "Miniaturyzowanie...",
+		"unfinishedPost": "Masz niezakończony post",
+		"uploadProgress": "przesłano...",
+		"googleSong": "Kliknij, żeby wyszukać piosenkę",
+		"last": "Ostatni",
+		"postsImages": "Posts/Images"
+	},
+	"sync": [
+		"odłączono",
+		"trwa łączenie",
+		"synchronizacja",
+		"zsynchronizowano",
+		"brak synchronizacji"
+	],
+	"syncwatch": {
+		"starting": "Synchronizacja nastąpi za 10 sekund",
+		"finished": "Zakończono"
+	},
+	"opts": {
+		"importConfig": {
+			"done": "Importowanie zakończone sukcesem. Strona zostanie teraz odświeżona",
+			"corrupt": "Importowanie nieudane. Plik uszkodzony."
+		},
+		"langApplied": "Language settings applied. The page will now reload."
+	}
+}

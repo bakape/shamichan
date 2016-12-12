@@ -9,7 +9,7 @@ import (
 var (
 	// Available language packs. Change this, when adding any new ones.
 	langs = []string{
-		"en_GB", "es_ES", "pt_BR", "sk_SK", "tr_TR", "uk_UA",
+		"en_GB", "es_ES", "pl_PL", "pt_BR", "sk_SK", "tr_TR", "uk_UA",
 	}
 
 	// Available themes. Change this, when adding any new ones.
