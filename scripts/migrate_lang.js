@@ -1,4 +1,7 @@
+#!/usr/bin/env node
 // For easily migrating between version of language packs
+
+"use strict"
 
 const fs = require("fs")
 
@@ -6,8 +9,8 @@ const en = {
     server: readJSON("lang/en_GB/server.json", "utf8"),
     common: readJSON("lang/en_GB/common.json", "utf8"),
 }
-const targets = ["es_ES", "pt_BR", "sk_SK", "tr_TR", "uk_UA"],
-    files = ["common", "server"]
+const targets = fs.readdirSync("lang").filter(n =>
+    n !== "en_GB" && /^\w{2}_\w{2}$/.test(n))
 
 for (let t of targets) {
     const source = {
@@ -16,16 +19,16 @@ for (let t of targets) {
     }
     const dir = `lang/${t}`
 
-    for (let f of files) {
-        const lang = readJSON(`${dir}/${f}.json`)
-        traverse(source, "_lang", lang)
+    for (let f of fs.readdirSync(dir)) {
+        const path = `${dir}/${f}`
+        traverse(source, "_lang", readJSON(path))
+        fs.unlinkSync(path)
     }
 
     const dest = JSON.parse(JSON.stringify(en)) // Deep clone
     traverseCopy(source, dest)
     for (let key in dest) {
         const path = `${dir}/${key}.json`
-        fs.unlinkSync(path)
         fs.writeFileSync(path, JSON.stringify(dest[key], null, "\t"))
     }
 }
