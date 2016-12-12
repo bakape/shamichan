@@ -20,7 +20,10 @@ export default function notifyAboutReply(post: Post) {
 	}
 	repliedToMe()
 
-	if (!options.notification || Notification.permission !== "granted") {
+	const re = !options.notification
+		|| typeof Notification !== "function"
+		|| Notification.permission !== "granted"
+	if (re) {
 		return
 	}
 
