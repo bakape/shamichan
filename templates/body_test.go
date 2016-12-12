@@ -247,32 +247,32 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "link reference",
 			in:   ">>>/4chan/",
-			out:  `<span><em><a href="http%3A%2F%2F4chan.org" target="_blank">&gt;&gt;&gt;/4chan/</a></em><br></span>`,
+			out:  `<span><em><a href="http://4chan.org" target="_blank">&gt;&gt;&gt;/4chan/</a></em><br></span>`,
 		},
 		{
 			name: "board reference",
 			in:   ">>>/a/",
-			out:  `<span><em><a href="%2Fa%2F" target="_blank">&gt;&gt;&gt;/a/</a></em><br></span>`,
+			out:  `<span><em><a href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em><br></span>`,
 		},
 		{
 			name: "reference with extra quotes",
 			in:   ">>>>>/a/",
-			out:  `<span><em>>><a href="%2Fa%2F" target="_blank">&gt;&gt;&gt;/a/</a></em><br></span>`,
+			out:  `<span><em>>><a href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em><br></span>`,
 		},
 		{
 			name: "HTTP URL",
 			in:   "http://4chan.org",
-			out:  `<span><a href="http%3A%2F%2F4chan.org" target="_blank">http://4chan.org</a><br></span>`,
+			out:  `<span><a href="http://4chan.org" target="_blank">http://4chan.org</a><br></span>`,
 		},
 		{
 			name: "HTTPS URL",
 			in:   "https://4chan.org",
-			out:  `<span><a href="https%3A%2F%2F4chan.org" target="_blank">https://4chan.org</a><br></span>`,
+			out:  `<span><a href="https://4chan.org" target="_blank">https://4chan.org</a><br></span>`,
 		},
 		{
 			name: "magnet URL",
 			in:   "magnet:?xt=urn:btih:c12fe1",
-			out:  `<span><a href="magnet%3A%3Fxt%3Durn%3Abtih%3Ac12fe1">magnet:?xt=urn:btih:c12fe1</a><br></span>`,
+			out:  `<span><a href="magnet:?xt=urn:btih:c12fe1">magnet:?xt=urn:btih:c12fe1</a><br></span>`,
 		},
 		{
 			name: "XSS inject URL",
@@ -287,22 +287,22 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "youtube embed",
 			in:   "https://www.youtube.com/watch?v=z0f4Wgi94eo",
-			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3Dz0f4Wgi94eo\">[Youtube] ???</a></em><br></span>",
+			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/watch?v=z0f4Wgi94eo\">[Youtube] ???</a></em><br></span>",
 		},
 		{
 			name: "youtu.be embed",
 			in:   "https://youtu.be/z0f4Wgi94eo",
-			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https%3A%2F%2Fyoutu.be%2Fz0f4Wgi94eo\">[Youtube] ???</a></em><br></span>",
+			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://youtu.be/z0f4Wgi94eo\">[Youtube] ???</a></em><br></span>",
 		},
 		{
 			name: "soundcloud embed",
 			in:   "https://soundcloud.com/cd_oblongar",
-			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"1\" href=\"https%3A%2F%2Fsoundcloud.com%2Fcd_oblongar\">[SoundCloud] ???</a></em><br></span>",
+			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"1\" href=\"https://soundcloud.com/cd_oblongar\">[SoundCloud] ???</a></em><br></span>",
 		},
 		{
 			name: "vimeo embed",
 			in:   "https://vimeo.com/174312494",
-			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https%3A%2F%2Fvimeo.com%2F174312494\">[Vimeo] ???</a></em><br></span>",
+			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https://vimeo.com/174312494\">[Vimeo] ???</a></em><br></span>",
 		},
 	}
 

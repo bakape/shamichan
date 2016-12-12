@@ -1,4 +1,4 @@
-import { makeAttrs, makeFrag } from "../util"
+import { makeAttrs, makeFrag, escape } from "../util"
 import { threads, write } from "../render"
 import { on } from "../util"
 import { fetchJSON } from "../fetch"
@@ -48,7 +48,7 @@ for (let p of ["Youtube", "SoundCloud", "Vimeo"]) {
 function formatNoEmbed(type: provider): (s: string) => string {
 	return (href: string) => {
 		const attrs = {
-			href: encodeURI(href),
+			href: escape(href),
 			class: "embed",
 			target: "_blank",
 			"data-type": type.toString(),

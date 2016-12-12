@@ -208,7 +208,7 @@ function parseReference(m: string[]): string {
 
 // Render and anchor link that opens in a new tab
 function newTabLink(href: string, text: string): string {
-    return `<a href="${encodeURI(href)}" target="_blank">${escape(text)}</a>`
+    return `<a href="${escape(href)}" target="_blank">${escape(text)}</a>`
 }
 
 // Parse generic URLs and embed, if applicable
@@ -224,7 +224,8 @@ function parseURL(bit: string): string {
         return escape(bit)
     }
     if (bit[0] == "m") { // Don't open a new tab for magnet links
-        return escape(bit).link(encodeURI(bit))
+        bit = escape(bit)
+        return bit.link(bit)
     }
     return newTabLink(bit, bit)
 }

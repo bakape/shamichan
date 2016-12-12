@@ -320,7 +320,7 @@ func streamcaptcha(qw422016 *qt422016.Writer, id string, lang map[string]string)
 	//line forms.html:77
 	qw422016.N().S(`" class="hidden"></a><noscript><iframe src="http://api.solvemedia.com/papi/challenge.noscript?k=`)
 	//line forms.html:79
-	qw422016.N().U(conf.CaptchaPublicKey)
+	qw422016.N().S(conf.CaptchaPublicKey)
 	//line forms.html:79
 	qw422016.N().S(`"height="260" width="350" frameborder="0"></iframe><br><input name="adcopy_challenge" type="text" required></noscript></div></div>`)
 //line forms.html:86

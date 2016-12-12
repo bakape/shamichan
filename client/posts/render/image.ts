@@ -113,7 +113,7 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
                 arg = img.SHA1
                 break
         }
-        ch[i].setAttribute("href", url + encodeURIComponent(arg))
+        ch[i].setAttribute("href", url + encodeURI(arg))
     }
 }
 

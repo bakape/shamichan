@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"html"
-	"net/url"
 	"regexp"
 	"strconv"
 
@@ -244,12 +243,8 @@ func (c *bodyContext) parseURL(bit []byte) {
 		c.escape(bit)
 	case c.parseEmbeds(bit):
 	case bit[0] == 'm': // Don't open a new tab for magnet links
-		fmt.Fprintf(
-			c,
-			`<a href="%s">%s</a>`,
-			url.QueryEscape(s),
-			html.EscapeString(s),
-		)
+		s = html.EscapeString(s)
+		fmt.Fprintf(c, `<a href="%s">%s</a>`, s, s)
 	default:
 		c.newTabLink(s, s)
 	}
@@ -265,7 +260,7 @@ func (c *bodyContext) parseEmbeds(b []byte) bool {
 			c,
 			`<em><a class="embed" target="_blank" data-type="%d" href="%s">[%s] ???</a></em>`,
 			t.typ,
-			url.QueryEscape(string(b)),
+			html.EscapeString(string(b)),
 			providers[t.typ],
 		)
 		return true

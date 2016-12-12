@@ -76,7 +76,7 @@ CreateBoard renders a the form for creating new boards
 			<a id="adcopy-link-image-{%s= id %}" class="hidden"></a>
 			<a id="adcopy-link-info-{%s= id %}" class="hidden"></a>
 			<noscript>
-				<iframe src="http://api.solvemedia.com/papi/challenge.noscript?k={%u conf.CaptchaPublicKey %}"
+				<iframe src="http://api.solvemedia.com/papi/challenge.noscript?k={%s= conf.CaptchaPublicKey %}"
 		height="260" width="350" frameborder="0"></iframe>
 				<br>
 				<input name="adcopy_challenge" type="text" required>
