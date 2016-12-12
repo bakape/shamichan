@@ -197,50 +197,6 @@ export function extend(dest: {}, source: {}) {
 	}
 }
 
-// Remove values from the array, that do not pass the truth test
-export function filter<T>(array: T[], fn: (item: T) => boolean): T[] {
-	const filtered: T[] = []
-	for (let item of array) {
-		if (fn(item)) {
-			filtered.push(item)
-		}
-	}
-	return filtered
-}
-
-// Group all objects in array by a property of the object
-export function groupBy<T extends Object>(array: T[], prop: string)
-	: { [key: string]: T[] } {
-	const groups: { [key: string]: T[] } = {}
-	for (let item of array) {
-		const dest = item[prop]
-		if (dest in groups) {
-			groups[dest].push(item)
-		} else {
-			groups[dest] = [item]
-		}
-	}
-	return groups
-}
-
-// Returns the first element of an array, that passes the truth test, or
-// undefined
-export function find<T>(arrayLike: ArrayLike<T>, fn: (item: T) => boolean): T {
-	for (let i = 0; i < arrayLike.length; i++) {
-		if (fn(arrayLike[i])) {
-			return arrayLike[i]
-		}
-	}
-	return undefined
-}
-
-// Iterates over an array-like object, like HTMLCollection
-export function each<T>(arrayLike: ArrayLike<T>, fn: (item: T) => void) {
-	for (let i = 0; i < arrayLike.length; i++) {
-		fn(arrayLike[i])
-	}
-}
-
 // Wraps event style object with onload() method to Promise style
 export function load(loader: Loader): Promise<Event> {
 	return new Promise<Event>((resolve, reject) => {
@@ -269,33 +225,12 @@ export function escape(str: string): string {
 		escapeMap[char])
 }
 
-// Construct a table from an array of objects and a consumer function,
-// that returns an array of cells.
-export function table<T>(rows: T[], func: (arg: T) => string[]): string {
-	let html = '<table>'
-	for (let row of rows) {
-		html += '<tr>'
-		for (let cell of func(row)) {
-			html += `<td>${cell}</td>`
-		}
-		html += '</tr>'
-	}
-	html += '</table>'
-	return html
-}
 
 // Extract the value of a named input field, which is a child of the parameter
 // element
 export function inputValue(el: Element, name: string): string {
 	return (el.querySelector(`input[name=${name}]`) as HTMLInputElement)
 		.value
-}
-
-// Applies mixins to destination object's prototype
-export function applyMixins(dest: any, ...mixins: any[]) {
-	mixins.forEach(mixin =>
-		Object.getOwnPropertyNames(mixin.prototype).forEach(name =>
-			dest.prototype[name] = mixin.prototype[name]))
 }
 
 // Compares all keys on a with keys on b for equality
