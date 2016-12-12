@@ -1,3 +1,5 @@
+//go:generate ffjson --nodecoder $GOFILE
+
 // Package common contains common shared types, variables and constants used
 // throughout the project
 package common

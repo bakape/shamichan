@@ -1,3 +1,5 @@
+//go:generate ffjson --nodecoder $GOFILE
+
 // Package config stores and exports the configuration for server-side use and
 // the public availability JSON struct, which includes a small subset of the
 // server configuration.

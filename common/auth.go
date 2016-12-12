@@ -1,3 +1,5 @@
+//go:generate ffjson --nodecoder $GOFILE
+
 package common
 
 // Captcha stores captcha data for request messages that require it, if captchas
