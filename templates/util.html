@@ -1,3 +1,5 @@
+{% import "strconv" %}
+
 Renders the tab selection butts in tabbed windows
 {% func tabButts(names []string) %}{% stripspace %}
 	<div class="tab-butts">
@@ -8,4 +10,21 @@ Renders the tab selection butts in tabbed windows
 		{% endfor %}
 	</div>
 	<hr>
+{% endstripspace %}{% endfunc %}
+
+Render a link to another post. Can optionally be cross-thread.
+{% func postLink(id, op uint64, board string, cross bool) %}{% stripspace %}
+	{% code idStr := strconv.FormatUint(id, 10) %}
+	<a class="history" data-id="{%s= idStr %}" href="
+		{% if cross %}
+			/{%s= board %}/{%s= strconv.FormatUint(op, 10) %}
+		{% endif %}
+		#p{%s= idStr %}"
+	>
+		>>
+		{% if cross %}
+			>/{%s= board %}/
+		{% endif %}
+		{%s= idStr %}
+	</a>
 {% endstripspace %}{% endfunc %}

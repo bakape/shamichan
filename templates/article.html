@@ -137,7 +137,7 @@
 		{% if p.Backlinks != nil %}
 			<small class="spaced">
 				{% for id, link := range p.Backlinks %}
-					{%s= renderPostLink(id, link.OP, link.Board, link.OP != op) %}
+					{%= postLink(id, link.OP, link.Board, link.OP != op) %}
 				{% endfor %}
 			</small>
 		{% endif %}

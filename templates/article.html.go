@@ -345,7 +345,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 		//line article.html:139
 		for id, link := range p.Backlinks {
 			//line article.html:140
-			qw422016.N().S(renderPostLink(id, link.OP, link.Board, link.OP != op))
+			streampostLink(qw422016, id, link.OP, link.Board, link.OP != op)
 			//line article.html:141
 		}
 		//line article.html:141

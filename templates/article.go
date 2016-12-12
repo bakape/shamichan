@@ -146,41 +146,6 @@ func readableFileSize(s int) string {
 	}
 }
 
-// Render a link to another post. Can optionally be cross-thread.
-func renderPostLink(id, op uint64, board string, cross bool) string {
-	var w htmlWriter
-
-	w.WriteString(`<a class="history" data-id=`)
-	idStr := strconv.FormatUint(id, 10)
-	w.WriteString(idStr)
-	w.WriteString(` href="`)
-
-	// More premature optimization ahead
-
-	// Write href
-	if cross {
-		w.WriteByte('/')
-		w.WriteString(board)
-		w.WriteByte('/')
-		w.WriteString(strconv.FormatUint(op, 10))
-	}
-	w.WriteString("#p")
-	w.WriteString(idStr)
-	w.WriteString(`">>>`)
-
-	// Write text
-	if cross {
-		w.WriteString(">/")
-		w.WriteString(board)
-		w.WriteByte('/')
-	}
-	w.WriteString(idStr)
-
-	w.WriteString("</a>")
-
-	return w.String()
-}
-
 // Correct thumbnail dimensions for smaller reply thumbnails
 func correctDims(large bool, w, h uint16) (string, string) {
 	if !large && (w > 125 || h > 125) {

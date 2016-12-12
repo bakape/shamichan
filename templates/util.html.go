@@ -11,69 +11,146 @@ import (
 	qt422016 "github.com/valyala/quicktemplate"
 )
 
+//line util.html:1
+import "strconv"
+
 // Renders the tab selection butts in tabbed windows
 
-//line util.html:2
+//line util.html:4
 var (
 	_ = qtio422016.Copy
 	_ = qt422016.AcquireByteBuffer
 )
 
-//line util.html:2
+//line util.html:4
 func streamtabButts(qw422016 *qt422016.Writer, names []string) {
-	//line util.html:2
-	qw422016.N().S(`<div class="tab-butts">`)
 	//line util.html:4
+	qw422016.N().S(`<div class="tab-butts">`)
+	//line util.html:6
 	for i, n := range names {
-		//line util.html:4
+		//line util.html:6
 		qw422016.N().S(`<a class="tab-link`)
-		//line util.html:5
+		//line util.html:7
 		if i == 0 {
-			//line util.html:5
+			//line util.html:7
 			qw422016.N().S(` `)
-			//line util.html:5
+			//line util.html:7
 			qw422016.N().S(`tab-sel`)
-			//line util.html:5
+			//line util.html:7
 		}
-		//line util.html:5
+		//line util.html:7
 		qw422016.N().S(`" data-id="`)
-		//line util.html:5
+		//line util.html:7
 		qw422016.N().D(i)
-		//line util.html:5
+		//line util.html:7
 		qw422016.N().S(`">`)
-		//line util.html:6
-		qw422016.N().S(n)
-		//line util.html:6
-		qw422016.N().S(`</a>`)
 		//line util.html:8
+		qw422016.N().S(n)
+		//line util.html:8
+		qw422016.N().S(`</a>`)
+		//line util.html:10
 	}
-	//line util.html:8
+	//line util.html:10
 	qw422016.N().S(`</div><hr>`)
-//line util.html:11
+//line util.html:13
 }
 
-//line util.html:11
+//line util.html:13
 func writetabButts(qq422016 qtio422016.Writer, names []string) {
-	//line util.html:11
+	//line util.html:13
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line util.html:11
+	//line util.html:13
 	streamtabButts(qw422016, names)
-	//line util.html:11
+	//line util.html:13
 	qt422016.ReleaseWriter(qw422016)
-//line util.html:11
+//line util.html:13
 }
 
-//line util.html:11
+//line util.html:13
 func tabButts(names []string) string {
-	//line util.html:11
+	//line util.html:13
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line util.html:11
+	//line util.html:13
 	writetabButts(qb422016, names)
-	//line util.html:11
+	//line util.html:13
 	qs422016 := string(qb422016.B)
-	//line util.html:11
+	//line util.html:13
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line util.html:11
+	//line util.html:13
 	return qs422016
-//line util.html:11
+//line util.html:13
+}
+
+// Render a link to another post. Can optionally be cross-thread.
+
+//line util.html:16
+func streampostLink(qw422016 *qt422016.Writer, id, op uint64, board string, cross bool) {
+	//line util.html:17
+	idStr := strconv.FormatUint(id, 10)
+
+	//line util.html:17
+	qw422016.N().S(`<a class="history" data-id="`)
+	//line util.html:18
+	qw422016.N().S(idStr)
+	//line util.html:18
+	qw422016.N().S(`" href="`)
+	//line util.html:19
+	if cross {
+		//line util.html:19
+		qw422016.N().S(`/`)
+		//line util.html:20
+		qw422016.N().S(board)
+		//line util.html:20
+		qw422016.N().S(`/`)
+		//line util.html:20
+		qw422016.N().S(strconv.FormatUint(op, 10))
+		//line util.html:21
+	}
+	//line util.html:21
+	qw422016.N().S(`#p`)
+	//line util.html:22
+	qw422016.N().S(idStr)
+	//line util.html:22
+	qw422016.N().S(`">>>`)
+	//line util.html:25
+	if cross {
+		//line util.html:25
+		qw422016.N().S(`>/`)
+		//line util.html:26
+		qw422016.N().S(board)
+		//line util.html:26
+		qw422016.N().S(`/`)
+		//line util.html:27
+	}
+	//line util.html:28
+	qw422016.N().S(idStr)
+	//line util.html:28
+	qw422016.N().S(`</a>`)
+//line util.html:30
+}
+
+//line util.html:30
+func writepostLink(qq422016 qtio422016.Writer, id, op uint64, board string, cross bool) {
+	//line util.html:30
+	qw422016 := qt422016.AcquireWriter(qq422016)
+	//line util.html:30
+	streampostLink(qw422016, id, op, board, cross)
+	//line util.html:30
+	qt422016.ReleaseWriter(qw422016)
+//line util.html:30
+}
+
+//line util.html:30
+func postLink(id, op uint64, board string, cross bool) string {
+	//line util.html:30
+	qb422016 := qt422016.AcquireByteBuffer()
+	//line util.html:30
+	writepostLink(qb422016, id, op, board, cross)
+	//line util.html:30
+	qs422016 := string(qb422016.B)
+	//line util.html:30
+	qt422016.ReleaseByteBuffer(qb422016)
+	//line util.html:30
+	return qs422016
+//line util.html:30
 }
