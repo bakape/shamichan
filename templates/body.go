@@ -231,7 +231,7 @@ func (c *bodyContext) newTabLink(href, text string) {
 	fmt.Fprintf(
 		c,
 		`<a href="%s" target="_blank">%s</a>`,
-		url.QueryEscape(href),
+		html.EscapeString(href),
 		html.EscapeString(text),
 	)
 }
