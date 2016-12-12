@@ -205,10 +205,10 @@ export function toggleExpandAll() {
 	expandAll = !expandAll
 
 	write(() => {
-		const e = threads.querySelector("#expand-images")
+		const e = threads.querySelector("#expand-images a")
 		if (e) {
 			const k = (expandAll ? "contract" : "expand") + "Images"
-			e.textContent = lang.ui[k]
+			e.textContent = lang.posts[k]
 		}
 	})
 
