@@ -22,7 +22,8 @@ type formSpecs struct {
 
 // ConfigureBoard renders a form for setting board configurations
 func ConfigureBoard(conf config.BoardConfigs, ln lang.Pack) string {
-	return configurationTable(reflect.ValueOf(conf), "configureBoard", true, ln)
+	v := reflect.ValueOf(conf)
+	return configurationTable(v, "configureBoard", false, ln)
 }
 
 func configurationTable(
