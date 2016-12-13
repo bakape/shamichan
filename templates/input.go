@@ -3,6 +3,7 @@
 package templates
 
 import (
+	"html"
 	"strconv"
 	"strings"
 
@@ -101,7 +102,7 @@ func (w *formWriter) input(spec inputSpec) {
 			w.typ("password")
 		}
 		if spec.Val != nil {
-			w.attr("value", spec.Val.(string))
+			w.attr("value", html.EscapeString(spec.Val.(string)))
 		}
 		if spec.Pattern != "" {
 			w.attr("pattern", spec.Pattern)
