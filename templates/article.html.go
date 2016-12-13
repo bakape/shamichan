@@ -281,7 +281,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 	//line article.html:119
 	qw422016.N().S(`<blockquote>`)
 	//line article.html:121
-	qw422016.N().S(renderBody(p, op))
+	streambody(qw422016, p, op)
 	//line article.html:121
 	qw422016.N().S(`</blockquote></div>`)
 	//line article.html:124
