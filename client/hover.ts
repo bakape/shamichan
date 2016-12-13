@@ -214,16 +214,16 @@ async function renderPostPreview(event: MouseEvent) {
 	if (!target.matches || !target.matches("a.history")) {
 		return
 	}
-	const m = target.textContent.match(/^>{2,}(\d+)/)
-	if (!m) {
+	const id = parseInt(target.getAttribute("data-id"))
+	if (!id) {
 		return
 	}
 
-	let post = posts.get(parseInt(m[1]))
+	let post = posts.get(id)
 	if (!post) {
 		// Try to fetch from server, if this post is not currently displayed
 		// due to lastN or in a different thread
-		const [data, err] = await fetchJSON<PostData>(`/json/post/${m[1]}`)
+		const [data, err] = await fetchJSON<PostData>(`/json/post/${id}`)
 		if (!err) {
 			post = new Post(data)
 			new PostView(post, null)
