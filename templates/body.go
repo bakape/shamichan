@@ -144,7 +144,7 @@ func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
 
 // Parse a line fragment
 func (c *bodyContext) parseFragment(frag string) {
-	for i, word := range strings.Split(frag, "\n") {
+	for i, word := range strings.Split(frag, " ") {
 		if i != 0 {
 			c.N().S(` `)
 		}
