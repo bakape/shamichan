@@ -199,7 +199,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, ln lang.Pack) {
 	//line index.html:209
 	qw422016.N().S(`<div id="identity" class="modal glass">`)
 	//line index.html:211
-	qw422016.N().S(renderTable(specs["identity"], ln))
+	streamtable(qw422016, specs["identity"], ln)
 	//line index.html:211
 	qw422016.N().S(`</div>`)
 	//line index.html:215
@@ -212,7 +212,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, ln lang.Pack) {
 	//line index.html:219
 	qw422016.N().S(`<div class="tab-cont"><div class="tab-sel" data-id="0"><form id="login-form">`)
 	//line index.html:223
-	qw422016.N().S(renderTable(specs["login"], ln))
+	streamtable(qw422016, specs["login"], ln)
 	//line index.html:224
 	streamcaptcha(qw422016, "login", ln.UI)
 	//line index.html:224
@@ -222,7 +222,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, ln lang.Pack) {
 	//line index.html:225
 	qw422016.N().S(`"><div class="form-response admin"></div></form></div><div data-id="1"><form id="registration-form">`)
 	//line index.html:231
-	qw422016.N().S(renderTable(specs["register"], ln))
+	streamtable(qw422016, specs["register"], ln)
 	//line index.html:232
 	streamcaptcha(qw422016, "register", ln.UI)
 	//line index.html:232
@@ -276,88 +276,80 @@ func streamrenderIndex(qw422016 *qt422016.Writer, ln lang.Pack) {
 		//line index.html:261
 		qw422016.N().S(`>`)
 		//line index.html:262
-		for _, s := range sp {
-			//line index.html:263
-			qw422016.N().S(renderInput(s, ln))
-			//line index.html:264
-			qw422016.N().S(renderLabel(s, ln))
-			//line index.html:264
-			qw422016.N().S(`<br>`)
-			//line index.html:266
-		}
-		//line index.html:270
+		streamoptions(qw422016, sp, ln)
+		//line index.html:266
 		if i == 0 {
-			//line index.html:270
+			//line index.html:266
 			qw422016.N().S(`<br><span class="spaced">`)
-			//line index.html:273
+			//line index.html:269
 			for _, id := range [...]string{"export", "import", "hidden"} {
-				//line index.html:273
+				//line index.html:269
 				qw422016.N().S(`<a id="`)
-				//line index.html:274
+				//line index.html:270
 				qw422016.N().S(id)
-				//line index.html:274
+				//line index.html:270
 				qw422016.N().S(`" title="`)
-				//line index.html:274
+				//line index.html:270
 				qw422016.N().S(ln.Forms[id][1])
-				//line index.html:274
+				//line index.html:270
 				qw422016.N().S(`">`)
-				//line index.html:275
+				//line index.html:271
 				qw422016.N().S(ln.Forms[id][0])
-				//line index.html:275
+				//line index.html:271
 				qw422016.N().S(`</a>`)
-				//line index.html:277
+				//line index.html:273
 			}
-			//line index.html:277
+			//line index.html:273
 			qw422016.N().S(`</span>`)
-			//line index.html:281
+			//line index.html:277
 			qw422016.N().S(`<input type="file" id="importSettings" hidden>`)
-			//line index.html:283
+			//line index.html:279
 		}
-		//line index.html:283
+		//line index.html:279
 		qw422016.N().S(`</div>`)
-		//line index.html:285
+		//line index.html:281
 	}
-	//line index.html:285
+	//line index.html:281
 	qw422016.N().S(`</div></div></div></div>`)
-	//line index.html:292
+	//line index.html:288
 	qw422016.N().S(`<div class="overlay" id="hover-overlay"></div><div id="page-container"><section id="left-panel" class="side-panel glass"></section>`)
-	//line index.html:298
+	//line index.html:294
 	qw422016.N().S(`<div id="left-spacer" class="side-spacer"></div>`)
-	//line index.html:305
+	//line index.html:301
 	qw422016.N().S(`<section id="threads">{{.Threads}}</section><section id="right-panel" class="side-panel glass"></section><div id="right-spacer" class="side-spacer"></div></div><script src="/assets/js/vendor/system.js"></script>`)
-	//line index.html:316
+	//line index.html:312
 	if conf.Captcha {
-		//line index.html:316
+		//line index.html:312
 		qw422016.N().S(`<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>`)
-		//line index.html:318
+		//line index.html:314
 	}
-	//line index.html:321
+	//line index.html:317
 	qw422016.N().S(`<script src="/assets/js/scripts/loader.js"></script></body>`)
-//line index.html:324
+//line index.html:320
 }
 
-//line index.html:324
+//line index.html:320
 func writerenderIndex(qq422016 qtio422016.Writer, ln lang.Pack) {
-	//line index.html:324
+	//line index.html:320
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line index.html:324
+	//line index.html:320
 	streamrenderIndex(qw422016, ln)
-	//line index.html:324
+	//line index.html:320
 	qt422016.ReleaseWriter(qw422016)
-//line index.html:324
+//line index.html:320
 }
 
-//line index.html:324
+//line index.html:320
 func renderIndex(ln lang.Pack) string {
-	//line index.html:324
+	//line index.html:320
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line index.html:324
+	//line index.html:320
 	writerenderIndex(qb422016, ln)
-	//line index.html:324
+	//line index.html:320
 	qs422016 := string(qb422016.B)
-	//line index.html:324
+	//line index.html:320
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line index.html:324
+	//line index.html:320
 	return qs422016
-//line index.html:324
+//line index.html:320
 }

@@ -49,7 +49,7 @@ BoardNavigation renders a board selection and search form
 
 CreateBoard renders a the form for creating new boards
 {% func CreateBoard(ln lang.Pack) %}{% stripspace %}
-	{%s= renderTable(specs["createBoard"], ln) %}
+	{%= table(specs["createBoard"], ln) %}
 	<input type="submit" value="{%s= ln.UI["submit"] %}">
 	{%= captcha("create-board", ln.UI) %}
 	<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
@@ -101,7 +101,7 @@ Form for inputing key-value map-like data
 
 Form fommatted as a table, with cancel and submit buttons
 {% func tableForm(specs []inputSpec, needCaptcha bool, ln lang.Pack) %}{% stripspace %}
-	{%s= renderTable(specs, ln) %}
+	{%= table(specs, ln) %}
 	{% if needCaptcha %}
 		{%= captcha("ajax", ln.UI) %}
 	{% endif %}

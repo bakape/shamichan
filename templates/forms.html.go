@@ -206,7 +206,7 @@ func BoardNavigation(lang map[string]string) string {
 //line forms.html:51
 func StreamCreateBoard(qw422016 *qt422016.Writer, ln lang.Pack) {
 	//line forms.html:52
-	qw422016.N().S(renderTable(specs["createBoard"], ln))
+	streamtable(qw422016, specs["createBoard"], ln)
 	//line forms.html:52
 	qw422016.N().S(`<input type="submit" value="`)
 	//line forms.html:53
@@ -400,7 +400,7 @@ func keyValueForm(k, v string) string {
 //line forms.html:103
 func streamtableForm(qw422016 *qt422016.Writer, specs []inputSpec, needCaptcha bool, ln lang.Pack) {
 	//line forms.html:104
-	qw422016.N().S(renderTable(specs, ln))
+	streamtable(qw422016, specs, ln)
 	//line forms.html:105
 	if needCaptcha {
 		//line forms.html:106

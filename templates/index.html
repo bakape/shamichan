@@ -208,7 +208,7 @@
 					Post creation credentals
 				{% endcomment %}
 				<div id="identity" class="modal glass">
-					{%s= renderTable(specs["identity"], ln) %}
+					{%= table(specs["identity"], ln) %}
 				</div>
 				{% comment %}
 					Account login and registration
@@ -220,7 +220,7 @@
 						<div class="tab-cont">
 							<div class="tab-sel" data-id="0">
 								<form id="login-form">
-									{%s= renderTable(specs["login"], ln) %}
+									{%= table(specs["login"], ln) %}
 									{%= captcha("login", ln.UI) %}
 									<input type="submit" value="{%s= ln.UI["submit"] %}">
 									<div class="form-response admin"></div>
@@ -228,7 +228,7 @@
 							</div>
 							<div data-id="1">
 								<form id="registration-form">
-									{%s= renderTable(specs["register"], ln) %}
+									{%= table(specs["register"], ln) %}
 									{%= captcha("register", ln.UI) %}
 									<input type="submit" value="{%s= ln.UI["submit"] %}">
 									<div class="form-response admin"></div>
@@ -259,11 +259,7 @@
 					<div class="tab-cont">
 						{% for i, sp := range optionSpecs %}
 							<div data-id="{%d i %}"{% if i == 0 %}{% space %}class="tab-sel"{% endif %}>
-								{% for _, s := range sp %}
-									{%s= renderInput(s, ln) %}
-									{%s= renderLabel(s, ln) %}
-									<br>
-								{% endfor %}
+								{%= options(sp, ln) %}
 								{% comment %}
 									Hidden post reset, Export and Import links for first tab
 								{% endcomment %}

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/bakape/meguca/lang"
+	"github.com/valyala/quicktemplate"
 )
 
 // Input field types
@@ -24,8 +25,7 @@ const (
 	_shortcut
 )
 
-// Spec of an option passed into the rendering function. All fields are
-// exported, so that they can be passed directly to "html/template".
+// Spec of an option passed into the rendering function
 type inputSpec struct {
 	Type                                        inputType
 	Required, Placeholder, NoID, NoAutoComplete bool
@@ -37,8 +37,19 @@ type inputSpec struct {
 
 // For constructing various HTML input forms
 type formWriter struct {
-	htmlWriter
+	quicktemplate.Writer
 	lang lang.Pack
+}
+
+// Write an element attribute to the buffer
+func (w *formWriter) attr(key, val string) {
+	w.N().S(` `)
+	w.N().S(key)
+	if val != "" {
+		w.N().S(`="`)
+		w.N().S(val)
+		w.N().S(`"`)
+	}
 }
 
 func (w *formWriter) typ(val string) {
@@ -54,9 +65,9 @@ func (w *formWriter) input(spec inputSpec) {
 	case _textarea:
 		w.textArea(spec)
 	case _map:
-		w.WriteString(renderMap(spec, w.lang))
+		streamrenderMap(&w.Writer, spec, w.lang)
 	case _shortcut:
-		w.WriteString("Alt+")
+		w.N().S("Alt+")
 		cont = true
 	default:
 		cont = true
@@ -109,14 +120,14 @@ func (w *formWriter) input(spec inputSpec) {
 		w.attr("class", "shortcut")
 	}
 
-	w.WriteByte('>')
+	w.N().S(`>`)
 }
 
 // Write the element tag and the common parts of all input element types to
 // buffer
 func (w *formWriter) tag(tag string, spec inputSpec) {
-	w.WriteByte('<')
-	w.WriteString(tag)
+	w.N().S(`<`)
+	w.N().S(tag)
 	w.attr("name", spec.ID)
 	if !spec.NoID { // To not conflict with non-unique labels
 		w.attr("id", spec.ID)
@@ -133,7 +144,7 @@ func (w *formWriter) tag(tag string, spec inputSpec) {
 // Write a select element to buffer
 func (w *formWriter) sel(spec inputSpec) {
 	w.tag("select", spec)
-	w.WriteByte('>')
+	w.N().S(`>`)
 
 	var val string
 	if spec.Val != nil {
@@ -141,23 +152,23 @@ func (w *formWriter) sel(spec inputSpec) {
 	}
 
 	for _, o := range spec.Options {
-		w.WriteString("<option")
+		w.N().S("<option")
 		w.attr("value", o)
 		if o == val {
 			w.attr("selected", "selected")
 		}
-		w.WriteByte('>')
+		w.N().S(`>`)
 
 		label, ok := w.lang.Options[spec.ID]
 		if !ok {
 			label = o
 		}
-		w.WriteString(label)
+		w.N().S(label)
 
-		w.WriteString("</option>")
+		w.N().S("</option>")
 	}
 
-	w.WriteString("</select>")
+	w.N().S("</select>")
 }
 
 // Render a text area input element
@@ -167,67 +178,70 @@ func (w *formWriter) textArea(spec inputSpec) {
 		w.attr("maxlength", strconv.Itoa(spec.MaxLength))
 	}
 	w.attr("rows", strconv.Itoa(spec.Rows))
-	w.WriteByte('>')
+	w.N().S(`>`)
 
 	switch spec.Val.(type) {
 	case string:
-		w.escape(spec.Val.(string))
+		w.E().S(spec.Val.(string))
 	case []string:
-		w.escape(strings.Join(spec.Val.([]string), "\n"))
+		w.E().S(strings.Join(spec.Val.([]string), "\n"))
 	}
 
-	w.WriteString("</textarea>")
+	w.N().S("</textarea>")
 }
 
 // Write an input element label from the spec to the buffer
 func (w *formWriter) label(spec inputSpec) {
 	ln := w.lang.Forms[spec.ID]
 
-	w.WriteString("<label")
+	w.N().S("<label")
 	if !spec.NoID {
 		w.attr("for", spec.ID)
 	}
 	w.attr("title", ln[1])
-	w.WriteByte('>')
+	w.N().S(`>`)
 
-	w.WriteString(ln[0])
-	w.WriteString("</label>")
+	w.N().S(ln[0])
+	w.N().S("</label>")
 }
 
 // Render a table containing {label input_element} pairs
-func renderTable(specs []inputSpec, lang lang.Pack) string {
+func streamtable(qw *quicktemplate.Writer, specs []inputSpec, lang lang.Pack) {
 	w := formWriter{
-		lang: lang,
+		Writer: *qw,
+		lang:   lang,
 	}
-	w.WriteString("<table>")
+	w.N().S("<table>")
 
 	for _, spec := range specs {
-		w.WriteString("<tr><td>")
+		w.N().S("<tr><td>")
 		w.label(spec)
-		w.WriteString("</td><td>")
+		w.N().S("</td><td>")
 		w.input(spec)
-		w.WriteString("</td></tr>")
+		w.N().S("</td></tr>")
 	}
 
-	w.WriteString("</table>")
-
-	return w.String()
+	w.N().S("</table>")
 }
 
 // Render a single input element
-func renderInput(spec inputSpec, lang lang.Pack) string {
+func streaminput(qw *quicktemplate.Writer, spec inputSpec, lang lang.Pack) {
 	w := formWriter{
-		lang: lang,
+		Writer: *qw,
+		lang:   lang,
 	}
 	w.input(spec)
-	return w.String()
 }
 
-// Render a single label for an input element
-func renderLabel(spec inputSpec, lang lang.Pack) string {
+// Render the options inputs of an options panel
+func streamoptions(qw *quicktemplate.Writer, specs []inputSpec, ln lang.Pack) {
 	w := formWriter{
-		lang: lang,
+		Writer: *qw,
+		lang:   ln,
 	}
-	w.label(spec)
-	return w.String()
+	for _, s := range specs {
+		w.input(s)
+		w.label(s)
+		w.N().S(`<br>`)
+	}
 }

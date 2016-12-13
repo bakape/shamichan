@@ -35,7 +35,7 @@
 				<br>
 				<noscript>
 					{% for _, s := range specs["noscriptPostCreation"] %}
-						{%s= renderInput(s, ln) %}
+						{%= input(s, ln) %}
 						<br>
 					{% endfor %}
 				</noscript>

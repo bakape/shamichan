@@ -1,54 +1,13 @@
 package templates
 
 import (
-	"bytes"
 	"html"
-	"html/template"
-	"net/url"
 	"strconv"
 	"time"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/lang"
 )
-
-type htmlWriter struct {
-	bytes.Buffer
-}
-
-// Allows passing additional information to thread-related templates
-type postContext struct {
-	common.Post
-	OP              uint64
-	Omit, ImageOmit int
-	Subject, Root   string
-}
-
-// Write an element attribute to the buffer
-func (w *htmlWriter) attr(key, val string) {
-	w.WriteByte(' ')
-	w.WriteString(key)
-	if val != "" {
-		w.WriteString(`="`)
-		w.WriteString(val)
-		w.WriteByte('"')
-	}
-}
-
-// Write an HTML-escaped string to buffer
-func (w *htmlWriter) escape(s string) {
-	w.WriteString(html.EscapeString(s))
-}
-
-// Write an URL-query-escaped string to buffer
-func (w *htmlWriter) queryEscape(s string) {
-	w.WriteString(url.QueryEscape(s))
-}
-
-// Outputs the buffer contents as a HTML string
-func (w *htmlWriter) HTML() template.HTML {
-	return template.HTML(w.String())
-}
 
 // Returns the HTTP path to the thumbnail of an image
 func thumbPath(fileType uint8, SHA1 string) string {

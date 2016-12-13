@@ -72,7 +72,7 @@ func streamrenderBoard(qw422016 *qt422016.Writer, threadHTML []byte, id, title s
 	//line board.html:37
 	for _, s := range specs["noscriptPostCreation"] {
 		//line board.html:38
-		qw422016.N().S(renderInput(s, ln))
+		streaminput(qw422016, s, ln)
 		//line board.html:38
 		qw422016.N().S(`<br>`)
 		//line board.html:40
