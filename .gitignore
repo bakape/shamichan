@@ -20,3 +20,5 @@ www/js
 www/lang
 images
 imager/images
+thumb_*.png
+thumb_*.jpg
