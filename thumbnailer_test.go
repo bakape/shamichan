@@ -8,14 +8,19 @@ import (
 	"testing"
 )
 
-func init() {
-	SetOpts(150, 150)
-}
-
 func TestThumbnail(t *testing.T) {
 	for _, ext := range [...]string{"png", "jpg", "gif", "pdf"} {
 		buf := readSample(t, "sample."+ext)
-		buf, w, h, err := Thumbnail(buf, ext == "jpg")
+
+		opts := Options{
+			Width:           150,
+			Height:          150,
+			JPEGCompression: 90,
+		}
+		if ext == "jpg" {
+			opts.OutputType = JPEG
+		}
+		buf, w, h, err := Thumbnail(buf, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -63,7 +68,7 @@ func writeSample(t *testing.T, name string, buf []byte) {
 }
 
 func TestErrorPassing(t *testing.T) {
-	_, _, _, err := Thumbnail(nil, false)
+	_, _, _, err := Thumbnail(nil, Options{})
 	if err == nil {
 		t.Fatal(`expected error`)
 	}

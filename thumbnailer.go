@@ -14,20 +14,29 @@ import (
 	"os"
 )
 
+// OutputType specifies output image formats
+type OutputType int
+
+// Available output formats
+const (
+	PNG OutputType = iota
+	JPEG
+)
+
+// Options for thumbnailing a specific file
+type Options struct {
+	OutputType                     OutputType
+	Width, Height, JPEGCompression uint
+}
+
 func init() {
 	C.InitializeMagick(C.CString(os.Args[0]))
 }
 
-// SetOpts sets global thumbnailer options
-func SetOpts(maxX, maxY uint) {
-	C.maxX = C.ulong(maxX)
-	C.maxY = C.ulong(maxY)
-}
-
 // Thumbnail generates a thumbnail of the specified maximum dimensions from a
-// source image buffer. jpeg specifies, ig the output thumbnail should be jpeg
-// or PNG.
-func Thumbnail(buf []byte, jpeg bool) ([]byte, uint, uint, error) {
+// source image buffer. Returns the generated thumbnail buffer, the thumbnail's
+// width and height and error, if any.
+func Thumbnail(buf []byte, opts Options) ([]byte, uint, uint, error) {
 	cBuf := C.CBytes(buf)
 	defer C.free(cBuf)
 
@@ -35,7 +44,13 @@ func Thumbnail(buf []byte, jpeg bool) ([]byte, uint, uint, error) {
 	defer C.DestroyExceptionInfo(ex)
 
 	var thumb C.struct_Thumbnail
-	err := C.thumbnail(cBuf, C.size_t(len(buf)), &thumb, C.bool(jpeg), ex)
+	cOpts := C.struct_Options{
+		outputType:      C.int(opts.OutputType),
+		width:           C.ulong(opts.Width),
+		height:          C.ulong(opts.Height),
+		JPEGCompression: C.ulong(opts.JPEGCompression),
+	}
+	err := C.thumbnail(cBuf, C.size_t(len(buf)), cOpts, &thumb, ex)
 	if err != 0 {
 		return nil, 0, 0, extractError(ex)
 	}

@@ -1,10 +1,8 @@
 #include "string.h"
 #include "thumbnailer.h"
 
-unsigned long maxX = 150, maxY = 150, JPEGCompressionLevel = 90;
-
-int thumbnail(const void *src, const size_t size, struct Thumbnail *thumb,
-	      bool jpeg, ExceptionInfo *ex)
+int thumbnail(const void *src, const size_t size, const struct Options opts,
+	      struct Thumbnail *thumb, ExceptionInfo *ex)
 {
 	ImageInfo *info = NULL;
 	Image *img = NULL, *sampled = NULL, *scaled = NULL;
@@ -19,7 +17,7 @@ int thumbnail(const void *src, const size_t size, struct Thumbnail *thumb,
 	}
 
 	// Image already fits thumbnail
-	if (img->columns <= maxX && img->rows <= maxY) {
+	if (img->columns <= opts.width && img->rows <= opts.height) {
 		thumb->width = img->columns;
 		thumb->height = img->rows;
 		strncpy(thumb->buf, src, size);
@@ -29,9 +27,9 @@ int thumbnail(const void *src, const size_t size, struct Thumbnail *thumb,
 
 	// Maintain aspect ratio
 	if (img->columns >= img->rows) {
-		scale = (double)(img->columns) / (double)(maxX);
+		scale = (double)(img->columns) / (double)(opts.width);
 	} else {
-		scale = (double)(img->rows) / (double)(maxY);
+		scale = (double)(img->rows) / (double)(opts.height);
 	}
 	thumb->width = (unsigned long)(img->columns / scale);
 	thumb->height = (unsigned long)(img->rows / scale);
@@ -54,8 +52,8 @@ int thumbnail(const void *src, const size_t size, struct Thumbnail *thumb,
 	// Write thumbnail
 	DestroyImageInfo(info);
 	info = CloneImageInfo(NULL);
-	if (jpeg) {
-		info->quality = JPEGCompressionLevel;
+	if (opts.outputType) {
+		info->quality = opts.JPEGCompression;
 		strcpy(info->magick, "JPEG");
 		strcpy(scaled->magick, "JPEG");
 	} else {

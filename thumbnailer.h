@@ -4,16 +4,18 @@
 #include "stdbool.h"
 #include <magick/api.h>
 
-unsigned long maxX, maxY;
-
 struct Thumbnail {
 	void *buf;
 	size_t size;
-	unsigned long width;
-	unsigned long height;
+	unsigned long width, height;
 };
 
-int thumbnail(const void *src, const size_t size, struct Thumbnail *thumb,
-	      bool jpeg, ExceptionInfo *ex);
+struct Options {
+	int outputType;
+	unsigned long width, height, JPEGCompression;
+};
+
+int thumbnail(const void *, const size_t, const struct Options,
+	      struct Thumbnail *, ExceptionInfo *);
 
 #endif
