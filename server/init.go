@@ -15,6 +15,7 @@ import (
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
+	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/lang"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/templates"
@@ -140,35 +141,29 @@ func printUsage() {
 }
 
 func startServer() {
-	wg := new(sync.WaitGroup)
-	wg.Add(1)
-	load(wg, lang.Load)
+	var wg sync.WaitGroup
 
-	logFatal(db.LoadDB)
+	load := func(fns []func() error) {
+		for i := range fns {
+			wg.Add(1)
+			fn := fns[i]
+			go func() {
+				if err := fn(); err != nil {
+					log.Fatal(err)
+				}
+				wg.Done()
+			}()
+		}
+	}
 
+	load([]func() error{db.LoadDB, assets.CreateDirs, lang.Load})
 	wg.Wait()
-	wg.Add(3)
-	go func() {
-		logFatal(templates.Compile)
-		wg.Done()
-	}()
-	load(wg, imager.InitImager)
-	load(wg, websockets.Listen)
-
+	load([]func() error{templates.Compile, websockets.Listen})
 	wg.Wait()
 
-	logFatal(startWebServer)
-}
-
-func logFatal(fn func() error) {
-	if err := fn(); err != nil {
+	err := startWebServer()
+	imager.UnloadGM()
+	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func load(wg *sync.WaitGroup, fn func() error) {
-	go func() {
-		logFatal(fn)
-		wg.Done()
-	}()
 }

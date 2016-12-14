@@ -1,17 +1,16 @@
 package imager
 
 // #cgo pkg-config: GraphicsMagick
-// #cgo CFLAGS: -std=c11
+// #cgo CFLAGS: -std=c11 -D_POSIX_C_SOURCE
+// #include "init.h"
 // #include "thumbnailer.h"
 // #include <stdlib.h>
 import "C"
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/imager/assets"
 )
 
 var (
@@ -19,10 +18,13 @@ var (
 	errTooTall = errors.New("image too tall")
 )
 
-// InitImager applies the thumbnail quality configuration
-func InitImager() error {
-	C.InitializeMagick(C.CString(os.Args[0]))
-	return assets.CreateDirs()
+func init() {
+	C.magickInit()
+}
+
+// UnloadGM safely unloads the GraphicsMagick runtime
+func UnloadGM() {
+	C.DestroyMagick()
 }
 
 // processImage generates a thumbnail from a source image buffer. Returns the
