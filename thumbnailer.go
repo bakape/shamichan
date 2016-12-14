@@ -25,8 +25,10 @@ const (
 
 // Options for thumbnailing a specific file
 type Options struct {
-	OutputType                     OutputType
-	Width, Height, JPEGCompression uint
+	OutputType    OutputType
+	Width, Height uint
+	// Must be from interval [1;100]
+	JPEGCompression uint
 }
 
 func init() {
