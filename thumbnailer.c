@@ -44,17 +44,17 @@ int thumbnail(const void *src, const size_t size, const struct Options opts,
 	thumb->width = (unsigned long)(img->columns / scale);
 	thumb->height = (unsigned long)(img->rows / scale);
 
-	// Subsample to twice the thumbnail size. A decent enough compromise
+	// Subsample to 4 times the thumbnail size. A decent enough compromise
 	// between quality and performance for images arround the thumbnail size
 	// and much bigger ones.
-	sampled = SampleImage(img, thumb->width * 2, thumb->height * 2, ex);
+	sampled = SampleImage(img, thumb->width * 4, thumb->height * 4, ex);
 	if (sampled == NULL) {
 		goto end;
 	}
 
 	// Scale to thumbnail size
-	scaled = ResizeImage(sampled, thumb->width, thumb->height, CubicFilter,
-			     1, ex);
+	scaled =
+	    ResizeImage(sampled, thumb->width, thumb->height, BoxFilter, 1, ex);
 	if (scaled == NULL) {
 		goto end;
 	}
