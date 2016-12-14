@@ -12,7 +12,7 @@ struct Thumbnail {
 
 struct Options {
 	int outputType;
-	unsigned long width, height, JPEGCompression;
+	unsigned long width, height, maxSrcWidth, maxSrcHeight, JPEGCompression;
 };
 
 int thumbnail(const void *src, const size_t size, const struct Options opts,

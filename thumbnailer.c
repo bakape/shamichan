@@ -7,12 +7,23 @@ int thumbnail(const void *src, const size_t size, const struct Options opts,
 	ImageInfo *info = NULL;
 	Image *img = NULL, *sampled = NULL, *scaled = NULL;
 	double scale;
+	int code = 0;
 
 	// Read image
 	info = CloneImageInfo(NULL);
 	GetExceptionInfo(ex);
 	img = BlobToImage(info, src, size, ex);
 	if (img == NULL) {
+		goto end;
+	}
+
+	// Vadlidate dimentions
+	if (opts.maxSrcWidth && img->columns > opts.maxSrcWidth) {
+		code = 2;
+		goto end;
+	}
+	if (opts.maxSrcHeight && img->rows > opts.maxSrcHeight) {
+		code = 3;
 		goto end;
 	}
 
@@ -63,7 +74,10 @@ end:
 	if (scaled != NULL) {
 		DestroyImage(scaled);
 	}
-	return thumb->buf == NULL;
+	if (code == 0) {
+		return thumb->buf == NULL;
+	}
+	return code;
 }
 
 static void writeThumb(Image *img, struct Thumbnail *thumb,

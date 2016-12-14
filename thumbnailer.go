@@ -10,6 +10,7 @@ package thumbnailer
 // #include "thumbnailer.h"
 import "C"
 import (
+	"errors"
 	"fmt"
 	"os"
 )
@@ -23,10 +24,23 @@ const (
 	JPEG
 )
 
+// Various predefined thumbnailing errors
+var (
+	ErrTooWide = errors.New("thumbnailer: image too wide")
+	ErrTooTall = errors.New("thumbnailer: image too tall")
+)
+
 // Options for thumbnailing a specific file
 type Options struct {
-	OutputType    OutputType
+	OutputType OutputType
+
+	// Thumbnail dims
 	Width, Height uint
+
+	// Maximum allowed source image dimensions. Returns error, if exceeded.
+	// Validation will not be conducted, if unset.
+	MaxSrcWidth, MaxSrcHeight uint
+
 	// Must be from interval [1;100]
 	JPEGCompression uint
 }
@@ -51,16 +65,24 @@ func Thumbnail(buf []byte, opts Options) ([]byte, uint, uint, error) {
 		width:           C.ulong(opts.Width),
 		height:          C.ulong(opts.Height),
 		JPEGCompression: C.ulong(opts.JPEGCompression),
+		maxSrcWidth:     C.ulong(opts.MaxSrcWidth),
+		maxSrcHeight:    C.ulong(opts.MaxSrcHeight),
 	}
 	err := C.thumbnail(cBuf, C.size_t(len(buf)), cOpts, &thumb, ex)
-	if err != 0 {
-		return nil, 0, 0, extractError(ex)
-	}
 	defer func() {
 		if thumb.buf != nil {
 			C.free(thumb.buf)
 		}
 	}()
+	switch err {
+	case 0:
+	case 1:
+		return nil, 0, 0, extractError(ex)
+	case 2:
+		return nil, 0, 0, ErrTooWide
+	case 3:
+		return nil, 0, 0, ErrTooWide
+	}
 
 	return C.GoBytes(thumb.buf, C.int(thumb.size)),
 		uint(thumb.width),

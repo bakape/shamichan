@@ -9,6 +9,8 @@ import (
 )
 
 func TestThumbnail(t *testing.T) {
+	t.Parallel()
+
 	for _, ext := range [...]string{"png", "jpg", "gif", "pdf"} {
 		buf := readSample(t, "sample."+ext)
 
@@ -68,8 +70,71 @@ func writeSample(t *testing.T, name string, buf []byte) {
 }
 
 func TestErrorPassing(t *testing.T) {
-	_, _, _, err := Thumbnail(nil, Options{})
+	t.Parallel()
+
+	_, _, _, err := Thumbnail(nil, Options{
+		Width:  150,
+		Height: 150,
+	})
 	if err == nil {
 		t.Fatal(`expected error`)
+	}
+}
+
+func TestDimensionValidation(t *testing.T) {
+	t.Parallel()
+
+	cases := [...]struct {
+		name, file string
+		maxW, maxH uint
+		err        error
+	}{
+		{
+			name: "width check disabled",
+			file: "too wide.jpg",
+			maxW: 2000,
+		},
+		{
+			name: "too wide",
+			file: "too wide.jpg",
+			maxW: 2000,
+			err:  ErrTooWide,
+		},
+		{
+			name: "height check disabled",
+			file: "too tall.jpg",
+			maxH: 2000,
+		},
+		{
+			name: "too tall",
+			file: "too tall.jpg",
+			maxH: 2000,
+			err:  ErrTooTall,
+		},
+		{
+			name: "pdf pass through",
+			file: "sample.pdf",
+			maxH: 1,
+			maxW: 1,
+		},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			opts := Options{
+				Width:           150,
+				Height:          150,
+				MaxSrcWidth:     c.maxW,
+				MaxSrcHeight:    c.maxH,
+				JPEGCompression: 90,
+			}
+			_, _, _, err := Thumbnail(readSample(t, c.file), opts)
+			if err != c.err {
+				t.Logf("unexpected error: %s : %s", c.err, err)
+			}
+		})
 	}
 }
