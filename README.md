@@ -89,8 +89,8 @@ the password "password"
 * Install
     * GCC or Clang
     * make
-    * ffmpeg >= 3.0 development libraries (libavcodec, libavutil, libavformat,
-    libswscale) compiled with:
+    * ffmpeg >= 3.0 libraries (libavcodec, libavutil, libavformat) compiled
+    with:
         * libvpx
         * libvorbis
         * libopus

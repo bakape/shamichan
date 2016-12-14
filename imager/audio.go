@@ -1,11 +1,14 @@
 package imager
 
+// #cgo pkg-config: libavcodec libavformat libavutil
+// #cgo CFLAGS: -std=c11
+// #include "audio.h"
+import "C"
 import (
 	"bytes"
 	"io/ioutil"
 	"path/filepath"
-
-	"github.com/bakape/goffmpeg"
+	"unsafe"
 )
 
 // Directory for static image asset storage. Overrideable for tests.
@@ -14,18 +17,33 @@ var assetRoot = "www"
 // Fallback image for MP3 files with no cover
 const fallbackCover = "audio-fallback.png"
 
+// HasImage return whether or not the file has album art in it
+func (c *Context) HasImage() bool {
+	return C.find_cover_art(c.avFormatCtx) != -1
+}
+
+// Picture extracts attached image. This function will only work if the decoder
+// was given enough data.
+func (c *Context) Picture() []byte {
+	img := C.retrieve_cover_art(c.avFormatCtx)
+	if img.size <= 0 || img.data == nil {
+		return nil
+	}
+	return C.GoBytes(unsafe.Pointer(img.data), img.size)
+}
+
 // Test if file is an MP3
 func detectMP3(buf []byte) (bool, error) {
-	c, err := goffmpeg.NewContextReadSeeker(bytes.NewReader(buf))
+	c, err := NewContextReadSeeker(bytes.NewReader(buf))
 	if err != nil {
 		// Invalid file that can't even have a context created
-		if fferr, ok := err.(goffmpeg.FFmpegError); ok && fferr.Code() == -1 {
+		if fferr, ok := err.(FFmpegError); ok && fferr.Code() == -1 {
 			return false, nil
 		}
 		return false, err
 	}
 	defer c.Close()
-	codec, err := c.CodecName(goffmpeg.Audio)
+	codec, err := c.CodecName(Audio)
 	if err != nil {
 		return false, err
 	}
@@ -35,7 +53,7 @@ func detectMP3(buf []byte) (bool, error) {
 // Extract image and meta info from MP3 files and send them down the
 // thumbnailing pipeline.
 func processMP3(data []byte) (res thumbResponse) {
-	c, err := goffmpeg.NewContextReadSeeker(bytes.NewReader(data))
+	c, err := NewContextReadSeeker(bytes.NewReader(data))
 	if err != nil {
 		res.err = err
 		return

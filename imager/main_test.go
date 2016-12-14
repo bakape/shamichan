@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	if err := db.LoadDB(); err != nil {
 		panic(err)
 	}
-	if err := InitImager(); err != nil {
+	if err := assets.CreateDirs(); err != nil {
 		panic(err)
 	}
 	defer assets.DeleteDirs()

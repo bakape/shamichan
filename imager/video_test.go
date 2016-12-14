@@ -1,7 +1,10 @@
 package imager
 
-import "testing"
-import "github.com/bakape/meguca/imager/assets"
+import (
+	"testing"
+
+	"github.com/bakape/meguca/imager/assets"
+)
 
 func TestProcessWebm(t *testing.T) {
 	t.Parallel()

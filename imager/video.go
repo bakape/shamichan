@@ -2,30 +2,82 @@
 
 package imager
 
+// #cgo pkg-config: libavcodec libavutil libavformat
+// #cgo CFLAGS: -std=c11
+// #include <libavutil/pixdesc.h>
+// #include "video.h"
+import "C"
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"image"
-
 	"image/png"
-
-	"github.com/bakape/goffmpeg"
+	"unsafe"
 )
 
 var (
 	errNoCompatibleStreams = errors.New("no compatible streams found")
 )
 
+// Thumbnail extracts the first frame of the video
+func (c *Context) Thumbnail() (image.Image, error) {
+	ci, err := c.codecContext(Video)
+	if err != nil {
+		return nil, err
+	}
+
+	var f *C.AVFrame
+	eErr := C.extract_video_image(&f, c.avFormatCtx, ci.ctx, ci.stream)
+	if eErr != 0 {
+		return nil, FFmpegError(eErr)
+	}
+	if f == nil {
+		return nil, errors.New("failed to get frame")
+	}
+	defer C.av_frame_free(&f)
+
+	if C.GoString(C.av_get_pix_fmt_name(int32(f.format))) != "yuv420p" {
+		return nil, fmt.Errorf(
+			"expected format: %s; got: %s",
+			image.YCbCrSubsampleRatio420,
+			C.GoString(C.av_get_pix_fmt_name(int32(f.format))),
+		)
+	}
+	y := C.GoBytes(unsafe.Pointer(f.data[0]), f.linesize[0]*f.height)
+	u := C.GoBytes(unsafe.Pointer(f.data[1]), f.linesize[0]*f.height/4)
+	v := C.GoBytes(unsafe.Pointer(f.data[2]), f.linesize[0]*f.height/4)
+
+	return &image.YCbCr{
+		Y:              y,
+		Cb:             u,
+		Cr:             v,
+		YStride:        int(f.linesize[0]),
+		CStride:        int(f.linesize[0]) / 2,
+		SubsampleRatio: image.YCbCrSubsampleRatio420,
+		Rect: image.Rectangle{
+			Min: image.Point{
+				X: 0,
+				Y: 0,
+			},
+			Max: image.Point{
+				X: int(f.width),
+				Y: int(f.height) / 2 * 2,
+			},
+		},
+	}, nil
+}
+
 // Extract data and thumbnail from a WebM video
 func processWebm(data []byte) (res thumbResponse) {
-	c, err := goffmpeg.NewContextReadSeeker(bytes.NewReader(data))
+	c, err := NewContextReadSeeker(bytes.NewReader(data))
 	if err != nil {
 		res.err = err
 		return
 	}
 	defer c.Close()
 
-	audio, err := c.CodecName(goffmpeg.Audio)
+	audio, err := c.CodecName(Audio)
 	if err != nil {
 		res.err = err
 		return
@@ -40,7 +92,7 @@ func processWebm(data []byte) (res thumbResponse) {
 }
 
 // Produce a thumbnail out of a video stream
-func thumbnailVideo(c *goffmpeg.Context, res thumbResponse) thumbResponse {
+func thumbnailVideo(c *Context, res thumbResponse) thumbResponse {
 	var src image.Image
 	src, res.err = c.Thumbnail()
 	if res.err != nil {
@@ -71,14 +123,14 @@ func processMediaContainer(
 	data []byte,
 	videoC, audioC1, audioC2 string,
 ) (res thumbResponse) {
-	c, err := goffmpeg.NewContextReadSeeker(bytes.NewReader(data))
+	c, err := NewContextReadSeeker(bytes.NewReader(data))
 	if err != nil {
 		res.err = err
 		return
 	}
 	defer c.Close()
 
-	audio, err := c.CodecName(goffmpeg.Audio)
+	audio, err := c.CodecName(Audio)
 	if err != nil {
 		res.err = err
 		return
@@ -88,7 +140,7 @@ func processMediaContainer(
 		res.audio = true
 	}
 
-	video, err := c.CodecName(goffmpeg.Video)
+	video, err := c.CodecName(Video)
 	if err != nil {
 		res.err = err
 		return
