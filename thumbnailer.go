@@ -81,7 +81,7 @@ func Thumbnail(buf []byte, opts Options) ([]byte, uint, uint, error) {
 	case 2:
 		return nil, 0, 0, ErrTooWide
 	case 3:
-		return nil, 0, 0, ErrTooWide
+		return nil, 0, 0, ErrTooTall
 	}
 
 	return C.GoBytes(thumb.buf, C.int(thumb.size)),

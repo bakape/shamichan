@@ -17,14 +17,16 @@ int thumbnail(const void *src, const size_t size, const struct Options opts,
 		goto end;
 	}
 
-	// Vadlidate dimentions
-	if (opts.maxSrcWidth && img->columns > opts.maxSrcWidth) {
-		code = 2;
-		goto end;
-	}
-	if (opts.maxSrcHeight && img->rows > opts.maxSrcHeight) {
-		code = 3;
-		goto end;
+	// Validate dimentions
+	if (strcmp(img->magick, "PDF")) {
+		if (opts.maxSrcWidth && img->columns > opts.maxSrcWidth) {
+			code = 2;
+			goto end;
+		}
+		if (opts.maxSrcHeight && img->rows > opts.maxSrcHeight) {
+			code = 3;
+			goto end;
+		}
 	}
 
 	// Image already fits thumbnail
@@ -80,6 +82,7 @@ end:
 	return code;
 }
 
+// Convert thumbnail to apropriate file type and write to buffer
 static void writeThumb(Image *img, struct Thumbnail *thumb,
 		       const struct Options opts, ExceptionInfo *ex)
 {

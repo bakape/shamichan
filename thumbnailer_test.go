@@ -92,7 +92,6 @@ func TestDimensionValidation(t *testing.T) {
 		{
 			name: "width check disabled",
 			file: "too wide.jpg",
-			maxW: 2000,
 		},
 		{
 			name: "too wide",
@@ -103,7 +102,6 @@ func TestDimensionValidation(t *testing.T) {
 		{
 			name: "height check disabled",
 			file: "too tall.jpg",
-			maxH: 2000,
 		},
 		{
 			name: "too tall",
@@ -133,7 +131,7 @@ func TestDimensionValidation(t *testing.T) {
 			}
 			_, _, _, err := Thumbnail(readSample(t, c.file), opts)
 			if err != c.err {
-				t.Logf("unexpected error: %s : %s", c.err, err)
+				t.Fatalf("unexpected error: `%s` : `%s`", c.err, err)
 			}
 		})
 	}
