@@ -142,6 +142,7 @@ package_copy:
 # 	mxe-x86-64-w64-mingw32.static-gcc
 # 	mxe-x86-64-w64-mingw32.static-libidn
 # 	mxe-x86-64-w64-mingw32.static-ffmpeg
+#   mxe-x86-64-w64-mingw32.static-graphicsmagick
 cross_compile_win_amd64:
 	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
 	CC=$(MXE_ROOT)/bin/$(MXE_TARGET)-gcc \

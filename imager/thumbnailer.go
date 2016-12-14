@@ -2,89 +2,74 @@ package imager
 
 // #cgo pkg-config: GraphicsMagick
 // #cgo CFLAGS: -std=c11
-// #include <stdlib.h>
-// #include <magick/api.h>
 // #include "thumbnailer.h"
+// #include <stdlib.h>
 import "C"
 import (
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/imager/assets"
 )
 
-// OutputType specifies output image formats
-type OutputType int
-
-// Available output formats
-const (
-	PNG OutputType = iota
-	JPEG
-)
-
-// Various predefined thumbnailing errors
 var (
-	ErrTooWide = errors.New("thumbnailer: image too wide")
-	ErrTooTall = errors.New("thumbnailer: image too tall")
+	errTooWide = errors.New("image too wide") // No such thing
+	errTooTall = errors.New("image too tall")
 )
 
-// Options for thumbnailing a specific file
-type Options struct {
-	OutputType OutputType
-
-	// Thumbnail dims
-	Width, Height uint
-
-	// Maximum allowed source image dimensions. Returns error, if exceeded.
-	// Validation will not be conducted, if unset.
-	MaxSrcWidth, MaxSrcHeight uint
-
-	// Must be from interval [1;100]
-	JPEGCompression uint
-}
-
-func init() {
+// InitImager applies the thumbnail quality configuration
+func InitImager() error {
 	C.InitializeMagick(C.CString(os.Args[0]))
+	return assets.CreateDirs()
 }
 
-// Thumbnail generates a thumbnail of the specified maximum dimensions from a
-// source image buffer. Returns the generated thumbnail buffer, the thumbnail's
-// width and height and error, if any.
-func Thumbnail(buf []byte, opts Options) ([]byte, uint, uint, error) {
+// processImage generates a thumbnail from a source image buffer. Returns the
+// generated thumbnail's buffer, the source images and thumbnail's dimensions
+// and error, if any.
+func processImage(buf []byte) ([]byte, [4]uint16, error) {
 	cBuf := C.CBytes(buf)
 	defer C.free(cBuf)
 
 	ex := &C.ExceptionInfo{}
 	defer C.DestroyExceptionInfo(ex)
 
+	conf := config.Get()
 	var thumb C.struct_Thumbnail
 	cOpts := C.struct_Options{
-		outputType:      C.int(opts.OutputType),
-		width:           C.ulong(opts.Width),
-		height:          C.ulong(opts.Height),
-		JPEGCompression: C.ulong(opts.JPEGCompression),
-		maxSrcWidth:     C.ulong(opts.MaxSrcWidth),
-		maxSrcHeight:    C.ulong(opts.MaxSrcHeight),
+		JPEGCompression: C.uint8_t(conf.JPEGQuality),
+		maxSrcWidth:     C.ulong(conf.MaxWidth),
+		maxSrcHeight:    C.ulong(conf.MaxHeight),
 	}
-	err := C.thumbnail(cBuf, C.size_t(len(buf)), cOpts, &thumb, ex)
+	errCode := C.thumbnail(cBuf, C.size_t(len(buf)), cOpts, &thumb, ex)
 	defer func() {
 		if thumb.buf != nil {
 			C.free(thumb.buf)
 		}
 	}()
-	switch err {
+	var err error
+	switch errCode {
 	case 0:
 	case 1:
-		return nil, 0, 0, extractError(ex)
+		err = extractError(ex)
 	case 2:
-		return nil, 0, 0, ErrTooWide
+		err = errTooWide
 	case 3:
-		return nil, 0, 0, ErrTooTall
+		err = errTooTall
+	}
+	if err != nil {
+		return nil, [4]uint16{}, err
 	}
 
-	return C.GoBytes(thumb.buf, C.int(thumb.size)),
-		uint(thumb.width),
-		uint(thumb.height),
-		nil
+	out := C.GoBytes(thumb.buf, C.int(thumb.size))
+	dims := [4]uint16{
+		uint16(thumb.srcWidth),
+		uint16(thumb.srcHeight),
+		uint16(thumb.width),
+		uint16(thumb.height),
+	}
+	return out, dims, nil
 }
 
 func extractError(ex *C.ExceptionInfo) error {

@@ -7,6 +7,8 @@ import (
 	"errors"
 	"image"
 
+	"image/png"
+
 	"github.com/bakape/goffmpeg"
 )
 
@@ -44,7 +46,14 @@ func thumbnailVideo(c *goffmpeg.Context, res thumbResponse) thumbResponse {
 	if res.err != nil {
 		return res
 	}
-	res.thumb, res.dims, res.err = verifyAndScale(src, "png")
+
+	w := new(bytes.Buffer)
+	res.err = png.Encode(w, src)
+	if res.err != nil {
+		return res
+	}
+
+	res.thumb, res.dims, res.err = processImage(w.Bytes())
 	return res
 }
 

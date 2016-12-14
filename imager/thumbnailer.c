@@ -1,5 +1,7 @@
-#include "string.h"
 #include "thumbnailer.h"
+#include <string.h>
+
+const unsigned long thumbWidth = 150, thumbHeight = 150;
 
 int thumbnail(const void *src, const size_t size, const struct Options opts,
 	      struct Thumbnail *thumb, ExceptionInfo *ex)
@@ -16,21 +18,23 @@ int thumbnail(const void *src, const size_t size, const struct Options opts,
 	if (img == NULL) {
 		goto end;
 	}
+	thumb->srcWidth = img->columns;
+	thumb->srcHeight = img->rows;
 
 	// Validate dimentions
 	if (strcmp(img->magick, "PDF")) {
-		if (opts.maxSrcWidth && img->columns > opts.maxSrcWidth) {
+		if (img->columns > opts.maxSrcWidth) {
 			code = 2;
 			goto end;
 		}
-		if (opts.maxSrcHeight && img->rows > opts.maxSrcHeight) {
+		if (img->rows > opts.maxSrcHeight) {
 			code = 3;
 			goto end;
 		}
 	}
 
 	// Image already fits thumbnail
-	if (img->columns <= opts.width && img->rows <= opts.height) {
+	if (img->columns <= thumbWidth && img->rows <= thumbHeight) {
 		thumb->width = img->columns;
 		thumb->height = img->rows;
 		writeThumb(img, thumb, opts, ex);
@@ -39,9 +43,9 @@ int thumbnail(const void *src, const size_t size, const struct Options opts,
 
 	// Maintain aspect ratio
 	if (img->columns >= img->rows) {
-		scale = (double)(img->columns) / (double)(opts.width);
+		scale = (double)(img->columns) / (double)(thumbWidth);
 	} else {
-		scale = (double)(img->rows) / (double)(opts.height);
+		scale = (double)(img->rows) / (double)(thumbHeight);
 	}
 	thumb->width = (unsigned long)(img->columns / scale);
 	thumb->height = (unsigned long)(img->rows / scale);
@@ -87,18 +91,19 @@ static void writeThumb(Image *img, struct Thumbnail *thumb,
 		       const struct Options opts, ExceptionInfo *ex)
 {
 	ImageInfo *info = CloneImageInfo(NULL);
+	char *format = NULL;
 
-	if (opts.outputType) {
-		info->quality = opts.JPEGCompression;
-		strcpy(info->magick, "JPEG");
-		strcpy(img->magick, "JPEG");
-	} else {
+	if (strcmp(img->magick, "JPEG")) {
+		format = "PNG";
 		// Will pass through libimagequant, so comression and filters
 		// are pointeless
 		info->quality = 0;
-		strcpy(info->magick, "PNG");
-		strcpy(img->magick, "PNG");
+	} else {
+		format = "JPEG";
+		info->quality = opts.JPEGCompression;
 	}
+	strcpy(info->magick, format);
+	strcpy(img->magick, format);
 	thumb->buf = ImageToBlob(info, img, &thumb->size, ex);
 
 	DestroyImageInfo(info);

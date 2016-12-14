@@ -83,20 +83,25 @@ the password "password"
 ###All Platforms
 * Install
 	* [Go](https://golang.org/doc/install) >=1.7
-	* [Node.js](https://nodejs.org) >=5.0 (for building the client)
+	* [Node.js](https://nodejs.org) >=5.0
 
 ###Linux and OSX
 * Install
     * GCC or Clang
     * make
     * ffmpeg >= 3.0 development libraries (libavcodec, libavutil, libavformat,
-    libswscale) compiled with
+    libswscale) compiled with:
         * libvpx
         * libvorbis
         * libopus
         * libtheora
         * libx264
         * libmp3lame
+    * GraphicsMagic compiler with:
+        * zlib
+        * libpng
+        * libjpeg
+        * postscript
     * git
     * zip
 * Run `make`
@@ -106,6 +111,7 @@ the password "password"
 * Open MSYS2 shell
 * Install with pacman
     * mingw-w64-x86_64-ffmpeg
+    * mingw-w64-x86_64-graphicsmagick
     * mingw-w64-x86_64-gcc
     * mingw-w64-x86_64-pkg-config
     * git
