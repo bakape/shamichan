@@ -15,7 +15,9 @@ struct Options {
 	unsigned long width, height, JPEGCompression;
 };
 
-int thumbnail(const void *, const size_t, const struct Options,
-	      struct Thumbnail *, ExceptionInfo *);
+int thumbnail(const void *src, const size_t size, const struct Options opts,
+	      struct Thumbnail *thumb, ExceptionInfo *ex);
+static void writeThumb(Image *img, struct Thumbnail *thumb,
+		       const struct Options opts, ExceptionInfo *ex);
 
 #endif

@@ -20,8 +20,7 @@ int thumbnail(const void *src, const size_t size, const struct Options opts,
 	if (img->columns <= opts.width && img->rows <= opts.height) {
 		thumb->width = img->columns;
 		thumb->height = img->rows;
-		strncpy(thumb->buf, src, size);
-		thumb->size = size;
+		writeThumb(img, thumb, opts, ex);
 		goto end;
 	}
 
@@ -49,21 +48,7 @@ int thumbnail(const void *src, const size_t size, const struct Options opts,
 		goto end;
 	}
 
-	// Write thumbnail
-	DestroyImageInfo(info);
-	info = CloneImageInfo(NULL);
-	if (opts.outputType) {
-		info->quality = opts.JPEGCompression;
-		strcpy(info->magick, "JPEG");
-		strcpy(scaled->magick, "JPEG");
-	} else {
-		// Will pass through libimagequant, so comression and filters
-		// are pointeless
-		info->quality = 0;
-		strcpy(info->magick, "PNG");
-		strcpy(scaled->magick, "PNG");
-	}
-	thumb->buf = ImageToBlob(info, scaled, &thumb->size, ex);
+	writeThumb(scaled, thumb, opts, ex);
 
 end:
 	if (img != NULL) {
@@ -79,4 +64,25 @@ end:
 		DestroyImage(scaled);
 	}
 	return thumb->buf == NULL;
+}
+
+static void writeThumb(Image *img, struct Thumbnail *thumb,
+		       const struct Options opts, ExceptionInfo *ex)
+{
+	ImageInfo *info = CloneImageInfo(NULL);
+
+	if (opts.outputType) {
+		info->quality = opts.JPEGCompression;
+		strcpy(info->magick, "JPEG");
+		strcpy(img->magick, "JPEG");
+	} else {
+		// Will pass through libimagequant, so comression and filters
+		// are pointeless
+		info->quality = 0;
+		strcpy(info->magick, "PNG");
+		strcpy(img->magick, "PNG");
+	}
+	thumb->buf = ImageToBlob(info, img, &thumb->size, ex);
+
+	DestroyImageInfo(info);
 }
