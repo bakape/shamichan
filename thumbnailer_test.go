@@ -138,3 +138,21 @@ func TestDimensionValidation(t *testing.T) {
 		})
 	}
 }
+
+func TestSourceAlreadyThumbSize(t *testing.T) {
+	t.Parallel()
+
+	_, w, h, err := Thumbnail(readSample(t, "too small.png"), Options{
+		Width:  150,
+		Height: 150,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if w != 121 {
+		t.Errorf("unexpected width: 121 : %d", w)
+	}
+	if h != 150 {
+		t.Errorf("unexpected height: 150: %d", h)
+	}
+}
