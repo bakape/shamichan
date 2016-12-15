@@ -2,6 +2,8 @@
 
 const int bufSize = 1 << 12;
 
+pthread_mutex_t codecMu;
+
 // Initialize am AVFormatContext with the buffered file
 int create_context(AVFormatContext **ctx)
 {
@@ -16,7 +18,21 @@ int create_context(AVFormatContext **ctx)
 	if (err < 0) {
 		return err;
 	}
+
+	// Calls avcodec_open2 internally, so need lock
+	err = pthread_mutex_lock(&codecMu);
+	if (err < 0) {
+		return err;
+	}
 	err = avformat_find_stream_info(*ctx, NULL);
+	if (err < 0) {
+		int muErr = pthread_mutex_unlock(&codecMu);
+		if (muErr < 0) {
+			return muErr;
+		}
+		return err;
+	}
+	err = pthread_mutex_unlock(&codecMu);
 	if (err < 0) {
 		return err;
 	}
@@ -36,6 +52,7 @@ void destroy(AVFormatContext *ctx)
 int codec_context(AVCodecContext **avcc, int *stream, AVFormatContext *avfc,
 		  const enum AVMediaType type)
 {
+	int err;
 	AVCodec *codec = NULL;
 	*stream = av_find_best_stream(avfc, type, -1, -1, &codec, 0);
 	if (*stream < 0) {
@@ -43,9 +60,23 @@ int codec_context(AVCodecContext **avcc, int *stream, AVFormatContext *avfc,
 	}
 
 	*avcc = avfc->streams[*stream]->codec;
-	int err = avcodec_open2(*avcc, codec, NULL);
+
+	// Not thread safe. Needs lock.
+	err = pthread_mutex_lock(&codecMu);
+	if (err < 0) {
+		return err;
+	}
+	err = avcodec_open2(*avcc, codec, NULL);
 	if (err < 0) {
 		avcodec_free_context(avcc);
+		int muErr = pthread_mutex_unlock(&codecMu);
+		if (muErr < 0) {
+			return muErr;
+		}
+		return err;
+	}
+	err = pthread_mutex_unlock(&codecMu);
+	if (err < 0) {
 		return err;
 	}
 

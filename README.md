@@ -89,6 +89,8 @@ the password "password"
 * Install
     * GCC or Clang
     * make
+    * pkg-config
+    * pthread
     * ffmpeg >= 3.0 libraries (libavcodec, libavutil, libavformat) compiled
     with:
         * libvpx
@@ -114,6 +116,7 @@ the password "password"
     * mingw-w64-x86_64-graphicsmagick
     * mingw-w64-x86_64-gcc
     * mingw-w64-x86_64-pkg-config
+    * mingw-w64-x86_64-libwinpthread-git
     * git
     * make
     * zip

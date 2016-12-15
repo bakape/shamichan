@@ -102,21 +102,6 @@ dist_clean: clean
 test: server_deps
 	go test ./...
 
-# Build ffmpeg for integration testing with Travis.cl. We need these, because
-# their servers are still running trusty.
-travis_build_ffmpeg:
-	apt-get install -y libvpx-dev libmp3lame-dev libopus-dev libvorbis-dev \
-		libx264-dev libtheora-dev git build-essential yasm
-ifeq ("$(wildcard .ffmpeg/ffmpeg)", "")
-	git clone --depth 1 -b release/3.0 https://github.com/FFmpeg/FFmpeg.git \
-		.ffmpeg
-	cd .ffmpeg; \
-	./configure --enable-libmp3lame --enable-libx264 --enable-libvpx \
-		--enable-libvorbis --enable-libopus --enable-libtheora --enable-gpl
-	$(MAKE) -C .ffmpeg
-endif
-	$(MAKE) -C .ffmpeg install
-
 # Generate binary packages for distribution
 package: server_static client package_copy
 	rm -rf .package/meguca.exe
@@ -143,6 +128,7 @@ package_copy:
 # 	mxe-x86-64-w64-mingw32.static-libidn
 # 	mxe-x86-64-w64-mingw32.static-ffmpeg
 #   mxe-x86-64-w64-mingw32.static-graphicsmagick
+#   mxe-x86-64-w64-mingw32.static-pthreads
 cross_compile_win_amd64:
 	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
 	CC=$(MXE_ROOT)/bin/$(MXE_TARGET)-gcc \

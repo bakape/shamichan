@@ -2,6 +2,7 @@
 #define CGO_FFMPEG_H
 
 #include <libavformat/avformat.h>
+#include <pthread.h>
 
 extern int readCallBack(void *, uint8_t *, int);
 extern int64_t seekCallBack(void *, int64_t, int);
