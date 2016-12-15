@@ -1,24 +1,15 @@
 #include "ffmpeg.h"
 
-int create_context(AVFormatContext **ctx, const int bufSize, const int flags)
-{
-	// Pick which custom I/O callbacks to assign to AVIOContext
-	int (*read)(void *, uint8_t *, int);
-	int (*write)(void *, uint8_t *, int);
-	int64_t (*seek)(void *, int64_t, int);
-	if (flags & canRead) {
-		read = readCallBack;
-	}
-	if (flags & canWrite) {
-		write = writeCallBack;
-	}
-	if (flags & canSeek) {
-		seek = seekCallBack;
-	}
+const int bufSize = 1 << 12;
 
-	unsigned char *buf = malloc((size_t)(bufSize));
+// Initialize am AVFormatContext with the buffered file
+int create_context(AVFormatContext **ctx)
+{
+	unsigned char *buf = malloc(bufSize);
 	AVFormatContext *c = *ctx;
-	c->pb = avio_alloc_context(buf, bufSize, 0, c, read, write, seek);
+
+	c->pb = avio_alloc_context(buf, bufSize, 0, c, readCallBack, NULL,
+				   seekCallBack);
 	c->flags |= AVFMT_FLAG_CUSTOM_IO;
 
 	int err = avformat_open_input(ctx, NULL, NULL, NULL);
@@ -41,6 +32,7 @@ void destroy(AVFormatContext *ctx)
 	av_free(ctx);
 }
 
+// Create a AVCodecContext of the desired media type
 int codec_context(AVCodecContext **avcc, int *stream, AVFormatContext *avfc,
 		  const enum AVMediaType type)
 {
@@ -60,6 +52,7 @@ int codec_context(AVCodecContext **avcc, int *stream, AVFormatContext *avfc,
 	return 0;
 }
 
+// Format ffmpeg error code to string message
 char *format_error(const int code)
 {
 	char *buf = malloc(1024);

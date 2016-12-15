@@ -16,13 +16,11 @@ import (
 	"unsafe"
 )
 
-var (
-	errNoCompatibleStreams = errors.New("no compatible streams found")
-)
+var errNoCompatibleStreams = errors.New("no compatible streams found")
 
 // Thumbnail extracts the first frame of the video
-func (c *Context) Thumbnail() (image.Image, error) {
-	ci, err := c.codecContext(Video)
+func (c *ffContext) Thumbnail() (image.Image, error) {
+	ci, err := c.codecContext(ffVideo)
 	if err != nil {
 		return nil, err
 	}
@@ -30,12 +28,15 @@ func (c *Context) Thumbnail() (image.Image, error) {
 	var f *C.AVFrame
 	eErr := C.extract_video_image(&f, c.avFormatCtx, ci.ctx, ci.stream)
 	if eErr != 0 {
-		return nil, FFmpegError(eErr)
+		return nil, ffError(eErr)
 	}
 	if f == nil {
 		return nil, errors.New("failed to get frame")
 	}
 	defer C.av_frame_free(&f)
+
+	// TODO: This encoding step is redundant. Need to find a way to extract the
+	// buffer directly from the frame.
 
 	if C.GoString(C.av_get_pix_fmt_name(int32(f.format))) != "yuv420p" {
 		return nil, fmt.Errorf(
@@ -70,14 +71,14 @@ func (c *Context) Thumbnail() (image.Image, error) {
 
 // Extract data and thumbnail from a WebM video
 func processWebm(data []byte) (res thumbResponse) {
-	c, err := NewContextReadSeeker(bytes.NewReader(data))
+	c, err := newFFContext(data)
 	if err != nil {
 		res.err = err
 		return
 	}
 	defer c.Close()
 
-	audio, err := c.CodecName(Audio)
+	audio, err := c.CodecName(ffAudio)
 	if err != nil {
 		res.err = err
 		return
@@ -92,7 +93,7 @@ func processWebm(data []byte) (res thumbResponse) {
 }
 
 // Produce a thumbnail out of a video stream
-func thumbnailVideo(c *Context, res thumbResponse) thumbResponse {
+func thumbnailVideo(c *ffContext, res thumbResponse) thumbResponse {
 	var src image.Image
 	src, res.err = c.Thumbnail()
 	if res.err != nil {
@@ -123,14 +124,14 @@ func processMediaContainer(
 	data []byte,
 	videoC, audioC1, audioC2 string,
 ) (res thumbResponse) {
-	c, err := NewContextReadSeeker(bytes.NewReader(data))
+	c, err := newFFContext(data)
 	if err != nil {
 		res.err = err
 		return
 	}
 	defer c.Close()
 
-	audio, err := c.CodecName(Audio)
+	audio, err := c.CodecName(ffAudio)
 	if err != nil {
 		res.err = err
 		return
@@ -140,7 +141,7 @@ func processMediaContainer(
 		res.audio = true
 	}
 
-	video, err := c.CodecName(Video)
+	video, err := c.CodecName(ffVideo)
 	if err != nil {
 		res.err = err
 		return
