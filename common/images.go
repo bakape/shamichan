@@ -28,6 +28,7 @@ var Extensions = map[uint8]string{
 	MP4:      "mp4",
 	WEBM:     "webm",
 	OGG:      "ogg",
+	PDF:      "pdf",
 	ZIP:      "zip",
 	SevenZip: "7z",
 	TGZ:      "tar.gz",

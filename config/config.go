@@ -81,7 +81,7 @@ var (
 )
 
 // Default string for the FAQ panel
-const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, ZIP, 7Z, TAR.GZ and TAR.XZ.
+const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ.
 Encase words in ** to spoiler them. Spoilers reset on newline.
 <hr>Hash commands:
 #d100 #2d100 - Roll dice

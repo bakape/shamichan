@@ -24,7 +24,8 @@ License: GNU AGPL
     - Optional automatic deletion of unused threads and boards
     - Automatic HTTP(S) and magnet URL linkification
 * Files and images
-    - JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, ZIP, 7Z, TAR.GZ and TAR.XZ supported
+    - JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ
+    supported
     - Transparent PNG and GIF thumbnails
     - Configurable size limits
     - Inbuilt reverse image search
@@ -36,7 +37,7 @@ License: GNU AGPL
     - Low memory and CPU usage
     - High vertical and easy horizontal scaling
     - No frameworks and optimized code on both client and server
-    - Fast video and audio processing through C bindings to ffmpeg
+    - File upload processing written in C with GraphicsMagick and ffmpeg
     - On-demand lazy client module loading and rendering
     - Inbuilt custom LRU cache
 * Client UI
@@ -99,7 +100,7 @@ the password "password"
         * libtheora
         * libx264
         * libmp3lame
-    * GraphicsMagic compiler with:
+    * GraphicsMagick compiler with:
         * zlib
         * libpng
         * libjpeg

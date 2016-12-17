@@ -18,6 +18,9 @@ int thumbnail(const void *src,
 	// Read image
 	info = CloneImageInfo(NULL);
 	GetExceptionInfo(ex);
+	// Read only the first frame/page of GIFs and PDFs
+	info->subimage = 0;
+	info->subrange = 1;
 	img = BlobToImage(info, src, size, ex);
 	if (img == NULL) {
 		goto end;

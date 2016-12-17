@@ -31,6 +31,7 @@ var (
 		"application/ogg": common.OGG,
 		"video/mp4":       common.MP4,
 		"application/zip": common.ZIP,
+		"application/pdf": common.PDF,
 	}
 
 	// File type tests for types not supported by http.DetectContentType
@@ -244,7 +245,7 @@ func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 			res = processMP4(data)
 		case common.ZIP, common.SevenZip, common.TGZ, common.TXZ:
 			res = processArchive()
-		case common.JPEG, common.PNG, common.GIF:
+		case common.JPEG, common.PNG, common.GIF, common.PDF:
 			res.thumb, res.dims, res.PNGThumb, res.err = processImage(data)
 		}
 
