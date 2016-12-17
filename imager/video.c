@@ -16,7 +16,7 @@ int extract_video_image(AVFrame **frame,
 			int got = 0;
 			*frame = av_frame_alloc();
 			err = avcodec_decode_video2(avcc, *frame, &got, &pkt);
-			av_free_packet(&pkt);
+			av_packet_unref(&pkt);
 			if (err < 0) {
 				av_frame_free(frame);
 				return err;
