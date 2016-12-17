@@ -9,9 +9,9 @@ import (
 
 	"bytes"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/common"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -25,11 +25,11 @@ func newAllocationTester(
 	t *testing.T,
 	source,
 	name string,
-	fileType uint8,
+	fileType, thumbType uint8,
 ) *allocationTester {
 	return &allocationTester{
 		source: filepath.Join("testdata", source),
-		paths:  assets.GetFilePaths(name, fileType),
+		paths:  assets.GetFilePaths(name, fileType, thumbType),
 		t:      t,
 	}
 }
@@ -130,7 +130,7 @@ func testRemoveImage(t *testing.T) {
 		},
 		Posts: 1,
 	})
-	at := newAllocationTester(t, "sample.jpg", id, common.JPEG)
+	at := newAllocationTester(t, "sample.jpg", id, common.JPEG, common.JPEG)
 	at.Allocate()
 
 	if err := DeallocateImage(id); err != nil {
@@ -156,7 +156,7 @@ func TestCleanUpFailedAllocation(t *testing.T) {
 	defer setupImageDirs(t)()
 
 	const id = "123"
-	at := newAllocationTester(t, "sample.jpg", id, common.JPEG)
+	at := newAllocationTester(t, "sample.jpg", id, common.JPEG, common.JPEG)
 	at.Allocate()
 	path := filepath.Join("images", "thumb", id+".jpg")
 	if err := os.Remove(path); err != nil {
@@ -195,7 +195,7 @@ func TestAllocateImage(t *testing.T) {
 
 	// Assert files and remove them
 	t.Run("files", func(t *testing.T) {
-		for i, path := range assets.GetFilePaths(id, common.JPEG) {
+		for i, path := range assets.GetFilePaths(id, common.JPEG, common.JPEG) {
 			buf, err := ioutil.ReadFile(path)
 			if err != nil {
 				t.Error(err)

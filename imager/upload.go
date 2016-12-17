@@ -53,11 +53,11 @@ var (
 
 // Response from a thumbnail generation performed concurently
 type thumbResponse struct {
-	audio, video bool
-	dims         [4]uint16
-	length       uint32
-	thumb        []byte
-	err          error
+	audio, video, PNGThumb bool
+	dims                   [4]uint16
+	length                 uint32
+	thumb                  []byte
+	err                    error
 }
 
 // NewImageUpload  handles the clients' image (or other file) upload request
@@ -188,6 +188,9 @@ func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
 	img.Length = res.length
 	img.Audio = res.audio
 	img.Video = res.video
+	if res.PNGThumb {
+		img.ThumbType = common.PNG
+	}
 
 	if err := db.AllocateImage(data, res.thumb, img); err != nil {
 		return 500, "", err
@@ -242,7 +245,7 @@ func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 		case common.ZIP, common.SevenZip, common.TGZ, common.TXZ:
 			res = processArchive()
 		case common.JPEG, common.PNG, common.GIF:
-			res.thumb, res.dims, res.err = processImage(data)
+			res.thumb, res.dims, res.PNGThumb, res.err = processImage(data)
 		}
 
 		ch <- res

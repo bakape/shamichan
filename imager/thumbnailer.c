@@ -1,15 +1,19 @@
 #include "thumbnailer.h"
+#include <magick/pixel_cache.h>
 #include <string.h>
 
 const unsigned long thumbWidth = 150, thumbHeight = 150;
 
-int thumbnail(const void *src, const size_t size, const struct Options opts,
-	      struct Thumbnail *thumb, ExceptionInfo *ex)
+int thumbnail(const void *src,
+			  const size_t size,
+			  const struct Options opts,
+			  struct Thumbnail *thumb,
+			  ExceptionInfo *ex)
 {
 	ImageInfo *info = NULL;
 	Image *img = NULL, *sampled = NULL, *scaled = NULL;
 	double scale;
-	int code = 0;
+	int err = 0;
 
 	// Read image
 	info = CloneImageInfo(NULL);
@@ -24,11 +28,11 @@ int thumbnail(const void *src, const size_t size, const struct Options opts,
 	// Validate dimentions
 	if (strcmp(img->magick, "PDF")) {
 		if (img->columns > opts.maxSrcWidth) {
-			code = 2;
+			err = 2;
 			goto end;
 		}
 		if (img->rows > opts.maxSrcHeight) {
-			code = 3;
+			err = 3;
 			goto end;
 		}
 	}
@@ -37,7 +41,7 @@ int thumbnail(const void *src, const size_t size, const struct Options opts,
 	if (img->columns <= thumbWidth && img->rows <= thumbHeight) {
 		thumb->width = img->columns;
 		thumb->height = img->rows;
-		writeThumb(img, thumb, opts, ex);
+		err = writeThumb(img, thumb, opts, ex);
 		goto end;
 	}
 
@@ -60,12 +64,12 @@ int thumbnail(const void *src, const size_t size, const struct Options opts,
 
 	// Scale to thumbnail size
 	scaled =
-	    ResizeImage(sampled, thumb->width, thumb->height, BoxFilter, 1, ex);
+		ResizeImage(sampled, thumb->width, thumb->height, BoxFilter, 1, ex);
 	if (scaled == NULL) {
 		goto end;
 	}
 
-	writeThumb(scaled, thumb, opts, ex);
+	err = writeThumb(scaled, thumb, opts, ex);
 
 end:
 	if (img != NULL) {
@@ -80,24 +84,33 @@ end:
 	if (scaled != NULL) {
 		DestroyImage(scaled);
 	}
-	if (code == 0) {
+	if (err == 0) {
 		return thumb->buf == NULL;
 	}
-	return code;
+	return err;
 }
 
 // Convert thumbnail to apropriate file type and write to buffer
-static void writeThumb(Image *img, struct Thumbnail *thumb,
-		       const struct Options opts, ExceptionInfo *ex)
+static int writeThumb(Image *img,
+					  struct Thumbnail *thumb,
+					  const struct Options opts,
+					  ExceptionInfo *ex)
 {
 	ImageInfo *info = CloneImageInfo(NULL);
 	char *format = NULL;
+	bool needPNG = false;
 
 	if (strcmp(img->magick, "JPEG")) {
+		int err = hasTransparency(img, &needPNG, ex);
+		if (err) {
+			DestroyImageInfo(info);
+			return err;
+		}
+	}
+	if (needPNG) {
 		format = "PNG";
-		// Will pass through libimagequant, so comression and filters
-		// are pointeless
-		info->quality = 0;
+		info->quality = 105;
+		thumb->isPNG = true;
 	} else {
 		format = "JPEG";
 		info->quality = opts.JPEGCompression;
@@ -107,4 +120,33 @@ static void writeThumb(Image *img, struct Thumbnail *thumb,
 	thumb->buf = ImageToBlob(info, img, &thumb->size, ex);
 
 	DestroyImageInfo(info);
+	return 0;
+}
+
+// Itterates over all pixels and checks, if any transparency present
+static int hasTransparency(const Image *img, bool *needPNG, ExceptionInfo *ex)
+{
+	// No alpha channel
+	if (!img->matte) {
+		return 0;
+	}
+
+	// Transparent pixels are most likely to also be in the first row, so
+	// retrieve one row at a time. It is also more performant to retrieve entire
+	// rows instead of individual pixels.
+	for (unsigned long i = 0; i < img->rows; i++) {
+		const PixelPacket *packets =
+			AcquireImagePixels(img, 0, i, img->columns, 1, ex);
+		if (packets == NULL) {
+			return 1;
+		}
+		for (unsigned long j = 0; j < img->columns; j++) {
+			if (packets[i].opacity != MaxRGB) {
+				*needPNG = true;
+				return 0;
+			}
+		}
+	}
+
+	return 0;
 }

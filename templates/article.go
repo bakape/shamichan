@@ -9,37 +9,6 @@ import (
 	"github.com/bakape/meguca/lang"
 )
 
-// Returns the HTTP path to the thumbnail of an image
-func thumbPath(fileType uint8, SHA1 string) string {
-	buf := make([]byte, 14, 58)
-	copy(buf, "/images/thumb/")
-	buf = append(buf, SHA1...)
-	buf = append(buf, '.')
-
-	var ext string
-	if fileType == common.JPEG {
-		ext = "jpg"
-	} else {
-		ext = "png"
-	}
-	buf = append(buf, ext...)
-
-	return string(buf)
-}
-
-// Returns the HTTP path to the source file
-func sourcePath(fileType uint8, SHA1 string) string {
-	ext := common.Extensions[fileType]
-
-	buf := make([]byte, 12, 53+len(ext))
-	copy(buf, "/images/src/")
-	buf = append(buf, SHA1...)
-	buf = append(buf, '.')
-	buf = append(buf, ext...)
-
-	return string(buf)
-}
-
 // Returns image name with proper extension
 func imageName(fileType uint8, name string) string {
 	ext := common.Extensions[fileType]

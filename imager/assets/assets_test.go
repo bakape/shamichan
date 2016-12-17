@@ -5,15 +5,15 @@ import (
 	"path/filepath"
 	"testing"
 
-	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/common"
+	. "github.com/bakape/meguca/test"
 )
 
 func TestMain(m *testing.M) {
 	if err := CreateDirs(); err != nil {
 		panic(err)
 	}
-	defer  DeleteDirs()
+	defer DeleteDirs()
 
 	code := m.Run()
 
@@ -29,8 +29,8 @@ func resetDirs(t *testing.T) {
 func TestGetFilePaths(t *testing.T) {
 	t.Parallel()
 
-	webm := GetFilePaths("jingai", common.WEBM)
-	jpeg := GetFilePaths("modoki", common.JPEG)
+	webm := GetFilePaths("jingai", common.WEBM, common.PNG)
+	jpeg := GetFilePaths("modoki", common.JPEG, common.JPEG)
 
 	cases := [...]struct {
 		name, got, expected string
@@ -57,11 +57,11 @@ func TestDeleteAssets(t *testing.T) {
 	resetDirs(t)
 
 	cases := [...]struct {
-		testName, name string
-		fileType       uint8
+		testName, name      string
+		fileType, thumbType uint8
 	}{
-		{"JPEG", "foo", common.JPEG},
-		{"PNG", "bar", common.PNG},
+		{"JPEG", "foo", common.JPEG, common.JPEG},
+		{"PNG", "bar", common.PNG, common.PNG},
 	}
 
 	for i := range cases {
@@ -70,7 +70,7 @@ func TestDeleteAssets(t *testing.T) {
 			t.Parallel()
 
 			// Create files
-			for _, path := range GetFilePaths(c.name, c.fileType) {
+			for _, path := range GetFilePaths(c.name, c.fileType, c.thumbType) {
 				file, err := os.Create(path)
 				if err != nil {
 					t.Fatal(err)
@@ -81,10 +81,10 @@ func TestDeleteAssets(t *testing.T) {
 			}
 
 			// Delete them and check, if deleted
-			if err := Delete(c.name, c.fileType); err != nil {
+			if err := Delete(c.name, c.fileType, c.thumbType); err != nil {
 				t.Fatal(err)
 			}
-			for _, path := range GetFilePaths(c.name, c.fileType) {
+			for _, path := range GetFilePaths(c.name, c.fileType, c.thumbType) {
 				_, err := os.Stat(path)
 				if !os.IsNotExist(err) {
 					UnexpectedError(t, err)
@@ -97,7 +97,7 @@ func TestDeleteAssets(t *testing.T) {
 func TestDeleteMissingAssets(t *testing.T) {
 	resetDirs(t)
 
-	if err := Delete("akarin", common.PNG); err != nil {
+	if err := Delete("akarin", common.PNG, common.PNG); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -118,19 +118,20 @@ func TestWriteAssets(t *testing.T) {
 	resetDirs(t)
 
 	const (
-		name     = "foo"
-		fileType = common.JPEG
+		name      = "foo"
+		fileType  = common.JPEG
+		thumbType = common.JPEG
 	)
 	std := [...][]byte{
 		{1, 2, 3},
 		{4, 5, 6},
 	}
 
-	if err := Write(name, fileType, std[0], std[1]); err != nil {
+	if err := Write(name, fileType, thumbType, std[0], std[1]); err != nil {
 		t.Fatal(err)
 	}
 
-	for i, path := range GetFilePaths(name, fileType) {
+	for i, path := range GetFilePaths(name, fileType, thumbType) {
 		AssertFileEquals(t, path, std[i])
 	}
 }

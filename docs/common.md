@@ -30,6 +30,7 @@ Uploaded file data attached to post
 | video | bool | - | Only used for mp4 and ogg uploads, which may or may not contain a video stream. Describes, if they do. |
 | spoiler | bool | - | describes, if image thumbnail is spoilered |
 | fileType | [fileTypes](#filetypes) | + | file type of the originally uploaded file |
+| thumbType | [fileTypes](#filetypes) | + | file type of the generated thumbnail |
 | length | uint | - | Length of stream in seconds. Only used for audio and video files. |
 | size | uint | + | size of originally uploaded file in bytes |
 | dims | [4]uint | + | 4 item array containing the dimensions of the uploaded file and its thumbnail - [width, height, thumbnail_width, thumbnail_height] |

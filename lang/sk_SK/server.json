@@ -8,10 +8,6 @@
 			"JPEG kompresia náhľadu",
 			"Kvalita JPEG náhľadov"
 		],
-		"PNGQuality": [
-			"PNG kompresia náhľadu",
-			"Stratová kompresia PNG náhľadov. Vyššia je horšia"
-		],
 		"alwaysLock": [
 			"Always Lock to Bottom",
 			"Lock scrolling to page bottom even when tab is hidden"

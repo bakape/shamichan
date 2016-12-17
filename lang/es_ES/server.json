@@ -8,10 +8,6 @@
 			"JPEG thumbnail quality",
 			"Quality of image JPEG thumbnails"
 		],
-		"PNGQuality": [
-			"PNG thumbnail compression",
-			"Lossy compression level of PNG thumbnails. Higher is lossier."
-		],
 		"alwaysLock": [
 			"Siempre bloquear a la parte inferior",
 			"Bloquea scrolling a la parte inferior de la pagina incluso cuando la pestaña esta escondida"

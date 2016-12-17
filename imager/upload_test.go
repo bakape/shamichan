@@ -96,13 +96,13 @@ func getImageRecord(t *testing.T, id string) (res common.ImageCommon) {
 }
 
 // Assert image file assets were created with the correct paths
-func assertFiles(t *testing.T, src, id string, fileType uint8) {
+func assertFiles(t *testing.T, src, id string, fileType, thumbType uint8) {
 	var (
 		paths [3]string
 		data  [3][]byte
 	)
 	paths[0] = filepath.Join("testdata", src)
-	destPaths := assets.GetFilePaths(id, fileType)
+	destPaths := assets.GetFilePaths(id, fileType, thumbType)
 	paths[1], paths[2] = destPaths[0], destPaths[1]
 
 	for i := range paths {
@@ -240,7 +240,7 @@ func TestNewThumbnail(t *testing.T) {
 	AssertDeepEquals(t, img, std)
 
 	assertImageToken(t, rec.Body.String(), std.SHA1, assets.StdJPEG.Name)
-	assertFiles(t, "sample.jpg", std.SHA1, common.JPEG)
+	assertFiles(t, "sample.jpg", std.SHA1, common.JPEG, common.JPEG)
 }
 
 func TestAPNGThumbnailing(t *testing.T) {

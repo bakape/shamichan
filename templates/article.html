@@ -1,6 +1,7 @@
 {% import "fmt" %}
 {% import "strconv" %}
 {% import "github.com/bakape/meguca/common" %}
+{% import "github.com/bakape/meguca/imager/assets" %}
 
 {% func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
@@ -51,7 +52,7 @@
 		{% code var src string %}
 		{% if p.Image != nil %}
 			{% code img := *p.Image %}
-			{% code src =  sourcePath(img.FileType, img.SHA1) %}
+			{% code src =  assets.SourcePath(img.FileType, img.SHA1) %}
 			{% code ISSrc := root + src %}
 			<figcaption class="spaced">
 				<a class="image-toggle act" hidden></a>
@@ -112,7 +113,7 @@
 							<img src="/assets/spoil/default.jpg" width="125" height="125">
 						{% else %}
 							{% code w, h := correctDims(subject != "", img.Dims[2], img.Dims[3]) %}
-							<img src="{%s= thumbPath(img.FileType, img.SHA1) %}" width="{%s= w %}" height="{%s= h %}">
+							<img src="{%s= assets.ThumbPath(img.FileType, img.ThumbType, img.SHA1) %}" width="{%s= w %}" height="{%s= h %}">
 						{% endif %}
 					</a>
 				</figure>

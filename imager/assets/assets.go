@@ -2,7 +2,6 @@
 package assets
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -37,26 +36,45 @@ var (
 )
 
 // GetFilePaths generates file paths of the source file and its thumbnail
-func GetFilePaths(name string, fileType uint8) (paths [2]string) {
-	thumbExtension := "png"
-	if fileType == common.JPEG {
-		thumbExtension = "jpg"
-	}
-	paths[0] = fmt.Sprintf("images/src/%s.%s", name, common.Extensions[fileType])
-	paths[1] = fmt.Sprintf("images/thumb/%s.%s", name, thumbExtension)
-
+func GetFilePaths(SHA1 string, fileType, thumbType uint8) (paths [2]string) {
+	paths[0] = SourcePath(fileType, SHA1)
+	paths[1] = ThumbPath(fileType, thumbType, SHA1)
 	for i := range paths {
-		paths[i] = filepath.FromSlash(paths[i])
+		paths[i] = filepath.FromSlash(paths[i][1:])
 	}
 
 	return
 }
 
+// ThumbPath returns the path to the thumbnail of an image
+func ThumbPath(fileType, thumbType uint8, SHA1 string) string {
+	buf := make([]byte, 14, 58)
+	copy(buf, "/images/thumb/")
+	buf = append(buf, SHA1...)
+	buf = append(buf, '.')
+	buf = append(buf, common.Extensions[thumbType]...)
+
+	return string(buf)
+}
+
+// SourcePath returns the path to the source file on an image
+func SourcePath(fileType uint8, SHA1 string) string {
+	ext := common.Extensions[fileType]
+
+	buf := make([]byte, 12, 53+len(ext))
+	copy(buf, "/images/src/")
+	buf = append(buf, SHA1...)
+	buf = append(buf, '.')
+	buf = append(buf, ext...)
+
+	return string(buf)
+}
+
 // Write writes file assets to disk
-func Write(name string, fileType uint8, src, thumb []byte) error {
+func Write(name string, fileType, thumbType uint8, src, thumb []byte) error {
 	data := [2][]byte{src, thumb}
 
-	for i, path := range GetFilePaths(name, fileType) {
+	for i, path := range GetFilePaths(name, fileType, thumbType) {
 		if err := writeFile(path, data[i]); err != nil {
 			return err
 		}
@@ -78,8 +96,8 @@ func writeFile(path string, data []byte) error {
 }
 
 // Delete deletes file assets belonging to a single upload
-func Delete(name string, fileType uint8) error {
-	for _, path := range GetFilePaths(name, fileType) {
+func Delete(name string, fileType, thumbType uint8) error {
+	for _, path := range GetFilePaths(name, fileType, thumbType) {
 		// Ignore somehow absent images
 		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 			return err

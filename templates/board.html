@@ -2,6 +2,7 @@
 {% import "github.com/bakape/meguca/config" %}
 {% import "github.com/bakape/meguca/common" %}
 {% import "github.com/bakape/meguca/lang" %}
+{% import "github.com/bakape/meguca/imager/assets" %}
 
 {% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, ln lang.Pack) %}{% stripspace %}
 	{% comment %}
@@ -102,7 +103,7 @@ allow caching of generated posts.
 						{% if img.Spoiler %}
 							<img src="/assets/spoil/default.jpg" width="150" height="150" class="expanded">
 						{% else %}
-							<img width="{%s= strconv.FormatUint(uint64(img.Dims[2]), 10) %}" height="{%s= strconv.FormatUint(uint64(img.Dims[3]), 10) %}" class="expanded" src="{%s= thumbPath(img.FileType, img.SHA1) %}">
+							<img width="{%s= strconv.FormatUint(uint64(img.Dims[2]), 10) %}" height="{%s= strconv.FormatUint(uint64(img.Dims[3]), 10) %}" class="expanded" src="{%s= assets.ThumbPath(img.FileType, img.ThumbType, img.SHA1) %}">
 						{% endif %}
 					</a>
 				</figure>

@@ -14,8 +14,9 @@ import (
 )
 
 var (
-	errTooWide = errors.New("image too wide") // No such thing
-	errTooTall = errors.New("image too tall")
+	errTooWide             = errors.New("image too wide") // No such thing
+	errTooTall             = errors.New("image too tall")
+	errThumbnailingUnknown = errors.New("unknown thumbnailing error")
 )
 
 func init() {
@@ -29,8 +30,8 @@ func UnloadGM() {
 
 // processImage generates a thumbnail from a source image buffer. Returns the
 // generated thumbnail's buffer, the source images and thumbnail's dimensions
-// and error, if any.
-func processImage(buf []byte) ([]byte, [4]uint16, error) {
+// if a the generated thumbnail is a PNG image and error, if any.
+func processImage(buf []byte) ([]byte, [4]uint16, bool, error) {
 	cBuf := C.CBytes(buf)
 	defer C.free(cBuf)
 
@@ -51,17 +52,21 @@ func processImage(buf []byte) ([]byte, [4]uint16, error) {
 		}
 	}()
 	var err error
-	switch errCode {
-	case 0:
-	case 1:
+	if ex.reason != nil {
 		err = extractError(ex)
-	case 2:
-		err = errTooWide
-	case 3:
-		err = errTooTall
+	} else {
+		switch errCode {
+		case 0:
+		case 1:
+			err = errThumbnailingUnknown
+		case 2:
+			err = errTooWide
+		case 3:
+			err = errTooTall
+		}
 	}
 	if err != nil {
-		return nil, [4]uint16{}, err
+		return nil, [4]uint16{}, false, err
 	}
 
 	out := C.GoBytes(thumb.buf, C.int(thumb.size))
@@ -71,7 +76,7 @@ func processImage(buf []byte) ([]byte, [4]uint16, error) {
 		uint16(thumb.width),
 		uint16(thumb.height),
 	}
-	return out, dims, nil
+	return out, dims, bool(thumb.isPNG), nil
 }
 
 func extractError(ex *C.ExceptionInfo) error {

@@ -1,7 +1,9 @@
 #include "video.h"
 
-int extract_video_image(AVFrame **frame, AVFormatContext *avfc,
-			AVCodecContext *avcc, const int stream)
+int extract_video_image(AVFrame **frame,
+						AVFormatContext *avfc,
+						AVCodecContext *avcc,
+						const int stream)
 {
 	for (;;) {
 		AVPacket pkt;

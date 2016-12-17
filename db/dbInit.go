@@ -16,7 +16,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 18
+const dbVersion = 19
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -175,6 +175,11 @@ func verifyDBVersion() error {
 		if err := upgrade17to18(); err != nil {
 			return err
 		}
+		fallthrough
+	case 18:
+		if err := upgrade18to19(); err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("incompatible database version: %d", version)
 	}
@@ -312,6 +317,33 @@ func upgrade17to18() error {
 
 	return WriteAll([]r.Term{
 		r.Table("imageTokens").IndexCreate("expires"),
+		incrementVersion,
+	})
+}
+
+func upgrade18to19() error {
+	return WriteAll([]r.Term{
+		r.
+			Table("images").
+			Update(map[string]r.Term{
+				"thumbType": r.Branch(
+					r.Row.Field("fileType").Eq(0),
+					0,
+					1,
+				),
+			}),
+		r.
+			Table("posts").
+			HasFields("image").
+			Update(map[string]map[string]r.Term{
+				"image": {
+					"thumbType": r.Branch(
+						r.Row.Field("image").Field("fileType").Eq(0),
+						0,
+						1,
+					),
+				},
+			}),
 		incrementVersion,
 	})
 }

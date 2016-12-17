@@ -10,8 +10,8 @@ int create_context(AVFormatContext **ctx)
 	unsigned char *buf = malloc(bufSize);
 	AVFormatContext *c = *ctx;
 
-	c->pb = avio_alloc_context(buf, bufSize, 0, c, readCallBack, NULL,
-				   seekCallBack);
+	c->pb = avio_alloc_context(
+		buf, bufSize, 0, c, readCallBack, NULL, seekCallBack);
 	c->flags |= AVFMT_FLAG_CUSTOM_IO;
 
 	int err = avformat_open_input(ctx, NULL, NULL, NULL);
@@ -49,8 +49,10 @@ void destroy(AVFormatContext *ctx)
 }
 
 // Create a AVCodecContext of the desired media type
-int codec_context(AVCodecContext **avcc, int *stream, AVFormatContext *avfc,
-		  const enum AVMediaType type)
+int codec_context(AVCodecContext **avcc,
+				  int *stream,
+				  AVFormatContext *avfc,
+				  const enum AVMediaType type)
 {
 	int err;
 	AVCodec *codec = NULL;

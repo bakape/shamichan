@@ -8,10 +8,6 @@
 			"Jakość miniatur JPEG",
 			"Określ poziom jakości miniatur JPEG"
 		],
-		"PNGQuality": [
-			"Kompresja miniatur PNG",
-			"Określ poziom kompresji miniatur PNG. Im wyższa, tym bardziej stratna."
-		],
 		"alwaysLock": [
 			"Always Lock to Bottom",
 			"Lock scrolling to page bottom even when tab is hidden"

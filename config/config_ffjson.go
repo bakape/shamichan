@@ -347,8 +347,6 @@ func (mj *Configs) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	}
 	buf.WriteString(`,"JPEGQuality":`)
 	fflib.FormatBits2(buf, uint64(mj.JPEGQuality), 10, false)
-	buf.WriteString(`,"PNGQuality":`)
-	fflib.FormatBits2(buf, uint64(mj.PNGQuality), 10, false)
 	buf.WriteString(`,"maxWidth":`)
 	fflib.FormatBits2(buf, uint64(mj.MaxWidth), 10, false)
 	buf.WriteString(`,"maxHeight":`)

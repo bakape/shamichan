@@ -104,7 +104,7 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
         let arg: string
         switch (type) {
             case ISType.thumb:
-                arg = location.origin + thumbPath(img.SHA1, img.fileType)
+                arg = location.origin + sourcePath(img.SHA1, img.fileType)
                 break
             case ISType.MD5:
                 arg = img.MD5
@@ -141,9 +141,12 @@ function readableFilesize(size: number): string {
 
 // Get the thumbnail path of an image, accounting for not thumbnail of specific
 // type being present
-export function thumbPath(SHA1: string, fileType: fileTypes): string {
-    const ext = fileType === fileTypes.jpg ? "jpg" : "png"
-    return `/images/thumb/${SHA1}.${ext}`
+export function thumbPath(
+    SHA1: string,
+    fileType: fileTypes,
+    thumbType: fileTypes,
+): string {
+    return `/images/thumb/${SHA1}.${fileTypes[thumbType]}`
 }
 
 // Resolve the path to the source file of an upload
@@ -178,7 +181,7 @@ export function renderThumbnail(el: Element, data: ImageData) {
         // Animated GIF thumbnails
         thumb = src
     } else {
-        thumb = thumbPath(data.SHA1, data.fileType)
+        thumb = thumbPath(data.SHA1, data.fileType, data.thumbType)
     }
 
     // Downscale thumbnail for higher DPI, unless specified not to

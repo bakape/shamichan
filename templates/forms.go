@@ -39,7 +39,12 @@ func configurationTable(
 
 	// Assign values to all specs
 	for i, s := range withValues {
-		withValues[i].Val = v.FieldByName(strings.Title(s.ID)).Interface()
+		v := v.FieldByName(strings.Title(s.ID))
+		switch k := v.Kind(); k {
+		case reflect.Uint8, reflect.Uint16:
+			v = v.Convert(reflect.TypeOf(uint(0)))
+		}
+		withValues[i].Val = v.Interface()
 	}
 
 	return tableForm(withValues, needCaptcha, ln)

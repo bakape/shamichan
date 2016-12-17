@@ -65,7 +65,7 @@ func processMP3(data []byte) (res thumbResponse) {
 		return assignFallbackCover(res)
 	}
 
-	res.thumb, res.dims, res.err = processImage(c.Picture())
+	res.thumb, res.dims, res.PNGThumb, res.err = processImage(c.Picture())
 	return
 }
 

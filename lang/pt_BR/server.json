@@ -8,10 +8,6 @@
 			"JPEG thumbnail quality",
 			"Quality of image JPEG thumbnails"
 		],
-		"PNGQuality": [
-			"PNG thumbnail compression",
-			"Lossy compression level of PNG thumbnails. Higher is lossier."
-		],
 		"alwaysLock": [
 			"Sempre travar no rodapé",
 			"Trava o scroll da página no rodapé mesmo com a aba no fundo."

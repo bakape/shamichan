@@ -68,6 +68,8 @@ func (mj *Image) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	}
 	buf.WriteString(`"fileType":`)
 	fflib.FormatBits2(buf, uint64(mj.FileType), 10, false)
+	buf.WriteString(`,"thumbType":`)
+	fflib.FormatBits2(buf, uint64(mj.ThumbType), 10, false)
 	buf.WriteByte(',')
 	if mj.Length != 0 {
 		buf.WriteString(`"length":`)
@@ -141,6 +143,8 @@ func (mj *ImageCommon) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	}
 	buf.WriteString(`"fileType":`)
 	fflib.FormatBits2(buf, uint64(mj.FileType), 10, false)
+	buf.WriteString(`,"thumbType":`)
+	fflib.FormatBits2(buf, uint64(mj.ThumbType), 10, false)
 	buf.WriteByte(',')
 	if mj.Length != 0 {
 		buf.WriteString(`"length":`)
@@ -216,6 +220,8 @@ func (mj *ProtoImage) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	}
 	buf.WriteString(`"fileType":`)
 	fflib.FormatBits2(buf, uint64(mj.FileType), 10, false)
+	buf.WriteString(`,"thumbType":`)
+	fflib.FormatBits2(buf, uint64(mj.ThumbType), 10, false)
 	buf.WriteByte(',')
 	if mj.Length != 0 {
 		buf.WriteString(`"length":`)

@@ -8,10 +8,6 @@
 			"JPEG thumbnail quality",
 			"Quality of image JPEG thumbnails"
 		],
-		"PNGQuality": [
-			"PNG thumbnail compression",
-			"Lossy compression level of PNG thumbnails. Higher is lossier."
-		],
 		"alwaysLock": [
 			"Her zaman aşağıda kal",
 			"Her zaman aşağıda kal"

@@ -72,6 +72,7 @@ export interface ImageData {
 	video: boolean
 	spoiler: boolean
 	fileType: fileTypes
+	thumbType: fileTypes
 	length?: number
 	size: number
 	// [width, height, thumbnail_width, thumbnail_height]

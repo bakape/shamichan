@@ -1,4 +1,4 @@
-//go:generate ffjson --nodecoder $GOFILE
+//go:generate ffjson --nodecoder --force-regenerate $GOFILE
 
 // Package config stores and exports the configuration for server-side use and
 // the public availability JSON struct, which includes a small subset of the
@@ -54,7 +54,6 @@ var (
 		ThreadExpiry:  14,
 		BoardExpiry:   7,
 		JPEGQuality:   80,
-		PNGQuality:    20,
 		MaxSize:       5,
 		MaxHeight:     6000,
 		MaxWidth:      6000,
@@ -97,10 +96,9 @@ type Configs struct {
 	PruneThreads      bool `json:"pruneThreads" gorethink:"pruneThreads"`
 	PruneBoards       bool `json:"pruneBoards" gorethink:"pruneBoards"`
 	Pyu               bool `json:"pyu" gorethink:"pyu"`
-	JPEGQuality       uint
-	PNGQuality        uint
-	MaxWidth          uint   `json:"maxWidth" gorethink:"maxWidth"`
-	MaxHeight         uint   `json:"maxHeight" gorethink:"maxHeight"`
+	JPEGQuality       uint8
+	MaxWidth          uint16 `json:"maxWidth" gorethink:"maxWidth"`
+	MaxHeight         uint16 `json:"maxHeight" gorethink:"maxHeight"`
 	ThreadExpiry      uint   `json:"threadExpiry" gorethink:"threadExpiry"`
 	BoardExpiry       uint   `json:"boardExpiry" gorethink:"boardExpiry"`
 	MaxSize           uint   `json:"maxSize" gorethink:"maxSize"`

@@ -106,7 +106,7 @@ func thumbnailVideo(c *ffContext, res thumbResponse) thumbResponse {
 		return res
 	}
 
-	res.thumb, res.dims, res.err = processImage(w.Bytes())
+	res.thumb, res.dims, res.PNGThumb, res.err = processImage(w.Bytes())
 	return res
 }
 
@@ -161,7 +161,7 @@ func processMediaContainer(
 		if !c.HasImage() {
 			return assignFallbackCover(res)
 		}
-		res.thumb, res.dims, res.err = processImage(c.Picture())
+		res.thumb, res.dims, res.PNGThumb, res.err = processImage(c.Picture())
 		return
 	}
 

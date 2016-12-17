@@ -9,8 +9,10 @@ extern int64_t seekCallBack(void *, int64_t, int);
 
 int create_context(AVFormatContext **ctx);
 void destroy(AVFormatContext *ctx);
-int codec_context(AVCodecContext **avcc, int *stream, AVFormatContext *avfc,
-		  const enum AVMediaType type);
+int codec_context(AVCodecContext **avcc,
+				  int *stream,
+				  AVFormatContext *avfc,
+				  const enum AVMediaType type);
 char *format_error(const int code);
 
 #endif
