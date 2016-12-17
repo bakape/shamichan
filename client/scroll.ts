@@ -17,7 +17,7 @@ export let atBottom: boolean
 // Scroll to target anchor element, if any
 export function scrollToAnchor() {
 	if (!location.hash) {
-		return scrollToTop()
+		return
 	}
 	const el = document.querySelector(location.hash)
 	if (!el) {

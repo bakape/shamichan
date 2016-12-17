@@ -8,8 +8,6 @@ import { postSM, postEvent } from "./posts/posting/main"
 import { scrollToAnchor } from "./scroll"
 import { connSM, connState } from "./connection"
 
-history.scrollRestoration = "manual"
-
 // Handle a click on any .history anchor
 function handleClick(event: KeyboardEvent) {
 	// Don't trigger, when user is trying to open in a new tab
@@ -21,7 +19,6 @@ function handleClick(event: KeyboardEvent) {
 		((event.target as Element)
 			.closest("a.history") as HTMLAnchorElement)
 			.href
-	history.replaceState(window.scrollY, "")
 	navigate(href, event, true).catch(alertError)
 }
 
@@ -74,10 +71,7 @@ export default async function navigate(
 
 	if (needPush) {
 		scrollToAnchor()
-		history.pushState(window.scrollY, "", nextState.href)
-	} else if (history.state !== null) {
-		// Scroll to saved position
-		window.scrollTo(0, history.state)
+		history.pushState(null, null, nextState.href)
 	}
 
 	displayLoading(false)
