@@ -166,10 +166,9 @@ export default class PostView extends ImageHandler {
         renderTime(this.el.querySelector("time"), this.model.time, false)
     }
 
-    // Add highlight to post because it linked a post the client made, the
-    // client made it or similar.
-    public addHighlight() {
+    // Add or remove highlight to post
+    public setHighlight(on: boolean) {
         write(() =>
-            this.el.classList.add("highlight"))
+            this.el.classList.toggle("highlight", on))
     }
 }

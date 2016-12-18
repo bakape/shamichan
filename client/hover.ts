@@ -91,6 +91,9 @@ class PostPreview extends ImageHandler {
 		}
 
 		this.position()
+
+		// Highlight target post, if present
+		this.sourceModel.view.setHighlight(true)
 	}
 
 	// Position the preview element relative to it's parent link
@@ -128,6 +131,7 @@ class PostPreview extends ImageHandler {
 		this.parent.removeEventListener("click", this.clickHandler)
 		postPreview = null
 		super.remove()
+		this.sourceModel.view.setHighlight(false)
 	}
 }
 
