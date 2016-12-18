@@ -16,14 +16,14 @@ import { Post } from "./posts/models"
 // Load all stateful modules in dependency order
 async function start() {
 	const frag = document.getElementById("threads")
-	extractConfigs(frag)
+	extractConfigs()
 
 	await open()
 	await loadFromDB()
 	init()
 
 	if (page.thread) {
-		renderThread(null)
+		renderThread("")
 	} else {
 		renderBoard()
 	}

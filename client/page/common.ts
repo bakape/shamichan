@@ -2,7 +2,6 @@ import { fetchBoard, fetchThread } from "../fetch"
 import { PageState, posts, setBoardConfig } from '../state'
 import renderThread from './thread'
 import { renderFresh as renderBoard } from './board'
-import { makeFrag } from "../util"
 import { setExpandAll } from "../posts/images"
 
 // Load a page (either board or thread) and render it once the ready promise
@@ -21,19 +20,16 @@ export default async function (
 	await ready
 
 	posts.clear()
-	const frag = makeFrag(html)
-	extractConfigs(frag)
 	setExpandAll(false)
-
 	if (thread) {
-		renderThread(frag)
+		renderThread(html)
 	} else {
-		renderBoard(frag)
+		renderBoard(html)
 	}
 }
 
 // Find board configurations in the HTML and apply them
-export function extractConfigs(ns: NodeSelector) {
-	const conf = ns.querySelector("#board-configs").textContent
+export function extractConfigs() {
+	const conf = document.getElementById("board-configs").textContent
 	setBoardConfig(JSON.parse(conf))
 }

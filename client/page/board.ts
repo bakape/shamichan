@@ -1,4 +1,4 @@
-import { escape, on, makeFrag } from '../util'
+import { escape, on } from '../util'
 import lang from '../lang'
 import { page } from '../state'
 import options from '../options'
@@ -6,6 +6,7 @@ import { write, threads } from '../render'
 import { renderTime } from "../posts/render/posts"
 import { fetchBoard } from "../fetch"
 import { setTitle } from "../tab"
+import { extractConfigs } from "./common"
 
 type SortFunction = (a: HTMLElement, b: HTMLElement) => number
 
@@ -33,10 +34,10 @@ export function formatHeader(name: string, title: string): string {
 }
 
 // Render a board fresh board from parsed document fragment
-export function renderFresh(frag: DocumentFragment) {
+export function renderFresh(html: string) {
 	lastFetch = Math.floor(Date.now() / 1000)
-	threads.innerHTML = ""
-	threads.append(frag)
+	threads.innerHTML = html
+	extractConfigs()
 	render()
 }
 
@@ -147,7 +148,7 @@ async function refreshBoard() {
 	if (err) {
 		throw err
 	}
-	renderFresh(makeFrag(html))
+	renderFresh(html)
 }
 
 // Update refresh timer or refresh board, if document hidden, each minute

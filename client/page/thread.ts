@@ -8,19 +8,20 @@ import { updateSyncTimestamp } from "../connection"
 import notifyAboutReply from "../notification"
 import { pluralize, escape } from "../util"
 import { setTitle } from "../tab"
+import { extractConfigs } from "./common"
 
 // Container for all rendered posts
 export let threadContainer: HTMLElement
 
 // Render the HTML of a thread page. Insert specifies if the fragment should be
 // inserted into the DOM.
-export default function (frag: DocumentFragment) {
+export default function (html: string) {
     updateSyncTimestamp()
 
-    if (frag) {
-        threads.innerHTML = ""
-        threads.append(frag)
+    if (html) {
+        threads.innerHTML = html
     }
+    extractConfigs()
 
     threadContainer = threads.querySelector("#thread-container")
     if (!options.workModeToggle && (options.userBG || options.illyaDance)) {
