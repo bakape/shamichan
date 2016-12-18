@@ -75,14 +75,6 @@ function extractPost(post: PostData) {
         return el.remove()
     }
 
-    // All kinds of interesting synchronization data races might be happening,
-    // so ensure all posts contain a defined body state, just in case
-    post.state = {
-        spoiler: false,
-        quote: false,
-        iDice: 0,
-    }
-
     const model = new Post(post),
         view = new PostView(model, el)
     postCollection.add(model)
