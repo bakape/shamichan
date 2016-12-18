@@ -23,9 +23,9 @@ async function start() {
 	init()
 
 	if (page.thread) {
-		renderThread(frag, false)
+		renderThread(null)
 	} else {
-		renderBoard(frag)
+		renderBoard()
 	}
 
 	scrollToAnchor()

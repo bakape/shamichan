@@ -14,21 +14,26 @@ export let threadContainer: HTMLElement
 
 // Render the HTML of a thread page. Insert specifies if the fragment should be
 // inserted into the DOM.
-export default function (frag: DocumentFragment, insert: boolean) {
+export default function (frag: DocumentFragment) {
     updateSyncTimestamp()
 
-    threadContainer = frag.querySelector("#thread-container")
+    if (frag) {
+        threads.innerHTML = ""
+        threads.append(frag)
+    }
+
+    threadContainer = threads.querySelector("#thread-container")
     if (!options.workModeToggle && (options.userBG || options.illyaDance)) {
         threadContainer.classList.add("custom-BG")
     }
 
     const data = JSON.parse(
-        frag.querySelector("#post-data").textContent,
+        threads.querySelector("#post-data").textContent,
     ) as ThreadData
     const {posts} = data
     delete data.posts
 
-    extractPost(data, frag)
+    extractPost(data)
     postCollection.lowestID = posts.length ? posts[0].id : data.id
     if (data.image) {
         data.image.large = true
@@ -36,14 +41,14 @@ export default function (frag: DocumentFragment, insert: boolean) {
 
     // Extra client-side localizations. Not done server-side for better
     // cacheability.
-    localizeOmitted(frag)
+    localizeOmitted()
     if (options.anonymise) {
-        for (let el of frag.querySelectorAll(".name")) {
+        for (let el of threads.querySelectorAll(".name")) {
             el.textContent = lang.posts["anon"]
         }
     } else if (options.lang !== "en_GB") { // Server renders in en_GB
         // Localize posts without a poster name or tripcode
-        for (let el of frag.querySelectorAll(".name")) {
+        for (let el of threads.querySelectorAll(".name")) {
             if (el.textContent === "Anonymous") {
                 el.textContent = lang.posts["anon"]
             }
@@ -53,12 +58,7 @@ export default function (frag: DocumentFragment, insert: boolean) {
     setThreadTitle(data)
 
     for (let post of posts) {
-        extractPost(post, frag)
-    }
-
-    if (insert) {
-        threads.innerHTML = ""
-        threads.append(frag)
+        extractPost(post)
     }
 }
 
@@ -70,8 +70,8 @@ export function setThreadTitle(data: ThreadData) {
 // Extract post model and view from the HTML fragment and apply client-specific
 // formatting. writeNow specifies, if the write to the DOM fragment should not
 // be delayed.
-function extractPost(post: PostData, frag: NodeSelector) {
-    const el = frag.querySelector(`#p${post.id}`)
+function extractPost(post: PostData) {
+    const el = document.getElementById(`p${post.id}`)
 
     if (hidden.has(post.id)) {
         return el.remove()
@@ -121,12 +121,12 @@ function extractPost(post: PostData, frag: NodeSelector) {
 }
 
 // Localize omitted post and image span
-function localizeOmitted(frag: DocumentFragment) {
+function localizeOmitted() {
     // Server renders in en_GB
     if (options.lang === "en_GB") {
         return
     }
-    const el = frag.querySelector(".omit")
+    const el = document.querySelector(".omit")
     if (!el) {
         return
     }

@@ -26,7 +26,7 @@ export default async function (
 	setExpandAll(false)
 
 	if (thread) {
-		renderThread(frag, true)
+		renderThread(frag)
 	} else {
 		renderBoard(frag)
 	}

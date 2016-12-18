@@ -35,14 +35,14 @@ export function formatHeader(name: string, title: string): string {
 // Render a board fresh board from parsed document fragment
 export function renderFresh(frag: DocumentFragment) {
 	lastFetch = Math.floor(Date.now() / 1000)
-	render(frag)
 	threads.innerHTML = ""
 	threads.append(frag)
+	render()
 }
 
 // Apply client-side modifications to a board page's HTML. writeNow specifies,
 // if the write to the DOM fragment should not be delayed.
-export function render(frag: NodeSelector) {
+export function render() {
 	// Set sort mode <select> to correspond with setting
 	let sortMode = localStorage.getItem("catalogSort")
 	// "bump" is a legacy sort mode. Account for clients explicitly set to it.
@@ -55,28 +55,29 @@ export function render(frag: NodeSelector) {
 	}
 
 	// Apply board title to tab
-	setTitle(frag.querySelector("#page-title").textContent)
+	setTitle(threads.querySelector("#page-title").textContent)
 
 	// Add extra localizations
-	for (let el of frag.querySelectorAll(".counters")) {
+	for (let el of threads.querySelectorAll(".counters")) {
 		el.setAttribute("title", lang.ui["postsImages"])
 	}
-	for (let el of frag.querySelectorAll(".lastN-link")) {
+	for (let el of threads.querySelectorAll(".lastN-link")) {
 		el.textContent = `${lang.ui["last"]} 100`
 	}
 
-	(frag.querySelector("select[name=sortMode]") as HTMLSelectElement)
+	(threads.querySelector("select[name=sortMode]") as HTMLSelectElement)
 		.value = sortMode
-	renderRefreshButton(frag.querySelector("#refresh > a"))
-	sortThreads(frag.querySelector("#catalog"), true)
+	renderRefreshButton(threads.querySelector("#refresh > a"))
+	sortThreads(true)
 }
 
 // Sort all threads on a board
-export function sortThreads(frag: DocumentFragment, initial: boolean) {
-	let threads = Array.from(frag.querySelectorAll("article"))
+export function sortThreads(initial: boolean) {
+	let catalog = document.getElementById("catalog"),
+		threads = Array.from(catalog.querySelectorAll("article"))
 
 	if (options.hideThumbs || options.workModeToggle) {
-		for (let el of frag.querySelectorAll("img.expanded")) {
+		for (let el of catalog.querySelectorAll("img.expanded")) {
 			el.style.display = "none"
 		}
 	}
@@ -95,7 +96,7 @@ export function sortThreads(frag: DocumentFragment, initial: boolean) {
 		el.remove()
 	}
 	threads = threads.sort(sorts[sortMode])
-	frag.append(...threads)
+	catalog.append(...threads)
 }
 
 // Render the board refresh button text
@@ -109,17 +110,18 @@ function renderRefreshButton(el: Element) {
 // Persist thread sort order mode to localStorage and rerender threads
 function onSortChange(e: Event) {
 	localStorage.setItem("catalogSort", (e.target as HTMLInputElement).value)
-	sortThreads(document.getElementById("catalog"), false)
+	sortThreads(false)
 }
 
 function onSearchChange(e: Event) {
 	const filter = (e.target as HTMLInputElement).value
-	filterThreads(filter, document.getElementById("catalog"))
+	filterThreads(filter)
 }
 
 // Filter against board and subject and toggle thread visibility
-function filterThreads(filter: string, catalog: DocumentFragment) {
-	const r = new RegExp(filter, "i")
+function filterThreads(filter: string) {
+	const r = new RegExp(filter, "i"),
+		catalog = document.getElementById("catalog")
 
 	for (let el of catalog.querySelectorAll("article")) {
 		let display = "none"
