@@ -286,6 +286,5 @@ export class Post extends Model implements PostData {
 		this.editing = false
 		this.resetState()
 		this.view.closePost()
-		this.state = null
 	}
 }
