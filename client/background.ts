@@ -138,7 +138,7 @@ function renderGlass(theme: string, blob: Blob): string {
 				url(${blurred}) center fixed no-repeat;
 			background-size: cover;
 		}
-		article.highlight:not(.editing) {
+		article.highlight:not(.editing), article:target {
 			background:
 				linear-gradient(${highlight}, ${highlight}),
 				url(${blurred}) center fixed no-repeat;
