@@ -11,8 +11,6 @@ let view: OptionsPanel
 localStorage.removeItem("options")
 
 interface Options extends ChangeEmitter {
-	lang: string
-	inlineFit: string
 	hideThumbs: boolean
 	imageHover: boolean
 	webmHover: boolean
@@ -26,7 +24,7 @@ interface Options extends ChangeEmitter {
 	illyaDanceMute: boolean
 	horizontalPosting: boolean
 	replyRight: boolean
-	theme: string
+	workModeToggle: boolean
 	userBG: boolean
 	alwaysLock: boolean
 	newPost: number
@@ -34,7 +32,10 @@ interface Options extends ChangeEmitter {
 	done: number
 	expandAll: number
 	workMode: number
-	workModeToggle: boolean
+	lang: string
+	inlineFit: string
+	theme: string
+	customCSS: string
 }
 
 // Central options storage model

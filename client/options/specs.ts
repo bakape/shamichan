@@ -6,18 +6,9 @@ import { loadModule, makeEl } from '../util'
 import { write } from "../render"
 
 // Types of option models
-export const enum optionType { checkbox, number, image, shortcut, menu }
-
-// Can't  use enums for ones below, because they persist to localStorage
-
-// Available themes. Change this, when adding any new ones.
-export const themes = [
-	'moe', 'gar', 'mawaru', 'moon', 'ashita', 'console', 'tea', 'higan',
-	'ocean', 'rave', 'glass', "inumi",
-]
-
-// Available language packs. Change this, when adding any new ones.
-export const langs = ["en_GB", "es_ES", "pt_BR", "sk_SK", "tr_TR", 'uk_UA']
+export const enum optionType {
+	checkbox, number, image, shortcut, menu, textarea,
+}
 
 export type OptionValue = boolean | string | number
 
@@ -161,6 +152,19 @@ export const specs: { [id: string]: OptionSpec } = {
 	// Upload field for the custom background image
 	userBGImage: {
 		type: optionType.image,
+	},
+	// User-set CSS rules
+	customCSS: {
+		type: optionType.textarea,
+		exec(css: string) {
+			let el = document.getElementById("custom-CSS-style")
+			if (!el) {
+				el = document.createElement("style")
+				el.id = "custom-CSS-style"
+				document.head.append(el)
+			}
+			el.innerHTML = css
+		},
 	},
 	// Lock thread scrolling to bottom, when bottom in view, even when the
 	// tab is hidden

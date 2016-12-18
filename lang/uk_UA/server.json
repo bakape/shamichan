@@ -48,6 +48,10 @@
 			"Теги коду",
 			"Ввмикає теги коду для постингу джерельного коду"
 		],
+		"customCSS": [
+			"Custom CSS",
+			"User-defined CSS rules loaded on top of the selected theme"
+		],
 		"defaultCSS": [
 			"Дефолтна тема",
 			"Тема що завантажується по дефолту, коли в користувача не вказано свою."

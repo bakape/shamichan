@@ -48,6 +48,10 @@
 			"Tag kodu",
 			"Włącz tag kodu służący do lepszego formatowania języków programowania"
 		],
+		"customCSS": [
+			"Custom CSS",
+			"User-defined CSS rules loaded on top of the selected theme"
+		],
 		"defaultCSS": [
 			"Domyślny styl",
 			"Domyślnie ładowany styl, jeśli użytkownik nie wybierze innego"
