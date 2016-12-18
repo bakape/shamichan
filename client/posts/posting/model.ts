@@ -35,6 +35,9 @@ export default class FormModel extends Post {
 	// Buffer for messages committed during connection outage
 	private messageBuffer: BufferedMessage[]
 
+	// ID of last linked post
+	private lasLinked: number
+
 	// Pass and ID, if you wish to hijack an existing model. To create a new
 	// model pass zero.
 	constructor(id: number) {
@@ -253,7 +256,7 @@ export default class FormModel extends Post {
 	}
 
 	// Add a link to the target post in the input
-	public addReference(id: number) {
+	public addReference(id: number, sel: string) {
 		let s = ""
 		const {line} = this.inputState
 
@@ -264,7 +267,17 @@ export default class FormModel extends Post {
 			s += " "
 		}
 
-		s += `>>${id} `
+		// Don't duplicate links, if quoting same post multiple times in
+		// succession
+		if (id !== this.lasLinked) {
+			s += `>>${id} `
+		}
+		this.lasLinked = id
+
+		if (sel) {
+			s += "\n" + sel
+		}
+
 		this.view.replaceLine(this.inputState.line + s, false)
 	}
 

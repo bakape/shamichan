@@ -156,7 +156,7 @@ export default class FormView extends PostView {
     }
 
     // Handle input events on input
-    private onInput(val: string = this.input.textContent) {
+    private onInput(val: string) {
         if (this.inputLock) {
             return
         }
@@ -208,7 +208,7 @@ export default class FormView extends PostView {
             range.collapse(false)
             sel.removeAllRanges()
             sel.addRange(range)
-            this.onInput()
+            this.onInput(this.input.textContent)
         }
         const fnl = () =>
             this.lockInput(fn)

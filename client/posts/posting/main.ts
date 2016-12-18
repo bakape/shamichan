@@ -6,7 +6,7 @@ import FSM from "../../fsm"
 import { connState, connSM } from "../../connection"
 import { write, threads } from "../../render"
 import lang from "../../lang"
-import { on, getClosestID } from "../../util"
+import { on } from "../../util"
 import { deferInit } from "../../defer"
 import identity from "./identity"
 import { boardConfig } from "../../state"
@@ -62,10 +62,33 @@ function bindNagging() {
 		event.returnValue = lang.ui["unfinishedPost"]
 }
 
-// Insert target post's number as a link into the text body
-function quotePost(event: Event) {
+// Insert target post's number as a link into the text body. If text in the
+// post is selected, quote it.
+function quotePost(e: Event) {
+	// Make sure the selection both starts and ends in the quoted post's
+	// blockquote
+	const post = (e.target as Element).closest("article"),
+		gsel = getSelection()
+
+	const isInside = (prop: string): boolean => {
+		let el = gsel[prop] as HTMLElement
+		if (!el) {
+			return false
+		}
+		el = el.parentElement
+		if (!el.closest("blockquote")) {
+			return false
+		}
+		return el.closest("article") === post
+	}
+
+	let sel: string
+	if (isInside("baseNode") && isInside("focusNode")) {
+		sel = gsel.toString()
+	}
+
 	postSM.feed(postEvent.open)
-	postModel.addReference(getClosestID(event.target as Element))
+	postModel.addReference(parseInt(post.id.slice(1)), sel)
 }
 
 // Update the draft post's fields on identity change, if any
