@@ -114,6 +114,14 @@ export class Post extends Model implements PostData {
 	constructor(attrs: PostData) {
 		super()
 		extend(this, attrs)
+
+		// All kinds of race conditions can happen, so best always define the
+		// struct
+		this.state = {
+			spoiler: false,
+			quote: false,
+			iDice: 0,
+		}
 	}
 
 	// Remove the model from its collection, detach all references and allow to
