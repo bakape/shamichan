@@ -13,11 +13,9 @@ import { extractConfigs } from "./common"
 // Container for all rendered posts
 export let threadContainer: HTMLElement
 
-// Render the HTML of a thread page. Insert specifies if the fragment should be
-// inserted into the DOM.
+// Render the HTML of a thread page
 export default function (html: string) {
     updateSyncTimestamp()
-
     if (html) {
         threads.innerHTML = html
     }
@@ -69,8 +67,7 @@ export function setThreadTitle(data: ThreadData) {
 }
 
 // Extract post model and view from the HTML fragment and apply client-specific
-// formatting. writeNow specifies, if the write to the DOM fragment should not
-// be delayed.
+// formatting
 function extractPost(post: PostData) {
     const el = document.getElementById(`p${post.id}`)
 
@@ -78,9 +75,22 @@ function extractPost(post: PostData) {
         return el.remove()
     }
 
+    // All kinds of interesting synchronization data races might be happening,
+    // so ensure all posts contain a defined body state, just in case
+    post.state = {
+        spoiler: false,
+        quote: false,
+        iDice: 0,
+    }
+
     const model = new Post(post),
         view = new PostView(model, el)
     postCollection.add(model)
+
+    // If the post is still open, rerender its body, to sync the parser state
+    if (post.editing) {
+        view.renderOpenBody()
+    }
 
     // Apply client-specific formatting to a post rendered server-side
 

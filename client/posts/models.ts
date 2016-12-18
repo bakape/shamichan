@@ -215,7 +215,7 @@ export class Post extends Model implements PostData {
 			this.editing = false
 		}
 		write(() =>
-			this.view.renderContents(this.view.el))
+			this.view.renderContents())
 	}
 
 	// Insert data about a link to another post into the model

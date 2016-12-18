@@ -77,8 +77,9 @@ export default class FormView extends PostView {
         }
 
         write(() => {
-            this.blockquote.innerHTML = ""
-            this.blockquote.append(this.input)
+            const bq = this.el.querySelector("blockquote")
+            bq.innerHTML = ""
+            bq.append(this.input)
             this.input.focus()
         })
     }
@@ -231,7 +232,7 @@ export default class FormView extends PostView {
         const html = parseTerminatedLine(this.model.lastBodyLine(), this.model),
             frag = makeFrag(html)
         write(() =>
-            this.blockquote.children[num].replaceWith(frag))
+            this.el.querySelector("blockquote").children[num].replaceWith(frag))
     }
 
     // Need to rerender entire post, because the client's actions introduce
@@ -239,7 +240,7 @@ export default class FormView extends PostView {
     public closePost() {
         write(() => {
             this.el.classList.remove("editing")
-            this.renderContents(this.el)
+            this.renderContents()
         })
     }
 

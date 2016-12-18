@@ -29,7 +29,7 @@ function parseClosedBody(data: PostData): string {
 }
 
 // Parse a text body, that is still being edited
-function parseOpenBody(data: PostData): string {
+export function parseOpenBody(data: PostData): string {
     const state: TextState = data.state = {
         spoiler: false,
         quote: false,

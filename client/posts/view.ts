@@ -1,7 +1,7 @@
 import { Post } from './models'
 import { makeFrag } from '../util'
 import renderPost, { renderName, renderTime } from './render/posts'
-import { parseOpenLine, parseTerminatedLine } from './render/body'
+import { parseOpenLine, parseOpenBody, parseTerminatedLine } from './render/body'
 import { write, importTemplate } from '../render'
 import { renderBacklinks } from './render/etc'
 import ImageHandler from "./images"
@@ -9,9 +9,8 @@ import { ViewAttrs } from "../view"
 
 // Base post view class
 export default class PostView extends ImageHandler {
-    // Only exist on open posts
-    private buffer: Node        // Text node being written to
-    protected blockquote: Element // Entire text body of post
+    // Text node being written to. Only exist on open posts
+    private _buffer: Node
 
     constructor(model: Post, el: HTMLElement) {
         const attrs: ViewAttrs = { model }
@@ -36,23 +35,28 @@ export default class PostView extends ImageHandler {
 
     // Render the element contents, but don't insert it into the DOM
     protected render() {
-        const frag = importTemplate("article")
-        this.renderContents(frag)
-        this.el.append(frag)
+        this.el.append(importTemplate("article"))
+        this.renderContents()
     }
 
     // Render post into a container and find buffer positions
-    public renderContents(container: DocumentFragment) {
-        renderPost(container, this.model)
-        if (this.model.editing) {
-            this.blockquote = container.querySelector("blockquote")
-            let buf = this.blockquote.lastChild
-            if (!buf) {
-                this.buffer = document.createElement("span")
-                this.blockquote.append(this.buffer)
-            } else {
-                this.findBuffer(buf)
-            }
+    public renderContents() {
+        renderPost(this.el, this.model)
+    }
+
+    // Render the text body of an open post
+    public renderOpenBody() {
+        const el = this.el.querySelector("blockquote")
+        el.innerHTML = parseOpenBody(this.model)
+    }
+
+    // Get the current Node for text to be written to
+    private buffer(): Node {
+        if (this._buffer) {
+            return this._buffer
+        } else {
+            this.findBuffer(this.lastLine())
+            return this._buffer
         }
     }
 
@@ -68,7 +72,7 @@ export default class PostView extends ImageHandler {
         if (!b) {
             b = this.lastLine()
         }
-        this.buffer = b
+        this._buffer = b
     }
 
     // Remove the element from the DOM and detach from its model, allowing the
@@ -94,8 +98,7 @@ export default class PostView extends ImageHandler {
 
     // Return the last line of the text body
     private lastLine(): Element {
-        const ch = this.blockquote.children
-        return ch[ch.length - 1]
+        return this.el.querySelector("blockquote").lastElementChild
     }
 
     // Replace the contents of the last line, accounting for the possibility of
@@ -105,22 +108,23 @@ export default class PostView extends ImageHandler {
         if (ll) {
             ll.replaceWith(node)
         } else {
-            this.blockquote.append(node)
+            this.el.querySelector("blockquote").append(node)
         }
     }
 
     // Append a string to the current text buffer
     public appendString(s: string) {
         write(() =>
-            this.buffer.append(s))
+            this.buffer().append(s))
     }
 
     // Remove one character from the current buffer
     public backspace() {
         write(() => {
+            const buf = this.buffer()
             // Merge multiple successive nodes created by appendString()
-            this.buffer.normalize()
-            this.buffer.textContent = this.buffer.textContent.slice(0, -1)
+            buf.normalize()
+            buf.textContent = buf.textContent.slice(0, -1)
         })
     }
 
@@ -130,8 +134,8 @@ export default class PostView extends ImageHandler {
             frag = makeFrag(parseTerminatedLine(line, this.model))
         write(() => {
             this.replaceLastLine(frag)
-            this.buffer = document.createElement("span")
-            this.blockquote.append(this.buffer)
+            this._buffer = document.createElement("span")
+            this.el.querySelector("blockquote").append(this._buffer)
         })
     }
 
@@ -148,7 +152,6 @@ export default class PostView extends ImageHandler {
         write(() => {
             this.el.classList.remove("editing")
             this.replaceLastLine(frag)
-            this.buffer = this.blockquote = null
         })
     }
 

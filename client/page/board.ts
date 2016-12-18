@@ -33,7 +33,7 @@ export function formatHeader(name: string, title: string): string {
 	return `/${name}/ - ${escape(title)}`
 }
 
-// Render a board fresh board from parsed document fragment
+// Render a board fresh board page
 export function renderFresh(html: string) {
 	lastFetch = Math.floor(Date.now() / 1000)
 	threads.innerHTML = html
@@ -41,8 +41,7 @@ export function renderFresh(html: string) {
 	render()
 }
 
-// Apply client-side modifications to a board page's HTML. writeNow specifies,
-// if the write to the DOM fragment should not be delayed.
+// Apply client-side modifications to a board page's HTML
 export function render() {
 	// Set sort mode <select> to correspond with setting
 	let sortMode = localStorage.getItem("catalogSort")
