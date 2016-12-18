@@ -117,6 +117,16 @@
 		}
 	}
 
+	// Check event listener option support
+	if (DOMUpToDate) {
+		var s = "var a = document.createElement(\"a\");"
+			+ "var ctr = 0;"
+			+ "a.addEventListener(\"click\", () => ctr++, {once: true});"
+			+ "a.click(); a.click();"
+			+ "return ctr === 1;"
+		DOMUpToDate = check(s)
+	}
+
 	if (DOMUpToDate && !window.legacy) {
 		// Minimalistic DOM polyfill for modern browsers
 		polyfills.push('scripts/polyfill')

@@ -42,22 +42,6 @@ for (let method in nodeExtends) {
 	}
 }
 
-const ET = EventTarget.prototype
-ET._oldAddEventListener = ET.addEventListener
-
-// We assume this polyfill is loaded only in browsers, that already support
-// the 'passive' and 'capture' options
-ET.addEventListener = function (type, handler, options) {
-	if (options && options.once) {
-		const oldHandler = handler
-		handler = event => {
-			this.removeEventListener(type, handler)
-			oldHandler.call(this, event)
-		}
-	}
-	this._oldAddEventListener(type, handler, options)
-}
-
 function mutationMacro(...nodes) {
 	if (nodes.length === 1) {
 		return textNodeIfString(nodes[0])
