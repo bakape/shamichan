@@ -8,7 +8,7 @@ import renderThread, { setThreadTitle } from "./page/thread"
 import { extractConfigs } from "./page/common"
 import { exec, init } from './defer'
 import { loadModule } from "./util"
-import { checkBottom, scrollToAnchor } from "./scroll"
+import { checkBottom } from "./scroll"
 import { ThreadData } from "./posts/models"
 import { setTitle } from "./tab"
 import { Post } from "./posts/models"
@@ -28,7 +28,6 @@ async function start() {
 		renderBoard()
 	}
 
-	scrollToAnchor()
 	checkBottom()
 	connect()
 	exec()

@@ -115,6 +115,23 @@ export default class FormModel extends Post {
 			return
 		}
 
+		// Split multiline strings
+		let i = val.indexOf("\n")
+		if (i !== -1 && i !== val.length - 1) {
+			const quote = val[0] === ">"
+			while (i !== -1) {
+				const line = val.slice(0, i)
+				this.parseInput(line)
+				this.parseInput(line + "\n")
+				val = val.slice(i + 1)
+				if (quote) {
+					val = ">" + val
+				}
+				i = val.indexOf("\n")
+			}
+			this.view.replaceLine(val, true)
+		}
+
 		const lenDiff = val.length - old.length,
 			exceeding = this.bodyLength + lenDiff - 2000
 
@@ -208,18 +225,6 @@ export default class FormModel extends Post {
 		})
 		this.bodyLength += lenDiff
 		this.inputState.line = old.slice(0, start).join("") + end
-		this.reformatInput(this.inputState.line)
-	}
-
-	// Reformat the text, if the input contains newlines
-	private reformatInput(val: string) {
-		if (val.indexOf("\n") === -1) {
-			return
-		}
-		const lines = val.split("\n"),
-			lastLine = lines[lines.length - 1]
-		this.inputState.line = lastLine
-		this.view.injectLines(lines.slice(0, -1), lastLine)
 	}
 
 	// Close the form and revert to regular post
@@ -260,7 +265,7 @@ export default class FormModel extends Post {
 		}
 
 		s += `>>${id} `
-		this.view.replaceLine(this.inputState.line + s)
+		this.view.replaceLine(this.inputState.line + s, false)
 	}
 
 	// Request allocation of a draft post to the server
@@ -273,7 +278,6 @@ export default class FormModel extends Post {
 			this.body = body
 			this.bodyLength = body.length
 			this.inputState.line = body
-			this.reformatInput(body)
 		}
 
 		if (image) {

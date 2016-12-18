@@ -50,6 +50,8 @@ export default class FormView extends PostView {
         // Always make sure the input span always has at least 1 character, so
         // it does not float onto the image, if any.
         this.input.textContent = "\u200b"
+        this.input.addEventListener("paste", e =>
+            this.onPaste(e as ClipboardEvent))
         this.input.addEventListener("input", (event: Event) => {
             event.stopImmediatePropagation()
             this.onInput((event.target as Element).textContent)
@@ -165,6 +167,13 @@ export default class FormView extends PostView {
         this.model.parseInput(val.replace("\u200b", ""))
     }
 
+    // Strip external formating on pastes
+    private onPaste(e: ClipboardEvent) {
+        e.preventDefault()
+        const text = e.clipboardData.getData("text/plain")
+        document.execCommand("insertHTML", false, text)
+    }
+
     // Ignore any oninput events on input during supplied function call
     private lockInput(fn: () => void) {
         this.inputLock = true
@@ -188,10 +197,10 @@ export default class FormView extends PostView {
                 this.input.textContent = val))
     }
 
-
-    // Replace the current line and set the cursor to the input's end
-    public replaceLine(line: string) {
-        write(() => {
+    // Replace the current line and set the cursor to the input's end. `lock`
+    // toggles locking the onInput handler from firing.
+    public replaceLine(line: string, lock: boolean) {
+        const fn = () => {
             this.input.textContent = line || "\u200b"
             const range = document.createRange(),
                 sel = window.getSelection()
@@ -200,7 +209,10 @@ export default class FormView extends PostView {
             sel.removeAllRanges()
             sel.addRange(range)
             this.onInput()
-        })
+        }
+        const fnl = () =>
+            this.lockInput(fn)
+        write(lock ? fnl : fn)
     }
 
     // Start a new line in the input field and close the previous one
@@ -212,18 +224,6 @@ export default class FormView extends PostView {
             this.lockInput(() =>
                 this.input.textContent = "\u200b")
         })
-    }
-
-    // Inject lines before input and set input contents to the lastLine
-    public injectLines(lines: string[], lastLine: string) {
-        const frag = document.createDocumentFragment()
-        for (let line of lines) {
-            const el = makeFrag(parseTerminatedLine(line, this.model))
-            frag.append(el)
-        }
-        write(() =>
-            this.input.before(frag))
-        this.replaceLine(lastLine)
     }
 
     // Parse and replace the temporary like closed by input with a proper
