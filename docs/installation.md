@@ -18,7 +18,7 @@ apt-get install -y nodejs
 
 # Install Go
 wget -O- https://storage.googleapis.com/golang/go1.7.4.linux-amd64.tar.gz | tar xpz -C /usr/local
-echo 'export PATH=$PATH:/usr/local/go/bin' > /etc/profile
+echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 source /etc/profile
 
 # Install C dependencies
