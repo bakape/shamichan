@@ -35,7 +35,7 @@ make
 ./meguca -a :80
 ```
 
-##update
+##Update
 
 ```bash
 cd /meguca
