@@ -70,15 +70,8 @@ On Linux RethinkDB does not enable a configuration file by default. If you don't
 want to configure anything, just copy `/etc/rethinkdb/default.conf.sample` into
 `/etc/rethinkdb/instances.d/instance1.conf`.
 
-##Setup
-* See `./meguca help` for server operation
-* Login into the "admin" account via the infinity symbol in the top banner with
-the password "password"
-* Change the default password
-* Create a board from the administration panel
-* Configure server from the administration panel
-
 ##Building from source
+A reference list of commands can be found in `docs/installation.md`
 
 ###All Platforms
 * Install
@@ -122,6 +115,14 @@ the password "password"
     * zip
 * Navigate to the meguca root directory
 * Run `make`
+
+##Setup
+* See `./meguca help` for server operation
+* Login into the "admin" account via the infinity symbol in the top banner with
+the password "password"
+* Change the default password
+* Create a board from the administration panel
+* Configure server from the administration panel
 
 ##Development
 * See `/docs/` for more documentation
