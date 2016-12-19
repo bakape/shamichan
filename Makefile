@@ -52,8 +52,13 @@ server_deps: build_dirs
 		| xargs go get -v
 
 # Fetch updates of both meguca and dependancies
-update: build_dirs
-	go get -u -v github.com/bakape/meguca
+update_deps: build_dirs
+	go list -f '{{.Deps}}' . \
+		| tr "[" " " \
+		| tr "]" " " \
+		| xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' \
+		| grep -v 'github.com/bakape/meguca' \
+		| xargs go get -v -u
 	npm update
 
 # Creates the temporary directories for compiling
