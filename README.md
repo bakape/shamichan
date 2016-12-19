@@ -14,6 +14,7 @@ License: GNU AGPL
     - Dice roll, coin flip and eightball commands
     - Desktop notifications, post highlighting and "(You)" on quote
     - Post link hover previews, including cross-thread
+    - Inline post link expansion
     - Optional relative post timestamps
     - Image spoilering after closing a post
     - Non-temporal and recursive post linking
@@ -23,6 +24,8 @@ License: GNU AGPL
     - Option to display only the last 50 posts in a thread
     - Optional automatic deletion of unused threads and boards
     - Automatic HTTP(S) and magnet URL linkification
+    - Automatic quoting of selected text, when quoting a post
+    - Automatic quoting of multiline pastes, if line starts with `>`
 * Files and images
     - JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ
     supported

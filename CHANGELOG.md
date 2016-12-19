@@ -2,6 +2,27 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v3.1.0 - 2016-12-19
+* Change
+	- Improved page loading and JSON/HTML generation Speed
+	- Improved file thumbnailing speed
+	- Added "thumbExt" field to post JSON. Seed docs.
+	- Choose between JPEG and PNG thumbnails based on wether the image has
+	transparency
+* Fix
+	- Cross-thread post hover previews
+	- Paste handling in the post input form
+* Remove
+	- Lossy PNG thumbnail compression
+* Add
+	- Dependency for GraphicsMagick and pthreads
+	- PDF upload support
+	- User-set custom CSS option
+	- Highlight target post on link hover preview
+	- Automatic quoting of multiline pastes, if line starts with `>`
+	- Automatic quoting of selected text, when quoting a post
+	- Inline post link expansion
+
 ##v3.0.0 - 2016-12-12
 * BREAKING:
 	- Changed CLI flags to shorter one letter variants
