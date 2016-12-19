@@ -268,10 +268,6 @@
 			"Thread expiry time",
 			"Number of days without new posts before a thread is deleted"
 		],
-		"thumbs": [
-			"Thumbnails",
-			"Set thumbnail style:nSmall: 125x125, small file size;nSharp: 125x125, more detailed;nHide: hide all images;"
-		],
 		"title": [
 			"Board title",
 			"Short descriptive title of the board"

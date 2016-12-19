@@ -268,10 +268,6 @@
 			"Thread expiry time",
 			"Number of days without new posts before a thread is deleted"
 		],
-		"thumbs": [
-			"Küçükresimler",
-			"Küçük resim ayarı:\nKüçük: 125x125, küçük dosya boyutu;\nKeskin: 125x125, daha detaylı görüntü;\nGizli: tüm resimleri gizle;"
-		],
 		"title": [
 			"Board title",
 			"Short descriptive title of the board"

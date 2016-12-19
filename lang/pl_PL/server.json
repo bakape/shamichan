@@ -268,10 +268,6 @@
 			"Czas wygaśnięcia tematu",
 			"Liczba dni, po których temat bez odpowiedzi zostanie usunięty"
 		],
-		"thumbs": [
-			"Thumbnails",
-			"Set thumbnail style:\nSmall: 125x125, small file size;\nSharp: 125x125, more detailed;\nHide: hide all images;"
-		],
 		"title": [
 			"Nazwa działu",
 			"Krótka, opisowa nazwa działu"
