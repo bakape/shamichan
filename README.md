@@ -70,10 +70,6 @@ On Linux RethinkDB does not enable a configuration file by default. If you don't
 want to configure anything, just copy `/etc/rethinkdb/default.conf.sample` into
 `/etc/rethinkdb/instances.d/instance1.conf`.
 
-##Compiled Windows Binaries
-Compiled binary release archives for windows/x86_64 are downloadable from the
-[release](https://github.com/bakape/meguca/releases) page.
-
 ##Setup
 * See `./meguca help` for server operation
 * Login into the "admin" account via the infinity symbol in the top banner with

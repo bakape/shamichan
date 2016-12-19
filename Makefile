@@ -4,14 +4,6 @@ GULP=./node_modules/.bin/gulp
 # Version for tagging the releases
 VERSION=$(shell git describe --abbrev=0 --tags)
 
-# Path to and target for the MXE cross environment for cross-compiling to
-# win_amd64. Default value is the debian x86-static install path.
-MXE_ROOT=/usr/lib/mxe/usr
-MXE_TARGET=x86_64-w64-mingw32.static
-
-# Root of statically compiled libraries for native static compilation
-STATIC_ROOT=/usr/local
-
 # Differentiate between Unix and mingw builds
 ifeq ($(OS), Windows_NT)
 	BUILD_PATH="/.meguca_build/src/github.com/bakape"
@@ -21,15 +13,11 @@ ifeq ($(OS), Windows_NT)
 	export PATH:=$(PATH):/mingw64/bin/
 	BINARY=meguca.exe
 	ISWINDOWS=true
-	PACKAGE="meguca-$(VERSION)_windows_$(PROCESSOR_ARCHITECTURE).zip"
 else
 	BUILD_PATH="./.build/src/github.com/bakape"
 	export GOPATH=$(shell pwd)/.build
 	BINARY=meguca
 	ISWINDOWS=false
-	OS_LOWER=$(shell echo `uname -s` | tr A-Z a-z)
-	ARCH=$(shell uname -p)
-	PACKAGE="meguca-$(VERSION)_$(OS_LOWER)_$(ARCH).tar.xz"
 endif
 
 .PHONY: server client
@@ -53,12 +41,6 @@ server: server_deps
 ifeq ($(ISWINDOWS), true)
 	cp /mingw64/bin/*.dll ./
 endif
-
-# Build server, but link all cgo deps statically
-server_static:
-	PKG_CONFIG_LIBDIR=$(STATIC_ROOT)/lib/pkgconfig \
-	PKG_CONFIG_PATH=$(STATIC_ROOT)/lib/pkgconfig \
-	go build -v -a -o $(BINARY) --ldflags '-extldflags "-static"'
 
 # Fecth all server dependancies. Dependacies are not updated automatically.
 server_deps: build_dirs
@@ -101,44 +83,3 @@ dist_clean: clean
 # Run all server tests
 test: server_deps
 	go test ./...
-
-# Generate binary packages for distribution
-package: server_static client package_copy
-	rm -rf .package/meguca.exe
-	cp $(BINARY) .package/
-ifeq ($(ISWINDOWS), true)
-	cp *.dll .package/
-	cd .package; zip -rq ../$(PACKAGE) .
-else
-	cd .package; tar cfpJ ../$(PACKAGE) *
-endif
-
-# Copy generated package contents for archiving
-package_copy:
-	rm -rf .package
-	mkdir -p .package/images/src .package/images/thumb
-	cp -r docs scripts www CHANGELOG.md README.md LICENSE .package/
-
-# Cross-compile from Unix into a Windows_amd64 static binary
-# Needs Go checkout dfbbe06a205e7048a8541c4c97b250c24c40db96 or later. At the
-# moment of writing this change is not released yet. Should probably make it
-# into Go 1.7.1.
-# Depends on:
-# 	mxe-x86-64-w64-mingw32.static-gcc
-# 	mxe-x86-64-w64-mingw32.static-libidn
-# 	mxe-x86-64-w64-mingw32.static-ffmpeg
-#   mxe-x86-64-w64-mingw32.static-graphicsmagick
-#   mxe-x86-64-w64-mingw32.static-pthreads
-cross_compile_win_amd64:
-	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
-	CC=$(MXE_ROOT)/bin/$(MXE_TARGET)-gcc \
-	PKG_CONFIG=$(MXE_ROOT)/bin/$(MXE_TARGET)-pkg-config \
-	PKG_CONFIG_LIBDIR=$(MXE_ROOT)/$(MXE_TARGET)/lib/pkgconfig \
-	PKG_CONFIG_PATH=$(MXE_ROOT)/$(MXE_TARGET)/lib/pkgconfig \
-	go build -v -a -o meguca.exe --ldflags '-extldflags "-static"'
-
-# Zip the cross-compiled contents into an archive
-cross_package_win_amd64: cross_compile_win_amd64 client package_copy
-	rm -rf .package/meguca
-	cp meguca.exe .package/
-	cd .package; zip -rq ../meguca-$(VERSION)_windows_x86_64.zip .
