@@ -18,11 +18,14 @@ article {
 	& > *:not(header) {
 		contain: content;
 	}
-	small {
+	.backlinks {
 		padding-top: 0.5em;
 		padding-bottom: 0.2em;
 		word-break: break-word;
 		overflow-wrap: break-word;
+	}
+	&.inline-container blockquote {
+		margin-right: 0;
 	}
 	blockquote {
 		word-break: break-word;
@@ -235,7 +238,8 @@ header {
 }
 
 .thread-links {
-	padding-bottom: 0.5em;
+	padding: 0.3em;
+	font-size: smaller;
 	&:empty {
 		display: none;
 	}

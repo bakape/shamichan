@@ -15,10 +15,12 @@ function handleClick(event: KeyboardEvent) {
 		return
 	}
 
-	const href =
-		((event.target as Element)
-			.closest("a.history") as HTMLAnchorElement)
-			.href
+	let target = event.target as Element
+	if (target.classList.contains("hash-link")) {
+		target = target.closest("em").firstElementChild
+	}
+
+	const href = (target.closest("a.history") as HTMLAnchorElement).href
 	navigate(href, event, true).catch(alertError)
 }
 
@@ -85,7 +87,7 @@ function alertError(err: Error) {
 
 // Bind event listener
 on(document, "click", handleClick, {
-	selector: "a.history, a.history img",
+	selector: "a.history:not(.post-link), a.history img, .hash-link",
 })
 
 // For back and forward history events

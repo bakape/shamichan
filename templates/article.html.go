@@ -340,44 +340,48 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 	//line article.html:138
 	if p.Backlinks != nil {
 		//line article.html:138
-		qw422016.N().S(`<small class="spaced">`)
+		qw422016.N().S(`<span class="backlinks spaced">`)
 		//line article.html:140
 		for id, link := range p.Backlinks {
-			//line article.html:141
+			//line article.html:140
+			qw422016.N().S(`<em>`)
+			//line article.html:142
 			streampostLink(qw422016, id, link.OP, link.Board, link.OP != op)
 			//line article.html:142
+			qw422016.N().S(`</em>`)
+			//line article.html:144
 		}
-		//line article.html:142
-		qw422016.N().S(`</small>`)
 		//line article.html:144
+		qw422016.N().S(`</span>`)
+		//line article.html:146
 	}
-	//line article.html:144
+	//line article.html:146
 	qw422016.N().S(`</article>`)
-//line article.html:146
+//line article.html:148
 }
 
-//line article.html:146
+//line article.html:148
 func writerenderArticle(qq422016 qtio422016.Writer, p common.Post, op uint64, omit, imageOmit int, subject, root string) {
-	//line article.html:146
+	//line article.html:148
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line article.html:146
+	//line article.html:148
 	streamrenderArticle(qw422016, p, op, omit, imageOmit, subject, root)
-	//line article.html:146
+	//line article.html:148
 	qt422016.ReleaseWriter(qw422016)
-//line article.html:146
+//line article.html:148
 }
 
-//line article.html:146
+//line article.html:148
 func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string) string {
-	//line article.html:146
+	//line article.html:148
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line article.html:146
+	//line article.html:148
 	writerenderArticle(qb422016, p, op, omit, imageOmit, subject, root)
-	//line article.html:146
+	//line article.html:148
 	qs422016 := string(qb422016.B)
-	//line article.html:146
+	//line article.html:148
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line article.html:146
+	//line article.html:148
 	return qs422016
-//line article.html:146
+//line article.html:148
 }

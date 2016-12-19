@@ -6,7 +6,7 @@ import { PostLinks } from '../models'
 
 // Render a link to other posts
 export function renderPostLink(num: number, board: string, op: number): string {
-    let html = `<a class="history" data-id="${num}" href="`
+    let html = `<a class="history post-link" data-id="${num}" href="`
     const cross = op !== page.thread
 
     if (cross) {
@@ -23,7 +23,7 @@ export function renderPostLink(num: number, board: string, op: number): string {
         html += ' ' + lang.posts["you"]
     }
 
-    html += "</a>"
+    html += `</a><a class="hash-link"> #</a>`
 
     return html
 }
@@ -51,17 +51,17 @@ export function renderBacklinks(post: DocumentFragment, links: PostLinks) {
         return
     }
 
-    let el = post.querySelector("small")
+    let el = post.querySelector(".backlinks")
     if (!el) {
-        el = document.createElement("small")
-        el.classList.add("spaced")
+        el = document.createElement("span")
+        el.classList.add("spaced", "backlinks")
         post.append(el)
     }
 
     let html = ''
     for (let id in links) {
         const {board, op} = links[id]
-        html += renderPostLink(parseInt(id), board, op)
+        html += "<em>" + renderPostLink(parseInt(id), board, op) + "</em>"
     }
 
     el.innerHTML = html

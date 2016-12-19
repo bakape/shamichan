@@ -1,6 +1,7 @@
 // Helper functions for communicating with the server's JSON API
 
-import { ThreadData } from "./posts/models"
+import { ThreadData, Post, PostData } from "./posts/models"
+import PostView from "./posts/view"
 
 // Single entry of the array, fetched through `/json/boardList`
 export type BoardEntry = {
@@ -81,4 +82,16 @@ export async function fetchThreadJSON(
 		url += `?last=${lastN}`
 	}
 	return await fetchJSON<ThreadData>(url)
+}
+
+// Try to fetch from server, if this post is not currently displayed due to
+// lastN or in a different thread. Returns the rendered PostView with a model
+// attached or null.
+export async function renderFetchedPost(id: number): Promise<PostView | null> {
+	const [data, err] = await fetchJSON<PostData>(`/json/post/${id}`)
+	if (!err) {
+		const post = new Post(data)
+		return new PostView(post, null)
+	}
+	return null
 }

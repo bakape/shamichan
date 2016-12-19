@@ -207,7 +207,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "valid link",
 			in:   ">>21",
-			out:  `<span><em><a class="history" data-id="21" href="#p21">>>21</a></em><br></span>`,
+			out:  `<span><em><a class="history post-link" data-id="21" href="#p21">>>21</a><a class="hash-link"> #</a></em><br></span>`,
 			op:   20,
 			links: common.LinkMap{
 				21: {
@@ -219,7 +219,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "valid link with extra quotes",
 			in:   ">>>>21",
-			out:  `<span><em>>><a class="history" data-id="21" href="#p21">>>21</a></em><br></span>`,
+			out:  `<span><em>>><a class="history post-link" data-id="21" href="#p21">>>21</a><a class="hash-link"> #</a></em><br></span>`,
 			op:   20,
 			links: common.LinkMap{
 				21: {
@@ -231,7 +231,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "valid cross-thread link",
 			in:   ">>21",
-			out:  `<span><em><a class="history" data-id="21" href="/a/22#p21">>>>/a/21</a></em><br></span>`,
+			out:  `<span><em><a class="history post-link" data-id="21" href="/a/22#p21">>>>/a/21</a><a class="hash-link"> #</a></em><br></span>`,
 			op:   20,
 			links: common.LinkMap{
 				21: {

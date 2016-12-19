@@ -89,7 +89,7 @@ func streampostLink(qw422016 *qt422016.Writer, id, op uint64, board string, cros
 	idStr := strconv.FormatUint(id, 10)
 
 	//line util.html:17
-	qw422016.N().S(`<a class="history" data-id="`)
+	qw422016.N().S(`<a class="history post-link" data-id="`)
 	//line util.html:18
 	qw422016.N().S(idStr)
 	//line util.html:18
@@ -125,32 +125,32 @@ func streampostLink(qw422016 *qt422016.Writer, id, op uint64, board string, cros
 	//line util.html:28
 	qw422016.N().S(idStr)
 	//line util.html:28
-	qw422016.N().S(`</a>`)
-//line util.html:30
+	qw422016.N().S(`</a><a class="hash-link"> #</a>`)
+//line util.html:31
 }
 
-//line util.html:30
+//line util.html:31
 func writepostLink(qq422016 qtio422016.Writer, id, op uint64, board string, cross bool) {
-	//line util.html:30
+	//line util.html:31
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line util.html:30
+	//line util.html:31
 	streampostLink(qw422016, id, op, board, cross)
-	//line util.html:30
+	//line util.html:31
 	qt422016.ReleaseWriter(qw422016)
-//line util.html:30
+//line util.html:31
 }
 
-//line util.html:30
+//line util.html:31
 func postLink(id, op uint64, board string, cross bool) string {
-	//line util.html:30
+	//line util.html:31
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line util.html:30
+	//line util.html:31
 	writepostLink(qb422016, id, op, board, cross)
-	//line util.html:30
+	//line util.html:31
 	qs422016 := string(qb422016.B)
-	//line util.html:30
+	//line util.html:31
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line util.html:30
+	//line util.html:31
 	return qs422016
-//line util.html:30
+//line util.html:31
 }

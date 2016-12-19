@@ -44,7 +44,7 @@ async function start() {
 	const modules = [
 		"mod/login", "etc", "hover", "posts/posting/drop",
 		"posts/posting/threadCreation", "options/loop", "keyboard",
-		"posts/menu", "page/boardNavigation",
+		"posts/menu", "page/boardNavigation", "posts/inlineExpand",
 	]
 	for (let m of modules) {
 		loadModule(m)

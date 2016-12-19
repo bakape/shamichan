@@ -5,9 +5,8 @@ import { posts, getModel } from "./state"
 import { hook } from "./hooks"
 import options from "./options"
 import { setAttrs, getClosestID } from "./util"
-import { fetchJSON } from "./fetch"
-import { PostData, Post } from "./posts/models"
-import PostView from "./posts/view"
+import { renderFetchedPost } from "./fetch"
+import { Post } from "./posts/models"
 import ImageHandler from "./posts/images"
 
 interface MouseMove extends ChangeEmitter {
@@ -72,6 +71,11 @@ class PostPreview extends ImageHandler {
 				continue
 			}
 			el.classList.add("referenced")
+		}
+
+		// Remove any inline expanded posts
+		for (let el of this.el.querySelectorAll("article")) {
+			el.remove()
 		}
 
 		// Contract any expanded open thumbnails
@@ -214,8 +218,14 @@ function renderImagePreview(event: MouseEvent) {
 }
 
 async function renderPostPreview(event: MouseEvent) {
-	const target = event.target as HTMLAnchorElement
-	if (!target.matches || !target.matches("a.history")) {
+	let target = event.target as HTMLElement
+	if (!target.matches || !target.matches("a.history, .hash-link")) {
+		return
+	}
+	if (target.classList.contains("hash-link")) {
+		target = target.previousElementSibling as HTMLElement
+	}
+	if (target.matches("em.expanded > a")) {
 		return
 	}
 	const id = parseInt(target.getAttribute("data-id"))
@@ -227,10 +237,9 @@ async function renderPostPreview(event: MouseEvent) {
 	if (!post) {
 		// Try to fetch from server, if this post is not currently displayed
 		// due to lastN or in a different thread
-		const [data, err] = await fetchJSON<PostData>(`/json/post/${id}`)
-		if (!err) {
-			post = new Post(data)
-			new PostView(post, null)
+		const fetched = await renderFetchedPost(id)
+		if (fetched) {
+			post = fetched.model
 		}
 	}
 	postPreview = new PostPreview(post, target)

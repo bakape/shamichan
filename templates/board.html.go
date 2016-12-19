@@ -257,7 +257,7 @@ func StreamCatalogThreads(qw422016 *qt422016.Writer, b common.Board) {
 			//line board.html:110
 		}
 		//line board.html:110
-		qw422016.N().S(`<small class="spaced thread-links"><b class="board">/`)
+		qw422016.N().S(`<span class="spaced thread-links"><b class="board">/`)
 		//line board.html:113
 		qw422016.N().S(t.Board)
 		//line board.html:113
@@ -293,7 +293,7 @@ func StreamCatalogThreads(qw422016 *qt422016.Writer, b common.Board) {
 		//line board.html:126
 		qw422016.N().S(idStr)
 		//line board.html:126
-		qw422016.N().S(`?last=100">Last 100</a></span></small><br><h3>「`)
+		qw422016.N().S(`?last=100">Last 100</a></span></span><br><h3>「`)
 		//line board.html:133
 		qw422016.E().S(t.Subject)
 		//line board.html:133

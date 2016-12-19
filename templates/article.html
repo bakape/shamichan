@@ -136,11 +136,13 @@
 			</span>
 		{% endif %}
 		{% if p.Backlinks != nil %}
-			<small class="spaced">
+			<span class="backlinks spaced">
 				{% for id, link := range p.Backlinks %}
-					{%= postLink(id, link.OP, link.Board, link.OP != op) %}
+					<em>
+						{%= postLink(id, link.OP, link.Board, link.OP != op) %}
+					</em>
 				{% endfor %}
-			</small>
+			</span>
 		{% endif %}
 	</article>
 {% endstripspace %}{% endfunc %}
