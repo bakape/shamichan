@@ -70,7 +70,7 @@ server_deps: build_dirs
 		| xargs go get -v
 
 # Fetch updates of both meguca and dependancies
-update:
+update: build_dirs
 	go get -u -v github.com/bakape/meguca
 	npm update
 
