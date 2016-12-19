@@ -21,27 +21,34 @@ async function onClick(e: MouseEvent) {
 	}
 
 	const model = posts.get(id)
+	let found = false
 	if (model) {
-		// Can not create recursive DOM trees
+		// Can not create cyclic DOM trees
 		if (model.view.el.contains(parent)) {
 			return
 		}
 
-		return write(() => {
+		found = true
+		write(() => {
 			parent.classList.add("expanded")
 			parent.append(model.view.el)
 		})
+	} else {
+		// Fetch external post from server
+		const view = await renderFetchedPost(id)
+		if (view) {
+			found = true
+			write(() => {
+				parent.classList.add("expanded")
+				parent.append(view.el)
+			})
+		}
 	}
 
-	// Fetch external post from server
-	const view = await renderFetchedPost(id)
-	if (!view) {
-		return
+	if (found) {
+		write(() =>
+			toggleLinkReferences(parent, id, true))
 	}
-	write(() => {
-		parent.classList.add("expanded")
-		parent.append(view.el)
-	})
 }
 
 // contract and already expanded post and return it to its former position
@@ -71,8 +78,10 @@ function contractPost(id: number, parent: HTMLElement) {
 			break
 		}
 		if (previous.view.el.matches("#thread-container > article")) {
-			write(() =>
-				previous.view.el.before(model.view.el))
+			write(() => {
+				toggleLinkReferences(parent, id, false)
+				previous.view.el.before(model.view.el)
+			})
 			break
 		}
 		i--
@@ -82,3 +91,15 @@ function contractPost(id: number, parent: HTMLElement) {
 on(threads, "click", onClick, {
 	selector: ".post-link",
 })
+
+// Highlight or unhighlight links referencing the parent post in the child post
+function toggleLinkReferences(parent: Element, childID: number, on: boolean) {
+	const p = parent.closest("article"),
+		ch = document.getElementById(`p${childID}`)
+	for (let el of p.querySelectorAll(".post-link")) {
+		// Check if not from a post inlined in the child
+		if (el.closest("article") === ch) {
+			el.classList.toggle("referenced", on)
+		}
+	}
+}
