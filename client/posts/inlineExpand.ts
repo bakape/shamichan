@@ -46,12 +46,16 @@ async function onClick(e: MouseEvent) {
 
 // contract and already expanded post and return it to its former position
 function contractPost(id: number, parent: HTMLElement) {
+	write(() =>
+		parent.classList.remove("expanded"))
+
 	const model = posts.get(id)
 	// Fetched from server and not originally part of the thread
 	if (!model) {
 		return write(() =>
 			document.getElementById(`p${id}`).remove())
 	}
+
 
 	// Find the ID of the post preceding this one. Make sure the target post is
 	// not expanded inline itself.
