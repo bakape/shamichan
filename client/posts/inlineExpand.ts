@@ -95,10 +95,11 @@ on(threads, "click", onClick, {
 // Highlight or unhighlight links referencing the parent post in the child post
 function toggleLinkReferences(parent: Element, childID: number, on: boolean) {
 	const p = parent.closest("article"),
-		ch = document.getElementById(`p${childID}`)
+		ch = document.getElementById(`p${childID}`),
+		pID = p.closest("article").id.slice(1)
 	for (let el of p.querySelectorAll(".post-link")) {
 		// Check if not from a post inlined in the child
-		if (el.closest("article") === ch) {
+		if (el.closest("article") === ch && el.getAttribute("data-id") == pID) {
 			el.classList.toggle("referenced", on)
 		}
 	}
