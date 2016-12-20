@@ -196,6 +196,10 @@
 			"Password",
 			""
 		],
+		"postInlineExpand": [
+			"Inline Post Link Expansion",
+			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
+		],
 		"postPassword": [
 			"Hasło",
 			"Hasło używane do usuwania postów i obrazków, po ich utworzeniu, a także otwieraniu postów po rozłączeniu"

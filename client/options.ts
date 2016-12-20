@@ -18,6 +18,7 @@ interface Options extends ChangeEmitter {
 	spoilers: boolean
 	notification: boolean
 	anonymise: boolean
+	postInlineExpand: boolean
 	relativeTime: boolean
 	nowPlaying: boolean
 	illyaDance: boolean

@@ -94,6 +94,14 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	// Anonymise all poster names
 	anonymise: {},
+	// Expand post links inline
+	postInlineExpand: {
+		default: true,
+		exec: toggleHeadStyle(
+			"postInlineExpand",
+			".hash-link{ display: inline; }"
+		),
+	},
 	// Relative post timestamps
 	relativeTime: {},
 	// R/a/dio now playing banner

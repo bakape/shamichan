@@ -2,11 +2,13 @@ import { posts } from "../state"
 import { renderFetchedPost } from "../fetch"
 import { on } from "../util"
 import { threads, write } from "../render"
+import options from "../options"
 
 // Expand or contract linked posts inline
 async function onClick(e: MouseEvent) {
-	// Don't trigger, when user is trying to open in a new tab
-	if (e.which !== 1 || e.ctrlKey) {
+	// Don't trigger, when user is trying to open in a new tab or inline
+	// expansion is disabled
+	if (e.which !== 1 || e.ctrlKey || !options.postInlineExpand) {
 		return
 	}
 

@@ -7,6 +7,7 @@ import { synchronise } from './connection'
 import { postSM, postEvent } from "./posts/posting/main"
 import { scrollToAnchor } from "./scroll"
 import { connSM, connState } from "./connection"
+import options from "./options"
 
 // Handle a click on any .history anchor
 function handleClick(event: KeyboardEvent) {
@@ -16,6 +17,11 @@ function handleClick(event: KeyboardEvent) {
 	}
 
 	let target = event.target as Element
+
+	if (target.classList.contains("post-link") && options.postInlineExpand) {
+		return
+	}
+
 	if (target.classList.contains("hash-link")) {
 		target = target.closest("em").firstElementChild
 		location.hash = "#p" + target.getAttribute("data-id")
@@ -88,7 +94,7 @@ function alertError(err: Error) {
 
 // Bind event listener
 on(document, "click", handleClick, {
-	selector: "a.history:not(.post-link), a.history img, .hash-link",
+	selector: "a.history, a.history img, .hash-link",
 })
 
 // For back and forward history events
