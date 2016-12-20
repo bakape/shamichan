@@ -1,6 +1,6 @@
 // Desktop notifications on reply and such
 
-import { storeSeenReply } from "./state"
+import { storeSeenReply, boardConfig } from "./state"
 import options from "./options"
 import lang from "./lang"
 import { thumbPath } from "./posts/render/image"
@@ -31,7 +31,11 @@ export default function notifyAboutReply(post: Post) {
 	if (!options.hideThumbs && !options.workModeToggle) {
 		if (post.image) {
 			const {SHA1, fileType, thumbType} = post.image
-			icon = thumbPath(SHA1, fileType, thumbType)
+			if (post.image.spoiler) {
+				icon = '/assets/spoil/' + boardConfig.spoiler
+			} else {
+				icon = thumbPath(SHA1, fileType, thumbType)
+			}
 		} else {
 			icon = defaultIcon
 		}

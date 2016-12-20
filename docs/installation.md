@@ -1,5 +1,5 @@
 List of installation and update commands to set up meguca on Debian jessie.
-Use as a reference. All commands assume to be run as by the root user.
+Use as a reference. All commands assume to be run by the root user.
 
 ##Install
 
