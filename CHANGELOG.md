@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v3.2.1 - 2016-12-20
+* Fix
+	- Only highlight links to the actual post in inline posts
+
 ##v3.2.0 - 2016-12-20
 * Fix
 	- Inline post border visibility on all themes
