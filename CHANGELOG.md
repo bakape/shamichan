@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v3.2.0 - 2016-12-20
+* Fix
+	- Inline post border visibility on all themes
+* Add
+	- Reference installation commands
+	- Highlight reverse reference links in inlined posts
+
 ##v3.1.0 - 2016-12-19
 * Change
 	- Improved page loading and JSON/HTML generation Speed
