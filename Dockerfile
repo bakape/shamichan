@@ -9,4 +9,4 @@ ENTRYPOINT service rethinkdb start && make test
 
 RUN apt-get update && apt-get dist-upgrade -y
 COPY . .
-RUN make update_deps all
+RUN make all

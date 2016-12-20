@@ -1,3 +1,4 @@
 services: docker
-before_install: docker build -t bakape/meguca .
-script: docker run -t bakape/meguca
+script:
+  - docker build -t bakape/meguca .
+  - docker run -t bakape/meguca
