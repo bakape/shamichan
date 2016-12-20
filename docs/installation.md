@@ -1,5 +1,5 @@
 List of installation and update commands to set up meguca on Debian jessie.
-Use as a reference.
+Use as a reference. All commands assume to be run as by the root user.
 
 ##Install
 
@@ -10,7 +10,7 @@ wget -qO- https://download.rethinkdb.com/apt/pubkey.gpg | apt-key add -
 apt-get update
 apt-get install rethinkdb
 cp /etc/rethinkdb/default.conf.sample /etc/rethinkdb/instances.d/instance1.conf
-service rethinkdb start
+/etc/init.d/rethinkdb start
 
 # Install Node.js
 wget -qO- https://deb.nodesource.com/setup_7.x | bash -
