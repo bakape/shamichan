@@ -18,14 +18,23 @@ article, aside {
 }
 
 article {
+	article {
+		border: @border;
+	}
 	&.highlight:not(.editing), &:target {
 		background-color: #ffb8d5;
 		border-color: #ef93c5;
+		article {
+			border: solid 1px #ef93c5;
+		}
 	}
 	&.editing {
 		background: #b7bbb6 url('chevrons.png');
 		border-color: gray;
 		background-attachment: fixed;
+		article {
+			border: solid 1px gray;
+		}
 	}
 }
 

@@ -40,13 +40,22 @@ article, aside {
 }
 
 article {
+    article {
+        border: @border;
+    }
     &.highlight:not(.editing), &:target {
         background-color: rgba(44, 44, 51, 0.88);
         border-color: #21212c;
+        article {
+			border: solid 1px #21212c;
+		}
     }
     &.editing {
         background-color: rgba(44, 57, 71, 0.88);
         border-color: #2c2121;
+        article {
+			border: solid 1px #2c2121;
+		}
     }
 }
 

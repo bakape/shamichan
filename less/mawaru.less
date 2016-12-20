@@ -18,13 +18,22 @@ article, aside, .modal, .side-panel {
 }
 
 article {
+	article {
+		border: @border;
+	}
 	&.highlight:not(.editing), &:target {
 		background-color: #333;
 		border-color: #222;
+		article {
+			border: solid 1px #222;
+		}
 	}
 	&.editing {
 		background-color: #311;
 		border-color: #200;
+		article {
+			border: solid 1px #200;
+		}
 	}
 }
 
