@@ -7,6 +7,7 @@ import { renderTime } from "../posts/render/posts"
 import { fetchBoard } from "../fetch"
 import { setTitle } from "../tab"
 import { extractConfigs } from "./common"
+import { setPostCount } from "./thread"
 
 type SortFunction = (a: HTMLElement, b: HTMLElement) => number
 
@@ -53,6 +54,8 @@ export function render() {
 	if (!sortMode) {
 		sortMode = "lastReply"
 	}
+
+	setPostCount(0, 0)
 
 	// Apply board title to tab
 	setTitle(threads.querySelector("#page-title").textContent)

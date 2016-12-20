@@ -9,6 +9,7 @@ import { threadContainer } from "./page/thread"
 import { write } from "./render"
 import { postAdded } from "./tab"
 import { deferInit } from "./defer"
+import { incrementPostCount } from "./page/thread"
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -60,6 +61,7 @@ export function insertPost(data: PostData) {
 			if (!existing.isAllocated) {
 				existing.onAllocation(data)
 			}
+			incrementPostCount(true, "image" in data)
 		} else {
 			existing.extend(data)
 		}
@@ -84,6 +86,7 @@ export function insertPost(data: PostData) {
 	if (model.links) {
 		model.checkRepliedToMe(model.links)
 	}
+	incrementPostCount(true, "image" in data)
 }
 
 deferInit(() => {
@@ -100,6 +103,9 @@ deferInit(() => {
 	handlers[message.insertImage] = (msg: ImageMessage) =>
 		handle(msg.id, m => {
 			delete msg.id
+			if (!("image" in m)) {
+				incrementPostCount(false, true)
+			}
 			m.insertImage(msg)
 		})
 

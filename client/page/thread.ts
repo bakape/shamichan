@@ -1,7 +1,7 @@
 import { PostData, ThreadData, Post, fileTypes } from '../posts/models'
 import PostView from '../posts/view'
 import { posts as postCollection, hidden, mine, seenReplies } from '../state'
-import { threads } from '../render'
+import { threads, write } from '../render'
 import options from "../options"
 import lang from "../lang"
 import { updateSyncTimestamp } from "../connection"
@@ -12,6 +12,10 @@ import { extractConfigs } from "./common"
 
 // Container for all rendered posts
 export let threadContainer: HTMLElement
+
+const counters = document.getElementById("thread-post-counters")
+let postCtr = 0,
+    imgCtr = 0
 
 // Render the HTML of a thread page
 export default function (html: string) {
@@ -31,6 +35,8 @@ export default function (html: string) {
     ) as ThreadData
     const {posts} = data
     delete data.posts
+
+    setPostCount(data.postCtr, data.imageCtr)
 
     extractPost(data)
     postCollection.lowestID = posts.length ? posts[0].id : data.id
@@ -145,4 +151,33 @@ function localizeOmitted() {
 
     el.firstChild.replaceWith(text)
     el.querySelector("a.history").textContent = lang.posts["seeAll"]
+}
+
+// Increment thread post counters and rerender the indicator in the banner
+export function incrementPostCount(post: boolean, hasImage: boolean) {
+    if (post) {
+        postCtr++
+    }
+    if (hasImage) {
+        imgCtr++
+    }
+    renderPostCounter()
+}
+
+// Externally set thread image post count
+export function setPostCount(posts: number, images: number) {
+    postCtr = posts
+    imgCtr = images
+    renderPostCounter()
+}
+
+function renderPostCounter() {
+    let text: string
+    if (!postCtr && !imgCtr) {
+        text = ""
+    } else {
+        text = `${postCtr} / ${imgCtr}`
+    }
+    write(() =>
+        counters.textContent = text)
 }

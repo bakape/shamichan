@@ -1,4 +1,4 @@
-//go:generate qtc --ext html
+//go:generate qtc
 
 // Package templates generates and stores HTML templates
 package templates

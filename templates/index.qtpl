@@ -179,6 +179,7 @@
 						<path d="M0 0v1l4 2 4-2v-1h-8zm0 2v4h8v-4l-4 2-4-2z" transform="translate(0 1)" />
 					</svg>
 				</a>
+				<b id="thread-post-counters" class="act banner-float" title="{%s= ln.Common.UI["postsImages"] %}"></b>
 				{% comment %}
 					Websocket connection status indicator
 				{% endcomment %}
