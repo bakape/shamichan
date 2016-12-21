@@ -5,6 +5,7 @@ import { accountPanel, loginID, sessionToken, reset } from "./login"
 import { write } from "../render"
 import { postJSON } from "../fetch"
 import { makeFrag } from "../util"
+import View from "../view"
 
 interface Removable {
 	remove(): void
@@ -17,7 +18,6 @@ export function newRequest(): { [key: string]: any } {
 		session: sessionToken,
 	}
 }
-
 
 // Set a password match validator function for 2 input elements, that are
 // children of the passed element.
@@ -37,9 +37,9 @@ function findInputEl(parent: Element, name: string): HTMLInputElement {
 }
 
 // Generic input form that is embedded into AccountPanel
-export default class AccountFormView extends FormView {
-	constructor(attrs: ViewAttrs, handler: () => void) {
-		super(attrs, handler)
+export abstract class AccountFormView extends FormView {
+	constructor(attrs: ViewAttrs) {
+		super(attrs)
 	}
 
 	// Render a form field and embed the input fields inside it. Then append it
@@ -140,4 +140,58 @@ export function extractForm(form: HTMLElement): { [key: string]: any } {
 	}
 
 	return vals
+}
+
+// Render the <select> for picking the owned board you want to manipulate
+export class OwnedBoardSelection extends View<null> {
+	private parent: SelectedBoardForm
+
+	constructor(parent: SelectedBoardForm) {
+		super({ tag: "form" })
+		this.parent = parent
+		this.on("submit", e =>
+			this.onSubmit(e))
+		this.render()
+	}
+
+	private async render() {
+		const res = await fetch(`/forms/ownedBoards/${loginID}`)
+		switch (res.status) {
+			case 200:
+				this.el.append(makeFrag(await res.text()))
+				write(() =>
+					this.parent.el.append(this.el))
+				break
+			case 403:
+				handle403(this.parent)
+				break
+			default:
+				throw await res.text()
+		}
+	}
+
+	private onSubmit(e: Event) {
+		e.preventDefault()
+		e.stopPropagation()
+		const board = ((e.target as Element)
+			.querySelector("select") as HTMLInputElement)
+			.value
+		this.parent.renderNext(board)
+		this.remove()
+	}
+}
+
+// View that performs an action on a selected board
+export abstract class SelectedBoardForm extends AccountFormView {
+	protected board: string
+	protected boardSelector: OwnedBoardSelection
+
+	public abstract renderNext(board: string): void
+
+	constructor(attrs: ViewAttrs) {
+		attrs.tag = "form"
+		super(attrs)
+		this.boardSelector = new OwnedBoardSelection(this)
+		super.render()
+	}
 }

@@ -203,3 +203,8 @@ func serverConfigurationForm(w http.ResponseWriter, r *http.Request) {
 func changePasswordForm(w http.ResponseWriter, r *http.Request) {
 	staticTemplate(w, r, templates.ChangePassword)
 }
+
+// Render a form with nothing but captcha and confirmation buttons
+func renderCaptcha(w http.ResponseWriter, r *http.Request) {
+	staticTemplate(w, r, templates.CaptchaConfirmation)
+}

@@ -1,15 +1,14 @@
-import AccountFormView, { newRequest } from './common'
+import { AccountFormView, newRequest } from './common'
 import { inputValue } from '../util'
 
 // Panel view for creating boards
 export default class BoardCreationPanel extends AccountFormView {
 	constructor() {
-		super({ tag: "form" }, () =>
-			this.onSubmit())
+		super({ tag: "form" })
 		this.renderPublicForm("/forms/createBoard")
 	}
 
-	private async onSubmit() {
+	protected send() {
 		const req = newRequest()
 		req["name"] = inputValue(this.el, 'boardName')
 		req["title"] = inputValue(this.el, 'boardTitle')

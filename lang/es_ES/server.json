@@ -319,6 +319,7 @@
 		"configureServer": "Configure server",
 		"createBoard": "Create board",
 		"done": "Import successfull. The page will now reload.",
+		"deleteBoard": "Delete board",
 		"enableJS": "Enable JavaScript for more functionality",
 		"feedback": "Feedback",
 		"focus": "Centrar",

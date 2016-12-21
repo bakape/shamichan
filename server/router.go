@@ -71,6 +71,7 @@ func createRouter() http.Handler {
 	forms.GET("/ownedBoards/:userID", ownedBoardSelection)
 	forms.GET("/createBoard", wrapHandler(boardCreationForm))
 	forms.GET("/changePassword", wrapHandler(changePasswordForm))
+	forms.GET("/captcha", wrapHandler(renderCaptcha))
 	forms.POST("/configureBoard", wrapHandler(boardConfigurationForm))
 	forms.POST("/configureServer", wrapHandler(serverConfigurationForm))
 
@@ -101,6 +102,7 @@ func createRouter() http.Handler {
 	admin.POST("/config", wrapHandler(servePrivateServerConfigs))
 	admin.POST("/configureServer", wrapHandler(configureServer))
 	admin.POST("/createBoard", wrapHandler(createBoard))
+	admin.POST("/deleteBoard", wrapHandler(deleteBoard))
 
 	// Assets
 	r.GET("/assets/*path", serveAssets)

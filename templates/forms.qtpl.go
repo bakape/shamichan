@@ -207,296 +207,331 @@ func BoardNavigation(lang map[string]string) string {
 func StreamCreateBoard(qw422016 *qt422016.Writer, ln lang.Pack) {
 	//line forms.qtpl:52
 	streamtable(qw422016, specs["createBoard"], ln)
-	//line forms.qtpl:52
-	qw422016.N().S(`<input type="submit" value="`)
 	//line forms.qtpl:53
-	qw422016.N().S(ln.UI["submit"])
-	//line forms.qtpl:53
-	qw422016.N().S(`">`)
-	//line forms.qtpl:54
-	streamcaptcha(qw422016, "create-board", ln.UI)
-	//line forms.qtpl:54
-	qw422016.N().S(`<input type="button" name="cancel" value="`)
-	//line forms.qtpl:55
-	qw422016.N().S(ln.UI["cancel"])
-	//line forms.qtpl:55
-	qw422016.N().S(`"><div class="form-response admin"></div>`)
-//line forms.qtpl:57
+	StreamCaptchaConfirmation(qw422016, ln)
+//line forms.qtpl:54
 }
 
-//line forms.qtpl:57
+//line forms.qtpl:54
 func WriteCreateBoard(qq422016 qtio422016.Writer, ln lang.Pack) {
-	//line forms.qtpl:57
+	//line forms.qtpl:54
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line forms.qtpl:57
+	//line forms.qtpl:54
 	StreamCreateBoard(qw422016, ln)
-	//line forms.qtpl:57
+	//line forms.qtpl:54
 	qt422016.ReleaseWriter(qw422016)
-//line forms.qtpl:57
+//line forms.qtpl:54
 }
 
-//line forms.qtpl:57
+//line forms.qtpl:54
 func CreateBoard(ln lang.Pack) string {
-	//line forms.qtpl:57
+	//line forms.qtpl:54
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line forms.qtpl:57
+	//line forms.qtpl:54
 	WriteCreateBoard(qb422016, ln)
-	//line forms.qtpl:57
+	//line forms.qtpl:54
 	qs422016 := string(qb422016.B)
-	//line forms.qtpl:57
+	//line forms.qtpl:54
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line forms.qtpl:57
+	//line forms.qtpl:54
 	return qs422016
-//line forms.qtpl:57
+//line forms.qtpl:54
 }
 
-//line forms.qtpl:59
-func streamcaptcha(qw422016 *qt422016.Writer, id string, lang map[string]string) {
+// CaptchaConfirmation renders a confirmation form with an optional captcha
+
+//line forms.qtpl:57
+func StreamCaptchaConfirmation(qw422016 *qt422016.Writer, ln lang.Pack) {
+	//line forms.qtpl:57
+	qw422016.N().S(`<input type="submit" value="`)
+	//line forms.qtpl:58
+	qw422016.N().S(ln.UI["submit"])
+	//line forms.qtpl:58
+	qw422016.N().S(`">`)
+	//line forms.qtpl:59
+	streamcaptcha(qw422016, "confirmation", ln.UI)
+	//line forms.qtpl:59
+	qw422016.N().S(`<input type="button" name="cancel" value="`)
 	//line forms.qtpl:60
+	qw422016.N().S(ln.UI["cancel"])
+	//line forms.qtpl:60
+	qw422016.N().S(`"><div class="form-response admin"></div>`)
+//line forms.qtpl:62
+}
+
+//line forms.qtpl:62
+func WriteCaptchaConfirmation(qq422016 qtio422016.Writer, ln lang.Pack) {
+	//line forms.qtpl:62
+	qw422016 := qt422016.AcquireWriter(qq422016)
+	//line forms.qtpl:62
+	StreamCaptchaConfirmation(qw422016, ln)
+	//line forms.qtpl:62
+	qt422016.ReleaseWriter(qw422016)
+//line forms.qtpl:62
+}
+
+//line forms.qtpl:62
+func CaptchaConfirmation(ln lang.Pack) string {
+	//line forms.qtpl:62
+	qb422016 := qt422016.AcquireByteBuffer()
+	//line forms.qtpl:62
+	WriteCaptchaConfirmation(qb422016, ln)
+	//line forms.qtpl:62
+	qs422016 := string(qb422016.B)
+	//line forms.qtpl:62
+	qt422016.ReleaseByteBuffer(qb422016)
+	//line forms.qtpl:62
+	return qs422016
+//line forms.qtpl:62
+}
+
+//line forms.qtpl:64
+func streamcaptcha(qw422016 *qt422016.Writer, id string, lang map[string]string) {
+	//line forms.qtpl:65
 	conf := config.Get()
 
-	//line forms.qtpl:61
+	//line forms.qtpl:66
 	if !conf.Captcha {
-		//line forms.qtpl:62
+		//line forms.qtpl:67
 		return
-		//line forms.qtpl:63
+		//line forms.qtpl:68
 	}
-	//line forms.qtpl:63
+	//line forms.qtpl:68
 	qw422016.N().S(`<div class="captcha-container" id="captcha-`)
-	//line forms.qtpl:64
+	//line forms.qtpl:69
 	qw422016.N().S(id)
-	//line forms.qtpl:64
+	//line forms.qtpl:69
 	qw422016.N().S(`"><div id="adcopy-outer-`)
-	//line forms.qtpl:65
+	//line forms.qtpl:70
 	qw422016.N().S(id)
-	//line forms.qtpl:65
+	//line forms.qtpl:70
 	qw422016.N().S(`"><div id="adcopy-puzzle-image-`)
-	//line forms.qtpl:66
+	//line forms.qtpl:71
 	qw422016.N().S(id)
-	//line forms.qtpl:66
+	//line forms.qtpl:71
 	qw422016.N().S(`" class="captcha-image" title="`)
-	//line forms.qtpl:66
+	//line forms.qtpl:71
 	qw422016.N().S(lang["reloadCaptcha"])
-	//line forms.qtpl:66
+	//line forms.qtpl:71
 	qw422016.N().S(`"></div><div id="adcopy-puzzle-audio-`)
-	//line forms.qtpl:67
+	//line forms.qtpl:72
 	qw422016.N().S(id)
-	//line forms.qtpl:67
+	//line forms.qtpl:72
 	qw422016.N().S(`" class="hidden"></div><div id="adcopy-pixel-image-`)
-	//line forms.qtpl:68
+	//line forms.qtpl:73
 	qw422016.N().S(id)
-	//line forms.qtpl:68
+	//line forms.qtpl:73
 	qw422016.N().S(`" class="hidden"></div><div><span id="adcopy-instr-`)
-	//line forms.qtpl:70
+	//line forms.qtpl:75
 	qw422016.N().S(id)
-	//line forms.qtpl:70
+	//line forms.qtpl:75
 	qw422016.N().S(`" class="hidden"></span></div><input id="adcopy_response-`)
-	//line forms.qtpl:72
+	//line forms.qtpl:77
 	qw422016.N().S(id)
-	//line forms.qtpl:72
+	//line forms.qtpl:77
 	qw422016.N().S(`" name="adcopy_response" class="full-width" type="text" placeholder="`)
-	//line forms.qtpl:72
+	//line forms.qtpl:77
 	qw422016.N().S(lang["focusForCaptcha"])
-	//line forms.qtpl:72
+	//line forms.qtpl:77
 	qw422016.N().S(`" required><input type="hidden" name="adcopy_challenge" id="adcopy_challenge-`)
-	//line forms.qtpl:73
+	//line forms.qtpl:78
 	qw422016.N().S(id)
-	//line forms.qtpl:73
+	//line forms.qtpl:78
 	qw422016.N().S(`" hidden><a id="adcopy-link-refresh-`)
-	//line forms.qtpl:74
+	//line forms.qtpl:79
 	qw422016.N().S(id)
-	//line forms.qtpl:74
+	//line forms.qtpl:79
 	qw422016.N().S(`" class="hidden"></a><a id="adcopy-link-audio-`)
-	//line forms.qtpl:75
+	//line forms.qtpl:80
 	qw422016.N().S(id)
-	//line forms.qtpl:75
+	//line forms.qtpl:80
 	qw422016.N().S(`" class="hidden"></a><a id="adcopy-link-image-`)
-	//line forms.qtpl:76
+	//line forms.qtpl:81
 	qw422016.N().S(id)
-	//line forms.qtpl:76
+	//line forms.qtpl:81
 	qw422016.N().S(`" class="hidden"></a><a id="adcopy-link-info-`)
-	//line forms.qtpl:77
+	//line forms.qtpl:82
 	qw422016.N().S(id)
-	//line forms.qtpl:77
+	//line forms.qtpl:82
 	qw422016.N().S(`" class="hidden"></a><!-- Temporary, till better noscript support ><noscript><iframe src="https://api-secure.solvemedia.com/papi/challenge.noscript?k=`)
-	//line forms.qtpl:80
+	//line forms.qtpl:85
 	qw422016.N().S(conf.CaptchaPublicKey)
-	//line forms.qtpl:80
+	//line forms.qtpl:85
 	qw422016.N().S(`"height="260" width="350" frameborder="0"></iframe><br><input name="adcopy_challenge" type="text" required></noscript><--></div></div>`)
-//line forms.qtpl:88
+//line forms.qtpl:93
 }
 
-//line forms.qtpl:88
+//line forms.qtpl:93
 func writecaptcha(qq422016 qtio422016.Writer, id string, lang map[string]string) {
-	//line forms.qtpl:88
+	//line forms.qtpl:93
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line forms.qtpl:88
+	//line forms.qtpl:93
 	streamcaptcha(qw422016, id, lang)
-	//line forms.qtpl:88
+	//line forms.qtpl:93
 	qt422016.ReleaseWriter(qw422016)
-//line forms.qtpl:88
+//line forms.qtpl:93
 }
 
-//line forms.qtpl:88
+//line forms.qtpl:93
 func captcha(id string, lang map[string]string) string {
-	//line forms.qtpl:88
+	//line forms.qtpl:93
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line forms.qtpl:88
+	//line forms.qtpl:93
 	writecaptcha(qb422016, id, lang)
-	//line forms.qtpl:88
+	//line forms.qtpl:93
 	qs422016 := string(qb422016.B)
-	//line forms.qtpl:88
+	//line forms.qtpl:93
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line forms.qtpl:88
+	//line forms.qtpl:93
 	return qs422016
-//line forms.qtpl:88
+//line forms.qtpl:93
 }
 
 // Form for inputing key-value map-like data
 
-//line forms.qtpl:91
+//line forms.qtpl:96
 func streamkeyValueForm(qw422016 *qt422016.Writer, k, v string) {
-	//line forms.qtpl:91
+	//line forms.qtpl:96
 	qw422016.N().S(`<span><input type="text" class="map-field" value="`)
-	//line forms.qtpl:93
+	//line forms.qtpl:98
 	qw422016.E().S(k)
-	//line forms.qtpl:93
+	//line forms.qtpl:98
 	qw422016.N().S(`"><input type="text" class="map-field" value="`)
-	//line forms.qtpl:94
+	//line forms.qtpl:99
 	qw422016.E().S(v)
-	//line forms.qtpl:94
+	//line forms.qtpl:99
 	qw422016.N().S(`"><a class="map-remove">[X]</a><br></span>`)
-//line forms.qtpl:100
+//line forms.qtpl:105
 }
 
-//line forms.qtpl:100
+//line forms.qtpl:105
 func writekeyValueForm(qq422016 qtio422016.Writer, k, v string) {
-	//line forms.qtpl:100
+	//line forms.qtpl:105
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line forms.qtpl:100
+	//line forms.qtpl:105
 	streamkeyValueForm(qw422016, k, v)
-	//line forms.qtpl:100
+	//line forms.qtpl:105
 	qt422016.ReleaseWriter(qw422016)
-//line forms.qtpl:100
+//line forms.qtpl:105
 }
 
-//line forms.qtpl:100
+//line forms.qtpl:105
 func keyValueForm(k, v string) string {
-	//line forms.qtpl:100
+	//line forms.qtpl:105
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line forms.qtpl:100
+	//line forms.qtpl:105
 	writekeyValueForm(qb422016, k, v)
-	//line forms.qtpl:100
+	//line forms.qtpl:105
 	qs422016 := string(qb422016.B)
-	//line forms.qtpl:100
+	//line forms.qtpl:105
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line forms.qtpl:100
+	//line forms.qtpl:105
 	return qs422016
-//line forms.qtpl:100
+//line forms.qtpl:105
 }
 
 // Form fommatted as a table, with cancel and submit buttons
 
-//line forms.qtpl:103
+//line forms.qtpl:108
 func streamtableForm(qw422016 *qt422016.Writer, specs []inputSpec, needCaptcha bool, ln lang.Pack) {
-	//line forms.qtpl:104
+	//line forms.qtpl:109
 	streamtable(qw422016, specs, ln)
-	//line forms.qtpl:105
+	//line forms.qtpl:110
 	if needCaptcha {
-		//line forms.qtpl:106
+		//line forms.qtpl:111
 		streamcaptcha(qw422016, "ajax", ln.UI)
-		//line forms.qtpl:107
+		//line forms.qtpl:112
 	}
-	//line forms.qtpl:107
+	//line forms.qtpl:112
 	qw422016.N().S(`<input type="submit" value="`)
-	//line forms.qtpl:108
+	//line forms.qtpl:113
 	qw422016.N().S(ln.UI["submit"])
-	//line forms.qtpl:108
+	//line forms.qtpl:113
 	qw422016.N().S(`"><input type="button" name="cancel" value="`)
-	//line forms.qtpl:109
+	//line forms.qtpl:114
 	qw422016.N().S(ln.UI["cancel"])
-	//line forms.qtpl:109
+	//line forms.qtpl:114
 	qw422016.N().S(`"><div class="form-response admin"></div>`)
-//line forms.qtpl:111
+//line forms.qtpl:116
 }
 
-//line forms.qtpl:111
+//line forms.qtpl:116
 func writetableForm(qq422016 qtio422016.Writer, specs []inputSpec, needCaptcha bool, ln lang.Pack) {
-	//line forms.qtpl:111
+	//line forms.qtpl:116
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line forms.qtpl:111
+	//line forms.qtpl:116
 	streamtableForm(qw422016, specs, needCaptcha, ln)
-	//line forms.qtpl:111
+	//line forms.qtpl:116
 	qt422016.ReleaseWriter(qw422016)
-//line forms.qtpl:111
+//line forms.qtpl:116
 }
 
-//line forms.qtpl:111
+//line forms.qtpl:116
 func tableForm(specs []inputSpec, needCaptcha bool, ln lang.Pack) string {
-	//line forms.qtpl:111
+	//line forms.qtpl:116
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line forms.qtpl:111
+	//line forms.qtpl:116
 	writetableForm(qb422016, specs, needCaptcha, ln)
-	//line forms.qtpl:111
+	//line forms.qtpl:116
 	qs422016 := string(qb422016.B)
-	//line forms.qtpl:111
+	//line forms.qtpl:116
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line forms.qtpl:111
+	//line forms.qtpl:116
 	return qs422016
-//line forms.qtpl:111
+//line forms.qtpl:116
 }
 
 // Render a map form for inputting map-like data
 
-//line forms.qtpl:114
+//line forms.qtpl:119
 func streamrenderMap(qw422016 *qt422016.Writer, spec inputSpec, ln lang.Pack) {
-	//line forms.qtpl:114
+	//line forms.qtpl:119
 	qw422016.N().S(`<div class="map-form" name="`)
-	//line forms.qtpl:115
+	//line forms.qtpl:120
 	qw422016.N().S(spec.ID)
-	//line forms.qtpl:115
+	//line forms.qtpl:120
 	qw422016.N().S(`" title="`)
-	//line forms.qtpl:115
+	//line forms.qtpl:120
 	qw422016.N().S(ln.Forms[spec.ID][1])
-	//line forms.qtpl:115
+	//line forms.qtpl:120
 	qw422016.N().S(`">`)
-	//line forms.qtpl:116
+	//line forms.qtpl:121
 	for k, v := range spec.Val.(map[string]string) {
-		//line forms.qtpl:117
+		//line forms.qtpl:122
 		streamkeyValueForm(qw422016, k, v)
-		//line forms.qtpl:118
+		//line forms.qtpl:123
 	}
-	//line forms.qtpl:118
+	//line forms.qtpl:123
 	qw422016.N().S(`<a class="map-add">`)
-	//line forms.qtpl:120
+	//line forms.qtpl:125
 	qw422016.N().S(ln.UI["add"])
-	//line forms.qtpl:120
+	//line forms.qtpl:125
 	qw422016.N().S(`</a><br></div>`)
-//line forms.qtpl:124
+//line forms.qtpl:129
 }
 
-//line forms.qtpl:124
+//line forms.qtpl:129
 func writerenderMap(qq422016 qtio422016.Writer, spec inputSpec, ln lang.Pack) {
-	//line forms.qtpl:124
+	//line forms.qtpl:129
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line forms.qtpl:124
+	//line forms.qtpl:129
 	streamrenderMap(qw422016, spec, ln)
-	//line forms.qtpl:124
+	//line forms.qtpl:129
 	qt422016.ReleaseWriter(qw422016)
-//line forms.qtpl:124
+//line forms.qtpl:129
 }
 
-//line forms.qtpl:124
+//line forms.qtpl:129
 func renderMap(spec inputSpec, ln lang.Pack) string {
-	//line forms.qtpl:124
+	//line forms.qtpl:129
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line forms.qtpl:124
+	//line forms.qtpl:129
 	writerenderMap(qb422016, spec, ln)
-	//line forms.qtpl:124
+	//line forms.qtpl:129
 	qs422016 := string(qb422016.B)
-	//line forms.qtpl:124
+	//line forms.qtpl:129
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line forms.qtpl:124
+	//line forms.qtpl:129
 	return qs422016
-//line forms.qtpl:124
+//line forms.qtpl:129
 }

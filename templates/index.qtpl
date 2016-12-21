@@ -238,7 +238,11 @@
 						</div>
 					</div>
 					<div id="form-selection" class="hidden">
-						{% for _, l := range [...]string{"logout", "logoutAll", "changePassword", "createBoard", "configureBoard"} %}
+						{% code links := [...]string{
+							"logout", "logoutAll", "changePassword",
+							"createBoard", "configureBoard", "deleteBoard",
+						} %}
+						{% for _, l := range links %}
 							<a id="{%s= l %}">
 								{%s= ln.UI[l] %}
 							</a>

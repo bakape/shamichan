@@ -4,14 +4,13 @@ import { write, importTemplate } from './render'
 import CaptchaView from './captcha'
 
 // Generic input form view with optional captcha support
-export default class FormView extends View<null> {
-	// Function used for sending the form to the client
-	private handleForm: () => void
+abstract class FormView extends View<null> {
 	private captcha: CaptchaView
 
-	constructor(attrs: ViewAttrs, handler: () => void) {
+	protected abstract send(): void
+
+	constructor(attrs: ViewAttrs) {
 		super(attrs)
-		this.handleForm = handler
 		this.onClick({
 			"input[name=cancel]": () =>
 				this.remove(),
@@ -32,7 +31,7 @@ export default class FormView extends View<null> {
 	// Submit form to server. Pass it to the assigned handler function
 	private submit(event: Event) {
 		event.preventDefault()
-		this.handleForm()
+		this.send()
 	}
 
 	// Also destroy captcha, if any
@@ -85,3 +84,5 @@ export default class FormView extends View<null> {
 			(event.target as Element).closest("span").remove())
 	}
 }
+
+export default FormView

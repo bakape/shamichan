@@ -146,24 +146,33 @@ func deleteUnusedBoards() error {
 	}
 
 	for _, board := range expired {
-		var threads []uint64
-		q := r.Table("threads").GetAllByIndex("board", board).Field("id")
-		if err := All(q, &threads); err != nil {
+		if err := DeleteBoard(board); err != nil {
 			return err
 		}
+	}
 
-		for _, thread := range threads {
-			if err := DeleteThread(thread); err != nil {
-				return err
-			}
-		}
+	return nil
+}
 
-		// Perform board deletion after all threads are deleted, so there are
-		// less consequences to an interrupted cleanup task.
-		q = r.Table("boards").Get(board).Delete()
-		if err := Write(q); err != nil {
+// DeleteBoard deletes a board and all of its contained threads and posts
+func DeleteBoard(board string) error {
+	var threads []uint64
+	q := r.Table("threads").GetAllByIndex("board", board).Field("id")
+	if err := All(q, &threads); err != nil {
+		return err
+	}
+
+	for _, thread := range threads {
+		if err := DeleteThread(thread); err != nil {
 			return err
 		}
+	}
+
+	// Perform board deletion after all threads are deleted, so there are
+	// less consequences to an interrupted cleanup task.
+	q = r.Table("boards").Get(board).Delete()
+	if err := Write(q); err != nil {
+		return err
 	}
 
 	return nil

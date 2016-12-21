@@ -66,6 +66,12 @@ type boardCreationRequest struct {
 	common.Captcha
 }
 
+type boardDeletionRequest struct {
+	ID string
+	sessionCreds
+	common.Captcha
+}
+
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
 // decoding succeeded.
 func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
@@ -285,5 +291,24 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 		})
 	if err := db.Write(q); err != nil {
 		text500(w, r, err)
+	}
+}
+
+// Delete a board owned by the client
+func deleteBoard(w http.ResponseWriter, r *http.Request) {
+	var msg boardDeletionRequest
+	isValid := decodeJSON(w, r, &msg) &&
+		isLoggedIn(w, r, msg.UserID, msg.Session) &&
+		isBoardOwner(w, r, msg.ID, msg.UserID)
+	if !isValid {
+		return
+	}
+	if !auth.AuthenticateCaptcha(msg.Captcha, auth.GetIP(r)) {
+		text403(w, errInvalidCaptcha)
+		return
+	}
+	if err := db.DeleteBoard(msg.ID); err != nil {
+		text500(w, r, err)
+		return
 	}
 }

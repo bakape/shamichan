@@ -1,16 +1,14 @@
-import AccountFormView, { newRequest, extractForm, handle403 } from './common'
+import { AccountFormView, newRequest, extractForm, handle403 } from './common'
 import { makeFrag, extend } from '../util'
 import { postJSON } from "../fetch"
 
 // Panel for server administration controls such as global server settings
 export default class ConfigPanel extends AccountFormView {
 	constructor() {
-		const attrs = {
+		super({
 			tag: "form",
 			class: "wide-fields", // The panel needs much larger text inputs
-		}
-		super(attrs, () =>
-			this.postConfigs())
+		})
 		this.render()
 	}
 
@@ -31,7 +29,7 @@ export default class ConfigPanel extends AccountFormView {
 	}
 
 	// Extract and send the configuration struct from the form
-	private async postConfigs() {
+	protected send() {
 		const req = newRequest()
 		extend(req, extractForm(this.el))
 		this.postResponse("/admin/configureServer", req)

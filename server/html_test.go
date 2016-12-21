@@ -154,6 +154,7 @@ func TestStaticTemplates(t *testing.T) {
 		{"create board", "/forms/createBoard"},
 		{"board navigation panel", "/forms/boardNavigation"},
 		{"change password", "/forms/changePassword"},
+		{"captcha confirmation", "/forms/captcha"},
 	}
 
 	for i := range cases {

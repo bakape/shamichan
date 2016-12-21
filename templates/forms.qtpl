@@ -50,8 +50,13 @@ BoardNavigation renders a board selection and search form
 CreateBoard renders a the form for creating new boards
 {% func CreateBoard(ln lang.Pack) %}{% stripspace %}
 	{%= table(specs["createBoard"], ln) %}
+	{%= CaptchaConfirmation(ln) %}
+{% endstripspace %}{% endfunc %}
+
+CaptchaConfirmation renders a confirmation form with an optional captcha
+{% func CaptchaConfirmation(ln lang.Pack) %}{% stripspace %}
 	<input type="submit" value="{%s= ln.UI["submit"] %}">
-	{%= captcha("create-board", ln.UI) %}
+	{%= captcha("confirmation", ln.UI) %}
 	<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
 	<div class="form-response admin"></div>
 {% endstripspace %}{% endfunc %}

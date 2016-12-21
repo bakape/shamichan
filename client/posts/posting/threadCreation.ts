@@ -16,10 +16,8 @@ class ThreadForm extends FormView {
 	private upload: UploadForm
 
 	constructor(event: Event) {
-		const aside = (event.target as Element).closest("aside"),
-			el = aside.querySelector("#new-thread-form")
-		super({ el }, () =>
-			this.sendRequest())
+		const aside = (event.target as Element).closest("aside")
+		super({ el: document.getElementById("new-thread-form") })
 		this.aside = aside
 		this.render()
 		handlers[message.postID] = (msg: number) =>
@@ -48,7 +46,7 @@ class ThreadForm extends FormView {
 		})
 	}
 
-	private async sendRequest() {
+	protected async send() {
 		write(() => {
 			this.el.querySelector("input[type=submit]").remove()
 			this.el.querySelector("input[name=cancel]").remove()

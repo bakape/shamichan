@@ -394,3 +394,35 @@ func TestServerConfigSetting(t *testing.T) {
 	std.DefaultCSS = "ashita"
 	AssertDeepEquals(t, conf, std)
 }
+
+func TestDeleteBoard(t *testing.T) {
+	assertTableClear(t, "main", "accounts", "threads", "posts", "boards")
+	writeSampleUser(t)
+	assertInsert(t, "boards", config.DatabaseBoardConfigs{
+		BoardConfigs: config.BoardConfigs{
+			ID: "a",
+			Staff: map[string][]string{
+				"owners": {sampleLoginCreds.UserID},
+			},
+		},
+	})
+
+	rec, req := newJSONPair(t, "/admin/deleteBoard", boardDeletionRequest{
+		ID:           "a",
+		sessionCreds: sampleLoginCreds,
+	})
+	router.ServeHTTP(rec, req)
+
+	assertCode(t, rec, 200)
+	assertDeleted(t, gorethink.Table("boards").Get("a"), true)
+}
+
+func assertDeleted(t *testing.T, q gorethink.Term, del bool) {
+	var deleted bool
+	if err := db.One(q.Eq(nil), &deleted); err != nil {
+		t.Fatal(err)
+	}
+	if deleted != del {
+		LogUnexpected(t, del, deleted)
+	}
+}

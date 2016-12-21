@@ -27,6 +27,7 @@ class AccountPanel extends TabbedModal {
 			"#changePassword": this.loadConditionalView("mod/changePassword"),
 			"#configureServer": this.loadConditionalView("mod/configureServer"),
 			"#createBoard": this.loadConditionalView("mod/createBoard"),
+			"#deleteBoard": this.loadConditionalView("mod/deleteBoard"),
 			"#configureBoard": this.loadConditionalView("mod/configureBoard"),
 		})
 
@@ -101,13 +102,12 @@ class BaseLoginForm extends FormView {
 	private url: string
 
 	constructor(id: string, url: string) {
-		super({ el: document.getElementById(id) }, () =>
-			this.sendRequest())
+		super({ el: document.getElementById(id) })
 		this.url = "/admin/" + url
 	}
 
 	// Extract and send login ID and password and captcha (if any) from a form
-	private async sendRequest() {
+	protected async send() {
 		const req: any = {}
 		for (let key of ['id', 'password']) {
 			req[key] = inputValue(this.el, key)
