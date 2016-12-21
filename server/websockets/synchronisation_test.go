@@ -138,6 +138,8 @@ func TestSyncToThread(t *testing.T) {
 		t.Errorf("unexpected feed ID: 1 : %d", cl.feedID)
 	}
 
+	assertMessage(t, wcl, `351`)
+
 	// The update stream does not guarantee initial message order on
 	// synchronization, only that messages from the same document will be in
 	// order. Can't really test that here.

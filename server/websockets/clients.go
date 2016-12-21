@@ -33,8 +33,14 @@ func (c *ClientMap) add(cl *Client, syncID SyncID) {
 	cl.synced = true
 	newIP := c.ips[cl.ip] == 0
 	c.ips[cl.ip]++
+	count := len(c.ips)
 	c.Unlock()
 
+	// Ensure client always receives a count
+	msg, _ := EncodeMessage(MessageSyncCount, count)
+	cl.Send(msg)
+
+	// If changed, also send to all other clients
 	if newIP {
 		c.sendIPCount()
 	}
