@@ -305,7 +305,7 @@ func constructPost(
 		return
 	}
 
-	post.Password, err = auth.BcryptHash(req.Password, 6)
+	post.Password, err = auth.BcryptHash(req.Password, 4)
 
 	// TODO: Staff title verification
 
