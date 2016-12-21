@@ -345,6 +345,7 @@
 		"subject": "Konu",
 		"submit": "Submit",
 		"sync": "Connection status",
+		"syncCount": "Unique connected IP count",
 		"top": "Üst"
 	},
 	"sortModes": [

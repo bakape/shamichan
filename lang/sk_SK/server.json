@@ -345,6 +345,7 @@
 		"subject": "Predmet",
 		"submit": "Odoslať",
 		"sync": "Connection status",
+		"syncCount": "Unique connected IP count",
 		"top": "Vrch"
 	},
 	"sortModes": [

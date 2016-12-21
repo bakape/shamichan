@@ -173,193 +173,197 @@ func streamrenderIndex(qw422016 *qt422016.Writer, ln lang.Pack) {
 	//line index.qtpl:177
 	qw422016.N().S(ln.UI["feedback"])
 	//line index.qtpl:177
-	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M0 0v1l4 2 4-2v-1h-8zm0 2v4h8v-4l-4 2-4-2z" transform="translate(0 1)" /></svg></a><b id="thread-post-counters" class="act banner-float" title="`)
+	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M0 0v1l4 2 4-2v-1h-8zm0 2v4h8v-4l-4 2-4-2z" transform="translate(0 1)" /></svg></a><b id="thread-post-counters" class="act hide-empty banner-float" title="`)
 	//line index.qtpl:182
 	qw422016.N().S(ln.Common.UI["postsImages"])
 	//line index.qtpl:182
+	qw422016.N().S(`"></b><b id="sync-counter" class="act hide-empty banner-float" title="`)
+	//line index.qtpl:183
+	qw422016.N().S(ln.UI["syncCount"])
+	//line index.qtpl:183
 	qw422016.N().S(`"></b>`)
-	//line index.qtpl:185
+	//line index.qtpl:186
 	qw422016.N().S(`<b id="sync" class="banner-float" title="`)
-	//line index.qtpl:186
+	//line index.qtpl:187
 	qw422016.N().S(ln.UI["sync"])
-	//line index.qtpl:186
+	//line index.qtpl:187
 	qw422016.N().S(`"></b></span>`)
-	//line index.qtpl:190
+	//line index.qtpl:191
 	qw422016.N().S(`<div id="modal-overlay" class="overlay">`)
-	//line index.qtpl:194
+	//line index.qtpl:195
 	qw422016.N().S(`<div id="FAQ" class="modal glass">meguca is licensed under the`)
-	//line index.qtpl:196
+	//line index.qtpl:197
 	qw422016.N().S(` `)
-	//line index.qtpl:196
+	//line index.qtpl:197
 	qw422016.N().S(`<a href="https://www.gnu.org/licenses/agpl.html" target="_blank">GNU Affero General Public License</a><br>Source code repository:`)
-	//line index.qtpl:201
+	//line index.qtpl:202
 	qw422016.N().S(` `)
-	//line index.qtpl:201
+	//line index.qtpl:202
 	qw422016.N().S(`<a href="https://github.com/bakape/meguca" target="_blank">github.com/bakape/meguca</a><hr>`)
-	//line index.qtpl:206
+	//line index.qtpl:207
 	qw422016.N().S(strings.Replace(conf.FAQ, "\n", "<br>", -1))
-	//line index.qtpl:206
+	//line index.qtpl:207
 	qw422016.N().S(`</div>`)
-	//line index.qtpl:210
+	//line index.qtpl:211
 	qw422016.N().S(`<div id="identity" class="modal glass">`)
-	//line index.qtpl:212
+	//line index.qtpl:213
 	streamtable(qw422016, specs["identity"], ln)
-	//line index.qtpl:212
+	//line index.qtpl:213
 	qw422016.N().S(`</div>`)
-	//line index.qtpl:216
+	//line index.qtpl:217
 	qw422016.N().S(`<div id="account-panel" class="modal glass"><div id="login-forms">`)
-	//line index.qtpl:219
+	//line index.qtpl:220
 	f := ln.Forms
 
-	//line index.qtpl:220
+	//line index.qtpl:221
 	streamtabButts(qw422016, []string{f["id"][0], f["register"][0]})
-	//line index.qtpl:220
+	//line index.qtpl:221
 	qw422016.N().S(`<div class="tab-cont"><div class="tab-sel" data-id="0"><form id="login-form">`)
-	//line index.qtpl:224
+	//line index.qtpl:225
 	streamtable(qw422016, specs["login"], ln)
-	//line index.qtpl:225
+	//line index.qtpl:226
 	streamcaptcha(qw422016, "login", ln.UI)
-	//line index.qtpl:225
+	//line index.qtpl:226
 	qw422016.N().S(`<input type="submit" value="`)
-	//line index.qtpl:226
+	//line index.qtpl:227
 	qw422016.N().S(ln.UI["submit"])
-	//line index.qtpl:226
+	//line index.qtpl:227
 	qw422016.N().S(`"><div class="form-response admin"></div></form></div><div data-id="1"><form id="registration-form">`)
-	//line index.qtpl:232
+	//line index.qtpl:233
 	streamtable(qw422016, specs["register"], ln)
-	//line index.qtpl:233
+	//line index.qtpl:234
 	streamcaptcha(qw422016, "register", ln.UI)
-	//line index.qtpl:233
+	//line index.qtpl:234
 	qw422016.N().S(`<input type="submit" value="`)
-	//line index.qtpl:234
+	//line index.qtpl:235
 	qw422016.N().S(ln.UI["submit"])
-	//line index.qtpl:234
+	//line index.qtpl:235
 	qw422016.N().S(`"><div class="form-response admin"></div></form></div></div></div><div id="form-selection" class="hidden">`)
-	//line index.qtpl:241
+	//line index.qtpl:242
 	links := [...]string{
 		"logout", "logoutAll", "changePassword",
 		"createBoard", "configureBoard", "deleteBoard",
 	}
 
-	//line index.qtpl:245
+	//line index.qtpl:246
 	for _, l := range links {
-		//line index.qtpl:245
+		//line index.qtpl:246
 		qw422016.N().S(`<a id="`)
-		//line index.qtpl:246
+		//line index.qtpl:247
 		qw422016.N().S(l)
-		//line index.qtpl:246
+		//line index.qtpl:247
 		qw422016.N().S(`">`)
-		//line index.qtpl:247
+		//line index.qtpl:248
 		qw422016.N().S(ln.UI[l])
-		//line index.qtpl:247
+		//line index.qtpl:248
 		qw422016.N().S(`</a><br>`)
-		//line index.qtpl:250
+		//line index.qtpl:251
 	}
-	//line index.qtpl:250
+	//line index.qtpl:251
 	qw422016.N().S(`<span><a id="configureServer">`)
-	//line index.qtpl:253
+	//line index.qtpl:254
 	qw422016.N().S(ln.UI["configureServer"])
-	//line index.qtpl:253
+	//line index.qtpl:254
 	qw422016.N().S(`</a><br></span></div></div>`)
-	//line index.qtpl:261
+	//line index.qtpl:262
 	qw422016.N().S(`<div id="options" class="modal glass">`)
-	//line index.qtpl:263
+	//line index.qtpl:264
 	streamtabButts(qw422016, ln.Tabs)
-	//line index.qtpl:263
+	//line index.qtpl:264
 	qw422016.N().S(`<div class="tab-cont">`)
-	//line index.qtpl:265
+	//line index.qtpl:266
 	for i, sp := range optionSpecs {
-		//line index.qtpl:265
+		//line index.qtpl:266
 		qw422016.N().S(`<div data-id="`)
-		//line index.qtpl:266
-		qw422016.N().D(i)
-		//line index.qtpl:266
-		qw422016.N().S(`"`)
-		//line index.qtpl:266
-		if i == 0 {
-			//line index.qtpl:266
-			qw422016.N().S(` `)
-			//line index.qtpl:266
-			qw422016.N().S(`class="tab-sel"`)
-			//line index.qtpl:266
-		}
-		//line index.qtpl:266
-		qw422016.N().S(`>`)
 		//line index.qtpl:267
-		streamoptions(qw422016, sp, ln)
-		//line index.qtpl:271
+		qw422016.N().D(i)
+		//line index.qtpl:267
+		qw422016.N().S(`"`)
+		//line index.qtpl:267
 		if i == 0 {
-			//line index.qtpl:271
-			qw422016.N().S(`<br><span class="spaced">`)
-			//line index.qtpl:274
-			for _, id := range [...]string{"export", "import", "hidden"} {
-				//line index.qtpl:274
-				qw422016.N().S(`<a id="`)
-				//line index.qtpl:275
-				qw422016.N().S(id)
-				//line index.qtpl:275
-				qw422016.N().S(`" title="`)
-				//line index.qtpl:275
-				qw422016.N().S(ln.Forms[id][1])
-				//line index.qtpl:275
-				qw422016.N().S(`">`)
-				//line index.qtpl:276
-				qw422016.N().S(ln.Forms[id][0])
-				//line index.qtpl:276
-				qw422016.N().S(`</a>`)
-				//line index.qtpl:278
-			}
-			//line index.qtpl:278
-			qw422016.N().S(`</span>`)
-			//line index.qtpl:282
-			qw422016.N().S(`<input type="file" id="importSettings" hidden>`)
-			//line index.qtpl:284
+			//line index.qtpl:267
+			qw422016.N().S(` `)
+			//line index.qtpl:267
+			qw422016.N().S(`class="tab-sel"`)
+			//line index.qtpl:267
 		}
-		//line index.qtpl:284
+		//line index.qtpl:267
+		qw422016.N().S(`>`)
+		//line index.qtpl:268
+		streamoptions(qw422016, sp, ln)
+		//line index.qtpl:272
+		if i == 0 {
+			//line index.qtpl:272
+			qw422016.N().S(`<br><span class="spaced">`)
+			//line index.qtpl:275
+			for _, id := range [...]string{"export", "import", "hidden"} {
+				//line index.qtpl:275
+				qw422016.N().S(`<a id="`)
+				//line index.qtpl:276
+				qw422016.N().S(id)
+				//line index.qtpl:276
+				qw422016.N().S(`" title="`)
+				//line index.qtpl:276
+				qw422016.N().S(ln.Forms[id][1])
+				//line index.qtpl:276
+				qw422016.N().S(`">`)
+				//line index.qtpl:277
+				qw422016.N().S(ln.Forms[id][0])
+				//line index.qtpl:277
+				qw422016.N().S(`</a>`)
+				//line index.qtpl:279
+			}
+			//line index.qtpl:279
+			qw422016.N().S(`</span>`)
+			//line index.qtpl:283
+			qw422016.N().S(`<input type="file" id="importSettings" hidden>`)
+			//line index.qtpl:285
+		}
+		//line index.qtpl:285
 		qw422016.N().S(`</div>`)
-		//line index.qtpl:286
+		//line index.qtpl:287
 	}
-	//line index.qtpl:286
+	//line index.qtpl:287
 	qw422016.N().S(`</div></div></div></div>`)
-	//line index.qtpl:293
+	//line index.qtpl:294
 	qw422016.N().S(`<div class="overlay" id="hover-overlay"></div><div id="page-container"><section id="left-panel" class="side-panel glass"></section>`)
-	//line index.qtpl:299
+	//line index.qtpl:300
 	qw422016.N().S(`<div id="left-spacer" class="side-spacer"></div>`)
-	//line index.qtpl:306
+	//line index.qtpl:307
 	qw422016.N().S(`<section id="threads">{{.Threads}}</section><section id="right-panel" class="side-panel glass"></section><div id="right-spacer" class="side-spacer"></div></div><script src="/assets/js/vendor/system.js"></script>`)
-	//line index.qtpl:317
+	//line index.qtpl:318
 	if conf.Captcha {
-		//line index.qtpl:317
+		//line index.qtpl:318
 		qw422016.N().S(`<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>`)
-		//line index.qtpl:319
+		//line index.qtpl:320
 	}
-	//line index.qtpl:322
+	//line index.qtpl:323
 	qw422016.N().S(`<script src="/assets/js/scripts/loader.js"></script></body>`)
-//line index.qtpl:325
+//line index.qtpl:326
 }
 
-//line index.qtpl:325
+//line index.qtpl:326
 func writerenderIndex(qq422016 qtio422016.Writer, ln lang.Pack) {
-	//line index.qtpl:325
+	//line index.qtpl:326
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line index.qtpl:325
+	//line index.qtpl:326
 	streamrenderIndex(qw422016, ln)
-	//line index.qtpl:325
+	//line index.qtpl:326
 	qt422016.ReleaseWriter(qw422016)
-//line index.qtpl:325
+//line index.qtpl:326
 }
 
-//line index.qtpl:325
+//line index.qtpl:326
 func renderIndex(ln lang.Pack) string {
-	//line index.qtpl:325
+	//line index.qtpl:326
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line index.qtpl:325
+	//line index.qtpl:326
 	writerenderIndex(qb422016, ln)
-	//line index.qtpl:325
+	//line index.qtpl:326
 	qs422016 := string(qb422016.B)
-	//line index.qtpl:325
+	//line index.qtpl:326
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line index.qtpl:325
+	//line index.qtpl:326
 	return qs422016
-//line index.qtpl:325
+//line index.qtpl:326
 }

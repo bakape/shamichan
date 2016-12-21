@@ -9,6 +9,7 @@ import (
 func newClientMap() *ClientMap {
 	return &ClientMap{
 		clients: make(map[*Client]SyncID),
+		ips:     make(map[string]int),
 	}
 }
 
@@ -79,16 +80,14 @@ func TestCountByIP(t *testing.T) {
 		OP:    1,
 		Board: "a",
 	}
-	for i := range cls {
+	for i, ip := range [...]string{"foo", "foo", "bar"} {
 		cl, _ := sv.NewClient()
+		cl.ip = ip
 		cls[i] = cl
 		m.add(cl, id)
 	}
-	cls[0].ip = "foo"
-	cls[1].ip = "foo"
-	cls[2].ip = "bar"
 
-	if count := m.CountByIP(); count != 2 {
+	if count := len(m.ips); count != 2 {
 		LogUnexpected(t, 2, count)
 	}
 }

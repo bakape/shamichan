@@ -29,6 +29,8 @@ must always be "synchronize".
 | 31 | reclaim | uint | Response to a request to reclaim a post lost after disconnecting from the server. 0 denotes success and the client is henceforth able to write to said post, as before the disconnect.1 denotes the post is unrecoverable. |
 | 32 | postID | int | Returns the post ID of the client's freshly allocated post. A response to a post or thread insertion request. -1 denotes invalid captcha. |
 | 33 | concat | * | Contains several null-byte concatenated messages. Used for limiting the rate of update frames sent from the server. |
+| 34 | NOOP | - | Invokes no operation on the server. Can be used as a connectivity test. |
+| 35 | syncCount | uint | Sends the current unique connected IP count |
 
 ##SpliceMessage
 

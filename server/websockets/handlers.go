@@ -42,6 +42,9 @@ const (
 	// one way ping, because the JS Websocket API does not provide access to
 	// pinging.
 	MessageNOOP
+
+	// Transmit current synced IP count to client
+	MessageSyncCount
 )
 
 var (

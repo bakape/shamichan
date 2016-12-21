@@ -345,6 +345,7 @@
 		"subject": "Temat",
 		"submit": "Zatwierdź",
 		"sync": "Status połączenia",
+		"syncCount": "Unique connected IP count",
 		"top": "Na górę"
 	},
 	"sortModes": [

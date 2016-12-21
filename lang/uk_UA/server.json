@@ -345,6 +345,7 @@
 		"subject": "Тема",
 		"submit": "Надіслати",
 		"sync": "Статус зв'язку",
+		"syncCount": "Unique connected IP count",
 		"top": "Шапка"
 	},
 	"sortModes": [

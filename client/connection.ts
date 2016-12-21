@@ -40,6 +40,9 @@ export const enum message {
 	// Invokes no operation on the server. Used to test the client's connection
 	// in situations, when you can't be certain the client is still connected.
 	NOOP,
+
+	// Transmit current synced IP count to client
+	syncCount,
 }
 
 export type MessageHandler = (msg: {}) => void
@@ -71,9 +74,9 @@ let socket: WebSocket,
 	// fetch of thread contents
 	syncTimestamp: number
 
-const syncEl = document.getElementById('sync')
-const path =
-	(location.protocol === 'https:' ? 'wss' : 'ws')
+const syncEl = document.getElementById('sync'),
+	syncCount = document.getElementById("sync-counter")
+const path = (location.protocol === 'https:' ? 'wss' : 'ws')
 	+ `://${location.host}/socket`
 
 function connect() {
@@ -352,3 +355,7 @@ window.addEventListener('online', () => {
 	connSM.feed(connEvent.retry)
 })
 window.addEventListener('offline', connSM.feeder(connEvent.close))
+
+handlers[message.syncCount] = (n: number) =>
+	write(() =>
+		syncCount.textContent = n.toString())
