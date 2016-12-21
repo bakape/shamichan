@@ -63,9 +63,6 @@ type Client struct {
 	// Underlying websocket connection
 	conn *websocket.Conn
 
-	// Token of an authenticated user session, if any
-	sessionToken string
-
 	// Client IP
 	ip string
 
@@ -310,11 +307,6 @@ func (c *Client) Close(err error) {
 			}
 		}
 	}
-}
-
-// Small helper method for more DRY-ness. Not thread-safe.
-func (c *Client) isLoggedIn() bool {
-	return c.sessionToken != ""
 }
 
 // Helper for determining, if the client currently has an open post not older
