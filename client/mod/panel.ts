@@ -7,8 +7,15 @@ import { getModel, page } from "../state"
 import { newRequest } from "./common"
 import { extend } from "../util"
 import { postJSON } from "../fetch"
+import { toggleHeadStyle } from "../options/specs"
 
-let panel: ModPanel
+let panel: ModPanel,
+	displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true"
+
+const checkboxStyler = toggleHeadStyle(
+	"mod-checkboxes",
+	".mod-checkbox{ display: inline; }"
+)
 
 export default class ModPanel extends View<null> {
 	constructor() {
@@ -21,11 +28,15 @@ export default class ModPanel extends View<null> {
 		this.el.querySelector("form").addEventListener("submit", e =>
 			this.onSubmit(e))
 
-		const st = document.createElement("style")
-		st.innerHTML = ".mod-checkbox{ display: inline; }"
+		const toggle = (this.el
+			.querySelector(`input[name="showCheckboxes"]`) as HTMLInputElement)
+		toggle.addEventListener("change", e =>
+			toggleCheckboxDisplay((event.target as HTMLInputElement).checked))
+
+		toggleCheckboxDisplay(displayCheckboxes)
 		write(() => {
 			this.el.style.display = "inline-block"
-			document.head.append(st)
+			toggle.checked = displayCheckboxes
 		})
 	}
 
@@ -72,4 +83,9 @@ export default class ModPanel extends View<null> {
 			throw await res.text()
 		}
 	}
+}
+
+function toggleCheckboxDisplay(on: boolean) {
+	localStorage.setItem("hideModCheckboxes", (!on).toString())
+	checkboxStyler(on)
 }

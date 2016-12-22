@@ -290,6 +290,7 @@
 				</div>
 				<div id="moderation-panel" class="modal">
 					<form>
+						<input type="checkbox" name="showCheckboxes">
 						<select name="action">
 							{% for _, id := range [...]string{"deletePost"} %}
 								<option value="{%s= id %}">

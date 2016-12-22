@@ -324,66 +324,66 @@ func streamrenderIndex(qw422016 *qt422016.Writer, ln lang.Pack) {
 		//line index.qtpl:288
 	}
 	//line index.qtpl:288
-	qw422016.N().S(`</div></div><div id="moderation-panel" class="modal"><form><select name="action">`)
-	//line index.qtpl:294
+	qw422016.N().S(`</div></div><div id="moderation-panel" class="modal"><form><input type="checkbox" name="showCheckboxes"><select name="action">`)
+	//line index.qtpl:295
 	for _, id := range [...]string{"deletePost"} {
-		//line index.qtpl:294
+		//line index.qtpl:295
 		qw422016.N().S(`<option value="`)
-		//line index.qtpl:295
+		//line index.qtpl:296
 		qw422016.N().S(id)
-		//line index.qtpl:295
+		//line index.qtpl:296
 		qw422016.N().S(`">`)
-		//line index.qtpl:296
+		//line index.qtpl:297
 		qw422016.N().S(ln.UI[id])
-		//line index.qtpl:296
+		//line index.qtpl:297
 		qw422016.N().S(`</option>`)
-		//line index.qtpl:298
+		//line index.qtpl:299
 	}
-	//line index.qtpl:298
+	//line index.qtpl:299
 	qw422016.N().S(`</select><input type="submit" value="`)
-	//line index.qtpl:300
+	//line index.qtpl:301
 	qw422016.N().S(ln.UI["submit"])
-	//line index.qtpl:300
+	//line index.qtpl:301
 	qw422016.N().S(`"></form></div></div></div>`)
-	//line index.qtpl:307
+	//line index.qtpl:308
 	qw422016.N().S(`<div class="overlay" id="hover-overlay"></div><div id="page-container"><section id="left-panel" class="side-panel glass"></section>`)
-	//line index.qtpl:313
+	//line index.qtpl:314
 	qw422016.N().S(`<div id="left-spacer" class="side-spacer"></div>`)
-	//line index.qtpl:320
+	//line index.qtpl:321
 	qw422016.N().S(`<section id="threads">{{.Threads}}</section><section id="right-panel" class="side-panel glass"></section><div id="right-spacer" class="side-spacer"></div></div><script src="/assets/js/vendor/system.js"></script>`)
-	//line index.qtpl:331
+	//line index.qtpl:332
 	if conf.Captcha {
-		//line index.qtpl:331
+		//line index.qtpl:332
 		qw422016.N().S(`<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>`)
-		//line index.qtpl:333
+		//line index.qtpl:334
 	}
-	//line index.qtpl:336
+	//line index.qtpl:337
 	qw422016.N().S(`<script src="/assets/js/scripts/loader.js"></script></body>`)
-//line index.qtpl:339
+//line index.qtpl:340
 }
 
-//line index.qtpl:339
+//line index.qtpl:340
 func writerenderIndex(qq422016 qtio422016.Writer, ln lang.Pack) {
-	//line index.qtpl:339
+	//line index.qtpl:340
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line index.qtpl:339
+	//line index.qtpl:340
 	streamrenderIndex(qw422016, ln)
-	//line index.qtpl:339
+	//line index.qtpl:340
 	qt422016.ReleaseWriter(qw422016)
-//line index.qtpl:339
+//line index.qtpl:340
 }
 
-//line index.qtpl:339
+//line index.qtpl:340
 func renderIndex(ln lang.Pack) string {
-	//line index.qtpl:339
+	//line index.qtpl:340
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line index.qtpl:339
+	//line index.qtpl:340
 	writerenderIndex(qb422016, ln)
-	//line index.qtpl:339
+	//line index.qtpl:340
 	qs422016 := string(qb422016.B)
-	//line index.qtpl:339
+	//line index.qtpl:340
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line index.qtpl:339
+	//line index.qtpl:340
 	return qs422016
-//line index.qtpl:339
+//line index.qtpl:340
 }

@@ -224,7 +224,10 @@ function toggleImageSearch(engine: string): (toggle: boolean) => void {
 }
 
 // Toggle an optional style element in the head
-function toggleHeadStyle(name: string, css: string): (toggle: boolean) => void {
+export function toggleHeadStyle(
+	name: string,
+	css: string,
+): (toggle: boolean) => void {
 	return toggle => {
 		const id = name + "-toggle"
 		if (!document.getElementById(id)) {
