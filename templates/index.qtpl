@@ -288,7 +288,7 @@
 						{% endfor %}
 					</div>
 				</div>
-				<div id="moderation-panel" class="modal">
+				<div id="moderation-panel" class="modal glass">
 					<form>
 						<input type="checkbox" name="showCheckboxes">
 						<select name="action">
