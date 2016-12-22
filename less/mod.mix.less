@@ -4,5 +4,13 @@
 }
 
 #moderation-panel {
+	display: none;
 	align-self: flex-end;
+	margin-top: auto;
+	transform: translateX(95%);
+	transition-duration: 0.3s;
+	transition-property: transform;
+	&:hover {
+		transform: translateX(0);
+	}
 }
