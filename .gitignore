@@ -22,3 +22,4 @@ images
 imager/images
 thumb_*.png
 thumb_*.jpg
+*.qtpl.go

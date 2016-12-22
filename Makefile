@@ -37,6 +37,7 @@ watch:
 
 # Build server
 server: server_deps
+	go generate ./templates
 	go build -v -o $(BINARY)
 ifeq ($(ISWINDOWS), true)
 	cp /mingw64/bin/*.dll ./
@@ -75,7 +76,7 @@ client_clean:
 
 # Removes any build and dependancy directories
 clean: client_clean
-	rm -rf .build .ffmpeg node_modules .package \
+	rm -rf .build .ffmpeg node_modules .package ./templates/*.qtpl.go \
 		meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 ifeq ($(ISWINDOWS), true)
 	rm -rf /.meguca_build *.dll
