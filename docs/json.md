@@ -49,6 +49,7 @@ extends [ThreadCommon](#threadcommon), [Post](common.md#post)
 
 | Field | Type | Required | Description |
 |---|---|:---:|---|
+| abbrev | bool | - | Specifies, if the thread is abbreviated and does not contain all of its replies |
 | posts | [][Post](common.md#post) | + | Array of reply posts to the thread |
 
 ##StandalonePost

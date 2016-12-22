@@ -12,6 +12,7 @@ var (
 			Table("threads").
 			EqJoin("id", r.Table("posts")).
 			Zip().
+			Filter(filterDeleted).
 			Without(omitForBoards).
 			Merge(mergeLastUpdated).
 			OrderBy(r.Desc("replyTime"))
@@ -39,6 +40,10 @@ var (
 	omitForThreadPosts = append(omitForPosts, []string{"op", "board"}...)
 )
 
+func filterDeleted(p r.Term) r.Term {
+	return p.Field("deleted").Default(false).Eq(false)
+}
+
 // GetThread retrieves public thread data from the database
 func GetThread(id uint64, lastN int) (common.Thread, error) {
 	q := r.
@@ -50,6 +55,7 @@ func GetThread(id uint64, lastN int) (common.Thread, error) {
 	getPosts := r.
 		Table("posts").
 		GetAllByIndex("op", id).
+		Filter(filterDeleted).
 		OrderBy("id").
 		CoerceTo("array")
 
@@ -69,11 +75,17 @@ func GetThread(id uint64, lastN int) (common.Thread, error) {
 		return thread, err
 	}
 
+	if thread.Deleted {
+		return common.Thread{}, r.ErrEmptyResult
+	}
+
 	// Remove OP from posts slice to prevent possible duplication. Post might
 	// be deleted before the thread due to a deletion race.
 	if len(thread.Posts) != 0 && thread.Posts[0].ID == id {
 		thread.Posts = thread.Posts[1:]
 	}
+
+	thread.Abbrev = lastN != 0
 
 	return thread, nil
 }
@@ -82,6 +94,9 @@ func GetThread(id uint64, lastN int) (common.Thread, error) {
 func GetPost(id uint64) (post common.StandalonePost, err error) {
 	q := FindPost(id).Without(omitForPosts).Default(nil)
 	err = One(q, &post)
+	if post.Deleted && err == nil {
+		return common.StandalonePost{}, r.ErrEmptyResult
+	}
 	return
 }
 
@@ -92,6 +107,7 @@ func GetBoard(board string) (data common.Board, err error) {
 		GetAllByIndex("board", board).
 		EqJoin("id", r.Table("posts")).
 		Zip().
+		Filter(filterDeleted).
 		Without(omitForBoards).
 		Merge(mergeLastUpdated).
 		OrderBy(r.Desc("replyTime"))

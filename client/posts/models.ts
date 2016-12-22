@@ -20,6 +20,7 @@ export type PostLinks = { [id: number]: PostLink }
 // property.
 export interface PostData {
 	editing?: boolean
+	deleted?: boolean
 	image?: ImageData
 	time: number
 	id: number

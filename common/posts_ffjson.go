@@ -213,6 +213,14 @@ func (mj *DatabasePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 		buf.WriteByte(',')
 	}
+	if mj.Deleted != false {
+		if mj.Deleted {
+			buf.WriteString(`"deleted":true`)
+		} else {
+			buf.WriteString(`"deleted":false`)
+		}
+		buf.WriteByte(',')
+	}
 	buf.WriteString(`"id":`)
 	fflib.FormatBits2(buf, uint64(mj.ID), 10, false)
 	buf.WriteString(`,"time":`)
@@ -393,6 +401,14 @@ func (mj *Post) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 		buf.WriteByte(',')
 	}
+	if mj.Deleted != false {
+		if mj.Deleted {
+			buf.WriteString(`"deleted":true`)
+		} else {
+			buf.WriteString(`"deleted":false`)
+		}
+		buf.WriteByte(',')
+	}
 	buf.WriteString(`"id":`)
 	fflib.FormatBits2(buf, uint64(mj.ID), 10, false)
 	buf.WriteString(`,"time":`)
@@ -511,6 +527,14 @@ func (mj *StandalonePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 		buf.WriteByte(',')
 	}
+	if mj.Deleted != false {
+		if mj.Deleted {
+			buf.WriteString(`"deleted":true`)
+		} else {
+			buf.WriteString(`"deleted":false`)
+		}
+		buf.WriteByte(',')
+	}
 	buf.WriteString(`"id":`)
 	fflib.FormatBits2(buf, uint64(mj.ID), 10, false)
 	buf.WriteString(`,"time":`)
@@ -616,7 +640,16 @@ func (mj *Thread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	var obj []byte
 	_ = obj
 	_ = err
-	buf.WriteString(`{"posts":`)
+	buf.WriteByte('{')
+	if mj.Abbrev != false {
+		if mj.Abbrev {
+			buf.WriteString(`"abbrev":true`)
+		} else {
+			buf.WriteString(`"abbrev":false`)
+		}
+		buf.WriteByte(',')
+	}
+	buf.WriteString(`"posts":`)
 	if mj.Posts != nil {
 		buf.WriteString(`[`)
 		for i, v := range mj.Posts {
@@ -643,6 +676,14 @@ func (mj *Thread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteString(`"editing":true`)
 		} else {
 			buf.WriteString(`"editing":false`)
+		}
+		buf.WriteByte(',')
+	}
+	if mj.Deleted != false {
+		if mj.Deleted {
+			buf.WriteString(`"deleted":true`)
+		} else {
+			buf.WriteString(`"deleted":false`)
 		}
 		buf.WriteByte(',')
 	}

@@ -73,6 +73,13 @@ func Thread(ln lang.Pack, withIndex bool, postHTML []byte) ([]byte, error) {
 
 // CalculateOmit returns the omitted post and image counts for a thread
 func CalculateOmit(t common.Thread) (int, int) {
+	// There might still be posts missing due to deletions even in complete
+	// thread queries. Ensure we are actually retrieving an abbreviated thread
+	// before calculating.
+	if !t.Abbrev {
+		return 0, 0
+	}
+
 	var (
 		omit    = int(t.PostCtr) - len(t.Posts)
 		imgOmit uint32

@@ -208,6 +208,7 @@ func testGetThread(t *testing.T) {
 	}
 	sliced := thread1
 	sliced.Posts = sliced.Posts[1:]
+	sliced.Abbrev = true
 
 	cases := [...]struct {
 		name  string

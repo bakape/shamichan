@@ -318,6 +318,7 @@
 		"configureBoard": "Configure board",
 		"configureServer": "Configure server",
 		"createBoard": "Create board",
+		"deletePost": "Delete post",
 		"done": "Done",
 		"deleteBoard": "Delete board",
 		"enableJS": "Enable JavaScript for more functionality",

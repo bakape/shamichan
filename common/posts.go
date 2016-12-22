@@ -61,6 +61,7 @@ type ThreadCommon struct {
 // its opening post data and its contained posts. The composite type itself is
 // not stored in the database.
 type Thread struct {
+	Abbrev bool `json:"abbrev,omitempty"`
 	Post
 	ThreadCommon
 	Posts []Post `json:"posts" gorethink:"posts"`
@@ -80,6 +81,7 @@ type DatabaseThread struct {
 // reply.
 type Post struct {
 	Editing   bool      `json:"editing,omitempty" gorethink:"editing"`
+	Deleted   bool      `json:"deleted,omitempty" gorethink:"deleted,omitempty"`
 	ID        uint64    `json:"id" gorethink:"id"`
 	Time      int64     `json:"time" gorethink:"time"`
 	Body      string    `json:"body" gorethink:"body"`

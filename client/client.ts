@@ -57,7 +57,9 @@ export function insertPost(data: PostData) {
 
 	const existing = posts.get(data.id)
 	if (existing) {
-		if (existing instanceof FormModel) {
+		if (data.deleted) {
+			existing.remove()
+		} else if (existing instanceof FormModel) {
 			if (!existing.isAllocated) {
 				existing.onAllocation(data)
 			}
@@ -65,6 +67,11 @@ export function insertPost(data: PostData) {
 		} else {
 			existing.extend(data)
 		}
+		return
+	}
+
+	// Deleted post sent through a sync update. Don't render.
+	if (data.deleted) {
 		return
 	}
 
@@ -142,4 +149,8 @@ deferInit(() => {
 	handlers[message.closePost] = (id: number) =>
 		handle(id, m =>
 			m.closePost())
+
+	handlers[message.deletePost] = (id: number) =>
+		handle(id, m =>
+			m.remove())
 })

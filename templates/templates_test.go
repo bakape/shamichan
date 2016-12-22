@@ -74,6 +74,7 @@ func TestThread(t *testing.T) {
 			ID:    1,
 			Image: &img,
 		},
+		Abbrev: true,
 		Posts: []common.Post{
 			{
 				ID:   2,

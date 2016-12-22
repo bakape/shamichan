@@ -49,6 +49,10 @@ class AccountPanel extends TabbedModal {
 				(el.lastElementChild as HTMLElement).style.display = "none"
 			}
 		})
+
+		// Load Moderation panel
+		loadModule("mod/panel").then(m =>
+			new m.default())
 	}
 
 	// Create handler for dynamically loading and rendering conditional view

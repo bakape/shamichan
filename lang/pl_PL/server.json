@@ -318,6 +318,7 @@
 		"configureBoard": "Konfiguracja działu",
 		"configureServer": "Konfiguracja serwera",
 		"createBoard": "Tworzenie działu",
+		"deletePost": "Delete post",
 		"done": "Importowanie zakończone sukcesem. Strona zostanie teraz odświeżona",
 		"deleteBoard": "Delete board",
 		"enableJS": "Enable JavaScript for more functionality",

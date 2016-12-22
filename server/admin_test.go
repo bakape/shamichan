@@ -10,8 +10,10 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/server/websockets"
 	. "github.com/bakape/meguca/test"
 	"github.com/dancannon/gorethink"
 )
@@ -424,5 +426,90 @@ func assertDeleted(t *testing.T, q gorethink.Term, del bool) {
 	}
 	if deleted != del {
 		LogUnexpected(t, del, deleted)
+	}
+}
+
+func TestDeletePost(t *testing.T) {
+	assertTableClear(t, "main", "accounts", "posts")
+	assertInsert(t, "posts", []common.DatabasePost{
+		{
+			StandalonePost: common.StandalonePost{
+				Board: "a",
+				Post: common.Post{
+					ID: 1,
+				},
+			},
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Board: "c",
+				Post: common.Post{
+					ID: 2,
+				},
+			},
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Board: "a",
+				Post: common.Post{
+					ID: 3,
+				},
+			},
+		},
+	})
+	writeSampleUser(t)
+
+	rec, req := newJSONPair(t, "/admin/deletePost", postDeletionRequest{
+		IDs:          []uint64{1, 2, 3},
+		Board:        "a",
+		sessionCreds: sampleLoginCreds,
+	})
+	router.ServeHTTP(rec, req)
+
+	assertCode(t, rec, 200)
+
+	cases := [...]struct {
+		name    string
+		id      uint64
+		deleted bool
+	}{
+		{"from target board", 1, true},
+		{"from target board", 3, true},
+		{"different board", 2, false},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			var deleted bool
+			q := db.FindPost(c.id).Field("deleted").Default(false)
+			if err := db.One(q, &deleted); err != nil {
+				t.Fatal(err)
+			}
+			if deleted != c.deleted {
+				LogUnexpected(t, deleted, c.deleted)
+			}
+
+			if !c.deleted {
+				return
+			}
+			msg, err := websockets.EncodeMessage(
+				websockets.MessageDeletePost,
+				c.id,
+			)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var contains bool
+			q = db.FindPost(c.id).Field("log").Contains(msg)
+			if err := db.One(q, &contains); err != nil {
+				t.Fatal(err)
+			}
+			if !contains {
+				t.Errorf("log message not written")
+			}
+		})
 	}
 }

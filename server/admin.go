@@ -72,6 +72,12 @@ type boardDeletionRequest struct {
 	common.Captcha
 }
 
+type postDeletionRequest struct {
+	IDs   []uint64 `json:"ids"`
+	Board string
+	sessionCreds
+}
+
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
 // decoding succeeded.
 func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
@@ -308,6 +314,43 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := db.DeleteBoard(msg.ID); err != nil {
+		text500(w, r, err)
+		return
+	}
+}
+
+// Delete one or multiple posts on a moderated board
+func deletePost(w http.ResponseWriter, r *http.Request) {
+	var msg postDeletionRequest
+
+	// TODO: More than board owners should be able to delete posts
+	isValid := decodeJSON(w, r, &msg) &&
+		isLoggedIn(w, r, msg.UserID, msg.Session) &&
+		isBoardOwner(w, r, msg.Board, msg.UserID)
+	if !isValid {
+		return
+	}
+
+	// Cast IDs to interfaces
+	ids := make([]interface{}, len(msg.IDs))
+	for i := range ids {
+		ids[i] = interface{}(msg.IDs[i])
+	}
+
+	q := gorethink.
+		Table("posts").
+		GetAll(ids...).
+		Filter(gorethink.Row.Field("board").Eq(msg.Board)).
+		Update(map[string]interface{}{
+			"log": gorethink.Row.Field("log").Append(gorethink.
+				Expr("12").
+				Add(gorethink.Row.Field("id").CoerceTo("string")).
+				CoerceTo("binary"),
+			),
+			"deleted":     true,
+			"lastUpdated": gorethink.Now().ToEpochTime().Floor(),
+		})
+	if err := db.Write(q); err != nil {
 		text500(w, r, err)
 		return
 	}

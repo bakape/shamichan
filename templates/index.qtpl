@@ -49,6 +49,7 @@
 		{% endcomment %}
 		<template name="article">
 			<header class="spaced">
+				<input type="checkbox" class="mod-checkbox hidden">
 				<h3 hidden></h3>
 				<b class="name"></b>
 				<time></time>
@@ -286,6 +287,18 @@
 							</div>
 						{% endfor %}
 					</div>
+				</div>
+				<div id="moderation-panel" class="modal">
+					<form>
+						<select name="action">
+							{% for _, id := range [...]string{"deletePost"} %}
+								<option value="{%s= id %}">
+									{%s= ln.UI[id] %}
+								</option>
+							{% endfor %}
+						</select>
+						<input type="submit" value="{%s= ln.UI["submit"] %}">
+					</form>
 				</div>
 			</div>
 		</div>

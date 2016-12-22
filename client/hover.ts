@@ -243,6 +243,8 @@ async function renderPostPreview(event: MouseEvent) {
 		const fetched = await renderFetchedPost(id)
 		if (fetched) {
 			post = fetched.model
+		} else {
+			return
 		}
 	}
 	postPreview = new PostPreview(post, target)

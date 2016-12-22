@@ -7,6 +7,7 @@
 	{% code id := strconv.FormatUint(p.ID, 10) %}
 	<article id="p{%s= id %}" class="glass{% if p.Editing %}{% space %}editing{% endif %}">
 		<header class="spaced">
+			<input type="checkbox" class="mod-checkbox hidden">
 			{% if subject != "" %}
 				<h3>
 					「{%s subject %}」
