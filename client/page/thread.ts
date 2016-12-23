@@ -96,6 +96,11 @@ function extractPost(post: PostData) {
     // if client is on UTC. Meh.
     view.renderTime()
 
+    // Localize staff titles
+    if (post.auth && options.lang != "en_GB") {
+        view.renderName()
+    }
+
     // Add (You) to posts linking to the user's posts and trigger desktop
     // notifications, if needed
     const {model: {links, backlinks, image}} = view

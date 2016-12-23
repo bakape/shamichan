@@ -22,6 +22,10 @@ var (
 var specs = map[string][]inputSpec{
 	"identity": {
 		{
+			ID:   "staffTitle",
+			Type: _bool,
+		},
+		{
 			ID:             "name",
 			Type:           _string,
 			MaxLength:      common.MaxLenName,

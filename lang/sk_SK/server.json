@@ -260,6 +260,10 @@
 			"Textové spojlere",
 			"Povoľ používanie ** na spojlerovanie blokov textu"
 		],
+		"staffTitle": [
+			"Staff Title",
+			"Display your staff title in the post header"
+		],
 		"textOnly": [
 			"Len text",
 			"Zakázať odosielanie súborov"

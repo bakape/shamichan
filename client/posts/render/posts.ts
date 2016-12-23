@@ -5,7 +5,12 @@ import { renderBody } from './body'
 import { PostData, ThreadData } from '../models'
 import lang from '../../lang'
 import options from '../../options'
-import { PostCredentials } from "../posting/identity"
+
+interface PostCredentials {
+	name?: string
+	trip?: string
+	auth?: string
+}
 
 // Populate post template
 export default function (
@@ -68,7 +73,7 @@ export function renderName(
 	}
 	if (auth) { // Render staff title
 		el.classList.add("admin")
-		html += ` ## ${escape(auth)}`
+		html += ` ## ${lang.posts[auth]}`
 	}
 	el.innerHTML = html
 }

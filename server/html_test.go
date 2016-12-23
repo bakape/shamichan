@@ -139,7 +139,7 @@ func TestBoardConfigurationForm(t *testing.T) {
 
 	rec, req := newJSONPair(t, "/forms/configureBoard", boardConfigRequest{
 		ID:           "a",
-		sessionCreds: sampleLoginCreds,
+		SessionCreds: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)

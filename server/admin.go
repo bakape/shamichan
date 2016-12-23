@@ -45,37 +45,37 @@ var (
 
 // Request to set the board-specific configuration for a board
 type boardConfigSettingRequest struct {
-	sessionCreds
+	auth.SessionCreds
 	config.BoardConfigs
 }
 
 // Request for the current non-public board configuration
 type boardConfigRequest struct {
-	sessionCreds
+	auth.SessionCreds
 	ID string `json:"id"`
 }
 
 type configSettingRequest struct {
-	sessionCreds
+	auth.SessionCreds
 	config.Configs
 }
 
 type boardCreationRequest struct {
 	Name, Title string
-	sessionCreds
+	auth.SessionCreds
 	common.Captcha
 }
 
 type boardDeletionRequest struct {
 	ID string
-	sessionCreds
+	auth.SessionCreds
 	common.Captcha
 }
 
 type postDeletionRequest struct {
 	IDs   []uint64 `json:"ids"`
 	Board string
-	sessionCreds
+	auth.SessionCreds
 }
 
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
@@ -95,7 +95,7 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardConfigSettingRequest
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		isBoardOwner(w, r, msg.ID, msg.UserID) &&
+		isBoardOwner(w, msg.ID, msg.UserID) &&
 		validateBoardConfigs(w, msg.BoardConfigs)
 	if !isValid {
 		return
@@ -119,24 +119,12 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 }
 
 // Assert the user is one of the board's owners
-func isBoardOwner(
-	w http.ResponseWriter,
-	req *http.Request,
-	board, userID string,
-) (isOwner bool) {
-	if staff := config.GetBoardConfigs(board).Staff; staff != nil {
-		for _, o := range staff["owners"] {
-			if o == userID {
-				isOwner = true
-				break
-			}
-		}
-	}
-
-	if !isOwner {
+func isBoardOwner(w http.ResponseWriter, board, userID string) bool {
+	if !auth.HoldsPosition(board, userID, "owners") {
 		http.Error(w, "403 Not board owner", 403)
+		return false
 	}
-	return
+	return true
 }
 
 // Validate length limit compliance of various fields
@@ -184,7 +172,7 @@ func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
 // Serve the current server configurations. Available only to the "admin"
 // account
 func servePrivateServerConfigs(w http.ResponseWriter, r *http.Request) {
-	var msg sessionCreds
+	var msg auth.SessionCreds
 	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg) {
 		return
 	}
@@ -194,7 +182,7 @@ func servePrivateServerConfigs(w http.ResponseWriter, r *http.Request) {
 func isAdmin(
 	w http.ResponseWriter,
 	r *http.Request,
-	msg sessionCreds,
+	msg auth.SessionCreds,
 ) bool {
 	if !(isLoggedIn(w, r, msg.UserID, msg.Session)) {
 		return false
@@ -217,7 +205,7 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 	)
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		isBoardOwner(w, r, msg.ID, msg.UserID)
+		isBoardOwner(w, msg.ID, msg.UserID)
 	if !isValid {
 		return conf, false
 	}
@@ -285,7 +273,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 // user
 func configureServer(w http.ResponseWriter, r *http.Request) {
 	var msg configSettingRequest
-	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg.sessionCreds) {
+	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg.SessionCreds) {
 		return
 	}
 
@@ -305,7 +293,7 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardDeletionRequest
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		isBoardOwner(w, r, msg.ID, msg.UserID)
+		isBoardOwner(w, msg.ID, msg.UserID)
 	if !isValid {
 		return
 	}
@@ -326,7 +314,7 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	// TODO: More than board owners should be able to delete posts
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		isBoardOwner(w, r, msg.Board, msg.UserID)
+		isBoardOwner(w, msg.Board, msg.UserID)
 	if !isValid {
 		return
 	}

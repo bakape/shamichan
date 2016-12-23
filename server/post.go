@@ -92,8 +92,11 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 				Token:   token,
 				Name:    header.Filename,
 			},
+			SessionCreds: auth.SessionCreds{
+				UserID:  f.Get("userID"),
+				Session: f.Get("session"),
+			},
 			Name:     f.Get("name"),
-			Auth:     f.Get("auth"),
 			Password: f.Get("password"),
 			Body:     f.Get("body"),
 		},

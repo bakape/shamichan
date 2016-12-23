@@ -40,8 +40,9 @@ type ThreadCreationRequest struct {
 // ReplyCreationRequest contains common fields for both thread and reply
 // creation
 type ReplyCreationRequest struct {
-	Image                      ImageRequest
-	Name, Auth, Password, Body string
+	Image ImageRequest
+	auth.SessionCreds
+	Name, Password, Body string
 }
 
 // ImageRequest contains data for allocating an image
@@ -265,7 +266,10 @@ func constructPost(
 	forcedAnon, parseBody bool,
 	ip, board string,
 ) (
-	post common.DatabasePost, now int64, bodyLength int, err error,
+	post common.DatabasePost,
+	now int64,
+	bodyLength int,
+	err error,
 ) {
 	now = time.Now().Unix()
 	post = common.DatabasePost{
@@ -283,6 +287,21 @@ func constructPost(
 	if !forcedAnon {
 		post.Name, post.Trip, err = parser.ParseName(req.Name)
 		if err != nil {
+			return
+		}
+	}
+
+	// Attach staff position title after validations
+	if req.UserID != "" {
+		post.Auth = auth.FindPosition(board, req.UserID)
+
+		var loggedIn bool
+		loggedIn, err = db.IsLoggedIn(req.UserID, req.Session)
+		if err != nil {
+			return
+		}
+		if !loggedIn {
+			err = common.ErrInvalidCreds
 			return
 		}
 	}

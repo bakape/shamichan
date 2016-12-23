@@ -15,7 +15,7 @@ import (
 
 const samplePassword = "123456"
 
-var sampleLoginCreds = sessionCreds{
+var sampleLoginCreds = auth.SessionCreds{
 	UserID:  "user1",
 	Session: genSession(),
 }
@@ -81,7 +81,7 @@ func TestIsLoggedIn(t *testing.T) {
 				LogUnexpected(t, c.isValid, isValid)
 			}
 			if !c.isValid {
-				assertError(t, rec, 403, errInvalidCreds)
+				assertError(t, rec, 403, common.ErrInvalidCreds)
 			}
 		})
 	}
@@ -114,7 +114,7 @@ func TestNotLoggedIn(t *testing.T) {
 
 			rec, req := newJSONPair(t, "/", sampleLoginCreds)
 			fn(rec, req)
-			assertError(t, rec, 403, errInvalidCreds)
+			assertError(t, rec, 403, common.ErrInvalidCreds)
 		})
 	}
 }
@@ -135,7 +135,7 @@ func TestChangePassword(t *testing.T) {
 			old:  "1234567",
 			new:  new,
 			code: 403,
-			err:  errInvalidCreds,
+			err:  common.ErrInvalidCreds,
 		},
 		{
 			name: "new password too long",
@@ -163,7 +163,7 @@ func TestChangePassword(t *testing.T) {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			msg := passwordChangeRequest{
-				sessionCreds: sampleLoginCreds,
+				SessionCreds: sampleLoginCreds,
 				Old:          c.old,
 				New:          c.new,
 			}
@@ -291,14 +291,14 @@ func TestLogin(t *testing.T) {
 			id:       id + "1",
 			password: password,
 			code:     403,
-			err:      errInvalidCreds,
+			err:      common.ErrInvalidCreds,
 		},
 		{
 			name:     "invalid password",
 			id:       id,
 			password: password + "1",
 			code:     403,
-			err:      errInvalidCreds,
+			err:      common.ErrInvalidCreds,
 		},
 		{
 			name:     "valid",
@@ -351,7 +351,7 @@ func TestLogout(t *testing.T) {
 			name:  "not logged in",
 			token: genSession(),
 			code:  403,
-			err:   errInvalidCreds,
+			err:   common.ErrInvalidCreds,
 		},
 		{
 			name:  "valid",
@@ -365,7 +365,7 @@ func TestLogout(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/admin/logout", sessionCreds{
+			rec, req := newJSONPair(t, "/admin/logout", auth.SessionCreds{
 				UserID:  id,
 				Session: c.token,
 			})
@@ -402,7 +402,7 @@ func TestLogoutAll(t *testing.T) {
 	}
 	assertInsert(t, "accounts", user)
 
-	rec, req := newJSONPair(t, "/admin/logoutAll", sessionCreds{
+	rec, req := newJSONPair(t, "/admin/logoutAll", auth.SessionCreds{
 		UserID:  id,
 		Session: sessions[0].Token,
 	})

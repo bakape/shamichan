@@ -157,8 +157,7 @@ export default class PostView extends ImageHandler {
 
     // Render the name and tripcode in the header
     public renderName() {
-        write(() =>
-            renderName(this.el.querySelector(".name"), this.model))
+        renderName(this.el.querySelector(".name"), this.model)
     }
 
     // Render the <time> element in the header

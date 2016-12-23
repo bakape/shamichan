@@ -15,7 +15,6 @@ import (
 
 var (
 	errInvalidCaptcha  = errors.New("invalid captcha")
-	errInvalidCreds    = errors.New("invalid login credentials")
 	errInvalidPassword = errors.New("invalid password")
 	errInvalidUserID   = errors.New("invalid login ID")
 	errUserIDTaken     = errors.New("login ID already taken")
@@ -31,13 +30,8 @@ type loginCreds struct {
 	ID, Password string
 }
 
-// Embed in every request that needs authentication
-type sessionCreds struct {
-	UserID, Session string
-}
-
 type passwordChangeRequest struct {
-	sessionCreds
+	auth.SessionCreds
 	common.Captcha
 	Old, New string
 }
@@ -120,7 +114,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 	case gorethink.ErrEmptyResult:
-		text403(w, errInvalidCreds)
+		text403(w, common.ErrInvalidCreds)
 		return
 	default:
 		text500(w, r, err)
@@ -131,7 +125,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		commitLogin(w, r, req.ID)
 	case bcrypt.ErrMismatchedHashAndPassword:
-		text403(w, errInvalidCreds)
+		text403(w, common.ErrInvalidCreds)
 	default:
 		text500(w, r, err)
 	}
@@ -139,7 +133,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 // Log out user from session and remove the session key from the database
 func logout(w http.ResponseWriter, r *http.Request) {
-	commitLogout(w, r, func(req sessionCreds) gorethink.Term {
+	commitLogout(w, r, func(req auth.SessionCreds) gorethink.Term {
 		// Remove current session from user's session document
 		return db.GetAccount(req.UserID).Update(map[string]gorethink.Term{
 			"sessions": gorethink.Row.
@@ -155,9 +149,9 @@ func logout(w http.ResponseWriter, r *http.Request) {
 func commitLogout(
 	w http.ResponseWriter,
 	r *http.Request,
-	fn func(sessionCreds) gorethink.Term,
+	fn func(auth.SessionCreds) gorethink.Term,
 ) {
-	var req sessionCreds
+	var req auth.SessionCreds
 	if !decodeJSON(w, r, &req) || !isLoggedIn(w, r, req.UserID, req.Session) {
 		return
 	}
@@ -169,7 +163,7 @@ func commitLogout(
 
 // Log out all sessions of the specific user
 func logoutAll(w http.ResponseWriter, r *http.Request) {
-	commitLogout(w, r, func(req sessionCreds) gorethink.Term {
+	commitLogout(w, r, func(req auth.SessionCreds) gorethink.Term {
 		return db.GetAccount(req.UserID).Update(map[string][]string{
 			"sessions": []string{},
 		})
@@ -197,7 +191,7 @@ func changePassword(w http.ResponseWriter, r *http.Request) {
 	switch err := auth.BcryptCompare(msg.Old, hash); err {
 	case nil:
 	case bcrypt.ErrMismatchedHashAndPassword:
-		text403(w, errInvalidCreds)
+		text403(w, common.ErrInvalidCreds)
 		return
 	default:
 		text500(w, r, err)
@@ -245,26 +239,19 @@ func isLoggedIn(
 	r *http.Request,
 	user, session string,
 ) bool {
-	if len(user) > common.MaxLenUserID || len(session) != common.LenSession {
-		text403(w, errInvalidCreds)
+	isValid, err := db.IsLoggedIn(user, session)
+	switch err {
+	case common.ErrInvalidCreds:
+		text403(w, err)
 		return false
-	}
-
-	var isValid bool
-	q := gorethink.
-		Table("accounts").
-		Get(user).
-		Field("sessions").
-		Field("token").
-		Contains(session).
-		Default(false)
-	if err := db.One(q, &isValid); err != nil {
+	case nil:
+	default:
 		text500(w, r, err)
 		return false
 	}
 
 	if !isValid {
-		text403(w, errInvalidCreds)
+		text403(w, common.ErrInvalidCreds)
 		return false
 	}
 

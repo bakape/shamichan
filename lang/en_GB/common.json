@@ -14,7 +14,11 @@
 		"seeAll": "See all",
 		"spoiler": "Spoiler",
 		"show": "Show",
-		"you": "(You)"
+		"you": "(You)",
+		"admin": "Admin",
+		"boardOwner": "Board Owner",
+		"moderator": "Moderator",
+		"janitor": "Meido"
 	},
 	"plurals": {
 		"day": [

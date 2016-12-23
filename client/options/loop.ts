@@ -86,7 +86,8 @@ function toggleAnonymisation() {
 		({name, trip, auth}) =>
 			!!name || !!trip || !!auth,
 		({view}) =>
-			view.renderName(),
+			write(() =>
+				view.renderName()),
 	)
 }
 

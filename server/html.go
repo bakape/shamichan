@@ -184,7 +184,7 @@ func boardCreationForm(w http.ResponseWriter, r *http.Request) {
 
 // Render the form for configuring the server
 func serverConfigurationForm(w http.ResponseWriter, r *http.Request) {
-	var msg sessionCreds
+	var msg auth.SessionCreds
 	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg) {
 		return
 	}

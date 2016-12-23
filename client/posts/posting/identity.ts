@@ -1,21 +1,14 @@
 // Name, tripcode and staff title persistence and postform propagation
 
 import { emitChanges, ChangeEmitter } from '../../model'
-import { randomID } from '../../util'
+import { randomID, extend } from '../../util'
 import { BannerModal } from "../../banner"
 import { write } from "../../render"
+import { newRequest } from "../../mod/common"
 
 interface Identity extends ChangeEmitter {
 	name: string
 	postPassword: string
-	[index: string]: any
-}
-
-// Base of any post allocation request
-export interface PostCredentials {
-	name?: string
-	auth?: string // TODO
-	password?: string
 	[index: string]: any
 }
 
@@ -62,13 +55,14 @@ class IdentityPanel extends BannerModal {
 new IdentityPanel()
 
 // Generate a new base post allocation request
-export function newAllocRequest(): PostCredentials {
-	const req: PostCredentials = {
-		password: identity.postPassword,
-	} as any
+export function newAllocRequest() {
+	const req = { password: identity.postPassword } as any
 
 	if (identity.name) {
 		req["name"] = identity.name
+	}
+	if ((document.getElementById("staffTitle") as HTMLInputElement).checked) {
+		extend(req, newRequest())
 	}
 
 	return req

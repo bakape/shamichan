@@ -1,6 +1,7 @@
 {% import "fmt" %}
 {% import "strconv" %}
 {% import "github.com/bakape/meguca/common" %}
+{% import "github.com/bakape/meguca/lang" %}
 {% import "github.com/bakape/meguca/imager/assets" %}
 
 {% func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string) %}{% stripspace %}
@@ -13,7 +14,7 @@
 					「{%s subject %}」
 				</h3>
 			{% endif %}
-			<b class="name"{% if p.Auth != "" %}{% space %}class="admin"{% endif %}>
+			<b class="name{% if p.Auth != "" %}{% space %}admin{% endif %}">
 				{% if p.Name != "" || p.Trip == "" %}
 					{% if p.Name != "" %}
 						{%s p.Name %}
@@ -30,7 +31,7 @@
 					</code>
 				{% endif %}
 				{% if p.Auth != "" %}
-					##{% space %}{%s p.Auth %}
+					{% space %}##{% space %}{%s= lang.Packs["en_GB"].Common.Posts[p.Auth] %}
 				{% endif %}
 			</b>
 			<time>

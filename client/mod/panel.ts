@@ -37,6 +37,10 @@ export default class ModPanel extends View<null> {
 		write(() => {
 			this.el.style.display = "inline-block"
 			toggle.checked = displayCheckboxes
+			document
+				.querySelector("#identity > table tr:first-child")
+				.style
+				.display = "table-row"
 		})
 	}
 

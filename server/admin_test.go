@@ -18,7 +18,7 @@ import (
 	"github.com/dancannon/gorethink"
 )
 
-var adminLoginCreds = sessionCreds{
+var adminLoginCreds = auth.SessionCreds{
 	UserID:  "admin",
 	Session: genSession(),
 }
@@ -75,7 +75,7 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 
 	rec, req := newJSONPair(t, "/admin/boardConfig", boardConfigRequest{
 		ID:           "a",
-		sessionCreds: sampleLoginCreds,
+		SessionCreds: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)
 	assertBody(t, rec, string(marshalJSON(t, conf)))
@@ -116,7 +116,7 @@ func TestBoardConfiguration(t *testing.T) {
 	writeSampleUser(t)
 
 	data := boardConfigSettingRequest{
-		sessionCreds: sampleLoginCreds,
+		SessionCreds: sampleLoginCreds,
 		BoardConfigs: conf,
 	}
 	rec, req := newJSONPair(t, "/admin/configureBoard", data)
@@ -257,7 +257,7 @@ func TestValidateBoardCreation(t *testing.T) {
 			msg := boardCreationRequest{
 				Name:         c.id,
 				Title:        c.title,
-				sessionCreds: sampleLoginCreds,
+				SessionCreds: sampleLoginCreds,
 			}
 			rec, req := newJSONPair(t, "/admin/createBoard", msg)
 			router.ServeHTTP(rec, req)
@@ -281,7 +281,7 @@ func TestBoardCreation(t *testing.T) {
 	msg := boardCreationRequest{
 		Name:         id,
 		Title:        title,
-		sessionCreds: sampleLoginCreds,
+		SessionCreds: sampleLoginCreds,
 	}
 	rec, req := newJSONPair(t, "/admin/createBoard", msg)
 	router.ServeHTTP(rec, req)
@@ -323,19 +323,19 @@ func TestServePrivateServerConfigs(t *testing.T) {
 
 	cases := [...]struct {
 		name string
-		sessionCreds
+		auth.SessionCreds
 		code int
 		err  error
 	}{
 		{
 			name:         "not admin",
-			sessionCreds: sampleLoginCreds,
+			SessionCreds: sampleLoginCreds,
 			code:         403,
 			err:          errAccessDenied,
 		},
 		{
 			name:         "admin",
-			sessionCreds: adminLoginCreds,
+			SessionCreds: adminLoginCreds,
 			code:         200,
 		},
 	}
@@ -345,7 +345,7 @@ func TestServePrivateServerConfigs(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/admin/config", c.sessionCreds)
+			rec, req := newJSONPair(t, "/admin/config", c.SessionCreds)
 			router.ServeHTTP(rec, req)
 
 			assertCode(t, rec, c.code)
@@ -379,7 +379,7 @@ func TestServerConfigSetting(t *testing.T) {
 	writeAdminAccount(t)
 
 	msg := configSettingRequest{
-		sessionCreds: adminLoginCreds,
+		SessionCreds: adminLoginCreds,
 		Configs:      config.Defaults,
 	}
 	msg.DefaultCSS = "ashita"
@@ -411,7 +411,7 @@ func TestDeleteBoard(t *testing.T) {
 
 	rec, req := newJSONPair(t, "/admin/deleteBoard", boardDeletionRequest{
 		ID:           "a",
-		sessionCreds: sampleLoginCreds,
+		SessionCreds: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)
 
@@ -462,7 +462,7 @@ func TestDeletePost(t *testing.T) {
 	rec, req := newJSONPair(t, "/admin/deletePost", postDeletionRequest{
 		IDs:          []uint64{1, 2, 3},
 		Board:        "a",
-		sessionCreds: sampleLoginCreds,
+		SessionCreds: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)
 

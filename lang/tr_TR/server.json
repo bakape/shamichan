@@ -260,6 +260,10 @@
 			"Text spoilers",
 			"Enable use of ** to spoiler blocks of text"
 		],
+		"staffTitle": [
+			"Staff Title",
+			"Display your staff title in the post header"
+		],
 		"textOnly": [
 			"Text only",
 			"Disable file uploads"

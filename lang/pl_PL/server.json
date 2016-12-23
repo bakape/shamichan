@@ -260,6 +260,10 @@
 			"Image Spoilers",
 			"Don't spoiler images"
 		],
+		"staffTitle": [
+			"Staff Title",
+			"Display your staff title in the post header"
+		],
 		"textOnly": [
 			"Tylko tekst",
 			"Wyłącz przesyłanie plików"

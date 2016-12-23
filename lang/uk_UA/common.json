@@ -14,7 +14,11 @@
 		"seeAll": "Показати все",
 		"spoiler": "Спойлер",
 		"show": "Показати",
-		"you": "(Ви)"
+		"you": "(Ви)",
+		"admin": "Admin",
+		"boardOwner": "Board Owner",
+		"moderator": "Moderator",
+		"janitor": "Meido"
 	},
 	"plurals": {
 		"day": [

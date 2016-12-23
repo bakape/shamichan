@@ -108,19 +108,16 @@ a:hover, blockquote a {
     background-color: #1d1d21;
 }
 
-#thread-container:not(.custom-BG) article.editing:not(:first-child) a,
-    #thread-container:not(.custom-BG) article.editing:not(:first-child) b,
-    #thread-container:not(.custom-BG) article.editing:not(:first-child) header
-{
-    color: #222;
-}
-
-#thread-container:not(.custom-BG) article.editing:not(:first-child) em {
-    color: #656d28;
-}
-
-#thread-container:not(.custom-BG) article.editing:not(:first-child) li {
-    color: #ddd;
+#thread-container:not(.custom-BG) article.editing:not(:first-child) {
+    a, b:not(.admin), header {
+        color: #222;
+    }
+    em {
+        color: #656d28;
+    }
+    li {
+        color: #ddd;
+    }
 }
 
 #thread-container.custom-BG article.editing {
@@ -129,19 +126,16 @@ a:hover, blockquote a {
     color: #000;
 }
 
-#thread-container.custom-BG article.editing a,
-    #thread-container.custom-BG article.editing b,
-    #thread-container.custom-BG article.editing header
-{
-    color: #222;
-}
-
-#thread-container.custom-BG article.editing em {
-    color: #656d28;
-}
-
-#thread-container.custom-BG article.editing li {
-    color: #ddd;
+#thread-container.custom-BG article.editing {
+    a, b:not(.admin), header {
+        color: #222;
+    }
+    em {
+        color: #656d28;
+    }
+    li {
+        color: #ddd;
+    }
 }
 
 .embed {
