@@ -16,9 +16,9 @@
 		"show": "Показати",
 		"you": "(Ви)",
 		"admin": "Admin",
-		"boardOwner": "Board Owner",
-		"moderator": "Moderator",
-		"janitor": "Meido"
+		"owners": "Board Owner",
+		"moderators": "Moderator",
+		"janitors": "Meido"
 	},
 	"plurals": {
 		"day": [
