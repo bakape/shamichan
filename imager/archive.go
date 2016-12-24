@@ -1,8 +1,11 @@
 package imager
 
+// #cgo LDFLAGS: -L${SRCDIR}/lib -l:libimager.a -ldl
+// #include <stdlib.h>
+// #include "lib/imager.h"
+import "C"
 import (
 	"bytes"
-	"compress/gzip"
 	"io"
 	"io/ioutil"
 	"path/filepath"
@@ -12,15 +15,10 @@ import (
 
 // Detect if file is a TAR archive compressed with GZIP
 func detectTarGZ(buf []byte) (bool, error) {
-	if !bytes.HasPrefix(buf, []byte("\x1F\x8B\x08")) {
-		return false, nil
-	}
-
-	r, err := gzip.NewReader(bytes.NewReader(buf))
-	if err != nil {
-		return false, err
-	}
-	return isTar(r)
+	b := C.CBytes(buf)
+	defer C.free(b)
+	is := C.is_tar_gz((*C.uint8_t)(b), C.size_t(len(buf)))
+	return bool(is), nil
 }
 
 // Read the start of the file and determine, if it is a TAR archive

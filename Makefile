@@ -36,11 +36,15 @@ watch:
 	$(GULP) -w
 
 # Build server
-server: server_deps
+server: server_deps imager
 	go build -v -o $(BINARY)
 ifeq ($(ISWINDOWS), true)
 	cp /mingw64/bin/*.dll ./
 endif
+
+# Build Rust imager deps
+imager:
+	$(MAKE) -C imager/lib
 
 # Fecth all server dependancies. Dependacies are not updated automatically.
 server_deps: build_dirs
@@ -77,6 +81,7 @@ client_clean:
 clean: client_clean
 	rm -rf .build .ffmpeg node_modules .package \
 		meguca-*.zip meguca-*.tar.xz meguca meguca.exe
+	$(MAKE) -C imager/lib clean
 ifeq ($(ISWINDOWS), true)
 	rm -rf /.meguca_build *.dll
 endif
