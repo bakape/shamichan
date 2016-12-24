@@ -20,7 +20,7 @@ else
 	ISWINDOWS=false
 endif
 
-.PHONY: server client
+.PHONY: server client imager
 
 # Build everything
 all: server client

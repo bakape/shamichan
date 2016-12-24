@@ -1,4 +1,6 @@
-all:
+.PHONY: build
+
+build:
 	cargo rustc --release
 	cp target/release/libimager.a .
 
