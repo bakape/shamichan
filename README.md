@@ -73,46 +73,38 @@ want to configure anything, just copy `/etc/rethinkdb/default.conf.sample` into
 ##Building from source
 A reference list of commands can be found in `docs/installation.md`
 
-###All Platforms
-* Install
-	* [Go](https://golang.org/doc/install) >=1.7
-	* [Node.js](https://nodejs.org) >=5.0
+###Dependencies
+* [Go](https://golang.org/doc/install) >=1.7
+* [Node.js](https://nodejs.org) >=5.0
+* [Rust](https://www.rust-lang.org/en-US/install.html)
+* GCC or Clang
+* make
+* pkg-config
+* pthread
+* lzma
+* ffmpeg >= 3.0 libraries (libavcodec, libavutil, libavformat) compiled with:
+    * libvpx
+    * libvorbis
+    * libopus
+    * libtheora
+    * libx264
+    * libmp3lame
+* GraphicsMagick compiler with:
+    * zlib
+    * libpng
+    * libjpeg
+    * postscript
+* git
+* zip
 
 ###Linux and OSX
-* Install
-    * GCC or Clang
-    * make
-    * pkg-config
-    * pthread
-    * ffmpeg >= 3.0 libraries (libavcodec, libavutil, libavformat) compiled
-    with:
-        * libvpx
-        * libvorbis
-        * libopus
-        * libtheora
-        * libx264
-        * libmp3lame
-    * GraphicsMagick compiler with:
-        * zlib
-        * libpng
-        * libjpeg
-        * postscript
-    * git
-    * zip
 * Run `make`
 
 ###Windows
 * Install [MSYS2](https://sourceforge.net/projects/msys2/)
 * Open MSYS2 shell
-* Install with pacman
-    * mingw-w64-x86_64-ffmpeg
-    * mingw-w64-x86_64-graphicsmagick
-    * mingw-w64-x86_64-gcc
-    * mingw-w64-x86_64-pkg-config
-    * mingw-w64-x86_64-libwinpthread-git
-    * git
-    * make
-    * zip
+* Install dependencies listed above with the `mingw-w64-x86_64-` prefix with
+pacman
 * Navigate to the meguca root directory
 * Run `make`
 

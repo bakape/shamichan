@@ -9,3 +9,4 @@ crate_type = ["staticlib"]
 [dependencies]
 libflate = "0.1.3"
 libc = "0.2.18"
+rust-lzma = "0.2.1"
