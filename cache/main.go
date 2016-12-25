@@ -98,7 +98,10 @@ func (s *store) update(data interface{}, json, html []byte) {
 	// Calculating the actual memory footprint of the stored post data is
 	// expensive. Assume it is as big as the JSON. Most probably it's far less
 	// than that.
-	newSize := len(json)*2 + len(html)
+	newSize := len(json) + len(html)
+	if data != nil {
+		newSize += len(json)
+	}
 
 	s.data = data
 	s.json = json

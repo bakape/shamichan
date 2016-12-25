@@ -42,7 +42,7 @@ func getData(s *store, f FrontEnd) (
 	data interface{}, json []byte, ctr uint64, fresh bool, err error,
 ) {
 	// Have cached data
-	if s.data != nil {
+	if s.json != nil {
 		if s.isFresh() {
 			// No freshness check needed yet
 			return s.data, s.json, s.updateCounter, false, nil
@@ -92,7 +92,7 @@ func GetHTML(k Key, f FrontEnd) ([]byte, uint64, error) {
 	var html []byte
 	genHTML := func() {
 		html = []byte(f.RenderHTML(data, json))
-		s.update(data, json, html)
+		s.update(nil, json, html)
 	}
 	if !fresh {
 		// If the cache has been filled with a JSON request, it will not have
