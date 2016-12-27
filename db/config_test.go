@@ -1,37 +1,44 @@
 package db
 
-// import (
-// 	"testing"
+import (
+	"testing"
 
-// 	"github.com/bakape/meguca/config"
-// 	. "github.com/bakape/meguca/test"
-// )
+	"github.com/bakape/meguca/config"
+	. "github.com/bakape/meguca/test"
+)
 
-// func TestLoadConfigs(t *testing.T) {
-// 	config.Clear()
-// 	assertTableClear(t, "main", "boards")
-// 	assertInsert(t, "main", ConfigDocument{
-// 		Document{"config"},
-// 		config.Defaults,
-// 	})
+func TestLoadConfigs(t *testing.T) {
+	config.Clear()
+	assertTableClear(t, "main")
+	assertExec(t,
+		`INSERT INTO main (id, val) VALUES ('config', $1)`,
+		`{"mature":true}`,
+	)
 
-// 	if err := loadConfigs(); err != nil {
-// 		t.Fatal(err)
-// 	}
+	if err := loadConfigs(); err != nil {
+		t.Fatal(err)
+	}
 
-// 	AssertDeepEquals(t, config.Get(), &config.Defaults)
-// }
+	AssertDeepEquals(t, config.Get(), &config.Configs{
+		Public: config.Public{
+			Mature: true,
+		},
+	})
+}
 
-// func TestUpdateConfigs(t *testing.T) {
-// 	config.Set(config.Configs{})
+func TestUpdateConfigs(t *testing.T) {
+	config.Set(config.Configs{})
 
-// 	std := config.Configs{}
-// 	std.Mature = true
-// 	if err := updateConfigs(std); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	AssertDeepEquals(t, config.Get(), &std)
-// }
+	std := config.Configs{
+		Public: config.Public{
+			Mature: true,
+		},
+	}
+	if err := updateConfigs(`{"mature":true}`); err != nil {
+		t.Fatal(err)
+	}
+	AssertDeepEquals(t, config.Get(), &std)
+}
 
 // func TestUpdateOnRemovedBoard(t *testing.T) {
 // 	config.Clear()

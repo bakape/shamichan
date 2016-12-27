@@ -2,40 +2,67 @@
 
 package db
 
-import "github.com/bakape/meguca/config"
+import (
+	"encoding/json"
+	"log"
+	"time"
 
-type boardConfUpdate struct {
-	Deleted bool
-	config.BoardConfigs
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/templates"
+	"github.com/bakape/meguca/util"
+	"github.com/lib/pq"
+)
+
+// type boardConfUpdate struct {
+// 	Deleted bool
+// 	config.BoardConfigs
+// }
+
+// Load configs from the database and update on each change
+func loadConfigs() error {
+	var enc string
+	err := DB.QueryRow(`SELECT val FROM main WHERE id = 'config'`).Scan(&enc)
+	if err != nil {
+		return err
+	}
+	if err := decodeAndSetConfigs(enc); err != nil {
+		return err
+	}
+
+	// Listen for updates
+	listener := pq.NewListener(
+		connArgs(),
+		time.Second,
+		time.Second*10,
+		func(_ pq.ListenerEventType, _ error) {},
+	)
+	if err := listener.Listen("config_updates"); err != nil {
+		return err
+	}
+	go func() {
+		if IsTest {
+			return
+		}
+		for msg := range listener.Notify {
+			if msg.Extra == "" {
+				continue
+			}
+			if err := updateConfigs(msg.Extra); err != nil {
+				log.Println(err)
+			}
+		}
+	}()
+
+	return nil
 }
 
-// // Load configs from the database and update on each change
-// func loadConfigs() error {
-// 	cursor, err := GetMain("config").
-// 		Changes(r.ChangesOpts{IncludeInitial: true}).
-// 		Field("new_val").
-// 		Run(RSession)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	read := make(chan config.Configs)
-// 	cursor.Listen(read)
-// 	initial := <-read
-
-// 	// Reload configuration on any change in the database
-// 	if !IsTest {
-// 		go func() {
-// 			for {
-// 				if err := updateConfigs(<-read); err != nil {
-// 					log.Println(err)
-// 				}
-// 			}
-// 		}()
-// 	}
-
-// 	return config.Set(initial)
-// }
+func decodeAndSetConfigs(data string) error {
+	var conf config.Configs
+	if err := json.Unmarshal([]byte(data), &conf); err != nil {
+		return err
+	}
+	return config.Set(conf)
+}
 
 // func loadBoardConfigs() error {
 // 	// First load all boards
@@ -89,12 +116,12 @@ type boardConfUpdate struct {
 // 	return nil
 // }
 
-// func updateConfigs(conf config.Configs) error {
-// 	if err := config.Set(conf); err != nil {
-// 		return util.WrapError("reloading configuration", err)
-// 	}
-// 	return recompileTemplates()
-// }
+func updateConfigs(data string) error {
+	if err := decodeAndSetConfigs(data); err != nil {
+		return util.WrapError("reloading configuration", err)
+	}
+	return recompileTemplates()
+}
 
 // func updateBoardConfigs(u boardConfUpdate) error {
 // 	if u.Deleted {
@@ -112,12 +139,12 @@ type boardConfUpdate struct {
 // 	return nil
 // }
 
-// func recompileTemplates() error {
-// 	if IsTest {
-// 		return nil
-// 	}
-// 	if err := templates.Compile(); err != nil {
-// 		return util.WrapError("recompiling templates", err)
-// 	}
-// 	return nil
-// }
+func recompileTemplates() error {
+	if IsTest {
+		return nil
+	}
+	if err := templates.Compile(); err != nil {
+		return util.WrapError("recompiling templates", err)
+	}
+	return nil
+}

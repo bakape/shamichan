@@ -10,6 +10,7 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
 	_ "github.com/lib/pq" // Postgres driver
 	"github.com/pquerna/ffjson/ffjson"
 )
@@ -195,14 +196,18 @@ var initQ = [...]string{
 	);`,
 }
 
-// LoadDB establishes connections to RethinkDB and Redis and bootstraps both
-// databases, if not yet done.
-func LoadDB() (err error) {
-	args := fmt.Sprintf(
+// Generates a Postgres connection parameter string
+func connArgs() string {
+	return fmt.Sprintf(
 		`user='meguca' password='%s' dbname='%s' sslmode=disable`,
 		DBPassword, DBName,
 	)
-	DB, err = sql.Open("postgres", args)
+}
+
+// LoadDB establishes connections to RethinkDB and Redis and bootstraps both
+// databases, if not yet done.
+func LoadDB() (err error) {
+	DB, err = sql.Open("postgres", connArgs())
 	if err != nil {
 		return err
 	}
@@ -222,14 +227,13 @@ SELECT EXISTS (
 		return InitDB()
 	}
 
-	return nil
-
 	// if !IsTest {
 	// 	go runCleanupTasks()
 	// }
-	// return util.Waterfall([]func() error{
-	//  	loadConfigs,
-	// })
+
+	return util.Waterfall([]func() error{
+		loadConfigs,
+	})
 }
 
 // InitDB initializes a database
@@ -250,7 +254,7 @@ func InitDB() error {
 
 	// Init main table
 	exec(initQ[0])
-	conf, err := ffjson.Marshal(config.Get())
+	conf, err := ffjson.Marshal(config.Defaults)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -261,14 +265,14 @@ func InitDB() error {
 		exec(initQ[i])
 	}
 
-	if err == nil {
-		if err := tx.Commit(); err != nil {
-			return err
-		}
-		return CreateAdminAccount()
+	if err != nil {
+		tx.Rollback()
+		return err
 	}
-	tx.Rollback()
-	return err
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return CreateAdminAccount()
 }
 
 // CreateAdminAccount writes a fresh admin account with the default password to

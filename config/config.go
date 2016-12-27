@@ -93,31 +93,31 @@ All hash commands need to be input on their own line`
 // Configs stores the global server configuration
 type Configs struct {
 	Public
-	PruneThreads      bool `json:"pruneThreads" gorethink:"pruneThreads"`
-	PruneBoards       bool `json:"pruneBoards" gorethink:"pruneBoards"`
-	Pyu               bool `json:"pyu" gorethink:"pyu"`
+	PruneThreads      bool `json:"pruneThreads"`
+	PruneBoards       bool `json:"pruneBoards"`
+	Pyu               bool `json:"pyu"`
 	JPEGQuality       uint8
-	MaxWidth          uint16 `json:"maxWidth" gorethink:"maxWidth"`
-	MaxHeight         uint16 `json:"maxHeight" gorethink:"maxHeight"`
-	ThreadExpiry      uint   `json:"threadExpiry" gorethink:"threadExpiry"`
-	BoardExpiry       uint   `json:"boardExpiry" gorethink:"boardExpiry"`
-	MaxSize           uint   `json:"maxSize" gorethink:"maxSize"`
-	SessionExpiry     uint   `json:"sessionExpiry" gorethink:"sessionExpiry"`
-	RootURL           string `json:"rootURL" gorethink:"rootURL"`
-	Salt              string `json:"salt" gorethink:"salt"`
-	FeedbackEmail     string `json:"feedbackEmail" gorethink:"feedbackEmail"`
-	CaptchaPrivateKey string `json:"captchaPrivateKey" gorethink:"captchaPrivateKey"`
+	MaxWidth          uint16 `json:"maxWidth"`
+	MaxHeight         uint16 `json:"maxHeight"`
+	ThreadExpiry      uint   `json:"threadExpiry"`
+	BoardExpiry       uint   `json:"boardExpiry"`
+	MaxSize           uint   `json:"maxSize"`
+	SessionExpiry     uint   `json:"sessionExpiry"`
+	RootURL           string `json:"rootURL"`
+	Salt              string `json:"salt"`
+	FeedbackEmail     string `json:"feedbackEmail"`
+	CaptchaPrivateKey string `json:"captchaPrivateKey"`
 	FAQ               string
 }
 
 // Public contains configurations exposeable through public availability APIs
 type Public struct {
-	Captcha          bool              `json:"captcha" gorethink:"captcha"`
-	Mature           bool              `json:"mature" gorethink:"mature"`
-	DefaultLang      string            `json:"defaultLang" gorethink:"defaultLang"`
-	DefaultCSS       string            `json:"defaultCSS" gorethink:"defaultCSS"`
-	CaptchaPublicKey string            `json:"captchaPublicKey" gorethink:"captchaPublicKey"`
-	Links            map[string]string `json:"links" gorethink:"links"`
+	Captcha          bool              `json:"captcha"`
+	Mature           bool              `json:"mature"`
+	DefaultLang      string            `json:"defaultLang"`
+	DefaultCSS       string            `json:"defaultCSS"`
+	CaptchaPublicKey string            `json:"captchaPublicKey"`
+	Links            map[string]string `json:"links"`
 }
 
 // BoardConfigs stores board-specific configuration
