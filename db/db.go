@@ -28,47 +28,6 @@ var postReservationQuery = GetMain("info").
 	Field("new_val").
 	Field("postCtr")
 
-// Exec executes the query and only returns an error, if any. Do not use for
-// write queries.
-func Exec(query r.Term) error {
-	return query.Exec(RSession)
-}
-
-// Write executes the inner query and returns an error, if any. Only use this
-// function for write queries
-func Write(query r.Term) error {
-	_, err := query.RunWrite(RSession)
-	return err
-}
-
-// WriteAll executes passed write queries in order. Returns on first error.
-func WriteAll(qs []r.Term) error {
-	for _, q := range qs {
-		if err := Write(q); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// One writes the query result into the target pointer or throws an error
-func One(query r.Term, res interface{}) error {
-	c, err := query.Run(RSession)
-	if err != nil {
-		return err
-	}
-	return c.One(res)
-}
-
-// All writes all responses into target pointer to slice or returns error
-func All(query r.Term, res interface{}) error {
-	c, err := query.Run(RSession)
-	if err != nil {
-		return err
-	}
-	return c.All(res)
-}
-
 // FindPost finds a post only by ID number
 func FindPost(id uint64) r.Term {
 	return r.Table("posts").Get(id)
