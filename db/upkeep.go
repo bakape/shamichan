@@ -2,246 +2,238 @@
 
 package db
 
-import (
-	"log"
-	"time"
+// const day = 24 * 60 * 60
 
-	"github.com/bakape/meguca/config"
-	r "github.com/dancannon/gorethink"
-)
+// var sessionExpiryQuery = r.
+// 	Table("accounts").
+// 	Update(map[string]r.Term{
+// 		"sessions": r.Row.
+// 			Field("sessions").
+// 			Filter(func(s r.Term) r.Term {
+// 				return s.Field("expires").Gt(r.Now())
+// 			}),
+// 	})
 
-const day = 24 * 60 * 60
+// var postClosingQuery = r.
+// 	Table("posts").
+// 	GetAllByIndex("editing", true). // Older than 30 minutes
+// 	Filter(r.Row.Field("time").Lt(r.Now().ToEpochTime().Sub(1800))).
+// 	Update(map[string]interface{}{
+// 		"log": r.Row.Field("log").Append(r.
+// 			Expr("06").
+// 			Add(r.Row.Field("id").CoerceTo("string")).
+// 			CoerceTo("binary"),
+// 		),
+// 		"editing":     false,
+// 		"lastUpdated": r.Now().ToEpochTime().Floor(),
+// 	})
 
-var sessionExpiryQuery = r.
-	Table("accounts").
-	Update(map[string]r.Term{
-		"sessions": r.Row.
-			Field("sessions").
-			Filter(func(s r.Term) r.Term {
-				return s.Field("expires").Gt(r.Now())
-			}),
-	})
+// var expireImageTokensQuery = r.
+// 	Table("imageTokens").
+// 	Between(r.MinVal, r.Now(), r.BetweenOpts{
+// 		Index: "expires",
+// 	}).
+// 	Delete(r.DeleteOpts{ReturnChanges: true}).
+// 	Do(func(d r.Term) r.Term {
+// 		return d.Field("deleted").Eq(0).Branch(
+// 			r.Expr([]string{}),
+// 			d.Field("changes").Field("old_val").Field("SHA1"),
+// 		)
+// 	})
 
-var postClosingQuery = r.
-	Table("posts").
-	GetAllByIndex("editing", true). // Older than 30 minutes
-	Filter(r.Row.Field("time").Lt(r.Now().ToEpochTime().Sub(1800))).
-	Update(map[string]interface{}{
-		"log": r.Row.Field("log").Append(r.
-			Expr("06").
-			Add(r.Row.Field("id").CoerceTo("string")).
-			CoerceTo("binary"),
-		),
-		"editing":     false,
-		"lastUpdated": r.Now().ToEpochTime().Floor(),
-	})
+// // Run database clean up tasks at server start and regular intervals. Must be
+// // launched in separate goroutine.
+// func runCleanupTasks() {
+// 	// To ensure even the once an hour tasks are run shortly after server start
+// 	time.Sleep(time.Minute)
+// 	runMinuteTasks()
+// 	runHourTasks()
 
-var expireImageTokensQuery = r.
-	Table("imageTokens").
-	Between(r.MinVal, r.Now(), r.BetweenOpts{
-		Index: "expires",
-	}).
-	Delete(r.DeleteOpts{ReturnChanges: true}).
-	Do(func(d r.Term) r.Term {
-		return d.Field("deleted").Eq(0).Branch(
-			r.Expr([]string{}),
-			d.Field("changes").Field("old_val").Field("SHA1"),
-		)
-	})
+// 	timerMin := time.Tick(time.Minute)
+// 	timerHour := time.Tick(time.Hour)
+// 	for {
+// 		select {
+// 		case <-timerMin:
+// 			runMinuteTasks()
+// 		case <-timerHour:
+// 			runHourTasks()
+// 		}
+// 	}
+// }
 
-// Run database clean up tasks at server start and regular intervals. Must be
-// launched in separate goroutine.
-func runCleanupTasks() {
-	// To ensure even the once an hour tasks are run shortly after server start
-	time.Sleep(time.Minute)
-	runMinuteTasks()
-	runHourTasks()
+// func runMinuteTasks() {
+// 	logError("open post cleanup", closeDanglingPosts())
+// 	logError("expire image tokens", expireImageTokens())
+// }
 
-	timerMin := time.Tick(time.Minute)
-	timerHour := time.Tick(time.Hour)
-	for {
-		select {
-		case <-timerMin:
-			runMinuteTasks()
-		case <-timerHour:
-			runHourTasks()
-		}
-	}
-}
+// func runHourTasks() {
+// 	logError("session cleanup", expireUserSessions())
+// 	logError("board cleanup", deleteUnusedBoards())
+// 	logError("thread cleanup", deleteOldThreads())
+// }
 
-func runMinuteTasks() {
-	logError("open post cleanup", closeDanglingPosts())
-	logError("expire image tokens", expireImageTokens())
-}
+// func logError(prefix string, err error) {
+// 	if err != nil {
+// 		log.Printf("%s: %s\n", prefix, err)
+// 	}
+// }
 
-func runHourTasks() {
-	logError("session cleanup", expireUserSessions())
-	logError("board cleanup", deleteUnusedBoards())
-	logError("thread cleanup", deleteOldThreads())
-}
+// // Separate function, so we can test it
+// func expireUserSessions() error {
+// 	return Write(sessionExpiryQuery)
+// }
 
-func logError(prefix string, err error) {
-	if err != nil {
-		log.Printf("%s: %s\n", prefix, err)
-	}
-}
+// // Close any open posts that have not been closed for 30 minutes
+// func closeDanglingPosts() error {
+// 	return Write(postClosingQuery)
+// }
 
-// Separate function, so we can test it
-func expireUserSessions() error {
-	return Write(sessionExpiryQuery)
-}
+// // Remove any expired image tokens and decrement or deallocate their target
+// // image's assets
+// func expireImageTokens() error {
+// 	var toDealloc []string
+// 	if err := All(expireImageTokensQuery, &toDealloc); err != nil {
+// 		return err
+// 	}
 
-// Close any open posts that have not been closed for 30 minutes
-func closeDanglingPosts() error {
-	return Write(postClosingQuery)
-}
+// 	for _, sha1 := range toDealloc {
+// 		if err := DeallocateImage(sha1); err != nil {
+// 			return err
+// 		}
+// 	}
 
-// Remove any expired image tokens and decrement or deallocate their target
-// image's assets
-func expireImageTokens() error {
-	var toDealloc []string
-	if err := All(expireImageTokensQuery, &toDealloc); err != nil {
-		return err
-	}
+// 	return nil
+// }
 
-	for _, sha1 := range toDealloc {
-		if err := DeallocateImage(sha1); err != nil {
-			return err
-		}
-	}
+// // Delete boards that are older than 1 week and have not had any new posts for
+// // N days.
+// func deleteUnusedBoards() error {
+// 	conf := config.Get()
+// 	if !conf.PruneBoards {
+// 		return nil
+// 	}
 
-	return nil
-}
+// 	q := r.
+// 		Table("boards").
+// 		Filter(r.
+// 			Row.
+// 			Field("created").
+// 			Lt(r.Now().Sub(day * conf.BoardExpiry)).
+// 			And(r.
+// 				Table("posts").
+// 				GetAllByIndex("board", r.Row.Field("id")).
+// 				Pluck("time").
+// 				OrderBy("time").
+// 				Nth(-1).
+// 				Field("time").
+// 				Lt(r.Now().ToEpochTime().Sub(day * conf.BoardExpiry)).
+// 				Default(true),
+// 			),
+// 		).
+// 		Field("id")
 
-// Delete boards that are older than 1 week and have not had any new posts for
-// N days.
-func deleteUnusedBoards() error {
-	conf := config.Get()
-	if !conf.PruneBoards {
-		return nil
-	}
+// 	var expired []string
+// 	if err := All(q, &expired); err != nil {
+// 		return err
+// 	}
 
-	q := r.
-		Table("boards").
-		Filter(r.
-			Row.
-			Field("created").
-			Lt(r.Now().Sub(day * conf.BoardExpiry)).
-			And(r.
-				Table("posts").
-				GetAllByIndex("board", r.Row.Field("id")).
-				Pluck("time").
-				OrderBy("time").
-				Nth(-1).
-				Field("time").
-				Lt(r.Now().ToEpochTime().Sub(day * conf.BoardExpiry)).
-				Default(true),
-			),
-		).
-		Field("id")
+// 	for _, board := range expired {
+// 		if err := DeleteBoard(board); err != nil {
+// 			return err
+// 		}
+// 	}
 
-	var expired []string
-	if err := All(q, &expired); err != nil {
-		return err
-	}
+// 	return nil
+// }
 
-	for _, board := range expired {
-		if err := DeleteBoard(board); err != nil {
-			return err
-		}
-	}
+// // DeleteBoard deletes a board and all of its contained threads and posts
+// func DeleteBoard(board string) error {
+// 	var threads []uint64
+// 	q := r.Table("threads").GetAllByIndex("board", board).Field("id")
+// 	if err := All(q, &threads); err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	for _, thread := range threads {
+// 		if err := DeleteThread(thread); err != nil {
+// 			return err
+// 		}
+// 	}
 
-// DeleteBoard deletes a board and all of its contained threads and posts
-func DeleteBoard(board string) error {
-	var threads []uint64
-	q := r.Table("threads").GetAllByIndex("board", board).Field("id")
-	if err := All(q, &threads); err != nil {
-		return err
-	}
+// 	// Perform board deletion after all threads are deleted, so there are
+// 	// less consequences to an interrupted cleanup task.
+// 	q = r.Table("boards").Get(board).Delete()
+// 	if err := Write(q); err != nil {
+// 		return err
+// 	}
 
-	for _, thread := range threads {
-		if err := DeleteThread(thread); err != nil {
-			return err
-		}
-	}
+// 	return nil
+// }
 
-	// Perform board deletion after all threads are deleted, so there are
-	// less consequences to an interrupted cleanup task.
-	q = r.Table("boards").Get(board).Delete()
-	if err := Write(q); err != nil {
-		return err
-	}
+// // Delete threads that have not had any new posts in N days.
+// func deleteOldThreads() error {
+// 	conf := config.Get()
+// 	if !conf.PruneThreads {
+// 		return nil
+// 	}
 
-	return nil
-}
+// 	q := r.
+// 		Table("posts").
+// 		GroupByIndex("op").
+// 		Field("time").
+// 		Max().
+// 		Ungroup().
+// 		Filter(r.Row.
+// 			Field("reduction").
+// 			Lt(r.Now().ToEpochTime().Sub(day * conf.ThreadExpiry)),
+// 		).
+// 		Field("group").
+// 		Default(nil)
 
-// Delete threads that have not had any new posts in N days.
-func deleteOldThreads() error {
-	conf := config.Get()
-	if !conf.PruneThreads {
-		return nil
-	}
+// 	var expired []uint64
+// 	if err := All(q, &expired); err != nil {
+// 		return err
+// 	}
 
-	q := r.
-		Table("posts").
-		GroupByIndex("op").
-		Field("time").
-		Max().
-		Ungroup().
-		Filter(r.Row.
-			Field("reduction").
-			Lt(r.Now().ToEpochTime().Sub(day * conf.ThreadExpiry)),
-		).
-		Field("group").
-		Default(nil)
+// 	for _, t := range expired {
+// 		if err := DeleteThread(t); err != nil {
+// 			return err
+// 		}
+// 	}
 
-	var expired []uint64
-	if err := All(q, &expired); err != nil {
-		return err
-	}
+// 	return nil
+// }
 
-	for _, t := range expired {
-		if err := DeleteThread(t); err != nil {
-			return err
-		}
-	}
+// // DeleteThread deletes a thread from the database and deallocated any freed up
+// // images
+// func DeleteThread(id uint64) error {
+// 	if err := Write(FindThread(id).Delete()); err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	q := r.
+// 		Table("posts").
+// 		GetAllByIndex("op", id).
+// 		Delete(r.DeleteOpts{
+// 			ReturnChanges: true,
+// 		}).
+// 		Field("changes").
+// 		Field("old_val").
+// 		Field("image").
+// 		Field("SHA1").
+// 		Default("") // Already deleted by another backend instance or no image
+// 	var images []string
+// 	if err := All(q, &images); err != nil {
+// 		return err
+// 	}
 
-// DeleteThread deletes a thread from the database and deallocated any freed up
-// images
-func DeleteThread(id uint64) error {
-	if err := Write(FindThread(id).Delete()); err != nil {
-		return err
-	}
+// 	for _, sha1 := range images {
+// 		if sha1 != "" {
+// 			if err := DeallocateImage(sha1); err != nil {
+// 				return err
+// 			}
+// 		}
+// 	}
 
-	q := r.
-		Table("posts").
-		GetAllByIndex("op", id).
-		Delete(r.DeleteOpts{
-			ReturnChanges: true,
-		}).
-		Field("changes").
-		Field("old_val").
-		Field("image").
-		Field("SHA1").
-		Default("") // Already deleted by another backend instance or no image
-	var images []string
-	if err := All(q, &images); err != nil {
-		return err
-	}
-
-	for _, sha1 := range images {
-		if sha1 != "" {
-			if err := DeallocateImage(sha1); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
+// 	return nil
+// }

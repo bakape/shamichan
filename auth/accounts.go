@@ -16,9 +16,8 @@ import (
 // User contains ID, password hash and board-related data of a registered user
 // account
 type User struct {
-	ID       string    `gorethink:"id"`
-	Password []byte    `gorethink:"password"`
-	Sessions []Session `gorethink:"sessions"`
+	ID       string
+	Password []byte
 }
 
 // Session contains the token and expiry time of a single authenticated login
