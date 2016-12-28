@@ -40,73 +40,81 @@ func TestUpdateConfigs(t *testing.T) {
 	AssertDeepEquals(t, config.Get(), &std)
 }
 
-// func TestUpdateOnRemovedBoard(t *testing.T) {
-// 	config.Clear()
-// 	config.SetBoardConfigs(config.BoardConfigs{
-// 		ID: "a",
-// 	})
+func TestUpdateOnRemovedBoard(t *testing.T) {
+	assertTableClear(t, "boards")
+	config.Clear()
+	config.SetBoardConfigs(config.BoardConfigs{
+		ID: "a",
+	})
 
-// 	u := boardConfUpdate{
-// 		BoardConfigs: config.BoardConfigs{
-// 			ID: "a",
-// 		},
-// 		Deleted: true,
-// 	}
-// 	if err := updateBoardConfigs(u); err != nil {
-// 		t.Fatal(err)
-// 	}
+	if err := updateBoardConfigs("a"); err != nil {
+		t.Fatal(err)
+	}
 
-// 	AssertDeepEquals(
-// 		t,
-// 		config.GetBoardConfigs("a"),
-// 		config.BoardConfContainer{},
-// 	)
-// 	AssertDeepEquals(t, config.GetBoards(), []string{})
-// }
+	AssertDeepEquals(
+		t,
+		config.GetBoardConfigs("a"),
+		config.BoardConfContainer{},
+	)
+	AssertDeepEquals(t, config.GetBoards(), []string{})
+}
 
-// func TestUpdateOnAddBoard(t *testing.T) {
-// 	config.Clear()
+func TestUpdateOnAddBoard(t *testing.T) {
+	assertTableClear(t, "boards")
+	config.Clear()
 
-// 	std := config.BoardConfigs{
-// 		ID: "a",
-// 		BoardPublic: config.BoardPublic{
-// 			CodeTags: true,
-// 		},
-// 	}
-// 	u := boardConfUpdate{
-// 		BoardConfigs: std,
-// 	}
+	std := config.BoardConfigs{
+		ID: "a",
+		BoardPublic: config.BoardPublic{
+			CodeTags: true,
+		},
+		Eightball: []string{"yes"},
+	}
+	if err := WriteBoardConfigs(std, false); err != nil {
+		t.Fatal(err)
+	}
 
-// 	if err := updateBoardConfigs(u); err != nil {
-// 		t.Fatal(err)
-// 	}
+	if err := updateBoardConfigs("a"); err != nil {
+		t.Fatal(err)
+	}
 
-// 	AssertDeepEquals(t, config.GetBoardConfigs("a").BoardConfigs, std)
-// 	AssertDeepEquals(t, config.GetBoards(), []string{"a"})
-// }
+	AssertDeepEquals(t, config.GetBoardConfigs("a").BoardConfigs, std)
+	AssertDeepEquals(t, config.GetBoards(), []string{"a"})
+}
 
-// func TestUpdateBoardConfigs(t *testing.T) {
-// 	config.SetBoardConfigs(config.BoardConfigs{
-// 		ID: "a",
-// 	})
+func TestUpdateBoardConfigs(t *testing.T) {
+	assertTableClear(t, "boards")
+	config.Clear()
 
-// 	u := boardConfUpdate{
-// 		BoardConfigs: config.BoardConfigs{
-// 			ID: "a",
-// 			BoardPublic: config.BoardPublic{
-// 				PostParseConfigs: config.PostParseConfigs{
-// 					HashCommands: true,
-// 				},
-// 			},
-// 		},
-// 	}
-// 	if err := updateBoardConfigs(u); err != nil {
-// 		t.Fatal(err)
-// 	}
+	std := config.BoardConfigs{
+		ID: "a",
+		BoardPublic: config.BoardPublic{
+			PostParseConfigs: config.PostParseConfigs{
+				HashCommands: true,
+			},
+		},
+		Eightball: []string{"yes"},
+	}
+	if err := WriteBoardConfigs(std, false); err != nil {
+		t.Fatal(err)
+	}
 
-// 	AssertDeepEquals(
-// 		t,
-// 		config.GetBoardConfigs("a").BoardConfigs,
-// 		u.BoardConfigs,
-// 	)
-// }
+	if err := loadBoardConfigs(); err != nil {
+		t.Fatal(err)
+	}
+
+	AssertDeepEquals(t, config.GetBoardConfigs("a").BoardConfigs, std)
+
+	assertExec(t,
+		`UPDATE boards
+			SET title = 'foo'
+			WHERE id = 'a'`,
+	)
+
+	if err := updateBoardConfigs("a"); err != nil {
+		t.Fatal(err)
+	}
+
+	std.Title = "foo"
+	AssertDeepEquals(t, config.GetBoardConfigs("a").BoardConfigs, std)
+}

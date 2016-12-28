@@ -25,9 +25,6 @@ var (
 	// or check DB version
 	IsTest bool
 
-	// AllTables are all tables needed for meguca operation
-	AllTables = []string{}
-
 	// DB stores the postgres database instance
 	DB *sql.DB
 
@@ -111,6 +108,8 @@ var initQ = [...]string{
 		notice VARCHAR(500)
 			NOT NULL,
 		rules VARCHAR(5000)
+			NOT NULL,
+		eightball TEXT[]
 			NOT NULL
 	);`,
 	`CREATE TABLE staff (
@@ -214,12 +213,13 @@ func LoadDB() (err error) {
 
 	var exists bool
 	err = DB.QueryRow(`
-SELECT EXISTS (
-	SELECT 1
-	FROM  information_schema.tables
-	WHERE table_schema = 'public'
-		AND table_name = 'main'
-);`).Scan(&exists)
+		SELECT EXISTS (
+			SELECT 1
+			FROM  information_schema.tables
+			WHERE table_schema = 'public'
+				AND table_name = 'main'
+		);`).
+		Scan(&exists)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ SELECT EXISTS (
 	// }
 
 	return util.Waterfall([]func() error{
-		loadConfigs,
+		loadConfigs, loadBoardConfigs,
 	})
 }
 

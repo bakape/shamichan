@@ -61,38 +61,17 @@ func (mj *BoardConfContainer) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	} else {
 		buf.WriteString(`null`)
 	}
-	buf.WriteString(`,"staff":`)
-	/* Falling back. type=map[string][]string kind=map */
-	err = buf.Encode(mj.Staff)
-	if err != nil {
-		return err
-	}
 	if mj.CodeTags {
 		buf.WriteString(`,"codeTags":true`)
 	} else {
 		buf.WriteString(`,"codeTags":false`)
 	}
-	buf.WriteString(`,"spoiler":`)
-	fflib.WriteJsonString(buf, string(mj.Spoiler))
 	buf.WriteString(`,"title":`)
 	fflib.WriteJsonString(buf, string(mj.Title))
 	buf.WriteString(`,"notice":`)
 	fflib.WriteJsonString(buf, string(mj.Notice))
 	buf.WriteString(`,"rules":`)
 	fflib.WriteJsonString(buf, string(mj.Rules))
-	buf.WriteString(`,"banners":`)
-	if mj.Banners != nil {
-		buf.WriteString(`[`)
-		for i, v := range mj.Banners {
-			if i != 0 {
-				buf.WriteString(`,`)
-			}
-			fflib.WriteJsonString(buf, string(v))
-		}
-		buf.WriteString(`]`)
-	} else {
-		buf.WriteString(`null`)
-	}
 	if mj.ReadOnly {
 		buf.WriteString(`,"readOnly":true`)
 	} else {
@@ -153,38 +132,17 @@ func (mj *BoardConfigs) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	} else {
 		buf.WriteString(`null`)
 	}
-	buf.WriteString(`,"staff":`)
-	/* Falling back. type=map[string][]string kind=map */
-	err = buf.Encode(mj.Staff)
-	if err != nil {
-		return err
-	}
 	if mj.CodeTags {
 		buf.WriteString(`,"codeTags":true`)
 	} else {
 		buf.WriteString(`,"codeTags":false`)
 	}
-	buf.WriteString(`,"spoiler":`)
-	fflib.WriteJsonString(buf, string(mj.Spoiler))
 	buf.WriteString(`,"title":`)
 	fflib.WriteJsonString(buf, string(mj.Title))
 	buf.WriteString(`,"notice":`)
 	fflib.WriteJsonString(buf, string(mj.Notice))
 	buf.WriteString(`,"rules":`)
 	fflib.WriteJsonString(buf, string(mj.Rules))
-	buf.WriteString(`,"banners":`)
-	if mj.Banners != nil {
-		buf.WriteString(`[`)
-		for i, v := range mj.Banners {
-			if i != 0 {
-				buf.WriteString(`,`)
-			}
-			fflib.WriteJsonString(buf, string(v))
-		}
-		buf.WriteString(`]`)
-	} else {
-		buf.WriteString(`null`)
-	}
 	if mj.ReadOnly {
 		buf.WriteString(`,"readOnly":true`)
 	} else {
@@ -235,27 +193,12 @@ func (mj *BoardPublic) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	} else {
 		buf.WriteString(`{"codeTags":false`)
 	}
-	buf.WriteString(`,"spoiler":`)
-	fflib.WriteJsonString(buf, string(mj.Spoiler))
 	buf.WriteString(`,"title":`)
 	fflib.WriteJsonString(buf, string(mj.Title))
 	buf.WriteString(`,"notice":`)
 	fflib.WriteJsonString(buf, string(mj.Notice))
 	buf.WriteString(`,"rules":`)
 	fflib.WriteJsonString(buf, string(mj.Rules))
-	buf.WriteString(`,"banners":`)
-	if mj.Banners != nil {
-		buf.WriteString(`[`)
-		for i, v := range mj.Banners {
-			if i != 0 {
-				buf.WriteString(`,`)
-			}
-			fflib.WriteJsonString(buf, string(v))
-		}
-		buf.WriteString(`]`)
-	} else {
-		buf.WriteString(`null`)
-	}
 	if mj.ReadOnly {
 		buf.WriteString(`,"readOnly":true`)
 	} else {
@@ -449,38 +392,17 @@ func (mj *DatabaseBoardConfigs) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	} else {
 		buf.WriteString(`null`)
 	}
-	buf.WriteString(`,"staff":`)
-	/* Falling back. type=map[string][]string kind=map */
-	err = buf.Encode(mj.Staff)
-	if err != nil {
-		return err
-	}
 	if mj.CodeTags {
 		buf.WriteString(`,"codeTags":true`)
 	} else {
 		buf.WriteString(`,"codeTags":false`)
 	}
-	buf.WriteString(`,"spoiler":`)
-	fflib.WriteJsonString(buf, string(mj.Spoiler))
 	buf.WriteString(`,"title":`)
 	fflib.WriteJsonString(buf, string(mj.Title))
 	buf.WriteString(`,"notice":`)
 	fflib.WriteJsonString(buf, string(mj.Notice))
 	buf.WriteString(`,"rules":`)
 	fflib.WriteJsonString(buf, string(mj.Rules))
-	buf.WriteString(`,"banners":`)
-	if mj.Banners != nil {
-		buf.WriteString(`[`)
-		for i, v := range mj.Banners {
-			if i != 0 {
-				buf.WriteString(`,`)
-			}
-			fflib.WriteJsonString(buf, string(v))
-		}
-		buf.WriteString(`]`)
-	} else {
-		buf.WriteString(`null`)
-	}
 	if mj.ReadOnly {
 		buf.WriteString(`,"readOnly":true`)
 	} else {

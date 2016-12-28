@@ -92,32 +92,3 @@ func AuthenticateCaptcha(captcha common.Captcha, ip string) bool {
 func printCaptchaError(err error) {
 	log.Println(errCaptcha{err})
 }
-
-// HoldsPosition returns if the user holds a specific staff position
-func HoldsPosition(board, userID, position string) bool {
-	if staff := config.GetBoardConfigs(board).Staff; staff != nil {
-		for _, o := range staff[position] {
-			if o == userID {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// FindPosition returns the first matching position of a user on a certain
-// board. As a special case the admin user will always return "admin". If none
-// found, returns empty string.
-func FindPosition(board, userID string) string {
-	if userID == "admin" {
-		return userID
-	}
-	for pos, ids := range config.GetBoardConfigs(board).Staff {
-		for _, id := range ids {
-			if userID == id {
-				return pos
-			}
-		}
-	}
-	return ""
-}

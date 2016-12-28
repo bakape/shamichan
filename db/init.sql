@@ -76,6 +76,8 @@ CREATE TABLE boards (
 	notice VARCHAR(500)
 		NOT NULL,
 	rules VARCHAR(5000)
+		NOT NULL,
+	eightball TEXT[]
 		NOT NULL
 );
 

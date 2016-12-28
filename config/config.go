@@ -34,9 +34,7 @@ var (
 					HashCommands: true,
 				},
 				CodeTags: true,
-				Spoiler:  "default.jpg",
 				Title:    "Aggregator metaboard",
-				Banners:  []string{},
 			},
 		},
 		Hash: "0",
@@ -123,20 +121,17 @@ type Public struct {
 // BoardConfigs stores board-specific configuration
 type BoardConfigs struct {
 	BoardPublic
-	ID        string              `json:"id" gorethink:"id"`
-	Eightball []string            `json:"eightball" gorethink:"eightball"`
-	Staff     map[string][]string `json:"staff" gorethink:"staff"`
+	ID        string   `json:"id"`
+	Eightball []string `json:"eightball"`
 }
 
 // BoardPublic contains publically accessible board-specific configurations
 type BoardPublic struct {
 	PostParseConfigs
-	CodeTags bool     `json:"codeTags" gorethink:"codeTags"`
-	Spoiler  string   `json:"spoiler" gorethink:"spoiler"`
-	Title    string   `json:"title" gorethink:"title"`
-	Notice   string   `json:"notice" gorethink:"notice"`
-	Rules    string   `json:"rules" gorethink:"rules"`
-	Banners  []string `json:"banners" gorethink:"banners"`
+	CodeTags bool   `json:"codeTags"`
+	Title    string `json:"title"`
+	Notice   string `json:"notice"`
+	Rules    string `json:"rules"`
 }
 
 // BoardConfContainer contains configurations for an individual board as well
@@ -333,15 +328,14 @@ func RemoveBoard(b string) {
 
 // Clear resets package state. Only use in tests.
 func Clear() {
-	boardMu.Lock()
-	defer boardMu.Unlock()
 	globalMu.RLock()
 	defer globalMu.RUnlock()
 
 	global = &Configs{}
-	boardConfigs = map[string]BoardConfContainer{}
 	clientJSON = nil
 	hash = ""
+
+	ClearBoards()
 }
 
 // ClearBoards clears any existing board configuration entries. Only use in

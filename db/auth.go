@@ -39,7 +39,7 @@ func RegisterAccount(ID string, hash []byte) error {
 		`INSERT INTO accounts (id, password) VALUES ($1, $2)`,
 		ID, hash,
 	)
-	if err, ok := err.(*pq.Error); ok && err.Code.Class() == "23" {
+	if err, ok := err.(*pq.Error); ok && err.Code.Name() == "unique_violation" {
 		return ErrUserNameTaken
 	}
 	return err
