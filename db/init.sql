@@ -1,6 +1,5 @@
 CREATE TABLE main (
 	id TEXT
-		NOT NULL
 		PRIMARY KEY,
 	val TEXT
 		NOT NULL
@@ -17,15 +16,14 @@ CREATE TABLE accounts (
 );
 
 CREATE TABLE sessions (
-	id VARCHAR(20)
+	account VARCHAR(20)
 		REFERENCES accounts
 		ON DELETE CASCADE,
 	token TEXT,
 	expires BIGINT
 		NOT NULL,
-	PRIMARY KEY (id, token)
+	PRIMARY KEY (account, token)
 );
-CREATE INDEX session_expiry on sessions (expires);
 
 CREATE TABLE images (
 	APNG BOOLEAN,
@@ -48,7 +46,7 @@ CREATE TABLE images (
 
 CREATE TABLE image_tokens (
 	token CHAR(32)
-		PRIMARY KEY,
+		NOT NULL,
 	SHA1 CHAR(40)
 		NOT NULL
 		REFERENCES images
@@ -56,7 +54,6 @@ CREATE TABLE image_tokens (
 	expires BIGINT
 		NOT NULL
 );
-CREATE INDEX image_token_expiry on image_tokens (expires);
 
 CREATE TABLE boards (
 	readOnly BOOLEAN
@@ -107,6 +104,7 @@ CREATE TABLE threads (
 	subject VARCHAR(100)
 		NOT NULL
 );
+CREATE INDEX threads_board on threads (board);
 
 CREATE TABLE posts (
 	editing BOOLEAN
@@ -138,21 +136,10 @@ CREATE TABLE posts (
 	imageName VARCHAR(200),
 	commands TEXT[]
 );
+CREATE INDEX op on posts (op);
+CREATE INDEX image on posts (SHA1);
 CREATE INDEX editing on posts (editing);
 CREATE INDEX ip on posts (ip);
-
-CREATE TABLE backlinks (
-	targetBoard VARCHAR(3)
-		NOT NULL,
-	source BIGINT
-		PRIMARY KEY
-		REFERENCES posts
-		ON DELETE CASCADE,
-	target BIGINT
-		NOT NULL
-		REFERENCES posts
-		ON DELETE CASCADE
-);
 
 CREATE TABLE links (
 	targetBoard VARCHAR(3)
@@ -166,3 +153,20 @@ CREATE TABLE links (
 		REFERENCES posts
 		ON DELETE CASCADE
 );
+CREATE INDEX links_source on links (source);
+CREATE INDEX links_target on links (target);
+
+CREATE TABLE backlinks (
+	targetBoard VARCHAR(3)
+		NOT NULL,
+	source BIGINT
+		PRIMARY KEY
+		REFERENCES posts
+		ON DELETE CASCADE,
+	target BIGINT
+		NOT NULL
+		REFERENCES posts
+		ON DELETE CASCADE
+);
+CREATE INDEX backlinks_source on backlinks (source);
+CREATE INDEX backlinks_target on backlinks (target);
