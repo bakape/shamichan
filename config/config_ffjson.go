@@ -367,16 +367,7 @@ func (mj *DatabaseBoardConfigs) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	_ = obj
 	_ = err
 	buf.WriteString(`{"Created":`)
-
-	{
-
-		obj, err = mj.Created.MarshalJSON()
-		if err != nil {
-			return err
-		}
-		buf.Write(obj)
-
-	}
+	fflib.FormatBits2(buf, uint64(mj.Created), 10, mj.Created < 0)
 	buf.WriteString(`,"id":`)
 	fflib.WriteJsonString(buf, string(mj.ID))
 	buf.WriteString(`,"eightball":`)

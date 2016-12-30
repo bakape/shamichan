@@ -13,16 +13,6 @@ var (
 	ErrUserNameTaken = errors.New("user name already taken")
 )
 
-func init() {
-	AddPrepared(
-		"isLoggedIn",
-		`SELECT EXISTS (
-			SELECT true FROM sessions
-				WHERE account = $1 AND token = $2
-		);`,
-	)
-}
-
 // IsLoggedIn check if the user is logged in with the specified session
 func IsLoggedIn(user, session string) (bool, error) {
 	if len(user) > common.MaxLenUserID || len(session) != common.LenSession {
@@ -30,7 +20,7 @@ func IsLoggedIn(user, session string) (bool, error) {
 	}
 
 	var loggedIn bool
-	err := Prepared["isLoggedIn"].QueryRow(user, session).Scan(&loggedIn)
+	err := prepared["isLoggedIn"].QueryRow(user, session).Scan(&loggedIn)
 	if err != nil {
 		return false, err
 	}
@@ -40,7 +30,7 @@ func IsLoggedIn(user, session string) (bool, error) {
 // RegisterAccount writes the ID and password hash of a new user account to the
 // database
 func RegisterAccount(ID string, hash []byte) error {
-	_, err := DB.Exec(
+	_, err := db.Exec(
 		`INSERT INTO accounts (id, password) VALUES ($1, $2)`,
 		ID, hash,
 	)
@@ -49,3 +39,10 @@ func RegisterAccount(ID string, hash []byte) error {
 	}
 	return err
 }
+
+// // GetLoginHash retrieves the login hash of the registered user account
+// func GetLoginHash(id string) (hash []byte, err error) {
+// 	query := GetAccount(id).Field("password").Default(nil)
+// 	err = One(query, &hash)
+// 	return
+// }

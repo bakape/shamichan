@@ -3,8 +3,6 @@ package db
 import (
 	"errors"
 	"time"
-
-	r "github.com/dancannon/gorethink"
 )
 
 const (
@@ -13,10 +11,10 @@ const (
 )
 
 var (
-	// Update associate post count on an image document
-	incrementImageRefCount = map[string]r.Term{
-		"posts": r.Row.Field("posts").Add(1),
-	}
+	// // Update associate post count on an image document
+	// incrementImageRefCount = map[string]r.Term{
+	// 	"posts": r.Row.Field("posts").Add(1),
+	// }
 
 	// ErrInvalidToken occurs, when trying to retrieve an image with an
 	// non-existent token. The token might have expired (60 to 119 seconds) or

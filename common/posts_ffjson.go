@@ -97,8 +97,8 @@ func (mj *BoardThread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	fflib.FormatBits2(buf, uint64(mj.ImageCtr), 10, false)
 	buf.WriteString(`,"replyTime":`)
 	fflib.FormatBits2(buf, uint64(mj.ReplyTime), 10, mj.ReplyTime < 0)
-	buf.WriteString(`,"lastUpdated":`)
-	fflib.FormatBits2(buf, uint64(mj.LastUpdated), 10, mj.LastUpdated < 0)
+	buf.WriteString(`,"logCtr":`)
+	fflib.FormatBits2(buf, uint64(mj.LogCtr), 10, false)
 	buf.WriteString(`,"subject":`)
 	fflib.WriteJsonString(buf, string(mj.Subject))
 	buf.WriteString(`,"board":`)
@@ -161,11 +161,7 @@ func (mj *DatabasePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	var obj []byte
 	_ = obj
 	_ = err
-	buf.WriteString(`{ "lastUpdated":`)
-	fflib.FormatBits2(buf, uint64(mj.LastUpdated), 10, mj.LastUpdated < 0)
-	buf.WriteString(`,"IP":`)
-	fflib.WriteJsonString(buf, string(mj.IP))
-	buf.WriteString(`,"Password":`)
+	buf.WriteString(`{ "Password":`)
 	if mj.Password != nil {
 		buf.WriteString(`"`)
 		{
@@ -174,29 +170,6 @@ func (mj *DatabasePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			enc.Close()
 		}
 		buf.WriteString(`"`)
-	} else {
-		buf.WriteString(`null`)
-	}
-	buf.WriteString(`,"Log":`)
-	if mj.Log != nil {
-		buf.WriteString(`[`)
-		for i, v := range mj.Log {
-			if i != 0 {
-				buf.WriteString(`,`)
-			}
-			if v != nil {
-				buf.WriteString(`"`)
-				{
-					enc := base64.NewEncoder(base64.StdEncoding, buf)
-					enc.Write(reflect.Indirect(reflect.ValueOf(v)).Bytes())
-					enc.Close()
-				}
-				buf.WriteString(`"`)
-			} else {
-				buf.WriteString(`null`)
-			}
-		}
-		buf.WriteString(`]`)
 	} else {
 		buf.WriteString(`null`)
 	}
@@ -243,21 +216,6 @@ func (mj *DatabasePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		fflib.WriteJsonString(buf, string(mj.Auth))
 		buf.WriteByte(',')
 	}
-	if mj.Image != nil {
-		if true {
-			buf.WriteString(`"image":`)
-
-			{
-
-				err = mj.Image.MarshalJSONBuf(buf)
-				if err != nil {
-					return err
-				}
-
-			}
-			buf.WriteByte(',')
-		}
-	}
 	if len(mj.Backlinks) != 0 {
 		/* Falling back. type=common.LinkMap kind=map */
 		buf.WriteString(`"backlinks":`)
@@ -300,6 +258,21 @@ func (mj *DatabasePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 		buf.WriteByte(',')
 	}
+	if mj.Image != nil {
+		if true {
+			buf.WriteString(`"image":`)
+
+			{
+
+				err = mj.Image.MarshalJSONBuf(buf)
+				if err != nil {
+					return err
+				}
+
+			}
+			buf.WriteByte(',')
+		}
+	}
 	buf.Rewind(1)
 	buf.WriteByte('}')
 	return nil
@@ -326,18 +299,41 @@ func (mj *DatabaseThread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	var obj []byte
 	_ = obj
 	_ = err
-	buf.WriteString(`{"PostCtr":`)
+	buf.WriteString(`{"ID":`)
+	fflib.FormatBits2(buf, uint64(mj.ID), 10, false)
+	buf.WriteString(`,"PostCtr":`)
 	fflib.FormatBits2(buf, uint64(mj.PostCtr), 10, false)
 	buf.WriteString(`,"ImageCtr":`)
 	fflib.FormatBits2(buf, uint64(mj.ImageCtr), 10, false)
-	buf.WriteString(`,"ID":`)
-	fflib.FormatBits2(buf, uint64(mj.ID), 10, false)
 	buf.WriteString(`,"ReplyTime":`)
 	fflib.FormatBits2(buf, uint64(mj.ReplyTime), 10, mj.ReplyTime < 0)
 	buf.WriteString(`,"Subject":`)
 	fflib.WriteJsonString(buf, string(mj.Subject))
 	buf.WriteString(`,"Board":`)
 	fflib.WriteJsonString(buf, string(mj.Board))
+	buf.WriteString(`,"Log":`)
+	if mj.Log != nil {
+		buf.WriteString(`[`)
+		for i, v := range mj.Log {
+			if i != 0 {
+				buf.WriteString(`,`)
+			}
+			if v != nil {
+				buf.WriteString(`"`)
+				{
+					enc := base64.NewEncoder(base64.StdEncoding, buf)
+					enc.Write(reflect.Indirect(reflect.ValueOf(v)).Bytes())
+					enc.Close()
+				}
+				buf.WriteString(`"`)
+			} else {
+				buf.WriteString(`null`)
+			}
+		}
+		buf.WriteString(`]`)
+	} else {
+		buf.WriteString(`null`)
+	}
 	buf.WriteByte('}')
 	return nil
 }
@@ -431,21 +427,6 @@ func (mj *Post) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		fflib.WriteJsonString(buf, string(mj.Auth))
 		buf.WriteByte(',')
 	}
-	if mj.Image != nil {
-		if true {
-			buf.WriteString(`"image":`)
-
-			{
-
-				err = mj.Image.MarshalJSONBuf(buf)
-				if err != nil {
-					return err
-				}
-
-			}
-			buf.WriteByte(',')
-		}
-	}
 	if len(mj.Backlinks) != 0 {
 		/* Falling back. type=common.LinkMap kind=map */
 		buf.WriteString(`"backlinks":`)
@@ -487,6 +468,21 @@ func (mj *Post) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteString(`null`)
 		}
 		buf.WriteByte(',')
+	}
+	if mj.Image != nil {
+		if true {
+			buf.WriteString(`"image":`)
+
+			{
+
+				err = mj.Image.MarshalJSONBuf(buf)
+				if err != nil {
+					return err
+				}
+
+			}
+			buf.WriteByte(',')
+		}
 	}
 	buf.Rewind(1)
 	buf.WriteByte('}')
@@ -557,21 +553,6 @@ func (mj *StandalonePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		fflib.WriteJsonString(buf, string(mj.Auth))
 		buf.WriteByte(',')
 	}
-	if mj.Image != nil {
-		if true {
-			buf.WriteString(`"image":`)
-
-			{
-
-				err = mj.Image.MarshalJSONBuf(buf)
-				if err != nil {
-					return err
-				}
-
-			}
-			buf.WriteByte(',')
-		}
-	}
 	if len(mj.Backlinks) != 0 {
 		/* Falling back. type=common.LinkMap kind=map */
 		buf.WriteString(`"backlinks":`)
@@ -613,6 +594,21 @@ func (mj *StandalonePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteString(`null`)
 		}
 		buf.WriteByte(',')
+	}
+	if mj.Image != nil {
+		if true {
+			buf.WriteString(`"image":`)
+
+			{
+
+				err = mj.Image.MarshalJSONBuf(buf)
+				if err != nil {
+					return err
+				}
+
+			}
+			buf.WriteByte(',')
+		}
 	}
 	buf.Rewind(1)
 	buf.WriteByte('}')
@@ -709,21 +705,6 @@ func (mj *Thread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		fflib.WriteJsonString(buf, string(mj.Auth))
 		buf.WriteByte(',')
 	}
-	if mj.Image != nil {
-		if true {
-			buf.WriteString(`"image":`)
-
-			{
-
-				err = mj.Image.MarshalJSONBuf(buf)
-				if err != nil {
-					return err
-				}
-
-			}
-			buf.WriteByte(',')
-		}
-	}
 	if len(mj.Backlinks) != 0 {
 		/* Falling back. type=common.LinkMap kind=map */
 		buf.WriteString(`"backlinks":`)
@@ -766,6 +747,21 @@ func (mj *Thread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 		buf.WriteByte(',')
 	}
+	if mj.Image != nil {
+		if true {
+			buf.WriteString(`"image":`)
+
+			{
+
+				err = mj.Image.MarshalJSONBuf(buf)
+				if err != nil {
+					return err
+				}
+
+			}
+			buf.WriteByte(',')
+		}
+	}
 	if mj.Locked != false {
 		if mj.Locked {
 			buf.WriteString(`"locked":true`)
@@ -796,8 +792,8 @@ func (mj *Thread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	fflib.FormatBits2(buf, uint64(mj.ImageCtr), 10, false)
 	buf.WriteString(`,"replyTime":`)
 	fflib.FormatBits2(buf, uint64(mj.ReplyTime), 10, mj.ReplyTime < 0)
-	buf.WriteString(`,"lastUpdated":`)
-	fflib.FormatBits2(buf, uint64(mj.LastUpdated), 10, mj.LastUpdated < 0)
+	buf.WriteString(`,"logCtr":`)
+	fflib.FormatBits2(buf, uint64(mj.LogCtr), 10, false)
 	buf.WriteString(`,"subject":`)
 	fflib.WriteJsonString(buf, string(mj.Subject))
 	buf.WriteString(`,"board":`)
@@ -858,8 +854,8 @@ func (mj *ThreadCommon) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	fflib.FormatBits2(buf, uint64(mj.ImageCtr), 10, false)
 	buf.WriteString(`,"replyTime":`)
 	fflib.FormatBits2(buf, uint64(mj.ReplyTime), 10, mj.ReplyTime < 0)
-	buf.WriteString(`,"lastUpdated":`)
-	fflib.FormatBits2(buf, uint64(mj.LastUpdated), 10, mj.LastUpdated < 0)
+	buf.WriteString(`,"logCtr":`)
+	fflib.FormatBits2(buf, uint64(mj.LogCtr), 10, false)
 	buf.WriteString(`,"subject":`)
 	fflib.WriteJsonString(buf, string(mj.Subject))
 	buf.WriteString(`,"board":`)

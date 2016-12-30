@@ -21,7 +21,7 @@ type rowScanner interface {
 // Load configs from the database and update on each change
 func loadConfigs() error {
 	var enc string
-	err := DB.QueryRow(`SELECT val FROM main WHERE id = 'config'`).Scan(&enc)
+	err := db.QueryRow(`SELECT val FROM main WHERE id = 'config'`).Scan(&enc)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,10 @@ func decodeAndSetConfigs(data string) error {
 }
 
 func loadBoardConfigs() error {
-	r, err := DB.Query(`SELECT * FROM boards`)
+	r, err := db.Query(`
+		SELECT readOnly, textOnly, forcedAnon, hashCommands, codeTags, id,
+			title, notice, rules, eightball
+		FROM boards`)
 	if err != nil {
 		return err
 	}
@@ -95,27 +98,27 @@ func loadBoardConfigs() error {
 func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 	var eightball pq.StringArray
 	err = r.Scan(
-		&c.ReadOnly, &c.TextOnly, &c.ForcedAnon, &c.HashCommands, &c.ID,
-		&c.CodeTags, &c.Title, &c.Notice, &c.Rules, &eightball,
+		&c.ReadOnly, &c.TextOnly, &c.ForcedAnon, &c.HashCommands, &c.CodeTags,
+		&c.ID, &c.Title, &c.Notice, &c.Rules, &eightball,
 	)
 	c.Eightball = []string(eightball)
 	return
 }
 
 // WriteBoardConfigs writes board-specific configurations to the database
-func WriteBoardConfigs(c config.BoardConfigs, overwrite bool) error {
+func WriteBoardConfigs(c config.DatabaseBoardConfigs, overwrite bool) error {
 	q :=
 		`INSERT INTO boards (
-			readOnly, textOnly, forcedAnon, hashCommands, id, codeTags, title,
-			notice, rules, eightball
+			readOnly, textOnly, forcedAnon, hashCommands, codeTags, id, created,
+			title, notice, rules, eightball
 		)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
 	if overwrite {
 		q += ` ON CONFLICT DO UPDATE`
 	}
-	_, err := DB.Exec(q,
-		c.ReadOnly, c.TextOnly, c.ForcedAnon, c.HashCommands, c.ID, c.CodeTags,
-		c.Title, c.Notice, c.Rules, pq.StringArray(c.Eightball),
+	_, err := db.Exec(q,
+		c.ReadOnly, c.TextOnly, c.ForcedAnon, c.HashCommands, c.CodeTags, c.ID,
+		c.Created, c.Title, c.Notice, c.Rules, pq.StringArray(c.Eightball),
 	)
 	return err
 }
@@ -123,7 +126,7 @@ func WriteBoardConfigs(c config.BoardConfigs, overwrite bool) error {
 // WriteStaff writes staff positions of a specific board. Old rows are
 // overwritten.
 func WriteStaff(board string, staff map[string][]string) error {
-	tx, err := DB.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
@@ -167,7 +170,13 @@ func updateConfigs(data string) error {
 }
 
 func updateBoardConfigs(board string) error {
-	r := DB.QueryRow(`SELECT * FROM boards WHERE id = $1`, board)
+	r := db.QueryRow(`
+		SELECT readOnly, textOnly, forcedAnon, hashCommands, codeTags, id,
+			title, notice, rules, eightball
+		FROM boards
+		WHERE id = $1`,
+		board,
+	)
 	conf, err := scanBoardConfigs(r)
 	switch err {
 	case nil:

@@ -17,7 +17,7 @@ func assertTableClear(t *testing.T, tables ...string) {
 }
 
 func assertExec(t *testing.T, q string, args ...interface{}) {
-	_, err := DB.Exec(q, args...)
+	_, err := db.Exec(q, args...)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,80 +1,113 @@
 package db
 
-// func TestReader(t *testing.T) {
-// 	assertTableClear(t, "posts", "threads", "main")
+import (
+	"testing"
 
-// 	assertInsert(t, "posts", []common.DatabasePost{
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					ID: 1,
-// 				},
-// 				OP:    1,
-// 				Board: "a",
-// 			},
-// 			LastUpdated: 1,
-// 			Log:         [][]byte{{1, 2, 3}},
-// 		},
-// 		{
-// 			StandalonePost: common.StandalonePost{
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/imager/assets"
+	. "github.com/bakape/meguca/test"
+)
 
-// 				Post: common.Post{
-// 					ID:   2,
-// 					Body: "foo",
-// 				},
-// 				OP:    1,
-// 				Board: "a",
-// 			},
-// 			LastUpdated: 2,
-// 			Log:         [][]byte{{3, 4, 5}},
-// 		},
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					ID: 4,
-// 				},
-// 				OP:    1,
-// 				Board: "a",
-// 			},
-// 			LastUpdated: 3,
-// 			Log:         [][]byte{{1}},
-// 		},
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					ID: 3,
-// 				},
-// 				OP:    3,
-// 				Board: "c",
-// 			},
-// 			LastUpdated: 4,
-// 			Log:         [][]byte{{1}, {2}},
-// 		},
-// 	})
+func TestReader(t *testing.T) {
+	assertTableClear(t, "boards", "images")
 
-// 	assertInsert(t, "threads", []common.DatabaseThread{
-// 		{
-// 			ID:      1,
-// 			Board:   "a",
-// 			PostCtr: 3,
-// 		},
-// 		{
-// 			ID:      3,
-// 			Board:   "c",
-// 			PostCtr: 1,
-// 		},
-// 	})
+	boards := [...]config.DatabaseBoardConfigs{
+		{
+			BoardConfigs: config.BoardConfigs{
+				ID:        "a",
+				Eightball: []string{"yes"},
+			},
+		},
+		{
+			BoardConfigs: config.BoardConfigs{
+				ID:        "c",
+				Eightball: []string{"yes"},
+			},
+		},
+	}
+	for _, b := range boards {
+		if err := WriteBoardConfigs(b, false); err != nil {
+			t.Fatal(err)
+		}
+	}
 
-// 	assertInsert(t, "main", map[string]interface{}{
-// 		"id":      "info",
-// 		"postCtr": 3,
-// 	})
+	threads := [...]common.DatabaseThread{
+		{
+			ID:        1,
+			Board:     "a",
+			Log:       [][]byte{{1}},
+			ReplyTime: 1,
+			PostCtr:   3,
+		},
+		{
+			ID:        3,
+			Board:     "c",
+			Log:       [][]byte{{1}},
+			ReplyTime: 3,
+			PostCtr:   1,
+		},
+	}
+	posts := [...]common.DatabasePost{
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID:    1,
+					Image: &assets.StdJPEG,
+				},
+				OP:    1,
+				Board: "a",
+			},
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID: 3,
+				},
+				OP:    3,
+				Board: "c",
+			},
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID:   2,
+					Body: "foo",
+				},
+				OP:    1,
+				Board: "a",
+			},
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID: 4,
+				},
+				OP:    1,
+				Board: "a",
+			},
+		},
+	}
 
-// 	t.Run("GetPost", testGetPost)
-// 	t.Run("GetAllBoard", testGetAllBoard)
-// 	t.Run("GetBoard", testGetBoard)
-// 	t.Run("GetThread", testGetThread)
-// }
+	if err := WriteImage(assets.StdJPEG.ImageCommon); err != nil {
+		t.Fatal(err)
+	}
+	for i := range threads {
+		if err := WriteThread(threads[i], posts[i]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for i := len(threads); i < len(posts); i++ {
+		if err := WritePost(nil, posts[i]); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	t.Run("GetAllBoard", testGetAllBoard)
+	// t.Run("GetPost", testGetPost)
+	// t.Run("GetBoard", testGetBoard)
+	// t.Run("GetThread", testGetThread)
+}
 
 // func testGetPost(t *testing.T) {
 // 	t.Parallel()
@@ -104,34 +137,37 @@ package db
 // 	AssertDeepEquals(t, post, std)
 // }
 
-// func testGetAllBoard(t *testing.T) {
-// 	t.Parallel()
+func testGetAllBoard(t *testing.T) {
+	t.Parallel()
 
-// 	std := common.Board{
-// 		{
-// 			ID: 1,
-// 			ThreadCommon: common.ThreadCommon{
-// 				PostCtr:     3,
-// 				Board:       "a",
-// 				LastUpdated: 3,
-// 			},
-// 		},
-// 		{
-// 			ID: 3,
-// 			ThreadCommon: common.ThreadCommon{
-// 				PostCtr:     1,
-// 				Board:       "c",
-// 				LastUpdated: 4,
-// 			},
-// 		},
-// 	}
+	std := common.Board{
+		{
+			ID: 3,
+			ThreadCommon: common.ThreadCommon{
+				PostCtr:   1,
+				Board:     "c",
+				LogCtr:    1,
+				ReplyTime: 3,
+			},
+		},
+		{
+			ID: 1,
+			ThreadCommon: common.ThreadCommon{
+				PostCtr:   3,
+				Board:     "a",
+				LogCtr:    1,
+				ReplyTime: 1,
+			},
+			Image: &assets.StdJPEG,
+		},
+	}
 
-// 	board, err := GetAllBoard()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	AssertDeepEquals(t, board, std)
-// }
+	board, err := GetAllBoard()
+	if err != nil {
+		t.Fatal(err)
+	}
+	AssertDeepEquals(t, board, std)
+}
 
 // func testGetBoard(t *testing.T) {
 // 	t.Parallel()

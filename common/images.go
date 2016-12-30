@@ -37,9 +37,9 @@ var Extensions = map[uint8]string{
 
 // Image contains a post's image and thumbnail data
 type Image struct {
-	Spoiler bool `json:"spoiler,omitempty" gorethink:"spoiler,omitempty"`
+	Spoiler bool `json:"spoiler,omitempty"`
 	ImageCommon
-	Name string `json:"name" gorethink:"name"`
+	Name string `json:"name"`
 }
 
 // ProtoImage stores image data related to the source and thumbnail resources
@@ -52,16 +52,16 @@ type ProtoImage struct {
 
 // ImageCommon contains the common fields of both Image and ProtoImage structs
 type ImageCommon struct {
-	APNG  bool `json:"apng,omitempty" gorethink:"apng,omitempty"`
-	Audio bool `json:"audio,omitempty" gorethink:"audio,omitempty"`
+	APNG  bool `json:"apng,omitempty"`
+	Audio bool `json:"audio,omitempty"`
 	// Only used for file formats like OGG and MP4 that may or may not contain
 	// video
-	Video     bool      `json:"video,omitempty" gorethink:"video,omitempty"`
-	FileType  uint8     `json:"fileType" gorethink:"fileType"`
-	ThumbType uint8     `json:"thumbType" gorethink:"thumbType"`
-	Length    uint32    `json:"length,omitempty" gorethink:"length,omitempty"`
-	Dims      [4]uint16 `json:"dims" gorethink:"dims"`
-	Size      int       `json:"size" gorethink:"size"`
+	Video     bool      `json:"video,omitempty"`
+	FileType  uint8     `json:"fileType"`
+	ThumbType uint8     `json:"thumbType"`
+	Length    uint32    `json:"length,omitempty"`
+	Dims      [4]uint16 `json:"dims"`
+	Size      int       `json:"size"`
 	MD5       string
 	SHA1      string
 }

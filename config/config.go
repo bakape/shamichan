@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/bakape/meguca/util"
 )
@@ -145,15 +144,15 @@ type BoardConfContainer struct {
 // DatabaseBoardConfigs contains extra fields not exposed on database reads
 type DatabaseBoardConfigs struct {
 	BoardConfigs
-	Created time.Time `gorethink:"created"`
+	Created int64
 }
 
 // PostParseConfigs contains board-specific flags for post text parsing
 type PostParseConfigs struct {
-	ReadOnly     bool `json:"readOnly" gorethink:"readOnly"`
-	TextOnly     bool `json:"textOnly" gorethink:"textOnly"`
-	ForcedAnon   bool `json:"forcedAnon" gorethink:"forcedAnon"`
-	HashCommands bool `json:"hashCommands" gorethink:"hashCommands"`
+	ReadOnly     bool `json:"readOnly"`
+	TextOnly     bool `json:"textOnly"`
+	ForcedAnon   bool `json:"forcedAnon"`
+	HashCommands bool `json:"hashCommands"`
 }
 
 // BoardTitle contains a board's ID and title
