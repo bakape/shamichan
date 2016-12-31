@@ -10,6 +10,8 @@ import (
 	"sort"
 	"sync"
 
+	"reflect"
+
 	"github.com/bakape/meguca/util"
 )
 
@@ -307,7 +309,11 @@ func SetBoardConfigs(conf BoardConfigs) (bool, error) {
 	defer boardMu.Unlock()
 
 	// Nothing changed
-	if boardConfigs[conf.ID].Hash == cont.Hash {
+	noChange := reflect.DeepEqual(
+		boardConfigs[conf.ID].BoardConfigs,
+		cont.BoardConfigs,
+	)
+	if noChange {
 		return false, nil
 	}
 
