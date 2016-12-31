@@ -3,6 +3,9 @@ package db
 import (
 	"errors"
 	"time"
+
+	"github.com/bakape/meguca/common"
+	"github.com/lib/pq"
 )
 
 const (
@@ -28,6 +31,16 @@ var (
 // 	SHA1    string
 // 	Expires time.Time `gorethink:"expires"`
 // }
+
+// WriteImage writes a processed image record to the DB
+func WriteImage(i common.ImageCommon) error {
+	dims := pq.GenericArray{A: i.Dims}
+	_, err := prepared["writeImage"].Exec(
+		i.APNG, i.Audio, i.Video, i.FileType, i.ThumbType, dims,
+		i.Length, i.Size, i.MD5, i.SHA1,
+	)
+	return err
+}
 
 // // FindImageThumb searches for an existing image with the specified hash and
 // // returns it, if it exists. Otherwise, returns an empty struct. To ensure the

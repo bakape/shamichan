@@ -46,4 +46,17 @@ var protoPrepared = map[string]string{
 			LEFT OUTER JOIN images AS i
 				ON p.SHA1 = i.SHA1
 			ORDER BY replyTime DESC`,
+
+	"getBoard": `
+		SELECT t.board, t.id, t.postCtr, t.imageCtr, t.replyTime, t.subject,
+				p.spoiler, p.time, p.name, p.trip, p.auth, p.imageName,
+				(SELECT array_length(t.log, 1)) AS logCtr,
+				i.*
+			FROM threads AS t
+			INNER JOIN posts AS p
+				ON t.id = p.id AND p.deleted != 'true'
+			LEFT OUTER JOIN images AS i
+				ON p.SHA1 = i.SHA1
+			WHERE t.board = $1
+			ORDER BY replyTime DESC`,
 }

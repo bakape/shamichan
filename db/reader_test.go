@@ -104,8 +104,8 @@ func TestReader(t *testing.T) {
 	}
 
 	t.Run("GetAllBoard", testGetAllBoard)
+	t.Run("GetBoard", testGetBoard)
 	// t.Run("GetPost", testGetPost)
-	// t.Run("GetBoard", testGetBoard)
 	// t.Run("GetThread", testGetThread)
 }
 
@@ -169,47 +169,48 @@ func testGetAllBoard(t *testing.T) {
 	AssertDeepEquals(t, board, std)
 }
 
-// func testGetBoard(t *testing.T) {
-// 	t.Parallel()
+func testGetBoard(t *testing.T) {
+	t.Parallel()
 
-// 	cases := [...]struct {
-// 		name, id string
-// 		std      common.Board
-// 	}{
-// 		{
-// 			name: "full",
-// 			id:   "c",
-// 			std: common.Board{
-// 				{
-// 					ID: 3,
-// 					ThreadCommon: common.ThreadCommon{
-// 						PostCtr:     1,
-// 						Board:       "c",
-// 						LastUpdated: 4,
-// 					},
-// 				},
-// 			},
-// 		},
-// 		{
-// 			name: "empty",
-// 			id:   "z",
-// 			std:  common.Board{},
-// 		},
-// 	}
+	cases := [...]struct {
+		name, id string
+		std      common.Board
+	}{
+		{
+			name: "full",
+			id:   "c",
+			std: common.Board{
+				{
+					ID: 3,
+					ThreadCommon: common.ThreadCommon{
+						PostCtr:   1,
+						Board:     "c",
+						LogCtr:    1,
+						ReplyTime: 3,
+					},
+				},
+			},
+		},
+		{
+			name: "empty",
+			id:   "z",
+			std:  common.Board{},
+		},
+	}
 
-// 	for i := range cases {
-// 		c := cases[i]
-// 		t.Run(c.name, func(t *testing.T) {
-// 			t.Parallel()
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 
-// 			board, err := GetBoard(c.id)
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
-// 			AssertDeepEquals(t, board, c.std)
-// 		})
-// 	}
-// }
+			board, err := GetBoard(c.id)
+			if err != nil {
+				t.Fatal(err)
+			}
+			AssertDeepEquals(t, board, c.std)
+		})
+	}
+}
 
 // func testGetThread(t *testing.T) {
 // 	t.Parallel()

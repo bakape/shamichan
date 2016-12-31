@@ -123,16 +123,6 @@ func WritePost(tx *sql.Tx, p common.DatabasePost) error {
 	return err
 }
 
-// WriteImage writes a processed image record to the DB
-func WriteImage(i common.ImageCommon) error {
-	dims := pq.GenericArray{A: i.Dims}
-	_, err := prepared["writeImage"].Exec(
-		i.APNG, i.Audio, i.Video, i.FileType, i.ThumbType, dims,
-		i.Length, i.Size, i.MD5, i.SHA1,
-	)
-	return err
-}
-
 // WriteThread writes a thread and it's OP to the database
 func WriteThread(t common.DatabaseThread, p common.DatabasePost) error {
 	tx, err := db.Begin()
