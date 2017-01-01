@@ -55,8 +55,8 @@ CreateBoard renders a the form for creating new boards
 
 CaptchaConfirmation renders a confirmation form with an optional captcha
 {% func CaptchaConfirmation(ln lang.Pack) %}{% stripspace %}
-	<input type="submit" value="{%s= ln.UI["submit"] %}">
 	{%= captcha("confirmation", ln.UI) %}
+	<input type="submit" value="{%s= ln.UI["submit"] %}">
 	<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
 	<div class="form-response admin"></div>
 {% endstripspace %}{% endfunc %}
@@ -92,7 +92,7 @@ CaptchaConfirmation renders a confirmation form with an optional captcha
 	</div>
 {% endstripspace %}{% endfunc %}
 
-Form for inputing key-value map-like data
+Form for inputting key-value map-like data
 {% func keyValueForm(k, v string) %}{% stripspace %}
 	<span>
 		<input type="text" class="map-field" value="{%s k %}">
@@ -104,7 +104,7 @@ Form for inputing key-value map-like data
 	</span>
 {% endstripspace %}{% endfunc %}
 
-Form fommatted as a table, with cancel and submit buttons
+Form formatted as a table, with cancel and submit buttons
 {% func tableForm(specs []inputSpec, needCaptcha bool, ln lang.Pack) %}{% stripspace %}
 	{%= table(specs, ln) %}
 	{% if needCaptcha %}

@@ -22,6 +22,12 @@ abstract class FormView extends View<null> {
 		this.on("submit", e =>
 			this.submit(e))
 
+		this.initCaptcha()
+	}
+
+	// Forms that are not rendered on initialization need to call this method
+	// themselves
+	protected initCaptcha() {
 		const captcha = this.el.querySelector(".captcha-container")
 		if (captcha) {
 			this.captcha = new CaptchaView(captcha)

@@ -6,6 +6,7 @@ export default class BoardCreationPanel extends AccountFormView {
 	constructor() {
 		super({ tag: "form" })
 		this.renderPublicForm("/forms/createBoard")
+		this.initCaptcha()
 	}
 
 	protected send() {

@@ -242,16 +242,14 @@ func CreateBoard(ln lang.Pack) string {
 
 //line forms.qtpl:57
 func StreamCaptchaConfirmation(qw422016 *qt422016.Writer, ln lang.Pack) {
-	//line forms.qtpl:57
-	qw422016.N().S(`<input type="submit" value="`)
 	//line forms.qtpl:58
-	qw422016.N().S(ln.UI["submit"])
-	//line forms.qtpl:58
-	qw422016.N().S(`">`)
-	//line forms.qtpl:59
 	streamcaptcha(qw422016, "confirmation", ln.UI)
+	//line forms.qtpl:58
+	qw422016.N().S(`<input type="submit" value="`)
 	//line forms.qtpl:59
-	qw422016.N().S(`<input type="button" name="cancel" value="`)
+	qw422016.N().S(ln.UI["submit"])
+	//line forms.qtpl:59
+	qw422016.N().S(`"><input type="button" name="cancel" value="`)
 	//line forms.qtpl:60
 	qw422016.N().S(ln.UI["cancel"])
 	//line forms.qtpl:60
@@ -387,7 +385,7 @@ func captcha(id string, lang map[string]string) string {
 //line forms.qtpl:93
 }
 
-// Form for inputing key-value map-like data
+// Form for inputting key-value map-like data
 
 //line forms.qtpl:96
 func streamkeyValueForm(qw422016 *qt422016.Writer, k, v string) {
@@ -430,7 +428,7 @@ func keyValueForm(k, v string) string {
 //line forms.qtpl:105
 }
 
-// Form fommatted as a table, with cancel and submit buttons
+// Form formatted as a table, with cancel and submit buttons
 
 //line forms.qtpl:108
 func streamtableForm(qw422016 *qt422016.Writer, specs []inputSpec, needCaptcha bool, ln lang.Pack) {

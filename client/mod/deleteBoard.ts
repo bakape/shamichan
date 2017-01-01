@@ -8,6 +8,7 @@ export default class BoardDeletionView extends SelectedBoardForm {
 	public renderNext(board: string) {
 		this.board = board
 		this.renderPublicForm("/forms/captcha")
+		this.initCaptcha()
 	}
 
 	protected send() {
