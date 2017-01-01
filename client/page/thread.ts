@@ -1,4 +1,4 @@
-import { PostData, ThreadData, Post, fileTypes } from '../posts/models'
+import { PostData, ThreadData, Post, fileTypes, PostLinks } from '../posts/models'
 import PostView from '../posts/view'
 import { posts as postCollection, hidden, mine, seenReplies } from '../state'
 import { threads, write } from '../render'
@@ -101,26 +101,9 @@ function extractPost(post: PostData) {
         view.renderName()
     }
 
-    // Add (You) to posts linking to the user's posts and trigger desktop
-    // notifications, if needed
     const {model: {links, backlinks, image}} = view
-    for (let l of [links, backlinks]) {
-        if (!l) {
-            continue
-        }
-        for (let idStr in l) {
-            const id = parseInt(idStr)
-            if (!mine.has(id)) {
-                continue
-            }
-            for (let el of view.el.querySelectorAll(`a[data-id="${id}"]`)) {
-                el.textContent += " " + lang.posts["you"]
-            }
-            if (!seenReplies.has(id)) {
-                notifyAboutReply(view.model)
-            }
-        }
-    }
+    localizeLinks(links, view, true)
+    localizeLinks(backlinks, view, false)
 
     if (image) {
         const should =
@@ -156,6 +139,29 @@ function localizeOmitted() {
 
     el.firstChild.replaceWith(text)
     el.querySelector("a.history").textContent = lang.posts["seeAll"]
+}
+
+// Add (You) to posts linking to the user's posts and trigger desktop
+// notifications, if needed
+function localizeLinks(links: PostLinks, view: PostView, notify: boolean) {
+    if (!links) {
+        return
+    }
+    for (let idStr in links) {
+        const id = parseInt(idStr)
+        if (!mine.has(id)) {
+            continue
+        }
+        for (let el of view.el.querySelectorAll(`a[data-id="${id}"]`)) {
+            // Can create doubles with circular quotes. Avoid that.
+            if (!el.textContent.includes(lang.posts["you"])) {
+                el.textContent += " " + lang.posts["you"]
+            }
+        }
+        if (notify && !seenReplies.has(id)) {
+            notifyAboutReply(view.model)
+        }
+    }
 }
 
 // Increment thread post counters and rerender the indicator in the banner
