@@ -8,7 +8,6 @@ import { getModel, posts } from "../state"
 import { trigger } from "../hooks"
 import lang from "../lang"
 import { deferInit } from "../defer"
-import { scrollToElement } from "../scroll"
 
 // Expand all image thumbnails automatically
 export let expandAll = false
@@ -97,7 +96,7 @@ export default class ImageHandler extends View<Post> {
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
 		if (img.tallerThanViewport && scroll) {
-			scrollToElement(this.el)
+			this.el.scrollIntoView()
 		}
 
 		img.expanded = img.tallerThanViewport = img.revealed = false
@@ -115,7 +114,7 @@ export default class ImageHandler extends View<Post> {
 				cls += "fit-to-width"
 				img.tallerThanViewport = img.dims[1] > window.innerHeight
 				if (img.tallerThanViewport && !noScroll) {
-					scrollToElement(this.el)
+					this.el.scrollIntoView()
 				}
 				break
 			case "screen":
