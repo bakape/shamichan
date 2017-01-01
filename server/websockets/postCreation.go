@@ -351,10 +351,13 @@ func getImage(token, name string, spoiler bool) (img *common.Image, err error) {
 		return nil, err
 	}
 
-	// Trim on the first dot in the file name. Not using filepath.Ext(), because
-	// it does not handle compound extensions like ".tar.gz"
-	if i := strings.IndexByte(name, '.'); i != -1 {
+	// Trim on the last dot in the file name, but also strip for .tar.gz and
+	// .tar.xz as special cases.
+	if i := strings.LastIndexByte(name, '.'); i != -1 {
 		name = name[:i]
+	}
+	if strings.HasSuffix(name, ".tar") {
+		name = name[:len(name)-4]
 	}
 
 	return &common.Image{
