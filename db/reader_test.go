@@ -22,7 +22,7 @@ func TestReader(t *testing.T) {
 				Board: "a",
 			},
 			LastUpdated: 1,
-			Log:         [][]byte{{1, 2, 3}},
+			Log:         []string{"123"},
 		},
 		{
 			StandalonePost: common.StandalonePost{
@@ -35,7 +35,7 @@ func TestReader(t *testing.T) {
 				Board: "a",
 			},
 			LastUpdated: 2,
-			Log:         [][]byte{{3, 4, 5}},
+			Log:         []string{"345"},
 		},
 		{
 			StandalonePost: common.StandalonePost{
@@ -46,7 +46,7 @@ func TestReader(t *testing.T) {
 				Board: "a",
 			},
 			LastUpdated: 3,
-			Log:         [][]byte{{1}},
+	Log:         []string{"1"},
 		},
 		{
 			StandalonePost: common.StandalonePost{
@@ -57,7 +57,7 @@ func TestReader(t *testing.T) {
 				Board: "c",
 			},
 			LastUpdated: 4,
-			Log:         [][]byte{{1}, {2}},
+			Log:         []string{"1", "2"},
 		},
 	})
 

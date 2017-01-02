@@ -52,14 +52,14 @@ type updateFeed struct {
 	// Cached JSON of `cache`. Prevents duplicating work, when encoding the same
 	// posts to JSON. Especially useful on server start, when many clients
 	// request synchronization at once. Set to null on any change of `cache`.
-	cacheJSON []byte
+	cacheJSON string
 }
 
 // Change feed update message
 type feedUpdate struct {
 	Change uint8
 	timestampedPost
-	Log [][]byte
+	Log []string
 }
 
 type timestampedPost struct {
@@ -129,8 +129,8 @@ func (f *feedContainer) addClient(id uint64, cl *Client) {
 	}
 	feed.clients = append(feed.clients, cl)
 
-	var msg []byte
-	if feed.cacheJSON != nil {
+	var msg string
+	if feed.cacheJSON != "" {
 		msg = feed.cacheJSON
 	} else {
 		var err error
@@ -181,7 +181,7 @@ func (f *feedContainer) cleanUp(time int64) {
 		for id, post := range feed.cache {
 			if post.LastUpdated < time {
 				delete(feed.cache, id)
-				feed.cacheJSON = nil
+				feed.cacheJSON = ""
 			}
 		}
 
@@ -203,7 +203,8 @@ func (f *feedContainer) flushBuffers() {
 			continue
 		}
 
-		buf := feed.buf.Bytes()
+		buf := feed.buf.String()
+		feed.buf.Reset()
 		if feed.multiple {
 			feed.multiple = false
 			buf = prependMessageType(MessageConcat, buf)
@@ -212,9 +213,8 @@ func (f *feedContainer) flushBuffers() {
 			// sending to clients.
 			c := make([]byte, len(buf))
 			copy(c, buf)
-			buf = c
+			buf = string(c)
 		}
-		feed.buf.Reset()
 
 		for _, client := range feed.clients {
 			client.Send(buf)
@@ -291,21 +291,21 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) {
 		}
 		feed.writeToBuffer(data)
 		feed.cache[update.ID] = update.timestampedPost
-		feed.cacheJSON = nil
+		feed.cacheJSON = ""
 	// New replication log messages
 	case postUpdated:
 		for _, msg := range update.Log {
 			feed.writeToBuffer(msg)
 		}
 		feed.cache[update.ID] = update.timestampedPost
-		feed.cacheJSON = nil
+		feed.cacheJSON = ""
 	}
 }
 
-func (u *updateFeed) writeToBuffer(data []byte) {
+func (u *updateFeed) writeToBuffer(data string) {
 	if u.buf.Len() != 0 {
 		u.multiple = true
 		u.buf.WriteRune('\u0000')
 	}
-	u.buf.Write(data)
+	u.buf.WriteString(data)
 }

@@ -1,4 +1,4 @@
-//go:generate ffjson --nodecoder --force-regenerate $GOFILE
+//go:generate ffjson --nodecoder $GOFILE
 
 // Package common contains common shared types, variables and constants used
 // throughout the project
@@ -110,7 +110,7 @@ type DatabasePost struct {
 	LastUpdated int64    `json:"lastUpdated" gorethink:"lastUpdated"`
 	IP          string   `gorethink:"ip"`
 	Password    []byte   `gorethink:"password"`
-	Log         [][]byte `gorethink:"log"`
+	Log         []string `gorethink:"log"`
 }
 
 // LinkMap contains a map of post numbers, this tread is linking, to

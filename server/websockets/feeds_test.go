@@ -69,12 +69,12 @@ func TestStreamUpdates(t *testing.T) {
 			OP:   post.OP,
 		},
 		LastUpdated: post.LastUpdated,
-		Log:         [][]byte{},
+		Log:         []string{},
 	})
 	assertMessage(t, wcl, encodeMessage(t, MessageInsertPost, post.Post))
 
 	q := db.FindPost(1).Update(map[string]interface{}{
-		"log": appendLog([]byte("bar")),
+		"log": appendLog("bar"),
 	})
 	if err := db.Write(q); err != nil {
 		t.Fatal(err)
@@ -127,7 +127,7 @@ func TestBufferUpdate(t *testing.T) {
 			update: feedUpdate{
 				Change:          postUpdated,
 				timestampedPost: stdPost,
-				Log:             [][]byte{[]byte("foo")},
+				Log:             []string{"foo"},
 			},
 			cached: stdPost,
 			buf:    "foo",
@@ -163,8 +163,8 @@ func TestWriteMultipleToBuffer(t *testing.T) {
 	t.Parallel()
 
 	u := updateFeed{}
-	u.writeToBuffer([]byte("a"))
-	u.writeToBuffer([]byte("b"))
+	u.writeToBuffer("a")
+	u.writeToBuffer("b")
 
 	const std = "a\u0000b"
 	if s := u.buf.String(); s != std {

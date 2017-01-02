@@ -70,7 +70,7 @@ type Client struct {
 	receive chan receivedMessage
 
 	// Only used to pass messages from the Send method.
-	sendExternal chan []byte
+	sendExternal chan string
 
 	// Close the client and free all used resources
 	close chan error
@@ -115,7 +115,7 @@ func newClient(conn *websocket.Conn, req *http.Request) *Client {
 		receive: make(chan receivedMessage),
 		// Allows for ~6 seconds of messages at 0.2 second intervals, until the
 		// buffer overflows.
-		sendExternal: make(chan []byte, 1<<5),
+		sendExternal: make(chan string, 1<<5),
 		conn:         conn,
 	}
 }
@@ -211,7 +211,7 @@ func (c *Client) closeConnections(err error) error {
 }
 
 // Send a message to the client. Can be used concurrently.
-func (c *Client) Send(msg []byte) {
+func (c *Client) Send(msg string) {
 	select {
 	case c.sendExternal <- msg:
 	default:
@@ -220,8 +220,8 @@ func (c *Client) Send(msg []byte) {
 }
 
 // Sends a message to the client. Not safe for concurrent use.
-func (c *Client) send(msg []byte) error {
-	return c.conn.WriteMessage(websocket.TextMessage, msg)
+func (c *Client) send(msg string) error {
+	return c.conn.WriteMessage(websocket.TextMessage, []byte(msg))
 }
 
 // Format a message type as JSON and send it to the client. Not safe for

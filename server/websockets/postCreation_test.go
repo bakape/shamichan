@@ -117,7 +117,7 @@ func testCreateThread(t *testing.T) {
 	}
 	stdPost := common.DatabasePost{
 		IP:  "::1",
-		Log: [][]byte{},
+		Log: []string{},
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				Editing: true,
@@ -295,7 +295,7 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 	}
 
 	assertMessage(t, wcl, `326`)
-	assertRepLog(t, 2, append(strDummyLog, "062"))
+	assertRepLog(t, 2, append(dummyLog, "062"))
 	assertPostClosed(t, 2)
 }
 

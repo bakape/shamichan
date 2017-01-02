@@ -29,8 +29,7 @@ var postClosingQuery = r.
 	Update(map[string]interface{}{
 		"log": r.Row.Field("log").Append(r.
 			Expr("06").
-			Add(r.Row.Field("id").CoerceTo("string")).
-			CoerceTo("binary"),
+			Add(r.Row.Field("id").CoerceTo("string")),
 		),
 		"editing":     false,
 		"lastUpdated": r.Now().ToEpochTime().Floor(),

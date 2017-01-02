@@ -332,8 +332,7 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 		Update(map[string]interface{}{
 			"log": gorethink.Row.Field("log").Append(gorethink.
 				Expr("12").
-				Add(gorethink.Row.Field("id").CoerceTo("string")).
-				CoerceTo("binary"),
+				Add(gorethink.Row.Field("id").CoerceTo("string")),
 			),
 			"deleted":     true,
 			"lastUpdated": gorethink.Now().ToEpochTime().Floor(),

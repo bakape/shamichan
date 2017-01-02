@@ -79,17 +79,17 @@ func decodeMessage(data []byte, dest interface{}) error {
 
 // EncodeMessage encodes a message for sending through websockets or writing to
 // the replication log.
-func EncodeMessage(typ MessageType, msg interface{}) ([]byte, error) {
+func EncodeMessage(typ MessageType, msg interface{}) (string, error) {
 	data, err := json.Marshal(msg)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return prependMessageType(typ, data), nil
+	return prependMessageType(typ, string(data)), nil
 }
 
 // Prepend the encoded websocket message type to an already encoded message
-func prependMessageType(typ MessageType, data []byte) []byte {
+func prependMessageType(typ MessageType, data string) string {
 	encoded := make([]byte, len(data)+2)
 	typeString := strconv.FormatUint(uint64(typ), 10)
 
@@ -103,7 +103,7 @@ func prependMessageType(typ MessageType, data []byte) []byte {
 
 	copy(encoded[2:], data)
 
-	return encoded
+	return string(encoded)
 }
 
 // No operation message handler. Used as a one way pseudo-ping.

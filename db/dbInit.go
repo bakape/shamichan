@@ -16,7 +16,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 19
+const dbVersion = 20
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -180,6 +180,11 @@ func verifyDBVersion() error {
 		if err := upgrade18to19(); err != nil {
 			return err
 		}
+		fallthrough
+	case 19:
+		if err := update19to20(); err != nil {
+			return err
+		}
 	default:
 		return fmt.Errorf("incompatible database version: %d", version)
 	}
@@ -233,7 +238,7 @@ func upgrade15to16() error {
 							"op":          t.Field("id"),
 							"board":       t.Field("board"),
 							"lastUpdated": time.Now().Unix() - 60,
-							"log":         [][]byte{},
+							"log":         []string{},
 						})
 					}).
 					ForEach(func(p r.Term) r.Term {
@@ -343,6 +348,19 @@ func upgrade18to19() error {
 						1,
 					),
 				},
+			}),
+		incrementVersion,
+	})
+}
+
+func update19to20() error {
+	return WriteAll([]r.Term{
+		r.
+			Table("posts").
+			Update(map[string]r.Term{
+				"log": r.Row.Field("log").Map(func(msg r.Term) r.Term {
+					return msg.CoerceTo("string")
+				}),
 			}),
 		incrementVersion,
 	})

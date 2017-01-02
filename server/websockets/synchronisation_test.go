@@ -111,7 +111,7 @@ func TestSyncToThread(t *testing.T) {
 			OP:    1,
 			Board: "a",
 		},
-		Log:         [][]byte{[]byte("foog"), []byte("bar")},
+		Log:         []string{"foog", "bar"},
 		LastUpdated: time.Now().Unix(),
 	})
 

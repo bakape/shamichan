@@ -75,14 +75,6 @@ func marshalJSON(t *testing.T, msg interface{}) []byte {
 	return data
 }
 
-func dummyLog(n int) [][]byte {
-	log := make([][]byte, n)
-	for i := 0; i < n; i++ {
-		log[i] = []byte{1}
-	}
-	return log
-}
-
 func setBoards(t *testing.T, boards ...string) {
 	config.ClearBoards()
 	for _, b := range boards {

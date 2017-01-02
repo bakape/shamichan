@@ -46,12 +46,7 @@ you gotta be 18 to use 4chan). But whatever, I digress. It's just fucking
 annoying that I'm never taken serious on this site, goddamn.`
 
 var (
-	dummyLog = [][]byte{
-		{102, 111, 111},
-		{98, 97, 114},
-	}
-
-	strDummyLog = []string{
+	dummyLog = []string{
 		"foo",
 		"bar",
 	}
@@ -219,7 +214,7 @@ func TestAppendRune(t *testing.T) {
 
 	assertOpenPost(t, cl, 4, "abcd")
 	assertBody(t, 2, "abcd")
-	assertRepLog(t, 2, append(strDummyLog, `03[2,100]`))
+	assertRepLog(t, 2, append(dummyLog, `03[2,100]`))
 }
 
 func assertOpenPost(t *testing.T, cl *Client, len int, buf string) {
@@ -243,17 +238,12 @@ func assertBody(t *testing.T, id uint64, body string) {
 }
 
 func assertRepLog(t *testing.T, id uint64, log []string) {
-	var res [][]byte
+	var res []string
 	q := db.FindPost(id).Field("log")
 	if err := db.All(q, &res); err != nil {
 		t.Fatal(err)
 	}
-
-	strRes := make([]string, len(res))
-	for i := range res {
-		strRes[i] = string(res[i])
-	}
-	AssertDeepEquals(t, strRes, log)
+	AssertDeepEquals(t, res, log)
 }
 
 func BenchmarkAppend(b *testing.B) {
@@ -302,7 +292,7 @@ func TestAppendNewline(t *testing.T) {
 
 	assertOpenPost(t, cl, 4, "")
 	assertBody(t, 2, "abc\n")
-	assertRepLog(t, 2, append(strDummyLog, "03[2,10]"))
+	assertRepLog(t, 2, append(dummyLog, "03[2,10]"))
 }
 
 func TestAppendNewlineWithHashCommand(t *testing.T) {
@@ -357,28 +347,28 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 	t.Run("last log message", func(t *testing.T) {
 		t.Parallel()
 
-		var log []byte
+		var log string
 		q := db.FindPost(2).Field("log").Nth(-1)
 		if err := db.One(q, &log); err != nil {
 			t.Fatal(err)
 		}
 		const std = "03[2,10]"
-		if s := string(log); s != std {
-			LogUnexpected(t, std, s)
+		if log != std {
+			LogUnexpected(t, std, log)
 		}
 	})
 
 	t.Run("second to last log message", func(t *testing.T) {
 		t.Parallel()
 
-		var log []byte
+		var log string
 		q := db.FindPost(2).Field("log").Nth(-2)
 		if err := db.One(q, &log); err != nil {
 			t.Fatal(err)
 		}
 		const patt = `09{"id":2,"type":1,"val":(?:true|false)}`
-		if !regexp.MustCompile(patt).Match(log) {
-			t.Fatalf("message does not match `%s`: `%s`", patt, string(log))
+		if !regexp.MustCompile(patt).MatchString(log) {
+			t.Fatalf("message does not match `%s`: `%s`", patt, log)
 		}
 	})
 }
@@ -395,7 +385,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 				Board: "a",
 				OP:    1,
 			},
-			Log: [][]byte{},
+			Log: []string{},
 		},
 		{
 			StandalonePost: common.StandalonePost{
@@ -405,7 +395,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 				OP:    21,
 				Board: "c",
 			},
-			Log: [][]byte{},
+			Log: []string{},
 		},
 	})
 
@@ -498,7 +488,7 @@ func TestBackspace(t *testing.T) {
 	}
 
 	assertOpenPost(t, cl, 2, "ab")
-	assertRepLog(t, 2, append(strDummyLog, "042"))
+	assertRepLog(t, 2, append(dummyLog, "042"))
 	assertBody(t, 2, "ab")
 }
 
@@ -523,7 +513,7 @@ func TestClosePost(t *testing.T) {
 	}
 
 	AssertDeepEquals(t, cl.openPost, openPost{})
-	assertRepLog(t, 2, append(strDummyLog, "062"))
+	assertRepLog(t, 2, append(dummyLog, "062"))
 	assertBody(t, 2, "abc")
 	assertPostClosed(t, 2)
 }
@@ -745,7 +735,7 @@ func TestSplice(t *testing.T) {
 					Board: "a",
 					OP:    1,
 				},
-				Log: [][]byte{},
+				Log: []string{},
 			})
 
 			cl, _ := sv.NewClient()
@@ -795,7 +785,7 @@ func TestCloseOldOpenPost(t *testing.T) {
 			},
 			OP: 1,
 		},
-		Log: [][]byte{},
+		Log: []string{},
 	})
 
 	sv := newWSServer(t)
@@ -879,7 +869,7 @@ func TestInsertImage(t *testing.T) {
 			Board: "a",
 			OP:    1,
 		},
-		Log: [][]byte{},
+		Log: []string{},
 	})
 	assertInsert(t, "images", stdJPEG)
 	_, token, err := db.NewImageToken(stdJPEG.SHA1)

@@ -126,13 +126,13 @@ func appendRune(data []byte, c *Client) error {
 }
 
 // Helper for running post update queries on the current open post
-func (c *Client) updatePost(key string, val interface{}, msg []byte) error {
+func (c *Client) updatePost(key string, val interface{}, msg string) error {
 	return UpdatePost(c.openPost.id, key, val, msg)
 }
 
 // UpdatePost post updates a single field of an existing post with the
 // appropriate replication log update and timestamp modification.
-func UpdatePost(id uint64, key string, val interface{}, msg []byte) error {
+func UpdatePost(id uint64, key string, val interface{}, msg string) error {
 	update := map[string]interface{}{
 		key:           val,
 		"log":         appendLog(msg),
@@ -142,7 +142,7 @@ func UpdatePost(id uint64, key string, val interface{}, msg []byte) error {
 }
 
 // Shorthand for creating a replication log append query
-func appendLog(msg []byte) r.Term {
+func appendLog(msg string) r.Term {
 	return r.Row.Field("log").Append(msg)
 }
 

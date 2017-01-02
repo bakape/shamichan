@@ -184,17 +184,7 @@ func (mj *DatabasePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			if i != 0 {
 				buf.WriteString(`,`)
 			}
-			if v != nil {
-				buf.WriteString(`"`)
-				{
-					enc := base64.NewEncoder(base64.StdEncoding, buf)
-					enc.Write(reflect.Indirect(reflect.ValueOf(v)).Bytes())
-					enc.Close()
-				}
-				buf.WriteString(`"`)
-			} else {
-				buf.WriteString(`null`)
-			}
+			fflib.WriteJsonString(buf, string(v))
 		}
 		buf.WriteString(`]`)
 	} else {

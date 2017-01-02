@@ -1,4 +1,4 @@
-//go:generate ffjson --nodecoder --force-regenerate $GOFILE
+//go:generate ffjson --nodecoder $GOFILE
 
 package common
 
