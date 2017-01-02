@@ -315,6 +315,7 @@
 		"account": "Account and board management",
 		"add": "Add",
 		"apply": "Apply",
+		"ban": "Ban",
 		"bottom": "Alt",
 		"cancel": "İptal",
 		"catalog": "Catalog",
@@ -339,6 +340,7 @@
 		"reloadCaptcha": "Click to reload",
 		"reply": "Cevapla",
 		"report": "İspiyonla",
+		"reason": "Reason",
 		"rescan": "Tara",
 		"return": "Geri Dön",
 		"rules": "Rules",
@@ -365,5 +367,12 @@
 		"ResimAra",
 		"Eğlence",
 		"Kısayollar"
-	]
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
 }

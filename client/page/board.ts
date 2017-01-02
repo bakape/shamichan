@@ -6,7 +6,7 @@ import { write, threads } from '../render'
 import { renderTime } from "../posts/render/posts"
 import { fetchBoard } from "../fetch"
 import { setTitle } from "../tab"
-import { extractConfigs } from "./common"
+import { extractConfigs, isBanned } from "./common"
 import { setPostCount } from "./thread"
 
 type SortFunction = (a: HTMLElement, b: HTMLElement) => number
@@ -38,6 +38,9 @@ export function formatHeader(name: string, title: string): string {
 export function renderFresh(html: string) {
 	lastFetch = Math.floor(Date.now() / 1000)
 	threads.innerHTML = html
+	if (isBanned()) {
+		return
+	}
 	extractConfigs()
 	render()
 }
@@ -146,17 +149,22 @@ function filterThreads(filter: string) {
 
 // Fetch and rerender board contents
 async function refreshBoard() {
-	const [html, err] = await fetchBoard(page.board)
-	if (err) {
-		throw err
+	const res = await fetchBoard(page.board),
+		t = await res.text()
+	switch (res.status) {
+		case 200:
+		case 403:
+			renderFresh(t)
+			break
+		default:
+			throw t
 	}
-	renderFresh(html)
 }
 
 // Update refresh timer or refresh board, if document hidden, each minute
 // TODO: Replace with SSE
 setInterval(() => {
-	if (page.thread) {
+	if (page.thread || isBanned()) {
 		return
 	}
 	if (document.hidden) {

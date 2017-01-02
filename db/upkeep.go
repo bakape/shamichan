@@ -48,6 +48,13 @@ var expireImageTokensQuery = r.
 		)
 	})
 
+var expireBansQ = r.
+	Table("bans").
+	Between(r.MinVal, r.Now(), r.BetweenOpts{
+		Index: "expires",
+	}).
+	Delete()
+
 // Run database clean up tasks at server start and regular intervals. Must be
 // launched in separate goroutine.
 func runCleanupTasks() {
@@ -71,6 +78,7 @@ func runCleanupTasks() {
 func runMinuteTasks() {
 	logError("open post cleanup", closeDanglingPosts())
 	logError("expire image tokens", expireImageTokens())
+	logError("expire bans", Write(expireBansQ))
 }
 
 func runHourTasks() {

@@ -315,6 +315,7 @@
 		"account": "Аккаунт і менеджмент борди",
 		"add": "Додати",
 		"apply": "Прийняти",
+		"ban": "Ban",
 		"bottom": "Дно",
 		"cancel": "Скасувати",
 		"catalog": "Каталог",
@@ -339,6 +340,7 @@
 		"reloadCaptcha": "Натисніть для перезавантаження",
 		"reply": "Відповісти",
 		"report": "Зарепортити",
+		"reason": "Reason",
 		"rescan": "Пересканувати",
 		"return": "Повернутися",
 		"rules": "Правила",
@@ -366,5 +368,12 @@
 		"Пошук зображень",
 		"Fun",
 		"Шорткати"
-	]
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
 }

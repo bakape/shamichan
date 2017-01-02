@@ -21,6 +21,7 @@ export type PostLinks = { [id: number]: PostLink }
 export interface PostData {
 	editing?: boolean
 	deleted?: boolean
+	banned?: boolean
 	image?: ImageData
 	time: number
 	id: number
@@ -54,9 +55,9 @@ export interface Command {
 
 // Data of an OP post
 export interface ThreadData extends PostData {
-	locked?: boolean
-	archived?: boolean
-	sticky?: boolean
+	locked: boolean
+	archived: boolean
+	sticky: boolean
 	postCtr: number
 	imageCtr: number
 	logCtr: number
@@ -101,6 +102,8 @@ export class Post extends Model implements PostData {
 
 	// PostData properties
 	public editing: boolean
+	public deleted: boolean
+	public banned: boolean
 	public image: ImageData
 	public time: number
 	public body: string
@@ -287,5 +290,14 @@ export class Post extends Model implements PostData {
 		this.editing = false
 		this.resetState()
 		this.view.closePost()
+	}
+
+	// Set post as banned
+	public setBanned() {
+		if (this.banned) {
+			return
+		}
+		this.banned = true
+		this.view.renderBanned()
 	}
 }

@@ -28,6 +28,7 @@ type Pack struct {
 	Tabs, SortModes []string
 	Forms           map[string][2]string
 	UI, Options     map[string]string
+	Templates       map[string][]string
 	Common
 }
 
@@ -35,6 +36,7 @@ type Pack struct {
 type Common struct {
 	Posts, UI map[string]string
 	Time      map[string][]string
+	Plurals   map[string][2]string
 }
 
 // Load loads and parses all JSON language packs

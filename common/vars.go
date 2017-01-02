@@ -14,6 +14,7 @@ const (
 	MaxLenNotice       = 500
 	MaxLenRules        = 5000
 	MaxLenEightball    = 2000
+	MaxBanReasonLength = 100
 )
 
 const (

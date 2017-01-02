@@ -8,7 +8,7 @@ import { updateSyncTimestamp } from "../connection"
 import notifyAboutReply from "../notification"
 import { pluralize, escape } from "../util"
 import { setTitle } from "../tab"
-import { extractConfigs } from "./common"
+import { extractConfigs, isBanned } from "./common"
 
 // Container for all rendered posts
 export let threadContainer: HTMLElement
@@ -22,6 +22,9 @@ export default function (html: string) {
     updateSyncTimestamp()
     if (html) {
         threads.innerHTML = html
+    }
+    if (isBanned) {
+        return
     }
     extractConfigs()
 
@@ -57,6 +60,11 @@ export default function (html: string) {
             if (el.textContent === "Anonymous") {
                 el.textContent = lang.posts["anon"]
             }
+        }
+
+        // Localize banned post notices
+        for (let el of threads.querySelectorAll(".banned")) {
+            el.innerText = lang.posts["banned"]
         }
     }
 

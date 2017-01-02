@@ -287,106 +287,118 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 	//line article.qtpl:124
 	streambody(qw422016, p, op)
 	//line article.qtpl:124
-	qw422016.N().S(`</blockquote></div>`)
-	//line article.qtpl:127
+	qw422016.N().S(`</blockquote>`)
+	//line article.qtpl:126
+	if p.Banned {
+		//line article.qtpl:126
+		qw422016.N().S(`<b class="admin banned">`)
+		//line article.qtpl:128
+		qw422016.N().S(lang.Packs["en_GB"].Common.Posts["banned"])
+		//line article.qtpl:128
+		qw422016.N().S(`</b>`)
+		//line article.qtpl:130
+	}
+	//line article.qtpl:130
+	qw422016.N().S(`</div>`)
+	//line article.qtpl:132
 	if omit != 0 {
-		//line article.qtpl:127
+		//line article.qtpl:132
 		qw422016.N().S(`<span class="omit" data-omit="`)
-		//line article.qtpl:128
+		//line article.qtpl:133
 		qw422016.N().D(omit)
-		//line article.qtpl:128
+		//line article.qtpl:133
 		qw422016.N().S(`" data-image-omit="`)
-		//line article.qtpl:128
+		//line article.qtpl:133
 		qw422016.N().D(imageOmit)
-		//line article.qtpl:128
+		//line article.qtpl:133
 		qw422016.N().S(`">`)
-		//line article.qtpl:129
+		//line article.qtpl:134
 		qw422016.N().D(omit)
-		//line article.qtpl:129
+		//line article.qtpl:134
 		qw422016.N().S(` `)
-		//line article.qtpl:129
+		//line article.qtpl:134
 		qw422016.N().S(`post`)
-		//line article.qtpl:129
+		//line article.qtpl:134
 		if omit > 1 {
-			//line article.qtpl:129
+			//line article.qtpl:134
 			qw422016.N().S(`s`)
-			//line article.qtpl:129
+			//line article.qtpl:134
 		}
-		//line article.qtpl:130
+		//line article.qtpl:135
 		qw422016.N().S(` `)
-		//line article.qtpl:130
+		//line article.qtpl:135
 		qw422016.N().S(`and`)
-		//line article.qtpl:130
+		//line article.qtpl:135
 		qw422016.N().S(` `)
-		//line article.qtpl:130
+		//line article.qtpl:135
 		qw422016.N().D(imageOmit)
-		//line article.qtpl:131
+		//line article.qtpl:136
 		qw422016.N().S(` `)
-		//line article.qtpl:131
+		//line article.qtpl:136
 		qw422016.N().S(`image`)
-		//line article.qtpl:131
+		//line article.qtpl:136
 		if imageOmit > 1 {
-			//line article.qtpl:131
+			//line article.qtpl:136
 			qw422016.N().S(`s`)
-			//line article.qtpl:131
+			//line article.qtpl:136
 		}
-		//line article.qtpl:131
+		//line article.qtpl:136
 		qw422016.N().S(`omitted`)
-		//line article.qtpl:132
+		//line article.qtpl:137
 		qw422016.N().S(` `)
-		//line article.qtpl:132
+		//line article.qtpl:137
 		qw422016.N().S(`<span class="act"><a href="`)
-		//line article.qtpl:134
-		qw422016.N().S(strconv.FormatUint(op, 10))
-		//line article.qtpl:134
-		qw422016.N().S(`" class="history">See All</a></span></span>`)
 		//line article.qtpl:139
+		qw422016.N().S(strconv.FormatUint(op, 10))
+		//line article.qtpl:139
+		qw422016.N().S(`" class="history">See All</a></span></span>`)
+		//line article.qtpl:144
 	}
-	//line article.qtpl:140
+	//line article.qtpl:145
 	if p.Backlinks != nil {
-		//line article.qtpl:140
+		//line article.qtpl:145
 		qw422016.N().S(`<span class="backlinks spaced">`)
-		//line article.qtpl:142
+		//line article.qtpl:147
 		for id, link := range p.Backlinks {
-			//line article.qtpl:142
+			//line article.qtpl:147
 			qw422016.N().S(`<em>`)
-			//line article.qtpl:144
+			//line article.qtpl:149
 			streampostLink(qw422016, id, link.OP, link.Board, link.OP != op)
-			//line article.qtpl:144
+			//line article.qtpl:149
 			qw422016.N().S(`</em>`)
-			//line article.qtpl:146
+			//line article.qtpl:151
 		}
-		//line article.qtpl:146
+		//line article.qtpl:151
 		qw422016.N().S(`</span>`)
-		//line article.qtpl:148
+		//line article.qtpl:153
 	}
-	//line article.qtpl:148
+	//line article.qtpl:153
 	qw422016.N().S(`</article>`)
-//line article.qtpl:150
+//line article.qtpl:155
 }
 
-//line article.qtpl:150
+//line article.qtpl:155
 func writerenderArticle(qq422016 qtio422016.Writer, p common.Post, op uint64, omit, imageOmit int, subject, root string) {
-	//line article.qtpl:150
+	//line article.qtpl:155
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line article.qtpl:150
+	//line article.qtpl:155
 	streamrenderArticle(qw422016, p, op, omit, imageOmit, subject, root)
-	//line article.qtpl:150
+	//line article.qtpl:155
 	qt422016.ReleaseWriter(qw422016)
-//line article.qtpl:150
+//line article.qtpl:155
 }
 
-//line article.qtpl:150
+//line article.qtpl:155
 func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string) string {
-	//line article.qtpl:150
+	//line article.qtpl:155
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line article.qtpl:150
+	//line article.qtpl:155
 	writerenderArticle(qb422016, p, op, omit, imageOmit, subject, root)
-	//line article.qtpl:150
+	//line article.qtpl:155
 	qs422016 := string(qb422016.B)
-	//line article.qtpl:150
+	//line article.qtpl:155
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line article.qtpl:150
+	//line article.qtpl:155
 	return qs422016
-//line article.qtpl:150
+//line article.qtpl:155
 }

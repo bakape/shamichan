@@ -10,6 +10,7 @@ import { postJSON } from "../fetch"
 import { toggleHeadStyle } from "../options/specs"
 
 let panel: ModPanel,
+	banInputs: BanInputs,
 	displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true"
 
 const checkboxStyler = toggleHeadStyle(
@@ -24,9 +25,16 @@ export default class ModPanel extends View<null> {
 		}
 		super({ el: document.getElementById("moderation-panel") })
 		panel = this
+		banInputs = new BanInputs()
 
 		this.el.querySelector("form").addEventListener("submit", e =>
 			this.onSubmit(e))
+
+		this.el
+			.querySelector("select[name=action]")
+			.addEventListener("change", () => this.onSelectChange(), {
+				passive: true
+			})
 
 		const toggle = (this.el
 			.querySelector(`input[name="showCheckboxes"]`) as HTMLInputElement)
@@ -44,7 +52,7 @@ export default class ModPanel extends View<null> {
 		})
 	}
 
-	private onSubmit(e: Event) {
+	private async onSubmit(e: Event) {
 		e.preventDefault()
 		e.stopImmediatePropagation()
 
@@ -60,23 +68,47 @@ export default class ModPanel extends View<null> {
 			el.checked = false
 		}
 
-		const action = (this.el
-			.querySelector(`select[name="action"]`) as HTMLInputElement)
-			.value
-		switch (action) {
+		switch (this.getMode()) {
 			case "deletePost":
-				this.deletePost(models)
+				await this.deletePost(models)
 				break
+			case "ban":
+				await this.ban(models)
+				break
+		}
+
+		for (let el of checked) {
+			el.checked = false
 		}
 	}
 
+	// Return current action mode
+	private getMode(): string {
+		return (this.el
+			.querySelector(`select[name="action"]`) as HTMLInputElement)
+			.value
+	}
+
 	// Deleted one or multiple selected posts
-	private deletePost(models: Post[]) {
-		this.postJSON("/admin/deletePost", {
+	private async deletePost(models: Post[]) {
+		await this.postJSON("/admin/deletePost", {
 			ids: models.map(m =>
 				m.id),
 			board: page.board,
 		})
+	}
+
+	// Ban selected posts
+	private async ban(models: Post[]) {
+		const args = {
+			ids: models.map(m =>
+				m.id),
+			board: page.board,
+		}
+		extend(args, banInputs.vals())
+
+		await this.postJSON("/admin/ban", args)
+		banInputs.clear()
 	}
 
 	// Post JSON to server and handle errors
@@ -87,9 +119,64 @@ export default class ModPanel extends View<null> {
 			throw await res.text()
 		}
 	}
+
+	// Change additional input visibility on action change
+	private onSelectChange() {
+		banInputs.toggleDisplay(this.getMode() === "ban")
+	}
 }
 
 function toggleCheckboxDisplay(on: boolean) {
 	localStorage.setItem("hideModCheckboxes", (!on).toString())
 	checkboxStyler(on)
+}
+
+// Ban input fields
+class BanInputs extends View<null> {
+	constructor() {
+		super({ el: document.getElementById("ban-form") })
+	}
+
+	public toggleDisplay(on: boolean) {
+		write(() => {
+			(this.el
+				.querySelector("input[name=reason]") as HTMLInputElement)
+				.disabled = !on
+			this.el.classList.toggle("hidden", !on)
+		})
+	}
+
+	// Clear values of all fields
+	public clear() {
+		write(() => {
+			for (let el of this.el.getElementsByTagName("input")) {
+				el.value = ""
+			}
+		})
+	}
+
+	// Get input field values
+	public vals(): { [key: string]: any } {
+		let duration = 0
+		for (let el of this.el.querySelectorAll("input[type=number]")) {
+			let times = 1
+			switch (el.getAttribute("name")) {
+				case "day":
+					times *= 24
+				case "hour":
+					times *= 60
+			}
+			const val = parseInt((el as HTMLInputElement).value)
+			if (val) { // Empty string parses to NaN
+				duration += val * times
+			}
+		}
+
+		return {
+			duration,
+			reason: (this.el
+				.querySelector("input[name=reason]") as HTMLInputElement)
+				.value
+		}
+	}
 }

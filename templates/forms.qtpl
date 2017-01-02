@@ -32,8 +32,7 @@ BoardNavigation renders a board selection and search form
 	<input type="text" class="full-width" name="search" placeholder="{%s= lang["search"] %}">
 	<br>
 	<form>
-		<input type="submit" value="{%s= lang["apply"] %}">
-		<input type="button" name="cancel" value="{%s= lang["cancel"] %}">
+		{%= submit(true, lang) %}
 		<br>
 		{% for _, b := range config.GetBoardTitles() %}
 			<label>
@@ -56,9 +55,7 @@ CreateBoard renders a the form for creating new boards
 CaptchaConfirmation renders a confirmation form with an optional captcha
 {% func CaptchaConfirmation(ln lang.Pack) %}{% stripspace %}
 	{%= captcha("confirmation", ln.UI) %}
-	<input type="submit" value="{%s= ln.UI["submit"] %}">
-	<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
-	<div class="form-response admin"></div>
+	{%= submit(true, ln.UI) %}
 {% endstripspace %}{% endfunc %}
 
 {% func captcha(id string, lang map[string]string) %}{% stripspace %}
@@ -110,9 +107,7 @@ Form formatted as a table, with cancel and submit buttons
 	{% if needCaptcha %}
 		{%= captcha("ajax", ln.UI) %}
 	{% endif %}
-	<input type="submit" value="{%s= ln.UI["submit"] %}">
-	<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
-	<div class="form-response admin"></div>
+	{%= submit(true, ln.UI) %}
 {% endstripspace %}{% endfunc %}
 
 Render a map form for inputting map-like data
@@ -126,4 +121,13 @@ Render a map form for inputting map-like data
 		</a>
 		<br>
 	</div>
+{% endstripspace %}{% endfunc %}
+
+Render submit and cancel buttons
+{% func submit(cancel bool, ln map[string]string) %}{% stripspace %}
+	<input type="submit" value="{%s= ln["submit"] %}">
+	{% if cancel %}
+		<input type="button" name="cancel" value="{%s= ln["cancel"] %}">
+	{% endif %}
+	<div class="form-response admin"></div>
 {% endstripspace %}{% endfunc %}

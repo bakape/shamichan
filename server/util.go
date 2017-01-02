@@ -7,6 +7,10 @@ import (
 	"runtime/debug"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/lang"
+	"github.com/bakape/meguca/templates"
+	"github.com/dancannon/gorethink"
 )
 
 // Base set of HTTP headers for both HTML and JSON
@@ -63,4 +67,39 @@ func text403(w http.ResponseWriter, err error) {
 func text500(w http.ResponseWriter, r *http.Request, err interface{}) {
 	http.Error(w, fmt.Sprintf("500 %s", err), 500)
 	logError(r, err)
+}
+
+// Check client is not banned on specific board. Returns true, if all clear.
+// Renders ban page and returns false otherwise.
+func assertNotBanned(
+	w http.ResponseWriter,
+	r *http.Request,
+	board string,
+) bool {
+	ip := auth.GetIP(r)
+	if !auth.IsBanned(board, ip) {
+		return true
+	}
+
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return false
+	}
+
+	var rec auth.BanRecord
+	q := gorethink.Table("bans").Get([]string{board, ip})
+	if err := db.One(q, &rec); err != nil {
+		text500(w, r, err)
+		return false
+	}
+	w.WriteHeader(403)
+	head := w.Header()
+	for key, val := range vanillaHeaders {
+		head.Set(key, val)
+	}
+	head.Set("Content-Type", "text/html")
+	html := []byte(templates.BanPage(rec, lp.Templates["banPage"]))
+	w.Write(html)
+	return false
 }

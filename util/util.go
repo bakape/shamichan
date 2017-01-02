@@ -30,7 +30,7 @@ func (e wrappedError) Error() string {
 
 // Waterfall executes a slice of functions until the first error returned. This
 // error, if any, is returned to the caller.
-func Waterfall(fns []func() error) (err error) {
+func Waterfall(fns ...func() error) (err error) {
 	for _, fn := range fns {
 		err = fn()
 		if err != nil {

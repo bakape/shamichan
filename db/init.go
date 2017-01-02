@@ -3,12 +3,11 @@
 package db
 
 import (
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
-
-	"encoding/base64"
-	"encoding/hex"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
@@ -16,7 +15,7 @@ import (
 	r "github.com/dancannon/gorethink"
 )
 
-const dbVersion = 20
+const dbVersion = 21
 
 var (
 	// Address of the RethinkDB cluster instance to connect to
@@ -55,6 +54,9 @@ var (
 
 		// Board configurations
 		"boards",
+
+		// Board-specific IP bans
+		"bans",
 	}
 
 	// Map of simple secondary indices for tables
@@ -62,6 +64,7 @@ var (
 		table, index string
 	}{
 		{"imageTokens", "expires"},
+		{"bans", "expires"},
 		{"threads", "board"},
 		{"posts", "op"},
 		{"posts", "board"},
@@ -121,10 +124,7 @@ func LoadDB() (err error) {
 	if !IsTest {
 		go runCleanupTasks()
 	}
-	if err := loadConfigs(); err != nil {
-		return err
-	}
-	return loadBoardConfigs()
+	return util.Waterfall(loadConfigs, loadBoardConfigs, loadBans)
 }
 
 // Connect establishes a connection to RethinkDB. Address passed separately for
@@ -160,10 +160,10 @@ func verifyDBVersion() error {
 		}
 		fallthrough
 	case 16:
-		err := WriteAll([]r.Term{
+		err := WriteAll(
 			r.Table("posts").IndexCreate("lastUpdated"),
 			incrementVersion,
-		})
+		)
 		if err != nil {
 			return err
 		}
@@ -182,7 +182,12 @@ func verifyDBVersion() error {
 		}
 		fallthrough
 	case 19:
-		if err := update19to20(); err != nil {
+		if err := upgrade19to20(); err != nil {
+			return err
+		}
+		fallthrough
+	case 20:
+		if err := upgrade20to21(); err != nil {
 			return err
 		}
 	default:
@@ -249,7 +254,7 @@ func upgrade15to16() error {
 		r.TableDrop("threads_old"),
 		incrementVersion,
 	)
-	if err := WriteAll(qs); err != nil {
+	if err := WriteAll(qs...); err != nil {
 		return err
 	}
 
@@ -320,14 +325,14 @@ func upgrade17to18() error {
 		}
 	}
 
-	return WriteAll([]r.Term{
+	return WriteAll(
 		r.Table("imageTokens").IndexCreate("expires"),
 		incrementVersion,
-	})
+	)
 }
 
 func upgrade18to19() error {
-	return WriteAll([]r.Term{
+	return WriteAll(
 		r.
 			Table("images").
 			Update(map[string]r.Term{
@@ -350,11 +355,11 @@ func upgrade18to19() error {
 				},
 			}),
 		incrementVersion,
-	})
+	)
 }
 
-func update19to20() error {
-	return WriteAll([]r.Term{
+func upgrade19to20() error {
+	return WriteAll(
 		r.
 			Table("posts").
 			Update(map[string]r.Term{
@@ -363,7 +368,20 @@ func update19to20() error {
 				}),
 			}),
 		incrementVersion,
-	})
+	)
+}
+
+func upgrade20to21() error {
+	err := WriteAll(
+		createTable("bans"),
+		r.Table("bans").IndexCreate("expires"),
+		incrementVersion,
+	)
+	if err != nil {
+		return err
+	}
+
+	return waitForIndex("bans")()
 }
 
 // InitDB initialize a rethinkDB database
@@ -420,7 +438,7 @@ func CreateTables() error {
 		PrimaryKey: "SHA1",
 	}))
 
-	return WriteAll(qs)
+	return WriteAll(qs...)
 }
 
 func createPostTables() []r.Term {
@@ -454,7 +472,7 @@ func CreateIndices() error {
 		fns = append(fns, waitForIndex(table))
 	}
 
-	return util.Waterfall(fns)
+	return util.Waterfall(fns...)
 }
 
 func waitForIndex(table string) func() error {

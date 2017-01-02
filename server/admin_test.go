@@ -459,7 +459,7 @@ func TestDeletePost(t *testing.T) {
 	})
 	writeSampleUser(t)
 
-	rec, req := newJSONPair(t, "/admin/deletePost", postDeletionRequest{
+	rec, req := newJSONPair(t, "/admin/deletePost", postActionRequest{
 		IDs:          []uint64{1, 2, 3},
 		Board:        "a",
 		SessionCreds: sampleLoginCreds,

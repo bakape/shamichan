@@ -123,6 +123,11 @@
 			<blockquote>
 				{%= body(p, op) %}
 			</blockquote>
+			{% if p.Banned %}
+				<b class="admin banned">
+					{%s= lang.Packs["en_GB"].Common.Posts["banned"] %}
+				</b>
+			{% endif %}
 		</div>
 		{% if omit != 0 %}
 			<span class="omit" data-omit="{%d omit %}" data-image-omit="{%d imageOmit %}">

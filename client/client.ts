@@ -120,7 +120,7 @@ deferInit(() => {
 		handle(id, m =>
 			m.spoilerImage())
 
-	handlers[message.append] = ([id, char]: number[]) =>
+	handlers[message.append] = ([id, char]: [number, number]) =>
 		handle(id, m =>
 			m.append(char))
 
@@ -153,4 +153,8 @@ deferInit(() => {
 	handlers[message.deletePost] = (id: number) =>
 		handle(id, m =>
 			m.remove())
+
+	handlers[message.banned] = (id: number) =>
+		handle(id, m =>
+			m.setBanned())
 })

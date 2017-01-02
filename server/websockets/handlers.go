@@ -26,6 +26,7 @@ const (
 	MessageInsertImage
 	MessageSpoiler
 	MessageDeletePost
+	MessageBanned
 )
 
 // >= 30 are miscellaneous and do not write to post models

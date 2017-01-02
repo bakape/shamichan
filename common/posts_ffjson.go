@@ -211,6 +211,14 @@ func (mj *DatabasePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 		buf.WriteByte(',')
 	}
+	if mj.Banned != false {
+		if mj.Banned {
+			buf.WriteString(`"banned":true`)
+		} else {
+			buf.WriteString(`"banned":false`)
+		}
+		buf.WriteByte(',')
+	}
 	buf.WriteString(`"id":`)
 	fflib.FormatBits2(buf, uint64(mj.ID), 10, false)
 	buf.WriteString(`,"time":`)
@@ -399,6 +407,14 @@ func (mj *Post) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		}
 		buf.WriteByte(',')
 	}
+	if mj.Banned != false {
+		if mj.Banned {
+			buf.WriteString(`"banned":true`)
+		} else {
+			buf.WriteString(`"banned":false`)
+		}
+		buf.WriteByte(',')
+	}
 	buf.WriteString(`"id":`)
 	fflib.FormatBits2(buf, uint64(mj.ID), 10, false)
 	buf.WriteString(`,"time":`)
@@ -522,6 +538,14 @@ func (mj *StandalonePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteString(`"deleted":true`)
 		} else {
 			buf.WriteString(`"deleted":false`)
+		}
+		buf.WriteByte(',')
+	}
+	if mj.Banned != false {
+		if mj.Banned {
+			buf.WriteString(`"banned":true`)
+		} else {
+			buf.WriteString(`"banned":false`)
 		}
 		buf.WriteByte(',')
 	}
@@ -674,6 +698,14 @@ func (mj *Thread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 			buf.WriteString(`"deleted":true`)
 		} else {
 			buf.WriteString(`"deleted":false`)
+		}
+		buf.WriteByte(',')
+	}
+	if mj.Banned != false {
+		if mj.Banned {
+			buf.WriteString(`"banned":true`)
+		} else {
+			buf.WriteString(`"banned":false`)
 		}
 		buf.WriteByte(',')
 	}

@@ -1,6 +1,6 @@
 // Helper functions for communicating with the server's JSON API
 
-import { ThreadData, Post, PostData } from "./posts/models"
+import { Post, PostData } from "./posts/models"
 import PostView from "./posts/view"
 
 // Single entry of the array, fetched through `/json/boardList`
@@ -54,8 +54,8 @@ export async function fetchHTML(url: string): Promise<[string, string]> {
 }
 
 // Fetch HTML of a board page
-export async function fetchBoard(board: string): Promise<[string, string]> {
-	return await fetchHTML(`/${board}/?noIndex=true`)
+export async function fetchBoard(board: string): Promise<Response> {
+	return await fetch(`/${board}/?noIndex=true`)
 }
 
 // Fetch HTML of a thread page
@@ -63,12 +63,12 @@ export async function fetchThread(
 	board: string,
 	thread: number,
 	lastN: number,
-): Promise<[string, string]> {
+): Promise<Response> {
 	let url = `/${board}/${thread}?noIndex=true`
 	if (lastN) {
 		url += `&last=${lastN}`
 	}
-	return await fetchHTML(url)
+	return await fetch(url)
 }
 
 // Fetch thread JSON data
@@ -76,12 +76,12 @@ export async function fetchThreadJSON(
 	board: string,
 	thread: number,
 	lastN: number,
-): Promise<[ThreadData, string]> {
+): Promise<Response> {
 	let url = `/json/${board}/${thread}`
 	if (lastN) {
 		url += `?last=${lastN}`
 	}
-	return await fetchJSON<ThreadData>(url)
+	return await fetch(url)
 }
 
 // Try to fetch from server, if this post is not currently displayed due to

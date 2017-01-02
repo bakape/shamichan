@@ -55,8 +55,7 @@
 					</span>
 				{% endif %}
 				{%= captcha("new-thread", ln.UI) %}
-				<input type="submit" value="{%s= ln.UI["submit"] %}">
-				<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
+				{%= submit(true, ln.UI) %}
 			</form>
 		</aside>
 		<aside id="refresh" class="act glass">

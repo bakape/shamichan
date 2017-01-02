@@ -36,9 +36,12 @@ var (
 	errTitleTooLong     = common.ErrTooLong("board title")
 	errNoticeTooLong    = common.ErrTooLong("notice")
 	errRulesTooLong     = common.ErrTooLong("rules")
+	errBanReasonTooLong = common.ErrTooLong("ban reason")
 	errInvalidBoardName = errors.New("invalid board name")
 	errBoardNameTaken   = errors.New("board name taken")
 	errAccessDenied     = errors.New("access denied")
+	errNoReason         = errors.New("no reason provided")
+	errNoDuration       = errors.New("no ban duration provided")
 
 	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,3}$`)
 )
@@ -72,10 +75,17 @@ type boardDeletionRequest struct {
 	common.Captcha
 }
 
-type postDeletionRequest struct {
+// Request to perform a moderation action on a specific set of posts
+type postActionRequest struct {
 	IDs   []uint64 `json:"ids"`
 	Board string
 	auth.SessionCreds
+}
+
+type banRequest struct {
+	Duration uint64
+	Reason   string
+	postActionRequest
 }
 
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
@@ -309,7 +319,7 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 
 // Delete one or multiple posts on a moderated board
 func deletePost(w http.ResponseWriter, r *http.Request) {
-	var msg postDeletionRequest
+	var msg postActionRequest
 
 	// TODO: More than board owners should be able to delete posts
 	isValid := decodeJSON(w, r, &msg) &&
@@ -319,16 +329,7 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Cast IDs to interfaces
-	ids := make([]interface{}, len(msg.IDs))
-	for i := range ids {
-		ids[i] = interface{}(msg.IDs[i])
-	}
-
-	q := gorethink.
-		Table("posts").
-		GetAll(ids...).
-		Filter(gorethink.Row.Field("board").Eq(msg.Board)).
+	q := getAffectedPosts(msg.IDs, msg.Board).
 		Update(map[string]interface{}{
 			"log": gorethink.Row.Field("log").Append(gorethink.
 				Expr("12").
@@ -340,5 +341,67 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	if err := db.Write(q); err != nil {
 		text500(w, r, err)
 		return
+	}
+}
+
+// Get query targeting posts affected by the post moderation request
+func getAffectedPosts(ids []uint64, board string) gorethink.Term {
+	// Cast post ID array to interface array
+	cast := make([]interface{}, len(ids))
+	for i := range ids {
+		cast[i] = interface{}(ids[i])
+	}
+
+	return gorethink.
+		Table("posts").
+		GetAll(cast...).
+		Filter(gorethink.Row.Field("board").Eq(board))
+}
+
+// Ban a specific IP from a specific board
+func ban(w http.ResponseWriter, r *http.Request) {
+	var msg banRequest
+
+	isValid := decodeJSON(w, r, &msg) &&
+		isLoggedIn(w, r, msg.UserID, msg.Session) &&
+		isBoardOwner(w, msg.Board, msg.UserID)
+	switch {
+	case !isValid:
+		return
+	case len(msg.Reason) > common.MaxBanReasonLength:
+		text400(w, errBanReasonTooLong)
+		return
+	case msg.Reason == "":
+		text400(w, errNoReason)
+		return
+	case msg.Duration == 0:
+		text400(w, errNoDuration)
+		return
+	}
+
+	var posts []struct {
+		ID uint64
+		IP string
+	}
+	q := getAffectedPosts(msg.IDs, msg.Board).
+		Pluck("ip", "id").
+		Default(nil)
+	if err := db.All(q, &posts); err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	rec := auth.BanRecord{
+		ID:      [2]string{msg.Board, ""},
+		Reason:  msg.Reason,
+		By:      msg.UserID,
+		Expires: time.Now().Add(time.Duration(msg.Duration) * time.Minute),
+	}
+	for _, p := range posts {
+		rec.ID[1] = p.IP
+		if err := db.Ban(rec, p.ID); err != nil {
+			text500(w, r, err)
+			return
+		}
 	}
 }

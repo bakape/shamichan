@@ -1,18 +1,7 @@
 // Package db handles all core database interactions of the server
 package db
 
-import (
-	"errors"
-
-	"github.com/bakape/meguca/auth"
-	r "github.com/dancannon/gorethink"
-)
-
-var (
-	// ErrUserNameTaken denotes a user name the client is trying  to register
-	// with is already taken
-	ErrUserNameTaken = errors.New("user name already taken")
-)
+import r "github.com/dancannon/gorethink"
 
 var postReservationQuery = GetMain("info").
 	Update(
@@ -42,7 +31,7 @@ func Write(query r.Term) error {
 }
 
 // WriteAll executes passed write queries in order. Returns on first error.
-func WriteAll(qs []r.Term) error {
+func WriteAll(qs ...r.Term) error {
 	for _, q := range qs {
 		if err := Write(q); err != nil {
 			return err
@@ -128,26 +117,6 @@ func ThreadCounter(id uint64) (counter uint64, err error) {
 		Max().
 		Default(0)
 	err = One(q, &counter)
-	return
-}
-
-// RegisterAccount writes the ID and password hash of a new user account to the
-// database
-func RegisterAccount(ID string, hash []byte) error {
-	err := Insert("accounts", auth.User{
-		ID:       ID,
-		Password: hash,
-	})
-	if r.IsConflictErr(err) {
-		return ErrUserNameTaken
-	}
-	return err
-}
-
-// GetLoginHash retrieves the login hash of the registered user account
-func GetLoginHash(id string) (hash []byte, err error) {
-	query := GetAccount(id).Field("password").Default(nil)
-	err = One(query, &hash)
 	return
 }
 

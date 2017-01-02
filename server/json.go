@@ -192,23 +192,27 @@ func validateThread(
 	w http.ResponseWriter,
 	r *http.Request,
 	p map[string]string,
-) (id uint64, ok bool) {
+) (uint64, bool) {
 	board := p["board"]
-	var err error
-	id, err = strconv.ParseUint(p["thread"], 10, 64)
+
+	if !assertNotBanned(w, r, board) {
+		return 0, false
+	}
+
+	id, err := strconv.ParseUint(p["thread"], 10, 64)
 	if err != nil {
 		text404(w)
-		return
+		return 0, false
 	}
 
 	valid, err := db.ValidateOP(id, board)
 	if err != nil {
 		text500(w, r, err)
-		return
+		return 0, false
 	}
 	if !valid {
 		text404(w)
-		return
+		return 0, false
 	}
 
 	return id, true
@@ -239,6 +243,9 @@ func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	b := p["board"]
 	if !auth.IsBoard(b) {
 		text404(w)
+		return
+	}
+	if !assertNotBanned(w, r, b) {
 		return
 	}
 

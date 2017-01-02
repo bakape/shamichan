@@ -315,6 +315,7 @@
 		"account": "Konto i zarządzanie działami",
 		"add": "Dodaj",
 		"apply": "Zatwierdź",
+		"ban": "Ban",
 		"bottom": "Na dół",
 		"cancel": "Cofnij",
 		"catalog": "Katalog",
@@ -339,6 +340,7 @@
 		"reloadCaptcha": "Kliknij, żeby odświeżyć",
 		"reply": "Odpowiedź",
 		"report": "Zgłoś",
+		"reason": "Reason",
 		"rescan": "Przeskanuj",
 		"return": "Powrót",
 		"rules": "Zasady",
@@ -365,5 +367,12 @@
 		"Wyszukiwanie obrazu",
 		"Zabawa",
 		"Skróty"
-	]
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
 }

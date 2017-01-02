@@ -82,6 +82,7 @@ type DatabaseThread struct {
 type Post struct {
 	Editing   bool      `json:"editing,omitempty" gorethink:"editing"`
 	Deleted   bool      `json:"deleted,omitempty" gorethink:"deleted,omitempty"`
+	Banned    bool      `json:"banned,omitempty" gorethink:"banned,omitempty"`
 	ID        uint64    `json:"id" gorethink:"id"`
 	Time      int64     `json:"time" gorethink:"time"`
 	Body      string    `json:"body" gorethink:"body"`

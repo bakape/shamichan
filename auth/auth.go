@@ -3,11 +3,13 @@
 package auth
 
 import (
+	"crypto/rand"
 	"encoding/base64"
-	"math/rand"
 	"net"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/bakape/meguca/config"
 	"golang.org/x/crypto/bcrypt"
@@ -21,21 +23,18 @@ var (
 	// ReverseProxyIP specifies the IP of a non-localhost reverse proxy. Used
 	// for filtering in XFF IP determination.
 	ReverseProxyIP string
+
+	// board: IP: IsBanned
+	bans   = map[string]map[string]bool{}
+	bansMu sync.RWMutex
 )
 
-// Ident is used to verify a client's access and write permissions. Contains its
-// IP and logged in user data, if any.
-type Ident struct {
-	UserID string
-	IP     string
-}
-
-// LookUpIdent determine access rights of an IP
-func LookUpIdent(req *http.Request) Ident {
-	ident := Ident{
-		IP: GetIP(req),
-	}
-	return ident
+// BanRecord stores information about a specific ban
+type BanRecord struct {
+	ID      [2]string `gorethink:"id"`
+	Reason  string    `gorethink:"reason"`
+	By      string    `gorethink:"by"`
+	Expires time.Time
 }
 
 // IsBoard confirms the string is a valid board
@@ -74,7 +73,52 @@ func GetIP(req *http.Request) string {
 			}
 		}
 	}
-	return req.RemoteAddr
+	ip, _, err := net.SplitHostPort(req.RemoteAddr)
+	if err != nil {
+		return req.RemoteAddr // No port in address
+	}
+	return ip
+}
+
+// IsBanned returns if the IP is banned on the target board
+func IsBanned(board, ip string) bool {
+	bansMu.RLock()
+	ips, ok := bans[board]
+	bansMu.RUnlock()
+
+	if !ok {
+		return false
+	}
+	return ips[ip]
+}
+
+// AddBan adds an IP to the banned cache of a board
+func AddBan(board, ip string) {
+	bansMu.Lock()
+	defer bansMu.Unlock()
+
+	ips, ok := bans[board]
+	if !ok {
+		ips = map[string]bool{}
+		bans[board] = ips
+	}
+	ips[ip] = true
+}
+
+// RemoveBan removes an IP's ban from a specific board from the ban cache
+func RemoveBan(board, ip string) {
+	bansMu.Lock()
+	defer bansMu.Unlock()
+
+	ips, ok := bans[board]
+	if !ok {
+		return
+	}
+	if len(ips) == 1 {
+		delete(bans, board)
+	} else {
+		delete(ips, ip)
+	}
 }
 
 // RandomID generates a randomID of base64 characters of desired byte length

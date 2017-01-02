@@ -110,7 +110,7 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn, req *http.Request) *Client {
 	return &Client{
-		ip:      auth.LookUpIdent(req).IP,
+		ip:      auth.GetIP(req),
 		close:   make(chan error, 2),
 		receive: make(chan receivedMessage),
 		// Allows for ~6 seconds of messages at 0.2 second intervals, until the

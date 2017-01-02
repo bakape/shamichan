@@ -21,8 +21,7 @@ func init() {
 	config.Set(config.Configs{})
 	lang.Dir = filepath.Join("..", "lang")
 
-	fns := []func() error{lang.Load, Compile}
-	if err := util.Waterfall(fns); err != nil {
+	if err := util.Waterfall(lang.Load, Compile); err != nil {
 		panic(err)
 	}
 }

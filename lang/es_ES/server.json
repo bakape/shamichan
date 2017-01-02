@@ -315,6 +315,7 @@
 		"account": "Account and board management",
 		"add": "Add",
 		"apply": "Apply",
+		"ban": "Ban",
 		"bottom": "Abajo",
 		"cancel": "Cancelar",
 		"catalog": "Catalog",
@@ -339,6 +340,7 @@
 		"reloadCaptcha": "Click to reload",
 		"reply": "Respuesta",
 		"report": "Reportar",
+		"reason": "Reason",
 		"rescan": "Rescan",
 		"return": "Regresar",
 		"rules": "Rules",
@@ -365,5 +367,12 @@
 		"Búsqueda",
 		"Entretenimiento",
 		"Atajos"
-	]
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
 }

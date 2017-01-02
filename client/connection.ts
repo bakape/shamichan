@@ -4,7 +4,7 @@ import FSM from './fsm'
 import { debug, page } from './state'
 import lang from './lang'
 import { write } from './render'
-import { PostData } from "./posts/models"
+import { PostData, ThreadData } from "./posts/models"
 import { insertPost } from "./client"
 import { fetchThreadJSON } from "./fetch"
 import identity from "./posts/posting/identity"
@@ -27,6 +27,7 @@ export const enum message {
 	insertImage,
 	spoiler,
 	deletePost,
+	banned,
 
 	// >= 30 are miscellaneous and do not write to post models
 	synchronise = 30,
@@ -220,14 +221,19 @@ async function fetchBacklog() {
 
 	const {board, thread} = page,
 		// Always fetch the full thread
-		[data, err] = await fetchThreadJSON(board, thread, 0)
-	if (err) {
-		alert(err)
-		return
+		res = await fetchThreadJSON(board, thread, 0)
+	switch (res.status) {
+		case 200:
+			const data = await res.json() as ThreadData
+			insertPost(data)
+			data.posts.forEach(insertPost)
+			delete data.posts
+			break
+		case 403:
+			return
+		default:
+			throw await res.text()
 	}
-	insertPost(data)
-	data.posts.forEach(insertPost)
-	delete data.posts
 }
 
 // Reset the reconnection attempt counter and timers

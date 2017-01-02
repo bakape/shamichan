@@ -315,6 +315,7 @@
 		"account": "Account and board management",
 		"add": "Pridať",
 		"apply": "Použiť",
+		"ban": "Ban",
 		"bottom": "Dolu",
 		"cancel": "Zrušiť",
 		"catalog": "Katalóg",
@@ -339,6 +340,7 @@
 		"reloadCaptcha": "Klikni pre znovunačítanie",
 		"reply": "Odpovedať",
 		"report": "Nahlásiť",
+		"reason": "Reason",
 		"rescan": "Znovu naskenovať",
 		"return": "Návrat",
 		"rules": "Pravidlá",
@@ -366,5 +368,12 @@
 		"Image Search",
 		"Fun",
 		"Shortcuts"
-	]
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
 }

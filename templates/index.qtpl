@@ -225,16 +225,14 @@
 								<form id="login-form">
 									{%= table(specs["login"], ln) %}
 									{%= captcha("login", ln.UI) %}
-									<input type="submit" value="{%s= ln.UI["submit"] %}">
-									<div class="form-response admin"></div>
+									{%= submit(false, ln.UI) %}
 								</form>
 							</div>
 							<div data-id="1">
 								<form id="registration-form">
 									{%= table(specs["register"], ln) %}
 									{%= captcha("register", ln.UI) %}
-									<input type="submit" value="{%s= ln.UI["submit"] %}">
-									<div class="form-response admin"></div>
+									{%= submit(false, ln.UI) %}
 								</form>
 							</div>
 						</div>
@@ -290,15 +288,23 @@
 				</div>
 				<div id="moderation-panel" class="modal glass">
 					<form>
+						<div id="ban-form" class="hidden">
+							{% for _, id  := range [...]string{"day", "hour", "minute"} %}
+								<input type="number" name="{%s= id %}" min="0" placeholder="{%s= strings.Title(ln.Common.Plurals[id][1]) %}">
+							{% endfor %}
+							<br>
+							<input type="text" name="reason" required class="full-width" placeholder="{%s= ln.UI["reason"] %}" disabled>
+							<br>
+						</div>
 						<input type="checkbox" name="showCheckboxes">
 						<select name="action">
-							{% for _, id := range [...]string{"deletePost"} %}
+							{% for _, id := range [...]string{"deletePost", "ban"} %}
 								<option value="{%s= id %}">
 									{%s= ln.UI[id] %}
 								</option>
 							{% endfor %}
 						</select>
-						<input type="submit" value="{%s= ln.UI["submit"] %}">
+						{%= submit(false, ln.UI) %}
 					</form>
 				</div>
 			</div>
@@ -314,9 +320,7 @@
 			{% endcomment %}
 			<div id="left-spacer" class="side-spacer"></div>
 			{% comment %}
-				Contains posts, page naviagation, title, image banner and the catalog
-			{% endcomment %}
-			{% comment %}
+				Contains posts, page navigation, title, image banner and the catalog.
 				Is injected on the second parse of this template
 			{% endcomment %}
 			<section id="threads">

@@ -10,11 +10,16 @@ export default async function (
 	{board, thread, lastN}: PageState,
 	ready: Promise<void>
 ) {
-	const [html, err] = thread
+	const res = thread
 		? await fetchThread(board, thread, lastN)
 		: await fetchBoard(board)
-	if (err) {
-		throw err
+	const t = await res.text()
+	switch (res.status) {
+		case 200:
+		case 403:
+			break
+		default:
+			throw t
 	}
 
 	await ready
@@ -22,9 +27,9 @@ export default async function (
 	posts.clear()
 	setExpandAll(false)
 	if (thread) {
-		renderThread(html)
+		renderThread(t)
 	} else {
-		renderBoard(html)
+		renderBoard(t)
 	}
 }
 
@@ -32,4 +37,9 @@ export default async function (
 export function extractConfigs() {
 	const conf = document.getElementById("board-configs").textContent
 	setBoardConfig(JSON.parse(conf))
+}
+
+// Check if the rendered page is a ban page
+export function isBanned(): boolean {
+	return !!document.querySelector(".ban-page")
 }

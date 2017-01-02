@@ -42,19 +42,6 @@ func TestIsBoard(t *testing.T) {
 	}
 }
 
-func TestLookupIdentNoReverseProxy(t *testing.T) {
-	t.Parallel()
-
-	const ip = "::1"
-	req := httptest.NewRequest("GET", "/", nil)
-	req.RemoteAddr = ip
-	std := Ident{IP: ip}
-
-	if i := LookUpIdent(req); i != std {
-		LogUnexpected(t, std, i)
-	}
-}
-
 func TestGetIP(t *testing.T) {
 	const (
 		ip             = "207.178.71.93"
