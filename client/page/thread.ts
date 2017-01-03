@@ -23,7 +23,7 @@ export default function (html: string) {
     if (html) {
         threads.innerHTML = html
     }
-    if (isBanned) {
+    if (isBanned()) {
         return
     }
     extractConfigs()
