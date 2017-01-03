@@ -34,7 +34,7 @@ type BanRecord struct {
 	ID      [2]string `gorethink:"id"`
 	Reason  string    `gorethink:"reason"`
 	By      string    `gorethink:"by"`
-	Expires time.Time
+	Expires time.Time `gorethink:"expires"`
 }
 
 // IsBoard confirms the string is a valid board
