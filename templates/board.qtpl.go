@@ -251,7 +251,7 @@ func StreamCatalogThreads(qw422016 *qt422016.Writer, b common.Board) {
 			//line board.qtpl:109
 		}
 		//line board.qtpl:109
-		qw422016.N().S(`<span class="spaced thread-links"><b class="board">/`)
+		qw422016.N().S(`<span class="spaced thread-links hide-empty"><b class="board">/`)
 		//line board.qtpl:112
 		qw422016.N().S(t.Board)
 		//line board.qtpl:112

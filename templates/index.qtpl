@@ -186,6 +186,7 @@
 					Websocket connection status indicator
 				{% endcomment %}
 				<b id="sync" class="banner-float" title="{%s= ln.UI["sync"] %}"></b>
+				<span id="banner-extensions" class="hide-empty banner-float"></span>
 			</span>
 			{% comment %}
 				For modal windows

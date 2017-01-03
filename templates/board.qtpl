@@ -107,7 +107,7 @@ allow caching of generated posts.
 					</a>
 				</figure>
 			{% endif %}
-			<span class="spaced thread-links">
+			<span class="spaced thread-links hide-empty">
 				<b class="board">
 					/{%s= t.Board %}/
 				</b>
