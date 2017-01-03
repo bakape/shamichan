@@ -173,21 +173,21 @@ func streamrenderIndex(qw422016 *qt422016.Writer, ln lang.Pack) {
 	//line index.qtpl:178
 	qw422016.N().S(ln.UI["feedback"])
 	//line index.qtpl:178
-	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M0 0v1l4 2 4-2v-1h-8zm0 2v4h8v-4l-4 2-4-2z" transform="translate(0 1)" /></svg></a><b id="thread-post-counters" class="act hide-empty banner-float" title="`)
-	//line index.qtpl:183
+	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M0 0v1l4 2 4-2v-1h-8zm0 2v4h8v-4l-4 2-4-2z" transform="translate(0 1)" /></svg></a><span id="banner-extensions" class="hide-empty banner-float"></span><b id="thread-post-counters" class="act hide-empty banner-float" title="`)
+	//line index.qtpl:184
 	qw422016.N().S(ln.Common.UI["postsImages"])
-	//line index.qtpl:183
+	//line index.qtpl:184
 	qw422016.N().S(`"></b><b id="sync-counter" class="act hide-empty banner-float" title="`)
-	//line index.qtpl:184
+	//line index.qtpl:185
 	qw422016.N().S(ln.UI["syncCount"])
-	//line index.qtpl:184
+	//line index.qtpl:185
 	qw422016.N().S(`"></b>`)
-	//line index.qtpl:187
+	//line index.qtpl:188
 	qw422016.N().S(`<b id="sync" class="banner-float" title="`)
-	//line index.qtpl:188
+	//line index.qtpl:189
 	qw422016.N().S(ln.UI["sync"])
-	//line index.qtpl:188
-	qw422016.N().S(`"></b><span id="banner-extensions" class="hide-empty banner-float"></span></span>`)
+	//line index.qtpl:189
+	qw422016.N().S(`"></b></span>`)
 	//line index.qtpl:193
 	qw422016.N().S(`<div id="modal-overlay" class="overlay">`)
 	//line index.qtpl:197

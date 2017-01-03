@@ -180,13 +180,13 @@
 						<path d="M0 0v1l4 2 4-2v-1h-8zm0 2v4h8v-4l-4 2-4-2z" transform="translate(0 1)" />
 					</svg>
 				</a>
+				<span id="banner-extensions" class="hide-empty banner-float"></span>
 				<b id="thread-post-counters" class="act hide-empty banner-float" title="{%s= ln.Common.UI["postsImages"] %}"></b>
 				<b id="sync-counter" class="act hide-empty banner-float" title="{%s= ln.UI["syncCount"] %}"></b>
 				{% comment %}
 					Websocket connection status indicator
 				{% endcomment %}
 				<b id="sync" class="banner-float" title="{%s= ln.UI["sync"] %}"></b>
-				<span id="banner-extensions" class="hide-empty banner-float"></span>
 			</span>
 			{% comment %}
 				For modal windows
