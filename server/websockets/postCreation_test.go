@@ -81,7 +81,7 @@ func TestInsertThread(t *testing.T) {
 			req := ThreadCreationRequest{
 				Board: c.board,
 			}
-			err := insertThread(marshalJSON(t, req), new(Client))
+			err := new(Client).insertThread(marshalJSON(t, req))
 			if err != c.err {
 				UnexpectedError(t, err)
 			}
@@ -148,7 +148,7 @@ func testCreateThread(t *testing.T) {
 		Board:   "c",
 	}
 	data := marshalJSON(t, req)
-	if err := insertThread(data, cl); err != nil {
+	if err := cl.insertThread(data); err != nil {
 		t.Fatal(err)
 	}
 	assertMessage(t, wcl, `326`)
@@ -192,7 +192,7 @@ func testCreateThreadTextOnly(t *testing.T) {
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	data := marshalJSON(t, sampleImagelessThreadCreationRequest)
-	if err := insertThread(data, cl); err != nil {
+	if err := cl.insertThread(data); err != nil {
 		t.Fatal(err)
 	}
 	assertMessage(t, wcl, `327`)
@@ -290,7 +290,7 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 	}
 	data := marshalJSON(t, sampleImagelessThreadCreationRequest)
 
-	if err := insertThread(data, cl); err != nil {
+	if err := cl.insertThread(data); err != nil {
 		t.Fatal(err)
 	}
 
@@ -325,7 +325,7 @@ func TestPostCreationValidations(t *testing.T) {
 					Token: c.token,
 				},
 			}
-			err := insertPost(marshalJSON(t, req), cl)
+			err := cl.insertPost(marshalJSON(t, req))
 			if err != errNoTextOrImage {
 				UnexpectedError(t, err)
 			}
@@ -352,7 +352,7 @@ func TestPostCreationOnLockedThread(t *testing.T) {
 	req := ReplyCreationRequest{
 		Body: "a",
 	}
-	if err := insertPost(marshalJSON(t, req), cl); err != errThreadIsLocked {
+	if err := cl.insertPost(marshalJSON(t, req)); err != errThreadIsLocked {
 		UnexpectedError(t, err)
 	}
 }
@@ -383,7 +383,7 @@ func TestPostCreation(t *testing.T) {
 		},
 	}
 
-	if err := insertPost(marshalJSON(t, req), cl); err != nil {
+	if err := cl.insertPost(marshalJSON(t, req)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -487,7 +487,7 @@ func TestTextOnlyPostCreation(t *testing.T) {
 		Password: "123",
 	}
 
-	if err := insertPost(marshalJSON(t, req), cl); err != nil {
+	if err := cl.insertPost(marshalJSON(t, req)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -526,10 +526,10 @@ func BenchmarkPostCreation(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := insertPost(marshalJSON(b, req), cl); err != nil {
+		if err := cl.insertPost(marshalJSON(b, req)); err != nil {
 			b.Fatal(err)
 		}
-		if err := closePost(nil, cl); err != nil {
+		if err := cl.closePost(); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -561,7 +561,7 @@ func TestPostCreationForcedAnon(t *testing.T) {
 		Password: "123",
 	}
 
-	if err := insertPost(marshalJSON(t, req), cl); err != nil {
+	if err := cl.insertPost(marshalJSON(t, req)); err != nil {
 		t.Fatal(err)
 	}
 

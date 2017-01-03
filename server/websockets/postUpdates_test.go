@@ -137,23 +137,6 @@ func TestWriteBacklinks(t *testing.T) {
 	}
 }
 
-func TestNoOpenPost(t *testing.T) {
-	t.Parallel()
-
-	sv := newWSServer(t)
-	defer sv.Close()
-
-	fns := [...]func([]byte, *Client) error{
-		appendRune, backspace, closePost, spliceText, insertImage,
-	}
-	for _, fn := range fns {
-		cl, _ := sv.NewClient()
-		if err := fn(nil, cl); err != errNoPostOpen {
-			t.Errorf("unexpected error by %s: %s", funcName(fn), err)
-		}
-	}
-}
-
 func funcName(fn interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
 }
@@ -161,18 +144,14 @@ func funcName(fn interface{}) string {
 func TestLineEmpty(t *testing.T) {
 	t.Parallel()
 
-	fns := [...]func([]byte, *Client) error{backspace}
-
 	sv := newWSServer(t)
 	defer sv.Close()
 
-	for _, fn := range fns {
-		cl, _ := sv.NewClient()
-		cl.openPost.id = 1
-		cl.openPost.time = time.Now().Unix()
-		if err := fn(nil, cl); err != errLineEmpty {
-			t.Errorf("unexpected error by %s: %s", funcName(fn), err)
-		}
+	cl, _ := sv.NewClient()
+	cl.openPost.id = 1
+	cl.openPost.time = time.Now().Unix()
+	if err := cl.backspace(); err != errLineEmpty {
+		t.Errorf("unexpected error by %s: %s", "Client.backspace", err)
 	}
 }
 
@@ -188,7 +167,7 @@ func TestAppendBodyTooLong(t *testing.T) {
 		time:       time.Now().Unix(),
 		bodyLength: common.MaxLenBody,
 	}
-	if err := appendRune(nil, cl); err != common.ErrBodyTooLong {
+	if err := cl.appendRune(nil); err != common.ErrBodyTooLong {
 		UnexpectedError(t, err)
 	}
 }
@@ -208,7 +187,7 @@ func TestAppendRune(t *testing.T) {
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
 
-	if err := appendRune([]byte("100"), cl); err != nil {
+	if err := cl.appendRune([]byte("100")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -263,7 +242,7 @@ func BenchmarkAppend(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := appendRune([]byte("100"), cl); err != nil {
+		if err := cl.appendRune([]byte("100")); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -286,7 +265,7 @@ func TestAppendNewline(t *testing.T) {
 	}
 	setBoardConfigs(t, false)
 
-	if err := appendRune([]byte("10"), cl); err != nil {
+	if err := cl.appendRune([]byte("10")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -327,7 +306,7 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 		Buffer:     *bytes.NewBuffer([]byte("#flip")),
 	}
 
-	if err := appendRune([]byte("10"), cl); err != nil {
+	if err := cl.appendRune([]byte("10")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -412,7 +391,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 	}
 	setBoardConfigs(t, false)
 
-	if err := appendRune([]byte("10"), cl); err != nil {
+	if err := cl.appendRune([]byte("10")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -483,7 +462,7 @@ func TestBackspace(t *testing.T) {
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
 
-	if err := backspace([]byte{}, cl); err != nil {
+	if err := cl.backspace(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -508,7 +487,7 @@ func TestClosePost(t *testing.T) {
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
 
-	if err := closePost([]byte{}, cl); err != nil {
+	if err := cl.closePost(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -569,7 +548,7 @@ func TestSpliceValidityChecks(t *testing.T) {
 				},
 				Text: []rune(c.text),
 			}
-			if err := spliceText(marshalJSON(t, req), cl); err != c.err {
+			if err := cl.spliceText(marshalJSON(t, req)); err != c.err {
 				UnexpectedError(t, err)
 			}
 		})
@@ -756,7 +735,7 @@ func TestSplice(t *testing.T) {
 				Text: []rune(c.text),
 			}
 
-			if err := spliceText(marshalJSON(t, req), cl); err != nil {
+			if err := cl.spliceText(marshalJSON(t, req)); err != nil {
 				t.Fatal(err)
 			}
 
@@ -827,7 +806,7 @@ func TestInsertImageIntoPostWithImage(t *testing.T) {
 		time:     time.Now().Unix(),
 		hasImage: true,
 	}
-	if err := insertImage(nil, cl); err != errHasImage {
+	if err := cl.insertImage(nil); err != errHasImage {
 		UnexpectedError(t, err)
 	}
 }
@@ -848,7 +827,7 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 		Name:  "foo.jpeg",
 		Token: "123",
 	}
-	if err := insertImage(marshalJSON(t, req), cl); err != errTextOnly {
+	if err := cl.insertImage(marshalJSON(t, req)); err != errTextOnly {
 		UnexpectedError(t, err)
 	}
 }
@@ -891,7 +870,7 @@ func TestInsertImage(t *testing.T) {
 		Name:  "foo.jpeg",
 		Token: token,
 	}
-	if err := insertImage(marshalJSON(t, req), cl); err != nil {
+	if err := cl.insertImage(marshalJSON(t, req)); err != nil {
 		t.Fatal(err)
 	}
 

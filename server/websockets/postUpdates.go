@@ -92,7 +92,7 @@ func (s spliceRequest) MarshalJSON() ([]byte, error) {
 }
 
 // Append a rune to the body of the open post
-func appendRune(data []byte, c *Client) error {
+func (c *Client) appendRune(data []byte) error {
 	if has, err := c.hasPost(); err != nil {
 		return err
 	} else if !has {
@@ -255,7 +255,7 @@ func writeBacklink(id, op uint64, board string, destID uint64) error {
 }
 
 // Remove one character from the end of the line in the open post
-func backspace(_ []byte, c *Client) error {
+func (c *Client) backspace() error {
 	if has, err := c.hasPost(); err != nil {
 		return err
 	} else if !has {
@@ -278,7 +278,7 @@ func backspace(_ []byte, c *Client) error {
 }
 
 // Close an open post and parse the last line, if needed.
-func closePost(_ []byte, c *Client) error {
+func (c *Client) closePost() error {
 	if c.openPost.id == 0 {
 		return errNoPostOpen
 	}
@@ -302,7 +302,7 @@ func closePost(_ []byte, c *Client) error {
 
 // Splice the current line's text in the open post. This call is also used for
 // text pastes.
-func spliceText(data []byte, c *Client) error {
+func (c *Client) spliceText(data []byte) error {
 	if has, err := c.hasPost(); err != nil {
 		return err
 	} else if !has {
@@ -422,7 +422,7 @@ func spliceLine(req spliceRequest, c *Client) error {
 }
 
 // Insert and image into an existing open post
-func insertImage(data []byte, c *Client) error {
+func (c *Client) insertImage(data []byte) error {
 	if has, err := c.hasPost(); err != nil {
 		return err
 	} else if !has {

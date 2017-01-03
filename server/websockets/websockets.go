@@ -281,11 +281,31 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 // Run the appropriate handler for the websocket message
 func (c *Client) runHandler(typ MessageType, msg []byte) error {
 	data := msg[2:]
-	handler, ok := handlers[typ]
-	if !ok {
+	switch typ {
+	case MessageSynchronise:
+		return c.synchronise(data)
+	case MessageReclaim:
+		return c.reclaimPost(data)
+	case MessageInsertThread:
+		return c.insertThread(data)
+	case MessageAppend:
+		return c.appendRune(data)
+	case MessageBackspace:
+		return c.backspace()
+	case MessageClosePost:
+		return c.closePost()
+	case MessageSplice:
+		return c.spliceText(data)
+	case MessageInsertPost:
+		return c.insertPost(data)
+	case MessageInsertImage:
+		return c.insertImage(data)
+	case MessageNOOP:
+		// No operation message handler. Used as a one way pseudo-ping.
+		return nil
+	default:
 		return errInvalidPayload(msg)
 	}
-	return handler(data, c)
 }
 
 // logError writes the client's websocket error to the error log (or stdout)
@@ -316,7 +336,7 @@ func (c *Client) hasPost() (bool, error) {
 	case c.openPost.id == 0:
 		return false, errNoPostOpen
 	case c.openPost.time < time.Now().Add(-time.Minute*29).Unix():
-		return false, closePost(nil, c)
+		return false, c.closePost()
 	default:
 		return true, nil
 	}

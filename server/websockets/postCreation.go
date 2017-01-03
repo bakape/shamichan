@@ -52,8 +52,8 @@ type ImageRequest struct {
 }
 
 // Insert a new thread into the database
-func insertThread(data []byte, c *Client) (err error) {
-	if err := closePreviousPost(c); err != nil {
+func (c *Client) insertThread(data []byte) (err error) {
+	if err := c.closePreviousPost(); err != nil {
 		return err
 	}
 	var req ThreadCreationRequest
@@ -147,8 +147,8 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 }
 
 // Insert a new post into the database
-func insertPost(data []byte, c *Client) error {
-	if err := closePreviousPost(c); err != nil {
+func (c *Client) insertPost(data []byte) error {
+	if err := c.closePreviousPost(); err != nil {
 		return err
 	}
 
@@ -244,9 +244,9 @@ func lastLine(s string) string {
 }
 
 // If the client has a previous post, close it silently
-func closePreviousPost(c *Client) error {
+func (c *Client) closePreviousPost() error {
 	if c.openPost.id != 0 {
-		return closePost(nil, c)
+		return c.closePost()
 	}
 	return nil
 }

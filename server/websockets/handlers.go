@@ -54,23 +54,7 @@ var (
 
 	errInvalidStructure = errors.New("invalid message structure")
 	errInValidCaptcha   = errors.New("invalid captcha provided")
-
-	// Lookup table for message handlers
-	handlers = map[MessageType]handler{
-		MessageSynchronise:  synchronise,
-		MessageReclaim:      reclaimPost,
-		MessageInsertThread: insertThread,
-		MessageAppend:       appendRune,
-		MessageBackspace:    backspace,
-		MessageClosePost:    closePost,
-		MessageSplice:       spliceText,
-		MessageInsertPost:   insertPost,
-		MessageInsertImage:  insertImage,
-		MessageNOOP:         noop,
-	}
 )
-
-type handler func([]byte, *Client) error
 
 // Decode message JSON into the supplied type. Will augment, once we switch to
 // a binary message protocol.
@@ -105,9 +89,4 @@ func prependMessageType(typ MessageType, data string) string {
 	copy(encoded[2:], data)
 
 	return string(encoded)
-}
-
-// No operation message handler. Used as a one way pseudo-ping.
-func noop(_ []byte, _ *Client) error {
-	return nil
 }

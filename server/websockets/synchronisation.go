@@ -34,7 +34,7 @@ type reclaimRequest struct {
 
 // Synchronise the client to a certain thread, assign it's ID and prepare to
 // receive update messages.
-func synchronise(data []byte, c *Client) error {
+func (c *Client) synchronise(data []byte) error {
 	// Unsubscribe from previous update feed, if any
 	if c.feedID != 0 {
 		feeds.Remove <- subRequest{c.feedID, c}
@@ -99,8 +99,8 @@ func syncToThread(board string, thread uint64, c *Client) error {
 // TODO: Technically there is no locking performed so a single post may be open
 // by multiple clients. This opens us up to some exploits, but nothing severe.
 // Still need to think of a solution.
-func reclaimPost(data []byte, c *Client) error {
-	if err := closePreviousPost(c); err != nil {
+func (c *Client) reclaimPost(data []byte) error {
+	if err := c.closePreviousPost(); err != nil {
 		return err
 	}
 

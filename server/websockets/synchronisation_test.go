@@ -30,7 +30,7 @@ func TestOldFeedClosing(t *testing.T) {
 	defer feeds.Clear()
 
 	cl.feedID = 1
-	synchronise(nil, cl)
+	cl.synchronise(nil)
 	if cl.feedID != 0 {
 		t.Fatal("old feed not cleared")
 	}
@@ -48,13 +48,13 @@ func TestSyncToBoard(t *testing.T) {
 		Thread: 0,
 		Board:  "c",
 	}
-	if err := synchronise(marshalJSON(t, msg), cl); err != errInvalidBoard {
+	if err := cl.synchronise(marshalJSON(t, msg)); err != errInvalidBoard {
 		UnexpectedError(t, err)
 	}
 
 	// Valid synchronization
 	msg.Board = "a"
-	if err := synchronise(marshalJSON(t, msg), cl); err != nil {
+	if err := cl.synchronise(marshalJSON(t, msg)); err != nil {
 		t.Fatal(err)
 	}
 	defer Clients.Clear()
@@ -91,7 +91,7 @@ func TestInvalidThreadSync(t *testing.T) {
 		Board:  "a",
 		Thread: 1,
 	})
-	if err := synchronise(data, cl); err != errInvalidThread {
+	if err := cl.synchronise(data); err != errInvalidThread {
 		UnexpectedError(t, err)
 	}
 }
@@ -125,7 +125,7 @@ func TestSyncToThread(t *testing.T) {
 		Thread: 1,
 	})
 
-	if err := synchronise(data, cl); err != nil {
+	if err := cl.synchronise(data); err != nil {
 		t.Fatal(err)
 	}
 	defer Clients.Clear()
@@ -212,7 +212,7 @@ func TestReclaimPost(t *testing.T) {
 				ID:       c.id,
 				Password: c.password,
 			}
-			reclaimPost(marshalJSON(t, req), cl)
+			cl.reclaimPost(marshalJSON(t, req))
 
 			assertMessage(t, wcl, `31`+strconv.Itoa(c.code))
 		})
