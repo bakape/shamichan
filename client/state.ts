@@ -12,6 +12,7 @@ interface Configs {
 	defaultLang: string
 	defaultCSS: string
 	captchaPublicKey: string
+	imageRootOverride: string
 	links: { [key: string]: string }
 }
 

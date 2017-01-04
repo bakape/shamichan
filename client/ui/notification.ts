@@ -28,11 +28,11 @@ export default function notifyAboutReply(post: Post) {
 	let icon: string
 	if (!options.hideThumbs && !options.workModeToggle) {
 		if (post.image) {
-			const {SHA1, fileType, thumbType} = post.image
+			const {SHA1, thumbType} = post.image
 			if (post.image.spoiler) {
 				icon = '/assets/spoil/' + boardConfig.spoiler
 			} else {
-				icon = thumbPath(SHA1, fileType, thumbType)
+				icon = thumbPath(SHA1, thumbType)
 			}
 		} else {
 			icon = defaultIcon

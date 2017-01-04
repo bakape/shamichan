@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 )
 
 const fileCreationFlags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
@@ -35,10 +36,16 @@ var (
 	}
 )
 
+type buffer []byte
+
+func (b buffer) append(s string) buffer {
+	return append(b, s...)
+}
+
 // GetFilePaths generates file paths of the source file and its thumbnail
 func GetFilePaths(SHA1 string, fileType, thumbType uint8) (paths [2]string) {
 	paths[0] = SourcePath(fileType, SHA1)
-	paths[1] = ThumbPath(fileType, thumbType, SHA1)
+	paths[1] = ThumbPath(thumbType, SHA1)
 	for i := range paths {
 		paths[i] = filepath.FromSlash(paths[i][1:])
 	}
@@ -46,27 +53,33 @@ func GetFilePaths(SHA1 string, fileType, thumbType uint8) (paths [2]string) {
 	return
 }
 
-// ThumbPath returns the path to the thumbnail of an image
-func ThumbPath(fileType, thumbType uint8, SHA1 string) string {
-	buf := make([]byte, 14, 58)
-	copy(buf, "/images/thumb/")
-	buf = append(buf, SHA1...)
-	buf = append(buf, '.')
-	buf = append(buf, common.Extensions[thumbType]...)
+func imageRoot() string {
+	r := config.Get().ImageRootOverride
+	if r != "" {
+		return r
+	}
+	return "/images"
+}
 
+// ThumbPath returns the path to the thumbnail of an image
+func ThumbPath(thumbType uint8, SHA1 string) string {
+	root := imageRoot()
+	ext := common.Extensions[thumbType]
+
+	buf := make(buffer, 0, len(root)+len(ext)+48).
+		append(root).append("/thumb/").append(SHA1)
+	buf = append(buf, '.').append(ext)
 	return string(buf)
 }
 
 // SourcePath returns the path to the source file on an image
 func SourcePath(fileType uint8, SHA1 string) string {
+	root := imageRoot()
 	ext := common.Extensions[fileType]
 
-	buf := make([]byte, 12, 53+len(ext))
-	copy(buf, "/images/src/")
-	buf = append(buf, SHA1...)
-	buf = append(buf, '.')
-	buf = append(buf, ext...)
-
+	buf := make(buffer, 0, len(ext)+len(root)+46).
+		append(root).append("/src/").append(SHA1)
+	buf = append(buf, '.').append(ext)
 	return string(buf)
 }
 

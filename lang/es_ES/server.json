@@ -128,6 +128,10 @@
 			"Expansion de imagen al pasar el ratón",
 			"Muestra una previsualización de la imagen al pasar"
 		],
+		"imageRootOverride": [
+			"Image root override",
+			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
+		],
 		"import": [
 			"Importar",
 			"Importar opciones desde archivo"

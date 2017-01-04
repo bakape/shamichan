@@ -1,4 +1,4 @@
-import { boardConfig } from '../../state'
+import { boardConfig, config } from '../../state'
 import options from '../../options'
 import { escape, setAttrs, pad, importTemplate } from '../../util'
 import { ImageData, fileTypes } from '../../common'
@@ -150,19 +150,19 @@ function readableFilesize(size: number): string {
     return `${text.slice(0, -1)}.${text.slice(-1)} MB`
 }
 
+function imageRoot(): string {
+    return config.imageRootOverride || "/images"
+}
+
 // Get the thumbnail path of an image, accounting for not thumbnail of specific
 // type being present
-export function thumbPath(
-    SHA1: string,
-    fileType: fileTypes,
-    thumbType: fileTypes,
-): string {
-    return `/images/thumb/${SHA1}.${fileTypes[thumbType]}`
+export function thumbPath(SHA1: string, thumbType: fileTypes): string {
+    return `${imageRoot()}/thumb/${SHA1}.${fileTypes[thumbType]}`
 }
 
 // Resolve the path to the source file of an upload
 export function sourcePath(SHA1: string, fileType: fileTypes): string {
-    return `/images/src/${SHA1}.${fileTypes[fileType]}`
+    return `${imageRoot()}/src/${SHA1}.${fileTypes[fileType]}`
 }
 
 // Render a name + download link of an image
@@ -192,7 +192,7 @@ export function renderThumbnail(el: Element, data: ImageData) {
         // Animated GIF thumbnails
         thumb = src
     } else {
-        thumb = thumbPath(data.SHA1, data.fileType, data.thumbType)
+        thumb = thumbPath(data.SHA1, data.thumbType)
     }
 
     // Downscale thumbnail for higher DPI, unless specified not to

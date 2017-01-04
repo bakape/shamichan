@@ -6,8 +6,13 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
 )
+
+func init() {
+	config.Set(config.Defaults)
+}
 
 func TestMain(m *testing.M) {
 	if err := CreateDirs(); err != nil {

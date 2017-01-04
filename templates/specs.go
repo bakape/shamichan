@@ -204,6 +204,10 @@ var specs = map[string][]inputSpec{
 			Type: _string,
 		},
 		{
+			ID:   "imageRootOverride",
+			Type: _string,
+		},
+		{
 			ID:   "salt",
 			Type: _string,
 		},

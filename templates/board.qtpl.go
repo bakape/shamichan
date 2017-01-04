@@ -241,7 +241,7 @@ func StreamCatalogThreads(qw422016 *qt422016.Writer, b common.Board) {
 				//line board.qtpl:105
 				qw422016.N().S(`" class="expanded" src="`)
 				//line board.qtpl:105
-				qw422016.N().S(assets.ThumbPath(img.FileType, img.ThumbType, img.SHA1))
+				qw422016.N().S(assets.ThumbPath(img.ThumbType, img.SHA1))
 				//line board.qtpl:105
 				qw422016.N().S(`">`)
 				//line board.qtpl:106

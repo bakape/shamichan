@@ -265,7 +265,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 			//line article.qtpl:117
 			qw422016.N().S(`<img src="`)
 			//line article.qtpl:118
-			qw422016.N().S(assets.ThumbPath(img.FileType, img.ThumbType, img.SHA1))
+			qw422016.N().S(assets.ThumbPath(img.ThumbType, img.SHA1))
 			//line article.qtpl:118
 			qw422016.N().S(`" width="`)
 			//line article.qtpl:118

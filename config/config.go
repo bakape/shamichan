@@ -1,4 +1,4 @@
-//go:generate ffjson --nodecoder --force-regenerate $GOFILE
+//go:generate ffjson --nodecoder $GOFILE
 
 // Package config stores and exports the configuration for server-side use and
 // the public availability JSON struct, which includes a small subset of the
@@ -7,11 +7,10 @@ package config
 
 import (
 	"encoding/json"
+	"reflect"
 	"sort"
 	"sync"
 	"time"
-
-	"reflect"
 
 	"github.com/bakape/meguca/util"
 )
@@ -114,12 +113,13 @@ type Configs struct {
 
 // Public contains configurations exposeable through public availability APIs
 type Public struct {
-	Captcha          bool              `json:"captcha" gorethink:"captcha"`
-	Mature           bool              `json:"mature" gorethink:"mature"`
-	DefaultLang      string            `json:"defaultLang" gorethink:"defaultLang"`
-	DefaultCSS       string            `json:"defaultCSS" gorethink:"defaultCSS"`
-	CaptchaPublicKey string            `json:"captchaPublicKey" gorethink:"captchaPublicKey"`
-	Links            map[string]string `json:"links" gorethink:"links"`
+	Captcha           bool              `json:"captcha" gorethink:"captcha"`
+	Mature            bool              `json:"mature" gorethink:"mature"`
+	DefaultLang       string            `json:"defaultLang" gorethink:"defaultLang"`
+	DefaultCSS        string            `json:"defaultCSS" gorethink:"defaultCSS"`
+	CaptchaPublicKey  string            `json:"captchaPublicKey" gorethink:"captchaPublicKey"`
+	ImageRootOverride string            `json:"imageRootOverride" gorethink:"imageRootOverride"`
+	Links             map[string]string `json:"links" gorethink:"links"`
 }
 
 // BoardConfigs stores board-specific configuration
