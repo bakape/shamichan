@@ -14,7 +14,7 @@ let panel: ModPanel,
 export default class ModPanel extends View<null> {
 	constructor() {
 		if (panel) {
-			return
+			return null
 		}
 		checkboxStyler = toggleHeadStyle(
 			"mod-checkboxes",
