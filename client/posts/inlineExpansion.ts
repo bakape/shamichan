@@ -38,7 +38,7 @@ async function onClick(e: MouseEvent) {
 		})
 	} else {
 		// Fetch external post from server
-		const [data] = await fetchJSON<PostData>("/json/post/${id}")
+		const [data] = await fetchJSON<PostData>(`/json/post/${id}`)
 		if (data) {
 			const model = new Post(data),
 				view = new PostView(model, null)
