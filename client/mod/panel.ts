@@ -1,28 +1,26 @@
 // Moderation panel with various post moderation and other controls
 
-import View from "../view"
-import { write, threads } from "../render"
-import { Post } from "../posts/models"
+import { View } from "../base"
+import { extend, postJSON, write, threads, toggleHeadStyle } from "../util"
+import { Post } from "../posts"
 import { getModel, page } from "../state"
 import { newRequest } from "./common"
-import { extend } from "../util"
-import { postJSON } from "../fetch"
-import { toggleHeadStyle } from "../options/specs"
 
 let panel: ModPanel,
 	banInputs: BanInputs,
-	displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true"
-
-const checkboxStyler = toggleHeadStyle(
-	"mod-checkboxes",
-	".mod-checkbox{ display: inline; }"
-)
+	displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true",
+	checkboxStyler: (toggle: boolean) => void
 
 export default class ModPanel extends View<null> {
 	constructor() {
 		if (panel) {
 			return
 		}
+		checkboxStyler = toggleHeadStyle(
+			"mod-checkboxes",
+			".mod-checkbox{ display: inline; }"
+		)
+
 		super({ el: document.getElementById("moderation-panel") })
 		panel = this
 		banInputs = new BanInputs()

@@ -1,13 +1,13 @@
 import { message, send, handlers } from "../../connection"
-import { Post, TextState, ImageData, PostData } from "../models"
+import { Post } from "../model"
+import { TextState, ImageData, PostData } from "../../common"
 import FormView from "./view"
 import { posts, storeMine } from "../../state"
-import { postSM, postEvent, postState } from "./main"
-import { extend } from "../../util"
+import { postSM, postEvent, postState } from "."
+import { extend, write } from "../../util"
 import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
 import { newAllocRequest } from "./identity"
-import { write } from "../../render"
 
 // A message created while disconnected for later sending
 type BufferedMessage = [message, any]

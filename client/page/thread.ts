@@ -1,17 +1,12 @@
-import { PostData, ThreadData, Post, fileTypes, PostLinks } from '../posts/models'
-import PostView from '../posts/view'
+import { Post, PostView } from '../posts'
+import { fileTypes, PostLinks, PostData, ThreadData } from "../common"
 import { posts as postCollection, hidden, mine, seenReplies } from '../state'
-import { threads, write } from '../render'
+import { pluralize, escape, threads, write } from '../util'
 import options from "../options"
 import lang from "../lang"
 import { updateSyncTimestamp } from "../connection"
-import notifyAboutReply from "../notification"
-import { pluralize, escape } from "../util"
-import { setTitle } from "../tab"
-import { extractConfigs, isBanned } from "./common"
-
-// Container for all rendered posts
-export let threadContainer: HTMLElement
+import { notifyAboutReply, setTitle } from "../ui"
+import { extractConfigs, isBanned } from "."
 
 const counters = document.getElementById("thread-post-counters")
 let postCtr = 0,
@@ -28,9 +23,8 @@ export default function (html: string) {
     }
     extractConfigs()
 
-    threadContainer = threads.querySelector("#thread-container")
     if (!options.workModeToggle && (options.userBG || options.illyaDance)) {
-        threadContainer.classList.add("custom-BG")
+        document.getElementById("thread-container").classList.add("custom-BG")
     }
 
     const data = JSON.parse(

@@ -3,22 +3,25 @@
 // batches.
 
 import { posts, page } from "../state"
-import options from "../options"
-import { threads, write } from "../render"
-import { fileTypes, Post } from "../posts/models"
+import options from "."
+import { threads, write } from "../util"
+import { Post } from "../posts"
+import { fileTypes } from "../common"
 
 // Listen for changes on the options object and call appropriate handlers on
 // all applicable posts
-const handlers: { [key: string]: () => void } = {
-	workModeToggle: renderImages,
-	hideThumbs: renderImages,
-	spoilers: toggleSpoilers,
-	autogif: toggleAutoGIF,
-	anonymise: toggleAnonymisation,
-	relativeTime: renderTime,
-}
-for (let key in handlers) {
-	options.onChange(key, handlers[key])
+export default () => {
+	const handlers: { [key: string]: () => void } = {
+		workModeToggle: renderImages,
+		hideThumbs: renderImages,
+		spoilers: toggleSpoilers,
+		autogif: toggleAutoGIF,
+		anonymise: toggleAnonymisation,
+		relativeTime: renderTime,
+	}
+	for (let key in handlers) {
+		options.onChange(key, handlers[key])
+	}
 }
 
 // Rerender time every minute, if relative time is set

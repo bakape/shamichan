@@ -1,12 +1,10 @@
-import { escape, on } from '../util'
+import { escape, write, on, fetchBoard } from '../util'
 import lang from '../lang'
 import { page } from '../state'
 import options from '../options'
-import { write, threads } from '../render'
-import { renderTime } from "../posts/render/posts"
-import { fetchBoard } from "../fetch"
-import { setTitle } from "../tab"
-import { extractConfigs, isBanned } from "./common"
+import { renderTime } from "../posts"
+import { setTitle } from "../ui"
+import { extractConfigs, isBanned } from "."
 import { setPostCount } from "./thread"
 
 type SortFunction = (a: HTMLElement, b: HTMLElement) => number
@@ -18,6 +16,7 @@ const sorts: { [name: string]: SortFunction } = {
 	replyCount: subtract("postCtr"),
 	fileCount: subtract("imageCtr"),
 }
+const threads = document.getElementById("threads")
 
 // Unix time of last board page render. Used for automatic refreshes.
 let lastFetch = Date.now() / 1000

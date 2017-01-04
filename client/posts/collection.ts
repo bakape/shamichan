@@ -1,4 +1,4 @@
-import { Post } from './models'
+import { Post } from './model'
 
 // Holds a collection of Post models
 export default class PostCollection {

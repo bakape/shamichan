@@ -156,6 +156,11 @@
 		polyfills.push("vendor/proxy.min")
 	}
 
+	// Remove prefixes on Web Crypto API for Safari
+	if (!checkFunction("window.crypto.subtle.digest")) {
+		window.crypt.subtle = window.crypto.webkitSubtle
+	}
+
 	var head = document.getElementsByTagName('head')[0]
 
 	// Load appropriate language pack
@@ -177,11 +182,7 @@
 
 	for (var i = 0; i < polyfills.length; i++) {
 		scriptCount++
-		var script = document.createElement('script')
-		script.type = 'text/javascript'
-		script.src = '/assets/js/' + polyfills[i] + '.js'
-		script.onload = checkAllLoaded
-		head.appendChild(script)
+		loadScript(polyfills[i]).onload = checkAllLoaded
 	}
 
 	// Check for browser compatibility by trying to detect some ES6 features
@@ -212,32 +213,25 @@
 		}
 	}
 
-	function loadClient() {
-		var meta = {}
-		meta["es5/*"] = meta["es6/*"] = { format: "register" }
-		System.config({
-			baseURL: '/assets/js',
-			defaultJSExtensions: true,
-			meta: meta
-		})
+	function loadScript(path) {
+		var script = document.createElement('script')
+		script.type = 'text/javascript'
+		script.src = '/assets/js/' + path + '.js'
+		head.appendChild(script)
+		return script
+	}
 
+	function loadClient() {
 		// Iterable NodeList
 		if (!checkFunction('NodeList.prototype[Symbol.iterator]')) {
 			NodeList.prototype[Symbol.iterator] =
 				Array.prototype[Symbol.iterator]
 		}
 
-		var base = window.legacy ? "es5/" : "es6/"
-
-		System.import(base + 'main').catch(function (err) {
-			alert(err)
-			throw err
-		})
-
-		// Web Crypto API polyfill
-		if (!checkFunction("window.crypto.subtle.digest")) {
-			System.import(base + "sha1")
-		}
+		loadScript("es" + (window.legacy ? 5 : 6) + "/main")
+			.onload = function () {
+				require("main")
+			}
 
 		if ('serviceWorker' in navigator) {
 			navigator.serviceWorker

@@ -1,11 +1,11 @@
-import { Post } from './models'
-import { makeFrag } from '../util'
-import renderPost, { renderName, renderTime, renderBanned } from './render/posts'
-import { parseOpenLine, parseOpenBody, parseTerminatedLine } from './render/body'
-import { write, importTemplate } from '../render'
-import { renderBacklinks } from './render/etc'
+import { Post } from './model'
+import { makeFrag, write, importTemplate } from '../util'
+import {
+    renderPost, renderName, renderTime, renderBanned, parseOpenLine,
+    parseOpenBody, parseTerminatedLine, renderBacklinks
+} from './render'
 import ImageHandler from "./images"
-import { ViewAttrs } from "../view"
+import { ViewAttrs } from "../base"
 
 // Base post view class
 export default class PostView extends ImageHandler {

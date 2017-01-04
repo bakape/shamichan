@@ -2,14 +2,11 @@
 
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts } from './state'
-import { Post, PostLinks, Command, PostData, ImageData } from './posts/models'
-import FormModel from "./posts/posting/model"
-import PostView from "./posts/view"
-import { threadContainer } from "./page/thread"
-import { write } from "./render"
-import { postAdded } from "./tab"
-import { deferInit } from "./defer"
-import { incrementPostCount } from "./page/thread"
+import { Post, FormModel, PostView } from './posts'
+import { PostLinks, Command, PostData, ImageData } from "./common"
+import { postAdded } from "./ui"
+import { write } from "./util"
+import { incrementPostCount } from "./page"
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -81,7 +78,9 @@ export function insertPost(data: PostData) {
 
 	// Find last allocated post and insert after it
 	write(() => {
-		const last = threadContainer.lastElementChild
+		const last = document
+			.getElementById("thread-container")
+			.lastElementChild
 		if (last.id === "p0") {
 			last.before(view.el)
 		} else {
@@ -96,7 +95,7 @@ export function insertPost(data: PostData) {
 	incrementPostCount(true, "image" in data)
 }
 
-deferInit(() => {
+export default () => {
 	handlers[message.invalid] = (msg: string) => {
 
 		// TODO: More user-friendly critical error reporting
@@ -157,4 +156,4 @@ deferInit(() => {
 	handlers[message.banned] = (id: number) =>
 		handle(id, m =>
 			m.setBanned())
-})
+}

@@ -1,10 +1,8 @@
 // Name, tripcode and staff title persistence and postform propagation
 
-import { emitChanges, ChangeEmitter } from '../../model'
-import { randomID, extend } from '../../util'
-import { BannerModal } from "../../banner"
-import { write } from "../../render"
-import { newRequest } from "../../mod/common"
+import { BannerModal } from '../../base'
+import { extend, write, emitChanges, ChangeEmitter } from '../../util'
+import { newRequest } from "../../mod"
 
 interface Identity extends ChangeEmitter {
 	name: string
@@ -14,6 +12,10 @@ interface Identity extends ChangeEmitter {
 
 // Values of the name and tripcode fields
 let identity = {} as Identity
+
+const base64 =
+	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
+		.split("")
 
 // Load from localStorage or initialize
 identity.name = localStorage.getItem("name") || ""
@@ -52,8 +54,6 @@ class IdentityPanel extends BannerModal {
 	}
 }
 
-new IdentityPanel()
-
 // Generate a new base post allocation request
 export function newAllocRequest() {
 	const req = { password: identity.postPassword } as any
@@ -66,4 +66,22 @@ export function newAllocRequest() {
 	}
 
 	return req
+}
+
+// Generate a random base64 string of passed length
+function randomID(len: number): string {
+	let id = ''
+	for (let i = 0; i < len; i++) {
+		id += random(base64)
+	}
+	return id
+}
+
+// Return a random item from an array
+function random<T>(array: T[]): T {
+	return array[Math.floor(Math.random() * array.length)]
+}
+
+export function initIdentity() {
+	new IdentityPanel()
 }

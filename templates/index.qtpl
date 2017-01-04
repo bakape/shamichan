@@ -26,6 +26,7 @@
 		{% endcomment %}
 		<link rel="stylesheet" href="/assets/css/base.css">
 		<link rel="stylesheet" id="theme-css" href="/assets/css/{%s= conf.DefaultCSS %}.css">
+		<style id="user-background-style"></style>
 		{% comment %}
 			Hide various elements that are dysfunctional without JS
 		{% endcomment %}
@@ -122,6 +123,7 @@
 			Loading indicator image
 		{% endcomment %}
 		<image src="/assets/loading.gif" id="loading-image">
+		<div id="user-background"></div>
 		<div id="overlay-container">
 			{% comment %}
 				Top banner
@@ -330,7 +332,6 @@
 			<section id="right-panel" class="side-panel glass"></section>
 			<div id="right-spacer" class="side-spacer"></div>
 		</div>
-		<script src="/assets/js/vendor/system.js"></script>
 		{% comment %}
 			Captcha provider scripts
 		{% endcomment %}
@@ -340,6 +341,7 @@
 		{% comment %}
 			Dynamic module loader
 		{% endcomment %}
+		<script src="/assets/js/vendor/almond.js"></script>
 		<script src="/assets/js/scripts/loader.js"></script>
 	</body>
 {% endstripspace %}{% endfunc %}

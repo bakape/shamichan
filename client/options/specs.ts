@@ -2,15 +2,14 @@
 
 import { config } from '../state'
 import lang from '../lang'
-import { loadModule, makeEl } from '../util'
-import { write } from "../render"
+import { write, makeEl } from "../util"
+import { render as renderBackground } from "./background"
+import initRadio from "./r-a-dio"
 
 // Types of option models
 export const enum optionType {
 	checkbox, number, image, shortcut, menu, textarea,
 }
-
-export type OptionValue = boolean | string | number
 
 // Full schema of the option interface
 export type OptionSpec = {
@@ -19,22 +18,16 @@ export type OptionSpec = {
 	type?: optionType
 
 	// Default value. false, if omitted.
-	default?: OptionValue
+	default?: any
 
 	// Function to execute on option change
-	exec?: (val?: OptionValue) => void
+	exec?: (val?: any) => void
 
 	// Should the function not be executed on model population?
 	noExecOnStart?: boolean
 
 	// Function that validates the users input
-	validation?: (val: OptionValue) => boolean
-}
-
-// Same handler fot toggling Illya dance, and user backgrounds
-function renderBackground() {
-	loadModule('background').then(m =>
-		m.render())
+	validation?: (val: any) => boolean
 }
 
 // Specifications of option behavior, where needed. Some properties defined as
@@ -107,9 +100,7 @@ export const specs: { [id: string]: OptionSpec } = {
 	// R/a/dio now playing banner
 	nowPlaying: {
 		noExecOnStart: true,
-		exec() {
-			loadModule("r-a-dio")
-		},
+		exec: initRadio,
 	},
 	// Illya dance in the background
 	illyaDance: {
@@ -224,7 +215,7 @@ function toggleImageSearch(engine: string): (toggle: boolean) => void {
 }
 
 // Toggle an optional style element in the head
-export function toggleHeadStyle(
+function toggleHeadStyle(
 	name: string,
 	css: string,
 ): (toggle: boolean) => void {

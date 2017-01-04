@@ -1,9 +1,8 @@
 import { boardConfig } from '../../state'
 import options from '../../options'
-import { commaList, escape, setAttrs, pad } from '../../util'
-import { ImageData, fileTypes } from '../models'
+import { escape, setAttrs, pad, importTemplate } from '../../util'
+import { ImageData, fileTypes } from '../../common'
 import lang from '../../lang'
-import { importTemplate } from "../../render"
 
 // Specs for handling image search link clicks
 type ImageSearchSpec = {
@@ -94,6 +93,18 @@ export function renderFigcaption(
     imageLink(link, data)
     renderImageSearch(el.querySelector(".image-search-container"), data)
     el.hidden = false
+}
+
+// Makes a ', ' separated list
+function commaList(items: string[]): string {
+    let html = ''
+    for (let item of items) {
+        if (html) {
+            html += ', '
+        }
+        html += item
+    }
+    return html
 }
 
 // Assign URLs to image search links

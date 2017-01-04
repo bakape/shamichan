@@ -1,14 +1,11 @@
 // Handles Websocket connectivity and messaging
 
-import FSM from './fsm'
 import { debug, page } from './state'
 import lang from './lang'
-import { write } from './render'
-import { PostData, ThreadData } from "./posts/models"
+import { FSM, fetchThreadJSON, write } from './util'
 import { insertPost } from "./client"
-import { fetchThreadJSON } from "./fetch"
-import identity from "./posts/posting/identity"
-import { postSM, postEvent, postState, postModel } from "./posts/posting/main"
+import { identity, postSM, postEvent, postState, postModel } from "./posts"
+import { PostData, ThreadData } from "./common"
 
 // Message types of the WebSocket communication protocol
 export const enum message {

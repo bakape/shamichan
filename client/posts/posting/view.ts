@@ -1,16 +1,14 @@
 import PostView from "../view"
 import FormModel from "./model"
-import { Post } from "../models"
+import { Post } from "../model"
 import { boardConfig } from "../../state"
-import { setAttrs, makeFrag } from "../../util"
-import { parseTerminatedLine } from "../render/body"
-import { renderHeader, renderName } from "../render/posts"
-import { write, importTemplate } from "../../render"
-import { threadContainer } from "../../page/thread"
-import { postSM, postEvent } from "./main"
+import {
+    setAttrs, makeFrag, write, importTemplate, atBottom, scrollToBottom
+} from "../../util"
+import { parseTerminatedLine, renderHeader, renderName } from "../render"
+import { postSM, postEvent } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
-import { atBottom, scrollToBottom } from "../../scroll"
 
 // Element at the bottom of the thread to keep the fixed reply form from
 // overlapping any other posts, when scrolled till bottom
@@ -126,7 +124,7 @@ export default class FormView extends PostView {
         })
 
         write(() => {
-            threadContainer.append(this.el)
+            document.getElementById("thread-container").append(this.el)
             this.input.focus()
             this.resizeSpacer()
         })
