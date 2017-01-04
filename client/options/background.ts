@@ -19,7 +19,7 @@ type BackgroundGradients = {
 }
 
 const container = document.getElementById("user-background"),
-	style = document.getElementById("user-style")
+	style = document.getElementById("user-background-style")
 
 // Map for transparency gradients to apply on top of the blurred background
 const colourMap: { [key: string]: BackgroundGradients } = {
@@ -87,7 +87,7 @@ function toggleOPBackground(on: boolean) {
 // Render a custom user-set background apply blurred glass to elements, if
 // needed.
 async function renderBackground(bg?: BackgroundStore): Promise<void> {
-	if (!bg) {
+	if (!bg || !bg.normal || !bg.blurred) {
 		bg = await getObj<BackgroundStore>("main", "background")
 		if (!bg.normal || !bg.blurred) {
 			return

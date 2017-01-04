@@ -19,10 +19,10 @@ import initModeration from "./mod"
 async function start() {
 	const frag = document.getElementById("threads")
 	extractConfigs()
-	initOptions()
 
 	await open()
 	await loadFromDB()
+	initOptions()
 
 	if (page.thread) {
 		renderThread("")

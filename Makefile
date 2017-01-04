@@ -1,5 +1,5 @@
-export PATH:=$(PATH):$(realpath node_modules/.bin)
 uglifyjs=node_modules/.bin/uglifyjs
+gulp=node_modules/.bin/gulp
 
 # Differentiate between Unix and mingw builds
 ifeq ($(OS), Windows_NT)
@@ -22,13 +22,13 @@ endif
 all: server client
 
 client: client_vendor
-	gulp
+	$(gulp)
 
 client_deps:
 	npm install --progress false --depth 0
 
 watch:
-	gulp -w
+	$(gulp) -w
 
 client_vendor: client_deps
 	mkdir -p www/js/vendor

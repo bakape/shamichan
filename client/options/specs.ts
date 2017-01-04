@@ -3,7 +3,7 @@
 import { config } from '../state'
 import lang from '../lang'
 import { write, makeEl } from "../util"
-import { render as renderBackground } from "./background"
+import { render as renderBG } from "./background"
 import initRadio from "./r-a-dio"
 
 // Types of option models
@@ -28,6 +28,10 @@ export type OptionSpec = {
 
 	// Function that validates the users input
 	validation?: (val: any) => boolean
+}
+
+function renderBackground(_: boolean) {
+	renderBG()
 }
 
 // Specifications of option behavior, where needed. Some properties defined as
