@@ -1,7 +1,7 @@
 // Core websocket message handlers
 
 import { handlers, message, connSM, connEvent } from './connection'
-import { posts } from './state'
+import { posts, hidden } from './state'
 import { Post, FormModel, PostView } from './posts'
 import { PostLinks, Command, PostData, ImageData } from "./common"
 import { postAdded } from "./ui"
@@ -48,7 +48,9 @@ function handle(id: number, fn: (m: Post) => void) {
 export function insertPost(data: PostData) {
 	// It is possible to receive insertion updates for posts that are not
 	// currently displayed, because of the Last N setting. Skip them.
-	if (data.id < posts.lowestID) {
+	//
+	// Same for posts that are hidden by the user
+	if (data.id < posts.lowestID || hidden.has(data.id)) {
 		return
 	}
 
