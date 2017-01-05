@@ -140,10 +140,10 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 		img := *p.Image
 
 		//line article.qtpl:57
-		src = assets.RelativeSourcePath(img.FileType, img.SHA1)
+		src = assets.SourcePath(img.FileType, img.SHA1)
 
 		//line article.qtpl:58
-		ISSrc := root + src
+		ISSrc := root + assets.RelativeSourcePath(img.FileType, img.SHA1)
 
 		//line article.qtpl:58
 		qw422016.N().S(`<figcaption class="spaced"><a class="image-toggle act" hidden></a><span class="spaced image-search-container"><a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url=`)

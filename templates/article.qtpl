@@ -54,8 +54,8 @@
 		{% code var src string %}
 		{% if p.Image != nil %}
 			{% code img := *p.Image %}
-			{% code src =  assets.RelativeSourcePath(img.FileType, img.SHA1) %}
-			{% code ISSrc := root + src %}
+			{% code src =  assets.SourcePath(img.FileType, img.SHA1) %}
+			{% code ISSrc := root + assets.RelativeSourcePath(img.FileType, img.SHA1) %}
 			<figcaption class="spaced">
 				<a class="image-toggle act" hidden></a>
 				<span class="spaced image-search-container">
