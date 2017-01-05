@@ -11,19 +11,19 @@ type ImageSearchSpec = {
 }
 
 // Types of data requested by the search provider
-const enum ISType { thumb, MD5, SHA1 }
+const enum ISType { src, MD5, SHA1 }
 
 const ISSpecs: ImageSearchSpec[] = [
     {
-        type: ISType.thumb,
+        type: ISType.src,
         url: "https://www.google.com/searchbyimage?image_url=",
     },
     {
-        type: ISType.thumb,
+        type: ISType.src,
         url: "http://iqdb.org/?url=",
     },
     {
-        type: ISType.thumb,
+        type: ISType.src,
         url: "http://saucenao.com/search.php?db=999&url=",
     },
     {
@@ -114,8 +114,10 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
         const {type, url} = ISSpecs[i]
         let arg: string
         switch (type) {
-            case ISType.thumb:
-                arg = location.origin + sourcePath(img.SHA1, img.fileType)
+            case ISType.src:
+                const s = location.origin
+                    + `/images/src/${img.SHA1}.${fileTypes[img.fileType]}`
+                arg = encodeURI(s)
                 break
             case ISType.MD5:
                 arg = img.MD5
@@ -124,7 +126,7 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
                 arg = img.SHA1
                 break
         }
-        ch[i].setAttribute("href", url + encodeURI(arg))
+        ch[i].setAttribute("href", url + arg)
     }
 }
 

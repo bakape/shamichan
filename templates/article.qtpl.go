@@ -140,7 +140,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 		img := *p.Image
 
 		//line article.qtpl:57
-		src = assets.SourcePath(img.FileType, img.SHA1)
+		src = assets.RelativeSourcePath(img.FileType, img.SHA1)
 
 		//line article.qtpl:58
 		ISSrc := root + src
