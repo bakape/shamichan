@@ -342,7 +342,9 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 			qw422016.N().S(`s`)
 			//line article.qtpl:136
 		}
-		//line article.qtpl:136
+		//line article.qtpl:137
+		qw422016.N().S(` `)
+		//line article.qtpl:137
 		qw422016.N().S(`omitted`)
 		//line article.qtpl:137
 		qw422016.N().S(` `)

@@ -134,7 +134,7 @@
 				{%d omit %}{% space %}post{% if omit > 1 %}s{% endif %}
 				{% space %}and{% space %}{%d imageOmit %}
 				{% space %}image{% if imageOmit > 1 %}s{% endif %}
-				omitted{% space %}
+				{% space %}omitted{% space %}
 				<span class="act">
 					<a href="{%s= strconv.FormatUint(op, 10) %}" class="history">
 						See All
