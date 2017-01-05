@@ -178,7 +178,7 @@ function renderImagePreview(event: MouseEvent) {
 		return
 	}
 	const src = link.getAttribute("href"),
-		ext = src.slice(src.indexOf(".") + 1)
+		ext = src.slice(src.lastIndexOf(".") + 1)
 	let tag: string
 
 	switch (ext) {
@@ -186,8 +186,8 @@ function renderImagePreview(event: MouseEvent) {
 		case "mp3":
 		case "zip":
 		case "7z":
-		case "tar.gz":
-		case "tar.xz":
+		case "gz":
+		case "xz":
 			return clear()
 		case "webm":
 			if (!options.webmHover) {
