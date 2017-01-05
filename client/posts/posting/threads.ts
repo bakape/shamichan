@@ -37,11 +37,8 @@ class ThreadForm extends FormView {
 	// Reset new thread form to initial state
 	public remove() {
 		delete handlers[message.postID]
-		write(() => {
-			for (let cl of ["expanded", "sending"]) {
-				this.aside.classList.remove(cl)
-			}
-		})
+		write(() =>
+			this.aside.classList.remove("expanded", "sending"))
 	}
 
 	protected async send() {

@@ -58,7 +58,7 @@ export default class CaptchaView extends View<null> {
 	}
 
 	// Returns the data from the captcha widget
-	public data(): { [key: string]: string } {
-		return { captcha: grecaptcha.getResponse(this.widgetID) }
+	public data(): string {
+		return grecaptcha.getResponse(this.widgetID)
 	}
 }
