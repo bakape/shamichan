@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"fmt"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 )
@@ -44,8 +46,16 @@ func (b buffer) append(s string) buffer {
 
 // GetFilePaths generates file paths of the source file and its thumbnail
 func GetFilePaths(SHA1 string, fileType, thumbType uint8) (paths [2]string) {
-	paths[0] = SourcePath(fileType, SHA1)
-	paths[1] = ThumbPath(thumbType, SHA1)
+	paths[0] = fmt.Sprintf(
+		"/images/src/%s.%s",
+		SHA1,
+		common.Extensions[fileType],
+	)
+	paths[1] = fmt.Sprintf(
+		"/images/thumb/%s.%s",
+		SHA1,
+		common.Extensions[thumbType],
+	)
 	for i := range paths {
 		paths[i] = filepath.FromSlash(paths[i][1:])
 	}
