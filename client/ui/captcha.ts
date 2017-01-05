@@ -1,77 +1,64 @@
 import { View } from '../base'
-import { write } from '../util'
 import { config } from '../state'
+import options from "../options"
 
-// Solve Media AJAX API controller
-// https://portal.solvemedia.com/portal/help/pub/ajax
-interface ACPuzzleController {
-	create(
-		key: string,
-		elID: string,
-		opts?: ACPuzzleOptions
-	): ACPuzzleController
-	destroy(): void
-	get_challenge(): string
-	get_response(): string
-	reload(): void
+// Google's Recaptcha JS API
+interface GRecaptcha {
+	render(container: Element, parameters: RenderParams): string
+	reset(id: string): void
+	getResponse(id: string): string
 }
 
-interface ACPuzzleOptions {
-	multi: boolean
-	id: string
-	theme: string
+interface RenderParams {
+	sitekey: string
+	theme: Theme
+	size: "compact" | "normal"
 }
 
-declare var ACPuzzle: ACPuzzleController
+type Theme = "light" | "dark"
+
+declare var grecaptcha: GRecaptcha
 
 // Wrapper around Solve Media's captcha service AJAX API
 export default class CaptchaView extends View<null> {
-	public id: string
-	private widget: ACPuzzleController
+	private widgetID: string
 
 	constructor(el: HTMLElement) {
 		super({ el })
-
-		// Render the captcha widget only after the input field is focused
-		this.el
-			.querySelector("input[name=adcopy_response]")
-			.addEventListener("focus", () =>
-				this.renderWidget())
-
-		this.onClick({
-			".captcha-image img": () =>
-				this.reload()
-		})
+		this.render()
 	}
 
 	// Render the actual captcha
-	private renderWidget() {
-		const id = this.id.replace("captcha-", "")
-		this.widget = ACPuzzle.create(config.captchaPublicKey, id, {
-			id,
-			multi: true,
-			theme: "custom",
+	private render() {
+		let theme: Theme
+		switch (options.theme) {
+			case "ashita":
+			case "console":
+			case "glass":
+			case "higan":
+			case "inumi":
+			case "mawaru":
+			case "ocean":
+				theme = "dark"
+				break
+			default:
+				theme = "light"
+		}
+
+		this.widgetID = grecaptcha.render(this.el, {
+			sitekey: config.captchaPublicKey,
+			theme,
+			size: "normal",
 		})
 	}
 
 	// Load a new captcha
 	public reload() {
-		this.widget.reload()
-	}
-
-	public remove() {
-		if (this.widget) {
-			write(() =>
-				this.widget.destroy())
-		}
-		super.remove()
+		grecaptcha.reset(this.widgetID)
 	}
 
 	// Returns the data from the captcha widget
 	public data(): { [key: string]: string } {
-		return {
-			captcha: this.widget.get_response(),
-			captchaID: this.widget.get_challenge(),
-		}
+		return { captcha: grecaptcha.getResponse(this.widgetID) }
 	}
 }

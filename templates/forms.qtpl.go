@@ -274,293 +274,228 @@ func CaptchaConfirmation(ln lang.Pack) string {
 //line forms.qtpl:61
 func streamcaptcha(qw422016 *qt422016.Writer, id string, lang map[string]string) {
 	//line forms.qtpl:62
-	conf := config.Get()
-
-	//line forms.qtpl:63
-	if !conf.Captcha {
-		//line forms.qtpl:64
-		return
+	if config.Get().Captcha {
+		//line forms.qtpl:62
+		qw422016.N().S(`<div class="captcha-container"></div>`)
 		//line forms.qtpl:65
 	}
-	//line forms.qtpl:65
-	qw422016.N().S(`<div class="captcha-container" id="captcha-`)
-	//line forms.qtpl:66
-	qw422016.N().S(id)
-	//line forms.qtpl:66
-	qw422016.N().S(`"><div id="adcopy-outer-`)
-	//line forms.qtpl:67
-	qw422016.N().S(id)
-	//line forms.qtpl:67
-	qw422016.N().S(`"><div id="adcopy-puzzle-image-`)
-	//line forms.qtpl:68
-	qw422016.N().S(id)
-	//line forms.qtpl:68
-	qw422016.N().S(`" class="captcha-image" title="`)
-	//line forms.qtpl:68
-	qw422016.N().S(lang["reloadCaptcha"])
-	//line forms.qtpl:68
-	qw422016.N().S(`"></div><div id="adcopy-puzzle-audio-`)
-	//line forms.qtpl:69
-	qw422016.N().S(id)
-	//line forms.qtpl:69
-	qw422016.N().S(`" class="hidden"></div><div id="adcopy-pixel-image-`)
-	//line forms.qtpl:70
-	qw422016.N().S(id)
-	//line forms.qtpl:70
-	qw422016.N().S(`" class="hidden"></div><div><span id="adcopy-instr-`)
-	//line forms.qtpl:72
-	qw422016.N().S(id)
-	//line forms.qtpl:72
-	qw422016.N().S(`" class="hidden"></span></div><input id="adcopy_response-`)
-	//line forms.qtpl:74
-	qw422016.N().S(id)
-	//line forms.qtpl:74
-	qw422016.N().S(`" name="adcopy_response" class="full-width" type="text" placeholder="`)
-	//line forms.qtpl:74
-	qw422016.N().S(lang["focusForCaptcha"])
-	//line forms.qtpl:74
-	qw422016.N().S(`" required><input type="hidden" name="adcopy_challenge" id="adcopy_challenge-`)
-	//line forms.qtpl:75
-	qw422016.N().S(id)
-	//line forms.qtpl:75
-	qw422016.N().S(`" hidden><a id="adcopy-link-refresh-`)
-	//line forms.qtpl:76
-	qw422016.N().S(id)
-	//line forms.qtpl:76
-	qw422016.N().S(`" class="hidden"></a><a id="adcopy-link-audio-`)
-	//line forms.qtpl:77
-	qw422016.N().S(id)
-	//line forms.qtpl:77
-	qw422016.N().S(`" class="hidden"></a><a id="adcopy-link-image-`)
-	//line forms.qtpl:78
-	qw422016.N().S(id)
-	//line forms.qtpl:78
-	qw422016.N().S(`" class="hidden"></a><a id="adcopy-link-info-`)
-	//line forms.qtpl:79
-	qw422016.N().S(id)
-	//line forms.qtpl:79
-	qw422016.N().S(`" class="hidden"></a><!-- Temporary, till better noscript support ><noscript><iframe src="https://api-secure.solvemedia.com/papi/challenge.noscript?k=`)
-	//line forms.qtpl:82
-	qw422016.N().S(conf.CaptchaPublicKey)
-	//line forms.qtpl:82
-	qw422016.N().S(`"height="260" width="350" frameborder="0"></iframe><br><input name="adcopy_challenge" type="text" required></noscript><--></div></div>`)
-//line forms.qtpl:90
+//line forms.qtpl:66
 }
 
-//line forms.qtpl:90
+//line forms.qtpl:66
 func writecaptcha(qq422016 qtio422016.Writer, id string, lang map[string]string) {
-	//line forms.qtpl:90
+	//line forms.qtpl:66
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line forms.qtpl:90
+	//line forms.qtpl:66
 	streamcaptcha(qw422016, id, lang)
-	//line forms.qtpl:90
+	//line forms.qtpl:66
 	qt422016.ReleaseWriter(qw422016)
-//line forms.qtpl:90
+//line forms.qtpl:66
 }
 
-//line forms.qtpl:90
+//line forms.qtpl:66
 func captcha(id string, lang map[string]string) string {
-	//line forms.qtpl:90
+	//line forms.qtpl:66
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line forms.qtpl:90
+	//line forms.qtpl:66
 	writecaptcha(qb422016, id, lang)
-	//line forms.qtpl:90
+	//line forms.qtpl:66
 	qs422016 := string(qb422016.B)
-	//line forms.qtpl:90
+	//line forms.qtpl:66
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line forms.qtpl:90
+	//line forms.qtpl:66
 	return qs422016
-//line forms.qtpl:90
+//line forms.qtpl:66
 }
 
 // Form for inputting key-value map-like data
 
-//line forms.qtpl:93
+//line forms.qtpl:69
 func streamkeyValueForm(qw422016 *qt422016.Writer, k, v string) {
-	//line forms.qtpl:93
+	//line forms.qtpl:69
 	qw422016.N().S(`<span><input type="text" class="map-field" value="`)
-	//line forms.qtpl:95
+	//line forms.qtpl:71
 	qw422016.E().S(k)
-	//line forms.qtpl:95
+	//line forms.qtpl:71
 	qw422016.N().S(`"><input type="text" class="map-field" value="`)
-	//line forms.qtpl:96
+	//line forms.qtpl:72
 	qw422016.E().S(v)
-	//line forms.qtpl:96
+	//line forms.qtpl:72
 	qw422016.N().S(`"><a class="map-remove">[X]</a><br></span>`)
-//line forms.qtpl:102
+//line forms.qtpl:78
 }
 
-//line forms.qtpl:102
+//line forms.qtpl:78
 func writekeyValueForm(qq422016 qtio422016.Writer, k, v string) {
-	//line forms.qtpl:102
+	//line forms.qtpl:78
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line forms.qtpl:102
+	//line forms.qtpl:78
 	streamkeyValueForm(qw422016, k, v)
-	//line forms.qtpl:102
+	//line forms.qtpl:78
 	qt422016.ReleaseWriter(qw422016)
-//line forms.qtpl:102
+//line forms.qtpl:78
 }
 
-//line forms.qtpl:102
+//line forms.qtpl:78
 func keyValueForm(k, v string) string {
-	//line forms.qtpl:102
+	//line forms.qtpl:78
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line forms.qtpl:102
+	//line forms.qtpl:78
 	writekeyValueForm(qb422016, k, v)
-	//line forms.qtpl:102
+	//line forms.qtpl:78
 	qs422016 := string(qb422016.B)
-	//line forms.qtpl:102
+	//line forms.qtpl:78
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line forms.qtpl:102
+	//line forms.qtpl:78
 	return qs422016
-//line forms.qtpl:102
+//line forms.qtpl:78
 }
 
 // Form formatted as a table, with cancel and submit buttons
 
-//line forms.qtpl:105
+//line forms.qtpl:81
 func streamtableForm(qw422016 *qt422016.Writer, specs []inputSpec, needCaptcha bool, ln lang.Pack) {
-	//line forms.qtpl:106
+	//line forms.qtpl:82
 	streamtable(qw422016, specs, ln)
-	//line forms.qtpl:107
+	//line forms.qtpl:83
 	if needCaptcha {
-		//line forms.qtpl:108
+		//line forms.qtpl:84
 		streamcaptcha(qw422016, "ajax", ln.UI)
-		//line forms.qtpl:109
+		//line forms.qtpl:85
 	}
-	//line forms.qtpl:110
+	//line forms.qtpl:86
 	streamsubmit(qw422016, true, ln.UI)
-//line forms.qtpl:111
+//line forms.qtpl:87
 }
 
-//line forms.qtpl:111
+//line forms.qtpl:87
 func writetableForm(qq422016 qtio422016.Writer, specs []inputSpec, needCaptcha bool, ln lang.Pack) {
-	//line forms.qtpl:111
+	//line forms.qtpl:87
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line forms.qtpl:111
+	//line forms.qtpl:87
 	streamtableForm(qw422016, specs, needCaptcha, ln)
-	//line forms.qtpl:111
+	//line forms.qtpl:87
 	qt422016.ReleaseWriter(qw422016)
-//line forms.qtpl:111
+//line forms.qtpl:87
 }
 
-//line forms.qtpl:111
+//line forms.qtpl:87
 func tableForm(specs []inputSpec, needCaptcha bool, ln lang.Pack) string {
-	//line forms.qtpl:111
+	//line forms.qtpl:87
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line forms.qtpl:111
+	//line forms.qtpl:87
 	writetableForm(qb422016, specs, needCaptcha, ln)
-	//line forms.qtpl:111
+	//line forms.qtpl:87
 	qs422016 := string(qb422016.B)
-	//line forms.qtpl:111
+	//line forms.qtpl:87
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line forms.qtpl:111
+	//line forms.qtpl:87
 	return qs422016
-//line forms.qtpl:111
+//line forms.qtpl:87
 }
 
 // Render a map form for inputting map-like data
 
-//line forms.qtpl:114
+//line forms.qtpl:90
 func streamrenderMap(qw422016 *qt422016.Writer, spec inputSpec, ln lang.Pack) {
-	//line forms.qtpl:114
+	//line forms.qtpl:90
 	qw422016.N().S(`<div class="map-form" name="`)
-	//line forms.qtpl:115
+	//line forms.qtpl:91
 	qw422016.N().S(spec.ID)
-	//line forms.qtpl:115
+	//line forms.qtpl:91
 	qw422016.N().S(`" title="`)
-	//line forms.qtpl:115
+	//line forms.qtpl:91
 	qw422016.N().S(ln.Forms[spec.ID][1])
-	//line forms.qtpl:115
+	//line forms.qtpl:91
 	qw422016.N().S(`">`)
-	//line forms.qtpl:116
+	//line forms.qtpl:92
 	for k, v := range spec.Val.(map[string]string) {
-		//line forms.qtpl:117
+		//line forms.qtpl:93
 		streamkeyValueForm(qw422016, k, v)
-		//line forms.qtpl:118
+		//line forms.qtpl:94
 	}
-	//line forms.qtpl:118
+	//line forms.qtpl:94
 	qw422016.N().S(`<a class="map-add">`)
-	//line forms.qtpl:120
+	//line forms.qtpl:96
 	qw422016.N().S(ln.UI["add"])
-	//line forms.qtpl:120
+	//line forms.qtpl:96
 	qw422016.N().S(`</a><br></div>`)
-//line forms.qtpl:124
+//line forms.qtpl:100
 }
 
-//line forms.qtpl:124
+//line forms.qtpl:100
 func writerenderMap(qq422016 qtio422016.Writer, spec inputSpec, ln lang.Pack) {
-	//line forms.qtpl:124
+	//line forms.qtpl:100
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line forms.qtpl:124
+	//line forms.qtpl:100
 	streamrenderMap(qw422016, spec, ln)
-	//line forms.qtpl:124
+	//line forms.qtpl:100
 	qt422016.ReleaseWriter(qw422016)
-//line forms.qtpl:124
+//line forms.qtpl:100
 }
 
-//line forms.qtpl:124
+//line forms.qtpl:100
 func renderMap(spec inputSpec, ln lang.Pack) string {
-	//line forms.qtpl:124
+	//line forms.qtpl:100
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line forms.qtpl:124
+	//line forms.qtpl:100
 	writerenderMap(qb422016, spec, ln)
-	//line forms.qtpl:124
+	//line forms.qtpl:100
 	qs422016 := string(qb422016.B)
-	//line forms.qtpl:124
+	//line forms.qtpl:100
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line forms.qtpl:124
+	//line forms.qtpl:100
 	return qs422016
-//line forms.qtpl:124
+//line forms.qtpl:100
 }
 
 // Render submit and cancel buttons
 
-//line forms.qtpl:127
+//line forms.qtpl:103
 func streamsubmit(qw422016 *qt422016.Writer, cancel bool, ln map[string]string) {
-	//line forms.qtpl:127
+	//line forms.qtpl:103
 	qw422016.N().S(`<input type="submit" value="`)
-	//line forms.qtpl:128
+	//line forms.qtpl:104
 	qw422016.N().S(ln["submit"])
-	//line forms.qtpl:128
+	//line forms.qtpl:104
 	qw422016.N().S(`">`)
-	//line forms.qtpl:129
+	//line forms.qtpl:105
 	if cancel {
-		//line forms.qtpl:129
+		//line forms.qtpl:105
 		qw422016.N().S(`<input type="button" name="cancel" value="`)
-		//line forms.qtpl:130
+		//line forms.qtpl:106
 		qw422016.N().S(ln["cancel"])
-		//line forms.qtpl:130
+		//line forms.qtpl:106
 		qw422016.N().S(`">`)
-		//line forms.qtpl:131
+		//line forms.qtpl:107
 	}
-	//line forms.qtpl:131
+	//line forms.qtpl:107
 	qw422016.N().S(`<div class="form-response admin"></div>`)
-//line forms.qtpl:133
+//line forms.qtpl:109
 }
 
-//line forms.qtpl:133
+//line forms.qtpl:109
 func writesubmit(qq422016 qtio422016.Writer, cancel bool, ln map[string]string) {
-	//line forms.qtpl:133
+	//line forms.qtpl:109
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line forms.qtpl:133
+	//line forms.qtpl:109
 	streamsubmit(qw422016, cancel, ln)
-	//line forms.qtpl:133
+	//line forms.qtpl:109
 	qt422016.ReleaseWriter(qw422016)
-//line forms.qtpl:133
+//line forms.qtpl:109
 }
 
-//line forms.qtpl:133
+//line forms.qtpl:109
 func submit(cancel bool, ln map[string]string) string {
-	//line forms.qtpl:133
+	//line forms.qtpl:109
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line forms.qtpl:133
+	//line forms.qtpl:109
 	writesubmit(qb422016, cancel, ln)
-	//line forms.qtpl:133
+	//line forms.qtpl:109
 	qs422016 := string(qb422016.B)
-	//line forms.qtpl:133
+	//line forms.qtpl:109
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line forms.qtpl:133
+	//line forms.qtpl:109
 	return qs422016
-//line forms.qtpl:133
+//line forms.qtpl:109
 }

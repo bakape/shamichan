@@ -59,34 +59,10 @@ CaptchaConfirmation renders a confirmation form with an optional captcha
 {% endstripspace %}{% endfunc %}
 
 {% func captcha(id string, lang map[string]string) %}{% stripspace %}
-	{% code conf := config.Get() %}
-	{% if !conf.Captcha %}
-		{% return %}
+	{% if config.Get().Captcha %}
+		<div class="captcha-container"></div>
+		{% comment %}TODO: noscript captchas{% endcomment %}
 	{% endif %}
-	<div class="captcha-container" id="captcha-{%s= id %}">
-		<div id="adcopy-outer-{%s= id %}">
-			<div id="adcopy-puzzle-image-{%s= id %}" class="captcha-image" title="{%s= lang["reloadCaptcha"] %}"></div>
-			<div id="adcopy-puzzle-audio-{%s= id %}" class="hidden"></div>
-			<div id="adcopy-pixel-image-{%s= id %}" class="hidden"></div>
-			<div>
-				<span id="adcopy-instr-{%s= id %}" class="hidden"></span>
-			</div>
-			<input id="adcopy_response-{%s= id %}" name="adcopy_response" class="full-width" type="text" placeholder="{%s= lang["focusForCaptcha"] %}" required>
-			<input type="hidden" name="adcopy_challenge" id="adcopy_challenge-{%s= id %}" hidden>
-			<a id="adcopy-link-refresh-{%s= id %}" class="hidden"></a>
-			<a id="adcopy-link-audio-{%s= id %}" class="hidden"></a>
-			<a id="adcopy-link-image-{%s= id %}" class="hidden"></a>
-			<a id="adcopy-link-info-{%s= id %}" class="hidden"></a>
-			<!-- Temporary, till better noscript support >
-				<noscript>
-					<iframe src="https://api-secure.solvemedia.com/papi/challenge.noscript?k={%s= conf.CaptchaPublicKey %}"
-			height="260" width="350" frameborder="0"></iframe>
-					<br>
-					<input name="adcopy_challenge" type="text" required>
-				</noscript>
-			<-->
-		</div>
-	</div>
 {% endstripspace %}{% endfunc %}
 
 Form for inputting key-value map-like data

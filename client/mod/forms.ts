@@ -31,6 +31,7 @@ abstract class AccountFormView extends FormView {
 			case 200:
 				this.el.append(makeFrag(await res.text()))
 				this.render()
+				this.initCaptcha()
 				break
 			case 403:
 				handle403(this)
@@ -184,7 +185,6 @@ export class BoardDeletionView extends SelectedBoardForm {
 	public renderNext(board: string) {
 		this.board = board
 		this.renderPublicForm("/forms/captcha")
-		this.initCaptcha()
 	}
 
 	protected send() {
@@ -200,7 +200,6 @@ export class BoardCreationPanel extends AccountFormView {
 	constructor() {
 		super({ tag: "form" })
 		this.renderPublicForm("/forms/createBoard")
-		this.initCaptcha()
 	}
 
 	protected send() {

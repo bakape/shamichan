@@ -1,12 +1,12 @@
 package auth
 
 import (
-	"bufio"
-	"errors"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
+
+	"encoding/json"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -33,14 +33,8 @@ type SessionCreds struct {
 	UserID, Session string
 }
 
-// Error during authenticating a captcha. These are not reported to the client,
-// only logged.
-type errCaptcha struct {
-	error
-}
-
-func (e errCaptcha) Error() string {
-	return "captcha: " + e.error.Error()
+type captchaValidationResponse struct {
+	Success bool
 }
 
 // BcryptCompare compares a bcrypt hash with a user-supplied string
@@ -58,40 +52,33 @@ func AuthenticateCaptcha(captcha common.Captcha, ip string) bool {
 		return true
 	}
 
-	if captcha.Captcha == "" || captcha.CaptchaID == "" {
+	if captcha.Captcha == "" {
 		return false
 	}
 
-	data := url.Values{
-		"privatekey": {conf.CaptchaPrivateKey},
-		"challenge":  {captcha.CaptchaID},
-		"response":   {captcha.Captcha},
-		"remoteip":   {ip},
-	}
-	res, err := http.PostForm("http://verify.solvemedia.com/papi/verify", data)
+	res, err := http.PostForm(
+		"https://www.google.com/recaptcha/api/siteverify",
+		url.Values{
+			"secret":   {conf.CaptchaPrivateKey},
+			"response": {captcha.Captcha},
+		},
+	)
 	if err != nil {
 		printCaptchaError(err)
 		return false
 	}
 	defer res.Body.Close()
 
-	reader := bufio.NewReader(res.Body)
-	status, err := reader.ReadString('\n')
-	if err != nil {
+	var data captchaValidationResponse
+	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
 		printCaptchaError(err)
 		return false
 	}
-	if status[:len(status)-1] != "true" {
-		reason, _ := reader.ReadString('\n')
-		printCaptchaError(errors.New(reason[:len(reason)-1]))
-		return false
-	}
-
-	return true
+	return data.Success
 }
 
 func printCaptchaError(err error) {
-	log.Println(errCaptcha{err})
+	log.Printf("captcha: %s\n", err)
 }
 
 // HoldsPosition returns if the user holds a specific staff position
