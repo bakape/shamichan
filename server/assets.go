@@ -1,15 +1,12 @@
 package server
 
 import (
-	"bytes"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
-	"syscall"
 	"time"
 
-	"github.com/bakape/meguca/util"
+	"strconv"
 )
 
 const assetCacheHeader = "max-age=0, must-revalidate"
@@ -76,24 +73,22 @@ func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 	}
 	defer file.Close()
 
-	buf, err := ioutil.ReadAll(file)
+	stats, err := file.Stat()
 	if err != nil {
-		// I don't know how but some clients keep requesting a directory. Maybe
-		// a crawler.
-		pathErr, ok := err.(*os.PathError)
-		if ok && pathErr.Err == syscall.EISDIR {
-			text400(w, err)
-		} else {
-			text500(w, r, err)
-		}
+		text500(w, r, err)
 		return
 	}
+	if stats.IsDir() {
+		text404(w)
+		return
+	}
+	modTime := stats.ModTime()
+	etag := strconv.FormatInt(modTime.Unix(), 10)
 
 	head := w.Header()
 	head.Set("Cache-Control", assetCacheHeader)
-	head.Set("ETag", util.HashBuffer(buf))
-
-	http.ServeContent(w, r, path, time.Time{}, bytes.NewReader(buf))
+	head.Set("ETag", etag)
+	http.ServeContent(w, r, path, modTime, file)
 }
 
 // Serve the service worker script file. It needs to be on the root scope for
