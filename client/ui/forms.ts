@@ -68,7 +68,7 @@ abstract class FormView extends View<null> {
 	}
 
 	// Load a new captcha, if present and response code is not 0
-	protected reloadCaptcha() {
+	public reloadCaptcha() {
 		if (this.captcha) {
 			this.captcha.reload()
 		}

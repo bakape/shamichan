@@ -4,7 +4,7 @@ import { inputValue, postJSON, write } from '../util'
 import { FormView } from "../ui"
 import { TabbedModal } from "../base"
 import { validatePasswordMatch, newRequest } from "./common"
-import Panel from "./panel"
+import ModPanel from "./panel"
 import {
 	PasswordChangeView, ConfigPanel, BoardConfigPanel, BoardCreationPanel,
 	BoardDeletionView
@@ -22,11 +22,14 @@ export let loginID = localStorage.getItem("loginID"),
 	// Only active AccountPanel instance
 	accountPanel: AccountPanel
 
+let loginForm: LoginForm,
+	registrationForm: LoginForm,
+	modPanel: ModPanel
+
 // Account login and registration
 class AccountPanel extends TabbedModal {
 	constructor() {
 		super(document.getElementById("account-panel"))
-		accountPanel = this
 
 		this.onClick({
 			'#logout': () =>
@@ -60,7 +63,7 @@ class AccountPanel extends TabbedModal {
 		})
 
 		// Load Moderation panel
-		new Panel()
+		modPanel = new ModPanel()
 	}
 
 	// Create handler for dynamically loading and rendering conditional view
@@ -86,6 +89,9 @@ export function reset() {
 	localStorage.removeItem("loginID")
 	loginID = ""
 	sessionToken = ""
+	loginForm.reloadCaptcha()
+	registrationForm.reloadCaptcha()
+	modPanel.reset()
 	write(() => {
 		document.getElementById("login-forms").style.display = ""
 		document.getElementById("form-selection").style.display = "none"
@@ -109,7 +115,7 @@ async function logout(url: string) {
 }
 
 // Common functionality of login and registration forms
-class BaseLoginForm extends FormView {
+class LoginForm extends FormView {
 	private url: string
 
 	constructor(id: string, url: string) {
@@ -153,11 +159,8 @@ class BaseLoginForm extends FormView {
 
 // Init module
 export default function () {
-	new AccountPanel()
-	new BaseLoginForm("login-form", "login")
-	validatePasswordMatch(
-		new BaseLoginForm("registration-form", "register").el,
-		"password",
-		"repeat",
-	)
+	accountPanel = new AccountPanel()
+	loginForm = new LoginForm("login-form", "login")
+	registrationForm = new LoginForm("registration-form", "register")
+	validatePasswordMatch(registrationForm.el, "password", "repeat")
 }

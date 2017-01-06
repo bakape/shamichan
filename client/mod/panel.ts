@@ -12,9 +12,13 @@ let panel: ModPanel,
 	checkboxStyler: (toggle: boolean) => void
 
 export default class ModPanel extends View<null> {
+	private checkboxToggle: HTMLInputElement
+
 	constructor() {
 		if (panel) {
-			return null
+			panel.setVisibility(true)
+			toggleCheckboxDisplay(displayCheckboxes)
+			return panel
 		}
 		checkboxStyler = toggleHeadStyle(
 			"mod-checkboxes",
@@ -34,20 +38,33 @@ export default class ModPanel extends View<null> {
 				passive: true
 			})
 
-		const toggle = (this.el
+		this.checkboxToggle = (this.el
 			.querySelector(`input[name="showCheckboxes"]`) as HTMLInputElement)
-		toggle.addEventListener("change", e =>
+		this.checkboxToggle.addEventListener("change", e =>
 			toggleCheckboxDisplay((event.target as HTMLInputElement).checked))
 
 		toggleCheckboxDisplay(displayCheckboxes)
+		this.setVisibility(true)
+	}
+
+	private setVisibility(show: boolean) {
 		write(() => {
-			this.el.style.display = "inline-block"
-			toggle.checked = displayCheckboxes
-			document
-				.querySelector("#identity > table tr:first-child")
-				.style
-				.display = "table-row"
+			this.el.style.display = show ? "inline-block" : ""
+			this.checkboxToggle.checked = displayCheckboxes
+			const auth = document
+				.querySelector("#identity > table tr:first-child"
+				) as HTMLInputElement
+			auth.style.display = show ? "table-row" : ""
+			auth.checked = false
 		})
+	}
+
+	// Reset the state of the module and hide all revealed elements
+	public reset() {
+		checkboxStyler(false)
+		this.setVisibility(false)
+		banInputs.clear()
+		banInputs.toggleDisplay(false)
 	}
 
 	private async onSubmit(e: Event) {
