@@ -4,27 +4,28 @@ import { BannerModal } from '../../base'
 import { extend, write, emitChanges, ChangeEmitter } from '../../util'
 import { newRequest } from "../../mod"
 
+
+const base64 =
+	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
+		.split("")
+const authCheckbox = document.getElementById("staffTitle") as HTMLInputElement
+
 interface Identity extends ChangeEmitter {
+	auth: boolean
 	name: string
 	postPassword: string
 	[index: string]: any
 }
 
-// Values of the name and tripcode fields
-let identity = {} as Identity
-
-const base64 =
-	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
-		.split("")
-
-// Load from localStorage or initialize
-identity.name = localStorage.getItem("name") || ""
-let stored = localStorage.getItem("postPassword")
-if (!stored) {
-	stored = randomID(32)
-	localStorage.setItem("postPassword", stored)
+let identity = {
+	auth: false,
+	name: localStorage.getItem("name") || "",
+	postPassword: localStorage.getItem("postPassword") || "",
+} as Identity
+if (!identity.postPassword) {
+	identity.postPassword = randomID(32)
+	localStorage.setItem("postPassword", identity.postPassword)
 }
-identity.postPassword = stored
 export default identity = emitChanges(identity)
 
 // Poster identity input panel
@@ -33,6 +34,9 @@ class IdentityPanel extends BannerModal {
 		super(document.getElementById("identity"))
 		this.on("input", e =>
 			this.onInput(e))
+		authCheckbox.addEventListener("change", () => this.onAuthChange(), {
+			passive: true,
+		})
 		this.assignValues()
 	}
 
@@ -52,19 +56,21 @@ class IdentityPanel extends BannerModal {
 		localStorage.setItem(name, val)
 		identity[name] = val
 	}
+
+	private onAuthChange() {
+		identity.auth = authCheckbox.checked
+	}
 }
 
 // Generate a new base post allocation request
 export function newAllocRequest() {
 	const req = { password: identity.postPassword } as any
-
 	if (identity.name) {
 		req["name"] = identity.name
 	}
-	if ((document.getElementById("staffTitle") as HTMLInputElement).checked) {
+	if (authCheckbox.checked) {
 		extend(req, newRequest())
 	}
-
 	return req
 }
 

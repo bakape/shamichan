@@ -14,8 +14,8 @@ export function hook(name: string, func: Hook) {
 // Execute all handlers for a hook
 export function trigger(name: string, ...args: any[]): any | null {
 	const func = hooks[name]
-	if (!hook) {
-		return null
+	if (!func) {
+		return undefined
 	}
 	return func(...args)
 }

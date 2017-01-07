@@ -226,8 +226,10 @@ export default () => {
 		passive: true,
 	})
 
-	// Trigger update on name change
-	identity.onChange("name", updateIdentity)
+	// Trigger update on name or staff field change
+	for (let id of ["name", "auth"]) {
+		identity.onChange(id, updateIdentity)
+	}
 
 	initDrop()
 	initThreads()

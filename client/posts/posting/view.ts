@@ -87,17 +87,20 @@ export default class FormView extends PostView {
     // Render a temporary view of the identity fields, so the user can see what
     // credentials he is about to post with
     public renderIdentity() {
-        let {name} = identity,
+        let {name, auth} = identity,
             trip = ""
-        const iHash = name.indexOf("#")
-        if (iHash !== -1) {
+        const i = name.indexOf("#")
+        if (i !== -1) {
             trip = "?"
-            name = name.slice(0, iHash)
+            name = name.slice(0, i)
         }
-        renderName(this.el.querySelector(".name"), {
+
+        const el = this.el.querySelector(".name")
+        el.classList.remove("admin")
+        renderName(el, {
             trip,
+            auth: auth ? "??" : "",
             name: name.trim(),
-            auth: undefined,
         })
     }
 
@@ -153,7 +156,7 @@ export default class FormView extends PostView {
         })
     }
 
-    // Handle input events on input
+    // Handle input events on this.input
     private onInput(val: string) {
         if (this.inputLock) {
             return
@@ -189,7 +192,7 @@ export default class FormView extends PostView {
 
     // Trim input from the end by the supplied length
     public trimInput(length: number) {
-        let val = this.input.textContent.slice(0, -length) || "\u200b"
+        const val = this.input.textContent.slice(0, -length) || "\u200b"
         write(() =>
             this.lockInput(() =>
                 this.input.textContent = val))
@@ -224,7 +227,7 @@ export default class FormView extends PostView {
         })
     }
 
-    // Parse and replace the temporary like closed by input with a proper
+    // Parse and replace the temporary line closed by input with a proper
     // parsed line
     public terminateLine(num: number) {
         const html = parseTerminatedLine(this.model.lastBodyLine(), this.model),
@@ -234,7 +237,7 @@ export default class FormView extends PostView {
     }
 
     // Need to rerender entire post, because the client's actions introduce
-    // desync from server
+    // desync from the server
     public closePost() {
         write(() => {
             this.el.classList.remove("editing")

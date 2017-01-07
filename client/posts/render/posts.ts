@@ -86,7 +86,7 @@ export function renderName(
 	}
 	if (auth) { // Render staff title
 		el.classList.add("admin")
-		html += ` ## ${lang.posts[auth]}`
+		html += ` ## ${lang.posts[auth] || "??"}`
 	}
 	el.innerHTML = html
 }
