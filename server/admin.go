@@ -398,6 +398,11 @@ func ban(w http.ResponseWriter, r *http.Request) {
 		Expires: time.Now().Add(time.Duration(msg.Duration) * time.Minute),
 	}
 	for _, p := range posts {
+		// Post no longer has an IP after private data cleanup
+		if p.IP == "" {
+			continue
+		}
+
 		rec.ID[1] = p.IP
 		if err := db.Ban(rec, p.ID); err != nil {
 			text500(w, r, err)

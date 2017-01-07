@@ -12,7 +12,7 @@ import (
 
 const day = 24 * 60 * 60
 
-var sessionExpiryQuery = r.
+var sessionExpiryQ = r.
 	Table("accounts").
 	Update(map[string]r.Term{
 		"sessions": r.Row.
@@ -22,10 +22,10 @@ var sessionExpiryQuery = r.
 			}),
 	})
 
-var postClosingQuery = r.
+var postClosingQ = r.
 	Table("posts").
 	GetAllByIndex("editing", true). // Older than 30 minutes
-	Filter(r.Row.Field("time").Lt(r.Now().ToEpochTime().Sub(1800))).
+	Filter(timeFilter(1800)).
 	Update(map[string]interface{}{
 		"log": r.Row.Field("log").Append(r.
 			Expr("06").
@@ -35,7 +35,17 @@ var postClosingQuery = r.
 		"lastUpdated": r.Now().ToEpochTime().Floor(),
 	})
 
-var expireImageTokensQuery = r.
+// Remove any identity information from post after a week. Also clear the log,
+// as it will most likely be pointless by then.
+var postCleanupQ = r.
+	Table("posts").
+	Filter(r.Row.HasFields("ip")).
+	Filter(timeFilter(day * 7)).
+	Replace(r.Row.Without("ip", "password").Merge(map[string][]string{
+		"log": []string{},
+	}))
+
+var expireImageTokensQ = r.
 	Table("imageTokens").
 	Between(r.MinVal, r.Now(), r.BetweenOpts{
 		Index: "expires",
@@ -54,6 +64,12 @@ var expireBansQ = r.
 		Index: "expires",
 	}).
 	Delete()
+
+func timeFilter(sec int) r.Term {
+	return r.Row.
+		Field("time").
+		Lt(r.Now().ToEpochTime().Floor().Sub(sec))
+}
 
 // Run database clean up tasks at server start and regular intervals. Must be
 // launched in separate goroutine.
@@ -85,6 +101,7 @@ func runHourTasks() {
 	logError("session cleanup", expireUserSessions())
 	logError("board cleanup", deleteUnusedBoards())
 	logError("thread cleanup", deleteOldThreads())
+	logError("old post cleanup", Write(postCleanupQ))
 }
 
 func logError(prefix string, err error) {
@@ -95,19 +112,19 @@ func logError(prefix string, err error) {
 
 // Separate function, so we can test it
 func expireUserSessions() error {
-	return Write(sessionExpiryQuery)
+	return Write(sessionExpiryQ)
 }
 
 // Close any open posts that have not been closed for 30 minutes
 func closeDanglingPosts() error {
-	return Write(postClosingQuery)
+	return Write(postClosingQ)
 }
 
 // Remove any expired image tokens and decrement or deallocate their target
 // image's assets
 func expireImageTokens() error {
 	var toDealloc []string
-	if err := All(expireImageTokensQuery, &toDealloc); err != nil {
+	if err := All(expireImageTokensQ, &toDealloc); err != nil {
 		return err
 	}
 
