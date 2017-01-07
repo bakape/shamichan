@@ -4,7 +4,7 @@ package common
 const (
 	MaxLenName         = 50
 	MaxLenAuth         = 50
-	MaxLenPostPassword = 50
+	MaxLenPostPassword = 100
 	MaxLenSubject      = 100
 	MaxLenBody         = 2000
 	MaxLenPassword     = 50
@@ -17,11 +17,9 @@ const (
 	MaxBanReasonLength = 100
 )
 
-const (
-	// LenSession defines the length of an unpadded base64-encoded account
-	// login session token
-	LenSession = 171
-)
+// LenSession defines the length of an unpadded base64-encoded account login
+// session token
+const LenSession = 171
 
 // Commonly used errors
 var (

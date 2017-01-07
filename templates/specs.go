@@ -36,7 +36,7 @@ var specs = map[string][]inputSpec{
 			Type:         _password,
 			MaxLength:    common.MaxLenPassword,
 			Required:     true,
-			Autocomplete: "new-password",
+			Autocomplete: "off",
 		},
 	},
 	"noscriptPostCreation": {

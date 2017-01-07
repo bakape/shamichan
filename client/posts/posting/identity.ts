@@ -23,7 +23,7 @@ let identity = {
 	postPassword: localStorage.getItem("postPassword") || "",
 } as Identity
 if (!identity.postPassword) {
-	identity.postPassword = randomID(32)
+	identity.postPassword = randomID(64)
 	localStorage.setItem("postPassword", identity.postPassword)
 }
 export default identity = emitChanges(identity)
@@ -74,18 +74,15 @@ export function newAllocRequest() {
 	return req
 }
 
-// Generate a random base64 string of passed length
+// Generate a random unpadded base64 string of passed byte length
 function randomID(len: number): string {
 	let id = ''
+	const b = new Uint8Array(len)
+	crypto.getRandomValues(b)
 	for (let i = 0; i < len; i++) {
-		id += random(base64)
+		id += base64[b[i] % 64]
 	}
 	return id
-}
-
-// Return a random item from an array
-function random<T>(array: T[]): T {
-	return array[Math.floor(Math.random() * array.length)]
 }
 
 export function initIdentity() {
