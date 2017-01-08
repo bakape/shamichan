@@ -2,9 +2,9 @@
 
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts, hidden } from './state'
-import { Post, FormModel, PostView } from './posts'
+import { Post, FormModel, PostView, postEvent, postSM } from './posts'
 import { PostLinks, Command, PostData, ImageData } from "./common"
-import { postAdded } from "./ui"
+import { postAdded, navigate } from "./ui"
 import { write } from "./util"
 import { incrementPostCount } from "./page"
 
@@ -158,4 +158,9 @@ export default () => {
 	handlers[message.banned] = (id: number) =>
 		handle(id, m =>
 			m.setBanned())
+
+	handlers[message.redirect] = (board: string) => {
+		postSM.feed(postEvent.reset)
+		navigate(`/${board}/`, null, true)
+	}
 }

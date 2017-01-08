@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/gorilla/websocket"
@@ -335,11 +336,11 @@ func TestSendMessage(t *testing.T) {
 	cl, wcl := sv.NewClient()
 
 	cases := [...]struct {
-		typ MessageType
+		typ common.MessageType
 		msg string
 	}{
-		{MessageInsertPost, "02null"},  // 1 char type string
-		{MessageSynchronise, "30null"}, // 2 char type string
+		{common.MessageInsertPost, "02null"},  // 1 char type string
+		{common.MessageSynchronise, "30null"}, // 2 char type string
 	}
 
 	for i := range cases {

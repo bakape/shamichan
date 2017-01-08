@@ -43,7 +43,7 @@ func spoilerImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logMsg, err := websockets.EncodeMessage(websockets.MessageSpoiler, msg.ID)
+	logMsg, err := common.EncodeMessage(common.MessageSpoiler, msg.ID)
 	if err != nil {
 		text500(w, r, err)
 		return

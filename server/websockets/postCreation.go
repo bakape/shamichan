@@ -65,7 +65,7 @@ func (c *Client) insertThread(data []byte) (err error) {
 	switch err {
 	case nil:
 	case errInValidCaptcha:
-		return c.sendMessage(MessagePostID, -1)
+		return c.sendMessage(common.MessagePostID, -1)
 	default:
 		return err
 	}
@@ -78,7 +78,7 @@ func (c *Client) insertThread(data []byte) (err error) {
 		hasImage: hasImage,
 	}
 
-	return c.sendMessage(MessagePostID, id)
+	return c.sendMessage(common.MessagePostID, id)
 }
 
 // ConstructThread creates a new tread and writes it to the database. Returns
@@ -86,11 +86,14 @@ func (c *Client) insertThread(data []byte) (err error) {
 func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	id uint64, timeStamp int64, hasImage bool, err error,
 ) {
-	if !auth.IsNonMetaBoard(req.Board) {
+	switch {
+	case !auth.IsNonMetaBoard(req.Board):
 		err = errInvalidBoard
 		return
-	}
-	if !auth.AuthenticateCaptcha(req.Captcha, ip) {
+	case auth.IsBanned(req.Board, ip):
+		err = errBanned
+		return
+	case !auth.AuthenticateCaptcha(req.Captcha, ip):
 		err = errInValidCaptcha
 		return
 	}
@@ -158,6 +161,9 @@ func (c *Client) insertPost(data []byte) error {
 	}
 
 	_, sync := Clients.GetSync(c)
+	if auth.IsBanned(sync.Board, c.ip) {
+		return errBanned
+	}
 	conf, err := getBoardConfig(sync.Board)
 	if err != nil {
 		return err
@@ -210,7 +216,7 @@ func (c *Client) insertPost(data []byte) error {
 
 	// Ensure the client knows the post ID before the public post insertion
 	// update message is sent
-	if err := c.sendMessage(MessagePostID, post.ID); err != nil {
+	if err := c.sendMessage(common.MessagePostID, post.ID); err != nil {
 		return err
 	}
 

@@ -112,7 +112,7 @@ func TestWriteBacklinks(t *testing.T) {
 				LogUnexpected(t, std, link)
 			}
 
-			msg, err := EncodeMessage(MessageBacklink, linkMessage{
+			msg, err := common.EncodeMessage(common.MessageBacklink, linkMessage{
 				ID: id,
 				Links: common.LinkMap{
 					10: {
@@ -878,7 +878,7 @@ func TestInsertImage(t *testing.T) {
 		Name:        "foo",
 		ImageCommon: stdJPEG,
 	}
-	msg, err := EncodeMessage(MessageInsertImage, imageMessage{
+	msg, err := common.EncodeMessage(common.MessageInsertImage, imageMessage{
 		ID:    2,
 		Image: std,
 	})

@@ -1,13 +1,13 @@
 // Hooks for optional modules to execute code in exposed functions
 
-type Hook = (...args: any[]) => any
-type HookMap = { [key: string]: Hook }
+type HookHandler = (...args: any[]) => any
+type HookMap = { [key: string]: HookHandler }
 
 // Hooks for optional handlers
 const hooks: HookMap = {}
 
 // Assigns a handler to execute on a hook name
-export function hook(name: string, func: Hook) {
+export function hook(name: string, func: HookHandler) {
 	hooks[name] = func
 }
 

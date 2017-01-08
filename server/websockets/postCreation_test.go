@@ -387,7 +387,7 @@ func TestPostCreation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertMessage(t, wcl, encodeMessageType(MessagePostID)+"6")
+	assertMessage(t, wcl, encodeMessageType(common.MessagePostID)+"6")
 
 	// Get the time value from the DB and normalize against it
 	var then int64

@@ -75,7 +75,7 @@ func TestRegisterSync(t *testing.T) {
 
 	// Both for new syncs and switching syncs
 	for _, s := range syncs {
-		registerSync(s.Board, s.OP, cl)
+		cl.registerSync(s.Board, s.OP)
 		assertSyncID(t, &Clients, cl, s)
 	}
 }

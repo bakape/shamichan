@@ -134,7 +134,7 @@ func (f *feedContainer) addClient(id uint64, cl *Client) {
 		msg = feed.cacheJSON
 	} else {
 		var err error
-		msg, err = EncodeMessage(MessageSynchronise, feed.cache)
+		msg, err = common.EncodeMessage(common.MessageSynchronise, feed.cache)
 		if err != nil {
 			cl.Close(err)
 		} else {
@@ -207,7 +207,7 @@ func (f *feedContainer) flushBuffers() {
 		feed.buf.Reset()
 		if feed.multiple {
 			feed.multiple = false
-			buf = prependMessageType(MessageConcat, buf)
+			buf = common.PrependMessageType(common.MessageConcat, buf)
 		} else {
 			// Need to copy, because the underlying array can be modified during
 			// sending to clients.
@@ -284,7 +284,7 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) {
 	// updated within the last 30 seconds. Client must deduplicate and render
 	// accordingly.
 	case postInserted:
-		data, err := EncodeMessage(MessageInsertPost, update.Post)
+		data, err := common.EncodeMessage(common.MessageInsertPost, update.Post)
 		if err != nil {
 			log.Printf("could not encode: %#v\n", update.Post)
 			break

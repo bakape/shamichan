@@ -397,6 +397,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 		By:      msg.UserID,
 		Expires: time.Now().Add(time.Duration(msg.Duration) * time.Minute),
 	}
+	ips := make(map[string]struct{}, len(posts))
 	for _, p := range posts {
 		// Post no longer has an IP after private data cleanup
 		if p.IP == "" {
@@ -404,9 +405,17 @@ func ban(w http.ResponseWriter, r *http.Request) {
 		}
 
 		rec.ID[1] = p.IP
+		ips[p.IP] = struct{}{}
 		if err := db.Ban(rec, p.ID); err != nil {
 			text500(w, r, err)
 			return
+		}
+	}
+
+	// Redirect all banned connected clients to the /all/ board
+	for ip := range ips {
+		for _, cl := range common.Clients.GetByIP(ip) {
+			cl.Redirect("all")
 		}
 	}
 }

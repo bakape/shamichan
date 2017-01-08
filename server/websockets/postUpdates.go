@@ -3,10 +3,9 @@ package websockets
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 	"unicode/utf8"
-
-	"strconv"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -111,7 +110,10 @@ func (c *Client) appendRune(data []byte) error {
 	}
 
 	id := c.openPost.id
-	msg, err := EncodeMessage(MessageAppend, [2]uint64{id, uint64(char)})
+	msg, err := common.EncodeMessage(
+		common.MessageAppend,
+		[2]uint64{id, uint64(char)},
+	)
 	if err != nil {
 		return err
 	}
@@ -169,7 +171,7 @@ func parseLine(c *Client, insertNewline bool) error {
 	}
 
 	if insertNewline {
-		msg, err := EncodeMessage(MessageAppend, [2]uint64{
+		msg, err := common.EncodeMessage(common.MessageAppend, [2]uint64{
 			c.openPost.id,
 			uint64('\n'),
 		})
@@ -187,7 +189,7 @@ func parseLine(c *Client, insertNewline bool) error {
 
 // Write a hash command to the database
 func writeCommand(comm common.Command, c *Client) error {
-	msg, err := EncodeMessage(MessageCommand, commandMessage{
+	msg, err := common.EncodeMessage(common.MessageCommand, commandMessage{
 		ID:      c.openPost.id,
 		Command: comm,
 	})
@@ -200,7 +202,7 @@ func writeCommand(comm common.Command, c *Client) error {
 
 // Write new links to other posts to the database
 func writeLinks(links common.LinkMap, c *Client) error {
-	msg, err := EncodeMessage(MessageLink, linkMessage{
+	msg, err := common.EncodeMessage(common.MessageLink, linkMessage{
 		ID:    c.openPost.id,
 		Links: links,
 	})
@@ -228,7 +230,7 @@ func writeLinks(links common.LinkMap, c *Client) error {
 // Writes the location data of the post linking a post to the the post being
 // linked
 func writeBacklink(id, op uint64, board string, destID uint64) error {
-	msg, err := EncodeMessage(MessageBacklink, linkMessage{
+	msg, err := common.EncodeMessage(common.MessageBacklink, linkMessage{
 		ID: destID,
 		Links: common.LinkMap{
 			id: {
@@ -270,7 +272,7 @@ func (c *Client) backspace() error {
 	c.openPost.bodyLength--
 
 	id := c.openPost.id
-	msg, err := EncodeMessage(MessageBackspace, id)
+	msg, err := common.EncodeMessage(common.MessageBackspace, id)
 	if err != nil {
 		return err
 	}
@@ -288,7 +290,7 @@ func (c *Client) closePost() error {
 		}
 	}
 
-	msg, err := EncodeMessage(MessageClosePost, c.openPost.id)
+	msg, err := common.EncodeMessage(common.MessageClosePost, c.openPost.id)
 	if err != nil {
 		return err
 	}
@@ -384,7 +386,7 @@ func spliceLine(req spliceRequest, c *Client) error {
 	new := string(append(start, end...))
 	c.openPost.WriteString(new)
 
-	msg, err := EncodeMessage(MessageSplice, res)
+	msg, err := common.EncodeMessage(common.MessageSplice, res)
 	if err != nil {
 		return err
 	}
@@ -445,7 +447,7 @@ func (c *Client) insertImage(data []byte) error {
 	if err != nil {
 		return err
 	}
-	msg, err := EncodeMessage(MessageInsertImage, imageMessage{
+	msg, err := common.EncodeMessage(common.MessageInsertImage, imageMessage{
 		ID:    c.openPost.id,
 		Image: *img,
 	})

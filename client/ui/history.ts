@@ -10,7 +10,10 @@ import options from "../options"
 // Handle a click on any .history anchor
 function handleClick(event: KeyboardEvent) {
 	// Don't trigger, when user is trying to open in a new tab
-	if (event.which !== 1 || event.ctrlKey) {
+	const bypass = event.which !== 1
+		|| event.ctrlKey
+		|| connSM.state === connState.desynced
+	if (bypass) {
 		return
 	}
 

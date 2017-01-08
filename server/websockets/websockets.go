@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/util"
 	"github.com/gorilla/websocket"
 )
@@ -72,6 +73,9 @@ type Client struct {
 	// Only used to pass messages from the Send method.
 	sendExternal chan string
 
+	// Redirect client to target board
+	redirect chan string
+
 	// Close the client and free all used resources
 	close chan error
 }
@@ -110,9 +114,10 @@ func Handler(res http.ResponseWriter, req *http.Request) {
 // newClient creates a new websocket client
 func newClient(conn *websocket.Conn, req *http.Request) *Client {
 	return &Client{
-		ip:      auth.GetIP(req),
-		close:   make(chan error, 2),
-		receive: make(chan receivedMessage),
+		ip:       auth.GetIP(req),
+		close:    make(chan error, 2),
+		receive:  make(chan receivedMessage),
+		redirect: make(chan string),
 		// Allows for ~6 seconds of messages at 0.2 second intervals, until the
 		// buffer overflows.
 		sendExternal: make(chan string, 1<<5),
@@ -156,6 +161,17 @@ func (c *Client) listenerLoop() error {
 			if err := c.handleMessage(msg.typ, msg.msg); err != nil {
 				return err
 			}
+		case board := <-c.redirect:
+			if err := c.closePreviousPost(); err != nil {
+				return err
+			}
+			err := c.sendMessage(common.MessageRedirect, board)
+			if err != nil {
+				return err
+			}
+			if err := c.syncToBoard(board); err != nil {
+				return err
+			}
 		}
 	}
 }
@@ -189,7 +205,7 @@ func (c *Client) closeConnections(err error) error {
 	case nil:
 		closeType = websocket.CloseNormalClosure
 	default:
-		c.sendMessage(MessageInvalid, err.Error())
+		c.sendMessage(common.MessageInvalid, err.Error())
 		closeType = websocket.CloseInvalidFramePayloadData
 	}
 
@@ -226,8 +242,8 @@ func (c *Client) send(msg string) error {
 
 // Format a message type as JSON and send it to the client. Not safe for
 // concurrent use.
-func (c *Client) sendMessage(typ MessageType, msg interface{}) error {
-	encoded, err := EncodeMessage(typ, msg)
+func (c *Client) sendMessage(typ common.MessageType, msg interface{}) error {
+	encoded, err := common.EncodeMessage(typ, msg)
 	if err != nil {
 		return err
 	}
@@ -270,8 +286,8 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 	if err != nil {
 		return errInvalidPayload(msg)
 	}
-	typ := MessageType(uncast)
-	if !c.synced && typ != MessageSynchronise {
+	typ := common.MessageType(uncast)
+	if !c.synced && typ != common.MessageSynchronise {
 		return errInvalidPayload(msg)
 	}
 
@@ -279,28 +295,28 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 }
 
 // Run the appropriate handler for the websocket message
-func (c *Client) runHandler(typ MessageType, msg []byte) error {
+func (c *Client) runHandler(typ common.MessageType, msg []byte) error {
 	data := msg[2:]
 	switch typ {
-	case MessageSynchronise:
+	case common.MessageSynchronise:
 		return c.synchronise(data)
-	case MessageReclaim:
+	case common.MessageReclaim:
 		return c.reclaimPost(data)
-	case MessageInsertThread:
+	case common.MessageInsertThread:
 		return c.insertThread(data)
-	case MessageAppend:
+	case common.MessageAppend:
 		return c.appendRune(data)
-	case MessageBackspace:
+	case common.MessageBackspace:
 		return c.backspace()
-	case MessageClosePost:
+	case common.MessageClosePost:
 		return c.closePost()
-	case MessageSplice:
+	case common.MessageSplice:
 		return c.spliceText(data)
-	case MessageInsertPost:
+	case common.MessageInsertPost:
 		return c.insertPost(data)
-	case MessageInsertImage:
+	case common.MessageInsertImage:
 		return c.insertImage(data)
-	case MessageNOOP:
+	case common.MessageNOOP:
 		// No operation message handler. Used as a one way pseudo-ping.
 		return nil
 	default:
@@ -339,5 +355,14 @@ func (c *Client) hasPost() (bool, error) {
 		return false, c.closePost()
 	default:
 		return true, nil
+	}
+}
+
+// Redirect closes any open posts and forces the client to sync to the target
+// board
+func (c *Client) Redirect(board string) {
+	select {
+	case c.redirect <- board:
+	default:
 	}
 }

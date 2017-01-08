@@ -2,7 +2,6 @@ package db
 
 import (
 	"errors"
-
 	"time"
 
 	"github.com/bakape/meguca/auth"

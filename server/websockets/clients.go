@@ -1,12 +1,20 @@
 package websockets
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/bakape/meguca/common"
+)
 
 // Clients stores all synchronized websocket clients in a thread-safe map
 var Clients = ClientMap{
 	// Start with 100 to avoid reallocations on server start
 	clients: make(map[*Client]SyncID, 100),
 	ips:     make(map[string]int, 100),
+}
+
+func init() {
+	common.Clients = &Clients
 }
 
 // ClientMap is a thread-safe store for all clients connected to this server
@@ -37,7 +45,7 @@ func (c *ClientMap) add(cl *Client, syncID SyncID) {
 	c.Unlock()
 
 	// Ensure client always receives a count
-	msg, _ := EncodeMessage(MessageSyncCount, count)
+	msg, _ := common.EncodeMessage(common.MessageSyncCount, count)
 	cl.Send(msg)
 
 	// If changed, also send to all other clients
@@ -51,7 +59,7 @@ func (c *ClientMap) sendIPCount() {
 	c.RLock()
 	defer c.RUnlock()
 
-	msg, _ := EncodeMessage(MessageSyncCount, len(c.ips))
+	msg, _ := common.EncodeMessage(common.MessageSyncCount, len(c.ips))
 	for cl := range c.clients {
 		cl.Send(msg)
 	}
@@ -94,4 +102,17 @@ func (c *ClientMap) GetSync(cl *Client) (bool, SyncID) {
 	defer c.RUnlock()
 	sync, ok := c.clients[cl]
 	return ok, sync
+}
+
+// GetByIP retrieves all Clients that match the passed IP
+func (c *ClientMap) GetByIP(ip string) (clients []common.Client) {
+	c.RLock()
+	defer c.RUnlock()
+
+	for cl := range c.clients {
+		if cl.ip == ip {
+			clients = append(clients, cl)
+		}
+	}
+	return
 }
