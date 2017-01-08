@@ -2,13 +2,17 @@ import { write, importTemplate } from '../util'
 import { View, ViewAttrs } from '../base'
 import CaptchaView from './captcha'
 
+interface FormAttrs extends ViewAttrs {
+	lazyCaptcha?: boolean
+}
+
 // Generic input form view with optional captcha support
 abstract class FormView extends View<null> {
 	private captcha: CaptchaView
 
 	protected abstract send(): void
 
-	constructor(attrs: ViewAttrs) {
+	constructor(attrs: FormAttrs) {
 		super(attrs)
 		this.onClick({
 			"input[name=cancel]": () =>
@@ -21,12 +25,14 @@ abstract class FormView extends View<null> {
 		this.on("submit", e =>
 			this.submit(e))
 
-		this.initCaptcha()
+		if (!attrs.lazyCaptcha) {
+			this.initCaptcha()
+		}
 	}
 
 	// Forms that are not rendered on initialization need to call this method
 	// themselves
-	protected initCaptcha() {
+	public initCaptcha() {
 		let captcha = this.el.querySelector(".captcha-container")
 		if (captcha) {
 			// Clear any previous captcha, when reusing form

@@ -1,6 +1,6 @@
 import { on, OnOptions, write } from '../util'
 
-export type ViewAttrs = {
+export interface ViewAttrs {
 	el?: HTMLElement
 	model?: Model
 	tag?: string

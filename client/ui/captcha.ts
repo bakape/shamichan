@@ -19,17 +19,32 @@ type Theme = "light" | "dark"
 
 declare var grecaptcha: GRecaptcha
 
+interface Window {
+	onRecaptchaLoad: () => void
+}
+
+declare var window: Window
+
+let scriptLoaded: Promise<void>,
+	loadingScript = false
+
 // Wrapper around Solve Media's captcha service AJAX API
 export default class CaptchaView extends View<null> {
 	private widgetID: string
 
 	constructor(el: HTMLElement) {
 		super({ el })
-		this.render()
+		this.render().catch(err =>
+			alert("The tin foil is too far up your ass. Stop blocking captchas, faggot."))
 	}
 
 	// Render the actual captcha
-	private render() {
+	private async  render() {
+		if (!loadingScript) {
+			this.loadScript()
+		}
+		await scriptLoaded
+
 		let theme: Theme
 		switch (options.theme) {
 			case "ashita":
@@ -60,5 +75,17 @@ export default class CaptchaView extends View<null> {
 	// Returns the data from the captcha widget
 	public data(): string {
 		return grecaptcha.getResponse(this.widgetID)
+	}
+
+	// Load the grecaptcha script from Google's servers
+	private loadScript() {
+		loadingScript = true
+		const el = document.createElement("script")
+		scriptLoaded = new Promise<void>((resolve, reject) => {
+			window.onRecaptchaLoad = resolve
+			el.onerror = reject
+		})
+		el.src = "https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit"
+		document.head.append(el)
 	}
 }

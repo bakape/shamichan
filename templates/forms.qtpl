@@ -59,10 +59,25 @@ CaptchaConfirmation renders a confirmation form with an optional captcha
 {% endstripspace %}{% endfunc %}
 
 {% func captcha(id string, lang map[string]string) %}{% stripspace %}
-	{% if config.Get().Captcha %}
-		<div class="captcha-container"></div>
-		{% comment %}TODO: noscript captchas{% endcomment %}
+	{% code conf := config.Get() %}
+	{% if !conf.Captcha %}
+		{% return %}
 	{% endif %}
+	<div class="captcha-container">
+		<div class="g-recaptcha" data-sitekey="{%s= conf.CaptchaPublicKey %}"></div>
+		<noscript>
+			<div>
+				<div class="g-recaptcha-container">
+					<div>
+						<iframe src="https://www.google.com/recaptcha/api/fallback?k={%s= conf.CaptchaPublicKey %}" frameborder="0" scrolling="no"></iframe>
+					</div>
+				</div>
+				<div class="g-recaptcha-response-container">
+					<textarea name="g-recaptcha-response" class="g-recaptcha-response"></textarea>
+				</div>
+			</div>
+		</noscript>
+	</div>
 {% endstripspace %}{% endfunc %}
 
 Form for inputting key-value map-like data

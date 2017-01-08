@@ -45,9 +45,6 @@
 				document.getElementById('theme-css').href = '/assets/css/' + localStorage.theme + '.css'
 			}
 		</script>
-		{% if conf.Captcha %}
-			<script src="https://www.google.com/recaptcha/api.js?render=explicit"></script>
-		{% endif %}
 		{% comment %}
 			Templates for our various views
 		{% endcomment %}

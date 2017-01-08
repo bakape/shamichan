@@ -46,6 +46,22 @@ class AccountPanel extends TabbedModal {
 		if (loginID && sessionToken) {
 			this.displayMenu()
 		}
+
+		this.tabHook = id => {
+			switch (id) {
+				case 0:
+					loginForm.initCaptcha()
+					break
+				case 1:
+					registrationForm.initCaptcha()
+					break
+			}
+		}
+		this.showHook = () => {
+			if (!loginID) {
+				loginForm.initCaptcha()
+			}
+		}
 	}
 
 	// Display the form selection menu
@@ -119,7 +135,10 @@ class LoginForm extends FormView {
 	private url: string
 
 	constructor(id: string, url: string) {
-		super({ el: document.getElementById(id) })
+		super({
+			el: document.getElementById(id),
+			lazyCaptcha: true,
+		})
 		this.url = "/admin/" + url
 	}
 
