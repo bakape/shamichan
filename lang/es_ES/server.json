@@ -296,6 +296,10 @@
 			"",
 			"Imagen para usar como fondo personalizado"
 		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
+		],
 		"webmHover": [
 			"Expansión de WebM al pasar el ratón",
 			"Muestra una previsualización del WebM al pasar. Requiere tener Expansion de imagen al pasar el ratón activado."

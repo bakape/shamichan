@@ -325,6 +325,7 @@ var optionSpecs = [...][]inputSpec{
 		{ID: "google"},
 		{ID: "iqdb"},
 		{ID: "saucenao"},
+		{ID: "whatAnime"},
 		{ID: "desustorage"},
 		{ID: "exhentai"},
 	},

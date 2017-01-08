@@ -27,6 +27,10 @@ const ISSpecs: ImageSearchSpec[] = [
         url: "http://saucenao.com/search.php?db=999&url=",
     },
     {
+        type: ISType.src,
+        url: "https://whatanime.ga/?url=",
+    },
+    {
         type: ISType.MD5,
         url: "https://desuarchive.org/_/search/image/",
     },

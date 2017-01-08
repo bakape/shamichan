@@ -184,6 +184,9 @@ export const specs: { [id: string]: OptionSpec } = {
 		default: true,
 		exec: toggleImageSearch("saucenao"),
 	},
+	whatAnime: {
+		exec: toggleImageSearch("whatAnime"),
+	},
 	desustorage: {
 		exec: toggleImageSearch("desustorage"),
 	},

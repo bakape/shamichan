@@ -296,6 +296,10 @@
 			"",
 			"Image to use as the background"
 		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
+		],
 		"webmHover": [
 			"Expandovať WebM pod kurzorom",
 			"Display WebM previews on hover. Requires Image Hover Expansion enabled."
