@@ -15,10 +15,10 @@ var protoPrepared = map[string]string{
 
 	"writePost": `
 		INSERT INTO posts (
-			editing, deleted, spoiler, id, board, op, time, body, name, trip,
-			auth, SHA1, imageName, commands
+			editing, spoiler, id, board, op, time, body, name, trip, auth,
+			SHA1, imageName, commands
 		) VALUES
-			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
 
 	"writeImage": `
 		INSERT INTO images (
@@ -49,7 +49,7 @@ var protoPrepared = map[string]string{
 				i.*
 			FROM threads AS t
 			INNER JOIN posts AS p
-				ON t.id = p.id AND p.deleted != 'true'
+				ON t.id = p.id AND (p.deleted is NULL OR p.deleted = 'false')
 			LEFT OUTER JOIN images AS i
 				ON p.SHA1 = i.SHA1
 			ORDER BY replyTime DESC`,
@@ -61,7 +61,7 @@ var protoPrepared = map[string]string{
 				i.*
 			FROM threads AS t
 			INNER JOIN posts AS p
-				ON t.id = p.id AND p.deleted != 'true'
+				ON t.id = p.id AND (deleted IS NULL OR deleted = 'false')
 			LEFT OUTER JOIN images AS i
 				ON p.SHA1 = i.SHA1
 			WHERE t.board = $1
@@ -73,7 +73,7 @@ var protoPrepared = map[string]string{
 			FROM posts
 			LEFT OUTER JOIN images
 				ON posts.SHA1 = images.SHA1
-			WHERE id = $1 AND deleted != 'true'`,
+			WHERE id = $1 AND (deleted IS NULL OR deleted = 'false')`,
 
 	"getLinks":     `SELECT * FROM links WHERE source = ANY($1::bigint[])`,
 	"getBacklinks": `SELECT * FROM backlinks WHERE source = ANY($1::bigint[])`,

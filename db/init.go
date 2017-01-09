@@ -108,9 +108,9 @@ CREATE INDEX threads_board on threads (board);
 
 CREATE TABLE posts (
 	editing BOOLEAN NOT NULL,
-	deleted BOOLEAN NOT NULL,
-	spoiler BOOLEAN NOT NULL,
-	banned BOOLEAN NOT NULL,
+	spoiler BOOLEAN,
+	deleted BOOLEAN,
+	banned BOOLEAN,
 	id BIGINT PRIMARY KEY,
 	op BIGINT NOT NULL REFERENCES threads ON DELETE CASCADE,
 	time BIGINT NOT NULL,

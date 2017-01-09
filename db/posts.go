@@ -129,8 +129,8 @@ func WritePost(tx *sql.Tx, p DatabasePost) error {
 	}
 
 	_, err := ex.Exec(
-		p.Editing, p.Deleted, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body,
-		name, trip, auth, img, imgName, comm,
+		p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, name, trip,
+		auth, img, imgName, comm,
 	)
 	return err
 }
