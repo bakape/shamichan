@@ -67,28 +67,18 @@ type Thread struct {
 	Posts []Post `json:"posts"`
 }
 
-// DatabaseThread is a template for writing new threads to the database
-type DatabaseThread struct {
-	ID                uint64
-	PostCtr, ImageCtr uint32
-	ReplyTime         int64
-	Subject, Board    string
-	Log               [][]byte
-}
-
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {
 	Editing   bool      `json:"editing,omitempty"`
-	Deleted   bool      `json:"deleted,omitempty"`
 	ID        uint64    `json:"id"`
 	Time      int64     `json:"time"`
 	Body      string    `json:"body"`
 	Name      string    `json:"name,omitempty"`
 	Trip      string    `json:"trip,omitempty"`
 	Auth      string    `json:"auth,omitempty"`
-	Backlinks LinkMap   `json:"backlinks,omitempty"`
 	Links     LinkMap   `json:"links,omitempty"`
+	Backlinks LinkMap   `json:"backlinks,omitempty"`
 	Commands  []Command `json:"commands,omitempty"`
 	Image     *Image    `json:"image,omitempty"`
 }
@@ -100,13 +90,6 @@ type StandalonePost struct {
 	Post
 	OP    uint64 `json:"op"`
 	Board string `json:"board"`
-}
-
-// DatabasePost is for writing new posts to a database. It contains the Password
-// field, which is never exposed publically through Post.
-type DatabasePost struct {
-	StandalonePost
-	Password []byte
 }
 
 // LinkMap contains a map of target post ID: parenthood

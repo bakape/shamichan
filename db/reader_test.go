@@ -1,7 +1,10 @@
 package db
 
 import (
+	"reflect"
 	"testing"
+
+	"database/sql"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -32,7 +35,7 @@ func TestReader(t *testing.T) {
 		}
 	}
 
-	threads := [...]common.DatabaseThread{
+	threads := [...]DatabaseThread{
 		{
 			ID:        1,
 			Board:     "a",
@@ -48,7 +51,13 @@ func TestReader(t *testing.T) {
 			PostCtr:   1,
 		},
 	}
-	posts := [...]common.DatabasePost{
+	links := common.LinkMap{
+		1: {
+			Board: "a",
+			OP:    1,
+		},
+	}
+	posts := [...]DatabasePost{
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
@@ -62,7 +71,8 @@ func TestReader(t *testing.T) {
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
-					ID: 3,
+					ID:    3,
+					Links: links,
 				},
 				OP:    3,
 				Board: "c",
@@ -102,40 +112,48 @@ func TestReader(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	if err := WriteLinks(nil, 3, links); err != nil {
+		t.Fatal(err)
+	}
 
 	t.Run("GetAllBoard", testGetAllBoard)
 	t.Run("GetBoard", testGetBoard)
-	// t.Run("GetPost", testGetPost)
+	t.Run("GetPost", testGetPost)
 	// t.Run("GetThread", testGetThread)
 }
 
-// func testGetPost(t *testing.T) {
-// 	t.Parallel()
+func testGetPost(t *testing.T) {
+	t.Parallel()
 
-// 	// Does not exist
-// 	post, err := GetPost(99)
-// 	if err != r.ErrEmptyResult {
-// 		UnexpectedError(t, err)
-// 	}
-// 	if !reflect.DeepEqual(post, common.StandalonePost{}) {
-// 		t.Errorf("post not empty: %#v", post)
-// 	}
+	// Does not exist
+	post, err := GetPost(99)
+	if err != sql.ErrNoRows {
+		UnexpectedError(t, err)
+	}
+	if !reflect.DeepEqual(post, common.StandalonePost{}) {
+		t.Errorf("post not empty: %#v", post)
+	}
 
-// 	// Valid read
-// 	std := common.StandalonePost{
-// 		Post: common.Post{
-// 			ID:   2,
-// 			Body: "foo",
-// 		},
-// 		OP:    1,
-// 		Board: "a",
-// 	}
-// 	post, err = GetPost(2)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	AssertDeepEquals(t, post, std)
-// }
+	// Valid read
+	std := common.StandalonePost{
+		Post: common.Post{
+			ID: 3,
+			Links: common.LinkMap{
+				1: {
+					Board: "a",
+					OP:    1,
+				},
+			},
+		},
+		OP:    3,
+		Board: "c",
+	}
+	post, err = GetPost(3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	AssertDeepEquals(t, post, std)
+}
 
 func testGetAllBoard(t *testing.T) {
 	t.Parallel()

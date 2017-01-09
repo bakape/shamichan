@@ -113,6 +113,7 @@ CREATE TABLE posts (
 	id BIGINT PRIMARY KEY,
 	op BIGINT NOT NULL REFERENCES threads ON DELETE CASCADE,
 	time BIGINT NOT NULL,
+	board VARCHAR(3) NOT NULL,
 	trip CHAR(10),
 	auth VARCHAR(20),
 	SHA1 CHAR(40) REFERENCES images ON DELETE SET NULL,
@@ -120,7 +121,7 @@ CREATE TABLE posts (
 	imageName VARCHAR(200),
 	body VARCHAR(2000) NOT NULL,
 	postPassword BYTEA,
-	commands TEXT[]
+	commands JSON[]
 );
 CREATE INDEX deleted on posts (deleted);
 CREATE INDEX op on posts (op);
@@ -130,7 +131,8 @@ CREATE INDEX editing on posts (editing);
 CREATE TABLE links (
 	targetBoard VARCHAR(3) NOT NULL,
 	source BIGINT PRIMARY KEY REFERENCES posts ON DELETE CASCADE,
-	target BIGINT NOT NULL REFERENCES posts ON DELETE CASCADE
+	target BIGINT NOT NULL REFERENCES posts ON DELETE CASCADE,
+	targetOP BIGINT NOT NULL
 );
 CREATE INDEX links_source on links (source);
 CREATE INDEX links_target on links (target);
@@ -138,7 +140,8 @@ CREATE INDEX links_target on links (target);
 CREATE TABLE backlinks (
 	targetBoard VARCHAR(3) NOT NULL,
 	source BIGINT PRIMARY KEY REFERENCES posts ON DELETE CASCADE,
-	target BIGINT NOT NULL REFERENCES posts ON DELETE CASCADE
+	target BIGINT NOT NULL REFERENCES posts ON DELETE CASCADE,
+	targetOP BIGINT NOT NULL
 );
 CREATE INDEX backlinks_source on backlinks (source);
 CREATE INDEX backlinks_target on backlinks (target);`

@@ -9,6 +9,23 @@ import (
 	"github.com/pquerna/ffjson/ffjson"
 )
 
+// DatabasePost is for writing new posts to a database. It contains the Password
+// field, which is never exposed publically through Post.
+type DatabasePost struct {
+	Deleted bool
+	common.StandalonePost
+	Password []byte
+}
+
+// DatabaseThread is a template for writing new threads to the database
+type DatabaseThread struct {
+	ID                uint64
+	PostCtr, ImageCtr uint32
+	ReplyTime         int64
+	Subject, Board    string
+	Log               [][]byte
+}
+
 type executor interface {
 	Exec(args ...interface{}) (sql.Result, error)
 }
@@ -76,13 +93,8 @@ func NewPostID() (id uint64, err error) {
 }
 
 // WritePost writes a post struct to database
-func WritePost(tx *sql.Tx, p common.DatabasePost) error {
-	var ex executor
-	if tx != nil {
-		ex = tx.Stmt(prepared["writePost"])
-	} else {
-		ex = prepared["writePost"]
-	}
+func WritePost(tx *sql.Tx, p DatabasePost) error {
+	ex := getExecutor(tx, "writePost")
 
 	// Don't store empty strings in the database. Zero value != NULL.
 	var (
@@ -117,14 +129,21 @@ func WritePost(tx *sql.Tx, p common.DatabasePost) error {
 	}
 
 	_, err := ex.Exec(
-		p.Editing, p.Deleted, spoiler, p.ID, p.OP, p.Time, p.Body, name, trip,
-		auth, img, imgName, comm,
+		p.Editing, p.Deleted, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body,
+		name, trip, auth, img, imgName, comm,
 	)
 	return err
 }
 
+func getExecutor(tx *sql.Tx, key string) executor {
+	if tx != nil {
+		return tx.Stmt(prepared[key])
+	}
+	return prepared[key]
+}
+
 // WriteThread writes a thread and it's OP to the database
-func WriteThread(t common.DatabaseThread, p common.DatabasePost) error {
+func WriteThread(t DatabaseThread, p DatabasePost) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
@@ -149,4 +168,25 @@ func WriteThread(t common.DatabaseThread, p common.DatabasePost) error {
 		return err
 	}
 	return tx.Commit()
+}
+
+// WriteLinks writes a post's links to the database
+func WriteLinks(tx *sql.Tx, src uint64, links common.LinkMap) error {
+	return writeLinks(tx, "writeLinks", src, links)
+}
+
+// WriteBacklinks writes a post's backlinks to the database
+func WriteBacklinks(tx *sql.Tx, src uint64, links common.LinkMap) error {
+	return writeLinks(tx, "writeBacklinks", src, links)
+}
+
+func writeLinks(tx *sql.Tx, q string, src uint64, links common.LinkMap) error {
+	ex := getExecutor(tx, q)
+	for target, link := range links {
+		_, err := ex.Exec(src, target, link.OP, link.Board)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
