@@ -13,7 +13,6 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/server/websockets"
 	. "github.com/bakape/meguca/test"
 	"github.com/dancannon/gorethink"
 )
@@ -459,7 +458,7 @@ func TestDeletePost(t *testing.T) {
 	})
 	writeSampleUser(t)
 
-	rec, req := newJSONPair(t, "/admin/deletePost", postDeletionRequest{
+	rec, req := newJSONPair(t, "/admin/deletePost", postActionRequest{
 		IDs:          []uint64{1, 2, 3},
 		Board:        "a",
 		SessionCreds: sampleLoginCreds,
@@ -495,10 +494,7 @@ func TestDeletePost(t *testing.T) {
 			if !c.deleted {
 				return
 			}
-			msg, err := websockets.EncodeMessage(
-				websockets.MessageDeletePost,
-				c.id,
-			)
+			msg, err := common.EncodeMessage(common.MessageDeletePost, c.id)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -1,8 +1,0 @@
-{
-  "resolution": "main",
-  "tree": {
-    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/97673cf1ac0264e750319d392392b206ae5d35c9/systemjs/systemjs.d.ts",
-    "raw": "registry:dt/systemjs#0.19.29+20160702105636",
-    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/97673cf1ac0264e750319d392392b206ae5d35c9/systemjs/systemjs.d.ts"
-  }
-}

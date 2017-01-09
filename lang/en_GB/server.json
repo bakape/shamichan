@@ -128,6 +128,10 @@
 			"Image Hover Expansion",
 			"Display image previews on hover"
 		],
+		"imageRootOverride": [
+			"Image root override",
+			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
+		],
 		"import": [
 			"Import",
 			"Import options from file"
@@ -292,6 +296,10 @@
 			"",
 			"Image to use as the background"
 		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
+		],
 		"webmHover": [
 			"WebM Hover Expansion",
 			"Display WebM previews on hover. Requires Image Hover Expansion enabled."
@@ -315,6 +323,7 @@
 		"account": "Account and board management",
 		"add": "Add",
 		"apply": "Apply",
+		"ban": "Ban",
 		"bottom": "Bottom",
 		"cancel": "Cancel",
 		"catalog": "Catalog",
@@ -339,6 +348,7 @@
 		"reloadCaptcha": "Click to reload",
 		"reply": "Reply",
 		"report": "Report",
+		"reason": "Reason",
 		"rescan": "Rescan",
 		"return": "Return",
 		"rules": "Show Rules",
@@ -365,5 +375,12 @@
 		"Image Search",
 		"Fun",
 		"Shortcuts"
-	]
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
 }

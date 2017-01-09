@@ -26,8 +26,9 @@
 		{% endcomment %}
 		<link rel="stylesheet" href="/assets/css/base.css">
 		<link rel="stylesheet" id="theme-css" href="/assets/css/{%s= conf.DefaultCSS %}.css">
+		<style id="user-background-style"></style>
 		{% comment %}
-			Hide various elements that are disfunctional without JS
+			Hide various elements that are dysfunctional without JS
 		{% endcomment %}
 		<noscript>
 			<link rel="stylesheet" href="/assets/css/noscript.css">
@@ -80,6 +81,7 @@
 						{"google", "G"},
 						{"iqdb", "Iq"},
 						{"saucenao", "Sn"},
+						{"whatAnime", "WA"},
 						{"desustorage", "Ds"},
 						{"exhentai", "Ex"},
 					} %}
@@ -122,6 +124,7 @@
 			Loading indicator image
 		{% endcomment %}
 		<image src="/assets/loading.gif" id="loading-image">
+		<div id="user-background"></div>
 		<div id="overlay-container">
 			{% comment %}
 				Top banner
@@ -175,11 +178,12 @@
 						<path d="M3 0c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm-1.5 2.5c-.83 0-1.5.67-1.5 1.5h1c0-.28.22-.5.5-.5s.5.22.5.5-1 1.64-1 2.5c0 .86.67 1.5 1.5 1.5s1.5-.67 1.5-1.5h-1c0 .28-.22.5-.5.5s-.5-.22-.5-.5c0-.36 1-1.84 1-2.5 0-.81-.67-1.5-1.5-1.5z" transform="translate(2)"/>
 					</svg>
 				</a>
-				<a id="banner-feedback" href="mailto:{%u conf.FeedbackEmail %}" target="_blank" class="banner-float" title="{%s= ln.UI["feedback"] %}">
+				<a id="banner-feedback" href="mailto:{%s conf.FeedbackEmail %}" target="_blank" class="banner-float" title="{%s= ln.UI["feedback"] %}">
 					<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
 						<path d="M0 0v1l4 2 4-2v-1h-8zm0 2v4h8v-4l-4 2-4-2z" transform="translate(0 1)" />
 					</svg>
 				</a>
+				<span id="banner-extensions" class="hide-empty banner-float"></span>
 				<b id="thread-post-counters" class="act hide-empty banner-float" title="{%s= ln.Common.UI["postsImages"] %}"></b>
 				<b id="sync-counter" class="act hide-empty banner-float" title="{%s= ln.UI["syncCount"] %}"></b>
 				{% comment %}
@@ -208,7 +212,7 @@
 					{%s= strings.Replace(conf.FAQ, "\n", "<br>", -1) %}
 				</div>
 				{% comment %}
-					Post creation credentals
+					Post creation credentials
 				{% endcomment %}
 				<div id="identity" class="modal glass">
 					{%= table(specs["identity"], ln) %}
@@ -225,16 +229,14 @@
 								<form id="login-form">
 									{%= table(specs["login"], ln) %}
 									{%= captcha("login", ln.UI) %}
-									<input type="submit" value="{%s= ln.UI["submit"] %}">
-									<div class="form-response admin"></div>
+									{%= submit(false, ln.UI) %}
 								</form>
 							</div>
 							<div data-id="1">
 								<form id="registration-form">
 									{%= table(specs["register"], ln) %}
 									{%= captcha("register", ln.UI) %}
-									<input type="submit" value="{%s= ln.UI["submit"] %}">
-									<div class="form-response admin"></div>
+									{%= submit(false, ln.UI) %}
 								</form>
 							</div>
 						</div>
@@ -290,15 +292,23 @@
 				</div>
 				<div id="moderation-panel" class="modal glass">
 					<form>
+						<div id="ban-form" class="hidden">
+							{% for _, id  := range [...]string{"day", "hour", "minute"} %}
+								<input type="number" name="{%s= id %}" min="0" placeholder="{%s= strings.Title(ln.Common.Plurals[id][1]) %}">
+							{% endfor %}
+							<br>
+							<input type="text" name="reason" required class="full-width" placeholder="{%s= ln.UI["reason"] %}" disabled>
+							<br>
+						</div>
 						<input type="checkbox" name="showCheckboxes">
 						<select name="action">
-							{% for _, id := range [...]string{"deletePost"} %}
+							{% for _, id := range [...]string{"deletePost", "ban"} %}
 								<option value="{%s= id %}">
 									{%s= ln.UI[id] %}
 								</option>
 							{% endfor %}
 						</select>
-						<input type="submit" value="{%s= ln.UI["submit"] %}">
+						{%= submit(false, ln.UI) %}
 					</form>
 				</div>
 			</div>
@@ -314,9 +324,7 @@
 			{% endcomment %}
 			<div id="left-spacer" class="side-spacer"></div>
 			{% comment %}
-				Contains posts, page naviagation, title, image banner and the catalog
-			{% endcomment %}
-			{% comment %}
+				Contains posts, page navigation, title, image banner and the catalog.
 				Is injected on the second parse of this template
 			{% endcomment %}
 			<section id="threads">
@@ -325,16 +333,10 @@
 			<section id="right-panel" class="side-panel glass"></section>
 			<div id="right-spacer" class="side-spacer"></div>
 		</div>
-		<script src="/assets/js/vendor/system.js"></script>
-		{% comment %}
-			Captcha provider scripts
-		{% endcomment %}
-		{% if conf.Captcha %}
-			<script type="text/javascript" src="https://api-secure.solvemedia.com/papi/challenge.ajax"></script>
-		{% endif %}
 		{% comment %}
 			Dynamic module loader
 		{% endcomment %}
+		<script src="/assets/js/vendor/almond.js"></script>
 		<script src="/assets/js/scripts/loader.js"></script>
 	</body>
 {% endstripspace %}{% endfunc %}

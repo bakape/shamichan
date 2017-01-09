@@ -128,6 +128,10 @@
 			"Expansão de Imagem ao Pairar",
 			"Mostra prévias de imagens ao pairar"
 		],
+		"imageRootOverride": [
+			"Image root override",
+			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
+		],
 		"import": [
 			"Importar",
 			"Importar opções de arquivo"
@@ -292,6 +296,10 @@
 			"",
 			"Imagem para usar como fundo"
 		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
+		],
 		"webmHover": [
 			"Expansão de WebM ao pairar",
 			"Mostra prévias de WebM ao pairar. Requer Expansão de Imagem ao Pairar ativado."
@@ -315,6 +323,7 @@
 		"account": "Account and board management",
 		"add": "Add",
 		"apply": "Apply",
+		"ban": "Ban",
 		"bottom": "Rodapé",
 		"cancel": "Cancelar",
 		"catalog": "Catalog",
@@ -339,6 +348,7 @@
 		"reloadCaptcha": "Click to reload",
 		"reply": "Postar",
 		"report": "Reportar",
+		"reason": "Reason",
 		"rescan": "Rescan",
 		"return": "Retornar",
 		"rules": "Rules",
@@ -365,5 +375,12 @@
 		"Pesquisa",
 		"Diversão",
 		"Atalhos"
-	]
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
 }

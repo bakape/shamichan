@@ -1,5 +1,3 @@
-//go:generate ffjson --nodecoder --force-regenerate $GOFILE
-
 package common
 
 import "errors"
@@ -12,5 +10,5 @@ var (
 // Captcha stores captcha data for request messages that require it, if captchas
 // s are enabled
 type Captcha struct {
-	Captcha, CaptchaID string
+	Captcha string
 }

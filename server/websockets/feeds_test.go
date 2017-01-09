@@ -69,12 +69,12 @@ func TestStreamUpdates(t *testing.T) {
 			OP:   post.OP,
 		},
 		LastUpdated: post.LastUpdated,
-		Log:         [][]byte{},
+		Log:         []string{},
 	})
-	assertMessage(t, wcl, encodeMessage(t, MessageInsertPost, post.Post))
+	assertMessage(t, wcl, encodeMessage(t, common.MessageInsertPost, post.Post))
 
 	q := db.FindPost(1).Update(map[string]interface{}{
-		"log": appendLog([]byte("bar")),
+		"log": appendLog("bar"),
 	})
 	if err := db.Write(q); err != nil {
 		t.Fatal(err)
@@ -86,7 +86,7 @@ func TestStreamUpdates(t *testing.T) {
 	sv.Add(1)
 	go readListenErrors(t, cl2, sv)
 	feeds.Add <- subRequest{1, cl2}
-	std := encodeMessage(t, MessageSynchronise, map[int64]common.Post{
+	std := encodeMessage(t, common.MessageSynchronise, map[int64]common.Post{
 		1: post.Post,
 	})
 	assertMessage(t, wcl2, std)
@@ -120,14 +120,14 @@ func TestBufferUpdate(t *testing.T) {
 				Log:             nil,
 			},
 			cached: stdPost,
-			buf:    encodeMessage(t, MessageInsertPost, stdPost),
+			buf:    encodeMessage(t, common.MessageInsertPost, stdPost),
 		},
 		{
 			name: "post updated",
 			update: feedUpdate{
 				Change:          postUpdated,
 				timestampedPost: stdPost,
-				Log:             [][]byte{[]byte("foo")},
+				Log:             []string{"foo"},
 			},
 			cached: stdPost,
 			buf:    "foo",
@@ -151,8 +151,12 @@ func TestBufferUpdate(t *testing.T) {
 	}
 }
 
-func encodeMessage(t *testing.T, typ MessageType, data interface{}) string {
-	msg, err := EncodeMessage(typ, data)
+func encodeMessage(
+	t *testing.T,
+	typ common.MessageType,
+	data interface{},
+) string {
+	msg, err := common.EncodeMessage(typ, data)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,8 +167,8 @@ func TestWriteMultipleToBuffer(t *testing.T) {
 	t.Parallel()
 
 	u := updateFeed{}
-	u.writeToBuffer([]byte("a"))
-	u.writeToBuffer([]byte("b"))
+	u.writeToBuffer("a")
+	u.writeToBuffer("b")
 
 	const std = "a\u0000b"
 	if s := u.buf.String(); s != std {
@@ -192,13 +196,13 @@ func TestFlushMultipleMessages(t *testing.T) {
 	}
 
 	feeds.flushBuffers()
-	assertMessage(t, wcl, encodeMessageType(MessageConcat)+msg)
+	assertMessage(t, wcl, encodeMessageType(common.MessageConcat)+msg)
 
 	cl.Close(nil)
 	sv.Wait()
 }
 
-func encodeMessageType(typ MessageType) string {
+func encodeMessageType(typ common.MessageType) string {
 	return strconv.Itoa(int(typ))
 }
 

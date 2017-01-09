@@ -3,10 +3,9 @@ package websockets
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 	"unicode/utf8"
-
-	"strconv"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -92,7 +91,7 @@ func (s spliceRequest) MarshalJSON() ([]byte, error) {
 }
 
 // Append a rune to the body of the open post
-func appendRune(data []byte, c *Client) error {
+func (c *Client) appendRune(data []byte) error {
 	if has, err := c.hasPost(); err != nil {
 		return err
 	} else if !has {
@@ -111,7 +110,10 @@ func appendRune(data []byte, c *Client) error {
 	}
 
 	id := c.openPost.id
-	msg, err := EncodeMessage(MessageAppend, [2]uint64{id, uint64(char)})
+	msg, err := common.EncodeMessage(
+		common.MessageAppend,
+		[2]uint64{id, uint64(char)},
+	)
 	if err != nil {
 		return err
 	}
@@ -126,13 +128,13 @@ func appendRune(data []byte, c *Client) error {
 }
 
 // Helper for running post update queries on the current open post
-func (c *Client) updatePost(key string, val interface{}, msg []byte) error {
+func (c *Client) updatePost(key string, val interface{}, msg string) error {
 	return UpdatePost(c.openPost.id, key, val, msg)
 }
 
 // UpdatePost post updates a single field of an existing post with the
 // appropriate replication log update and timestamp modification.
-func UpdatePost(id uint64, key string, val interface{}, msg []byte) error {
+func UpdatePost(id uint64, key string, val interface{}, msg string) error {
 	update := map[string]interface{}{
 		key:           val,
 		"log":         appendLog(msg),
@@ -142,7 +144,7 @@ func UpdatePost(id uint64, key string, val interface{}, msg []byte) error {
 }
 
 // Shorthand for creating a replication log append query
-func appendLog(msg []byte) r.Term {
+func appendLog(msg string) r.Term {
 	return r.Row.Field("log").Append(msg)
 }
 
@@ -169,7 +171,7 @@ func parseLine(c *Client, insertNewline bool) error {
 	}
 
 	if insertNewline {
-		msg, err := EncodeMessage(MessageAppend, [2]uint64{
+		msg, err := common.EncodeMessage(common.MessageAppend, [2]uint64{
 			c.openPost.id,
 			uint64('\n'),
 		})
@@ -187,7 +189,7 @@ func parseLine(c *Client, insertNewline bool) error {
 
 // Write a hash command to the database
 func writeCommand(comm common.Command, c *Client) error {
-	msg, err := EncodeMessage(MessageCommand, commandMessage{
+	msg, err := common.EncodeMessage(common.MessageCommand, commandMessage{
 		ID:      c.openPost.id,
 		Command: comm,
 	})
@@ -200,7 +202,7 @@ func writeCommand(comm common.Command, c *Client) error {
 
 // Write new links to other posts to the database
 func writeLinks(links common.LinkMap, c *Client) error {
-	msg, err := EncodeMessage(MessageLink, linkMessage{
+	msg, err := common.EncodeMessage(common.MessageLink, linkMessage{
 		ID:    c.openPost.id,
 		Links: links,
 	})
@@ -228,7 +230,7 @@ func writeLinks(links common.LinkMap, c *Client) error {
 // Writes the location data of the post linking a post to the the post being
 // linked
 func writeBacklink(id, op uint64, board string, destID uint64) error {
-	msg, err := EncodeMessage(MessageBacklink, linkMessage{
+	msg, err := common.EncodeMessage(common.MessageBacklink, linkMessage{
 		ID: destID,
 		Links: common.LinkMap{
 			id: {
@@ -255,7 +257,7 @@ func writeBacklink(id, op uint64, board string, destID uint64) error {
 }
 
 // Remove one character from the end of the line in the open post
-func backspace(_ []byte, c *Client) error {
+func (c *Client) backspace() error {
 	if has, err := c.hasPost(); err != nil {
 		return err
 	} else if !has {
@@ -270,7 +272,7 @@ func backspace(_ []byte, c *Client) error {
 	c.openPost.bodyLength--
 
 	id := c.openPost.id
-	msg, err := EncodeMessage(MessageBackspace, id)
+	msg, err := common.EncodeMessage(common.MessageBackspace, id)
 	if err != nil {
 		return err
 	}
@@ -278,7 +280,7 @@ func backspace(_ []byte, c *Client) error {
 }
 
 // Close an open post and parse the last line, if needed.
-func closePost(_ []byte, c *Client) error {
+func (c *Client) closePost() error {
 	if c.openPost.id == 0 {
 		return errNoPostOpen
 	}
@@ -288,7 +290,7 @@ func closePost(_ []byte, c *Client) error {
 		}
 	}
 
-	msg, err := EncodeMessage(MessageClosePost, c.openPost.id)
+	msg, err := common.EncodeMessage(common.MessageClosePost, c.openPost.id)
 	if err != nil {
 		return err
 	}
@@ -302,7 +304,7 @@ func closePost(_ []byte, c *Client) error {
 
 // Splice the current line's text in the open post. This call is also used for
 // text pastes.
-func spliceText(data []byte, c *Client) error {
+func (c *Client) spliceText(data []byte) error {
 	if has, err := c.hasPost(); err != nil {
 		return err
 	} else if !has {
@@ -384,7 +386,7 @@ func spliceLine(req spliceRequest, c *Client) error {
 	new := string(append(start, end...))
 	c.openPost.WriteString(new)
 
-	msg, err := EncodeMessage(MessageSplice, res)
+	msg, err := common.EncodeMessage(common.MessageSplice, res)
 	if err != nil {
 		return err
 	}
@@ -422,7 +424,7 @@ func spliceLine(req spliceRequest, c *Client) error {
 }
 
 // Insert and image into an existing open post
-func insertImage(data []byte, c *Client) error {
+func (c *Client) insertImage(data []byte) error {
 	if has, err := c.hasPost(); err != nil {
 		return err
 	} else if !has {
@@ -445,7 +447,7 @@ func insertImage(data []byte, c *Client) error {
 	if err != nil {
 		return err
 	}
-	msg, err := EncodeMessage(MessageInsertImage, imageMessage{
+	msg, err := common.EncodeMessage(common.MessageInsertImage, imageMessage{
 		ID:    c.openPost.id,
 		Image: *img,
 	})

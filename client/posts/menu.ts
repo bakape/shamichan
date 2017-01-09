@@ -1,11 +1,10 @@
-import View from "../view"
-import { Post } from "./models"
+import { View } from "../base"
+import { Post } from "./model"
 import { getModel, mine } from "../state"
-import { threads, write } from "../render"
-import { on, outerWidth } from "../util"
+import { on, write } from "../util"
 import lang from "../lang"
 import { hidePost } from "./hide"
-import { spoilerImage } from "./posting/upload"
+import { spoilerImage } from "./posting"
 
 interface ControlButton extends Element {
 	_popup_menu: MenuView
@@ -107,7 +106,22 @@ function openMenu(e: Event) {
 	}
 }
 
-on(threads, "click", openMenu, {
-	passive: true,
-	selector: ".control, .control svg, .control svg path",
-})
+// Return width of element with padding and margin
+function outerWidth(el: HTMLElement): number {
+	const style = getComputedStyle(el)
+	const widths = [
+		style.marginLeft, style.marginRight, style.paddingLeft,
+		style.paddingRight
+	]
+	let total = el.offsetWidth
+	for (let width of widths) {
+		total += parseInt(width)
+	}
+	return total
+}
+
+export default () =>
+	on(document.getElementById("threads"), "click", openMenu, {
+		passive: true,
+		selector: ".control, .control svg, .control svg path",
+	})

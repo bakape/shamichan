@@ -1,10 +1,14 @@
 import lang from '../../lang'
-import { load, bufferToHex } from '../../util'
-import { write } from '../../render'
-import { postJSON, postText } from "../../fetch"
+import { load, postJSON, postText, write } from '../../util'
 import identity from "./identity"
-import { Post } from "../models"
-import View from "../../view"
+import { Post } from "../model"
+import { View } from "../../base"
+
+// Precompute 00 - ff strings for conversion to hexadecimal strings
+const precomputedHex = new Array(256)
+for (let i = 0; i < 256; i++) {
+    precomputedHex[i] = (i < 16 ? '0' : '') + i.toString(16)
+}
 
 // Uploaded file data to be embedded in thread and reply creation or file
 // insertion requests
@@ -137,4 +141,14 @@ export async function spoilerImage({id}: Post) {
         id,
         password: identity.postPassword,
     })
+}
+
+// Encodes an ArrayBuffer to a hex string
+function bufferToHex(buf: ArrayBuffer): string {
+    const b = new Uint8Array(buf),
+        res = new Array(buf.byteLength)
+    for (let i = 0; i < res.length; i++) {
+        res[i] = precomputedHex[b[i]]
+    }
+    return res.join('')
 }

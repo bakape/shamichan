@@ -32,8 +32,7 @@ func TestWaterfall(t *testing.T) {
 		wasRun++
 		return nil
 	}
-	fns := []func() error{fn, fn}
-	if err := Waterfall(fns); err != nil {
+	if err := Waterfall(fn, fn); err != nil {
 		t.Fatal(err)
 	}
 	if wasRun != 2 {
@@ -43,7 +42,7 @@ func TestWaterfall(t *testing.T) {
 	// 2nd function returns error
 	wasRun = 0
 	stdErr := errors.New("foo")
-	fns = []func() error{
+	fns := []func() error{
 		fn,
 		func() error {
 			wasRun++
@@ -51,7 +50,7 @@ func TestWaterfall(t *testing.T) {
 		},
 		fn,
 	}
-	if err := Waterfall(fns); err != stdErr {
+	if err := Waterfall(fns...); err != stdErr {
 		UnexpectedError(t, err)
 	}
 	if wasRun != 2 {

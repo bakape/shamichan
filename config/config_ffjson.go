@@ -328,6 +328,8 @@ func (mj *Configs) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	fflib.WriteJsonString(buf, string(mj.DefaultCSS))
 	buf.WriteString(`,"captchaPublicKey":`)
 	fflib.WriteJsonString(buf, string(mj.CaptchaPublicKey))
+	buf.WriteString(`,"imageRootOverride":`)
+	fflib.WriteJsonString(buf, string(mj.ImageRootOverride))
 	if mj.Links == nil {
 		buf.WriteString(`,"links":null`)
 	} else {
@@ -500,6 +502,8 @@ func (mj *Public) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	fflib.WriteJsonString(buf, string(mj.DefaultCSS))
 	buf.WriteString(`,"captchaPublicKey":`)
 	fflib.WriteJsonString(buf, string(mj.CaptchaPublicKey))
+	buf.WriteString(`,"imageRootOverride":`)
+	fflib.WriteJsonString(buf, string(mj.ImageRootOverride))
 	if mj.Links == nil {
 		buf.WriteString(`,"links":null`)
 	} else {

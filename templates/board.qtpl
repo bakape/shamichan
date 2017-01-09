@@ -55,8 +55,7 @@
 					</span>
 				{% endif %}
 				{%= captcha("new-thread", ln.UI) %}
-				<input type="submit" value="{%s= ln.UI["submit"] %}">
-				<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
+				{%= submit(true, ln.UI) %}
 			</form>
 		</aside>
 		<aside id="refresh" class="act glass">
@@ -103,12 +102,12 @@ allow caching of generated posts.
 						{% if img.Spoiler %}
 							<img src="/assets/spoil/default.jpg" width="150" height="150" class="expanded">
 						{% else %}
-							<img width="{%s= strconv.FormatUint(uint64(img.Dims[2]), 10) %}" height="{%s= strconv.FormatUint(uint64(img.Dims[3]), 10) %}" class="expanded" src="{%s= assets.ThumbPath(img.FileType, img.ThumbType, img.SHA1) %}">
+							<img width="{%s= strconv.FormatUint(uint64(img.Dims[2]), 10) %}" height="{%s= strconv.FormatUint(uint64(img.Dims[3]), 10) %}" class="expanded" src="{%s= assets.ThumbPath(img.ThumbType, img.SHA1) %}">
 						{% endif %}
 					</a>
 				</figure>
 			{% endif %}
-			<span class="spaced thread-links">
+			<span class="spaced thread-links hide-empty">
 				<b class="board">
 					/{%s= t.Board %}/
 				</b>

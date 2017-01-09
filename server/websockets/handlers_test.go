@@ -35,11 +35,3 @@ func TestDecodeMessage(t *testing.T) {
 		LogUnexpected(t, std, msg)
 	}
 }
-
-func TestNOOPMessage(t *testing.T) {
-	t.Parallel()
-
-	if err := noop(nil, nil); err != nil {
-		t.Fatal(err)
-	}
-}

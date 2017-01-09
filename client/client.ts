@@ -1,15 +1,12 @@
 // Core websocket message handlers
 
 import { handlers, message, connSM, connEvent } from './connection'
-import { posts } from './state'
-import { Post, PostLinks, Command, PostData, ImageData } from './posts/models'
-import FormModel from "./posts/posting/model"
-import PostView from "./posts/view"
-import { threadContainer } from "./page/thread"
-import { write } from "./render"
-import { postAdded } from "./tab"
-import { deferInit } from "./defer"
-import { incrementPostCount } from "./page/thread"
+import { posts, hidden } from './state'
+import { Post, FormModel, PostView, postEvent, postSM } from './posts'
+import { PostLinks, Command, PostData, ImageData } from "./common"
+import { postAdded, navigate } from "./ui"
+import { write } from "./util"
+import { incrementPostCount } from "./page"
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -51,7 +48,9 @@ function handle(id: number, fn: (m: Post) => void) {
 export function insertPost(data: PostData) {
 	// It is possible to receive insertion updates for posts that are not
 	// currently displayed, because of the Last N setting. Skip them.
-	if (data.id < posts.lowestID) {
+	//
+	// Same for posts that are hidden by the user
+	if (data.id < posts.lowestID || hidden.has(data.id)) {
 		return
 	}
 
@@ -81,7 +80,9 @@ export function insertPost(data: PostData) {
 
 	// Find last allocated post and insert after it
 	write(() => {
-		const last = threadContainer.lastElementChild
+		const last = document
+			.getElementById("thread-container")
+			.lastElementChild
 		if (last.id === "p0") {
 			last.before(view.el)
 		} else {
@@ -96,7 +97,7 @@ export function insertPost(data: PostData) {
 	incrementPostCount(true, "image" in data)
 }
 
-deferInit(() => {
+export default () => {
 	handlers[message.invalid] = (msg: string) => {
 
 		// TODO: More user-friendly critical error reporting
@@ -120,7 +121,7 @@ deferInit(() => {
 		handle(id, m =>
 			m.spoilerImage())
 
-	handlers[message.append] = ([id, char]: number[]) =>
+	handlers[message.append] = ([id, char]: [number, number]) =>
 		handle(id, m =>
 			m.append(char))
 
@@ -153,4 +154,13 @@ deferInit(() => {
 	handlers[message.deletePost] = (id: number) =>
 		handle(id, m =>
 			m.remove())
-})
+
+	handlers[message.banned] = (id: number) =>
+		handle(id, m =>
+			m.setBanned())
+
+	handlers[message.redirect] = (board: string) => {
+		postSM.feed(postEvent.reset)
+		navigate(`/${board}/`, null, true)
+	}
+}

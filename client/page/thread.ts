@@ -1,17 +1,12 @@
-import { PostData, ThreadData, Post, fileTypes } from '../posts/models'
-import PostView from '../posts/view'
+import { Post, PostView } from '../posts'
+import { fileTypes, PostLinks, PostData, ThreadData } from "../common"
 import { posts as postCollection, hidden, mine, seenReplies } from '../state'
-import { threads, write } from '../render'
+import { pluralize, escape, threads, write } from '../util'
 import options from "../options"
 import lang from "../lang"
 import { updateSyncTimestamp } from "../connection"
-import notifyAboutReply from "../notification"
-import { pluralize, escape } from "../util"
-import { setTitle } from "../tab"
-import { extractConfigs } from "./common"
-
-// Container for all rendered posts
-export let threadContainer: HTMLElement
+import { notifyAboutReply, setTitle } from "../ui"
+import { extractConfigs, isBanned } from "."
 
 const counters = document.getElementById("thread-post-counters")
 let postCtr = 0,
@@ -23,11 +18,13 @@ export default function (html: string) {
     if (html) {
         threads.innerHTML = html
     }
+    if (isBanned()) {
+        return
+    }
     extractConfigs()
 
-    threadContainer = threads.querySelector("#thread-container")
     if (!options.workModeToggle && (options.userBG || options.illyaDance)) {
-        threadContainer.classList.add("custom-BG")
+        document.getElementById("thread-container").classList.add("custom-BG")
     }
 
     const data = JSON.parse(
@@ -57,6 +54,11 @@ export default function (html: string) {
             if (el.textContent === "Anonymous") {
                 el.textContent = lang.posts["anon"]
             }
+        }
+
+        // Localize banned post notices
+        for (let el of threads.querySelectorAll(".banned")) {
+            el.innerText = lang.posts["banned"]
         }
     }
 
@@ -101,26 +103,9 @@ function extractPost(post: PostData) {
         view.renderName()
     }
 
-    // Add (You) to posts linking to the user's posts and trigger desktop
-    // notifications, if needed
     const {model: {links, backlinks, image}} = view
-    for (let l of [links, backlinks]) {
-        if (!l) {
-            continue
-        }
-        for (let idStr in l) {
-            const id = parseInt(idStr)
-            if (!mine.has(id)) {
-                continue
-            }
-            for (let el of view.el.querySelectorAll(`a[data-id="${id}"]`)) {
-                el.textContent += " " + lang.posts["you"]
-            }
-            if (!seenReplies.has(id)) {
-                notifyAboutReply(view.model)
-            }
-        }
-    }
+    localizeLinks(links, view, true)
+    localizeLinks(backlinks, view, false)
 
     if (image) {
         const should =
@@ -156,6 +141,29 @@ function localizeOmitted() {
 
     el.firstChild.replaceWith(text)
     el.querySelector("a.history").textContent = lang.posts["seeAll"]
+}
+
+// Add (You) to posts linking to the user's posts and trigger desktop
+// notifications, if needed
+function localizeLinks(links: PostLinks, view: PostView, notify: boolean) {
+    if (!links) {
+        return
+    }
+    for (let idStr in links) {
+        const id = parseInt(idStr)
+        if (!mine.has(id)) {
+            continue
+        }
+        for (let el of view.el.querySelectorAll(`a[data-id="${id}"]`)) {
+            // Can create doubles with circular quotes. Avoid that.
+            if (!el.textContent.includes(lang.posts["you"])) {
+                el.textContent += " " + lang.posts["you"]
+            }
+        }
+        if (notify && !seenReplies.has(id)) {
+            notifyAboutReply(view.model)
+        }
+    }
 }
 
 // Increment thread post counters and rerender the indicator in the banner

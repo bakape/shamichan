@@ -128,6 +128,10 @@
 			"Expandovať obrázky pod kurzorom",
 			"Display image previews on hover"
 		],
+		"imageRootOverride": [
+			"Image root override",
+			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
+		],
 		"import": [
 			"Importovať",
 			"Importovať nastavenia zo súboru"
@@ -292,6 +296,10 @@
 			"",
 			"Image to use as the background"
 		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
+		],
 		"webmHover": [
 			"Expandovať WebM pod kurzorom",
 			"Display WebM previews on hover. Requires Image Hover Expansion enabled."
@@ -315,6 +323,7 @@
 		"account": "Account and board management",
 		"add": "Pridať",
 		"apply": "Použiť",
+		"ban": "Ban",
 		"bottom": "Dolu",
 		"cancel": "Zrušiť",
 		"catalog": "Katalóg",
@@ -339,6 +348,7 @@
 		"reloadCaptcha": "Klikni pre znovunačítanie",
 		"reply": "Odpovedať",
 		"report": "Nahlásiť",
+		"reason": "Reason",
 		"rescan": "Znovu naskenovať",
 		"return": "Návrat",
 		"rules": "Pravidlá",
@@ -366,5 +376,12 @@
 		"Image Search",
 		"Fun",
 		"Shortcuts"
-	]
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
 }

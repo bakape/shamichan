@@ -3,19 +3,16 @@
 'use strict'
 
 const babel = require("gulp-babel"),
-	cache = require('gulp-cached'),
-	fs = require('fs-extra'),
 	gulp = require('gulp'),
 	gutil = require('gulp-util'),
 	jsonminify = require('gulp-jsonminify'),
 	less = require('gulp-less'),
+	minifier = require('gulp-uglify/minifier'),
 	nano = require('gulp-cssnano'),
 	rename = require('gulp-rename'),
 	sourcemaps = require('gulp-sourcemaps'),
 	ts = require('gulp-typescript'),
-	uglify = require('gulp-uglify')
-
-fs.mkdirsSync('www/js/vendor')
+	uglifyjs = require('uglify-js')
 
 // Keep script alive and rebuild on file changes
 // Triggered with the `-w` flag
@@ -32,10 +29,11 @@ buildES5()
 createTask('scripts', 'clientScripts/*.js', src =>
 	src
 		.pipe(sourcemaps.init())
-		.pipe(uglify())
+		.pipe(minifier({}, uglifyjs))
 		.on('error', handleError)
 		.pipe(sourcemaps.write('maps'))
-		.pipe(gulp.dest('www/js/scripts')))
+		.pipe(gulp.dest('www/js/scripts'))
+)
 
 // Compile Less to CSS
 {
@@ -48,7 +46,8 @@ createTask('scripts', 'clientScripts/*.js', src =>
 			.on('error', handleError)
 			.pipe(nano())
 			.pipe(sourcemaps.write('maps'))
-			.pipe(gulp.dest('www/css')))
+			.pipe(gulp.dest('www/css'))
+	)
 
 	// Recompile on source update, if running with the `-w` flag
 	if (watch) {
@@ -62,37 +61,8 @@ createTask('lang', 'lang/**/*.json', src =>
 	src
 		.pipe(jsonminify())
 		.on('error', handleError)
-		.pipe(gulp.dest('www/lang')))
-
-// Copies a dependency libraries from node_modules to the vendor directory
-tasks.push('vendor')
-gulp.task('vendor', () => {
-	const paths = [
-		'systemjs/dist/system.js',
-		'systemjs/dist/system.js.map',
-		'systemjs/dist/system-polyfills.js',
-		'systemjs/dist/system-polyfills.js.map',
-		'dom4/build/dom4.js',
-		'core-js/client/core.min.js',
-		'core-js/client/core.min.js.map',
-		"babel-polyfill/dist/polyfill.min.js",
-		"proxy-polyfill/proxy.min.js"
-	]
-	for (let path of paths) {
-		const split = path.split('/'),
-			dest = 'www/js/vendor/' + split[split.length - 1]
-		fs.copySync("node_modules/" + path, dest, { clobber: true })
-	}
-})
-
-tasks.push('polyfill')
-gulp.task('polyfill', () => {
-	const path = 'client/polyfill.js',
-		dest = 'www/js/scripts/polyfill.js'
-	fs.copySync(path, dest, { clobber: true })
-})
-
-compileVendor('fetch', 'node_modules/whatwg-fetch/fetch.js')
+		.pipe(gulp.dest('www/lang'))
+)
 
 gulp.task('default', tasks)
 
@@ -120,9 +90,11 @@ function buildES5() {
 			.pipe(babel({
 				presets: ['latest'],
 			}))
-			.pipe(uglify())
+			.pipe(minifier({}, uglifyjs))
+			.on('error', handleError)
 			.pipe(sourcemaps.write('maps'))
-			.pipe(gulp.dest('www/js/es5')))
+			.pipe(gulp.dest('www/js/es5'))
+	)
 }
 
 function buildClient() {
@@ -140,6 +112,8 @@ function buildClient() {
 function handleError(err) {
 	if (!watch) {
 		throw err
+	} else {
+		console.error(err.message)
 	}
 }
 
@@ -147,21 +121,11 @@ function handleError(err) {
 function createTask(name, path, task) {
 	tasks.push(name)
 	gulp.task(name, () =>
-		task(gulp.src(path).pipe(cache(name))))
+		task(gulp.src(path))
+	)
 
 	// Recompile on source update, if running with the `-w` flag
 	if (watch) {
 		gulp.watch(path, [name])
 	}
-}
-
-// Copy a dependency library, minify and generate sourcemaps
-function compileVendor(name, path) {
-	createTask(name, path, src =>
-		src
-			.pipe(rename({ basename: name }))
-			.pipe(sourcemaps.init())
-			.pipe(uglify())
-			.pipe(sourcemaps.write('maps'))
-			.pipe(gulp.dest('www/js/vendor')))
 }

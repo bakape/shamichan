@@ -26,6 +26,8 @@ must always be "synchronize".
 | 10 | insertImage | [ImageMessage](#imagemessage) | Insert an image into an open post. |
 | 11 | spoiler | uint | Spoiler the image of the post specified by ID |
 | 12 | deletePost | uint | Delete a post specified by ID |
+| 13 | banned | uint | Notifies the specific post was banned |
+| 13 | redirect | string | Notifies the client it has been redirected to the specific board page. Any open posts have been closed and after receiving this message the client is already considered to be synchronized to the board. If the client does comply an error will be raised the client will be disconnected. |
 | 30 | synchronize | map[uint][Post](common.md#post) | Response to a synchronization request. Contains a map of posts updated in the thread in the last 30 seconds. These are meant to bring the client up to sync with the update stream server-side. Consequently the client must ensure his existing post data is not more than 30 seconds old before synchronization. |
 | 31 | reclaim | uint | Response to a request to reclaim a post lost after disconnecting from the server. 0 denotes success and the client is henceforth able to write to said post, as before the disconnect.1 denotes the post is unrecoverable. |
 | 32 | postID | int | Returns the post ID of the client's freshly allocated post. A response to a post or thread insertion request. -1 denotes invalid captcha. |

@@ -1,9 +1,8 @@
-import { boardConfig } from '../../state'
+import { boardConfig, config } from '../../state'
 import options from '../../options'
-import { commaList, escape, setAttrs, pad } from '../../util'
-import { ImageData, fileTypes } from '../models'
+import { escape, setAttrs, pad, importTemplate } from '../../util'
+import { ImageData, fileTypes } from '../../common'
 import lang from '../../lang'
-import { importTemplate } from "../../render"
 
 // Specs for handling image search link clicks
 type ImageSearchSpec = {
@@ -12,20 +11,24 @@ type ImageSearchSpec = {
 }
 
 // Types of data requested by the search provider
-const enum ISType { thumb, MD5, SHA1 }
+const enum ISType { src, MD5, SHA1 }
 
 const ISSpecs: ImageSearchSpec[] = [
     {
-        type: ISType.thumb,
+        type: ISType.src,
         url: "https://www.google.com/searchbyimage?image_url=",
     },
     {
-        type: ISType.thumb,
+        type: ISType.src,
         url: "http://iqdb.org/?url=",
     },
     {
-        type: ISType.thumb,
+        type: ISType.src,
         url: "http://saucenao.com/search.php?db=999&url=",
+    },
+    {
+        type: ISType.src,
+        url: "https://whatanime.ga/?url=",
     },
     {
         type: ISType.MD5,
@@ -96,6 +99,18 @@ export function renderFigcaption(
     el.hidden = false
 }
 
+// Makes a ', ' separated list
+function commaList(items: string[]): string {
+    let html = ''
+    for (let item of items) {
+        if (html) {
+            html += ', '
+        }
+        html += item
+    }
+    return html
+}
+
 // Assign URLs to image search links
 function renderImageSearch(cont: HTMLElement, img: ImageData) {
     const ch = cont.children
@@ -103,8 +118,10 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
         const {type, url} = ISSpecs[i]
         let arg: string
         switch (type) {
-            case ISType.thumb:
-                arg = location.origin + sourcePath(img.SHA1, img.fileType)
+            case ISType.src:
+                const s = location.origin
+                    + `/images/src/${img.SHA1}.${fileTypes[img.fileType]}`
+                arg = encodeURI(s)
                 break
             case ISType.MD5:
                 arg = img.MD5
@@ -113,7 +130,7 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
                 arg = img.SHA1
                 break
         }
-        ch[i].setAttribute("href", url + encodeURI(arg))
+        ch[i].setAttribute("href", url + arg)
     }
 }
 
@@ -139,19 +156,19 @@ function readableFilesize(size: number): string {
     return `${text.slice(0, -1)}.${text.slice(-1)} MB`
 }
 
+function imageRoot(): string {
+    return config.imageRootOverride || "/images"
+}
+
 // Get the thumbnail path of an image, accounting for not thumbnail of specific
 // type being present
-export function thumbPath(
-    SHA1: string,
-    fileType: fileTypes,
-    thumbType: fileTypes,
-): string {
-    return `/images/thumb/${SHA1}.${fileTypes[thumbType]}`
+export function thumbPath(SHA1: string, thumbType: fileTypes): string {
+    return `${imageRoot()}/thumb/${SHA1}.${fileTypes[thumbType]}`
 }
 
 // Resolve the path to the source file of an upload
 export function sourcePath(SHA1: string, fileType: fileTypes): string {
-    return `/images/src/${SHA1}.${fileTypes[fileType]}`
+    return `${imageRoot()}/src/${SHA1}.${fileTypes[fileType]}`
 }
 
 // Render a name + download link of an image
@@ -181,7 +198,7 @@ export function renderThumbnail(el: Element, data: ImageData) {
         // Animated GIF thumbnails
         thumb = src
     } else {
-        thumb = thumbPath(data.SHA1, data.fileType, data.thumbType)
+        thumb = thumbPath(data.SHA1, data.thumbType)
     }
 
     // Downscale thumbnail for higher DPI, unless specified not to

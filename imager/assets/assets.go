@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
 )
 
 const fileCreationFlags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
@@ -37,8 +39,13 @@ var (
 
 // GetFilePaths generates file paths of the source file and its thumbnail
 func GetFilePaths(SHA1 string, fileType, thumbType uint8) (paths [2]string) {
-	paths[0] = SourcePath(fileType, SHA1)
-	paths[1] = ThumbPath(fileType, thumbType, SHA1)
+	paths[0] = RelativeSourcePath(fileType, SHA1)
+	paths[1] = util.ConcatStrings(
+		"/images/thumb/",
+		SHA1,
+		".",
+		common.Extensions[thumbType],
+	)
 	for i := range paths {
 		paths[i] = filepath.FromSlash(paths[i][1:])
 	}
@@ -46,28 +53,44 @@ func GetFilePaths(SHA1 string, fileType, thumbType uint8) (paths [2]string) {
 	return
 }
 
-// ThumbPath returns the path to the thumbnail of an image
-func ThumbPath(fileType, thumbType uint8, SHA1 string) string {
-	buf := make([]byte, 14, 58)
-	copy(buf, "/images/thumb/")
-	buf = append(buf, SHA1...)
-	buf = append(buf, '.')
-	buf = append(buf, common.Extensions[thumbType]...)
+// RelativeSourcePath returns an file's source path relative to the root path
+func RelativeSourcePath(fileType uint8, SHA1 string) string {
+	return util.ConcatStrings(
+		"/images/src/",
+		SHA1,
+		".",
+		common.Extensions[fileType],
+	)
+}
 
-	return string(buf)
+func imageRoot() string {
+	r := config.Get().ImageRootOverride
+	if r != "" {
+		return r
+	}
+	return "/images"
+}
+
+// ThumbPath returns the path to the thumbnail of an image
+func ThumbPath(thumbType uint8, SHA1 string) string {
+	return util.ConcatStrings(
+		imageRoot(),
+		"/thumb/",
+		SHA1,
+		".",
+		common.Extensions[thumbType],
+	)
 }
 
 // SourcePath returns the path to the source file on an image
 func SourcePath(fileType uint8, SHA1 string) string {
-	ext := common.Extensions[fileType]
-
-	buf := make([]byte, 12, 53+len(ext))
-	copy(buf, "/images/src/")
-	buf = append(buf, SHA1...)
-	buf = append(buf, '.')
-	buf = append(buf, ext...)
-
-	return string(buf)
+	return util.ConcatStrings(
+		imageRoot(),
+		"/src/",
+		SHA1,
+		".",
+		common.Extensions[fileType],
+	)
 }
 
 // Write writes file assets to disk

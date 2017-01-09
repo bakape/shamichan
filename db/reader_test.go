@@ -1,10 +1,9 @@
 package db
 
 import (
+	"database/sql"
 	"reflect"
 	"testing"
-
-	"database/sql"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"

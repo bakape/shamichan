@@ -42,6 +42,9 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		text404(w)
 		return
 	}
+	if !assertNotBanned(w, r, b) {
+		return
+	}
 
 	lp, err := lang.Get(w, r)
 	if err != nil {

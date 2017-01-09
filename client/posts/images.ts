@@ -1,14 +1,11 @@
-import { Post, fileTypes } from "./models"
-import View from "../view"
-import { renderFigcaption, renderImage, sourcePath } from "./render/image"
-import { write, threads } from "../render"
+import { Post } from "./model"
+import { fileTypes } from "../common"
+import { View } from "../base"
+import { renderFigcaption, renderImage, sourcePath } from "./render"
+import { setAttrs, on, trigger, write } from "../util"
 import options from "../options"
-import { setAttrs, on } from "../util"
 import { getModel, posts } from "../state"
-import { trigger } from "../hooks"
 import lang from "../lang"
-import { deferInit } from "../defer"
-import { scrollToElement } from "../scroll"
 
 // Expand all image thumbnails automatically
 export let expandAll = false
@@ -97,7 +94,7 @@ export default class ImageHandler extends View<Post> {
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
 		if (img.tallerThanViewport && scroll) {
-			scrollToElement(this.el)
+			this.el.scrollIntoView()
 		}
 
 		img.expanded = img.tallerThanViewport = img.revealed = false
@@ -115,7 +112,7 @@ export default class ImageHandler extends View<Post> {
 				cls += "fit-to-width"
 				img.tallerThanViewport = img.dims[1] > window.innerHeight
 				if (img.tallerThanViewport && !noScroll) {
-					scrollToElement(this.el)
+					this.el.scrollIntoView()
 				}
 				break
 			case "screen":
@@ -245,18 +242,15 @@ function shouldAutoExpand(model: Post): boolean {
 	}
 }
 
-deferInit(() => {
-	on(threads, "click", handleImageClick, {
-		selector: "img, video",
-	})
-
-	on(threads, "click", toggleHiddenThumbnail, {
-		passive: true,
-		selector: ".image-toggle",
-	})
-
-	on(threads, "click", toggleExpandAll, {
-		passive: true,
-		selector: "#expand-images a",
-	})
+const threads = document.getElementById("threads")
+on(threads, "click", handleImageClick, {
+	selector: "img, video",
+})
+on(threads, "click", toggleHiddenThumbnail, {
+	passive: true,
+	selector: ".image-toggle",
+})
+on(threads, "click", toggleExpandAll, {
+	passive: true,
+	selector: "#expand-images a",
 })

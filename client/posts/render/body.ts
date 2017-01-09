@@ -1,6 +1,6 @@
 import { config, boards } from '../../state'
 import { renderPostLink } from './etc'
-import { PostData, PostLinks, TextState } from '../models'
+import { PostData, PostLinks, TextState } from '../../common'
 import { escape } from '../../util'
 import { parseEmbeds } from "../embed"
 

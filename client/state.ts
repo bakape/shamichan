@@ -1,11 +1,8 @@
 // Stores the state of the web application
 
-import { emitChanges, ChangeEmitter } from './model'
-import { Post } from './posts/models'
-import PostCollection from './posts/collection'
-import { getClosestID } from './util'
+import { Post, PostCollection } from './posts'
+import { getClosestID, write, emitChanges, ChangeEmitter } from './util'
 import { readIDs, storeID } from './db'
-import { write } from './render'
 import { send } from './connection'
 
 // Server-wide global configurations
@@ -15,6 +12,7 @@ interface Configs {
 	defaultLang: string
 	defaultCSS: string
 	captchaPublicKey: string
+	imageRootOverride: string
 	links: { [key: string]: string }
 }
 

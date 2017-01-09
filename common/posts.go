@@ -1,4 +1,4 @@
-//go:generate ffjson --nodecoder --force-regenerate $GOFILE
+//go:generate ffjson --nodecoder $GOFILE
 
 // Package common contains common shared types, variables and constants used
 // throughout the project
@@ -71,6 +71,7 @@ type Thread struct {
 // reply.
 type Post struct {
 	Editing   bool      `json:"editing,omitempty"`
+	Banned    bool      `json:"banned,omitempty"`
 	ID        uint64    `json:"id"`
 	Time      int64     `json:"time"`
 	Body      string    `json:"body"`

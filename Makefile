@@ -1,8 +1,5 @@
-# Path to gulp executable for building the client
-GULP=./node_modules/.bin/gulp
-
-# Version for tagging the releases
-VERSION=$(shell git describe --abbrev=0 --tags)
+uglifyjs=node_modules/.bin/uglifyjs
+gulp=node_modules/.bin/gulp
 
 # Differentiate between Unix and mingw builds
 ifeq ($(OS), Windows_NT)
@@ -22,31 +19,32 @@ endif
 
 .PHONY: server client imager
 
-# Build everything
 all: server client
 
-# Install NPM deps and build client
-client:
-	npm install
-	$(GULP)
+client: client_vendor
+	$(gulp)
 
-# Incrementaly rebuild the client for faster develepment builds. Only builds
-# the ES6 version for modern browsers.
+client_deps:
+	npm install --progress false --depth 0
+
 watch:
-	$(GULP) -w
+	$(gulp) -w
 
-# Build server
+client_vendor: client_deps
+	mkdir -p www/js/vendor
+	cp node_modules/dom4/build/dom4.js node_modules/core-js/client/core.min.js node_modules/core-js/client/core.min.js.map node_modules/babel-polyfill/dist/polyfill.min.js node_modules/proxy-polyfill/proxy.min.js www/js/vendor
+	 $(uglifyjs) node_modules/whatwg-fetch/fetch.js -o www/js/vendor/fetch.js
+	 $(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
+
 server: server_deps imager
 	go build -v -o $(BINARY)
 ifeq ($(ISWINDOWS), true)
 	cp /mingw64/bin/*.dll ./
 endif
 
-# Build Rust imager deps
 imager:
 	$(MAKE) -C imager/lib
 
-# Fecth all server dependancies. Dependacies are not updated automatically.
 server_deps: build_dirs
 	go list -f '{{.Deps}}' . \
 		| tr "[" " " \
@@ -55,7 +53,6 @@ server_deps: build_dirs
 		| grep -v 'github.com/bakape/meguca' \
 		| xargs go get -v
 
-# Fetch updates of both meguca and dependancies
 update_deps: build_dirs
 	go list -f '{{.Deps}}' . \
 		| tr "[" " " \
@@ -65,7 +62,6 @@ update_deps: build_dirs
 		| xargs go get -v -u
 	npm update
 
-# Creates the temporary directories for compiling
 build_dirs:
 ifeq ($(ISWINDOWS), true)
 	rm -rf $(BUILD_PATH)
@@ -73,23 +69,18 @@ endif
 	mkdir -p $(BUILD_PATH)
 	ln -sfn "$(shell pwd)" $(BUILD_PATH)/meguca
 
-# Removes compiled client files
 client_clean:
-	rm -rf www/js www/css/*.css www/css/maps www/lang
+	rm -rf www/js www/css/*.css www/css/maps www/lang node_modules
 
-# Removes any build and dependancy directories
 clean: client_clean
-	rm -rf .build .ffmpeg node_modules .package \
-		meguca-*.zip meguca-*.tar.xz meguca meguca.exe
+	rm -rf .build .ffmpeg .package meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 	$(MAKE) -C imager/lib clean
 ifeq ($(ISWINDOWS), true)
 	rm -rf /.meguca_build *.dll
 endif
 
-# Also removes runtime use dirs
 dist_clean: clean
 	rm -rf images error.log
 
-# Run all server tests
 test: server_deps
 	go test ./...

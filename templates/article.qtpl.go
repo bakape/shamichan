@@ -143,7 +143,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 		src = assets.SourcePath(img.FileType, img.SHA1)
 
 		//line article.qtpl:58
-		ISSrc := root + src
+		ISSrc := root + assets.RelativeSourcePath(img.FileType, img.SHA1)
 
 		//line article.qtpl:58
 		qw422016.N().S(`<figcaption class="spaced"><a class="image-toggle act" hidden></a><span class="spaced image-search-container"><a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url=`)
@@ -158,235 +158,253 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 		//line article.qtpl:68
 		qw422016.N().S(ISSrc)
 		//line article.qtpl:68
-		qw422016.N().S(`">Sn</a><a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/`)
+		qw422016.N().S(`">Sn</a><a class="image-search whatAnime" target="_blank" rel="nofollow" href="https://whatanime.ga/?url=`)
 		//line article.qtpl:71
+		qw422016.N().S(ISSrc)
+		//line article.qtpl:71
+		qw422016.N().S(`">WA</a><a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/`)
+		//line article.qtpl:74
 		qw422016.N().S(img.MD5)
-		//line article.qtpl:71
+		//line article.qtpl:74
 		qw422016.N().S(`">Ds</a><a class="image-search exhentai" target="_blank" rel="nofollow" href="http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=`)
-		//line article.qtpl:74
+		//line article.qtpl:77
 		qw422016.N().S(img.SHA1)
-		//line article.qtpl:74
+		//line article.qtpl:77
 		qw422016.N().S(`">Ex</a></span><span>(`)
-		//line article.qtpl:80
-		if img.Audio {
-			//line article.qtpl:80
-			qw422016.N().S(`♫,`)
-			//line article.qtpl:81
-			qw422016.N().S(` `)
-			//line article.qtpl:82
-		}
 		//line article.qtpl:83
-		if img.Length != 0 {
+		if img.Audio {
+			//line article.qtpl:83
+			qw422016.N().S(`♫,`)
 			//line article.qtpl:84
+			qw422016.N().S(` `)
+			//line article.qtpl:85
+		}
+		//line article.qtpl:86
+		if img.Length != 0 {
+			//line article.qtpl:87
 			l := img.Length
 
-			//line article.qtpl:85
+			//line article.qtpl:88
 			if l < 60 {
-				//line article.qtpl:86
+				//line article.qtpl:89
 				qw422016.N().S(fmt.Sprintf("0:%02d", l))
-				//line article.qtpl:87
+				//line article.qtpl:90
 			} else {
-				//line article.qtpl:88
+				//line article.qtpl:91
 				min := l / 6
 
-				//line article.qtpl:89
+				//line article.qtpl:92
 				qw422016.N().S(fmt.Sprintf("%02d:%02d", min, l-min))
-				//line article.qtpl:90
+				//line article.qtpl:93
 			}
-			//line article.qtpl:90
-			qw422016.N().S(`,`)
-			//line article.qtpl:91
-			qw422016.N().S(` `)
-			//line article.qtpl:92
-		}
-		//line article.qtpl:93
-		if img.APNG {
 			//line article.qtpl:93
-			qw422016.N().S(`APNG,`)
+			qw422016.N().S(`,`)
 			//line article.qtpl:94
 			qw422016.N().S(` `)
 			//line article.qtpl:95
 		}
 		//line article.qtpl:96
+		if img.APNG {
+			//line article.qtpl:96
+			qw422016.N().S(`APNG,`)
+			//line article.qtpl:97
+			qw422016.N().S(` `)
+			//line article.qtpl:98
+		}
+		//line article.qtpl:99
 		qw422016.N().S(readableFileSize(img.Size))
-		//line article.qtpl:96
+		//line article.qtpl:99
 		qw422016.N().S(`,`)
-		//line article.qtpl:96
+		//line article.qtpl:99
 		qw422016.N().S(` `)
-		//line article.qtpl:97
+		//line article.qtpl:100
 		qw422016.N().S(strconv.FormatUint(uint64(img.Dims[0]), 10))
-		//line article.qtpl:97
+		//line article.qtpl:100
 		qw422016.N().S(`x`)
-		//line article.qtpl:99
-		qw422016.N().S(strconv.FormatUint(uint64(img.Dims[1]), 10))
-		//line article.qtpl:99
-		qw422016.N().S(`)</span>`)
 		//line article.qtpl:102
+		qw422016.N().S(strconv.FormatUint(uint64(img.Dims[1]), 10))
+		//line article.qtpl:102
+		qw422016.N().S(`)</span>`)
+		//line article.qtpl:105
 		name := imageName(img.FileType, img.Name)
 
-		//line article.qtpl:102
+		//line article.qtpl:105
 		qw422016.N().S(`<a href="`)
-		//line article.qtpl:103
+		//line article.qtpl:106
 		qw422016.N().S(src)
-		//line article.qtpl:103
+		//line article.qtpl:106
 		qw422016.N().S(`" download="`)
-		//line article.qtpl:103
+		//line article.qtpl:106
 		qw422016.N().S(name)
-		//line article.qtpl:103
+		//line article.qtpl:106
 		qw422016.N().S(`">`)
-		//line article.qtpl:104
-		qw422016.N().S(name)
-		//line article.qtpl:104
-		qw422016.N().S(`</a></figcaption>`)
 		//line article.qtpl:107
-	}
-	//line article.qtpl:107
-	qw422016.N().S(`<div class="post-container">`)
-	//line article.qtpl:109
-	if p.Image != nil {
+		qw422016.N().S(name)
+		//line article.qtpl:107
+		qw422016.N().S(`</a></figcaption>`)
 		//line article.qtpl:110
+	}
+	//line article.qtpl:110
+	qw422016.N().S(`<div class="post-container">`)
+	//line article.qtpl:112
+	if p.Image != nil {
+		//line article.qtpl:113
 		img := *p.Image
 
-		//line article.qtpl:110
-		qw422016.N().S(`<figure><a target="_blank" href="`)
-		//line article.qtpl:112
-		qw422016.N().S(src)
-		//line article.qtpl:112
-		qw422016.N().S(`">`)
 		//line article.qtpl:113
+		qw422016.N().S(`<figure><a target="_blank" href="`)
+		//line article.qtpl:115
+		qw422016.N().S(src)
+		//line article.qtpl:115
+		qw422016.N().S(`">`)
+		//line article.qtpl:116
 		if img.Spoiler {
-			//line article.qtpl:113
-			qw422016.N().S(`<!-- TODO: board-specific server-side spoiler rendering --><img src="/assets/spoil/default.jpg" width="125" height="125">`)
 			//line article.qtpl:116
+			qw422016.N().S(`<!-- TODO: board-specific server-side spoiler rendering --><img src="/assets/spoil/default.jpg" width="125" height="125">`)
+			//line article.qtpl:119
 		} else {
-			//line article.qtpl:117
+			//line article.qtpl:120
 			w, h := correctDims(subject != "", img.Dims[2], img.Dims[3])
 
-			//line article.qtpl:117
+			//line article.qtpl:120
 			qw422016.N().S(`<img src="`)
-			//line article.qtpl:118
-			qw422016.N().S(assets.ThumbPath(img.FileType, img.ThumbType, img.SHA1))
-			//line article.qtpl:118
+			//line article.qtpl:121
+			qw422016.N().S(assets.ThumbPath(img.ThumbType, img.SHA1))
+			//line article.qtpl:121
 			qw422016.N().S(`" width="`)
-			//line article.qtpl:118
+			//line article.qtpl:121
 			qw422016.N().S(w)
-			//line article.qtpl:118
+			//line article.qtpl:121
 			qw422016.N().S(`" height="`)
-			//line article.qtpl:118
+			//line article.qtpl:121
 			qw422016.N().S(h)
-			//line article.qtpl:118
+			//line article.qtpl:121
 			qw422016.N().S(`">`)
-			//line article.qtpl:119
+			//line article.qtpl:122
 		}
-		//line article.qtpl:119
-		qw422016.N().S(`</a></figure>`)
 		//line article.qtpl:122
+		qw422016.N().S(`</a></figure>`)
+		//line article.qtpl:125
 	}
-	//line article.qtpl:122
+	//line article.qtpl:125
 	qw422016.N().S(`<blockquote>`)
-	//line article.qtpl:124
-	streambody(qw422016, p, op)
-	//line article.qtpl:124
-	qw422016.N().S(`</blockquote></div>`)
 	//line article.qtpl:127
-	if omit != 0 {
-		//line article.qtpl:127
-		qw422016.N().S(`<span class="omit" data-omit="`)
-		//line article.qtpl:128
-		qw422016.N().D(omit)
-		//line article.qtpl:128
-		qw422016.N().S(`" data-image-omit="`)
-		//line article.qtpl:128
-		qw422016.N().D(imageOmit)
-		//line article.qtpl:128
-		qw422016.N().S(`">`)
+	streambody(qw422016, p, op)
+	//line article.qtpl:127
+	qw422016.N().S(`</blockquote>`)
+	//line article.qtpl:129
+	if p.Banned {
 		//line article.qtpl:129
-		qw422016.N().D(omit)
-		//line article.qtpl:129
-		qw422016.N().S(` `)
-		//line article.qtpl:129
-		qw422016.N().S(`post`)
-		//line article.qtpl:129
-		if omit > 1 {
-			//line article.qtpl:129
-			qw422016.N().S(`s`)
-			//line article.qtpl:129
-		}
-		//line article.qtpl:130
-		qw422016.N().S(` `)
-		//line article.qtpl:130
-		qw422016.N().S(`and`)
-		//line article.qtpl:130
-		qw422016.N().S(` `)
-		//line article.qtpl:130
-		qw422016.N().D(imageOmit)
+		qw422016.N().S(`<b class="admin banned">`)
 		//line article.qtpl:131
-		qw422016.N().S(` `)
+		qw422016.N().S(lang.Packs["en_GB"].Common.Posts["banned"])
 		//line article.qtpl:131
-		qw422016.N().S(`image`)
-		//line article.qtpl:131
-		if imageOmit > 1 {
-			//line article.qtpl:131
-			qw422016.N().S(`s`)
-			//line article.qtpl:131
-		}
-		//line article.qtpl:131
-		qw422016.N().S(`omitted`)
-		//line article.qtpl:132
-		qw422016.N().S(` `)
-		//line article.qtpl:132
-		qw422016.N().S(`<span class="act"><a href="`)
-		//line article.qtpl:134
-		qw422016.N().S(strconv.FormatUint(op, 10))
-		//line article.qtpl:134
-		qw422016.N().S(`" class="history">See All</a></span></span>`)
-		//line article.qtpl:139
+		qw422016.N().S(`</b>`)
+		//line article.qtpl:133
 	}
-	//line article.qtpl:140
-	if p.Backlinks != nil {
-		//line article.qtpl:140
-		qw422016.N().S(`<span class="backlinks spaced">`)
-		//line article.qtpl:142
-		for id, link := range p.Backlinks {
-			//line article.qtpl:142
-			qw422016.N().S(`<em>`)
-			//line article.qtpl:144
-			streampostLink(qw422016, id, link.OP, link.Board, link.OP != op)
-			//line article.qtpl:144
-			qw422016.N().S(`</em>`)
-			//line article.qtpl:146
+	//line article.qtpl:133
+	qw422016.N().S(`</div>`)
+	//line article.qtpl:135
+	if omit != 0 {
+		//line article.qtpl:135
+		qw422016.N().S(`<span class="omit" data-omit="`)
+		//line article.qtpl:136
+		qw422016.N().D(omit)
+		//line article.qtpl:136
+		qw422016.N().S(`" data-image-omit="`)
+		//line article.qtpl:136
+		qw422016.N().D(imageOmit)
+		//line article.qtpl:136
+		qw422016.N().S(`">`)
+		//line article.qtpl:137
+		qw422016.N().D(omit)
+		//line article.qtpl:137
+		qw422016.N().S(` `)
+		//line article.qtpl:137
+		qw422016.N().S(`post`)
+		//line article.qtpl:137
+		if omit > 1 {
+			//line article.qtpl:137
+			qw422016.N().S(`s`)
+			//line article.qtpl:137
 		}
-		//line article.qtpl:146
-		qw422016.N().S(`</span>`)
-		//line article.qtpl:148
+		//line article.qtpl:138
+		qw422016.N().S(` `)
+		//line article.qtpl:138
+		qw422016.N().S(`and`)
+		//line article.qtpl:138
+		qw422016.N().S(` `)
+		//line article.qtpl:138
+		qw422016.N().D(imageOmit)
+		//line article.qtpl:139
+		qw422016.N().S(` `)
+		//line article.qtpl:139
+		qw422016.N().S(`image`)
+		//line article.qtpl:139
+		if imageOmit > 1 {
+			//line article.qtpl:139
+			qw422016.N().S(`s`)
+			//line article.qtpl:139
+		}
+		//line article.qtpl:140
+		qw422016.N().S(` `)
+		//line article.qtpl:140
+		qw422016.N().S(`omitted`)
+		//line article.qtpl:140
+		qw422016.N().S(` `)
+		//line article.qtpl:140
+		qw422016.N().S(`<span class="act"><a href="`)
+		//line article.qtpl:142
+		qw422016.N().S(strconv.FormatUint(op, 10))
+		//line article.qtpl:142
+		qw422016.N().S(`" class="history">See All</a></span></span>`)
+		//line article.qtpl:147
 	}
 	//line article.qtpl:148
+	if p.Backlinks != nil {
+		//line article.qtpl:148
+		qw422016.N().S(`<span class="backlinks spaced">`)
+		//line article.qtpl:150
+		for id, link := range p.Backlinks {
+			//line article.qtpl:150
+			qw422016.N().S(`<em>`)
+			//line article.qtpl:152
+			streampostLink(qw422016, id, link.OP, link.Board, link.OP != op)
+			//line article.qtpl:152
+			qw422016.N().S(`</em>`)
+			//line article.qtpl:154
+		}
+		//line article.qtpl:154
+		qw422016.N().S(`</span>`)
+		//line article.qtpl:156
+	}
+	//line article.qtpl:156
 	qw422016.N().S(`</article>`)
-//line article.qtpl:150
+//line article.qtpl:158
 }
 
-//line article.qtpl:150
+//line article.qtpl:158
 func writerenderArticle(qq422016 qtio422016.Writer, p common.Post, op uint64, omit, imageOmit int, subject, root string) {
-	//line article.qtpl:150
+	//line article.qtpl:158
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line article.qtpl:150
+	//line article.qtpl:158
 	streamrenderArticle(qw422016, p, op, omit, imageOmit, subject, root)
-	//line article.qtpl:150
+	//line article.qtpl:158
 	qt422016.ReleaseWriter(qw422016)
-//line article.qtpl:150
+//line article.qtpl:158
 }
 
-//line article.qtpl:150
+//line article.qtpl:158
 func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string) string {
-	//line article.qtpl:150
+	//line article.qtpl:158
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line article.qtpl:150
+	//line article.qtpl:158
 	writerenderArticle(qb422016, p, op, omit, imageOmit, subject, root)
-	//line article.qtpl:150
+	//line article.qtpl:158
 	qs422016 := string(qb422016.B)
-	//line article.qtpl:150
+	//line article.qtpl:158
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line article.qtpl:150
+	//line article.qtpl:158
 	return qs422016
-//line article.qtpl:150
+//line article.qtpl:158
 }

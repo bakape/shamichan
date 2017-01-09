@@ -28,12 +28,12 @@ const (
 
 // Spec of an option passed into the rendering function
 type inputSpec struct {
-	Type                                        inputType
-	Required, Placeholder, NoID, NoAutoComplete bool
-	Min, Max, MaxLength, Rows                   int
-	ID, Pattern                                 string
-	Options                                     []string
-	Val                                         interface{}
+	Type                        inputType
+	Required, Placeholder, NoID bool
+	Min, Max, MaxLength, Rows   int
+	ID, Pattern, Autocomplete   string
+	Options                     []string
+	Val                         interface{}
 }
 
 // For constructing various HTML input forms
@@ -110,8 +110,8 @@ func (w *formWriter) input(spec inputSpec) {
 		if spec.MaxLength != 0 {
 			w.attr("maxlength", strconv.Itoa(spec.MaxLength))
 		}
-		if spec.NoAutoComplete {
-			w.attr("autocomplete", "off")
+		if spec.Autocomplete != "" {
+			w.attr("autocomplete", spec.Autocomplete)
 		}
 	case _image:
 		w.typ("file")

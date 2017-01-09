@@ -2,7 +2,7 @@
 
 import { page, mine } from '../../state'
 import lang from '../../lang'
-import { PostLinks } from '../models'
+import { PostLinks } from '../../common'
 
 // Render a link to other posts
 export function renderPostLink(num: number, board: string, op: number): string {

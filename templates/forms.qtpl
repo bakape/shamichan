@@ -32,8 +32,7 @@ BoardNavigation renders a board selection and search form
 	<input type="text" class="full-width" name="search" placeholder="{%s= lang["search"] %}">
 	<br>
 	<form>
-		<input type="submit" value="{%s= lang["apply"] %}">
-		<input type="button" name="cancel" value="{%s= lang["cancel"] %}">
+		{%= submit(true, lang) %}
 		<br>
 		{% for _, b := range config.GetBoardTitles() %}
 			<label>
@@ -55,10 +54,8 @@ CreateBoard renders a the form for creating new boards
 
 CaptchaConfirmation renders a confirmation form with an optional captcha
 {% func CaptchaConfirmation(ln lang.Pack) %}{% stripspace %}
-	<input type="submit" value="{%s= ln.UI["submit"] %}">
 	{%= captcha("confirmation", ln.UI) %}
-	<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
-	<div class="form-response admin"></div>
+	{%= submit(true, ln.UI) %}
 {% endstripspace %}{% endfunc %}
 
 {% func captcha(id string, lang map[string]string) %}{% stripspace %}
@@ -66,33 +63,24 @@ CaptchaConfirmation renders a confirmation form with an optional captcha
 	{% if !conf.Captcha %}
 		{% return %}
 	{% endif %}
-	<div class="captcha-container" id="captcha-{%s= id %}">
-		<div id="adcopy-outer-{%s= id %}">
-			<div id="adcopy-puzzle-image-{%s= id %}" class="captcha-image" title="{%s= lang["reloadCaptcha"] %}"></div>
-			<div id="adcopy-puzzle-audio-{%s= id %}" class="hidden"></div>
-			<div id="adcopy-pixel-image-{%s= id %}" class="hidden"></div>
+	<div class="captcha-container">
+		<div class="g-recaptcha" data-sitekey="{%s= conf.CaptchaPublicKey %}"></div>
+		<noscript>
 			<div>
-				<span id="adcopy-instr-{%s= id %}" class="hidden"></span>
+				<div class="g-recaptcha-container">
+					<div>
+						<iframe src="https://www.google.com/recaptcha/api/fallback?k={%s= conf.CaptchaPublicKey %}" frameborder="0" scrolling="no"></iframe>
+					</div>
+				</div>
+				<div class="g-recaptcha-response-container">
+					<textarea name="g-recaptcha-response" class="g-recaptcha-response"></textarea>
+				</div>
 			</div>
-			<input id="adcopy_response-{%s= id %}" name="adcopy_response" class="full-width" type="text" placeholder="{%s= lang["focusForCaptcha"] %}" required>
-			<input type="hidden" name="adcopy_challenge" id="adcopy_challenge-{%s= id %}" hidden>
-			<a id="adcopy-link-refresh-{%s= id %}" class="hidden"></a>
-			<a id="adcopy-link-audio-{%s= id %}" class="hidden"></a>
-			<a id="adcopy-link-image-{%s= id %}" class="hidden"></a>
-			<a id="adcopy-link-info-{%s= id %}" class="hidden"></a>
-			<!-- Temporary, till better noscript support >
-				<noscript>
-					<iframe src="https://api-secure.solvemedia.com/papi/challenge.noscript?k={%s= conf.CaptchaPublicKey %}"
-			height="260" width="350" frameborder="0"></iframe>
-					<br>
-					<input name="adcopy_challenge" type="text" required>
-				</noscript>
-			<-->
-		</div>
+		</noscript>
 	</div>
 {% endstripspace %}{% endfunc %}
 
-Form for inputing key-value map-like data
+Form for inputting key-value map-like data
 {% func keyValueForm(k, v string) %}{% stripspace %}
 	<span>
 		<input type="text" class="map-field" value="{%s k %}">
@@ -104,15 +92,13 @@ Form for inputing key-value map-like data
 	</span>
 {% endstripspace %}{% endfunc %}
 
-Form fommatted as a table, with cancel and submit buttons
+Form formatted as a table, with cancel and submit buttons
 {% func tableForm(specs []inputSpec, needCaptcha bool, ln lang.Pack) %}{% stripspace %}
 	{%= table(specs, ln) %}
 	{% if needCaptcha %}
 		{%= captcha("ajax", ln.UI) %}
 	{% endif %}
-	<input type="submit" value="{%s= ln.UI["submit"] %}">
-	<input type="button" name="cancel" value="{%s= ln.UI["cancel"] %}">
-	<div class="form-response admin"></div>
+	{%= submit(true, ln.UI) %}
 {% endstripspace %}{% endfunc %}
 
 Render a map form for inputting map-like data
@@ -126,4 +112,13 @@ Render a map form for inputting map-like data
 		</a>
 		<br>
 	</div>
+{% endstripspace %}{% endfunc %}
+
+Render submit and cancel buttons
+{% func submit(cancel bool, ln map[string]string) %}{% stripspace %}
+	<input type="submit" value="{%s= ln["submit"] %}">
+	{% if cancel %}
+		<input type="button" name="cancel" value="{%s= ln["cancel"] %}">
+	{% endif %}
+	<div class="form-response admin"></div>
 {% endstripspace %}{% endfunc %}

@@ -128,6 +128,10 @@
 			"Розгортання зображень",
 			"Зображення розгротається при наведенні мишки на нього."
 		],
+		"imageRootOverride": [
+			"Image root override",
+			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
+		],
 		"import": [
 			"Імпорт",
 			"Імпортувати настройки з файлу"
@@ -292,6 +296,10 @@
 			"",
 			"Власна картинка на фон сторінки"
 		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
+		],
 		"webmHover": [
 			"Розгортання webm",
 			"WebMки розгротаються при наведенні мишки"
@@ -315,6 +323,7 @@
 		"account": "Аккаунт і менеджмент борди",
 		"add": "Додати",
 		"apply": "Прийняти",
+		"ban": "Ban",
 		"bottom": "Дно",
 		"cancel": "Скасувати",
 		"catalog": "Каталог",
@@ -339,6 +348,7 @@
 		"reloadCaptcha": "Натисніть для перезавантаження",
 		"reply": "Відповісти",
 		"report": "Зарепортити",
+		"reason": "Reason",
 		"rescan": "Пересканувати",
 		"return": "Повернутися",
 		"rules": "Правила",
@@ -366,5 +376,12 @@
 		"Пошук зображень",
 		"Fun",
 		"Шорткати"
-	]
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
 }

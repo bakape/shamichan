@@ -1,10 +1,6 @@
 package db
 
-import (
-	"testing"
-
-	. "github.com/bakape/meguca/test"
-)
+import "testing"
 
 func TestRegisterAccount(t *testing.T) {
 	assertTableClear(t, "accounts")
@@ -38,7 +34,7 @@ func TestRegisterAccount(t *testing.T) {
 // 		err      error
 // 	}{
 // 		{"exists", id, nil},
-// 		{"does not exist", "456", r.ErrEmptyResult},
+// 		{"does not exist", "456", gorethink.ErrEmptyResult},
 // 	}
 
 // 	for i := range samples {

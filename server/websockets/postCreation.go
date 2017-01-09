@@ -52,8 +52,8 @@ type ImageRequest struct {
 }
 
 // Insert a new thread into the database
-func insertThread(data []byte, c *Client) (err error) {
-	if err := closePreviousPost(c); err != nil {
+func (c *Client) insertThread(data []byte) (err error) {
+	if err := c.closePreviousPost(); err != nil {
 		return err
 	}
 	var req ThreadCreationRequest
@@ -65,7 +65,7 @@ func insertThread(data []byte, c *Client) (err error) {
 	switch err {
 	case nil:
 	case errInValidCaptcha:
-		return c.sendMessage(MessagePostID, -1)
+		return c.sendMessage(common.MessagePostID, -1)
 	default:
 		return err
 	}
@@ -78,7 +78,7 @@ func insertThread(data []byte, c *Client) (err error) {
 		hasImage: hasImage,
 	}
 
-	return c.sendMessage(MessagePostID, id)
+	return c.sendMessage(common.MessagePostID, id)
 }
 
 // ConstructThread creates a new tread and writes it to the database. Returns
@@ -86,11 +86,14 @@ func insertThread(data []byte, c *Client) (err error) {
 func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	id uint64, timeStamp int64, hasImage bool, err error,
 ) {
-	if !auth.IsNonMetaBoard(req.Board) {
+	switch {
+	case !auth.IsNonMetaBoard(req.Board):
 		err = errInvalidBoard
 		return
-	}
-	if !auth.AuthenticateCaptcha(req.Captcha, ip) {
+	case auth.IsBanned(req.Board, ip):
+		err = errBanned
+		return
+	case !auth.AuthenticateCaptcha(req.Captcha, ip):
 		err = errInValidCaptcha
 		return
 	}
@@ -147,8 +150,8 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 }
 
 // Insert a new post into the database
-func insertPost(data []byte, c *Client) error {
-	if err := closePreviousPost(c); err != nil {
+func (c *Client) insertPost(data []byte) error {
+	if err := c.closePreviousPost(); err != nil {
 		return err
 	}
 
@@ -158,6 +161,9 @@ func insertPost(data []byte, c *Client) error {
 	}
 
 	_, sync := Clients.GetSync(c)
+	if auth.IsBanned(sync.Board, c.ip) {
+		return errBanned
+	}
 	conf, err := getBoardConfig(sync.Board)
 	if err != nil {
 		return err
@@ -210,7 +216,7 @@ func insertPost(data []byte, c *Client) error {
 
 	// Ensure the client knows the post ID before the public post insertion
 	// update message is sent
-	if err := c.sendMessage(MessagePostID, post.ID); err != nil {
+	if err := c.sendMessage(common.MessagePostID, post.ID); err != nil {
 		return err
 	}
 
@@ -244,9 +250,9 @@ func lastLine(s string) string {
 }
 
 // If the client has a previous post, close it silently
-func closePreviousPost(c *Client) error {
+func (c *Client) closePreviousPost() error {
 	if c.openPost.id != 0 {
-		return closePost(nil, c)
+		return c.closePost()
 	}
 	return nil
 }
@@ -351,10 +357,13 @@ func getImage(token, name string, spoiler bool) (img *common.Image, err error) {
 		return nil, err
 	}
 
-	// Trim on the first dot in the file name. Not using filepath.Ext(), because
-	// it does not handle compound extensions like ".tar.gz"
-	if i := strings.IndexByte(name, '.'); i != -1 {
+	// Trim on the last dot in the file name, but also strip for .tar.gz and
+	// .tar.xz as special cases.
+	if i := strings.LastIndexByte(name, '.'); i != -1 {
 		name = name[:i]
+	}
+	if strings.HasSuffix(name, ".tar") {
+		name = name[:len(name)-4]
 	}
 
 	return &common.Image{

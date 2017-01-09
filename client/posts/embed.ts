@@ -1,8 +1,4 @@
-import { makeAttrs, makeFrag, escape } from "../util"
-import { threads, write } from "../render"
-import { on } from "../util"
-import { fetchJSON } from "../fetch"
-import { deferInit } from "../defer"
+import { makeAttrs, makeFrag, escape, on, fetchJSON, write } from "../util"
 
 type OEmbedDoc = {
 	title: string
@@ -130,14 +126,12 @@ async function toggleExpansion(e: MouseEvent) {
 	})
 }
 
-deferInit(() => {
-	on(threads, "mouseover", fetchMeta, {
-		passive: true,
-		selector: ".embed",
-	})
-
-	on(threads, "click", toggleExpansion, {
-		selector: ".embed",
-	})
+const threads = document.getElementById("threads")
+on(threads, "mouseover", fetchMeta, {
+	passive: true,
+	selector: ".embed",
+})
+on(threads, "click", toggleExpansion, {
+	selector: ".embed",
 })
 

@@ -1,9 +1,9 @@
 // Hide posts you don't like
 
 import { storeHidden, hidden } from "../state"
-import { Post } from "./models"
-import { panel } from "../options/view"
+import { Post } from "./model"
 import { clearStore } from "../db"
+import { trigger } from "../util"
 
 // TODO: Thread hiding
 
@@ -11,12 +11,12 @@ import { clearStore } from "../db"
 export function hidePost(model: Post) {
 	model.remove()
 	storeHidden(model.id)
-	panel.renderHidden(hidden.size)
+	trigger("renderHiddenCount", hidden.size)
 }
 
 // Clear all hidden posts
 export function clearHidden() {
 	hidden.clear()
-	panel.renderHidden(0)
+	trigger("renderHiddenCount", 0)
 	clearStore("hidden")
 }

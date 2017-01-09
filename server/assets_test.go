@@ -16,7 +16,6 @@ func TestAssetServer(t *testing.T) {
 	// Requesting a directory
 	rec, req = newPair("/assets/js")
 	router.ServeHTTP(rec, req)
-	assertCode(t, rec, 400)
 }
 
 func TestServeWorker(t *testing.T) {

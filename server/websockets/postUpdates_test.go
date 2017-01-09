@@ -46,12 +46,7 @@ you gotta be 18 to use 4chan). But whatever, I digress. It's just fucking
 annoying that I'm never taken serious on this site, goddamn.`
 
 var (
-	dummyLog = [][]byte{
-		{102, 111, 111},
-		{98, 97, 114},
-	}
-
-	strDummyLog = []string{
+	dummyLog = []string{
 		"foo",
 		"bar",
 	}
@@ -117,7 +112,7 @@ func TestWriteBacklinks(t *testing.T) {
 				LogUnexpected(t, std, link)
 			}
 
-			msg, err := EncodeMessage(MessageBacklink, linkMessage{
+			msg, err := common.EncodeMessage(common.MessageBacklink, linkMessage{
 				ID: id,
 				Links: common.LinkMap{
 					10: {
@@ -142,23 +137,6 @@ func TestWriteBacklinks(t *testing.T) {
 	}
 }
 
-func TestNoOpenPost(t *testing.T) {
-	t.Parallel()
-
-	sv := newWSServer(t)
-	defer sv.Close()
-
-	fns := [...]func([]byte, *Client) error{
-		appendRune, backspace, closePost, spliceText, insertImage,
-	}
-	for _, fn := range fns {
-		cl, _ := sv.NewClient()
-		if err := fn(nil, cl); err != errNoPostOpen {
-			t.Errorf("unexpected error by %s: %s", funcName(fn), err)
-		}
-	}
-}
-
 func funcName(fn interface{}) string {
 	return runtime.FuncForPC(reflect.ValueOf(fn).Pointer()).Name()
 }
@@ -166,18 +144,14 @@ func funcName(fn interface{}) string {
 func TestLineEmpty(t *testing.T) {
 	t.Parallel()
 
-	fns := [...]func([]byte, *Client) error{backspace}
-
 	sv := newWSServer(t)
 	defer sv.Close()
 
-	for _, fn := range fns {
-		cl, _ := sv.NewClient()
-		cl.openPost.id = 1
-		cl.openPost.time = time.Now().Unix()
-		if err := fn(nil, cl); err != errLineEmpty {
-			t.Errorf("unexpected error by %s: %s", funcName(fn), err)
-		}
+	cl, _ := sv.NewClient()
+	cl.openPost.id = 1
+	cl.openPost.time = time.Now().Unix()
+	if err := cl.backspace(); err != errLineEmpty {
+		t.Errorf("unexpected error by %s: %s", "Client.backspace", err)
 	}
 }
 
@@ -193,7 +167,7 @@ func TestAppendBodyTooLong(t *testing.T) {
 		time:       time.Now().Unix(),
 		bodyLength: common.MaxLenBody,
 	}
-	if err := appendRune(nil, cl); err != common.ErrBodyTooLong {
+	if err := cl.appendRune(nil); err != common.ErrBodyTooLong {
 		UnexpectedError(t, err)
 	}
 }
@@ -213,13 +187,13 @@ func TestAppendRune(t *testing.T) {
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
 
-	if err := appendRune([]byte("100"), cl); err != nil {
+	if err := cl.appendRune([]byte("100")); err != nil {
 		t.Fatal(err)
 	}
 
 	assertOpenPost(t, cl, 4, "abcd")
 	assertBody(t, 2, "abcd")
-	assertRepLog(t, 2, append(strDummyLog, `03[2,100]`))
+	assertRepLog(t, 2, append(dummyLog, `03[2,100]`))
 }
 
 func assertOpenPost(t *testing.T, cl *Client, len int, buf string) {
@@ -243,17 +217,12 @@ func assertBody(t *testing.T, id uint64, body string) {
 }
 
 func assertRepLog(t *testing.T, id uint64, log []string) {
-	var res [][]byte
+	var res []string
 	q := db.FindPost(id).Field("log")
 	if err := db.All(q, &res); err != nil {
 		t.Fatal(err)
 	}
-
-	strRes := make([]string, len(res))
-	for i := range res {
-		strRes[i] = string(res[i])
-	}
-	AssertDeepEquals(t, strRes, log)
+	AssertDeepEquals(t, res, log)
 }
 
 func BenchmarkAppend(b *testing.B) {
@@ -273,7 +242,7 @@ func BenchmarkAppend(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		if err := appendRune([]byte("100"), cl); err != nil {
+		if err := cl.appendRune([]byte("100")); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -296,13 +265,13 @@ func TestAppendNewline(t *testing.T) {
 	}
 	setBoardConfigs(t, false)
 
-	if err := appendRune([]byte("10"), cl); err != nil {
+	if err := cl.appendRune([]byte("10")); err != nil {
 		t.Fatal(err)
 	}
 
 	assertOpenPost(t, cl, 4, "")
 	assertBody(t, 2, "abc\n")
-	assertRepLog(t, 2, append(strDummyLog, "03[2,10]"))
+	assertRepLog(t, 2, append(dummyLog, "03[2,10]"))
 }
 
 func TestAppendNewlineWithHashCommand(t *testing.T) {
@@ -337,7 +306,7 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 		Buffer:     *bytes.NewBuffer([]byte("#flip")),
 	}
 
-	if err := appendRune([]byte("10"), cl); err != nil {
+	if err := cl.appendRune([]byte("10")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -357,28 +326,28 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 	t.Run("last log message", func(t *testing.T) {
 		t.Parallel()
 
-		var log []byte
+		var log string
 		q := db.FindPost(2).Field("log").Nth(-1)
 		if err := db.One(q, &log); err != nil {
 			t.Fatal(err)
 		}
 		const std = "03[2,10]"
-		if s := string(log); s != std {
-			LogUnexpected(t, std, s)
+		if log != std {
+			LogUnexpected(t, std, log)
 		}
 	})
 
 	t.Run("second to last log message", func(t *testing.T) {
 		t.Parallel()
 
-		var log []byte
+		var log string
 		q := db.FindPost(2).Field("log").Nth(-2)
 		if err := db.One(q, &log); err != nil {
 			t.Fatal(err)
 		}
 		const patt = `09{"id":2,"type":1,"val":(?:true|false)}`
-		if !regexp.MustCompile(patt).Match(log) {
-			t.Fatalf("message does not match `%s`: `%s`", patt, string(log))
+		if !regexp.MustCompile(patt).MatchString(log) {
+			t.Fatalf("message does not match `%s`: `%s`", patt, log)
 		}
 	})
 }
@@ -395,7 +364,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 				Board: "a",
 				OP:    1,
 			},
-			Log: [][]byte{},
+			Log: []string{},
 		},
 		{
 			StandalonePost: common.StandalonePost{
@@ -405,7 +374,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 				OP:    21,
 				Board: "c",
 			},
-			Log: [][]byte{},
+			Log: []string{},
 		},
 	})
 
@@ -422,7 +391,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 	}
 	setBoardConfigs(t, false)
 
-	if err := appendRune([]byte("10"), cl); err != nil {
+	if err := cl.appendRune([]byte("10")); err != nil {
 		t.Fatal(err)
 	}
 
@@ -493,12 +462,12 @@ func TestBackspace(t *testing.T) {
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
 
-	if err := backspace([]byte{}, cl); err != nil {
+	if err := cl.backspace(); err != nil {
 		t.Fatal(err)
 	}
 
 	assertOpenPost(t, cl, 2, "ab")
-	assertRepLog(t, 2, append(strDummyLog, "042"))
+	assertRepLog(t, 2, append(dummyLog, "042"))
 	assertBody(t, 2, "ab")
 }
 
@@ -518,12 +487,12 @@ func TestClosePost(t *testing.T) {
 		Buffer:     *bytes.NewBuffer([]byte("abc")),
 	}
 
-	if err := closePost([]byte{}, cl); err != nil {
+	if err := cl.closePost(); err != nil {
 		t.Fatal(err)
 	}
 
 	AssertDeepEquals(t, cl.openPost, openPost{})
-	assertRepLog(t, 2, append(strDummyLog, "062"))
+	assertRepLog(t, 2, append(dummyLog, "062"))
 	assertBody(t, 2, "abc")
 	assertPostClosed(t, 2)
 }
@@ -579,7 +548,7 @@ func TestSpliceValidityChecks(t *testing.T) {
 				},
 				Text: []rune(c.text),
 			}
-			if err := spliceText(marshalJSON(t, req), cl); err != c.err {
+			if err := cl.spliceText(marshalJSON(t, req)); err != c.err {
 				UnexpectedError(t, err)
 			}
 		})
@@ -745,7 +714,7 @@ func TestSplice(t *testing.T) {
 					Board: "a",
 					OP:    1,
 				},
-				Log: [][]byte{},
+				Log: []string{},
 			})
 
 			cl, _ := sv.NewClient()
@@ -766,7 +735,7 @@ func TestSplice(t *testing.T) {
 				Text: []rune(c.text),
 			}
 
-			if err := spliceText(marshalJSON(t, req), cl); err != nil {
+			if err := cl.spliceText(marshalJSON(t, req)); err != nil {
 				t.Fatal(err)
 			}
 
@@ -795,7 +764,7 @@ func TestCloseOldOpenPost(t *testing.T) {
 			},
 			OP: 1,
 		},
-		Log: [][]byte{},
+		Log: []string{},
 	})
 
 	sv := newWSServer(t)
@@ -837,7 +806,7 @@ func TestInsertImageIntoPostWithImage(t *testing.T) {
 		time:     time.Now().Unix(),
 		hasImage: true,
 	}
-	if err := insertImage(nil, cl); err != errHasImage {
+	if err := cl.insertImage(nil); err != errHasImage {
 		UnexpectedError(t, err)
 	}
 }
@@ -858,7 +827,7 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 		Name:  "foo.jpeg",
 		Token: "123",
 	}
-	if err := insertImage(marshalJSON(t, req), cl); err != errTextOnly {
+	if err := cl.insertImage(marshalJSON(t, req)); err != errTextOnly {
 		UnexpectedError(t, err)
 	}
 }
@@ -879,7 +848,7 @@ func TestInsertImage(t *testing.T) {
 			Board: "a",
 			OP:    1,
 		},
-		Log: [][]byte{},
+		Log: []string{},
 	})
 	assertInsert(t, "images", stdJPEG)
 	_, token, err := db.NewImageToken(stdJPEG.SHA1)
@@ -901,7 +870,7 @@ func TestInsertImage(t *testing.T) {
 		Name:  "foo.jpeg",
 		Token: token,
 	}
-	if err := insertImage(marshalJSON(t, req), cl); err != nil {
+	if err := cl.insertImage(marshalJSON(t, req)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -909,7 +878,7 @@ func TestInsertImage(t *testing.T) {
 		Name:        "foo",
 		ImageCommon: stdJPEG,
 	}
-	msg, err := EncodeMessage(MessageInsertImage, imageMessage{
+	msg, err := common.EncodeMessage(common.MessageInsertImage, imageMessage{
 		ID:    2,
 		Image: std,
 	})

@@ -1,11 +1,11 @@
-import { Post } from './models'
-import { makeFrag } from '../util'
-import renderPost, { renderName, renderTime } from './render/posts'
-import { parseOpenLine, parseOpenBody, parseTerminatedLine } from './render/body'
-import { write, importTemplate } from '../render'
-import { renderBacklinks } from './render/etc'
+import { Post } from './model'
+import { makeFrag, write, importTemplate } from '../util'
+import {
+    renderPost, renderName, renderTime, renderBanned, parseOpenLine,
+    parseOpenBody, parseTerminatedLine, renderBacklinks
+} from './render'
 import ImageHandler from "./images"
-import { ViewAttrs } from "../view"
+import { ViewAttrs } from "../base"
 
 // Base post view class
 export default class PostView extends ImageHandler {
@@ -163,6 +163,12 @@ export default class PostView extends ImageHandler {
     // Render the <time> element in the header
     public renderTime() {
         renderTime(this.el.querySelector("time"), this.model.time, false)
+    }
+
+    // Render ban notice on post
+    public renderBanned() {
+        write(() =>
+            renderBanned(this.el))
     }
 
     // Add or remove highlight to post

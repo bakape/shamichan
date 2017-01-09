@@ -30,7 +30,7 @@ func (e wrappedError) Error() string {
 
 // Waterfall executes a slice of functions until the first error returned. This
 // error, if any, is returned to the caller.
-func Waterfall(fns []func() error) (err error) {
+func Waterfall(fns ...func() error) (err error) {
 	for _, fn := range fns {
 		err = fn()
 		if err != nil {
@@ -44,4 +44,17 @@ func Waterfall(fns []func() error) (err error) {
 func HashBuffer(buf []byte) string {
 	hash := md5.Sum(buf)
 	return base64.RawStdEncoding.EncodeToString(hash[:])
+}
+
+// ConcatStrings efficiently concatenates strings with only one extra allocation
+func ConcatStrings(s ...string) string {
+	l := 0
+	for _, s := range s {
+		l += len(s)
+	}
+	b := make([]byte, 0, l)
+	for _, s := range s {
+		b = append(b, s...)
+	}
+	return string(b)
 }

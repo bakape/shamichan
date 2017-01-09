@@ -98,7 +98,7 @@ func TestSpoilerImage(t *testing.T) {
 			assertCode(t, rec, c.code)
 
 			var spoilered bool
-			msg := []byte("11" + strconv.Itoa(int(c.id)))
+			msg := "11" + strconv.Itoa(int(c.id))
 			post := db.FindPost(c.id)
 			q := gorethink.And(
 				post.Field("log").Contains(msg),

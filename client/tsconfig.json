@@ -3,7 +3,8 @@
 	"compileOnSave": false,
 	"compilerOptions": {
 		"target": "ES6",
-		"module": "system",
+		"module": "amd",
+		"outFile": "../main.js",
 		"moduleResolution": "node",
 		"newLine": "LF",
 		"removeComments": true,

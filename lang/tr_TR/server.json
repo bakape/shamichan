@@ -128,6 +128,10 @@
 			"Üstündeyken genişlet(Resim)",
 			"Fare üstüne geldiğinde resimleri genişlet"
 		],
+		"imageRootOverride": [
+			"Image root override",
+			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
+		],
 		"import": [
 			"İçeri al",
 			"Ayarları dosyadan al"
@@ -292,6 +296,10 @@
 			"",
 			"Arkaplan için resim seç"
 		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
+		],
 		"webmHover": [
 			"Üstündeyken genişlet(WebM)",
 			"Fare üstüne geldiğinde WebMleri genişlet. Resim ayarı açık olmalıdır"
@@ -315,6 +323,7 @@
 		"account": "Account and board management",
 		"add": "Add",
 		"apply": "Apply",
+		"ban": "Ban",
 		"bottom": "Alt",
 		"cancel": "İptal",
 		"catalog": "Catalog",
@@ -339,6 +348,7 @@
 		"reloadCaptcha": "Click to reload",
 		"reply": "Cevapla",
 		"report": "İspiyonla",
+		"reason": "Reason",
 		"rescan": "Tara",
 		"return": "Geri Dön",
 		"rules": "Rules",
@@ -365,5 +375,12 @@
 		"ResimAra",
 		"Eğlence",
 		"Kısayollar"
-	]
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
 }

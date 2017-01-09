@@ -67,7 +67,7 @@ package db
 // 	assertTableClear(t, "posts")
 
 // 	tooOld := time.Now().Add(-time.Minute * 31).Unix()
-// 	log := [][]byte{[]byte{1, 2, 3}}
+// 	log := []string{"123"}
 // 	posts := []common.DatabasePost{
 // 		{
 // 			StandalonePost: common.StandalonePost{
@@ -122,7 +122,7 @@ package db
 // 	t.Run("log update", func(t *testing.T) {
 // 		t.Parallel()
 // 		var isAppended bool
-// 		q := FindPost(1).Field("log").Nth(-1).Eq([]byte("061"))
+// 		q := FindPost(1).Field("log").Nth(-1).Eq("061")
 // 		if err := One(q, &isAppended); err != nil {
 // 			t.Fatal(err)
 // 		}

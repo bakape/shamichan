@@ -28,8 +28,8 @@ func init() {
 	db.IsTest = true
 	lang.Dir = filepath.Join("..", "lang")
 
-	fns := []func() error{db.LoadDB, lang.Load, templates.Compile}
-	if err := util.Waterfall(fns); err != nil {
+	err := util.Waterfall(db.LoadDB, lang.Load, templates.Compile)
+	if err != nil {
 		panic(err)
 	}
 }

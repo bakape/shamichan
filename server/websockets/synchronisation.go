@@ -20,6 +20,7 @@ var (
 	errInvalidBoard   = errors.New("invalid board")
 	errInvalidThread  = errors.New("invalid thread")
 	errInvalidCounter = errors.New("invalid progress counter")
+	errBanned         = errors.New("you are banned from this board")
 )
 
 type syncRequest struct {
@@ -34,7 +35,7 @@ type reclaimRequest struct {
 
 // Synchronise the client to a certain thread, assign it's ID and prepare to
 // receive update messages.
-func synchronise(data []byte, c *Client) error {
+func (c *Client) synchronise(data []byte) error {
 	// Unsubscribe from previous update feed, if any
 	if c.feedID != 0 {
 		feeds.Remove <- subRequest{c.feedID, c}
@@ -42,29 +43,30 @@ func synchronise(data []byte, c *Client) error {
 	}
 
 	var msg syncRequest
-	if err := decodeMessage(data, &msg); err != nil {
+	err := decodeMessage(data, &msg)
+	switch {
+	case err != nil:
 		return err
-	}
-	if !auth.IsBoard(msg.Board) {
+	case !auth.IsBoard(msg.Board):
 		return errInvalidBoard
+	case auth.IsBanned(msg.Board, c.ip):
+		return errBanned
+	case msg.Thread == 0:
+		return c.syncToBoard(msg.Board)
+	default:
+		return c.syncToThread(msg.Board, msg.Thread)
 	}
-
-	if msg.Thread == 0 {
-		return syncToBoard(msg.Board, c)
-	}
-
-	return syncToThread(msg.Board, msg.Thread, c)
 }
 
 // Board pages do not have any live feeds (for now, at least). Just send the
 // client its ID.
-func syncToBoard(board string, c *Client) error {
-	registerSync(board, 0, c)
-	return c.sendMessage(MessageSynchronise, map[string]string{})
+func (c *Client) syncToBoard(board string) error {
+	c.registerSync(board, 0)
+	return c.sendMessage(common.MessageSynchronise, map[string]string{})
 }
 
 // Register the client with the central client storage data structure
-func registerSync(board string, op uint64, c *Client) {
+func (c *Client) registerSync(board string, op uint64) {
 	id := SyncID{
 		OP:    op,
 		Board: board,
@@ -78,7 +80,7 @@ func registerSync(board string, op uint64, c *Client) {
 
 // Sends a response to the client's synchronization request with any missed
 // messages and starts streaming in updates.
-func syncToThread(board string, thread uint64, c *Client) error {
+func (c *Client) syncToThread(board string, thread uint64) error {
 	valid, err := db.ValidateOP(thread, board)
 	if err != nil {
 		return err
@@ -87,7 +89,7 @@ func syncToThread(board string, thread uint64, c *Client) error {
 		return errInvalidThread
 	}
 
-	registerSync(board, thread, c)
+	c.registerSync(board, thread)
 	feeds.Add <- subRequest{thread, c}
 	c.feedID = thread
 
@@ -99,8 +101,8 @@ func syncToThread(board string, thread uint64, c *Client) error {
 // TODO: Technically there is no locking performed so a single post may be open
 // by multiple clients. This opens us up to some exploits, but nothing severe.
 // Still need to think of a solution.
-func reclaimPost(data []byte, c *Client) error {
-	if err := closePreviousPost(c); err != nil {
+func (c *Client) reclaimPost(data []byte) error {
+	if err := c.closePreviousPost(); err != nil {
 		return err
 	}
 
@@ -115,11 +117,11 @@ func reclaimPost(data []byte, c *Client) error {
 		return err
 	}
 	if !post.Editing {
-		return c.sendMessage(MessageReclaim, 1)
+		return c.sendMessage(common.MessageReclaim, 1)
 	}
 	if err := auth.BcryptCompare(req.Password, post.Password); err != nil {
 		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return c.sendMessage(MessageReclaim, 1)
+			return c.sendMessage(common.MessageReclaim, 1)
 		}
 		return err
 	}
@@ -138,5 +140,5 @@ func reclaimPost(data []byte, c *Client) error {
 		board:      post.Board,
 	}
 
-	return c.sendMessage(MessageReclaim, 0)
+	return c.sendMessage(common.MessageReclaim, 0)
 }

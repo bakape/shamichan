@@ -2,7 +2,7 @@ import { escape, pluralize, pad } from '../../util'
 import { renderImage, renderFigcaption } from './image'
 import { renderBacklinks } from './etc'
 import { renderBody } from './body'
-import { PostData, ThreadData } from '../models'
+import { PostData, ThreadData } from '../../common'
 import lang from '../../lang'
 import options from '../../options'
 
@@ -25,13 +25,26 @@ export default function (
 
 	frag.querySelector("blockquote").innerHTML = renderBody(data)
 	renderBacklinks(frag, data.backlinks)
-
+	if (data.banned) {
+		renderBanned(frag)
+	}
 	renderHeader(frag, data)
 
 	if (data.image) {
 		renderFigcaption(frag, data.image, false)
 		renderImage(frag, data.image, false)
 	}
+}
+
+// Render "USER WAS BANNED FOR THIS POST" message
+export function renderBanned(parent: NodeSelector) {
+	if (parent.querySelector(".banned")) {
+		return
+	}
+	const b = document.createElement("b")
+	b.classList.add("admin", "banned")
+	b.innerText = lang.posts["banned"]
+	parent.querySelector("blockquote").after(b)
 }
 
 // Render the header on top of the post
@@ -73,7 +86,7 @@ export function renderName(
 	}
 	if (auth) { // Render staff title
 		el.classList.add("admin")
-		html += ` ## ${lang.posts[auth]}`
+		html += ` ## ${lang.posts[auth] || "??"}`
 	}
 	el.innerHTML = html
 }
