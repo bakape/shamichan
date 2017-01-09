@@ -110,6 +110,7 @@ CREATE TABLE posts (
 	editing BOOLEAN NOT NULL,
 	deleted BOOLEAN NOT NULL,
 	spoiler BOOLEAN NOT NULL,
+	banned BOOLEAN NOT NULL,
 	id BIGINT PRIMARY KEY,
 	op BIGINT NOT NULL REFERENCES threads ON DELETE CASCADE,
 	time BIGINT NOT NULL,
@@ -192,9 +193,7 @@ func LoadDB() (err error) {
 	// 	go runCleanupTasks()
 	// }
 
-	return util.Waterfall([]func() error{
-		loadConfigs, loadBoardConfigs,
-	})
+	return util.Waterfall(loadConfigs, loadBoardConfigs)
 }
 
 // InitDB initializes a database

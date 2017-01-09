@@ -1,6 +1,10 @@
 package db
 
-import "testing"
+import (
+	"testing"
+
+	. "github.com/bakape/meguca/test"
+)
 
 func TestRegisterAccount(t *testing.T) {
 	assertTableClear(t, "accounts")
