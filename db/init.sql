@@ -65,11 +65,13 @@ CREATE TABLE threads (
 	id BIGINT PRIMARY KEY,
 	postCtr BIGINT NOT NULL,
 	imageCtr BIGINT NOT NULL,
+	bumpTime BIGINT NOT NULL,
 	replyTime BIGINT NOT NULL,
 	subject VARCHAR(100) NOT NULL,
 	log BYTEA[] NOT NULL
 );
 CREATE INDEX threads_board on threads (board);
+CREATE INDEX bumpTime on threads (bumpTime);
 
 CREATE TABLE posts (
 	editing BOOLEAN NOT NULL,
@@ -87,27 +89,11 @@ CREATE TABLE posts (
 	imageName VARCHAR(200),
 	body VARCHAR(2000) NOT NULL,
 	postPassword BYTEA,
+	links BIGINT[][2],
+	backlinks BIGINT[][2],
 	commands JSON[]
 );
 CREATE INDEX deleted on posts (deleted);
 CREATE INDEX op on posts (op);
 CREATE INDEX image on posts (SHA1);
 CREATE INDEX editing on posts (editing);
-
-CREATE TABLE links (
-	targetBoard VARCHAR(3) NOT NULL,
-	source BIGINT PRIMARY KEY REFERENCES posts ON DELETE CASCADE,
-	target BIGINT NOT NULL REFERENCES posts ON DELETE CASCADE,
-	targetOP BIGINT NOT NULL
-);
-CREATE INDEX links_source on links (source);
-CREATE INDEX links_target on links (target);
-
-CREATE TABLE backlinks (
-	targetBoard VARCHAR(3) NOT NULL,
-	source BIGINT PRIMARY KEY REFERENCES posts ON DELETE CASCADE,
-	target BIGINT NOT NULL REFERENCES posts ON DELETE CASCADE,
-	targetOP BIGINT NOT NULL
-);
-CREATE INDEX backlinks_source on backlinks (source);
-CREATE INDEX backlinks_target on backlinks (target);

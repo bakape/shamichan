@@ -147,9 +147,9 @@
 		{% endif %}
 		{% if p.Backlinks != nil %}
 			<span class="backlinks spaced">
-				{% for id, link := range p.Backlinks %}
+				{% for _, link := range p.Backlinks %}
 					<em>
-						{%= postLink(id, link.OP, link.Board, link.OP != op) %}
+						{%= postLink(link[0], link[1], link[1] != op) %}
 					</em>
 				{% endfor %}
 			</span>

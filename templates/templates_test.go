@@ -78,15 +78,9 @@ func TestThread(t *testing.T) {
 			{
 				ID:   2,
 				Body: "bar",
-				Backlinks: common.LinkMap{
-					3: {
-						OP:    1,
-						Board: "a",
-					},
-					4: {
-						OP:    7,
-						Board: "l",
-					},
+				Backlinks: [][2]uint64{
+					{3, 1},
+					{4, 7},
 				},
 			},
 			{

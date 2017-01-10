@@ -25,7 +25,7 @@ func TestRenderBody(t *testing.T) {
 		name, in, out, string string
 		editing               bool
 		op                    uint64
-		links                 common.LinkMap
+		links                 [][2]uint64
 		commands              []common.Command
 	}{
 		{
@@ -194,51 +194,31 @@ func TestRenderBody(t *testing.T) {
 			out:  "<span><em>>>20</em><br></span>",
 		},
 		{
-			name: "1 invalid link",
-			in:   ">>20",
-			out:  "<span><em>>>20</em><br></span>",
-			links: common.LinkMap{
-				21: {
-					Board: "a",
-					OP:    21,
-				},
-			},
+			name:  "1 invalid link",
+			in:    ">>20",
+			out:   "<span><em>>>20</em><br></span>",
+			links: [][2]uint64{{21, 21}},
 		},
 		{
-			name: "valid link",
-			in:   ">>21",
-			out:  `<span><em><a class="history post-link" data-id="21" href="#p21">>>21</a><a class="hash-link"> #</a></em><br></span>`,
-			op:   20,
-			links: common.LinkMap{
-				21: {
-					Board: "a",
-					OP:    20,
-				},
-			},
+			name:  "valid link",
+			in:    ">>21",
+			out:   `<span><em><a class="history post-link" data-id="21" href="#p21">>>21</a><a class="hash-link"> #</a></em><br></span>`,
+			op:    20,
+			links: [][2]uint64{{21, 20}},
 		},
 		{
-			name: "valid link with extra quotes",
-			in:   ">>>>21",
-			out:  `<span><em>>><a class="history post-link" data-id="21" href="#p21">>>21</a><a class="hash-link"> #</a></em><br></span>`,
-			op:   20,
-			links: common.LinkMap{
-				21: {
-					Board: "a",
-					OP:    20,
-				},
-			},
+			name:  "valid link with extra quotes",
+			in:    ">>>>21",
+			out:   `<span><em>>><a class="history post-link" data-id="21" href="#p21">>>21</a><a class="hash-link"> #</a></em><br></span>`,
+			op:    20,
+			links: [][2]uint64{{21, 20}},
 		},
 		{
-			name: "valid cross-thread link",
-			in:   ">>21",
-			out:  `<span><em><a class="history post-link" data-id="21" href="/a/22#p21">>>>/a/21</a><a class="hash-link"> #</a></em><br></span>`,
-			op:   20,
-			links: common.LinkMap{
-				21: {
-					Board: "a",
-					OP:    22,
-				},
-			},
+			name:  "valid cross-thread link",
+			in:    ">>21",
+			out:   `<span><em><a class="history post-link" data-id="21" href="/cross/22#p21">>>21 ➡</a><a class="hash-link"> #</a></em><br></span>`,
+			op:    20,
+			links: [][2]uint64{{21, 22}},
 		},
 		{
 			name: "invalid reference",

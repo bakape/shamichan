@@ -84,7 +84,7 @@ func tabButts(names []string) string {
 // Render a link to another post. Can optionally be cross-thread.
 
 //line util.qtpl:16
-func streampostLink(qw422016 *qt422016.Writer, id, op uint64, board string, cross bool) {
+func streampostLink(qw422016 *qt422016.Writer, id, op uint64, cross bool) {
 	//line util.qtpl:17
 	idStr := strconv.FormatUint(id, 10)
 
@@ -97,11 +97,7 @@ func streampostLink(qw422016 *qt422016.Writer, id, op uint64, board string, cros
 	//line util.qtpl:19
 	if cross {
 		//line util.qtpl:19
-		qw422016.N().S(`/`)
-		//line util.qtpl:20
-		qw422016.N().S(board)
-		//line util.qtpl:20
-		qw422016.N().S(`/`)
+		qw422016.N().S(`/cross/`)
 		//line util.qtpl:20
 		qw422016.N().S(strconv.FormatUint(op, 10))
 		//line util.qtpl:21
@@ -113,39 +109,37 @@ func streampostLink(qw422016 *qt422016.Writer, id, op uint64, board string, cros
 	//line util.qtpl:22
 	qw422016.N().S(`">>>`)
 	//line util.qtpl:25
-	if cross {
-		//line util.qtpl:25
-		qw422016.N().S(`>/`)
-		//line util.qtpl:26
-		qw422016.N().S(board)
-		//line util.qtpl:26
-		qw422016.N().S(`/`)
-		//line util.qtpl:27
-	}
-	//line util.qtpl:28
 	qw422016.N().S(idStr)
+	//line util.qtpl:26
+	if cross {
+		//line util.qtpl:27
+		qw422016.N().S(` `)
+		//line util.qtpl:27
+		qw422016.N().S(`➡`)
+		//line util.qtpl:28
+	}
 	//line util.qtpl:28
 	qw422016.N().S(`</a><a class="hash-link"> #</a>`)
 //line util.qtpl:31
 }
 
 //line util.qtpl:31
-func writepostLink(qq422016 qtio422016.Writer, id, op uint64, board string, cross bool) {
+func writepostLink(qq422016 qtio422016.Writer, id, op uint64, cross bool) {
 	//line util.qtpl:31
 	qw422016 := qt422016.AcquireWriter(qq422016)
 	//line util.qtpl:31
-	streampostLink(qw422016, id, op, board, cross)
+	streampostLink(qw422016, id, op, cross)
 	//line util.qtpl:31
 	qt422016.ReleaseWriter(qw422016)
 //line util.qtpl:31
 }
 
 //line util.qtpl:31
-func postLink(id, op uint64, board string, cross bool) string {
+func postLink(id, op uint64, cross bool) string {
 	//line util.qtpl:31
 	qb422016 := qt422016.AcquireByteBuffer()
 	//line util.qtpl:31
-	writepostLink(qb422016, id, op, board, cross)
+	writepostLink(qb422016, id, op, cross)
 	//line util.qtpl:31
 	qs422016 := string(qb422016.B)
 	//line util.qtpl:31

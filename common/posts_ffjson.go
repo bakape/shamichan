@@ -95,6 +95,8 @@ func (mj *BoardThread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	fflib.FormatBits2(buf, uint64(mj.ImageCtr), 10, false)
 	buf.WriteString(`,"replyTime":`)
 	fflib.FormatBits2(buf, uint64(mj.ReplyTime), 10, mj.ReplyTime < 0)
+	buf.WriteString(`,"bumpTime":`)
+	fflib.FormatBits2(buf, uint64(mj.BumpTime), 10, mj.BumpTime < 0)
 	buf.WriteString(`,"logCtr":`)
 	fflib.FormatBits2(buf, uint64(mj.LogCtr), 10, false)
 	buf.WriteString(`,"subject":`)
@@ -134,35 +136,6 @@ func (mj *Command) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	if err != nil {
 		return err
 	}
-	buf.WriteByte('}')
-	return nil
-}
-
-func (mj *Link) MarshalJSON() ([]byte, error) {
-	var buf fflib.Buffer
-	if mj == nil {
-		buf.WriteString("null")
-		return buf.Bytes(), nil
-	}
-	err := mj.MarshalJSONBuf(&buf)
-	if err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-func (mj *Link) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
-	if mj == nil {
-		buf.WriteString("null")
-		return nil
-	}
-	var err error
-	var obj []byte
-	_ = obj
-	_ = err
-	buf.WriteString(`{"op":`)
-	fflib.FormatBits2(buf, uint64(mj.OP), 10, false)
-	buf.WriteString(`,"board":`)
-	fflib.WriteJsonString(buf, string(mj.Board))
 	buf.WriteByte('}')
 	return nil
 }
@@ -228,20 +201,48 @@ func (mj *Post) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		buf.WriteByte(',')
 	}
 	if len(mj.Links) != 0 {
-		/* Falling back. type=common.LinkMap kind=map */
 		buf.WriteString(`"links":`)
-		err = buf.Encode(mj.Links)
-		if err != nil {
-			return err
+		if mj.Links != nil {
+			buf.WriteString(`[`)
+			for i, v := range mj.Links {
+				if i != 0 {
+					buf.WriteString(`,`)
+				}
+				buf.WriteString(`[`)
+				for i, v := range v {
+					if i != 0 {
+						buf.WriteString(`,`)
+					}
+					fflib.FormatBits2(buf, uint64(v), 10, false)
+				}
+				buf.WriteString(`]`)
+			}
+			buf.WriteString(`]`)
+		} else {
+			buf.WriteString(`null`)
 		}
 		buf.WriteByte(',')
 	}
 	if len(mj.Backlinks) != 0 {
-		/* Falling back. type=common.LinkMap kind=map */
 		buf.WriteString(`"backlinks":`)
-		err = buf.Encode(mj.Backlinks)
-		if err != nil {
-			return err
+		if mj.Backlinks != nil {
+			buf.WriteString(`[`)
+			for i, v := range mj.Backlinks {
+				if i != 0 {
+					buf.WriteString(`,`)
+				}
+				buf.WriteString(`[`)
+				for i, v := range v {
+					if i != 0 {
+						buf.WriteString(`,`)
+					}
+					fflib.FormatBits2(buf, uint64(v), 10, false)
+				}
+				buf.WriteString(`]`)
+			}
+			buf.WriteString(`]`)
+		} else {
+			buf.WriteString(`null`)
 		}
 		buf.WriteByte(',')
 	}
@@ -354,20 +355,48 @@ func (mj *StandalonePost) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		buf.WriteByte(',')
 	}
 	if len(mj.Links) != 0 {
-		/* Falling back. type=common.LinkMap kind=map */
 		buf.WriteString(`"links":`)
-		err = buf.Encode(mj.Links)
-		if err != nil {
-			return err
+		if mj.Links != nil {
+			buf.WriteString(`[`)
+			for i, v := range mj.Links {
+				if i != 0 {
+					buf.WriteString(`,`)
+				}
+				buf.WriteString(`[`)
+				for i, v := range v {
+					if i != 0 {
+						buf.WriteString(`,`)
+					}
+					fflib.FormatBits2(buf, uint64(v), 10, false)
+				}
+				buf.WriteString(`]`)
+			}
+			buf.WriteString(`]`)
+		} else {
+			buf.WriteString(`null`)
 		}
 		buf.WriteByte(',')
 	}
 	if len(mj.Backlinks) != 0 {
-		/* Falling back. type=common.LinkMap kind=map */
 		buf.WriteString(`"backlinks":`)
-		err = buf.Encode(mj.Backlinks)
-		if err != nil {
-			return err
+		if mj.Backlinks != nil {
+			buf.WriteString(`[`)
+			for i, v := range mj.Backlinks {
+				if i != 0 {
+					buf.WriteString(`,`)
+				}
+				buf.WriteString(`[`)
+				for i, v := range v {
+					if i != 0 {
+						buf.WriteString(`,`)
+					}
+					fflib.FormatBits2(buf, uint64(v), 10, false)
+				}
+				buf.WriteString(`]`)
+			}
+			buf.WriteString(`]`)
+		} else {
+			buf.WriteString(`null`)
 		}
 		buf.WriteByte(',')
 	}
@@ -506,20 +535,48 @@ func (mj *Thread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 		buf.WriteByte(',')
 	}
 	if len(mj.Links) != 0 {
-		/* Falling back. type=common.LinkMap kind=map */
 		buf.WriteString(`"links":`)
-		err = buf.Encode(mj.Links)
-		if err != nil {
-			return err
+		if mj.Links != nil {
+			buf.WriteString(`[`)
+			for i, v := range mj.Links {
+				if i != 0 {
+					buf.WriteString(`,`)
+				}
+				buf.WriteString(`[`)
+				for i, v := range v {
+					if i != 0 {
+						buf.WriteString(`,`)
+					}
+					fflib.FormatBits2(buf, uint64(v), 10, false)
+				}
+				buf.WriteString(`]`)
+			}
+			buf.WriteString(`]`)
+		} else {
+			buf.WriteString(`null`)
 		}
 		buf.WriteByte(',')
 	}
 	if len(mj.Backlinks) != 0 {
-		/* Falling back. type=common.LinkMap kind=map */
 		buf.WriteString(`"backlinks":`)
-		err = buf.Encode(mj.Backlinks)
-		if err != nil {
-			return err
+		if mj.Backlinks != nil {
+			buf.WriteString(`[`)
+			for i, v := range mj.Backlinks {
+				if i != 0 {
+					buf.WriteString(`,`)
+				}
+				buf.WriteString(`[`)
+				for i, v := range v {
+					if i != 0 {
+						buf.WriteString(`,`)
+					}
+					fflib.FormatBits2(buf, uint64(v), 10, false)
+				}
+				buf.WriteString(`]`)
+			}
+			buf.WriteString(`]`)
+		} else {
+			buf.WriteString(`null`)
 		}
 		buf.WriteByte(',')
 	}
@@ -592,6 +649,8 @@ func (mj *Thread) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	fflib.FormatBits2(buf, uint64(mj.ImageCtr), 10, false)
 	buf.WriteString(`,"replyTime":`)
 	fflib.FormatBits2(buf, uint64(mj.ReplyTime), 10, mj.ReplyTime < 0)
+	buf.WriteString(`,"bumpTime":`)
+	fflib.FormatBits2(buf, uint64(mj.BumpTime), 10, mj.BumpTime < 0)
 	buf.WriteString(`,"logCtr":`)
 	fflib.FormatBits2(buf, uint64(mj.LogCtr), 10, false)
 	buf.WriteString(`,"subject":`)
@@ -654,6 +713,8 @@ func (mj *ThreadCommon) MarshalJSONBuf(buf fflib.EncodingBuffer) error {
 	fflib.FormatBits2(buf, uint64(mj.ImageCtr), 10, false)
 	buf.WriteString(`,"replyTime":`)
 	fflib.FormatBits2(buf, uint64(mj.ReplyTime), 10, mj.ReplyTime < 0)
+	buf.WriteString(`,"bumpTime":`)
+	fflib.FormatBits2(buf, uint64(mj.BumpTime), 10, mj.BumpTime < 0)
 	buf.WriteString(`,"logCtr":`)
 	fflib.FormatBits2(buf, uint64(mj.LogCtr), 10, false)
 	buf.WriteString(`,"subject":`)

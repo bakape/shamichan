@@ -4,8 +4,6 @@ import "github.com/bakape/meguca/common"
 import "database/sql"
 import "github.com/lib/pq"
 import "encoding/json"
-import "bytes"
-import "strconv"
 
 type tableScanner interface {
 	rowScanner
@@ -59,21 +57,26 @@ func (i *imageScanner) Val() *common.Image {
 
 type postScanner struct {
 	common.Post
+	banned           sql.NullBool
 	name, trip, auth sql.NullString
+	links, backlinks linkRow
 	commands         pq.StringArray
 }
 
 func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
-		&p.Editing, &p.ID, &p.Time, &p.Body, &p.name, &p.trip, &p.auth,
-		&p.commands,
+		&p.Editing, &p.banned, &p.ID, &p.Time, &p.Body, &p.name, &p.trip,
+		&p.auth, &p.links, &p.backlinks, &p.commands,
 	}
 }
 
 func (p *postScanner) Val() (common.Post, error) {
+	p.Banned = p.banned.Bool
 	p.Name = p.name.String
 	p.Trip = p.trip.String
 	p.Auth = p.auth.String
+	p.Links = [][2]uint64(p.links)
+	p.Backlinks = [][2]uint64(p.backlinks)
 
 	if p.commands != nil {
 		p.Commands = make([]common.Command, len(p.commands))
@@ -88,61 +91,85 @@ func (p *postScanner) Val() (common.Post, error) {
 	return p.Post, nil
 }
 
-type linksRow struct {
-	source, target, targetOP uint64
-	targetBoard              string
-}
-
 // // GetThread retrieves public thread data from the database
-// func GetThread(id uint64, lastN int) (common.Thread, error) {
-// 	q := r.
-// 		Table("threads").
-// 		GetAll(id). // Can not join after Get(). Meh.
-// 		EqJoin("id", r.Table("posts")).
-// 		Zip()
-
-// 	getPosts := r.
-// 		Table("posts").
-// 		GetAllByIndex("op", id).
-// 		Filter(filterDeleted).
-// 		OrderBy("id").
-// 		CoerceTo("array")
-
-// 	// Only fetch last N number of replies
-// 	if lastN != 0 {
-// 		getPosts = getPosts.Slice(-lastN)
+// func GetThread(id uint64, lastN int) (t common.Thread, err error) {
+// 	tx, err := db.Begin()
+// 	if err != nil {
+// 		return
+// 	}
+// 	defer tx.Commit()
+// 	err = setReadONly(tx)
+// 	if err != nil {
+// 		return
 // 	}
 
-// 	q = q.Merge(map[string]r.Term{
-// 		"posts":       getPosts.Without(omitForThreadPosts),
-// 		"lastUpdated": getLastUpdated,
-// 	}).
-// 		Without("ip", "op", "password")
-
-// 	var thread common.Thread
-// 	if err := One(q, &thread); err != nil {
-// 		return thread, err
+// 	// Get thread metadata
+// 	row := tx.Stmt(prepared["getThread"]).QueryRow(id)
+// 	err = row.Scan(
+// 		&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
+// 		&t.Subject, &t.LogCtr,
+// 	)
+// 	if err != nil {
+// 		return
 // 	}
+// 	t.Abbrev = lastN != 0
 
-// 	if thread.Deleted {
-// 		return common.Thread{}, r.ErrEmptyResult
-// 	}
+// 	// Get OP post
+// 	row :=
 
-// 	// Remove OP from posts slice to prevent possible duplication. Post might
-// 	// be deleted before the thread due to a deletion race.
-// 	if len(thread.Posts) != 0 && thread.Posts[0].ID == id {
-// 		thread.Posts = thread.Posts[1:]
-// 	}
+// 	// q := r.
+// 	// 	Table("threads").
+// 	// 	GetAll(id). // Can not join after Get(). Meh.
+// 	// 	EqJoin("id", r.Table("posts")).
+// 	// 	Zip()
 
-// 	thread.Abbrev = lastN != 0
+// 	// getPosts := r.
+// 	// 	Table("posts").
+// 	// 	GetAllByIndex("op", id).
+// 	// 	Filter(filterDeleted).
+// 	// 	OrderBy("id").
+// 	// 	CoerceTo("array")
 
-// 	return thread, nil
+// 	// // Only fetch last N number of replies
+// 	// if lastN != 0 {
+// 	// 	getPosts = getPosts.Slice(-lastN)
+// 	// }
+
+// 	// q = q.Merge(map[string]r.Term{
+// 	// 	"posts":       getPosts.Without(omitForThreadPosts),
+// 	// 	"lastUpdated": getLastUpdated,
+// 	// }).
+// 	// 	Without("ip", "op", "password")
+
+// 	// var thread common.Thread
+// 	// if err := One(q, &thread); err != nil {
+// 	// 	return thread, err
+// 	// }
+
+// 	// if thread.Deleted {
+// 	// 	return common.Thread{}, r.ErrEmptyResult
+// 	// }
+
+// 	// // Remove OP from posts slice to prevent possible duplication. Post might
+// 	// // be deleted before the thread due to a deletion race.
+// 	// if len(thread.Posts) != 0 && thread.Posts[0].ID == id {
+// 	// 	thread.Posts = thread.Posts[1:]
+// 	// }
+
+// 	// thread.Abbrev = lastN != 0
+
+// 	// return thread, nil
 // }
+
+func setReadONly(tx *sql.Tx) error {
+	_, err := tx.Exec("SET TRANSACTION READ ONLY")
+	return err
+}
 
 // GetPost reads a single post from the database
 func GetPost(id uint64) (res common.StandalonePost, err error) {
 	var (
-		args = make([]interface{}, 2, 20)
+		args = make([]interface{}, 2, 23)
 		post postScanner
 		img  imageScanner
 	)
@@ -161,28 +188,7 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 	}
 	res.Image = img.Val()
 
-	links, backlinks, err := getLinks(id)
-	if err != nil {
-		return
-	}
-	res.Links = repackLinks(links)
-	res.Backlinks = repackLinks(backlinks)
-
 	return res, nil
-}
-
-func repackLinks(rows []linksRow) common.LinkMap {
-	if rows == nil {
-		return nil
-	}
-	links := make(common.LinkMap, len(rows))
-	for _, r := range rows {
-		links[r.target] = common.Link{
-			OP:    r.targetOP,
-			Board: r.targetBoard,
-		}
-	}
-	return links
 }
 
 // GetBoard retrieves all OPs of a single board
@@ -215,10 +221,11 @@ func scanBoard(table tableScanner) (common.Board, error) {
 			img              imageScanner
 		)
 
-		args := make([]interface{}, 0, 23)
+		args := make([]interface{}, 0, 24)
 		args = append(args,
-			&t.Board, &t.ID, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.Subject,
-			&img.Spoiler, &t.Time, &name, &trip, &auth, &img.Name, &t.LogCtr,
+			&t.Board, &t.ID, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
+			&t.Subject, &img.Spoiler, &t.Time, &name, &trip, &auth, &img.Name,
+			&t.LogCtr,
 		)
 		args = append(args, img.ScanArgs()...)
 		err := table.Scan(args...)
@@ -242,57 +249,4 @@ func scanBoard(table tableScanner) (common.Board, error) {
 	}
 
 	return board, nil
-}
-
-// Retrieve links and backlinks by post IDs
-func getLinks(ids ...uint64) (
-	links, backlinks []linksRow, err error,
-) {
-	// Stringify ID array
-	var buf bytes.Buffer
-	buf.WriteByte('{')
-	for i, id := range ids {
-		if i != 0 {
-			buf.WriteByte(',')
-		}
-		buf.WriteString(strconv.FormatUint(id, 10))
-	}
-	buf.WriteByte('}')
-	args := buf.String()
-
-	links, err = scanLinks("getLinks", args)
-	if err != nil {
-		return
-	}
-	backlinks, err = scanLinks("getBacklinks", args)
-	return
-}
-
-func scanLinks(queryID, ids string) ([]linksRow, error) {
-	r, err := prepared[queryID].Query(ids)
-	if err != nil {
-		return nil, err
-	}
-
-	links := make([]linksRow, 0, 8)
-	for r.Next() {
-		var row linksRow
-		err := r.Scan(&row.targetBoard, &row.source, &row.target, &row.targetOP)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(links) == cap(links) {
-			new := make([]linksRow, len(links), cap(links)*2)
-			copy(new, links)
-			links = new
-		}
-
-		links = append(links, row)
-	}
-
-	if len(links) == 0 {
-		return nil, nil
-	}
-	return links, nil
 }

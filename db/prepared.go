@@ -16,9 +16,9 @@ var protoPrepared = map[string]string{
 	"writePost": `
 		INSERT INTO posts (
 			editing, spoiler, id, board, op, time, body, name, trip, auth,
-			SHA1, imageName, commands
+			SHA1, imageName, links, backlinks, commands
 		) VALUES
-			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
 
 	"writeImage": `
 		INSERT INTO images (
@@ -29,22 +29,16 @@ var protoPrepared = map[string]string{
 
 	"writeOP": `
 		INSERT INTO threads (
-			board, log, id, postCtr, imageCtr, replyTime, subject
+			board, log, id, postCtr, imageCtr, replyTime, bumpTime, subject
 		) VALUES
-			($1, $2, $3, $4, $5, $6, $7)`,
+			($1, $2, $3, $4, $5, $6, $7, $8)`,
 
 	"newPostID": `SELECT nextval('post_id')`,
 
-	"writeLinks": `
-		INSERT INTO links (source, target, targetOP, targetBoard) VALUES
-			($1, $2, $3, $4)`,
-	"writeBacklinks": `
-		INSERT INTO backlinks (source, target, targetOP, targetBoard) VALUES
-			($1, $2, $3, $4)`,
-
 	"getAllBoard": `
-		SELECT t.board, t.id, t.postCtr, t.imageCtr, t.replyTime, t.subject,
-				p.spoiler, p.time, p.name, p.trip, p.auth, p.imageName,
+		SELECT t.board, t.id, t.postCtr, t.imageCtr, t.replyTime, t.bumpTime,
+				t.subject, p.spoiler, p.time, p.name, p.trip, p.auth,
+				p.imageName,
 				(SELECT array_length(t.log, 1)) AS logCtr,
 				i.*
 			FROM threads AS t
@@ -52,11 +46,12 @@ var protoPrepared = map[string]string{
 				ON t.id = p.id AND (p.deleted is NULL OR p.deleted = 'false')
 			LEFT OUTER JOIN images AS i
 				ON p.SHA1 = i.SHA1
-			ORDER BY replyTime DESC`,
+			ORDER BY bumpTime DESC`,
 
 	"getBoard": `
-		SELECT t.board, t.id, t.postCtr, t.imageCtr, t.replyTime, t.subject,
-				p.spoiler, p.time, p.name, p.trip, p.auth, p.imageName,
+		SELECT t.board, t.id, t.postCtr, t.imageCtr, t.replyTime, t.bumpTime,
+				t.subject, p.spoiler, p.time, p.name, p.trip, p.auth,
+				p.imageName,
 				(SELECT array_length(t.log, 1)) AS logCtr,
 				i.*
 			FROM threads AS t
@@ -65,16 +60,27 @@ var protoPrepared = map[string]string{
 			LEFT OUTER JOIN images AS i
 				ON p.SHA1 = i.SHA1
 			WHERE t.board = $1
-			ORDER BY replyTime DESC`,
+			ORDER BY bumpTime DESC`,
 
 	"getPost": `
-		SELECT op, board, editing, id, time, body, name, trip, auth, commands,
-			images.*
+		SELECT op, board, editing, banned, id, time, body, name, trip, auth,
+				links, backlinks, commands, images.*
 			FROM posts
 			LEFT OUTER JOIN images
 				ON posts.SHA1 = images.SHA1
 			WHERE id = $1 AND (deleted IS NULL OR deleted = 'false')`,
 
-	"getLinks":     `SELECT * FROM links WHERE source = ANY($1::bigint[])`,
-	"getBacklinks": `SELECT * FROM backlinks WHERE source = ANY($1::bigint[])`,
+	"getThread": `
+		SELECT board, postCtr, imageCtr, replyTime, bumpTime, subject,
+				(SELECT array_length(log, 1)) AS logCtr
+			FROM threads
+			WHERE id = $1`,
+
+	"getOP": `
+		SELECT op, board, editing, banned, id, time, body, name, trip, auth,
+				commands, images.*
+			FROM posts
+			LEFT OUTER JOIN images
+				ON posts.SHA1 = images.SHA1
+			WHERE id = $1 AND (deleted IS NULL OR deleted = 'false')`,
 }

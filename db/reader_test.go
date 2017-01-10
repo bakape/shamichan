@@ -40,6 +40,7 @@ func TestReader(t *testing.T) {
 			Board:     "a",
 			Log:       [][]byte{{1}},
 			ReplyTime: 1,
+			BumpTime:  1,
 			PostCtr:   3,
 		},
 		{
@@ -47,13 +48,8 @@ func TestReader(t *testing.T) {
 			Board:     "c",
 			Log:       [][]byte{{1}},
 			ReplyTime: 3,
+			BumpTime:  5,
 			PostCtr:   1,
-		},
-	}
-	links := common.LinkMap{
-		1: {
-			Board: "a",
-			OP:    1,
 		},
 	}
 	posts := [...]DatabasePost{
@@ -71,7 +67,13 @@ func TestReader(t *testing.T) {
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
 					ID:    3,
-					Links: links,
+					Links: [][2]uint64{{1, 1}},
+					Commands: []common.Command{
+						{
+							Type: common.Flip,
+							Val:  true,
+						},
+					},
 				},
 				OP:    3,
 				Board: "c",
@@ -111,9 +113,6 @@ func TestReader(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if err := WriteLinks(nil, 3, links); err != nil {
-		t.Fatal(err)
-	}
 
 	t.Run("GetAllBoard", testGetAllBoard)
 	t.Run("GetBoard", testGetBoard)
@@ -136,11 +135,12 @@ func testGetPost(t *testing.T) {
 	// Valid read
 	std := common.StandalonePost{
 		Post: common.Post{
-			ID: 3,
-			Links: common.LinkMap{
-				1: {
-					Board: "a",
-					OP:    1,
+			ID:    3,
+			Links: [][2]uint64{{1, 1}},
+			Commands: []common.Command{
+				{
+					Type: common.Flip,
+					Val:  true,
 				},
 			},
 		},
@@ -165,6 +165,7 @@ func testGetAllBoard(t *testing.T) {
 				Board:     "c",
 				LogCtr:    1,
 				ReplyTime: 3,
+				BumpTime:  5,
 			},
 		},
 		{
@@ -174,6 +175,7 @@ func testGetAllBoard(t *testing.T) {
 				Board:     "a",
 				LogCtr:    1,
 				ReplyTime: 1,
+				BumpTime:  1,
 			},
 			Image: &assets.StdJPEG,
 		},
@@ -204,6 +206,7 @@ func testGetBoard(t *testing.T) {
 						Board:     "c",
 						LogCtr:    1,
 						ReplyTime: 3,
+						BumpTime:  5,
 					},
 				},
 			},

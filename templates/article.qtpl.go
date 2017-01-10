@@ -365,11 +365,11 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, op uint64, om
 		//line article.qtpl:148
 		qw422016.N().S(`<span class="backlinks spaced">`)
 		//line article.qtpl:150
-		for id, link := range p.Backlinks {
+		for _, link := range p.Backlinks {
 			//line article.qtpl:150
 			qw422016.N().S(`<em>`)
 			//line article.qtpl:152
-			streampostLink(qw422016, id, link.OP, link.Board, link.OP != op)
+			streampostLink(qw422016, link[0], link[1], link[1] != op)
 			//line article.qtpl:152
 			qw422016.N().S(`</em>`)
 			//line article.qtpl:154
