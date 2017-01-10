@@ -117,7 +117,7 @@ func TestReader(t *testing.T) {
 	t.Run("GetAllBoard", testGetAllBoard)
 	t.Run("GetBoard", testGetBoard)
 	t.Run("GetPost", testGetPost)
-	// t.Run("GetThread", testGetThread)
+	t.Run("GetThread", testGetThread)
 }
 
 func testGetPost(t *testing.T) {
@@ -232,82 +232,100 @@ func testGetBoard(t *testing.T) {
 	}
 }
 
-// func testGetThread(t *testing.T) {
-// 	t.Parallel()
+func testGetThread(t *testing.T) {
+	t.Parallel()
 
-// 	thread1 := common.Thread{
-// 		ThreadCommon: common.ThreadCommon{
-// 			PostCtr:     3,
-// 			LastUpdated: 3,
-// 			Board:       "a",
-// 		},
-// 		Post: common.Post{
-// 			ID: 1,
-// 		},
-// 		Posts: []common.Post{
-// 			{
-// 				ID:   2,
-// 				Body: "foo",
-// 			},
-// 			{
-// 				ID: 4,
-// 			},
-// 		},
-// 	}
-// 	sliced := thread1
-// 	sliced.Posts = sliced.Posts[1:]
-// 	sliced.Abbrev = true
+	thread1 := common.Thread{
+		ThreadCommon: common.ThreadCommon{
+			PostCtr:   3,
+			ReplyTime: 1,
+			BumpTime:  1,
+			LogCtr:    1,
+			Board:     "a",
+		},
+		Post: common.Post{
+			ID:    1,
+			Image: &assets.StdJPEG,
+		},
+		Posts: []common.Post{
+			{
+				ID:   2,
+				Body: "foo",
+			},
+			{
+				ID: 4,
+			},
+		},
+	}
+	sliced := thread1
+	sliced.Posts = sliced.Posts[1:]
+	sliced.Abbrev = true
 
-// 	cases := [...]struct {
-// 		name  string
-// 		id    uint64
-// 		lastN int
-// 		std   common.Thread
-// 		err   error
-// 	}{
-// 		{
-// 			name: "full",
-// 			id:   1,
-// 			std:  thread1,
-// 		},
-// 		{
-// 			name:  "last 1 reply",
-// 			id:    1,
-// 			lastN: 1,
-// 			std:   sliced,
-// 		},
-// 		{
-// 			name: "no replies ;_;",
-// 			id:   3,
-// 			std: common.Thread{
-// 				ThreadCommon: common.ThreadCommon{
-// 					PostCtr:     1,
-// 					Board:       "c",
-// 					LastUpdated: 4,
-// 				},
-// 				Post: common.Post{
-// 					ID: 3,
-// 				},
-// 				Posts: []common.Post{},
-// 			},
-// 		},
-// 		{
-// 			name: "nonexistent thread",
-// 			id:   99,
-// 			err:  r.ErrEmptyResult,
-// 		},
-// 	}
+	cases := [...]struct {
+		name  string
+		id    uint64
+		lastN int
+		std   common.Thread
+		err   error
+	}{
+		{
+			name: "full",
+			id:   1,
+			std:  thread1,
+		},
+		{
+			name:  "last 1 reply",
+			id:    1,
+			lastN: 1,
+			std:   sliced,
+		},
+		{
+			name: "no replies ;_;",
+			id:   3,
+			std: common.Thread{
+				ThreadCommon: common.ThreadCommon{
+					Board:     "c",
+					ReplyTime: 3,
+					BumpTime:  5,
+					PostCtr:   1,
+					LogCtr:    1,
+				},
+				Post: common.Post{
+					ID:    3,
+					Links: [][2]uint64{{1, 1}},
+					Commands: []common.Command{
+						{
+							Type: common.Flip,
+							Val:  true,
+						},
+					},
+				},
+				Posts: []common.Post{},
+			},
+		},
+		{
+			name: "nonexistent thread",
+			id:   99,
+			err:  sql.ErrNoRows,
+		},
+	}
 
-// 	for i := range cases {
-// 		c := cases[i]
-// 		t.Run(c.name, func(t *testing.T) {
-// 			t.Parallel()
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 
-// 			thread, err := GetThread(c.id, c.lastN)
-// 			if err != c.err {
-// 				UnexpectedError(t, err)
-// 			}
-// 			AssertDeepEquals(t, thread, c.std)
-// 		})
-// 	}
-// }
+			thread, err := GetThread(c.id, c.lastN)
+			if err != c.err {
+				UnexpectedError(t, err)
+			}
+			// Assert image equality and then override to not compare pointer
+			// addresses with reflection
+			if thread.Image != nil {
+				AssertDeepEquals(t, *thread.Image, *c.std.Image)
+				thread.Image = c.std.Image
+			}
+			AssertDeepEquals(t, thread, c.std)
+		})
+	}
+}

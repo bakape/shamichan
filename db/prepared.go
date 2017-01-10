@@ -63,8 +63,8 @@ var protoPrepared = map[string]string{
 			ORDER BY bumpTime DESC`,
 
 	"getPost": `
-		SELECT op, board, editing, banned, id, time, body, name, trip, auth,
-				links, backlinks, commands, images.*
+		SELECT op, board, editing, banned, spoiler, id, time, body, name, trip,
+				auth, links, backlinks, commands, imageName, images.*
 			FROM posts
 			LEFT OUTER JOIN images
 				ON posts.SHA1 = images.SHA1
@@ -76,11 +76,37 @@ var protoPrepared = map[string]string{
 			FROM threads
 			WHERE id = $1`,
 
-	"getOP": `
-		SELECT op, board, editing, banned, id, time, body, name, trip, auth,
-				commands, images.*
+	"getThreadPost": `
+		SELECT editing, banned, spoiler, id, time, body, name, trip, auth,
+				links, backlinks, commands, imageName, images.*
 			FROM posts
 			LEFT OUTER JOIN images
 				ON posts.SHA1 = images.SHA1
 			WHERE id = $1 AND (deleted IS NULL OR deleted = 'false')`,
+
+	"getFullThread": `
+		SELECT editing, banned, spoiler, id, time, body, name, trip, auth,
+				links, backlinks, commands, imageName, images.*
+			FROM posts
+			LEFT OUTER JOIN images
+				ON posts.SHA1 = images.SHA1
+			WHERE op = $1
+				AND id != $1
+				AND (deleted IS NULL OR deleted = 'false')
+			ORDER BY id ASC`,
+
+	"getLastN": `
+		WITH t AS (
+			SELECT editing, banned, spoiler, id, time, body, name, trip, auth,
+				links, backlinks, commands, imageName, images.*
+			FROM posts
+			LEFT OUTER JOIN images
+				ON posts.SHA1 = images.SHA1
+			WHERE op = $1
+				AND id != $1
+				AND (deleted IS NULL OR deleted = 'false')
+			ORDER BY id DESC
+			LIMIT $2
+		)
+		SELECT * FROM t ORDER BY id ASC`,
 }

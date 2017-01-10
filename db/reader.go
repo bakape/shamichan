@@ -1,9 +1,12 @@
 package db
 
-import "github.com/bakape/meguca/common"
-import "database/sql"
-import "github.com/lib/pq"
-import "encoding/json"
+import (
+	"database/sql"
+	"encoding/json"
+
+	"github.com/bakape/meguca/common"
+	"github.com/lib/pq"
+)
 
 type tableScanner interface {
 	rowScanner
@@ -57,20 +60,20 @@ func (i *imageScanner) Val() *common.Image {
 
 type postScanner struct {
 	common.Post
-	banned           sql.NullBool
-	name, trip, auth sql.NullString
-	links, backlinks linkRow
-	commands         pq.StringArray
+	banned, spoiler             sql.NullBool
+	name, trip, auth, imageName sql.NullString
+	links, backlinks            linkRow
+	commands                    pq.StringArray
 }
 
 func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
-		&p.Editing, &p.banned, &p.ID, &p.Time, &p.Body, &p.name, &p.trip,
-		&p.auth, &p.links, &p.backlinks, &p.commands,
+		&p.Editing, &p.banned, &p.spoiler, &p.ID, &p.Time, &p.Body, &p.name, &p.trip,
+		&p.auth, &p.links, &p.backlinks, &p.commands, &p.imageName,
 	}
 }
 
-func (p *postScanner) Val() (common.Post, error) {
+func (p postScanner) Val() (common.Post, error) {
 	p.Banned = p.banned.Bool
 	p.Name = p.name.String
 	p.Trip = p.trip.String
@@ -91,85 +94,104 @@ func (p *postScanner) Val() (common.Post, error) {
 	return p.Post, nil
 }
 
-// // GetThread retrieves public thread data from the database
-// func GetThread(id uint64, lastN int) (t common.Thread, err error) {
-// 	tx, err := db.Begin()
-// 	if err != nil {
-// 		return
-// 	}
-// 	defer tx.Commit()
-// 	err = setReadONly(tx)
-// 	if err != nil {
-// 		return
-// 	}
+// Returns if image is spoiled and it's assigned name, if any
+func (p postScanner) Image() (bool, string) {
+	return p.spoiler.Bool, p.imageName.String
+}
 
-// 	// Get thread metadata
-// 	row := tx.Stmt(prepared["getThread"]).QueryRow(id)
-// 	err = row.Scan(
-// 		&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-// 		&t.Subject, &t.LogCtr,
-// 	)
-// 	if err != nil {
-// 		return
-// 	}
-// 	t.Abbrev = lastN != 0
+// GetThread retrieves public thread data from the database
+func GetThread(id uint64, lastN int) (t common.Thread, err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer tx.Commit()
+	err = setReadOnly(tx)
+	if err != nil {
+		return
+	}
 
-// 	// Get OP post
-// 	row :=
+	// Get thread metadata
+	row := tx.Stmt(prepared["getThread"]).QueryRow(id)
+	err = row.Scan(
+		&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
+		&t.Subject, &t.LogCtr,
+	)
+	if err != nil {
+		return
+	}
+	t.Abbrev = lastN != 0
 
-// 	// q := r.
-// 	// 	Table("threads").
-// 	// 	GetAll(id). // Can not join after Get(). Meh.
-// 	// 	EqJoin("id", r.Table("posts")).
-// 	// 	Zip()
+	// Get OP post. Need to fetch separately, in case, if not fetching the full
+	// thread. Also allows to return early on deleted threads.
+	row = tx.Stmt(prepared["getThreadPost"]).QueryRow(id)
+	t.Post, err = scanThreadPost(row)
+	if err != nil {
+		return
+	}
 
-// 	// getPosts := r.
-// 	// 	Table("posts").
-// 	// 	GetAllByIndex("op", id).
-// 	// 	Filter(filterDeleted).
-// 	// 	OrderBy("id").
-// 	// 	CoerceTo("array")
+	// Get replies
+	var (
+		r   *sql.Rows
+		cap int
+	)
+	if lastN == 0 {
+		r, err = tx.Stmt(prepared["getFullThread"]).Query(id)
+		cap = int(t.PostCtr)
+	} else {
+		r, err = tx.Stmt(prepared["getLastN"]).Query(id, lastN)
+		cap = lastN
+	}
+	if err != nil {
+		return
+	}
+	t.Posts = make([]common.Post, 0, cap)
 
-// 	// // Only fetch last N number of replies
-// 	// if lastN != 0 {
-// 	// 	getPosts = getPosts.Slice(-lastN)
-// 	// }
+	var p common.Post
+	for r.Next() {
+		p, err = scanThreadPost(r)
+		if err != nil {
+			return
+		}
+		t.Posts = append(t.Posts, p)
+	}
 
-// 	// q = q.Merge(map[string]r.Term{
-// 	// 	"posts":       getPosts.Without(omitForThreadPosts),
-// 	// 	"lastUpdated": getLastUpdated,
-// 	// }).
-// 	// 	Without("ip", "op", "password")
+	return
+}
 
-// 	// var thread common.Thread
-// 	// if err := One(q, &thread); err != nil {
-// 	// 	return thread, err
-// 	// }
-
-// 	// if thread.Deleted {
-// 	// 	return common.Thread{}, r.ErrEmptyResult
-// 	// }
-
-// 	// // Remove OP from posts slice to prevent possible duplication. Post might
-// 	// // be deleted before the thread due to a deletion race.
-// 	// if len(thread.Posts) != 0 && thread.Posts[0].ID == id {
-// 	// 	thread.Posts = thread.Posts[1:]
-// 	// }
-
-// 	// thread.Abbrev = lastN != 0
-
-// 	// return thread, nil
-// }
-
-func setReadONly(tx *sql.Tx) error {
+func setReadOnly(tx *sql.Tx) error {
 	_, err := tx.Exec("SET TRANSACTION READ ONLY")
 	return err
+}
+
+func scanThreadPost(rs rowScanner) (res common.Post, err error) {
+	var (
+		args = make([]interface{}, 0, 21)
+		post postScanner
+		img  imageScanner
+	)
+	args = append(args, post.ScanArgs()...)
+	args = append(args, img.ScanArgs()...)
+
+	err = rs.Scan(args...)
+	if err != nil {
+		return
+	}
+	res, err = post.Val()
+	if err != nil {
+		return
+	}
+	res.Image = img.Val()
+	if res.Image != nil {
+		res.Image.Spoiler, res.Image.Name = post.Image()
+	}
+	return
 }
 
 // GetPost reads a single post from the database
 func GetPost(id uint64) (res common.StandalonePost, err error) {
 	var (
-		args = make([]interface{}, 2, 23)
+		args = make([]interface{}, 2, 25)
 		post postScanner
 		img  imageScanner
 	)
@@ -187,6 +209,9 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 		return
 	}
 	res.Image = img.Val()
+	if res.Image != nil {
+		res.Image.Spoiler, res.Image.Name = post.Image()
+	}
 
 	return res, nil
 }

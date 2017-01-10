@@ -2,11 +2,10 @@
 package db
 
 import (
+	"bytes"
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-
-	"bytes"
 	"strconv"
 
 	"github.com/bakape/meguca/common"
