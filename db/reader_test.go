@@ -29,7 +29,7 @@ func TestReader(t *testing.T) {
 		},
 	}
 	for _, b := range boards {
-		if err := WriteBoardConfigs(b, false); err != nil {
+		if err := WriteBoard(b, false); err != nil {
 			t.Fatal(err)
 		}
 	}

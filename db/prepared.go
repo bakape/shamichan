@@ -7,11 +7,7 @@ var prepared = make(map[string]*sql.Stmt, len(protoPrepared))
 
 // Queries to be converted into prepared statements
 var protoPrepared = map[string]string{
-	"isLoggedIn": `
-		SELECT EXISTS(
-			SELECT true FROM sessions
-				WHERE account = $1 AND token = $2
-		);`,
+	"isLoggedIn": `SELECT true FROM sessions WHERE account = $1 AND token = $2`,
 
 	"writePost": `
 		INSERT INTO posts (
@@ -113,4 +109,6 @@ var protoPrepared = map[string]string{
 	"threadCounter": `SELECT array_length(log, 1) FROM threads WHERE id = $1`,
 
 	"boardCounter": `SELECT ctr FROM boards WHERE id = $1`,
+
+	"validateOP": `SELECT true FROM threads WHERE id = $1 AND board = $2`,
 }

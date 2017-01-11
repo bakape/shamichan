@@ -124,11 +124,14 @@ func (l linkRow) Value() (driver.Value, error) {
 	return buf.String(), nil
 }
 
-// // ValidateOP confirms the specified thread exists on specific board
-// func ValidateOP(id uint64, board string) (valid bool, err error) {
-// 	err = One(FindThread(id).Field("board").Eq(board).Default(false), &valid)
-// 	return
-// }
+// ValidateOP confirms the specified thread exists on specific board
+func ValidateOP(id uint64, board string) (valid bool, err error) {
+	err = prepared["validateOP"].QueryRow(id, board).Scan(&valid)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+	return
+}
 
 // BoardCounter retrieves the history or "progress" counter of a board
 func BoardCounter(board string) (counter uint64, err error) {

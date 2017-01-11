@@ -105,8 +105,8 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 	return
 }
 
-// WriteBoardConfigs writes board-specific configurations to the database
-func WriteBoardConfigs(c config.DatabaseBoardConfigs, overwrite bool) error {
+// WriteBoard writes a board complete with configurations to the database
+func WriteBoard(c config.DatabaseBoardConfigs, overwrite bool) error {
 	q :=
 		`INSERT INTO boards (
 			readOnly, textOnly, forcedAnon, hashCommands, codeTags, id, created,
