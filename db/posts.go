@@ -124,61 +124,23 @@ func (l linkRow) Value() (driver.Value, error) {
 	return buf.String(), nil
 }
 
-// // FindPost finds a post only by ID number
-// func FindPost(id uint64) r.Term {
-// 	return r.Table("posts").Get(id)
-// }
-
 // // ValidateOP confirms the specified thread exists on specific board
 // func ValidateOP(id uint64, board string) (valid bool, err error) {
 // 	err = One(FindThread(id).Field("board").Eq(board).Default(false), &valid)
 // 	return
 // }
 
-// // FindThread is a  shorthand for retrieving a document from the "threads" table
-// func FindThread(id uint64) r.Term {
-// 	return r.Table("threads").Get(id)
-// }
+// BoardCounter retrieves the history or "progress" counter of a board
+func BoardCounter(board string) (counter uint64, err error) {
+	err = prepared["boardCounter"].QueryRow(board).Scan(&counter)
+	return
+}
 
-// // GetMain is a shorthand for retrieving a document from the "main" table
-// func GetMain(id string) r.Term {
-// 	return r.Table("main").Get(id)
-// }
-
-// // GetAccount is a shorthand for retrieving a document from the "accounts" table
-// func GetAccount(id string) r.Term {
-// 	return r.Table("accounts").Get(id)
-// }
-
-// // GetImage is a shorthand for retrieving a document from the "images" table
-// func GetImage(id string) r.Term {
-// 	return r.Table("images").Get(id)
-// }
-
-// // BoardCounter retrieves the history or "progress" counter of a board
-// func BoardCounter(board string) (counter uint64, err error) {
-// 	q := r.
-// 		Table("posts").
-// 		GetAllByIndex("board", board).
-// 		Field("lastUpdated").
-// 		Max().
-// 		Default(0)
-// 	err = One(q, &counter)
-// 	return
-// }
-
-// // ThreadCounter retrieves the post counter of a thread to get a rough estimate
-// // of the thread's progress
-// func ThreadCounter(id uint64) (counter uint64, err error) {
-// 	q := r.
-// 		Table("posts").
-// 		GetAllByIndex("op", id).
-// 		Field("lastUpdated").
-// 		Max().
-// 		Default(0)
-// 	err = One(q, &counter)
-// 	return
-// }
+// ThreadCounter retrieves the progress counter of a thread
+func ThreadCounter(id uint64) (counter uint64, err error) {
+	err = prepared["threadCounter"].QueryRow(id).Scan(&counter)
+	return
+}
 
 // NewPostID reserves a new post ID
 func NewPostID() (id uint64, err error) {

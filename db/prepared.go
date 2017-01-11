@@ -109,4 +109,8 @@ var protoPrepared = map[string]string{
 			LIMIT $2
 		)
 		SELECT * FROM t ORDER BY id ASC`,
+
+	"threadCounter": `SELECT array_length(log, 1) FROM threads WHERE id = $1`,
+
+	"boardCounter": `SELECT ctr FROM boards WHERE id = $1`,
 }
