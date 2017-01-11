@@ -1,9 +1,11 @@
 package db
 
 import (
+	"database/sql"
 	"errors"
 	"time"
 
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/lib/pq"
 )
@@ -25,13 +27,6 @@ var (
 	ErrInvalidToken = errors.New("invalid image token")
 )
 
-// // Document for registering a token corresponding to a client's right to
-// // allocate an image in its post
-// type allocationToken struct {
-// 	SHA1    string
-// 	Expires time.Time `gorethink:"expires"`
-// }
-
 // WriteImage writes a processed image record to the DB
 func WriteImage(i common.ImageCommon) error {
 	dims := pq.GenericArray{A: i.Dims}
@@ -42,65 +37,71 @@ func WriteImage(i common.ImageCommon) error {
 	return err
 }
 
-// // FindImageThumb searches for an existing image with the specified hash and
-// // returns it, if it exists. Otherwise, returns an empty struct. To ensure the
-// // image is not deallocated by another thread/process, the reference counter
-// // of the image will be incremented.
-// func FindImageThumb(hash string) (img common.ImageCommon, err error) {
-// 	query := GetImage(hash).
-// 		Update(incrementImageRefCount, r.UpdateOpts{ReturnChanges: true}).
-// 		Field("changes").
-// 		Field("new_val").
-// 		Without("posts").
-// 		Default(nil)
-// 	err = One(query, &img)
-// 	return
-// }
+// GetImage retrieves a thumbnailed image record from the DB
+func GetImage(SHA1 string) (common.ImageCommon, error) {
+	return scanImage(prepared["getImage"].QueryRow(SHA1))
+}
 
-// // NewImageToken inserts a new expiring image token document into the DB and
-// // returns it's ID
-// func NewImageToken(SHA1 string) (code int, token string, err error) {
-// 	q := r.
-// 		Table("imageTokens").
-// 		Insert(allocationToken{
-// 			SHA1:    SHA1,
-// 			Expires: time.Now().Add(tokenTimeout),
-// 		}).
-// 		Field("generated_keys").
-// 		AtIndex(0)
-// 	err = One(q, &token)
-// 	if err != nil {
-// 		code = 500
-// 	} else {
-// 		code = 200
-// 	}
-// 	return
-// }
+func scanImage(rs rowScanner) (img common.ImageCommon, err error) {
+	var scanner imageScanner
+	err = rs.Scan(scanner.ScanArgs()...)
+	if err != nil {
+		return
+	}
+	return scanner.Val().ImageCommon, nil
+}
 
-// // UseImageToken deletes a document from the "imageTokens" table and uses and
-// // returns the Image document from the "images" table, the token was created
-// // for. If no token exists, returns ErrInvalidToken.
-// func UseImageToken(id string) (img common.ImageCommon, err error) {
-// 	q := r.
-// 		Table("imageTokens").
-// 		Get(id).
-// 		Delete(r.DeleteOpts{ReturnChanges: true}).
-// 		Field("changes").
-// 		AtIndex(0).
-// 		Field("old_val").
-// 		Pluck("SHA1").
-// 		Merge(r.
-// 			Table("images").
-// 			Get(r.Row.Field("SHA1")).
-// 			Without("posts"),
-// 		).
-// 		Default(nil)
-// 	err = One(q, &img)
-// 	if err == r.ErrEmptyResult {
-// 		err = ErrInvalidToken
-// 	}
-// 	return
-// }
+// NewImageToken inserts a new image allocation token into the DB and returns
+// it's ID
+func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
+	ex := getExecutor(tx, "writeImageToken")
+
+	// Loop in case there is a primary key collision
+	for {
+		token, err = auth.RandomID(64)
+		if err != nil {
+			return
+		}
+		expires := time.Now().Add(tokenTimeout).Unix()
+
+		_, err = ex.Exec(token, SHA1, expires)
+		switch {
+		case err == nil:
+			return
+		case isConflictError(err):
+			continue
+		default:
+			return
+		}
+	}
+}
+
+// UseImageToken deletes an image allocation token and returns the matching
+// processed image. If no token exists, returns ErrInvalidToken.
+func UseImageToken(token string) (img common.ImageCommon, err error) {
+	if len(token) != common.LenImageToken {
+		err = ErrInvalidToken
+		return
+	}
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+
+	var SHA1 string
+	err = tx.Stmt(prepared["useImageToken"]).QueryRow(token).Scan(&SHA1)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+
+	img, err = scanImage(tx.Stmt(prepared["getImage"]).QueryRow(SHA1))
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+	return img, tx.Commit()
+}
 
 // // DeallocateImage decrements the image's reference counter. If the counter
 // // would become zero, the image entry is immediately deleted along with its

@@ -1,5 +1,13 @@
 package db
 
+import (
+	"database/sql"
+	"testing"
+
+	"github.com/bakape/meguca/imager/assets"
+	. "github.com/bakape/meguca/test"
+)
+
 // type allocationTester struct {
 // 	t            *testing.T
 // 	name, source string
@@ -45,38 +53,33 @@ package db
 // 	}
 // }
 
-// func TestFindImageThumb(t *testing.T) {
-// 	assertTableClear(t, "images")
+func TestGetImage(t *testing.T) {
+	assertTableClear(t, "images")
+	writeSampleImage(t)
 
-// 	t.Run("nonexistent image", func(t *testing.T) {
-// 		t.Parallel()
-// 		_, err := FindImageThumb("sha")
-// 		if err != r.ErrEmptyResult {
-// 			UnexpectedError(t, err)
-// 		}
-// 	})
-// 	t.Run("existent image", testFindImageThumb)
-// }
+	t.Run("nonexistent", func(t *testing.T) {
+		t.Parallel()
+		_, err := GetImage(GenString(40))
+		if err != sql.ErrNoRows {
+			UnexpectedError(t, err)
+		}
+	})
+	t.Run("existent", func(t *testing.T) {
+		t.Parallel()
 
-// func testFindImageThumb(t *testing.T) {
-// 	t.Parallel()
+		img, err := GetImage(assets.StdJPEG.SHA1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		AssertDeepEquals(t, img, assets.StdJPEG.ImageCommon)
+	})
+}
 
-// 	const id = "foo"
-// 	thumbnailed := common.ProtoImage{
-// 		ImageCommon: common.ImageCommon{
-// 			SHA1: id,
-// 		},
-// 		Posts: 1,
-// 	}
-// 	assertInsert(t, "images", thumbnailed)
-
-// 	img, err := FindImageThumb(id)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	AssertDeepEquals(t, img, thumbnailed.ImageCommon)
-// 	assertImageRefCount(t, id, 2)
-// }
+func writeSampleImage(t *testing.T) {
+	if err := WriteImage(assets.StdJPEG.ImageCommon); err != nil {
+		t.Fatal(err)
+	}
+}
 
 // func TestDeallocateImage(t *testing.T) {
 // 	assertTableClear(t, "posts", "images")
@@ -216,26 +219,21 @@ package db
 // 	return data
 // }
 
-// func TestUseImageToken(t *testing.T) {
-// 	assertTableClear(t, "images", "imageTokens")
+func TestImageTokens(t *testing.T) {
+	assertTableClear(t, "images")
+	writeSampleImage(t)
 
-// 	const name = "foo.jpeg"
-// 	assertInsert(t, "images", common.ProtoImage{
-// 		ImageCommon: assets.StdJPEG.ImageCommon,
-// 		Posts:       1,
-// 	})
+	token, err := NewImageToken(nil, assets.StdJPEG.SHA1)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	_, id, err := NewImageToken(assets.StdJPEG.SHA1)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	img, err := UseImageToken(id)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	std := assets.StdJPEG.ImageCommon
-// 	if img != std {
-// 		LogUnexpected(t, img, std)
-// 	}
-// }
+	img, err := UseImageToken(token)
+	if err != nil {
+		t.Fatal(err)
+	}
+	std := assets.StdJPEG.ImageCommon
+	if img != std {
+		LogUnexpected(t, img, std)
+	}
+}

@@ -40,10 +40,18 @@ func RegisterAccount(ID string, hash []byte) error {
 		`INSERT INTO accounts (id, password) VALUES ($1, $2)`,
 		ID, hash,
 	)
-	if err, ok := err.(*pq.Error); ok && err.Code.Name() == "unique_violation" {
+	if isConflictError(err) {
 		return ErrUserNameTaken
 	}
 	return err
+}
+
+// Returns if an error is a unique key conflict error
+func isConflictError(err error) bool {
+	if err, ok := err.(*pq.Error); ok && err.Code.Name() == "unique_violation" {
+		return true
+	}
+	return false
 }
 
 // // GetLoginHash retrieves the login hash of the registered user account

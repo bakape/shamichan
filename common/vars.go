@@ -17,9 +17,11 @@ const (
 	MaxBanReasonLength = 100
 )
 
-// LenSession defines the length of an unpadded base64-encoded account login
-// session token
-const LenSession = 171
+// Various cryptographic token exact lengths
+const (
+	LenSession    = 171
+	LenImageToken = 86
+)
 
 // Commonly used errors
 var (

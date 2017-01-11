@@ -23,6 +23,10 @@ var protoPrepared = map[string]string{
 		) VALUES
 			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 
+	"writeImageToken": `
+		INSERT INTO image_tokens (token, SHA1, expires) VALUES
+			($1, $2, $3)`,
+
 	"writeOP": `
 		INSERT INTO threads (
 			board, log, id, postCtr, imageCtr, replyTime, bumpTime, subject
@@ -111,4 +115,11 @@ var protoPrepared = map[string]string{
 	"boardCounter": `SELECT ctr FROM boards WHERE id = $1`,
 
 	"validateOP": `SELECT true FROM threads WHERE id = $1 AND board = $2`,
+
+	"getImage": `SELECT * FROM images WHERE SHA1 = $1`,
+
+	"useImageToken": `
+		DELETE FROM image_tokens
+			WHERE token = $1
+			RETURNING SHA1`,
 }

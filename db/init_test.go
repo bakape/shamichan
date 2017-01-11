@@ -3,7 +3,7 @@ package db
 import "testing"
 
 func init() {
-	DBName = "meguca_test_db"
+	DBName = "meguca_test"
 	IsTest = true
 	if err := LoadDB(); err != nil {
 		panic(err)
