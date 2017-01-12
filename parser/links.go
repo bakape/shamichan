@@ -1,21 +1,20 @@
 package parser
 
 import (
+	"database/sql"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
-	r "github.com/dancannon/gorethink"
 )
 
 var linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
 
 // Extract post links from a text fragment, verify and retrieve their
 // parenthood
-func parseLinks(frag string) (common.LinkMap, error) {
-	var links common.LinkMap
+func parseLinks(frag string) ([][2]uint64, error) {
+	var links [][2]uint64
 
 	// TODO: Do this in-place w/o creating any garbage slices
 	for _, word := range strings.Split(frag, " ") {
@@ -28,39 +27,20 @@ func parseLinks(frag string) (common.LinkMap, error) {
 			continue
 		}
 
-		id, err := strconv.ParseUint(string(match[1]), 10, 64)
+		id, err := strconv.ParseUint(match[1], 10, 64)
 		if err != nil {
 			return nil, err
 		}
 
-		var parenthood struct {
-			OP    uint64
-			Board string
-		}
-		q := db.FindPost(id).Pluck("op", "board").Default(nil)
-		err = db.One(q, &parenthood)
-		if err != nil {
-			if err == r.ErrEmptyResult { // Points to invalid post. Ignore.
-				continue
-			}
+		op, err := db.GetPostOP(id)
+		switch err {
+		case nil:
+			links = append(links, [2]uint64{id, op})
+		case sql.ErrNoRows: // Points to invalid post. Ignore.
+			continue
+		default:
 			return nil, err
 		}
-
-		link := common.Link{
-			OP:    parenthood.OP,
-			Board: parenthood.Board,
-		}
-
-		if links == nil {
-			links = common.LinkMap{id: link}
-		} else {
-			links[id] = link
-		}
-	}
-
-	// All links invalid
-	if len(links) == 0 {
-		return nil, nil
 	}
 
 	return links, nil

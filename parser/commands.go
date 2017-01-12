@@ -11,7 +11,6 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	r "github.com/dancannon/gorethink"
 )
 
 var (
@@ -19,22 +18,6 @@ var (
 
 	errTooManyRolls = diceError(0)
 	errDieTooBig    = diceError(1)
-
-	pcountQuery = db.GetMain("info").Field("pyu").Default(0)
-	pyuQuery    = db.
-			GetMain("info").
-			Update(
-			map[string]r.Term{
-				"pyu": r.Row.Field("pyu").Default(0).Add(1),
-			},
-			r.UpdateOpts{
-				ReturnChanges: true,
-			},
-		).
-		Field("changes").
-		AtIndex(0).
-		Field("new_val").
-		Field("pyu")
 )
 
 type diceError int
@@ -67,13 +50,7 @@ func parseCommand(match, board string) (common.Command, error) {
 
 		// Select random string from the the 8ball answer array
 		answers := config.GetBoardConfigs(board).Eightball
-		// Just in case something unexpected happens due to race condition or
-		// something
-		if answers == nil {
-			com.Val = "null"
-		} else {
-			com.Val = answers[rand.Intn(len(answers))]
-		}
+		com.Val = answers[rand.Intn(len(answers))]
 
 		return com, nil
 
@@ -82,10 +59,9 @@ func parseCommand(match, board string) (common.Command, error) {
 		if !config.Get().Pyu {
 			return com, nil
 		}
-		var res int
+		var err error
+		com.Val, err = db.IncrementPyu()
 		com.Type = common.Pyu
-		err := db.One(pyuQuery, &res)
-		com.Val = res
 		return com, err
 
 	// Return current pyu count
@@ -93,10 +69,9 @@ func parseCommand(match, board string) (common.Command, error) {
 		if !config.Get().Pyu {
 			return com, nil
 		}
-		var res int
+		var err error
+		com.Val, err = db.GetPyu()
 		com.Type = common.Pcount
-		err := db.One(pcountQuery, &res)
-		com.Val = res
 		return com, err
 
 	// Dice throw

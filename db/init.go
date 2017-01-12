@@ -39,7 +39,8 @@ CREATE TABLE main (
 );
 INSERT INTO main (id, val) VALUES
 	('version', %d),
-	('config', '%s');
+	('config', '%s'),
+	('pyu', '0');
 
 CREATE TABLE accounts (
 	id VARCHAR(20) PRIMARY KEY,

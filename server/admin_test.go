@@ -368,7 +368,7 @@ func writeAdminAccount(t *testing.T) {
 }
 
 func TestServerConfigSetting(t *testing.T) {
-	assertTableClear(t, "main", "accounts")
+	assertTableClear(t, "accounts")
 	assertInsert(t, "main", db.ConfigDocument{
 		Document: db.Document{
 			ID: "config",
@@ -397,7 +397,7 @@ func TestServerConfigSetting(t *testing.T) {
 }
 
 func TestDeleteBoard(t *testing.T) {
-	assertTableClear(t, "main", "accounts", "threads", "posts", "boards")
+	assertTableClear(t, "accounts", "threads", "posts", "boards")
 	writeSampleUser(t)
 	assertInsert(t, "boards", config.DatabaseBoardConfigs{
 		BoardConfigs: config.BoardConfigs{

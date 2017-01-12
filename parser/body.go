@@ -16,7 +16,7 @@ var (
 
 // ParseBody parses the entire post text body for commands and links
 func ParseBody(body, board string) (
-	links common.LinkMap, com []common.Command, err error,
+	links [][2]uint64, com []common.Command, err error,
 ) {
 	parseCommands := config.GetBoardConfigs(board).HashCommands
 	for _, line := range strings.Split(body, "\n") {
@@ -27,14 +27,8 @@ func ParseBody(body, board string) (
 		if c.Val != nil {
 			com = append(com, c)
 		}
-		if l != nil {
-			if links == nil {
-				links = l
-			} else {
-				for id, link := range l {
-					links[id] = link
-				}
-			}
+		for _, l := range l {
+			links = append(links, l)
 		}
 	}
 
@@ -42,12 +36,12 @@ func ParseBody(body, board string) (
 }
 
 // ParseLine parses a full text line of a post
-func ParseLine(line, board string) (common.LinkMap, common.Command, error) {
+func ParseLine(line, board string) ([][2]uint64, common.Command, error) {
 	return parseLine(line, board, config.GetBoardConfigs(board).HashCommands)
 }
 
 func parseLine(line, board string, parseCommands bool) (
-	links common.LinkMap, com common.Command, err error,
+	links [][2]uint64, com common.Command, err error,
 ) {
 	if len(line) == 0 {
 		return

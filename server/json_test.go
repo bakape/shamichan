@@ -171,7 +171,7 @@ func TestPostJSON(t *testing.T) {
 
 // Setup the database for testing post-related paths
 func setupPosts(t *testing.T) {
-	assertTableClear(t, "main", "posts", "threads")
+	assertTableClear(t, "posts", "threads")
 	assertInsert(t, "main", map[string]interface{}{
 		"id":      "info",
 		"postCtr": 8,

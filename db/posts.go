@@ -134,6 +134,12 @@ func ValidateOP(id uint64, board string) (valid bool, err error) {
 	return
 }
 
+// GetPostOP retrieves the parent thread ID of the passed post
+func GetPostOP(id uint64) (op uint64, err error) {
+	err = prepared["getPostOP"].QueryRow(id).Scan(&op)
+	return
+}
+
 // BoardCounter retrieves the history or "progress" counter of a board
 func BoardCounter(board string) (counter uint64, err error) {
 	err = prepared["boardCounter"].QueryRow(board).Scan(&counter)
@@ -229,4 +235,27 @@ func WriteThread(t DatabaseThread, p DatabasePost) error {
 		return err
 	}
 	return tx.Commit()
+}
+
+// GetPyu retrieves current pyu counter
+func GetPyu() (c int, err error) {
+	err = db.QueryRow(`SELECT val::bigint FROM main WHERE id = 'pyu'`).Scan(&c)
+	return
+}
+
+// IncrementPyu increments the pyu counter by one and returns the new counter
+func IncrementPyu() (c int, err error) {
+	const q = `
+		UPDATE main
+			SET val = (val::bigint + 1)::text
+			WHERE id = 'pyu'
+			RETURNING val::bigint`
+	err = db.QueryRow(q).Scan(&c)
+	return
+}
+
+// SetPyu sets the pyu counter
+func SetPyu(c uint) error {
+	_, err := db.Exec(`UPDATE main SET val = $1::text WHERE id = 'pyu'`, c)
+	return err
 }

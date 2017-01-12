@@ -9,11 +9,7 @@ import (
 
 func TestLoadConfigs(t *testing.T) {
 	config.Clear()
-	assertTableClear(t, "main")
-	assertExec(t,
-		`INSERT INTO main (id, val) VALUES ('config', $1)`,
-		`{"mature":true}`,
-	)
+	assertExec(t, `UPDATE main SET val = '{"mature":true}' WHERE id = 'config'`)
 
 	if err := loadConfigs(); err != nil {
 		t.Fatal(err)

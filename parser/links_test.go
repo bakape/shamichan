@@ -4,18 +4,22 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 )
 
 func TestParseLinks(t *testing.T) {
-	assertTableClear(t, "posts")
-	assertInsert(t, "posts", []common.DatabasePost{
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+
+	posts := [...]db.DatabasePost{
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
 					ID: 8,
 				},
-				OP:    2,
+				OP:    1,
 				Board: "a",
 			},
 		},
@@ -24,32 +28,31 @@ func TestParseLinks(t *testing.T) {
 				Post: common.Post{
 					ID: 6,
 				},
-				OP:    2,
+				OP:    1,
 				Board: "a",
 			},
 		},
-	})
+	}
+	for _, p := range posts {
+		if err := db.WritePost(nil, p); err != nil {
+			t.Fatal(err)
+		}
+	}
 
 	cases := [...]struct {
 		name, in string
-		links    common.LinkMap
+		links    [][2]uint64
 	}{
 		{"no links", "foo bar baz", nil},
 		{
 			"valid links",
-			" >>>1  >>6 >>>>8",
-			common.LinkMap{
-				6: common.Link{
-					OP:    2,
-					Board: "a",
-				},
-				8: common.Link{
-					OP:    2,
-					Board: "a",
-				},
+			" >>>88  >>6 >>>>8",
+			[][2]uint64{
+				{6, 1},
+				{8, 1},
 			},
 		},
-		{"all links invalid", " >>1 >>2 >>33", nil},
+		{"all links invalid", " >>88 >>2 >>33", nil},
 	}
 
 	for i := range cases {

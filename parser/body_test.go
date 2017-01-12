@@ -2,9 +2,11 @@ package parser
 
 import (
 	"testing"
+	"time"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 )
 
@@ -48,14 +50,17 @@ func TestParseLine(t *testing.T) {
 }
 
 func TestParseBody(t *testing.T) {
-	assertTableClear(t, "posts")
-	assertInsert(t, "posts", []common.DatabasePost{
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+
+	posts := [...]db.DatabasePost{
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
 					ID: 8,
 				},
-				OP:    2,
+				OP:    1,
 				Board: "a",
 			},
 		},
@@ -64,11 +69,17 @@ func TestParseBody(t *testing.T) {
 				Post: common.Post{
 					ID: 6,
 				},
-				OP:    2,
+				OP:    1,
 				Board: "a",
 			},
 		},
-	})
+	}
+	for _, p := range posts {
+		if err := db.WritePost(nil, p); err != nil {
+			t.Fatal(err)
+		}
+	}
+
 	config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
 		BoardPublic: config.BoardPublic{
@@ -85,14 +96,40 @@ func TestParseBody(t *testing.T) {
 	if l := len(com); l != 2 {
 		t.Errorf("unexpected command count: %d", l)
 	}
-	AssertDeepEquals(t, links, common.LinkMap{
-		8: common.Link{
-			OP:    2,
-			Board: "a",
-		},
-		6: common.Link{
-			OP:    2,
-			Board: "a",
-		},
+	AssertDeepEquals(t, links, [][2]uint64{
+		{8, 1},
+		{6, 1},
 	})
+}
+
+func writeSampleBoard(t *testing.T) {
+	b := db.DatabaseBoardConfigs{
+		BoardConfigs: config.BoardConfigs{
+			ID:        "a",
+			Eightball: []string{"yes"},
+		},
+	}
+	if err := db.WriteBoard(b, false); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeSampleThread(t *testing.T) {
+	thread := db.DatabaseThread{
+		ID:    1,
+		Board: "a",
+		Log:   []string{"123"},
+	}
+	op := db.DatabasePost{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
+				ID:   1,
+				Time: time.Now().Unix(),
+			},
+			OP: 1,
+		},
+	}
+	if err := db.WriteThread(thread, op); err != nil {
+		t.Fatal(err)
+	}
 }

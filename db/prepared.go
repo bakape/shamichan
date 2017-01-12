@@ -114,6 +114,8 @@ var protoPrepared = map[string]string{
 
 	"validateOP": `SELECT true FROM threads WHERE id = $1 AND board = $2`,
 
+	"getPostOP": `SELECT op FROM posts WHERE id = $1`,
+
 	"getImage": `SELECT * FROM images WHERE SHA1 = $1`,
 
 	"useImageToken": `

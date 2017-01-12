@@ -43,7 +43,7 @@ func TestParseName(t *testing.T) {
 
 	t.Run("name too long", func(t *testing.T) {
 		t.Parallel()
-		_, _, err := ParseName(genString(common.MaxLenName + 1))
+		_, _, err := ParseName(GenString(common.MaxLenName + 1))
 		if err != common.ErrNameTooLong {
 			UnexpectedError(t, err)
 		}
@@ -63,7 +63,7 @@ func TestParseSubject(t *testing.T) {
 		},
 		{
 			"subject too long",
-			genString(common.MaxLenSubject + 1), "", common.ErrSubjectTooLong,
+			GenString(common.MaxLenSubject + 1), "", common.ErrSubjectTooLong,
 		},
 		{
 			"valid",
@@ -101,12 +101,12 @@ func TestVerifyPostPassword(t *testing.T) {
 		},
 		{
 			"too long",
-			genString(common.MaxLenPostPassword + 1),
+			GenString(common.MaxLenPostPassword + 1),
 			common.ErrPostPasswordTooLong,
 		},
 		{
 			"valid",
-			genString(common.MaxLenPostPassword),
+			GenString(common.MaxLenPostPassword),
 			nil,
 		},
 	}

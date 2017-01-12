@@ -84,8 +84,9 @@ func Test8ball(t *testing.T) {
 }
 
 func TestPyu(t *testing.T) {
-	assertTableClear(t, "main")
-	assertInsert(t, "main", db.Document{ID: "info"})
+	if err := db.SetPyu(0); err != nil {
+		t.Fatal(err)
+	}
 
 	t.Run("disabled", func(t *testing.T) {
 		(*config.Get()).Pyu = false

@@ -78,8 +78,8 @@ func decodeAndSetConfigs(data string) error {
 func loadBoardConfigs() error {
 	r, err := db.Query(`
 		SELECT readOnly, textOnly, forcedAnon, hashCommands, codeTags, id,
-			title, notice, rules, eightball
-		FROM boards`)
+				title, notice, rules, eightball
+			FROM boards`)
 	if err != nil {
 		return err
 	}

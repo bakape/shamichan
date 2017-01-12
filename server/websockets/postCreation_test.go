@@ -33,7 +33,7 @@ var (
 )
 
 func TestInsertThread(t *testing.T) {
-	assertTableClear(t, "main", "posts", "threads", "images")
+	assertTableClear(t, "posts", "threads", "images")
 	populateMainTable(t)
 
 	conf := [...]config.BoardConfigs{
@@ -272,7 +272,7 @@ func TestGetInvalidImage(t *testing.T) {
 }
 
 func TestClosePreviousPostOnCreation(t *testing.T) {
-	assertTableClear(t, "main", "threads", "posts")
+	assertTableClear(t, "threads", "posts")
 	assertInsert(t, "posts", samplePost)
 	populateMainTable(t)
 	setBoardConfigs(t, true)
@@ -461,7 +461,7 @@ func TestPostCreation(t *testing.T) {
 
 func prepareForPostCreation(t testing.TB) {
 	now := time.Now().Unix()
-	assertTableClear(t, "main", "threads", "posts")
+	assertTableClear(t, "threads", "posts")
 	assertInsert(t, "threads", common.DatabaseThread{
 		ID:        1,
 		Board:     "a",
