@@ -9,16 +9,6 @@ import (
 	"github.com/bakape/meguca/common"
 )
 
-// // Remove any identity information from post after a week. Also clear the log,
-// // as it will most likely be pointless by then.
-// var postCleanupQ = r.
-// 	Table("posts").
-// 	Filter(r.Row.HasFields("ip")).
-// 	Filter(timeFilter(day * 7)).
-// 	Replace(r.Row.Without("ip", "password").Merge(map[string][]string{
-// 		"log": []string{},
-// 	}))
-
 // var expireBansQ = r.
 // 	Table("bans").
 // 	Between(r.MinVal, r.Now(), r.BetweenOpts{
@@ -54,9 +44,9 @@ func runMinuteTasks() {
 
 func runHourTasks() {
 	logError("session cleanup", expireUserSessions)
+	logError("remove identity info", removeIdentityInfo)
 	// logError("board cleanup", deleteUnusedBoards())
 	// logError("thread cleanup", deleteOldThreads())
-	// logError("old post cleanup", Write(postCleanupQ))
 }
 
 func logError(prefix string, fn func() error) {
@@ -112,6 +102,15 @@ func closeDanglingPosts() (err error) {
 	}
 
 	return tx.Commit()
+}
+
+// Remove any identity information from posts after a week
+func removeIdentityInfo() error {
+	_, err := db.Exec(`
+		UPDATE posts
+			SET ip = NULL, password = NULL
+			WHERE time < EXTRACT(EPOCH FROM now() - interval '7 days')`)
+	return err
 }
 
 // // Delete boards that are older than 1 week and have not had any new posts for

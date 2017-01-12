@@ -124,7 +124,8 @@ CREATE TABLE posts (
 	name VARCHAR(50),
 	imageName VARCHAR(200),
 	body VARCHAR(2000) NOT NULL,
-	postPassword BYTEA,
+	password BYTEA,
+	ip TEXT,
 	links BIGINT[][2],
 	backlinks BIGINT[][2],
 	commands JSON[]
@@ -133,6 +134,7 @@ CREATE INDEX deleted on posts (deleted);
 CREATE INDEX op on posts (op);
 CREATE INDEX image on posts (SHA1);
 CREATE INDEX editing on posts (editing);
+CREATE INDEX ip on posts (ip);
 `
 
 // Generates a Postgres connection parameter string

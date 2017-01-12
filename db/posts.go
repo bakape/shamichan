@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
+	"net"
 	"strconv"
 
 	"github.com/bakape/meguca/common"
@@ -18,6 +19,7 @@ type DatabasePost struct {
 	Deleted bool
 	common.StandalonePost
 	Password []byte
+	IP       net.IP
 }
 
 // DatabaseThread is a template for writing new threads to the database
@@ -188,7 +190,8 @@ func WritePost(tx *sql.Tx, p DatabasePost) error {
 
 	_, err := ex.Exec(
 		p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, name, trip,
-		auth, img, imgName, linkRow(p.Links), linkRow(p.Backlinks), comm,
+		auth, p.Password, []byte(p.IP), img, imgName, linkRow(p.Links),
+		linkRow(p.Backlinks), comm,
 	)
 	return err
 }

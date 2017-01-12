@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 
+	"net"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/imager/assets"
@@ -62,6 +64,8 @@ func TestReader(t *testing.T) {
 				OP:    1,
 				Board: "a",
 			},
+			Password: []byte("foo"),
+			IP:       net.IP("::1"),
 		},
 		{
 			StandalonePost: common.StandalonePost{
