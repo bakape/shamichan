@@ -98,7 +98,11 @@ func Write(name string, fileType, thumbType uint8, src, thumb []byte) error {
 	data := [2][]byte{src, thumb}
 
 	for i, path := range GetFilePaths(name, fileType, thumbType) {
-		if err := writeFile(path, data[i]); err != nil {
+		err := writeFile(path, data[i])
+		switch {
+		// Ignore files already written by another thread or process
+		case err == nil, os.IsExist(err):
+		default:
 			return err
 		}
 	}

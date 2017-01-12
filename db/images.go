@@ -7,6 +7,8 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/imager/assets"
+	"github.com/bakape/meguca/util"
 	"github.com/lib/pq"
 )
 
@@ -16,11 +18,6 @@ const (
 )
 
 var (
-	// // Update associate post count on an image document
-	// incrementImageRefCount = map[string]r.Term{
-	// 	"posts": r.Row.Field("posts").Add(1),
-	// }
-
 	// ErrInvalidToken occurs, when trying to retrieve an image with an
 	// non-existent token. The token might have expired (60 to 119 seconds) or
 	// the client could have provided an invalid token to begin with.
@@ -103,72 +100,26 @@ func UseImageToken(token string) (img common.ImageCommon, err error) {
 	return img, tx.Commit()
 }
 
-// // DeallocateImage decrements the image's reference counter. If the counter
-// // would become zero, the image entry is immediately deleted along with its
-// // file assets.
-// func DeallocateImage(id string) error {
-// 	query := GetImage(id).
-// 		Replace(
-// 			func(doc r.Term) r.Term {
-// 				return r.Branch(
-// 					doc.Field("posts").Eq(1),
-// 					nil,
-// 					doc.Merge(map[string]r.Term{
-// 						"posts": doc.Field("posts").Sub(1),
-// 					}),
-// 				)
-// 			},
-// 			r.ReplaceOpts{ReturnChanges: true},
-// 		).
-// 		Field("changes").
-// 		Field("old_val").
-// 		Pluck("posts", "fileType")
+// AllocateImage allocates an image's file resources to their respective served
+// directories and write its data to the database
+func AllocateImage(src, thumb []byte, img common.ImageCommon) error {
+	err := assets.Write(img.SHA1, img.FileType, img.ThumbType, src, thumb)
+	if err != nil {
+		return cleanUpFailedAllocation(img, err)
+	}
 
-// 	var res struct {
-// 		Posts               int
-// 		FileType, ThumbType uint8
-// 	}
-// 	if err := One(query, &res); err != nil {
-// 		return err
-// 	}
+	err = WriteImage(img)
+	if err != nil {
+		return cleanUpFailedAllocation(img, err)
+	}
+	return nil
+}
 
-// 	if res.Posts == 1 {
-// 		if err := assets.Delete(id, res.FileType, res.ThumbType); err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
-
-// // AllocateImage allocates an image's file resources to their respective served
-// // directories and write its data to the database
-// func AllocateImage(src, thumb []byte, img common.ImageCommon) error {
-// 	err := assets.Write(img.SHA1, img.FileType, img.ThumbType, src, thumb)
-// 	if err != nil {
-// 		return cleanUpFailedAllocation(img, err)
-// 	}
-
-// 	// TODO: Account for race condition, when the same image is uploaded at the
-// 	// same time by multiple clients.
-// 	query := r.
-// 		Table("images").
-// 		Insert(common.ProtoImage{
-// 			ImageCommon: img,
-// 			Posts:       1,
-// 		})
-// 	err = Write(query)
-// 	if err != nil {
-// 		return cleanUpFailedAllocation(img, err)
-// 	}
-// 	return nil
-// }
-
-// // Delete any dangling image files in case of a failed image allocation
-// func cleanUpFailedAllocation(img common.ImageCommon, err error) error {
-// 	delErr := assets.Delete(img.SHA1, img.FileType, img.ThumbType)
-// 	if delErr != nil {
-// 		err = util.WrapError(err.Error(), delErr)
-// 	}
-// 	return err
-// }
+// Delete any dangling image files in case of a failed image allocation
+func cleanUpFailedAllocation(img common.ImageCommon, err error) error {
+	delErr := assets.Delete(img.SHA1, img.FileType, img.ThumbType)
+	if delErr != nil {
+		err = util.WrapError(err.Error(), delErr)
+	}
+	return err
+}

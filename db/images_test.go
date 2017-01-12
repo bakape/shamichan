@@ -1,57 +1,15 @@
 package db
 
 import (
+	"bytes"
 	"database/sql"
+	"io/ioutil"
 	"testing"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
 )
-
-// type allocationTester struct {
-// 	t            *testing.T
-// 	name, source string
-// 	paths        [2]string
-// }
-
-// func newAllocationTester(
-// 	t *testing.T,
-// 	source,
-// 	name string,
-// 	fileType, thumbType uint8,
-// ) *allocationTester {
-// 	return &allocationTester{
-// 		source: filepath.Join("testdata", source),
-// 		paths:  assets.GetFilePaths(name, fileType, thumbType),
-// 		t:      t,
-// 	}
-// }
-
-// func (a *allocationTester) Allocate() {
-// 	for _, dest := range a.paths {
-// 		if err := os.Link(a.source, dest); err != nil {
-// 			a.t.Fatal(err)
-// 		}
-// 	}
-// }
-
-// func (a *allocationTester) AssertDeleted() {
-// 	for _, path := range a.paths {
-// 		if _, err := os.Stat(path); !os.IsNotExist(err) {
-// 			UnexpectedError(a.t, err)
-// 		}
-// 	}
-// }
-
-// func assertImageRefCount(t *testing.T, id string, count int) {
-// 	var posts int
-// 	if err := One(GetImage(id).Field("posts"), &posts); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	if posts != count {
-// 		t.Errorf("unexpected reference count: %d : %d", count, posts)
-// 	}
-// }
 
 func TestGetImage(t *testing.T) {
 	assertTableClear(t, "images")
@@ -81,143 +39,60 @@ func writeSampleImage(t *testing.T) {
 	}
 }
 
-// func TestDeallocateImage(t *testing.T) {
-// 	assertTableClear(t, "posts", "images")
+func setupImageDirs(t *testing.T) func() {
+	if err := assets.CreateDirs(); err != nil {
+		t.Fatal(err)
+	}
+	return func() {
+		if err := assets.DeleteDirs(); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
 
-// 	t.Run("only decrement ref count", testDecrementRefCount)
-// 	t.Run("remove image", testRemoveImage)
-// }
+func TestAllocateImage(t *testing.T) {
+	assertTableClear(t, "images")
+	defer setupImageDirs(t)()
 
-// func testDecrementRefCount(t *testing.T) {
-// 	t.Parallel()
+	id := GenString(40)
+	var files [2][]byte
+	for i, name := range [...]string{"sample", "thumb"} {
+		files[i] = ReadSample(t, name+".jpg")
+	}
+	std := common.ImageCommon{
+		SHA1:     id,
+		MD5:      GenString(22),
+		FileType: common.JPEG,
+	}
 
-// 	const id = "nano desu"
-// 	assertInsert(t, "images", common.ProtoImage{
-// 		ImageCommon: common.ImageCommon{
-// 			SHA1: id,
-// 		},
-// 		Posts: 2,
-// 	})
+	if err := AllocateImage(files[0], files[1], std); err != nil {
+		t.Fatal(err)
+	}
 
-// 	if err := DeallocateImage(id); err != nil {
-// 		t.Fatal(err)
-// 	}
+	// Assert files and remove them
+	t.Run("files", func(t *testing.T) {
+		for i, path := range assets.GetFilePaths(id, common.JPEG, common.JPEG) {
+			buf, err := ioutil.ReadFile(path)
+			if err != nil {
+				t.Error(err)
+			}
+			if !bytes.Equal(buf, files[i]) {
+				t.Error("invalid file")
+			}
+		}
+	})
 
-// 	assertImageRefCount(t, id, 1)
-// }
-
-// func testRemoveImage(t *testing.T) {
-// 	t.Parallel()
-// 	defer setupImageDirs(t)()
-
-// 	const id = "fuwa fuwa fuwari"
-// 	assertInsert(t, "images", common.ProtoImage{
-// 		ImageCommon: common.ImageCommon{
-// 			FileType: common.JPEG,
-// 			SHA1:     id,
-// 		},
-// 		Posts: 1,
-// 	})
-// 	at := newAllocationTester(t, "sample.jpg", id, common.JPEG, common.JPEG)
-// 	at.Allocate()
-
-// 	if err := DeallocateImage(id); err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	assertDeleted(t, GetImage(id), true)
-// 	at.AssertDeleted()
-// }
-
-// func setupImageDirs(t *testing.T) func() {
-// 	if err := assets.CreateDirs(); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	return func() {
-// 		if err := assets.DeleteDirs(); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 	}
-// }
-
-// func TestCleanUpFailedAllocation(t *testing.T) {
-// 	defer setupImageDirs(t)()
-
-// 	const id = "123"
-// 	at := newAllocationTester(t, "sample.jpg", id, common.JPEG, common.JPEG)
-// 	at.Allocate()
-// 	path := filepath.Join("images", "thumb", id+".jpg")
-// 	if err := os.Remove(path); err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	err := errors.New("foo")
-// 	img := common.ImageCommon{
-// 		SHA1:     id,
-// 		FileType: common.JPEG,
-// 	}
-
-// 	if reErr := cleanUpFailedAllocation(img, err); reErr != err {
-// 		LogUnexpected(t, err, reErr)
-// 	}
-// 	at.AssertDeleted()
-// }
-
-// func TestAllocateImage(t *testing.T) {
-// 	assertTableClear(t, "images")
-// 	defer setupImageDirs(t)()
-
-// 	const id = "123"
-// 	var files [2][]byte
-// 	for i, name := range [...]string{"sample", "thumb"} {
-// 		files[i] = readSample(t, name+".jpg")
-// 	}
-// 	img := common.ImageCommon{
-// 		SHA1:     id,
-// 		FileType: common.JPEG,
-// 	}
-
-// 	if err := AllocateImage(files[0], files[1], img); err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	// Assert files and remove them
-// 	t.Run("files", func(t *testing.T) {
-// 		for i, path := range assets.GetFilePaths(id, common.JPEG, common.JPEG) {
-// 			buf, err := ioutil.ReadFile(path)
-// 			if err != nil {
-// 				t.Error(err)
-// 			}
-// 			if !bytes.Equal(buf, files[i]) {
-// 				t.Error("invalid file")
-// 			}
-// 		}
-// 	})
-
-// 	// Assert database document
-// 	t.Run("db document", func(t *testing.T) {
-// 		var doc common.ProtoImage
-// 		if err := One(GetImage(id), &doc); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		std := common.ProtoImage{
-// 			ImageCommon: img,
-// 			Posts:       1,
-// 		}
-// 		if doc != std {
-// 			LogUnexpected(t, std, doc)
-// 		}
-// 	})
-// }
-
-// func readSample(t *testing.T, name string) []byte {
-// 	path := filepath.Join("testdata", name)
-// 	data, err := ioutil.ReadFile(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	return data
-// }
+	// Assert database record
+	t.Run("db row", func(t *testing.T) {
+		img, err := GetImage(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if img != std {
+			LogUnexpected(t, std, img)
+		}
+	})
+}
 
 func TestImageTokens(t *testing.T) {
 	assertTableClear(t, "images")

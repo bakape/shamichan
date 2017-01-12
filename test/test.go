@@ -3,8 +3,10 @@ package test
 
 import (
 	"bytes"
+	"encoding/base64"
 	"io/ioutil"
 	"math/rand"
+	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -45,11 +47,21 @@ func AssertBufferEquals(t *testing.T, buf, std []byte) {
 	}
 }
 
-// GenString produces a random ASCII character string of passed length
+// GenString produces a random base64 string of passed length
 func GenString(len int) string {
 	buf := make([]byte, len)
 	for i := 0; i < len; i++ {
-		buf[i] = byte(rand.Intn(128))
+		buf[i] = byte(rand.Intn(256))
 	}
-	return string(buf)
+	return base64.RawURLEncoding.EncodeToString(buf)[:len]
+}
+
+// ReadSample reads a sample file of passed file name
+func ReadSample(t *testing.T, name string) []byte {
+	path := filepath.Join("testdata", name)
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Error(err)
+	}
+	return data
 }

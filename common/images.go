@@ -42,15 +42,8 @@ type Image struct {
 	Name string `json:"name"`
 }
 
-// ProtoImage stores image data related to the source and thumbnail resources
-// themselves. This struct is partially copied into the image struct on image
-// allocation.
-type ProtoImage struct {
-	ImageCommon
-	Posts uint `gorethink:"posts"`
-}
-
-// ImageCommon contains the common fields of both Image and ProtoImage structs
+// ImageCommon contains the common data shared between multiple post referencing
+// the same image
 type ImageCommon struct {
 	APNG  bool `json:"apng,omitempty"`
 	Audio bool `json:"audio,omitempty"`
