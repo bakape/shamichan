@@ -97,48 +97,6 @@ func assertLogContains(t *testing.T, id uint64, msgs ...string) {
 	}
 }
 
-// func TestImageTokenExpiry(t *testing.T) {
-// 	assertTableClear(t, "images")
-
-// 	const SHA1 = "123"
-// 	assertInsert(t, "images", common.ProtoImage{
-// 		ImageCommon: common.ImageCommon{
-// 			SHA1:     "123",
-// 			FileType: common.JPEG,
-// 		},
-// 		Posts: 7,
-// 	})
-
-// 	expired := time.Now().Add(-time.Minute)
-// 	tokens := [...]allocationToken{
-// 		{
-// 			SHA1:    SHA1,
-// 			Expires: expired,
-// 		},
-// 		{
-// 			SHA1:    SHA1,
-// 			Expires: expired,
-// 		},
-// 		{
-// 			SHA1:    SHA1,
-// 			Expires: time.Now().Add(time.Minute),
-// 		},
-// 	}
-// 	assertInsert(t, "imageTokens", tokens)
-
-// 	if err := expireImageTokens(); err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	var posts int
-// 	if err := One(GetImage(SHA1).Field("posts"), &posts); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	if posts != 5 {
-// 		t.Errorf("unexpected reference count: %d", posts)
-// 	}
-// }
-
 // func TestDeleteThread(t *testing.T) {
 // 	assertTableClear(t, "threads", "posts", "images")
 

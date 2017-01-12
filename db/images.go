@@ -123,3 +123,9 @@ func cleanUpFailedAllocation(img common.ImageCommon, err error) error {
 	}
 	return err
 }
+
+// Remove any unused expired image allocation tokens
+func expireImageTokens() error {
+	_, err := db.Exec(`DELETE FROM image_tokens WHERE expires < now()`)
+	return err
+}

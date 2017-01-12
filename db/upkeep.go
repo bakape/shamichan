@@ -9,19 +9,6 @@ import (
 	"github.com/bakape/meguca/common"
 )
 
-// var expireImageTokensQ = r.
-// 	Table("imageTokens").
-// 	Between(r.MinVal, r.Now(), r.BetweenOpts{
-// 		Index: "expires",
-// 	}).
-// 	Delete(r.DeleteOpts{ReturnChanges: true}).
-// 	Do(func(d r.Term) r.Term {
-// 		return d.Field("deleted").Eq(0).Branch(
-// 			r.Expr([]string{}),
-// 			d.Field("changes").Field("old_val").Field("SHA1"),
-// 		)
-// 	})
-
 // // Remove any identity information from post after a week. Also clear the log,
 // // as it will most likely be pointless by then.
 // var postCleanupQ = r.
@@ -61,7 +48,7 @@ func runCleanupTasks() {
 
 func runMinuteTasks() {
 	logError("open post cleanup", closeDanglingPosts)
-	// logError("expire image tokens", expireImageTokens)
+	logError("expire image tokens", expireImageTokens)
 	// logError("expire bans", Write(expireBansQ))
 }
 
@@ -126,23 +113,6 @@ func closeDanglingPosts() (err error) {
 
 	return tx.Commit()
 }
-
-// // Remove any expired image tokens and decrement or deallocate their target
-// // image's assets
-// func expireImageTokens() error {
-// 	var toDealloc []string
-// 	if err := All(expireImageTokensQ, &toDealloc); err != nil {
-// 		return err
-// 	}
-
-// 	for _, sha1 := range toDealloc {
-// 		if err := DeallocateImage(sha1); err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
 
 // // Delete boards that are older than 1 week and have not had any new posts for
 // // N days.

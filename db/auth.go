@@ -54,7 +54,7 @@ func isConflictError(err error) bool {
 	return false
 }
 
-// Expire unused image allocation tokens
+// Remove expired login sessions
 func expireUserSessions() error {
 	_, err := db.Exec(`DELETE FROM sessions WHERE expires < now()`)
 	return err
