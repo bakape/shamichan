@@ -143,12 +143,6 @@ type BoardConfContainer struct {
 	Hash string
 }
 
-// DatabaseBoardConfigs contains extra fields not exposed on database reads
-type DatabaseBoardConfigs struct {
-	BoardConfigs
-	Created int64
-}
-
 // PostParseConfigs contains board-specific flags for post text parsing
 type PostParseConfigs struct {
 	ReadOnly     bool `json:"readOnly"`

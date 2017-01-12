@@ -39,7 +39,7 @@ func TestValidateOp(t *testing.T) {
 }
 
 func writeSampleBoard(t *testing.T) {
-	b := config.DatabaseBoardConfigs{
+	b := DatabaseBoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "a",
 			Eightball: []string{"yes"},

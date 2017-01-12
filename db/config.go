@@ -18,6 +18,12 @@ type rowScanner interface {
 	Scan(dest ...interface{}) error
 }
 
+// DatabaseBoardConfigs contains extra fields not exposed on database reads
+type DatabaseBoardConfigs struct {
+	config.BoardConfigs
+	Created time.Time
+}
+
 // Load configs from the database and update on each change
 func loadConfigs() error {
 	var enc string
@@ -106,7 +112,7 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 }
 
 // WriteBoard writes a board complete with configurations to the database
-func WriteBoard(c config.DatabaseBoardConfigs, overwrite bool) error {
+func WriteBoard(c DatabaseBoardConfigs, overwrite bool) error {
 	q :=
 		`INSERT INTO boards (
 			readOnly, textOnly, forcedAnon, hashCommands, codeTags, id, created,

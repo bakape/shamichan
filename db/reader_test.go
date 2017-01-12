@@ -14,7 +14,7 @@ import (
 func TestReader(t *testing.T) {
 	assertTableClear(t, "boards", "images")
 
-	boards := [...]config.DatabaseBoardConfigs{
+	boards := [...]DatabaseBoardConfigs{
 		{
 			BoardConfigs: config.BoardConfigs{
 				ID:        "a",

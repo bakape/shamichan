@@ -9,28 +9,6 @@ import (
 	"github.com/bakape/meguca/common"
 )
 
-const day = 24 * 60 * 60
-
-// var sessionExpiryQ = r.
-// 	Table("accounts").
-// 	Update(map[string]r.Term{
-// 		"sessions": r.Row.
-// 			Field("sessions").
-// 			Filter(func(s r.Term) r.Term {
-// 				return s.Field("expires").Gt(r.Now())
-// 			}),
-// 	})
-
-// // Remove any identity information from post after a week. Also clear the log,
-// // as it will most likely be pointless by then.
-// var postCleanupQ = r.
-// 	Table("posts").
-// 	Filter(r.Row.HasFields("ip")).
-// 	Filter(timeFilter(day * 7)).
-// 	Replace(r.Row.Without("ip", "password").Merge(map[string][]string{
-// 		"log": []string{},
-// 	}))
-
 // var expireImageTokensQ = r.
 // 	Table("imageTokens").
 // 	Between(r.MinVal, r.Now(), r.BetweenOpts{
@@ -44,18 +22,22 @@ const day = 24 * 60 * 60
 // 		)
 // 	})
 
+// // Remove any identity information from post after a week. Also clear the log,
+// // as it will most likely be pointless by then.
+// var postCleanupQ = r.
+// 	Table("posts").
+// 	Filter(r.Row.HasFields("ip")).
+// 	Filter(timeFilter(day * 7)).
+// 	Replace(r.Row.Without("ip", "password").Merge(map[string][]string{
+// 		"log": []string{},
+// 	}))
+
 // var expireBansQ = r.
 // 	Table("bans").
 // 	Between(r.MinVal, r.Now(), r.BetweenOpts{
 // 		Index: "expires",
 // 	}).
 // 	Delete()
-
-// func timeFilter(sec int) r.Term {
-// 	return r.Row.
-// 		Field("time").
-// 		Lt(r.Now().ToEpochTime().Floor().Sub(sec))
-// }
 
 // Run database clean up tasks at server start and regular intervals. Must be
 // launched in separate goroutine.
@@ -79,12 +61,12 @@ func runCleanupTasks() {
 
 func runMinuteTasks() {
 	logError("open post cleanup", closeDanglingPosts)
-	// logError("expire image tokens", expireImageTokens())
+	// logError("expire image tokens", expireImageTokens)
 	// logError("expire bans", Write(expireBansQ))
 }
 
 func runHourTasks() {
-	// logError("session cleanup", expireUserSessions())
+	logError("session cleanup", expireUserSessions)
 	// logError("board cleanup", deleteUnusedBoards())
 	// logError("thread cleanup", deleteOldThreads())
 	// logError("old post cleanup", Write(postCleanupQ))
@@ -95,11 +77,6 @@ func logError(prefix string, fn func() error) {
 		log.Printf("%s: %s\n", prefix, err)
 	}
 }
-
-// // Separate function, so we can test it
-// func expireUserSessions() error {
-// 	return Write(sessionExpiryQ)
-// }
 
 // Close any open posts that have not been closed for 30 minutes
 func closeDanglingPosts() (err error) {
@@ -114,9 +91,7 @@ func closeDanglingPosts() (err error) {
 	}()
 
 	// Read and close all expired posts
-	r, err := tx.
-		Stmt(prepared["closeExpiredOpenPosts"]).
-		Query(time.Now().Add(time.Minute * -30).Unix())
+	r, err := tx.Stmt(prepared["closeExpiredOpenPosts"]).Query()
 	if err != nil {
 		return
 	}

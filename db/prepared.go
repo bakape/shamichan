@@ -126,7 +126,7 @@ var protoPrepared = map[string]string{
 	"closeExpiredOpenPosts": `
 		UPDATE posts
 			SET editing = false
-			WHERE editing = true AND time < $1
+			WHERE editing = true AND time < EXTRACT(EPOCH FROM now()) - 1800
 			RETURNING id, op`,
 
 	"updateLog": `

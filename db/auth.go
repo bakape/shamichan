@@ -54,6 +54,12 @@ func isConflictError(err error) bool {
 	return false
 }
 
+// Expire unused image allocation tokens
+func expireUserSessions() error {
+	_, err := db.Exec(`DELETE FROM sessions WHERE expires < now()`)
+	return err
+}
+
 // // GetLoginHash retrieves the login hash of the registered user account
 // func GetLoginHash(id string) (hash []byte, err error) {
 // 	query := GetAccount(id).Field("password").Default(nil)

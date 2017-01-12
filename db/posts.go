@@ -207,10 +207,9 @@ func WriteThread(t DatabaseThread, p DatabasePost) error {
 		return err
 	}
 
-	log := pq.GenericArray{A: t.Log}
 	_, err = tx.Stmt(prepared["writeOP"]).Exec(
 		t.Board,
-		log,
+		pq.StringArray(t.Log),
 		t.ID,
 		t.PostCtr,
 		t.ImageCtr,

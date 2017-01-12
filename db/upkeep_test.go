@@ -11,67 +11,6 @@ import (
 
 // const eightDays = time.Hour * 24 * 8
 
-// func TestExpireUserSessions(t *testing.T) {
-// 	assertTableClear(t, "accounts")
-
-// 	expired := time.Now().Add(-time.Hour)
-// 	samples := []auth.User{
-// 		{
-// 			ID: "1",
-// 			Sessions: []auth.Session{
-// 				{
-// 					Token:   "foo",
-// 					Expires: expired,
-// 				},
-// 				{
-// 					Token:   "bar",
-// 					Expires: time.Now().Add(time.Hour),
-// 				},
-// 			},
-// 		},
-// 		{
-// 			ID: "2",
-// 			Sessions: []auth.Session{
-// 				{
-// 					Token:   "baz",
-// 					Expires: expired,
-// 				},
-// 			},
-// 		},
-// 	}
-// 	assertInsert(t, "accounts", samples)
-
-// 	if err := expireUserSessions(); err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	t.Run("not expired", func(t *testing.T) {
-// 		t.Parallel()
-// 		var res []auth.Session
-// 		if err := All(GetAccount("1").Field("sessions"), &res); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		if len(res) != 1 {
-// 			t.Errorf("unexpected session count: %d", len(res))
-// 		}
-// 		token := res[0].Token
-// 		if token != "bar" {
-// 			t.Errorf("unexpected session token: %s", token)
-// 		}
-// 	})
-
-// 	t.Run("expired", func(t *testing.T) {
-// 		t.Parallel()
-// 		var res []auth.Session
-// 		if err := All(GetAccount("2").Field("sessions"), &res); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		if res != nil {
-// 			t.Fatal("session not cleared")
-// 		}
-// 	})
-// }
-
 func TestOpenPostClosing(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)

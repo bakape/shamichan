@@ -59,7 +59,7 @@ func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
 		if err != nil {
 			return
 		}
-		expires := time.Now().Add(tokenTimeout).Unix()
+		expires := time.Now().Add(tokenTimeout)
 
 		_, err = ex.Exec(token, SHA1, expires)
 		switch {
