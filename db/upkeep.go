@@ -155,30 +155,6 @@ func closeDanglingPosts() (err error) {
 // 	return nil
 // }
 
-// // DeleteBoard deletes a board and all of its contained threads and posts
-// func DeleteBoard(board string) error {
-// 	var threads []uint64
-// 	q := r.Table("threads").GetAllByIndex("board", board).Field("id")
-// 	if err := All(q, &threads); err != nil {
-// 		return err
-// 	}
-
-// 	for _, thread := range threads {
-// 		if err := DeleteThread(thread); err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	// Perform board deletion after all threads are deleted, so there are
-// 	// less consequences to an interrupted cleanup task.
-// 	q = r.Table("boards").Get(board).Delete()
-// 	if err := Write(q); err != nil {
-// 		return err
-// 	}
-
-// 	return nil
-// }
-
 // // Delete threads that have not had any new posts in N days.
 // func deleteOldThreads() error {
 // 	conf := config.Get()
@@ -213,36 +189,14 @@ func closeDanglingPosts() (err error) {
 // 	return nil
 // }
 
-// // DeleteThread deletes a thread from the database and deallocated any freed up
-// // images
-// func DeleteThread(id uint64) error {
-// 	if err := Write(FindThread(id).Delete()); err != nil {
-// 		return err
-// 	}
+// DeleteBoard deletes a board and all of its contained threads and posts
+func DeleteBoard(board string) error {
+	_, err := db.Exec(`DELETE FROM boards WHERE id = $1`, board)
+	return err
+}
 
-// 	q := r.
-// 		Table("posts").
-// 		GetAllByIndex("op", id).
-// 		Delete(r.DeleteOpts{
-// 			ReturnChanges: true,
-// 		}).
-// 		Field("changes").
-// 		Field("old_val").
-// 		Field("image").
-// 		Field("SHA1").
-// 		Default("") // Already deleted by another backend instance or no image
-// 	var images []string
-// 	if err := All(q, &images); err != nil {
-// 		return err
-// 	}
-
-// 	for _, sha1 := range images {
-// 		if sha1 != "" {
-// 			if err := DeallocateImage(sha1); err != nil {
-// 				return err
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
+// DeleteThread deletes a thread from the database
+func DeleteThread(id uint64) error {
+	_, err := db.Exec(`DELETE FROM threads WHERE id = $1`, id)
+	return err
+}
