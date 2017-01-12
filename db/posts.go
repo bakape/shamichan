@@ -2,7 +2,6 @@
 package db
 
 import (
-	"bytes"
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
@@ -27,7 +26,7 @@ type DatabaseThread struct {
 	PostCtr, ImageCtr   uint32
 	ReplyTime, BumpTime int64
 	Subject, Board      string
-	Log                 [][]byte
+	Log                 []string
 }
 
 type executor interface {
@@ -107,21 +106,21 @@ func (l linkRow) Value() (driver.Value, error) {
 		return nil, nil
 	}
 
-	var buf bytes.Buffer
-	buf.WriteByte('{')
+	b := make([]byte, 1, 16)
+	b[0] = '{'
 	for i, l := range l {
 		if i != 0 {
-			buf.WriteByte(',')
+			b = append(b, ',')
 		}
-		buf.WriteByte('{')
-		buf.WriteString(strconv.FormatUint(l[0], 10))
-		buf.WriteByte(',')
-		buf.WriteString(strconv.FormatUint(l[1], 10))
-		buf.WriteByte('}')
+		b = append(b, '{')
+		b = strconv.AppendUint(b, l[0], 10)
+		b = append(b, ',')
+		b = strconv.AppendUint(b, l[1], 10)
+		b = append(b, '}')
 	}
-	buf.WriteByte('}')
+	b = append(b, '}')
 
-	return buf.String(), nil
+	return string(b), nil
 }
 
 // ValidateOP confirms the specified thread exists on specific board

@@ -263,13 +263,6 @@ func scanBoard(table tableScanner) (common.Board, error) {
 		t.Auth = auth.String
 		t.Image = img.Val()
 
-		// Allocate more space in advance, to reduce backing array reallocation
-		if len(board) == cap(board) {
-			new := make(common.Board, len(board), cap(board)*2)
-			copy(new, board)
-			board = new
-		}
-
 		board = append(board, t)
 	}
 

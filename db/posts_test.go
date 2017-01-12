@@ -3,6 +3,8 @@ package db
 import (
 	"testing"
 
+	"time"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 )
@@ -10,22 +12,7 @@ import (
 func TestValidateOp(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
-	thread := DatabaseThread{
-		ID:    1,
-		Board: "a",
-		Log:   [][]byte{},
-	}
-	op := DatabasePost{
-		StandalonePost: common.StandalonePost{
-			Post: common.Post{
-				ID: 1,
-			},
-			OP: 1,
-		},
-	}
-	if err := WriteThread(thread, op); err != nil {
-		t.Fatal(err)
-	}
+	writeSampleThread(t)
 
 	cases := [...]struct {
 		id      uint64
@@ -59,6 +46,26 @@ func writeSampleBoard(t *testing.T) {
 		},
 	}
 	if err := WriteBoard(b, false); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeSampleThread(t *testing.T) {
+	thread := DatabaseThread{
+		ID:    1,
+		Board: "a",
+		Log:   []string{"123"},
+	}
+	op := DatabasePost{
+		StandalonePost: common.StandalonePost{
+			Post: common.Post{
+				ID:   1,
+				Time: time.Now().Unix(),
+			},
+			OP: 1,
+		},
+	}
+	if err := WriteThread(thread, op); err != nil {
 		t.Fatal(err)
 	}
 }

@@ -104,7 +104,7 @@ CREATE TABLE threads (
 	bumpTime BIGINT NOT NULL,
 	replyTime BIGINT NOT NULL,
 	subject VARCHAR(100) NOT NULL,
-	log BYTEA[] NOT NULL
+	log TEXT[] NOT NULL
 );
 CREATE INDEX threads_board on threads (board);
 CREATE INDEX bumpTime on threads (bumpTime);
@@ -138,7 +138,7 @@ CREATE INDEX editing on posts (editing);
 // Generates a Postgres connection parameter string
 func connArgs() string {
 	return fmt.Sprintf(
-		`user='meguca' password='%s' dbname='%s' sslmode=disable`,
+		`user=meguca password='%s' dbname='%s' sslmode=disable binary_parameters=yes`,
 		DBPassword, DBName,
 	)
 }
@@ -177,9 +177,9 @@ func LoadDB() (err error) {
 		}
 	}
 
-	// if !IsTest {
-	// 	go runCleanupTasks()
-	// }
+	if !IsTest {
+		go runCleanupTasks()
+	}
 
 	return util.Waterfall(loadConfigs, loadBoardConfigs)
 }

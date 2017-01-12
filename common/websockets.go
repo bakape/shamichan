@@ -62,30 +62,28 @@ type Client interface {
 
 // EncodeMessage encodes a message for sending through websockets or writing to
 // the replication log.
-func EncodeMessage(typ MessageType, msg interface{}) (string, error) {
+func EncodeMessage(typ MessageType, msg interface{}) ([]byte, error) {
 	data, err := json.Marshal(msg)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	return PrependMessageType(typ, string(data)), nil
+	return PrependMessageType(typ, data), nil
 }
 
 // PrependMessageType prepends the encoded websocket message type to an already
 // encoded message
-func PrependMessageType(typ MessageType, data string) string {
+func PrependMessageType(typ MessageType, data []byte) []byte {
 	encoded := make([]byte, len(data)+2)
-	typeString := strconv.FormatUint(uint64(typ), 10)
 
 	// Ensure type string is always 2 chars long
-	if len(typeString) == 1 {
+	var i int
+	if typ < 10 {
 		encoded[0] = '0'
-		encoded[1] = typeString[0]
-	} else {
-		copy(encoded, typeString)
+		i = 1
 	}
+	strconv.AppendUint(encoded[i:i], uint64(typ), 10)
 
 	copy(encoded[2:], data)
 
-	return string(encoded)
+	return encoded
 }

@@ -2,7 +2,14 @@
 
 package db
 
-// const day = 24 * 60 * 60
+import (
+	"log"
+	"time"
+
+	"github.com/bakape/meguca/common"
+)
+
+const day = 24 * 60 * 60
 
 // var sessionExpiryQ = r.
 // 	Table("accounts").
@@ -12,19 +19,6 @@ package db
 // 			Filter(func(s r.Term) r.Term {
 // 				return s.Field("expires").Gt(r.Now())
 // 			}),
-// 	})
-
-// var postClosingQ = r.
-// 	Table("posts").
-// 	GetAllByIndex("editing", true). // Older than 30 minutes
-// 	Filter(timeFilter(1800)).
-// 	Update(map[string]interface{}{
-// 		"log": r.Row.Field("log").Append(r.
-// 			Expr("06").
-// 			Add(r.Row.Field("id").CoerceTo("string")),
-// 		),
-// 		"editing":     false,
-// 		"lastUpdated": r.Now().ToEpochTime().Floor(),
 // 	})
 
 // // Remove any identity information from post after a week. Also clear the log,
@@ -63,54 +57,100 @@ package db
 // 		Lt(r.Now().ToEpochTime().Floor().Sub(sec))
 // }
 
-// // Run database clean up tasks at server start and regular intervals. Must be
-// // launched in separate goroutine.
-// func runCleanupTasks() {
-// 	// To ensure even the once an hour tasks are run shortly after server start
-// 	time.Sleep(time.Minute)
-// 	runMinuteTasks()
-// 	runHourTasks()
+// Run database clean up tasks at server start and regular intervals. Must be
+// launched in separate goroutine.
+func runCleanupTasks() {
+	// To ensure even the once an hour tasks are run shortly after server start
+	time.Sleep(time.Minute)
+	runMinuteTasks()
+	runHourTasks()
 
-// 	timerMin := time.Tick(time.Minute)
-// 	timerHour := time.Tick(time.Hour)
-// 	for {
-// 		select {
-// 		case <-timerMin:
-// 			runMinuteTasks()
-// 		case <-timerHour:
-// 			runHourTasks()
-// 		}
-// 	}
-// }
+	min := time.Tick(time.Minute)
+	hour := time.Tick(time.Hour)
+	for {
+		select {
+		case <-min:
+			runMinuteTasks()
+		case <-hour:
+			runHourTasks()
+		}
+	}
+}
 
-// func runMinuteTasks() {
-// 	logError("open post cleanup", closeDanglingPosts())
-// 	logError("expire image tokens", expireImageTokens())
-// 	logError("expire bans", Write(expireBansQ))
-// }
+func runMinuteTasks() {
+	logError("open post cleanup", closeDanglingPosts)
+	// logError("expire image tokens", expireImageTokens())
+	// logError("expire bans", Write(expireBansQ))
+}
 
-// func runHourTasks() {
-// 	logError("session cleanup", expireUserSessions())
-// 	logError("board cleanup", deleteUnusedBoards())
-// 	logError("thread cleanup", deleteOldThreads())
-// 	logError("old post cleanup", Write(postCleanupQ))
-// }
+func runHourTasks() {
+	// logError("session cleanup", expireUserSessions())
+	// logError("board cleanup", deleteUnusedBoards())
+	// logError("thread cleanup", deleteOldThreads())
+	// logError("old post cleanup", Write(postCleanupQ))
+}
 
-// func logError(prefix string, err error) {
-// 	if err != nil {
-// 		log.Printf("%s: %s\n", prefix, err)
-// 	}
-// }
+func logError(prefix string, fn func() error) {
+	if err := fn(); err != nil {
+		log.Printf("%s: %s\n", prefix, err)
+	}
+}
 
 // // Separate function, so we can test it
 // func expireUserSessions() error {
 // 	return Write(sessionExpiryQ)
 // }
 
-// // Close any open posts that have not been closed for 30 minutes
-// func closeDanglingPosts() error {
-// 	return Write(postClosingQ)
-// }
+// Close any open posts that have not been closed for 30 minutes
+func closeDanglingPosts() (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Read and close all expired posts
+	r, err := tx.
+		Stmt(prepared["closeExpiredOpenPosts"]).
+		Query(time.Now().Add(time.Minute * -30).Unix())
+	if err != nil {
+		return
+	}
+
+	type post struct {
+		id, op uint64
+	}
+
+	posts := make([]post, 0, 8)
+	for r.Next() {
+		var p post
+		err = r.Scan(&p.id, &p.op)
+		if err != nil {
+			return
+		}
+		posts = append(posts, p)
+	}
+
+	// Write updates to the replication log
+	q := tx.Stmt(prepared["updateLog"])
+	for _, p := range posts {
+		var msg []byte
+		msg, err = common.EncodeMessage(common.MessageClosePost, p.id)
+		if err != nil {
+			return
+		}
+		_, err = q.Exec(p.op, msg)
+		if err != nil {
+			return
+		}
+	}
+
+	return tx.Commit()
+}
 
 // // Remove any expired image tokens and decrement or deallocate their target
 // // image's assets

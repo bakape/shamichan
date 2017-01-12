@@ -69,7 +69,7 @@ CREATE TABLE threads (
 	bumpTime BIGINT NOT NULL,
 	replyTime BIGINT NOT NULL,
 	subject VARCHAR(100) NOT NULL,
-	log BYTEA[] NOT NULL
+	log TEXT[] NOT NULL
 );
 CREATE INDEX threads_board on threads (board);
 CREATE INDEX bumpTime on threads (bumpTime);

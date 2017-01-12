@@ -1,5 +1,14 @@
 package db
 
+import (
+	"testing"
+	"time"
+
+	"github.com/bakape/meguca/common"
+	. "github.com/bakape/meguca/test"
+	"github.com/lib/pq"
+)
+
 // const eightDays = time.Hour * 24 * 8
 
 // func TestExpireUserSessions(t *testing.T) {
@@ -63,86 +72,91 @@ package db
 // 	})
 // }
 
-// func TestOpenPostClosing(t *testing.T) {
-// 	assertTableClear(t, "posts")
+func TestOpenPostClosing(t *testing.T) {
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
 
-// 	tooOld := time.Now().Add(-time.Minute * 31).Unix()
-// 	log := []string{"123"}
-// 	posts := []common.DatabasePost{
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					ID:      1,
-// 					Editing: true,
-// 					Time:    tooOld,
-// 				},
-// 			},
-// 			Log: log,
-// 		},
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					ID:      2,
-// 					Editing: true,
-// 					Time:    time.Now().Unix(),
-// 				},
-// 			},
-// 		},
-// 	}
-// 	assertInsert(t, "posts", posts)
+	tooOld := time.Now().Add(-time.Minute * 31).Unix()
+	posts := [...]DatabasePost{
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID:      2,
+					Editing: true,
+					Time:    tooOld,
+				},
+				OP: 1,
+			},
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID:      3,
+					Editing: true,
+					Time:    time.Now().Unix(),
+				},
+				OP: 1,
+			},
+		},
+	}
+	for _, p := range posts {
+		if err := WritePost(nil, p); err != nil {
+			t.Fatal(err)
+		}
+	}
 
-// 	if err := closeDanglingPosts(); err != nil {
-// 		t.Fatal(err)
-// 	}
+	if err := closeDanglingPosts(); err != nil {
+		t.Fatal(err)
+	}
 
-// 	cases := [...]struct {
-// 		name    string
-// 		id      uint64
-// 		editing bool
-// 	}{
-// 		{"closed", 1, false},
-// 		{"untouched", 2, true},
-// 	}
+	cases := [...]struct {
+		name    string
+		id      uint64
+		editing bool
+	}{
+		{"closed", 2, false},
+		{"untouched", 3, true},
+	}
 
-// 	for i := range cases {
-// 		c := cases[i]
-// 		t.Run(c.name, func(t *testing.T) {
-// 			t.Parallel()
-// 			var editing bool
-// 			err := One(FindPost(c.id).Field("editing"), &editing)
-// 			if err != nil {
-// 				t.Fatal(err)
-// 			}
-// 			if editing != c.editing {
-// 				LogUnexpected(t, c.editing, editing)
-// 			}
-// 		})
-// 	}
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			var editing bool
+			err := db.
+				QueryRow(`SELECT editing FROM posts WHERE id = $1`, c.id).
+				Scan(&editing)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if editing != c.editing {
+				LogUnexpected(t, c.editing, editing)
+			}
+		})
+	}
 
-// 	t.Run("log update", func(t *testing.T) {
-// 		t.Parallel()
-// 		var isAppended bool
-// 		q := FindPost(1).Field("log").Nth(-1).Eq("061")
-// 		if err := One(q, &isAppended); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		if !isAppended {
-// 			t.Error("log not updated")
-// 		}
-// 	})
+	t.Run("log update", func(t *testing.T) {
+		t.Parallel()
+		assertLogContains(t, 1, "062")
+	})
+}
 
-// 	t.Run("lastUpdated field", func(t *testing.T) {
-// 		t.Parallel()
-// 		var lu int64
-// 		q := FindPost(1).Field("lastUpdated")
-// 		if err := One(q, &lu); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		if lu <= tooOld || lu > time.Now().Unix() {
-// 			t.Fatalf("unexpected lastUpdated time: %d", lu)
-// 		}
-// 	})
-// }
+func assertLogContains(t *testing.T, id uint64, msgs ...string) {
+	var contains bool
+	err := db.
+		QueryRow(
+			`SELECT true FROM threads WHERE id = $1 and log @> $2`,
+			id, pq.StringArray(msgs),
+		).
+		Scan(&contains)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !contains {
+		t.Errorf("replication log does not contain %v", msgs)
+	}
+}
 
 // func TestImageTokenExpiry(t *testing.T) {
 // 	assertTableClear(t, "images")

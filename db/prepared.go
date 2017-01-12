@@ -122,4 +122,15 @@ var protoPrepared = map[string]string{
 		DELETE FROM image_tokens
 			WHERE token = $1
 			RETURNING SHA1`,
+
+	"closeExpiredOpenPosts": `
+		UPDATE posts
+			SET editing = false
+			WHERE editing = true AND time < $1
+			RETURNING id, op`,
+
+	"updateLog": `
+		UPDATE threads
+			SET log = array_append(log, $2)
+			WHERE id = $1`,
 }

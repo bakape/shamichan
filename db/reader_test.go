@@ -38,7 +38,7 @@ func TestReader(t *testing.T) {
 		{
 			ID:        1,
 			Board:     "a",
-			Log:       [][]byte{{1}},
+			Log:       []string{"1"},
 			ReplyTime: 1,
 			BumpTime:  1,
 			PostCtr:   3,
@@ -46,7 +46,7 @@ func TestReader(t *testing.T) {
 		{
 			ID:        3,
 			Board:     "c",
-			Log:       [][]byte{{1}},
+			Log:       []string{"1"},
 			ReplyTime: 3,
 			BumpTime:  5,
 			PostCtr:   1,
