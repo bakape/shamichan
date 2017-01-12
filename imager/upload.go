@@ -4,6 +4,7 @@ package imager
 import (
 	"crypto/md5"
 	"crypto/sha1"
+	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
@@ -18,7 +19,6 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	r "github.com/dancannon/gorethink"
 )
 
 var (
@@ -87,17 +87,19 @@ func UploadImageHash(w http.ResponseWriter, req *http.Request) {
 	}
 	hash := string(buf)
 
-	_, err = db.FindImageThumb(hash)
-	if err == r.ErrEmptyResult {
+	_, err = db.GetImage(hash)
+	switch err {
+	case nil:
+	case sql.ErrNoRows:
 		return
-	} else if err != nil {
+	default:
 		LogError(w, req, 500, err)
 		return
 	}
 
-	code, token, err := db.NewImageToken(hash)
+	token, err := db.NewImageToken(hash)
 	if err != nil {
-		LogError(w, req, code, err)
+		LogError(w, req, 500, err)
 	}
 	w.Write([]byte(token))
 }
@@ -135,19 +137,25 @@ func ParseUpload(req *http.Request) (int, string, error) {
 
 	sum := sha1.Sum(data)
 	SHA1 := hex.EncodeToString(sum[:])
-	img, err := db.FindImageThumb(SHA1)
-	noThumbnail := err == r.ErrEmptyResult
-	if err != nil && !noThumbnail {
+	img, err := db.GetImage(SHA1)
+	switch err {
+	case nil: // Already have a thumbnail
+		return newImageToken(SHA1)
+	case sql.ErrNoRows:
+		img.SHA1 = SHA1
+		return newThumbnail(data, img)
+	default:
 		return 500, "", err
 	}
+}
 
-	// Already have a thumbnail
-	if !noThumbnail {
-		return db.NewImageToken(SHA1)
+func newImageToken(SHA1 string) (int, string, error) {
+	token, err := db.NewImageToken(SHA1)
+	code := 200
+	if err != nil {
+		code = 500
 	}
-
-	img.SHA1 = SHA1
-	return newThumbnail(data, img)
+	return code, token, err
 }
 
 // Parse and validate the form of the upload request
@@ -197,7 +205,7 @@ func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
 		return 500, "", err
 	}
 
-	return db.NewImageToken(img.SHA1)
+	return newImageToken(img.SHA1)
 }
 
 // detectFileType detects if the upload is of a supported file type, by reading

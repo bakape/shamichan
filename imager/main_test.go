@@ -13,7 +13,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	db.DBName = "meguca_test_imager"
+	db.DBName = "meguca_test"
 	db.IsTest = true
 	assetRoot = filepath.Join("..", "www")
 	config.Set(config.Configs{})

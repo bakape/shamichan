@@ -833,7 +833,7 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 }
 
 func TestInsertImage(t *testing.T) {
-	assertTableClear(t, "posts", "threads", "images", "imageTokens")
+	assertTableClear(t, "posts", "threads", "images")
 	setBoardConfigs(t, false)
 	assertInsert(t, "threads", common.DatabaseThread{
 		ID:      1,

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"database/sql"
 	"errors"
 	"time"
 
@@ -11,6 +10,8 @@ import (
 	"github.com/bakape/meguca/util"
 	"github.com/lib/pq"
 )
+
+// TODO: Unused image cleanup function
 
 const (
 	// Time it takes for an image allocation token to expire
@@ -50,9 +51,7 @@ func scanImage(rs rowScanner) (img common.ImageCommon, err error) {
 
 // NewImageToken inserts a new image allocation token into the DB and returns
 // it's ID
-func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
-	ex := getExecutor(tx, "writeImageToken")
-
+func NewImageToken(SHA1 string) (token string, err error) {
 	// Loop in case there is a primary key collision
 	for {
 		token, err = auth.RandomID(64)
@@ -61,7 +60,7 @@ func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
 		}
 		expires := time.Now().Add(tokenTimeout)
 
-		_, err = ex.Exec(token, SHA1, expires)
+		_, err = prepared["writeImageToken"].Exec(token, SHA1, expires)
 		switch {
 		case err == nil:
 			return

@@ -18,7 +18,6 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
-	r "github.com/dancannon/gorethink"
 )
 
 func init() {
@@ -62,12 +61,6 @@ func assertTableClear(t *testing.T, tables ...string) {
 	}
 }
 
-func assertInsert(t *testing.T, table string, doc interface{}) {
-	if err := db.Insert(table, doc); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func newJPEGRequest(t *testing.T) *http.Request {
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -88,11 +81,12 @@ func newJPEGRequest(t *testing.T) *http.Request {
 	return req
 }
 
-func getImageRecord(t *testing.T, id string) (res common.ImageCommon) {
-	if err := db.One(db.GetImage(id), &res); err != nil {
+func getImageRecord(t *testing.T, id string) common.ImageCommon {
+	img, err := db.GetImage(id)
+	if err != nil {
 		t.Fatal(err)
 	}
-	return
+	return img
 }
 
 // Assert image file assets were created with the correct paths
@@ -116,27 +110,6 @@ func assertFiles(t *testing.T, src, id string, fileType, thumbType uint8) {
 	AssertBufferEquals(t, data[0], data[1])
 	if len(data[1]) < len(data[2]) {
 		t.Error("unexpected file size difference")
-	}
-}
-
-func assertImageRefCount(t *testing.T, id string, count int) {
-	var posts int
-	if err := db.One(db.GetImage(id).Field("posts"), &posts); err != nil {
-		t.Fatal(err)
-	}
-	if posts != count {
-		t.Errorf("unexpected post count: %d : %d", count, posts)
-	}
-}
-
-func assertImageToken(t *testing.T, id, SHA1, name string) {
-	q := r.Table("imageTokens").Get(id).Field("SHA1").Eq(SHA1)
-	var isEqual bool
-	if err := db.One(q, &isEqual); err != nil {
-		t.Fatal(err)
-	}
-	if !isEqual {
-		t.Error("SHA1 hash mismatch")
 	}
 }
 
@@ -221,7 +194,7 @@ func TestWrongFileType(t *testing.T) {
 }
 
 func TestNewThumbnail(t *testing.T) {
-	assertTableClear(t, "images", "imageTokens")
+	assertTableClear(t, "images")
 	resetDirs(t)
 
 	req := newJPEGRequest(t)
@@ -229,22 +202,13 @@ func TestNewThumbnail(t *testing.T) {
 	NewImageUpload(rec, req)
 	assertCode(t, rec.Code, 200)
 
-	std := common.ProtoImage{
-		ImageCommon: assets.StdJPEG.ImageCommon,
-		Posts:       1,
-	}
-	var img common.ProtoImage
-	if err := db.One(r.Table("images").Get(std.SHA1), &img); err != nil {
-		t.Fatal(err)
-	}
-	AssertDeepEquals(t, img, std)
-
-	assertImageToken(t, rec.Body.String(), std.SHA1, assets.StdJPEG.Name)
-	assertFiles(t, "sample.jpg", std.SHA1, common.JPEG, common.JPEG)
+	img := getImageRecord(t, assets.StdJPEG.SHA1)
+	AssertDeepEquals(t, img, assets.StdJPEG.ImageCommon)
+	assertFiles(t, "sample.jpg", assets.StdJPEG.SHA1, common.JPEG, common.JPEG)
 }
 
 func TestAPNGThumbnailing(t *testing.T) {
-	assertTableClear(t, "images", "imageTokens")
+	assertTableClear(t, "images")
 	resetDirs(t)
 
 	for _, e := range [...]string{"png", "apng"} {
@@ -281,7 +245,7 @@ func TestNoImageUploaded(t *testing.T) {
 }
 
 func TestThumbNailReuse(t *testing.T) {
-	assertTableClear(t, "images", "imageTokens")
+	assertTableClear(t, "images")
 	resetDirs(t)
 
 	for i := 1; i <= 2; i++ {
@@ -291,13 +255,11 @@ func TestThumbNailReuse(t *testing.T) {
 			t.Fatal(err)
 		}
 		assertCode(t, code, 200)
-
-		assertImageRefCount(t, assets.StdJPEG.SHA1, i)
 	}
 }
 
 func TestUploadImageHash(t *testing.T) {
-	assertTableClear(t, "images", "imageTokens")
+	assertTableClear(t, "images")
 	resetDirs(t)
 
 	std := assets.StdJPEG
@@ -308,7 +270,6 @@ func TestUploadImageHash(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertCode(t, code, 200)
-	assertImageRefCount(t, std.SHA1, 1)
 
 	rec := httptest.NewRecorder()
 	b := bytes.NewReader([]byte(std.SHA1))
@@ -317,11 +278,10 @@ func TestUploadImageHash(t *testing.T) {
 	if rec.Code != 200 {
 		t.Errorf("unexpected status code: %d", rec.Code)
 	}
-	assertImageToken(t, rec.Body.String(), std.SHA1, std.Name)
 }
 
 func TestUploadImageHashNoHash(t *testing.T) {
-	assertTableClear(t, "images", "imageTokens")
+	assertTableClear(t, "images")
 
 	rec := httptest.NewRecorder()
 	b := bytes.NewReader([]byte(assets.StdJPEG.SHA1))

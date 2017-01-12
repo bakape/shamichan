@@ -98,7 +98,7 @@ func TestImageTokens(t *testing.T) {
 	assertTableClear(t, "images")
 	writeSampleImage(t)
 
-	token, err := NewImageToken(nil, assets.StdJPEG.SHA1)
+	token, err := NewImageToken(assets.StdJPEG.SHA1)
 	if err != nil {
 		t.Fatal(err)
 	}

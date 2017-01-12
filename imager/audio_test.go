@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
 )
@@ -53,6 +54,8 @@ func TestProcessMP3NoCover(t *testing.T) {
 }
 
 func TestProcessMP3(t *testing.T) {
+	config.Set(config.Defaults)
+
 	res := processMP3(readSample(t, "with-cover.mp3"))
 	if res.err != nil {
 		t.Fatal(res.err)
