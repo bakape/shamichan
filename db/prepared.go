@@ -7,8 +7,6 @@ var prepared = make(map[string]*sql.Stmt, len(protoPrepared))
 
 // Queries to be converted into prepared statements
 var protoPrepared = map[string]string{
-	"isLoggedIn": `SELECT true FROM sessions WHERE account = $1 AND token = $2`,
-
 	"writePost": `
 		INSERT INTO posts (
 			editing, spoiler, id, board, op, time, body, name, trip, auth,
@@ -133,4 +131,8 @@ var protoPrepared = map[string]string{
 		UPDATE threads
 			SET log = array_append(log, $2)
 			WHERE id = $1`,
+
+	"isLoggedIn": `SELECT true FROM sessions WHERE account = $1 AND token = $2`,
+
+	"getPassword": `SELECT password FROM accounts WHERE id = $1`,
 }
