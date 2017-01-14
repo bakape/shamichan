@@ -2,12 +2,11 @@ use std::slice;
 use std::io::Read;
 use std::marker::Sized;
 use libflate::gzip;
-use libc::size_t;
 use lzma::LzmaReader;
 
 // Detect if file is a TAR archive compressed with GZIP
 #[no_mangle]
-pub extern "C" fn is_tar_gz(b: *const u8, size: size_t) -> bool {
+pub extern "C" fn is_tar_gz(b: *const u8, size: usize) -> bool {
     let buf = unsafe { slice::from_raw_parts(b, size) };
     if !buf.starts_with(&[0x1f, 0x8b, 0x08]) {
         return false;
@@ -30,7 +29,7 @@ fn is_tar<D: Read + Sized, E>(decoder: Result<D, E>) -> bool {
 
 // Detect if file is a TAR archive compressed with XZ
 #[no_mangle]
-pub extern "C" fn is_tar_xz(b: *const u8, size: size_t) -> bool {
+pub extern "C" fn is_tar_xz(b: *const u8, size: usize) -> bool {
     let buf = unsafe { slice::from_raw_parts(b, size) };
     if !buf.starts_with(&[0xFD, b'7', b'z', b'X', b'Z', 0x00]) {
         return false;
