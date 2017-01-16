@@ -1,12 +1,11 @@
 package auth
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
-
-	"encoding/json"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -43,7 +42,7 @@ func BcryptCompare(password string, hash []byte) error {
 
 // AuthenticateCaptcha posts a request to the SolveMedia API to authenticate a
 // captcha
-func AuthenticateCaptcha(captcha common.Captcha, ip string) bool {
+func AuthenticateCaptcha(captcha common.Captcha) bool {
 	conf := config.Get()
 
 	// Captchas disabled or running tests. Can not use API, when testing

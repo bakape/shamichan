@@ -66,6 +66,17 @@ func GetPassword(id string) (hash []byte, err error) {
 	return
 }
 
+// FindPosition returns the first matching position of a user on a certain
+// board. As a special case the admin user will always return "admin". If none
+// found, returns empty string
+func FindPosition(board, userID string) (pos string, err error) {
+	if userID == "admin" {
+		return userID, nil
+	}
+	err = prepared["findPosition"].QueryRow(board, userID).Scan(&pos)
+	return
+}
+
 // // Ban an IP from accessing a specific board
 // func Ban(rec auth.BanRecord, id uint64) error {
 // 	return WriteAll(

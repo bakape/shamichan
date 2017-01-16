@@ -98,6 +98,7 @@ CREATE TABLE staff (
 CREATE SEQUENCE post_id;
 
 CREATE TABLE threads (
+	locked BOOLEAN,
 	board VARCHAR(3) NOT NULL REFERENCES boards ON DELETE CASCADE,
 	id BIGINT PRIMARY KEY,
 	postCtr BIGINT NOT NULL,
@@ -126,7 +127,7 @@ CREATE TABLE posts (
 	imageName VARCHAR(200),
 	body VARCHAR(2000) NOT NULL,
 	password BYTEA,
-	ip TEXT,
+	ip INET,
 	links BIGINT[][2],
 	backlinks BIGINT[][2],
 	commands JSON[]

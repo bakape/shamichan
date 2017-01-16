@@ -5,8 +5,6 @@ import (
 	"reflect"
 	"testing"
 
-	"net"
-
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/imager/assets"
@@ -31,7 +29,7 @@ func TestReader(t *testing.T) {
 		},
 	}
 	for _, b := range boards {
-		if err := WriteBoard(b, false); err != nil {
+		if err := WriteBoard(b); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -65,7 +63,7 @@ func TestReader(t *testing.T) {
 				Board: "a",
 			},
 			Password: []byte("foo"),
-			IP:       net.IP("::1"),
+			IP:       "::1",
 		},
 		{
 			StandalonePost: common.StandalonePost{

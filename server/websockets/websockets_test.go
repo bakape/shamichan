@@ -39,7 +39,7 @@ type mockWSServer struct {
 }
 
 func init() {
-	db.DBName = "meguca_test_websockets"
+	db.DBName = "meguca_test"
 	db.IsTest = true
 	if err := db.LoadDB(); err != nil {
 		panic(err)
@@ -86,12 +86,6 @@ func dialServer(t testing.TB, sv *httptest.Server) *websocket.Conn {
 
 func assertTableClear(t testing.TB, tables ...string) {
 	if err := db.ClearTables(tables...); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func assertInsert(t testing.TB, table string, doc interface{}) {
-	if err := db.Insert(table, doc); err != nil {
 		t.Fatal(err)
 	}
 }

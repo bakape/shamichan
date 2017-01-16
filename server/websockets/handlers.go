@@ -10,8 +10,7 @@ import (
 var (
 	isTest bool
 
-	errInvalidStructure = errors.New("invalid message structure")
-	errInValidCaptcha   = errors.New("invalid captcha provided")
+	errInValidCaptcha = errors.New("invalid captcha provided")
 )
 
 // Decode message JSON into the supplied type. Will augment, once we switch to

@@ -14,10 +14,6 @@ import (
 	"github.com/lib/pq"
 )
 
-type rowScanner interface {
-	Scan(dest ...interface{}) error
-}
-
 // DatabaseBoardConfigs contains extra fields not exposed on database reads
 type DatabaseBoardConfigs struct {
 	config.BoardConfigs
@@ -112,16 +108,13 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 }
 
 // WriteBoard writes a board complete with configurations to the database
-func WriteBoard(c DatabaseBoardConfigs, overwrite bool) error {
+func WriteBoard(c DatabaseBoardConfigs) error {
 	q :=
 		`INSERT INTO boards (
 			readOnly, textOnly, forcedAnon, hashCommands, codeTags, id, created,
 			title, notice, rules, eightball
 		)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
-	if overwrite {
-		q += ` ON CONFLICT DO UPDATE`
-	}
 	_, err := db.Exec(q,
 		c.ReadOnly, c.TextOnly, c.ForcedAnon, c.HashCommands, c.CodeTags, c.ID,
 		c.Created, c.Title, c.Notice, c.Rules, pq.StringArray(c.Eightball),

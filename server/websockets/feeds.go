@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
 	r "github.com/dancannon/gorethink"
 )
 
@@ -47,19 +46,13 @@ type updateFeed struct {
 	buf bytes.Buffer
 	// Subscribed clients
 	clients []*Client
-	// Cache of posts updated within the last 30 s
-	cache map[uint64]timestampedPost
-	// Cached JSON of `cache`. Prevents duplicating work, when encoding the same
-	// posts to JSON. Especially useful on server start, when many clients
-	// request synchronization at once. Set to null on any change of `cache`.
-	cacheJSON string
 }
 
 // Change feed update message
 type feedUpdate struct {
 	Change uint8
 	timestampedPost
-	Log []string
+	Log [][]byte
 }
 
 type timestampedPost struct {
@@ -110,8 +103,8 @@ func (f *feedContainer) loop() {
 			f.bufferUpdate(update)
 		case <-f.clear:
 			f.feeds = make(map[uint64]*updateFeed, 1)
-		case t := <-cleanUp:
-			f.cleanUp(t.Unix())
+		case <-cleanUp:
+			f.cleanUp()
 		case <-send:
 			f.flushBuffers()
 		}
@@ -122,26 +115,18 @@ func (f *feedContainer) loop() {
 func (f *feedContainer) addClient(id uint64, cl *Client) {
 	feed, ok := f.feeds[id]
 	if !ok {
-		feed = &updateFeed{
-			cache: make(map[uint64]timestampedPost, 4),
-		}
+		feed = &updateFeed{}
 		f.feeds[id] = feed
 	}
 	feed.clients = append(feed.clients, cl)
 
-	var msg string
-	if feed.cacheJSON != "" {
-		msg = feed.cacheJSON
+	// TODO: Feed counters
+	msg, err := common.EncodeMessage(common.MessageSynchronise, 0)
+	if err != nil {
+		cl.Close(err)
 	} else {
-		var err error
-		msg, err = common.EncodeMessage(common.MessageSynchronise, feed.cache)
-		if err != nil {
-			cl.Close(err)
-		} else {
-			feed.cacheJSON = msg
-		}
+		cl.Send(msg)
 	}
-	cl.Send(msg)
 }
 
 // Remove client from subscribers
@@ -162,30 +147,10 @@ func (f *feedContainer) Clear() {
 	f.clear <- struct{}{}
 }
 
-// Clean up entries from updated post cache older than 30 seconds. If a feed is
-// to contain no listening clients or cached posts, remove it from the map.
-// Also check if an error did not occur on the database feed.
-func (f *feedContainer) cleanUp(time int64) {
-	// If there's and error, log and attempt reconnecting
-	if err := f.cursor.Err(); err != nil {
-		log.Printf("update feed: %s\n", err)
-		if err := f.streamUpdates(); err != nil { // Attempt to reconnect
-			panic(err) // We're fucked
-		}
-		return
-	}
-
-	time -= 30
-
+// If a feed does not contain any listening clients remove it from the map
+func (f *feedContainer) cleanUp() {
 	for thread, feed := range f.feeds {
-		for id, post := range feed.cache {
-			if post.LastUpdated < time {
-				delete(feed.cache, id)
-				feed.cacheJSON = ""
-			}
-		}
-
-		if len(feed.cache) == 0 && len(feed.clients) == 0 {
+		if len(feed.clients) == 0 {
 			delete(f.feeds, thread)
 		}
 	}
@@ -203,8 +168,8 @@ func (f *feedContainer) flushBuffers() {
 			continue
 		}
 
-		buf := feed.buf.String()
-		feed.buf.Reset()
+		buf := feed.buf.Bytes()
+		defer feed.buf.Reset()
 		if feed.multiple {
 			feed.multiple = false
 			buf = common.PrependMessageType(common.MessageConcat, buf)
@@ -213,7 +178,7 @@ func (f *feedContainer) flushBuffers() {
 			// sending to clients.
 			c := make([]byte, len(buf))
 			copy(c, buf)
-			buf = string(c)
+			buf = c
 		}
 
 		for _, client := range feed.clients {
@@ -225,40 +190,40 @@ func (f *feedContainer) flushBuffers() {
 // Subscribe to a stream of post updates and populate the initial cache of posts
 // updated within the last 30 seconds.
 func (f *feedContainer) streamUpdates() error {
-	cursor, err := r.
-		Table("posts").
-		Between(r.Now().ToEpochTime().Sub(30), r.MaxVal, r.BetweenOpts{
-			Index: "lastUpdated",
-		}).
-		Changes(r.ChangesOpts{
-			IncludeInitial: true,
-			IncludeTypes:   true,
-			Squash:         0.2, // Perform at most every 0.2 seconds
-		}).
-		Map(func(ch r.Term) r.Term {
-			return ch.Field("type").Do(func(typ r.Term) r.Term {
-				return r.Branch(
-					typ.Eq("add").Or(typ.Eq("initial")),
-					ch.Field("new_val").Without("log", "ip", "password"),
-					typ.Eq("remove"),
-					nil,
-					ch.Field("new_val").Merge(map[string]interface{}{
-						"log": ch.
-							Field("new_val").
-							Field("log").
-							Slice(ch.Field("old_val").Field("log").Count()),
-						"change": postUpdated,
-					}),
-				)
-			})
-		}).
-		Run(db.RSession)
-	if err != nil {
-		return err
-	}
+	// cursor, err := r.
+	// 	Table("posts").
+	// 	Between(r.Now().ToEpochTime().Sub(30), r.MaxVal, r.BetweenOpts{
+	// 		Index: "lastUpdated",
+	// 	}).
+	// 	Changes(r.ChangesOpts{
+	// 		IncludeInitial: true,
+	// 		IncludeTypes:   true,
+	// 		Squash:         0.2, // Perform at most every 0.2 seconds
+	// 	}).
+	// 	Map(func(ch r.Term) r.Term {
+	// 		return ch.Field("type").Do(func(typ r.Term) r.Term {
+	// 			return r.Branch(
+	// 				typ.Eq("add").Or(typ.Eq("initial")),
+	// 				ch.Field("new_val").Without("log", "ip", "password"),
+	// 				typ.Eq("remove"),
+	// 				nil,
+	// 				ch.Field("new_val").Merge(map[string]interface{}{
+	// 					"log": ch.
+	// 						Field("new_val").
+	// 						Field("log").
+	// 						Slice(ch.Field("old_val").Field("log").Count()),
+	// 					"change": postUpdated,
+	// 				}),
+	// 			)
+	// 		})
+	// 	}).
+	// 	Run(db.RSession)
+	// if err != nil {
+	// 	return err
+	// }
 
-	cursor.Listen(f.read)
-	f.cursor = cursor
+	// cursor.Listen(f.read)
+	// f.cursor = cursor
 
 	return nil
 }
@@ -273,9 +238,7 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) {
 
 	feed, ok := f.feeds[update.OP]
 	if !ok {
-		feed = &updateFeed{
-			cache: make(map[uint64]timestampedPost, 4),
-		}
+		feed = &updateFeed{}
 		f.feeds[update.OP] = feed
 	}
 
@@ -290,22 +253,18 @@ func (f *feedContainer) bufferUpdate(update feedUpdate) {
 			break
 		}
 		feed.writeToBuffer(data)
-		feed.cache[update.ID] = update.timestampedPost
-		feed.cacheJSON = ""
 	// New replication log messages
 	case postUpdated:
 		for _, msg := range update.Log {
 			feed.writeToBuffer(msg)
 		}
-		feed.cache[update.ID] = update.timestampedPost
-		feed.cacheJSON = ""
 	}
 }
 
-func (u *updateFeed) writeToBuffer(data string) {
+func (u *updateFeed) writeToBuffer(data []byte) {
 	if u.buf.Len() != 0 {
 		u.multiple = true
 		u.buf.WriteRune('\u0000')
 	}
-	u.buf.WriteString(data)
+	u.buf.Write(data)
 }

@@ -8,11 +8,6 @@ import (
 	"github.com/lib/pq"
 )
 
-type tableScanner interface {
-	rowScanner
-	Next() bool
-}
-
 type imageScanner struct {
 	APNG, Audio, Video, Spoiler       sql.NullBool
 	FileType, ThumbType, Length, Size sql.NullInt64
@@ -113,14 +108,16 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 
 	// Get thread metadata
 	row := tx.Stmt(prepared["getThread"]).QueryRow(id)
+	var logCtr sql.NullInt64
 	err = row.Scan(
 		&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-		&t.Subject, &t.LogCtr,
+		&t.Subject, &logCtr,
 	)
 	if err != nil {
 		return
 	}
 	t.Abbrev = lastN != 0
+	t.LogCtr = uint64(logCtr.Int64)
 
 	// Get OP post. Need to fetch separately, in case, if not fetching the full
 	// thread. Also allows to return early on deleted threads.
@@ -157,11 +154,6 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	}
 
 	return
-}
-
-func setReadOnly(tx *sql.Tx) error {
-	_, err := tx.Exec("SET TRANSACTION READ ONLY")
-	return err
 }
 
 func scanThreadPost(rs rowScanner) (res common.Post, err error) {

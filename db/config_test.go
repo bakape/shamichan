@@ -68,7 +68,7 @@ func TestUpdateOnAddBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := WriteBoard(std, false); err != nil {
+	if err := WriteBoard(std); err != nil {
 		t.Fatal(err)
 	}
 
@@ -99,7 +99,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := WriteBoard(std, false); err != nil {
+	if err := WriteBoard(std); err != nil {
 		t.Fatal(err)
 	}
 

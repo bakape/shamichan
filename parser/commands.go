@@ -31,95 +31,78 @@ func init() {
 }
 
 // Parse a matched hash command
-func parseCommand(match, board string) (common.Command, error) {
+func parseCommand(match, board string) (com common.Command, err error) {
 
 	// TODO: #syncwatch
 
-	var com common.Command
 	switch match {
 
 	// Coin flip
 	case "flip":
 		com.Type = common.Flip
 		com.Val = rand.Intn(2) == 0
-		return com, nil
 
-	// 8ball
+	// 8ball; select random string from the the 8ball answer array
 	case "8ball":
 		com.Type = common.EightBall
-
-		// Select random string from the the 8ball answer array
 		answers := config.GetBoardConfigs(board).Eightball
 		com.Val = answers[rand.Intn(len(answers))]
 
-		return com, nil
-
 	// Increment pyu counter
 	case "pyu":
-		if !config.Get().Pyu {
-			return com, nil
+		if config.Get().Pyu {
+			com.Type = common.Pyu
+			com.Val, err = db.IncrementPyu()
 		}
-		var err error
-		com.Val, err = db.IncrementPyu()
-		com.Type = common.Pyu
-		return com, err
 
 	// Return current pyu count
 	case "pcount":
-		if !config.Get().Pyu {
-			return com, nil
+		if config.Get().Pyu {
+			com.Type = common.Pcount
+			com.Val, err = db.GetPyu()
 		}
-		var err error
-		com.Val, err = db.GetPyu()
-		com.Type = common.Pcount
-		return com, err
 
 	// Dice throw
 	default:
-		val, err := parseDice(match)
+		com.Val, err = parseDice(match)
+		com.Type = common.Dice
 		switch err {
-		case nil:
-			com.Type = common.Dice
-			com.Val = val
-			return com, nil
 		case errTooManyRolls, errDieTooBig: // Consider command invalid
-			return com, nil
-		default:
-			return com, err
+			return common.Command{}, nil
 		}
 	}
+
+	return
 }
 
 // Parse dice throw commands
-func parseDice(match string) ([]uint16, error) {
+func parseDice(match string) (val []uint16, err error) {
 	dice := diceRegexp.FindStringSubmatch(match)
 
 	var rolls int
 	if len(dice[1]) == 0 {
 		rolls = 1
 	} else {
-		var err error
 		rolls, err = strconv.Atoi(string(dice[1]))
-		if err != nil {
-			return nil, err
-		}
-		if rolls > 10 {
+		switch {
+		case err != nil:
+			return
+		case rolls > 10:
 			return nil, errTooManyRolls
 		}
 	}
 
 	max, err := strconv.Atoi(string(dice[2]))
-	if err != nil {
-		return nil, err
-	}
-	if max > 100 {
+	switch {
+	case err != nil:
+		return
+	case max > 100:
 		return nil, errDieTooBig
 	}
 
-	val := make([]uint16, rolls)
+	val = make([]uint16, rolls)
 	for i := 0; i < rolls; i++ {
 		val[i] = uint16(rand.Intn(max)) + 1
 	}
-
-	return val, nil
+	return
 }

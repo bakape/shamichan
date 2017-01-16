@@ -3,7 +3,6 @@
 package websockets
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -56,7 +55,7 @@ type Client struct {
 	synced bool
 
 	// Post currently open by the client
-	openPost openPost
+	post openPost
 
 	// Currently subscribed to update feed, if any
 	feedID uint64
@@ -71,7 +70,7 @@ type Client struct {
 	receive chan receivedMessage
 
 	// Only used to pass messages from the Send method.
-	sendExternal chan string
+	sendExternal chan []byte
 
 	// Redirect client to target board
 	redirect chan string
@@ -83,16 +82,6 @@ type Client struct {
 type receivedMessage struct {
 	typ int
 	msg []byte
-}
-
-// Data of a post currently being written to by a Client
-type openPost struct {
-	hasImage bool
-	bytes.Buffer
-	bodyLength int
-	id, op     uint64
-	time       int64
-	board      string
 }
 
 // Handler is an http.HandleFunc that responds to new websocket connection
@@ -120,7 +109,7 @@ func newClient(conn *websocket.Conn, req *http.Request) *Client {
 		redirect: make(chan string),
 		// Allows for ~6 seconds of messages at 0.2 second intervals, until the
 		// buffer overflows.
-		sendExternal: make(chan string, 1<<5),
+		sendExternal: make(chan []byte, 1<<5),
 		conn:         conn,
 	}
 }
@@ -227,7 +216,7 @@ func (c *Client) closeConnections(err error) error {
 }
 
 // Send a message to the client. Can be used concurrently.
-func (c *Client) Send(msg string) {
+func (c *Client) Send(msg []byte) {
 	select {
 	case c.sendExternal <- msg:
 	default:
@@ -236,8 +225,8 @@ func (c *Client) Send(msg string) {
 }
 
 // Sends a message to the client. Not safe for concurrent use.
-func (c *Client) send(msg string) error {
-	return c.conn.WriteMessage(websocket.TextMessage, []byte(msg))
+func (c *Client) send(msg []byte) error {
+	return c.conn.WriteMessage(websocket.TextMessage, msg)
 }
 
 // Format a message type as JSON and send it to the client. Not safe for
@@ -349,9 +338,9 @@ func (c *Client) Close(err error) {
 // than 29 minutes. If the post is older, it is closed automatically.
 func (c *Client) hasPost() (bool, error) {
 	switch {
-	case c.openPost.id == 0:
+	case c.post.id == 0:
 		return false, errNoPostOpen
-	case c.openPost.time < time.Now().Add(-time.Minute*29).Unix():
+	case c.post.time < time.Now().Add(-time.Minute*29).Unix():
 		return false, c.closePost()
 	default:
 		return true, nil

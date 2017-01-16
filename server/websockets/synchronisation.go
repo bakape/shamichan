@@ -5,14 +5,12 @@ package websockets
 import (
 	"bytes"
 	"errors"
-	"strings"
 
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
-	r "github.com/dancannon/gorethink"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -111,33 +109,34 @@ func (c *Client) reclaimPost(data []byte) error {
 		return err
 	}
 
-	var post common.DatabasePost
-	err := db.One(db.FindPost(req.ID).Default(nil), &post)
-	if err != nil && err != r.ErrEmptyResult {
+	hash, err := db.GetPostPassword(req.ID)
+	if err != nil {
 		return err
 	}
-	if !post.Editing {
+	switch err = auth.BcryptCompare(req.Password, hash); err {
+	case nil:
+	case bcrypt.ErrMismatchedHashAndPassword:
 		return c.sendMessage(common.MessageReclaim, 1)
-	}
-	if err := auth.BcryptCompare(req.Password, post.Password); err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
-			return c.sendMessage(common.MessageReclaim, 1)
-		}
+	default:
 		return err
 	}
 
-	iLast := strings.LastIndexByte(post.Body, '\n')
-	if iLast == -1 {
-		iLast = 0
+	post, err := db.GetPost(req.ID)
+	switch {
+	case err != nil:
+		return err
+	case !post.Editing:
+		return c.sendMessage(common.MessageReclaim, 1)
 	}
-	c.openPost = openPost{
-		hasImage:   post.Image != nil,
-		Buffer:     *bytes.NewBufferString(post.Body[iLast:]),
-		bodyLength: utf8.RuneCountInString(post.Body),
-		id:         post.ID,
-		op:         post.OP,
-		time:       post.Time,
-		board:      post.Board,
+
+	c.post = openPost{
+		hasImage: post.Image != nil,
+		Buffer:   *bytes.NewBufferString(post.Body),
+		len:      utf8.RuneCountInString(post.Body),
+		id:       post.ID,
+		op:       post.OP,
+		time:     post.Time,
+		board:    post.Board,
 	}
 
 	return c.sendMessage(common.MessageReclaim, 0)

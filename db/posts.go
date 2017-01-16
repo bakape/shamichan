@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"fmt"
-	"net"
 	"strconv"
 
 	"github.com/bakape/meguca/common"
@@ -19,7 +18,7 @@ type DatabasePost struct {
 	Deleted bool
 	common.StandalonePost
 	Password []byte
-	IP       net.IP
+	IP       string
 }
 
 // DatabaseThread is a template for writing new threads to the database
@@ -29,10 +28,6 @@ type DatabaseThread struct {
 	ReplyTime, BumpTime int64
 	Subject, Board      string
 	Log                 []string
-}
-
-type executor interface {
-	Exec(args ...interface{}) (sql.Result, error)
 }
 
 // For decoding and encoding the tuple arrays we store links in
@@ -164,8 +159,8 @@ func WritePost(tx *sql.Tx, p DatabasePost) error {
 
 	// Don't store empty strings in the database. Zero value != NULL.
 	var (
-		name, trip, auth, img, imgName *string
-		spoiler                        bool
+		name, trip, auth, img, imgName, ip *string
+		spoiler                            bool
 	)
 	if p.Name != "" {
 		name = &p.Name
@@ -175,6 +170,9 @@ func WritePost(tx *sql.Tx, p DatabasePost) error {
 	}
 	if p.Auth != "" {
 		auth = &p.Auth
+	}
+	if p.IP != "" {
+		ip = &p.IP
 	}
 	if p.Image != nil {
 		img = &p.Image.SHA1
@@ -196,25 +194,19 @@ func WritePost(tx *sql.Tx, p DatabasePost) error {
 
 	_, err := ex.Exec(
 		p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, name, trip,
-		auth, p.Password, []byte(p.IP), img, imgName, linkRow(p.Links),
+		auth, p.Password, ip, img, imgName, linkRow(p.Links),
 		linkRow(p.Backlinks), comm,
 	)
 	return err
 }
 
-func getExecutor(tx *sql.Tx, key string) executor {
-	if tx != nil {
-		return tx.Stmt(prepared[key])
-	}
-	return prepared[key]
-}
-
 // WriteThread writes a thread and it's OP to the database
-func WriteThread(t DatabaseThread, p DatabasePost) error {
+func WriteThread(t DatabaseThread, p DatabasePost) (err error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
+	defer rollbackOnError(tx, &err)
 
 	_, err = tx.Stmt(prepared["writeOP"]).Exec(
 		t.Board,
@@ -227,35 +219,63 @@ func WriteThread(t DatabaseThread, p DatabasePost) error {
 		t.Subject,
 	)
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
-	if err := WritePost(tx, p); err != nil {
-		tx.Rollback()
+	err = WritePost(tx, p)
+	if err != nil {
 		return err
 	}
 	return tx.Commit()
 }
 
-// GetPyu retrieves current pyu counter
-func GetPyu() (c int, err error) {
-	err = db.QueryRow(`SELECT val::bigint FROM main WHERE id = 'pyu'`).Scan(&c)
+// IsLocked returns if the thread is locked from posting
+func IsLocked(id uint64) (bool, error) {
+	var locked sql.NullBool
+	err := prepared["isLocked"].QueryRow(id).Scan(&locked)
+	return locked.Bool, err
+}
+
+// GetPostPassword retrieves a post's modification password
+func GetPostPassword(id uint64) (p []byte, err error) {
+	err = prepared["getPostPassword"].QueryRow(id).Scan(&p)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
 	return
 }
 
-// IncrementPyu increments the pyu counter by one and returns the new counter
-func IncrementPyu() (c int, err error) {
-	const q = `
-		UPDATE main
-			SET val = (val::bigint + 1)::text
-			WHERE id = 'pyu'
-			RETURNING val::bigint`
-	err = db.QueryRow(q).Scan(&c)
+// HasImage returns, if the post has an image allocated
+func HasImage(id uint64) (has bool, err error) {
+	err = db.
+		QueryRow(`
+			SELECT true FROM posts
+				WHERE id = $1 AND SHA1 IS NOT NULL`,
+			id,
+		).
+		Scan(&has)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
 	return
 }
 
-// SetPyu sets the pyu counter
-func SetPyu(c uint) error {
-	_, err := db.Exec(`UPDATE main SET val = $1::text WHERE id = 'pyu'`, c)
+// GetIP returns an IP of the poster that created a post. Posts older than 7
+// days will not have this field.
+func GetIP(id uint64) (string, error) {
+	var ip sql.NullString
+	err := prepared["getIP"].QueryRow(id).Scan(&ip)
+	return ip.String, err
+}
+
+// GetLog retrieves a slice of a thread's replication log
+func GetLog(id, from, to uint64) ([][]byte, error) {
+	var log pq.ByteaArray
+	err := prepared["getLog"].QueryRow(id, from, to).Scan(&log)
+	return [][]byte(log), err
+}
+
+// SetPostCounter sets the post counter. Should only be used for tests.
+func SetPostCounter(c uint64) error {
+	_, err := db.Exec(`SELECT setval('post_id', $1)`, c)
 	return err
 }

@@ -121,9 +121,6 @@ func ParseUpload(req *http.Request) (int, string, error) {
 		return 400, "", err
 	}
 
-	// TODO: A scheduler based on available RAM, so we don't run out of memory
-	// with concurrent burst loads
-
 	file, _, err := req.FormFile("image")
 	if err != nil {
 		return 400, "", err

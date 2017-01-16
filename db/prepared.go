@@ -14,6 +14,48 @@ var protoPrepared = map[string]string{
 		) VALUES
 			($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
 
+	"appendBody": `
+		UPDATE posts
+			SET body = body || $2
+			WHERE id = $1`,
+
+	"insertCommand": `
+		UPDATE posts
+			SET commands = array_append(commands, $2)
+			WHERE id = $1`,
+
+	"insertLinks": `
+		UPDATE posts
+			SET links = links || $2
+			WHERE id = $1`,
+
+	"insertBacklinks": `
+		UPDATE posts
+			SET backlinks = backlinks || $2
+			WHERE id = $1`,
+
+	"backspace": `
+		UPDATE posts
+			SET body = left(body, -1)
+			WHERE id = $1`,
+
+	"closePost": `
+		UPDATE posts
+			SET editing = false
+			WHERE id = $1`,
+
+	"insertImage": `
+		UPDATE posts
+			SET SHA1 = $2, imageName = $3
+			WHERE id = $1`,
+
+	"replaceBody": `
+		UPDATE posts
+			SET body = $2
+			WHERE id = $1`,
+
+	"getPostPassword": `SELECT password FROM posts WHERE id = $1`,
+
 	"writeImage": `
 		INSERT INTO images (
 			APNG, audio, video, fileType, thumbType, dims, length, size, MD5,
@@ -114,9 +156,15 @@ var protoPrepared = map[string]string{
 
 	"validateOP": `SELECT true FROM threads WHERE id = $1 AND board = $2`,
 
+	"isLocked": `SELECT locked FROM threads WHERE id = $1`,
+
 	"getPostOP": `SELECT op FROM posts WHERE id = $1`,
 
 	"getImage": `SELECT * FROM images WHERE SHA1 = $1`,
+
+	"getIP": `SELECT ip FROM posts WHERE id = $1`,
+
+	"getLog": `SELECT log[$2:$3] FROM threads WHERE id = $1`,
 
 	"useImageToken": `
 		DELETE FROM image_tokens
@@ -126,15 +174,43 @@ var protoPrepared = map[string]string{
 	"closeExpiredOpenPosts": `
 		UPDATE posts
 			SET editing = false
-			WHERE editing = true AND time < EXTRACT(EPOCH FROM now()) - 1800
+			WHERE editing = true
+				AND time < floor(extract(EPOCH FROM now())) - 1800
 			RETURNING id, op`,
 
 	"updateLog": `
 		UPDATE threads
 			SET log = array_append(log, $2)
+			WHERE id = $1
+			RETURNING pg_notify('t:' || $1, $2)`,
+
+	"bumpThread": `
+		UPDATE threads
+			SET
+				replyTime = CASE WHEN $2
+					THEN floor(extract(EPOCH FROM now()))
+					ELSE replyTime
+				END,
+				postCtr = CASE WHEN $2
+					THEN postCtr + 1
+					ELSE postCtr
+				END,
+				bumpTime = CASE WHEN $3
+					THEN floor(extract(EPOCH FROM now()))
+					ELSE bumpTime
+				END,
+				imageCtr = CASE WHEN $4
+					THEN imageCtr + 1
+					ELSE imageCtr
+				END
 			WHERE id = $1`,
 
 	"isLoggedIn": `SELECT true FROM sessions WHERE account = $1 AND token = $2`,
+
+	"findPosition": `
+		SELECT position FROM staff
+			WHERE board = $1 AND account = $2
+			LIMIT 1`,
 
 	"getPassword": `SELECT password FROM accounts WHERE id = $1`,
 }
