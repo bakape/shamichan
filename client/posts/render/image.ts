@@ -119,9 +119,21 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
         let arg: string
         switch (type) {
             case ISType.src:
-                const s = location.origin
-                    + `/images/src/${img.SHA1}.${fileTypes[img.fileType]}`
-                arg = encodeURI(s)
+                let root: string,
+                    type: fileTypes
+                switch (img.fileType) {
+                    case fileTypes.jpg:
+                    case fileTypes.gif:
+                    case fileTypes.png:
+                        root = "src"
+                        type = img.fileType
+                        break
+                    default:
+                        root = "thumb"
+                        type = img.thumbType
+                }
+                const s = `/images/${root}/${img.SHA1}.${fileTypes[type]}`
+                arg = encodeURI(location.origin + s)
                 break
             case ISType.MD5:
                 arg = img.MD5

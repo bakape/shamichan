@@ -40,12 +40,7 @@ var (
 // GetFilePaths generates file paths of the source file and its thumbnail
 func GetFilePaths(SHA1 string, fileType, thumbType uint8) (paths [2]string) {
 	paths[0] = RelativeSourcePath(fileType, SHA1)
-	paths[1] = util.ConcatStrings(
-		"/images/thumb/",
-		SHA1,
-		".",
-		common.Extensions[thumbType],
-	)
+	paths[1] = relativeThumbPath(thumbType, SHA1)
 	for i := range paths {
 		paths[i] = filepath.FromSlash(paths[i][1:])
 	}
@@ -61,6 +56,27 @@ func RelativeSourcePath(fileType uint8, SHA1 string) string {
 		".",
 		common.Extensions[fileType],
 	)
+}
+
+func relativeThumbPath(thumbType uint8, SHA1 string) string {
+	return util.ConcatStrings(
+		"/images/thumb/",
+		SHA1,
+		".",
+		common.Extensions[thumbType],
+	)
+}
+
+// ImageSearchPath returns the relative path used for image search file lookups.
+// If files is not JPEG, PNG or GIF, returns the thumbnail instead of the source
+// file.
+func ImageSearchPath(fileType, thumbType uint8, SHA1 string) string {
+	switch fileType {
+	case common.JPEG, common.PNG, common.GIF:
+		return RelativeSourcePath(fileType, SHA1)
+	default:
+		return relativeThumbPath(thumbType, SHA1)
+	}
 }
 
 func imageRoot() string {
