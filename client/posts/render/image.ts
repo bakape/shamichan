@@ -119,21 +119,7 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
         let arg: string
         switch (type) {
             case ISType.src:
-                let root: string,
-                    type: fileTypes
-                switch (img.fileType) {
-                    case fileTypes.jpg:
-                    case fileTypes.gif:
-                    case fileTypes.png:
-                        root = "src"
-                        type = img.fileType
-                        break
-                    default:
-                        root = "thumb"
-                        type = img.thumbType
-                }
-                const s = `/images/${root}/${img.SHA1}.${fileTypes[type]}`
-                arg = encodeURI(location.origin + s)
+                arg = resolveFuzyIS(img)
                 break
             case ISType.MD5:
                 arg = img.MD5
@@ -144,6 +130,25 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
         }
         ch[i].setAttribute("href", url + arg)
     }
+}
+
+// Resolve URL of image search, that require to download the image file
+function resolveFuzyIS({fileType, thumbType, SHA1}: ImageData): string {
+    let root: string,
+        type: fileTypes
+    switch (fileType) {
+        case fileTypes.jpg:
+        case fileTypes.gif:
+        case fileTypes.png:
+            root = "src"
+            type = fileType
+            break
+        default:
+            root = "thumb"
+            type = thumbType
+    }
+    const s = `/images/${root}/${SHA1}.${fileTypes[type]}`
+    return encodeURI(location.origin + s)
 }
 
 // Render video/audio length in human readable form
