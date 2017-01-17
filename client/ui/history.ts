@@ -12,7 +12,7 @@ function handleClick(event: KeyboardEvent) {
 	// Don't trigger, when user is trying to open in a new tab
 	const bypass = event.which !== 1
 		|| event.ctrlKey
-		|| connSM.state === connState.desynced
+		|| connSM.state !== connState.synced
 	if (bypass) {
 		return
 	}
