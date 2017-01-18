@@ -113,13 +113,15 @@ func SourcePath(fileType uint8, SHA1 string) string {
 func Write(name string, fileType, thumbType uint8, src, thumb []byte) error {
 	data := [2][]byte{src, thumb}
 
-	for i, path := range GetFilePaths(name, fileType, thumbType) {
-		if err := writeFile(path, data[i]); err != nil {
-			return err
-		}
+	paths := GetFilePaths(name, fileType, thumbType)
+	ch := make(chan error)
+	go func() {
+		ch <- writeFile(paths[0], data[0])
+	}()
+	if err := writeFile(paths[1], data[1]); err != nil {
+		return err
 	}
-
-	return nil
+	return <-ch
 }
 
 // Write a single file to disk with the appropriate permissions and flags
