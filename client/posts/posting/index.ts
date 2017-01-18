@@ -3,7 +3,7 @@
 import FormModel from "./model"
 import FormView from "./view"
 import { connState, connSM } from "../../connection"
-import { on, FSM, write, threads } from "../../util"
+import { on, FSM, write, threads, hook } from "../../util"
 import lang from "../../lang"
 import identity, { initIdentity } from "./identity"
 import { boardConfig } from "../../state"
@@ -21,7 +21,7 @@ export type FormMessage = {
 }
 
 // Current post form view and model instances
-export let postForm: FormView,
+let postForm: FormView,
 	postModel: FormModel
 
 // Post authoring finite state machine
@@ -47,6 +47,9 @@ export const enum postEvent {
 	abandon,    // Abandon ownership of any open post
 }
 export const postSM = new FSM<postState, postEvent>(postState.none)
+
+hook("getPostModel", () =>
+	postModel)
 
 // Find the post creation button and style it, if any
 function stylePostControls(fn: (el: HTMLElement) => void) {

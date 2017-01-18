@@ -1,9 +1,9 @@
 // Keyboard shortcuts and such
 
 import options from "../options"
-import { postForm, postSM, postEvent, toggleExpandAll } from "../posts"
+import { FormModel, postSM, postEvent, toggleExpandAll } from "../posts"
 import { page } from "../state"
-import { scrollToElement } from "../util"
+import { scrollToElement, trigger } from "../util"
 import navigate from "./history"
 
 // Bind keyboard event listener to the document
@@ -33,8 +33,9 @@ function handleShortcut(event: KeyboardEvent) {
 			postSM.feed(postEvent.done)
 			break
 		case options.toggleSpoiler:
-			if (postForm) {
-				postForm.toggleSpoiler()
+			const m = trigger("getPostModel") as FormModel
+			if (m) {
+				m.view.toggleSpoiler()
 			}
 			break
 		case options.expandAll:

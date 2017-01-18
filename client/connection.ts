@@ -2,9 +2,9 @@
 
 import { debug, page } from './state'
 import lang from './lang'
-import { FSM, fetchThreadJSON, write } from './util'
+import { FSM, fetchThreadJSON, write, trigger } from './util'
 import { insertPost } from "./client"
-import { identity, postSM, postEvent, postState, postModel } from "./posts"
+import { identity, postSM, postEvent, postState, FormModel } from "./posts"
 import { PostData, ThreadData } from "./common"
 
 // Message types of the WebSocket communication protocol
@@ -198,9 +198,10 @@ export async function synchronise() {
 	// browser tab, etc.
 	if (page.thread && postSM.state === postState.halted) {
 		// No older than 28 minutes
-		if (postModel.time > (Date.now() / 1000 - 28 * 60)) {
+		const m = trigger("getPostModel") as FormModel
+		if (m.time > (Date.now() / 1000 - 28 * 60)) {
 			send(message.reclaim, {
-				id: postModel.id,
+				id: m.id,
 				password: identity.postPassword,
 			})
 		} else {
