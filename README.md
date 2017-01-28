@@ -48,7 +48,7 @@ License: GNU AGPL
     - Scrolling compensation prevents post updates from moving the viewport
     - Inbuilt DOM update batching to reduce redraws
     - Multiple themes
-    - Custom user-uploaded backgrounds
+    - Custom user-set backgrounds and CSS
     - Configurable keyboard shortcuts
     - Work mode aka Boss key
     - Customisable top banner board link list
@@ -64,10 +64,6 @@ License: GNU AGPL
     - Optional R/a/dio Now Playing banner
 
 ##Runtime dependencies
-* [RethinkDB](https://rethinkdb.com/docs/install/).
-On Linux RethinkDB does not enable a configuration file by default. If you don't
-want to configure anything, just copy `/etc/rethinkdb/default.conf.sample` into
-`/etc/rethinkdb/instances.d/instance1.conf`.
 * [PostgresSQL](https://www.postgresql.org/download/) >= 9.5
 
 ##Building from source

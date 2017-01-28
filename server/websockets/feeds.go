@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/common"
-	r "github.com/dancannon/gorethink"
 )
 
 // Post update kinds passed with feedUpdate
@@ -33,7 +32,7 @@ type feedContainer struct {
 	// Read from "posts" table change feed
 	read chan feedUpdate
 	// Current database change feed cursor
-	cursor *r.Cursor
+	cursor interface{}
 	// Map of thread IDs to their feeds
 	feeds map[uint64]*updateFeed
 }

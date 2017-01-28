@@ -13,7 +13,6 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
-	"github.com/dancannon/gorethink"
 	"github.com/pquerna/ffjson/ffjson"
 )
 
@@ -137,7 +136,7 @@ func servePost(w http.ResponseWriter, r *http.Request, p map[string]string) {
 }
 
 func respondToJSONError(w http.ResponseWriter, r *http.Request, err error) {
-	if err == gorethink.ErrEmptyResult {
+	if err == sql.ErrNoRows {
 		text404(w)
 	} else {
 		text500(w, r, err)
