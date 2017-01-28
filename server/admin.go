@@ -15,7 +15,6 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/dancannon/gorethink"
 )
 
 const (
@@ -64,15 +63,13 @@ type configSettingRequest struct {
 }
 
 type boardCreationRequest struct {
-	Name, Title string
+	Name, Title, Captcha string
 	auth.SessionCreds
-	common.Captcha
 }
 
 type boardDeletionRequest struct {
-	ID string
+	ID, Captcha string
 	auth.SessionCreds
-	common.Captcha
 }
 
 // Request to perform a moderation action on a specific set of posts
@@ -105,36 +102,36 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardConfigSettingRequest
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		isBoardOwner(w, msg.ID, msg.UserID) &&
+		isBoardOwner(w, r, msg.ID, msg.UserID) &&
 		validateBoardConfigs(w, msg.BoardConfigs)
 	if !isValid {
 		return
 	}
 
-	// TODO: Some kind of upload scheme for spoilers and banners
-	conf := msg.BoardConfigs
-	conf.Spoiler = "default.jpg"
-	conf.Banners = []string{}
-
-	// TODO: Staff configuration
-	conf.Staff = map[string][]string{
-		"owners": {msg.UserID},
-	}
-
-	q := gorethink.Table("boards").Get(msg.ID).Update(conf)
-	if err := db.Write(q); err != nil {
+	msg.BoardConfigs.ID = msg.ID
+	if err := db.UpdateBoard(msg.BoardConfigs); err != nil {
 		text500(w, r, err)
 		return
 	}
 }
 
 // Assert the user is one of the board's owners
-func isBoardOwner(w http.ResponseWriter, board, userID string) bool {
-	if !auth.HoldsPosition(board, userID, "owners") {
+func isBoardOwner(
+	w http.ResponseWriter,
+	r *http.Request,
+	board, userID string,
+) bool {
+	pos, err := db.GetPosition(userID, board)
+	switch {
+	case err != nil:
+		text500(w, r, err)
+		return false
+	case pos != "owners":
 		http.Error(w, "403 Not board owner", 403)
 		return false
+	default:
+		return true
 	}
-	return true
 }
 
 // Validate length limit compliance of various fields
@@ -215,7 +212,7 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 	)
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		isBoardOwner(w, msg.ID, msg.UserID)
+		isBoardOwner(w, r, msg.ID, msg.UserID)
 	if !isValid {
 		return conf, false
 	}
@@ -246,7 +243,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		err = errInvalidBoardName
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
-	case !auth.AuthenticateCaptcha(msg.Captcha, auth.GetIP(r)):
+	case !auth.AuthenticateCaptcha(msg.Captcha):
 		err = errInvalidCaptcha
 	}
 	if err != nil {
@@ -254,27 +251,41 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q := gorethink.Table("boards").Insert(config.DatabaseBoardConfigs{
+	tx, err := db.StartTransaction()
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	defer db.RollbackOnError(tx, &err)
+
+	err = db.WriteBoard(tx, db.DatabaseBoardConfigs{
 		Created: time.Now(),
 		BoardConfigs: config.BoardConfigs{
 			BoardPublic: config.BoardPublic{
-				Title:   msg.Title,
-				Spoiler: "default.jpg",
-				Banners: []string{},
+				Title: msg.Title,
 			},
 			ID:        msg.Name,
 			Eightball: config.EightballDefaults,
-			Staff: map[string][]string{
-				"owners": []string{msg.UserID},
-			},
 		},
 	})
-
-	err = db.Write(q)
 	switch {
-	case gorethink.IsConflictErr(err):
+	case err == nil:
+	case db.IsConflictError(err):
 		text400(w, errBoardNameTaken)
-	case err != nil:
+		return
+	default:
+		text500(w, r, err)
+		return
+	}
+
+	err = db.WriteStaff(tx, msg.Name, map[string][]string{
+		"owners": []string{msg.UserID},
+	})
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	if err := tx.Commit(); err != nil {
 		text500(w, r, err)
 	}
 }
@@ -286,14 +297,7 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg.SessionCreds) {
 		return
 	}
-
-	q := db.GetMain("config").
-		Replace(func(doc gorethink.Term) gorethink.Term {
-			return gorethink.Expr(msg.Configs).Merge(map[string]string{
-				"id": "config",
-			})
-		})
-	if err := db.Write(q); err != nil {
+	if err := db.WriteConfigs(msg.Configs); err != nil {
 		text500(w, r, err)
 	}
 }
@@ -303,11 +307,11 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardDeletionRequest
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		isBoardOwner(w, msg.ID, msg.UserID)
+		isBoardOwner(w, r, msg.ID, msg.UserID)
 	if !isValid {
 		return
 	}
-	if !auth.AuthenticateCaptcha(msg.Captcha, auth.GetIP(r)) {
+	if !auth.AuthenticateCaptcha(msg.Captcha) {
 		text403(w, errInvalidCaptcha)
 		return
 	}
@@ -320,42 +324,16 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 // Delete one or multiple posts on a moderated board
 func deletePost(w http.ResponseWriter, r *http.Request) {
 	var msg postActionRequest
-
-	// TODO: More than board owners should be able to delete posts
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		isBoardOwner(w, msg.Board, msg.UserID)
+		// TODO: More than just board owners should be able to delete posts
+		isBoardOwner(w, r, msg.Board, msg.UserID)
 	if !isValid {
 		return
 	}
-
-	q := getAffectedPosts(msg.IDs, msg.Board).
-		Update(map[string]interface{}{
-			"log": gorethink.Row.Field("log").Append(gorethink.
-				Expr("12").
-				Add(gorethink.Row.Field("id").CoerceTo("string")),
-			),
-			"deleted":     true,
-			"lastUpdated": gorethink.Now().ToEpochTime().Floor(),
-		})
-	if err := db.Write(q); err != nil {
+	if err := db.DeletePosts(msg.Board, msg.IDs...); err != nil {
 		text500(w, r, err)
-		return
 	}
-}
-
-// Get query targeting posts affected by the post moderation request
-func getAffectedPosts(ids []uint64, board string) gorethink.Term {
-	// Cast post ID array to interface array
-	cast := make([]interface{}, len(ids))
-	for i := range ids {
-		cast[i] = interface{}(ids[i])
-	}
-
-	return gorethink.
-		Table("posts").
-		GetAll(cast...).
-		Filter(gorethink.Row.Field("board").Eq(board))
 }
 
 // Ban a specific IP from a specific board
@@ -364,7 +342,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		isBoardOwner(w, msg.Board, msg.UserID)
+		isBoardOwner(w, r, msg.Board, msg.UserID)
 	switch {
 	case !isValid:
 		return
@@ -379,37 +357,11 @@ func ban(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var posts []struct {
-		ID uint64
-		IP string
-	}
-	q := getAffectedPosts(msg.IDs, msg.Board).
-		Pluck("ip", "id").
-		Default(nil)
-	if err := db.All(q, &posts); err != nil {
+	expires := time.Now().Add(time.Duration(msg.Duration) * time.Minute)
+	ips, err := db.Ban(msg.Board, msg.Reason, msg.UserID, expires, msg.IDs...)
+	if err != nil {
 		text500(w, r, err)
 		return
-	}
-
-	rec := auth.BanRecord{
-		ID:      [2]string{msg.Board, ""},
-		Reason:  msg.Reason,
-		By:      msg.UserID,
-		Expires: time.Now().Add(time.Duration(msg.Duration) * time.Minute),
-	}
-	ips := make(map[string]struct{}, len(posts))
-	for _, p := range posts {
-		// Post no longer has an IP after private data cleanup
-		if p.IP == "" {
-			continue
-		}
-
-		rec.ID[1] = p.IP
-		ips[p.IP] = struct{}{}
-		if err := db.Ban(rec, p.ID); err != nil {
-			text500(w, r, err)
-			return
-		}
 	}
 
 	// Redirect all banned connected clients to the /all/ board

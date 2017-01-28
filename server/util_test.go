@@ -33,12 +33,6 @@ func assertTableClear(t *testing.T, tables ...string) {
 	}
 }
 
-func assertInsert(t *testing.T, table string, doc interface{}) {
-	if err := db.Insert(table, doc); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func assertEtag(t *testing.T, rec *httptest.ResponseRecorder, etag string) {
 	if s := rec.Header().Get("ETag"); s != etag {
 		t.Errorf("unexpected etag: %s : %s", etag, s)
@@ -47,11 +41,8 @@ func assertEtag(t *testing.T, rec *httptest.ResponseRecorder, etag string) {
 
 func assertBody(t *testing.T, rec *httptest.ResponseRecorder, body string) {
 	if s := rec.Body.String(); s != body {
-		t.Errorf(
-			"unexpected response body:\nexpected: `%s`\ngot:      `%s`",
-			body,
-			s,
-		)
+		const f = "unexpected response body:\nexpected: `%s`\ngot:      `%s`"
+		t.Errorf(f, body, s)
 	}
 }
 
@@ -94,16 +85,6 @@ func TestText404(t *testing.T) {
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 404)
 	assertBody(t, rec, "404 not found\n")
-}
-
-func TestText500(t *testing.T) {
-	t.Parallel()
-
-	rec, req := newPair("/")
-	req.RemoteAddr = "::1"
-	text500(rec, req, errors.New("foo"))
-	assertCode(t, rec, 500)
-	assertBody(t, rec, "500 foo\n")
 }
 
 func TestText40X(t *testing.T) {

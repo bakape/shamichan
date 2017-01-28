@@ -54,16 +54,10 @@ func Start() {
 	)
 	flag.Float64Var(&cache.Size, "c", 1<<7, "cache size in MB")
 	flag.StringVar(
-		&db.DBName,
+		&db.ConnArgs,
 		"d",
-		"meguca",
-		"name of the RethinkDB database to use",
-	)
-	flag.StringVar(
-		&db.Address,
-		"D",
-		"localhost:28015",
-		"address of the RethinkDB server to connect to",
+		`user=meguca password=meguca dbname=meguca sslmode=disable`,
+		"PostgreSQL connection arguments",
 	)
 	flag.BoolVar(
 		&ssl,

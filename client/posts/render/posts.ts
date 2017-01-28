@@ -123,8 +123,7 @@ function relativeTime(then: number, now: number): string {
 	if (time < 1) {
 		if (time > -5) { // Assume to be client clock imprecision
 			return lang.posts["justNow"]
-		}
-		else {
+		} else {
 			isFuture = true
 			time = -time
 		}

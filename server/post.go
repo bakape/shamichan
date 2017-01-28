@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"database/sql"
+
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
@@ -21,41 +22,33 @@ func spoilerImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var res struct {
-		Image    common.Image
-		Password []byte
-	}
-	q := db.FindPost(msg.ID).Pluck("image", "password").Default(nil)
-	if err := db.One(q, &res); err != nil {
+	hash, err := db.GetPostPassword(msg.ID)
+	switch err {
+	case nil:
+	case sql.ErrNoRows:
+		text404(w)
+		return
+	default:
 		text500(w, r, err)
 		return
 	}
 
-	if res.Image.SHA1 == "" {
-		text400(w, errNoImage)
-		return
-	}
-	if res.Image.Spoiler { // Already spoilered. NOOP.
-		return
-	}
-	if err := auth.BcryptCompare(msg.Password, res.Password); err != nil {
+	if err := auth.BcryptCompare(msg.Password, hash); err != nil {
 		text403(w, err)
 		return
 	}
 
-	logMsg, err := common.EncodeMessage(common.MessageSpoiler, msg.ID)
-	if err != nil {
+	post, err := db.GetPost(msg.ID)
+	switch {
+	case err != nil:
 		text500(w, r, err)
-		return
-	}
-
-	update := map[string]bool{
-		"spoiler": true,
-	}
-	err = websockets.UpdatePost(msg.ID, "image", update, logMsg)
-	if err != nil {
-		text500(w, r, err)
-		return
+	case post.Image == nil:
+		text400(w, errNoImage)
+	case post.Image.Spoiler: // NOOP. Consider to be due to sync race.
+	default:
+		if err := db.SpoilerImage(msg.ID); err != nil {
+			text500(w, r, err)
+		}
 	}
 }
 
@@ -82,9 +75,7 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	req := websockets.ThreadCreationRequest{
 		Subject: f.Get("subject"),
 		Board:   f.Get("board"),
-		Captcha: common.Captcha{
-			Captcha: f.Get("captcha"),
-		},
+		Captcha: f.Get("captcha"),
 		ReplyCreationRequest: websockets.ReplyCreationRequest{
 			Image: websockets.ImageRequest{
 				Spoiler: f.Get("spoiler") == "on",

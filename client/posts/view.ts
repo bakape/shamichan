@@ -52,12 +52,10 @@ export default class PostView extends ImageHandler {
 
     // Get the current Node for text to be written to
     private buffer(): Node {
-        if (this._buffer) {
-            return this._buffer
-        } else {
+        if (!this._buffer) {
             this.findBuffer(this.lastLine())
-            return this._buffer
         }
+        return this._buffer
     }
 
     // Find the text buffer in an open line

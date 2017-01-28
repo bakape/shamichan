@@ -4,12 +4,17 @@ package db
 import (
 	"database/sql"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/bakape/meguca/common"
 	"github.com/lib/pq"
 	"github.com/pquerna/ffjson/ffjson"
+)
+
+var (
+	errTooManyMessages = errors.New("too many messages requested")
 )
 
 // DatabasePost is for writing new posts to a database. It contains the Password
@@ -135,15 +140,21 @@ func GetPostOP(id uint64) (op uint64, err error) {
 	return
 }
 
+// PostCounter retrieves the current post counter
+func PostCounter() (c uint64, err error) {
+	err = prepared["postCounter"].QueryRow().Scan(&c)
+	return
+}
+
 // BoardCounter retrieves the history or "progress" counter of a board
-func BoardCounter(board string) (counter uint64, err error) {
-	err = prepared["boardCounter"].QueryRow(board).Scan(&counter)
+func BoardCounter(board string) (c uint64, err error) {
+	err = prepared["boardCounter"].QueryRow(board).Scan(&c)
 	return
 }
 
 // ThreadCounter retrieves the progress counter of a thread
-func ThreadCounter(id uint64) (counter uint64, err error) {
-	err = prepared["threadCounter"].QueryRow(id).Scan(&counter)
+func ThreadCounter(id uint64) (c uint64, err error) {
+	err = prepared["threadCounter"].QueryRow(id).Scan(&c)
 	return
 }
 
@@ -206,7 +217,7 @@ func WriteThread(t DatabaseThread, p DatabasePost) (err error) {
 	if err != nil {
 		return err
 	}
-	defer rollbackOnError(tx, &err)
+	defer RollbackOnError(tx, &err)
 
 	_, err = tx.Stmt(prepared["writeOP"]).Exec(
 		t.Board,
@@ -269,13 +280,54 @@ func GetIP(id uint64) (string, error) {
 
 // GetLog retrieves a slice of a thread's replication log
 func GetLog(id, from, to uint64) ([][]byte, error) {
+	if to-from > 500 {
+		return nil, errTooManyMessages
+	}
 	var log pq.ByteaArray
 	err := prepared["getLog"].QueryRow(id, from, to).Scan(&log)
 	return [][]byte(log), err
 }
 
-// SetPostCounter sets the post counter. Should only be used for tests.
+// SetPostCounter sets the post counter. Should only be used in tests.
 func SetPostCounter(c uint64) error {
 	_, err := db.Exec(`SELECT setval('post_id', $1)`, c)
 	return err
+}
+
+// DeletePosts marks the target posts as deleted
+func DeletePosts(board string, ids ...uint64) error {
+	_, err := db.Exec(`
+		UPDATE posts
+			SET deleted = true
+			WHERE id = ANY($1) AND board = $2`,
+		encodeIDArray(ids...), board,
+	)
+	return err
+}
+
+func encodeIDArray(ids ...uint64) string {
+	b := make([]byte, 1, 16)
+	b[0] = '{'
+	for i, id := range ids {
+		if i != 0 {
+			b = append(b, ',')
+		}
+		b = strconv.AppendUint(b, id, 10)
+	}
+	b = append(b, '}')
+	return string(b)
+}
+
+// SpoilerImage spoilers an already allocated image
+func SpoilerImage(id uint64) (err error) {
+	op, err := GetPostOP(id)
+	if err != nil {
+		return
+	}
+
+	msg, err := common.EncodeMessage(common.MessageSpoiler, id)
+	if err != nil {
+		return
+	}
+	return updatePost(id, op, msg, "spoilerImage", nil)
 }

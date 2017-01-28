@@ -10,7 +10,6 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/lang"
 	"github.com/bakape/meguca/templates"
-	"github.com/dancannon/gorethink"
 )
 
 // Base set of HTTP headers for both HTML and JSON
@@ -44,9 +43,7 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 
 // Log an error together with the client's IP and stack trace
 func logError(r *http.Request, err interface{}) {
-	if !isTest { // Do not pollute test output with logs
-		log.Printf("server: %s: %s\n%s", auth.GetIP(r), err, debug.Stack())
-	}
+	log.Printf("server: %s: %s\n%s", auth.GetIP(r), err, debug.Stack())
 }
 
 // Text-only 404 response
@@ -87,9 +84,8 @@ func assertNotBanned(
 		return false
 	}
 
-	var rec auth.BanRecord
-	q := gorethink.Table("bans").Get([]string{board, ip})
-	if err := db.One(q, &rec); err != nil {
+	rec, err := db.GetBanInfo(ip, board)
+	if err != nil {
 		text500(w, r, err)
 		return false
 	}

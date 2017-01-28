@@ -64,7 +64,7 @@ func NewImageToken(SHA1 string) (token string, err error) {
 		switch {
 		case err == nil:
 			return
-		case isConflictError(err):
+		case IsConflictError(err):
 			continue
 		default:
 			return

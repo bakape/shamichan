@@ -139,7 +139,7 @@ func assertBody(t *testing.T, id uint64, body string) {
 }
 
 func assertRepLog(t *testing.T, id uint64, log []string) {
-	res, err := db.GetLog(id, 0, 1000)
+	res, err := db.GetLog(id, 0, 500)
 	if err != nil {
 		t.Fatal(err)
 	}

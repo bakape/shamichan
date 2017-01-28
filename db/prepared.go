@@ -67,6 +67,8 @@ var protoPrepared = map[string]string{
 		INSERT INTO image_tokens (token, SHA1, expires) VALUES
 			($1, $2, $3)`,
 
+	"spoilerImage": `UPDATE posts SET spoiler = true WHERE id = $1`,
+
 	"writeOP": `
 		INSERT INTO threads (
 			board, log, id, postCtr, imageCtr, replyTime, bumpTime, subject
@@ -150,6 +152,8 @@ var protoPrepared = map[string]string{
 		)
 		SELECT * FROM t ORDER BY id ASC`,
 
+	"postCounter": `SELECT last_value FROM post_id;`,
+
 	"threadCounter": `SELECT array_length(log, 1) FROM threads WHERE id = $1`,
 
 	"boardCounter": `SELECT ctr FROM boards WHERE id = $1`,
@@ -196,7 +200,11 @@ var protoPrepared = map[string]string{
 					ELSE postCtr
 				END,
 				bumpTime = CASE WHEN $3
-					THEN floor(extract(EPOCH FROM now()))
+					THEN
+						CASE WHEN postCtr <= 1000
+							THEN floor(extract(EPOCH FROM now()))
+							ELSE bumpTime
+						END
 					ELSE bumpTime
 				END,
 				imageCtr = CASE WHEN $4
@@ -206,6 +214,12 @@ var protoPrepared = map[string]string{
 			WHERE id = $1`,
 
 	"isLoggedIn": `SELECT true FROM sessions WHERE account = $1 AND token = $2`,
+
+	"getPosition": `
+		SELECT position FROM staff
+			WHERE account = $1 AND board = $2`,
+
+	"getBanInfo": `SELECT * FROM bans WHERE ip = $1 AND board = $2`,
 
 	"findPosition": `
 		SELECT position FROM staff

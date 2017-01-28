@@ -13,7 +13,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	db.DBName = "meguca_test"
+	db.ConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable`
 	db.IsTest = true
 	assetRoot = filepath.Join("..", "www")
 	config.Set(config.Configs{})

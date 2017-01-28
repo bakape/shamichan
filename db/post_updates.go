@@ -69,7 +69,7 @@ func updatePost(
 	if err != nil {
 		return
 	}
-	defer rollbackOnError(tx, &err)
+	defer RollbackOnError(tx, &err)
 
 	q := tx.Stmt(prepared[queryKey])
 	if arg != nil {
@@ -86,12 +86,6 @@ func updatePost(
 	}
 
 	return tx.Commit()
-}
-
-func rollbackOnError(tx *sql.Tx, err *error) {
-	if *err != nil {
-		tx.Rollback()
-	}
 }
 
 // InsertCommand inserts a has command result into a post
@@ -177,7 +171,7 @@ func InsertImage(id, op uint64, img common.Image) (err error) {
 	if err != nil {
 		return
 	}
-	defer rollbackOnError(tx, &err)
+	defer RollbackOnError(tx, &err)
 
 	_, err = tx.Stmt(prepared["insertImage"]).Exec(id, img.SHA1, img.Name)
 	if err != nil {

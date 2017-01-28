@@ -1,5 +1,7 @@
 package common
 
+import "errors"
+
 // Maximum lengths of various string input fields
 const (
 	MaxLenName         = 50
@@ -29,6 +31,7 @@ var (
 	ErrSubjectTooLong      = ErrTooLong("subject")
 	ErrPostPasswordTooLong = ErrTooLong("post password")
 	ErrBodyTooLong         = ErrTooLong("post body")
+	ErrInvalidCreds        = errors.New("invalid login credentials")
 )
 
 // ErrTooLong is passed, when a field exceeds the maximum string length for

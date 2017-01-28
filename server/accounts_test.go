@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
@@ -25,16 +24,17 @@ func writeSampleUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertInsert(t, "accounts", auth.User{
-		ID:       sampleLoginCreds.UserID,
-		Password: hash,
-		Sessions: []auth.Session{
-			{
-				Token:   sampleLoginCreds.Session,
-				Expires: time.Now().Add(time.Hour),
-			},
-		},
-	})
+	err = db.RegisterAccount(sampleLoginCreds.UserID, hash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = db.WriteLoginSession(
+		sampleLoginCreds.UserID,
+		sampleLoginCreds.Session,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func genSession() string {
@@ -44,22 +44,21 @@ func genSession() string {
 func TestIsLoggedIn(t *testing.T) {
 	assertTableClear(t, "accounts")
 
+	hash, err := auth.BcryptHash(samplePassword, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.RegisterAccount("user1", hash); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.RegisterAccount("user2", hash); err != nil {
+		t.Fatal(err)
+	}
+
 	token := genSession()
-	assertInsert(t, "accounts", []auth.User{
-		{
-			ID: "user1",
-			Sessions: []auth.Session{
-				{
-					Token:   token,
-					Expires: time.Now().Add(time.Hour),
-				},
-			},
-		},
-		{
-			ID:       "user2",
-			Sessions: []auth.Session{},
-		},
-	})
+	if err := db.WriteLoginSession("user1", token); err != nil {
+		t.Fatal(err)
+	}
 
 	cases := [...]struct {
 		name, user, session string
@@ -176,7 +175,7 @@ func TestChangePassword(t *testing.T) {
 	}
 
 	// Assert new hash matches new password
-	hash, err := db.GetLoginHash(sampleLoginCreds.UserID)
+	hash, err := db.GetPassword(sampleLoginCreds.UserID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -239,30 +238,27 @@ func TestRegistrationValidations(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			rec, req := newJSONPair(t, "/admin/register", loginRequest{
-				loginCreds: loginCreds{
-					ID:       c.id,
-					Password: c.password,
-				},
+			rec, req := newJSONPair(t, "/admin/register", loginCreds{
+				ID:       c.id,
+				Password: c.password,
 			})
 			router.ServeHTTP(rec, req)
 
 			assertError(t, rec, c.code, c.err)
 			if c.err == nil {
-				assertLogin(t, c.id, rec.Body.String())
+				assertLogin(t, c.id, rec.Body.String(), true)
 			}
 		})
 	}
 }
 
-func assertLogin(t *testing.T, user, session string) {
-	var contains bool
-	q := db.GetAccount(user).Field("sessions").Field("token").Contains(session)
-	if err := db.One(q, &contains); err != nil {
+func assertLogin(t *testing.T, user, session string, loggedIn bool) {
+	is, err := db.IsLoggedIn(user, session)
+	switch {
+	case err != nil:
 		t.Fatal(err)
-	}
-	if !contains {
-		t.Fatal("session not created")
+	case is != loggedIn:
+		t.Fatalf("unexpected session status: %t", is)
 	}
 }
 
@@ -313,17 +309,15 @@ func TestLogin(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/admin/login", loginRequest{
-				loginCreds: loginCreds{
-					ID:       c.id,
-					Password: c.password,
-				},
+			rec, req := newJSONPair(t, "/admin/login", loginCreds{
+				ID:       c.id,
+				Password: c.password,
 			})
 			router.ServeHTTP(rec, req)
 
 			assertError(t, rec, c.code, c.err)
 			if c.err == nil {
-				assertLogin(t, c.id, rec.Body.String())
+				assertLogin(t, c.id, rec.Body.String(), true)
 			}
 		})
 	}
@@ -331,16 +325,7 @@ func TestLogin(t *testing.T) {
 
 func TestLogout(t *testing.T) {
 	assertTableClear(t, "accounts")
-
-	const id = "123"
-	sessions := []auth.Session{
-		{Token: genSession()},
-		{Token: genSession()},
-	}
-	assertInsert(t, "accounts", auth.User{
-		ID:       id,
-		Sessions: sessions,
-	})
+	id, tokens := writeSampleSessions(t)
 
 	cases := [...]struct {
 		name, token string
@@ -355,7 +340,7 @@ func TestLogout(t *testing.T) {
 		},
 		{
 			name:  "valid",
-			token: sessions[0].Token,
+			token: tokens[0],
 			code:  200,
 		},
 	}
@@ -373,47 +358,46 @@ func TestLogout(t *testing.T) {
 
 			assertError(t, rec, c.code, c.err)
 
-			// Assert database user document
 			if c.err == nil {
-				var res []auth.Session
-				err := db.All(db.GetAccount(id).Field("sessions"), &res)
-				if err != nil {
-					t.Fatal(err)
-				}
-				res[0].Expires = time.Time{} // Normalize time
-				AssertDeepEquals(t, res, []auth.Session{sessions[1]})
+				assertLogin(t, id, tokens[0], false)
+				assertLogin(t, id, tokens[1], true)
 			}
 		})
 	}
 }
 
+func writeSampleSessions(t *testing.T) (string, [2]string) {
+	const id = "123"
+	tokens := [2]string{genSession(), genSession()}
+	hash, err := auth.BcryptHash("foo", 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := db.RegisterAccount(id, hash); err != nil {
+		t.Fatal(err)
+	}
+	for _, token := range tokens {
+		if err := db.WriteLoginSession(id, token); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	return id, tokens
+}
+
 func TestLogoutAll(t *testing.T) {
 	assertTableClear(t, "accounts")
-
-	const id = "123"
-	sessions := []auth.Session{
-		{Token: genSession()},
-		{Token: genSession()},
-	}
-	user := auth.User{
-		ID:       id,
-		Sessions: sessions,
-		Password: []byte{1, 2, 3},
-	}
-	assertInsert(t, "accounts", user)
+	id, tokens := writeSampleSessions(t)
 
 	rec, req := newJSONPair(t, "/admin/logoutAll", auth.SessionCreds{
 		UserID:  id,
-		Session: sessions[0].Token,
+		Session: tokens[0],
 	})
 	router.ServeHTTP(rec, req)
 
 	assertCode(t, rec, 200)
-
-	var res auth.User
-	if err := db.One(db.GetAccount(id), &res); err != nil {
-		t.Fatal(err)
+	for _, tok := range tokens {
+		assertLogin(t, id, tok, false)
 	}
-	user.Sessions = []auth.Session{}
-	AssertDeepEquals(t, res, user)
 }

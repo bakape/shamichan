@@ -1,7 +1,7 @@
 package server
 
 import (
-	"encoding/json"
+	"database/sql"
 	"errors"
 	"net/http"
 	"strconv"
@@ -14,6 +14,7 @@ import (
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/dancannon/gorethink"
+	"github.com/pquerna/ffjson/ffjson"
 )
 
 var (
@@ -35,14 +36,7 @@ var (
 	boardCache = cache.FrontEnd{
 		GetCounter: func(k cache.Key) (uint64, error) {
 			if k.Board == "all" {
-				var ctr uint64
-				q := gorethink.
-					Table("posts").
-					Field("lastUpdated").
-					Max().
-					Default(0)
-				err := db.One(q, &ctr)
-				return ctr, err
+				return db.PostCounter()
 			}
 			return db.BoardCounter(k.Board)
 		},
@@ -71,7 +65,7 @@ func serveJSON(
 	etag string,
 	data interface{},
 ) {
-	buf, err := json.Marshal(data)
+	buf, err := ffjson.Marshal(data)
 	if err != nil {
 		text500(w, r, err)
 		return
@@ -132,13 +126,14 @@ func servePost(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	post, err := db.GetPost(id)
-	if err != nil {
+	switch post, err := db.GetPost(id); err {
+	case nil:
+		serveJSON(w, r, "", post)
+	case sql.ErrNoRows:
+		text404(w)
+	default:
 		respondToJSONError(w, r, err)
-		return
 	}
-
-	serveJSON(w, r, "", post)
 }
 
 func respondToJSONError(w http.ResponseWriter, r *http.Request, err error) {
@@ -261,35 +256,6 @@ func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 // Serve a JSON array of all available boards and their titles
 func serveBoardList(res http.ResponseWriter, req *http.Request) {
 	serveJSON(res, req, "", config.GetBoardTitles())
-}
-
-// Fetch an array of boards a certain user holds a certain position on
-func serveStaffPositions(
-	w http.ResponseWriter,
-	r *http.Request,
-	p map[string]string,
-) {
-	q := gorethink.
-		Table("boards").
-		Filter(gorethink.Row.
-			Field("staff").
-			Field(p["position"]).
-			Contains(p["user"]),
-		).
-		Field("id").
-		CoerceTo("array")
-	var boards []string
-	if err := db.All(q, &boards); err != nil {
-		text500(w, r, err)
-		return
-	}
-
-	// Ensure response is always a JSON array
-	if boards == nil {
-		boards = []string{}
-	}
-
-	serveJSON(w, r, "", boards)
 }
 
 // Serve map of internal file type enums to extensions. Needed for

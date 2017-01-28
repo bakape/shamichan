@@ -2,11 +2,11 @@ package server
 
 import (
 	"net/http"
-	"sort"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/lang"
 	"github.com/bakape/meguca/templates"
 )
@@ -134,20 +134,22 @@ func ownedBoardSelection(
 	p map[string]string,
 ) {
 	userID := p["userID"]
+	owned, err := db.GetOwnedBoards(userID)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
 
-	var owned config.BoardTitles
-	for _, c := range config.GetAllBoardConfigs() {
-		for _, o := range c.Staff["owners"] {
-			if o == userID {
-				owned = append(owned, config.BoardTitle{
-					ID:    c.ID,
-					Title: c.Title,
-				})
+	// Retrieve titles of boards
+	ownedTitles := make(config.BoardTitles, 0, len(owned))
+	for _, b := range config.GetBoardTitles() {
+		for _, o := range owned {
+			if b.ID == o {
+				ownedTitles = append(ownedTitles, b)
 				break
 			}
 		}
 	}
-	sort.Sort(owned)
 
 	lp, err := lang.Get(w, r)
 	if err != nil {
@@ -155,7 +157,7 @@ func ownedBoardSelection(
 		return
 	}
 
-	serveHTML(w, r, "", []byte(templates.OwnedBoard(owned, lp.UI)), nil)
+	serveHTML(w, r, "", []byte(templates.OwnedBoard(ownedTitles, lp.UI)), nil)
 }
 
 // Renders a form for configuring a board owned by the user

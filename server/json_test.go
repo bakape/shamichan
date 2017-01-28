@@ -1,13 +1,13 @@
 package server
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 )
 
@@ -72,7 +72,7 @@ func TestPostJSON(t *testing.T) {
 	setBoards(t, "a")
 	cache.Clear()
 
-	const postEtag = "qO18VR0TvaL71iNdrFmaIQ"
+	const postEtag = "aZggEVf/3trOeEWhFT7wxQ"
 
 	cases := [...]struct {
 		name, url, header string
@@ -80,74 +80,83 @@ func TestPostJSON(t *testing.T) {
 		etag              string
 	}{
 		{
-			"invalid post number",
-			"/post/www",
-			"", 400, "",
+			name: "invalid post number",
+			url:  "/post/www",
+			code: 400,
 		},
 		{
-			"nonexistent post",
-			"/post/66",
-			"", 404, "",
+			name: "nonexistent post",
+			url:  "/post/66",
+			code: 404,
 		},
 		{
-			"existing post",
-			"/post/1",
-			"", 200, postEtag,
+			name: "existing post",
+			url:  "/post/1",
+			code: 200,
+			etag: postEtag,
 		},
 		{
-			"post etag matches",
-			"/post/1",
-			postEtag, 304, "",
+			name:   "post etag matches",
+			url:    "/post/1",
+			header: postEtag,
+			code:   304,
+			etag:   "",
 		},
 		{
-			"invalid thread board",
-			"/nope/1",
-			"", 404, "",
+			name: "invalid thread board",
+			url:  "/nope/1",
+			code: 404,
 		},
 		{
-			"invalid thread number",
-			"/a/www",
-			"", 404, "",
+			name: "invalid thread number",
+			url:  "/a/www",
+			code: 404,
 		},
 		{
-			"nonexistent thread",
-			"/a/22",
-			"", 404, "",
+			name: "nonexistent thread",
+			url:  "/a/22",
+			code: 404,
 		},
 		{
-			"valid thread",
-			"/a/1",
-			"", 200, "W/11",
+			name: "valid thread",
+			url:  "/a/1",
+			code: 200,
+			etag: "W/11",
 		},
 		{
-			"thread etags match",
-			"/a/1",
-			"W/11", 304, "",
+			name:   "thread etags match",
+			url:    "/a/1",
+			header: "W/11",
+			code:   304,
 		},
 		{
-			"invalid board",
-			"/nope/",
-			"", 404, "",
+			name: "invalid board",
+			url:  "/nope/",
+			code: 404,
 		},
 		{
-			"valid board",
-			"/a/",
-			"", 200, "W/11",
+			name: "valid board",
+			url:  "/a/",
+			code: 200,
+			etag: "W/0",
 		},
 		{
-			"board etag matches",
-			"/a/",
-			"W/11", 304, "",
+			name:   "board etag matches",
+			url:    "/a/",
+			header: "W/0",
+			code:   304,
 		},
 		{
-			"all board",
-			"/all/",
-			"", 200, "W/11",
+			name: "all board",
+			url:  "/all/",
+			code: 200,
+			etag: "W/11",
 		},
 		{
-			"/all/ board etag matches",
-			"/all/",
-			"W/11", 304, "",
+			name:   "/all/ board etag matches",
+			url:    "/all/",
+			header: "W/11",
+			code:   304,
 		},
 	}
 
@@ -171,25 +180,12 @@ func TestPostJSON(t *testing.T) {
 
 // Setup the database for testing post-related paths
 func setupPosts(t *testing.T) {
-	assertTableClear(t, "posts", "threads")
-	assertInsert(t, "main", map[string]interface{}{
-		"id":      "info",
-		"postCtr": 8,
-	})
-	assertInsert(t, "threads", common.DatabaseThread{
-		ID:    1,
-		Board: "a",
-	})
-	assertInsert(t, "posts", common.DatabasePost{
-		StandalonePost: common.StandalonePost{
-			Post: common.Post{
-				ID: 1,
-			},
-			Board: "a",
-			OP:    1,
-		},
-		LastUpdated: 11,
-	})
+	assertTableClear(t, "boards")
+	if err := db.SetPostCounter(11); err != nil {
+		t.Fatal(err)
+	}
+	writeSampleBoard(t)
+	writeSampleThread(t)
 }
 
 func TestServeBoardConfigs(t *testing.T) {
@@ -201,7 +197,6 @@ func TestServeBoardConfigs(t *testing.T) {
 			CodeTags: true,
 			Title:    "Animu",
 			Notice:   "Notice",
-			Banners:  []string{},
 		},
 	}
 	config.SetBoardConfigs(conf)
@@ -259,48 +254,6 @@ func TestServeBoardList(t *testing.T) {
 	rec, req := newPair("/json/boardList")
 	router.ServeHTTP(rec, req)
 	assertBody(t, rec, std)
-}
-
-func TestServeStaffPosition(t *testing.T) {
-	assertTableClear(t, "boards")
-	staff := map[string][]string{
-		"owners": {"admin"},
-	}
-	assertInsert(t, "boards", []config.BoardConfigs{
-		{
-			ID:    "a",
-			Staff: staff,
-		},
-		{
-			ID: "b",
-		},
-		{
-			ID:    "c",
-			Staff: staff,
-		},
-	})
-
-	cases := [...]struct {
-		name, position, user, res string
-	}{
-		{"valid query", "owners", "admin", `["a","c"]`},
-		{"invalid user", "mod", "admin", "[]"},
-		{"invalid position", "owners", "bullshit", "[]"},
-		{"both invalid", "bullocks", "bullshit", "[]"},
-	}
-
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-
-			path := fmt.Sprintf("/json/positions/%s/%s", c.position, c.user)
-			rec, req := newPair(path)
-			router.ServeHTTP(rec, req)
-			assertCode(t, rec, 200)
-			assertBody(t, rec, c.res)
-		})
-	}
 }
 
 func TestServeExtensionMap(t *testing.T) {

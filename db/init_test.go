@@ -3,7 +3,7 @@ package db
 import "testing"
 
 func init() {
-	DBName = "meguca_test"
+	ConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable`
 	IsTest = true
 	if err := LoadDB(); err != nil {
 		panic(err)

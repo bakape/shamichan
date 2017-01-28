@@ -17,8 +17,8 @@ import (
 const version = 1
 
 var (
-	// DBName is the name of the database to use
-	DBName = "meguca"
+	// ConnArgs specifies the PostgreSQL connection arguments
+	ConnArgs = `user=meguca password=meguca dbname=meguca sslmode=disable`
 
 	// IsTest can be overridden to not launch several infinite loops during tests
 	// or check DB version
@@ -26,131 +26,130 @@ var (
 
 	// Stores the postgres database instance
 	db *sql.DB
-
-	// DBPassword stores the Postgres user password
-	DBPassword = "meguca"
 )
 
 // Initial table creation queries
 const initQ = `
-CREATE TABLE main (
-	id TEXT PRIMARY KEY,
-	val TEXT NOT NULL
+create table main (
+	id text primary key,
+	val text not null
 );
-INSERT INTO main (id, val) VALUES
+insert into main (id, val) values
 	('version', %d),
 	('config', '%s'),
 	('pyu', '0');
 
-CREATE TABLE accounts (
-	id VARCHAR(20) PRIMARY KEY,
-	password BYTEA NOT NULL
+create table accounts (
+	id varchar(20) primary key,
+	password bytea not null
 );
 
-CREATE TABLE sessions (
-	account VARCHAR(20) NOT NULL REFERENCES accounts ON DELETE CASCADE,
-	token TEXT NOT NULL,
-	expires TIMESTAMP NOT NULL,
-	PRIMARY KEY (account, token)
+create table sessions (
+	account varchar(20) not null references accounts on delete cascade,
+	token text not null,
+	expires timestamp not null,
+	primary key (account, token)
 );
 
-CREATE TABLE images (
-	APNG BOOLEAN NOT NULL,
-	audio BOOLEAN NOT NULL,
-	video BOOLEAN NOT NULL,
-	fileType SMALLINT NOT NULL,
-	thumbType SMALLINT NOT NULL,
-	dims SMALLINT[4] NOT NULL,
-	length INT NOT NULL,
-	size INT NOT NULL,
-	MD5 CHAR(22) NOT NULL,
-	SHA1 CHAR(40) PRIMARY KEY
+create table bans (
+	board varchar(3) not null,
+	ip inet not null,
+	by varchar(20) not null,
+	reason text not null,
+	expires timestamp default now(),
+	primary key (ip, board)
 );
 
-CREATE TABLE image_tokens (
-	token CHAR(86) NOT NULL PRIMARY KEY,
-	SHA1 CHAR(40) NOT NULL REFERENCES images ON DELETE CASCADE,
-	expires TIMESTAMP NOT NULL
+create table images (
+	apng boolean not null,
+	audio boolean not null,
+	video boolean not null,
+	fileType smallint not null,
+	thumbType smallint not null,
+	dims smallint[4] not null,
+	length int not null,
+	size int not null,
+	md5 char(22) not null,
+	sha1 char(40) primary key
 );
 
-CREATE TABLE boards (
-	readOnly BOOLEAN NOT NULL,
-	textOnly BOOLEAN NOT NULL,
-	forcedAnon BOOLEAN NOT NULL,
-	hashCommands BOOLEAN NOT NULL,
-	codeTags BOOLEAN NOT NULL,
-	id VARCHAR(3) PRIMARY KEY,
-	ctr BIGINT DEFAULT 0,
-	created TIMESTAMP NOT NULL,
-	title VARCHAR(100) NOT NULL,
-	notice VARCHAR(500) NOT NULL,
-	rules VARCHAR(5000) NOT NULL,
-	eightball TEXT[] NOT NULL
+create table image_tokens (
+	token char(86) not null primary key,
+	sha1 char(40) not null references images on delete cascade,
+	expires timestamp not null
 );
 
-CREATE TABLE staff (
-	board VARCHAR(3) NOT NULL REFERENCES boards ON DELETE CASCADE,
-	account VARCHAR(20) NOT NULL REFERENCES accounts ON DELETE CASCADE,
-	position VARCHAR(50) NOT NULL,
-	PRIMARY KEY (board, position)
+create table boards (
+	readOnly boolean not null,
+	textOnly boolean not null,
+	forcedAnon boolean not null,
+	hashCommands boolean not null,
+	codeTags boolean not null,
+	id varchar(3) primary key,
+	ctr bigint default 0,
+	created timestamp not null,
+	title varchar(100) not null,
+	notice varchar(500) not null,
+	rules varchar(5000) not null,
+	eightball text[] not null
 );
 
-CREATE SEQUENCE post_id;
-
-CREATE TABLE threads (
-	locked BOOLEAN,
-	board VARCHAR(3) NOT NULL REFERENCES boards ON DELETE CASCADE,
-	id BIGINT PRIMARY KEY,
-	postCtr BIGINT NOT NULL,
-	imageCtr BIGINT NOT NULL,
-	bumpTime BIGINT NOT NULL,
-	replyTime BIGINT NOT NULL,
-	subject VARCHAR(100) NOT NULL,
-	log TEXT[] NOT NULL
+create table staff (
+	board varchar(3) not null references boards on delete cascade,
+	account varchar(20) not null references accounts on delete cascade,
+	position varchar(50) not null
 );
-CREATE INDEX threads_board on threads (board);
-CREATE INDEX bumpTime on threads (bumpTime);
+create index staff_board on staff (board);
+create index staff_account on staff (account);
 
-CREATE TABLE posts (
-	editing BOOLEAN NOT NULL,
-	spoiler BOOLEAN,
-	deleted BOOLEAN,
-	banned BOOLEAN,
-	id BIGINT PRIMARY KEY,
-	op BIGINT NOT NULL REFERENCES threads ON DELETE CASCADE,
-	time BIGINT NOT NULL,
-	board VARCHAR(3) NOT NULL,
-	trip CHAR(10),
-	auth VARCHAR(20),
-	SHA1 CHAR(40) REFERENCES images ON DELETE SET NULL,
-	name VARCHAR(50),
-	imageName VARCHAR(200),
-	body VARCHAR(2000) NOT NULL,
-	password BYTEA,
-	ip INET,
-	links BIGINT[][2],
-	backlinks BIGINT[][2],
-	commands JSON[]
+create sequence post_id;
+
+create table threads (
+	locked boolean,
+	board varchar(3) not null references boards on delete cascade,
+	id bigint primary key,
+	postCtr bigint not null,
+	imageCtr bigint not null,
+	bumpTime bigint not null,
+	replyTime bigint not null,
+	subject varchar(100) not null,
+	log text[] not null
 );
-CREATE INDEX deleted on posts (deleted);
-CREATE INDEX op on posts (op);
-CREATE INDEX image on posts (SHA1);
-CREATE INDEX editing on posts (editing);
-CREATE INDEX ip on posts (ip);
+create index threads_board on threads (board);
+create index bumpTime on threads (bumpTime);
+
+create table posts (
+	editing boolean not null,
+	spoiler boolean,
+	deleted boolean,
+	banned boolean,
+	id bigint primary key,
+	op bigint not null references threads on delete cascade,
+	time bigint not null,
+	board varchar(3) not null,
+	trip char(10),
+	auth varchar(20),
+	sha1 char(40) references images on delete set null,
+	name varchar(50),
+	imageName varchar(200),
+	body varchar(2000) not null,
+	password bytea,
+	ip inet,
+	links bigint[][2],
+	backlinks bigint[][2],
+	commands json[]
+);
+create index deleted on posts (deleted);
+create index op on posts (op);
+create index image on posts (sha1);
+create index editing on posts (editing);
+create index ip on posts (ip);
 `
-
-// Generates a Postgres connection parameter string
-func connArgs() string {
-	return fmt.Sprintf(
-		`user=meguca password='%s' dbname='%s' sslmode=disable binary_parameters=yes`,
-		DBPassword, DBName,
-	)
-}
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
 func LoadDB() (err error) {
-	db, err = sql.Open("postgres", connArgs())
+	db, err = sql.Open("postgres", ConnArgs)
 	if err != nil {
 		return err
 	}
@@ -185,12 +184,12 @@ func LoadDB() (err error) {
 		go runCleanupTasks()
 	}
 
-	return util.Waterfall(loadConfigs, loadBoardConfigs)
+	return util.Waterfall(loadConfigs, loadBoardConfigs, loadBans)
 }
 
 // InitDB initializes a database
 func InitDB() error {
-	log.Printf("initializing database '%s'", DBName)
+	log.Println("initializing database")
 
 	conf, err := ffjson.Marshal(config.Defaults)
 	if err != nil {

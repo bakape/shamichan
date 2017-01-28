@@ -7,11 +7,14 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
-	"github.com/dancannon/gorethink"
+	"github.com/bakape/meguca/imager/assets"
 )
 
 func TestSpoilerImage(t *testing.T) {
-	assertTableClear(t, "posts")
+	assertTableClear(t, "boards", "images")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+	writeSampleImage(t)
 
 	const password = "123"
 	hash, err := auth.BcryptHash(password, 6)
@@ -19,26 +22,17 @@ func TestSpoilerImage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assertInsert(t, "posts", []common.DatabasePost{
-		{
-			Password: hash,
-			StandalonePost: common.StandalonePost{
-				Post: common.Post{
-					ID: 1,
-					Image: &common.Image{
-						ImageCommon: common.ImageCommon{
-							SHA1: "123",
-						},
-					},
-				},
-			},
-		},
+	posts := [...]db.DatabasePost{
 		{
 			Password: hash,
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
 					ID: 2,
+					Image: &common.Image{
+						ImageCommon: assets.StdJPEG.ImageCommon,
+					},
 				},
+				OP: 1,
 			},
 		},
 		{
@@ -46,13 +40,8 @@ func TestSpoilerImage(t *testing.T) {
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
 					ID: 3,
-					Image: &common.Image{
-						ImageCommon: common.ImageCommon{
-							SHA1: "123",
-						},
-						Spoiler: true,
-					},
 				},
+				OP: 1,
 			},
 		},
 		{
@@ -61,26 +50,43 @@ func TestSpoilerImage(t *testing.T) {
 				Post: common.Post{
 					ID: 4,
 					Image: &common.Image{
-						ImageCommon: common.ImageCommon{
-							SHA1: "123",
-						},
+						ImageCommon: assets.StdJPEG.ImageCommon,
+						Spoiler:     true,
 					},
 				},
+				OP: 1,
 			},
 		},
-	})
+		{
+			Password: hash,
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID: 5,
+					Image: &common.Image{
+						ImageCommon: assets.StdJPEG.ImageCommon,
+					},
+				},
+				OP: 1,
+			},
+		},
+	}
+	for _, p := range posts {
+		if err := db.WritePost(nil, p); err != nil {
+			t.Fatal(err)
+		}
+	}
 
 	cases := [...]struct {
-		name      string
-		id        uint64
-		password  string
-		code      int
-		spoilered bool
+		name                string
+		id                  uint64
+		password            string
+		code                int
+		hasImage, spoilered bool
 	}{
-		{"no image", 2, password, 400, false},
-		{"wrong password", 4, "122", 403, false},
-		{"success", 1, password, 200, true},
-		{"already spoilered", 3, password, 200, true},
+		{"no image", 3, password, 400, false, false},
+		{"wrong password", 5, "122", 403, true, false},
+		{"success", 2, password, 200, true, true},
+		{"already spoilered", 4, password, 200, true, true},
 	}
 
 	for i := range cases {
@@ -97,23 +103,41 @@ func TestSpoilerImage(t *testing.T) {
 
 			assertCode(t, rec, c.code)
 
-			var spoilered bool
-			msg := "11" + strconv.Itoa(int(c.id))
-			post := db.FindPost(c.id)
-			q := gorethink.And(
-				post.Field("log").Contains(msg),
-				post.Field("image").Field("spoiler"),
-			)
-			if err := db.One(q, &spoilered); err != nil {
+			post, err := db.GetPost(c.id)
+			if err != nil {
 				t.Fatal(err)
 			}
-			if spoilered != spoilered {
+			if c.hasImage && post.Image.Spoiler != c.spoilered {
+				assertRepLogContains(t, 1, "11"+strconv.FormatUint(c.id, 10))
 				t.Errorf(
 					"spoiler mismatch: expected %v; got %v",
 					c.spoilered,
-					spoilered,
+					post.Image.Spoiler,
 				)
 			}
 		})
+	}
+}
+
+func writeSampleImage(t *testing.T) {
+	if err := db.WriteImage(assets.StdJPEG.ImageCommon); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func assertRepLogContains(t *testing.T, id uint64, msg string) {
+	res, err := db.GetLog(id, 0, 500)
+	if err != nil {
+		t.Fatal(err)
+	}
+	contains := false
+	for _, r := range res {
+		if string(r) == msg {
+			contains = true
+			break
+		}
+	}
+	if !contains {
+		t.Errorf(`log does not contain message "%s"`, msg)
 	}
 }

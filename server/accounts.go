@@ -1,15 +1,13 @@
 package server
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/dancannon/gorethink"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,28 +18,21 @@ var (
 	errUserIDTaken     = errors.New("login ID already taken")
 )
 
-// Request struct for logging in to an existing or registering a new account
-type loginRequest struct {
-	common.Captcha
-	loginCreds
-}
-
 type loginCreds struct {
-	ID, Password string
+	ID, Password, Captcha string
 }
 
 type passwordChangeRequest struct {
 	auth.SessionCreds
-	common.Captcha
-	Old, New string
+	Old, New, Captcha string
 }
 
 // Register a new user account
 func register(w http.ResponseWriter, r *http.Request) {
-	var req loginRequest
+	var req loginCreds
 	isValid := decodeJSON(w, r, &req) &&
 		validateUserID(w, req.ID) &&
-		checkPasswordAndCaptcha(w, r, req.Password, auth.GetIP(r), req.Captcha)
+		checkPasswordAndCaptcha(w, r, req.Password, req.Captcha)
 	if !isValid {
 		return
 	}
@@ -82,16 +73,7 @@ func commitLogin(w http.ResponseWriter, r *http.Request, userID string) {
 		text500(w, r, err)
 		return
 	}
-
-	expiryTime := time.Duration(config.Get().SessionExpiry) * time.Hour * 24
-	session := auth.Session{
-		Token:   token,
-		Expires: time.Now().Add(expiryTime),
-	}
-	q := db.GetAccount(userID).Update(map[string]gorethink.Term{
-		"sessions": gorethink.Row.Field("sessions").Append(session),
-	})
-	if err := db.Write(q); err != nil {
+	if err := db.WriteLoginSession(userID, token); err != nil {
 		text500(w, r, err)
 		return
 	}
@@ -101,19 +83,19 @@ func commitLogin(w http.ResponseWriter, r *http.Request, userID string) {
 
 // Log into a registered user account
 func login(w http.ResponseWriter, r *http.Request) {
-	var req loginRequest
+	var req loginCreds
 	switch {
 	case !decodeJSON(w, r, &req):
 		return
-	case !auth.AuthenticateCaptcha(req.Captcha, auth.GetIP(r)):
+	case !auth.AuthenticateCaptcha(req.Captcha):
 		text403(w, errInvalidCaptcha)
 		return
 	}
 
-	hash, err := db.GetLoginHash(req.ID)
+	hash, err := db.GetPassword(req.ID)
 	switch err {
 	case nil:
-	case gorethink.ErrEmptyResult:
+	case sql.ErrNoRows:
 		text403(w, common.ErrInvalidCreds)
 		return
 	default:
@@ -133,15 +115,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 
 // Log out user from session and remove the session key from the database
 func logout(w http.ResponseWriter, r *http.Request) {
-	commitLogout(w, r, func(req auth.SessionCreds) gorethink.Term {
-		// Remove current session from user's session document
-		return db.GetAccount(req.UserID).Update(map[string]gorethink.Term{
-			"sessions": gorethink.Row.
-				Field("sessions").
-				Filter(func(s gorethink.Term) gorethink.Term {
-					return s.Field("token").Eq(req.Session).Not()
-				}),
-		})
+	commitLogout(w, r, func(req auth.SessionCreds) error {
+		return db.LogOut(req.UserID, req.Session)
 	})
 }
 
@@ -149,24 +124,22 @@ func logout(w http.ResponseWriter, r *http.Request) {
 func commitLogout(
 	w http.ResponseWriter,
 	r *http.Request,
-	fn func(auth.SessionCreds) gorethink.Term,
+	fn func(auth.SessionCreds) error,
 ) {
 	var req auth.SessionCreds
 	if !decodeJSON(w, r, &req) || !isLoggedIn(w, r, req.UserID, req.Session) {
 		return
 	}
 
-	if err := db.Write(fn(req)); err != nil {
+	if err := fn(req); err != nil {
 		text500(w, r, err)
 	}
 }
 
 // Log out all sessions of the specific user
 func logoutAll(w http.ResponseWriter, r *http.Request) {
-	commitLogout(w, r, func(req auth.SessionCreds) gorethink.Term {
-		return db.GetAccount(req.UserID).Update(map[string][]string{
-			"sessions": []string{},
-		})
+	commitLogout(w, r, func(req auth.SessionCreds) error {
+		return db.LogOutAll(req.UserID)
 	})
 }
 
@@ -175,13 +148,13 @@ func changePassword(w http.ResponseWriter, r *http.Request) {
 	var msg passwordChangeRequest
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		checkPasswordAndCaptcha(w, r, msg.New, auth.GetIP(r), msg.Captcha)
+		checkPasswordAndCaptcha(w, r, msg.New, msg.Captcha)
 	if !isValid {
 		return
 	}
 
 	// Get old hash
-	hash, err := db.GetLoginHash(msg.UserID)
+	hash, err := db.GetPassword(msg.UserID)
 	if err != nil {
 		text500(w, r, err)
 		return
@@ -204,14 +177,8 @@ func changePassword(w http.ResponseWriter, r *http.Request) {
 		text500(w, r, err)
 		return
 	}
-
-	q := db.GetAccount(msg.UserID).
-		Update(map[string][]byte{
-			"password": hash,
-		})
-	if err := db.Write(q); err != nil {
+	if err := db.ChangePassword(msg.UserID, hash); err != nil {
 		text500(w, r, err)
-		return
 	}
 }
 
@@ -219,14 +186,13 @@ func changePassword(w http.ResponseWriter, r *http.Request) {
 func checkPasswordAndCaptcha(
 	w http.ResponseWriter,
 	r *http.Request,
-	password, ip string,
-	captcha common.Captcha,
+	password, captcha string,
 ) bool {
 	switch {
 	case password == "", len(password) > common.MaxLenPassword:
 		text400(w, errInvalidPassword)
 		return false
-	case !auth.AuthenticateCaptcha(captcha, ip):
+	case !auth.AuthenticateCaptcha(captcha):
 		text403(w, errInvalidCaptcha)
 		return false
 	}

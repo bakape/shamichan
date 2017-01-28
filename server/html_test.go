@@ -4,26 +4,15 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/cache"
-	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 )
 
 func TestThreadHTML(t *testing.T) {
 	cache.Clear()
-	assertTableClear(t, "threads", "posts")
-	assertInsert(t, "threads", common.DatabaseThread{
-		ID:    1,
-		Board: "a",
-	})
-	assertInsert(t, "posts", common.DatabasePost{
-		StandalonePost: common.StandalonePost{
-			OP:    1,
-			Board: "a",
-			Post: common.Post{
-				ID: 1,
-			},
-		},
-	})
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
 	setBoards(t, "a")
 	(*config.Get()).DefaultLang = "en_GB"
 
@@ -77,33 +66,65 @@ func TestBoardHTML(t *testing.T) {
 }
 
 func TestOwnedBoardSelection(t *testing.T) {
+	assertTableClear(t, "boards", "accounts")
 	config.ClearBoards()
-	conf := [...]config.BoardConfigs{
-		{
-			ID: "a",
-			Staff: map[string][]string{
-				"owners": {"foo", "admin"},
+	(*config.Get()).DefaultLang = "en_GB"
+	writeAdminAccount(t)
+	writeSampleUser(t)
+
+	for _, b := range [...]string{"a", "c"} {
+		err := db.WriteBoard(nil, db.DatabaseBoardConfigs{
+			BoardConfigs: config.BoardConfigs{
+				ID:        b,
+				Eightball: []string{"yes"},
 			},
-		},
-		{
-			ID: "c",
-			Staff: map[string][]string{
-				"owners": {"admin"},
-			},
-		},
-	}
-	for _, c := range conf {
-		if _, err := config.SetBoardConfigs(c); err != nil {
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		conf := config.BoardConfigs{
+			ID: b,
+		}
+		if _, err := config.SetBoardConfigs(conf); err != nil {
 			t.Fatal(err)
 		}
 	}
-	(*config.Get()).DefaultLang = "en_GB"
+
+	staff := [...]struct {
+		id     string
+		owners []string
+	}{
+		{
+			"a",
+			[]string{"user1", "admin"},
+		},
+		{
+			"c",
+			[]string{"admin"},
+		},
+	}
+	tx, err := db.StartTransaction()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, s := range staff {
+		err := db.WriteStaff(tx, s.id, map[string][]string{
+			"owners": s.owners,
+		})
+		if err != nil {
+			tx.Rollback()
+			t.Fatal(err)
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
 
 	cases := [...]struct {
 		name, id string
 	}{
 		{"no owned boards", "bar"},
-		{"one owned board", "foo"},
+		{"one owned board", "user1"},
 		{"multiple owned boards", "admin"},
 	}
 
@@ -120,22 +141,26 @@ func TestOwnedBoardSelection(t *testing.T) {
 }
 
 func TestBoardConfigurationForm(t *testing.T) {
-	assertTableClear(t, "accounts")
-	writeSampleUser(t)
 	config.ClearBoards()
+	(*config.Get()).DefaultLang = "en_GB"
+	assertTableClear(t, "accounts", "boards")
+	writeSampleBoard(t)
+	writeSampleUser(t)
 
-	conf := config.BoardConfigs{
-		ID: "a",
-		Staff: map[string][]string{
-			"owners": {"user1"},
-		},
-	}
-	_, err := config.SetBoardConfigs(conf)
+	tx, err := db.StartTransaction()
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	(*config.Get()).DefaultLang = "en_GB"
+	err = db.WriteStaff(tx, "a", map[string][]string{
+		"owners": {"user1"},
+	})
+	if err != nil {
+		tx.Rollback()
+		t.Fatal(err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
 
 	rec, req := newJSONPair(t, "/forms/configureBoard", boardConfigRequest{
 		ID:           "a",

@@ -69,7 +69,7 @@ func TestInsertThread(t *testing.T) {
 		if _, err := config.SetBoardConfigs(c.BoardConfigs); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.WriteBoard(c); err != nil {
+		if err := db.WriteBoard(nil, c); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -386,7 +386,6 @@ func TestPostCreation(t *testing.T) {
 	AssertDeepEquals(t, thread.PostCtr, uint32(1))
 	AssertDeepEquals(t, thread.ImageCtr, uint32(2))
 	AssertDeepEquals(t, thread.ReplyTime, stdPost.Time)
-	AssertDeepEquals(t, thread.BumpTime, stdPost.Time)
 
 	AssertDeepEquals(t, cl.post, openPost{
 		id:       6,
@@ -415,7 +414,7 @@ func writeSampleBoard(t testing.TB) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := db.WriteBoard(b); err != nil {
+	if err := db.WriteBoard(nil, b); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -428,7 +427,6 @@ func writeSampleThread(t testing.TB) {
 		PostCtr:   0,
 		ImageCtr:  1,
 		ReplyTime: now,
-		BumpTime:  now,
 		Log:       []string{},
 	}
 	op := db.DatabasePost{

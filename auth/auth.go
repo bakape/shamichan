@@ -29,12 +29,16 @@ var (
 	bansMu sync.RWMutex
 )
 
+// Ban holdsan entry of an IP being banned from a board
+type Ban struct {
+	IP, Board string
+}
+
 // BanRecord stores information about a specific ban
 type BanRecord struct {
-	ID      [2]string `gorethink:"id"`
-	Reason  string    `gorethink:"reason"`
-	By      string    `gorethink:"by"`
-	Expires time.Time `gorethink:"expires"`
+	Ban
+	Reason, By string
+	Expires    time.Time
 }
 
 // IsBoard confirms the string is a valid board
@@ -92,33 +96,21 @@ func IsBanned(board, ip string) bool {
 	return ips[ip]
 }
 
-// AddBan adds an IP to the banned cache of a board
-func AddBan(board, ip string) {
+// SetBans replaces the ban cache with the new set
+func SetBans(b ...Ban) {
+	new := map[string]map[string]bool{}
+	for _, b := range b {
+		board, ok := new[b.Board]
+		if !ok {
+			board = map[string]bool{}
+			new[b.Board] = board
+		}
+		board[b.IP] = true
+	}
+
 	bansMu.Lock()
-	defer bansMu.Unlock()
-
-	ips, ok := bans[board]
-	if !ok {
-		ips = map[string]bool{}
-		bans[board] = ips
-	}
-	ips[ip] = true
-}
-
-// RemoveBan removes an IP's ban from a specific board from the ban cache
-func RemoveBan(board, ip string) {
-	bansMu.Lock()
-	defer bansMu.Unlock()
-
-	ips, ok := bans[board]
-	if !ok {
-		return
-	}
-	if len(ips) == 1 {
-		delete(bans, board)
-	} else {
-		delete(ips, ip)
-	}
+	bans = new
+	bansMu.Unlock()
 }
 
 // RandomID generates a randomID of base64 characters of desired byte length

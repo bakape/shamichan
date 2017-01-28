@@ -1,6 +1,10 @@
 package db
 
-import "database/sql"
+import (
+	"database/sql"
+
+	"github.com/lib/pq"
+)
 
 type executor interface {
 	Exec(args ...interface{}) (sql.Result, error)
@@ -13,6 +17,12 @@ type rowScanner interface {
 type tableScanner interface {
 	rowScanner
 	Next() bool
+}
+
+type queryer interface {
+	Exec(string, ...interface{}) (sql.Result, error)
+	Query(string, ...interface{}) (*sql.Rows, error)
+	QueryRow(string, ...interface{}) *sql.Row
 }
 
 // StartTransaction initiates a new DB transaction. It is the responsibility of
@@ -51,7 +61,29 @@ func getExecutor(tx *sql.Tx, key string) executor {
 	return prepared[key]
 }
 
+func getQuerier(tx *sql.Tx) queryer {
+	if tx == nil {
+		return db
+	}
+	return tx
+}
+
 func setReadOnly(tx *sql.Tx) error {
 	_, err := tx.Exec("SET TRANSACTION READ ONLY")
 	return err
+}
+
+// IsConflictError returns if an error is a unique key conflict error
+func IsConflictError(err error) bool {
+	if err, ok := err.(*pq.Error); ok && err.Code.Name() == "unique_violation" {
+		return true
+	}
+	return false
+}
+
+// RollbackOnError on error undoes the transaction on error
+func RollbackOnError(tx *sql.Tx, err *error) {
+	if *err != nil {
+		tx.Rollback()
+	}
 }

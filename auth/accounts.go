@@ -5,26 +5,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"time"
 
-	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// User contains ID, password hash and board-related data of a registered user
-// account
-type User struct {
-	ID       string
-	Password []byte
-}
-
-// Session contains the token and expiry time of a single authenticated login
-// session
-type Session struct {
-	Token   string    `gorethink:"token"`
-	Expires time.Time `gorethink:"expires"`
-}
 
 // SessionCreds is embed in every request that needs logged in authentication
 type SessionCreds struct {
@@ -42,15 +26,14 @@ func BcryptCompare(password string, hash []byte) error {
 
 // AuthenticateCaptcha posts a request to the SolveMedia API to authenticate a
 // captcha
-func AuthenticateCaptcha(captcha common.Captcha) bool {
+func AuthenticateCaptcha(captcha string) bool {
 	conf := config.Get()
 
 	// Captchas disabled or running tests. Can not use API, when testing
 	if !conf.Captcha {
 		return true
 	}
-
-	if captcha.Captcha == "" {
+	if captcha == "" {
 		return false
 	}
 
@@ -58,7 +41,7 @@ func AuthenticateCaptcha(captcha common.Captcha) bool {
 		"https://www.google.com/recaptcha/api/siteverify",
 		url.Values{
 			"secret":   {conf.CaptchaPrivateKey},
-			"response": {captcha.Captcha},
+			"response": {captcha},
 		},
 	)
 	if err != nil {

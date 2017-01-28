@@ -39,7 +39,7 @@ type mockWSServer struct {
 }
 
 func init() {
-	db.DBName = "meguca_test"
+	db.ConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable`
 	db.IsTest = true
 	if err := db.LoadDB(); err != nil {
 		panic(err)

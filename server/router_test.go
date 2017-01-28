@@ -24,7 +24,7 @@ func init() {
 	router = createRouter()
 	webRoot = "testdata"
 	imageWebRoot = "testdata"
-	db.DBName = "meguca_test_server"
+	db.ConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable`
 	db.IsTest = true
 	lang.Dir = filepath.Join("..", "lang")
 

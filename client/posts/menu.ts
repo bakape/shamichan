@@ -10,7 +10,7 @@ interface ControlButton extends Element {
 	_popup_menu: MenuView
 }
 
-// Spec for a single item of the dropdown menu
+// Spec for a single item of the drop down menu
 type ItemSpec = {
 	text: string
 	shouldRender: (m: Post) => boolean
@@ -72,8 +72,7 @@ class MenuView extends View<Post> {
 
 		// Calculate position. Can't use CSS translate, because it shifts
 		// the background.
-		el.style.left =
-			el.getBoundingClientRect().left
+		el.style.left = el.getBoundingClientRect().left
 			- (outerWidth(el) + el.offsetWidth) * 0.6
 			+ 'px'
 	}
