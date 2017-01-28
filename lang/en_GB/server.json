@@ -206,7 +206,7 @@
 		],
 		"postPassword": [
 			"Password",
-			"Password used for post or image deletion after creation and reopening open posts after a disconnect"
+			"Password used for image spoilering and reopening open posts after a disconnect"
 		],
 		"pruneBoards": [
 			"Prune boards",

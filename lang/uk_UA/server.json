@@ -205,8 +205,8 @@
 			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
 		],
 		"postPassword": [
-			"Пароль поста",
-			"Пароль, який надає вам змогу видаляти ваші пости"
+			"Password",
+			"Password used for image spoilering and reopening open posts after a disconnect"
 		],
 		"pruneBoards": [
 			"Prune boards",
