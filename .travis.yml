@@ -1,4 +1,4 @@
 services: docker
 script:
-  - docker build -t bakape/meguca .
-  - docker run -t bakape/meguca
+  - docker build -t meguca_test .
+  - docker run -t meguca_test
