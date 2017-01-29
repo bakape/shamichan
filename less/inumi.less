@@ -38,10 +38,32 @@ article, aside {
     border: none ;
 }
 
-#thread-container:not(.custom-BG) article.editing:not(:first-child) {
+.editing-mixin() {
     background-color: #fa9cfd;
     border-color: #bc5dc5;
     color: #000;
+	& > header, & > figcaption {
+		a, b:not(.admin) {
+			color: #222;
+		}
+	}
+	& > .post-container > blockquote > span, & > .backlinks {
+		& > em > a, & > a {
+			color: #222;
+		}
+		& > em {
+			color: #656d28;
+		}
+	}
+}
+
+#thread-container {
+	&:not(.custom-BG) article.editing:not(:first-child) {
+		.editing-mixin;
+	}
+	&.custom-BG article.editing {
+		.editing-mixin;
+	}
 }
 
 #banner, .modal, .popup-menu, .preview, .reply-form, .side-panel:not(:empty) {
@@ -60,7 +82,6 @@ article, aside {
 }
 
 #thread-container:not(.custom-BG) article:first-child {
-    /* margin-left: 1px; */
     padding-left: 1em;
     padding-right: 1em;
     border: none;
@@ -106,36 +127,6 @@ a:hover, blockquote a {
 
 .preview:not(.editing) {
     background-color: #1d1d21;
-}
-
-#thread-container:not(.custom-BG) article.editing:not(:first-child) {
-    a, b:not(.admin), header {
-        color: #222;
-    }
-    em {
-        color: #656d28;
-    }
-    li {
-        color: #ddd;
-    }
-}
-
-#thread-container.custom-BG article.editing {
-    background-color: #cec952;
-    border-color: #aa3;
-    color: #000;
-}
-
-#thread-container.custom-BG article.editing {
-    a, b:not(.admin), header {
-        color: #222;
-    }
-    em {
-        color: #656d28;
-    }
-    li {
-        color: #ddd;
-    }
 }
 
 .embed {

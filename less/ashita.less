@@ -40,14 +40,18 @@ article.highlight, article:target, .popup-menu {
 	background-color: #cec952;
 	border-color: #aa3;
 	color: black;
-	a, b:not(.admin), header {
-		color: #222;
+	& > header, & > figcaption {
+		a, b:not(.admin) {
+			color: #222;
+		}
 	}
-	em {
-		color: #656d28;
-	}
-	li {
-		color: #ddd;
+	& > .post-container > blockquote > span, & > .backlinks {
+		& > em > a, & > a {
+			color: #222;
+		}
+		& > em {
+			color: #656d28;
+		}
 	}
 }
 

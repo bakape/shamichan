@@ -55,7 +55,7 @@
 		{% if p.Image != nil %}
 			{% code img := *p.Image %}
 			{% code src =  assets.SourcePath(img.FileType, img.SHA1) %}
-			{% code ISSrc := root + assets.RelativeSourcePath(img.FileType, img.SHA1) %}
+			{% code ISSrc := root + assets.ImageSearchPath(img.FileType, img.ThumbType, img.SHA1) %}
 			<figcaption class="spaced">
 				<a class="image-toggle act" hidden></a>
 				<span class="spaced image-search-container">
@@ -114,7 +114,9 @@
 				<figure>
 					<a target="_blank" href="{%s= src %}">
 						{% if img.Spoiler %}
-							<!-- TODO: board-specific server-side spoiler rendering -->
+							{% comment %}
+								TODO: board-specific server-side spoiler rendering
+							{% endcomment %}
 							<img src="/assets/spoil/default.jpg" width="125" height="125">
 						{% else %}
 							{% code w, h := correctDims(subject != "", img.Dims[2], img.Dims[3]) %}

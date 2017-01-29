@@ -17,7 +17,7 @@ export default class ModPanel extends View<null> {
 	constructor() {
 		if (panel) {
 			panel.setVisibility(true)
-			toggleCheckboxDisplay(displayCheckboxes)
+			setVisibility(displayCheckboxes)
 			return panel
 		}
 		checkboxStyler = toggleHeadStyle(
@@ -41,9 +41,9 @@ export default class ModPanel extends View<null> {
 		this.checkboxToggle = (this.el
 			.querySelector(`input[name="showCheckboxes"]`) as HTMLInputElement)
 		this.checkboxToggle.addEventListener("change", e =>
-			toggleCheckboxDisplay((event.target as HTMLInputElement).checked))
+			setVisibility((event.target as HTMLInputElement).checked))
 
-		toggleCheckboxDisplay(displayCheckboxes)
+		setVisibility(displayCheckboxes)
 		this.setVisibility(true)
 	}
 
@@ -63,7 +63,6 @@ export default class ModPanel extends View<null> {
 	public reset() {
 		checkboxStyler(false)
 		this.setVisibility(false)
-		banInputs.clear()
 		banInputs.toggleDisplay(false)
 	}
 
@@ -123,7 +122,6 @@ export default class ModPanel extends View<null> {
 		extend(args, banInputs.vals())
 
 		await this.postJSON("/admin/ban", args)
-		banInputs.clear()
 	}
 
 	// Post JSON to server and handle errors
@@ -139,10 +137,17 @@ export default class ModPanel extends View<null> {
 	private onSelectChange() {
 		banInputs.toggleDisplay(this.getMode() === "ban")
 	}
+
+	// Force panel to stay visible
+	public setSlideOut(on: boolean) {
+		write(() =>
+			this.el.classList.toggle("keep-visible", on))
+	}
 }
 
-function toggleCheckboxDisplay(on: boolean) {
+function setVisibility(on: boolean) {
 	localStorage.setItem("hideModCheckboxes", (!on).toString())
+	panel.setSlideOut(on)
 	checkboxStyler(on)
 }
 
@@ -158,15 +163,6 @@ class BanInputs extends View<null> {
 				.querySelector("input[name=reason]") as HTMLInputElement)
 				.disabled = !on
 			this.el.classList.toggle("hidden", !on)
-		})
-	}
-
-	// Clear values of all fields
-	public clear() {
-		write(() => {
-			for (let el of this.el.getElementsByTagName("input")) {
-				el.value = ""
-			}
 		})
 	}
 

@@ -3,6 +3,7 @@
 import { page, mine } from '../../state'
 import lang from '../../lang'
 import { PostLinks } from '../../common'
+import { makeFrag } from "../../util"
 
 // Render a link to other posts
 export function renderPostLink(num: number, board: string, op: number): string {
@@ -28,23 +29,6 @@ export function renderPostLink(num: number, board: string, op: number): string {
     return html
 }
 
-// TODO: Reimplement, when moderation done
-
-// Render USER WAS BANNED FOR THIS POST message, or similar
-// export function renderBanned(): string {
-// 	return `<b class="admin banMessage">${lang.mod.banMessage}</b>`
-// }
-//
-// Render moderation information. Only exposed to authenticated staff.
-// export function renderModInfo(info) {
-// 	let html = '<b class="modLog admin">'
-// 	for (let action of info) {
-// 		html += `${lang.mod.formatLog(action)}<br>`
-// 	}
-// 	html += '</b>'
-// 	return html
-// }
-
 // Render links to posts that are linking to the target post
 export function renderBacklinks(post: DocumentFragment, links: PostLinks) {
     if (!links) {
@@ -58,11 +42,22 @@ export function renderBacklinks(post: DocumentFragment, links: PostLinks) {
         post.append(el)
     }
 
-    let html = ''
+    // Get already rendered backlink IDs
+    let rendered: string[] = []
+    for (let em of Array.from(el.children)) {
+        rendered.push((em.firstChild as HTMLElement).dataset["id"])
+    }
+
+    let html = ""
     for (let id in links) {
+        // Confirm link not already rendered
+        if (rendered.includes(id)) {
+            continue
+        }
+
         const {board, op} = links[id]
         html += "<em>" + renderPostLink(parseInt(id), board, op) + "</em>"
     }
 
-    el.innerHTML = html
+    el.append(makeFrag(html))
 }
