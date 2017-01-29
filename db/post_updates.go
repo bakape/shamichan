@@ -5,26 +5,8 @@ import (
 	"encoding/json"
 
 	"github.com/bakape/meguca/common"
+	"github.com/lib/pq"
 )
-
-// Message sent to all clients to inject a command result into a model
-type commandMessage struct {
-	ID uint64 `json:"id"`
-	common.Command
-}
-
-// Message sent to listening clients about a link or backlink insertion into
-// a post
-type linkMessage struct {
-	ID    uint64      `json:"id"`
-	Links [][2]uint64 `json:"links"`
-}
-
-// Message that signals and insertion of an image into an existing post
-type imageMessage struct {
-	common.Image
-	ID uint64 `json:"id"`
-}
 
 // BumpThread dumps up thread counters and adds a message to the thread's
 // replication log
@@ -69,8 +51,21 @@ func updatePost(
 	if err != nil {
 		return
 	}
-	defer RollbackOnError(tx, &err)
+	err = updatePostTx(tx, id, op, msg, queryKey, arg)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+	return tx.Commit()
+}
 
+func updatePostTx(
+	tx *sql.Tx,
+	id, op uint64,
+	msg []byte,
+	queryKey string,
+	arg interface{},
+) (err error) {
 	q := tx.Stmt(prepared[queryKey])
 	if arg != nil {
 		_, err = q.Exec(id, arg)
@@ -80,63 +75,59 @@ func updatePost(
 	if err != nil {
 		return
 	}
-	err = UpdateLog(tx, op, msg)
-	if err != nil {
-		return
-	}
-
-	return tx.Commit()
+	return UpdateLog(tx, op, msg)
 }
 
 // InsertCommand inserts a has command result into a post
-func InsertCommand(id, op uint64, com common.Command) error {
-	msg, err := common.EncodeMessage(common.MessageCommand, commandMessage{
-		ID:      id,
-		Command: com,
-	})
-	if err != nil {
-		return err
+func insertCommands(tx *sql.Tx, id, op uint64, com []common.Command) (
+	err error,
+) {
+	data := make([]string, len(com))
+	for i := range com {
+		var b []byte
+		b, err = json.Marshal(com[i])
+		if err != nil {
+			return
+		}
+		data[i] = string(b)
 	}
-	data, err := json.Marshal(com)
-	if err != nil {
-		return err
-	}
-	return updatePost(id, op, msg, "insertCommand", data)
+
+	_, err = tx.Stmt(prepared["insertCommands"]).Exec(id, pq.StringArray(data))
+	return
 }
 
-// InsertLinks writes new links to other posts and the accompanying backlinks to
-// the database
-func InsertLinks(id, op uint64, links [][2]uint64) error {
-	msg, err := common.EncodeMessage(common.MessageLink, linkMessage{
-		ID:    id,
-		Links: links,
-	})
+// Writes new links to other posts and the accompanying backlinks
+func insertLinks(tx *sql.Tx, id, op uint64, links [][2]uint64) (err error) {
+	_, err = tx.Stmt(prepared["insertLinks"]).Exec(id, linkRow(links))
 	if err != nil {
-		return err
-	}
-	err = updatePost(id, op, msg, "insertLinks", linkRow(links))
-	if err != nil {
-		return err
+		return
 	}
 
 	// Most often this loop will iterate only once, so no need to think heavily
 	// on optimizations
 	for _, l := range links {
-		bl := [][2]uint64{{id, op}}
-		msg, err := common.EncodeMessage(common.MessageBacklink, linkMessage{
-			ID:    l[0],
-			Links: bl,
-		})
+		var msg []byte
+		msg, err = common.EncodeMessage(
+			common.MessageBacklink,
+			[3]uint64{l[0], id, op},
+		)
 		if err != nil {
-			return err
+			return
 		}
-		err = updatePost(l[0], l[1], msg, "insertBacklinks", linkRow(bl))
+		err = updatePostTx(
+			tx,
+			l[0],
+			l[1],
+			msg,
+			"insertBacklinks",
+			linkRow{{id, op}},
+		)
 		if err != nil {
-			return err
+			return
 		}
 	}
 
-	return nil
+	return
 }
 
 // Backspace removes one character from the end of the post body
@@ -148,18 +139,57 @@ func Backspace(id, op uint64) error {
 	return updatePost(id, op, msg, "backspace", nil)
 }
 
-// ClosePost closes an open post
-func ClosePost(id, op uint64) error {
-	msg, err := common.EncodeMessage(common.MessageClosePost, id)
+// ClosePost closes an open post and commits any links, backlinks and hash
+// commands
+func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
+	err error,
+) {
+	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
+		ID       uint64           `json:"id"`
+		Links    [][2]uint64      `json:"links,omitempty"`
+		Commands []common.Command `json:"commands,omitempty"`
+	}{
+		ID:       id,
+		Links:    links,
+		Commands: com,
+	})
 	if err != nil {
-		return err
+		return
 	}
-	return updatePost(id, op, msg, "closePost", nil)
+
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer RollbackOnError(tx, &err)
+
+	err = updatePostTx(tx, id, op, msg, "closePost", nil)
+	if err != nil {
+		return
+	}
+
+	if com != nil {
+		err = insertCommands(tx, id, op, com)
+		if err != nil {
+			return
+		}
+	}
+	if links != nil {
+		err = insertLinks(tx, id, op, links)
+		if err != nil {
+			return
+		}
+	}
+
+	return tx.Commit()
 }
 
 // InsertImage insert and image into and existing open post
 func InsertImage(id, op uint64, img common.Image) (err error) {
-	msg, err := common.EncodeMessage(common.MessageInsertImage, imageMessage{
+	msg, err := common.EncodeMessage(common.MessageInsertImage, struct {
+		common.Image
+		ID uint64 `json:"id"`
+	}{
 		ID:    id,
 		Image: img,
 	})

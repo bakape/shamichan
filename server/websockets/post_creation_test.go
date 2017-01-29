@@ -283,7 +283,7 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 	}
 
 	assertMessage(t, wcl, `326`)
-	assertRepLog(t, 1, []string{"062"})
+	assertRepLog(t, 1, []string{`06{"id":2}`})
 	assertPostClosed(t, 2)
 }
 
@@ -385,7 +385,6 @@ func TestPostCreation(t *testing.T) {
 	}
 	AssertDeepEquals(t, thread.PostCtr, uint32(1))
 	AssertDeepEquals(t, thread.ImageCtr, uint32(2))
-	AssertDeepEquals(t, thread.ReplyTime, stdPost.Time)
 
 	AssertDeepEquals(t, cl.post, openPost{
 		id:       6,

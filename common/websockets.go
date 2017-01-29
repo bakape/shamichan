@@ -17,9 +17,7 @@ const (
 	MessageBackspace
 	MessageSplice
 	MessageClosePost
-	MessageLink
 	MessageBacklink
-	MessageCommand
 	MessageInsertImage
 	MessageSpoiler
 	MessageDeletePost

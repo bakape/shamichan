@@ -18,7 +18,7 @@ else
 	is_windows=false
 endif
 
-.PHONY: server client imager
+.PHONY: server client imager test
 
 all: server client
 
@@ -89,5 +89,5 @@ endif
 dist_clean: clean
 	rm -rf images error.log
 
-test: server_deps
+test:
 	go test -p 1 ./...

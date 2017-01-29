@@ -16,14 +16,14 @@ func TestParseLine(t *testing.T) {
 	})
 
 	t.Run("commands disabled", func(t *testing.T) {
-		links, com, err := ParseLine([]byte("#flip"), "a")
+		links, com, err := ParseBody([]byte("#flip"), "a")
 		if err != nil {
 			t.Fatal(err)
 		}
 		if links != nil {
 			t.Fatalf("unexpected links: %#v", links)
 		}
-		AssertDeepEquals(t, com, common.Command{})
+		AssertDeepEquals(t, com, []common.Command(nil))
 	})
 
 	t.Run("commands enabled", func(t *testing.T) {
@@ -36,15 +36,15 @@ func TestParseLine(t *testing.T) {
 			},
 		})
 
-		links, com, err := ParseLine([]byte("#flip"), "a")
+		links, com, err := ParseBody([]byte("#flip"), "a")
 		if err != nil {
 			t.Fatal(err)
 		}
 		if links != nil {
 			t.Fatalf("unexpected links: %#v", links)
 		}
-		if com.Type != common.Flip {
-			t.Fatalf("unexpected command type: %d", com.Type)
+		if com[0].Type != common.Flip {
+			t.Fatalf("unexpected command type: %d", com[0].Type)
 		}
 	})
 }

@@ -1,11 +1,10 @@
 package parser
 
 import (
+	"bytes"
 	"database/sql"
 	"regexp"
 	"strconv"
-
-	"bytes"
 
 	"github.com/bakape/meguca/db"
 )
@@ -18,7 +17,7 @@ func parseLinks(frag []byte) ([][2]uint64, error) {
 	var links [][2]uint64
 
 	// TODO: Do this in-place w/o creating any garbage slices
-	for _, word := range bytes.Split(frag, []byte(" ")) {
+	for _, word := range bytes.Split(frag, []byte{' '}) {
 		if len(word) == 0 || word[0] != '>' {
 			continue
 		}

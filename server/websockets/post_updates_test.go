@@ -65,7 +65,7 @@ func TestLineEmpty(t *testing.T) {
 	cl, _ := sv.NewClient()
 	cl.post.id = 1
 	cl.post.time = time.Now().Unix()
-	if err := cl.backspace(); err != errLineEmpty {
+	if err := cl.backspace(); err != errEmptyPost {
 		t.Errorf("unexpected error by %s: %s", "Client.backspace", err)
 	}
 }
@@ -204,7 +204,7 @@ func TestAppendNewline(t *testing.T) {
 	assertRepLog(t, 1, []string{"03[2,10]"})
 }
 
-func TestAppendNewlineWithHashCommand(t *testing.T) {
+func TestClosePostWithHashCommand(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -237,13 +237,13 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 	cl.post = openPost{
 		id:     2,
 		op:     1,
-		len:    3,
+		len:    5,
 		board:  "a",
 		time:   time.Now().Unix(),
 		Buffer: *bytes.NewBufferString("#flip"),
 	}
 
-	if err := cl.appendRune([]byte("10")); err != nil {
+	if err := cl.closePost(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -253,6 +253,9 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 		post, err := db.GetPost(2)
 		if err != nil {
 			t.Fatal(err)
+		}
+		if len(post.Commands) == 0 {
+			t.Fatal("no commands written")
 		}
 		if typ := post.Commands[0].Type; typ != common.Flip {
 			t.Errorf("unexpected command type: %d", typ)
@@ -266,29 +269,15 @@ func TestAppendNewlineWithHashCommand(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		const std = "03[2,10]"
-		last := string(log[len(log)-1])
-		if last != std {
-			LogUnexpected(t, std, last)
-		}
-	})
-
-	t.Run("second to last log message", func(t *testing.T) {
-		t.Parallel()
-
-		log, err := db.GetLog(1, 0, 100)
-		if err != nil {
-			t.Fatal(err)
-		}
-		const patt = `09{"id":2,"type":1,"val":(?:true|false)}`
-		msg := string(log[len(log)-2])
+		const patt = `06{"id":2,"commands":\[{"type":1,"val":(?:true|false)}\]}`
+		msg := string(log[len(log)-1])
 		if !regexp.MustCompile(patt).MatchString(msg) {
 			t.Fatalf("message does not match `%s`: `%s`", patt, msg)
 		}
 	})
 }
 
-func TestAppendNewlineWithLinks(t *testing.T) {
+func TestClosePostWithLinks(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -350,32 +339,26 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 	}
 	setBoardConfigs(t, false)
 
-	if err := cl.appendRune([]byte("10")); err != nil {
+	if err := cl.closePost(); err != nil {
 		t.Fatal(err)
 	}
 
 	std := [...]struct {
-		id, op uint64
-		log    []string
-		field  string
-		val    [][2]uint64
+		id, op     uint64
+		log, field string
+		val        [][2]uint64
 	}{
 		{
-			id: 2,
-			op: 1,
-			log: []string{
-				`07{"id":2,"links":[[22,21]]}`,
-				`03[2,10]`,
-			},
+			id:    2,
+			op:    1,
+			log:   `06{"id":2,"links":[[22,21]]}`,
 			field: "links",
 			val:   [][2]uint64{{22, 21}},
 		},
 		{
-			id: 22,
-			op: 21,
-			log: []string{
-				`08{"id":22,"links":[[2,1]]}`,
-			},
+			id:    22,
+			op:    21,
+			log:   `07[22,2,1]`,
 			field: "backlinks",
 			val:   [][2]uint64{{2, 1}},
 		},
@@ -386,7 +369,7 @@ func TestAppendNewlineWithLinks(t *testing.T) {
 		t.Run(s.field, func(t *testing.T) {
 			t.Parallel()
 
-			assertRepLog(t, s.op, s.log)
+			assertRepLog(t, s.op, []string{s.log})
 
 			post, err := db.GetPost(s.id)
 			if err != nil {
@@ -455,7 +438,7 @@ func TestClosePost(t *testing.T) {
 	}
 
 	AssertDeepEquals(t, cl.post, openPost{})
-	assertRepLog(t, 1, []string{"062"})
+	assertRepLog(t, 1, []string{`06{"id":2}`})
 	assertBody(t, 2, "abc")
 	assertPostClosed(t, 2)
 }
@@ -539,7 +522,7 @@ func TestSplice(t *testing.T) {
 		log               []string
 	}{
 		{
-			name:  "append to empty line",
+			name:  "append to empty body",
 			start: 0,
 			len:   0,
 			text:  "abc",
@@ -566,7 +549,7 @@ func TestSplice(t *testing.T) {
 			log:   []string{`05{"id":2,"start":2,"len":1,"text":""}`},
 		},
 		{
-			name:  "replace till line end",
+			name:  "replace till end",
 			start: 2,
 			len:   -1,
 			text:  "abc",
@@ -575,7 +558,7 @@ func TestSplice(t *testing.T) {
 			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
 		},
 		{
-			name:  "replace multibyte char till line end",
+			name:  "replace with multibyte char string till end",
 			start: 1,
 			len:   -1,
 			text:  "ΓΔ",
@@ -584,7 +567,7 @@ func TestSplice(t *testing.T) {
 			log:   []string{`05{"id":2,"start":1,"len":-1,"text":"ΓΔ"}`},
 		},
 		{
-			name:  "inject into the middle of the line",
+			name:  "inject into the middle",
 			start: 2,
 			len:   -1,
 			text:  "abc",
@@ -593,7 +576,7 @@ func TestSplice(t *testing.T) {
 			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
 		},
 		{
-			name:  "inject multibyte char into the middle of the line",
+			name:  "inject multibyte char into the middle",
 			start: 2,
 			len:   0,
 			text:  "Δ",
@@ -602,62 +585,27 @@ func TestSplice(t *testing.T) {
 			log:   []string{`05{"id":2,"start":2,"len":0,"text":"Δ"}`},
 		},
 		{
-			name:  "inject into second line of body",
-			start: 2,
-			len:   3,
-			text:  "abcdefg",
-			init:  "00\n012345",
-			final: "00\n01abcdefg5",
-			log:   []string{`05{"id":2,"start":2,"len":3,"text":"abcdefg"}`},
-		},
-		{
-			name:  "append exceeds max body length",
-			start: 52,
+			name:  "injection exceeds max body length",
+			start: 1943,
 			len:   0,
 			text:  longSplice,
 			init:  longPost,
 			final: longPost[:1943] + longSplice[:57],
 			log: []string{
-				`05{"id":2,"start":52,"len":-1,"text":"Never gonna give you` +
+				`05{"id":2,"start":1943,"len":-1,"text":"Never gonna give you` +
 					` up Never gonna let you down Never go"}`,
 			},
 		},
 		{
-			name:  "injection exceeds max body length",
-			start: 60,
+			name:  "append exceeds max body length",
+			start: 1951,
 			len:   0,
 			text:  longSplice + "\n",
 			init:  longPost,
 			final: longPost + longSplice[:49],
 			log: []string{
-				`05{"id":2,"start":60,"len":-1,"text":"Never gonna give you` +
+				`05{"id":2,"start":1951,"len":-1,"text":"Never gonna give you` +
 					` up Never gonna let you down "}`,
-			},
-		},
-		{
-			name:  "splice contains newlines",
-			start: 2,
-			len:   1,
-			text:  "abc\nefg",
-			init:  "00\n012345",
-			final: "00\n01abc\nefg345",
-			log: []string{
-				`05{"id":2,"start":2,"len":-1,"text":"abc"}`,
-				"03[2,10]",
-				`05{"id":2,"start":0,"len":0,"text":"efg345"}`,
-			},
-		},
-		{
-			name:  "inject single newline char",
-			start: 2,
-			len:   0,
-			text:  "\n",
-			init:  "012345",
-			final: "01\n2345",
-			log: []string{
-				`05{"id":2,"start":2,"len":-1,"text":""}`,
-				"03[2,10]",
-				`05{"id":2,"start":0,"len":0,"text":"2345"}`,
 			},
 		},
 	}
@@ -750,7 +698,7 @@ func TestCloseOldOpenPost(t *testing.T) {
 	}
 
 	assertPostClosed(t, 2)
-	assertRepLog(t, 1, []string{"062"})
+	assertRepLog(t, 1, []string{`06{"id":2}`})
 }
 
 func TestInsertImageIntoPostWithImage(t *testing.T) {

@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"unicode/utf8"
@@ -13,13 +14,23 @@ import (
 
 var (
 	errNoPostOpen          = errors.New("no post open")
-	errLineEmpty           = errors.New("line empty")
+	errEmptyPost           = errors.New("post body empty")
 	errInvalidSpliceCoords = errors.New("invalid splice coordinates")
 	errSpliceTooLong       = errors.New("splice text too long")
 	errSpliceNOOP          = errors.New("splice NOOP")
 	errTextOnly            = errors.New("text only board")
 	errHasImage            = errors.New("post already has image")
 )
+
+// Data of a post currently being written to by a Client
+type openPost struct {
+	hasImage bool
+	bytes.Buffer
+	len    int
+	id, op uint64
+	time   int64
+	board  string
+}
 
 // Like spliceRequest, but with a string Text field. Used for internal
 // conversions between []rune and string.
@@ -83,69 +94,23 @@ func (c *Client) appendRune(data []byte) error {
 		return err
 	}
 
-	if char == '\n' {
-		return c.parseLine(true)
-	}
-
-	if err := db.AppendBody(c.post.id, c.post.op, char); err != nil {
-		return err
-	}
 	c.post.WriteRune(char)
 	c.post.len++
-
-	return nil
-}
-
-// Parse line contents and commit newline. If line contains hash commands or
-// links to other posts also commit those and generate backlinks, if needed.
-// Appending the newline can be optionally omitted, to optimise post closing
-// and similar.
-func (c *Client) parseLine(insertNewline bool) error {
-	links, comm, err := parser.ParseLine(c.post.LastLine(), c.post.board)
-	if err != nil {
-		return err
-	}
-	c.post.WriteRune('\n')
-	c.post.len++
-
-	switch {
-	case comm.Val != nil:
-		err = c.writeCommand(comm)
-	case links != nil:
-		err = c.writeLinks(links)
-	}
-	if err != nil {
-		return err
-	}
-
-	if insertNewline {
-		err := db.AppendBody(c.post.id, c.post.op, '\n')
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (c *Client) writeCommand(comm common.Command) error {
-	return db.InsertCommand(c.post.id, c.post.op, comm)
-}
-
-func (c *Client) writeLinks(links [][2]uint64) error {
-	return db.InsertLinks(c.post.id, c.post.op, links)
+	return db.AppendBody(c.post.id, c.post.op, char)
 }
 
 // Remove one character from the end of the line in the open post
 func (c *Client) backspace() error {
-	if has, err := c.hasPost(); err != nil {
+	has, err := c.hasPost()
+	switch {
+	case err != nil:
 		return err
-	} else if !has {
+	case !has:
 		return nil
+	case c.post.len == 0:
+		return errEmptyPost
 	}
-	if len(c.post.LastLine()) == 0 {
-		return errLineEmpty
-	}
+
 	_, lastRuneLen := utf8.DecodeLastRune(c.post.Bytes())
 	c.post.Truncate(c.post.Len() - lastRuneLen)
 	c.post.len--
@@ -158,21 +123,27 @@ func (c *Client) closePost() error {
 	if c.post.id == 0 {
 		return errNoPostOpen
 	}
-	if len(c.post.LastLine()) != 0 {
-		if err := c.parseLine(false); err != nil {
+
+	var (
+		links [][2]uint64
+		com   []common.Command
+		err   error
+	)
+	if c.post.len != 0 {
+		links, com, err = parser.ParseBody(c.post.Bytes(), c.post.board)
+		if err != nil {
 			return err
 		}
 	}
-	if err := db.ClosePost(c.post.id, c.post.op); err != nil {
+
+	if err := db.ClosePost(c.post.id, c.post.op, links, com); err != nil {
 		return err
 	}
-
 	c.post = openPost{}
 	return nil
 }
 
-// Splice the current line's text in the open post. This call is also used for
-// text pastes.
+// Splice the text in the open post. This call is also used for text pastes.
 func (c *Client) spliceText(data []byte) error {
 	if has, err := c.hasPost(); err != nil {
 		return err
@@ -180,13 +151,13 @@ func (c *Client) spliceText(data []byte) error {
 		return nil
 	}
 
+	// Decode and validate
 	var req spliceRequest
-	oldLength := len(string(c.post.LastLine()))
 	err := decodeMessage(data, &req)
 	switch {
 	case err != nil:
 		return err
-	case req.Start < 0, req.Start+req.Len > oldLength:
+	case req.Start < 0, req.Len < -1, req.Start+req.Len > c.post.len:
 		return errInvalidSpliceCoords
 	case req.Len == 0 && len(req.Text) == 0:
 		return errSpliceNOOP // This does nothing. Client-side error.
@@ -194,22 +165,15 @@ func (c *Client) spliceText(data []byte) error {
 		return errSpliceTooLong // Nice try, kid
 	}
 
-	return c.spliceLine(req)
-}
-
-// Splice the first line of the text. If there are more lines, parse the
-// previous one and recurse until all lines are parsed.
-func (c *Client) spliceLine(req spliceRequest) error {
 	var (
-		old   = []rune(string(c.post.LastLine()))
-		start = old[:req.Start]
-		end   []rune
+		old = []rune(c.post.String())
+		end []rune
 	)
 
-	// -1 has special meaning - slice off till line end.
-	if req.Len < 0 {
+	// -1 has special meaning - slice off till end
+	if req.Len == -1 {
 		end = req.Text
-		c.post.len += len(req.Text) - len(old[req.Start:])
+		c.post.len = req.Start + len(req.Text)
 	} else {
 		end = append(req.Text, old[req.Start+req.Len:]...)
 		c.post.len += -req.Len + len(req.Text)
@@ -222,27 +186,7 @@ func (c *Client) spliceLine(req spliceRequest) error {
 		},
 	}
 
-	// Slice until newline, if any, and delay the next line's splicing until the
-	// next recursive spliceLine call
-	var (
-		delayed      []rune
-		firstNewline = -1
-	)
-	for i, r := range end { // Find first newline
-		if r == '\n' {
-			firstNewline = i
-			break
-		}
-	}
-	if firstNewline != -1 {
-		delayed = end[firstNewline+1:]
-		end = end[:firstNewline]
-		res.Len = -1 // Special meaning. Client should replace till line end.
-		res.Text = string(end)
-		c.post.len -= len(delayed) + 1
-	}
-
-	// Goes over max post length. Trim the end.
+	// If it goes over the max post length, trim the end
 	exceeding := c.post.len - common.MaxLenBody
 	if exceeding > 0 {
 		end = end[:len(end)-exceeding]
@@ -251,27 +195,18 @@ func (c *Client) spliceLine(req spliceRequest) error {
 		c.post.len = common.MaxLenBody
 	}
 
-	c.post.TrimLastLine()
-	c.post.WriteString(string(append(start, end...)))
+	byteStartPos := 0
+	for _, r := range old[:req.Start] {
+		byteStartPos += utf8.RuneLen(r)
+	}
+	c.post.Truncate(byteStartPos)
+	c.post.WriteString(string(end))
 
 	msg, err := common.EncodeMessage(common.MessageSplice, res)
 	if err != nil {
 		return err
 	}
-	err = db.SplicePost(c.post.id, c.post.op, msg, c.post.String())
-	if err != nil {
-		return err
-	}
-
-	// Recurse on the text sliced after the newline, until all lines are
-	// processed. Unless the text body is already over max length
-	if delayed != nil && exceeding < 0 {
-		if err := c.parseLine(true); err != nil {
-			return err
-		}
-		return c.spliceLine(spliceRequest{Text: delayed})
-	}
-	return nil
+	return db.SplicePost(c.post.id, c.post.op, msg, c.post.String())
 }
 
 // Insert and image into an existing open post

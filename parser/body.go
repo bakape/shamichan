@@ -19,7 +19,7 @@ func ParseBody(body []byte, board string) (
 	links [][2]uint64, com []common.Command, err error,
 ) {
 	parseCommands := config.GetBoardConfigs(board).HashCommands
-	for _, line := range bytes.Split(body, []byte("\n")) {
+	for _, line := range bytes.Split(body, []byte{'\n'}) {
 		l, c, err := parseLine(line, board, parseCommands)
 		if err != nil {
 			return nil, nil, err
@@ -33,11 +33,6 @@ func ParseBody(body []byte, board string) (
 	}
 
 	return
-}
-
-// ParseLine parses a full text line of a post
-func ParseLine(line []byte, board string) ([][2]uint64, common.Command, error) {
-	return parseLine(line, board, config.GetBoardConfigs(board).HashCommands)
 }
 
 func parseLine(line []byte, board string, parseCommands bool) (

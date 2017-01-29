@@ -19,15 +19,9 @@ var protoPrepared = map[string]string{
 			SET body = body || $2
 			WHERE id = $1`,
 
-	"insertCommand": `
-		UPDATE posts
-			SET commands = array_append(commands, $2)
-			WHERE id = $1`,
+	"insertCommands": `UPDATE posts SET commands = $2 WHERE id = $1`,
 
-	"insertLinks": `
-		UPDATE posts
-			SET links = links || $2
-			WHERE id = $1`,
+	"insertLinks": `UPDATE posts SET links = $2 WHERE id = $1`,
 
 	"insertBacklinks": `
 		UPDATE posts
