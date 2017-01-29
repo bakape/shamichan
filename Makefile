@@ -1,20 +1,21 @@
-uglifyjs=node_modules/.bin/uglifyjs
-gulp=node_modules/.bin/gulp
+export node_bins=$(PWD)/node_modules/.bin
+export uglifyjs=$(node_bins)/uglifyjs
+export gulp=$(node_bins)/gulp
 
 # Differentiate between Unix and mingw builds
 ifeq ($(OS), Windows_NT)
-	BUILD_PATH="/.meguca_build/src/github.com/bakape"
-	export GOPATH="/.meguca_build"
+	build_path=/.meguca_build/src/github.com/bakape
+	export GOPATH=/.meguca_build
 	export PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig/
 	export PKG_CONFIG_LIBDIR=/mingw64/lib/pkgconfig/
 	export PATH:=$(PATH):/mingw64/bin/
-	BINARY=meguca.exe
-	ISWINDOWS=true
+	binary=meguca.exe
+	is_windows=true
 else
-	BUILD_PATH="./.build/src/github.com/bakape"
-	export GOPATH=$(shell pwd)/.build
-	BINARY=meguca
-	ISWINDOWS=false
+	build_path=$(PWD)/.build/src/github.com/bakape
+	export GOPATH=$(PWD)/.build
+	binary=meguca
+	is_windows=false
 endif
 
 .PHONY: server client imager
@@ -36,16 +37,20 @@ client_vendor: client_deps
 	 $(uglifyjs) node_modules/whatwg-fetch/fetch.js -o www/js/vendor/fetch.js
 	 $(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
 
-server: server_deps imager
-	go build -v -o $(BINARY)
-ifeq ($(ISWINDOWS), true)
+server: server_deps generate imager
+	go build -v -o $(binary)
+ifeq ($(is_windows), true)
 	cp /mingw64/bin/*.dll ./
 endif
 
 imager:
 	$(MAKE) -C imager/lib
 
+generate:
+	$(MAKE) -C templates
+
 server_deps: build_dirs
+	go get -v github.com/valyala/quicktemplate/qtc
 	go list -f '{{.Deps}}' . \
 		| tr "[" " " \
 		| tr "]" " " \
@@ -54,6 +59,7 @@ server_deps: build_dirs
 		| xargs go get -v
 
 update_deps: build_dirs
+	go get -u -v github.com/valyala/quicktemplate/qtc
 	go list -f '{{.Deps}}' . \
 		| tr "[" " " \
 		| tr "]" " " \
@@ -63,11 +69,11 @@ update_deps: build_dirs
 	npm update
 
 build_dirs:
-ifeq ($(ISWINDOWS), true)
-	rm -rf $(BUILD_PATH)
+ifeq ($(is_windows), true)
+	rm -rf $(build_path)
 endif
-	mkdir -p $(BUILD_PATH)
-	ln -sfn "$(shell pwd)" $(BUILD_PATH)/meguca
+	mkdir -p $(build_path)
+	ln -sfn "$(shell pwd)" $(build_path)/meguca
 
 client_clean:
 	rm -rf www/js www/css/*.css www/css/maps www/lang node_modules
@@ -75,7 +81,8 @@ client_clean:
 clean: client_clean
 	rm -rf .build .ffmpeg .package meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 	$(MAKE) -C imager/lib clean
-ifeq ($(ISWINDOWS), true)
+	$(MAKE) -C templates clean
+ifeq ($(is_windows), true)
 	rm -rf /.meguca_build *.dll
 endif
 

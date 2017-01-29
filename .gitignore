@@ -25,3 +25,4 @@ thumb_*.jpg
 imager/lib/target
 libimager.a
 Cargo.lock
+*.qtpl.go
