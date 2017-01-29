@@ -1,9 +1,6 @@
 import { Post } from './model'
 import { makeFrag, write, importTemplate } from '../util'
-import {
-    renderPost, renderName, renderTime, renderBanned, parseOpenLine,
-    parseOpenBody, parseTerminatedLine, renderBacklinks
-} from './render'
+import { renderPost, renderName, renderTime, renderBanned, parseBody, renderBacklinks } from './render'
 import ImageHandler from "./images"
 import { ViewAttrs } from "../base"
 
@@ -44,12 +41,6 @@ export default class PostView extends ImageHandler {
         renderPost(this.el, this.model)
     }
 
-    // Render the text body of an open post
-    public renderOpenBody() {
-        const el = this.el.querySelector("blockquote")
-        el.innerHTML = parseOpenBody(this.model)
-    }
-
     // Get the current Node for text to be written to
     private buffer(): Node {
         if (!this._buffer) {
@@ -86,28 +77,24 @@ export default class PostView extends ImageHandler {
         this.model.view = this.model = null
     }
 
-    // Replace the current line with a reparsed fragment
-    public reparseLine() {
-        const frag = makeFrag(parseOpenLine(this.model.state))
+    // Replace the current body with a reparsed fragment
+    public reparseBody() {
+        const frag = makeFrag(parseBody(this.model))
         this.findBuffer(frag.firstChild)
         write(() =>
-            this.replaceLastLine(frag))
+            this.replaceBody(frag))
     }
 
     // Return the last line of the text body
-    private lastLine(): Element {
-        return this.el.querySelector("blockquote").lastElementChild
+    private lastLine(): Node {
+        return this.el.querySelector("blockquote").lastChild
     }
 
-    // Replace the contents of the last line, accounting for the possibility of
-    // there being no lines
-    private replaceLastLine(node: Node) {
-        const ll = this.lastLine()
-        if (ll) {
-            ll.replaceWith(node)
-        } else {
-            this.el.querySelector("blockquote").append(node)
-        }
+    // Replace the text body of the post
+    private replaceBody(node: Node) {
+        const bq = this.el.querySelector("blockquote")
+        bq.innerHTML = ""
+        bq.append(node)
     }
 
     // Append a string to the current text buffer
@@ -126,17 +113,6 @@ export default class PostView extends ImageHandler {
         })
     }
 
-    // Start a new line and reparse the old one
-    public startNewLine() {
-        const line = this.model.state.line.slice(0, -1),
-            frag = makeFrag(parseTerminatedLine(line, this.model))
-        write(() => {
-            this.replaceLastLine(frag)
-            this._buffer = document.createElement("span")
-            this.el.querySelector("blockquote").append(this._buffer)
-        })
-    }
-
     // Render links to posts linking to this post
     public renderBacklinks() {
         write(() =>
@@ -145,11 +121,10 @@ export default class PostView extends ImageHandler {
 
     // Close an open post and clean up
     public closePost() {
-        const html = parseTerminatedLine(this.model.state.line, this.model),
-            frag = makeFrag(html)
+        const frag = makeFrag(parseBody(this.model))
         write(() => {
             this.el.classList.remove("editing")
-            this.replaceLastLine(frag)
+            this.replaceBody(frag)
         })
     }
 

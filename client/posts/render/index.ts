@@ -1,4 +1,4 @@
-export * from "./body"
+export { default as parseBody } from "./body"
 export * from "./etc"
 export * from "./image"
 export * from "./posts"

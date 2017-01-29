@@ -5,71 +5,52 @@ import { escape } from '../../util'
 import { parseEmbeds } from "../embed"
 
 // Render the text body of a post
-export function renderBody(data: PostData): string {
-    if (data.editing) {
-        return parseOpenBody(data)
-    }
-    return parseClosedBody(data)
-}
-
-// Parse a text body of a closed post
-function parseClosedBody(data: PostData): string {
+export default function renderBody(data: PostData): string {
     data.state = {
         spoiler: false,
         quote: false,
+        lastLineEmpty: false,
         iDice: 0,
     }
     let html = ""
-    for (let line of data.body.split("\n")) {
-        html += parseTerminatedLine(line, data)
+
+    const fn = data.editing ? parseOpenLine : parseTerminatedLine,
+        lines = data.body.split("\n"),
+        last = lines.length - 1
+    for (let i = 0; i < lines.length; i++) {
+        const l = lines[i]
+
+        // Prevent successive empty lines
+        if (!l.length) {
+            if (!data.state.lastLineEmpty) {
+                html += "<br>"
+            }
+            data.state.lastLineEmpty = true
+            continue
+        }
+
+        html += initLine(l, data.state)
+            + fn(l, data)
+            + terminateTags(data.state, i != last)
     }
-    data.state = null // Clean up a bit
 
     return html
 }
 
-// Parse a text body, that is still being edited
-export function parseOpenBody(data: PostData): string {
-    const state: TextState = data.state = {
-        spoiler: false,
-        quote: false,
-        iDice: 0,
-    }
-    let html = ""
-    const lines = data.body.split("\n")
-    for (let i = 0; i < lines.length - 1; i++) {
-        html += parseTerminatedLine(lines[i], data)
-    }
-
-    state.line = lines[lines.length - 1]
-    html += parseOpenLine(state)
-
-    return html
-}
 
 // Parse a single line, that is no longer being edited
-export function parseTerminatedLine(line: string, data: PostData): string {
-    // For hiding redundant newlines using CSS
-    if (!line) {
-        return "<br>"
-    }
-
-    const {state} = data
-    let html = initLine(line, state)
+function parseTerminatedLine(line: string, data: PostData): string {
+    let html = ""
 
     if (line[0] == "#") {
         const m = line.match(/^#(flip|\d*d\d+|8ball|pyu|pcount)$/)
         if (m) {
-            return html
-                + parseCommand(m[1], data)
-                + terminateTags(state, true)
+            return html + parseCommand(m[1], data)
         }
     }
 
-    return html
-        + parseSpoilers(line, data.state, frag =>
-            parseFragment(frag, data))
-        + terminateTags(state, true)
+    return html + parseSpoilers(line, data.state, frag =>
+        parseFragment(frag, data))
 }
 
 // Injects spoiler tags and calls fn on the remaining parts
@@ -82,7 +63,15 @@ function parseSpoilers(
     while (true) {
         const i = frag.indexOf("**")
         if (i !== -1) {
-            html += fn(frag.slice(0, i)) + `<${state.spoiler ? '/' : ''}del>`
+            html += fn(frag.slice(0, i))
+            if (state.quote) {
+                html += "</em>"
+            }
+            html += `<${state.spoiler ? '/' : ''}del>`
+            if (state.quote) {
+                html += "<em>"
+            }
+
             state.spoiler = !state.spoiler
             frag = frag.substring(i + 2)
         } else {
@@ -95,12 +84,14 @@ function parseSpoilers(
 
 // Open a new line container and check for quotes
 function initLine(line: string, state: TextState): string {
+    let html = ""
     state.spoiler = state.quote = false
-
-    let html = "<span>"
     if (line[0] === ">") {
         state.quote = true
         html += "<em>"
+    }
+    if (state.spoiler) {
+        html += "<del>"
     }
     return html
 }
@@ -117,17 +108,12 @@ function terminateTags(state: TextState, newLine: boolean): string {
     if (newLine) {
         html += "<br>"
     }
-    return html + "</span>"
+    return html
 }
 
 // Parse a line that is still being edited
-export function parseOpenLine(state: TextState): string {
-    if (!state.line) {
-        return "<span></span>"
-    }
-    return initLine(state.line, state)
-        + parseSpoilers(state.line, state, escape)
-        + terminateTags(state, false)
+function parseOpenLine(line: string, {state}: PostData): string {
+    return parseSpoilers(line, state, escape)
 }
 
 // Parse a line fragment

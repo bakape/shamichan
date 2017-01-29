@@ -2,10 +2,8 @@ import PostView from "../view"
 import FormModel from "./model"
 import { Post } from "../model"
 import { boardConfig } from "../../state"
-import {
-    setAttrs, makeFrag, write, importTemplate, atBottom, scrollToBottom
-} from "../../util"
-import { parseTerminatedLine, renderHeader, renderName } from "../render"
+import { setAttrs, write, importTemplate, atBottom, scrollToBottom } from "../../util"
+import { renderHeader, renderName } from "../render"
 import { postSM, postEvent } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
@@ -54,8 +52,6 @@ export default class FormView extends PostView {
             event.stopImmediatePropagation()
             this.onInput((event.target as Element).textContent)
         })
-        this.input.addEventListener("keydown", (event: KeyboardEvent) =>
-            this.onKeyDown(event))
 
         this.postControls = importTemplate("post-controls").firstElementChild
         this.el.querySelector(".post-container").append(this.postControls)
@@ -171,6 +167,7 @@ export default class FormView extends PostView {
     // Strip external formating on pastes
     private onPaste(e: ClipboardEvent) {
         e.preventDefault()
+        e.stopImmediatePropagation()
         const text = e.clipboardData.getData("text/plain")
         document.execCommand("insertHTML", false, text)
     }
@@ -182,14 +179,6 @@ export default class FormView extends PostView {
         this.inputLock = false
     }
 
-    // Handle keydown events on input
-    private onKeyDown(event: KeyboardEvent) {
-        if (event.which === 13) { // Enter
-            event.preventDefault()
-            return this.onInput(this.model.inputState.line + "\n")
-        }
-    }
-
     // Trim input from the end by the supplied length
     public trimInput(length: number) {
         const val = this.input.textContent.slice(0, -length) || "\u200b"
@@ -198,11 +187,10 @@ export default class FormView extends PostView {
                 this.input.textContent = val))
     }
 
-    // Replace the current line and set the cursor to the input's end. `lock`
-    // toggles locking the onInput handler from firing.
-    public replaceLine(line: string, lock: boolean) {
-        const fn = () => {
-            this.input.textContent = line || "\u200b"
+    // Replace the current body and set the cursor to the input's end
+    public replaceText(body: string) {
+        write(() => {
+            this.input.textContent = body || "\u200b"
             const range = document.createRange(),
                 sel = window.getSelection()
             range.setEndAfter(this.input.lastChild)
@@ -210,38 +198,6 @@ export default class FormView extends PostView {
             sel.removeAllRanges()
             sel.addRange(range)
             this.onInput(this.input.textContent)
-        }
-        const fnl = () =>
-            this.lockInput(fn)
-        write(lock ? fnl : fn)
-    }
-
-    // Start a new line in the input field and close the previous one
-    public startNewLine() {
-        const {line} = this.model.inputState,
-            frag = makeFrag(parseTerminatedLine(line, this.model))
-        write(() => {
-            this.input.before(frag)
-            this.lockInput(() =>
-                this.input.textContent = "\u200b")
-        })
-    }
-
-    // Parse and replace the temporary line closed by input with a proper
-    // parsed line
-    public terminateLine(num: number) {
-        const html = parseTerminatedLine(this.model.lastBodyLine(), this.model),
-            frag = makeFrag(html)
-        write(() =>
-            this.el.querySelector("blockquote").children[num].replaceWith(frag))
-    }
-
-    // Need to rerender entire post, because the client's actions introduce
-    // desync from the server
-    public closePost() {
-        write(() => {
-            this.el.classList.remove("editing")
-            this.renderContents()
         })
     }
 

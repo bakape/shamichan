@@ -34,8 +34,8 @@ export interface PostData {
 export type TextState = {
 	spoiler: boolean
 	quote: boolean
+	lastLineEmpty: boolean
 	iDice: number // Index of the next dice array item to use
-	line?: string
 }
 
 // Types of hash command entries

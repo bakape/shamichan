@@ -31,57 +31,56 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "closed post",
 			in:   "foo\nbar",
-			out:  "<span>foo<br></span><span>bar<br></span>",
+			out:  "foo<br>bar",
 		},
 		{
 			name:    "open post",
 			in:      "foo\nbar",
-			out:     "<span>foo<br></span><span>bar</span>",
+			out:     "foo<br>bar",
 			editing: true,
 		},
 		{
 			name: "closed post quote",
 			in:   ">foo\nbar",
-			out:  "<span><em>&gt;foo</em><br></span><span>bar<br></span>",
+			out:  "<em>&gt;foo</em><br>bar",
 		},
 		{
 			name:    "open post quote",
 			in:      ">foo\nbar",
-			out:     "<span><em>&gt;foo</em><br></span><span>bar</span>",
+			out:     "<em>&gt;foo</em><br>bar",
 			editing: true,
 		},
 		{
 			name: "closed post spoiler",
 			in:   "foo**bar** baz",
-			out:  "<span>foo<del>bar</del> baz<br></span>",
+			out:  "foo<del>bar</del> baz",
 		},
 		{
 			name:    "open post spoiler",
 			in:      "foo**bar** baz",
-			out:     "<span>foo<del>bar</del> baz</span>",
+			out:     "foo<del>bar</del> baz",
 			editing: true,
 		},
 		{
 			name: "hide empty lines",
 			in:   "bar\n\n",
-			out:  "<span>bar<br></span><br><br>",
+			out:  "bar<br><br>",
 		},
 		{
 			name: "unclosed spoiler tags",
 			in:   "**foo",
-			out:  "<span><del>foo</del><br></span>",
+			out:  "<del>foo</del>",
 		},
 		{
 			name:    "trailing empty open line",
 			in:      "foo\n",
-			out:     "<span>foo<br></span><span></span>",
+			out:     "foo<br><br>",
 			editing: true,
 		},
 		{
 			name: "#flip",
 			in:   "#flip\n#flip",
-			out: "<span><strong>#flip (true)</strong><br></span>" +
-				"<span><strong>#flip (false)</strong><br></span>",
+			out:  "<strong>#flip (true)</strong><br><strong>#flip (false)</strong>",
 			commands: []common.Command{
 				{
 					Type: common.Flip,
@@ -96,7 +95,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "#8ball",
 			in:   "#8ball",
-			out:  "<span><strong>#8ball (bar)</strong><br></span>",
+			out:  "<strong>#8ball (bar)</strong>",
 			commands: []common.Command{
 				{
 					Type: common.EightBall,
@@ -107,7 +106,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "#pyu",
 			in:   "#pyu",
-			out:  "<span><strong>#pyu (1)</strong><br></span>",
+			out:  "<strong>#pyu (1)</strong>",
 			commands: []common.Command{
 				{
 					Type: common.Pyu,
@@ -118,7 +117,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "#pcount",
 			in:   "#pcount",
-			out:  "<span><strong>#pcount (2)</strong><br></span>",
+			out:  "<strong>#pcount (2)</strong>",
 			commands: []common.Command{
 				{
 					Type: common.Pcount,
@@ -129,7 +128,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "single roll dice",
 			in:   "#d20",
-			out:  "<span><strong>#d20 (22)</strong><br></span>",
+			out:  "<strong>#d20 (22)</strong>",
 			commands: []common.Command{
 				{
 					Type: common.Dice,
@@ -141,7 +140,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "multiple roll dice",
 			in:   "#2d20",
-			out:  "<span><strong>#2d20 (22 + 33 = 55)</strong><br></span>",
+			out:  "<strong>#2d20 (22 + 33 = 55)</strong>",
 			commands: []common.Command{
 				{
 					Type: common.Dice,
@@ -152,7 +151,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "too many dice rolls",
 			in:   "#11d20",
-			out:  "<span>#11d20<br></span>",
+			out:  "#11d20",
 			commands: []common.Command{
 				{
 					Type: common.Dice,
@@ -163,7 +162,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "too many dice faces",
 			in:   "#2d101",
-			out:  "<span>#2d101<br></span>",
+			out:  "#2d101",
 			commands: []common.Command{
 				{
 					Type: common.Dice,
@@ -174,13 +173,12 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "no valid commands",
 			in:   "#flip",
-			out:  "<span>#flip<br></span>",
+			out:  "#flip",
 		},
 		{
 			name: "too few commands",
 			in:   "#flip\n#flip",
-			out: "<span><strong>#flip (true)</strong><br></span>" +
-				"<span>#flip<br></span>",
+			out:  "<strong>#flip (true)</strong><br>#flip",
 			commands: []common.Command{
 				{
 					Type: common.Flip,
@@ -191,99 +189,99 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "no links in post",
 			in:   ">>20",
-			out:  "<span><em>>>20</em><br></span>",
+			out:  "<em>>>20</em>",
 		},
 		{
 			name:  "1 invalid link",
 			in:    ">>20",
-			out:   "<span><em>>>20</em><br></span>",
+			out:   "<em>>>20</em>",
 			links: [][2]uint64{{21, 21}},
 		},
 		{
 			name:  "valid link",
 			in:    ">>21",
-			out:   `<span><em><a class="history post-link" data-id="21" href="#p21">>>21</a><a class="hash-link"> #</a></em><br></span>`,
+			out:   `<em><a class="history post-link" data-id="21" href="#p21">>>21</a><a class="hash-link"> #</a></em>`,
 			op:    20,
 			links: [][2]uint64{{21, 20}},
 		},
 		{
 			name:  "valid link with extra quotes",
 			in:    ">>>>21",
-			out:   `<span><em>>><a class="history post-link" data-id="21" href="#p21">>>21</a><a class="hash-link"> #</a></em><br></span>`,
+			out:   `<em>>><a class="history post-link" data-id="21" href="#p21">>>21</a><a class="hash-link"> #</a></em>`,
 			op:    20,
 			links: [][2]uint64{{21, 20}},
 		},
 		{
 			name:  "valid cross-thread link",
 			in:    ">>21",
-			out:   `<span><em><a class="history post-link" data-id="21" href="/cross/22#p21">>>21 ➡</a><a class="hash-link"> #</a></em><br></span>`,
+			out:   `<em><a class="history post-link" data-id="21" href="/cross/22#p21">>>21 ➡</a><a class="hash-link"> #</a></em>`,
 			op:    20,
 			links: [][2]uint64{{21, 22}},
 		},
 		{
 			name: "invalid reference",
 			in:   ">>>/fufufu/",
-			out:  `<span><em>>>>/fufufu/</em><br></span>`,
+			out:  `<em>>>>/fufufu/</em>`,
 		},
 		{
 			name: "link reference",
 			in:   ">>>/4chan/",
-			out:  `<span><em><a href="http://4chan.org" target="_blank">&gt;&gt;&gt;/4chan/</a></em><br></span>`,
+			out:  `<em><a href="http://4chan.org" target="_blank">&gt;&gt;&gt;/4chan/</a></em>`,
 		},
 		{
 			name: "board reference",
 			in:   ">>>/a/",
-			out:  `<span><em><a href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em><br></span>`,
+			out:  `<em><a href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em>`,
 		},
 		{
 			name: "reference with extra quotes",
 			in:   ">>>>>/a/",
-			out:  `<span><em>>><a href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em><br></span>`,
+			out:  `<em>>><a href="/a/" target="_blank">&gt;&gt;&gt;/a/</a></em>`,
 		},
 		{
 			name: "HTTP URL",
 			in:   "http://4chan.org",
-			out:  `<span><a href="http://4chan.org" target="_blank">http://4chan.org</a><br></span>`,
+			out:  `<a href="http://4chan.org" target="_blank">http://4chan.org</a>`,
 		},
 		{
 			name: "HTTPS URL",
 			in:   "https://4chan.org",
-			out:  `<span><a href="https://4chan.org" target="_blank">https://4chan.org</a><br></span>`,
+			out:  `<a href="https://4chan.org" target="_blank">https://4chan.org</a>`,
 		},
 		{
 			name: "magnet URL",
 			in:   "magnet:?xt=urn:btih:c12fe1",
-			out:  `<span><a href="magnet:?xt=urn:btih:c12fe1">magnet:?xt=urn:btih:c12fe1</a><br></span>`,
+			out:  `<a href="magnet:?xt=urn:btih:c12fe1">magnet:?xt=urn:btih:c12fe1</a>`,
 		},
 		{
 			name: "XSS inject URL",
 			in:   "http://4chan.org<>",
-			out:  `<span>http://4chan.org&lt;&gt;<br></span>`,
+			out:  `http://4chan.org&lt;&gt;`,
 		},
 		{
 			name: "escape generic text",
 			in:   "<>&",
-			out:  "<span>&lt;&gt;&amp;<br></span>",
+			out:  "&lt;&gt;&amp;",
 		},
 		{
 			name: "youtube embed",
 			in:   "https://www.youtube.com/watch?v=z0f4Wgi94eo",
-			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/watch?v=z0f4Wgi94eo\">[Youtube] ???</a></em><br></span>",
+			out:  "<em><a class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/watch?v=z0f4Wgi94eo\">[Youtube] ???</a></em>",
 		},
 		{
 			name: "youtu.be embed",
 			in:   "https://youtu.be/z0f4Wgi94eo",
-			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://youtu.be/z0f4Wgi94eo\">[Youtube] ???</a></em><br></span>",
+			out:  "<em><a class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://youtu.be/z0f4Wgi94eo\">[Youtube] ???</a></em>",
 		},
 		{
 			name: "soundcloud embed",
 			in:   "https://soundcloud.com/cd_oblongar",
-			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"1\" href=\"https://soundcloud.com/cd_oblongar\">[SoundCloud] ???</a></em><br></span>",
+			out:  "<em><a class=\"embed\" target=\"_blank\" data-type=\"1\" href=\"https://soundcloud.com/cd_oblongar\">[SoundCloud] ???</a></em>",
 		},
 		{
 			name: "vimeo embed",
 			in:   "https://vimeo.com/174312494",
-			out:  "<span><em><a class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https://vimeo.com/174312494\">[Vimeo] ???</a></em><br></span>",
+			out:  "<em><a class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https://vimeo.com/174312494\">[Vimeo] ???</a></em>",
 		},
 	}
 

@@ -89,7 +89,7 @@ function extractPost(post: PostData) {
 
     // If the post is still open, rerender its body, to sync the parser state
     if (post.editing) {
-        view.renderOpenBody()
+        view.reparseBody()
     }
 
     // Apply client-specific formatting to a post rendered server-side

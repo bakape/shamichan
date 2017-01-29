@@ -30,14 +30,6 @@ export class Post extends Model implements PostData {
 	constructor(attrs: PostData) {
 		super()
 		extend(this, attrs)
-
-		// All kinds of race conditions can happen, so best always define the
-		// struct
-		this.state = {
-			spoiler: false,
-			quote: false,
-			iDice: 0,
-		}
 	}
 
 	// Remove the model from its collection, detach all references and allow to
@@ -54,72 +46,54 @@ export class Post extends Model implements PostData {
 	// Append a character to the text body
 	public append(code: number) {
 		const char = String.fromCodePoint(code),
-			{state, view} = this
+			{ view} = this
 		this.body += char
-		state.line += char
 
-		if (char === "\n") {                    // Start new line
-			view.startNewLine()
-			this.resetState()
-			this.state.line = ""
-		} else if (state.line === ">") {        // Start quote
-			view.reparseLine()
-		} else if (state.line.endsWith("**")) { // Start or close spoiler
-			this.resetState()
-			view.reparseLine()
+		if (char === "\n" || endsWithTag(this.body)) {
+			view.reparseBody()
 		} else {
 			view.appendString(char)
 		}
 	}
 
-	// Reset spoiler and quote state of the line
-	protected resetState() {
-		this.state.spoiler = this.state.quote = false
-	}
-
 	// Backspace one character in the current line
 	public backspace() {
-		const {state, view} = this,
-			needReparse = state.line === ">" || state.line.endsWith("**")
-		state.line = state.line.slice(0, -1)
+		const needReparse = endsWithTag(this.body)
 		this.body = this.body.slice(0, -1)
 		if (needReparse) {
-			this.resetState()
-			view.reparseLine()
+			this.view.reparseBody()
 		} else {
-			view.backspace()
+			this.view.backspace()
 		}
 	}
 
 	// Splice the current open line of text
 	public splice(msg: SpliceResponse) {
-		const {state} = this
-		state.line = this.spliceLine(state.line, msg)
-		this.resetState()
-		this.view.reparseLine()
+		this.body = this.spliceText(this.body, msg)
+		this.view.reparseBody()
 	}
 
 	// Extra method for code reuse in post forms
-	protected spliceLine(
-		line: string,
+	protected spliceText(
+		body: string,
 		{start, len, text}: SpliceResponse,
 	): string {
 		// Must use arrays of chars to properly splice multibyte unicode
-		const keep = Array.from(line).slice(0, start),
+		const keep = Array.from(body).slice(0, start),
 			t = Array.from(text)
 		let end: string[]
 		if (len === -1) { // Special meaning - replace till line end
 			end = t
 		} else {
-			end = t.concat(Array.from(line).slice(start + 1 + len))
+			end = t.concat(Array.from(body).slice(start + 1 + len))
 		}
-		line = keep.concat(end).join("")
+		body = keep.concat(end).join("")
 
 		// Replace last line in text body
 		const iLast = this.body.lastIndexOf("\n")
-		this.body = this.body.substring(0, iLast + 1) + line
+		this.body = this.body.substring(0, iLast + 1) + body
 
-		return line
+		return body
 	}
 
 	// Extend a field on the model, if it exists. Assign if it doesn't
@@ -200,7 +174,6 @@ export class Post extends Model implements PostData {
 			return
 		}
 		this.editing = false
-		this.resetState()
 		this.view.closePost()
 	}
 
@@ -212,4 +185,8 @@ export class Post extends Model implements PostData {
 		this.banned = true
 		this.view.renderBanned()
 	}
+}
+
+function endsWithTag(body: string): boolean {
+	return body.endsWith(">") || body.endsWith("**")
 }

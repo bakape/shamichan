@@ -1,7 +1,7 @@
 import { escape, pluralize, pad } from '../../util'
 import { renderImage, renderFigcaption } from './image'
 import { renderBacklinks } from './etc'
-import { renderBody } from './body'
+import renderBody from './body'
 import { PostData, ThreadData } from '../../common'
 import lang from '../../lang'
 import options from '../../options'

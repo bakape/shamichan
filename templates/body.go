@@ -25,9 +25,7 @@ var (
 	diceRegexp      = regexp.MustCompile(`^(\d*)d(\d+)$`)
 	linkRegexp      = regexp.MustCompile(`^>>(>*)(\d+)$`)
 	referenceRegexp = regexp.MustCompile(`^>>>(>*)\/(\w+)\/$`)
-	urlRegexp       = regexp.MustCompile(
-		`^(?:magnet:\?|https?:\/\/)[-a-zA-Z0-9@:%_\+\.~#\?&\/=]+$`,
-	)
+	urlRegexp       = regexp.MustCompile(`^(?:magnet:\?|https?:\/\/)[-a-zA-Z0-9@:%_\+\.~#\?&\/=]+$`)
 
 	providers = map[int]string{
 		youTube:    "Youtube",
@@ -59,8 +57,8 @@ var (
 
 type bodyContext struct {
 	state struct { // Body parser state
-		spoiler, quote bool
-		iDice          int
+		spoiler, quote, lastLineEmpty bool
+		iDice                         int
 	}
 	common.Post
 	OP uint64
@@ -75,50 +73,53 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64) {
 		Writer: *w,
 	}
 
-	lines := strings.Split(c.Body, "\n")
+	var fn func(string)
 	if c.Editing {
-		for i := 0; i < len(lines)-1; i++ {
-			c.parseTerminatedLine(lines[i])
-		}
-		c.parseOpenLine(lines[len(lines)-1])
+		fn = c.parseOpenLine
 	} else {
-		for _, line := range lines {
-			c.parseTerminatedLine(line)
+		fn = c.parseTerminatedLine
+	}
+
+	lines := strings.Split(c.Body, "\n")
+	last := len(lines) - 1
+	for i, l := range lines {
+		// Prevent successive empty lines
+		if len(l) == 0 {
+			if !c.state.lastLineEmpty {
+				c.N().S("<br>")
+			}
+			c.state.lastLineEmpty = true
+			continue
 		}
+		c.state.lastLineEmpty = false
+
+		c.initLine(l[0])
+		fn(l)
+		c.terminateTags(i != last)
 	}
 }
 
 // Parse a line that is no longer being edited
 func (c *bodyContext) parseTerminatedLine(line string) {
-	// For hiding redundant newlines using CSS
-	if len(line) == 0 {
-		c.N().S("<br>")
-		return
-	}
-
-	c.initLine(line[0])
-
 	if line[0] == '#' {
 		if m := commandRegexp.FindStringSubmatch(line); m != nil {
 			c.parseCommands(string(m[1]))
-			c.terminateTags(true)
 			return
 		}
 	}
 
 	c.parseSpoilers(line, (*c).parseFragment)
-	c.terminateTags(true)
 }
 
 // Open a new line container and check for quotes
 func (c *bodyContext) initLine(first byte) {
-	c.state.spoiler = false
 	c.state.quote = false
-
-	c.N().S("<span>")
 	if first == '>' {
 		c.N().S("<em>")
 		c.state.quote = true
+	}
+	if c.state.spoiler {
+		c.N().S("<del>")
 	}
 }
 
@@ -128,11 +129,18 @@ func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
 		i := strings.Index(frag, "**")
 		if i != -1 {
 			fn(frag[:i])
+			if c.state.quote {
+				c.N().S("</em>")
+			}
 			if c.state.spoiler {
 				c.N().S("</del>")
 			} else {
 				c.N().S("<del>")
 			}
+			if c.state.quote {
+				c.N().S("<em>")
+			}
+
 			c.state.spoiler = !c.state.spoiler
 			frag = frag[i+2:]
 		} else {
@@ -352,18 +360,11 @@ func (c *bodyContext) terminateTags(newLine bool) {
 	if newLine {
 		c.N().S("<br>")
 	}
-	c.N().S("</span>")
 }
 
 // Parse a line that is still being edited
 func (c *bodyContext) parseOpenLine(line string) {
-	if len(line) == 0 {
-		c.N().S("<span></span>")
-		return
-	}
-	c.initLine(line[0])
 	c.parseSpoilers(line, func(s string) {
 		c.E().S(s)
 	})
-	c.terminateTags(false)
 }
