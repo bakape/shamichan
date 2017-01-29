@@ -4,6 +4,7 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	_ "github.com/lib/pq" // Postgres driver
-	"github.com/pquerna/ffjson/ffjson"
 )
 
 const version = 1
@@ -191,7 +191,7 @@ func LoadDB() (err error) {
 func InitDB() error {
 	log.Println("initializing database")
 
-	conf, err := ffjson.Marshal(config.Defaults)
+	conf, err := json.Marshal(config.Defaults)
 	if err != nil {
 		return err
 	}

@@ -2,9 +2,9 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 
 	"github.com/bakape/meguca/common"
-	"github.com/pquerna/ffjson/ffjson"
 )
 
 // Message sent to all clients to inject a command result into a model
@@ -97,7 +97,7 @@ func InsertCommand(id, op uint64, com common.Command) error {
 	if err != nil {
 		return err
 	}
-	data, err := ffjson.Marshal(com)
+	data, err := json.Marshal(com)
 	if err != nil {
 		return err
 	}

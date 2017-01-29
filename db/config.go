@@ -12,7 +12,6 @@ import (
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/lib/pq"
-	"github.com/pquerna/ffjson/ffjson"
 )
 
 // DatabaseBoardConfigs contains extra fields not exposed on database reads
@@ -240,7 +239,7 @@ func recompileTemplates() error {
 
 // WriteConfigs writes new global configurations to the database
 func WriteConfigs(c config.Configs) error {
-	data, err := ffjson.Marshal(c)
+	data, err := json.Marshal(c)
 	if err != nil {
 		return err
 	}

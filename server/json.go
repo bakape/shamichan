@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -13,7 +14,6 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
-	"github.com/pquerna/ffjson/ffjson"
 )
 
 var (
@@ -64,7 +64,7 @@ func serveJSON(
 	etag string,
 	data interface{},
 ) {
-	buf, err := ffjson.Marshal(data)
+	buf, err := json.Marshal(data)
 	if err != nil {
 		text500(w, r, err)
 		return

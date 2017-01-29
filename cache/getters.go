@@ -1,9 +1,8 @@
 package cache
 
 import (
+	"encoding/json"
 	"time"
-
-	"github.com/pquerna/ffjson/ffjson"
 )
 
 // FrontEnd provides functions for fetching, validating and generating the
@@ -39,7 +38,7 @@ func GetJSON(k Key, f FrontEnd) ([]byte, uint64, error) {
 }
 
 func getData(s *store, f FrontEnd) (
-	data interface{}, json []byte, ctr uint64, fresh bool, err error,
+	data interface{}, buf []byte, ctr uint64, fresh bool, err error,
 ) {
 	// Have cached data
 	if s.json != nil {
@@ -70,7 +69,7 @@ func getData(s *store, f FrontEnd) (
 	if err != nil {
 		return
 	}
-	json, err = ffjson.Marshal(data)
+	buf, err = json.Marshal(data)
 	if err != nil {
 		return
 	}

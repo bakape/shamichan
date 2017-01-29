@@ -4,13 +4,13 @@ package db
 import (
 	"database/sql"
 	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/bakape/meguca/common"
 	"github.com/lib/pq"
-	"github.com/pquerna/ffjson/ffjson"
 )
 
 var (
@@ -195,7 +195,7 @@ func WritePost(tx *sql.Tx, p DatabasePost) error {
 	if p.Commands != nil {
 		comm = make(pq.StringArray, len(p.Commands))
 		for i := range comm {
-			s, err := ffjson.Marshal(p.Commands[i])
+			s, err := json.Marshal(p.Commands[i])
 			if err != nil {
 				return err
 			}

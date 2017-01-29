@@ -1,5 +1,3 @@
-//go:generate ffjson --nodecoder $GOFILE
-
 package common
 
 // Supported file formats
