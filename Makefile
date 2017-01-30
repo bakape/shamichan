@@ -28,14 +28,14 @@ client: client_vendor
 client_deps:
 	npm install --progress false --depth 0
 
-watch:
+watch: client_deps
 	$(gulp) -w
 
 client_vendor: client_deps
 	mkdir -p www/js/vendor
 	cp node_modules/dom4/build/dom4.js node_modules/core-js/client/core.min.js node_modules/core-js/client/core.min.js.map node_modules/babel-polyfill/dist/polyfill.min.js node_modules/proxy-polyfill/proxy.min.js www/js/vendor
-	 $(uglifyjs) node_modules/whatwg-fetch/fetch.js -o www/js/vendor/fetch.js
-	 $(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
+	$(uglifyjs) node_modules/whatwg-fetch/fetch.js -o www/js/vendor/fetch.js
+	$(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
 
 server: server_deps generate imager
 	go build -v -o $(binary)
@@ -46,7 +46,7 @@ endif
 imager:
 	$(MAKE) -C imager/lib
 
-generate:
+generate: server_deps
 	$(MAKE) -C templates
 	$(MAKE) -C db
 
