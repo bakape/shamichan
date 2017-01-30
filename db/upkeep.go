@@ -68,7 +68,7 @@ func closeDanglingPosts() (err error) {
 	}()
 
 	// Read and close all expired posts
-	r, err := tx.Stmt(prepared["closeExpiredOpenPosts"]).Query()
+	r, err := tx.Stmt(prepared["close_expired_open_posts"]).Query()
 	if err != nil {
 		return
 	}
@@ -88,7 +88,7 @@ func closeDanglingPosts() (err error) {
 	}
 
 	// Write updates to the replication log
-	q := tx.Stmt(prepared["updateLog"])
+	q := tx.Stmt(prepared["update_log"])
 	for _, p := range posts {
 		var msg []byte
 		msg, err = common.EncodeMessage(common.MessageClosePost, p.id)
@@ -106,10 +106,7 @@ func closeDanglingPosts() (err error) {
 
 // Remove any identity information from posts after a week
 func removeIdentityInfo() error {
-	_, err := db.Exec(`
-		UPDATE posts
-			SET ip = NULL, password = NULL
-			WHERE time < EXTRACT(EPOCH FROM now() - interval '7 days')`)
+	_, err := prepared["remove_identity_info"].Exec()
 	return err
 }
 

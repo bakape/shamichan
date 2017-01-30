@@ -107,7 +107,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	}
 
 	// Get thread metadata
-	row := tx.Stmt(prepared["getThread"]).QueryRow(id)
+	row := tx.Stmt(prepared["get_thread"]).QueryRow(id)
 	var logCtr sql.NullInt64
 	err = row.Scan(
 		&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
@@ -121,7 +121,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 
 	// Get OP post. Need to fetch separately, in case, if not fetching the full
 	// thread. Also allows to return early on deleted threads.
-	row = tx.Stmt(prepared["getThreadPost"]).QueryRow(id)
+	row = tx.Stmt(prepared["get_thread_post"]).QueryRow(id)
 	t.Post, err = scanThreadPost(row)
 	if err != nil {
 		return
@@ -133,10 +133,10 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 		cap int
 	)
 	if lastN == 0 {
-		r, err = tx.Stmt(prepared["getFullThread"]).Query(id)
+		r, err = tx.Stmt(prepared["get_full_thread"]).Query(id)
 		cap = int(t.PostCtr)
 	} else {
-		r, err = tx.Stmt(prepared["getLastN"]).Query(id, lastN)
+		r, err = tx.Stmt(prepared["get_last_n"]).Query(id, lastN)
 		cap = lastN
 	}
 	if err != nil {
@@ -192,7 +192,7 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 	args = append(args, post.ScanArgs()...)
 	args = append(args, img.ScanArgs()...)
 
-	err = prepared["getPost"].QueryRow(id).Scan(args...)
+	err = prepared["get_post"].QueryRow(id).Scan(args...)
 	if err != nil {
 		return
 	}
@@ -210,7 +210,7 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 
 // GetBoard retrieves all OPs of a single board
 func GetBoard(board string) (common.Board, error) {
-	r, err := prepared["getBoard"].Query(board)
+	r, err := prepared["get_board"].Query(board)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func GetBoard(board string) (common.Board, error) {
 
 // GetAllBoard retrieves all threads for the "/all/" meta-board
 func GetAllBoard() (common.Board, error) {
-	r, err := prepared["getAllBoard"].Query()
+	r, err := prepared["get_all_board"].Query()
 	if err != nil {
 		return nil, err
 	}

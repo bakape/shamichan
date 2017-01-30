@@ -48,9 +48,11 @@ imager:
 
 generate:
 	$(MAKE) -C templates
+	$(MAKE) -C db
 
 server_deps: build_dirs
 	go get -v github.com/valyala/quicktemplate/qtc
+	go get -v github.com/jteeuwen/go-bindata/...
 	go list -f '{{.Deps}}' . \
 		| tr "[" " " \
 		| tr "]" " " \
@@ -60,6 +62,7 @@ server_deps: build_dirs
 
 update_deps: build_dirs
 	go get -u -v github.com/valyala/quicktemplate/qtc
+	go get -u -v github.com/jteeuwen/go-bindata/...
 	go list -f '{{.Deps}}' . \
 		| tr "[" " " \
 		| tr "]" " " \
@@ -82,6 +85,7 @@ clean: client_clean
 	rm -rf .build .ffmpeg .package meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 	$(MAKE) -C imager/lib clean
 	$(MAKE) -C templates clean
+	$(MAKE) -C db clean
 ifeq ($(is_windows), true)
 	rm -rf /.meguca_build *.dll
 endif

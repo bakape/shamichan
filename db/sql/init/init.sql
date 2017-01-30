@@ -38,12 +38,12 @@ create table images (
 	length int not null,
 	size int not null,
 	md5 char(22) not null,
-	sha1 char(40) primary key
+	SHA1 char(40) primary key
 );
 
 create table image_tokens (
 	token char(86) not null primary key,
-	sha1 char(40) not null references images on delete cascade,
+	SHA1 char(40) not null references images on delete cascade,
 	expires timestamp not null
 );
 
@@ -97,7 +97,7 @@ create table posts (
 	board varchar(3) not null,
 	trip char(10),
 	auth varchar(20),
-	sha1 char(40) references images on delete set null,
+	SHA1 char(40) references images on delete set null,
 	name varchar(50),
 	imageName varchar(200),
 	body varchar(2000) not null,
@@ -109,6 +109,6 @@ create table posts (
 );
 create index deleted on posts (deleted);
 create index op on posts (op);
-create index image on posts (sha1);
+create index image on posts (SHA1);
 create index editing on posts (editing);
 create index ip on posts (ip);

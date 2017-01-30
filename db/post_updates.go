@@ -16,7 +16,7 @@ func BumpThread(
 	reply, bump, image bool,
 	msg []byte,
 ) error {
-	_, err := tx.Stmt(prepared["bumpThread"]).Exec(id, reply, bump, image)
+	_, err := tx.Stmt(prepared["bump_thread"]).Exec(id, reply, bump, image)
 	if err != nil {
 		return err
 	}
@@ -25,7 +25,7 @@ func BumpThread(
 
 // UpdateLog writes to a thread's replication log
 func UpdateLog(tx *sql.Tx, id uint64, msg []byte) error {
-	_, err := tx.Stmt(prepared["updateLog"]).Exec(id, msg)
+	_, err := tx.Stmt(prepared["update_log"]).Exec(id, msg)
 	return err
 }
 
@@ -38,7 +38,7 @@ func AppendBody(id, op uint64, char rune) error {
 	if err != nil {
 		return err
 	}
-	return updatePost(id, op, msg, "appendBody", string(char))
+	return updatePost(id, op, msg, "append_body", string(char))
 }
 
 func updatePost(
@@ -92,13 +92,13 @@ func insertCommands(tx *sql.Tx, id, op uint64, com []common.Command) (
 		data[i] = string(b)
 	}
 
-	_, err = tx.Stmt(prepared["insertCommands"]).Exec(id, pq.StringArray(data))
+	_, err = tx.Stmt(prepared["insert_commands"]).Exec(id, pq.StringArray(data))
 	return
 }
 
 // Writes new links to other posts and the accompanying backlinks
 func insertLinks(tx *sql.Tx, id, op uint64, links [][2]uint64) (err error) {
-	_, err = tx.Stmt(prepared["insertLinks"]).Exec(id, linkRow(links))
+	_, err = tx.Stmt(prepared["insert_links"]).Exec(id, linkRow(links))
 	if err != nil {
 		return
 	}
@@ -119,7 +119,7 @@ func insertLinks(tx *sql.Tx, id, op uint64, links [][2]uint64) (err error) {
 			l[0],
 			l[1],
 			msg,
-			"insertBacklinks",
+			"insert_backlinks",
 			linkRow{{id, op}},
 		)
 		if err != nil {
@@ -163,7 +163,7 @@ func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
 	}
 	defer RollbackOnError(tx, &err)
 
-	err = updatePostTx(tx, id, op, msg, "closePost", nil)
+	err = updatePostTx(tx, id, op, msg, "close_post", nil)
 	if err != nil {
 		return
 	}
@@ -203,7 +203,7 @@ func InsertImage(id, op uint64, img common.Image) (err error) {
 	}
 	defer RollbackOnError(tx, &err)
 
-	_, err = tx.Stmt(prepared["insertImage"]).Exec(id, img.SHA1, img.Name)
+	_, err = tx.Stmt(prepared["insert_image"]).Exec(id, img.SHA1, img.Name)
 	if err != nil {
 		return
 	}
@@ -217,5 +217,5 @@ func InsertImage(id, op uint64, img common.Image) (err error) {
 // SplicePost splices the text body of a post. For less load on the DB, supply
 // the entire new body as `body`.
 func SplicePost(id, op uint64, msg []byte, body string) error {
-	return updatePost(id, op, msg, "replaceBody", body)
+	return updatePost(id, op, msg, "replace_body", body)
 }

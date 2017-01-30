@@ -22,7 +22,7 @@ func IsLoggedIn(user, session string) (loggedIn bool, err error) {
 		return
 	}
 
-	err = prepared["isLoggedIn"].QueryRow(user, session).Scan(&loggedIn)
+	err = prepared["is_logged_in"].QueryRow(user, session).Scan(&loggedIn)
 	if err == sql.ErrNoRows {
 		err = nil
 	}
@@ -32,10 +32,7 @@ func IsLoggedIn(user, session string) (loggedIn bool, err error) {
 // RegisterAccount writes the ID and password hash of a new user account to the
 // database
 func RegisterAccount(ID string, hash []byte) error {
-	_, err := db.Exec(
-		`INSERT INTO accounts (id, password) VALUES ($1, $2)`,
-		ID, hash,
-	)
+	_, err := prepared["register_account"].Exec(ID, hash)
 	if IsConflictError(err) {
 		return ErrUserNameTaken
 	}
@@ -44,13 +41,13 @@ func RegisterAccount(ID string, hash []byte) error {
 
 // Remove expired login sessions
 func expireUserSessions() error {
-	_, err := db.Exec(`DELETE FROM sessions WHERE expires < now()`)
+	_, err := prepared["expire_user_sessions"].Exec()
 	return err
 }
 
 // GetPassword retrieves the login password hash of the registered user account
 func GetPassword(id string) (hash []byte, err error) {
-	err = prepared["getPassword"].QueryRow(id).Scan(&hash)
+	err = prepared["get_password"].QueryRow(id).Scan(&hash)
 	return
 }
 
@@ -61,48 +58,42 @@ func FindPosition(board, userID string) (pos string, err error) {
 	if userID == "admin" {
 		return userID, nil
 	}
-	err = prepared["findPosition"].QueryRow(board, userID).Scan(&pos)
+	err = prepared["find_position"].QueryRow(board, userID).Scan(&pos)
 	return
 }
 
 // WriteLoginSession writes a new user login session to the DB
 func WriteLoginSession(account, token string) error {
 	expiryTime := time.Duration(config.Get().SessionExpiry) * time.Hour * 24
-	_, err := db.Exec(
-		`INSERT INTO sessions (account, token, expires)  VALUES
-			($1, $2, $3)`,
-		account, token, time.Now().Add(expiryTime),
+	_, err := prepared["write_login_session"].Exec(
+		account,
+		token,
+		time.Now().Add(expiryTime),
 	)
 	return err
 }
 
 // LogOut logs the account out of one specific session
 func LogOut(account, token string) error {
-	_, err := db.Exec(
-		`DELETE FROM sessions WHERE account = $1 and token = $2`,
-		account, token,
-	)
+	_, err := prepared["log_out"].Exec(account, token)
 	return err
 }
 
 // LogOutAll logs an account out of all user sessions
 func LogOutAll(account string) error {
-	_, err := db.Exec(`DELETE FROM sessions WHERE account = $1`, account)
+	_, err := prepared["log_out_all"].Exec(account)
 	return err
 }
 
 // ChangePassword changes an existing user's login password
 func ChangePassword(account string, hash []byte) error {
-	_, err := db.Exec(
-		`UPDATE accounts SET password = $2 WHERE id = $1`,
-		account, hash,
-	)
+	_, err := prepared["change_password"].Exec(account, hash)
 	return err
 }
 
 // GetPosition returns the staff position a user is holding on a board
 func GetPosition(account, board string) (pos string, err error) {
-	err = prepared["getPosition"].QueryRow(account, board).Scan(&pos)
+	err = prepared["get_position"].QueryRow(account, board).Scan(&pos)
 	if err == sql.ErrNoRows {
 		err = nil
 	}
@@ -121,12 +112,7 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 	defer RollbackOnError(tx, &err)
 
 	// Write ban messages to posts and threads
-	q, err := tx.Prepare(
-		`UPDATE posts
-			SET banned = true
-			WHERE id = $1 AND board = $2
-			RETURNING ip, op`,
-	)
+	q := tx.Stmt(prepared["write_ban_message"])
 	if err != nil {
 		return
 	}
@@ -158,11 +144,7 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 	}
 
 	// Write bans to the ban table
-	q, err = tx.Prepare(
-		`INSERT INTO bans (ip, board, reason, by, expires) VALUES
-			($1, $2, $3, $4, $5)
-			ON CONFLICT DO NOTHING`,
-	)
+	q = tx.Stmt(prepared["write_ban"])
 	if err != nil {
 		return
 	}
@@ -211,11 +193,7 @@ func updateBans() (err error) {
 
 // GetOwnedBoards returns boards the account holder owns
 func GetOwnedBoards(account string) (boards []string, err error) {
-	r, err := db.Query(
-		`SELECT board FROM staff
-			WHERE account = $1 AND position = 'owners'`,
-		account,
-	)
+	r, err := prepared["get_owned_boards"].Query(account)
 	if err != nil {
 		return
 	}
@@ -232,7 +210,7 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 
 // GetBanInfo retrieves information about a specific ban
 func GetBanInfo(ip, board string) (b auth.BanRecord, err error) {
-	err = prepared["getBanInfo"].
+	err = prepared["get_ban_info"].
 		QueryRow(ip, board).
 		Scan(&b.Board, &b.IP, &b.By, &b.Reason, &b.Expires)
 	return

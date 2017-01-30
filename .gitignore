@@ -26,3 +26,4 @@ imager/lib/target
 libimager.a
 Cargo.lock
 *.qtpl.go
+db/sql/sql.go

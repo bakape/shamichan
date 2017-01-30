@@ -127,7 +127,7 @@ func (l linkRow) Value() (driver.Value, error) {
 
 // ValidateOP confirms the specified thread exists on specific board
 func ValidateOP(id uint64, board string) (valid bool, err error) {
-	err = prepared["validateOP"].QueryRow(id, board).Scan(&valid)
+	err = prepared["validate_op"].QueryRow(id, board).Scan(&valid)
 	if err == sql.ErrNoRows {
 		return false, nil
 	}
@@ -136,37 +136,37 @@ func ValidateOP(id uint64, board string) (valid bool, err error) {
 
 // GetPostOP retrieves the parent thread ID of the passed post
 func GetPostOP(id uint64) (op uint64, err error) {
-	err = prepared["getPostOP"].QueryRow(id).Scan(&op)
+	err = prepared["get_post_op"].QueryRow(id).Scan(&op)
 	return
 }
 
 // PostCounter retrieves the current post counter
 func PostCounter() (c uint64, err error) {
-	err = prepared["postCounter"].QueryRow().Scan(&c)
+	err = prepared["post_counter"].QueryRow().Scan(&c)
 	return
 }
 
 // BoardCounter retrieves the history or "progress" counter of a board
 func BoardCounter(board string) (c uint64, err error) {
-	err = prepared["boardCounter"].QueryRow(board).Scan(&c)
+	err = prepared["board_counter"].QueryRow(board).Scan(&c)
 	return
 }
 
 // ThreadCounter retrieves the progress counter of a thread
 func ThreadCounter(id uint64) (c uint64, err error) {
-	err = prepared["threadCounter"].QueryRow(id).Scan(&c)
+	err = prepared["thread_counter"].QueryRow(id).Scan(&c)
 	return
 }
 
 // NewPostID reserves a new post ID
 func NewPostID() (id uint64, err error) {
-	err = prepared["newPostID"].QueryRow().Scan(&id)
+	err = prepared["new_post_id"].QueryRow().Scan(&id)
 	return id, err
 }
 
 // WritePost writes a post struct to database
 func WritePost(tx *sql.Tx, p DatabasePost) error {
-	ex := getExecutor(tx, "writePost")
+	ex := getExecutor(tx, "write_post")
 
 	// Don't store empty strings in the database. Zero value != NULL.
 	var (
@@ -219,7 +219,7 @@ func WriteThread(t DatabaseThread, p DatabasePost) (err error) {
 	}
 	defer RollbackOnError(tx, &err)
 
-	_, err = tx.Stmt(prepared["writeOP"]).Exec(
+	_, err = tx.Stmt(prepared["write_op"]).Exec(
 		t.Board,
 		pq.StringArray(t.Log),
 		t.ID,
@@ -242,28 +242,13 @@ func WriteThread(t DatabaseThread, p DatabasePost) (err error) {
 // IsLocked returns if the thread is locked from posting
 func IsLocked(id uint64) (bool, error) {
 	var locked sql.NullBool
-	err := prepared["isLocked"].QueryRow(id).Scan(&locked)
+	err := prepared["is_locked"].QueryRow(id).Scan(&locked)
 	return locked.Bool, err
 }
 
 // GetPostPassword retrieves a post's modification password
 func GetPostPassword(id uint64) (p []byte, err error) {
-	err = prepared["getPostPassword"].QueryRow(id).Scan(&p)
-	if err == sql.ErrNoRows {
-		err = nil
-	}
-	return
-}
-
-// HasImage returns, if the post has an image allocated
-func HasImage(id uint64) (has bool, err error) {
-	err = db.
-		QueryRow(`
-			SELECT true FROM posts
-				WHERE id = $1 AND SHA1 IS NOT NULL`,
-			id,
-		).
-		Scan(&has)
+	err = prepared["get_post_password"].QueryRow(id).Scan(&p)
 	if err == sql.ErrNoRows {
 		err = nil
 	}
@@ -274,7 +259,7 @@ func HasImage(id uint64) (has bool, err error) {
 // days will not have this field.
 func GetIP(id uint64) (string, error) {
 	var ip sql.NullString
-	err := prepared["getIP"].QueryRow(id).Scan(&ip)
+	err := prepared["get_ip"].QueryRow(id).Scan(&ip)
 	return ip.String, err
 }
 
@@ -284,7 +269,7 @@ func GetLog(id, from, to uint64) ([][]byte, error) {
 		return nil, errTooManyMessages
 	}
 	var log pq.ByteaArray
-	err := prepared["getLog"].QueryRow(id, from, to).Scan(&log)
+	err := prepared["get_log"].QueryRow(id, from, to).Scan(&log)
 	return [][]byte(log), err
 }
 
@@ -296,12 +281,7 @@ func SetPostCounter(c uint64) error {
 
 // DeletePosts marks the target posts as deleted
 func DeletePosts(board string, ids ...uint64) error {
-	_, err := db.Exec(`
-		UPDATE posts
-			SET deleted = true
-			WHERE id = ANY($1) AND board = $2`,
-		encodeIDArray(ids...), board,
-	)
+	_, err := prepared["delete_posts"].Exec(encodeIDArray(ids...), board)
 	return err
 }
 
@@ -329,5 +309,5 @@ func SpoilerImage(id uint64) (err error) {
 	if err != nil {
 		return
 	}
-	return updatePost(id, op, msg, "spoilerImage", nil)
+	return updatePost(id, op, msg, "spoiler_image", nil)
 }

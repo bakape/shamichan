@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"errors"
 	"time"
 
@@ -28,7 +29,7 @@ var (
 // WriteImage writes a processed image record to the DB
 func WriteImage(i common.ImageCommon) error {
 	dims := pq.GenericArray{A: i.Dims}
-	_, err := prepared["writeImage"].Exec(
+	_, err := prepared["write_image"].Exec(
 		i.APNG, i.Audio, i.Video, i.FileType, i.ThumbType, dims,
 		i.Length, i.Size, i.MD5, i.SHA1,
 	)
@@ -37,7 +38,7 @@ func WriteImage(i common.ImageCommon) error {
 
 // GetImage retrieves a thumbnailed image record from the DB
 func GetImage(SHA1 string) (common.ImageCommon, error) {
-	return scanImage(prepared["getImage"].QueryRow(SHA1))
+	return scanImage(prepared["get_image"].QueryRow(SHA1))
 }
 
 func scanImage(rs rowScanner) (img common.ImageCommon, err error) {
@@ -60,7 +61,7 @@ func NewImageToken(SHA1 string) (token string, err error) {
 		}
 		expires := time.Now().Add(tokenTimeout)
 
-		_, err = prepared["writeImageToken"].Exec(token, SHA1, expires)
+		_, err = prepared["write_image_token"].Exec(token, SHA1, expires)
 		switch {
 		case err == nil:
 			return
@@ -85,13 +86,13 @@ func UseImageToken(token string) (img common.ImageCommon, err error) {
 	}
 
 	var SHA1 string
-	err = tx.Stmt(prepared["useImageToken"]).QueryRow(token).Scan(&SHA1)
+	err = tx.Stmt(prepared["use_image_token"]).QueryRow(token).Scan(&SHA1)
 	if err != nil {
 		tx.Rollback()
 		return
 	}
 
-	img, err = scanImage(tx.Stmt(prepared["getImage"]).QueryRow(SHA1))
+	img, err = scanImage(tx.Stmt(prepared["get_image"]).QueryRow(SHA1))
 	if err != nil {
 		tx.Rollback()
 		return
@@ -125,6 +126,21 @@ func cleanUpFailedAllocation(img common.ImageCommon, err error) error {
 
 // Remove any unused expired image allocation tokens
 func expireImageTokens() error {
-	_, err := db.Exec(`DELETE FROM image_tokens WHERE expires < now()`)
+	_, err := prepared["expire_image_tokens"].Exec()
 	return err
+}
+
+// HasImage returns, if the post has an image allocated. Only used in tests.
+func HasImage(id uint64) (has bool, err error) {
+	err = db.
+		QueryRow(`
+			SELECT true FROM posts
+				WHERE id = $1 AND SHA1 IS NOT NULL`,
+			id,
+		).
+		Scan(&has)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
+	return
 }

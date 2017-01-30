@@ -77,10 +77,7 @@ func decodeConfigs(data string) (c config.Configs, err error) {
 }
 
 func loadBoardConfigs() error {
-	r, err := db.Query(`
-		SELECT readOnly, textOnly, forcedAnon, hashCommands, codeTags, id,
-				title, notice, rules, eightball
-			FROM boards`)
+	r, err := prepared["get_board_configs"].Query()
 	if err != nil {
 		return err
 	}
@@ -114,14 +111,7 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 
 // WriteBoard writes a board complete with configurations to the database
 func WriteBoard(tx *sql.Tx, c DatabaseBoardConfigs) error {
-	const q = `
-		INSERT INTO boards (
-			readOnly, textOnly, forcedAnon, hashCommands, codeTags, id, created,
-			title, notice, rules, eightball
-		)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-			RETURNING pg_notify('board_updated', $6)`
-	_, err := getQuerier(tx).Exec(q,
+	_, err := getStatement(tx, "write_board").Exec(
 		c.ReadOnly, c.TextOnly, c.ForcedAnon, c.HashCommands, c.CodeTags, c.ID,
 		c.Created, c.Title, c.Notice, c.Rules, pq.StringArray(c.Eightball),
 	)
@@ -130,21 +120,7 @@ func WriteBoard(tx *sql.Tx, c DatabaseBoardConfigs) error {
 
 // UpdateBoard updates board configurations
 func UpdateBoard(c config.BoardConfigs) error {
-	const q = `
-		UPDATE boards
-			SET
-				readOnly = $2,
-				textOnly = $3,
-				forcedAnon = $4,
-				hashCommands = $5,
-				codeTags = $6,
-				title = $7,
-				notice = $8,
-				rules = $9,
-				eightball = $10
-			WHERE id = $1
-			RETURNING pg_notify('board_updated', $1)`
-	_, err := db.Exec(q,
+	_, err := prepared["update_board"].Exec(
 		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.HashCommands, c.CodeTags,
 		c.Title, c.Notice, c.Rules, pq.StringArray(c.Eightball),
 	)
@@ -155,24 +131,16 @@ func UpdateBoard(c config.BoardConfigs) error {
 // overwritten. tx must not be nil.
 func WriteStaff(tx *sql.Tx, board string, staff map[string][]string) error {
 	// Remove previous staff entries
-	_, err := tx.Exec(`DELETE FROM staff WHERE account = $1`, board)
+	_, err := prepared["clear_staff"].Exec(board)
 	if err != nil {
 		return err
 	}
 
 	// Write new ones
-	p, err := tx.Prepare(
-		`INSERT INTO staff (board, account, position) VALUES
-			($1, $2, $3)`,
-	)
-	if err != nil {
-		return err
-	}
-	defer p.Close()
-
+	q := tx.Stmt(prepared["write_staff"])
 	for pos, accounts := range staff {
 		for _, a := range accounts {
-			_, err = p.Exec(board, a, pos)
+			_, err = q.Exec(board, a, pos)
 			if err != nil {
 				return err
 			}
@@ -243,12 +211,6 @@ func WriteConfigs(c config.Configs) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec(`
-		UPDATE main
-			SET val = $1
-			WHERE id = 'config'
-			RETURNING pg_notify('config_updates', $1)`,
-		string(data),
-	)
+	_, err = prepared["write_configs"].Exec(string(data))
 	return err
 }
