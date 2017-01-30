@@ -124,12 +124,6 @@ func cleanUpFailedAllocation(img common.ImageCommon, err error) error {
 	return err
 }
 
-// Remove any unused expired image allocation tokens
-func expireImageTokens() error {
-	_, err := prepared["expire_image_tokens"].Exec()
-	return err
-}
-
 // HasImage returns, if the post has an image allocated. Only used in tests.
 func HasImage(id uint64) (has bool, err error) {
 	err = db.

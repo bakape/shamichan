@@ -39,12 +39,6 @@ func RegisterAccount(ID string, hash []byte) error {
 	return err
 }
 
-// Remove expired login sessions
-func expireUserSessions() error {
-	_, err := prepared["expire_user_sessions"].Exec()
-	return err
-}
-
 // GetPassword retrieves the login password hash of the registered user account
 func GetPassword(id string) (hash []byte, err error) {
 	err = prepared["get_password"].QueryRow(id).Scan(&hash)

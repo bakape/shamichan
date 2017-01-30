@@ -44,6 +44,10 @@ func GetConfigs() (c config.Configs, err error) {
 
 // Assigns a function to listen to Postgres notifications
 func listen(event string, fn func(msg string) error) error {
+	if IsTest {
+		return nil
+	}
+
 	l := pq.NewListener(
 		ConnArgs,
 		time.Second,
@@ -55,13 +59,7 @@ func listen(event string, fn func(msg string) error) error {
 	}
 
 	go func() {
-		if IsTest {
-			return
-		}
 		for msg := range l.Notify {
-			if msg.Extra == "" {
-				continue
-			}
 			if err := fn(msg.Extra); err != nil {
 				log.Println(err)
 			}

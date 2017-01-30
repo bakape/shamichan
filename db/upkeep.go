@@ -49,6 +49,18 @@ func runHourTasks() {
 	// logError("thread cleanup", deleteOldThreads())
 }
 
+// Remove any unused expired image allocation tokens
+func expireImageTokens() error {
+	_, err := prepared["expire_image_tokens"].Exec()
+	return err
+}
+
+// Remove expired login sessions
+func expireUserSessions() error {
+	_, err := prepared["expire_user_sessions"].Exec()
+	return err
+}
+
 func logError(prefix string, fn func() error) {
 	if err := fn(); err != nil {
 		log.Printf("%s: %s\n", prefix, err)

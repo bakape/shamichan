@@ -37,7 +37,7 @@ create table images (
 	dims smallint[4] not null,
 	length int not null,
 	size int not null,
-	md5 char(22) not null,
+	MD5 char(22) not null,
 	SHA1 char(40) primary key
 );
 

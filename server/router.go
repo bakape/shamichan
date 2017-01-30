@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"net/http/pprof"
+
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/util"
@@ -59,6 +61,8 @@ func createRouter() http.Handler {
 		text404(w)
 	}
 	r.PanicHandler = text500
+
+	r.GET("/debug/pprof/profile", wrapHandler(pprof.Profile))
 
 	// HTML
 	r.GET("/", wrapHandler(redirectToDefault))
