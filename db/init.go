@@ -41,23 +41,28 @@ func LoadDB() (err error) {
 	if err != nil {
 		return err
 	}
-	if !exists {
-		if err := InitDB(); err != nil {
-			return err
-		}
-	}
 
-	if err := genPrepared(); err != nil {
+	tasks := make([]func() error, 0, 6)
+	if !exists {
+		tasks = append(tasks, initDB)
+	}
+	tasks = append(tasks, genPrepared)
+	if !exists {
+		tasks = append(tasks, CreateAdminAccount)
+	}
+	tasks = append(tasks, loadConfigs, loadBoardConfigs, loadBans)
+	if err := util.Waterfall(tasks...); err != nil {
 		return err
 	}
+
 	if !IsTest {
 		go runCleanupTasks()
 	}
-	return util.Waterfall(loadConfigs, loadBoardConfigs, loadBans)
+	return nil
 }
 
-// InitDB initializes a database
-func InitDB() error {
+// initDB initializes a database
+func initDB() error {
 	log.Println("initializing database")
 
 	conf, err := json.Marshal(config.Defaults)
@@ -65,20 +70,9 @@ func InitDB() error {
 		return err
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		return err
-	}
-	_, err = tx.Exec(fmt.Sprintf(getQuery("init/init.sql"), version, string(conf)))
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	return CreateAdminAccount()
+	q := fmt.Sprintf(getQuery("init/init.sql"), version, string(conf))
+	_, err = db.Exec(q)
+	return err
 }
 
 // CreateAdminAccount writes a fresh admin account with the default password to
