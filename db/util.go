@@ -25,12 +25,6 @@ type tableScanner interface {
 	Next() bool
 }
 
-type queryer interface {
-	Exec(string, ...interface{}) (sql.Result, error)
-	Query(string, ...interface{}) (*sql.Rows, error)
-	QueryRow(string, ...interface{}) *sql.Row
-}
-
 // Generate prepared statements
 func genPrepared() error {
 	for _, id := range queries.AssetNames() {
@@ -77,13 +71,6 @@ func getExecutor(tx *sql.Tx, key string) executor {
 		return tx.Stmt(prepared[key])
 	}
 	return prepared[key]
-}
-
-func getQuerier(tx *sql.Tx) queryer {
-	if tx == nil {
-		return db
-	}
-	return tx
 }
 
 func getStatement(tx *sql.Tx, id string) *sql.Stmt {

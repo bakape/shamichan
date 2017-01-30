@@ -8,4 +8,8 @@ do
     sleep 1
 done
 
-make test
+if [[ "$1" -eq "test" ]]; then
+    make test
+else
+    ./meguca $@
+fi

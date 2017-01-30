@@ -10,6 +10,9 @@ wget -qO- https://deb.nodesource.com/setup_7.x | bash -
 apt-get install -y nodejs
 
 # Install and init PostgreSQL
+echo deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main >> /etc/apt/sources.list.d/pgdg.list
+wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+apt-get update
 apt-get install -y postgresql
 service postgresql start
 su postgres
@@ -18,7 +21,7 @@ createdb -T template0 -E UTF8 -O meguca meguca
 exit
 
 # Install Go
-wget -O- https://storage.googleapis.com/golang/go1.7.4.linux-amd64.tar.gz | tar xpz -C /usr/local
+wget -O- https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz | tar xpz -C /usr/local
 echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 source /etc/profile
 
@@ -27,9 +30,9 @@ apt-get dist-upgrade -y
 apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libgraphicsmagick1-dev liblzma-dev git zip curl
 
 # Install Rust
-apt-get install curl
 curl https://sh.rustup.rs -sSf | sh
 echo 'PATH=$PATH:$HOME/.cargo/bin' >> ~/.bash_profile
+source /etc/profile
 
 # Clone and build meguca
 git clone -b v3.1.0 https://github.com/bakape/meguca.git /meguca
