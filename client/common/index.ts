@@ -2,13 +2,7 @@
 // dependencies
 
 // Generic link object containing target post board and thread
-export type PostLink = {
-	board: string
-	op: number
-}
-
-// Map of target to post numbers to their parenthood data
-export type PostLinks = { [id: number]: PostLink }
+export type PostLink = [number, number]
 
 // Data of any post. In addition to server-sent JSON includes the state
 // property.
@@ -24,8 +18,8 @@ export interface PostData {
 	trip?: string
 	auth?: string
 	state: TextState
-	backlinks?: PostLinks
-	links?: PostLinks
+	backlinks?: PostLink[]
+	links?: PostLink[]
 	commands?: Command[]
 }
 

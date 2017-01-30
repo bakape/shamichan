@@ -3,7 +3,7 @@
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts, hidden } from './state'
 import { Post, FormModel, PostView, postEvent, postSM } from './posts'
-import { PostLinks, Command, PostData, ImageData } from "./common"
+import { PostLink, Command, PostData, ImageData } from "./common"
 import { postAdded, navigate } from "./ui"
 import { write } from "./util"
 import { incrementPostCount } from "./page"
@@ -16,16 +16,10 @@ export type SpliceResponse = {
 	text: string
 }
 
-// Message sent to listening clients about a link or backlink insertion into
-// a post
-type LinkMessage = {
+type CloseMessage = {
 	id: number
-	links: PostLinks
-}
-
-// Message to inject a new command result into a model
-interface CommandMessage extends Command {
-	id: number
+	links: PostLink[] | null
+	commands: Command[] | null
 }
 
 // Message for inserting images into an open post
@@ -91,9 +85,6 @@ export function insertPost(data: PostData) {
 	})
 
 	postAdded()
-	if (model.links) {
-		model.checkRepliedToMe(model.links)
-	}
 	incrementPostCount(true, "image" in data)
 }
 
@@ -133,23 +124,21 @@ export default () => {
 		handle(msg.id, m =>
 			m.splice(msg))
 
-	handlers[message.link] = ({id, links}: LinkMessage) =>
+	handlers[message.backlink] = ([id, target, targetOP]: number[]) =>
 		handle(id, m =>
-			m.insertLink(links))
+			m.insertBacklink(target, targetOP))
 
-	handlers[message.backlink] = ({id, links}: LinkMessage) =>
-		handle(id, m =>
-			m.insertBacklink(links))
-
-	handlers[message.command] = (msg: CommandMessage) =>
-		handle(msg.id, m => {
-			delete msg.id
-			m.insertCommand(msg)
+	handlers[message.closePost] = ({id, links, commands}: CloseMessage) =>
+		handle(id, m => {
+			if (links) {
+				m.links = links
+				m.checkRepliedToMe()
+			}
+			if (commands) {
+				m.commands = commands
+			}
+			m.closePost()
 		})
-
-	handlers[message.closePost] = (id: number) =>
-		handle(id, m =>
-			m.closePost())
 
 	handlers[message.deletePost] = (id: number) =>
 		handle(id, m =>

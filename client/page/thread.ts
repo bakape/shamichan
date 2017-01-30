@@ -1,5 +1,5 @@
 import { Post, PostView } from '../posts'
-import { fileTypes, PostLinks, PostData, ThreadData } from "../common"
+import { fileTypes, PostLink, PostData, ThreadData } from "../common"
 import { posts as postCollection, hidden, mine, seenReplies } from '../state'
 import { pluralize, escape, threads, write } from '../util'
 import options from "../options"
@@ -145,12 +145,11 @@ function localizeOmitted() {
 
 // Add (You) to posts linking to the user's posts and trigger desktop
 // notifications, if needed
-function localizeLinks(links: PostLinks, view: PostView, notify: boolean) {
+function localizeLinks(links: PostLink[], view: PostView, notify: boolean) {
     if (!links) {
         return
     }
-    for (let idStr in links) {
-        const id = parseInt(idStr)
+    for (let [id] of links) {
         if (!mine.has(id)) {
             continue
         }

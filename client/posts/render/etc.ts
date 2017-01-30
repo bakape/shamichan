@@ -2,35 +2,29 @@
 
 import { page, mine } from '../../state'
 import lang from '../../lang'
-import { PostLinks } from '../../common'
+import { PostLink } from '../../common'
 import { makeFrag } from "../../util"
 
 // Render a link to other posts
-export function renderPostLink(num: number, board: string, op: number): string {
-    let html = `<a class="history post-link" data-id="${num}" href="`
+export function renderPostLink(id: number, op: number): string {
     const cross = op !== page.thread
-
+    let html = `<a class="history post-link" data-id="${id}" href="`
     if (cross) {
-        html += `/${board}/${op}`
+        html += `/cross/${op}`
     }
-    html += `#p${num}">>>`
-
+    html += `#p${id}">>>${id}`
     if (cross) {
-        html += `>/${board}/`
+        html += " ➡"
     }
-    html += num
-
-    if (mine.has(num)) { // Post, I made
+    if (mine.has(id)) { // Post, I made
         html += ' ' + lang.posts["you"]
     }
-
     html += `</a><a class="hash-link"> #</a>`
-
     return html
 }
 
 // Render links to posts that are linking to the target post
-export function renderBacklinks(post: DocumentFragment, links: PostLinks) {
+export function renderBacklinks(post: DocumentFragment, links: PostLink[]) {
     if (!links) {
         return
     }
@@ -49,14 +43,12 @@ export function renderBacklinks(post: DocumentFragment, links: PostLinks) {
     }
 
     let html = ""
-    for (let id in links) {
+    for (let [id, op] of links) {
         // Confirm link not already rendered
-        if (rendered.includes(id)) {
+        if (rendered.includes(id.toString())) {
             continue
         }
-
-        const {board, op} = links[id]
-        html += "<em>" + renderPostLink(parseInt(id), board, op) + "</em>"
+        html += "<em>" + renderPostLink(id, op) + "</em>"
     }
 
     el.append(makeFrag(html))

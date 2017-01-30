@@ -1,6 +1,6 @@
 import { config, boards } from '../../state'
 import { renderPostLink } from './etc'
-import { PostData, PostLinks, TextState } from '../../common'
+import { PostData, PostLink, TextState } from '../../common'
 import { escape } from '../../util'
 import { parseEmbeds } from "../embed"
 
@@ -167,16 +167,22 @@ function parseFragment(frag: string, data: PostData): string {
 }
 
 // Verify and render a link to other posts
-function parsePostLink(m: string[], links: PostLinks): string {
+function parsePostLink(m: string[], links: PostLink[]): string {
     if (!links) {
         return m[0]
     }
-    const id = parseInt(m[2]),
-        verified = links[id]
-    if (!verified) {
+    const id = parseInt(m[2])
+    let op: number
+    for (let l of links) {
+        if (l[0] === id) {
+            op = l[1]
+            break
+        }
+    }
+    if (!op) {
         return m[0]
     }
-    return m[1] + renderPostLink(id, verified.board, verified.op)
+    return m[1] + renderPostLink(id, op)
 }
 
 // Parse internal or customly set reference URL

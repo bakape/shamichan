@@ -5,7 +5,7 @@ import PostView from './view'
 import { SpliceResponse } from '../client'
 import { mine, seenReplies } from "../state"
 import { notifyAboutReply } from "../ui"
-import { PostData, TextState, PostLinks, Command, ImageData } from "../common"
+import { PostData, TextState, PostLink, Command, ImageData } from "../common"
 
 // Generic post model
 export class Post extends Model implements PostData {
@@ -23,9 +23,9 @@ export class Post extends Model implements PostData {
 	public trip: string
 	public auth: string
 	public state: TextState
-	public backlinks: PostLinks
+	public backlinks: PostLink[]
 	public commands: Command[]
-	public links: PostLinks
+	public links: PostLink[]
 
 	constructor(attrs: PostData) {
 		super()
@@ -96,15 +96,6 @@ export class Post extends Model implements PostData {
 		return body
 	}
 
-	// Extend a field on the model, if it exists. Assign if it doesn't
-	public extendField(key: string, obj: {}) {
-		if (this[key]) {
-			extend(this[key], obj)
-		} else {
-			this[key] = obj
-		}
-	}
-
 	// Extend all fields in the model and rerender
 	public extend(data: PostData) {
 		extend(this, data)
@@ -116,17 +107,11 @@ export class Post extends Model implements PostData {
 			this.view.renderContents())
 	}
 
-	// Insert data about a link to another post into the model
-	public insertLink(links: PostLinks) {
-		this.checkRepliedToMe(links)
-		this.extendField("links", links)
-	}
-
 	// Check if this post replied to one of the user's posts and trigger
 	// handlers
-	public checkRepliedToMe(links: PostLinks) {
-		for (let key in links) {
-			if (!mine.has(parseInt(key))) {
+	public checkRepliedToMe() {
+		for (let [id] of this.links) {
+			if (!mine.has(id)) {
 				continue
 			}
 			// In case there are multiple links to the same post
@@ -137,18 +122,14 @@ export class Post extends Model implements PostData {
 	}
 
 	// Insert data about another post linking this post into the model
-	public insertBacklink(links: PostLinks) {
-		this.extendField("backlinks", links)
-		this.view.renderBacklinks()
-	}
-
-	// Insert a new command result into the model
-	public insertCommand(comm: Command) {
-		if (!this.commands) {
-			this.commands = [comm]
+	public insertBacklink(id: number, op: number) {
+		const l: [number, number] = [id, op]
+		if (this.backlinks) {
+			this.backlinks.push(l)
 		} else {
-			this.commands.push(comm)
+			this.backlinks = [l]
 		}
+		this.view.renderBacklinks()
 	}
 
 	// Insert an image into an existing post
