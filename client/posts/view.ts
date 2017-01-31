@@ -44,22 +44,20 @@ export default class PostView extends ImageHandler {
     // Get the current Node for text to be written to
     private buffer(): Node {
         if (!this._buffer) {
-            this.findBuffer(this.lastLine())
+            this.findBuffer()
         }
         return this._buffer
     }
 
     // Find the text buffer in an open line
-    private findBuffer(b: Node) {
+    private findBuffer() {
         const {state} = this.model
+        let b = this.el.querySelector("blockquote") as Element
         if (state.quote) {
-            b = b.lastChild
+            b = b.lastElementChild
         }
         if (state.spoiler) {
-            b = b.lastChild
-        }
-        if (!b) {
-            b = this.lastLine()
+            b = b.lastElementChild
         }
         this._buffer = b
     }
@@ -80,14 +78,10 @@ export default class PostView extends ImageHandler {
     // Replace the current body with a reparsed fragment
     public reparseBody() {
         const frag = makeFrag(parseBody(this.model))
-        this.findBuffer(frag.firstChild)
-        write(() =>
-            this.replaceBody(frag))
-    }
-
-    // Return the last line of the text body
-    private lastLine(): Node {
-        return this.el.querySelector("blockquote").lastChild
+        write(() => {
+            this.replaceBody(frag)
+            this.findBuffer()
+        })
     }
 
     // Replace the text body of the post
