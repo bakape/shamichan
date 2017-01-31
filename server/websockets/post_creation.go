@@ -111,7 +111,7 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	if err != nil {
 		return
 	}
-	thread := db.DatabaseThread{
+	thread := db.Thread{
 		ReplyTime: timeStamp,
 		Board:     req.Board,
 		Log:       []string{},
@@ -267,13 +267,13 @@ func constructPost(
 	forcedAnon, parseBody bool,
 	ip, board string,
 ) (
-	post db.DatabasePost,
+	post db.Post,
 	now int64,
 	bodyLength int,
 	err error,
 ) {
 	now = time.Now().Unix()
-	post = db.DatabasePost{
+	post = db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				Editing: true,

@@ -39,7 +39,7 @@ func TestValidateOp(t *testing.T) {
 }
 
 func writeSampleBoard(t *testing.T) {
-	b := DatabaseBoardConfigs{
+	b := BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "a",
 			Eightball: []string{"yes"},
@@ -51,12 +51,12 @@ func writeSampleBoard(t *testing.T) {
 }
 
 func writeSampleThread(t *testing.T) {
-	thread := DatabaseThread{
+	thread := Thread{
 		ID:    1,
 		Board: "a",
 		Log:   []string{"123"},
 	}
-	op := DatabasePost{
+	op := Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				ID:   1,

@@ -2,8 +2,10 @@ package db
 
 import (
 	"database/sql"
+	"log"
 	"path/filepath"
 	"strings"
+	"time"
 
 	queries "github.com/bakape/meguca/db/sql"
 	"github.com/lib/pq"
@@ -108,4 +110,42 @@ func getQuery(id string) string {
 		panic(err)
 	}
 	return string(b)
+}
+
+// Assigns a function to listen to Postgres notifications on a channel
+func listenFunc(event string, fn func(msg string) error) error {
+	if IsTest {
+		return nil
+	}
+	l, err := Listen(event)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for msg := range l.Notify {
+			if msg == nil {
+				continue
+			}
+			if err := fn(msg.Extra); err != nil {
+				log.Println(err)
+			}
+		}
+	}()
+
+	return nil
+}
+
+// Listen starts listening for notification events on a specific channel
+func Listen(event string) (*pq.Listener, error) {
+	l := pq.NewListener(
+		ConnArgs,
+		time.Second,
+		time.Second*10,
+		func(_ pq.ListenerEventType, _ error) {},
+	)
+	if err := l.Listen(event); err != nil {
+		return nil, err
+	}
+	return l, nil
 }

@@ -5,7 +5,6 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/bakape/meguca/config"
@@ -14,8 +13,8 @@ import (
 	"github.com/lib/pq"
 )
 
-// DatabaseBoardConfigs contains extra fields not exposed on database reads
-type DatabaseBoardConfigs struct {
+// BoardConfigs contains extra fields not exposed on database reads
+type BoardConfigs struct {
 	config.BoardConfigs
 	Created time.Time
 }
@@ -28,7 +27,7 @@ func loadConfigs() error {
 	}
 	config.Set(conf)
 
-	return listen("config_updates", updateConfigs)
+	return listenFunc("config_updates", updateConfigs)
 }
 
 // GetConfigs retrieves global configurations. Only used in tests.
@@ -40,33 +39,6 @@ func GetConfigs() (c config.Configs, err error) {
 	}
 	c, err = decodeConfigs(enc)
 	return
-}
-
-// Assigns a function to listen to Postgres notifications
-func listen(event string, fn func(msg string) error) error {
-	if IsTest {
-		return nil
-	}
-
-	l := pq.NewListener(
-		ConnArgs,
-		time.Second,
-		time.Second*10,
-		func(_ pq.ListenerEventType, _ error) {},
-	)
-	if err := l.Listen(event); err != nil {
-		return err
-	}
-
-	go func() {
-		for msg := range l.Notify {
-			if err := fn(msg.Extra); err != nil {
-				log.Println(err)
-			}
-		}
-	}()
-
-	return nil
 }
 
 func decodeConfigs(data string) (c config.Configs, err error) {
@@ -94,7 +66,7 @@ func loadBoardConfigs() error {
 		return err
 	}
 
-	return listen("board_updated", updateBoardConfigs)
+	return listenFunc("board_updated", updateBoardConfigs)
 }
 
 func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
@@ -108,7 +80,7 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 }
 
 // WriteBoard writes a board complete with configurations to the database
-func WriteBoard(tx *sql.Tx, c DatabaseBoardConfigs) error {
+func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 	_, err := getStatement(tx, "write_board").Exec(
 		c.ReadOnly, c.TextOnly, c.ForcedAnon, c.HashCommands, c.CodeTags, c.ID,
 		c.Created, c.Title, c.Notice, c.Rules, pq.StringArray(c.Eightball),

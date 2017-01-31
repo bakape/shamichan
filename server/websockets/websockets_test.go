@@ -44,9 +44,6 @@ func init() {
 	if err := db.LoadDB(); err != nil {
 		panic(err)
 	}
-	if err := Listen(); err != nil {
-		panic(err)
-	}
 }
 
 func newWSServer(t testing.TB) *mockWSServer {

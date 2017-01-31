@@ -14,7 +14,7 @@ import (
 func TestReader(t *testing.T) {
 	assertTableClear(t, "boards", "images")
 
-	boards := [...]DatabaseBoardConfigs{
+	boards := [...]BoardConfigs{
 		{
 			BoardConfigs: config.BoardConfigs{
 				ID:        "a",
@@ -34,7 +34,7 @@ func TestReader(t *testing.T) {
 		}
 	}
 
-	threads := [...]DatabaseThread{
+	threads := [...]Thread{
 		{
 			ID:        1,
 			Board:     "a",
@@ -52,7 +52,7 @@ func TestReader(t *testing.T) {
 			PostCtr:   1,
 		},
 	}
-	posts := [...]DatabasePost{
+	posts := [...]Post{
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{

@@ -56,7 +56,7 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 	assertTableClear(t, "boards", "accounts")
 
 	config.ClearBoards()
-	conf := db.DatabaseBoardConfigs{
+	conf := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "a",
 			Eightball: []string{"a", "b", "c"},
@@ -96,7 +96,7 @@ func TestBoardConfiguration(t *testing.T) {
 		},
 		Eightball: []string{},
 	}
-	init := db.DatabaseBoardConfigs{
+	init := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        board,
 			Eightball: []string{},
@@ -264,7 +264,7 @@ func TestValidateBoardCreation(t *testing.T) {
 }
 
 func writeSampleBoard(t testing.TB) {
-	b := db.DatabaseBoardConfigs{
+	b := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "a",
 			Eightball: []string{"yes"},
@@ -433,7 +433,7 @@ func TestDeletePost(t *testing.T) {
 	writeSampleUser(t)
 	writeSampleBoardOwner(t)
 
-	err := db.WriteBoard(nil, db.DatabaseBoardConfigs{
+	err := db.WriteBoard(nil, db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "c",
 			Eightball: []string{"yes"},
@@ -443,12 +443,12 @@ func TestDeletePost(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	thread := db.DatabaseThread{
+	thread := db.Thread{
 		ID:    3,
 		Board: "c",
 		Log:   []string{},
 	}
-	op := db.DatabasePost{
+	op := db.Post{
 		StandalonePost: common.StandalonePost{
 			Board: "c",
 			Post: common.Post{
@@ -461,7 +461,7 @@ func TestDeletePost(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	posts := [...]db.DatabasePost{
+	posts := [...]db.Post{
 		{
 			StandalonePost: common.StandalonePost{
 				Board: "a",
@@ -524,12 +524,12 @@ func TestDeletePost(t *testing.T) {
 }
 
 func writeSampleThread(t *testing.T) {
-	thread := db.DatabaseThread{
+	thread := db.Thread{
 		ID:    1,
 		Board: "a",
 		Log:   strings.Split(GenString(11), ""),
 	}
-	op := db.DatabasePost{
+	op := db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				ID:   1,

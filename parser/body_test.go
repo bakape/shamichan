@@ -54,7 +54,7 @@ func TestParseBody(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 
-	posts := [...]db.DatabasePost{
+	posts := [...]db.Post{
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
@@ -103,7 +103,7 @@ func TestParseBody(t *testing.T) {
 }
 
 func writeSampleBoard(t *testing.T) {
-	b := db.DatabaseBoardConfigs{
+	b := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "a",
 			Eightball: []string{"yes"},
@@ -115,12 +115,12 @@ func writeSampleBoard(t *testing.T) {
 }
 
 func writeSampleThread(t *testing.T) {
-	thread := db.DatabaseThread{
+	thread := db.Thread{
 		ID:    1,
 		Board: "a",
 		Log:   []string{"123"},
 	}
-	op := db.DatabasePost{
+	op := db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				ID:   1,

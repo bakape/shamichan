@@ -73,7 +73,7 @@ func TestOwnedBoardSelection(t *testing.T) {
 	writeSampleUser(t)
 
 	for _, b := range [...]string{"a", "c"} {
-		err := db.WriteBoard(nil, db.DatabaseBoardConfigs{
+		err := db.WriteBoard(nil, db.BoardConfigs{
 			BoardConfigs: config.BoardConfigs{
 				ID:        b,
 				Eightball: []string{"yes"},

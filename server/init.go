@@ -17,7 +17,6 @@ import (
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/templates"
 )
 
@@ -137,7 +136,7 @@ func printUsage() {
 func startServer() {
 	var wg sync.WaitGroup
 
-	load := func(fns []func() error) {
+	load := func(fns ...func() error) {
 		for i := range fns {
 			wg.Add(1)
 			fn := fns[i]
@@ -150,14 +149,13 @@ func startServer() {
 		}
 	}
 
-	load([]func() error{db.LoadDB, assets.CreateDirs, lang.Load})
+	defer imager.UnloadGM()
+	load(db.LoadDB, assets.CreateDirs, lang.Load)
 	wg.Wait()
-	load([]func() error{templates.Compile, websockets.Listen})
+	load(templates.Compile)
 	wg.Wait()
 
-	err := startWebServer()
-	imager.UnloadGM()
-	if err != nil {
+	if err := startWebServer(); err != nil {
 		log.Fatal(err)
 	}
 }

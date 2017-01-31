@@ -17,17 +17,17 @@ var (
 	errTooManyMessages = errors.New("too many messages requested")
 )
 
-// DatabasePost is for writing new posts to a database. It contains the Password
+// Post is for writing new posts to a database. It contains the Password
 // field, which is never exposed publically through Post.
-type DatabasePost struct {
+type Post struct {
 	Deleted bool
 	common.StandalonePost
 	Password []byte
 	IP       string
 }
 
-// DatabaseThread is a template for writing new threads to the database
-type DatabaseThread struct {
+// Thread is a template for writing new threads to the database
+type Thread struct {
 	ID                  uint64
 	PostCtr, ImageCtr   uint32
 	ReplyTime, BumpTime int64
@@ -141,21 +141,24 @@ func GetPostOP(id uint64) (op uint64, err error) {
 }
 
 // PostCounter retrieves the current post counter
-func PostCounter() (c uint64, err error) {
-	err = prepared["post_counter"].QueryRow().Scan(&c)
-	return
+func PostCounter() (uint64, error) {
+	var c sql.NullInt64
+	err := prepared["post_counter"].QueryRow().Scan(&c)
+	return uint64(c.Int64), err
 }
 
 // BoardCounter retrieves the history or "progress" counter of a board
-func BoardCounter(board string) (c uint64, err error) {
-	err = prepared["board_counter"].QueryRow(board).Scan(&c)
-	return
+func BoardCounter(board string) (uint64, error) {
+	var c sql.NullInt64
+	err := prepared["board_counter"].QueryRow(board).Scan(&c)
+	return uint64(c.Int64), err
 }
 
 // ThreadCounter retrieves the progress counter of a thread
-func ThreadCounter(id uint64) (c uint64, err error) {
-	err = prepared["thread_counter"].QueryRow(id).Scan(&c)
-	return
+func ThreadCounter(id uint64) (uint64, error) {
+	var c sql.NullInt64
+	err := prepared["thread_counter"].QueryRow(id).Scan(&c)
+	return uint64(c.Int64), err
 }
 
 // NewPostID reserves a new post ID
@@ -165,7 +168,7 @@ func NewPostID() (id uint64, err error) {
 }
 
 // WritePost writes a post struct to database
-func WritePost(tx *sql.Tx, p DatabasePost) error {
+func WritePost(tx *sql.Tx, p Post) error {
 	ex := getExecutor(tx, "write_post")
 
 	// Don't store empty strings in the database. Zero value != NULL.
@@ -212,7 +215,7 @@ func WritePost(tx *sql.Tx, p DatabasePost) error {
 }
 
 // WriteThread writes a thread and it's OP to the database
-func WriteThread(t DatabaseThread, p DatabasePost) (err error) {
+func WriteThread(t Thread, p Post) (err error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return err

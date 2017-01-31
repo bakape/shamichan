@@ -53,28 +53,20 @@ type Client struct {
 	// Client is synced. The local property exists mainly to reduce lock
 	// contention on Clients.
 	synced bool
-
 	// Post currently open by the client
 	post openPost
-
 	// Currently subscribed to update feed, if any
 	feedID uint64
-
 	// Underlying websocket connection
 	conn *websocket.Conn
-
 	// Client IP
 	ip string
-
 	// Internal message receiver channel
 	receive chan receivedMessage
-
 	// Only used to pass messages from the Send method.
 	sendExternal chan []byte
-
 	// Redirect client to target board
 	redirect chan string
-
 	// Close the client and free all used resources
 	close chan error
 }
@@ -169,7 +161,7 @@ func (c *Client) listenerLoop() error {
 func (c *Client) closeConnections(err error) error {
 	// Close update feed, if any
 	if c.feedID != 0 {
-		feeds.Remove <- subRequest{c.feedID, c}
+		feeds.Remove(c.feedID, c)
 		c.feedID = 0
 	}
 

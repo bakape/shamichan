@@ -5,7 +5,6 @@ package websockets
 import (
 	"bytes"
 	"errors"
-
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/auth"
@@ -36,7 +35,7 @@ type reclaimRequest struct {
 func (c *Client) synchronise(data []byte) error {
 	// Unsubscribe from previous update feed, if any
 	if c.feedID != 0 {
-		feeds.Remove <- subRequest{c.feedID, c}
+		feeds.Remove(c.feedID, c)
 		c.feedID = 0
 	}
 
@@ -60,7 +59,7 @@ func (c *Client) synchronise(data []byte) error {
 // client its ID.
 func (c *Client) syncToBoard(board string) error {
 	c.registerSync(board, 0)
-	return c.sendMessage(common.MessageSynchronise, map[string]string{})
+	return c.sendMessage(common.MessageSynchronise, 0)
 }
 
 // Register the client with the central client storage data structure
@@ -88,7 +87,9 @@ func (c *Client) syncToThread(board string, thread uint64) error {
 	}
 
 	c.registerSync(board, thread)
-	feeds.Add <- subRequest{thread, c}
+	if err := feeds.Add(thread, c); err != nil {
+		return err
+	}
 	c.feedID = thread
 
 	return nil
@@ -110,9 +111,13 @@ func (c *Client) reclaimPost(data []byte) error {
 	}
 
 	hash, err := db.GetPostPassword(req.ID)
-	if err != nil {
+	switch {
+	case err != nil:
 		return err
+	case hash == nil:
+		return c.sendMessage(common.MessageReclaim, 1)
 	}
+
 	switch err = auth.BcryptCompare(req.Password, hash); err {
 	case nil:
 	case bcrypt.ErrMismatchedHashAndPassword:

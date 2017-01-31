@@ -43,7 +43,7 @@ you gotta be 18 to use 4chan). But whatever, I digress. It's just fucking
 annoying that I'm never taken serious on this site, goddamn.`
 
 var (
-	samplePost = db.DatabasePost{
+	samplePost = db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				Editing: true,
@@ -209,7 +209,7 @@ func TestClosePostWithHashCommand(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 
-	post := db.DatabasePost{
+	post := db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				ID:   2,
@@ -282,12 +282,12 @@ func TestClosePostWithLinks(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 
-	thread := db.DatabaseThread{
+	thread := db.Thread{
 		ID:    21,
 		Board: "a",
 		Log:   []string{},
 	}
-	op := db.DatabasePost{
+	op := db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				ID: 21,
@@ -299,7 +299,7 @@ func TestClosePostWithLinks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	posts := [...]db.DatabasePost{
+	posts := [...]db.Post{
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
@@ -616,7 +616,7 @@ func TestSplice(t *testing.T) {
 			assertTableClear(t, "threads")
 			writeSampleThread(t)
 
-			post := db.DatabasePost{
+			post := db.Post{
 				StandalonePost: common.StandalonePost{
 					Post: common.Post{
 						Editing: true,
@@ -666,7 +666,7 @@ func TestCloseOldOpenPost(t *testing.T) {
 	writeSampleThread(t)
 
 	then := time.Now().Add(time.Minute * -30).Unix()
-	post := db.DatabasePost{
+	post := db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				Editing: true,
@@ -745,7 +745,7 @@ func TestInsertImage(t *testing.T) {
 	writeSampleImage(t)
 	setBoardConfigs(t, false)
 
-	post := db.DatabasePost{
+	post := db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				ID: 2,

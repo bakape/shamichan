@@ -17,7 +17,7 @@ func TestOpenPostClosing(t *testing.T) {
 	writeSampleThread(t)
 
 	tooOld := time.Now().Add(-time.Minute * 31).Unix()
-	posts := [...]DatabasePost{
+	posts := [...]Post{
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{

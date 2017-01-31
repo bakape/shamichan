@@ -159,7 +159,7 @@ func loadBans() error {
 	if err := updateBans(); err != nil {
 		return err
 	}
-	return listen("bans_updated", func(_ string) error {
+	return listenFunc("bans_updated", func(_ string) error {
 		return updateBans()
 	})
 }

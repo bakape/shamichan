@@ -59,7 +59,7 @@ func TestUpdateOnAddBoard(t *testing.T) {
 	assertTableClear(t, "boards")
 	config.Clear()
 
-	std := DatabaseBoardConfigs{
+	std := BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID: "a",
 			BoardPublic: config.BoardPublic{
@@ -88,7 +88,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 	assertTableClear(t, "boards")
 	config.Clear()
 
-	std := DatabaseBoardConfigs{
+	std := BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID: "a",
 			BoardPublic: config.BoardPublic{

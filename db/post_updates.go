@@ -23,9 +23,9 @@ func BumpThread(
 	return UpdateLog(tx, id, msg)
 }
 
-// UpdateLog writes to a thread's replication log
+// UpdateLog writes to a thread's replication log..
 func UpdateLog(tx *sql.Tx, id uint64, msg []byte) error {
-	_, err := tx.Stmt(prepared["update_log"]).Exec(id, msg)
+	_, err := getStatement(tx, "update_log").Exec(id, msg)
 	return err
 }
 

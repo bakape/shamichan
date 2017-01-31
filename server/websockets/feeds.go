@@ -5,9 +5,13 @@ package websockets
 import (
 	"bytes"
 	"log"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
+	"github.com/lib/pq"
 )
 
 // Post update kinds passed with feedUpdate
@@ -18,252 +22,178 @@ const (
 
 var (
 	// Contains and manages all active update feeds
-	feeds = newFeedContainer()
+	feeds = newFeedMap()
 )
 
-// Container for holding and managing client<->update-feed interaction
-type feedContainer struct {
-	// Subscribe client
-	Add chan subRequest
-	// Remove client from subscribers
-	Remove chan subRequest
-	// Remove all existing feeds and clients. Used only in tests.
-	clear chan struct{}
-	// Read from "posts" table change feed
-	read chan feedUpdate
-	// Current database change feed cursor
-	cursor interface{}
-	// Map of thread IDs to their feeds
+// Container for managing client<->update-feed assignment and interaction
+type feedMap struct {
 	feeds map[uint64]*updateFeed
-}
-
-// A feed with synchronization logic of a certain thread
-type updateFeed struct {
-	// Indicates the buf contains multiple concatenated messages
-	multiple bool
-	// Buffer of unsent messages
-	buf bytes.Buffer
-	// Subscribed clients
-	clients []*Client
-}
-
-// Change feed update message
-type feedUpdate struct {
-	Change uint8
-	timestampedPost
-	Log [][]byte
-}
-
-type timestampedPost struct {
-	common.Post
-	OP          uint64 `json:"-"`
-	LastUpdated int64  `json:"-"`
-}
-
-// Request to add or remove a client to a subscription
-type subRequest struct {
-	id     uint64
-	client *Client
-}
-
-// Listen initializes and starts listening for post updates from RethinkDB
-func Listen() error {
-	if err := feeds.streamUpdates(); err != nil {
-		return err
-	}
-	go feeds.loop()
-	return nil
+	mu    sync.Mutex
 }
 
 // Separate function to ease testing
-func newFeedContainer() feedContainer {
-	return feedContainer{
-		Add:    make(chan subRequest),
-		Remove: make(chan subRequest),
-		clear:  make(chan struct{}),
-		read:   make(chan feedUpdate),
-
-		// 100 len map to avoid some possible reallocation as the server starts
-		feeds: make(map[uint64]*updateFeed, 100),
+func newFeedMap() *feedMap {
+	return &feedMap{
+		// 32 len map to avoid some possible reallocation as the server starts
+		feeds: make(map[uint64]*updateFeed, 32),
 	}
 }
 
-func (f *feedContainer) loop() {
-	cleanUp := time.Tick(time.Second * 10)
-	send := time.Tick(time.Millisecond * 200)
+// Add client and send it the current progress counter
+func (f *feedMap) Add(id uint64, c *Client) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 
-	for {
-		select {
-		case req := <-f.Add:
-			f.addClient(req.id, req.client)
-		case req := <-f.Remove:
-			f.removeClient(req.id, req.client)
-		case update := <-f.read:
-			f.bufferUpdate(update)
-		case <-f.clear:
-			f.feeds = make(map[uint64]*updateFeed, 1)
-		case <-cleanUp:
-			f.cleanUp()
-		case <-send:
-			f.flushBuffers()
-		}
-	}
-}
-
-// Add client and send it posts updated within the last 30 seconds
-func (f *feedContainer) addClient(id uint64, cl *Client) {
 	feed, ok := f.feeds[id]
 	if !ok {
-		feed = &updateFeed{}
+		feed = &updateFeed{
+			close:   make(chan struct{}),
+			clients: make([]*Client, 0, 8),
+		}
 		f.feeds[id] = feed
+		if err := feed.Start(id); err != nil {
+			return err
+		}
 	}
-	feed.clients = append(feed.clients, cl)
 
-	// TODO: Feed counters
-	msg, err := common.EncodeMessage(common.MessageSynchronise, 0)
+	feed.Lock()
+	defer feed.Unlock()
+	feed.clients = append(feed.clients, c)
+	msg, err := common.EncodeMessage(common.MessageSynchronise, feed.ctr)
 	if err != nil {
-		cl.Close(err)
-	} else {
-		cl.Send(msg)
+		return err
 	}
+	c.Send(msg)
+
+	return nil
 }
 
-// Remove client from subscribers
-func (f *feedContainer) removeClient(id uint64, cl *Client) {
+// Remove client from a subscribed feed
+func (f *feedMap) Remove(id uint64, c *Client) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
 	feed := f.feeds[id]
-	for i, c := range feed.clients {
-		if c == cl {
+	feed.Lock()
+	defer feed.Unlock()
+	for i, cl := range feed.clients {
+		if cl == c {
 			copy(feed.clients[i:], feed.clients[i+1:])
 			feed.clients[len(feed.clients)-1] = nil
 			feed.clients = feed.clients[:len(feed.clients)-1]
 			break
 		}
 	}
+
+	if len(feed.clients) == 0 {
+		close(feed.close)
+		delete(f.feeds, id)
+	}
 }
 
 // Remove all existing feeds and clients. Used only in tests.
-func (f *feedContainer) Clear() {
-	f.clear <- struct{}{}
-}
+func (f *feedMap) Clear() {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 
-// If a feed does not contain any listening clients remove it from the map
-func (f *feedContainer) cleanUp() {
-	for thread, feed := range f.feeds {
-		if len(feed.clients) == 0 {
-			delete(f.feeds, thread)
-		}
-	}
-}
-
-// Send any buffered messages to any listening clients
-func (f *feedContainer) flushBuffers() {
 	for _, feed := range f.feeds {
-		if feed.buf.Len() == 0 {
-			continue
-		}
-		if len(feed.clients) == 0 {
-			feed.multiple = false
-			feed.buf.Reset()
-			continue
-		}
-
-		buf := feed.buf.Bytes()
-		defer feed.buf.Reset()
-		if feed.multiple {
-			feed.multiple = false
-			buf = common.PrependMessageType(common.MessageConcat, buf)
-		} else {
-			// Need to copy, because the underlying array can be modified during
-			// sending to clients.
-			c := make([]byte, len(buf))
-			copy(c, buf)
-			buf = c
-		}
-
-		for _, client := range feed.clients {
-			client.Send(buf)
-		}
+		close(feed.close)
 	}
+	f.feeds = make(map[uint64]*updateFeed, 32)
 }
 
-// Subscribe to a stream of post updates and populate the initial cache of posts
-// updated within the last 30 seconds.
-func (f *feedContainer) streamUpdates() error {
-	// cursor, err := r.
-	// 	Table("posts").
-	// 	Between(r.Now().ToEpochTime().Sub(30), r.MaxVal, r.BetweenOpts{
-	// 		Index: "lastUpdated",
-	// 	}).
-	// 	Changes(r.ChangesOpts{
-	// 		IncludeInitial: true,
-	// 		IncludeTypes:   true,
-	// 		Squash:         0.2, // Perform at most every 0.2 seconds
-	// 	}).
-	// 	Map(func(ch r.Term) r.Term {
-	// 		return ch.Field("type").Do(func(typ r.Term) r.Term {
-	// 			return r.Branch(
-	// 				typ.Eq("add").Or(typ.Eq("initial")),
-	// 				ch.Field("new_val").Without("log", "ip", "password"),
-	// 				typ.Eq("remove"),
-	// 				nil,
-	// 				ch.Field("new_val").Merge(map[string]interface{}{
-	// 					"log": ch.
-	// 						Field("new_val").
-	// 						Field("log").
-	// 						Slice(ch.Field("old_val").Field("log").Count()),
-	// 					"change": postUpdated,
-	// 				}),
-	// 			)
-	// 		})
-	// 	}).
-	// 	Run(db.RSession)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// cursor.Listen(f.read)
-	// f.cursor = cursor
-
-	return nil
+// A feed with synchronization logic of a certain thread
+type updateFeed struct {
+	// Count of buffered messages
+	buffered uint64
+	// Update progress counter
+	ctr uint64
+	// Protects the client array and update counter
+	sync.Mutex
+	// Buffer of unsent messages
+	buf bytes.Buffer
+	// Update channel and controller
+	listener *pq.Listener
+	// For breaking the inner loop
+	close chan struct{}
+	// Subscribed clients
+	clients []*Client
 }
 
-// Buffer the replication log updates received from the DB and cache the new
-// contents of the post.
-func (f *feedContainer) bufferUpdate(update feedUpdate) {
-	// Empty updates are returned on post deletion
-	if update.timestampedPost.ID == 0 {
+func (u *updateFeed) Start(id uint64) (err error) {
+	u.listener, err = db.Listen("t:" + strconv.FormatUint(id, 10))
+	if err != nil {
+		return
+	}
+	// Technically there might be some desync between these two calls, but we
+	// can be almost certain, that the feed will already be started, when the
+	// message is committed. Meh.
+	u.ctr, err = db.ThreadCounter(id)
+	if err != nil {
 		return
 	}
 
-	feed, ok := f.feeds[update.OP]
-	if !ok {
-		feed = &updateFeed{}
-		f.feeds[update.OP] = feed
-	}
+	go func() {
+		flush := time.NewTicker(time.Millisecond * 200)
+		defer flush.Stop()
 
-	switch update.Change {
-	// To synchronise the client's state with the feed we resend any posts
-	// updated within the last 30 seconds. Client must deduplicate and render
-	// accordingly.
-	case postInserted:
-		data, err := common.EncodeMessage(common.MessageInsertPost, update.Post)
-		if err != nil {
-			log.Printf("could not encode: %#v\n", update.Post)
-			break
+		for {
+			select {
+			case <-u.close:
+				if err := u.listener.Close(); err != nil {
+					log.Printf("feed closing: %s", err)
+				}
+				return
+			case msg := <-u.listener.Notify:
+				if msg != nil { // Disconnect happened. Shouganai.
+					u.writeToBuffer(msg.Extra)
+				}
+			case <-flush.C:
+				u.flushBuffer()
+			}
 		}
-		feed.writeToBuffer(data)
-	// New replication log messages
-	case postUpdated:
-		for _, msg := range update.Log {
-			feed.writeToBuffer(msg)
-		}
-	}
+	}()
+
+	return
 }
 
-func (u *updateFeed) writeToBuffer(data []byte) {
+func (u *updateFeed) writeToBuffer(data string) {
 	if u.buf.Len() != 0 {
-		u.multiple = true
 		u.buf.WriteRune('\u0000')
 	}
-	u.buf.Write(data)
+	u.buf.WriteString(data)
+	u.buffered++
+}
+
+// Send any buffered messages to any listening clients
+func (u *updateFeed) flushBuffer() {
+	if u.buffered == 0 {
+		return
+	}
+	u.Lock()
+	defer u.Unlock()
+	defer func() {
+		u.buf.Reset()
+		u.ctr += u.buffered
+		u.buffered = 0
+	}()
+
+	if len(u.clients) == 0 {
+		return
+	}
+
+	buf := u.buf.Bytes()
+	if u.buffered != 1 {
+		buf = common.PrependMessageType(common.MessageConcat, buf)
+	} else {
+		// Need to copy, because the underlying array can be modified during
+		// sending to clients.
+		c := make([]byte, len(buf))
+		copy(c, buf)
+		buf = c
+	}
+
+	for _, c := range u.clients {
+		c.Send(buf)
+	}
 }

@@ -37,7 +37,7 @@ func TestInsertThread(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	conf := [...]db.DatabaseBoardConfigs{
+	conf := [...]db.BoardConfigs{
 		{
 			BoardConfigs: config.BoardConfigs{
 				ID: "c",
@@ -407,7 +407,7 @@ func prepareForPostCreation(t testing.TB) {
 }
 
 func writeSampleBoard(t testing.TB) {
-	b := db.DatabaseBoardConfigs{
+	b := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "a",
 			Eightball: []string{"yes"},
@@ -420,7 +420,7 @@ func writeSampleBoard(t testing.TB) {
 
 func writeSampleThread(t testing.TB) {
 	now := time.Now().Unix()
-	thread := db.DatabaseThread{
+	thread := db.Thread{
 		ID:        1,
 		Board:     "a",
 		PostCtr:   0,
@@ -428,7 +428,7 @@ func writeSampleThread(t testing.TB) {
 		ReplyTime: now,
 		Log:       []string{},
 	}
-	op := db.DatabasePost{
+	op := db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				ID:   1,

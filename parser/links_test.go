@@ -13,7 +13,7 @@ func TestParseLinks(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 
-	posts := [...]db.DatabasePost{
+	posts := [...]db.Post{
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{

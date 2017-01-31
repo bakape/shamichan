@@ -22,7 +22,7 @@ func TestSpoilerImage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	posts := [...]db.DatabasePost{
+	posts := [...]db.Post{
 		{
 			Password: hash,
 			StandalonePost: common.StandalonePost{

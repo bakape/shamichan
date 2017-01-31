@@ -1,214 +1,207 @@
 package websockets
 
-// func TestOldFeedClosing(t *testing.T) {
-// 	assertTableClear(t, "boards")
-// 	writeSampleBoard(t)
-// 	writeSampleThread(t)
+import (
+	"strconv"
+	"testing"
 
-// 	post := db.DatabasePost{
-// 		StandalonePost: common.StandalonePost{
-// 			Post: common.Post{
-// 				ID: 1,
-// 			},
-// 			OP: 1,
-// 		},
-// 	}
-// 	if err := db.WritePost(nil, post); err != nil {
-// 		t.Fatal(err)
-// 	}
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager/assets"
+	. "github.com/bakape/meguca/test"
+)
 
-// 	sv := newWSServer(t)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
-// 	feeds.Add <- subRequest{1, cl}
-// 	defer feeds.Clear()
+func TestOldFeedClosing(t *testing.T) {
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
 
-// 	cl.feedID = 1
-// 	cl.synchronise(nil)
-// 	if cl.feedID != 0 {
-// 		t.Fatal("old feed not cleared")
-// 	}
-// }
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	if err := feeds.Add(1, cl); err != nil {
+		t.Fatal(err)
+	}
+	defer feeds.Clear()
 
-// func TestSyncToBoard(t *testing.T) {
-// 	setBoardConfigs(t, false)
+	cl.feedID = 1
+	cl.synchronise(nil)
+	if cl.feedID != 0 {
+		t.Fatal("old feed not cleared")
+	}
+}
 
-// 	sv := newWSServer(t)
-// 	defer sv.Close()
-// 	cl, wcl := sv.NewClient()
+func TestSyncToBoard(t *testing.T) {
+	setBoardConfigs(t, false)
 
-// 	// Invalid board
-// 	msg := syncRequest{
-// 		Thread: 0,
-// 		Board:  "c",
-// 	}
-// 	if err := cl.synchronise(marshalJSON(t, msg)); err != errInvalidBoard {
-// 		UnexpectedError(t, err)
-// 	}
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
 
-// 	// Valid synchronization
-// 	msg.Board = "a"
-// 	if err := cl.synchronise(marshalJSON(t, msg)); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	defer Clients.Clear()
-// 	assertMessage(t, wcl, `30{}`)
-// }
+	// Invalid board
+	msg := syncRequest{
+		Thread: 0,
+		Board:  "c",
+	}
+	if err := cl.synchronise(marshalJSON(t, msg)); err != errInvalidBoard {
+		UnexpectedError(t, err)
+	}
 
-// func TestRegisterSync(t *testing.T) {
-// 	sv := newWSServer(t)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
+	// Valid synchronization
+	msg.Board = "a"
+	if err := cl.synchronise(marshalJSON(t, msg)); err != nil {
+		t.Fatal(err)
+	}
+	defer Clients.Clear()
+	assertMessage(t, wcl, `300`)
+}
 
-// 	syncs := [...]SyncID{
-// 		{1, "a"},
-// 		{2, "a"},
-// 	}
+func TestRegisterSync(t *testing.T) {
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+	defer Clients.Clear()
 
-// 	defer Clients.Clear()
+	syncs := [...]SyncID{
+		{1, "a"},
+		{2, "a"},
+	}
 
-// 	// Both for new syncs and switching syncs
-// 	for _, s := range syncs {
-// 		cl.registerSync(s.Board, s.OP)
-// 		assertSyncID(t, &Clients, cl, s)
-// 	}
-// }
+	// Both for new syncs and switching syncs
+	for _, s := range syncs {
+		cl.registerSync(s.Board, s.OP)
+		assertSyncID(t, &Clients, cl, s)
+	}
+}
 
-// func TestInvalidThreadSync(t *testing.T) {
-// 	assertTableClear(t, "threads")
+func TestInvalidThreadSync(t *testing.T) {
+	assertTableClear(t, "boards")
 
-// 	sv := newWSServer(t)
-// 	defer sv.Close()
-// 	cl, _ := sv.NewClient()
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
 
-// 	data := marshalJSON(t, syncRequest{
-// 		Board:  "a",
-// 		Thread: 1,
-// 	})
-// 	if err := cl.synchronise(data); err != errInvalidThread {
-// 		UnexpectedError(t, err)
-// 	}
-// }
+	data := marshalJSON(t, syncRequest{
+		Board:  "a",
+		Thread: 1,
+	})
+	if err := cl.synchronise(data); err != errInvalidThread {
+		UnexpectedError(t, err)
+	}
+}
 
-// func TestSyncToThread(t *testing.T) {
-// 	assertTableClear(t, "threads", "posts")
-// 	assertInsert(t, "threads", common.DatabaseThread{
-// 		ID:    1,
-// 		Board: "a",
-// 	})
-// 	assertInsert(t, "posts", common.DatabasePost{
-// 		StandalonePost: common.StandalonePost{
-// 			Post: common.Post{
-// 				ID:   1,
-// 				Body: "foo",
-// 			},
-// 			OP:    1,
-// 			Board: "a",
-// 		},
-// 		Log:         []string{"foog", "bar"},
-// 		LastUpdated: time.Now().Unix(),
-// 	})
+func TestSyncToThread(t *testing.T) {
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+	for _, msg := range [...]string{"foo", "bar"} {
+		if err := db.UpdateLog(nil, 1, []byte(msg)); err != nil {
+			t.Fatal(err)
+		}
+	}
 
-// 	sv := newWSServer(t)
-// 	defer sv.Close()
-// 	cl, wcl := sv.NewClient()
-// 	sv.Add(1)
-// 	go readListenErrors(t, cl, sv)
-// 	data := marshalJSON(t, syncRequest{
-// 		Board:  "a",
-// 		Thread: 1,
-// 	})
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+	sv.Add(1)
+	go readListenErrors(t, cl, sv)
+	data := marshalJSON(t, syncRequest{
+		Board:  "a",
+		Thread: 1,
+	})
 
-// 	if err := cl.synchronise(data); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	defer Clients.Clear()
-// 	defer feeds.Clear()
-// 	assertSyncID(t, &Clients, cl, SyncID{
-// 		OP:    1,
-// 		Board: "a",
-// 	})
-// 	if cl.feedID != 1 {
-// 		t.Errorf("unexpected feed ID: 1 : %d", cl.feedID)
-// 	}
+	if err := cl.synchronise(data); err != nil {
+		t.Fatal(err)
+	}
+	defer Clients.Clear()
+	defer feeds.Clear()
+	assertSyncID(t, &Clients, cl, SyncID{
+		OP:    1,
+		Board: "a",
+	})
+	if cl.feedID != 1 {
+		t.Errorf("unexpected feed ID: 1 : %d", cl.feedID)
+	}
 
-// 	assertMessage(t, wcl, `351`)
+	assertMessage(t, wcl, `351`)
+	assertMessage(t, wcl, "302")
 
-// 	// The update stream does not guarantee initial message order on
-// 	// synchronization, only that messages from the same document will be in
-// 	// order. Can't really test that here.
-// 	_, msg, err := wcl.ReadMessage()
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	if s := string(msg); !strings.HasPrefix(s, "30") {
-// 		t.Fatalf("unexpected message type: %s", s)
-// 	}
+	cl.Close(nil)
+	sv.Wait()
+}
 
-// 	cl.Close(nil)
-// 	sv.Wait()
-// }
+func TestReclaimPost(t *testing.T) {
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
 
-// func TestReclaimPost(t *testing.T) {
-// 	assertTableClear(t, "posts")
+	const pw = "123"
+	hash, err := auth.BcryptHash(pw, 6)
+	if err != nil {
+		t.Fatal(err)
+	}
+	posts := [...]db.Post{
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					Editing: true,
+					Image:   &assets.StdJPEG,
+					ID:      2,
+					Body:    "abc\ndef",
+					Time:    3,
+				},
+				OP:    1,
+				Board: "a",
+			},
+			Password: hash,
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					Editing: false,
+					ID:      3,
+				},
+				OP:    1,
+				Board: "a",
+			},
+			Password: hash,
+		},
+	}
+	for _, p := range posts {
+		if err := db.WritePost(nil, p); err != nil {
+			t.Fatal(err)
+		}
+	}
 
-// 	const pw = "123"
-// 	hash, err := auth.BcryptHash(pw, 6)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	assertInsert(t, "posts", []common.DatabasePost{
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					Editing: true,
-// 					Image:   &assets.StdJPEG,
-// 					ID:      1,
-// 					Body:    "abc\ndef",
-// 					Time:    3,
-// 				},
-// 				OP:    1,
-// 				Board: "a",
-// 			},
-// 			Password: hash,
-// 		},
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					Editing: false,
-// 					ID:      2,
-// 				},
-// 			},
-// 		},
-// 	})
+	cases := [...]struct {
+		name     string
+		id       uint64
+		password string
+		code     int
+	}{
+		{"no post", 99, "", 1},
+		{"already closed", 3, "", 1},
+		{"wrong password", 2, "aaaaaaaa", 1},
+		{"valid", 2, pw, 0},
+	}
 
-// 	cases := [...]struct {
-// 		name     string
-// 		id       uint64
-// 		password string
-// 		code     int
-// 	}{
-// 		{"no post", 99, "", 1},
-// 		{"already closed", 2, "", 1},
-// 		{"wrong password", 1, "aaaaaaaa", 1},
-// 		{"valid", 1, pw, 0},
-// 	}
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 
-// 	for i := range cases {
-// 		c := cases[i]
-// 		t.Run(c.name, func(t *testing.T) {
-// 			t.Parallel()
+			sv := newWSServer(t)
+			defer sv.Close()
+			cl, wcl := sv.NewClient()
+			req := reclaimRequest{
+				ID:       c.id,
+				Password: c.password,
+			}
+			if err := cl.reclaimPost(marshalJSON(t, req)); err != nil {
+				t.Fatal(err)
+			}
 
-// 			sv := newWSServer(t)
-// 			defer sv.Close()
-// 			cl, wcl := sv.NewClient()
-// 			req := reclaimRequest{
-// 				ID:       c.id,
-// 				Password: c.password,
-// 			}
-// 			cl.reclaimPost(marshalJSON(t, req))
-
-// 			assertMessage(t, wcl, `31`+strconv.Itoa(c.code))
-// 		})
-// 	}
-// }
+			assertMessage(t, wcl, `31`+strconv.Itoa(c.code))
+		})
+	}
+}
