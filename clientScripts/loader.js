@@ -104,6 +104,11 @@
 		'Element.prototype.remove',
 		'Element.prototype.contains',
 		'Element.prototype.matches',
+		'Element.prototype.after',
+		'Element.prototype.before',
+		'Element.prototype.append',
+		'Element.prototype.prepend',
+		'Element.prototype.replaceWith',
 
 		// DOM level 3 query methods
 		'Element.prototype.querySelector',
@@ -127,10 +132,7 @@
 		DOMUpToDate = check(s)
 	}
 
-	if (DOMUpToDate && !window.legacy) {
-		// Minimalistic DOM polyfill for modern browsers
-		polyfills.push('scripts/polyfill')
-	} else {
+	if (!DOMUpToDate || window.legacy) {
 		polyfills.push('vendor/dom4')
 	}
 
