@@ -10,4 +10,5 @@ with t as (
 	order by id desc
 	limit $2
 )
-select * from t order by id asc
+select * from t
+	order by id asc

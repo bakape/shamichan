@@ -1,1 +1,2 @@
-delete from image_tokens where expires < now()
+delete from image_tokens
+	where expires < now()

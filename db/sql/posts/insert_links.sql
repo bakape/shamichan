@@ -1,1 +1,3 @@
-update posts set links = $2 where id = $1
+update posts
+	set links = $2
+	where id = $1

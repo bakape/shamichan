@@ -1,1 +1,2 @@
-select password from posts where id = $1
+select password from posts
+	where id = $1

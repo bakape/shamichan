@@ -1,1 +1,2 @@
-delete from bans where expires < now()
+delete from bans
+	where expires < now()

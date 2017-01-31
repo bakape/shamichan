@@ -1,1 +1,2 @@
-delete from sessions where account = $1
+delete from sessions
+	where account = $1

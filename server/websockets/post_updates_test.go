@@ -295,7 +295,7 @@ func TestClosePostWithLinks(t *testing.T) {
 			OP: 21,
 		},
 	}
-	if err := db.WriteThread(thread, op); err != nil {
+	if err := db.WriteThread(nil, thread, op); err != nil {
 		t.Fatal(err)
 	}
 

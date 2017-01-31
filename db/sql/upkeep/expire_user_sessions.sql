@@ -1,1 +1,2 @@
-delete from sessions where expires < now()
+delete from sessions
+	where expires < now()

@@ -1,1 +1,2 @@
-select val::bigint from main where id = 'pyu'
+select val::bigint from main
+	where id = 'pyu'

@@ -215,12 +215,15 @@ func WritePost(tx *sql.Tx, p Post) error {
 }
 
 // WriteThread writes a thread and it's OP to the database
-func WriteThread(t Thread, p Post) (err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return err
+func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
+	passedTx := tx != nil
+	if !passedTx {
+		tx, err = db.Begin()
+		if err != nil {
+			return err
+		}
+		defer RollbackOnError(tx, &err)
 	}
-	defer RollbackOnError(tx, &err)
 
 	_, err = tx.Stmt(prepared["write_op"]).Exec(
 		t.Board,
@@ -239,7 +242,11 @@ func WriteThread(t Thread, p Post) (err error) {
 	if err != nil {
 		return err
 	}
-	return tx.Commit()
+
+	if !passedTx {
+		return tx.Commit()
+	}
+	return nil
 }
 
 // IsLocked returns if the thread is locked from posting
@@ -313,4 +320,25 @@ func SpoilerImage(id uint64) (err error) {
 		return
 	}
 	return updatePost(id, op, msg, "spoiler_image", nil)
+}
+
+// BumpThread dumps up thread counters and adds a message to the thread's
+// replication log. tx must not be nil.
+func BumpThread(
+	tx *sql.Tx,
+	id uint64,
+	reply, bump, image bool,
+	msg []byte,
+) error {
+	_, err := tx.Stmt(prepared["bump_thread"]).Exec(id, reply, bump, image)
+	if err != nil {
+		return err
+	}
+	return UpdateLog(tx, id, msg)
+}
+
+// BumpBoard increment's a board's progress counter. tx must not be nil.
+func BumpBoard(tx *sql.Tx, board string) error {
+	_, err := tx.Stmt(prepared["bump_board"]).Exec(board)
+	return err
 }

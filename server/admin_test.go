@@ -457,7 +457,7 @@ func TestDeletePost(t *testing.T) {
 			OP: 3,
 		},
 	}
-	if err := db.WriteThread(thread, op); err != nil {
+	if err := db.WriteThread(nil, thread, op); err != nil {
 		t.Fatal(err)
 	}
 
@@ -539,7 +539,7 @@ func writeSampleThread(t *testing.T) {
 			Board: "a",
 		},
 	}
-	if err := db.WriteThread(thread, op); err != nil {
+	if err := db.WriteThread(nil, thread, op); err != nil {
 		t.Fatal(err)
 	}
 }

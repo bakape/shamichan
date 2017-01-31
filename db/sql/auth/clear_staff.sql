@@ -1,1 +1,2 @@
-delete from staff where account = $1
+delete from staff
+	where account = $1

@@ -1,1 +1,2 @@
-select * from images where SHA1 = $1
+select * from images
+	where SHA1 = $1

@@ -106,7 +106,7 @@ func TestReader(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i := range threads {
-		if err := WriteThread(threads[i], posts[i]); err != nil {
+		if err := WriteThread(nil, threads[i], posts[i]); err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -1,1 +1,3 @@
-update posts set body = body || $2 where id = $1
+update posts
+	set body = body || $2
+	where id = $1

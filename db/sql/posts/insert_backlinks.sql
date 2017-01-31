@@ -1,1 +1,3 @@
-update posts set backlinks = backlinks || $2 where id = $1
+update posts
+	set backlinks = backlinks || $2
+	where id = $1

@@ -1,1 +1,2 @@
-select ctr from boards where id = $1
+select ctr from boards
+	where id = $1

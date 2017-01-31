@@ -1,1 +1,2 @@
-select op from posts where id = $1
+select op from posts
+	where id = $1

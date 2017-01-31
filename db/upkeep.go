@@ -9,13 +9,6 @@ import (
 	"github.com/bakape/meguca/common"
 )
 
-// var expireBansQ = r.
-// 	Table("bans").
-// 	Between(r.MinVal, r.Now(), r.BetweenOpts{
-// 		Index: "expires",
-// 	}).
-// 	Delete()
-
 // Run database clean up tasks at server start and regular intervals. Must be
 // launched in separate goroutine.
 func runCleanupTasks() {
@@ -66,11 +59,7 @@ func closeDanglingPosts() (err error) {
 	if err != nil {
 		return
 	}
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		}
-	}()
+	defer RollbackOnError(tx, &err)
 
 	// Read and close all expired posts
 	r, err := tx.Stmt(prepared["close_expired_open_posts"]).Query()

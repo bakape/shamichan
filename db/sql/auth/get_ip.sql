@@ -1,1 +1,2 @@
-select ip from posts where id = $1
+select ip from posts
+	where id = $1

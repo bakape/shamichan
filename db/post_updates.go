@@ -8,21 +8,6 @@ import (
 	"github.com/lib/pq"
 )
 
-// BumpThread dumps up thread counters and adds a message to the thread's
-// replication log
-func BumpThread(
-	tx *sql.Tx,
-	id uint64,
-	reply, bump, image bool,
-	msg []byte,
-) error {
-	_, err := tx.Stmt(prepared["bump_thread"]).Exec(id, reply, bump, image)
-	if err != nil {
-		return err
-	}
-	return UpdateLog(tx, id, msg)
-}
-
 // UpdateLog writes to a thread's replication log..
 func UpdateLog(tx *sql.Tx, id uint64, msg []byte) error {
 	_, err := getStatement(tx, "update_log").Exec(id, msg)

@@ -1,1 +1,2 @@
-select password from accounts where id = $1
+select password from accounts
+	where id = $1

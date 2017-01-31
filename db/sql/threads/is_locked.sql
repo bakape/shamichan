@@ -1,1 +1,2 @@
-select locked from threads where id = $1
+select locked from threads
+	where id = $1

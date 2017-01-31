@@ -140,19 +140,36 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	post.ID = id
 	post.OP = id
 
-	err = db.WriteThread(thread, post)
+	tx, err := db.StartTransaction()
+	if err != nil {
+		return
+	}
+	defer db.RollbackOnError(tx, &err)
+
+	err = db.WriteThread(tx, thread, post)
+	if err != nil {
+		return
+	}
+	err = db.BumpBoard(tx, req.Board)
+	if err != nil {
+		return
+	}
+	err = tx.Commit()
+
 	return
 }
 
 // Insert a new post into the database
-func (c *Client) insertPost(data []byte) error {
-	if err := c.closePreviousPost(); err != nil {
-		return err
+func (c *Client) insertPost(data []byte) (err error) {
+	err = c.closePreviousPost()
+	if err != nil {
+		return
 	}
 
 	var req ReplyCreationRequest
-	if err := decodeMessage(data, &req); err != nil {
-		return err
+	err = decodeMessage(data, &req)
+	if err != nil {
+		return
 	}
 
 	_, sync := Clients.GetSync(c)
@@ -161,7 +178,7 @@ func (c *Client) insertPost(data []byte) error {
 	}
 	conf, err := getBoardConfig(sync.Board)
 	if err != nil {
-		return err
+		return
 	}
 
 	// Post must have either at least one character or an image to be allocated
@@ -173,7 +190,7 @@ func (c *Client) insertPost(data []byte) error {
 	locked, err := db.IsLocked(sync.OP)
 	switch {
 	case err != nil:
-		return err
+		return
 	case locked:
 		return errThreadIsLocked
 	}
@@ -186,46 +203,52 @@ func (c *Client) insertPost(data []byte) error {
 		sync.Board,
 	)
 	if err != nil {
-		return err
+		return
 	}
 
 	post.OP = sync.OP
 	post.ID, err = db.NewPostID()
 	if err != nil {
-		return err
+		return
 	}
 
 	if hasImage {
 		img := req.Image
 		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
 		if err != nil {
-			return err
+			return
 		}
 	}
 
 	// Ensure the client knows the post ID before the public post insertion
 	// update message is sent
-	if err := c.sendMessage(common.MessagePostID, post.ID); err != nil {
-		return err
+	err = c.sendMessage(common.MessagePostID, post.ID)
+	if err != nil {
+		return
 	}
 
 	msg, err := common.EncodeMessage(common.MessageInsertPost, post.Post)
 	if err != nil {
-		return err
+		return
 	}
 
 	tx, err := db.StartTransaction()
 	if err != nil {
-		return err
+		return
 	}
-	if err := db.WritePost(tx, post); err != nil {
-		tx.Rollback()
-		return err
+	defer db.RollbackOnError(tx, &err)
+
+	err = db.WritePost(tx, post)
+	if err != nil {
+		return
 	}
 	err = db.BumpThread(tx, sync.OP, true, true, hasImage, msg)
 	if err != nil {
-		tx.Rollback()
-		return err
+		return
+	}
+	err = db.BumpBoard(tx, sync.Board)
+	if err != nil {
+		return
 	}
 	if err := tx.Commit(); err != nil {
 		return err

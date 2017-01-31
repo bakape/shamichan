@@ -1,1 +1,3 @@
-update posts set editing = false where id = $1
+update posts
+	set editing = false
+	where id = $1
