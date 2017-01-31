@@ -18,7 +18,8 @@ www/css/*.css
 www/css/maps
 www/js
 www/lang
-images
+/images
+imager/assets/images
 imager/images
 thumb_*.png
 thumb_*.jpg
