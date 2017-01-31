@@ -109,39 +109,17 @@ func deleteUnusedBoards() error {
 	return execPrepared("delete_unused_boards", min)
 }
 
-// // Delete threads that have not had any new posts in N days.
-// func deleteOldThreads() error {
-// 	conf := config.Get()
-// 	if !conf.PruneThreads {
-// 		return nil
-// 	}
-
-// 	q := r.
-// 		Table("posts").
-// 		GroupByIndex("op").
-// 		Field("time").
-// 		Max().
-// 		Ungroup().
-// 		Filter(r.Row.
-// 			Field("reduction").
-// 			Lt(r.Now().ToEpochTime().Sub(day * conf.ThreadExpiry)),
-// 		).
-// 		Field("group").
-// 		Default(nil)
-
-// 	var expired []uint64
-// 	if err := All(q, &expired); err != nil {
-// 		return err
-// 	}
-
-// 	for _, t := range expired {
-// 		if err := DeleteThread(t); err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
+// Delete threads that have not been bumped in N days
+func deleteOldThreads() error {
+	conf := config.Get()
+	if !conf.PruneThreads {
+		return nil
+	}
+	min := time.Now().
+		Add(-time.Duration(conf.ThreadExpiry) * time.Hour * 24).
+		Unix()
+	return execPrepared("delete_old_threads", min)
+}
 
 // DeleteBoard deletes a board and all of its contained threads and posts
 func DeleteBoard(board string) error {

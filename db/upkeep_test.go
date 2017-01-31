@@ -14,6 +14,12 @@ import (
 
 const eightDays = time.Hour * 24 * 8
 
+type threadExpiryCases []struct {
+	id    uint64
+	board string
+	time  time.Time
+}
+
 func TestOpenPostClosing(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
@@ -119,6 +125,11 @@ func assertBoardDeleted(t *testing.T, id string, del bool) {
 	assertDeleted(t, q, del)
 }
 
+func assertThreadDeleted(t *testing.T, id uint64, del bool) {
+	q := fmt.Sprintf(`from threads where id = '%d'`, id)
+	assertDeleted(t, q, del)
+}
+
 func TestDeleteUnusedBoards(t *testing.T) {
 	assertTableClear(t, "boards")
 	config.Set(config.Configs{
@@ -196,34 +207,10 @@ func testDeleteUnusedBoards(t *testing.T) {
 		}
 	}
 
-	ops := [...]struct {
-		id    uint64
-		board string
-		time  time.Time
-	}{
+	writeExpiringThreads(t, threadExpiryCases{
 		{1, "a", expired},
 		{3, "c", fresh},
-	}
-	for _, op := range ops {
-		thread := Thread{
-			ID:        op.id,
-			Board:     op.board,
-			ReplyTime: op.time.Unix(),
-			Log:       []string{},
-		}
-		post := Post{
-			StandalonePost: common.StandalonePost{
-				Post: common.Post{
-					ID: op.id,
-				},
-				Board: op.board,
-				OP:    op.id,
-			},
-		}
-		if err := WriteThread(nil, thread, post); err != nil {
-			t.Fatal(err)
-		}
-	}
+	})
 
 	if err := deleteUnusedBoards(); err != nil {
 		t.Fatal(err)
@@ -246,61 +233,65 @@ func testDeleteUnusedBoards(t *testing.T) {
 	}
 }
 
-// func TestDeleteOldThreads(t *testing.T) {
-// 	assertTableClear(t, "posts", "threads")
-// 	config.Set(config.Configs{
-// 		ThreadExpiry: 7,
-// 	})
+func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
+	for _, op := range ops {
+		unix := op.time.Unix()
+		thread := Thread{
+			ID:        op.id,
+			Board:     op.board,
+			ReplyTime: unix,
+			BumpTime:  unix,
+			Log:       []string{},
+		}
+		post := Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID: op.id,
+				},
+				Board: op.board,
+				OP:    op.id,
+			},
+		}
+		if err := WriteThread(nil, thread, post); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
 
-// 	t.Run("no expired threads", func(t *testing.T) {
-// 		(*config.Get()).PruneThreads = true
-// 		if err := deleteOldThreads(); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 	})
+func TestDeleteOldThreads(t *testing.T) {
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	config.Set(config.Configs{
+		ThreadExpiry: 7,
+	})
 
-// 	assertInsert(t, "threads", []common.DatabaseThread{
-// 		{ID: 1},
-// 		{ID: 2},
-// 	})
-// 	assertInsert(t, "posts", []common.DatabasePost{
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					ID:   1,
-// 					Time: time.Now().Add(-eightDays).Unix(),
-// 				},
-// 				OP: 1,
-// 			},
-// 		},
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					ID:   2,
-// 					Time: time.Now().Unix(),
-// 				},
-// 				OP: 2,
-// 			},
-// 		},
-// 	})
+	t.Run("no threads", func(t *testing.T) {
+		(*config.Get()).PruneThreads = true
+		if err := deleteOldThreads(); err != nil {
+			t.Fatal(err)
+		}
+	})
 
-// 	t.Run("pruning disabled", func(t *testing.T) {
-// 		(*config.Get()).PruneThreads = false
-// 		if err := deleteOldThreads(); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		assertDeleted(t, FindPost(1), false)
-// 		assertDeleted(t, FindThread(1), false)
-// 	})
+	writeExpiringThreads(t, threadExpiryCases{
+		{1, "a", time.Now().Add(-eightDays)},
+		{2, "a", time.Now()},
+	})
 
-// 	t.Run("deleted", func(t *testing.T) {
-// 		(*config.Get()).PruneThreads = true
-// 		if err := deleteOldThreads(); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		for i := uint64(1); i <= 2; i++ {
-// 			assertDeleted(t, FindPost(i), i == 1)
-// 			assertDeleted(t, FindThread(i), i == 1)
-// 		}
-// 	})
-// }
+	t.Run("pruning disabled", func(t *testing.T) {
+		(*config.Get()).PruneThreads = false
+		if err := deleteOldThreads(); err != nil {
+			t.Fatal(err)
+		}
+		assertThreadDeleted(t, 1, false)
+		assertThreadDeleted(t, 2, false)
+	})
+
+	t.Run("deleted", func(t *testing.T) {
+		(*config.Get()).PruneThreads = true
+		if err := deleteOldThreads(); err != nil {
+			t.Fatal(err)
+		}
+		assertThreadDeleted(t, 1, true)
+		assertThreadDeleted(t, 2, false)
+	})
+}

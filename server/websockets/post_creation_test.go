@@ -169,6 +169,7 @@ func testCreateThread(t *testing.T) {
 	// Normalize timestamps and pointer fields
 	then := thread.ReplyTime
 	std.ReplyTime = then
+	std.BumpTime = then
 	std.Time = then
 	std.Image = thread.Image
 
