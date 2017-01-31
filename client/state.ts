@@ -23,11 +23,9 @@ export interface BoardConfigs {
 	forcedAnon: boolean
 	hashCommands: boolean
 	codeTags: boolean
-	spoiler: string       //Image spoiler
 	title: string
 	notice: string
 	rules: string
-	banners: string[]
 	[index: string]: any
 }
 

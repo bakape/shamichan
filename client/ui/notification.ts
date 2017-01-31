@@ -1,6 +1,6 @@
 // Desktop notifications on reply and such
 
-import { storeSeenReply, boardConfig } from "../state"
+import { storeSeenReply } from "../state"
 import options from "../options"
 import lang from "../lang"
 import { thumbPath, Post } from "../posts"
@@ -30,7 +30,7 @@ export default function notifyAboutReply(post: Post) {
 		if (post.image) {
 			const {SHA1, thumbType} = post.image
 			if (post.image.spoiler) {
-				icon = '/assets/spoil/' + boardConfig.spoiler
+				icon = '/assets/spoil/default.jpg'
 			} else {
 				icon = thumbPath(SHA1, thumbType)
 			}

@@ -1,4 +1,4 @@
-import { boardConfig, config } from '../../state'
+import { config } from '../../state'
 import options from '../../options'
 import { escape, setAttrs, pad, importTemplate } from '../../util'
 import { ImageData, fileTypes } from '../../common'
@@ -209,7 +209,7 @@ export function renderThumbnail(el: Element, data: ImageData) {
 
     if (data.spoiler && options.spoilers) {
         // Spoilered and spoilers enabled
-        thumb = '/assets/spoil/' + boardConfig.spoiler
+        thumb = '/assets/spoil/default.jpg'
         thumbHeight = thumbWidth = 150
     } else if (data.fileType === fileTypes.gif && options.autogif) {
         // Animated GIF thumbnails
