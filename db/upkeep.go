@@ -8,6 +8,7 @@ import (
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/imager/assets"
 )
 
 // Run database clean up tasks at server start and regular intervals. Must be
@@ -37,8 +38,9 @@ func runMinuteTasks() {
 
 func runHourTasks() {
 	logPrepared("expire_user_sessions", "remove_identity_info")
-	// logError("thread cleanup", deleteOldThreads())
+	logError("thread cleanup", deleteOldThreads())
 	logError("board cleanup", deleteUnusedBoards())
+	logError("image cleanup", deleteUnusedImages())
 }
 
 func logPrepared(ids ...string) {
@@ -125,4 +127,29 @@ func deleteOldThreads() error {
 func DeleteBoard(board string) error {
 	_, err := prepared["delete_board"].Exec(board)
 	return err
+}
+
+// Delete images not used in any posts
+func deleteUnusedImages() (err error) {
+	r, err := prepared["delete_unused_images"].Query()
+	if err != nil {
+		return
+	}
+
+	for r.Next() {
+		var (
+			sha1                string
+			fileType, thumbType uint8
+		)
+		err = r.Scan(&sha1, &fileType, &thumbType)
+		if err != nil {
+			return
+		}
+		err = assets.Delete(sha1, fileType, thumbType)
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }

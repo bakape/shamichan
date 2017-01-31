@@ -12,8 +12,6 @@ import (
 	"github.com/lib/pq"
 )
 
-// TODO: Unused image cleanup function
-
 const (
 	// Time it takes for an image allocation token to expire
 	tokenTimeout = time.Minute

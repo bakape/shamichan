@@ -110,8 +110,8 @@ func SourcePath(fileType uint8, SHA1 string) string {
 }
 
 // Write writes file assets to disk
-func Write(name string, fileType, thumbType uint8, src, thumb []byte) error {
-	paths := GetFilePaths(name, fileType, thumbType)
+func Write(SHA1 string, fileType, thumbType uint8, src, thumb []byte) error {
+	paths := GetFilePaths(SHA1, fileType, thumbType)
 
 	ch := make(chan error)
 	go func() {
@@ -142,8 +142,8 @@ func writeFile(path string, data []byte) error {
 }
 
 // Delete deletes file assets belonging to a single upload
-func Delete(name string, fileType, thumbType uint8) error {
-	for _, path := range GetFilePaths(name, fileType, thumbType) {
+func Delete(SHA1 string, fileType, thumbType uint8) error {
+	for _, path := range GetFilePaths(SHA1, fileType, thumbType) {
 		// Ignore somehow absent images
 		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 			return err
