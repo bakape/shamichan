@@ -10,7 +10,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bakape/meguca/templates"
 	"github.com/sevlyar/go-daemon"
 )
 
@@ -53,21 +52,6 @@ func daemonise() {
 	daemonised = true
 	defer daemonContext.Release()
 	log.Println("Server started ------------------------------------")
-
-	// Hot reload server configuration
-	daemon.SetSigHandler(func(_ os.Signal) error {
-
-		// TODO: Configuration reloading
-
-		err = templates.Compile()
-		if err != nil {
-			log.Printf("error reloading templates: %s\n", err)
-		}
-		if err == nil {
-			log.Println("configuration reloaded")
-		}
-		return nil
-	}, syscall.SIGUSR1)
 
 	go startServer()
 	if err := daemon.ServeSignals(); err != nil {

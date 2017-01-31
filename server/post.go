@@ -94,7 +94,9 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 
 	id, _, _, err := websockets.ConstructThread(req, auth.GetIP(r), true)
 	if err != nil {
+
 		// TODO: Not all codes are actually 400. Need to differentiate.
+
 		text400(w, err)
 		return
 	}

@@ -326,7 +326,9 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	var msg postActionRequest
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&
+
 		// TODO: More than just board owners should be able to delete posts
+
 		isBoardOwner(w, r, msg.Board, msg.UserID)
 	if !isValid {
 		return

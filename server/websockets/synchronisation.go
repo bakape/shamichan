@@ -79,10 +79,10 @@ func (c *Client) registerSync(board string, op uint64) {
 // messages and starts streaming in updates.
 func (c *Client) syncToThread(board string, thread uint64) error {
 	valid, err := db.ValidateOP(thread, board)
-	if err != nil {
+	switch {
+	case err != nil:
 		return err
-	}
-	if !valid {
+	case !valid:
 		return errInvalidThread
 	}
 

@@ -227,7 +227,7 @@ func detectFileType(buf []byte) (uint8, error) {
 	return mime, nil
 }
 
-// TODO: Waiting on Soreil
+// TODO: SVG support
 func detectSVG(buf []byte) (bool, error) {
 	return false, nil
 }
