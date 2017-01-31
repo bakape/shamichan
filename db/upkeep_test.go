@@ -4,12 +4,15 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
+
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
 	"github.com/lib/pq"
 )
 
-// const eightDays = time.Hour * 24 * 8
+const eightDays = time.Hour * 24 * 8
 
 func TestOpenPostClosing(t *testing.T) {
 	assertTableClear(t, "boards")
@@ -97,168 +100,151 @@ func assertLogContains(t *testing.T, id uint64, msgs ...string) {
 	}
 }
 
-// func assertDeleted(t *testing.T, q r.Term, del bool) {
-// 	var deleted bool
-// 	if err := One(q.Eq(nil), &deleted); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	if deleted != del {
-// 		LogUnexpected(t, del, deleted)
-// 	}
-// }
+func assertDeleted(t *testing.T, q string, del bool) {
+	q = fmt.Sprintf(`select exists (select 1 %s)`, q)
+	var exists bool
+	err := db.QueryRow(q).Scan(&exists)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// func TestDeleteUnusedBoards(t *testing.T) {
-// 	assertTableClear(t, "boards", "threads", "posts")
-// 	config.Set(config.Configs{
-// 		BoardExpiry: 7,
-// 		PruneBoards: true,
-// 	})
+	deleted := !exists
+	if deleted != del {
+		LogUnexpected(t, del, deleted)
+	}
+}
 
-// 	t.Run("no unused boards", func(t *testing.T) {
-// 		t.Parallel()
+func assertBoardDeleted(t *testing.T, id string, del bool) {
+	q := fmt.Sprintf(`from boards where id = '%s'`, id)
+	assertDeleted(t, q, del)
+}
 
-// 		if err := deleteUnusedBoards(); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 	})
+func TestDeleteUnusedBoards(t *testing.T) {
+	assertTableClear(t, "boards")
+	config.Set(config.Configs{
+		BoardExpiry: 7,
+	})
 
-// 	t.Run("board with no threads", func(t *testing.T) {
-// 		t.Parallel()
+	t.Run("no boards", func(t *testing.T) {
+		(*config.Get()).PruneBoards = true
 
-// 		assertInsert(t, "boards", config.DatabaseBoardConfigs{
-// 			Created: time.Now().Add(-eightDays),
-// 			BoardConfigs: config.BoardConfigs{
-// 				ID: "l",
-// 			},
-// 		})
+		if err := deleteUnusedBoards(); err != nil {
+			t.Fatal(err)
+		}
+	})
 
-// 		if err := deleteUnusedBoards(); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		assertDeleted(t, r.Table("boards").Get("l"), true)
-// 	})
+	t.Run("board with no threads", testBoardNoThreads)
+	t.Run("pruning disabled", testBoardPruningDisabled)
+	t.Run("board with threads", testDeleteUnusedBoards)
+}
 
-// 	t.Run("pruning disabled", func(t *testing.T) {
-// 		(*config.Get()).PruneBoards = false
-// 		assertInsert(t, "boards", config.DatabaseBoardConfigs{
-// 			Created: time.Now().Add(-eightDays),
-// 			BoardConfigs: config.BoardConfigs{
-// 				ID: "x",
-// 			},
-// 		})
+func testBoardNoThreads(t *testing.T) {
+	(*config.Get()).PruneBoards = true
 
-// 		if err := deleteUnusedBoards(); err != nil {
-// 			t.Fatal(err)
-// 		}
-// 		assertDeleted(t, r.Table("boards").Get("x"), false)
-// 	})
+	err := WriteBoard(nil, BoardConfigs{
+		Created: time.Now().Add(-eightDays),
+		BoardConfigs: config.BoardConfigs{
+			ID:        "l",
+			Eightball: []string{},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	t.Run("board with threads", testDeleteUnusedBoards)
-// }
+	if err := deleteUnusedBoards(); err != nil {
+		t.Fatal(err)
+	}
+	assertBoardDeleted(t, "l", true)
+}
 
-// func testDeleteUnusedBoards(t *testing.T) {
-// 	config.Set(config.Configs{
-// 		PruneBoards: true,
-// 		BoardExpiry: 7,
-// 	})
-// 	expired := time.Now().Add(-eightDays)
-// 	fresh := time.Now()
+func testBoardPruningDisabled(t *testing.T) {
+	(*config.Get()).PruneBoards = false
 
-// 	boards := [...]config.DatabaseBoardConfigs{
-// 		{
-// 			Created: expired,
-// 			BoardConfigs: config.BoardConfigs{
-// 				ID: "a",
-// 			},
-// 		},
-// 		{
-// 			Created: expired,
-// 			BoardConfigs: config.BoardConfigs{
-// 				ID: "c",
-// 			},
-// 		},
-// 	}
-// 	assertInsert(t, "boards", boards)
+	err := WriteBoard(nil, BoardConfigs{
+		Created: time.Now().Add(-eightDays),
+		BoardConfigs: config.BoardConfigs{
+			ID:        "x",
+			Eightball: []string{},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	threads := [...]common.DatabaseThread{
-// 		{
-// 			ID:    1,
-// 			Board: "a",
-// 		},
-// 		{
-// 			ID:    3,
-// 			Board: "c",
-// 		},
-// 	}
-// 	assertInsert(t, "threads", threads)
+	if err := deleteUnusedBoards(); err != nil {
+		t.Fatal(err)
+	}
+	assertBoardDeleted(t, "x", false)
+}
 
-// 	posts := [...]common.DatabasePost{
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					ID:   1,
-// 					Time: expired.Unix(),
-// 				},
-// 				OP:    1,
-// 				Board: "a",
-// 			},
-// 		},
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					ID:   3,
-// 					Time: expired.Unix(),
-// 				},
-// 				OP:    3,
-// 				Board: "c",
-// 			},
-// 		},
-// 		{
-// 			StandalonePost: common.StandalonePost{
-// 				Post: common.Post{
-// 					ID:   4,
-// 					Time: fresh.Unix(),
-// 				},
-// 				OP:    3,
-// 				Board: "c",
-// 			},
-// 		},
-// 	}
-// 	assertInsert(t, "posts", posts)
+func testDeleteUnusedBoards(t *testing.T) {
+	(*config.Get()).PruneBoards = true
+	fresh := time.Now()
+	expired := fresh.Add(-eightDays)
 
-// 	if err := deleteUnusedBoards(); err != nil {
-// 		t.Fatal(err)
-// 	}
+	for _, id := range [...]string{"a", "c"} {
+		err := WriteBoard(nil, BoardConfigs{
+			Created: expired,
+			BoardConfigs: config.BoardConfigs{
+				ID:        id,
+				Eightball: []string{},
+			},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 
-// 	cases := [...]struct {
-// 		name    string
-// 		deleted bool
-// 		board   string
-// 		id      uint64
-// 	}{
-// 		{"deleted", true, "a", 1},
-// 		{"untouched", false, "c", 3},
-// 	}
+	ops := [...]struct {
+		id    uint64
+		board string
+		time  time.Time
+	}{
+		{1, "a", expired},
+		{3, "c", fresh},
+	}
+	for _, op := range ops {
+		thread := Thread{
+			ID:        op.id,
+			Board:     op.board,
+			ReplyTime: op.time.Unix(),
+			Log:       []string{},
+		}
+		post := Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID: op.id,
+				},
+				Board: op.board,
+				OP:    op.id,
+			},
+		}
+		if err := WriteThread(nil, thread, post); err != nil {
+			t.Fatal(err)
+		}
+	}
 
-// 	for i := range cases {
-// 		c := cases[i]
-// 		t.Run(c.name, func(t *testing.T) {
-// 			t.Parallel()
-// 			t.Run("board", func(t *testing.T) {
-// 				t.Parallel()
-// 				assertDeleted(t, r.Table("boards").Get(c.board), c.deleted)
-// 			})
-// 			t.Run("thread", func(t *testing.T) {
-// 				t.Parallel()
-// 				assertDeleted(t, FindThread(c.id), c.deleted)
-// 			})
-// 			t.Run("post", func(t *testing.T) {
-// 				t.Parallel()
-// 				assertDeleted(t, FindPost(c.id), c.deleted)
-// 			})
-// 		})
-// 	}
-// }
+	if err := deleteUnusedBoards(); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := [...]struct {
+		name, board string
+		deleted     bool
+	}{
+		{"deleted", "a", true},
+		{"untouched", "c", false},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			assertBoardDeleted(t, c.board, c.deleted)
+		})
+	}
+}
 
 // func TestDeleteOldThreads(t *testing.T) {
 // 	assertTableClear(t, "posts", "threads")

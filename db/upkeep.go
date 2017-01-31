@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 )
 
 // Run database clean up tasks at server start and regular intervals. Must be
@@ -36,14 +37,13 @@ func runMinuteTasks() {
 
 func runHourTasks() {
 	logPrepared("expire_user_sessions", "remove_identity_info")
-	// logError("board cleanup", deleteUnusedBoards())
 	// logError("thread cleanup", deleteOldThreads())
+	logError("board cleanup", deleteUnusedBoards())
 }
 
 func logPrepared(ids ...string) {
 	for _, id := range ids {
-		_, err := prepared[id].Exec()
-		logError(id, err)
+		logError(id, execPrepared(id))
 	}
 }
 
@@ -98,46 +98,16 @@ func closeDanglingPosts() (err error) {
 	return tx.Commit()
 }
 
-// // Delete boards that are older than 1 week and have not had any new posts for
-// // N days.
-// func deleteUnusedBoards() error {
-// 	conf := config.Get()
-// 	if !conf.PruneBoards {
-// 		return nil
-// 	}
-
-// 	q := r.
-// 		Table("boards").
-// 		Filter(r.
-// 			Row.
-// 			Field("created").
-// 			Lt(r.Now().Sub(day * conf.BoardExpiry)).
-// 			And(r.
-// 				Table("posts").
-// 				GetAllByIndex("board", r.Row.Field("id")).
-// 				Pluck("time").
-// 				OrderBy("time").
-// 				Nth(-1).
-// 				Field("time").
-// 				Lt(r.Now().ToEpochTime().Sub(day * conf.BoardExpiry)).
-// 				Default(true),
-// 			),
-// 		).
-// 		Field("id")
-
-// 	var expired []string
-// 	if err := All(q, &expired); err != nil {
-// 		return err
-// 	}
-
-// 	for _, board := range expired {
-// 		if err := DeleteBoard(board); err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	return nil
-// }
+// Delete boards that are older than N days and have not had any new posts for
+// N days.
+func deleteUnusedBoards() error {
+	conf := config.Get()
+	if !conf.PruneBoards {
+		return nil
+	}
+	min := time.Now().Add(-time.Duration(conf.BoardExpiry) * time.Hour * 24)
+	return execPrepared("delete_unused_boards", min)
+}
 
 // // Delete threads that have not had any new posts in N days.
 // func deleteOldThreads() error {
@@ -175,12 +145,6 @@ func closeDanglingPosts() (err error) {
 
 // DeleteBoard deletes a board and all of its contained threads and posts
 func DeleteBoard(board string) error {
-	_, err := db.Exec(`DELETE FROM boards WHERE id = $1`, board)
-	return err
-}
-
-// DeleteThread deletes a thread from the database
-func DeleteThread(id uint64) error {
-	_, err := db.Exec(`DELETE FROM threads WHERE id = $1`, id)
+	_, err := prepared["delete_board"].Exec(board)
 	return err
 }

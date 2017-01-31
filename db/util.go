@@ -75,6 +75,11 @@ func getExecutor(tx *sql.Tx, key string) executor {
 	return prepared[key]
 }
 
+func execPrepared(id string, args ...interface{}) error {
+	_, err := prepared[id].Exec(args...)
+	return err
+}
+
 func getStatement(tx *sql.Tx, id string) *sql.Stmt {
 	stmt := prepared[id]
 	if tx != nil {

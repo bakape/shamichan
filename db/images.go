@@ -29,11 +29,11 @@ var (
 // WriteImage writes a processed image record to the DB
 func WriteImage(i common.ImageCommon) error {
 	dims := pq.GenericArray{A: i.Dims}
-	_, err := prepared["write_image"].Exec(
-		i.APNG, i.Audio, i.Video, i.FileType, i.ThumbType, dims,
-		i.Length, i.Size, i.MD5, i.SHA1,
+	return execPrepared(
+		"write_image",
+		i.APNG, i.Audio, i.Video, i.FileType, i.ThumbType, dims, i.Length,
+		i.Size, i.MD5, i.SHA1,
 	)
-	return err
 }
 
 // GetImage retrieves a thumbnailed image record from the DB
@@ -61,7 +61,7 @@ func NewImageToken(SHA1 string) (token string, err error) {
 		}
 		expires := time.Now().Add(tokenTimeout)
 
-		_, err = prepared["write_image_token"].Exec(token, SHA1, expires)
+		err = execPrepared("write_image_token", token, SHA1, expires)
 		switch {
 		case err == nil:
 			return

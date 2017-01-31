@@ -85,6 +85,7 @@ create table threads (
 );
 create index threads_board on threads (board);
 create index bumpTime on threads (bumpTime);
+create index replyTime on threads (replyTime);
 
 create table posts (
 	editing boolean not null,

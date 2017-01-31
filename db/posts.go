@@ -291,8 +291,7 @@ func SetPostCounter(c uint64) error {
 
 // DeletePosts marks the target posts as deleted
 func DeletePosts(board string, ids ...uint64) error {
-	_, err := prepared["delete_posts"].Exec(encodeIDArray(ids...), board)
-	return err
+	return execPrepared("delete_posts", encodeIDArray(ids...), board)
 }
 
 func encodeIDArray(ids ...uint64) string {

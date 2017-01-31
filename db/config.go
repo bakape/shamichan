@@ -90,18 +90,18 @@ func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 
 // UpdateBoard updates board configurations
 func UpdateBoard(c config.BoardConfigs) error {
-	_, err := prepared["update_board"].Exec(
+	return execPrepared(
+		"update_board",
 		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.HashCommands, c.CodeTags,
 		c.Title, c.Notice, c.Rules, pq.StringArray(c.Eightball),
 	)
-	return err
 }
 
 // WriteStaff writes staff positions of a specific board. Old rows are
 // overwritten. tx must not be nil.
 func WriteStaff(tx *sql.Tx, board string, staff map[string][]string) error {
 	// Remove previous staff entries
-	_, err := prepared["clear_staff"].Exec(board)
+	_, err := tx.Stmt(prepared["clear_staff"]).Exec(board)
 	if err != nil {
 		return err
 	}
@@ -181,6 +181,5 @@ func WriteConfigs(c config.Configs) error {
 	if err != nil {
 		return err
 	}
-	_, err = prepared["write_configs"].Exec(string(data))
-	return err
+	return execPrepared("write_configs", string(data))
 }

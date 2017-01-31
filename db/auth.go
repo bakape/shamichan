@@ -32,7 +32,7 @@ func IsLoggedIn(user, session string) (loggedIn bool, err error) {
 // RegisterAccount writes the ID and password hash of a new user account to the
 // database
 func RegisterAccount(ID string, hash []byte) error {
-	_, err := prepared["register_account"].Exec(ID, hash)
+	err := execPrepared("register_account", ID, hash)
 	if IsConflictError(err) {
 		return ErrUserNameTaken
 	}
@@ -59,30 +59,27 @@ func FindPosition(board, userID string) (pos string, err error) {
 // WriteLoginSession writes a new user login session to the DB
 func WriteLoginSession(account, token string) error {
 	expiryTime := time.Duration(config.Get().SessionExpiry) * time.Hour * 24
-	_, err := prepared["write_login_session"].Exec(
+	return execPrepared(
+		"write_login_session",
 		account,
 		token,
 		time.Now().Add(expiryTime),
 	)
-	return err
 }
 
 // LogOut logs the account out of one specific session
 func LogOut(account, token string) error {
-	_, err := prepared["log_out"].Exec(account, token)
-	return err
+	return execPrepared("log_out", account, token)
 }
 
 // LogOutAll logs an account out of all user sessions
 func LogOutAll(account string) error {
-	_, err := prepared["log_out_all"].Exec(account)
-	return err
+	return execPrepared("log_out_all", account)
 }
 
 // ChangePassword changes an existing user's login password
 func ChangePassword(account string, hash []byte) error {
-	_, err := prepared["change_password"].Exec(account, hash)
-	return err
+	return execPrepared("change_password", account, hash)
 }
 
 // GetPosition returns the staff position a user is holding on a board
