@@ -37,32 +37,25 @@ func runCleanupTasks() {
 }
 
 func runMinuteTasks() {
-	logError("open post cleanup", closeDanglingPosts)
-	logError("expire image tokens", expireImageTokens)
-	// logError("expire bans", Write(expireBansQ))
+	logError("open post cleanup", closeDanglingPosts())
+	logPrepared("expire_image_tokens", "expire_bans")
 }
 
 func runHourTasks() {
-	logError("session cleanup", expireUserSessions)
-	logError("remove identity info", removeIdentityInfo)
+	logPrepared("expire_user_sessions", "remove_identity_info")
 	// logError("board cleanup", deleteUnusedBoards())
 	// logError("thread cleanup", deleteOldThreads())
 }
 
-// Remove any unused expired image allocation tokens
-func expireImageTokens() error {
-	_, err := prepared["expire_image_tokens"].Exec()
-	return err
+func logPrepared(ids ...string) {
+	for _, id := range ids {
+		_, err := prepared[id].Exec()
+		logError(id, err)
+	}
 }
 
-// Remove expired login sessions
-func expireUserSessions() error {
-	_, err := prepared["expire_user_sessions"].Exec()
-	return err
-}
-
-func logError(prefix string, fn func() error) {
-	if err := fn(); err != nil {
+func logError(prefix string, err error) {
+	if err != nil {
 		log.Printf("%s: %s\n", prefix, err)
 	}
 }
@@ -114,12 +107,6 @@ func closeDanglingPosts() (err error) {
 	}
 
 	return tx.Commit()
-}
-
-// Remove any identity information from posts after a week
-func removeIdentityInfo() error {
-	_, err := prepared["remove_identity_info"].Exec()
-	return err
 }
 
 // // Delete boards that are older than 1 week and have not had any new posts for

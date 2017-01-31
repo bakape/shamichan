@@ -24,7 +24,7 @@ create table bans (
 	ip inet not null,
 	by varchar(20) not null,
 	reason text not null,
-	expires timestamp default now(),
+	expires timestamp not null,
 	primary key (ip, board)
 );
 
