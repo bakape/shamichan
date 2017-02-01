@@ -17,7 +17,7 @@ type PausableTicker struct {
 
 // Start starts p
 func (p *PausableTicker) Start() {
-	p.t = time.NewTicker(time.Millisecond * 200)
+	p.t = time.NewTicker(time.Millisecond * 100)
 	p.C = p.t.C
 }
 
