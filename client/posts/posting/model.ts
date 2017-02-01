@@ -89,7 +89,7 @@ export default class FormModel extends Post {
 
 	// Compare new value to old and generate appropriate commands
 	public parseInput(val: string): void {
-		const old = this.body
+		const old = this.inputBody
 
 		// Rendering hack shenanigans - ignore
 		if (old === val) {
