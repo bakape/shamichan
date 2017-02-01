@@ -152,7 +152,6 @@ export default class FormView extends PostView {
         this.model.parseInput(this.input.value)
     }
 
-
     private resizeInput() {
         const el = this.input,
             s = el.style
@@ -168,13 +167,10 @@ export default class FormView extends PostView {
     // Replace the current body and set the cursor to the input's end
     public replaceText(body: string) {
         write(() => {
-            this.input.value = body
-            const range = document.createRange(),
-                sel = window.getSelection()
-            range.setEndAfter(this.input)
-            range.collapse(false)
-            sel.removeAllRanges()
-            sel.addRange(range)
+            const el = this.input
+            el.value = body
+            this.el.focus()
+            el.setSelectionRange(body.length, body.length)
             this.onInput()
         })
     }

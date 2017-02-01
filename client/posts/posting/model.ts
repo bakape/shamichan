@@ -189,18 +189,16 @@ export default class FormModel extends Post {
 	// Add a link to the target post in the input
 	public addReference(id: number, sel: string) {
 		let s = ""
-		const body = this.inputBody,
-			previousIsLink = />>\d+ *$/.test(body)
 
 		// If already linking a post, put the new one on the next line
-		if (!previousIsLink && body && body[body.length - 1] !== " ") {
-			s += " "
+		if (/>>\d+ *$/.test(this.inputBody)) {
+			s += "\n"
 		}
 
 		// Don't duplicate links, if quoting same post multiple times in
 		// succession
 		if (id !== this.lasLinked) {
-			s += (previousIsLink ? "" : ">") + `>${id} `
+			s += `>>${id} `
 		}
 		this.lasLinked = id
 
@@ -211,7 +209,7 @@ export default class FormModel extends Post {
 			}
 		}
 
-		this.view.replaceText(body + s)
+		this.view.replaceText(this.inputBody + s)
 	}
 
 	// Request allocation of a draft post to the server
