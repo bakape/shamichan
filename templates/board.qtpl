@@ -68,7 +68,7 @@
 		<span id="catalog-controls" class="margin-spaced">
 			<input type="text" name="search" placeholder="{%s= ln.UI["search"] %}" title="{%s= ln.UI["searchTooltip"] %}">
 			<select name="sortMode">
-				{% for i, s := range [...]string{"lastReply", "creation", "replyCount", "fileCount"} %}
+				{% for i, s := range [...]string{"bump", "lastReply", "creation", "replyCount", "fileCount"} %}
 					<option value="{%s= s %}">
 						{%s= ln.SortModes[i] %}
 					</option>

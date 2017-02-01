@@ -364,6 +364,7 @@
 		"top": "Na górę"
 	},
 	"sortModes": [
+		"Bump time",
 		"Czas ostatniej odpowiedzi",
 		"Czas utworzenia",
 		"Liczba odpowiedzi",

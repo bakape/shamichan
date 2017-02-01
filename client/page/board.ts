@@ -48,17 +48,6 @@ export function renderFresh(html: string) {
 
 // Apply client-side modifications to a board page's HTML
 export function render() {
-	// Set sort mode <select> to correspond with setting
-	let sortMode = localStorage.getItem("catalogSort")
-	// "bump" is a legacy sort mode. Account for clients explicitly set to it.
-	if (sortMode === "bump") {
-		sortMode = ""
-		localStorage.removeItem("catalogSort")
-	}
-	if (!sortMode) {
-		sortMode = "lastReply"
-	}
-
 	setPostCount(0, 0)
 
 	// Apply board title to tab
@@ -73,7 +62,7 @@ export function render() {
 	}
 
 	(threads.querySelector("select[name=sortMode]") as HTMLSelectElement)
-		.value = sortMode
+		.value = localStorage.getItem("catalogSort") || "bump"
 	renderRefreshButton(threads.querySelector("#refresh > a"))
 	sortThreads(true)
 }
@@ -89,13 +78,9 @@ export function sortThreads(initial: boolean) {
 		}
 	}
 
-	let sortMode = localStorage.getItem("catalogSort")
-	if (!sortMode || sortMode === "bump") {
-		sortMode = "lastReply"
-	}
-
+	const sortMode = localStorage.getItem("catalogSort") || "bump"
 	// Already sorted as needed
-	if (initial && sortMode === "lastReply") {
+	if (initial && sortMode === "bump") {
 		return
 	}
 

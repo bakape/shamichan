@@ -364,6 +364,7 @@
 		"top": "Arriba"
 	},
 	"sortModes": [
+		"Bump time",
 		"Last reply time",
 		"Creation time",
 		"Reply count",
