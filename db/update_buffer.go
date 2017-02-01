@@ -8,8 +8,8 @@ import (
 	"encoding/hex"
 	"log"
 	"sync"
-	"time"
 
+	"github.com/bakape/meguca/util"
 	"github.com/lib/pq"
 )
 
@@ -77,10 +77,14 @@ func (b *MessageBuffer) Reset() {
 func init() {
 	go func() {
 		for {
-			flush := time.Tick(time.Millisecond * 200)
+			// Stop the timer, if there are no messages and resume on new ones.
+			// Keeping the goroutine asleep reduces CPU usage.
+			var flush util.PausableTicker
+			flush.Start()
 
 			select {
 			case req := <-bodyModCh:
+				flush.StartIfPaused()
 				buf, ok := toLog[req.op]
 				if !ok {
 					buf = bufPool.Get().(*MessageBuffer)
@@ -88,7 +92,11 @@ func init() {
 				}
 				buf.Write(req.msg)
 				toReplaceBody[req.id] = req.body
-			case <-flush:
+			case <-flush.C:
+				if len(toLog) == 0 {
+					flush.Pause()
+					continue
+				}
 				if err := flushBodyUpdates(); err != nil {
 					log.Printf("flushing body updates: %s\n", err)
 				}
@@ -98,10 +106,6 @@ func init() {
 }
 
 func flushBodyUpdates() error {
-	if len(toLog) == 0 {
-		return nil
-	}
-
 	tx, err := db.Begin()
 	if err != nil {
 		return err

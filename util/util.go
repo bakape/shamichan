@@ -5,7 +5,33 @@ package util
 import (
 	"crypto/md5"
 	"encoding/base64"
+	"time"
 )
+
+// PausableTicker is a time.Ticker that can be paused
+type PausableTicker struct {
+	t *time.Ticker
+	C <-chan time.Time
+}
+
+// Start starts p
+func (p *PausableTicker) Start() {
+	p.t = time.NewTicker(time.Millisecond * 200)
+	p.C = p.t.C
+}
+
+// Pause pauses p
+func (p *PausableTicker) Pause() {
+	p.t.Stop()
+	p.C = nil
+}
+
+// StartIfPaused start p back up, if p is paused
+func (p *PausableTicker) StartIfPaused() {
+	if p.C == nil {
+		p.Start()
+	}
+}
 
 // WrapError wraps error types to create compound error chains
 func WrapError(text string, err error) error {

@@ -8,10 +8,10 @@ import (
 	"log"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/util"
 	"github.com/lib/pq"
 )
 
@@ -107,6 +107,8 @@ func (f *feedMap) Clear() {
 type updateFeed struct {
 	// Update progress counter
 	ctr uint64
+	// Message flushing ticker
+	ticker util.PausableTicker
 	// Protects the client array and update counter
 	sync.Mutex
 	// Buffer of unsent messages
@@ -133,21 +135,25 @@ func (u *updateFeed) Start(id uint64) (err error) {
 	}
 
 	go func() {
-		flush := time.NewTicker(time.Millisecond * 200)
-		defer flush.Stop()
+		// Stop the timer, if there are no messages and resume on new ones.
+		// Keeping the goroutine asleep reduces CPU usage.
+		u.ticker.Start()
+		defer u.ticker.Pause()
 
 		for {
 			select {
 			case <-u.close:
+				u.ticker.StartIfPaused()
 				if err := u.listener.Close(); err != nil {
 					log.Printf("feed closing: %s", err)
 				}
 				return
 			case msg := <-u.listener.Notify:
+				u.ticker.StartIfPaused()
 				if msg != nil { // Disconnect happened. Shouganai.
 					u.decodeMessage(msg.Extra)
 				}
-			case <-flush.C:
+			case <-u.ticker.C:
 				u.flushBuffer()
 			}
 		}
@@ -180,6 +186,7 @@ func (u *updateFeed) flushBuffer() {
 	// to clients.
 	buf, flushed := u.Flush(true)
 	if flushed == 0 {
+		u.ticker.Pause()
 		return
 	}
 
