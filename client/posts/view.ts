@@ -72,6 +72,9 @@ export default class PostView extends ImageHandler {
 
     // Replace the current body with a reparsed fragment
     public reparseBody() {
+        if (!this.model.body) {
+            return
+        }
         const frag = makeFrag(parseBody(this.model))
         write(() => {
             this.replaceBody(frag)
