@@ -155,18 +155,6 @@ header {
 	line-height: 200%;
 }
 
-#text-input {
-	border: 0;
-	padding: 0;
-	background-color: transparent;
-	outline: none;
-	min-height: 1em;
-	min-width: 20em;
-	white-space: pre-wrap;
-	cursor: text;
-	display: block;
-}
-
 .upload-status {
 	margin-left: 0.5em;
 }
@@ -196,6 +184,17 @@ header {
 	}
 }
 
+#text-input {
+	border: 0;
+	padding: 0;
+	background-color: transparent;
+	outline: none;
+	min-height: 3em;
+	min-width: 30em;
+	max-height: 85vh;
+	max-width: 85vw;
+}
+
 .reply-form {
 	position: fixed;
 	z-index: 15;
@@ -203,8 +202,8 @@ header {
 	left: 0;
     margin: 1em;
 	.post-container {
-		max-height: 40vh;
-		overflow-y: auto;
+		max-height: 90vh;
+		max-width: 90vw;
 	}
 }
 

@@ -15,8 +15,7 @@ let bottomSpacer: HTMLElement
 // Post creation and update view
 export default class FormView extends PostView {
     public model: FormModel
-    private inputLock: boolean
-    private input: HTMLElement
+    private input: HTMLTextAreaElement
     private done: HTMLElement
     public cancel: HTMLElement
     private observer: MutationObserver
@@ -36,21 +35,16 @@ export default class FormView extends PostView {
     // Render extra input fields for inputting text and optionally uploading
     // images
     private renderInputs(isOP: boolean) {
-        this.input = document.createElement("span")
+        this.input = document.createElement("textarea")
         setAttrs(this.input, {
             id: "text-input",
             name: "body",
-            contenteditable: "",
         })
+        this.resizeInput()
 
-        // Always make sure the input span always has at least 1 character, so
-        // it does not float onto the image, if any.
-        this.input.textContent = "\u200b"
-        this.input.addEventListener("paste", e =>
-            this.onPaste(e as ClipboardEvent))
         this.input.addEventListener("input", (event: Event) => {
             event.stopImmediatePropagation()
-            this.onInput((event.target as Element).textContent)
+            this.onInput()
         })
 
         this.postControls = importTemplate("post-controls").firstElementChild
@@ -153,52 +147,34 @@ export default class FormView extends PostView {
     }
 
     // Handle input events on this.input
-    private onInput(val: string) {
-        if (this.inputLock) {
-            return
-        }
-        if (val === "") {
-            this.lockInput(() =>
-                this.input.textContent = "\u200b")
-        }
-        this.model.parseInput(val.replace("\u200b", ""))
+    private onInput() {
+        this.resizeInput()
+        this.model.parseInput(this.input.value)
     }
 
-    // Strip external formating on pastes
-    private onPaste(e: ClipboardEvent) {
-        e.preventDefault()
-        e.stopImmediatePropagation()
-        const text = e.clipboardData.getData("text/plain")
-        document.execCommand("insertHTML", false, text)
-    }
 
-    // Ignore any oninput events on input during supplied function call
-    private lockInput(fn: () => void) {
-        this.inputLock = true
-        fn()
-        this.inputLock = false
+    private resizeInput() {
+        const el = this.input,
+            s = el.style
+        s.height = "auto"
+        s.height = el.scrollHeight + "px"
     }
 
     // Trim input from the end by the supplied length
     public trimInput(length: number) {
-        const val = this.input.textContent.slice(0, -length) || "\u200b"
-        write(() =>
-            this.lockInput(() =>
-                this.input.textContent = val))
+        this.input.value = this.input.value.slice(0, -length)
     }
 
     // Replace the current body and set the cursor to the input's end
     public replaceText(body: string) {
-        write(() => {
-            this.input.textContent = body || "\u200b"
-            const range = document.createRange(),
-                sel = window.getSelection()
-            range.setEndAfter(this.input.lastChild)
-            range.collapse(false)
-            sel.removeAllRanges()
-            sel.addRange(range)
-            this.onInput(this.input.textContent)
-        })
+        this.input.value = body
+        const range = document.createRange(),
+            sel = window.getSelection()
+        range.setEndAfter(this.input.lastChild)
+        range.collapse(false)
+        sel.removeAllRanges()
+        sel.addRange(range)
+        this.onInput()
     }
 
     // Transform form into a generic post. Removes any dangling form controls
