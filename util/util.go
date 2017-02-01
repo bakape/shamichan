@@ -3,6 +3,7 @@
 package util
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/base64"
 	"time"
@@ -31,6 +32,40 @@ func (p *PausableTicker) StartIfPaused() {
 	if p.C == nil {
 		p.Start()
 	}
+}
+
+// MessageBuffer provides bufferring and concatenation for post update messages
+type MessageBuffer struct {
+	buf   bytes.Buffer
+	count uint64
+}
+
+// Write writes a message to b
+func (b *MessageBuffer) Write(data []byte) {
+	if b.count == 0 {
+		b.buf.WriteString("33")
+	} else {
+		b.buf.WriteByte(0)
+	}
+	b.count++
+	b.buf.Write(data)
+}
+
+// Flush flushes b into into a []byte and returns it together with the flushed
+// message count. If no messages are stored, the returned buffer is nil.
+func (b *MessageBuffer) Flush() ([]byte, uint64) {
+	if b.count == 0 {
+		return nil, 0
+	}
+
+	flushed := b.count
+	buf := b.buf.Bytes()
+	b.count = 0
+
+	c := make([]byte, len(buf))
+	copy(c, buf)
+	b.buf.Reset()
+	return c, flushed
 }
 
 // WrapError wraps error types to create compound error chains

@@ -281,7 +281,16 @@ func GetLog(id, from, to uint64) ([][]byte, error) {
 		return nil, ErrTooManyMessages
 	}
 	var log pq.ByteaArray
-	err := prepared["get_log"].QueryRow(id, from, to).Scan(&log)
+	// Postgres arrays are 1-based
+	err := prepared["get_log"].QueryRow(id, from+1, to+1).Scan(&log)
+	return [][]byte(log), err
+}
+
+// GetLogTillEnd retrieves a slice of the replication log from a certain lower
+// index
+func GetLogTillEnd(id, from uint64) ([][]byte, error) {
+	var log pq.ByteaArray
+	err := prepared["get_log_till_end"].QueryRow(id, from+1).Scan(&log)
 	return [][]byte(log), err
 }
 

@@ -106,7 +106,7 @@ func TestWriteMultipleToBuffer(t *testing.T) {
 	u.Write([]byte("b"))
 
 	const std = "33a\u0000b"
-	buf, flushed := u.Flush(true)
+	buf, flushed := u.Flush()
 	if s := string(buf); s != std {
 		LogUnexpected(t, std, s)
 	}

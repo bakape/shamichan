@@ -3,8 +3,6 @@
 package websockets
 
 import (
-	"bytes"
-	"encoding/hex"
 	"log"
 	"strconv"
 	"sync"
@@ -48,6 +46,7 @@ func (f *feedMap) Add(id uint64, c *Client) error {
 	feed, ok := f.feeds[id]
 	if !ok {
 		feed = &updateFeed{
+			id:      id,
 			close:   make(chan struct{}),
 			clients: make([]*Client, 0, 8),
 		}
@@ -105,6 +104,7 @@ func (f *feedMap) Clear() {
 
 // A feed with synchronization logic of a certain thread
 type updateFeed struct {
+	id uint64
 	// Update progress counter
 	ctr uint64
 	// Message flushing ticker
@@ -112,7 +112,7 @@ type updateFeed struct {
 	// Protects the client array and update counter
 	sync.Mutex
 	// Buffer of unsent messages
-	db.MessageBuffer
+	util.MessageBuffer
 	// Update channel and controller
 	listener *pq.Listener
 	// For breaking the inner loop
@@ -151,7 +151,7 @@ func (u *updateFeed) Start(id uint64) (err error) {
 			case msg := <-u.listener.Notify:
 				u.ticker.StartIfPaused()
 				if msg != nil { // Disconnect happened. Shouganai.
-					u.decodeMessage(msg.Extra)
+					u.fetchUpdates()
 				}
 			case <-u.ticker.C:
 				u.flushBuffer()
@@ -162,29 +162,22 @@ func (u *updateFeed) Start(id uint64) (err error) {
 	return
 }
 
-func (u *updateFeed) decodeMessage(data string) {
-	buf, err := hex.DecodeString(data)
+func (u *updateFeed) fetchUpdates() {
+	l, err := db.GetLogTillEnd(u.id, u.ctr)
 	if err != nil {
-		log.Printf("could not decode update: %s : %s", data, err)
+		log.Printf("could not fetch updates on thread %d: %s\n", u.id, err)
 		return
 	}
-
-	// Split concatenated message
-	if len(buf) > 2 && buf[0] == '3' && buf[1] == '3' {
-		for _, msg := range bytes.Split(buf[2:], []byte{0}) {
-			u.Write(msg)
-		}
-		return
+	for _, msg := range l {
+		u.Write(msg)
 	}
-
-	u.Write(buf)
 }
 
 // Send any buffered messages to any listening clients
 func (u *updateFeed) flushBuffer() {
 	// Need to copy, because the underlying array can be modified during sending
 	// to clients.
-	buf, flushed := u.Flush(true)
+	buf, flushed := u.Flush()
 	if flushed == 0 {
 		u.ticker.Pause()
 		return
