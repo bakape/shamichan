@@ -115,7 +115,7 @@ func TestAppendRune(t *testing.T) {
 }
 
 func awaitFlush() {
-	time.Sleep(time.Millisecond * 300)
+	time.Sleep(time.Millisecond * 400)
 }
 
 func writeSamplePost(t testing.TB) {
