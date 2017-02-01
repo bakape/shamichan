@@ -190,12 +190,10 @@ export default class FormModel extends Post {
 	public addReference(id: number, sel: string) {
 		let s = ""
 		const body = this.inputBody,
-			previousIsLink = /^>>\d+ ?$/.test(body)
+			previousIsLink = />>\d+ *$/.test(body)
 
 		// If already linking a post, put the new one on the next line
-		if (previousIsLink) {
-			s += "\n"
-		} else if (body && body[body.length - 1] !== " ") {
+		if (!previousIsLink && body && body[body.length - 1] !== " ") {
 			s += " "
 		}
 
@@ -207,7 +205,10 @@ export default class FormModel extends Post {
 		this.lasLinked = id
 
 		if (sel) {
-			s += "\n" + sel
+			s += "\n"
+			for (let line of sel.split("\n")) {
+				s += ">" + line + "\n"
+			}
 		}
 
 		this.view.replaceText(body + s)

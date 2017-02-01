@@ -167,14 +167,16 @@ export default class FormView extends PostView {
 
     // Replace the current body and set the cursor to the input's end
     public replaceText(body: string) {
-        this.input.value = body
-        const range = document.createRange(),
-            sel = window.getSelection()
-        range.setEndAfter(this.input.lastChild)
-        range.collapse(false)
-        sel.removeAllRanges()
-        sel.addRange(range)
-        this.onInput()
+        write(() => {
+            this.input.value = body
+            const range = document.createRange(),
+                sel = window.getSelection()
+            range.setEndAfter(this.input)
+            range.collapse(false)
+            sel.removeAllRanges()
+            sel.addRange(range)
+            this.onInput()
+        })
     }
 
     // Transform form into a generic post. Removes any dangling form controls
