@@ -1,7 +1,6 @@
 package websockets
 
 import (
-	"bytes"
 	"strconv"
 	"testing"
 	"time"
@@ -65,13 +64,13 @@ func TestStreamUpdates(t *testing.T) {
 	if err := db.UpdateLog(nil, 1, []byte("foo")); err != nil {
 		t.Fatal(err)
 	}
-	assertMessage(t, wcl, "foo")
+	assertMessage(t, wcl, "33foo")
 
 	// Another
 	if err := db.UpdateLog(nil, 1, []byte("bar")); err != nil {
 		t.Fatal(err)
 	}
-	assertMessage(t, wcl, "bar")
+	assertMessage(t, wcl, "33bar")
 
 	// Count updated
 	time.Sleep(time.Millisecond * 200)
@@ -103,15 +102,16 @@ func TestWriteMultipleToBuffer(t *testing.T) {
 	t.Parallel()
 
 	u := updateFeed{}
-	u.writeToBuffer("a")
-	u.writeToBuffer("b")
+	u.Write([]byte("a"))
+	u.Write([]byte("b"))
 
-	const std = "a\u0000b"
-	if s := u.buf.String(); s != std {
+	const std = "33a\u0000b"
+	buf, flushed := u.Flush(true)
+	if s := string(buf); s != std {
 		LogUnexpected(t, std, s)
 	}
-	if u.buffered != 2 {
-		t.Fatalf("unexpected message count: %d", u.buffered)
+	if flushed != 2 {
+		t.Fatalf("unexpected message count: %d", flushed)
 	}
 }
 
@@ -125,10 +125,10 @@ func TestFlushMultipleMessages(t *testing.T) {
 	go readListenErrors(t, cl, sv)
 	const msg = "a\u0000bc"
 	u := updateFeed{
-		clients:  []*Client{cl},
-		buf:      *bytes.NewBufferString(msg),
-		buffered: 2,
+		clients: []*Client{cl},
 	}
+	u.Write([]byte("a"))
+	u.Write([]byte("bc"))
 
 	u.flushBuffer()
 	assertMessage(t, wcl, encodeMessageType(common.MessageConcat)+msg)

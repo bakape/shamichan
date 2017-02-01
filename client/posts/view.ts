@@ -33,11 +33,6 @@ export default class PostView extends ImageHandler {
     // Render the element contents, but don't insert it into the DOM
     protected render() {
         this.el.append(importTemplate("article"))
-        this.renderContents()
-    }
-
-    // Render post into a container and find buffer positions
-    public renderContents() {
         renderPost(this.el, this.model)
     }
 

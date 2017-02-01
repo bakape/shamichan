@@ -118,7 +118,7 @@ func writeSampleThread(t *testing.T) {
 	thread := db.Thread{
 		ID:    1,
 		Board: "a",
-		Log:   []string{"123"},
+		Log:   [][]byte{[]byte("123")},
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{

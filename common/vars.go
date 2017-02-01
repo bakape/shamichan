@@ -32,6 +32,7 @@ var (
 	ErrPostPasswordTooLong = ErrTooLong("post password")
 	ErrBodyTooLong         = ErrTooLong("post body")
 	ErrInvalidCreds        = errors.New("invalid login credentials")
+	ErrContainsNull        = errors.New("null byte in non-concatenated message")
 )
 
 // ErrTooLong is passed, when a field exceeds the maximum string length for

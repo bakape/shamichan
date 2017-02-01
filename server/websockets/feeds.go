@@ -4,6 +4,7 @@ package websockets
 
 import (
 	"bytes"
+	"encoding/hex"
 	"log"
 	"strconv"
 	"sync"
@@ -104,14 +105,12 @@ func (f *feedMap) Clear() {
 
 // A feed with synchronization logic of a certain thread
 type updateFeed struct {
-	// Count of buffered messages
-	buffered uint64
 	// Update progress counter
 	ctr uint64
 	// Protects the client array and update counter
 	sync.Mutex
 	// Buffer of unsent messages
-	buf bytes.Buffer
+	db.MessageBuffer
 	// Update channel and controller
 	listener *pq.Listener
 	// For breaking the inner loop
@@ -146,7 +145,7 @@ func (u *updateFeed) Start(id uint64) (err error) {
 				return
 			case msg := <-u.listener.Notify:
 				if msg != nil { // Disconnect happened. Shouganai.
-					u.writeToBuffer(msg.Extra)
+					u.decodeMessage(msg.Extra)
 				}
 			case <-flush.C:
 				u.flushBuffer()
@@ -157,42 +156,40 @@ func (u *updateFeed) Start(id uint64) (err error) {
 	return
 }
 
-func (u *updateFeed) writeToBuffer(data string) {
-	if u.buf.Len() != 0 {
-		u.buf.WriteRune('\u0000')
+func (u *updateFeed) decodeMessage(data string) {
+	buf, err := hex.DecodeString(data)
+	if err != nil {
+		log.Printf("could not decode update: %s : %s", data, err)
+		return
 	}
-	u.buf.WriteString(data)
-	u.buffered++
+
+	// Split concatenated message
+	if len(buf) > 2 && buf[0] == '3' && buf[1] == '3' {
+		for _, msg := range bytes.Split(buf[2:], []byte{0}) {
+			u.Write(msg)
+		}
+		return
+	}
+
+	u.Write(buf)
 }
 
 // Send any buffered messages to any listening clients
 func (u *updateFeed) flushBuffer() {
-	if u.buffered == 0 {
+	// Need to copy, because the underlying array can be modified during sending
+	// to clients.
+	buf, flushed := u.Flush(true)
+	if flushed == 0 {
 		return
 	}
+
 	u.Lock()
 	defer u.Unlock()
-	defer func() {
-		u.buf.Reset()
-		u.ctr += u.buffered
-		u.buffered = 0
-	}()
+	u.ctr += flushed
 
 	if len(u.clients) == 0 {
 		return
 	}
-
-	buf := u.buf.Bytes()
-	if u.buffered != 1 {
-		buf = common.PrependMessageType(common.MessageConcat, buf)
-	} else {
-		// Need to copy, because the underlying array can be modified during
-		// sending to clients.
-		c := make([]byte, len(buf))
-		copy(c, buf)
-		buf = c
-	}
-
 	for _, c := range u.clients {
 		c.Send(buf)
 	}

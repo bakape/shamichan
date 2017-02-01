@@ -109,8 +109,13 @@ func TestAppendRune(t *testing.T) {
 	}
 
 	assertOpenPost(t, cl, 4, "abcd")
+	awaitFlush()
 	assertBody(t, 2, "abcd")
-	assertRepLog(t, 1, []string{`03[2,100]`})
+	assertRepLog(t, 1, []string{"03[2,100]"})
+}
+
+func awaitFlush() {
+	time.Sleep(time.Millisecond * 300)
 }
 
 func writeSamplePost(t testing.TB) {
@@ -174,34 +179,6 @@ func BenchmarkAppend(b *testing.B) {
 			b.Fatal(err)
 		}
 	}
-}
-
-func TestAppendNewline(t *testing.T) {
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
-	writeSamplePost(t)
-
-	sv := newWSServer(t)
-	defer sv.Close()
-	cl, _ := sv.NewClient()
-	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		board:  "a",
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString("abc"),
-	}
-	setBoardConfigs(t, false)
-
-	if err := cl.appendRune([]byte("10")); err != nil {
-		t.Fatal(err)
-	}
-
-	assertOpenPost(t, cl, 4, "abc\n")
-	assertBody(t, 2, "abc\n")
-	assertRepLog(t, 1, []string{"03[2,10]"})
 }
 
 func TestClosePostWithHashCommand(t *testing.T) {
@@ -285,7 +262,7 @@ func TestClosePostWithLinks(t *testing.T) {
 	thread := db.Thread{
 		ID:    21,
 		Board: "a",
-		Log:   []string{},
+		Log:   [][]byte{},
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{
@@ -410,6 +387,7 @@ func TestBackspace(t *testing.T) {
 	}
 
 	assertOpenPost(t, cl, 2, "ab")
+	awaitFlush()
 	assertRepLog(t, 1, []string{"042"})
 	assertBody(t, 2, "ab")
 }
@@ -505,21 +483,15 @@ func TestSplice(t *testing.T) {
 	writeSampleBoard(t)
 	setBoardConfigs(t, false)
 
-	const longSplice = `Never gonna give you up ` +
-		`Never gonna let you down ` +
-		`Never gonna run around and desert you ` +
-		`Never gonna make you cry ` +
-		`Never gonna say goodbye ` +
-		`Never gonna tell a lie and hurt you `
+	const longSplice = `Never gonna give you up Never gonna let you down Never gonna run around and desert you Never gonna make you cry Never gonna say goodbye Never gonna tell a lie and hurt you `
 
 	sv := newWSServer(t)
 	defer sv.Close()
 
 	cases := [...]struct {
-		name              string
-		start, len        int
-		text, init, final string
-		log               []string
+		name                   string
+		start, len             int
+		text, init, final, log string
 	}{
 		{
 			name:  "append to empty body",
@@ -528,7 +500,7 @@ func TestSplice(t *testing.T) {
 			text:  "abc",
 			init:  "",
 			final: "abc",
-			log:   []string{`05{"id":2,"start":0,"len":0,"text":"abc"}`},
+			log:   `05{"id":2,"start":0,"len":0,"text":"abc"}`,
 		},
 		{
 			name:  "remove one char",
@@ -537,7 +509,7 @@ func TestSplice(t *testing.T) {
 			text:  "",
 			init:  "abc",
 			final: "bc",
-			log:   []string{`05{"id":2,"start":0,"len":1,"text":""}`},
+			log:   `05{"id":2,"start":0,"len":1,"text":""}`,
 		},
 		{
 			name:  "remove one multibyte char",
@@ -546,7 +518,7 @@ func TestSplice(t *testing.T) {
 			text:  "",
 			init:  "αΒΓΔ",
 			final: "αΒΔ",
-			log:   []string{`05{"id":2,"start":2,"len":1,"text":""}`},
+			log:   `05{"id":2,"start":2,"len":1,"text":""}`,
 		},
 		{
 			name:  "replace till end",
@@ -555,7 +527,7 @@ func TestSplice(t *testing.T) {
 			text:  "abc",
 			init:  "abcd",
 			final: "ababc",
-			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
+			log:   `05{"id":2,"start":2,"len":-1,"text":"abc"}`,
 		},
 		{
 			name:  "replace with multibyte char string till end",
@@ -564,7 +536,7 @@ func TestSplice(t *testing.T) {
 			text:  "ΓΔ",
 			init:  "αΒΓΔ",
 			final: "αΓΔ",
-			log:   []string{`05{"id":2,"start":1,"len":-1,"text":"ΓΔ"}`},
+			log:   `05{"id":2,"start":1,"len":-1,"text":"ΓΔ"}`,
 		},
 		{
 			name:  "inject into the middle",
@@ -573,7 +545,7 @@ func TestSplice(t *testing.T) {
 			text:  "abc",
 			init:  "ab",
 			final: "ababc",
-			log:   []string{`05{"id":2,"start":2,"len":-1,"text":"abc"}`},
+			log:   `05{"id":2,"start":2,"len":-1,"text":"abc"}`,
 		},
 		{
 			name:  "inject multibyte char into the middle",
@@ -582,7 +554,7 @@ func TestSplice(t *testing.T) {
 			text:  "Δ",
 			init:  "αΒΓ",
 			final: "αΒΔΓ",
-			log:   []string{`05{"id":2,"start":2,"len":0,"text":"Δ"}`},
+			log:   `05{"id":2,"start":2,"len":0,"text":"Δ"}`,
 		},
 		{
 			name:  "injection exceeds max body length",
@@ -591,10 +563,7 @@ func TestSplice(t *testing.T) {
 			text:  longSplice,
 			init:  longPost,
 			final: longPost[:1943] + longSplice[:57],
-			log: []string{
-				`05{"id":2,"start":1943,"len":-1,"text":"Never gonna give you` +
-					` up Never gonna let you down Never go"}`,
-			},
+			log:   `05{"id":2,"start":1943,"len":-1,"text":"Never gonna give you up Never gonna let you down Never go"}`,
 		},
 		{
 			name:  "append exceeds max body length",
@@ -603,10 +572,7 @@ func TestSplice(t *testing.T) {
 			text:  longSplice + "\n",
 			init:  longPost,
 			final: longPost + longSplice[:49],
-			log: []string{
-				`05{"id":2,"start":1951,"len":-1,"text":"Never gonna give you` +
-					` up Never gonna let you down "}`,
-			},
+			log:   `05{"id":2,"start":1951,"len":-1,"text":"Never gonna give you up Never gonna let you down "}`,
 		},
 	}
 
@@ -654,8 +620,9 @@ func TestSplice(t *testing.T) {
 			}
 
 			assertOpenPost(t, cl, utf8.RuneCountInString(c.final), c.final)
+			awaitFlush()
 			assertBody(t, 2, c.final)
-			assertRepLog(t, 1, c.log)
+			assertRepLog(t, 1, []string{c.log})
 		})
 	}
 }

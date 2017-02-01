@@ -2,10 +2,8 @@
 
 import { debug, page } from './state'
 import lang from './lang'
-import { FSM, fetchThreadJSON, write, trigger } from './util'
-import { insertPost } from "./client"
+import { FSM, write, trigger } from './util'
 import { identity, postSM, postEvent, postState, FormModel } from "./posts"
-import { PostData, ThreadData } from "./common"
 
 // Message types of the WebSocket communication protocol
 export const enum message {
@@ -68,12 +66,10 @@ export const connSM = new FSM<connState, connEvent>(connState.loading)
 let socket: WebSocket,
 	attempts: number,
 	attemptTimer: number,
-	// Timestamp of the last post altering message received or the the initial
-	// fetch of thread contents
-	syncTimestamp: number
+	syncCounter: number // Tracks thread update progress
 
 const syncEl = document.getElementById('sync'),
-	syncCount = document.getElementById("sync-counter")
+	syncedCount = document.getElementById("sync-counter")
 const path = (location.protocol === 'https:' ? 'wss' : 'ws')
 	+ `://${location.host}/socket`
 
@@ -147,7 +143,7 @@ function onMessage(data: string, extracted: boolean) {
 	const type = parseInt(data.slice(0, 2))
 
 	if (debug) {
-		console.log(extracted ? ">>" : ">", data)
+		console.log(extracted ? "\t>" : ">", data)
 	}
 
 	// Split several concatenated messages
@@ -160,7 +156,7 @@ function onMessage(data: string, extracted: boolean) {
 
 	// Message types bellow thirty alter the thread state
 	if (type < 30) {
-		updateSyncTimestamp()
+		syncCounter++
 	}
 
 	const handler = handlers[type]
@@ -169,24 +165,21 @@ function onMessage(data: string, extracted: boolean) {
 	}
 }
 
-// Update the thread synchronization timestamp
-export function updateSyncTimestamp() {
-	syncTimestamp = Date.now()
+// Update the thread synchronization progress counter
+export function setSyncCounter(c: number) {
+	syncCounter = c
 }
 
 function prepareToSync(): connState {
 	renderStatus(syncStatus.connecting)
-	synchronise().catch(connSM.feeder(connEvent.close))
+	synchronise()
 	attemptTimer = setTimeout(resetAttempts, 10000) as any
 	return connState.syncing
 }
 
 // Send a requests to the server to synchronise to the current page and
-// subscribe to the appropriate event feeds and optionally try to send a logged
-// in user session authentication request.
-export async function synchronise() {
-	await fetchBacklog()
-
+// subscribe to the appropriate event feeds
+export function synchronise() {
 	send(message.synchronise, {
 		board: page.board,
 		thread: page.thread,
@@ -205,31 +198,6 @@ export async function synchronise() {
 		} else {
 			postSM.feed(postEvent.abandon)
 		}
-	}
-}
-
-// If thread data is too old because of disconnect, computer suspension or
-// resuming old tabs, refetch and sync differences. The actual deadline
-// is 30 seconds, but a ten second buffer is probably sound.
-async function fetchBacklog() {
-	if (!page.thread || Date.now() - syncTimestamp < 20000) {
-		return
-	}
-
-	const {board, thread} = page,
-		// Always fetch the full thread
-		res = await fetchThreadJSON(board, thread, 0)
-	switch (res.status) {
-		case 200:
-			const data = await res.json() as ThreadData
-			insertPost(data)
-			data.posts.forEach(insertPost)
-			delete data.posts
-			break
-		case 403:
-			return
-		default:
-			throw await res.text()
 	}
 }
 
@@ -286,13 +254,36 @@ for (let state of [connState.connecting, connState.reconnecting]) {
 
 // Synchronise to the server and start receiving updates on the appropriate
 // channel. If there are any missed messages, fetch them.
-handlers[message.synchronise] = (backlog: { [id: number]: PostData }) => {
-	if (page.thread) {
-		for (let id in backlog) {
-			insertPost(backlog[id])
-		}
+handlers[message.synchronise] = async (ctr: number) => {
+	if (page.thread && ctr !== syncCounter) {
+		await fetchBacklog(syncCounter, ctr).catch(alert)
 	}
 	connSM.feed(connEvent.sync)
+}
+
+// If thread data is too old because of disconnect, computer suspension or
+// resuming old tabs, refetch and/or sync differences.
+async function fetchBacklog(start: number, end: number) {
+	// Too many changes
+	if (end - start > 500) {
+		location.reload(true)
+		return
+	}
+
+	const res = await fetch("/json/log", {
+		method: "POST",
+		body: JSON.stringify({
+			id: page.thread,
+			start, end,
+		})
+	})
+	switch (res.status) {
+		case 200:
+			onMessage(await res.text(), false)
+			break
+		default:
+			throw await res.text()
+	}
 }
 
 // Handle response to a open post reclaim request
@@ -362,4 +353,4 @@ window.addEventListener('offline', connSM.feeder(connEvent.close))
 
 handlers[message.syncCount] = (n: number) =>
 	write(() =>
-		syncCount.textContent = n.toString())
+		syncedCount.textContent = n.toString())

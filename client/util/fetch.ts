@@ -61,16 +61,3 @@ export async function fetchThread(
 	}
 	return await fetch(url)
 }
-
-// Fetch thread JSON data
-export async function fetchThreadJSON(
-	board: string,
-	thread: number,
-	lastN: number,
-): Promise<Response> {
-	let url = `/json/${board}/${thread}`
-	if (lastN) {
-		url += `?last=${lastN}`
-	}
-	return await fetch(url)
-}

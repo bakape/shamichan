@@ -1,5 +1,5 @@
 import { Model } from '../base'
-import { extend, write } from '../util'
+import { extend } from '../util'
 import Collection from './collection'
 import PostView from './view'
 import { SpliceResponse } from '../client'
@@ -49,7 +49,10 @@ export class Post extends Model implements PostData {
 			{ view} = this
 		this.body += char
 
-		if (char === "\n" || endsWithTag(this.body)) {
+
+		// It is possible to receive text body updates after a post closes,
+		// due to server-side buffering optimizations. If so, rerender the body.
+		if (char === "\n" || endsWithTag(this.body) || !this.editing) {
 			view.reparseBody()
 		} else {
 			view.appendString(char)
@@ -58,7 +61,7 @@ export class Post extends Model implements PostData {
 
 	// Backspace one character in the current line
 	public backspace() {
-		const needReparse = endsWithTag(this.body)
+		const needReparse = endsWithTag(this.body) || !this.editing
 		this.body = this.body.slice(0, -1)
 		if (needReparse) {
 			this.view.reparseBody()
@@ -94,17 +97,6 @@ export class Post extends Model implements PostData {
 		this.body = this.body.substring(0, iLast + 1) + body
 
 		return body
-	}
-
-	// Extend all fields in the model and rerender
-	public extend(data: PostData) {
-		extend(this, data)
-		// "editing":false is omitted to reduce payload. Override explicitly.
-		if (!data.editing) {
-			this.editing = false
-		}
-		write(() =>
-			this.view.renderContents())
 	}
 
 	// Check if this post replied to one of the user's posts and trigger

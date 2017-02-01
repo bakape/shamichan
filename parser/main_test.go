@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	db.ConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable`
+	db.ConnArgs = db.TestConnArgs
 	db.IsTest = true
 	if err := db.LoadDB(); err != nil {
 		panic(err)

@@ -54,7 +54,7 @@ func writeSampleThread(t *testing.T) {
 	thread := Thread{
 		ID:    1,
 		Board: "a",
-		Log:   []string{"123"},
+		Log:   [][]byte{[]byte("123")},
 	}
 	op := Post{
 		StandalonePost: common.StandalonePost{

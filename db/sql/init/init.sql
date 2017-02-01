@@ -81,7 +81,7 @@ create table threads (
 	bumpTime bigint not null,
 	replyTime bigint not null,
 	subject varchar(100) not null,
-	log text[] not null
+	log bytea[] not null
 );
 create index threads_board on threads (board);
 create index bumpTime on threads (bumpTime);

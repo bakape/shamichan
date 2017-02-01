@@ -15,7 +15,7 @@ func UpdateLog(tx *sql.Tx, id uint64, msg []byte) error {
 }
 
 // AppendBody appends a character to a post body
-func AppendBody(id, op uint64, char rune) error {
+func AppendBody(id, op uint64, char rune, body string) error {
 	msg, err := common.EncodeMessage(
 		common.MessageAppend,
 		[2]uint64{id, uint64(char)},
@@ -23,7 +23,13 @@ func AppendBody(id, op uint64, char rune) error {
 	if err != nil {
 		return err
 	}
-	return updatePost(id, op, msg, "append_body", string(char))
+	bodyModCh <- bodyModRequest{
+		id:   id,
+		op:   op,
+		msg:  msg,
+		body: body,
+	}
+	return nil
 }
 
 func updatePost(
@@ -116,12 +122,18 @@ func insertLinks(tx *sql.Tx, id, op uint64, links [][2]uint64) (err error) {
 }
 
 // Backspace removes one character from the end of the post body
-func Backspace(id, op uint64) error {
+func Backspace(id, op uint64, body string) error {
 	msg, err := common.EncodeMessage(common.MessageBackspace, id)
 	if err != nil {
 		return err
 	}
-	return updatePost(id, op, msg, "backspace", nil)
+	bodyModCh <- bodyModRequest{
+		id:   id,
+		op:   op,
+		msg:  msg,
+		body: body,
+	}
+	return nil
 }
 
 // ClosePost closes an open post and commits any links, backlinks and hash
@@ -201,6 +213,11 @@ func InsertImage(id, op uint64, img common.Image) (err error) {
 
 // SplicePost splices the text body of a post. For less load on the DB, supply
 // the entire new body as `body`.
-func SplicePost(id, op uint64, msg []byte, body string) error {
-	return updatePost(id, op, msg, "replace_body", body)
+func SplicePost(id, op uint64, msg []byte, body string) {
+	bodyModCh <- bodyModRequest{
+		id:   id,
+		op:   op,
+		msg:  msg,
+		body: body,
+	}
 }

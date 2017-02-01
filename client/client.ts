@@ -1,7 +1,7 @@
 // Core websocket message handlers
 
 import { handlers, message, connSM, connEvent } from './connection'
-import { posts, hidden } from './state'
+import { posts } from './state'
 import { Post, FormModel, PostView, postEvent, postSM } from './posts'
 import { PostLink, Command, PostData, ImageData } from "./common"
 import { postAdded, navigate } from "./ui"
@@ -35,36 +35,14 @@ function handle(id: number, fn: (m: Post) => void) {
 	}
 }
 
-// Insert a post into the models and DOM. The passed post may already exist and
-// be rendered, in which case it is a possibly updated version, that syncs the
-// client's state to the update stream. In that case the client must rerender
-// posts or deduplicate appropriately.
-export function insertPost(data: PostData) {
-	// It is possible to receive insertion updates for posts that are not
-	// currently displayed, because of the Last N setting. Skip them.
-	//
-	// Same for posts that are hidden by the user
-	if (data.id < posts.lowestID || hidden.has(data.id)) {
-		return
-	}
-
+// Insert a post into the models and DOM
+function insertPost(data: PostData) {
 	const existing = posts.get(data.id)
 	if (existing) {
-		if (data.deleted) {
-			existing.remove()
-		} else if (existing instanceof FormModel) {
-			if (!existing.isAllocated) {
-				existing.onAllocation(data)
-			}
+		if (existing instanceof FormModel && !existing.isAllocated) {
+			existing.onAllocation(data)
 			incrementPostCount(true, "image" in data)
-		} else {
-			existing.extend(data)
 		}
-		return
-	}
-
-	// Deleted post sent through a sync update. Don't render.
-	if (data.deleted) {
 		return
 	}
 

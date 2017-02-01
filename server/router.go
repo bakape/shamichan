@@ -5,8 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"net/http/pprof"
-
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/server/websockets"
 	"github.com/bakape/meguca/util"
@@ -62,8 +60,6 @@ func createRouter() http.Handler {
 	}
 	r.PanicHandler = text500
 
-	r.GET("/debug/pprof/profile", wrapHandler(pprof.Profile))
-
 	// HTML
 	r.GET("/", wrapHandler(redirectToDefault))
 	r.GET("/:board/", boardHTML)
@@ -88,6 +84,7 @@ func createRouter() http.Handler {
 	json.GET("/extensions", wrapHandler(serveExtensionMap))
 	json.GET("/boardConfig/:board", serveBoardConfigs)
 	json.GET("/boardList", wrapHandler(serveBoardList))
+	json.POST("/log", wrapHandler(serveReplicationLog))
 
 	// Public POST API
 	r.POST("/createThread", wrapHandler(createThread))

@@ -6,6 +6,7 @@ import { renderTime } from "../posts"
 import { setTitle } from "../ui"
 import { extractConfigs, isBanned } from "."
 import { setPostCount } from "./thread"
+import { setSyncCounter } from "../connection"
 
 type SortFunction = (a: HTMLElement, b: HTMLElement) => number
 
@@ -35,6 +36,7 @@ export function formatHeader(name: string, title: string): string {
 
 // Render a board fresh board page
 export function renderFresh(html: string) {
+	setSyncCounter(0)
 	lastFetch = Math.floor(Date.now() / 1000)
 	threads.innerHTML = html
 	if (isBanned()) {

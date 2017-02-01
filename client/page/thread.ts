@@ -4,7 +4,7 @@ import { posts as postCollection, hidden, mine, seenReplies } from '../state'
 import { pluralize, escape, threads, write } from '../util'
 import options from "../options"
 import lang from "../lang"
-import { updateSyncTimestamp } from "../connection"
+import { setSyncCounter } from "../connection"
 import { notifyAboutReply, setTitle } from "../ui"
 import { extractConfigs, isBanned } from "."
 
@@ -14,7 +14,6 @@ let postCtr = 0,
 
 // Render the HTML of a thread page
 export default function (html: string) {
-    updateSyncTimestamp()
     if (html) {
         threads.innerHTML = html
     }
@@ -31,6 +30,7 @@ export default function (html: string) {
         threads.querySelector("#post-data").textContent,
     ) as ThreadData
     const {posts} = data
+    setSyncCounter(data.logCtr)
     delete data.posts
 
     setPostCount(data.postCtr, data.imageCtr)

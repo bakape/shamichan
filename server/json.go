@@ -262,3 +262,42 @@ func serveBoardList(res http.ResponseWriter, req *http.Request) {
 func serveExtensionMap(w http.ResponseWriter, r *http.Request) {
 	serveJSON(w, r, "", common.Extensions)
 }
+
+// Server a slice of a thread's replication log
+func serveReplicationLog(w http.ResponseWriter, r *http.Request) {
+	var msg struct {
+		ID, Start, End uint64
+	}
+	if !decodeJSON(w, r, &msg) {
+		return
+	}
+
+	log, err := db.GetLog(msg.ID, msg.Start, msg.End)
+	switch err {
+	case nil:
+	case db.ErrTooManyMessages, sql.ErrNoRows:
+		text400(w, err)
+		return
+	default:
+		text500(w, r, err)
+		return
+	}
+
+	// Concatenate log in one allocation
+	l := 0
+	for _, msg := range log {
+		l += len(msg)
+	}
+	buf := make([]byte, 2, 2+l+(len(log)-1))
+	buf[0] = '3'
+	buf[1] = '3'
+	for i, msg := range log {
+		if i != 0 {
+			buf = append(buf, 0)
+		}
+		buf = append(buf, msg...)
+	}
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Write(buf)
+}

@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/bakape/meguca/auth"
@@ -446,7 +445,7 @@ func TestDeletePost(t *testing.T) {
 	thread := db.Thread{
 		ID:    3,
 		Board: "c",
-		Log:   []string{},
+		Log:   [][]byte{},
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{
@@ -527,7 +526,7 @@ func writeSampleThread(t *testing.T) {
 	thread := db.Thread{
 		ID:    1,
 		Board: "a",
-		Log:   strings.Split(GenString(11), ""),
+		Log:   bytes.Split([]byte(GenString(11)), []byte{}),
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{

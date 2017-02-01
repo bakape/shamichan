@@ -14,7 +14,9 @@ import (
 )
 
 var (
-	errTooManyMessages = errors.New("too many messages requested")
+	// ErrTooManyMessages denotes too many messages have been requested from
+	// the replication log
+	ErrTooManyMessages = errors.New("too many messages requested")
 )
 
 // Post is for writing new posts to a database. It contains the Password
@@ -32,7 +34,7 @@ type Thread struct {
 	PostCtr, ImageCtr   uint32
 	ReplyTime, BumpTime int64
 	Subject, Board      string
-	Log                 []string
+	Log                 [][]byte
 }
 
 // For decoding and encoding the tuple arrays we store links in
@@ -227,7 +229,7 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 
 	_, err = tx.Stmt(prepared["write_op"]).Exec(
 		t.Board,
-		pq.StringArray(t.Log),
+		pq.ByteaArray(t.Log),
 		t.ID,
 		t.PostCtr,
 		t.ImageCtr,
@@ -276,7 +278,7 @@ func GetIP(id uint64) (string, error) {
 // GetLog retrieves a slice of a thread's replication log
 func GetLog(id, from, to uint64) ([][]byte, error) {
 	if to-from > 500 {
-		return nil, errTooManyMessages
+		return nil, ErrTooManyMessages
 	}
 	var log pq.ByteaArray
 	err := prepared["get_log"].QueryRow(id, from, to).Scan(&log)

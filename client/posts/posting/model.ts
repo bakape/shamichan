@@ -9,21 +9,13 @@ import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
 import { newAllocRequest } from "./identity"
 
-// A message created while disconnected for later sending
-type BufferedMessage = [message, any]
-
 // Form Model of an OP post
 export default class FormModel extends Post {
 	private sentAllocRequest: boolean
 	public isAllocated: boolean
 	private inputBody: string
 	public view: FormView
-
-	// Buffer for messages committed during connection outage
-	private messageBuffer: BufferedMessage[]
-
-	// ID of last linked post
-	private lasLinked: number
+	private lasLinked: number // ID of last linked post
 
 	// Pass and ID, if you wish to hijack an existing model. To create a new
 	// model pass zero.
@@ -68,7 +60,6 @@ export default class FormModel extends Post {
 
 		// Initialize state
 		this.inputBody = ""
-		this.messageBuffer = []
 	}
 
 	// Append a character to the model's body and reparse the line, if it's a
@@ -128,19 +119,15 @@ export default class FormModel extends Post {
 
 	// Optionally buffer all data, if currently disconnected
 	private send(type: message, msg: any) {
-		if (postSM.state === postState.halted) {
-			this.messageBuffer.push([type, msg])
-		} else {
+		if (postSM.state !== postState.halted) {
 			send(type, msg)
 		}
 	}
 
-	// Flush any buffered messages to the server
-	public flushBuffer() {
-		for (let [type, msg] of this.messageBuffer) {
-			send(type, msg)
-		}
-		this.messageBuffer = []
+	// Reset the text body to match the server values
+	public resyncBody() {
+		this.inputBody = this.body
+		this.view.replaceText(this.body)
 	}
 
 	// Send a message about removing the last character of the line to the

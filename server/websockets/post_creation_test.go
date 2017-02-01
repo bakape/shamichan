@@ -427,7 +427,7 @@ func writeSampleThread(t testing.TB) {
 		PostCtr:   0,
 		ImageCtr:  1,
 		ReplyTime: now,
-		Log:       []string{},
+		Log:       [][]byte{},
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{

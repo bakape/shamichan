@@ -115,7 +115,7 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 		ReplyTime: timeStamp,
 		BumpTime:  timeStamp,
 		Board:     req.Board,
-		Log:       []string{},
+		Log:       [][]byte{},
 	}
 	thread.Subject, err = parser.ParseSubject(req.Subject)
 	if err != nil {

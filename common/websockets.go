@@ -1,6 +1,7 @@
 package common
 
 import (
+	"bytes"
 	"encoding/json"
 	"strconv"
 )
@@ -62,10 +63,14 @@ type Client interface {
 // the replication log.
 func EncodeMessage(typ MessageType, msg interface{}) ([]byte, error) {
 	data, err := json.Marshal(msg)
-	if err != nil {
+	switch {
+	case err != nil:
 		return nil, err
+	case typ != MessageConcat && bytes.IndexRune(data, 0) != -1:
+		return nil, ErrContainsNull
+	default:
+		return PrependMessageType(typ, data), nil
 	}
-	return PrependMessageType(typ, data), nil
 }
 
 // PrependMessageType prepends the encoded websocket message type to an already

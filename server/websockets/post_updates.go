@@ -80,23 +80,29 @@ func (s spliceRequest) MarshalJSON() ([]byte, error) {
 }
 
 // Append a rune to the body of the open post
-func (c *Client) appendRune(data []byte) error {
-	if has, err := c.hasPost(); err != nil {
-		return err
-	} else if !has {
-		return nil
-	}
-	if c.post.len+1 > common.MaxLenBody {
+func (c *Client) appendRune(data []byte) (err error) {
+	has, err := c.hasPost()
+	switch {
+	case err != nil:
+		return
+	case !has:
+		return
+	case c.post.len+1 > common.MaxLenBody:
 		return common.ErrBodyTooLong
 	}
+
 	var char rune
-	if err := decodeMessage(data, &char); err != nil {
-		return err
+	err = decodeMessage(data, &char)
+	switch {
+	case err != nil:
+		return
+	case char == 0:
+		return common.ErrContainsNull
 	}
 
 	c.post.WriteRune(char)
 	c.post.len++
-	return db.AppendBody(c.post.id, c.post.op, char)
+	return db.AppendBody(c.post.id, c.post.op, char, c.post.String())
 }
 
 // Remove one character from the end of the line in the open post
@@ -115,7 +121,7 @@ func (c *Client) backspace() error {
 	c.post.Truncate(c.post.Len() - lastRuneLen)
 	c.post.len--
 
-	return db.Backspace(c.post.id, c.post.op)
+	return db.Backspace(c.post.id, c.post.op, c.post.String())
 }
 
 // Close an open post and parse the last line, if needed.
@@ -165,6 +171,12 @@ func (c *Client) spliceText(data []byte) error {
 		return errSpliceTooLong // Nice try, kid
 	}
 
+	for _, r := range req.Text {
+		if r == 0 {
+			return common.ErrContainsNull
+		}
+	}
+
 	var (
 		old = []rune(c.post.String())
 		end []rune
@@ -206,7 +218,8 @@ func (c *Client) spliceText(data []byte) error {
 	if err != nil {
 		return err
 	}
-	return db.SplicePost(c.post.id, c.post.op, msg, c.post.String())
+	db.SplicePost(c.post.id, c.post.op, msg, c.post.String())
+	return nil
 }
 
 // Insert and image into an existing open post

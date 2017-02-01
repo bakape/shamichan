@@ -14,11 +14,15 @@ import (
 	_ "github.com/lib/pq" // Postgres driver
 )
 
-const version = 1
+const (
+	version = 1
+	// TestConnArgs contains ConnArgs used for tests
+	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
+)
 
 var (
 	// ConnArgs specifies the PostgreSQL connection arguments
-	ConnArgs = `user=meguca password=meguca dbname=meguca sslmode=disable`
+	ConnArgs = `user=meguca password=meguca dbname=meguca sslmode=disable binary_parameters=yes`
 
 	// IsTest can be overridden to not launch several infinite loops during tests
 	// or check DB version
