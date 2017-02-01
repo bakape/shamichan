@@ -8,7 +8,6 @@ License: GNU AGPL
 ##Features
 * Posts and posting
     - Character by character post updates
-    - Can edit entire line while writing
     - Hovering quick reply for post authoring
     - Dice roll, coin flip and eightball commands
     - Desktop notifications, post highlighting and "(You)" on quote
@@ -20,11 +19,10 @@ License: GNU AGPL
     - No posts per thread or threads per board limit
     - Forced anonymity display mode
     - Post hiding
-    - Option to display only the last 50 posts in a thread
+    - Option to display only the last 100 posts in a thread
     - Optional automatic deletion of unused threads and boards
     - Automatic HTTP(S) and magnet URL linkification
     - Automatic quoting of selected text, when quoting a post
-    - Automatic quoting of multiline pastes, if line starts with `>`
 * Files and images
     - JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ
     supported
@@ -37,10 +35,8 @@ License: GNU AGPL
     instantly
 * Performance
     - Low memory and CPU usage
-    - High vertical and easy horizontal scaling
     - No frameworks and optimized code on both client and server
     - File upload processing written in C with GraphicsMagick and ffmpeg
-    - On-demand lazy client module loading and rendering
     - Inbuilt custom LRU cache
 * Client UI
     - Works with all modern and most outdated browsers (such as PaleMoon)
