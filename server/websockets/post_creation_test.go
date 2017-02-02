@@ -124,6 +124,7 @@ func testCreateThread(t *testing.T) {
 			Board:    "c",
 			Subject:  "subject",
 			ImageCtr: 1,
+			PostCtr:  1,
 		},
 		Post: common.Post{
 			Editing: true,

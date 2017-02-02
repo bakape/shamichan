@@ -34,7 +34,7 @@ func TestGetImage(t *testing.T) {
 }
 
 func writeSampleImage(t *testing.T) {
-	if err := WriteImage(assets.StdJPEG.ImageCommon); err != nil {
+	if err := WriteImage(nil, assets.StdJPEG.ImageCommon); err != nil {
 		t.Fatal(err)
 	}
 }

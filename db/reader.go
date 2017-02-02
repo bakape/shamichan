@@ -236,13 +236,14 @@ func scanBoard(table tableScanner) (common.Board, error) {
 			t                common.BoardThread
 			name, trip, auth sql.NullString
 			img              imageScanner
+			logCtr           sql.NullInt64
 		)
 
 		args := make([]interface{}, 0, 24)
 		args = append(args,
 			&t.Board, &t.ID, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
 			&t.Subject, &img.Spoiler, &t.Time, &name, &trip, &auth, &img.Name,
-			&t.LogCtr,
+			&logCtr,
 		)
 		args = append(args, img.ScanArgs()...)
 		err := table.Scan(args...)
@@ -253,6 +254,7 @@ func scanBoard(table tableScanner) (common.Board, error) {
 		t.Name = name.String
 		t.Trip = trip.String
 		t.Auth = auth.String
+		t.LogCtr = uint64(logCtr.Int64)
 		t.Image = img.Val()
 
 		board = append(board, t)

@@ -25,13 +25,13 @@ var (
 )
 
 // WriteImage writes a processed image record to the DB
-func WriteImage(i common.ImageCommon) error {
+func WriteImage(tx *sql.Tx, i common.ImageCommon) error {
 	dims := pq.GenericArray{A: i.Dims}
-	return execPrepared(
-		"write_image",
+	_, err := getStatement(tx, "write_image").Exec(
 		i.APNG, i.Audio, i.Video, i.FileType, i.ThumbType, dims, i.Length,
 		i.Size, i.MD5, i.SHA1,
 	)
+	return err
 }
 
 // GetImage retrieves a thumbnailed image record from the DB
@@ -106,7 +106,7 @@ func AllocateImage(src, thumb []byte, img common.ImageCommon) error {
 		return cleanUpFailedAllocation(img, err)
 	}
 
-	err = WriteImage(img)
+	err = WriteImage(nil, img)
 	if err != nil {
 		return cleanUpFailedAllocation(img, err)
 	}

@@ -112,6 +112,7 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 		return
 	}
 	thread := db.Thread{
+		PostCtr:   1,
 		ReplyTime: timeStamp,
 		BumpTime:  timeStamp,
 		Board:     req.Board,

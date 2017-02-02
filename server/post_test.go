@@ -120,7 +120,7 @@ func TestSpoilerImage(t *testing.T) {
 }
 
 func writeSampleImage(t *testing.T) {
-	if err := db.WriteImage(assets.StdJPEG.ImageCommon); err != nil {
+	if err := db.WriteImage(nil, assets.StdJPEG.ImageCommon); err != nil {
 		t.Fatal(err)
 	}
 }

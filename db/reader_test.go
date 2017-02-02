@@ -102,7 +102,7 @@ func TestReader(t *testing.T) {
 		},
 	}
 
-	if err := WriteImage(assets.StdJPEG.ImageCommon); err != nil {
+	if err := WriteImage(nil, assets.StdJPEG.ImageCommon); err != nil {
 		t.Fatal(err)
 	}
 	for i := range threads {
