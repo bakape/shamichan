@@ -69,7 +69,7 @@
 						Sn
 					</a>
 					<a class="image-search whatAnime" target="_blank" rel="nofollow" href="https://whatanime.ga/?url={%s= ISSrc %}">
-						WA
+						Wa
 					</a>
 					<a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{%s= img.MD5 %}">
 						Ds
