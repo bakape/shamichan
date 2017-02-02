@@ -264,12 +264,6 @@ handlers[message.synchronise] = async (ctr: number) => {
 // If thread data is too old because of disconnect, computer suspension or
 // resuming old tabs, refetch and/or sync differences.
 async function fetchBacklog(start: number, end: number) {
-	// Too many changes
-	if (end - start > 500) {
-		location.reload(true)
-		return
-	}
-
 	const res = await fetch("/json/log", {
 		method: "POST",
 		body: JSON.stringify({

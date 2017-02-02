@@ -277,9 +277,6 @@ func GetIP(id uint64) (string, error) {
 
 // GetLog retrieves a slice of a thread's replication log
 func GetLog(id, from, to uint64) ([][]byte, error) {
-	if to-from > 500 {
-		return nil, ErrTooManyMessages
-	}
 	var log pq.ByteaArray
 	// Postgres arrays are 1-based
 	err := prepared["get_log"].QueryRow(id, from+1, to+1).Scan(&log)
