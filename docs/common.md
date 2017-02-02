@@ -48,13 +48,7 @@ jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz"
 ```
 
 ##PostLinks
-Map of linked post IDs to their parenthood data. Each map key contains the
-following object:
-
-| Field | Type | Required | Description |
-|---|---|:---:|---|
-| board | string | + | Parent board of the linked post |
-| op | uint | + | Parent thread of the linked post |
+Array of linked post and parent thread tuples - [][2]uint
 
 ##Command
 Results of an executed hash command. Several different object types implement
@@ -71,6 +65,6 @@ The "val" field contains the following data for each command type:
 | dice | []uint | Array of dice rolls. Maximum number of rolls is 10 and each roll can not exceed 100 |
 | flip | bool | coin flip |
 | eightBall | string | stores one of several predefined string messages randomly |
-| syncWatch | ? | syncwatch not yet implemented and spec not finalized |
+| syncWatch | ? | syncwatch is not yet implemented and spec not finalized |
 | pyu | uint | increment generic global counter and store current value |
 | pcount | uint | store current global counter without incrementing |

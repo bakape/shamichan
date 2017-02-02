@@ -15,20 +15,18 @@ must always be "synchronize".
 | Code | Name | Payload type | Description |
 |:---:|---|---|---|
 | 0 | invalid | string | Convey an unrecoverable error. Only used on client protocol violations or server errors. The connection is terminated after writing this message. You should either fix your client implementation or report a server bug, if this message is encountered. |
-| 2 | insertPost | [Post](common.md#post) | Post insertion into the thread. The passed post may already exist and be rendered, in which case it is a possibly updated version of the post, that syncs the client's state to the update stream. In that case the client must rerender or deduplicate appropriately. |
+| 2 | insertPost | [Post](common.md#post) | Post insertion into the thread |
 | 3 | append | [2]uint | Append a character to the current line of the post. The first array item is the ID of the target post. The seconds is a character encoded as UTF-8 character code. |
 | 4 | backspace | uint | Remove one character from the end of the line of the post specified by ID. |
 | 5 | splice | [SpliceMessage](#splicemessage) | Splice the current open line. Used for all text mutations, that are neither "append" or "backspace". |
 | 6 | closePost | uint | Close the post specified by ID. This message may be received for already closed posts, due to asynchronous nature of the eventual synchronization algorithm. |
-| 7 | link | [LinkMessage](#linkmessage) | Insert a link into the specified post's link map. This message is always sent before the message to close an open line, so that any links are available, when the line is parsed. |
-| 8 | backlink | [LinkMessage](#linkmessage) | Add a backlink to the post specified by ID. |
-| 9 | command | [CommandMessage](#commandmessage) | Append a command result to the specified post's array. Insert a link into the specified post's link map. This message is always sent before the message to close an open line, so that any command results are available, when the line is parsed. |
-| 10 | insertImage | [ImageMessage](#imagemessage) | Insert an image into an open post. |
-| 11 | spoiler | uint | Spoiler the image of the post specified by ID |
-| 12 | deletePost | uint | Delete a post specified by ID |
-| 13 | banned | uint | Notifies the specific post was banned |
-| 13 | redirect | string | Notifies the client it has been redirected to the specific board page. Any open posts have been closed and after receiving this message the client is already considered to be synchronized to the board. If the client does comply an error will be raised the client will be disconnected. |
-| 30 | synchronize | map[uint][Post](common.md#post) | Response to a synchronization request. Contains a map of posts updated in the thread in the last 30 seconds. These are meant to bring the client up to sync with the update stream server-side. Consequently the client must ensure his existing post data is not more than 30 seconds old before synchronization. |
+| 7 | backlink | [3]uint | Add a backlink to the post. A tuple of [target_post, linked_post, linked_post_parent_thread] |
+| 8 | insertImage | [ImageMessage](#imagemessage) | Insert an image into an open post. |
+| 9 | spoiler | uint | Spoiler the image of the post specified by ID |
+| 10 | deletePost | uint | Delete a post specified by ID |
+| 11 | banned | uint | Notifies the specific post was banned |
+| 12 | redirect | string | Notifies the client it has been redirected to the specific board page. Any open posts have been closed and after receiving this message the client is already considered to be synchronized to the board. If the client does comply an error will be raised the client will be disconnected. |
+| 30 | synchronize | uint | Response to a synchronization request. Returns the current synchronization counter of the update feed |
 | 31 | reclaim | uint | Response to a request to reclaim a post lost after disconnecting from the server. 0 denotes success and the client is henceforth able to write to said post, as before the disconnect.1 denotes the post is unrecoverable. |
 | 32 | postID | int | Returns the post ID of the client's freshly allocated post. A response to a post or thread insertion request. -1 denotes invalid captcha. |
 | 33 | concat | * | Contains several null-byte concatenated messages. Used for limiting the rate of update frames sent from the server. |
@@ -41,20 +39,6 @@ extends [SpliceRequest](#splicerequest)
 
 | Field | Type | Required | Description |
 |---|---|:---:|---|
-| id | uint | + | ID of the target post |
-
-##LinkMessage
-
-| Field | Type | Required | Description |
-|---|---|:---:|---|
-| id | uint | + | ID of the target post |
-| links | [PostLinks](common.md#postlinks) | + | Links to be inserted into the target post |
-
-##CommandMessage
-extends [Command](common.md#command)
-
-| Field | Type | Required | Description |
-|---|---|---|---|
 | id | uint | + | ID of the target post |
 
 ##ImageMessage
@@ -78,20 +62,10 @@ denotes a string literal of maximum 30 bytes allowed length.
 | 4 | backspace | - | Remove one character from the end of the current line. Does not contain any payload. |
 | 5 | splice | [SpliceRequest](#splicerequest) | Splice the current open line. Used for all text mutations, that are neither "append" or "backspace". |
 | 6 | closePost | - | Close the current open post. Does not contain any payload. |
-| 10 | insertImage | [ImageRequest](#imagerequest) | Allocate an image to an already open post. |
+| 8 | insertImage | [ImageRequest](#imagerequest) | Allocate an image to an already open post. |
 | 30 | synchronize | [SyncRequest](#syncrequest) | Synchronize to a specific thread or board update feed. |
 | 31 | reclaim | [ReclaimRequest](#reclaimrequest) | Reclaim an open post after losing connection to the server. Note that only open posts can be reclaimed and open posts are automatically closed 30 minutes after opening. |
 | 43 | NOOP | - | No operation message. No payload. Can be used as a pseudo ping, if your WebSocket API does not expose pings. |
-
-##Captcha
-Solved captcha data from the SolveMedia captcha service.
-Note that captchas are only required, if the site administrator has enabled
-them. This is exposed through the `/json/config` JSON API endpoint.
-
-| Field | Type | Required | Description |
-|---|---|:---:|---|
-| captcha | string | + | The user's typed in captcha response |
-| captchaID | string | + | ID of the captcha as provided by the SolveMedia |
 
 ##ImageRequest
 Request to allocate a file to a post. Note that allocation requests on boards
@@ -115,12 +89,13 @@ Common fields of both thread and reply creation requests
 
 ##ThreadCreationRequest
 
-extends [Captcha](#captcha), [PostCreationCommon](#postcreationcommon)
+extends [PostCreationCommon](#postcreationcommon)
 
 | Field | Type | Required | Description |
 |---|---|:---:|---|
 | subject | string{100} | + | thread subject |
 | board | string{3} | + | board the thread will be inserted into |
+| captcha | string | - | captcha response token |
 
 ##SpliceRequest
 Mimics the behavior of JavaScript's [Array.prototype.splice](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
