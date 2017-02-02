@@ -65,16 +65,25 @@ export default class FormModel extends Post {
 	// Append a character to the model's body and reparse the line, if it's a
 	// newline
 	public append(code: number) {
+		if (!this.editing) {
+			return super.append(code)
+		}
 		this.body += String.fromCodePoint(code)
 	}
 
 	// Remove the last character from the model's body
 	public backspace() {
+		if (!this.editing) {
+			return super.backspace()
+		}
 		this.body = this.body.slice(0, -1)
 	}
 
 	// Splice the last line of the body
 	public splice(msg: SpliceResponse) {
+		if (!this.editing) {
+			return super.splice(msg)
+		}
 		this.body = this.spliceText(this.body, msg)
 	}
 
@@ -178,10 +187,6 @@ export default class FormModel extends Post {
 	// Turn post form into a regular post, because it has expired after a
 	// period of posting ability loss
 	public abandon() {
-		// Normalize state. The editing attribute remains true, which will cause
-		// a close message from the server to close the post one more time and
-		// re-render its contents.
-		this.body = this.inputBody
 		this.view.cleanUp()
 		this.closePost()
 	}
