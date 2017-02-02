@@ -28,3 +28,4 @@ libimager.a
 Cargo.lock
 *.qtpl.go
 db/sql/sql.go
+scripts/migration/3to4/3to4

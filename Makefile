@@ -1,21 +1,20 @@
 export node_bins=$(PWD)/node_modules/.bin
 export uglifyjs=$(node_bins)/uglifyjs
 export gulp=$(node_bins)/gulp
+export build_path=$(PWD)/.build/src/github.com/bakape
+export GOPATH=$(PWD)/.build
+export is_windows=false
+binary=meguca
 
 # Differentiate between Unix and mingw builds
 ifeq ($(OS), Windows_NT)
-	build_path=/.meguca_build/src/github.com/bakape
+	export build_path=/.meguca_build/src/github.com/bakape
 	export GOPATH=/.meguca_build
 	export PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig/
 	export PKG_CONFIG_LIBDIR=/mingw64/lib/pkgconfig/
 	export PATH:=$(PATH):/mingw64/bin/
+	export is_windows=true
 	binary=meguca.exe
-	is_windows=true
-else
-	build_path=$(PWD)/.build/src/github.com/bakape
-	export GOPATH=$(PWD)/.build
-	binary=meguca
-	is_windows=false
 endif
 
 .PHONY: server client imager test
@@ -53,6 +52,7 @@ generate: server_deps
 server_deps: build_dirs
 	go get -v github.com/valyala/quicktemplate/qtc
 	go get -v github.com/jteeuwen/go-bindata/...
+	go get -v github.com/dancannon/gorethink
 	go list -f '{{.Deps}}' . \
 		| tr "[" " " \
 		| tr "]" " " \
@@ -86,6 +86,7 @@ clean: client_clean
 	$(MAKE) -C imager/lib clean
 	$(MAKE) -C templates clean
 	$(MAKE) -C db clean
+	$(MAKE) -C scripts/migration/3to4 clean
 ifeq ($(is_windows), true)
 	rm -rf /.meguca_build *.dll
 endif
@@ -95,3 +96,6 @@ dist_clean: clean
 
 test:
 	go test -p 1 ./...
+
+upgrade_v4: generate
+	$(MAKE) -C scripts/migration/3to4 upgrade
