@@ -12,6 +12,7 @@ type SortFunction = (a: HTMLElement, b: HTMLElement) => number
 
 // Thread sort functions
 const sorts: { [name: string]: SortFunction } = {
+	bump: subtract("bumpTime"),
 	lastReply: subtract("replyTime"),
 	creation: subtract("time"),
 	replyCount: subtract("postCtr"),
@@ -24,9 +25,8 @@ let lastFetch = Date.now() / 1000
 
 // Sort threads by embedded data
 function subtract(attr: string): (a: HTMLElement, b: HTMLElement) => number {
-	attr = "data-" + attr
 	return (a, b) =>
-		parseInt(b.getAttribute(attr)) - parseInt(a.getAttribute(attr))
+		parseInt(b.dataset[attr]) - parseInt(a.dataset[attr])
 }
 
 // Format a board name and title into canonical board header format
