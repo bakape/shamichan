@@ -15,14 +15,14 @@ a.referenced {
 }
 
 article {
+	word-break: break-word;
+	word-wrap: break-word;
+	max-width: 95vw;
 	& > *:not(header) {
 		contain: content;
 	}
 	.backlinks {
 		padding-top: 0.5em;
-		padding-bottom: 0.2em;
-		word-break: break-all;
-		overflow-wrap: break-word;
 		& > em > a {
 			font-size: smaller;
 		}
@@ -31,7 +31,6 @@ article {
 		margin-right: 0;
 	}
 	blockquote {
-		word-break: break-all;
 		min-width: 15em;
 	}
 	audio {
@@ -95,7 +94,6 @@ em {
 
 figcaption {
 	margin: 2px 0;
-	word-break: break-all;
 }
 
 .image-search {
@@ -225,7 +223,6 @@ header {
 		max-height: 320px;
 		display: inline-block;
 		text-align: center;
-		word-wrap:break-word;
 		overflow: hidden;
 		vertical-align: top;
 		padding: 0.6em;
