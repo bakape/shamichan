@@ -12,11 +12,11 @@ type SortFunction = (a: HTMLElement, b: HTMLElement) => number
 
 // Thread sort functions
 const sorts: { [name: string]: SortFunction } = {
-	bump: subtract("bumpTime"),
-	lastReply: subtract("replyTime"),
+	bump: subtract("bump-time"),
+	lastReply: subtract("reply-time"),
 	creation: subtract("time"),
-	replyCount: subtract("postCtr"),
-	fileCount: subtract("imageCtr"),
+	replyCount: subtract("post-ctr"),
+	fileCount: subtract("image-ctr"),
 }
 const threads = document.getElementById("threads")
 

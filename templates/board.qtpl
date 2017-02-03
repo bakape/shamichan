@@ -94,7 +94,7 @@ allow caching of generated posts.
 		{% code idStr:= strconv.FormatUint(t.ID, 10) %}
 		{% code postCtr := strconv.FormatUint(uint64(t.PostCtr), 10) %}
 		{% code imgCtr := strconv.FormatUint(uint64(t.ImageCtr), 10) %}
-		<article id="p{%s= idStr %}" class="glass" data-bumpTime="{%s= strconv.FormatInt(t.BumpTime, 10) %}" data-replyTime="{%s= strconv.FormatInt(t.ReplyTime, 10) %}" data-time="{%s= strconv.FormatInt(t.Time, 10) %}" data-postCtr="{%s= postCtr %}" data-imageCtr="{%s= imgCtr %}">
+		<article id="p{%s= idStr %}" class="glass" data-bump-time="{%s= strconv.FormatInt(t.BumpTime, 10) %}" data-reply-time="{%s= strconv.FormatInt(t.ReplyTime, 10) %}" data-time="{%s= strconv.FormatInt(t.Time, 10) %}" data-post-ctr="{%s= postCtr %}" data-image-ctr="{%s= imgCtr %}">
 			{% if t.Image != nil %}
 				<figure>
 					{% code img := *t.Image %}
