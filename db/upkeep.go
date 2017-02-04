@@ -68,6 +68,7 @@ func closeDanglingPosts() (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Close()
 
 	type post struct {
 		id, op uint64
@@ -135,6 +136,7 @@ func deleteUnusedImages() (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Close()
 
 	for r.Next() {
 		var (

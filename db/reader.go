@@ -142,6 +142,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	if err != nil {
 		return
 	}
+	defer r.Close()
 	t.Posts = make([]common.Post, 0, cap)
 
 	var p common.Post
