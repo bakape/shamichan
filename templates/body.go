@@ -85,10 +85,12 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64) {
 	for i, l := range lines {
 		// Prevent successive empty lines
 		if len(l) == 0 {
-			if !c.state.lastLineEmpty {
+			// Don't break, if body ends with newline
+			if !c.state.lastLineEmpty && i != last {
 				c.N().S("<br>")
 			}
 			c.state.lastLineEmpty = true
+			c.state.quote = false
 			continue
 		}
 		c.state.lastLineEmpty = false

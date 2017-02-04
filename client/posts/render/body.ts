@@ -22,10 +22,12 @@ export default function renderBody(data: PostData): string {
 
         // Prevent successive empty lines
         if (!l.length) {
-            if (!state.lastLineEmpty) {
+            // Don't break, if body ends with newline
+            if (!state.lastLineEmpty && i !== last) {
                 html += "<br>"
             }
             state.lastLineEmpty = true
+            state.quote = false
             continue
         }
 
