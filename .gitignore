@@ -23,8 +23,11 @@ imager/assets/images
 imager/images
 thumb_*.png
 thumb_*.jpg
-imager/lib/target
-libimager.a
+*/lib/target
+*.a
+*.wasm
+*.wast
+templates/lib/*.js
 Cargo.lock
 *.qtpl.go
 db/sql/sql.go
