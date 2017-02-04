@@ -120,6 +120,16 @@ async function toggleExpansion(e: MouseEvent) {
 
 	const html = decodeURIComponent(el.getAttribute("data-html")),
 		frag = makeFrag(html)
+
+	// Restrict embedded iframe access to the page. Improves privacy.
+	for (let el of frag.querySelectorAll("iframe")) {
+		el.setAttribute("referrerpolicy", "no-referrer")
+		el.setAttribute(
+			"sandbox",
+			"allow-scripts allow-same-origin allow-popups allow-modals",
+		)
+	}
+
 	write(() => {
 		el.append(frag)
 		el.classList.add("expanded")
