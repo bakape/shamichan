@@ -21,12 +21,13 @@ const sorts: { [name: string]: SortFunction } = {
 const threads = document.getElementById("threads")
 
 // Unix time of last board page render. Used for automatic refreshes.
-let lastFetch = Date.now() / 1000
+let lastFetchTime = Date.now() / 1000
 
 // Sort threads by embedded data
 function subtract(attr: string): (a: HTMLElement, b: HTMLElement) => number {
+	attr = "data-" + attr
 	return (a, b) =>
-		parseInt(b.dataset[attr]) - parseInt(a.dataset[attr])
+		parseInt(b.getAttribute(attr)) - parseInt(a.getAttribute(attr))
 }
 
 // Format a board name and title into canonical board header format
@@ -37,7 +38,7 @@ export function formatHeader(name: string, title: string): string {
 // Render a board fresh board page
 export function renderFresh(html: string) {
 	setSyncCounter(0)
-	lastFetch = Math.floor(Date.now() / 1000)
+	lastFetchTime = Math.floor(Date.now() / 1000)
 	threads.innerHTML = html
 	if (isBanned()) {
 		return
@@ -93,7 +94,7 @@ export function sortThreads(initial: boolean) {
 
 // Render the board refresh button text
 function renderRefreshButton(el: Element) {
-	renderTime(el, lastFetch, true)
+	renderTime(el, lastFetchTime, true)
 	if (el.textContent === lang.posts["justNow"]) {
 		el.textContent = lang.ui["refresh"]
 	}
@@ -132,7 +133,6 @@ function filterThreads(filter: string) {
 	}
 }
 
-
 // Fetch and rerender board contents
 async function refreshBoard() {
 	const res = await fetchBoard(page.board),
@@ -161,7 +161,7 @@ setInterval(() => {
 	}
 }, 600000)
 
-on(threads, "change", onSortChange, {
+on(threads, "input", onSortChange, {
 	passive: true,
 	selector: "select[name=sortMode]",
 })
