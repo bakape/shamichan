@@ -74,7 +74,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name:    "trailing empty open line",
 			in:      "foo\n",
-			out:     "foo<br><br>",
+			out:     "foo<br>",
 			editing: true,
 		},
 		{
