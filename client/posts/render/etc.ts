@@ -37,17 +37,19 @@ export function renderBacklinks(post: DocumentFragment, links: PostLink[]) {
     }
 
     // Get already rendered backlink IDs
-    let rendered: string[] = []
+    const rendered = new Set<number>()
     for (let em of Array.from(el.children)) {
-        rendered.push((em.firstChild as HTMLElement).getAttribute("data-id"))
+        const id = (em.firstChild as HTMLElement).getAttribute("data-id")
+        rendered.add(parseInt(id))
     }
 
     let html = ""
     for (let [id, op] of links) {
         // Confirm link not already rendered
-        if (rendered.includes(id.toString())) {
+        if (rendered.has(id)) {
             continue
         }
+        rendered.add(id)
         html += "<em>" + renderPostLink(id, op) + "</em>"
     }
 

@@ -149,9 +149,15 @@
 		{% endif %}
 		{% if p.Backlinks != nil %}
 			<span class="backlinks spaced">
+				{% code rendered := make(map[uint64]bool, len(p.Backlinks)) %}
 				{% for _, link := range p.Backlinks %}
+					{% code id := link[0] %}
+					{% if rendered[id] %}
+						{% continue %}
+					{% endif %}
+					{% code rendered[id] = true %}
 					<em>
-						{%= postLink(link[0], link[1], link[1] != op) %}
+						{%= postLink(id, link[1], link[1] != op) %}
 					</em>
 				{% endfor %}
 			</span>
