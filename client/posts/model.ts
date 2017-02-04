@@ -30,6 +30,15 @@ export class Post extends Model implements PostData {
 	constructor(attrs: PostData) {
 		super()
 		extend(this, attrs)
+
+		// All kinds of interesting races can happen, so best insure a model
+		// always fast the state object defined
+		this.state = {
+			spoiler: false,
+			quote: false,
+			lastLineEmpty: false,
+			iDice: 0,
+		}
 	}
 
 	// Remove the model from its collection, detach all references and allow to
