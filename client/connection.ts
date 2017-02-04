@@ -273,7 +273,11 @@ async function fetchBacklog(start: number, end: number) {
 	})
 	switch (res.status) {
 		case 200:
-			onMessage(await res.text(), false)
+			// Text body will be empty, if there are no messages
+			const data = await res.text()
+			if (data) {
+				onMessage(data, false)
+			}
 			break
 		default:
 			throw await res.text()

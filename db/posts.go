@@ -5,18 +5,11 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/bakape/meguca/common"
 	"github.com/lib/pq"
-)
-
-var (
-	// ErrTooManyMessages denotes too many messages have been requested from
-	// the replication log
-	ErrTooManyMessages = errors.New("too many messages requested")
 )
 
 // Post is for writing new posts to a database. It contains the Password

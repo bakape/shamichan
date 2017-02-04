@@ -272,14 +272,23 @@ func serveReplicationLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// NOOP
+	if msg.Start-msg.End == 0 {
+		return
+	}
+
 	log, err := db.GetLog(msg.ID, msg.Start, msg.End)
 	switch err {
 	case nil:
-	case db.ErrTooManyMessages, sql.ErrNoRows:
+	case sql.ErrNoRows:
 		text400(w, err)
 		return
 	default:
 		text500(w, r, err)
+		return
+	}
+
+	if len(log) == 0 {
 		return
 	}
 
