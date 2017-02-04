@@ -114,6 +114,7 @@ func (c *bodyContext) parseTerminatedLine(line string) {
 // Open a new line container and check for quotes
 func (c *bodyContext) initLine(first byte) {
 	c.state.quote = false
+	c.state.lastLineEmpty = false
 	if first == '>' {
 		c.N().S("<em>")
 		c.state.quote = true

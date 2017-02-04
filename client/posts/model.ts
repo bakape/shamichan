@@ -58,7 +58,6 @@ export class Post extends Model implements PostData {
 			{ view} = this
 		this.body += char
 
-
 		// It is possible to receive text body updates after a post closes,
 		// due to server-side buffering optimizations. If so, rerender the body.
 		if (char === "\n" || endsWithTag(this.body) || !this.editing) {

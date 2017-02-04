@@ -6,7 +6,7 @@ import { parseEmbeds } from "../embed"
 
 // Render the text body of a post
 export default function renderBody(data: PostData): string {
-    data.state = {
+    const state: TextState = data.state = {
         spoiler: false,
         quote: false,
         lastLineEmpty: false,
@@ -22,16 +22,16 @@ export default function renderBody(data: PostData): string {
 
         // Prevent successive empty lines
         if (!l.length) {
-            if (!data.state.lastLineEmpty) {
+            if (!state.lastLineEmpty) {
                 html += "<br>"
             }
-            data.state.lastLineEmpty = true
+            state.lastLineEmpty = true
             continue
         }
 
-        html += initLine(l, data.state)
+        html += initLine(l, state)
             + fn(l, data)
-            + terminateTags(data.state, i != last)
+            + terminateTags(state, i != last)
     }
 
     return html
@@ -85,7 +85,7 @@ function parseSpoilers(
 // Open a new line container and check for quotes
 function initLine(line: string, state: TextState): string {
     let html = ""
-    state.spoiler = state.quote = false
+    state.quote = state.lastLineEmpty = false
     if (line[0] === ">") {
         state.quote = true
         html += "<em>"
