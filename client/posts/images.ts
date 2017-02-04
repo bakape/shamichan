@@ -28,11 +28,10 @@ export default class ImageHandler extends View<Post> {
 		}
 	}
 
-	public toggleImageExpansion(event: Event) {
+	public toggleImageExpansion(event: MouseEvent) {
 		const img = this.model.image
 		if (img.expanded) {
-			event.preventDefault()
-			return this.contractImage(true, true)
+			return this.contractImage(event, true, true)
 		}
 
 		switch (img.fileType) {
@@ -52,6 +51,8 @@ export default class ImageHandler extends View<Post> {
 				if (!this.model.image.video) {
 					event.preventDefault()
 					return this.renderAudio()
+				} else {
+					return this.expandImage(event, false)
 				}
 			default:
 				return this.expandImage(event, false)
@@ -67,7 +68,11 @@ export default class ImageHandler extends View<Post> {
 
 	// Contract an image and optionally omit scrolling to post and delay the
 	// rendering of the change to the next animation frame.
-	public contractImage(scroll: boolean, delay: boolean) {
+	public contractImage(
+		e: MouseEvent | null,
+		scroll: boolean,
+		delay: boolean,
+	) {
 		const img = this.model.image
 
 		switch (img.fileType) {
@@ -75,6 +80,15 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes.mp3:
 			case fileTypes.mp4:
 			case fileTypes.webm:
+				// Firefox provides no way of detecting, if the controls where
+				// clicked instead of the video. Estimate this by height.
+				if (e) {
+					const max = (e.target as HTMLElement).offsetHeight - 25
+					if (e.offsetY > max) {
+						return
+					}
+				}
+
 				write(() => {
 					const v = this.el.querySelector("video")
 					if (v) {
@@ -89,6 +103,9 @@ export default class ImageHandler extends View<Post> {
 				break
 		}
 
+		if (e) {
+			e.preventDefault()
+		}
 		this.renderImage(false, delay)
 
 		// Scroll the post back into view, if contracting images taller than
@@ -128,7 +145,8 @@ export default class ImageHandler extends View<Post> {
 			// Hide any hover previews
 			trigger("imageExpanded")
 
-			const el = this.el.querySelector("figure img") as HTMLImageElement,
+			const figure = this.el.querySelector("figure"),
+				imgEl = figure.querySelector("img"),
 				src = sourcePath(img.SHA1, img.fileType)
 
 			switch (img.fileType) {
@@ -143,11 +161,11 @@ export default class ImageHandler extends View<Post> {
 						controls: "",
 						loop: "",
 					})
-					el.hidden = true
-					el.after(video)
+					imgEl.hidden = true
+					figure.append(video)
 					break
 				default:
-					setAttrs(el, {
+					setAttrs(imgEl, {
 						src,
 						class: cls,
 						width: "",
@@ -217,7 +235,7 @@ export function toggleExpandAll() {
 		if (expandAll) {
 			post.view.expandImage(null, true)
 		} else {
-			post.view.contractImage(false, true)
+			post.view.contractImage(null, false, true)
 		}
 	}
 }
