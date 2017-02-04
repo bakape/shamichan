@@ -83,6 +83,10 @@ func closeDanglingPosts() (err error) {
 		}
 		posts = append(posts, p)
 	}
+	err = r.Err()
+	if err != nil {
+		return
+	}
 
 	// Write updates to the replication log
 	q := tx.Stmt(prepared["update_log"])
@@ -153,5 +157,5 @@ func deleteUnusedImages() (err error) {
 		}
 	}
 
-	return
+	return r.Err()
 }

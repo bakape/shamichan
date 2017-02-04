@@ -177,6 +177,10 @@ func updateBans() (err error) {
 		}
 		bans = append(bans, b)
 	}
+	err = r.Err()
+	if err != nil {
+		return
+	}
 	auth.SetBans(bans...)
 
 	return nil
@@ -196,6 +200,7 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 		}
 		boards = append(boards, board)
 	}
+	err = r.Err()
 	return
 }
 

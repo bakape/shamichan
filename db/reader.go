@@ -153,6 +153,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 		}
 		t.Posts = append(t.Posts, p)
 	}
+	err = r.Err()
 
 	return
 }
@@ -261,5 +262,5 @@ func scanBoard(table tableScanner) (common.Board, error) {
 		board = append(board, t)
 	}
 
-	return board, nil
+	return board, table.Err()
 }
