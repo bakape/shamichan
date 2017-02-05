@@ -151,16 +151,16 @@ export class Post extends Model implements PostData {
 	public closePost() {
 		this.editing = false
 		this.view.closePost()
-	}|| !this.editing
+	}
 
 	// Set post as banned
 	public setBanned() {
-	if (this.banned) {
-		return
+		if (this.banned) {
+			return
+		}
+		this.banned = true
+		this.view.renderBanned()
 	}
-	this.banned = true
-	this.view.renderBanned()
-}
 }
 
 function endsWithTag(body: string): boolean {

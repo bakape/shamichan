@@ -169,7 +169,7 @@ export default class FormView extends PostView {
         write(() => {
             const el = this.input
             el.value = body
-            this.el.focus()
+            el.focus()
             el.setSelectionRange(body.length, body.length)
             this.onInput()
         })
