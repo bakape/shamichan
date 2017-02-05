@@ -40,7 +40,6 @@ export default class FormView extends PostView {
             id: "text-input",
             name: "body",
             rows: "1",
-            wrap: "off",
         })
         this.resizeInput()
 
@@ -160,8 +159,10 @@ export default class FormView extends PostView {
             s = el.style
         s.width = "0px"
         s.height = "0px"
+        el.wrap = "off"
         s.width = Math.max(260, el.scrollWidth) + "px"
-        s.height = Math.max(32, el.scrollHeight) + "px"
+        el.wrap = "soft"
+        s.height = Math.max(16, el.scrollHeight) + "px"
     }
 
     // Trim input from the end by the supplied length
