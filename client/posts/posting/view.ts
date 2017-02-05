@@ -40,11 +40,10 @@ export default class FormView extends PostView {
             id: "text-input",
             name: "body",
             rows: "1",
+            wrap: "off",
         })
         this.resizeInput()
 
-        this.input.addEventListener("keyup", () =>
-            this.resizeInput())
         this.input.addEventListener("input", (event: Event) => {
             event.stopImmediatePropagation()
             this.onInput()
@@ -159,11 +158,9 @@ export default class FormView extends PostView {
     private resizeInput() {
         const el = this.input,
             s = el.style
-        el.wrap = "off"
         s.width = "0px"
         s.height = "0px"
         s.width = Math.max(260, el.scrollWidth) + "px"
-        el.wrap = "soft"
         s.height = Math.max(32, el.scrollHeight) + "px"
     }
 
