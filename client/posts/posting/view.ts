@@ -2,7 +2,7 @@ import PostView from "../view"
 import FormModel from "./model"
 import { Post } from "../model"
 import { boardConfig } from "../../state"
-import { setAttrs, write, importTemplate, atBottom, scrollToBottom, outerWidth } from "../../util"
+import { setAttrs, write, importTemplate, atBottom, scrollToBottom } from "../../util"
 import { renderHeader, renderName } from "../render"
 import { postSM, postEvent } from "."
 import UploadForm from "./upload"
@@ -39,6 +39,7 @@ export default class FormView extends PostView {
         setAttrs(this.input, {
             id: "text-input",
             name: "body",
+            rows: "1",
         })
         this.resizeInput()
 
@@ -161,14 +162,9 @@ export default class FormView extends PostView {
         el.wrap = "off"
         s.width = "0px"
         s.height = "0px"
-        let w = el.scrollWidth
-        // Image shifts text to the right
-        if (this.model.image) {
-            w -= outerWidth(this.el.querySelector("figure"))
-        }
-        s.width = Math.max(260, w) + "px"
+        s.width = Math.max(260, el.scrollWidth) + "px"
         el.wrap = "soft"
-        s.height = Math.max(16, el.scrollHeight) + "px"
+        s.height = Math.max(32, el.scrollHeight) + "px"
     }
 
     // Trim input from the end by the supplied length
