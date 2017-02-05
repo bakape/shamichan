@@ -193,11 +193,11 @@ header {
 	padding: 0;
 	background-color: transparent;
 	outline: none;
-	min-height: 3em;
-	min-width: 30em;
+	width: 100%;
 	max-height: 85vh;
-	max-width: 85vw;
-	resize: horizontal;
+	max-width: 100%;
+	resize: none;
+	overflow-wrap: break-word;
 }
 
 .reply-form {
@@ -209,7 +209,16 @@ header {
 	.post-container {
 		max-height: 90vh;
 		max-width: 90vw;
+		display: flex;
+		flex-wrap: nowrap;
 	}
+	figure ~ blockquote {
+		margin-left: 0px;
+	}
+}
+
+#post-controls {
+	padding: 0.2em;
 }
 
 // Make OPs stand out, if no custom background set

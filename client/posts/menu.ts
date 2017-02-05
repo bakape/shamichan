@@ -1,7 +1,7 @@
 import { View } from "../base"
 import { Post } from "./model"
 import { getModel, mine } from "../state"
-import { on, write } from "../util"
+import { on, write, outerWidth } from "../util"
 import lang from "../lang"
 import { hidePost } from "./hide"
 import { spoilerImage } from "./posting"
@@ -103,20 +103,6 @@ function openMenu(e: Event) {
 	if (model) {
 		new MenuView(parent, model)
 	}
-}
-
-// Return width of element with padding and margin
-function outerWidth(el: HTMLElement): number {
-	const style = getComputedStyle(el)
-	const widths = [
-		style.marginLeft, style.marginRight, style.paddingLeft,
-		style.paddingRight
-	]
-	let total = el.offsetWidth
-	for (let width of widths) {
-		total += parseInt(width)
-	}
-	return total
 }
 
 export default () =>

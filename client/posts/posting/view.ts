@@ -2,7 +2,7 @@ import PostView from "../view"
 import FormModel from "./model"
 import { Post } from "../model"
 import { boardConfig } from "../../state"
-import { setAttrs, write, importTemplate, atBottom, scrollToBottom } from "../../util"
+import { setAttrs, write, importTemplate, atBottom, scrollToBottom, outerWidth } from "../../util"
 import { renderHeader, renderName } from "../render"
 import { postSM, postEvent } from "."
 import UploadForm from "./upload"
@@ -42,13 +42,15 @@ export default class FormView extends PostView {
         })
         this.resizeInput()
 
+        this.input.addEventListener("keyup", () =>
+            this.resizeInput())
         this.input.addEventListener("input", (event: Event) => {
             event.stopImmediatePropagation()
             this.onInput()
         })
 
         this.postControls = importTemplate("post-controls").firstElementChild
-        this.el.querySelector(".post-container").append(this.postControls)
+        this.el.append(this.postControls)
 
         this.done = this.el.querySelector("input[name=done]")
         this.done.addEventListener("click", postSM.feeder(postEvent.done))
@@ -152,11 +154,21 @@ export default class FormView extends PostView {
         this.model.parseInput(this.input.value)
     }
 
+    // Resize textarea to content width and adjust height
     private resizeInput() {
         const el = this.input,
             s = el.style
-        s.height = "auto"
-        s.height = el.scrollHeight + "px"
+        el.wrap = "off"
+        s.width = "0px"
+        s.height = "0px"
+        let w = el.scrollWidth
+        // Image shifts text to the right
+        if (this.model.image) {
+            w -= outerWidth(this.el.querySelector("figure"))
+        }
+        s.width = Math.max(260, w) + "px"
+        el.wrap = "soft"
+        s.height = Math.max(16, el.scrollHeight) + "px"
     }
 
     // Trim input from the end by the supplied length
@@ -242,7 +254,8 @@ export default class FormView extends PostView {
 
     // Insert image into the open post
     public insertImage() {
-        this.renderImage(false, true)
+        this.renderImage(false, false)
+        this.resizeInput()
         this.removeUploadForm()
 
         const {spoiler} = this.upload
