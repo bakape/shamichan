@@ -42,9 +42,15 @@ func updatePost(
 	if err != nil {
 		return
 	}
+	defer RollbackOnError(tx, &err)
+
+	err = LockForWrite(tx, "threads", "posts")
+	if err != nil {
+		return
+	}
+
 	err = updatePostTx(tx, id, op, msg, queryKey, arg)
 	if err != nil {
-		tx.Rollback()
 		return
 	}
 	return tx.Commit()
@@ -160,6 +166,11 @@ func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
 	}
 	defer RollbackOnError(tx, &err)
 
+	err = LockForWrite(tx, "threads", "posts")
+	if err != nil {
+		return
+	}
+
 	err = updatePostTx(tx, id, op, msg, "close_post", nil)
 	if err != nil {
 		return
@@ -199,6 +210,11 @@ func InsertImage(id, op uint64, img common.Image) (err error) {
 		return
 	}
 	defer RollbackOnError(tx, &err)
+
+	err = LockForWrite(tx, "threads", "posts")
+	if err != nil {
+		return
+	}
 
 	_, err = tx.Stmt(prepared["insert_image"]).Exec(id, img.SHA1, img.Name)
 	if err != nil {

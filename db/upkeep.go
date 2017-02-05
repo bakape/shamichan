@@ -63,6 +63,11 @@ func closeDanglingPosts() (err error) {
 	}
 	defer RollbackOnError(tx, &err)
 
+	err = LockForWrite(tx, "threads", "posts")
+	if err != nil {
+		return
+	}
+
 	// Read and close all expired posts
 	r, err := tx.Stmt(prepared["close_expired_open_posts"]).Query()
 	if err != nil {

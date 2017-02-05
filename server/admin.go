@@ -258,6 +258,11 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.RollbackOnError(tx, &err)
 
+	err = db.LockForWrite(tx, "boards", "staff")
+	if err != nil {
+		return
+	}
+
 	err = db.WriteBoard(tx, db.BoardConfigs{
 		Created: time.Now(),
 		BoardConfigs: config.BoardConfigs{

@@ -54,19 +54,24 @@ func init() {
 	}()
 }
 
-func flushBodyUpdates() error {
+func flushBodyUpdates() (err error) {
 	tx, err := db.Begin()
 	if err != nil {
-		return err
+		return
 	}
 	defer RollbackOnError(tx, &err)
+
+	err = LockForWrite(tx, "threads", "posts")
+	if err != nil {
+		return
+	}
 
 	q := tx.Stmt(prepared["update_log_many"])
 	for op, buf := range toLog {
 		_, err = q.Exec(op, pq.ByteaArray(*buf))
 		delete(toLog, op)
 		if err != nil {
-			return err
+			return
 		}
 	}
 
@@ -75,7 +80,7 @@ func flushBodyUpdates() error {
 		_, err = q.Exec(id, body)
 		delete(toReplaceBody, id)
 		if err != nil {
-			return err
+			return
 		}
 	}
 

@@ -148,6 +148,11 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	}
 	defer db.RollbackOnError(tx, &err)
 
+	err = db.LockForWrite(tx, "boards", "threads", "posts")
+	if err != nil {
+		return
+	}
+
 	err = db.WriteThread(tx, thread, post)
 	if err != nil {
 		return
@@ -239,6 +244,11 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 	defer db.RollbackOnError(tx, &err)
+
+	err = db.LockForWrite(tx, "boards", "threads", "posts")
+	if err != nil {
+		return
+	}
 
 	err = db.WritePost(tx, post)
 	if err != nil {

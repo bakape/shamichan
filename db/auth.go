@@ -102,6 +102,11 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 	}
 	defer RollbackOnError(tx, &err)
 
+	err = LockForWrite(tx, "threads", "posts", "bans")
+	if err != nil {
+		return
+	}
+
 	// Write ban messages to posts and threads
 	q := tx.Stmt(prepared["write_ban_message"])
 	if err != nil {
