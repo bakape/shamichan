@@ -60,7 +60,7 @@ export class Post extends Model implements PostData {
 
 		// It is possible to receive text body updates after a post closes,
 		// due to server-side buffering optimizations. If so, rerender the body.
-		if (char === "\n" || endsWithTag(this.body) || !this.editing) {
+		if (char === "\n" || !this.editing || endsWithTag(this.body)) {
 			view.reparseBody()
 		} else {
 			view.appendString(char)
@@ -69,7 +69,9 @@ export class Post extends Model implements PostData {
 
 	// Backspace one character in the current line
 	public backspace() {
-		const needReparse = endsWithTag(this.body) || !this.editing
+		const needReparse = this.body[this.body.length - 1] === "\n"
+			|| !this.editing
+			|| endsWithTag(this.body)
 		this.body = this.body.slice(0, -1)
 		if (needReparse) {
 			this.view.reparseBody()
@@ -149,18 +151,24 @@ export class Post extends Model implements PostData {
 	public closePost() {
 		this.editing = false
 		this.view.closePost()
-	}
+	}|| !this.editing
 
 	// Set post as banned
 	public setBanned() {
-		if (this.banned) {
-			return
-		}
-		this.banned = true
-		this.view.renderBanned()
+	if (this.banned) {
+		return
 	}
+	this.banned = true
+	this.view.renderBanned()
+}
 }
 
 function endsWithTag(body: string): boolean {
-	return body.endsWith(">") || body.endsWith("**")
+	switch (body[body.length - 1]) {
+		case ">":
+			return true
+		case "*":
+			return body[body.length - 2] === "*"
+	}
+	return false
 }

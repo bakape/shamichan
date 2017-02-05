@@ -6,8 +6,8 @@ import { ViewAttrs } from "../base"
 
 // Base post view class
 export default class PostView extends ImageHandler {
-    // Text node being written to. Only exist on open posts
-    private _buffer: Node
+    // Text element being written to
+    private _buffer: Element
 
     constructor(model: Post, el: HTMLElement) {
         const attrs: ViewAttrs = { model }
@@ -37,7 +37,7 @@ export default class PostView extends ImageHandler {
     }
 
     // Get the current Node for text to be written to
-    private buffer(): Node {
+    private buffer(): Element {
         if (!this._buffer) {
             this.findBuffer()
         }
@@ -101,7 +101,7 @@ export default class PostView extends ImageHandler {
             const buf = this.buffer()
             // Merge multiple successive nodes created by appendString()
             buf.normalize()
-            buf.textContent = buf.textContent.slice(0, -1)
+            buf.innerHTML = buf.innerHTML.slice(0, -1)
         })
     }
 
