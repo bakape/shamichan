@@ -103,13 +103,6 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64) {
 
 // Parse a line that is no longer being edited
 func (c *bodyContext) parseTerminatedLine(line string) {
-	if line[0] == '#' {
-		if m := commandRegexp.FindStringSubmatch(line); m != nil {
-			c.parseCommands(string(m[1]))
-			return
-		}
-	}
-
 	c.parseSpoilers(line, (*c).parseFragment)
 }
 
@@ -162,7 +155,8 @@ func (c *bodyContext) parseFragment(frag string) {
 		if len(word) == 0 {
 			continue
 		}
-		if word[0] == '>' {
+		switch word[0] {
+		case '>': // Links
 			if m := linkRegexp.FindStringSubmatch(word); m != nil {
 				// Post links
 				c.parsePostLink(m)
@@ -172,8 +166,12 @@ func (c *bodyContext) parseFragment(frag string) {
 				c.parseReference(m)
 				continue
 			}
-		} else {
-			// Generic HTTP(S) URLs and magnet links
+		case '#': // Hash commands
+			if m := commandRegexp.FindStringSubmatch(word); m != nil {
+				c.parseCommands(string(m[1]))
+				continue
+			}
+		default: // Generic HTTP(S) URLs and magnet links
 			match := false
 			// Checking the first byte is much cheaper than a function call. Do
 			// that first, as most cases won't match.

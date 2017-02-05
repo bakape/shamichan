@@ -82,9 +82,7 @@ Encase text in ** to spoiler.
 <hr>Hash commands:
 #d100 #2d100 - Roll dice
 #flip - Coin flip
-#8ball - An 8ball
-
-All hash commands need to be input on their own line`
+#8ball - An 8ball`
 
 // Configs stores the global server configuration
 type Configs struct {

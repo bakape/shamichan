@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 )
@@ -12,6 +13,9 @@ func TestParseLinks(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
+	config.SetBoardConfigs(config.BoardConfigs{
+		ID: "a",
+	})
 
 	posts := [...]db.Post{
 		{
@@ -60,7 +64,7 @@ func TestParseLinks(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			links, err := parseLinks([]byte(c.in))
+			links, _, err := ParseBody([]byte(c.in), "a")
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -2,16 +2,16 @@
 package parser
 
 import (
-	"bytes"
 	"regexp"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 )
 
+// Post syntax pattern matchers
 var (
-	// CommandRegexp matches any hash command in a line
 	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount)$`)
+	linkRegexp    = regexp.MustCompile(`^>{2,}(\d+)$`)
 )
 
 // ParseBody parses the entire post text body for commands and links
@@ -19,38 +19,57 @@ func ParseBody(body []byte, board string) (
 	links [][2]uint64, com []common.Command, err error,
 ) {
 	parseCommands := config.GetBoardConfigs(board).HashCommands
-	for _, line := range bytes.Split(body, []byte{'\n'}) {
-		l, c, err := parseLine(line, board, parseCommands)
-		if err != nil {
-			return nil, nil, err
-		}
-		if c.Val != nil {
-			com = append(com, c)
-		}
-		for _, l := range l {
-			links = append(links, l)
-		}
-	}
+	start := 0
 
-	return
-}
+	for i, b := range body {
+		switch b {
+		case '\n', ' ', '\t':
+		default:
+			if i == len(body)-1 {
+				i++
+			} else {
+				continue
+			}
+		}
 
-func parseLine(line []byte, board string, parseCommands bool) (
-	links [][2]uint64, com common.Command, err error,
-) {
-	if len(line) == 0 {
-		return
-	}
+		word := body[start:i]
+		start = i + 1
+		if len(word) == 0 {
+			continue
+		}
 
-	if parseCommands && line[0] == '#' {
-		if m := CommandRegexp.FindSubmatch(line); m != nil {
-			com, err = parseCommand(string(m[1]), board)
-			if err != nil {
+		switch word[0] {
+		case '>':
+			m := linkRegexp.FindSubmatch(word)
+			if m == nil {
+				continue
+			}
+			var l [2]uint64
+			l, err = parseLink(m)
+			switch {
+			case err != nil:
 				return
+			case l[0] != 0:
+				links = append(links, l)
+			}
+		case '#':
+			if !parseCommands {
+				continue
+			}
+			m := CommandRegexp.FindSubmatch(word)
+			if m == nil {
+				continue
+			}
+			var c common.Command
+			c, err = parseCommand(string(m[1]), board)
+			switch {
+			case err != nil:
+				return
+			case c.Val != nil:
+				com = append(com, c)
 			}
 		}
 	}
 
-	links, err = parseLinks(line)
 	return
 }

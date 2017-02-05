@@ -45,10 +45,7 @@ function parseTerminatedLine(line: string, data: PostData): string {
     let html = ""
 
     if (line[0] == "#") {
-        const m = line.match(/^#(flip|\d*d\d+|8ball|pyu|pcount)$/)
-        if (m) {
-            return html + parseCommand(m[1], data)
-        }
+
     }
 
     return html + parseSpoilers(line, data.state, frag =>
@@ -130,37 +127,48 @@ function parseFragment(frag: string, data: PostData): string {
         if (!word) {
             continue
         }
-        if (word[0] === ">") {
-            // Post links
-            let m = word.match(/^>>(>*)(\d+)$/)
-            if (m) {
-                html += parsePostLink(m, data.links)
-                continue
-            }
 
-            // Internal and custom reference URLs
-            m = word.match(/^>>>(>*)\/(\w+)\/$/)
-            if (m) {
-                html += parseReference(m)
-                continue
-            }
-        } else {
-            // Generic HTTP(S) URLs, magnet links and embeds
-            let match: boolean
-            // Checking the first byte is much cheaper than a function call. Do
-            // that first, as most cases won't match.
-            switch (word[0]) {
-                case "h":
-                    match = word.startsWith("http")
-                    break
-                case "m":
-                    match = word.startsWith("magnet:?")
-                    break
-            }
-            if (match) {
-                html += parseURL(word)
-                continue
-            }
+        let m: RegExpMatchArray
+        switch (word[0]) {
+            case ">":
+                // Post links
+                m = word.match(/^>>(>*)(\d+)$/)
+                if (m) {
+                    html += parsePostLink(m, data.links)
+                    continue
+                }
+
+                // Internal and custom reference URLs
+                m = word.match(/^>>>(>*)\/(\w+)\/$/)
+                if (m) {
+                    html += parseReference(m)
+                    continue
+                }
+                break
+            case "#": // Hash commands
+                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount)$/)
+                if (m) {
+                    html += parseCommand(m[1], data)
+                    continue
+                }
+                break
+            default:
+                // Generic HTTP(S) URLs, magnet links and embeds
+                let match: boolean
+                // Checking the first byte is much cheaper than a function call. Do
+                // that first, as most cases won't match.
+                switch (word[0]) {
+                    case "h":
+                        match = word.startsWith("http")
+                        break
+                    case "m":
+                        match = word.startsWith("magnet:?")
+                        break
+                }
+                if (match) {
+                    html += parseURL(word)
+                    continue
+                }
         }
         html += escape(word)
     }

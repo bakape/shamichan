@@ -43,6 +43,9 @@ func TestParseLine(t *testing.T) {
 		if links != nil {
 			t.Fatalf("unexpected links: %#v", links)
 		}
+		if com == nil {
+			t.Fatalf("no commands")
+		}
 		if com[0].Type != common.Flip {
 			t.Fatalf("unexpected command type: %d", com[0].Type)
 		}
@@ -93,7 +96,7 @@ func TestParseBody(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if l := len(com); l != 2 {
+	if l := len(com); l != 3 {
 		t.Errorf("unexpected command count: %d", l)
 	}
 	AssertDeepEquals(t, links, [][2]uint64{
