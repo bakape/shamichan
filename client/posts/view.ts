@@ -6,9 +6,6 @@ import { ViewAttrs } from "../base"
 
 // Base post view class
 export default class PostView extends ImageHandler {
-    // Text element being written to
-    private _buffer: Element
-
     constructor(model: Post, el: HTMLElement) {
         const attrs: ViewAttrs = { model }
         if (el) {
@@ -36,22 +33,17 @@ export default class PostView extends ImageHandler {
         renderPost(this.el, this.model)
     }
 
-    // Get the current Node for text to be written to
+    // Get the current Element for text to be written to
     private buffer(): Element {
-        if (!this._buffer) {
-            // Find the text buffer in an open line. It is the deepest last
-            // element in the blockquote
-            this._buffer = this.el.querySelector("blockquote") as Element
-            while (true) {
-                const b = this._buffer.lastElementChild
-                if (b) {
-                    this._buffer = b
-                } else {
-                    break
-                }
-            }
+        const {state: {spoiler, quote}} = this.model
+        let buf = this.el.querySelector("blockquote") as Element
+        if (quote) {
+            buf = buf.lastElementChild
         }
-        return this._buffer
+        if (spoiler) {
+            buf = buf.lastElementChild
+        }
+        return buf
     }
 
     // Remove the element from the DOM and detach from its model, allowing the
@@ -82,7 +74,6 @@ export default class PostView extends ImageHandler {
         const bq = this.el.querySelector("blockquote")
         bq.innerHTML = ""
         bq.append(node)
-        this._buffer = null
     }
 
     // Append a string to the current text buffer
