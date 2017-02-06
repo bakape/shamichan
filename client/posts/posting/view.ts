@@ -2,7 +2,7 @@ import PostView from "../view"
 import FormModel from "./model"
 import { Post } from "../model"
 import { boardConfig } from "../../state"
-import { setAttrs, write, importTemplate, atBottom, scrollToBottom } from "../../util"
+import { setAttrs, importTemplate, atBottom, scrollToBottom } from "../../util"
 import { renderHeader, renderName } from "../render"
 import { postSM, postEvent } from "."
 import UploadForm from "./upload"
@@ -67,12 +67,10 @@ export default class FormView extends PostView {
             this.renderIdentity()
         }
 
-        write(() => {
-            const bq = this.el.querySelector("blockquote")
-            bq.innerHTML = ""
-            bq.append(this.input)
-            this.input.focus()
-        })
+        const bq = this.el.querySelector("blockquote")
+        bq.innerHTML = ""
+        bq.append(this.input)
+        this.input.focus()
     }
 
     // Render a temporary view of the identity fields, so the user can see what
@@ -108,8 +106,7 @@ export default class FormView extends PostView {
 
         // Keep this post and bottomSpacer the same height
         this.observer = new MutationObserver(() =>
-            write(() =>
-                this.resizeSpacer()))
+            this.resizeSpacer())
         this.observer.observe(this.el, {
             childList: true,
             attributes: true,
@@ -117,11 +114,9 @@ export default class FormView extends PostView {
             subtree: true,
         })
 
-        write(() => {
-            document.getElementById("thread-container").append(this.el)
-            this.input.focus()
-            this.resizeSpacer()
-        })
+        document.getElementById("thread-container").append(this.el)
+        this.input.focus()
+        this.resizeSpacer()
     }
 
     // Resize bottomSpacer to the same top position as this post
@@ -141,10 +136,8 @@ export default class FormView extends PostView {
     }
 
     private removeUploadForm() {
-        write(() => {
-            this.upload.input.remove()
-            this.upload.status.remove()
-        })
+        this.upload.input.remove()
+        this.upload.status.remove()
     }
 
     // Handle input events on this.input
@@ -172,13 +165,11 @@ export default class FormView extends PostView {
 
     // Replace the current body and set the cursor to the input's end
     public replaceText(body: string) {
-        write(() => {
-            const el = this.input
-            el.value = body
-            el.focus()
-            el.setSelectionRange(body.length, body.length)
-            this.onInput()
-        })
+        const el = this.input
+        el.value = body
+        el.focus()
+        el.setSelectionRange(body.length, body.length)
+        this.onInput()
     }
 
     // Transform form into a generic post. Removes any dangling form controls
@@ -215,21 +206,18 @@ export default class FormView extends PostView {
 
     // Lock the post form after a critical error occurs
     public renderError() {
-        write(() =>
-            (this.el.classList.add("errored"),
-                this.input.setAttribute("contenteditable", "false")))
+        this.el.classList.add("errored")
+        this.input.setAttribute("contenteditable", "false")
     }
 
     // Transition into allocated post
     public renderAlloc() {
         this.id = "p" + this.model.id
         const header = this.el.querySelector("header")
-        write(() => {
-            this.el.id = this.id as string
-            header.classList.remove("temporary")
-            renderHeader(header, this.model)
-            this.showDone()
-        })
+        this.el.id = this.id as string
+        header.classList.remove("temporary")
+        renderHeader(header, this.model)
+        this.showDone()
     }
 
     // Toggle the spoiler input checkbox
@@ -239,23 +227,20 @@ export default class FormView extends PostView {
             return
         }
 
-        write(() => {
-            const el = this.el
-                .querySelector("input[name=spoiler]") as HTMLInputElement
-            el.checked = !el.checked
-        })
+        const el = this.el
+            .querySelector("input[name=spoiler]") as HTMLInputElement
+        el.checked = !el.checked
     }
 
     // Insert image into the open post
     public insertImage() {
-        this.renderImage(false, false)
+        this.renderImage(false)
         this.resizeInput()
         this.removeUploadForm()
 
         const {spoiler} = this.upload
         if (this.model.image.spoiler) {
-            write(() =>
-                spoiler.remove())
+            spoiler.remove()
         } else {
             const fn = () =>
                 this.upload.spoilerImage()

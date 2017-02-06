@@ -1,7 +1,7 @@
 // Stores the state of the web application
 
 import { Post, PostCollection } from './posts'
-import { getClosestID, write, emitChanges, ChangeEmitter } from './util'
+import { getClosestID, emitChanges, ChangeEmitter } from './util'
 import { readIDs, storeID } from './db'
 import { send } from './connection'
 
@@ -125,8 +125,7 @@ export function getModel(el: Element): Post {
 
 // Display or hide the loading animation
 export function displayLoading(display: boolean) {
-	write(() =>
-		loading.style.display = display ? 'block' : 'none')
+	loading.style.display = display ? 'block' : 'none'
 }
 
 ; (window as any).debugMode = () => {

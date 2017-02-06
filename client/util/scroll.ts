@@ -3,12 +3,10 @@
 import { page } from "../state"
 import { trigger } from "./hooks"
 
-const banner = document.getElementById("banner"),
-	threads = document.getElementById("threads")
+const banner = document.getElementById("banner")
 
 let lock: HTMLElement,
-	reference: Element,
-	ticking: boolean
+	scrolled = false
 
 // Indicates if the page is scrolled to its bottom
 export let atBottom: boolean
@@ -39,33 +37,6 @@ function scrollToTop() {
 	checkBottom()
 }
 
-// Lock position to the bottom of a thread or keep the viewport from bumping
-// on out of sight DOM mutation.
-export function followDOM(func: () => void) {
-	// Don't compensate on board pages
-	if (!page.thread) {
-		return func()
-	}
-
-	const previous = referenceDistance()
-	func()
-
-	// Prevent scrolling with new posts, if page isn't visible
-	if (atBottom) {
-		return scrollToBottom()
-	}
-	// Element was removed or something
-	if (!elExists(reference)) {
-		return
-	}
-
-	// Only compensate, if the height increased above the viewport
-	const delta = topDistance(reference, true) - previous
-	if (delta) {
-		window.scrollBy(0, delta)
-	}
-}
-
 // Scroll to the bottom of the thread
 export function scrollToBottom() {
 	window.scrollTo(0, document.documentElement.scrollHeight)
@@ -88,57 +59,21 @@ export function checkBottom() {
 	}
 }
 
-// Check if element reference exists and is in the DOM
-function elExists(el: Element): boolean {
-	return !!el && document.contains(el)
-}
-
-// Return element position dimensions against the viewport, if the element
-// is within the viewport
-function topDistance(el: Element, skipCheck: boolean): number | null {
-	const {top} = el.getBoundingClientRect()
-	if (skipCheck || (top >= 0 && top < window.innerHeight)) {
-		return top
-	}
-	return null
-}
-
-// Returns distance of viewport to current reference element
-function referenceDistance(): number {
-	if (elExists(reference)) {
-		const bounds = topDistance(reference, false)
-		if (bounds !== null) {
-			return bounds
-		}
-	}
-
-	// Find new reference element (first inside viewport). Account for empty
-	// boards.
-	for (let sel of ["article", "#threads"]) {
-		for (let el of threads.querySelectorAll(sel)) {
-			const bounds = topDistance(el, false)
-			if (bounds !== null) {
-				reference = el
-				return bounds
-			}
-		}
-	}
-}
-
-// Check, if we are at page bottom and persists to position on scroll. Deferred
-// to animation frames to reduce lag.
-function onScroll() {
-	if (ticking) {
-		return
-	}
-	ticking = true
-	requestAnimationFrame(() => {
+// Scroll to page bottom, if previously at the bottom and the scroll away
+// happened on DOM update and not user's scroll
+function onFrame() {
+	if (scrolled) {
 		checkBottom()
-		ticking = false
-	})
+		scrolled = false
+	} else if (atBottom && page.thread) {
+		window.scrollTo(0, document.body.scrollHeight)
+	}
+	requestAnimationFrame(onFrame)
 }
 
-document.addEventListener("scroll", onScroll, {
+requestAnimationFrame(onFrame)
+
+document.addEventListener("scroll", () => scrolled = true, {
 	passive: true,
 })
 

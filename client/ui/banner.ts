@@ -1,5 +1,4 @@
 import { BannerModal } from "../base"
-import { write } from '../util'
 
 export default () => {
 	for (let id of ["options", "FAQ", "identity", "account"]) {
@@ -16,8 +15,7 @@ function highlightBanner(name: string) {
 	}
 
 	const el = document.querySelector('#banner-' + name)
-	write(() =>
-		el.classList.add("blinking"))
+	el.classList.add("blinking")
 
 	el.addEventListener("click", () => {
 		el.classList.remove("blinking")

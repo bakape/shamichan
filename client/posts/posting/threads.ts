@@ -1,4 +1,4 @@
-import { on, inputValue, write } from '../../util'
+import { on, inputValue } from '../../util'
 import { FormView, navigate } from '../../ui'
 import { newAllocRequest } from './identity'
 import { page, boardConfig } from '../../state'
@@ -28,25 +28,20 @@ class ThreadForm extends FormView {
 		if (!boardConfig.textOnly) {
 			this.upload = new UploadForm(null, this.el)
 		}
-		write(() => {
-			this.aside.classList.add("expanded")
-			this.el.querySelector("input, select").focus()
-		})
+		this.aside.classList.add("expanded")
+		this.el.querySelector("input, select").focus()
 	}
 
 	// Reset new thread form to initial state
 	public remove() {
 		delete handlers[message.postID]
-		write(() =>
-			this.aside.classList.remove("expanded", "sending"))
+		this.aside.classList.remove("expanded", "sending")
 	}
 
 	protected async send() {
-		write(() => {
-			this.el.querySelector("input[type=submit]").remove()
-			this.el.querySelector("input[name=cancel]").remove()
-			this.upload.el.querySelector("br:last-child").remove()
-		})
+		this.el.querySelector("input[type=submit]").remove()
+		this.el.querySelector("input[name=cancel]").remove()
+		this.upload.el.querySelector("br:last-child").remove()
 
 		const req = newAllocRequest()
 

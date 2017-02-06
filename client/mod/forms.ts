@@ -1,4 +1,4 @@
-import { inputValue, makeFrag, extend, postJSON, write } from '../util'
+import { inputValue, makeFrag, extend, postJSON } from '../util'
 import { FormView } from "../ui"
 import { validatePasswordMatch, newRequest } from './common'
 import { View, ViewAttrs } from "../base"
@@ -19,8 +19,7 @@ abstract class AccountFormView extends FormView {
 	// to the parent view.
 	protected render() {
 		accountPanel.toggleMenu(false)
-		write(() =>
-			accountPanel.el.append(this.el))
+		accountPanel.el.append(this.el)
 	}
 
 	// Render a simple publically available form, that does not require to
@@ -82,8 +81,7 @@ class OwnedBoardSelection extends View<null> {
 		switch (res.status) {
 			case 200:
 				this.el.append(makeFrag(await res.text()))
-				write(() =>
-					this.parent.el.append(this.el))
+				this.parent.el.append(this.el)
 				break
 			case 403:
 				handle403(this.parent)
@@ -153,8 +151,7 @@ export class BoardConfigPanel extends SelectedBoardForm {
 		switch (res.status) {
 			case 200:
 				const frag = makeFrag(await res.text())
-				write(() =>
-					this.el.append(frag))
+				this.el.append(frag)
 				break
 			case 403:
 				handle403(this)

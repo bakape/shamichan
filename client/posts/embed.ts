@@ -1,4 +1,4 @@
-import { makeAttrs, makeFrag, escape, on, fetchJSON, write } from "../util"
+import { makeAttrs, makeFrag, escape, on, fetchJSON } from "../util"
 
 type OEmbedDoc = {
 	title: string
@@ -103,13 +103,11 @@ async function toggleExpansion(e: MouseEvent) {
 	const el = e.target as Element
 
 	if (el.classList.contains("expanded")) {
-		write(() => {
-			el.classList.remove("expanded")
-			const iframe = el.lastChild
-			if (iframe) {
-				iframe.remove()
-			}
-		})
+		el.classList.remove("expanded")
+		const iframe = el.lastChild
+		if (iframe) {
+			iframe.remove()
+		}
 		return
 	}
 
@@ -130,10 +128,8 @@ async function toggleExpansion(e: MouseEvent) {
 		)
 	}
 
-	write(() => {
-		el.append(frag)
-		el.classList.add("expanded")
-	})
+	el.append(frag)
+	el.classList.add("expanded")
 }
 
 const threads = document.getElementById("threads")

@@ -1,7 +1,7 @@
 import { Post, PostView } from '../posts'
 import { fileTypes, PostLink, PostData, ThreadData } from "../common"
 import { posts as postCollection, hidden, mine, seenReplies } from '../state'
-import { pluralize, escape, threads, write } from '../util'
+import { pluralize, escape, threads } from '../util'
 import options from "../options"
 import lang from "../lang"
 import { setSyncCounter } from "../connection"
@@ -114,7 +114,7 @@ function extractPost(post: PostData) {
             || (image.spoiler && !options.spoilers)
             || (image.fileType === fileTypes.gif && options.autogif)
         if (should) {
-            view.renderImage(false, false)
+            view.renderImage(false)
         }
     }
 }
@@ -190,6 +190,5 @@ function renderPostCounter() {
     } else {
         text = `${postCtr} / ${imgCtr}`
     }
-    write(() =>
-        counters.textContent = text)
+    counters.textContent = text
 }

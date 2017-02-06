@@ -84,7 +84,7 @@ class PostPreview extends ImageHandler {
 		if (img && img.expanded) {
 			// Clone parent model's image and render contracted thumbnail
 			this.model.image = Object.assign({}, this.sourceModel.image)
-			this.contractImage(null, false, false)
+			this.contractImage(null, false)
 		}
 
 		const fc = overlay.firstChild

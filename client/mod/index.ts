@@ -1,6 +1,6 @@
 // Login/logout/registration facilities for the account system
 
-import { inputValue, postJSON, write } from '../util'
+import { inputValue, postJSON } from '../util'
 import { FormView } from "../ui"
 import { TabbedModal } from "../base"
 import { validatePasswordMatch, newRequest } from "./common"
@@ -66,17 +66,15 @@ class AccountPanel extends TabbedModal {
 
 	// Display the form selection menu
 	public displayMenu() {
-		write(() => {
-			document.getElementById("login-forms").style.display = "none"
+		document.getElementById("login-forms").style.display = "none"
 
-			const el = document.getElementById("form-selection")
-			el.style.display = "block"
+		const el = document.getElementById("form-selection")
+		el.style.display = "block"
 
-			// Hide server configuration link, unless logged in as "admin"
-			if (loginID !== "admin") {
-				(el.lastElementChild as HTMLElement).style.display = "none"
-			}
-		})
+		// Hide server configuration link, unless logged in as "admin"
+		if (loginID !== "admin") {
+			(el.lastElementChild as HTMLElement).style.display = "none"
+		}
 
 		// Load Moderation panel
 		modPanel = new ModPanel()
@@ -93,9 +91,9 @@ class AccountPanel extends TabbedModal {
 
 	// Either hide or show the selection menu
 	public toggleMenu(show: boolean) {
-		const display = show ? "block" : "none"
-		write(() =>
-			document.getElementById("form-selection").style.display = display)
+		document.getElementById("form-selection")
+			.style
+			.display = show ? "block" : "none"
 	}
 }
 
@@ -108,13 +106,11 @@ export function reset() {
 	loginForm.reloadCaptcha()
 	registrationForm.reloadCaptcha()
 	modPanel.reset()
-	write(() => {
-		document.getElementById("login-forms").style.display = ""
-		document.getElementById("form-selection").style.display = "none"
-		for (let el of accountPanel.el.querySelectorAll(".form-response")) {
-			el.textContent = ""
-		}
-	})
+	document.getElementById("login-forms").style.display = ""
+	document.getElementById("form-selection").style.display = "none"
+	for (let el of accountPanel.el.querySelectorAll(".form-response")) {
+		el.textContent = ""
+	}
 }
 
 // Terminate the user session(s) server-side and reset the panel
@@ -161,12 +157,10 @@ class LoginForm extends FormView {
 				accountPanel.displayMenu()
 
 				// Clear all password fields for security reasons
-				write(() => {
-					const els = this.el.querySelectorAll("input[type=password]")
-					for (let el of els as HTMLInputElement[]) {
-						el.value = ""
-					}
-				})
+				const els = this.el.querySelectorAll("input[type=password]")
+				for (let el of els as HTMLInputElement[]) {
+					el.value = ""
+				}
 
 				break
 			default:

@@ -1,7 +1,7 @@
 import { View } from "../base"
 import { Post } from "./model"
 import { getModel, mine } from "../state"
-import { on, write, outerWidth } from "../util"
+import { on, outerWidth } from "../util"
 import lang from "../lang"
 import { hidePost } from "./hide"
 import { spoilerImage } from "./posting"
@@ -67,8 +67,7 @@ class MenuView extends View<Post> {
 		}
 
 		const {el, parent} = this
-		write(() =>
-			parent.append(el))
+		parent.append(el)
 
 		// Calculate position. Can't use CSS translate, because it shifts
 		// the background.

@@ -5,7 +5,7 @@ import options from "../options"
 import lang from "../lang"
 import { thumbPath, Post } from "../posts"
 import { repliedToMe } from "./tab"
-import { read, write, scrollToAnchor } from "../util"
+import { scrollToAnchor } from "../util"
 
 // Displayed, when there is no image in post
 const defaultIcon = "/assets/notification-icon.png"
@@ -47,10 +47,6 @@ export default function notifyAboutReply(post: Post) {
 		n.close()
 		window.focus()
 		location.hash = "#p" + post.id
-
-		// Next animation frame is delayed, when tab has no focus. Must scroll
-		// only after render for there to be an element to scroll to.
-		read(() =>
-			write(scrollToAnchor))
+		scrollToAnchor()
 	}
 }

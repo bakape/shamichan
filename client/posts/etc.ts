@@ -1,9 +1,8 @@
-import { on, write } from "../util"
+import { on } from "../util"
 
 // Toggle spoiler revealing on click
 function toggleSpoiler(event: Event) {
-	write(() =>
-		(event.target as Element).classList.toggle("reveal"))
+	(event.target as Element).classList.toggle("reveal")
 }
 
 export default () =>

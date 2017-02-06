@@ -1,4 +1,4 @@
-import { escape, write, on, fetchBoard } from '../util'
+import { escape, on, fetchBoard } from '../util'
 import lang from '../lang'
 import { page } from '../state'
 import options from '../options'
@@ -156,8 +156,7 @@ setInterval(() => {
 	if (document.hidden) {
 		refreshBoard()
 	} else {
-		write(() =>
-			renderRefreshButton(threads.querySelector("#refresh > a")))
+		renderRefreshButton(threads.querySelector("#refresh > a"))
 	}
 }, 600000)
 

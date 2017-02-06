@@ -1,5 +1,4 @@
 import View from "./view"
-import { write } from "../util"
 
 // Stores the views of all BannerModal instances
 const bannerModals: { [key: string]: BannerModal } = {}
@@ -38,8 +37,7 @@ export class BannerModal extends View<null> {
 
 	// Unhide the element. If the element has not been rendered yet, do it.
 	private show() {
-		write(() =>
-			this.el.style.display = 'block')
+		this.el.style.display = 'block'
 		visible = this
 		if (this.showHook) {
 			this.showHook()
@@ -48,8 +46,7 @@ export class BannerModal extends View<null> {
 
 	// Hide the element
 	private hide() {
-		write(() =>
-			this.el.style.display = 'none')
+		this.el.style.display = 'none'
 		visible = null
 	}
 }
@@ -69,27 +66,25 @@ export class TabbedModal extends BannerModal {
 
 	// Switch to a tab, when clicking the tab butt
 	private switchTab(event: Event) {
-		write(() => {
-			const el = event.target as Element
+		const el = event.target as Element
 
-			// Deselect previous tab
-			for (let selected of this.el.querySelectorAll('.tab-sel')) {
-				selected.classList.remove('tab-sel')
-			}
+		// Deselect previous tab
+		for (let selected of this.el.querySelectorAll('.tab-sel')) {
+			selected.classList.remove('tab-sel')
+		}
 
-			// Select the new one
-			el.classList.add('tab-sel')
-			const id = el.getAttribute('data-id')
-			for (let el of this.el.querySelectorAll(`.tab-cont > div`)) {
-				if (el.getAttribute("data-id") !== id) {
-					continue
-				}
-				el.classList.add("tab-sel")
+		// Select the new one
+		el.classList.add('tab-sel')
+		const id = el.getAttribute('data-id')
+		for (let el of this.el.querySelectorAll(`.tab-cont > div`)) {
+			if (el.getAttribute("data-id") !== id) {
+				continue
 			}
+			el.classList.add("tab-sel")
+		}
 
-			if (this.tabHook) {
-				this.tabHook(parseInt(id))
-			}
-		})
+		if (this.tabHook) {
+			this.tabHook(parseInt(id))
+		}
 	}
 }

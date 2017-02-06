@@ -1,7 +1,7 @@
 // Moderation panel with various post moderation and other controls
 
 import { View } from "../base"
-import { extend, postJSON, write, threads, toggleHeadStyle } from "../util"
+import { extend, postJSON, threads, toggleHeadStyle } from "../util"
 import { Post } from "../posts"
 import { getModel, page } from "../state"
 import { newRequest } from "./common"
@@ -48,15 +48,12 @@ export default class ModPanel extends View<null> {
 	}
 
 	private setVisibility(show: boolean) {
-		write(() => {
-			this.el.style.display = show ? "inline-block" : ""
-			this.checkboxToggle.checked = displayCheckboxes
-			const auth = document
-				.querySelector("#identity > table tr:first-child"
-				) as HTMLInputElement
-			auth.style.display = show ? "table-row" : ""
-			auth.checked = false
-		})
+		this.el.style.display = show ? "inline-block" : ""
+		this.checkboxToggle.checked = displayCheckboxes
+		const auth = document
+			.querySelector("#identity > table tr:first-child") as HTMLInputElement
+		auth.style.display = show ? "table-row" : ""
+		auth.checked = false
 	}
 
 	// Reset the state of the module and hide all revealed elements
@@ -140,8 +137,7 @@ export default class ModPanel extends View<null> {
 
 	// Force panel to stay visible
 	public setSlideOut(on: boolean) {
-		write(() =>
-			this.el.classList.toggle("keep-visible", on))
+		this.el.classList.toggle("keep-visible", on)
 	}
 }
 
@@ -158,12 +154,10 @@ class BanInputs extends View<null> {
 	}
 
 	public toggleDisplay(on: boolean) {
-		write(() => {
-			(this.el
-				.querySelector("input[name=reason]") as HTMLInputElement)
-				.disabled = !on
-			this.el.classList.toggle("hidden", !on)
-		})
+		(this.el
+			.querySelector("input[name=reason]") as HTMLInputElement)
+			.disabled = !on
+		this.el.classList.toggle("hidden", !on)
 	}
 
 	// Get input field values

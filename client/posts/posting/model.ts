@@ -4,7 +4,7 @@ import { ImageData, PostData } from "../../common"
 import FormView from "./view"
 import { posts, storeMine } from "../../state"
 import { postSM, postEvent, postState } from "."
-import { extend, write } from "../../util"
+import { extend } from "../../util"
 import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
 import { newAllocRequest } from "./identity"
@@ -268,8 +268,7 @@ export default class FormModel extends Post {
 			return
 		}
 
-		write(() =>
-			this.view.cancel.remove())
+		this.view.cancel.remove()
 
 		const data = await this.view.upload.uploadFile(file)
 

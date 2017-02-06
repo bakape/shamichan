@@ -2,7 +2,7 @@
 
 import { debug, page } from './state'
 import lang from './lang'
-import { FSM, write, trigger } from './util'
+import { FSM, trigger } from './util'
 import { identity, postSM, postEvent, postState, FormModel } from "./posts"
 
 // Message types of the WebSocket communication protocol
@@ -105,8 +105,7 @@ function nullSocket() {
 
 // Render connection status indicator
 function renderStatus(status: syncStatus) {
-	write(() =>
-		syncEl.textContent = lang.sync[status])
+	syncEl.textContent = lang.sync[status]
 }
 
 // Send a message to the server. If msg is null, it is omitted from sent
@@ -350,5 +349,4 @@ window.addEventListener('online', () => {
 window.addEventListener('offline', connSM.feeder(connEvent.close))
 
 handlers[message.syncCount] = (n: number) =>
-	write(() =>
-		syncedCount.textContent = n.toString())
+	syncedCount.textContent = n.toString()

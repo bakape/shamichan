@@ -1,4 +1,4 @@
-import { write, importTemplate } from '../util'
+import { importTemplate } from '../util'
 import { View, ViewAttrs } from '../base'
 import CaptchaView from './captcha'
 
@@ -69,8 +69,7 @@ abstract class FormView extends View<null> {
 
 	// Render a text comment about the response status below the form
 	protected renderFormResponse(text: string) {
-		write(() =>
-			this.el.querySelector(".form-response").textContent = text)
+		this.el.querySelector(".form-response").textContent = text
 	}
 
 	// Load a new captcha, if present and response code is not 0
@@ -82,9 +81,7 @@ abstract class FormView extends View<null> {
 
 	// Render an additional map key-value input field pair
 	protected addMapInput(event: Event) {
-		write(() =>
-			(event.target as Element)
-				.before(this.renderKeyValuePair("", "")))
+		(event.target as Element).before(this.renderKeyValuePair("", ""))
 	}
 
 	// Render a single key-value input field pair in a map subform
@@ -98,8 +95,7 @@ abstract class FormView extends View<null> {
 
 	// Remove a map key-vale input field pair
 	protected removeMapInput(event: Event) {
-		write(() =>
-			(event.target as Element).closest("span").remove())
+		(event.target as Element).closest("span").remove()
 	}
 }
 

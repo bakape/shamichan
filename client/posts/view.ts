@@ -1,5 +1,5 @@
 import { Post } from './model'
-import { makeFrag, write, importTemplate } from '../util'
+import { makeFrag, importTemplate } from '../util'
 import { renderPost, renderName, renderTime, renderBanned, parseBody, renderBacklinks } from './render'
 import ImageHandler from "./images"
 import { ViewAttrs } from "../base"
@@ -65,8 +65,7 @@ export default class PostView extends ImageHandler {
             return
         }
         const frag = makeFrag(parseBody(this.model))
-        write(() =>
-            this.replaceBody(frag))
+        this.replaceBody(frag)
     }
 
     // Replace the text body of the post
@@ -78,33 +77,27 @@ export default class PostView extends ImageHandler {
 
     // Append a string to the current text buffer
     public appendString(s: string) {
-        write(() =>
-            this.buffer().append(s))
+        this.buffer().append(s)
     }
 
     // Remove one character from the current buffer
     public backspace() {
-        write(() => {
-            const buf = this.buffer()
-            // Merge multiple successive nodes created by appendString()
-            buf.normalize()
-            buf.innerHTML = buf.innerHTML.slice(0, -1)
-        })
+        const buf = this.buffer()
+        // Merge multiple successive nodes created by appendString()
+        buf.normalize()
+        buf.innerHTML = buf.innerHTML.slice(0, -1)
     }
 
     // Render links to posts linking to this post
     public renderBacklinks() {
-        write(() =>
-            renderBacklinks(this.el, this.model.backlinks))
+        renderBacklinks(this.el, this.model.backlinks)
     }
 
     // Close an open post and clean up
     public closePost() {
         const frag = makeFrag(parseBody(this.model))
-        write(() => {
-            this.el.classList.remove("editing")
-            this.replaceBody(frag)
-        })
+        this.el.classList.remove("editing")
+        this.replaceBody(frag)
     }
 
     // Render the name and tripcode in the header
@@ -119,13 +112,11 @@ export default class PostView extends ImageHandler {
 
     // Render ban notice on post
     public renderBanned() {
-        write(() =>
-            renderBanned(this.el))
+        renderBanned(this.el)
     }
 
     // Add or remove highlight to post
     public setHighlight(on: boolean) {
-        write(() =>
-            this.el.classList.toggle("highlight", on))
+        this.el.classList.toggle("highlight", on)
     }
 }

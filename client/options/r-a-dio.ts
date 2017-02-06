@@ -1,6 +1,6 @@
 // R/a/dio integration
 
-import { HTML, makeAttrs, fetchJSON, write } from '../util'
+import { HTML, makeAttrs, fetchJSON } from '../util'
 import options from '.'
 import lang from '../lang'
 
@@ -53,8 +53,7 @@ function isMatch(a: {}, b: {}): boolean {
 // Render the banner message text
 function render() {
 	if (!options.nowPlaying) {
-		write(() =>
-			el.innerHTML = "")
+		el.innerHTML = ""
 		return
 	}
 
@@ -63,7 +62,7 @@ function render() {
 		href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
 		target: "_blank",
 	}
-	const html = HTML
+	el.innerHTML = HTML
 		`<a href="http://r-a-d.io/" target="_blank">
 			[${data.listeners.toString()}] ${data.dj}
 		</a>
@@ -73,8 +72,6 @@ function render() {
 				${data.np}
 			</b>
 		</a>`
-	write(() =>
-		el.innerHTML = html)
 }
 
 // Initialize

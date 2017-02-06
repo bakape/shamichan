@@ -1,5 +1,5 @@
 import { View, Model } from '../base'
-import { HTML, makeFrag, fetchHTML, write } from '../util'
+import { HTML, makeFrag, fetchHTML } from '../util'
 
 const selected = new Set<string>(),
 	panel = document.getElementById("left-panel"),
@@ -40,10 +40,8 @@ class BoardNavigation extends View<Model> {
 			]
 			</nav>`
 
-		write(() => {
-			this.el.innerHTML = html
-			document.querySelector("#banner").prepend(this.el)
-		})
+		this.el.innerHTML = html
+		document.querySelector("#banner").prepend(this.el)
 	}
 
 	private togglePanel(el: Element) {
@@ -100,17 +98,14 @@ class BoardSelectionPanel extends View<Model> {
 			navigation.render()
 		}
 
-		write(() => {
-			this.parentEl.textContent = "-"
-			this.el.innerHTML = ""
-			this.el.append(frag)
-			panel.append(this.el)
-		})
+		this.parentEl.textContent = "-"
+		this.el.innerHTML = ""
+		this.el.append(frag)
+		panel.append(this.el)
 	}
 
 	public remove() {
-		write(() =>
-			this.parentEl.textContent = "+")
+		this.parentEl.textContent = "+"
 		selectionPanel = null
 		super.remove()
 	}
@@ -134,17 +129,15 @@ class BoardSelectionPanel extends View<Model> {
 		const term = (event.target as HTMLInputElement).value.trim(),
 			regexp = new RegExp(term, 'i')
 
-		write(() => {
-			for (let el of this.el.querySelectorAll("label")) {
-				let display: string
-				if (regexp.test(el.querySelector("a").textContent)) {
-					display = "block"
-				} else {
-					display = "none"
-				}
-				el.style.display = display
+		for (let el of this.el.querySelectorAll("label")) {
+			let display: string
+			if (regexp.test(el.querySelector("a").textContent)) {
+				display = "block"
+			} else {
+				display = "none"
 			}
-		})
+			el.style.display = display
+		}
 	}
 }
 

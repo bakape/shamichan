@@ -3,7 +3,7 @@
 import stackBlur from './stackBlur'
 import options from '.'
 import { displayLoading } from '../state'
-import { HTML, load, write } from '../util'
+import { HTML, load } from '../util'
 import { getObj, putObj } from '../db'
 
 type BackgroundStore = {
@@ -44,10 +44,8 @@ export default () => {
 
 // Central render function. Resets state and renders the appropriate background.
 export function render(bg?: BackgroundStore) {
-	write(() => {
-		container.innerHTML = ''
-		style.innerHTML = ''
-	})
+	container.innerHTML = ''
+	style.innerHTML = ''
 
 	let showOPBG = false
 	if (options.illyaDance) {
@@ -71,16 +69,14 @@ function renderIllya() {
 			<source src="/assets/illya.webm" type="video/webm">
 			<source src="/assets/illya.mp4" type="video/mp4">
 		</video>`
-	write(() =>
-		container.innerHTML = html)
+	container.innerHTML = html
 }
 
 // Wrap the OP in a background for better visibility
 function toggleOPBackground(on: boolean) {
 	const tc = document.getElementById("thread-container")
 	if (tc) {
-		write(() =>
-			tc.classList.toggle("custom-BG", on))
+		tc.classList.toggle("custom-BG", on)
 	}
 }
 
@@ -105,8 +101,7 @@ async function renderBackground(bg?: BackgroundStore): Promise<void> {
 	if (theme === 'glass' || theme === 'ocean') {
 		html += ' ' + renderGlass(theme, bg.blurred)
 	}
-	write(() =>
-		style.innerHTML = html)
+	style.innerHTML = html
 }
 
 // Apply transparent blurred glass background to elements with the 'glass' class

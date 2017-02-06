@@ -5,7 +5,6 @@ import { posts } from './state'
 import { Post, FormModel, PostView, postEvent, postSM } from './posts'
 import { PostLink, Command, PostData, ImageData } from "./common"
 import { postAdded, navigate } from "./ui"
-import { write } from "./util"
 import { incrementPostCount } from "./page"
 
 // Message for splicing the contents of the current line
@@ -51,16 +50,14 @@ function insertPost(data: PostData) {
 	const view = new PostView(model, null)
 
 	// Find last allocated post and insert after it
-	write(() => {
-		const last = document
-			.getElementById("thread-container")
-			.lastElementChild
-		if (last.id === "p0") {
-			last.before(view.el)
-		} else {
-			last.after(view.el)
-		}
-	})
+	const last = document
+		.getElementById("thread-container")
+		.lastElementChild
+	if (last.id === "p0") {
+		last.before(view.el)
+	} else {
+		last.after(view.el)
+	}
 
 	postAdded()
 	incrementPostCount(true, "image" in data)

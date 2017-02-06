@@ -1,4 +1,4 @@
-import { on, OnOptions, write } from '../util'
+import { on, OnOptions } from '../util'
 
 export interface ViewAttrs {
 	el?: HTMLElement
@@ -47,8 +47,7 @@ export default class View<M> {
 
 	// Remove the from the DOM without causing a redraw
 	public remove() {
-		write(() =>
-			this.el.remove())
+		this.el.remove()
 	}
 
 	// Add  optionally selector-specific event listeners to the view

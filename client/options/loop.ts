@@ -4,7 +4,7 @@
 
 import { posts, page } from "../state"
 import options from "."
-import { threads, write } from "../util"
+import { threads } from "../util"
 import { Post } from "../posts"
 import { fileTypes } from "../common"
 
@@ -48,17 +48,15 @@ function renderImages() {
 		if (options.hideThumbs || options.workModeToggle) {
 			display = "none"
 		}
-		write(() => {
-			for (let el of threads.querySelectorAll(".expanded")) {
-				el.style.display = display
-			}
-		})
+		for (let el of threads.querySelectorAll(".expanded")) {
+			el.style.display = display
+		}
 	} else {
 		loopPosts(
 			({image}) =>
 				!!image,
 			({view}) =>
-				view.renderImage(false, true),
+				view.renderImage(false),
 		)
 	}
 }
@@ -69,7 +67,7 @@ function toggleSpoilers() {
 		({image}) =>
 			!!image && image.spoiler,
 		({view}) =>
-			view.renderImage(false, true),
+			view.renderImage(false),
 	)
 }
 
@@ -79,7 +77,7 @@ function toggleAutoGIF() {
 		({image}) =>
 			!!image && image.fileType === fileTypes.gif,
 		({view}) =>
-			view.renderImage(false, true),
+			view.renderImage(false),
 	)
 }
 
@@ -89,16 +87,13 @@ function toggleAnonymisation() {
 		({name, trip, auth}) =>
 			!!name || !!trip || !!auth,
 		({view}) =>
-			write(() =>
-				view.renderName()),
+			view.renderName(),
 	)
 }
 
 // Rerender all timestamps on posts, if set to relative time
 function renderTime() {
-	write(() => {
-		for (let {view} of posts) {
-			view.renderTime()
-		}
-	})
+	for (let {view} of posts) {
+		view.renderTime()
+	}
 }

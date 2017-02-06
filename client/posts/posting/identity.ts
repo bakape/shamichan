@@ -1,7 +1,7 @@
 // Name, tripcode and staff title persistence and postform propagation
 
 import { BannerModal } from '../../base'
-import { extend, write, emitChanges, ChangeEmitter } from '../../util'
+import { extend, emitChanges, ChangeEmitter } from '../../util'
 import { newRequest } from "../../mod"
 
 
@@ -41,12 +41,10 @@ class IdentityPanel extends BannerModal {
 	}
 
 	private assignValues() {
-		write(() => {
-			for (let key of ["name", "postPassword"]) {
-				(this.el.querySelector(`input[name=${key}]`) as HTMLInputElement)
-					.value = identity[key]
-			}
-		})
+		for (let key of ["name", "postPassword"]) {
+			(this.el.querySelector(`input[name=${key}]`) as HTMLInputElement)
+				.value = identity[key]
+		}
 	}
 
 	private onInput(event: Event) {

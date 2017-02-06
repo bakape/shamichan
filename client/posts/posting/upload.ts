@@ -1,5 +1,5 @@
 import lang from '../../lang'
-import { load, postJSON, postText, write } from '../../util'
+import { load, postJSON, postText } from '../../util'
 import identity from "./identity"
 import { Post } from "../model"
 import { View } from "../../base"
@@ -47,14 +47,11 @@ export default class UploadForm extends View<Post> {
             return null
         }
 
-        let token: string
 
-        write(() => {
-            this.input.style.display = "none"
-            this.renderProgress({
-                total: 1,
-                loaded: 0,
-            })
+        this.input.style.display = "none"
+        this.renderProgress({
+            total: 1,
+            loaded: 0,
         })
 
         // First send a an SHA1 hash to the server, in case it already has the
@@ -67,6 +64,7 @@ export default class UploadForm extends View<Post> {
         if (err) {
             throw err
         }
+        let token: string
         if (res) {
             token = res
         } else {
@@ -104,10 +102,8 @@ export default class UploadForm extends View<Post> {
         await load(xhr)
 
         if (xhr.status !== 200) {
-            write(() => {
-                this.status.textContent = xhr.response
-                this.input.style.display = ""
-            })
+            this.status.textContent = xhr.response
+            this.input.style.display = ""
             return ""
         }
 
@@ -123,15 +119,13 @@ export default class UploadForm extends View<Post> {
             const n = Math.floor(loaded / total * 100)
             s = `${n}% ${lang.ui["uploadProgress"]}`
         }
-        write(() =>
-            this.status.textContent = s)
+        this.status.textContent = s
     }
 
     // Spoiler an image file after it has already been allocated
     public async spoilerImage() {
         await spoilerImage(this.model as Post)
-        write(() =>
-            this.spoiler.remove())
+        this.spoiler.remove()
     }
 }
 

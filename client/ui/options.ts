@@ -1,6 +1,6 @@
 import { TabbedModal } from '../base'
 import { models, default as options, optionType, storeBackground } from '../options'
-import { load, write, hook } from '../util'
+import { load, hook } from '../util'
 import lang from '../lang'
 import { clearHidden } from "../posts"
 import { hidden } from "../state"
@@ -31,8 +31,7 @@ export default class OptionsPanel extends TabbedModal {
 			this.applyChange(e))
 
 		this.renderHidden(hidden.size)
-		write(() =>
-			this.assignValues())
+		this.assignValues()
 
 		hook("renderOptionValue", ([id, type, val]) =>
 			this.assignValue(id, type, val))
@@ -155,9 +154,7 @@ export default class OptionsPanel extends TabbedModal {
 
 	// Render Hidden posts counter
 	private renderHidden(count: number) {
-		write(() => {
-			const el = this.hidden
-			el.textContent = el.textContent.replace(/\d+$/, count.toString())
-		})
+		const el = this.hidden
+		el.textContent = el.textContent.replace(/\d+$/, count.toString())
 	}
 }

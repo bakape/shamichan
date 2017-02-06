@@ -1,5 +1,5 @@
 import { posts } from "../state"
-import { on, fetchJSON, write } from "../util"
+import { on, fetchJSON } from "../util"
 import options from "../options"
 import { Post } from "./model"
 import { PostData } from "../common"
@@ -32,10 +32,8 @@ async function onClick(e: MouseEvent) {
 		}
 
 		found = true
-		write(() => {
-			parent.classList.add("expanded")
-			parent.append(model.view.el)
-		})
+		parent.classList.add("expanded")
+		parent.append(model.view.el)
 	} else {
 		// Fetch external post from server
 		const [data] = await fetchJSON<PostData>(`/json/post/${id}`)
@@ -43,29 +41,24 @@ async function onClick(e: MouseEvent) {
 			const model = new Post(data),
 				view = new PostView(model, null)
 			found = true
-			write(() => {
-				parent.classList.add("expanded")
-				parent.append(view.el)
-			})
+			parent.classList.add("expanded")
+			parent.append(view.el)
 		}
 	}
 
 	if (found) {
-		write(() =>
-			toggleLinkReferences(parent, id, true))
+		toggleLinkReferences(parent, id, true)
 	}
 }
 
 // contract and already expanded post and return it to its former position
 function contractPost(id: number, parent: HTMLElement) {
-	write(() =>
-		parent.classList.remove("expanded"))
+	parent.classList.remove("expanded")
 
 	const model = posts.get(id)
 	// Fetched from server and not originally part of the thread
 	if (!model) {
-		return write(() =>
-			document.getElementById(`p${id}`).remove())
+		return document.getElementById(`p${id}`).remove()
 	}
 
 
@@ -76,17 +69,12 @@ function contractPost(id: number, parent: HTMLElement) {
 	while (true) {
 		const previous = posts.get(parseInt(ids[i - 1]))
 		if (!previous) {
-			write(() =>
-				document
-					.getElementById("thread-container")
-					.prepend(model.view.el))
+			document.getElementById("thread-container").prepend(model.view.el)
 			break
 		}
 		if (previous.view.el.matches("#thread-container > article")) {
-			write(() => {
-				toggleLinkReferences(parent, id, false)
-				previous.view.el.before(model.view.el)
-			})
+			toggleLinkReferences(parent, id, false)
+			previous.view.el.before(model.view.el)
 			break
 		}
 		i--

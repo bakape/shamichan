@@ -137,14 +137,14 @@ export class Post extends Model implements PostData {
 	// Insert an image into an existing post
 	public insertImage(img: ImageData) {
 		this.image = img
-		this.view.renderImage(false, true)
+		this.view.renderImage(false)
 		this.view.autoExpandImage()
 	}
 
 	// Spoiler an already allocated imageThreadData
 	public spoilerImage() {
 		this.image.spoiler = true
-		this.view.renderImage(false, true)
+		this.view.renderImage(false)
 	}
 
 	// Close an open post and reparse its last line

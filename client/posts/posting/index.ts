@@ -3,7 +3,7 @@
 import FormModel from "./model"
 import FormView from "./view"
 import { connState, connSM } from "../../connection"
-import { on, FSM, write, threads, hook } from "../../util"
+import { on, FSM, threads, hook } from "../../util"
 import lang from "../../lang"
 import identity, { initIdentity } from "./identity"
 import { boardConfig } from "../../state"
@@ -53,12 +53,10 @@ hook("getPostModel", () =>
 
 // Find the post creation button and style it, if any
 function stylePostControls(fn: (el: HTMLElement) => void) {
-	write(() => {
-		const el = threads.querySelector("aside.posting")
-		if (el) {
-			fn(el)
-		}
-	})
+	const el = threads.querySelector("aside.posting")
+	if (el) {
+		fn(el)
+	}
 }
 
 // Ensures you are nagged at by the browser, when navigating away from an
