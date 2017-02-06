@@ -1,7 +1,10 @@
 package server
 
 import (
+	"database/sql"
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/cache"
@@ -212,4 +215,32 @@ func changePasswordForm(w http.ResponseWriter, r *http.Request) {
 // Render a form with nothing but captcha and confirmation buttons
 func renderCaptcha(w http.ResponseWriter, r *http.Request) {
 	staticTemplate(w, r, templates.CaptchaConfirmation)
+}
+
+// Redirect the client to the appropriate board through a cross-board redirect
+func crossRedirect(
+	w http.ResponseWriter,
+	r *http.Request,
+	p map[string]string,
+) {
+	thread := p["thread"]
+	id, err := strconv.ParseUint(thread, 10, 64)
+	if err != nil {
+		text404(w)
+		return
+	}
+
+	board, err := db.GetThreadBoard(id)
+	switch err {
+	case nil:
+		url := fmt.Sprintf("/%s/%s", board, thread)
+		if r.URL.RawQuery != "" {
+			url = fmt.Sprintf("%s?%s", url, r.URL.RawQuery)
+		}
+		http.Redirect(w, r, url, 301)
+	case sql.ErrNoRows:
+		text404(w)
+	default:
+		text500(w, r, err)
+	}
 }

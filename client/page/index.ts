@@ -1,5 +1,5 @@
-import { fetchBoard, fetchThread } from "../util"
-import { PageState, posts, setBoardConfig } from '../state'
+import { fetchBoard, fetchThread, extend } from "../util"
+import { PageState, posts, setBoardConfig, read } from '../state'
 import renderThread from './thread'
 import { renderFresh as renderBoard } from './board'
 import { setExpandAll } from "../posts"
@@ -14,16 +14,39 @@ initNavigation()
 
 // Load a page (either board or thread) and render it once the ready promise
 // has been resolved
-export async function loadPage(
-	{board, thread, lastN}: PageState,
-	ready: Promise<void>
-) {
+export async function loadPage(state: PageState, ready: Promise<void>) {
+	const {board, thread, lastN} = state
 	const res = thread
 		? await fetchThread(board, thread, lastN)
 		: await fetchBoard(board)
 	const t = await res.text()
 	switch (res.status) {
 		case 200:
+			// Was redirected
+			if (thread && board === "cross") {
+				const redir = read(res.url)
+
+				// Strip internal query parameter
+				let [url, query] = redir.href.split("?")
+				if (query) {
+					query = query
+						.split("&")
+						.filter(p =>
+							p !== "noIndex=true")
+						.join("&")
+					if (query) {
+						url += "?" + query
+					}
+				}
+				const [, hash] = state.href.split("#")
+				if (hash) {
+					url += "#" + hash
+				}
+				redir.href = url
+
+				extend(state, redir)
+			}
+			break
 		case 403:
 			break
 		default:

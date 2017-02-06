@@ -64,6 +64,7 @@ func createRouter() http.Handler {
 	r.GET("/", wrapHandler(redirectToDefault))
 	r.GET("/:board/", boardHTML)
 	r.GET("/:board/:thread", threadHTML)
+	r.GET("/cross/:thread", crossRedirect)
 
 	// API for retrieving various localized HTML forms
 	forms := r.NewGroup("/forms")

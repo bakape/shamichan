@@ -135,6 +135,12 @@ func GetPostOP(id uint64) (op uint64, err error) {
 	return
 }
 
+// GetThreadBoard retrieves the board of a thread by id
+func GetThreadBoard(id uint64) (board string, err error) {
+	err = prepared["get_thread_board"].QueryRow(id).Scan(&board)
+	return
+}
+
 // PostCounter retrieves the current post counter
 func PostCounter() (uint64, error) {
 	var c sql.NullInt64

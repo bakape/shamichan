@@ -7,19 +7,16 @@ import { makeFrag } from "../../util"
 
 // Render a link to other posts
 export function renderPostLink(id: number, op: number): string {
-    const cross = op !== page.thread
-    let html = `<a class="history post-link" data-id="${id}" href="`
-    if (cross) {
-        html += `/cross/${op}`
-    }
-    html += `#p${id}">>>${id}`
+    const cross = op !== page.thread,
+        url = `${cross ? `/cross/${op}` : ""}#p${id}`
+    let html = `<a class="history post-link" data-id="${id}" href="${url}">>>${id}`
     if (cross) {
         html += " ➡"
     }
     if (mine.has(id)) { // Post, I made
         html += ' ' + lang.posts["you"]
     }
-    html += `</a><a class="hash-link"> #</a>`
+    html += `</a><a class="hash-link" href="${url}"> #</a>`
     return html
 }
 
