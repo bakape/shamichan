@@ -119,7 +119,7 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
         let arg: string
         switch (type) {
             case ISType.src:
-                arg = resolveFuzyIS(img)
+                arg = resolveFuzzyIS(img)
                 break
             case ISType.MD5:
                 arg = img.MD5
@@ -133,15 +133,20 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
 }
 
 // Resolve URL of image search, that require to download the image file
-function resolveFuzyIS({fileType, thumbType, SHA1}: ImageData): string {
+function resolveFuzzyIS({fileType, thumbType, SHA1, size}: ImageData): string {
     let root: string,
         type: fileTypes
     switch (fileType) {
         case fileTypes.jpg:
         case fileTypes.gif:
         case fileTypes.png:
-            root = "src"
-            type = fileType
+            if (size > 8 << 20) {
+                root = "thumb"
+                type = thumbType
+            } else {
+                root = "src"
+                type = fileType
+            }
             break
         default:
             root = "thumb"

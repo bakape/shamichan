@@ -55,7 +55,7 @@
 		{% if p.Image != nil %}
 			{% code img := *p.Image %}
 			{% code src =  assets.SourcePath(img.FileType, img.SHA1) %}
-			{% code ISSrc := root + assets.ImageSearchPath(img.FileType, img.ThumbType, img.SHA1) %}
+			{% code ISSrc := root + assets.ImageSearchPath(img.ImageCommon) %}
 			<figcaption class="spaced">
 				<a class="image-toggle act" hidden></a>
 				<span class="spaced image-search-container">

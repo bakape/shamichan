@@ -70,12 +70,15 @@ func relativeThumbPath(thumbType uint8, SHA1 string) string {
 // ImageSearchPath returns the relative path used for image search file lookups.
 // If files is not JPEG, PNG or GIF, returns the thumbnail instead of the source
 // file.
-func ImageSearchPath(fileType, thumbType uint8, SHA1 string) string {
-	switch fileType {
+func ImageSearchPath(img common.ImageCommon) string {
+	switch img.FileType {
 	case common.JPEG, common.PNG, common.GIF:
-		return RelativeSourcePath(fileType, SHA1)
+		if img.Size > 8<<20 {
+			return relativeThumbPath(img.ThumbType, img.SHA1)
+		}
+		return RelativeSourcePath(img.FileType, img.SHA1)
 	default:
-		return relativeThumbPath(thumbType, SHA1)
+		return relativeThumbPath(img.ThumbType, img.SHA1)
 	}
 }
 
