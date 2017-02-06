@@ -3,7 +3,7 @@
 import { page, mine } from '../../state'
 import lang from '../../lang'
 import { PostLink } from '../../common'
-import { makeFrag } from "../../util"
+import { makeFrag, firstChild } from "../../util"
 
 // Render a link to other posts
 export function renderPostLink(id: number, op: number): string {
@@ -21,12 +21,14 @@ export function renderPostLink(id: number, op: number): string {
 }
 
 // Render links to posts that are linking to the target post
-export function renderBacklinks(post: DocumentFragment, links: PostLink[]) {
+export function renderBacklinks(post: Element, links: PostLink[]) {
     if (!links) {
         return
     }
 
-    let el = post.querySelector(".backlinks")
+    // Find backlink span or create one
+    let el = firstChild(post, ch =>
+        ch.classList.contains("backlinks"))
     if (!el) {
         el = document.createElement("span")
         el.classList.add("spaced", "backlinks")

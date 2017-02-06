@@ -1,5 +1,5 @@
 import { escape, pluralize, pad } from '../../util'
-import { renderImage, renderFigcaption } from './image'
+import { renderImage } from './image'
 import { renderBacklinks } from './etc'
 import renderBody from './body'
 import { PostData, ThreadData } from '../../common'
@@ -13,26 +13,21 @@ interface PostCredentials {
 }
 
 // Populate post template
-export default function (
-	frag: DocumentFragment,
-	data: PostData | ThreadData,
-) {
+export default function (post: Element, data: PostData | ThreadData) {
 	if ((data as ThreadData).subject) {
-		const el = frag.querySelector("h3")
+		const el = post.querySelector("h3")
 		el.innerHTML = `「${escape((data as ThreadData).subject)}」`
 		el.hidden = false
 	}
 
-	frag.querySelector("blockquote").innerHTML = renderBody(data)
-	renderBacklinks(frag, data.backlinks)
+	post.querySelector("blockquote").innerHTML = renderBody(data)
+	renderBacklinks(post, data.backlinks)
 	if (data.banned) {
-		renderBanned(frag)
+		renderBanned(post)
 	}
-	renderHeader(frag, data)
-
+	renderHeader(post, data)
 	if (data.image) {
-		renderFigcaption(frag, data.image, false)
-		renderImage(frag, data.image, false)
+		renderImage(post, data.image, false)
 	}
 }
 

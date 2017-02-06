@@ -1,6 +1,6 @@
 import { config } from '../../state'
 import options from '../../options'
-import { escape, setAttrs, pad, importTemplate } from '../../util'
+import { escape, setAttrs, pad, importTemplate, firstChild } from '../../util'
 import { ImageData, fileTypes } from '../../common'
 import lang from '../../lang'
 
@@ -41,15 +41,14 @@ const ISSpecs: ImageSearchSpec[] = [
 ]
 
 // Render a thumbnail of an image, according to configuration settings
-export function renderImage(
-    post: DocumentFragment,
-    data: ImageData,
-    reveal: boolean,
-) {
-    let el = post.querySelector("figure")
+export function renderImage(post: Element, data: ImageData, reveal: boolean) {
+    // Need to find direct descendant, otherwise inlined posts might match
+    const cont = post.querySelector(".post-container")
+    let el = firstChild(cont, ch =>
+        ch.tagName === "FIGURE")
     if (!el) {
         el = importTemplate("figure").firstChild as HTMLElement
-        post.querySelector(".post-container").prepend(el)
+        cont.prepend(el)
     }
 
     const showThumb = (!options.hideThumbs && !options.workModeToggle) || reveal
@@ -60,15 +59,13 @@ export function renderImage(
     if (showThumb) {
         renderThumbnail(el.lastElementChild, data)
     }
+    renderFigcaption(post, data, reveal)
 }
 
 // Render the information caption above the image
-export function renderFigcaption(
-    post: DocumentFragment,
-    data: ImageData,
-    reveal: boolean,
-) {
-    let el = post.querySelector("figcaption")
+function renderFigcaption(post: Element, data: ImageData, reveal: boolean) {
+    let el = firstChild(post, ch =>
+        ch.tagName === "FIGCAPTION")
     if (!el) {
         el = importTemplate("figcaption").firstChild as HTMLElement
         post.firstElementChild.after(el)
@@ -194,7 +191,7 @@ export function sourcePath(SHA1: string, fileType: fileTypes): string {
 }
 
 // Render a name + download link of an image
-export function imageLink(el: Element, data: ImageData) {
+function imageLink(el: Element, data: ImageData) {
     let {name} = data
     const {SHA1, fileType} = data
     name = `${escape(name)}.${fileTypes[fileType]}`
@@ -207,7 +204,7 @@ export function imageLink(el: Element, data: ImageData) {
 }
 
 // Render the actual thumbnail image
-export function renderThumbnail(el: Element, data: ImageData) {
+function renderThumbnail(el: Element, data: ImageData) {
     const src = sourcePath(data.SHA1, data.fileType)
     let thumb: string,
         [, , thumbWidth, thumbHeight] = data.dims

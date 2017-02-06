@@ -1,7 +1,7 @@
 import { Post } from "./model"
 import { fileTypes } from "../common"
 import { View } from "../base"
-import { renderFigcaption, renderImage, sourcePath } from "./render"
+import { renderImage, sourcePath } from "./render"
 import { setAttrs, on, trigger, write } from "../util"
 import options from "../options"
 import { getModel, posts } from "../state"
@@ -18,7 +18,6 @@ export default class ImageHandler extends View<Post> {
 	public renderImage(reveal: boolean, delay: boolean) {
 		const fn = () => {
 			const img = this.model.image
-			renderFigcaption(this.el, img, reveal)
 			renderImage(this.el, img, reveal)
 		}
 		if (delay) {

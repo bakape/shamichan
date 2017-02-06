@@ -162,3 +162,19 @@ export function outerWidth(el: HTMLElement): number {
 	}
 	return total
 }
+
+// Find the first child of an element, that matches a check function, if any
+export function firstChild(
+	el: Element,
+	check: (el: Element) => boolean,
+): HTMLElement | undefined {
+	let m: HTMLElement
+	for (let i = 0; i < el.children.length; i++) {
+		const ch = el.children[i]
+		if (check(ch)) {
+			m = ch as HTMLElement
+			break
+		}
+	}
+	return m
+}
