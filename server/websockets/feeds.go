@@ -122,13 +122,11 @@ type updateFeed struct {
 }
 
 func (u *updateFeed) Start(id uint64) (err error) {
+	// TODO: Lock table, while spawning listener
 	u.listener, err = db.Listen("t:" + strconv.FormatUint(id, 10))
 	if err != nil {
 		return
 	}
-	// Technically there might be some desync between these two calls, but we
-	// can be almost certain, that the feed will already be started, when the
-	// message is committed. Meh.
 	u.ctr, err = db.ThreadCounter(id)
 	if err != nil {
 		return

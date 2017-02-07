@@ -160,7 +160,7 @@ func Listen(event string) (*pq.Listener, error) {
 // LockForWrite locks tables for writing ahead of time. Prevents deadlocks.
 func LockForWrite(tx *sql.Tx, tables ...string) error {
 	t := strings.Join(tables, ", ")
-	q := fmt.Sprintf(`lock table %s in row exclusive mode;`, t)
+	q := fmt.Sprintf(`lock table %s in share row exclusive mode;`, t)
 	_, err := tx.Exec(q)
 	return err
 }
