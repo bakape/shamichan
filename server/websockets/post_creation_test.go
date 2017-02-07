@@ -157,7 +157,7 @@ func testCreateThread(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertMessage(t, wcl, `326`)
-	assertIP(t, 6, "::1")
+	assertIP(t, 6, "c", "::1")
 
 	thread, err := db.GetThread(6, 0)
 	if err != nil {
@@ -221,8 +221,8 @@ func setBoardConfigs(t testing.TB, textOnly bool) {
 	}
 }
 
-func assertIP(t *testing.T, id uint64, ip string) {
-	res, err := db.GetIP(id)
+func assertIP(t *testing.T, id uint64, board, ip string) {
+	res, err := db.GetIP(id, board)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -379,7 +379,7 @@ func TestPostCreation(t *testing.T) {
 	stdPost.Time = post.Time
 	AssertDeepEquals(t, post, stdPost)
 
-	assertIP(t, 6, "::1")
+	assertIP(t, 6, "a", "::1")
 
 	thread, err := db.GetThread(1, 0)
 	if err != nil {

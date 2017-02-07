@@ -311,14 +311,6 @@ func GetPostPassword(id uint64) (p []byte, err error) {
 	return
 }
 
-// GetIP returns an IP of the poster that created a post. Posts older than 7
-// days will not have this field.
-func GetIP(id uint64) (string, error) {
-	var ip sql.NullString
-	err := prepared["get_ip"].QueryRow(id).Scan(&ip)
-	return ip.String, err
-}
-
 // GetLog retrieves a slice of a thread's replication log
 func GetLog(id, from, to uint64) ([][]byte, error) {
 	var log pq.ByteaArray

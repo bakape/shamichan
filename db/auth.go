@@ -96,63 +96,58 @@ func GetPosition(account, board string) (pos string, err error) {
 func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 	ips map[string]bool, err error,
 ) {
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer RollbackOnError(tx, &err)
-
-	err = LockForWrite(tx, "threads", "posts", "bans")
-	if err != nil {
-		return
+	type post struct {
+		id, op uint64
 	}
 
-	// Write ban messages to posts and threads
-	q := tx.Stmt(prepared["write_ban_message"])
-	if err != nil {
-		return
-	}
-
+	// Retrieve matching posts
 	ips = make(map[string]bool, len(ids))
+	posts := make([]post, 0, len(ids))
 	for _, id := range ids {
-		var (
-			ip sql.NullString
-			op uint64
-		)
-		err = q.QueryRow(id, board).Scan(&ip, op)
-		switch {
-		case err != nil:
-			return
-		case !ip.Valid: // Post older than 7 days
+		ip, err := GetIP(id, board)
+		switch err {
+		case nil:
+		case sql.ErrNoRows:
 			continue
+		default:
+			return nil, err
 		}
-		ips[ip.String] = true
+		ips[ip] = true
+		posts = append(posts, post{id: id})
+	}
 
-		var msg []byte
-		msg, err = common.EncodeMessage(common.MessageBanned, id)
+	// Retrieve their OPs
+	for i, post := range posts {
+		post.op, err = GetPostOP(post.id)
 		if err != nil {
 			return
 		}
-		err = UpdateLog(tx, op, msg)
+		posts[i] = post
+	}
+
+	// Write ban messages to posts
+	for _, post := range posts {
+		var msg []byte
+		msg, err = common.EncodeMessage(common.MessageBanned, post.id)
+		if err != nil {
+			return
+		}
+		err = execPrepared("ban_post", post.id, post.op, msg)
 		if err != nil {
 			return
 		}
 	}
 
 	// Write bans to the ban table
-	q = tx.Stmt(prepared["write_ban"])
-	if err != nil {
-		return
-	}
 	for ip := range ips {
-		_, err = q.Exec(ip, board, reason, by, expires)
+		err = execPrepared("write_ban", ip, board, reason, by, expires)
 		if err != nil {
 			return
 		}
 	}
 
 	if len(ips) != 0 {
-		_, err = tx.Exec(`NOTIFY bans_updated`)
+		_, err = db.Exec(`notify bans_updated`)
 	}
 	return
 }
@@ -176,7 +171,7 @@ func updateBans() (err error) {
 	bans := make([]auth.Ban, 0, 16)
 	for r.Next() {
 		var b auth.Ban
-		err = r.Scan(&b.IP, b.Board)
+		err = r.Scan(&b.IP, &b.Board)
 		if err != nil {
 			return
 		}
@@ -215,4 +210,12 @@ func GetBanInfo(ip, board string) (b auth.BanRecord, err error) {
 		QueryRow(ip, board).
 		Scan(&b.Board, &b.IP, &b.By, &b.Reason, &b.Expires)
 	return
+}
+
+// GetIP returns an IP of the poster that created a post. Posts older than 7
+// days will not have this information.
+func GetIP(id uint64, board string) (string, error) {
+	var ip sql.NullString
+	err := prepared["get_ip"].QueryRow(id, board).Scan(&ip)
+	return ip.String, err
 }
