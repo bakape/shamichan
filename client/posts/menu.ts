@@ -68,12 +68,6 @@ class MenuView extends View<Post> {
 
 		const {el, parent} = this
 		parent.append(el)
-
-		// Calculate position. Can't use CSS translate, because it shifts
-		// the background.
-		el.style.left = el.getBoundingClientRect().left
-			- (outerWidth(el) + el.offsetWidth) * 0.6
-			+ 'px'
 	}
 
 	// Run appropriate handler on click or simply remove the menu
