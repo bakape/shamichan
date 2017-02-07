@@ -120,6 +120,58 @@ func (l linkRow) Value() (driver.Value, error) {
 	return string(b), nil
 }
 
+// For encoding and decoding hash command results
+type commandRow []common.Command
+
+func (c *commandRow) Scan(src interface{}) error {
+	switch src := src.(type) {
+	case []byte:
+		return c.scanBytes(src)
+	case string:
+		return c.scanBytes([]byte(src))
+	case nil:
+		*c = nil
+		return nil
+	default:
+		return fmt.Errorf("db: cannot convert %T to []common.Command", src)
+	}
+}
+
+func (c *commandRow) scanBytes(data []byte) (err error) {
+	var strArr pq.ByteaArray
+	err = strArr.Scan(data)
+	if err != nil {
+		return
+	}
+
+	*c = make([]common.Command, len(strArr))
+	for i := range strArr {
+		err = json.Unmarshal([]byte(strArr[i]), &(*c)[i])
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func (c commandRow) Value() (driver.Value, error) {
+	if c == nil {
+		return nil, nil
+	}
+
+	var strArr = make(pq.StringArray, len(c))
+	for i := range strArr {
+		s, err := json.Marshal(c[i])
+		if err != nil {
+			return nil, err
+		}
+		strArr[i] = string(s)
+	}
+
+	return strArr.Value()
+}
+
 // ValidateOP confirms the specified thread exists on specific board
 func ValidateOP(id uint64, board string) (valid bool, err error) {
 	err = prepared["validate_op"].QueryRow(id, board).Scan(&valid)
@@ -195,22 +247,10 @@ func WritePost(tx *sql.Tx, p Post) error {
 		spoiler = p.Image.Spoiler
 	}
 
-	var comm pq.StringArray
-	if p.Commands != nil {
-		comm = make(pq.StringArray, len(p.Commands))
-		for i := range comm {
-			s, err := json.Marshal(p.Commands[i])
-			if err != nil {
-				return err
-			}
-			comm[i] = string(s)
-		}
-	}
-
 	_, err := ex.Exec(
 		p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, name, trip,
 		auth, p.Password, ip, img, imgName, linkRow(p.Links),
-		linkRow(p.Backlinks), comm,
+		linkRow(p.Backlinks), commandRow(p.Commands),
 	)
 	return err
 }

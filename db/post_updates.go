@@ -2,10 +2,8 @@ package db
 
 import (
 	"database/sql"
-	"encoding/json"
 
 	"github.com/bakape/meguca/common"
-	"github.com/lib/pq"
 )
 
 // UpdateLog writes to a thread's replication log..
@@ -75,34 +73,17 @@ func updatePostTx(
 	return UpdateLog(tx, op, msg)
 }
 
-// InsertCommand inserts a has command result into a post
-func insertCommands(tx *sql.Tx, id, op uint64, com []common.Command) (
-	err error,
-) {
-	data := make([]string, len(com))
-	for i := range com {
-		var b []byte
-		b, err = json.Marshal(com[i])
-		if err != nil {
-			return
-		}
-		data[i] = string(b)
-	}
-
-	_, err = tx.Stmt(prepared["insert_commands"]).Exec(id, pq.StringArray(data))
-	return
-}
-
-// Writes new links to other posts and the accompanying backlinks
-func insertLinks(tx *sql.Tx, id, op uint64, links [][2]uint64) (err error) {
-	_, err = tx.Stmt(prepared["insert_links"]).Exec(id, linkRow(links))
-	if err != nil {
-		return
+// Writes new backlinks to other posts
+func insertBackinks(id, op uint64, links [][2]uint64) (err error) {
+	// Deduplicate
+	dedupped := make(map[[2]uint64]struct{}, len(links))
+	for _, l := range links {
+		dedupped[l] = struct{}{}
 	}
 
 	// Most often this loop will iterate only once, so no need to think heavily
 	// on optimizations
-	for _, l := range links {
+	for l := range dedupped {
 		var msg []byte
 		msg, err = common.EncodeMessage(
 			common.MessageBacklink,
@@ -111,13 +92,9 @@ func insertLinks(tx *sql.Tx, id, op uint64, links [][2]uint64) (err error) {
 		if err != nil {
 			return
 		}
-		err = updatePostTx(
-			tx,
-			l[0],
-			l[1],
-			msg,
-			"insert_backlinks",
-			linkRow{{id, op}},
+		err = execPrepared(
+			"insert_backlink",
+			l[0], l[1], msg, linkRow{{id, op}},
 		)
 		if err != nil {
 			return
@@ -156,40 +133,23 @@ func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
 		Links:    links,
 		Commands: com,
 	})
+
+	err = execPrepared(
+		"close_post",
+		id, op, msg, linkRow(links), commandRow(com),
+	)
 	if err != nil {
 		return
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer RollbackOnError(tx, &err)
-
-	err = LockForWrite(tx, "threads", "posts")
-	if err != nil {
-		return
-	}
-
-	err = updatePostTx(tx, id, op, msg, "close_post", nil)
-	if err != nil {
-		return
-	}
-
-	if com != nil {
-		err = insertCommands(tx, id, op, com)
-		if err != nil {
-			return
-		}
-	}
 	if links != nil {
-		err = insertLinks(tx, id, op, links)
+		err = insertBackinks(id, op, links)
 		if err != nil {
 			return
 		}
 	}
 
-	return tx.Commit()
+	return err
 }
 
 // InsertImage insert and image into and existing open post

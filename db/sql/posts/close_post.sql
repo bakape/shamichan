@@ -1,3 +1,1 @@
-update posts
-	set editing = false
-	where id = $1
+select close_post($1, $2, $3, $4, $5)

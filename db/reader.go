@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"encoding/json"
 
 	"github.com/bakape/meguca/common"
 	"github.com/lib/pq"
@@ -58,7 +57,7 @@ type postScanner struct {
 	banned, spoiler             sql.NullBool
 	name, trip, auth, imageName sql.NullString
 	links, backlinks            linkRow
-	commands                    pq.StringArray
+	commands                    commandRow
 }
 
 func (p *postScanner) ScanArgs() []interface{} {
@@ -75,16 +74,7 @@ func (p postScanner) Val() (common.Post, error) {
 	p.Auth = p.auth.String
 	p.Links = [][2]uint64(p.links)
 	p.Backlinks = [][2]uint64(p.backlinks)
-
-	if p.commands != nil {
-		p.Commands = make([]common.Command, len(p.commands))
-		for i := range p.commands {
-			err := json.Unmarshal([]byte(p.commands[i]), &p.Commands[i])
-			if err != nil {
-				return p.Post, err
-			}
-		}
-	}
+	p.Commands = []common.Command(p.commands)
 
 	return p.Post, nil
 }

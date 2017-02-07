@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -31,11 +32,25 @@ type tableScanner interface {
 
 // Generate prepared statements
 func genPrepared() error {
-	for _, id := range queries.AssetNames() {
-		if strings.HasPrefix(id, "init") {
-			continue
-		}
+	names := queries.AssetNames()
+	sort.Strings(names)
+	left := make([]string, 0, len(names))
 
+	for _, id := range names {
+		switch {
+		case strings.HasPrefix(id, "init"):
+			continue
+		case strings.HasPrefix(id, "functions"):
+			_, err := db.Exec(getQuery(id))
+			if err != nil {
+				return err
+			}
+		default:
+			left = append(left, id)
+		}
+	}
+
+	for _, id := range left {
 		var err error
 		k := strings.TrimSuffix(filepath.Base(id), ".sql")
 		prepared[k], err = db.Prepare(getQuery(id))
@@ -43,6 +58,7 @@ func genPrepared() error {
 			return err
 		}
 	}
+
 	return nil
 }
 
