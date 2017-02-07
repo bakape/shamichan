@@ -1,7 +1,7 @@
 import { View } from "../base"
 import { Post } from "./model"
 import { getModel, mine } from "../state"
-import { on, outerWidth } from "../util"
+import { on } from "../util"
 import lang from "../lang"
 import { hidePost } from "./hide"
 import { spoilerImage } from "./posting"
@@ -65,9 +65,7 @@ class MenuView extends View<Post> {
 			li.textContent = text
 			this.el.append(li)
 		}
-
-		const {el, parent} = this
-		parent.append(el)
+		this.parent.append(this.el)
 	}
 
 	// Run appropriate handler on click or simply remove the menu

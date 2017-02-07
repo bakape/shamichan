@@ -149,20 +149,6 @@ export function pluralize(num: number, word: [string, string]): string {
 	return `${num} ${word[num === 1 || num === -1 ? 0 : 1]}`
 }
 
-// Return width of element with padding and margin
-export function outerWidth(el: HTMLElement): number {
-	const style = getComputedStyle(el)
-	const widths = [
-		style.marginLeft, style.marginRight, style.paddingLeft,
-		style.paddingRight
-	]
-	let total = el.offsetWidth
-	for (let width of widths) {
-		total += parseInt(width)
-	}
-	return total
-}
-
 // Find the first child of an element, that matches a check function, if any
 export function firstChild(
 	el: Element,
