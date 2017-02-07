@@ -2,6 +2,7 @@
 
 import { page } from "../state"
 import { trigger } from "./hooks"
+import { isCuck } from "../common"
 
 const banner = document.getElementById("banner")
 
@@ -49,38 +50,53 @@ export function checkBottom() {
 		atBottom = false
 		return
 	}
-	atBottom = window.innerHeight + window.scrollY
-		>= document.documentElement.offsetHeight
+	atBottom = isAtBottom()
 	if (!lock) {
-		lock = document.querySelector("#lock")
+		lock = document.getElementById("lock")
 	}
 	if (lock) {
 		lock.style.visibility = atBottom ? "visible" : "hidden"
 	}
 }
 
+function isAtBottom(): boolean {
+	return window.innerHeight + window.scrollY
+		>= document.documentElement.offsetHeight
+}
+
 // Scroll to page bottom, if previously at the bottom and the scroll away
 // happened on DOM update and not user's scroll
 function onFrame() {
-	if (scrolled) {
-		checkBottom()
-		scrolled = false
-	} else if (atBottom && page.thread) {
-		window.scrollTo(0, document.body.scrollHeight)
+	if (page.thread) {
+		if (scrolled) {
+			checkBottom()
+			scrolled = false
+		} else if (atBottom && !isAtBottom()) {
+			window.scrollTo(0, document.body.scrollHeight)
+		}
 	}
 	requestAnimationFrame(onFrame)
 }
 
-requestAnimationFrame(onFrame)
+// Firefox's multithreaded scrolling introduces a race between scroll events and
+// scrolling API updates. Just disable it for them.
+if (!isCuck) {
+	requestAnimationFrame(onFrame)
 
-document.addEventListener("scroll", () => scrolled = true, {
-	passive: true,
-})
+	document.addEventListener("scroll", () => scrolled = true, {
+		passive: true,
+	})
 
-// Unlock from bottom, when the tab is hidden, unless set not to
-document.addEventListener("visibilitychange", () => {
-	const opts = trigger("getOptions")
-	if (document.hidden && (opts && !opts.alwaysLock)) {
-		atBottom = false
-	}
-})
+	// Unlock from bottom, when the tab is hidden, unless set not to
+	document.addEventListener("visibilitychange", () => {
+		const opts = trigger("getOptions")
+		if (document.hidden && (opts && !opts.alwaysLock)) {
+			atBottom = false
+		}
+	})
+} else {
+	// Permanently hide locking UI
+	const el = document.createElement("style")
+	el.innerHTML = `#lock, #alwaysLock, label[for="alwaysLock"]{display: none;}`
+	document.head.append(el)
+}

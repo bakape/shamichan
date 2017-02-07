@@ -1,6 +1,10 @@
 // Common types and constants in a separate module to avoid circular
 // dependencies
 
+// Detect FireFox, so we can disable any functionality it's retarded bugs and
+// data races break
+export const isCuck = navigator.userAgent.toLowerCase().includes("firefox")
+
 // Generic link object containing target post board and thread
 export type PostLink = [number, number]
 
