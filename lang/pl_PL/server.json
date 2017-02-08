@@ -92,10 +92,6 @@
 			"Google",
 			"Google image search"
 		],
-		"hashCommands": [
-			"Komendy z kratką",
-			"Włącz #dice, #flip, #8ball, itp."
-		],
 		"hidden": [
 			"Hidden: 0",
 			"Clear hidden posts"

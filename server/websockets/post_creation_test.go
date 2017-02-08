@@ -47,9 +47,7 @@ func TestInsertThread(t *testing.T) {
 			BoardConfigs: config.BoardConfigs{
 				ID: "r",
 				BoardPublic: config.BoardPublic{
-					PostParseConfigs: config.PostParseConfigs{
-						ReadOnly: true,
-					},
+					ReadOnly: true,
 				},
 			},
 		},
@@ -57,9 +55,7 @@ func TestInsertThread(t *testing.T) {
 			BoardConfigs: config.BoardConfigs{
 				ID: "a",
 				BoardPublic: config.BoardPublic{
-					PostParseConfigs: config.PostParseConfigs{
-						TextOnly: true,
-					},
+					TextOnly: true,
 				},
 			},
 		},
@@ -211,9 +207,7 @@ func setBoardConfigs(t testing.TB, textOnly bool) {
 	_, err := config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
 		BoardPublic: config.BoardPublic{
-			PostParseConfigs: config.PostParseConfigs{
-				TextOnly: textOnly,
-			},
+			TextOnly: textOnly,
 		},
 	})
 	if err != nil {
@@ -508,9 +502,7 @@ func TestPostCreationForcedAnon(t *testing.T) {
 	_, err := config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
 		BoardPublic: config.BoardPublic{
-			PostParseConfigs: config.PostParseConfigs{
-				ForcedAnon: true,
-			},
+			ForcedAnon: true,
 		},
 	})
 	if err != nil {

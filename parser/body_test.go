@@ -15,41 +15,19 @@ func TestParseLine(t *testing.T) {
 		ID: "a",
 	})
 
-	t.Run("commands disabled", func(t *testing.T) {
-		links, com, err := ParseBody([]byte("#flip"), "a")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if links != nil {
-			t.Fatalf("unexpected links: %#v", links)
-		}
-		AssertDeepEquals(t, com, []common.Command(nil))
-	})
-
-	t.Run("commands enabled", func(t *testing.T) {
-		config.SetBoardConfigs(config.BoardConfigs{
-			ID: "a",
-			BoardPublic: config.BoardPublic{
-				PostParseConfigs: config.PostParseConfigs{
-					HashCommands: true,
-				},
-			},
-		})
-
-		links, com, err := ParseBody([]byte("#flip"), "a")
-		if err != nil {
-			t.Fatal(err)
-		}
-		if links != nil {
-			t.Fatalf("unexpected links: %#v", links)
-		}
-		if com == nil {
-			t.Fatalf("no commands")
-		}
-		if com[0].Type != common.Flip {
-			t.Fatalf("unexpected command type: %d", com[0].Type)
-		}
-	})
+	links, com, err := ParseBody([]byte("#flip"), "a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if links != nil {
+		t.Fatalf("unexpected links: %#v", links)
+	}
+	if com == nil {
+		t.Fatalf("no commands")
+	}
+	if com[0].Type != common.Flip {
+		t.Fatalf("unexpected command type: %d", com[0].Type)
+	}
 }
 
 func TestParseBody(t *testing.T) {
@@ -82,15 +60,6 @@ func TestParseBody(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-
-	config.SetBoardConfigs(config.BoardConfigs{
-		ID: "a",
-		BoardPublic: config.BoardPublic{
-			PostParseConfigs: config.PostParseConfigs{
-				HashCommands: true,
-			},
-		},
-	})
 
 	links, com, err := ParseBody([]byte("#flip\n>>8\n>>>6 #flip\n#flip"), "a")
 	if err != nil {

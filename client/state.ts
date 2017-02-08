@@ -21,8 +21,6 @@ export interface BoardConfigs {
 	readOnly: boolean
 	textOnly: boolean
 	forcedAnon: boolean
-	hashCommands: boolean
-	codeTags: boolean
 	title: string
 	notice: string
 	rules: string

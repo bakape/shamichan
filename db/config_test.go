@@ -63,7 +63,7 @@ func TestUpdateOnAddBoard(t *testing.T) {
 		BoardConfigs: config.BoardConfigs{
 			ID: "a",
 			BoardPublic: config.BoardPublic{
-				CodeTags: true,
+				ForcedAnon: true,
 			},
 			Eightball: []string{"yes"},
 		},
@@ -92,9 +92,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 		BoardConfigs: config.BoardConfigs{
 			ID: "a",
 			BoardPublic: config.BoardPublic{
-				PostParseConfigs: config.PostParseConfigs{
-					HashCommands: true,
-				},
+				ForcedAnon: true,
 			},
 			Eightball: []string{"yes"},
 		},

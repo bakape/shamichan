@@ -1,3 +1,2 @@
-select readOnly, textOnly, forcedAnon, hashCommands, codeTags, id, title,
-		notice, rules, eightball
+select readOnly, textOnly, forcedAnon, id, title, notice, rules, eightball
 	from boards

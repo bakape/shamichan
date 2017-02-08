@@ -92,10 +92,6 @@
 			"Google",
 			"Google image search"
 		],
-		"hashCommands": [
-			"Hash commands",
-			"Enable #dice, #flip, #8ball, etc."
-		],
 		"hidden": [
 			"Hidden: 0",
 			"Clear hidden posts"

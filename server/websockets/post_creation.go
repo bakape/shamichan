@@ -288,8 +288,8 @@ func (c *Client) closePreviousPost() error {
 }
 
 // Retrieve post-related board configurations
-func getBoardConfig(board string) (conf config.PostParseConfigs, err error) {
-	conf = config.GetBoardConfigs(board).PostParseConfigs
+func getBoardConfig(board string) (conf config.BoardConfigs, err error) {
+	conf = config.GetBoardConfigs(board).BoardConfigs
 	if conf.ReadOnly {
 		err = errReadOnly
 	}

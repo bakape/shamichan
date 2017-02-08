@@ -136,7 +136,6 @@ var specs = map[string][]inputSpec{
 		{ID: "readOnly"},
 		{ID: "textOnly"},
 		{ID: "forcedAnon"},
-		{ID: "hashCommands"},
 		{
 			ID:        "title",
 			Type:      _string,

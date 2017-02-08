@@ -92,10 +92,6 @@
 			"Google",
 			"Google resim arama"
 		],
-		"hashCommands": [
-			"Hash commands",
-			"Enable #dice, #flip, #8ball, etc."
-		],
 		"hidden": [
 			"Gizli: 0",
 			"Gizli girdileri temizle"

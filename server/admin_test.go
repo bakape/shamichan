@@ -89,9 +89,7 @@ func TestBoardConfiguration(t *testing.T) {
 	conf := config.BoardConfigs{
 		ID: board,
 		BoardPublic: config.BoardPublic{
-			PostParseConfigs: config.PostParseConfigs{
-				ForcedAnon: true,
-			},
+			ForcedAnon: true,
 		},
 		Eightball: []string{},
 	}

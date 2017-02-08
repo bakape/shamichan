@@ -67,7 +67,7 @@ func TestSetGetAddRemoveBoardConfigs(t *testing.T) {
 	std := BoardConfigs{
 		ID: "a",
 		BoardPublic: BoardPublic{
-			CodeTags: true,
+			ForcedAnon: true,
 		},
 	}
 
@@ -105,7 +105,7 @@ func TestSetMatchingBoardConfigs(t *testing.T) {
 	conf := BoardConfigs{
 		ID: "a",
 		BoardPublic: BoardPublic{
-			CodeTags: true,
+			ForcedAnon: true,
 		},
 	}
 
@@ -127,7 +127,7 @@ func TestSetDifferentBoardConfigs(t *testing.T) {
 	conf := BoardConfigs{
 		ID: "a",
 		BoardPublic: BoardPublic{
-			CodeTags: true,
+			ForcedAnon: true,
 		},
 	}
 

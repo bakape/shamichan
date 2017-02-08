@@ -9,7 +9,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 )
@@ -198,15 +197,6 @@ func TestClosePostWithHashCommand(t *testing.T) {
 	if err := db.WritePost(nil, post); err != nil {
 		t.Fatal(err)
 	}
-
-	config.SetBoardConfigs(config.BoardConfigs{
-		ID: "a",
-		BoardPublic: config.BoardPublic{
-			PostParseConfigs: config.PostParseConfigs{
-				HashCommands: true,
-			},
-		},
-	})
 
 	sv := newWSServer(t)
 	defer sv.Close()

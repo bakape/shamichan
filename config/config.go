@@ -28,11 +28,7 @@ var (
 		BoardConfigs: BoardConfigs{
 			ID: "all",
 			BoardPublic: BoardPublic{
-				PostParseConfigs: PostParseConfigs{
-					HashCommands: true,
-				},
-				CodeTags: true,
-				Title:    "Aggregator metaboard",
+				Title: "Aggregator metaboard",
 			},
 		},
 		Hash: "0",
@@ -124,11 +120,12 @@ type BoardConfigs struct {
 
 // BoardPublic contains publically accessible board-specific configurations
 type BoardPublic struct {
-	PostParseConfigs
-	CodeTags bool   `json:"codeTags"`
-	Title    string `json:"title"`
-	Notice   string `json:"notice"`
-	Rules    string `json:"rules"`
+	ReadOnly   bool   `json:"readOnly"`
+	TextOnly   bool   `json:"textOnly"`
+	ForcedAnon bool   `json:"forcedAnon"`
+	Title      string `json:"title"`
+	Notice     string `json:"notice"`
+	Rules      string `json:"rules"`
 }
 
 // BoardConfContainer contains configurations for an individual board as well
@@ -137,14 +134,6 @@ type BoardConfContainer struct {
 	BoardConfigs
 	JSON []byte
 	Hash string
-}
-
-// PostParseConfigs contains board-specific flags for post text parsing
-type PostParseConfigs struct {
-	ReadOnly     bool `json:"readOnly"`
-	TextOnly     bool `json:"textOnly"`
-	ForcedAnon   bool `json:"forcedAnon"`
-	HashCommands bool `json:"hashCommands"`
 }
 
 // BoardTitle contains a board's ID and title

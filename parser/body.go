@@ -5,7 +5,6 @@ import (
 	"regexp"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 )
 
 // Post syntax pattern matchers
@@ -18,7 +17,6 @@ var (
 func ParseBody(body []byte, board string) (
 	links [][2]uint64, com []common.Command, err error,
 ) {
-	parseCommands := config.GetBoardConfigs(board).HashCommands
 	start := 0
 
 	for i, b := range body {
@@ -53,9 +51,6 @@ func ParseBody(body []byte, board string) (
 				links = append(links, l)
 			}
 		case '#':
-			if !parseCommands {
-				continue
-			}
 			m := CommandRegexp.FindSubmatch(word)
 			if m == nil {
 				continue
