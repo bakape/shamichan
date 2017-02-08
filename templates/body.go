@@ -57,8 +57,8 @@ var (
 
 type bodyContext struct {
 	state struct { // Body parser state
-		spoiler, quote, lastLineEmpty bool
-		iDice                         int
+		spoiler, quote, lastLineEmpty, code bool
+		iDice                               int
 	}
 	common.Post
 	OP uint64
@@ -103,7 +103,7 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64) {
 
 // Parse a line that is no longer being edited
 func (c *bodyContext) parseTerminatedLine(line string) {
-	c.parseSpoilers(line, (*c).parseFragment)
+	c.parseCode(line, (*c).parseFragment)
 }
 
 // Open a new line container and check for quotes
@@ -116,6 +116,34 @@ func (c *bodyContext) initLine(first byte) {
 	}
 	if c.state.spoiler {
 		c.N().S("<del>")
+	}
+}
+
+// Detect code tags
+func (c *bodyContext) parseCode(frag string, fn func(string)) {
+	for {
+		i := strings.Index(frag, "``")
+		if i != -1 {
+			c.formatCode(frag[:i], fn)
+			frag = frag[i+2:]
+			c.state.code = !c.state.code
+		} else {
+			c.formatCode(frag, fn)
+			break
+		}
+	}
+}
+
+func (c *bodyContext) formatCode(frag string, fn func(string)) {
+	if c.state.code {
+		// Strip quotes
+		for len(frag) != 0 && frag[0] == '>' {
+			c.N().S(`&gt;`)
+			frag = frag[1:]
+		}
+		c.N().Z(highlightSyntax(frag))
+	} else {
+		c.parseSpoilers(frag, fn)
 	}
 }
 
@@ -365,7 +393,7 @@ func (c *bodyContext) terminateTags(newLine bool) {
 
 // Parse a line that is still being edited
 func (c *bodyContext) parseOpenLine(line string) {
-	c.parseSpoilers(line, func(s string) {
+	c.parseCode(line, func(s string) {
 		c.E().S(s)
 	})
 }

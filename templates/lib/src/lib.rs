@@ -1,3 +1,6 @@
+// TODO: HTML escaping
+// TODO: Handle UTF-8 code
+
 mod matchers;
 
 use matchers::{is_keyword, is_operator};
@@ -65,7 +68,7 @@ impl<'a> Writer<'a> {
 			let b = *ch;
 			self.i = i;
 
-			if self.typ < Type::Word {
+			if self.typ > Type::Word {
 				self.buf.push(b);
 			}
 			match self.typ {
@@ -125,7 +128,7 @@ impl<'a> Writer<'a> {
 	// close open tag
 	fn close(&mut self) {
 		self.buf.extend_from_slice(b"</pre>");
-		self.start = self.i + 1;
+		self.start = self.i;
 	}
 
 	// terminate an escaping token, if matched
@@ -171,6 +174,7 @@ impl<'a> Writer<'a> {
 			self.buf.extend_from_slice(OPERATOR);
 		}
 		self.buf.push(b);
+		self.start = self.i;
 		if is {
 			self.close();
 		}

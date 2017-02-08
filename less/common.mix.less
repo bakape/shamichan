@@ -1,4 +1,4 @@
-body, article {
+body, article, blockquote pre {
 	color: @body;
 }
 
@@ -36,4 +36,20 @@ article audio {
 	&::-webkit-media-controls-time-remaining-display {
   		color: @link;
 	}
+}
+
+em, .ms-string {
+	color: @em;
+}
+
+.ms-operator {
+	color: @mod;
+}
+
+.ms-comment {
+	color: fade(@body, 60%);
+}
+
+.ms-function {
+	color: @link;
 }

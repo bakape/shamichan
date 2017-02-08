@@ -3,6 +3,7 @@ import { renderPostLink } from './etc'
 import { PostData, PostLink, TextState } from '../../common'
 import { escape } from '../../util'
 import { parseEmbeds } from "../embed"
+import highlightSyntax from "./code"
 
 // Render the text body of a post
 export default function renderBody(data: PostData): string {
@@ -10,6 +11,7 @@ export default function renderBody(data: PostData): string {
         spoiler: false,
         quote: false,
         lastLineEmpty: false,
+        code: false,
         iDice: 0,
     }
     let html = ""
@@ -42,14 +44,48 @@ export default function renderBody(data: PostData): string {
 
 // Parse a single line, that is no longer being edited
 function parseTerminatedLine(line: string, data: PostData): string {
-    let html = ""
-
-    if (line[0] == "#") {
-
-    }
-
-    return html + parseSpoilers(line, data.state, frag =>
+    return parseCode(line, data.state, frag =>
         parseFragment(frag, data))
+}
+
+// Detect code tags
+function parseCode(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
+    let html = ""
+    while (true) {
+        const i = frag.indexOf("``")
+        if (i !== -1) {
+            html += formatCode(frag.slice(0, i), state, fn)
+            frag = frag.substring(i + 2)
+            state.code = !state.code
+        } else {
+            html += formatCode(frag, state, fn)
+            break
+        }
+    }
+    return html
+}
+
+function formatCode(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
+    let html = ""
+    if (state.code) {
+        // Strip quotes
+        while (frag[0] === '>') {
+            html += "&gt;"
+            frag = frag.slice(1)
+        }
+        html += highlightSyntax(frag)
+    } else {
+        html += parseSpoilers(frag, state, fn)
+    }
+    return html
 }
 
 // Injects spoiler tags and calls fn on the remaining parts
@@ -112,7 +148,7 @@ function terminateTags(state: TextState, newLine: boolean): string {
 
 // Parse a line that is still being edited
 function parseOpenLine(line: string, {state}: PostData): string {
-    return parseSpoilers(line, state, escape)
+    return parseCode(line, state, escape)
 }
 
 // Parse a line fragment

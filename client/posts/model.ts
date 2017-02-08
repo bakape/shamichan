@@ -37,6 +37,7 @@ export class Post extends Model implements PostData {
 			spoiler: false,
 			quote: false,
 			lastLineEmpty: false,
+			code: false,
 			iDice: 0,
 		}
 	}
@@ -54,16 +55,19 @@ export class Post extends Model implements PostData {
 
 	// Append a character to the text body
 	public append(code: number) {
-		const char = String.fromCodePoint(code),
-			{ view} = this
+		const char = String.fromCodePoint(code)
 		this.body += char
 
 		// It is possible to receive text body updates after a post closes,
 		// due to server-side buffering optimizations. If so, rerender the body.
-		if (char === "\n" || !this.editing || endsWithTag(this.body)) {
-			view.reparseBody()
+		const needReparse = char === "\n"
+			|| !this.editing
+			|| this.state.code
+			|| endsWithTag(this.body)
+		if (needReparse) {
+			this.view.reparseBody()
 		} else {
-			view.appendString(char)
+			this.view.appendString(char)
 		}
 	}
 
@@ -71,6 +75,7 @@ export class Post extends Model implements PostData {
 	public backspace() {
 		const needReparse = this.body[this.body.length - 1] === "\n"
 			|| !this.editing
+			|| this.state.code
 			|| endsWithTag(this.body)
 		this.body = this.body.slice(0, -1)
 		if (needReparse) {
@@ -169,6 +174,8 @@ function endsWithTag(body: string): boolean {
 			return true
 		case "*":
 			return body[body.length - 2] === "*"
+		case "`":
+			return body[body.length - 2] === "`"
 	}
 	return false
 }

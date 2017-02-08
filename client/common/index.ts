@@ -33,6 +33,7 @@ export type TextState = {
 	spoiler: boolean
 	quote: boolean
 	lastLineEmpty: boolean
+	code: boolean
 	iDice: number // Index of the next dice array item to use
 }
 

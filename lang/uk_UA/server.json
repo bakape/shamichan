@@ -44,10 +44,6 @@
 			"Публічний ключ капчі",
 			"Ключа для комунікації з стороннім сервісом капчі"
 		],
-		"codeTags": [
-			"Теги коду",
-			"Ввмикає теги коду для постингу джерельного коду"
-		],
 		"customCSS": [
 			"Custom CSS",
 			"User-defined CSS rules loaded on top of the selected theme"

@@ -43,7 +43,7 @@
 				{%s= ln.Common.UI["last"] %}{% space %}100
 			</a>
 		</span>
-		<span id="lock" style="visibilty: hidden;">
+		<span id="lock" style="visibility: hidden;">
 			{%s= ln.UI["lockedToBottom"] %}
 		</span>
 	</span>

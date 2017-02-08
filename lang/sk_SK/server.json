@@ -44,10 +44,6 @@
 			"Kapča verejný kľúč",
 			"Kľúč používaný na komunikáciu s externou kapča službou"
 		],
-		"codeTags": [
-			"Code tags",
-			"Enable code tags for embedding programming code"
-		],
 		"customCSS": [
 			"Custom CSS",
 			"User-defined CSS rules loaded on top of the selected theme"
