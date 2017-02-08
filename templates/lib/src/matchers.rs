@@ -177,6 +177,6 @@ pub fn is_keyword(s: &[u8]) -> bool {
 	}
 }
 
-pub fn is_operator(b: &u8) -> bool {
-	OPERATORS.contains(b)
+pub fn is_operator(b: u8) -> bool {
+	OPERATORS.contains(&b)
 }

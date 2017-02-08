@@ -1,12 +1,15 @@
-server:
+sserver:
 	cargo rustc --release
 	cp target/release/libminisin.a .
 
-client:
-	rustc --target wasm32-unknown-emscripten --crate-type bin -v -O -o minisin.js src/lib.rs
+client: client_clean
+	rustc --target wasm32-unknown-emscripten -v -O -o minisin.js src/lib.rs
 
-clean:
-	rm -rf target *.a *.o *.js *.wasm *.wast
+client_clean:
+	rm -f *.o *.js *.wasm *.wast
+
+clean: client_clean
+	rm -rf target *.a
 
 debug:
 	cargo rustc
