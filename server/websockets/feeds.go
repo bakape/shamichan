@@ -104,7 +104,8 @@ func (f *feedMap) Clear() {
 
 // A feed with synchronization logic of a certain thread
 type updateFeed struct {
-	id uint64
+	hasUpdates bool
+	id         uint64
 	// Update progress counter
 	ctr uint64
 	// Message flushing ticker
@@ -141,7 +142,6 @@ func (u *updateFeed) Start(id uint64) (err error) {
 		for {
 			select {
 			case <-u.close:
-				u.ticker.StartIfPaused()
 				if err := u.listener.Close(); err != nil {
 					log.Printf("feed closing: %s", err)
 				}
@@ -149,9 +149,13 @@ func (u *updateFeed) Start(id uint64) (err error) {
 			case msg := <-u.listener.Notify:
 				u.ticker.StartIfPaused()
 				if msg != nil { // Disconnect happened. Shouganai.
-					u.fetchUpdates()
+					u.hasUpdates = true
 				}
 			case <-u.ticker.C:
+				if u.hasUpdates {
+					u.hasUpdates = false
+					u.fetchUpdates()
+				}
 				u.flushBuffer()
 			}
 		}
