@@ -131,7 +131,6 @@ export default class ImageHandler extends View<Post> {
 		const figure = this.el.querySelector("figure"),
 			imgEl = figure.querySelector("img"),
 			src = sourcePath(img.SHA1, img.fileType)
-
 		switch (img.fileType) {
 			case fileTypes.ogg:
 			case fileTypes.mp4:
@@ -148,12 +147,12 @@ export default class ImageHandler extends View<Post> {
 				figure.append(video)
 				break
 			default:
-				setAttrs(imgEl, {
+				const el = document.createElement("img")
+				setAttrs(el, {
 					src,
 					class: cls,
-					width: "",
-					height: "",
 				})
+				imgEl.replaceWith(el)
 		}
 	}
 
