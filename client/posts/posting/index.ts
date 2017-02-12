@@ -20,9 +20,18 @@ export type FormMessage = {
 	view: FormView,
 }
 
+type Selection = {
+	start: Node
+	end: Node
+	text: string
+}
+
 // Current post form view and model instances
 let postForm: FormView,
-	postModel: FormModel
+	postModel: FormModel,
+	// Store last selected range, so we can access it after a mouse click on
+	// quote links, which cause that link to become selected
+	lastSelection: Selection
 
 // Post authoring finite state machine
 export const enum postState {
@@ -71,11 +80,9 @@ function bindNagging() {
 function quotePost(e: Event) {
 	// Make sure the selection both starts and ends in the quoted post's
 	// blockquote
-	const post = (e.target as Element).closest("article"),
-		gsel = getSelection()
-
+	const post = (e.target as Element).closest("article")
 	const isInside = (prop: string): boolean => {
-		let el = gsel[prop] as HTMLElement
+		let el = lastSelection[prop] as HTMLElement
 		if (!el) {
 			return false
 		}
@@ -85,10 +92,9 @@ function quotePost(e: Event) {
 		}
 		return el.closest("article") === post
 	}
-
 	let sel: string
-	if (isInside("baseNode") && isInside("focusNode")) {
-		sel = gsel.toString()
+	if (lastSelection && isInside("start") && isInside("end")) {
+		sel = lastSelection.text
 	}
 
 	postSM.feed(postEvent.open)
@@ -224,7 +230,23 @@ export default () => {
 	// Handle clicks on post quoting links
 	on(threads, "click", quotePost, {
 		selector: "a.quote",
-		passive: true,
+	})
+
+	// Store last selected range that is not a quote link
+	document.addEventListener("selectionchange", () => {
+		const sel = getSelection(),
+			start = sel.anchorNode
+		if (!start) {
+			return
+		}
+		const el = start.parentElement
+		if (el && !el.classList.contains("quote")) {
+			lastSelection = {
+				start: sel.anchorNode,
+				end: sel.focusNode,
+				text: sel.toString(),
+			}
+		}
 	})
 
 	// Trigger update on name or staff field change
