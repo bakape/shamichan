@@ -12,12 +12,15 @@ class ThreadForm extends FormView {
 	private aside: Element
 	private selectedBoard: string
 	private upload: UploadForm
+	private submitEl: HTMLElement
+	private lastBr: HTMLElement
 
 	constructor(event: Event) {
 		const aside = (event.target as Element).closest("aside")
 		super({ el: document.getElementById("new-thread-form") })
 		this.aside = aside
 		this.render()
+		this.submitEl = this.el.querySelector("input[type=submit]")
 		handlers[message.postID] = (msg: number) =>
 			this.handleResponse(msg)
 	}
@@ -27,29 +30,31 @@ class ThreadForm extends FormView {
 	private render() {
 		if (!boardConfig.textOnly) {
 			this.upload = new UploadForm(null, this.el)
+			this.lastBr = this.upload.el.querySelector("br:last-child")
 		}
 		this.aside.classList.add("expanded")
 		this.el.querySelector("input, select").focus()
 	}
 
-	// Reset new thread form to initial state
+	// Reset new thread form to initial state and cancel upload
 	public remove() {
 		delete handlers[message.postID]
+		if (this.upload && this.upload.isUploading) {
+			this.upload.cancel()
+		}
+		this.reset()
 		this.aside.classList.remove("expanded", "sending")
 	}
 
 	protected async send() {
-		this.el.querySelector("input[type=submit]").remove()
-		this.el.querySelector("input[name=cancel]").remove()
-		this.upload.el.querySelector("br:last-child").remove()
-
 		const req = newAllocRequest()
+		this.submitEl.style.display = "none"
 
 		if (this.upload && this.upload.input.files.length) {
+			this.lastBr.style.display = "none"
 			req["image"] = await this.upload.uploadFile()
 			if (!req["image"]) {
-				this.reloadCaptcha()
-				return
+				return this.reset()
 			}
 		}
 
@@ -67,10 +72,18 @@ class ThreadForm extends FormView {
 		send(message.insertThread, req)
 	}
 
+	private reset() {
+		this.reloadCaptcha()
+		this.submitEl.style.display = ""
+		if (this.upload) {
+			this.lastBr.style.display = ""
+		}
+	}
+
 	private async handleResponse(id: number) {
 		if (id === -1) {
 			this.renderFormResponse(lang.ui["invalidCaptcha"])
-			this.reloadCaptcha()
+			this.reset()
 			return
 		}
 		await navigate(`/${this.selectedBoard}/${id}`, null, true)

@@ -27,7 +27,9 @@ interface LoadProgress {
 export default class UploadForm extends View<Post> {
     public spoiler: HTMLElement
     public status: HTMLElement
+    public isUploading: boolean
     public input: HTMLInputElement
+    private xhr: XMLHttpRequest
 
     constructor(model: Post, parent: HTMLElement) {
         const el = parent.querySelector(".upload-container")
@@ -43,11 +45,11 @@ export default class UploadForm extends View<Post> {
     public async uploadFile(
         file: File = this.input.files[0],
     ): Promise<FileData> {
-        if (!navigator.onLine) {
+        if (!navigator.onLine || this.isUploading) {
             return null
         }
 
-
+        this.isUploading = true
         this.input.style.display = "none"
         this.renderProgress({
             total: 1,
@@ -62,6 +64,7 @@ export default class UploadForm extends View<Post> {
             hash = await crypto.subtle.digest("SHA-1", result),
             [res, err] = await postText("/uploadHash", bufferToHex(hash))
         if (err) {
+            this.isUploading = false
             throw err
         }
         let token: string
@@ -79,9 +82,9 @@ export default class UploadForm extends View<Post> {
             token,
             name: file.name,
         }
-        const spoiler =
-            (this.el.querySelector("input[name=spoiler]") as HTMLInputElement)
-                .checked
+        const spoiler = (this.el
+            .querySelector("input[name=spoiler]") as HTMLInputElement)
+            .checked
         if (spoiler) {
             img.spoiler = true
         }
@@ -94,20 +97,36 @@ export default class UploadForm extends View<Post> {
         formData.append("image", file)
 
         // Not using fetch, because no ProgressEvent support
-        const xhr = new XMLHttpRequest()
-        xhr.open("POST", "/upload")
-        xhr.upload.onprogress = e =>
+        this.xhr = new XMLHttpRequest()
+        this.xhr.open("POST", "/upload")
+        this.xhr.upload.onprogress = e =>
             this.renderProgress(e)
-        xhr.send(formData)
-        await load(xhr)
+        this.xhr.send(formData)
+        await load(this.xhr)
 
-        if (xhr.status !== 200) {
-            this.status.textContent = xhr.response
-            this.input.style.display = ""
+        if (!this.isUploading) { // Cancelled
+            return ""
+        }
+        if (this.xhr.status !== 200) {
+            this.status.textContent = this.xhr.response
+            this.cancel()
             return ""
         }
 
-        return xhr.responseText
+        this.isUploading = false
+        const text = this.xhr.responseText
+        this.xhr = null
+        return text
+    }
+
+    // Cancel any current uploads and reset form
+    public cancel() {
+        this.isUploading = false
+        if (this.xhr) {
+            this.xhr.abort()
+            this.xhr = null
+        }
+        this.input.style.display = ""
     }
 
     // Render client-side upload progress

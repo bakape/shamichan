@@ -202,6 +202,9 @@ export default class FormView extends PostView {
 
     // Clean up on form removal
     public remove() {
+        if (this.upload && this.upload.isUploading) {
+            this.upload.cancel()
+        }
         super.remove()
         this.cleanUp()
     }
