@@ -1,6 +1,6 @@
 // Desktop notifications on reply and such
 
-import { storeSeenReply } from "../state"
+import { storeSeenReply, seenReplies } from "../state"
 import options from "../options"
 import lang from "../lang"
 import { thumbPath, Post } from "../posts"
@@ -12,6 +12,9 @@ const defaultIcon = "/assets/notification-icon.png"
 
 // Notify the user that one of their posts has been replied to
 export default function notifyAboutReply(post: Post) {
+	if (seenReplies.has(post.id)) {
+		return
+	}
 	storeSeenReply(post.id)
 	if (!document.hidden) {
 		return

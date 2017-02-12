@@ -1,6 +1,6 @@
 import { Post, PostView } from '../posts'
 import { fileTypes, PostLink, PostData, ThreadData } from "../common"
-import { posts as postCollection, hidden, mine, seenReplies } from '../state'
+import { posts as postCollection, hidden, mine } from '../state'
 import { pluralize, escape, threads } from '../util'
 import options from "../options"
 import lang from "../lang"
@@ -108,8 +108,7 @@ function extractPost(post: PostData) {
     localizeLinks(backlinks, view, false)
 
     if (image) {
-        const should =
-            options.hideThumbs
+        const should = options.hideThumbs
             || options.workModeToggle
             || (image.spoiler && !options.spoilers)
             || (image.fileType === fileTypes.gif && options.autogif)
@@ -159,7 +158,7 @@ function localizeLinks(links: PostLink[], view: PostView, notify: boolean) {
                 el.textContent += " " + lang.posts["you"]
             }
         }
-        if (notify && !seenReplies.has(id)) {
+        if (notify) {
             notifyAboutReply(view.model)
         }
     }

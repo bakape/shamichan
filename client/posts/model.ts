@@ -3,7 +3,7 @@ import { extend } from '../util'
 import Collection from './collection'
 import PostView from './view'
 import { SpliceResponse } from '../client'
-import { mine, seenReplies } from "../state"
+import { mine } from "../state"
 import { notifyAboutReply } from "../ui"
 import { PostData, TextState, PostLink, Command, ImageData } from "../common"
 
@@ -121,10 +121,7 @@ export class Post extends Model implements PostData {
 			if (!mine.has(id)) {
 				continue
 			}
-			// In case there are multiple links to the same post
-			if (!seenReplies.has(this.id)) {
-				notifyAboutReply(this)
-			}
+			notifyAboutReply(this)
 		}
 	}
 
