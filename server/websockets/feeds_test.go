@@ -61,13 +61,13 @@ func TestStreamUpdates(t *testing.T) {
 	assertMessage(t, wcl, "300")
 
 	// One message
-	if err := db.UpdateLog(nil, 1, []byte("foo")); err != nil {
+	if err := db.UpdateLog(1, []byte("foo")); err != nil {
 		t.Fatal(err)
 	}
 	assertMessage(t, wcl, "33foo")
 
 	// Another
-	if err := db.UpdateLog(nil, 1, []byte("bar")); err != nil {
+	if err := db.UpdateLog(1, []byte("bar")); err != nil {
 		t.Fatal(err)
 	}
 	assertMessage(t, wcl, "33bar")

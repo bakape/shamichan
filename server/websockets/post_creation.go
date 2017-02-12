@@ -111,14 +111,7 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	if err != nil {
 		return
 	}
-	thread := db.Thread{
-		PostCtr:   1,
-		ReplyTime: timeStamp,
-		BumpTime:  timeStamp,
-		Board:     req.Board,
-		Log:       [][]byte{},
-	}
-	thread.Subject, err = parser.ParseSubject(req.Subject)
+	subject, err := parser.ParseSubject(req.Subject)
 	if err != nil {
 		return
 	}
@@ -128,7 +121,6 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	if hasImage {
 		img := req.Image
 		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
-		thread.ImageCtr = 1
 		if err != nil {
 			return
 		}
@@ -138,31 +130,10 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	if err != nil {
 		return
 	}
-	thread.ID = id
 	post.ID = id
 	post.OP = id
 
-	tx, err := db.StartTransaction()
-	if err != nil {
-		return
-	}
-	defer db.RollbackOnError(tx, &err)
-
-	err = db.LockForWrite(tx, "boards", "threads", "posts")
-	if err != nil {
-		return
-	}
-
-	err = db.WriteThread(tx, thread, post)
-	if err != nil {
-		return
-	}
-	err = db.BumpBoard(tx, req.Board)
-	if err != nil {
-		return
-	}
-	err = tx.Commit()
-
+	err = db.InsertThread(subject, post)
 	return
 }
 
@@ -233,37 +204,9 @@ func (c *Client) insertPost(data []byte) (err error) {
 	if err != nil {
 		return
 	}
-
-	msg, err := common.EncodeMessage(common.MessageInsertPost, post.Post)
+	err = db.InsertPost(post)
 	if err != nil {
 		return
-	}
-
-	tx, err := db.StartTransaction()
-	if err != nil {
-		return
-	}
-	defer db.RollbackOnError(tx, &err)
-
-	err = db.LockForWrite(tx, "boards", "threads", "posts")
-	if err != nil {
-		return
-	}
-
-	err = db.WritePost(tx, post)
-	if err != nil {
-		return
-	}
-	err = db.BumpThread(tx, sync.OP, true, true, hasImage, msg)
-	if err != nil {
-		return
-	}
-	err = db.BumpBoard(tx, sync.Board)
-	if err != nil {
-		return
-	}
-	if err := tx.Commit(); err != nil {
-		return err
 	}
 
 	c.post = openPost{
@@ -373,10 +316,7 @@ func constructPost(
 // Embeds spoiler and image name in result struct. The last extension is
 // stripped from the name.
 func getImage(token, name string, spoiler bool) (img *common.Image, err error) {
-	switch {
-	case len(token) > 127: // RethinkDB key length limit
-		return nil, errInvalidImageToken
-	case len(name) > 200:
+	if len(name) > 200 {
 		return nil, errImageNameTooLong
 	}
 

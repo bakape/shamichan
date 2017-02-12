@@ -1,10 +1,9 @@
 package db
 
 import (
+	"fmt"
 	"testing"
 	"time"
-
-	"fmt"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -24,6 +23,11 @@ func TestOpenPostClosing(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
+	common.ParseBody = func(_ []byte, _ string) (
+		[][2]uint64, []common.Command, error,
+	) {
+		return nil, nil, nil
+	}
 
 	tooOld := time.Now().Add(-time.Minute * 31).Unix()
 	posts := [...]Post{
@@ -84,10 +88,7 @@ func TestOpenPostClosing(t *testing.T) {
 		})
 	}
 
-	t.Run("log update", func(t *testing.T) {
-		t.Parallel()
-		assertLogContains(t, 1, "062")
-	})
+	assertLogContains(t, 1, `06{"id":2}`)
 }
 
 func assertLogContains(t *testing.T, id uint64, msgs ...string) {

@@ -27,6 +27,9 @@ const (
 	Pcount
 )
 
+// ParseBody forwards parser.ParseBody to avoid cyclic imports in db/upkeep
+var ParseBody func([]byte, string) ([][2]uint64, []Command, error)
+
 // Board is an array stripped down version of Thread for whole-board retrieval
 // queries. Reduces server memory usage and served JSON payload.
 type Board []BoardThread

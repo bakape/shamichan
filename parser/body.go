@@ -13,6 +13,11 @@ var (
 	linkRegexp    = regexp.MustCompile(`^>{2,}(\d+)$`)
 )
 
+// Needed to avoid cyclic imports for the 'db' package
+func init() {
+	common.ParseBody = ParseBody
+}
+
 // ParseBody parses the entire post text body for commands and links
 func ParseBody(body []byte, board string) (
 	links [][2]uint64, com []common.Command, err error,

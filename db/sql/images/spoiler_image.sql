@@ -1,3 +1,1 @@
-update posts
-	set spoiler = true
-	where id = $1
+select spoiler_image($1, $2, $3);

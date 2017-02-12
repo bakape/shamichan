@@ -1,3 +1,1 @@
-update posts
-	set SHA1 = $2, imageName = $3
-	where id = $1
+select insert_image($1, $2, $3, $4, $5)

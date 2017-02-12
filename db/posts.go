@@ -220,10 +220,19 @@ func NewPostID() (id uint64, err error) {
 	return id, err
 }
 
-// WritePost writes a post struct to database
-func WritePost(tx *sql.Tx, p Post) error {
-	ex := getExecutor(tx, "write_post")
+// InsertPost inserts a post into an existing thread
+func InsertPost(p Post) error {
+	msg, err := common.EncodeMessage(common.MessageInsertPost, p.Post)
+	if err != nil {
+		return err
+	}
+	return execPrepared(
+		"insert_post",
+		append([]interface{}{msg}, genPostCreationArgs(p)...)...,
+	)
+}
 
+func genPostCreationArgs(p Post) []interface{} {
 	// Don't store empty strings in the database. Zero value != NULL.
 	var (
 		name, trip, auth, img, imgName, ip *string
@@ -247,15 +256,34 @@ func WritePost(tx *sql.Tx, p Post) error {
 		spoiler = p.Image.Spoiler
 	}
 
-	_, err := ex.Exec(
+	return []interface{}{
 		p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, name, trip,
-		auth, p.Password, ip, img, imgName, linkRow(p.Links),
-		linkRow(p.Backlinks), commandRow(p.Commands),
-	)
+		auth, p.Password, ip, img, imgName,
+		linkRow(p.Links), linkRow(p.Backlinks), commandRow(p.Commands),
+	}
+}
+
+// WritePost writes a post struct to the database. Only used in tests and
+// migrations.
+func WritePost(tx *sql.Tx, p Post) error {
+	_, err := getExecutor(tx, "write_post").Exec(genPostCreationArgs(p)...)
 	return err
 }
 
-// WriteThread writes a thread and it's OP to the database
+// InsertThread inserts a new thread into the database
+func InsertThread(subject string, p Post) error {
+	imgCtr := 0
+	if p.Image != nil {
+		imgCtr = 1
+	}
+	return execPrepared(
+		"insert_thread",
+		append([]interface{}{subject, imgCtr}, genPostCreationArgs(p)...)...,
+	)
+}
+
+// WriteThread writes a thread and it's OP to the database. Only used for tests
+// and migrations.
 func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 	passedTx := tx != nil
 	if !passedTx {
@@ -349,39 +377,4 @@ func encodeIDArray(ids ...uint64) string {
 	}
 	b = append(b, '}')
 	return string(b)
-}
-
-// SpoilerImage spoilers an already allocated image
-func SpoilerImage(id uint64) (err error) {
-	op, err := GetPostOP(id)
-	if err != nil {
-		return
-	}
-
-	msg, err := common.EncodeMessage(common.MessageSpoiler, id)
-	if err != nil {
-		return
-	}
-	return updatePost(id, op, msg, "spoiler_image", nil)
-}
-
-// BumpThread dumps up thread counters and adds a message to the thread's
-// replication log. tx must not be nil.
-func BumpThread(
-	tx *sql.Tx,
-	id uint64,
-	reply, bump, image bool,
-	msg []byte,
-) error {
-	_, err := tx.Stmt(prepared["bump_thread"]).Exec(id, reply, bump, image)
-	if err != nil {
-		return err
-	}
-	return UpdateLog(tx, id, msg)
-}
-
-// BumpBoard increment's a board's progress counter. tx must not be nil.
-func BumpBoard(tx *sql.Tx, board string) error {
-	_, err := tx.Stmt(prepared["bump_board"]).Exec(board)
-	return err
 }

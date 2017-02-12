@@ -95,7 +95,7 @@ func TestSyncToThread(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	for _, msg := range [...]string{"foo", "bar"} {
-		if err := db.UpdateLog(nil, 1, []byte(msg)); err != nil {
+		if err := db.UpdateLog(1, []byte(msg)); err != nil {
 			t.Fatal(err)
 		}
 	}

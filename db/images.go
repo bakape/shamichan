@@ -136,3 +136,16 @@ func HasImage(id uint64) (has bool, err error) {
 	}
 	return
 }
+
+// SpoilerImage spoilers an already allocated image
+func SpoilerImage(id uint64) (err error) {
+	msg, err := common.EncodeMessage(common.MessageSpoiler, id)
+	if err != nil {
+		return
+	}
+	op, err := GetPostOP(id)
+	if err != nil {
+		return
+	}
+	return execPrepared("spoiler_image", id, op, msg)
+}

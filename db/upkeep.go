@@ -56,58 +56,44 @@ func logError(prefix string, err error) {
 }
 
 // Close any open posts that have not been closed for 30 minutes
-func closeDanglingPosts() (err error) {
-	tx, err := db.Begin()
+func closeDanglingPosts() error {
+	r, err := prepared["get_expired_open_posts"].Query()
 	if err != nil {
-		return
-	}
-	defer RollbackOnError(tx, &err)
-
-	err = LockForWrite(tx, "threads", "posts")
-	if err != nil {
-		return
-	}
-
-	// Read and close all expired posts
-	r, err := tx.Stmt(prepared["close_expired_open_posts"]).Query()
-	if err != nil {
-		return
+		return err
 	}
 	defer r.Close()
 
 	type post struct {
-		id, op uint64
+		id, op      uint64
+		board, body string
 	}
 
 	posts := make([]post, 0, 8)
 	for r.Next() {
 		var p post
-		err = r.Scan(&p.id, &p.op)
+		err = r.Scan(&p.id, &p.op, &p.board, &p.body)
 		if err != nil {
-			return
+			return err
 		}
 		posts = append(posts, p)
 	}
 	err = r.Err()
 	if err != nil {
-		return
+		return err
 	}
 
-	// Write updates to the replication log
-	q := tx.Stmt(prepared["update_log"])
 	for _, p := range posts {
-		var msg []byte
-		msg, err = common.EncodeMessage(common.MessageClosePost, p.id)
+		links, com, err := common.ParseBody([]byte(p.body), p.board)
 		if err != nil {
-			return
+			return err
 		}
-		_, err = q.Exec(p.op, msg)
+		err = ClosePost(p.id, p.op, links, com)
 		if err != nil {
-			return
+			return err
 		}
 	}
 
-	return tx.Commit()
+	return nil
 }
 
 // Delete boards that are older than N days and have not had any new posts for

@@ -1,14 +1,10 @@
 package db
 
-import (
-	"database/sql"
+import "github.com/bakape/meguca/common"
 
-	"github.com/bakape/meguca/common"
-)
-
-// UpdateLog writes to a thread's replication log..
-func UpdateLog(tx *sql.Tx, id uint64, msg []byte) error {
-	_, err := getStatement(tx, "update_log").Exec(id, msg)
+// UpdateLog writes to a thread's replication log. Only used in tests.
+func UpdateLog(id uint64, msg []byte) error {
+	_, err := db.Exec(`select update_log($1, $2)`, id, msg)
 	return err
 }
 
@@ -28,49 +24,6 @@ func AppendBody(id, op uint64, char rune, body string) error {
 		body: body,
 	}
 	return nil
-}
-
-func updatePost(
-	id, op uint64,
-	msg []byte,
-	queryKey string,
-	arg interface{},
-) (err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer RollbackOnError(tx, &err)
-
-	err = LockForWrite(tx, "threads", "posts")
-	if err != nil {
-		return
-	}
-
-	err = updatePostTx(tx, id, op, msg, queryKey, arg)
-	if err != nil {
-		return
-	}
-	return tx.Commit()
-}
-
-func updatePostTx(
-	tx *sql.Tx,
-	id, op uint64,
-	msg []byte,
-	queryKey string,
-	arg interface{},
-) (err error) {
-	q := tx.Stmt(prepared[queryKey])
-	if arg != nil {
-		_, err = q.Exec(id, arg)
-	} else {
-		_, err = q.Exec(id)
-	}
-	if err != nil {
-		return
-	}
-	return UpdateLog(tx, op, msg)
 }
 
 // Writes new backlinks to other posts
@@ -155,8 +108,8 @@ func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
 // InsertImage insert and image into and existing open post
 func InsertImage(id, op uint64, img common.Image) (err error) {
 	msg, err := common.EncodeMessage(common.MessageInsertImage, struct {
-		common.Image
 		ID uint64 `json:"id"`
+		common.Image
 	}{
 		ID:    id,
 		Image: img,
@@ -164,27 +117,7 @@ func InsertImage(id, op uint64, img common.Image) (err error) {
 	if err != nil {
 		return
 	}
-
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer RollbackOnError(tx, &err)
-
-	err = LockForWrite(tx, "threads", "posts")
-	if err != nil {
-		return
-	}
-
-	_, err = tx.Stmt(prepared["insert_image"]).Exec(id, img.SHA1, img.Name)
-	if err != nil {
-		return
-	}
-	err = BumpThread(tx, op, false, false, true, msg)
-	if err != nil {
-		return
-	}
-	return tx.Commit()
+	return execPrepared("insert_image", id, op, msg, img.SHA1, img.Name)
 }
 
 // SplicePost splices the text body of a post. For less load on the DB, supply
