@@ -87,10 +87,11 @@ function quotePost(e: Event) {
 			return false
 		}
 		el = el.parentElement
-		if (!el.closest("blockquote")) {
-			return false
-		}
-		return el.closest("article") === post
+
+		return (el.closest("blockquote") && el.closest("article") === post)
+			// When selecting the last line, the selection ends outside the
+			// blockquote and the article itself is the focus node
+			|| el === post
 	}
 	let sel: string
 	if (lastSelection && isInside("start") && isInside("end")) {
