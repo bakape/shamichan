@@ -23,6 +23,7 @@ License: GNU AGPL
     - Optional automatic deletion of unused threads and boards
     - Automatic HTTP(S) and magnet URL linkification
     - Automatic quoting of selected text, when quoting a post
+    - Live programming code tags with syntax highlighting
 * Files and images
     - JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ
     supported
