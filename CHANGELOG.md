@@ -2,6 +2,40 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v4.0.0 - 2017-02-13
+* Add
+	- Thread post and image count indicators
+	- Board deletion
+	- Moderator post deletion
+	- bans
+	- Proper ban page
+	- Configurable custom image serving path
+	- Posts older than 7 days are stripped of any private identity information,
+	like the IP address
+	- whatanime.ga image search
+	- Programming code tags with syntax highlighting
+	- Cancelable image uploads
+* Change
+	- Switch DBMS to PostgreSQL
+	- Allow entire post body to be edited live
+	- Only commit links and hash commands on post close
+	- Improved page load speeds
+	- Reduced client and server CPU and memory consumption
+	- Flags for starting the server
+	- Switched to Google's Recaptcha
+	- Restore thread bumping and limit globally to 1000 posts
+	- Remove hash command newline requirement
+	- Display expanded images while loading
+* Fix
+	- Duplicate reply desktop notifications
+	- Disappearing inlined posts
+	- Locking UI on desynchronization
+	- .editing styles cascading into inline posts
+	- Backlink duplication with inlined posts
+	- Video controls on FireFox
+	- Image search on large uploads and videos
+	- Unselectable post numbers
+
 ##v3.2.1 - 2016-12-20
 * Fix
 	- Only highlight links to the actual post in inline posts
