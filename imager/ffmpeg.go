@@ -162,7 +162,7 @@ func (c *ffContext) codecContext(typ ffMediaType) (codecInfo, error) {
 	return ci, nil
 }
 
-// CodecName returns hte codec name of the best stream of type typ in the input
+// CodecName returns the codec name of the best stream of type typ in the input
 // or an empty string, if there is no stream of this type
 func (c *ffContext) CodecName(typ ffMediaType) (string, error) {
 	ci, err := c.codecContext(typ)

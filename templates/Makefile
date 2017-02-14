@@ -1,5 +1,3 @@
-.PHONY: all clean
-
 all: clean
 	$(GOPATH)/bin/qtc
 

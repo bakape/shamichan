@@ -1,4 +1,6 @@
-sserver:
+all: server client
+
+server:
 	cargo rustc --release
 	cp target/release/libminisin.a .
 
