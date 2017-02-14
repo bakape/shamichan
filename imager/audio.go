@@ -4,14 +4,7 @@ package imager
 // #cgo CFLAGS: -std=c11
 // #include "audio.h"
 import "C"
-import (
-	"io/ioutil"
-	"path/filepath"
-	"unsafe"
-)
-
-// Directory for static image asset storage. Overrideable for tests.
-var assetRoot = "www"
+import "unsafe"
 
 // Fallback image for MP3 files with no cover
 const fallbackCover = "audio-fallback.png"
@@ -71,8 +64,7 @@ func processMP3(data []byte) (res thumbResponse) {
 
 // Assign fallback cover art to audio file without any
 func assignFallbackCover(res thumbResponse) thumbResponse {
-	path := filepath.Join(assetRoot, fallbackCover)
-	res.thumb, res.err = ioutil.ReadFile(path)
+	res.thumb, res.err = Asset("audio.png")
 	res.dims = [4]uint16{150, 150, 150, 150}
 	return res
 }

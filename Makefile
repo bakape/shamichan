@@ -45,6 +45,7 @@ endif
 generate: server_deps
 	$(MAKE) -C templates
 	$(MAKE) -C db
+	$(MAKE) -C imager
 
 server_deps: build_dirs
 	go get -v github.com/valyala/quicktemplate/qtc
@@ -82,6 +83,7 @@ clean: client_clean
 	rm -rf .build .ffmpeg .package meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 	$(MAKE) -C templates clean
 	$(MAKE) -C db clean
+	$(MAKE) -C imager clean
 	$(MAKE) -C scripts/migration/3to4 clean
 ifeq ($(is_windows), true)
 	rm -rf /.meguca_build *.dll

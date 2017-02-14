@@ -30,4 +30,5 @@ thumb_*.jpg
 templates/lib/*.js
 *.qtpl.go
 db/sql/sql.go
+imager/bin.go
 scripts/migration/3to4/3to4

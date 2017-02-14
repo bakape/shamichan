@@ -1,8 +1,6 @@
 package imager
 
 import (
-	"io/ioutil"
-	"path/filepath"
 	"testing"
 
 	"github.com/bakape/meguca/config"
@@ -46,7 +44,7 @@ func TestProcessMP3NoCover(t *testing.T) {
 		t.Fatal(res.err)
 	}
 
-	AssertBufferEquals(t, res.thumb, readFallbackThumb(t, "audio-fallback.png"))
+	AssertBufferEquals(t, res.thumb, readFallbackThumb(t, "audio.png"))
 	assertDims(t, res.dims, [4]uint16{150, 150, 150, 150})
 	if res.length != mp3Length {
 		t.Fatalf("unexpected length: %d : %d", mp3Length, res.length)
@@ -69,7 +67,7 @@ func TestProcessMP3(t *testing.T) {
 }
 
 func readFallbackThumb(t *testing.T, name string) []byte {
-	buf, err := ioutil.ReadFile(filepath.Join(assetRoot, name))
+	buf, err := Asset(name)
 	if err != nil {
 		t.Fatal(err)
 	}

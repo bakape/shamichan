@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/common"
+	. "github.com/bakape/meguca/test"
 )
 
 func TestDetectArchive(t *testing.T) {
@@ -73,6 +73,6 @@ func TestProcessArchive(t *testing.T) {
 		t.Fatal(res.err)
 	}
 
-	AssertBufferEquals(t, res.thumb, readFallbackThumb(t, "archive-thumb.png"))
+	AssertBufferEquals(t, res.thumb, readFallbackThumb(t, "archive.png"))
 	assertDims(t, res.dims, [4]uint16{150, 150, 150, 150})
 }

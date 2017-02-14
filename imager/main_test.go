@@ -15,7 +15,6 @@ import (
 func TestMain(m *testing.M) {
 	db.ConnArgs = db.TestConnArgs
 	db.IsTest = true
-	assetRoot = filepath.Join("..", "www")
 	config.Set(config.Configs{})
 	if err := db.LoadDB(); err != nil {
 		panic(err)

@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"io"
-	"io/ioutil"
-	"path/filepath"
 
 	"github.com/ulikunitz/xz"
 )
@@ -56,8 +54,7 @@ func detect7z(buf []byte) (bool, error) {
 
 // Attach thumbnail to archive uploads and return
 func processArchive() (res thumbResponse) {
-	path := filepath.Join(assetRoot, "archive-thumb.png")
-	res.thumb, res.err = ioutil.ReadFile(path)
+	res.thumb, res.err = Asset("archive.png")
 	res.dims = [4]uint16{150, 150, 150, 150}
 	return res
 }
