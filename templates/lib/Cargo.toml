@@ -1,7 +1,0 @@
-[package]
-name = "minisin"
-version = "0.1.0"
-authors = ["bakape <scorpid33@gmail.com>"]
-
-[lib]
-crate_type = ["staticlib"]
