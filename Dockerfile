@@ -2,7 +2,7 @@
 FROM bakape/meguca
 MAINTAINER bakape <scorpid33@gmail.com>
 EXPOSE 8000
-ENV PATH="${PATH}:/usr/local/go/bin:/root/.cargo/bin"
+ENV PATH="${PATH}:/usr/local/go/bin"
 RUN mkdir -p /meguca
 WORKDIR /meguca
 ENTRYPOINT scripts/docker_start.sh test
