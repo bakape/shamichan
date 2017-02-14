@@ -67,14 +67,12 @@ License: GNU AGPL
 A reference list of commands can be found in `docs/installation.md`
 
 ###Dependencies
-* [Go](https://golang.org/doc/install) >=1.7
-* [Node.js](https://nodejs.org) >=5.0
-* [Rust](https://www.rust-lang.org/en-US/install.html)
+* [Go](https://golang.org/doc/install) >=1.7 (for building server)
+* [Node.js](https://nodejs.org) >=5.0 (for building client)
 * GCC or Clang
 * make
 * pkg-config
 * pthread
-* lzma
 * ffmpeg >= 3.0 libraries (libavcodec, libavutil, libavformat) compiled with:
     * libvpx
     * libvorbis

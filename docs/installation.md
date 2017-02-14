@@ -27,13 +27,7 @@ source /etc/profile
 
 # Install C dependencies
 apt-get dist-upgrade -y
-apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libgraphicsmagick1-dev liblzma-dev git zip curl
-
-# Install Rust
-curl https://sh.rustup.rs -sSf | sh
-echo 'PATH=$PATH:$HOME/.cargo/bin' >> ~/.bash_profile
-source /etc/profile
-rustup target add wasm32-unknown-emscripten
+apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libgraphicsmagick1-dev git zip
 
 # Clone and build meguca
 git clone -b v3.1.0 https://github.com/bakape/meguca.git /meguca
@@ -53,7 +47,7 @@ cd /meguca
 # Pull changes
 git pull
 git tag
-git checkout v3.1.0
+git checkout v4.0.0
 
 # Rebuild
 make update_deps all

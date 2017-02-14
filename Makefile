@@ -36,14 +36,11 @@ client_vendor: client_deps
 	$(uglifyjs) node_modules/whatwg-fetch/fetch.js -o www/js/vendor/fetch.js
 	$(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
 
-server: server_deps generate imager
+server: server_deps generate
 	go build -v -o $(binary)
 ifeq ($(is_windows), true)
 	cp /mingw64/bin/*.dll ./
 endif
-
-imager:
-	$(MAKE) -C imager/lib
 
 generate: server_deps
 	$(MAKE) -C templates
@@ -83,7 +80,6 @@ client_clean:
 
 clean: client_clean
 	rm -rf .build .ffmpeg .package meguca-*.zip meguca-*.tar.xz meguca meguca.exe
-	$(MAKE) -C imager/lib clean
 	$(MAKE) -C templates clean
 	$(MAKE) -C db clean
 	$(MAKE) -C scripts/migration/3to4 clean
