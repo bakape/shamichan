@@ -39,9 +39,9 @@ var (
 		test  func([]byte) (bool, error)
 		fType uint8
 	}{
+		{detect7z, common.SevenZip},
 		{detectTarGZ, common.TGZ},
 		{detectTarXZ, common.TXZ},
-		{detect7z, common.SevenZip},
 		{detectSVG, common.SVG},
 		{detectMP3, common.MP3},
 	}
