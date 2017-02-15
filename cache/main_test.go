@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"sync"
 	"testing"
 
 	. "github.com/bakape/meguca/test"
@@ -19,10 +20,13 @@ func TestConcurrency(t *testing.T) {
 		},
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(300)
 	for i := 0; i < 3; i++ {
 		go func() {
-			for j := 0; j < 100; i++ {
+			for j := 0; j < 100; j++ {
 				go func(j int) {
+					defer wg.Done()
 					k := ThreadKey(uint64(j), 0)
 					if _, _, err := GetJSON(k, f); err != nil {
 						t.Fatal(err)
@@ -31,6 +35,7 @@ func TestConcurrency(t *testing.T) {
 			}
 		}()
 	}
+	wg.Wait()
 }
 
 func TestCacheEviction(t *testing.T) {
