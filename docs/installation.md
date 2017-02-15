@@ -5,6 +5,13 @@ All commands assume to be run by the root user.
 ##Install
 
 ```bash
+# Install C dependencies
+echo 'deb http://ftp.debian.org/debian jessie-backports main contrib non-free
+deb-src http://ftp.debian.org/debian jessie-backports main contrib non-free' >> /etc/apt/sources.list
+apt-get update
+apt-get install -t jessie-backports -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libgraphicsmagick1-dev git zip
+apt-get dist-upgrade -y
+
 # Install Node.js
 wget -qO- https://deb.nodesource.com/setup_7.x | bash -
 apt-get install -y nodejs
@@ -24,10 +31,6 @@ exit
 wget -O- https://storage.googleapis.com/golang/go1.7.5.linux-amd64.tar.gz | tar xpz -C /usr/local
 echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 source /etc/profile
-
-# Install C dependencies
-apt-get dist-upgrade -y
-apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libgraphicsmagick1-dev git zip
 
 # Clone and build meguca
 git clone -b v3.1.0 https://github.com/bakape/meguca.git /meguca
