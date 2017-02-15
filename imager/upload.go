@@ -251,7 +251,11 @@ func processFile(data []byte, fileType uint8) <-chan thumbResponse {
 		case common.ZIP, common.SevenZip, common.TGZ, common.TXZ:
 			res = processArchive()
 		case common.JPEG, common.PNG, common.GIF, common.PDF:
-			res.thumb, res.dims, res.PNGThumb, res.err = processImage(data)
+			res.thumb, res.dims, res.PNGThumb, res.err = processImage(
+				data,
+				0,
+				0,
+			)
 		}
 
 		ch <- res

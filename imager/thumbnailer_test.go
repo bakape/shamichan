@@ -35,7 +35,7 @@ func TestImageProcessing(t *testing.T) {
 			t.Parallel()
 
 			buf := readSample(t, "sample."+c.ext)
-			thumb, dims, isPNG, err := processImage(buf)
+			thumb, dims, isPNG, err := processImage(buf, 0, 0)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -86,7 +86,7 @@ func TestGraphicsMagicErrorPassing(t *testing.T) {
 		MaxWidth:  2000,
 		MaxHeight: 2000,
 	})
-	_, _, _, err := processImage(nil)
+	_, _, _, err := processImage(nil, 0, 0)
 	if err == nil {
 		t.Fatal(`expected error`)
 	}
@@ -127,7 +127,7 @@ func TestDimensionValidation(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			_, _, _, err := processImage(readSample(t, c.file))
+			_, _, _, err := processImage(readSample(t, c.file), 0, 0)
 
 			if err != c.err {
 				t.Fatalf("unexpected error: `%s` : `%s`", c.err, err)
@@ -142,7 +142,7 @@ func TestSourceAlreadyThumbSize(t *testing.T) {
 		MaxHeight: 2000,
 	})
 
-	_, dims, _, err := processImage(readSample(t, "too small.png"))
+	_, dims, _, err := processImage(readSample(t, "too small.png"), 0, 0)
 
 	assertDims(t, dims, [4]uint16{121, 150, 121, 150})
 	if err != nil {
