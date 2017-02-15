@@ -88,8 +88,8 @@
 						{% if l < 60 %}
 							{%s= fmt.Sprintf("0:%02d", l) %}
 						{% else %}
-							{% code min := l / 6 %}
-							{%s= fmt.Sprintf("%02d:%02d", min, l-min) %}
+							{% code min := l / 60 %}
+							{%s= fmt.Sprintf("%02d:%02d", min, l - min * 60) %}
 						{% endif %}
 						,{% space %}
 					{% endif %}
