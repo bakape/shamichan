@@ -93,7 +93,7 @@ dist_clean: clean
 	rm -rf images error.log
 
 test:
-	go test -p 1 ./...
+	go test --race -p 1 ./...
 
 upgrade_v4: generate
 	$(MAKE) -C scripts/migration/3to4 upgrade
