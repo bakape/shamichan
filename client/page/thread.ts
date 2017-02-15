@@ -67,6 +67,15 @@ export default function (html: string) {
     for (let post of posts) {
         extractPost(post)
     }
+
+    // If the post is still open, rerender its body, to sync the parser state.
+    // Needs to be done after models are populated to resolve temporary image
+    // links in open posts.
+    for (let m of postCollection) {
+        if (m.editing) {
+            m.view.reparseBody()
+        }
+    }
 }
 
 // Set thread title to tab
@@ -86,11 +95,6 @@ function extractPost(post: PostData) {
     const model = new Post(post),
         view = new PostView(model, el)
     postCollection.add(model)
-
-    // If the post is still open, rerender its body, to sync the parser state
-    if (post.editing) {
-        view.reparseBody()
-    }
 
     // Apply client-specific formatting to a post rendered server-side
 

@@ -1,5 +1,5 @@
-import { config, boards } from '../../state'
-import { renderPostLink } from './etc'
+import { config, boards, posts } from '../../state'
+import { renderPostLink, renderTempLink } from './etc'
 import { PostData, PostLink, TextState } from '../../common'
 import { escape } from '../../util'
 import { parseEmbeds } from "../embed"
@@ -148,7 +148,39 @@ function terminateTags(state: TextState, newLine: boolean): string {
 
 // Parse a line that is still being edited
 function parseOpenLine(line: string, {state}: PostData): string {
-    return parseCode(line, state, escape)
+    return parseCode(line, state, parseOpenLinks)
+}
+
+// Parse temporary links, that still may be edited
+function parseOpenLinks(frag: string): string {
+    let html = ""
+    const words = frag.split(" ")
+    for (let i = 0; i < words.length; i++) {
+        const word = words[i]
+        if (i !== 0) {
+            html += " "
+        }
+        if (!word) {
+            continue
+        }
+        if (word[0] !== ">") {
+            html += escape(word)
+            continue
+        }
+
+        const m = word.match(/^>>(>*)(\d+)$/)
+        if (!m) {
+            html += escape(word)
+            continue
+        }
+        const id = parseInt(m[2])
+        if (!posts.has(id)) {
+            html += escape(word)
+        } else {
+            html += m[1] + renderTempLink(id)
+        }
+    }
+    return html
 }
 
 // Parse a line fragment

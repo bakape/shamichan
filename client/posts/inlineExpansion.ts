@@ -7,16 +7,21 @@ import PostView from "./view"
 
 // Expand or contract linked posts inline
 async function onClick(e: MouseEvent) {
-	// Don't trigger, when user is trying to open in a new tab or inline
-	// expansion is disabled
-	if (e.which !== 1 || e.ctrlKey || !options.postInlineExpand) {
+	const el = e.target as Element
+
+	// Don't trigger, when user is trying to open in a new tab, inline
+	// expansion is disabled or the link is temporary
+	const bypass = e.which !== 1
+		|| e.ctrlKey
+		|| !options.postInlineExpand
+		|| el.classList.contains("temp")
+	if (bypass) {
 		return
 	}
 
 	e.preventDefault()
 
-	const el = e.target as Element,
-		parent = el.parentElement,
+	const parent = el.parentElement,
 		id = parseInt(el.getAttribute("data-id"))
 
 	if (parent.classList.contains("expanded")) {
