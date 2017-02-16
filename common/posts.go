@@ -30,23 +30,14 @@ const (
 // ParseBody forwards parser.ParseBody to avoid cyclic imports in db/upkeep
 var ParseBody func([]byte, string) ([][2]uint64, []Command, error)
 
-// Board is an array stripped down version of Thread for whole-board retrieval
-// queries. Reduces server memory usage and served JSON payload.
-type Board []BoardThread
+// Board is a slice of threads. Defined to enable marshalling optimizations.
+type Board []Thread
 
-// BoardThread is a stripped down version of Thread for board catalog queries
-type BoardThread struct {
-	ThreadCommon
-	ID    uint64 `json:"id"`
-	Time  int64  `json:"time"`
-	Name  string `json:"name,omitempty"`
-	Trip  string `json:"trip,omitempty"`
-	Auth  string `json:"auth,omitempty"`
-	Image *Image `json:"image,omitempty"`
-}
-
-// ThreadCommon contains common fields of both BoardThread and Thread
-type ThreadCommon struct {
+// Thread is a transport/export wrapper that stores both the thread metadata,
+// its opening post data and its contained posts. The composite type itself is
+// not stored in the database.
+type Thread struct {
+	Abbrev    bool   `json:"abbrev,omitempty"`
 	Locked    bool   `json:"locked,omitempty"`
 	Archived  bool   `json:"archived,omitempty"`
 	Sticky    bool   `json:"sticky,omitempty"`
@@ -57,16 +48,8 @@ type ThreadCommon struct {
 	LogCtr    uint64 `json:"logCtr"`
 	Subject   string `json:"subject"`
 	Board     string `json:"board"`
-}
-
-// Thread is a transport/export wrapper that stores both the thread metadata,
-// its opening post data and its contained posts. The composite type itself is
-// not stored in the database.
-type Thread struct {
-	Abbrev bool `json:"abbrev,omitempty"`
 	Post
-	ThreadCommon
-	Posts []Post `json:"posts"`
+	Posts []Post `json:"posts,omitempty"`
 }
 
 // Post is a generic post exposed publically through the JSON API. Either OP or

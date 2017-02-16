@@ -109,7 +109,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	t.Abbrev = lastN != 0
 	t.LogCtr = uint64(logCtr.Int64)
 
-	// Get OP post. Need to fetch separately, in case, if not fetching the full
+	// Get OP post. Need to fetch separately, in case not fetching the full
 	// thread. Also allows to return early on deleted threads.
 	row = tx.Stmt(prepared["get_thread_post"]).QueryRow(id)
 	t.Post, err = scanThreadPost(row)
@@ -200,57 +200,114 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 	return res, nil
 }
 
-// GetBoard retrieves all OPs of a single board
-func GetBoard(board string) (common.Board, error) {
+// GetBoardCatalog retrieves all OPs of a single board
+func GetBoardCatalog(board string) (common.Board, error) {
 	r, err := prepared["get_board"].Query(board)
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	return scanCatalog(r)
+}
+
+// GetBoard retrieves all threads on the board, complete with the first 5
+// posts
+func GetBoard(board string) (common.Board, error) {
+	r, err := prepared["get_board_thread_ids"].Query(board)
+	if err != nil {
+		return nil, err
+	}
 	return scanBoard(r)
 }
 
-// GetAllBoard retrieves all threads for the "/all/" meta-board
-func GetAllBoard() (common.Board, error) {
+// GetAllBoardCatalog retrieves all threads for the "/all/" meta-board
+func GetAllBoardCatalog() (common.Board, error) {
 	r, err := prepared["get_all_board"].Query()
 	if err != nil {
 		return nil, err
 	}
-	defer r.Close()
+	return scanCatalog(r)
+}
+
+// GetAllBoard retrieves all threads, complete with the first 5 posts
+func GetAllBoard() (common.Board, error) {
+	r, err := prepared["get_all_thread_ids"].Query()
+	if err != nil {
+		return nil, err
+	}
 	return scanBoard(r)
 }
 
-func scanBoard(table tableScanner) (common.Board, error) {
-	board := make(common.Board, 0, 8)
+func scanCatalog(table tableScanner) (board common.Board, err error) {
+	defer table.Close()
+	board = make(common.Board, 0, 8)
 
 	for table.Next() {
 		var (
-			t                common.BoardThread
-			name, trip, auth sql.NullString
-			img              imageScanner
-			logCtr           sql.NullInt64
+			t      common.Thread
+			post   postScanner
+			img    imageScanner
+			logCtr sql.NullInt64
 		)
 
-		args := make([]interface{}, 0, 24)
+		args := make([]interface{}, 0, 30)
 		args = append(args,
-			&t.Board, &t.ID, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-			&t.Subject, &img.Spoiler, &t.Time, &name, &trip, &auth, &img.Name,
-			&logCtr,
+			&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
+			&t.Subject, &logCtr,
 		)
+		args = append(args, post.ScanArgs()...)
 		args = append(args, img.ScanArgs()...)
-		err := table.Scan(args...)
+		err = table.Scan(args...)
 		if err != nil {
-			return nil, err
+			return
 		}
 
-		t.Name = name.String
-		t.Trip = trip.String
-		t.Auth = auth.String
 		t.LogCtr = uint64(logCtr.Int64)
+		t.Post, err = post.Val()
+		if err != nil {
+			return
+		}
 		t.Image = img.Val()
+		if t.Image != nil {
+			t.Image.Spoiler, t.Image.Name = post.Image()
+		}
 
 		board = append(board, t)
 	}
+	err = table.Err()
 
-	return board, table.Err()
+	return
+}
+
+func scanBoard(table tableScanner) (board common.Board, err error) {
+	defer table.Close()
+
+	ids := make([]uint64, 0, 32)
+	for table.Next() {
+		var id uint64
+		err = table.Scan(&id)
+		if err != nil {
+			return
+		}
+		ids = append(ids, id)
+	}
+	err = table.Err()
+	if err != nil {
+		return
+	}
+
+	board = make(common.Board, 0, len(ids))
+	for _, id := range ids {
+		var thread common.Thread
+		thread, err = GetThread(id, 5)
+		switch err {
+		case nil:
+			board = append(board, thread)
+		case sql.ErrNoRows: // Deleted thread
+			err = nil
+		default:
+			return
+		}
+	}
+
+	return
 }

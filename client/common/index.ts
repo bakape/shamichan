@@ -17,6 +17,7 @@ export interface PostData {
 	image?: ImageData
 	time: number
 	id: number
+	op: number
 	body: string
 	name?: string
 	trip?: string

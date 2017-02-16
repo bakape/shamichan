@@ -62,9 +62,29 @@ func createRouter() http.Handler {
 
 	// HTML
 	r.GET("/", wrapHandler(redirectToDefault))
-	r.GET("/:board/", boardHTML)
+	r.GET("/:board/", func(
+		w http.ResponseWriter,
+		r *http.Request,
+		p map[string]string,
+	) {
+		boardHTML(w, r, p, false)
+	})
+	r.GET("/:board/catalog", func(
+		w http.ResponseWriter,
+		r *http.Request,
+		p map[string]string,
+	) {
+		boardHTML(w, r, p, true)
+	})
+	r.GET("/all/catalog", func(
+		w http.ResponseWriter,
+		r *http.Request,
+		p map[string]string,
+	) {
+		boardHTML(w, r, map[string]string{"board": "all"}, true)
+	})
 	r.GET("/:board/:thread", threadHTML)
-	r.GET("/cross/:thread", crossRedirect)
+	r.GET("/all/:thread", crossRedirect)
 
 	// API for retrieving various localized HTML forms
 	forms := r.NewGroup("/forms")
@@ -78,7 +98,20 @@ func createRouter() http.Handler {
 
 	// JSON API
 	json := r.NewGroup("/json")
-	json.GET("/:board/", boardJSON)
+	json.GET("/:board/", func(
+		w http.ResponseWriter,
+		r *http.Request,
+		p map[string]string,
+	) {
+		boardJSON(w, r, p, false)
+	})
+	json.GET("/:board/catalog", func(
+		w http.ResponseWriter,
+		r *http.Request,
+		p map[string]string,
+	) {
+		boardJSON(w, r, p, true)
+	})
 	json.GET("/:board/:thread", threadJSON)
 	json.GET("/post/:post", servePost)
 	json.GET("/config", wrapHandler(serveConfigs))

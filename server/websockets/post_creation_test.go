@@ -116,12 +116,10 @@ func testCreateThread(t *testing.T) {
 	cl.ip = "::1"
 
 	std := common.Thread{
-		ThreadCommon: common.ThreadCommon{
-			Board:    "c",
-			Subject:  "subject",
-			ImageCtr: 1,
-			PostCtr:  1,
-		},
+		Board:    "c",
+		Subject:  "subject",
+		ImageCtr: 1,
+		PostCtr:  1,
 		Post: common.Post{
 			Editing: true,
 			ID:      6,

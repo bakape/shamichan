@@ -52,16 +52,16 @@
 ThreadPosts renders the post content of a thread. Separate function to allow
 caching of generated posts.
 {% func ThreadPosts(t common.Thread, json []byte, omit, imageOmit int) %}{% stripspace %}
-	<div id="thread-container">
+	<section id="thread-container">
 		{% code root := config.Get().RootURL %}
-		{%= renderArticle(t.Post, t.ID, omit, imageOmit, t.Subject, root) %}
+		{%= renderArticle(t.Post, t.ID, omit, imageOmit, t.Subject, root, false) %}
 		{% for _, p := range t.Posts %}
-			{%= renderArticle(p, t.ID, 0, 0, "", root) %}
+			{%= renderArticle(p, t.ID, 0, 0, "", root, false) %}
 		{% endfor %}
-	</div>
-	<script id="post-data" type="application/json">
-		{%z= json %}
-	</script>
+		<script id="post-data" type="application/json">
+			{%z= json %}
+		</script>
+	</section>
 	<script id="board-configs" type="application/json">
 		{%z= config.GetBoardConfigs(t.Board).JSON %}
 	</script>

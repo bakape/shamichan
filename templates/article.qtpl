@@ -3,9 +3,14 @@
 {% import "github.com/bakape/meguca/common" %}
 {% import "github.com/bakape/meguca/lang" %}
 {% import "github.com/bakape/meguca/imager/assets" %}
+{% import "github.com/bakape/meguca/util" %}
 
-{% func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string) %}{% stripspace %}
+{% func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string, index bool) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
+	{% code opStr := strconv.FormatUint(op, 10) %}
+	{% comment %}
+		Force cross-links on board pages
+	{% endcomment %}
 	<article id="p{%s= id %}" class="glass{% if p.Editing %}{% space %}editing{% endif %}">
 		<header class="spaced">
 			<input type="checkbox" class="mod-checkbox hidden">
@@ -38,13 +43,23 @@
 				{%s= formatTime(p.Time) %}
 			</time>
 			<nav>
-				<a href="#p{%s= id %}">
+				{% code url := util.ConcatStrings(opStr, "#p", id) %}
+				{% if index %}
+					{% code url = "/all/" + url %}
+				{% endif %}
+				<a class="history" href="{%s= url %}">
 					No.
 				</a>
-				<a class="quote">
+				<a class="history quote" href="{%s= url %}">
 					{%s= id %}
 				</a>
 			</nav>
+			{% if index && subject != "" %}
+				<span>
+					{%= expandLink("all", id) %}
+					{%= last100Link("all", id) %}
+				</span>
+			{% endif %}
 			<a class="control">
 				<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
 					<path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" />
@@ -126,7 +141,7 @@
 				</figure>
 			{% endif %}
 			<blockquote>
-				{%= body(p, op) %}
+				{%= body(p, op, index) %}
 			</blockquote>
 			{% if p.Banned %}
 				<b class="admin banned">
@@ -141,7 +156,7 @@
 				{% space %}image{% if imageOmit > 1 %}s{% endif %}
 				{% space %}omitted{% space %}
 				<span class="act">
-					<a href="{%s= strconv.FormatUint(op, 10) %}" class="history">
+					<a href="{%s= opStr %}" class="history">
 						See All
 					</a>
 				</span>
@@ -157,7 +172,7 @@
 					{% endif %}
 					{% code rendered[id] = true %}
 					<em>
-						{%= postLink(id, link[1], link[1] != op) %}
+						{%= postLink(id, link[1], link[1] != op, index) %}
 					</em>
 				{% endfor %}
 			</span>

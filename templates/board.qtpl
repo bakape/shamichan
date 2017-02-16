@@ -1,3 +1,4 @@
+{% import "encoding/json" %}
 {% import "strconv" %}
 {% import "github.com/bakape/meguca/config" %}
 {% import "github.com/bakape/meguca/common" %}
@@ -76,63 +77,85 @@
 			</select>
 		</span>
 	</span>
-	<noscript>TODO: Noscript thread creation</noscript>
+	<noscript>
+		TODO: Noscript thread creation
+	</noscript>
 	<hr>
-	<div id="catalog">
-		{%z= threadHTML %}
-		<script id="board-configs" type="application/json">
-			{%z= conf.JSON %}
-		</script>
-	</div>
+	{%z= threadHTML %}
+	<script id="board-configs" type="application/json">
+		{%z= conf.JSON %}
+	</script>
 	<hr>
 {% endstripspace %}{% endfunc %}
 
 CatalogThreads renders thread content for a catalog page. Separate function to
 allow caching of generated posts.
-{% func CatalogThreads(b common.Board) %}{% stripspace %}
-	{% for _, t := range b %}
-		{% code idStr:= strconv.FormatUint(t.ID, 10) %}
-		{% code postCtr := strconv.FormatUint(uint64(t.PostCtr), 10) %}
-		{% code imgCtr := strconv.FormatUint(uint64(t.ImageCtr), 10) %}
-		<article id="p{%s= idStr %}" class="glass" data-bump-time="{%s= strconv.FormatInt(t.BumpTime, 10) %}" data-reply-time="{%s= strconv.FormatInt(t.ReplyTime, 10) %}" data-time="{%s= strconv.FormatInt(t.Time, 10) %}" data-post-ctr="{%s= postCtr %}" data-image-ctr="{%s= imgCtr %}">
-			{% if t.Image != nil %}
-				<figure>
-					{% code img := *t.Image %}
-					<a class="history" href="/{%s= t.Board %}/{%s= idStr %}">
-						{% if img.Spoiler %}
-							<img src="/assets/spoil/default.jpg" width="150" height="150" class="expanded">
-						{% else %}
-							<img width="{%s= strconv.FormatUint(uint64(img.Dims[2]), 10) %}" height="{%s= strconv.FormatUint(uint64(img.Dims[3]), 10) %}" class="expanded" src="{%s= assets.ThumbPath(img.ThumbType, img.SHA1) %}">
-						{% endif %}
-					</a>
-				</figure>
-			{% endif %}
-			<span class="spaced thread-links hide-empty">
-				<b class="board">
-					/{%s= t.Board %}/
-				</b>
-				<span class="counters">
-					{%s= postCtr %}/{%s= imgCtr %}
-				</span>
-				{% if t.Image == nil %}
-					<span class="act">
-						<a class="history expand-link" href="/{%s= t.Board %}/{%s= idStr %}">
-							Expand
+{% func CatalogThreads(b []common.Thread) %}{% stripspace %}
+	<div id="catalog">
+		{% for _, t := range b %}
+			{% code idStr:= strconv.FormatUint(t.ID, 10) %}
+			<article id="p{%s= idStr %}" class="glass" data-id="{%s= idStr %}">
+				{% if t.Image != nil %}
+					<figure>
+						{% code img := *t.Image %}
+						<a class="history" href="/{%s= t.Board %}/{%s= idStr %}">
+							{% if img.Spoiler %}
+								<img src="/assets/spoil/default.jpg" width="150" height="150" class="expanded">
+							{% else %}
+								<img width="{%s= strconv.FormatUint(uint64(img.Dims[2]), 10) %}" height="{%s= strconv.FormatUint(uint64(img.Dims[3]), 10) %}" class="expanded" src="{%s= assets.ThumbPath(img.ThumbType, img.SHA1) %}">
+							{% endif %}
 						</a>
-					</span>
+					</figure>
 				{% endif %}
-				<span class="act">
-					<a class="history lastN-link" href="/{%s= t.Board %}/{%s= idStr %}?last=100">
-						Last 100
-					</a>
+				<span class="spaced thread-links hide-empty">
+					<b class="board">
+						/{%s= t.Board %}/
+					</b>
+					<span class="counters">
+						{%s= strconv.FormatUint(uint64(t.PostCtr), 10) %}
+						/
+						{%s= strconv.FormatUint(uint64(t.ImageCtr), 10) %}
+					</span>
+					{% if t.Image == nil %}
+						{%= expandLink(t.Board, idStr) %}
+					{% endif %}
+					{%= last100Link(t.Board, idStr) %}
 				</span>
-			</span>
-			<br>
-			<h3>
-				「{%s t.Subject %}」
-			</h3>
-		</article>
+				<br>
+				<h3>
+					「{%s t.Subject %}」
+				</h3>
+				<blockquote>
+					{%s t.Body %}
+				</blockquote>
+			</article>
+		{% endfor %}
+	</div>
+{% endstripspace %}{% endfunc %}
+
+IndexThreads renders abbreviated threads for display on board index pages
+{% func IndexThreads(threads []common.Thread) %}{% stripspace %}
+	{% code root := config.Get().RootURL %}
+	<div id="index-thread-container">
+	{% for _, t := range threads %}
+		{% code omit, imageOmit := CalculateOmit(t) %}
+		<section class="index-thread" data-id="{%s= strconv.FormatUint(t.ID, 10) %}">
+			{%= renderArticle(t.Post, t.ID, omit, imageOmit, t.Subject, root, true) %}
+			{% for _, p := range t.Posts %}
+				{%= renderArticle(p, t.ID, 0, 0, "", root, true) %}
+			{% endfor %}
+			<hr>
+			<script type="application/json">
+				{% comment %}
+					Lets assume an error never happens.
+					Handling them here would be troublesome.
+				{% endcomment %}
+				{% code threadJSON, _ := json.Marshal(t) %}
+				{%z= threadJSON %}
+			</script>
+		</section>
 	{% endfor %}
+	</div>
 {% endstripspace %}{% endfunc %}
 
 Notice widget, that reveals text on hover

@@ -8,7 +8,7 @@ a.referenced {
 	cursor: default !important;
 }
 
-#thread-container, article {
+#thread-container, .index-thread, article {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
@@ -227,11 +227,20 @@ header {
 }
 
 // Make OPs stand out, if no custom background set
-#thread-container:not(.custom-BG) article:first-child {
+#threads section:not(.custom-BG) > article:first-child {
 	margin-left: 0;
 	padding-left: 0;
 	border: none;
 	background: none;
+}
+
+#threads  {
+	hr {
+		width: 100%;
+	}
+	section:last-child hr {
+		display: none;
+	}
 }
 
 #catalog {
@@ -245,6 +254,14 @@ header {
 		vertical-align: top;
 		padding: 0.6em;
 		margin: 0.15em;
+		blockquote {
+			&:empty {
+				display: none;
+			}
+			min-width: initial;
+			margin: 0;
+			padding: 0;
+		}
 	}
 	.thread-links {
 		clear: none;

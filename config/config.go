@@ -45,7 +45,7 @@ var (
 	Defaults = Configs{
 		ThreadExpiry:  14,
 		BoardExpiry:   7,
-		JPEGQuality:   80,
+		JPEGQuality:   90,
 		MaxSize:       5,
 		MaxHeight:     6000,
 		MaxWidth:      6000,

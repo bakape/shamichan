@@ -46,7 +46,7 @@ export async function fetchHTML(url: string): Promise<[string, string]> {
 
 // Fetch HTML of a board page
 export async function fetchBoard(board: string): Promise<Response> {
-	return await fetch(`/${board}/?noIndex=true`)
+	return await fetch(`/${board}/?minimal=true`)
 }
 
 // Fetch HTML of a thread page
@@ -55,7 +55,7 @@ export async function fetchThread(
 	thread: number,
 	lastN: number,
 ): Promise<Response> {
-	let url = `/${board}/${thread}?noIndex=true`
+	let url = `/${board}/${thread}?minimal=true`
 	if (lastN) {
 		url += `&last=${lastN}`
 	}

@@ -28,6 +28,7 @@ type tableScanner interface {
 	rowScanner
 	Next() bool
 	Err() error
+	Close() error
 }
 
 // Generate prepared statements

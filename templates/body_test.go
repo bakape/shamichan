@@ -214,7 +214,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name:  "valid cross-thread link",
 			in:    ">>21",
-			out:   `<em><a class="history post-link" data-id="21" href="/cross/22#p21">>>21 ➡</a><a class="hash-link" href="/cross/22#p21"> #</a></em>`,
+			out:   `<em><a class="history post-link" data-id="21" href="/all/22#p21">>>21 ➡</a><a class="hash-link" href="/all/22#p21"> #</a></em>`,
 			op:    20,
 			links: [][2]uint64{{21, 22}},
 		},
@@ -302,7 +302,7 @@ func TestRenderBody(t *testing.T) {
 			w := quicktemplate.AcquireWriter(buf)
 			defer quicktemplate.ReleaseWriter(w)
 
-			streambody(w, p, c.op)
+			streambody(w, p, c.op, false)
 
 			if s := string(buf.B); s != c.out {
 				LogUnexpected(t, c.out, s)

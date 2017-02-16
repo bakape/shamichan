@@ -13,6 +13,7 @@ export class Post extends Model implements PostData {
 	view: PostView
 
 	// PostData properties
+	public op: number
 	public editing: boolean
 	public deleted: boolean
 	public banned: boolean

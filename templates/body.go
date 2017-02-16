@@ -56,6 +56,7 @@ var (
 )
 
 type bodyContext struct {
+	index bool     // Rendered for an index page
 	state struct { // Body parser state
 		spoiler, quote, lastLineEmpty, code bool
 		iDice                               int
@@ -66,8 +67,9 @@ type bodyContext struct {
 }
 
 // Render the text body of a post
-func streambody(w *quicktemplate.Writer, p common.Post, op uint64) {
+func streambody(w *quicktemplate.Writer, p common.Post, op uint64, index bool) {
 	c := bodyContext{
+		index:  index,
 		Post:   p,
 		OP:     op,
 		Writer: *w,
@@ -241,7 +243,7 @@ func (c *bodyContext) parsePostLink(m []string) {
 	if len(m[1]) != 0 { // Write extra quotes
 		c.N().S(m[1])
 	}
-	streampostLink(&c.Writer, id, op, op != c.OP)
+	streampostLink(&c.Writer, id, op, op != c.OP, c.index)
 }
 
 // Parse internal or customly set reference URL

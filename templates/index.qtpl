@@ -55,10 +55,10 @@
 				<b class="name"></b>
 				<time></time>
 				<nav>
-					<a>
+					<a class="history">
 						No.
 					</a>
-					<a class="quote"></a>
+					<a class="history quote"></a>
 				</nav>
 				<a class="control">
 					<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">

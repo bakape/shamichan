@@ -1,4 +1,4 @@
-all: clean
+all:
 	$(GOPATH)/bin/qtc
 
 clean:

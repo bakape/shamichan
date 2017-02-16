@@ -22,8 +22,8 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 	const t = await res.text()
 	switch (res.status) {
 		case 200:
-			// Was redirected
-			if (thread && board === "cross") {
+			// Possibly was redirected
+			if (thread && board === "all") {
 				const redir = read(res.url)
 
 				// Strip internal query parameter
@@ -32,7 +32,7 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 					query = query
 						.split("&")
 						.filter(p =>
-							p !== "noIndex=true")
+							p !== "minimal=true")
 						.join("&")
 					if (query) {
 						url += "?" + query

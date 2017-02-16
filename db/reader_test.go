@@ -159,35 +159,57 @@ func testGetPost(t *testing.T) {
 func testGetAllBoard(t *testing.T) {
 	t.Parallel()
 
-	std := common.Board{
+	std := []common.Thread{
 		{
-			ID: 3,
-			ThreadCommon: common.ThreadCommon{
-				PostCtr:   1,
-				Board:     "c",
-				LogCtr:    1,
-				ReplyTime: 3,
-				BumpTime:  5,
+			Post: common.Post{
+				ID:    3,
+				Links: [][2]uint64{{1, 1}},
+				Commands: []common.Command{
+					{
+						Type: common.Flip,
+						Val:  true,
+					},
+				},
 			},
+			PostCtr:   1,
+			Board:     "c",
+			LogCtr:    1,
+			ReplyTime: 3,
+			BumpTime:  5,
 		},
 		{
-			ID: 1,
-			ThreadCommon: common.ThreadCommon{
-				PostCtr:   3,
-				Board:     "a",
-				LogCtr:    1,
-				ReplyTime: 1,
-				BumpTime:  1,
+			Post: common.Post{
+				ID:    1,
+				Image: &assets.StdJPEG,
 			},
-			Image: &assets.StdJPEG,
+			PostCtr:   3,
+			Board:     "a",
+			LogCtr:    1,
+			ReplyTime: 1,
+			BumpTime:  1,
 		},
 	}
 
-	board, err := GetAllBoard()
+	board, err := GetAllBoardCatalog()
 	if err != nil {
 		t.Fatal(err)
 	}
+	for i := range board {
+		assertImage(t, &board[i], std[i].Image)
+	}
 	AssertDeepEquals(t, board, std)
+}
+
+// Assert image equality and then override to not compare pointer addresses
+// with reflection
+func assertImage(t *testing.T, thread *common.Thread, std *common.Image) {
+	if std != nil {
+		if thread.Image == nil {
+			t.Fatalf("no image on thread %d", thread.ID)
+		}
+		AssertDeepEquals(t, *thread.Image, *std)
+		thread.Image = std
+	}
 }
 
 func testGetBoard(t *testing.T) {
@@ -202,14 +224,21 @@ func testGetBoard(t *testing.T) {
 			id:   "c",
 			std: common.Board{
 				{
-					ID: 3,
-					ThreadCommon: common.ThreadCommon{
-						PostCtr:   1,
-						Board:     "c",
-						LogCtr:    1,
-						ReplyTime: 3,
-						BumpTime:  5,
+					Post: common.Post{
+						ID:    3,
+						Links: [][2]uint64{{1, 1}},
+						Commands: []common.Command{
+							{
+								Type: common.Flip,
+								Val:  true,
+							},
+						},
 					},
+					PostCtr:   1,
+					Board:     "c",
+					LogCtr:    1,
+					ReplyTime: 3,
+					BumpTime:  5,
 				},
 			},
 		},
@@ -225,9 +254,12 @@ func testGetBoard(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			board, err := GetBoard(c.id)
+			board, err := GetBoardCatalog(c.id)
 			if err != nil {
 				t.Fatal(err)
+			}
+			for i := range board {
+				assertImage(t, &board[i], c.std[i].Image)
 			}
 			AssertDeepEquals(t, board, c.std)
 		})
@@ -238,13 +270,11 @@ func testGetThread(t *testing.T) {
 	t.Parallel()
 
 	thread1 := common.Thread{
-		ThreadCommon: common.ThreadCommon{
-			PostCtr:   3,
-			ReplyTime: 1,
-			BumpTime:  1,
-			LogCtr:    1,
-			Board:     "a",
-		},
+		PostCtr:   3,
+		ReplyTime: 1,
+		BumpTime:  1,
+		LogCtr:    1,
+		Board:     "a",
 		Post: common.Post{
 			ID:    1,
 			Image: &assets.StdJPEG,
@@ -285,13 +315,11 @@ func testGetThread(t *testing.T) {
 			name: "no replies ;_;",
 			id:   3,
 			std: common.Thread{
-				ThreadCommon: common.ThreadCommon{
-					Board:     "c",
-					ReplyTime: 3,
-					BumpTime:  5,
-					PostCtr:   1,
-					LogCtr:    1,
-				},
+				Board:     "c",
+				ReplyTime: 3,
+				BumpTime:  5,
+				PostCtr:   1,
+				LogCtr:    1,
 				Post: common.Post{
 					ID:    3,
 					Links: [][2]uint64{{1, 1}},
@@ -321,12 +349,7 @@ func testGetThread(t *testing.T) {
 			if err != c.err {
 				UnexpectedError(t, err)
 			}
-			// Assert image equality and then override to not compare pointer
-			// addresses with reflection
-			if thread.Image != nil {
-				AssertDeepEquals(t, *thread.Image, *c.std.Image)
-				thread.Image = c.std.Image
-			}
+			assertImage(t, &thread, c.std.Image)
 			AssertDeepEquals(t, thread, c.std)
 		})
 	}

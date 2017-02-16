@@ -70,7 +70,7 @@ func TestGetHTML(t *testing.T) {
 	}
 
 	for i := 0; i < 2; i++ {
-		json, ctr, err := GetHTML(BoardKey("a"), f)
+		json, ctr, err := GetHTML(BoardKey("a", false), f)
 		if err := err; err != nil {
 			t.Fatal(err)
 		}
@@ -81,7 +81,7 @@ func TestGetHTML(t *testing.T) {
 	assertCount(t, "rendered", 1, fetches)
 
 	t.Run("with json", func(t *testing.T) {
-		key := BoardKey("c")
+		key := BoardKey("c", false)
 
 		if _, _, err := GetJSON(key, f); err != nil {
 			t.Fatal(err)
@@ -110,7 +110,7 @@ func TestCounterExpiry(t *testing.T) {
 		},
 	}
 
-	k := BoardKey("a")
+	k := BoardKey("a", false)
 	if _, _, err := GetJSON(k, f); err != nil {
 		t.Fatal(err)
 	}

@@ -32,6 +32,23 @@ var (
 			return []byte(templates.ThreadPosts(thread, json, oPosts, oImages))
 		},
 	}
+	catalogCache = cache.FrontEnd{
+		GetCounter: func(k cache.Key) (uint64, error) {
+			if k.Board == "all" {
+				return db.PostCounter()
+			}
+			return db.BoardCounter(k.Board)
+		},
+		GetFresh: func(k cache.Key) (interface{}, error) {
+			if k.Board == "all" {
+				return db.GetAllBoardCatalog()
+			}
+			return db.GetBoardCatalog(k.Board)
+		},
+		RenderHTML: func(data interface{}, json []byte) []byte {
+			return []byte(templates.CatalogThreads(data.(common.Board)))
+		},
+	}
 	boardCache = cache.FrontEnd{
 		GetCounter: func(k cache.Key) (uint64, error) {
 			if k.Board == "all" {
@@ -46,7 +63,7 @@ var (
 			return db.GetBoard(k.Board)
 		},
 		RenderHTML: func(data interface{}, json []byte) []byte {
-			return []byte(templates.CatalogThreads(data.(common.Board)))
+			return []byte(templates.IndexThreads(data.(common.Board)))
 		},
 	}
 )
@@ -233,7 +250,12 @@ func formatEtag(ctr uint64, lang, hash string) string {
 }
 
 // Serves board page JSON
-func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
+func boardJSON(
+	w http.ResponseWriter,
+	r *http.Request,
+	p map[string]string,
+	catalog bool,
+) {
 	b := p["board"]
 	if !auth.IsBoard(b) {
 		text404(w)
@@ -243,13 +265,26 @@ func boardJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	data, ctr, err := cache.GetJSON(cache.BoardKey(b), boardCache)
+	data, ctr, err := cache.GetJSON(chooseBoardCache(b, catalog))
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
 
 	writeJSON(w, r, formatEtag(ctr, "", ""), data)
+}
+
+// Choose the proper view and cache for the request
+func chooseBoardCache(board string, catalog bool) (
+	k cache.Key, f cache.FrontEnd,
+) {
+	k = cache.BoardKey(board, !catalog)
+	if catalog {
+		f = catalogCache
+	} else {
+		f = boardCache
+	}
+	return
 }
 
 // Serve a JSON array of all available boards and their titles

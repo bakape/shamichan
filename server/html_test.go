@@ -49,7 +49,7 @@ func TestBoardHTML(t *testing.T) {
 	}{
 		{"/all/ board", "/all/", 200},
 		{"regular board", "/a/", 200},
-		{"without index template", "/a/?noIndex=true", 200},
+		{"without index template", "/a/?minimal=true", 200},
 		{"non-existent board", "/b/", 404},
 	}
 

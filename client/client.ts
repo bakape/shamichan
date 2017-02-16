@@ -1,7 +1,7 @@
 // Core websocket message handlers
 
 import { handlers, message, connSM, connEvent } from './connection'
-import { posts } from './state'
+import { posts, page } from './state'
 import { Post, FormModel, PostView, postEvent, postSM } from './posts'
 import { PostLink, Command, PostData, ImageData } from "./common"
 import { postAdded, navigate } from "./ui"
@@ -46,6 +46,7 @@ function insertPost(data: PostData) {
 	}
 
 	const model = new Post(data)
+	model.op = page.thread
 	posts.add(model)
 	const view = new PostView(model, null)
 

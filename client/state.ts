@@ -29,6 +29,7 @@ export interface BoardConfigs {
 
 // The current state of a board or thread page
 export interface PageState extends ChangeEmitter {
+	catalog: boolean
 	thread: number
 	lastN: number
 	board: string
@@ -68,14 +69,22 @@ export let debug: boolean = /[\?&]debug=true/.test(location.href)
 // Read page state by parsing a URL
 export function read(href: string): PageState {
 	const [, board, thread] = href
-		.match(/\/(\w+)\/(\d+)?(?:\?[^#]+)?(?:#[^#]+)?$/)
+		.match(/\/(\w+)\/(\w+)?(?:\?[^#]+)?(?:#[^#]+)?$/)
 	const lastN = href.match(/[\?&]last=(\d+)/)
-	return {
+	const state = {
 		href,
 		board: decodeURIComponent(board),
-		thread: thread ? parseInt(thread) : 0,
 		lastN: lastN ? parseInt(lastN[1]) : 0,
 	} as PageState
+
+	state.catalog = thread === "catalog"
+	if (!state.catalog) {
+		state.thread = thread ? parseInt(thread) : 0
+	} else {
+		state.thread = 0
+	}
+
+	return state
 }
 
 // Load post number sets from the database

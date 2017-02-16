@@ -1,4 +1,4 @@
-import { escape, on, fetchBoard } from '../util'
+import { on, fetchBoard } from '../util'
 import lang from '../lang'
 import { page } from '../state'
 import options from '../options'
@@ -28,11 +28,6 @@ function subtract(attr: string): (a: HTMLElement, b: HTMLElement) => number {
 	attr = "data-" + attr
 	return (a, b) =>
 		parseInt(b.getAttribute(attr)) - parseInt(a.getAttribute(attr))
-}
-
-// Format a board name and title into canonical board header format
-export function formatHeader(name: string, title: string): string {
-	return `/${name}/ - ${escape(title)}`
 }
 
 // Render a board fresh board page
@@ -70,11 +65,21 @@ export function render() {
 
 // Sort all threads on a board
 export function sortThreads(initial: boolean) {
-	let catalog = document.getElementById("catalog"),
-		threads = Array.from(catalog.querySelectorAll("article"))
+	let contID: string,
+		threadTag: string
+	if (page.catalog) {
+		contID = "catalog"
+		threadTag = "article"
+	} else {
+		contID = "index-thread-container"
+		threadTag = "section"
+	}
+	const cont = document.getElementById(contID),
+		threads = Array.from(cont.querySelectorAll(threadTag))
 
-	if (options.hideThumbs || options.workModeToggle) {
-		for (let el of catalog.querySelectorAll("img.expanded")) {
+	// Index board pages use the same localization functions as threads
+	if (page.catalog && (options.hideThumbs || options.workModeToggle)) {
+		for (let el of cont.querySelectorAll("img.expanded")) {
 			el.style.display = "none"
 		}
 	}
@@ -88,8 +93,7 @@ export function sortThreads(initial: boolean) {
 	for (let el of threads) {
 		el.remove()
 	}
-	threads = threads.sort(sorts[sortMode])
-	catalog.append(...threads)
+	cont.append(...threads.sort(sorts[sortMode]))
 }
 
 // Render the board refresh button text

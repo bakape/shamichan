@@ -39,7 +39,12 @@ func serveHTML(
 }
 
 // Serves board HTML to regular or noscript clients
-func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
+func boardHTML(
+	w http.ResponseWriter,
+	r *http.Request,
+	p map[string]string,
+	catalog bool,
+) {
 	b := p["board"]
 	if !auth.IsBoard(b) {
 		text404(w)
@@ -55,7 +60,7 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	html, ctr, err := cache.GetHTML(cache.BoardKey(b), boardCache)
+	html, ctr, err := cache.GetHTML(chooseBoardCache(b, catalog))
 	if err != nil {
 		text500(w, r, err)
 		return
@@ -67,13 +72,13 @@ func boardHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	html, err = templates.Board(b, lp, withIndex(r), html)
+	html, err = templates.Board(b, lp, isMinimal(r), html)
 	serveHTML(w, r, etag, html, err)
 }
 
-// Returns, if the noIndex query string is not set
-func withIndex(r *http.Request) bool {
-	return r.URL.Query().Get("noIndex") != "true"
+// Returns, if the minimal query string is not set
+func isMinimal(r *http.Request) bool {
+	return r.URL.Query().Get("minimal") != "true"
 }
 
 // Asserts a thread exists on the specific board and renders the index template
@@ -102,7 +107,7 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	html, err = templates.Thread(lp, withIndex(r), html)
+	html, err = templates.Thread(lp, isMinimal(r), html)
 	serveHTML(w, r, etag, html, err)
 }
 

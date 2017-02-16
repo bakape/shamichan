@@ -22,10 +22,6 @@ export default function (html: string) {
     }
     extractConfigs()
 
-    if (!options.workModeToggle && (options.userBG || options.illyaDance)) {
-        document.getElementById("thread-container").classList.add("custom-BG")
-    }
-
     const data = JSON.parse(
         threads.querySelector("#post-data").textContent,
     ) as ThreadData
@@ -35,7 +31,7 @@ export default function (html: string) {
 
     setPostCount(data.postCtr, data.imageCtr)
 
-    extractPost(data)
+    extractPost(data, data.op)
     postCollection.lowestID = posts.length ? posts[0].id : data.id
     if (data.image) {
         data.image.large = true
@@ -65,7 +61,7 @@ export default function (html: string) {
     setThreadTitle(data)
 
     for (let post of posts) {
-        extractPost(post)
+        extractPost(post, data.op)
     }
 
     // If the post is still open, rerender its body, to sync the parser state.
@@ -85,12 +81,13 @@ export function setThreadTitle(data: ThreadData) {
 
 // Extract post model and view from the HTML fragment and apply client-specific
 // formatting
-function extractPost(post: PostData) {
+function extractPost(post: PostData, op: number) {
     const el = document.getElementById(`p${post.id}`)
 
     if (hidden.has(post.id)) {
         return el.remove()
     }
+    post.op = op
 
     const model = new Post(post),
         view = new PostView(model, el)

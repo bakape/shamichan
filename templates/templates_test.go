@@ -38,19 +38,19 @@ func TestCompileTemplates(t *testing.T) {
 func TestBoard(t *testing.T) {
 	board := common.Board{
 		{
-			ID: 1,
-			ThreadCommon: common.ThreadCommon{
-				Board:   "a",
-				Subject: "foo",
+			Post: common.Post{
+				ID: 1,
 			},
+			Board:   "a",
+			Subject: "foo",
 		},
 		{
-			ID: 2,
-			ThreadCommon: common.ThreadCommon{
-				Board:   "c",
-				Subject: "bar",
+			Post: common.Post{
+				ID:    2,
+				Image: &assets.StdJPEG,
 			},
-			Image: &assets.StdJPEG,
+			Board:   "c",
+			Subject: "bar",
 		},
 	}
 	html := CatalogThreads(board)
@@ -65,10 +65,8 @@ func TestThread(t *testing.T) {
 	img := assets.StdJPEG
 	img.Length = 20
 	thread := common.Thread{
-		ThreadCommon: common.ThreadCommon{
-			Board:   "a",
-			Subject: "foo",
-		},
+		Board:   "a",
+		Subject: "foo",
 		Post: common.Post{
 			ID:    1,
 			Image: &img,

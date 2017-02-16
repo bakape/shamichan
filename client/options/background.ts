@@ -74,7 +74,7 @@ function renderIllya() {
 
 // Wrap the OP in a background for better visibility
 function toggleOPBackground(on: boolean) {
-	const tc = document.getElementById("thread-container")
+	const tc = document.getElementById("threads")
 	if (tc) {
 		tc.classList.toggle("custom-BG", on)
 	}

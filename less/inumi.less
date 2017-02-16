@@ -58,11 +58,11 @@ article, aside {
 	}
 }
 
-#thread-container {
-	&:not(.custom-BG) article.editing:not(:first-child) {
+#threads section {
+	&:not(.custom-BG) > article.editing:not(:first-child) {
 		.editing-mixin;
 	}
-	&.custom-BG article.editing {
+	&.custom-BG > article.editing {
 		.editing-mixin;
 	}
 }
@@ -82,7 +82,7 @@ article, aside {
     left: 0;
 }
 
-#thread-container:not(.custom-BG) article:first-child {
+#threads section:not(.custom-BG) > article:first-child {
     padding-left: 1em;
     padding-right: 1em;
     border: none;

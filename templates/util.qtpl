@@ -13,11 +13,11 @@ Renders the tab selection butts in tabbed windows
 {% endstripspace %}{% endfunc %}
 
 Render a link to another post. Can optionally be cross-thread.
-{% func postLink(id, op uint64, cross bool) %}{% stripspace %}
+{% func postLink(id, op uint64, cross, index bool) %}{% stripspace %}
 	{% code idBuf := strconv.AppendUint(make([]byte, 0, 16), id, 10) %}
 	{% code url := make([]byte, 0, 32) %}
-	{% if cross %}
-		{% code url = append(url, "/cross/"...) %}
+	{% if cross || index %}
+		{% code url = append(url, "/all/"...) %}
 		{% code url = strconv.AppendUint(url, op, 10) %}
 	{% endif %}
 	{% code url = append(url, "#p"...) %}
@@ -30,4 +30,20 @@ Render a link to another post. Can optionally be cross-thread.
 		{% endif %}
 	</a>
 	<a class="hash-link" href="{%z= url %}"> #</a>
+{% endstripspace %}{% endfunc %}
+
+{% func expandLink(board, id string) %}{% stripspace %}
+	<span class="act">
+		<a class="history expand-link" href="/{%s= board %}/{%s= id %}">
+			Expand
+		</a>
+	</span>
+{% endstripspace %}{% endfunc %}
+
+{% func last100Link(board, id string) %}{% stripspace %}
+	<span class="act">
+		<a class="history lastN-link" href="/{%s= board %}/{%s= id %}?last=100">
+			Last 100
+		</a>
+	</span>
 {% endstripspace %}{% endfunc %}

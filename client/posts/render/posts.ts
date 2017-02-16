@@ -5,6 +5,7 @@ import renderBody from './body'
 import { PostData, ThreadData } from '../../common'
 import lang from '../../lang'
 import options from '../../options'
+import { page } from "../../state"
 
 interface PostCredentials {
 	name?: string
@@ -50,7 +51,11 @@ export function renderHeader(frag: NodeSelector, data: PostData) {
 	const nav = frag.querySelector("nav"),
 		link = nav.firstElementChild as HTMLAnchorElement,
 		quote = nav.lastElementChild as HTMLAnchorElement
-	link.href = `#p${data.id}`
+	let url = `${data.op || data.id}#p${data.id}`
+	if (page.thread) {
+		url = "/all/" + url
+	}
+	quote.href = link.href = url
 	quote.textContent = data.id.toString()
 }
 

@@ -1,4 +1,4 @@
-import { posts } from "../state"
+import { posts, page } from "../state"
 import { on, fetchJSON } from "../util"
 import options from "../options"
 import { Post } from "./model"
@@ -30,7 +30,7 @@ async function onClick(e: MouseEvent) {
 
 	const model = posts.get(id)
 	let found = false
-	if (model) {
+	if (model && page.thread) {
 		// Can not create cyclic DOM trees
 		if (model.view.el.contains(parent)) {
 			return
@@ -46,7 +46,7 @@ async function onClick(e: MouseEvent) {
 			const model = new Post(data),
 				view = new PostView(model, null)
 			found = true
-			parent.classList.add("expanded")
+			parent.classList.add("expanded", "fetched")
 			parent.append(view.el)
 		}
 	}
@@ -58,14 +58,14 @@ async function onClick(e: MouseEvent) {
 
 // contract and already expanded post and return it to its former position
 function contractPost(id: number, parent: HTMLElement) {
-	parent.classList.remove("expanded")
-
+	const wasFetched = parent.classList.contains("fetched")
+	parent.classList.remove("expanded", "fetched")
 	const model = posts.get(id)
-	// Fetched from server and not originally part of the thread
-	if (!model) {
-		return document.getElementById(`p${id}`).remove()
+	// Fetched from server and not originally part of the thread or removed from
+	// the thread
+	if (wasFetched || !model) {
+		return parent.lastElementChild.remove()
 	}
-
 
 	// Find the ID of the post preceding this one. Make sure the target post is
 	// not expanded inline itself.
