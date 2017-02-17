@@ -7,6 +7,7 @@ import { trigger, emitChanges, ChangeEmitter, hook } from "../util"
 
 export { store as storeBackground } from "./background"
 export * from "./specs"
+export { posterName } from "./r-a-dio"
 
 // Delete legacy options localStorage entry, if any
 localStorage.removeItem("options")

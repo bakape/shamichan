@@ -5,6 +5,7 @@ import { Post, PostView } from "../posts"
 import lang from "../lang"
 import { notifyAboutReply } from "../ui"
 import { threads, pluralize } from "../util"
+import { posterName } from "../options"
 
 // Find board configurations in the HTML and apply them
 export function extractConfigs() {
@@ -85,9 +86,10 @@ function localizeLinks(links: PostLink[], view: PostView, notify: boolean) {
 // cacheability.
 export function localizeThreads() {
 	localizeOmitted()
-	if (options.anonymise) {
+	if (posterName() || options.anonymise) {
+		const name = posterName() || lang.posts["anon"]
 		for (let el of threads.querySelectorAll(".name")) {
-			el.textContent = lang.posts["anon"]
+			el.textContent = name
 		}
 	} else if (options.lang !== "en_GB") { // Server renders in en_GB
 		// Localize posts without a poster name or tripcode

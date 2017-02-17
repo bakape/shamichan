@@ -15,6 +15,15 @@ let el = document.getElementById('banner-center'),
 	data: RadioData = {} as RadioData,
 	started = false
 
+// Replacement new post names based on currently playing song
+export const posterName = () =>
+	_posterName
+let _posterName = ""
+const songMap = new Map([
+	[/Girls,? Be Ambitious/i, 'Joe'],
+	[/Super Special/i, 'Super Special'],
+])
+
 // Fetch JSON from R/a/dio's API and rerender the banner, if different data
 // received
 async function fetchData() {
@@ -53,8 +62,21 @@ function isMatch(a: {}, b: {}): boolean {
 // Render the banner message text
 function render() {
 	if (!options.nowPlaying) {
-		el.innerHTML = ""
+		el.innerHTML = _posterName = ""
 		return
+	}
+
+	// Check for song matches
+	let matched = false
+	for (let [patt, rep] of songMap) {
+		if (patt.test(data.np)) {
+			matched = true
+			_posterName = rep
+			break
+		}
+	}
+	if (!matched) {
+		_posterName = ""
 	}
 
 	const attrs = {

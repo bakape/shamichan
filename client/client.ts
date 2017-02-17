@@ -6,6 +6,7 @@ import { Post, FormModel, PostView, postEvent, postSM } from './posts'
 import { PostLink, Command, PostData, ImageData } from "./common"
 import { postAdded, navigate } from "./ui"
 import { incrementPostCount } from "./page"
+import { posterName } from "./options"
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -36,6 +37,11 @@ function handle(id: number, fn: (m: Post) => void) {
 
 // Insert a post into the models and DOM
 function insertPost(data: PostData) {
+	// R/a/dio song name override
+	if (posterName()) {
+		data.name = posterName()
+	}
+
 	const existing = posts.get(data.id)
 	if (existing) {
 		if (existing instanceof FormModel && !existing.isAllocated) {
