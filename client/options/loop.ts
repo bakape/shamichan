@@ -26,13 +26,17 @@ export default () => {
 
 // Rerender time every minute, if relative time is set
 setInterval(() => {
-	if (options.relativeTime) {
+	if (options.relativeTime && !page.catalog) {
 		renderTime()
 	}
 }, 60000)
 
 // Loop over all posts after filtering with `test`
 function loopPosts(test: (post: Post) => boolean, fn: (post: Post) => void) {
+	// Catalog does not contain proper views and is very static
+	if (page.catalog) {
+		return
+	}
 	for (let post of posts) {
 		if (test(post)) {
 			fn(post)
