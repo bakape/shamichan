@@ -23,11 +23,6 @@ function handleClick(event: KeyboardEvent) {
 		return
 	}
 
-	if (target.classList.contains("hash-link")) {
-		target = target.closest("em").firstElementChild
-		location.hash = "#p" + target.getAttribute("data-id")
-	}
-
 	const href = (target.closest("a.history") as HTMLAnchorElement).href
 	navigate(href, event, true).catch(alertError)
 }

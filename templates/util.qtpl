@@ -29,7 +29,7 @@ Render a link to another post. Can optionally be cross-thread.
 			{% space %}➡
 		{% endif %}
 	</a>
-	<a class="hash-link" href="{%z= url %}"> #</a>
+	<a class="hash-link history" href="{%z= url %}"> #</a>
 {% endstripspace %}{% endfunc %}
 
 {% func expandLink(board, id string) %}{% stripspace %}
