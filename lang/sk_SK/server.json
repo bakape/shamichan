@@ -345,7 +345,7 @@
 		"return": "Návrat",
 		"rules": "Pravidlá",
 		"search": "Hľadať",
-		"searchTooltip": "Vytriediť dosky podľa predmetu alebo názvu. Prijíma ja regulárne výrazy.",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"send": "Odoslané",
 		"showNotice": "Ukázať upozornenie",
 		"sortMode": "Zoradiť vlákna podľa",

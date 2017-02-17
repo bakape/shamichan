@@ -345,7 +345,7 @@
 		"return": "Return",
 		"rules": "Show Rules",
 		"search": "Search",
-		"searchTooltip": "Filter threads by subject or board name. Accepts Regular expressions.",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"send": "Send",
 		"showNotice": "Show Notice",
 		"sortMode": "Sort threads by",

@@ -345,7 +345,7 @@
 		"return": "Powrót",
 		"rules": "Zasady",
 		"search": "Wyszukaj",
-		"searchTooltip": "Filtruj tematy po tytule lub nazwie działu. Wyrażenia regularne są akceptowane.",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"send": "Wyślij",
 		"showNotice": "Pokaż powiadomienie",
 		"sortMode": "Sortuj tematy po",

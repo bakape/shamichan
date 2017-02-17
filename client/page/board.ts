@@ -111,16 +111,7 @@ export function render() {
 
 // Sort all threads on a board
 export function sortThreads(initial: boolean) {
-	let contID: string,
-		threadTag: string
-	if (page.catalog) {
-		contID = "catalog"
-		threadTag = "article"
-	} else {
-		contID = "index-thread-container"
-		threadTag = "section"
-	}
-	const cont = document.getElementById(contID)
+	const [cont, threads] = getThreads()
 
 	// Index board pages use the same localization functions as threads
 	if (page.catalog && (options.hideThumbs || options.workModeToggle)) {
@@ -137,8 +128,7 @@ export function sortThreads(initial: boolean) {
 
 	// Sort threads by model properties
 	const els: { [id: number]: HTMLElement } = {}
-	cont.append(...Array
-		.from(cont.querySelectorAll(threadTag))
+	cont.append(...threads
 		.map(el => {
 			const id = el.getAttribute("data-id")
 			els[id] = el
@@ -149,6 +139,24 @@ export function sortThreads(initial: boolean) {
 		.map(({id}) =>
 			els[id])
 	)
+}
+
+// Retrieves the thread container and the threads within depending on page type
+function getThreads(): [HTMLElement, HTMLElement[]] {
+	let contID: string,
+		threadTag: string
+	if (page.catalog) {
+		contID = "catalog"
+		threadTag = "article"
+	} else {
+		contID = "index-thread-container"
+		threadTag = "section"
+	}
+	const cont = document.getElementById(contID)
+	return [
+		cont,
+		Array.from(cont.querySelectorAll(threadTag)),
+	]
 }
 
 // Render the board refresh button text
@@ -172,23 +180,21 @@ function onSearchChange(e: Event) {
 
 // Filter against board and subject and toggle thread visibility
 function filterThreads(filter: string) {
-	const r = new RegExp(filter, "i"),
-		catalog = document.getElementById("catalog")
-
-	for (let el of catalog.querySelectorAll("article")) {
-		let display = "none"
-
-		const board = el.querySelector(".board")
-		if (board && r.test(board.textContent)) {
-			display = ""
-		} else {
-			const subject = el.querySelector("h3").textContent.slice(1, -1)
-			if (r.test(subject)) {
-				display = ""
-			}
+	const [, threads] = getThreads(),
+		r = new RegExp(filter, "i"),
+		matched = new Set<number>()
+	for (let m of posts) {
+		const match = (m.board && r.test(`/${m.board}/`))
+			|| r.test(m.subject)
+			|| r.test(m.body)
+		if (match) {
+			matched.add(m.op)
 		}
+	}
 
-		el.style.display = display
+	for (let el of threads) {
+		const id = parseInt(el.getAttribute("data-id"))
+		el.style.display = matched.has(id) ? "" : "none"
 	}
 }
 

@@ -345,7 +345,7 @@
 		"return": "Повернутися",
 		"rules": "Правила",
 		"search": "Пошук",
-		"searchTooltip": "Відфільтрувати треди за темою або назвою борди. Підтримує регулярні вирази.",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"send": "Надіслати",
 		"showNotice": "Показати Повідомлення",
 		"sortMode": "Відсортувати треди за",

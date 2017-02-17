@@ -23,6 +23,8 @@ export class Post extends Model implements PostData {
 	public name: string
 	public trip: string
 	public auth: string
+	public subject: string
+	public board: string
 	public state: TextState
 	public backlinks: PostLink[]
 	public commands: Command[]
