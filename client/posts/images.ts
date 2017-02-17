@@ -174,10 +174,14 @@ export default class ImageHandler extends View<Post> {
 // Delegate image clicks to views. More performant than dedicated listeners for
 // each view.
 function handleImageClick(event: MouseEvent) {
-	if (options.inlineFit === "none" || event.which !== 1) {
+	const el = event.target as Element
+	const bypass = options.inlineFit === "none"
+		|| event.which !== 1
+		|| el.classList.contains("catalog")
+	if (bypass) {
 		return
 	}
-	const model = getModel(event.target as Element)
+	const model = getModel(el)
 	if (!model) {
 		return
 	}

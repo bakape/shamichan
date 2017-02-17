@@ -171,7 +171,10 @@ function renderImagePreview(event: MouseEvent) {
 		return
 	}
 	const target = event.target as HTMLElement
-	if (target.tagName !== "IMG" || target.classList.contains("expanded")) {
+	const bypass = target.tagName !== "IMG"
+		|| target.classList.contains("expanded")
+		|| target.classList.contains("catalog")
+	if (bypass) {
 		if (imagePreview) {
 			imagePreview.remove()
 			imagePreview = null

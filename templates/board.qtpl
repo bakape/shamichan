@@ -110,9 +110,9 @@ allow caching of generated posts.
 						{% code img := *t.Image %}
 						<a class="history" href="/{%s= t.Board %}/{%s= idStr %}">
 							{% if img.Spoiler %}
-								<img src="/assets/spoil/default.jpg" width="150" height="150" class="expanded">
+								<img src="/assets/spoil/default.jpg" width="150" height="150" class="catalog">
 							{% else %}
-								<img width="{%s= strconv.FormatUint(uint64(img.Dims[2]), 10) %}" height="{%s= strconv.FormatUint(uint64(img.Dims[3]), 10) %}" class="expanded" src="{%s= assets.ThumbPath(img.ThumbType, img.SHA1) %}">
+								<img width="{%s= strconv.FormatUint(uint64(img.Dims[2]), 10) %}" height="{%s= strconv.FormatUint(uint64(img.Dims[3]), 10) %}" class="catalog" src="{%s= assets.ThumbPath(img.ThumbType, img.SHA1) %}">
 							{% endif %}
 						</a>
 					</figure>
