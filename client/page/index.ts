@@ -1,5 +1,5 @@
-import { fetchBoard, fetchThread } from "../util"
-import { PageState, posts, read, page } from '../state'
+import { fetchBoard, fetchThread, extend } from "../util"
+import { PageState, posts, read } from '../state'
 import renderThread from './thread'
 import { renderFresh as renderBoard } from './board'
 import { setExpandAll } from "../posts"
@@ -21,6 +21,7 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 		? await fetchThread(board, thread, lastN)
 		: await fetchBoard(board, catalog)
 	const t = await res.text()
+	await ready
 	switch (res.status) {
 		case 200:
 			// Possibly was redirected
@@ -45,7 +46,7 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 				}
 				redir.href = url
 
-				page.replaceWith(redir)
+				extend(state, redir)
 			}
 			break
 		case 403:
@@ -53,8 +54,6 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 		default:
 			throw t
 	}
-
-	await ready
 
 	posts.clear()
 	setExpandAll(false)

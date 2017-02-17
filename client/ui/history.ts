@@ -54,7 +54,10 @@ export default async function navigate(
 		if (event && (event.target as Element).classList.contains("reload")) {
 			needPush = false
 		} else {
-			return scrollToAnchor()
+			// RAF ensures the programmatic scroll happens after the default
+			// browser scroll
+			requestAnimationFrame(scrollToAnchor)
+			return
 		}
 	}
 
@@ -73,15 +76,15 @@ export default async function navigate(
 		renderPage = resolve)
 	const pageLoader = loadPage(nextState, ready)
 
-	page.replaceWith(nextState)
 	renderPage()
 	await pageLoader
+	page.replaceWith(nextState)
 	postSM.feed(postEvent.reset)
 	synchronise()
 
 	if (needPush) {
-		scrollToAnchor()
 		history.pushState(null, null, nextState.href)
+		scrollToAnchor()
 	}
 
 	displayLoading(false)
