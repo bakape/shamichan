@@ -65,6 +65,17 @@ class PostPreview extends ImageHandler {
 	}
 
 	private render() {
+		// Remove any inline expanded posts
+		for (let el of this.el.querySelectorAll("article")) {
+			el.remove()
+		}
+
+		// Remove any existing reverse post link highlights due to link inline
+		// expansion
+		for (let el of this.el.querySelectorAll("a.history.referenced")) {
+			el.classList.remove("referenced")
+		}
+
 		// Underline reverse post links in preview
 		const patt = new RegExp(`[>\/]` + getClosestID(this.parent))
 		for (let el of this.el.querySelectorAll("a.history")) {
@@ -72,11 +83,6 @@ class PostPreview extends ImageHandler {
 				continue
 			}
 			el.classList.add("referenced")
-		}
-
-		// Remove any inline expanded posts
-		for (let el of this.el.querySelectorAll("article")) {
-			el.remove()
 		}
 
 		// Contract any expanded open thumbnails
