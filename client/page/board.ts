@@ -1,22 +1,26 @@
 import { on, fetchBoard } from '../util'
 import lang from '../lang'
-import { page } from '../state'
+import { page, hidden, posts } from '../state'
 import options from '../options'
-import { renderTime } from "../posts"
+import { renderTime, Post } from "../posts"
 import { setTitle } from "../ui"
-import { extractConfigs, isBanned } from "."
+import {
+	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts
+} from "./common"
 import { setPostCount } from "./thread"
 import { setSyncCounter } from "../connection"
+import { ThreadData } from "../common"
 
-type SortFunction = (a: HTMLElement, b: HTMLElement) => number
+
+type SortFunction = (a: Post, b: Post) => number
 
 // Thread sort functions
 const sorts: { [name: string]: SortFunction } = {
-	bump: subtract("bump-time"),
-	lastReply: subtract("reply-time"),
+	bump: subtract("bumpTime"),
+	lastReply: subtract("replyTime"),
 	creation: subtract("time"),
-	replyCount: subtract("post-ctr"),
-	fileCount: subtract("image-ctr"),
+	replyCount: subtract("postCtr"),
+	fileCount: subtract("imageCtr"),
 }
 const threads = document.getElementById("threads")
 
@@ -24,10 +28,9 @@ const threads = document.getElementById("threads")
 let lastFetchTime = Date.now() / 1000
 
 // Sort threads by embedded data
-function subtract(attr: string): (a: HTMLElement, b: HTMLElement) => number {
-	attr = "data-" + attr
+function subtract(attr: string): (a: Post, b: Post) => number {
 	return (a, b) =>
-		parseInt(b.getAttribute(attr)) - parseInt(a.getAttribute(attr))
+		b[attr] - a[attr]
 }
 
 // Render a board fresh board page
@@ -42,9 +45,49 @@ export function renderFresh(html: string) {
 	render()
 }
 
+function extractCatalogModels() {
+	const text = document.getElementById("post-data").textContent
+	for (let t of JSON.parse(text) as ThreadData[]) {
+		if (hidden.has(t.id)) {
+			document.getElementById(`p${t.id}`).remove()
+			continue
+		}
+		t.op = t.id
+		if (t.image) {
+			t.image.large = true
+		}
+		posts.add(new Post(t))
+	}
+}
+
+function extractThreads() {
+	const text = document.getElementById("post-data").textContent
+	for (let thread of JSON.parse(text) as ThreadData[]) {
+		const {posts} = thread
+		delete thread.posts
+		if (extractPost(thread, thread.id)) {
+			document.querySelector(`section[data-id="${thread.id}"]`).remove()
+			continue
+		}
+		if (thread.image) {
+			thread.image.large = true
+		}
+		for (let post of posts) {
+			extractPost(post, thread.id)
+		}
+	}
+	localizeThreads()
+	reparseOpenPosts()
+}
+
 // Apply client-side modifications to a board page's HTML
 export function render() {
 	setPostCount(0, 0)
+	if (page.catalog) {
+		extractCatalogModels()
+	} else {
+		extractThreads()
+	}
 
 	// Apply board title to tab
 	setTitle(threads.querySelector("#page-title").textContent)
@@ -55,6 +98,9 @@ export function render() {
 	}
 	for (let el of threads.querySelectorAll(".lastN-link")) {
 		el.textContent = `${lang.ui["last"]} 100`
+	}
+	for (let el of threads.querySelectorAll(".expand-link")) {
+		el.textContent = lang.posts["expand"]
 	}
 
 	(threads.querySelector("select[name=sortMode]") as HTMLSelectElement)
@@ -74,8 +120,7 @@ export function sortThreads(initial: boolean) {
 		contID = "index-thread-container"
 		threadTag = "section"
 	}
-	const cont = document.getElementById(contID),
-		threads = Array.from(cont.querySelectorAll(threadTag))
+	const cont = document.getElementById(contID)
 
 	// Index board pages use the same localization functions as threads
 	if (page.catalog && (options.hideThumbs || options.workModeToggle)) {
@@ -90,10 +135,20 @@ export function sortThreads(initial: boolean) {
 		return
 	}
 
-	for (let el of threads) {
-		el.remove()
-	}
-	cont.append(...threads.sort(sorts[sortMode]))
+	// Sort threads by model properties
+	const els: { [id: number]: HTMLElement } = {}
+	cont.append(...Array
+		.from(cont.querySelectorAll(threadTag))
+		.map(el => {
+			const id = el.getAttribute("data-id")
+			els[id] = el
+			el.remove()
+			return posts.get(parseInt(id))
+		})
+		.sort(sorts[sortMode])
+		.map(({id}) =>
+			els[id])
+	)
 }
 
 // Render the board refresh button text
@@ -139,11 +194,12 @@ function filterThreads(filter: string) {
 
 // Fetch and rerender board contents
 async function refreshBoard() {
-	const res = await fetchBoard(page.board),
+	const res = await fetchBoard(page.board, page.catalog),
 		t = await res.text()
 	switch (res.status) {
 		case 200:
 		case 403:
+			posts.clear()
 			renderFresh(t)
 			break
 		default:

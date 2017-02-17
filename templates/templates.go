@@ -45,25 +45,25 @@ func Compile() error {
 func Board(
 	b string,
 	ln lang.Pack,
-	withIndex bool,
+	minimal, catalog bool,
 	threadHTML []byte,
 ) ([]byte, error) {
 	boardConf := config.GetBoardConfigs(b)
 	title := fmt.Sprintf("/%s/ - %s", b, boardConf.Title)
 	title = html.EscapeString(title)
 
-	html := renderBoard(threadHTML, b, title, boardConf, ln)
+	html := renderBoard(threadHTML, b, title, boardConf, catalog, ln)
 
-	if !withIndex {
+	if minimal {
 		return []byte(html), nil
 	}
 	return execIndex(html, title, ln.ID)
 }
 
 // Thread renders thread page HTML for noscript browsers
-func Thread(ln lang.Pack, withIndex bool, postHTML []byte) ([]byte, error) {
+func Thread(ln lang.Pack, minimal bool, postHTML []byte) ([]byte, error) {
 	html := renderThread(postHTML, ln)
-	if !withIndex {
+	if minimal {
 		return []byte(html), nil
 	}
 	return execIndex(html, "", ln.ID)

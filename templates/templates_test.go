@@ -55,7 +55,7 @@ func TestBoard(t *testing.T) {
 	}
 	html := CatalogThreads(board)
 
-	_, err := Board("all", lang.Packs["en_GB"], true, []byte(html))
+	_, err := Board("all", lang.Packs["en_GB"], false, false, []byte(html))
 	if err != nil {
 		t.Fatal(err)
 	}

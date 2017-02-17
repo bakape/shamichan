@@ -3,7 +3,6 @@ import { Post } from './model'
 // Holds a collection of Post models
 export default class PostCollection {
 	public models: { [key: string]: Post } = {}
-	public lowestID: number = 0 // Lowest post ID, excluding OP
 
 	// Retrieve a model by its ID
 	public get(id: number): Post {
@@ -28,7 +27,6 @@ export default class PostCollection {
 			delete this.models[id].collection
 		}
 		this.models = {}
-		this.lowestID = 0
 	}
 
 	// Return weather a post exists in the collection

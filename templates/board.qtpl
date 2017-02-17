@@ -1,11 +1,10 @@
-{% import "encoding/json" %}
 {% import "strconv" %}
 {% import "github.com/bakape/meguca/config" %}
 {% import "github.com/bakape/meguca/common" %}
 {% import "github.com/bakape/meguca/lang" %}
 {% import "github.com/bakape/meguca/imager/assets" %}
 
-{% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, ln lang.Pack) %}{% stripspace %}
+{% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, catalog bool, ln lang.Pack) %}{% stripspace %}
 	{% comment %}
 		Not implemented yet
 		<h1 class="image-banner">
@@ -64,6 +63,17 @@
 				{%s= ln.Common.UI["refresh"] %}
 			</a>
 		</aside>
+		<aside class="act glass">
+			{% if catalog %}
+				<a href="." class="history">
+					{%s= ln.UI["return"] %}
+				</a>
+			{% else %}
+				<a href="catalog" class="history">
+					{%s= ln.UI["catalog"] %}
+				</a>
+			{% endif %}
+		</aside>
 		{%= hoverReveal(conf.Notice, ln.UI["showNotice"]) %}
 		{%= hoverReveal(conf.Rules, ln.UI["rules"]) %}
 		<span id="catalog-controls" class="margin-spaced">
@@ -90,7 +100,7 @@
 
 CatalogThreads renders thread content for a catalog page. Separate function to
 allow caching of generated posts.
-{% func CatalogThreads(b []common.Thread) %}{% stripspace %}
+{% func CatalogThreads(b []common.Thread, json []byte) %}{% stripspace %}
 	<div id="catalog">
 		{% for _, t := range b %}
 			{% code idStr:= strconv.FormatUint(t.ID, 10) %}
@@ -130,31 +140,29 @@ allow caching of generated posts.
 				</blockquote>
 			</article>
 		{% endfor %}
+		<script id="post-data" type="application/json">
+			{%z= json %}
+		</script>
 	</div>
 {% endstripspace %}{% endfunc %}
 
 IndexThreads renders abbreviated threads for display on board index pages
-{% func IndexThreads(threads []common.Thread) %}{% stripspace %}
+{% func IndexThreads(threads []common.Thread, json []byte) %}{% stripspace %}
 	{% code root := config.Get().RootURL %}
 	<div id="index-thread-container">
-	{% for _, t := range threads %}
-		{% code omit, imageOmit := CalculateOmit(t) %}
-		<section class="index-thread" data-id="{%s= strconv.FormatUint(t.ID, 10) %}">
-			{%= renderArticle(t.Post, t.ID, omit, imageOmit, t.Subject, root, true) %}
-			{% for _, p := range t.Posts %}
-				{%= renderArticle(p, t.ID, 0, 0, "", root, true) %}
-			{% endfor %}
-			<hr>
-			<script type="application/json">
-				{% comment %}
-					Lets assume an error never happens.
-					Handling them here would be troublesome.
-				{% endcomment %}
-				{% code threadJSON, _ := json.Marshal(t) %}
-				{%z= threadJSON %}
-			</script>
-		</section>
-	{% endfor %}
+		{% for _, t := range threads %}
+			{% code omit, imageOmit := CalculateOmit(t) %}
+			<section class="index-thread" data-id="{%s= strconv.FormatUint(t.ID, 10) %}">
+				{%= renderArticle(t.Post, t.ID, omit, imageOmit, t.Subject, root, true) %}
+				{% for _, p := range t.Posts %}
+					{%= renderArticle(p, t.ID, 0, 0, "", root, true) %}
+				{% endfor %}
+				<hr>
+			</section>
+		{% endfor %}
+		<script id="post-data" type="application/json">
+			{%z= json %}
+		</script>
 	</div>
 {% endstripspace %}{% endfunc %}
 

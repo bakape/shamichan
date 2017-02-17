@@ -2,7 +2,7 @@ import { message, send, handlers } from "../../connection"
 import { Post } from "../model"
 import { ImageData, PostData } from "../../common"
 import FormView from "./view"
-import { posts, storeMine } from "../../state"
+import { posts, storeMine, page } from "../../state"
 import { postSM, postEvent, postState } from "."
 import { extend } from "../../util"
 import { SpliceResponse } from "../../client"
@@ -46,6 +46,7 @@ export default class FormModel extends Post {
 		} else {
 			super({
 				id: 0,
+				op: page.thread,
 				editing: true,
 				time: Date.now(),
 				body: "",

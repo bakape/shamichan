@@ -72,13 +72,13 @@ func boardHTML(
 		return
 	}
 
-	html, err = templates.Board(b, lp, isMinimal(r), html)
+	html, err = templates.Board(b, lp, isMinimal(r), catalog, html)
 	serveHTML(w, r, etag, html, err)
 }
 
 // Returns, if the minimal query string is not set
 func isMinimal(r *http.Request) bool {
-	return r.URL.Query().Get("minimal") != "true"
+	return r.URL.Query().Get("minimal") == "true"
 }
 
 // Asserts a thread exists on the specific board and renders the index template

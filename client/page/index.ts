@@ -1,10 +1,11 @@
-import { fetchBoard, fetchThread, extend } from "../util"
-import { PageState, posts, setBoardConfig, read } from '../state'
+import { fetchBoard, fetchThread } from "../util"
+import { PageState, posts, read, page } from '../state'
 import renderThread from './thread'
 import { renderFresh as renderBoard } from './board'
 import { setExpandAll } from "../posts"
 import initNavigation from "./navigation"
 
+export { extractConfigs } from "./common"
 export {
 	incrementPostCount, default as renderThread, setThreadTitle
 } from "./thread"
@@ -15,10 +16,10 @@ initNavigation()
 // Load a page (either board or thread) and render it once the ready promise
 // has been resolved
 export async function loadPage(state: PageState, ready: Promise<void>) {
-	const {board, thread, lastN} = state
+	const {board, thread, lastN, catalog} = state
 	const res = thread
 		? await fetchThread(board, thread, lastN)
-		: await fetchBoard(board)
+		: await fetchBoard(board, catalog)
 	const t = await res.text()
 	switch (res.status) {
 		case 200:
@@ -44,7 +45,7 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 				}
 				redir.href = url
 
-				extend(state, redir)
+				page.replaceWith(redir)
 			}
 			break
 		case 403:
@@ -62,15 +63,4 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 	} else {
 		renderBoard(t)
 	}
-}
-
-// Find board configurations in the HTML and apply them
-export function extractConfigs() {
-	const conf = document.getElementById("board-configs").textContent
-	setBoardConfig(JSON.parse(conf))
-}
-
-// Check if the rendered page is a ban page
-export function isBanned(): boolean {
-	return !!document.querySelector(".ban-page")
 }

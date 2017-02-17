@@ -45,8 +45,11 @@ export async function fetchHTML(url: string): Promise<[string, string]> {
 }
 
 // Fetch HTML of a board page
-export async function fetchBoard(board: string): Promise<Response> {
-	return await fetch(`/${board}/?minimal=true`)
+export async function fetchBoard(
+	board: string,
+	catalog: boolean,
+): Promise<Response> {
+	return await fetch(`/${board}/${catalog ? "catalog" : ""}?minimal=true`)
 }
 
 // Fetch HTML of a thread page

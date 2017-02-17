@@ -49,7 +49,7 @@ type Thread struct {
 	Subject   string `json:"subject"`
 	Board     string `json:"board"`
 	Post
-	Posts []Post `json:"posts,omitempty"`
+	Posts []Post `json:"posts"`
 }
 
 // Post is a generic post exposed publically through the JSON API. Either OP or

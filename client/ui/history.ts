@@ -43,7 +43,7 @@ export default async function navigate(
 
 	// Does the link point to the same page as this one?
 	let isSame = true
-	for (let key of ["thread", "lastN", "board"]) {
+	for (let key of ["thread", "lastN", "board", "catalog"]) {
 		if (nextState[key] !== page[key]) {
 			isSame = false
 			break
@@ -73,9 +73,9 @@ export default async function navigate(
 		renderPage = resolve)
 	const pageLoader = loadPage(nextState, ready)
 
+	page.replaceWith(nextState)
 	renderPage()
 	await pageLoader
-	page.replaceWith(nextState)
 	postSM.feed(postEvent.reset)
 	synchronise()
 

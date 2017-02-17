@@ -46,7 +46,7 @@ var (
 			return db.GetBoardCatalog(k.Board)
 		},
 		RenderHTML: func(data interface{}, json []byte) []byte {
-			return []byte(templates.CatalogThreads(data.(common.Board)))
+			return []byte(templates.CatalogThreads(data.(common.Board), json))
 		},
 	}
 	boardCache = cache.FrontEnd{
@@ -63,7 +63,7 @@ var (
 			return db.GetBoard(k.Board)
 		},
 		RenderHTML: func(data interface{}, json []byte) []byte {
-			return []byte(templates.IndexThreads(data.(common.Board)))
+			return []byte(templates.IndexThreads(data.(common.Board), json))
 		},
 	}
 )

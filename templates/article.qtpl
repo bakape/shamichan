@@ -8,9 +8,6 @@
 {% func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string, index bool) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
 	{% code opStr := strconv.FormatUint(op, 10) %}
-	{% comment %}
-		Force cross-links on board pages
-	{% endcomment %}
 	<article id="p{%s= id %}" class="glass{% if p.Editing %}{% space %}editing{% endif %}">
 		<header class="spaced">
 			<input type="checkbox" class="mod-checkbox hidden">
