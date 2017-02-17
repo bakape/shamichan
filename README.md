@@ -66,7 +66,7 @@ License: GNU AGPL
 ##Building from source
 A reference list of commands can be found in `docs/installation.md`
 
-###Dependencies
+###Build dependencies
 * [Go](https://golang.org/doc/install) >=1.7 (for building server)
 * [Node.js](https://nodejs.org) >=5.0 (for building client)
 * GCC or Clang

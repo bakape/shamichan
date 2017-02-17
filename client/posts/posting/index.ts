@@ -6,9 +6,10 @@ import { connState, connSM } from "../../connection"
 import { on, FSM, threads, hook } from "../../util"
 import lang from "../../lang"
 import identity, { initIdentity } from "./identity"
-import { boardConfig } from "../../state"
+import { boardConfig, page } from "../../state"
 import initDrop from "./drop"
 import initThreads from "./threads"
+import { navigate } from "../../ui"
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
@@ -77,10 +78,25 @@ function bindNagging() {
 
 // Insert target post's number as a link into the text body. If text in the
 // post is selected, quote it.
-function quotePost(e: Event) {
+async function quotePost(e: MouseEvent) {
+	// Don't trigger, when user is trying to open in a new tab
+	const bypass = e.which !== 1
+		|| e.ctrlKey
+		|| connSM.state !== connState.synced
+	if (bypass) {
+		return
+	}
+
+	const target = e.target as HTMLAnchorElement
+
+	// On board pages, first navigate to the thread
+	if (!page.thread) {
+		await navigate(target.href, event, true)
+	}
+
 	// Make sure the selection both starts and ends in the quoted post's
 	// blockquote
-	const post = (e.target as Element).closest("article")
+	const post = target.closest("article")
 	const isInside = (prop: string): boolean => {
 		let el = lastSelection[prop] as HTMLElement
 		if (!el) {
