@@ -159,7 +159,7 @@ func testGetPost(t *testing.T) {
 func testGetAllBoard(t *testing.T) {
 	t.Parallel()
 
-	std := []common.Thread{
+	std := common.Board{
 		{
 			Post: common.Post{
 				ID:    3,
