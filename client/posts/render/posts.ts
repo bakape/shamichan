@@ -52,7 +52,7 @@ export function renderHeader(frag: NodeSelector, data: PostData) {
 		link = nav.firstElementChild as HTMLAnchorElement,
 		quote = nav.lastElementChild as HTMLAnchorElement
 	let url = `${data.op || data.id}#p${data.id}`
-	if (page.thread) {
+	if (!page.thread && !page.catalog) {
 		url = "/all/" + url
 	}
 	quote.href = link.href = url

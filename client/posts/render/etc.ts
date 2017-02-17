@@ -7,8 +7,9 @@ import { makeFrag, firstChild, makeAttrs } from "../../util"
 
 // Render a link to other posts
 export function renderPostLink(id: number, op: number): string {
-    const cross = !page.catalog && op !== page.thread,
-        url = `${cross || !page.thread ? "/all/" : ""}${op}#p${id}`
+    const cross = op !== page.thread,
+        index = !page.thread && !page.catalog,
+        url = `${cross || index ? "/all/" : ""}${op}#p${id}`
     let html = `<a class="history post-link" data-id="${id}" href="${url}">>>${id}`
     if (cross) {
         html += " ➡"

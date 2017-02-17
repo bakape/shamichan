@@ -1,4 +1,4 @@
-import { fetchBoard, fetchThread } from "../util"
+import { fetchBoard, fetchThread, extend } from "../util"
 import { PageState, posts, read, page } from '../state'
 import renderThread from './thread'
 import { renderFresh as renderBoard } from './board'
@@ -47,6 +47,7 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 				redir.href = url
 
 				page.replaceWith(redir)
+				extend(state, redir)
 			}
 			break
 		case 403:

@@ -88,10 +88,11 @@ async function quotePost(e: MouseEvent) {
 	}
 
 	const target = e.target as HTMLAnchorElement
+	e.preventDefault()
 
 	// On board pages, first navigate to the thread
 	if (!page.thread) {
-		await navigate(target.href, event, true)
+		await navigate(target.href, null, true)
 	}
 
 	// Make sure the selection both starts and ends in the quoted post's
