@@ -76,10 +76,10 @@ export default async function navigate(
 		renderPage = resolve)
 	const pageLoader = loadPage(nextState, ready)
 
-	renderPage()
-	await pageLoader
 	page.replaceWith(nextState)
 	postSM.feed(postEvent.reset)
+	renderPage()
+	await pageLoader
 	synchronise()
 
 	if (needPush) {
