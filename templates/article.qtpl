@@ -40,9 +40,9 @@
 				{%s= formatTime(p.Time) %}
 			</time>
 			<nav>
-				{% code url := util.ConcatStrings(opStr, "#p", id) %}
+				{% code url := "#p" + id %}
 				{% if index %}
-					{% code url = "/all/" + url %}
+					{% code url = util.ConcatStrings("/all/", opStr, "?last=100", url) %}
 				{% endif %}
 				<a class="history" href="{%s= url %}">
 					No.

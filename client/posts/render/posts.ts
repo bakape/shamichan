@@ -51,9 +51,9 @@ export function renderHeader(frag: NodeSelector, data: PostData) {
 	const nav = frag.querySelector("nav"),
 		link = nav.firstElementChild as HTMLAnchorElement,
 		quote = nav.lastElementChild as HTMLAnchorElement
-	let url = `${data.op || data.id}#p${data.id}`
+	let url = `#p${data.id}`
 	if (!page.thread && !page.catalog) {
-		url = "/all/" + url
+		url = `/all/${data.op || data.id}?last=100` + url
 	}
 	quote.href = link.href = url
 	quote.textContent = data.id.toString()
