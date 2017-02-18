@@ -42,10 +42,9 @@ License: GNU AGPL
 * Client UI
     - Works with all modern and most outdated browsers (such as PaleMoon)
     - Read-only functionality preserved with JavaScript disabled
-    - Scrolling compensation prevents post updates from moving the viewport
-    - Inbuilt DOM update batching to reduce redraws
     - Multiple themes
     - Custom user-set backgrounds and CSS
+    - Mascots
     - Configurable keyboard shortcuts
     - Work mode aka Boss key
     - Customisable top banner board link list

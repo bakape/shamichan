@@ -169,9 +169,11 @@ export default class FormView extends PostView {
     public replaceText(body: string) {
         const el = this.input
         el.value = body
-        el.focus()
-        el.setSelectionRange(body.length, body.length)
         this.onInput()
+        requestAnimationFrame(() => {
+            el.focus()
+            el.setSelectionRange(body.length, body.length)
+        })
     }
 
     // Transform form into a generic post. Removes any dangling form controls
