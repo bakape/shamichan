@@ -9,7 +9,7 @@ import { makeFrag, firstChild, makeAttrs } from "../../util"
 export function renderPostLink(id: number, op: number): string {
     const cross = op !== page.thread,
         index = !page.thread && !page.catalog,
-        url = `${cross || index ? "/all/${op}" : ""}#p${id}`
+        url = `${cross || index ? `/all/${op}` : ""}#p${id}`
     let html = `<a class="history post-link" data-id="${id}" href="${url}">>>${id}`
     if (cross) {
         html += " ➡"
