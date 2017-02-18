@@ -311,6 +311,11 @@ var optionSpecs = [...][]inputSpec{
 			ID:   "userBGImage",
 			Type: _image,
 		},
+		{ID: "mascot"},
+		{
+			ID:   "mascotImage",
+			Type: _image,
+		},
 		{
 			ID:   "customCSS",
 			Type: _textarea,

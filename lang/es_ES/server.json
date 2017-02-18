@@ -144,6 +144,14 @@
 			"External links",
 			"Add, remove or edit external >>>/4chan/-type references"
 		],
+		"mascot": [
+			"Mascot",
+			"Toggle mascot display"
+		],
+		"mascotImage": [
+			"",
+			"Image to use as the mascot"
+		],
 		"mature": [
 			"Mature content",
 			"Inform the user the website contains mature content on first visit"

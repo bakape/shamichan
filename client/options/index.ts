@@ -3,9 +3,11 @@
 import { OptionSpec, specs, optionType } from './specs'
 import initBackground from "./background"
 import initLoops from "./loop"
+import initMascot from "./mascot"
 import { trigger, emitChanges, ChangeEmitter, hook } from "../util"
 
 export { store as storeBackground } from "./background"
+export { store as storeMascot } from "./mascot"
 export * from "./specs"
 export { posterName } from "./r-a-dio"
 
@@ -29,6 +31,7 @@ interface Options extends ChangeEmitter {
 	replyRight: boolean
 	workModeToggle: boolean
 	userBG: boolean
+	mascot: boolean
 	alwaysLock: boolean
 	newPost: number
 	toggleSpoiler: number
@@ -145,12 +148,13 @@ export function initOptions() {
 	}
 
 	// Conditionally load and execute optional modules
-	for (let opt of ["userBG", "nowPlaying", "illyaDance"]) {
+	for (let opt of ["userBG", "nowPlaying", "illyaDance", "mascot"]) {
 		if (options[opt]) {
 			models[opt].execute(true)
 		}
 	}
 
 	initBackground()
+	initMascot()
 	initLoops()
 }

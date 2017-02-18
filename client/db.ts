@@ -1,6 +1,6 @@
 // IndexedDB database controller
 
-const dbVersion = 4
+const dbVersion = 5
 
 let db: IDBDatabase
 
@@ -54,22 +54,33 @@ export function open(): Promise<void> {
 
 // Upgrade or initialize the database
 function upgradeDB(event: IDBVersionChangeEvent) {
-	const db = (event.target as any).result as IDBDatabase
+	db = (event.target as any).result as IDBDatabase
+	switch (event.oldVersion) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+			// Delete all previous object stores
+			for (let name of Array.from(db.objectStoreNames)) {
+				db.deleteObjectStore(name)
+			}
 
-	// Delete all previous object stores
-	for (let name of Array.from(db.objectStoreNames)) {
-		db.deleteObjectStore(name)
+			for (let name of postStores) {
+				db.createObjectStore(name, { autoIncrement: true })
+					.createIndex("expires", "expires")
+			}
+
+			// Various miscellaneous objects
+			const main = db.createObjectStore('main', { keyPath: 'id' })
+			main.add({ id: 'background' })
+			main.add({ id: 'mascot' })
+			break
+		case 4:
+			// Can't modify data during an upgrade, so do it right after the
+			// "upgrade" completes
+			setTimeout(() => addObj("main", { id: "mascot" }), 1000)
+			break
 	}
-
-	for (let name of postStores) {
-		db
-			.createObjectStore(name, { autoIncrement: true })
-			.createIndex("expires", "expires")
-	}
-
-	// Various miscellaneous objects
-	const main = db.createObjectStore('main', { keyPath: 'id' })
-	main.add({ id: 'background' })
 }
 
 // Helper for throwing errors with event-based error passing
@@ -132,15 +143,18 @@ function fakePromise<T>(res: T): Promise<T> {
 }
 
 // Asynchronously insert a new expiring post id object into a postStore
-export function storeID(objStore: string, id: number, expiry: number) {
+export function storeID(store: string, id: number, expiry: number) {
 	if (isCuck) {
 		return
 	}
-	const req = newTransaction(objStore, true).add({
+	addObj(store, {
 		id,
 		expires: Date.now() + expiry,
 	})
-	req.onerror = throwErr
+}
+
+function addObj(store: string, obj: any) {
+	newTransaction(store, true).add(obj).onerror = throwErr
 }
 
 // Clear the target object store asynchronously

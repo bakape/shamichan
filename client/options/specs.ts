@@ -4,6 +4,7 @@ import { config } from '../state'
 import lang from '../lang'
 import { makeEl } from "../util"
 import { render as renderBG } from "./background"
+import { render as renderMascot } from "./mascot"
 import initRadio from "./r-a-dio"
 
 // Types of option models
@@ -154,6 +155,14 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	// Upload field for the custom background image
 	userBGImage: {
+		type: optionType.image,
+	},
+	// Mascot in the corner
+	mascot: {
+		noExecOnStart: true,
+		exec: renderMascot,
+	},
+	mascotImage: {
 		type: optionType.image,
 	},
 	// User-set CSS rules

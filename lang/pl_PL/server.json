@@ -144,6 +144,14 @@
 			"Linki zewnętrzne",
 			"Dodaj, usuń lub edytuj linki zewnętrzne w stylu >>>/4chana/"
 		],
+		"mascot": [
+			"Mascot",
+			"Toggle mascot display"
+		],
+		"mascotImage": [
+			"",
+			"Image to use as the mascot"
+		],
 		"mature": [
 			"Treści dla dorosłych",
 			"Przy pierwszej wizycie poinformuj użytkownika o treściach dla dorosłych na tej stronie"
