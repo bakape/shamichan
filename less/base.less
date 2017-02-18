@@ -251,14 +251,24 @@ noscript {
 	figure img.expanded {
 		margin: 0;
 	}
+	#thread-post-counters, #sync-counter {
+		display: none;
+	}
+	.reply-form {
+		margin: 0;
+		padding-right: 10px;
+		padding-left: 10px;
+		width: ~"calc(100vw - 20px)";
+		max-width: initial;
+		z-index: 310;
+	}
+	#post-controls  {
+		width: 100%;
+	}
 }
 
 @media (pointer: coarse) {
 	#banner {
-		font-size: 150%;
-	}
-	#page-container {
-		height: ~"calc(100vh - 2.25em)";
-		margin-top: 2.25em;
+		font-size: 120%;
 	}
 }
