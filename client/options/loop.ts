@@ -46,13 +46,13 @@ function loopPosts(test: (post: Post) => boolean, fn: (post: Post) => void) {
 
 // Rerender all images
 function renderImages() {
-	if (!page.thread) {
-		// Quick render, because we don't have models in the catalog
+	if (page.catalog) {
+		// Quick render, because we don't have views in the catalog
 		let display = ""
 		if (options.hideThumbs || options.workModeToggle) {
 			display = "none"
 		}
-		for (let el of threads.querySelectorAll(".expanded")) {
+		for (let el of threads.querySelectorAll("img.catalog")) {
 			el.style.display = display
 		}
 	} else {
