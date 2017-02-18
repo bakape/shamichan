@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"path/filepath"
 	"sort"
@@ -172,12 +171,4 @@ func Listen(event string) (*pq.Listener, error) {
 		return nil, err
 	}
 	return l, nil
-}
-
-// LockForWrite locks tables for writing ahead of time. Prevents deadlocks.
-func LockForWrite(tx *sql.Tx, tables ...string) error {
-	t := strings.Join(tables, ", ")
-	q := fmt.Sprintf(`lock table %s in share row exclusive mode;`, t)
-	_, err := tx.Exec(q)
-	return err
 }

@@ -61,11 +61,6 @@ func flushBodyUpdates() (err error) {
 	}
 	defer RollbackOnError(tx, &err)
 
-	err = LockForWrite(tx, "threads", "posts")
-	if err != nil {
-		return
-	}
-
 	q := tx.Stmt(prepared["update_log_many"])
 	for op, buf := range toLog {
 		_, err = q.Exec(op, pq.ByteaArray(*buf))

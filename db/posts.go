@@ -292,11 +292,6 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 			return err
 		}
 		defer RollbackOnError(tx, &err)
-
-		err = LockForWrite(tx, "threads", "posts")
-		if err != nil {
-			return
-		}
 	}
 
 	_, err = tx.Stmt(prepared["write_op"]).Exec(
