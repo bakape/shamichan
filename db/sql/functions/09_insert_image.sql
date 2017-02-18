@@ -8,6 +8,6 @@ create or replace function insert_image(
 	select update_log(op, msg);
 	update posts
 		set SHA1 = insert_image.SHA1,
-			imageName = name
+			imageName = insert_image.name
 		where id = insert_image.id;
 $$ language sql;

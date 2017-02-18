@@ -105,21 +105,6 @@ func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
 	return err
 }
 
-// InsertImage insert and image into and existing open post
-func InsertImage(id, op uint64, img common.Image) (err error) {
-	msg, err := common.EncodeMessage(common.MessageInsertImage, struct {
-		ID uint64 `json:"id"`
-		common.Image
-	}{
-		ID:    id,
-		Image: img,
-	})
-	if err != nil {
-		return
-	}
-	return execPrepared("insert_image", id, op, msg, img.SHA1, img.Name)
-}
-
 // SplicePost splices the text body of a post. For less load on the DB, supply
 // the entire new body as `body`.
 func SplicePost(id, op uint64, msg []byte, body string) {

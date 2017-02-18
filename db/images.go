@@ -137,6 +137,21 @@ func HasImage(id uint64) (has bool, err error) {
 	return
 }
 
+// InsertImage insert and image into and existing open post
+func InsertImage(id, op uint64, img common.Image) (err error) {
+	msg, err := common.EncodeMessage(common.MessageInsertImage, struct {
+		ID uint64 `json:"id"`
+		common.Image
+	}{
+		ID:    id,
+		Image: img,
+	})
+	if err != nil {
+		return
+	}
+	return execPrepared("insert_image", id, op, msg, img.SHA1, img.Name)
+}
+
 // SpoilerImage spoilers an already allocated image
 func SpoilerImage(id uint64) (err error) {
 	msg, err := common.EncodeMessage(common.MessageSpoiler, id)
