@@ -34,6 +34,11 @@
 			</a>
 		</span>
 		<span class="act">
+			<a href="catalog" class="history">
+				{%s= ln.UI["catalog"] %}
+			</a>
+		</span>
+		<span class="act">
 			<a href="#top">
 				{%s= ln.UI["top"] %}
 			</a>
