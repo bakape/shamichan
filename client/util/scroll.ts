@@ -6,8 +6,7 @@ import { isCuck } from "../common"
 
 const banner = document.getElementById("banner")
 
-let lock: HTMLElement,
-	scrolled = false
+let scrolled = false
 
 // Indicates if the page is scrolled to its bottom
 export let atBottom: boolean
@@ -51,9 +50,7 @@ export function checkBottom() {
 		return
 	}
 	atBottom = isAtBottom()
-	if (!lock) {
-		lock = document.getElementById("lock")
-	}
+	const lock = document.getElementById("lock")
 	if (lock) {
 		lock.style.visibility = atBottom ? "visible" : "hidden"
 	}
