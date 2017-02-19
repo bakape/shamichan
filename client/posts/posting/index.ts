@@ -98,11 +98,13 @@ async function quotePost(e: MouseEvent) {
 	// blockquote
 	const post = target.closest("article")
 	const isInside = (prop: string): boolean => {
-		let el = lastSelection[prop] as HTMLElement
-		if (!el) {
+		const node = lastSelection[prop] as Node
+		if (!node) {
 			return false
 		}
-		el = el.parentElement
+		const el = node.nodeType === Node.TEXT_NODE
+			? node.parentElement
+			: node as Element
 
 		return (el.closest("blockquote") && el.closest("article") === post)
 			// When selecting the last line, the selection ends outside the
