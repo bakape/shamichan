@@ -3,7 +3,7 @@
 import FormModel from "./model"
 import FormView from "./view"
 import { connState, connSM } from "../../connection"
-import { on, FSM, threads, hook } from "../../util"
+import { on, FSM, threads, hook, scrollToBottom } from "../../util"
 import lang from "../../lang"
 import identity, { initIdentity } from "./identity"
 import { boardConfig, page } from "../../state"
@@ -127,6 +127,22 @@ function updateIdentity() {
 	}
 }
 
+async function openReply(e: MouseEvent) {
+	e.preventDefault()
+	e.stopImmediatePropagation()
+
+	// If on a board page, first navigate to the target thread
+	const href = (event.target as HTMLAnchorElement).href
+	if (href) {
+		await navigate(href, null, true)
+	}
+
+	postSM.feed(postEvent.open)
+	if (href) {
+		scrollToBottom()
+	}
+}
+
 export default () => {
 	// Synchronise with connection state machine
 	connSM.on(connState.synced, postSM.feeder(postEvent.sync))
@@ -242,7 +258,7 @@ export default () => {
 	})
 
 	// Handle clicks on the [Reply] button
-	on(threads, "click", postSM.feeder(postEvent.open), {
+	on(threads, "click", openReply, {
 		selector: "aside.posting a",
 	})
 
