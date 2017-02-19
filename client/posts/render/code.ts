@@ -200,7 +200,7 @@ const operators = {
 }
 
 export default function highlightSyntax(text: string): string {
-	let html = "<pre>",
+	let html = `<code class="code-tag">`,
 		token = "",
 		typ = type.unmatched
 
@@ -280,7 +280,7 @@ export default function highlightSyntax(text: string): string {
 	if (typ !== type.unmatched) {
 		html += close
 	}
-	html += "</pre>"
+	html += "</code>"
 	return html
 }
 

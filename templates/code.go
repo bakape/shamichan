@@ -240,7 +240,7 @@ func (w *codeWriter) escapeByte(b byte) {
 
 func highlightSyntax(text string) []byte {
 	var w codeWriter
-	w.WriteString(`<pre>`)
+	w.WriteString(`<code class="code-tag">`)
 
 	buf := []byte(text)
 	token := make([]byte, 0, 64)
@@ -330,7 +330,7 @@ func highlightSyntax(text string) []byte {
 	if typ != unmatched {
 		w.close()
 	}
-	w.WriteString("</pre>")
+	w.WriteString("</code>")
 	return w.Bytes()
 }
 
