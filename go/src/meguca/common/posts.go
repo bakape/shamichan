@@ -42,8 +42,6 @@ type Board []Thread
 type Thread struct {
 	Abbrev    bool   `json:"abbrev,omitempty"`
 	Locked    bool   `json:"locked,omitempty"`
-	Archived  bool   `json:"archived,omitempty"`
-	Sticky    bool   `json:"sticky,omitempty"`
 	PostCtr   uint32 `json:"postCtr"`
 	ImageCtr  uint32 `json:"imageCtr"`
 	ReplyTime int64  `json:"replyTime"`
