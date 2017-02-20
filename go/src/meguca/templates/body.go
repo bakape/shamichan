@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"html"
+	"meguca/common"
+	"meguca/config"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"meguca/common"
-	"meguca/config"
 	"github.com/valyala/quicktemplate"
 )
 
@@ -21,8 +21,6 @@ const (
 )
 
 var (
-	commandRegexp   = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount)$`)
-	diceRegexp      = regexp.MustCompile(`^(\d*)d(\d+)$`)
 	linkRegexp      = regexp.MustCompile(`^>>(>*)(\d+)$`)
 	referenceRegexp = regexp.MustCompile(`^>>>(>*)\/(\w+)\/$`)
 	urlRegexp       = regexp.MustCompile(`^(?:magnet:\?|https?:\/\/)[-a-zA-Z0-9@:%_\+\.~#\?&\/=]+$`)
@@ -197,7 +195,7 @@ func (c *bodyContext) parseFragment(frag string) {
 				continue
 			}
 		case '#': // Hash commands
-			if m := commandRegexp.FindStringSubmatch(word); m != nil {
+			if m := common.CommandRegexp.FindStringSubmatch(word); m != nil {
 				c.parseCommands(string(m[1]))
 				continue
 			}
@@ -334,7 +332,7 @@ func (c *bodyContext) parseCommands(bit string) {
 		c.state.iDice++
 	default:
 		// Validate dice
-		m := diceRegexp.FindStringSubmatch(bit)
+		m := common.DiceRegexp.FindStringSubmatch(bit)
 		if m[1] != "" {
 			if rolls, err := strconv.Atoi(m[1]); err != nil || rolls > 10 {
 				c.writeInvalidCommand(bit)

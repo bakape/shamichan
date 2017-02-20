@@ -1,6 +1,9 @@
 package common
 
-import "errors"
+import (
+	"errors"
+	"regexp"
+)
 
 // Maximum lengths of various string input fields
 const (
@@ -44,6 +47,12 @@ var (
 		"ashita", "console", "gar", "glass", "higan", "inumi", "mawaru", "moe",
 		"moon", "ocean", "rave", "tea",
 	}
+)
+
+// Common Regex expressions
+var (
+	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount)$`)
+	DiceRegexp    = regexp.MustCompile(`(\d*)d(\d+)`)
 )
 
 // ErrTooLong is passed, when a field exceeds the maximum string length for

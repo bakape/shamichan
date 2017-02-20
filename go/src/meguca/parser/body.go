@@ -7,11 +7,7 @@ import (
 	"meguca/common"
 )
 
-// Post syntax pattern matchers
-var (
-	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount)$`)
-	linkRegexp    = regexp.MustCompile(`^>{2,}(\d+)$`)
-)
+var linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
 
 // Needed to avoid cyclic imports for the 'db' package
 func init() {
@@ -56,7 +52,7 @@ func ParseBody(body []byte, board string) (
 				links = append(links, l)
 			}
 		case '#':
-			m := CommandRegexp.FindSubmatch(word)
+			m := common.CommandRegexp.FindSubmatch(word)
 			if m == nil {
 				continue
 			}

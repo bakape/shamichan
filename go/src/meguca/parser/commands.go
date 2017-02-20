@@ -4,7 +4,6 @@ package parser
 
 import (
 	"math/rand"
-	"regexp"
 	"strconv"
 	"time"
 
@@ -14,8 +13,6 @@ import (
 )
 
 var (
-	diceRegexp = regexp.MustCompile(`(\d*)d(\d+)`)
-
 	errTooManyRolls = diceError(0)
 	errDieTooBig    = diceError(1)
 )
@@ -77,7 +74,7 @@ func parseCommand(match, board string) (com common.Command, err error) {
 
 // Parse dice throw commands
 func parseDice(match string) (val []uint16, err error) {
-	dice := diceRegexp.FindStringSubmatch(match)
+	dice := common.DiceRegexp.FindStringSubmatch(match)
 
 	var rolls int
 	if len(dice[1]) == 0 {
