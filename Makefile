@@ -47,6 +47,8 @@ endif
 
 generate:
 	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
+	rm -f go/src/meguca/common/*_easyjson.go
+	rm -f go/src/meguca/config/*_easyjson.go
 	go generate meguca/...
 
 server_deps:
