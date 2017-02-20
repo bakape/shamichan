@@ -4,8 +4,6 @@
 // throughout the project
 package common
 
-import "github.com/mailru/easyjson/jwriter"
-
 // CommandType are the various struct types of hash commands and their
 // responses, such as dice rolls, #flip, #8ball, etc.
 type CommandType uint8
@@ -34,16 +32,9 @@ const (
 // ParseBody forwards parser.ParseBody to avoid cyclic imports in db/upkeep
 var ParseBody func([]byte, string) ([][2]uint64, []Command, error)
 
+//easyjson:json
 // Board is a slice of threads. Defined to enable marshalling optimizations.
 type Board []Thread
-
-// MarshalEasyJSON implements easyjson.Marshaler. Need to implement ourselves,
-// because easyjson does not handle array types.
-func (b Board) MarshalEasyJSON(w *jwriter.Writer) {
-	for _, t := range b {
-		t.MarshalEasyJSON(w)
-	}
-}
 
 // Thread is a transport/export wrapper that stores both the thread metadata,
 // its opening post data and its contained posts. The composite type itself is
