@@ -3,6 +3,8 @@ package cache
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/mailru/easyjson"
 )
 
 // FrontEnd provides functions for fetching, validating and generating the
@@ -13,10 +15,10 @@ type FrontEnd struct {
 	GetCounter func(Key) (uint64, error)
 
 	// GetFresh retrieves new post data from the database
-	GetFresh func(Key) (interface{}, error)
+	GetFresh func(Key) (easyjson.Marshaler, error)
 
 	// RenderHTML produces HTML from the passed in data and JSON
-	RenderHTML func(interface{}, []byte) []byte
+	RenderHTML func(easyjson.Marshaler, []byte) []byte
 }
 
 // GetJSON retrieves JSON from the cache, validates it is still
@@ -38,7 +40,7 @@ func GetJSON(k Key, f FrontEnd) ([]byte, uint64, error) {
 }
 
 func getData(s *store, f FrontEnd) (
-	data interface{}, buf []byte, ctr uint64, fresh bool, err error,
+	data easyjson.Marshaler, buf []byte, ctr uint64, fresh bool, err error,
 ) {
 	// Have cached data
 	if s.json != nil {

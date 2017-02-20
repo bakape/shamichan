@@ -46,14 +46,14 @@ ifeq ($(is_windows), true)
 endif
 
 generate:
-	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/...
+	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
 	go generate meguca/...
 
 server_deps:
 	go list -f '{{.Deps}}' meguca | tr "[" " " | tr "]" " " | xargs go get -v
 
 update_deps:
-	go get -u -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/...
+	go get -u -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
 	go list -f '{{.Deps}}' meguca | tr "[" " " | tr "]" " " | xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' | grep -v 'meguca' | xargs go get -u -v
 	npm update
 

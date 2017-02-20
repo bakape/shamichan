@@ -2,9 +2,8 @@ package common
 
 import (
 	"encoding/json"
-	"testing"
-
 	. "meguca/test"
+	"testing"
 )
 
 func TestMarshalUnmarshalCommands(t *testing.T) {

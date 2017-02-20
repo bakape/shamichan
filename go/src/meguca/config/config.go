@@ -4,12 +4,12 @@
 package config
 
 import (
-	"encoding/json"
+	"meguca/util"
 	"reflect"
 	"sort"
 	"sync"
 
-	"meguca/util"
+	"github.com/mailru/easyjson"
 )
 
 var (
@@ -80,90 +80,13 @@ Encase text in ** to spoiler and in ` + "``" + ` to highlight programing code sy
 #flip - Coin flip
 #8ball - An 8ball`
 
-// Configs stores the global server configuration
-type Configs struct {
-	Public
-	PruneThreads      bool `json:"pruneThreads"`
-	PruneBoards       bool `json:"pruneBoards"`
-	Pyu               bool `json:"pyu"`
-	JPEGQuality       uint8
-	MaxWidth          uint16 `json:"maxWidth"`
-	MaxHeight         uint16 `json:"maxHeight"`
-	ThreadExpiry      uint   `json:"threadExpiry"`
-	BoardExpiry       uint   `json:"boardExpiry"`
-	MaxSize           uint   `json:"maxSize"`
-	SessionExpiry     uint   `json:"sessionExpiry"`
-	RootURL           string `json:"rootURL"`
-	Salt              string `json:"salt"`
-	FeedbackEmail     string `json:"feedbackEmail"`
-	CaptchaPrivateKey string `json:"captchaPrivateKey"`
-	FAQ               string
-}
-
-// Public contains configurations exposeable through public availability APIs
-type Public struct {
-	Captcha           bool              `json:"captcha"`
-	Mature            bool              `json:"mature"`
-	DefaultLang       string            `json:"defaultLang"`
-	DefaultCSS        string            `json:"defaultCSS"`
-	CaptchaPublicKey  string            `json:"captchaPublicKey"`
-	ImageRootOverride string            `json:"imageRootOverride"`
-	Links             map[string]string `json:"links"`
-}
-
-// BoardConfigs stores board-specific configuration
-type BoardConfigs struct {
-	BoardPublic
-	ID        string   `json:"id"`
-	Eightball []string `json:"eightball"`
-}
-
-// BoardPublic contains publically accessible board-specific configurations
-type BoardPublic struct {
-	ReadOnly   bool   `json:"readOnly"`
-	TextOnly   bool   `json:"textOnly"`
-	ForcedAnon bool   `json:"forcedAnon"`
-	Title      string `json:"title"`
-	Notice     string `json:"notice"`
-	Rules      string `json:"rules"`
-}
-
-// BoardConfContainer contains configurations for an individual board as well
-// as pregenerated public JSON and it's hash
-type BoardConfContainer struct {
-	BoardConfigs
-	JSON []byte
-	Hash string
-}
-
-// BoardTitle contains a board's ID and title
-type BoardTitle struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-}
-
-// BoardTitles implements sort.Interface
-type BoardTitles []BoardTitle
-
 // Generate /all/ board configs
 func init() {
 	var err error
-	AllBoardConfigs.JSON, err = json.Marshal(AllBoardConfigs.BoardPublic)
+	AllBoardConfigs.JSON, err = easyjson.Marshal(AllBoardConfigs.BoardPublic)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (b BoardTitles) Len() int {
-	return len(b)
-}
-
-func (b BoardTitles) Less(i, j int) bool {
-	return b[i].ID < b[j].ID
-}
-
-func (b BoardTitles) Swap(i, j int) {
-	b[i], b[j] = b[j], b[i]
 }
 
 // Get returns a pointer to the current server configuration struct. Callers
@@ -176,7 +99,7 @@ func Get() *Configs {
 
 // Set sets the internal configuration struct
 func Set(c Configs) error {
-	client, err := json.Marshal(c.Public)
+	client, err := easyjson.Marshal(c.Public)
 	if err != nil {
 		return err
 	}
@@ -278,7 +201,7 @@ func SetBoardConfigs(conf BoardConfigs) (bool, error) {
 		BoardConfigs: conf,
 	}
 	var err error
-	cont.JSON, err = json.Marshal(conf.BoardPublic)
+	cont.JSON, err = easyjson.Marshal(conf.BoardPublic)
 	if err != nil {
 		return false, err
 	}

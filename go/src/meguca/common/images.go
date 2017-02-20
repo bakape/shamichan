@@ -1,3 +1,5 @@
+//go:generate easyjson --all --no_std_marshalers $GOFILE
+
 package common
 
 // Supported file formats

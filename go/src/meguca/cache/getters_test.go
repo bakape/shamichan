@@ -1,14 +1,23 @@
 package cache
 
 import (
+	. "meguca/test"
 	"testing"
 	"time"
 
-	. "meguca/test"
+	"github.com/mailru/easyjson"
+	"github.com/mailru/easyjson/jwriter"
 )
 
 func init() {
 	expiryTime = 1
+}
+
+// Simple dummy implementation of easyjson.Marshaler
+type easyString string
+
+func (e easyString) MarshalEasyJSON(w *jwriter.Writer) {
+	w.Raw([]byte(e), nil)
 }
 
 func TestGetJSON(t *testing.T) {
@@ -24,10 +33,10 @@ func TestGetJSON(t *testing.T) {
 			}
 			return 0, nil
 		},
-		GetFresh: func(k Key) (interface{}, error) {
+		GetFresh: func(k Key) (easyjson.Marshaler, error) {
 			fetches++
 			if k == key {
-				return []string{"foo"}, nil
+				return easyString("foo"), nil
 			}
 			return nil, nil
 		},
@@ -38,7 +47,7 @@ func TestGetJSON(t *testing.T) {
 		if err := err; err != nil {
 			t.Fatal(err)
 		}
-		AssertDeepEquals(t, string(json), `["foo"]`)
+		AssertDeepEquals(t, string(json), `"foo"`)
 		AssertDeepEquals(t, ctr, uint64(1))
 	}
 	assertCount(t, "fetched", 1, fetches)
@@ -59,11 +68,11 @@ func TestGetHTML(t *testing.T) {
 		GetCounter: func(k Key) (uint64, error) {
 			return 1, nil
 		},
-		GetFresh: func(k Key) (interface{}, error) {
+		GetFresh: func(k Key) (easyjson.Marshaler, error) {
 			fetches++
-			return "foo", nil
+			return easyString("foo"), nil
 		},
-		RenderHTML: func(_ interface{}, _ []byte) []byte {
+		RenderHTML: func(_ easyjson.Marshaler, _ []byte) []byte {
 			renders++
 			return []byte("bar")
 		},
@@ -104,9 +113,9 @@ func TestCounterExpiry(t *testing.T) {
 			counterChecks++
 			return 1, nil
 		},
-		GetFresh: func(k Key) (interface{}, error) {
+		GetFresh: func(k Key) (easyjson.Marshaler, error) {
 			fetches++
-			return "foo", nil
+			return easyString("foo"), nil
 		},
 	}
 

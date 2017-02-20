@@ -17,6 +17,7 @@ thumb_*.png
 thumb_*.jpg
 *.qtpl.go
 bin_data.go
+*_easyjson.go
 scripts/migration/3to4/3to4
 /go/pkg
 /images

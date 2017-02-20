@@ -1,10 +1,11 @@
 package cache
 
 import (
+	. "meguca/test"
 	"sync"
 	"testing"
 
-	. "meguca/test"
+	"github.com/mailru/easyjson"
 )
 
 // Basic test for deadlocks
@@ -15,8 +16,8 @@ func TestConcurrency(t *testing.T) {
 		GetCounter: func(k Key) (uint64, error) {
 			return 1, nil
 		},
-		GetFresh: func(k Key) (interface{}, error) {
-			return "foo", nil
+		GetFresh: func(k Key) (easyjson.Marshaler, error) {
+			return easyString("foo"), nil
 		},
 	}
 
@@ -46,8 +47,8 @@ func TestCacheEviction(t *testing.T) {
 		GetCounter: func(k Key) (uint64, error) {
 			return 1, nil
 		},
-		GetFresh: func(k Key) (interface{}, error) {
-			return GenString(1 << 10), nil
+		GetFresh: func(k Key) (easyjson.Marshaler, error) {
+			return easyString(GenString(1 << 10)), nil
 		},
 	}
 

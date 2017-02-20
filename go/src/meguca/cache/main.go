@@ -6,6 +6,8 @@ import (
 	"container/list"
 	"sync"
 	"time"
+
+	"github.com/mailru/easyjson"
 )
 
 var (
@@ -36,7 +38,7 @@ type store struct {
 	key           Key
 	lastChecked   int64
 	updateCounter uint64
-	data          interface{}
+	data          easyjson.Marshaler
 	html, json    []byte
 
 	// Separate mutex, because accessed both from get requests and cache
@@ -94,7 +96,7 @@ func (s *store) isFresh() bool {
 
 // Stores the new values of s. Calculates and stores the new size. Passes the
 // delta to the central cache tp fire eviction checks.
-func (s *store) update(data interface{}, json, html []byte) {
+func (s *store) update(data easyjson.Marshaler, json, html []byte) {
 	// Calculating the actual memory footprint of the stored post data is
 	// expensive. Assume it is as big as the JSON. Most probably it's far less
 	// than that.

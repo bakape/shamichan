@@ -4,9 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"net/http"
-	"strconv"
-
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/common"
@@ -14,6 +11,10 @@ import (
 	"meguca/db"
 	"meguca/templates"
 	"meguca/util"
+	"net/http"
+	"strconv"
+
+	"github.com/mailru/easyjson"
 )
 
 var (
@@ -23,10 +24,10 @@ var (
 		GetCounter: func(k cache.Key) (uint64, error) {
 			return db.ThreadCounter(k.ID)
 		},
-		GetFresh: func(k cache.Key) (interface{}, error) {
+		GetFresh: func(k cache.Key) (easyjson.Marshaler, error) {
 			return db.GetThread(k.ID, int(k.LastN))
 		},
-		RenderHTML: func(data interface{}, json []byte) []byte {
+		RenderHTML: func(data easyjson.Marshaler, json []byte) []byte {
 			thread := data.(common.Thread)
 			oPosts, oImages := templates.CalculateOmit(thread)
 			return []byte(templates.ThreadPosts(thread, json, oPosts, oImages))
@@ -39,13 +40,13 @@ var (
 			}
 			return db.BoardCounter(k.Board)
 		},
-		GetFresh: func(k cache.Key) (interface{}, error) {
+		GetFresh: func(k cache.Key) (easyjson.Marshaler, error) {
 			if k.Board == "all" {
 				return db.GetAllBoardCatalog()
 			}
 			return db.GetBoardCatalog(k.Board)
 		},
-		RenderHTML: func(data interface{}, json []byte) []byte {
+		RenderHTML: func(data easyjson.Marshaler, json []byte) []byte {
 			return []byte(templates.CatalogThreads(data.(common.Board), json))
 		},
 	}
@@ -56,13 +57,13 @@ var (
 			}
 			return db.BoardCounter(k.Board)
 		},
-		GetFresh: func(k cache.Key) (interface{}, error) {
+		GetFresh: func(k cache.Key) (easyjson.Marshaler, error) {
 			if k.Board == "all" {
 				return db.GetAllBoard()
 			}
 			return db.GetBoard(k.Board)
 		},
-		RenderHTML: func(data interface{}, json []byte) []byte {
+		RenderHTML: func(data easyjson.Marshaler, json []byte) []byte {
 			return []byte(templates.IndexThreads(data.(common.Board), json))
 		},
 	}
