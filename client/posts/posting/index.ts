@@ -132,7 +132,7 @@ async function openReply(e: MouseEvent) {
 	e.stopImmediatePropagation()
 
 	// If on a board page, first navigate to the target thread
-	const href = (event.target as HTMLAnchorElement).href
+	const href = (e.target as HTMLAnchorElement).href
 	if (href) {
 		await navigate(href, null, true)
 	}
