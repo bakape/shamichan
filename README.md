@@ -66,7 +66,7 @@ License: GNU AGPL
 A reference list of commands can be found in `docs/installation.md`
 
 ###Build dependencies
-* [Go](https://golang.org/doc/install) >=1.7 (for building server)
+* [Go](https://golang.org/doc/install) >=1.8 (for building server)
 * [Node.js](https://nodejs.org) >=5.0 (for building client)
 * GCC or Clang
 * make
@@ -116,9 +116,3 @@ the client
 * `make clean` removes files from the previous compilation
 * `make dist_clean` in addition to the above removes uploaded files and their
 thumbnails
-
-###Linux only
-* make creates a Go workspace in the `.build` subdirectory. If you don't have a
-proper Go workspace set up, you can simply `export GOPATH=$(pwd)/.build` to
-temporarily assign `.build` as your Go workspace in the current shell. This will
-allow you to use native go commands such as `go test` and `go build`.

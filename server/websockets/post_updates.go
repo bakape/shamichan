@@ -6,10 +6,10 @@ import (
 	"errors"
 	"unicode/utf8"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/parser"
+	"../../common"
+	"../../config"
+	"../../db"
+	"../../parser"
 )
 
 var (

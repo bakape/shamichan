@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	. "github.com/bakape/meguca/test"
+	. "../test"
 )
 
 func TestWrapError(t *testing.T) {

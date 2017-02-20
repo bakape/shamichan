@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bakape/meguca/common"
-	. "github.com/bakape/meguca/test"
+	"../common"
+	. "../test"
 )
 
 func TestDetectArchive(t *testing.T) {

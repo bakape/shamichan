@@ -1,6 +1,6 @@
 {% import "fmt" %}
 {% import "time" %}
-{% import "github.com/bakape/meguca/auth" %}
+{% import "../auth" %}
 
 BanPage renders a ban page for a banned user
 {% func BanPage(rec auth.BanRecord, ln []string) %}{% stripspace %}

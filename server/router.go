@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/bakape/meguca/imager"
-	"github.com/bakape/meguca/server/websockets"
-	"github.com/bakape/meguca/util"
+	"../imager"
+	"../server/websockets"
+	"../util"
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"
 )

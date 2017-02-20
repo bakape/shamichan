@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
+	"../auth"
+	"../common"
+	"../db"
 	"golang.org/x/crypto/bcrypt"
 )
 

@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/lang"
+	"../config"
+	"../lang"
 )
 
 type boardList struct {

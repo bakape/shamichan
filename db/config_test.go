@@ -3,8 +3,8 @@ package db
 import (
 	"testing"
 
-	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"../config"
+	. "../test"
 )
 
 func TestLoadConfigs(t *testing.T) {

@@ -1,5 +1,5 @@
-{% import "github.com/bakape/meguca/config" %}
-{% import "github.com/bakape/meguca/lang" %}
+{% import "../config" %}
+{% import "../lang" %}
 
 OwnedBoard renders a form for selecting one of several boards owned by the
 user

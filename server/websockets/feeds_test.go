@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
+	"../../common"
+	"../../db"
+	. "../../test"
 )
 
 func TestAddingFeeds(t *testing.T) {

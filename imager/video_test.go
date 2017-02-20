@@ -3,7 +3,7 @@ package imager
 import (
 	"testing"
 
-	"github.com/bakape/meguca/imager/assets"
+	"./assets"
 )
 
 func TestProcessWebm(t *testing.T) {

@@ -1,6 +1,6 @@
-{% import "github.com/bakape/meguca/lang" %}
-{% import "github.com/bakape/meguca/common" %}
-{% import "github.com/bakape/meguca/config" %}
+{% import "../lang" %}
+{% import "../common" %}
+{% import "../config" %}
 
 {% func renderThread(postHTML []byte, ln lang.Pack) %}{% stripspace %}
 	<span class="aside-container top-margin">

@@ -11,13 +11,13 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/cache"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager"
-	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/templates"
+	"../auth"
+	"../cache"
+	"../db"
+	"../imager"
+	"../imager/assets"
+	"../lang"
+	"../templates"
 )
 
 var (

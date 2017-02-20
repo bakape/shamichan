@@ -4,10 +4,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager/assets"
+	"../auth"
+	"../common"
+	"../db"
+	"../imager/assets"
 )
 
 func TestSpoilerImage(t *testing.T) {

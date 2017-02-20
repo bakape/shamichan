@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bakape/meguca/config"
+	"../config"
 )
 
 func init() {

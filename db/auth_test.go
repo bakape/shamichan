@@ -3,7 +3,7 @@ package db
 import (
 	"testing"
 
-	. "github.com/bakape/meguca/test"
+	. "../test"
 )
 
 func TestRegisterAccount(t *testing.T) {

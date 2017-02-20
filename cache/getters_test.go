@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/bakape/meguca/test"
+	. "../test"
 )
 
 func init() {

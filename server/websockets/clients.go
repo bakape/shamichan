@@ -3,7 +3,7 @@ package websockets
 import (
 	"sync"
 
-	"github.com/bakape/meguca/common"
+	"../../common"
 )
 
 // Clients stores all synchronized websocket clients in a thread-safe map

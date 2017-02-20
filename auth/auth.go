@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bakape/meguca/config"
+	"../config"
 	"golang.org/x/crypto/bcrypt"
 )
 

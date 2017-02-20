@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/util"
+	"../../common"
+	"../../config"
+	"../../util"
 )
 
 const fileCreationFlags = os.O_WRONLY | os.O_CREATE | os.O_EXCL

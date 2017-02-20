@@ -3,7 +3,7 @@
 package templates
 
 import (
-	"github.com/bakape/meguca/common"
+	"../common"
 )
 
 var (

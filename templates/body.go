@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
+	"../common"
+	"../config"
 	"github.com/valyala/quicktemplate"
 )
 

@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/util"
+	"../../auth"
+	"../../common"
+	"../../util"
 	"github.com/gorilla/websocket"
 )
 

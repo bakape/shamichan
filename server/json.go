@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/cache"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/templates"
-	"github.com/bakape/meguca/util"
+	"../auth"
+	"../cache"
+	"../common"
+	"../config"
+	"../db"
+	"../templates"
+	"../util"
 )
 
 var (

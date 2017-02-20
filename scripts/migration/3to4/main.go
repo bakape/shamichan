@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/util"
+	"../../../common"
+	"../../../config"
+	"../../../db"
+	"../../../util"
 	"github.com/dancannon/gorethink"
 )
 

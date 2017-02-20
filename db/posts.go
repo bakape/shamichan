@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/bakape/meguca/common"
+	"../common"
 	"github.com/lib/pq"
 )
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/bakape/meguca/config"
+	"../config"
 	"golang.org/x/crypto/bcrypt"
 )
 

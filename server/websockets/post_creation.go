@@ -7,11 +7,11 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/parser"
+	"../../auth"
+	"../../common"
+	"../../config"
+	"../../db"
+	"../../parser"
 )
 
 var (

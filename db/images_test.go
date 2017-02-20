@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/imager/assets"
-	. "github.com/bakape/meguca/test"
+	"../common"
+	"../imager/assets"
+	. "../test"
 )
 
 func TestGetImage(t *testing.T) {

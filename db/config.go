@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/templates"
-	"github.com/bakape/meguca/util"
+	"../config"
+	"../templates"
+	"../util"
 	"github.com/lib/pq"
 )
 

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"testing"
 
-	. "github.com/bakape/meguca/test"
+	. "../test"
 )
 
 // Basic test for deadlocks

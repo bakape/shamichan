@@ -8,11 +8,11 @@ import (
 
 	"database/sql"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager"
-	"github.com/bakape/meguca/server/websockets"
+	"../auth"
+	"../config"
+	"../db"
+	"../imager"
+	"../server/websockets"
 )
 
 // Spoiler an already allocated image

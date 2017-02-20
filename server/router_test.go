@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/templates"
-	"github.com/bakape/meguca/util"
+	"../db"
+	"../lang"
+	"../templates"
+	"../util"
 	"github.com/dimfeld/httptreemux"
 )
 

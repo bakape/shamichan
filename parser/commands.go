@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
+	"../common"
+	"../config"
+	"../db"
 )
 
 var (

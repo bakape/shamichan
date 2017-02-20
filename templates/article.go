@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/lang"
+	"../common"
+	"../lang"
 )
 
 // Returns image name with proper extension

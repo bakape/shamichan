@@ -1,6 +1,6 @@
 package db
 
-import "github.com/bakape/meguca/common"
+import "../common"
 
 // UpdateLog writes to a thread's replication log. Only used in tests.
 func UpdateLog(id uint64, msg []byte) error {

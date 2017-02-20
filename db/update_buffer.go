@@ -6,7 +6,7 @@ package db
 import (
 	"log"
 
-	"github.com/bakape/meguca/util"
+	"../util"
 	"github.com/lib/pq"
 )
 

@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/util"
+	"../../common"
+	"../../db"
+	"../../util"
 	"github.com/lib/pq"
 )
 

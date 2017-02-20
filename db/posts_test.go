@@ -5,8 +5,8 @@ import (
 
 	"time"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
+	"../common"
+	"../config"
 )
 
 func TestValidateOp(t *testing.T) {

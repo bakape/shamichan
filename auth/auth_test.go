@@ -4,10 +4,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"../config"
+	. "../test"
 	"golang.org/x/crypto/bcrypt"
-
-	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
 )
 
 func init() {

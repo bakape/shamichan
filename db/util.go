@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	queries "github.com/bakape/meguca/db/sql"
+	queries "./sql"
 	"github.com/lib/pq"
 )
 

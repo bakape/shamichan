@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"strconv"
 
-	"github.com/bakape/meguca/db"
+	"../db"
 )
 
 // Extract post links from a text fragment, verify and retrieve their

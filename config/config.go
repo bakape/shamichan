@@ -9,7 +9,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/bakape/meguca/util"
+	"../util"
 )
 
 var (

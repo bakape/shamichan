@@ -3,7 +3,7 @@ package websockets
 import (
 	"testing"
 
-	. "github.com/bakape/meguca/test"
+	. "../../test"
 )
 
 func newClientMap() *ClientMap {

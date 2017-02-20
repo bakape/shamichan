@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bakape/meguca/cache"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
+	"../cache"
+	"../common"
+	"../config"
+	"../db"
+	. "../test"
 )
 
 var genericImage = &common.Image{

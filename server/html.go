@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/cache"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/templates"
+	"../auth"
+	"../cache"
+	"../config"
+	"../db"
+	"../lang"
+	"../templates"
 )
 
 // Apply headers and write HTML to client

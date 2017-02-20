@@ -3,9 +3,9 @@ package parser
 import (
 	"testing"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"../common"
+	"../config"
+	. "../test"
 )
 
 func TestParseName(t *testing.T) {

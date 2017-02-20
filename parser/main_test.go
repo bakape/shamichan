@@ -3,8 +3,8 @@ package parser
 import (
 	"testing"
 
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
+	"../config"
+	"../db"
 )
 
 func init() {

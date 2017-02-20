@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/bakape/meguca/config"
+	"../config"
 )
 
 var (

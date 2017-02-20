@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"../common"
+	"../config"
+	. "../test"
 	"github.com/lib/pq"
 )
 

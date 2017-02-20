@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
+	"../../common"
+	"../../db"
+	. "../../test"
 	"github.com/gorilla/websocket"
 )
 

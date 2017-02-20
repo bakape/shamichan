@@ -1,7 +1,7 @@
 {% import "encoding/json" %}
 {% import "strings" %}
-{% import "github.com/bakape/meguca/config" %}
-{% import "github.com/bakape/meguca/lang" %}
+{% import "../config" %}
+{% import "../lang" %}
 
 {% func renderIndex(ln lang.Pack) %}{% stripspace %}
 	{% code conf := config.Get() %}

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	. "github.com/bakape/meguca/test"
+	. "../test"
 )
 
 func TestGetAllBoard(t *testing.T) {

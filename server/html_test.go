@@ -3,9 +3,9 @@ package server
 import (
 	"testing"
 
-	"github.com/bakape/meguca/cache"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
+	"../cache"
+	"../config"
+	"../db"
 )
 
 func TestThreadHTML(t *testing.T) {

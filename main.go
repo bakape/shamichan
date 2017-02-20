@@ -2,7 +2,7 @@
 
 package main
 
-import "github.com/bakape/meguca/server"
+import "./server"
 
 func main() {
 	server.Start()

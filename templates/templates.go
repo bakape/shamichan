@@ -8,9 +8,9 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/lang"
+	"../common"
+	"../config"
+	"../lang"
 )
 
 var (

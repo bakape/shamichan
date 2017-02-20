@@ -1,15 +1,11 @@
 export node_bins=$(PWD)/node_modules/.bin
 export uglifyjs=$(node_bins)/uglifyjs
 export gulp=$(node_bins)/gulp
-export build_path=$(PWD)/.build/src/github.com/bakape
-export GOPATH=$(PWD)/.build
 export is_windows=false
 binary=meguca
 
 # Differentiate between Unix and mingw builds
 ifeq ($(OS), Windows_NT)
-	export build_path=/.meguca_build/src/github.com/bakape
-	export GOPATH=/.meguca_build
 	export PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig/
 	export PKG_CONFIG_LIBDIR=/mingw64/lib/pkgconfig/
 	export PATH:=$(PATH):/mingw64/bin/
@@ -36,45 +32,29 @@ client_vendor: client_deps
 	$(uglifyjs) node_modules/whatwg-fetch/fetch.js -o www/js/vendor/fetch.js
 	$(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
 
-server: server_deps generate
+server: generate server_deps
 	go build -v -o $(binary)
 ifeq ($(is_windows), true)
 	cp /mingw64/bin/*.dll ./
 endif
 
-generate: server_deps
+generate:
+	go get -v github.com/valyala/quicktemplate/qtc
+	go get -v github.com/jteeuwen/go-bindata/...
 	$(MAKE) -C templates
 	$(MAKE) -C db
 	$(MAKE) -C imager
 
-server_deps: build_dirs
-	go get -v github.com/valyala/quicktemplate/qtc
-	go get -v github.com/jteeuwen/go-bindata/...
+server_deps:
 	go get -v github.com/dancannon/gorethink
-	go list -f '{{.Deps}}' . \
-		| tr "[" " " \
-		| tr "]" " " \
-		| xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' \
-		| grep -v 'github.com/bakape/meguca' \
-		| xargs go get -v
+	go list -f '{{.Deps}}' . | tr "[" " " | tr "]" " " | xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' | grep -v '^_' | xargs go get -v
 
-update_deps: build_dirs
+update_deps:
 	go get -u -v github.com/valyala/quicktemplate/qtc
 	go get -u -v github.com/jteeuwen/go-bindata/...
-	go list -f '{{.Deps}}' . \
-		| tr "[" " " \
-		| tr "]" " " \
-		| xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' \
-		| grep -v 'github.com/bakape/meguca' \
-		| xargs go get -v -u
+	go list -f '{{.Deps}}' . | tr "[" " " | tr "]" " " | xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' | grep -v '^_'
+		| xargs go get -u -v
 	npm update
-
-build_dirs:
-ifeq ($(is_windows), true)
-	rm -rf $(build_path)
-endif
-	mkdir -p $(build_path)
-	ln -sfn "$(shell pwd)" $(build_path)/meguca
 
 client_clean:
 	rm -rf www/js www/css/*.css www/css/maps www/lang node_modules

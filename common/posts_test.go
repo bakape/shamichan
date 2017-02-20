@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	. "github.com/bakape/meguca/test"
+	. "../test"
 )
 
 func TestMarshalUnmarshalCommands(t *testing.T) {

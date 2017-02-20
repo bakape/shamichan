@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/imager/assets"
+	"../config"
+	"./assets"
 )
 
 func TestImageProcessing(t *testing.T) {

@@ -5,9 +5,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
+	"../auth"
+	"../common"
+	"../config"
 )
 
 // Common errors

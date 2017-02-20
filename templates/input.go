@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bakape/meguca/lang"
+	"../lang"
 	"github.com/valyala/quicktemplate"
 )
 

@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/util"
+	"../auth"
+	"../config"
+	"../util"
 	_ "github.com/lib/pq" // Postgres driver
 )
 

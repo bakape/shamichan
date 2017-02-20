@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager/assets"
-	. "github.com/bakape/meguca/test"
+	"../config"
+	"../db"
+	"./assets"
+	. "../test"
 )
 
 func TestMain(m *testing.M) {

@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 
-	"github.com/bakape/meguca/common"
+	"../common"
 	"github.com/lib/pq"
 )
 

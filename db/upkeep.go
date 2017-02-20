@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/imager/assets"
+	"../common"
+	"../config"
+	"../imager/assets"
 )
 
 // Run database clean up tasks at server start and regular intervals. Must be

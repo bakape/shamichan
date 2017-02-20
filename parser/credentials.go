@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/aquilax/tripcode"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/common"
+	"../config"
+	"../common"
 )
 
 var (

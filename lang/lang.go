@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bakape/meguca/config"
+	"../config"
 )
 
 var (

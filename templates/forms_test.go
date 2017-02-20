@@ -3,8 +3,8 @@ package templates
 import (
 	"testing"
 
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/lang"
+	"../config"
+	"../lang"
 )
 
 func TestBoardNavigation(t *testing.T) {

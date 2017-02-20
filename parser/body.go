@@ -4,7 +4,7 @@ package parser
 import (
 	"regexp"
 
-	"github.com/bakape/meguca/common"
+	"../common"
 )
 
 // Post syntax pattern matchers

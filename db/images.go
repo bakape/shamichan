@@ -5,10 +5,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/util"
+	"../auth"
+	"../common"
+	"../imager/assets"
+	"../util"
 	"github.com/lib/pq"
 )
 

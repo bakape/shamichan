@@ -1,8 +1,8 @@
 {% import "strconv" %}
-{% import "github.com/bakape/meguca/config" %}
-{% import "github.com/bakape/meguca/common" %}
-{% import "github.com/bakape/meguca/lang" %}
-{% import "github.com/bakape/meguca/imager/assets" %}
+{% import "../config" %}
+{% import "../common" %}
+{% import "../lang" %}
+{% import "../imager/assets" %}
 
 {% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, catalog bool, ln lang.Pack) %}{% stripspace %}
 	{% comment %}

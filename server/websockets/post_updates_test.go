@@ -8,9 +8,9 @@ import (
 
 	"unicode/utf8"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
+	"../../common"
+	"../../db"
+	. "../../test"
 )
 
 // Sample wall of text

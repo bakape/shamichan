@@ -4,11 +4,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/util"
+	"../common"
+	"../config"
+	"../imager/assets"
+	"../lang"
+	"../util"
 )
 
 func init() {
