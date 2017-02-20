@@ -3,6 +3,9 @@ export uglifyjs=$(node_bins)/uglifyjs
 export gulp=$(node_bins)/gulp
 export is_windows=false
 binary=meguca
+ifeq ($(GOPATH),)
+	export GOPATH=$(HOME)/go
+endif
 
 # Differentiate between Unix and mingw builds
 ifeq ($(OS), Windows_NT)
