@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"../../../common"
-	"../../../config"
-	"../../../db"
-	"../../../util"
+	"meguca/common"
+	"meguca/config"
+	"meguca/db"
+	"meguca/util"
 	"github.com/dancannon/gorethink"
 )
 

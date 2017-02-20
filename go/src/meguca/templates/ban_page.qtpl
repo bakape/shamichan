@@ -1,0 +1,25 @@
+{% import "fmt" %}
+{% import "time" %}
+{% import "meguca/auth" %}
+
+BanPage renders a ban page for a banned user
+{% func BanPage(rec auth.BanRecord, ln []string) %}{% stripspace %}
+	<div class="ban-page glass">
+		{%s= fmt.Sprintf(ln[0], bold(rec.Board), bold(rec.By)) %}
+		<br>
+		<br>
+		<b>
+			{%s rec.Reason %}
+		</b>
+		<br>
+		<br>
+		{% code expires := rec.Expires.Round(time.Second) %}
+		{% code date := expires.UTC().Format(time.UnixDate) %}
+		{% code till := expires.Sub(time.Now().Round(time.Second)).String() %}
+		{%s= fmt.Sprintf(ln[1], bold(date), bold(till)) %}
+		<br>
+		<br>
+		{%s= fmt.Sprintf(ln[2], bold(rec.IP)) %}
+		<br>
+	</div>
+{% endstripspace %}{% endfunc %}

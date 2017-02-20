@@ -63,7 +63,7 @@ License: GNU AGPL
 * [PostgresSQL](https://www.postgresql.org/download/) >= 9.5
 
 ##Building from source
-A reference list of commands can be found in `docs/installation.md`
+A reference list of commands can be found in `./docs/installation.md`
 
 ###Build dependencies
 * [Go](https://golang.org/doc/install) >=1.8 (for building server)
@@ -107,7 +107,7 @@ the password "password"
 * Configure server from the administration panel
 
 ##Development
-* See `/docs/` for more documentation
+* See `./docs` for more documentation
 * `./meguca` or `./meguca debug` run the server in development mode
 * `make server` and `make client` build the server and client separately
 * `make watch` watches the file system for changes and incrementally rebuilds
@@ -116,3 +116,5 @@ the client
 * `make clean` removes files from the previous compilation
 * `make dist_clean` in addition to the above removes uploaded files and their
 thumbnails
+* To enable using Go tools in the project add the absolute path of `./go` to
+your `$GOPATH` environment variable
