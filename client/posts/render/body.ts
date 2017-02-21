@@ -1,7 +1,7 @@
 import { config, boards, posts } from '../../state'
 import { renderPostLink, renderTempLink } from './etc'
 import { PostData, PostLink, TextState } from '../../common'
-import { escape } from '../../util'
+import { escape, makeAttrs } from '../../util'
 import { parseEmbeds } from "../embed"
 import highlightSyntax from "./code"
 
@@ -12,6 +12,7 @@ export default function renderBody(data: PostData): string {
         quote: false,
         lastLineEmpty: false,
         code: false,
+        haveSyncwatch: false,
         iDice: 0,
     }
     let html = ""
@@ -214,7 +215,7 @@ function parseFragment(frag: string, data: PostData): string {
                 }
                 break
             case "#": // Hash commands
-                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount)$/)
+                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?)$/)
                 if (m) {
                     html += parseCommand(m[1], data)
                     continue
@@ -307,8 +308,6 @@ function parseCommand(bit: string, {commands, state}: PostData): string {
         return "#" + bit
     }
 
-    // TODO: Sycnwatch
-
     let inner: string
     switch (bit) {
         case "flip":
@@ -318,6 +317,10 @@ function parseCommand(bit: string, {commands, state}: PostData): string {
             inner = commands[state.iDice++].val.toString()
             break
         default:
+            if (bit.startsWith("sw")) {
+                return formatSyncwatch(bit, commands[state.iDice++].val, state)
+            }
+
             // Validate dice
             const m = bit.match(/^(\d*)d(\d+)$/)
             if (parseInt(m[1]) > 10 || parseInt(m[2]) > 100) {
@@ -340,4 +343,18 @@ function parseCommand(bit: string, {commands, state}: PostData): string {
     }
 
     return `<strong>#${bit} (${inner})</strong>`
+}
+
+// Format a synchronized time counter
+function formatSyncwatch(bit: string, val: number[], state: TextState): string {
+    state.haveSyncwatch = true
+    const attrs = {
+        class: "embed syncwatch",
+        "data-hour": val[0].toString(),
+        "data-min": val[1].toString(),
+        "data-sec": val[2].toString(),
+        "data-start": val[3].toString(),
+        "data-end": val[4].toString()
+    }
+    return `<em><strong ${makeAttrs(attrs)}>syncwatch</strong></em>`
 }

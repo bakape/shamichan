@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"meguca/common"
+	"meguca/db"
+	. "meguca/test"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,9 +16,6 @@ import (
 	"testing"
 	"time"
 
-	"meguca/common"
-	"meguca/db"
-	. "meguca/test"
 	"github.com/gorilla/websocket"
 )
 
@@ -89,7 +89,7 @@ func assertTableClear(t testing.TB, tables ...string) {
 
 func readListenErrors(t *testing.T, cl *Client, sv *mockWSServer) {
 	defer sv.Done()
-	if err := cl.listen(); err != nil {
+	if err := cl.listen(); err != nil && err != websocket.ErrCloseSent {
 		t.Fatal(err)
 	}
 }

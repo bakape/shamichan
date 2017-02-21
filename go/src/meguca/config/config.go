@@ -78,7 +78,8 @@ Encase text in ** to spoiler and in ` + "``" + ` to highlight programing code sy
 <hr>Hash commands:
 #d100 #2d100 - Roll dice
 #flip - Coin flip
-#8ball - An 8ball`
+#8ball - An 8ball
+#sw24:30 #sw2:24:30 #sw24:30+30 #sw24:30-30 - "Syncwatch" synchronized time counter`
 
 // Generate /all/ board configs
 func init() {

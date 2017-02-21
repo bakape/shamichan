@@ -1,8 +1,11 @@
 import { Post } from './model'
 import { makeFrag, importTemplate } from '../util'
-import { renderPost, renderName, renderTime, renderBanned, parseBody, renderBacklinks } from './render'
+import {
+    renderPost, renderName, renderTime, renderBanned, parseBody, renderBacklinks
+} from './render'
 import ImageHandler from "./images"
 import { ViewAttrs } from "../base"
+import { findSyncwatches } from "./syncwatch"
 
 // Base post view class
 export default class PostView extends ImageHandler {
@@ -64,15 +67,12 @@ export default class PostView extends ImageHandler {
         if (!this.model.body) {
             return
         }
-        const frag = makeFrag(parseBody(this.model))
-        this.replaceBody(frag)
-    }
-
-    // Replace the text body of the post
-    private replaceBody(node: Node) {
         const bq = this.el.querySelector("blockquote")
         bq.innerHTML = ""
-        bq.append(node)
+        bq.append(makeFrag(parseBody(this.model)))
+        if (this.model.state.haveSyncwatch) {
+            findSyncwatches(this.el)
+        }
     }
 
     // Append a string to the current text buffer
@@ -95,9 +95,8 @@ export default class PostView extends ImageHandler {
 
     // Close an open post and clean up
     public closePost() {
-        const frag = makeFrag(parseBody(this.model))
         this.el.classList.remove("editing")
-        this.replaceBody(frag)
+        this.reparseBody()
     }
 
     // Render the name and tripcode in the header

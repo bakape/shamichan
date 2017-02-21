@@ -5,6 +5,7 @@ export { default as ImageHandler, toggleExpandAll, setExpandAll } from "./images
 export { clearHidden } from "./hide"
 export { renderTime, thumbPath } from "./render"
 export { default as PostCollection } from "./collection"
+export { findSyncwatches } from "./syncwatch"
 
 import initEtc from "./etc"
 import initPosting from "./posting"

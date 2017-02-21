@@ -35,6 +35,7 @@ export type TextState = {
 	quote: boolean
 	lastLineEmpty: boolean
 	code: boolean
+	haveSyncwatch: boolean
 	iDice: number // Index of the next dice array item to use
 }
 

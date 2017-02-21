@@ -25,13 +25,14 @@ must always be "synchronize".
 | 9 | spoiler | uint | Spoiler the image of the post specified by ID |
 | 10 | deletePost | uint | Delete a post specified by ID |
 | 11 | banned | uint | Notifies the specific post was banned |
-| 12 | redirect | string | Notifies the client it has been redirected to the specific board page. Any open posts have been closed and after receiving this message the client is already considered to be synchronized to the board. If the client does comply an error will be raised the client will be disconnected. |
 | 30 | synchronize | uint | Response to a synchronization request. Returns the current synchronization counter of the update feed |
 | 31 | reclaim | uint | Response to a request to reclaim a post lost after disconnecting from the server. 0 denotes success and the client is henceforth able to write to said post, as before the disconnect.1 denotes the post is unrecoverable. |
 | 32 | postID | int | Returns the post ID of the client's freshly allocated post. A response to a post or thread insertion request. -1 denotes invalid captcha. |
 | 33 | concat | * | Contains several null-byte concatenated messages. Used for limiting the rate of update frames sent from the server. |
 | 34 | NOOP | - | Invokes no operation on the server. Can be used as a connectivity test. |
 | 35 | syncCount | uint | Sends the current unique connected IP count |
+| 36 | serverTime | uint | Sends the server's current time's Unix timestamp. Can be used for approximating the clock skew between the server and client. |
+| 37 | redirect | string | Notifies the client it has been redirected to the specific board page. Any open posts have been closed and after receiving this message the client is already considered to be synchronized to the board. If the client does comply an error will be raised the client will be disconnected. |
 
 ##SpliceMessage
 

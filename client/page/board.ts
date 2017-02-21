@@ -2,7 +2,7 @@ import { on, fetchBoard } from '../util'
 import lang from '../lang'
 import { page, hidden, posts } from '../state'
 import options from '../options'
-import { renderTime, Post } from "../posts"
+import { renderTime, Post, findSyncwatches } from "../posts"
 import { setTitle } from "../ui"
 import {
 	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts
@@ -107,6 +107,9 @@ export function render() {
 		.value = localStorage.getItem("catalogSort") || "bump"
 	renderRefreshButton(threads.querySelector("#refresh > a"))
 	sortThreads(true)
+	if (!page.catalog) {
+		findSyncwatches(threads)
+	}
 }
 
 // Sort all threads on a board

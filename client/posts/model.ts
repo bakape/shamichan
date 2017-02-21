@@ -34,13 +34,14 @@ export class Post extends Model implements PostData {
 		super()
 		extend(this, attrs)
 
-		// All kinds of interesting races can happen, so best insure a model
-		// always fast the state object defined
+		// All kinds of interesting races can happen, so best ensure a model
+		// always has the state object defined
 		this.state = {
 			spoiler: false,
 			quote: false,
 			lastLineEmpty: false,
 			code: false,
+			haveSyncwatch: false,
 			iDice: 0,
 		}
 	}

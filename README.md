@@ -58,6 +58,7 @@ License: GNU AGPL
 * Miscellaneous
     - Documented public JSON API and WebSocket protocol
     - Optional R/a/dio Now Playing banner
+    - Synchronized time counters (for group watching sessions and such)
 
 ##Runtime dependencies
 * [PostgresSQL](https://www.postgresql.org/download/) >= 9.5

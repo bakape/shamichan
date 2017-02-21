@@ -5,11 +5,12 @@ package websockets
 import (
 	"bytes"
 	"errors"
-	"unicode/utf8"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/db"
+	"time"
+	"unicode/utf8"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -37,6 +38,14 @@ func (c *Client) synchronise(data []byte) error {
 	if c.feedID != 0 {
 		feeds.Remove(c.feedID, c)
 		c.feedID = 0
+	}
+
+	// Send current server time on first synchronization
+	if !c.synced {
+		err := c.sendMessage(common.MessageServerTime, time.Now().Unix())
+		if err != nil {
+			return err
+		}
 	}
 
 	var msg syncRequest

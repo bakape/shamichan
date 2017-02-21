@@ -84,7 +84,7 @@ type StandalonePost struct {
 // Dice: []uint16
 // Flip: bool
 // EightBall: string
-// SyncWatch: TODO: SyncWatch storage type
+// SyncWatch: [5]uint64
 // Pyu: int64
 // Pcount: int64
 type Command struct {

@@ -23,7 +23,6 @@ const (
 	MessageSpoiler
 	MessageDeletePost
 	MessageBanned
-	MessageRedirect
 )
 
 // >= 30 are miscellaneous and do not write to post models
@@ -44,6 +43,12 @@ const (
 
 	// Transmit current synced IP count to client
 	MessageSyncCount
+
+	// Send current server Unix time to client
+	MessageServerTime
+
+	// Redirect the client to a specific board
+	MessageRedirect
 )
 
 // Clients exposes the global client map to all packages without causing

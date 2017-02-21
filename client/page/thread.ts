@@ -5,6 +5,7 @@ import { setTitle } from "../ui"
 import {
     extractConfigs, isBanned, extractPost, localizeThreads, reparseOpenPosts
 } from "./common"
+import { findSyncwatches } from "../posts"
 
 const counters = document.getElementById("thread-post-counters")
 let postCtr = 0,
@@ -39,6 +40,7 @@ export default function (html: string) {
     }
     localizeThreads()
     reparseOpenPosts()
+    findSyncwatches(threads)
 }
 
 // Set thread title to tab

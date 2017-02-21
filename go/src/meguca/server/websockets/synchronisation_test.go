@@ -1,14 +1,15 @@
 package websockets
 
 import (
-	"strconv"
-	"testing"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/db"
 	"meguca/imager/assets"
 	. "meguca/test"
+	"strconv"
+	"testing"
+
+	"github.com/gorilla/websocket"
 )
 
 func TestOldFeedClosing(t *testing.T) {
@@ -46,6 +47,7 @@ func TestSyncToBoard(t *testing.T) {
 	if err := cl.synchronise(marshalJSON(t, msg)); err != errInvalidBoard {
 		UnexpectedError(t, err)
 	}
+	skipMessage(t, wcl)
 
 	// Valid synchronization
 	msg.Board = "a"
@@ -53,7 +55,15 @@ func TestSyncToBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer Clients.Clear()
+	skipMessage(t, wcl)
 	assertMessage(t, wcl, `300`)
+}
+
+func skipMessage(t *testing.T, con *websocket.Conn) {
+	_, _, err := con.ReadMessage()
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestRegisterSync(t *testing.T) {
@@ -123,6 +133,7 @@ func TestSyncToThread(t *testing.T) {
 		t.Errorf("unexpected feed ID: 1 : %d", cl.feedID)
 	}
 
+	skipMessage(t, wcl)
 	assertMessage(t, wcl, `351`)
 	assertMessage(t, wcl, "302")
 

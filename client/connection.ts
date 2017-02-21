@@ -21,7 +21,6 @@ export const enum message {
 	spoiler,
 	deletePost,
 	banned,
-	redirect,
 
 	// >= 30 are miscellaneous and do not write to post models
 	synchronise = 30,
@@ -39,6 +38,12 @@ export const enum message {
 
 	// Transmit current synced IP count to client
 	syncCount,
+
+	// Send current server Unix time to client
+	serverTime,
+
+	// Redirect the client to a specific board
+	redirect,
 }
 
 export type MessageHandler = (msg: {}) => void

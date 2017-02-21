@@ -87,7 +87,7 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64, index bool) {
 		if len(l) == 0 {
 			// Don't break, if body ends with newline
 			if !c.state.lastLineEmpty && i != last {
-				c.N().S("<br>")
+				c.string("<br>")
 			}
 			c.state.lastLineEmpty = true
 			c.state.quote = false
@@ -101,6 +101,16 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64, index bool) {
 	}
 }
 
+// Write string without escaping
+func (c *bodyContext) string(s string) {
+	c.N().S(s)
+}
+
+// Escape and write string
+func (c *bodyContext) escape(s string) {
+	c.E().S(s)
+}
+
 // Parse a line that is no longer being edited
 func (c *bodyContext) parseTerminatedLine(line string) {
 	c.parseCode(line, (*c).parseFragment)
@@ -111,11 +121,11 @@ func (c *bodyContext) initLine(first byte) {
 	c.state.quote = false
 	c.state.lastLineEmpty = false
 	if first == '>' {
-		c.N().S("<em>")
+		c.string("<em>")
 		c.state.quote = true
 	}
 	if c.state.spoiler {
-		c.N().S("<del>")
+		c.string("<del>")
 	}
 }
 
@@ -138,7 +148,7 @@ func (c *bodyContext) formatCode(frag string, fn func(string)) {
 	if c.state.code {
 		// Strip quotes
 		for len(frag) != 0 && frag[0] == '>' {
-			c.N().S(`&gt;`)
+			c.string(`&gt;`)
 			frag = frag[1:]
 		}
 		c.N().Z(highlightSyntax(frag))
@@ -154,15 +164,15 @@ func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
 		if i != -1 {
 			fn(frag[:i])
 			if c.state.quote {
-				c.N().S("</em>")
+				c.string("</em>")
 			}
 			if c.state.spoiler {
-				c.N().S("</del>")
+				c.string("</del>")
 			} else {
-				c.N().S("<del>")
+				c.string("<del>")
 			}
 			if c.state.quote {
-				c.N().S("<em>")
+				c.string("<em>")
 			}
 
 			c.state.spoiler = !c.state.spoiler
@@ -178,7 +188,7 @@ func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
 func (c *bodyContext) parseFragment(frag string) {
 	for i, word := range strings.Split(frag, " ") {
 		if i != 0 {
-			c.N().S(` `)
+			c.string(` `)
 		}
 		if len(word) == 0 {
 			continue
@@ -214,14 +224,14 @@ func (c *bodyContext) parseFragment(frag string) {
 				continue
 			}
 		}
-		c.E().S(word)
+		c.escape(word)
 	}
 }
 
 // Parse a potential link to a post
 func (c *bodyContext) parsePostLink(m []string) {
 	if c.Links == nil {
-		c.N().S(m[0])
+		c.string(m[0])
 		return
 	}
 
@@ -234,12 +244,12 @@ func (c *bodyContext) parsePostLink(m []string) {
 		}
 	}
 	if op == 0 {
-		c.N().S(m[0])
+		c.string(m[0])
 		return
 	}
 
 	if len(m[1]) != 0 { // Write extra quotes
-		c.N().S(m[1])
+		c.string(m[1])
 	}
 	streampostLink(&c.Writer, id, op, op != c.OP, c.index)
 }
@@ -254,23 +264,23 @@ func (c *bodyContext) parseReference(m []string) {
 		href = fmt.Sprintf("/%s/", m2)
 	} else if href = config.Get().Links[m2]; href != "" {
 	} else {
-		c.N().S(m[0])
+		c.string(m[0])
 		return
 	}
 
 	if len(m[1]) != 0 {
-		c.N().S(m[1])
+		c.string(m[1])
 	}
 	c.newTabLink(href, fmt.Sprintf(">>>/%s/", string(m[2])))
 }
 
 // Format and anchor link that opens in a new tab
 func (c *bodyContext) newTabLink(href, text string) {
-	c.N().S(`<a href="`)
-	c.E().S(href)
-	c.N().S(`" target="_blank">`)
-	c.E().S(text)
-	c.N().S(`</a>`)
+	c.string(`<a href="`)
+	c.escape(href)
+	c.string(`" target="_blank">`)
+	c.escape(text)
+	c.string(`</a>`)
 }
 
 // Parse generic URLs and magnet links
@@ -278,15 +288,15 @@ func (c *bodyContext) parseURL(bit string) {
 	s := string(bit)
 	switch {
 	case !urlRegexp.MatchString(bit):
-		c.E().S(bit)
+		c.escape(bit)
 	case c.parseEmbeds(bit):
 	case bit[0] == 'm': // Don't open a new tab for magnet links
 		s = html.EscapeString(s)
-		c.N().S(`<a href="`)
-		c.N().S(s)
-		c.N().S(`">`)
-		c.N().S(s)
-		c.N().S(`</a>`)
+		c.string(`<a href="`)
+		c.string(s)
+		c.string(`">`)
+		c.string(s)
+		c.string(`</a>`)
 	default:
 		c.newTabLink(s, s)
 	}
@@ -299,13 +309,13 @@ func (c *bodyContext) parseEmbeds(s string) bool {
 			continue
 		}
 
-		c.N().S(`<em><a class="embed" target="_blank" data-type="`)
+		c.string(`<em><a class="embed" target="_blank" data-type="`)
 		c.N().D(t.typ)
-		c.N().S(`" href="`)
-		c.E().S(s)
-		c.N().S(`">[`)
-		c.N().S(providers[t.typ])
-		c.N().S(`] ???</a></em>`)
+		c.string(`" href="`)
+		c.escape(s)
+		c.string(`">[`)
+		c.string(providers[t.typ])
+		c.string(`] ???</a></em>`)
 
 		return true
 	}
@@ -323,14 +333,19 @@ func (c *bodyContext) parseCommands(bit string) {
 		return
 	}
 
-	// TODO: Sycnwatch
-
-	inner := new(bytes.Buffer)
+	var inner bytes.Buffer
+	val := c.Commands[c.state.iDice].Val
 	switch bit {
 	case "flip", "8ball", "pyu", "pcount":
-		fmt.Fprint(inner, c.Commands[c.state.iDice].Val)
+		fmt.Fprint(&inner, val)
 		c.state.iDice++
 	default:
+		if strings.HasPrefix(bit, "sw") {
+			c.formatSyncwatch(val)
+			c.state.iDice++
+			return
+		}
+
 		// Validate dice
 		m := common.DiceRegexp.FindStringSubmatch(bit)
 		if m[1] != "" {
@@ -345,7 +360,7 @@ func (c *bodyContext) parseCommands(bit string) {
 		}
 
 		// Cast []interface to []uint16
-		uncast := c.Commands[c.state.iDice].Val.([]interface{})
+		uncast := val.([]interface{})
 		rolls := make([]uint16, len(uncast))
 		for i := range rolls {
 			rolls[i] = uint16(uncast[i].(float64))
@@ -361,39 +376,64 @@ func (c *bodyContext) parseCommands(bit string) {
 			inner.WriteString(strconv.FormatUint(uint64(roll), 10))
 		}
 		if len(rolls) > 1 {
-			fmt.Fprintf(inner, " = %d", sum)
+			fmt.Fprintf(&inner, " = %d", sum)
 		}
 	}
 
-	c.N().S(`<strong>#`)
-	c.N().S(bit)
-	c.N().S(` (`)
-	c.N().S(inner.String())
-	c.N().S(`)</strong>`)
+	c.string(`<strong>#`)
+	c.string(bit)
+	c.string(` (`)
+	c.N().Z(inner.Bytes())
+	c.string(`)</strong>`)
+}
+
+// Format a synchronized time counter
+func (c *bodyContext) formatSyncwatch(uncast interface{}) {
+	// Cast []interface to [5]uint64
+	var val [5]uint64
+	for i, v := range uncast.([]interface{}) {
+		val[i] = uint64(v.(float64))
+	}
+
+	c.string(`<em><strong class="embed syncwatch" data-hour=`)
+	c.uint64(val[0])
+	c.string(` data-min=`)
+	c.uint64(val[1])
+	c.string(` data-sec=`)
+	c.uint64(val[2])
+	c.string(` data-start=`)
+	c.uint64(val[3])
+	c.string(` data-end=`)
+	c.uint64(val[4])
+	c.string(`>syncwatch</strong></em>`)
+}
+
+func (c *bodyContext) uint64(i uint64) {
+	c.string(strconv.FormatUint(i, 10))
 }
 
 // If command validation failed, simply write the string
 func (c *bodyContext) writeInvalidCommand(s string) {
-	c.N().S("#")
-	c.N().S(s)
+	c.string("#")
+	c.escape(s)
 }
 
 // Close any open HTML tags
 func (c *bodyContext) terminateTags(newLine bool) {
 	if c.state.spoiler {
-		c.N().S("</del>")
+		c.string("</del>")
 	}
 	if c.state.quote {
-		c.N().S("</em>")
+		c.string("</em>")
 	}
 	if newLine {
-		c.N().S("<br>")
+		c.string("<br>")
 	}
 }
 
 // Parse a line that is still being edited
 func (c *bodyContext) parseOpenLine(line string) {
 	c.parseCode(line, func(s string) {
-		c.E().S(s)
+		c.escape(s)
 	})
 }

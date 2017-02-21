@@ -135,9 +135,9 @@ async function toggleExpansion(e: MouseEvent) {
 const threads = document.getElementById("threads")
 on(threads, "mouseover", fetchMeta, {
 	passive: true,
-	selector: ".embed",
+	selector: "a.embed",
 })
 on(threads, "click", toggleExpansion, {
-	selector: ".embed",
+	selector: "a.embed",
 })
 

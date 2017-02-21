@@ -6,13 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"meguca/auth"
+	"meguca/common"
+	"meguca/util"
 	"net/http"
 	"strconv"
 	"time"
 
-	"meguca/auth"
-	"meguca/common"
-	"meguca/util"
 	"github.com/gorilla/websocket"
 )
 

@@ -55,6 +55,7 @@ export default class FormModel extends Post {
 					quote: false,
 					lastLineEmpty: false,
 					code: false,
+					haveSyncwatch: false,
 					iDice: 0,
 				},
 			})

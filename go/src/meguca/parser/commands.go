@@ -3,25 +3,23 @@
 package parser
 
 import (
+	"errors"
 	"math/rand"
-	"strconv"
-	"time"
-
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 )
 
 var (
-	errTooManyRolls = diceError(0)
-	errDieTooBig    = diceError(1)
+	syncWatchRegexp = regexp.MustCompile(`^sw(\d+:)?(\d+):(\d+)([+-]\d+)?$`)
+
+	errTooManyRolls = errors.New("too many rolls")
+	errDieTooBig    = errors.New("die too big")
 )
-
-type diceError int
-
-func (d diceError) Error() string {
-	return "dice error: " + strconv.Itoa(int(d))
-}
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -29,9 +27,6 @@ func init() {
 
 // Parse a matched hash command
 func parseCommand(match, board string) (com common.Command, err error) {
-
-	// TODO: #syncwatch
-
 	switch match {
 
 	// Coin flip
@@ -59,8 +54,15 @@ func parseCommand(match, board string) (com common.Command, err error) {
 			com.Val, err = db.GetPyu()
 		}
 
-	// Dice throw
 	default:
+		// Synchronized time counter
+		if strings.HasPrefix(match, "sw") {
+			com.Type = common.SyncWatch
+			com.Val = parseSyncWatch(match)
+			return
+		}
+
+		// Dice throw
 		com.Val, err = parseDice(match)
 		com.Type = common.Dice
 		switch err {
@@ -102,4 +104,39 @@ func parseDice(match string) (val []uint16, err error) {
 		val[i] = uint16(rand.Intn(max)) + 1
 	}
 	return
+}
+
+func parseSyncWatch(match string) interface{} {
+	m := syncWatchRegexp.FindStringSubmatch(match)
+	var (
+		hours, min, sec, offset uint64
+		offsetDirection         byte
+	)
+
+	if m[1] != "" {
+		hours, _ = strconv.ParseUint(m[1][:len(m[1])-1], 10, 64)
+	}
+	min, _ = strconv.ParseUint(m[2], 10, 64)
+	sec, _ = strconv.ParseUint(m[3], 10, 64)
+	if m[4] != "" {
+		offsetDirection = m[4][0]
+		offset, _ = strconv.ParseUint(m[4][1:], 10, 64)
+	}
+
+	start := uint64(time.Now().Unix())
+	switch offsetDirection {
+	case '+':
+		start += offset
+	case '-':
+		start -= offset
+	}
+	end := start + sec + (hours*60+min)*60
+
+	return [5]uint64{
+		hours,
+		min,
+		sec,
+		start,
+		end,
+	}
 }
