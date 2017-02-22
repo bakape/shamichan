@@ -2,6 +2,20 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v4.1.0 - 2017-02-22
+* Fix
+	- Video and audio length formatting
+* Add
+	- Render temporary links in open posts
+	- Thread searching and filtering
+	- Poster name replacement on r/a/dio song
+	- Replies and quoting from board page
+	- Mascots
+	- Limit post body to 100 lines
+* Change
+	- Use board index view as default board view
+	- JSON API. See `/docs/`
+
 ##v4.0.0 - 2017-02-13
 * Add
 	- Thread post and image count indicators
