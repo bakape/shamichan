@@ -1,7 +1,6 @@
 package templates
 
 import (
-	"bytes"
 	"fmt"
 	"html"
 	"meguca/common"
@@ -325,23 +324,26 @@ func (c *bodyContext) parseEmbeds(s string) bool {
 // Parse a hash command
 func (c *bodyContext) parseCommands(bit string) {
 	// Guard against invalid dice rolls
-	invalid := c.Commands == nil ||
-		c.state.iDice > len(c.Commands)-1 ||
-		c.Commands[c.state.iDice].Val == nil
-	if invalid {
+	if c.Commands == nil || c.state.iDice > len(c.Commands)-1 {
 		c.writeInvalidCommand(bit)
 		return
 	}
 
-	var inner bytes.Buffer
-	val := c.Commands[c.state.iDice].Val
+	inner := make([]byte, 0, 32)
+	val := c.Commands[c.state.iDice]
 	switch bit {
-	case "flip", "8ball", "pyu", "pcount":
-		fmt.Fprint(&inner, val)
+	case "flip":
+		inner = strconv.AppendBool(inner, val.Flip)
+		c.state.iDice++
+	case "8ball":
+		inner = append(inner, val.Eightball...)
+		c.state.iDice++
+	case "pyu", "pcount":
+		inner = strconv.AppendUint(inner, val.Pyu, 10)
 		c.state.iDice++
 	default:
 		if strings.HasPrefix(bit, "sw") {
-			c.formatSyncwatch(val)
+			c.formatSyncwatch(val.SyncWatch)
 			c.state.iDice++
 			return
 		}
@@ -359,42 +361,30 @@ func (c *bodyContext) parseCommands(bit string) {
 			return
 		}
 
-		// Cast []interface to []uint16
-		uncast := val.([]interface{})
-		rolls := make([]uint16, len(uncast))
-		for i := range rolls {
-			rolls[i] = uint16(uncast[i].(float64))
-		}
-
 		c.state.iDice++
-		var sum uint
-		for i, roll := range rolls {
+		var sum uint64
+		for i, roll := range val.Dice {
 			if i != 0 {
-				inner.WriteString(" + ")
+				inner = append(inner, " + "...)
 			}
-			sum += uint(roll)
-			inner.WriteString(strconv.FormatUint(uint64(roll), 10))
+			sum += uint64(roll)
+			inner = strconv.AppendUint(inner, uint64(roll), 10)
 		}
-		if len(rolls) > 1 {
-			fmt.Fprintf(&inner, " = %d", sum)
+		if len(val.Dice) > 1 {
+			inner = append(inner, " = "...)
+			inner = strconv.AppendUint(inner, sum, 10)
 		}
 	}
 
 	c.string(`<strong>#`)
 	c.string(bit)
 	c.string(` (`)
-	c.N().Z(inner.Bytes())
+	c.N().Z(inner)
 	c.string(`)</strong>`)
 }
 
 // Format a synchronized time counter
-func (c *bodyContext) formatSyncwatch(uncast interface{}) {
-	// Cast []interface to [5]uint64
-	var val [5]uint64
-	for i, v := range uncast.([]interface{}) {
-		val[i] = uint64(v.(float64))
-	}
-
+func (c *bodyContext) formatSyncwatch(val [5]uint64) {
 	c.string(`<em><strong class="embed syncwatch" data-hour=`)
 	c.uint64(val[0])
 	c.string(` data-min=`)

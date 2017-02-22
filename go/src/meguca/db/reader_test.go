@@ -73,7 +73,7 @@ func TestReader(t *testing.T) {
 					Commands: []common.Command{
 						{
 							Type: common.Flip,
-							Val:  true,
+							Flip: true,
 						},
 					},
 				},
@@ -142,7 +142,7 @@ func testGetPost(t *testing.T) {
 			Commands: []common.Command{
 				{
 					Type: common.Flip,
-					Val:  true,
+					Flip: true,
 				},
 			},
 		},
@@ -167,7 +167,7 @@ func testGetAllBoard(t *testing.T) {
 				Commands: []common.Command{
 					{
 						Type: common.Flip,
-						Val:  true,
+						Flip: true,
 					},
 				},
 			},
@@ -230,7 +230,7 @@ func testGetBoard(t *testing.T) {
 						Commands: []common.Command{
 							{
 								Type: common.Flip,
-								Val:  true,
+								Flip: true,
 							},
 						},
 					},
@@ -326,7 +326,7 @@ func testGetThread(t *testing.T) {
 					Commands: []common.Command{
 						{
 							Type: common.Flip,
-							Val:  true,
+							Flip: true,
 						},
 					},
 				},

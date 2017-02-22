@@ -2,9 +2,8 @@
 package parser
 
 import (
-	"regexp"
-
 	"meguca/common"
+	"regexp"
 )
 
 var linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
@@ -57,12 +56,14 @@ func ParseBody(body []byte, board string) (
 				continue
 			}
 			var c common.Command
-			c, err = parseCommand(string(m[1]), board)
-			switch {
-			case err != nil:
-				return
-			case c.Val != nil:
+			c, err = parseCommand(m[1], board)
+			switch err {
+			case nil:
 				com = append(com, c)
+			case errTooManyRolls, errDieTooBig: // Consider command invalid
+				err = nil
+			default:
+				return
 			}
 		}
 	}

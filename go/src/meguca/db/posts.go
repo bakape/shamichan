@@ -4,12 +4,12 @@ package db
 import (
 	"database/sql"
 	"database/sql/driver"
-	"encoding/json"
 	"fmt"
+	"meguca/common"
 	"strconv"
 
-	"meguca/common"
 	"github.com/lib/pq"
+	"github.com/mailru/easyjson"
 )
 
 // Post is for writing new posts to a database. It contains the Password
@@ -138,15 +138,15 @@ func (c *commandRow) Scan(src interface{}) error {
 }
 
 func (c *commandRow) scanBytes(data []byte) (err error) {
-	var strArr pq.ByteaArray
-	err = strArr.Scan(data)
+	var bArr pq.ByteaArray
+	err = bArr.Scan(data)
 	if err != nil {
 		return
 	}
 
-	*c = make([]common.Command, len(strArr))
-	for i := range strArr {
-		err = json.Unmarshal([]byte(strArr[i]), &(*c)[i])
+	*c = make([]common.Command, len(bArr))
+	for i := range bArr {
+		err = (*c)[i].UnmarshalJSON(bArr[i])
 		if err != nil {
 			return
 		}
@@ -162,7 +162,7 @@ func (c commandRow) Value() (driver.Value, error) {
 
 	var strArr = make(pq.StringArray, len(c))
 	for i := range strArr {
-		s, err := json.Marshal(c[i])
+		s, err := easyjson.Marshal(c[i])
 		if err != nil {
 			return nil, err
 		}

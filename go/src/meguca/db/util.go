@@ -70,13 +70,13 @@ func StartTransaction() (*sql.Tx, error) {
 }
 
 // GetPyu retrieves current pyu counter
-func GetPyu() (c int, err error) {
+func GetPyu() (c uint64, err error) {
 	err = prepared["get_pyu"].QueryRow().Scan(&c)
 	return
 }
 
 // IncrementPyu increments the pyu counter by one and returns the new counter
-func IncrementPyu() (c int, err error) {
+func IncrementPyu() (c uint64, err error) {
 	err = prepared["increment_pyu"].QueryRow().Scan(&c)
 	return
 }

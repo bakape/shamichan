@@ -1,11 +1,11 @@
 package templates
 
 import (
-	"testing"
-
 	"meguca/common"
 	"meguca/config"
 	. "meguca/test"
+	"testing"
+
 	"github.com/valyala/quicktemplate"
 )
 
@@ -84,11 +84,11 @@ func TestRenderBody(t *testing.T) {
 			commands: []common.Command{
 				{
 					Type: common.Flip,
-					Val:  true,
+					Flip: true,
 				},
 				{
 					Type: common.Flip,
-					Val:  false,
+					Flip: false,
 				},
 			},
 		},
@@ -98,8 +98,8 @@ func TestRenderBody(t *testing.T) {
 			out:  "<strong>#8ball (bar)</strong>",
 			commands: []common.Command{
 				{
-					Type: common.EightBall,
-					Val:  "bar",
+					Type:      common.EightBall,
+					Eightball: "bar",
 				},
 			},
 		},
@@ -110,7 +110,7 @@ func TestRenderBody(t *testing.T) {
 			commands: []common.Command{
 				{
 					Type: common.Pyu,
-					Val:  int64(1),
+					Pyu:  1,
 				},
 			},
 		},
@@ -121,7 +121,7 @@ func TestRenderBody(t *testing.T) {
 			commands: []common.Command{
 				{
 					Type: common.Pcount,
-					Val:  int64(2),
+					Pyu:  2,
 				},
 			},
 		},
@@ -132,8 +132,7 @@ func TestRenderBody(t *testing.T) {
 			commands: []common.Command{
 				{
 					Type: common.Dice,
-					// This is how values are decoded from the database
-					Val: []interface{}{float64(22)},
+					Dice: []uint16{22},
 				},
 			},
 		},
@@ -144,7 +143,7 @@ func TestRenderBody(t *testing.T) {
 			commands: []common.Command{
 				{
 					Type: common.Dice,
-					Val:  []interface{}{float64(22), float64(33)},
+					Dice: []uint16{22, 33},
 				},
 			},
 		},
@@ -155,7 +154,7 @@ func TestRenderBody(t *testing.T) {
 			commands: []common.Command{
 				{
 					Type: common.Dice,
-					Val:  []interface{}{float64(22), float64(33)},
+					Dice: []uint16{22, 33},
 				},
 			},
 		},
@@ -166,7 +165,7 @@ func TestRenderBody(t *testing.T) {
 			commands: []common.Command{
 				{
 					Type: common.Dice,
-					Val:  []interface{}{float64(22), float64(33)},
+					Dice: []uint16{22, 33},
 				},
 			},
 		},
@@ -182,7 +181,7 @@ func TestRenderBody(t *testing.T) {
 			commands: []common.Command{
 				{
 					Type: common.Flip,
-					Val:  true,
+					Flip: true,
 				},
 			},
 		},

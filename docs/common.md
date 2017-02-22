@@ -65,6 +65,6 @@ The "val" field contains the following data for each command type:
 | dice | []uint | Array of dice rolls. Maximum number of rolls is 10 and each roll can not exceed 100 |
 | flip | bool | coin flip |
 | eightBall | string | stores one of several predefined string messages randomly |
-| syncWatch | ? | syncwatch is not yet implemented and spec not finalized |
+| syncWatch | [5]uint | stores data of the synchronized time counter as [hours, minutes, seconds, start_time, end_time] |
 | pyu | uint | increment generic global counter and store current value |
 | pcount | uint | store current global counter without incrementing |

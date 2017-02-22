@@ -4,31 +4,6 @@
 // throughout the project
 package common
 
-// CommandType are the various struct types of hash commands and their
-// responses, such as dice rolls, #flip, #8ball, etc.
-type CommandType uint8
-
-const (
-	// Dice is the dice roll command type
-	Dice CommandType = iota
-
-	// Flip is the coin flip command type
-	Flip
-
-	// EightBall is the the #8ball random answer dispenser command type
-	EightBall
-
-	// SyncWatch is the synchronized timer command type for synchronizing
-	// episode time during group anime watching and such
-	SyncWatch
-
-	// Pyu - don't ask
-	Pyu
-
-	// Pcount - don't ask
-	Pcount
-)
-
 // ParseBody forwards parser.ParseBody to avoid cyclic imports in db/upkeep
 var ParseBody func([]byte, string) ([][2]uint64, []Command, error)
 
@@ -77,17 +52,4 @@ type StandalonePost struct {
 	Post
 	OP    uint64 `json:"op"`
 	Board string `json:"board"`
-}
-
-// Command contains the type and value array of hash commands, such as dice
-// rolls, #flip, #8ball, etc. The Val field depends on the Type field.
-// Dice: []uint16
-// Flip: bool
-// EightBall: string
-// SyncWatch: [5]uint64
-// Pyu: int64
-// Pcount: int64
-type Command struct {
-	Type CommandType `json:"type"`
-	Val  interface{} `json:"val"`
 }

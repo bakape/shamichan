@@ -3,6 +3,7 @@
 package parser
 
 import (
+	"bytes"
 	"errors"
 	"math/rand"
 	"meguca/common"
@@ -26,49 +27,47 @@ func init() {
 }
 
 // Parse a matched hash command
-func parseCommand(match, board string) (com common.Command, err error) {
-	switch match {
+func parseCommand(match []byte, board string) (com common.Command, err error) {
+	switch {
 
 	// Coin flip
-	case "flip":
+	case bytes.Equal(match, []byte("flip")):
 		com.Type = common.Flip
-		com.Val = rand.Intn(2) == 0
+		com.Flip = rand.Intn(2) == 0
 
 	// 8ball; select random string from the the 8ball answer array
-	case "8ball":
+	case bytes.Equal(match, []byte("8ball")):
 		com.Type = common.EightBall
 		answers := config.GetBoardConfigs(board).Eightball
-		com.Val = answers[rand.Intn(len(answers))]
+		com.Eightball = answers[rand.Intn(len(answers))]
 
 	// Increment pyu counter
-	case "pyu":
+	case bytes.Equal(match, []byte("pyu")):
 		if config.Get().Pyu {
 			com.Type = common.Pyu
-			com.Val, err = db.IncrementPyu()
+			com.Pyu, err = db.IncrementPyu()
 		}
 
 	// Return current pyu count
-	case "pcount":
+	case bytes.Equal(match, []byte("pcount")):
 		if config.Get().Pyu {
 			com.Type = common.Pcount
-			com.Val, err = db.GetPyu()
+			com.Pyu, err = db.GetPyu()
 		}
 
 	default:
+		matchStr := string(match)
+
 		// Synchronized time counter
-		if strings.HasPrefix(match, "sw") {
+		if strings.HasPrefix(matchStr, "sw") {
 			com.Type = common.SyncWatch
-			com.Val = parseSyncWatch(match)
+			com.SyncWatch = parseSyncWatch(matchStr)
 			return
 		}
 
 		// Dice throw
-		com.Val, err = parseDice(match)
 		com.Type = common.Dice
-		switch err {
-		case errTooManyRolls, errDieTooBig: // Consider command invalid
-			return common.Command{}, nil
-		}
+		com.Dice, err = parseDice(matchStr)
 	}
 
 	return
@@ -106,7 +105,7 @@ func parseDice(match string) (val []uint16, err error) {
 	return
 }
 
-func parseSyncWatch(match string) interface{} {
+func parseSyncWatch(match string) [5]uint64 {
 	m := syncWatchRegexp.FindStringSubmatch(match)
 	var (
 		hours, min, sec, offset uint64
