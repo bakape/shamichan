@@ -82,10 +82,10 @@ export const specs: { [id: string]: OptionSpec } = {
 	notification: {
 		default: true,
 		exec(enabled: boolean) {
-			const can = enabled
+			const req = enabled
 				&& typeof Notification === "function"
-				&& Notification.permission !== "granted"
-			if (can) {
+				&& (Notification as any).permission !== "granted"
+			if (req) {
 				Notification.requestPermission()
 			}
 		},

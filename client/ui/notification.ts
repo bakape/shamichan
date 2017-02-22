@@ -23,7 +23,7 @@ export default function notifyAboutReply(post: Post) {
 
 	const re = !options.notification
 		|| typeof Notification !== "function"
-		|| Notification.permission !== "granted"
+		|| (Notification as any).permission !== "granted"
 	if (re) {
 		return
 	}
