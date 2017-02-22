@@ -4,17 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"unicode/utf8"
-
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	"meguca/parser"
+	"unicode/utf8"
 )
 
 var (
 	errNoPostOpen          = errors.New("no post open")
 	errEmptyPost           = errors.New("post body empty")
+	errTooManyLines        = errors.New("too many lines in post body")
 	errInvalidSpliceCoords = errors.New("invalid splice coordinates")
 	errSpliceTooLong       = errors.New("splice text too long")
 	errSpliceNOOP          = errors.New("splice NOOP")
@@ -26,10 +26,19 @@ var (
 type openPost struct {
 	hasImage bool
 	bytes.Buffer
-	len    int
-	id, op uint64
-	time   int64
-	board  string
+	len, lines int
+	id, op     uint64
+	time       int64
+	board      string
+}
+
+func (o *openPost) countLines() {
+	o.lines = 0
+	for _, b := range o.Bytes() {
+		if b == '\n' {
+			o.lines++
+		}
+	}
 }
 
 // Like spliceRequest, but with a string Text field. Used for internal
@@ -98,6 +107,11 @@ func (c *Client) appendRune(data []byte) (err error) {
 		return
 	case char == 0:
 		return common.ErrContainsNull
+	case char == '\n':
+		c.post.lines++
+		if c.post.lines > common.MaxLinesBody {
+			return errTooManyLines
+		}
 	}
 
 	c.post.WriteRune(char)
@@ -117,8 +131,11 @@ func (c *Client) backspace() error {
 		return errEmptyPost
 	}
 
-	_, lastRuneLen := utf8.DecodeLastRune(c.post.Bytes())
+	r, lastRuneLen := utf8.DecodeLastRune(c.post.Bytes())
 	c.post.Truncate(c.post.Len() - lastRuneLen)
+	if r == '\n' {
+		c.post.lines--
+	}
 	c.post.len--
 
 	return db.Backspace(c.post.id, c.post.op, c.post.String())
@@ -213,6 +230,10 @@ func (c *Client) spliceText(data []byte) error {
 	}
 	c.post.Truncate(byteStartPos)
 	c.post.WriteString(string(end))
+	c.post.countLines()
+	if c.post.lines > common.MaxLinesBody {
+		return errTooManyLines
+	}
 
 	msg, err := common.EncodeMessage(common.MessageSplice, res)
 	if err != nil {
