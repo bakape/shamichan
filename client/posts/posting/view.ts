@@ -76,7 +76,7 @@ export default class FormView extends PostView {
     // Render a temporary view of the identity fields, so the user can see what
     // credentials he is about to post with
     public renderIdentity() {
-        let {name, auth} = identity,
+        let { name, auth } = identity,
             trip = ""
         const i = name.indexOf("#")
         if (i !== -1) {
@@ -95,8 +95,12 @@ export default class FormView extends PostView {
 
     // Show button for closing allocated posts
     private showDone() {
-        this.cancel.hidden = true
-        this.done.hidden = false
+        if (this.cancel) {
+            this.cancel.hidden = true
+        }
+        if (this.done) {
+            this.done.hidden = false
+        }
     }
 
     // Initialize extra elements for a draft unallocated post
@@ -126,7 +130,7 @@ export default class FormView extends PostView {
             return
         }
 
-        const {height} = this.el.getBoundingClientRect()
+        const { height } = this.el.getBoundingClientRect()
         // Avoid needless writes
         if (this.previousHeight === height) {
             return
@@ -245,7 +249,7 @@ export default class FormView extends PostView {
         this.resizeInput()
         this.removeUploadForm()
 
-        const {spoiler} = this.upload
+        const { spoiler } = this.upload
         if (this.model.image.spoiler) {
             spoiler.remove()
         } else {
