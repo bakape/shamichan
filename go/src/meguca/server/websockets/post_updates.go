@@ -116,7 +116,7 @@ func (c *Client) appendRune(data []byte) (err error) {
 
 	c.post.WriteRune(char)
 	c.post.len++
-	return db.AppendBody(c.post.id, c.post.op, char, c.post.String())
+	return db.AppendBody(c.post.id, c.post.op, char)
 }
 
 // Remove one character from the end of the line in the open post
@@ -138,7 +138,7 @@ func (c *Client) backspace() error {
 	}
 	c.post.len--
 
-	return db.Backspace(c.post.id, c.post.op, c.post.String())
+	return db.Backspace(c.post.id, c.post.op)
 }
 
 // Close an open post and parse the last line, if needed.
@@ -239,8 +239,7 @@ func (c *Client) spliceText(data []byte) error {
 	if err != nil {
 		return err
 	}
-	db.SplicePost(c.post.id, c.post.op, msg, c.post.String())
-	return nil
+	return db.SplicePost(c.post.id, c.post.op, msg, c.post.String())
 }
 
 // Insert and image into an existing open post

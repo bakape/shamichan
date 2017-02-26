@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"meguca/common"
+
 	"github.com/lib/pq"
 )
 
