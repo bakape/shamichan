@@ -52,7 +52,8 @@ export function on(
 	if (opts && opts.selector) {
 		const oldFn = fn
 		fn = event => {
-			if ((event.target as Element).matches(opts.selector)) {
+			const t = event.target
+			if (t instanceof Element && t.matches(opts.selector)) {
 				oldFn(event)
 			}
 		}
