@@ -38,7 +38,7 @@ export default class PostView extends ImageHandler {
 
     // Get the current Element for text to be written to
     private buffer(): Element {
-        const {state: {spoiler, quote}} = this.model
+        const { state: { spoiler, quote } } = this.model
         let buf = this.el.querySelector("blockquote") as Element
         if (quote) {
             buf = buf.lastElementChild
@@ -64,9 +64,6 @@ export default class PostView extends ImageHandler {
 
     // Replace the current body with a reparsed fragment
     public reparseBody() {
-        if (!this.model.body) {
-            return
-        }
         const bq = this.el.querySelector("blockquote")
         bq.innerHTML = ""
         bq.append(makeFrag(parseBody(this.model)))
