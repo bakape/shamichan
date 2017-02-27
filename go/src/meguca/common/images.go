@@ -4,7 +4,7 @@ package common
 
 // Supported file formats
 const (
-	JPEG = iota
+	JPEG uint8 = iota
 	PNG
 	GIF
 	WEBM

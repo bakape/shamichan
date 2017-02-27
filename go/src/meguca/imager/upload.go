@@ -1,3 +1,5 @@
+//go:generate go-bindata -o bin_data.go --pkg imager --nocompress --nometadata archive.png audio.png
+
 // Package imager handles image, video, etc. upload requests and processing
 package imager
 
@@ -8,58 +10,56 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
-	"strconv"
-
-	"github.com/Soreil/apngdetector"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/Soreil/apngdetector"
+	"github.com/bakape/thumbnailer"
 )
 
 var (
-	// Map of net/http MIME types to the constants used internally
+	// Map of MIME types to the constants used internally
 	mimeTypes = map[string]uint8{
 		"image/jpeg":      common.JPEG,
 		"image/png":       common.PNG,
 		"image/gif":       common.GIF,
+		"application/pdf": common.PDF,
 		"video/webm":      common.WEBM,
 		"application/ogg": common.OGG,
 		"video/mp4":       common.MP4,
-		"application/zip": common.ZIP,
-		"application/pdf": common.PDF,
+		"audio/mpeg":      common.MP3,
+		mime7Zip:          common.SevenZip,
+		mimeTarGZ:         common.TGZ,
+		mimeTarXZ:         common.TXZ,
+		mimeZip:           common.ZIP,
 	}
 
-	// File type tests for types not supported by http.DetectContentType
-	typeTests = [...]struct {
-		test  func([]byte) (bool, error)
-		fType uint8
-	}{
-		{detect7z, common.SevenZip},
-		{detectTarGZ, common.TGZ},
-		{detectTarXZ, common.TXZ},
-		{detectSVG, common.SVG},
-		{detectMP3, common.MP3},
+	// MIME types from thumbnailer  to accept
+	allowedMimeTypes = map[string]bool{
+		"image/jpeg":      true,
+		"image/png":       true,
+		"image/gif":       true,
+		"application/pdf": true,
+		"video/webm":      true,
+		"application/ogg": true,
+		"video/mp4":       true,
+		"audio/mpeg":      true,
+		mimeZip:           true,
+		mime7Zip:          true,
+		mimeTarGZ:         true,
+		mimeTarXZ:         true,
 	}
 
-	errTooLarge        = errors.New("file too large")
-	errInvalidFileHash = errors.New("invalid file hash")
-
-	isTest bool
+	errTooLarge = errors.New("file too large")
+	isTest      bool
 )
-
-// Response from a thumbnail generation performed concurently
-type thumbResponse struct {
-	audio, video, PNGThumb bool
-	dims                   [4]uint16
-	length                 uint32
-	thumb                  []byte
-	err                    error
-}
 
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
@@ -170,106 +170,81 @@ func parseUploadForm(req *http.Request) error {
 // Create a new thumbnail, commit its resources to the DB and filesystem, and
 // pass the image data to the client.
 func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
-	fileType, err := detectFileType(data)
-	if err != nil {
+	conf := config.Get()
+	thumb, img, err := processFile(data, img, thumbnailer.Options{
+		JPEGQuality: conf.JPEGQuality,
+		MaxSourceDims: thumbnailer.Dims{
+			Width:  uint(conf.MaxWidth),
+			Height: uint(conf.MaxHeight),
+		},
+		ThumbDims: thumbnailer.Dims{
+			Width:  150,
+			Height: 150,
+		},
+		AcceptedMimeTypes: allowedMimeTypes,
+	})
+	switch err.(type) {
+	case nil:
+	case thumbnailer.UnsupportedMIMEError:
 		return 400, "", err
-	}
-
-	// Generate MD5 hash and thumbnail concurently
-	md5 := genMD5(data)
-	thumb := processFile(data, fileType)
-
-	if fileType == common.PNG {
-		img.APNG = apngdetector.Detect(data)
-	}
-
-	img.FileType = fileType
-	img.Size = len(data)
-	img.MD5 = <-md5
-	res := <-thumb
-	if res.err != nil {
-		return 400, "", res.err // Some errors aren't actually 400, but most are
-	}
-	img.Dims = res.dims
-	img.Length = res.length
-	img.Audio = res.audio
-	img.Video = res.video
-	if res.PNGThumb {
-		img.ThumbType = common.PNG
-	}
-
-	if err := db.AllocateImage(data, res.thumb, img); err != nil {
+	default:
 		return 500, "", err
 	}
 
+	if err := db.AllocateImage(data, thumb, img); err != nil {
+		return 500, "", err
+	}
 	return newImageToken(img.SHA1)
 }
 
-// detectFileType detects if the upload is of a supported file type, by reading
-// its first 512 bytes. OGG and MP4 are also checked to contain HTML5 supported
-// video and audio streams.
-func detectFileType(buf []byte) (uint8, error) {
-	mimeType := http.DetectContentType(buf)
-	mime, ok := mimeTypes[mimeType]
-	if !ok {
-		for _, t := range typeTests {
-			match, err := t.test(buf)
-			if err != nil {
-				return 0, err
-			}
-			if match {
-				return t.fType, nil
-			}
-		}
-
-		return 0, fmt.Errorf("unsupported file type: %s", mimeType)
+// Separate function for easier testability
+func processFile(
+	data []byte,
+	img common.ImageCommon,
+	opts thumbnailer.Options,
+) (
+	[]byte, common.ImageCommon, error,
+) {
+	src, thumb, err := thumbnailer.ProcessBuffer(data, opts)
+	switch err {
+	case nil:
+	case thumbnailer.ErrNoCoverArt:
+	default:
+		return nil, img, err
 	}
-	return mime, nil
-}
 
-// TODO: SVG support
-func detectSVG(buf []byte) (bool, error) {
-	return false, nil
-}
+	img.Audio = src.HasAudio
+	img.Video = src.HasVideo
 
-// Concurently delegate the processing of the file to an appropriate function by
-// file type
-func processFile(data []byte, fileType uint8) <-chan thumbResponse {
-	ch := make(chan thumbResponse)
+	img.FileType = mimeTypes[src.Mime]
+	if img.FileType == common.PNG {
+		img.APNG = apngdetector.Detect(data)
+	}
+	if thumb.IsPNG {
+		img.ThumbType = common.PNG
+	} else {
+		img.ThumbType = common.JPEG
+	}
 
-	go func() {
-		var res thumbResponse
-		switch fileType {
-		case common.WEBM:
-			res = processWebm(data)
-		case common.MP3:
-			res = processMP3(data)
-		case common.OGG:
-			res = processOGG(data)
-		case common.MP4:
-			res = processMP4(data)
-		case common.ZIP, common.SevenZip, common.TGZ, common.TXZ:
-			res = processArchive()
-		case common.JPEG, common.PNG, common.GIF, common.PDF:
-			res.thumb, res.dims, res.PNGThumb, res.err = processImage(
-				data,
-				0,
-				0,
-			)
+	img.Length = uint32(src.Length / time.Second)
+	img.Size = len(data)
+
+	// MP3, OGG and MP4 might only contain audio and need a fallback thumbnail
+	if thumb.Data == nil {
+		img.ThumbType = common.PNG
+		img.Dims = [4]uint16{150, 150, 150, 150}
+		thumb.Data = MustAsset("audio.png")
+	} else {
+		img.Dims = [4]uint16{
+			uint16(src.Width),
+			uint16(src.Height),
+			uint16(thumb.Width),
+			uint16(thumb.Height),
 		}
+	}
 
-		ch <- res
-	}()
+	sum := md5.Sum(data)
+	img.MD5 = base64.RawURLEncoding.EncodeToString(sum[:])
 
-	return ch
-}
-
-// Concurently generates the MD5 hash of an image
-func genMD5(data []byte) <-chan string {
-	ch := make(chan string)
-	go func() {
-		sum := md5.Sum(data)
-		ch <- base64.RawURLEncoding.EncodeToString(sum[:])
-	}()
-	return ch
+	return thumb.Data, img, nil
 }

@@ -1,14 +1,24 @@
 package imager
 
 import (
+	"meguca/common"
+	. "meguca/test"
 	"strings"
 	"testing"
 
-	"meguca/common"
-	. "meguca/test"
+	"github.com/bakape/thumbnailer"
 )
 
-func TestDetectArchive(t *testing.T) {
+var (
+	dummyOpts = thumbnailer.Options{
+		ThumbDims: thumbnailer.Dims{
+			Width:  150,
+			Height: 150,
+		},
+	}
+)
+
+func TestProcessArchive(t *testing.T) {
 	t.Parallel()
 
 	cases := [...]struct {
@@ -38,16 +48,22 @@ func TestDetectArchive(t *testing.T) {
 		{
 			name: "file too small",
 			file: "sample.txt",
-			err:  "unsupported file type:",
+			err:  "unsupported MIME type",
 		},
 	}
+
+	fallback := readFallbackThumb(t, "archive.png")
 
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			typ, err := detectFileType(readSample(t, c.file))
+			thumb, img, err := processFile(
+				readSample(t, c.file),
+				common.ImageCommon{},
+				dummyOpts,
+			)
 
 			if c.err != "" {
 				if err == nil {
@@ -56,23 +72,14 @@ func TestDetectArchive(t *testing.T) {
 				if !strings.HasPrefix(err.Error(), c.err) {
 					t.Fatalf("unexpected error: %#v", err)
 				}
+				return
 			} else if err != nil {
 				t.Fatal(err)
 			}
 
-			if typ != c.typ {
-				t.Errorf("unexpected type: %d : %d", c.typ, typ)
-			}
+			assertFileType(t, img.FileType, c.typ)
+			AssertBufferEquals(t, thumb, fallback)
+			assertDims(t, img.Dims, [4]uint16{150, 150, 150, 150})
 		})
 	}
-}
-
-func TestProcessArchive(t *testing.T) {
-	res := processArchive()
-	if res.err != nil {
-		t.Fatal(res.err)
-	}
-
-	AssertBufferEquals(t, res.thumb, readFallbackThumb(t, "archive.png"))
-	assertDims(t, res.dims, [4]uint16{150, 150, 150, 150})
 }

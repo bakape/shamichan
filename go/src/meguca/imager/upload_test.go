@@ -113,27 +113,6 @@ func assertFiles(t *testing.T, src, id string, fileType, thumbType uint8) {
 	}
 }
 
-func TestDetectFileType(t *testing.T) {
-	t.Parallel()
-
-	// Supported file types
-	for c, e := range common.Extensions {
-		code := c
-		ext := e
-		t.Run(ext, func(t *testing.T) {
-			t.Parallel()
-
-			typ, err := detectFileType(readSample(t, "sample."+ext))
-			if err != nil {
-				t.Fatal(err)
-			}
-			if typ != code {
-				t.Fatalf("unexpected type code: %d : %d", code, typ)
-			}
-		})
-	}
-}
-
 func TestInvalidContentLengthHeader(t *testing.T) {
 	b, w := newMultiWriter()
 	req := newRequest(t, b, w)
@@ -187,7 +166,7 @@ func TestWrongFileType(t *testing.T) {
 
 	code, _, err := newThumbnail(data, common.ImageCommon{})
 
-	if s := fmt.Sprint(err); !strings.HasPrefix(s, "unsupported file type") {
+	if s := fmt.Sprint(err); !strings.HasPrefix(s, "unsupported MIME type:") {
 		UnexpectedError(t, err)
 	}
 	assertCode(t, code, 400)

@@ -1,9 +1,9 @@
 package imager
 
 import (
-	"testing"
-
+	"meguca/common"
 	"meguca/imager/assets"
+	"testing"
 )
 
 func TestProcessWebm(t *testing.T) {
@@ -30,19 +30,26 @@ func TestProcessWebm(t *testing.T) {
 		t.Run(c.testName, func(t *testing.T) {
 			t.Parallel()
 
-			res := processWebm(readSample(t, c.name))
-			if res.err != nil {
-				t.Fatal(res.err)
+			thumb, img, err := processFile(
+				readSample(t, c.name),
+				common.ImageCommon{},
+				dummyOpts,
+			)
+			if err != nil {
+				t.Fatal(err)
 			}
-			assertThumbnail(t, res.thumb)
-			assertDims(t, res.dims, c.dims)
-			if res.audio != c.audio {
-				t.Error("unexpected audio flag value")
-			}
-			if res.length != c.length {
-				t.Errorf("unexpected length: %d : %d", c.length, res.length)
-			}
+
+			assertThumbnail(t, thumb)
+			assertDims(t, img.Dims, c.dims)
+			assertAudio(t, img.Audio, c.audio)
+			assertLength(t, img.Length, c.length)
 		})
+	}
+}
+
+func assertAudio(t *testing.T, res, std bool) {
+	if res != std {
+		t.Error("unexpected audio flag value")
 	}
 }
 
@@ -99,11 +106,6 @@ func TestProcessOGG(t *testing.T) {
 			length: 5,
 			dims:   assets.StdJPEG.Dims,
 		},
-		{
-			name: "no compatible streams",
-			file: "no_streams",
-			err:  errNoCompatibleStreams,
-		},
 	}
 
 	for i := range cases {
@@ -111,21 +113,22 @@ func TestProcessOGG(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			res := processOGG(readSample(t, c.file+".ogg"))
-			if res.err != c.err {
-				t.Fatal(res.err)
+			thumb, img, err := processFile(
+				readSample(t, c.file+".ogg"),
+				common.ImageCommon{},
+				dummyOpts,
+			)
+			if err != c.err {
+				t.Fatal(err)
 			}
 			if c.err != nil {
 				return
 			}
-			assertThumbnail(t, res.thumb)
-			assertDims(t, res.dims, c.dims)
-			if res.audio != c.audio {
-				t.Error("unexpected audio flag value")
-			}
-			if res.length != c.length {
-				t.Errorf("unexpected length: %d : %d", c.length, res.length)
-			}
+
+			assertThumbnail(t, thumb)
+			assertDims(t, img.Dims, c.dims)
+			assertAudio(t, img.Audio, c.audio)
+			assertLength(t, img.Length, c.length)
 		})
 	}
 }
@@ -190,21 +193,22 @@ func TestProcessMP4(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			res := processMP4(readSample(t, c.file+".mp4"))
-			if res.err != c.err {
-				t.Fatal(res.err)
+			thumb, img, err := processFile(
+				readSample(t, c.file+".mp4"),
+				common.ImageCommon{},
+				dummyOpts,
+			)
+			if err != c.err {
+				t.Fatal(err)
 			}
 			if c.err != nil {
 				return
 			}
-			assertThumbnail(t, res.thumb)
-			assertDims(t, res.dims, c.dims)
-			if res.audio != c.audio {
-				t.Error("unexpected audio flag value")
-			}
-			if res.length != c.length {
-				t.Errorf("unexpected length: %d : %d", c.length, res.length)
-			}
+
+			assertThumbnail(t, thumb)
+			assertDims(t, img.Dims, c.dims)
+			assertAudio(t, img.Audio, c.audio)
+			assertLength(t, img.Length, c.length)
 		})
 	}
 }

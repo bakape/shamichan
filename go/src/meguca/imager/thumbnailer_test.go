@@ -3,12 +3,14 @@ package imager
 import (
 	"fmt"
 	"io/ioutil"
+	"meguca/common"
+	"meguca/config"
+	"meguca/imager/assets"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"meguca/config"
-	"meguca/imager/assets"
+	"github.com/bakape/thumbnailer"
 )
 
 func TestImageProcessing(t *testing.T) {
@@ -34,26 +36,37 @@ func TestImageProcessing(t *testing.T) {
 		t.Run(c.ext, func(t *testing.T) {
 			t.Parallel()
 
-			buf := readSample(t, "sample."+c.ext)
-			thumb, dims, isPNG, err := processImage(buf, 0, 0)
+			thumb, img, err := processFile(
+				readSample(t, "sample."+c.ext),
+				common.ImageCommon{},
+				thumbnailer.Options{
+					ThumbDims: thumbnailer.Dims{
+						Width:  150,
+						Height: 150,
+					},
+					JPEGQuality: 90,
+				},
+			)
 			if err != nil {
 				t.Fatal(err)
 			}
 
 			assertThumbnail(t, thumb)
-			assertDims(t, dims, c.dims)
+			assertDims(t, img.Dims, c.dims)
 
-			if isPNG != c.isPNG {
-				t.Error("unexpected thumbnail type")
+			thumbType := common.JPEG
+			if c.isPNG {
+				thumbType = common.PNG
 			}
+			assertFileType(t, img.ThumbType, thumbType)
 
 			var thumbExt string
-			if isPNG {
+			if img.ThumbType == common.PNG {
 				thumbExt = "png"
 			} else {
 				thumbExt = "jpg"
 			}
-			t.Logf(`dims: %dx%d`, dims[2], dims[3])
+			t.Logf(`dims: %dx%d`, img.Dims[2], img.Dims[3])
 			writeSample(t, fmt.Sprintf("thumb_%s.%s", c.ext, thumbExt), thumb)
 		})
 	}
@@ -76,75 +89,6 @@ func writeSample(t *testing.T, name string, buf []byte) {
 	}
 
 	err = ioutil.WriteFile(path, buf, 0600)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestGraphicsMagicErrorPassing(t *testing.T) {
-	config.Set(config.Configs{
-		MaxWidth:  2000,
-		MaxHeight: 2000,
-	})
-	_, _, _, err := processImage(nil, 0, 0)
-	if err == nil {
-		t.Fatal(`expected error`)
-	}
-}
-
-func TestDimensionValidation(t *testing.T) {
-	config.Set(config.Configs{
-		MaxWidth:  2000,
-		MaxHeight: 2000,
-	})
-
-	cases := [...]struct {
-		name, file string
-		err        error
-	}{
-		{
-			name: "too wide",
-			file: "too wide.jpg",
-			err:  errTooWide,
-		},
-		{
-			name: "too tall",
-			file: "too tall.jpg",
-			err:  errTooTall,
-		},
-		{
-			name: "pass",
-			file: "sample.jpg",
-		},
-		{
-			name: "pdf pass through",
-			file: "sample.pdf",
-		},
-	}
-
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-
-			_, _, _, err := processImage(readSample(t, c.file), 0, 0)
-
-			if err != c.err {
-				t.Fatalf("unexpected error: `%s` : `%s`", c.err, err)
-			}
-		})
-	}
-}
-
-func TestSourceAlreadyThumbSize(t *testing.T) {
-	config.Set(config.Configs{
-		MaxWidth:  2000,
-		MaxHeight: 2000,
-	})
-
-	_, dims, _, err := processImage(readSample(t, "too small.png"), 0, 0)
-
-	assertDims(t, dims, [4]uint16{121, 150, 121, 150})
 	if err != nil {
 		t.Fatal(err)
 	}

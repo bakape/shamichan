@@ -7,17 +7,15 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
-	"runtime"
-	"sync"
-
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/db"
-	"meguca/imager"
 	"meguca/imager/assets"
 	"meguca/lang"
 	"meguca/templates"
+	"os"
+	"runtime"
+	"sync"
 )
 
 var (
@@ -149,7 +147,6 @@ func startServer() {
 		}
 	}
 
-	defer imager.UnloadGM()
 	load(db.LoadDB, assets.CreateDirs, lang.Load)
 	wg.Wait()
 	load(templates.Compile)

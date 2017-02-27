@@ -5,56 +5,106 @@ import (
 	"compress/gzip"
 	"io"
 
+	"github.com/bakape/thumbnailer"
 	"github.com/ulikunitz/xz"
 )
 
+const (
+	mimeZip   = "application/zip"
+	mime7Zip  = "application/x-7z-compressed"
+	mimeTarGZ = "application/gzip"
+	mimeTarXZ = "application/x-xz"
+)
+
+func init() {
+	fns := [...]thumbnailer.MatcherFunc{
+		detect7z,
+		detectZip,
+		detectTarGZ,
+		detectTarXZ,
+	}
+	for _, fn := range fns {
+		thumbnailer.RegisterMatcher(fn)
+	}
+
+	for _, m := range [...]string{mimeZip, mime7Zip, mimeTarGZ, mimeTarXZ} {
+		thumbnailer.RegisterProcessor(m, processArchive)
+	}
+}
+
 // Detect if file is a TAR archive compressed with GZIP
-func detectTarGZ(buf []byte) (bool, error) {
+func detectTarGZ(buf []byte) (mime string, ext string) {
 	if !bytes.HasPrefix(buf, []byte("\x1F\x8B\x08")) {
-		return false, nil
+		return
 	}
 
 	r, err := gzip.NewReader(bytes.NewReader(buf))
-	if err != nil {
-		return false, err
+	switch {
+	case err != nil:
+	case isTar(r):
+		mime = mimeTarGZ
+		ext = "tar.gz"
 	}
-	return isTar(r)
+	return
 }
 
 // Read the start of the file and determine, if it is a TAR archive
-func isTar(r io.Reader) (bool, error) {
+func isTar(r io.Reader) bool {
 	head := make([]byte, 262)
 	read, err := r.Read(head)
-	if err != nil {
-		return false, err
+	if err != nil || read != 262 {
+		return false
 	}
-	if read != 262 {
-		return false, nil
-	}
-	return bytes.HasPrefix(head[257:], []byte("ustar")), nil
+	return bytes.HasPrefix(head[257:], []byte("ustar"))
 }
 
 // Detect if file is a TAR archive compressed with XZ
-func detectTarXZ(buf []byte) (bool, error) {
+func detectTarXZ(buf []byte) (mime string, ext string) {
 	if !bytes.HasPrefix(buf, []byte{0xFD, '7', 'z', 'X', 'Z', 0x00}) {
-		return false, nil
+		return "", ""
 	}
 
 	r, err := xz.NewReader(bytes.NewReader(buf))
-	if err != nil {
-		return false, err
+	switch {
+	case err != nil:
+	case isTar(r):
+		mime = mimeTarXZ
+		ext = "tar.xz"
 	}
-	return isTar(r)
+	return
 }
 
 // Detect if file is a 7zip archive
-func detect7z(buf []byte) (bool, error) {
-	return bytes.HasPrefix(buf, []byte{'7', 'z', 0xBC, 0xAF, 0x27, 0x1C}), nil
+func detect7z(buf []byte) (string, string) {
+	if bytes.HasPrefix(buf, []byte{'7', 'z', 0xBC, 0xAF, 0x27, 0x1C}) {
+		return mime7Zip, "7z"
+	}
+	return "", ""
+}
+
+// Detect zip archives
+func detectZip(data []byte) (string, string) {
+	if bytes.HasPrefix(data, []byte("\x50\x4B\x03\x04")) {
+		return mimeZip, "zip"
+	}
+	return "", ""
 }
 
 // Attach thumbnail to archive uploads and return
-func processArchive() (res thumbResponse) {
-	res.thumb, res.err = Asset("archive.png")
-	res.dims = [4]uint16{150, 150, 150, 150}
-	return res
+func processArchive(src thumbnailer.Source, _ thumbnailer.Options) (
+	thumbnailer.Source, thumbnailer.Thumbnail, error,
+) {
+	thumb := thumbnailer.Thumbnail{
+		Image: thumbnailer.Image{
+			Data: MustAsset("archive.png"),
+			Dims: thumbnailer.Dims{
+				Width:  150,
+				Height: 150,
+			},
+		},
+		IsPNG: true,
+	}
+	src.Width = 150
+	src.Height = 150
+	return src, thumb, nil
 }

@@ -1,69 +1,59 @@
 package imager
 
 import (
-	"testing"
-
-	"meguca/config"
+	"meguca/common"
 	"meguca/imager/assets"
 	. "meguca/test"
+	"testing"
 )
 
 const mp3Length uint32 = 1
 
-func TestMP3Detection(t *testing.T) {
+func TestProcessMP3NoCover(t *testing.T) {
 	t.Parallel()
 
-	cases := [...]struct {
-		ext   string
-		isMP3 bool
-	}{
-		{"mp3", true},
-		{"webm", false},
-		{"txt", false},
+	thumb, img, err := processFile(
+		readSample(t, "sample.mp3"),
+		common.ImageCommon{},
+		dummyOpts,
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.ext, func(t *testing.T) {
-			t.Parallel()
+	assertLength(t, img.Length, mp3Length)
+	assertFileType(t, img.FileType, common.MP3)
+	AssertBufferEquals(t, thumb, readFallbackThumb(t, "audio.png"))
+	assertDims(t, img.Dims, [4]uint16{150, 150, 150, 150})
+}
 
-			isMp3, err := detectMP3(readSample(t, "sample."+c.ext))
-			if err != nil {
-				t.Fatal(err)
-			}
-			if isMp3 != c.isMP3 {
-				t.Fatal("unexpected result")
-			}
-		})
+func assertFileType(t *testing.T, res, std uint8) {
+	if res != std {
+		t.Errorf("unexpected file type: %d : %d", std, res)
 	}
 }
 
-func TestProcessMP3NoCover(t *testing.T) {
-	res := processMP3(readSample(t, "sample.mp3"))
-	if res.err != nil {
-		t.Fatal(res.err)
-	}
-
-	AssertBufferEquals(t, res.thumb, readFallbackThumb(t, "audio.png"))
-	assertDims(t, res.dims, [4]uint16{150, 150, 150, 150})
-	if res.length != mp3Length {
-		t.Fatalf("unexpected length: %d : %d", mp3Length, res.length)
+func assertLength(t *testing.T, res, std uint32) {
+	if res != std {
+		t.Errorf("unexpected length: %d : %d", std, res)
 	}
 }
 
 func TestProcessMP3(t *testing.T) {
-	config.Set(config.Defaults)
+	t.Parallel()
 
-	res := processMP3(readSample(t, "with-cover.mp3"))
-	if res.err != nil {
-		t.Fatal(res.err)
+	thumb, img, err := processFile(
+		readSample(t, "with_cover.mp3"),
+		common.ImageCommon{},
+		dummyOpts,
+	)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	assertThumbnail(t, res.thumb)
-	assertDims(t, res.dims, assets.StdDims["png"])
-	if res.length != mp3Length {
-		t.Fatalf("unexpected length: %d : %d", mp3Length, res.length)
-	}
+	assertThumbnail(t, thumb)
+	assertDims(t, img.Dims, assets.StdDims["png"])
+	assertLength(t, img.Length, mp3Length)
 }
 
 func readFallbackThumb(t *testing.T, name string) []byte {
