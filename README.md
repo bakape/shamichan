@@ -6,59 +6,97 @@ Platforms: Linux, OSX, Win64
 License: GNU AGPL
 
 ##Features
-* Posts and posting
-    - Character by character post updates
-    - Hovering quick reply for post authoring
-    - Dice roll, coin flip and eightball commands
-    - Desktop notifications, post highlighting and "(You)" on quote
-    - Post link hover previews, including cross-thread
-    - Inline post link expansion
-    - Optional relative post timestamps
-    - Image spoilering after closing a post
-    - Non-temporal and recursive post linking
-    - No posts per thread or threads per board limit
-    - Forced anonymity display mode
-    - Post hiding
-    - Option to display only the last 100 posts in a thread
-    - Optional automatic deletion of unused threads and boards
-    - Automatic HTTP(S) and magnet URL linkification
-    - Automatic quoting of selected text, when quoting a post
-    - Live programming code tags with syntax highlighting
-* Files and images
-    - JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ
-    supported
-    - Transparent PNG and GIF thumbnails
-    - Configurable size limits
-    - Inbuilt reverse image search
-    - No file is ever thumbnailed or stored twice, reducing server load and
-    disk space usage
-    - Any file already present on the server is "uploaded and thumbnailed"
-    instantly
-* Performance
-    - Low memory and CPU usage
-    - No frameworks and optimized code on both client and server
-    - File upload processing written in C with GraphicsMagick and ffmpeg
-    - Inbuilt custom LRU cache
-* Client UI
-    - Works with all modern and most outdated browsers (such as PaleMoon)
-    - Read-only functionality preserved with JavaScript disabled
-    - Multiple themes
-    - Custom user-set backgrounds and CSS
-    - Mascots
-    - Configurable keyboard shortcuts
-    - Work mode aka Boss key
-    - Customisable top banner board link list
-    - Optional animated GIF thumbnails
-    - Settings export/import to/from JSON file
-* Board administration
-    - User board creation and configuration panels
-* Internationalization
-    - Client almost entirely localized in multiple languages
-    - More languages can be added by editing simple JSON files
-* Miscellaneous
-    - Documented public JSON API and WebSocket protocol
-    - Optional R/a/dio Now Playing banner
-    - Synchronized time counters (for group watching sessions and such)
+<details>
+    <summary>Posts and posting</summary>
+    <ul>
+        <li>Character by character post updates</li>
+        <li>Hovering quick reply for post authoring</li>
+        <li>Dice roll, coin flip and eightball commands</li>
+        <li>Desktop notifications, post highlighting and "(You)" on quote</li>
+        <li>Post link hover previews, including cross-thread</li>
+        <li>Inline post link expansion</li>
+        <li>Optional relative post timestamps</li>
+        <li>Image spoilering after closing a post</li>
+        <li>Non-temporal and recursive post linking</li>
+        <li>No posts per thread or threads per board limit</li>
+        <li>Forced anonymity display mode</li>
+        <li>Post hiding</li>
+        <li>Option to display only the last 100 posts in a thread</li>
+        <li>Optional automatic deletion of unused threads and boards</li>
+        <li>Automatic HTTP(S) and magnet URL linkification</li>
+        <li>Automatic quoting of selected text, when quoting a post</li>
+        <li>Live programming code tags with syntax highlighting</li>
+    </ul>
+</details>
+<details>
+    <summary>Files and images</summary>
+    <ul>
+        <li>
+            JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and
+            TAR.XZ are supported
+        </li>
+        <li>Transparent PNG and GIF thumbnails</li>
+        <li>Configurable size limits</li>
+        <li>Inbuilt reverse image search</li>
+        <li>
+            No file is ever thumbnailed or stored twice, reducing server load
+            and disk space usage
+        </li>
+        <li>
+            Any file already present on the server is "uploaded and thumbnailed"
+        </li>
+        instantly
+    </ul>
+</details>
+<details>
+    <summary>Performance</summary>
+    <ul>
+        <li>Low memory and CPU usage</li>
+        <li>No frameworks and optimized code on both client and server</li>
+        <li>
+            File upload processing written in C with GraphicsMagick and ffmpeg
+        </li>
+        <li>Inbuilt custom LRU cache</li>
+    </ul>
+</details>
+<details>
+    <summary>Client UI</summary>
+    <ul>
+        <li>Works with all modern and most outdated browsers (such as PaleMoon)</li>
+        <li>Read-only functionality preserved with JavaScript disabled</li>
+        <li>Multiple themes</li>
+        <li>Custom user-set backgrounds and CSS</li>
+        <li>Mascots</li>
+        <li>Configurable keyboard shortcuts</li>
+        <li>Work mode aka Boss key</li>
+        <li>Customisable top banner board link list</li>
+        <li>Optional animated GIF thumbnails</li>
+        <li>Settings export/import to/from JSON file</li>
+    </ul>
+</details>
+<details>
+    <summary>Board administration</summary>
+    <ul>
+        <li>User board creation and configuration panels</li>
+    </ul>
+</details>
+<details>
+    <summary>Internationalization</summary>
+    <ul>
+        <li>Client almost entirely localized in multiple languages</li>
+        <li>More languages can be added by editing simple JSON files</li>
+    </ul>
+</details>
+<details>
+    <summary>Miscellaneous</summary>
+    <ul>
+        <li>Documented public JSON API and WebSocket protocol</li>
+        <li>Optional R/a/dio Now Playing banner</li>
+        <li>
+            Synchronized time counters (for group watching sessions and such)
+        </li>
+    </ul>
+</details>
 
 ##Runtime dependencies
 * [PostgresSQL](https://www.postgresql.org/download/) >= 9.5
