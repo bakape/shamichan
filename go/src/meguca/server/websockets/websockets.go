@@ -99,9 +99,8 @@ func newClient(conn *websocket.Conn, req *http.Request) *Client {
 		close:    make(chan error, 2),
 		receive:  make(chan receivedMessage),
 		redirect: make(chan string),
-		// Allows for ~6 seconds of messages at 0.2 second intervals, until the
-		// buffer overflows.
-		sendExternal: make(chan []byte, 1<<5),
+		// Allows for ~6 seconds of messages , until the buffer overflows
+		sendExternal: make(chan []byte, time.Second*6/util.TickerInterval),
 		conn:         conn,
 	}
 }

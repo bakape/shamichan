@@ -9,6 +9,9 @@ import (
 	"time"
 )
 
+// TickerInterval sets the interval of PausableTicker flushes
+const TickerInterval = time.Millisecond * 100
+
 // PausableTicker is a time.Ticker that can be paused
 type PausableTicker struct {
 	t *time.Ticker
@@ -17,7 +20,7 @@ type PausableTicker struct {
 
 // Start starts p
 func (p *PausableTicker) Start() {
-	p.t = time.NewTicker(time.Millisecond * 50)
+	p.t = time.NewTicker(TickerInterval)
 	p.C = p.t.C
 }
 
