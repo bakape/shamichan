@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v4.1.1 - 2017-03-04
+* Fix:
+	- Errors, when firing click handlers on text
+	- Posting form corrupting on opened and then quickly closed posts
+	- Latency issues in active threads with many open posts
+	- Posting form not disappearing with an empty text body
+
 ##v4.1.0 - 2017-02-22
 * Fix
 	- Video and audio length formatting
