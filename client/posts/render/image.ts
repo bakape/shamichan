@@ -112,7 +112,7 @@ function commaList(items: string[]): string {
 function renderImageSearch(cont: HTMLElement, img: ImageData) {
     const ch = cont.children
     for (let i = 0; i < ch.length; i++) {
-        const {type, url} = ISSpecs[i]
+        const { type, url } = ISSpecs[i]
         let arg: string
         switch (type) {
             case ISType.src:
@@ -130,7 +130,7 @@ function renderImageSearch(cont: HTMLElement, img: ImageData) {
 }
 
 // Resolve URL of image search, that require to download the image file
-function resolveFuzzyIS({fileType, thumbType, SHA1, size}: ImageData): string {
+function resolveFuzzyIS({ fileType, thumbType, SHA1, size }: ImageData): string {
     let root: string,
         type: fileTypes
     switch (fileType) {
@@ -190,14 +190,19 @@ export function sourcePath(SHA1: string, fileType: fileTypes): string {
     return `${imageRoot()}/src/${SHA1}.${fileTypes[fileType]}`
 }
 
+// Resolve the path to the source file of an upload relative to the site root
+function relativeSourcePath(SHA1: string, fileType: fileTypes): string {
+    return `/images/src/${SHA1}.${fileTypes[fileType]}`
+}
+
 // Render a name + download link of an image
 function imageLink(el: Element, data: ImageData) {
-    let {name} = data
-    const {SHA1, fileType} = data
+    let { name } = data
+    const { SHA1, fileType } = data
     name = `${escape(name)}.${fileTypes[fileType]}`
 
     setAttrs(el, {
-        href: sourcePath(SHA1, fileType),
+        href: relativeSourcePath(SHA1, fileType),
         download: name,
     })
     el.innerHTML = name

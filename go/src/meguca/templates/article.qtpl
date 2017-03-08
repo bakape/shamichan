@@ -115,7 +115,7 @@
 					)
 				</span>
 				{% code name := imageName(img.FileType, img.Name) %}
-				<a href="{%s= src %}" download="{%s= name %}">
+				<a href="{%s= assets.RelativeSourcePath(img.FileType, img.SHA1) %}" download="{%s= name %}">
 					{%s= name %}
 				</a>
 			</figcaption>
