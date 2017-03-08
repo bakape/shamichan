@@ -22,6 +22,11 @@ function handleClick(event: KeyboardEvent) {
 	if (target.classList.contains("post-link") && options.postInlineExpand) {
 		return
 	}
+	// Don't scroll to target post on thread pages
+	if (target.classList.contains("quote") && page.thread) {
+		event.preventDefault()
+		return
+	}
 
 	const href = (target.closest("a.history") as HTMLAnchorElement).href
 	navigate(href, event, true).catch(alertError)
