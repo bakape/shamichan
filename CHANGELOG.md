@@ -2,8 +2,13 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v4.1.2 - 2017-03-08
+* Fix
+	- Downloads not retaining original file names
+	- Quote links causing scrolling
+
 ##v4.1.1 - 2017-03-04
-* Fix:
+* Fix
 	- Errors, when firing click handlers on text
 	- Posting form corrupting on opened and then quickly closed posts
 	- Latency issues in active threads with many open posts
