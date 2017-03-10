@@ -5,8 +5,6 @@ import { Post } from "./model"
 import { clearStore } from "../db"
 import { trigger } from "../util"
 
-// TODO: Thread hiding
-
 // Hide a post and persist to database
 export function hidePost(model: Post) {
 	model.remove()
