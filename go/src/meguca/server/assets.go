@@ -9,8 +9,6 @@ import (
 	"strconv"
 )
 
-const assetCacheHeader = "max-age=0, must-revalidate"
-
 var (
 	// Set of headers for serving images (and other uploaded files)
 	imageHeaders = map[string]string{
@@ -79,7 +77,7 @@ func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 	etag := strconv.FormatInt(modTime.Unix(), 10)
 
 	head := w.Header()
-	head.Set("Cache-Control", assetCacheHeader)
+	head.Set("Cache-Control", "no-cache")
 	head.Set("ETag", etag)
 	http.ServeContent(w, r, path, modTime, file)
 }

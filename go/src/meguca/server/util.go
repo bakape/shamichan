@@ -9,12 +9,13 @@ import (
 	"meguca/templates"
 	"net/http"
 	"runtime/debug"
+	"strconv"
 )
 
 // Base set of HTTP headers for both HTML and JSON
 var vanillaHeaders = map[string]string{
 	"X-Frame-Options": "sameorigin",
-	"Cache-Control":   "max-age=0, must-revalidate",
+	"Cache-Control":   "no-cache",
 	"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
 }
 
@@ -30,6 +31,26 @@ func checkClientEtag(
 		return true
 	}
 	return false
+}
+
+// Combine the progress counter and optional configuration hash into a weak etag
+func formatEtag(ctr uint64, lang, hash string) string {
+	c := strconv.FormatUint(ctr, 10)
+	buf := make([]byte, 2, 9+len(c)+len(hash))
+	buf[0] = 'W'
+	buf[1] = '/'
+	buf = append(buf, c...)
+
+	if lang != "" {
+		buf = append(buf, '-')
+		buf = append(buf, lang...)
+	}
+	if hash != "" {
+		buf = append(buf, '-')
+		buf = append(buf, hash...)
+	}
+
+	return string(buf)
 }
 
 // Write a []byte to the client

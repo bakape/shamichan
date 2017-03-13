@@ -230,26 +230,6 @@ func validateThread(
 	return id, true
 }
 
-// Combine the progress counter and optional configuration hash into a weak etag
-func formatEtag(ctr uint64, lang, hash string) string {
-	c := strconv.FormatUint(ctr, 10)
-	buf := make([]byte, 2, 9+len(c)+len(hash))
-	buf[0] = 'W'
-	buf[1] = '/'
-	buf = append(buf, c...)
-
-	if lang != "" {
-		buf = append(buf, '-')
-		buf = append(buf, lang...)
-	}
-	if hash != "" {
-		buf = append(buf, '-')
-		buf = append(buf, hash...)
-	}
-
-	return string(buf)
-}
-
 // Serves board page JSON
 func boardJSON(
 	w http.ResponseWriter,
