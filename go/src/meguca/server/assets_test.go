@@ -50,12 +50,6 @@ func TestImageServer(t *testing.T) {
 	assertBody(t, rec, string(buf))
 	assertHeaders(t, rec, imageHeaders)
 
-	// Second fetch
-	rec, req = newPair(found)
-	req.Header.Set("If-None-Match", "0")
-	router.ServeHTTP(rec, req)
-	assertCode(t, rec, 304)
-
 	// Non-existing file
 	rec, req = newPair(notFound)
 	router.ServeHTTP(rec, req)
