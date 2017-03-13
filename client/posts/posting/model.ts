@@ -69,7 +69,7 @@ export default class FormModel extends Post {
 	// newline
 	public append(code: number) {
 		if (!this.editing) {
-			return super.append(code)
+			return
 		}
 		this.body += String.fromCodePoint(code)
 	}
@@ -77,7 +77,7 @@ export default class FormModel extends Post {
 	// Remove the last character from the model's body
 	public backspace() {
 		if (!this.editing) {
-			return super.backspace()
+			return
 		}
 		this.body = this.body.slice(0, -1)
 	}
@@ -85,7 +85,7 @@ export default class FormModel extends Post {
 	// Splice the last line of the body
 	public splice(msg: SpliceResponse) {
 		if (!this.editing) {
-			return super.splice(msg)
+			return
 		}
 		this.body = this.spliceText(this.body, msg)
 	}
@@ -191,6 +191,7 @@ export default class FormModel extends Post {
 
 	// Close the form and revert to regular post
 	public commitClose() {
+		this.body = this.inputBody
 		this.abandon()
 		this.send(message.closePost, null)
 	}

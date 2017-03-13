@@ -11,8 +11,6 @@ export interface ViewAttrs {
 // Generic model class, that all other model classes extend
 export class Model {
 	public id: number
-
-	[index: string]: any
 }
 
 // Generic view class, that all over view classes extend
@@ -23,7 +21,7 @@ export default class View<M> {
 
 	// Creates a new View and binds it to the target model, id any. If no
 	// element supplied, creates a new one from the attributes.
-	constructor({el, model, tag, class: cls, id}: ViewAttrs) {
+	constructor({ el, model, tag, class: cls, id }: ViewAttrs) {
 		if (model) {
 			this.model = model as any
 		}

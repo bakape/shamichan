@@ -98,7 +98,7 @@ export class Post extends Model implements PostData {
 	// Extra method for code reuse in post forms
 	protected spliceText(
 		body: string,
-		{start, len, text}: SpliceResponse,
+		{ start, len, text }: SpliceResponse,
 	): string {
 		// Must use arrays of chars to properly splice multibyte unicode
 		const keep = Array.from(body).slice(0, start),

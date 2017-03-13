@@ -3,16 +3,14 @@
 package server
 
 import (
-	"net/http"
-	"strconv"
-
 	"database/sql"
-
 	"meguca/auth"
 	"meguca/config"
 	"meguca/db"
 	"meguca/imager"
 	"meguca/server/websockets"
+	"net/http"
+	"strconv"
 )
 
 // Spoiler an already allocated image
