@@ -3,13 +3,12 @@ package server
 import (
 	"fmt"
 	"log"
-	"net/http"
-	"runtime/debug"
-
 	"meguca/auth"
 	"meguca/db"
 	"meguca/lang"
 	"meguca/templates"
+	"net/http"
+	"runtime/debug"
 )
 
 // Base set of HTTP headers for both HTML and JSON

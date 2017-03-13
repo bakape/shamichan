@@ -18,8 +18,6 @@ var (
 		// it is a year or greater, so keep it a little below.
 		"Cache-Control":   "max-age=30240000, public, immutable",
 		"X-Frame-Options": "sameorigin",
-		// Fake E-tag, because all images are immutable
-		"ETag": "0",
 	}
 
 	// For overriding during tests
@@ -36,11 +34,6 @@ func getWorkerPath() string {
 // More performant handler for serving image assets. These are immutable
 // (except deletion), so we can also set separate caching policies for them.
 func serveImages(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	if r.Header.Get("If-None-Match") == "0" {
-		w.WriteHeader(304)
-		return
-	}
-
 	file, err := os.Open(cleanJoin(imageWebRoot, p["path"]))
 	if err != nil {
 		text404(w)
