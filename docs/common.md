@@ -4,7 +4,7 @@ Note that to minimize network payload fields at their null values are omitted.
 For example a post containing `"editing":false` will have the editing field
 omitted.
 
-##Post
+## Post
 Generic post object
 
 | Field | Type | Required | Description |
@@ -20,7 +20,7 @@ Generic post object
 | commands | [[]Command](#command) | - | results of hash commands, such as #flip |
 | image | [Image](#image) | - | uploaded file data |
 
-##Image
+## Image
 Uploaded file data attached to post
 
 | Field | Type | Required | Description |
@@ -38,7 +38,7 @@ Uploaded file data attached to post
 | SHA1 | string | + | SHA1 hash of the originally uploaded file. Encoded to hex. |
 | name | string | + | file name the user uploaded the file with without extension |
 
-##fileTypes
+## fileTypes
 Enum representing all available file types an uploaded file can be. These are
 also the canonical file extensions of these types. The extensions of thumbnails
 is `.png` for all file types, except for `.jpg`, in which case it is `.jpg`.
@@ -47,10 +47,10 @@ is `.png` for all file types, except for `.jpg`, in which case it is `.jpg`.
 jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz"
 ```
 
-##PostLinks
+## PostLinks
 Array of linked post and parent thread tuples - [][2]uint
 
-##Command
+## Command
 Results of an executed hash command. Several different object types implement
 this common interface and cary data appropriate to their command type. The
 "type" field defines which type of command is stored, according to enum:

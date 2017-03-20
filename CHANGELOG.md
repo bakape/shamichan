@@ -2,19 +2,19 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
-##v4.1.2 - 2017-03-08
+## v4.1.2 - 2017-03-08
 * Fix
 	- Downloads not retaining original file names
 	- Quote links causing scrolling
 
-##v4.1.1 - 2017-03-04
+## v4.1.1 - 2017-03-04
 * Fix
 	- Errors, when firing click handlers on text
 	- Posting form corrupting on opened and then quickly closed posts
 	- Latency issues in active threads with many open posts
 	- Posting form not disappearing with an empty text body
 
-##v4.1.0 - 2017-02-22
+## v4.1.0 - 2017-02-22
 * Fix
 	- Video and audio length formatting
 * Add
@@ -28,7 +28,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Use board index view as default board view
 	- JSON API. See `/docs/`
 
-##v4.0.0 - 2017-02-13
+## v4.0.0 - 2017-02-13
 * Add
 	- Thread post and image count indicators
 	- Board deletion
@@ -62,18 +62,18 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Image search on large uploads and videos
 	- Unselectable post numbers
 
-##v3.2.1 - 2016-12-20
+## v3.2.1 - 2016-12-20
 * Fix
 	- Only highlight links to the actual post in inline posts
 
-##v3.2.0 - 2016-12-20
+## v3.2.0 - 2016-12-20
 * Fix
 	- Inline post border visibility on all themes
 * Add
 	- Reference installation commands
 	- Highlight reverse reference links in inlined posts
 
-##v3.1.0 - 2016-12-19
+## v3.1.0 - 2016-12-19
 * Change
 	- Improved page loading and JSON/HTML generation Speed
 	- Improved file thumbnailing speed
@@ -94,7 +94,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Automatic quoting of selected text, when quoting a post
 	- Inline post link expansion
 
-##v3.0.0 - 2016-12-12
+## v3.0.0 - 2016-12-12
 * BREAKING:
 	- Changed CLI flags to shorter one letter variants
 	- Removed `--origin` CLI flag
@@ -119,12 +119,12 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Relative timestamps not toggling off without refresh
 	- Downloading archives on thumbnail click in FireFox
 
-##v2.7.1 - 2016-11-30
+## v2.7.1 - 2016-11-30
 * Fix
 	- Backspace corrupting posts, when tab hidden
 	- Catalog sorting and searching
 
-##v2.7.0 - 2016-11-29
+## v2.7.0 - 2016-11-29
 * Fix
 	- Not compiling due to TypeScript type checker regression
 	- Images expanding in post previews
@@ -145,11 +145,11 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Websocket connection origin restrictions
 	- "--origin" CLI parameter
 
-##v2.6.1 - 2016-11-02
+## v2.6.1 - 2016-11-02
 * Fix
 	- Splicing of multibyte character unicode strings
 
-##v2.6.0 - 2016-11-02
+## v2.6.0 - 2016-11-02
 * Add
 	- OGG and MP4 upload support
 	- Preview new post credentials before allocation
@@ -171,11 +171,11 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Middle clicking on image search links
 	- Missing content after resuming from standby or a background tab on mobile
 
-##v2.5.1 - 2016-10-23
+## v2.5.1 - 2016-10-23
 * Fix
 	- Board configuration live reloading
 
-##v2.5.0 - 2016-10-22
+## v2.5.0 - 2016-10-22
 * Fix
 	- Existing board updates on board creation
 	- Don't lock to bottom, when navigating between threads
@@ -183,11 +183,11 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Cross-thread post previews
 	- Underline reverse links in post hover previews
 
-##v2.4.1 - 2016-10-21
+## v2.4.1 - 2016-10-21
 * Fix
 	- Page not loading, when there are no boards created
 
-##v2.4.0 - 2016-10-18
+## v2.4.0 - 2016-10-18
 * Add
 	- Youtube, SoundCloud and Vimeo embeds
 	- Optional notice for mature content
@@ -201,7 +201,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Hide file upload controls while uploading
 	- Scroll to bottom on post creation
 
-##v2.3.0 - 2016-10-08
+## v2.3.0 - 2016-10-08
 * Warning
 	- An automatic database upgrade will be performed. Make sure only one
 	instance of meguca is running at that time. It is also recommended to back
@@ -235,7 +235,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- File upload attempt handling on text-only boards
 	- Etag generation on upload assets and JSON
 
-##v2.2.0-beta - 2016-09-02
+## v2.2.0-beta - 2016-09-02
 * Add
 	- Configurable board navigation panel
 	- Board configuration WebUI
@@ -252,7 +252,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Board list retrieval with no boards created
 	- Captcha reloading in login/registration forms
 
-##v2.1.0-alpha - 2016-07-04
+## v2.1.0-alpha - 2016-07-04
 * License
 	- Relicense under GNU AGPL
 * Add
@@ -273,71 +273,71 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Pseudo boards
 	- `config/config.json` configuration file
 
-##v2.0.0-alpha - 2016-06-21
+## v2.0.0-alpha - 2016-06-21
 Start tracking v2 progress in versions for easier debugging
 	- Rewriting server in Go
 	- Rewriting client in TypeScript
 	- Switched DBMS to RethinkDB
 
-##v1.9.6 - 2016-08-11
+## v1.9.6 - 2016-08-11
 * Add
 	- Turkish language pack
 
-##v1.9.5 - 2016-07-12
+## v1.9.5 - 2016-07-12
 * Fix
 	- Outdated desustorage URL
 
-##v1.9.4 - 2016-06-21
+## v1.9.4 - 2016-06-21
 * Fix
 	- Server crashing, when launched from init script on Debian
 
-##v1.9.3 - 2016-06-11
+## v1.9.3 - 2016-06-11
 * Fix
 	- Don't auto expand files with audio and PDF
 
-##v1.9.2 - 2016-05-27
+## v1.9.2 - 2016-05-27
 * Fix
 	- Server crashes on catalog pages
 
-##v1.9.1 - 2016-04-29
+## v1.9.1 - 2016-04-29
 * Fix
 	- Spontaneous server crashes
 
-##v1.9.0 - 2016-04-29
+## v1.9.0 - 2016-04-29
 * Change
 	- Replace homebrew web app install prompt with Android Chrome install banner
 
-##v1.8.3 - 2016-04-17
+## v1.8.3 - 2016-04-17
 * Change
 	- Restore web manifest install prompt on Android Chrome/FF
 
-##v1.8.2 - 2016-04-11
+## v1.8.2 - 2016-04-11
 * Fix
 	- Revert bugged SockJS version change
 
-##v1.8.1 - 2016-04-05
+## v1.8.1 - 2016-04-05
 * Fix
 	- Websocket heartbeat timeout crashes
 
-##v1.8.0 - 2016-04-03
+## v1.8.0 - 2016-04-03
 * Add
 	- Material Design theme
 * Fix
 	- Syncing of mobile devices
 
-##v1.7.5 - 2016-04-01
+## v1.7.5 - 2016-04-01
 * Fix
 	- Not being able to connect to websocket in some cases
 
-##v1.7.4 - 2016-03-28
+## v1.7.4 - 2016-03-28
 * Fix
 	- Post hover anonymisation
 
-##v1.7.3 - 2016-02-12
+## v1.7.3 - 2016-02-12
 * Change
 	- Lock down current stable, so we can move v2 into master
 
-##v1.7.2 - 2015-12-27
+## v1.7.2 - 2015-12-27
 * Fix
 	- Server crashing on no thumbnail catalog OP renders
 	- Image hat z-index
@@ -345,7 +345,7 @@ Start tracking v2 progress in versions for easier debugging
 	- Video controls to all WebM
     - Release publishing helper script
 
-##v1.7.1 - 2015-12-10
+## v1.7.1 - 2015-12-10
 * Fix
 	- r/a/dio banner not updating after prolonged operation
 * Remove
@@ -353,49 +353,49 @@ Start tracking v2 progress in versions for easier debugging
 * Change
 	- Only DJs allowed to wear names with forced anon on
 
-##v1.7.0 - 2015-12-05
+## v1.7.0 - 2015-12-05
 * Remove
 	- Drop shadow from image hover previews
 * Add
 	- DJ staff class with ability to scan for song requests
 
-##v1.6.2 - 2015-11-21
+## v1.6.2 - 2015-11-21
 * Fix
 	- PDF thumbnailing timeout
 
-##v1.6.1 - 2015-11-15
+## v1.6.1 - 2015-11-15
 * Fix
 	- Post links in report emails
 
-##v1.6.0 - 2015-11-13
+## v1.6.0 - 2015-11-13
 * Fix
 	- Page not loading on outdated Chrome versions
 * Add
 	- Restore Vagrant support
 
-##v1.5.1 - 2015-11-10
+## v1.5.1 - 2015-11-10
 * Fix
 	- "hide" image thumbnail mode
 
-##v1.5.0 - 2015-11-08
+## v1.5.0 - 2015-11-08
 * Add
 	- Work mode aka Boss key
 
-##v1.4.0 - 2015-11-08
+## v1.4.0 - 2015-11-08
 * Add
 	- Optional site frontpage to serve on '/'
 * Changed
 	- Upgrade breaking dependencies
 
-##v1.3.3 - 2015-11-06
+## v1.3.3 - 2015-11-06
 * Fix
 	- Writing of multiple dice in one fragment
 
-##v1.3.2 - 2015-11-06
+## v1.3.2 - 2015-11-06
 * Fixed
 	- Crash on failing to read moderation array
 
-##v1.3.1 - 2015-10-31
+## v1.3.1 - 2015-10-31
 * Fixed
 	- New post multiplication in Expand All image mode
 	- Crashes related to database dice spec migration
@@ -406,18 +406,18 @@ Start tracking v2 progress in versions for easier debugging
 	- Babel.js transformer check for node.js version >=5
 	- Switch from archive.moe image search to desustorage.org
 
-##v1.3.0 - 2015-10-20
+## v1.3.0 - 2015-10-20
 * Fixed
 	- Crash on parsing dice server-side in some cases
 * Added
 	- Option to hide some boards from navigation bar
 
-##v1.2.7 - 2015-10-11
+## v1.2.7 - 2015-10-11
 * Fixed
 	- "Works best with" appearing on Chromium browsers
 	- Skewed clocks resulting in post showing in the future
 
-##v1.2.6 - 2015-10-10
+## v1.2.6 - 2015-10-10
 * Fixed
 	- Deploy script iptables persistence after reboot
 	- Soundcloud embedding under HTTPS
@@ -425,41 +425,41 @@ Start tracking v2 progress in versions for easier debugging
 	- JS injections now execute on all thread's and board's sections, articles
     and post forms
 
-##v1.2.5 - 2015-10-04
+## v1.2.5 - 2015-10-04
 * Fixed
 	- Post reporting
 
-##v1.2.4 2015-10-03
+## v1.2.4 2015-10-03
 * Fixed
 	- Moderation spoiler live update
 
-##v1.2.3 2015-10-03
+## v1.2.3 2015-10-03
 * Fixed
 	- New post keyboard shortcut
 
-##v1.2.2 - 2015-10-02
+## v1.2.2 - 2015-10-02
 * Changed
 	- Refactored page scrolling on change compensation
 	- Default image hover preview and relative timestamp settings
 
-##v1.2.1 - 2015-09-30
+## v1.2.1 - 2015-09-30
 * Fixed
 	- Staff logging in
 
-##v1.2.0 - 2015-09-30
+## v1.2.0 - 2015-09-30
 * Added
 	- Ability to select redis database to use
 	- Automatic setup script for Ubuntu Trusty
 * Removed
 	- HTML caching
 
-##v1.1.1 - 2015-09-23
+## v1.1.1 - 2015-09-23
 * Fixed
 	- Post menu background artefact
 	- Missing post menu button on console theme
 	- Reload looping, when behind CDN
 
-##v1.1.0 - 2015-09-22
+## v1.1.0 - 2015-09-22
 * Added
 	- 40x and 50x page rendering on requests
 	- DOM level 4 polyfill
@@ -469,7 +469,7 @@ Start tracking v2 progress in versions for easier debugging
 	- Missing top <hr> on thread pages
 	- Missing icons in "Works best with" message
 
-##v1.0.0 - 2015-09-20
+## v1.0.0 - 2015-09-20
 * Added
 	- UTC Clock to the schedule
 	- Options export and import to/from file
@@ -573,17 +573,17 @@ Start tracking v2 progress in versions for easier debugging
 	- Changed server entry point. Use `npm start` to start the server.
 	- Removed thread tagging. See `docs/migration.md`.
 
-##v0.11.3 - 2015-03-31
+## v0.11.3 - 2015-03-31
 * Fixed
 	- Server crash, when thread expiry is not defined for all boards
 
-##v0.11.2 - 2015-03-19
+## v0.11.2 - 2015-03-19
 * Fixed
 	- "Clear hidden" button now only renders on the General tab of options
 	- No word auto completion in the blockquote on mobile
 	- Auto quoting the header, when selected
 
-##v0.11.0 - 2015-03-15
+## v0.11.0 - 2015-03-15
 * Added
 	- PDF uploads
 	- Automatic selected tex quoting
@@ -625,7 +625,7 @@ Start tracking v2 progress in versions for easier debugging
 	- EXIF deletion script
 	- Autocompletion of text in the blockquote
 
-##v0.10.0 - 2015-02-24
+## v0.10.0 - 2015-02-24
 * Added
 	- Vagrant support
 	- Readonly JSON API
@@ -642,7 +642,7 @@ Start tracking v2 progress in versions for easier debugging
 * Changed
 	- Expanded and reorganized documentation
 
-##v0.9.0 - 2015-02-17
+## v0.9.0 - 2015-02-17
 * Added
 	- Chrome for Android home screen webapp support
 	- Option to unlock from page bottom on tab visibility loss
@@ -662,7 +662,7 @@ Start tracking v2 progress in versions for easier debugging
     sure to run `make clean; npm update; npm install` from meguca's root
     directory.
 
-##v0.8.0 - 2015-01-30
+## v0.8.0 - 2015-01-30
 *  Changed
 	- Acquire most dependencies through npm
 	- Moved various settings from config.js to hot.js
@@ -685,7 +685,7 @@ Start tracking v2 progress in versions for easier debugging
 	- Live administrator announcements
 	- Text spoiler keybind
 
-##v0.7.0 - 2015-01-15
+## v0.7.0 - 2015-01-15
 *  Added
 	- Ban purge script
 	- mega.co.nz backup script
@@ -701,7 +701,7 @@ Start tracking v2 progress in versions for easier debugging
 	- Report emails activate moderation multiselection
 	- More complete post model extraction
 
-##v0.6.0 - 2014-12-26
+## v0.6.0 - 2014-12-26
 *  Added
 	- [Top] link in all browsers
 	- Push websocket messages
@@ -709,7 +709,7 @@ Start tracking v2 progress in versions for easier debugging
 *  Changed
 	- Mods can now ban
 
-##v0.5.1 - 2014-12-22
+## v0.5.1 - 2014-12-22
 *  Added
 	- Hot-reloadable word filter
 	- Ability to render minimal page content (w/o scripts and CSS)
@@ -723,7 +723,7 @@ Start tracking v2 progress in versions for easier debugging
 *  Fixed
 	- Faulty ban timeout assignment
 
-##v0.4.0 - 2014-12-3
+## v0.4.0 - 2014-12-3
 *  Info
 	- Started versioning separately from
     [doushio](https://github.com/lalcmellkmal/doushio)

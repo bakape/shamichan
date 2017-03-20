@@ -17,7 +17,7 @@ information.
 | /uploadHash | POST | string{40} | string | Files can be inserted into a post without uploading the actual file, if it already exists on the server. To do this upload the hex-encoded SHA1 hash of the file you wish to insert into the post. If the file exists on the server a upload token is returned, otherwise response body is empty. Use this token in an [ImageRequest](common.md#imagerequest). |
 | /upload | POST | form{"image": File} | string | Uploads a file in a form under the "image" field. Returns a token to be used in [ImageRequest](common.md#imagerequest) for allocating images to posts. |
 
-##Thread
+## Thread
 
 extends [Post](common.md#post)
 
@@ -34,7 +34,7 @@ extends [Post](common.md#post)
 | board | string | + | Parent board of the thread |
 | posts | [][Post](common.md#post) | + | Array of reply posts to the thread |
 
-##StandalonePost
+## StandalonePost
 Additionally contains fields that define the posts parenthood
 
 extends [Post](common.md#post)
@@ -44,7 +44,7 @@ extends [Post](common.md#post)
 | op | uint | + | ID of the parent thread |
 | board | string | + | ID of the parent board |
 
-##Config
+## Config
 
 | Field | Type | Description |
 |---|---|---|
@@ -55,7 +55,7 @@ extends [Post](common.md#post)
 | captchaPublicKey | string | Public key for SolveMedia's captcha API |
 | links | map[string]string | Map of external link references. For example a key-value pair of `"4chan":"https://4chan.org"` would mean links typed in as `>>>/4chan/` should point to that specific URL. |
 
-##BoardConfig
+## BoardConfig
 
 | Field | Type | Description |
 |---|---|---|
@@ -68,14 +68,14 @@ extends [Post](common.md#post)
 | rules | string | Rules of current board |
 | banners | []string | Array of banner file names uploaded for this board. The banners can be found at `/assets/banners/<banner name>`. |
 
-##BoardTitle
+## BoardTitle
 
 | Field | Type | Description |
 |---|---|---|
 | id | string | ID of the board |
 | title | string | Title of the board |
 
-##SpoilingRequest
+## SpoilingRequest
 
 | Field | Type | Description |
 |---|---|---|

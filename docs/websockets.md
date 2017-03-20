@@ -10,7 +10,7 @@ message number is single digit, it must be padded with a leading zero.
 must always be "synchronize".
 - All complex payloads, such as JSON objects are JSON stringified
 
-#Server to client
+# Server to client
 
 | Code | Name | Payload type | Description |
 |:---:|---|---|---|
@@ -34,7 +34,7 @@ must always be "synchronize".
 | 36 | serverTime | uint | Sends the server's current time's Unix timestamp. Can be used for approximating the clock skew between the server and client. |
 | 37 | redirect | string | Notifies the client it has been redirected to the specific board page. Any open posts have been closed and after receiving this message the client is already considered to be synchronized to the board. If the client does comply an error will be raised the client will be disconnected. |
 
-##SpliceMessage
+## SpliceMessage
 
 extends [SpliceRequest](#splicerequest)
 
@@ -42,14 +42,14 @@ extends [SpliceRequest](#splicerequest)
 |---|---|:---:|---|
 | id | uint | + | ID of the target post |
 
-##ImageMessage
+## ImageMessage
 extends [Image](common.md#image)
 
 | Field | Type | Required | Description |
 |---|---|:---:|---|
 | id | uint | + | ID of the target post |
 
-#Client to server
+# Client to server
 
 Some fields of the string type have a maximum allowed length to prevent abuse.
 It is defined in curly brackets after the string type. For example `string{30}`
@@ -68,7 +68,7 @@ denotes a string literal of maximum 30 bytes allowed length.
 | 31 | reclaim | [ReclaimRequest](#reclaimrequest) | Reclaim an open post after losing connection to the server. Note that only open posts can be reclaimed and open posts are automatically closed 30 minutes after opening. |
 | 43 | NOOP | - | No operation message. No payload. Can be used as a pseudo ping, if your WebSocket API does not expose pings. |
 
-##ImageRequest
+## ImageRequest
 Request to allocate a file to a post. Note that allocation requests on boards
 set to text-only will be ignored.
 
@@ -78,7 +78,7 @@ set to text-only will be ignored.
 | token | string{127} | + | Allocation token retrieved from either "/upload" or "/uploadHash" |
 | name | string{200} | + | Original file name of the uploaded file |
 
-##PostCreationCommon
+## PostCreationCommon
 Common fields of both thread and reply creation requests
 
 | Field | Type | Required | Description |
@@ -88,7 +88,7 @@ Common fields of both thread and reply creation requests
 | email | string{100} | - | Poster email |
 | password | string{50} | + | Post password. Used for reclaiming a post after disconnection and preserving other limited post editing functionality, after closing a post. |
 
-##ThreadCreationRequest
+## ThreadCreationRequest
 
 extends [PostCreationCommon](#postcreationcommon)
 
@@ -98,7 +98,7 @@ extends [PostCreationCommon](#postcreationcommon)
 | board | string{3} | + | board the thread will be inserted into |
 | captcha | string | - | captcha response token |
 
-##SpliceRequest
+## SpliceRequest
 Mimics the behavior of JavaScript's [Array.prototype.splice](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Array/splice)
 method.
 
@@ -108,14 +108,14 @@ method.
 | len | int | + | Length of the string that should be deleted, starting with at the start position. -1 has the special meaning of deleting everything from start position till the end of the line. |
 | text | string | + | String to insert in the start position, after the "len" of the string has been deleted |
 
-##SyncRequest
+## SyncRequest
 
 | Field | Type | Required | Description |
 |---|---|:---:|---|
 | thread | uint | + | ID of the thread to synchronise to . If synchronizing to a board page, set to `0`. |
 | board | string{3} | + | Target board or parent board of  the thread |
 
-##ReclaimRequest
+## ReclaimRequest
 
 | Field | Type | Required | Description |
 |---|---|:---:|---|

@@ -2,7 +2,7 @@ List of installation and update commands to set up meguca on Debian jessie.
 Use as a reference. Copy paste at your own risk.
 All commands assume to be run by the root user.
 
-##Install
+## Install
 
 ```bash
 # Install C dependencies
@@ -42,7 +42,7 @@ make
 ./meguca -a :80
 ```
 
-##Update
+## Update
 
 ```bash
 cd /meguca

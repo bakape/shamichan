@@ -5,7 +5,7 @@ Platforms: Linux, OSX, Win64
 
 License: GNU AGPL
 
-##Features
+## Features
 <details>
     <summary>Posts and posting</summary>
     <ul>
@@ -98,13 +98,13 @@ License: GNU AGPL
     </ul>
 </details>
 
-##Runtime dependencies
+## Runtime dependencies
 * [PostgresSQL](https://www.postgresql.org/download/) >= 9.5
 
-##Building from source
+## Building from source
 A reference list of commands can be found in `./docs/installation.md`
 
-###Build dependencies
+### Build dependencies
 * [Go](https://golang.org/doc/install) >=1.8 (for building server)
 * [Node.js](https://nodejs.org) >=5.0 (for building client)
 * GCC or Clang
@@ -126,10 +126,10 @@ A reference list of commands can be found in `./docs/installation.md`
 * git
 * zip
 
-###Linux and OSX
+### Linux and OSX
 * Run `make`
 
-###Windows
+### Windows
 * Install [MSYS2](https://sourceforge.net/projects/msys2/)
 * Open MSYS2 shell
 * Install dependencies listed above with the `mingw-w64-x86_64-` prefix with
@@ -137,7 +137,7 @@ pacman
 * Navigate to the meguca root directory
 * Run `make`
 
-##Setup
+## Setup
 * See `./meguca help` for server operation
 * Login into the "admin" account via the infinity symbol in the top banner with
 the password "password"
@@ -145,7 +145,7 @@ the password "password"
 * Create a board from the administration panel
 * Configure server from the administration panel
 
-##Development
+## Development
 * See `./docs` for more documentation
 * `./meguca` or `./meguca debug` run the server in development mode
 * `make server` and `make client` build the server and client separately

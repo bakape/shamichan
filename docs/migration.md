@@ -1,4 +1,4 @@
-##v0/[doushio](https://github.com/lalcmellkmal/doushio) to v1
+## v0/[doushio](https://github.com/lalcmellkmal/doushio) to v1
 1. Fetch a fresh meguca directory
 2. Install dependencies
 3. Run `npm install`
@@ -12,13 +12,13 @@ you don't `redis-cli flushall` and skip to step 10.
 9. Copy over `www/{src,mid,thumb}` from your old setup to the new one
 10. Start the server
 
-##v1 to v4
+## v1 to v4
 TODO
 
-##v2 to v3
+## v2 to v3
 Upgrades automatically by running the server. No action from the user required.
 
-##v2/v3 to v4
+## v2/v3 to v4
 1. Install PostgreSQL and set up the database as described in `installation.md`
 2. Stop any running meguca servers
 3. Checkout the latest v3 release
