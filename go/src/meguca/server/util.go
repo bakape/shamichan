@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"meguca/auth"
@@ -105,17 +106,23 @@ func assertNotBanned(
 	}
 
 	rec, err := db.GetBanInfo(ip, board)
-	if err != nil {
+	switch err {
+	case nil:
+		w.WriteHeader(403)
+		head := w.Header()
+		for key, val := range vanillaHeaders {
+			head.Set(key, val)
+		}
+		head.Set("Content-Type", "text/html")
+		html := []byte(templates.BanPage(rec, lp.Templates["banPage"]))
+		w.Write(html)
+		return false
+	case sql.ErrNoRows:
+		// If there is no row, that means the ban cache has not been updated
+		// yet with a cleared ban.
+		return true
+	default:
 		text500(w, r, err)
 		return false
 	}
-	w.WriteHeader(403)
-	head := w.Header()
-	for key, val := range vanillaHeaders {
-		head.Set(key, val)
-	}
-	head.Set("Content-Type", "text/html")
-	html := []byte(templates.BanPage(rec, lp.Templates["banPage"]))
-	w.Write(html)
-	return false
 }
