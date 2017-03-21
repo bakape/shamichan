@@ -1,12 +1,10 @@
 package db
 
 import (
-	"testing"
-
-	"time"
-
 	"meguca/common"
 	"meguca/config"
+	"testing"
+	"time"
 )
 
 func TestValidateOp(t *testing.T) {

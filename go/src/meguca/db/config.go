@@ -1,15 +1,13 @@
-// Configuration loading, reloading and setting
-
 package db
 
 import (
 	"database/sql"
 	"encoding/json"
-	"time"
-
 	"meguca/config"
 	"meguca/templates"
 	"meguca/util"
+	"time"
+
 	"github.com/lib/pq"
 )
 

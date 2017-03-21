@@ -2,18 +2,16 @@ package server
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"io"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 var adminLoginCreds = auth.SessionCreds{
@@ -508,13 +506,12 @@ func TestDeletePost(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := db.GetPost(c.id)
-			deleted := err == sql.ErrNoRows
+			post, err := db.GetPost(c.id)
 			switch {
-			case err != nil && err != sql.ErrNoRows:
+			case err != nil:
 				t.Fatal(err)
-			case deleted != c.deleted:
-				LogUnexpected(t, deleted, c.deleted)
+			case post.Deleted != c.deleted:
+				LogUnexpected(t, post.Deleted, c.deleted)
 			}
 		})
 	}
