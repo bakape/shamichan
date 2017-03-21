@@ -8,7 +8,7 @@
 {% func renderArticle(p common.StandalonePost, omit, imageOmit int, subject, root string, index bool) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
 	{% code opStr := strconv.FormatUint(p.OP, 10) %}
-	<article id="p{%s= id %}" class="glass{% if p.Editing %}{% space %}editing{% endif %}">
+	<article id="p{%s= id %}" {%= postClass(p.Post) %}>
 		<header class="spaced">
 			<input type="checkbox" class="mod-checkbox hidden">
 			{% if subject != "" %}

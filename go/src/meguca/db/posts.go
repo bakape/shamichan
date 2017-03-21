@@ -355,21 +355,3 @@ func SetPostCounter(c uint64) error {
 	_, err := db.Exec(`SELECT setval('post_id', $1)`, c)
 	return err
 }
-
-// DeletePosts marks the target posts as deleted
-func DeletePosts(board string, ids ...uint64) error {
-	return execPrepared("delete_posts", encodeIDArray(ids...), board)
-}
-
-func encodeIDArray(ids ...uint64) string {
-	b := make([]byte, 1, 16)
-	b[0] = '{'
-	for i, id := range ids {
-		if i != 0 {
-			b = append(b, ',')
-		}
-		b = strconv.AppendUint(b, id, 10)
-	}
-	b = append(b, '}')
-	return string(b)
-}

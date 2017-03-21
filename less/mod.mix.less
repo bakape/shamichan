@@ -51,3 +51,15 @@
 	padding: 1em;
 	text-align: center;
 }
+
+.deleted {
+	& > header:before, .thread-links:before {
+		background-image: url(/assets/css/ui/deleted.svg);
+		width: 1em;
+		height: 1em;
+		content: "";
+		background-repeat: no-repeat;
+		background-size: contain;
+		display: inline-block;
+	}
+}

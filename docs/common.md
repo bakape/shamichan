@@ -10,6 +10,8 @@ Generic post object
 | Field | Type | Required | Description |
 |---|---|:---:|---|
 | editing | bool | - | describes, if the post is still open and its text body editable by the original creator of the post |
+| deleted | bool | - | specifies, the post has been deleted by a moderator |
+| banned | bool | - | specifies, the poster was banned for this post by a moderator |
 | time | uint | + | Unix timestamp of post creation |
 | id | uint | + | ID number of post. Unique globally, including across boards. |
 | body | string | + | text body of post |

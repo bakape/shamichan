@@ -104,7 +104,7 @@ allow caching of generated posts.
 	<div id="catalog">
 		{% for _, t := range b %}
 			{% code idStr:= strconv.FormatUint(t.ID, 10) %}
-			<article id="p{%s= idStr %}" class="glass" data-id="{%s= idStr %}">
+			<article id="p{%s= idStr %}" {%= postClass(t.Post) %} data-id="{%s= idStr %}">
 				{% if t.Image != nil %}
 					<figure>
 						{% code img := *t.Image %}

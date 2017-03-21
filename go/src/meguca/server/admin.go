@@ -333,8 +333,17 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 	if !isValid {
 		return
 	}
-	if err := db.DeletePosts(msg.Board, msg.IDs...); err != nil {
-		text500(w, r, err)
+	for _, id := range msg.IDs {
+		err := db.DeletePost(msg.Board, id)
+		switch err.(type) {
+		case nil:
+		case common.ErrInvalidPostID:
+			text400(w, err)
+			return
+		default:
+			text500(w, r, err)
+			return
+		}
 	}
 }
 
