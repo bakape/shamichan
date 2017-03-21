@@ -59,9 +59,14 @@ caching of generated posts.
 {% func ThreadPosts(t common.Thread, json []byte, omit, imageOmit int) %}{% stripspace %}
 	<section id="thread-container">
 		{% code root := config.Get().RootURL %}
-		{%= renderArticle(t.Post, t.ID, omit, imageOmit, t.Subject, root, false) %}
+		{% code post := common.StandalonePost{
+			OP: t.ID,
+			Post: t.Post,
+		} %}
+		{%= renderArticle(post, omit, imageOmit, t.Subject, root, false) %}
 		{% for _, p := range t.Posts %}
-			{%= renderArticle(p, t.ID, 0, 0, "", root, false) %}
+			{% code post.Post = p %}
+			{%= renderArticle(post, 0, 0, "", root, false) %}
 		{% endfor %}
 		<script id="post-data" type="application/json">
 			{%z= json %}

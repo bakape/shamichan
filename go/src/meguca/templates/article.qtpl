@@ -5,13 +5,18 @@
 {% import "meguca/imager/assets" %}
 {% import "meguca/util" %}
 
-{% func renderArticle(p common.Post, op uint64, omit, imageOmit int, subject, root string, index bool) %}{% stripspace %}
+{% func renderArticle(p common.StandalonePost, omit, imageOmit int, subject, root string, index bool) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
-	{% code opStr := strconv.FormatUint(op, 10) %}
+	{% code opStr := strconv.FormatUint(p.OP, 10) %}
 	<article id="p{%s= id %}" class="glass{% if p.Editing %}{% space %}editing{% endif %}">
 		<header class="spaced">
 			<input type="checkbox" class="mod-checkbox hidden">
 			{% if subject != "" %}
+				{% if p.Board != "" %}
+					<b class="board">
+						/{%s= p.Board %}/
+					</b>
+				{% endif %}
 				<h3>
 					「{%s subject %}」
 				</h3>
@@ -138,7 +143,7 @@
 				</figure>
 			{% endif %}
 			<blockquote>
-				{%= body(p, op, index) %}
+				{%= body(p.Post, p.OP, index) %}
 			</blockquote>
 			{% if p.Banned %}
 				<b class="admin banned">
@@ -169,7 +174,7 @@
 					{% endif %}
 					{% code rendered[id] = true %}
 					<em>
-						{%= postLink(id, link[1], link[1] != op, index) %}
+						{%= postLink(id, link[1], link[1] != p.OP, index) %}
 					</em>
 				{% endfor %}
 			</span>

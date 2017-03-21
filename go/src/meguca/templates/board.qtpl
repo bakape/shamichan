@@ -154,9 +154,15 @@ IndexThreads renders abbreviated threads for display on board index pages
 			{% code omit, imageOmit := CalculateOmit(t) %}
 			{% code idStr := strconv.FormatUint(t.ID, 10) %}
 			<section class="index-thread" data-id="{%s= idStr %}">
-				{%= renderArticle(t.Post, t.ID, omit, imageOmit, t.Subject, root, true) %}
+				{% code post := common.StandalonePost{
+					Board: t.Board,
+					OP: t.ID,
+					Post: t.Post,
+				} %}
+				{%= renderArticle(post, omit, imageOmit, t.Subject, root, true) %}
 				{% for _, p := range t.Posts %}
-					{%= renderArticle(p, t.ID, 0, 0, "", root, true) %}
+					{% code post.Post = p %}
+					{%= renderArticle(post, 0, 0, "", root, true) %}
 				{% endfor %}
 				<aside class="act posting glass">
 					<a href="/all/{%s= idStr %}?last=100#bottom">
