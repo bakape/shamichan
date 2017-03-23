@@ -110,7 +110,7 @@ export default () => {
 		handle(id, m =>
 			m.insertBacklink(target, targetOP))
 
-	handlers[message.closePost] = ({id, links, commands}: CloseMessage) =>
+	handlers[message.closePost] = ({ id, links, commands }: CloseMessage) =>
 		handle(id, m => {
 			if (links) {
 				m.links = links
@@ -124,7 +124,7 @@ export default () => {
 
 	handlers[message.deletePost] = (id: number) =>
 		handle(id, m =>
-			m.remove())
+			m.setDeleted())
 
 	handlers[message.banned] = (id: number) =>
 		handle(id, m =>

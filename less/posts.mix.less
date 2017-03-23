@@ -262,10 +262,10 @@ header {
 			margin: 0;
 			padding: 0;
 		}
-	}
-	.thread-links {
-		clear: none;
-		display: inline-block;
+		&.deleted .deleted-toggle:checked ~ .thread-links {
+			clear: none;
+			display: inline-block;
+		}
 	}
 	figure {
 		float: none;

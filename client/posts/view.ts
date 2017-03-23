@@ -18,6 +18,9 @@ export default class PostView extends ImageHandler {
             if (model.editing) {
                 attrs.class += ' editing'
             }
+            if (model.deleted) {
+                attrs.class += " deleted"
+            }
             attrs.tag = "article"
             attrs.id = "p" + model.id
         }
@@ -114,5 +117,10 @@ export default class PostView extends ImageHandler {
     // Add or remove highlight to post
     public setHighlight(on: boolean) {
         this.el.classList.toggle("highlight", on)
+    }
+
+    // Render indications that a post had been deleted
+    public renderDeleted() {
+        this.el.classList.add("deleted")
     }
 }

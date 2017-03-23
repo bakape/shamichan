@@ -8,7 +8,7 @@ package common
 var ParseBody func([]byte, string) ([][2]uint64, []Command, error)
 
 //easyjson:json
-// Board is a slice of threads. Defined to enable marshalling optimizations.
+// Board is defined to enable marshalling optimizations
 type Board []Thread
 
 // Thread is a transport/export wrapper that stores both the thread metadata,
@@ -33,6 +33,7 @@ type Thread struct {
 type Post struct {
 	Editing   bool        `json:"editing,omitempty"`
 	Banned    bool        `json:"banned,omitempty"`
+	Deleted   bool        `json:"deleted,omitempty"`
 	ID        uint64      `json:"id"`
 	Time      int64       `json:"time"`
 	Body      string      `json:"body"`

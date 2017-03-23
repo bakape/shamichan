@@ -167,6 +167,12 @@ export class Post extends Model implements PostData {
 		this.banned = true
 		this.view.renderBanned()
 	}
+
+	// Set post as deleted
+	public setDeleted() {
+		this.deleted = true
+		this.view.renderDeleted()
+	}
 }
 
 function endsWithTag(body: string): boolean {

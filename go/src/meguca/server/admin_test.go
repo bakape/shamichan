@@ -2,18 +2,16 @@ package server
 
 import (
 	"bytes"
-	"database/sql"
 	"fmt"
 	"io"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 var adminLoginCreds = auth.SessionCreds{
@@ -484,14 +482,19 @@ func TestDeletePost(t *testing.T) {
 		}
 	}
 
-	rec, req := newJSONPair(t, "/admin/deletePost", postActionRequest{
-		IDs:          []uint64{2, 3, 4},
+	data := postActionRequest{
+		IDs:          []uint64{2, 4},
 		Board:        "a",
 		SessionCreds: sampleLoginCreds,
-	})
+	}
+	rec, req := newJSONPair(t, "/admin/deletePost", data)
 	router.ServeHTTP(rec, req)
-
 	assertCode(t, rec, 200)
+
+	data.IDs = []uint64{3}
+	rec, req = newJSONPair(t, "/admin/deletePost", data)
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 400)
 
 	cases := [...]struct {
 		name    string
@@ -508,13 +511,12 @@ func TestDeletePost(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			_, err := db.GetPost(c.id)
-			deleted := err == sql.ErrNoRows
+			post, err := db.GetPost(c.id)
 			switch {
-			case err != nil && err != sql.ErrNoRows:
+			case err != nil:
 				t.Fatal(err)
-			case deleted != c.deleted:
-				LogUnexpected(t, deleted, c.deleted)
+			case post.Deleted != c.deleted:
+				LogUnexpected(t, post.Deleted, c.deleted)
 			}
 		})
 	}

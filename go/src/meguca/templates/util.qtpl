@@ -1,4 +1,5 @@
 {% import "strconv" %}
+{% import "meguca/common" %}
 
 Renders the tab selection butts in tabbed windows
 {% func tabButts(names []string) %}{% stripspace %}
@@ -46,4 +47,21 @@ Render a link to another post. Can optionally be cross-thread.
 			Last 100
 		</a>
 	</span>
+{% endstripspace %}{% endfunc %}
+
+Render the class attribute of a post
+{% func postClass(p common.Post) %}{% stripspace %}
+	class="glass
+		{% if p.Editing %}
+			{% space %}editing
+		{% endif %}
+		{% if p.Deleted %}
+			{% space %}deleted
+		{% endif %}
+	"
+{% endstripspace %}{% endfunc %}
+
+Renders a stylized deleted post display toggle
+{% func deletedToggle() %}{% stripspace %}
+	<input type="checkbox" class="deleted-toggle">
 {% endstripspace %}{% endfunc %}
