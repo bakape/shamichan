@@ -9,6 +9,7 @@
 	{% code id := strconv.FormatUint(p.ID, 10) %}
 	{% code opStr := strconv.FormatUint(p.OP, 10) %}
 	<article id="p{%s= id %}" {%= postClass(p.Post) %}>
+		{%= deletedToggle() %}
 		<header class="spaced">
 			<input type="checkbox" class="mod-checkbox hidden">
 			{% if subject != "" %}

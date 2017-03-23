@@ -52,14 +52,30 @@
 	text-align: center;
 }
 
-.deleted {
+.deleted-toggle {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	cursor: pointer;
+	margin: 0;
+	background-image: url(/assets/css/ui/deleted.svg);
+	width: 1.1em;
+	height: 1.1em;
+	background-repeat: no-repeat;
+	background-size: contain;
+}
+
+.deleted > .deleted-toggle {
 	& > header:before, .thread-links:before {
-		background-image: url(/assets/css/ui/deleted.svg);
-		width: 1em;
-		height: 1em;
-		content: "";
-		background-repeat: no-repeat;
-		background-size: contain;
 		display: inline-block;
+	}
+	&:not(:checked) ~ *:not(hr) {
+		display: none;
+	}
+}
+
+article, section {
+	&:not(.deleted) > .deleted-toggle {
+		display: none;
 	}
 }

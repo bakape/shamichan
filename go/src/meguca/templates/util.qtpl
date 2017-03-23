@@ -60,3 +60,8 @@ Render the class attribute of a post
 		{% endif %}
 	"
 {% endstripspace %}{% endfunc %}
+
+Renders a stylized deleted post display toggle
+{% func deletedToggle() %}{% stripspace %}
+	<input type="checkbox" class="deleted-toggle">
+{% endstripspace %}{% endfunc %}
