@@ -49,6 +49,7 @@
 			Templates for our various views
 		{% endcomment %}
 		<template name="article">
+			{%= deletedToggle() %}
 			<header class="spaced">
 				<input type="checkbox" class="mod-checkbox hidden">
 				<h3 hidden></h3>
