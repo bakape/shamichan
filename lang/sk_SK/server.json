@@ -250,7 +250,7 @@
 		],
 		"salt": [
 			"Bezpečná soľ",
-			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
+			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 40 charecters long."
 		],
 		"saucenao": [
 			"SauceNao",

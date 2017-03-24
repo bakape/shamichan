@@ -250,7 +250,7 @@
 		],
 		"salt": [
 			"Bezpieczna sól",
-			"Sól zabezpieczająca tripkody. Najlepiej, żeby miała co najmniej 4 znaki."
+			"Sól zabezpieczająca tripkody. Najlepiej, żeby miała co najmniej 40 znaki."
 		],
 		"saucenao": [
 			"SauceNao",

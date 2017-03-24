@@ -250,7 +250,7 @@
 		],
 		"salt": [
 			"Secure salt",
-			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 4 charecters long."
+			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 0 characters long."
 		],
 		"saucenao": [
 			"SauceNao",
