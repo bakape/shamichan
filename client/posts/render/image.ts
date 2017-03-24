@@ -68,7 +68,7 @@ function renderFigcaption(post: Element, data: ImageData, reveal: boolean) {
         ch.tagName === "FIGCAPTION")
     if (!el) {
         el = importTemplate("figcaption").firstChild as HTMLElement
-        post.firstElementChild.after(el)
+        post.querySelector("header").after(el)
     }
 
     const list: string[] = []
