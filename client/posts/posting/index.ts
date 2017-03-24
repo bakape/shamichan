@@ -105,6 +105,9 @@ async function quotePost(e: MouseEvent) {
 		const el = node.nodeType === Node.TEXT_NODE
 			? node.parentElement
 			: node as Element
+		if (!el) { // No idea why, but el sometimes is null
+			return false
+		}
 
 		return (el.closest("blockquote") && el.closest("article") === post)
 			// When selecting the last line, the selection ends outside the
@@ -222,7 +225,7 @@ export default () => {
 	postSM.act(
 		postState.ready,
 		postEvent.hijack,
-		({view, model}: FormMessage) => {
+		({ view, model }: FormMessage) => {
 			postModel = model
 			postForm = view
 			return postState.alloc
