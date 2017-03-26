@@ -95,7 +95,7 @@ func (s *store) isFresh() bool {
 }
 
 // Stores the new values of s. Calculates and stores the new size. Passes the
-// delta to the central cache tp fire eviction checks.
+// delta to the central cache to fire eviction checks.
 func (s *store) update(data easyjson.Marshaler, json, html []byte) {
 	// Calculating the actual memory footprint of the stored post data is
 	// expensive. Assume it is as big as the JSON. Most probably it's far less
