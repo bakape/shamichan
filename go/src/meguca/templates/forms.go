@@ -3,22 +3,11 @@
 package templates
 
 import (
-	"reflect"
-	"strings"
-
 	"meguca/config"
 	"meguca/lang"
+	"reflect"
+	"strings"
 )
-
-type boardList struct {
-	Boards config.BoardTitles
-	Lang   lang.Pack
-}
-
-type formSpecs struct {
-	Specs []inputSpec
-	Lang  lang.Pack
-}
 
 // ConfigureBoard renders a form for setting board configurations
 func ConfigureBoard(conf config.BoardConfigs, ln lang.Pack) string {

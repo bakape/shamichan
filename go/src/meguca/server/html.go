@@ -3,15 +3,14 @@ package server
 import (
 	"database/sql"
 	"fmt"
-	"net/http"
-	"strconv"
-
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/config"
 	"meguca/db"
 	"meguca/lang"
 	"meguca/templates"
+	"net/http"
+	"strconv"
 )
 
 // Apply headers and write HTML to client

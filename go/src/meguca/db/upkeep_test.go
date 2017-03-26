@@ -2,12 +2,12 @@ package db
 
 import (
 	"fmt"
-	"testing"
-	"time"
-
 	"meguca/common"
 	"meguca/config"
 	. "meguca/test"
+	"testing"
+	"time"
+
 	"github.com/lib/pq"
 )
 

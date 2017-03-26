@@ -8,10 +8,6 @@ import (
 	"net/url"
 )
 
-type captchaValidationResponse struct {
-	Success bool
-}
-
 // AuthenticateCaptcha posts a request to the SolveMedia API to authenticate a
 // captcha
 func AuthenticateCaptcha(captcha string) bool {
@@ -38,7 +34,9 @@ func AuthenticateCaptcha(captcha string) bool {
 	}
 	defer res.Body.Close()
 
-	var data captchaValidationResponse
+	var data struct {
+		Success bool
+	}
 	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
 		printCaptchaError(err)
 		return false

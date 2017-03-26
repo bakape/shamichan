@@ -2,11 +2,10 @@ package templates
 
 import (
 	"html"
-	"strconv"
-	"time"
-
 	"meguca/common"
 	"meguca/lang"
+	"strconv"
+	"time"
 )
 
 // Returns image name with proper extension

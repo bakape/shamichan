@@ -4,11 +4,10 @@ package db
 
 import (
 	"log"
-	"time"
-
 	"meguca/common"
 	"meguca/config"
 	"meguca/imager/assets"
+	"time"
 )
 
 // Run database clean up tasks at server start and regular intervals. Must be

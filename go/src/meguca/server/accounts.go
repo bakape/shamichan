@@ -3,11 +3,11 @@ package server
 import (
 	"database/sql"
 	"errors"
-	"net/http"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/db"
+	"net/http"
+
 	"golang.org/x/crypto/bcrypt"
 )
 

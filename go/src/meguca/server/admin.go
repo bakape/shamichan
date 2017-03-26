@@ -7,14 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
-	"regexp"
-	"time"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
+	"net/http"
+	"regexp"
+	"time"
 )
 
 const (
@@ -77,12 +76,6 @@ type postActionRequest struct {
 	IDs   []uint64 `json:"ids"`
 	Board string
 	auth.SessionCreds
-}
-
-type banRequest struct {
-	Duration uint64
-	Reason   string
-	postActionRequest
 }
 
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
@@ -349,7 +342,11 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 
 // Ban a specific IP from a specific board
 func ban(w http.ResponseWriter, r *http.Request) {
-	var msg banRequest
+	var msg struct {
+		Duration uint64
+		Reason   string
+		postActionRequest
+	}
 
 	isValid := decodeJSON(w, r, &msg) &&
 		isLoggedIn(w, r, msg.UserID, msg.Session) &&

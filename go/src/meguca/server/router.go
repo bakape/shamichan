@@ -3,11 +3,11 @@ package server
 import (
 	"compress/gzip"
 	"log"
-	"net/http"
-
 	"meguca/imager"
 	"meguca/server/websockets"
 	"meguca/util"
+	"net/http"
+
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"
 )
