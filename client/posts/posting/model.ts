@@ -48,6 +48,8 @@ export default class FormModel extends Post {
 				id: 0,
 				op: page.thread,
 				editing: true,
+				deleted: false,
+				banned: false,
 				time: Date.now(),
 				body: "",
 				state: {

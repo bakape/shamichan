@@ -11,9 +11,9 @@ export type PostLink = [number, number]
 // Data of any post. In addition to server-sent JSON includes the state
 // property.
 export interface PostData {
-	editing?: boolean
-	deleted?: boolean
-	banned?: boolean
+	editing: boolean
+	deleted: boolean
+	banned: boolean
 	image?: ImageData
 	time: number
 	id: number
@@ -50,9 +50,6 @@ export interface Command {
 
 // Data of an OP post
 export interface ThreadData extends PostData {
-	locked: boolean
-	archived: boolean
-	sticky: boolean
 	postCtr: number
 	imageCtr: number
 	logCtr: number
