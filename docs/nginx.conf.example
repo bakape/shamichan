@@ -1,4 +1,6 @@
 # Requires nginx >=1.4.
+# NB: Make sure to start meguca with the -r flag, if reverse-proxying, and set
+# the -R flag, if the proxy is on a different machine from the meguca instance.
 
 upstream meguca {
 	server 127.0.0.1:8000;
