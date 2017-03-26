@@ -23,12 +23,12 @@ export default function (html: string) {
 
     const text = document.getElementById("post-data").textContent,
         data = JSON.parse(text) as ThreadData,
-        {posts} = data
+        { posts } = data
     setSyncCounter(data.logCtr)
     delete data.posts
     setPostCount(data.postCtr, data.imageCtr)
 
-    extractPost(data, data.op)
+    extractPost(data, data.id)
     if (data.image) {
         data.image.large = true
     }
@@ -36,7 +36,7 @@ export default function (html: string) {
     setThreadTitle(data)
 
     for (let post of posts) {
-        extractPost(post, data.op)
+        extractPost(post, data.id)
     }
     localizeThreads()
     reparseOpenPosts()
