@@ -51,8 +51,6 @@ create table boards (
 	readOnly boolean not null,
 	textOnly boolean not null,
 	forcedAnon boolean not null,
-	hashCommands boolean not null,
-	codeTags boolean not null,
 	id varchar(3) primary key,
 	ctr bigint default 0,
 	created timestamp not null,
@@ -73,7 +71,6 @@ create index staff_account on staff (account);
 create sequence post_id;
 
 create table threads (
-	locked boolean,
 	board varchar(3) not null references boards on delete cascade,
 	id bigint primary key,
 	postCtr bigint not null,

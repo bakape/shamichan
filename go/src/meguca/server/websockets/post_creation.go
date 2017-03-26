@@ -3,15 +3,14 @@ package websockets
 import (
 	"bytes"
 	"errors"
-	"strings"
-	"time"
-	"unicode/utf8"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	"meguca/parser"
+	"strings"
+	"time"
+	"unicode/utf8"
 )
 
 var (
@@ -163,14 +162,6 @@ func (c *Client) insertPost(data []byte) (err error) {
 	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
 	if req.Body == "" && !hasImage {
 		return errNoTextOrImage
-	}
-
-	locked, err := db.IsLocked(sync.OP)
-	switch {
-	case err != nil:
-		return
-	case locked:
-		return errThreadIsLocked
 	}
 
 	post, now, bodyLength, err := constructPost(

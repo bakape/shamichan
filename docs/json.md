@@ -24,7 +24,6 @@ extends [Post](common.md#post)
 | Field | Type | Required | Description |
 |---|---|:---:|---|
 | abbrev | bool | - | Specifies, if the thread is abbreviated and does not contain all of its replies |
-| locked | bool | - | Specifies if the current thread is locked. A locked thread can not have new posts created in it. |
 | postCtr | uint | + | Number of posts in the thread |
 | imageCtr | uint | + | Number of posts with images in the thread |
 | replyTime | uint | + | Unix timestamp of the time of the last reply in the thread |

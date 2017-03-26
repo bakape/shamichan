@@ -318,13 +318,6 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 	return nil
 }
 
-// IsLocked returns if the thread is locked from posting
-func IsLocked(id uint64) (bool, error) {
-	var locked sql.NullBool
-	err := prepared["is_locked"].QueryRow(id).Scan(&locked)
-	return locked.Bool, err
-}
-
 // GetPostPassword retrieves a post's modification password
 func GetPostPassword(id uint64) (p []byte, err error) {
 	err = prepared["get_post_password"].QueryRow(id).Scan(&p)

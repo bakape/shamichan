@@ -80,8 +80,8 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 // WriteBoard writes a board complete with configurations to the database
 func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 	_, err := getStatement(tx, "write_board").Exec(
-		c.ReadOnly, c.TextOnly, c.ForcedAnon, true, true, c.ID,
-		c.Created, c.Title, c.Notice, c.Rules, pq.StringArray(c.Eightball),
+		c.ReadOnly, c.TextOnly, c.ForcedAnon, c.ID, c.Created, c.Title,
+		c.Notice, c.Rules, pq.StringArray(c.Eightball),
 	)
 	return err
 }
@@ -90,8 +90,8 @@ func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 func UpdateBoard(c config.BoardConfigs) error {
 	return execPrepared(
 		"update_board",
-		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, true, true,
-		c.Title, c.Notice, c.Rules, pq.StringArray(c.Eightball),
+		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.Title, c.Notice, c.Rules,
+		pq.StringArray(c.Eightball),
 	)
 }
 

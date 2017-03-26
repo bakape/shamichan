@@ -7,15 +7,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-
 	"meguca/auth"
 	"meguca/config"
 	"meguca/util"
+
 	_ "github.com/lib/pq" // Postgres driver
 )
 
 const (
-	version = 1
+	version = 2
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
 )
@@ -31,6 +31,27 @@ var (
 	// Stores the postgres database instance
 	db *sql.DB
 )
+
+var upgrades = map[uint]func(*sql.Tx) error{
+	1: func(tx *sql.Tx) (err error) {
+		// Delete legacy thread column
+		_, err = tx.Exec(
+			`ALTER TABLE threads
+				DROP COLUMN locked`,
+		)
+		if err != nil {
+			return
+		}
+
+		// Delete legacy board columns
+		_, err = tx.Exec(
+			`ALTER TABLE boards
+				DROP COLUMN hashCommands,
+				DROP COLUMN codeTags`,
+		)
+		return
+	},
+}
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
@@ -49,6 +70,40 @@ func LoadDB() (err error) {
 	tasks := make([]func() error, 0, 6)
 	if !exists {
 		tasks = append(tasks, initDB)
+	} else { // Perform any upgrades
+		var v uint
+		err = db.QueryRow(`select val from main where id = 'version'`).Scan(&v)
+		if err != nil {
+			return
+		}
+
+		var tx *sql.Tx
+		for i := v; i < version; i++ {
+			log.Printf("upgrading database to version %d\n", i+1)
+			tx, err = db.Begin()
+			if err != nil {
+				return
+			}
+
+			err = upgrades[i](tx)
+			if err != nil {
+				return rollBack(tx, err)
+			}
+
+			// Write new version number
+			_, err = tx.Exec(
+				`update main set val = $1 where id = 'version'`,
+				i+1,
+			)
+			if err != nil {
+				return rollBack(tx, err)
+			}
+
+			err = tx.Commit()
+			if err != nil {
+				return
+			}
+		}
 	}
 	tasks = append(tasks, genPrepared)
 	if !exists {
@@ -63,6 +118,13 @@ func LoadDB() (err error) {
 		go runCleanupTasks()
 	}
 	return nil
+}
+
+func rollBack(tx *sql.Tx, err error) error {
+	if rbErr := tx.Rollback(); rbErr != nil {
+		err = util.WrapError(err.Error(), rbErr)
+	}
+	return err
 }
 
 // initDB initializes a database
