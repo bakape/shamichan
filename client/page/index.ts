@@ -5,7 +5,7 @@ import { renderFresh as renderBoard } from './board'
 import { setExpandAll } from "../posts"
 import initNavigation from "./navigation"
 
-export { extractConfigs } from "./common"
+export { extractConfigs, isBanned } from "./common"
 export {
 	incrementPostCount, default as renderThread, setThreadTitle
 } from "./thread"
@@ -16,7 +16,7 @@ initNavigation()
 // Load a page (either board or thread) and render it once the ready promise
 // has been resolved
 export async function loadPage(state: PageState, ready: Promise<void>) {
-	const {board, thread, lastN, catalog} = state
+	const { board, thread, lastN, catalog } = state
 	const res = thread
 		? await fetchThread(board, thread, lastN)
 		: await fetchBoard(board, catalog)

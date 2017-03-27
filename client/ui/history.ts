@@ -2,7 +2,7 @@
 
 import { on, scrollToAnchor } from '../util'
 import { read, page, displayLoading } from '../state'
-import { loadPage } from '../page'
+import { loadPage, isBanned } from '../page'
 import { postSM, postEvent } from "../posts"
 import { synchronise, connSM, connState } from "../connection"
 import options from "../options"
@@ -80,7 +80,9 @@ export default async function navigate(
 	postSM.feed(postEvent.reset)
 	renderPage()
 	await pageLoader
-	synchronise()
+	if (!isBanned) {
+		synchronise()
+	}
 
 	if (needPush) {
 		history.pushState(null, null, nextState.href)
