@@ -3,6 +3,7 @@
 package server
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -73,8 +74,7 @@ type boardDeletionRequest struct {
 
 // Request to perform a moderation action on a specific set of posts
 type postActionRequest struct {
-	IDs   []uint64 `json:"ids"`
-	Board string
+	IDs []uint64
 	auth.SessionCreds
 }
 
@@ -318,16 +318,28 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 func deletePost(w http.ResponseWriter, r *http.Request) {
 	var msg postActionRequest
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-
-		// TODO: More than just board owners should be able to delete posts
-
-		isBoardOwner(w, r, msg.Board, msg.UserID)
+		isLoggedIn(w, r, msg.UserID, msg.Session)
 	if !isValid {
 		return
 	}
 	for _, id := range msg.IDs {
-		err := db.DeletePost(msg.Board, id)
+		board, err := db.GetPostBoard(id)
+		switch err {
+		case nil:
+		case sql.ErrNoRows:
+			text400(w, err)
+			return
+		default:
+			text500(w, r, err)
+			return
+		}
+
+		// TODO: More than just board owners should be able to delete posts
+		if !isBoardOwner(w, r, board, msg.UserID) {
+			return
+		}
+
+		err = db.DeletePost(board, id)
 		switch err.(type) {
 		case nil:
 		case common.ErrInvalidPostID:
@@ -343,14 +355,18 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 // Ban a specific IP from a specific board
 func ban(w http.ResponseWriter, r *http.Request) {
 	var msg struct {
+		Global   bool
 		Duration uint64
 		Reason   string
 		postActionRequest
 	}
 
+	// Decode and validate
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, msg.UserID, msg.Session) &&
-		isBoardOwner(w, r, msg.Board, msg.UserID)
+		isLoggedIn(w, r, msg.UserID, msg.Session)
+	if isValid && msg.Global {
+		isValid = isAdmin(w, r, msg.SessionCreds)
+	}
 	switch {
 	case !isValid:
 		return
@@ -365,17 +381,48 @@ func ban(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expires := time.Now().Add(time.Duration(msg.Duration) * time.Minute)
-	ips, err := db.Ban(msg.Board, msg.Reason, msg.UserID, expires, msg.IDs...)
-	if err != nil {
-		text500(w, r, err)
-		return
+	// Group posts by board
+	byBoard := make(map[string][]uint64, 2)
+	if msg.Global {
+		byBoard["all"] = msg.IDs
+	} else {
+		for _, id := range msg.IDs {
+			board, err := db.GetPostBoard(id)
+			switch err {
+			case nil:
+			case sql.ErrNoRows:
+				text400(w, err)
+				return
+			default:
+				text500(w, r, err)
+				return
+			}
+
+			byBoard[board] = append(byBoard[board], id)
+		}
+
+		// Assert rights to moderate for all affected boards
+		for b := range byBoard {
+			if !isBoardOwner(w, r, b, msg.UserID) {
+				return
+			}
+		}
 	}
 
-	// Redirect all banned connected clients to the /all/ board
-	for ip := range ips {
-		for _, cl := range common.Clients.GetByIP(ip) {
-			cl.Redirect("all")
+	// Apply bans
+	expires := time.Now().Add(time.Duration(msg.Duration) * time.Minute)
+	for b, ids := range byBoard {
+		ips, err := db.Ban(b, msg.Reason, msg.UserID, expires, ids...)
+		if err != nil {
+			text500(w, r, err)
+			return
+		}
+
+		// Redirect all banned connected clients to the /all/ board
+		for ip := range ips {
+			for _, cl := range common.Clients.GetByIP(ip) {
+				cl.Redirect("all")
+			}
 		}
 	}
 }

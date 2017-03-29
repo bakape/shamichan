@@ -188,9 +188,18 @@ func GetPostOP(id uint64) (op uint64, err error) {
 }
 
 // GetThreadBoard retrieves the board of a thread by id
-func GetThreadBoard(id uint64) (board string, err error) {
-	err = prepared["get_thread_board"].QueryRow(id).Scan(&board)
+func GetThreadBoard(id uint64) (string, error) {
+	return getPostBoard(id, "get_thread_board")
+}
+
+func getPostBoard(id uint64, queryID string) (board string, err error) {
+	err = prepared[queryID].QueryRow(id).Scan(&board)
 	return
+}
+
+// GetPostBoard retrieves the board of a post by ID
+func GetPostBoard(id uint64) (string, error) {
+	return getPostBoard(id, "get_post_board")
 }
 
 // PostCounter retrieves the current post counter

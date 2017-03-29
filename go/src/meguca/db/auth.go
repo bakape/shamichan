@@ -119,8 +119,8 @@ func GetBanInfo(ip, board string) (b auth.BanRecord, err error) {
 
 // GetIP returns an IP of the poster that created a post. Posts older than 7
 // days will not have this information.
-func GetIP(id uint64, board string) (string, error) {
+func GetIP(id uint64) (string, error) {
 	var ip sql.NullString
-	err := prepared["get_ip"].QueryRow(id, board).Scan(&ip)
+	err := prepared["get_ip"].QueryRow(id).Scan(&ip)
 	return ip.String, err
 }

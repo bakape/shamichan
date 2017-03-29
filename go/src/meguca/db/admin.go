@@ -20,7 +20,7 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 	ips = make(map[string]bool, len(ids))
 	posts := make([]post, 0, len(ids))
 	for _, id := range ids {
-		ip, err := GetIP(id, board)
+		ip, err := GetIP(id)
 		switch err {
 		case nil:
 		case sql.ErrNoRows:
@@ -69,15 +69,17 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 }
 
 func loadBans() error {
-	if err := updateBans(); err != nil {
+	if err := RefreshBanCache(); err != nil {
 		return err
 	}
 	return listenFunc("bans_updated", func(_ string) error {
-		return updateBans()
+		return RefreshBanCache()
 	})
 }
 
-func updateBans() (err error) {
+// RefreshBanCache loads up to date bans from the database and caches them in
+// memory
+func RefreshBanCache() (err error) {
 	r, err := db.Query(`SELECT ip, board FROM bans`)
 	if err != nil {
 		return
@@ -104,8 +106,7 @@ func updateBans() (err error) {
 
 // DeletePost marks the target post as deleted
 func DeletePost(board string, id uint64) (err error) {
-	var b string
-	err = prepared["get_post_board"].QueryRow(id).Scan(&b)
+	b, err := GetPostBoard(id)
 	switch {
 	case err == sql.ErrNoRows || b != board:
 		return common.ErrInvalidPostID(id)

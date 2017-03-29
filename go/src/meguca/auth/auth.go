@@ -5,13 +5,13 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"meguca/config"
 	"net"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	"meguca/config"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -85,15 +85,29 @@ func GetIP(req *http.Request) string {
 }
 
 // IsBanned returns if the IP is banned on the target board
-func IsBanned(board, ip string) bool {
+func IsBanned(board, ip string) (banned bool) {
 	bansMu.RLock()
-	ips, ok := bans[board]
-	bansMu.RUnlock()
+	defer bansMu.RUnlock()
+	global := bans["all"]
+	ips := bans[board]
 
-	if !ok {
-		return false
+	if global != nil && global[ip] {
+		return true
 	}
-	return ips[ip]
+	if ips != nil && ips[ip] {
+		return true
+	}
+	return false
+}
+
+// GetBannedLevels is like IsBanned, but returns, if the IP is banned globally
+// or only from the specific board.
+func GetBannedLevels(board, ip string) (globally, locally bool) {
+	bansMu.RLock()
+	defer bansMu.RUnlock()
+	global := bans["all"]
+	ips := bans[board]
+	return global != nil && global[ip], ips != nil && ips[ip]
 }
 
 // SetBans replaces the ban cache with the new set

@@ -7,11 +7,11 @@ import (
 	"bytes"
 	"fmt"
 	"html"
-	"html/template"
 	"meguca/common"
 	"meguca/config"
 	"meguca/lang"
 	"sync"
+	"text/template"
 )
 
 var (

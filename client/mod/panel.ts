@@ -1,16 +1,18 @@
-// Moderation panel with various post moderation and other controls
-
 import { View } from "../base"
-import { extend, postJSON, threads, toggleHeadStyle } from "../util"
+import {
+	extend, postJSON, threads, toggleHeadStyle, inputValue, inputElement
+} from "../util"
 import { Post } from "../posts"
-import { getModel, page } from "../state"
+import { getModel } from "../state"
 import { newRequest } from "./common"
+import { loginID } from "."
 
 let panel: ModPanel,
 	banInputs: BanInputs,
 	displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true",
 	checkboxStyler: (toggle: boolean) => void
 
+// Moderation panel with various post moderation and other controls
 export default class ModPanel extends View<null> {
 	private checkboxToggle: HTMLInputElement
 
@@ -18,6 +20,7 @@ export default class ModPanel extends View<null> {
 		if (panel) {
 			panel.setVisibility(true)
 			setVisibility(displayCheckboxes)
+			banInputs.toggleGlobalBans()
 			return panel
 		}
 		checkboxStyler = toggleHeadStyle(
@@ -103,21 +106,14 @@ export default class ModPanel extends View<null> {
 	// Deleted one or multiple selected posts
 	private async deletePost(models: Post[]) {
 		await this.postJSON("/admin/deletePost", {
-			ids: models.map(m =>
-				m.id),
-			board: page.board,
+			ids: mapToIDs(models),
 		})
 	}
 
 	// Ban selected posts
 	private async ban(models: Post[]) {
-		const args = {
-			ids: models.map(m =>
-				m.id),
-			board: page.board,
-		}
-		extend(args, banInputs.vals())
-
+		const args = banInputs.vals()
+		args["ids"] = mapToIDs(models)
 		await this.postJSON("/admin/ban", args)
 	}
 
@@ -125,9 +121,10 @@ export default class ModPanel extends View<null> {
 	private async postJSON(url: string, data: {}) {
 		extend(data, newRequest())
 		const res = await postJSON(url, data)
-		if (res.status !== 200) {
-			throw await res.text()
-		}
+		this.el.querySelector(".form-response").textContent =
+			res.status === 200
+				? ""
+				: await res.text()
 	}
 
 	// Change additional input visibility on action change
@@ -141,16 +138,16 @@ export default class ModPanel extends View<null> {
 	}
 }
 
-function setVisibility(on: boolean) {
-	localStorage.setItem("hideModCheckboxes", (!on).toString())
-	panel.setSlideOut(on)
-	checkboxStyler(on)
-}
-
 // Ban input fields
 class BanInputs extends View<null> {
 	constructor() {
 		super({ el: document.getElementById("ban-form") })
+		this.toggleGlobalBans()
+	}
+
+	// Unhide global bans checkbox for the "admin" account and hide for others
+	public toggleGlobalBans() {
+		(this.el.lastElementChild as HTMLElement).hidden = loginID !== "admin"
 	}
 
 	public toggleDisplay(on: boolean) {
@@ -179,9 +176,20 @@ class BanInputs extends View<null> {
 
 		return {
 			duration,
-			reason: (this.el
-				.querySelector("input[name=reason]") as HTMLInputElement)
-				.value
+			global: inputElement(this.el, "global").checked,
+			reason: inputValue(this.el, "reason"),
 		}
 	}
 }
+
+function setVisibility(on: boolean) {
+	localStorage.setItem("hideModCheckboxes", (!on).toString())
+	panel.setSlideOut(on)
+	checkboxStyler(on)
+}
+
+function mapToIDs(models: Post[]): number[] {
+	return models.map(m =>
+		m.id)
+}
+

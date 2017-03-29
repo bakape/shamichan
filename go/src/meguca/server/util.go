@@ -95,8 +95,12 @@ func assertNotBanned(
 	board string,
 ) bool {
 	ip := auth.GetIP(r)
-	if !auth.IsBanned(board, ip) {
+	globally, fromBoard := auth.GetBannedLevels(board, ip)
+	if !globally && !fromBoard {
 		return true
+	}
+	if globally {
+		board = "all"
 	}
 
 	lp, err := lang.Get(w, r)
@@ -114,12 +118,16 @@ func assertNotBanned(
 			head.Set(key, val)
 		}
 		head.Set("Content-Type", "text/html")
+		head.Set("Cache-Control", "no-store")
 		html := []byte(templates.BanPage(rec, lp.Templates["banPage"]))
 		w.Write(html)
 		return false
 	case sql.ErrNoRows:
 		// If there is no row, that means the ban cache has not been updated
-		// yet with a cleared ban.
+		// yet with a cleared ban. Force a ban cache refresh.
+		if err := db.RefreshBanCache(); err != nil {
+			log.Printf("refreshing ban cache: %s", err)
+		}
 		return true
 	default:
 		text500(w, r, err)

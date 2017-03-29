@@ -46,7 +46,7 @@
 			}
 		</script>
 		{% comment %}
-			Templates for our various views
+			Client-side templates for various views
 		{% endcomment %}
 		<template name="article">
 			{%= deletedToggle() %}
@@ -300,6 +300,10 @@
 							<br>
 							<input type="text" name="reason" required class="full-width" placeholder="{%s= ln.UI["reason"] %}" disabled>
 							<br>
+							<label hidden>
+								<input type="checkbox" name="global">
+								{%s= ln.UI["global"] %}
+							</label>
 						</div>
 						<input type="checkbox" name="showCheckboxes">
 						<select name="action">

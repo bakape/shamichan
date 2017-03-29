@@ -484,7 +484,6 @@ func TestDeletePost(t *testing.T) {
 
 	data := postActionRequest{
 		IDs:          []uint64{2, 4},
-		Board:        "a",
 		SessionCreds: sampleLoginCreds,
 	}
 	rec, req := newJSONPair(t, "/admin/deletePost", data)
@@ -494,7 +493,7 @@ func TestDeletePost(t *testing.T) {
 	data.IDs = []uint64{3}
 	rec, req = newJSONPair(t, "/admin/deletePost", data)
 	router.ServeHTTP(rec, req)
-	assertCode(t, rec, 400)
+	assertCode(t, rec, 403)
 
 	cases := [...]struct {
 		name    string
