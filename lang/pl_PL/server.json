@@ -348,6 +348,7 @@
 		"logout": "Wyloguj",
 		"logoutAll": "Wyloguj ze wszystkich urządzeń",
 		"newThread": "Nowy temat",
+		"notification": "Notification",
 		"options": "Ustawienia",
 		"ownNoBoards": "Nie posiadasz żadnego działu",
 		"reloadCaptcha": "Kliknij, żeby odświeżyć",
@@ -366,6 +367,7 @@
 		"submit": "Zatwierdź",
 		"sync": "Status połączenia",
 		"syncCount": "Unique connected IP count",
+		"text": "Text",
 		"top": "Na górę"
 	},
 	"sortModes": [

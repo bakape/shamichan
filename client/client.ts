@@ -7,6 +7,7 @@ import { PostLink, Command, PostData, ImageData } from "./common"
 import { postAdded, navigate } from "./ui"
 import { incrementPostCount } from "./page"
 import { posterName } from "./options"
+import { OverlayNotification } from "./ui"
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -134,4 +135,7 @@ export default () => {
 		postSM.feed(postEvent.reset)
 		navigate(`/${board}/`, null, true)
 	}
+
+	handlers[message.notification] = (text: string) =>
+		new OverlayNotification(text)
 }

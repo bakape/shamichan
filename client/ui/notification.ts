@@ -1,14 +1,14 @@
-// Desktop notifications on reply and such
-
 import { storeSeenReply, seenReplies } from "../state"
 import options from "../options"
 import lang from "../lang"
 import { thumbPath, Post } from "../posts"
 import { repliedToMe } from "./tab"
-import { scrollToAnchor } from "../util"
+import { scrollToAnchor, importTemplate } from "../util"
+import { View } from "../base"
 
 // Displayed, when there is no image in post
-const defaultIcon = "/assets/notification-icon.png"
+const defaultIcon = "/assets/notification-icon.png",
+	overlay = document.getElementById("modal-overlay")
 
 // Notify the user that one of their posts has been replied to
 export default function notifyAboutReply(post: Post) {
@@ -31,7 +31,7 @@ export default function notifyAboutReply(post: Post) {
 	let icon: string
 	if (!options.hideThumbs && !options.workModeToggle) {
 		if (post.image) {
-			const {SHA1, thumbType} = post.image
+			const { SHA1, thumbType } = post.image
 			if (post.image.spoiler) {
 				icon = '/assets/spoil/default.jpg'
 			} else {
@@ -51,5 +51,16 @@ export default function notifyAboutReply(post: Post) {
 		window.focus()
 		location.hash = "#p" + post.id
 		scrollToAnchor()
+	}
+}
+
+// Textual notification at the top of the page
+export class OverlayNotification extends View<null> {
+	constructor(text: string) {
+		super({ el: importTemplate("notification").firstChild as HTMLElement })
+		this.on("click", () =>
+			this.remove())
+		this.el.querySelector("b").textContent = text
+		overlay.prepend(this.el)
 	}
 }

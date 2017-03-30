@@ -116,3 +116,15 @@ func (c *ClientMap) GetByIP(ip string) (clients []common.Client) {
 	}
 	return
 }
+
+// Clients returns all currently connected clients
+func (c *ClientMap) All() []*Client {
+	c.RLock()
+	defer c.RUnlock()
+
+	cls := make([]*Client, 0, len(c.clients))
+	for cl := range c.clients {
+		cls = append(cls, cl)
+	}
+	return cls
+}

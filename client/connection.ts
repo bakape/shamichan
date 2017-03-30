@@ -44,6 +44,9 @@ export const enum message {
 
 	// Redirect the client to a specific board
 	redirect,
+
+	// Send a notification to a client
+	notification,
 }
 
 export type MessageHandler = (msg: {}) => void
@@ -88,7 +91,7 @@ function connect() {
 	socket.onopen = connSM.feeder(connEvent.open)
 	socket.onclose = connSM.feeder(connEvent.close)
 	socket.onerror = connSM.feeder(connEvent.close)
-	socket.onmessage = ({data}) =>
+	socket.onmessage = ({ data }) =>
 		onMessage(data, false)
 	if (debug) {
 		(window as any).socket = socket

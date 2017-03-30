@@ -49,6 +49,9 @@ const (
 
 	// Redirect the client to a specific board
 	MessageRedirect
+
+	// Send a notification to a client
+	MessageNotification
 )
 
 // Clients exposes the global client map to all packages without causing

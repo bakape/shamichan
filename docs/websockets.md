@@ -33,6 +33,7 @@ must always be "synchronize".
 | 35 | syncCount | uint | Sends the current unique connected IP count |
 | 36 | serverTime | uint | Sends the server's current time's Unix timestamp. Can be used for approximating the clock skew between the server and client. |
 | 37 | redirect | string | Notifies the client it has been redirected to the specific board page. Any open posts have been closed and after receiving this message the client is already considered to be synchronized to the board. If the client does comply an error will be raised the client will be disconnected. |
+| 37 | notification | string | Sends a textual message to be displayed to the user |
 
 ## SpliceMessage
 

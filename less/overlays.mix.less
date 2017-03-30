@@ -137,18 +137,14 @@
 	float: right;
 }
 
-.notification {
-	position: fixed;
-	text-align: center;
-	&.modal {
-		overflow: auto;
+.modal.notification {
+	#modal-overlay > & {
+	    display: block;
 	}
-	font-size: 120%;
-	right: 0;
-	left: 0;
-	margin-right: auto;
-	margin-left: auto;
-	width: 90%;
+    text-align: center;
+    padding: 0.6em;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #UTCClock {

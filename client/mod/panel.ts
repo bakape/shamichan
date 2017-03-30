@@ -8,7 +8,6 @@ import { newRequest } from "./common"
 import { loginID } from "."
 
 let panel: ModPanel,
-	banInputs: BanInputs,
 	displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true",
 	checkboxStyler: (toggle: boolean) => void
 
@@ -20,7 +19,6 @@ export default class ModPanel extends View<null> {
 		if (panel) {
 			panel.setVisibility(true)
 			setVisibility(displayCheckboxes)
-			banInputs.toggleGlobalBans()
 			return panel
 		}
 		checkboxStyler = toggleHeadStyle(
@@ -30,7 +28,8 @@ export default class ModPanel extends View<null> {
 
 		super({ el: document.getElementById("moderation-panel") })
 		panel = this
-		banInputs = new BanInputs()
+		new BanForm()
+		new NotificationForm()
 
 		this.el.querySelector("form").addEventListener("submit", e =>
 			this.onSubmit(e))
@@ -57,13 +56,21 @@ export default class ModPanel extends View<null> {
 			.querySelector("#identity > table tr:first-child") as HTMLInputElement
 		auth.style.display = show ? "table-row" : ""
 		auth.checked = false
+
+		// Reset action <select>
+		const sel = (this.el
+			.querySelector("select[name=action]") as HTMLInputElement)
+		sel.value = (sel.firstChild as HTMLOptionElement).value
+		this.el
+			.querySelector("option[value=notification]")
+			.hidden = loginID !== "admin";
 	}
 
 	// Reset the state of the module and hide all revealed elements
 	public reset() {
 		checkboxStyler(false)
 		this.setVisibility(false)
-		banInputs.toggleDisplay(false)
+		HidableForm.hideAll()
 	}
 
 	private async onSubmit(e: Event) {
@@ -72,23 +79,29 @@ export default class ModPanel extends View<null> {
 
 		const checked = (threads
 			.querySelectorAll(".mod-checkbox:checked") as HTMLInputElement[])
-		if (!checked.length) {
-			return
-		}
-		const models = new Array<Post>(checked.length)
-		for (let i = 0; i < checked.length; i++) {
-			const el = checked[i]
-			models[i] = getModel(el)
-			el.checked = false
-		}
+		const models = [...checked].map(getModel)
 
 		switch (this.getMode()) {
 			case "deletePost":
-				await this.deletePost(models)
+				if (checked.length) {
+					await this.postJSON("/admin/deletePost", {
+						ids: mapToIDs(models),
+					})
+				}
 				break
 			case "ban":
-				await this.ban(models)
+				if (checked.length) {
+					const args = HidableForm.forms["ban"].vals()
+					args["ids"] = mapToIDs(models)
+					await this.postJSON("/admin/ban", args)
+				}
 				break
+			case "notification":
+				await this.postJSON(
+					"/admin/notification",
+					HidableForm.forms["notification"].vals(),
+				)
+				return
 		}
 
 		for (let el of checked) {
@@ -103,19 +116,6 @@ export default class ModPanel extends View<null> {
 			.value
 	}
 
-	// Deleted one or multiple selected posts
-	private async deletePost(models: Post[]) {
-		await this.postJSON("/admin/deletePost", {
-			ids: mapToIDs(models),
-		})
-	}
-
-	// Ban selected posts
-	private async ban(models: Post[]) {
-		const args = banInputs.vals()
-		args["ids"] = mapToIDs(models)
-		await this.postJSON("/admin/ban", args)
-	}
 
 	// Post JSON to server and handle errors
 	private async postJSON(url: string, data: {}) {
@@ -129,7 +129,7 @@ export default class ModPanel extends View<null> {
 
 	// Change additional input visibility on action change
 	private onSelectChange() {
-		banInputs.toggleDisplay(this.getMode() === "ban")
+		HidableForm.show(this.getMode())
 	}
 
 	// Force panel to stay visible
@@ -138,23 +138,51 @@ export default class ModPanel extends View<null> {
 	}
 }
 
-// Ban input fields
-class BanInputs extends View<null> {
-	constructor() {
-		super({ el: document.getElementById("ban-form") })
-		this.toggleGlobalBans()
-	}
+abstract class HidableForm extends View<null> {
+	public static forms: { [id: string]: HidableForm } = {}
+	public abstract vals(): { [key: string]: any }
 
-	// Unhide global bans checkbox for the "admin" account and hide for others
-	public toggleGlobalBans() {
-		(this.el.lastElementChild as HTMLElement).hidden = loginID !== "admin"
+	constructor(id: string) {
+		super({ el: document.getElementById(id + "-form") })
+		HidableForm.forms[id] = this
+		this.toggleDisplay(false)
 	}
 
 	public toggleDisplay(on: boolean) {
-		(this.el
-			.querySelector("input[name=reason]") as HTMLInputElement)
-			.disabled = !on
+		for (let el of this.el.getElementsByTagName("input")) {
+			el.disabled = !on
+		}
 		this.el.classList.toggle("hidden", !on)
+	}
+
+	// Hide all displayed forms
+	public static hideAll() {
+		for (let id in HidableForm.forms) {
+			HidableForm.forms[id].toggleDisplay(false)
+		}
+	}
+
+	// Show a form by ID, if any
+	public static show(id: string) {
+		HidableForm.hideAll()
+		const f = HidableForm.forms[id]
+		if (f) {
+			f.toggleDisplay(true)
+		}
+	}
+}
+
+// Ban input fields
+class BanForm extends HidableForm {
+	constructor() {
+		super("ban")
+	}
+
+	public toggleDisplay(on: boolean) {
+		// Unhide global bans checkbox for the "admin" account and hide for
+		// others
+		(this.el.lastElementChild as HTMLElement).hidden = loginID !== "admin"
+		super.toggleDisplay(on)
 	}
 
 	// Get input field values
@@ -178,6 +206,19 @@ class BanInputs extends View<null> {
 			duration,
 			global: inputElement(this.el, "global").checked,
 			reason: inputValue(this.el, "reason"),
+		}
+	}
+}
+
+// Form for sending notifications to all connected clients
+class NotificationForm extends HidableForm {
+	constructor() {
+		super("notification")
+	}
+
+	public vals(): { [key: string]: string } {
+		return {
+			text: inputValue(this.el, "notification"),
 		}
 	}
 }

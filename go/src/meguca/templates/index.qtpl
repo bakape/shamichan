@@ -119,6 +119,11 @@
 				</span>
 			</div>
 		</template>
+		<template name="notification">
+			<div class="notification modal glass">
+				<b class="admin"><b>
+			</div>
+		</template>
 	</head>
 	<body>
 		{% comment %}
@@ -305,9 +310,13 @@
 								{%s= ln.UI["global"] %}
 							</label>
 						</div>
+						<div id="notification-form" class="hidden">
+							<input type="text" name="notification" required class="full-width" placeholder="{%s= ln.UI["text"] %}" style="min-width: 20em;" disabled>
+							<br>
+						</div>
 						<input type="checkbox" name="showCheckboxes">
 						<select name="action">
-							{% for _, id := range [...]string{"deletePost", "ban"} %}
+							{% for _, id := range [...]string{"deletePost", "ban", "notification"} %}
 								<option value="{%s= id %}">
 									{%s= ln.UI[id] %}
 								</option>

@@ -348,6 +348,7 @@
 		"logout": "Logout",
 		"logoutAll": "Log out all devices",
 		"newThread": "Novo tópico",
+		"notification": "Notification",
 		"options": "Options",
 		"ownNoBoards": "You don't own any boards",
 		"reloadCaptcha": "Click to reload",
@@ -366,6 +367,7 @@
 		"submit": "Submit",
 		"sync": "Connection status",
 		"syncCount": "Unique connected IP count",
+		"text": "Text",
 		"top": "Topo"
 	},
 	"sortModes": [

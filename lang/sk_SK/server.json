@@ -348,6 +348,7 @@
 		"logout": "Odhlásiť",
 		"logoutAll": "Odhlásiť zo všetkých zariadení",
 		"newThread": "Nové vlákno",
+		"notification": "Notification",
 		"options": "Options",
 		"ownNoBoards": "Nevlastníš žiadne dosky",
 		"reloadCaptcha": "Klikni pre znovunačítanie",
@@ -366,6 +367,7 @@
 		"submit": "Odoslať",
 		"sync": "Connection status",
 		"syncCount": "Unique connected IP count",
+		"text": "Text",
 		"top": "Vrch"
 	},
 	"sortModes": [

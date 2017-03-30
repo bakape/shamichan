@@ -12,6 +12,7 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
+	"meguca/server/websockets"
 	"net/http"
 	"regexp"
 	"time"
@@ -425,5 +426,25 @@ func ban(w http.ResponseWriter, r *http.Request) {
 				cl.Redirect("all")
 			}
 		}
+	}
+}
+
+// Send a textual message to all connected clients
+func sendNotification(w http.ResponseWriter, r *http.Request) {
+	var msg struct {
+		Text string
+		auth.SessionCreds
+	}
+	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, msg.SessionCreds) {
+		return
+	}
+
+	data, err := common.EncodeMessage(common.MessageNotification, msg.Text)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	for _, cl := range websockets.Clients.All() {
+		cl.Send(data)
 	}
 }

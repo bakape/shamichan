@@ -139,6 +139,7 @@ func createRouter() http.Handler {
 	admin.POST("/deleteBoard", wrapHandler(deleteBoard))
 	admin.POST("/deletePost", wrapHandler(deletePost))
 	admin.POST("/ban", wrapHandler(ban))
+	admin.POST("/notification", wrapHandler(sendNotification))
 
 	// Assets
 	r.GET("/assets/*path", serveAssets)

@@ -348,6 +348,7 @@
 		"logout": "Вийти",
 		"logoutAll": "Вийти на всіх пристроях",
 		"newThread": "Новий тред",
+		"notification": "Notification",
 		"options": "Опції",
 		"ownNoBoards": "Ви не маєте жодних борд.",
 		"reloadCaptcha": "Натисніть для перезавантаження",
@@ -366,6 +367,7 @@
 		"submit": "Надіслати",
 		"sync": "Статус зв'язку",
 		"syncCount": "Unique connected IP count",
+		"text": "Text",
 		"top": "Шапка"
 	},
 	"sortModes": [
