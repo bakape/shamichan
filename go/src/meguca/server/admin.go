@@ -25,9 +25,6 @@ const (
 
 	maxAnswers      = 100  // Maximum number of eightball answers
 	maxEightballLen = 2000 // Total chars in eightball
-	maxNoticeLen    = 500
-	maxRulesLen     = 5000
-	maxTitleLen     = 100
 )
 
 var (
@@ -144,11 +141,11 @@ func validateBoardConfigs(
 		err = errTooManyAnswers
 	case totalLen > maxEightballLen:
 		err = errEightballTooLong
-	case len(conf.Notice) > maxNoticeLen:
+	case len(conf.Notice) > common.MaxLenNotice:
 		err = errNoticeTooLong
-	case len(conf.Rules) > maxRulesLen:
+	case len(conf.Rules) > common.MaxLenRules:
 		err = errRulesTooLong
-	case len(conf.Title) > maxTitleLen:
+	case len(conf.Title) > common.MaxLenBoardTitle:
 		err = errTitleTooLong
 	}
 	if err != nil {
