@@ -220,12 +220,6 @@ func TestValidateBoardCreation(t *testing.T) {
 			err:   errInvalidBoardName,
 		},
 		{
-			name:  "reserved key 'id' as board name",
-			id:    "id",
-			title: "foo",
-			err:   errInvalidBoardName,
-		},
-		{
 			name:  "title too long",
 			id:    "b",
 			title: GenString(101),
