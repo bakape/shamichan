@@ -75,7 +75,10 @@ func TestIsLoggedIn(t *testing.T) {
 			t.Parallel()
 
 			rec, req := newPair("/")
-			isValid := isLoggedIn(rec, req, c.user, c.session)
+			isValid := isLoggedIn(rec, req, auth.SessionCreds{
+				UserID:  c.user,
+				Session: c.session,
+			})
 			if isValid != c.isValid {
 				LogUnexpected(t, c.isValid, isValid)
 			}

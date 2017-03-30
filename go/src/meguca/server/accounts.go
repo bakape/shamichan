@@ -127,7 +127,7 @@ func commitLogout(
 	fn func(auth.SessionCreds) error,
 ) {
 	var req auth.SessionCreds
-	if !decodeJSON(w, r, &req) || !isLoggedIn(w, r, req.UserID, req.Session) {
+	if !decodeJSON(w, r, &req) || !isLoggedIn(w, r, req) {
 		return
 	}
 
@@ -147,7 +147,7 @@ func logoutAll(w http.ResponseWriter, r *http.Request) {
 func changePassword(w http.ResponseWriter, r *http.Request) {
 	var msg passwordChangeRequest
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, msg.UserID, msg.Session) &&
+		isLoggedIn(w, r, msg.SessionCreds) &&
 		checkPasswordAndCaptcha(w, r, msg.New, msg.Captcha)
 	if !isValid {
 		return
@@ -203,9 +203,9 @@ func checkPasswordAndCaptcha(
 func isLoggedIn(
 	w http.ResponseWriter,
 	r *http.Request,
-	user, session string,
+	creds auth.SessionCreds,
 ) bool {
-	isValid, err := db.IsLoggedIn(user, session)
+	isValid, err := db.IsLoggedIn(creds.UserID, creds.Session)
 	switch err {
 	case common.ErrInvalidCreds:
 		text403(w, err)

@@ -95,7 +95,7 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
 func configureBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardConfigSettingRequest
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, msg.UserID, msg.Session) &&
+		isLoggedIn(w, r, msg.SessionCreds) &&
 		isBoardOwner(w, r, msg.ID, msg.UserID) &&
 		validateBoardConfigs(w, msg.BoardConfigs)
 	if !isValid {
@@ -185,7 +185,7 @@ func isAdmin(
 	r *http.Request,
 	msg auth.SessionCreds,
 ) bool {
-	if !(isLoggedIn(w, r, msg.UserID, msg.Session)) {
+	if !(isLoggedIn(w, r, msg)) {
 		return false
 	}
 	if msg.UserID != "admin" {
@@ -205,7 +205,7 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 		conf config.BoardConfigs
 	)
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, msg.UserID, msg.Session) &&
+		isLoggedIn(w, r, msg.SessionCreds) &&
 		isBoardOwner(w, r, msg.ID, msg.UserID)
 	if !isValid {
 		return conf, false
@@ -223,9 +223,7 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 // Handle requests to create a board
 func createBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardCreationRequest
-	valid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, msg.UserID, msg.Session)
-	if !valid {
+	if !decodeJSON(w, r, &msg) || !isLoggedIn(w, r, msg.SessionCreds) {
 		return
 	}
 
@@ -301,7 +299,7 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 func deleteBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardDeletionRequest
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, msg.UserID, msg.Session) &&
+		isLoggedIn(w, r, msg.SessionCreds) &&
 		isBoardOwner(w, r, msg.ID, msg.UserID)
 	if !isValid {
 		return
@@ -319,9 +317,7 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 // Delete one or multiple posts on a moderated board
 func deletePost(w http.ResponseWriter, r *http.Request) {
 	var msg postActionRequest
-	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, msg.UserID, msg.Session)
-	if !isValid {
+	if !decodeJSON(w, r, &msg) || !isLoggedIn(w, r, msg.SessionCreds) {
 		return
 	}
 	for _, id := range msg.IDs {
@@ -365,7 +361,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 
 	// Decode and validate
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, msg.UserID, msg.Session)
+		isLoggedIn(w, r, msg.SessionCreds)
 	if isValid && msg.Global {
 		isValid = isAdmin(w, r, msg.SessionCreds)
 	}
