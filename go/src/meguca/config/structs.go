@@ -26,6 +26,7 @@ type Configs struct {
 type Public struct {
 	Captcha           bool              `json:"captcha"`
 	Mature            bool              `json:"mature"`
+	DisableUserBoards bool              `json:"disableUserBoards"`
 	DefaultLang       string            `json:"defaultLang"`
 	DefaultCSS        string            `json:"defaultCSS"`
 	CaptchaPublicKey  string            `json:"captchaPublicKey"`

@@ -9,6 +9,7 @@ import { send } from './connection'
 interface Configs {
 	captcha: boolean
 	mature: boolean // Website intended for mature audiences
+	disableUserBoards: boolean
 	defaultLang: string
 	defaultCSS: string
 	captchaPublicKey: string

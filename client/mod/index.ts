@@ -9,6 +9,7 @@ import {
 	PasswordChangeView, ConfigPanel, BoardConfigPanel, BoardCreationPanel,
 	BoardDeletionView
 } from "./forms"
+import { config } from "../state"
 
 export { newRequest } from "./common"
 
@@ -71,10 +72,11 @@ class AccountPanel extends TabbedModal {
 		const el = document.getElementById("form-selection")
 		el.style.display = "block"
 
-		// Hide server configuration link, unless logged in as "admin"
-		if (loginID !== "admin") {
-			(el.lastElementChild as HTMLElement).style.display = "none"
-		}
+		// Hide some controls for non-admin accounts
+		const isAdmin = loginID === "admin";
+		(el.lastElementChild as HTMLElement).hidden = !isAdmin
+		document.getElementById("createBoard").hidden = !isAdmin
+			&& config.disableUserBoards
 
 		// Load Moderation panel
 		modPanel = new ModPanel()

@@ -60,6 +60,10 @@
 			"DesuStorage",
 			"desustorage.org pesquisa de Imagens"
 		],
+		"disableUserBoards": [
+			"Disable non-admin board creation",
+			"Prevents any account apart from the 'admin' account from creating new boards"
+		],
 		"done": [
 			"Terminar post",
 			"Fecha o post aberto"

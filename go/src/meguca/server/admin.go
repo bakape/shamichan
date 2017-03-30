@@ -231,8 +231,9 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	// Validate request data
 	var err error
 	switch {
-	// "id" is a reserved key name in the database
-	case msg.Name == "id", !boardNameValidation.MatchString(msg.Name):
+	case msg.UserID != "admin" && config.Get().DisableUserBoards:
+		err = errAccessDenied
+	case !boardNameValidation.MatchString(msg.Name):
 		err = errInvalidBoardName
 	case len(msg.Title) > 100:
 		err = errTitleTooLong

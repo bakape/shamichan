@@ -168,6 +168,7 @@ var specs = map[string][]inputSpec{
 	},
 	"configureServer": {
 		{ID: "mature"},
+		{ID: "disableUserBoards"},
 		{ID: "pruneThreads"},
 		{
 			ID:       "threadExpiry",

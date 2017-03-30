@@ -250,14 +250,14 @@
 						{% for _, l := range links %}
 							<a id="{%s= l %}">
 								{%s= ln.UI[l] %}
+								<br>
 							</a>
-							<br>
 						{% endfor %}
 						<span>
 							<a id="configureServer">
 								{%s= ln.UI["configureServer"] %}
+								<br>
 							</a>
-							<br>
 						</span>
 					</div>
 				</div>

@@ -60,6 +60,10 @@
 			"DesuStorage",
 			"Пошук зображень по desustorage.org"
 		],
+		"disableUserBoards": [
+			"Disable non-admin board creation",
+			"Prevents any account apart from the 'admin' account from creating new boards"
+		],
 		"done": [
 			"Закінчити пост",
 			"Закрити відкритий пост"
