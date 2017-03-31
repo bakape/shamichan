@@ -70,7 +70,7 @@
 		],
 		"eightball": [
 			"#8ball відповіді",
-			"Список відповідей для #8ball хеш команд. Одна відповідь на рядок. Може містити до 100 відповідей та 2000 знаків загало."
+			"Список відповідей для #8ball хеш команд. Може містити до 100 відповідей та 2000 знаків загало."
 		],
 		"exhentai": [
 			"Exhentai",
@@ -140,6 +140,10 @@
 			"IQDB",
 			"Пошук зображень по iqdb.org"
 		],
+		"janitors": [
+			"Janitors",
+			"Janitor account IDs. Janitors can only delete posts."
+		],
 		"lang": [
 			"Мова",
 			"Змінити мову інтерфейсу"
@@ -172,6 +176,10 @@
 			"Ліміт ширини зображення",
 			"Максимальна ширина зображення для завантажених зображень"
 		],
+		"moderators": [
+			"Moderators",
+			"Moderator account IDs. Moderators can delete posts, ban posters and distinguish posters by their mnemonic IDs."
+		],
 		"name": [
 			"Ім'я",
 			"Ім'я на постах"
@@ -199,6 +207,10 @@
 		"oldPassword": [
 			"Old password",
 			""
+		],
+		"owners": [
+			"Owners",
+			"Owner account IDs. Board owners have full access to all board controls. Must contain at least one."
 		],
 		"password": [
 			"Password",
@@ -327,6 +339,7 @@
 		"account": "Аккаунт і менеджмент борди",
 		"add": "Додати",
 		"apply": "Прийняти",
+		"assignStaff": "Assign staff",
 		"ban": "Ban",
 		"bottom": "Дно",
 		"cancel": "Скасувати",

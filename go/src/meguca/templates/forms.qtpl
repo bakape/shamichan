@@ -1,8 +1,7 @@
 {% import "meguca/config" %}
 {% import "meguca/lang" %}
 
-OwnedBoard renders a form for selecting one of several boards owned by the
-user
+OwnedBoard renders a form for selecting one of several boards owned by the user
 {% func OwnedBoard(boards config.BoardTitles, lang map[string]string) %}{% stripspace %}
 	{% if len(boards) != 0 %}
 		<select name="boards" required>
@@ -92,6 +91,17 @@ Form for inputting key-value map-like data
 	</span>
 {% endstripspace %}{% endfunc %}
 
+Form for inputting one array-like form item
+{% func arrayItemForm(v string) %}{% stripspace %}
+	<span>
+		<input type="text" class="array-field" value="{%s v %}">
+		<a class="array-remove">
+			[X]
+		</a>
+		<br>
+	</span>
+{% endstripspace %}{% endfunc %}
+
 Form formatted as a table, with cancel and submit buttons
 {% func tableForm(specs []inputSpec, needCaptcha bool, ln lang.Pack) %}{% stripspace %}
 	{%= table(specs, ln) %}
@@ -108,6 +118,19 @@ Render a map form for inputting map-like data
 			{%= keyValueForm(k, v) %}
 		{% endfor %}
 		<a class="map-add">
+			{%s= ln.UI["add"] %}
+		</a>
+		<br>
+	</div>
+{% endstripspace %}{% endfunc %}
+
+Render form for inputting array-like data
+{% func renderArray(spec inputSpec, ln lang.Pack) %}{% stripspace %}
+	<div class="array-form" name="{%s= spec.ID %}" title="{%s= ln.Forms[spec.ID][1] %}">
+		{% for _, v := range spec.Val.([]string) %}
+			{%= arrayItemForm(v) %}
+		{% endfor %}
+		<a class="array-add">
 			{%s= ln.UI["add"] %}
 		</a>
 		<br>

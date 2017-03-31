@@ -70,7 +70,7 @@
 		],
 		"eightball": [
 			"Odpowiedzi #8ball",
-			"Lista odpowiedzi komendy #8ball. Jedna odpowiedź na linijkę. Może zawierać maksymalnie 100 odpowiedzi i 2000 znaków."
+			"Lista odpowiedzi komendy #8ball. Może zawierać maksymalnie 100 odpowiedzi i 2000 znaków."
 		],
 		"exhentai": [
 			"Exhentai",
@@ -140,6 +140,10 @@
 			"IQDB",
 			"iqdb.org image search"
 		],
+		"janitors": [
+			"Janitors",
+			"Janitor account IDs. Janitors can only delete posts."
+		],
 		"lang": [
 			"Language",
 			"Change interface language"
@@ -172,6 +176,10 @@
 			"Limit szerokości obrazka",
 			"Maksymalna szerokość przesyłanych obrazków"
 		],
+		"moderators": [
+			"Moderators",
+			"Moderator account IDs. Moderators can delete posts, ban posters and distinguish posters by their mnemonic IDs."
+		],
 		"name": [
 			"Login",
 			"Imię, które będzie używane przy nowych postach"
@@ -199,6 +207,10 @@
 		"oldPassword": [
 			"Old password",
 			""
+		],
+		"owners": [
+			"Owners",
+			"Owner account IDs. Board owners have full access to all board controls. Must contain at least one."
 		],
 		"password": [
 			"Password",
@@ -327,6 +339,7 @@
 		"account": "Konto i zarządzanie działami",
 		"add": "Dodaj",
 		"apply": "Zatwierdź",
+		"assignStaff": "Assign staff",
 		"ban": "Ban",
 		"bottom": "Na dół",
 		"cancel": "Cofnij",

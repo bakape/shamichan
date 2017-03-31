@@ -1,2 +1,2 @@
 delete from staff
-	where account = $1
+	where board = $1

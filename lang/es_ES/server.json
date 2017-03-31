@@ -70,7 +70,7 @@
 		],
 		"eightball": [
 			"#8ball answers",
-			"List of answers for the #8ball hash command. One answer per line. Can contain up to 100 answers and 2000 characters total."
+			"List of answers for the #8ball hash command. Can contain up to 100 answers and 2000 characters total."
 		],
 		"exhentai": [
 			"Exhentai",
@@ -140,6 +140,10 @@
 			"IQDB",
 			"iqdb.org búsqueda de imágenes"
 		],
+		"janitors": [
+			"Janitors",
+			"Janitor account IDs. Janitors can only delete posts."
+		],
 		"lang": [
 			"Idioma",
 			"Cambia a diferentes idiomas"
@@ -172,6 +176,10 @@
 			"Image width limit",
 			"Maximum width of uploaded images"
 		],
+		"moderators": [
+			"Moderators",
+			"Moderator account IDs. Moderators can delete posts, ban posters and distinguish posters by their mnemonic IDs."
+		],
 		"name": [
 			"Name",
 			"Name to attach to new posts"
@@ -199,6 +207,10 @@
 		"oldPassword": [
 			"Old password",
 			""
+		],
+		"owners": [
+			"Owners",
+			"Owner account IDs. Board owners have full access to all board controls. Must contain at least one."
 		],
 		"password": [
 			"Password",
@@ -327,6 +339,7 @@
 		"account": "Account and board management",
 		"add": "Add",
 		"apply": "Apply",
+		"assignStaff": "Assign staff",
 		"ban": "Ban",
 		"bottom": "Abajo",
 		"cancel": "Cancelar",

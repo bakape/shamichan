@@ -120,3 +120,45 @@ func DeletePost(board string, id uint64) (err error) {
 	}
 	return execPrepared("delete_post", id, msg)
 }
+
+// WriteStaff writes staff positions of a specific board. Old rows are
+// overwritten. tx must not be nil.
+func WriteStaff(tx *sql.Tx, board string, staff map[string][]string) error {
+	// Remove previous staff entries
+	_, err := tx.Stmt(prepared["clear_staff"]).Exec(board)
+	if err != nil {
+		return err
+	}
+
+	// Write new ones
+	q := tx.Stmt(prepared["write_staff"])
+	for pos, accounts := range staff {
+		for _, a := range accounts {
+			_, err = q.Exec(board, a, pos)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// GetStaff retrieves all staff positions of a specific board
+func GetStaff(board string) (staff map[string][]string, err error) {
+	staff = make(map[string][]string, 3)
+	r, err := prepared["get_staff"].Query(board)
+	if err != nil {
+		return
+	}
+	for r.Next() {
+		var acc, pos string
+		err = r.Scan(&acc, &pos)
+		if err != nil {
+			return
+		}
+		staff[pos] = append(staff[pos], acc)
+	}
+	err = r.Err()
+	return
+}

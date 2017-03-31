@@ -441,3 +441,58 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 		cl.Send(data)
 	}
 }
+
+// Assign moderation staff to a board
+func assignStaff(w http.ResponseWriter, r *http.Request) {
+	var msg struct {
+		Board, Captcha               string
+		Owners, Moderators, Janitors []string
+		auth.SessionCreds
+	}
+
+	isValid := decodeJSON(w, r, &msg) &&
+		isLoggedIn(w, r, msg.SessionCreds) &&
+		isBoardOwner(w, r, msg.Board, msg.UserID)
+	switch {
+	case !isValid:
+		return
+	// Ensure there always is at least one board owner
+	case len(msg.Owners) == 0:
+		text400(w, errors.New("no board owners set"))
+		return
+	case !auth.AuthenticateCaptcha(msg.Captcha):
+		text400(w, errInvalidCaptcha)
+		return
+	default:
+		// Maximum of 100 staff per position
+		for _, s := range [...][]string{msg.Owners, msg.Moderators, msg.Janitors} {
+			if len(s) > 100 {
+				text400(w, errors.New("too many staff per position"))
+				return
+			}
+		}
+	}
+
+	// Write to database
+	tx, err := db.StartTransaction()
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	defer db.RollbackOnError(tx, &err)
+
+	err = db.WriteStaff(tx, msg.Board, map[string][]string{
+		"owners":     msg.Owners,
+		"moderators": msg.Moderators,
+		"janitors":   msg.Janitors,
+	})
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		text500(w, r, err)
+	}
+}

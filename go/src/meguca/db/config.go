@@ -95,29 +95,6 @@ func UpdateBoard(c config.BoardConfigs) error {
 	)
 }
 
-// WriteStaff writes staff positions of a specific board. Old rows are
-// overwritten. tx must not be nil.
-func WriteStaff(tx *sql.Tx, board string, staff map[string][]string) error {
-	// Remove previous staff entries
-	_, err := tx.Stmt(prepared["clear_staff"]).Exec(board)
-	if err != nil {
-		return err
-	}
-
-	// Write new ones
-	q := tx.Stmt(prepared["write_staff"])
-	for pos, accounts := range staff {
-		for _, a := range accounts {
-			_, err = q.Exec(board, a, pos)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
 func updateConfigs(data string) error {
 	conf, err := decodeConfigs(data)
 	if err != nil {

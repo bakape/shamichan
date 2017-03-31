@@ -17,10 +17,12 @@ abstract class FormView extends View<null> {
 		this.onClick({
 			"input[name=cancel]": () =>
 				this.remove(),
-			".map-remove": e =>
-				this.removeMapInput(e),
+			".map-remove, .array-remove": e =>
+				this.removeInput(e),
 			".map-add": e =>
-				this.addMapInput(e),
+				this.addInput(e, "keyValue"),
+			".array-add": e =>
+				this.addInput(e, "arrayItem"),
 		})
 		this.on("submit", e =>
 			this.submit(e))
@@ -70,6 +72,7 @@ abstract class FormView extends View<null> {
 	// Render a text comment about the response status below the form
 	protected renderFormResponse(text: string) {
 		this.el.querySelector(".form-response").textContent = text
+		this.reloadCaptcha()
 	}
 
 	// Load a new captcha, if present and response code is not 0
@@ -79,22 +82,11 @@ abstract class FormView extends View<null> {
 		}
 	}
 
-	// Render an additional map key-value input field pair
-	protected addMapInput(event: Event) {
-		(event.target as Element).before(this.renderKeyValuePair("", ""))
+	private addInput(event: Event, id: string) {
+		(event.target as Element).before(importTemplate(id))
 	}
 
-	// Render a single key-value input field pair in a map subform
-	private renderKeyValuePair(key: string, val: string): DocumentFragment {
-		const frag = importTemplate("keyValue"),
-			[k, v] = frag.querySelectorAll("input")
-		k.setAttribute("value", key)
-		v.setAttribute("value", val)
-		return frag
-	}
-
-	// Remove a map key-vale input field pair
-	protected removeMapInput(event: Event) {
+	private removeInput(event: Event) {
 		(event.target as Element).closest("span").remove()
 	}
 }

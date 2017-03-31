@@ -74,6 +74,9 @@
 		<template name="keyValue">
 			{%= keyValueForm("", "") %}
 		</template>
+		<template name="arrayItem">
+			{%= arrayItemForm("") %}
+		</template>
 		<template name="figcaption">
 			<figcaption class="spaced">
 				<a class="image-toggle act" hidden></a>
@@ -250,7 +253,8 @@
 					<div id="form-selection" class="hidden">
 						{% code links := [...]string{
 							"logout", "logoutAll", "changePassword",
-							"createBoard", "configureBoard", "deleteBoard",
+							"createBoard", "configureBoard", "assignStaff",
+							"deleteBoard",
 						} %}
 						{% for _, l := range links %}
 							<a id="{%s= l %}">

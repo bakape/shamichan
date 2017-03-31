@@ -6,6 +6,7 @@ import (
 	"meguca/config"
 	"meguca/lang"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -48,4 +49,20 @@ func ConfigureServer(conf config.Configs, ln lang.Pack) string {
 // ChangePassword renders a form for changing an account's password
 func ChangePassword(ln lang.Pack) string {
 	return tableForm(specs["changePassword"], true, ln)
+}
+
+// StaffAssignment renders a staff assignment form with the current staff
+// already filled in
+func StaffAssignment(staff [3][]string, ln lang.Pack) string {
+	var specs [3]inputSpec
+	for i, id := range [3]string{"owners", "moderators", "janitors"} {
+		sort.Strings(staff[i])
+		specs[i] = inputSpec{
+			ID:   id,
+			Type: _array,
+			Val:  staff[i],
+		}
+	}
+
+	return tableForm(specs[:], true, ln)
 }

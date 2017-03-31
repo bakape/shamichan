@@ -142,14 +142,9 @@ var specs = map[string][]inputSpec{
 		},
 		{
 			ID:        "eightball",
-			Type:      _textarea,
-			Rows:      5,
+			Type:      _array,
 			MaxLength: common.MaxLenEightball,
 		},
-
-		// TODO: Banner upload
-		// TODO: Staff configuration
-
 	},
 	"createBoard": {
 		{

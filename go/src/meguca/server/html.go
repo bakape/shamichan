@@ -184,6 +184,30 @@ func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
 	serveHTML(w, r, "", data, nil)
 }
 
+// Render a form for assigning staff to a board
+func staffAssignmentForm(
+	w http.ResponseWriter,
+	r *http.Request,
+	p map[string]string,
+) {
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	s, err := db.GetStaff(p["board"])
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	data := []byte(templates.StaffAssignment(
+		[...][]string{s["owners"], s["moderators"], s["janitors"]},
+		lp,
+	))
+	serveHTML(w, r, "", data, nil)
+}
+
 // Renders a form for creating new boards
 func boardCreationForm(w http.ResponseWriter, r *http.Request) {
 	lp, err := lang.Get(w, r)

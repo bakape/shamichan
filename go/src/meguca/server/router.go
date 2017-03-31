@@ -95,6 +95,7 @@ func createRouter() http.Handler {
 	forms.GET("/captcha", wrapHandler(renderCaptcha))
 	forms.POST("/configureBoard", wrapHandler(boardConfigurationForm))
 	forms.POST("/configureServer", wrapHandler(serverConfigurationForm))
+	forms.GET("/assignStaff/:board", staffAssignmentForm)
 
 	// JSON API
 	json := r.NewGroup("/json")
@@ -140,6 +141,7 @@ func createRouter() http.Handler {
 	admin.POST("/deletePost", wrapHandler(deletePost))
 	admin.POST("/ban", wrapHandler(ban))
 	admin.POST("/notification", wrapHandler(sendNotification))
+	admin.POST("/assignStaff", wrapHandler(assignStaff))
 
 	// Assets
 	r.GET("/assets/*path", serveAssets)

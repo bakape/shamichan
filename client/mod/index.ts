@@ -6,8 +6,8 @@ import { TabbedModal } from "../base"
 import { validatePasswordMatch, newRequest } from "./common"
 import ModPanel from "./panel"
 import {
-	PasswordChangeView, ConfigPanel, BoardConfigPanel, BoardCreationPanel,
-	BoardDeletionView
+	PasswordChangeForm, ServerConfigForm, BoardConfigForm, BoardCreationForm,
+	BoardDeletionForm, StaffAssignmentForm,
 } from "./forms"
 import { config } from "../state"
 
@@ -37,11 +37,12 @@ class AccountPanel extends TabbedModal {
 				logout("/admin/logout"),
 			"#logoutAll": () =>
 				logout("/admin/logoutAll"),
-			"#changePassword": this.loadConditional(PasswordChangeView),
-			"#configureServer": this.loadConditional(ConfigPanel),
-			"#createBoard": this.loadConditional(BoardCreationPanel),
-			"#deleteBoard": this.loadConditional(BoardDeletionView),
-			"#configureBoard": this.loadConditional(BoardConfigPanel),
+			"#changePassword": this.loadConditional(PasswordChangeForm),
+			"#configureServer": this.loadConditional(ServerConfigForm),
+			"#createBoard": this.loadConditional(BoardCreationForm),
+			"#deleteBoard": this.loadConditional(BoardDeletionForm),
+			"#configureBoard": this.loadConditional(BoardConfigForm),
+			"#assignStaff": this.loadConditional(StaffAssignmentForm),
 		})
 
 		if (loginID && sessionToken) {
@@ -167,7 +168,6 @@ class LoginForm extends FormView {
 				break
 			default:
 				this.renderFormResponse(await res.text())
-				this.reloadCaptcha()
 		}
 	}
 }

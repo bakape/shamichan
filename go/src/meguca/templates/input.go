@@ -4,10 +4,10 @@ package templates
 
 import (
 	"html"
+	"meguca/lang"
 	"strconv"
 	"strings"
 
-	"meguca/lang"
 	"github.com/valyala/quicktemplate"
 )
 
@@ -22,6 +22,7 @@ const (
 	_textarea
 	_password
 	_map
+	_array
 	_image
 	_shortcut
 )
@@ -67,6 +68,8 @@ func (w *formWriter) input(spec inputSpec) {
 		w.textArea(spec)
 	case _map:
 		streamrenderMap(&w.Writer, spec, w.lang)
+	case _array:
+		streamrenderArray(&w.Writer, spec, w.lang)
 	case _shortcut:
 		w.N().S("Alt+")
 		cont = true
