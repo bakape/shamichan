@@ -45,7 +45,7 @@ func decodeConfigs(data string) (c config.Configs, err error) {
 }
 
 func loadBoardConfigs() error {
-	r, err := prepared["get_board_configs"].Query()
+	r, err := prepared["get_all_board_configs"].Query()
 	if err != nil {
 		return err
 	}
@@ -127,17 +127,9 @@ func updateBoardConfigs(board string) error {
 	}
 }
 
-// GetBoardConfigs retrives the configurations of a specific board. Only used in
-// tests.
+// GetBoardConfigs retrives the configurations of a specific board
 func GetBoardConfigs(board string) (config.BoardConfigs, error) {
-	r := db.QueryRow(`
-		SELECT readOnly, textOnly, forcedAnon, id, title, notice, rules,
-			eightball
-		FROM boards
-		WHERE id = $1`,
-		board,
-	)
-	return scanBoardConfigs(r)
+	return scanBoardConfigs(prepared["get_board_configs"].QueryRow(board))
 }
 
 func recompileTemplates() error {
