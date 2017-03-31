@@ -80,7 +80,7 @@ export default async function navigate(
 	postSM.feed(postEvent.reset)
 	renderPage()
 	await pageLoader
-	if (!isBanned) {
+	if (!isBanned()) {
 		synchronise()
 	}
 
