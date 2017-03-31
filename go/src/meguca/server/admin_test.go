@@ -150,7 +150,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			"notice too long",
 			config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
-					Notice: GenString(maxNoticeLen + 1),
+					Notice: GenString(common.MaxLenNotice + 1),
 				},
 			},
 			errNoticeTooLong,
@@ -159,7 +159,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			"rules too long",
 			config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
-					Rules: GenString(maxRulesLen + 1),
+					Rules: GenString(common.MaxLenRules + 1),
 				},
 			},
 			errRulesTooLong,
@@ -168,7 +168,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			"title too long",
 			config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
-					Title: GenString(maxTitleLen + 1),
+					Title: GenString(common.MaxLenBoardTitle + 1),
 				},
 			},
 			errTitleTooLong,
