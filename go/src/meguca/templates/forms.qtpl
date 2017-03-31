@@ -23,7 +23,7 @@ OwnedBoard renders a form for selecting one of several boards owned by the user
 {% endstripspace %}{% endfunc %}
 
 {% func formatTitle(id, title string) %}{% stripspace %}
-	/{%s= id %}/ - {%s title %}
+	/{%s= id %}/{% space %}-{% space %}{%s title %}
 {% endstripspace %}{% endfunc %}
 
 BoardNavigation renders a board selection and search form
