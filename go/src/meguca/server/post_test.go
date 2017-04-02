@@ -1,7 +1,6 @@
 package server
 
 import (
-	"strconv"
 	"testing"
 
 	"meguca/auth"
@@ -108,7 +107,6 @@ func TestSpoilerImage(t *testing.T) {
 				t.Fatal(err)
 			}
 			if c.hasImage && post.Image.Spoiler != c.spoilered {
-				assertRepLogContains(t, 1, "11"+strconv.FormatUint(c.id, 10))
 				t.Errorf(
 					"spoiler mismatch: expected %v; got %v",
 					c.spoilered,
@@ -122,22 +120,5 @@ func TestSpoilerImage(t *testing.T) {
 func writeSampleImage(t *testing.T) {
 	if err := db.WriteImage(nil, assets.StdJPEG.ImageCommon); err != nil {
 		t.Fatal(err)
-	}
-}
-
-func assertRepLogContains(t *testing.T, id uint64, msg string) {
-	res, err := db.GetLog(id, 0, 500)
-	if err != nil {
-		t.Fatal(err)
-	}
-	contains := false
-	for _, r := range res {
-		if string(r) == msg {
-			contains = true
-			break
-		}
-	}
-	if !contains {
-		t.Errorf(`log does not contain message "%s"`, msg)
 	}
 }

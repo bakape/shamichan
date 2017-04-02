@@ -435,7 +435,6 @@ func TestDeletePost(t *testing.T) {
 	thread := db.Thread{
 		ID:    3,
 		Board: "c",
-		Log:   [][]byte{},
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{
@@ -519,7 +518,6 @@ func writeSampleThread(t *testing.T) {
 	thread := db.Thread{
 		ID:    1,
 		Board: "a",
-		Log:   bytes.Split([]byte(GenString(11)), []byte{}),
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{

@@ -276,7 +276,6 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 	}
 
 	assertMessage(t, wcl, `326`)
-	assertRepLog(t, 1, []string{`06{"id":2}`})
 	assertPostClosed(t, 2)
 }
 
@@ -419,7 +418,6 @@ func writeSampleThread(t testing.TB) {
 		PostCtr:   0,
 		ImageCtr:  1,
 		ReplyTime: now,
-		Log:       [][]byte{},
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{

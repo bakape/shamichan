@@ -38,7 +38,6 @@ func TestReader(t *testing.T) {
 		{
 			ID:        1,
 			Board:     "a",
-			Log:       [][]byte{{'1'}},
 			ReplyTime: 1,
 			BumpTime:  1,
 			PostCtr:   3,
@@ -46,7 +45,6 @@ func TestReader(t *testing.T) {
 		{
 			ID:        3,
 			Board:     "c",
-			Log:       [][]byte{{'1'}},
 			ReplyTime: 3,
 			BumpTime:  5,
 			PostCtr:   1,
@@ -173,7 +171,6 @@ func testGetAllBoard(t *testing.T) {
 			},
 			PostCtr:   1,
 			Board:     "c",
-			LogCtr:    1,
 			ReplyTime: 3,
 			BumpTime:  5,
 		},
@@ -184,7 +181,6 @@ func testGetAllBoard(t *testing.T) {
 			},
 			PostCtr:   3,
 			Board:     "a",
-			LogCtr:    1,
 			ReplyTime: 1,
 			BumpTime:  1,
 		},
@@ -236,7 +232,6 @@ func testGetBoard(t *testing.T) {
 					},
 					PostCtr:   1,
 					Board:     "c",
-					LogCtr:    1,
 					ReplyTime: 3,
 					BumpTime:  5,
 				},
@@ -273,7 +268,6 @@ func testGetThread(t *testing.T) {
 		PostCtr:   3,
 		ReplyTime: 1,
 		BumpTime:  1,
-		LogCtr:    1,
 		Board:     "a",
 		Post: common.Post{
 			ID:    1,
@@ -319,7 +313,6 @@ func testGetThread(t *testing.T) {
 				ReplyTime: 3,
 				BumpTime:  5,
 				PostCtr:   1,
-				LogCtr:    1,
 				Post: common.Post{
 					ID:    3,
 					Links: [][2]uint64{{1, 1}},

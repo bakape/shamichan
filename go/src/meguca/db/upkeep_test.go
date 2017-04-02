@@ -242,7 +242,6 @@ func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
 			Board:     op.board,
 			ReplyTime: unix,
 			BumpTime:  unix,
-			Log:       [][]byte{},
 		}
 		post := Post{
 			StandalonePost: common.StandalonePost{
