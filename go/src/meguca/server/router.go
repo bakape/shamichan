@@ -119,7 +119,6 @@ func createRouter() http.Handler {
 	json.GET("/extensions", wrapHandler(serveExtensionMap))
 	json.GET("/boardConfig/:board", serveBoardConfigs)
 	json.GET("/boardList", wrapHandler(serveBoardList))
-	json.POST("/log", wrapHandler(serveReplicationLog))
 
 	// Public POST API
 	r.POST("/createThread", wrapHandler(createThread))

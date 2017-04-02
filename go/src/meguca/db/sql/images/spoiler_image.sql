@@ -1,1 +1,3 @@
-select spoiler_image($1, $2, $3);
+update posts
+	set spoiler = true
+	where id = $1

@@ -1,7 +1,6 @@
 create or replace function bump_thread(
 	id bigint,
 	board varchar(3),
-	msg bytea,
 	bump bool,
 	image bool
 ) returns void as $$
@@ -23,5 +22,4 @@ create or replace function bump_thread(
 				else imageCtr
 			end
 		where id = bump_thread.id;
-	select update_log(id, msg);
 $$ language sql;

@@ -100,16 +100,14 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 
 	// Get thread metadata
 	row := tx.Stmt(prepared["get_thread"]).QueryRow(id)
-	var logCtr sql.NullInt64
 	err = row.Scan(
 		&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-		&t.Subject, &logCtr,
+		&t.Subject,
 	)
 	if err != nil {
 		return
 	}
 	t.Abbrev = lastN != 0
-	t.LogCtr = uint64(logCtr.Int64)
 
 	// Get OP post. Need to fetch separately, in case not fetching the full
 	// thread. Also allows to return early on deleted threads.
@@ -245,16 +243,15 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 
 	for table.Next() {
 		var (
-			t      common.Thread
-			post   postScanner
-			img    imageScanner
-			logCtr sql.NullInt64
+			t    common.Thread
+			post postScanner
+			img  imageScanner
 		)
 
-		args := make([]interface{}, 0, 31)
+		args := make([]interface{}, 0, 30)
 		args = append(args,
 			&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-			&t.Subject, &logCtr,
+			&t.Subject,
 		)
 		args = append(args, post.ScanArgs()...)
 		args = append(args, img.ScanArgs()...)
@@ -263,7 +260,6 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 			return
 		}
 
-		t.LogCtr = uint64(logCtr.Int64)
 		t.Post, err = post.Val()
 		if err != nil {
 			return

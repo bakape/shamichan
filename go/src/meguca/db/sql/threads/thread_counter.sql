@@ -1,2 +1,2 @@
-select array_length(log, 1) from threads
+select replyTime from threads
 	where id = $1

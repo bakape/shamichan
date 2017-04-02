@@ -4,12 +4,12 @@ package websockets
 
 import (
 	"log"
-	"strconv"
-	"sync"
-
 	"meguca/common"
 	"meguca/db"
 	"meguca/util"
+	"strconv"
+	"sync"
+
 	"github.com/lib/pq"
 )
 
@@ -165,14 +165,14 @@ func (u *updateFeed) Start(id uint64) (err error) {
 }
 
 func (u *updateFeed) fetchUpdates() {
-	l, err := db.GetLogTillEnd(u.id, u.ctr)
-	if err != nil {
-		log.Printf("could not fetch updates on thread %d: %s\n", u.id, err)
-		return
-	}
-	for _, msg := range l {
-		u.Write(msg)
-	}
+	// l, err := db.GetLogTillEnd(u.id, u.ctr)
+	// if err != nil {
+	// 	log.Printf("could not fetch updates on thread %d: %s\n", u.id, err)
+	// 	return
+	// }
+	// for _, msg := range l {
+	// 	u.Write(msg)
+	// }
 }
 
 // Send any buffered messages to any listening clients

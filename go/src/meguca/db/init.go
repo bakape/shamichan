@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	version = 2
+	version = 3
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
 )
@@ -48,6 +48,13 @@ var upgrades = map[uint]func(*sql.Tx) error{
 			`ALTER TABLE boards
 				DROP COLUMN hashCommands,
 				DROP COLUMN codeTags`,
+		)
+		return
+	},
+	2: func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE threads
+				DROP COLUMN log`,
 		)
 		return
 	},

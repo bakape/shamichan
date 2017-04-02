@@ -27,7 +27,6 @@ type Thread struct {
 	PostCtr, ImageCtr   uint32
 	ReplyTime, BumpTime int64
 	Subject, Board      string
-	Log                 [][]byte
 }
 
 // For decoding and encoding the tuple arrays we store links in
@@ -305,7 +304,6 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 
 	_, err = tx.Stmt(prepared["write_op"]).Exec(
 		t.Board,
-		pq.ByteaArray(t.Log),
 		t.ID,
 		t.PostCtr,
 		t.ImageCtr,
@@ -334,22 +332,6 @@ func GetPostPassword(id uint64) (p []byte, err error) {
 		err = nil
 	}
 	return
-}
-
-// GetLog retrieves a slice of a thread's replication log
-func GetLog(id, from, to uint64) ([][]byte, error) {
-	var log pq.ByteaArray
-	// Postgres arrays are 1-based
-	err := prepared["get_log"].QueryRow(id, from+1, to+1).Scan(&log)
-	return [][]byte(log), err
-}
-
-// GetLogTillEnd retrieves a slice of the replication log from a certain lower
-// index
-func GetLogTillEnd(id, from uint64) ([][]byte, error) {
-	var log pq.ByteaArray
-	err := prepared["get_log_till_end"].QueryRow(id, from+1).Scan(&log)
-	return [][]byte(log), err
 }
 
 // SetPostCounter sets the post counter. Should only be used in tests.
