@@ -10,7 +10,9 @@ import (
 	"meguca/auth"
 	"meguca/config"
 	"meguca/util"
+	"time"
 
+	"github.com/boltdb/bolt"
 	_ "github.com/lib/pq" // Postgres driver
 )
 
@@ -30,6 +32,9 @@ var (
 
 	// Stores the postgres database instance
 	db *sql.DB
+
+	// Embedded database for temporary storage
+	boltDB *bolt.DB
 )
 
 var upgrades = map[uint]func(*sql.Tx) error{
@@ -116,7 +121,7 @@ func LoadDB() (err error) {
 	if !exists {
 		tasks = append(tasks, CreateAdminAccount)
 	}
-	tasks = append(tasks, loadConfigs, loadBoardConfigs, loadBans)
+	tasks = append(tasks, openBoltDB, loadConfigs, loadBoardConfigs, loadBans)
 	if err := util.Waterfall(tasks...); err != nil {
 		return err
 	}
@@ -132,6 +137,19 @@ func rollBack(tx *sql.Tx, err error) error {
 		err = util.WrapError(err.Error(), rbErr)
 	}
 	return err
+}
+
+func openBoltDB() (err error) {
+	boltDB, err = bolt.Open("db.db", 0600, &bolt.Options{
+		Timeout: time.Second,
+	})
+	if err != nil {
+		return
+	}
+	return boltDB.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("open_bodies"))
+		return err
+	})
 }
 
 // initDB initializes a database
@@ -161,6 +179,25 @@ func CreateAdminAccount() error {
 // ClearTables deletes the contents of specified DB tables. Only used for tests.
 func ClearTables(tables ...string) error {
 	for _, t := range tables {
+		// Clear open post body bucket
+		switch t {
+		case "boards", "threads", "posts":
+			err := boltDB.Update(func(tx *bolt.Tx) error {
+				buc := tx.Bucket([]byte("open_bodies"))
+				c := buc.Cursor()
+				for k, _ := c.First(); k != nil; k, _ = c.Next() {
+					err := buc.Delete(k)
+					if err != nil {
+						return err
+					}
+				}
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
+
 		if _, err := db.Exec(`DELETE FROM ` + t); err != nil {
 			return err
 		}

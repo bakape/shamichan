@@ -2,12 +2,6 @@ package db
 
 import "meguca/common"
 
-// UpdateLog writes to a thread's replication log. Only used in tests.
-func UpdateLog(id uint64, msg []byte) error {
-	_, err := db.Exec(`select update_log($1, $2)`, id, msg)
-	return err
-}
-
 // AppendBody appends a character to a post body
 func AppendBody(id, op uint64, char rune) error {
 	msg, err := common.EncodeMessage(
@@ -65,19 +59,9 @@ func Backspace(id, op uint64) error {
 func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
 	err error,
 ) {
-	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
-		ID       uint64           `json:"id"`
-		Links    [][2]uint64      `json:"links,omitempty"`
-		Commands []common.Command `json:"commands,omitempty"`
-	}{
-		ID:       id,
-		Links:    links,
-		Commands: com,
-	})
-
 	err = execPrepared(
 		"close_post",
-		id, op, msg, linkRow(links), commandRow(com),
+		id, op, linkRow(links), commandRow(com),
 	)
 	if err != nil {
 		return

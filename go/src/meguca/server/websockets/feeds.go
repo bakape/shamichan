@@ -3,11 +3,8 @@
 package websockets
 
 import (
-	"log"
 	"meguca/common"
-	"meguca/db"
 	"meguca/util"
-	"strconv"
 	"sync"
 
 	"github.com/lib/pq"
@@ -123,43 +120,43 @@ type updateFeed struct {
 }
 
 func (u *updateFeed) Start(id uint64) (err error) {
-	// TODO: Lock table, while spawning listener
-	u.listener, err = db.Listen("t:" + strconv.FormatUint(id, 10))
-	if err != nil {
-		return
-	}
-	u.ctr, err = db.ThreadCounter(id)
-	if err != nil {
-		return
-	}
+	// // TODO: Lock table, while spawning listener
+	// u.listener, err = db.Listen("t:" + strconv.FormatUint(id, 10))
+	// if err != nil {
+	// 	return
+	// }
+	// u.ctr, err = db.ThreadCounter(id)
+	// if err != nil {
+	// 	return
+	// }
 
-	go func() {
-		// Stop the timer, if there are no messages and resume on new ones.
-		// Keeping the goroutine asleep reduces CPU usage.
-		u.ticker.Start()
-		defer u.ticker.Pause()
+	// go func() {
+	// 	// Stop the timer, if there are no messages and resume on new ones.
+	// 	// Keeping the goroutine asleep reduces CPU usage.
+	// 	u.ticker.Start()
+	// 	defer u.ticker.Pause()
 
-		for {
-			select {
-			case <-u.close:
-				if err := u.listener.Close(); err != nil {
-					log.Printf("feed closing: %s", err)
-				}
-				return
-			case msg := <-u.listener.Notify:
-				u.ticker.StartIfPaused()
-				if msg != nil { // Disconnect happened. Shouganai.
-					u.hasUpdates = true
-				}
-			case <-u.ticker.C:
-				if u.hasUpdates {
-					u.hasUpdates = false
-					u.fetchUpdates()
-				}
-				u.flushBuffer()
-			}
-		}
-	}()
+	// 	for {
+	// 		select {
+	// 		case <-u.close:
+	// 			if err := u.listener.Close(); err != nil {
+	// 				log.Printf("feed closing: %s", err)
+	// 			}
+	// 			return
+	// 		case msg := <-u.listener.Notify:
+	// 			u.ticker.StartIfPaused()
+	// 			if msg != nil { // Disconnect happened. Shouganai.
+	// 				u.hasUpdates = true
+	// 			}
+	// 		case <-u.ticker.C:
+	// 			if u.hasUpdates {
+	// 				u.hasUpdates = false
+	// 				u.fetchUpdates()
+	// 			}
+	// 			u.flushBuffer()
+	// 		}
+	// 	}
+	// }()
 
 	return
 }

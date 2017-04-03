@@ -1,5 +1,4 @@
 create or replace function insert_post(
-	msg bytea,
 	editing bool,
 	spoiler bool,
 	id bigint,
@@ -18,7 +17,7 @@ create or replace function insert_post(
 	backlinks bigint[][2],
 	commands json[]
 ) returns void as $$
-	select bump_thread(op, board, msg, 'true', SHA1 is not null);
+	select bump_thread(op, board, 'true', SHA1 is not null);
 	insert into posts (
 		editing, spoiler, id, board, op, time, body, name, trip, auth, password,
 		ip, SHA1, imageName, links, backlinks, commands

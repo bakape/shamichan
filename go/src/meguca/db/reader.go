@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"meguca/common"
+	"sort"
 
 	"github.com/lib/pq"
 )
@@ -86,6 +87,20 @@ func (p postScanner) Image() (bool, string) {
 	return p.spoiler.Bool, p.imageName.String
 }
 
+type postSorter []*common.Post
+
+func (p postSorter) Len() int {
+	return len(p)
+}
+
+func (p postSorter) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
+func (p postSorter) Less(i, j int) bool {
+	return p[i].ID < p[j].ID
+}
+
 // GetThread retrieves public thread data from the database
 func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	tx, err := db.Begin()
@@ -144,6 +159,21 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 		t.Posts = append(t.Posts, p)
 	}
 	err = r.Err()
+	if err != nil {
+		return
+	}
+
+	// Inject bodies into open posts
+	open := make([]*common.Post, 0, 16)
+	if t.Post.Editing {
+		open = append(open, &t.Post)
+	}
+	for i := range t.Posts {
+		if t.Posts[i].Editing {
+			open = append(open, &t.Posts[i])
+		}
+	}
+	err = injectOpenBodies(open)
 
 	return
 }
@@ -197,7 +227,14 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 		res.Image.Spoiler, res.Image.Name = post.Image()
 	}
 
-	return res, nil
+	if res.Editing {
+		res.Body, err = GetOpenBody(res.ID)
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 // GetBoardCatalog retrieves all OPs of a single board
@@ -272,6 +309,17 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 		board = append(board, t)
 	}
 	err = table.Err()
+	if err != nil {
+		return
+	}
+
+	open := make([]*common.Post, 0, 16)
+	for i := range board {
+		if board[i].Editing {
+			open = append(open, &board[i].Post)
+		}
+	}
+	err = injectOpenBodies(open)
 
 	return
 }
@@ -307,5 +355,38 @@ func scanBoard(table tableScanner) (board common.Board, err error) {
 		}
 	}
 
+	open := make([]*common.Post, 0, 32)
+	for i := range board {
+		t := &board[i]
+		if t.Editing {
+			open = append(open, &t.Post)
+		}
+		for i := range t.Posts {
+			if t.Posts[i].Editing {
+				open = append(open, &t.Posts[i])
+			}
+		}
+	}
+
 	return
+}
+
+// Inject open post bodies from the embedded database into the posts
+func injectOpenBodies(posts []*common.Post) error {
+	if len(posts) == 0 {
+		return nil
+	}
+
+	tx, err := boltDB.Begin(false)
+	if err != nil {
+		return err
+	}
+
+	buc := tx.Bucket([]byte("open_bodies"))
+	sort.Sort(postSorter(posts))
+	for _, p := range posts {
+		p.Body = string(buc.Get(formatPostID(p.ID)))
+	}
+
+	return tx.Rollback()
 }

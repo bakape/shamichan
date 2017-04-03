@@ -1,1 +1,1 @@
-select close_post($1, $2, $3, $4, $5)
+select close_post($1, $2, $3, $4)
