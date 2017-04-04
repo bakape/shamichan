@@ -112,12 +112,12 @@ func isBoardOwner(
 	r *http.Request,
 	board, userID string,
 ) bool {
-	pos, err := db.GetPosition(userID, board)
+	pos, err := db.GetPositions(userID, board)
 	switch {
 	case err != nil:
 		text500(w, r, err)
 		return false
-	case pos != "owners":
+	case !pos["owners"]:
 		http.Error(w, "403 Not board owner", 403)
 		return false
 	default:

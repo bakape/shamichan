@@ -82,12 +82,25 @@ func ChangePassword(account string, hash []byte) error {
 	return execPrepared("change_password", account, hash)
 }
 
-// GetPosition returns the staff position a user is holding on a board
-func GetPosition(account, board string) (pos string, err error) {
-	err = prepared["get_position"].QueryRow(account, board).Scan(&pos)
-	if err == sql.ErrNoRows {
-		err = nil
+// GetPositions returns the staff positions a user is holding on a board
+func GetPositions(account, board string) (pos map[string]bool, err error) {
+	pos = make(map[string]bool, 3)
+	r, err := prepared["get_positions"].Query(account, board)
+	if err != nil {
+		return
 	}
+	defer r.Close()
+
+	for r.Next() {
+		var s string
+		err = r.Scan(&s)
+		if err != nil {
+			return
+		}
+		pos[s] = true
+	}
+	err = r.Err()
+
 	return
 }
 
