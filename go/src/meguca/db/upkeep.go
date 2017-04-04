@@ -40,6 +40,10 @@ func runHourTasks() {
 	logError("thread cleanup", deleteOldThreads())
 	logError("board cleanup", deleteUnusedBoards())
 	logError("image cleanup", deleteUnusedImages())
+	logError("vaccum database", func() error {
+		_, err := db.Exec(`vacuum`)
+		return err
+	}())
 }
 
 func logPrepared(ids ...string) {
