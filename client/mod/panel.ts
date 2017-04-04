@@ -97,10 +97,9 @@ export default class ModPanel extends View<null> {
 				}
 				break
 			case "notification":
-				await this.postJSON(
-					"/admin/notification",
-					HidableForm.forms["notification"].vals(),
-				)
+				const f = HidableForm.forms["notification"]
+				await this.postJSON("/admin/notification", f.vals())
+				f.clear()
 				return
 		}
 
@@ -168,6 +167,13 @@ abstract class HidableForm extends View<null> {
 		const f = HidableForm.forms[id]
 		if (f) {
 			f.toggleDisplay(true)
+		}
+	}
+
+	// Clear any text inputs
+	public clear() {
+		for (let el of this.el.querySelectorAll("input[type=text]")) {
+			(el as HTMLInputElement).value = ""
 		}
 	}
 }
