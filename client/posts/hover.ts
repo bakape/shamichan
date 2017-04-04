@@ -37,7 +37,7 @@ class PostPreview extends ImageHandler {
 	private sourceModel: Post
 
 	constructor(model: Post, parent: HTMLElement) {
-		const {el} = model.view
+		const { el } = model.view
 		super({ el: clonePost(el) })
 		this.parent = parent
 		this.model = Object.assign({}, model)
@@ -65,6 +65,12 @@ class PostPreview extends ImageHandler {
 	}
 
 	private render() {
+		// Stop any playing audio or video
+		const media = this.el.querySelector("audio, video") as HTMLMediaElement
+		if (media) {
+			media.pause()
+		}
+
 		// Remove any inline expanded posts
 		for (let el of this.el.querySelectorAll("article")) {
 			el.remove()
