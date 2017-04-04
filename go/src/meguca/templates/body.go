@@ -275,7 +275,7 @@ func (c *bodyContext) parseReference(m []string) {
 
 // Format and anchor link that opens in a new tab
 func (c *bodyContext) newTabLink(href, text string) {
-	c.string(`<a href="`)
+	c.string(`<a rel="noreferrer" href="`)
 	c.escape(href)
 	c.string(`" target="_blank">`)
 	c.escape(text)
@@ -291,7 +291,7 @@ func (c *bodyContext) parseURL(bit string) {
 	case c.parseEmbeds(bit):
 	case bit[0] == 'm': // Don't open a new tab for magnet links
 		s = html.EscapeString(s)
-		c.string(`<a href="`)
+		c.string(`<a rel="noreferrer" href="`)
 		c.string(s)
 		c.string(`">`)
 		c.string(s)
@@ -308,7 +308,7 @@ func (c *bodyContext) parseEmbeds(s string) bool {
 			continue
 		}
 
-		c.string(`<em><a class="embed" target="_blank" data-type="`)
+		c.string(`<em><a rel="noreferrer" class="embed" target="_blank" data-type="`)
 		c.N().D(t.typ)
 		c.string(`" href="`)
 		c.escape(s)

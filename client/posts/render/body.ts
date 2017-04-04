@@ -148,7 +148,7 @@ function terminateTags(state: TextState, newLine: boolean): string {
 }
 
 // Parse a line that is still being edited
-function parseOpenLine(line: string, {state}: PostData): string {
+function parseOpenLine(line: string, { state }: PostData): string {
     return parseCode(line, state, parseOpenLinks)
 }
 
@@ -279,7 +279,7 @@ function parseReference(m: string[]): string {
 
 // Render and anchor link that opens in a new tab
 function newTabLink(href: string, text: string): string {
-    return `<a href="${escape(href)}" target="_blank">${escape(text)}</a>`
+    return `<a rel="noreferrer" href="${escape(href)}" target="_blank">${escape(text)}</a>`
 }
 
 // Parse generic URLs and embed, if applicable
@@ -302,7 +302,7 @@ function parseURL(bit: string): string {
 }
 
 // Parse a hash command
-function parseCommand(bit: string, {commands, state}: PostData): string {
+function parseCommand(bit: string, { commands, state }: PostData): string {
     // Guard against invalid dice rolls and parsing lines in the post form
     if (!commands || !commands[state.iDice]) {
         return "#" + bit

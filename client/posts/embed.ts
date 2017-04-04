@@ -44,6 +44,7 @@ for (let p of ["Youtube", "SoundCloud", "Vimeo"]) {
 function formatNoEmbed(type: provider): (s: string) => string {
 	return (href: string) => {
 		const attrs = {
+			rel: "noreferrer",
 			href: escape(href),
 			class: "embed",
 			target: "_blank",
