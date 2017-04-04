@@ -283,8 +283,9 @@ export default class FormModel extends Post {
 		}
 
 		const data = await this.view.upload.uploadFile(file)
-		// Upload failed, canceled or image added while thumbnailing
-		if (!data || this.image) {
+		// Upload failed, canceled, image added while thumbnailing or post
+		// closed
+		if (!data || this.image || !this.editing) {
 			return
 		}
 

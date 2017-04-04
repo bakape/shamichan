@@ -183,6 +183,9 @@ export default class FormView extends PostView {
     // Transform form into a generic post. Removes any dangling form controls
     // and frees up references.
     public cleanUp() {
+        if (this.upload && this.upload.isUploading) {
+            this.upload.cancel()
+        }
         this.el.classList.remove("reply-form")
         if (this.postControls) {
             this.postControls.remove()
@@ -208,9 +211,6 @@ export default class FormView extends PostView {
 
     // Clean up on form removal
     public remove() {
-        if (this.upload && this.upload.isUploading) {
-            this.upload.cancel()
-        }
         super.remove()
         this.cleanUp()
     }
