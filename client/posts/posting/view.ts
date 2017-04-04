@@ -169,11 +169,14 @@ export default class FormView extends PostView {
         this.input.value = this.input.value.slice(0, -length)
     }
 
-    // Replace the current body and set the cursor to the input's end
-    public replaceText(body: string) {
+    // Replace the current body and set the cursor to the input's end.
+    // commit sets, if the onInput method should be run.
+    public replaceText(body: string, commit: boolean) {
         const el = this.input
         el.value = body
-        this.onInput()
+        if (commit) {
+            this.onInput()
+        }
         requestAnimationFrame(() => {
             el.focus()
             el.setSelectionRange(body.length, body.length)

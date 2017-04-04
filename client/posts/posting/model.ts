@@ -149,7 +149,7 @@ export default class FormModel extends Post {
 	// Reset the text body to match the server values
 	public resyncBody() {
 		this.inputBody = this.body
-		this.view.replaceText(this.body)
+		this.view.replaceText(this.body, true)
 	}
 
 	// Send a message about removing the last character of the line to the
@@ -228,7 +228,7 @@ export default class FormModel extends Post {
 			}
 		}
 
-		this.view.replaceText(this.inputBody + s)
+		this.view.replaceText(this.inputBody + s, this.inputBody !== "")
 	}
 
 	// Request allocation of a draft post to the server
