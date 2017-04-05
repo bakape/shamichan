@@ -222,21 +222,25 @@ export default class FormModel extends Post {
 	// Add a link to the target post in the input
 	public addReference(id: number, sel: string) {
 		let s = ""
-		const old = this.bufferedQuote || this.inputBody
-
-		// If already linking a post, put the new one on the next line
-		if (/>>\d+ *$/.test(old)) {
-			s += "\n"
-		}
+		const old = this.bufferedQuote || this.inputBody,
+			newLine = !old || old.endsWith("\n")
 
 		// Don't duplicate links, if quoting same post multiple times in
 		// succession
 		if (id !== this.lasLinked) {
+			if (!newLine && old[old.length - 1] !== " ") {
+				s += " "
+			}
 			s += `>>${id} `
 		}
 		this.lasLinked = id
 
-		if (sel) {
+		if (!sel) {
+			// If starting from a new line, insert newline after post
+			if (newLine) {
+				s += "\n"
+			}
+		} else {
 			s += "\n"
 			for (let line of sel.split("\n")) {
 				s += ">" + line + "\n"

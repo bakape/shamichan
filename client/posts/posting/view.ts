@@ -176,6 +176,8 @@ export default class FormView extends PostView {
         el.value = body
         if (commit) {
             this.onInput()
+        } else {
+            this.resizeInput()
         }
         requestAnimationFrame(() => {
             el.focus()
