@@ -7,6 +7,7 @@ import (
 	"meguca/common"
 	"meguca/db"
 	"net/http"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -31,6 +32,7 @@ type passwordChangeRequest struct {
 func register(w http.ResponseWriter, r *http.Request) {
 	var req loginCreds
 	isValid := decodeJSON(w, r, &req) &&
+		trimLoginID(&req.ID) &&
 		validateUserID(w, req.ID) &&
 		checkPasswordAndCaptcha(w, r, req.Password, req.Captcha)
 	if !isValid {
@@ -87,6 +89,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case !decodeJSON(w, r, &req):
 		return
+	case !trimLoginID(&req.ID):
+		return
 	case !auth.AuthenticateCaptcha(req.Captcha):
 		text403(w, errInvalidCaptcha)
 		return
@@ -127,7 +131,7 @@ func commitLogout(
 	fn func(auth.SessionCreds) error,
 ) {
 	var req auth.SessionCreds
-	if !decodeJSON(w, r, &req) || !isLoggedIn(w, r, req) {
+	if !decodeJSON(w, r, &req) || !isLoggedIn(w, r, &req) {
 		return
 	}
 
@@ -147,7 +151,7 @@ func logoutAll(w http.ResponseWriter, r *http.Request) {
 func changePassword(w http.ResponseWriter, r *http.Request) {
 	var msg passwordChangeRequest
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, msg.SessionCreds) &&
+		isLoggedIn(w, r, &msg.SessionCreds) &&
 		checkPasswordAndCaptcha(w, r, msg.New, msg.Captcha)
 	if !isValid {
 		return
@@ -203,8 +207,9 @@ func checkPasswordAndCaptcha(
 func isLoggedIn(
 	w http.ResponseWriter,
 	r *http.Request,
-	creds auth.SessionCreds,
+	creds *auth.SessionCreds,
 ) bool {
+	trimLoginID(&creds.UserID)
 	isValid, err := db.IsLoggedIn(creds.UserID, creds.Session)
 	switch err {
 	case common.ErrInvalidCreds:
@@ -221,5 +226,11 @@ func isLoggedIn(
 		return false
 	}
 
+	return true
+}
+
+// Trim spaces from loginID. Chainable with other authenticators.
+func trimLoginID(id *string) bool {
+	*id = strings.TrimSpace(*id)
 	return true
 }
