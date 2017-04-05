@@ -13,6 +13,11 @@ import { newAllocRequest } from "./identity"
 export default class FormModel extends Post {
 	private sentAllocRequest: boolean
 	public isAllocated: boolean
+
+	// A quote, that has been submitted at the start of the post and not
+	// committed yet
+	private bufferedQuote: string
+
 	private inputBody: string
 	public view: FormView
 	private lasLinked: number // ID of last linked post
@@ -94,6 +99,9 @@ export default class FormModel extends Post {
 
 	// Compare new value to old and generate appropriate commands
 	public parseInput(val: string): void {
+		// Remove any buffered quote, as we are committing now
+		this.bufferedQuote = ""
+
 		const old = this.inputBody
 
 		// Rendering hack shenanigans - ignore
@@ -193,6 +201,12 @@ export default class FormModel extends Post {
 
 	// Close the form and revert to regular post
 	public commitClose() {
+		// It is possible to have never committed anything, if all you have in
+		// the body is one quote
+		if (this.bufferedQuote) {
+			this.parseInput(this.bufferedQuote)
+		}
+
 		this.body = this.inputBody
 		this.abandon()
 		this.send(message.closePost, null)
@@ -208,9 +222,10 @@ export default class FormModel extends Post {
 	// Add a link to the target post in the input
 	public addReference(id: number, sel: string) {
 		let s = ""
+		const old = this.bufferedQuote || this.inputBody
 
 		// If already linking a post, put the new one on the next line
-		if (/>>\d+ *$/.test(this.inputBody)) {
+		if (/>>\d+ *$/.test(old)) {
 			s += "\n"
 		}
 
@@ -228,7 +243,18 @@ export default class FormModel extends Post {
 			}
 		}
 
-		this.view.replaceText(this.inputBody + s, this.inputBody !== "")
+		// Don't commit a quote, if it is the first input in a post
+		let commit = true
+		if (!this.sentAllocRequest && !this.bufferedQuote) {
+			commit = false
+		}
+		this.view.replaceText(old + s, commit)
+
+		// Makes sure the quote is committed later, if it is the first input in
+		// the post
+		if (!commit) {
+			this.bufferedQuote = s
+		}
 	}
 
 	// Request allocation of a draft post to the server
