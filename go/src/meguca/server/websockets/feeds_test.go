@@ -1,11 +1,10 @@
 package websockets
 
 import (
-	"strconv"
-	"testing"
-
 	"meguca/common"
 	. "meguca/test"
+	"strconv"
+	"testing"
 )
 
 func TestAddingFeeds(t *testing.T) {
@@ -104,12 +103,8 @@ func TestWriteMultipleToBuffer(t *testing.T) {
 	u.Write([]byte("b"))
 
 	const std = "33a\u0000b"
-	buf, flushed := u.Flush()
-	if s := string(buf); s != std {
+	if s := string(u.Flush()); s != std {
 		LogUnexpected(t, std, s)
-	}
-	if flushed != 2 {
-		t.Fatalf("unexpected message count: %d", flushed)
 	}
 }
 

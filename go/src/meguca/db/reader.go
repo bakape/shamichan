@@ -3,8 +3,10 @@ package db
 import (
 	"database/sql"
 	"meguca/common"
+	"meguca/util"
 	"sort"
 
+	"github.com/boltdb/bolt"
 	"github.com/lib/pq"
 )
 
@@ -99,6 +101,14 @@ func (p postSorter) Swap(i, j int) {
 
 func (p postSorter) Less(i, j int) bool {
 	return p[i].ID < p[j].ID
+}
+
+// PostStats contains post open status, body and creation time
+type PostStats struct {
+	Editing, HasImage bool
+	ID                uint64
+	Time              int64
+	Body              []byte
 }
 
 // GetThread retrieves public thread data from the database
@@ -272,6 +282,51 @@ func GetAllBoard() (common.Board, error) {
 		return nil, err
 	}
 	return scanBoard(r)
+}
+
+// GetRecentPosts retrieves posts created in the thread in the last 15 minutes.
+// Posts that are being editted also have their Body property set.
+func GetRecentPosts(op uint64) (posts []PostStats, err error) {
+	r, err := prepared["get_recent_posts"].Query()
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	posts = make([]PostStats, 0, 64)
+	var p PostStats
+	for r.Next() {
+		err = r.Scan(&p.ID, &p.Time, &p.Editing, &p.HasImage)
+		if err != nil {
+			return
+		}
+		posts = append(posts, p)
+	}
+	err = r.Err()
+	if err != nil {
+		return
+	}
+
+	// Get open post bodies
+	if len(posts) != 0 {
+		var tx *bolt.Tx
+		tx, err = boltDB.Begin(false)
+		if err != nil {
+			return
+		}
+		defer tx.Rollback()
+
+		buc := tx.Bucket([]byte("open_bodies"))
+		for i, p := range posts {
+			if !p.Editing {
+				continue
+			}
+			// Buffer is only valid for the transaction. Need to copy.
+			posts[i].Body = util.CloneBytes(buc.Get(formatPostID(p.ID)))
+		}
+	}
+
+	return
 }
 
 func scanCatalog(table tableScanner) (board common.Board, err error) {

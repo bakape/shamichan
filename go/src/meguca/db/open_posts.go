@@ -27,3 +27,9 @@ func GetOpenBody(id uint64) (body string, err error) {
 	})
 	return
 }
+
+func deleteOpenPostBody(id uint64) error {
+	return boltDB.Batch(func(tx *bolt.Tx) error {
+		return tx.Bucket([]byte("open_bodies")).Delete(formatPostID(id))
+	})
+}

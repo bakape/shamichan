@@ -35,10 +35,7 @@ type reclaimRequest struct {
 // receive update messages.
 func (c *Client) synchronise(data []byte) error {
 	// Unsubscribe from previous update feed, if any
-	if c.feedID != 0 {
-		feeds.Remove(c.feedID, c)
-		c.feedID = 0
-	}
+	c.unsubscribeFeed()
 
 	// Send current server time on first synchronization
 	if !c.synced {
@@ -61,6 +58,14 @@ func (c *Client) synchronise(data []byte) error {
 		return c.syncToBoard(msg.Board)
 	default:
 		return c.syncToThread(msg.Board, msg.Thread)
+	}
+}
+
+// Unsubscribe from update feed, if any
+func (c *Client) unsubscribeFeed() {
+	if c.feed != nil {
+		feeds.Remove(c.feed, c)
+		c.feed = nil
 	}
 }
 
@@ -96,11 +101,7 @@ func (c *Client) syncToThread(board string, thread uint64) error {
 	}
 
 	c.registerSync(board, thread)
-	if err := feeds.Add(thread, c); err != nil {
-		return err
-	}
-	c.feedID = thread
-
+	c.feed, err = feeds.Add(thread, c)
 	return nil
 }
 
@@ -145,13 +146,16 @@ func (c *Client) reclaimPost(data []byte) error {
 
 	c.post = openPost{
 		hasImage: post.Image != nil,
-		Buffer:   *bytes.NewBufferString(post.Body),
 		len:      utf8.RuneCountInString(post.Body),
 		id:       post.ID,
 		op:       post.OP,
 		time:     post.Time,
 		board:    post.Board,
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString(post.Body),
+		},
 	}
+	c.feed.InsertPost(&c.post, nil)
 
 	return c.sendMessage(common.MessageReclaim, 0)
 }

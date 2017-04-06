@@ -195,20 +195,27 @@ func (c *Client) insertPost(data []byte) (err error) {
 	if err != nil {
 		return
 	}
+
 	err = db.InsertPost(post)
 	if err != nil {
 		return
 	}
-
+	msg, err := common.EncodeMessage(common.MessageInsertPost, post.Post)
+	if err != nil {
+		return
+	}
 	c.post = openPost{
 		id:       post.ID,
 		op:       sync.OP,
 		time:     now,
 		board:    sync.Board,
-		Buffer:   *bytes.NewBufferString(post.Body),
 		len:      bodyLength,
 		hasImage: hasImage,
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString(post.Body),
+		},
 	}
+	c.feed.InsertPost(&c.post, msg)
 
 	return nil
 }

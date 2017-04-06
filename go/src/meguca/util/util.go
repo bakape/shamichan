@@ -39,36 +39,30 @@ func (p *PausableTicker) StartIfPaused() {
 
 // MessageBuffer provides bufferring and concatenation for post update messages
 type MessageBuffer struct {
-	buf   bytes.Buffer
-	count uint64
+	buf bytes.Buffer
 }
 
 // Write writes a message to b
 func (b *MessageBuffer) Write(data []byte) {
-	if b.count == 0 {
+	if b.buf.Len() == 0 {
 		b.buf.WriteString("33")
 	} else {
 		b.buf.WriteByte(0)
 	}
-	b.count++
 	b.buf.Write(data)
 }
 
-// Flush flushes b into into a []byte and returns it together with the flushed
-// message count. If no messages are stored, the returned buffer is nil.
-func (b *MessageBuffer) Flush() ([]byte, uint64) {
-	if b.count == 0 {
-		return nil, 0
+// Flush flushes b into into a []byte and returns it.
+// If no messages are stored, the returned buffer is nil.
+func (b *MessageBuffer) Flush() []byte {
+	if b.buf.Len() == 0 {
+		return nil
 	}
 
-	flushed := b.count
-	buf := b.buf.Bytes()
-	b.count = 0
-
-	c := make([]byte, len(buf))
-	copy(c, buf)
+	// Need to copy, because buffer will be sent to multiple threads
+	buf := CloneBytes(b.buf.Bytes())
 	b.buf.Reset()
-	return c, flushed
+	return buf
 }
 
 // WrapError wraps error types to create compound error chains
@@ -121,4 +115,11 @@ func ConcatStrings(s ...string) string {
 		b = append(b, s...)
 	}
 	return string(b)
+}
+
+// CloneBytes creates a copy of b
+func CloneBytes(b []byte) []byte {
+	cp := make([]byte, len(b))
+	copy(cp, b)
+	return cp
 }

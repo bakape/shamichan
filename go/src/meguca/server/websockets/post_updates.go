@@ -1,7 +1,6 @@
 package websockets
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"meguca/common"
@@ -21,25 +20,6 @@ var (
 	errTextOnly            = errors.New("text only board")
 	errHasImage            = errors.New("post already has image")
 )
-
-// Data of a post currently being written to by a Client
-type openPost struct {
-	hasImage bool
-	bytes.Buffer
-	len, lines int
-	id, op     uint64
-	time       int64
-	board      string
-}
-
-func (o *openPost) countLines() {
-	o.lines = 0
-	for _, b := range o.Bytes() {
-		if b == '\n' {
-			o.lines++
-		}
-	}
-}
 
 // Like spliceRequest, but with a string Text field. Used for internal
 // conversions between []rune and string.
@@ -114,9 +94,27 @@ func (c *Client) appendRune(data []byte) (err error) {
 		}
 	}
 
+	msg, err := common.EncodeMessage(
+		common.MessageAppend,
+		[2]uint64{c.post.id, uint64(char)},
+	)
+	if err != nil {
+		return
+	}
+
+	c.post.Lock()
+	defer c.post.Unlock()
+
 	c.post.WriteRune(char)
 	c.post.len++
-	return db.AppendBody(c.post.id, c.post.op, char)
+	return c.updateBody(msg)
+}
+
+// Send message to thread update feed and writes the open post's buffer to the
+// embedded database. Requires locking of c.openPost.
+func (c *Client) updateBody(msg []byte) error {
+	c.feed.Send(msg)
+	return db.SetOpenBody(c.post.id, c.post.Bytes())
 }
 
 // Remove one character from the end of the line in the open post
@@ -131,6 +129,14 @@ func (c *Client) backspace() error {
 		return errEmptyPost
 	}
 
+	msg, err := common.EncodeMessage(common.MessageBackspace, c.post.id)
+	if err != nil {
+		return err
+	}
+
+	c.post.Lock()
+	defer c.post.Unlock()
+
 	r, lastRuneLen := utf8.DecodeLastRune(c.post.Bytes())
 	c.post.Truncate(c.post.Len() - lastRuneLen)
 	if r == '\n' {
@@ -138,7 +144,7 @@ func (c *Client) backspace() error {
 	}
 	c.post.len--
 
-	return db.Backspace(c.post.id, c.post.op)
+	return c.updateBody(msg)
 }
 
 // Close an open post and parse the last line, if needed.
@@ -224,38 +230,51 @@ func (c *Client) spliceText(data []byte) error {
 		c.post.len = common.MaxLenBody
 	}
 
-	byteStartPos := 0
-	for _, r := range old[:req.Start] {
-		byteStartPos += utf8.RuneLen(r)
-	}
-	c.post.Truncate(byteStartPos)
-	c.post.WriteString(string(end))
-	c.post.countLines()
-	if c.post.lines > common.MaxLinesBody {
-		return errTooManyLines
-	}
-
 	msg, err := common.EncodeMessage(common.MessageSplice, res)
 	if err != nil {
 		return err
 	}
-	return db.SplicePost(c.post.id, c.post.op, msg, c.post.String())
+
+	byteStartPos := 0
+	for _, r := range old[:req.Start] {
+		byteStartPos += utf8.RuneLen(r)
+	}
+
+	c.post.Lock()
+	defer c.post.Unlock()
+
+	c.post.Truncate(byteStartPos)
+	c.post.WriteString(string(end))
+
+	// Count lines
+	c.post.lines = 0
+	for _, b := range c.post.Bytes() {
+		if b == '\n' {
+			c.post.lines++
+		}
+	}
+	if c.post.lines > common.MaxLinesBody {
+		c.post.Truncate(byteStartPos)
+		return errTooManyLines
+	}
+
+	return c.updateBody(msg)
 }
 
 // Insert and image into an existing open post
-func (c *Client) insertImage(data []byte) error {
-	if has, err := c.hasPost(); err != nil {
-		return err
-	} else if !has {
-		return nil
-	}
-	if c.post.hasImage {
+func (c *Client) insertImage(data []byte) (err error) {
+	has, err := c.hasPost()
+	switch {
+	case err != nil || !has:
+		return
+	case c.post.hasImage:
 		return errHasImage
 	}
 
 	var req ImageRequest
-	if err := decodeMessage(data, &req); err != nil {
-		return err
+	err = decodeMessage(data, &req)
+	if err != nil {
+		return
 	}
 
 	if config.GetBoardConfigs(c.post.board).TextOnly {
@@ -264,9 +283,26 @@ func (c *Client) insertImage(data []byte) error {
 
 	img, err := getImage(req.Token, req.Name, req.Spoiler)
 	if err != nil {
-		return err
+		return
 	}
 	c.post.hasImage = true
 
-	return db.InsertImage(c.post.id, c.post.op, *img)
+	err = db.InsertImage(c.post.id, c.post.op, *img)
+	if err != nil {
+		return
+	}
+
+	msg, err := common.EncodeMessage(common.MessageInsertImage, struct {
+		ID uint64 `json:"id"`
+		common.Image
+	}{
+		ID:    c.post.id,
+		Image: *img,
+	})
+	if err != nil {
+		return
+	}
+	c.feed.InsertImage(c.post.id, msg)
+
+	return nil
 }
