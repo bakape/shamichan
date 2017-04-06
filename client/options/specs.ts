@@ -2,7 +2,7 @@
 
 import { config } from '../state'
 import lang from '../lang'
-import { makeEl } from "../util"
+import { makeEl, HTML } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
 import initRadio from "./r-a-dio"
@@ -121,8 +121,12 @@ export const specs: { [id: string]: OptionSpec } = {
 	horizontalPosting: {
 		exec: toggleHeadStyle(
 			'horizontal',
-			'article,aside{display:inline-block;}'
-			+ '#thread-container{display:block;}'
+			HTML`#thread-container {
+				display:flex;
+				flex-direction: row;
+				flex-wrap: wrap;
+				align-items: baseline;
+			}`,
 		)
 	},
 	// Move [Reply] to the right side of the screen
