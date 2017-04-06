@@ -21,13 +21,16 @@ func insertBackinks(id, op uint64, links [][2]uint64) (err error) {
 		if err != nil {
 			return
 		}
+
 		err = execPrepared(
 			"insert_backlink",
-			l[0], l[1], msg, linkRow{{id, op}},
+			l[0], l[1], linkRow{{id, op}},
 		)
 		if err != nil {
 			return
 		}
+
+		common.Feeds.SendTo(op, msg)
 	}
 
 	return
@@ -38,6 +41,19 @@ func insertBackinks(id, op uint64, links [][2]uint64) (err error) {
 func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
 	err error,
 ) {
+	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
+		ID       uint64           `json:"id"`
+		Links    [][2]uint64      `json:"links,omitempty"`
+		Commands []common.Command `json:"commands,omitempty"`
+	}{
+		ID:       id,
+		Links:    links,
+		Commands: com,
+	})
+	if err != nil {
+		return err
+	}
+
 	err = execPrepared(
 		"close_post",
 		id, op, linkRow(links), commandRow(com),
@@ -53,5 +69,6 @@ func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
 		}
 	}
 
+	common.Feeds.ClosePost(id, op, msg)
 	return deleteOpenPostBody(id)
 }

@@ -4,6 +4,7 @@ package websockets
 
 import (
 	"bytes"
+	"meguca/common"
 	"meguca/db"
 	"meguca/util"
 	"strconv"
@@ -11,10 +12,15 @@ import (
 	"time"
 )
 
-var (
-	// Contains and manages all active update feeds
-	feeds = newFeedMap()
-)
+// Contains and manages all active update feeds
+var feeds = feedMap{
+	// 32 len map to avoid some possible reallocation as the server starts
+	feeds: make(map[uint64]*updateFeed, 32),
+}
+
+func init() {
+	common.Feeds = &feeds
+}
 
 type postCreationMessage struct {
 	hasImage bool
@@ -24,7 +30,7 @@ type postCreationMessage struct {
 	msg []byte
 }
 
-type imageInsertionMessage struct {
+type postIDMessage struct {
 	id  uint64
 	msg []byte
 }
@@ -40,14 +46,6 @@ type feedMap struct {
 	mu    sync.RWMutex
 }
 
-// Separate function to ease testing
-func newFeedMap() *feedMap {
-	return &feedMap{
-		// 32 len map to avoid some possible reallocation as the server starts
-		feeds: make(map[uint64]*updateFeed, 32),
-	}
-}
-
 // Add client and send it the current progress counter
 func (f *feedMap) Add(id uint64, c *Client) (feed *updateFeed, err error) {
 	f.mu.Lock()
@@ -60,7 +58,8 @@ func (f *feedMap) Add(id uint64, c *Client) (feed *updateFeed, err error) {
 			close:       make(chan struct{}),
 			send:        make(chan []byte),
 			insertPost:  make(chan postCreationMessage),
-			insertImage: make(chan imageInsertionMessage),
+			insertImage: make(chan postIDMessage),
+			closePost:   make(chan postIDMessage),
 			clients:     make([]*Client, 0, 8),
 		}
 		f.feeds[id] = feed
@@ -111,6 +110,28 @@ func (f *feedMap) Clear() {
 	f.feeds = make(map[uint64]*updateFeed, 32)
 }
 
+// SendTo sends a message to a feed, if it exists
+func (f *feedMap) SendTo(id uint64, msg []byte) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+
+	feed := f.feeds[id]
+	if feed != nil {
+		feed.Send(msg)
+	}
+}
+
+// ClosePost closes a post in a feed, if it exists
+func (f *feedMap) ClosePost(id, op uint64, msg []byte) {
+	f.mu.RLock()
+	defer f.mu.RUnlock()
+
+	feed := f.feeds[op]
+	if feed != nil {
+		feed.ClosePost(id, msg)
+	}
+}
+
 // A feed with synchronization logic of a certain thread
 type updateFeed struct {
 	// Thread ID
@@ -126,7 +147,9 @@ type updateFeed struct {
 	// Insert a new post into the thread and propagate to listeners
 	insertPost chan postCreationMessage
 	// Insert an image into an already allocated post
-	insertImage chan imageInsertionMessage
+	insertImage chan postIDMessage
+	// Close an open post
+	closePost chan postIDMessage
 	// Breaks the inner loop
 	close chan struct{}
 	// Subscribed clients
@@ -188,6 +211,10 @@ func (u *updateFeed) Start() (err error) {
 				p := u.open[msg.id]
 				p.hasImage = true
 				u.open[msg.id] = p
+				u.Write(msg.msg)
+			case msg := <-u.closePost:
+				u.ticker.StartIfPaused()
+				delete(u.open, msg.id)
 				u.Write(msg.msg)
 			}
 		}
@@ -279,7 +306,14 @@ func (u *updateFeed) InsertPost(p *openPost, msg []byte) {
 
 // Insert an image into an already allocated post
 func (u *updateFeed) InsertImage(id uint64, msg []byte) {
-	u.insertImage <- imageInsertionMessage{
+	u.insertImage <- postIDMessage{
+		id:  id,
+		msg: msg,
+	}
+}
+
+func (u *updateFeed) ClosePost(id uint64, msg []byte) {
+	u.closePost <- postIDMessage{
 		id:  id,
 		msg: msg,
 	}

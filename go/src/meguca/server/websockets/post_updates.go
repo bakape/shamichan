@@ -7,6 +7,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	"meguca/parser"
+	"meguca/util"
 	"unicode/utf8"
 )
 
@@ -159,7 +160,10 @@ func (c *Client) closePost() error {
 		err   error
 	)
 	if c.post.len != 0 {
-		links, com, err = parser.ParseBody(c.post.Bytes(), c.post.board)
+		c.post.RLock()
+		body := util.CloneBytes(c.post.Bytes())
+		c.post.RUnlock()
+		links, com, err = parser.ParseBody(body, c.post.board)
 		if err != nil {
 			return err
 		}
