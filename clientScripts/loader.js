@@ -160,7 +160,7 @@
 
 	// Remove prefixes on Web Crypto API for Safari
 	if (!checkFunction("window.crypto.subtle.digest")) {
-		window.crypt.subtle = window.crypto.webkitSubtle
+		window.crypto.subtle = window.crypto.webkitSubtle
 	}
 
 	var head = document.getElementsByTagName('head')[0]
