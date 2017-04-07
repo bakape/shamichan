@@ -291,7 +291,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 	}
 	c.post.hasImage = true
 
-	err = db.InsertImage(c.post.id, c.post.op, *img)
+	err = db.InsertImage(c.post.id, *img)
 	if err != nil {
 		return
 	}

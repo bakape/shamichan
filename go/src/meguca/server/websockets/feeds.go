@@ -99,17 +99,6 @@ func (f *feedMap) Remove(feed *updateFeed, c *Client) {
 	}
 }
 
-// Remove all existing feeds and clients. Used only in tests.
-func (f *feedMap) Clear() {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	for _, feed := range f.feeds {
-		close(feed.close)
-	}
-	f.feeds = make(map[uint64]*updateFeed, 32)
-}
-
 // SendTo sends a message to a feed, if it exists
 func (f *feedMap) SendTo(id uint64, msg []byte) {
 	f.mu.RLock()
@@ -286,7 +275,7 @@ func (u *updateFeed) genSyncMessage() []byte {
 		b = append(b, '}')
 	}
 
-	b = append(b, '}')
+	b = append(b, `}}`...)
 
 	return b
 }

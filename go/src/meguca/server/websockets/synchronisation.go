@@ -73,7 +73,7 @@ func (c *Client) unsubscribeFeed() {
 // client its ID.
 func (c *Client) syncToBoard(board string) error {
 	c.registerSync(board, 0)
-	return c.sendMessage(common.MessageSynchronise, 0)
+	return c.sendMessage(common.MessageSynchronise, nil)
 }
 
 // Register the client with the central client storage data structure

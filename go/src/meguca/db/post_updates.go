@@ -22,15 +22,15 @@ func insertBackinks(id, op uint64, links [][2]uint64) (err error) {
 			return
 		}
 
-		err = execPrepared(
-			"insert_backlink",
-			l[0], l[1], linkRow{{id, op}},
-		)
+		err = execPrepared("insert_backlink", l[0], linkRow{{id, op}})
 		if err != nil {
 			return
 		}
 
-		common.Feeds.SendTo(op, msg)
+		// nil during tests
+		if !IsTest {
+			common.Feeds.SendTo(op, msg)
+		}
 	}
 
 	return
@@ -69,6 +69,8 @@ func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
 		}
 	}
 
-	common.Feeds.ClosePost(id, op, msg)
+	if !IsTest {
+		common.Feeds.ClosePost(id, op, msg)
+	}
 	return deleteOpenPostBody(id)
 }

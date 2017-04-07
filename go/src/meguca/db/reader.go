@@ -287,7 +287,7 @@ func GetAllBoard() (common.Board, error) {
 // GetRecentPosts retrieves posts created in the thread in the last 15 minutes.
 // Posts that are being editted also have their Body property set.
 func GetRecentPosts(op uint64) (posts []PostStats, err error) {
-	r, err := prepared["get_recent_posts"].Query()
+	r, err := prepared["get_recent_posts"].Query(op)
 	if err != nil {
 		return
 	}

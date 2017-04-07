@@ -94,12 +94,15 @@ func TestAppendRune(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
+	addToFeed(t, cl, 1)
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString("abc"),
+		id:   2,
+		op:   1,
+		len:  3,
+		time: time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("abc"),
+		},
 	}
 
 	if err := cl.appendRune([]byte("100")); err != nil {
@@ -150,12 +153,15 @@ func BenchmarkAppend(b *testing.B) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString("abc"),
+		id:   2,
+		op:   1,
+		len:  3,
+		time: time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("abc"),
+		},
 	}
+	addToFeed(b, cl, 1)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -187,12 +193,14 @@ func TestClosePostWithHashCommand(t *testing.T) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    5,
-		board:  "a",
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString("#flip"),
+		id:    2,
+		op:    1,
+		len:   5,
+		board: "a",
+		time:  time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("#flip"),
+		},
 	}
 
 	if err := cl.closePost(); err != nil {
@@ -267,12 +275,14 @@ func TestClosePostWithLinks(t *testing.T) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		board:  "a",
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString(" >>22 "),
+		id:    2,
+		op:    1,
+		len:   3,
+		board: "a",
+		time:  time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString(" >>22 "),
+		},
 	}
 	setBoardConfigs(t, false)
 
@@ -325,19 +335,23 @@ func TestBackspace(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	if err := db.WritePost(nil, samplePost); err != nil {
+	err := db.WritePost(nil, samplePost)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
+	addToFeed(t, cl, 1)
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString("abc"),
+		id:   2,
+		op:   1,
+		len:  3,
+		time: time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("abc"),
+		},
 	}
 
 	if err := cl.backspace(); err != nil {
@@ -361,11 +375,13 @@ func TestClosePost(t *testing.T) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		board:  "a",
-		Buffer: *bytes.NewBufferString("abc"),
+		id:    2,
+		op:    1,
+		len:   3,
+		board: "a",
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("abc"),
+		},
 	}
 
 	if err := cl.closePost(); err != nil {
@@ -554,13 +570,16 @@ func TestSplice(t *testing.T) {
 			}
 
 			cl, _ := sv.NewClient()
+			addToFeed(t, cl, 1)
 			cl.post = openPost{
-				id:     2,
-				op:     1,
-				len:    utf8.RuneCountInString(c.init),
-				board:  "a",
-				time:   time.Now().Unix(),
-				Buffer: *bytes.NewBufferString(c.init),
+				id:    2,
+				op:    1,
+				len:   utf8.RuneCountInString(c.init),
+				board: "a",
+				time:  time.Now().Unix(),
+				bodyBuffer: bodyBuffer{
+					Buffer: *bytes.NewBufferString(c.init),
+				},
 			}
 
 			req := spliceRequest{
@@ -687,6 +706,7 @@ func TestInsertImage(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
+	addToFeed(t, cl, 1)
 	cl.post = openPost{
 		id:    2,
 		board: "a",

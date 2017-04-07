@@ -3,12 +3,11 @@ package db
 import (
 	"database/sql"
 	"errors"
-	"time"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/imager/assets"
 	"meguca/util"
+	"time"
 
 	"github.com/lib/pq"
 )
@@ -139,8 +138,8 @@ func HasImage(id uint64) (has bool, err error) {
 }
 
 // InsertImage insert and image into and existing open post
-func InsertImage(id, op uint64, img common.Image) (err error) {
-	return execPrepared("insert_image", id, op, img.SHA1, img.Name)
+func InsertImage(id uint64, img common.Image) (err error) {
+	return execPrepared("insert_image", id, img.SHA1, img.Name)
 }
 
 // SpoilerImage spoilers an already allocated image
@@ -149,9 +148,19 @@ func SpoilerImage(id uint64) (err error) {
 	if err != nil {
 		return
 	}
+
 	op, err := GetPostOP(id)
 	if err != nil {
 		return
 	}
-	return execPrepared("spoiler_image", id, op, msg)
+	err = execPrepared("spoiler_image", id)
+	if err != nil {
+		return
+	}
+
+	if !IsTest {
+		common.Feeds.SendTo(op, msg)
+	}
+
+	return
 }
