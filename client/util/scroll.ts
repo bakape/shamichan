@@ -43,7 +43,7 @@ export function scrollToBottom() {
 	atBottom = true
 }
 
-// Set the scroll lock position to a post or to the bottom of the document
+// Check, if at the bottom of the thread and render the locking indicator
 export function checkBottom() {
 	if (!page.thread) {
 		atBottom = false
