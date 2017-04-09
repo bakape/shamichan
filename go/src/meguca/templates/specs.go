@@ -284,6 +284,7 @@ var optionSpecs = [...][]inputSpec{
 		{ID: "autogif"},
 		{ID: "spoilers"},
 		{ID: "replyRight"},
+		{ID: "horizontalPosting"},
 		{
 			ID:      "theme",
 			Type:    _select,
@@ -317,7 +318,6 @@ var optionSpecs = [...][]inputSpec{
 		{ID: "nowPlaying"},
 		{ID: "illyaDance"},
 		{ID: "illyaDanceMute"},
-		{ID: "horizontalPosting"},
 	},
 	{
 		{
