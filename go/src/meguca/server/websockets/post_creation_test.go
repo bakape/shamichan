@@ -249,6 +249,7 @@ func TestGetInvalidImage(t *testing.T) {
 }
 
 func TestClosePreviousPostOnCreation(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
