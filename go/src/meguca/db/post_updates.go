@@ -1,6 +1,9 @@
 package db
 
-import "meguca/common"
+import (
+	"fmt"
+	"meguca/common"
+)
 
 // Writes new backlinks to other posts
 func insertBackinks(id, op uint64, links [][2]uint64) (err error) {
@@ -38,7 +41,7 @@ func insertBackinks(id, op uint64, links [][2]uint64) (err error) {
 
 // ClosePost closes an open post and commits any links, backlinks and hash
 // commands
-func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
+func ClosePost(id, op uint64, body string, links [][2]uint64, com []common.Command) (
 	err error,
 ) {
 	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
@@ -54,9 +57,10 @@ func ClosePost(id, op uint64, links [][2]uint64, com []common.Command) (
 		return err
 	}
 
+	fmt.Println(body)
 	err = execPrepared(
 		"close_post",
-		id, op, linkRow(links), commandRow(com),
+		id, op, body, linkRow(links), commandRow(com),
 	)
 	if err != nil {
 		return

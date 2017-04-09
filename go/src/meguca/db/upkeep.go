@@ -90,7 +90,7 @@ func closeDanglingPosts() error {
 		if err != nil {
 			return err
 		}
-		err = ClosePost(p.id, p.op, links, com)
+		err = ClosePost(p.id, p.op, p.body, links, com)
 		if err != nil {
 			return err
 		}

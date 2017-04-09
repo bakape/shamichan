@@ -1,6 +1,7 @@
 create or replace function close_post(
 	id bigint,
 	op bigint,
+	body varchar(2000),
 	links bigint[][2],
 	com json[]
 ) returns void as $$
@@ -10,6 +11,7 @@ create or replace function close_post(
 	update posts
 		set editing = false,
 			links = close_post.links,
-			commands = close_post.com
+			commands = close_post.com,
+			body = close_post.body
 		where id = close_post.id;
 $$ language sql;

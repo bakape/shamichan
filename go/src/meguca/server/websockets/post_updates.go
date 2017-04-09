@@ -158,10 +158,11 @@ func (c *Client) closePost() error {
 		links [][2]uint64
 		com   []common.Command
 		err   error
+		body  []byte
 	)
 	if c.post.len != 0 {
 		c.post.RLock()
-		body := util.CloneBytes(c.post.Bytes())
+		body = util.CloneBytes(c.post.Bytes())
 		c.post.RUnlock()
 		links, com, err = parser.ParseBody(body, c.post.board)
 		if err != nil {
@@ -169,7 +170,7 @@ func (c *Client) closePost() error {
 		}
 	}
 
-	if err := db.ClosePost(c.post.id, c.post.op, links, com); err != nil {
+	if err := db.ClosePost(c.post.id, c.post.op, string(body), links, com); err != nil {
 		return err
 	}
 	c.post = openPost{}

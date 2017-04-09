@@ -57,24 +57,27 @@ handlers[message.reclaim] = (code: number) => {
 
 // Synchronise to the server and start receiving updates on the appropriate
 // channel. If there are any missed messages, fetch them.
-handlers[message.synchronise] = async ({ open, recent }: SyncData) => {
-	const proms: Promise<void>[] = []
+handlers[message.synchronise] = async (data: SyncData) => {
+	if (data) {
+		const { open, recent } = data,
+			proms: Promise<void>[] = []
 
-	for (let id in open) {
-		proms.push(syncOpenPost(parseInt(id), open[id]))
-	}
-
-	for (let id of recent) {
-		// Missing posts, that are open, will be fetched by the loop above
-		if (!posts.get(id) && !open[id]) {
-			proms.push(fetchMissingPost(id))
+		for (let id in open) {
+			proms.push(syncOpenPost(parseInt(id), open[id]))
 		}
-	}
 
-	try {
-		await Promise.all(proms)
-	} catch (e) {
-		return alert(e)
+		for (let id of recent) {
+			// Missing posts, that are open, will be fetched by the loop above
+			if (!posts.get(id) && !open[id]) {
+				proms.push(fetchMissingPost(id))
+			}
+		}
+
+		try {
+			await Promise.all(proms)
+		} catch (e) {
+			return alert(e)
+		}
 	}
 	connSM.feed(connEvent.sync)
 }
@@ -91,7 +94,9 @@ async function syncOpenPost(id: number, { hasImage, body }: OpenPost) {
 		model.image = (await fetchPost(id)).image
 		model.view.renderImage(false)
 	}
-	model.body = body
+	if (body) {
+		model.body = body
+	}
 	model.view.reparseBody()
 }
 
