@@ -86,6 +86,7 @@ func TestAppendBodyTooLong(t *testing.T) {
 }
 
 func TestAppendRune(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
