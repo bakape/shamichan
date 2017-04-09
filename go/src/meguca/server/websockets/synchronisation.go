@@ -91,18 +91,18 @@ func (c *Client) registerSync(board string, op uint64) {
 
 // Sends a response to the client's synchronization request with any missed
 // messages and starts streaming in updates.
-func (c *Client) syncToThread(board string, thread uint64) error {
+func (c *Client) syncToThread(board string, thread uint64) (err error) {
 	valid, err := db.ValidateOP(thread, board)
 	switch {
 	case err != nil:
-		return err
+		return
 	case !valid:
 		return errInvalidThread
 	}
 
 	c.registerSync(board, thread)
 	c.feed, err = feeds.Add(thread, c)
-	return nil
+	return
 }
 
 // Reclaim an open post after connection loss or navigating away.

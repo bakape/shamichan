@@ -85,6 +85,54 @@ func TestRegisterSync(t *testing.T) {
 	}
 }
 
+func TestInvalidThreadSync(t *testing.T) {
+	feeds.Clear()
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, _ := sv.NewClient()
+
+	data := marshalJSON(t, syncRequest{
+		Board:  "a",
+		Thread: 1,
+	})
+	defer Clients.Clear()
+	if err := cl.synchronise(data); err != errInvalidThread {
+		UnexpectedError(t, err)
+	}
+}
+
+func TestSyncToThread(t *testing.T) {
+	feeds.Clear()
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+	sv.Add(1)
+	go readListenErrors(t, cl, sv)
+
+	sendMessage(t, wcl, common.MessageSynchronise, syncRequest{
+		Board:  "a",
+		Thread: 1,
+	})
+	defer Clients.Clear()
+
+	skipMessage(t, wcl)
+	assertMessage(t, wcl, "351")
+	assertSyncID(t, &Clients, cl, SyncID{
+		OP:    1,
+		Board: "a",
+	})
+
+	cl.Close(nil)
+	sv.Wait()
+}
+
 func sendMessage(
 	t *testing.T,
 	conn *websocket.Conn,
