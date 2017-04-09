@@ -11,7 +11,7 @@ create or replace function bump_thread(
 			postCtr =  postCtr + 1,
 			bumpTime = case when bump
 				then
-					case when postCtr <= 1000
+					case when postCtr <= 5000
 						then floor(extract(epoch from now()))
 						else bumpTime
 					end
