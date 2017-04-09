@@ -1,101 +1,40 @@
 package websockets
 
 import (
+	"meguca/common"
+	. "meguca/test"
 	"strconv"
 	"testing"
-	"time"
-
-	"meguca/common"
-	"meguca/db"
-	. "meguca/test"
 )
 
-func TestAddingFeeds(t *testing.T) {
+func TestStreamUpdates(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	feeds.Clear()
 
 	sv := newWSServer(t)
 	defer sv.Close()
 	sv.Add(2)
 	cl1, wcl1 := sv.NewClient()
+	addToFeed(t, cl1, 1)
 	go readListenErrors(t, cl1, sv)
 	cl2, wcl2 := sv.NewClient()
+	addToFeed(t, cl2, 1)
 	go readListenErrors(t, cl2, sv)
 
-	if err := feeds.Add(1, cl1); err != nil {
-		t.Fatal(err)
-	}
-	defer feeds.Clear()
-	assertMessage(t, wcl1, "300")
+	const syncMsg = "30{\"recent\":[1],\"open\":{\"1\":{\"hasImage\":false,\"body\":\"\"}}}"
+	assertMessage(t, wcl1, syncMsg)
+	assertMessage(t, wcl2, syncMsg)
 
-	if err := feeds.Add(1, cl2); err != nil {
-		t.Fatal(err)
-	}
-	assertMessage(t, wcl2, "300")
-
-	feeds.Remove(1, cl2)
+	// Send message
+	feeds.SendTo(1, []byte("foo"))
+	assertMessage(t, wcl1, "33foo")
+	assertMessage(t, wcl2, "33foo")
 
 	cl1.Close(nil)
 	cl2.Close(nil)
 	sv.Wait()
-}
-
-func TestStreamUpdates(t *testing.T) {
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
-	feeds.Clear()
-
-	sv := newWSServer(t)
-	defer sv.Close()
-	cl, wcl := sv.NewClient()
-	sv.Add(2)
-	go readListenErrors(t, cl, sv)
-	if err := feeds.Add(1, cl); err != nil {
-		t.Fatal(err)
-	}
-	defer feeds.Clear()
-
-	assertMessage(t, wcl, "300")
-
-	// One message
-	if err := db.UpdateLog(1, []byte("foo")); err != nil {
-		t.Fatal(err)
-	}
-	assertMessage(t, wcl, "33foo")
-
-	// Another
-	if err := db.UpdateLog(1, []byte("bar")); err != nil {
-		t.Fatal(err)
-	}
-	assertMessage(t, wcl, "33bar")
-
-	// Count updated
-	time.Sleep(time.Millisecond * 200)
-	cl2, wcl2 := sv.NewClient()
-	go readListenErrors(t, cl2, sv)
-	if err := feeds.Add(1, cl2); err != nil {
-		t.Fatal(err)
-	}
-	assertMessage(t, wcl2, "302")
-
-	cl.Close(nil)
-	cl2.Close(nil)
-	sv.Wait()
-}
-
-func encodeMessage(
-	t *testing.T,
-	typ common.MessageType,
-	data interface{},
-) string {
-	msg, err := common.EncodeMessage(typ, data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return string(msg)
 }
 
 func TestWriteMultipleToBuffer(t *testing.T) {
@@ -106,12 +45,8 @@ func TestWriteMultipleToBuffer(t *testing.T) {
 	u.Write([]byte("b"))
 
 	const std = "33a\u0000b"
-	buf, flushed := u.Flush()
-	if s := string(buf); s != std {
+	if s := string(u.Flush()); s != std {
 		LogUnexpected(t, std, s)
-	}
-	if flushed != 2 {
-		t.Fatalf("unexpected message count: %d", flushed)
 	}
 }
 

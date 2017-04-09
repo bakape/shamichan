@@ -35,10 +35,7 @@ type reclaimRequest struct {
 // receive update messages.
 func (c *Client) synchronise(data []byte) error {
 	// Unsubscribe from previous update feed, if any
-	if c.feedID != 0 {
-		feeds.Remove(c.feedID, c)
-		c.feedID = 0
-	}
+	c.unsubscribeFeed()
 
 	// Send current server time on first synchronization
 	if !c.synced {
@@ -64,11 +61,19 @@ func (c *Client) synchronise(data []byte) error {
 	}
 }
 
+// Unsubscribe from update feed, if any
+func (c *Client) unsubscribeFeed() {
+	if c.feed != nil {
+		feeds.Remove(c.feed, c)
+		c.feed = nil
+	}
+}
+
 // Board pages do not have any live feeds (for now, at least). Just send the
 // client its ID.
 func (c *Client) syncToBoard(board string) error {
 	c.registerSync(board, 0)
-	return c.sendMessage(common.MessageSynchronise, 0)
+	return c.sendMessage(common.MessageSynchronise, nil)
 }
 
 // Register the client with the central client storage data structure
@@ -86,22 +91,18 @@ func (c *Client) registerSync(board string, op uint64) {
 
 // Sends a response to the client's synchronization request with any missed
 // messages and starts streaming in updates.
-func (c *Client) syncToThread(board string, thread uint64) error {
+func (c *Client) syncToThread(board string, thread uint64) (err error) {
 	valid, err := db.ValidateOP(thread, board)
 	switch {
 	case err != nil:
-		return err
+		return
 	case !valid:
 		return errInvalidThread
 	}
 
 	c.registerSync(board, thread)
-	if err := feeds.Add(thread, c); err != nil {
-		return err
-	}
-	c.feedID = thread
-
-	return nil
+	c.feed, err = feeds.Add(thread, c)
+	return
 }
 
 // Reclaim an open post after connection loss or navigating away.
@@ -145,13 +146,16 @@ func (c *Client) reclaimPost(data []byte) error {
 
 	c.post = openPost{
 		hasImage: post.Image != nil,
-		Buffer:   *bytes.NewBufferString(post.Body),
 		len:      utf8.RuneCountInString(post.Body),
 		id:       post.ID,
 		op:       post.OP,
 		time:     post.Time,
 		board:    post.Board,
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString(post.Body),
+		},
 	}
+	c.feed.InsertPost(&c.post, nil)
 
 	return c.sendMessage(common.MessageReclaim, 0)
 }

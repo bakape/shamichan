@@ -77,8 +77,7 @@ create table threads (
 	imageCtr bigint not null,
 	bumpTime bigint not null,
 	replyTime bigint not null,
-	subject varchar(100) not null,
-	log bytea[] not null
+	subject varchar(100) not null
 );
 create index threads_board on threads (board);
 create index bumpTime on threads (bumpTime);

@@ -56,7 +56,7 @@ type Client struct {
 	// Post currently open by the client
 	post openPost
 	// Currently subscribed to update feed, if any
-	feedID uint64
+	feed *updateFeed
 	// Underlying websocket connection
 	conn *websocket.Conn
 	// Client IP
@@ -160,12 +160,8 @@ func (c *Client) listenerLoop() error {
 
 // Close all connections an goroutines associated with the Client
 func (c *Client) closeConnections(err error) error {
-	// Close update feed, if any
-	if c.feedID != 0 {
-		feeds.Remove(c.feedID, c)
-		c.feedID = 0
-	}
-
+	// Unsubscribe from update feed, if any
+	c.unsubscribeFeed()
 	// Close receiver loop
 	c.Close(nil)
 

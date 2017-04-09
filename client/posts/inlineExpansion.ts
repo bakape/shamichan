@@ -64,25 +64,10 @@ function contractPost(id: number, parent: HTMLElement) {
 	// Fetched from server and not originally part of the thread or removed from
 	// the thread
 	if (wasFetched || !model) {
-		return parent.lastElementChild.remove()
-	}
-
-	// Find the ID of the post preceding this one. Make sure the target post is
-	// not expanded inline itself.
-	const ids = Object.keys(posts.models).sort()
-	let i = ids.indexOf(id.toString())
-	while (true) {
-		const previous = posts.get(parseInt(ids[i - 1]))
-		if (!previous) {
-			document.getElementById("thread-container").prepend(model.view.el)
-			break
-		}
-		if (previous.view.el.matches("#thread-container > article")) {
-			toggleLinkReferences(parent, id, false)
-			previous.view.el.before(model.view.el)
-			break
-		}
-		i--
+		parent.lastElementChild.remove()
+	} else {
+		toggleLinkReferences(parent, id, false)
+		model.view.reposition()
 	}
 }
 

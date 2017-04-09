@@ -1,1 +1,3 @@
-select ban_post($1, $2, $3)
+update posts
+	set banned = true
+	where id = $1

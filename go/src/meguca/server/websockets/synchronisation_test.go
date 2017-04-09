@@ -13,6 +13,7 @@ import (
 )
 
 func TestOldFeedClosing(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -20,14 +21,14 @@ func TestOldFeedClosing(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	if err := feeds.Add(1, cl); err != nil {
+	feed, err := feeds.Add(1, cl)
+	if err != nil {
 		t.Fatal(err)
 	}
-	defer feeds.Clear()
 
-	cl.feedID = 1
+	cl.feed = feed
 	cl.synchronise(nil)
-	if cl.feedID != 0 {
+	if cl.feed != nil {
 		t.Fatal("old feed not cleared")
 	}
 }
@@ -56,7 +57,7 @@ func TestSyncToBoard(t *testing.T) {
 	}
 	defer Clients.Clear()
 	skipMessage(t, wcl)
-	assertMessage(t, wcl, `300`)
+	assertMessage(t, wcl, `30null`)
 }
 
 func skipMessage(t *testing.T, con *websocket.Conn) {
@@ -85,7 +86,9 @@ func TestRegisterSync(t *testing.T) {
 }
 
 func TestInvalidThreadSync(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
+	writeSampleBoard(t)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -95,53 +98,67 @@ func TestInvalidThreadSync(t *testing.T) {
 		Board:  "a",
 		Thread: 1,
 	})
+	defer Clients.Clear()
 	if err := cl.synchronise(data); err != errInvalidThread {
 		UnexpectedError(t, err)
 	}
 }
 
 func TestSyncToThread(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	for _, msg := range [...]string{"foo", "bar"} {
-		if err := db.UpdateLog(1, []byte(msg)); err != nil {
-			t.Fatal(err)
-		}
-	}
 
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	sv.Add(1)
 	go readListenErrors(t, cl, sv)
-	data := marshalJSON(t, syncRequest{
+
+	sendMessage(t, wcl, common.MessageSynchronise, syncRequest{
 		Board:  "a",
 		Thread: 1,
 	})
-
-	if err := cl.synchronise(data); err != nil {
-		t.Fatal(err)
-	}
 	defer Clients.Clear()
-	defer feeds.Clear()
+
+	skipMessage(t, wcl)
+	assertMessage(t, wcl, "351")
 	assertSyncID(t, &Clients, cl, SyncID{
 		OP:    1,
 		Board: "a",
 	})
-	if cl.feedID != 1 {
-		t.Errorf("unexpected feed ID: 1 : %d", cl.feedID)
-	}
-
-	skipMessage(t, wcl)
-	assertMessage(t, wcl, `351`)
-	assertMessage(t, wcl, "302")
 
 	cl.Close(nil)
 	sv.Wait()
 }
 
+func sendMessage(
+	t *testing.T,
+	conn *websocket.Conn,
+	typ common.MessageType,
+	data interface{},
+) {
+	err := conn.WriteMessage(websocket.TextMessage, encodeMessage(t, typ, data))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func encodeMessage(
+	t *testing.T,
+	typ common.MessageType,
+	data interface{},
+) []byte {
+	msg, err := common.EncodeMessage(typ, data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return msg
+}
+
 func TestReclaimPost(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -204,6 +221,7 @@ func TestReclaimPost(t *testing.T) {
 			sv := newWSServer(t)
 			defer sv.Close()
 			cl, wcl := sv.NewClient()
+			addToFeed(t, cl, 1)
 			req := reclaimRequest{
 				ID:       c.id,
 				Password: c.password,

@@ -2,7 +2,6 @@ package websockets
 
 import (
 	"bytes"
-	"regexp"
 	"testing"
 	"time"
 
@@ -87,6 +86,7 @@ func TestAppendBodyTooLong(t *testing.T) {
 }
 
 func TestAppendRune(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -95,12 +95,15 @@ func TestAppendRune(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
+	addToFeed(t, cl, 1)
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString("abc"),
+		id:   2,
+		op:   1,
+		len:  3,
+		time: time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("abc"),
+		},
 	}
 
 	if err := cl.appendRune([]byte("100")); err != nil {
@@ -110,7 +113,6 @@ func TestAppendRune(t *testing.T) {
 	assertOpenPost(t, cl, 4, "abcd")
 	awaitFlush()
 	assertBody(t, 2, "abcd")
-	assertRepLog(t, 1, []string{"03[2,100]"})
 }
 
 func awaitFlush() {
@@ -142,20 +144,8 @@ func assertBody(t *testing.T, id uint64, body string) {
 	}
 }
 
-func assertRepLog(t *testing.T, id uint64, log []string) {
-	res, err := db.GetLog(id, 0, 500)
-	if err != nil {
-		t.Fatal(err)
-	}
-	strRes := make([]string, len(res))
-	for i := range res {
-		strRes[i] = string(res[i])
-	}
-
-	AssertDeepEquals(t, strRes, log)
-}
-
 func BenchmarkAppend(b *testing.B) {
+	feeds.Clear()
 	assertTableClear(b, "boards")
 	writeSampleBoard(b)
 	writeSampleThread(b)
@@ -165,12 +155,15 @@ func BenchmarkAppend(b *testing.B) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString("abc"),
+		id:   2,
+		op:   1,
+		len:  3,
+		time: time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("abc"),
+		},
 	}
+	addToFeed(b, cl, 1)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -181,6 +174,7 @@ func BenchmarkAppend(b *testing.B) {
 }
 
 func TestClosePostWithHashCommand(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -202,12 +196,14 @@ func TestClosePostWithHashCommand(t *testing.T) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    5,
-		board:  "a",
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString("#flip"),
+		id:    2,
+		op:    1,
+		len:   5,
+		board: "a",
+		time:  time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("#flip"),
+		},
 	}
 
 	if err := cl.closePost(); err != nil {
@@ -228,23 +224,10 @@ func TestClosePostWithHashCommand(t *testing.T) {
 			t.Errorf("unexpected command type: %d", typ)
 		}
 	})
-
-	t.Run("last log message", func(t *testing.T) {
-		t.Parallel()
-
-		log, err := db.GetLog(1, 0, 100)
-		if err != nil {
-			t.Fatal(err)
-		}
-		const patt = `06{"id":2,"commands":\[{"type":1,"val":(?:true|false)}\]}`
-		msg := string(log[len(log)-1])
-		if !regexp.MustCompile(patt).MatchString(msg) {
-			t.Fatalf("message does not match `%s`: `%s`", patt, msg)
-		}
-	})
 }
 
 func TestClosePostWithLinks(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -252,7 +235,6 @@ func TestClosePostWithLinks(t *testing.T) {
 	thread := db.Thread{
 		ID:    21,
 		Board: "a",
-		Log:   [][]byte{},
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{
@@ -297,12 +279,14 @@ func TestClosePostWithLinks(t *testing.T) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		board:  "a",
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString(" >>22 "),
+		id:    2,
+		op:    1,
+		len:   3,
+		board: "a",
+		time:  time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString(" >>22 "),
+		},
 	}
 	setBoardConfigs(t, false)
 
@@ -336,8 +320,6 @@ func TestClosePostWithLinks(t *testing.T) {
 		t.Run(s.field, func(t *testing.T) {
 			t.Parallel()
 
-			assertRepLog(t, s.op, []string{s.log})
-
 			post, err := db.GetPost(s.id)
 			if err != nil {
 				t.Fatal(err)
@@ -354,22 +336,27 @@ func TestClosePostWithLinks(t *testing.T) {
 }
 
 func TestBackspace(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	if err := db.WritePost(nil, samplePost); err != nil {
+	err := db.WritePost(nil, samplePost)
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
+	addToFeed(t, cl, 1)
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString("abc"),
+		id:   2,
+		op:   1,
+		len:  3,
+		time: time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("abc"),
+		},
 	}
 
 	if err := cl.backspace(); err != nil {
@@ -378,11 +365,11 @@ func TestBackspace(t *testing.T) {
 
 	assertOpenPost(t, cl, 2, "ab")
 	awaitFlush()
-	assertRepLog(t, 1, []string{"042"})
 	assertBody(t, 2, "ab")
 }
 
 func TestClosePost(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -394,11 +381,13 @@ func TestClosePost(t *testing.T) {
 	defer sv.Close()
 	cl, _ := sv.NewClient()
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		board:  "a",
-		Buffer: *bytes.NewBufferString("abc"),
+		id:    2,
+		op:    1,
+		len:   3,
+		board: "a",
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("abc"),
+		},
 	}
 
 	if err := cl.closePost(); err != nil {
@@ -406,7 +395,6 @@ func TestClosePost(t *testing.T) {
 	}
 
 	AssertDeepEquals(t, cl.post, openPost{})
-	assertRepLog(t, 1, []string{`06{"id":2}`})
 	assertBody(t, 2, "abc")
 	assertPostClosed(t, 2)
 }
@@ -469,6 +457,7 @@ func TestSpliceValidityChecks(t *testing.T) {
 }
 
 func TestSplice(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	setBoardConfigs(t, false)
@@ -588,13 +577,16 @@ func TestSplice(t *testing.T) {
 			}
 
 			cl, _ := sv.NewClient()
+			addToFeed(t, cl, 1)
 			cl.post = openPost{
-				id:     2,
-				op:     1,
-				len:    utf8.RuneCountInString(c.init),
-				board:  "a",
-				time:   time.Now().Unix(),
-				Buffer: *bytes.NewBufferString(c.init),
+				id:    2,
+				op:    1,
+				len:   utf8.RuneCountInString(c.init),
+				board: "a",
+				time:  time.Now().Unix(),
+				bodyBuffer: bodyBuffer{
+					Buffer: *bytes.NewBufferString(c.init),
+				},
 			}
 
 			req := spliceRequest{
@@ -612,12 +604,12 @@ func TestSplice(t *testing.T) {
 			assertOpenPost(t, cl, utf8.RuneCountInString(c.final), c.final)
 			awaitFlush()
 			assertBody(t, 2, c.final)
-			assertRepLog(t, 1, []string{c.log})
 		})
 	}
 }
 
 func TestCloseOldOpenPost(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -655,7 +647,6 @@ func TestCloseOldOpenPost(t *testing.T) {
 	}
 
 	assertPostClosed(t, 2)
-	assertRepLog(t, 1, []string{`06{"id":2}`})
 }
 
 func TestInsertImageIntoPostWithImage(t *testing.T) {
@@ -696,6 +687,7 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 }
 
 func TestInsertImage(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards", "images")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -723,6 +715,7 @@ func TestInsertImage(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
+	addToFeed(t, cl, 1)
 	cl.post = openPost{
 		id:    2,
 		board: "a",

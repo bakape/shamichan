@@ -1,6 +1,5 @@
 import { ThreadData } from "../common"
 import { escape, threads } from '../util'
-import { setSyncCounter } from "../connection"
 import { setTitle } from "../ui"
 import {
     extractConfigs, isBanned, extractPost, localizeThreads, reparseOpenPosts
@@ -24,7 +23,6 @@ export default function (html: string) {
     const text = document.getElementById("post-data").textContent,
         data = JSON.parse(text) as ThreadData,
         { posts } = data
-    setSyncCounter(data.logCtr)
     delete data.posts
     setPostCount(data.postCtr, data.imageCtr)
 

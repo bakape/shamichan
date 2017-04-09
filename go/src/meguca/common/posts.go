@@ -20,7 +20,6 @@ type Thread struct {
 	ImageCtr  uint32 `json:"imageCtr"`
 	ReplyTime int64  `json:"replyTime"`
 	BumpTime  int64  `json:"bumpTime"`
-	LogCtr    uint64 `json:"logCtr"`
 	Subject   string `json:"subject"`
 	Board     string `json:"board"`
 	Post

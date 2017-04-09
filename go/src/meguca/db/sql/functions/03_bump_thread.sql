@@ -1,7 +1,6 @@
 create or replace function bump_thread(
 	id bigint,
 	board varchar(3),
-	msg bytea,
 	bump bool,
 	image bool
 ) returns void as $$
@@ -12,7 +11,7 @@ create or replace function bump_thread(
 			postCtr =  postCtr + 1,
 			bumpTime = case when bump
 				then
-					case when postCtr <= 1000
+					case when postCtr <= 5000
 						then floor(extract(epoch from now()))
 						else bumpTime
 					end
@@ -23,5 +22,4 @@ create or replace function bump_thread(
 				else imageCtr
 			end
 		where id = bump_thread.id;
-	select update_log(id, msg);
 $$ language sql;

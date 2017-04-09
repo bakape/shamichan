@@ -37,7 +37,7 @@ function handle(id: number, fn: (m: Post) => void) {
 }
 
 // Insert a post into the models and DOM
-function insertPost(data: PostData) {
+export function insertPost(data: PostData) {
 	// R/a/dio song name override
 	if (posterName()) {
 		data.name = posterName()

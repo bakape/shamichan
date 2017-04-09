@@ -1,4 +1,3 @@
-select board, postCtr, imageCtr, replyTime, bumpTime, subject,
-		(select array_length(log, 1)) as logCtr
+select board, postCtr, imageCtr, replyTime, bumpTime, subject
 	from threads
 	where id = $1

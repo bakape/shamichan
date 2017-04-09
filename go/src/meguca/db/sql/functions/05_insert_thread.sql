@@ -1,5 +1,6 @@
-create or replace function insert_post(
-	msg bytea,
+create or replace function insert_thread(
+	subject varchar(100),
+	imageCtr bigint,
 	editing bool,
 	spoiler bool,
 	id bigint,
@@ -18,7 +19,11 @@ create or replace function insert_post(
 	backlinks bigint[][2],
 	commands json[]
 ) returns void as $$
-	select bump_thread(op, board, msg, 'true', SHA1 is not null);
+	select bump_board(board);
+	insert into threads (
+		board, id, postCtr, imageCtr, replyTime, bumpTime, subject
+	)
+		values (board, id, 1, imageCtr, now, now, subject);
 	insert into posts (
 		editing, spoiler, id, board, op, time, body, name, trip, auth, password,
 		ip, SHA1, imageName, links, backlinks, commands

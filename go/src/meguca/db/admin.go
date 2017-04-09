@@ -48,9 +48,12 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 		if err != nil {
 			return
 		}
-		err = execPrepared("ban_post", post.id, post.op, msg)
+		err = execPrepared("ban_post", post.id, post.op)
 		if err != nil {
 			return
+		}
+		if !IsTest {
+			common.Feeds.SendTo(post.op, msg)
 		}
 	}
 
@@ -118,7 +121,21 @@ func DeletePost(board string, id uint64) (err error) {
 	if err != nil {
 		return
 	}
-	return execPrepared("delete_post", id, msg)
+
+	err = execPrepared("delete_post", id)
+	if err != nil {
+		return
+	}
+
+	op, err := GetPostOP(id)
+	if err != nil {
+		return
+	}
+	if !IsTest {
+		common.Feeds.SendTo(op, msg)
+	}
+
+	return
 }
 
 // WriteStaff writes staff positions of a specific board. Old rows are

@@ -1,13 +1,12 @@
 package parser
 
 import (
-	"testing"
-	"time"
-
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"testing"
+	"time"
 )
 
 func TestParseLine(t *testing.T) {
@@ -90,7 +89,6 @@ func writeSampleThread(t *testing.T) {
 	thread := db.Thread{
 		ID:    1,
 		Board: "a",
-		Log:   [][]byte{[]byte("123")},
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{

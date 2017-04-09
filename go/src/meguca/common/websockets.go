@@ -67,6 +67,12 @@ type Client interface {
 	Redirect(board string)
 }
 
+// Feeds exposes update feed storage map without causing circular imports
+var Feeds interface {
+	SendTo(id uint64, msg []byte)
+	ClosePost(id, op uint64, msg []byte)
+}
+
 // EncodeMessage encodes a message for sending through websockets or writing to
 // the replication log.
 func EncodeMessage(typ MessageType, msg interface{}) ([]byte, error) {

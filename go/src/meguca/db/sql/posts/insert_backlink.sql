@@ -1,1 +1,3 @@
-select insert_backlink($1, $2, $3, $4)
+update posts
+	set backlinks = backlinks || $2
+	where id = $1

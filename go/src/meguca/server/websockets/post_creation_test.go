@@ -249,6 +249,7 @@ func TestGetInvalidImage(t *testing.T) {
 }
 
 func TestClosePreviousPostOnCreation(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -262,12 +263,14 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	cl.post = openPost{
-		id:     2,
-		op:     1,
-		len:    3,
-		board:  "a",
-		time:   time.Now().Unix(),
-		Buffer: *bytes.NewBufferString("abc"),
+		id:    2,
+		op:    1,
+		len:   3,
+		board: "a",
+		time:  time.Now().Unix(),
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("abc"),
+		},
 	}
 	data := marshalJSON(t, sampleImagelessThreadCreationRequest)
 
@@ -276,7 +279,6 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 	}
 
 	assertMessage(t, wcl, `326`)
-	assertRepLog(t, 1, []string{`06{"id":2}`})
 	assertPostClosed(t, 2)
 }
 
@@ -315,6 +317,7 @@ func TestPostCreationValidations(t *testing.T) {
 }
 
 func TestPostCreation(t *testing.T) {
+	feeds.Clear()
 	prepareForPostCreation(t)
 	setBoardConfigs(t, false)
 	writeSampleImage(t)
@@ -328,6 +331,7 @@ func TestPostCreation(t *testing.T) {
 	cl, wcl := sv.NewClient()
 	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
+	addToFeed(t, cl, 1)
 	cl.ip = "::1"
 
 	req := ReplyCreationRequest{
@@ -385,9 +389,19 @@ func TestPostCreation(t *testing.T) {
 		time:     stdPost.Time,
 		board:    "a",
 		len:      1,
-		Buffer:   *bytes.NewBufferString("Δ"),
 		hasImage: true,
+		bodyBuffer: bodyBuffer{
+			Buffer: *bytes.NewBufferString("Δ"),
+		},
 	})
+}
+
+func addToFeed(t testing.TB, cl *Client, id uint64) {
+	var err error
+	cl.feed, err = feeds.Add(1, cl)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func prepareForPostCreation(t testing.TB) {
@@ -419,7 +433,6 @@ func writeSampleThread(t testing.TB) {
 		PostCtr:   0,
 		ImageCtr:  1,
 		ReplyTime: now,
-		Log:       [][]byte{},
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{
@@ -436,6 +449,7 @@ func writeSampleThread(t testing.TB) {
 }
 
 func TestTextOnlyPostCreation(t *testing.T) {
+	feeds.Clear()
 	prepareForPostCreation(t)
 	setBoardConfigs(t, true)
 
@@ -444,6 +458,8 @@ func TestTextOnlyPostCreation(t *testing.T) {
 	cl, _ := sv.NewClient()
 	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
+	var err error
+	cl.feed, err = feeds.Add(1, cl)
 
 	req := ReplyCreationRequest{
 		Body:     "a",
@@ -468,6 +484,7 @@ func TestTextOnlyPostCreation(t *testing.T) {
 }
 
 func BenchmarkPostCreation(b *testing.B) {
+	feeds.Clear()
 	prepareForPostCreation(b)
 	setBoardConfigs(b, true)
 
@@ -494,6 +511,7 @@ func BenchmarkPostCreation(b *testing.B) {
 }
 
 func TestPostCreationForcedAnon(t *testing.T) {
+	feeds.Clear()
 	prepareForPostCreation(t)
 	config.ClearBoards()
 	_, err := config.SetBoardConfigs(config.BoardConfigs{
@@ -511,6 +529,7 @@ func TestPostCreationForcedAnon(t *testing.T) {
 	cl, _ := sv.NewClient()
 	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
+	addToFeed(t, cl, 1)
 
 	req := ReplyCreationRequest{
 		Body:     "a",

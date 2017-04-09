@@ -3,7 +3,10 @@ package db
 import (
 	"database/sql"
 	"meguca/common"
+	"meguca/util"
+	"sort"
 
+	"github.com/boltdb/bolt"
 	"github.com/lib/pq"
 )
 
@@ -86,6 +89,28 @@ func (p postScanner) Image() (bool, string) {
 	return p.spoiler.Bool, p.imageName.String
 }
 
+type postSorter []*common.Post
+
+func (p postSorter) Len() int {
+	return len(p)
+}
+
+func (p postSorter) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
+func (p postSorter) Less(i, j int) bool {
+	return p[i].ID < p[j].ID
+}
+
+// PostStats contains post open status, body and creation time
+type PostStats struct {
+	Editing, HasImage bool
+	ID                uint64
+	Time              int64
+	Body              []byte
+}
+
 // GetThread retrieves public thread data from the database
 func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	tx, err := db.Begin()
@@ -100,16 +125,14 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 
 	// Get thread metadata
 	row := tx.Stmt(prepared["get_thread"]).QueryRow(id)
-	var logCtr sql.NullInt64
 	err = row.Scan(
 		&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-		&t.Subject, &logCtr,
+		&t.Subject,
 	)
 	if err != nil {
 		return
 	}
 	t.Abbrev = lastN != 0
-	t.LogCtr = uint64(logCtr.Int64)
 
 	// Get OP post. Need to fetch separately, in case not fetching the full
 	// thread. Also allows to return early on deleted threads.
@@ -146,6 +169,21 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 		t.Posts = append(t.Posts, p)
 	}
 	err = r.Err()
+	if err != nil {
+		return
+	}
+
+	// Inject bodies into open posts
+	open := make([]*common.Post, 0, 16)
+	if t.Post.Editing {
+		open = append(open, &t.Post)
+	}
+	for i := range t.Posts {
+		if t.Posts[i].Editing {
+			open = append(open, &t.Posts[i])
+		}
+	}
+	err = injectOpenBodies(open)
 
 	return
 }
@@ -199,7 +237,14 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 		res.Image.Spoiler, res.Image.Name = post.Image()
 	}
 
-	return res, nil
+	if res.Editing {
+		res.Body, err = GetOpenBody(res.ID)
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 // GetBoardCatalog retrieves all OPs of a single board
@@ -239,22 +284,66 @@ func GetAllBoard() (common.Board, error) {
 	return scanBoard(r)
 }
 
+// GetRecentPosts retrieves posts created in the thread in the last 15 minutes.
+// Posts that are being editted also have their Body property set.
+func GetRecentPosts(op uint64) (posts []PostStats, err error) {
+	r, err := prepared["get_recent_posts"].Query(op)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	posts = make([]PostStats, 0, 64)
+	var p PostStats
+	for r.Next() {
+		err = r.Scan(&p.ID, &p.Time, &p.Editing, &p.HasImage)
+		if err != nil {
+			return
+		}
+		posts = append(posts, p)
+	}
+	err = r.Err()
+	if err != nil {
+		return
+	}
+
+	// Get open post bodies
+	if len(posts) != 0 {
+		var tx *bolt.Tx
+		tx, err = boltDB.Begin(false)
+		if err != nil {
+			return
+		}
+		defer tx.Rollback()
+
+		buc := tx.Bucket([]byte("open_bodies"))
+		for i, p := range posts {
+			if !p.Editing {
+				continue
+			}
+			// Buffer is only valid for the transaction. Need to copy.
+			posts[i].Body = util.CloneBytes(buc.Get(formatPostID(p.ID)))
+		}
+	}
+
+	return
+}
+
 func scanCatalog(table tableScanner) (board common.Board, err error) {
 	defer table.Close()
 	board = make(common.Board, 0, 8)
 
 	for table.Next() {
 		var (
-			t      common.Thread
-			post   postScanner
-			img    imageScanner
-			logCtr sql.NullInt64
+			t    common.Thread
+			post postScanner
+			img  imageScanner
 		)
 
-		args := make([]interface{}, 0, 31)
+		args := make([]interface{}, 0, 30)
 		args = append(args,
 			&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-			&t.Subject, &logCtr,
+			&t.Subject,
 		)
 		args = append(args, post.ScanArgs()...)
 		args = append(args, img.ScanArgs()...)
@@ -263,7 +352,6 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 			return
 		}
 
-		t.LogCtr = uint64(logCtr.Int64)
 		t.Post, err = post.Val()
 		if err != nil {
 			return
@@ -276,6 +364,17 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 		board = append(board, t)
 	}
 	err = table.Err()
+	if err != nil {
+		return
+	}
+
+	open := make([]*common.Post, 0, 16)
+	for i := range board {
+		if board[i].Editing {
+			open = append(open, &board[i].Post)
+		}
+	}
+	err = injectOpenBodies(open)
 
 	return
 }
@@ -311,5 +410,38 @@ func scanBoard(table tableScanner) (board common.Board, err error) {
 		}
 	}
 
+	open := make([]*common.Post, 0, 32)
+	for i := range board {
+		t := &board[i]
+		if t.Editing {
+			open = append(open, &t.Post)
+		}
+		for i := range t.Posts {
+			if t.Posts[i].Editing {
+				open = append(open, &t.Posts[i])
+			}
+		}
+	}
+
 	return
+}
+
+// Inject open post bodies from the embedded database into the posts
+func injectOpenBodies(posts []*common.Post) error {
+	if len(posts) == 0 {
+		return nil
+	}
+
+	tx, err := boltDB.Begin(false)
+	if err != nil {
+		return err
+	}
+
+	buc := tx.Bucket([]byte("open_bodies"))
+	sort.Sort(postSorter(posts))
+	for _, p := range posts {
+		p.Body = string(buc.Get(formatPostID(p.ID)))
+	}
+
+	return tx.Rollback()
 }

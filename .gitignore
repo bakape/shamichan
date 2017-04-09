@@ -23,3 +23,5 @@ scripts/migration/3to4/3to4
 /images
 go/src/meguca/imager/assets/images
 go/src/meguca/imager/images
+db.db
+easyjson-bootstrap*.go

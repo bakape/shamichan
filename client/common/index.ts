@@ -52,8 +52,8 @@ export interface Command {
 export interface ThreadData extends PostData {
 	postCtr: number
 	imageCtr: number
-	logCtr: number
 	replyTime: number
+	bumpTime: number
 	subject: string
 	board: string
 	posts?: PostData[]

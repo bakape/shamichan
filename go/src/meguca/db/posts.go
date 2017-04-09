@@ -27,7 +27,6 @@ type Thread struct {
 	PostCtr, ImageCtr   uint32
 	ReplyTime, BumpTime int64
 	Subject, Board      string
-	Log                 [][]byte
 }
 
 // For decoding and encoding the tuple arrays we store links in
@@ -230,15 +229,17 @@ func NewPostID() (id uint64, err error) {
 }
 
 // InsertPost inserts a post into an existing thread
-func InsertPost(p Post) error {
-	msg, err := common.EncodeMessage(common.MessageInsertPost, p.Post)
+func InsertPost(p Post) (err error) {
+	err = execPrepared("insert_post", genPostCreationArgs(p)...)
 	if err != nil {
-		return err
+		return
 	}
-	return execPrepared(
-		"insert_post",
-		append([]interface{}{msg}, genPostCreationArgs(p)...)...,
-	)
+
+	if p.Editing {
+		err = SetOpenBody(p.ID, []byte(p.Body))
+	}
+
+	return
 }
 
 func genPostCreationArgs(p Post) []interface{} {
@@ -274,21 +275,38 @@ func genPostCreationArgs(p Post) []interface{} {
 
 // WritePost writes a post struct to the database. Only used in tests and
 // migrations.
-func WritePost(tx *sql.Tx, p Post) error {
-	_, err := getExecutor(tx, "write_post").Exec(genPostCreationArgs(p)...)
-	return err
+func WritePost(tx *sql.Tx, p Post) (err error) {
+	_, err = getExecutor(tx, "write_post").Exec(genPostCreationArgs(p)...)
+	if err != nil {
+		return
+	}
+
+	if p.Editing {
+		err = SetOpenBody(p.ID, []byte(p.Body))
+	}
+
+	return
 }
 
 // InsertThread inserts a new thread into the database
-func InsertThread(subject string, p Post) error {
+func InsertThread(subject string, p Post) (err error) {
 	imgCtr := 0
 	if p.Image != nil {
 		imgCtr = 1
 	}
-	return execPrepared(
+	err = execPrepared(
 		"insert_thread",
 		append([]interface{}{subject, imgCtr}, genPostCreationArgs(p)...)...,
 	)
+	if err != nil {
+		return
+	}
+
+	if p.Editing {
+		err = SetOpenBody(p.ID, []byte(p.Body))
+	}
+
+	return
 }
 
 // WriteThread writes a thread and it's OP to the database. Only used for tests
@@ -305,7 +323,6 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 
 	_, err = tx.Stmt(prepared["write_op"]).Exec(
 		t.Board,
-		pq.ByteaArray(t.Log),
 		t.ID,
 		t.PostCtr,
 		t.ImageCtr,
@@ -316,6 +333,7 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 	if err != nil {
 		return err
 	}
+
 	err = WritePost(tx, p)
 	if err != nil {
 		return err
@@ -334,22 +352,6 @@ func GetPostPassword(id uint64) (p []byte, err error) {
 		err = nil
 	}
 	return
-}
-
-// GetLog retrieves a slice of a thread's replication log
-func GetLog(id, from, to uint64) ([][]byte, error) {
-	var log pq.ByteaArray
-	// Postgres arrays are 1-based
-	err := prepared["get_log"].QueryRow(id, from+1, to+1).Scan(&log)
-	return [][]byte(log), err
-}
-
-// GetLogTillEnd retrieves a slice of the replication log from a certain lower
-// index
-func GetLogTillEnd(id, from uint64) ([][]byte, error) {
-	var log pq.ByteaArray
-	err := prepared["get_log_till_end"].QueryRow(id, from+1).Scan(&log)
-	return [][]byte(log), err
 }
 
 // SetPostCounter sets the post counter. Should only be used in tests.

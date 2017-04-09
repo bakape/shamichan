@@ -1,62 +1,20 @@
-// Handles Websocket connectivity and messaging
+import { FSM } from "../util"
+import { debug } from "../state"
+import { message, handlers } from "./messages"
+import { renderStatus } from "./ui"
+import { synchronise } from "./synchronization"
 
-import { debug, page } from './state'
-import lang from './lang'
-import { FSM, trigger } from './util'
-import { identity, postSM, postEvent, postState, FormModel } from "./posts"
+const path = (location.protocol === 'https:' ? 'wss' : 'ws')
+	+ `://${location.host}/socket`
 
-// Message types of the WebSocket communication protocol
-export const enum message {
-	invalid,
-
-	// 1 - 29 modify post model state
-	insertThread,
-	insertPost,
-	append,
-	backspace,
-	splice,
-	closePost,
-	backlink,
-	insertImage,
-	spoiler,
-	deletePost,
-	banned,
-
-	// >= 30 are miscellaneous and do not write to post models
-	synchronise = 30,
-	reclaim,
-
-	// Send new post ID to client
-	postID,
-
-	// Concatenation of multiple websocket messages to reduce transport overhead
-	concat,
-
-	// Invokes no operation on the server. Used to test the client's connection
-	// in situations, when you can't be certain the client is still connected.
-	NOOP,
-
-	// Transmit current synced IP count to client
-	syncCount,
-
-	// Send current server Unix time to client
-	serverTime,
-
-	// Redirect the client to a specific board
-	redirect,
-
-	// Send a notification to a client
-	notification,
-}
-
-export type MessageHandler = (msg: {}) => void
-
-// Websocket message handlers. Each handler responds to its distinct message
-// type.
-export const handlers: { [type: number]: MessageHandler } = {}
+let socket: WebSocket,
+	attempts: number,
+	attemptTimer: number
 
 // Websocket connection and synchronization with server states
-const enum syncStatus { disconnected, connecting, syncing, synced, desynced }
+export const enum syncStatus {
+	disconnected, connecting, syncing, synced, desynced,
+}
 
 // States of the connection finite state machine
 export const enum connState {
@@ -70,16 +28,6 @@ export const enum connEvent {
 
 // Finite state machine for managing websocket connectivity
 export const connSM = new FSM<connState, connEvent>(connState.loading)
-
-let socket: WebSocket,
-	attempts: number,
-	attemptTimer: number,
-	syncCounter: number // Tracks thread update progress
-
-const syncEl = document.getElementById('sync'),
-	syncedCount = document.getElementById("sync-counter")
-const path = (location.protocol === 'https:' ? 'wss' : 'ws')
-	+ `://${location.host}/socket`
 
 function connect() {
 	nullSocket()
@@ -109,11 +57,6 @@ function nullSocket() {
 			= socket
 			= null
 	}
-}
-
-// Render connection status indicator
-function renderStatus(status: syncStatus) {
-	syncEl.textContent = lang.sync[status]
 }
 
 // Send a message to the server. If msg is null, it is omitted from sent
@@ -161,20 +104,10 @@ function onMessage(data: string, extracted: boolean) {
 		return
 	}
 
-	// Message types bellow thirty alter the thread state
-	if (type < 30) {
-		syncCounter++
-	}
-
 	const handler = handlers[type]
 	if (handler) {
 		handler(JSON.parse(data.slice(2)))
 	}
-}
-
-// Update the thread synchronization progress counter
-export function setSyncCounter(c: number) {
-	syncCounter = c
 }
 
 function prepareToSync(): connState {
@@ -184,49 +117,12 @@ function prepareToSync(): connState {
 	return connState.syncing
 }
 
-// Send a requests to the server to synchronise to the current page and
-// subscribe to the appropriate event feeds
-export function synchronise() {
-	send(message.synchronise, {
-		board: page.board,
-		thread: page.thread,
-	})
-
-	// Reclaim a post lost after disconnecting, going on standby, resuming
-	// browser tab, etc.
-	if (page.thread && postSM.state === postState.halted) {
-		// No older than 28 minutes
-		const m = trigger("getPostModel") as FormModel
-		if (m.time > (Date.now() / 1000 - 28 * 60)) {
-			send(message.reclaim, {
-				id: m.id,
-				password: identity.postPassword,
-			})
-		} else {
-			postSM.feed(postEvent.abandon)
-		}
-	}
-}
-
-// Reset the reconnection attempt counter and timers
-function resetAttempts() {
-	if (attemptTimer) {
-		clearTimeout(attemptTimer)
-		attemptTimer = 0
-	}
-	attempts = 0
-}
-
 function clearModuleState() {
 	nullSocket()
 	if (attemptTimer) {
 		clearTimeout(attemptTimer)
 		attemptTimer = 0
 	}
-}
-
-export function start() {
-	connSM.feed(connEvent.start)
 }
 
 // Work around browser slowing down/suspending tabs and keep the FSM up to date
@@ -248,6 +144,19 @@ function onWindowFocus() {
 	}
 }
 
+// Reset the reconnection attempt counter and timers
+function resetAttempts() {
+	if (attemptTimer) {
+		clearTimeout(attemptTimer)
+		attemptTimer = 0
+	}
+	attempts = 0
+}
+
+export function start() {
+	connSM.feed(connEvent.start)
+}
+
 connSM.act(connState.loading, connEvent.start, () => {
 	renderStatus(syncStatus.connecting)
 	attempts = 0
@@ -257,50 +166,6 @@ connSM.act(connState.loading, connEvent.start, () => {
 
 for (let state of [connState.connecting, connState.reconnecting]) {
 	connSM.act(state, connEvent.open, prepareToSync)
-}
-
-// Synchronise to the server and start receiving updates on the appropriate
-// channel. If there are any missed messages, fetch them.
-handlers[message.synchronise] = async (ctr: number) => {
-	if (page.thread && ctr !== syncCounter) {
-		await fetchBacklog(syncCounter, ctr).catch(alert)
-	}
-	connSM.feed(connEvent.sync)
-}
-
-// If thread data is too old because of disconnect, computer suspension or
-// resuming old tabs, refetch and/or sync differences.
-async function fetchBacklog(start: number, end: number) {
-	const res = await fetch("/json/log", {
-		method: "POST",
-		body: JSON.stringify({
-			id: page.thread,
-			start, end,
-		})
-	})
-	switch (res.status) {
-		case 200:
-			// Text body will be empty, if there are no messages
-			const data = await res.text()
-			if (data) {
-				onMessage(data, false)
-			}
-			break
-		default:
-			throw await res.text()
-	}
-}
-
-// Handle response to a open post reclaim request
-handlers[message.reclaim] = (code: number) => {
-	switch (code) {
-		case 0:
-			postSM.feed(postEvent.reclaim)
-			break
-		case 1:
-			postSM.feed(postEvent.abandon)
-			break
-	}
 }
 
 connSM.act(connState.syncing, connEvent.sync, () => {
@@ -355,6 +220,3 @@ window.addEventListener('online', () => {
 	connSM.feed(connEvent.retry)
 })
 window.addEventListener('offline', connSM.feeder(connEvent.close))
-
-handlers[message.syncCount] = (n: number) =>
-	syncedCount.textContent = n.toString()

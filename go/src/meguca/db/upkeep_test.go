@@ -7,8 +7,6 @@ import (
 	. "meguca/test"
 	"testing"
 	"time"
-
-	"github.com/lib/pq"
 )
 
 const eightDays = time.Hour * 24 * 8
@@ -88,23 +86,6 @@ func TestOpenPostClosing(t *testing.T) {
 		})
 	}
 
-	assertLogContains(t, 1, `06{"id":2}`)
-}
-
-func assertLogContains(t *testing.T, id uint64, msgs ...string) {
-	var contains bool
-	err := db.
-		QueryRow(
-			`SELECT true FROM threads WHERE id = $1 and log @> $2`,
-			id, pq.StringArray(msgs),
-		).
-		Scan(&contains)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !contains {
-		t.Errorf("replication log does not contain %v", msgs)
-	}
 }
 
 func assertDeleted(t *testing.T, q string, del bool) {
@@ -242,7 +223,6 @@ func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
 			Board:     op.board,
 			ReplyTime: unix,
 			BumpTime:  unix,
-			Log:       [][]byte{},
 		}
 		post := Post{
 			StandalonePost: common.StandalonePost{
