@@ -8,7 +8,6 @@ import {
 	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts
 } from "./common"
 import { setPostCount } from "./thread"
-import { setSyncCounter } from "../connection"
 import { ThreadData } from "../common"
 
 
@@ -35,7 +34,6 @@ function subtract(attr: string): (a: Post, b: Post) => number {
 
 // Render a board fresh board page
 export function renderFresh(html: string) {
-	setSyncCounter(0)
 	lastFetchTime = Math.floor(Date.now() / 1000)
 	threads.innerHTML = html
 	if (isBanned()) {
@@ -63,7 +61,7 @@ function extractCatalogModels() {
 function extractThreads() {
 	const text = document.getElementById("post-data").textContent
 	for (let thread of JSON.parse(text) as ThreadData[]) {
-		const {posts} = thread
+		const { posts } = thread
 		delete thread.posts
 		if (extractPost(thread, thread.id)) {
 			document.querySelector(`section[data-id="${thread.id}"]`).remove()
@@ -139,7 +137,7 @@ export function sortThreads(initial: boolean) {
 			return posts.get(parseInt(id))
 		})
 		.sort(sorts[sortMode])
-		.map(({id}) =>
+		.map(({ id }) =>
 			els[id])
 	)
 }

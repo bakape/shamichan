@@ -19,7 +19,7 @@ interface Loader {
 }
 
 // Retrieve post id of post element
-function getID(el: Element): number {
+export function getID(el: Element): number {
 	if (!el) {
 		return 0
 	}

@@ -6,6 +6,7 @@ import {
 import ImageHandler from "./images"
 import { ViewAttrs } from "../base"
 import { findSyncwatches } from "./syncwatch"
+import { getID } from "../util"
 
 // Base post view class
 export default class PostView extends ImageHandler {
@@ -122,5 +123,21 @@ export default class PostView extends ImageHandler {
     // Render indications that a post had been deleted
     public renderDeleted() {
         this.el.classList.add("deleted")
+    }
+
+    // Inserts PostView back into the thread ordered by id
+    public reposition() {
+        // Insert before first post with greater ID
+        const sec = this.el.closest("section"),
+            { id } = this.model
+        for (let p of Array.from(sec.children)) {
+            if (getID(p) > id) {
+                p.before(this.el)
+                return
+            }
+        }
+
+        // This post should be last or no posts in thread
+        sec.append(this.el)
     }
 }

@@ -1,18 +1,20 @@
-import { FSM, trigger } from "../util"
-import { debug, page } from "../state"
+import { FSM } from "../util"
+import { debug } from "../state"
 import { message, handlers } from "./messages"
 import { renderStatus } from "./ui"
-import { postSM, postEvent, postState, identity, FormModel } from "../posts"
+import { synchronise } from "./synchronization"
+
+const path = (location.protocol === 'https:' ? 'wss' : 'ws')
+	+ `://${location.host}/socket`
+
+let socket: WebSocket,
+	attempts: number,
+	attemptTimer: number
 
 // Websocket connection and synchronization with server states
 export const enum syncStatus {
 	disconnected, connecting, syncing, synced, desynced,
 }
-
-let socket: WebSocket,
-	syncCounter: number, // Tracks thread update progress
-	attempts: number,
-	attemptTimer: number
 
 // States of the connection finite state machine
 export const enum connState {
@@ -26,9 +28,6 @@ export const enum connEvent {
 
 // Finite state machine for managing websocket connectivity
 export const connSM = new FSM<connState, connEvent>(connState.loading)
-
-const path = (location.protocol === 'https:' ? 'wss' : 'ws')
-	+ `://${location.host}/socket`
 
 function connect() {
 	nullSocket()
@@ -105,20 +104,10 @@ function onMessage(data: string, extracted: boolean) {
 		return
 	}
 
-	// Message types bellow thirty alter the thread state
-	if (type < 30) {
-		syncCounter++
-	}
-
 	const handler = handlers[type]
 	if (handler) {
 		handler(JSON.parse(data.slice(2)))
 	}
-}
-
-// Update the thread synchronization progress counter
-export function setSyncCounter(c: number) {
-	syncCounter = c
 }
 
 function prepareToSync(): connState {
@@ -126,30 +115,6 @@ function prepareToSync(): connState {
 	synchronise()
 	attemptTimer = setTimeout(resetAttempts, 10000) as any
 	return connState.syncing
-}
-
-// Send a requests to the server to synchronise to the current page and
-// subscribe to the appropriate event feeds
-export function synchronise() {
-	send(message.synchronise, {
-		board: page.board,
-		thread: page.thread,
-	})
-
-	// Reclaim a post lost after disconnecting, going on standby, resuming
-	// browser tab, etc.
-	if (page.thread && postSM.state === postState.halted) {
-		// No older than 28 minutes
-		const m = trigger("getPostModel") as FormModel
-		if (m.time > (Date.now() / 1000 - 28 * 60)) {
-			send(message.reclaim, {
-				id: m.id,
-				password: identity.postPassword,
-			})
-		} else {
-			postSM.feed(postEvent.abandon)
-		}
-	}
 }
 
 function clearModuleState() {
@@ -192,29 +157,6 @@ export function start() {
 	connSM.feed(connEvent.start)
 }
 
-// If thread data is too old because of disconnect, computer suspension or
-// resuming old tabs, refetch and/or sync differences.
-async function fetchBacklog(start: number, end: number) {
-	const res = await fetch("/json/log", {
-		method: "POST",
-		body: JSON.stringify({
-			id: page.thread,
-			start, end,
-		})
-	})
-	switch (res.status) {
-		case 200:
-			// Text body will be empty, if there are no messages
-			const data = await res.text()
-			if (data) {
-				onMessage(data, false)
-			}
-			break
-		default:
-			throw await res.text()
-	}
-}
-
 connSM.act(connState.loading, connEvent.start, () => {
 	renderStatus(syncStatus.connecting)
 	attempts = 0
@@ -224,27 +166,6 @@ connSM.act(connState.loading, connEvent.start, () => {
 
 for (let state of [connState.connecting, connState.reconnecting]) {
 	connSM.act(state, connEvent.open, prepareToSync)
-}
-
-// Synchronise to the server and start receiving updates on the appropriate
-// channel. If there are any missed messages, fetch them.
-handlers[message.synchronise] = async (ctr: number) => {
-	if (page.thread && ctr !== syncCounter) {
-		await fetchBacklog(syncCounter, ctr).catch(alert)
-	}
-	connSM.feed(connEvent.sync)
-}
-
-// Handle response to a open post reclaim request
-handlers[message.reclaim] = (code: number) => {
-	switch (code) {
-		case 0:
-			postSM.feed(postEvent.reclaim)
-			break
-		case 1:
-			postSM.feed(postEvent.abandon)
-			break
-	}
 }
 
 connSM.act(connState.syncing, connEvent.sync, () => {
