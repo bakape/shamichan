@@ -8,6 +8,7 @@ import (
 )
 
 func TestStreamUpdates(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)

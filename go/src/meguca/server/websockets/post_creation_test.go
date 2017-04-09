@@ -316,6 +316,7 @@ func TestPostCreationValidations(t *testing.T) {
 }
 
 func TestPostCreation(t *testing.T) {
+	feeds.Clear()
 	prepareForPostCreation(t)
 	setBoardConfigs(t, false)
 	writeSampleImage(t)
@@ -447,6 +448,7 @@ func writeSampleThread(t testing.TB) {
 }
 
 func TestTextOnlyPostCreation(t *testing.T) {
+	feeds.Clear()
 	prepareForPostCreation(t)
 	setBoardConfigs(t, true)
 
@@ -481,6 +483,7 @@ func TestTextOnlyPostCreation(t *testing.T) {
 }
 
 func BenchmarkPostCreation(b *testing.B) {
+	feeds.Clear()
 	prepareForPostCreation(b)
 	setBoardConfigs(b, true)
 
@@ -507,6 +510,7 @@ func BenchmarkPostCreation(b *testing.B) {
 }
 
 func TestPostCreationForcedAnon(t *testing.T) {
+	feeds.Clear()
 	prepareForPostCreation(t)
 	config.ClearBoards()
 	_, err := config.SetBoardConfigs(config.BoardConfigs{

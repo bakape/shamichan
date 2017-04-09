@@ -94,7 +94,7 @@ func (f *feedMap) Remove(feed *updateFeed, c *Client) {
 	}
 
 	if len(feed.clients) == 0 {
-		close(feed.close)
+		feed.Close()
 		delete(f.feeds, feed.id)
 	}
 }
@@ -119,6 +119,17 @@ func (f *feedMap) ClosePost(id, op uint64, msg []byte) {
 	if feed != nil {
 		feed.ClosePost(id, msg)
 	}
+}
+
+// Remove all existing feeds and clients. Used only in tests.
+func (f *feedMap) Clear() {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	for _, feed := range f.feeds {
+		feed.Close()
+	}
+	f.feeds = make(map[uint64]*updateFeed, 32)
 }
 
 // A feed with synchronization logic of a certain thread
@@ -305,5 +316,13 @@ func (u *updateFeed) ClosePost(id uint64, msg []byte) {
 	u.closePost <- postIDMessage{
 		id:  id,
 		msg: msg,
+	}
+}
+
+func (u *updateFeed) Close() {
+	select {
+	case <-u.close:
+	default:
+		close(u.close)
 	}
 }

@@ -144,6 +144,7 @@ func assertBody(t *testing.T, id uint64, body string) {
 }
 
 func BenchmarkAppend(b *testing.B) {
+	feeds.Clear()
 	assertTableClear(b, "boards")
 	writeSampleBoard(b)
 	writeSampleThread(b)
@@ -172,6 +173,7 @@ func BenchmarkAppend(b *testing.B) {
 }
 
 func TestClosePostWithHashCommand(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -224,6 +226,7 @@ func TestClosePostWithHashCommand(t *testing.T) {
 }
 
 func TestClosePostWithLinks(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -332,6 +335,7 @@ func TestClosePostWithLinks(t *testing.T) {
 }
 
 func TestBackspace(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -364,6 +368,7 @@ func TestBackspace(t *testing.T) {
 }
 
 func TestClosePost(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -451,6 +456,7 @@ func TestSpliceValidityChecks(t *testing.T) {
 }
 
 func TestSplice(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	setBoardConfigs(t, false)
@@ -602,6 +608,7 @@ func TestSplice(t *testing.T) {
 }
 
 func TestCloseOldOpenPost(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -679,6 +686,7 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 }
 
 func TestInsertImage(t *testing.T) {
+	feeds.Clear()
 	assertTableClear(t, "boards", "images")
 	writeSampleBoard(t)
 	writeSampleThread(t)

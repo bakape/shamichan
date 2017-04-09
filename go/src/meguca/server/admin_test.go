@@ -516,8 +516,9 @@ func TestDeletePost(t *testing.T) {
 
 func writeSampleThread(t *testing.T) {
 	thread := db.Thread{
-		ID:    1,
-		Board: "a",
+		ID:        1,
+		Board:     "a",
+		ReplyTime: 11,
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{
