@@ -1,10 +1,8 @@
 create or replace function bump_thread(
 	id bigint,
-	board varchar(3),
 	bump bool,
 	image bool
 ) returns void as $$
-	select bump_board(board);
 	update threads
 		set
 			replyTime = floor(extract(epoch from now())),
