@@ -36,7 +36,7 @@ var (
 	catalogCache = cache.FrontEnd{
 		GetCounter: func(k cache.Key) (uint64, error) {
 			if k.Board == "all" {
-				return db.PostCounter()
+				return db.AllBoardCounter()
 			}
 			return db.BoardCounter(k.Board)
 		},
@@ -53,7 +53,7 @@ var (
 	boardCache = cache.FrontEnd{
 		GetCounter: func(k cache.Key) (uint64, error) {
 			if k.Board == "all" {
-				return db.PostCounter()
+				return db.AllBoardCounter()
 			}
 			return db.BoardCounter(k.Board)
 		},

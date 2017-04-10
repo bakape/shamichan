@@ -208,11 +208,16 @@ func PostCounter() (uint64, error) {
 	return uint64(c.Int64), err
 }
 
-// BoardCounter retrieves the history or "progress" counter of a board
-func BoardCounter(board string) (uint64, error) {
-	var c sql.NullInt64
-	err := prepared["board_counter"].QueryRow(board).Scan(&c)
-	return uint64(c.Int64), err
+// BoardCounter retrieves the progress counter of a board
+func BoardCounter(board string) (ctr uint64, err error) {
+	err = prepared["board_counter"].QueryRow(board).Scan(&ctr)
+	return
+}
+
+// AllBoardCounter retrieves the progress counter of the /all/ board
+func AllBoardCounter() (ctr uint64, err error) {
+	err = prepared["all_board_counter"].QueryRow().Scan(&ctr)
+	return
 }
 
 // ThreadCounter retrieves the progress counter of a thread

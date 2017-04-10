@@ -138,12 +138,12 @@ func TestPostJSON(t *testing.T) {
 			name: "valid board",
 			url:  "/a/",
 			code: 200,
-			etag: "W/0",
+			etag: "W/11",
 		},
 		{
 			name:   "board etag matches",
 			url:    "/a/",
-			header: "W/0",
+			header: "W/11",
 			code:   304,
 		},
 		{
