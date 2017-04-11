@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	version = 4
+	version = 5
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
 )
@@ -67,6 +67,17 @@ var upgrades = map[uint]func(*sql.Tx) error{
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				DROP COLUMN ctr`,
+		)
+		return
+	},
+	4: func(tx *sql.Tx) (err error) {
+		// Restore correct image counters after incorrect updates
+		_, err = tx.Exec(
+			`UPDATE threads
+				SET imageCtr = (SELECT COUNT(*) FROM posts
+					WHERE SHA1 IS NOT NULL
+						AND op = threads.id
+				)`,
 		)
 		return
 	},

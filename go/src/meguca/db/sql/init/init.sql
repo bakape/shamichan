@@ -52,7 +52,6 @@ create table boards (
 	textOnly boolean not null,
 	forcedAnon boolean not null,
 	id varchar(3) primary key,
-	ctr bigint default 0,
 	created timestamp not null,
 	title varchar(100) not null,
 	notice varchar(500) not null,
