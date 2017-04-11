@@ -203,30 +203,28 @@ func GetPostBoard(id uint64) (string, error) {
 
 // PostCounter retrieves the current post counter
 func PostCounter() (uint64, error) {
+	return getCounter("post_counter")
+}
+
+func getCounter(queryID string, args ...interface{}) (uint64, error) {
 	var c sql.NullInt64
-	err := prepared["post_counter"].QueryRow().Scan(&c)
+	err := prepared[queryID].QueryRow(args...).Scan(&c)
 	return uint64(c.Int64), err
 }
 
 // BoardCounter retrieves the progress counter of a board
 func BoardCounter(board string) (uint64, error) {
-	var c *sql.NullInt64
-	err := prepared["board_counter"].QueryRow(board).Scan(&c)
-	return uint64(c.Int64), err
+	return getCounter("board_counter", board)
 }
 
 // AllBoardCounter retrieves the progress counter of the /all/ board
 func AllBoardCounter() (uint64, error) {
-	var c *sql.NullInt64
-	err := prepared["all_board_counter"].QueryRow().Scan(&c)
-	return uint64(c.Int64), err
+	return getCounter("all_board_counter")
 }
 
 // ThreadCounter retrieves the progress counter of a thread
 func ThreadCounter(id uint64) (uint64, error) {
-	var c sql.NullInt64
-	err := prepared["thread_counter"].QueryRow(id).Scan(&c)
-	return uint64(c.Int64), err
+	return getCounter("thread_counter", id)
 }
 
 // NewPostID reserves a new post ID
