@@ -18,7 +18,7 @@ export default class FormModel extends Post {
 	// committed yet
 	private bufferedQuote: string
 
-	private inputBody: string
+	public inputBody: string
 	public view: FormView
 	private lasLinked: number // ID of last linked post
 
@@ -152,12 +152,6 @@ export default class FormModel extends Post {
 		if (postSM.state !== postState.halted) {
 			send(type, msg)
 		}
-	}
-
-	// Reset the text body to match the server values
-	public resyncBody() {
-		this.inputBody = this.body
-		this.view.replaceText(this.body, true)
 	}
 
 	// Send a message about removing the last character of the line to the

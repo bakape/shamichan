@@ -195,10 +195,11 @@ connSM.act(connState.dropped, connEvent.retry, () => {
 	connect()
 
 	// Don't show this immediately so we don't thrash on network loss
-	setTimeout(() =>
-		connSM.state === connState.reconnecting
-		&& renderStatus(syncStatus.connecting)
-		, 100)
+	setTimeout(() => {
+		if (connSM.state === connState.reconnecting) {
+			renderStatus(syncStatus.connecting)
+		}
+	}, 100)
 	return connState.reconnecting
 })
 

@@ -43,6 +43,45 @@ export function synchronise() {
 	}
 }
 
+// Sync open posts to the state they are in on the server's update feed
+// dispatcher
+async function syncOpenPost(id: number, { hasImage, body }: OpenPost) {
+	let model = posts.get(id)
+
+	if (!model) {
+		await fetchMissingPost(id)
+		model = posts.get(id)
+	} else if (model instanceof FormModel) {
+		// Don't rerender post form text
+		model.inputBody = model.body = body
+		model.view.onInput()
+		return
+	}
+
+	if (hasImage && !model.image) {
+		model.image = (await fetchPost(id)).image
+		model.view.renderImage(false)
+	}
+	if (body) {
+		model.body = body
+	}
+	model.view.reparseBody()
+}
+
+// Fetch a post not present on the client and render it
+async function fetchMissingPost(id: number) {
+	insertPost(await fetchPost(id))
+	posts.get(id).view.reposition()
+}
+
+async function fetchPost(id: number): Promise<PostData> {
+	const r = await fetch(`/json/post/${id}`)
+	if (r.status !== 200) {
+		throw await r.text()
+	}
+	return r.json()
+}
+
 // Handle response to a open post reclaim request
 handlers[message.reclaim] = (code: number) => {
 	switch (code) {
@@ -80,36 +119,4 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		}
 	}
 	connSM.feed(connEvent.sync)
-}
-
-// Sync open posts to the state they are in on the server's update feed
-// dispatcher
-async function syncOpenPost(id: number, { hasImage, body }: OpenPost) {
-	let model = posts.get(id)
-	if (!model) {
-		await fetchMissingPost(id)
-		model = posts.get(id)
-	}
-	if (hasImage && !model.image) {
-		model.image = (await fetchPost(id)).image
-		model.view.renderImage(false)
-	}
-	if (body) {
-		model.body = body
-	}
-	model.view.reparseBody()
-}
-
-// Fetch a post not present on the client and render it
-async function fetchMissingPost(id: number) {
-	insertPost(await fetchPost(id))
-	posts.get(id).view.reposition()
-}
-
-async function fetchPost(id: number): Promise<PostData> {
-	const r = await fetch(`/json/post/${id}`)
-	if (r.status !== 200) {
-		throw await r.text()
-	}
-	return r.json()
 }

@@ -1,8 +1,13 @@
 type StateHandler = (arg?: any) => void
 
+interface Stringable {
+	toString(): string
+}
+
 // Finite State Machine
-export default class FSM<S, E> {
+export default class FSM<S extends Stringable, E extends Stringable> {
 	private stateHandlers: SetMap<StateHandler> = new SetMap<StateHandler>()
+	private onceHandlers: SetMap<StateHandler> = new SetMap<StateHandler>()
 	private transitions: { [transition: string]: (arg?: any) => S } = {}
 	private wilds: { [event: string]: (arg?: any) => S } = {}
 	public state: S
@@ -14,7 +19,12 @@ export default class FSM<S, E> {
 
 	// Assign a handler to be execute on arrival to a new state
 	public on(state: S, handler: StateHandler) {
-		this.stateHandlers.add(state as any, handler)
+		this.stateHandlers.add(state.toString(), handler)
+	}
+
+	// Like on, but handler is removed after execution
+	public once(state: S, handler: StateHandler) {
+		this.onceHandlers.add(state.toString(), handler)
 	}
 
 	// Specify state transition and a handler to execute on it. The handler must
@@ -26,7 +36,7 @@ export default class FSM<S, E> {
 	// Specify an event and handler, that will execute, when this event is fired
 	// on any state.
 	public wildAct(event: E, handler: (arg?: any) => S) {
-		this.wilds[event as any] = handler
+		this.wilds[event.toString()] = handler
 	}
 
 	// Generate a transition string representation
@@ -37,8 +47,9 @@ export default class FSM<S, E> {
 	// Feed an event to the FSM
 	public feed(event: E, arg?: any) {
 		let result: S
-		if (event as any in this.wilds) {
-			result = this.wilds[event as any](arg)
+		const e = event.toString()
+		if (e in this.wilds) {
+			result = this.wilds[e](arg)
 		} else {
 			const transition = this.transitionString(this.state, event),
 				handler = this.transitions[transition]
@@ -48,7 +59,8 @@ export default class FSM<S, E> {
 			result = handler(arg)
 		}
 		this.state = result
-		this.stateHandlers.forEach(result as any, fn =>
+		const r = result.toString()
+		this.stateHandlers.forEach(r, fn =>
 			fn(arg))
 	}
 

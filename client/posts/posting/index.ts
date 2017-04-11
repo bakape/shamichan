@@ -189,7 +189,6 @@ export default () => {
 
 	// Regained connectivity, when post is allocated
 	postSM.act(postState.halted, postEvent.reclaim, () => {
-		postModel.resyncBody()
 		return postState.alloc
 	})
 
