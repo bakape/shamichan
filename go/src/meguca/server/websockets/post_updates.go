@@ -170,7 +170,8 @@ func (c *Client) closePost() error {
 		}
 	}
 
-	if err := db.ClosePost(c.post.id, c.post.op, string(body), links, com); err != nil {
+	err = db.ClosePost(c.post.id, c.post.op, string(body), links, com)
+	if err != nil {
 		return err
 	}
 	c.post = openPost{}
@@ -292,7 +293,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 	}
 	c.post.hasImage = true
 
-	err = db.InsertImage(c.post.id, *img)
+	err = db.InsertImage(c.post.id, c.post.op, *img)
 	if err != nil {
 		return
 	}

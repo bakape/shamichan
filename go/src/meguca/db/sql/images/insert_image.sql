@@ -1,4 +1,6 @@
-update posts
-	set SHA1 = $2,
-		imageName = $3
-	where id = $1
+select insert_image(
+	$1::bigint,
+	$2::bigint,
+	$3::char(40),
+	$4::varchar(200)
+)

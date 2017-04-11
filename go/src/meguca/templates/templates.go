@@ -80,7 +80,7 @@ func CalculateOmit(t common.Thread) (int, int) {
 	}
 
 	var (
-		omit    = int(t.PostCtr) - len(t.Posts)
+		omit    = int(t.PostCtr) - (len(t.Posts) + 1)
 		imgOmit uint32
 	)
 	if omit != 0 {
