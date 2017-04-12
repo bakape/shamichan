@@ -30,9 +30,9 @@ export function synchronise() {
 	// Reclaim a post lost after disconnecting, going on standby, resuming
 	// browser tab, etc.
 	if (page.thread && postSM.state === postState.halted) {
-		// No older than 28 minutes
+		// No older than 15 minutes
 		const m = trigger("getPostModel") as FormModel
-		if (m.time > (Date.now() / 1000 - 28 * 60)) {
+		if (m.time > (Date.now() / 1000 - 15 * 60)) {
 			send(message.reclaim, {
 				id: m.id,
 				password: identity.postPassword,
@@ -97,17 +97,36 @@ handlers[message.reclaim] = (code: number) => {
 // Synchronise to the server and start receiving updates on the appropriate
 // channel. If there are any missed messages, fetch them.
 handlers[message.synchronise] = async (data: SyncData) => {
+	// Skip posts before the first post in a shortened thread
+	let minID = 0
+	if (page.lastN) {
+		minID = Infinity
+		for (let { id } of posts) {
+			if (id < minID) {
+				minID = id
+			}
+		}
+		// No replies ;_;
+		if (minID === Infinity) {
+			minID = page.thread
+		}
+	}
+
+	// Board pages currently have no sync data
 	if (data) {
 		const { open, recent } = data,
 			proms: Promise<void>[] = []
 
-		for (let id in open) {
-			proms.push(syncOpenPost(parseInt(id), open[id]))
+		for (let key in open) {
+			const id = parseInt(key)
+			if (id >= minID) {
+				proms.push(syncOpenPost(id, open[key]))
+			}
 		}
 
 		for (let id of recent) {
 			// Missing posts, that are open, will be fetched by the loop above
-			if (!posts.get(id) && !open[id]) {
+			if (id >= minID && !posts.get(id) && !open[id]) {
 				proms.push(fetchMissingPost(id))
 			}
 		}
