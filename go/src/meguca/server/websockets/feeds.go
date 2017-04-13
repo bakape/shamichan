@@ -196,8 +196,14 @@ func (u *updateFeed) Start() (err error) {
 				u.Write(msg)
 			case <-u.ticker.C:
 				u.flushBuffer()
+			// Remove stale cache entries (older than 15 minutes)
 			case <-cleanUp.C:
-				// TODO: Clean up posts older than 15 minutes
+				till := time.Now().Add(-15 * time.Minute).Unix()
+				for id, created := range u.recent {
+					if created < till {
+						delete(u.recent, id)
+					}
+				}
 			case p := <-u.insertPost:
 				u.ticker.StartIfPaused()
 				u.recent[p.id] = p.time
@@ -290,8 +296,6 @@ func (u *updateFeed) genSyncMessage() []byte {
 
 	return b
 }
-
-// TODO: Remove stale cache entries
 
 // Insert a new post into the thread and propagate to listeners
 func (u *updateFeed) InsertPost(p *openPost, msg []byte) {
