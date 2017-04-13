@@ -48,7 +48,7 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 		if err != nil {
 			return
 		}
-		err = execPrepared("ban_post", post.id, post.op)
+		err = execPrepared("ban_post", post.id)
 		if err != nil {
 			return
 		}
