@@ -74,6 +74,7 @@ export class BoardConfigForm extends SelectedBoardForm {
 			case 200:
 				const frag = makeFrag(await res.text())
 				this.el.append(frag)
+				this.initCaptcha()
 				break
 			case 403:
 				this.handle403()
