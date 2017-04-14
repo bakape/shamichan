@@ -5,7 +5,7 @@ information.
 |---|---|---|---|---|
 | /json/all/ | GET | - | [][Thread](#thread) | Returns all threads from all boards complete with the last 5 replies as an array of [Thread](#thread) |
 | /json/:board/ | GET | - | [][Thread](#thread) | Returns specific board specified by the `:board` parameter complete with the last 5 replies as an array of [Thread](#thread) |
-| /json/:board/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
+| /json/all/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
 | /json/:board/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
 | /json/:board/:thread | GET | - | [Thread](#thread) | Returns a specific thread on a specific board. Accepts the `last=N` query parameter. `N` specifies the maximum amount of replies to return and can be either 5 or 100. |
 | /json/post/:post | GET | - | [StandalonePost](#standalonepost) | Returns a specific post located in any thread or board by its numeric ID. |
