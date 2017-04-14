@@ -55,7 +55,8 @@ func (f *feedMap) Add(id uint64, c *Client) (feed *updateFeed, err error) {
 	if !ok {
 		feed = &updateFeed{
 			id:          id,
-			close:       make(chan struct{}),
+			add:         make(chan *Client),
+			remove:      make(chan *Client),
 			send:        make(chan []byte),
 			insertPost:  make(chan postCreationMessage),
 			insertImage: make(chan postIDMessage),
@@ -63,21 +64,13 @@ func (f *feedMap) Add(id uint64, c *Client) (feed *updateFeed, err error) {
 			clients:     make([]*Client, 0, 8),
 		}
 		f.feeds[id] = feed
-		err = feed.Init()
+		err = feed.Start()
 		if err != nil {
 			return
 		}
-		// Needs to be started after the feed's mutex is released
-		defer func() {
-			go feed.Start()
-		}()
 	}
 
-	feed.Lock()
-	defer feed.Unlock()
-	feed.clients = append(feed.clients, c)
-	c.Send(feed.genSyncMessage())
-
+	feed.add <- c
 	return
 }
 
@@ -86,19 +79,9 @@ func (f *feedMap) Remove(feed *updateFeed, c *Client) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	feed.Lock()
-	defer feed.Unlock()
-	for i, cl := range feed.clients {
-		if cl == c {
-			copy(feed.clients[i:], feed.clients[i+1:])
-			feed.clients[len(feed.clients)-1] = nil
-			feed.clients = feed.clients[:len(feed.clients)-1]
-			break
-		}
-	}
-
-	if len(feed.clients) == 0 {
-		feed.Close()
+	feed.remove <- c
+	// If the feeds sends a non-nil, it means it closed
+	if nil != <-feed.remove {
 		delete(f.feeds, feed.id)
 	}
 }
@@ -129,10 +112,6 @@ func (f *feedMap) ClosePost(id, op uint64, msg []byte) {
 func (f *feedMap) Clear() {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-
-	for _, feed := range f.feeds {
-		feed.Close()
-	}
 	f.feeds = make(map[uint64]*updateFeed, 32)
 }
 
@@ -142,10 +121,12 @@ type updateFeed struct {
 	id uint64
 	// Message flushing ticker
 	ticker util.PausableTicker
-	// Protects the client array
-	sync.Mutex
 	// Buffer of unsent messages
 	util.MessageBuffer
+	// Add a client
+	add chan *Client
+	// Remove client
+	remove chan *Client
 	// Propagates mesages to all listeners
 	send chan []byte
 	// Insert a new post into the thread and propagate to listeners
@@ -154,8 +135,6 @@ type updateFeed struct {
 	insertImage chan postIDMessage
 	// Close an open post
 	closePost chan postIDMessage
-	// Breaks the inner loop
-	close chan struct{}
 	// Subscribed clients
 	clients []*Client
 	// Recent posts in the thread
@@ -164,8 +143,8 @@ type updateFeed struct {
 	open map[uint64]openPostCacheEntry
 }
 
-// Read existing posts into cache
-func (u *updateFeed) Init() (err error) {
+// Read existing posts into cache and start main loop
+func (u *updateFeed) Start() (err error) {
 	recent, err := db.GetRecentPosts(u.id)
 	if err != nil {
 		return
@@ -181,55 +160,72 @@ func (u *updateFeed) Init() (err error) {
 			},
 		}
 	}
-	return
-}
 
-func (u *updateFeed) Start() {
-	// Stop the timer, if there are no messages and resume on new ones.
-	// Keeping the goroutine asleep reduces CPU usage.
-	u.ticker.Start()
-	defer u.ticker.Pause()
+	go func() {
+		// Stop the timer, if there are no messages and resume on new ones.
+		// Keeping the goroutine asleep reduces CPU usage.
+		u.ticker.Start()
+		defer u.ticker.Pause()
 
-	cleanUp := time.NewTicker(time.Minute)
-	defer cleanUp.Stop()
+		cleanUp := time.NewTicker(time.Minute)
+		defer cleanUp.Stop()
 
-	for {
-		select {
-		case <-u.close:
-			return
-		case msg := <-u.send:
-			u.ticker.StartIfPaused()
-			u.Write(msg)
-		case <-u.ticker.C:
-			u.flushBuffer()
-		// Remove stale cache entries (older than 15 minutes)
-		case <-cleanUp.C:
-			till := time.Now().Add(-15 * time.Minute).Unix()
-			for id, created := range u.recent {
-				if created < till {
-					delete(u.recent, id)
+		for {
+			select {
+			case c := <-u.add:
+				u.clients = append(u.clients, c)
+				c.Send(u.genSyncMessage())
+			case c := <-u.remove:
+				for i, cl := range u.clients {
+					if cl == c {
+						copy(u.clients[i:], u.clients[i+1:])
+						u.clients[len(u.clients)-1] = nil
+						u.clients = u.clients[:len(u.clients)-1]
+						break
+					}
 				}
+				if len(u.clients) != 0 {
+					u.remove <- nil
+				} else {
+					u.remove <- c
+					return
+				}
+			case msg := <-u.send:
+				u.ticker.StartIfPaused()
+				u.Write(msg)
+			case <-u.ticker.C:
+				u.flushBuffer()
+			// Remove stale cache entries (older than 15 minutes)
+			case <-cleanUp.C:
+				till := time.Now().Add(-15 * time.Minute).Unix()
+				for id, created := range u.recent {
+					if created < till {
+						delete(u.recent, id)
+					}
+				}
+			case p := <-u.insertPost:
+				u.ticker.StartIfPaused()
+				u.recent[p.id] = p.time
+				u.open[p.id] = openPostCacheEntry{
+					hasImage:   p.hasImage,
+					bodyBuffer: p.bodyBuffer,
+				}
+				u.Write(p.msg)
+			case msg := <-u.insertImage:
+				u.ticker.StartIfPaused()
+				p := u.open[msg.id]
+				p.hasImage = true
+				u.open[msg.id] = p
+				u.Write(msg.msg)
+			case msg := <-u.closePost:
+				u.ticker.StartIfPaused()
+				delete(u.open, msg.id)
+				u.Write(msg.msg)
 			}
-		case p := <-u.insertPost:
-			u.ticker.StartIfPaused()
-			u.recent[p.id] = p.time
-			u.open[p.id] = openPostCacheEntry{
-				hasImage:   p.hasImage,
-				bodyBuffer: p.bodyBuffer,
-			}
-			u.Write(p.msg)
-		case msg := <-u.insertImage:
-			u.ticker.StartIfPaused()
-			p := u.open[msg.id]
-			p.hasImage = true
-			u.open[msg.id] = p
-			u.Write(msg.msg)
-		case msg := <-u.closePost:
-			u.ticker.StartIfPaused()
-			delete(u.open, msg.id)
-			u.Write(msg.msg)
 		}
-	}
+	}()
+
+	return
 }
 
 // Send any buffered messages to any listening clients
@@ -240,8 +236,6 @@ func (u *updateFeed) flushBuffer() {
 		return
 	}
 
-	u.Lock()
-	defer u.Unlock()
 	if len(u.clients) == 0 {
 		return
 	}
@@ -323,13 +317,5 @@ func (u *updateFeed) ClosePost(id uint64, msg []byte) {
 	u.closePost <- postIDMessage{
 		id:  id,
 		msg: msg,
-	}
-}
-
-func (u *updateFeed) Close() {
-	select {
-	case <-u.close:
-	default:
-		close(u.close)
 	}
 }
