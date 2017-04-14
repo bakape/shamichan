@@ -30,6 +30,8 @@ export default class FormView extends PostView {
             this.el.classList.add("reply-form")
             this.initDraft()
         }
+        requestAnimationFrame(() =>
+            this.input.focus())
     }
 
     // Render extra input fields for inputting text and optionally uploading
@@ -70,7 +72,6 @@ export default class FormView extends PostView {
         const bq = this.el.querySelector("blockquote")
         bq.innerHTML = ""
         bq.append(this.input)
-        this.input.focus()
     }
 
     // Render a temporary view of the identity fields, so the user can see what
@@ -119,7 +120,6 @@ export default class FormView extends PostView {
         })
 
         document.getElementById("thread-container").append(this.el)
-        this.input.focus()
         this.resizeSpacer()
     }
 
