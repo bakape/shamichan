@@ -146,6 +146,9 @@ export default class FormView extends PostView {
 
     // Handle input events on this.input
     public onInput() {
+        if (!this.input) {
+            return
+        }
         this.resizeInput()
         this.model.parseInput(this.input.value)
     }
