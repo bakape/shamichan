@@ -63,10 +63,14 @@ func (f *feedMap) Add(id uint64, c *Client) (feed *updateFeed, err error) {
 			clients:     make([]*Client, 0, 8),
 		}
 		f.feeds[id] = feed
-		err = feed.Start()
+		err = feed.Init()
 		if err != nil {
 			return
 		}
+		// Needs to be started after the feed's mutex is released
+		defer func() {
+			go feed.Start()
+		}()
 	}
 
 	feed.Lock()
@@ -160,8 +164,8 @@ type updateFeed struct {
 	open map[uint64]openPostCacheEntry
 }
 
-func (u *updateFeed) Start() (err error) {
-	// Read existing posts into cache
+// Read existing posts into cache
+func (u *updateFeed) Init() (err error) {
 	recent, err := db.GetRecentPosts(u.id)
 	if err != nil {
 		return
@@ -177,56 +181,55 @@ func (u *updateFeed) Start() (err error) {
 			},
 		}
 	}
-
-	go func() {
-		// Stop the timer, if there are no messages and resume on new ones.
-		// Keeping the goroutine asleep reduces CPU usage.
-		u.ticker.Start()
-		defer u.ticker.Pause()
-
-		cleanUp := time.NewTicker(time.Minute)
-		defer cleanUp.Stop()
-
-		for {
-			select {
-			case <-u.close:
-				return
-			case msg := <-u.send:
-				u.ticker.StartIfPaused()
-				u.Write(msg)
-			case <-u.ticker.C:
-				u.flushBuffer()
-			// Remove stale cache entries (older than 15 minutes)
-			case <-cleanUp.C:
-				till := time.Now().Add(-15 * time.Minute).Unix()
-				for id, created := range u.recent {
-					if created < till {
-						delete(u.recent, id)
-					}
-				}
-			case p := <-u.insertPost:
-				u.ticker.StartIfPaused()
-				u.recent[p.id] = p.time
-				u.open[p.id] = openPostCacheEntry{
-					hasImage:   p.hasImage,
-					bodyBuffer: p.bodyBuffer,
-				}
-				u.Write(p.msg)
-			case msg := <-u.insertImage:
-				u.ticker.StartIfPaused()
-				p := u.open[msg.id]
-				p.hasImage = true
-				u.open[msg.id] = p
-				u.Write(msg.msg)
-			case msg := <-u.closePost:
-				u.ticker.StartIfPaused()
-				delete(u.open, msg.id)
-				u.Write(msg.msg)
-			}
-		}
-	}()
-
 	return
+}
+
+func (u *updateFeed) Start() {
+	// Stop the timer, if there are no messages and resume on new ones.
+	// Keeping the goroutine asleep reduces CPU usage.
+	u.ticker.Start()
+	defer u.ticker.Pause()
+
+	cleanUp := time.NewTicker(time.Minute)
+	defer cleanUp.Stop()
+
+	for {
+		select {
+		case <-u.close:
+			return
+		case msg := <-u.send:
+			u.ticker.StartIfPaused()
+			u.Write(msg)
+		case <-u.ticker.C:
+			u.flushBuffer()
+		// Remove stale cache entries (older than 15 minutes)
+		case <-cleanUp.C:
+			till := time.Now().Add(-15 * time.Minute).Unix()
+			for id, created := range u.recent {
+				if created < till {
+					delete(u.recent, id)
+				}
+			}
+		case p := <-u.insertPost:
+			u.ticker.StartIfPaused()
+			u.recent[p.id] = p.time
+			u.open[p.id] = openPostCacheEntry{
+				hasImage:   p.hasImage,
+				bodyBuffer: p.bodyBuffer,
+			}
+			u.Write(p.msg)
+		case msg := <-u.insertImage:
+			u.ticker.StartIfPaused()
+			p := u.open[msg.id]
+			p.hasImage = true
+			u.open[msg.id] = p
+			u.Write(msg.msg)
+		case msg := <-u.closePost:
+			u.ticker.StartIfPaused()
+			delete(u.open, msg.id)
+			u.Write(msg.msg)
+		}
+	}
 }
 
 // Send any buffered messages to any listening clients
