@@ -82,30 +82,13 @@ func ChangePassword(account string, hash []byte) error {
 	return execPrepared("change_password", account, hash)
 }
 
-// GetPositions returns the staff positions a user is holding on a board
-func GetPositions(account, board string) (pos map[string]bool, err error) {
-	pos = make(map[string]bool, 3)
-	r, err := prepared["get_positions"].Query(account, board)
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	for r.Next() {
-		var s string
-		err = r.Scan(&s)
-		if err != nil {
-			return
-		}
-		pos[s] = true
-	}
-	err = r.Err()
-
-	return
-}
-
 // GetOwnedBoards returns boards the account holder owns
 func GetOwnedBoards(account string) (boards []string, err error) {
+	// admin account can perform actions on any board
+	if account == "admin" {
+		return config.GetBoards(), nil
+	}
+
 	r, err := prepared["get_owned_boards"].Query(account)
 	if err != nil {
 		return

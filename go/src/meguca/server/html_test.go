@@ -162,8 +162,8 @@ func TestBoardConfigurationForm(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rec, req := newJSONPair(t, "/forms/configureBoard", boardConfigRequest{
-		ID:           "a",
+	rec, req := newJSONPair(t, "/forms/configureBoard", boardActionRequest{
+		Board:        "a",
 		SessionCreds: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)

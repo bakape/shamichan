@@ -67,7 +67,7 @@ export class BoardConfigForm extends SelectedBoardForm {
 	// Render the configuration input elements
 	public async renderNext(board: string) {
 		const req = newRequest()
-		req["id"] = board
+		req["board"] = board
 
 		const res = await postJSON("/forms/configureBoard", req)
 		switch (res.status) {
@@ -86,7 +86,7 @@ export class BoardConfigForm extends SelectedBoardForm {
 	// Extract form data and send a request to apply the new configs
 	protected send() {
 		this.postResponse("/admin/configureBoard", req => {
-			req["id"] = this.board
+			req["board"] = this.board
 			this.extractForm(req)
 		})
 	}
@@ -103,7 +103,7 @@ export class BoardDeletionForm extends SelectedBoardForm {
 
 	protected send() {
 		this.postResponse("/admin/deleteBoard", req =>
-			req["id"] = this.board)
+			req["board"] = this.board)
 	}
 }
 
@@ -133,7 +133,7 @@ export class BoardCreationForm extends AccountForm {
 
 	protected send() {
 		this.postResponse("/admin/createBoard", req => {
-			req["name"] = inputValue(this.el, 'boardName')
+			req["board"] = inputValue(this.el, 'boardName')
 			req["title"] = inputValue(this.el, 'boardTitle')
 		})
 	}

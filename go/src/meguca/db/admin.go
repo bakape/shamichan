@@ -7,6 +7,18 @@ import (
 	"time"
 )
 
+// ModerationLevel defines the level required to perform an action
+type ModerationLevel int8
+
+// All available moderation levels
+const (
+	NotStaff ModerationLevel = iota - 1
+	Janitor
+	Moderator
+	BoardOwner
+	Admin
+)
+
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
 // banned IPs.
 func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
@@ -177,5 +189,54 @@ func GetStaff(board string) (staff map[string][]string, err error) {
 		staff[pos] = append(staff[pos], acc)
 	}
 	err = r.Err()
+	return
+}
+
+// CanPerform returns, if the account can perform an action of ModerationLevel
+// 'action' on the target board
+func CanPerform(account, board string, action ModerationLevel) (
+	can bool, err error,
+) {
+	switch {
+	case account == "admin": // admin account can do anything
+		return true, nil
+	case action == Admin: // Only admin account can perform Admin actions
+		return false, nil
+	}
+
+	r, err := prepared["get_positions"].Query(account, board)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	// Read the highest position held
+	pos := NotStaff
+	for r.Next() {
+		var s string
+		err = r.Scan(&s)
+		if err != nil {
+			return
+		}
+
+		level := NotStaff
+		switch s {
+		case "owners":
+			level = BoardOwner
+		case "moderators":
+			level = Moderator
+		case "janitors":
+			level = Janitor
+		}
+		if level > pos {
+			pos = level
+		}
+	}
+	err = r.Err()
+	if err != nil {
+		return
+	}
+
+	can = pos >= action
 	return
 }

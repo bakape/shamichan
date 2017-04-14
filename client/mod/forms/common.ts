@@ -1,17 +1,12 @@
 import lang from "../../lang"
 import { reset } from ".."
 import { FormView } from "../../ui"
-import { ViewAttrs } from "../../base"
 import { accountPanel } from ".."
 import { postJSON, makeFrag } from "../../util"
 import { newRequest } from "../common"
 
 // Generic input form that is embedded into AccountPanel
 export abstract class AccountForm extends FormView {
-	constructor(attrs: ViewAttrs) {
-		super(attrs)
-	}
-
 	// Render a form field and embed the input fields inside it. Then append it
 	// to the parent view.
 	protected render() {

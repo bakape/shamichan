@@ -44,7 +44,7 @@ func TestNotBoardOwner(t *testing.T) {
 			rec, req := newJSONPair(t, "/", sampleLoginCreds)
 			fn(rec, req)
 			assertCode(t, rec, 403)
-			assertBody(t, rec, "403 Not board owner\n")
+			assertBody(t, rec, "403 access denied\n")
 		})
 	}
 }
@@ -69,8 +69,8 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 	writeSampleUser(t)
 	writeSampleBoardOwner(t)
 
-	rec, req := newJSONPair(t, "/admin/boardConfig", boardConfigRequest{
-		ID:           "a",
+	rec, req := newJSONPair(t, "/admin/boardConfig", boardActionRequest{
+		Board:        "a",
 		SessionCreds: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)
@@ -105,7 +105,10 @@ func TestBoardConfiguration(t *testing.T) {
 	writeSampleBoardOwner(t)
 
 	data := boardConfigSettingRequest{
-		SessionCreds: sampleLoginCreds,
+		boardActionRequest: boardActionRequest{
+			Board:        conf.ID,
+			SessionCreds: sampleLoginCreds,
+		},
 		BoardConfigs: conf,
 	}
 	rec, req := newJSONPair(t, "/admin/configureBoard", data)
@@ -239,9 +242,11 @@ func TestValidateBoardCreation(t *testing.T) {
 			t.Parallel()
 
 			msg := boardCreationRequest{
-				Name:         c.id,
-				Title:        c.title,
-				SessionCreds: sampleLoginCreds,
+				Title: c.title,
+				boardActionRequest: boardActionRequest{
+					Board:        c.id,
+					SessionCreds: sampleLoginCreds,
+				},
 			}
 			rec, req := newJSONPair(t, "/admin/createBoard", msg)
 			router.ServeHTTP(rec, req)
@@ -296,9 +301,11 @@ func TestBoardCreation(t *testing.T) {
 	)
 
 	msg := boardCreationRequest{
-		Name:         id,
-		Title:        title,
-		SessionCreds: sampleLoginCreds,
+		Title: title,
+		boardActionRequest: boardActionRequest{
+			Board:        id,
+			SessionCreds: sampleLoginCreds,
+		},
 	}
 	rec, req := newJSONPair(t, "/admin/createBoard", msg)
 	router.ServeHTTP(rec, req)
@@ -406,8 +413,8 @@ func TestDeleteBoard(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleBoardOwner(t)
 
-	rec, req := newJSONPair(t, "/admin/deleteBoard", boardDeletionRequest{
-		ID:           "a",
+	rec, req := newJSONPair(t, "/admin/deleteBoard", boardActionRequest{
+		Board:        "a",
 		SessionCreds: sampleLoginCreds,
 	})
 	router.ServeHTTP(rec, req)
@@ -476,8 +483,10 @@ func TestDeletePost(t *testing.T) {
 	}
 
 	data := postActionRequest{
-		IDs:          []uint64{2, 4},
-		SessionCreds: sampleLoginCreds,
+		IDs: []uint64{2, 4},
+		boardActionRequest: boardActionRequest{
+			SessionCreds: sampleLoginCreds,
+		},
 	}
 	rec, req := newJSONPair(t, "/admin/deletePost", data)
 	router.ServeHTTP(rec, req)

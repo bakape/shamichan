@@ -13,7 +13,7 @@ import (
 // ConfigureBoard renders a form for setting board configurations
 func ConfigureBoard(conf config.BoardConfigs, ln lang.Pack) string {
 	v := reflect.ValueOf(conf)
-	return configurationTable(v, "configureBoard", false, ln)
+	return configurationTable(v, "configureBoard", true, ln)
 }
 
 func configurationTable(

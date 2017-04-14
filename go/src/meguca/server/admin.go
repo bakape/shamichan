@@ -43,16 +43,14 @@ var (
 	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,3}$`)
 )
 
-// Request to set the board-specific configuration for a board
-type boardConfigSettingRequest struct {
+type boardActionRequest struct {
+	Board, Captcha string
 	auth.SessionCreds
-	config.BoardConfigs
 }
 
-// Request for the current non-public board configuration
-type boardConfigRequest struct {
-	auth.SessionCreds
-	ID string `json:"id"`
+type boardConfigSettingRequest struct {
+	boardActionRequest
+	config.BoardConfigs
 }
 
 type configSettingRequest struct {
@@ -61,19 +59,14 @@ type configSettingRequest struct {
 }
 
 type boardCreationRequest struct {
-	Name, Title, Captcha string
-	auth.SessionCreds
-}
-
-type boardDeletionRequest struct {
-	ID, Captcha string
-	auth.SessionCreds
+	boardActionRequest
+	Title string
 }
 
 // Request to perform a moderation action on a specific set of posts
 type postActionRequest struct {
 	IDs []uint64
-	auth.SessionCreds
+	boardActionRequest
 }
 
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
@@ -92,8 +85,7 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
 func configureBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardConfigSettingRequest
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, &msg.SessionCreds) &&
-		isBoardOwner(w, r, msg.ID, msg.UserID) &&
+		canPerform(w, r, &msg.boardActionRequest, db.BoardOwner, true) &&
 		validateBoardConfigs(w, msg.BoardConfigs)
 	if !isValid {
 		return
@@ -106,19 +98,29 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Assert the user is one of the board's owners
-func isBoardOwner(
+// Assert user can perform a moderation action
+func canPerform(
 	w http.ResponseWriter,
 	r *http.Request,
-	board, userID string,
+	msg *boardActionRequest,
+	level db.ModerationLevel,
+	needCaptcha bool,
 ) bool {
-	pos, err := db.GetPositions(userID, board)
+	switch {
+	case needCaptcha && !auth.AuthenticateCaptcha(msg.Captcha):
+		text403(w, errInvalidCaptcha)
+		return false
+	case !isLoggedIn(w, r, &msg.SessionCreds):
+		return false
+	}
+
+	can, err := db.CanPerform(msg.UserID, msg.Board, level)
 	switch {
 	case err != nil:
 		text500(w, r, err)
 		return false
-	case !pos["owners"]:
-		http.Error(w, "403 Not board owner", 403)
+	case !can:
+		text403(w, errAccessDenied)
 		return false
 	default:
 		return true
@@ -198,17 +200,17 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 	config.BoardConfigs, bool,
 ) {
 	var (
-		msg  boardConfigRequest
+		msg  boardActionRequest
 		conf config.BoardConfigs
 	)
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, &msg.SessionCreds) &&
-		isBoardOwner(w, r, msg.ID, msg.UserID)
+		canPerform(w, r, &msg, db.BoardOwner, false)
 	if !isValid {
 		return conf, false
 	}
 
-	conf = config.GetBoardConfigs(msg.ID).BoardConfigs
+	conf = config.GetBoardConfigs(msg.Board).BoardConfigs
+	conf.ID = msg.Board
 	if conf.ID == "" {
 		text404(w)
 		return conf, false
@@ -229,7 +231,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case msg.UserID != "admin" && config.Get().DisableUserBoards:
 		err = errAccessDenied
-	case !boardNameValidation.MatchString(msg.Name):
+	case !boardNameValidation.MatchString(msg.Board):
 		err = errInvalidBoardName
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
@@ -254,7 +256,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 			BoardPublic: config.BoardPublic{
 				Title: msg.Title,
 			},
-			ID:        msg.Name,
+			ID:        msg.Board,
 			Eightball: config.EightballDefaults,
 		},
 	})
@@ -268,7 +270,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.WriteStaff(tx, msg.Name, map[string][]string{
+	err = db.WriteStaff(tx, msg.Board, map[string][]string{
 		"owners": []string{msg.UserID},
 	})
 	if err != nil {
@@ -294,32 +296,28 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 
 // Delete a board owned by the client
 func deleteBoard(w http.ResponseWriter, r *http.Request) {
-	var msg boardDeletionRequest
+	var msg boardActionRequest
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, &msg.SessionCreds) &&
-		isBoardOwner(w, r, msg.ID, msg.UserID)
+		canPerform(w, r, &msg, db.BoardOwner, true)
 	if !isValid {
 		return
 	}
-	if !auth.AuthenticateCaptcha(msg.Captcha) {
-		text403(w, errInvalidCaptcha)
-		return
-	}
-	if err := db.DeleteBoard(msg.ID); err != nil {
+
+	if err := db.DeleteBoard(msg.Board); err != nil {
 		text500(w, r, err)
-		return
 	}
 }
 
 // Delete one or multiple posts on a moderated board
 func deletePost(w http.ResponseWriter, r *http.Request) {
 	var msg postActionRequest
-	if !decodeJSON(w, r, &msg) || !isLoggedIn(w, r, &msg.SessionCreds) {
+	if !decodeJSON(w, r, &msg) {
 		return
 	}
 
+	var err error
 	for _, id := range msg.IDs {
-		board, err := db.GetPostBoard(id)
+		msg.Board, err = db.GetPostBoard(id)
 		switch err {
 		case nil:
 		case sql.ErrNoRows:
@@ -330,12 +328,11 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// TODO: More than just board owners should be able to delete posts
-		if !isBoardOwner(w, r, board, msg.UserID) {
+		if !canPerform(w, r, &msg.boardActionRequest, db.Janitor, false) {
 			return
 		}
 
-		err = db.DeletePost(board, id)
+		err = db.DeletePost(msg.Board, id)
 		switch err.(type) {
 		case nil:
 		case common.ErrInvalidPostID:
@@ -399,7 +396,8 @@ func ban(w http.ResponseWriter, r *http.Request) {
 
 		// Assert rights to moderate for all affected boards
 		for b := range byBoard {
-			if !isBoardOwner(w, r, b, msg.UserID) {
+			msg.Board = b
+			if !canPerform(w, r, &msg.boardActionRequest, db.Moderator, false) {
 				return
 			}
 		}
@@ -446,23 +444,18 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 // Assign moderation staff to a board
 func assignStaff(w http.ResponseWriter, r *http.Request) {
 	var msg struct {
-		Board, Captcha               string
+		boardActionRequest
 		Owners, Moderators, Janitors []string
-		auth.SessionCreds
 	}
 
 	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, &msg.SessionCreds) &&
-		isBoardOwner(w, r, msg.Board, msg.UserID)
+		canPerform(w, r, &msg.boardActionRequest, db.BoardOwner, true)
 	switch {
 	case !isValid:
 		return
 	// Ensure there always is at least one board owner
 	case len(msg.Owners) == 0:
 		text400(w, errors.New("no board owners set"))
-		return
-	case !auth.AuthenticateCaptcha(msg.Captcha):
-		text400(w, errInvalidCaptcha)
 		return
 	default:
 		// Maximum of 100 staff per position
