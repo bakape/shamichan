@@ -36,14 +36,6 @@
 			"Kapča",
 			"Ask users to complete a captcha for certain tasks like registration and thread creation"
 		],
-		"captchaPrivateKey": [
-			"Kapča súkromný kľúč",
-			"Kľúč používaný na autentizáciu vyriešených kapčí na strane servera"
-		],
-		"captchaPublicKey": [
-			"Kapča verejný kľúč",
-			"Kľúč používaný na komunikáciu s externou kapča službou"
-		],
 		"customCSS": [
 			"Custom CSS",
 			"User-defined CSS rules loaded on top of the selected theme"

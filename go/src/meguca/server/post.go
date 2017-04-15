@@ -73,7 +73,10 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	req := websockets.ThreadCreationRequest{
 		Subject: f.Get("subject"),
 		Board:   f.Get("board"),
-		Captcha: f.Get("captcha"),
+		Captcha: auth.Captcha{
+			CaptchaID: f.Get("captchaID"),
+			Solution:  f.Get("solution"),
+		},
 		ReplyCreationRequest: websockets.ReplyCreationRequest{
 			Image: websockets.ImageRequest{
 				Spoiler: f.Get("spoiler") == "on",

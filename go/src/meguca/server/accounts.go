@@ -20,12 +20,14 @@ var (
 )
 
 type loginCreds struct {
-	ID, Password, Captcha string
+	ID, Password string
+	auth.Captcha
 }
 
 type passwordChangeRequest struct {
 	auth.SessionCreds
-	Old, New, Captcha string
+	Old, New string
+	auth.Captcha
 }
 
 // Register a new user account
@@ -190,7 +192,8 @@ func changePassword(w http.ResponseWriter, r *http.Request) {
 func checkPasswordAndCaptcha(
 	w http.ResponseWriter,
 	r *http.Request,
-	password, captcha string,
+	password string,
+	captcha auth.Captcha,
 ) bool {
 	switch {
 	case password == "", len(password) > common.MaxLenPassword:

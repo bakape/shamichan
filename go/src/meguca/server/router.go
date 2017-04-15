@@ -3,6 +3,7 @@ package server
 import (
 	"compress/gzip"
 	"log"
+	"meguca/auth"
 	"meguca/imager"
 	"meguca/server/websockets"
 	"meguca/util"
@@ -141,6 +142,11 @@ func createRouter() http.Handler {
 	admin.POST("/ban", wrapHandler(ban))
 	admin.POST("/notification", wrapHandler(sendNotification))
 	admin.POST("/assignStaff", wrapHandler(assignStaff))
+
+	// Captcha API
+	captcha := r.NewGroup("/captcha")
+	captcha.GET("/new", wrapHandler(auth.NewCaptchaID))
+	captcha.GET("/image/*path", wrapHandler(auth.ServeCaptcha))
 
 	// Assets
 	r.GET("/assets/*path", serveAssets)

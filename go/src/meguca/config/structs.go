@@ -5,21 +5,20 @@ package config
 // Configs stores the global server configuration
 type Configs struct {
 	Public
-	PruneThreads      bool `json:"pruneThreads"`
-	PruneBoards       bool `json:"pruneBoards"`
-	Pyu               bool `json:"pyu"`
-	JPEGQuality       uint8
-	MaxWidth          uint16 `json:"maxWidth"`
-	MaxHeight         uint16 `json:"maxHeight"`
-	ThreadExpiry      uint   `json:"threadExpiry"`
-	BoardExpiry       uint   `json:"boardExpiry"`
-	MaxSize           uint   `json:"maxSize"`
-	SessionExpiry     uint   `json:"sessionExpiry"`
-	RootURL           string `json:"rootURL"`
-	Salt              string `json:"salt"`
-	FeedbackEmail     string `json:"feedbackEmail"`
-	CaptchaPrivateKey string `json:"captchaPrivateKey"`
-	FAQ               string
+	PruneThreads  bool `json:"pruneThreads"`
+	PruneBoards   bool `json:"pruneBoards"`
+	Pyu           bool `json:"pyu"`
+	JPEGQuality   uint8
+	MaxWidth      uint16 `json:"maxWidth"`
+	MaxHeight     uint16 `json:"maxHeight"`
+	ThreadExpiry  uint   `json:"threadExpiry"`
+	BoardExpiry   uint   `json:"boardExpiry"`
+	MaxSize       uint   `json:"maxSize"`
+	SessionExpiry uint   `json:"sessionExpiry"`
+	RootURL       string `json:"rootURL"`
+	Salt          string `json:"salt"`
+	FeedbackEmail string `json:"feedbackEmail"`
+	FAQ           string
 }
 
 // Public contains configurations exposeable through public availability APIs
@@ -29,7 +28,6 @@ type Public struct {
 	DisableUserBoards bool              `json:"disableUserBoards"`
 	DefaultLang       string            `json:"defaultLang"`
 	DefaultCSS        string            `json:"defaultCSS"`
-	CaptchaPublicKey  string            `json:"captchaPublicKey"`
 	ImageRootOverride string            `json:"imageRootOverride"`
 	Links             map[string]string `json:"links"`
 }

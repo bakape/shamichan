@@ -36,14 +36,6 @@
 			"Captcha",
 			"Ask users to complete a captcha for certain tasks like registration and thread creation"
 		],
-		"captchaPrivateKey": [
-			"Captcha private key",
-			"Key used for authenticating solved captchas server-side"
-		],
-		"captchaPublicKey": [
-			"Captcha public key",
-			"Key used for communicating with external captcha service"
-		],
 		"customCSS": [
 			"Custom CSS",
 			"User-defined CSS rules loaded on top of the selected theme"

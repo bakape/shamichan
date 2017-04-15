@@ -44,7 +44,8 @@ var (
 )
 
 type boardActionRequest struct {
-	Board, Captcha string
+	Board string
+	auth.Captcha
 	auth.SessionCreds
 }
 

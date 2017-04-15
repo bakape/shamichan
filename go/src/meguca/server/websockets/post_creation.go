@@ -31,7 +31,8 @@ const (
 // ThreadCreationRequest contains data for creating a new thread
 type ThreadCreationRequest struct {
 	ReplyCreationRequest
-	Subject, Board, Captcha string
+	Subject, Board string
+	auth.Captcha
 }
 
 // ReplyCreationRequest contains common fields for both thread and reply

@@ -192,14 +192,6 @@ var specs = map[string][]inputSpec{
 		},
 		{ID: "captcha"},
 		{
-			ID:   "captchaPublicKey",
-			Type: _string,
-		},
-		{
-			ID:   "captchaPrivateKey",
-			Type: _string,
-		},
-		{
 			ID:       "sessionExpiry",
 			Type:     _number,
 			Min:      1,

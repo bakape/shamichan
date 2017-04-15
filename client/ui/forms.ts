@@ -1,4 +1,4 @@
-import { importTemplate } from '../util'
+import { importTemplate, extend } from '../util'
 import { View, ViewAttrs } from '../base'
 import CaptchaView from './captcha'
 
@@ -38,12 +38,10 @@ abstract class FormView extends View<null> {
 		let captcha = this.el.querySelector(".captcha-container")
 		if (captcha) {
 			// Clear any previous captcha, when reusing form
-			if (captcha.innerHTML !== "") {
-				const el = document.createElement("div")
-				el.classList.add("captcha-container")
-				captcha.replaceWith(el)
-				captcha = el
-			}
+			captcha.querySelector(".captcha-image").removeAttribute("src");
+			(captcha.querySelector(".captcha-input") as HTMLInputElement)
+				.value = ""
+
 			this.captcha = new CaptchaView(captcha)
 		}
 	}
@@ -65,7 +63,7 @@ abstract class FormView extends View<null> {
 	// Inject captcha data into the request struct, if any
 	protected injectCaptcha(req: {}) {
 		if (this.captcha) {
-			req["captcha"] = this.captcha.data()
+			extend(req, this.captcha.data())
 		}
 	}
 

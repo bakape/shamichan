@@ -12,7 +12,6 @@ interface Configs {
 	disableUserBoards: boolean
 	defaultLang: string
 	defaultCSS: string
-	captchaPublicKey: string
 	imageRootOverride: string
 	links: { [key: string]: string }
 }

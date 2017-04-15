@@ -53,29 +53,21 @@ CreateBoard renders a the form for creating new boards
 
 CaptchaConfirmation renders a confirmation form with an optional captcha
 {% func CaptchaConfirmation(ln lang.Pack) %}{% stripspace %}
-	{%= captcha("confirmation", ln.UI) %}
+	{%= captcha() %}
 	{%= submit(true, ln.UI) %}
 {% endstripspace %}{% endfunc %}
 
-{% func captcha(id string, lang map[string]string) %}{% stripspace %}
-	{% code conf := config.Get() %}
-	{% if !conf.Captcha %}
+{% func captcha() %}{% stripspace %}
+	{% if !config.Get().Captcha %}
 		{% return %}
 	{% endif %}
 	<div class="captcha-container">
-		<div class="g-recaptcha" data-sitekey="{%s= conf.CaptchaPublicKey %}"></div>
-		<noscript>
-			<div>
-				<div class="g-recaptcha-container">
-					<div>
-						<iframe src="https://www.google.com/recaptcha/api/fallback?k={%s= conf.CaptchaPublicKey %}" frameborder="0" scrolling="no"></iframe>
-					</div>
-				</div>
-				<div class="g-recaptcha-response-container">
-					<textarea name="g-recaptcha-response" class="g-recaptcha-response"></textarea>
-				</div>
-			</div>
-		</noscript>
+		<img class="captcha-image">
+		<input class="captcha-input" type="text" maxlength="6" minlength="6" pattern="\d{6}">
+		{% comment %}
+			TODO
+			<noscript></noscript>
+		{% endcomment %}
 	</div>
 {% endstripspace %}{% endfunc %}
 
@@ -106,7 +98,7 @@ Form formatted as a table, with cancel and submit buttons
 {% func tableForm(specs []inputSpec, needCaptcha bool, ln lang.Pack) %}{% stripspace %}
 	{%= table(specs, ln) %}
 	{% if needCaptcha %}
-		{%= captcha("ajax", ln.UI) %}
+		{%= captcha() %}
 	{% endif %}
 	{%= submit(true, ln.UI) %}
 {% endstripspace %}{% endfunc %}

@@ -36,14 +36,6 @@
 			"Captcha",
 			"Poproś użytkownika o wypełnienie captchy przy takich rzeczach jak rejestracja i tworzenie tematu"
 		],
-		"captchaPrivateKey": [
-			"Klucz prywatny captchy",
-			"Klucz używany do uwierzytelnienia rozwiązanych captch z serwerem"
-		],
-		"captchaPublicKey": [
-			"Klucz publiczny captchy",
-			"Klucz używany do komunikacji z zewnętrznym serwisem captchy"
-		],
 		"customCSS": [
 			"Custom CSS",
 			"User-defined CSS rules loaded on top of the selected theme"

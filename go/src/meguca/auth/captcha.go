@@ -1,49 +1,35 @@
 package auth
 
 import (
-	"encoding/json"
-	"log"
 	"meguca/config"
 	"net/http"
-	"net/url"
+
+	"github.com/dchest/captcha"
 )
+
+// Captcha contains the ID and solution of a captcha-protected request
+type Captcha struct {
+	CaptchaID, Solution string
+}
+
+var captchaServer = captcha.Server(captcha.StdWidth, captcha.StdHeight)
+
+// NewCaptchaID creates a new captcha and write its ID to the client
+func NewCaptchaID(w http.ResponseWriter, _ *http.Request) {
+	w.Write([]byte(captcha.New()))
+}
+
+// ServeCaptcha serves captcha images and audio
+func ServeCaptcha(w http.ResponseWriter, r *http.Request) {
+	captchaServer.ServeHTTP(w, r)
+}
 
 // AuthenticateCaptcha posts a request to the SolveMedia API to authenticate a
 // captcha
-func AuthenticateCaptcha(captcha string) bool {
-	conf := config.Get()
-
+func AuthenticateCaptcha(req Captcha) bool {
 	// Captchas disabled or running tests. Can not use API, when testing
-	if !conf.Captcha {
+	if !config.Get().Captcha {
 		return true
 	}
-	if captcha == "" {
-		return false
-	}
-
-	res, err := http.PostForm(
-		"https://www.google.com/recaptcha/api/siteverify",
-		url.Values{
-			"secret":   {conf.CaptchaPrivateKey},
-			"response": {captcha},
-		},
-	)
-	if err != nil {
-		printCaptchaError(err)
-		return false
-	}
-	defer res.Body.Close()
-
-	var data struct {
-		Success bool
-	}
-	if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
-		printCaptchaError(err)
-		return false
-	}
-	return data.Success
-}
-
-func printCaptchaError(err error) {
-	log.Printf("captcha: %s\n", err)
+	return captcha.VerifyString(req.CaptchaID, req.Solution)
 }

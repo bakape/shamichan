@@ -54,7 +54,7 @@
 						<br>
 					</span>
 				{% endif %}
-				{%= captcha("new-thread", ln.UI) %}
+				{%= captcha() %}
 				{%= submit(true, ln.UI) %}
 			</form>
 		</aside>
