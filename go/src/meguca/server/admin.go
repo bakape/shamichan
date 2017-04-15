@@ -92,7 +92,7 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg.BoardConfigs.ID = msg.ID
+	msg.BoardConfigs.ID = msg.Board
 	if err := db.UpdateBoard(msg.BoardConfigs); err != nil {
 		text500(w, r, err)
 		return
