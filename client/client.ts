@@ -78,6 +78,7 @@ export default () => {
 
 		alert(msg)
 		connSM.feed(connEvent.error)
+		throw msg
 	}
 
 	handlers[message.insertPost] = insertPost

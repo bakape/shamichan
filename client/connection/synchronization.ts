@@ -134,7 +134,8 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		try {
 			await Promise.all(proms)
 		} catch (e) {
-			return alert(e)
+			alert(e)
+			throw e
 		}
 	}
 	connSM.feed(connEvent.sync)
