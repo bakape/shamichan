@@ -71,8 +71,8 @@ func boardHTML(
 		return
 	}
 
-	html, err = templates.Board(b, lp, isMinimal(r), catalog, html)
-	serveHTML(w, r, etag, html, err)
+	html = templates.Board(b, lp, isMinimal(r), catalog, html)
+	serveHTML(w, r, etag, html, nil)
 }
 
 // Returns, if the minimal query string is not set
@@ -106,8 +106,7 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	html, err = templates.Thread(lp, isMinimal(r), html)
-	serveHTML(w, r, etag, html, err)
+	serveHTML(w, r, etag, templates.Thread(lp, isMinimal(r), html), nil)
 }
 
 // Render a board selection and navigation panel and write HTML to client

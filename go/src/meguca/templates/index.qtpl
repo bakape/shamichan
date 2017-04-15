@@ -18,7 +18,7 @@
 			{% comment %}
 				Only expanded in the second parse of the template
 			{% endcomment %}
-			{{.Title}}
+			$$$
 		</title>
 		<link rel="manifest" href="/assets/mobile/manifest.json">
 		{% comment %}
@@ -346,7 +346,10 @@
 				Is injected on the second parse of this template
 			{% endcomment %}
 			<section id="threads">
-				{{.Threads}}
+				{% comment %}
+					Post HTML and data
+				{% endcomment %}
+				$$$
 			</section>
 			<section id="right-panel" class="side-panel glass"></section>
 			<div id="right-spacer" class="side-spacer"></div>

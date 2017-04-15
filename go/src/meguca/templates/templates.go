@@ -11,27 +11,23 @@ import (
 	"meguca/config"
 	"meguca/lang"
 	"sync"
-	"text/template"
 )
 
 var (
-	indexTemplates = make(map[string]*template.Template, 6)
+	indexTemplates = make(map[string][3][]byte, 7)
 	mu             sync.RWMutex
 )
 
 // Compile reads template HTML from disk, injects dynamic variables,
 // hashes and stores them
 func Compile() error {
-	t := make(map[string]*template.Template, len(lang.Packs))
+	t := make(map[string][3][]byte, len(lang.Packs))
 	for id := range lang.Packs {
 		ln := lang.Packs[id]
 		firstPass := renderIndex(ln)
 
-		var err error
-		t[id], err = template.New(ln.ID).Parse(firstPass)
-		if err != nil {
-			return err
-		}
+		split := bytes.Split([]byte(firstPass), []byte("$$$"))
+		t[id] = [3][]byte{split[0], split[1], split[2]}
 	}
 
 	mu.Lock()
@@ -48,7 +44,7 @@ func Board(
 	ln lang.Pack,
 	minimal, catalog bool,
 	threadHTML []byte,
-) ([]byte, error) {
+) []byte {
 	boardConf := config.GetBoardConfigs(b)
 	title := fmt.Sprintf("/%s/ - %s", b, boardConf.Title)
 	title = html.EscapeString(title)
@@ -56,16 +52,16 @@ func Board(
 	html := renderBoard(threadHTML, b, title, boardConf, catalog, ln)
 
 	if minimal {
-		return []byte(html), nil
+		return []byte(html)
 	}
 	return execIndex(html, title, ln.ID)
 }
 
 // Thread renders thread page HTML for noscript browsers
-func Thread(ln lang.Pack, minimal bool, postHTML []byte) ([]byte, error) {
+func Thread(ln lang.Pack, minimal bool, postHTML []byte) []byte {
 	html := renderThread(postHTML, ln)
 	if minimal {
-		return []byte(html), nil
+		return []byte(html)
 	}
 	return execIndex(html, "", ln.ID)
 }
@@ -98,19 +94,18 @@ func CalculateOmit(t common.Thread) (int, int) {
 }
 
 // Execute and index template in the second pass
-func execIndex(html, title, lang string) ([]byte, error) {
+func execIndex(html, title, lang string) []byte {
 	mu.RLock()
 	t := indexTemplates[lang]
 	mu.RUnlock()
 
-	var w bytes.Buffer
-	err := t.Execute(&w, struct {
-		Title, Threads string
-	}{
-		Title:   title,
-		Threads: html,
-	})
-	return w.Bytes(), err
+	return bytes.Join([][]byte{
+		t[0],
+		[]byte(title),
+		t[1],
+		[]byte(html),
+		t[2],
+	}, nil)
 }
 
 func bold(s string) string {

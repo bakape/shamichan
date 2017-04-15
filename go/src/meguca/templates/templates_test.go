@@ -53,10 +53,7 @@ func TestBoard(t *testing.T) {
 	}
 	html := CatalogThreads(board, nil)
 
-	_, err := Board("all", lang.Packs["en_GB"], false, false, []byte(html))
-	if err != nil {
-		t.Fatal(err)
-	}
+	Board("all", lang.Packs["en_GB"], false, false, []byte(html))
 }
 
 func TestThread(t *testing.T) {
@@ -89,8 +86,5 @@ func TestThread(t *testing.T) {
 
 	oPosts, oImages := CalculateOmit(thread)
 	html := ThreadPosts(thread, nil, oPosts, oImages)
-	_, err := Thread(lang.Packs["en_GB"], true, []byte(html))
-	if err != nil {
-		t.Fatal(err)
-	}
+	Thread(lang.Packs["en_GB"], true, []byte(html))
 }
