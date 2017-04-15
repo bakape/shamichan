@@ -22,11 +22,11 @@ func TestRenderBody(t *testing.T) {
 	})
 
 	cases := [...]struct {
-		name, in, out, string string
-		editing               bool
-		op                    uint64
-		links                 [][2]uint64
-		commands              []common.Command
+		name, in, out string
+		editing       bool
+		op            uint64
+		links         [][2]uint64
+		commands      []common.Command
 	}{
 		{
 			name: "closed post",

@@ -1,21 +1,13 @@
 package server
 
 import (
-	"strings"
-	"testing"
-
 	"meguca/cache"
-	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"strings"
+	"testing"
 )
-
-var genericImage = &common.Image{
-	ImageCommon: common.ImageCommon{
-		SHA1: "foo",
-	},
-}
 
 func removeIndentation(s string) string {
 	s = strings.Replace(s, "\t", "", -1)

@@ -7,11 +7,7 @@ import (
 	"errors"
 )
 
-var (
-	isTest bool
-
-	errInValidCaptcha = errors.New("invalid captcha provided")
-)
+var errInValidCaptcha = errors.New("invalid captcha provided")
 
 // Decode message JSON into the supplied type. Will augment, once we switch to
 // a binary message protocol.

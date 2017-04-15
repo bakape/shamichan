@@ -22,7 +22,6 @@ var (
 	// debugMode denotes the server has been started with the `debug` parameter.
 	// This will cause not to spawn a daemon and stay attached to the launching
 	// shell.
-	debugMode  bool
 	daemonised bool
 	isWindows  = runtime.GOOS == "windows"
 

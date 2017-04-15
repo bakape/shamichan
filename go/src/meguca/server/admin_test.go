@@ -80,10 +80,7 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 func TestBoardConfiguration(t *testing.T) {
 	assertTableClear(t, "accounts", "boards")
 
-	const (
-		id    = "user1"
-		board = "a"
-	)
+	const board = "a"
 	conf := config.BoardConfigs{
 		ID: board,
 		BoardPublic: config.BoardPublic{
@@ -295,9 +292,8 @@ func TestBoardCreation(t *testing.T) {
 	writeSampleUser(t)
 
 	const (
-		id     = "a"
-		userID = "user1"
-		title  = "/a/ - Animu & Mango"
+		id    = "a"
+		title = "/a/ - Animu & Mango"
 	)
 
 	msg := boardCreationRequest{

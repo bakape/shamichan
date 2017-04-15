@@ -16,16 +16,8 @@ import (
 var (
 	errReadOnly          = errors.New("read only board")
 	errInvalidImageToken = errors.New("invalid image token")
-	errNoImageName       = errors.New("no image name")
 	errImageNameTooLong  = errors.New("image name too long")
 	errNoTextOrImage     = errors.New("no text or image")
-	errThreadIsLocked    = errors.New("thread is locked")
-)
-
-// Websocket message response codes
-const (
-	postCreated = iota
-	invalidInsertionCaptcha
 )
 
 // ThreadCreationRequest contains data for creating a new thread

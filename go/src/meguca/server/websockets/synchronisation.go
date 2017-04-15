@@ -15,10 +15,9 @@ import (
 )
 
 var (
-	errInvalidBoard   = errors.New("invalid board")
-	errInvalidThread  = errors.New("invalid thread")
-	errInvalidCounter = errors.New("invalid progress counter")
-	errBanned         = errors.New("you are banned from this board")
+	errInvalidBoard  = errors.New("invalid board")
+	errInvalidThread = errors.New("invalid thread")
+	errBanned        = errors.New("you are banned from this board")
 )
 
 type syncRequest struct {

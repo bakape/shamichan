@@ -22,7 +22,6 @@ import (
 const (
 	invalidMessage   = "invalid message:"
 	onlyText         = "only text frames allowed"
-	abnormalClosure  = "websocket: close 1006"
 	closeNormal      = "websocket: close 1000"
 	invalidCharacter = "invalid character"
 )
@@ -92,10 +91,6 @@ func readListenErrors(t *testing.T, cl *Client, sv *mockWSServer) {
 	if err := cl.listen(); err != nil && err != websocket.ErrCloseSent {
 		t.Fatal(err)
 	}
-}
-
-func newRequest() *http.Request {
-	return httptest.NewRequest("GET", "/", nil)
 }
 
 func assertMessage(t *testing.T, con *websocket.Conn, std string) {

@@ -44,14 +44,6 @@ func readSample(t *testing.T, name string) []byte {
 	return data
 }
 
-func openFile(t *testing.T, name string) *os.File {
-	f, err := os.Open(filepath.FromSlash("testdata/" + name))
-	if err != nil {
-		t.Fatal(err)
-	}
-	return f
-}
-
 // How do we assert a thumbnail?
 func assertThumbnail(t *testing.T, thumb []byte) {
 	if len(thumb) < 100 {

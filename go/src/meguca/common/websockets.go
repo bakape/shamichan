@@ -57,7 +57,6 @@ const (
 // Clients exposes the global client map to all packages without causing
 // circular imports
 var Clients interface {
-	Clear()
 	GetByIP(ip string) []Client
 }
 
