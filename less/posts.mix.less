@@ -62,14 +62,9 @@ code.code-tag {
 
 del {
 	text-decoration: none;
-	&, em {
-		background-color: black;
-		color: black;
-	}
-	&:hover, &.reveal {
-		&, em {
-			color: white;
-		}
+	background-color: black;
+	&:not(:hover):not(.reveal) * {
+		visibility: hidden;
 	}
 }
 
