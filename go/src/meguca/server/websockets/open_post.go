@@ -13,7 +13,7 @@ type bodyBuffer struct {
 
 // Data of a post currently being written to by a Client
 type openPost struct {
-	hasImage bool
+	hasImage, isSpoilered bool
 	bodyBuffer
 	len, lines int
 	id, op     uint64

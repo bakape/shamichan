@@ -4,7 +4,7 @@ import { Post } from "../model"
 import { boardConfig } from "../../state"
 import { setAttrs, importTemplate, atBottom, scrollToBottom } from "../../util"
 import { renderHeader, renderName } from "../render"
-import { postSM, postEvent } from "."
+import { postSM, postEvent, postState } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
 
@@ -241,17 +241,19 @@ export default class FormView extends PostView {
 
     // Toggle the spoiler input checkbox
     public toggleSpoiler() {
-        // Can only turn a spoiler on, if image already allocated
-        if (this.model.image && this.model.image.spoiler) {
+        if (this.model.image && postSM.state !== postState.halted) {
+            this.upload.spoiler.remove()
+            this.model.commitSpoiler()
             return
         }
 
-        const el = this.el
-            .querySelector("input[name=spoiler]") as HTMLInputElement
+        const el = this.upload
+            .spoiler
+            .querySelector("input") as HTMLInputElement
         el.checked = !el.checked
     }
 
-    // Insert image into the open post
+    // Insert image into an open post
     public insertImage() {
         this.renderImage(false)
         this.resizeInput()
@@ -261,9 +263,7 @@ export default class FormView extends PostView {
         if (this.model.image.spoiler) {
             spoiler.remove()
         } else {
-            const fn = () =>
-                this.upload.spoilerImage()
-            spoiler.addEventListener("change", fn, {
+            spoiler.addEventListener("change", this.toggleSpoiler.bind(this), {
                 passive: true,
             })
         }

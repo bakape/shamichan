@@ -1,6 +1,5 @@
 import lang from '../../lang'
-import { load, postJSON, postText } from '../../util'
-import identity from "./identity"
+import { load, postText } from '../../util'
 import { Post } from "../model"
 import { View } from "../../base"
 
@@ -35,7 +34,8 @@ export default class UploadForm extends View<Post> {
         const el = parent.querySelector(".upload-container")
         el.hidden = false
         super({ el, model })
-        this.spoiler = el.querySelector(`span[data-id="spoiler"]`)
+        this.spoiler = el
+            .querySelector(`span[data-id="spoiler"]`) as HTMLInputElement
         this.status = el.querySelector(".upload-status")
         this.input = el.querySelector("input[name=image]") as HTMLInputElement
     }
@@ -60,7 +60,7 @@ export default class UploadForm extends View<Post> {
         // file thumbnailed and we don't need to upload.
         const r = new FileReader()
         r.readAsArrayBuffer(file)
-        const {target: {result}} = await load(r) as ArrayBufferLoadEvent,
+        const { target: { result } } = await load(r) as ArrayBufferLoadEvent,
             hash = await crypto.subtle.digest("SHA-1", result),
             [res, err] = await postText("/uploadHash", bufferToHex(hash))
         if (err) {
@@ -130,7 +130,7 @@ export default class UploadForm extends View<Post> {
     }
 
     // Render client-side upload progress
-    private renderProgress({total, loaded}: LoadProgress) {
+    private renderProgress({ total, loaded }: LoadProgress) {
         let s: string
         if (loaded === total) {
             s = lang.ui["thumbnailing"]
@@ -140,20 +140,6 @@ export default class UploadForm extends View<Post> {
         }
         this.status.textContent = s
     }
-
-    // Spoiler an image file after it has already been allocated
-    public async spoilerImage() {
-        await spoilerImage(this.model as Post)
-        this.spoiler.remove()
-    }
-}
-
-// Spoiler a post's image.
-export async function spoilerImage({id}: Post) {
-    await postJSON("/spoiler", {
-        id,
-        password: identity.postPassword,
-    })
 }
 
 // Encodes an ArrayBuffer to a hex string

@@ -123,7 +123,6 @@ func createRouter() http.Handler {
 
 	// Public POST API
 	r.POST("/createThread", wrapHandler(createThread))
-	r.POST("/spoiler", wrapHandler(spoilerImage))
 
 	// Administration JSON API for logged in users
 	admin := r.NewGroup("/admin")

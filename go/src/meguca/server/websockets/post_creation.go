@@ -61,11 +61,12 @@ func (c *Client) insertThread(data []byte) (err error) {
 	}
 
 	c.post = openPost{
-		id:       id,
-		op:       id,
-		time:     now,
-		board:    req.Board,
-		hasImage: hasImage,
+		id:          id,
+		op:          id,
+		time:        now,
+		board:       req.Board,
+		hasImage:    hasImage,
+		isSpoilered: req.Image.Spoiler,
 	}
 
 	return c.sendMessage(common.MessagePostID, id)
@@ -198,12 +199,13 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 	c.post = openPost{
-		id:       post.ID,
-		op:       sync.OP,
-		time:     now,
-		board:    sync.Board,
-		len:      bodyLength,
-		hasImage: hasImage,
+		id:          post.ID,
+		op:          sync.OP,
+		time:        now,
+		board:       sync.Board,
+		len:         bodyLength,
+		hasImage:    hasImage,
+		isSpoilered: req.Image.Spoiler,
 		bodyBuffer: bodyBuffer{
 			Buffer: *bytes.NewBufferString(post.Body),
 		},

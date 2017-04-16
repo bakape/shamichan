@@ -1,10 +1,9 @@
 import { View } from "../base"
 import { Post } from "./model"
-import { getModel, mine } from "../state"
+import { getModel } from "../state"
 import { on } from "../util"
 import lang from "../lang"
 import { hidePost } from "./hide"
-import { spoilerImage } from "./posting"
 
 interface ControlButton extends Element {
 	_popup_menu: MenuView
@@ -25,13 +24,6 @@ const actions: { [key: string]: ItemSpec } = {
 			return true
 		},
 		handler: hidePost,
-	},
-	spoiler: {
-		text: lang.posts["spoiler"],
-		shouldRender({id, image}) {
-			return !!image && !image.spoiler && mine.has(id)
-		},
-		handler: spoilerImage,
 	},
 }
 
@@ -56,7 +48,7 @@ class MenuView extends View<Post> {
 
 	private render() {
 		for (let key in actions) {
-			const {shouldRender, text} = actions[key]
+			const { shouldRender, text } = actions[key]
 			if (!shouldRender(this.model)) {
 				continue
 			}

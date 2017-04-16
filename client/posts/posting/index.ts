@@ -13,7 +13,6 @@ import { navigate } from "../../ui"
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
-export { spoilerImage } from "./upload"
 
 // Sent to the FSM via the "open" and "hijack" events
 export type FormMessage = {

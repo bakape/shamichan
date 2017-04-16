@@ -12,6 +12,7 @@ create or replace function close_post(
 		set editing = false,
 			links = close_post.links,
 			commands = close_post.com,
-			body = close_post.body
+			body = close_post.body,
+			password = null
 		where id = close_post.id;
 $$ language sql;

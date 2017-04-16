@@ -7,6 +7,7 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/imager/assets"
+	"strings"
 	"time"
 )
 
@@ -49,7 +50,7 @@ func runHourTasks() {
 
 func logPrepared(ids ...string) {
 	for _, id := range ids {
-		logError(id, execPrepared(id))
+		logError(strings.Replace(id, "_", " ", -1), execPrepared(id))
 	}
 }
 

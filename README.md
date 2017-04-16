@@ -16,7 +16,6 @@ License: GNU AGPL
         <li>Post link hover previews, including cross-thread</li>
         <li>Inline post link expansion</li>
         <li>Optional relative post timestamps</li>
-        <li>Image spoilering after closing a post</li>
         <li>Non-temporal and recursive post linking</li>
         <li>No posts per thread or threads per board limit</li>
         <li>Forced anonymity display mode</li>

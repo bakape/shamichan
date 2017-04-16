@@ -3,52 +3,13 @@
 package server
 
 import (
-	"database/sql"
 	"meguca/auth"
 	"meguca/config"
-	"meguca/db"
 	"meguca/imager"
 	"meguca/server/websockets"
 	"net/http"
 	"strconv"
 )
-
-// Spoiler an already allocated image
-func spoilerImage(w http.ResponseWriter, r *http.Request) {
-	var msg spoilerRequest
-	if !decodeJSON(w, r, &msg) {
-		return
-	}
-
-	hash, err := db.GetPostPassword(msg.ID)
-	switch err {
-	case nil:
-	case sql.ErrNoRows:
-		text404(w)
-		return
-	default:
-		text500(w, r, err)
-		return
-	}
-
-	if err := auth.BcryptCompare(msg.Password, hash); err != nil {
-		text403(w, err)
-		return
-	}
-
-	post, err := db.GetPost(msg.ID)
-	switch {
-	case err != nil:
-		text500(w, r, err)
-	case post.Image == nil:
-		text400(w, errNoImage)
-	case post.Image.Spoiler: // NOOP. Consider to be due to sync race.
-	default:
-		if err := db.SpoilerImage(msg.ID); err != nil {
-			text500(w, r, err)
-		}
-	}
-}
 
 // Create a thread with a finished OP and immediately close it
 func createThread(w http.ResponseWriter, r *http.Request) {

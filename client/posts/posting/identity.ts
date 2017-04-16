@@ -4,11 +4,8 @@ import { BannerModal } from '../../base'
 import { extend, emitChanges, ChangeEmitter } from '../../util'
 import { newRequest } from "../../mod"
 
-
-const base64 =
-	'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
-		.split("")
-const authCheckbox = document.getElementById("staffTitle") as HTMLInputElement
+const base64 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_',
+	authCheckbox = document.getElementById("staffTitle") as HTMLInputElement
 
 interface Identity extends ChangeEmitter {
 	auth: boolean
@@ -41,10 +38,8 @@ class IdentityPanel extends BannerModal {
 	}
 
 	private assignValues() {
-		for (let key of ["name", "postPassword"]) {
-			(this.el.querySelector(`input[name=${key}]`) as HTMLInputElement)
-				.value = identity[key]
-		}
+		(this.el.querySelector(`input[name="name"]`) as HTMLInputElement)
+			.value = identity.name
 	}
 
 	private onInput(event: Event) {

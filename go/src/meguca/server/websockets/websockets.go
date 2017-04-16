@@ -272,36 +272,6 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 	return c.runHandler(typ, msg)
 }
 
-// Run the appropriate handler for the websocket message
-func (c *Client) runHandler(typ common.MessageType, msg []byte) error {
-	data := msg[2:]
-	switch typ {
-	case common.MessageSynchronise:
-		return c.synchronise(data)
-	case common.MessageReclaim:
-		return c.reclaimPost(data)
-	case common.MessageInsertThread:
-		return c.insertThread(data)
-	case common.MessageAppend:
-		return c.appendRune(data)
-	case common.MessageBackspace:
-		return c.backspace()
-	case common.MessageClosePost:
-		return c.closePost()
-	case common.MessageSplice:
-		return c.spliceText(data)
-	case common.MessageInsertPost:
-		return c.insertPost(data)
-	case common.MessageInsertImage:
-		return c.insertImage(data)
-	case common.MessageNOOP:
-		// No operation message handler. Used as a one way pseudo-ping.
-		return nil
-	default:
-		return errInvalidPayload(msg)
-	}
-}
-
 // logError writes the client's websocket error to the error log (or stdout)
 func (c *Client) logError(err error) {
 	log.Printf("error by %s: %v\n", c.ip, err)

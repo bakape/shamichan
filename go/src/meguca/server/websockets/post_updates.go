@@ -271,8 +271,10 @@ func (c *Client) spliceText(data []byte) error {
 func (c *Client) insertImage(data []byte) (err error) {
 	has, err := c.hasPost()
 	switch {
-	case err != nil || !has:
+	case err != nil:
 		return
+	case !has:
+		return errNoPostOpen
 	case c.post.hasImage:
 		return errHasImage
 	}
@@ -292,6 +294,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 		return
 	}
 	c.post.hasImage = true
+	c.post.isSpoilered = req.Spoiler
 
 	err = db.InsertImage(c.post.id, c.post.op, *img)
 	if err != nil {
@@ -311,4 +314,21 @@ func (c *Client) insertImage(data []byte) (err error) {
 	c.feed.InsertImage(c.post.id, msg)
 
 	return nil
+}
+
+// Spoiler an already inserted image in an unclosed post
+func (c *Client) spoilerImage() error {
+	has, err := c.hasPost()
+	switch {
+	case err != nil:
+		return err
+	case !has:
+		return errNoPostOpen
+	case !c.post.hasImage:
+		return errors.New("post does not have an image")
+	case c.post.isSpoilered:
+		return errors.New("already spoilered")
+	}
+
+	return db.SpoilerImage(c.post.id)
 }

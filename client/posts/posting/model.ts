@@ -325,4 +325,9 @@ export default class FormModel extends Post {
 		this.image = img
 		this.view.insertImage()
 	}
+
+	// Spoiler an already allocated image
+	public commitSpoiler() {
+		this.send(message.spoiler, null)
+	}
 }

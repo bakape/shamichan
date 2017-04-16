@@ -169,11 +169,12 @@ func testCreateThread(t *testing.T) {
 
 	AssertDeepEquals(t, thread, std)
 	AssertDeepEquals(t, cl.post, openPost{
-		id:       6,
-		op:       6,
-		board:    "c",
-		time:     then,
-		hasImage: true,
+		id:          6,
+		op:          6,
+		board:       "c",
+		time:        then,
+		hasImage:    true,
+		isSpoilered: true,
 	})
 }
 
@@ -384,12 +385,13 @@ func TestPostCreation(t *testing.T) {
 	AssertDeepEquals(t, thread.ImageCtr, uint32(2))
 
 	AssertDeepEquals(t, cl.post, openPost{
-		id:       6,
-		op:       1,
-		time:     stdPost.Time,
-		board:    "a",
-		len:      1,
-		hasImage: true,
+		id:          6,
+		op:          1,
+		time:        stdPost.Time,
+		board:       "a",
+		len:         1,
+		hasImage:    true,
+		isSpoilered: true,
 		bodyBuffer: bodyBuffer{
 			Buffer: *bytes.NewBufferString("Δ"),
 		},
