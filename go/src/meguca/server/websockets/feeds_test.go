@@ -62,28 +62,6 @@ func TestWriteMultipleToBuffer(t *testing.T) {
 	}
 }
 
-func TestFlushMultipleMessages(t *testing.T) {
-	t.Parallel()
-
-	sv := newWSServer(t)
-	defer sv.Close()
-	cl, wcl := sv.NewClient()
-	sv.Add(1)
-	go readListenErrors(t, cl, sv)
-	const msg = "a\u0000bc"
-	u := updateFeed{
-		clients: []*Client{cl},
-	}
-	u.Write([]byte("a"))
-	u.Write([]byte("bc"))
-
-	u.flushBuffer()
-	assertMessage(t, wcl, encodeMessageType(common.MessageConcat)+msg)
-
-	cl.Close(nil)
-	sv.Wait()
-}
-
 func encodeMessageType(typ common.MessageType) string {
 	return strconv.Itoa(int(typ))
 }

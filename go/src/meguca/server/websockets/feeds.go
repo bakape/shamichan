@@ -37,6 +37,7 @@ type postIDMessage struct {
 
 type openPostCacheEntry struct {
 	hasImage bool
+	created  int64
 	*bodyBuffer
 }
 
@@ -155,6 +156,7 @@ func (u *updateFeed) Start() (err error) {
 		u.recent[p.ID] = p.Time
 		u.open[p.ID] = openPostCacheEntry{
 			hasImage: p.HasImage,
+			created:  p.Time,
 			bodyBuffer: &bodyBuffer{
 				Buffer: *bytes.NewBuffer(p.Body),
 			},
@@ -172,10 +174,14 @@ func (u *updateFeed) Start() (err error) {
 
 		for {
 			select {
+
+			// Add client
 			case c := <-u.add:
 				u.clients = append(u.clients, c)
 				c.Send(u.genSyncMessage())
 				u.sendIPCount()
+
+			// Remove client and close feed, if no clients left
 			case c := <-u.remove:
 				for i, cl := range u.clients {
 					if cl == c {
@@ -192,11 +198,21 @@ func (u *updateFeed) Start() (err error) {
 					u.remove <- c
 					return
 				}
+
+			// Buffer external message and prepare for sending to all clients
 			case msg := <-u.send:
 				u.ticker.StartIfPaused()
 				u.Write(msg)
+
+			// Send any buffered messages to any listening clients
 			case <-u.ticker.C:
-				u.flushBuffer()
+				buf := u.Flush()
+				if buf == nil {
+					u.ticker.Pause()
+				} else {
+					u.sendToAll(buf)
+				}
+
 			// Remove stale cache entries (older than 15 minutes)
 			case <-cleanUp.C:
 				till := time.Now().Add(-15 * time.Minute).Unix()
@@ -205,20 +221,32 @@ func (u *updateFeed) Start() (err error) {
 						delete(u.recent, id)
 					}
 				}
+				for id, p := range u.open {
+					if p.created < till {
+						delete(u.open, id)
+					}
+				}
+
+			// Insert a new post, cache and propagate
 			case p := <-u.insertPost:
 				u.ticker.StartIfPaused()
 				u.recent[p.id] = p.time
 				u.open[p.id] = openPostCacheEntry{
 					hasImage:   p.hasImage,
+					created:    p.time,
 					bodyBuffer: p.bodyBuffer,
 				}
 				u.Write(p.msg)
+
+			// Insert and image into an open post
 			case msg := <-u.insertImage:
 				u.ticker.StartIfPaused()
 				p := u.open[msg.id]
 				p.hasImage = true
 				u.open[msg.id] = p
 				u.Write(msg.msg)
+
+			// Close open post
 			case msg := <-u.closePost:
 				u.ticker.StartIfPaused()
 				delete(u.open, msg.id)
@@ -228,17 +256,6 @@ func (u *updateFeed) Start() (err error) {
 	}()
 
 	return
-}
-
-// Send any buffered messages to any listening clients
-func (u *updateFeed) flushBuffer() {
-	buf := u.Flush()
-	if buf == nil {
-		u.ticker.Pause()
-		return
-	}
-
-	u.sendToAll(buf)
 }
 
 // Send a message to all listening clients
