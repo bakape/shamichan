@@ -3,7 +3,7 @@
 // Fetches and decodes a JSON response from the API. Returns a tuple of the
 // fetched resource and error, if any
 export async function fetchJSON<T>(url: string): Promise<[T, string]> {
-	const res = await fetch(url)
+	const res = await uncachedGET(url)
 	if (res.status !== 200) {
 		return [null, await res.text()]
 	}
@@ -34,14 +34,14 @@ export async function postText(
 	return ["", rt]
 }
 
-// Fetches HTML from the server. Returns a tuple of the fetched resource and
-// error, if any
-export async function fetchHTML(url: string): Promise<[string, string]> {
-	const res = await fetch(url)
-	if (res.status !== 200) {
-		return ["", await res.text()]
-	}
-	return [await res.text(), ""]
+// Avoids stale fetches from the browser cache
+export async function uncachedGET(url: string): Promise<Response> {
+	const h = new Headers()
+	h.append("Cache-Control", "no-cache")
+	return await fetch(url, {
+		method: "GET",
+		headers: h,
+	})
 }
 
 // Fetch HTML of a board page
@@ -49,7 +49,7 @@ export async function fetchBoard(
 	board: string,
 	catalog: boolean,
 ): Promise<Response> {
-	return await fetch(`/${board}/${catalog ? "catalog" : ""}?minimal=true`)
+	return uncachedGET(`/${board}/${catalog ? "catalog" : ""}?minimal=true`)
 }
 
 // Fetch HTML of a thread page
@@ -62,5 +62,5 @@ export async function fetchThread(
 	if (lastN) {
 		url += `&last=${lastN}`
 	}
-	return await fetch(url)
+	return uncachedGET(url)
 }

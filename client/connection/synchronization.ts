@@ -2,7 +2,7 @@ import { handlers, message } from "./messages"
 import { connSM, connEvent, send } from "./state"
 import { postSM, postEvent, postState, identity, FormModel } from "../posts"
 import { page, posts } from "../state"
-import { trigger } from "../util"
+import { trigger, uncachedGET } from "../util"
 import { PostData } from "../common"
 import { insertPost } from "../client"
 
@@ -75,7 +75,7 @@ async function fetchMissingPost(id: number) {
 }
 
 async function fetchPost(id: number): Promise<PostData> {
-	const r = await fetch(`/json/post/${id}`)
+	const r = await uncachedGET(`/json/post/${id}`)
 	if (r.status !== 200) {
 		throw await r.text()
 	}

@@ -1,6 +1,6 @@
 import { View, ViewAttrs } from "../../base"
 import { loginID } from ".."
-import { makeFrag, postJSON, inputValue } from "../../util"
+import { makeFrag, postJSON, inputValue, uncachedGET } from "../../util"
 import { AccountForm } from "./common"
 import { newRequest } from "../common"
 
@@ -17,7 +17,7 @@ class OwnedBoardSelection extends View<null> {
 	}
 
 	private async render() {
-		const res = await fetch(`/forms/ownedBoards/${loginID}`)
+		const res = await uncachedGET(`/forms/ownedBoards/${loginID}`)
 		switch (res.status) {
 			case 200:
 				this.el.append(makeFrag(await res.text()))

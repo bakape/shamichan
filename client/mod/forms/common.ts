@@ -2,7 +2,7 @@ import lang from "../../lang"
 import { reset } from ".."
 import { FormView } from "../../ui"
 import { accountPanel } from ".."
-import { postJSON, makeFrag } from "../../util"
+import { postJSON, makeFrag, uncachedGET } from "../../util"
 import { newRequest } from "../common"
 
 // Generic input form that is embedded into AccountPanel
@@ -18,7 +18,7 @@ export abstract class AccountForm extends FormView {
 	// Render a simple publically available form, that does not require to
 	// submit any private information
 	protected async renderPublicForm(url: string) {
-		const res = await fetch(url)
+		const res = await uncachedGET(url)
 		switch (res.status) {
 			case 200:
 				this.el.append(makeFrag(await res.text()))

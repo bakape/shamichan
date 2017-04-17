@@ -16,6 +16,9 @@ var captchaServer = captcha.Server(captcha.StdWidth, captcha.StdHeight)
 
 // NewCaptchaID creates a new captcha and write its ID to the client
 func NewCaptchaID(w http.ResponseWriter, _ *http.Request) {
+	h := w.Header()
+	h.Set("Content-Type", "text/plain")
+	h.Set("Cache-Control", "no-store, private")
 	w.Write([]byte(captcha.New()))
 }
 

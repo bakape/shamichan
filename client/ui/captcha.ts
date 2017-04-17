@@ -1,4 +1,5 @@
 import { View } from '../base'
+import { uncachedGET } from "../util"
 
 // Wrapper around Solve Media's captcha service AJAX API
 export default class CaptchaView extends View<null> {
@@ -16,7 +17,7 @@ export default class CaptchaView extends View<null> {
 
 	// Render the actual captcha
 	private async render() {
-		const r = await fetch(`/captcha/new`),
+		const r = await uncachedGET(`/captcha/new`),
 			text = await r.text()
 		if (r.status !== 200) {
 			throw text

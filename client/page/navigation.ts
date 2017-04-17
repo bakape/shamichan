@@ -1,5 +1,5 @@
 import { View, Model } from '../base'
-import { HTML, makeFrag, fetchHTML } from '../util'
+import { HTML, makeFrag, uncachedGET } from '../util'
 
 const selected = new Set<string>(),
 	panel = document.getElementById("left-panel"),
@@ -75,11 +75,12 @@ class BoardSelectionPanel extends View<Model> {
 
 	// Fetch the board list from the server and render the selection form
 	private async render() {
-		const [html, err] = await fetchHTML("/forms/boardNavigation")
-		if (err) {
-			throw err
+		const r = await uncachedGET("/forms/boardNavigation"),
+			text = await r.text()
+		if (r.status !== 200) {
+			throw text
 		}
-		const frag = makeFrag(html)
+		const frag = makeFrag(text)
 		const boards = Array
 			.from(frag.querySelectorAll("input[type=checkbox]"))
 			.map(b =>
