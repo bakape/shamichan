@@ -10,5 +10,9 @@ export function renderStatus(status: syncStatus) {
 	syncEl.textContent = lang.sync[status]
 }
 
-handlers[message.syncCount] = (n: number) =>
-	syncedCount.textContent = n.toString()
+// Set synced IP count to n
+export function renderSyncCount(n: number) {
+	syncedCount.textContent = n ? n.toString() : ""
+}
+
+handlers[message.syncCount] = renderSyncCount

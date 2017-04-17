@@ -9,7 +9,6 @@ import (
 func newClientMap() *ClientMap {
 	return &ClientMap{
 		clients: make(map[*Client]SyncID),
-		ips:     make(map[string]int),
 	}
 }
 
@@ -66,28 +65,4 @@ func TestMapChangeSync(t *testing.T) {
 
 	m.changeSync(cl, newSync)
 	assertSyncID(t, m, cl, newSync)
-}
-
-func TestCountByIP(t *testing.T) {
-	t.Parallel()
-
-	m := newClientMap()
-	sv := newWSServer(t)
-	defer sv.Close()
-
-	cls := [3]*Client{}
-	id := SyncID{
-		OP:    1,
-		Board: "a",
-	}
-	for i, ip := range [...]string{"foo", "foo", "bar"} {
-		cl, _ := sv.NewClient()
-		cl.ip = ip
-		cls[i] = cl
-		m.add(cl, id)
-	}
-
-	if count := len(m.ips); count != 2 {
-		LogUnexpected(t, 2, count)
-	}
 }

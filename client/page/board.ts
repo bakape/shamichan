@@ -9,6 +9,7 @@ import {
 } from "./common"
 import { setPostCount } from "./thread"
 import { ThreadData } from "../common"
+import { renderSyncCount } from "../connection"
 
 
 type SortFunction = (a: Post, b: Post) => number
@@ -40,6 +41,7 @@ export function renderFresh(html: string) {
 		return
 	}
 	extractConfigs()
+	renderSyncCount(0) // Board pages do not have any sync logic or counters
 	render()
 }
 

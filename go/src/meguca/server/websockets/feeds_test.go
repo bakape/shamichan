@@ -5,6 +5,8 @@ import (
 	. "meguca/test"
 	"strconv"
 	"testing"
+
+	"github.com/gorilla/websocket"
 )
 
 func TestStreamUpdates(t *testing.T) {
@@ -16,24 +18,34 @@ func TestStreamUpdates(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	sv.Add(2)
-	cl1, wcl1 := sv.NewClient()
-	addToFeed(t, cl1, 1)
-	go readListenErrors(t, cl1, sv)
-	cl2, wcl2 := sv.NewClient()
-	addToFeed(t, cl2, 1)
-	go readListenErrors(t, cl2, sv)
+	var (
+		cls  [2]*Client
+		wcls [2]*websocket.Conn
+	)
+	for i := range cls {
+		cls[i], wcls[i] = sv.NewClient()
+		cls[i].ip = strconv.Itoa(i)
+		addToFeed(t, cls[i], 1)
+		go readListenErrors(t, cls[i], sv)
+	}
 
 	const syncMsg = "30{\"recent\":[1],\"open\":{\"1\":{\"hasImage\":false,\"body\":\"\"}}}"
-	assertMessage(t, wcl1, syncMsg)
-	assertMessage(t, wcl2, syncMsg)
+	assertMessage(t, wcls[0], syncMsg)
+	assertMessage(t, wcls[0], "351")
+	assertMessage(t, wcls[1], syncMsg)
+	for i := range wcls {
+		assertMessage(t, wcls[i], "352")
+	}
 
 	// Send message
 	feeds.SendTo(1, []byte("foo"))
-	assertMessage(t, wcl1, "33foo")
-	assertMessage(t, wcl2, "33foo")
+	for i := range wcls {
+		assertMessage(t, wcls[i], "33foo")
+	}
 
-	cl1.Close(nil)
-	cl2.Close(nil)
+	for i := range cls {
+		cls[i].Close(nil)
+	}
 	sv.Wait()
 }
 

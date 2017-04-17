@@ -175,6 +175,7 @@ func (u *updateFeed) Start() (err error) {
 			case c := <-u.add:
 				u.clients = append(u.clients, c)
 				c.Send(u.genSyncMessage())
+				u.sendIPCount()
 			case c := <-u.remove:
 				for i, cl := range u.clients {
 					if cl == c {
@@ -186,6 +187,7 @@ func (u *updateFeed) Start() (err error) {
 				}
 				if len(u.clients) != 0 {
 					u.remove <- nil
+					u.sendIPCount()
 				} else {
 					u.remove <- c
 					return
@@ -236,11 +238,13 @@ func (u *updateFeed) flushBuffer() {
 		return
 	}
 
-	if len(u.clients) == 0 {
-		return
-	}
+	u.sendToAll(buf)
+}
+
+// Send a message to all listening clients
+func (u *updateFeed) sendToAll(msg []byte) {
 	for _, c := range u.clients {
-		c.Send(buf)
+		c.Send(msg)
 	}
 }
 
@@ -292,6 +296,17 @@ func (u *updateFeed) genSyncMessage() []byte {
 	b = append(b, `}}`...)
 
 	return b
+}
+
+// Send unique IP count to all connected clients
+func (u *updateFeed) sendIPCount() {
+	ips := make(map[string]struct{}, len(u.clients))
+	for _, c := range u.clients {
+		ips[c.ip] = struct{}{}
+	}
+
+	msg, _ := common.EncodeMessage(common.MessageSyncCount, len(ips))
+	u.sendToAll(msg)
 }
 
 // Insert a new post into the thread and propagate to listeners

@@ -330,10 +330,10 @@ func TestPostCreation(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
+	cl.ip = "::1"
 	Clients.add(cl, SyncID{1, "a"})
 	defer Clients.Clear()
 	addToFeed(t, cl, 1)
-	cl.ip = "::1"
 
 	req := ReplyCreationRequest{
 		Body:     "Δ",
