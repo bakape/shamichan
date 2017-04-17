@@ -63,8 +63,13 @@ code.code-tag {
 del {
 	text-decoration: none;
 	background-color: black;
-	&:not(:hover):not(.reveal) * {
-		visibility: hidden;
+	&:not(:hover):not(.reveal) {
+		& {
+			color: black;
+		}
+		* {
+			visibility: hidden;
+		}
 	}
 }
 

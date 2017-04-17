@@ -82,7 +82,10 @@ body {
 }
 
 del {
-	color: white;
+	background-color: white;
+	&:not(:hover):not(.reveal) {
+		color: white;
+	}
 }
 
 .embed {
