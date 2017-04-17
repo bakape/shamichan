@@ -154,8 +154,12 @@ hr {
     border-top: 1px solid #282a2e;
 }
 
-.popup-menu li:hover {
-    background-color: #136;
+.popup-menu {
+	// Need extra override for open posts
+	color: @body;
+	li:hover {
+		background-color: #136;
+	}
 }
 
 .omit {
