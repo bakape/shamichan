@@ -131,7 +131,7 @@ export default class PostView extends ImageHandler {
         const sec = this.el.closest("section"),
             { id } = this.model
         for (let p of Array.from(sec.children)) {
-            if (getID(p) > id) {
+            if (p.tagName === "ARTICLE" && getID(p) > id) {
                 p.before(this.el)
                 return
             }
