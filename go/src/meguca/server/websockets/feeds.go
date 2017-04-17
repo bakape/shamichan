@@ -201,8 +201,7 @@ func (u *updateFeed) Start() (err error) {
 
 			// Buffer external message and prepare for sending to all clients
 			case msg := <-u.send:
-				u.ticker.StartIfPaused()
-				u.Write(msg)
+				u.bufferMessage(msg)
 
 			// Send any buffered messages to any listening clients
 			case <-u.ticker.C:
@@ -210,7 +209,9 @@ func (u *updateFeed) Start() (err error) {
 				if buf == nil {
 					u.ticker.Pause()
 				} else {
-					u.sendToAll(buf)
+					for _, c := range u.clients {
+						c.Send(buf)
+					}
 				}
 
 			// Remove stale cache entries (older than 15 minutes)
@@ -259,15 +260,14 @@ func (u *updateFeed) Start() (err error) {
 }
 
 // Send a message to all listening clients
-func (u *updateFeed) sendToAll(msg []byte) {
-	for _, c := range u.clients {
-		c.Send(msg)
-	}
-}
-
-// Send a message to all listening clients
 func (u *updateFeed) Send(msg []byte) {
 	u.send <- msg
+}
+
+// Buffer a message to be sent on the next tick
+func (u *updateFeed) bufferMessage(msg []byte) {
+	u.ticker.StartIfPaused()
+	u.Write(msg)
 }
 
 // Generate a message for synchronizing to the current status of the update
@@ -323,7 +323,7 @@ func (u *updateFeed) sendIPCount() {
 	}
 
 	msg, _ := common.EncodeMessage(common.MessageSyncCount, len(ips))
-	u.sendToAll(msg)
+	u.bufferMessage(msg)
 }
 
 // Insert a new post into the thread and propagate to listeners

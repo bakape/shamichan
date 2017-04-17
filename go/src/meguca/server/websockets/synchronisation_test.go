@@ -124,7 +124,7 @@ func TestSyncToThread(t *testing.T) {
 
 	skipMessage(t, wcl)
 	skipMessage(t, wcl)
-	assertMessage(t, wcl, "351")
+	assertMessage(t, wcl, "33351")
 	assertSyncID(t, &Clients, cl, SyncID{
 		OP:    1,
 		Board: "a",
