@@ -51,6 +51,27 @@ em, .ms-string {
 	color: @em;
 }
 
+em {
+	& del:hover, & del.reveal, & {
+		color: @em;
+	}
+}
+
+del {
+	text-decoration: none;
+	&, em {
+		background-color: @del;
+	}
+	&:hover, &.reveal {
+		color: #fff - @del;
+	}
+	&:not(:hover):not(.reveal) {
+		&, em, a {
+			color: @del;
+		}
+	}
+}
+
 .ms-operator {
 	color: @mod;
 }
