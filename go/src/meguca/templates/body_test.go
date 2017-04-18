@@ -253,11 +253,6 @@ func TestRenderBody(t *testing.T) {
 			out:  `<a rel="noreferrer" href="magnet:?xt=urn:btih:c12fe1">magnet:?xt=urn:btih:c12fe1</a>`,
 		},
 		{
-			name: "XSS inject URL",
-			in:   "http://4chan.org<>",
-			out:  `http://4chan.org&lt;&gt;`,
-		},
-		{
 			name: "escape generic text",
 			in:   "<>&",
 			out:  "&lt;&gt;&amp;",
