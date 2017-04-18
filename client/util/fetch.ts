@@ -3,7 +3,7 @@
 // Fetches and decodes a JSON response from the API. Returns a tuple of the
 // fetched resource and error, if any
 export async function fetchJSON<T>(url: string): Promise<[T, string]> {
-	const res = await uncachedGET(url)
+	const res = await fetch(url)
 	if (res.status !== 200) {
 		return [null, await res.text()]
 	}
