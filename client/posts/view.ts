@@ -96,7 +96,7 @@ export default class PostView extends ImageHandler {
 
     // Close an open post and clean up
     public closePost() {
-        this.el.classList.remove("editing")
+        this.setEditing(false)
         this.reparseBody()
     }
 
@@ -118,6 +118,11 @@ export default class PostView extends ImageHandler {
     // Add or remove highlight to post
     public setHighlight(on: boolean) {
         this.el.classList.toggle("highlight", on)
+    }
+
+    // Set display as an open post, that is being edited
+    public setEditing(on: boolean) {
+        this.el.classList.toggle("editing", on)
     }
 
     // Render indications that a post had been deleted

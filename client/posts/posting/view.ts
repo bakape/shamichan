@@ -16,10 +16,7 @@ let bottomSpacer: HTMLElement
 export default class FormView extends PostView {
     public model: FormModel
     private input: HTMLTextAreaElement
-    private done: HTMLElement
-    public cancel: HTMLElement
     private observer: MutationObserver
-    private postControls: Element
     private previousHeight: number
     public upload: UploadForm
 
@@ -42,31 +39,50 @@ export default class FormView extends PostView {
             id: "text-input",
             name: "body",
             rows: "1",
+            maxlength: "2000",
         })
+        this.el.append(importTemplate("post-controls"))
         this.resizeInput()
 
-        this.input.addEventListener("input", (event: Event) => {
-            event.stopImmediatePropagation()
+        this.input.addEventListener("input", e => {
+            e.stopImmediatePropagation()
             this.onInput()
         })
-
-        this.postControls = importTemplate("post-controls").firstElementChild
-        this.el.append(this.postControls)
-
-        this.done = this.el.querySelector("input[name=done]")
-        this.done.addEventListener("click", postSM.feeder(postEvent.done))
-        this.cancel = this.el.querySelector("input[name=cancel]")
-        this.cancel.addEventListener("click", postSM.feeder(postEvent.done))
+        this.onClick({
+            "input[name=done]": postSM.feeder(postEvent.done),
+            "input[name=cancel]": postSM.feeder(postEvent.done),
+        })
+        this.on(
+            "change",
+            e => {
+                if (this.model.sentAllocRequest) {
+                    return
+                }
+                const live = (event.target as HTMLInputElement).checked
+                this.setEditing(live)
+                const d = this.inputElement("done")
+                d.hidden = live
+                this.model.nonLive = !live
+            },
+            {
+                passive: true,
+                selector: "input[name=live]",
+            },
+        )
 
         if (isOP) {
             this.showDone()
+            this.removeLiveToggle()
         } else {
             if (!boardConfig.textOnly) {
                 this.upload = new UploadForm(this.model, this.el)
                 this.upload.input.addEventListener("change", () =>
                     this.model.uploadFile())
             }
-            this.renderIdentity()
+            this.renderIdentity();
+            (this.el
+                .querySelector("input[name=live]") as HTMLInputElement)
+                .checked = true
         }
 
         const bq = this.el.querySelector("blockquote")
@@ -96,11 +112,21 @@ export default class FormView extends PostView {
 
     // Show button for closing allocated posts
     private showDone() {
-        if (this.cancel) {
-            this.cancel.hidden = true
+        const c = this.inputElement("cancel")
+        if (c) {
+            c.remove()
         }
-        if (this.done) {
-            this.done.hidden = false
+        const d = this.inputElement("done")
+        if (d) {
+            d.hidden = false
+        }
+    }
+
+    // Remove checkbox, that toggles non-live posting
+    public removeLiveToggle() {
+        const el = this.el.querySelector(".live-toggle")
+        if (el) {
+            el.remove()
         }
     }
 
@@ -195,8 +221,9 @@ export default class FormView extends PostView {
             this.upload.cancel()
         }
         this.el.classList.remove("reply-form")
-        if (this.postControls) {
-            this.postControls.remove()
+        const pc = this.el.querySelector("#post-controls")
+        if (pc) {
+            pc.remove()
         }
         if (bottomSpacer) {
             bottomSpacer.style.height = ""
@@ -207,11 +234,8 @@ export default class FormView extends PostView {
         if (this.observer) {
             this.observer.disconnect()
         }
-        this.postControls
-            = bottomSpacer
+        bottomSpacer
             = this.observer
-            = this.done
-            = this.cancel
             = this.input
             = this.upload
             = null

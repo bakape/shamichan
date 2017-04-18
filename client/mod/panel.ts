@@ -1,7 +1,5 @@
 import { View } from "../base"
-import {
-	extend, postJSON, threads, toggleHeadStyle, inputValue, inputElement
-} from "../util"
+import { extend, postJSON, threads, toggleHeadStyle } from "../util"
 import { Post } from "../posts"
 import { getModel } from "../state"
 import { newRequest } from "./common"
@@ -210,8 +208,8 @@ class BanForm extends HidableForm {
 
 		return {
 			duration,
-			global: inputElement(this.el, "global").checked,
-			reason: inputValue(this.el, "reason"),
+			global: this.inputElement("global").checked,
+			reason: this.inputElement("reason").value,
 		}
 	}
 }
@@ -224,7 +222,7 @@ class NotificationForm extends HidableForm {
 
 	public vals(): { [key: string]: string } {
 		return {
-			text: inputValue(this.el, "notification"),
+			text: this.inputElement("notification").value,
 		}
 	}
 }

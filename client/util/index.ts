@@ -137,17 +137,6 @@ export function escape(str: string): string {
 		escapeMap[char])
 }
 
-// Extract the value of a named input field, which is a child of the parameter
-// element
-export function inputValue(parent: Element, name: string): string {
-	return inputElement(parent, name).value
-}
-
-// Query an input element by name
-export function inputElement(parent: Element, name: string): HTMLInputElement {
-	return parent.querySelector(`input[name="${name}"]`) as HTMLInputElement
-}
-
 // Return either the singular or plural form of a translation, depending on
 // number
 export function pluralize(num: number, word: [string, string]): string {

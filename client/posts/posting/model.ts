@@ -11,12 +11,12 @@ import { newAllocRequest } from "./identity"
 
 // Form Model of an OP post
 export default class FormModel extends Post {
-	private sentAllocRequest: boolean
+	public sentAllocRequest: boolean
 	public isAllocated: boolean
+	public nonLive: boolean // Disable live post updates
 
-	// A quote, that has been submitted at the start of the post and not
-	// committed yet
-	private bufferedQuote: string
+	// Text that is not submitted yet to defer post allocation
+	public bufferedText: string
 
 	public inputBody: string
 	public view: FormView
@@ -40,6 +40,7 @@ export default class FormModel extends Post {
 				}
 			}
 			super(attrs)
+			this.sentAllocRequest = this.isAllocated = true
 
 			// Replace old model and view pair with the postForm pair
 			posts.add(this)
@@ -47,7 +48,6 @@ export default class FormModel extends Post {
 			oldView.el.replaceWith(view.el)
 
 			postSM.feed(postEvent.hijack, { view, model: this })
-			this.sentAllocRequest = this.isAllocated = true
 		} else {
 			super({
 				id: 0,
@@ -99,8 +99,14 @@ export default class FormModel extends Post {
 
 	// Compare new value to old and generate appropriate commands
 	public parseInput(val: string): void {
+		// Handle live update toggling
+		if (this.nonLive) {
+			this.bufferedText = val
+			return
+		}
+
 		// Remove any buffered quote, as we are committing now
-		this.bufferedQuote = ""
+		this.bufferedText = ""
 
 		const old = this.inputBody
 
@@ -196,9 +202,10 @@ export default class FormModel extends Post {
 	// Close the form and revert to regular post
 	public commitClose() {
 		// It is possible to have never committed anything, if all you have in
-		// the body is one quote
-		if (this.bufferedQuote) {
-			this.parseInput(this.bufferedQuote)
+		// the body is one quote and an image allocated.
+		if (this.bufferedText) {
+			this.nonLive = false
+			this.parseInput(this.bufferedText)
 		}
 
 		this.body = this.inputBody
@@ -216,7 +223,7 @@ export default class FormModel extends Post {
 	// Add a link to the target post in the input
 	public addReference(id: number, sel: string) {
 		let s = ""
-		const old = this.bufferedQuote || this.inputBody,
+		const old = this.bufferedText || this.inputBody,
 			newLine = !old || old.endsWith("\n")
 
 		// Don't duplicate links, if quoting same post multiple times in
@@ -243,7 +250,7 @@ export default class FormModel extends Post {
 
 		// Don't commit a quote, if it is the first input in a post
 		let commit = true
-		if (!this.sentAllocRequest && !this.bufferedQuote) {
+		if (!this.sentAllocRequest && !this.bufferedText) {
 			commit = false
 		}
 		this.view.replaceText(old + s, commit)
@@ -251,12 +258,15 @@ export default class FormModel extends Post {
 		// Makes sure the quote is committed later, if it is the first input in
 		// the post
 		if (!commit) {
-			this.bufferedQuote = s
+			this.bufferedText = s
 		}
 	}
 
 	// Request allocation of a draft post to the server
 	private requestAlloc(body: string | null, image: FileData | null) {
+		this.view.removeLiveToggle()
+		this.view.setEditing(true)
+		this.nonLive = false
 		this.sentAllocRequest = true
 		const req = newAllocRequest()
 

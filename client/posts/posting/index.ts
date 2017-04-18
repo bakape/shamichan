@@ -10,6 +10,7 @@ import { boardConfig, page } from "../../state"
 import initDrop from "./drop"
 import initThreads from "./threads"
 import { navigate } from "../../ui"
+import options from "../../options"
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
@@ -247,7 +248,32 @@ export default () => {
 	postSM.on(postState.alloc, hidePostControls)
 
 	// Close unallocated draft
-	postSM.act(postState.draft, postEvent.done, () => {
+	postSM.act(postState.draft, postEvent.done, (e?: Event) => {
+		// Commit a draft made as a non-live post
+		let commitNonLive = false
+		if (event) {
+			if (event.target instanceof HTMLInputElement) {
+				commitNonLive = event.target.getAttribute("name") === "done"
+			} else if (event instanceof KeyboardEvent) {
+				commitNonLive = event.which === options.done
+			}
+
+			if (commitNonLive) {
+				commitNonLive = !!postModel.bufferedText
+			}
+		}
+		if (commitNonLive) {
+			postModel.nonLive = false
+			// Do this after the function returns
+			setTimeout(() => {
+				postModel.parseInput(postModel.bufferedText)
+			}, 0)
+			postSM.once(postState.alloc, () =>
+				setTimeout(() =>
+					postSM.feed(postEvent.done)))
+			return postState.draft
+		}
+
 		postForm.remove()
 		return postState.ready
 	})

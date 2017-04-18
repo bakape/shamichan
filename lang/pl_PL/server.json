@@ -212,10 +212,6 @@
 			"Inline Post Link Expansion",
 			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
 		],
-		"postPassword": [
-			"Password",
-			"Password used for image spoilering and reopening open posts after a disconnect"
-		],
 		"pruneBoards": [
 			"Usuń działy",
 			"Usuń działy bez żadnych postów od N dni"
@@ -349,6 +345,7 @@
 		"focusForCaptcha": "Kliknij, aby załadować captchę",
 		"global": "Global",
 		"identity": "Konto",
+		"live": "Live",
 		"lockedToBottom": "Jesteś na samym dole",
 		"logout": "Wyloguj",
 		"logoutAll": "Wyloguj ze wszystkich urządzeń",

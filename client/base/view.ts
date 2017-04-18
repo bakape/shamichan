@@ -61,4 +61,10 @@ export default class View<M> {
 			this.on('click', events[selector], { selector, capture: true })
 		}
 	}
+
+	// Returns input element inside the view by name
+	public inputElement(name: string): HTMLInputElement {
+		return this.el
+			.querySelector(`input[name="${name}"]`) as HTMLInputElement
+	}
 }

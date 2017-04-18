@@ -1,6 +1,6 @@
 import { View, ViewAttrs } from "../../base"
 import { loginID } from ".."
-import { makeFrag, postJSON, inputValue, uncachedGET } from "../../util"
+import { makeFrag, postJSON, uncachedGET } from "../../util"
 import { AccountForm } from "./common"
 import { newRequest } from "../common"
 
@@ -134,8 +134,8 @@ export class BoardCreationForm extends AccountForm {
 
 	protected send() {
 		this.postResponse("/admin/createBoard", req => {
-			req["board"] = inputValue(this.el, 'boardName')
-			req["title"] = inputValue(this.el, 'boardTitle')
+			req["board"] = this.inputElement('boardName').value
+			req["title"] = this.inputElement('boardTitle').value
 		})
 	}
 }

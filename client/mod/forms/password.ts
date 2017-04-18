@@ -1,6 +1,5 @@
 import { AccountForm } from "./common"
 import { validatePasswordMatch } from "../common"
-import { inputValue } from "../../util"
 
 // View for changing a password
 export class PasswordChangeForm extends AccountForm {
@@ -12,8 +11,8 @@ export class PasswordChangeForm extends AccountForm {
 
 	protected send() {
 		this.postResponse("/admin/changePassword", req => {
-			req["old"] = inputValue(this.el, "oldPassword")
-			req["new"] = inputValue(this.el, "newPassword")
+			req["old"] = this.inputElement("oldPassword").value
+			req["new"] = this.inputElement("newPassword").value
 		})
 	}
 }

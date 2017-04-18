@@ -62,6 +62,9 @@ export default class FSM<S extends Stringable, E extends Stringable> {
 		const r = result.toString()
 		this.stateHandlers.forEach(r, fn =>
 			fn(arg))
+		this.onceHandlers.forEach(r, fn =>
+			fn(arg))
+		this.onceHandlers.removeAll(r)
 	}
 
 	// Returns a function that executes FSM.prototype.feed with the passed
@@ -94,6 +97,11 @@ class SetMap<V> {
 		if (set.size === 0) {
 			delete this.map[key]
 		}
+	}
+
+	// Remove all items from a key
+	public removeAll(key: string) {
+		delete this.map[key]
 	}
 
 	// Execute a function for each item under a key

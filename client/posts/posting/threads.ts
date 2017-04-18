@@ -1,4 +1,4 @@
-import { on, inputValue } from '../../util'
+import { on } from '../../util'
 import { FormView, navigate } from '../../ui'
 import { newAllocRequest } from './identity'
 import { page, boardConfig } from '../../state'
@@ -58,7 +58,7 @@ class ThreadForm extends FormView {
 			}
 		}
 
-		req["subject"] = inputValue(this.el, "subject")
+		req["subject"] = this.inputElement("subject").value
 
 		let board = page.board
 		if (board === "all") {

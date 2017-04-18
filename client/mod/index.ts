@@ -1,6 +1,6 @@
 // Login/logout/registration facilities for the account system
 
-import { inputValue, postJSON } from '../util'
+import { postJSON } from '../util'
 import { FormView } from "../ui"
 import { TabbedModal } from "../base"
 import { validatePasswordMatch, newRequest } from "./common"
@@ -145,7 +145,7 @@ class LoginForm extends FormView {
 	protected async send() {
 		const req: any = {}
 		for (let key of ['id', 'password']) {
-			req[key] = inputValue(this.el, key)
+			req[key] = this.inputElement(key).value
 		}
 		this.injectCaptcha(req)
 		loginID = req.id
