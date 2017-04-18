@@ -224,8 +224,8 @@ function parseFragment(frag: string, data: PostData): string {
             default:
                 // Generic HTTP(S) URLs, magnet links and embeds
                 let match: boolean
-                // Checking the first byte is much cheaper than a function call. Do
-                // that first, as most cases won't match.
+                // Checking the first byte is much cheaper than a function call.
+                // Do that first, as most cases won't match.
                 switch (word[0]) {
                     case "h":
                         match = word.startsWith("http")
@@ -279,7 +279,12 @@ function parseReference(m: string[]): string {
 
 // Render and anchor link that opens in a new tab
 function newTabLink(href: string, text: string): string {
-    return `<a rel="noreferrer" href="${escape(href)}" target="_blank">${escape(text)}</a>`
+    const attrs = {
+        rel: "noreferrer",
+        href: escape(href),
+        target: "_blank",
+    }
+    return `<a ${makeAttrs(attrs)}>${escape(text)}</a>`
 }
 
 // Parse generic URLs and embed, if applicable
@@ -289,16 +294,16 @@ function parseURL(bit: string): string {
         return embed
     }
 
-    const m = /^(?:magnet:\?|https?:\/\/)[-a-zA-Z0-9@:%_\+\.~#\?&\/=]+$/
-        .test(bit)
-    if (!m) {
+    try {
+        new URL(bit) // Will throw, if invalid URL
+        if (bit[0] == "m") { // Don't open a new tab for magnet links
+            bit = escape(bit)
+            return bit.link(bit)
+        }
+        return newTabLink(bit, bit)
+    } catch (e) {
         return escape(bit)
     }
-    if (bit[0] == "m") { // Don't open a new tab for magnet links
-        bit = escape(bit)
-        return bit.link(bit)
-    }
-    return newTabLink(bit, bit)
 }
 
 // Parse a hash command

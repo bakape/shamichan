@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"net/url"
+
 	"github.com/valyala/quicktemplate"
 )
 
@@ -285,8 +287,9 @@ func (c *bodyContext) newTabLink(href, text string) {
 // Parse generic URLs and magnet links
 func (c *bodyContext) parseURL(bit string) {
 	s := string(bit)
+	_, err := url.Parse(s)
 	switch {
-	case !urlRegexp.MatchString(bit):
+	case err != nil:
 		c.escape(bit)
 	case c.parseEmbeds(bit):
 	case bit[0] == 'm': // Don't open a new tab for magnet links
