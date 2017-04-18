@@ -69,14 +69,14 @@ func closeDanglingPosts() error {
 	defer r.Close()
 
 	type post struct {
-		id, op      uint64
-		board, body string
+		id, op uint64
+		board  string
 	}
 
 	posts := make([]post, 0, 8)
 	for r.Next() {
 		var p post
-		err = r.Scan(&p.id, &p.op, &p.board, &p.body)
+		err = r.Scan(&p.id, &p.op, &p.board)
 		if err != nil {
 			return err
 		}
@@ -88,11 +88,17 @@ func closeDanglingPosts() error {
 	}
 
 	for _, p := range posts {
-		links, com, err := common.ParseBody([]byte(p.body), p.board)
+		// Get post body from BoltDB
+		body, err := GetOpenBody(p.id)
 		if err != nil {
 			return err
 		}
-		err = ClosePost(p.id, p.op, p.body, links, com)
+
+		links, com, err := common.ParseBody([]byte(body), p.board)
+		if err != nil {
+			return err
+		}
+		err = ClosePost(p.id, p.op, body, links, com)
 		if err != nil {
 			return err
 		}
