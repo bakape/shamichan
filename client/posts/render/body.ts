@@ -5,6 +5,15 @@ import { escape, makeAttrs } from '../../util'
 import { parseEmbeds } from "../embed"
 import highlightSyntax from "./code"
 
+// URLs supported for linkification
+const urlPrefixes = {
+    'h': "http",
+    'm': "magnet:?",
+    'i': "irc",
+    'f': "ftp",
+    'b': "bitcoin",
+}
+
 // Render the text body of a post
 export default function renderBody(data: PostData): string {
     const state: TextState = data.state = {
@@ -223,18 +232,10 @@ function parseFragment(frag: string, data: PostData): string {
                 break
             default:
                 // Generic HTTP(S) URLs, magnet links and embeds
-                let match: boolean
                 // Checking the first byte is much cheaper than a function call.
                 // Do that first, as most cases won't match.
-                switch (word[0]) {
-                    case "h":
-                        match = word.startsWith("http")
-                        break
-                    case "m":
-                        match = word.startsWith("magnet:?")
-                        break
-                }
-                if (match) {
+                const pre = urlPrefixes[word[0]]
+                if (pre && word.startsWith(pre)) {
                     html += parseURL(word)
                     continue
                 }

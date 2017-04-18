@@ -5,11 +5,10 @@ import (
 	"html"
 	"meguca/common"
 	"meguca/config"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"net/url"
 
 	"github.com/valyala/quicktemplate"
 )
@@ -24,7 +23,6 @@ const (
 var (
 	linkRegexp      = regexp.MustCompile(`^>>(>*)(\d+)$`)
 	referenceRegexp = regexp.MustCompile(`^>>>(>*)\/(\w+)\/$`)
-	urlRegexp       = regexp.MustCompile(`^(?:magnet:\?|https?:\/\/)[-a-zA-Z0-9@:%_\+\.~#\?&\/=]+$`)
 
 	providers = map[int]string{
 		youTube:    "Youtube",
@@ -51,6 +49,15 @@ var (
 			vimeo,
 			regexp.MustCompile(`https?:\/\/(?:www\.)?vimeo\.com\/.+`),
 		},
+	}
+
+	// URLs supported for linkification
+	urlPrefixes = map[byte]string{
+		'h': "http",
+		'm': "magnet:?",
+		'i': "irc",
+		'f': "ftp",
+		'b': "bitcoin",
 	}
 )
 
@@ -211,16 +218,10 @@ func (c *bodyContext) parseFragment(frag string) {
 				continue
 			}
 		default: // Generic HTTP(S) URLs and magnet links
-			match := false
 			// Checking the first byte is much cheaper than a function call. Do
 			// that first, as most cases won't match.
-			switch word[0] {
-			case 'h':
-				match = strings.HasPrefix(word, "http")
-			case 'm':
-				match = strings.HasPrefix(word, "magnet:?")
-			}
-			if match {
+			pre, ok := urlPrefixes[word[0]]
+			if ok && strings.HasPrefix(word, pre) {
 				c.parseURL(word)
 				continue
 			}
