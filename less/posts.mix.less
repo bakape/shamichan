@@ -18,9 +18,6 @@ article {
 	word-break: break-word;
 	word-wrap: break-word;
 	max-width: 95vw;
-	& > *:not(header) {
-		contain: content;
-	}
 	.backlinks {
 		padding-top: 0.5em;
 		& > em > a {
@@ -41,7 +38,14 @@ article {
 		word-wrap: normal;
     	word-break: normal;
 	}
+	.post-container {
+		width: 100%;
+	}
+	article .post-container {
+		width: initial;
+	}
 }
+
 
 h3 {
 	margin: 0;
