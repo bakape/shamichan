@@ -64,7 +64,7 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 
 // Log an error together with the client's IP and stack trace
 func logError(r *http.Request, err interface{}) {
-	log.Printf("server: %s: %s\n%s", auth.GetIP(r), err, debug.Stack())
+	log.Printf("server: %s: %s\n%s\n", auth.GetIP(r), err, debug.Stack())
 }
 
 // Text-only 404 response
