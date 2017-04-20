@@ -6,7 +6,7 @@ import (
 	"meguca/auth"
 	"meguca/config"
 	"meguca/imager"
-	"meguca/server/websockets"
+	"meguca/websockets"
 	"net/http"
 	"strconv"
 )

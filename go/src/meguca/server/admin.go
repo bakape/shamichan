@@ -12,7 +12,7 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
-	"meguca/server/websockets"
+	"meguca/websockets"
 	"net/http"
 	"regexp"
 	"time"

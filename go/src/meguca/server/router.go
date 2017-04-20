@@ -5,7 +5,7 @@ import (
 	"log"
 	"meguca/auth"
 	"meguca/imager"
-	"meguca/server/websockets"
+	"meguca/websockets"
 	"meguca/util"
 	"net/http"
 
