@@ -1,7 +1,6 @@
 package websockets
 
 import (
-	"bytes"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
@@ -175,6 +174,7 @@ func testCreateThread(t *testing.T) {
 		time:        then,
 		hasImage:    true,
 		isSpoilered: true,
+		body:        []byte{},
 	})
 }
 
@@ -269,9 +269,7 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 		len:   3,
 		board: "a",
 		time:  time.Now().Unix(),
-		bodyBuffer: bodyBuffer{
-			Buffer: *bytes.NewBufferString("abc"),
-		},
+		body:  []byte("abc"),
 	}
 	data := marshalJSON(t, sampleImagelessThreadCreationRequest)
 
@@ -392,9 +390,7 @@ func TestPostCreation(t *testing.T) {
 		len:         1,
 		hasImage:    true,
 		isSpoilered: true,
-		bodyBuffer: bodyBuffer{
-			Buffer: *bytes.NewBufferString("Δ"),
-		},
+		body:        []byte("Δ"),
 	})
 }
 

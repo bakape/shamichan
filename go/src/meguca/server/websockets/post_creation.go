@@ -1,7 +1,6 @@
 package websockets
 
 import (
-	"bytes"
 	"errors"
 	"meguca/auth"
 	"meguca/common"
@@ -66,6 +65,7 @@ func (c *Client) insertThread(data []byte) (err error) {
 		time:        now,
 		board:       req.Board,
 		hasImage:    hasImage,
+		body:        make([]byte, 0, 1<<10),
 		isSpoilered: req.Image.Spoiler,
 	}
 
@@ -206,11 +206,9 @@ func (c *Client) insertPost(data []byte) (err error) {
 		len:         bodyLength,
 		hasImage:    hasImage,
 		isSpoilered: req.Image.Spoiler,
-		bodyBuffer: bodyBuffer{
-			Buffer: *bytes.NewBufferString(post.Body),
-		},
+		body:        append(make([]byte, 0, 1<<10), post.Body...),
 	}
-	c.feed.InsertPost(&c.post, msg)
+	c.feed.InsertPost(c.post, msg)
 
 	return nil
 }

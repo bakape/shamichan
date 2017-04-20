@@ -3,7 +3,6 @@
 package websockets
 
 import (
-	"bytes"
 	"errors"
 	"meguca/auth"
 	"meguca/common"
@@ -150,11 +149,9 @@ func (c *Client) reclaimPost(data []byte) error {
 		op:       post.OP,
 		time:     post.Time,
 		board:    post.Board,
-		bodyBuffer: bodyBuffer{
-			Buffer: *bytes.NewBufferString(post.Body),
-		},
+		body:     append(make([]byte, 0, 1<<10), post.Body...),
 	}
-	c.feed.InsertPost(&c.post, nil)
+	c.feed.InsertPost(c.post, nil)
 
 	return c.sendMessage(common.MessageReclaim, 0)
 }

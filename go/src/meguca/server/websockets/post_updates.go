@@ -103,10 +103,7 @@ func (c *Client) appendRune(data []byte) (err error) {
 		return
 	}
 
-	c.post.Lock()
-	defer c.post.Unlock()
-
-	c.post.WriteRune(char)
+	c.post.body = append(c.post.body, string(char)...)
 	c.post.len++
 	return c.updateBody(msg)
 }
@@ -114,8 +111,8 @@ func (c *Client) appendRune(data []byte) (err error) {
 // Send message to thread update feed and writes the open post's buffer to the
 // embedded database. Requires locking of c.openPost.
 func (c *Client) updateBody(msg []byte) error {
-	c.feed.Send(msg)
-	return db.SetOpenBody(c.post.id, c.post.Bytes())
+	c.feed.SetOpenBody(c.post.id, c.post.body, msg)
+	return db.SetOpenBody(c.post.id, c.post.body)
 }
 
 // Remove one character from the end of the line in the open post
@@ -135,11 +132,8 @@ func (c *Client) backspace() error {
 		return err
 	}
 
-	c.post.Lock()
-	defer c.post.Unlock()
-
-	r, lastRuneLen := utf8.DecodeLastRune(c.post.Bytes())
-	c.post.Truncate(c.post.Len() - lastRuneLen)
+	r, lastRuneLen := utf8.DecodeLastRune(c.post.body)
+	c.post.body = c.post.body[:len(c.post.body)-lastRuneLen]
 	if r == '\n' {
 		c.post.lines--
 	}
@@ -158,19 +152,15 @@ func (c *Client) closePost() error {
 		links [][2]uint64
 		com   []common.Command
 		err   error
-		body  []byte
 	)
 	if c.post.len != 0 {
-		c.post.RLock()
-		body = util.CloneBytes(c.post.Bytes())
-		c.post.RUnlock()
-		links, com, err = parser.ParseBody(body, c.post.board)
+		links, com, err = parser.ParseBody(c.post.body, c.post.board)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = db.ClosePost(c.post.id, c.post.op, string(body), links, com)
+	err = db.ClosePost(c.post.id, c.post.op, string(c.post.body), links, com)
 	if err != nil {
 		return err
 	}
@@ -207,7 +197,7 @@ func (c *Client) spliceText(data []byte) error {
 	}
 
 	var (
-		old = []rune(c.post.String())
+		old = []rune(string(c.post.body))
 		end []rune
 	)
 
@@ -241,26 +231,25 @@ func (c *Client) spliceText(data []byte) error {
 		return err
 	}
 
+	// Need to prevent modifications to the original slice, as there might be
+	// concurrent reads in the update feed.
+	c.post.body = util.CloneBytes(c.post.body)
+
 	byteStartPos := 0
 	for _, r := range old[:req.Start] {
 		byteStartPos += utf8.RuneLen(r)
 	}
 
-	c.post.Lock()
-	defer c.post.Unlock()
-
-	c.post.Truncate(byteStartPos)
-	c.post.WriteString(string(end))
+	c.post.body = append(c.post.body[:byteStartPos], string(end)...)
 
 	// Count lines
 	c.post.lines = 0
-	for _, b := range c.post.Bytes() {
+	for _, b := range c.post.body {
 		if b == '\n' {
 			c.post.lines++
 		}
 	}
 	if c.post.lines > common.MaxLinesBody {
-		c.post.Truncate(byteStartPos)
 		return errTooManyLines
 	}
 

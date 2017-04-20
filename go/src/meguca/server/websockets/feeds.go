@@ -3,7 +3,6 @@
 package websockets
 
 import (
-	"bytes"
 	"meguca/common"
 	"meguca/db"
 	"meguca/util"
@@ -23,11 +22,10 @@ func init() {
 }
 
 type postCreationMessage struct {
-	hasImage bool
-	id       uint64
-	time     int64
-	*bodyBuffer
-	msg []byte
+	hasImage  bool
+	id        uint64
+	time      int64
+	body, msg []byte
 }
 
 type postIDMessage struct {
@@ -35,10 +33,15 @@ type postIDMessage struct {
 	msg []byte
 }
 
+type postBodyModMessage struct {
+	postIDMessage
+	body []byte
+}
+
 type openPostCacheEntry struct {
 	hasImage bool
 	created  int64
-	*bodyBuffer
+	body     []byte
 }
 
 // Container for managing client<->update-feed assignment and interaction
@@ -62,6 +65,7 @@ func (f *feedMap) Add(id uint64, c *Client) (feed *updateFeed, err error) {
 			insertPost:  make(chan postCreationMessage),
 			insertImage: make(chan postIDMessage),
 			closePost:   make(chan postIDMessage),
+			setOpenBody: make(chan postBodyModMessage),
 			clients:     make([]*Client, 0, 8),
 		}
 		f.feeds[id] = feed
@@ -136,6 +140,8 @@ type updateFeed struct {
 	insertImage chan postIDMessage
 	// Close an open post
 	closePost chan postIDMessage
+	// Set body of an open post
+	setOpenBody chan postBodyModMessage
 	// Subscribed clients
 	clients []*Client
 	// Recent posts in the thread
@@ -157,9 +163,7 @@ func (u *updateFeed) Start() (err error) {
 		u.open[p.ID] = openPostCacheEntry{
 			hasImage: p.HasImage,
 			created:  p.Time,
-			bodyBuffer: &bodyBuffer{
-				Buffer: *bytes.NewBuffer(p.Body),
-			},
+			body:     p.Body,
 		}
 	}
 
@@ -232,18 +236,29 @@ func (u *updateFeed) Start() (err error) {
 			case p := <-u.insertPost:
 				u.ticker.StartIfPaused()
 				u.recent[p.id] = p.time
+				_, ok := u.open[p.id]
 				u.open[p.id] = openPostCacheEntry{
-					hasImage:   p.hasImage,
-					created:    p.time,
-					bodyBuffer: p.bodyBuffer,
+					hasImage: p.hasImage,
+					created:  p.time,
+					body:     p.body,
 				}
-				u.Write(p.msg)
+				// Don't write insert messages, when reclaiming posts.
+				if !ok {
+					u.Write(p.msg)
+				}
 
 			// Insert and image into an open post
 			case msg := <-u.insertImage:
 				u.ticker.StartIfPaused()
 				p := u.open[msg.id]
 				p.hasImage = true
+				u.open[msg.id] = p
+				u.Write(msg.msg)
+
+			case msg := <-u.setOpenBody:
+				u.ticker.StartIfPaused()
+				p := u.open[msg.id]
+				p.body = msg.body
 				u.open[msg.id] = p
 				u.Write(msg.msg)
 
@@ -302,10 +317,7 @@ func (u *updateFeed) genSyncMessage() []byte {
 		b = strconv.AppendBool(b, p.hasImage)
 
 		b = append(b, `,"body":`...)
-		p.RLock()
-		s := p.String()
-		p.RUnlock()
-		b = strconv.AppendQuote(b, s)
+		b = strconv.AppendQuote(b, string(p.body))
 
 		b = append(b, '}')
 	}
@@ -326,14 +338,15 @@ func (u *updateFeed) sendIPCount() {
 	u.bufferMessage(msg)
 }
 
-// Insert a new post into the thread and propagate to listeners
-func (u *updateFeed) InsertPost(p *openPost, msg []byte) {
+// Insert a new post into the thread or reclaim an open post after disconnect
+// and propagate to listeners
+func (u *updateFeed) InsertPost(p openPost, msg []byte) {
 	u.insertPost <- postCreationMessage{
-		hasImage:   p.hasImage,
-		id:         p.id,
-		time:       p.time,
-		bodyBuffer: &p.bodyBuffer,
-		msg:        msg,
+		hasImage: p.hasImage,
+		id:       p.id,
+		time:     p.time,
+		body:     p.body,
+		msg:      msg,
 	}
 }
 
@@ -349,5 +362,16 @@ func (u *updateFeed) ClosePost(id uint64, msg []byte) {
 	u.closePost <- postIDMessage{
 		id:  id,
 		msg: msg,
+	}
+}
+
+// Set body of an open post and send update message to clients
+func (u *updateFeed) SetOpenBody(id uint64, body, msg []byte) {
+	u.setOpenBody <- postBodyModMessage{
+		postIDMessage: postIDMessage{
+			id:  id,
+			msg: msg,
+		},
+		body: body,
 	}
 }

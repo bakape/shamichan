@@ -1,7 +1,6 @@
 package websockets
 
 import (
-	"bytes"
 	"testing"
 	"time"
 
@@ -101,9 +100,7 @@ func TestAppendRune(t *testing.T) {
 		op:   1,
 		len:  3,
 		time: time.Now().Unix(),
-		bodyBuffer: bodyBuffer{
-			Buffer: *bytes.NewBufferString("abc"),
-		},
+		body: []byte("abc"),
 	}
 
 	if err := cl.appendRune([]byte("100")); err != nil {
@@ -129,7 +126,7 @@ func assertOpenPost(t *testing.T, cl *Client, len int, buf string) {
 	if l := cl.post.len; l != len {
 		t.Errorf("unexpected openPost body length: %d", l)
 	}
-	if s := cl.post.String(); s != buf {
+	if s := string(cl.post.body); s != buf {
 		t.Errorf("unexpected openPost buffer contents: `%s`", s)
 	}
 }
@@ -159,9 +156,7 @@ func BenchmarkAppend(b *testing.B) {
 		op:   1,
 		len:  3,
 		time: time.Now().Unix(),
-		bodyBuffer: bodyBuffer{
-			Buffer: *bytes.NewBufferString("abc"),
-		},
+		body: []byte("abc"),
 	}
 	addToFeed(b, cl, 1)
 
@@ -201,9 +196,7 @@ func TestClosePostWithHashCommand(t *testing.T) {
 		len:   5,
 		board: "a",
 		time:  time.Now().Unix(),
-		bodyBuffer: bodyBuffer{
-			Buffer: *bytes.NewBufferString("#flip"),
-		},
+		body:  []byte("#flip"),
 	}
 
 	if err := cl.closePost(); err != nil {
@@ -284,9 +277,7 @@ func TestClosePostWithLinks(t *testing.T) {
 		len:   3,
 		board: "a",
 		time:  time.Now().Unix(),
-		bodyBuffer: bodyBuffer{
-			Buffer: *bytes.NewBufferString(" >>22 "),
-		},
+		body:  []byte(" >>22 "),
 	}
 	setBoardConfigs(t, false)
 
@@ -354,9 +345,7 @@ func TestBackspace(t *testing.T) {
 		op:   1,
 		len:  3,
 		time: time.Now().Unix(),
-		bodyBuffer: bodyBuffer{
-			Buffer: *bytes.NewBufferString("abc"),
-		},
+		body: []byte("abc"),
 	}
 
 	if err := cl.backspace(); err != nil {
@@ -380,14 +369,14 @@ func TestClosePost(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
+	addToFeed(t, cl, 1)
+	cl.feed.InsertPost(cl.post, nil)
 	cl.post = openPost{
 		id:    2,
 		op:    1,
 		len:   3,
 		board: "a",
-		bodyBuffer: bodyBuffer{
-			Buffer: *bytes.NewBufferString("abc"),
-		},
+		body:  []byte("abc"),
 	}
 
 	if err := cl.closePost(); err != nil {
@@ -584,9 +573,7 @@ func TestSplice(t *testing.T) {
 				len:   utf8.RuneCountInString(c.init),
 				board: "a",
 				time:  time.Now().Unix(),
-				bodyBuffer: bodyBuffer{
-					Buffer: *bytes.NewBufferString(c.init),
-				},
+				body:  []byte(c.init),
 			}
 
 			req := spliceRequest{
