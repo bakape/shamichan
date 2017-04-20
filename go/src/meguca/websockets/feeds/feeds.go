@@ -34,15 +34,16 @@ func addToFeed(id uint64, c common.Client) (feed *Feed, err error) {
 	feed, ok := feeds.feeds[id]
 	if !ok {
 		feed = &Feed{
-			id:          id,
-			add:         make(chan common.Client),
-			remove:      make(chan common.Client),
-			send:        make(chan []byte),
-			insertPost:  make(chan postCreationMessage),
-			insertImage: make(chan postIDMessage),
-			closePost:   make(chan postIDMessage),
-			setOpenBody: make(chan postBodyModMessage),
-			clients:     make([]common.Client, 0, 8),
+			id:            id,
+			add:           make(chan common.Client),
+			remove:        make(chan common.Client),
+			send:          make(chan []byte),
+			insertPost:    make(chan postCreationMessage),
+			insertImage:   make(chan postIDMessage),
+			closePost:     make(chan postIDMessage),
+			setOpenBody:   make(chan postBodyModMessage),
+			clients:       make([]common.Client, 0, 8),
+			messageBuffer: make([]byte, 0, 1<<10),
 		}
 		feeds.feeds[id] = feed
 		err = feed.Start()

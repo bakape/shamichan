@@ -3,7 +3,6 @@ package feeds
 import (
 	"meguca/common"
 	"meguca/db"
-	"meguca/util"
 	"strconv"
 	"time"
 )
@@ -36,9 +35,9 @@ type Feed struct {
 	// Thread ID
 	id uint64
 	// Message flushing ticker
-	ticker util.PausableTicker
+	ticker
 	// Buffer of unsent messages
-	util.MessageBuffer
+	messageBuffer
 	// Add a client
 	add chan common.Client
 	// Remove client
@@ -81,8 +80,8 @@ func (f *Feed) Start() (err error) {
 	go func() {
 		// Stop the timer, if there are no messages and resume on new ones.
 		// Keeping the goroutine asleep reduces CPU usage.
-		f.ticker.Start()
-		defer f.ticker.Pause()
+		f.start()
+		defer f.pause()
 
 		cleanUp := time.NewTicker(time.Minute)
 		defer cleanUp.Stop()
@@ -119,10 +118,10 @@ func (f *Feed) Start() (err error) {
 				f.bufferMessage(msg)
 
 			// Send any buffered messages to any listening clients
-			case <-f.ticker.C:
-				buf := f.Flush()
+			case <-f.C:
+				buf := f.flush()
 				if buf == nil {
-					f.ticker.Pause()
+					f.pause()
 				} else {
 					for _, c := range f.clients {
 						c.Send(buf)
@@ -145,7 +144,7 @@ func (f *Feed) Start() (err error) {
 
 			// Insert a new post, cache and propagate
 			case p := <-f.insertPost:
-				f.ticker.StartIfPaused()
+				f.startIfPaused()
 				f.recent[p.id] = p.time
 				f.open[p.id] = openPostCacheEntry{
 					hasImage: p.hasImage,
@@ -154,29 +153,29 @@ func (f *Feed) Start() (err error) {
 				}
 				// Don't write insert messages, when reclaiming posts.
 				if p.msg != nil {
-					f.Write(p.msg)
+					f.write(p.msg)
 				}
 
 			// Insert and image into an open post
 			case msg := <-f.insertImage:
-				f.ticker.StartIfPaused()
+				f.startIfPaused()
 				p := f.open[msg.id]
 				p.hasImage = true
 				f.open[msg.id] = p
-				f.Write(msg.msg)
+				f.write(msg.msg)
 
 			case msg := <-f.setOpenBody:
-				f.ticker.StartIfPaused()
+				f.startIfPaused()
 				p := f.open[msg.id]
 				p.body = msg.body
 				f.open[msg.id] = p
-				f.Write(msg.msg)
+				f.write(msg.msg)
 
 			// Close open post
 			case msg := <-f.closePost:
-				f.ticker.StartIfPaused()
+				f.startIfPaused()
 				delete(f.open, msg.id)
-				f.Write(msg.msg)
+				f.write(msg.msg)
 			}
 		}
 	}()
@@ -191,8 +190,8 @@ func (f *Feed) Send(msg []byte) {
 
 // Buffer a message to be sent on the next tick
 func (f *Feed) bufferMessage(msg []byte) {
-	f.ticker.StartIfPaused()
-	f.Write(msg)
+	f.startIfPaused()
+	f.write(msg)
 }
 
 // Generate a message for synchronizing to the current status of the update

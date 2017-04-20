@@ -3,67 +3,9 @@
 package util
 
 import (
-	"bytes"
 	"crypto/md5"
 	"encoding/base64"
-	"time"
 )
-
-// TickerInterval sets the interval of PausableTicker flushes
-const TickerInterval = time.Millisecond * 100
-
-// PausableTicker is a time.Ticker that can be paused
-type PausableTicker struct {
-	t *time.Ticker
-	C <-chan time.Time
-}
-
-// Start starts p
-func (p *PausableTicker) Start() {
-	p.t = time.NewTicker(TickerInterval)
-	p.C = p.t.C
-}
-
-// Pause pauses p
-func (p *PausableTicker) Pause() {
-	p.t.Stop()
-	p.C = nil
-}
-
-// StartIfPaused start p back up, if p is paused
-func (p *PausableTicker) StartIfPaused() {
-	if p.C == nil {
-		p.Start()
-	}
-}
-
-// MessageBuffer provides bufferring and concatenation for post update messages
-type MessageBuffer struct {
-	buf bytes.Buffer
-}
-
-// Write writes a message to b
-func (b *MessageBuffer) Write(data []byte) {
-	if b.buf.Len() == 0 {
-		b.buf.WriteString("33")
-	} else {
-		b.buf.WriteByte(0)
-	}
-	b.buf.Write(data)
-}
-
-// Flush flushes b into into a []byte and returns it.
-// If no messages are stored, the returned buffer is nil.
-func (b *MessageBuffer) Flush() []byte {
-	if b.buf.Len() == 0 {
-		return nil
-	}
-
-	// Need to copy, because buffer will be sent to multiple threads
-	buf := CloneBytes(b.buf.Bytes())
-	b.buf.Reset()
-	return buf
-}
 
 // WrapError wraps error types to create compound error chains
 func WrapError(text string, err error) error {

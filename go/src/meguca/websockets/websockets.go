@@ -106,7 +106,7 @@ func newClient(conn *websocket.Conn, req *http.Request) *Client {
 		// Allows for ~60 seconds of messages, until the buffer overflows.
 		// A larger gap is more acceptable to shitty connections and mobile
 		// phones, especially while uploading.
-		sendExternal: make(chan []byte, time.Second*60/util.TickerInterval),
+		sendExternal: make(chan []byte, time.Second*60/feeds.TickerInterval),
 		conn:         conn,
 	}
 }
