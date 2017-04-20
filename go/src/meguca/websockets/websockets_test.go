@@ -279,31 +279,6 @@ func normalCloseWebClient(t *testing.T, wcl *websocket.Conn) {
 	}
 }
 
-func TestClientCleanUp(t *testing.T) {
-	t.Parallel()
-
-	sv := newWSServer(t)
-	defer sv.Close()
-	id := SyncID{
-		OP:    1,
-		Board: "a",
-	}
-
-	cl, wcl := sv.NewClient()
-	Clients.add(cl, id)
-	if _, sync := Clients.GetSync(cl); sync != id {
-		LogUnexpected(t, id, sync)
-	}
-
-	sv.Add(1)
-	go readListenErrors(t, cl, sv)
-	normalCloseWebClient(t, wcl)
-	sv.Wait()
-	if synced, _ := Clients.GetSync(cl); synced {
-		t.Error("client still synced")
-	}
-}
-
 func TestHandler(t *testing.T) {
 	t.Parallel()
 

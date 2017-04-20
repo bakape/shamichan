@@ -1,14 +1,13 @@
 package websockets
 
 import (
-	"testing"
-	"time"
-
-	"unicode/utf8"
-
 	"meguca/common"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/websockets/feeds"
+	"testing"
+	"time"
+	"unicode/utf8"
 )
 
 // Sample wall of text
@@ -94,13 +93,14 @@ func TestAppendRune(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	addToFeed(t, cl, 1)
+	registerClient(t, cl, 1, "a")
 	cl.post = openPost{
-		id:   2,
-		op:   1,
-		len:  3,
-		time: time.Now().Unix(),
-		body: []byte("abc"),
+		id:    2,
+		op:    1,
+		len:   3,
+		board: "a",
+		time:  time.Now().Unix(),
+		body:  []byte("abc"),
 	}
 
 	if err := cl.appendRune([]byte("100")); err != nil {
@@ -158,7 +158,7 @@ func BenchmarkAppend(b *testing.B) {
 		time: time.Now().Unix(),
 		body: []byte("abc"),
 	}
-	addToFeed(b, cl, 1)
+	registerClient(b, cl, 1, "a")
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -339,7 +339,7 @@ func TestBackspace(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	addToFeed(t, cl, 1)
+	registerClient(t, cl, 1, "a")
 	cl.post = openPost{
 		id:   2,
 		op:   1,
@@ -369,8 +369,7 @@ func TestClosePost(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	addToFeed(t, cl, 1)
-	cl.feed.InsertPost(cl.post, nil)
+	registerClient(t, cl, 1, "a")
 	cl.post = openPost{
 		id:    2,
 		op:    1,
@@ -378,6 +377,7 @@ func TestClosePost(t *testing.T) {
 		board: "a",
 		body:  []byte("abc"),
 	}
+	cl.feed.InsertPost(1, false, time.Now().Unix(), cl.post.body, nil)
 
 	if err := cl.closePost(); err != nil {
 		t.Fatal(err)
@@ -566,7 +566,7 @@ func TestSplice(t *testing.T) {
 			}
 
 			cl, _ := sv.NewClient()
-			addToFeed(t, cl, 1)
+			registerClient(t, cl, 1, "a")
 			cl.post = openPost{
 				id:    2,
 				op:    1,
@@ -702,7 +702,7 @@ func TestInsertImage(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	addToFeed(t, cl, 1)
+	registerClient(t, cl, 1, "a")
 	cl.post = openPost{
 		id:    2,
 		board: "a",

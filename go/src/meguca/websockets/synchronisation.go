@@ -10,6 +10,8 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"meguca/websockets/feeds"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,9 +34,6 @@ type reclaimRequest struct {
 // Synchronise the client to a certain thread, assign it's ID and prepare to
 // receive update messages.
 func (c *Client) synchronise(data []byte) error {
-	// Unsubscribe from previous update feed, if any
-	c.unsubscribeFeed()
-
 	// Send current server time on first synchronization
 	if !c.synced {
 		err := c.sendMessage(common.MessageServerTime, time.Now().Unix())
@@ -52,54 +51,43 @@ func (c *Client) synchronise(data []byte) error {
 		return errInvalidBoard
 	case auth.IsBanned(msg.Board, c.ip):
 		return errBanned
-	case msg.Thread == 0:
-		return c.syncToBoard(msg.Board)
-	default:
-		return c.syncToThread(msg.Board, msg.Thread)
+	case msg.Thread != 0:
+		valid, err := db.ValidateOP(msg.Thread, msg.Board)
+		switch {
+		case err != nil:
+			return err
+		case !valid:
+			return errInvalidThread
+		}
 	}
+
+	return c.registerSync(msg.Thread, msg.Board)
 }
 
-// Unsubscribe from update feed, if any
-func (c *Client) unsubscribeFeed() {
-	if c.feed != nil {
-		feeds.Remove(c.feed, c)
-		c.feed = nil
-	}
-}
-
-// Board pages do not have any live feeds (for now, at least). Just send the
-// client its ID.
-func (c *Client) syncToBoard(board string) error {
-	c.registerSync(board, 0)
-	return c.sendMessage(common.MessageSynchronise, nil)
-}
-
-// Register the client with the central client storage data structure
-func (c *Client) registerSync(board string, op uint64) {
-	id := SyncID{
-		OP:    op,
-		Board: board,
-	}
-	if !c.synced {
-		Clients.add(c, id)
-	} else {
-		Clients.changeSync(c, id)
-	}
-}
-
-// Sends a response to the client's synchronization request with any missed
-// messages and starts streaming in updates.
-func (c *Client) syncToThread(board string, thread uint64) (err error) {
-	valid, err := db.ValidateOP(thread, board)
-	switch {
-	case err != nil:
+// Register fresh client sync or change from previous sync
+func (c *Client) registerSync(id uint64, board string) (err error) {
+	err = c.closePreviousPost()
+	if err != nil {
 		return
-	case !valid:
-		return errInvalidThread
 	}
 
-	c.registerSync(board, thread)
-	c.feed, err = feeds.Add(thread, c)
+	var fn func(common.Client, uint64, string) (*feeds.Feed, error)
+	if c.synced {
+		fn = feeds.ChangeSync
+	} else {
+		fn = feeds.AddClient
+	}
+	c.feed, err = fn(c, id, board)
+	if err != nil {
+		return
+	}
+
+	// Still sending something for consistency, but there is no actual syncing
+	// to board pages
+	if id == 0 {
+		return c.sendMessage(common.MessageSynchronise, nil)
+	}
+
 	return
 }
 
@@ -151,7 +139,7 @@ func (c *Client) reclaimPost(data []byte) error {
 		board:    post.Board,
 		body:     append(make([]byte, 0, 1<<10), post.Body...),
 	}
-	c.feed.InsertPost(c.post, nil)
+	c.feed.InsertPost(c.post.id, c.post.hasImage, c.post.time, c.post.body, nil)
 
 	return c.sendMessage(common.MessageReclaim, 0)
 }

@@ -54,22 +54,26 @@ const (
 	MessageNotification
 )
 
-// Clients exposes the global client map to all packages without causing
-// circular imports
-var Clients interface {
-	GetByIP(ip string) []Client
-}
+// Forwarded functions from "meguca/websockets/feeds" to avoid circular imports
+var (
+	// GetByIP returns all clients that match an IP
+	GetByIP func(ip string) []Client
+
+	// SendTo sends a message to a feed, if it exists
+	SendTo func(id uint64, msg []byte)
+
+	// ClosePost closes a post in a feed, if it exists
+	ClosePost func(id, op uint64, msg []byte)
+)
 
 // Client exposes some globally accessible websocket client functionality
 // without causing circular imports
 type Client interface {
+	Send([]byte)
 	Redirect(board string)
-}
-
-// Feeds exposes update feed storage map without causing circular imports
-var Feeds interface {
-	SendTo(id uint64, msg []byte)
-	ClosePost(id, op uint64, msg []byte)
+	IP() string
+	Close(error)
+	SetSynced()
 }
 
 // EncodeMessage encodes a message for sending through websockets or writing to

@@ -31,7 +31,7 @@ func insertBackinks(id, op uint64, links [][2]uint64) (err error) {
 
 		// nil during tests
 		if !IsTest {
-			common.Feeds.SendTo(op, msg)
+			common.SendTo(op, msg)
 		}
 	}
 
@@ -72,7 +72,7 @@ func ClosePost(id, op uint64, body string, links [][2]uint64, com []common.Comma
 	}
 
 	if !IsTest {
-		common.Feeds.ClosePost(id, op, msg)
+		common.ClosePost(id, op, msg)
 	}
 	return deleteOpenPostBody(id)
 }

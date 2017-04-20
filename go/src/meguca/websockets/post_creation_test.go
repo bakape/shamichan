@@ -5,6 +5,8 @@ import (
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/websockets/feeds"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -106,11 +108,8 @@ func testCreateThread(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
-	Clients.add(cl, SyncID{
-		OP:    0,
-		Board: "all",
-	})
-	defer Clients.Clear()
+	registerClient(t, cl, 0, "all")
+	defer cl.Close(nil)
 	cl.ip = "::1"
 
 	std := common.Thread{
@@ -287,7 +286,11 @@ func TestPostCreationValidations(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	Clients.add(cl, SyncID{1, "a"})
+	var err error
+	cl.feed, err = feeds.AddClient(cl, 1, "a")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	cases := [...]struct {
 		testName, token, name string
@@ -329,9 +332,8 @@ func TestPostCreation(t *testing.T) {
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
 	cl.ip = "::1"
-	Clients.add(cl, SyncID{1, "a"})
-	defer Clients.Clear()
-	addToFeed(t, cl, 1)
+	registerClient(t, cl, 1, "a")
+	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
 		Body:     "Δ",
@@ -394,12 +396,16 @@ func TestPostCreation(t *testing.T) {
 	})
 }
 
-func addToFeed(t testing.TB, cl *Client, id uint64) {
+func registerClient(t testing.TB, cl *Client, id uint64, board string) {
 	var err error
-	cl.feed, err = feeds.Add(1, cl)
+	cl.feed, err = feeds.AddClient(cl, id, board)
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func encodeMessageType(typ common.MessageType) string {
+	return strconv.Itoa(int(typ))
 }
 
 func prepareForPostCreation(t testing.TB) {
@@ -454,10 +460,8 @@ func TestTextOnlyPostCreation(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	Clients.add(cl, SyncID{1, "a"})
-	defer Clients.Clear()
-	var err error
-	cl.feed, err = feeds.Add(1, cl)
+	registerClient(t, cl, 1, "a")
+	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
 		Body:     "a",
@@ -489,8 +493,8 @@ func BenchmarkPostCreation(b *testing.B) {
 	sv := newWSServer(b)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	Clients.add(cl, SyncID{1, "a"})
-	defer Clients.Clear()
+	registerClient(b, cl, 1, "a")
+	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
 		Body:     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
@@ -525,9 +529,8 @@ func TestPostCreationForcedAnon(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	Clients.add(cl, SyncID{1, "a"})
-	defer Clients.Clear()
-	addToFeed(t, cl, 1)
+	registerClient(t, cl, 1, "a")
+	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
 		Body:     "a",

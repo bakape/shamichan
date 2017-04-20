@@ -7,6 +7,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	"meguca/parser"
+	"meguca/websockets/feeds"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -143,11 +144,11 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 
-	_, sync := Clients.GetSync(c)
-	if auth.IsBanned(sync.Board, c.ip) {
+	_, op, board := feeds.GetSync(c)
+	if auth.IsBanned(board, c.ip) {
 		return errBanned
 	}
-	conf, err := getBoardConfig(sync.Board)
+	conf, err := getBoardConfig(board)
 	if err != nil {
 		return
 	}
@@ -163,13 +164,13 @@ func (c *Client) insertPost(data []byte) (err error) {
 		conf.ForcedAnon,
 		true,
 		c.ip,
-		sync.Board,
+		board,
 	)
 	if err != nil {
 		return
 	}
 
-	post.OP = sync.OP
+	post.OP = op
 	post.ID, err = db.NewPostID()
 	if err != nil {
 		return
@@ -200,15 +201,15 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 	c.post = openPost{
 		id:          post.ID,
-		op:          sync.OP,
+		op:          op,
 		time:        now,
-		board:       sync.Board,
+		board:       board,
 		len:         bodyLength,
 		hasImage:    hasImage,
 		isSpoilered: req.Image.Spoiler,
 		body:        append(make([]byte, 0, 1<<10), post.Body...),
 	}
-	c.feed.InsertPost(c.post, msg)
+	c.feed.InsertPost(c.post.id, c.post.hasImage, c.post.time, c.post.body, msg)
 
 	return nil
 }

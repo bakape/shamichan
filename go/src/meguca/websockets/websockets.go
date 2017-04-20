@@ -15,6 +15,8 @@ import (
 
 	"runtime/debug"
 
+	"meguca/websockets/feeds"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -50,15 +52,15 @@ func (e errInvalidFrame) Error() string {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	// Synchronized to any change feed and registered in the global Clients map.
-	// Should only be mutated from Clients, which also contains weather this
-	// Client is synced. The local property exists mainly to reduce lock
-	// contention on Clients.
+	// Synchronized to any change feed and registered in the global client map.
+	// Should only be mutated from the map, which also contains weather this
+	// Client is synced. The local property exists only to reduce lock
+	// contention on the map.
 	synced bool
 	// Post currently open by the client
 	post openPost
 	// Currently subscribed to update feed, if any
-	feed *updateFeed
+	feed *feeds.Feed
 	// Underlying websocket connection
 	conn *websocket.Conn
 	// Client IP
@@ -115,7 +117,7 @@ func (c *Client) listen() error {
 
 	// Clean up, when loop exits
 	err := c.listenerLoop()
-	Clients.remove(c)
+	feeds.RemoveClient(c)
 	return c.closeConnections(err)
 }
 
@@ -146,14 +148,11 @@ func (c *Client) listenerLoop() error {
 				return err
 			}
 		case board := <-c.redirect:
-			if err := c.closePreviousPost(); err != nil {
-				return err
-			}
 			err := c.sendMessage(common.MessageRedirect, board)
 			if err != nil {
 				return err
 			}
-			if err := c.syncToBoard(board); err != nil {
+			if err := c.registerSync(0, board); err != nil {
 				return err
 			}
 		}
@@ -162,8 +161,6 @@ func (c *Client) listenerLoop() error {
 
 // Close all connections an goroutines associated with the Client
 func (c *Client) closeConnections(err error) error {
-	// Unsubscribe from update feed, if any
-	c.unsubscribeFeed()
 	// Close receiver loop
 	c.Close(nil)
 
@@ -315,4 +312,15 @@ func (c *Client) Redirect(board string) {
 	case c.redirect <- board:
 	default:
 	}
+}
+
+// IP returns the IP of the  client connection. Thread-safe, as the IP is never
+// written to after assignment.
+func (c *Client) IP() string {
+	return c.ip
+}
+
+// SetSynced marks the client as synced to the server and ready for operation
+func (c *Client) SetSynced() {
+	c.synced = true
 }

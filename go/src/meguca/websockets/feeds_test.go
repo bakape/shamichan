@@ -1,9 +1,7 @@
 package websockets
 
 import (
-	"meguca/common"
-	. "meguca/test"
-	"strconv"
+	"meguca/websockets/feeds"
 	"testing"
 )
 
@@ -17,7 +15,7 @@ func TestStreamUpdates(t *testing.T) {
 	defer sv.Close()
 	sv.Add(1)
 	cl, wcl := sv.NewClient()
-	addToFeed(t, cl, 1)
+	registerClient(t, cl, 1, "a")
 	go readListenErrors(t, cl, sv)
 
 	assertMessage(
@@ -33,21 +31,4 @@ func TestStreamUpdates(t *testing.T) {
 
 	cl.Close(nil)
 	sv.Wait()
-}
-
-func TestWriteMultipleToBuffer(t *testing.T) {
-	t.Parallel()
-
-	u := updateFeed{}
-	u.Write([]byte("a"))
-	u.Write([]byte("b"))
-
-	const std = "33a\u0000b"
-	if s := string(u.Flush()); s != std {
-		LogUnexpected(t, std, s)
-	}
-}
-
-func encodeMessageType(typ common.MessageType) string {
-	return strconv.Itoa(int(typ))
 }

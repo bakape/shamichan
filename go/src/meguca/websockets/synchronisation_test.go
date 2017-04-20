@@ -6,6 +6,7 @@ import (
 	"meguca/db"
 	"meguca/imager/assets"
 	. "meguca/test"
+	"meguca/websockets/feeds"
 	"strconv"
 	"testing"
 
@@ -21,19 +22,23 @@ func TestOldFeedClosing(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	feed, err := feeds.Add(1, cl)
+	registerClient(t, cl, 1, "a")
+
+	err := cl.synchronise(marshalJSON(t, syncRequest{
+		Thread: 0,
+		Board:  "a",
+	}))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	cl.feed = feed
-	cl.synchronise(nil)
 	if cl.feed != nil {
 		t.Fatal("old feed not cleared")
 	}
 }
 
 func TestSyncToBoard(t *testing.T) {
+	feeds.Clear()
 	setBoardConfigs(t, false)
 
 	sv := newWSServer(t)
@@ -55,9 +60,11 @@ func TestSyncToBoard(t *testing.T) {
 	if err := cl.synchronise(marshalJSON(t, msg)); err != nil {
 		t.Fatal(err)
 	}
-	defer Clients.Clear()
 	skipMessage(t, wcl)
-	assertMessage(t, wcl, `30null`)
+	assertMessage(t, wcl, "30null")
+	if !cl.synced {
+		t.Fatal("sync property not set")
+	}
 }
 
 func skipMessage(t *testing.T, con *websocket.Conn) {
@@ -68,20 +75,42 @@ func skipMessage(t *testing.T, con *websocket.Conn) {
 }
 
 func TestRegisterSync(t *testing.T) {
+	feeds.Clear()
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	defer Clients.Clear()
 
-	syncs := [...]SyncID{
+	syncs := [...]struct {
+		id    uint64
+		board string
+	}{
 		{1, "a"},
-		{2, "a"},
+		{0, "a"},
 	}
 
 	// Both for new syncs and switching syncs
 	for _, s := range syncs {
-		cl.registerSync(s.Board, s.OP)
-		assertSyncID(t, &Clients, cl, s)
+		if err := cl.registerSync(s.id, s.board); err != nil {
+			t.Fatal(err)
+		}
+		assertSyncID(t, cl, s.id, s.board)
+	}
+}
+
+func assertSyncID(t *testing.T, cl *Client, id uint64, board string) {
+	synced, _id, _board := feeds.GetSync(cl)
+	if !synced {
+		t.Error("client not synced")
+	}
+	if id != _id {
+		LogUnexpected(t, id, _id)
+	}
+	if board != _board {
+		LogUnexpected(t, board, _board)
 	}
 }
 
@@ -98,7 +127,6 @@ func TestInvalidThreadSync(t *testing.T) {
 		Board:  "a",
 		Thread: 1,
 	})
-	defer Clients.Clear()
 	if err := cl.synchronise(data); err != errInvalidThread {
 		UnexpectedError(t, err)
 	}
@@ -120,15 +148,11 @@ func TestSyncToThread(t *testing.T) {
 		Board:  "a",
 		Thread: 1,
 	})
-	defer Clients.Clear()
 
 	skipMessage(t, wcl)
 	skipMessage(t, wcl)
 	assertMessage(t, wcl, "33351")
-	assertSyncID(t, &Clients, cl, SyncID{
-		OP:    1,
-		Board: "a",
-	})
+	assertSyncID(t, cl, 1, "a")
 
 	cl.Close(nil)
 	sv.Wait()
@@ -222,7 +246,7 @@ func TestReclaimPost(t *testing.T) {
 			sv := newWSServer(t)
 			defer sv.Close()
 			cl, wcl := sv.NewClient()
-			addToFeed(t, cl, 1)
+			registerClient(t, cl, 1, "a")
 			req := reclaimRequest{
 				ID:       c.id,
 				Password: c.password,

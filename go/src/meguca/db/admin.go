@@ -65,7 +65,7 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 			return
 		}
 		if !IsTest {
-			common.Feeds.SendTo(post.op, msg)
+			common.SendTo(post.op, msg)
 		}
 	}
 
@@ -144,7 +144,7 @@ func DeletePost(board string, id uint64) (err error) {
 		return
 	}
 	if !IsTest {
-		common.Feeds.SendTo(op, msg)
+		common.SendTo(op, msg)
 	}
 
 	return

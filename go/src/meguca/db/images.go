@@ -159,7 +159,7 @@ func SpoilerImage(id uint64) (err error) {
 	}
 
 	if !IsTest {
-		common.Feeds.SendTo(op, msg)
+		common.SendTo(op, msg)
 	}
 
 	return

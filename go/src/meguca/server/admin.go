@@ -12,7 +12,7 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
-	"meguca/websockets"
+	"meguca/websockets/feeds"
 	"net/http"
 	"regexp"
 	"time"
@@ -415,7 +415,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 
 		// Redirect all banned connected clients to the /all/ board
 		for ip := range ips {
-			for _, cl := range common.Clients.GetByIP(ip) {
+			for _, cl := range common.GetByIP(ip) {
 				cl.Redirect("all")
 			}
 		}
@@ -437,7 +437,7 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 		text500(w, r, err)
 		return
 	}
-	for _, cl := range websockets.Clients.All() {
+	for _, cl := range feeds.All() {
 		cl.Send(data)
 	}
 }
