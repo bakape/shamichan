@@ -74,8 +74,8 @@
 				</a>
 			{% endif %}
 		</aside>
-		{%= hoverReveal(conf.Notice, ln.UI["showNotice"]) %}
-		{%= hoverReveal(conf.Rules, ln.UI["rules"]) %}
+		{%= hoverReveal("aside", conf.Notice, ln.UI["showNotice"]) %}
+		{%= hoverReveal("aside", conf.Rules, ln.UI["rules"]) %}
 		<span id="catalog-controls" class="margin-spaced">
 			<input type="text" name="search" placeholder="{%s= ln.UI["search"] %}" title="{%s= ln.UI["searchTooltip"] %}">
 			<select name="sortMode">
@@ -178,19 +178,4 @@ IndexThreads renders abbreviated threads for display on board index pages
 			{%z= json %}
 		</script>
 	</div>
-{% endstripspace %}{% endfunc %}
-
-Notice widget, that reveals text on hover
-{% func hoverReveal(text, label string) %}{% stripspace %}
-	{% if text == "" %}
-		{% return %}
-	{% endif %}
-	<aside class="glass hover-reveal">
-		<span class="act">
-			{%s= label %}
-		</span>
-		<span class="popup-menu glass">
-			{%s text %}
-		</span>
-	</aside>
 {% endstripspace %}{% endfunc %}

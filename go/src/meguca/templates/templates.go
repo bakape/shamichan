@@ -58,8 +58,8 @@ func Board(
 }
 
 // Thread renders thread page HTML for noscript browsers
-func Thread(ln lang.Pack, minimal bool, postHTML []byte) []byte {
-	html := renderThread(postHTML, ln)
+func Thread(ln lang.Pack, board string, minimal bool, postHTML []byte) []byte {
+	html := renderThread(postHTML, board, ln)
 	if minimal {
 		return []byte(html)
 	}

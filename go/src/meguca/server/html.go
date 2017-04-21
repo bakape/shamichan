@@ -106,7 +106,8 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	serveHTML(w, r, etag, templates.Thread(lp, isMinimal(r), html), nil)
+	html = templates.Thread(lp, p["board"], isMinimal(r), html)
+	serveHTML(w, r, etag, html, nil)
 }
 
 // Render a board selection and navigation panel and write HTML to client

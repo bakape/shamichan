@@ -65,3 +65,19 @@ Renders a stylized deleted post display toggle
 {% func deletedToggle() %}{% stripspace %}
 	<input type="checkbox" class="deleted-toggle">
 {% endstripspace %}{% endfunc %}
+
+
+Notice widget, that reveals text on hover
+{% func hoverReveal(tag, text, label string) %}{% stripspace %}
+	{% if text == "" %}
+		{% return %}
+	{% endif %}
+	<{%s= tag %}{% space %}class="hover-reveal{% if tag == "aside" %}{% space %}glass{% endif %}">
+		<span class="act">
+			{%s= label %}
+		</span>
+		<span class="popup-menu glass">
+			{%s text %}
+		</span>
+	</{%s= tag %}>
+{% endstripspace %}{% endfunc %}

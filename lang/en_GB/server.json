@@ -363,7 +363,7 @@
 		"search": "Search",
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"send": "Send",
-		"showNotice": "Show Notice",
+		"showNotice": "Notice",
 		"sortMode": "Sort threads by",
 		"subject": "Subject",
 		"submit": "Submit",
