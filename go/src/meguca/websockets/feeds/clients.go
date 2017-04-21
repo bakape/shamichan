@@ -30,29 +30,17 @@ type syncID struct {
 	board string
 }
 
-// AddClient adds a client to a the global client map and synchronizes to an
-// update feed, if any.
-func AddClient(cl common.Client, op uint64, board string) (*Feed, error) {
-	clients.Lock()
-	clients.clients[cl] = syncID{op, board}
-	cl.SetSynced()
-	clients.Unlock()
-
-	if op == 0 {
-		return nil, nil
-	}
-	return addToFeed(op, cl)
-}
-
-// ChangeSync changes the thread or board ID the client is synchronized to
-func ChangeSync(cl common.Client, op uint64, board string) (*Feed, error) {
+// SyncClient adds a client to a the global client map and synchronizes to an
+// update feed, if any. If the client was already synced to another feed, it is
+// automatically unsubscribed.
+func SyncClient(cl common.Client, op uint64, board string) (*Feed, error) {
 	clients.Lock()
 	old := clients.clients[cl]
 	clients.clients[cl] = syncID{op, board}
 	clients.Unlock()
 
 	if old.op != 0 {
-		removeFromFeed(op, cl)
+		removeFromFeed(old.op, cl)
 	}
 	if op == 0 {
 		return nil, nil

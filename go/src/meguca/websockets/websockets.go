@@ -9,13 +9,11 @@ import (
 	"meguca/auth"
 	"meguca/common"
 	"meguca/util"
+	"meguca/websockets/feeds"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 	"time"
-
-	"runtime/debug"
-
-	"meguca/websockets/feeds"
 
 	"github.com/gorilla/websocket"
 )
@@ -52,11 +50,8 @@ func (e errInvalidFrame) Error() string {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	// Synchronized to any change feed and registered in the global client map.
-	// Should only be mutated from the map, which also contains weather this
-	// Client is synced. The local property exists only to reduce lock
-	// contention on the map.
-	synced bool
+	// Have received first message, which must be a common.MessageSynchronise
+	gotFirstMessage bool
 	// Post currently open by the client
 	post openPost
 	// Currently subscribed to update feed, if any
@@ -264,8 +259,17 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 		return errInvalidPayload(msg)
 	}
 	typ := common.MessageType(uncast)
-	if !c.synced && typ != common.MessageSynchronise {
-		return errInvalidPayload(msg)
+	if !c.gotFirstMessage {
+		if typ != common.MessageSynchronise {
+			return errInvalidPayload(msg)
+		}
+		c.gotFirstMessage = true
+
+		// Send current server time on first synchronization
+		err = c.sendMessage(common.MessageServerTime, time.Now().Unix())
+		if err != nil {
+			return err
+		}
 	}
 
 	return c.runHandler(typ, msg)
@@ -318,9 +322,4 @@ func (c *Client) Redirect(board string) {
 // written to after assignment.
 func (c *Client) IP() string {
 	return c.ip
-}
-
-// SetSynced marks the client as synced to the server and ready for operation
-func (c *Client) SetSynced() {
-	c.synced = true
 }

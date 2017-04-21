@@ -73,7 +73,6 @@ type Client interface {
 	Redirect(board string)
 	IP() string
 	Close(error)
-	SetSynced()
 }
 
 // EncodeMessage encodes a message for sending through websockets or writing to

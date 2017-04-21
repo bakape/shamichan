@@ -286,11 +286,7 @@ func TestPostCreationValidations(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, _ := sv.NewClient()
-	var err error
-	cl.feed, err = feeds.AddClient(cl, 1, "a")
-	if err != nil {
-		t.Fatal(err)
-	}
+	registerClient(t, cl, 1, "a")
 
 	cases := [...]struct {
 		testName, token, name string
@@ -398,7 +394,7 @@ func TestPostCreation(t *testing.T) {
 
 func registerClient(t testing.TB, cl *Client, id uint64, board string) {
 	var err error
-	cl.feed, err = feeds.AddClient(cl, id, board)
+	cl.feed, err = feeds.SyncClient(cl, id, board)
 	if err != nil {
 		t.Fatal(err)
 	}

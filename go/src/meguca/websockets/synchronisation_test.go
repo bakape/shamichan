@@ -53,18 +53,13 @@ func TestSyncToBoard(t *testing.T) {
 	if err := cl.synchronise(marshalJSON(t, msg)); err != errInvalidBoard {
 		UnexpectedError(t, err)
 	}
-	skipMessage(t, wcl)
 
 	// Valid synchronization
 	msg.Board = "a"
 	if err := cl.synchronise(marshalJSON(t, msg)); err != nil {
 		t.Fatal(err)
 	}
-	skipMessage(t, wcl)
 	assertMessage(t, wcl, "30null")
-	if !cl.synced {
-		t.Fatal("sync property not set")
-	}
 }
 
 func skipMessage(t *testing.T, con *websocket.Conn) {

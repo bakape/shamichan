@@ -216,7 +216,7 @@ func TestHandleMessage(t *testing.T) {
 	assertHandlerError(t, cl, msg, invalidMessage)
 
 	// No handler
-	cl.synced = true
+	cl.gotFirstMessage = true
 	assertHandlerError(t, cl, msg, invalidMessage)
 
 	// Invalid inner message payload. Test proper type reflection of the

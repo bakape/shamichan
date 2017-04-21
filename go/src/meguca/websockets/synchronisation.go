@@ -7,7 +7,6 @@ import (
 	"meguca/auth"
 	"meguca/common"
 	"meguca/db"
-	"time"
 	"unicode/utf8"
 
 	"meguca/websockets/feeds"
@@ -34,14 +33,6 @@ type reclaimRequest struct {
 // Synchronise the client to a certain thread, assign it's ID and prepare to
 // receive update messages.
 func (c *Client) synchronise(data []byte) error {
-	// Send current server time on first synchronization
-	if !c.synced {
-		err := c.sendMessage(common.MessageServerTime, time.Now().Unix())
-		if err != nil {
-			return err
-		}
-	}
-
 	var msg syncRequest
 	err := decodeMessage(data, &msg)
 	switch {
@@ -71,13 +62,7 @@ func (c *Client) registerSync(id uint64, board string) (err error) {
 		return
 	}
 
-	var fn func(common.Client, uint64, string) (*feeds.Feed, error)
-	if c.synced {
-		fn = feeds.ChangeSync
-	} else {
-		fn = feeds.AddClient
-	}
-	c.feed, err = fn(c, id, board)
+	c.feed, err = feeds.SyncClient(c, id, board)
 	if err != nil {
 		return
 	}
@@ -87,7 +72,6 @@ func (c *Client) registerSync(id uint64, board string) (err error) {
 	if id == 0 {
 		return c.sendMessage(common.MessageSynchronise, nil)
 	}
-
 	return
 }
 
