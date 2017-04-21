@@ -49,8 +49,8 @@ export default class FormView extends PostView {
             this.onInput()
         })
         this.onClick({
-            "input[name=done]": postSM.feeder(postEvent.done),
-            "input[name=cancel]": postSM.feeder(postEvent.done),
+            "input[name=\"done\"]": postSM.feeder(postEvent.done),
+            "input[name=\"cancel\"]": postSM.feeder(postEvent.done),
         })
         this.on(
             "change",
@@ -58,7 +58,7 @@ export default class FormView extends PostView {
                 if (this.model.sentAllocRequest) {
                     return
                 }
-                const live = (event.target as HTMLInputElement).checked
+                const live = (e.target as HTMLInputElement).checked
                 this.setEditing(live)
                 const d = this.inputElement("done")
                 d.hidden = live
@@ -66,7 +66,7 @@ export default class FormView extends PostView {
             },
             {
                 passive: true,
-                selector: "input[name=live]",
+                selector: `input[name="live"]`,
             },
         )
 

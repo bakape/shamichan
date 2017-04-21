@@ -251,11 +251,11 @@ export default () => {
 	postSM.act(postState.draft, postEvent.done, (e?: Event) => {
 		// Commit a draft made as a non-live post
 		let commitNonLive = false
-		if (event) {
-			if (event.target instanceof HTMLInputElement) {
-				commitNonLive = event.target.getAttribute("name") === "done"
-			} else if (event instanceof KeyboardEvent) {
-				commitNonLive = event.which === options.done
+		if (e) {
+			if (e.target instanceof HTMLInputElement) {
+				commitNonLive = e.target.getAttribute("name") === "done"
+			} else if (e instanceof KeyboardEvent) {
+				commitNonLive = e.which === options.done
 			}
 
 			if (commitNonLive) {
