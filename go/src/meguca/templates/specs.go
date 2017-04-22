@@ -317,5 +317,9 @@ var optionSpecs = [...][]inputSpec{
 			ID:   "workMode",
 			Type: _shortcut,
 		},
+		{
+			ID:   "galleryMode",
+			Type: _shortcut,
+		},
 	},
 }

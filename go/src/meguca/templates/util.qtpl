@@ -58,6 +58,9 @@ Render the class attribute of a post
 		{% if p.Deleted %}
 			{% space %}deleted
 		{% endif %}
+		{% if p.Image != nil %}
+			{% space %}media
+		{% endif %}
 	"
 {% endstripspace %}{% endfunc %}
 

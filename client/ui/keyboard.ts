@@ -1,7 +1,7 @@
 // Keyboard shortcuts and such
 
 import options from "../options"
-import { FormModel, postSM, postEvent, toggleExpandAll } from "../posts"
+import { FormModel, postSM, postEvent, toggleExpandAll, toggleGallery } from "../posts"
 import { page } from "../state"
 import { scrollToElement, trigger } from "../util"
 import navigate from "./history"
@@ -11,45 +11,71 @@ export default () =>
 	document.addEventListener("keydown", handleShortcut)
 
 function handleShortcut(event: KeyboardEvent) {
-	if (!event.altKey) {
-		return
+	let caught = false
+
+	let anyModifier = event.altKey || event.metaKey || event.ctrlKey || event.shiftKey;
+	let inInput = 'selectionStart' in event.target
+
+	if(!anyModifier && !inInput) {
+		caught = true
+		switch (event.key) {
+			case "w":
+			case "ArrowLeft":
+				navigatePost(true)
+				break
+			case "s":
+			case "ArrowRight":
+				navigatePost(false)
+				break
+			default:
+				caught = false
+		}
 	}
 
-	let caught = true
-	switch (event.which) {
-		case options.newPost:
-			if (page.thread) {
-				postSM.feed(postEvent.open)
+	if (event.altKey) {
+		caught = true
+
+		switch (event.which) {
+			case options.newPost:
+				if (page.thread) {
+					postSM.feed(postEvent.open)
+					break
+				}
+				const tf = document
+					.querySelector("aside:not(.expanded) .new-thread-button")
+				if (tf) {
+					tf.click()
+					scrollToElement(tf)
+				}
 				break
-			}
-			const tf = document
-				.querySelector("aside:not(.expanded) .new-thread-button")
-			if (tf) {
-				tf.click()
-				scrollToElement(tf)
-			}
-			break
-		case options.done:
-			postSM.feed(postEvent.done, event)
-			break
-		case options.toggleSpoiler:
-			const m = trigger("getPostModel") as FormModel
-			if (m) {
-				m.view.toggleSpoiler()
-			}
-			break
-		case options.expandAll:
-			toggleExpandAll()
-			break
-		case options.workMode:
-			options.workModeToggle = !options.workModeToggle
-			break
-		case 38:
-			navigateUp()
-			break
-		default:
-			caught = false
+			case options.done:
+				postSM.feed(postEvent.done, event)
+				break
+			case options.toggleSpoiler:
+				const m = trigger("getPostModel") as FormModel
+				if (m) {
+					m.view.toggleSpoiler()
+				}
+				break
+			case options.galleryMode:
+				toggleGallery()
+				break
+			case options.expandAll:
+				toggleExpandAll()
+				break
+			case options.workMode:
+				options.workModeToggle = !options.workModeToggle
+				break
+			case 38:
+				navigateUp()
+				break
+			default:
+				caught = false
+		}
+
 	}
+
+	
 
 	if (caught) {
 		event.stopImmediatePropagation()
@@ -68,4 +94,20 @@ function navigateUp() {
 	if (url) {
 		navigate(url, null, true)
 	}
+}
+
+function navigatePost(reverse: boolean) {
+	let current = document.querySelector("article:target") || document.querySelector("article.glass") as Element
+	while(current) {
+		current = reverse ? current.previousElementSibling : current.nextElementSibling
+		if(!current || window.getComputedStyle(current).display != "none") {
+			break
+		}
+	}
+
+	if(current) {
+		window.location.hash = current.id
+	}
+
+
 }
