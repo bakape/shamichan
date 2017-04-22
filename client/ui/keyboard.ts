@@ -1,7 +1,7 @@
 // Keyboard shortcuts and such
 
 import options from "../options"
-import { FormModel, postSM, postEvent, toggleExpandAll } from "../posts"
+import { FormModel, postSM, postEvent, toggleExpandAll, toggleGallery } from "../posts"
 import { page } from "../state"
 import { scrollToElement, trigger } from "../util"
 import navigate from "./history"
@@ -37,6 +37,9 @@ function handleShortcut(event: KeyboardEvent) {
 			if (m) {
 				m.view.toggleSpoiler()
 			}
+			break
+		case options.galleryMode:
+			toggleGallery()
 			break
 		case options.expandAll:
 			toggleExpandAll()

@@ -43,6 +43,7 @@ const ISSpecs: ImageSearchSpec[] = [
 // Render a thumbnail of an image, according to configuration settings
 export function renderImage(post: Element, data: ImageData, reveal: boolean) {
     // Need to find direct descendant, otherwise inlined posts might match
+    post.classList.add("media")
     const cont = post.querySelector(".post-container")
     let el = firstChild(cont, ch =>
         ch.tagName === "FIGURE")
