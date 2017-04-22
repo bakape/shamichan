@@ -242,14 +242,14 @@
 							<div class="tab-sel" data-id="0">
 								<form id="login-form">
 									{%= table(specs["login"], ln) %}
-									{%= captcha() %}
+									{%= captcha(ln.UI) %}
 									{%= submit(false, ln.UI) %}
 								</form>
 							</div>
 							<div data-id="1">
 								<form id="registration-form">
 									{%= table(specs["register"], ln) %}
-									{%= captcha() %}
+									{%= captcha(ln.UI) %}
 									{%= submit(false, ln.UI) %}
 								</form>
 							</div>

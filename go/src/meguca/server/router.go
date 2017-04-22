@@ -5,8 +5,8 @@ import (
 	"log"
 	"meguca/auth"
 	"meguca/imager"
-	"meguca/websockets"
 	"meguca/util"
+	"meguca/websockets"
 	"net/http"
 
 	"github.com/dimfeld/httptreemux"
@@ -146,6 +146,11 @@ func createRouter() http.Handler {
 	captcha := r.NewGroup("/captcha")
 	captcha.GET("/new", wrapHandler(auth.NewCaptchaID))
 	captcha.GET("/image/*path", wrapHandler(auth.ServeCaptcha))
+
+	// Noscript captcha API
+	NSCaptcha := captcha.NewGroup("/noscript")
+	NSCaptcha.GET("/load", wrapHandler(noscriptCaptchaLink))
+	NSCaptcha.GET("/new", wrapHandler(noscriptCaptcha))
 
 	// Assets
 	r.GET("/assets/*path", serveAssets)

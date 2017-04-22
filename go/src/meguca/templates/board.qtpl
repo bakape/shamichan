@@ -21,7 +21,7 @@
 					{%s= ln.UI["newThread"] %}
 				</a>
 			</span>
-			<form id="new-thread-form" action="/createThread" class="hidden">
+			<form id="new-thread-form" action="/createThread" method="post" enctype="multipart/form-data" class="hidden">
 				{% if id == "all" %}
 					<select name="board" required>
 						{% for _, b := range config.GetBoardTitles() %}
@@ -54,7 +54,7 @@
 						<br>
 					</span>
 				{% endif %}
-				{%= captcha() %}
+				{%= captcha(ln.UI) %}
 				{%= submit(true, ln.UI) %}
 			</form>
 		</aside>
@@ -87,9 +87,6 @@
 			</select>
 		</span>
 	</span>
-	<noscript>
-		TODO: Noscript thread creation
-	</noscript>
 	<hr>
 	{%z= threadHTML %}
 	<script id="board-configs" type="application/json">

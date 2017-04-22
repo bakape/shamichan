@@ -184,7 +184,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 		}
 	}
 
-	// Ensure the client knows the post ID before the public post insertion
+	// Ensure the client knows the post ID, before the public post insertion
 	// update message is sent
 	err = c.sendMessage(common.MessagePostID, post.ID)
 	if err != nil {
@@ -246,8 +246,7 @@ func constructPost(
 	post = db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
-				Editing: true,
-				Time:    now,
+				Time: now,
 			},
 			Board: board,
 		},
@@ -279,12 +278,13 @@ func constructPost(
 		}
 	}
 
+	bodyLength = utf8.RuneCountInString(req.Body)
+	if bodyLength > common.MaxLenBody {
+		err = common.ErrBodyTooLong
+		return
+	}
+
 	if parseBody {
-		bodyLength = utf8.RuneCountInString(req.Body)
-		if bodyLength > common.MaxLenBody {
-			err = common.ErrBodyTooLong
-			return
-		}
 		post.Links, post.Commands, err = parser.ParseBody(
 			[]byte(req.Body),
 			board,
@@ -293,14 +293,21 @@ func constructPost(
 			return
 		}
 		post.Body = req.Body
+	} else {
+		post.Editing = true
+
+		// Posts that are committed in one action need not a password, as they
+		// are closed on commit and can not be reclaimed
+		err = parser.VerifyPostPassword(req.Password)
+		if err != nil {
+			return
+		}
+		post.Password, err = auth.BcryptHash(req.Password, 4)
+		if err != nil {
+			return
+		}
 	}
 
-	err = parser.VerifyPostPassword(req.Password)
-	if err != nil {
-		return
-	}
-
-	post.Password, err = auth.BcryptHash(req.Password, 4)
 	return
 }
 

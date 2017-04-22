@@ -204,7 +204,9 @@ table {
 
 .captcha-container {
 	padding: 0.5em;
-	display: grid;
+	&, noscript {
+		display: grid;
+	}
 }
 
 @media screen and (max-device-width: 700px) {

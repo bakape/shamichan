@@ -245,6 +245,23 @@ func renderCaptcha(w http.ResponseWriter, r *http.Request) {
 	staticTemplate(w, r, templates.CaptchaConfirmation)
 }
 
+// Render a link to request a new captcha
+func noscriptCaptchaLink(w http.ResponseWriter, r *http.Request) {
+	staticTemplate(w, r, templates.NoscriptCaptchaLink)
+}
+
+// Render the captcha for noscript browsers
+func noscriptCaptcha(w http.ResponseWriter, r *http.Request) {
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	html := []byte(templates.NoscriptCaptcha(auth.GetIP(r), lp))
+	serveHTML(w, r, "", html, nil)
+}
+
 // Redirect the client to the appropriate board through a cross-board redirect
 func crossRedirect(
 	w http.ResponseWriter,

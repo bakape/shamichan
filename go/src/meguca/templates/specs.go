@@ -33,14 +33,6 @@ var specs = map[string][]inputSpec{
 			Rows:      5,
 			MaxLength: common.MaxLenBody,
 		},
-		{
-			ID:           "postPassword",
-			Type:         _password,
-			MaxLength:    common.MaxLenPassword,
-			Required:     true,
-			Placeholder:  true,
-			Autocomplete: "new-password",
-		},
 	},
 	"login": {
 		{
