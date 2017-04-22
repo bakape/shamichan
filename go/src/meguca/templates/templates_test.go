@@ -86,5 +86,5 @@ func TestThread(t *testing.T) {
 
 	oPosts, oImages := CalculateOmit(thread)
 	html := ThreadPosts(thread, nil, oPosts, oImages)
-	Thread(lang.Packs["en_GB"], "a", true, []byte(html))
+	Thread(lang.Packs["en_GB"], 1, "a", true, []byte(html))
 }
