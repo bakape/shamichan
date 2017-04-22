@@ -242,13 +242,7 @@ func (c *Client) spliceText(data []byte) error {
 
 	c.post.body = append(c.post.body[:byteStartPos], string(end)...)
 
-	// Count lines
-	c.post.lines = 0
-	for _, b := range c.post.body {
-		if b == '\n' {
-			c.post.lines++
-		}
-	}
+	c.post.countLines()
 	if c.post.lines > common.MaxLinesBody {
 		return errTooManyLines
 	}

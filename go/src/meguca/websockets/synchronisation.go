@@ -7,7 +7,6 @@ import (
 	"meguca/auth"
 	"meguca/common"
 	"meguca/db"
-	"unicode/utf8"
 
 	"meguca/websockets/feeds"
 
@@ -57,9 +56,13 @@ func (c *Client) synchronise(data []byte) error {
 
 // Register fresh client sync or change from previous sync
 func (c *Client) registerSync(id uint64, board string) (err error) {
-	err = c.closePreviousPost()
-	if err != nil {
-		return
+	// Don't close OP's, as navigating to the thread is a natural part of
+	// thread creation
+	if c.post.id != 0 && c.post.id != c.post.op {
+		err = c.closePreviousPost()
+		if err != nil {
+			return
+		}
 	}
 
 	c.feed, err = feeds.SyncClient(c, id, board)
@@ -114,16 +117,8 @@ func (c *Client) reclaimPost(data []byte) error {
 		return c.sendMessage(common.MessageReclaim, 1)
 	}
 
-	c.post = openPost{
-		hasImage: post.Image != nil,
-		len:      utf8.RuneCountInString(post.Body),
-		id:       post.ID,
-		op:       post.OP,
-		time:     post.Time,
-		board:    post.Board,
-		body:     append(make([]byte, 0, 1<<10), post.Body...),
-	}
-	c.feed.InsertPost(c.post.id, c.post.hasImage, c.post.time, c.post.body, nil)
+	c.post.init(post)
+	c.feed.InsertPost(post, c.post.body, nil)
 
 	return c.sendMessage(common.MessageReclaim, 0)
 }

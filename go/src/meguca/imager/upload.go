@@ -64,7 +64,7 @@ var (
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
-	maxSize := config.Get().MaxSize * 1024 * 1024
+	maxSize := config.Get().MaxSize << 20
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxSize))
 
 	code, id, err := ParseUpload(r)
@@ -161,7 +161,7 @@ func parseUploadForm(req *http.Request) error {
 	if err != nil {
 		return err
 	}
-	if length > uint64(config.Get().MaxSize*1024*1024) {
+	if length > uint64(config.Get().MaxSize<<20) {
 		return errTooLarge
 	}
 	return req.ParseMultipartForm(0)

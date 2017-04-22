@@ -6,14 +6,45 @@ import (
 	"fmt"
 	"meguca/auth"
 	"meguca/config"
+	"meguca/db"
 	"meguca/imager"
 	"meguca/websockets"
+	"meguca/websockets/feeds"
 	"net/http"
+	"strconv"
 )
 
-// Create a thread with a finished OP and immediately close it
+// Create a thread with a closed OP
 func createThread(w http.ResponseWriter, r *http.Request) {
-	maxSize := config.Get().MaxSize*1024*1024 + jsonLimit
+	repReq, ok := parsePostCreationForm(w, r)
+	if !ok {
+		return
+	}
+
+	// Map form data to websocket thread creation request
+	req := websockets.ThreadCreationRequest{
+		Subject:              r.Form.Get("subject"),
+		Board:                r.Form.Get("board"),
+		ReplyCreationRequest: repReq,
+	}
+
+	post, err := websockets.CreateThread(req, auth.GetIP(r), false)
+	if err != nil {
+
+		// TODO: Not all codes are actually 400. Need to differentiate.
+
+		text400(w, err)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf(`/%s/%d`, req.Board, post.ID), 302)
+}
+
+// ok = false, if failed and caller should return
+func parsePostCreationForm(w http.ResponseWriter, r *http.Request) (
+	req websockets.ReplyCreationRequest, ok bool,
+) {
+	maxSize := config.Get().MaxSize<<20 + jsonLimit
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxSize))
 	err := r.ParseMultipartForm(0)
 	if err != nil {
@@ -39,18 +70,13 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Map form data to websocket thread creation request
 	f := r.Form
-	req := websockets.ThreadCreationRequest{
-		Subject: f.Get("subject"),
-		Board:   f.Get("board"),
+	req = websockets.ReplyCreationRequest{
+		Name: f.Get("name"),
+		Body: f.Get("body"),
 		Captcha: auth.Captcha{
 			CaptchaID: f.Get("captchaID"),
 			Solution:  f.Get("captcha"),
-		},
-		ReplyCreationRequest: websockets.ReplyCreationRequest{
-			Name: f.Get("name"),
-			Body: f.Get("body"),
 		},
 	}
 	if token != "" {
@@ -61,7 +87,35 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	id, _, _, err := websockets.ConstructThread(req, auth.GetIP(r), true)
+	ok = true
+	return
+}
+
+// Create a closed reply post
+func createReply(w http.ResponseWriter, r *http.Request) {
+	req, ok := parsePostCreationForm(w, r)
+	if !ok {
+		return
+	}
+
+	// Validate thread
+	op, err := strconv.ParseUint(r.Form.Get("op"), 10, 64)
+	if err != nil {
+		text400(w, err)
+		return
+	}
+	board := r.Form.Get("board")
+	ok, err = db.ValidateOP(op, board)
+	switch {
+	case err != nil:
+		text500(w, r, err)
+		return
+	case !ok:
+		text400(w, fmt.Errorf("invalid thread: /%s/%d", board, op))
+		return
+	}
+
+	post, msg, err := websockets.CreatePost(op, board, auth.GetIP(r), false, req)
 	if err != nil {
 
 		// TODO: Not all codes are actually 400. Need to differentiate.
@@ -70,5 +124,7 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf(`/%s/%d`, req.Board, id), 302)
+	feeds.InsertPostInto(post.StandalonePost, msg)
+	url := fmt.Sprintf(`/%s/%d?last100=true#bottom`, board, op)
+	http.Redirect(w, r, url, 302)
 }

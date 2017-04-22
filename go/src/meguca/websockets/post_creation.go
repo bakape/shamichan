@@ -24,7 +24,6 @@ var (
 type ThreadCreationRequest struct {
 	ReplyCreationRequest
 	Subject, Board string
-	auth.Captcha
 }
 
 // ReplyCreationRequest contains common fields for both thread and reply
@@ -32,6 +31,7 @@ type ThreadCreationRequest struct {
 type ReplyCreationRequest struct {
 	Image ImageRequest
 	auth.SessionCreds
+	auth.Captcha
 	Name, Password, Body string
 }
 
@@ -46,12 +46,13 @@ func (c *Client) insertThread(data []byte) (err error) {
 	if err := c.closePreviousPost(); err != nil {
 		return err
 	}
+
 	var req ThreadCreationRequest
 	if err := decodeMessage(data, &req); err != nil {
 		return err
 	}
 
-	id, now, hasImage, err := ConstructThread(req, c.ip, false)
+	post, err := CreateThread(req, c.ip, true)
 	switch err {
 	case nil:
 	case errInValidCaptcha:
@@ -60,23 +61,14 @@ func (c *Client) insertThread(data []byte) (err error) {
 		return err
 	}
 
-	c.post = openPost{
-		id:          id,
-		op:          id,
-		time:        now,
-		board:       req.Board,
-		hasImage:    hasImage,
-		body:        make([]byte, 0, 1<<10),
-		isSpoilered: req.Image.Spoiler,
-	}
-
-	return c.sendMessage(common.MessagePostID, id)
+	c.post.init(post.StandalonePost)
+	return c.sendMessage(common.MessagePostID, post.ID)
 }
 
-// ConstructThread creates a new tread and writes it to the database. Returns
-// the ID of the thread and its creation timestamp
-func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
-	id uint64, timeStamp int64, hasImage bool, err error,
+// CreateThread creates a new tread and writes it to the database.
+// open specifies, if the thread OP should stay open after creation.
+func CreateThread(req ThreadCreationRequest, ip string, open bool) (
+	post db.Post, err error,
 ) {
 	switch {
 	case !auth.IsNonMetaBoard(req.Board):
@@ -95,10 +87,10 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 		return
 	}
 
-	post, timeStamp, _, err := constructPost(
+	post, err = constructPost(
 		req.ReplyCreationRequest,
 		conf.ForcedAnon,
-		parseBody,
+		open,
 		ip,
 		req.Board,
 	)
@@ -110,8 +102,8 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 		return
 	}
 
-	// Perform this last, so there are less dangling images because of an error
-	hasImage = !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
+	// Perform this last, so there are less dangling images because of any error
+	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
 	if hasImage {
 		img := req.Image
 		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
@@ -120,7 +112,7 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 		}
 	}
 
-	id, err = db.NewPostID()
+	id, err := db.NewPostID()
 	if err != nil {
 		return
 	}
@@ -128,6 +120,72 @@ func ConstructThread(req ThreadCreationRequest, ip string, parseBody bool) (
 	post.OP = id
 
 	err = db.InsertThread(subject, post)
+	return
+}
+
+// CreatePost creates a new post and writes it to the database.
+// open specifies, if the post should stay open after creation.
+func CreatePost(
+	op uint64,
+	board, ip string,
+	open bool,
+	req ReplyCreationRequest,
+) (
+	post db.Post, msg []byte, err error,
+) {
+	switch {
+	case auth.IsBanned(board, ip):
+		err = errBanned
+		return
+	// For now, only noscript posts need a captcha
+	case !open && !auth.AuthenticateCaptcha(req.Captcha):
+		err = errInValidCaptcha
+		return
+	}
+
+	conf, err := getBoardConfig(board)
+	if err != nil {
+		return
+	}
+
+	// Post must have either at least one character or an image to be allocated
+	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
+	if req.Body == "" && !hasImage {
+		err = errNoTextOrImage
+		return
+	}
+
+	post, err = constructPost(
+		req,
+		conf.ForcedAnon,
+		open,
+		ip,
+		board,
+	)
+	if err != nil {
+		return
+	}
+
+	if hasImage {
+		img := req.Image
+		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
+		if err != nil {
+			return
+		}
+	}
+
+	post.OP = op
+	post.ID, err = db.NewPostID()
+	if err != nil {
+		return
+	}
+
+	msg, err = common.EncodeMessage(common.MessageInsertPost, post.Post)
+	if err != nil {
+		return
+	}
+
+	err = db.InsertPost(post)
 	return
 }
 
@@ -145,43 +203,9 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 
 	_, op, board := feeds.GetSync(c)
-	if auth.IsBanned(board, c.ip) {
-		return errBanned
-	}
-	conf, err := getBoardConfig(board)
+	post, msg, err := CreatePost(op, board, c.ip, true, req)
 	if err != nil {
 		return
-	}
-
-	// Post must have either at least one character or an image to be allocated
-	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
-	if req.Body == "" && !hasImage {
-		return errNoTextOrImage
-	}
-
-	post, now, bodyLength, err := constructPost(
-		req,
-		conf.ForcedAnon,
-		true,
-		c.ip,
-		board,
-	)
-	if err != nil {
-		return
-	}
-
-	post.OP = op
-	post.ID, err = db.NewPostID()
-	if err != nil {
-		return
-	}
-
-	if hasImage {
-		img := req.Image
-		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
-		if err != nil {
-			return
-		}
 	}
 
 	// Ensure the client knows the post ID, before the public post insertion
@@ -191,25 +215,8 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 
-	err = db.InsertPost(post)
-	if err != nil {
-		return
-	}
-	msg, err := common.EncodeMessage(common.MessageInsertPost, post.Post)
-	if err != nil {
-		return
-	}
-	c.post = openPost{
-		id:          post.ID,
-		op:          op,
-		time:        now,
-		board:       board,
-		len:         bodyLength,
-		hasImage:    hasImage,
-		isSpoilered: req.Image.Spoiler,
-		body:        append(make([]byte, 0, 1<<10), post.Body...),
-	}
-	c.feed.InsertPost(c.post.id, c.post.hasImage, c.post.time, c.post.body, msg)
+	c.post.init(post.StandalonePost)
+	c.feed.InsertPost(post.StandalonePost, c.post.body, msg)
 
 	return nil
 }
@@ -234,19 +241,15 @@ func getBoardConfig(board string) (conf config.BoardConfigs, err error) {
 // Construct the common parts of the new post for both threads and replies
 func constructPost(
 	req ReplyCreationRequest,
-	forcedAnon, parseBody bool,
+	forcedAnon, open bool,
 	ip, board string,
 ) (
-	post db.Post,
-	now int64,
-	bodyLength int,
-	err error,
+	post db.Post, err error,
 ) {
-	now = time.Now().Unix()
 	post = db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
-				Time: now,
+				Time: time.Now().Unix(),
 			},
 			Board: board,
 		},
@@ -259,6 +262,31 @@ func constructPost(
 			return
 		}
 	}
+
+	if utf8.RuneCountInString(req.Body) > common.MaxLenBody {
+		err = common.ErrBodyTooLong
+		return
+	}
+
+	lines := 0
+	for _, r := range req.Body {
+		if r == '\n' {
+			lines++
+		}
+	}
+	if lines > common.MaxLinesBody {
+		err = errTooManyLines
+		return
+	}
+
+	post.Links, post.Commands, err = parser.ParseBody(
+		[]byte(req.Body),
+		board,
+	)
+	if err != nil {
+		return
+	}
+	post.Body = req.Body
 
 	// Attach staff position title after validations
 	if req.UserID != "" {
@@ -278,22 +306,7 @@ func constructPost(
 		}
 	}
 
-	bodyLength = utf8.RuneCountInString(req.Body)
-	if bodyLength > common.MaxLenBody {
-		err = common.ErrBodyTooLong
-		return
-	}
-
-	if parseBody {
-		post.Links, post.Commands, err = parser.ParseBody(
-			[]byte(req.Body),
-			board,
-		)
-		if err != nil {
-			return
-		}
-		post.Body = req.Body
-	} else {
+	if open {
 		post.Editing = true
 
 		// Posts that are committed in one action need not a password, as they

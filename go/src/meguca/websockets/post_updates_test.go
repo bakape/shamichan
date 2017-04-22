@@ -45,6 +45,7 @@ var (
 				Editing: true,
 				ID:      2,
 				Body:    "abc",
+				Time:    time.Now().Unix(),
 			},
 			OP:    1,
 			Board: "a",
@@ -377,7 +378,7 @@ func TestClosePost(t *testing.T) {
 		board: "a",
 		body:  []byte("abc"),
 	}
-	cl.feed.InsertPost(1, false, time.Now().Unix(), cl.post.body, nil)
+	cl.feed.InsertPost(samplePost.StandalonePost, cl.post.body, nil)
 
 	if err := cl.closePost(); err != nil {
 		t.Fatal(err)

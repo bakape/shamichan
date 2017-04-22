@@ -83,6 +83,18 @@ func SendTo(id uint64, msg []byte) {
 	}
 }
 
+// InsertPostInto inserts a post into a tread feed, if it exists. Only use for
+// already closed posts.
+func InsertPostInto(post common.StandalonePost, msg []byte) {
+	feeds.mu.RLock()
+	defer feeds.mu.RUnlock()
+
+	feed := feeds.feeds[post.OP]
+	if feed != nil {
+		feed.InsertPost(post, nil, msg)
+	}
+}
+
 // ClosePost closes a post in a feed, if it exists
 func ClosePost(id, op uint64, msg []byte) {
 	feeds.mu.RLock()

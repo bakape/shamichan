@@ -106,7 +106,7 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	html = templates.Thread(lp, p["board"], isMinimal(r), html)
+	html = templates.Thread(lp, id, p["board"], isMinimal(r), html)
 	serveHTML(w, r, etag, html, nil)
 }
 

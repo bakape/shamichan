@@ -18,6 +18,18 @@ var (
 	}
 )
 
+func init() {
+	captcha.SetCustomStore(captcha.NewMemoryStore(1<<10, captchaLifetime))
+
+	go func() {
+		t := time.Tick(time.Minute)
+		for {
+			<-t
+			noscriptCaptchas.cleanUp()
+		}
+	}()
+}
+
 // Captcha contains the ID and solution of a captcha-protected request
 type Captcha struct {
 	CaptchaID, Solution string
@@ -68,18 +80,6 @@ func (n *noscriptCaptchaMap) cleanUp() {
 			delete(n.m, ip)
 		}
 	}
-}
-
-func init() {
-	captcha.SetCustomStore(captcha.NewMemoryStore(1<<10, captchaLifetime))
-
-	go func() {
-		t := time.Tick(time.Minute)
-		for {
-			<-t
-			noscriptCaptchas.cleanUp()
-		}
-	}()
 }
 
 // NewCaptchaID creates a new captcha and write its ID to the client

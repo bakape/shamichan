@@ -1,9 +1,20 @@
+{% import "strconv" %}
 {% import "meguca/lang" %}
 {% import "meguca/common" %}
 {% import "meguca/config" %}
 
-{% func renderThread(postHTML []byte, board string, ln lang.Pack) %}{% stripspace %}
+{% func renderThread(postHTML []byte, id uint64,board string, ln lang.Pack) %}{% stripspace %}
 	{% code conf := config.GetBoardConfigs(board) %}
+	<form id="new-reply-form" action="/createReply" method="post" enctype="multipart/form-data" class="top-margin hidden">
+		<input name="board" type="text" value="{%s= board %}" hidden>
+		<input name="op" type="text" value="{%s= strconv.FormatUint(id, 10) %}" hidden>
+		{%= noscriptPostCreationFields(ln) %}
+		{% if !conf.TextOnly %}
+			{%= uploadForm(ln.Common.Posts) %}
+		{% endif %}
+		{%= captcha(ln.UI) %}
+		{%= submit(true, ln.UI) %}
+	</form>
 	<span class="aside-container top-margin">
 		<span class="act" id="top">
 			<a href="#bottom">
@@ -28,9 +39,6 @@
 		{%= hoverReveal("span", conf.Notice, ln.UI["showNotice"]) %}
 		{%= hoverReveal("span", conf.Rules, ln.UI["rules"]) %}
 	</span>
-	<noscript>
-		TODO: Noscript post creation
-	</noscript>
 	<hr>
 	{%z= postHTML %}
 	<div id="bottom-spacer"></div>

@@ -8,10 +8,10 @@ import (
 )
 
 type postCreationMessage struct {
-	hasImage  bool
-	id        uint64
-	time      int64
-	body, msg []byte
+	open, hasImage bool
+	id             uint64
+	time           int64
+	body, msg      []byte
 }
 
 type postIDMessage struct {
@@ -146,12 +146,14 @@ func (f *Feed) Start() (err error) {
 			case p := <-f.insertPost:
 				f.startIfPaused()
 				f.recent[p.id] = p.time
-				f.open[p.id] = openPostCacheEntry{
-					hasImage: p.hasImage,
-					created:  p.time,
-					body:     p.body,
+				if p.open {
+					f.open[p.id] = openPostCacheEntry{
+						hasImage: p.hasImage,
+						created:  p.time,
+						body:     p.body,
+					}
 				}
-				// Don't write insert messages, when reclaiming posts.
+				// Don't write insert messages, when reclaiming posts
 				if p.msg != nil {
 					f.write(p.msg)
 				}
@@ -249,16 +251,12 @@ func (f *Feed) sendIPCount() {
 
 // Insert a new post into the thread or reclaim an open post after disconnect
 // and propagate to listeners
-func (f *Feed) InsertPost(
-	id uint64,
-	hasImage bool,
-	time int64,
-	body, msg []byte,
-) {
+func (f *Feed) InsertPost(post common.StandalonePost, body, msg []byte) {
 	f.insertPost <- postCreationMessage{
-		hasImage: hasImage,
-		id:       id,
-		time:     time,
+		open:     post.Editing,
+		id:       post.ID,
+		hasImage: post.Image != nil,
+		time:     post.Time,
 		body:     body,
 		msg:      msg,
 	}

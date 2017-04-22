@@ -156,14 +156,15 @@ header {
 	}
 }
 
-#new-thread-form {
-	input[type=text], input[type=password], textarea {
+#new-thread-form, #new-reply-form {
+	input[type=text], textarea {
 		width: 20em;
 	}
-	&.sending {
-		input[type=submit], input[name=cancel], br:last-child {
-			 display: none;
-		}
+}
+
+#new-thread-form.sending {
+	input[type=submit], input[name=cancel], br:last-child {
+			display: none;
 	}
 }
 
