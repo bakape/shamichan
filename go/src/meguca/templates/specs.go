@@ -6,6 +6,11 @@ import (
 	"meguca/common"
 )
 
+// NOTE: After adding inputSpec structs with new ID fields, be sure to add the
+// description to at least `lang/en_GB/server.json.forms`. Then run
+// `scripts/migrate_lang.js` to insert temporary placeholders into any language
+// packs missing translations.
+
 var specs = map[string][]inputSpec{
 	"identity": {
 		{

@@ -84,6 +84,10 @@
 			"Wymuszona anonimowość",
 			"Wyłącz nazwy użytkowników, tripkody i maile w postach"
 		],
+		"galleryMode": [
+			"Gallery Mode",
+			"Only show posts containing images"
+		],
 		"google": [
 			"Google",
 			"Google image search"

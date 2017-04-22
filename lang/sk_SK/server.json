@@ -84,6 +84,10 @@
 			"Vynútená anonymita",
 			"Zruš uživateľské mená, výletokódy a emaily v plagátoch"
 		],
+		"galleryMode": [
+			"Gallery Mode",
+			"Only show posts containing images"
+		],
 		"google": [
 			"Google",
 			"Google image search"
