@@ -2,6 +2,53 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v4.2.0 - 2017-04-23
+* Fix:
+	- Delay of post body syncing, when closing post form
+	- Serving OGG files to Chrome
+	- Stale page HTML retention
+	- Ban clearing race on expiry
+	- Hover tooltips disappearing with some slower mouse movements
+	- OP post backgrounds on board pages
+	- Performance problems with large threads
+	- moon theme not falling back to monospace font
+	- database bloating disk usage over time
+	- Errors, when post is closed before upload finishes
+	- Bugs with account assigned to multiple positions on the same board
+	- Media auto playing in hover preview
+	- Trim space from login IDs
+	- Loading meguca on iOS
+	- Add scroll bars to side panel as needed
+	- Omit count calculation
+	- Fix image counter updates
+	- Focus thread form after thread creation
+	- Post repositioning order after collapsing an inlined post link
+	- Popup menu colours on editing posts in ashita and inumi
+	- Inlined post text clipping
+* Change:
+	- Deleted posts now publically visible
+	- Prevent passing referrer to linked external sites
+	- Align posts with horizontal posting
+	- Increase bump limit to 3000
+	- Switch to internal captcha system
+	- Make only open post images spoilerable
+	- Replace global sync indicator with thread-level one
+	- Use URL parsers to validate URLs
+	- Support more URL prefixes
+	- First class citizenship to cross-thread inlined posts
+* Add:
+	- Global bans for admins
+	- Setting to disable user board creation
+	- Global admin -> users notifications
+	- Board index and catalog links to thread top
+	- Intelligently insert newlines and spaces, when quoting
+	- Less disruptive post reclaiming after disconnect
+	- 4 tier staff system
+	- Toggleable non-live post creation
+	- Display rules and notices on thread pages
+	- Keyboard post navigation
+	- Gallery mode
+
 ## v4.1.2 - 2017-03-08
 * Fix
 	- Downloads not retaining original file names

@@ -12,7 +12,7 @@ License: GNU AGPL
         <li>Character by character post updates</li>
         <li>Hovering quick reply for post authoring</li>
         <li>Dice roll, coin flip and eightball commands</li>
-        <li>Desktop notifications, post highlighting and "(You)" on quote</li>
+        <li>Desktop notifications  and "(You)" links on quote</li>
         <li>Post link hover previews, including cross-thread</li>
         <li>Inline post link expansion</li>
         <li>Optional relative post timestamps</li>
@@ -22,9 +22,12 @@ License: GNU AGPL
         <li>Post hiding</li>
         <li>Option to display only the last 100 posts in a thread</li>
         <li>Optional automatic deletion of unused threads and boards</li>
-        <li>Automatic HTTP(S) and magnet URL linkification</li>
-        <li>Automatic quoting of selected text, when quoting a post</li>
+        <li>Automatic URL linkification</li>
+        <li>Automatic intelligent quoting of selected text, when quoting a post</li>
         <li>Live programming code tags with syntax highlighting</li>
+        <li>Automatic open post recovery after a disconnect</li>
+        <li>Toggleable non-live post creation</li>
+        <li>Keyboard post navigation</li>
     </ul>
 </details>
 <details>
@@ -41,9 +44,8 @@ License: GNU AGPL
             No file is ever thumbnailed or stored twice, reducing server load
             and disk space usage
         </li>
-        <li>
-            Any file already present on the server is "uploaded and thumbnailed"
-        </li>
+        <li>Any file already present on the server is "uploaded and thumbnailed"</li>
+        <li>Gallery mode</li>
         instantly
     </ul>
 </details>
@@ -52,9 +54,7 @@ License: GNU AGPL
     <ul>
         <li>Low memory and CPU usage</li>
         <li>No frameworks and optimized code on both client and server</li>
-        <li>
-            File upload processing written in C with GraphicsMagick and ffmpeg
-        </li>
+        <li>File upload processing written in C with GraphicsMagick and ffmpeg</li>
         <li>Inbuilt custom LRU cache</li>
     </ul>
 </details>
@@ -62,6 +62,7 @@ License: GNU AGPL
     <summary>Client UI</summary>
     <ul>
         <li>Works with all modern and most outdated browsers (such as PaleMoon)</li>
+        <li>Works with JavaScript disabled browsers</li>
         <li>Read-only functionality preserved with JavaScript disabled</li>
         <li>Multiple themes</li>
         <li>Custom user-set backgrounds and CSS</li>
@@ -76,7 +77,12 @@ License: GNU AGPL
 <details>
     <summary>Board administration</summary>
     <ul>
+        <li>Support for both centralized and 8chan-style board ownership</li>
+        <li>Global admin -> users notification system</li>
         <li>User board creation and configuration panels</li>
+        <li>4 tier staff system</li>
+        <li>Board-level and global bans</li>
+        <li>Transparent post deletion</li>
     </ul>
 </details>
 <details>
@@ -89,11 +95,11 @@ License: GNU AGPL
 <details>
     <summary>Miscellaneous</summary>
     <ul>
-        <li>Documented public JSON API and WebSocket protocol</li>
+        <li>Documented public JSON API</li>
         <li>Optional R/a/dio Now Playing banner</li>
-        <li>
-            Synchronized time counters (for group watching sessions and such)
-        </li>
+        <li>Synchronized time counters (for group watching sessions and such)</li>
+        <li>Thread-level connected unique IP counter</li>
+        <li>Internal captcha system</li>
     </ul>
 </details>
 
