@@ -207,7 +207,7 @@ table {
 	display: grid;
 }
 
-:root.gallery #threads article:not(.media):not(.editing) {display: none;}
+:root.gallery #threads article[id^=p]:not(.media):not(.editing) {display: none;}
 
 @media screen and (max-device-width: 700px) {
 	body {
