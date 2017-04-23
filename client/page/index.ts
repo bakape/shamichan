@@ -29,9 +29,12 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 				const redir = read(res.url)
 
 				// Strip internal query parameter
-				let [url, query] = redir.href.split("?")
+				const u = new URL(redir.href)
+				let query = u.search,
+					url = u.pathname
 				if (query) {
 					query = query
+						.slice(1)
 						.split("&")
 						.filter(p =>
 							p !== "minimal=true")
@@ -40,9 +43,8 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 						url += "?" + query
 					}
 				}
-				const [, hash] = state.href.split("#")
-				if (hash) {
-					url += "#" + hash
+				if (u.hash) {
+					url += u.hash
 				}
 				redir.href = url
 

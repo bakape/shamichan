@@ -68,23 +68,15 @@ export let debug: boolean = /[\?&]debug=true/.test(location.href)
 
 // Read page state by parsing a URL
 export function read(href: string): PageState {
-	const [, board, thread] = href
-		.match(/\/(\w+)\/(\w+)?(?:\?[^#]+)?(?:#[^#]+)?$/)
-	const lastN = href.match(/[\?&]last=(\d+)/)
-	const state = {
+	const u = new URL(href),
+		thread = u.pathname.match(/^\/\w+\/(\d+)/)
+	return {
 		href,
-		board: decodeURIComponent(board),
-		lastN: lastN ? parseInt(lastN[1]) : 0,
+		board: u.pathname.match(/^\/(\w+)\//)[1],
+		lastN: /[&\?]last=100/.test(u.search) ? 100 : 0,
+		catalog: /^\/\w+\/catalog/.test(u.pathname),
+		thread: parseInt(thread && thread[1]) || 0,
 	} as PageState
-
-	state.catalog = thread === "catalog"
-	if (!state.catalog) {
-		state.thread = thread ? parseInt(thread) : 0
-	} else {
-		state.thread = 0
-	}
-
-	return state
 }
 
 // Load post number sets from the database
