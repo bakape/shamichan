@@ -27,7 +27,6 @@ extends [Post](common.md#post)
 | imageCtr | uint | + | Number of posts with images in the thread |
 | replyTime | uint | + | Unix timestamp of the time of the last reply in the thread |
 | bumpTime | uint | + | Unix timestamp of when the thread was last bumped to the top of the board |
-| logCtr | uint | + | Length of the thread's replication log |
 | subject | string | + | Subject of the thread |
 | board | string | + | Parent board of the thread |
 | posts | [][Post](common.md#post) | + | Array of reply posts to the thread |
@@ -59,11 +58,9 @@ extends [Post](common.md#post)
 | readOnly | bool | Specifies, if thread and post creation has been disabled on this board |
 | textOnly | bool | Specifies, if file upload has been disabled |
 | forcedAnon | bool | Specifies, if poster names and tripcodes have been disabled |
-| spoiler | string | The spoiler set for this board. The resulting URL of the set spoiler would be `/assets/spoil/<spoiler name>.jpg`.  |
 | title | string | Title of the board |
 | notice | string | Short notice from the board owner |
 | rules | string | Rules of current board |
-| banners | []string | Array of banner file names uploaded for this board. The banners can be found at `/assets/banners/<banner name>`. |
 
 ## BoardTitle
 
@@ -71,10 +68,3 @@ extends [Post](common.md#post)
 |---|---|---|
 | id | string | ID of the board |
 | title | string | Title of the board |
-
-## SpoilingRequest
-
-| Field | Type | Description |
-|---|---|---|
-| id | uint | ID of the post with the image to spoil |
-| password | string | Password used, when allocating the post |
