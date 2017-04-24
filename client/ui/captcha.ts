@@ -9,6 +9,14 @@ export default class CaptchaView extends View<null> {
 
 	constructor(el: HTMLElement) {
 		super({ el })
+
+		// <noscript> loaded with AJAX can still load and cause submission
+		// problems. Remove any.
+		const ns = this.el.querySelector("noscript")
+		if (ns) {
+			ns.remove()
+		}
+
 		this.render().catch(e => {
 			alert(e)
 			throw e
