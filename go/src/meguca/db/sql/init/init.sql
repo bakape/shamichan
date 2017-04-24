@@ -38,7 +38,9 @@ create table images (
 	length int not null,
 	size int not null,
 	MD5 char(22) not null,
-	SHA1 char(40) primary key
+	SHA1 char(40) primary key,
+	Title varchar(100) not null,
+	Artist varchar(100) not null
 );
 
 create table image_tokens (

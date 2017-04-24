@@ -68,6 +68,8 @@ export interface ImageData {
 	fileType: fileTypes
 	thumbType: fileTypes
 	length?: number
+	artist?: string
+	title?: string
 	size: number
 	// [width, height, thumbnail_width, thumbnail_height]
 	dims: [number, number, number, number]

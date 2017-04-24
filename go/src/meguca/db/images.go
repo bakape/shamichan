@@ -29,7 +29,7 @@ func WriteImage(tx *sql.Tx, i common.ImageCommon) error {
 	dims := pq.GenericArray{A: i.Dims}
 	_, err := getStatement(tx, "write_image").Exec(
 		i.APNG, i.Audio, i.Video, i.FileType, i.ThumbType, dims, i.Length,
-		i.Size, i.MD5, i.SHA1,
+		i.Size, i.MD5, i.SHA1, i.Title, i.Artist,
 	)
 	return err
 }

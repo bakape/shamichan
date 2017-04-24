@@ -228,6 +228,8 @@ func processFile(
 
 	img.Length = uint32(src.Length / time.Second)
 	img.Size = len(data)
+	img.Artist = src.Artist
+	img.Title = src.Title
 
 	// MP3, OGG and MP4 might only contain audio and need a fallback thumbnail
 	if thumb.Data == nil {

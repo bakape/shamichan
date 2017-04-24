@@ -70,18 +70,6 @@ function renderFigcaption(post: Element, data: ImageData, reveal: boolean) {
         post.querySelector("header").after(el)
     }
 
-    const list: string[] = []
-    if (data.audio) {
-        list.push('\u266B')
-    }
-    if (data.length) {
-        list.push(readableLength(data.length))
-    }
-    if (data.apng) {
-        list.push('APNG')
-    }
-    list.push(readableFilesize(data.size), `${data.dims[0]}x${data.dims[1]}`)
-
     const [hToggle, , info, link] = Array.from(el.children) as HTMLElement[]
     if (!options.hideThumbs && !options.workModeToggle) {
         hToggle.hidden = true
@@ -89,23 +77,23 @@ function renderFigcaption(post: Element, data: ImageData, reveal: boolean) {
         hToggle.hidden = false
         hToggle.textContent = lang.posts[reveal ? 'hide' : 'show']
     }
-    info.textContent = `(${commaList(list)})`
+    info.querySelector(".media-title").textContent = data.title
+    info.querySelector(".media-artist").textContent = data.artist
+    info.querySelector(".has-audio").hidden = !data.audio
+    if (data.length) {
+        info.querySelector(".media-length").textContent = readableLength(data.length)
+    }
+    info.querySelector(".is-apng").hidden = !data.apng
+    info.querySelector(".filesize").textContent = readableFilesize(data.size)
+    info.querySelector(".dims").textContent = `${data.dims[0]}x${data.dims[1]}`
+    
+
+    
     imageLink(link, data)
     renderImageSearch(el.querySelector(".image-search-container"), data)
     el.hidden = false
 }
 
-// Makes a ', ' separated list
-function commaList(items: string[]): string {
-    let html = ''
-    for (let item of items) {
-        if (html) {
-            html += ', '
-        }
-        html += item
-    }
-    return html
-}
 
 // Assign URLs to image search links
 function renderImageSearch(cont: HTMLElement, img: ImageData) {

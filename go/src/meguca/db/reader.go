@@ -13,7 +13,7 @@ import (
 type imageScanner struct {
 	APNG, Audio, Video, Spoiler       sql.NullBool
 	FileType, ThumbType, Length, Size sql.NullInt64
-	Name, SHA1, MD5                   sql.NullString
+	Name, SHA1, MD5, Title, Artist    sql.NullString
 	Dims                              pq.Int64Array
 }
 
@@ -22,7 +22,7 @@ type imageScanner struct {
 func (i *imageScanner) ScanArgs() []interface{} {
 	return []interface{}{
 		&i.APNG, &i.Audio, &i.Video, &i.FileType, &i.ThumbType, &i.Dims,
-		&i.Length, &i.Size, &i.MD5, &i.SHA1,
+		&i.Length, &i.Size, &i.MD5, &i.SHA1, &i.Title, &i.Artist,
 	}
 }
 
@@ -50,6 +50,8 @@ func (i *imageScanner) Val() *common.Image {
 			Size:      int(i.Size.Int64),
 			MD5:       i.MD5.String,
 			SHA1:      i.SHA1.String,
+			Title:     i.Title.String,
+			Artist:    i.Artist.String,
 		},
 		Name: i.Name.String,
 	}

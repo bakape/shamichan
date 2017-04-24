@@ -55,6 +55,8 @@ type ImageCommon struct {
 	Length    uint32    `json:"length,omitempty"`
 	Dims      [4]uint16 `json:"dims"`
 	Size      int       `json:"size"`
+	Artist    string    `json:"artist,omitempty"`
+	Title     string    `json:"title,omitempty"`
 	MD5       string
 	SHA1      string
 }

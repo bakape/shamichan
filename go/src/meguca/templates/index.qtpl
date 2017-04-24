@@ -95,7 +95,15 @@
 						</a>
 					{% endfor %}
 				</span>
-				<span></span>
+				<span class="fileinfo">
+					<span class="media-artist"></span>
+					<span class="media-title"></span>
+					<span hidden class="has-audio">♫</span>
+					<span class="media-length"></span>
+					<span hidden class="is-apng">APNG</span>
+					<span class="filesize"></span>
+					<span class="dims"></span>
+				</span>
 				<a></a>
 			</figcaption>
 		</template>
