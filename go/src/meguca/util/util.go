@@ -106,7 +106,7 @@ func SplitPunctuation(word []byte) (leading byte, mid []byte, trailing byte) {
 // isPunctuation returns, if b is a punctuation symbol
 func isPunctuation(b byte) bool {
 	switch b {
-	case '!', '"', '\'', '(', ')', ',', '-', '.', '/', ':', ';', '?':
+	case '!', '"', '\'', '(', ')', ',', '-', '.', '/', ':', ';', '?','[',']':
 		return true
 	default:
 		return false
