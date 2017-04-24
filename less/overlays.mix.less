@@ -171,13 +171,16 @@
 	input[type=text], input[type=password] {
 		width: 10em;
 	}
-	input.full-width {
-		width: ~"calc(100% - 1px)";
-		box-sizing: border-box;
-	}
 	#modal-overlay > & {
 		display: none;
 		margin-left: auto;
+	}
+}
+
+input[type=number], input[type=text], input[type=password], textarea {
+	.full-width &, &.full-width {
+		width: ~"calc(100% - 1px)";
+		box-sizing: border-box;
 	}
 }
 

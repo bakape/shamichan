@@ -38,8 +38,8 @@ abstract class FormView extends View<null> {
 		let captcha = this.el.querySelector(".captcha-container")
 		if (captcha) {
 			// Clear any previous captcha, when reusing form
-			captcha.querySelector(".captcha-image").removeAttribute("src");
-			(captcha.querySelector(".captcha-input") as HTMLInputElement)
+			captcha.querySelector("img").removeAttribute("src");
+			(captcha.querySelector(`input[name="captcha"]`) as HTMLInputElement)
 				.value = ""
 
 			this.captcha = new CaptchaView(captcha)

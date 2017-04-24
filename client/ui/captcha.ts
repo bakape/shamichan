@@ -31,9 +31,10 @@ export default class CaptchaView extends View<null> {
 			throw text
 		}
 		this.captchaID = text
-		this.image = this.el.querySelector(".captcha-image") as HTMLImageElement
+		this.image = this.el.querySelector("img") as HTMLImageElement
 		this.image.setAttribute("src", `/captcha/image/${this.captchaID}.png`)
-		this.input = this.el.querySelector(".captcha-input") as HTMLInputElement
+		this.input = this.el
+			.querySelector(`input[name="captcha"]`) as HTMLInputElement
 	}
 
 	// Returns the data from the captcha widget
