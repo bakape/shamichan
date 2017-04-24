@@ -74,7 +74,7 @@ func SplitPunctuation(word []byte) (leading byte, mid []byte, trailing byte) {
 
 	isPunctuation := func(b byte) bool {
 		switch b {
-		case '!', '"', '\'', '(', ')', ',', '-', '.', '/', ':', ';', '?':
+		case '!', '"', '\'', '(', ')', ',', '-', '.', '/', ':', ';', '?','[',']':
 			return true
 		default:
 			return false
