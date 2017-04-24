@@ -14,7 +14,7 @@ func TestParseLine(t *testing.T) {
 		ID: "a",
 	})
 
-	links, com, err := ParseBody([]byte("#flip"), "a")
+	links, com, err := ParseBody([]byte("#flip,"), "a")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +60,10 @@ func TestParseBody(t *testing.T) {
 		}
 	}
 
-	links, com, err := ParseBody([]byte("#flip\n>>8\n>>>6 #flip\n#flip"), "a")
+	links, com, err := ParseBody(
+		[]byte("#flip?\n>>8\n>>>6 (#flip)\n#flip"),
+		"a",
+	)
 	if err != nil {
 		t.Fatal(err)
 	}

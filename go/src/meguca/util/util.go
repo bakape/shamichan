@@ -65,3 +65,82 @@ func CloneBytes(b []byte) []byte {
 	copy(cp, b)
 	return cp
 }
+
+// SplitPunctuation splits off one byte of leading and trailing punctuation,
+// if any, and returns the 3 split parts. If there is no edge punctuation, the
+// respective byte = 0.
+func SplitPunctuation(word []byte) (leading byte, mid []byte, trailing byte) {
+	mid = word
+
+	isPunctuation := func(b byte) bool {
+		switch b {
+		case '!', '"', '\'', '(', ')', ',', '-', '.', '/', ':', ';', '?':
+			return true
+		default:
+			return false
+		}
+	}
+
+	// Split leading
+	if len(mid) < 2 {
+		return
+	}
+	if isPunctuation(mid[0]) {
+		leading = mid[0]
+		mid = mid[1:]
+	}
+
+	// Split trailing
+	l := len(mid)
+	if l < 2 {
+		return
+	}
+	if isPunctuation(mid[l-1]) {
+		trailing = mid[l-1]
+		mid = mid[:l-1]
+	}
+
+	return
+}
+
+// isPunctuation returns, if b is a punctuation symbol
+func isPunctuation(b byte) bool {
+	switch b {
+	case '!', '"', '\'', '(', ')', ',', '-', '.', '/', ':', ';', '?':
+		return true
+	default:
+		return false
+	}
+}
+
+// SplitPunctuationString splits off one byte of leading and trailing
+// punctuation, if any, and returns the 3 split parts. If there is no edge
+// punctuation, the respective byte = 0.
+func SplitPunctuationString(word string) (
+	leading byte, mid string, trailing byte,
+) {
+	// Generic copy paste :^)
+
+	mid = word
+
+	// Split leading
+	if len(mid) < 2 {
+		return
+	}
+	if isPunctuation(mid[0]) {
+		leading = mid[0]
+		mid = mid[1:]
+	}
+
+	// Split trailing
+	l := len(mid)
+	if l < 2 {
+		return
+	}
+	if isPunctuation(mid[l-1]) {
+		trailing = mid[l-1]
+		mid = mid[:l-1]
+	}
+
+	return
+}

@@ -3,6 +3,7 @@ package parser
 
 import (
 	"meguca/common"
+	"meguca/util"
 	"regexp"
 )
 
@@ -30,7 +31,7 @@ func ParseBody(body []byte, board string) (
 			}
 		}
 
-		word := body[start:i]
+		_, word, _ := util.SplitPunctuation(body[start:i])
 		start = i + 1
 		if len(word) == 0 {
 			continue

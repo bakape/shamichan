@@ -5,6 +5,7 @@ import (
 	"html"
 	"meguca/common"
 	"meguca/config"
+	"meguca/util"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -119,6 +120,12 @@ func (c *bodyContext) escape(s string) {
 	c.E().S(s)
 }
 
+// Write a byte without heap allocations or escaping
+func (c *bodyContext) byte(b byte) {
+	buf := [1]byte{b}
+	c.N().SZ(buf[:])
+}
+
 // Parse a line that is no longer being edited
 func (c *bodyContext) parseTerminatedLine(line string) {
 	c.parseCode(line, (*c).parseFragment)
@@ -194,28 +201,38 @@ func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
 
 // Parse a line fragment
 func (c *bodyContext) parseFragment(frag string) {
+	// Leading and trailing punctuation, if any
+	var leadPunct, trailPunct byte
+
 	for i, word := range strings.Split(frag, " ") {
 		if i != 0 {
-			c.string(` `)
+			c.byte(' ')
 		}
+
+		// Strip leading and trailing punctuation and commit separately
+		leadPunct, word, trailPunct = util.SplitPunctuationString(word)
+		if leadPunct != 0 {
+			c.byte(leadPunct)
+		}
+
 		if len(word) == 0 {
-			continue
+			goto end
 		}
 		switch word[0] {
 		case '>': // Links
 			if m := linkRegexp.FindStringSubmatch(word); m != nil {
 				// Post links
 				c.parsePostLink(m)
-				continue
+				goto end
 			} else if m := referenceRegexp.FindStringSubmatch(word); m != nil {
 				// Internal and custom reference URLs
 				c.parseReference(m)
-				continue
+				goto end
 			}
 		case '#': // Hash commands
 			if m := common.CommandRegexp.FindStringSubmatch(word); m != nil {
 				c.parseCommands(string(m[1]))
-				continue
+				goto end
 			}
 		default: // Generic HTTP(S) URLs and magnet links
 			// Checking the first byte is much cheaper than a function call. Do
@@ -223,10 +240,16 @@ func (c *bodyContext) parseFragment(frag string) {
 			pre, ok := urlPrefixes[word[0]]
 			if ok && strings.HasPrefix(word, pre) {
 				c.parseURL(word)
-				continue
+				goto end
 			}
 		}
 		c.escape(word)
+
+	end:
+		// Write trailing punctuation, if any
+		if trailPunct != 0 {
+			c.byte(trailPunct)
+		}
 	}
 }
 
@@ -408,7 +431,7 @@ func (c *bodyContext) uint64(i uint64) {
 
 // If command validation failed, simply write the string
 func (c *bodyContext) writeInvalidCommand(s string) {
-	c.string("#")
+	c.byte('#')
 	c.escape(s)
 }
 

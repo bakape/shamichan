@@ -42,8 +42,8 @@ const ISSpecs: ImageSearchSpec[] = [
 
 // Render a thumbnail of an image, according to configuration settings
 export function renderImage(post: Element, data: ImageData, reveal: boolean) {
-    // Need to find direct descendant, otherwise inlined posts might match
     post.classList.add("media")
+    // Need to find direct descendant, otherwise inlined posts might match
     const cont = post.querySelector(".post-container")
     let el = firstChild(cont, ch =>
         ch.tagName === "FIGURE")
@@ -56,8 +56,6 @@ export function renderImage(post: Element, data: ImageData, reveal: boolean) {
     el.hidden = !showThumb
     if (showThumb) {
         (el.firstElementChild as HTMLElement).hidden = false
-    }
-    if (showThumb) {
         renderThumbnail(el.lastElementChild, data)
     }
     renderFigcaption(post, data, reveal)

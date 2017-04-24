@@ -62,13 +62,13 @@ CaptchaConfirmation renders a confirmation form with an optional captcha
 	{% if !config.Get().Captcha %}
 		{% return %}
 	{% endif %}
-	<div class="captcha-container">
-		<img class="captcha-image">
+	<div class="captcha-container full-width">
+		<img>
 		<noscript>
 			<iframe width="240" height="100" marginwidth="0" marginheight="0" src="/captcha/noscript/load"></iframe>
 			<input type="text" name="captchaID" placeholder="{%s= ln["captchaID"] %}" required>
 		</noscript>
-		<input name="captcha" placeholder="{%s= ln["captcha"] %}" class="captcha-input" type="text" maxlength="6" minlength="6" pattern="\d{6}" required>
+		<input name="captcha" placeholder="{%s= ln["captcha"] %}" type="number" autocomplete="off" required>
 	</div>
 {% endstripspace %}{% endfunc %}
 

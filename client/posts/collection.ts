@@ -2,7 +2,7 @@ import { Post } from './model'
 
 // Holds a collection of Post models
 export default class PostCollection {
-	public models: { [key: string]: Post } = {}
+	private models: { [key: string]: Post } = {}
 
 	// Retrieve a model by its ID
 	public get(id: number): Post {
