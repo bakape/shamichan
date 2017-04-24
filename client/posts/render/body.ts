@@ -432,6 +432,8 @@ function isPunctuation(b: string): boolean {
         case ':':
         case ';':
         case '?':
+        case '[':
+        case ']':
             return true
         default:
             return false
