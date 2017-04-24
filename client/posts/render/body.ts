@@ -166,28 +166,32 @@ function parseOpenLinks(frag: string): string {
     let html = ""
     const words = frag.split(" ")
     for (let i = 0; i < words.length; i++) {
-        const word = words[i]
         if (i !== 0) {
             html += " "
         }
-        if (!word) {
-            continue
-        }
-        if (word[0] !== ">") {
-            html += escape(word)
-            continue
+
+        // Split leading and trailing punctuation, if any
+        const [leadPunct, word, trailPunct] = splitPunctuation(words[i])
+        if (leadPunct) {
+            html += leadPunct
         }
 
-        const m = word.match(/^>>(>*)(\d+)$/)
-        if (!m) {
-            html += escape(word)
-            continue
+        let matched = false
+        if (word && word[0] === ">") {
+            const m = word.match(/^>>(>*)(\d+)$/)
+            if (m) {
+                const id = parseInt(m[2])
+                if (posts.has(id)) {
+                    html += m[1] + renderTempLink(id)
+                    matched = true
+                }
+            }
         }
-        const id = parseInt(m[2])
-        if (!posts.has(id)) {
+        if (!matched) {
             html += escape(word)
-        } else {
-            html += m[1] + renderTempLink(id)
+        }
+        if (trailPunct) {
+            html += trailPunct
         }
     }
     return html
@@ -198,36 +202,48 @@ function parseFragment(frag: string, data: PostData): string {
     let html = ""
     const words = frag.split(" ")
     for (let i = 0; i < words.length; i++) {
-        const word = words[i]
         if (i !== 0) {
             html += " "
         }
+
+        // Split leading and trailing punctuation, if any
+        const [leadPunct, word, trailPunct] = splitPunctuation(words[i])
+        if (leadPunct) {
+            html += leadPunct
+        }
         if (!word) {
+            if (trailPunct) {
+                html += trailPunct
+            }
             continue
         }
 
-        let m: RegExpMatchArray
+        let m: RegExpMatchArray,
+            matched = false
         switch (word[0]) {
             case ">":
                 // Post links
                 m = word.match(/^>>(>*)(\d+)$/)
                 if (m) {
                     html += parsePostLink(m, data.links)
-                    continue
+                    matched = true
+                    break
                 }
 
                 // Internal and custom reference URLs
                 m = word.match(/^>>>(>*)\/(\w+)\/$/)
                 if (m) {
                     html += parseReference(m)
-                    continue
+                    matched = true
+                    break
                 }
                 break
             case "#": // Hash commands
                 m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?)$/)
                 if (m) {
                     html += parseCommand(m[1], data)
-                    continue
+                    matched = true
+                    break
                 }
                 break
             default:
@@ -237,10 +253,17 @@ function parseFragment(frag: string, data: PostData): string {
                 const pre = urlPrefixes[word[0]]
                 if (pre && word.startsWith(pre)) {
                     html += parseURL(word)
-                    continue
+                    matched = true
+                    break
                 }
         }
-        html += escape(word)
+
+        if (!matched) {
+            html += escape(word)
+        }
+        if (trailPunct) {
+            html += trailPunct
+        }
     }
 
     return html
@@ -363,4 +386,54 @@ function formatSyncwatch(bit: string, val: number[], state: TextState): string {
         "data-end": val[4].toString()
     }
     return `<em><strong ${makeAttrs(attrs)}>syncwatch</strong></em>`
+}
+
+// Splits off one byte of leading and trailing punctuation, if any, and returns
+// the 3 split parts. If there is no edge punctuation, the respective string
+// is empty.
+function splitPunctuation(word: string): [string, string, string] {
+    const re: [string, string, string] = ["", word, ""]
+    re[1] = word
+
+    // Split leading
+    if (re[1].length < 2) {
+        return re
+    }
+    if (isPunctuation(re[1][0])) {
+        re[0] = re[1][0]
+        re[1] = re[1].slice(1)
+    }
+
+    // Split trailing
+    const l = re[1].length
+    if (l < 2) {
+        return re
+    }
+    if (isPunctuation(re[1][l - 1])) {
+        re[2] = re[1][l - 1]
+        re[1] = re[1].slice(0, -1)
+    }
+
+    return re
+}
+
+// Return if b is a punctuation byte
+function isPunctuation(b: string): boolean {
+    switch (b) {
+        case '!':
+        case '"':
+        case '\'':
+        case '(':
+        case ')':
+        case ',':
+        case '-':
+        case '.':
+        case '/':
+        case ':':
+        case ';':
+        case '?':
+            return true
+        default:
+            return false
+    }
 }
