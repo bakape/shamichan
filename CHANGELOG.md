@@ -2,8 +2,13 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+##v4.2.1 - 2017-04-24
+* Fix
+	- Administration forms with captchas enabled
+	- Captchas autocompleting
+
 ##v4.2.0 - 2017-04-23
-* Fix:
+* Fix
 	- Delay of post body syncing, when closing post form
 	- Serving OGG files to Chrome
 	- Stale page HTML retention
@@ -25,7 +30,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Post repositioning order after collapsing an inlined post link
 	- Popup menu colours on editing posts in ashita and inumi
 	- Inlined post text clipping
-* Change:
+* Change
 	- Deleted posts now publically visible
 	- Prevent passing referrer to linked external sites
 	- Align posts with horizontal posting
@@ -36,7 +41,7 @@ Project uses [Semantic Versioning](http://semver.org/)
 	- Use URL parsers to validate URLs
 	- Support more URL prefixes
 	- First class citizenship to cross-thread inlined posts
-* Add:
+* Add
 	- Global bans for admins
 	- Setting to disable user board creation
 	- Global admin -> users notifications
