@@ -220,9 +220,9 @@ table {
 .fileinfo {display: inline-flex;align-items: baseline;margin-left: 1ex;}
 .fileinfo::before {content: "(";}
 .fileinfo::after {content: ")";}
-.fileinfo > :empty {display: none;} 
-.fileinfo > :not(:empty):not([hidden]) ~ ::before {content: ", ";}
-.fileinfo > .media-artist:not(:empty) + .media-title::before {content: "\00a0-\00a0";}
+.fileinfo > span:empty {display: none;} 
+.fileinfo > span:not(:empty):not([hidden]) ~ span::before {content: ", ";}
+.fileinfo > span.media-artist:not(:empty) + span.media-title::before {content: "\00a0-\00a0";}
 
 
 @media screen and (max-device-width: 700px) {
