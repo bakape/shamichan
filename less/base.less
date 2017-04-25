@@ -214,7 +214,16 @@ table {
 	}
 }
 
+
 :root.gallery #threads article[id^=p]:not(.media):not(.editing) {display: none;}
+
+.fileinfo {display: inline-flex;align-items: baseline;margin-left: 1ex;}
+.fileinfo::before {content: "(";}
+.fileinfo::after {content: ")";}
+.fileinfo > :empty {display: none;} 
+.fileinfo > :not(:empty):not([hidden]) ~ ::before {content: ", ";}
+.fileinfo > .media-artist:not(:empty) + .media-title::before {content: "\00a0-\00a0";}
+
 
 @media screen and (max-device-width: 700px) {
 	body {

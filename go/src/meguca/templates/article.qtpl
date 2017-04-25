@@ -96,12 +96,11 @@
 						Ex
 					</a>
 				</span>
-				<span>
-					(
-					{% if img.Audio %}
-						♫,{% space %}
-					{% endif %}
-					{% if img.Length != 0 %}
+				<span class="fileinfo">
+					{% if img.Artist != "" %}<span class="media-artist">{%s= img.Artist %}</span>{% endif %}
+					{% if img.Title != "" %}<span class="media-title">{%s= img.Title %}</span>{% endif %}
+					{% if img.Audio %}<span class="has-audio">♫</span>{% endif %}
+					{% if img.Length != 0 %}<span class="media-length">
 						{% code l := img.Length %}
 						{% if l < 60 %}
 							{%s= fmt.Sprintf("0:%02d", l) %}
@@ -109,16 +108,17 @@
 							{% code min := l / 60 %}
 							{%s= fmt.Sprintf("%02d:%02d", min, l - min * 60) %}
 						{% endif %}
-						,{% space %}
+						</span>
 					{% endif %}
 					{% if img.APNG %}
-						APNG,{% space %}
+						<span class="is-apng">APNG</span>
 					{% endif %}
-					{%s= readableFileSize(img.Size) %},{% space %}
+					<span class="filesize">{%s= readableFileSize(img.Size) %}</span>
+					<span class="dims">
 					{%s= strconv.FormatUint(uint64(img.Dims[0]), 10) %}
 					x
 					{%s= strconv.FormatUint(uint64(img.Dims[1]), 10) %}
-					)
+					</span>
 				</span>
 				{% code name := imageName(img.FileType, img.Name) %}
 				<a href="{%s= assets.RelativeSourcePath(img.FileType, img.SHA1) %}" download="{%s= name %}">

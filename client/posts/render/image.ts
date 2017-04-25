@@ -70,18 +70,6 @@ function renderFigcaption(post: Element, data: ImageData, reveal: boolean) {
         post.querySelector("header").after(el)
     }
 
-    const list: string[] = []
-    if (data.audio) {
-        list.push('\u266B')
-    }
-    if (data.length) {
-        list.push(readableLength(data.length))
-    }
-    if (data.apng) {
-        list.push('APNG')
-    }
-    list.push(readableFilesize(data.size), `${data.dims[0]}x${data.dims[1]}`)
-
     const [hToggle, , info, link] = Array.from(el.children) as HTMLElement[]
     if (!options.hideThumbs && !options.workModeToggle) {
         hToggle.hidden = true
@@ -89,23 +77,41 @@ function renderFigcaption(post: Element, data: ImageData, reveal: boolean) {
         hToggle.hidden = false
         hToggle.textContent = lang.posts[reveal ? 'hide' : 'show']
     }
-    info.textContent = `(${commaList(list)})`
+    for(let el of Array.from(info.children) as HTMLElement[]) {
+        switch(el.className) {
+            case "media-title":
+                el.textContent = data.title
+                break;
+            case "media-artist":
+                el.textContent = data.artist
+                break
+            case "has-audio":
+                el.hidden = !data.audio
+                break
+            case "media-length":
+                if (data.length) {
+                    el.textContent = readableLength(data.length)
+                }
+                break
+            case "is-apng":
+                el.hidden = !data.apng
+                break
+            case "filesize":
+                el.textContent = readableFilesize(data.size)
+                break
+            case "dims":
+                el.textContent = `${data.dims[0]}x${data.dims[1]}`
+                break
+        }
+    }
+    
+
+    
     imageLink(link, data)
     renderImageSearch(el.querySelector(".image-search-container"), data)
     el.hidden = false
 }
 
-// Makes a ', ' separated list
-function commaList(items: string[]): string {
-    let html = ''
-    for (let item of items) {
-        if (html) {
-            html += ', '
-        }
-        html += item
-    }
-    return html
-}
 
 // Assign URLs to image search links
 function renderImageSearch(cont: HTMLElement, img: ImageData) {
