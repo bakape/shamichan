@@ -192,7 +192,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 
 func scanThreadPost(rs rowScanner) (res common.Post, err error) {
 	var (
-		args = make([]interface{}, 0, 22)
+		args = make([]interface{}, 0, 24)
 		post postScanner
 		img  imageScanner
 	)
@@ -217,7 +217,7 @@ func scanThreadPost(rs rowScanner) (res common.Post, err error) {
 // GetPost reads a single post from the database
 func GetPost(id uint64) (res common.StandalonePost, err error) {
 	var (
-		args = make([]interface{}, 2, 26)
+		args = make([]interface{}, 2, 28)
 		post postScanner
 		img  imageScanner
 	)
@@ -342,7 +342,7 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 			img  imageScanner
 		)
 
-		args := make([]interface{}, 0, 30)
+		args := make([]interface{}, 0, 32)
 		args = append(args,
 			&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
 			&t.Subject,

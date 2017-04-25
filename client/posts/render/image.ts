@@ -77,15 +77,33 @@ function renderFigcaption(post: Element, data: ImageData, reveal: boolean) {
         hToggle.hidden = false
         hToggle.textContent = lang.posts[reveal ? 'hide' : 'show']
     }
-    info.querySelector(".media-title").textContent = data.title
-    info.querySelector(".media-artist").textContent = data.artist
-    info.querySelector(".has-audio").hidden = !data.audio
-    if (data.length) {
-        info.querySelector(".media-length").textContent = readableLength(data.length)
+    for(let el of Array.from(info.children) as HTMLElement[]) {
+        switch(el.className) {
+            case "media-title":
+                el.textContent = data.title
+                break;
+            case "media-artist":
+                el.textContent = data.artist
+                break
+            case "has-audio":
+                el.hidden = !data.audio
+                break
+            case "media-length":
+                if (data.length) {
+                    el.textContent = readableLength(data.length)
+                }
+                break
+            case "is-apng":
+                el.hidden = !data.apng
+                break
+            case "filesize":
+                el.textContent = readableFilesize(data.size)
+                break
+            case "dims":
+                el.textContent = `${data.dims[0]}x${data.dims[1]}`
+                break
+        }
     }
-    info.querySelector(".is-apng").hidden = !data.apng
-    info.querySelector(".filesize").textContent = readableFilesize(data.size)
-    info.querySelector(".dims").textContent = `${data.dims[0]}x${data.dims[1]}`
     
 
     
