@@ -43,7 +43,7 @@ class ThreadForm extends FormView {
 			this.upload.cancel()
 		}
 		this.reset()
-		this.aside.classList.remove("expanded", "sending")
+		this.aside.classList.remove("expanded")
 	}
 
 	protected async send() {
