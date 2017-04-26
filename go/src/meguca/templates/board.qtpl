@@ -167,7 +167,6 @@ Render noscript-specific post creation fields
 {% func noscriptPostCreationFields(ln lang.Pack) %}{% stripspace %}
 	{% for _, s := range specs["noscriptPostCreation"] %}
 		{%= input(s, ln) %}
-		<br>
 	{% endfor %}
 {% endstripspace %}{% endfunc %}
 

@@ -4,6 +4,7 @@ package db
 import (
 	"database/sql"
 	"database/sql/driver"
+	"errors"
 	"fmt"
 	"meguca/common"
 	"strconv"
@@ -49,7 +50,7 @@ func (l *linkRow) Scan(src interface{}) error {
 func (l *linkRow) scanBytes(src []byte) error {
 	length := len(src)
 	if length < 6 {
-		return fmt.Errorf("db: source too short")
+		return errors.New("db: source too short")
 	}
 
 	src = src[1 : length-1]
@@ -234,8 +235,8 @@ func NewPostID() (id uint64, err error) {
 }
 
 // InsertPost inserts a post into an existing thread
-func InsertPost(p Post) (err error) {
-	err = execPrepared("insert_post", genPostCreationArgs(p)...)
+func InsertPost(p Post, sage bool) (err error) {
+	err = execPrepared("insert_post", append(genPostCreationArgs(p), sage)...)
 	if err != nil {
 		return
 	}

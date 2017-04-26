@@ -256,6 +256,10 @@
 			"Rules",
 			"Board rules to display in the rule modal window"
 		],
+		"sage": [
+			"Sage",
+			"Do not bump the thread to the top of the board on post creation."
+		],
 		"salt": [
 			"Secure salt",
 			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 0 characters long."

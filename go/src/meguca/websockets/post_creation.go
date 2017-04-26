@@ -29,6 +29,7 @@ type ThreadCreationRequest struct {
 // ReplyCreationRequest contains common fields for both thread and reply
 // creation
 type ReplyCreationRequest struct {
+	Sage  bool
 	Image ImageRequest
 	auth.SessionCreds
 	auth.Captcha
@@ -185,7 +186,7 @@ func CreatePost(
 		return
 	}
 
-	err = db.InsertPost(post)
+	err = db.InsertPost(post, req.Sage)
 	return
 }
 

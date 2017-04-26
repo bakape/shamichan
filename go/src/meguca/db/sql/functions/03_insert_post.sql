@@ -15,9 +15,10 @@ create or replace function insert_post(
 	imageName varchar(200),
 	links bigint[][2],
 	backlinks bigint[][2],
-	commands json[]
+	commands json[],
+	sage bool
 ) returns void as $$
-	select bump_thread(op, 'true', SHA1 is not null);
+	select bump_thread(op, not sage, SHA1 is not null);
 	insert into posts (
 		editing, spoiler, id, board, op, time, body, name, trip, auth, password,
 		ip, SHA1, imageName, links, backlinks, commands

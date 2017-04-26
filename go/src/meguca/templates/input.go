@@ -235,6 +235,10 @@ func streaminput(qw *quicktemplate.Writer, spec inputSpec, lang lang.Pack) {
 		lang:   lang,
 	}
 	w.input(spec)
+	if !spec.Placeholder {
+		w.label(spec)
+	}
+	w.N().S(`<br>`)
 }
 
 // Render the options inputs of an options panel

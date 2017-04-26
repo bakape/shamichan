@@ -74,6 +74,7 @@ func parsePostCreationForm(w http.ResponseWriter, r *http.Request) (
 	req = websockets.ReplyCreationRequest{
 		Name: f.Get("name"),
 		Body: f.Get("body"),
+		Sage: f.Get("sage") == "on",
 		Captcha: auth.Captcha{
 			CaptchaID: f.Get("captchaID"),
 			Solution:  f.Get("captcha"),

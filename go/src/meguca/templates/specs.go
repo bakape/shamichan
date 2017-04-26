@@ -18,6 +18,10 @@ var specs = map[string][]inputSpec{
 			Type: _bool,
 		},
 		{
+			ID:   "sage",
+			Type: _bool,
+		},
+		{
 			ID:           "name",
 			Type:         _string,
 			MaxLength:    common.MaxLenName,
@@ -25,6 +29,10 @@ var specs = map[string][]inputSpec{
 		},
 	},
 	"noscriptPostCreation": {
+		{
+			ID:   "sage",
+			Type: _bool,
+		},
 		{
 			ID:           "name",
 			Type:         _string,

@@ -4,42 +4,51 @@ import { BannerModal } from '../../base'
 import { extend, emitChanges, ChangeEmitter } from '../../util'
 import { newRequest } from "../../mod"
 
-const base64 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_',
-	authCheckbox = document.getElementById("staffTitle") as HTMLInputElement
+const base64 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
 
 interface Identity extends ChangeEmitter {
 	auth: boolean
 	name: string
+	sage: boolean
 	postPassword: string
 	[index: string]: any
 }
 
-let identity = {
+const identity = emitChanges({
 	auth: false,
 	name: localStorage.getItem("name") || "",
-	postPassword: localStorage.getItem("postPassword") || "",
-} as Identity
-if (!identity.postPassword) {
-	identity.postPassword = randomID(64)
-	localStorage.setItem("postPassword", identity.postPassword)
-}
-export default identity = emitChanges(identity)
+	sage: localStorage.getItem("sage") === "true",
+	postPassword: randomID(64),
+} as Identity)
+export default identity
 
 // Poster identity input panel
 class IdentityPanel extends BannerModal {
 	constructor() {
 		super(document.getElementById("identity"))
-		this.on("input", e =>
-			this.onInput(e))
-		authCheckbox.addEventListener("change", () => this.onAuthChange(), {
+		this.on("input", this.onInput.bind(this), {
 			passive: true,
+			selector: `input[type=text]`,
+		})
+		this.on("change", this.onCheckboxChange.bind(this), {
+			passive: true,
+			selector: `input[type=checkbox]`,
 		})
 		this.assignValues()
 	}
 
 	private assignValues() {
-		(this.el.querySelector(`input[name="name"]`) as HTMLInputElement)
-			.value = identity.name
+		for (let el of this.el.querySelectorAll("input") as HTMLInputElement[]) {
+			const name = el.getAttribute("name")
+			switch (el.getAttribute("type")) {
+				case "text":
+					el.value = identity[name]
+					break
+				case "checkbox":
+					el.checked = identity[name]
+					break
+			}
+		}
 	}
 
 	private onInput(event: Event) {
@@ -50,18 +59,28 @@ class IdentityPanel extends BannerModal {
 		identity[name] = val
 	}
 
-	private onAuthChange() {
-		identity.auth = authCheckbox.checked
+	private onCheckboxChange(e: Event) {
+		const el = event.target as HTMLInputElement,
+			name = el.getAttribute("name"),
+			val = el.checked
+		if (name === "staffTitle") {
+			identity["auth"] = val
+			return
+		}
+		identity[name] = val
+		localStorage.setItem(name, val.toString())
 	}
 }
 
 // Generate a new base post allocation request
 export function newAllocRequest() {
-	const req = { password: identity.postPassword } as any
-	if (identity.name) {
-		req["name"] = identity.name
+	const req: { [key: string]: any } = { password: identity.postPassword }
+	for (let key of ["name", "sage"]) {
+		if (identity[key]) {
+			req[key] = identity[key]
+		}
 	}
-	if (authCheckbox.checked) {
+	if (identity.auth) {
 		extend(req, newRequest())
 	}
 	return req
