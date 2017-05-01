@@ -1,5 +1,8 @@
-Public JSON API documentation. Refer to [common.md](common.md) for more
-information.
+# Public JSON API documentation
+
+Note, that to minimize network payload fields at their null values are omitted.
+For example a post containing `"editing":false` will have the editing field
+omitted.
 
 | URL | Type | Request payload | Response payload | Description |
 |---|---|---|---|---|
@@ -11,14 +14,82 @@ information.
 | /json/post/:post | GET | - | [StandalonePost](#standalonepost) | Returns a specific post located in any thread or board by its numeric ID. |
 | /json/config | GET | - | [Config](#config) | Returns the current public server configuration |
 | /json/boardConfig/:board | GET | - | [BoardConfig](#boardconfig) | Returns public board-specific configurations for the specific board |
-| /json/extensions | GET | - | [fileTypes](common.md#filetypes) | Returns a map of the current filetype enums to their canonical extensions |
+| /json/extensions | GET | - | [fileTypes](#filetypes) | Returns a map of the current filetype enums to their canonical extensions |
 | /json/boardList | GET | - | [][BoardTitle](#boardtitle) | Returns an array of the currently created boards and their assigned titles |
-| /uploadHash | POST | string{40} | string | Files can be inserted into a post without uploading the actual file, if it already exists on the server. To do this upload the hex-encoded SHA1 hash of the file you wish to insert into the post. If the file exists on the server a upload token is returned, otherwise response body is empty. Use this token in an [ImageRequest](common.md#imagerequest). |
-| /upload | POST | form{"image": File} | string | Uploads a file in a form under the "image" field. Returns a token to be used in [ImageRequest](common.md#imagerequest) for allocating images to posts. |
+| /uploadHash | POST | string{40} | string | Files can be inserted into a post without uploading the actual file, if it already exists on the server. To do this upload the hex-encoded SHA1 hash of the file you wish to insert into the post. If the file exists on the server a upload token is returned, otherwise response body is empty. Use this token in an [ImageRequest](#imagerequest). |
+| /upload | POST | form{"image": File} | string | Uploads a file in a form under the "image" field. Returns a token to be used in [ImageRequest](#imagerequest) for allocating images to posts. |
+
+## Post
+Generic post object
+
+| Field | Type | Required | Description |
+|---|---|:---:|---|
+| editing | bool | - | describes, if the post is still open and its text body editable by the original creator of the post |
+| deleted | bool | - | specifies, the post has been deleted by a moderator |
+| banned | bool | - | specifies, the poster was banned for this post by a moderator |
+| time | uint | + | Unix timestamp of post creation |
+| id | uint | + | ID number of post. Unique globally, including across boards. |
+| body | string | + | text body of post |
+| name | string | - | poster name |
+| trip | string | - | poster tripcode |
+| auth | string | - | signifies staff posting with staff title enabled; one of "admin", "owners", "moderators" or "janitors" |
+| backlinks | [PostLinks](#postlinks) | - | posts linking to this post |
+| links | [PostLinks](#postlinks) | - | posts this post is linking |
+| commands | [[]Command](#command) | - | results of hash commands, such as #flip |
+| image | [Image](#image) | - | uploaded file data |
+
+## Image
+Uploaded file data attached to post
+
+| Field | Type | Required | Description |
+|---|---|:---:|---|
+| apng | bool | - | describes, if file is an animated PNG |
+| audio | bool | - | describes, if the file contains audio |
+| video | bool | - | Only used for mp4 and ogg uploads, which may or may not contain a video stream. Describes, if they do. |
+| spoiler | bool | - | describes, if image thumbnail is spoilered |
+| fileType | [fileTypes](#filetypes) | + | file type of the originally uploaded file |
+| thumbType | [fileTypes](#filetypes) | + | file type of the generated thumbnail |
+| length | uint | - | Length of stream in seconds. Only used for audio and video files. |
+| size | uint | + | size of originally uploaded file in bytes |
+| dims | [4]uint | + | 4 item array containing the dimensions of the uploaded file and its thumbnail - [width, height, thumbnail_width, thumbnail_height] |
+| MD5 | string | + | MD5 hash of the originally uploaded file. Encoded to unpadded base64 URL encoding. |
+| SHA1 | string | + | SHA1 hash of the originally uploaded file. Encoded to hex. |
+| name | string | + | file name the user uploaded the file with without extension |
+
+## fileTypes
+Enum representing all available file types an uploaded file can be. These are
+also the canonical file extensions of these types. The extensions of thumbnails
+is `.png` for all file types, except for `.jpg`, in which case it is `.jpg`.
+
+```
+jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz"
+```
+
+## PostLinks
+Array of linked post and parent thread tuples - [][2]uint
+
+## Command
+Results of an executed hash command. Several different object types implement
+this common interface and cary data appropriate to their command type. The
+"type" field defines which type of command is stored, according to enum:
+
+```
+dice, flip, eightBall, syncWatch, pyu, pcount
+```
+The "val" field contains the following data for each command type:
+
+| enum | Value type | Description |
+|---|---|---|
+| dice | []uint | Array of dice rolls. Maximum number of rolls is 10 and each roll can not exceed 100 |
+| flip | bool | coin flip |
+| eightBall | string | stores one of several predefined string messages randomly |
+| syncWatch | [5]uint | stores data of the synchronized time counter as [hours, minutes, seconds, start_time, end_time] |
+| pyu | uint | increment generic global counter and store current value |
+| pcount | uint | store current global counter without incrementing |
 
 ## Thread
 
-extends [Post](common.md#post)
+extends [Post](#post)
 
 | Field | Type | Required | Description |
 |---|---|:---:|---|
@@ -29,12 +100,12 @@ extends [Post](common.md#post)
 | bumpTime | uint | + | Unix timestamp of when the thread was last bumped to the top of the board |
 | subject | string | + | Subject of the thread |
 | board | string | + | Parent board of the thread |
-| posts | [][Post](common.md#post) | + | Array of reply posts to the thread |
+| posts | [][Post](#post) | + | Array of reply posts to the thread |
 
 ## StandalonePost
 Additionally contains fields that define the posts parenthood
 
-extends [Post](common.md#post)
+extends [Post](#post)
 
 | Field | Type | Required | Description |
 |---|---|:---:|---|
