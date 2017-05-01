@@ -220,7 +220,7 @@ table {
 .fileinfo {display: inline-flex;align-items: baseline;margin-left: 1ex;}
 .fileinfo::before {content: "(";}
 .fileinfo::after {content: ")";}
-.fileinfo > span:empty {display: none;} 
+.fileinfo > span:empty {display: none;}
 .fileinfo > span:not(:empty):not([hidden]) ~ span::before {content: ", ";}
 .fileinfo > span.media-artist:not(:empty) + span.media-title::before {content: "\00a0-\00a0";}
 
@@ -242,7 +242,7 @@ table {
 	#thread-post-counters, #sync-counter {
 		display: none;
 	}
-	.reply-form {
+	.reply-form:not(.preview) {
 		margin: 0;
 		padding-right: 10px;
 		padding-left: 10px;
