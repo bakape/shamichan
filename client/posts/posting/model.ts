@@ -7,7 +7,7 @@ import { postSM, postEvent, postState } from "."
 import { extend } from "../../util"
 import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
-import { newAllocRequest } from "./identity"
+import identity, { newAllocRequest } from "./identity"
 
 // Form Model of an OP post
 export default class FormModel extends Post {
@@ -66,6 +66,7 @@ export default class FormModel extends Post {
 					iDice: 0,
 				},
 			})
+			this.nonLive = !identity.live
 		}
 
 		// Initialize state
@@ -264,7 +265,6 @@ export default class FormModel extends Post {
 
 	// Request allocation of a draft post to the server
 	private requestAlloc(body: string | null, image: FileData | null) {
-		this.view.removeLiveToggle()
 		this.view.setEditing(true)
 		this.nonLive = false
 		this.sentAllocRequest = true

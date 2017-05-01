@@ -130,6 +130,16 @@ function updateIdentity() {
 	}
 }
 
+// Toggle live update committing on the input form, if any
+function toggleLive(live: boolean) {
+	if (!postModel || postModel.sentAllocRequest) {
+		return
+	}
+	postForm.setEditing(live)
+	postForm.inputElement("done").hidden = live
+	postModel.nonLive = !live
+}
+
 async function openReply(e: MouseEvent) {
 	e.preventDefault()
 	e.stopImmediatePropagation()
@@ -311,10 +321,11 @@ export default () => {
 		}
 	})
 
-	// Trigger update on name or staff field change
+	// Trigger post form updates on post options change
 	for (let id of ["name", "auth"]) {
 		identity.onChange(id, updateIdentity)
 	}
+	identity.onChange("live", toggleLive)
 
 	initDrop()
 	initThreads()

@@ -148,6 +148,10 @@
 			"Linki zewnętrzne",
 			"Dodaj, usuń lub edytuj linki zewnętrzne w stylu >>>/4chana/"
 		],
+		"live": [
+			"Live",
+			"Show your post to others as it is being typed"
+		],
 		"mascot": [
 			"Mascot",
 			"Toggle mascot display"

@@ -52,37 +52,16 @@ export default class FormView extends PostView {
             "input[name=\"done\"]": postSM.feeder(postEvent.done),
             "input[name=\"cancel\"]": postSM.feeder(postEvent.done),
         })
-        this.on(
-            "change",
-            e => {
-                if (this.model.sentAllocRequest) {
-                    return
-                }
-                const live = (e.target as HTMLInputElement).checked
-                this.setEditing(live)
-                const d = this.inputElement("done")
-                d.hidden = live
-                this.model.nonLive = !live
-            },
-            {
-                passive: true,
-                selector: `input[name="live"]`,
-            },
-        )
 
         if (isOP) {
             this.showDone()
-            this.removeLiveToggle()
         } else {
             if (!boardConfig.textOnly) {
                 this.upload = new UploadForm(this.model, this.el)
                 this.upload.input.addEventListener("change", () =>
                     this.model.uploadFile())
             }
-            this.renderIdentity();
-            (this.el
-                .querySelector("input[name=live]") as HTMLInputElement)
-                .checked = true
+            this.renderIdentity()
         }
 
         const bq = this.el.querySelector("blockquote")
@@ -122,14 +101,6 @@ export default class FormView extends PostView {
         }
     }
 
-    // Remove checkbox, that toggles non-live posting
-    public removeLiveToggle() {
-        const el = this.el.querySelector(".live-toggle")
-        if (el) {
-            el.remove()
-        }
-    }
-
     // Initialize extra elements for a draft unallocated post
     private initDraft() {
         this.el.querySelector("header").classList.add("temporary")
@@ -147,6 +118,7 @@ export default class FormView extends PostView {
 
         document.getElementById("thread-container").append(this.el)
         this.resizeSpacer()
+        this.setEditing(identity.live)
     }
 
     // Resize bottomSpacer to the same top position as this post
@@ -271,7 +243,8 @@ export default class FormView extends PostView {
             return
         }
 
-        const el = this.upload
+        const el = this
+            .upload
             .spoiler
             .querySelector("input") as HTMLInputElement
         el.checked = !el.checked

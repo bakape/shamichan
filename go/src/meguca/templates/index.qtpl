@@ -118,11 +118,6 @@
 			<div id="post-controls">
 				<input name="cancel" type="button" value="{%s= ln.UI["cancel"] %}">
 				<input name="done" type="button" value="{%s= ln.UI["done"] %}" hidden>
-				<label class="live-toggle">
-					<input name="live" type="checkbox">
-					{%s= ln.UI["live"] %}
-					<br>
-				</label>
 				<span class="upload-container" hidden>
 					<input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip">
 					<span data-id="spoiler">

@@ -8,19 +8,22 @@ const base64 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_
 
 interface Identity extends ChangeEmitter {
 	auth: boolean
-	name: string
 	sage: boolean
+	live: boolean
+	name: string
 	postPassword: string
 	[index: string]: any
 }
 
-const identity = emitChanges({
+let identity = {
 	auth: false,
 	name: localStorage.getItem("name") || "",
 	sage: localStorage.getItem("sage") === "true",
 	postPassword: randomID(64),
-} as Identity)
-export default identity
+} as Identity
+const liveKey = localStorage.getItem("live")
+identity.live = liveKey ? liveKey === "true" : true
+export default identity = emitChanges(identity)
 
 // Poster identity input panel
 class IdentityPanel extends BannerModal {

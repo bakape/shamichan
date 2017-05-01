@@ -148,6 +148,10 @@
 			"Extrenal links",
 			"Add, remove or edit external >>>/4chan/-type references"
 		],
+		"live": [
+			"Live",
+			"Show your post to others as it is being typed"
+		],
 		"mascot": [
 			"Mascot",
 			"Toggle mascot display"

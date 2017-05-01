@@ -13,14 +13,9 @@ import (
 
 var specs = map[string][]inputSpec{
 	"identity": {
-		{
-			ID:   "staffTitle",
-			Type: _bool,
-		},
-		{
-			ID:   "sage",
-			Type: _bool,
-		},
+		{ID: "staffTitle"},
+		{ID: "live"},
+		{ID: "sage"},
 		{
 			ID:           "name",
 			Type:         _string,
@@ -29,10 +24,7 @@ var specs = map[string][]inputSpec{
 		},
 	},
 	"noscriptPostCreation": {
-		{
-			ID:   "sage",
-			Type: _bool,
-		},
+		{ID: "sage"},
 		{
 			ID:           "name",
 			Type:         _string,

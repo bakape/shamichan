@@ -148,6 +148,10 @@
 			"Зовнніші посилання",
 			"Додавати видаляти та редагувати зовнішні посилання >>>/4chan/"
 		],
+		"live": [
+			"Live",
+			"Show your post to others as it is being typed"
+		],
 		"mascot": [
 			"Mascot",
 			"Toggle mascot display"
