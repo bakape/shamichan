@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	version = 7
+	version = 8
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
 )
@@ -94,6 +94,10 @@ var upgrades = map[uint]func(*sql.Tx) error{
 			`ALTER TABLE posts
 				ADD COLUMN sage bool`,
 		)
+		return
+	},
+	7: func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(`DROP INDEX deleted`)
 		return
 	},
 }

@@ -106,7 +106,6 @@ create table posts (
 	backlinks bigint[][2],
 	commands json[]
 );
-create index deleted on posts (deleted);
 create index op on posts (op);
 create index image on posts (SHA1);
 create index editing on posts (editing);
