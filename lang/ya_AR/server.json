@@ -1,0 +1,406 @@
+{
+	"forms": {
+		"FAQ": [
+			"Information panel text",
+			"Entries for the banner's Frequently Asked Questions list and information modal"
+		],
+		"JPEGQuality": [
+			"JPEG thumbnail quality",
+			"Quality of image JPEG thumbnails"
+		],
+		"alwaysLock": [
+			"Always Lock to Bottom",
+			"Lock scrolling to page bottom even when tab is hidden"
+		],
+		"anonymise": [
+			"Anonymise",
+			"Display all posters as anonymous"
+		],
+		"autogif": [
+			"Animated GIF Thumbnails",
+			"Animate GIF thumbnails"
+		],
+		"boardExpiry": [
+			"Board expiry time",
+			"Number of days without new posts before a board is deleted"
+		],
+		"boardName": [
+			"Board name",
+			"Name of the new board. Can contain up to 3 lowercase Latin letters or numbers."
+		],
+		"boardTitle": [
+			"Board title",
+			"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
+		],
+		"captcha": [
+			"Captcha",
+			"Ask users to complete a captcha for certain tasks like registration and thread creation"
+		],
+		"customCSS": [
+			"Custom CSS",
+			"User-defined CSS rules loaded on top of the selected theme"
+		],
+		"defaultCSS": [
+			"Default theme",
+			"Theme to load by default, when none is set by the client"
+		],
+		"defaultLang": [
+			"Default language",
+			"Language pack to load by default"
+		],
+		"desustorage": [
+			"DesuStorage",
+			"desustorage.org image search"
+		],
+		"disableUserBoards": [
+			"Disable non-admin board creation",
+			"Prevents any account apart from the 'admin' account from creating new boards"
+		],
+		"done": [
+			"Finish Post",
+			"Close open post"
+		],
+		"eightball": [
+			"#8ball answers",
+			"List of answers for the #8ball hash command. Can contain up to 100 answers and 2000 characters total."
+		],
+		"exhentai": [
+			"Exhentai",
+			"exhentai.org image search"
+		],
+		"expandAll": [
+			"Expand All Images",
+			"Expand all images. Webm, PDF and MP3 and your own post aren't affected. New post images are also expanded."
+		],
+		"export": [
+			"Export",
+			"Export options to file"
+		],
+		"feedbackEmail": [
+			"Feedback email",
+			"User feedback email to display in the top banner"
+		],
+		"forcedAnon": [
+			"Forced Anonymous",
+			"Disable user names, tripcodes and emails on posts"
+		],
+		"galleryMode": [
+			"Gallery Mode",
+			"Only show posts containing images"
+		],
+		"google": [
+			"Google",
+			"Google image search"
+		],
+		"hidden": [
+			"Hidden: 0",
+			"Clear hidden posts"
+		],
+		"hideThumbs": [
+			"Hide thumbnails",
+			"Display a [Show] button in place of thumbnails"
+		],
+		"horizontalPosting": [
+			"Horizontal Posting",
+			"38chan nostalgia"
+		],
+		"id": [
+			"Login",
+			""
+		],
+		"illyaDance": [
+			"Illya Dance",
+			"Dancing loli in the background"
+		],
+		"illyaDanceMute": [
+			"Mute Illya",
+			"Mute dancing loli"
+		],
+		"imageHover": [
+			"Image Hover Expansion",
+			"Display image previews on hover"
+		],
+		"imageRootOverride": [
+			"Image root override",
+			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
+		],
+		"import": [
+			"Import",
+			"Import options from file"
+		],
+		"inlineFit": [
+			"Expansion",
+			"Expand images inside the parent post and resize according to setting"
+		],
+		"iqdb": [
+			"IQDB",
+			"iqdb.org image search"
+		],
+		"janitors": [
+			"Janitors",
+			"Janitor account IDs. Janitors can only delete posts."
+		],
+		"lang": [
+			"Language",
+			"Change interface language"
+		],
+		"links": [
+			"External links",
+			"Add, remove or edit external >>>/4chan/-type references"
+		],
+		"live": [
+			"Live",
+			"Show your post to others as it is being typed"
+		],
+		"mascot": [
+			"Mascot",
+			"Toggle mascot display"
+		],
+		"mascotImage": [
+			"",
+			"Image to use as the mascot"
+		],
+		"mature": [
+			"Mature content",
+			"Inform the user the website contains mature content on first visit"
+		],
+		"maxHeight": [
+			"Image height limit",
+			"Maximum height of uploaded images"
+		],
+		"maxSize": [
+			"Image size limit",
+			"Maximum size of uploaded images in MB"
+		],
+		"maxWidth": [
+			"Image width limit",
+			"Maximum width of uploaded images"
+		],
+		"moderators": [
+			"Moderators",
+			"Moderator account IDs. Moderators can delete posts, ban posters and distinguish posters by their mnemonic IDs."
+		],
+		"name": [
+			"Name",
+			"Name to attach to new posts"
+		],
+		"newPassword": [
+			"New password",
+			""
+		],
+		"newPost": [
+			"New Post",
+			"Open new post"
+		],
+		"notice": [
+			"Notice",
+			"Short informational message displayed at the top of the page"
+		],
+		"notification": [
+			"Desktop Notifications",
+			"Get desktop notifications when quoted or a syncwatch is about to start"
+		],
+		"nowPlaying": [
+			"Now Playing Banner",
+			"Currently playing song on r/a/dio and other stream information in the top banner."
+		],
+		"oldPassword": [
+			"Old password",
+			""
+		],
+		"owners": [
+			"Owners",
+			"Owner account IDs. Board owners have full access to all board controls. Must contain at least one."
+		],
+		"password": [
+			"Password",
+			""
+		],
+		"postInlineExpand": [
+			"Inline Post Link Expansion",
+			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
+		],
+		"pruneBoards": [
+			"Prune boards",
+			"Delete boards that have not had any new posts for N days"
+		],
+		"pruneThreads": [
+			"Prune threads",
+			"Delete threads that have not had any posts in N days"
+		],
+		"pyu": [
+			"#pyu",
+			"Don't ask"
+		],
+		"readOnly": [
+			"Read only",
+			"Disable post creation"
+		],
+		"register": [
+			"Register",
+			""
+		],
+		"relativeTime": [
+			"Relative Timestamps",
+			"Relative post timestamps. Ex.: '1 hour ago'"
+		],
+		"repeat": [
+			"Repeat",
+			""
+		],
+		"replyRight": [
+			"[Reply] at Right",
+			"Move Reply button to the right side of the page"
+		],
+		"rootURL": [
+			"Root URL",
+			"Root URL of the imageboard. Required for some image search providers to work."
+		],
+		"rules": [
+			"Rules",
+			"Board rules to display in the rule modal window"
+		],
+		"sage": [
+			"Sage",
+			"Do not bump the thread to the top of the board on post creation."
+		],
+		"salt": [
+			"Secure salt",
+			"Salt for secure tripcode and mnemonic generation. Recommended to be at least 40 characters long."
+		],
+		"saucenao": [
+			"SauceNao",
+			"saucenao.com image search"
+		],
+		"sessionExpiry": [
+			"Account session expiry",
+			"Time in days until user accounts are automatically logged out"
+		],
+		"spoilers": [
+			"Image Spoilers",
+			"Don't spoiler images"
+		],
+		"staffTitle": [
+			"Staff Title",
+			"Display your staff title in the post header"
+		],
+		"textOnly": [
+			"Text only",
+			"Disable file uploads"
+		],
+		"theme": [
+			"Theme",
+			"Select CSS theme"
+		],
+		"threadExpiry": [
+			"Thread expiry time",
+			"Number of days without new posts before a thread is deleted"
+		],
+		"title": [
+			"Board title",
+			"Short descriptive title of the board"
+		],
+		"toggleSpoiler": [
+			"Image Spoiler",
+			"Toggle spoiler in the open post"
+		],
+		"userBG": [
+			"Custom Background",
+			"Toggle custom page background"
+		],
+		"userBGImage": [
+			"",
+			"Image to use as the background"
+		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
+		],
+		"webmHover": [
+			"WebM Hover Expansion",
+			"Display WebM previews on hover. Requires Image Hover Expansion enabled."
+		],
+		"workMode": [
+			"Work mode",
+			"Hides images and disables user background"
+		],
+		"workModeToggle": [
+			"Work mode",
+			"Hides images and disables user background"
+		]
+	},
+	"options": {
+		"none": "none",
+		"width": "fit to width",
+		"screen": "fit to screen"
+	},
+	"ui": {
+		"FAQ": "Information",
+		"account": "Account and board management",
+		"add": "Add",
+		"apply": "Apply",
+		"assignStaff": "Assign staff",
+		"ban": "Ban",
+		"bottom": "Bottom",
+		"cancel": "Cancel",
+		"captcha": "Captcha",
+		"captchaID": "Captcha ID",
+		"catalog": "Catalog",
+		"changePassword": "Change password",
+		"configureBoard": "Configure board",
+		"configureServer": "Configure server",
+		"createBoard": "Create board",
+		"deletePost": "Delete post",
+		"done": "Done",
+		"deleteBoard": "Delete board",
+		"enableJS": "Enable JavaScript for more functionality",
+		"feedback": "Feedback",
+		"global": "Global",
+		"identity": "Identity",
+		"live": "Live",
+		"loadCaptcha": "Click to load captcha",
+		"lockedToBottom": "Locked to bottom",
+		"logout": "Logout",
+		"logoutAll": "Log out all devices",
+		"newThread": "New thread",
+		"notification": "Notification",
+		"options": "Options",
+		"ownNoBoards": "You don't own any boards",
+		"reply": "Reply",
+		"report": "Report",
+		"reason": "Reason",
+		"return": "Return",
+		"rules": "Show Rules",
+		"search": "Search",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
+		"showNotice": "Notice",
+		"sortMode": "Sort threads by",
+		"subject": "Subject",
+		"submit": "Submit",
+		"sync": "Connection status",
+		"syncCount": "Unique connected IP count",
+		"text": "Text",
+		"top": "Top"
+	},
+	"sortModes": [
+		"Bump time",
+		"Last reply time",
+		"Creation time",
+		"Reply count",
+		"File count"
+	],
+	"tabs": [
+		"General",
+		"Style",
+		"Image Search",
+		"Fun",
+		"Shortcuts"
+	],
+	"templates": {
+		"banPage": [
+			"Ye have been banished from /%s/ by %s for the following reason:",
+			"Yer banishment will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
+	}
+}

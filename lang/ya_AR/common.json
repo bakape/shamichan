@@ -1,0 +1,109 @@
+{
+	"posts": {
+		"ago": "ago",
+		"and": "and",
+		"anon": "Matey",
+		"banned": "YER MATE WALKED THE PLANK FOR THIS POST",
+		"contractImages": "Contract Portraits",
+		"expandImages": "Expand Portraits",
+		"expand": "Expand",
+		"hide": "Banish",
+		"in": "in",
+		"justNow": "jus' now",
+		"omitted": "banished",
+		"seeAll": "Reveal All",
+		"spoiler": "Put Yer Message in a Bottle",
+		"show": "Reveal",
+		"you": "(Ye)",
+		"admin": "Pirate King",
+		"owners": "Captain",
+		"moderators": "First Mate",
+		"janitors": "Cabin Boy"
+	},
+	"plurals": {
+		"day": [
+			"day",
+			"days"
+		],
+		"hour": [
+			"hour",
+			"hours"
+		],
+		"image": [
+			"portrait",
+			"portraits"
+		],
+		"minute": [
+			"minute",
+			"minutes"
+		],
+		"month": [
+			"month",
+			"months"
+		],
+		"post": [
+			"missive",
+			"missives"
+		],
+		"year": [
+			"year",
+			"years"
+		]
+	},
+	"time": {
+		"calendar": [
+			"Jan",
+			"Feb",
+			"Mar",
+			"Apr",
+			"May",
+			"Jun",
+			"Jul",
+			"Aug",
+			"Sep",
+			"Oct",
+			"Nov",
+			"Dec"
+		],
+		"week": [
+			"Sun",
+			"Mon",
+			"Tue",
+			"Wed",
+			"Thu",
+			"Fri",
+			"Sat"
+		]
+	},
+	"ui": {
+		"mustMatch": "Yer magic word must match",
+		"invalidCaptcha": "Captcha is belly up",
+		"quoted": "Arr, ye have been quoted matey",
+		"refresh": "Reload",
+		"sessionExpired": "Yer session expired",
+		"thumbnailing": "Transcribing yer portrait...",
+		"unfinishedPost": "Yer missive is incomplete",
+		"uploadProgress": "uploaded...",
+		"googleSong": "Consult the Oracle",
+		"last": "Last",
+		"postsImages": "Missives/Portraits"
+	},
+	"sync": [
+		"disconnected",
+		"connecting",
+		"syncing",
+		"synced",
+		"desynced"
+	],
+	"syncwatch": {
+		"starting": "Yer picture show starts in 10 seconds",
+		"finished": "Yer picture show is finished"
+	},
+	"opts": {
+		"importConfig": {
+			"done": "Done",
+			"corrupt": "Import failed. File corrupt"
+		},
+		"langApplied": "Yer language ha' been changed, the page will now reload."
+	}
+}
