@@ -63,7 +63,7 @@ class IdentityPanel extends BannerModal {
 	}
 
 	private onCheckboxChange(e: Event) {
-		const el = event.target as HTMLInputElement,
+		const el = e.target as HTMLInputElement,
 			name = el.getAttribute("name"),
 			val = el.checked
 		if (name === "staffTitle") {
