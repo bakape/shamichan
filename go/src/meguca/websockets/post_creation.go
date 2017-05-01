@@ -251,6 +251,7 @@ func constructPost(
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
 				Time: time.Now().Unix(),
+				Sage: req.Sage,
 			},
 			Board: board,
 		},

@@ -21,10 +21,10 @@ create or replace function insert_post(
 	select bump_thread(op, not sage, SHA1 is not null);
 	insert into posts (
 		editing, spoiler, id, board, op, time, body, name, trip, auth, password,
-		ip, SHA1, imageName, links, backlinks, commands
+		ip, SHA1, imageName, links, backlinks, commands, sage
 	)
 		values (
 			editing, spoiler, id, board, op, now, body, name, trip, auth,
-			password, ip, SHA1, imageName, links, backlinks, commands
+			password, ip, SHA1, imageName, links, backlinks, commands, sage
 		);
 $$ language sql;

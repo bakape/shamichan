@@ -8,9 +8,10 @@ import options from '../../options'
 import { page } from "../../state"
 
 interface PostCredentials {
-	name?: string
-	trip?: string
-	auth?: string
+	sage: boolean
+	name: string
+	trip: string
+	auth: string
 }
 
 // Populate post template
@@ -62,7 +63,7 @@ export function renderHeader(frag: NodeSelector, data: PostData) {
 // Render the name of a post's poster
 export function renderName(
 	el: Element,
-	{trip, name, auth}: PostCredentials,
+	{ trip, name, auth, sage }: PostCredentials,
 ) {
 	if (options.anonymise) {
 		el.innerHTML = lang.posts["anon"]
@@ -88,6 +89,7 @@ export function renderName(
 		el.classList.add("admin")
 		html += ` ## ${lang.posts[auth] || "??"}`
 	}
+	el.classList.toggle("sage", !!sage)
 	el.innerHTML = html
 }
 

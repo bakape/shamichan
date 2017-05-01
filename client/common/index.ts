@@ -14,14 +14,15 @@ export interface PostData {
 	editing: boolean
 	deleted: boolean
 	banned: boolean
+	sage: boolean
 	image?: ImageData
 	time: number
 	id: number
 	op: number
 	body: string
-	name?: string
-	trip?: string
-	auth?: string
+	name: string
+	trip: string
+	auth: string
 	state: TextState
 	backlinks?: PostLink[]
 	links?: PostLink[]

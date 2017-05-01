@@ -86,6 +86,7 @@ export default class FormView extends PostView {
             trip,
             auth: auth ? "??" : "",
             name: name.trim(),
+            sage: identity.sage,
         })
     }
 

@@ -22,7 +22,7 @@
 					「{%s subject %}」
 				</h3>
 			{% endif %}
-			<b class="name{% if p.Auth != "" %}{% space %}admin{% endif %}">
+			<b class="name{% if p.Auth != "" %}{% space %}admin{% endif %}{% if p.Sage %}{% space %}sage{% endif %}">
 				{% if p.Name != "" || p.Trip == "" %}
 					{% if p.Name != "" %}
 						{%s p.Name %}

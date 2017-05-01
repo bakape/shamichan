@@ -89,6 +89,7 @@ create table posts (
 	spoiler boolean,
 	deleted boolean,
 	banned boolean,
+	sage boolean,
 	id bigint primary key,
 	op bigint not null references threads on delete cascade,
 	time bigint not null,

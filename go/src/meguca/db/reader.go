@@ -59,16 +59,16 @@ func (i *imageScanner) Val() *common.Image {
 
 type postScanner struct {
 	common.Post
-	banned, spoiler, deleted    sql.NullBool
-	name, trip, auth, imageName sql.NullString
-	links, backlinks            linkRow
-	commands                    commandRow
+	banned, spoiler, deleted, sage sql.NullBool
+	name, trip, auth, imageName    sql.NullString
+	links, backlinks               linkRow
+	commands                       commandRow
 }
 
 func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
-		&p.Editing, &p.banned, &p.spoiler, &p.deleted, &p.ID, &p.Time, &p.Body,
-		&p.name, &p.trip, &p.auth, &p.links, &p.backlinks, &p.commands,
+		&p.Editing, &p.banned, &p.spoiler, &p.deleted, &p.sage, &p.ID, &p.Time,
+		&p.Body, &p.name, &p.trip, &p.auth, &p.links, &p.backlinks, &p.commands,
 		&p.imageName,
 	}
 }
@@ -76,6 +76,7 @@ func (p *postScanner) ScanArgs() []interface{} {
 func (p postScanner) Val() (common.Post, error) {
 	p.Banned = p.banned.Bool
 	p.Deleted = p.deleted.Bool
+	p.Sage = p.sage.Bool
 	p.Name = p.name.String
 	p.Trip = p.trip.String
 	p.Auth = p.auth.String
@@ -192,7 +193,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 
 func scanThreadPost(rs rowScanner) (res common.Post, err error) {
 	var (
-		args = make([]interface{}, 0, 24)
+		args = make([]interface{}, 0, 25)
 		post postScanner
 		img  imageScanner
 	)
@@ -217,7 +218,7 @@ func scanThreadPost(rs rowScanner) (res common.Post, err error) {
 // GetPost reads a single post from the database
 func GetPost(id uint64) (res common.StandalonePost, err error) {
 	var (
-		args = make([]interface{}, 2, 28)
+		args = make([]interface{}, 2, 29)
 		post postScanner
 		img  imageScanner
 	)
@@ -342,7 +343,7 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 			img  imageScanner
 		)
 
-		args := make([]interface{}, 0, 32)
+		args := make([]interface{}, 0, 33)
 		args = append(args,
 			&t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
 			&t.Subject,
@@ -384,7 +385,7 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 func scanBoard(table tableScanner) (board common.Board, err error) {
 	defer table.Close()
 
-	ids := make([]uint64, 0, 32)
+	ids := make([]uint64, 0, 33)
 	for table.Next() {
 		var id uint64
 		err = table.Scan(&id)

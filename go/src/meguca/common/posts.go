@@ -32,6 +32,7 @@ type Post struct {
 	Editing   bool        `json:"editing,omitempty"`
 	Banned    bool        `json:"banned,omitempty"`
 	Deleted   bool        `json:"deleted,omitempty"`
+	Sage      bool        `json:"sage,omitempty"`
 	ID        uint64      `json:"id"`
 	Time      int64       `json:"time"`
 	Body      string      `json:"body"`

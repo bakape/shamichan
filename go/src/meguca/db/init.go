@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	version = 6
+	version = 7
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
 )
@@ -89,6 +89,13 @@ var upgrades = map[uint]func(*sql.Tx) error{
 		)
 		return
 	},
+	6: func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE posts
+				ADD COLUMN sage bool`,
+		)
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
@@ -108,40 +115,8 @@ func LoadDB() (err error) {
 	tasks := make([]func() error, 0, 6)
 	if !exists {
 		tasks = append(tasks, initDB)
-	} else { // Perform any upgrades
-		var v uint
-		err = db.QueryRow(`select val from main where id = 'version'`).Scan(&v)
-		if err != nil {
-			return
-		}
-
-		var tx *sql.Tx
-		for i := v; i < version; i++ {
-			log.Printf("upgrading database to version %d\n", i+1)
-			tx, err = db.Begin()
-			if err != nil {
-				return
-			}
-
-			err = upgrades[i](tx)
-			if err != nil {
-				return rollBack(tx, err)
-			}
-
-			// Write new version number
-			_, err = tx.Exec(
-				`update main set val = $1 where id = 'version'`,
-				i+1,
-			)
-			if err != nil {
-				return rollBack(tx, err)
-			}
-
-			err = tx.Commit()
-			if err != nil {
-				return
-			}
-		}
+	} else if err = checkVersion(); err != nil {
+		return
 	}
 	tasks = append(tasks, genPrepared)
 	if !exists {
@@ -156,6 +131,45 @@ func LoadDB() (err error) {
 		go runCleanupTasks()
 	}
 	return nil
+}
+
+// Check database version perform any upgrades
+func checkVersion() (err error) {
+	var v uint
+	err = db.QueryRow(`select val from main where id = 'version'`).Scan(&v)
+	if err != nil {
+		return
+	}
+
+	var tx *sql.Tx
+	for i := v; i < version; i++ {
+		log.Printf("upgrading database to version %d\n", i+1)
+		tx, err = db.Begin()
+		if err != nil {
+			return
+		}
+
+		err = upgrades[i](tx)
+		if err != nil {
+			return rollBack(tx, err)
+		}
+
+		// Write new version number
+		_, err = tx.Exec(
+			`update main set val = $1 where id = 'version'`,
+			i+1,
+		)
+		if err != nil {
+			return rollBack(tx, err)
+		}
+
+		err = tx.Commit()
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 func rollBack(tx *sql.Tx, err error) error {

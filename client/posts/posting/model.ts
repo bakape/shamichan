@@ -55,8 +55,12 @@ export default class FormModel extends Post {
 				editing: true,
 				deleted: false,
 				banned: false,
+				sage: false,
 				time: Date.now(),
 				body: "",
+				name: "",
+				auth: "",
+				trip: "",
 				state: {
 					spoiler: false,
 					quote: false,

@@ -321,8 +321,8 @@ export default () => {
 		}
 	})
 
-	// Trigger post form updates on post options change
-	for (let id of ["name", "auth"]) {
+	// Trigger post form updates on post option change
+	for (let id of ["name", "auth", "sage"]) {
 		identity.onChange(id, updateIdentity)
 	}
 	identity.onChange("live", toggleLive)
