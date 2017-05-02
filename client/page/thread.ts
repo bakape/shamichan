@@ -9,7 +9,8 @@ import { config } from "../state"
 
 const counters = document.getElementById("thread-post-counters")
 let postCtr = 0,
-    imgCtr = 0
+    imgCtr = 0,
+    bumpTime = 0
 
 // Render the HTML of a thread page
 export default function (html: string) {
@@ -25,7 +26,7 @@ export default function (html: string) {
         data = JSON.parse(text) as ThreadData,
         { posts } = data
     delete data.posts
-    setPostCount(data.postCtr, data.imageCtr)
+    setPostCount(data.postCtr, data.imageCtr, data.bumpTime)
 
     extractPost(data, data.id)
     if (data.image) {
@@ -51,6 +52,7 @@ export function setThreadTitle(data: ThreadData) {
 export function incrementPostCount(post: boolean, hasImage: boolean) {
     if (post) {
         postCtr++
+        bumpTime = Math.floor(Date.now() / 1000) // An estimate, but good enough
     }
     if (hasImage) {
         imgCtr++
@@ -59,9 +61,10 @@ export function incrementPostCount(post: boolean, hasImage: boolean) {
 }
 
 // Externally set thread image post count
-export function setPostCount(posts: number, images: number) {
+export function setPostCount(posts: number, images: number, bump: number) {
     postCtr = posts
     imgCtr = images
+    bumpTime = bump
     renderPostCounter()
 }
 
@@ -72,12 +75,17 @@ function renderPostCounter() {
 
         // Calculate estimated thread expiry time
         if (config.pruneThreads) {
+            // Calculate expiry age
             const min = config.threadExpiryMin,
                 max = config.threadExpiryMax
             let days = min + (-max + min) * (postCtr / 3000 - 1) ** 3
             if (days < min) {
                 days = min
             }
+
+            // Subtract current bump time
+            days -= (Date.now() / 1000 - bumpTime) / (3600 * 24)
+
             text += ` / `
             if (days > 1) {
                 text += `${Math.round(days)}d`

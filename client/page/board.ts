@@ -82,7 +82,7 @@ function extractThreads() {
 
 // Apply client-side modifications to a board page's HTML
 export function render() {
-	setPostCount(0, 0)
+	setPostCount(0, 0, 0)
 	if (page.catalog) {
 		extractCatalogModels()
 	} else {
