@@ -5,13 +5,11 @@ package config
 // Configs stores the global server configuration
 type Configs struct {
 	Public
-	PruneThreads  bool `json:"pruneThreads"`
 	PruneBoards   bool `json:"pruneBoards"`
 	Pyu           bool `json:"pyu"`
 	JPEGQuality   uint8
 	MaxWidth      uint16 `json:"maxWidth"`
 	MaxHeight     uint16 `json:"maxHeight"`
-	ThreadExpiry  uint   `json:"threadExpiry"`
 	BoardExpiry   uint   `json:"boardExpiry"`
 	MaxSize       uint   `json:"maxSize"`
 	SessionExpiry uint   `json:"sessionExpiry"`
@@ -26,6 +24,9 @@ type Public struct {
 	Captcha           bool              `json:"captcha"`
 	Mature            bool              `json:"mature"`
 	DisableUserBoards bool              `json:"disableUserBoards"`
+	PruneThreads      bool              `json:"pruneThreads"`
+	ThreadExpiryMin   uint              `json:"threadExpiryMin"`
+	ThreadExpiryMax   uint              `json:"threadExpiryMax"`
 	DefaultLang       string            `json:"defaultLang"`
 	DefaultCSS        string            `json:"defaultCSS"`
 	ImageRootOverride string            `json:"imageRootOverride"`

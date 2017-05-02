@@ -292,9 +292,13 @@
 			"Theme",
 			"Select CSS theme"
 		],
-		"threadExpiry": [
-			"Czas wygaśnięcia tematu",
-			"Liczba dni, po których temat bez odpowiedzi zostanie usunięty"
+		"threadExpiryMax": [
+			"Maximal thread expiry time",
+			"Number of days without new posts before a thread is deleted"
+		],
+		"threadExpiryMin": [
+			"Minimal thread expiry time",
+			"Number of days without new posts before a thread is deleted"
 		],
 		"title": [
 			"Nazwa działu",

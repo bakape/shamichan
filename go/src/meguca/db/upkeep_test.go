@@ -243,7 +243,10 @@ func TestDeleteOldThreads(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	config.Set(config.Configs{
-		ThreadExpiry: 7,
+		Public: config.Public{
+			ThreadExpiryMin: 7,
+			ThreadExpiryMax: 7,
+		},
 	})
 
 	t.Run("no threads", func(t *testing.T) {

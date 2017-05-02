@@ -10,6 +10,9 @@ interface Configs {
 	captcha: boolean
 	mature: boolean // Website intended for mature audiences
 	disableUserBoards: boolean
+	pruneThreads: boolean
+	threadExpiryMin: number
+	threadExpiryMax: number
 	defaultLang: string
 	defaultCSS: string
 	imageRootOverride: string

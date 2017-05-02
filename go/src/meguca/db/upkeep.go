@@ -4,6 +4,7 @@ package db
 
 import (
 	"log"
+	"math"
 	"meguca/common"
 	"meguca/config"
 	"meguca/imager/assets"
@@ -118,16 +119,58 @@ func deleteUnusedBoards() error {
 	return execPrepared("delete_unused_boards", min)
 }
 
-// Delete threads that have not been bumped in N days
-func deleteOldThreads() error {
+// Delete stale threads. Thread retention measured in a bumptime threshold, that
+// is calculated as a function of post count till bump limit with an N days
+// floor and ceiling.
+func deleteOldThreads() (err error) {
 	conf := config.Get()
 	if !conf.PruneThreads {
-		return nil
+		return
 	}
-	min := time.Now().
-		Add(-time.Duration(conf.ThreadExpiry) * time.Hour * 24).
-		Unix()
-	return execPrepared("delete_old_threads", min)
+
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer RollbackOnError(tx, &err)
+
+	// Find threads to delete
+	r, err := tx.Stmt(prepared["get_bump_data"]).Query()
+	if err != nil {
+		return
+	}
+	var (
+		now         = time.Now().Unix()
+		min         = float64(conf.ThreadExpiryMin * 24 * 3600)
+		max         = float64(conf.ThreadExpiryMax * 24 * 3600)
+		toDel       = make([]uint64, 0, 16)
+		id, postCtr uint64
+		bumpTime    int64
+	)
+	for r.Next() {
+		err = r.Scan(&id, &bumpTime, &postCtr)
+		if err != nil {
+			return
+		}
+		threshold := min + (-max+min)*math.Pow(float64(postCtr)/3000-1, 3)
+		if threshold < min {
+			threshold = min
+		}
+		if float64(now-bumpTime) > threshold {
+			toDel = append(toDel, id)
+		}
+	}
+
+	// Deleted any matched threads
+	q := tx.Stmt(prepared["delete_thread"])
+	for _, id := range toDel {
+		_, err = q.Exec(id)
+		if err != nil {
+			return
+		}
+	}
+
+	return tx.Commit()
 }
 
 // DeleteBoard deletes a board and all of its contained threads and posts

@@ -156,7 +156,13 @@ var specs = map[string][]inputSpec{
 		{ID: "disableUserBoards"},
 		{ID: "pruneThreads"},
 		{
-			ID:       "threadExpiry",
+			ID:       "threadExpiryMin",
+			Type:     _number,
+			Min:      1,
+			Required: true,
+		},
+		{
+			ID:       "threadExpiryMax",
 			Type:     _number,
 			Min:      1,
 			Required: true,

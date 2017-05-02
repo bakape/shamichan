@@ -43,7 +43,6 @@ var (
 
 	// Defaults contains the default server configuration values
 	Defaults = Configs{
-		ThreadExpiry:  14,
 		BoardExpiry:   7,
 		JPEGQuality:   90,
 		MaxSize:       5,
@@ -55,9 +54,11 @@ var (
 		RootURL:       "http://localhost",
 		FAQ:           defaultFAQ,
 		Public: Public{
-			DefaultCSS:  "moe",
-			DefaultLang: "en_GB",
-			Links:       map[string]string{"4chan": "http://www.4chan.org/"},
+			DefaultCSS:      "moe",
+			DefaultLang:     "en_GB",
+			ThreadExpiryMin: 7,
+			ThreadExpiryMax: 14,
+			Links:           map[string]string{"4chan": "http://www.4chan.org/"},
 		},
 	}
 

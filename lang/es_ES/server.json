@@ -292,8 +292,12 @@
 			"Tema",
 			"Selecciona tema de CSS"
 		],
-		"threadExpiry": [
-			"Thread expiry time",
+		"threadExpiryMax": [
+			"Maximal thread expiry time",
+			"Number of days without new posts before a thread is deleted"
+		],
+		"threadExpiryMin": [
+			"Minimal thread expiry time",
 			"Number of days without new posts before a thread is deleted"
 		],
 		"title": [

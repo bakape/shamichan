@@ -5,6 +5,7 @@ import {
     extractConfigs, isBanned, extractPost, localizeThreads, reparseOpenPosts
 } from "./common"
 import { findSyncwatches } from "../posts"
+import { config } from "../state"
 
 const counters = document.getElementById("thread-post-counters")
 let postCtr = 0,
@@ -65,11 +66,25 @@ export function setPostCount(posts: number, images: number) {
 }
 
 function renderPostCounter() {
-    let text: string
-    if (!postCtr && !imgCtr) {
-        text = ""
-    } else {
+    let text = ""
+    if (postCtr) {
         text = `${postCtr} / ${imgCtr}`
+
+        // Calculate estimated thread expiry time
+        if (config.pruneThreads) {
+            const min = config.threadExpiryMin,
+                max = config.threadExpiryMax
+            let days = min + (-max + min) * (postCtr / 3000 - 1) ** 3
+            if (days < min) {
+                days = min
+            }
+            text += ` / `
+            if (days > 1) {
+                text += `${Math.round(days)}d`
+            } else {
+                text += `${Math.round(days / 24)}h`
+            }
+        }
     }
     counters.textContent = text
 }

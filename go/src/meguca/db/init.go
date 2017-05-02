@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	version = 8
+	version = 9
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
 )
@@ -70,8 +70,8 @@ var upgrades = map[uint]func(*sql.Tx) error{
 		)
 		return
 	},
+	// Restore correct image counters after incorrect updates
 	4: func(tx *sql.Tx) (err error) {
-		// Restore correct image counters after incorrect updates
 		_, err = tx.Exec(
 			`UPDATE threads
 				SET imageCtr = (SELECT COUNT(*) FROM posts
@@ -98,6 +98,32 @@ var upgrades = map[uint]func(*sql.Tx) error{
 	},
 	7: func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(`DROP INDEX deleted`)
+		return
+	},
+	// Set default expiry configs, to keep all threads from deleting
+	8: func(tx *sql.Tx) (err error) {
+		var s string
+		err = tx.QueryRow("SELECT val FROM main WHERE id = 'config'").Scan(&s)
+		if err != nil {
+			return
+		}
+		conf, err := decodeConfigs(s)
+		if err != nil {
+			return
+		}
+
+		conf.ThreadExpiryMin = config.Defaults.ThreadExpiryMin
+		conf.ThreadExpiryMax = config.Defaults.ThreadExpiryMax
+		buf, err := json.Marshal(conf)
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec(
+			`UPDATE main
+				SET val = $1
+				WHERE id = 'config'`,
+			string(buf),
+		)
 		return
 	},
 }
