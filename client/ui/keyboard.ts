@@ -16,7 +16,7 @@ function handleShortcut(event: KeyboardEvent) {
 	let anyModifier = event.altKey || event.metaKey || event.ctrlKey || event.shiftKey;
 	let inInput = 'selectionStart' in event.target
 
-	if(!anyModifier && !inInput) {
+	if (!anyModifier && !inInput) {
 		caught = true
 		switch (event.key) {
 			case "w":
@@ -75,7 +75,7 @@ function handleShortcut(event: KeyboardEvent) {
 
 	}
 
-	
+
 
 	if (caught) {
 		event.stopImmediatePropagation()
@@ -92,7 +92,10 @@ function navigateUp() {
 		url = "/all/"
 	}
 	if (url) {
-		navigate(url, null, true)
+		// Convert to absolute URL
+		const a = document.createElement("a")
+		a.href = url
+		navigate(a.href, null, true)
 	}
 }
 
@@ -101,19 +104,19 @@ const postSelector = "article[id^=p]"
 // move focus to next or previous visible post in document order.
 // starts with first post if none is selected via current url fragment
 function navigatePost(reverse: boolean) {
-	let all : Element[] = Array.from(document.querySelectorAll(postSelector))
-	let current : Element = document.querySelector(postSelector + ":target") || all[0]
+	let all: Element[] = Array.from(document.querySelectorAll(postSelector))
+	let current: Element = document.querySelector(postSelector + ":target") || all[0]
 	let currentIdx = all.indexOf(current)
-	
-	while(current) {
+
+	while (current) {
 		currentIdx = reverse ? currentIdx - 1 : currentIdx + 1
 		current = all[currentIdx]
-		if(current && window.getComputedStyle(current).display != "none") {
+		if (current && window.getComputedStyle(current).display != "none") {
 			break
 		}
 	}
 
-	if(current) {
+	if (current) {
 		window.location.hash = current.id
 	}
 }
