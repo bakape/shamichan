@@ -1,4 +1,4 @@
-import { on, OnOptions } from '../util'
+import { on, OnOptions, inputElement } from '../util'
 
 export interface ViewAttrs {
 	el?: HTMLElement
@@ -64,7 +64,6 @@ export default class View<M> {
 
 	// Returns input element inside the view by name
 	public inputElement(name: string): HTMLInputElement {
-		return this.el
-			.querySelector(`input[name="${name}"]`) as HTMLInputElement
+		return inputElement(this.el, name)
 	}
 }

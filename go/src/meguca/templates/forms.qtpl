@@ -32,17 +32,24 @@ BoardNavigation renders a board selection and search form
 	<input type="text" class="full-width" name="search" placeholder="{%s= lang["search"] %}">
 	<br>
 	<form>
-		{%= submit(true, lang) %}
-		<br>
-		{% for _, b := range config.GetBoardTitles() %}
+		<span class="flex">
+			{%= submit(true, lang) %}
 			<label>
-				<input type="checkbox" name="{%s= b.ID %}">
-				<a href="/{%s= b.ID %}/" class="history">
-					{%= formatTitle(b.ID, b.Title) %}
-				</a>
-				<br>
+				<input type="checkbox" name="pointToCatalog">
+				{%s= lang["pointToCatalog"] %}
 			</label>
-		{% endfor %}
+		</span>
+		<div>
+			{% for _, b := range config.GetBoardTitles() %}
+				<label class="board">
+					<input type="checkbox" name="{%s= b.ID %}">
+					<a href="/{%s= b.ID %}/" class="history">
+						{%= formatTitle(b.ID, b.Title) %}
+					</a>
+					<br>
+				</label>
+			{% endfor %}
+		</div>
 	</form>
 {% endstripspace %}{% endfunc %}
 

@@ -1,5 +1,5 @@
-import { View, Model } from '../base'
-import { HTML, makeFrag, uncachedGET } from '../util'
+import { View } from '../base'
+import { HTML, makeFrag, uncachedGET, inputElement } from '../util'
 
 const selected = new Set<string>(),
 	panel = document.getElementById("left-panel"),
@@ -10,7 +10,7 @@ let navigation: BoardNavigation,
 	lastPanelWidth: number
 
 // View for navigating between boards and selecting w
-class BoardNavigation extends View<Model> {
+class BoardNavigation extends View<null> {
 	constructor() {
 		super({ el: document.getElementById("board-navigation") })
 		this.render()
@@ -23,12 +23,13 @@ class BoardNavigation extends View<Model> {
 	public render() {
 		let html = "["
 		const boards = ["all", ...Array.from(selected).sort()]
+		const catalog = pointToCatalog() ? "catalog" : ""
 		for (let i = 0; i < boards.length; i++) {
 			if (i !== 0) {
 				html += " / "
 			}
 			html += HTML
-				`<a href="../${boards[i]}/" class="history reload">
+				`<a href="../${boards[i]}/${catalog}" class="history reload">
 					${boards[i]}
 				</a>`
 		}
@@ -55,8 +56,8 @@ class BoardNavigation extends View<Model> {
 }
 
 // Panel for selecting which boards to display in the top banner
-class BoardSelectionPanel extends View<Model> {
-	parentEl: Element
+class BoardSelectionPanel extends View<null> {
+	private parentEl: Element
 
 	constructor(parentEl: Element) {
 		super({})
@@ -69,8 +70,20 @@ class BoardSelectionPanel extends View<Model> {
 		this.on("submit", e =>
 			this.submit(e))
 		this.on("input", e => this.search(e), {
-			selector: 'input[name=search]'
+			selector: 'input[name=search]',
+			passive: true,
 		})
+		this.on(
+			"change",
+			e => {
+				const on = (e.target as HTMLInputElement).checked
+				this.applyCatalogLinking(on)
+			},
+			{
+				passive: true,
+				selector: "input[name=pointToCatalog]",
+			},
+		)
 	}
 
 	// Fetch the board list from the server and render the selection form
@@ -82,7 +95,7 @@ class BoardSelectionPanel extends View<Model> {
 		}
 		const frag = makeFrag(text)
 		const boards = Array
-			.from(frag.querySelectorAll("input[type=checkbox]"))
+			.from(frag.querySelectorAll(".board input"))
 			.map(b =>
 				b.getAttribute("name"))
 
@@ -90,8 +103,7 @@ class BoardSelectionPanel extends View<Model> {
 		// Assert all selected boards still exist.If not, deselect them.
 		for (let s of selected) {
 			if (boards.includes(s)) {
-				(frag.querySelector(`input[name=${s}]`) as HTMLInputElement)
-					.checked = true
+				inputElement(frag, s).checked = true
 				continue
 			}
 			selected.delete(s)
@@ -99,9 +111,16 @@ class BoardSelectionPanel extends View<Model> {
 			navigation.render()
 		}
 
-		this.parentEl.textContent = "-"
 		this.el.innerHTML = ""
 		this.el.append(frag)
+
+		// Apply and display catalog linking, if any
+		if (pointToCatalog()) {
+			this.inputElement("pointToCatalog").checked = true
+			this.applyCatalogLinking(true)
+		}
+
+		this.parentEl.textContent = "-"
 		panel.append(this.el)
 	}
 
@@ -115,7 +134,7 @@ class BoardSelectionPanel extends View<Model> {
 	private submit(event: Event) {
 		event.preventDefault()
 		selected.clear()
-		for (let el of this.el.querySelectorAll("input[type=checkbox]")) {
+		for (let el of this.el.querySelectorAll(".board input")) {
 			if ((el as HTMLInputElement).checked) {
 				selected.add(el.getAttribute("name"))
 			}
@@ -140,6 +159,18 @@ class BoardSelectionPanel extends View<Model> {
 			el.style.display = display
 		}
 	}
+
+	// Transform links to point to catalog pages and persist
+	private applyCatalogLinking(on: boolean) {
+		for (let input of this.el.querySelectorAll(".board input")) {
+			let url = `/${input.getAttribute("name")}/`
+			if (on) {
+				url += "catalog"
+			}
+			(input.nextElementSibling as HTMLAnchorElement).href = url
+		}
+		localStorage.setItem("pointToCatalog", on.toString())
+	}
 }
 
 // Write selected boards to localStorage
@@ -156,6 +187,11 @@ function shiftThread() {
 	}
 	lastPanelWidth = w
 	spacer.style.width = w + "px"
+}
+
+// Returns, if board links should point to catalog pages
+function pointToCatalog() {
+	return localStorage.getItem("pointToCatalog") === "true"
 }
 
 export default () => {
