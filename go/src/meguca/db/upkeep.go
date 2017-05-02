@@ -160,6 +160,10 @@ func deleteOldThreads() (err error) {
 			toDel = append(toDel, id)
 		}
 	}
+	err = r.Err()
+	if err != nil {
+		return
+	}
 
 	// Deleted any matched threads
 	q := tx.Stmt(prepared["delete_thread"])
