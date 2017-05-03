@@ -110,7 +110,7 @@ export default () => {
 	}
 
 	document.addEventListener("scroll", () => {
-		if(recalcPending) {
+		if(recalcPending || document.hidden) {
 			return
 		}
 		recalcPending = true
