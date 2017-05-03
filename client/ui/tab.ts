@@ -1,6 +1,8 @@
 // Tab title and favicon rendering
 
 import { connSM, connState } from "../connection"
+import { Post } from "../posts"
+import { posts } from "../state"
 
 const titleEl = document.head.querySelector("title"),
 	faviconEl = document.getElementById("favicon"),
@@ -17,18 +19,20 @@ export function setTitle(t: string) {
 	resolve()
 }
 
-// Increment unseen post number, if tab is hidden
-export function postAdded() {
-	if (document.hidden) {
+// Increment unseen post number
+export function postAdded(post: Post) {
+	if (!post.seen()) {
 		unseenPosts++
 		resolve()
 	}
 }
 
 // Add unseen reply indicator to tab header
-export function repliedToMe() {
-	unseenReplies = true
-	resolve()
+export function repliedToMe(post: Post) {
+	if (!post.seen()) {
+		unseenReplies = true
+		resolve()
+	}
 }
 
 // Resolve tab title and favicon
@@ -53,6 +57,23 @@ function resolve() {
 		}
 	}
 	apply(prefix, `${urlBase}${icon}.ico`)
+}
+
+let recalcPending = false
+
+function recalc() {
+	recalcPending = false
+	unseenPosts = 0
+	unseenReplies = false
+	for(let post of posts) {
+		if(post.seen())
+			continue;
+		unseenPosts++
+		if(post.isReply()) {
+			unseenReplies = true
+		}
+	}
+	resolve()
 }
 
 // Write tab title and favicon to DOM. If we use requestAnimationFrame here,
@@ -88,12 +109,11 @@ export default () => {
 		connSM.on(state, delayedDiscoRender)
 	}
 
-	// Reset title on tab focus
-	document.addEventListener('visibilitychange', () => {
-		if (!document.hidden) {
-			unseenPosts = 0
-			unseenReplies = false
-			resolve()
+	document.addEventListener("scroll", () => {
+		if(recalcPending) {
+			return
 		}
-	})
+		recalcPending = true
+		setTimeout(recalc, 200)
+	}, {passive: true})
 }

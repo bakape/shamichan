@@ -19,7 +19,7 @@ export default function notifyAboutReply(post: Post) {
 	if (!document.hidden) {
 		return
 	}
-	repliedToMe()
+	repliedToMe(post)
 
 	const re = !options.notification
 		|| typeof Notification !== "function"

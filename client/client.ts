@@ -68,7 +68,7 @@ export function insertPost(data: PostData) {
 		last.after(view.el)
 	}
 
-	postAdded()
+	postAdded(model)
 	incrementPostCount(true, "image" in data)
 }
 
