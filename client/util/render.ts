@@ -2,9 +2,6 @@
 // reads. Basically a stripped down version of FastDOM.
 // Also contains utilities for HTML template tags.
 
-// Cached element containing the banners, posts, catalog and other board HTML
-export const threads = document.getElementById("threads")
-
 // Holds cached references to all out HTML template tags' contents
 const templates: { [name: string]: DocumentFragment } = {}
 

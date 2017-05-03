@@ -194,7 +194,7 @@ function toggleHiddenThumbnail(event: Event) {
 	if (!model) {
 		return
 	}
-	const {revealed} = model.image
+	const { revealed } = model.image
 	model.view.renderImage(!revealed)
 	model.image.revealed = !revealed
 }
@@ -203,7 +203,7 @@ function toggleHiddenThumbnail(event: Event) {
 export function toggleExpandAll() {
 	expandAll = !expandAll
 
-	const e = threads.querySelector("#expand-images a")
+	const e = document.querySelector("#expand-images a")
 	if (e) {
 		const k = (expandAll ? "contract" : "expand") + "Images"
 		e.textContent = lang.posts[k]
@@ -242,15 +242,14 @@ function shouldAutoExpand(model: Post): boolean {
 	}
 }
 
-const threads = document.getElementById("threads")
-on(threads, "click", handleImageClick, {
+on(document, "click", handleImageClick, {
 	selector: "img, video",
 })
-on(threads, "click", toggleHiddenThumbnail, {
+on(document, "click", toggleHiddenThumbnail, {
 	passive: true,
 	selector: ".image-toggle",
 })
-on(threads, "click", toggleExpandAll, {
+on(document, "click", toggleExpandAll, {
 	passive: true,
 	selector: "#expand-images a",
 })

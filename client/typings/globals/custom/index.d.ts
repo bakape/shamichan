@@ -54,7 +54,7 @@ interface HTMLInputElement {
 	): void
 }
 
-interface HTMLLabelElement {
+interface HTMLAnchorElement {
 	addEventListener(
 		type: string,
 		handler: EventListener,

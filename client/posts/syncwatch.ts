@@ -2,8 +2,6 @@ import lang from "../lang"
 import { pad } from "../util"
 import { handlers, message } from "../connection"
 
-const threads = document.getElementById("threads")
-
 let offset = 0
 
 handlers[message.serverTime] = (time: number) =>
@@ -46,7 +44,7 @@ class Syncwatch {
 		}
 
 		setTimeout(() => {
-			if (threads.contains(this.el)) {
+			if (document.contains(this.el)) {
 				this.render()
 			}
 		}, 1000)

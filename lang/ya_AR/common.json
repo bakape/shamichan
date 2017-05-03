@@ -18,7 +18,8 @@
 		"admin": "Pirate King",
 		"owners": "Captain",
 		"moderators": "First Mate",
-		"janitors": "Cabin Boy"
+		"janitors": "Cabin Boy",
+		"viewBySameIP": "Same IP"
 	},
 	"plurals": {
 		"day": [

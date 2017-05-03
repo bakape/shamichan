@@ -3,7 +3,7 @@
 import FormModel from "./model"
 import FormView from "./view"
 import { connState, connSM } from "../../connection"
-import { on, FSM, threads, hook, scrollToBottom } from "../../util"
+import { on, FSM, hook, scrollToBottom } from "../../util"
 import lang from "../../lang"
 import identity, { initIdentity } from "./identity"
 import { boardConfig, page } from "../../state"
@@ -63,7 +63,7 @@ hook("getPostModel", () =>
 
 // Find the post creation button and style it, if any
 function stylePostControls(fn: (el: HTMLElement) => void) {
-	const el = threads.querySelector("aside.posting")
+	const el = document.querySelector("aside.posting")
 	if (el) {
 		fn(el)
 	}
@@ -295,12 +295,12 @@ export default () => {
 	})
 
 	// Handle clicks on the [Reply] button
-	on(threads, "click", openReply, {
+	on(document, "click", openReply, {
 		selector: "aside.posting a",
 	})
 
 	// Handle clicks on post quoting links
-	on(threads, "click", quotePost, {
+	on(document, "click", quotePost, {
 		selector: "a.quote",
 	})
 

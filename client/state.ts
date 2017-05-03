@@ -1,6 +1,6 @@
 // Stores the state of the web application
 
-import { Post, PostCollection, inlinedPosts } from './posts'
+import { Post, PostCollection } from './posts'
 import { getClosestID, emitChanges, ChangeEmitter } from './util'
 import { readIDs, storeID } from './db'
 import { send } from './connection'
@@ -122,7 +122,7 @@ export function getModel(el: Element): Post {
 	if (!id) {
 		return null
 	}
-	return posts.get(id) || inlinedPosts.get(id)
+	return PostCollection.getFromAll(id)
 }
 
 // Display or hide the loading animation

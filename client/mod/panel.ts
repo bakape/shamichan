@@ -1,5 +1,5 @@
 import { View } from "../base"
-import { extend, postJSON, threads, toggleHeadStyle } from "../util"
+import { extend, postJSON, toggleHeadStyle } from "../util"
 import { Post } from "../posts"
 import { getModel } from "../state"
 import { newRequest } from "./common"
@@ -75,7 +75,7 @@ export default class ModPanel extends View<null> {
 		e.preventDefault()
 		e.stopImmediatePropagation()
 
-		const checked = (threads
+		const checked = (document
 			.querySelectorAll(".mod-checkbox:checked") as HTMLInputElement[])
 		const models = [...checked].map(getModel)
 

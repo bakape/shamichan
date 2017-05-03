@@ -240,3 +240,46 @@ func CanPerform(account, board string, action ModerationLevel) (
 	can = pos >= action
 	return
 }
+
+// GetSameIPPosts returns posts with the same IP and on the same board as the
+// target post
+func GetSameIPPosts(id uint64, board string) (
+	posts []common.StandalonePost, err error,
+) {
+	// Get posts ids
+	r, err := prepared["get_same_ip_posts"].Query(id, board)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+	var ids = make([]uint64, 0, 64)
+	for r.Next() {
+		var id uint64
+		err = r.Scan(&id)
+		if err != nil {
+			return
+		}
+		ids = append(ids, id)
+	}
+	err = r.Err()
+	if err != nil {
+		return
+	}
+
+	// Read the matched posts
+	posts = make([]common.StandalonePost, 0, len(ids))
+	var post common.StandalonePost
+	for _, id := range ids {
+		post, err = GetPost(id)
+		switch err {
+		case nil:
+			posts = append(posts, post)
+		case sql.ErrNoRows: // Deleted in race
+			err = nil
+		default:
+			return
+		}
+	}
+
+	return
+}

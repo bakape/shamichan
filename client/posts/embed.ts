@@ -133,12 +133,11 @@ async function toggleExpansion(e: MouseEvent) {
 	el.classList.add("expanded")
 }
 
-const threads = document.getElementById("threads")
-on(threads, "mouseover", fetchMeta, {
+on(document, "mouseover", fetchMeta, {
 	passive: true,
 	selector: "a.embed",
 })
-on(threads, "click", toggleExpansion, {
+on(document, "click", toggleExpansion, {
 	selector: "a.embed",
 })
 

@@ -491,3 +491,23 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 		text500(w, r, err)
 	}
 }
+
+// Retrieve posts with the same IP on the target board
+func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
+	var msg struct {
+		ID uint64
+		boardActionRequest
+	}
+	isValid := decodeJSON(w, r, &msg) &&
+		canPerform(w, r, &msg.boardActionRequest, db.Moderator, false)
+	if !isValid {
+		return
+	}
+
+	posts, err := db.GetSameIPPosts(msg.ID, msg.Board)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	serveJSON(w, r, "", posts)
+}

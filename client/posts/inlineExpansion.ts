@@ -9,7 +9,7 @@ import PostCollection from "./collection"
 // Stored models of posts, that have been created with inline expansion. This
 // lets these models still be queried by certain functions, that expect a
 // model-view pair.
-export const inlinedPosts = new PostCollection()
+const inlinedPosts = new PostCollection()
 
 // Expand or contract linked posts inline
 async function onClick(e: MouseEvent) {
@@ -98,7 +98,7 @@ export default () => {
 	page.onChange("thread", () =>
 		inlinedPosts.clear())
 
-	on(document.getElementById("threads"), "click", onClick, {
+	on(document, "click", onClick, {
 		selector: ".post-link",
 	})
 }

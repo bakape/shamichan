@@ -1,9 +1,12 @@
 import { View } from "../base"
 import { Post } from "./model"
 import { getModel } from "../state"
-import { on } from "../util"
+import { on, extend } from "../util"
 import lang from "../lang"
 import { hidePost } from "./hide"
+import { loginID, newRequest } from "../mod"
+import { postJSON } from "../util"
+import CollectionView from "./collectionView"
 
 interface ControlButton extends Element {
 	_popup_menu: MenuView
@@ -24,6 +27,13 @@ const actions: { [key: string]: ItemSpec } = {
 			return true
 		},
 		handler: hidePost,
+	},
+	viewSameIP: {
+		text: lang.posts["viewBySameIP"],
+		shouldRender(m) {
+			return !!loginID && m.time > Date.now() / 1000 - 24 * 7 * 3600
+		},
+		handler: getSameIPPosts,
 	},
 }
 
@@ -88,8 +98,22 @@ function openMenu(e: Event) {
 	}
 }
 
+// Fetch and render posts with the same IP on this board
+async function getSameIPPosts(m: Post) {
+	const req = newRequest()
+	extend(req, {
+		board: m.board,
+		id: m.id,
+	})
+	const res = await postJSON("/admin/sameIP", req)
+	if (res.status !== 200) {
+		return alert(await res.text())
+	}
+	new CollectionView(await res.json())
+}
+
 export default () =>
-	on(document.getElementById("threads"), "click", openMenu, {
+	on(document, "click", openMenu, {
 		passive: true,
 		selector: ".control, .control svg, .control svg path",
 	})

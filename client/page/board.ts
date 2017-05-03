@@ -65,7 +65,7 @@ function extractThreads() {
 	for (let thread of JSON.parse(text) as ThreadData[]) {
 		const { posts } = thread
 		delete thread.posts
-		if (extractPost(thread, thread.id)) {
+		if (extractPost(thread, thread.id, thread.board)) {
 			document.querySelector(`section[data-id="${thread.id}"]`).remove()
 			continue
 		}
@@ -73,7 +73,7 @@ function extractThreads() {
 			thread.image.large = true
 		}
 		for (let post of posts) {
-			extractPost(post, thread.id)
+			extractPost(post, thread.id, thread.board)
 		}
 	}
 	localizeThreads()

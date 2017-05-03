@@ -7,7 +7,6 @@ export { toggleGallery } from "./filter"
 export { renderTime, thumbPath } from "./render"
 export { default as PostCollection } from "./collection"
 export { findSyncwatches } from "./syncwatch"
-export { inlinedPosts } from "./inlineExpansion"
 
 import initEtc from "./etc"
 import initPosting from "./posting"

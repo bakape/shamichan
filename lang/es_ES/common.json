@@ -18,7 +18,8 @@
 		"admin": "Admin",
 		"owners": "Board Owner",
 		"moderators": "Moderator",
-		"janitors": "Meido"
+		"janitors": "Meido",
+		"viewBySameIP": "Same IP"
 	},
 	"plurals": {
 		"day": [

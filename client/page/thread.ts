@@ -1,5 +1,5 @@
 import { ThreadData } from "../common"
-import { escape, threads } from '../util'
+import { escape } from '../util'
 import { setTitle } from "../ui"
 import {
     extractConfigs, isBanned, extractPost, localizeThreads, reparseOpenPosts
@@ -7,7 +7,8 @@ import {
 import { findSyncwatches } from "../posts"
 import { config } from "../state"
 
-const counters = document.getElementById("thread-post-counters")
+const counters = document.getElementById("thread-post-counters"),
+    threads = document.getElementById("threads")
 let postCtr = 0,
     imgCtr = 0,
     bumpTime = 0
@@ -28,7 +29,7 @@ export default function (html: string) {
     delete data.posts
     setPostCount(data.postCtr, data.imageCtr, data.bumpTime)
 
-    extractPost(data, data.id)
+    extractPost(data, data.id, data.board)
     if (data.image) {
         data.image.large = true
     }
@@ -36,7 +37,7 @@ export default function (html: string) {
     setThreadTitle(data)
 
     for (let post of posts) {
-        extractPost(post, data.id)
+        extractPost(post, data.id, data.board)
     }
     localizeThreads()
     reparseOpenPosts()

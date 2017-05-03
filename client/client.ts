@@ -54,6 +54,7 @@ export function insertPost(data: PostData) {
 
 	const model = new Post(data)
 	model.op = page.thread
+	model.board = page.board
 	posts.add(model)
 	const view = new PostView(model, null)
 

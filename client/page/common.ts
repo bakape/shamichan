@@ -4,8 +4,10 @@ import { PostData, fileTypes, PostLink } from "../common"
 import { Post, PostView } from "../posts"
 import lang from "../lang"
 import { notifyAboutReply } from "../ui"
-import { threads, pluralize } from "../util"
+import { pluralize } from "../util"
 import { posterName } from "../options"
+
+const threads = document.getElementById("threads")
 
 // Find board configurations in the HTML and apply them
 export function extractConfigs() {
@@ -20,13 +22,18 @@ export function isBanned(): boolean {
 
 // Extract post model and view from the HTML fragment and apply client-specific
 // formatting. Returns whether the element was removed.
-export function extractPost(post: PostData, op: number): boolean {
+export function extractPost(
+	post: PostData,
+	op: number,
+	board: string,
+): boolean {
 	const el = document.getElementById(`p${post.id}`)
 	if (hidden.has(post.id)) {
 		el.remove()
 		return true
 	}
 	post.op = op
+	post.board = board
 
 	const model = new Post(post),
 		view = new PostView(model, el)
@@ -43,7 +50,7 @@ export function extractPost(post: PostData, op: number): boolean {
 		view.renderName()
 	}
 
-	const {model: {links, backlinks, image}} = view
+	const { model: { links, backlinks, image } } = view
 	localizeLinks(links, view, true)
 	localizeLinks(backlinks, view, false)
 

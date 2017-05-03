@@ -4,7 +4,6 @@
 
 import { posts, page } from "../state"
 import options from "."
-import { threads } from "../util"
 import { Post } from "../posts"
 import { fileTypes } from "../common"
 
@@ -52,14 +51,14 @@ function renderImages() {
 		if (options.hideThumbs || options.workModeToggle) {
 			display = "none"
 		}
-		for (let el of threads.querySelectorAll("img.catalog")) {
+		for (let el of document.querySelectorAll("img.catalog")) {
 			el.style.display = display
 		}
 	} else {
 		loopPosts(
-			({image}) =>
+			({ image }) =>
 				!!image,
-			({view}) =>
+			({ view }) =>
 				view.renderImage(false),
 		)
 	}
@@ -68,9 +67,9 @@ function renderImages() {
 // Image thumbnail spoilers
 function toggleSpoilers() {
 	loopPosts(
-		({image}) =>
+		({ image }) =>
 			!!image && image.spoiler,
-		({view}) =>
+		({ view }) =>
 			view.renderImage(false),
 	)
 }
@@ -78,9 +77,9 @@ function toggleSpoilers() {
 // Animated GIF thumbnails
 function toggleAutoGIF() {
 	loopPosts(
-		({image}) =>
+		({ image }) =>
 			!!image && image.fileType === fileTypes.gif,
-		({view}) =>
+		({ view }) =>
 			view.renderImage(false),
 	)
 }
@@ -88,16 +87,16 @@ function toggleAutoGIF() {
 // Self-delusion tripfag filter
 function toggleAnonymisation() {
 	loopPosts(
-		({name, trip, auth}) =>
+		({ name, trip, auth }) =>
 			!!name || !!trip || !!auth,
-		({view}) =>
+		({ view }) =>
 			view.renderName(),
 	)
 }
 
 // Rerender all timestamps on posts, if set to relative time
 function renderTime() {
-	for (let {view} of posts) {
+	for (let { view } of posts) {
 		view.renderTime()
 	}
 }

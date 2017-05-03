@@ -139,6 +139,7 @@ func deleteOldThreads() (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Close()
 	var (
 		now         = time.Now().Unix()
 		min         = float64(conf.ThreadExpiryMin * 24 * 3600)

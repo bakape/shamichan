@@ -6,9 +6,4 @@ function toggleSpoiler(event: Event) {
 }
 
 export default () =>
-	on(
-		document.getElementById("threads"),
-		"click",
-		toggleSpoiler,
-		{ selector: "del" },
-	)
+	on(document, "click", toggleSpoiler, { selector: "del" })

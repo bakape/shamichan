@@ -133,12 +133,22 @@ export default class PostView extends ImageHandler {
     // Inserts PostView back into the thread ordered by id
     public reposition() {
         // Insert before first post with greater ID
-        const sec = this.el.closest("section"),
-            { id } = this.model
-        for (let p of Array.from(sec.children)) {
-            if (p.tagName === "ARTICLE" && getID(p) > id) {
-                p.before(this.el)
-                return
+        const { id, op } = this.model,
+            sec = document.querySelector(`section[data-id="${op}"]`)
+        if (!sec) {
+            return
+        }
+        for (let el of Array.from(sec.children)) {
+            switch (el.tagName) {
+                case "ARTICLE":
+                    if (getID(el) > id) {
+                        el.before(this.el)
+                        return
+                    }
+                    break
+                case "ASIDE": // On board pages
+                    el.before(this.el)
+                    return
             }
         }
 

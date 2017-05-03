@@ -23,6 +23,7 @@ export interface PostData {
 	name: string
 	trip: string
 	auth: string
+	board?: string
 	state: TextState
 	backlinks?: PostLink[]
 	links?: PostLink[]

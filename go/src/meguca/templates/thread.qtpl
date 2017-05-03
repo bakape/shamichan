@@ -78,7 +78,7 @@
 ThreadPosts renders the post content of a thread. Separate function to allow
 caching of generated posts.
 {% func ThreadPosts(t common.Thread, json []byte, omit, imageOmit int) %}{% stripspace %}
-	<section id="thread-container">
+	<section id="thread-container" data-id="{%s= strconv.FormatUint(t.ID, 10) %}">
 		{% code root := config.Get().RootURL %}
 		{% code post := common.StandalonePost{
 			OP: t.ID,
