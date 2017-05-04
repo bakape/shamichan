@@ -183,8 +183,8 @@ export default class FormModel extends Post {
 		this.send(message.splice, {
 			start,
 			len: old.length - till - start,
-			// Account for replacing entire text body
-			text: !start && !till ? v : val.slice(start, -till).join(""),
+			// `|| undefined` ensures we never slice the string as [:0]
+			text: val.slice(start, -till || undefined).join(""),
 		})
 		this.inputBody = v
 	}
