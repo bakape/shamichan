@@ -12,7 +12,7 @@ var clients = ClientMap{
 }
 
 func init() {
-	common.GetByIP = GetByIP
+	common.GetByIPAndBoard = GetByIPAndBoard
 }
 
 // ClientMap is a thread-safe store for all clients connected to this server
@@ -73,13 +73,13 @@ func GetSync(cl common.Client) (synced bool, op uint64, board string) {
 	return
 }
 
-// GetByIP retrieves all Clients that match the passed IP
-func GetByIP(ip string) (cls []common.Client) {
+// GetByIPAndBoard retrieves all Clients that match the passed IP on a board
+func GetByIPAndBoard(ip, board string) (cls []common.Client) {
 	clients.RLock()
 	defer clients.RUnlock()
 
-	for cl := range clients.clients {
-		if cl.IP() == ip {
+	for cl, sync := range clients.clients {
+		if cl.IP() == ip && (board == "all" || sync.board == board) {
 			cls = append(cls, cl)
 		}
 	}

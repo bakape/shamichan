@@ -406,8 +406,8 @@ func ban(w http.ResponseWriter, r *http.Request) {
 
 	// Apply bans
 	expires := time.Now().Add(time.Duration(msg.Duration) * time.Minute)
-	for b, ids := range byBoard {
-		ips, err := db.Ban(b, msg.Reason, msg.UserID, expires, ids...)
+	for board, ids := range byBoard {
+		ips, err := db.Ban(board, msg.Reason, msg.UserID, expires, ids...)
 		if err != nil {
 			text500(w, r, err)
 			return
@@ -415,7 +415,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 
 		// Redirect all banned connected clients to the /all/ board
 		for ip := range ips {
-			for _, cl := range common.GetByIP(ip) {
+			for _, cl := range common.GetByIPAndBoard(ip, board) {
 				cl.Redirect("all")
 			}
 		}
