@@ -80,26 +80,23 @@ export default class FormModel extends Post {
 	// Append a character to the model's body and reparse the line, if it's a
 	// newline
 	public append(code: number) {
-		if (!this.editing) {
-			return
+		if (this.editing) {
+			this.body += String.fromCodePoint(code)
 		}
-		this.body += String.fromCodePoint(code)
 	}
 
 	// Remove the last character from the model's body
 	public backspace() {
-		if (!this.editing) {
-			return
+		if (this.editing) {
+			this.body = this.body.slice(0, -1)
 		}
-		this.body = this.body.slice(0, -1)
 	}
 
 	// Splice the last line of the body
 	public splice(msg: SpliceResponse) {
-		if (!this.editing) {
-			return
+		if (this.editing) {
+			this.spliceText(msg)
 		}
-		this.body = this.spliceText(this.body, msg)
 	}
 
 	// Compare new value to old and generate appropriate commands
@@ -176,32 +173,19 @@ export default class FormModel extends Post {
 	private commitSplice(v: string) {
 		// Convert to arrays of chars to deal with multibyte unicode chars
 		const old = [...this.inputBody],
-			val = [...v]
-		let start: number
+			val = [...v],
+			start = diffIndex(old, val),
+			till = diffIndex(
+				old.slice(start).reverse(),
+				val.slice(start).reverse(),
+			)
 
-		// Find first differing character
-		for (let i = 0; i < old.length; i++) {
-			if (old[i] !== val[i]) {
-				start = i
-				break
-			}
-		}
-
-		// New string is appended to the end
-		if (start === undefined) {
-			start = old.length
-		}
-
-		// Right now we simply resend the entire corrected string, including the
-		// common part, because I can't figure out a diff algorithm that covers
-		// all cases. The backend technically supports the latter.
-		const end = val.slice(start).join("")
 		this.send(message.splice, {
 			start,
-			len: -1,
-			text: end,
+			len: old.length - till - start,
+			text: val.slice(start, -till).join(""),
 		})
-		this.inputBody = old.slice(0, start).join("") + end
+		this.inputBody = v
 	}
 
 	// Close the form and revert to regular post
@@ -344,4 +328,14 @@ export default class FormModel extends Post {
 	public commitSpoiler() {
 		this.send(message.spoiler, null)
 	}
+}
+
+// Find the first differing character in 2 character arrays
+function diffIndex(a: string[], b: string[]): number {
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) {
+			return i
+		}
+	}
+	return a.length
 }

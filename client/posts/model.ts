@@ -92,31 +92,16 @@ export class Post extends Model implements PostData {
 
 	// Splice the current open line of text
 	public splice(msg: SpliceResponse) {
-		this.body = this.spliceText(this.body, msg)
+		this.spliceText(msg)
 		this.view.reparseBody()
 	}
 
 	// Extra method for code reuse in post forms
-	protected spliceText(
-		body: string,
-		{ start, len, text }: SpliceResponse,
-	): string {
+	protected spliceText({ start, len, text }: SpliceResponse) {
 		// Must use arrays of chars to properly splice multibyte unicode
-		const keep = Array.from(body).slice(0, start),
-			t = Array.from(text)
-		let end: string[]
-		if (len === -1) { // Special meaning - replace till line end
-			end = t
-		} else {
-			end = t.concat(Array.from(body).slice(start + 1 + len))
-		}
-		body = keep.concat(end).join("")
-
-		// Replace last line in text body
-		const iLast = this.body.lastIndexOf("\n")
-		this.body = this.body.substring(0, iLast + 1) + body
-
-		return body
+		const arr = [...this.body]
+		arr.splice(start, len, ...text)
+		this.body = arr.join("")
 	}
 
 	// Check if this post replied to one of the user's posts and trigger

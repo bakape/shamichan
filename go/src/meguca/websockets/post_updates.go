@@ -31,8 +31,8 @@ type spliceRequestString struct {
 
 // Common part of a splice request and a splice response
 type spliceCoords struct {
-	Start int `json:"start"`
-	Len   int `json:"len"`
+	Start uint `json:"start"`
+	Len   uint `json:"len"`
 }
 
 // Response to a spliceRequest. Sent to all listening clients.
@@ -177,12 +177,16 @@ func (c *Client) spliceText(data []byte) error {
 	}
 
 	// Decode and validate
-	var req spliceRequest
-	err := decodeMessage(data, &req)
+	var (
+		req spliceRequest
+		err = decodeMessage(data, &req)
+	)
 	switch {
 	case err != nil:
 		return err
-	case req.Start < 0, req.Len < -1, req.Start+req.Len > c.post.len:
+	case req.Start > common.MaxLenBody,
+		req.Len > common.MaxLenBody,
+		int(req.Start+req.Len) > c.post.len:
 		return errInvalidSpliceCoords
 	case req.Len == 0 && len(req.Text) == 0:
 		return errSpliceNOOP // This does nothing. Client-side error.
@@ -198,17 +202,9 @@ func (c *Client) spliceText(data []byte) error {
 
 	var (
 		old = []rune(string(c.post.body))
-		end []rune
-	)
-
-	// -1 has special meaning - slice off till end
-	if req.Len == -1 {
-		end = req.Text
-		c.post.len = req.Start + len(req.Text)
-	} else {
 		end = append(req.Text, old[req.Start+req.Len:]...)
-		c.post.len += -req.Len + len(req.Text)
-	}
+	)
+	c.post.len += -int(req.Len) + len(req.Text)
 	res := spliceMessage{
 		ID: c.post.id,
 		spliceRequestString: spliceRequestString{
@@ -221,7 +217,7 @@ func (c *Client) spliceText(data []byte) error {
 	exceeding := c.post.len - common.MaxLenBody
 	if exceeding > 0 {
 		end = end[:len(end)-exceeding]
-		res.Len = -1
+		res.Len = uint(len(old[int(req.Start):]))
 		res.Text = string(end)
 		c.post.len = common.MaxLenBody
 	}
@@ -239,7 +235,6 @@ func (c *Client) spliceText(data []byte) error {
 	for _, r := range old[:req.Start] {
 		byteStartPos += utf8.RuneLen(r)
 	}
-
 	c.post.body = append(c.post.body[:byteStartPos], string(end)...)
 
 	c.post.countLines()

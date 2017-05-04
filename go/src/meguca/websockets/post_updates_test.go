@@ -417,11 +417,10 @@ func TestSpliceValidityChecks(t *testing.T) {
 
 	cases := [...]struct {
 		name       string
-		start, len int
+		start, len uint
 		text, line string
 		err        error
 	}{
-		{"negative start", -1, 1, "", "", errInvalidSpliceCoords},
 		{"exceeds buffer bounds", 2, 1, "", "abc", errInvalidSpliceCoords},
 		{"NOOP", 0, 0, "", "", errSpliceNOOP},
 		{"too long", 0, 0, tooLong, "", errSpliceTooLong},
@@ -459,7 +458,7 @@ func TestSplice(t *testing.T) {
 
 	cases := [...]struct {
 		name                   string
-		start, len             int
+		start, len             uint
 		text, init, final, log string
 	}{
 		{
@@ -490,31 +489,13 @@ func TestSplice(t *testing.T) {
 			log:   `05{"id":2,"start":2,"len":1,"text":""}`,
 		},
 		{
-			name:  "replace till end",
-			start: 2,
-			len:   -1,
-			text:  "abc",
-			init:  "abcd",
-			final: "ababc",
-			log:   `05{"id":2,"start":2,"len":-1,"text":"abc"}`,
-		},
-		{
-			name:  "replace with multibyte char string till end",
-			start: 1,
-			len:   -1,
-			text:  "ΓΔ",
-			init:  "αΒΓΔ",
-			final: "αΓΔ",
-			log:   `05{"id":2,"start":1,"len":-1,"text":"ΓΔ"}`,
-		},
-		{
 			name:  "inject into the middle",
 			start: 2,
-			len:   -1,
+			len:   0,
 			text:  "abc",
-			init:  "ab",
-			final: "ababc",
-			log:   `05{"id":2,"start":2,"len":-1,"text":"abc"}`,
+			init:  "abc",
+			final: "ababcc",
+			log:   `05{"id":2,"start":2,"len":0,"text":"abc"}`,
 		},
 		{
 			name:  "inject multibyte char into the middle",
