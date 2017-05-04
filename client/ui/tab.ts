@@ -2,7 +2,7 @@
 
 import { connSM, connState } from "../connection"
 import { Post } from "../posts"
-import { posts } from "../state"
+import { posts, page } from "../state"
 
 const titleEl = document.head.querySelector("title"),
 	faviconEl = document.getElementById("favicon"),
@@ -122,6 +122,12 @@ export default () => {
 	for (let state of [connState.dropped, connState.desynced]) {
 		connSM.on(state, delayedDiscoRender)
 	}
+
+	page.onChange("thread", () => {
+		unseenPosts = 0
+		unseenReplies = false
+		resolve()
+	})
 
 	document.addEventListener("scroll", () => {
 		if(recalcPending || document.hidden) {
