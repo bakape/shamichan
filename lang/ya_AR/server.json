@@ -37,8 +37,12 @@
 			"Ask users to complete a captcha for certain tasks like registration and thread creation"
 		],
 		"customCSS": [
-			"Custom CSS",
+			"",
 			"User-defined CSS rules loaded on top of the selected theme"
+		],
+		"customCSSToggle": [
+			"Custom CSS",
+			"Toggle use of custom CSS"
 		],
 		"defaultCSS": [
 			"Default theme",

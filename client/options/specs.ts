@@ -6,6 +6,7 @@ import { makeEl, HTML } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
 import initRadio from "./r-a-dio"
+import options from "."
 
 // Types of option models
 export const enum optionType {
@@ -170,17 +171,26 @@ export const specs: { [id: string]: OptionSpec } = {
 		type: optionType.image,
 	},
 	// User-set CSS rules
-	customCSS: {
-		type: optionType.textarea,
-		exec(css: string) {
-			let el = document.getElementById("custom-CSS-style")
+	customCSSToggle: {
+		noExecOnStart: true,
+		exec(on: boolean) {
+			let el = document
+				.getElementById("custom-CSS-style") as HTMLStyleElement
 			if (!el) {
 				el = document.createElement("style")
 				el.id = "custom-CSS-style"
 				document.head.append(el)
+				// The disabled property only exists on elements in the DOM,
+				// so we do another query
+				el = document
+					.getElementById("custom-CSS-style") as HTMLStyleElement
 			}
-			el.innerHTML = css
+			el.innerHTML = options.customCSS
+			el.disabled = !on
 		},
+	},
+	customCSS: {
+		type: optionType.textarea,
 	},
 	// Lock thread scrolling to bottom, when bottom in view, even when the
 	// tab is hidden
@@ -252,6 +262,6 @@ function toggleHeadStyle(
 
 		// The disabled property only exists on elements in the DOM, so we do
 		// another query
-		(document.getElementById(id) as HTMLInputElement).disabled = !toggle
+		(document.getElementById(id) as HTMLStyleElement).disabled = !toggle
 	}
 }

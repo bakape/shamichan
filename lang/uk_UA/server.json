@@ -37,8 +37,12 @@
 			"Питати користувачів при регістрації та створенні тхреду"
 		],
 		"customCSS": [
-			"Custom CSS",
+			"",
 			"User-defined CSS rules loaded on top of the selected theme"
+		],
+		"customCSSToggle": [
+			"Custom CSS",
+			"Toggle use of custom CSS"
 		],
 		"defaultCSS": [
 			"Дефолтна тема",

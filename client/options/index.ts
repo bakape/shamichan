@@ -31,6 +31,7 @@ interface Options extends ChangeEmitter {
 	replyRight: boolean
 	workModeToggle: boolean
 	userBG: boolean
+	customCSSToggle: boolean
 	mascot: boolean
 	alwaysLock: boolean
 	newPost: number
@@ -148,7 +149,9 @@ export function initOptions() {
 	}
 
 	// Conditionally load and execute optional modules
-	for (let opt of ["userBG", "nowPlaying", "illyaDance", "mascot"]) {
+	for (let opt of [
+		"userBG", "nowPlaying", "illyaDance", "mascot", "customCSSToggle",
+	]) {
 		if (options[opt]) {
 			models[opt].execute(true)
 		}

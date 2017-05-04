@@ -62,6 +62,7 @@ export default class OptionsPanel extends TabbedModal {
 				break
 			case optionType.number:
 			case optionType.menu:
+			case optionType.textarea:
 				el.value = val as string
 				break
 			case optionType.shortcut:

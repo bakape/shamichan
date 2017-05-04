@@ -37,8 +37,12 @@
 			"Poproś użytkownika o wypełnienie captchy przy takich rzeczach jak rejestracja i tworzenie tematu"
 		],
 		"customCSS": [
-			"Custom CSS",
+			"",
 			"User-defined CSS rules loaded on top of the selected theme"
+		],
+		"customCSSToggle": [
+			"Custom CSS",
+			"Toggle use of custom CSS"
 		],
 		"defaultCSS": [
 			"Domyślny styl",

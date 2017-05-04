@@ -289,6 +289,7 @@ var optionSpecs = [...][]inputSpec{
 			ID:   "mascotImage",
 			Type: _image,
 		},
+		{ID: "customCSSToggle"},
 		{
 			ID:   "customCSS",
 			Type: _textarea,
