@@ -25,7 +25,8 @@ const queue : Post[] = [];
 export function postAdded(post: Post) {
 	// async batch processing since visibility calculations force a layout
 	if(queue.length == 0) {
-		requestAnimationFrame(processQueue)
+		// can't use RAF since it's disabled in background tabs
+		setTimeout(processQueue, 16)
 	}
 
 	queue.push(post)
@@ -61,13 +62,15 @@ function resolve() {
 	let prefix = "",
 		icon = "default"
 
-	if (unseenPosts) {
-		prefix = `(${unseenPosts}) `
-		icon = "unread"
-	}
-	if (unseenReplies) {
-		prefix = ">> " + prefix
-		icon = "reply"
+	if(page.thread != 0) {
+		if (unseenPosts) {
+			prefix = `(${unseenPosts}) `
+			icon = "unread"
+		}
+		if (unseenReplies) {
+			prefix = ">> " + prefix
+			icon = "reply"
+		}
 	}
 	apply(prefix, `${urlBase}${icon}.ico`)
 }
