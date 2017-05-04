@@ -3,7 +3,7 @@ import { extend } from '../util'
 import Collection from './collection'
 import PostView from './view'
 import { SpliceResponse } from '../client'
-import { mine } from "../state"
+import { mine, seenPosts, storeSeenPost } from "../state"
 import { notifyAboutReply } from "../ui"
 import { PostData, TextState, PostLink, Command, ImageData } from "../common"
 
@@ -35,6 +35,7 @@ export class Post extends Model implements PostData {
 	constructor(attrs: PostData) {
 		super()
 		extend(this, attrs)
+		this.seenOnce = seenPosts.has(this.id)
 
 		// All kinds of interesting races can happen, so best ensure a model
 		// always has the state object defined
@@ -193,6 +194,7 @@ export class Post extends Model implements PostData {
 		}
 
 		this.seenOnce = this.view.scrolledPast()
+		storeSeenPost(this.id)
 		return this.seenOnce
 	}
 }
