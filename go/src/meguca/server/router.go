@@ -2,12 +2,16 @@ package server
 
 import (
 	"compress/gzip"
+	"fmt"
 	"log"
 	"meguca/auth"
+	"meguca/config"
 	"meguca/imager"
 	"meguca/util"
 	"meguca/websockets"
 	"net/http"
+
+	"bytes"
 
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"
@@ -60,6 +64,8 @@ func createRouter() http.Handler {
 		text404(w)
 	}
 	r.PanicHandler = text500
+
+	r.GET("/robots.txt", wrapHandler(serveRobotsTXT))
 
 	// HTML
 	r.GET("/", wrapHandler(redirectToDefault))
@@ -182,6 +188,21 @@ func wrapHandler(fn http.HandlerFunc) httptreemux.HandlerFunc {
 }
 
 // Redirects to / requests to /all/ board
-func redirectToDefault(res http.ResponseWriter, req *http.Request) {
-	http.Redirect(res, req, "/all/", 302)
+func redirectToDefault(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/all/", 302)
+}
+
+// Generate a robots.txt with only select boards preventing indexing
+func serveRobotsTXT(w http.ResponseWriter, r *http.Request) {
+	var buf bytes.Buffer
+	// Would be pointles without the /all/ board disallowed.
+	// Also, this board can be huge. Don't want bots needlessly crawling it.
+	buf.WriteString("User-agent: *\nDisallow: /all/\n")
+	for _, c := range config.GetAllBoardConfigs() {
+		if c.DisableRobots {
+			fmt.Fprintf(&buf, "Disallow: /%s/\n", c.ID)
+		}
+	}
+	w.Header().Set("Content-Type", "text/plain")
+	buf.WriteTo(w)
 }

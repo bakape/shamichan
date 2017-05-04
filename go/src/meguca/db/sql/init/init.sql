@@ -53,6 +53,7 @@ create table boards (
 	readOnly boolean not null,
 	textOnly boolean not null,
 	forcedAnon boolean not null,
+	disableRobots boolean not null default false,
 	id varchar(3) primary key,
 	created timestamp not null,
 	title varchar(100) not null,
