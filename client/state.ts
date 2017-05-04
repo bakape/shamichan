@@ -60,6 +60,9 @@ export const posts = new PostCollection()
 // Posts I made in any tab
 export let mine: Set<number>
 
+// Posts that the user has already seen or scrolled past
+export let seenPosts: Set<number>
+
 // Replies to this user's posts the user has already seen
 export let seenReplies: Set<number>
 
@@ -94,6 +97,8 @@ export function loadFromDB(): Promise<Set<number>[]> {
 			mine = new Set(ids)),
 		readIDs("seen").then(ids =>
 			seenReplies = new Set(ids)),
+		readIDs("seenPost").then(ids =>
+			seenPosts = new Set(ids)),
 		readIDs("hidden").then((ids) =>
 			hidden = new Set(ids)),
 	])
@@ -109,6 +114,11 @@ export function storeMine(id: number) {
 export function storeSeenReply(id: number) {
 	seenReplies.add(id)
 	storeID("seen", id, thirtyDays)
+}
+
+export function storeSeenPost(id: number) {
+	seenReplies.add(id)
+	storeID("seenPost", id, thirtyDays)
 }
 
 // Store the ID of a post or thread to hide

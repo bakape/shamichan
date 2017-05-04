@@ -3,7 +3,7 @@ import { extend } from '../util'
 import Collection from './collection'
 import PostView from './view'
 import { SpliceResponse } from '../client'
-import { mine } from "../state"
+import { mine, seenPosts, storeSeenPost } from "../state"
 import { notifyAboutReply } from "../ui"
 import { PostData, TextState, PostLink, Command, ImageData } from "../common"
 
@@ -11,6 +11,7 @@ import { PostData, TextState, PostLink, Command, ImageData } from "../common"
 export class Post extends Model implements PostData {
 	collection: Collection
 	view: PostView
+	seenOnce: boolean
 
 	// PostData properties
 	public op: number
@@ -34,6 +35,7 @@ export class Post extends Model implements PostData {
 	constructor(attrs: PostData) {
 		super()
 		extend(this, attrs)
+		this.seenOnce = seenPosts.has(this.id)
 
 		// All kinds of interesting races can happen, so best ensure a model
 		// always has the state object defined
@@ -107,12 +109,21 @@ export class Post extends Model implements PostData {
 	// Check if this post replied to one of the user's posts and trigger
 	// handlers
 	public checkRepliedToMe() {
+		if(this.isReply()) {
+			notifyAboutReply(this)
+		}
+	}
+
+	public isReply() {
+		if(!this.links)
+			return false
 		for (let [id] of this.links) {
 			if (!mine.has(id)) {
 				continue
 			}
-			notifyAboutReply(this)
+			return true
 		}
+		return false
 	}
 
 	// Insert data about another post linking this post into the model
@@ -158,6 +169,23 @@ export class Post extends Model implements PostData {
 	public setDeleted() {
 		this.deleted = true
 		this.view.renderDeleted()
+	}
+
+	public seen() {
+		if(this.seenOnce) {
+			return true
+		}
+
+		if(document.hidden) {
+			return false
+		}
+
+		this.seenOnce = this.view.scrolledPast()
+		if(this.seenOnce) {
+			storeSeenPost(this.id)
+		}
+		
+		return this.seenOnce
 	}
 }
 

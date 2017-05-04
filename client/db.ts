@@ -1,6 +1,6 @@
 // IndexedDB database controller
 
-const dbVersion = 5
+const dbVersion = 6
 
 let db: IDBDatabase
 
@@ -15,6 +15,7 @@ const postStores = [
 	"mine",   // Posts created by this client
 	"hidden", // Posts hidden by client
 	"seen",   // Replies to the user's posts that have already been seen
+	"seenPost", // Posts that the user has viewed or scrolled past
 ]
 
 // Open a connection to the IndexedDB database
@@ -79,6 +80,14 @@ function upgradeDB(event: IDBVersionChangeEvent) {
 			// Can't modify data during an upgrade, so do it right after the
 			// "upgrade" completes
 			setTimeout(() => addObj("main", { id: "mascot" }), 1000)
+			break
+		case 5:
+			if(db.objectStoreNames.contains("seenPost")) {
+				break
+			}
+			db.createObjectStore("seenPost", { autoIncrement: true })
+				.createIndex("expires", "expires")
+
 			break
 	}
 }

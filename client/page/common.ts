@@ -4,6 +4,7 @@ import { PostData, fileTypes, PostLink } from "../common"
 import { Post, PostView } from "../posts"
 import lang from "../lang"
 import { notifyAboutReply } from "../ui"
+import { postAdded } from "../ui/tab"
 import { pluralize } from "../util"
 import { posterName } from "../options"
 
@@ -53,6 +54,8 @@ export function extractPost(
 	const { model: { links, backlinks, image } } = view
 	localizeLinks(links, view, true)
 	localizeLinks(backlinks, view, false)
+	postAdded(model)
+
 
 	if (image) {
 		const should = options.hideThumbs

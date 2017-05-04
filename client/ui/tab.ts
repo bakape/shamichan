@@ -1,6 +1,8 @@
 // Tab title and favicon rendering
 
 import { connSM, connState } from "../connection"
+import { Post } from "../posts"
+import { posts, page } from "../state"
 
 const titleEl = document.head.querySelector("title"),
 	faviconEl = document.getElementById("favicon"),
@@ -17,18 +19,34 @@ export function setTitle(t: string) {
 	resolve()
 }
 
-// Increment unseen post number, if tab is hidden
-export function postAdded() {
-	if (document.hidden) {
-		unseenPosts++
-		resolve()
+const queue : Post[] = [];
+
+// Update unseen post count based on post visibility and scroll position
+export function postAdded(post: Post) {
+	// async batch processing since visibility calculations force a layout
+	if(queue.length == 0) {
+		requestAnimationFrame(processQueue)
 	}
+
+	queue.push(post)
+}
+
+function processQueue() {
+	for (let post of queue) {
+		if (!post.seen()) {
+			unseenPosts++
+		}
+	}
+	queue.length = 0
+	resolve()
 }
 
 // Add unseen reply indicator to tab header
-export function repliedToMe() {
-	unseenReplies = true
-	resolve()
+export function repliedToMe(post: Post) {
+	if (!post.seen()) {
+		unseenReplies = true
+		resolve()
+	}
 }
 
 // Resolve tab title and favicon
@@ -42,17 +60,34 @@ function resolve() {
 
 	let prefix = "",
 		icon = "default"
-	if (document.hidden) {
-		if (unseenPosts) {
-			prefix = `(${unseenPosts}) `
-			icon = "unread"
-		}
-		if (unseenReplies) {
-			prefix = ">> " + prefix
-			icon = "reply"
-		}
+
+	if (unseenPosts) {
+		prefix = `(${unseenPosts}) `
+		icon = "unread"
+	}
+	if (unseenReplies) {
+		prefix = ">> " + prefix
+		icon = "reply"
 	}
 	apply(prefix, `${urlBase}${icon}.ico`)
+}
+
+let recalcPending = false
+
+function recalc() {
+	recalcPending = false
+	unseenPosts = 0
+	unseenReplies = false
+	for(let post of posts) {
+		if(post.seen()) {
+			continue;
+		}
+		unseenPosts++
+		if(post.isReply()) {
+			unseenReplies = true
+		}
+	}
+	resolve()
 }
 
 // Write tab title and favicon to DOM. If we use requestAnimationFrame here,
@@ -88,12 +123,17 @@ export default () => {
 		connSM.on(state, delayedDiscoRender)
 	}
 
-	// Reset title on tab focus
-	document.addEventListener('visibilitychange', () => {
-		if (!document.hidden) {
-			unseenPosts = 0
-			unseenReplies = false
-			resolve()
-		}
+	page.onChange("thread", () => {
+		unseenPosts = 0
+		unseenReplies = false
+		resolve()
 	})
+
+	document.addEventListener("scroll", () => {
+		if(recalcPending || document.hidden) {
+			return
+		}
+		recalcPending = true
+		setTimeout(recalc, 200)
+	}, {passive: true})
 }

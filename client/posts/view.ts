@@ -66,6 +66,14 @@ export default class PostView extends ImageHandler {
         this.model.view = this.model = null
     }
 
+    // check if we can see the post or have scrolled past it
+    public scrolledPast() {
+        const rect = this.el.getBoundingClientRect(),
+            viewW = document.documentElement.clientWidth,
+            viewH = document.documentElement.clientHeight;
+        return rect.bottom < viewH && rect.left > 0 && rect.left < viewW
+    }
+
     // Replace the current body with a reparsed fragment
     public reparseBody() {
         const bq = this.el.querySelector("blockquote")
