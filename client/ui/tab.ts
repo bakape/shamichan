@@ -19,12 +19,26 @@ export function setTitle(t: string) {
 	resolve()
 }
 
-// Increment unseen post number
+const queue : Post[] = [];
+
+// Update unseen post count based on post visibility and scroll position
 export function postAdded(post: Post) {
-	if (!post.seen()) {
-		unseenPosts++
-		resolve()
+	// async batch processing since visibility calculations force a layout
+	if(queue.length == 0) {
+		requestAnimationFrame(processQueue)
 	}
+
+	queue.push(post)
+}
+
+function processQueue() {
+	for (let post of queue) {
+		if (!post.seen()) {
+			unseenPosts++
+		}
+	}
+	queue.length = 0
+	resolve()
 }
 
 // Add unseen reply indicator to tab header
@@ -46,15 +60,14 @@ function resolve() {
 
 	let prefix = "",
 		icon = "default"
-	if (document.hidden) {
-		if (unseenPosts) {
-			prefix = `(${unseenPosts}) `
-			icon = "unread"
-		}
-		if (unseenReplies) {
-			prefix = ">> " + prefix
-			icon = "reply"
-		}
+
+	if (unseenPosts) {
+		prefix = `(${unseenPosts}) `
+		icon = "unread"
+	}
+	if (unseenReplies) {
+		prefix = ">> " + prefix
+		icon = "reply"
 	}
 	apply(prefix, `${urlBase}${icon}.ico`)
 }
@@ -66,8 +79,9 @@ function recalc() {
 	unseenPosts = 0
 	unseenReplies = false
 	for(let post of posts) {
-		if(post.seen())
+		if(post.seen()) {
 			continue;
+		}
 		unseenPosts++
 		if(post.isReply()) {
 			unseenReplies = true

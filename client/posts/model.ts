@@ -130,6 +130,8 @@ export class Post extends Model implements PostData {
 	}
 
 	public isReply() {
+		if(!this.links)
+			return false
 		for (let [id] of this.links) {
 			if (!mine.has(id)) {
 				continue
@@ -194,7 +196,10 @@ export class Post extends Model implements PostData {
 		}
 
 		this.seenOnce = this.view.scrolledPast()
-		storeSeenPost(this.id)
+		if(this.seenOnce) {
+			storeSeenPost(this.id)
+		}
+		
 		return this.seenOnce
 	}
 }
