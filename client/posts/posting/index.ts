@@ -36,13 +36,14 @@ let postForm: FormView,
 
 // Post authoring finite state machine
 export const enum postState {
-	none,    // No state. Awaiting first connection.
-	ready,   // Ready to create posts
-	halted,  // Post allocated to the server but no connectivity
-	locked,  // No post open. Post creation controls locked.
-	alloc,   // Post open and allocated to the server
-	draft,   // Post open, but not yet allocated.
-	errored, // Suffered unrecoverable error
+	none,           // No state. Awaiting first connection.
+	ready,          // Ready to create posts
+	halted,         // Post allocated to the server but no connectivity
+	locked,         // No post open. Post creation controls locked.
+	alloc,          // Post open and allocated to the server
+	draft,          // Post open, but not yet allocated.
+	sendingNonLive, // Sending a request to a allocate a post in non-live mode
+	errored,        // Suffered unrecoverable error
 }
 export const enum postEvent {
 	sync,       // Synchronized to the server
@@ -267,21 +268,10 @@ export default () => {
 			} else if (e instanceof KeyboardEvent) {
 				commitNonLive = e.which === options.done
 			}
-
-			if (commitNonLive) {
-				commitNonLive = !!postModel.bufferedText
-			}
 		}
 		if (commitNonLive) {
-			postModel.nonLive = false
-			// Do this after the function returns
-			setTimeout(() => {
-				postModel.parseInput(postModel.bufferedText)
-			}, 0)
-			postSM.once(postState.alloc, () =>
-				setTimeout(() =>
-					postSM.feed(postEvent.done)))
-			return postState.draft
+			postModel.commitNonLive()
+			return postState.sendingNonLive
 		}
 
 		postForm.remove()
@@ -291,6 +281,12 @@ export default () => {
 	// Close allocated post
 	postSM.act(postState.alloc, postEvent.done, () => {
 		postModel.commitClose()
+		return postState.ready
+	})
+
+	// Just close the post, after it is committed
+	postSM.act(postState.sendingNonLive, postEvent.done, () => {
+		postModel.abandon()
 		return postState.ready
 	})
 

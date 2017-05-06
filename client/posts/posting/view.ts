@@ -61,6 +61,7 @@ export default class FormView extends PostView {
                 this.upload.input.addEventListener("change", () =>
                     this.model.uploadFile())
             }
+            this.inputElement("done").hidden = !this.model.nonLive
             this.renderIdentity()
         }
 
@@ -209,7 +210,6 @@ export default class FormView extends PostView {
         }
         bottomSpacer
             = this.observer
-            = this.input
             = this.upload
             = null
     }

@@ -28,7 +28,7 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		ReplyCreationRequest: repReq,
 	}
 
-	post, err := websockets.CreateThread(req, auth.GetIP(r), false)
+	post, err := websockets.CreateThread(req, auth.GetIP(r))
 	if err != nil {
 
 		// TODO: Not all codes are actually 400. Need to differentiate.
@@ -116,7 +116,7 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, msg, err := websockets.CreatePost(op, board, auth.GetIP(r), false, req)
+	post, msg, err := websockets.CreatePost(op, board, auth.GetIP(r), true, req)
 	if err != nil {
 
 		// TODO: Not all codes are actually 400. Need to differentiate.

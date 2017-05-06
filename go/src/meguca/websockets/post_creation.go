@@ -29,8 +29,8 @@ type ThreadCreationRequest struct {
 // ReplyCreationRequest contains common fields for both thread and reply
 // creation
 type ReplyCreationRequest struct {
-	Sage  bool
-	Image ImageRequest
+	Sage, Open bool
+	Image      ImageRequest
 	auth.SessionCreds
 	auth.Captcha
 	Name, Password, Body string
@@ -52,8 +52,10 @@ func (c *Client) insertThread(data []byte) (err error) {
 	if err := decodeMessage(data, &req); err != nil {
 		return err
 	}
+	// Instantly closed OPs from websocket clients are currently not supported
+	req.Open = true
 
-	post, err := CreateThread(req, c.ip, true)
+	post, err := CreateThread(req, c.ip)
 	switch err {
 	case nil:
 	case errInValidCaptcha:
@@ -68,7 +70,7 @@ func (c *Client) insertThread(data []byte) (err error) {
 
 // CreateThread creates a new tread and writes it to the database.
 // open specifies, if the thread OP should stay open after creation.
-func CreateThread(req ThreadCreationRequest, ip string, open bool) (
+func CreateThread(req ThreadCreationRequest, ip string) (
 	post db.Post, err error,
 ) {
 	switch {
@@ -91,7 +93,6 @@ func CreateThread(req ThreadCreationRequest, ip string, open bool) (
 	post, err = constructPost(
 		req.ReplyCreationRequest,
 		conf.ForcedAnon,
-		open,
 		ip,
 		req.Board,
 	)
@@ -113,12 +114,11 @@ func CreateThread(req ThreadCreationRequest, ip string, open bool) (
 		}
 	}
 
-	id, err := db.NewPostID()
+	post.ID, err = db.NewPostID()
 	if err != nil {
 		return
 	}
-	post.ID = id
-	post.OP = id
+	post.OP = post.ID
 
 	err = db.InsertThread(subject, post)
 	return
@@ -129,7 +129,7 @@ func CreateThread(req ThreadCreationRequest, ip string, open bool) (
 func CreatePost(
 	op uint64,
 	board, ip string,
-	open bool,
+	needCaptcha bool,
 	req ReplyCreationRequest,
 ) (
 	post db.Post, msg []byte, err error,
@@ -139,7 +139,7 @@ func CreatePost(
 		err = errBanned
 		return
 	// For now, only noscript posts need a captcha
-	case !open && !auth.AuthenticateCaptcha(req.Captcha):
+	case needCaptcha && !auth.AuthenticateCaptcha(req.Captcha):
 		err = errInValidCaptcha
 		return
 	}
@@ -156,13 +156,7 @@ func CreatePost(
 		return
 	}
 
-	post, err = constructPost(
-		req,
-		conf.ForcedAnon,
-		open,
-		ip,
-		board,
-	)
+	post, err = constructPost(req, conf.ForcedAnon, ip, board)
 	if err != nil {
 		return
 	}
@@ -204,7 +198,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 
 	_, op, board := feeds.GetSync(c)
-	post, msg, err := CreatePost(op, board, c.ip, true, req)
+	post, msg, err := CreatePost(op, board, c.ip, false, req)
 	if err != nil {
 		return
 	}
@@ -216,7 +210,9 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 
-	c.post.init(post.StandalonePost)
+	if post.Editing {
+		c.post.init(post.StandalonePost)
+	}
 	c.feed.InsertPost(post.StandalonePost, c.post.body, msg)
 
 	return nil
@@ -242,7 +238,7 @@ func getBoardConfig(board string) (conf config.BoardConfigs, err error) {
 // Construct the common parts of the new post for both threads and replies
 func constructPost(
 	req ReplyCreationRequest,
-	forcedAnon, open bool,
+	forcedAnon bool,
 	ip, board string,
 ) (
 	post db.Post, err error,
@@ -308,7 +304,7 @@ func constructPost(
 		}
 	}
 
-	if open {
+	if req.Open {
 		post.Editing = true
 
 		// Posts that are committed in one action need not a password, as they

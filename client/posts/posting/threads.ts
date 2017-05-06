@@ -48,6 +48,7 @@ class ThreadForm extends FormView {
 
 	protected async send() {
 		const req = newAllocRequest()
+		req["open"] = true
 		this.submitEl.style.display = "none"
 
 		if (this.upload && this.upload.input.files.length) {

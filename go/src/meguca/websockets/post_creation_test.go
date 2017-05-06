@@ -332,6 +332,7 @@ func TestPostCreation(t *testing.T) {
 	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
+		Open:     true,
 		Body:     "Δ",
 		Password: "123",
 		Image: ImageRequest{

@@ -17,6 +17,7 @@ export default class FormModel extends Post {
 
 	// Text that is not submitted yet to defer post allocation
 	public bufferedText: string
+	public bufferedFile: File // Same for file uploads
 
 	public inputBody: string
 	public view: FormView
@@ -252,13 +253,38 @@ export default class FormModel extends Post {
 		}
 	}
 
+	// Commit a post made with live updates disabled
+	public async commitNonLive() {
+		if (!this.bufferedText && !this.bufferedFile) {
+			return postSM.feed(postEvent.done)
+		}
+
+		this.sentAllocRequest = true
+
+		const req = newAllocRequest()
+		if (this.bufferedFile) {
+			req["image"] = await this.view.upload.uploadFile(this.bufferedFile)
+		}
+		if (this.bufferedText) {
+			req["body"] = this.body = this.bufferedText
+		}
+
+		send(message.insertPost, req)
+		handlers[message.postID] = (id: number) => {
+			this.id = id
+			posts.add(this)
+			delete handlers[message.postID]
+		}
+	}
+
 	// Request allocation of a draft post to the server
 	private requestAlloc(body: string | null, image: FileData | null) {
 		this.view.setEditing(true)
 		this.nonLive = false
 		this.sentAllocRequest = true
-		const req = newAllocRequest()
 
+		const req = newAllocRequest()
+		req["open"] = !this.nonLive
 		if (body) {
 			req["body"] = body
 			this.body = body
@@ -270,16 +296,11 @@ export default class FormModel extends Post {
 
 		send(message.insertPost, req)
 		handlers[message.postID] = (id: number) => {
-			this.setID(id)
+			this.id = id
+			postSM.feed(postEvent.alloc)
+			posts.add(this)
 			delete handlers[message.postID]
 		}
-	}
-
-	// Set post ID and add to the post collection
-	private setID(id: number) {
-		this.id = id
-		postSM.feed(postEvent.alloc)
-		posts.add(this)
 	}
 
 	// Handle draft post allocation
@@ -296,11 +317,19 @@ export default class FormModel extends Post {
 		if (data.image) {
 			this.insertImage(this.image)
 		}
+		if (this.nonLive) {
+			postSM.feed(postEvent.done)
+		}
 	}
 
 	// Upload the file and request its allocation
 	public async uploadFile(file?: File) {
-		// Already have image
+		if (this.nonLive) {
+			this.bufferedFile = file || this.view.upload.input.files[0]
+			return
+		}
+
+		// Already have image or not in live mode
 		if (this.image) {
 			return
 		}
