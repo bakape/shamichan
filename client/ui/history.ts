@@ -22,8 +22,8 @@ function handleClick(event: KeyboardEvent) {
 	if (target.classList.contains("post-link") && options.postInlineExpand) {
 		return
 	}
-	// Don't scroll to target post on thread pages
-	if (target.classList.contains("quote") && page.thread) {
+	// Prevent navigation on quote links. We have a separate handler for that.
+	if (target.classList.contains("quote")) {
 		event.preventDefault()
 		return
 	}
