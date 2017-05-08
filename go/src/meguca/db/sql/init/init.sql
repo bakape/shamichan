@@ -73,7 +73,7 @@ create index staff_account on staff (account);
 create sequence post_id;
 
 create table threads (
-	sticky default false,
+	sticky boolean default false,
 	board varchar(3) not null references boards on delete cascade,
 	id bigint primary key,
 	postCtr bigint not null,
