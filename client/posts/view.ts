@@ -1,7 +1,8 @@
 import { Post } from './model'
 import { makeFrag, importTemplate } from '../util'
 import {
-    renderPost, renderName, renderTime, renderBanned, parseBody, renderBacklinks
+    renderPost, renderName, renderTime, renderBanned, parseBody,
+    renderBacklinks, renderSticky,
 } from './render'
 import ImageHandler from "./images"
 import { ViewAttrs } from "../base"
@@ -136,6 +137,15 @@ export default class PostView extends ImageHandler {
     // Render indications that a post had been deleted
     public renderDeleted() {
         this.el.classList.add("deleted")
+    }
+
+    // Render the sticky status of a thread OP
+    public renderSticky() {
+        const old = this.el.querySelector(".sticky")
+        if (old) {
+            old.remove()
+        }
+        renderSticky(this.el, this.model.sticky)
     }
 
     // Inserts PostView back into the thread ordered by id

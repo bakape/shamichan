@@ -35,6 +35,13 @@ const actions: { [key: string]: ItemSpec } = {
 		},
 		handler: getSameIPPosts,
 	},
+	toggleSticky: {
+		text: lang.posts["toggleSticky"],
+		shouldRender(m) {
+			return !!loginID && m.id === m.op
+		},
+		handler: toggleSticky,
+	},
 }
 
 // Post header drop down menu
@@ -110,6 +117,21 @@ async function getSameIPPosts(m: Post) {
 		return alert(await res.text())
 	}
 	new CollectionView(await res.json())
+}
+
+// Toggle sticky flag on a thread
+async function toggleSticky(m: Post) {
+	const req = newRequest()
+	extend(req, {
+		sticky: !m.sticky,
+		id: m.id,
+	})
+	const res = await postJSON("/admin/sticky", req)
+	if (res.status !== 200) {
+		return alert(await res.text())
+	}
+	m.sticky = !m.sticky
+	m.view.renderSticky()
 }
 
 export default () =>

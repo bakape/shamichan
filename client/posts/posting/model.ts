@@ -57,6 +57,7 @@ export default class FormModel extends Post {
 				deleted: false,
 				banned: false,
 				sage: false,
+				sticky: false,
 				time: Date.now(),
 				body: "",
 				name: "",

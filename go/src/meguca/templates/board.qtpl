@@ -135,20 +135,10 @@ IndexThreads renders abbreviated threads for display on board index pages
 	{% code root := config.Get().RootURL %}
 	<div id="index-thread-container">
 		{% for _, t := range threads %}
-			{% code omit, imageOmit := CalculateOmit(t) %}
 			{% code idStr := strconv.FormatUint(t.ID, 10) %}
 			<section class="index-thread{% if t.Deleted %}{% space %}deleted{% endif %}" data-id="{%s= idStr %}">
 				{%= deletedToggle() %}
-				{% code post := common.StandalonePost{
-					Board: t.Board,
-					OP: t.ID,
-					Post: t.Post,
-				} %}
-				{%= renderArticle(post, omit, imageOmit, t.Subject, root, true) %}
-				{% for _, p := range t.Posts %}
-					{% code post.Post = p %}
-					{%= renderArticle(post, 0, 0, "", root, true) %}
-				{% endfor %}
+				{%= renderThreadPosts(t, root, true) %}
 				<aside class="act posting glass">
 					<a href="/all/{%s= idStr %}?last=100#bottom">
 						Reply

@@ -19,7 +19,8 @@
 		"owners": "Board Owner",
 		"moderators": "Moderator",
 		"janitors": "Meido",
-		"viewBySameIP": "Same IP"
+		"viewBySameIP": "Same IP",
+		"toggleSticky": "Toggle sticky"
 	},
 	"plurals": {
 		"day": [

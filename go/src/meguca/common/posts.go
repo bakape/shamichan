@@ -8,14 +8,29 @@ package common
 var ParseBody func([]byte, string) ([][2]uint64, []Command, error)
 
 //easyjson:json
-// Board is defined to enable marshalling optimizations
+// Board is defined to enable marshalling optimizations and sorting by sticky
+// threads
 type Board []Thread
+
+func (b Board) Len() int {
+	return len(b)
+}
+
+func (b Board) Swap(i, j int) {
+	b[i], b[j] = b[j], b[i]
+}
+
+func (b Board) Less(i, j int) bool {
+	// So it gets sorted with sticky threads first
+	return b[i].Sticky
+}
 
 // Thread is a transport/export wrapper that stores both the thread metadata,
 // its opening post data and its contained posts. The composite type itself is
 // not stored in the database.
 type Thread struct {
 	Abbrev    bool   `json:"abbrev,omitempty"`
+	Sticky    bool   `json:"sticky,omitempty"`
 	PostCtr   uint32 `json:"postCtr"`
 	ImageCtr  uint32 `json:"imageCtr"`
 	ReplyTime int64  `json:"replyTime"`

@@ -28,9 +28,7 @@ var (
 			return db.GetThread(k.ID, int(k.LastN))
 		},
 		RenderHTML: func(data easyjson.Marshaler, json []byte) []byte {
-			thread := data.(common.Thread)
-			oPosts, oImages := templates.CalculateOmit(thread)
-			return []byte(templates.ThreadPosts(thread, json, oPosts, oImages))
+			return []byte(templates.ThreadPosts(data.(common.Thread), json))
 		},
 	}
 	catalogCache = cache.FrontEnd{

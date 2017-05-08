@@ -70,6 +70,11 @@ type postActionRequest struct {
 	boardActionRequest
 }
 
+type singlePostActionRequest struct {
+	ID uint64
+	boardActionRequest
+}
+
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
 // decoding succeeded.
 func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
@@ -494,10 +499,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 
 // Retrieve posts with the same IP on the target board
 func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
-	var msg struct {
-		ID uint64
-		boardActionRequest
-	}
+	var msg singlePostActionRequest
 	isValid := decodeJSON(w, r, &msg) &&
 		canPerform(w, r, &msg.boardActionRequest, db.Moderator, false)
 	if !isValid {
@@ -510,4 +512,25 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	serveJSON(w, r, "", posts)
+}
+
+// Set the sticky flag of a thread
+func setThreadSticky(w http.ResponseWriter, r *http.Request) {
+	var msg struct {
+		Sticky bool
+		singlePostActionRequest
+	}
+	isValid := decodeJSON(w, r, &msg) &&
+		canPerform(w, r, &msg.boardActionRequest, db.Moderator, false)
+	if !isValid {
+		return
+	}
+
+	switch err := db.SetThreadSticky(msg.ID, msg.Sticky); err {
+	case nil:
+	case sql.ErrNoRows:
+		text400(w, err)
+	default:
+		text500(w, r, err)
+	}
 }

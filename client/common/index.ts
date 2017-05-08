@@ -15,6 +15,7 @@ export interface PostData {
 	deleted: boolean
 	banned: boolean
 	sage: boolean
+	sticky: boolean
 	image?: ImageData
 	time: number
 	id: number

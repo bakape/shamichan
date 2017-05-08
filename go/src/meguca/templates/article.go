@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+// Extra data passed, when rendering an article
+type articleContext struct {
+	index, sticky        bool
+	omit, imageOmit      int
+	op                   uint64
+	board, subject, root string
+}
+
 // Returns image name with proper extension
 func imageName(fileType uint8, name string) string {
 	ext := common.Extensions[fileType]

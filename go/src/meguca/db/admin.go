@@ -283,3 +283,8 @@ func GetSameIPPosts(id uint64, board string) (
 
 	return
 }
+
+// Set the sticky field on a thread
+func SetThreadSticky(id uint64, sticky bool) error {
+	return execPrepared("set_sticky", id, sticky)
+}

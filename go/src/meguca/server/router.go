@@ -149,6 +149,7 @@ func createRouter() http.Handler {
 	admin.POST("/notification", wrapHandler(sendNotification))
 	admin.POST("/assignStaff", wrapHandler(assignStaff))
 	admin.POST("/sameIP", wrapHandler(getSameIPPosts))
+	admin.POST("/sticky", wrapHandler(setThreadSticky))
 
 	// Captcha API
 	captcha := r.NewGroup("/captcha")

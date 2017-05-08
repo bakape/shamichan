@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	version = 10
+	version = 11
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
 )
@@ -130,6 +130,13 @@ var upgrades = map[uint]func(*sql.Tx) error{
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN disableRobots bool not null default false`,
+		)
+		return
+	},
+	10: func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE threads
+				ADD COLUMN sticky bool default false`,
 		)
 		return
 	},

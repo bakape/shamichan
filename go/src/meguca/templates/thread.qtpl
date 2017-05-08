@@ -77,18 +77,9 @@
 
 ThreadPosts renders the post content of a thread. Separate function to allow
 caching of generated posts.
-{% func ThreadPosts(t common.Thread, json []byte, omit, imageOmit int) %}{% stripspace %}
+{% func ThreadPosts(t common.Thread, json []byte) %}{% stripspace %}
 	<section id="thread-container" data-id="{%s= strconv.FormatUint(t.ID, 10) %}">
-		{% code root := config.Get().RootURL %}
-		{% code post := common.StandalonePost{
-			OP: t.ID,
-			Post: t.Post,
-		} %}
-		{%= renderArticle(post, omit, imageOmit, t.Subject, root, false) %}
-		{% for _, p := range t.Posts %}
-			{% code post.Post = p %}
-			{%= renderArticle(post, 0, 0, "", root, false) %}
-		{% endfor %}
+		{%= renderThreadPosts(t, config.Get().RootURL, false) %}
 		<script id="post-data" type="application/json">
 			{%z= json %}
 		</script>
@@ -96,4 +87,25 @@ caching of generated posts.
 	<script id="board-configs" type="application/json">
 		{%z= config.GetBoardConfigs(t.Board).JSON %}
 	</script>
+{% endstripspace %}{% endfunc %}
+
+Common functionality between index board pages and threads pages
+{% func renderThreadPosts(t common.Thread, root string, index bool) %}{% stripspace %}
+	{% code c := articleContext{
+		index: index,
+		sticky: t.Sticky,
+		op: t.ID,
+		board: t.Board,
+		subject: t.Subject,
+		root: root,
+	} %}
+	{% code c.omit, c.imageOmit = CalculateOmit(t) %}
+	{%= renderArticle(t.Post, c) %}
+
+	{% code c.sticky = false %}
+	{% code c.omit, c.imageOmit = 0, 0 %}
+	{% code c.subject = "" %}
+	{% for _, p := range t.Posts %}
+		{%= renderArticle(p, c) %}
+	{% endfor %}
 {% endstripspace %}{% endfunc %}

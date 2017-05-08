@@ -135,6 +135,9 @@
 				<b class="admin"><b>
 			</div>
 		</template>
+		<template name="sticky">
+			{%= renderSticky(true) %}
+		</template>
 	</head>
 	<body>
 		{% comment %}

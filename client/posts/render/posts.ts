@@ -1,4 +1,4 @@
-import { escape, pluralize, pad } from '../../util'
+import { escape, pluralize, pad, importTemplate } from '../../util'
 import { renderImage } from './image'
 import { renderBacklinks } from './etc'
 import renderBody from './body'
@@ -27,7 +27,7 @@ export default function (post: Element, data: PostData | ThreadData) {
 	if (data.banned) {
 		renderBanned(post)
 	}
-	renderHeader(post, data)
+	renderHeader(post.querySelector("header"), data)
 	if (data.image) {
 		renderImage(post, data.image, false)
 	}
@@ -48,6 +48,7 @@ export function renderBanned(parent: NodeSelector) {
 export function renderHeader(frag: NodeSelector, data: PostData) {
 	renderTime(frag.querySelector("time"), data.time, false)
 	renderName(frag.querySelector(".name"), data)
+	renderSticky(frag, data.sticky)
 
 	const nav = frag.querySelector("nav"),
 		link = nav.firstElementChild as HTMLAnchorElement,
@@ -58,6 +59,13 @@ export function renderHeader(frag: NodeSelector, data: PostData) {
 	}
 	quote.href = link.href = url
 	quote.textContent = data.id.toString()
+}
+
+// Render an indicator, if an OP belongs to a sticky thread
+export function renderSticky(frag: NodeSelector, sticky: boolean) {
+	if (sticky) {
+		frag.querySelector(".mod-checkbox").after(importTemplate("sticky"))
+	}
 }
 
 // Render the name of a post's poster

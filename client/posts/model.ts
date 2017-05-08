@@ -19,6 +19,7 @@ export class Post extends Model implements PostData {
 	public deleted: boolean
 	public sage: boolean
 	public banned: boolean
+	public sticky: boolean
 	public image: ImageData
 	public time: number
 	public body: string
@@ -109,13 +110,13 @@ export class Post extends Model implements PostData {
 	// Check if this post replied to one of the user's posts and trigger
 	// handlers
 	public checkRepliedToMe() {
-		if(this.isReply()) {
+		if (this.isReply()) {
 			notifyAboutReply(this)
 		}
 	}
 
 	public isReply() {
-		if(!this.links)
+		if (!this.links)
 			return false
 		for (let [id] of this.links) {
 			if (!mine.has(id)) {
@@ -172,19 +173,19 @@ export class Post extends Model implements PostData {
 	}
 
 	public seen() {
-		if(this.seenOnce) {
+		if (this.seenOnce) {
 			return true
 		}
 
-		if(document.hidden) {
+		if (document.hidden) {
 			return false
 		}
 
 		this.seenOnce = this.view.scrolledPast()
-		if(this.seenOnce) {
+		if (this.seenOnce) {
 			storeSeenPost(this.id)
 		}
-		
+
 		return this.seenOnce
 	}
 }

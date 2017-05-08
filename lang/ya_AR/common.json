@@ -19,7 +19,8 @@
 		"owners": "Captain",
 		"moderators": "First Mate",
 		"janitors": "Cabin Boy",
-		"viewBySameIP": "Same IP"
+		"viewBySameIP": "Same IP",
+		"toggleSticky": "Toggle sticky"
 	},
 	"plurals": {
 		"day": [
