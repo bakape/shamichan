@@ -7,12 +7,11 @@ const babel = require("gulp-babel"),
 	gutil = require('gulp-util'),
 	jsonminify = require('gulp-jsonminify'),
 	less = require('gulp-less'),
-	minifier = require('gulp-uglify/minifier'),
 	nano = require('gulp-cssnano'),
 	rename = require('gulp-rename'),
 	sourcemaps = require('gulp-sourcemaps'),
 	ts = require('gulp-typescript'),
-	uglifyjs = require('uglify-js')
+	uglify = require('gulp-uglify')
 
 // Keep script alive and rebuild on file changes
 // Triggered with the `-w` flag
@@ -29,7 +28,7 @@ buildES5()
 createTask('scripts', 'clientScripts/*.js', src =>
 	src
 		.pipe(sourcemaps.init())
-		.pipe(minifier({}, uglifyjs))
+		.pipe(uglify())
 		.on('error', handleError)
 		.pipe(sourcemaps.write('maps'))
 		.pipe(gulp.dest('www/js/scripts'))
@@ -90,7 +89,7 @@ function buildES5() {
 			.pipe(babel({
 				presets: ['latest'],
 			}))
-			.pipe(minifier({}, uglifyjs))
+			.pipe(uglify())
 			.on('error', handleError)
 			.pipe(sourcemaps.write('maps'))
 			.pipe(gulp.dest('www/js/es5'))

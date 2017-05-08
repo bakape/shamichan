@@ -23,7 +23,6 @@
     "gulp-util": "^3.0.4",
     "proxy-polyfill": "^0.1.6",
     "typescript": "^2.0.0",
-    "uglify-js": "git+https://github.com/mishoo/UglifyJS2.git#harmony",
     "whatwg-fetch": "^2.0.1"
   }
 }
