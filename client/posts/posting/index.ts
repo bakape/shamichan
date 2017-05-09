@@ -142,6 +142,14 @@ function toggleLive(live: boolean) {
 }
 
 async function openReply(e: MouseEvent) {
+	// Don't trigger, when user is trying to open in a new tab
+	const bypass = e.which !== 1
+		|| e.ctrlKey
+		|| connSM.state !== connState.synced
+	if (bypass) {
+		return
+	}
+
 	e.preventDefault()
 	e.stopImmediatePropagation()
 
