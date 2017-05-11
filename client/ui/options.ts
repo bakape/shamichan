@@ -63,7 +63,7 @@ export default class OptionsPanel extends TabbedModal {
 			case optionType.number:
 			case optionType.menu:
 			case optionType.textarea:
-				el.value = val as string
+				el.value = val as string || ""
 				break
 			case optionType.shortcut:
 				el.value = String.fromCodePoint(val as number).toUpperCase()
