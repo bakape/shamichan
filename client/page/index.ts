@@ -16,7 +16,7 @@ initNavigation()
 // Load a page (either board or thread) and render it once the ready promise
 // has been resolved
 export async function loadPage(state: PageState, ready: Promise<void>) {
-	const { board, thread, lastN, catalog } = state
+	const { board, thread, lastN, catalog, href } = state
 	const res = thread
 		? await fetchThread(board, thread, lastN)
 		: await fetchBoard(board, catalog)
@@ -29,7 +29,7 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 				const redir = read(res.url)
 
 				// Strip internal query parameter
-				const u = new URL(redir.href)
+				const u = new URL(redir.href, location.origin)
 				let query = u.search,
 					url = u.pathname
 				if (query) {
@@ -43,9 +43,13 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 						url += "?" + query
 					}
 				}
-				if (u.hash) {
-					url += u.hash
+
+				// Restore old hash
+				const hash = new URL(href, location.origin).hash
+				if (hash) {
+					url += hash
 				}
+
 				redir.href = url
 
 				page.replaceWith(redir)

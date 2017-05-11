@@ -150,13 +150,12 @@ async function openReply(e: MouseEvent) {
 		return
 	}
 
-	e.preventDefault()
-	e.stopImmediatePropagation()
-
 	// If on a board page, first navigate to the target thread
 	const href = (e.target as HTMLAnchorElement).href
 	if (href) {
-		await navigate(href, null, true)
+		await navigate(href, e, true)
+	} else {
+		e.preventDefault()
 	}
 
 	postSM.feed(postEvent.open)

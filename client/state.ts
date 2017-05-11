@@ -74,12 +74,7 @@ export let debug: boolean = /[\?&]debug=true/.test(location.href)
 
 // Read page state by parsing a URL
 export function read(href: string): PageState {
-	// Convert to absolute URL, if relative
-	const a = document.createElement("a")
-	a.href = href
-	href = a.href
-
-	const u = new URL(href),
+	const u = new URL(href, location.origin),
 		thread = u.pathname.match(/^\/\w+\/(\d+)/)
 	return {
 		href,
