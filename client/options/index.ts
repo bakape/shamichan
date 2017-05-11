@@ -157,6 +157,13 @@ export function initOptions() {
 		}
 	}
 
+	// Change the applied custom CSS on CSS change
+	options.onChange("customCSS", () => {
+		if (options.customCSSToggle) {
+			models["customCSSToggle"].execute(true)
+		}
+	})
+
 	initBackground()
 	initMascot()
 	initLoops()
