@@ -11,6 +11,7 @@ import (
 // Basic test for deadlocks
 func TestConcurrency(t *testing.T) {
 	Clear()
+	Size = 0.00000001
 
 	f := FrontEnd{
 		GetCounter: func(k Key) (uint64, error) {
@@ -58,6 +59,8 @@ func TestCacheEviction(t *testing.T) {
 		}
 	}
 
+	mu.Lock()
+	defer mu.Unlock()
 	_, ok := cache[ThreadKey(0, 0)]
 	if ok {
 		t.Error("store not evicted")

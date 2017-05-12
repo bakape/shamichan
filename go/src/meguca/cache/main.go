@@ -79,8 +79,12 @@ func updateUsedSize(delta int) {
 
 	totalUsed += delta
 
-	if totalUsed > int(Size)*(1<<20) {
-		s := ll.Remove(ll.Back()).(*store)
+	for totalUsed > int(Size)*(1<<20) {
+		last := ll.Back()
+		if last == nil {
+			return
+		}
+		s := ll.Remove(last).(*store)
 		delete(cache, s.key)
 
 		s.sizeMu.Lock()
@@ -114,8 +118,6 @@ func (s *store) update(data easyjson.Marshaler, json, html []byte) {
 	s.size = newSize
 	s.sizeMu.Unlock()
 
-	// Technically it is possible to update the size even when the store is
-	// already evicted, but that should never happen, unless you have a very
-	// small cache, very large threads and a lot of traffic.
-	updateUsedSize(delta)
+	// In a separate goroutine, to ensure there is never any lock intersection
+	go updateUsedSize(delta)
 }
