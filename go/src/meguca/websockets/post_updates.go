@@ -295,7 +295,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 }
 
 // Spoiler an already inserted image in an unclosed post
-func (c *Client) spoilerImage() error {
+func (c *Client) spoilerImage() (err error) {
 	has, err := c.hasPost()
 	switch {
 	case err != nil:
@@ -308,5 +308,15 @@ func (c *Client) spoilerImage() error {
 		return errors.New("already spoilered")
 	}
 
-	return db.SpoilerImage(c.post.id)
+	err = db.SpoilerImage(c.post.id)
+	if err != nil {
+		return
+	}
+	msg, err := common.EncodeMessage(common.MessageSpoiler, c.post.id)
+	if err != nil {
+		return
+	}
+	c.feed.Send(msg)
+
+	return
 }

@@ -354,6 +354,7 @@
 		"assignStaff": "Assign staff",
 		"ban": "Ban",
 		"bottom": "Дно",
+		"by": "By",
 		"cancel": "Скасувати",
 		"captcha": "Captcha",
 		"captchaID": "Captcha ID",
@@ -366,6 +367,7 @@
 		"done": "Імпорт успішний. Зараз сторінка перезавантажиться.",
 		"deleteBoard": "Delete board",
 		"enableJS": "Enable JavaScript for more functionality",
+		"expires": "Expires",
 		"feedback": "Відгуки",
 		"global": "Global",
 		"identity": "Особистість",
@@ -379,6 +381,8 @@
 		"options": "Опції",
 		"ownNoBoards": "Ви не маєте жодних борд.",
 		"pointToCatalog": "Point to Catalog",
+		"post": "Post",
+		"posterID": "Poster ID",
 		"reply": "Відповісти",
 		"report": "Зарепортити",
 		"reason": "Reason",
@@ -393,7 +397,8 @@
 		"sync": "Статус зв'язку",
 		"syncCount": "Unique connected IP count",
 		"text": "Text",
-		"top": "Шапка"
+		"top": "Шапка",
+		"unban": "Unban"
 	},
 	"sortModes": [
 		"Час бампу",

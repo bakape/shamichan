@@ -109,7 +109,29 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 func GetBanInfo(ip, board string) (b auth.BanRecord, err error) {
 	err = prepared["get_ban_info"].
 		QueryRow(ip, board).
-		Scan(&b.Board, &b.IP, &b.By, &b.Reason, &b.Expires)
+		Scan(&b.IP, &b.Board, &b.ForPost, &b.Reason, &b.By, &b.Expires)
+	return
+}
+
+// Get all bans on a specific board. "all" counts as a valid board value.
+func GetBoardBans(board string) (b []auth.BanRecord, err error) {
+	b = make([]auth.BanRecord, 0, 64)
+	r, err := prepared["get_bans_by_board"].Query(board)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	var rec auth.BanRecord
+	for r.Next() {
+		err = r.Scan(&rec.IP, &rec.ForPost, &rec.Reason, &rec.By, &rec.Expires)
+		if err != nil {
+			return
+		}
+		b = append(b, rec)
+	}
+	err = r.Err()
+
 	return
 }
 

@@ -5,6 +5,7 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"meguca/config"
 	"net"
 	"net/http"
@@ -37,16 +38,14 @@ type Ban struct {
 // BanRecord stores information about a specific ban
 type BanRecord struct {
 	Ban
+	ForPost    uint64
 	Reason, By string
 	Expires    time.Time
 }
 
 // IsBoard confirms the string is a valid board
 func IsBoard(board string) bool {
-	if board == "all" {
-		return true
-	}
-	return IsNonMetaBoard(board)
+	return board == "all" || IsNonMetaBoard(board)
 }
 
 // IsNonMetaBoard returns whether a valid board is a classic board and not
@@ -56,7 +55,15 @@ func IsNonMetaBoard(b string) bool {
 }
 
 // GetIP extracts the IP of a request, honouring reverse proxies, if set
-func GetIP(req *http.Request) string {
+func GetIP(r *http.Request) (string, error) {
+	ip := getIP(r)
+	if net.ParseIP(ip) == nil {
+		return "", fmt.Errorf("invalid IP: %s", ip)
+	}
+	return ip, nil
+}
+
+func getIP(req *http.Request) string {
 	if IsReverseProxied {
 		for _, h := range [...]string{"X-Forwarded-For", "X-Real-Ip"} {
 			addresses := strings.Split(req.Header.Get(h), ",")

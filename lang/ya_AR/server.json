@@ -354,6 +354,7 @@
 		"assignStaff": "Assign staff",
 		"ban": "Ban",
 		"bottom": "Bottom",
+		"by": "By",
 		"cancel": "Cancel",
 		"captcha": "Captcha",
 		"captchaID": "Captcha ID",
@@ -366,6 +367,7 @@
 		"done": "Done",
 		"deleteBoard": "Delete board",
 		"enableJS": "Enable JavaScript for more functionality",
+		"expires": "Expires",
 		"feedback": "Feedback",
 		"global": "Global",
 		"identity": "Identity",
@@ -379,6 +381,8 @@
 		"options": "Options",
 		"ownNoBoards": "You don't own any boards",
 		"pointToCatalog": "Point to Catalog",
+		"post": "Post",
+		"posterID": "Poster ID",
 		"reply": "Reply",
 		"report": "Report",
 		"reason": "Reason",
@@ -393,7 +397,8 @@
 		"sync": "Connection status",
 		"syncCount": "Unique connected IP count",
 		"text": "Text",
-		"top": "Top"
+		"top": "Top",
+		"unban": "Unban"
 	},
 	"sortModes": [
 		"Bump time",

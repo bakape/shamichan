@@ -64,7 +64,11 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 
 // Log an error together with the client's IP and stack trace
 func logError(r *http.Request, err interface{}) {
-	log.Printf("server: %s: %s\n%s\n", auth.GetIP(r), err, debug.Stack())
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		ip = "invalid IP"
+	}
+	log.Printf("server: %s: %s\n%s\n", ip, err, debug.Stack())
 }
 
 // Text-only 404 response
@@ -94,7 +98,11 @@ func assertNotBanned(
 	r *http.Request,
 	board string,
 ) bool {
-	ip := auth.GetIP(r)
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		text400(w, err)
+		return false
+	}
 	globally, fromBoard := auth.GetBannedLevels(board, ip)
 	if !globally && !fromBoard {
 		return true

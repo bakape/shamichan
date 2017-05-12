@@ -1,0 +1,66 @@
+{% import "fmt" %}
+{% import "time" %}
+{% import "meguca/auth" %}
+{% import "meguca/config" %}
+{% import "github.com/bakape/mnemonics" %}
+
+BanPage renders a ban page for a banned user
+{% func BanPage(rec auth.BanRecord, ln []string) %}{% stripspace %}
+	<div class="ban-page glass">
+		{%s= fmt.Sprintf(ln[0], bold(rec.Board), bold(rec.By)) %}
+		<br>
+		<br>
+		<b>
+			{%s rec.Reason %}
+		</b>
+		<br>
+		<br>
+		{% code exp := correctTimeZone(rec.Expires) %}
+		{% code date := exp.Format(time.UnixDate) %}
+		{% code till := exp.Sub(time.Now().Round(time.Second)).String() %}
+		{%s= fmt.Sprintf(ln[1], bold(date), bold(till)) %}
+		<br>
+		<br>
+		{%s= fmt.Sprintf(ln[2], bold(rec.IP)) %}
+		<br>
+	</div>
+{% endstripspace %}{% endfunc %}
+
+// Renders a list of bans for a specific page with optional unbanning API links
+{% func BanList(bans []auth.BanRecord, canUnban bool, ln map[string]string) %}{% stripspace %}
+	<style>
+		table, th, td {
+			border: 1px solid black;
+		}
+		.hash-link {
+			display: none;
+		}
+	</style>
+	<table>
+		<tr>
+			{% for _, id := range [...]string{"reason", "by", "post", "posterID", "expires"} %}
+				<th>{%s= ln[id] %}</th>
+			{% endfor %}
+			{% if canUnban %}
+				<th>{%s= ln["unban"] %}</th>
+			{% endif %}
+		</tr>
+		{% code salt := config.Get().Salt %}
+		{% for _, b := range bans %}
+			<tr>
+				<td>{%s b.Reason %}</td>
+				<td>{%s b.By %}</td>
+				<td>{%= postLink(b.ForPost, b.ForPost, false, true) %}</td>
+				<td>{%s mnemonic.Mnemonic(b.IP, salt) %}</td>
+				<td>{%s correctTimeZone(b.Expires).Format(time.UnixDate) %}</td>
+				{% if canUnban %}
+					<td>
+						<a>
+							TODO
+						</a>
+					</td>
+				{% endif %}
+			</tr>
+		{% endfor %}
+	</table>
+{% endstripspace %}{% endfunc %}

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"log"
@@ -10,8 +11,6 @@ import (
 	"meguca/util"
 	"meguca/websockets"
 	"net/http"
-
-	"bytes"
 
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"
@@ -91,7 +90,7 @@ func createRouter() http.Handler {
 		boardHTML(w, r, map[string]string{"board": "all"}, true)
 	})
 	r.GET("/:board/:thread", threadHTML)
-	r.GET("/all/:thread", crossRedirect)
+	r.GET("/all/:id", crossRedirect)
 
 	// API for retrieving various localized HTML forms
 	forms := r.NewGroup("/forms")
@@ -150,6 +149,9 @@ func createRouter() http.Handler {
 	admin.POST("/assignStaff", wrapHandler(assignStaff))
 	admin.POST("/sameIP", wrapHandler(getSameIPPosts))
 	admin.POST("/sticky", wrapHandler(setThreadSticky))
+
+	// Available to both logged-in users and publicly with slight alterations
+	r.GET("/bans/:board", banList)
 
 	// Captcha API
 	captcha := r.NewGroup("/captcha")

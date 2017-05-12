@@ -143,24 +143,6 @@ func InsertImage(id, op uint64, img common.Image) (err error) {
 }
 
 // SpoilerImage spoilers an already allocated image
-func SpoilerImage(id uint64) (err error) {
-	msg, err := common.EncodeMessage(common.MessageSpoiler, id)
-	if err != nil {
-		return
-	}
-
-	op, err := GetPostOP(id)
-	if err != nil {
-		return
-	}
-	err = execPrepared("spoiler_image", id)
-	if err != nil {
-		return
-	}
-
-	if !IsTest {
-		common.SendTo(op, msg)
-	}
-
-	return
+func SpoilerImage(id uint64) error {
+	return execPrepared("spoiler_image", id)
 }

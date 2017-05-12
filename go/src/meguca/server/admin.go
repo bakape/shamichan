@@ -12,6 +12,8 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
+	"meguca/lang"
+	"meguca/templates"
 	"meguca/websockets/feeds"
 	"net/http"
 	"regexp"
@@ -533,4 +535,26 @@ func setThreadSticky(w http.ResponseWriter, r *http.Request) {
 	default:
 		text500(w, r, err)
 	}
+}
+
+// Render list of bans on a board with unban links for authenticated staff
+func banList(w http.ResponseWriter, r *http.Request, p map[string]string) {
+	board := p["board"]
+	if !auth.IsBoard(board) {
+		text404(w)
+		return
+	}
+
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	bans, err := db.GetBoardBans(board)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	serveHTML(w, r, "", []byte(templates.BanList(bans, false, lp.UI)), nil)
 }

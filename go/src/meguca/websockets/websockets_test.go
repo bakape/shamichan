@@ -69,7 +69,11 @@ func (m *mockWSServer) Close() {
 
 func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
 	wcl := dialServer(m.t, m.server)
-	return newClient(<-m.connSender, httptest.NewRequest("GET", "/", nil)), wcl
+	cl, err := newClient(<-m.connSender, httptest.NewRequest("GET", "/", nil))
+	if err != nil {
+		m.t.Fatal(err)
+	}
+	return cl, wcl
 }
 
 func dialServer(t testing.TB, sv *httptest.Server) *websocket.Conn {

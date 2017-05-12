@@ -77,24 +77,35 @@ type receivedMessage struct {
 
 // Handler is an http.HandleFunc that responds to new websocket connection
 // requests.
-func Handler(res http.ResponseWriter, req *http.Request) {
-	conn, err := upgrader.Upgrade(res, req, nil)
+func Handler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		ip := auth.GetIP(req)
+		ip, IPErr := auth.GetIP(r)
+		if IPErr != nil {
+			ip = "invalid IP"
+		}
 		log.Printf("websockets: %s: %s\n", ip, err)
 		return
 	}
 
-	c := newClient(conn, req)
+	c, err := newClient(conn, r)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("400 %s", err), 400)
+		return
+	}
 	if err := c.listen(); err != nil {
 		c.logError(err)
 	}
 }
 
 // newClient creates a new websocket client
-func newClient(conn *websocket.Conn, req *http.Request) *Client {
+func newClient(conn *websocket.Conn, req *http.Request) (*Client, error) {
+	ip, err := auth.GetIP(req)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
-		ip:       auth.GetIP(req),
+		ip:       ip,
 		close:    make(chan error, 2),
 		receive:  make(chan receivedMessage),
 		redirect: make(chan string),
@@ -103,7 +114,7 @@ func newClient(conn *websocket.Conn, req *http.Request) *Client {
 		// phones, especially while uploading.
 		sendExternal: make(chan []byte, time.Second*60/feeds.TickerInterval),
 		conn:         conn,
-	}
+	}, nil
 }
 
 // Listen listens for incoming messages on the channels and processes them

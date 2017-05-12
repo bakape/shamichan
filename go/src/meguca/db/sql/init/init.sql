@@ -22,6 +22,7 @@ create table sessions (
 create table bans (
 	board varchar(3) not null,
 	ip inet not null,
+	forPost bigint default 0,
 	by varchar(20) not null,
 	reason text not null,
 	expires timestamp not null,

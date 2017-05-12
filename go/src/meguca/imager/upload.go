@@ -109,7 +109,11 @@ func LogError(w http.ResponseWriter, r *http.Request, code int, err error) {
 	text := err.Error()
 	http.Error(w, text, code)
 	if !isTest {
-		log.Printf("upload error: %s: %s\n", auth.GetIP(r), text)
+		ip, err := auth.GetIP(r)
+		if err != nil {
+			ip = "invalid IP"
+		}
+		log.Printf("upload error: %s: %s\n", ip, text)
 	}
 }
 

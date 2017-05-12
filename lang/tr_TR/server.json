@@ -354,6 +354,7 @@
 		"assignStaff": "Assign staff",
 		"ban": "Ban",
 		"bottom": "Alt",
+		"by": "By",
 		"cancel": "İptal",
 		"captcha": "Captcha",
 		"captchaID": "Captcha ID",
@@ -366,6 +367,7 @@
 		"done": "Import successfull. The page will now reload.",
 		"deleteBoard": "Delete board",
 		"enableJS": "Enable JavaScript for more functionality",
+		"expires": "Expires",
 		"feedback": "Feedback",
 		"global": "Global",
 		"identity": "Identity",
@@ -379,6 +381,8 @@
 		"options": "Options",
 		"ownNoBoards": "You don't own any boards",
 		"pointToCatalog": "Point to Catalog",
+		"post": "Post",
+		"posterID": "Poster ID",
 		"reply": "Cevapla",
 		"report": "İspiyonla",
 		"reason": "Reason",
@@ -393,7 +397,8 @@
 		"sync": "Connection status",
 		"syncCount": "Unique connected IP count",
 		"text": "Text",
-		"top": "Üst"
+		"top": "Üst",
+		"unban": "Unban"
 	},
 	"sortModes": [
 		"Bump time",

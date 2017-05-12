@@ -22,14 +22,14 @@ const (
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
 // banned IPs.
 func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
-	ips map[string]bool, err error,
+	ips map[string]uint64, err error,
 ) {
 	type post struct {
 		id, op uint64
 	}
 
 	// Retrieve matching posts
-	ips = make(map[string]bool, len(ids))
+	ips = make(map[string]uint64, len(ids))
 	posts := make([]post, 0, len(ids))
 	for _, id := range ids {
 		ip, err := GetIP(id)
@@ -40,7 +40,7 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 		default:
 			return nil, err
 		}
-		ips[ip] = true
+		ips[ip] = id
 		posts = append(posts, post{id: id})
 	}
 
@@ -70,8 +70,8 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 	}
 
 	// Write bans to the ban table
-	for ip := range ips {
-		err = execPrepared("write_ban", ip, board, reason, by, expires)
+	for ip, id := range ips {
+		err = execPrepared("write_ban", ip, board, id, reason, by, expires)
 		if err != nil {
 			return
 		}

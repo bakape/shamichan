@@ -187,19 +187,16 @@ func GetPostOP(id uint64) (op uint64, err error) {
 	return
 }
 
-// GetThreadBoard retrieves the board of a thread by id
-func GetThreadBoard(id uint64) (string, error) {
-	return getPostBoard(id, "get_thread_board")
-}
-
-func getPostBoard(id uint64, queryID string) (board string, err error) {
-	err = prepared[queryID].QueryRow(id).Scan(&board)
+// Retrieve the board and OP of a post
+func GetPostParenthood(id uint64) (board string, op uint64, err error) {
+	err = prepared["get_post_parenthood"].QueryRow(id).Scan(&board, &op)
 	return
 }
 
 // GetPostBoard retrieves the board of a post by ID
-func GetPostBoard(id uint64) (string, error) {
-	return getPostBoard(id, "get_post_board")
+func GetPostBoard(id uint64) (board string, err error) {
+	err = prepared["get_post_board"].QueryRow(id).Scan(&board)
+	return
 }
 
 // PostCounter retrieves the current post counter

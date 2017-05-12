@@ -258,7 +258,13 @@ func noscriptCaptcha(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	html := []byte(templates.NoscriptCaptcha(auth.GetIP(r), lp))
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		text400(w, err)
+		return
+	}
+
+	html := []byte(templates.NoscriptCaptcha(ip, lp))
 	serveHTML(w, r, "", html, nil)
 }
 
@@ -268,21 +274,20 @@ func crossRedirect(
 	r *http.Request,
 	p map[string]string,
 ) {
-	thread := p["thread"]
-	id, err := strconv.ParseUint(thread, 10, 64)
+	idStr := p["id"]
+	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		text404(w)
 		return
 	}
 
-	board, err := db.GetThreadBoard(id)
+	board, op, err := db.GetPostParenthood(id)
 	switch err {
 	case nil:
-		url := fmt.Sprintf("/%s/%s", board, thread)
-		if r.URL.RawQuery != "" {
-			url = fmt.Sprintf("%s?%s", url, r.URL.RawQuery)
-		}
-		http.Redirect(w, r, url, 301)
+		url := r.URL
+		url.Path = fmt.Sprintf("/%s/%d", board, op)
+		url.Fragment = idStr
+		http.Redirect(w, r, url.String(), 301)
 	case sql.ErrNoRows:
 		text404(w)
 	default:

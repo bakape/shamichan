@@ -354,6 +354,7 @@
 		"assignStaff": "Assign staff",
 		"ban": "Ban",
 		"bottom": "Na dół",
+		"by": "By",
 		"cancel": "Cofnij",
 		"captcha": "Captcha",
 		"captchaID": "Captcha ID",
@@ -366,6 +367,7 @@
 		"done": "Importowanie zakończone sukcesem. Strona zostanie teraz odświeżona",
 		"deleteBoard": "Delete board",
 		"enableJS": "Enable JavaScript for more functionality",
+		"expires": "Expires",
 		"feedback": "Kontakt",
 		"global": "Global",
 		"identity": "Konto",
@@ -379,6 +381,8 @@
 		"options": "Ustawienia",
 		"ownNoBoards": "Nie posiadasz żadnego działu",
 		"pointToCatalog": "Point to Catalog",
+		"post": "Post",
+		"posterID": "Poster ID",
 		"reply": "Odpowiedź",
 		"report": "Zgłoś",
 		"reason": "Reason",
@@ -393,7 +397,8 @@
 		"sync": "Status połączenia",
 		"syncCount": "Unique connected IP count",
 		"text": "Text",
-		"top": "Na górę"
+		"top": "Na górę",
+		"unban": "Unban"
 	},
 	"sortModes": [
 		"Bump time",

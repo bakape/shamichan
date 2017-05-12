@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"fmt"
 	"html"
-	"meguca/common"
 	"meguca/config"
 	"meguca/lang"
 	"sync"
@@ -66,33 +65,6 @@ func Thread(ln lang.Pack, id uint64, board string, minimal bool, postHTML []byte
 	return execIndex(html, "", ln.ID)
 }
 
-// CalculateOmit returns the omitted post and image counts for a thread
-func CalculateOmit(t common.Thread) (int, int) {
-	// There might still be posts missing due to deletions even in complete
-	// thread queries. Ensure we are actually retrieving an abbreviated thread
-	// before calculating.
-	if !t.Abbrev {
-		return 0, 0
-	}
-
-	var (
-		omit    = int(t.PostCtr) - (len(t.Posts) + 1)
-		imgOmit uint32
-	)
-	if omit != 0 {
-		imgOmit = t.ImageCtr
-		if t.Image != nil {
-			imgOmit--
-		}
-		for _, p := range t.Posts {
-			if p.Image != nil {
-				imgOmit--
-			}
-		}
-	}
-	return omit, int(imgOmit)
-}
-
 // Execute and index template in the second pass
 func execIndex(html, title, lang string) []byte {
 	mu.RLock()
@@ -106,13 +78,4 @@ func execIndex(html, title, lang string) []byte {
 		[]byte(html),
 		t[2],
 	}, nil)
-}
-
-func bold(s string) string {
-	s = html.EscapeString(s)
-	b := make([]byte, 3, len(s)+7)
-	copy(b, "<b>")
-	b = append(b, s...)
-	b = append(b, "</b>"...)
-	return string(b)
 }

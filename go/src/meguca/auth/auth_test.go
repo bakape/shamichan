@@ -6,6 +6,7 @@ import (
 
 	"meguca/config"
 	. "meguca/test"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -77,7 +78,7 @@ func TestGetIP(t *testing.T) {
 			if c.xff != "" {
 				req.Header.Set("X-Forwarded-For", c.xff)
 			}
-			if i := GetIP(req); i != c.out {
+			if i, _ := GetIP(req); i != c.out {
 				LogUnexpected(t, c.out, ip)
 			}
 		})
