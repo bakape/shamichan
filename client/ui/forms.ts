@@ -9,6 +9,7 @@ interface FormAttrs extends ViewAttrs {
 // Generic input form view with optional captcha support
 abstract class FormView extends View<null> {
 	private captcha: CaptchaView
+	private lazyCaptcha: boolean
 
 	protected abstract send(): void
 
@@ -27,6 +28,7 @@ abstract class FormView extends View<null> {
 		this.on("submit", e =>
 			this.submit(e))
 
+		this.lazyCaptcha = attrs.lazyCaptcha
 		if (!attrs.lazyCaptcha) {
 			this.initCaptcha()
 		}
@@ -77,6 +79,8 @@ abstract class FormView extends View<null> {
 	public reloadCaptcha() {
 		if (this.captcha) {
 			this.captcha.reload()
+		} else if (this.lazyCaptcha) {
+			this.initCaptcha()
 		}
 	}
 
