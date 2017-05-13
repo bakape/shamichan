@@ -5,6 +5,8 @@ import (
 	"sync"
 	"testing"
 
+	"time"
+
 	"github.com/mailru/easyjson"
 )
 
@@ -59,6 +61,7 @@ func TestCacheEviction(t *testing.T) {
 		}
 	}
 
+	time.Sleep(time.Second * 1) // Wait for goroutine
 	mu.Lock()
 	defer mu.Unlock()
 	_, ok := cache[ThreadKey(0, 0)]
