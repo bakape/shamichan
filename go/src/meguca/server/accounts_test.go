@@ -2,14 +2,14 @@ package server
 
 import (
 	"fmt"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/db"
 	. "meguca/test"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
 )
 
 const samplePassword = "123456"
@@ -75,18 +75,36 @@ func TestIsLoggedIn(t *testing.T) {
 			t.Parallel()
 
 			rec, req := newPair("/")
-			isValid := isLoggedIn(rec, req, &auth.SessionCreds{
+			setLoginCookies(req, auth.SessionCreds{
 				UserID:  c.user,
 				Session: c.session,
 			})
-			if isValid != c.isValid {
+			if _, isValid := isLoggedIn(rec, req); isValid != c.isValid {
 				LogUnexpected(t, c.isValid, isValid)
 			}
 			if !c.isValid {
-				assertError(t, rec, 403, common.ErrInvalidCreds)
+				assertError(t, rec, 403, errAccessDenied)
 			}
 		})
 	}
+}
+
+func setLoginCookies(r *http.Request, creds auth.SessionCreds) {
+	expires := time.Now().Add(time.Hour)
+	loginCookie := http.Cookie{
+		Name:    "loginID",
+		Value:   creds.UserID,
+		Path:    "/",
+		Expires: expires,
+	}
+	sessionCookie := http.Cookie{
+		Name:    "session",
+		Value:   creds.Session,
+		Path:    "/",
+		Expires: expires,
+	}
+	r.AddCookie(&loginCookie)
+	r.AddCookie(&sessionCookie)
 }
 
 func assertError(
@@ -114,9 +132,9 @@ func TestNotLoggedIn(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/", sampleLoginCreds)
+			rec, req := newJSONPair(t, "/", map[string]string{})
 			fn(rec, req)
-			assertError(t, rec, 403, common.ErrInvalidCreds)
+			assertError(t, rec, 403, errAccessDenied)
 		})
 	}
 }
@@ -165,11 +183,11 @@ func TestChangePassword(t *testing.T) {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			msg := passwordChangeRequest{
-				SessionCreds: sampleLoginCreds,
-				Old:          c.old,
-				New:          c.new,
+				Old: c.old,
+				New: c.new,
 			}
 			rec, req := newJSONPair(t, "/admin/changePassword", msg)
+			setLoginCookies(req, sampleLoginCreds)
 
 			router.ServeHTTP(rec, req)
 
@@ -249,14 +267,32 @@ func TestRegistrationValidations(t *testing.T) {
 
 			assertError(t, rec, c.code, c.err)
 			if c.err == nil {
-				assertLogin(t, c.id, rec.Body.String(), true)
+				assertLogin(t, rec, true)
 			}
 		})
 	}
 }
 
-func assertLogin(t *testing.T, user, session string, loggedIn bool) {
-	is, err := db.IsLoggedIn(user, session)
+func assertLogin(t *testing.T, rec *httptest.ResponseRecorder, loggedIn bool) {
+	// Extract cookies from recorder
+	req := http.Request{
+		Header: http.Header{
+			"Cookie": rec.HeaderMap["Set-Cookie"],
+		},
+	}
+	var userID, session string
+	if c, err := req.Cookie("loginID"); err == nil {
+		userID = c.Value
+	}
+	if c, err := req.Cookie("session"); err == nil {
+		session = c.Value
+	}
+
+	assertLoginNoCookie(t, userID, session, loggedIn)
+}
+
+func assertLoginNoCookie(t *testing.T, userID, session string, loggedIn bool) {
+	is, err := db.IsLoggedIn(userID, session)
 	switch {
 	case err != nil:
 		t.Fatal(err)
@@ -320,7 +356,7 @@ func TestLogin(t *testing.T) {
 
 			assertError(t, rec, c.code, c.err)
 			if c.err == nil {
-				assertLogin(t, c.id, rec.Body.String(), true)
+				assertLogin(t, rec, true)
 			}
 		})
 	}
@@ -339,7 +375,7 @@ func TestLogout(t *testing.T) {
 			name:  "not logged in",
 			token: genSession(),
 			code:  403,
-			err:   common.ErrInvalidCreds,
+			err:   errAccessDenied,
 		},
 		{
 			name:  "valid",
@@ -353,7 +389,8 @@ func TestLogout(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/admin/logout", auth.SessionCreds{
+			rec, req := newJSONPair(t, "/admin/logout", nil)
+			setLoginCookies(req, auth.SessionCreds{
 				UserID:  id,
 				Session: c.token,
 			})
@@ -362,8 +399,8 @@ func TestLogout(t *testing.T) {
 			assertError(t, rec, c.code, c.err)
 
 			if c.err == nil {
-				assertLogin(t, id, tokens[0], false)
-				assertLogin(t, id, tokens[1], true)
+				assertLoginNoCookie(t, id, tokens[0], false)
+				assertLoginNoCookie(t, id, tokens[1], true)
 			}
 		})
 	}
@@ -393,7 +430,8 @@ func TestLogoutAll(t *testing.T) {
 	assertTableClear(t, "accounts")
 	id, tokens := writeSampleSessions(t)
 
-	rec, req := newJSONPair(t, "/admin/logoutAll", auth.SessionCreds{
+	rec, req := newJSONPair(t, "/admin/logoutAll", nil)
+	setLoginCookies(req, auth.SessionCreds{
 		UserID:  id,
 		Session: tokens[0],
 	})
@@ -401,6 +439,6 @@ func TestLogoutAll(t *testing.T) {
 
 	assertCode(t, rec, 200)
 	for _, tok := range tokens {
-		assertLogin(t, id, tok, false)
+		assertLoginNoCookie(t, id, tok, false)
 	}
 }

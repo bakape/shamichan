@@ -1,10 +1,10 @@
 import { View } from "../base"
 import { Post } from "./model"
 import { getModel } from "../state"
-import { on, extend } from "../util"
+import { on } from "../util"
 import lang from "../lang"
 import { hidePost } from "./hide"
-import { loginID, newRequest } from "../mod"
+import { loginID } from "../mod"
 import { postJSON } from "../util"
 import CollectionView from "./collectionView"
 
@@ -31,14 +31,14 @@ const actions: { [key: string]: ItemSpec } = {
 	viewSameIP: {
 		text: lang.posts["viewBySameIP"],
 		shouldRender(m) {
-			return !!loginID && m.time > Date.now() / 1000 - 24 * 7 * 3600
+			return !!loginID() && m.time > Date.now() / 1000 - 24 * 7 * 3600
 		},
 		handler: getSameIPPosts,
 	},
 	toggleSticky: {
 		text: lang.posts["toggleSticky"],
 		shouldRender(m) {
-			return !!loginID && m.id === m.op
+			return !!loginID() && m.id === m.op
 		},
 		handler: toggleSticky,
 	},
@@ -107,12 +107,10 @@ function openMenu(e: Event) {
 
 // Fetch and render posts with the same IP on this board
 async function getSameIPPosts(m: Post) {
-	const req = newRequest()
-	extend(req, {
+	const res = await postJSON("/admin/sameIP", {
 		board: m.board,
 		id: m.id,
 	})
-	const res = await postJSON("/admin/sameIP", req)
 	if (res.status !== 200) {
 		return alert(await res.text())
 	}
@@ -121,12 +119,10 @@ async function getSameIPPosts(m: Post) {
 
 // Toggle sticky flag on a thread
 async function toggleSticky(m: Post) {
-	const req = newRequest()
-	extend(req, {
+	const res = await postJSON("/admin/sticky", {
 		sticky: !m.sticky,
 		id: m.id,
 	})
-	const res = await postJSON("/admin/sticky", req)
 	if (res.status !== 200) {
 		return alert(await res.text())
 	}

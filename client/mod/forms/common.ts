@@ -3,7 +3,6 @@ import { reset } from ".."
 import { FormView } from "../../ui"
 import { accountPanel } from ".."
 import { postJSON, makeFrag, uncachedGET } from "../../util"
-import { newRequest } from "../common"
 
 // Generic input form that is embedded into AccountPanel
 export abstract class AccountForm extends FormView {
@@ -42,7 +41,7 @@ export abstract class AccountForm extends FormView {
 	// In case of errors, render them to the .form-response.
 	// Use fn to add any data to the request object.
 	protected async postResponse(url: string, fn: (data: {}) => void) {
-		const data = newRequest()
+		const data = {}
 		this.injectCaptcha(data)
 		fn(data)
 		const res = await postJSON(url, data)

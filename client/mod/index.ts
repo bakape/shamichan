@@ -3,7 +3,9 @@
 import { postJSON } from '../util'
 import { FormView } from "../ui"
 import { TabbedModal } from "../base"
-import { validatePasswordMatch, newRequest } from "./common"
+import {
+	validatePasswordMatch, loginID, sessionToken, deleteCookie, isAdmin
+} from "./common"
 import ModPanel from "./panel"
 import {
 	PasswordChangeForm, ServerConfigForm, BoardConfigForm, BoardCreationForm,
@@ -11,17 +13,14 @@ import {
 } from "./forms"
 import { config } from "../state"
 
-export { newRequest } from "./common"
+export { loginID, sessionToken } from "./common"
 
 interface Constructable {
 	new (): any
 }
 
-// User ID and session ID currently in use
-export let loginID = localStorage.getItem("loginID"),
-	sessionToken = localStorage.getItem("sessionToken"),
-	// Only active AccountPanel instance
-	accountPanel: AccountPanel
+// Only active AccountPanel instance
+export let accountPanel: AccountPanel
 
 let loginForm: LoginForm,
 	registrationForm: LoginForm,
@@ -45,7 +44,7 @@ class AccountPanel extends TabbedModal {
 			"#assignStaff": this.loadConditional(StaffAssignmentForm),
 		})
 
-		if (loginID && sessionToken) {
+		if (loginID() && sessionToken()) {
 			this.displayMenu()
 		}
 
@@ -60,7 +59,7 @@ class AccountPanel extends TabbedModal {
 			}
 		}
 		this.showHook = () => {
-			if (!loginID) {
+			if (!loginID()) {
 				loginForm.initCaptcha()
 			}
 		}
@@ -74,9 +73,9 @@ class AccountPanel extends TabbedModal {
 		el.style.display = "block"
 
 		// Hide some controls for non-admin accounts
-		const isAdmin = loginID === "admin";
-		(el.lastElementChild as HTMLElement).hidden = !isAdmin
-		document.getElementById("createBoard").hidden = !isAdmin
+		const admin = isAdmin();
+		(el.lastElementChild as HTMLElement).hidden = !admin
+		document.getElementById("createBoard").hidden = !admin
 			&& config.disableUserBoards
 
 		// Load Moderation panel
@@ -102,10 +101,8 @@ class AccountPanel extends TabbedModal {
 
 // Reset the views and module to its not-logged-id state
 export function reset() {
-	localStorage.removeItem("sessionToken")
-	localStorage.removeItem("loginID")
-	loginID = ""
-	sessionToken = ""
+	deleteCookie("loginID")
+	deleteCookie("session")
 	loginForm.reloadCaptcha()
 	registrationForm.reloadCaptcha()
 	modPanel.reset()
@@ -118,7 +115,10 @@ export function reset() {
 
 // Terminate the user session(s) server-side and reset the panel
 async function logout(url: string) {
-	const res = await postJSON(url, newRequest())
+	const res = await fetch(url, {
+		method: "POST",
+		credentials: "include",
+	})
 	switch (res.status) {
 		case 200:
 		case 403: // Does not really matter, if the session already expired
@@ -148,15 +148,10 @@ class LoginForm extends FormView {
 			req[key] = this.inputElement(key).value
 		}
 		this.injectCaptcha(req)
-		loginID = req.id
 
 		const res = await postJSON(this.url, req)
 		switch (res.status) {
 			case 200:
-				const token = await res.text()
-				sessionToken = token
-				localStorage.setItem("sessionToken", token)
-				localStorage.setItem("loginID", loginID)
 				accountPanel.displayMenu()
 
 				// Clear all password fields for security reasons

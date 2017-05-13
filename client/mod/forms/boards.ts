@@ -1,8 +1,7 @@
 import { View, ViewAttrs } from "../../base"
-import { loginID } from ".."
 import { makeFrag, postJSON, uncachedGET } from "../../util"
 import { AccountForm } from "./common"
-import { newRequest } from "../common"
+import { loginID } from "../common"
 
 // Render the <select> for picking the owned board you want to manipulate
 class OwnedBoardSelection extends View<null> {
@@ -17,7 +16,7 @@ class OwnedBoardSelection extends View<null> {
 	}
 
 	private async render() {
-		const res = await uncachedGET(`/forms/ownedBoards/${loginID}`)
+		const res = await uncachedGET(`/forms/ownedBoards/${loginID()}`)
 		switch (res.status) {
 			case 200:
 				this.el.append(makeFrag(await res.text()))
@@ -66,10 +65,7 @@ export class BoardConfigForm extends SelectedBoardForm {
 
 	// Render the configuration input elements
 	public async renderNext(board: string) {
-		const req = newRequest()
-		req["board"] = board
-
-		const res = await postJSON("/forms/configureBoard", req)
+		const res = await postJSON("/forms/configureBoard", { board })
 		switch (res.status) {
 			case 200:
 				const frag = makeFrag(await res.text())

@@ -1,6 +1,5 @@
 import { AccountForm } from "./common"
-import { newRequest } from "../common"
-import { postJSON, makeFrag } from "../../util"
+import { makeFrag } from "../../util"
 
 // Panel for server administration controls such as global server settings
 export class ServerConfigForm extends AccountForm {
@@ -14,7 +13,10 @@ export class ServerConfigForm extends AccountForm {
 
 	// Request current configuration and render the panel
 	protected async render() {
-		const res = await postJSON("/forms/configureServer", newRequest())
+		const res = await fetch("/forms/configureServer", {
+			method: "POST",
+			credentials: "include",
+		})
 		switch (res.status) {
 			case 200:
 				this.el.append(makeFrag(await res.text()))

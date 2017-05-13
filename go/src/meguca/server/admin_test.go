@@ -44,7 +44,7 @@ func TestNotBoardOwner(t *testing.T) {
 			rec, req := newJSONPair(t, "/", sampleLoginCreds)
 			fn(rec, req)
 			assertCode(t, rec, 403)
-			assertBody(t, rec, "403 access denied\n")
+			assertError(t, rec, 403, errAccessDenied)
 		})
 	}
 }
@@ -70,9 +70,9 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 	writeSampleBoardOwner(t)
 
 	rec, req := newJSONPair(t, "/admin/boardConfig", boardActionRequest{
-		Board:        "a",
-		SessionCreds: sampleLoginCreds,
+		Board: "a",
 	})
+	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertBody(t, rec, string(marshalJSON(t, conf.BoardConfigs)))
 }
@@ -103,12 +103,12 @@ func TestBoardConfiguration(t *testing.T) {
 
 	data := boardConfigSettingRequest{
 		boardActionRequest: boardActionRequest{
-			Board:        conf.ID,
-			SessionCreds: sampleLoginCreds,
+			Board: conf.ID,
 		},
 		BoardConfigs: conf,
 	}
 	rec, req := newJSONPair(t, "/admin/configureBoard", data)
+	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
 
@@ -241,11 +241,11 @@ func TestValidateBoardCreation(t *testing.T) {
 			msg := boardCreationRequest{
 				Title: c.title,
 				boardActionRequest: boardActionRequest{
-					Board:        c.id,
-					SessionCreds: sampleLoginCreds,
+					Board: c.id,
 				},
 			}
 			rec, req := newJSONPair(t, "/admin/createBoard", msg)
+			setLoginCookies(req, sampleLoginCreds)
 			router.ServeHTTP(rec, req)
 
 			assertCode(t, rec, 400)
@@ -299,11 +299,11 @@ func TestBoardCreation(t *testing.T) {
 	msg := boardCreationRequest{
 		Title: title,
 		boardActionRequest: boardActionRequest{
-			Board:        id,
-			SessionCreds: sampleLoginCreds,
+			Board: id,
 		},
 	}
 	rec, req := newJSONPair(t, "/admin/createBoard", msg)
+	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 
 	assertCode(t, rec, 200)
@@ -355,7 +355,8 @@ func TestServePrivateServerConfigs(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/admin/config", c.SessionCreds)
+			rec, req := newJSONPair(t, "/admin/config", nil)
+			setLoginCookies(req, c.SessionCreds)
 			router.ServeHTTP(rec, req)
 
 			assertCode(t, rec, c.code)
@@ -384,12 +385,10 @@ func TestServerConfigSetting(t *testing.T) {
 	}
 	writeAdminAccount(t)
 
-	msg := configSettingRequest{
-		SessionCreds: adminLoginCreds,
-		Configs:      config.Defaults,
-	}
+	msg := config.Defaults
 	msg.DefaultCSS = "ashita"
 	rec, req := newJSONPair(t, "/admin/configureServer", msg)
+	setLoginCookies(req, adminLoginCreds)
 	router.ServeHTTP(rec, req)
 
 	assertCode(t, rec, 200)
@@ -410,9 +409,9 @@ func TestDeleteBoard(t *testing.T) {
 	writeSampleBoardOwner(t)
 
 	rec, req := newJSONPair(t, "/admin/deleteBoard", boardActionRequest{
-		Board:        "a",
-		SessionCreds: sampleLoginCreds,
+		Board: "a",
 	})
+	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 
 	assertCode(t, rec, 200)
@@ -480,11 +479,9 @@ func TestDeletePost(t *testing.T) {
 
 	data := postActionRequest{
 		IDs: []uint64{2, 4},
-		boardActionRequest: boardActionRequest{
-			SessionCreds: sampleLoginCreds,
-		},
 	}
 	rec, req := newJSONPair(t, "/admin/deletePost", data)
+	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
 

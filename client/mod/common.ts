@@ -1,12 +1,37 @@
 import lang from '../lang'
-import { loginID, sessionToken } from "."
 
-// Create a new base request for private logged in AJAX queries
-export function newRequest(): { [key: string]: any } {
-	return {
-		userID: loginID,
-		session: sessionToken,
+// Returns, if logged in as admin account
+export function isAdmin() {
+	return loginID() === "admin"
+}
+
+// Returns current login ID in use
+export function loginID(): string {
+	return getCookie("loginID")
+}
+
+// Returns current login session token in use
+export function sessionToken(): string {
+	return getCookie("session")
+}
+
+// Get a cookie value by name. Returns empty string, if none.
+function getCookie(id: string): string {
+	const kv = document.cookie
+		.split(";")
+		.map(s =>
+			s.trim())
+		.filter(s =>
+			s.startsWith(id))
+	if (!kv.length) {
+		return ""
 	}
+	return kv[0].split("=")[1]
+}
+
+// Delete a cookie by id
+export function deleteCookie(id: string) {
+	document.cookie = `${id}=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`
 }
 
 // Set a password match validator function for 2 input elements, that are

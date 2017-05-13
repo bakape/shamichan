@@ -2,7 +2,7 @@
 
 import { BannerModal } from '../../base'
 import { extend, emitChanges, ChangeEmitter } from '../../util'
-import { newRequest } from "../../mod"
+import { loginID, sessionToken } from "../../mod"
 
 const base64 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_'
 
@@ -84,7 +84,10 @@ export function newAllocRequest() {
 		}
 	}
 	if (identity.auth) {
-		extend(req, newRequest())
+		extend(req, {
+			userID: loginID(),
+			session: sessionToken(),
+		})
 	}
 	return req
 }

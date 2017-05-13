@@ -14,6 +14,7 @@ export async function fetchJSON<T>(url: string): Promise<[T, string]> {
 export async function postJSON(url: string, body: any): Promise<Response> {
 	return await fetch(url, {
 		method: "POST",
+		credentials: 'include',
 		body: JSON.stringify(body),
 	})
 }

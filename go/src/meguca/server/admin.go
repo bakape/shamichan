@@ -48,17 +48,11 @@ var (
 type boardActionRequest struct {
 	Board string
 	auth.Captcha
-	auth.SessionCreds
 }
 
 type boardConfigSettingRequest struct {
 	boardActionRequest
 	config.BoardConfigs
-}
-
-type configSettingRequest struct {
-	auth.SessionCreds
-	config.Configs
 }
 
 type boardCreationRequest struct {
@@ -83,7 +77,6 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
 	decoder := json.NewDecoder(io.LimitReader(r.Body, jsonLimit))
 	if err := decoder.Decode(dest); err != nil {
 		http.Error(w, fmt.Sprintf("400 %s", err), 400)
-		logError(r, err)
 		return false
 	}
 	return true
@@ -114,15 +107,16 @@ func canPerform(
 	level db.ModerationLevel,
 	needCaptcha bool,
 ) bool {
-	switch {
-	case needCaptcha && !auth.AuthenticateCaptcha(msg.Captcha):
+	if needCaptcha && !auth.AuthenticateCaptcha(msg.Captcha) {
 		text403(w, errInvalidCaptcha)
 		return false
-	case !isLoggedIn(w, r, &msg.SessionCreds):
+	}
+	creds, ok := isLoggedIn(w, r)
+	if !ok {
 		return false
 	}
 
-	can, err := db.CanPerform(msg.UserID, msg.Board, level)
+	can, err := db.CanPerform(creds.UserID, msg.Board, level)
 	switch {
 	case err != nil:
 		text500(w, r, err)
@@ -170,8 +164,8 @@ func validateBoardConfigs(
 // unexposed ones. Intended to be used before setting the the configs with
 // configureBoard().
 func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
-	conf, isValid := boardConfData(w, r)
-	if !isValid {
+	conf, ok := boardConfData(w, r)
+	if !ok {
 		return
 	}
 	serveJSON(w, r, "", conf)
@@ -180,22 +174,17 @@ func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
 // Serve the current server configurations. Available only to the "admin"
 // account
 func servePrivateServerConfigs(w http.ResponseWriter, r *http.Request) {
-	var msg auth.SessionCreds
-	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, &msg) {
-		return
+	if isAdmin(w, r) {
+		serveJSON(w, r, "", config.Get())
 	}
-	serveJSON(w, r, "", config.Get())
 }
 
-func isAdmin(
-	w http.ResponseWriter,
-	r *http.Request,
-	msg *auth.SessionCreds,
-) bool {
-	if !(isLoggedIn(w, r, msg)) {
+func isAdmin(w http.ResponseWriter, r *http.Request) bool {
+	creds, ok := isLoggedIn(w, r)
+	if !ok {
 		return false
 	}
-	if msg.UserID != "admin" {
+	if creds.UserID != "admin" {
 		text403(w, errAccessDenied)
 		return false
 	}
@@ -211,9 +200,8 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 		msg  boardActionRequest
 		conf config.BoardConfigs
 	)
-	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, &msg, db.BoardOwner, false)
-	if !isValid {
+	ok := decodeJSON(w, r, &msg) && canPerform(w, r, &msg, db.BoardOwner, false)
+	if !ok {
 		return conf, false
 	}
 
@@ -230,14 +218,18 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 // Handle requests to create a board
 func createBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardCreationRequest
-	if !decodeJSON(w, r, &msg) || !isLoggedIn(w, r, &msg.SessionCreds) {
+	if !decodeJSON(w, r, &msg) {
+		return
+	}
+	creds, ok := isLoggedIn(w, r)
+	if !ok {
 		return
 	}
 
 	// Validate request data
 	var err error
 	switch {
-	case msg.UserID != "admin" && config.Get().DisableUserBoards:
+	case creds.UserID != "admin" && config.Get().DisableUserBoards:
 		err = errAccessDenied
 	case !boardNameValidation.MatchString(msg.Board):
 		err = errInvalidBoardName
@@ -279,7 +271,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = db.WriteStaff(tx, msg.Board, map[string][]string{
-		"owners": []string{msg.UserID},
+		"owners": []string{creds.UserID},
 	})
 	if err != nil {
 		text500(w, r, err)
@@ -293,11 +285,11 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 // Set the server configuration to match the one sent from the admin account
 // user
 func configureServer(w http.ResponseWriter, r *http.Request) {
-	var msg configSettingRequest
-	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, &msg.SessionCreds) {
+	var msg config.Configs
+	if !decodeJSON(w, r, &msg) || !isAdmin(w, r) {
 		return
 	}
-	if err := db.WriteConfigs(msg.Configs); err != nil {
+	if err := db.WriteConfigs(msg); err != nil {
 		text500(w, r, err)
 	}
 }
@@ -363,13 +355,15 @@ func ban(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Decode and validate
-	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, &msg.SessionCreds)
-	if isValid && msg.Global {
-		isValid = isAdmin(w, r, &msg.SessionCreds)
+	if !decodeJSON(w, r, &msg) {
+		return
 	}
+	creds, ok := isLoggedIn(w, r)
 	switch {
-	case !isValid:
+	case !ok:
+		return
+	case msg.Global && creds.UserID != "admin":
+		text403(w, errAccessDenied)
 		return
 	case len(msg.Reason) > common.MaxBanReasonLength:
 		text400(w, errBanReasonTooLong)
@@ -414,7 +408,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 	// Apply bans
 	expires := time.Now().Add(time.Duration(msg.Duration) * time.Minute)
 	for board, ids := range byBoard {
-		ips, err := db.Ban(board, msg.Reason, msg.UserID, expires, ids...)
+		ips, err := db.Ban(board, msg.Reason, creds.UserID, expires, ids...)
 		if err != nil {
 			text500(w, r, err)
 			return
@@ -431,15 +425,12 @@ func ban(w http.ResponseWriter, r *http.Request) {
 
 // Send a textual message to all connected clients
 func sendNotification(w http.ResponseWriter, r *http.Request) {
-	var msg struct {
-		Text string
-		auth.SessionCreds
-	}
-	if !decodeJSON(w, r, &msg) || !isAdmin(w, r, &msg.SessionCreds) {
+	var msg string
+	if !decodeJSON(w, r, &msg) || !isAdmin(w, r) {
 		return
 	}
 
-	data, err := common.EncodeMessage(common.MessageNotification, msg.Text)
+	data, err := common.EncodeMessage(common.MessageNotification, msg)
 	if err != nil {
 		text500(w, r, err)
 		return

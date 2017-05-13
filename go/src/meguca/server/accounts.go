@@ -5,9 +5,11 @@ import (
 	"errors"
 	"meguca/auth"
 	"meguca/common"
+	"meguca/config"
 	"meguca/db"
 	"net/http"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -25,7 +27,6 @@ type loginCreds struct {
 }
 
 type passwordChangeRequest struct {
-	auth.SessionCreds
 	Old, New string
 	auth.Captcha
 }
@@ -82,7 +83,24 @@ func commitLogin(w http.ResponseWriter, r *http.Request, userID string) {
 		return
 	}
 
-	w.Write([]byte(token))
+	// One hour less, so the cookie expires a bit before the DB session gets
+	// deleted
+	expires := time.Now().
+		Add(time.Duration(config.Get().SessionExpiry)*time.Hour*24 - time.Hour)
+	loginCookie := http.Cookie{
+		Name:    "loginID",
+		Value:   userID,
+		Path:    "/",
+		Expires: expires,
+	}
+	sessionCookie := http.Cookie{
+		Name:    "session",
+		Value:   token,
+		Path:    "/",
+		Expires: expires,
+	}
+	http.SetCookie(w, &loginCookie)
+	http.SetCookie(w, &sessionCookie)
 }
 
 // Log into a registered user account
@@ -132,12 +150,12 @@ func commitLogout(
 	r *http.Request,
 	fn func(auth.SessionCreds) error,
 ) {
-	var req auth.SessionCreds
-	if !decodeJSON(w, r, &req) || !isLoggedIn(w, r, &req) {
+	creds, ok := isLoggedIn(w, r)
+	if !ok {
 		return
 	}
 
-	if err := fn(req); err != nil {
+	if err := fn(creds); err != nil {
 		text500(w, r, err)
 	}
 }
@@ -152,15 +170,16 @@ func logoutAll(w http.ResponseWriter, r *http.Request) {
 // Change the account password
 func changePassword(w http.ResponseWriter, r *http.Request) {
 	var msg passwordChangeRequest
-	isValid := decodeJSON(w, r, &msg) &&
-		isLoggedIn(w, r, &msg.SessionCreds) &&
-		checkPasswordAndCaptcha(w, r, msg.New, msg.Captcha)
-	if !isValid {
+	if !decodeJSON(w, r, &msg) {
+		return
+	}
+	creds, ok := isLoggedIn(w, r)
+	if !ok || !checkPasswordAndCaptcha(w, r, msg.New, msg.Captcha) {
 		return
 	}
 
 	// Get old hash
-	hash, err := db.GetPassword(msg.UserID)
+	hash, err := db.GetPassword(creds.UserID)
 	if err != nil {
 		text500(w, r, err)
 		return
@@ -183,7 +202,7 @@ func changePassword(w http.ResponseWriter, r *http.Request) {
 		text500(w, r, err)
 		return
 	}
-	if err := db.ChangePassword(msg.UserID, hash); err != nil {
+	if err := db.ChangePassword(creds.UserID, hash); err != nil {
 		text500(w, r, err)
 	}
 }
@@ -206,30 +225,35 @@ func checkPasswordAndCaptcha(
 	return true
 }
 
-// Assert the user login session ID is valid
-func isLoggedIn(
-	w http.ResponseWriter,
-	r *http.Request,
-	creds *auth.SessionCreds,
-) bool {
-	trimLoginID(&creds.UserID)
-	isValid, err := db.IsLoggedIn(creds.UserID, creds.Session)
+// Assert the user login session ID is valid and returns the login credentials
+func isLoggedIn(w http.ResponseWriter, r *http.Request) (
+	creds auth.SessionCreds, ok bool,
+) {
+	// Extract from cookies
+	if c, err := r.Cookie("session"); err == nil {
+		creds.Session = c.Value
+	}
+	if c, err := r.Cookie("loginID"); err == nil {
+		creds.UserID = strings.TrimSpace(c.Value)
+	}
+	if creds.UserID == "" || creds.Session == "" {
+		text403(w, errAccessDenied)
+		return
+	}
+
+	ok, err := db.IsLoggedIn(creds.UserID, creds.Session)
 	switch err {
 	case common.ErrInvalidCreds:
 		text403(w, err)
-		return false
 	case nil:
+		if !ok {
+			text403(w, errAccessDenied)
+		}
 	default:
 		text500(w, r, err)
-		return false
 	}
 
-	if !isValid {
-		text403(w, common.ErrInvalidCreds)
-		return false
-	}
-
-	return true
+	return
 }
 
 // Trim spaces from loginID. Chainable with other authenticators.

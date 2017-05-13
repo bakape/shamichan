@@ -1,9 +1,8 @@
 import { View } from "../base"
-import { extend, postJSON, toggleHeadStyle } from "../util"
+import { postJSON, toggleHeadStyle } from "../util"
 import { Post } from "../posts"
 import { getModel } from "../state"
-import { newRequest } from "./common"
-import { loginID } from "."
+import { isAdmin } from "./common"
 
 let panel: ModPanel,
 	displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true",
@@ -61,7 +60,7 @@ export default class ModPanel extends View<null> {
 		sel.value = (sel.firstChild as HTMLOptionElement).value
 		this.el
 			.querySelector("option[value=notification]")
-			.hidden = loginID !== "admin";
+			.hidden = !isAdmin();
 	}
 
 	// Reset the state of the module and hide all revealed elements
@@ -116,7 +115,6 @@ export default class ModPanel extends View<null> {
 
 	// Post JSON to server and handle errors
 	private async postJSON(url: string, data: {}) {
-		extend(data, newRequest())
 		const res = await postJSON(url, data)
 		this.el.querySelector(".form-response").textContent =
 			res.status === 200
@@ -185,7 +183,7 @@ class BanForm extends HidableForm {
 	public toggleDisplay(on: boolean) {
 		// Unhide global bans checkbox for the "admin" account and hide for
 		// others
-		(this.el.lastElementChild as HTMLElement).hidden = loginID !== "admin"
+		(this.el.lastElementChild as HTMLElement).hidden = !isAdmin()
 		super.toggleDisplay(on)
 	}
 

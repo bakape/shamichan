@@ -163,9 +163,9 @@ func TestBoardConfigurationForm(t *testing.T) {
 	}
 
 	rec, req := newJSONPair(t, "/forms/configureBoard", boardActionRequest{
-		Board:        "a",
-		SessionCreds: sampleLoginCreds,
+		Board: "a",
 	})
+	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
 }
@@ -199,7 +199,8 @@ func TestServerConfigurationForm(t *testing.T) {
 	writeAdminAccount(t)
 	(*config.Get()).DefaultLang = "en_GB"
 
-	rec, req := newJSONPair(t, "/forms/configureServer", adminLoginCreds)
+	rec, req := newJSONPair(t, "/forms/configureServer", nil)
+	setLoginCookies(req, adminLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
 }
