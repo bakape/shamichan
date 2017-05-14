@@ -135,7 +135,7 @@ export default class ModPanel extends View<null> {
 
 abstract class HidableForm extends View<null> {
 	public static forms: { [id: string]: HidableForm } = {}
-	public abstract vals(): { [key: string]: any }
+	public abstract vals(): any
 
 	constructor(id: string) {
 		super({ el: document.getElementById(id + "-form") })
@@ -218,10 +218,8 @@ class NotificationForm extends HidableForm {
 		super("notification")
 	}
 
-	public vals(): { [key: string]: string } {
-		return {
-			text: this.inputElement("notification").value,
-		}
+	public vals(): string {
+		return this.inputElement("notification").value
 	}
 }
 
