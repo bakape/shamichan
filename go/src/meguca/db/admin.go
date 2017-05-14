@@ -83,6 +83,11 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 	return
 }
 
+// Lift a ban from a specific post on a specific board
+func Unban(board string, id uint64) error {
+	return execPrepared("unban", board, id)
+}
+
 func loadBans() error {
 	if err := RefreshBanCache(); err != nil {
 		return err

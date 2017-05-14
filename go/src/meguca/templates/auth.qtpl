@@ -1,5 +1,6 @@
 {% import "fmt" %}
 {% import "time" %}
+{% import "strconv" %}
 {% import "meguca/auth" %}
 {% import "meguca/config" %}
 {% import "github.com/bakape/mnemonics" %}
@@ -27,7 +28,7 @@ BanPage renders a ban page for a banned user
 {% endstripspace %}{% endfunc %}
 
 // Renders a list of bans for a specific page with optional unbanning API links
-{% func BanList(bans []auth.BanRecord, canUnban bool, ln map[string]string) %}{% stripspace %}
+{% func BanList(bans []auth.BanRecord, board string, canUnban bool, ln map[string]string) %}{% stripspace %}
 	<style>
 		table, th, td {
 			border: 1px solid black;
@@ -36,31 +37,34 @@ BanPage renders a ban page for a banned user
 			display: none;
 		}
 	</style>
-	<table>
-		<tr>
-			{% for _, id := range [...]string{"reason", "by", "post", "posterID", "expires"} %}
-				<th>{%s= ln[id] %}</th>
-			{% endfor %}
-			{% if canUnban %}
-				<th>{%s= ln["unban"] %}</th>
-			{% endif %}
-		</tr>
-		{% code salt := config.Get().Salt %}
-		{% for _, b := range bans %}
+	<form method="post" action="/admin/unban/{%s= board %}">
+		<table>
 			<tr>
-				<td>{%s b.Reason %}</td>
-				<td>{%s b.By %}</td>
-				<td>{%= postLink(b.ForPost, b.ForPost, false, true) %}</td>
-				<td>{%s mnemonic.Mnemonic(b.IP, salt) %}</td>
-				<td>{%s correctTimeZone(b.Expires).Format(time.UnixDate) %}</td>
+				{% for _, id := range [...]string{"reason", "by", "post", "posterID", "expires"} %}
+					<th>{%s= ln[id] %}</th>
+				{% endfor %}
 				{% if canUnban %}
-					<td>
-						<a>
-							TODO
-						</a>
-					</td>
+					<th>{%s= ln["unban"] %}</th>
 				{% endif %}
 			</tr>
-		{% endfor %}
-	</table>
+			{% code salt := config.Get().Salt %}
+			{% for _, b := range bans %}
+				<tr>
+					<td>{%s b.Reason %}</td>
+					<td>{%s b.By %}</td>
+					<td>{%= postLink(b.ForPost, b.ForPost, false, true) %}</td>
+					<td>{%s mnemonic.Mnemonic(b.IP, salt) %}</td>
+					<td>{%s correctTimeZone(b.Expires).Format(time.UnixDate) %}</td>
+					{% if canUnban %}
+						<td>
+							<input type="checkbox" name="{%s strconv.FormatUint(b.ForPost, 10) %}">
+						</td>
+					{% endif %}
+				</tr>
+			{% endfor %}
+		</table>
+		{% if canUnban %}
+			{%= submit(false, ln) %}
+		{% endif %}
+	</form>
 {% endstripspace %}{% endfunc %}

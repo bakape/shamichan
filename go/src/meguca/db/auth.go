@@ -128,6 +128,7 @@ func GetBoardBans(board string) (b []auth.BanRecord, err error) {
 		if err != nil {
 			return
 		}
+		rec.Board = board
 		b = append(b, rec)
 	}
 	err = r.Err()

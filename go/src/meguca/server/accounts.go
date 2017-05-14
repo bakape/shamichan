@@ -229,13 +229,7 @@ func checkPasswordAndCaptcha(
 func isLoggedIn(w http.ResponseWriter, r *http.Request) (
 	creds auth.SessionCreds, ok bool,
 ) {
-	// Extract from cookies
-	if c, err := r.Cookie("session"); err == nil {
-		creds.Session = c.Value
-	}
-	if c, err := r.Cookie("loginID"); err == nil {
-		creds.UserID = strings.TrimSpace(c.Value)
-	}
+	creds = extractLoginCreds(r)
 	if creds.UserID == "" || creds.Session == "" {
 		text403(w, errAccessDenied)
 		return
@@ -253,6 +247,17 @@ func isLoggedIn(w http.ResponseWriter, r *http.Request) (
 		text500(w, r, err)
 	}
 
+	return
+}
+
+// Extract login credentials from cookies
+func extractLoginCreds(r *http.Request) (creds auth.SessionCreds) {
+	if c, err := r.Cookie("session"); err == nil {
+		creds.Session = c.Value
+	}
+	if c, err := r.Cookie("loginID"); err == nil {
+		creds.UserID = strings.TrimSpace(c.Value)
+	}
 	return
 }
 

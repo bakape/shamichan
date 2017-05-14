@@ -42,7 +42,7 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf(`/%s/%d`, req.Board, post.ID), 302)
+	http.Redirect(w, r, fmt.Sprintf(`/%s/%d`, req.Board, post.ID), 303)
 }
 
 // ok = false, if failed and caller should return

@@ -17,6 +17,7 @@ import (
 	"meguca/websockets/feeds"
 	"net/http"
 	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -86,7 +87,7 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
 func configureBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardConfigSettingRequest
 	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, &msg.boardActionRequest, db.BoardOwner, true) &&
+		canPerform(w, r, msg.boardActionRequest, db.BoardOwner, true) &&
 		validateBoardConfigs(w, msg.BoardConfigs)
 	if !isValid {
 		return
@@ -103,27 +104,33 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 func canPerform(
 	w http.ResponseWriter,
 	r *http.Request,
-	msg *boardActionRequest,
+	msg boardActionRequest,
 	level db.ModerationLevel,
 	needCaptcha bool,
-) bool {
+) (
+	can bool,
+) {
+	if !auth.IsBoard(msg.Board) {
+		text400(w, errInvalidBoardName)
+		return
+	}
 	if needCaptcha && !auth.AuthenticateCaptcha(msg.Captcha) {
 		text403(w, errInvalidCaptcha)
-		return false
+		return
 	}
 	creds, ok := isLoggedIn(w, r)
 	if !ok {
-		return false
+		return
 	}
 
 	can, err := db.CanPerform(creds.UserID, msg.Board, level)
 	switch {
 	case err != nil:
 		text500(w, r, err)
-		return false
+		return
 	case !can:
 		text403(w, errAccessDenied)
-		return false
+		return
 	default:
 		return true
 	}
@@ -200,7 +207,7 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 		msg  boardActionRequest
 		conf config.BoardConfigs
 	)
-	ok := decodeJSON(w, r, &msg) && canPerform(w, r, &msg, db.BoardOwner, false)
+	ok := decodeJSON(w, r, &msg) && canPerform(w, r, msg, db.BoardOwner, false)
 	if !ok {
 		return conf, false
 	}
@@ -298,7 +305,7 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 func deleteBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardActionRequest
 	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, &msg, db.BoardOwner, true)
+		canPerform(w, r, msg, db.BoardOwner, true)
 	if !isValid {
 		return
 	}
@@ -328,7 +335,7 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !canPerform(w, r, &msg.boardActionRequest, db.Janitor, false) {
+		if !canPerform(w, r, msg.boardActionRequest, db.Janitor, false) {
 			return
 		}
 
@@ -399,7 +406,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 		// Assert rights to moderate for all affected boards
 		for b := range byBoard {
 			msg.Board = b
-			if !canPerform(w, r, &msg.boardActionRequest, db.Moderator, false) {
+			if !canPerform(w, r, msg.boardActionRequest, db.Moderator, false) {
 				return
 			}
 		}
@@ -448,7 +455,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 	}
 
 	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, &msg.boardActionRequest, db.BoardOwner, true)
+		canPerform(w, r, msg.boardActionRequest, db.BoardOwner, true)
 	switch {
 	case !isValid:
 		return
@@ -494,7 +501,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 	var msg singlePostActionRequest
 	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, &msg.boardActionRequest, db.Moderator, false)
+		canPerform(w, r, msg.boardActionRequest, db.Moderator, false)
 	if !isValid {
 		return
 	}
@@ -514,7 +521,7 @@ func setThreadSticky(w http.ResponseWriter, r *http.Request) {
 		singlePostActionRequest
 	}
 	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, &msg.boardActionRequest, db.Moderator, false)
+		canPerform(w, r, msg.boardActionRequest, db.Moderator, false)
 	if !isValid {
 		return
 	}
@@ -547,5 +554,78 @@ func banList(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		text500(w, r, err)
 		return
 	}
-	serveHTML(w, r, "", []byte(templates.BanList(bans, false, lp.UI)), nil)
+
+	canUnban := detectCanPerform(r, board, db.Moderator)
+	html := []byte(templates.BanList(bans, board, canUnban, lp.UI))
+	serveHTML(w, r, "", html, nil)
+}
+
+// Detect, if a  client can perform moderation on a board. Unlike canPerform,
+// this will not send any errors to the client, if no access rights detected.
+func detectCanPerform(
+	r *http.Request,
+	board string,
+	level db.ModerationLevel,
+) (can bool) {
+	creds := extractLoginCreds(r)
+	if creds.UserID == "" || creds.Session == "" {
+		return
+	}
+
+	ok, err := db.IsLoggedIn(creds.UserID, creds.Session)
+	if err != nil {
+		return
+	}
+	if !ok {
+		return
+	}
+
+	can, err = db.CanPerform(creds.UserID, board, level)
+	return
+}
+
+// Unban a specific board -> banned post combination
+func unban(w http.ResponseWriter, r *http.Request, p map[string]string) {
+	board := p["board"]
+	msg := boardActionRequest{
+		Board: board,
+	}
+	if !canPerform(w, r, msg, db.Moderator, false) {
+		return
+	}
+
+	// Extract post IDs from form
+	r.Body = http.MaxBytesReader(w, r.Body, jsonLimit)
+	err := r.ParseForm()
+	if err != nil {
+		text400(w, err)
+		return
+	}
+	var (
+		id  uint64
+		ids = make([]uint64, 0, 32)
+	)
+	for key, vals := range r.Form {
+		if len(vals) == 0 || vals[0] != "on" {
+			continue
+		}
+		id, err = strconv.ParseUint(key, 10, 64)
+		if err != nil {
+			text400(w, err)
+			return
+		}
+		ids = append(ids, id)
+	}
+
+	// Unban posts
+	for _, id := range ids {
+		switch err := db.Unban(board, id); err {
+		case nil, sql.ErrNoRows:
+		default:
+			text500(w, r, err)
+			return
+		}
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/%s/", board), 303)
 }

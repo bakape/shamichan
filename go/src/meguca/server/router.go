@@ -149,6 +149,7 @@ func createRouter() http.Handler {
 	admin.POST("/assignStaff", wrapHandler(assignStaff))
 	admin.POST("/sameIP", wrapHandler(getSameIPPosts))
 	admin.POST("/sticky", wrapHandler(setThreadSticky))
+	admin.POST("/unban/:board", unban)
 
 	// Available to both logged-in users and publicly with slight alterations
 	r.GET("/bans/:board", banList)
@@ -192,7 +193,7 @@ func wrapHandler(fn http.HandlerFunc) httptreemux.HandlerFunc {
 
 // Redirects to / requests to /all/ board
 func redirectToDefault(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/all/", 302)
+	http.Redirect(w, r, "/all/", 301)
 }
 
 // Generate a robots.txt with only select boards preventing indexing
