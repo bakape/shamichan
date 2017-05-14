@@ -31,7 +31,8 @@ func encodeBody(t *testing.T, data interface{}) io.Reader {
 }
 
 func TestNotBoardOwner(t *testing.T) {
-	assertTableClear(t, "accounts")
+	assertTableClear(t, "accounts", "boards")
+	writeSampleBoard(t)
 	writeSampleUser(t)
 
 	fns := [...]http.HandlerFunc{configureBoard, servePrivateBoardConfigs}
@@ -41,9 +42,10 @@ func TestNotBoardOwner(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/", sampleLoginCreds)
+			rec, req := newJSONPair(t, "/", boardActionRequest{
+				Board: "a",
+			})
 			fn(rec, req)
-			assertCode(t, rec, 403)
 			assertError(t, rec, 403, errAccessDenied)
 		})
 	}
@@ -424,13 +426,17 @@ func TestDeletePost(t *testing.T) {
 	writeSampleUser(t)
 	writeSampleBoardOwner(t)
 
-	err := db.WriteBoard(nil, db.BoardConfigs{
+	cConfigs := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "c",
 			Eightball: []string{"yes"},
 		},
-	})
+	}
+	err := db.WriteBoard(nil, cConfigs)
 	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := config.SetBoardConfigs(cConfigs.BoardConfigs); err != nil {
 		t.Fatal(err)
 	}
 

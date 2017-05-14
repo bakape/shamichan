@@ -38,7 +38,7 @@ func TestAllBoardRedirect(t *testing.T) {
 
 	rec, req := newPair("/")
 	router.ServeHTTP(rec, req)
-	assertCode(t, rec, 302)
+	assertCode(t, rec, 301)
 
 	loc := rec.Header().Get("Location")
 	if loc != "/all/" {

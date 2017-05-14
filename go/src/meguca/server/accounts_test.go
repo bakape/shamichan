@@ -120,7 +120,8 @@ func assertError(
 }
 
 func TestNotLoggedIn(t *testing.T) {
-	assertTableClear(t, "accounts")
+	assertTableClear(t, "accounts", "boards")
+	writeSampleBoard(t)
 
 	fns := [...]http.HandlerFunc{
 		configureBoard, servePrivateBoardConfigs, servePrivateServerConfigs,
@@ -132,7 +133,9 @@ func TestNotLoggedIn(t *testing.T) {
 		t.Run("", func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/", map[string]string{})
+			rec, req := newJSONPair(t, "/", boardActionRequest{
+				Board: "a",
+			})
 			fn(rec, req)
 			assertError(t, rec, 403, errAccessDenied)
 		})
