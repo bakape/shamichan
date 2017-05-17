@@ -113,8 +113,9 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	}
 
 	// Get thread metadata
-	row := tx.Stmt(prepared["get_thread"]).QueryRow(id)
-	err = row.Scan(threadScanArgs(&t)...)
+	err = tx.Stmt(prepared["get_thread"]).
+		QueryRow(id).
+		Scan(threadScanArgs(&t)...)
 	if err != nil {
 		return
 	}
@@ -122,7 +123,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 
 	// Get OP post. Need to fetch separately, in case not fetching the full
 	// thread. Also allows to return early on deleted threads.
-	row = tx.Stmt(prepared["get_thread_post"]).QueryRow(id)
+	row := tx.Stmt(prepared["get_thread_post"]).QueryRow(id)
 	t.Post, err = scanThreadPost(row)
 	if err != nil {
 		return
@@ -130,16 +131,16 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 
 	// Get replies
 	var (
-		r   *sql.Rows
-		cap int
+		cap   int
+		limit *int
 	)
-	if lastN == 0 {
-		r, err = tx.Stmt(prepared["get_full_thread"]).Query(id)
-		cap = int(t.PostCtr)
-	} else {
-		r, err = tx.Stmt(prepared["get_last_n"]).Query(id, lastN)
+	if lastN != 0 {
 		cap = lastN
+		limit = &lastN
+	} else {
+		cap = int(t.PostCtr)
 	}
+	r, err := tx.Stmt(prepared["get_thread_posts"]).Query(id, limit)
 	if err != nil {
 		return
 	}
