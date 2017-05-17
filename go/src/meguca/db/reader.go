@@ -112,22 +112,12 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 		return
 	}
 
-	// Get thread metadata
-	err = tx.Stmt(prepared["get_thread"]).
-		QueryRow(id).
-		Scan(threadScanArgs(&t)...)
+	// Get thread metadata and OP
+	t, err = scanOP(tx.Stmt(prepared["get_thread"]).QueryRow(id))
 	if err != nil {
 		return
 	}
 	t.Abbrev = lastN != 0
-
-	// Get OP post. Need to fetch separately, in case not fetching the full
-	// thread. Also allows to return early on deleted threads.
-	row := tx.Stmt(prepared["get_thread_post"]).QueryRow(id)
-	t.Post, err = scanThreadPost(row)
-	if err != nil {
-		return
-	}
 
 	// Get replies
 	var (
@@ -147,9 +137,19 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	defer r.Close()
 	t.Posts = make([]common.Post, 0, cap)
 
-	var p common.Post
+	// Scan replies into Go types
+	var (
+		post postScanner
+		img  imageScanner
+		p    common.Post
+		args = append(post.ScanArgs(), img.ScanArgs()...)
+	)
 	for r.Next() {
-		p, err = scanThreadPost(r)
+		err = r.Scan(args...)
+		if err != nil {
+			return
+		}
+		p, err = extractPost(post, img)
 		if err != nil {
 			return
 		}
@@ -168,26 +168,14 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	return
 }
 
-func scanThreadPost(rs rowScanner) (res common.Post, err error) {
-	var (
-		args = make([]interface{}, 0, 25)
-		post postScanner
-		img  imageScanner
-	)
-	args = append(args, post.ScanArgs()...)
-	args = append(args, img.ScanArgs()...)
-
-	err = rs.Scan(args...)
+func extractPost(ps postScanner, is imageScanner) (p common.Post, err error) {
+	p, err = ps.Val()
 	if err != nil {
 		return
 	}
-	res, err = post.Val()
-	if err != nil {
-		return
-	}
-	res.Image = img.Val()
-	if res.Image != nil {
-		res.Image.Spoiler, res.Image.Name = post.Image()
+	p.Image = is.Val()
+	if p.Image != nil {
+		p.Image.Spoiler, p.Image.Name = ps.Image()
 	}
 	return
 }
@@ -323,31 +311,12 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 	defer table.Close()
 	board = make(common.Board, 0, 32)
 
+	var t common.Thread
 	for table.Next() {
-		var (
-			t    common.Thread
-			post postScanner
-			img  imageScanner
-		)
-
-		args := make([]interface{}, 0, 34)
-		args = append(args, threadScanArgs(&t)...)
-		args = append(args, post.ScanArgs()...)
-		args = append(args, img.ScanArgs()...)
-		err = table.Scan(args...)
+		t, err = scanOP(table)
 		if err != nil {
 			return
 		}
-
-		t.Post, err = post.Val()
-		if err != nil {
-			return
-		}
-		t.Image = img.Val()
-		if t.Image != nil {
-			t.Image.Spoiler, t.Image.Name = post.Image()
-		}
-
 		board = append(board, t)
 	}
 	err = table.Err()
@@ -363,6 +332,25 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 	}
 	err = injectOpenBodies(open)
 
+	return
+}
+
+func scanOP(r rowScanner) (t common.Thread, err error) {
+	var (
+		post postScanner
+		img  imageScanner
+	)
+
+	args := make([]interface{}, 0, 34)
+	args = append(args, threadScanArgs(&t)...)
+	args = append(args, post.ScanArgs()...)
+	args = append(args, img.ScanArgs()...)
+	err = r.Scan(args...)
+	if err != nil {
+		return
+	}
+
+	t.Post, err = extractPost(post, img)
 	return
 }
 
