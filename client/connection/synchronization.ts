@@ -102,7 +102,7 @@ handlers[message.synchronise] = async (data: SyncData) => {
 	if (page.lastN) {
 		minID = Infinity
 		for (let { id } of posts) {
-			if (id < minID) {
+			if (id < minID && id !== page.thread) {
 				minID = id
 			}
 		}
