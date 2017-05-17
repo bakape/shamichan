@@ -29,6 +29,16 @@ create table bans (
 	primary key (ip, board)
 );
 
+create table mod_log (
+	type smallint not null,
+	board varchar(3) not null,
+	id bigint not null,
+	by varchar(20) not null,
+	created timestamp default (now() at time zone 'utc')
+);
+create index mod_log_board on mod_log (board);
+create index mod_log_created on mod_log (created);
+
 create table images (
 	apng boolean not null,
 	audio boolean not null,

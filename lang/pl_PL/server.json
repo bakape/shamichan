@@ -397,7 +397,9 @@
 		"sync": "Status połączenia",
 		"syncCount": "Unique connected IP count",
 		"text": "Text",
+		"time": "Time",
 		"top": "Na górę",
+		"type": "Type",
 		"unban": "Unban"
 	},
 	"sortModes": [

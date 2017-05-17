@@ -86,10 +86,11 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
 // Set board-specific configurations to the user's owned board
 func configureBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardConfigSettingRequest
-	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, msg.boardActionRequest, db.BoardOwner, true) &&
-		validateBoardConfigs(w, msg.BoardConfigs)
-	if !isValid {
+	if !decodeJSON(w, r, &msg) {
+		return
+	}
+	_, ok := canPerform(w, r, msg.boardActionRequest, auth.BoardOwner, true)
+	if !ok || !validateBoardConfigs(w, msg.BoardConfigs) {
 		return
 	}
 
@@ -105,10 +106,10 @@ func canPerform(
 	w http.ResponseWriter,
 	r *http.Request,
 	msg boardActionRequest,
-	level db.ModerationLevel,
+	level auth.ModerationLevel,
 	needCaptcha bool,
 ) (
-	can bool,
+	creds auth.SessionCreds, can bool,
 ) {
 	if !auth.IsBoard(msg.Board) {
 		text400(w, errInvalidBoardName)
@@ -132,7 +133,8 @@ func canPerform(
 		text403(w, errAccessDenied)
 		return
 	default:
-		return true
+		can = true
+		return
 	}
 }
 
@@ -207,8 +209,10 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 		msg  boardActionRequest
 		conf config.BoardConfigs
 	)
-	ok := decodeJSON(w, r, &msg) && canPerform(w, r, msg, db.BoardOwner, false)
-	if !ok {
+	if !decodeJSON(w, r, &msg) {
+		return conf, false
+	}
+	if _, ok := canPerform(w, r, msg, auth.BoardOwner, false); !ok {
 		return conf, false
 	}
 
@@ -304,9 +308,10 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 // Delete a board owned by the client
 func deleteBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardActionRequest
-	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, msg, db.BoardOwner, true)
-	if !isValid {
+	if !decodeJSON(w, r, &msg) {
+		return
+	}
+	if _, ok := canPerform(w, r, msg, auth.BoardOwner, true); !ok {
 		return
 	}
 
@@ -335,11 +340,17 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !canPerform(w, r, msg.boardActionRequest, db.Janitor, false) {
+		creds, ok := canPerform(
+			w, r,
+			msg.boardActionRequest,
+			auth.Janitor,
+			false,
+		)
+		if !ok {
 			return
 		}
 
-		err = db.DeletePost(msg.Board, id)
+		err = db.DeletePost(msg.Board, id, creds.UserID)
 		switch err.(type) {
 		case nil:
 		case common.ErrInvalidPostID:
@@ -406,7 +417,13 @@ func ban(w http.ResponseWriter, r *http.Request) {
 		// Assert rights to moderate for all affected boards
 		for b := range byBoard {
 			msg.Board = b
-			if !canPerform(w, r, msg.boardActionRequest, db.Moderator, false) {
+			_, ok := canPerform(
+				w, r,
+				msg.boardActionRequest,
+				auth.Moderator,
+				false,
+			)
+			if !ok {
 				return
 			}
 		}
@@ -453,12 +470,14 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 		boardActionRequest
 		Owners, Moderators, Janitors []string
 	}
-
-	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, msg.boardActionRequest, db.BoardOwner, true)
-	switch {
-	case !isValid:
+	if !decodeJSON(w, r, &msg) {
 		return
+	}
+	_, ok := canPerform(w, r, msg.boardActionRequest, auth.BoardOwner, true)
+	if !ok {
+		return
+	}
+	switch {
 	// Ensure there always is at least one board owner
 	case len(msg.Owners) == 0:
 		text400(w, errors.New("no board owners set"))
@@ -500,9 +519,11 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 // Retrieve posts with the same IP on the target board
 func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 	var msg singlePostActionRequest
-	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, msg.boardActionRequest, db.Moderator, false)
-	if !isValid {
+	if !decodeJSON(w, r, &msg) {
+		return
+	}
+	_, ok := canPerform(w, r, msg.boardActionRequest, auth.Moderator, false)
+	if !ok {
 		return
 	}
 
@@ -520,9 +541,11 @@ func setThreadSticky(w http.ResponseWriter, r *http.Request) {
 		Sticky bool
 		singlePostActionRequest
 	}
-	isValid := decodeJSON(w, r, &msg) &&
-		canPerform(w, r, msg.boardActionRequest, db.Moderator, false)
-	if !isValid {
+	if !decodeJSON(w, r, &msg) {
+		return
+	}
+	_, ok := canPerform(w, r, msg.boardActionRequest, auth.Moderator, false)
+	if !ok {
 		return
 	}
 
@@ -555,7 +578,7 @@ func banList(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	canUnban := detectCanPerform(r, board, db.Moderator)
+	canUnban := detectCanPerform(r, board, auth.Moderator)
 	html := []byte(templates.BanList(bans, board, canUnban, lp.UI))
 	serveHTML(w, r, "", html, nil)
 }
@@ -565,8 +588,10 @@ func banList(w http.ResponseWriter, r *http.Request, p map[string]string) {
 func detectCanPerform(
 	r *http.Request,
 	board string,
-	level db.ModerationLevel,
-) (can bool) {
+	level auth.ModerationLevel,
+) (
+	can bool,
+) {
 	creds := extractLoginCreds(r)
 	if creds.UserID == "" || creds.Session == "" {
 		return
@@ -590,7 +615,8 @@ func unban(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	msg := boardActionRequest{
 		Board: board,
 	}
-	if !canPerform(w, r, msg, db.Moderator, false) {
+	creds, ok := canPerform(w, r, msg, auth.Moderator, false)
+	if !ok {
 		return
 	}
 
@@ -619,7 +645,7 @@ func unban(w http.ResponseWriter, r *http.Request, p map[string]string) {
 
 	// Unban posts
 	for _, id := range ids {
-		switch err := db.Unban(board, id); err {
+		switch err := db.Unban(board, id, creds.UserID); err {
 		case nil, sql.ErrNoRows:
 		default:
 			text500(w, r, err)
@@ -628,4 +654,27 @@ func unban(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/%s/", board), 303)
+}
+
+// Serve moderation log for a specific board
+func modLog(w http.ResponseWriter, r *http.Request, p map[string]string) {
+	board := p["board"]
+	if !auth.IsBoard(board) {
+		text404(w)
+		return
+	}
+
+	lp, err := lang.Get(w, r)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	log, err := db.GetModLog(board)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	serveHTML(w, r, "", []byte(templates.ModLog(log, lp.UI)), nil)
 }

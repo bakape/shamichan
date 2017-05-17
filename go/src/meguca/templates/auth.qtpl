@@ -29,14 +29,7 @@ BanPage renders a ban page for a banned user
 
 // Renders a list of bans for a specific page with optional unbanning API links
 {% func BanList(bans []auth.BanRecord, board string, canUnban bool, ln map[string]string) %}{% stripspace %}
-	<style>
-		table, th, td {
-			border: 1px solid black;
-		}
-		.hash-link {
-			display: none;
-		}
-	</style>
+	{%= tableStyle() %}
 	<form method="post" action="/admin/unban/{%s= board %}">
 		<table>
 			<tr>
@@ -52,9 +45,9 @@ BanPage renders a ban page for a banned user
 				<tr>
 					<td>{%s b.Reason %}</td>
 					<td>{%s b.By %}</td>
-					<td>{%= postLink(b.ForPost, b.ForPost, false, true) %}</td>
+					<td>{%= staticPostLink(b.ForPost) %}</td>
 					<td>{%s mnemonic.Mnemonic(b.IP, salt) %}</td>
-					<td>{%s correctTimeZone(b.Expires).Format(time.UnixDate) %}</td>
+					<td>{%s b.Expires.Format(time.UnixDate) %}</td>
 					{% if canUnban %}
 						<td>
 							<input type="checkbox" name="{%s strconv.FormatUint(b.ForPost, 10) %}">
@@ -67,4 +60,50 @@ BanPage renders a ban page for a banned user
 			{%= submit(false, ln) %}
 		{% endif %}
 	</form>
+{% endstripspace %}{% endfunc %}
+
+Common style for plain html tables
+{% func tableStyle() %}{% stripspace %}
+	<style>
+		table, th, td {
+			border: 1px solid black;
+		}
+		.hash-link {
+			display: none;
+		}
+	</style>
+{% endstripspace %}{% endfunc %}
+
+Post link, that will redirect to the post from any page
+{% func staticPostLink(id uint64) %}{% stripspace %}
+	{%= postLink(id, id, false, true) %}
+{% endstripspace %}{% endfunc %}
+
+Renders a moderation log page
+{% func ModLog(log []auth.ModLogEntry, ln map[string]string) %}{% stripspace %}
+	{%= tableStyle() %}
+	<table>
+		<tr>
+			{% for _, id := range [...]string{"type", "by", "post", "time"} %}
+				<th>{%s= ln[id] %}</th>
+			{% endfor %}
+		</tr>
+		{% for _, l := range log %}
+			<tr>
+				<td>
+					{% switch l.Type %}
+					{% case auth.BanPost %}
+						{%s= ln["ban"] %}
+					{% case auth.UnbanPost %}
+						{%s= ln["unban"] %}
+					{% case auth.DeletePost %}
+						{%s= ln["deletePost"] %}
+					{% endswitch %}
+				</td>
+				<td>{%s l.By %}</td>
+				<td>{%= staticPostLink(l.ID) %}</td>
+				<td>{%s l.Created.Format(time.UnixDate) %}</td>
+			</tr>
+		{% endfor %}
+	</table>
 {% endstripspace %}{% endfunc %}

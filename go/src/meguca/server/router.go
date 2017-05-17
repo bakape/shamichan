@@ -153,6 +153,7 @@ func createRouter() http.Handler {
 
 	// Available to both logged-in users and publicly with slight alterations
 	r.GET("/bans/:board", banList)
+	r.GET("/mod-log/:board", modLog)
 
 	// Captcha API
 	captcha := r.NewGroup("/captcha")

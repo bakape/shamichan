@@ -397,7 +397,9 @@
 		"sync": "Статус зв'язку",
 		"syncCount": "Unique connected IP count",
 		"text": "Text",
+		"time": "Time",
 		"top": "Шапка",
+		"type": "Type",
 		"unban": "Unban"
 	},
 	"sortModes": [

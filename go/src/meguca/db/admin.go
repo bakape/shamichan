@@ -7,18 +7,6 @@ import (
 	"time"
 )
 
-// ModerationLevel defines the level required to perform an action
-type ModerationLevel int8
-
-// All available moderation levels
-const (
-	NotStaff ModerationLevel = iota - 1
-	Janitor
-	Moderator
-	BoardOwner
-	Admin
-)
-
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
 // banned IPs.
 func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
@@ -84,8 +72,8 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 }
 
 // Lift a ban from a specific post on a specific board
-func Unban(board string, id uint64) error {
-	return execPrepared("unban", board, id)
+func Unban(board string, id uint64, by string) error {
+	return execPrepared("unban", board, id, by)
 }
 
 func loadBans() error {
@@ -125,7 +113,7 @@ func RefreshBanCache() (err error) {
 }
 
 // DeletePost marks the target post as deleted
-func DeletePost(board string, id uint64) (err error) {
+func DeletePost(board string, id uint64, by string) (err error) {
 	b, err := GetPostBoard(id)
 	switch {
 	case err == sql.ErrNoRows || b != board:
@@ -139,7 +127,7 @@ func DeletePost(board string, id uint64) (err error) {
 		return
 	}
 
-	err = execPrepared("delete_post", id)
+	err = execPrepared("delete_post", id, by)
 	if err != nil {
 		return
 	}
@@ -199,13 +187,13 @@ func GetStaff(board string) (staff map[string][]string, err error) {
 
 // CanPerform returns, if the account can perform an action of ModerationLevel
 // 'action' on the target board
-func CanPerform(account, board string, action ModerationLevel) (
+func CanPerform(account, board string, action auth.ModerationLevel) (
 	can bool, err error,
 ) {
 	switch {
 	case account == "admin": // admin account can do anything
 		return true, nil
-	case action == Admin: // Only admin account can perform Admin actions
+	case action == auth.Admin: // Only admin account can perform Admin actions
 		return false, nil
 	}
 
@@ -216,7 +204,7 @@ func CanPerform(account, board string, action ModerationLevel) (
 	defer r.Close()
 
 	// Read the highest position held
-	pos := NotStaff
+	pos := auth.NotStaff
 	for r.Next() {
 		var s string
 		err = r.Scan(&s)
@@ -224,14 +212,14 @@ func CanPerform(account, board string, action ModerationLevel) (
 			return
 		}
 
-		level := NotStaff
+		level := auth.NotStaff
 		switch s {
 		case "owners":
-			level = BoardOwner
+			level = auth.BoardOwner
 		case "moderators":
-			level = Moderator
+			level = auth.Moderator
 		case "janitors":
-			level = Janitor
+			level = auth.Janitor
 		}
 		if level > pos {
 			pos = level
@@ -292,4 +280,26 @@ func GetSameIPPosts(id uint64, board string) (
 // Set the sticky field on a thread
 func SetThreadSticky(id uint64, sticky bool) error {
 	return execPrepared("set_sticky", id, sticky)
+}
+
+// Retrieve moderation log for a specific board
+func GetModLog(board string) (log []auth.ModLogEntry, err error) {
+	r, err := prepared["get_mod_log"].Query(board)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	log = make([]auth.ModLogEntry, 0, 64)
+	var entry auth.ModLogEntry
+	for r.Next() {
+		err = r.Scan(&entry.Type, &entry.ID, &entry.By, &entry.Created)
+		if err != nil {
+			return
+		}
+		log = append(log, entry)
+	}
+	err = r.Err()
+
+	return
 }

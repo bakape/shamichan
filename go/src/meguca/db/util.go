@@ -169,3 +169,13 @@ func Listen(event string) (*pq.Listener, error) {
 	}
 	return l, nil
 }
+
+// Execute all SQL statement strings and return on first error, if any
+func execAll(tx *sql.Tx, q ...string) error {
+	for _, q := range q {
+		if _, err := tx.Exec(q); err != nil {
+			return err
+		}
+	}
+	return nil
+}

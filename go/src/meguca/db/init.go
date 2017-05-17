@@ -1,5 +1,3 @@
-// Initializes and loads RethinkDB
-
 package db
 
 import (
@@ -17,7 +15,7 @@ import (
 )
 
 const (
-	version = 12
+	version = 13
 
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
@@ -27,8 +25,8 @@ var (
 	// ConnArgs specifies the PostgreSQL connection arguments
 	ConnArgs = `user=meguca password=meguca dbname=meguca sslmode=disable binary_parameters=yes`
 
-	// IsTest can be overridden to not launch several infinite loops during tests
-	// or check DB version
+	// IsTest can be overridden to not launch several infinite loops during
+	// tests
 	IsTest bool
 
 	// Stores the postgres database instance
@@ -40,22 +38,14 @@ var (
 
 var upgrades = map[uint]func(*sql.Tx) error{
 	1: func(tx *sql.Tx) (err error) {
-		// Delete legacy thread column
-		_, err = tx.Exec(
+		// Delete legacy columns
+		return execAll(tx,
 			`ALTER TABLE threads
 				DROP COLUMN locked`,
-		)
-		if err != nil {
-			return
-		}
-
-		// Delete legacy board columns
-		_, err = tx.Exec(
 			`ALTER TABLE boards
 				DROP COLUMN hashCommands,
 				DROP COLUMN codeTags`,
 		)
-		return
 	},
 	2: func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
@@ -147,6 +137,19 @@ var upgrades = map[uint]func(*sql.Tx) error{
 				ADD COLUMN forPost bigint default 0`,
 		)
 		return
+	},
+	12: func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`create table mod_log (
+				type smallint not null,
+				board varchar(3) not null,
+				id bigint not null,
+				by varchar(20) not null,
+				created timestamp default (now() at time zone 'utc')
+			)`,
+			`create index mod_log_board on mod_log (board)`,
+			`create index mod_log_created on mod_log (created)`,
+		)
 	},
 }
 
