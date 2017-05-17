@@ -176,16 +176,12 @@ export class Post extends Model implements PostData {
 		if (this.seenOnce) {
 			return true
 		}
-
-		if (document.hidden) {
+		if (document.hidden || !this.view) {
 			return false
 		}
-
-		this.seenOnce = this.view.scrolledPast()
-		if (this.seenOnce) {
+		if (this.seenOnce = this.view.scrolledPast()) {
 			storeSeenPost(this.id)
 		}
-
 		return this.seenOnce
 	}
 }
