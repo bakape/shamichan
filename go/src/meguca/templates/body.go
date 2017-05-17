@@ -311,9 +311,9 @@ func (c *bodyContext) newTabLink(href, text string) {
 // Parse generic URLs and magnet links
 func (c *bodyContext) parseURL(bit string) {
 	s := string(bit)
-	_, err := url.Parse(s)
+	u, err := url.Parse(s)
 	switch {
-	case err != nil:
+	case err != nil || u.Path == s: // Invalid or empty path
 		c.escape(bit)
 	case c.parseEmbeds(bit):
 	case bit[0] == 'm': // Don't open a new tab for magnet links
