@@ -56,24 +56,31 @@ export default class UploadForm extends View<Post> {
             loaded: 0,
         })
 
-        // First send a an SHA1 hash to the server, in case it already has the
-        // file thumbnailed and we don't need to upload.
-        const r = new FileReader()
-        r.readAsArrayBuffer(file)
-        const { target: { result } } = await load(r) as ArrayBufferLoadEvent,
-            hash = await crypto.subtle.digest("SHA-1", result),
-            [res, err] = await postText("/uploadHash", bufferToHex(hash))
-        if (err) {
-            this.isUploading = false
-            throw err
-        }
         let token: string
-        if (res) {
-            token = res
-        } else {
-            // If there is none, upload file like normal
+        // Detect, if the crypto API can be used
+        if (location.protocol === "https"
+            || location.hostname === "localhost"
+        ) {
+            // First send a an SHA1 hash to the server, in case it already has
+            // the file thumbnailed and we don't need to upload.
+            const r = new FileReader()
+            r.readAsArrayBuffer(file)
+            const { target: { result } } = await load(r) as ArrayBufferLoadEvent,
+                hash = await crypto.subtle.digest("SHA-1", result),
+                [res, err] = await postText("/uploadHash", bufferToHex(hash))
+            if (err) {
+                this.isUploading = false
+                throw err
+            }
+            if (res) {
+                token = res
+            }
+        }
+
+        if (!token) {
             token = await this.upload(file)
             if (!token) {
+                this.isUploading = false
                 return null
             }
         }
@@ -88,6 +95,7 @@ export default class UploadForm extends View<Post> {
         if (spoiler) {
             img.spoiler = true
         }
+        this.isUploading = false
         return img
     }
 
