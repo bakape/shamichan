@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"meguca/common"
 	"meguca/util"
-	"sort"
 
 	"github.com/boltdb/bolt"
 	"github.com/lib/pq"
@@ -135,15 +134,15 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 		return
 	}
 	defer r.Close()
-	t.Posts = make([]common.Post, 0, cap)
 
-	// Scan replies into Go types
+	// Scan replies into []common.Post
 	var (
 		post postScanner
 		img  imageScanner
 		p    common.Post
 		args = append(post.ScanArgs(), img.ScanArgs()...)
 	)
+	t.Posts = make([]common.Post, 0, cap)
 	for r.Next() {
 		err = r.Scan(args...)
 		if err != nil {
@@ -161,10 +160,36 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	}
 
 	// Inject bodies into open posts
-	open := appendOpenThreadPosts(make([]*common.Post, 0, 32), &t)
-	open = appendOpenPosts(open, t.Posts)
+	open := make([]*common.Post, 0, 32)
+	if t.Editing {
+		open = append(open, &t.Post)
+	}
+	for i := range t.Posts {
+		if t.Posts[i].Editing {
+			open = append(open, &t.Posts[i])
+		}
+	}
 	err = injectOpenBodies(open)
 
+	return
+}
+
+func scanOP(r rowScanner) (t common.Thread, err error) {
+	var (
+		post postScanner
+		img  imageScanner
+	)
+
+	args := make([]interface{}, 0, 34)
+	args = append(args, threadScanArgs(&t)...)
+	args = append(args, post.ScanArgs()...)
+	args = append(args, img.ScanArgs()...)
+	err = r.Scan(args...)
+	if err != nil {
+		return
+	}
+
+	t.Post, err = extractPost(post, img)
 	return
 }
 
@@ -225,23 +250,16 @@ func GetBoardCatalog(board string) (b common.Board, err error) {
 	if err != nil {
 		return
 	}
-	sort.Stable(b) // Sort sticky threads first
 	return
 }
 
-// GetBoard retrieves all threads on the board, complete with the first 5
-// posts
-func GetBoard(board string) (b common.Board, err error) {
+// Retrieves all threads IDs on the board in bump order with stickies first
+func GetThreadIDs(board string) ([]uint64, error) {
 	r, err := prepared["get_board_thread_ids"].Query(board)
 	if err != nil {
-		return
+		return nil, err
 	}
-	b, err = scanBoard(r)
-	if err != nil {
-		return
-	}
-	sort.Stable(b) // Sort sticky threads first
-	return
+	return scanThreadIDs(r)
 }
 
 // GetAllBoardCatalog retrieves all threads for the "/all/" meta-board
@@ -253,13 +271,13 @@ func GetAllBoardCatalog() (common.Board, error) {
 	return scanCatalog(r)
 }
 
-// GetAllBoard retrieves all threads, complete with the first 5 posts
-func GetAllBoard() (common.Board, error) {
+// Retrieves all threads IDs in bump order
+func GetAllThreadsIDs() ([]uint64, error) {
 	r, err := prepared["get_all_thread_ids"].Query()
 	if err != nil {
 		return nil, err
 	}
-	return scanBoard(r)
+	return scanThreadIDs(r)
 }
 
 // GetRecentPosts retrieves posts created in the thread in the last 15 minutes.
@@ -335,25 +353,6 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 	return
 }
 
-func scanOP(r rowScanner) (t common.Thread, err error) {
-	var (
-		post postScanner
-		img  imageScanner
-	)
-
-	args := make([]interface{}, 0, 34)
-	args = append(args, threadScanArgs(&t)...)
-	args = append(args, post.ScanArgs()...)
-	args = append(args, img.ScanArgs()...)
-	err = r.Scan(args...)
-	if err != nil {
-		return
-	}
-
-	t.Post, err = extractPost(post, img)
-	return
-}
-
 // Return arguments for scanning a common.Thread from the DB
 func threadScanArgs(t *common.Thread) []interface{} {
 	return []interface{}{
@@ -362,13 +361,12 @@ func threadScanArgs(t *common.Thread) []interface{} {
 	}
 }
 
-func scanBoard(table tableScanner) (board common.Board, err error) {
+func scanThreadIDs(table tableScanner) (ids []uint64, err error) {
 	defer table.Close()
 
-	// Get thread ID's
-	ids := make([]uint64, 0, 33)
+	ids = make([]uint64, 0, 64)
+	var id uint64
 	for table.Next() {
-		var id uint64
 		err = table.Scan(&id)
 		if err != nil {
 			return
@@ -376,54 +374,8 @@ func scanBoard(table tableScanner) (board common.Board, err error) {
 		ids = append(ids, id)
 	}
 	err = table.Err()
-	if err != nil {
-		return
-	}
-
-	// Retrieve the threads
-	board = make(common.Board, 0, len(ids))
-	for _, id := range ids {
-		var thread common.Thread
-		thread, err = GetThread(id, 5)
-		switch err {
-		case nil:
-			board = append(board, thread)
-		case sql.ErrNoRows: // Deleted board or something
-			err = nil
-		default:
-			return
-		}
-	}
-
-	// Inject text bodies into open posts
-	open := make([]*common.Post, 0, 64)
-	for i := range board {
-		open = appendOpenThreadPosts(open, &board[i])
-	}
-	err = injectOpenBodies(open)
 
 	return
-}
-
-// Filter ope posts and append as pointers
-func appendOpenPosts(open []*common.Post, posts []common.Post) []*common.Post {
-	for i := range posts {
-		if posts[i].Editing {
-			open = append(open, &posts[i])
-		}
-	}
-	return open
-}
-
-// Append all open posts in a thread, including the OP, to open
-func appendOpenThreadPosts(
-	open []*common.Post,
-	thread *common.Thread,
-) []*common.Post {
-	if thread.Editing {
-		open = append(open, &thread.Post)
-	}
-	return appendOpenPosts(open, thread.Posts)
 }
 
 // Inject open post bodies from the embedded database into the posts

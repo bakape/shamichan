@@ -103,17 +103,24 @@ export function render() {
 		el.textContent = lang.posts["expand"]
 	}
 
-	(threads.querySelector("select[name=sortMode]") as HTMLSelectElement)
-		.value = localStorage.getItem("catalogSort") || "bump"
 	renderRefreshButton(threads.querySelector("#refresh > a"))
-	sortThreads(true)
 	if (!page.catalog) {
 		findSyncwatches(threads)
+	} else {
+		(threads.querySelector("select[name=sortMode]") as HTMLSelectElement)
+			.value = localStorage.getItem("catalogSort") || "bump"
+		sortThreads(true)
 	}
 }
 
 // Sort all threads on a board
 export function sortThreads(initial: boolean) {
+	// Index pages are paginated, so it does not make a lot of sense to sort
+	// them
+	if (!page.catalog) {
+		return
+	}
+
 	const [cont, threads] = getThreads()
 
 	// Index board pages use the same localization functions as threads

@@ -1,13 +1,12 @@
 package templates
 
 import (
-	"testing"
-
 	"meguca/common"
 	"meguca/config"
 	"meguca/imager/assets"
 	"meguca/lang"
 	"meguca/util"
+	"testing"
 )
 
 func init() {
@@ -53,7 +52,7 @@ func TestBoard(t *testing.T) {
 	}
 	html := CatalogThreads(board, nil)
 
-	Board("all", lang.Packs["en_GB"], false, false, []byte(html))
+	Board("all", lang.Packs["en_GB"], 0, 0, false, false, []byte(html))
 }
 
 func TestThread(t *testing.T) {

@@ -4,7 +4,7 @@
 {% import "meguca/lang" %}
 {% import "meguca/imager/assets" %}
 
-{% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, catalog bool, ln lang.Pack) %}{% stripspace %}
+{% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, page, total int, catalog bool, ln lang.Pack) %}{% stripspace %}
 	{% comment %}
 		Not implemented yet
 		<h1 class="image-banner">
@@ -60,17 +60,35 @@
 				</a>
 			{% endif %}
 		</aside>
+		{% if !catalog %}
+			<aside class="act glass pagination">
+				{% for i := 0; i < total; i++ %}
+					{% if i != 0 %}
+						{% space %}
+					{% endif %}
+					{% if i != page %}
+						<a href="?page={%d i %}">
+					{% endif %}
+					{%d i %}
+					{% if i != page %}
+						</a>
+					{% endif %}
+				{% endfor %}
+			</aside>
+		{% endif %}
 		{%= hoverReveal("aside", conf.Notice, ln.UI["showNotice"]) %}
 		{%= hoverReveal("aside", conf.Rules, ln.UI["rules"]) %}
 		<span id="catalog-controls" class="margin-spaced">
 			<input type="text" name="search" placeholder="{%s= ln.UI["search"] %}" title="{%s= ln.UI["searchTooltip"] %}">
-			<select name="sortMode">
-				{% for i, s := range [...]string{"bump", "lastReply", "creation", "replyCount", "fileCount"} %}
-					<option value="{%s= s %}">
-						{%s= ln.SortModes[i] %}
-					</option>
-				{% endfor %}
-			</select>
+			{% if catalog %}
+				<select name="sortMode">
+					{% for i, s := range [...]string{"bump", "lastReply", "creation", "replyCount", "fileCount"} %}
+						<option value="{%s= s %}">
+							{%s= ln.SortModes[i] %}
+						</option>
+					{% endfor %}
+				</select>
+			{% endif %}
 		</span>
 	</span>
 	<hr>

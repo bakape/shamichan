@@ -6,8 +6,6 @@ import (
 	"testing"
 
 	"time"
-
-	"github.com/mailru/easyjson"
 )
 
 // Basic test for deadlocks
@@ -19,7 +17,7 @@ func TestConcurrency(t *testing.T) {
 		GetCounter: func(k Key) (uint64, error) {
 			return 1, nil
 		},
-		GetFresh: func(k Key) (easyjson.Marshaler, error) {
+		GetFresh: func(k Key) (interface{}, error) {
 			return easyString("foo"), nil
 		},
 	}
@@ -32,7 +30,7 @@ func TestConcurrency(t *testing.T) {
 				go func(j int) {
 					defer wg.Done()
 					k := ThreadKey(uint64(j), 0)
-					if _, _, err := GetJSON(k, f); err != nil {
+					if _, _, _, err := GetJSONAndData(k, f); err != nil {
 						t.Fatal(err)
 					}
 				}(j)
@@ -50,13 +48,14 @@ func TestCacheEviction(t *testing.T) {
 		GetCounter: func(k Key) (uint64, error) {
 			return 1, nil
 		},
-		GetFresh: func(k Key) (easyjson.Marshaler, error) {
+		GetFresh: func(k Key) (interface{}, error) {
 			return easyString(GenString(1 << 10)), nil
 		},
 	}
 
 	for i := 0; i < 6; i++ {
-		if _, _, err := GetJSON(ThreadKey(uint64(i), 0), f); err != nil {
+		_, _, _, err := GetJSONAndData(ThreadKey(uint64(i), 0), f)
+		if err != nil {
 			t.Fatal(err)
 		}
 	}

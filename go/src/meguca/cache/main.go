@@ -6,8 +6,6 @@ import (
 	"container/list"
 	"sync"
 	"time"
-
-	"github.com/mailru/easyjson"
 )
 
 var (
@@ -29,16 +27,17 @@ type Key struct {
 	LastN uint8
 	Board string
 	ID    uint64
+	Page  int64
 }
 
 // Single cache entry
 type store struct {
 	// Controls general access to the contents of the struct, except for size
-	sync.Mutex
+	sync.RWMutex
 	key           Key
 	lastChecked   int64
 	updateCounter uint64
-	data          easyjson.Marshaler
+	data          interface{}
 	html, json    []byte
 
 	// Separate mutex, because accessed both from get requests and cache
@@ -100,13 +99,12 @@ func (s *store) isFresh() bool {
 
 // Stores the new values of s. Calculates and stores the new size. Passes the
 // delta to the central cache to fire eviction checks.
-func (s *store) update(data easyjson.Marshaler, json, html []byte) {
-	// Calculating the actual memory footprint of the stored post data is
-	// expensive. Assume it is as big as the JSON. Most probably it's far less
-	// than that.
-	newSize := len(json) + len(html)
-	if data != nil {
-		newSize += len(json)
+func (s *store) update(data interface{}, json, html []byte, f FrontEnd) {
+	var newSize int
+	if f.Size == nil {
+		newSize = computeSize(data, json, html)
+	} else {
+		newSize = f.Size(data, json, html)
 	}
 
 	s.data = data
@@ -120,4 +118,14 @@ func (s *store) update(data easyjson.Marshaler, json, html []byte) {
 
 	// In a separate goroutine, to ensure there is never any lock intersection
 	go updateUsedSize(delta)
+}
+
+// Calculating the actual memory footprint of the stored post data is expensive.
+// Assume it is as big as the JSON. Most probably it's far less than that.
+func computeSize(data interface{}, json, html []byte) int {
+	newSize := len(json) + len(html)
+	if data != nil {
+		newSize += len(json)
+	}
+	return newSize
 }

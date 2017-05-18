@@ -3,8 +3,6 @@ package cache
 import (
 	"encoding/json"
 	"time"
-
-	"github.com/mailru/easyjson"
 )
 
 // FrontEnd provides functions for fetching, validating and generating the
@@ -15,35 +13,42 @@ type FrontEnd struct {
 	GetCounter func(Key) (uint64, error)
 
 	// GetFresh retrieves new post data from the database
-	GetFresh func(Key) (easyjson.Marshaler, error)
+	GetFresh func(Key) (interface{}, error)
+
+	// Encode data into JSON. If null, default encoder is used.
+	EncodeJSON func(data interface{}) ([]byte, error)
 
 	// RenderHTML produces HTML from the passed in data and JSON
-	RenderHTML func(easyjson.Marshaler, []byte) []byte
+	RenderHTML func(interface{}, []byte) []byte
+
+	// Calculates the size taken by the store.
+	// If nil, the default function is used.
+	Size func(data interface{}, json, html []byte) int
 }
 
-// GetJSON retrieves JSON from the cache, validates it is still
-// fresh or retrieves fresh data, if needed
-func GetJSON(k Key, f FrontEnd) ([]byte, uint64, error) {
+// GetJSON retrieves JSON from the cache along with unencoded post data,
+// validates, if is still fresh, or retrieves fresh data, if needed
+func GetJSONAndData(k Key, f FrontEnd) ([]byte, interface{}, uint64, error) {
 	s := getStore(k)
 	s.Lock()
 	defer s.Unlock()
 
 	data, json, ctr, fresh, err := getData(s, f)
 	if err != nil {
-		return nil, 0, err
+		return nil, nil, 0, err
 	}
 	if fresh {
-		s.update(data, json, nil)
+		s.update(data, json, nil, f)
 	}
 
-	return json, ctr, nil
+	return json, data, ctr, nil
 }
 
 func getData(s *store, f FrontEnd) (
-	data easyjson.Marshaler, buf []byte, ctr uint64, fresh bool, err error,
+	data interface{}, buf []byte, ctr uint64, fresh bool, err error,
 ) {
-	// Have cached data
-	if s.json != nil {
+	// Have cached data and json
+	if s.data != nil {
 		if s.isFresh() {
 			// No freshness check needed yet
 			return s.data, s.json, s.updateCounter, false, nil
@@ -71,29 +76,35 @@ func getData(s *store, f FrontEnd) (
 	if err != nil {
 		return
 	}
-	buf, err = json.Marshal(data)
+
+	if f.EncodeJSON != nil {
+		buf, err = f.EncodeJSON(data)
+	} else {
+		buf, err = json.Marshal(data)
+	}
 	if err != nil {
 		return
 	}
+
 	s.lastChecked = time.Now().Unix()
 	return
 }
 
 // GetHTML retrieves post HTML from the cache or generates fresh HTML as needed
-func GetHTML(k Key, f FrontEnd) ([]byte, uint64, error) {
+func GetHTML(k Key, f FrontEnd) ([]byte, interface{}, uint64, error) {
 	s := getStore(k)
 	s.Lock()
 	defer s.Unlock()
 
 	data, json, ctr, fresh, err := getData(s, f)
 	if err != nil {
-		return nil, 0, err
+		return nil, nil, 0, err
 	}
 
 	var html []byte
 	genHTML := func() {
 		html = []byte(f.RenderHTML(data, json))
-		s.update(nil, json, html)
+		s.update(nil, json, html, f)
 	}
 	if !fresh {
 		// If the cache has been filled with a JSON request, it will not have
@@ -107,7 +118,7 @@ func GetHTML(k Key, f FrontEnd) ([]byte, uint64, error) {
 		genHTML()
 	}
 
-	return html, ctr, nil
+	return html, data, ctr, nil
 }
 
 // ThreadKey encodes a Key from a thread's ID and last N posts to show setting
@@ -119,7 +130,7 @@ func ThreadKey(id uint64, lastN int) Key {
 }
 
 // BoardKey encodes a key for a board page resource
-func BoardKey(b string, index bool) Key {
+func BoardKey(b string, page int64, index bool) Key {
 	// Index theads will have a lastN == 1
 	lastN := uint8(0)
 	if index {
@@ -127,6 +138,7 @@ func BoardKey(b string, index bool) Key {
 	}
 	return Key{
 		Board: b,
+		Page:  page,
 		LastN: lastN,
 	}
 }

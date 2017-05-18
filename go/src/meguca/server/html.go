@@ -53,13 +53,18 @@ func boardHTML(
 		return
 	}
 
-	lp, err := lang.Get(w, r)
-	if err != nil {
+	html, data, ctr, err := cache.GetHTML(boardCacheArgs(r, b, catalog))
+	switch err {
+	case nil:
+	case errPageOverflow:
+		text404(w)
+		return
+	default:
 		text500(w, r, err)
 		return
 	}
 
-	html, ctr, err := cache.GetHTML(chooseBoardCache(b, catalog))
+	lp, err := lang.Get(w, r)
 	if err != nil {
 		text500(w, r, err)
 		return
@@ -71,7 +76,13 @@ func boardHTML(
 		return
 	}
 
-	html = templates.Board(b, lp, isMinimal(r), catalog, html)
+	var n, total int
+	if !catalog {
+		p := data.(pageStore)
+		n = p.pageNumber
+		total = p.pageTotal
+	}
+	html = templates.Board(b, lp, n, total, isMinimal(r), catalog, html)
 	serveHTML(w, r, etag, html, nil)
 }
 
@@ -94,7 +105,7 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	}
 
 	k := cache.ThreadKey(id, detectLastN(r))
-	html, ctr, err := cache.GetHTML(k, threadCache)
+	html, _, ctr, err := cache.GetHTML(k, threadCache)
 	if err != nil {
 		respondToJSONError(w, r, err)
 		return

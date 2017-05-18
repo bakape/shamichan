@@ -9,63 +9,12 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
-	"meguca/templates"
 	"meguca/util"
 	"net/http"
 	"strconv"
-
-	"github.com/mailru/easyjson"
 )
 
-var (
-	errNoImage = errors.New("post has no image")
-
-	threadCache = cache.FrontEnd{
-		GetCounter: func(k cache.Key) (uint64, error) {
-			return db.ThreadCounter(k.ID)
-		},
-		GetFresh: func(k cache.Key) (easyjson.Marshaler, error) {
-			return db.GetThread(k.ID, int(k.LastN))
-		},
-		RenderHTML: func(data easyjson.Marshaler, json []byte) []byte {
-			return []byte(templates.ThreadPosts(data.(common.Thread), json))
-		},
-	}
-	catalogCache = cache.FrontEnd{
-		GetCounter: func(k cache.Key) (uint64, error) {
-			if k.Board == "all" {
-				return db.AllBoardCounter()
-			}
-			return db.BoardCounter(k.Board)
-		},
-		GetFresh: func(k cache.Key) (easyjson.Marshaler, error) {
-			if k.Board == "all" {
-				return db.GetAllBoardCatalog()
-			}
-			return db.GetBoardCatalog(k.Board)
-		},
-		RenderHTML: func(data easyjson.Marshaler, json []byte) []byte {
-			return []byte(templates.CatalogThreads(data.(common.Board), json))
-		},
-	}
-	boardCache = cache.FrontEnd{
-		GetCounter: func(k cache.Key) (uint64, error) {
-			if k.Board == "all" {
-				return db.AllBoardCounter()
-			}
-			return db.BoardCounter(k.Board)
-		},
-		GetFresh: func(k cache.Key) (easyjson.Marshaler, error) {
-			if k.Board == "all" {
-				return db.GetAllBoard()
-			}
-			return db.GetBoard(k.Board)
-		},
-		RenderHTML: func(data easyjson.Marshaler, json []byte) []byte {
-			return []byte(templates.IndexThreads(data.(common.Board), json))
-		},
-	}
-)
+var errNoImage = errors.New("post has no image")
 
 // Request to spoiler an already allocated image that the sender has created
 type spoilerRequest struct {
@@ -187,7 +136,7 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 	}
 
 	k := cache.ThreadKey(id, detectLastN(r))
-	data, ctr, err := cache.GetJSON(k, threadCache)
+	data, _, ctr, err := cache.GetJSONAndData(k, threadCache)
 	if err != nil {
 		respondToJSONError(w, r, err)
 		return
@@ -244,26 +193,15 @@ func boardJSON(
 		return
 	}
 
-	data, ctr, err := cache.GetJSON(chooseBoardCache(b, catalog))
-	if err != nil {
+	data, _, ctr, err := cache.GetJSONAndData(boardCacheArgs(r, b, catalog))
+	switch err {
+	case nil:
+		writeJSON(w, r, formatEtag(ctr, "", ""), data)
+	case errPageOverflow:
+		text404(w)
+	default:
 		text500(w, r, err)
-		return
 	}
-
-	writeJSON(w, r, formatEtag(ctr, "", ""), data)
-}
-
-// Choose the proper view and cache for the request
-func chooseBoardCache(board string, catalog bool) (
-	k cache.Key, f cache.FrontEnd,
-) {
-	k = cache.BoardKey(board, !catalog)
-	if catalog {
-		f = catalogCache
-	} else {
-		f = boardCache
-	}
-	return
 }
 
 // Serve a JSON array of all available boards and their titles

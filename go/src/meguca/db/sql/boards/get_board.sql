@@ -9,4 +9,6 @@ select t.sticky, t.board, t.postCtr, t.imageCtr, t.replyTime, t.bumpTime,
 	left outer join images as i
 		on p.SHA1 = i.SHA1
 	where t.board = $1
-	order by bumpTime desc
+	order by
+		sticky desc,
+		bumpTime desc

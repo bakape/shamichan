@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jwriter"
 )
 
@@ -33,7 +32,7 @@ func TestGetJSON(t *testing.T) {
 			}
 			return 0, nil
 		},
-		GetFresh: func(k Key) (easyjson.Marshaler, error) {
+		GetFresh: func(k Key) (interface{}, error) {
 			fetches++
 			if k == key {
 				return easyString("foo"), nil
@@ -43,7 +42,7 @@ func TestGetJSON(t *testing.T) {
 	}
 
 	for i := 0; i < 2; i++ {
-		json, ctr, err := GetJSON(key, f)
+		json, _, ctr, err := GetJSONAndData(key, f)
 		if err := err; err != nil {
 			t.Fatal(err)
 		}
@@ -68,18 +67,18 @@ func TestGetHTML(t *testing.T) {
 		GetCounter: func(k Key) (uint64, error) {
 			return 1, nil
 		},
-		GetFresh: func(k Key) (easyjson.Marshaler, error) {
+		GetFresh: func(k Key) (interface{}, error) {
 			fetches++
 			return easyString("foo"), nil
 		},
-		RenderHTML: func(_ easyjson.Marshaler, _ []byte) []byte {
+		RenderHTML: func(_ interface{}, _ []byte) []byte {
 			renders++
 			return []byte("bar")
 		},
 	}
 
 	for i := 0; i < 2; i++ {
-		json, ctr, err := GetHTML(BoardKey("a", false), f)
+		json, _, ctr, err := GetHTML(BoardKey("a", 0, false), f)
 		if err := err; err != nil {
 			t.Fatal(err)
 		}
@@ -90,12 +89,12 @@ func TestGetHTML(t *testing.T) {
 	assertCount(t, "rendered", 1, fetches)
 
 	t.Run("with json", func(t *testing.T) {
-		key := BoardKey("c", false)
+		key := BoardKey("c", 0, false)
 
-		if _, _, err := GetJSON(key, f); err != nil {
+		if _, _, _, err := GetJSONAndData(key, f); err != nil {
 			t.Fatal(err)
 		}
-		if _, _, err := GetHTML(key, f); err != nil {
+		if _, _, _, err := GetHTML(key, f); err != nil {
 			t.Fatal(err)
 		}
 
@@ -113,18 +112,18 @@ func TestCounterExpiry(t *testing.T) {
 			counterChecks++
 			return 1, nil
 		},
-		GetFresh: func(k Key) (easyjson.Marshaler, error) {
+		GetFresh: func(k Key) (interface{}, error) {
 			fetches++
 			return easyString("foo"), nil
 		},
 	}
 
-	k := BoardKey("a", false)
-	if _, _, err := GetJSON(k, f); err != nil {
+	k := BoardKey("a", 0, false)
+	if _, _, _, err := GetJSONAndData(k, f); err != nil {
 		t.Fatal(err)
 	}
 	time.Sleep(time.Duration(float64(time.Second) * 1.1))
-	if _, _, err := GetJSON(k, f); err != nil {
+	if _, _, _, err := GetJSONAndData(k, f); err != nil {
 		t.Fatal(err)
 	}
 

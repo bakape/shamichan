@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	version = 13
+	version = 14
 
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
@@ -150,6 +150,10 @@ var upgrades = map[uint]func(*sql.Tx) error{
 			`create index mod_log_board on mod_log (board)`,
 			`create index mod_log_created on mod_log (created)`,
 		)
+	},
+	13: func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(`create index sticky on threads (sticky)`)
+		return
 	},
 }
 

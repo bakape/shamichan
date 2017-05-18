@@ -41,14 +41,20 @@ func Compile() error {
 func Board(
 	b string,
 	ln lang.Pack,
+	page, total int,
 	minimal, catalog bool,
 	threadHTML []byte,
 ) []byte {
 	boardConf := config.GetBoardConfigs(b)
-	title := fmt.Sprintf("/%s/ - %s", b, boardConf.Title)
-	title = html.EscapeString(title)
-
-	html := renderBoard(threadHTML, b, title, boardConf, catalog, ln)
+	title := html.EscapeString(fmt.Sprintf("/%s/ - %s", b, boardConf.Title))
+	html := renderBoard(
+		threadHTML,
+		b, title,
+		boardConf,
+		page, total,
+		catalog,
+		ln,
+	)
 
 	if minimal {
 		return []byte(html)
