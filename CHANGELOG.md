@@ -2,12 +2,40 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
-##v4.2.1 - 2017-04-24
+## v4.3.0 - 2017-05-18
+* Fix
+	- Links, hash commands, etc. not breaking on edge punctuation
+	- Noscript captcha styling
+	- Non-live reply visibility on moon theme
+	- Reply form position on mobile
+	- Preserve newlines in .hover-reveal
+	- Getting banned on any board redirecting clients on all boards to /all/
+	- Uploads without HTTPS
+	- Syncing threads fetching posts before first post in last=100 threads
+	- False positive URL linkification
+* Add
+	- Title metadata extraction from uploads
+	- Saging
+	- Option for pointing board navigation to catalog
+	- Ability to view post by the same IP for moderators
+	- Ability disable robots on board
+	- Responsive seen post detection
+	- Add toggle to custom CSS option
+	- Sticky threads
+	- Public ban list
+	- Public moderation log
+	- Unbanning
+* Change
+	- Optimised mid-string text edits
+	- Optimised board page fetches
+	- Scale mascot responsively to screen
+
+## v4.2.1 - 2017-04-24
 * Fix
 	- Administration forms with captchas enabled
 	- Captchas autocompleting
 
-##v4.2.0 - 2017-04-23
+## v4.2.0 - 2017-04-23
 * Fix
 	- Delay of post body syncing, when closing post form
 	- Serving OGG files to Chrome

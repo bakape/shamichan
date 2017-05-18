@@ -6,101 +6,102 @@ Platforms: Linux, OSX, Win64
 License: GNU AGPL
 
 ## Features
-<details>
-    <summary>Posts and posting</summary>
-    <ul>
-        <li>Character by character post updates</li>
-        <li>Hovering quick reply for post authoring</li>
-        <li>Dice roll, coin flip and eightball commands</li>
-        <li>Desktop notifications  and "(You)" links on quote</li>
-        <li>Post link hover previews, including cross-thread</li>
-        <li>Inline post link expansion</li>
-        <li>Optional relative post timestamps</li>
-        <li>Non-temporal and recursive post linking</li>
-        <li>No posts per thread or threads per board limit</li>
-        <li>Forced anonymity display mode</li>
-        <li>Post hiding</li>
-        <li>Option to display only the last 100 posts in a thread</li>
-        <li>Optional automatic deletion of unused threads and boards</li>
-        <li>Automatic URL linkification</li>
-        <li>Automatic intelligent quoting of selected text, when quoting a post</li>
-        <li>Live programming code tags with syntax highlighting</li>
-        <li>Automatic open post recovery after a disconnect</li>
-        <li>Toggleable non-live post creation</li>
-        <li>Keyboard post navigation</li>
-    </ul>
+
+<details><summary>Posts and posting</summary>
+
+- Character by character post updates
+- Hovering quick reply for post authoring
+- Dice roll, coin flip and eightball commands
+- Desktop notifications  and "(You)" links on quote
+- Post link hover previews, including cross-thread
+- Inline post link expansion
+- Optional relative post timestamps
+- Non-temporal and recursive post linking
+- No posts per thread or threads per board limit
+- Forced anonymity display mode
+- Post hiding
+- Option to display only the last 100 posts in a thread
+- Optional automatic deletion of unused threads and boards
+- Automatic URL linkification
+- Automatic intelligent quoting of selected text, when quoting a post
+- Live programming code tags with syntax highlighting
+- Automatic open post recovery after a disconnect
+- Toggleable non-live post creation
+- Keyboard post navigation
+- Explicitly visible sage
+- Responsive seen post detection
+
 </details>
-<details>
-    <summary>Files and images</summary>
-    <ul>
-        <li>
-            JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and
-            TAR.XZ are supported
-        </li>
-        <li>Transparent PNG and GIF thumbnails</li>
-        <li>Configurable size limits</li>
-        <li>Inbuilt reverse image search</li>
-        <li>
-            No file is ever thumbnailed or stored twice, reducing server load
-            and disk space usage
-        </li>
-        <li>Any file already present on the server is "uploaded and thumbnailed"</li>
-        <li>Gallery mode</li>
-        instantly
-    </ul>
+
+<details><summary>Files and images</summary>
+
+- JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ are supported
+- Transparent PNG and GIF thumbnails
+- Configurable size limits
+- Inbuilt reverse image search
+- No file is ever thumbnailed or stored twice, reducing server load and disk space usage
+- Any file already present on the server is "uploaded and thumbnailed" instantly
+- Title metadata extraction
+- Gallery mode
+
 </details>
-<details>
-    <summary>Performance</summary>
-    <ul>
-        <li>Low memory and CPU usage</li>
-        <li>No frameworks and optimized code on both client and server</li>
-        <li>File upload processing written in C with GraphicsMagick and ffmpeg</li>
-        <li>Inbuilt custom LRU cache</li>
-    </ul>
+
+<details><summary>Performance</summary>
+
+- Low memory and CPU usage
+- No frameworks and optimized code on both client and server
+- File upload processing written in C with GraphicsMagick and ffmpeg
+- Inbuilt custom multi-level LRU cache
+
 </details>
-<details>
-    <summary>Client UI</summary>
-    <ul>
-        <li>Works with all modern and most outdated browsers (such as PaleMoon)</li>
-        <li>Works with JavaScript disabled browsers</li>
-        <li>Read-only functionality preserved with JavaScript disabled</li>
-        <li>Multiple themes</li>
-        <li>Custom user-set backgrounds and CSS</li>
-        <li>Mascots</li>
-        <li>Configurable keyboard shortcuts</li>
-        <li>Work mode aka Boss key</li>
-        <li>Customisable top banner board link list</li>
-        <li>Optional animated GIF thumbnails</li>
-        <li>Settings export/import to/from JSON file</li>
-    </ul>
+
+<details><summary>Client UI</summary>
+
+- Works with all modern and most outdated browsers (such as PaleMoon)
+- Works with JavaScript disabled browsers
+- Read-only functionality preserved with JavaScript disabled
+- Multiple themes
+- Custom user-set backgrounds and CSS
+- Mascots
+- Configurable keyboard shortcuts
+- Work mode aka Boss key
+- Customisable top banner board link list
+- Optional animated GIF thumbnails
+- Settings export/import to/from JSON file
+
 </details>
-<details>
-    <summary>Board administration</summary>
-    <ul>
-        <li>Support for both centralized and 8chan-style board ownership</li>
-        <li>Global admin -> users notification system</li>
-        <li>User board creation and configuration panels</li>
-        <li>4 tier staff system</li>
-        <li>Board-level and global bans</li>
-        <li>Transparent post deletion</li>
-    </ul>
+
+<details><summary>Board administration/moderation</summary>
+
+- Support for both centralized and 8chan-style board ownership
+- Global admin -> users notification system
+- User board creation and configuration panels
+- 4 tier staff system
+- Board-level and global bans
+- Transparent post deletion
+- Viewing of all post made by same IP
+- Option to disable search indexing on board
+- Sticky threads
+- Public ban list
+- Public moderation log
+
 </details>
-<details>
-    <summary>Internationalization</summary>
-    <ul>
-        <li>Client almost entirely localized in multiple languages</li>
-        <li>More languages can be added by editing simple JSON files</li>
-    </ul>
+
+<details><summary>Internationalization</summary>
+
+- Client almost entirely localized in multiple languages
+- More languages can be added by editing simple JSON files
+
 </details>
-<details>
-    <summary>Miscellaneous</summary>
-    <ul>
-        <li>Documented public JSON API</li>
-        <li>Optional R/a/dio Now Playing banner</li>
-        <li>Synchronized time counters (for group watching sessions and such)</li>
-        <li>Thread-level connected unique IP counter</li>
-        <li>Internal captcha system</li>
-    </ul>
+
+<details><summary>Miscellaneous</summary>
+
+- Documented public JSON API
+- Optional R/a/dio Now Playing banner
+- Synchronized time counters (for group watching sessions and such)
+- Thread-level connected unique IP counter
+- Internal captcha system
+
 </details>
 
 ## Runtime dependencies
