@@ -35,6 +35,7 @@ export interface PageState extends ChangeEmitter {
 	catalog: boolean
 	thread: number
 	lastN: number
+	page: number
 	board: string
 	href: string
 }
@@ -75,11 +76,13 @@ export let debug: boolean = /[\?&]debug=true/.test(location.href)
 // Read page state by parsing a URL
 export function read(href: string): PageState {
 	const u = new URL(href, location.origin),
-		thread = u.pathname.match(/^\/\w+\/(\d+)/)
+		thread = u.pathname.match(/^\/\w+\/(\d+)/),
+		page = u.search.match(/[&\?]page=(\d+)/)
 	return {
 		href,
 		board: u.pathname.match(/^\/(\w+)\//)[1],
 		lastN: /[&\?]last=100/.test(u.search) ? 100 : 0,
+		page: page ? parseInt(page[1]) : 0,
 		catalog: /^\/\w+\/catalog/.test(u.pathname),
 		thread: parseInt(thread && thread[1]) || 0,
 	} as PageState

@@ -61,13 +61,10 @@
 			{% endif %}
 		</aside>
 		{% if !catalog %}
-			<aside class="act glass pagination">
+			<aside class="act glass pagination spaced">
 				{% for i := 0; i < total; i++ %}
-					{% if i != 0 %}
-						{% space %}
-					{% endif %}
 					{% if i != page %}
-						<a href="?page={%d i %}">
+						<a href="?page={%d i %}" class="history">
 					{% endif %}
 					{%d i %}
 					{% if i != page %}
