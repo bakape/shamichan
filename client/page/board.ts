@@ -210,7 +210,7 @@ function filterThreads(filter: string) {
 
 // Fetch and rerender board contents
 async function refreshBoard() {
-	const res = await fetchBoard(page.board, page.catalog),
+	const res = await fetchBoard(page.board, page.page, page.catalog),
 		t = await res.text()
 	switch (res.status) {
 		case 200:

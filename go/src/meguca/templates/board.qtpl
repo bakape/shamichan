@@ -61,16 +61,28 @@
 			{% endif %}
 		</aside>
 		{% if !catalog %}
-			<aside class="act glass pagination spaced">
+			<aside class="glass pagination spaced">
+				{% if page != 0 %}
+					{% if page-1 != 0 %}
+						{%= pageLink(0, "<<") %}
+					{% endif %}
+					{%= pageLink(page-1, "<") %}
+				{% endif %}
 				{% for i := 0; i < total; i++ %}
 					{% if i != page %}
-						<a href="?page={%d i %}" class="history">
-					{% endif %}
-					{%d i %}
-					{% if i != page %}
-						</a>
+						{%= pageLink(i, strconv.Itoa(i)) %}
+					{% else %}
+						<b>
+							{%d i %}
+						</b>
 					{% endif %}
 				{% endfor %}
+				{% if page != total-1 %}
+					{%= pageLink(page+1, ">") %}
+					{% if page+1 != total-1 %}
+						{%= pageLink(total-1, ">>") %}
+					{% endif %}
+				{% endif %}
 			</aside>
 		{% endif %}
 		{%= hoverReveal("aside", conf.Notice, ln.UI["showNotice"]) %}
@@ -94,6 +106,13 @@
 		{%z= conf.JSON %}
 	</script>
 	<hr>
+{% endstripspace %}{% endfunc %}
+
+Link to a different paginated board page
+{% func pageLink(i int, text string) %}{% stripspace %}
+	<a href="?page={%d i %}" class="history">
+		{%s= text %}
+	</a>
 {% endstripspace %}{% endfunc %}
 
 CatalogThreads renders thread content for a catalog page. Separate function to

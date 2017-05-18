@@ -16,10 +16,10 @@ initNavigation()
 // Load a page (either board or thread) and render it once the ready promise
 // has been resolved
 export async function loadPage(state: PageState, ready: Promise<void>) {
-	const { board, thread, lastN, catalog, href } = state
+	const { board, thread, lastN, catalog, href, page: pageNum } = state
 	const res = thread
 		? await fetchThread(board, thread, lastN)
-		: await fetchBoard(board, catalog)
+		: await fetchBoard(board, pageNum, catalog)
 	const t = await res.text()
 	await ready
 	switch (res.status) {

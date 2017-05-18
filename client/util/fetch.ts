@@ -48,9 +48,11 @@ export async function uncachedGET(url: string): Promise<Response> {
 // Fetch HTML of a board page
 export async function fetchBoard(
 	board: string,
+	page: number,
 	catalog: boolean,
 ): Promise<Response> {
-	return uncachedGET(`/${board}/${catalog ? "catalog" : ""}?minimal=true`)
+	const u = `/${board}/${catalog ? "catalog" : ""}?minimal=true&page=${page}`
+	return uncachedGET(u)
 }
 
 // Fetch HTML of a thread page
