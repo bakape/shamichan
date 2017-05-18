@@ -104,7 +104,7 @@ func GetHTML(k Key, f FrontEnd) ([]byte, interface{}, uint64, error) {
 	var html []byte
 	genHTML := func() {
 		html = []byte(f.RenderHTML(data, json))
-		s.update(nil, json, html, f)
+		s.update(data, json, html, f)
 	}
 	if !fresh {
 		// If the cache has been filled with a JSON request, it will not have
