@@ -38,11 +38,9 @@ func runMinuteTasks() {
 }
 
 func runHourTasks() {
-	for _, id := range [...]string{
+	logPrepared(
 		"expire_user_sessions", "remove_identity_info", "expire_mod_log",
-	} {
-		logError(strings.Replace(id, "_", " ", -1), execPrepared(id))
-	}
+	)
 	logError("thread cleanup", deleteOldThreads())
 	logError("board cleanup", deleteUnusedBoards())
 	logError("image cleanup", deleteUnusedImages())
@@ -54,7 +52,9 @@ func runHourTasks() {
 }
 
 func logPrepared(ids ...string) {
-
+	for _, id := range ids {
+		logError(strings.Replace(id, "_", " ", -1), execPrepared(id))
+	}
 }
 
 func logError(prefix string, err error) {
