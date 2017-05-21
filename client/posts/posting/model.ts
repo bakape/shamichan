@@ -216,13 +216,18 @@ export default class FormModel extends Post {
 	public addReference(id: number, sel: string) {
 		let s = ""
 		const old = this.bufferedText || this.inputBody,
-			newLine = !old || old.endsWith("\n")
+			newLine = !old || old.endsWith("\n"),
+			alreadyLinked = id === this.lasLinked
 
 		// Don't duplicate links, if quoting same post multiple times in
 		// succession
-		if (id !== this.lasLinked) {
-			if (!newLine && old[old.length - 1] !== " ") {
-				s += " "
+		if (!alreadyLinked) {
+			if (!newLine) {
+				if (sel) {
+					s += "\n"
+				} else if (old[old.length - 1] !== " ") {
+					s += " "
+				}
 			}
 			s += `>>${id} `
 		}
@@ -234,7 +239,9 @@ export default class FormModel extends Post {
 				s += "\n"
 			}
 		} else {
-			s += "\n"
+			if (!alreadyLinked || !newLine) {
+				s += "\n"
+			}
 			for (let line of sel.split("\n")) {
 				s += ">" + line + "\n"
 			}
