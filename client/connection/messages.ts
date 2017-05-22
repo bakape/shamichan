@@ -40,6 +40,9 @@ export const enum message {
 
 	// Send a notification to a client
 	notification,
+
+	// Notification about needing a captcha on the next post allocation
+	captcha,
 }
 
 export type MessageHandler = (msg: {}) => void

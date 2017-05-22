@@ -116,6 +116,7 @@
 		</template>
 		<template name="post-controls">
 			<div id="post-controls">
+				{%= captcha(ln.UI) %}
 				<input name="cancel" type="button" value="{%s= ln.UI["cancel"] %}">
 				<input name="done" type="button" value="{%s= ln.UI["done"] %}" hidden>
 				<span class="upload-container" hidden>

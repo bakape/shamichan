@@ -2,7 +2,7 @@
 
 import FormModel from "./model"
 import FormView from "./view"
-import { connState, connSM } from "../../connection"
+import { connState, connSM, handlers, message } from "../../connection"
 import { on, FSM, hook, scrollToBottom } from "../../util"
 import lang from "../../lang"
 import identity, { initIdentity } from "./identity"
@@ -32,7 +32,9 @@ let postForm: FormView,
 	postModel: FormModel,
 	// Store last selected range, so we can access it after a mouse click on
 	// quote links, which cause that link to become selected
-	lastSelection: Selection
+	lastSelection: Selection,
+	// Specifies, if a captcha solved is needed to allocate a post
+	needCaptcha = false
 
 // Post authoring finite state machine
 export const enum postState {
@@ -170,6 +172,10 @@ export default () => {
 	connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
 	connSM.on(connState.desynced, postSM.feeder(postEvent.error))
 
+	// The server notified a captcha will be required on the next post
+	handlers[message.captcha] = () =>
+		needCaptcha = true
+
 	// Initial synchronization
 	postSM.act(postState.none, postEvent.sync, () =>
 		postState.ready)
@@ -185,6 +191,8 @@ export default () => {
 
 	// Handle connection loss
 	postSM.wildAct(postEvent.disconnect, () => {
+		needCaptcha = false
+
 		switch (postSM.state) {
 			case postState.alloc:       // Pause current allocated post
 			case postState.halted:
@@ -254,6 +262,7 @@ export default () => {
 	// Open a new post creation form, if none open
 	postSM.act(postState.ready, postEvent.open, () => {
 		postModel = new FormModel(0)
+		postModel.needCaptcha = needCaptcha
 		postForm = new FormView(postModel, false)
 		return postState.draft
 	})
@@ -263,7 +272,12 @@ export default () => {
 		stylePostControls(el =>
 			el.style.display = "none")
 	postSM.on(postState.draft, hidePostControls)
-	postSM.on(postState.alloc, hidePostControls)
+	postSM.on(postState.alloc, () => {
+		hidePostControls()
+		if (postModel.needCaptcha) { // New captcha submitted
+			needCaptcha = false
+		}
+	})
 
 	// Close unallocated draft
 	postSM.act(postState.draft, postEvent.done, (e?: Event) => {
@@ -277,6 +291,9 @@ export default () => {
 			}
 		}
 		if (commitNonLive) {
+			if (postModel.needCaptcha) { // New captcha submitted
+				needCaptcha = false
+			}
 			postModel.commitNonLive()
 			return postState.sendingNonLive
 		}

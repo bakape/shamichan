@@ -34,7 +34,7 @@ abstract class FormView extends View<null> {
 		}
 	}
 
-	// Forms that are not rendered on initialization need to call this method
+	// Forms, that are not rendered on initialization, need to call this method
 	// themselves
 	public initCaptcha() {
 		let captcha = this.el.querySelector(".captcha-container")
