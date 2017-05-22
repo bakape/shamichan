@@ -59,7 +59,6 @@ License: GNU AGPL
 
 - Works with all modern and most outdated browsers (such as PaleMoon)
 - Works with JavaScript disabled browsers
-- Read-only functionality preserved with JavaScript disabled
 - Multiple themes
 - Custom user-set backgrounds and CSS
 - Mascots
