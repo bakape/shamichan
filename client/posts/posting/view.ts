@@ -29,8 +29,12 @@ export default class FormView extends PostView {
             this.el.classList.add("reply-form")
             this.initDraft()
         }
-        requestAnimationFrame(() =>
-            this.input.focus())
+
+        // Focus captcha instead, if one is needed
+        if (!this.model.needCaptcha) {
+            requestAnimationFrame(() =>
+                this.input.focus())
+        }
     }
 
     // Render extra input fields for inputting text and optionally uploading
