@@ -52,6 +52,9 @@ const (
 
 	// Send a notification to a client
 	MessageNotification
+
+	// Notify the client, he needs a captcha solved
+	MessageCaptcha
 )
 
 // Forwarded functions from "meguca/websockets/feeds" to avoid circular imports

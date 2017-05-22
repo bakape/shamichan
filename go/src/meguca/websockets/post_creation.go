@@ -134,14 +134,19 @@ func CreatePost(
 ) (
 	post db.Post, msg []byte, err error,
 ) {
-	switch {
-	case auth.IsBanned(board, ip):
+	if auth.IsBanned(board, ip) {
 		err = errBanned
 		return
-	// For now, only noscript posts need a captcha
-	case needCaptcha && !auth.AuthenticateCaptcha(req.Captcha):
-		err = errInValidCaptcha
-		return
+
+	}
+	if needCaptcha {
+		if !auth.AuthenticateCaptcha(req.Captcha) {
+			err = errInValidCaptcha
+			return
+		} else if config.Get().Captcha {
+			// Captcha solved - reset spam score.
+			auth.ResetSpamScore(ip)
+		}
 	}
 
 	conf, err := getBoardConfig(board)
@@ -198,7 +203,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 
 	_, op, board := feeds.GetSync(c)
-	post, msg, err := CreatePost(op, board, c.ip, false, req)
+	post, msg, err := CreatePost(op, board, c.ip, !auth.CanPost(c.ip), req)
 	if err != nil {
 		return
 	}
@@ -215,7 +220,11 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 	c.feed.InsertPost(post.StandalonePost, c.post.body, msg)
 
-	return nil
+	score := auth.PostCreationScore + auth.CharScore*time.Duration(c.post.len)
+	if post.Image != nil {
+		score += auth.ImageScore
+	}
+	return c.incrementSpamScore(score)
 }
 
 // If the client has a previous post, close it silently

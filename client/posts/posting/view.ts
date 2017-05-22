@@ -7,6 +7,7 @@ import { renderHeader, renderName } from "../render"
 import { postSM, postEvent, postState } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
+import { CaptchaView } from "../../ui"
 
 // Element at the bottom of the thread to keep the fixed reply form from
 // overlapping any other posts, when scrolled till bottom
@@ -19,6 +20,7 @@ export default class FormView extends PostView {
     private observer: MutationObserver
     private previousHeight: number
     public upload: UploadForm
+    public captcha: CaptchaView
 
     constructor(model: Post, isOP: boolean) {
         super(model, null)
@@ -105,8 +107,8 @@ export default class FormView extends PostView {
 
     // Initialize extra elements for a draft unallocated post
     private initDraft() {
-        this.el.querySelector("header").classList.add("temporary")
         bottomSpacer = document.getElementById("bottom-spacer")
+        this.el.querySelector("header").classList.add("temporary")
 
         // Keep this post and bottomSpacer the same height
         this.observer = new MutationObserver(() =>
@@ -121,6 +123,20 @@ export default class FormView extends PostView {
         document.getElementById("thread-container").append(this.el)
         this.resizeSpacer()
         this.setEditing(identity.live)
+
+        const captcha = this.el.querySelector(".captcha-container")
+        if (captcha) {
+            if (this.model.needCaptcha) {
+                this.captcha = new CaptchaView(captcha)
+                this.model.needCaptcha = true
+                requestAnimationFrame(() =>
+                    (captcha
+                        .querySelector("input[type=number]") as HTMLInputElement)
+                        .focus())
+            } else {
+                captcha.style.display = "none"
+            }
+        }
     }
 
     // Resize bottomSpacer to the same top position as this post

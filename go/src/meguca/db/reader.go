@@ -318,7 +318,7 @@ func GetRecentPosts(op uint64) (posts []PostStats, err error) {
 				continue
 			}
 			// Buffer is only valid for the transaction. Need to copy.
-			posts[i].Body = util.CloneBytes(buc.Get(formatPostID(p.ID)))
+			posts[i].Body = util.CloneBytes(buc.Get(encodeUint64Heap(p.ID)))
 		}
 	}
 
@@ -391,7 +391,7 @@ func injectOpenBodies(posts []*common.Post) error {
 
 	buc := tx.Bucket([]byte("open_bodies"))
 	for _, p := range posts {
-		p.Body = string(buc.Get(formatPostID(p.ID)))
+		p.Body = string(buc.Get(encodeUint64Heap(p.ID)))
 	}
 
 	return tx.Rollback()

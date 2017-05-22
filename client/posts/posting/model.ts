@@ -14,6 +14,7 @@ export default class FormModel extends Post {
 	public sentAllocRequest: boolean
 	public isAllocated: boolean
 	public nonLive: boolean // Disable live post updates
+	public needCaptcha: boolean // Need to solve a captcha to allocate
 
 	// Text that is not submitted yet to defer post allocation
 	public bufferedText: string
@@ -269,6 +270,9 @@ export default class FormModel extends Post {
 		if (this.bufferedText) {
 			req["body"] = this.body = this.bufferedText
 		}
+		if (this.needCaptcha) {
+			extend(req, this.view.captcha.data())
+		}
 
 		send(message.insertPost, req)
 		handlers[message.postID] = (id: number) => {
@@ -280,11 +284,18 @@ export default class FormModel extends Post {
 
 	// Request allocation of a draft post to the server
 	private requestAlloc(body: string | null, image: FileData | null) {
+		const req = newAllocRequest()
+		if (this.needCaptcha) {
+			extend(req, this.view.captcha.data())
+			if (!req["solution"]) {
+				return
+			}
+		}
+
 		this.view.setEditing(true)
 		this.nonLive = false
 		this.sentAllocRequest = true
 
-		const req = newAllocRequest()
 		req["open"] = !this.nonLive
 		if (body) {
 			req["body"] = body
@@ -325,6 +336,15 @@ export default class FormModel extends Post {
 
 	// Upload the file and request its allocation
 	public async uploadFile(file?: File) {
+		// Need a captcha and none submitted. Protects from no-captcha drops
+		// allocating post too soon.
+		if (this.needCaptcha) {
+			const { captcha } = this.view
+			if (captcha && !captcha.data()["solution"]) {
+				return
+			}
+		}
+
 		if (this.nonLive) {
 			this.bufferedFile = file || this.view.upload.input.files[0]
 			return

@@ -3,11 +3,13 @@ package websockets
 import (
 	"encoding/json"
 	"errors"
+	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	"meguca/parser"
 	"meguca/util"
+	"time"
 	"unicode/utf8"
 )
 
@@ -105,14 +107,32 @@ func (c *Client) appendRune(data []byte) (err error) {
 
 	c.post.body = append(c.post.body, string(char)...)
 	c.post.len++
-	return c.updateBody(msg)
+	return c.updateBody(msg, 1)
 }
 
 // Send message to thread update feed and writes the open post's buffer to the
 // embedded database. Requires locking of c.openPost.
-func (c *Client) updateBody(msg []byte) error {
+// n specifies the number of characters updated.
+func (c *Client) updateBody(msg []byte, n int) error {
 	c.feed.SetOpenBody(c.post.id, c.post.body, msg)
+	err := c.incrementSpamScore(time.Duration(n) * auth.CharScore)
+	if err != nil {
+		return err
+	}
 	return db.SetOpenBody(c.post.id, c.post.body)
+}
+
+// Increment the spam score for this IP by score. If the client requires a new
+// solved captcha, send a notification.
+func (c *Client) incrementSpamScore(score time.Duration) error {
+	exceeds, err := auth.IncrementSpamScore(c.ip, score)
+	if err != nil {
+		return err
+	}
+	if exceeds {
+		return c.sendMessage(common.MessageCaptcha, 0)
+	}
+	return nil
 }
 
 // Remove one character from the end of the line in the open post
@@ -139,7 +159,7 @@ func (c *Client) backspace() error {
 	}
 	c.post.len--
 
-	return c.updateBody(msg)
+	return c.updateBody(msg, 1)
 }
 
 // Close an open post and parse the last line, if needed.
@@ -242,7 +262,8 @@ func (c *Client) spliceText(data []byte) error {
 		return errTooManyLines
 	}
 
-	return c.updateBody(msg)
+	// +1, so you can't spam zero insert splices to infinity
+	return c.updateBody(msg, len(res.Text)+1)
 }
 
 // Insert and image into an existing open post
@@ -291,7 +312,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 	}
 	c.feed.InsertImage(c.post.id, msg)
 
-	return nil
+	return c.incrementSpamScore(auth.ImageScore)
 }
 
 // Spoiler an already inserted image in an unclosed post
