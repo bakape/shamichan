@@ -11,7 +11,7 @@ import { getID } from "../util"
 
 // Base post view class
 export default class PostView extends ImageHandler {
-    constructor(model: Post, el: HTMLElement) {
+    constructor(model: Post, el: HTMLElement | null) {
         const attrs: ViewAttrs = { model }
         if (el) {
             attrs.el = el
@@ -52,19 +52,6 @@ export default class PostView extends ImageHandler {
             buf = buf.lastElementChild
         }
         return buf
-    }
-
-    // Remove the element from the DOM and detach from its model, allowing the
-    // PostView instance to be garbage collected
-    public remove() {
-        this.unbind()
-        super.remove()
-    }
-
-    // Remove the model's cross references, but don't remove the element from
-    // the DOM
-    public unbind() {
-        this.model.view = this.model = null
     }
 
     // check if we can see the post or have scrolled past it

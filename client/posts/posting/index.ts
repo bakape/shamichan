@@ -271,7 +271,7 @@ export default () => {
 	postSM.act(postState.ready, postEvent.open, () => {
 		postModel = new FormModel(0)
 		postModel.needCaptcha = needCaptcha
-		postForm = new FormView(postModel, false)
+		postForm = new FormView(postModel, null)
 		return postState.draft
 	})
 

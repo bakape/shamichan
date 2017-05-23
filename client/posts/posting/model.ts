@@ -2,7 +2,7 @@ import { message, send, handlers } from "../../connection"
 import { Post } from "../model"
 import { ImageData, PostData } from "../../common"
 import FormView from "./view"
-import { posts, storeMine, page } from "../../state"
+import { posts, storeMine, page, storeSeenPost } from "../../state"
 import { postSM, postEvent, postState } from "."
 import { extend } from "../../util"
 import { SpliceResponse } from "../../client"
@@ -28,11 +28,7 @@ export default class FormModel extends Post {
 	// model pass zero.
 	constructor(id: number) {
 		if (id !== 0) {
-			storeMine(id)
-
-			const oldModel = posts.get(id),
-				oldView = oldModel.view
-			oldView.unbind()
+			const oldModel = posts.get(id)
 
 			// Copy the parent model's state and data
 			const attrs = {} as PostData
@@ -45,9 +41,8 @@ export default class FormModel extends Post {
 			this.sentAllocRequest = this.isAllocated = true
 
 			// Replace old model and view pair with the postForm pair
-			posts.add(this)
-			const view = new FormView(this, true)
-			oldView.el.replaceWith(view.el)
+			const view = new FormView(this, oldModel.view.el)
+			this.registerModel()
 
 			postSM.feed(postEvent.hijack, { view, model: this })
 		} else {
@@ -78,6 +73,15 @@ export default class FormModel extends Post {
 
 		// Initialize state
 		this.inputBody = ""
+	}
+
+	// Add this post to database stores and collections
+	private registerModel() {
+		// All the posts we make should be counted as seen
+		this.seenOnce = true
+		storeSeenPost(this.id)
+		storeMine(this.id)
+		posts.add(this)
 	}
 
 	// Append a character to the model's body and reparse the line, if it's a
@@ -284,7 +288,7 @@ export default class FormModel extends Post {
 		send(message.insertPost, req)
 		handlers[message.postID] = (id: number) => {
 			this.id = id
-			posts.add(this)
+			this.registerModel()
 			delete handlers[message.postID]
 		}
 	}
@@ -317,7 +321,7 @@ export default class FormModel extends Post {
 		handlers[message.postID] = (id: number) => {
 			this.id = id
 			postSM.feed(postEvent.alloc)
-			posts.add(this)
+			this.registerModel()
 			delete handlers[message.postID]
 		}
 	}

@@ -18,7 +18,7 @@ export class Post extends Model implements PostData {
 	public sage: boolean
 	public banned: boolean
 	public sticky: boolean
-	private seenOnce: boolean
+	protected seenOnce: boolean
 	public image: ImageData
 	public time: number
 	public body: string
@@ -171,11 +171,12 @@ export class Post extends Model implements PostData {
 		this.view.renderDeleted()
 	}
 
+	// Returns, if this post has been seen already
 	public seen() {
 		if (this.seenOnce) {
 			return true
 		}
-		if (document.hidden || !this.view) {
+		if (document.hidden) {
 			return false
 		}
 		if (this.seenOnce = this.view.scrolledPast()) {

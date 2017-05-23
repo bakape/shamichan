@@ -22,10 +22,10 @@ export default class FormView extends PostView {
     public upload: UploadForm
     public captcha: CaptchaView
 
-    constructor(model: Post, isOP: boolean) {
-        super(model, null)
-        this.renderInputs(isOP)
-        if (!isOP) {
+    constructor(model: Post, el: HTMLElement | null) {
+        super(model, el)
+        this.renderInputs(!!el)
+        if (!el) {
             this.el.classList.add("reply-form")
             this.initDraft()
         }
