@@ -112,10 +112,18 @@ async function quotePost(e: MouseEvent) {
 			return false
 		}
 
-		return (el.closest("blockquote") && el.closest("article") === post)
-			// When selecting the last line, the selection ends outside the
-			// blockquote and the article itself is the focus node
-			|| el === post
+		// Selection bound is mid-post
+		if (el.closest("blockquote") && el.closest("article") === post) {
+			return true
+		}
+		switch (prop) {
+			// Selection start at blockquote start
+			case "start":
+				return el === post
+			// Selection end is at blockquote end
+			case "end":
+				return el.closest("article") === post.nextSibling
+		}
 	}
 	let sel: string
 	if (lastSelection && isInside("start") && isInside("end")) {
