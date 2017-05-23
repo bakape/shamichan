@@ -41,6 +41,11 @@ export default class CaptchaView extends View<null> {
 
 	// Returns the data from the captcha widget
 	public data(): { [key: string]: string } {
+		// Captchas are disabled. Cache-induced race.
+		if (!this.input) {
+			return {}
+		}
+
 		return {
 			captchaID: this.captchaID,
 			solution: this.input.value,
