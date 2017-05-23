@@ -222,9 +222,8 @@ export default () => {
 	})
 
 	// Regained connectivity, when post is allocated
-	postSM.act(postState.halted, postEvent.reclaim, () => {
-		return postState.alloc
-	})
+	postSM.act(postState.halted, postEvent.reclaim, () =>
+		postState.alloc)
 
 	// Regained connectivity too late and post can no longer be reclaimed
 	postSM.act(postState.halted, postEvent.abandon, () => {

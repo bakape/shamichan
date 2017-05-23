@@ -237,7 +237,6 @@ table {
 @media screen and (max-device-width: 700px) {
 	body {
 		margin: 1px 0;
-		-webkit-text-size-adjust: none;
 	}
 	blockquote {
 		margin: 0.5em 0 0.5em 0.5em;
@@ -266,6 +265,19 @@ table {
 
 @media (pointer: coarse) {
 	#banner {
+		&, a {
+			font-size: 120%;
+		}
+		height: 1.5em;
+	}
+	.banner-float {
+		svg {
+			width: 1.2em;
+			height: 1.2em;
+		}
 		font-size: 120%;
+	}
+	#hover-overlay {
+		display: none;
 	}
 }
