@@ -117,7 +117,6 @@ create table posts (
 	password bytea,
 	ip inet,
 	links bigint[][2],
-	backlinks bigint[][2],
 	commands json[]
 );
 create index op on posts (op);

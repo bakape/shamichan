@@ -2,7 +2,6 @@
 
 import { page, mine } from '../../state'
 import lang from '../../lang'
-import { PostLink } from '../../common'
 import { makeFrag, firstChild, makeAttrs } from "../../util"
 
 // Render a link to other posts
@@ -37,7 +36,7 @@ export function renderTempLink(id: number): string {
 }
 
 // Render links to posts that are linking to the target post
-export function renderBacklinks(post: Element, links: PostLink[]) {
+export function renderBacklinks(post: Element, links: { [id: number]: number }) {
     if (!links) {
         return
     }
@@ -59,13 +58,14 @@ export function renderBacklinks(post: Element, links: PostLink[]) {
     }
 
     let html = ""
-    for (let [id, op] of links) {
+    for (let idStr in links) {
+        const id = parseInt(idStr)
         // Confirm link not already rendered
         if (rendered.has(id)) {
             continue
         }
         rendered.add(id)
-        html += "<em>" + renderPostLink(id, op) + "</em>"
+        html += "<em>" + renderPostLink(id, links[id]) + "</em>"
     }
 
     el.append(makeFrag(html))

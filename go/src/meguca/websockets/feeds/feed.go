@@ -7,6 +7,22 @@ import (
 	"time"
 )
 
+type postMessageType uint8
+
+const (
+	closePost postMessageType = iota
+	insertImage
+	spoilerImage
+	deletePost
+	ban
+)
+
+type postMessage struct {
+	typ postMessageType
+	id  uint64
+	msg []byte
+}
+
 type postCreationMessage struct {
 	open, hasImage bool
 	id             uint64
@@ -14,20 +30,15 @@ type postCreationMessage struct {
 	body, msg      []byte
 }
 
-type postIDMessage struct {
-	id  uint64
-	msg []byte
-}
-
 type postBodyModMessage struct {
-	postIDMessage
-	body []byte
+	id        uint64
+	msg, body []byte
 }
 
 type openPostCacheEntry struct {
-	hasImage bool
-	created  int64
-	body     []byte
+	hasImage, spoilered bool
+	created             int64
+	body                []byte
 }
 
 // A feed with synchronization logic of a certain thread
@@ -46,10 +57,8 @@ type Feed struct {
 	send chan []byte
 	// Insert a new post into the thread and propagate to listeners
 	insertPost chan postCreationMessage
-	// Insert an image into an already allocated post
-	insertImage chan postIDMessage
-	// Close an open post
-	closePost chan postIDMessage
+	// Send various simple messages targeted at a specific post
+	sendPostMessage chan postMessage
 	// Set body of an open post
 	setOpenBody chan postBodyModMessage
 	// Subscribed clients
@@ -58,10 +67,13 @@ type Feed struct {
 	recent map[uint64]int64
 	// Currently open posts
 	open map[uint64]openPostCacheEntry
+	// Deleted and banned posts
+	deleted, banned []uint64
 }
 
 // Read existing posts into cache and start main loop
 func (f *Feed) Start() (err error) {
+	// Read recent post data into memory
 	recent, err := db.GetRecentPosts(f.id)
 	if err != nil {
 		return
@@ -71,10 +83,17 @@ func (f *Feed) Start() (err error) {
 	for _, p := range recent {
 		f.recent[p.ID] = p.Time
 		f.open[p.ID] = openPostCacheEntry{
-			hasImage: p.HasImage,
-			created:  p.Time,
-			body:     p.Body,
+			hasImage:  p.HasImage,
+			spoilered: p.Spoilered,
+			created:   p.Time,
+			body:      p.Body,
 		}
+	}
+
+	// Read deleted and banned post IDs
+	f.deleted, f.banned, err = db.GetThreadMutations(f.id)
+	if err != nil {
+		return
 	}
 
 	go func() {
@@ -119,8 +138,7 @@ func (f *Feed) Start() (err error) {
 
 			// Send any buffered messages to any listening clients
 			case <-f.C:
-				buf := f.flush()
-				if buf == nil {
+				if buf := f.flush(); buf == nil {
 					f.pause()
 				} else {
 					for _, c := range f.clients {
@@ -158,14 +176,7 @@ func (f *Feed) Start() (err error) {
 					f.write(p.msg)
 				}
 
-			// Insert and image into an open post
-			case msg := <-f.insertImage:
-				f.startIfPaused()
-				p := f.open[msg.id]
-				p.hasImage = true
-				f.open[msg.id] = p
-				f.write(msg.msg)
-
+			// Set the body of an open post and propagate
 			case msg := <-f.setOpenBody:
 				f.startIfPaused()
 				p := f.open[msg.id]
@@ -173,10 +184,25 @@ func (f *Feed) Start() (err error) {
 				f.open[msg.id] = p
 				f.write(msg.msg)
 
-			// Close open post
-			case msg := <-f.closePost:
+			// Various post-related messages
+			case msg := <-f.sendPostMessage:
 				f.startIfPaused()
-				delete(f.open, msg.id)
+				switch msg.typ {
+				case closePost:
+					delete(f.open, msg.id)
+				case insertImage:
+					p := f.open[msg.id]
+					p.hasImage = true
+					f.open[msg.id] = p
+				case spoilerImage:
+					p := f.open[msg.id]
+					p.spoilered = true
+					f.open[msg.id] = p
+				case ban:
+					f.banned = append(f.banned, msg.id)
+				case deletePost:
+					f.deleted = append(f.deleted, msg.id)
+				}
 				f.write(msg.msg)
 			}
 		}
@@ -199,16 +225,21 @@ func (f *Feed) bufferMessage(msg []byte) {
 // Generate a message for synchronizing to the current status of the update
 // feed. The client has to compare this state to it's own and resolve any
 // missing entries or conflicts.
+// Handwritten to be as non-blocking as possible.
 func (f *Feed) genSyncMessage() []byte {
-	b := make([]byte, 0, 1024)
+	b := make([]byte, 0, 1<<10)
 
-	b = append(b, `30{"recent":[`...)
 	first := true
-	for id := range f.recent {
+	comma := func() {
 		if !first {
 			b = append(b, ',')
 		}
 		first = false
+	}
+
+	b = append(b, `30{"recent":[`...)
+	for id := range f.recent {
+		comma()
 		b = strconv.AppendUint(b, id, 10)
 	}
 
@@ -216,24 +247,37 @@ func (f *Feed) genSyncMessage() []byte {
 
 	first = true
 	for id, p := range f.open {
-		if !first {
-			b = append(b, ',')
-		}
-		first = false
+		comma()
 
 		b = append(b, '"')
 		b = strconv.AppendUint(b, id, 10)
-		b = append(b, `":{"hasImage":`...)
-
-		b = strconv.AppendBool(b, p.hasImage)
-
-		b = append(b, `,"body":`...)
+		b = append(b, `":{"body":`...)
 		b = strconv.AppendQuote(b, string(p.body))
-
+		if p.hasImage {
+			b = append(b, `,"hasImage":true`...)
+		}
+		if p.spoilered {
+			b = append(b, `,"spoilered":true`...)
+		}
 		b = append(b, '}')
 	}
+	b = append(b, '}')
 
-	b = append(b, `}}`...)
+	encodeUints := func(key string, is []uint64) {
+		b = append(b, `,"`...)
+		b = append(b, key...)
+		b = append(b, `":[`...)
+		first = true
+		for _, i := range is {
+			comma()
+			b = strconv.AppendUint(b, i, 10)
+		}
+		b = append(b, ']')
+	}
+	encodeUints("banned", f.banned)
+	encodeUints("deleted", f.deleted)
+
+	b = append(b, '}')
 
 	return b
 }
@@ -264,26 +308,39 @@ func (f *Feed) InsertPost(post common.StandalonePost, body, msg []byte) {
 
 // Insert an image into an already allocated post
 func (f *Feed) InsertImage(id uint64, msg []byte) {
-	f.insertImage <- postIDMessage{
+	f._sendPostMessage(insertImage, id, msg)
+}
+
+// Small helper method
+func (f *Feed) _sendPostMessage(typ postMessageType, id uint64, msg []byte) {
+	f.sendPostMessage <- postMessage{
+		typ: typ,
 		id:  id,
 		msg: msg,
 	}
 }
 
 func (f *Feed) ClosePost(id uint64, msg []byte) {
-	f.closePost <- postIDMessage{
-		id:  id,
-		msg: msg,
-	}
+	f._sendPostMessage(closePost, id, msg)
+}
+
+func (f *Feed) SpoilerImage(id uint64, msg []byte) {
+	f._sendPostMessage(spoilerImage, id, msg)
+}
+
+func (f *Feed) banPost(id uint64, msg []byte) {
+	f._sendPostMessage(ban, id, msg)
+}
+
+func (f *Feed) deletePost(id uint64, msg []byte) {
+	f._sendPostMessage(deletePost, id, msg)
 }
 
 // Set body of an open post and send update message to clients
 func (f *Feed) SetOpenBody(id uint64, body, msg []byte) {
 	f.setOpenBody <- postBodyModMessage{
-		postIDMessage: postIDMessage{
-			id:  id,
-			msg: msg,
-		},
+		id:   id,
+		msg:  msg,
 		body: body,
 	}
 }

@@ -28,8 +28,8 @@ export class Post extends Model implements PostData {
 	public subject: string
 	public board: string
 	public state: TextState
-	public backlinks: PostLink[]
 	public commands: Command[]
+	public backlinks: { [id: number]: number }
 	public links: PostLink[]
 
 	constructor(attrs: PostData) {
@@ -128,12 +128,10 @@ export class Post extends Model implements PostData {
 
 	// Insert data about another post linking this post into the model
 	public insertBacklink(id: number, op: number) {
-		const l: [number, number] = [id, op]
-		if (this.backlinks) {
-			this.backlinks.push(l)
-		} else {
-			this.backlinks = [l]
+		if (!this.backlinks) {
+			this.backlinks = {}
 		}
+		this.backlinks[id] = op
 		this.view.renderBacklinks()
 	}
 

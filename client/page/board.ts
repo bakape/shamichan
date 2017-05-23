@@ -5,7 +5,8 @@ import options from '../options'
 import { renderTime, Post, findSyncwatches } from "../posts"
 import { setTitle } from "../ui"
 import {
-	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts
+	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts,
+	genBacklinks
 } from "./common"
 import { setPostCount } from "./thread"
 import { ThreadData } from "../common"
@@ -106,6 +107,7 @@ export function render() {
 	renderRefreshButton(threads.querySelector("#refresh > a"))
 	if (!page.catalog) {
 		findSyncwatches(threads)
+		genBacklinks()
 	} else {
 		(threads.querySelector("select[name=sortMode]") as HTMLSelectElement)
 			.value = localStorage.getItem("catalogSort") || "bump"

@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"os"
-
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	"meguca/util"
+	"os"
+
 	"github.com/dancannon/gorethink"
 )
 
@@ -235,7 +235,6 @@ func copyThread(id uint64) (err error) {
 	// Compute fields from posts and verify images
 	thread.PostCtr = 0
 	thread.ImageCtr = 0
-	thread.Log = [][]byte{}
 	for i, p := range posts {
 		thread.ReplyTime = p.Time
 		if i < 1000 {
@@ -262,7 +261,6 @@ func copyThread(id uint64) (err error) {
 		}
 
 		p.Post.Links = convertLinks(p.Links)
-		p.Post.Backlinks = convertLinks(p.Backlinks)
 		p.IP = ""
 		p.Password = nil
 		p.Board = thread.Board

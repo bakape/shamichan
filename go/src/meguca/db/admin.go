@@ -43,17 +43,15 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 
 	// Write ban messages to posts
 	for _, post := range posts {
-		var msg []byte
-		msg, err = common.EncodeMessage(common.MessageBanned, post.id)
-		if err != nil {
-			return
-		}
 		err = execPrepared("ban_post", post.id)
 		if err != nil {
 			return
 		}
 		if !IsTest {
-			common.SendTo(post.op, msg)
+			err = common.BanPost(post.id, post.op)
+			if err != nil {
+				return
+			}
 		}
 	}
 
@@ -122,11 +120,6 @@ func DeletePost(board string, id uint64, by string) (err error) {
 		return
 	}
 
-	msg, err := common.EncodeMessage(common.MessageDeletePost, id)
-	if err != nil {
-		return
-	}
-
 	err = execPrepared("delete_post", id, by)
 	if err != nil {
 		return
@@ -137,7 +130,10 @@ func DeletePost(board string, id uint64, by string) (err error) {
 		return
 	}
 	if !IsTest {
-		common.SendTo(op, msg)
+		err = common.DeletePost(id, op)
+		if err != nil {
+			return
+		}
 	}
 
 	return

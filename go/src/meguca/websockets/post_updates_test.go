@@ -286,45 +286,11 @@ func TestClosePostWithLinks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	std := [...]struct {
-		id, op     uint64
-		log, field string
-		val        [][2]uint64
-	}{
-		{
-			id:    2,
-			op:    1,
-			log:   `06{"id":2,"links":[[22,21]]}`,
-			field: "links",
-			val:   [][2]uint64{{22, 21}},
-		},
-		{
-			id:    22,
-			op:    21,
-			log:   `07[22,2,1]`,
-			field: "backlinks",
-			val:   [][2]uint64{{2, 1}},
-		},
+	post, err := db.GetPost(2)
+	if err != nil {
+		t.Fatal(err)
 	}
-
-	for i := range std {
-		s := std[i]
-		t.Run(s.field, func(t *testing.T) {
-			t.Parallel()
-
-			post, err := db.GetPost(s.id)
-			if err != nil {
-				t.Fatal(err)
-			}
-			var l [][2]uint64
-			if s.field == "links" {
-				l = post.Links
-			} else {
-				l = post.Backlinks
-			}
-			AssertDeepEquals(t, l, s.val)
-		})
-	}
+	AssertDeepEquals(t, post.Links, [][2]uint64{{22, 21}})
 }
 
 func TestBackspace(t *testing.T) {

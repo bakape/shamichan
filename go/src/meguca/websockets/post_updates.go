@@ -337,7 +337,7 @@ func (c *Client) spoilerImage() (err error) {
 	if err != nil {
 		return
 	}
-	c.feed.Send(msg)
+	c.feed.SpoilerImage(c.post.id, msg)
 
 	return
 }

@@ -34,7 +34,6 @@ Generic post object
 | name | string | - | poster name |
 | trip | string | - | poster tripcode |
 | auth | string | - | signifies staff posting with staff title enabled; one of "admin", "owners", "moderators" or "janitors" |
-| backlinks | [PostLinks](#postlinks) | - | posts linking to this post |
 | links | [PostLinks](#postlinks) | - | posts this post is linking |
 | commands | [[]Command](#command) | - | results of hash commands, such as #flip |
 | image | [Image](#image) | - | uploaded file data |

@@ -30,14 +30,14 @@ export default class PostView extends ImageHandler {
 
         this.model.view = this
         if (!el) {
+            this.el.append(importTemplate("article"))
             this.render()
             this.autoExpandImage()
         }
     }
 
     // Render the element contents, but don't insert it into the DOM
-    protected render() {
-        this.el.append(importTemplate("article"))
+    public render() {
         renderPost(this.el, this.model)
     }
 

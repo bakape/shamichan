@@ -26,7 +26,6 @@ export interface PostData {
 	auth: string
 	board?: string
 	state: TextState
-	backlinks?: PostLink[]
 	links?: PostLink[]
 	commands?: Command[]
 }

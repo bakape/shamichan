@@ -14,9 +14,12 @@ var feeds = feedMap{
 	feeds: make(map[uint64]*Feed, 64),
 }
 
+// Export without circular dependency
 func init() {
 	common.SendTo = SendTo
 	common.ClosePost = ClosePost
+	common.BanPost = BanPost
+	common.DeletePost = DeletePost
 }
 
 // Container for managing client<->update-feed assignment and interaction
@@ -34,16 +37,15 @@ func addToFeed(id uint64, c common.Client) (feed *Feed, err error) {
 	feed, ok := feeds.feeds[id]
 	if !ok {
 		feed = &Feed{
-			id:            id,
-			add:           make(chan common.Client),
-			remove:        make(chan common.Client),
-			send:          make(chan []byte),
-			insertPost:    make(chan postCreationMessage),
-			insertImage:   make(chan postIDMessage),
-			closePost:     make(chan postIDMessage),
-			setOpenBody:   make(chan postBodyModMessage),
-			clients:       make([]common.Client, 0, 8),
-			messageBuffer: make([]byte, 0, 1<<10),
+			id:              id,
+			add:             make(chan common.Client),
+			remove:          make(chan common.Client),
+			send:            make(chan []byte),
+			insertPost:      make(chan postCreationMessage),
+			sendPostMessage: make(chan postMessage),
+			setOpenBody:     make(chan postBodyModMessage),
+			clients:         make([]common.Client, 0, 8),
+			messageBuffer:   make([]byte, 0, 1<<10),
 		}
 		feeds.feeds[id] = feed
 		err = feed.Start()
@@ -77,8 +79,7 @@ func SendTo(id uint64, msg []byte) {
 	feeds.mu.RLock()
 	defer feeds.mu.RUnlock()
 
-	feed := feeds.feeds[id]
-	if feed != nil {
+	if feed := feeds.feeds[id]; feed != nil {
 		feed.Send(msg)
 	}
 }
@@ -89,8 +90,7 @@ func InsertPostInto(post common.StandalonePost, msg []byte) {
 	feeds.mu.RLock()
 	defer feeds.mu.RUnlock()
 
-	feed := feeds.feeds[post.OP]
-	if feed != nil {
+	if feed := feeds.feeds[post.OP]; feed != nil {
 		feed.InsertPost(post, nil, msg)
 	}
 }
@@ -100,10 +100,41 @@ func ClosePost(id, op uint64, msg []byte) {
 	feeds.mu.RLock()
 	defer feeds.mu.RUnlock()
 
-	feed := feeds.feeds[op]
-	if feed != nil {
+	if feed := feeds.feeds[op]; feed != nil {
 		feed.ClosePost(id, msg)
 	}
+}
+
+// Propagate a message about a post being banned
+func BanPost(id, op uint64) error {
+	msg, err := common.EncodeMessage(common.MessageBanned, id)
+	if err != nil {
+		return err
+	}
+
+	feeds.mu.RLock()
+	defer feeds.mu.RUnlock()
+
+	if feed := feeds.feeds[op]; feed != nil {
+		feed.banPost(id, msg)
+	}
+	return nil
+}
+
+// Propagate a message about a post being deleted
+func DeletePost(id, op uint64) error {
+	msg, err := common.EncodeMessage(common.MessageDeletePost, id)
+	if err != nil {
+		return err
+	}
+
+	feeds.mu.RLock()
+	defer feeds.mu.RUnlock()
+
+	if feed := feeds.feeds[op]; feed != nil {
+		feed.deletePost(id, msg)
+	}
+	return nil
 }
 
 // Remove all existing feeds and clients. Used only in tests.

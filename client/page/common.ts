@@ -1,4 +1,4 @@
-import { setBoardConfig, hidden, mine, posts as postCollection } from "../state"
+import { setBoardConfig, hidden, mine, posts } from "../state"
 import options from "../options"
 import { PostData, fileTypes, PostLink } from "../common"
 import { Post, PostView } from "../posts"
@@ -38,7 +38,7 @@ export function extractPost(
 
 	const model = new Post(post),
 		view = new PostView(model, el)
-	postCollection.add(model)
+	posts.add(model)
 
 	// Apply client-specific formatting to a post rendered server-side
 
@@ -51,11 +51,9 @@ export function extractPost(
 		view.renderName()
 	}
 
-	const { model: { links, backlinks, image } } = view
-	localizeLinks(links, view, true)
-	localizeLinks(backlinks, view, false)
+	const { model: { links, image } } = view
+	localizeLinks(links, view)
 	postAdded(model)
-
 
 	if (image) {
 		const should = options.hideThumbs
@@ -72,7 +70,7 @@ export function extractPost(
 
 // Add (You) to posts linking to the user's posts and trigger desktop
 // notifications, if needed
-function localizeLinks(links: PostLink[], view: PostView, notify: boolean) {
+function localizeLinks(links: PostLink[], view: PostView) {
 	if (!links) {
 		return
 	}
@@ -86,9 +84,7 @@ function localizeLinks(links: PostLink[], view: PostView, notify: boolean) {
 				el.textContent += " " + lang.posts["you"]
 			}
 		}
-		if (notify) {
-			notifyAboutReply(view.model)
-		}
+		notifyAboutReply(view.model)
 	}
 }
 
@@ -145,9 +141,33 @@ function localizeOmitted() {
 // Needs to be done after models are populated to resolve temporary image links
 // in open posts.
 export function reparseOpenPosts() {
-	for (let m of postCollection) {
+	for (let m of posts) {
 		if (m.editing) {
 			m.view.reparseBody()
+		}
+	}
+}
+
+// Generate and render backlinks from displayed posts
+export function genBacklinks() {
+	// Invert links
+	for (let src of posts) {
+		if (!src.links) {
+			continue
+		}
+		for (let [id] of src.links) {
+			const target = posts.get(id)
+			if (!target.backlinks) {
+				target.backlinks = {}
+			}
+			target.backlinks[src.id] = src.op
+		}
+	}
+
+	// Render backlinks on any linked posts
+	for (let p of posts) {
+		if (p.backlinks) {
+			p.view.renderBacklinks()
 		}
 	}
 }

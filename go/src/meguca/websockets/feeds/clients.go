@@ -74,16 +74,17 @@ func GetSync(cl common.Client) (synced bool, op uint64, board string) {
 }
 
 // GetByIPAndBoard retrieves all Clients that match the passed IP on a board
-func GetByIPAndBoard(ip, board string) (cls []common.Client) {
+func GetByIPAndBoard(ip, board string) []common.Client {
 	clients.RLock()
 	defer clients.RUnlock()
 
+	cls := make([]common.Client, 0, 16)
 	for cl, sync := range clients.clients {
 		if cl.IP() == ip && (board == "all" || sync.board == board) {
 			cls = append(cls, cl)
 		}
 	}
-	return
+	return cls
 }
 
 // All returns all currently connected clients

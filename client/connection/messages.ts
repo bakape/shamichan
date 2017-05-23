@@ -9,7 +9,7 @@ export const enum message {
 	backspace,
 	splice,
 	closePost,
-	backlink,
+	_,
 	insertImage,
 	spoiler,
 	deletePost,

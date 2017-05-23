@@ -109,15 +109,17 @@ export default () => {
 		handle(msg.id, m =>
 			m.splice(msg))
 
-	handlers[message.backlink] = ([id, target, targetOP]: number[]) =>
-		handle(id, m =>
-			m.insertBacklink(target, targetOP))
-
 	handlers[message.closePost] = ({ id, links, commands }: CloseMessage) =>
 		handle(id, m => {
 			if (links) {
 				m.links = links
 				m.checkRepliedToMe()
+				for (let [id] of links) {
+					const target = posts.get(id)
+					if (target) {
+						target.insertBacklink(m.id, m.op)
+					}
+				}
 			}
 			if (commands) {
 				m.commands = commands

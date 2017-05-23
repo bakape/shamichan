@@ -2,7 +2,7 @@ import { escape, pluralize, pad, importTemplate } from '../../util'
 import { renderImage } from './image'
 import { renderBacklinks } from './etc'
 import renderBody from './body'
-import { PostData, ThreadData } from '../../common'
+import { Post } from '../model'
 import lang from '../../lang'
 import options from '../../options'
 import { page } from "../../state"
@@ -15,10 +15,10 @@ interface PostCredentials {
 }
 
 // Populate post template
-export default function (post: Element, data: PostData | ThreadData) {
-	if ((data as ThreadData).subject) {
+export default function (post: Element, data: Post) {
+	if (data.subject) {
 		const el = post.querySelector("h3")
-		el.innerHTML = `「${escape((data as ThreadData).subject)}」`
+		el.innerHTML = `「${escape(data.subject)}」`
 		el.hidden = false
 	}
 
@@ -45,7 +45,7 @@ export function renderBanned(parent: NodeSelector) {
 }
 
 // Render the header on top of the post
-export function renderHeader(frag: NodeSelector, data: PostData) {
+export function renderHeader(frag: NodeSelector, data: Post) {
 	renderTime(frag.querySelector("time"), data.time, false)
 	renderName(frag.querySelector(".name"), data)
 	renderSticky(frag, data.sticky)

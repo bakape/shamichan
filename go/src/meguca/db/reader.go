@@ -60,15 +60,14 @@ type postScanner struct {
 	common.Post
 	banned, spoiler, deleted, sage sql.NullBool
 	name, trip, auth, imageName    sql.NullString
-	links, backlinks               linkRow
+	links                          linkRow
 	commands                       commandRow
 }
 
 func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
 		&p.Editing, &p.banned, &p.spoiler, &p.deleted, &p.sage, &p.ID, &p.Time,
-		&p.Body, &p.name, &p.trip, &p.auth, &p.links, &p.backlinks, &p.commands,
-		&p.imageName,
+		&p.Body, &p.name, &p.trip, &p.auth, &p.links, &p.commands, &p.imageName,
 	}
 }
 
@@ -80,7 +79,6 @@ func (p postScanner) Val() (common.Post, error) {
 	p.Trip = p.trip.String
 	p.Auth = p.auth.String
 	p.Links = [][2]uint64(p.links)
-	p.Backlinks = [][2]uint64(p.backlinks)
 	p.Commands = []common.Command(p.commands)
 
 	return p.Post, nil
@@ -93,10 +91,10 @@ func (p postScanner) Image() (bool, string) {
 
 // PostStats contains post open status, body and creation time
 type PostStats struct {
-	Editing, HasImage bool
-	ID                uint64
-	Time              int64
-	Body              []byte
+	Editing, HasImage, Spoilered bool
+	ID                           uint64
+	Time                         int64
+	Body                         []byte
 }
 
 // GetThread retrieves public thread data from the database
@@ -180,7 +178,7 @@ func scanOP(r rowScanner) (t common.Thread, err error) {
 		img  imageScanner
 	)
 
-	args := make([]interface{}, 0, 34)
+	args := make([]interface{}, 0, 33)
 	args = append(args, threadScanArgs(&t)...)
 	args = append(args, post.ScanArgs()...)
 	args = append(args, img.ScanArgs()...)
@@ -208,7 +206,7 @@ func extractPost(ps postScanner, is imageScanner) (p common.Post, err error) {
 // GetPost reads a single post from the database
 func GetPost(id uint64) (res common.StandalonePost, err error) {
 	var (
-		args = make([]interface{}, 2, 29)
+		args = make([]interface{}, 2, 28)
 		post postScanner
 		img  imageScanner
 	)
@@ -292,7 +290,7 @@ func GetRecentPosts(op uint64) (posts []PostStats, err error) {
 	posts = make([]PostStats, 0, 64)
 	var p PostStats
 	for r.Next() {
-		err = r.Scan(&p.ID, &p.Time, &p.Editing, &p.HasImage)
+		err = r.Scan(&p.ID, &p.Time, &p.Editing, &p.HasImage, &p.Spoilered)
 		if err != nil {
 			return
 		}
@@ -321,6 +319,38 @@ func GetRecentPosts(op uint64) (posts []PostStats, err error) {
 			posts[i].Body = util.CloneBytes(buc.Get(encodeUint64Heap(p.ID)))
 		}
 	}
+
+	return
+}
+
+// Retvies mutations, that can happen to posts in a thread, after the post is
+// closed
+func GetThreadMutations(id uint64) (deleted, banned []uint64, err error) {
+	deleted = make([]uint64, 0, 16)
+	banned = make([]uint64, 0, 16)
+	r, err := prepared["get_thread_mutations"].Query(id)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	var (
+		isDeleted, isBanned sql.NullBool
+		postID              uint64
+	)
+	for r.Next() {
+		err = r.Scan(&postID, &isDeleted, &isBanned)
+		if err != nil {
+			return
+		}
+		if isDeleted.Bool {
+			deleted = append(deleted, postID)
+		}
+		if isBanned.Bool {
+			banned = append(banned, postID)
+		}
+	}
+	err = r.Err()
 
 	return
 }

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	version = 14
+	version = 15
 
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
@@ -153,6 +153,13 @@ var upgrades = map[uint]func(*sql.Tx) error{
 	},
 	13: func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(`create index sticky on threads (sticky)`)
+		return
+	},
+	14: func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE posts
+				DROP COLUMN backlinks`,
+		)
 		return
 	},
 }

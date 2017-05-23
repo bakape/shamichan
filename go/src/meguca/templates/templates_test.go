@@ -70,7 +70,7 @@ func TestThread(t *testing.T) {
 			{
 				ID:   2,
 				Body: "bar",
-				Backlinks: [][2]uint64{
+				Links: [][2]uint64{
 					{3, 1},
 					{4, 7},
 				},

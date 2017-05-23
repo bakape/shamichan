@@ -5,7 +5,7 @@ import { renderFresh as renderBoard } from './board'
 import { setExpandAll } from "../posts"
 import initNavigation from "./navigation"
 
-export { extractConfigs, isBanned } from "./common"
+export { extractConfigs, isBanned, genBacklinks } from "./common"
 export {
 	incrementPostCount, default as renderThread, setThreadTitle
 } from "./thread"

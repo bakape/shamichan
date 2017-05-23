@@ -16,6 +16,5 @@ select insert_thread(
 	$15::char(40),
 	$16::varchar(200),
 	$17::bigint[][2],
-	$18::bigint[][2],
-	$19::json[]
+	$18::json[]
 );

@@ -272,7 +272,7 @@ func genPostCreationArgs(p Post) []interface{} {
 	return []interface{}{
 		p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, name, trip,
 		auth, p.Password, ip, img, imgName,
-		linkRow(p.Links), linkRow(p.Backlinks), commandRow(p.Commands),
+		linkRow(p.Links), commandRow(p.Commands),
 	}
 }
 

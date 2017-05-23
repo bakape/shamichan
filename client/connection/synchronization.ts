@@ -1,21 +1,27 @@
 import { handlers, message } from "./messages"
 import { connSM, connEvent, send } from "./state"
-import { postSM, postEvent, postState, identity, FormModel } from "../posts"
+import {
+	postSM, postEvent, postState, identity, FormModel, Post
+} from "../posts"
 import { page, posts } from "../state"
-import { trigger, uncachedGET } from "../util"
+import { trigger, uncachedGET, extend } from "../util"
 import { PostData } from "../common"
 import { insertPost } from "../client"
+import { genBacklinks } from "../page"
 
 // Passed from the server to allow the client to synchronise state, before
 // consuming any incoming update messages.
 type SyncData = {
 	recent: number[] // Posts created within the last 15 minutes
 	open: { [id: number]: OpenPost } // Posts currently open
+	deleted: number[] // Posts deleted in this thread
+	banned: number[] // Posts banned in this thread
 }
 
 // State of an open post
 type OpenPost = {
-	hasImage: boolean
+	hasImage?: boolean
+	spoilered?: boolean
 	body: string
 }
 
@@ -45,7 +51,10 @@ export function synchronise() {
 
 // Sync open posts to the state they are in on the server's update feed
 // dispatcher
-async function syncOpenPost(id: number, { hasImage, body }: OpenPost) {
+async function syncOpenPost(
+	id: number,
+	{ hasImage, body, spoilered }: OpenPost,
+) {
 	let model = posts.get(id)
 
 	if (!model) {
@@ -62,6 +71,10 @@ async function syncOpenPost(id: number, { hasImage, body }: OpenPost) {
 		model.image = (await fetchPost(id)).image
 		model.view.renderImage(false)
 	}
+	if (spoilered && !model.image.spoiler) {
+		model.image.spoiler = true
+		model.view.renderImage(false)
+	}
 	if (body) {
 		model.body = body
 	}
@@ -72,6 +85,12 @@ async function syncOpenPost(id: number, { hasImage, body }: OpenPost) {
 async function fetchMissingPost(id: number) {
 	insertPost(await fetchPost(id))
 	posts.get(id).view.reposition()
+}
+
+// Fetch a post that should be closed, but isn't
+async function fetchUnclosed(post: Post) {
+	extend(post, await fetchPost(post.id))
+	post.view.render()
 }
 
 async function fetchPost(id: number): Promise<PostData> {
@@ -114,8 +133,14 @@ handlers[message.synchronise] = async (data: SyncData) => {
 
 	// Board pages currently have no sync data
 	if (data) {
-		const { open, recent } = data,
+		const { open, recent, banned, deleted } = data,
 			proms: Promise<void>[] = []
+
+		for (let post of posts) {
+			if (post.editing && !(post.id in open)) {
+				proms.push(fetchUnclosed(post))
+			}
+		}
 
 		for (let key in open) {
 			const id = parseInt(key)
@@ -131,12 +156,25 @@ handlers[message.synchronise] = async (data: SyncData) => {
 			}
 		}
 
-		try {
-			await Promise.all(proms)
-		} catch (e) {
+		for (let id of banned) {
+			const post = posts.get(id)
+			if (post && !post.banned) {
+				post.setBanned()
+			}
+		}
+		for (let id of deleted) {
+			const post = posts.get(id)
+			if (post && !post.deleted) {
+				post.setDeleted()
+			}
+		}
+
+		await Promise.all(proms).catch(e => {
 			alert(e)
 			throw e
-		}
+		})
 	}
+
+	genBacklinks() // Regenerate backlinks only, when latest data is fetched
 	connSM.feed(connEvent.sync)
 }

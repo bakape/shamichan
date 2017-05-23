@@ -14,7 +14,6 @@ select insert_post(
 	$13::char(40),
 	$14::varchar(200),
 	$15::bigint[][2],
-	$16::bigint[][2],
-	$17::json[],
-	$18::bool
+	$16::json[],
+	$17::bool
 );

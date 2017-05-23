@@ -18,7 +18,7 @@ const (
 	MessageBackspace
 	MessageSplice
 	MessageClosePost
-	MessageBacklink
+	_
 	MessageInsertImage
 	MessageSpoiler
 	MessageDeletePost
@@ -67,6 +67,12 @@ var (
 
 	// ClosePost closes a post in a feed, if it exists
 	ClosePost func(id, op uint64, msg []byte)
+
+	// Propagate a message about a post being banned
+	BanPost func(id, op uint64) error
+
+	// Propagate a message about a post being deleted
+	DeletePost func(id, op uint64) error
 )
 
 // Client exposes some globally accessible websocket client functionality
