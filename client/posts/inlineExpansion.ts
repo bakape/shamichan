@@ -95,7 +95,7 @@ function toggleLinkReferences(parent: Element, childID: number, on: boolean) {
 
 export default () => {
 	// Clear, when changing the page
-	page.onChange("thread", () =>
+	page.onChange("*", () =>
 		inlinedPosts.clear())
 
 	on(document, "click", onClick, {

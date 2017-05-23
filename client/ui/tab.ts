@@ -19,12 +19,12 @@ export function setTitle(t: string) {
 	resolve()
 }
 
-const queue : Post[] = [];
+const queue: Post[] = [];
 
 // Update unseen post count based on post visibility and scroll position
 export function postAdded(post: Post) {
 	// async batch processing since visibility calculations force a layout
-	if(queue.length == 0) {
+	if (queue.length == 0) {
 		// can't use RAF since it's disabled in background tabs
 		setTimeout(processQueue, 16)
 	}
@@ -62,7 +62,7 @@ function resolve() {
 	let prefix = "",
 		icon = "default"
 
-	if(page.thread != 0) {
+	if (page.thread != 0) {
 		if (unseenPosts) {
 			prefix = `(${unseenPosts}) `
 			icon = "unread"
@@ -81,12 +81,12 @@ function recalc() {
 	recalcPending = false
 	unseenPosts = 0
 	unseenReplies = false
-	for(let post of posts) {
-		if(post.seen()) {
+	for (let post of posts) {
+		if (post.seen()) {
 			continue;
 		}
 		unseenPosts++
-		if(post.isReply()) {
+		if (post.isReply()) {
 			unseenReplies = true
 		}
 	}
@@ -126,17 +126,17 @@ export default () => {
 		connSM.on(state, delayedDiscoRender)
 	}
 
-	page.onChange("thread", () => {
+	page.onChange("*", () => {
 		unseenPosts = 0
 		unseenReplies = false
 		resolve()
 	})
 
 	document.addEventListener("scroll", () => {
-		if(recalcPending || document.hidden) {
+		if (recalcPending || document.hidden) {
 			return
 		}
 		recalcPending = true
 		setTimeout(recalc, 200)
-	}, {passive: true})
+	}, { passive: true })
 }

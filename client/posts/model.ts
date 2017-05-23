@@ -9,17 +9,16 @@ import { PostData, TextState, PostLink, Command, ImageData } from "../common"
 
 // Generic post model
 export class Post extends Model implements PostData {
-	collection: Collection
-	view: PostView
-	seenOnce: boolean
+	public collection: Collection
+	public view: PostView
 
-	// PostData properties
 	public op: number
 	public editing: boolean
 	public deleted: boolean
 	public sage: boolean
 	public banned: boolean
 	public sticky: boolean
+	private seenOnce: boolean
 	public image: ImageData
 	public time: number
 	public body: string
