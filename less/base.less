@@ -225,14 +225,28 @@ table {
 	}
 }
 
-:root.gallery #threads article[id^=p]:not(.media):not(.editing) {display: none;}
+:root.gallery #threads article[id^=p]:not(.media):not(.editing) {
+	display: none;
+}
 
-.fileinfo {display: inline-flex;align-items: baseline;margin-left: 1ex;}
-.fileinfo::before {content: "(";}
-.fileinfo::after {content: ")";}
-.fileinfo > span:empty {display: none;}
-.fileinfo > span:not(:empty):not([hidden]) ~ span::before {content: ", ";}
-.fileinfo > span.media-artist:not(:empty) + span.media-title::before {content: "\00a0-\00a0";}
+.fileinfo {
+	margin-left: 1ex;
+	&::before {
+		content: "(";
+	}
+	&::after {
+		content: ")";
+	}
+	& > span::empty {
+		display: none;
+	}
+	& > span:not(:empty):not([hidden]) ~ span::before {
+		content: ", ";
+	}
+	&  > span.media-artist:not(:empty) + span.media-title::before {
+		content: "\00a0-\00a0";
+	}
+}
 
 @media screen and (max-device-width: 700px) {
 	body {
