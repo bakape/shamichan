@@ -7,7 +7,6 @@ import (
 	"meguca/auth"
 	"meguca/common"
 	"meguca/db"
-
 	"meguca/websockets/feeds"
 
 	"golang.org/x/crypto/bcrypt"

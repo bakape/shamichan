@@ -134,11 +134,17 @@ func CanPost(ip string) bool {
 // Increment spam detection score to an IP, after performing an action.
 // Returns, if the limit was exceeded.
 func IncrementSpamScore(ip string, score time.Duration) (bool, error) {
+	if !config.Get().Captcha {
+		return false, nil
+	}
 	return spamCounters.get(ip).increment(score)
 }
 
 // Reset a spam score to zero by IP
 func ResetSpamScore(ip string) {
+	if !config.Get().Captcha {
+		return
+	}
 	spamCounters.get(ip).reset()
 }
 
