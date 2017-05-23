@@ -157,10 +157,12 @@ export function genBacklinks() {
 		}
 		for (let [id] of src.links) {
 			const target = posts.get(id)
-			if (!target.backlinks) {
-				target.backlinks = {}
+			if (target) {
+				if (!target.backlinks) {
+					target.backlinks = {}
+				}
+				target.backlinks[src.id] = src.op
 			}
-			target.backlinks[src.id] = src.op
 		}
 	}
 
