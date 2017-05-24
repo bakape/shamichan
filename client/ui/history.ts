@@ -88,8 +88,6 @@ export default async function navigate(
 		history.pushState(null, null, nextState.href)
 		scrollToAnchor()
 	}
-
-	displayLoading(false)
 }
 
 function alertError(err: Error) {

@@ -3,7 +3,7 @@ import { connSM, connEvent, send } from "./state"
 import {
 	postSM, postEvent, postState, identity, FormModel, Post
 } from "../posts"
-import { page, posts } from "../state"
+import { page, posts, displayLoading } from "../state"
 import { trigger, uncachedGET, extend } from "../util"
 import { PostData } from "../common"
 import { insertPost } from "../client"
@@ -176,5 +176,6 @@ handlers[message.synchronise] = async (data: SyncData) => {
 	}
 
 	genBacklinks() // Regenerate backlinks only, when latest data is fetched
+	displayLoading(false)
 	connSM.feed(connEvent.sync)
 }

@@ -1,6 +1,6 @@
 // Client entry point
 
-import { displayLoading, loadFromDB, page, posts } from './state'
+import { loadFromDB, page, posts } from './state'
 import { start as connect } from './connection'
 import { open } from './db'
 import { initOptions } from "./options"
@@ -40,9 +40,6 @@ async function start() {
 	} else {
 		setTitle(frag.querySelector("#page-title").textContent)
 	}
-
-	displayLoading(false)
-
 
 	// Load auxiliary modules
 	initUI()
