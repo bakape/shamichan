@@ -58,6 +58,10 @@ export function insertPost(data: PostData) {
 	posts.add(model)
 	const view = new PostView(model, null)
 
+	if (model.links) { // For closed posts
+		model.propagateBacklinks()
+	}
+
 	// Find last allocated post and insert after it
 	const last = document
 		.getElementById("thread-container")
@@ -114,12 +118,7 @@ export default () => {
 			if (links) {
 				m.links = links
 				m.checkRepliedToMe()
-				for (let [id] of links) {
-					const target = posts.get(id)
-					if (target) {
-						target.insertBacklink(m.id, m.op)
-					}
-				}
+				m.propagateBacklinks()
 			}
 			if (commands) {
 				m.commands = commands

@@ -3,7 +3,7 @@ import { extend } from '../util'
 import Collection from './collection'
 import PostView from './view'
 import { SpliceResponse } from '../client'
-import { mine, seenPosts, storeSeenPost } from "../state"
+import { mine, seenPosts, storeSeenPost, posts } from "../state"
 import { notifyAboutReply } from "../ui"
 import { PostData, TextState, PostLink, Command, ImageData } from "../common"
 
@@ -133,6 +133,16 @@ export class Post extends Model implements PostData {
 		}
 		this.backlinks[id] = op
 		this.view.renderBacklinks()
+	}
+
+	// Set and render backlinks on any linked posts
+	public propagateBacklinks() {
+		for (let [id] of this.links) {
+			const post = posts.get(id)
+			if (post) {
+				post.insertBacklink(this.id, this.op)
+			}
+		}
 	}
 
 	// Insert an image into an existing post

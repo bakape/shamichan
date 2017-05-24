@@ -129,7 +129,7 @@ export default class PostView extends ImageHandler {
             }
             rendered.add(id)
             html += "<em>"
-                + renderPostLink(id, this.model.links[id][1])
+                + renderPostLink(id, this.model.backlinks[id])
                 + "</em>"
         }
 

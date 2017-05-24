@@ -343,6 +343,9 @@ export default class FormModel extends Post {
 		if (this.nonLive) {
 			postSM.feed(postEvent.done)
 		}
+		if (data.links) {
+			this.propagateBacklinks()
+		}
 	}
 
 	// Upload the file and request its allocation
