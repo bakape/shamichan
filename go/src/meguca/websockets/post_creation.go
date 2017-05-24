@@ -257,6 +257,7 @@ func constructPost(
 			Post: common.Post{
 				Time: time.Now().Unix(),
 				Sage: req.Sage,
+				Body: req.Body,
 			},
 			Board: board,
 		},
@@ -286,15 +287,6 @@ func constructPost(
 		return
 	}
 
-	post.Links, post.Commands, err = parser.ParseBody(
-		[]byte(req.Body),
-		board,
-	)
-	if err != nil {
-		return
-	}
-	post.Body = req.Body
-
 	// Attach staff position title after validations
 	if req.UserID != "" {
 		post.Auth, err = db.FindPosition(board, req.UserID)
@@ -323,6 +315,14 @@ func constructPost(
 			return
 		}
 		post.Password, err = auth.BcryptHash(req.Password, 4)
+		if err != nil {
+			return
+		}
+	} else {
+		post.Links, post.Commands, err = parser.ParseBody(
+			[]byte(req.Body),
+			board,
+		)
 		if err != nil {
 			return
 		}
