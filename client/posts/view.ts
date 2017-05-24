@@ -121,7 +121,7 @@ export default class PostView extends ImageHandler {
         }
 
         let html = ""
-        for (let idStr in this.model.links) {
+        for (let idStr in this.model.backlinks) {
             const id = parseInt(idStr)
             // Confirm link not already rendered
             if (rendered.has(id)) {
