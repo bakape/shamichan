@@ -522,7 +522,7 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
-	_, ok := canPerform(w, r, msg.boardActionRequest, auth.Moderator, false)
+	_, ok := canPerform(w, r, msg.boardActionRequest, auth.Janitor, false)
 	if !ok {
 		return
 	}
