@@ -2,7 +2,7 @@
 
 import { page, mine } from '../../state'
 import lang from '../../lang'
-import { makeFrag, firstChild, makeAttrs } from "../../util"
+import { makeAttrs, pluralize } from "../../util"
 
 // Render a link to other posts
 export function renderPostLink(id: number, op: number): string {
@@ -35,38 +35,36 @@ export function renderTempLink(id: number): string {
     return html
 }
 
-// Render links to posts that are linking to the target post
-export function renderBacklinks(post: Element, links: { [id: number]: number }) {
-    if (!links) {
-        return
-    }
-
-    // Find backlink span or create one
-    let el = firstChild(post, ch =>
-        ch.classList.contains("backlinks"))
-    if (!el) {
-        el = document.createElement("span")
-        el.classList.add("spaced", "backlinks")
-        post.append(el)
-    }
-
-    // Get already rendered backlink IDs
-    const rendered = new Set<number>()
-    for (let em of Array.from(el.children)) {
-        const id = (em.firstChild as HTMLElement).getAttribute("data-id")
-        rendered.add(parseInt(id))
-    }
-
-    let html = ""
-    for (let idStr in links) {
-        const id = parseInt(idStr)
-        // Confirm link not already rendered
-        if (rendered.has(id)) {
-            continue
+// Renders readable elapsed time since post
+export function relativeTime(then: number, now: number): string {
+    let time = Math.floor((now - then) / 60),
+        isFuture = false
+    if (time < 1) {
+        if (time > -5) { // Assume to be client clock imprecision
+            return lang.posts["justNow"]
+        } else {
+            isFuture = true
+            time = -time
         }
-        rendered.add(id)
-        html += "<em>" + renderPostLink(id, links[id]) + "</em>"
     }
 
-    el.append(makeFrag(html))
+    const divide = [60, 24, 30, 12],
+        unit = ['minute', 'hour', 'day', 'month']
+    for (let i = 0; i < divide.length; i++) {
+        if (time < divide[i]) {
+            return ago(time, lang.plurals[unit[i]], isFuture)
+        }
+        time = Math.floor(time / divide[i])
+    }
+
+    return ago(time, lang.plurals["year"], isFuture)
+}
+
+// Renders "56 minutes ago" or "in 56 minutes" like relative time text
+function ago(time: number, units: [string, string], isFuture: boolean): string {
+    const count = pluralize(time, units)
+    if (isFuture) {
+        return `${lang.posts["in"]} ${count}`
+    }
+    return `${count} ${lang.posts["ago"]}`
 }

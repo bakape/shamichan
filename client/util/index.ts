@@ -147,16 +147,14 @@ export function pluralize(num: number, word: [string, string]): string {
 export function firstChild(
 	el: Element,
 	check: (el: Element) => boolean,
-): HTMLElement | undefined {
-	let m: HTMLElement
+): HTMLElement | null {
 	for (let i = 0; i < el.children.length; i++) {
 		const ch = el.children[i]
 		if (check(ch)) {
-			m = ch as HTMLElement
-			break
+			return ch as HTMLElement
 		}
 	}
-	return m
+	return null
 }
 
 // Returns an input element inside the parent by name

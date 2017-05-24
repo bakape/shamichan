@@ -1,13 +1,14 @@
 import { Post } from './model'
-import { makeFrag, importTemplate } from '../util'
 import {
-    renderPost, renderName, renderTime, renderBanned, parseBody,
-    renderBacklinks, renderSticky,
-} from './render'
+    makeFrag, importTemplate, getID, escape, firstChild, pad
+} from '../util'
+import { parseBody, relativeTime, renderPostLink } from './render'
 import ImageHandler from "./images"
 import { ViewAttrs } from "../base"
 import { findSyncwatches } from "./syncwatch"
-import { getID } from "../util"
+import lang from "../lang"
+import { page } from "../state"
+import options from "../options"
 
 // Base post view class
 export default class PostView extends ImageHandler {
@@ -38,7 +39,23 @@ export default class PostView extends ImageHandler {
 
     // Render the element contents, but don't insert it into the DOM
     public render() {
-        renderPost(this.el, this.model)
+        if (this.model.subject) {
+            const el = this.el.querySelector("h3")
+            el.innerHTML = `「${escape(this.model.subject)}」`
+            el.hidden = false
+        }
+
+        this.el.querySelector("blockquote").innerHTML = parseBody(this.model)
+        if (this.model.backlinks) {
+            this.renderBacklinks()
+        }
+        if (this.model.banned) {
+            this.renderBanned()
+        }
+        this.renderHeader()
+        if (this.model.image) {
+            this.renderImage(false)
+        }
     }
 
     // Get the current Element for text to be written to
@@ -87,7 +104,75 @@ export default class PostView extends ImageHandler {
 
     // Render links to posts linking to this post
     public renderBacklinks() {
-        renderBacklinks(this.el, this.model.backlinks)
+        // Find backlink span or create one
+        let el = firstChild(this.el, ch =>
+            ch.classList.contains("backlinks"))
+        if (!el) {
+            el = document.createElement("span")
+            el.classList.add("spaced", "backlinks")
+            this.el.append(el)
+        }
+
+        // Get already rendered backlink IDs
+        const rendered = new Set<number>()
+        for (let em of Array.from(el.children)) {
+            const id = (em.firstChild as HTMLElement).getAttribute("data-id")
+            rendered.add(parseInt(id))
+        }
+
+        let html = ""
+        for (let idStr in this.model.links) {
+            const id = parseInt(idStr)
+            // Confirm link not already rendered
+            if (rendered.has(id)) {
+                continue
+            }
+            rendered.add(id)
+            html += "<em>"
+                + renderPostLink(id, this.model.links[id][1])
+                + "</em>"
+        }
+
+        el.append(makeFrag(html))
+    }
+
+    // Render the header on top of the post
+    protected renderHeader() {
+        this.renderTime()
+        this.renderName()
+        if (this.model.sticky) {
+            this.renderSticky()
+        }
+
+        const nav = this.el.querySelector("nav"),
+            link = nav.firstElementChild as HTMLAnchorElement,
+            quote = nav.lastElementChild as HTMLAnchorElement,
+            { id, op } = this.model
+        let url = `#p${id}`
+        if (!page.thread && !page.catalog) {
+            url = `/all/${op || id}?last=100` + url
+        }
+        quote.href = link.href = url
+        quote.textContent = id.toString()
+    }
+
+    // Renders a time element. Can be either absolute or relative.
+    public renderTime() {
+        let text = this.readableTime()
+        const el = this.el.querySelector("time")
+        if (options.relativeTime) {
+            el.setAttribute("title", text)
+            text = relativeTime(this.model.time, Math.floor(Date.now() / 1000))
+        }
+        el.textContent = text
+    }
+
+    // Renders classic absolute timestamp
+    private readableTime(): string {
+        const d = new Date(this.model.time * 1000)
+        return `${pad(d.getDate())} ${lang.time.calendar[d.getMonth()]} `
+            + `${d.getFullYear()} (${lang.time.week[d.getDay()]}) `
+            + `${pad(d.getHours())}:${pad(d.getMinutes())}`
     }
 
     // Close an open post and clean up
@@ -98,17 +183,49 @@ export default class PostView extends ImageHandler {
 
     // Render the name and tripcode in the header
     public renderName() {
-        renderName(this.el.querySelector(".name"), this.model)
+        const el = this.el.querySelector(".name")
+        if (options.anonymise) {
+            el.innerHTML = lang.posts["anon"]
+            return
+        }
+
+        let html = ""
+        const { trip, name, auth, sage } = this.model
+
+        if (name || !trip) {
+            if (name) {
+                html += escape(name)
+            } else {
+                html += lang.posts["anon"]
+            }
+            if (trip) {
+                html += ' '
+            }
+        }
+
+        if (trip) {
+            html += `<code>!${escape(trip)}</code>`
+        }
+        if (auth) { // Render staff title
+            el.classList.add("admin")
+            html += ` ## ${lang.posts[auth] || "??"}`
+        }
+        el.classList.toggle("sage", !!sage)
+        el.innerHTML = html
     }
 
-    // Render the <time> element in the header
-    public renderTime() {
-        renderTime(this.el.querySelector("time"), this.model.time, false)
-    }
-
-    // Render ban notice on post
+    // Render "USER WAS BANNED FOR THIS POST" message
     public renderBanned() {
-        renderBanned(this.el)
+        const el = firstChild(this.el.querySelector(".post-container"), el =>
+            el.classList.contains("banned"))
+        if (el) {
+            return
+        }
+
+        const b = document.createElement("b")
+        b.classList.add("admin", "banned")
+        b.innerText = lang.posts["banned"]
+        this.el.querySelector("blockquote").after(b)
     }
 
     // Add or remove highlight to post
@@ -132,7 +249,11 @@ export default class PostView extends ImageHandler {
         if (old) {
             old.remove()
         }
-        renderSticky(this.el, this.model.sticky)
+        if (this.model.sticky) {
+            this.el
+                .querySelector(".mod-checkbox")
+                .after(importTemplate("sticky"))
+        }
     }
 
     // Inserts PostView back into the thread ordered by id

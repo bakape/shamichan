@@ -2,7 +2,7 @@ import { on, fetchBoard } from '../util'
 import lang from '../lang'
 import { page, hidden, posts } from '../state'
 import options from '../options'
-import { renderTime, Post, findSyncwatches } from "../posts"
+import { relativeTime, Post, findSyncwatches } from "../posts"
 import { setTitle } from "../ui"
 import {
 	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts,
@@ -173,10 +173,11 @@ function getThreads(): [HTMLElement, HTMLElement[]] {
 
 // Render the board refresh button text
 function renderRefreshButton(el: Element) {
-	renderTime(el, lastFetchTime, true)
-	if (el.textContent === lang.posts["justNow"]) {
-		el.textContent = lang.ui["refresh"]
+	let text = relativeTime(lastFetchTime, Date.now())
+	if (text === lang.posts["justNow"]) {
+		text = lang.ui["refresh"]
 	}
+	el.textContent = text
 }
 
 // Persist thread sort order mode to localStorage and rerender threads

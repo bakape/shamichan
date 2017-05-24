@@ -3,7 +3,6 @@ import FormModel from "./model"
 import { Post } from "../model"
 import { boardConfig } from "../../state"
 import { setAttrs, importTemplate, atBottom, scrollToBottom } from "../../util"
-import { renderHeader, renderName } from "../render"
 import { postSM, postEvent, postState } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
@@ -87,14 +86,12 @@ export default class FormView extends PostView {
             name = name.slice(0, i)
         }
 
-        const el = this.el.querySelector(".name")
-        el.classList.remove("admin")
-        renderName(el, {
-            trip,
-            auth: auth ? "??" : "",
-            name: name.trim(),
-            sage: identity.sage,
-        })
+        this.el.querySelector(".name").classList.remove("admin")
+        this.model.name = name.trim()
+        this.model.trip = trip
+        this.model.auth = auth ? "??" : ""
+        this.model.sage = identity.sage
+        this.renderName()
     }
 
     // Show button for closing allocated posts
@@ -248,11 +245,9 @@ export default class FormView extends PostView {
 
     // Transition into allocated post
     public renderAlloc() {
-        this.id = "p" + this.model.id
-        const header = this.el.querySelector("header")
-        this.el.id = this.id as string
-        header.classList.remove("temporary")
-        renderHeader(header, this.model)
+        this.id = this.el.id = "p" + this.model.id
+        this.el.querySelector("header").classList.remove("temporary")
+        this.renderHeader()
         this.showDone()
     }
 
