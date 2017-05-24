@@ -173,7 +173,7 @@ function getThreads(): [HTMLElement, HTMLElement[]] {
 
 // Render the board refresh button text
 function renderRefreshButton(el: Element) {
-	let text = relativeTime(lastFetchTime, Date.now())
+	let text = relativeTime(lastFetchTime)
 	if (text === lang.posts["justNow"]) {
 		text = lang.ui["refresh"]
 	}

@@ -35,8 +35,9 @@ export function renderTempLink(id: number): string {
     return html
 }
 
-// Renders readable elapsed time since post
-export function relativeTime(then: number, now: number): string {
+// Renders readable elapsed time since post. Numbers are in seconds.
+export function relativeTime(then: number): string {
+    const now = Math.floor(Date.now() / 1000)
     let time = Math.floor((now - then) / 60),
         isFuture = false
     if (time < 1) {

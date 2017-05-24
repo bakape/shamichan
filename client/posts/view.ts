@@ -162,7 +162,7 @@ export default class PostView extends ImageHandler {
         const el = this.el.querySelector("time")
         if (options.relativeTime) {
             el.setAttribute("title", text)
-            text = relativeTime(this.model.time, Math.floor(Date.now() / 1000))
+            text = relativeTime(this.model.time)
         }
         el.textContent = text
     }
