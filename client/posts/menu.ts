@@ -122,6 +122,7 @@ async function toggleSticky(m: Post) {
 	const res = await postJSON("/admin/sticky", {
 		sticky: !m.sticky,
 		id: m.id,
+		board: m.board,
 	})
 	if (res.status !== 200) {
 		return alert(await res.text())
