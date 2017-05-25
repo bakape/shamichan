@@ -1,7 +1,8 @@
-select close_post(
-	$1::bigint,
-	$2::bigint,
-	$3::varchar(2000),
-	$4::bigint[][2],
-	$5::json[]
-)
+update posts
+	set editing = false,
+		body = $2,
+		links = $3,
+		commands = $4,
+		password = null
+	where id = $1
+	returning bump_thread(op, false, false, false)

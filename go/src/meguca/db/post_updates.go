@@ -21,10 +21,7 @@ func ClosePost(id, op uint64, body string, links [][2]uint64, com []common.Comma
 		return err
 	}
 
-	err = execPrepared(
-		"close_post",
-		id, op, body, linkRow(links), commandRow(com),
-	)
+	err = execPrepared("close_post", id, body, linkRow(links), commandRow(com))
 	if err != nil {
 		return
 	}

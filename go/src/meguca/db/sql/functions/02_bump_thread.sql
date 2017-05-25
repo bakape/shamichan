@@ -1,12 +1,16 @@
 create or replace function bump_thread(
 	id bigint,
+	addPost bool,
 	bump bool,
 	image bool
 ) returns void as $$
 	update threads
 		set
 			replyTime = floor(extract(epoch from now())),
-			postCtr =  postCtr + 1,
+			postCtr = case when addPost
+				then  postCtr + 1
+				else postCtr
+			end,
 			bumpTime = case when bump
 				then
 					case when postCtr <= 3000
