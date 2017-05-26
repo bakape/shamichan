@@ -111,15 +111,7 @@ func RefreshBanCache() (err error) {
 }
 
 // DeletePost marks the target post as deleted
-func DeletePost(board string, id uint64, by string) (err error) {
-	b, err := GetPostBoard(id)
-	switch {
-	case err == sql.ErrNoRows || b != board:
-		return common.ErrInvalidPostID(id)
-	case err != nil:
-		return
-	}
-
+func DeletePost(id uint64, by string) (err error) {
 	err = execPrepared("delete_post", id, by)
 	if err != nil {
 		return
@@ -131,11 +123,24 @@ func DeletePost(board string, id uint64, by string) (err error) {
 	}
 	if !IsTest {
 		err = common.DeletePost(id, op)
-		if err != nil {
-			return
-		}
+	}
+	return
+}
+
+// Permanently delete an image from a post
+func DeleteImage(id uint64, by string) (err error) {
+	err = execPrepared("delete_image", id, by)
+	if err != nil {
+		return
 	}
 
+	op, err := GetPostOP(id)
+	if err != nil {
+		return
+	}
+	if !IsTest {
+		err = common.DeleteImage(id, op)
+	}
 	return
 }
 

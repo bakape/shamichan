@@ -363,6 +363,7 @@
 		"configureBoard": "Configure board",
 		"configureServer": "Configure server",
 		"createBoard": "Create board",
+		"deleteImage": "Delete image",
 		"deletePost": "Delete post",
 		"done": "Done",
 		"deleteBoard": "Delete board",

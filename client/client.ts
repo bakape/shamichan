@@ -130,6 +130,10 @@ export default () => {
 		handle(id, m =>
 			m.setDeleted())
 
+	handlers[message.deleteImage] = (id: number) =>
+		handle(id, m =>
+			m.removeImage())
+
 	handlers[message.banned] = (id: number) =>
 		handle(id, m =>
 			m.setBanned())

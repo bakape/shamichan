@@ -86,6 +86,13 @@ export default class ModPanel extends View<null> {
 					})
 				}
 				break
+			case "deleteImage":
+				if (checked.length) {
+					await this.postJSON("/admin/deleteImage", {
+						ids: mapToIDs(models),
+					})
+				}
+				break
 			case "ban":
 				if (checked.length) {
 					const args = HidableForm.forms["ban"].vals()
@@ -111,7 +118,6 @@ export default class ModPanel extends View<null> {
 			.querySelector(`select[name="action"]`) as HTMLInputElement)
 			.value
 	}
-
 
 	// Post JSON to server and handle errors
 	private async postJSON(url: string, data: {}) {
@@ -233,4 +239,3 @@ function mapToIDs(models: Post[]): number[] {
 	return models.map(m =>
 		m.id)
 }
-

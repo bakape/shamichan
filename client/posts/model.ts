@@ -179,6 +179,11 @@ export class Post extends Model implements PostData {
 		this.view.renderDeleted()
 	}
 
+	public removeImage() {
+		this.image = null
+		this.view.removeImage()
+	}
+
 	// Returns, if this post has been seen already
 	public seen() {
 		if (this.seenOnce) {

@@ -54,13 +54,10 @@ export default class ImageHandler extends View<Post> {
 	public renderImage(reveal: boolean) {
 		this.el.classList.add("media")
 
-		// Need to find direct descendant, otherwise inlined posts might match
-		const cont = this.el.querySelector(".post-container")
-		let el = firstChild(cont, ch =>
-			ch.tagName === "FIGURE")
+		let el = this.getFigure()
 		if (!el) {
 			el = importTemplate("figure").firstChild as HTMLElement
-			cont.prepend(el)
+			this.el.querySelector(".post-container").prepend(el)
 		}
 
 		const showThumb = (!options.hideThumbs && !options.workModeToggle)
@@ -71,6 +68,30 @@ export default class ImageHandler extends View<Post> {
 			this.renderThumbnail()
 		}
 		this.renderFigcaption(reveal)
+	}
+
+	// Need to find direct descendant, otherwise inlined posts might match
+	private getFigure(): HTMLElement {
+		return firstChild(this.el.querySelector(".post-container"), ch =>
+			ch.tagName === "FIGURE")
+	}
+
+	// Need to find direct descendant, otherwise inlined posts might match
+	private getFigcaption(): HTMLElement {
+		return firstChild(this.el, ch =>
+			ch.tagName === "FIGCAPTION")
+	}
+
+	public removeImage() {
+		this.el.classList.remove("media")
+		let el = this.getFigure()
+		if (el) {
+			el.remove()
+		}
+		el = this.getFigcaption()
+		if (el) {
+			el.remove()
+		}
 	}
 
 	// Render the actual thumbnail image
@@ -109,8 +130,7 @@ export default class ImageHandler extends View<Post> {
 
 	// Render the information caption above the image
 	private renderFigcaption(reveal: boolean) {
-		let el = firstChild(this.el, ch =>
-			ch.tagName === "FIGCAPTION")
+		let el = this.getFigcaption()
 		if (!el) {
 			el = importTemplate("figcaption").firstChild as HTMLElement
 			this.el.querySelector("header").after(el)

@@ -14,6 +14,7 @@ export const enum message {
 	spoiler,
 	deletePost,
 	banned,
+	deleteImage,
 
 	// >= 30 are miscellaneous and do not write to post models
 	synchronise = 30,

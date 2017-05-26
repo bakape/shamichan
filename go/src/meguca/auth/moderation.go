@@ -31,6 +31,7 @@ const (
 	BanPost ModerationAction = iota
 	UnbanPost
 	DeletePost
+	DeleteImage
 )
 
 // Single entry in the moderation log

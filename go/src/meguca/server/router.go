@@ -144,6 +144,7 @@ func createRouter() http.Handler {
 	admin.POST("/createBoard", wrapHandler(createBoard))
 	admin.POST("/deleteBoard", wrapHandler(deleteBoard))
 	admin.POST("/deletePost", wrapHandler(deletePost))
+	admin.POST("/deleteImage", wrapHandler(deleteImage))
 	admin.POST("/ban", wrapHandler(ban))
 	admin.POST("/notification", wrapHandler(sendNotification))
 	admin.POST("/assignStaff", wrapHandler(assignStaff))

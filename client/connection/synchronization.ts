@@ -14,7 +14,8 @@ import { genBacklinks } from "../page"
 type SyncData = {
 	recent: number[] // Posts created within the last 15 minutes
 	open: { [id: number]: OpenPost } // Posts currently open
-	deleted: number[] // Posts deleted in this thread
+	deleted: number[] // Posts deleted
+	deletedImage: number[] // Posts deleted in this thread
 	banned: number[] // Posts banned in this thread
 }
 
@@ -133,7 +134,7 @@ handlers[message.synchronise] = async (data: SyncData) => {
 
 	// Board pages currently have no sync data
 	if (data) {
-		const { open, recent, banned, deleted } = data,
+		const { open, recent, banned, deleted, deletedImage } = data,
 			proms: Promise<void>[] = []
 
 		for (let post of posts) {
@@ -166,6 +167,13 @@ handlers[message.synchronise] = async (data: SyncData) => {
 			const post = posts.get(id)
 			if (post && !post.deleted) {
 				post.setDeleted()
+			}
+		}
+
+		for (let id of deletedImage) {
+			const post = posts.get(id)
+			if (post && post.image) {
+				post.removeImage()
 			}
 		}
 

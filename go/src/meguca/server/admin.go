@@ -138,6 +138,44 @@ func canPerform(
 	}
 }
 
+// Assert client can moderate a post of unknown parenthood and return userID
+func canModeratePost(
+	w http.ResponseWriter,
+	r *http.Request,
+	id uint64,
+	level auth.ModerationLevel,
+) (
+	userID string,
+	can bool,
+) {
+	board, err := db.GetPostBoard(id)
+	switch err {
+	case nil:
+	case sql.ErrNoRows:
+		text400(w, err)
+		return
+	default:
+		text500(w, r, err)
+		return
+	}
+
+	creds, can := canPerform(
+		w, r,
+		boardActionRequest{
+			Board: board,
+		},
+		level,
+		false,
+	)
+	if !can {
+		text403(w, errAccessDenied)
+		return
+	}
+
+	userID = creds.UserID
+	return
+}
+
 // Validate length limit compliance of various fields
 func validateBoardConfigs(
 	w http.ResponseWriter,
@@ -322,15 +360,28 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 
 // Delete one or multiple posts on a moderated board
 func deletePost(w http.ResponseWriter, r *http.Request) {
+	moderatePosts(w, r, auth.Janitor, db.DeletePost)
+}
+
+// Perform a moderation action an an array of posts
+func moderatePosts(
+	w http.ResponseWriter,
+	r *http.Request,
+	level auth.ModerationLevel,
+	fn func(id uint64, userID string) error,
+) {
 	var msg postActionRequest
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
 
-	var err error
 	for _, id := range msg.IDs {
-		msg.Board, err = db.GetPostBoard(id)
-		switch err {
+		userID, ok := canModeratePost(w, r, id, level)
+		if !ok {
+			return
+		}
+
+		switch err := fn(id, userID); err {
 		case nil:
 		case sql.ErrNoRows:
 			text400(w, err)
@@ -339,28 +390,12 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 			text500(w, r, err)
 			return
 		}
-
-		creds, ok := canPerform(
-			w, r,
-			msg.boardActionRequest,
-			auth.Janitor,
-			false,
-		)
-		if !ok {
-			return
-		}
-
-		err = db.DeletePost(msg.Board, id, creds.UserID)
-		switch err.(type) {
-		case nil:
-		case common.ErrInvalidPostID:
-			text400(w, err)
-			return
-		default:
-			text500(w, r, err)
-			return
-		}
 	}
+}
+
+// Permanently delete an image from a post
+func deleteImage(w http.ResponseWriter, r *http.Request) {
+	moderatePosts(w, r, auth.Janitor, db.DeleteImage)
 }
 
 // Ban a specific IP from a specific board

@@ -98,6 +98,8 @@ Renders a moderation log page
 						{%s= ln["unban"] %}
 					{% case auth.DeletePost %}
 						{%s= ln["deletePost"] %}
+					{% case auth.DeleteImage %}
+						{%s= ln["deleteImage"] %}
 					{% endswitch %}
 				</td>
 				<td>{%s l.By %}</td>

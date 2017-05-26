@@ -15,6 +15,7 @@ const (
 	spoilerImage
 	deletePost
 	ban
+	deleteImage
 )
 
 type postMessage struct {
@@ -68,7 +69,7 @@ type Feed struct {
 	// Currently open posts
 	open map[uint64]openPostCacheEntry
 	// Deleted and banned posts
-	deleted, banned []uint64
+	deleted, deletedImage, banned []uint64
 }
 
 // Read existing posts into cache and start main loop
@@ -202,6 +203,8 @@ func (f *Feed) Start() (err error) {
 					f.banned = append(f.banned, msg.id)
 				case deletePost:
 					f.deleted = append(f.deleted, msg.id)
+				case deleteImage:
+					f.deletedImage = append(f.deletedImage, msg.id)
 				}
 				f.write(msg.msg)
 			}
@@ -276,6 +279,7 @@ func (f *Feed) genSyncMessage() []byte {
 	}
 	encodeUints("banned", f.banned)
 	encodeUints("deleted", f.deleted)
+	encodeUints("deletedImage", f.deletedImage)
 
 	b = append(b, '}')
 
@@ -334,6 +338,10 @@ func (f *Feed) banPost(id uint64, msg []byte) {
 
 func (f *Feed) deletePost(id uint64, msg []byte) {
 	f._sendPostMessage(deletePost, id, msg)
+}
+
+func (f *Feed) deleteImage(id uint64, msg []byte) {
+	f._sendPostMessage(deleteImage, id, msg)
 }
 
 // Set body of an open post and send update message to clients
