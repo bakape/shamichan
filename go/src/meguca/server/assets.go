@@ -30,8 +30,9 @@ func getWorkerPath() string {
 
 // More performant handler for serving image assets. These are immutable
 // (except deletion), so we can also set separate caching policies for them.
-func serveImages(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	file, err := os.Open(cleanJoin(imageWebRoot, p["path"]))
+func serveImages(w http.ResponseWriter, r *http.Request) {
+	path := extractParam(r, "path")
+	file, err := os.Open(cleanJoin(imageWebRoot, path))
 	if err != nil {
 		text404(w)
 		return
@@ -43,7 +44,7 @@ func serveImages(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		head.Set(key, val)
 	}
 
-	http.ServeContent(w, r, p["path"], time.Time{}, file)
+	http.ServeContent(w, r, path, time.Time{}, file)
 }
 
 func cleanJoin(a, b string) string {
@@ -51,8 +52,8 @@ func cleanJoin(a, b string) string {
 }
 
 // Server static assets
-func serveAssets(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	serveFile(w, r, cleanJoin(webRoot, p["path"]))
+func serveAssets(w http.ResponseWriter, r *http.Request) {
+	serveFile(w, r, cleanJoin(webRoot, extractParam(r, "path")))
 }
 
 func serveFile(w http.ResponseWriter, r *http.Request, path string) {

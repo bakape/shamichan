@@ -594,8 +594,8 @@ func setThreadSticky(w http.ResponseWriter, r *http.Request) {
 }
 
 // Render list of bans on a board with unban links for authenticated staff
-func banList(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	board := p["board"]
+func banList(w http.ResponseWriter, r *http.Request) {
+	board := extractParam(r, "board")
 	if !auth.IsBoard(board) {
 		text404(w)
 		return
@@ -645,8 +645,8 @@ func detectCanPerform(
 }
 
 // Unban a specific board -> banned post combination
-func unban(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	board := p["board"]
+func unban(w http.ResponseWriter, r *http.Request) {
+	board := extractParam(r, "board")
 	msg := boardActionRequest{
 		Board: board,
 	}
@@ -692,8 +692,8 @@ func unban(w http.ResponseWriter, r *http.Request, p map[string]string) {
 }
 
 // Serve moderation log for a specific board
-func modLog(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	board := p["board"]
+func modLog(w http.ResponseWriter, r *http.Request) {
+	board := extractParam(r, "board")
 	if !auth.IsBoard(board) {
 		text404(w)
 		return

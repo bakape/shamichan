@@ -38,13 +38,8 @@ func serveHTML(
 }
 
 // Serves board HTML to regular or noscript clients
-func boardHTML(
-	w http.ResponseWriter,
-	r *http.Request,
-	p map[string]string,
-	catalog bool,
-) {
-	b := p["board"]
+func boardHTML(w http.ResponseWriter, r *http.Request, catalog bool) {
+	b := extractParam(r, "board")
 	if !auth.IsBoard(b) {
 		text404(w)
 		return
@@ -92,8 +87,8 @@ func isMinimal(r *http.Request) bool {
 }
 
 // Asserts a thread exists on the specific board and renders the index template
-func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	id, ok := validateThread(w, r, p)
+func threadHTML(w http.ResponseWriter, r *http.Request) {
+	id, ok := validateThread(w, r)
 	if !ok {
 		return
 	}
@@ -117,8 +112,8 @@ func threadHTML(w http.ResponseWriter, r *http.Request, p map[string]string) {
 		return
 	}
 
-	html = templates.Thread(lp, id, p["board"], isMinimal(r), html)
-	serveHTML(w, r, etag, html, nil)
+	b := extractParam(r, "board")
+	serveHTML(w, r, etag, templates.Thread(lp, id, b, isMinimal(r), html), nil)
 }
 
 // Render a board selection and navigation panel and write HTML to client
@@ -146,12 +141,8 @@ func staticTemplate(
 }
 
 // Serve a form for selecting one of several boards owned by the user
-func ownedBoardSelection(
-	w http.ResponseWriter,
-	r *http.Request,
-	p map[string]string,
-) {
-	userID := p["userID"]
+func ownedBoardSelection(w http.ResponseWriter, r *http.Request) {
+	userID := extractParam(r, "userID")
 	owned, err := db.GetOwnedBoards(userID)
 	if err != nil {
 		text500(w, r, err)
@@ -196,18 +187,14 @@ func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
 }
 
 // Render a form for assigning staff to a board
-func staffAssignmentForm(
-	w http.ResponseWriter,
-	r *http.Request,
-	p map[string]string,
-) {
+func staffAssignmentForm(w http.ResponseWriter, r *http.Request) {
 	lp, err := lang.Get(w, r)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
 
-	s, err := db.GetStaff(p["board"])
+	s, err := db.GetStaff(extractParam(r, "board"))
 	if err != nil {
 		text500(w, r, err)
 		return
@@ -279,12 +266,8 @@ func noscriptCaptcha(w http.ResponseWriter, r *http.Request) {
 }
 
 // Redirect the client to the appropriate board through a cross-board redirect
-func crossRedirect(
-	w http.ResponseWriter,
-	r *http.Request,
-	p map[string]string,
-) {
-	idStr := p["id"]
+func crossRedirect(w http.ResponseWriter, r *http.Request) {
+	idStr := extractParam(r, "id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
 		text404(w)

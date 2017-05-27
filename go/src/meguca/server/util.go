@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
+
+	"github.com/dimfeld/httptreemux"
 )
 
 // Base set of HTTP headers for both HTML and JSON
@@ -141,4 +143,9 @@ func assertNotBanned(
 		text500(w, r, err)
 		return false
 	}
+}
+
+// Extract URL paramater from request context
+func extractParam(r *http.Request, id string) string {
+	return httptreemux.ContextParams(r.Context())[id]
 }

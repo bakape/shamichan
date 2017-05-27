@@ -83,8 +83,8 @@ func serveConfigs(w http.ResponseWriter, r *http.Request) {
 }
 
 // Serve a single post as JSON
-func servePost(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	id, err := strconv.ParseUint(p["post"], 10, 64)
+func servePost(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseUint(extractParam(r, "post"), 10, 64)
 	if err != nil {
 		text400(w, err)
 		return
@@ -112,9 +112,8 @@ func respondToJSONError(w http.ResponseWriter, r *http.Request, err error) {
 func serveBoardConfigs(
 	w http.ResponseWriter,
 	r *http.Request,
-	p map[string]string,
 ) {
-	board := p["board"]
+	board := extractParam(r, "board")
 	if !auth.IsBoard(board) {
 		text404(w)
 		return
@@ -129,8 +128,8 @@ func serveBoardConfigs(
 }
 
 // Serves thread page JSON
-func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
-	id, ok := validateThread(w, r, p)
+func threadJSON(w http.ResponseWriter, r *http.Request) {
+	id, ok := validateThread(w, r)
 	if !ok {
 		return
 	}
@@ -147,18 +146,14 @@ func threadJSON(w http.ResponseWriter, r *http.Request, p map[string]string) {
 
 // Confirms a the thread exists on the board and returns its ID. If an error
 // occurred and the calling function should return, ok = false.
-func validateThread(
-	w http.ResponseWriter,
-	r *http.Request,
-	p map[string]string,
-) (uint64, bool) {
-	board := p["board"]
+func validateThread(w http.ResponseWriter, r *http.Request) (uint64, bool) {
+	board := extractParam(r, "board")
 
 	if !assertNotBanned(w, r, board) {
 		return 0, false
 	}
 
-	id, err := strconv.ParseUint(p["thread"], 10, 64)
+	id, err := strconv.ParseUint(extractParam(r, "thread"), 10, 64)
 	if err != nil {
 		text404(w)
 		return 0, false
@@ -178,13 +173,8 @@ func validateThread(
 }
 
 // Serves board page JSON
-func boardJSON(
-	w http.ResponseWriter,
-	r *http.Request,
-	p map[string]string,
-	catalog bool,
-) {
-	b := p["board"]
+func boardJSON(w http.ResponseWriter, r *http.Request, catalog bool) {
+	b := extractParam(r, "board")
 	if !auth.IsBoard(b) {
 		text404(w)
 		return

@@ -58,98 +58,75 @@ func startWebServer() (err error) {
 // Create the monolithic router for routing HTTP requests. Separated into own
 // function for easier testability.
 func createRouter() http.Handler {
-	r := httptreemux.New()
+	r := httptreemux.NewContextMux()
 	r.NotFoundHandler = func(w http.ResponseWriter, _ *http.Request) {
 		text404(w)
 	}
 	r.PanicHandler = text500
 
-	r.GET("/robots.txt", wrapHandler(serveRobotsTXT))
+	r.GET("/robots.txt", serveRobotsTXT)
 
 	// HTML
-	r.GET("/", wrapHandler(redirectToDefault))
-	r.GET("/:board/", func(
-		w http.ResponseWriter,
-		r *http.Request,
-		p map[string]string,
-	) {
-		boardHTML(w, r, p, false)
+	r.GET("/", redirectToDefault)
+	r.GET("/:board/", func(w http.ResponseWriter, r *http.Request) {
+		boardHTML(w, r, false)
 	})
-	r.GET("/:board/catalog", func(
-		w http.ResponseWriter,
-		r *http.Request,
-		p map[string]string,
-	) {
-		boardHTML(w, r, p, true)
-	})
-	r.GET("/all/catalog", func(
-		w http.ResponseWriter,
-		r *http.Request,
-		p map[string]string,
-	) {
-		boardHTML(w, r, map[string]string{"board": "all"}, true)
+	r.GET("/:board/catalog", func(w http.ResponseWriter, r *http.Request) {
+		boardHTML(w, r, true)
 	})
 	r.GET("/:board/:thread", threadHTML)
 	r.GET("/all/:id", crossRedirect)
 
 	// API for retrieving various localized HTML forms
 	forms := r.NewGroup("/forms")
-	forms.GET("/boardNavigation", wrapHandler(boardNavigation))
+	forms.GET("/boardNavigation", boardNavigation)
 	forms.GET("/ownedBoards/:userID", ownedBoardSelection)
-	forms.GET("/createBoard", wrapHandler(boardCreationForm))
-	forms.GET("/changePassword", wrapHandler(changePasswordForm))
-	forms.GET("/captcha", wrapHandler(renderCaptcha))
-	forms.POST("/configureBoard", wrapHandler(boardConfigurationForm))
-	forms.POST("/configureServer", wrapHandler(serverConfigurationForm))
+	forms.GET("/createBoard", boardCreationForm)
+	forms.GET("/changePassword", changePasswordForm)
+	forms.GET("/captcha", renderCaptcha)
+	forms.POST("/configureBoard", boardConfigurationForm)
+	forms.POST("/configureServer", serverConfigurationForm)
 	forms.GET("/assignStaff/:board", staffAssignmentForm)
 
 	// JSON API
 	json := r.NewGroup("/json")
-	json.GET("/:board/", func(
-		w http.ResponseWriter,
-		r *http.Request,
-		p map[string]string,
-	) {
-		boardJSON(w, r, p, false)
+	json.GET("/:board/", func(w http.ResponseWriter, r *http.Request) {
+		boardJSON(w, r, false)
 	})
-	json.GET("/:board/catalog", func(
-		w http.ResponseWriter,
-		r *http.Request,
-		p map[string]string,
-	) {
-		boardJSON(w, r, p, true)
+	json.GET("/:board/catalog", func(w http.ResponseWriter, r *http.Request) {
+		boardJSON(w, r, true)
 	})
 	json.GET("/:board/:thread", threadJSON)
 	json.GET("/post/:post", servePost)
-	json.GET("/config", wrapHandler(serveConfigs))
-	json.GET("/extensions", wrapHandler(serveExtensionMap))
+	json.GET("/config", serveConfigs)
+	json.GET("/extensions", serveExtensionMap)
 	json.GET("/boardConfig/:board", serveBoardConfigs)
-	json.GET("/boardList", wrapHandler(serveBoardList))
+	json.GET("/boardList", serveBoardList)
 
 	// Public POST API
-	r.POST("/createThread", wrapHandler(createThread))
-	r.POST("/createReply", wrapHandler(createReply))
+	r.POST("/createThread", createThread)
+	r.POST("/createReply", createReply)
 
 	// Administration JSON API for logged in users
 	admin := r.NewGroup("/admin")
-	admin.POST("/register", wrapHandler(register))
-	admin.POST("/login", wrapHandler(login))
-	admin.POST("/logout", wrapHandler(logout))
-	admin.POST("/logoutAll", wrapHandler(logoutAll))
-	admin.POST("/changePassword", wrapHandler(changePassword))
-	admin.POST("/boardConfig", wrapHandler(servePrivateBoardConfigs))
-	admin.POST("/configureBoard", wrapHandler(configureBoard))
-	admin.POST("/config", wrapHandler(servePrivateServerConfigs))
-	admin.POST("/configureServer", wrapHandler(configureServer))
-	admin.POST("/createBoard", wrapHandler(createBoard))
-	admin.POST("/deleteBoard", wrapHandler(deleteBoard))
-	admin.POST("/deletePost", wrapHandler(deletePost))
-	admin.POST("/deleteImage", wrapHandler(deleteImage))
-	admin.POST("/ban", wrapHandler(ban))
-	admin.POST("/notification", wrapHandler(sendNotification))
-	admin.POST("/assignStaff", wrapHandler(assignStaff))
-	admin.POST("/sameIP", wrapHandler(getSameIPPosts))
-	admin.POST("/sticky", wrapHandler(setThreadSticky))
+	admin.POST("/register", register)
+	admin.POST("/login", login)
+	admin.POST("/logout", logout)
+	admin.POST("/logoutAll", logoutAll)
+	admin.POST("/changePassword", changePassword)
+	admin.POST("/boardConfig", servePrivateBoardConfigs)
+	admin.POST("/configureBoard", configureBoard)
+	admin.POST("/config", servePrivateServerConfigs)
+	admin.POST("/configureServer", configureServer)
+	admin.POST("/createBoard", createBoard)
+	admin.POST("/deleteBoard", deleteBoard)
+	admin.POST("/deletePost", deletePost)
+	admin.POST("/deleteImage", deleteImage)
+	admin.POST("/ban", ban)
+	admin.POST("/notification", sendNotification)
+	admin.POST("/assignStaff", assignStaff)
+	admin.POST("/sameIP", getSameIPPosts)
+	admin.POST("/sticky", setThreadSticky)
 	admin.POST("/unban/:board", unban)
 
 	// Available to both logged-in users and publicly with slight alterations
@@ -158,25 +135,25 @@ func createRouter() http.Handler {
 
 	// Captcha API
 	captcha := r.NewGroup("/captcha")
-	captcha.GET("/new", wrapHandler(auth.NewCaptchaID))
-	captcha.GET("/image/*path", wrapHandler(auth.ServeCaptcha))
+	captcha.GET("/new", auth.NewCaptchaID)
+	captcha.GET("/image/*path", auth.ServeCaptcha)
 
 	// Noscript captcha API
 	NSCaptcha := captcha.NewGroup("/noscript")
-	NSCaptcha.GET("/load", wrapHandler(noscriptCaptchaLink))
-	NSCaptcha.GET("/new", wrapHandler(noscriptCaptcha))
+	NSCaptcha.GET("/load", noscriptCaptchaLink)
+	NSCaptcha.GET("/new", noscriptCaptcha)
 
 	// Assets
 	r.GET("/assets/*path", serveAssets)
 	r.GET("/images/*path", serveImages)
-	r.GET("/worker.js", wrapHandler(serveWorker))
+	r.GET("/worker.js", serveWorker)
 
 	// Websocket API
-	r.GET("/socket", wrapHandler(websockets.Handler))
+	r.GET("/socket", websockets.Handler)
 
 	// File upload
-	r.POST("/upload", wrapHandler(imager.NewImageUpload))
-	r.POST("/uploadHash", wrapHandler(imager.UploadImageHash))
+	r.POST("/upload", imager.NewImageUpload)
+	r.POST("/uploadHash", imager.UploadImageHash)
 
 	h := http.Handler(r)
 	if enableGzip {
@@ -184,13 +161,6 @@ func createRouter() http.Handler {
 	}
 
 	return h
-}
-
-// Adapter for http.HandlerFunc -> httptreemux.HandlerFunc
-func wrapHandler(fn http.HandlerFunc) httptreemux.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-		fn(w, r)
-	}
 }
 
 // Redirects to / requests to /all/ board

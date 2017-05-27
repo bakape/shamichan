@@ -47,21 +47,19 @@ func TestAllBoardRedirect(t *testing.T) {
 }
 
 func TestPanicHandler(t *testing.T) {
-	t.Parallel()
-
-	r := httptreemux.New()
-	h := wrapHandler(func(_ http.ResponseWriter, _ *http.Request) {
+	r := httptreemux.NewContextMux()
+	h := func(_ http.ResponseWriter, _ *http.Request) {
 		panic(errors.New("foo"))
-	})
+	}
 	r.GET("/panic", h)
 	r.PanicHandler = text500
 	rec, req := newPair("/panic")
 
 	// Prevent printing stack trace to terminal
 	log.SetOutput(ioutil.Discard)
-	r.ServeHTTP(rec, req)
-	log.SetOutput(os.Stdout)
+	defer log.SetOutput(os.Stdout)
 
+	r.ServeHTTP(rec, req)
 	assertCode(t, rec, 500)
 	assertBody(t, rec, "500 foo\n")
 }

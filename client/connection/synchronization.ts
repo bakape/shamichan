@@ -163,6 +163,7 @@ handlers[message.synchronise] = async (data: SyncData) => {
 				post.setBanned()
 			}
 		}
+
 		for (let id of deleted) {
 			const post = posts.get(id)
 			if (post && !post.deleted) {
