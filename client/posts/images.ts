@@ -196,7 +196,7 @@ export default class ImageHandler extends View<Post> {
 		// Render a name + download link of an image
 		const ext = fileTypes[data.fileType],
 			name = `${escape(data.name)}.${ext}`
-		setAttrs(el, {
+		setAttrs(el.lastElementChild, {
 			href: `/images/src/${data.SHA1}.${ext}`,
 			download: name,
 		})
