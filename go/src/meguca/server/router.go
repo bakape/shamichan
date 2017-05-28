@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"fmt"
 	"log"
 	"meguca/auth"
@@ -72,6 +73,18 @@ func createRouter() http.Handler {
 		boardHTML(w, r, false)
 	})
 	r.GET("/:board/catalog", func(w http.ResponseWriter, r *http.Request) {
+		boardHTML(w, r, true)
+	})
+	// Needs override, because it conflicts with crossRedirect
+	r.GET("/all/catalog", func(w http.ResponseWriter, r *http.Request) {
+		// Artificially set board to "all"
+		r = r.WithContext(context.WithValue(
+			r.Context(),
+			httptreemux.ParamsContextKey,
+			map[string]string{
+				"board": "all",
+			},
+		))
 		boardHTML(w, r, true)
 	})
 	r.GET("/:board/:thread", threadHTML)
