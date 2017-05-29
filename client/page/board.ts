@@ -1,6 +1,6 @@
 import { on, fetchBoard } from '../util'
 import lang from '../lang'
-import { page, hidden, posts } from '../state'
+import { page, posts } from '../state'
 import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
 import { setTitle } from "../ui"
@@ -49,15 +49,10 @@ export function renderFresh(html: string) {
 function extractCatalogModels() {
 	const text = document.getElementById("post-data").textContent
 	for (let t of JSON.parse(text) as ThreadData[]) {
-		if (hidden.has(t.id)) {
-			document.getElementById(`p${t.id}`).remove()
-			continue
-		}
-		t.op = t.id
 		if (t.image) {
 			t.image.large = true
 		}
-		posts.add(new Post(t))
+		extractPost(t, t.id, t.board)
 	}
 }
 

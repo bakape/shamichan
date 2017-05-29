@@ -1,4 +1,4 @@
-import { setBoardConfig, hidden, mine, posts } from "../state"
+import { setBoardConfig, hidden, mine, posts, page } from "../state"
 import options from "../options"
 import { PostData, fileTypes, PostLink } from "../common"
 import { Post, PostView } from "../posts"
@@ -39,6 +39,10 @@ export function extractPost(
 	const model = new Post(post),
 		view = new PostView(model, el)
 	posts.add(model)
+
+	if (page.catalog) {
+		return false
+	}
 
 	// Apply client-specific formatting to a post rendered server-side
 
