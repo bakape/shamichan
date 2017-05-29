@@ -184,7 +184,9 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		})
 	}
 
-	genBacklinks() // Regenerate backlinks only, when latest data is fetched
+	if (!page.catalog) {
+		genBacklinks() // Regenerate backlinks only, when latest data is fetched
+	}
 	displayLoading(false)
 	connSM.feed(connEvent.sync)
 }
