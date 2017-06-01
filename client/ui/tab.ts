@@ -8,6 +8,15 @@ const titleEl = document.head.querySelector("title"),
 	faviconEl = document.getElementById("favicon"),
 	urlBase = "/assets/favicons/"
 
+// All possible favicon states
+const enum states { default, disconnected, error, unread, replied }
+
+// Last state rendered as a favicon. Used to reduce DOM & tab header writes
+const lastRendered = {
+	state: states.default,
+	unseenPosts: 0,
+}
+
 let title: string,
 	unseenPosts = 0,
 	unseenReplies = false,
@@ -54,25 +63,22 @@ export function repliedToMe(post: Post) {
 function resolve() {
 	switch (connSM.state) {
 		case connState.desynced:
-			return apply("--- ", urlBase + "error.ico")
+			return apply("--- ", states.error)
 		case connState.dropped:
-			return apply("--- ", discoFavicon)
+			return apply("--- ", states.disconnected)
 	}
 
 	let prefix = "",
-		icon = "default"
-
-	if (page.thread != 0) {
-		if (unseenPosts) {
-			prefix = `(${unseenPosts}) `
-			icon = "unread"
-		}
-		if (unseenReplies) {
-			prefix = ">> " + prefix
-			icon = "reply"
-		}
+		state = states.default
+	if (unseenPosts) {
+		state = states.unread
+		prefix = `(${unseenPosts}) `
 	}
-	apply(prefix, `${urlBase}${icon}.ico`)
+	if (unseenReplies) {
+		state = states.replied
+		prefix = ">> " + prefix
+	}
+	apply(prefix, state)
 }
 
 let recalcPending = false
@@ -93,11 +99,38 @@ function recalc() {
 	resolve()
 }
 
-// Write tab title and favicon to DOM. If we use requestAnimationFrame here,
-// this will never render on a hidden document.
-function apply(prefix: string, favicon: string) {
+// Write tab title and favicon to DOM
+function apply(prefix: string, state: states) {
+	// Same data - skip write to DOM
+	if (lastRendered.state === state
+		&& lastRendered.unseenPosts === unseenPosts
+	) {
+		return
+	}
+
+	lastRendered.unseenPosts = unseenPosts
+	lastRendered.state = state
+
 	titleEl.innerHTML = prefix + title
-	faviconEl.setAttribute("href", favicon)
+	let url: string
+	switch (state) {
+		case states.default:
+			url = urlBase + "default.ico"
+			break
+		case states.disconnected:
+			url = discoFavicon
+			break
+		case states.error:
+			url = urlBase + "error.ico"
+			break
+		case states.replied:
+			url = urlBase + "reply.ico"
+			break
+		case states.unread:
+			url = urlBase + "unread.ico"
+			break
+	}
+	faviconEl.setAttribute("href", url)
 }
 
 // Account for immediate reconnection and only render favicon, if not
