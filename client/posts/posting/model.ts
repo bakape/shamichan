@@ -336,7 +336,6 @@ export default class FormModel extends Post {
 		this.isAllocated = true
 		extend(this, data)
 		this.view.renderAlloc()
-		storeMine(data.id)
 		if (data.image) {
 			this.insertImage(this.image)
 		}
