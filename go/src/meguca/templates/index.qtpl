@@ -338,6 +338,7 @@
 								</option>
 							{% endfor %}
 						</select>
+						<input type="button" value="{%s= ln.UI["clear"] %}" name="clear">
 						{%= submit(false, ln.UI) %}
 					</form>
 				</div>

@@ -36,6 +36,10 @@ export default class ModPanel extends View<null> {
 			.addEventListener("change", () => this.onSelectChange(), {
 				passive: true
 			})
+		this.inputElement("clear")
+			.addEventListener("click", () => this.clearCheckboxes(), {
+				passive: true,
+			})
 
 		this.checkboxToggle = (this.el
 			.querySelector(`input[name="showCheckboxes"]`) as HTMLInputElement)
@@ -74,9 +78,8 @@ export default class ModPanel extends View<null> {
 		e.preventDefault()
 		e.stopImmediatePropagation()
 
-		const checked = (document
-			.querySelectorAll(".mod-checkbox:checked") as HTMLInputElement[])
-		const models = [...checked].map(getModel)
+		const checked = this.getChecked(),
+			models = [...checked].map(getModel)
 
 		switch (this.getMode()) {
 			case "deletePost":
@@ -104,10 +107,19 @@ export default class ModPanel extends View<null> {
 				const f = HidableForm.forms["notification"]
 				await this.postJSON("/admin/notification", f.vals())
 				f.clear()
-				return
+				break
 		}
+	}
 
-		for (let el of checked) {
+	// Get selected post checkboxes
+	private getChecked(): HTMLInputElement[] {
+		return document
+			.querySelectorAll(".mod-checkbox:checked") as HTMLInputElement[]
+	}
+
+	// Clear any selected post checkboxes
+	private clearCheckboxes() {
+		for (let el of this.getChecked()) {
 			el.checked = false
 		}
 	}

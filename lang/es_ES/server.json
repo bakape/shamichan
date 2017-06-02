@@ -360,6 +360,7 @@
 		"captchaID": "Captcha ID",
 		"catalog": "Catalog",
 		"changePassword": "Change password",
+		"clear": "Clear",
 		"configureBoard": "Configure board",
 		"configureServer": "Configure server",
 		"createBoard": "Create board",
