@@ -10,7 +10,7 @@ export function renderPostLink(id: number, op: number): string {
         index = !page.thread && !page.catalog,
         url = `${cross || index ? `/all/${op}` : ""}#p${id}`
     let html = `<a class="history post-link" data-id="${id}" href="${url}">>>${id}`
-    if (cross) {
+    if (cross && !index) {
         html += " ➡"
     }
     if (mine.has(id)) { // Post, I made
