@@ -289,10 +289,12 @@ func constructPost(
 
 	// Attach staff position title after validations
 	if req.UserID != "" {
-		post.Auth, err = db.FindPosition(board, req.UserID)
+		var pos auth.ModerationLevel
+		pos, err = db.FindPosition(board, req.UserID)
 		if err != nil {
 			return
 		}
+		post.Auth = pos.String()
 
 		var loggedIn bool
 		loggedIn, err = db.IsLoggedIn(req.UserID, req.Session)

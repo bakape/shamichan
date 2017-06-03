@@ -3,11 +3,10 @@ package db
 import (
 	"database/sql"
 	"errors"
-	"time"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
+	"time"
 )
 
 // Common errors
@@ -45,14 +44,41 @@ func GetPassword(id string) (hash []byte, err error) {
 	return
 }
 
-// FindPosition returns the first matching position of a user on a certain
-// board. As a special case the admin user will always return "admin". If none
-// found, returns empty string
-func FindPosition(board, userID string) (pos string, err error) {
+// FindPosition returns the highest matching position of a user on a certain
+// board. As a special case the admin user will always return "admin".
+func FindPosition(board, userID string) (pos auth.ModerationLevel, err error) {
 	if userID == "admin" {
-		return userID, nil
+		return auth.Admin, nil
 	}
-	err = prepared["find_position"].QueryRow(board, userID).Scan(&pos)
+
+	r, err := prepared["get_positions"].Query(userID, board)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	// Read the highest position held
+	var s string
+	for r.Next() {
+		err = r.Scan(&s)
+		if err != nil {
+			return
+		}
+
+		level := auth.NotStaff
+		switch s {
+		case "owners":
+			level = auth.BoardOwner
+		case "moderators":
+			level = auth.Moderator
+		case "janitors":
+			level = auth.Janitor
+		}
+		if level > pos {
+			pos = level
+		}
+	}
+	err = r.Err()
 	return
 }
 

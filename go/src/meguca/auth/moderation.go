@@ -14,9 +14,41 @@ var (
 // ModerationLevel defines the level required to perform an action
 type ModerationLevel int8
 
+// Reads moderation level from string representation
+func (l *ModerationLevel) FromString(s string) {
+	switch s {
+	case "admin":
+		*l = Admin
+	case "owners":
+		*l = BoardOwner
+	case "moderators":
+		*l = Moderator
+	case "janitors":
+		*l = Janitor
+	default:
+		*l = NotStaff
+	}
+}
+
+// Returns string representation of moderation level
+func (l ModerationLevel) String() string {
+	switch l {
+	case Admin:
+		return "admin"
+	case BoardOwner:
+		return "owners"
+	case Moderator:
+		return "moderators"
+	case Janitor:
+		return "janitors"
+	default:
+		return ""
+	}
+}
+
 // All available moderation levels
 const (
-	NotStaff ModerationLevel = iota - 1
+	NotStaff ModerationLevel = iota
 	Janitor
 	Moderator
 	BoardOwner

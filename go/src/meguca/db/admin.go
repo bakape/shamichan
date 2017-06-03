@@ -198,39 +198,7 @@ func CanPerform(account, board string, action auth.ModerationLevel) (
 		return false, nil
 	}
 
-	r, err := prepared["get_positions"].Query(account, board)
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	// Read the highest position held
-	pos := auth.NotStaff
-	for r.Next() {
-		var s string
-		err = r.Scan(&s)
-		if err != nil {
-			return
-		}
-
-		level := auth.NotStaff
-		switch s {
-		case "owners":
-			level = auth.BoardOwner
-		case "moderators":
-			level = auth.Moderator
-		case "janitors":
-			level = auth.Janitor
-		}
-		if level > pos {
-			pos = level
-		}
-	}
-	err = r.Err()
-	if err != nil {
-		return
-	}
-
+	pos, err := FindPosition(board, account)
 	can = pos >= action
 	return
 }
