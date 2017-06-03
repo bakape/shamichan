@@ -50,26 +50,14 @@ type boardActionRequest struct {
 	Board string
 	auth.Captcha
 }
-
 type boardConfigSettingRequest struct {
-	boardActionRequest
+	auth.Captcha
 	config.BoardConfigs
 }
 
 type boardCreationRequest struct {
-	boardActionRequest
-	Title string
-}
-
-// Request to perform a moderation action on a specific set of posts
-type postActionRequest struct {
-	IDs []uint64
-	boardActionRequest
-}
-
-type singlePostActionRequest struct {
-	ID uint64
-	boardActionRequest
+	auth.Captcha
+	ID, Title string
 }
 
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
@@ -89,33 +77,32 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
-	_, ok := canPerform(w, r, msg.boardActionRequest, auth.BoardOwner, true)
+	_, ok := canPerform(w, r, msg.ID, auth.BoardOwner, &msg.Captcha)
 	if !ok || !validateBoardConfigs(w, msg.BoardConfigs) {
 		return
 	}
-
-	msg.BoardConfigs.ID = msg.Board
 	if err := db.UpdateBoard(msg.BoardConfigs); err != nil {
 		text500(w, r, err)
 		return
 	}
 }
 
-// Assert user can perform a moderation action
+// Assert user can perform a moderation action. If the action does not need a
+// captcha verification, pass captcha as nil.
 func canPerform(
 	w http.ResponseWriter,
 	r *http.Request,
-	msg boardActionRequest,
+	board string,
 	level auth.ModerationLevel,
-	needCaptcha bool,
+	captcha *auth.Captcha,
 ) (
 	creds auth.SessionCreds, can bool,
 ) {
-	if !auth.IsBoard(msg.Board) {
+	if !auth.IsBoard(board) {
 		text400(w, errInvalidBoardName)
 		return
 	}
-	if needCaptcha && !auth.AuthenticateCaptcha(msg.Captcha) {
+	if captcha != nil && !auth.AuthenticateCaptcha(*captcha) {
 		text403(w, errInvalidCaptcha)
 		return
 	}
@@ -124,7 +111,7 @@ func canPerform(
 		return
 	}
 
-	can, err := db.CanPerform(creds.UserID, msg.Board, level)
+	can, err := db.CanPerform(creds.UserID, board, level)
 	switch {
 	case err != nil:
 		text500(w, r, err)
@@ -145,7 +132,7 @@ func canModeratePost(
 	id uint64,
 	level auth.ModerationLevel,
 ) (
-	userID string,
+	board, userID string,
 	can bool,
 ) {
 	board, err := db.GetPostBoard(id)
@@ -159,14 +146,7 @@ func canModeratePost(
 		return
 	}
 
-	creds, can := canPerform(
-		w, r,
-		boardActionRequest{
-			Board: board,
-		},
-		level,
-		false,
-	)
+	creds, can := canPerform(w, r, board, level, nil)
 	if !can {
 		text403(w, errAccessDenied)
 		return
@@ -244,18 +224,15 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 	config.BoardConfigs, bool,
 ) {
 	var (
-		msg  boardActionRequest
-		conf config.BoardConfigs
+		conf  config.BoardConfigs
+		board = extractParam(r, "board")
 	)
-	if !decodeJSON(w, r, &msg) {
-		return conf, false
-	}
-	if _, ok := canPerform(w, r, msg, auth.BoardOwner, false); !ok {
+	if _, ok := canPerform(w, r, board, auth.BoardOwner, nil); !ok {
 		return conf, false
 	}
 
-	conf = config.GetBoardConfigs(msg.Board).BoardConfigs
-	conf.ID = msg.Board
+	conf = config.GetBoardConfigs(board).BoardConfigs
+	conf.ID = board
 	if conf.ID == "" {
 		text404(w)
 		return conf, false
@@ -280,7 +257,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case creds.UserID != "admin" && config.Get().DisableUserBoards:
 		err = errAccessDenied
-	case !boardNameValidation.MatchString(msg.Board):
+	case !boardNameValidation.MatchString(msg.ID):
 		err = errInvalidBoardName
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
@@ -305,7 +282,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 			BoardPublic: config.BoardPublic{
 				Title: msg.Title,
 			},
-			ID:        msg.Board,
+			ID:        msg.ID,
 			Eightball: config.EightballDefaults,
 		},
 	})
@@ -319,7 +296,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.WriteStaff(tx, msg.Board, map[string][]string{
+	err = db.WriteStaff(tx, msg.ID, map[string][]string{
 		"owners": []string{creds.UserID},
 	})
 	if err != nil {
@@ -349,7 +326,8 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
-	if _, ok := canPerform(w, r, msg, auth.BoardOwner, true); !ok {
+	_, ok := canPerform(w, r, msg.Board, auth.BoardOwner, &msg.Captcha)
+	if !ok {
 		return
 	}
 
@@ -360,42 +338,62 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 
 // Delete one or multiple posts on a moderated board
 func deletePost(w http.ResponseWriter, r *http.Request) {
-	moderatePosts(w, r, auth.Janitor, db.DeletePost)
-}
-
-// Perform a moderation action an an array of posts
-func moderatePosts(
-	w http.ResponseWriter,
-	r *http.Request,
-	level auth.ModerationLevel,
-	fn func(id uint64, userID string) error,
-) {
-	var msg postActionRequest
-	if !decodeJSON(w, r, &msg) {
+	var ids []uint64
+	if !decodeJSON(w, r, &ids) {
 		return
 	}
-
-	for _, id := range msg.IDs {
-		userID, ok := canModeratePost(w, r, id, level)
+	for _, id := range ids {
+		ok := moderatePost(w, r, id, auth.Janitor, func(userID string) error {
+			return db.DeletePost(id, userID)
+		})
 		if !ok {
 			return
 		}
+	}
+}
 
-		switch err := fn(id, userID); err {
-		case nil:
-		case sql.ErrNoRows:
-			text400(w, err)
-			return
-		default:
-			text500(w, r, err)
-			return
-		}
+// Perform a moderation action an a single post. If ok == false, the caller
+// should return.
+func moderatePost(
+	w http.ResponseWriter,
+	r *http.Request,
+	id uint64,
+	level auth.ModerationLevel,
+	fn func(userID string) error,
+) (
+	ok bool,
+) {
+	_, userID, can := canModeratePost(w, r, id, level)
+	if !can {
+		return
+	}
+
+	switch err := fn(userID); err {
+	case nil:
+		return true
+	case sql.ErrNoRows:
+		text400(w, err)
+		return
+	default:
+		text500(w, r, err)
+		return
 	}
 }
 
 // Permanently delete an image from a post
 func deleteImage(w http.ResponseWriter, r *http.Request) {
-	moderatePosts(w, r, auth.Janitor, db.DeleteImage)
+	var ids []uint64
+	if !decodeJSON(w, r, &ids) {
+		return
+	}
+	for _, id := range ids {
+		ok := moderatePost(w, r, id, auth.Janitor, func(userID string) error {
+			return db.DeleteImage(id, userID)
+		})
+		if !ok {
+			return
+		}
+	}
 }
 
 // Ban a specific IP from a specific board
@@ -404,7 +402,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 		Global   bool
 		Duration uint64
 		Reason   string
-		postActionRequest
+		IDs      []uint64
 	}
 
 	// Decode and validate
@@ -451,14 +449,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 
 		// Assert rights to moderate for all affected boards
 		for b := range byBoard {
-			msg.Board = b
-			_, ok := canPerform(
-				w, r,
-				msg.boardActionRequest,
-				auth.Moderator,
-				false,
-			)
-			if !ok {
+			if _, ok := canPerform(w, r, b, auth.Moderator, nil); !ok {
 				return
 			}
 		}
@@ -508,7 +499,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
-	_, ok := canPerform(w, r, msg.boardActionRequest, auth.BoardOwner, true)
+	_, ok := canPerform(w, r, msg.Board, auth.BoardOwner, &msg.Captcha)
 	if !ok {
 		return
 	}
@@ -553,16 +544,17 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 
 // Retrieve posts with the same IP on the target board
 func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
-	var msg singlePostActionRequest
-	if !decodeJSON(w, r, &msg) {
+	id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
+	if err != nil {
+		text400(w, err)
 		return
 	}
-	_, ok := canPerform(w, r, msg.boardActionRequest, auth.Janitor, false)
+	board, _, ok := canModeratePost(w, r, id, auth.Janitor)
 	if !ok {
 		return
 	}
 
-	posts, err := db.GetSameIPPosts(msg.ID, msg.Board)
+	posts, err := db.GetSameIPPosts(id, board)
 	if err != nil {
 		text500(w, r, err)
 		return
@@ -573,14 +565,13 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 // Set the sticky flag of a thread
 func setThreadSticky(w http.ResponseWriter, r *http.Request) {
 	var msg struct {
+		ID     uint64
 		Sticky bool
-		singlePostActionRequest
 	}
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
-	_, ok := canPerform(w, r, msg.boardActionRequest, auth.Moderator, false)
-	if !ok {
+	if _, _, ok := canModeratePost(w, r, msg.ID, auth.Moderator); !ok {
 		return
 	}
 
@@ -633,10 +624,7 @@ func detectCanPerform(
 	}
 
 	ok, err := db.IsLoggedIn(creds.UserID, creds.Session)
-	if err != nil {
-		return
-	}
-	if !ok {
+	if err != nil || !ok {
 		return
 	}
 
@@ -647,10 +635,7 @@ func detectCanPerform(
 // Unban a specific board -> banned post combination
 func unban(w http.ResponseWriter, r *http.Request) {
 	board := extractParam(r, "board")
-	msg := boardActionRequest{
-		Board: board,
-	}
-	creds, ok := canPerform(w, r, msg, auth.Moderator, false)
+	creds, ok := canPerform(w, r, board, auth.Moderator, nil)
 	if !ok {
 		return
 	}

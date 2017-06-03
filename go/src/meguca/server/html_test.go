@@ -162,9 +162,7 @@ func TestBoardConfigurationForm(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rec, req := newJSONPair(t, "/forms/configureBoard", boardActionRequest{
-		Board: "a",
-	})
+	rec, req := newJSONPair(t, "/forms/configureBoard/a", nil)
 	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)

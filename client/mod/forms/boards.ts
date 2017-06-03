@@ -65,7 +65,7 @@ export class BoardConfigForm extends SelectedBoardForm {
 
 	// Render the configuration input elements
 	public async renderNext(board: string) {
-		const res = await postJSON("/forms/configureBoard", { board })
+		const res = await postJSON(`/forms/configureBoard/${board}`, null)
 		switch (res.status) {
 			case 200:
 				const frag = makeFrag(await res.text())
@@ -82,10 +82,8 @@ export class BoardConfigForm extends SelectedBoardForm {
 
 	// Extract form data and send a request to apply the new configs
 	protected send() {
-		this.postResponse("/admin/configureBoard", req => {
-			req["board"] = this.board
-			this.extractForm(req)
-		})
+		this.postResponse(`/admin/configureBoard/${this.board}`, req =>
+			this.extractForm(req))
 	}
 }
 
@@ -130,7 +128,7 @@ export class BoardCreationForm extends AccountForm {
 
 	protected send() {
 		this.postResponse("/admin/createBoard", req => {
-			req["board"] = this.inputElement('boardName').value
+			req["id"] = this.inputElement('boardName').value
 			req["title"] = this.inputElement('boardTitle').value
 		})
 	}

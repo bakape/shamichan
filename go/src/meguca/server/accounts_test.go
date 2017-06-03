@@ -123,11 +123,7 @@ func TestNotLoggedIn(t *testing.T) {
 	assertTableClear(t, "accounts", "boards")
 	writeSampleBoard(t)
 
-	fns := [...]http.HandlerFunc{
-		configureBoard, servePrivateBoardConfigs, servePrivateServerConfigs,
-		changePassword,
-	}
-
+	fns := [...]http.HandlerFunc{servePrivateServerConfigs, changePassword}
 	for i := range fns {
 		fn := fns[i]
 		t.Run("", func(t *testing.T) {

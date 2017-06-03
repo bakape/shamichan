@@ -84,16 +84,15 @@ export default class ModPanel extends View<null> {
 		switch (this.getMode()) {
 			case "deletePost":
 				if (checked.length) {
-					await this.postJSON("/admin/deletePost", {
-						ids: mapToIDs(models),
-					})
+					await this.postJSON("/admin/deletePost", mapToIDs(models))
 				}
 				break
 			case "deleteImage":
 				if (checked.length) {
-					await this.postJSON("/admin/deleteImage", {
-						ids: mapToIDs(models),
-					})
+					await this.postJSON(
+						"/admin/deleteImage",
+						mapToIDs(models.filter(m => !!m.image)),
+					)
 				}
 				break
 			case "ban":

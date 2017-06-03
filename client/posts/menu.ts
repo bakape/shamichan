@@ -107,10 +107,7 @@ function openMenu(e: Event) {
 
 // Fetch and render posts with the same IP on this board
 async function getSameIPPosts(m: Post) {
-	const res = await postJSON("/admin/sameIP", {
-		board: m.board,
-		id: m.id,
-	})
+	const res = await postJSON(`/admin/sameIP/${m.id}`, null)
 	if (res.status !== 200) {
 		return alert(await res.text())
 	}
@@ -122,7 +119,6 @@ async function toggleSticky(m: Post) {
 	const res = await postJSON("/admin/sticky", {
 		sticky: !m.sticky,
 		id: m.id,
-		board: m.board,
 	})
 	if (res.status !== 200) {
 		return alert(await res.text())

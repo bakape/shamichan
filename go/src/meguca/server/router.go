@@ -97,7 +97,7 @@ func createRouter() http.Handler {
 	forms.GET("/createBoard", boardCreationForm)
 	forms.GET("/changePassword", changePasswordForm)
 	forms.GET("/captcha", renderCaptcha)
-	forms.POST("/configureBoard", boardConfigurationForm)
+	forms.POST("/configureBoard/:board", boardConfigurationForm)
 	forms.POST("/configureServer", serverConfigurationForm)
 	forms.GET("/assignStaff/:board", staffAssignmentForm)
 
@@ -127,8 +127,8 @@ func createRouter() http.Handler {
 	admin.POST("/logout", logout)
 	admin.POST("/logoutAll", logoutAll)
 	admin.POST("/changePassword", changePassword)
-	admin.POST("/boardConfig", servePrivateBoardConfigs)
-	admin.POST("/configureBoard", configureBoard)
+	admin.POST("/boardConfig/:board", servePrivateBoardConfigs)
+	admin.POST("/configureBoard/:board", configureBoard)
 	admin.POST("/config", servePrivateServerConfigs)
 	admin.POST("/configureServer", configureServer)
 	admin.POST("/createBoard", createBoard)
@@ -138,7 +138,7 @@ func createRouter() http.Handler {
 	admin.POST("/ban", ban)
 	admin.POST("/notification", sendNotification)
 	admin.POST("/assignStaff", assignStaff)
-	admin.POST("/sameIP", getSameIPPosts)
+	admin.POST("/sameIP/:id", getSameIPPosts)
 	admin.POST("/sticky", setThreadSticky)
 	admin.POST("/unban/:board", unban)
 
