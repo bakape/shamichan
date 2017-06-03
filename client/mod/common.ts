@@ -29,11 +29,6 @@ function getCookie(id: string): string {
 	return kv[0].split("=")[1]
 }
 
-// Delete a cookie by id
-export function deleteCookie(id: string) {
-	document.cookie = `${id}=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`
-}
-
 // Set a password match validator function for 2 input elements, that are
 // children of the passed element.
 export function validatePasswordMatch(
