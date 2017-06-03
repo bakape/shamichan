@@ -7,6 +7,7 @@ import { hidePost } from "./hide"
 import { loginID } from "../mod"
 import { postJSON } from "../util"
 import CollectionView from "./collectionView"
+import { PostData } from "../common"
 
 interface ControlButton extends Element {
 	_popup_menu: MenuView
@@ -30,18 +31,50 @@ const actions: { [key: string]: ItemSpec } = {
 	},
 	viewSameIP: {
 		text: lang.posts["viewBySameIP"],
-		shouldRender(m) {
-			return !!loginID() && m.time > Date.now() / 1000 - 24 * 7 * 3600
+		shouldRender: canModerateIP,
+		async handler(m) {
+			new CollectionView(await getSameIPPosts(m))
 		},
-		handler: getSameIPPosts,
+	},
+	deleteSameIP: {
+		text: lang.posts["deleteBySameIP"],
+		shouldRender: canModerateIP,
+		async handler(m) {
+			const posts = await getSameIPPosts(m)
+			if (!posts) {
+				return
+			}
+			const res = await postJSON("/admin/deletePost", posts.map(m =>
+				m.id))
+			if (res.status !== 200) {
+				alert(await res.text())
+			}
+		},
 	},
 	toggleSticky: {
 		text: lang.posts["toggleSticky"],
 		shouldRender(m) {
 			return !!loginID() && m.id === m.op
 		},
-		handler: toggleSticky,
+		// Toggle sticky flag on a thread
+		async handler(m) {
+			const res = await postJSON("/admin/sticky", {
+				sticky: !m.sticky,
+				id: m.id,
+			})
+			if (res.status !== 200) {
+				return alert(await res.text())
+			}
+			m.sticky = !m.sticky
+			m.view.renderSticky()
+		},
 	},
+}
+
+// Returns, if the post still likely has an IP attached and the client is
+// logged in
+function canModerateIP(m: Post): boolean {
+	return !!loginID() && m.time > Date.now() / 1000 - 24 * 7 * 3600
 }
 
 // Post header drop down menu
@@ -105,26 +138,14 @@ function openMenu(e: Event) {
 	}
 }
 
-// Fetch and render posts with the same IP on this board
-async function getSameIPPosts(m: Post) {
+// Fetch posts with the same IP on this board
+async function getSameIPPosts(m: Post): Promise<PostData[]> {
 	const res = await postJSON(`/admin/sameIP/${m.id}`, null)
 	if (res.status !== 200) {
-		return alert(await res.text())
+		alert(await res.text())
+		return
 	}
-	new CollectionView(await res.json())
-}
-
-// Toggle sticky flag on a thread
-async function toggleSticky(m: Post) {
-	const res = await postJSON("/admin/sticky", {
-		sticky: !m.sticky,
-		id: m.id,
-	})
-	if (res.status !== 200) {
-		return alert(await res.text())
-	}
-	m.sticky = !m.sticky
-	m.view.renderSticky()
+	return await res.json()
 }
 
 export default () =>
