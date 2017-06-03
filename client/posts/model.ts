@@ -107,21 +107,31 @@ export class Post extends Model implements PostData {
 	}
 
 	// Check if this post replied to one of the user's posts and trigger
-	// handlers
-	public checkRepliedToMe() {
+	// handlers.
+	// Set and render backlinks on any linked posts.
+	public propagateLinks() {
 		if (this.isReply()) {
 			notifyAboutReply(this)
 		}
+		if (this.links) {
+			for (let [id] of this.links) {
+				const post = posts.get(id)
+				if (post) {
+					post.insertBacklink(this.id, this.op)
+				}
+			}
+		}
 	}
 
+	// Returns, if post is a reply to one of the user's posts
 	public isReply() {
-		if (!this.links)
+		if (!this.links) {
 			return false
+		}
 		for (let [id] of this.links) {
-			if (!mine.has(id)) {
-				continue
+			if (mine.has(id)) {
+				return true
 			}
-			return true
 		}
 		return false
 	}
@@ -133,16 +143,6 @@ export class Post extends Model implements PostData {
 		}
 		this.backlinks[id] = op
 		this.view.renderBacklinks()
-	}
-
-	// Set and render backlinks on any linked posts
-	public propagateBacklinks() {
-		for (let [id] of this.links) {
-			const post = posts.get(id)
-			if (post) {
-				post.insertBacklink(this.id, this.op)
-			}
-		}
 	}
 
 	// Insert an image into an existing post
