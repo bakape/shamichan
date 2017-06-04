@@ -394,6 +394,7 @@
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"showNotice": "Upozornenie",
 		"sortMode": "Zoradiť vlákna podľa",
+		"spoilerImage": "Spoiler image",
 		"subject": "Predmet",
 		"submit": "Odoslať",
 		"sync": "Connection status",

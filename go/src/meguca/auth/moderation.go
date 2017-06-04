@@ -64,6 +64,7 @@ const (
 	UnbanPost
 	DeletePost
 	DeleteImage
+	SpoilerImage
 )
 
 // Single entry in the moderation log

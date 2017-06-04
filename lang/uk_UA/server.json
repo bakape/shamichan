@@ -394,6 +394,7 @@
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"showNotice": "Повідомлення",
 		"sortMode": "Відсортувати треди за",
+		"spoilerImage": "Spoiler image",
 		"subject": "Тема",
 		"submit": "Надіслати",
 		"sync": "Статус зв'язку",

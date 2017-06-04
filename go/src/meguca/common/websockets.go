@@ -77,6 +77,9 @@ var (
 
 	// Propagate a message about an image being deleted from a post
 	DeleteImage func(id, op uint64) error
+
+	// Propagate a message about an image being spoilered
+	SpoilerImage func(id, op uint64) error
 )
 
 // Client exposes some globally accessible websocket client functionality

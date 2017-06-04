@@ -21,6 +21,7 @@ func init() {
 	common.BanPost = BanPost
 	common.DeletePost = DeletePost
 	common.DeleteImage = DeleteImage
+	common.SpoilerImage = SpoilerImage
 }
 
 // Container for managing client<->update-feed assignment and interaction
@@ -139,6 +140,17 @@ func DeleteImage(id, op uint64) error {
 	}
 	return sendIfExists(op, func(f *Feed) {
 		f.deleteImage(id, msg)
+	})
+}
+
+// Propagate a message about an image being spoilered
+func SpoilerImage(id, op uint64) error {
+	msg, err := common.EncodeMessage(common.MessageSpoiler, id)
+	if err != nil {
+		return err
+	}
+	return sendIfExists(op, func(f *Feed) {
+		f.SpoilerImage(id, msg)
 	})
 }
 

@@ -111,8 +111,18 @@ func RefreshBanCache() (err error) {
 }
 
 // DeletePost marks the target post as deleted
-func DeletePost(id uint64, by string) (err error) {
-	err = execPrepared("delete_post", id, by)
+func DeletePost(id uint64, by string) error {
+	return moderatePost(id, by, "delete_post", common.DeletePost)
+}
+
+func moderatePost(
+	id uint64,
+	by, query string,
+	propagate func(id, op uint64) error,
+) (
+	err error,
+) {
+	err = execPrepared(query, id, by)
 	if err != nil {
 		return
 	}
@@ -122,26 +132,19 @@ func DeletePost(id uint64, by string) (err error) {
 		return
 	}
 	if !IsTest {
-		err = common.DeletePost(id, op)
+		err = propagate(id, op)
 	}
 	return
 }
 
 // Permanently delete an image from a post
-func DeleteImage(id uint64, by string) (err error) {
-	err = execPrepared("delete_image", id, by)
-	if err != nil {
-		return
-	}
+func DeleteImage(id uint64, by string) error {
+	return moderatePost(id, by, "delete_image", common.DeleteImage)
+}
 
-	op, err := GetPostOP(id)
-	if err != nil {
-		return
-	}
-	if !IsTest {
-		err = common.DeleteImage(id, op)
-	}
-	return
+// Spoiler image as a moderator
+func ModSpoilerImage(id uint64, by string) (err error) {
+	return moderatePost(id, by, "mod_spoiler_image", common.SpoilerImage)
 }
 
 // WriteStaff writes staff positions of a specific board. Old rows are

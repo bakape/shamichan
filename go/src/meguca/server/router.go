@@ -135,6 +135,7 @@ func createRouter() http.Handler {
 	admin.POST("/deleteBoard", deleteBoard)
 	admin.POST("/deletePost", deletePost)
 	admin.POST("/deleteImage", deleteImage)
+	admin.POST("/spoilerImage", modSpoilerImage)
 	admin.POST("/ban", ban)
 	admin.POST("/notification", sendNotification)
 	admin.POST("/assignStaff", assignStaff)

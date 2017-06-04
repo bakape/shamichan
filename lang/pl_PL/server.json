@@ -394,6 +394,7 @@
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"showNotice": "Powiadomienie",
 		"sortMode": "Sortuj tematy po",
+		"spoilerImage": "Spoiler image",
 		"subject": "Temat",
 		"submit": "Zatwierdź",
 		"sync": "Status połączenia",

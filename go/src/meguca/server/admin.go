@@ -338,18 +338,7 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 
 // Delete one or multiple posts on a moderated board
 func deletePost(w http.ResponseWriter, r *http.Request) {
-	var ids []uint64
-	if !decodeJSON(w, r, &ids) {
-		return
-	}
-	for _, id := range ids {
-		ok := moderatePost(w, r, id, auth.Janitor, func(userID string) error {
-			return db.DeletePost(id, userID)
-		})
-		if !ok {
-			return
-		}
-	}
+	moderatePosts(w, r, auth.Janitor, db.DeletePost)
 }
 
 // Perform a moderation action an a single post. If ok == false, the caller
@@ -380,20 +369,35 @@ func moderatePost(
 	}
 }
 
-// Permanently delete an image from a post
-func deleteImage(w http.ResponseWriter, r *http.Request) {
+// Same as moderatePost, but works on an array of posts
+func moderatePosts(
+	w http.ResponseWriter,
+	r *http.Request,
+	level auth.ModerationLevel,
+	fn func(id uint64, userID string) error,
+) {
 	var ids []uint64
 	if !decodeJSON(w, r, &ids) {
 		return
 	}
 	for _, id := range ids {
 		ok := moderatePost(w, r, id, auth.Janitor, func(userID string) error {
-			return db.DeleteImage(id, userID)
+			return fn(id, userID)
 		})
 		if !ok {
 			return
 		}
 	}
+}
+
+// Permanently delete an image from a post
+func deleteImage(w http.ResponseWriter, r *http.Request) {
+	moderatePosts(w, r, auth.Janitor, db.DeleteImage)
+}
+
+// Spoiler image as a moderator
+func modSpoilerImage(w http.ResponseWriter, r *http.Request) {
+	moderatePosts(w, r, auth.Janitor, db.ModSpoilerImage)
 }
 
 // Ban a specific IP from a specific board

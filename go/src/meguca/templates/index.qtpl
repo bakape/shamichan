@@ -332,7 +332,7 @@
 						</div>
 						<input type="checkbox" name="showCheckboxes">
 						<select name="action">
-							{% for _, id := range [...]string{"deletePost", "deleteImage", "ban", "notification"} %}
+							{% for _, id := range [...]string{"deletePost", "deleteImage", "spoilerImage", "ban", "notification"} %}
 								<option value="{%s= id %}">
 									{%s= ln.UI[id] %}
 								</option>
