@@ -14,7 +14,11 @@ type articleContext struct {
 	omit, imageOmit      int
 	op                   uint64
 	board, subject, root string
+	backlinks            backlinks
 }
+
+// Map of all backlinks on a page
+type backlinks map[uint64]map[uint64]uint64
 
 // Returns image name with proper extension
 func imageName(fileType uint8, name string) string {
@@ -88,4 +92,28 @@ func correctDims(large bool, w, h uint16) (string, string) {
 		h = uint16(float32(h) * 0.8333)
 	}
 	return strconv.FormatUint(uint64(w), 10), strconv.FormatUint(uint64(h), 10)
+}
+
+// Extract reverse links to linked posts on a page
+func extractBacklinks(cap int, threads ...common.Thread) backlinks {
+	bls := make(backlinks, cap)
+	register := func(p common.Post, op uint64) {
+		for _, l := range p.Links {
+			m, ok := bls[l[0]]
+			if !ok {
+				m = make(map[uint64]uint64, 4)
+				bls[l[0]] = m
+			}
+			m[p.ID] = op
+		}
+	}
+
+	for _, t := range threads {
+		register(t.Post, t.ID)
+		for _, p := range t.Posts {
+			register(p, t.ID)
+		}
+	}
+
+	return bls
 }

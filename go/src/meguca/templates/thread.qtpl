@@ -2,6 +2,7 @@
 {% import "meguca/lang" %}
 {% import "meguca/common" %}
 {% import "meguca/config" %}
+{% import "encoding/json" %}
 
 {% func renderThread(postHTML []byte, id uint64,board string, ln lang.Pack) %}{% stripspace %}
 	{% code conf := config.GetBoardConfigs(board) %}
@@ -79,10 +80,12 @@ ThreadPosts renders the post content of a thread. Separate function to allow
 caching of generated posts.
 {% func ThreadPosts(t common.Thread, json []byte) %}{% stripspace %}
 	<section id="thread-container" data-id="{%s= strconv.FormatUint(t.ID, 10) %}">
-		{%= renderThreadPosts(t, config.Get().RootURL, false) %}
+		{% code bls := extractBacklinks(1<<10, t) %}
+		{%= renderThreadPosts(t, bls, config.Get().RootURL, false) %}
 		<script id="post-data" type="application/json">
 			{%z= json %}
 		</script>
+		{%= encodeBacklinks(bls) %}
 	</section>
 	<script id="board-configs" type="application/json">
 		{%z= config.GetBoardConfigs(t.Board).JSON %}
@@ -90,7 +93,7 @@ caching of generated posts.
 {% endstripspace %}{% endfunc %}
 
 Common functionality between index board pages and threads pages
-{% func renderThreadPosts(t common.Thread, root string, index bool) %}{% stripspace %}
+{% func renderThreadPosts(t common.Thread, bls backlinks, root string, index bool) %}{% stripspace %}
 	{% code c := articleContext{
 		index: index,
 		sticky: t.Sticky,
@@ -98,6 +101,7 @@ Common functionality between index board pages and threads pages
 		board: t.Board,
 		subject: t.Subject,
 		root: root,
+		backlinks: bls,
 	} %}
 	{% code c.omit, c.imageOmit = CalculateOmit(t) %}
 	{%= renderArticle(t.Post, c) %}
@@ -108,4 +112,11 @@ Common functionality between index board pages and threads pages
 	{% for _, p := range t.Posts %}
 		{%= renderArticle(p, c) %}
 	{% endfor %}
+{% endstripspace %}{% endfunc %}
+
+{% func encodeBacklinks(bls backlinks) %}{% stripspace %}
+	<script id="backlink-data" type="application/json">
+		{% code buf, _ := json.Marshal(bls) %}
+		{%z= buf %}
+	</script>
 {% endstripspace %}{% endfunc %}

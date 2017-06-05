@@ -166,5 +166,14 @@
 				</span>
 			</span>
 		{% endif %}
+		{% if bls := c.backlinks[p.ID]; bls != nil %}
+			<span class="backlinks spaced">
+				{% for id, op := range bls %}
+					<em>
+						{%= postLink(id, op, op != c.op, c.index) %}
+					</em>
+				{% endfor %}
+			</span>
+		{% endif %}
 	</article>
 {% endstripspace %}{% endfunc %}

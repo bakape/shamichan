@@ -1,19 +1,39 @@
 import { setBoardConfig, hidden, mine, posts, page } from "../state"
 import options from "../options"
-import { PostData, fileTypes, PostLink } from "../common"
+import { PostData, ThreadData, fileTypes } from "../common"
 import { Post, PostView } from "../posts"
 import lang from "../lang"
-import { notifyAboutReply } from "../ui"
 import { postAdded } from "../ui/tab"
 import { pluralize } from "../util"
 import { posterName } from "../options"
+
+// Post data of a particular page
+export type PageData = {
+	threads: ThreadData | ThreadData[],
+	backlinks: { [id: number]: { [id: number]: number } },
+}
 
 const threads = document.getElementById("threads")
 
 // Find board configurations in the HTML and apply them
 export function extractConfigs() {
-	const conf = document.getElementById("board-configs").textContent
-	setBoardConfig(JSON.parse(conf))
+	setBoardConfig(extractJSON("board-configs"))
+}
+
+function extractJSON(id: string): any {
+	const el = document.getElementById(id)
+	if (!el) {
+		return null
+	}
+	return JSON.parse(el.textContent)
+}
+
+// Extract pregenerated rendered post data from DOM
+export function extractPageData(): PageData {
+	return {
+		threads: extractJSON("post-data"),
+		backlinks: extractJSON("backlink-data"),
+	}
 }
 
 // Check if the rendered page is a ban page
@@ -27,6 +47,8 @@ export function extractPost(
 	post: PostData,
 	op: number,
 	board: string,
+	replies: number[],
+	backlinks: { [id: number]: { [id: number]: number } },
 ): boolean {
 	const el = document.getElementById(`p${post.id}`)
 	if (hidden.has(post.id)) {
@@ -43,6 +65,7 @@ export function extractPost(
 	if (page.catalog) {
 		return false
 	}
+	model.backlinks = backlinks[post.id]
 
 	// Apply client-specific formatting to a post rendered server-side
 
@@ -55,10 +78,11 @@ export function extractPost(
 		view.renderName()
 	}
 
-	const { model: { links, image } } = view
-	localizeLinks(links, view)
+	localizeLinks(model, replies)
+	localizeBacklinks(model)
 	postAdded(model)
 
+	const { image } = model
 	if (image) {
 		const should = options.hideThumbs
 			|| options.workModeToggle
@@ -72,23 +96,51 @@ export function extractPost(
 	return false
 }
 
-// Add (You) to posts linking to the user's posts and trigger desktop
-// notifications, if needed
-function localizeLinks(links: PostLink[], view: PostView) {
-	if (!links) {
+// Add (You) to posts linking to the user's posts. Appends to array of posts,
+// that might need to register a new reply to one of the user's posts.
+function localizeLinks(post: Post, replies: number[]) {
+	if (!post.links) {
 		return
 	}
-	for (let [id] of links) {
+	let el: HTMLElement
+	for (let [id] of post.links) {
 		if (!mine.has(id)) {
 			continue
 		}
-		for (let el of view.el.querySelectorAll(`a[data-id="${id}"]`)) {
-			// Can create doubles with circular quotes. Avoid that.
-			if (!el.textContent.includes(lang.posts["you"])) {
-				el.textContent += " " + lang.posts["you"]
-			}
+
+		// Don't query DOM, until we know we need it
+		if (!el) {
+			el = post.view.el.querySelector("blockquote")
 		}
-		notifyAboutReply(view.model)
+		addYous(id, el)
+
+		replies.push(id)
+	}
+}
+
+function addYous(id: number, el: HTMLElement) {
+	for (let a of el.querySelectorAll(`a[data-id="${id}"]`)) {
+		a.textContent += " " + lang.posts["you"]
+	}
+}
+
+// Add (You) to backlinks user's posts
+function localizeBacklinks(post: Post) {
+	if (!post.backlinks) {
+		return
+	}
+	let el: HTMLElement
+	for (let idStr in post.backlinks) {
+		const id = parseInt(idStr)
+		if (!mine.has(id)) {
+			continue
+		}
+
+		// Don't query DOM, until we know we need it
+		if (!el) {
+			el = post.view.el.querySelector(".backlinks")
+		}
+		addYous(id, el)
 	}
 }
 
@@ -148,32 +200,6 @@ export function reparseOpenPosts() {
 	for (let m of posts) {
 		if (m.editing) {
 			m.view.reparseBody()
-		}
-	}
-}
-
-// Generate and render backlinks from displayed posts
-export function genBacklinks() {
-	// Invert links
-	for (let src of posts) {
-		if (!src.links) {
-			continue
-		}
-		for (let [id] of src.links) {
-			const target = posts.get(id)
-			if (target) {
-				if (!target.backlinks) {
-					target.backlinks = {}
-				}
-				target.backlinks[src.id] = src.op
-			}
-		}
-	}
-
-	// Render backlinks on any linked posts
-	for (let p of posts) {
-		if (p.backlinks) {
-			p.view.renderBacklinks()
 		}
 	}
 }

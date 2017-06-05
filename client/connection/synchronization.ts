@@ -7,7 +7,6 @@ import { page, posts, displayLoading } from "../state"
 import { trigger, uncachedGET, extend } from "../util"
 import { PostData } from "../common"
 import { insertPost } from "../client"
-import { genBacklinks } from "../page"
 
 // Passed from the server to allow the client to synchronise state, before
 // consuming any incoming update messages.
@@ -91,6 +90,7 @@ async function fetchMissingPost(id: number) {
 // Fetch a post that should be closed, but isn't
 async function fetchUnclosed(post: Post) {
 	extend(post, await fetchPost(post.id))
+	post.propagateLinks()
 	post.view.render()
 }
 
@@ -184,9 +184,6 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		})
 	}
 
-	if (!page.catalog) {
-		genBacklinks() // Regenerate backlinks only, when latest data is fetched
-	}
 	displayLoading(false)
 	connSM.feed(connEvent.sync)
 }

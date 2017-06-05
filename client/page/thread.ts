@@ -1,11 +1,12 @@
 import { ThreadData } from "../common"
 import { escape } from '../util'
-import { setTitle } from "../ui"
+import { setTitle, notifyAboutReply } from "../ui"
 import {
-    extractConfigs, isBanned, extractPost, localizeThreads, reparseOpenPosts
+    extractConfigs, isBanned, extractPost, localizeThreads, reparseOpenPosts,
+    extractPageData,
 } from "./common"
 import { findSyncwatches } from "../posts"
-import { config } from "../state"
+import { config, posts as allPosts } from "../state"
 
 const counters = document.getElementById("thread-post-counters"),
     threads = document.getElementById("threads")
@@ -23,13 +24,15 @@ export default function (html: string) {
     }
     extractConfigs()
 
-    const text = document.getElementById("post-data").textContent,
-        data = JSON.parse(text) as ThreadData,
-        { posts } = data
+    const { threads: dataUnion, backlinks } = extractPageData(),
+        data = dataUnion as ThreadData,
+        { posts } = data,
+        replies: number[] = []
+
     delete data.posts
     setPostCount(data.postCtr, data.imageCtr, data.bumpTime)
 
-    extractPost(data, data.id, data.board)
+    extractPost(data, data.id, data.board, replies, backlinks)
     if (data.image) {
         data.image.large = true
     }
@@ -37,11 +40,17 @@ export default function (html: string) {
     setThreadTitle(data)
 
     for (let post of posts) {
-        extractPost(post, data.id, data.board)
+        extractPost(post, data.id, data.board, replies, backlinks)
     }
     localizeThreads()
     reparseOpenPosts()
     findSyncwatches(threads)
+    for (let id of replies) {
+        const post = allPosts.get(id)
+        if (post) {
+            notifyAboutReply(post)
+        }
+    }
 }
 
 // Set thread title to tab

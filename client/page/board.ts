@@ -3,10 +3,10 @@ import lang from '../lang'
 import { page, posts } from '../state'
 import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
-import { setTitle } from "../ui"
+import { setTitle, notifyAboutReply } from "../ui"
 import {
 	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts,
-	genBacklinks
+	extractPageData,
 } from "./common"
 import { setPostCount } from "./thread"
 import { ThreadData } from "../common"
@@ -47,21 +47,22 @@ export function renderFresh(html: string) {
 }
 
 function extractCatalogModels() {
-	const text = document.getElementById("post-data").textContent
-	for (let t of JSON.parse(text) as ThreadData[]) {
+	const { threads, backlinks } = extractPageData()
+	for (let t of threads as ThreadData[]) {
 		if (t.image) {
 			t.image.large = true
 		}
-		extractPost(t, t.id, t.board)
+		extractPost(t, t.id, t.board, null, backlinks)
 	}
 }
 
 function extractThreads() {
-	const text = document.getElementById("post-data").textContent
-	for (let thread of JSON.parse(text) as ThreadData[]) {
+	const { threads, backlinks } = extractPageData(),
+		replies: number[] = []
+	for (let thread of threads as ThreadData[]) {
 		const { posts } = thread
 		delete thread.posts
-		if (extractPost(thread, thread.id, thread.board)) {
+		if (extractPost(thread, thread.id, thread.board, replies, backlinks)) {
 			document.querySelector(`section[data-id="${thread.id}"]`).remove()
 			continue
 		}
@@ -69,11 +70,17 @@ function extractThreads() {
 			thread.image.large = true
 		}
 		for (let post of posts) {
-			extractPost(post, thread.id, thread.board)
+			extractPost(post, thread.id, thread.board, replies, backlinks)
 		}
 	}
 	localizeThreads()
 	reparseOpenPosts()
+	for (let id of replies) {
+		const post = posts.get(id)
+		if (post) {
+			notifyAboutReply(post)
+		}
+	}
 }
 
 // Apply client-side modifications to a board page's HTML
@@ -102,7 +109,6 @@ export function render() {
 	renderRefreshButton(threads.querySelector("#refresh > a"))
 	if (!page.catalog) {
 		findSyncwatches(threads)
-		genBacklinks()
 	} else {
 		(threads.querySelector("select[name=sortMode]") as HTMLSelectElement)
 			.value = localStorage.getItem("catalogSort") || "bump"
