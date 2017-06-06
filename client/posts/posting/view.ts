@@ -60,6 +60,10 @@ export default class FormView extends PostView {
 
         if (isOP) {
             this.showDone()
+            const captcha = this.el.querySelector(".captcha-container")
+            if (captcha) {
+                captcha.remove()
+            }
         } else {
             if (!boardConfig.textOnly) {
                 this.upload = new UploadForm(this.model, this.el)
