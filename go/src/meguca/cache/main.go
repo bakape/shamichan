@@ -16,7 +16,7 @@ var (
 
 	// Time in seconds for the cache to expire and need counter comparison.
 	// Mutable for quicker testing.
-	expiryTime int64 = 60
+	expiryTime int64 = 30
 
 	// Size sets the maximum size of cache before evicting unread data in MB
 	Size float64 = 1 << 7
