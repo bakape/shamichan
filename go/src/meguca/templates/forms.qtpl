@@ -165,3 +165,13 @@ Render the captcha for noscript browsers
 		<img src="/captcha/image/{%s= id %}.png">
 	</div>
 {% endstripspace %}{% endfunc %}
+
+{% func BannerForm(ln lang.Pack) %}{% stripspace %}
+	<div style="white-space: normal;">
+		{%s= ln.UI["bannerSpecs"] %}
+	</div>
+	<br>
+	<input type="file" name="banners" multiple accept="image/png, image/gif, image/jpeg, video/webm">
+	{%= captcha(ln.UI) %}
+	{%= submit(true, ln.UI) %}
+{% endstripspace %}{% endfunc %}

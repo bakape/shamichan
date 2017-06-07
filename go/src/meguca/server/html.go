@@ -247,6 +247,10 @@ func noscriptCaptchaLink(w http.ResponseWriter, r *http.Request) {
 	staticTemplate(w, r, templates.NoscriptCaptchaLink)
 }
 
+func bannerSettingForm(w http.ResponseWriter, r *http.Request) {
+	staticTemplate(w, r, templates.BannerForm)
+}
+
 // Render the captcha for noscript browsers
 func noscriptCaptcha(w http.ResponseWriter, r *http.Request) {
 	lp, err := lang.Get(w, r)

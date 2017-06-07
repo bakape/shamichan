@@ -44,7 +44,11 @@ export abstract class AccountForm extends FormView {
 		const data = {}
 		this.injectCaptcha(data)
 		fn(data)
-		const res = await postJSON(url, data)
+		await this.handlePostResponse(await postJSON(url, data))
+	}
+
+	// Handle the response of a POST request
+	protected async  handlePostResponse(res: Response) {
 		switch (res.status) {
 			case 200:
 				this.remove()

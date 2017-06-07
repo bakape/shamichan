@@ -100,6 +100,7 @@ func createRouter() http.Handler {
 	forms.POST("/configureBoard/:board", boardConfigurationForm)
 	forms.POST("/configureServer", serverConfigurationForm)
 	forms.GET("/assignStaff/:board", staffAssignmentForm)
+	forms.GET("/setBanners", bannerSettingForm)
 
 	// JSON API
 	json := r.NewGroup("/json")
@@ -142,6 +143,7 @@ func createRouter() http.Handler {
 	admin.POST("/sameIP/:id", getSameIPPosts)
 	admin.POST("/sticky", setThreadSticky)
 	admin.POST("/unban/:board", unban)
+	admin.POST("/setBanners", setBanners)
 
 	// Available to both logged-in users and publicly with slight alterations
 	r.GET("/bans/:board", banList)

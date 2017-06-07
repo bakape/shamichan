@@ -4,7 +4,7 @@ import (
 	"regexp"
 )
 
-// Maximum lengths of various string input fields
+// Maximum lengths of various input fields
 const (
 	MaxLenName         = 50
 	MaxLenAuth         = 50
@@ -20,6 +20,8 @@ const (
 	MaxLenRules        = 5000
 	MaxLenEightball    = 2000
 	MaxBanReasonLength = 100
+	MaxNumBanners      = 20
+	MaxBannerSize      = 100 << 10
 )
 
 // Various cryptographic token exact lengths

@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+// Contains data and type of a file stored in the database
+type File struct {
+	Data []byte
+	Mime string
+}
+
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
 // banned IPs.
 func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
@@ -273,5 +279,30 @@ func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 	}
 	err = r.Err()
 
+	return
+}
+
+// Overwrite list of banners in the DB, for a specific board
+func SetBanners(board string, banners []File) (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer RollbackOnError(tx, &err)
+
+	_, err = tx.Stmt(prepared["clear_banners"]).Exec(board)
+	if err != nil {
+		return
+	}
+
+	q := tx.Stmt(prepared["set_banner"])
+	for i, f := range banners {
+		_, err = q.Exec(board, i, f.Data, f.Mime)
+		if err != nil {
+			return
+		}
+	}
+
+	err = tx.Commit()
 	return
 }
