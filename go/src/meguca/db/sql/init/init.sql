@@ -81,6 +81,13 @@ create table staff (
 create index staff_board on staff (board);
 create index staff_account on staff (account);
 
+create table banners (
+	board varchar(3) not null references boards on delete cascade,
+	id smallint not null,
+	data bytea not null,
+	mime text not null
+);
+
 create sequence post_id;
 
 create table threads (

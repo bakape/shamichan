@@ -119,6 +119,35 @@ export class StaffAssignmentForm extends SelectedBoardForm {
 	}
 }
 
+export class BannerForm extends SelectedBoardForm {
+	constructor() {
+		super({})
+	}
+
+	public el: HTMLFormElement
+
+	public renderNext(board: string) {
+		this.renderPublicForm("/forms/setBanners")
+	}
+
+	protected async send() {
+		const data = new FormData(this.el)
+		data.append("board", this.board)
+		if (this.captcha) {
+			const c = this.captcha.data()
+			for (let k in c) {
+				data.append(k, c[k])
+			}
+		}
+
+		this.handlePostResponse(await fetch("/admin/setBanners", {
+			method: "POST",
+			credentials: "include",
+			body: data,
+		}))
+	}
+}
+
 // Panel view for creating boards
 export class BoardCreationForm extends AccountForm {
 	constructor() {

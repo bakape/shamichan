@@ -15,13 +15,13 @@ import (
 )
 
 const (
-	version = 15
-
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
 )
 
 var (
+	version = len(upgrades) + 1
+
 	// ConnArgs specifies the PostgreSQL connection arguments
 	ConnArgs = `user=meguca password=meguca dbname=meguca sslmode=disable binary_parameters=yes`
 
@@ -36,8 +36,8 @@ var (
 	boltDB *bolt.DB
 )
 
-var upgrades = map[uint]func(*sql.Tx) error{
-	1: func(tx *sql.Tx) (err error) {
+var upgrades = []func(*sql.Tx) error{
+	func(tx *sql.Tx) (err error) {
 		// Delete legacy columns
 		return execAll(tx,
 			`ALTER TABLE threads
@@ -47,14 +47,14 @@ var upgrades = map[uint]func(*sql.Tx) error{
 				DROP COLUMN codeTags`,
 		)
 	},
-	2: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE threads
 				DROP COLUMN log`,
 		)
 		return
 	},
-	3: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				DROP COLUMN ctr`,
@@ -62,7 +62,7 @@ var upgrades = map[uint]func(*sql.Tx) error{
 		return
 	},
 	// Restore correct image counters after incorrect updates
-	4: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`UPDATE threads
 				SET imageCtr = (SELECT COUNT(*) FROM posts
@@ -72,7 +72,7 @@ var upgrades = map[uint]func(*sql.Tx) error{
 		)
 		return
 	},
-	5: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE images
 				ADD COLUMN Title varchar(100) not null default '',
@@ -80,19 +80,19 @@ var upgrades = map[uint]func(*sql.Tx) error{
 		)
 		return
 	},
-	6: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE posts
 				ADD COLUMN sage bool`,
 		)
 		return
 	},
-	7: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(`DROP INDEX deleted`)
 		return
 	},
 	// Set default expiry configs, to keep all threads from deleting
-	8: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		var s string
 		err = tx.QueryRow("SELECT val FROM main WHERE id = 'config'").Scan(&s)
 		if err != nil {
@@ -117,28 +117,28 @@ var upgrades = map[uint]func(*sql.Tx) error{
 		)
 		return
 	},
-	9: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN disableRobots bool not null default false`,
 		)
 		return
 	},
-	10: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE threads
 				ADD COLUMN sticky bool default false`,
 		)
 		return
 	},
-	11: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE bans
 				ADD COLUMN forPost bigint default 0`,
 		)
 		return
 	},
-	12: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		return execAll(tx,
 			`create table mod_log (
 				type smallint not null,
@@ -151,14 +151,25 @@ var upgrades = map[uint]func(*sql.Tx) error{
 			`create index mod_log_created on mod_log (created)`,
 		)
 	},
-	13: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(`create index sticky on threads (sticky)`)
 		return
 	},
-	14: func(tx *sql.Tx) (err error) {
+	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE posts
 				DROP COLUMN backlinks`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`create table banners (
+				board varchar(3) not null references boards on delete cascade,
+				id smallint not null,
+				data bytea not null,
+				mime text not null
+			);`,
 		)
 		return
 	},
@@ -188,7 +199,10 @@ func LoadDB() (err error) {
 	if !exists {
 		tasks = append(tasks, CreateAdminAccount)
 	}
-	tasks = append(tasks, openBoltDB, loadConfigs, loadBoardConfigs, loadBans)
+	tasks = append(
+		tasks,
+		openBoltDB, loadConfigs, loadBoardConfigs, loadBans, loadBanners,
+	)
 	if err := util.Waterfall(tasks...); err != nil {
 		return err
 	}
@@ -201,7 +215,7 @@ func LoadDB() (err error) {
 
 // Check database version perform any upgrades
 func checkVersion() (err error) {
-	var v uint
+	var v int
 	err = db.QueryRow(`select val from main where id = 'version'`).Scan(&v)
 	if err != nil {
 		return
@@ -215,7 +229,7 @@ func checkVersion() (err error) {
 			return
 		}
 
-		err = upgrades[i](tx)
+		err = upgrades[i-1](tx)
 		if err != nil {
 			return rollBack(tx, err)
 		}

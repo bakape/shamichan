@@ -7,7 +7,7 @@ import { validatePasswordMatch, loginID, sessionToken, isAdmin } from "./common"
 import ModPanel from "./panel"
 import {
 	PasswordChangeForm, ServerConfigForm, BoardConfigForm, BoardCreationForm,
-	BoardDeletionForm, StaffAssignmentForm,
+	BoardDeletionForm, StaffAssignmentForm, BannerForm,
 } from "./forms"
 import { config } from "../state"
 
@@ -40,6 +40,7 @@ class AccountPanel extends TabbedModal {
 			"#deleteBoard": this.loadConditional(BoardDeletionForm),
 			"#configureBoard": this.loadConditional(BoardConfigForm),
 			"#assignStaff": this.loadConditional(StaffAssignmentForm),
+			"#setBanners": this.loadConditional(BannerForm),
 		})
 
 		if (loginID() && sessionToken()) {
