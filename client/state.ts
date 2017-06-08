@@ -40,7 +40,7 @@ export interface PageState extends ChangeEmitter {
 	href: string
 }
 
-const thirtyDays = 30 * 24 * 60 * 60 * 1000,
+const tenDays = 10 * 24 * 60 * 60 * 1000,
 	loading = document.getElementById('loading-image')
 
 // Configuration passed from the server. Some values can be changed during
@@ -105,24 +105,24 @@ export function loadFromDB(): Promise<Set<number>[]> {
 // Store the ID of a post this client created
 export function storeMine(id: number) {
 	mine.add(id)
-	storeID("mine", id, thirtyDays)
+	storeID("mine", id, tenDays)
 }
 
 // Store the ID of a post that replied to one of the user's posts
 export function storeSeenReply(id: number) {
 	seenReplies.add(id)
-	storeID("seen", id, thirtyDays)
+	storeID("seen", id, tenDays)
 }
 
 export function storeSeenPost(id: number) {
 	seenReplies.add(id)
-	storeID("seenPost", id, thirtyDays)
+	storeID("seenPost", id, tenDays)
 }
 
 // Store the ID of a post or thread to hide
 export function storeHidden(id: number) {
 	hidden.add(id)
-	storeID("hidden", id, thirtyDays)
+	storeID("hidden", id, tenDays)
 }
 
 export function setBoardConfig(c: BoardConfigs) {
