@@ -59,7 +59,7 @@ func getData(s *store, f FrontEnd) (
 		}
 		if ctr == s.updateCounter {
 			// Still fresh
-			s.lastChecked = time.Now().Unix()
+			s.lastChecked = time.Now()
 			return s.data, s.json, s.updateCounter, false, nil
 		}
 	}
@@ -86,7 +86,7 @@ func getData(s *store, f FrontEnd) (
 		return
 	}
 
-	s.lastChecked = time.Now().Unix()
+	s.lastChecked = time.Now()
 	return
 }
 

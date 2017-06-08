@@ -8,15 +8,14 @@ import (
 	"time"
 )
 
+// Time for the cache to expire and need counter comparison
+const expiryTime = time.Second
+
 var (
 	cache     = make(map[Key]*list.Element, 10)
 	ll        = list.New()
 	totalUsed int
 	mu        sync.Mutex
-
-	// Time in seconds for the cache to expire and need counter comparison.
-	// Mutable for quicker testing.
-	expiryTime int64 = 30
 
 	// Size sets the maximum size of cache before evicting unread data in MB
 	Size float64 = 1 << 7
@@ -35,8 +34,8 @@ type store struct {
 	// Controls general access to the contents of the struct, except for size
 	sync.RWMutex
 	key           Key
-	lastChecked   int64
 	updateCounter uint64
+	lastChecked   time.Time
 	data          interface{}
 	html, json    []byte
 
@@ -94,7 +93,7 @@ func updateUsedSize(delta int) {
 
 // Return, if the data can still be considered fresh, without querying the DB
 func (s *store) isFresh() bool {
-	return time.Now().Unix()-s.lastChecked < expiryTime
+	return time.Now().Sub(s.lastChecked) < expiryTime
 }
 
 // Stores the new values of s. Calculates and stores the new size. Passes the

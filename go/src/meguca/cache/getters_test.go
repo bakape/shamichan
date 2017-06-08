@@ -8,10 +8,6 @@ import (
 	"github.com/mailru/easyjson/jwriter"
 )
 
-func init() {
-	expiryTime = 1
-}
-
 // Simple dummy implementation of easyjson.Marshaler
 type easyString string
 
