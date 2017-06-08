@@ -199,7 +199,10 @@ func LoadDB() (err error) {
 	if !exists {
 		tasks = append(tasks, CreateAdminAccount)
 	}
-	tasks = append(tasks, openBoltDB, loadConfigs, loadBoardConfigs, loadBans)
+	tasks = append(
+		tasks,
+		openBoltDB, loadConfigs, loadBoardConfigs, loadBans, loadBanners,
+	)
 	if err := util.Waterfall(tasks...); err != nil {
 		return err
 	}
