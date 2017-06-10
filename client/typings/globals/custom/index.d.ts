@@ -62,6 +62,14 @@ interface HTMLAnchorElement {
 	): void
 }
 
+interface Window {
+	addEventListener(
+		type: string,
+		handler: EventListener,
+		options?: boolean | EventListenerOptions
+	): void
+}
+
 interface Node extends ChildNode, ParentNode {
 	addEventListener(
 		type: string,

@@ -23,19 +23,19 @@ Render a link to another post. Can optionally be cross-thread.
 	{% endif %}
 	{% code url = append(url, "#p"...) %}
 	{% code url = append(url, idBuf...) %}
-	<a class="history post-link" data-id="{%z= idBuf %}" href="{%z= url %}">
+	<a class="post-link" data-id="{%z= idBuf %}" href="{%z= url %}">
 		>>
 		{%z= idBuf %}
 		{% if cross %}
 			{% space %}➡
 		{% endif %}
 	</a>
-	<a class="hash-link history" href="{%z= url %}"> #</a>
+	<a class="hash-link" href="{%z= url %}"> #</a>
 {% endstripspace %}{% endfunc %}
 
 {% func expandLink(board, id string) %}{% stripspace %}
 	<span class="act">
-		<a class="history expand-link" href="/{%s= board %}/{%s= id %}">
+		<a class="expand-link" href="/{%s= board %}/{%s= id %}">
 			Expand
 		</a>
 	</span>
@@ -43,7 +43,7 @@ Render a link to another post. Can optionally be cross-thread.
 
 {% func last100Link(board, id string) %}{% stripspace %}
 	<span class="act">
-		<a class="history lastN-link" href="/{%s= board %}/{%s= id %}?last=100">
+		<a class="lastN-link" href="/{%s= board %}/{%s= id %}?last=100">
 			Last 100
 		</a>
 	</span>

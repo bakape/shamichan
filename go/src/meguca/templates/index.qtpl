@@ -56,10 +56,10 @@
 				<b class="name"></b>
 				<time></time>
 				<nav>
-					<a class="history">
+					<a>
 						No.
 					</a>
-					<a class="history quote"></a>
+					<a class="quote"></a>
 				</nav>
 				<a class="control">
 					<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
@@ -154,12 +154,12 @@
 				<nav id="board-navigation">
 					<noscript>
 						[
-						<a href="/all/" class="history reload">
+						<a href="/all/">
 							all
 						</a>
 						{% for _, b := range boards %}
 							{% space %}/{% space %}
-							<a href="/{%s= b %}/" class="history reload">
+							<a href="/{%s= b %}/">
 								{%s= b %}
 							</a>
 						{% endfor %}

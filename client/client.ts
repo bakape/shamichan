@@ -4,7 +4,7 @@ import { handlers, message, connSM, connEvent } from './connection'
 import { posts, page } from './state'
 import { Post, FormModel, PostView, postEvent, postSM } from './posts'
 import { PostLink, Command, PostData, ImageData } from "./common"
-import { postAdded, navigate } from "./ui"
+import { postAdded } from "./ui"
 import { incrementPostCount } from "./page"
 import { posterName } from "./options"
 import { OverlayNotification } from "./ui"
@@ -138,7 +138,7 @@ export default () => {
 
 	handlers[message.redirect] = (board: string) => {
 		postSM.feed(postEvent.reset)
-		navigate(`/${board}/`, null, true)
+		location.href = `/${board}/`
 	}
 
 	handlers[message.notification] = (text: string) =>

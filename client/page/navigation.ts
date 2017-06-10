@@ -29,7 +29,7 @@ class BoardNavigation extends View<null> {
 				html += " / "
 			}
 			html += HTML
-				`<a href="../${boards[i]}/${catalog}" class="history reload">
+				`<a href="../${boards[i]}/${catalog}">
 					${boards[i]}
 				</a>`
 		}

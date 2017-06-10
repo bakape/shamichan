@@ -189,7 +189,7 @@ function localizeOmitted() {
 		text += ` ${lang.posts["omitted"]} `
 
 		el.firstChild.replaceWith(text)
-		el.querySelector("a.history").textContent = lang.posts["seeAll"]
+		el.querySelector("a").textContent = lang.posts["seeAll"]
 	}
 }
 

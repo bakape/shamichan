@@ -43,7 +43,7 @@ BoardNavigation renders a board selection and search form
 			{% for _, b := range config.GetBoardTitles() %}
 				<label class="board">
 					<input type="checkbox" name="{%s= b.ID %}">
-					<a href="/{%s= b.ID %}/" class="history">
+					<a href="/{%s= b.ID %}/">
 						{%= formatTitle(b.ID, b.Title) %}
 					</a>
 					<br>

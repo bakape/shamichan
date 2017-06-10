@@ -100,7 +100,7 @@ allow caching of generated posts.
 				{% if t.Image != nil %}
 					<figure>
 						{% code img := *t.Image %}
-						<a class="history" href="/{%s= t.Board %}/{%s= idStr %}">
+						<a href="/{%s= t.Board %}/{%s= idStr %}">
 							{% if img.Spoiler %}
 								<img src="/assets/spoil/default.jpg" width="150" height="150" class="catalog">
 							{% else %}
@@ -148,11 +148,6 @@ IndexThreads renders abbreviated threads for display on board index pages
 			<section class="index-thread{% if t.Deleted %}{% space %}deleted{% endif %}" data-id="{%s= idStr %}">
 				{%= deletedToggle() %}
 				{%= renderThreadPosts(t, bls, root, true) %}
-				<aside class="act posting glass">
-					<a href="/all/{%s= idStr %}?last=100#bottom">
-						Reply
-					</a>
-				</aside>
 				<hr>
 			</section>
 		{% endfor %}
@@ -193,11 +188,11 @@ Link to catalog or board page
 {% func catalogLink(catalog bool, ln map[string]string) %}{% stripspace %}
 	<aside class="act glass">
 		{% if catalog %}
-			<a href="." class="history">
+			<a href=".">
 				{%s= ln["return"] %}
 			</a>
 		{% else %}
-			<a href="catalog" class="history">
+			<a href="catalog">
 				{%s= ln["catalog"] %}
 			</a>
 		{% endif %}
@@ -233,7 +228,7 @@ Links to different pages og the board index
 
 Link to a different paginated board page
 {% func pageLink(i int, text string) %}{% stripspace %}
-	<a href="?page={%d i %}" class="history">
+	<a href="?page={%d i %}">
 		{%s= text %}
 	</a>
 {% endstripspace %}{% endfunc %}

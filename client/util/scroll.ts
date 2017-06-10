@@ -97,3 +97,7 @@ if (!isCuck) {
 	el.innerHTML = `#lock, #alwaysLock, label[for="alwaysLock"]{display: none;}`
 	document.head.append(el)
 }
+
+window.addEventListener("hashchange", scrollToAnchor, {
+	passive: true,
+})

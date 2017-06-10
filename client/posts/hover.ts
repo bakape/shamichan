@@ -78,13 +78,13 @@ class PostPreview extends ImageHandler {
 
 		// Remove any existing reverse post link highlights due to link inline
 		// expansion
-		for (let el of this.el.querySelectorAll("a.history.referenced")) {
+		for (let el of this.el.querySelectorAll("a.post-link.referenced")) {
 			el.classList.remove("referenced")
 		}
 
 		// Underline reverse post links in preview
 		const patt = new RegExp(`[>\/]` + getClosestID(this.parent))
-		for (let el of this.el.querySelectorAll("a.history")) {
+		for (let el of this.el.querySelectorAll("a.post-link")) {
 			if (!patt.test(el.textContent)) {
 				continue
 			}
@@ -238,7 +238,7 @@ function renderImagePreview(event: MouseEvent) {
 
 async function renderPostPreview(event: MouseEvent) {
 	let target = event.target as HTMLElement
-	if (!target.matches || !target.matches("a.history, .hash-link")) {
+	if (!target.matches || !target.matches("a.post-link, .hash-link")) {
 		return
 	}
 	if (target.classList.contains("hash-link")) {
