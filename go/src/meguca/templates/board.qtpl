@@ -38,17 +38,17 @@
 						{% endfor %}
 					</select>
 					<br>
+				{% else %}
+					<input type="text" name="board" value="{%s= conf.ID %}" hidden>
 				{% endif %}
 				<input name="subject" placeholder="{%s= ln.UI["subject"] %}" required type="text" maxlength="100">
 				<br>
-				<noscript>
-					{%= noscriptPostCreationFields(ln) %}
-				</noscript>
+				{%= noscriptPostCreationFields(ln) %}
 				{% if id == "all" || !conf.TextOnly %}
 					{%= uploadForm(ln.Common.Posts) %}
 				{% endif %}
 				{%= captcha(ln.UI) %}
-				{%= submit(true, ln.UI) %}
+				{%= submit(false, ln.UI) %}
 			</form>
 		</aside>
 		<aside id="refresh" class="act glass">
@@ -165,6 +165,9 @@ IndexThreads renders abbreviated threads for display on board index pages
 
 Render noscript-specific post creation fields
 {% func noscriptPostCreationFields(ln lang.Pack) %}{% stripspace %}
+	{% comment %}
+		TODO: Detect, if the user is staff, and enable staff title accordingly
+	{% endcomment %}
 	{% for _, s := range specs["noscriptPostCreation"] %}
 		{%= input(s, ln) %}
 	{% endfor %}

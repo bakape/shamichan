@@ -73,8 +73,8 @@ CaptchaConfirmation renders a confirmation form with an optional captcha
 		<img>
 		<noscript>
 			<iframe width="240" height="100" marginwidth="0" marginheight="0" src="/captcha/noscript/load"></iframe>
-			<input type="text" name="captchaID" placeholder="{%s= ln["captchaID"] %}" required>
 		</noscript>
+		<input type="text" name="captchaID" placeholder="{%s= ln["captchaID"] %}" required>
 		<input name="captcha" placeholder="{%s= ln["captcha"] %}" type="number" autocomplete="off" required>
 	</div>
 {% endstripspace %}{% endfunc %}

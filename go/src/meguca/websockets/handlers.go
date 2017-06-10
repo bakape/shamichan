@@ -24,8 +24,6 @@ func (c *Client) runHandler(typ common.MessageType, msg []byte) error {
 		return c.synchronise(data)
 	case common.MessageReclaim:
 		return c.reclaimPost(data)
-	case common.MessageInsertThread:
-		return c.insertThread(data)
 	case common.MessageAppend:
 		return c.appendRune(data)
 	case common.MessageBackspace:

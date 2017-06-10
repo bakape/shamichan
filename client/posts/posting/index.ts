@@ -53,7 +53,6 @@ export const enum postEvent {
 	error,      // Unrecoverable error
 	done,       // Post closed
 	open,       // New post opened
-	hijack,     // Hijacked an existing post as a postForm
 	reset,      // Set to none. Used during page navigation.
 	alloc,      // Allocated the draft post to the server
 	reclaim,    // Ownership of post reclaimed after connectivity loss
@@ -253,24 +252,13 @@ export default () => {
 	postSM.act(postState.draft, postEvent.alloc, () =>
 		postState.alloc)
 
-	// Hijack and existing post and replace with post form and model
-	postSM.act(
-		postState.ready,
-		postEvent.hijack,
-		({ view, model }: FormMessage) => {
-			postModel = model
-			postForm = view
-			return postState.alloc
-		},
-	)
-
 	postSM.on(postState.alloc, bindNagging)
 
 	// Open a new post creation form, if none open
 	postSM.act(postState.ready, postEvent.open, () => {
-		postModel = new FormModel(0)
+		postModel = new FormModel()
 		postModel.needCaptcha = needCaptcha
-		postForm = new FormView(postModel, null)
+		postForm = new FormView(postModel)
 		return postState.draft
 	})
 

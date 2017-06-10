@@ -20,15 +20,6 @@ var (
 		MD5:      "YOQQklgfezKbBXuEAsqopw",
 		Size:     300792,
 	}
-
-	sampleImagelessThreadCreationRequest = ThreadCreationRequest{
-		ReplyCreationRequest: ReplyCreationRequest{
-			Name:     "name",
-			Password: "123",
-		},
-		Subject: "subject",
-		Board:   "a",
-	}
 )
 
 func TestInsertThread(t *testing.T) {
@@ -87,8 +78,7 @@ func TestInsertThread(t *testing.T) {
 			req := ThreadCreationRequest{
 				Board: c.board,
 			}
-			err := new(Client).insertThread(marshalJSON(t, req))
-			if err != c.err {
+			if _, err := CreateThread(req, ""); err != c.err {
 				UnexpectedError(t, err)
 			}
 		})
@@ -105,22 +95,14 @@ func testCreateThread(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sv := newWSServer(t)
-	defer sv.Close()
-	cl, wcl := sv.NewClient()
-	registerClient(t, cl, 0, "all")
-	defer cl.Close(nil)
-	cl.ip = "::1"
-
 	std := common.Thread{
 		Board:    "c",
 		Subject:  "subject",
 		ImageCtr: 1,
 		PostCtr:  1,
 		Post: common.Post{
-			Editing: true,
-			ID:      6,
-			Name:    "name",
+			ID:   6,
+			Name: "name",
 			Image: &common.Image{
 				Spoiler:     true,
 				ImageCommon: stdJPEG,
@@ -143,12 +125,9 @@ func testCreateThread(t *testing.T) {
 		Subject: "subject",
 		Board:   "c",
 	}
-	data := marshalJSON(t, req)
-	if err := cl.insertThread(data); err != nil {
+	if _, err := CreateThread(req, "::1"); err != nil {
 		t.Fatal(err)
 	}
-	assertMessage(t, wcl, `326`)
-	assertIP(t, 6, "::1")
 
 	thread, err := db.GetThread(6, 0)
 	if err != nil {
@@ -166,27 +145,21 @@ func testCreateThread(t *testing.T) {
 	std.Image = thread.Image
 
 	AssertDeepEquals(t, thread, std)
-	AssertDeepEquals(t, cl.post, openPost{
-		id:          6,
-		op:          6,
-		board:       "c",
-		time:        then,
-		hasImage:    true,
-		isSpoilered: true,
-		body:        []byte{},
-	})
 }
 
 func testCreateThreadTextOnly(t *testing.T) {
-	sv := newWSServer(t)
-	defer sv.Close()
-	cl, wcl := sv.NewClient()
-	data := marshalJSON(t, sampleImagelessThreadCreationRequest)
-	if err := cl.insertThread(data); err != nil {
+	post, err := CreateThread(ThreadCreationRequest{
+		ReplyCreationRequest: ReplyCreationRequest{
+			Name:     "name",
+			Password: "123",
+		},
+		Subject: "subject",
+		Board:   "a",
+	}, "")
+	if err != nil {
 		t.Fatal(err)
 	}
-	assertMessage(t, wcl, `327`)
-	if cl.post.hasImage {
+	if post.Image != nil {
 		t.Error("image inserted")
 	}
 
@@ -262,6 +235,7 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 	sv := newWSServer(t)
 	defer sv.Close()
 	cl, wcl := sv.NewClient()
+	registerClient(t, cl, 1, "a")
 	cl.post = openPost{
 		id:    2,
 		op:    1,
@@ -270,9 +244,13 @@ func TestClosePreviousPostOnCreation(t *testing.T) {
 		time:  time.Now().Unix(),
 		body:  []byte("abc"),
 	}
-	data := marshalJSON(t, sampleImagelessThreadCreationRequest)
+	data := marshalJSON(t, ReplyCreationRequest{
+		Name:     "name",
+		Body:     "foo",
+		Password: "123",
+	})
 
-	if err := cl.insertThread(data); err != nil {
+	if err := cl.insertPost(data); err != nil {
 		t.Fatal(err)
 	}
 

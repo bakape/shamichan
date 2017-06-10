@@ -1,6 +1,6 @@
 // Client entry point
 
-import { loadFromDB, page, posts } from './state'
+import { loadFromDB, page, posts, storeMine } from './state'
 import { start as connect } from './connection'
 import { open } from './db'
 import { initOptions } from "./options"
@@ -11,7 +11,7 @@ import {
 	renderBoard, extractConfigs, setThreadTitle, renderThread
 } from './page'
 import { default as initUI, setTitle } from "./ui"
-import { checkBottom } from "./util"
+import { checkBottom, getCookie, deleteCookie } from "./util"
 import assignHandlers from "./client"
 import initModeration from "./mod"
 
@@ -22,6 +22,14 @@ async function start() {
 
 	await open()
 	await loadFromDB()
+
+	// Add a stored thread OP, made by the client to "mine"
+	const addMine = getCookie("addMine")
+	if (addMine) {
+		storeMine(parseInt(addMine))
+		deleteCookie("addMine")
+	}
+
 	initOptions()
 
 	if (page.thread) {

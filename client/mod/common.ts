@@ -1,4 +1,5 @@
 import lang from '../lang'
+import { getCookie } from "../util"
 
 // Returns, if logged in as admin account
 export function isAdmin() {
@@ -13,20 +14,6 @@ export function loginID(): string {
 // Returns current login session token in use
 export function sessionToken(): string {
 	return getCookie("session")
-}
-
-// Get a cookie value by name. Returns empty string, if none.
-function getCookie(id: string): string {
-	const kv = document.cookie
-		.split(";")
-		.map(s =>
-			s.trim())
-		.filter(s =>
-			s.startsWith(id))
-	if (!kv.length) {
-		return ""
-	}
-	return kv[0].split("=")[1]
 }
 
 // Set a password match validator function for 2 input elements, that are

@@ -1,6 +1,6 @@
 // Login/logout/registration facilities for the account system
 
-import { postJSON } from '../util'
+import { postJSON, deleteCookie } from '../util'
 import { FormView } from "../ui"
 import { TabbedModal } from "../base"
 import { validatePasswordMatch, loginID, sessionToken, isAdmin } from "./common"
@@ -110,11 +110,6 @@ export function reset() {
 	for (let el of accountPanel.el.querySelectorAll(".form-response")) {
 		el.textContent = ""
 	}
-}
-
-// Delete a cookie by id
-function deleteCookie(id: string) {
-	document.cookie = `${id}=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`
 }
 
 // Terminate the user session(s) server-side and reset the panel

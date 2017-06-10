@@ -42,6 +42,13 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Let the JS add the ID of the post to "mine"
+	http.SetCookie(w, &http.Cookie{
+		Name:  "addMine",
+		Value: strconv.FormatUint(post.ID, 10),
+		Path:  "/",
+	})
+
 	http.Redirect(w, r, fmt.Sprintf(`/%s/%d`, req.Board, post.ID), 303)
 }
 
@@ -84,6 +91,9 @@ func parsePostCreationForm(w http.ResponseWriter, r *http.Request) (
 			CaptchaID: f.Get("captchaID"),
 			Solution:  f.Get("captcha"),
 		},
+	}
+	if f.Get("auth") == "on" {
+		req.SessionCreds = extractLoginCreds(r)
 	}
 	if token != "" {
 		req.Image = websockets.ImageRequest{
@@ -137,5 +147,5 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 
 	feeds.InsertPostInto(post.StandalonePost, msg)
 	url := fmt.Sprintf(`/%s/%d?last100=true#bottom`, board, op)
-	http.Redirect(w, r, url, 302)
+	http.Redirect(w, r, url, 303)
 }

@@ -11,11 +11,32 @@ import (
 // `scripts/migrate_lang.js` to insert temporary placeholders into any language
 // packs missing translations.
 
+// Reused in multiple places
+var (
+	newPasswordSpec = inputSpec{
+		ID:           "password",
+		Type:         _password,
+		MaxLength:    common.MaxLenPassword,
+		NoID:         true,
+		Required:     true,
+		Autocomplete: "new-password",
+	}
+	repeatPasswordSpec = inputSpec{
+		ID:           "repeat",
+		Type:         _password,
+		MaxLength:    common.MaxLenPassword,
+		NoID:         true,
+		Required:     true,
+		Autocomplete: "new-password",
+	}
+	sageSpec = inputSpec{ID: "sage"}
+)
+
 var specs = map[string][]inputSpec{
 	"identity": {
 		{ID: "staffTitle"},
 		{ID: "live"},
-		{ID: "sage"},
+		sageSpec,
 		{
 			ID:           "name",
 			Type:         _string,
@@ -24,7 +45,7 @@ var specs = map[string][]inputSpec{
 		},
 	},
 	"noscriptPostCreation": {
-		{ID: "sage"},
+		{ID: "staffTitle"},
 		{
 			ID:           "name",
 			Type:         _string,
@@ -32,7 +53,7 @@ var specs = map[string][]inputSpec{
 			Placeholder:  true,
 			Autocomplete: "off",
 		},
-		{
+		inputSpec{
 			ID:        "body",
 			Type:      _textarea,
 			Rows:      5,
@@ -66,22 +87,8 @@ var specs = map[string][]inputSpec{
 			Required:     true,
 			Autocomplete: "off",
 		},
-		{
-			ID:           "password",
-			Type:         _password,
-			MaxLength:    common.MaxLenPassword,
-			NoID:         true,
-			Required:     true,
-			Autocomplete: "new-password",
-		},
-		{
-			ID:           "repeat",
-			Type:         _password,
-			MaxLength:    common.MaxLenPassword,
-			NoID:         true,
-			Required:     true,
-			Autocomplete: "new-password",
-		},
+		newPasswordSpec,
+		repeatPasswordSpec,
 	},
 	"changePassword": {
 		{
@@ -92,22 +99,8 @@ var specs = map[string][]inputSpec{
 			Required:     true,
 			Autocomplete: "current-password",
 		},
-		{
-			ID:           "newPassword",
-			Type:         _password,
-			MaxLength:    common.MaxLenPassword,
-			NoID:         true,
-			Required:     true,
-			Autocomplete: "new-password",
-		},
-		{
-			ID:           "repeat",
-			Type:         _password,
-			MaxLength:    common.MaxLenPassword,
-			NoID:         true,
-			Required:     true,
-			Autocomplete: "new-password",
-		},
+		newPasswordSpec,
+		repeatPasswordSpec,
 	},
 	"configureBoard": {
 		{ID: "readOnly"},
