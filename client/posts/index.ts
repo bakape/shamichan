@@ -1,9 +1,7 @@
 export { Post } from "./model"
 export { default as PostView } from "./view"
 export { postEvent, postSM, postState, FormModel, identity } from "./posting"
-export {
-	default as ImageHandler, toggleExpandAll, setExpandAll, thumbPath
-} from "./images"
+export { default as ImageHandler, toggleExpandAll, thumbPath } from "./images"
 export { clearHidden } from "./hide"
 export { toggleGallery } from "./filter"
 export * from "./render"

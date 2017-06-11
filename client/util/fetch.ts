@@ -54,16 +54,3 @@ export async function fetchBoard(
 	const u = `/${board}/${catalog ? "catalog" : ""}?minimal=true&page=${page}`
 	return uncachedGET(u)
 }
-
-// Fetch HTML of a thread page
-export async function fetchThread(
-	board: string,
-	thread: number,
-	lastN: number,
-): Promise<Response> {
-	let url = `/${board}/${thread}?minimal=true`
-	if (lastN) {
-		url += `&last=${lastN}`
-	}
-	return uncachedGET(url)
-}
