@@ -1,5 +1,5 @@
 import { FSM } from "../util"
-import { debug } from "../state"
+import { debug, page, displayLoading } from "../state"
 import { message, handlers } from "./messages"
 import { renderStatus } from "./ui"
 import { synchronise } from "./synchronization"
@@ -154,7 +154,11 @@ function resetAttempts() {
 }
 
 export function start() {
-	connSM.feed(connEvent.start)
+	if (page.thread) {
+		connSM.feed(connEvent.start)
+	} else {
+		displayLoading(false)
+	}
 }
 
 connSM.act(connState.loading, connEvent.start, () => {
