@@ -71,8 +71,9 @@ function upgradeDB(event: IDBVersionChangeEvent) {
 			}
 
 			for (let name of postStores) {
-				db.createObjectStore(name, { autoIncrement: true })
-					.createIndex("expires", "expires")
+				const s = db.createObjectStore(name, { autoIncrement: true })
+				s.createIndex("expires", "expires")
+				s.createIndex("op", "op")
 			}
 
 			// Various miscellaneous objects
@@ -91,7 +92,6 @@ function upgradeDB(event: IDBVersionChangeEvent) {
 			}
 			db.createObjectStore("seenPost", { autoIncrement: true })
 				.createIndex("expires", "expires")
-
 			break
 		case 6:
 			// Recreate all previous post ID stores
