@@ -1,17 +1,11 @@
 import { setBoardConfig, hidden, mine, posts, page, config } from "../state"
 import options from "../options"
-import { PostData, ThreadData, fileTypes } from "../common"
+import { PostData, fileTypes } from "../common"
 import { Post, PostView } from "../posts"
 import lang from "../lang"
 import { postAdded } from "../ui/tab"
 import { pluralize } from "../util"
 import { posterName } from "../options"
-
-// Post data of a particular page
-export type PageData = {
-	threads: ThreadData | ThreadData[],
-	backlinks: { [id: number]: { [id: number]: number } },
-}
 
 const threads = document.getElementById("threads")
 
@@ -29,7 +23,10 @@ function extractJSON(id: string): any {
 }
 
 // Extract pregenerated rendered post data from DOM
-export function extractPageData(): PageData {
+export function extractPageData<T>(): {
+	threads: T,
+	backlinks: { [id: number]: { [id: number]: number } },
+} {
 	return {
 		threads: extractJSON("post-data"),
 		backlinks: extractJSON("backlink-data"),

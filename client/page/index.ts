@@ -65,7 +65,7 @@ export async function loadPage(state: PageState, ready: Promise<void>) {
 	posts.clear()
 	setExpandAll(false)
 	if (thread) {
-		renderThread(t)
+		renderThread()
 	} else {
 		renderBoard(t)
 	}

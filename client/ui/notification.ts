@@ -15,7 +15,7 @@ export default function notifyAboutReply(post: Post) {
 	if (seenReplies.has(post.id)) {
 		return
 	}
-	storeSeenReply(post.id)
+	storeSeenReply(post.id, post.op)
 	if (!document.hidden) {
 		return
 	}

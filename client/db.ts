@@ -1,6 +1,6 @@
 // IndexedDB database controller
 
-const dbVersion = 6
+const dbVersion = 7
 
 let db: IDBDatabase
 
@@ -12,9 +12,9 @@ const gayNiggerSemen = "A mutation operation was attempted on a database that di
 
 // Expiring post ID object stores
 const postStores = [
-	"mine",   // Posts created by this client
-	"hidden", // Posts hidden by client
-	"seen",   // Replies to the user's posts that have already been seen
+	"mine",     // Posts created by this client
+	"hidden",   // Posts hidden by client
+	"seen",     // Replies to the user's posts that have already been seen
 	"seenPost", // Posts that the user has viewed or scrolled past
 ]
 
@@ -34,14 +34,18 @@ export function open(): Promise<void> {
 
 			db.onerror = throwErr
 			resolve()
-			for (let name of postStores) {
-				deleteExpired(name)
-			}
 
 			// Reload this tab, if another tab requires a DB upgrade
 			db.onversionchange = () =>
 				(db.close(),
 					location.reload(true))
+
+			// Delay for quicker starts
+			setTimeout(() => {
+				for (let name of postStores) {
+					deleteExpired(name)
+				}
+			}, 10000)
 		}
 	})
 		.catch(err => {
@@ -82,12 +86,21 @@ function upgradeDB(event: IDBVersionChangeEvent) {
 			setTimeout(() => addObj("main", { id: "mascot" }), 1000)
 			break
 		case 5:
-			if(db.objectStoreNames.contains("seenPost")) {
+			if (db.objectStoreNames.contains("seenPost")) {
 				break
 			}
 			db.createObjectStore("seenPost", { autoIncrement: true })
 				.createIndex("expires", "expires")
 
+			break
+		case 6:
+			// Recreate all previous post ID stores
+			for (let name of postStores) {
+				db.deleteObjectStore(name)
+				const s = db.createObjectStore(name, { autoIncrement: true })
+				s.createIndex("expires", "expires")
+				s.createIndex("op", "op")
+			}
 			break
 	}
 }
@@ -99,9 +112,9 @@ function throwErr(err: ErrorEvent) {
 
 // Delete expired keys from post ID object stores
 function deleteExpired(name: string) {
-	const trans = newTransaction(name, true),
-		range = IDBKeyRange.upperBound(Date.now()),
-		req = trans.index("expires").openCursor(range)
+	const req = newTransaction(name, true)
+		.index("expires")
+		.openCursor(IDBKeyRange.upperBound(Date.now()))
 
 	req.onerror = throwErr
 
@@ -122,14 +135,18 @@ function newTransaction(store: string, write: boolean): IDBObjectStore {
 	return t.objectStore(store)
 }
 
-// Read the contents of a postStore into an array
-export function readIDs(store: string): Promise<number[]> {
+// Read the contents of a postStore for specific threads into an array
+export function readIDs(store: string, ...ops: number[]): Promise<number[]> {
 	if (isCuck) {
 		return fakePromise([])
 	}
+	ops.sort((a, b) =>
+		a - b)
 	return new Promise<number[]>((resolve, reject) => {
-		const ids: number[] = []
-		const req = newTransaction(store, false).openCursor()
+		const ids: number[] = [],
+			req = newTransaction(store, false)
+				.index("op")
+				.openCursor(IDBKeyRange.bound(ops[0], ops[ops.length - 1]))
 
 		req.onerror = err =>
 			reject(err)
@@ -137,7 +154,9 @@ export function readIDs(store: string): Promise<number[]> {
 		req.onsuccess = event => {
 			const cursor = (event as any).target.result as IDBCursorWithValue
 			if (cursor) {
-				ids.push(cursor.value.id)
+				if (ops.includes(cursor.value.op)) {
+					ids.push(cursor.value.id)
+				}
 				cursor.continue()
 			} else {
 				resolve(ids)
@@ -152,12 +171,12 @@ function fakePromise<T>(res: T): Promise<T> {
 }
 
 // Asynchronously insert a new expiring post id object into a postStore
-export function storeID(store: string, id: number, expiry: number) {
+export function storeID(store: string, id: number, op: number, expiry: number) {
 	if (isCuck) {
 		return
 	}
 	addObj(store, {
-		id,
+		id, op,
 		expires: Date.now() + expiry,
 	})
 }

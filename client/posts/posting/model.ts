@@ -52,15 +52,6 @@ export default class FormModel extends Post {
 		})
 	}
 
-	// Add this post to database stores and collections
-	private registerModel() {
-		// All the posts we make should be counted as seen
-		this.seenOnce = true
-		storeSeenPost(this.id)
-		storeMine(this.id)
-		posts.add(this)
-	}
-
 	// Append a character to the model's body and reparse the line, if it's a
 	// newline
 	public append(code: number) {
@@ -263,9 +254,23 @@ export default class FormModel extends Post {
 		}
 
 		send(message.insertPost, req)
-		handlers[message.postID] = (id: number) => {
+		handlers[message.postID] = this.receiveID(false)
+	}
+
+	// Returns a function, that handles a message from the server, containing
+	// the ID of the allocated post.
+	// alloc specifies, if an alloc event should be fired on the state machine.
+	private receiveID(alloc: boolean): (id: number) => void {
+		return (id: number) => {
 			this.id = id
-			this.registerModel()
+			this.op = page.thread
+			this.seenOnce = true
+			if (alloc) {
+				postSM.feed(postEvent.alloc)
+			}
+			storeSeenPost(this.id, this.op)
+			storeMine(this.id, this.op)
+			posts.add(this)
 			delete handlers[message.postID]
 		}
 	}
@@ -295,12 +300,7 @@ export default class FormModel extends Post {
 		}
 
 		send(message.insertPost, req)
-		handlers[message.postID] = (id: number) => {
-			this.id = id
-			postSM.feed(postEvent.alloc)
-			this.registerModel()
-			delete handlers[message.postID]
-		}
+		handlers[message.postID] = this.receiveID(true)
 	}
 
 	// Handle draft post allocation

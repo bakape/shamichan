@@ -1,6 +1,6 @@
 import { on, fetchBoard } from '../util'
 import lang from '../lang'
-import { page, posts } from '../state'
+import { page, posts, loadFromDB } from '../state'
 import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
 import { setTitle, notifyAboutReply } from "../ui"
@@ -46,9 +46,10 @@ export function renderFresh(html: string) {
 	render()
 }
 
-function extractCatalogModels() {
-	const { threads, backlinks } = extractPageData()
-	for (let t of threads as ThreadData[]) {
+async function extractCatalogModels() {
+	const { threads, backlinks } = extractPageData<ThreadData[]>()
+	await loadIDStores(threads)
+	for (let t of threads) {
 		if (t.image) {
 			t.image.large = true
 		}
@@ -56,10 +57,15 @@ function extractCatalogModels() {
 	}
 }
 
-function extractThreads() {
-	const { threads, backlinks } = extractPageData(),
+async function loadIDStores(threads: ThreadData[]) {
+	await loadFromDB(...(threads as ThreadData[]).map(t => t.id))
+}
+
+async function extractThreads() {
+	const { threads, backlinks } = extractPageData<ThreadData[]>(),
 		replies: number[] = []
-	for (let thread of threads as ThreadData[]) {
+	await loadIDStores(threads)
+	for (let thread of threads) {
 		const { posts } = thread
 		delete thread.posts
 		if (extractPost(thread, thread.id, thread.board, replies, backlinks)) {
@@ -84,12 +90,12 @@ function extractThreads() {
 }
 
 // Apply client-side modifications to a board page's HTML
-export function render() {
+export async function render() {
 	setPostCount(0, 0, 0)
 	if (page.catalog) {
-		extractCatalogModels()
+		await extractCatalogModels()
 	} else {
-		extractThreads()
+		await extractThreads()
 	}
 
 	// Apply board title to tab

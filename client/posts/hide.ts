@@ -8,7 +8,7 @@ import { trigger } from "../util"
 // Hide a post and persist to database
 export function hidePost(model: Post) {
 	model.remove()
-	storeHidden(model.id)
+	storeHidden(model.id, model.op)
 	trigger("renderHiddenCount", hidden.size)
 }
 

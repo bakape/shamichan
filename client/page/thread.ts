@@ -15,17 +15,13 @@ let postCtr = 0,
     bumpTime = 0
 
 // Render the HTML of a thread page
-export default function (html: string) {
-    if (html) {
-        threads.innerHTML = html
-    }
+export default function () {
     if (isBanned()) {
         return
     }
     extractConfigs()
 
-    const { threads: dataUnion, backlinks } = extractPageData(),
-        data = dataUnion as ThreadData,
+    const { threads: data, backlinks } = extractPageData<ThreadData>(),
         { posts } = data,
         replies: number[] = []
 

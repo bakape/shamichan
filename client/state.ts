@@ -88,41 +88,42 @@ export function read(href: string): PageState {
 	} as PageState
 }
 
-// Load post number sets from the database
-export function loadFromDB(): Promise<Set<number>[]> {
+// Load post number sets for specific threads from the database
+export function loadFromDB(...threads: number[]): Promise<Set<number>[]> {
 	return Promise.all([
-		readIDs("mine").then(ids =>
+		readIDs("mine", ...threads).then(ids =>
 			mine = new Set(ids)),
-		readIDs("seen").then(ids =>
+		readIDs("seen", ...threads).then(ids =>
 			seenReplies = new Set(ids)),
-		readIDs("seenPost").then(ids =>
+		readIDs("seenPost", ...threads).then(ids =>
 			seenPosts = new Set(ids)),
-		readIDs("hidden").then((ids) =>
+		readIDs("hidden", ...threads).then((ids) =>
 			hidden = new Set(ids)),
 	])
 }
 
 // Store the ID of a post this client created
-export function storeMine(id: number) {
-	mine.add(id)
-	storeID("mine", id, tenDays)
+export function storeMine(id: number, op: number) {
+	store(mine, "mine", id, op)
 }
 
 // Store the ID of a post that replied to one of the user's posts
-export function storeSeenReply(id: number) {
-	seenReplies.add(id)
-	storeID("seen", id, tenDays)
+export function storeSeenReply(id: number, op: number) {
+	store(seenReplies, "seen", id, op)
 }
 
-export function storeSeenPost(id: number) {
-	seenReplies.add(id)
-	storeID("seenPost", id, tenDays)
+export function storeSeenPost(id: number, op: number) {
+	store(seenReplies, "seenPost", id, op)
 }
 
 // Store the ID of a post or thread to hide
-export function storeHidden(id: number) {
-	hidden.add(id)
-	storeID("hidden", id, tenDays)
+export function storeHidden(id: number, op: number) {
+	store(hidden, "hidden", id, op)
+}
+
+function store(set: Set<number>, key: string, id: number, op: number) {
+	set.add(id)
+	storeID(key, id, op, tenDays)
 }
 
 export function setBoardConfig(c: BoardConfigs) {

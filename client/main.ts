@@ -21,21 +21,24 @@ async function start() {
 	extractConfigs()
 
 	await open()
-	await loadFromDB()
+	if (page.thread) {
+		await loadFromDB(page.thread)
 
-	// Add a stored thread OP, made by the client to "mine"
-	const addMine = getCookie("addMine")
-	if (addMine) {
-		storeMine(parseInt(addMine))
-		deleteCookie("addMine")
+		// Add a stored thread OP, made by the client to "mine"
+		const addMine = getCookie("addMine")
+		if (addMine) {
+			const id = parseInt(addMine)
+			storeMine(id, id)
+			deleteCookie("addMine")
+		}
 	}
 
 	initOptions()
 
 	if (page.thread) {
-		renderThread("")
+		renderThread()
 	} else {
-		renderBoard()
+		await renderBoard()
 	}
 
 	checkBottom()
