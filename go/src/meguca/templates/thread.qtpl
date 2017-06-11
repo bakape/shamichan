@@ -10,7 +10,7 @@
 	<form id="new-reply-form" action="/createReply" method="post" enctype="multipart/form-data" class="top-margin hidden">
 		<input name="board" type="text" value="{%s= board %}" hidden>
 		<input name="op" type="text" value="{%s= strconv.FormatUint(id, 10) %}" hidden>
-		{%= input(sageSpec, ln) %}
+		{%= input(sageSpec.wrap(), ln) %}
 		{%= noscriptPostCreationFields(pos, ln) %}
 		{% if !conf.TextOnly %}
 			{%= uploadForm(ln.Common.Posts) %}

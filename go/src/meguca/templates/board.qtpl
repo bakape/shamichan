@@ -162,7 +162,7 @@ IndexThreads renders abbreviated threads for display on board index pages
 Render noscript-specific post creation fields
 {% func noscriptPostCreationFields(pos auth.ModerationLevel, ln lang.Pack) %}{% stripspace %}
 	{% if pos > auth.NotStaff %}
-		{%= input(staffTitleSpec, ln) %}
+		{%= input(staffTitleSpec.wrap(), ln) %}
 	{% endif %}
 	{% for _, s := range specs["noscriptPostCreation"] %}
 		{%= input(s, ln) %}
