@@ -1,6 +1,6 @@
 // Client entry point
 
-import { loadFromDB, page, posts, storeMine } from './state'
+import { loadFromDB, page, posts, storeMine, displayLoading } from './state'
 import { start as connect } from './connection'
 import { open } from './db'
 import { initOptions } from "./options"
@@ -37,22 +37,17 @@ async function start() {
 
 	if (page.thread) {
 		renderThread()
-	} else {
-		await renderBoard()
-	}
-
-	checkBottom()
-	connect()
-	assignHandlers()
-	initPosts()
-
-	if (page.thread) {
+		checkBottom()
+		connect()
+		assignHandlers()
 		setThreadTitle(posts.get(page.thread) as Post & ThreadData)
 	} else {
+		await renderBoard()
 		setTitle(frag.querySelector("#page-title").textContent)
+		displayLoading(false)
 	}
 
-	// Load auxiliary modules
+	initPosts()
 	initUI()
 	initModeration()
 }
