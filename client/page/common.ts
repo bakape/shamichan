@@ -1,4 +1,4 @@
-import { setBoardConfig, hidden, mine, posts, page } from "../state"
+import { setBoardConfig, hidden, mine, posts, page, config } from "../state"
 import options from "../options"
 import { PostData, ThreadData, fileTypes } from "../common"
 import { Post, PostView } from "../posts"
@@ -74,7 +74,7 @@ export function extractPost(
 	view.renderTime()
 
 	// Localize staff titles
-	if (post.auth && options.lang != "en_GB") {
+	if (post.auth && options.lang !== config.defaultLang) {
 		view.renderName()
 	}
 
@@ -153,7 +153,7 @@ export function localizeThreads() {
 		for (let el of threads.querySelectorAll(".name")) {
 			el.textContent = name
 		}
-	} else if (options.lang !== "en_GB") { // Server renders in en_GB
+	} else if (options.lang !== config.defaultLang) {
 		// Localize posts without a poster name or tripcode
 		for (let el of threads.querySelectorAll(".name")) {
 			if (el.textContent === "Anonymous") {
@@ -170,8 +170,7 @@ export function localizeThreads() {
 
 // Localize omitted post and image span
 function localizeOmitted() {
-	// Server renders in en_GB
-	if (options.lang === "en_GB") {
+	if (options.lang === config.defaultLang) {
 		return
 	}
 	for (let el of threads.querySelectorAll(".omit")) {
@@ -189,7 +188,7 @@ function localizeOmitted() {
 		text += ` ${lang.posts["omitted"]} `
 
 		el.firstChild.replaceWith(text)
-		el.querySelector("a.history").textContent = lang.posts["seeAll"]
+		el.querySelector("a").textContent = lang.posts["seeAll"]
 	}
 }
 

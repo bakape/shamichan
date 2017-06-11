@@ -3,10 +3,11 @@
 {% import "meguca/config" %}
 {% import "meguca/common" %}
 {% import "meguca/lang" %}
+{% import "meguca/auth" %}
 {% import "meguca/imager/assets" %}
 {% import banners "meguca/assets" %}
 
-{% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, page, total int, catalog bool, ln lang.Pack) %}{% stripspace %}
+{% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, page, total int, pos auth.ModerationLevel, catalog bool, ln lang.Pack) %}{% stripspace %}
 	{% code bannerID, mime, ok := banners.Banners.Random(conf.ID) %}
 	{% if ok %}
 		<h1 class="image-banner">
@@ -38,17 +39,17 @@
 						{% endfor %}
 					</select>
 					<br>
+				{% else %}
+					<input type="text" name="board" value="{%s= conf.ID %}" hidden>
 				{% endif %}
 				<input name="subject" placeholder="{%s= ln.UI["subject"] %}" required type="text" maxlength="100">
 				<br>
-				<noscript>
-					{%= noscriptPostCreationFields(ln) %}
-				</noscript>
+				{%= noscriptPostCreationFields(pos, ln) %}
 				{% if id == "all" || !conf.TextOnly %}
 					{%= uploadForm(ln.Common.Posts) %}
 				{% endif %}
 				{%= captcha(ln.UI) %}
-				{%= submit(true, ln.UI) %}
+				{%= submit(false, ln.UI) %}
 			</form>
 		</aside>
 		<aside id="refresh" class="act glass">
@@ -100,7 +101,7 @@ allow caching of generated posts.
 				{% if t.Image != nil %}
 					<figure>
 						{% code img := *t.Image %}
-						<a class="history" href="/{%s= t.Board %}/{%s= idStr %}">
+						<a href="/{%s= t.Board %}/{%s= idStr %}">
 							{% if img.Spoiler %}
 								<img src="/assets/spoil/default.jpg" width="150" height="150" class="catalog">
 							{% else %}
@@ -148,11 +149,6 @@ IndexThreads renders abbreviated threads for display on board index pages
 			<section class="index-thread{% if t.Deleted %}{% space %}deleted{% endif %}" data-id="{%s= idStr %}">
 				{%= deletedToggle() %}
 				{%= renderThreadPosts(t, bls, root, true) %}
-				<aside class="act posting glass">
-					<a href="/all/{%s= idStr %}?last=100#bottom">
-						Reply
-					</a>
-				</aside>
 				<hr>
 			</section>
 		{% endfor %}
@@ -164,7 +160,10 @@ IndexThreads renders abbreviated threads for display on board index pages
 {% endstripspace %}{% endfunc %}
 
 Render noscript-specific post creation fields
-{% func noscriptPostCreationFields(ln lang.Pack) %}{% stripspace %}
+{% func noscriptPostCreationFields(pos auth.ModerationLevel, ln lang.Pack) %}{% stripspace %}
+	{% if pos > auth.NotStaff %}
+		{%= input(staffTitleSpec.wrap(), ln) %}
+	{% endif %}
 	{% for _, s := range specs["noscriptPostCreation"] %}
 		{%= input(s, ln) %}
 	{% endfor %}
@@ -190,11 +189,11 @@ Link to catalog or board page
 {% func catalogLink(catalog bool, ln map[string]string) %}{% stripspace %}
 	<aside class="act glass">
 		{% if catalog %}
-			<a href="." class="history">
+			<a href=".">
 				{%s= ln["return"] %}
 			</a>
 		{% else %}
-			<a href="catalog" class="history">
+			<a href="catalog">
 				{%s= ln["catalog"] %}
 			</a>
 		{% endif %}
@@ -230,7 +229,7 @@ Links to different pages og the board index
 
 Link to a different paginated board page
 {% func pageLink(i int, text string) %}{% stripspace %}
-	<a href="?page={%d i %}" class="history">
+	<a href="?page={%d i %}">
 		{%s= text %}
 	</a>
 {% endstripspace %}{% endfunc %}

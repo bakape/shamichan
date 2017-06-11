@@ -3,13 +3,13 @@ export const enum message {
 	invalid,
 
 	// 1 - 29 modify post model state
-	insertThread,
+	_,
 	insertPost,
 	append,
 	backspace,
 	splice,
 	closePost,
-	_,
+	__,
 	insertImage,
 	spoiler,
 	deletePost,

@@ -12,7 +12,7 @@ type MessageType uint8
 // 1 - 29 modify post model state
 const (
 	MessageInvalid MessageType = iota
-	MessageInsertThread
+	_
 	MessageInsertPost
 	MessageAppend
 	MessageBackspace

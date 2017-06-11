@@ -21,13 +21,11 @@ export default class FormView extends PostView {
     public upload: UploadForm
     public captcha: CaptchaView
 
-    constructor(model: Post, el: HTMLElement | null) {
-        super(model, el)
-        this.renderInputs(!!el)
-        if (!el) {
-            this.el.classList.add("reply-form")
-            this.initDraft()
-        }
+    constructor(model: Post) {
+        super(model, null)
+        this.renderInputs()
+        this.el.classList.add("reply-form")
+        this.initDraft()
 
         // Focus captcha instead, if one is needed
         if (!this.model.needCaptcha) {
@@ -38,7 +36,7 @@ export default class FormView extends PostView {
 
     // Render extra input fields for inputting text and optionally uploading
     // images
-    private renderInputs(isOP: boolean) {
+    private renderInputs() {
         this.input = document.createElement("textarea")
         setAttrs(this.input, {
             id: "text-input",
@@ -58,21 +56,12 @@ export default class FormView extends PostView {
             "input[name=\"cancel\"]": postSM.feeder(postEvent.done),
         })
 
-        if (isOP) {
-            this.showDone()
-            const captcha = this.el.querySelector(".captcha-container")
-            if (captcha) {
-                captcha.remove()
-            }
-        } else {
-            if (!boardConfig.textOnly) {
-                this.upload = new UploadForm(this.model, this.el)
-                this.upload.input.addEventListener("change", () =>
-                    this.model.uploadFile())
-            }
-            this.inputElement("done").hidden = !this.model.nonLive
-            this.renderIdentity()
+        if (!boardConfig.textOnly) {
+            this.upload = new UploadForm(this.model, this.el)
+            this.upload.input.addEventListener("change", () =>
+                this.model.uploadFile())
         }
+        this.inputElement("done").hidden = !this.model.nonLive
 
         const bq = this.el.querySelector("blockquote")
         bq.innerHTML = ""
@@ -114,6 +103,7 @@ export default class FormView extends PostView {
     private initDraft() {
         bottomSpacer = document.getElementById("bottom-spacer")
         this.el.querySelector("header").classList.add("temporary")
+        this.renderIdentity()
 
         // Keep this post and bottomSpacer the same height
         this.observer = new MutationObserver(() =>

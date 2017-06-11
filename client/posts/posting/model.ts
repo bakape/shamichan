@@ -13,66 +13,43 @@ import identity, { newAllocRequest } from "./identity"
 export default class FormModel extends Post {
 	public sentAllocRequest: boolean
 	public isAllocated: boolean
-	public nonLive: boolean // Disable live post updates
+	public nonLive = !identity.live  // Disable live post updates
 	public needCaptcha: boolean // Need to solve a captcha to allocate
 
 	// Text that is not submitted yet to defer post allocation
 	public bufferedText: string
 	public bufferedFile: File // Same for file uploads
 
-	public inputBody: string
+	public inputBody = ""
 	public view: FormView
 	private lasLinked: number // ID of last linked post
 
 	// Pass and ID, if you wish to hijack an existing model. To create a new
 	// model pass zero.
-	constructor(id: number) {
-		if (id !== 0) {
-			const oldModel = posts.get(id)
-
-			// Copy the parent model's state and data
-			const attrs = {} as PostData
-			for (let key in oldModel) {
-				if (typeof oldModel[key] !== "function") {
-					attrs[key] = oldModel[key]
-				}
-			}
-			super(attrs)
-			this.sentAllocRequest = this.isAllocated = true
-
-			// Replace old model and view pair with the postForm pair
-			const view = new FormView(this, oldModel.view.el)
-			this.registerModel()
-
-			postSM.feed(postEvent.hijack, { view, model: this })
-		} else {
-			super({
-				id: 0,
-				op: page.thread,
-				editing: true,
-				deleted: false,
-				banned: false,
-				sage: false,
-				sticky: false,
-				time: Date.now(),
-				body: "",
-				name: "",
-				auth: "",
-				trip: "",
-				state: {
-					spoiler: false,
-					quote: false,
-					lastLineEmpty: false,
-					code: false,
-					haveSyncwatch: false,
-					iDice: 0,
-				},
-			})
-			this.nonLive = !identity.live
-		}
-
+	constructor() {
 		// Initialize state
-		this.inputBody = ""
+		super({
+			id: 0,
+			op: page.thread,
+			editing: true,
+			deleted: false,
+			banned: false,
+			sage: false,
+			sticky: false,
+			time: Math.floor(Date.now() / 1000),
+			body: "",
+			name: "",
+			auth: "",
+			trip: "",
+			state: {
+				spoiler: false,
+				quote: false,
+				lastLineEmpty: false,
+				code: false,
+				haveSyncwatch: false,
+				iDice: 0,
+			},
+		})
 	}
 
 	// Add this post to database stores and collections

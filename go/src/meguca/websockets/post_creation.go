@@ -42,32 +42,6 @@ type ImageRequest struct {
 	Token, Name string
 }
 
-// Insert a new thread into the database
-func (c *Client) insertThread(data []byte) (err error) {
-	if err := c.closePreviousPost(); err != nil {
-		return err
-	}
-
-	var req ThreadCreationRequest
-	if err := decodeMessage(data, &req); err != nil {
-		return err
-	}
-	// Instantly closed OPs from websocket clients are currently not supported
-	req.Open = true
-
-	post, err := CreateThread(req, c.ip)
-	switch err {
-	case nil:
-	case errInValidCaptcha:
-		return c.sendMessage(common.MessagePostID, -1)
-	default:
-		return err
-	}
-
-	c.post.init(post.StandalonePost)
-	return c.sendMessage(common.MessagePostID, post.ID)
-}
-
 // CreateThread creates a new tread and writes it to the database.
 // open specifies, if the thread OP should stay open after creation.
 func CreateThread(req ThreadCreationRequest, ip string) (

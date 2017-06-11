@@ -29,12 +29,19 @@ const (
 
 // Spec of an option passed into the rendering function
 type inputSpec struct {
-	Type                        inputType
-	Required, Placeholder, NoID bool
-	Min, Max, MaxLength, Rows   int
-	ID, Pattern, Autocomplete   string
-	Options                     []string
-	Val                         interface{}
+	Type                                   inputType
+	Required, Placeholder, NoID, WrapLabel bool
+	Min, Max, MaxLength, Rows              int
+	ID, Pattern, Autocomplete              string
+	Options                                []string
+	Val                                    interface{}
+}
+
+// Returns a copy of s, that will render wrapped indside a label
+func (s inputSpec) wrap() inputSpec {
+	s.NoID = true
+	s.WrapLabel = true
+	return s
 }
 
 // For constructing various HTML input forms
@@ -195,7 +202,7 @@ func (w *formWriter) textArea(spec inputSpec) {
 }
 
 // Write an input element label from the spec to the buffer
-func (w *formWriter) label(spec inputSpec) {
+func (w *formWriter) label(spec inputSpec, inside *func()) {
 	ln := w.lang.Forms[spec.ID]
 
 	w.N().S("<label")
@@ -204,7 +211,9 @@ func (w *formWriter) label(spec inputSpec) {
 	}
 	w.attr("title", ln[1])
 	w.N().S(`>`)
-
+	if inside != nil {
+		(*inside)()
+	}
 	w.N().S(ln[0])
 	w.N().S("</label>")
 }
@@ -219,7 +228,7 @@ func streamtable(qw *quicktemplate.Writer, specs []inputSpec, lang lang.Pack) {
 
 	for _, spec := range specs {
 		w.N().S("<tr><td>")
-		w.label(spec)
+		w.label(spec, nil)
 		w.N().S("</td><td>")
 		w.input(spec)
 		w.N().S("</td></tr>")
@@ -234,9 +243,16 @@ func streaminput(qw *quicktemplate.Writer, spec inputSpec, lang lang.Pack) {
 		Writer: *qw,
 		lang:   lang,
 	}
-	w.input(spec)
-	if !spec.Placeholder {
-		w.label(spec)
+	if spec.WrapLabel {
+		f := func() {
+			w.input(spec)
+		}
+		w.label(spec, &f)
+	} else {
+		w.input(spec)
+		if !spec.Placeholder {
+			w.label(spec, nil)
+		}
 	}
 	w.N().S(`<br>`)
 }
@@ -249,7 +265,7 @@ func streamoptions(qw *quicktemplate.Writer, specs []inputSpec, ln lang.Pack) {
 	}
 	for _, s := range specs {
 		w.input(s)
-		w.label(s)
+		w.label(s, nil)
 		w.N().S(`<br>`)
 	}
 }

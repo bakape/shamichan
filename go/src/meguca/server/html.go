@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"meguca/auth"
 	"meguca/cache"
+	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	"meguca/lang"
@@ -65,8 +66,13 @@ func boardHTML(w http.ResponseWriter, r *http.Request, catalog bool) {
 		return
 	}
 
+	pos, ok := extractPosition(w, r)
+	if !ok {
+		return
+	}
+
 	_, hash := config.GetClient()
-	etag := formatEtag(ctr, lp.ID, hash)
+	etag := formatEtag(ctr, lp.ID, hash, pos)
 	if checkClientEtag(w, r, etag) {
 		return
 	}
@@ -77,7 +83,7 @@ func boardHTML(w http.ResponseWriter, r *http.Request, catalog bool) {
 		n = p.pageNumber
 		total = p.pageTotal
 	}
-	html = templates.Board(b, lp, n, total, isMinimal(r), catalog, html)
+	html = templates.Board(b, lp, n, total, pos, isMinimal(r), catalog, html)
 	serveHTML(w, r, etag, html, nil)
 }
 
@@ -106,14 +112,54 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	pos, ok := extractPosition(w, r)
+	if !ok {
+		return
+	}
+
 	_, hash := config.GetClient()
-	etag := formatEtag(ctr, lp.ID, hash)
+	etag := formatEtag(ctr, lp.ID, hash, pos)
 	if checkClientEtag(w, r, etag) {
 		return
 	}
 
 	b := extractParam(r, "board")
-	serveHTML(w, r, etag, templates.Thread(lp, id, b, isMinimal(r), html), nil)
+	serveHTML(w, r, etag, templates.Thread(lp, id, b, pos, html), nil)
+}
+
+// Extract logged in position for HTML request.
+// If ok == false, caller should return.
+func extractPosition(w http.ResponseWriter, r *http.Request) (
+	pos auth.ModerationLevel, ok bool,
+) {
+	ok = true
+	pos = auth.NotLoggedIn
+	creds := extractLoginCreds(r)
+	if creds.UserID == "" {
+		return
+	}
+
+	loggedIn, err := db.IsLoggedIn(creds.UserID, creds.Session)
+	switch err {
+	case common.ErrInvalidCreds:
+		return
+	case nil:
+		if loggedIn {
+			board := extractParam(r, "board")
+			pos, err = db.FindPosition(board, creds.UserID)
+			if err != nil {
+				text500(w, r, err)
+				ok = false
+				return
+			}
+		}
+	default:
+		text500(w, r, err)
+		ok = false
+		return
+	}
+
+	return
 }
 
 // Render a board selection and navigation panel and write HTML to client

@@ -4,7 +4,6 @@ import { uncachedGET } from "../util"
 // Wrapper around Solve Media's captcha service AJAX API
 export default class CaptchaView extends View<null> {
 	private captchaID: string
-	private image: HTMLImageElement
 	private input: HTMLInputElement
 
 	constructor(el: HTMLElement) {
@@ -34,9 +33,15 @@ export default class CaptchaView extends View<null> {
 		if (r.status !== 200) {
 			throw text
 		}
-		this.captchaID = text
-		this.image = this.el.querySelector("img") as HTMLImageElement
-		this.image.setAttribute("src", `/captcha/image/${this.captchaID}.png`)
+		this.captchaID = text;
+		this.el
+			.querySelector("img")
+			.setAttribute("src", `/captcha/image/${this.captchaID}.png`)
+
+		// Set captchaID, to enable sending with FormData()
+		const cID = this.inputElement("captchaID")
+		cID.hidden = true
+		cID.value = this.captchaID
 	}
 
 	// Returns the data from the captcha widget

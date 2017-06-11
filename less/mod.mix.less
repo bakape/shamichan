@@ -4,7 +4,9 @@
 }
 
 #moderation-panel {
-	display: none;
+	#modal-overlay > & {
+		display: inline-block;
+	}
 	align-self: flex-end;
 	margin-top: auto;
 	&:not(.keep-visible) {
@@ -35,11 +37,6 @@
 			transition-property: max-width, max-height;
 		}
 	}
-}
-
-
-#identity > table tr:first-child {
-	display: none;
 }
 
 .banned {

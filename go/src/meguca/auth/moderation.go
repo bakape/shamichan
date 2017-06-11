@@ -48,7 +48,8 @@ func (l ModerationLevel) String() string {
 
 // All available moderation levels
 const (
-	NotStaff ModerationLevel = iota
+	NotLoggedIn ModerationLevel = iota - 1
+	NotStaff
 	Janitor
 	Moderator
 	BoardOwner

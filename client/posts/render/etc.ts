@@ -9,21 +9,21 @@ export function renderPostLink(id: number, op: number): string {
     const cross = op !== page.thread,
         index = !page.thread && !page.catalog,
         url = `${cross || index ? `/all/${op}` : ""}#p${id}`
-    let html = `<a class="history post-link" data-id="${id}" href="${url}">>>${id}`
+    let html = `<a class="post-link" data-id="${id}" href="${url}">>>${id}`
     if (cross && !index) {
         html += " ➡"
     }
     if (mine.has(id)) { // Post, I made
         html += ' ' + lang.posts["you"]
     }
-    html += `</a><a class="hash-link history" href="${url}"> #</a>`
+    html += `</a><a class="hash-link" href="${url}"> #</a>`
     return html
 }
 
 // Render a temporary link for open posts
 export function renderTempLink(id: number): string {
     const attrs = {
-        class: "history post-link temp",
+        class: "post-link temp",
         "data-id": id.toString(),
         href: `#p${id}`,
     }

@@ -164,3 +164,22 @@ export function inputElement(
 ): HTMLInputElement {
 	return parent.querySelector(`input[name="${name}"]`) as HTMLInputElement
 }
+
+// Get a cookie value by name. Returns empty string, if none.
+export function getCookie(id: string): string {
+	const kv = document.cookie
+		.split(";")
+		.map(s =>
+			s.trim())
+		.filter(s =>
+			s.startsWith(id))
+	if (!kv.length) {
+		return ""
+	}
+	return kv[0].split("=")[1]
+}
+
+// Delete a `path=/` cookie by id
+export function deleteCookie(id: string) {
+	document.cookie = `${id}=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`
+}

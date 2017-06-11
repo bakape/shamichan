@@ -4,7 +4,6 @@ import options from "../options"
 import { FormModel, postSM, postEvent, toggleExpandAll, toggleGallery } from "../posts"
 import { page } from "../state"
 import { scrollToElement, trigger } from "../util"
-import navigate from "./history"
 
 // Bind keyboard event listener to the document
 export default () =>
@@ -95,7 +94,7 @@ function navigateUp() {
 		// Convert to absolute URL
 		const a = document.createElement("a")
 		a.href = url
-		navigate(a.href, null, true)
+		location.href = url
 	}
 }
 

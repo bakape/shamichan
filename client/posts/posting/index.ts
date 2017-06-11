@@ -3,13 +3,12 @@
 import FormModel from "./model"
 import FormView from "./view"
 import { connState, connSM, handlers, message } from "../../connection"
-import { on, FSM, hook, scrollToBottom } from "../../util"
+import { on, FSM, hook } from "../../util"
 import lang from "../../lang"
 import identity, { initIdentity } from "./identity"
 import { boardConfig, page } from "../../state"
 import initDrop from "./drop"
 import initThreads from "./threads"
-import { navigate } from "../../ui"
 import options from "../../options"
 
 export { default as FormModel } from "./model"
@@ -53,7 +52,6 @@ export const enum postEvent {
 	error,      // Unrecoverable error
 	done,       // Post closed
 	open,       // New post opened
-	hijack,     // Hijacked an existing post as a postForm
 	reset,      // Set to none. Used during page navigation.
 	alloc,      // Allocated the draft post to the server
 	reclaim,    // Ownership of post reclaimed after connectivity loss
@@ -81,7 +79,7 @@ function bindNagging() {
 
 // Insert target post's number as a link into the text body. If text in the
 // post is selected, quote it.
-async function quotePost(e: MouseEvent) {
+function quotePost(e: MouseEvent) {
 	// Don't trigger, when user is trying to open in a new tab
 	const bypass = e.which !== 1
 		|| e.ctrlKey
@@ -94,7 +92,8 @@ async function quotePost(e: MouseEvent) {
 
 	// On board pages, first navigate to the thread
 	if (!page.thread) {
-		await navigate(target.href, e, true)
+		location.href = target.href
+		return
 	}
 
 	// Make sure the selection both starts and ends in the quoted post's
@@ -153,25 +152,16 @@ function toggleLive(live: boolean) {
 
 async function openReply(e: MouseEvent) {
 	// Don't trigger, when user is trying to open in a new tab
-	const bypass = e.which !== 1
+	if (e.which !== 1
+		|| !page.thread
 		|| e.ctrlKey
 		|| connSM.state !== connState.synced
-	if (bypass) {
+	) {
 		return
 	}
 
-	// If on a board page, first navigate to the target thread
-	const href = (e.target as HTMLAnchorElement).href
-	if (href) {
-		await navigate(href, e, true)
-	} else {
-		e.preventDefault()
-	}
-
+	e.preventDefault()
 	postSM.feed(postEvent.open)
-	if (href) {
-		scrollToBottom()
-	}
 }
 
 export default () => {
@@ -253,24 +243,13 @@ export default () => {
 	postSM.act(postState.draft, postEvent.alloc, () =>
 		postState.alloc)
 
-	// Hijack and existing post and replace with post form and model
-	postSM.act(
-		postState.ready,
-		postEvent.hijack,
-		({ view, model }: FormMessage) => {
-			postModel = model
-			postForm = view
-			return postState.alloc
-		},
-	)
-
 	postSM.on(postState.alloc, bindNagging)
 
 	// Open a new post creation form, if none open
 	postSM.act(postState.ready, postEvent.open, () => {
-		postModel = new FormModel(0)
+		postModel = new FormModel()
 		postModel.needCaptcha = needCaptcha
-		postForm = new FormView(postModel, null)
+		postForm = new FormView(postModel)
 		return postState.draft
 	})
 
