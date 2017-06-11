@@ -29,12 +29,12 @@ var (
 		Required:     true,
 		Autocomplete: "new-password",
 	}
-	sageSpec = inputSpec{ID: "sage"}
+	sageSpec       = inputSpec{ID: "sage"}
+	staffTitleSpec = inputSpec{ID: "staffTitle"}
 )
 
 var specs = map[string][]inputSpec{
 	"identity": {
-		{ID: "staffTitle"},
 		{ID: "live"},
 		sageSpec,
 		{
@@ -45,7 +45,6 @@ var specs = map[string][]inputSpec{
 		},
 	},
 	"noscriptPostCreation": {
-		{ID: "staffTitle"},
 		{
 			ID:           "name",
 			Type:         _string,

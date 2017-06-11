@@ -4,7 +4,7 @@ import { getModel } from "../state"
 import { on } from "../util"
 import lang from "../lang"
 import { hidePost } from "./hide"
-import { loginID } from "../mod"
+import { position, ModerationLevel } from "../mod"
 import { postJSON } from "../util"
 import CollectionView from "./collectionView"
 import { PostData } from "../common"
@@ -54,7 +54,7 @@ const actions: { [key: string]: ItemSpec } = {
 	toggleSticky: {
 		text: lang.posts["toggleSticky"],
 		shouldRender(m) {
-			return !!loginID() && m.id === m.op
+			return position >= ModerationLevel.moderator && m.id === m.op
 		},
 		// Toggle sticky flag on a thread
 		async handler(m) {
@@ -74,7 +74,8 @@ const actions: { [key: string]: ItemSpec } = {
 // Returns, if the post still likely has an IP attached and the client is
 // logged in
 function canModerateIP(m: Post): boolean {
-	return !!loginID() && m.time > Date.now() / 1000 - 24 * 7 * 3600
+	return position >= ModerationLevel.janitor
+		&& m.time > Date.now() / 1000 - 24 * 7 * 3600
 }
 
 // Post header drop down menu

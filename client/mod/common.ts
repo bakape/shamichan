@@ -1,10 +1,5 @@
 import lang from '../lang'
-import { getCookie } from "../util"
-
-// Returns, if logged in as admin account
-export function isAdmin() {
-	return loginID() === "admin"
-}
+import { getCookie, inputElement } from "../util"
 
 // Returns current login ID in use
 export function loginID(): string {
@@ -21,14 +16,9 @@ export function sessionToken(): string {
 export function validatePasswordMatch(
 	parent: Element, name1: string, name2: string
 ) {
-	const el1 = findInputEl(parent, name1),
-		el2 = findInputEl(parent, name2),
+	const el1 = inputElement(parent, name1),
+		el2 = inputElement(parent, name2),
 		v = el2.value !== el1.value ? lang.ui["mustMatch"] : ""
 	el1.onchange = el2.onchange = () =>
 		el2.setCustomValidity(v)
-}
-
-// Find an input element by name within a parent form element
-function findInputEl(parent: Element, name: string): HTMLInputElement {
-	return parent.querySelector(`input[name=${name}]`) as HTMLInputElement
 }

@@ -2,8 +2,9 @@
 {% import "strings" %}
 {% import "meguca/config" %}
 {% import "meguca/lang" %}
+{% import "meguca/auth" %}
 
-{% func renderIndex(ln lang.Pack) %}{% stripspace %}
+{% func renderIndex(pos auth.ModerationLevel, ln lang.Pack) %}{% stripspace %}
 	{% code conf := config.Get() %}
 	{% code confJSON, confHash := config.GetClient() %}
 	{% code boards := config.GetBoards() %}
@@ -40,7 +41,8 @@
 			var config = {%z= confJSON %},
 				configHash = '{%s= confHash %}',
 				{% code boardJSON, _ := json.Marshal(boards) %}
-				boards = {%z= boardJSON %};
+				boards = {%z= boardJSON %},
+				position = {%d int(pos) %};
 			if (localStorage.theme !== config.DefaultCSS) {
 				document.getElementById('theme-css').href = '/assets/css/' + localStorage.theme + '.css'
 			}
@@ -70,12 +72,6 @@
 			<div class="post-container">
 				<blockquote></blockquote>
 			</div>
-		</template>
-		<template name="keyValue">
-			{%= keyValueForm("", "") %}
-		</template>
-		<template name="arrayItem">
-			{%= arrayItemForm("") %}
 		</template>
 		<template name="figcaption">
 			<figcaption class="spaced">
@@ -139,6 +135,14 @@
 		<template name="sticky">
 			{%= renderSticky(true) %}
 		</template>
+		{% if pos > auth.NotLoggedIn %}
+			<template name="keyValue">
+				{%= keyValueForm("", "") %}
+			</template>
+			<template name="arrayItem">
+				{%= arrayItemForm("") %}
+			</template>
+		{% endif %}
 	</head>
 	<body>
 		{% comment %}
@@ -169,13 +173,7 @@
 				{% comment %}
 					For r/a/dio stream status and such
 				{% endcomment %}
-				<b id="banner-center">
-					<noscript>
-						<b>
-							{%s= ln.UI["enableJS"] %}
-						</b>
-					</noscript>
-				</b>
+				<b id="banner-center"></b>
 				{% comment %}
 					Various buttons, that unhide modal windows
 				{% endcomment %}
@@ -236,50 +234,59 @@
 					Post creation credentials
 				{% endcomment %}
 				<div id="identity" class="modal glass">
-					{%= table(specs["identity"], ln) %}
+					{% code fields := specs["identity"] %}
+					{% if pos > auth.NotStaff %}
+						{% code fields = make([]inputSpec, 1, len(fields)+1) %}
+						{% code fields[0] = staffTitleSpec %}
+						{% code fields = append(fields, specs["identity"]...) %}
+					{% endif %}
+					{%= table(fields, ln) %}
 				</div>
 				{% comment %}
 					Account login and registration
 				{% endcomment %}
 				<div id="account-panel" class="modal glass">
-					<div id="login-forms">
-						{% code f := ln.Forms %}
-						{%= tabButts([]string{f["id"][0], f["register"][0]}) %}
-						<div class="tab-cont">
-							<div class="tab-sel" data-id="0">
-								<form id="login-form">
-									{%= table(specs["login"], ln) %}
-									{%= captcha(ln.UI) %}
-									{%= submit(false, ln.UI) %}
-								</form>
-							</div>
-							<div data-id="1">
-								<form id="registration-form">
-									{%= table(specs["register"], ln) %}
-									{%= captcha(ln.UI) %}
-									{%= submit(false, ln.UI) %}
-								</form>
+					{% if pos == auth.NotLoggedIn %}
+						<div id="login-forms">
+							{% code f := ln.Forms %}
+							{%= tabButts([]string{f["id"][0], f["register"][0]}) %}
+							<div class="tab-cont">
+								<div class="tab-sel" data-id="0">
+									<form id="login-form">
+										{%= table(specs["login"], ln) %}
+										{%= captcha(ln.UI) %}
+										{%= submit(false, ln.UI) %}
+									</form>
+								</div>
+								<div data-id="1">
+									<form id="registration-form">
+										{%= table(specs["register"], ln) %}
+										{%= captcha(ln.UI) %}
+										{%= submit(false, ln.UI) %}
+									</form>
+								</div>
 							</div>
 						</div>
-					</div>
-					<div id="form-selection" class="hidden">
-						{% for _, l := range [...]string{
-							"logout", "logoutAll", "changePassword",
-							"createBoard", "configureBoard", "deleteBoard",
-							"assignStaff", "setBanners",
-						} %}
-							<a id="{%s= l %}">
-								{%s= ln.UI[l] %}
-								<br>
-							</a>
-						{% endfor %}
-						<span>
-							<a id="configureServer">
-								{%s= ln.UI["configureServer"] %}
-								<br>
-							</a>
-						</span>
-					</div>
+					{% else %}
+						<div id="form-selection">
+							{% for _, l := range [...]string{
+								"logout", "logoutAll", "changePassword",
+								"createBoard", "configureBoard", "deleteBoard",
+								"assignStaff", "setBanners",
+							} %}
+								<a id="{%s= l %}">
+									{%s= ln.UI[l] %}
+									<br>
+								</a>
+							{% endfor %}
+							{% if pos == auth.Admin %}
+								<a id="configureServer">
+									{%s= ln.UI["configureServer"] %}
+									<br>
+								</a>
+							{% endif %}
+						</div>
+					{% endif %}
 				</div>
 				{% comment %}
 					Options panel
@@ -311,36 +318,51 @@
 						{% endfor %}
 					</div>
 				</div>
-				<div id="moderation-panel" class="modal glass">
-					<form>
-						<div id="ban-form" class="hidden">
-							{% for _, id  := range [...]string{"day", "hour", "minute"} %}
-								<input type="number" name="{%s= id %}" min="0" placeholder="{%s= strings.Title(ln.Common.Plurals[id][1]) %}">
-							{% endfor %}
-							<br>
-							<input type="text" name="reason" required class="full-width" placeholder="{%s= ln.UI["reason"] %}" disabled>
-							<br>
-							<label hidden>
-								<input type="checkbox" name="global">
-								{%s= ln.UI["global"] %}
-							</label>
-						</div>
-						<div id="notification-form" class="hidden">
-							<input type="text" name="notification" required class="full-width" placeholder="{%s= ln.UI["text"] %}" style="min-width: 20em;" disabled>
-							<br>
-						</div>
-						<input type="checkbox" name="showCheckboxes">
-						<select name="action">
-							{% for _, id := range [...]string{"deletePost", "deleteImage", "spoilerImage", "ban", "notification"} %}
-								<option value="{%s= id %}">
-									{%s= ln.UI[id] %}
-								</option>
-							{% endfor %}
-						</select>
-						<input type="button" value="{%s= ln.UI["clear"] %}" name="clear">
-						{%= submit(false, ln.UI) %}
-					</form>
-				</div>
+				{% if pos > auth.NotStaff %}
+					<div id="moderation-panel" class="modal glass">
+						<form>
+							{% if pos >= auth.Moderator %}
+								<div id="ban-form" class="hidden">
+									{% for _, id  := range [...]string{"day", "hour", "minute"} %}
+										<input type="number" name="{%s= id %}" min="0" placeholder="{%s= strings.Title(ln.Common.Plurals[id][1]) %}">
+									{% endfor %}
+									<br>
+									<input type="text" name="reason" required class="full-width" placeholder="{%s= ln.UI["reason"] %}" disabled>
+									<br>
+									{% if pos == auth.Admin %}
+										<label>
+											<input type="checkbox" name="global">
+											{%s= ln.UI["global"] %}
+										</label>
+									{% endif %}
+								</div>
+							{% endif %}
+							{% if pos == auth.Admin %}
+								<div id="notification-form" class="hidden">
+									<input type="text" name="notification" required class="full-width" placeholder="{%s= ln.UI["text"] %}" style="min-width: 20em;" disabled>
+									<br>
+								</div>
+							{% endif %}
+							<input type="checkbox" name="showCheckboxes">
+							<select name="action">
+								{% code ids := append(make([]string, 0, 5), "deletePost", "deleteImage", "spoilerImage") %}
+								{% if pos >= auth.Moderator %}
+									{% code ids = append(ids, "ban") %}
+								{% endif %}
+								{% if pos == auth.Admin %}
+									{% code ids = append(ids, "notification") %}
+								{% endif %}
+								{% for _, id := range ids %}
+									<option value="{%s= id %}">
+										{%s= ln.UI[id] %}
+									</option>
+								{% endfor %}
+							</select>
+							<input type="button" value="{%s= ln.UI["clear"] %}" name="clear">
+							{%= submit(false, ln.UI) %}
+						</form>
+					</div>
+				{% endif %}
 			</div>
 		</div>
 		{% comment %}

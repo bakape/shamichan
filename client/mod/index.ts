@@ -3,13 +3,12 @@
 import { postJSON, deleteCookie } from '../util'
 import { FormView } from "../ui"
 import { TabbedModal } from "../base"
-import { validatePasswordMatch, loginID, sessionToken, isAdmin } from "./common"
+import { validatePasswordMatch } from "./common"
 import ModPanel from "./panel"
 import {
 	PasswordChangeForm, ServerConfigForm, BoardConfigForm, BoardCreationForm,
 	BoardDeletionForm, StaffAssignmentForm, BannerForm,
 } from "./forms"
-import { config } from "../state"
 
 export { loginID, sessionToken } from "./common"
 
@@ -17,12 +16,24 @@ interface Constructable {
 	new (): any
 }
 
+// Possible staff access levels
+export const enum ModerationLevel {
+	notLoggedIn = - 1,
+	notStaff,
+	janitor,
+	moderator,
+	boardOwner,
+	admin,
+}
+
+// Current staff position on this page
+export const position: ModerationLevel = (window as any).position
+
 // Only active AccountPanel instance
 export let accountPanel: AccountPanel
 
 let loginForm: LoginForm,
-	registrationForm: LoginForm,
-	modPanel: ModPanel
+	registrationForm: LoginForm
 
 // Account login and registration
 class AccountPanel extends TabbedModal {
@@ -43,42 +54,25 @@ class AccountPanel extends TabbedModal {
 			"#setBanners": this.loadConditional(BannerForm),
 		})
 
-		if (loginID() && sessionToken()) {
-			this.displayMenu()
-		}
-
-		this.tabHook = id => {
-			switch (id) {
-				case 0:
+		if (position > ModerationLevel.notStaff) {
+			new ModPanel()
+		} else {
+			this.tabHook = id => {
+				switch (id) {
+					case 0:
+						loginForm.initCaptcha()
+						break
+					case 1:
+						registrationForm.initCaptcha()
+						break
+				}
+			}
+			this.showHook = () => {
+				if (position === ModerationLevel.notLoggedIn) {
 					loginForm.initCaptcha()
-					break
-				case 1:
-					registrationForm.initCaptcha()
-					break
+				}
 			}
 		}
-		this.showHook = () => {
-			if (!loginID()) {
-				loginForm.initCaptcha()
-			}
-		}
-	}
-
-	// Display the form selection menu
-	public displayMenu() {
-		document.getElementById("login-forms").style.display = "none"
-
-		const el = document.getElementById("form-selection")
-		el.style.display = "block"
-
-		// Hide some controls for non-admin accounts
-		const admin = isAdmin();
-		(el.lastElementChild as HTMLElement).hidden = !admin
-		document.getElementById("createBoard").hidden = !admin
-			&& config.disableUserBoards
-
-		// Load Moderation panel
-		modPanel = new ModPanel()
 	}
 
 	// Create handler for dynamically loading and rendering conditional view
@@ -102,14 +96,6 @@ class AccountPanel extends TabbedModal {
 export function reset() {
 	deleteCookie("loginID")
 	deleteCookie("session")
-	loginForm.reloadCaptcha()
-	registrationForm.reloadCaptcha()
-	modPanel.reset()
-	document.getElementById("login-forms").style.display = ""
-	document.getElementById("form-selection").style.display = "none"
-	for (let el of accountPanel.el.querySelectorAll(".form-response")) {
-		el.textContent = ""
-	}
 }
 
 // Terminate the user session(s) server-side and reset the panel
@@ -121,10 +107,10 @@ async function logout(url: string) {
 	switch (res.status) {
 		case 200:
 		case 403: // Does not really matter, if the session already expired
-			reset()
+			location.reload(true)
 			break
 		default:
-			throw await res.text()
+			alert(await res.text())
 	}
 }
 
@@ -151,15 +137,7 @@ class LoginForm extends FormView {
 		const res = await postJSON(this.url, req)
 		switch (res.status) {
 			case 200:
-				accountPanel.displayMenu()
-
-				// Clear all password fields for security reasons
-				const els = this.el.querySelectorAll("input[type=password]")
-				for (let el of els as HTMLInputElement[]) {
-					el.value = ""
-				}
-
-				break
+				location.reload(true)
 			default:
 				this.renderFormResponse(await res.text())
 		}
@@ -167,9 +145,11 @@ class LoginForm extends FormView {
 }
 
 // Init module
-export default function () {
+export default () => {
 	accountPanel = new AccountPanel()
-	loginForm = new LoginForm("login-form", "login")
-	registrationForm = new LoginForm("registration-form", "register")
-	validatePasswordMatch(registrationForm.el, "password", "repeat")
+	if (position === ModerationLevel.notLoggedIn) {
+		loginForm = new LoginForm("login-form", "login")
+		registrationForm = new LoginForm("registration-form", "register")
+		validatePasswordMatch(registrationForm.el, "password", "repeat")
+	}
 }

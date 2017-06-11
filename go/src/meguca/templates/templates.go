@@ -7,26 +7,34 @@ import (
 	"bytes"
 	"fmt"
 	"html"
+	"meguca/auth"
 	"meguca/config"
 	"meguca/lang"
 	"sync"
 )
 
 var (
-	indexTemplates = make(map[string][3][]byte, 7)
+	indexTemplates = make(map[string]map[auth.ModerationLevel][3][]byte, 7)
 	mu             sync.RWMutex
 )
 
 // Compile reads template HTML from disk, injects dynamic variables,
 // hashes and stores them
 func Compile() error {
-	t := make(map[string][3][]byte, len(lang.Packs))
+	t := make(map[string]map[auth.ModerationLevel][3][]byte, len(lang.Packs))
+	levels := [...]auth.ModerationLevel{
+		auth.NotLoggedIn, auth.NotStaff, auth.Janitor, auth.Moderator,
+		auth.BoardOwner, auth.Admin,
+	}
 	for id := range lang.Packs {
-		ln := lang.Packs[id]
-		firstPass := renderIndex(ln)
-
-		split := bytes.Split([]byte(firstPass), []byte("$$$"))
-		t[id] = [3][]byte{split[0], split[1], split[2]}
+		for _, pos := range levels {
+			firstPass := renderIndex(pos, lang.Packs[id])
+			if _, ok := t[id]; !ok {
+				t[id] = make(map[auth.ModerationLevel][3][]byte, len(levels))
+			}
+			split := bytes.Split([]byte(firstPass), []byte("$$$"))
+			t[id][pos] = [3][]byte{split[0], split[1], split[2]}
+		}
 	}
 
 	mu.Lock()
@@ -42,6 +50,7 @@ func Board(
 	b string,
 	ln lang.Pack,
 	page, total int,
+	pos auth.ModerationLevel,
 	minimal, catalog bool,
 	threadHTML []byte,
 ) []byte {
@@ -52,6 +61,7 @@ func Board(
 		b, title,
 		boardConf,
 		page, total,
+		pos,
 		catalog,
 		ln,
 	)
@@ -59,22 +69,24 @@ func Board(
 	if minimal {
 		return []byte(html)
 	}
-	return execIndex(html, title, ln.ID)
+	return execIndex(html, title, ln.ID, pos)
 }
 
 // Thread renders thread page HTML for noscript browsers
-func Thread(ln lang.Pack, id uint64, board string, minimal bool, postHTML []byte) []byte {
-	html := renderThread(postHTML, id, board, ln)
-	if minimal {
-		return []byte(html)
-	}
-	return execIndex(html, "", ln.ID)
+func Thread(
+	ln lang.Pack,
+	id uint64,
+	board string,
+	pos auth.ModerationLevel,
+	postHTML []byte,
+) []byte {
+	return execIndex(renderThread(postHTML, id, board, pos, ln), "", ln.ID, pos)
 }
 
 // Execute and index template in the second pass
-func execIndex(html, title, lang string) []byte {
+func execIndex(html, title, lang string, pos auth.ModerationLevel) []byte {
 	mu.RLock()
-	t := indexTemplates[lang]
+	t := indexTemplates[lang][pos]
 	mu.RUnlock()
 
 	return bytes.Join([][]byte{

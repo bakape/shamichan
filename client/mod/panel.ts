@@ -2,7 +2,6 @@ import { View } from "../base"
 import { postJSON, toggleHeadStyle } from "../util"
 import { Post } from "../posts"
 import { getModel } from "../state"
-import { isAdmin } from "./common"
 
 let panel: ModPanel,
 	displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true",
@@ -10,14 +9,7 @@ let panel: ModPanel,
 
 // Moderation panel with various post moderation and other controls
 export default class ModPanel extends View<null> {
-	private checkboxToggle: HTMLInputElement
-
 	constructor() {
-		if (panel) {
-			panel.setVisibility(true)
-			setVisibility(displayCheckboxes)
-			return panel
-		}
 		checkboxStyler = toggleHeadStyle(
 			"mod-checkboxes",
 			".mod-checkbox{ display: inline; }"
@@ -41,37 +33,22 @@ export default class ModPanel extends View<null> {
 				passive: true,
 			})
 
-		this.checkboxToggle = (this.el
-			.querySelector(`input[name="showCheckboxes"]`) as HTMLInputElement)
-		this.checkboxToggle.addEventListener("change", e =>
-			setVisibility((event.target as HTMLInputElement).checked))
+		const checkboxToggle = this.inputElement("showCheckboxes")
+		checkboxToggle.checked = displayCheckboxes
+		checkboxToggle.addEventListener(
+			"change",
+			e =>
+				this.setVisibility((event.target as HTMLInputElement).checked),
+			{ passive: true },
+		)
 
-		setVisibility(displayCheckboxes)
-		this.setVisibility(true)
+		this.setVisibility(displayCheckboxes)
 	}
 
-	private setVisibility(show: boolean) {
-		this.el.style.display = show ? "inline-block" : ""
-		this.checkboxToggle.checked = displayCheckboxes
-		const auth = document
-			.querySelector("#identity > table tr:first-child") as HTMLInputElement
-		auth.style.display = show ? "table-row" : ""
-		auth.checked = false
-
-		// Reset action <select>
-		const sel = (this.el
-			.querySelector("select[name=action]") as HTMLInputElement)
-		sel.value = (sel.firstChild as HTMLOptionElement).value
-		this.el
-			.querySelector("option[value=notification]")
-			.hidden = !isAdmin();
-	}
-
-	// Reset the state of the module and hide all revealed elements
-	public reset() {
-		checkboxStyler(false)
-		this.setVisibility(false)
-		HidableForm.hideAll()
+	private setVisibility(on: boolean) {
+		localStorage.setItem("hideModCheckboxes", (!on).toString())
+		this.setSlideOut(on)
+		checkboxStyler(on)
 	}
 
 	private async onSubmit(e: Event) {
@@ -202,13 +179,6 @@ class BanForm extends HidableForm {
 		super("ban")
 	}
 
-	public toggleDisplay(on: boolean) {
-		// Unhide global bans checkbox for the "admin" account and hide for
-		// others
-		(this.el.lastElementChild as HTMLElement).hidden = !isAdmin()
-		super.toggleDisplay(on)
-	}
-
 	// Get input field values
 	public vals(): { [key: string]: any } {
 		let duration = 0
@@ -243,12 +213,6 @@ class NotificationForm extends HidableForm {
 	public vals(): string {
 		return this.inputElement("notification").value
 	}
-}
-
-function setVisibility(on: boolean) {
-	localStorage.setItem("hideModCheckboxes", (!on).toString())
-	panel.setSlideOut(on)
-	checkboxStyler(on)
 }
 
 function mapToIDs(models: Post[]): number[] {
