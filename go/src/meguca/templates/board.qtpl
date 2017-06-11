@@ -12,7 +12,7 @@
 		<h1 class="image-banner">
 			{% code url := fmt.Sprintf("/assets/banners/%s/%d", conf.ID, bannerID) %}
 			{% if mime == "video/webm" %}
-				<video src="{%s= url %}" autoplay>
+				<video src="{%s= url %}" autoplay loop>
 			{% else %}
 				<img src="{%s= url %}">
 			{% endif %}
