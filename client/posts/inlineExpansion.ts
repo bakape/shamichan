@@ -1,4 +1,4 @@
-import { posts, page } from "../state"
+import { posts } from "../state"
 import { on, fetchJSON } from "../util"
 import options from "../options"
 import { Post } from "./model"
@@ -94,10 +94,6 @@ function toggleLinkReferences(parent: Element, childID: number, on: boolean) {
 }
 
 export default () => {
-	// Clear, when changing the page
-	page.onChange("*", () =>
-		inlinedPosts.clear())
-
 	on(document, "click", onClick, {
 		selector: ".post-link",
 	})

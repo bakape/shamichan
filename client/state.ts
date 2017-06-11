@@ -1,7 +1,7 @@
-// Stores the state of the web application
+// Stores the central state of the web application
 
 import { Post, PostCollection } from './posts'
-import { getClosestID, emitChanges, ChangeEmitter } from './util'
+import { getClosestID } from './util'
 import { readIDs, storeID } from './db'
 import { send } from './connection'
 
@@ -31,7 +31,7 @@ export interface BoardConfigs {
 }
 
 // The current state of a board or thread page
-export interface PageState extends ChangeEmitter {
+export type PageState = {
 	catalog: boolean
 	thread: number
 	lastN: number
@@ -53,7 +53,7 @@ export let boards: string[] = (window as any).boards
 export let boardConfig: BoardConfigs
 
 // Load initial page state
-export const page = emitChanges<PageState>(read(location.href))
+export const page = read(location.href)
 
 // All posts currently displayed
 export const posts = new PostCollection()
