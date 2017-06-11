@@ -92,7 +92,7 @@ func parsePostCreationForm(w http.ResponseWriter, r *http.Request) (
 			Solution:  f.Get("captcha"),
 		},
 	}
-	if f.Get("auth") == "on" {
+	if f.Get("staffTitle") == "on" {
 		req.SessionCreds = extractLoginCreds(r)
 	}
 	if token != "" {
