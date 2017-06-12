@@ -71,7 +71,7 @@ export function extractPost(
 	view.renderTime()
 
 	// Localize staff titles
-	if (post.auth && options.lang !== config.defaultLang) {
+	if (post.auth && options.lang !== "en_GB") {
 		view.renderName()
 	}
 

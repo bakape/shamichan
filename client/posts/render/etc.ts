@@ -8,7 +8,7 @@ import { makeAttrs, pluralize } from "../../util"
 export function renderPostLink(id: number, op: number): string {
     const cross = op !== page.thread,
         index = !page.thread && !page.catalog,
-        url = `${cross || index ? `/all/${op}` : ""}#p${id}`
+        url = `${(cross || index) ? `/all/${id}` : ""}#p${id}`
     let html = `<a class="post-link" data-id="${id}" href="${url}">>>${id}`
     if (cross && !index) {
         html += " ➡"

@@ -224,7 +224,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name:  "valid cross-thread link",
 			in:    ">>21",
-			out:   `<em><a class="post-link" data-id="21" href="/all/22#p21">>>21 ➡</a><a class="hash-link" href="/all/22#p21"> #</a></em>`,
+			out:   `<em><a class="post-link" data-id="21" href="/all/21#p21">>>21 ➡</a><a class="hash-link" href="/all/21#p21"> #</a></em>`,
 			op:    20,
 			links: [][2]uint64{{21, 22}},
 		},

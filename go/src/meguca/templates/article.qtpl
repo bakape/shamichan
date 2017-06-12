@@ -7,7 +7,6 @@
 
 {% func renderArticle(p common.Post, c articleContext) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
-	{% code opStr := strconv.FormatUint(c.op, 10) %}
 	<article id="p{%s= id %}" {%= postClass(p) %}>
 		{%= deletedToggle() %}
 		<header class="spaced">
@@ -49,7 +48,7 @@
 			<nav>
 				{% code url := "#p" + id %}
 				{% if c.index %}
-					{% code url = util.ConcatStrings("/all/", opStr, "?last=100", url) %}
+					{% code url = util.ConcatStrings("/all/", id, "?last=100", url) %}
 				{% endif %}
 				<a href="{%s= url %}">
 					No.
@@ -160,7 +159,7 @@
 				{% space %}image{% if c.imageOmit > 1 %}s{% endif %}
 				{% space %}omitted{% space %}
 				<span class="act">
-					<a href="{%s= opStr %}">
+					<a href="{%s= strconv.FormatUint(c.op, 10) %}">
 						See All
 					</a>
 				</span>
@@ -170,7 +169,7 @@
 			<span class="backlinks spaced">
 				{% for id, op := range bls %}
 					<em>
-						{%= postLink(id, op, op != c.op, c.index) %}
+						{%= postLink(id, op != c.op, c.index) %}
 					</em>
 				{% endfor %}
 			</span>

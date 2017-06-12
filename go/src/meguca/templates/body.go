@@ -276,7 +276,7 @@ func (c *bodyContext) parsePostLink(m []string) {
 	if len(m[1]) != 0 { // Write extra quotes
 		c.string(m[1])
 	}
-	streampostLink(&c.Writer, id, op, op != c.OP, c.index)
+	streampostLink(&c.Writer, id, op != c.OP, c.index)
 }
 
 // Parse internal or customly set reference URL

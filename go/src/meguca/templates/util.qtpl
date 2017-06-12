@@ -14,12 +14,12 @@ Renders the tab selection butts in tabbed windows
 {% endstripspace %}{% endfunc %}
 
 Render a link to another post. Can optionally be cross-thread.
-{% func postLink(id, op uint64, cross, index bool) %}{% stripspace %}
+{% func postLink(id uint64, cross, index bool) %}{% stripspace %}
 	{% code idBuf := strconv.AppendUint(make([]byte, 0, 16), id, 10) %}
 	{% code url := make([]byte, 0, 32) %}
 	{% if cross || index %}
 		{% code url = append(url, "/all/"...) %}
-		{% code url = strconv.AppendUint(url, op, 10) %}
+		{% code url = strconv.AppendUint(url, id, 10) %}
 	{% endif %}
 	{% code url = append(url, "#p"...) %}
 	{% code url = append(url, idBuf...) %}

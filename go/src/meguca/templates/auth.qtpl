@@ -76,7 +76,7 @@ Common style for plain html tables
 
 Post link, that will redirect to the post from any page
 {% func staticPostLink(id uint64) %}{% stripspace %}
-	{%= postLink(id, id, false, true) %}
+	{%= postLink(id, false, true) %}
 {% endstripspace %}{% endfunc %}
 
 Renders a moderation log page
