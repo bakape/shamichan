@@ -2,7 +2,9 @@ import PostView from "../view"
 import FormModel from "./model"
 import { Post } from "../model"
 import { boardConfig } from "../../state"
-import { setAttrs, importTemplate, atBottom, scrollToBottom } from "../../util"
+import {
+    setAttrs, importTemplate, atBottom, scrollToBottom, firstChild,
+} from "../../util"
 import { postSM, postEvent, postState } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
@@ -84,11 +86,10 @@ export default class FormView extends PostView {
         this.captcha = new CaptchaView(cont)
 
         // Hide all other post controls till the captcha is submitted
-        const children = this.el
-            .querySelector("#post-controls")
-            .children
-        const controls = Array.from(children).slice(1) as HTMLElement[]
-        controls.push(this.el.querySelector(".post-container"))
+        const controls = [
+            this.el.querySelector(".post-container"),
+            this.el.querySelector("#post-controls"),
+        ]
         for (let el of controls) {
             el.style.display = "none"
         }
@@ -134,7 +135,8 @@ export default class FormView extends PostView {
 
     // Show button for closing allocated posts
     private showDone() {
-        const c = this.inputElement("cancel")
+        const c = firstChild(this.el.querySelector("#post-controls"), ch =>
+            ch.getAttribute("name") === "cancel")
         if (c) {
             c.remove()
         }

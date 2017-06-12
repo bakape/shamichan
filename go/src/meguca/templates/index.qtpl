@@ -111,11 +111,11 @@
 			</figure>
 		</template>
 		<template name="post-controls">
+			<form class="antispam-captcha">
+				{%= captcha(ln.UI) %}
+				{%= submit(true, ln.UI) %}
+			</form>
 			<div id="post-controls">
-				<form class="antispam-captcha">
-					{%= captcha(ln.UI) %}
-					{%= submit(true, ln.UI) %}
-				</form>
 				<input name="cancel" type="button" value="{%s= ln.UI["cancel"] %}">
 				<input name="done" type="button" value="{%s= ln.UI["done"] %}" hidden>
 				<span class="upload-container" hidden>

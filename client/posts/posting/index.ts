@@ -261,7 +261,7 @@ export default () => {
 	// New captcha submitted
 	postSM.act(postState.needCaptcha, postEvent.captchaSolved, () => {
 		postModel.needCaptcha = needCaptcha = false
-		if (postModel.bufferedFile) {
+		if (postModel.bufferedFile && !postModel.nonLive) {
 			postModel.uploadFile(postModel.bufferedFile)
 			postModel.bufferedFile = null
 		}
