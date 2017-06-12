@@ -111,17 +111,14 @@ export default class FormModel extends Post {
 		}
 
 		if (!this.sentAllocRequest) {
-			return this.requestAlloc(val, null)
+			this.requestAlloc(val, null)
+		} else if (lenDiff === 1 && val.slice(0, -1) === old) {
+			this.commitChar(val.slice(-1))
+		} else if (lenDiff === -1 && old.slice(0, -1) === val) {
+			this.commitBackspace()
+		} else {
+			this.commitSplice(val)
 		}
-
-		if (lenDiff === 1 && val.slice(0, -1) === old) {
-			return this.commitChar(val.slice(-1))
-		}
-		if (lenDiff === -1 && old.slice(0, -1) === val) {
-			return this.commitBackspace()
-		}
-
-		return this.commitSplice(val)
 	}
 
 	// Commit a character appendage to the end of the line to the server
@@ -249,9 +246,6 @@ export default class FormModel extends Post {
 		if (this.bufferedText) {
 			req["body"] = this.body = this.bufferedText
 		}
-		if (this.needCaptcha) {
-			extend(req, this.view.captcha.data())
-		}
 
 		send(message.insertPost, req)
 		handlers[message.postID] = this.receiveID(false)
@@ -278,12 +272,6 @@ export default class FormModel extends Post {
 	// Request allocation of a draft post to the server
 	private requestAlloc(body: string | null, image: FileData | null) {
 		const req = newAllocRequest()
-		if (this.needCaptcha) {
-			extend(req, this.view.captcha.data())
-			if (!req["solution"]) {
-				return
-			}
-		}
 
 		this.view.setEditing(true)
 		this.nonLive = false
@@ -327,10 +315,10 @@ export default class FormModel extends Post {
 		// Need a captcha and none submitted. Protects from no-captcha drops
 		// allocating post too soon.
 		if (this.needCaptcha) {
-			const { captcha } = this.view
-			if (captcha && !captcha.data()["solution"]) {
-				return
+			if (file) {
+				this.bufferedFile = file
 			}
+			return
 		}
 
 		if (this.nonLive) {

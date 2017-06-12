@@ -43,19 +43,21 @@ export const enum postState {
 	locked,         // No post open. Post creation controls locked.
 	alloc,          // Post open and allocated to the server
 	draft,          // Post open, but not yet allocated.
+	needCaptcha,    // Awaiting a captcha to be solved
 	sendingNonLive, // Sending a request to a allocate a post in non-live mode
 	errored,        // Suffered unrecoverable error
 }
 export const enum postEvent {
-	sync,       // Synchronized to the server
-	disconnect, // Disconnected from server
-	error,      // Unrecoverable error
-	done,       // Post closed
-	open,       // New post opened
-	reset,      // Set to none. Used during page navigation.
-	alloc,      // Allocated the draft post to the server
-	reclaim,    // Ownership of post reclaimed after connectivity loss
-	abandon,    // Abandon ownership of any open post
+	sync,          // Synchronized to the server
+	disconnect,    // Disconnected from server
+	error,         // Unrecoverable error
+	done,          // Post closed
+	open,          // New post opened
+	reset,         // Set to none. Used during page navigation.
+	alloc,         // Allocated the draft post to the server
+	reclaim,       // Ownership of post reclaimed after connectivity loss
+	abandon,       // Abandon ownership of any open post
+	captchaSolved, // New captcha solved and submitted
 }
 export const postSM = new FSM<postState, postEvent>(postState.none)
 
@@ -250,6 +252,19 @@ export default () => {
 		postModel = new FormModel()
 		postModel.needCaptcha = needCaptcha
 		postForm = new FormView(postModel)
+		if (needCaptcha) {
+			return postState.needCaptcha
+		}
+		return postState.draft
+	})
+
+	// New captcha submitted
+	postSM.act(postState.needCaptcha, postEvent.captchaSolved, () => {
+		postModel.needCaptcha = needCaptcha = false
+		if (postModel.bufferedFile) {
+			postModel.uploadFile(postModel.bufferedFile)
+			postModel.bufferedFile = null
+		}
 		return postState.draft
 	})
 
@@ -258,12 +273,8 @@ export default () => {
 		stylePostControls(el =>
 			el.style.display = "none")
 	postSM.on(postState.draft, hidePostControls)
-	postSM.on(postState.alloc, () => {
-		hidePostControls()
-		if (postModel.needCaptcha) { // New captcha submitted
-			needCaptcha = false
-		}
-	})
+	postSM.on(postState.alloc, () =>
+		hidePostControls())
 
 	// Close unallocated draft
 	postSM.act(postState.draft, postEvent.done, (e?: Event) => {

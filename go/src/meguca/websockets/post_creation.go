@@ -201,6 +201,21 @@ func (c *Client) insertPost(data []byte) (err error) {
 	return c.incrementSpamScore(score)
 }
 
+// Reset the IP's spam score, by submitting a captcha
+func (c *Client) submitCaptcha(data []byte) (err error) {
+	var msg auth.Captcha
+	err = decodeMessage(data, &msg)
+	if err != nil {
+		return
+	}
+
+	if !auth.AuthenticateCaptcha(msg) {
+		return errInValidCaptcha
+	}
+	auth.ResetSpamScore(c.ip)
+	return nil
+}
+
 // If the client has a previous post, close it silently
 func (c *Client) closePreviousPost() error {
 	if c.post.id != 0 {

@@ -7,6 +7,7 @@ import { postSM, postEvent, postState } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
 import { CaptchaView } from "../../ui"
+import { message, send } from "../../connection"
 
 // Element at the bottom of the thread to keep the fixed reply form from
 // overlapping any other posts, when scrolled till bottom
@@ -24,14 +25,7 @@ export default class FormView extends PostView {
     constructor(model: Post) {
         super(model, null)
         this.renderInputs()
-        this.el.classList.add("reply-form")
         this.initDraft()
-
-        // Focus captcha instead, if one is needed
-        if (!this.model.needCaptcha) {
-            requestAnimationFrame(() =>
-                this.input.focus())
-        }
     }
 
     // Render extra input fields for inputting text and optionally uploading
@@ -66,6 +60,57 @@ export default class FormView extends PostView {
         const bq = this.el.querySelector("blockquote")
         bq.innerHTML = ""
         bq.append(this.input)
+
+        const captcha = this.el.querySelector(".antispam-captcha")
+        if (this.model.needCaptcha) {
+            if (captcha) {
+                this.renderCaptcha(captcha)
+            } else {
+                // Page's captcha setting has desynced from the server
+                location.reload(true)
+            }
+        } else {
+            if (captcha) {
+                captcha.style.display = "none"
+            }
+            requestAnimationFrame(() =>
+                this.input.focus())
+        }
+    }
+
+    // Request a captcha to be filled out, before the post is submitted
+    private renderCaptcha(el: HTMLElement) {
+        const cont = el.querySelector(".captcha-container")
+        this.captcha = new CaptchaView(cont)
+
+        // Hide all other post controls till the captcha is submitted
+        const children = this.el
+            .querySelector("#post-controls")
+            .children
+        const controls = Array.from(children).slice(1) as HTMLElement[]
+        controls.push(this.el.querySelector(".post-container"))
+        for (let el of controls) {
+            el.style.display = "none"
+        }
+
+        el.addEventListener("submit", e => {
+            e.preventDefault()
+            e.stopImmediatePropagation()
+
+            send(message.captcha, this.captcha.data())
+
+            el.remove()
+            for (let el of controls) {
+                el.style.display = ""
+            }
+            this.input.focus()
+            postSM.feed(postEvent.captchaSolved)
+        })
+
+        requestAnimationFrame(() =>
+            (cont
+                .querySelector("input[type=number]") as HTMLElement)
+                .focus())
     }
 
     // Render a temporary view of the identity fields, so the user can see what
@@ -102,6 +147,7 @@ export default class FormView extends PostView {
     // Initialize extra elements for a draft unallocated post
     private initDraft() {
         bottomSpacer = document.getElementById("bottom-spacer")
+        this.el.classList.add("reply-form")
         this.el.querySelector("header").classList.add("temporary")
         this.renderIdentity()
 
@@ -118,20 +164,6 @@ export default class FormView extends PostView {
         document.getElementById("thread-container").append(this.el)
         this.resizeSpacer()
         this.setEditing(identity.live)
-
-        const captcha = this.el.querySelector(".captcha-container")
-        if (captcha) {
-            if (this.model.needCaptcha) {
-                this.captcha = new CaptchaView(captcha)
-                this.model.needCaptcha = true
-                requestAnimationFrame(() =>
-                    (captcha
-                        .querySelector("input[type=number]") as HTMLInputElement)
-                        .focus())
-            } else {
-                captcha.style.display = "none"
-            }
-        }
     }
 
     // Resize bottomSpacer to the same top position as this post
