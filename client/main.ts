@@ -1,17 +1,17 @@
 // Client entry point
 
 import { loadFromDB, page, posts, storeMine, displayLoading } from './state'
-import { start as connect } from './connection'
+import { start as connect, connSM, connState } from './connection'
 import { open } from './db'
 import { initOptions } from "./options"
 import initPosts from "./posts"
-import { Post } from "./posts"
+import { Post, postSM, postEvent, FormModel } from "./posts"
 import { ThreadData } from "./common"
 import {
 	renderBoard, extractConfigs, setThreadTitle, renderThread
 } from './page'
 import { default as initUI, setTitle } from "./ui"
-import { checkBottom, getCookie, deleteCookie } from "./util"
+import { checkBottom, getCookie, deleteCookie, trigger } from "./util"
 import assignHandlers from "./client"
 import initModeration from "./mod"
 
@@ -37,8 +37,25 @@ async function start() {
 
 	if (page.thread) {
 		renderThread()
-		checkBottom()
+
+		// Open a cross-thread quoting reply
+		connSM.once(connState.synced, () => {
+			const data = localStorage.getItem("openQuote")
+			if (!data) {
+				return
+			}
+			const i = data.indexOf(":"),
+				id = parseInt(data.slice(0, i)),
+				sel = data.slice(i + 1)
+			localStorage.removeItem("openQuote")
+			if (posts.get(id)) {
+				postSM.feed(postEvent.open);
+				(trigger("getPostModel") as FormModel).addReference(id, sel)
+			}
+		})
+
 		connect()
+		checkBottom()
 		assignHandlers()
 		setThreadTitle(posts.get(page.thread) as Post & ThreadData)
 	} else {

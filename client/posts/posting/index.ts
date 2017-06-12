@@ -85,18 +85,12 @@ function quotePost(e: MouseEvent) {
 	// Don't trigger, when user is trying to open in a new tab
 	const bypass = e.which !== 1
 		|| e.ctrlKey
-		|| connSM.state !== connState.synced
+		|| (page.thread && connSM.state !== connState.synced)
 	if (bypass) {
 		return
 	}
 
 	const target = e.target as HTMLAnchorElement
-
-	// On board pages, first navigate to the thread
-	if (!page.thread) {
-		location.href = target.href
-		return
-	}
 
 	// Make sure the selection both starts and ends in the quoted post's
 	// blockquote
@@ -126,13 +120,24 @@ function quotePost(e: MouseEvent) {
 				return el.closest("article") === post.nextSibling
 		}
 	}
-	let sel: string
+	let sel = ""
 	if (lastSelection && isInside("start") && isInside("end")) {
 		sel = lastSelection.text
 	}
 
+	const id = parseInt(post.id.slice(1))
+
+	// On board pages, first navigate to the thread
+	if (!page.thread) {
+		location.href = target.href
+
+		// Store, so a reply is opened, when the page is loaded
+		localStorage.setItem("openQuote", `${id}:${sel}`)
+		return
+	}
+
 	postSM.feed(postEvent.open)
-	postModel.addReference(parseInt(post.id.slice(1)), sel)
+	postModel.addReference(id, sel)
 }
 
 // Update the draft post's fields on identity change, if any
