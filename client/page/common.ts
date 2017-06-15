@@ -111,7 +111,7 @@ function localizeLinks(post: Post, replies: number[]) {
 		}
 		addYous(id, el)
 
-		replies.push(id)
+		replies.push(post.id)
 	}
 }
 
