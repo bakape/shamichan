@@ -11,7 +11,9 @@ import {
 	renderBoard, extractConfigs, setThreadTitle, renderThread
 } from './page'
 import { default as initUI, setTitle } from "./ui"
-import { checkBottom, getCookie, deleteCookie, trigger } from "./util"
+import {
+	checkBottom, getCookie, deleteCookie, trigger, scrollToBottom,
+} from "./util"
 import assignHandlers from "./client"
 import initModeration from "./mod"
 
@@ -51,6 +53,7 @@ async function start() {
 			if (posts.get(id)) {
 				postSM.feed(postEvent.open);
 				(trigger("getPostModel") as FormModel).addReference(id, sel)
+				requestAnimationFrame(scrollToBottom)
 			}
 		})
 
