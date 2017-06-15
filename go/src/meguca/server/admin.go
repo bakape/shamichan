@@ -77,6 +77,7 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
+	msg.ID = extractParam(r, "board")
 	_, ok := canPerform(w, r, msg.ID, auth.BoardOwner, &msg.Captcha)
 	if !ok || !validateBoardConfigs(w, msg.BoardConfigs) {
 		return
