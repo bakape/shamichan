@@ -20,7 +20,6 @@ var (
 
 	errTooManyRolls = errors.New("too many rolls")
 	errDieTooBig    = errors.New("die too big")
-	errDieIsZero    = errors.New("die is zero")
 )
 
 func init() {
@@ -97,15 +96,17 @@ func parseDice(match string) (val []uint16, err error) {
 	switch {
 	case err != nil:
 		return
-	case max == 0:
-		return nil, errDieIsZero
 	case max > 100:
 		return nil, errDieTooBig
 	}
 
 	val = make([]uint16, rolls)
 	for i := 0; i < rolls; i++ {
-		val[i] = uint16(rand.Intn(max)) + 1
+		if max != 0 {
+			val[i] = uint16(rand.Intn(max)) + 1
+		} else {
+			val[i] = 0
+		}
 	}
 	return
 }
