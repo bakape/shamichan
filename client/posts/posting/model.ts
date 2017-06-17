@@ -305,9 +305,9 @@ export default class FormModel extends Post {
 			this.insertImage(this.image)
 		}
 		if (this.nonLive) {
+			this.propagateLinks()
 			postSM.feed(postEvent.done)
 		}
-		this.propagateLinks()
 	}
 
 	// Upload the file and request its allocation

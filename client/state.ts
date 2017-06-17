@@ -113,7 +113,7 @@ export function storeSeenReply(id: number, op: number) {
 }
 
 export function storeSeenPost(id: number, op: number) {
-	store(seenReplies, "seenPost", id, op)
+	store(seenPosts, "seenPost", id, op)
 }
 
 // Store the ID of a post or thread to hide

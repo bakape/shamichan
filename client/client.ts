@@ -58,8 +58,9 @@ export function insertPost(data: PostData) {
 	posts.add(model)
 	const view = new PostView(model, null)
 
-	// For closed posts
-	model.propagateLinks()
+	if (!model.editing) {
+		model.propagateLinks()
+	}
 
 	// Find last allocated post and insert after it
 	const last = document
