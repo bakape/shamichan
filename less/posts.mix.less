@@ -3,9 +3,10 @@ a.referenced {
 	border-bottom: 1px dashed currentColor;
 }
 
-.errored * {
-	color: red !important;
-	cursor: default !important;
+.errored {
+	&, * {
+		color: red !important;
+	}
 }
 
 #thread-container, .index-thread, article {
