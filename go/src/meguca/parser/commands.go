@@ -20,6 +20,7 @@ var (
 
 	errTooManyRolls = errors.New("too many rolls")
 	errDieTooBig    = errors.New("die too big")
+	errDieIsZero    = errors.New("die is zero")
 )
 
 func init() {
@@ -39,7 +40,9 @@ func parseCommand(match []byte, board string) (com common.Command, err error) {
 	case bytes.Equal(match, []byte("8ball")):
 		com.Type = common.EightBall
 		answers := config.GetBoardConfigs(board).Eightball
-		com.Eightball = answers[rand.Intn(len(answers))]
+		if len(answers) != 0 {
+			com.Eightball = answers[rand.Intn(len(answers))]
+		}
 
 	// Increment pyu counter
 	case bytes.Equal(match, []byte("pyu")):
@@ -94,6 +97,8 @@ func parseDice(match string) (val []uint16, err error) {
 	switch {
 	case err != nil:
 		return
+	case max == 0:
+		return nil, errDieIsZero
 	case max > 100:
 		return nil, errDieTooBig
 	}
