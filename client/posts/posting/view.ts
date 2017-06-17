@@ -230,6 +230,10 @@ export default class FormView extends PostView {
         requestAnimationFrame(() => {
             el.focus()
             el.setSelectionRange(body.length, body.length)
+
+            // Because Firefox refocuses the clicked <a>
+            requestAnimationFrame(() =>
+                el.focus())
         })
     }
 
