@@ -68,7 +68,7 @@
 			</a>
 		</span>
 		<span class="act">
-			<a href="?last=100">
+			<a href="?last=100#bottom">
 				{%s= ln.Common.UI["last"] %}{% space %}100
 			</a>
 		</span>
