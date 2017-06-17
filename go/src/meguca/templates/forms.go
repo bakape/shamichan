@@ -4,24 +4,18 @@ package templates
 
 import (
 	"meguca/config"
-	"meguca/lang"
 	"reflect"
 	"sort"
 	"strings"
 )
 
 // ConfigureBoard renders a form for setting board configurations
-func ConfigureBoard(conf config.BoardConfigs, ln lang.Pack) string {
+func ConfigureBoard(conf config.BoardConfigs) string {
 	v := reflect.ValueOf(conf)
-	return configurationTable(v, "configureBoard", true, ln)
+	return configurationTable(v, "configureBoard", true)
 }
 
-func configurationTable(
-	v reflect.Value,
-	key string,
-	needCaptcha bool,
-	ln lang.Pack,
-) string {
+func configurationTable(v reflect.Value, key string, needCaptcha bool) string {
 	// Copy over all spec structs, so the mutations don't affect them
 	noValues := specs[key]
 	withValues := make([]inputSpec, len(noValues))
@@ -37,23 +31,23 @@ func configurationTable(
 		withValues[i].Val = v.Interface()
 	}
 
-	return tableForm(withValues, needCaptcha, ln)
+	return tableForm(withValues, needCaptcha)
 }
 
 // ConfigureServer renders the form for changing server configurations
-func ConfigureServer(conf config.Configs, ln lang.Pack) string {
+func ConfigureServer(conf config.Configs) string {
 	v := reflect.ValueOf(conf)
-	return configurationTable(v, "configureServer", false, ln)
+	return configurationTable(v, "configureServer", false)
 }
 
 // ChangePassword renders a form for changing an account's password
-func ChangePassword(ln lang.Pack) string {
-	return tableForm(specs["changePassword"], true, ln)
+func ChangePassword() string {
+	return tableForm(specs["changePassword"], true)
 }
 
 // StaffAssignment renders a staff assignment form with the current staff
 // already filled in
-func StaffAssignment(staff [3][]string, ln lang.Pack) string {
+func StaffAssignment(staff [3][]string) string {
 	var specs [3]inputSpec
 	for i, id := range [3]string{"owners", "moderators", "janitors"} {
 		sort.Strings(staff[i])
@@ -64,5 +58,5 @@ func StaffAssignment(staff [3][]string, ln lang.Pack) string {
 		}
 	}
 
-	return tableForm(specs[:], true, ln)
+	return tableForm(specs[:], true)
 }

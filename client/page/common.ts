@@ -4,7 +4,7 @@ import { PostData, fileTypes } from "../common"
 import { Post, PostView } from "../posts"
 import lang from "../lang"
 import { postAdded } from "../ui/tab"
-import { pluralize } from "../util"
+import { pluralize, extractJSON } from "../util"
 import { posterName } from "../options"
 
 const threads = document.getElementById("threads")
@@ -12,14 +12,6 @@ const threads = document.getElementById("threads")
 // Find board configurations in the HTML and apply them
 export function extractConfigs() {
 	setBoardConfig(extractJSON("board-configs"))
-}
-
-function extractJSON(id: string): any {
-	const el = document.getElementById(id)
-	if (!el) {
-		return null
-	}
-	return JSON.parse(el.textContent)
 }
 
 // Extract pregenerated rendered post data from DOM
@@ -71,7 +63,7 @@ export function extractPost(
 	view.renderTime()
 
 	// Localize staff titles
-	if (post.auth && options.lang !== "en_GB") {
+	if (post.auth && options.lang !== config.defaultLang) {
 		view.renderName()
 	}
 

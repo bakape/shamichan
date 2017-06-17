@@ -6,7 +6,6 @@ import (
 	"log"
 	"meguca/auth"
 	"meguca/db"
-	"meguca/lang"
 	"meguca/templates"
 	"net/http"
 	"runtime/debug"
@@ -37,11 +36,7 @@ func checkClientEtag(
 }
 
 // Combine the progress counter and optional configuration hash into a weak etag
-func formatEtag(
-	ctr uint64,
-	lang, hash string,
-	pos auth.ModerationLevel,
-) string {
+func formatEtag(ctr uint64, hash string, pos auth.ModerationLevel) string {
 	buf := make([]byte, 2, 128)
 	buf[0] = 'W'
 	buf[1] = '/'
@@ -50,9 +45,6 @@ func formatEtag(
 	addOpt := func(s string) {
 		buf = append(buf, '-')
 		buf = append(buf, s...)
-	}
-	if lang != "" {
-		addOpt(lang)
 	}
 	if hash != "" {
 		addOpt(hash)
@@ -121,12 +113,6 @@ func assertNotBanned(
 		board = "all"
 	}
 
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return false
-	}
-
 	rec, err := db.GetBanInfo(ip, board)
 	switch err {
 	case nil:
@@ -137,7 +123,7 @@ func assertNotBanned(
 		}
 		head.Set("Content-Type", "text/html")
 		head.Set("Cache-Control", "no-store")
-		html := []byte(templates.BanPage(rec, lp.Templates["banPage"]))
+		html := []byte(templates.BanPage(rec))
 		w.Write(html)
 		return false
 	case sql.ErrNoRows:

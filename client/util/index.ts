@@ -183,3 +183,12 @@ export function getCookie(id: string): string {
 export function deleteCookie(id: string) {
 	document.cookie = `${id}=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`
 }
+
+// Extract JSON from a <script> tag by ID
+export function extractJSON(id: string): any {
+	const el = document.getElementById(id)
+	if (!el) {
+		return null
+	}
+	return JSON.parse(el.textContent)
+}

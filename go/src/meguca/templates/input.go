@@ -74,9 +74,9 @@ func (w *formWriter) input(spec inputSpec) {
 	case _textarea:
 		w.textArea(spec)
 	case _map:
-		streamrenderMap(&w.Writer, spec, w.lang)
+		streamrenderMap(&w.Writer, spec)
 	case _array:
-		streamrenderArray(&w.Writer, spec, w.lang)
+		streamrenderArray(&w.Writer, spec)
 	case _shortcut:
 		w.N().S("Alt+")
 		cont = true
@@ -219,10 +219,10 @@ func (w *formWriter) label(spec inputSpec, inside *func()) {
 }
 
 // Render a table containing {label input_element} pairs
-func streamtable(qw *quicktemplate.Writer, specs []inputSpec, lang lang.Pack) {
+func streamtable(qw *quicktemplate.Writer, specs []inputSpec) {
 	w := formWriter{
 		Writer: *qw,
-		lang:   lang,
+		lang:   lang.Get(),
 	}
 	w.N().S("<table>")
 

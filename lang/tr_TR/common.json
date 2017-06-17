@@ -89,7 +89,10 @@
 		"uploadProgress": "uploaded...",
 		"googleSong": "Şarkıyı googleda aratmak için tıklayın",
 		"last": "Son",
-		"postsImages": "Posts/Images/TTL"
+		"postsImages": "Posts/Images/TTL",
+		"finished": "Bitti",
+		"importDone": "Import successful. The page will now reload.",
+		"importCorrupt": "Import failed. File corrupt"
 	},
 	"sync": [
 		"disconnected",
@@ -97,16 +100,5 @@
 		"syncing",
 		"synced",
 		"desynced"
-	],
-	"syncwatch": {
-		"starting": "Syncwatch 10 saniye içinde başlıyor",
-		"finished": "Bitti"
-	},
-	"opts": {
-		"importConfig": {
-			"done": "Import successfull. The page will now reload.",
-			"corrupt": "Import failed. File corrupt"
-		},
-		"langApplied": "Dil ayarları uygulandı. Şimdi sayfayı yenileyeceğiz."
-	}
+	]
 }

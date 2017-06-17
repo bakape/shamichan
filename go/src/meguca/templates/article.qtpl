@@ -39,7 +39,7 @@
 					</code>
 				{% endif %}
 				{% if p.Auth != "" %}
-					{% space %}##{% space %}{%s= lang.Packs["en_GB"].Common.Posts[p.Auth] %}
+					{% space %}##{% space %}{%s= lang.Get().Common.Posts[p.Auth] %}
 				{% endif %}
 			</b>
 			<time>
@@ -148,7 +148,7 @@
 			</blockquote>
 			{% if p.Banned %}
 				<b class="admin banned">
-					{%s= lang.Packs["en_GB"].Common.Posts["banned"] %}
+					{%s= lang.Get().Common.Posts["banned"] %}
 				</b>
 			{% endif %}
 		</div>

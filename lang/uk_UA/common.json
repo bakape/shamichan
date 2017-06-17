@@ -89,7 +89,10 @@
 		"uploadProgress": "завантаження...",
 		"googleSong": "Клікніть для гугль пісні",
 		"last": "Останні",
-		"postsImages": "Posts/Images/TTL"
+		"postsImages": "Posts/Images/TTL",
+		"finished": "Готово.",
+		"importDone": "Import successful. The page will now reload.",
+		"importCorrupt": "Import failed. File corrupt"
 	},
 	"sync": [
 		"Від'єднано",
@@ -97,16 +100,5 @@
 		"Синхронізуємо",
 		"Синхронізовано",
 		"Розсинхронізовано"
-	],
-	"syncwatch": {
-		"starting": "Синхронізування через 10 секунд",
-		"finished": "Готово."
-	},
-	"opts": {
-		"importConfig": {
-			"done": "Імпорт успішний. Зараз сторінка перезавантажиться.",
-			"corrupt": "Імпорт невдалий. Файл пошкоджений"
-		},
-		"langApplied": "Мову змінено. Зараз сторінка перезавантажиться."
-	}
+	]
 }

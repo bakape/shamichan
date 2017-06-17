@@ -89,7 +89,10 @@
 		"uploadProgress": "przesłano...",
 		"googleSong": "Kliknij, żeby wyszukać piosenkę",
 		"last": "Ostatni",
-		"postsImages": "Posts/Images/TTL"
+		"postsImages": "Posts/Images/TTL",
+		"finished": "Zakończono",
+		"importDone": "Import successful. The page will now reload.",
+		"importCorrupt": "Import failed. File corrupt"
 	},
 	"sync": [
 		"odłączono",
@@ -97,16 +100,5 @@
 		"synchronizacja",
 		"zsynchronizowano",
 		"brak synchronizacji"
-	],
-	"syncwatch": {
-		"starting": "Synchronizacja nastąpi za 10 sekund",
-		"finished": "Zakończono"
-	},
-	"opts": {
-		"importConfig": {
-			"done": "Importowanie zakończone sukcesem. Strona zostanie teraz odświeżona",
-			"corrupt": "Importowanie nieudane. Plik uszkodzony."
-		},
-		"langApplied": "Language settings applied. The page will now reload."
-	}
+	]
 }

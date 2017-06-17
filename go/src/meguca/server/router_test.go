@@ -4,14 +4,14 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
-	"net/http"
-	"os"
-	"testing"
-
+	"meguca/config"
 	"meguca/db"
 	"meguca/lang"
 	"meguca/templates"
 	"meguca/util"
+	"net/http"
+	"os"
+	"testing"
 
 	"github.com/dimfeld/httptreemux"
 )
@@ -27,8 +27,15 @@ func init() {
 	db.ConnArgs = db.TestConnArgs
 	db.IsTest = true
 
-	err := util.Waterfall(db.LoadDB, lang.Load, templates.Compile)
-	if err != nil {
+	if err := db.LoadDB(); err != nil {
+		panic(err)
+	}
+	config.Set(config.Configs{
+		Public: config.Public{
+			DefaultLang: "en_GB",
+		},
+	})
+	if err := util.Waterfall(lang.Load, templates.Compile); err != nil {
 		panic(err)
 	}
 }

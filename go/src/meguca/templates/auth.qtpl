@@ -3,10 +3,12 @@
 {% import "strconv" %}
 {% import "meguca/auth" %}
 {% import "meguca/config" %}
+{% import "meguca/lang" %}
 {% import "github.com/bakape/mnemonics" %}
 
 BanPage renders a ban page for a banned user
-{% func BanPage(rec auth.BanRecord, ln []string) %}{% stripspace %}
+{% func BanPage(rec auth.BanRecord) %}{% stripspace %}
+	{% code ln := lang.Get().Templates["banPage"] %}
 	<div class="ban-page glass">
 		{%s= fmt.Sprintf(ln[0], bold(rec.Board), bold(rec.By)) %}
 		<br>
@@ -28,7 +30,8 @@ BanPage renders a ban page for a banned user
 {% endstripspace %}{% endfunc %}
 
 // Renders a list of bans for a specific page with optional unbanning API links
-{% func BanList(bans []auth.BanRecord, board string, canUnban bool, ln map[string]string) %}{% stripspace %}
+{% func BanList(bans []auth.BanRecord, board string, canUnban bool) %}{% stripspace %}
+	{% code ln := lang.Get().UI %}
 	{%= tableStyle() %}
 	<form method="post" action="/admin/unban/{%s= board %}">
 		<table>
@@ -57,7 +60,7 @@ BanPage renders a ban page for a banned user
 			{% endfor %}
 		</table>
 		{% if canUnban %}
-			{%= submit(false, ln) %}
+			{%= submit(false) %}
 		{% endif %}
 	</form>
 {% endstripspace %}{% endfunc %}
@@ -80,7 +83,8 @@ Post link, that will redirect to the post from any page
 {% endstripspace %}{% endfunc %}
 
 Renders a moderation log page
-{% func ModLog(log []auth.ModLogEntry, ln map[string]string) %}{% stripspace %}
+{% func ModLog(log []auth.ModLogEntry) %}{% stripspace %}
+	{% code ln := lang.Get().UI %}
 	{%= tableStyle() %}
 	<table>
 		<tr>

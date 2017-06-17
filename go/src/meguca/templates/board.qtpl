@@ -7,7 +7,8 @@
 {% import "meguca/imager/assets" %}
 {% import banners "meguca/assets" %}
 
-{% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, page, total int, pos auth.ModerationLevel, catalog bool, ln lang.Pack) %}{% stripspace %}
+{% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, page, total int, pos auth.ModerationLevel, catalog bool) %}{% stripspace %}
+	{% code ln := lang.Get() %}
 	{% code bannerID, mime, ok := banners.Banners.Random(conf.ID) %}
 	{% if ok %}
 		<h1 class="image-banner">
@@ -44,12 +45,12 @@
 				{% endif %}
 				<input name="subject" placeholder="{%s= ln.UI["subject"] %}" required type="text" maxlength="100">
 				<br>
-				{%= noscriptPostCreationFields(pos, ln) %}
+				{%= noscriptPostCreationFields(pos) %}
 				{% if id == "all" || !conf.TextOnly %}
-					{%= uploadForm(ln.Common.Posts) %}
+					{%= uploadForm() %}
 				{% endif %}
-				{%= captcha(ln.UI) %}
-				{%= submit(false, ln.UI) %}
+				{%= captcha() %}
+				{%= submit(false) %}
 			</form>
 		</aside>
 		<aside id="refresh" class="act glass">
@@ -57,7 +58,7 @@
 				{%s= ln.Common.UI["refresh"] %}
 			</a>
 		</aside>
-		{%= catalogLink(catalog, ln.UI) %}
+		{%= catalogLink(catalog) %}
 		{% if !catalog %}
 			{%= pagination(page, total) %}
 		{% endif %}
@@ -83,7 +84,7 @@
 	</script>
 	<hr>
 	<span class="aside-container">
-		{%= catalogLink(catalog, ln.UI) %}
+		{%= catalogLink(catalog) %}
 		{% if !catalog %}
 			{%= pagination(page, total) %}
 		{% endif %}
@@ -160,7 +161,8 @@ IndexThreads renders abbreviated threads for display on board index pages
 {% endstripspace %}{% endfunc %}
 
 Render noscript-specific post creation fields
-{% func noscriptPostCreationFields(pos auth.ModerationLevel, ln lang.Pack) %}{% stripspace %}
+{% func noscriptPostCreationFields(pos auth.ModerationLevel) %}{% stripspace %}
+	{% code ln := lang.Get() %}
 	{% if pos > auth.NotStaff %}
 		{%= input(staffTitleSpec.wrap(), ln) %}
 	{% endif %}
@@ -170,12 +172,12 @@ Render noscript-specific post creation fields
 {% endstripspace %}{% endfunc %}
 
 Render image upload form
-{% func uploadForm(ln map[string]string) %}{% stripspace %}
+{% func uploadForm() %}{% stripspace %}
 	<span class="upload-container">
 		<span data-id="spoiler">
 			<label>
 				<input type="checkbox" name="spoiler">
-				{%s= ln["spoiler"] %}
+				{%s= lang.Get().UI["spoiler"] %}
 			</label>
 		</span>
 		<strong class="upload-status"></strong>
@@ -186,7 +188,8 @@ Render image upload form
 {% endstripspace %}{% endfunc %}
 
 Link to catalog or board page
-{% func catalogLink(catalog bool, ln map[string]string) %}{% stripspace %}
+{% func catalogLink(catalog bool) %}{% stripspace %}
+	{% code ln := lang.Get().UI %}
 	<aside class="act glass">
 		{% if catalog %}
 			<a href=".">

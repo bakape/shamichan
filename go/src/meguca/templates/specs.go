@@ -241,11 +241,6 @@ var specs = map[string][]inputSpec{
 // Specs of option inputs grouped by tab
 var optionSpecs = [...][]inputSpec{
 	{
-		{
-			ID:      "lang",
-			Type:    _select,
-			Options: common.Langs,
-		},
 		{ID: "imageHover"},
 		{ID: "webmHover"},
 		{ID: "notification"},

@@ -1,7 +1,6 @@
 // Specs for individual option models
 
 import { config } from '../state'
-import lang from '../lang'
 import { makeEl, HTML } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
@@ -39,21 +38,6 @@ function renderBackground(_: boolean) {
 // Specifications of option behavior, where needed. Some properties defined as
 // getters to prevent race with "state" module
 export const specs: { [id: string]: OptionSpec } = {
-	// Language selection
-	lang: {
-		type: optionType.menu,
-		get default() {
-			return config.defaultLang
-		},
-		noExecOnStart: true,
-		exec(ln: string) {
-			// Expire 10 years from now
-			const t = new Date(new Date().getFullYear() + 10, 11)
-			document.cookie = `lang=${ln};expires${t.toUTCString()};path=/`
-			alert(lang.opts["langApplied"])
-			location.reload()
-		},
-	},
 	// Thumbnail inline expansion mode
 	inlineFit: {
 		type: optionType.menu,

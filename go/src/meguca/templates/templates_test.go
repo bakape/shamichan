@@ -14,7 +14,11 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	config.Set(config.Configs{})
+	config.Set(config.Configs{
+		Public: config.Public{
+			DefaultLang: "en_GB",
+		},
+	})
 
 	if err := util.Waterfall(lang.Load, Compile); err != nil {
 		panic(err)

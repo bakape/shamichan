@@ -12,7 +12,6 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
-	"meguca/lang"
 	"meguca/templates"
 	"meguca/websockets/feeds"
 	"net/http"
@@ -596,12 +595,6 @@ func banList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
 	bans, err := db.GetBoardBans(board)
 	if err != nil {
 		text500(w, r, err)
@@ -609,7 +602,7 @@ func banList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	canUnban := detectCanPerform(r, board, auth.Moderator)
-	html := []byte(templates.BanList(bans, board, canUnban, lp.UI))
+	html := []byte(templates.BanList(bans, board, canUnban))
 	serveHTML(w, r, "", html, nil)
 }
 
@@ -688,17 +681,11 @@ func modLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
 	log, err := db.GetModLog(board)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
 
-	serveHTML(w, r, "", []byte(templates.ModLog(log, lp.UI)), nil)
+	serveHTML(w, r, "", []byte(templates.ModLog(log)), nil)
 }

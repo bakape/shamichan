@@ -141,7 +141,7 @@ func threadJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, r, formatEtag(ctr, "", "", auth.NotLoggedIn), data)
+	writeJSON(w, r, formatEtag(ctr, "", auth.NotLoggedIn), data)
 }
 
 // Confirms a the thread exists on the board and returns its ID. If an error
@@ -186,7 +186,7 @@ func boardJSON(w http.ResponseWriter, r *http.Request, catalog bool) {
 	data, _, ctr, err := cache.GetJSONAndData(boardCacheArgs(r, b, catalog))
 	switch err {
 	case nil:
-		writeJSON(w, r, formatEtag(ctr, "", "", auth.NotLoggedIn), data)
+		writeJSON(w, r, formatEtag(ctr, "", auth.NotLoggedIn), data)
 	case errPageOverflow:
 		text404(w)
 	default:
