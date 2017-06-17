@@ -3,7 +3,7 @@ import options from "../options"
 import { PostData, fileTypes } from "../common"
 import { Post, PostView } from "../posts"
 import lang from "../lang"
-import { postAdded } from "../ui/tab"
+import { postAdded, notifyAboutReply } from "../ui"
 import { pluralize } from "../util"
 import { posterName } from "../options"
 
@@ -44,7 +44,6 @@ export function extractPost(
 	post: PostData,
 	op: number,
 	board: string,
-	replies: number[],
 	backlinks: { [id: number]: { [id: number]: number } },
 ): boolean {
 	const el = document.getElementById(`p${post.id}`)
@@ -75,17 +74,17 @@ export function extractPost(
 		view.renderName()
 	}
 
-	localizeLinks(model, replies)
+	localizeLinks(model)
 	localizeBacklinks(model)
 	postAdded(model)
 
 	const { image } = model
 	if (image) {
-		const should = options.hideThumbs
+		if (options.hideThumbs
 			|| options.workModeToggle
 			|| (image.spoiler && !options.spoilers)
 			|| (image.fileType === fileTypes.gif && options.autogif)
-		if (should) {
+		) {
 			view.renderImage(false)
 		}
 	}
@@ -95,23 +94,26 @@ export function extractPost(
 
 // Add (You) to posts linking to the user's posts. Appends to array of posts,
 // that might need to register a new reply to one of the user's posts.
-function localizeLinks(post: Post, replies: number[]) {
+function localizeLinks(post: Post) {
 	if (!post.links) {
 		return
 	}
-	let el: HTMLElement
+	let el: HTMLElement,
+		isReply = false
 	for (let id of new Set(post.links.map(l => l[0]))) {
 		if (!mine.has(id)) {
 			continue
 		}
+		isReply = true
 
 		// Don't query DOM, until we know we need it
 		if (!el) {
 			el = post.view.el.querySelector("blockquote")
 		}
 		addYous(id, el)
-
-		replies.push(post.id)
+	}
+	if (isReply) {
+		notifyAboutReply(post)
 	}
 }
 

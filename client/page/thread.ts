@@ -1,12 +1,12 @@
 import { ThreadData } from "../common"
 import { escape } from '../util'
-import { setTitle, notifyAboutReply } from "../ui"
+import { setTitle } from "../ui"
 import {
     extractConfigs, isBanned, extractPost, localizeThreads, reparseOpenPosts,
     extractPageData,
 } from "./common"
 import { findSyncwatches } from "../posts"
-import { config, posts as allPosts } from "../state"
+import { config } from "../state"
 
 const counters = document.getElementById("thread-post-counters"),
     threads = document.getElementById("threads")
@@ -22,13 +22,12 @@ export default function () {
     extractConfigs()
 
     const { threads: data, backlinks } = extractPageData<ThreadData>(),
-        { posts } = data,
-        replies: number[] = []
+        { posts } = data
 
-    delete data.posts
+    data.posts = null
     setPostCount(data.postCtr, data.imageCtr, data.bumpTime)
 
-    extractPost(data, data.id, data.board, replies, backlinks)
+    extractPost(data, data.id, data.board, backlinks)
     if (data.image) {
         data.image.large = true
     }
@@ -36,17 +35,11 @@ export default function () {
     setThreadTitle(data)
 
     for (let post of posts) {
-        extractPost(post, data.id, data.board, replies, backlinks)
+        extractPost(post, data.id, data.board, backlinks)
     }
     localizeThreads()
     reparseOpenPosts()
     findSyncwatches(threads)
-    for (let id of replies) {
-        const post = allPosts.get(id)
-        if (post) {
-            notifyAboutReply(post)
-        }
-    }
 }
 
 // Set thread title to tab

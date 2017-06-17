@@ -3,7 +3,7 @@ import lang from '../lang'
 import { page, posts, loadFromDB } from '../state'
 import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
-import { setTitle, notifyAboutReply } from "../ui"
+import { setTitle } from "../ui"
 import {
 	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts,
 	extractPageData,
@@ -53,7 +53,7 @@ async function extractCatalogModels() {
 		if (t.image) {
 			t.image.large = true
 		}
-		extractPost(t, t.id, t.board, null, backlinks)
+		extractPost(t, t.id, t.board, backlinks)
 	}
 }
 
@@ -62,13 +62,12 @@ async function loadIDStores(threads: ThreadData[]) {
 }
 
 async function extractThreads() {
-	const { threads, backlinks } = extractPageData<ThreadData[]>(),
-		replies: number[] = []
+	const { threads, backlinks } = extractPageData<ThreadData[]>()
 	await loadIDStores(threads)
 	for (let thread of threads) {
 		const { posts } = thread
 		delete thread.posts
-		if (extractPost(thread, thread.id, thread.board, replies, backlinks)) {
+		if (extractPost(thread, thread.id, thread.board, backlinks)) {
 			document.querySelector(`section[data-id="${thread.id}"]`).remove()
 			continue
 		}
@@ -76,17 +75,11 @@ async function extractThreads() {
 			thread.image.large = true
 		}
 		for (let post of posts) {
-			extractPost(post, thread.id, thread.board, replies, backlinks)
+			extractPost(post, thread.id, thread.board, backlinks)
 		}
 	}
 	localizeThreads()
 	reparseOpenPosts()
-	for (let id of replies) {
-		const post = posts.get(id)
-		if (post) {
-			notifyAboutReply(post)
-		}
-	}
 }
 
 // Apply client-side modifications to a board page's HTML
