@@ -20,7 +20,7 @@ create table sessions (
 );
 
 create table bans (
-	board varchar(3) not null,
+	board text not null,
 	ip inet not null,
 	forPost bigint default 0,
 	by varchar(20) not null,
@@ -31,7 +31,7 @@ create table bans (
 
 create table mod_log (
 	type smallint not null,
-	board varchar(3) not null,
+	board text not null,
 	id bigint not null,
 	by varchar(20) not null,
 	created timestamp default (now() at time zone 'utc')
@@ -65,7 +65,7 @@ create table boards (
 	textOnly boolean not null,
 	forcedAnon boolean not null,
 	disableRobots boolean not null default false,
-	id varchar(3) primary key,
+	id text primary key,
 	created timestamp not null,
 	title varchar(100) not null,
 	notice varchar(500) not null,
@@ -74,7 +74,7 @@ create table boards (
 );
 
 create table staff (
-	board varchar(3) not null references boards on delete cascade,
+	board text not null references boards on delete cascade,
 	account varchar(20) not null references accounts on delete cascade,
 	position varchar(50) not null
 );
@@ -82,7 +82,7 @@ create index staff_board on staff (board);
 create index staff_account on staff (account);
 
 create table banners (
-	board varchar(3) not null references boards on delete cascade,
+	board text not null references boards on delete cascade,
 	id smallint not null,
 	data bytea not null,
 	mime text not null
@@ -92,7 +92,7 @@ create sequence post_id;
 
 create table threads (
 	sticky boolean default false,
-	board varchar(3) not null references boards on delete cascade,
+	board text not null references boards on delete cascade,
 	id bigint primary key,
 	postCtr bigint not null,
 	imageCtr bigint not null,
@@ -114,7 +114,7 @@ create table posts (
 	id bigint primary key,
 	op bigint not null references threads on delete cascade,
 	time bigint not null,
-	board varchar(3) not null,
+	board text not null,
 	trip char(10),
 	auth varchar(20),
 	SHA1 char(40) references images on delete set null,

@@ -26,7 +26,7 @@
 		],
 		"boardName": [
 			"Názov dosky",
-			"Názov novej dosky. Môže obsahovať maximálne 3 malé latinské písmena alebo čísla."
+			"Názov novej dosky. Môže obsahovať maximálne 10 malé latinské písmena alebo čísla."
 		],
 		"boardTitle": [
 			"Titúlok dosky",

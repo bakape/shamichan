@@ -173,6 +173,31 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		q := [...]string{
+			`alter table boards
+				alter column id type text`,
+			`alter table bans
+				alter column board type text`,
+			`alter table mod_log
+				alter column board type text`,
+			`alter table staff
+				alter column board type text`,
+			`alter table banners
+				alter column board type text`,
+			`alter table threads
+				alter column board type text`,
+			`alter table posts
+				alter column board type text`,
+		}
+		for _, q := range q {
+			_, err = tx.Exec(q)
+			if err != nil {
+				return
+			}
+		}
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both

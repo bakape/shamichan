@@ -3,7 +3,7 @@ insert into bans (ip, board, forPost, reason, by, expires)
 	on conflict do nothing
 	returning log_moderation(
 		0::smallint,
-		$2::varchar(3),
+		$2::text,
 		$3::bigint,
 		$5::varchar(20)
 	)

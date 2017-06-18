@@ -26,7 +26,7 @@
 		],
 		"boardName": [
 			"Board name",
-			"Name of the new board. Can contain up to 3 lowercase Latin letters or numbers."
+			"Name of the new board. Can contain up to 10 lowercase Latin letters or numbers."
 		],
 		"boardTitle": [
 			"Board title",

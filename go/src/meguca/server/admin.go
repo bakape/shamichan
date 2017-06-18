@@ -42,7 +42,7 @@ var (
 	errNoReason         = errors.New("no reason provided")
 	errNoDuration       = errors.New("no ban duration provided")
 
-	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,3}$`)
+	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,10}$`)
 )
 
 type boardActionRequest struct {
@@ -251,12 +251,25 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Returns, if the board name, matches a reserved ID
+	isReserved := func() bool {
+		for _, s := range [...]string{"html", "json", "api", "assets", "all"} {
+			if msg.ID == s {
+				return true
+			}
+		}
+		return false
+	}
+
 	// Validate request data
 	var err error
 	switch {
 	case creds.UserID != "admin" && config.Get().DisableUserBoards:
 		err = errAccessDenied
-	case !boardNameValidation.MatchString(msg.ID):
+	case !boardNameValidation.MatchString(msg.ID),
+		msg.ID == "",
+		len(msg.ID) > common.MaxLenBoardID,
+		isReserved():
 		err = errInvalidBoardName
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
