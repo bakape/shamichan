@@ -16,7 +16,7 @@ class OwnedBoardSelection extends View<null> {
 	}
 
 	private async render() {
-		const res = await uncachedGET(`/forms/ownedBoards/${loginID()}`)
+		const res = await uncachedGET(`/html/owned-boards/${loginID()}`)
 		switch (res.status) {
 			case 200:
 				this.el.append(makeFrag(await res.text()))
@@ -65,7 +65,7 @@ export class BoardConfigForm extends SelectedBoardForm {
 
 	// Render the configuration input elements
 	public async renderNext(board: string) {
-		const res = await postJSON(`/forms/configureBoard/${board}`, null)
+		const res = await postJSON(`/html/configure-board/${board}`, null)
 		switch (res.status) {
 			case 200:
 				const frag = makeFrag(await res.text())
@@ -82,7 +82,7 @@ export class BoardConfigForm extends SelectedBoardForm {
 
 	// Extract form data and send a request to apply the new configs
 	protected send() {
-		this.postResponse(`/admin/configureBoard/${this.board}`, req =>
+		this.postResponse(`/api/configure-board/${this.board}`, req =>
 			this.extractForm(req))
 	}
 }
@@ -93,11 +93,11 @@ export class BoardDeletionForm extends SelectedBoardForm {
 	}
 
 	public renderNext(board: string) {
-		this.renderPublicForm("/forms/captcha")
+		this.renderPublicForm("/html/captcha")
 	}
 
 	protected send() {
-		this.postResponse("/admin/deleteBoard", req =>
+		this.postResponse("/api/delete-board", req =>
 			req["board"] = this.board)
 	}
 }
@@ -108,11 +108,11 @@ export class StaffAssignmentForm extends SelectedBoardForm {
 	}
 
 	public renderNext(board: string) {
-		this.renderPublicForm(`/forms/assignStaff/${board}`)
+		this.renderPublicForm(`/html/assign-staff/${board}`)
 	}
 
 	protected send() {
-		this.postResponse("/admin/assignStaff", req => {
+		this.postResponse("/api/assign-staff", req => {
 			req["board"] = this.board
 			this.extractForm(req)
 		})
@@ -127,7 +127,7 @@ export class BannerForm extends SelectedBoardForm {
 	public el: HTMLFormElement
 
 	public renderNext(board: string) {
-		this.renderPublicForm("/forms/setBanners")
+		this.renderPublicForm("/html/set-banners")
 	}
 
 	protected async send() {
@@ -140,7 +140,7 @@ export class BannerForm extends SelectedBoardForm {
 			}
 		}
 
-		this.handlePostResponse(await fetch("/admin/setBanners", {
+		this.handlePostResponse(await fetch("/api/set-banners", {
 			method: "POST",
 			credentials: "include",
 			body: data,
@@ -152,11 +152,11 @@ export class BannerForm extends SelectedBoardForm {
 export class BoardCreationForm extends AccountForm {
 	constructor() {
 		super({ tag: "form" })
-		this.renderPublicForm("/forms/createBoard")
+		this.renderPublicForm("/html/create-board")
 	}
 
 	protected send() {
-		this.postResponse("/admin/createBoard", req => {
+		this.postResponse("/api/create-board", req => {
 			req["id"] = this.inputElement('boardName').value
 			req["title"] = this.inputElement('boardTitle').value
 		})

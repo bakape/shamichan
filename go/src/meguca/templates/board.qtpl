@@ -30,7 +30,7 @@
 					{%s= ln.UI["newThread"] %}
 				</a>
 			</span>
-			<form id="new-thread-form" action="/createThread" method="post" enctype="multipart/form-data" class="hidden">
+			<form id="new-thread-form" action="/api/create-thread" method="post" enctype="multipart/form-data" class="hidden">
 				{% if id == "all" %}
 					<select name="board" required>
 						{% for _, b := range config.GetBoardTitles() %}

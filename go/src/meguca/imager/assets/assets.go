@@ -2,12 +2,11 @@
 package assets
 
 import (
-	"os"
-	"path/filepath"
-
 	"meguca/common"
 	"meguca/config"
 	"meguca/util"
+	"os"
+	"path/filepath"
 )
 
 const fileCreationFlags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
@@ -39,8 +38,18 @@ var (
 
 // GetFilePaths generates file paths of the source file and its thumbnail
 func GetFilePaths(SHA1 string, fileType, thumbType uint8) (paths [2]string) {
-	paths[0] = RelativeSourcePath(fileType, SHA1)
-	paths[1] = relativeThumbPath(thumbType, SHA1)
+	paths[0] = util.ConcatStrings(
+		"/images/src/",
+		SHA1,
+		".",
+		common.Extensions[fileType],
+	)
+	paths[1] = util.ConcatStrings(
+		"/images/thumb/",
+		SHA1,
+		".",
+		common.Extensions[thumbType],
+	)
 	for i := range paths {
 		paths[i] = filepath.FromSlash(paths[i][1:])
 	}
@@ -51,7 +60,7 @@ func GetFilePaths(SHA1 string, fileType, thumbType uint8) (paths [2]string) {
 // RelativeSourcePath returns an file's source path relative to the root path
 func RelativeSourcePath(fileType uint8, SHA1 string) string {
 	return util.ConcatStrings(
-		"/images/src/",
+		"/assets/images/src/",
 		SHA1,
 		".",
 		common.Extensions[fileType],
@@ -60,7 +69,7 @@ func RelativeSourcePath(fileType uint8, SHA1 string) string {
 
 func relativeThumbPath(thumbType uint8, SHA1 string) string {
 	return util.ConcatStrings(
-		"/images/thumb/",
+		"/assets/images/thumb/",
 		SHA1,
 		".",
 		common.Extensions[thumbType],
@@ -87,7 +96,7 @@ func imageRoot() string {
 	if r != "" {
 		return r
 	}
-	return "/images"
+	return "/assets/images"
 }
 
 // ThumbPath returns the path to the thumbnail of an image

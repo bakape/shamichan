@@ -8,7 +8,7 @@
 {% func renderThread(postHTML []byte, id uint64, board string, pos auth.ModerationLevel) %}{% stripspace %}
 	{% code conf := config.GetBoardConfigs(board) %}
 	{% code ln := lang.Get() %}
-	<form id="new-reply-form" action="/createReply" method="post" enctype="multipart/form-data" class="top-margin hidden">
+	<form id="new-reply-form" action="/api/create-reply" method="post" enctype="multipart/form-data" class="top-margin hidden">
 		<input name="board" type="text" value="{%s= board %}" hidden>
 		<input name="op" type="text" value="{%s= strconv.FormatUint(id, 10) %}" hidden>
 		{%= input(sageSpec.wrap(), ln) %}

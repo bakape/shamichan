@@ -96,57 +96,57 @@ func TestPostJSON(t *testing.T) {
 		},
 		{
 			name: "invalid thread board",
-			url:  "/nope/1",
+			url:  "/boards/nope/1",
 			code: 404,
 		},
 		{
 			name: "invalid thread number",
-			url:  "/a/www",
+			url:  "/boards/a/www",
 			code: 404,
 		},
 		{
 			name: "nonexistent thread",
-			url:  "/a/22",
+			url:  "/boards/a/22",
 			code: 404,
 		},
 		{
 			name: "valid thread",
-			url:  "/a/1",
+			url:  "/boards/a/1",
 			code: 200,
 			etag: "W/11",
 		},
 		{
 			name:   "thread etags match",
-			url:    "/a/1",
+			url:    "/boards/a/1",
 			header: "W/11",
 			code:   304,
 		},
 		{
 			name: "invalid board",
-			url:  "/nope/",
+			url:  "/boards/nope/",
 			code: 404,
 		},
 		{
 			name: "valid board",
-			url:  "/a/",
+			url:  "/boards/a/",
 			code: 200,
 			etag: "W/11",
 		},
 		{
 			name:   "board etag matches",
-			url:    "/a/",
+			url:    "/boards/a/",
 			header: "W/11",
 			code:   304,
 		},
 		{
 			name: "all board",
-			url:  "/all/",
+			url:  "/boards/all/",
 			code: 200,
 			etag: "W/11",
 		},
 		{
 			name:   "/all/ board etag matches",
-			url:    "/all/",
+			url:    "/boards/all/",
 			header: "W/11",
 			code:   304,
 		},
@@ -207,7 +207,7 @@ func TestServeBoardConfigs(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newPair("/json/boardConfig/" + c.url)
+			rec, req := newPair("/json/board-config/" + c.url)
 			router.ServeHTTP(rec, req)
 			assertCode(t, rec, c.code)
 			if c.code == 200 {
@@ -242,7 +242,7 @@ func TestServeBoardList(t *testing.T) {
 	}
 ]`)
 
-	rec, req := newPair("/json/boardList")
+	rec, req := newPair("/json/board-list")
 	router.ServeHTTP(rec, req)
 	assertBody(t, rec, std)
 }

@@ -36,8 +36,8 @@ func TestNotBoardOwner(t *testing.T) {
 	writeSampleUser(t)
 
 	paths := [...]string{
-		"/admin/configureBoard/a",
-		"/forms/configureBoard/a",
+		"/api/configure-board/a",
+		"/html/configure-board/a",
 	}
 	for _, p := range paths {
 		t.Run(p, func(t *testing.T) {
@@ -70,7 +70,7 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 	writeSampleUser(t)
 	writeSampleBoardOwner(t)
 
-	rec, req := newJSONPair(t, "/admin/boardConfig/a", nil)
+	rec, req := newJSONPair(t, "/api/board-config/a", nil)
 	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
@@ -104,7 +104,7 @@ func TestBoardConfiguration(t *testing.T) {
 	data := boardConfigSettingRequest{
 		BoardConfigs: conf,
 	}
-	rec, req := newJSONPair(t, "/admin/configureBoard/a", data)
+	rec, req := newJSONPair(t, "/api/configure-board/a", data)
 	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
@@ -239,7 +239,7 @@ func TestValidateBoardCreation(t *testing.T) {
 				ID:    c.id,
 				Title: c.title,
 			}
-			rec, req := newJSONPair(t, "/admin/createBoard", msg)
+			rec, req := newJSONPair(t, "/api/create-board", msg)
 			setLoginCookies(req, sampleLoginCreds)
 			router.ServeHTTP(rec, req)
 
@@ -295,7 +295,7 @@ func TestBoardCreation(t *testing.T) {
 		ID:    id,
 		Title: title,
 	}
-	rec, req := newJSONPair(t, "/admin/createBoard", msg)
+	rec, req := newJSONPair(t, "/api/create-board", msg)
 	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 
@@ -348,7 +348,7 @@ func TestServePrivateServerConfigs(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/admin/config", nil)
+			rec, req := newJSONPair(t, "/api/config", nil)
 			setLoginCookies(req, c.SessionCreds)
 			router.ServeHTTP(rec, req)
 
@@ -380,7 +380,7 @@ func TestServerConfigSetting(t *testing.T) {
 
 	msg := config.Defaults
 	msg.DefaultCSS = "ashita"
-	rec, req := newJSONPair(t, "/admin/configureServer", msg)
+	rec, req := newJSONPair(t, "/api/configure-server", msg)
 	setLoginCookies(req, adminLoginCreds)
 	router.ServeHTTP(rec, req)
 
@@ -401,7 +401,7 @@ func TestDeleteBoard(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleBoardOwner(t)
 
-	rec, req := newJSONPair(t, "/admin/deleteBoard", boardActionRequest{
+	rec, req := newJSONPair(t, "/api/delete-board", boardActionRequest{
 		Board: "a",
 	})
 	setLoginCookies(req, sampleLoginCreds)
@@ -475,13 +475,14 @@ func TestDeletePost(t *testing.T) {
 	}
 
 	data := []uint64{2, 4}
-	rec, req := newJSONPair(t, "/admin/deletePost", data)
+	const url = "/api/delete-post"
+	rec, req := newJSONPair(t, url, data)
 	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
 
 	data = []uint64{3}
-	rec, req = newJSONPair(t, "/admin/deletePost", data)
+	rec, req = newJSONPair(t, url, data)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 403)
 

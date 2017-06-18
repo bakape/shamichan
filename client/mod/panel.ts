@@ -61,18 +61,18 @@ export default class ModPanel extends View<null> {
 		switch (this.getMode()) {
 			case "deletePost":
 				if (checked.length) {
-					await this.postJSON("/admin/deletePost", mapToIDs(models))
+					await this.postJSON("/api/delete-post", mapToIDs(models))
 				}
 				break
 			case "spoilerImage":
 				if (checked.length) {
-					await this.postJSON("/admin/spoilerImage", mapToIDs(models))
+					await this.postJSON("/api/spoiler-image", mapToIDs(models))
 				}
 				break
 			case "deleteImage":
 				if (checked.length) {
 					await this.postJSON(
-						"/admin/deleteImage",
+						"/api/delete-image",
 						mapToIDs(models.filter(m => !!m.image)),
 					)
 				}
@@ -81,12 +81,12 @@ export default class ModPanel extends View<null> {
 				if (checked.length) {
 					const args = HidableForm.forms["ban"].vals()
 					args["ids"] = mapToIDs(models)
-					await this.postJSON("/admin/ban", args)
+					await this.postJSON("/api/ban", args)
 				}
 				break
 			case "notification":
 				const f = HidableForm.forms["notification"]
-				await this.postJSON("/admin/notification", f.vals())
+				await this.postJSON("/api/notification", f.vals())
 				f.clear()
 				break
 		}

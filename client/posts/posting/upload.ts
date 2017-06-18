@@ -67,7 +67,10 @@ export default class UploadForm extends View<Post> {
             r.readAsArrayBuffer(file)
             const { target: { result } } = await load(r) as ArrayBufferLoadEvent,
                 hash = await crypto.subtle.digest("SHA-1", result),
-                [res, err] = await postText("/uploadHash", bufferToHex(hash))
+                [res, err] = await postText(
+                    "/api/upload-hash",
+                    bufferToHex(hash),
+                )
             if (err) {
                 this.isUploading = false
                 throw err
@@ -106,7 +109,7 @@ export default class UploadForm extends View<Post> {
 
         // Not using fetch, because no ProgressEvent support
         this.xhr = new XMLHttpRequest()
-        this.xhr.open("POST", "/upload")
+        this.xhr.open("POST", "/api/upload")
         this.xhr.upload.onprogress = e =>
             this.renderProgress(e)
         this.xhr.send(formData)

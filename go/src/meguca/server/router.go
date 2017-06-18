@@ -90,87 +90,80 @@ func createRouter() http.Handler {
 	r.GET("/:board/:thread", threadHTML)
 	r.GET("/all/:id", crossRedirect)
 
-	// API for retrieving various localized HTML forms
-	forms := r.NewGroup("/forms")
-	forms.GET("/boardNavigation", boardNavigation)
-	forms.GET("/ownedBoards/:userID", ownedBoardSelection)
-	forms.GET("/createBoard", boardCreationForm)
-	forms.GET("/changePassword", changePasswordForm)
-	forms.GET("/captcha", renderCaptcha)
-	forms.POST("/configureBoard/:board", boardConfigurationForm)
-	forms.POST("/configureServer", serverConfigurationForm)
-	forms.GET("/assignStaff/:board", staffAssignmentForm)
-	forms.GET("/setBanners", bannerSettingForm)
+	html := r.NewGroup("/html")
+	html.GET("/board-navigation", boardNavigation)
+	html.GET("/owned-boards/:userID", ownedBoardSelection)
+	html.GET("/create-board", boardCreationForm)
+	html.GET("/change-password", changePasswordForm)
+	html.GET("/captcha", renderCaptcha)
+	html.POST("/configure-board/:board", boardConfigurationForm)
+	html.POST("/configure-server", serverConfigurationForm)
+	html.GET("/assign-staff/:board", staffAssignmentForm)
+	html.GET("/set-banners", bannerSettingForm)
+	html.GET("/bans/:board", banList)
+	html.GET("/mod-log/:board", modLog)
 
 	// JSON API
 	json := r.NewGroup("/json")
-	json.GET("/:board/", func(w http.ResponseWriter, r *http.Request) {
+	boards := json.NewGroup("/boards")
+	boards.GET("/:board/", func(w http.ResponseWriter, r *http.Request) {
 		boardJSON(w, r, false)
 	})
-	json.GET("/:board/catalog", func(w http.ResponseWriter, r *http.Request) {
+	boards.GET("/:board/catalog", func(w http.ResponseWriter, r *http.Request) {
 		boardJSON(w, r, true)
 	})
-	json.GET("/:board/:thread", threadJSON)
+	boards.GET("/:board/:thread", threadJSON)
 	json.GET("/post/:post", servePost)
 	json.GET("/config", serveConfigs)
 	json.GET("/extensions", serveExtensionMap)
-	json.GET("/boardConfig/:board", serveBoardConfigs)
-	json.GET("/boardList", serveBoardList)
+	json.GET("/board-config/:board", serveBoardConfigs)
+	json.GET("/board-list", serveBoardList)
 
-	// Public POST API
-	r.POST("/createThread", createThread)
-	r.POST("/createReply", createReply)
-
-	// Administration JSON API for logged in users
-	admin := r.NewGroup("/admin")
-	admin.POST("/register", register)
-	admin.POST("/login", login)
-	admin.POST("/logout", logout)
-	admin.POST("/logoutAll", logoutAll)
-	admin.POST("/changePassword", changePassword)
-	admin.POST("/boardConfig/:board", servePrivateBoardConfigs)
-	admin.POST("/configureBoard/:board", configureBoard)
-	admin.POST("/config", servePrivateServerConfigs)
-	admin.POST("/configureServer", configureServer)
-	admin.POST("/createBoard", createBoard)
-	admin.POST("/deleteBoard", deleteBoard)
-	admin.POST("/deletePost", deletePost)
-	admin.POST("/deleteImage", deleteImage)
-	admin.POST("/spoilerImage", modSpoilerImage)
-	admin.POST("/ban", ban)
-	admin.POST("/notification", sendNotification)
-	admin.POST("/assignStaff", assignStaff)
-	admin.POST("/sameIP/:id", getSameIPPosts)
-	admin.POST("/sticky", setThreadSticky)
-	admin.POST("/unban/:board", unban)
-	admin.POST("/setBanners", setBanners)
-
-	// Available to both logged-in users and publicly with slight alterations
-	r.GET("/bans/:board", banList)
-	r.GET("/mod-log/:board", modLog)
+	// Internal API
+	api := r.NewGroup("/api")
+	api.GET("/socket", websockets.Handler)
+	api.POST("/upload", imager.NewImageUpload)
+	api.POST("/upload-hash", imager.UploadImageHash)
+	api.POST("/create-thread", createThread)
+	api.POST("/create-reply", createReply)
+	api.POST("/register", register)
+	api.POST("/login", login)
+	api.POST("/logout", logout)
+	api.POST("/logout-all", logoutAll)
+	api.POST("/change-password", changePassword)
+	api.POST("/board-config/:board", servePrivateBoardConfigs)
+	api.POST("/configure-board/:board", configureBoard)
+	api.POST("/config", servePrivateServerConfigs)
+	api.POST("/configure-server", configureServer)
+	api.POST("/create-board", createBoard)
+	api.POST("/delete-board", deleteBoard)
+	api.POST("/delete-post", deletePost)
+	api.POST("/delete-image", deleteImage)
+	api.POST("/spoiler-image", modSpoilerImage)
+	api.POST("/ban", ban)
+	api.POST("/notification", sendNotification)
+	api.POST("/assign-staff", assignStaff)
+	api.POST("/same-IP/:id", getSameIPPosts)
+	api.POST("/sticky", setThreadSticky)
+	api.POST("/unban/:board", unban)
+	api.POST("/set-banners", setBanners)
 
 	// Captcha API
-	captcha := r.NewGroup("/captcha")
+	captcha := api.NewGroup("/captcha")
 	captcha.GET("/new", auth.NewCaptchaID)
 	captcha.GET("/image/*path", auth.ServeCaptcha)
 
 	// Noscript captcha API
-	NSCaptcha := captcha.NewGroup("/noscript")
+	NSCaptcha := api.NewGroup("/noscript-captcha")
 	NSCaptcha.GET("/load", noscriptCaptchaLink)
 	NSCaptcha.GET("/new", noscriptCaptcha)
 
 	// Assets
-	r.GET("/assets/banners/:board/:id", serveBanner)
-	r.GET("/assets/*path", serveAssets)
-	r.GET("/images/*path", serveImages)
+	assets := r.NewGroup("/assets")
+	assets.GET("/banners/:board/:id", serveBanner)
+	assets.GET("/*path", serveAssets)
+	assets.GET("/images/*path", serveImages)
 	r.GET("/worker.js", serveWorker)
-
-	// Websocket API
-	r.GET("/socket", websockets.Handler)
-
-	// File upload
-	r.POST("/upload", imager.NewImageUpload)
-	r.POST("/uploadHash", imager.UploadImageHash)
 
 	h := http.Handler(r)
 	if enableGzip {
