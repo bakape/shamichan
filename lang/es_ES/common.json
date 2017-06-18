@@ -89,7 +89,10 @@
 		"uploadProgress": "uploaded...",
 		"googleSong": "Clock para googlear la cancion",
 		"last": "Últimos",
-		"postsImages": "Posts/Images/TTL"
+		"postsImages": "Posts/Images/TTL",
+		"finished": "Terminado",
+		"importDone": "Import successful. The page will now reload.",
+		"importCorrupt": "Import failed. File corrupt"
 	},
 	"sync": [
 		"disconnected",
@@ -97,16 +100,5 @@
 		"syncing",
 		"synced",
 		"desynced"
-	],
-	"syncwatch": {
-		"starting": "Syncwatch empezando end 10 segundos",
-		"finished": "Terminado"
-	},
-	"opts": {
-		"importConfig": {
-			"done": "Import successfull. The page will now reload.",
-			"corrupt": "Import failed. File corrupt"
-		},
-		"langApplied": "Opciones de idioma applicadas. La pagina sera recargada ahora."
-	}
+	]
 }

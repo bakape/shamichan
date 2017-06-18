@@ -13,7 +13,7 @@ export class ServerConfigForm extends AccountForm {
 
 	// Request current configuration and render the panel
 	protected async render() {
-		const res = await fetch("/forms/configureServer", {
+		const res = await fetch("/html/configure-server", {
 			method: "POST",
 			credentials: "include",
 		})
@@ -32,7 +32,7 @@ export class ServerConfigForm extends AccountForm {
 
 	// Extract and send the configuration struct from the form
 	protected send() {
-		this.postResponse("/admin/configureServer", req =>
+		this.postResponse("/api/configure-server", req =>
 			this.extractForm(req))
 	}
 }

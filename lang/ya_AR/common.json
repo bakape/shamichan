@@ -89,7 +89,10 @@
 		"uploadProgress": "uploaded...",
 		"googleSong": "Consult the Oracle",
 		"last": "Last",
-		"postsImages": "Missives/Portraits/TTL"
+		"postsImages": "Missives/Portraits/TTL",
+		"finished": "Yer picture show is finished",
+		"importDone": "Import successful. The page will now reload.",
+		"importCorrupt": "Import failed. File corrupt"
 	},
 	"sync": [
 		"disconnected",
@@ -97,16 +100,5 @@
 		"syncing",
 		"synced",
 		"desynced"
-	],
-	"syncwatch": {
-		"starting": "Yer picture show starts in 10 seconds",
-		"finished": "Yer picture show is finished"
-	},
-	"opts": {
-		"importConfig": {
-			"done": "Done",
-			"corrupt": "Import failed. File corrupt"
-		},
-		"langApplied": "Yer language ha' been changed, the page will now reload."
-	}
+	]
 }

@@ -32,8 +32,8 @@ func TestImageServer(t *testing.T) {
 	t.Parallel()
 
 	const (
-		found    = "/images/src/tis_life.gif"
-		notFound = "/images/src/nobody_here.gif"
+		found    = "/assets/images/src/tis_life.gif"
+		notFound = "/assets/images/src/nobody_here.gif"
 	)
 
 	// Successful first serve

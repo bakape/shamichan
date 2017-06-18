@@ -4,8 +4,9 @@
 {% import "meguca/lang" %}
 {% import "meguca/auth" %}
 
-{% func renderIndex(pos auth.ModerationLevel, ln lang.Pack) %}{% stripspace %}
+{% func renderIndex(pos auth.ModerationLevel) %}{% stripspace %}
 	{% code conf := config.Get() %}
+	{% code ln := lang.Get() %}
 	{% code confJSON, confHash := config.GetClient() %}
 	{% code boards := config.GetBoards() %}
 	<!doctype html>
@@ -112,11 +113,11 @@
 		</template>
 		<template name="post-controls">
 			<form class="antispam-captcha">
-				{%= captcha(ln.UI) %}
-				{%= submit(true, ln.UI) %}
+				{%= captcha() %}
+				{%= submit(true) %}
 			</form>
 			<div id="post-controls">
-				<input name="cancel" type="button" value="{%s= ln.UI["cancel"] %}">
+				{%= cancel() %}
 				<input name="done" type="button" value="{%s= ln.UI["done"] %}" hidden>
 				<span class="upload-container" hidden>
 					<input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip">
@@ -243,7 +244,7 @@
 						{% code fields[0] = staffTitleSpec %}
 						{% code fields = append(fields, specs["identity"]...) %}
 					{% endif %}
-					{%= table(fields, ln) %}
+					{%= table(fields) %}
 				</div>
 				{% comment %}
 					Account login and registration
@@ -256,16 +257,16 @@
 							<div class="tab-cont">
 								<div class="tab-sel" data-id="0">
 									<form id="login-form">
-										{%= table(specs["login"], ln) %}
-										{%= captcha(ln.UI) %}
-										{%= submit(false, ln.UI) %}
+										{%= table(specs["login"]) %}
+										{%= captcha() %}
+										{%= submit(false) %}
 									</form>
 								</div>
 								<div data-id="1">
 									<form id="registration-form">
-										{%= table(specs["register"], ln) %}
-										{%= captcha(ln.UI) %}
-										{%= submit(false, ln.UI) %}
+										{%= table(specs["register"]) %}
+										{%= captcha() %}
+										{%= submit(false) %}
 									</form>
 								</div>
 							</div>
@@ -362,7 +363,7 @@
 								{% endfor %}
 							</select>
 							<input type="button" value="{%s= ln.UI["clear"] %}" name="clear">
-							{%= submit(false, ln.UI) %}
+							{%= submit(false) %}
 						</form>
 					</div>
 				{% endif %}
@@ -395,6 +396,10 @@
 			Dynamic module loader
 		{% endcomment %}
 		<script src="/assets/js/vendor/almond.js"></script>
+		<script id="lang-data" type="application/json">
+			{% code buf, _ := json.Marshal(ln.Common) %}
+			{%z= buf %}
+		</script>
 		<script src="/assets/js/scripts/loader.js"></script>
 	</body>
 {% endstripspace %}{% endfunc %}

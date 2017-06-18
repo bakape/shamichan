@@ -137,7 +137,7 @@ function newTransaction(store: string, write: boolean): IDBObjectStore {
 
 // Read the contents of a postStore for specific threads into an array
 export function readIDs(store: string, ...ops: number[]): Promise<number[]> {
-	if (isCuck) {
+	if (isCuck || !ops.length) {
 		return fakePromise([])
 	}
 	ops.sort((a, b) =>

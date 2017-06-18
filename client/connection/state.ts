@@ -4,8 +4,9 @@ import { message, handlers } from "./messages"
 import { renderStatus } from "./ui"
 import { synchronise } from "./synchronization"
 
-const path = (location.protocol === 'https:' ? 'wss' : 'ws')
-	+ `://${location.host}/socket`
+const path =
+	(location.protocol === 'https:' ? 'wss' : 'ws')
+	+ `://${location.host}/api/socket`
 
 let socket: WebSocket,
 	attempts: number,

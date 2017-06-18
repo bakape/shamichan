@@ -44,7 +44,7 @@ const actions: { [key: string]: ItemSpec } = {
 			if (!posts) {
 				return
 			}
-			const res = await postJSON("/admin/deletePost", posts.map(m =>
+			const res = await postJSON("/api/delete-post", posts.map(m =>
 				m.id))
 			if (res.status !== 200) {
 				alert(await res.text())
@@ -58,7 +58,7 @@ const actions: { [key: string]: ItemSpec } = {
 		},
 		// Toggle sticky flag on a thread
 		async handler(m) {
-			const res = await postJSON("/admin/sticky", {
+			const res = await postJSON("/api/sticky", {
 				sticky: !m.sticky,
 				id: m.id,
 			})
@@ -141,7 +141,7 @@ function openMenu(e: Event) {
 
 // Fetch posts with the same IP on this board
 async function getSameIPPosts(m: Post): Promise<PostData[]> {
-	const res = await postJSON(`/admin/sameIP/${m.id}`, null)
+	const res = await postJSON(`/api/same-IP/${m.id}`, null)
 	if (res.status !== 200) {
 		alert(await res.text())
 		return

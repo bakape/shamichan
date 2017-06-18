@@ -6,18 +6,16 @@ omitted.
 
 | URL | Type | Request payload | Response payload | Description |
 |---|---|---|---|---|
-| /json/all/?page=N | GET | - | [][Thread](#thread) | Returns all threads from all boards, complete with the last 5 replies, as an array of [Thread](#thread). The response is paginated and N specifies the page. N defaults to 0. |
-| /json/:board/?page=N | GET | - | [][Thread](#thread) | Returns threads from a board, specified by the `:board` parameter, complete with the last 5 replies, as an array of [Thread](#thread). The response is paginated and N specifies the page. N defaults to 0. |
-| /json/all/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
-| /json/:board/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
-| /json/:board/:thread | GET | - | [Thread](#thread) | Returns a specific thread on a specific board. Accepts the `last=N` query parameter. `N` specifies the maximum amount of replies to return and can be either 5 or 100. |
+| /json/boards/all/?page=N | GET | - | [][Thread](#thread) | Returns all threads from all boards, complete with the last 5 replies, as an array of [Thread](#thread). The response is paginated and N specifies the page. N defaults to 0. |
+| /json/boards/:board/?page=N | GET | - | [][Thread](#thread) | Returns threads from a board, specified by the `:board` parameter, complete with the last 5 replies, as an array of [Thread](#thread). The response is paginated and N specifies the page. N defaults to 0. |
+| /json/boards/all/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
+| /json/boards/:board/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
+| /json/boards/:board/:thread | GET | - | [Thread](#thread) | Returns a specific thread on a specific board. Accepts the `last=N` query parameter. `N` specifies the maximum amount of replies to return and can be either 5 or 100. |
 | /json/post/:post | GET | - | [StandalonePost](#standalonepost) | Returns a specific post located in any thread or board by its numeric ID. |
 | /json/config | GET | - | [Config](#config) | Returns the current public server configuration |
-| /json/boardConfig/:board | GET | - | [BoardConfig](#boardconfig) | Returns public board-specific configurations for the specific board |
+| /json/board-config/:board | GET | - | [BoardConfig](#boardconfig) | Returns public board-specific configurations for the specific board |
 | /json/extensions | GET | - | [fileTypes](#filetypes) | Returns a map of the current filetype enums to their canonical extensions |
-| /json/boardList | GET | - | [][BoardTitle](#boardtitle) | Returns an array of the currently created boards and their assigned titles |
-| /uploadHash | POST | string{40} | string | Files can be inserted into a post without uploading the actual file, if it already exists on the server. To do this upload the hex-encoded SHA1 hash of the file you wish to insert into the post. If the file exists on the server a upload token is returned, otherwise response body is empty. Use this token in an [ImageRequest](#imagerequest). |
-| /upload | POST | form{"image": File} | string | Uploads a file in a form under the "image" field. Returns a token to be used in [ImageRequest](#imagerequest) for allocating images to posts. |
+| /json/board-list | GET | - | [][BoardTitle](#boardtitle) | Returns an array of the currently created boards and their assigned titles |
 
 ## Post
 Generic post object

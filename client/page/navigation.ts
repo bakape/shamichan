@@ -88,7 +88,7 @@ class BoardSelectionPanel extends View<null> {
 
 	// Fetch the board list from the server and render the selection form
 	private async render() {
-		const r = await uncachedGET("/forms/boardNavigation"),
+		const r = await uncachedGET("/html/board-navigation"),
 			text = await r.text()
 		if (r.status !== 200) {
 			throw text

@@ -185,7 +185,7 @@ func TestChangePassword(t *testing.T) {
 				Old: c.old,
 				New: c.new,
 			}
-			rec, req := newJSONPair(t, "/admin/changePassword", msg)
+			rec, req := newJSONPair(t, "/api/change-password", msg)
 			setLoginCookies(req, sampleLoginCreds)
 
 			router.ServeHTTP(rec, req)
@@ -258,7 +258,7 @@ func TestRegistrationValidations(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			rec, req := newJSONPair(t, "/admin/register", loginCreds{
+			rec, req := newJSONPair(t, "/api/register", loginCreds{
 				ID:       c.id,
 				Password: c.password,
 			})
@@ -347,7 +347,7 @@ func TestLogin(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/admin/login", loginCreds{
+			rec, req := newJSONPair(t, "/api/login", loginCreds{
 				ID:       c.id,
 				Password: c.password,
 			})
@@ -388,7 +388,7 @@ func TestLogout(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newJSONPair(t, "/admin/logout", nil)
+			rec, req := newJSONPair(t, "/api/logout", nil)
 			setLoginCookies(req, auth.SessionCreds{
 				UserID:  id,
 				Session: c.token,
@@ -429,7 +429,7 @@ func TestLogoutAll(t *testing.T) {
 	assertTableClear(t, "accounts")
 	id, tokens := writeSampleSessions(t)
 
-	rec, req := newJSONPair(t, "/admin/logoutAll", nil)
+	rec, req := newJSONPair(t, "/api/logout-all", nil)
 	setLoginCookies(req, auth.SessionCreds{
 		UserID:  id,
 		Session: tokens[0],

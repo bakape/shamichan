@@ -42,9 +42,9 @@ class AccountPanel extends TabbedModal {
 
 		this.onClick({
 			'#logout': () =>
-				logout("/admin/logout"),
+				logout("/api/logout"),
 			"#logoutAll": () =>
-				logout("/admin/logoutAll"),
+				logout("/api/logout-all"),
 			"#changePassword": this.loadConditional(PasswordChangeForm),
 			"#configureServer": this.loadConditional(ServerConfigForm),
 			"#createBoard": this.loadConditional(BoardCreationForm),
@@ -123,7 +123,7 @@ class LoginForm extends FormView {
 			el: document.getElementById(id),
 			lazyCaptcha: true,
 		})
-		this.url = "/admin/" + url
+		this.url = "/api/" + url
 	}
 
 	// Extract and send login ID and password and captcha (if any) from a form

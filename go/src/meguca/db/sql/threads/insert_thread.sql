@@ -4,7 +4,7 @@ select insert_thread(
 	$3::bool,
 	$4::bool,
 	$5::bigint,
-	$6::varchar(3),
+	$6::text,
 	$7::bigint,
 	$8::bigint,
 	$9::varchar(2000),

@@ -32,7 +32,7 @@ func imageName(fileType uint8, name string) string {
 
 // Renders the post creation time field
 func formatTime(sec int64) string {
-	ln := lang.Packs["en_GB"].Common.Time
+	ln := lang.Get().Common.Time
 
 	t := time.Unix(sec, 0)
 	year, m, day := t.Date()

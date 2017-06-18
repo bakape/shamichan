@@ -197,7 +197,7 @@ export default class ImageHandler extends View<Post> {
 		const ext = fileTypes[data.fileType],
 			name = `${escape(data.name)}.${ext}`
 		setAttrs(el.lastElementChild, {
-			href: `/images/src/${data.SHA1}.${ext}`,
+			href: `/assets/images/src/${data.SHA1}.${ext}`,
 			download: name,
 		})
 		link.innerHTML = name
@@ -246,7 +246,7 @@ export default class ImageHandler extends View<Post> {
 				root = "thumb"
 				type = thumbType
 		}
-		const s = `/images/${root}/${SHA1}.${fileTypes[type]}`
+		const s = `/assets/images/${root}/${SHA1}.${fileTypes[type]}`
 		return encodeURI(location.origin + s)
 	}
 
@@ -404,7 +404,7 @@ export default class ImageHandler extends View<Post> {
 }
 
 function imageRoot(): string {
-	return config.imageRootOverride || "/images"
+	return config.imageRootOverride || "/assets/images"
 }
 
 // Get the thumbnail path of an image, accounting for not thumbnail of specific

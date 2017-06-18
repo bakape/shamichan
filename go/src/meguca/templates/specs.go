@@ -134,7 +134,7 @@ var specs = map[string][]inputSpec{
 			ID:        "boardName",
 			Type:      _string,
 			Required:  true,
-			Pattern:   "^[a-z0-9]{1,3}$",
+			Pattern:   "^[a-z0-9]{1,10}$",
 			MaxLength: common.MaxLenBoardID,
 		},
 		{
@@ -241,11 +241,6 @@ var specs = map[string][]inputSpec{
 // Specs of option inputs grouped by tab
 var optionSpecs = [...][]inputSpec{
 	{
-		{
-			ID:      "lang",
-			Type:    _select,
-			Options: common.Langs,
-		},
 		{ID: "imageHover"},
 		{ID: "webmHover"},
 		{ID: "notification"},

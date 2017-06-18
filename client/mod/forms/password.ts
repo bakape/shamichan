@@ -5,12 +5,12 @@ import { validatePasswordMatch } from "../common"
 export class PasswordChangeForm extends AccountForm {
 	constructor() {
 		super({ tag: "form" })
-		this.renderPublicForm("/forms/changePassword").then(() =>
+		this.renderPublicForm("/html/change-password").then(() =>
 			validatePasswordMatch(this.el, "newPassword", "repeat"))
 	}
 
 	protected send() {
-		this.postResponse("/admin/changePassword", req => {
+		this.postResponse("/html/change-password", req => {
 			req["old"] = this.inputElement("oldPassword").value
 			req["new"] = this.inputElement("newPassword").value
 		})

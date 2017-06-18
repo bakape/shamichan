@@ -165,26 +165,13 @@
 
 	var head = document.getElementsByTagName('head')[0]
 
-	// Load appropriate language pack
-	scriptCount++
-	var xhr = new XMLHttpRequest()
-	var langPath = '/assets/lang/'
-		+ (localStorage.lang || config.defaultLang)
-		+ '/common.json'
-	xhr.open('GET', langPath)
-	xhr.responseType = 'json'
-	xhr.onload = function () {
-		if (this.status !== 200) {
-			throw new Error("Error fetching language pack: " + this.status)
+	if (polyfills.length) {
+		for (var i = 0; i < polyfills.length; i++) {
+			scriptCount++
+			loadScript(polyfills[i]).onload = checkAllLoaded
 		}
-		window.lang = this.response
-		checkAllLoaded()
-	}
-	xhr.send()
-
-	for (var i = 0; i < polyfills.length; i++) {
-		scriptCount++
-		loadScript(polyfills[i]).onload = checkAllLoaded
+	} else {
+		loadClient()
 	}
 
 	// Check for browser compatibility by trying to detect some ES6 features

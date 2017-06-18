@@ -26,7 +26,7 @@
 		],
 		"boardName": [
 			"Nazwa działu",
-			"Nazwa nowego działu. Może zawierać do trzech małych liter łacińskich i liczb."
+			"Nazwa nowego działu. Może zawierać do 10 małych liter łacińskich i liczb."
 		],
 		"boardTitle": [
 			"Tytuł działu",
@@ -368,6 +368,7 @@
 		"deleteImage": "Delete image",
 		"deletePost": "Delete post",
 		"done": "Importowanie zakończone sukcesem. Strona zostanie teraz odświeżona",
+		"deleteBoard": "Delete board",
 		"expires": "Expires",
 		"feedback": "Kontakt",
 		"global": "Global",

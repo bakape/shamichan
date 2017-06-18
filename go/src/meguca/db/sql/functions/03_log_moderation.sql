@@ -1,6 +1,6 @@
 create or replace function log_moderation(
 	type smallint,
-	board varchar(3),
+	board text,
 	id bigint,
 	by varchar(20)
 ) returns void as $$

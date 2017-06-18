@@ -133,7 +133,7 @@ func TestOwnedBoardSelection(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			rec, req := newPair("/forms/ownedBoards/" + c.id)
+			rec, req := newPair("/html/owned-boards/" + c.id)
 			router.ServeHTTP(rec, req)
 			assertCode(t, rec, 200)
 		})
@@ -162,7 +162,7 @@ func TestBoardConfigurationForm(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	rec, req := newJSONPair(t, "/forms/configureBoard/a", nil)
+	rec, req := newJSONPair(t, "/html/configure-board/a", nil)
 	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
@@ -174,10 +174,10 @@ func TestStaticTemplates(t *testing.T) {
 	cases := [...]struct {
 		name, url string
 	}{
-		{"create board", "/forms/createBoard"},
-		{"board navigation panel", "/forms/boardNavigation"},
-		{"change password", "/forms/changePassword"},
-		{"captcha confirmation", "/forms/captcha"},
+		{"create board", "/html/create-board"},
+		{"board navigation panel", "/html/board-navigation"},
+		{"change password", "/html/change-password"},
+		{"captcha confirmation", "/html/captcha"},
 	}
 
 	for i := range cases {
@@ -197,7 +197,7 @@ func TestServerConfigurationForm(t *testing.T) {
 	writeAdminAccount(t)
 	(*config.Get()).DefaultLang = "en_GB"
 
-	rec, req := newJSONPair(t, "/forms/configureServer", nil)
+	rec, req := newJSONPair(t, "/html/configure-server", nil)
 	setLoginCookies(req, adminLoginCreds)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)

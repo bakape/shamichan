@@ -146,7 +146,9 @@ func startServer() {
 		}
 	}
 
-	load(db.LoadDB, assets.CreateDirs, lang.Load)
+	load(db.LoadDB, assets.CreateDirs)
+	wg.Wait()
+	load(lang.Load)
 	wg.Wait()
 	load(templates.Compile)
 	wg.Wait()

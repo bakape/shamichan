@@ -14,7 +14,7 @@ const (
 	MaxLinesBody       = 100
 	MaxLenPassword     = 50
 	MaxLenUserID       = 20
-	MaxLenBoardID      = 3
+	MaxLenBoardID      = 10
 	MaxLenBoardTitle   = 100
 	MaxLenNotice       = 500
 	MaxLenRules        = 5000

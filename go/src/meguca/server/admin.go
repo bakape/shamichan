@@ -12,7 +12,6 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
-	"meguca/lang"
 	"meguca/templates"
 	"meguca/websockets/feeds"
 	"net/http"
@@ -43,7 +42,7 @@ var (
 	errNoReason         = errors.New("no reason provided")
 	errNoDuration       = errors.New("no ban duration provided")
 
-	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,3}$`)
+	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,10}$`)
 )
 
 type boardActionRequest struct {
@@ -253,12 +252,25 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Returns, if the board name, matches a reserved ID
+	isReserved := func() bool {
+		for _, s := range [...]string{"html", "json", "api", "assets", "all"} {
+			if msg.ID == s {
+				return true
+			}
+		}
+		return false
+	}
+
 	// Validate request data
 	var err error
 	switch {
 	case creds.UserID != "admin" && config.Get().DisableUserBoards:
 		err = errAccessDenied
-	case !boardNameValidation.MatchString(msg.ID):
+	case !boardNameValidation.MatchString(msg.ID),
+		msg.ID == "",
+		len(msg.ID) > common.MaxLenBoardID,
+		isReserved():
 		err = errInvalidBoardName
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
@@ -597,12 +609,6 @@ func banList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
 	bans, err := db.GetBoardBans(board)
 	if err != nil {
 		text500(w, r, err)
@@ -610,7 +616,7 @@ func banList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	canUnban := detectCanPerform(r, board, auth.Moderator)
-	html := []byte(templates.BanList(bans, board, canUnban, lp.UI))
+	html := []byte(templates.BanList(bans, board, canUnban))
 	serveHTML(w, r, "", html, nil)
 }
 
@@ -689,17 +695,11 @@ func modLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
 	log, err := db.GetModLog(board)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
 
-	serveHTML(w, r, "", []byte(templates.ModLog(log, lp.UI)), nil)
+	serveHTML(w, r, "", []byte(templates.ModLog(log)), nil)
 }

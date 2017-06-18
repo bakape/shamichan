@@ -28,7 +28,7 @@ export default class CaptchaView extends View<null> {
 
 	// Render the actual captcha
 	private async render() {
-		const r = await uncachedGET(`/captcha/new`),
+		const r = await uncachedGET(`/api/captcha/new`),
 			text = await r.text()
 		if (r.status !== 200) {
 			throw text
@@ -36,7 +36,7 @@ export default class CaptchaView extends View<null> {
 		this.captchaID = text;
 		this.el
 			.querySelector("img")
-			.setAttribute("src", `/captcha/image/${this.captchaID}.png`)
+			.setAttribute("src", `/api/captcha/image/${this.captchaID}.png`)
 
 		// Set captchaID, to enable sending with FormData()
 		const cID = this.inputElement("captchaID")

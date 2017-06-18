@@ -4,7 +4,7 @@ create or replace function insert_thread(
 	editing bool,
 	spoiler bool,
 	id bigint,
-	board varchar(3),
+	board text,
 	op bigint,
 	now bigint,
 	body varchar(2000),

@@ -1,4 +1,5 @@
-// Provides type-safe and selective mappings for the language packs
+// Provides type-safe and selective mappings for the language packs.
+// Must not use imports, to preserve load order.
 
 type LanguagePack = {
 	posts: { [key: string]: string }
@@ -9,12 +10,10 @@ type LanguagePack = {
 	}
 	ui: { [key: string]: string }
 	sync: string[]
-	syncwatch: { [key: string]: string }
-	opts: {
-		importConfig: { [key: string]: string }
-		langApplied: string
-	}
 }
 
-const lang = (window as any).lang as LanguagePack
-export default lang
+export default JSON.parse(
+	document
+		.getElementById("lang-data")
+		.textContent
+) as LanguagePack

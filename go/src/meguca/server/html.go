@@ -8,7 +8,6 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
-	"meguca/lang"
 	"meguca/templates"
 	"net/http"
 	"strconv"
@@ -60,19 +59,13 @@ func boardHTML(w http.ResponseWriter, r *http.Request, catalog bool) {
 		return
 	}
 
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
 	pos, ok := extractPosition(w, r)
 	if !ok {
 		return
 	}
 
 	_, hash := config.GetClient()
-	etag := formatEtag(ctr, lp.ID, hash, pos)
+	etag := formatEtag(ctr, hash, pos)
 	if checkClientEtag(w, r, etag) {
 		return
 	}
@@ -83,7 +76,7 @@ func boardHTML(w http.ResponseWriter, r *http.Request, catalog bool) {
 		n = p.pageNumber
 		total = p.pageTotal
 	}
-	html = templates.Board(b, lp, n, total, pos, isMinimal(r), catalog, html)
+	html = templates.Board(b, n, total, pos, isMinimal(r), catalog, html)
 	serveHTML(w, r, etag, html, nil)
 }
 
@@ -96,12 +89,6 @@ func isMinimal(r *http.Request) bool {
 func threadHTML(w http.ResponseWriter, r *http.Request) {
 	id, ok := validateThread(w, r)
 	if !ok {
-		return
-	}
-
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
 		return
 	}
 
@@ -118,13 +105,13 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, hash := config.GetClient()
-	etag := formatEtag(ctr, lp.ID, hash, pos)
+	etag := formatEtag(ctr, hash, pos)
 	if checkClientEtag(w, r, etag) {
 		return
 	}
 
 	b := extractParam(r, "board")
-	serveHTML(w, r, etag, templates.Thread(lp, id, b, pos, html), nil)
+	serveHTML(w, r, etag, templates.Thread(id, b, pos, html), nil)
 }
 
 // Extract logged in position for HTML request.
@@ -164,26 +151,16 @@ func extractPosition(w http.ResponseWriter, r *http.Request) (
 
 // Render a board selection and navigation panel and write HTML to client
 func boardNavigation(w http.ResponseWriter, r *http.Request) {
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	serveHTML(w, r, "", []byte(templates.BoardNavigation(lp.UI)), nil)
+	staticTemplate(w, r, templates.BoardNavigation)
 }
 
-// Execute a simple template, that only accepts a language pack argument
+// Execute a simple template, that accepts no arguments
 func staticTemplate(
 	w http.ResponseWriter,
 	r *http.Request,
-	fn func(lang.Pack) string,
+	fn func() string,
 ) {
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	serveHTML(w, r, "", []byte(fn(lp)), nil)
+	serveHTML(w, r, "", []byte(fn()), nil)
 }
 
 // Serve a form for selecting one of several boards owned by the user
@@ -206,13 +183,7 @@ func ownedBoardSelection(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
-	serveHTML(w, r, "", []byte(templates.OwnedBoard(ownedTitles, lp.UI)), nil)
+	serveHTML(w, r, "", []byte(templates.OwnedBoard(ownedTitles)), nil)
 }
 
 // Renders a form for configuring a board owned by the user
@@ -222,44 +193,25 @@ func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
-	data := []byte(templates.ConfigureBoard(conf, lp))
-	serveHTML(w, r, "", data, nil)
+	serveHTML(w, r, "", []byte(templates.ConfigureBoard(conf)), nil)
 }
 
 // Render a form for assigning staff to a board
 func staffAssignmentForm(w http.ResponseWriter, r *http.Request) {
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
 	s, err := db.GetStaff(extractParam(r, "board"))
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
-	data := []byte(templates.StaffAssignment(
+	html := []byte(templates.StaffAssignment(
 		[...][]string{s["owners"], s["moderators"], s["janitors"]},
-		lp,
 	))
-	serveHTML(w, r, "", data, nil)
+	serveHTML(w, r, "", html, nil)
 }
 
 // Renders a form for creating new boards
 func boardCreationForm(w http.ResponseWriter, r *http.Request) {
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	serveHTML(w, r, "", []byte(templates.CreateBoard(lp)), nil)
+	staticTemplate(w, r, templates.CreateBoard)
 }
 
 // Render the form for configuring the server
@@ -268,13 +220,7 @@ func serverConfigurationForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
-	data := []byte(templates.ConfigureServer((*config.Get()), lp))
+	data := []byte(templates.ConfigureServer((*config.Get())))
 	serveHTML(w, r, "", data, nil)
 }
 
@@ -299,20 +245,12 @@ func bannerSettingForm(w http.ResponseWriter, r *http.Request) {
 
 // Render the captcha for noscript browsers
 func noscriptCaptcha(w http.ResponseWriter, r *http.Request) {
-	lp, err := lang.Get(w, r)
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-
 	ip, err := auth.GetIP(r)
 	if err != nil {
 		text400(w, err)
 		return
 	}
-
-	html := []byte(templates.NoscriptCaptcha(ip, lp))
-	serveHTML(w, r, "", html, nil)
+	serveHTML(w, r, "", []byte(templates.NoscriptCaptcha(ip)), nil)
 }
 
 // Redirect the client to the appropriate board through a cross-board redirect

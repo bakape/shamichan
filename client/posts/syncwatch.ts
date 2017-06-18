@@ -28,7 +28,7 @@ class Syncwatch {
 	private render() {
 		const now = Math.round(Date.now() / 1000) + offset
 		if (now > this.end) {
-			this.el.innerText = lang.syncwatch["finished"]
+			this.el.innerText = lang.ui["finished"]
 			return
 		} else if (now < this.start) {
 			this.el.innerHTML = (this.start - now).toString()

@@ -152,7 +152,7 @@ export default class OptionsPanel extends TabbedModal {
 			json = JSON.parse(event.target.result)
 		}
 		catch (err) {
-			alert(lang.opts.importConfig["corrupt"])
+			alert(lang.ui["importCorrupt"])
 			return
 		}
 
@@ -160,7 +160,7 @@ export default class OptionsPanel extends TabbedModal {
 		for (let key in json) {
 			localStorage.setItem(key, json[key])
 		}
-		alert(lang.opts.importConfig["done"])
+		alert(lang.ui["importDone"])
 		location.reload()
 	}
 
