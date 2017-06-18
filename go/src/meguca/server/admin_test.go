@@ -200,7 +200,7 @@ func TestValidateBoardCreation(t *testing.T) {
 	}{
 		{
 			name:  "board name too long",
-			id:    "abcd",
+			id:    GenString(common.MaxLenBoardID + 1),
 			title: "foo",
 			err:   errInvalidBoardName,
 		},
