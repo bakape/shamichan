@@ -65,12 +65,14 @@ func Board(
 // Thread renders thread page HTML for noscript browsers
 func Thread(
 	id uint64,
-	board string,
+	board, title string,
 	abbrev bool,
 	pos auth.ModerationLevel,
 	postHTML []byte,
 ) []byte {
-	return execIndex(renderThread(postHTML, id, board, abbrev, pos), "", pos)
+	title = html.EscapeString(fmt.Sprintf("/%s/ - %s", board, title))
+	html := renderThread(postHTML, id, board, abbrev, pos)
+	return execIndex(html, title, pos)
 }
 
 // Execute and index template in the second pass

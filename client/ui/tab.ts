@@ -5,8 +5,10 @@ import { Post } from "../posts"
 import { posts } from "../state"
 
 const titleEl = document.head.querySelector("title"),
+	title = titleEl.textContent,
 	faviconEl = document.getElementById("favicon"),
-	urlBase = "/assets/favicons/"
+	urlBase = "/assets/favicons/",
+	queue: Post[] = []
 
 // All possible favicon states
 const enum states { default, disconnected, error, unread, replied }
@@ -17,18 +19,9 @@ const lastRendered = {
 	unseenPosts: 0,
 }
 
-let title: string,
-	unseenPosts = 0,
+let unseenPosts = 0,
 	unseenReplies = false,
 	discoFavicon: string
-
-// Set the text part of a page title
-export function setTitle(t: string) {
-	title = t
-	resolve()
-}
-
-const queue: Post[] = [];
 
 // Update unseen post count based on post visibility and scroll position
 export function postAdded(post: Post) {

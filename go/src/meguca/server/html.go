@@ -94,7 +94,7 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 
 	lastN := detectLastN(r)
 	k := cache.ThreadKey(id, lastN)
-	html, _, ctr, err := cache.GetHTML(k, threadCache)
+	html, data, ctr, err := cache.GetHTML(k, threadCache)
 	if err != nil {
 		respondToJSONError(w, r, err)
 		return
@@ -112,7 +112,9 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b := extractParam(r, "board")
-	serveHTML(w, r, etag, templates.Thread(id, b, lastN != 0, pos, html), nil)
+	title := data.(common.Thread).Subject
+	html = templates.Thread(id, b, title, lastN != 0, pos, html)
+	serveHTML(w, r, etag, html, nil)
 }
 
 // Extract logged in position for HTML request.

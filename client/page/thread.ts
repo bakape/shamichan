@@ -1,6 +1,4 @@
 import { ThreadData } from "../common"
-import { escape } from '../util'
-import { setTitle } from "../ui"
 import {
     extractConfigs, isBanned, extractPost, localizeThreads, reparseOpenPosts,
     extractPageData,
@@ -32,19 +30,12 @@ export default function () {
         data.image.large = true
     }
 
-    setThreadTitle(data)
-
     for (let post of posts) {
         extractPost(post, data.id, data.board, backlinks)
     }
     localizeThreads()
     reparseOpenPosts()
     findSyncwatches(threads)
-}
-
-// Set thread title to tab
-export function setThreadTitle(data: ThreadData) {
-    setTitle(`/${data.board}/ - ${escape(data.subject)} (#${data.id})`)
 }
 
 // Increment thread post counters and rerender the indicator in the banner

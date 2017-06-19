@@ -5,12 +5,9 @@ import { start as connect, connSM, connState } from './connection'
 import { open } from './db'
 import { initOptions } from "./options"
 import initPosts from "./posts"
-import { Post, postSM, postEvent, FormModel } from "./posts"
-import { ThreadData } from "./common"
-import {
-	renderBoard, extractConfigs, setThreadTitle, renderThread
-} from './page'
-import { default as initUI, setTitle } from "./ui"
+import { postSM, postEvent, FormModel } from "./posts"
+import { renderBoard, extractConfigs, renderThread } from './page'
+import initUI from "./ui"
 import {
 	checkBottom, getCookie, deleteCookie, trigger, scrollToBottom,
 } from "./util"
@@ -19,7 +16,6 @@ import initModeration from "./mod"
 
 // Load all stateful modules in dependency order
 async function start() {
-	const frag = document.getElementById("threads")
 	extractConfigs()
 
 	await open()
@@ -60,10 +56,8 @@ async function start() {
 		connect()
 		checkBottom()
 		assignHandlers()
-		setThreadTitle(posts.get(page.thread) as Post & ThreadData)
 	} else {
 		await renderBoard()
-		setTitle(frag.querySelector("#page-title").textContent)
 		displayLoading(false)
 	}
 

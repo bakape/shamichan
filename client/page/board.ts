@@ -3,7 +3,6 @@ import lang from '../lang'
 import { page, posts, loadFromDB } from '../state'
 import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
-import { setTitle } from "../ui"
 import {
 	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts,
 	extractPageData,
@@ -90,9 +89,6 @@ export async function render() {
 	} else {
 		await extractThreads()
 	}
-
-	// Apply board title to tab
-	setTitle(threads.querySelector("#page-title").textContent)
 
 	// Add extra localizations
 	for (let el of threads.querySelectorAll(".counters")) {
