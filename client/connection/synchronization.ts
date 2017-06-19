@@ -60,7 +60,7 @@ async function syncOpenPost(
 	if (!model) {
 		await fetchMissingPost(id)
 		model = posts.get(id)
-	} else if (model instanceof FormModel) {
+	} else if (model instanceof FormModel && model.editing) {
 		// Don't rerender post form text
 		model.inputBody = model.body = body
 		model.view.onInput()
