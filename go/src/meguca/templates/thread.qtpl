@@ -5,7 +5,7 @@
 {% import "meguca/auth" %}
 {% import "encoding/json" %}
 
-{% func renderThread(postHTML []byte, id uint64, board string, pos auth.ModerationLevel) %}{% stripspace %}
+{% func renderThread(postHTML []byte, id uint64, board string, abbrev bool, pos auth.ModerationLevel) %}{% stripspace %}
 	{% code conf := config.GetBoardConfigs(board) %}
 	{% code ln := lang.Get() %}
 	<form id="new-reply-form" action="/api/create-reply" method="post" enctype="multipart/form-data" class="top-margin hidden">
@@ -68,11 +68,13 @@
 				{%s= ln.UI["top"] %}
 			</a>
 		</span>
-		<span class="act">
-			<a href="?last=100#bottom">
-				{%s= ln.Common.UI["last"] %}{% space %}100
-			</a>
-		</span>
+		{% if !abbrev %}
+			<span class="act">
+				<a href="?last=100#bottom">
+					{%s= ln.Common.UI["last"] %}{% space %}100
+				</a>
+			</span>
+		{% endif %}
 		<span id="lock" style="visibility: hidden;">
 			{%s= ln.UI["lockedToBottom"] %}
 		</span>

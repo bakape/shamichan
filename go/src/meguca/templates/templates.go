@@ -66,10 +66,11 @@ func Board(
 func Thread(
 	id uint64,
 	board string,
+	abbrev bool,
 	pos auth.ModerationLevel,
 	postHTML []byte,
 ) []byte {
-	return execIndex(renderThread(postHTML, id, board, pos), "", pos)
+	return execIndex(renderThread(postHTML, id, board, abbrev, pos), "", pos)
 }
 
 // Execute and index template in the second pass
