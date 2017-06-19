@@ -273,6 +273,12 @@ export default () => {
 		return postState.draft
 	})
 
+	// Cancelled, when needing a captcha
+	postSM.act(postState.needCaptcha, postEvent.done, () => {
+		postForm.remove()
+		return postState.ready
+	})
+
 	// Hide post controls, when a postForm is open
 	const hidePostControls = () =>
 		stylePostControls(el =>
