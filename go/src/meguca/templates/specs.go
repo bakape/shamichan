@@ -13,14 +13,6 @@ import (
 
 // Reused in multiple places
 var (
-	newPasswordSpec = inputSpec{
-		ID:           "password",
-		Type:         _password,
-		MaxLength:    common.MaxLenPassword,
-		NoID:         true,
-		Required:     true,
-		Autocomplete: "new-password",
-	}
 	repeatPasswordSpec = inputSpec{
 		ID:           "repeat",
 		Type:         _password,
@@ -86,7 +78,14 @@ var specs = map[string][]inputSpec{
 			Required:     true,
 			Autocomplete: "off",
 		},
-		newPasswordSpec,
+		{
+			ID:           "password",
+			Type:         _password,
+			MaxLength:    common.MaxLenPassword,
+			NoID:         true,
+			Required:     true,
+			Autocomplete: "new-password",
+		},
 		repeatPasswordSpec,
 	},
 	"changePassword": {
@@ -98,7 +97,14 @@ var specs = map[string][]inputSpec{
 			Required:     true,
 			Autocomplete: "current-password",
 		},
-		newPasswordSpec,
+		{
+			ID:           "newPassword",
+			Type:         _password,
+			MaxLength:    common.MaxLenPassword,
+			NoID:         true,
+			Required:     true,
+			Autocomplete: "new-password",
+		},
 		repeatPasswordSpec,
 	},
 	"configureBoard": {
