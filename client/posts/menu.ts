@@ -44,6 +44,9 @@ const actions: { [key: string]: ItemSpec } = {
 			if (!posts) {
 				return
 			}
+			if (!confirm(lang.ui["confirmDelete"])) {
+				return
+			}
 			const res = await postJSON("/api/delete-post", posts.map(m =>
 				m.id))
 			if (res.status !== 200) {

@@ -92,7 +92,8 @@
 		"postsImages": "Posts/Images/TTL",
 		"finished": "Bitti",
 		"importDone": "Import successful. The page will now reload.",
-		"importCorrupt": "Import failed. File corrupt"
+		"importCorrupt": "Import failed. File corrupt",
+		"confirmDelete": "Delete all posts by this IP?"
 	},
 	"sync": [
 		"disconnected",
