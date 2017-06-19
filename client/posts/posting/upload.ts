@@ -58,7 +58,7 @@ export default class UploadForm extends View<Post> {
 
         let token: string
         // Detect, if the crypto API can be used
-        if (location.protocol === "https"
+        if (location.protocol === "https:"
             || location.hostname === "localhost"
         ) {
             // First send a an SHA1 hash to the server, in case it already has
