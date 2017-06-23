@@ -38,8 +38,7 @@ func serveHTML(
 }
 
 // Serves board HTML to regular or noscript clients
-func boardHTML(w http.ResponseWriter, r *http.Request, catalog bool) {
-	b := extractParam(r, "board")
+func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 	if !auth.IsBoard(b) {
 		text404(w)
 		return
