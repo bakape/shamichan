@@ -198,7 +198,7 @@ export function clearStore(store: string) {
 // Retrieve an object from a specific object store
 export function getObj<T>(store: string, id: any): Promise<T> {
 	if (isCuck) {
-		return fakePromise({})
+		return fakePromise({} as any)
 	}
 	return new Promise<T>((resolve, reject) => {
 		const t = newTransaction(store, false),
