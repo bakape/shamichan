@@ -91,9 +91,6 @@ export async function render() {
 	}
 
 	// Add extra localizations
-	for (let el of threads.querySelectorAll(".counters")) {
-		el.setAttribute("title", lang.ui["postsImages"])
-	}
 	for (let el of threads.querySelectorAll(".lastN-link")) {
 		el.textContent = `${lang.ui["last"]} 100`
 	}
