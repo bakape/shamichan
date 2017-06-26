@@ -2,6 +2,7 @@ package assets
 
 import (
 	"math/rand"
+	"meguca/util"
 	"sync"
 	"time"
 )
@@ -28,6 +29,9 @@ type BannerStore struct {
 func (s *BannerStore) Set(board string, files []File) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	for i := range files {
+		files[i].Hash = util.HashBuffer(files[i].Data)
+	}
 	s.m[board] = files
 }
 

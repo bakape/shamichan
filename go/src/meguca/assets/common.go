@@ -1,11 +1,14 @@
 package assets
 
-import "sync"
+import (
+	"meguca/util"
+	"sync"
+)
 
 // Contains data and type of a file stored in memory
 type File struct {
-	Data []byte
-	Mime string
+	Data       []byte
+	Mime, Hash string
 }
 
 // Stores board-specific files in memory
@@ -25,6 +28,7 @@ func (s *FileStore) Set(board string, file File) {
 	if file.Data == nil {
 		delete(s.m, board)
 	} else {
+		file.Hash = util.HashBuffer(file.Data)
 		s.m[board] = file
 	}
 }

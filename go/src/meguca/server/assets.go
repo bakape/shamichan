@@ -264,11 +264,20 @@ func serveBanner(w http.ResponseWriter, r *http.Request) {
 		text404(w)
 		return
 	}
-	serveAssetFromMemory(w, f)
+	serveAssetFromMemory(w, r, f)
 }
 
-func serveAssetFromMemory(w http.ResponseWriter, f assets.File) {
+func serveAssetFromMemory(
+	w http.ResponseWriter,
+	r *http.Request,
+	f assets.File,
+) {
+	if checkClientEtag(w, r, f.Hash) {
+		return
+	}
+
 	h := w.Header()
+	h.Set("ETag", f.Hash)
 	h.Set("Content-Type", f.Mime)
 	h.Set("Content-Length", strconv.Itoa(len(f.Data)))
 	w.Write(f.Data)
@@ -276,5 +285,5 @@ func serveAssetFromMemory(w http.ResponseWriter, f assets.File) {
 
 // Serve board-specific loading animation
 func serveLoadingAnimation(w http.ResponseWriter, r *http.Request) {
-	serveAssetFromMemory(w, assets.Loading.Get(extractParam(r, "board")))
+	serveAssetFromMemory(w, r, assets.Loading.Get(extractParam(r, "board")))
 }

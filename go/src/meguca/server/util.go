@@ -21,8 +21,8 @@ var vanillaHeaders = map[string]string{
 	"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
 }
 
-// Check is any of the etags the client provides in the "If-None-Match" header
-// match the generated etag. If yes, write 304 and return true.
+// Check if the etag the client provides in the "If-None-Match" header matches
+// the generated etag. If yes, write 304 and return true.
 func checkClientEtag(
 	w http.ResponseWriter,
 	r *http.Request,
