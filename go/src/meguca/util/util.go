@@ -40,6 +40,25 @@ func Waterfall(fns ...func() error) (err error) {
 	return
 }
 
+// Execute functions in parallel. The first error is returned, if any.
+func Parallel(fns ...func() error) error {
+	ch := make(chan error)
+	for i := range fns {
+		fn := fns[i]
+		go func() {
+			ch <- fn()
+		}()
+	}
+
+	for range fns {
+		if err := <-ch; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // HashBuffer computes a base64 MD5 hash from a buffer
 func HashBuffer(buf []byte) string {
 	hash := md5.Sum(buf)

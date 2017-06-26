@@ -66,7 +66,10 @@ func parsePostCreationForm(w http.ResponseWriter, r *http.Request) (
 
 	// Handle image, if any, and extract file name
 	var token string
-	_, header, err := r.FormFile("image")
+	file, header, err := r.FormFile("image")
+	if file != nil {
+		file.Close()
+	}
 	switch err {
 	case nil:
 		var code int

@@ -40,8 +40,7 @@ export type PageState = {
 	href: string
 }
 
-const tenDays = 10 * 24 * 60 * 60 * 1000,
-	loading = document.getElementById('loading-image')
+const tenDays = 10 * 24 * 60 * 60 * 1000
 
 // Configuration passed from the server. Some values can be changed during
 // runtime.
@@ -141,7 +140,10 @@ export function getModel(el: Element): Post {
 
 // Display or hide the loading animation
 export function displayLoading(display: boolean) {
-	loading.style.display = display ? 'block' : 'none'
+	const el = document.getElementById('loading-image')
+	if (el) {
+		el.style.display = display ? 'block' : 'none'
+	}
 }
 
 ; (window as any).debugMode = () => {

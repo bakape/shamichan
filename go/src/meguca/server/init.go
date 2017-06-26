@@ -13,9 +13,9 @@ import (
 	"meguca/imager/assets"
 	"meguca/lang"
 	"meguca/templates"
+	"meguca/util"
 	"os"
 	"runtime"
-	"sync"
 )
 
 var (
@@ -131,27 +131,14 @@ func printUsage() {
 }
 
 func startServer() {
-	var wg sync.WaitGroup
-
 	load := func(fns ...func() error) {
-		for i := range fns {
-			wg.Add(1)
-			fn := fns[i]
-			go func() {
-				if err := fn(); err != nil {
-					log.Fatal(err)
-				}
-				wg.Done()
-			}()
+		if err := util.Parallel(fns...); err != nil {
+			log.Fatal(err)
 		}
 	}
-
 	load(db.LoadDB, assets.CreateDirs)
-	wg.Wait()
 	load(lang.Load)
-	wg.Wait()
 	load(templates.Compile)
-	wg.Wait()
 
 	if err := startWebServer(); err != nil {
 		log.Fatal(err)

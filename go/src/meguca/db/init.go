@@ -198,6 +198,16 @@ var upgrades = []func(*sql.Tx) error{
 		}
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`create table loading_animations (
+				board text primary key references boards on delete cascade,
+				data bytea not null,
+				mime text not null
+			);`,
+		)
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
@@ -214,20 +224,29 @@ func LoadDB() (err error) {
 		return err
 	}
 
-	tasks := make([]func() error, 0, 6)
+	tasks := make([]func() error, 0, 16)
 	if !exists {
 		tasks = append(tasks, initDB)
 	} else if err = checkVersion(); err != nil {
 		return
 	}
 	tasks = append(tasks, genPrepared)
-	if !exists {
-		tasks = append(tasks, CreateAdminAccount)
-	}
+
+	// Run these is parallel
 	tasks = append(
 		tasks,
-		openBoltDB, loadConfigs, loadBoardConfigs, loadBans, loadBanners,
+		func() error {
+			tasks := []func() error{
+				openBoltDB, loadConfigs, loadBoardConfigs, loadBans,
+				loadBanners, loadLoadingAnimations,
+			}
+			if !exists {
+				tasks = append(tasks, CreateAdminAccount)
+			}
+			return util.Parallel(tasks...)
+		},
 	)
+
 	if err := util.Waterfall(tasks...); err != nil {
 		return err
 	}

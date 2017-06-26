@@ -21,7 +21,7 @@ const (
 	MaxLenEightball    = 2000
 	MaxBanReasonLength = 100
 	MaxNumBanners      = 20
-	MaxBannerSize      = 100 << 10
+	MaxAssetSize       = 100 << 10
 )
 
 // Various cryptographic token exact lengths

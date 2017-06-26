@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"meguca/assets"
 	"meguca/common"
 )
@@ -36,34 +37,15 @@ func SetBanners(board string, banners []assets.File) (err error) {
 }
 
 func loadBanners() (err error) {
-	r, err := prepared["load_all_banners"].Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
 	// Load all banners and group by board
 	byBoard := make(map[string][]assets.File, 64)
-	for r.Next() {
-		var (
-			board, mime string
-			data        []byte
-		)
-		err = r.Scan(&board, &data, &mime)
-		if err != nil {
-			return
-		}
-
-		files := byBoard[board]
+	err = loadAllAssets("load_all_banners", func(b string, f assets.File) {
+		files := byBoard[b]
 		if files == nil {
 			files = make([]assets.File, 0, common.MaxNumBanners)
 		}
-		byBoard[board] = append(files, assets.File{
-			Data: data,
-			Mime: mime,
-		})
-	}
-	err = r.Err()
+		byBoard[b] = append(files, f)
+	})
 	if err != nil {
 		return
 	}
@@ -73,6 +55,31 @@ func loadBanners() (err error) {
 	}
 
 	return listenFunc("banners_updated", updateBanners)
+}
+
+// Load all assets by prepared query key and pass them to fn one by one
+func loadAllAssets(q string, fn func(board string, file assets.File)) (
+	err error,
+) {
+	r, err := prepared[q].Query()
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	var (
+		board string
+		file  assets.File
+	)
+	for r.Next() {
+		err = r.Scan(&board, &file.Data, &file.Mime)
+		if err != nil {
+			return
+		}
+
+		fn(board, file)
+	}
+	return r.Err()
 }
 
 func updateBanners(board string) (err error) {
@@ -103,5 +110,58 @@ func updateBanners(board string) (err error) {
 	}
 
 	assets.Banners.Set(board, files)
+	return
+}
+
+// Set loading animation for specific board. Nil file.Data means the default
+// animation should be used.
+func SetLoadingAnimation(board string, file assets.File) (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer RollbackOnError(tx, &err)
+
+	_, err = tx.Stmt(prepared["clear_loading"]).Exec(board)
+	if err != nil {
+		return
+	}
+
+	if file.Data != nil {
+		_, err = tx.Stmt(prepared["set_loading"]).
+			Exec(board, file.Data, file.Mime)
+		if err != nil {
+			return
+		}
+	}
+
+	_, err = tx.Exec("select pg_notify('loading_animation_updated', $1)", board)
+	if err != nil {
+		return
+	}
+
+	err = tx.Commit()
+	return
+}
+
+func loadLoadingAnimations() (err error) {
+	err = loadAllAssets("load_all_loading", func(b string, f assets.File) {
+		assets.Loading.Set(b, f)
+	})
+	if err != nil {
+		return
+	}
+
+	return listenFunc("loading_animation_updated", updateLoadingAnimation)
+}
+
+func updateLoadingAnimation(board string) (err error) {
+	var f assets.File
+	err = prepared["load_loading"].QueryRow(board).Scan(&f.Data, &f.Mime)
+	switch err {
+	case nil, sql.ErrNoRows:
+		assets.Loading.Set(board, f)
+		err = nil
+	}
 	return
 }

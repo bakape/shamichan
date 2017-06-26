@@ -133,13 +133,20 @@ func getQuery(id string) string {
 }
 
 // Assigns a function to listen to Postgres notifications on a channel
-func listenFunc(event string, fn func(msg string) error) error {
+func listenFunc(event string, fn func(msg string) error) (err error) {
 	if IsTest {
-		return nil
+		return
 	}
-	l, err := Listen(event)
+
+	l := pq.NewListener(
+		ConnArgs,
+		time.Second,
+		time.Second*10,
+		func(_ pq.ListenerEventType, _ error) {},
+	)
+	err = l.Listen(event)
 	if err != nil {
-		return err
+		return
 	}
 
 	go func() {
@@ -153,21 +160,7 @@ func listenFunc(event string, fn func(msg string) error) error {
 		}
 	}()
 
-	return nil
-}
-
-// Listen starts listening for notification events on a specific channel
-func Listen(event string) (*pq.Listener, error) {
-	l := pq.NewListener(
-		ConnArgs,
-		time.Second,
-		time.Second*10,
-		func(_ pq.ListenerEventType, _ error) {},
-	)
-	if err := l.Listen(event); err != nil {
-		return nil, err
-	}
-	return l, nil
+	return
 }
 
 // Execute all SQL statement strings and return on first error, if any

@@ -13,20 +13,14 @@ var (
 	}
 )
 
-// Contains data and type of a file stored in memory
-type File struct {
-	Data []byte
-	Mime string
-}
-
 func init() {
 	rand.Seed(time.Now().Unix())
 }
 
 // Stores multiple files by board in memory
 type BannerStore struct {
-	m  map[string][]File
 	mu sync.RWMutex
+	m  map[string][]File
 }
 
 // Set files stored for a certain board.
@@ -38,7 +32,7 @@ func (s *BannerStore) Set(board string, files []File) {
 }
 
 // Returns the banner specified by board and ID. If none found, ok == false.
-// file should not be muatted.
+// file should not be mutted.
 func (s *BannerStore) Get(board string, id int) (file File, ok bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

@@ -149,10 +149,6 @@
 		{% endif %}
 	</head>
 	<body>
-		{% comment %}
-			Loading indicator image
-		{% endcomment %}
-		<image src="/assets/loading.gif" id="loading-image">
 		<div id="user-background"></div>
 		<div id="overlay-container">
 			{% comment %}
@@ -276,7 +272,7 @@
 							{% for _, l := range [...]string{
 								"logout", "logoutAll", "changePassword",
 								"createBoard", "configureBoard", "deleteBoard",
-								"assignStaff", "setBanners",
+								"assignStaff", "setBanners", "setLoading",
 							} %}
 								<a id="{%s= l %}">
 									{%s= ln.UI[l] %}

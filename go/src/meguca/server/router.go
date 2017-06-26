@@ -92,6 +92,7 @@ func createRouter() http.Handler {
 	html.POST("/configure-server", serverConfigurationForm)
 	html.GET("/assign-staff/:board", staffAssignmentForm)
 	html.GET("/set-banners", bannerSettingForm)
+	html.GET("/set-loading", loadingAnimationForm)
 	html.GET("/bans/:board", banList)
 	html.GET("/mod-log/:board", modLog)
 
@@ -139,6 +140,7 @@ func createRouter() http.Handler {
 	api.POST("/sticky", setThreadSticky)
 	api.POST("/unban/:board", unban)
 	api.POST("/set-banners", setBanners)
+	api.POST("/set-loading", setLoadingAnimation)
 
 	// Captcha API
 	captcha := api.NewGroup("/captcha")
@@ -153,8 +155,9 @@ func createRouter() http.Handler {
 	// Assets
 	assets := r.NewGroup("/assets")
 	assets.GET("/banners/:board/:id", serveBanner)
-	assets.GET("/*path", serveAssets)
+	assets.GET("/loading/:board", serveLoadingAnimation)
 	assets.GET("/images/*path", serveImages)
+	assets.GET("/*path", serveAssets)
 	r.GET("/worker.js", serveWorker)
 
 	h := http.Handler(r)

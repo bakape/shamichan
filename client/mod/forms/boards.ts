@@ -119,15 +119,21 @@ export class StaffAssignmentForm extends SelectedBoardForm {
 	}
 }
 
-export class BannerForm extends SelectedBoardForm {
-	constructor() {
+// Submits data to the server as multipart form
+export class FormDataForm extends SelectedBoardForm {
+	public el: HTMLFormElement
+	private srcURL: string
+	private destURL: string
+
+	// Downloads form HTML from src and sends input to dest on submission
+	constructor(src: string, dest: string) {
 		super({})
+		this.srcURL = src
+		this.destURL = dest
 	}
 
-	public el: HTMLFormElement
-
 	public renderNext(board: string) {
-		this.renderPublicForm("/html/set-banners")
+		this.renderPublicForm(this.srcURL)
 	}
 
 	protected async send() {
@@ -140,7 +146,7 @@ export class BannerForm extends SelectedBoardForm {
 			}
 		}
 
-		this.handlePostResponse(await fetch("/api/set-banners", {
+		this.handlePostResponse(await fetch(this.destURL, {
 			method: "POST",
 			credentials: "include",
 			body: data,

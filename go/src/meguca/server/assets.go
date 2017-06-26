@@ -99,29 +99,13 @@ func serveWorker(w http.ResponseWriter, r *http.Request) {
 
 // Set the banners of a board
 func setBanners(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(
-		w,
-		r.Body,
-		common.MaxNumBanners*common.MaxBannerSize,
-	)
-	if err := r.ParseMultipartForm(0); err != nil {
-		text400(w, err)
-		return
-	}
-
-	f := r.Form
-	board := f.Get("board")
-	_, ok := canPerform(w, r, board, auth.BoardOwner, &auth.Captcha{
-		CaptchaID: f.Get("captchaID"),
-		Solution:  f.Get("captcha"),
-	})
+	board, ok := parseAssetForm(w, r, common.MaxNumBanners)
 	if !ok {
 		return
 	}
 
 	var (
 		opts = thumbnailer.Options{
-			JPEGQuality: 0,
 			MaxSourceDims: thumbnailer.Dims{
 				Width:  300,
 				Height: 100,
@@ -147,35 +131,118 @@ func setBanners(w http.ResponseWriter, r *http.Request) {
 			sendFileError(w, h, err.Error())
 			return
 		}
-		defer file.Close()
-
-		buf, err := ioutil.ReadAll(file)
-		if err != nil {
-			text500(w, r, err)
+		out, ok := readAssetFile(w, r, file, h, opts)
+		if !ok {
 			return
 		}
-
-		if len(buf) > common.MaxBannerSize {
-			sendFileError(w, h, "too large")
-			return
-		}
-
-		src, _, err := thumbnailer.ProcessBuffer(buf, opts)
-		switch {
-		case err != nil:
-			sendFileError(w, h, err.Error())
-			return
-		case src.HasAudio:
-			sendFileError(w, h, "has audio")
-			return
-		}
-		banners = append(banners, assets.File{
-			Data: buf,
-			Mime: src.Mime,
-		})
+		banners = append(banners, out)
 	}
 
 	if err := db.SetBanners(board, banners); err != nil {
+		text500(w, r, err)
+	}
+}
+
+// Parse form for uploading file assets for a board.
+// maxSize specifies maximum number of common.MaxAssetSize to accept.
+// If ok == false, caller should return.
+func parseAssetForm(w http.ResponseWriter, r *http.Request, maxSize uint) (
+	board string, ok bool,
+) {
+	r.Body = http.MaxBytesReader(
+		w,
+		r.Body,
+		int64(maxSize)*common.MaxAssetSize,
+	)
+	if err := r.ParseMultipartForm(0); err != nil {
+		text400(w, err)
+		return
+	}
+
+	f := r.Form
+	board = f.Get("board")
+	_, ok = canPerform(w, r, board, auth.BoardOwner, &auth.Captcha{
+		CaptchaID: f.Get("captchaID"),
+		Solution:  f.Get("captcha"),
+	})
+	return
+}
+
+// Read a file from an asset submition form.
+// If ok == false, caller should return.
+func readAssetFile(
+	w http.ResponseWriter,
+	r *http.Request,
+	f multipart.File,
+	h *multipart.FileHeader,
+	opts thumbnailer.Options,
+) (
+	out assets.File,
+	ok bool,
+) {
+	defer f.Close()
+
+	buf, err := ioutil.ReadAll(f)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	if len(buf) > common.MaxAssetSize {
+		sendFileError(w, h, "too large")
+		return
+	}
+
+	src, _, err := thumbnailer.ProcessBuffer(buf, opts)
+	switch {
+	case err != nil:
+		sendFileError(w, h, err.Error())
+	case src.HasAudio:
+		sendFileError(w, h, "has audio")
+	default:
+		ok = true
+		out = assets.File{
+			Data: buf,
+			Mime: src.Mime,
+		}
+	}
+	return
+}
+
+func setLoadingAnimation(w http.ResponseWriter, r *http.Request) {
+	board, ok := parseAssetForm(w, r, 1)
+	if !ok {
+		return
+	}
+
+	var out assets.File
+	file, h, err := r.FormFile("image")
+	switch err {
+	case nil:
+		out, ok = readAssetFile(w, r, file, h, thumbnailer.Options{
+			MaxSourceDims: thumbnailer.Dims{
+				Width:  300,
+				Height: 300,
+			},
+			ThumbDims: thumbnailer.Dims{
+				Width:  300,
+				Height: 300,
+			},
+			AcceptedMimeTypes: map[string]bool{
+				"image/gif":  true,
+				"video/webm": true,
+			},
+		})
+		if !ok {
+			return
+		}
+	case http.ErrMissingFile:
+		err = nil
+	default:
+		text400(w, err)
+		return
+	}
+
+	if err := db.SetLoadingAnimation(board, out); err != nil {
 		text500(w, r, err)
 	}
 }
@@ -197,8 +264,17 @@ func serveBanner(w http.ResponseWriter, r *http.Request) {
 		text404(w)
 		return
 	}
+	serveAssetFromMemory(w, f)
+}
+
+func serveAssetFromMemory(w http.ResponseWriter, f assets.File) {
 	h := w.Header()
 	h.Set("Content-Type", f.Mime)
 	h.Set("Content-Length", strconv.Itoa(len(f.Data)))
 	w.Write(f.Data)
+}
+
+// Serve board-specific loading animation
+func serveLoadingAnimation(w http.ResponseWriter, r *http.Request) {
+	serveAssetFromMemory(w, assets.Loading.Get(extractParam(r, "board")))
 }

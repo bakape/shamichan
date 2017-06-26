@@ -79,6 +79,7 @@
 			{%s= ln.UI["lockedToBottom"] %}
 		</span>
 	</span>
+	{%= loadingImage(board) %}
 {% endstripspace %}{% endfunc %}
 
 ThreadPosts renders the post content of a thread. Separate function to allow

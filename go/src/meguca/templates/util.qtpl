@@ -1,5 +1,7 @@
 {% import "strconv" %}
+{% import "fmt" %}
 {% import "meguca/common" %}
+{% import "meguca/assets" %}
 
 Renders the tab selection butts in tabbed windows
 {% func tabButts(names []string) %}{% stripspace %}
@@ -95,4 +97,19 @@ Render pin signifying a thread is sticky
 			<path d="M1.34 0a.5.5 0 0 0 .16 1h.5v2h-1c-.55 0-1 .45-1 1h3v3l.44 1 .56-1v-3h3c0-.55-.45-1-1-1h-1v-2h.5a.5.5 0 1 0 0-1h-4a.5.5 0 0 0-.09 0 .5.5 0 0 0-.06 0z" />
 		</svg>
 	</span>
+{% endstripspace %}{% endfunc %}
+
+Render an image or video asset
+{% func asset(url, mime string) %}{% stripspace %}
+	{% if mime == "video/webm" %}
+		<video src="{%s= url %}" autoplay loop>
+	{% else %}
+		<img src="{%s= url %}">
+	{% endif %}
+{% endstripspace %}{% endfunc %}
+
+{% func loadingImage(board string) %}{% stripspace %}
+	<div id="loading-image">
+		{%= asset(fmt.Sprintf("/assets/loading/%s", board), assets.Loading.Get(board).Mime) %}
+	</div>
 {% endstripspace %}{% endfunc %}

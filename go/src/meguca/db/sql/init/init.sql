@@ -88,6 +88,12 @@ create table banners (
 	mime text not null
 );
 
+create table loading_animations (
+	board text primary key references boards on delete cascade,
+	data bytea not null,
+	mime text not null
+);
+
 create sequence post_id;
 
 create table threads (

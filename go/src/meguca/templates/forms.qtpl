@@ -181,6 +181,18 @@ Render the captcha for noscript browsers
 	</div>
 	<br>
 	<input type="file" name="banners" multiple accept="image/png, image/gif, image/jpeg, video/webm">
+	<br>
+	{%= captcha() %}
+	{%= submit(true) %}
+{% endstripspace %}{% endfunc %}
+
+{% func LoadingAnimationForm() %}{% stripspace %}
+	<div style="white-space: normal;">
+		{%s= lang.Get().UI["loadingSpecs"] %}
+	</div>
+	<br>
+	<input type="file" name="image" accept="image/gif, video/webm">
+	<br>
 	{%= captcha() %}
 	{%= submit(true) %}
 {% endstripspace %}{% endfunc %}

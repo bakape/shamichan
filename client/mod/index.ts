@@ -7,14 +7,10 @@ import { validatePasswordMatch } from "./common"
 import ModPanel from "./panel"
 import {
 	PasswordChangeForm, ServerConfigForm, BoardConfigForm, BoardCreationForm,
-	BoardDeletionForm, StaffAssignmentForm, BannerForm,
+	BoardDeletionForm, StaffAssignmentForm, FormDataForm,
 } from "./forms"
 
 export { loginID, sessionToken } from "./common"
-
-interface Constructable {
-	new (): any
-}
 
 // Possible staff access levels
 export const enum ModerationLevel {
@@ -45,13 +41,22 @@ class AccountPanel extends TabbedModal {
 				logout("/api/logout"),
 			"#logoutAll": () =>
 				logout("/api/logout-all"),
-			"#changePassword": this.loadConditional(PasswordChangeForm),
-			"#configureServer": this.loadConditional(ServerConfigForm),
-			"#createBoard": this.loadConditional(BoardCreationForm),
-			"#deleteBoard": this.loadConditional(BoardDeletionForm),
-			"#configureBoard": this.loadConditional(BoardConfigForm),
-			"#assignStaff": this.loadConditional(StaffAssignmentForm),
-			"#setBanners": this.loadConditional(BannerForm),
+			"#changePassword": this.loadConditional(() =>
+				new PasswordChangeForm()),
+			"#configureServer": this.loadConditional(() =>
+				new ServerConfigForm()),
+			"#createBoard": this.loadConditional(() =>
+				new BoardCreationForm()),
+			"#deleteBoard": this.loadConditional(() =>
+				new BoardDeletionForm()),
+			"#configureBoard": this.loadConditional(() =>
+				new BoardConfigForm()),
+			"#assignStaff": this.loadConditional(() =>
+				new StaffAssignmentForm()),
+			"#setBanners": this.loadConditional(() =>
+				new FormDataForm("/html/set-banners", "/api/set-banners")),
+			"#setLoading": this.loadConditional(() =>
+				new FormDataForm("/html/set-loading", "/api/set-loading")),
 		})
 
 		if (position > ModerationLevel.notStaff) {
@@ -77,10 +82,10 @@ class AccountPanel extends TabbedModal {
 
 	// Create handler for dynamically loading and rendering conditional view
 	// modules
-	private loadConditional(m: Constructable): EventListener {
+	private loadConditional(module: () => void): EventListener {
 		return () => {
 			this.toggleMenu(false)
-			new m()
+			module()
 		}
 	}
 
