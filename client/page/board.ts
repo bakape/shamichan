@@ -7,7 +7,6 @@ import {
 	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts,
 	extractPageData,
 } from "./common"
-import { setPostCount } from "./thread"
 import { ThreadData } from "../common"
 import { renderSyncCount } from "../connection"
 
@@ -83,7 +82,6 @@ async function extractThreads() {
 
 // Apply client-side modifications to a board page's HTML
 export async function render() {
-	setPostCount(0, 0, 0)
 	if (page.catalog) {
 		await extractCatalogModels()
 	} else {

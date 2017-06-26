@@ -10,7 +10,8 @@ const counters = document.getElementById("thread-post-counters"),
     threads = document.getElementById("threads")
 let postCtr = 0,
     imgCtr = 0,
-    bumpTime = 0
+    bumpTime = 0,
+    isDeleted = false
 
 // Render the HTML of a thread page
 export default function () {
@@ -23,7 +24,12 @@ export default function () {
         { posts } = data
 
     data.posts = null
-    setPostCount(data.postCtr, data.imageCtr, data.bumpTime)
+
+    postCtr = data.postCtr
+    imgCtr = data.imageCtr
+    bumpTime = data.bumpTime
+    isDeleted = data.deleted
+    renderPostCounter()
 
     extractPost(data, data.id, data.board, backlinks)
     if (data.image) {
@@ -50,14 +56,6 @@ export function incrementPostCount(post: boolean, hasImage: boolean) {
     renderPostCounter()
 }
 
-// Externally set thread image post count
-export function setPostCount(posts: number, images: number, bump: number) {
-    postCtr = posts
-    imgCtr = images
-    bumpTime = bump
-    renderPostCounter()
-}
-
 function renderPostCounter() {
     let text = ""
     if (postCtr) {
@@ -69,6 +67,9 @@ function renderPostCounter() {
             const min = config.threadExpiryMin,
                 max = config.threadExpiryMax
             let days = min + (-max + min) * (postCtr / 3000 - 1) ** 3
+            if (isDeleted) {
+                days /= 3
+            }
             if (days < min) {
                 days = min
             }

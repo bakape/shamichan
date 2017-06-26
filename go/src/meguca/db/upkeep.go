@@ -3,6 +3,7 @@
 package db
 
 import (
+	"database/sql"
 	"log"
 	"math"
 	"meguca/common"
@@ -45,10 +46,8 @@ func runHourTasks() {
 	logError("board cleanup", deleteUnusedBoards())
 	logError("image cleanup", deleteUnusedImages())
 	logError("delete dangling open post bodies", cleanUpOpenPostBodies())
-	logError("vaccum database", func() error {
-		_, err := db.Exec(`vacuum`)
-		return err
-	}())
+	_, err := db.Exec(`vacuum`)
+	logError("vaccum database", err)
 }
 
 func logPrepared(ids ...string) {
@@ -149,13 +148,17 @@ func deleteOldThreads() (err error) {
 		toDel       = make([]uint64, 0, 16)
 		id, postCtr uint64
 		bumpTime    int64
+		deleted     sql.NullBool
 	)
 	for r.Next() {
-		err = r.Scan(&id, &bumpTime, &postCtr)
+		err = r.Scan(&id, &bumpTime, &postCtr, &deleted)
 		if err != nil {
 			return
 		}
 		threshold := min + (-max+min)*math.Pow(float64(postCtr)/3000-1, 3)
+		if deleted.Bool {
+			threshold /= 3
+		}
 		if threshold < min {
 			threshold = min
 		}
