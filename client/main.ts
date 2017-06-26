@@ -1,6 +1,6 @@
 // Client entry point
 
-import { loadFromDB, page, posts, storeMine, displayLoading } from './state'
+import { loadFromDB, page, posts, storeMine } from './state'
 import { start as connect, connSM, connState } from './connection'
 import { open } from './db'
 import { initOptions } from "./options"
@@ -58,7 +58,6 @@ async function start() {
 		assignHandlers()
 	} else {
 		await renderBoard()
-		displayLoading(false)
 	}
 
 	initPosts()

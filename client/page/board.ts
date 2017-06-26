@@ -1,6 +1,6 @@
 import { on, fetchBoard } from '../util'
 import lang from '../lang'
-import { page, posts, loadFromDB } from '../state'
+import { page, posts, loadFromDB, displayLoading } from '../state'
 import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
 import {
@@ -8,8 +8,6 @@ import {
 	extractPageData,
 } from "./common"
 import { ThreadData } from "../common"
-import { renderSyncCount } from "../connection"
-
 
 type SortFunction = (a: Post, b: Post) => number
 
@@ -40,7 +38,6 @@ export function renderFresh(html: string) {
 		return
 	}
 	extractConfigs()
-	renderSyncCount(0) // Board pages do not have any sync logic or counters
 	render()
 }
 
@@ -104,6 +101,7 @@ export async function render() {
 			.value = localStorage.getItem("catalogSort") || "bump"
 		sortThreads(true)
 	}
+	displayLoading(false)
 }
 
 // Sort all threads on a board
