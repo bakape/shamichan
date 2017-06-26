@@ -266,6 +266,7 @@ export default class ImageHandler extends View<Post> {
 				event.preventDefault()
 				return this.el.querySelector("figcaption a[download]").click()
 			case fileTypes.mp3:
+			case fileTypes.flac:
 				event.preventDefault()
 				return this.renderAudio()
 			case fileTypes.mp4:
@@ -296,6 +297,7 @@ export default class ImageHandler extends View<Post> {
 		switch (img.fileType) {
 			case fileTypes.ogg:
 			case fileTypes.mp3:
+			case fileTypes.flac:
 			case fileTypes.mp4:
 			case fileTypes.webm:
 				// Firefox provides no way of detecting, if the controls where

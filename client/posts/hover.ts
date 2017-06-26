@@ -197,8 +197,9 @@ function renderImagePreview(event: MouseEvent) {
 	let tag: string
 
 	switch (ext) {
-		case "pdf": // Nothing to preview for PDF or MP3
+		case "pdf": // Nothing to preview for these
 		case "mp3":
+		case "flac":
 		case "zip":
 		case "7z":
 		case "gz":

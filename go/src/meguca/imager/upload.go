@@ -39,9 +39,10 @@ var (
 		mimeTarGZ:         common.TGZ,
 		mimeTarXZ:         common.TXZ,
 		mimeZip:           common.ZIP,
+		"audio/x-flac":    common.FLAC,
 	}
 
-	// MIME types from thumbnailer  to accept
+	// MIME types from thumbnailer to accept
 	allowedMimeTypes = map[string]bool{
 		"image/jpeg":      true,
 		"image/png":       true,
@@ -55,6 +56,7 @@ var (
 		mime7Zip:          true,
 		mimeTarGZ:         true,
 		mimeTarXZ:         true,
+		"audio/x-flac":    true,
 	}
 
 	errTooLarge = errors.New("file too large")

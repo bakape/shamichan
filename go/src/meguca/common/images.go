@@ -17,6 +17,7 @@ const (
 	SevenZip
 	TGZ
 	TXZ
+	FLAC
 )
 
 // Extensions maps internal file types to their canonical file extensions
@@ -33,6 +34,7 @@ var Extensions = map[uint8]string{
 	SevenZip: "7z",
 	TGZ:      "tar.gz",
 	TXZ:      "tar.xz",
+	FLAC:     "flac",
 }
 
 // Image contains a post's image and thumbnail data
