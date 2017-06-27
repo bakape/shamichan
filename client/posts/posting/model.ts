@@ -22,7 +22,6 @@ export default class FormModel extends Post {
 
 	public inputBody = ""
 	public view: FormView
-	private lasLinked: number // ID of last linked post
 
 	// Pass and ID, if you wish to hijack an existing model. To create a new
 	// model pass zero.
@@ -186,32 +185,24 @@ export default class FormModel extends Post {
 	public addReference(id: number, sel: string) {
 		let s = ""
 		const old = this.bufferedText || this.inputBody,
-			newLine = !old || old.endsWith("\n"),
-			alreadyLinked = id === this.lasLinked
+			newLine = !old || old.endsWith("\n")
 
-		// Don't duplicate links, if quoting same post multiple times in
-		// succession
-		if (!alreadyLinked) {
+		if (sel) {
 			if (!newLine) {
-				if (sel) {
-					s += "\n"
-				} else if (old[old.length - 1] !== " ") {
-					s += " "
-				}
+				s += "\n"
 			}
-			s += `>>${id} `
+		} else if (!newLine && old[old.length - 1] !== " ") {
+			s += " "
 		}
-		this.lasLinked = id
+		s += `>>${id} `
 
 		if (!sel) {
-			// If starting from a new line, insert newline after post
+			// If starting from a new line, insert newline after post link
 			if (newLine) {
 				s += "\n"
 			}
 		} else {
-			if (!alreadyLinked || !newLine) {
-				s += "\n"
-			}
+			s += "\n"
 			for (let line of sel.split("\n")) {
 				s += ">" + line + "\n"
 			}
