@@ -28,6 +28,7 @@ interface Options extends ChangeEmitter {
 	illyaDance: boolean
 	illyaDanceMute: boolean
 	horizontalPosting: boolean
+	hideRecursively: boolean
 	replyRight: boolean
 	workModeToggle: boolean
 	userBG: boolean

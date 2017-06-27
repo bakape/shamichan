@@ -1,7 +1,7 @@
 import { setBoardConfig, hidden, mine, posts, page, config } from "../state"
 import options from "../options"
 import { PostData, fileTypes } from "../common"
-import { Post, PostView } from "../posts"
+import { Post, PostView, hideRecursively } from "../posts"
 import lang from "../lang"
 import { postAdded, notifyAboutReply } from "../ui"
 import { pluralize, extractJSON } from "../util"
@@ -31,18 +31,14 @@ export function isBanned(): boolean {
 }
 
 // Extract post model and view from the HTML fragment and apply client-specific
-// formatting. Returns whether the element was removed.
+// formatting.
 export function extractPost(
 	post: PostData,
 	op: number,
 	board: string,
 	backlinks: { [id: number]: { [id: number]: number } },
-): boolean {
+) {
 	const el = document.getElementById(`p${post.id}`)
-	if (hidden.has(post.id)) {
-		el.remove()
-		return true
-	}
 	post.op = op
 	post.board = board
 
@@ -80,8 +76,6 @@ export function extractPost(
 			view.renderImage(false)
 		}
 	}
-
-	return false
 }
 
 // Add (You) to posts linking to the user's posts. Appends to array of posts,
@@ -132,6 +126,16 @@ function localizeBacklinks(post: Post) {
 			el = post.view.el.querySelector(".backlinks")
 		}
 		addYous(id, el)
+	}
+}
+
+// Hide posts, that have been hidden (or linked hidden posts recursively, if
+// enabled)
+export function hidePosts() {
+	for (let post of posts) {
+		if (hidden.has(post.id)) {
+			hideRecursively(post)
+		}
 	}
 }
 

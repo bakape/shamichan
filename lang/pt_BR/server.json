@@ -104,6 +104,10 @@
 			"Escondidos: 0",
 			"Limpa os posts escondidos"
 		],
+		"hideRecursively": [
+			"Recursive post hiding",
+			"Hide all posts, that replied to a hidden post recursively"
+		],
 		"hideThumbs": [
 			"Hide thumbnails",
 			"Display a [Show] button in place of thumbnails"

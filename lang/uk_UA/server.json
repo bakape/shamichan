@@ -104,6 +104,10 @@
 			"Сховано: 0",
 			"Очистити сховані пости"
 		],
+		"hideRecursively": [
+			"Recursive post hiding",
+			"Hide all posts, that replied to a hidden post recursively"
+		],
 		"hideThumbs": [
 			"Приховати прев'ю",
 			"Показувати кнопку [Show] замість прев'ю"

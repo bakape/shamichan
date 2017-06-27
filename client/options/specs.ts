@@ -77,6 +77,8 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	// Anonymise all poster names
 	anonymise: {},
+	// Hide posts that linked to a hidden post
+	hideRecursively: {},
 	// Expand post links inline
 	postInlineExpand: {
 		default: true,

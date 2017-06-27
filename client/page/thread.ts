@@ -1,7 +1,7 @@
 import { ThreadData } from "../common"
 import {
     extractConfigs, isBanned, extractPost, localizeThreads, reparseOpenPosts,
-    extractPageData,
+    extractPageData, hidePosts,
 } from "./common"
 import { findSyncwatches } from "../posts"
 import { config } from "../state"
@@ -39,6 +39,7 @@ export default function () {
     for (let post of posts) {
         extractPost(post, data.id, data.board, backlinks)
     }
+    hidePosts()
     localizeThreads()
     reparseOpenPosts()
     findSyncwatches(threads)

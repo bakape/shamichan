@@ -104,6 +104,10 @@
 			"Скрыто: 0",
 			"Очистить список скрытого"
 		],
+		"hideRecursively": [
+			"Recursive post hiding",
+			"Hide all posts, that replied to a hidden post recursively"
+		],
 		"hideThumbs": [
 			"Скрыть превью",
 			"Отображать кнопку [Показать] на месте превью"

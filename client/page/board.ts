@@ -5,7 +5,7 @@ import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
 import {
 	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts,
-	extractPageData,
+	extractPageData, hidePosts,
 } from "./common"
 import { ThreadData } from "../common"
 
@@ -73,6 +73,7 @@ async function extractThreads() {
 			extractPost(post, thread.id, thread.board, backlinks)
 		}
 	}
+	hidePosts()
 	localizeThreads()
 	reparseOpenPosts()
 }

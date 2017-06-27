@@ -3,9 +3,10 @@ import { extend } from '../util'
 import Collection from './collection'
 import PostView from './view'
 import { SpliceResponse } from '../client'
-import { mine, seenPosts, storeSeenPost, posts } from "../state"
+import { mine, seenPosts, storeSeenPost, posts, hidden } from "../state"
 import { notifyAboutReply } from "../ui"
 import { PostData, TextState, PostLink, Command, ImageData } from "../common"
+import { hideRecursively } from "./hide"
 
 // Generic post model
 export class Post extends Model implements PostData {
@@ -19,6 +20,7 @@ export class Post extends Model implements PostData {
 	public banned: boolean
 	public sticky: boolean
 	protected seenOnce: boolean
+	public hidden: boolean
 	public image: ImageData
 	public time: number
 	public body: string
@@ -58,6 +60,21 @@ export class Post extends Model implements PostData {
 		if (this.view) {
 			this.view.remove()
 		}
+	}
+
+	// Stop post from displaying
+	public hide() {
+		this.hidden = true
+		this.view.hide()
+	}
+
+	// Stop hiding the post, if it was hidden
+	public unhide() {
+		if (!this.hidden) {
+			return
+		}
+		this.hidden = false
+		this.view.unhide()
 	}
 
 	// Append a character to the text body
@@ -118,6 +135,9 @@ export class Post extends Model implements PostData {
 				const post = posts.get(id)
 				if (post) {
 					post.insertBacklink(this.id, this.op)
+				}
+				if (hidden.has(id)) {
+					hideRecursively(this)
 				}
 			}
 		}

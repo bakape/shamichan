@@ -181,6 +181,16 @@ export default class PostView extends ImageHandler {
         this.reparseBody()
     }
 
+    // Stop post from displaying
+    public hide() {
+        this.el.style.display = "none"
+    }
+
+    // Stop hiding the post
+    public unhide() {
+        this.el.style.display = ""
+    }
+
     // Render the name and tripcode in the header
     public renderName() {
         const el = this.el.querySelector(".name")

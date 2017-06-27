@@ -253,6 +253,7 @@ var optionSpecs = [...][]inputSpec{
 		{ID: "webmHover"},
 		{ID: "notification"},
 		{ID: "anonymise"},
+		{ID: "hideRecursively"},
 		{ID: "postInlineExpand"},
 		{ID: "relativeTime"},
 		{ID: "alwaysLock"},

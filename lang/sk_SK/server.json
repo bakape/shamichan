@@ -104,6 +104,10 @@
 			"Schovaných: 0",
 			"Vyčistiť zoznam schovaných plagátov"
 		],
+		"hideRecursively": [
+			"Recursive post hiding",
+			"Hide all posts, that replied to a hidden post recursively"
+		],
 		"hideThumbs": [
 			"Schovať náhľady",
 			"Display a [Show] button in place of thumbnails"

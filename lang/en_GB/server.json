@@ -104,6 +104,10 @@
 			"Hidden: 0",
 			"Clear hidden posts"
 		],
+		"hideRecursively": [
+			"Recursive post hiding",
+			"Hide all posts, that replied to a hidden post recursively"
+		],
 		"hideThumbs": [
 			"Hide thumbnails",
 			"Display a [Show] button in place of thumbnails"
