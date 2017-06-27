@@ -59,7 +59,13 @@ func Board(
 	if minimal {
 		return []byte(html)
 	}
-	return execIndex(html, title, conf.DefaultCSS, pos)
+
+	theme := conf.DefaultCSS
+	if b == "all" {
+		theme = config.Get().DefaultCSS
+	}
+
+	return execIndex(html, title, theme, pos)
 }
 
 // Thread renders thread page HTML for noscript browsers
