@@ -27,7 +27,7 @@
 			Main and theme-specific stylesheets
 		{% endcomment %}
 		<link rel="stylesheet" href="/assets/css/base.css">
-		<link rel="stylesheet" id="theme-css" href="/assets/css/{%s= conf.DefaultCSS %}.css">
+		<link rel="stylesheet" id="theme-css" href="/assets/css/$$$.css">
 		<style id="user-background-style"></style>
 		{% comment %}
 			Hide various elements that are dysfunctional without JS

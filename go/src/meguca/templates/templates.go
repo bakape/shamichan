@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	indexTemplates map[auth.ModerationLevel][3][]byte
+	indexTemplates map[auth.ModerationLevel][4][]byte
 	mu             sync.RWMutex
 )
 
@@ -23,10 +23,10 @@ func Compile() error {
 		auth.NotLoggedIn, auth.NotStaff, auth.Janitor, auth.Moderator,
 		auth.BoardOwner, auth.Admin,
 	}
-	t := make(map[auth.ModerationLevel][3][]byte, len(levels))
+	t := make(map[auth.ModerationLevel][4][]byte, len(levels))
 	for _, pos := range levels {
 		split := bytes.Split([]byte(renderIndex(pos)), []byte("$$$"))
-		t[pos] = [3][]byte{split[0], split[1], split[2]}
+		t[pos] = [4][]byte{split[0], split[1], split[2], split[3]}
 	}
 
 	mu.Lock()
@@ -45,12 +45,12 @@ func Board(
 	minimal, catalog bool,
 	threadHTML []byte,
 ) []byte {
-	boardConf := config.GetBoardConfigs(b)
-	title := html.EscapeString(fmt.Sprintf("/%s/ - %s", b, boardConf.Title))
+	conf := config.GetBoardConfigs(b)
+	title := html.EscapeString(fmt.Sprintf("/%s/ - %s", b, conf.Title))
 	html := renderBoard(
 		threadHTML,
 		b, title,
-		boardConf,
+		conf,
 		page, total,
 		pos,
 		catalog,
@@ -59,7 +59,7 @@ func Board(
 	if minimal {
 		return []byte(html)
 	}
-	return execIndex(html, title, pos)
+	return execIndex(html, title, conf.DefaultCSS, pos)
 }
 
 // Thread renders thread page HTML for noscript browsers
@@ -72,11 +72,12 @@ func Thread(
 ) []byte {
 	title = html.EscapeString(fmt.Sprintf("/%s/ - %s", board, title))
 	html := renderThread(postHTML, id, board, abbrev, pos)
-	return execIndex(html, title, pos)
+	theme := config.GetBoardConfigs(board).DefaultCSS
+	return execIndex(html, title, theme, pos)
 }
 
 // Execute and index template in the second pass
-func execIndex(html, title string, pos auth.ModerationLevel) []byte {
+func execIndex(html, title, theme string, pos auth.ModerationLevel) []byte {
 	mu.RLock()
 	t := indexTemplates[pos]
 	mu.RUnlock()
@@ -85,7 +86,9 @@ func execIndex(html, title string, pos auth.ModerationLevel) []byte {
 		t[0],
 		[]byte(title),
 		t[1],
-		[]byte(html),
+		[]byte(theme),
 		t[2],
+		[]byte(html),
+		t[3],
 	}, nil)
 }

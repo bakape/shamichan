@@ -179,6 +179,18 @@ func validateBoardConfigs(
 	case len(conf.Title) > common.MaxLenBoardTitle:
 		err = errTitleTooLong
 	}
+	if err == nil {
+		matched := false
+		for _, t := range common.Themes {
+			if conf.DefaultCSS == t {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			err = errors.New("invalid default theme")
+		}
+	}
 	if err != nil {
 		http.Error(w, fmt.Sprintf("400 %s", err), 400)
 		return false

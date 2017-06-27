@@ -21,8 +21,13 @@ var (
 		Required:     true,
 		Autocomplete: "new-password",
 	}
-	sageSpec       = inputSpec{ID: "sage"}
-	staffTitleSpec = inputSpec{ID: "staffTitle"}
+	sageSpec         = inputSpec{ID: "sage"}
+	staffTitleSpec   = inputSpec{ID: "staffTitle"}
+	defaultThemeSpec = inputSpec{
+		ID:      "defaultCSS",
+		Type:    _select,
+		Options: common.Themes,
+	}
 )
 
 var specs = map[string][]inputSpec{
@@ -129,6 +134,7 @@ var specs = map[string][]inputSpec{
 			Rows:      5,
 			MaxLength: common.MaxLenRules,
 		},
+		defaultThemeSpec,
 		{
 			ID:        "eightball",
 			Type:      _array,
@@ -201,11 +207,7 @@ var specs = map[string][]inputSpec{
 			Type:    _select,
 			Options: common.Langs,
 		},
-		{
-			ID:      "defaultCSS",
-			Type:    _select,
-			Options: common.Themes,
-		},
+		defaultThemeSpec,
 		{ID: "pyu"},
 		{
 			ID:       "maxWidth",

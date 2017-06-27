@@ -82,14 +82,18 @@ func TestBoardConfiguration(t *testing.T) {
 
 	const board = "a"
 	conf := config.BoardConfigs{
-		ID: board,
+		ID:        board,
+		Eightball: []string{},
 		BoardPublic: config.BoardPublic{
 			ForcedAnon: true,
+			DefaultCSS: "moe",
 		},
-		Eightball: []string{},
 	}
 	init := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
+			BoardPublic: config.BoardPublic{
+				DefaultCSS: "moe",
+			},
 			ID:        board,
 			Eightball: []string{},
 		},
@@ -126,7 +130,11 @@ func TestValidateBoardConfigs(t *testing.T) {
 	}{
 		{
 			"all is well",
-			config.BoardConfigs{},
+			config.BoardConfigs{
+				BoardPublic: config.BoardPublic{
+					DefaultCSS: "moe",
+				},
+			},
 			nil,
 		},
 		{

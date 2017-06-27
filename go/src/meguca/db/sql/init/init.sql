@@ -67,6 +67,7 @@ create table boards (
 	disableRobots boolean not null default false,
 	id text primary key,
 	created timestamp not null,
+	defaultCSS text not null,
 	title varchar(100) not null,
 	notice varchar(500) not null,
 	rules varchar(5000) not null,
