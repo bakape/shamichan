@@ -4,7 +4,7 @@ import { page, posts, loadFromDB, displayLoading } from '../state'
 import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
 import {
-	extractConfigs, isBanned, localizeThreads, extractPost, reparseOpenPosts,
+	extractConfigs, localizeThreads, extractPost, reparseOpenPosts,
 	extractPageData, hidePosts,
 } from "./common"
 import { ThreadData } from "../common"
@@ -39,6 +39,11 @@ export function renderFresh(html: string) {
 	}
 	extractConfigs()
 	render()
+}
+
+// Check if the rendered page is a ban page
+function isBanned(): boolean {
+	return !!document.querySelector(".ban-page")
 }
 
 async function extractCatalogModels() {

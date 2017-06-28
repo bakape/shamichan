@@ -1,6 +1,6 @@
 import { ThreadData } from "../common"
 import {
-    extractConfigs, isBanned, extractPost, localizeThreads, reparseOpenPosts,
+    extractConfigs, extractPost, localizeThreads, reparseOpenPosts,
     extractPageData, hidePosts,
 } from "./common"
 import { findSyncwatches } from "../posts"
@@ -15,9 +15,6 @@ let postCtr = 0,
 
 // Render the HTML of a thread page
 export default function () {
-    if (isBanned()) {
-        return
-    }
     extractConfigs()
 
     const { threads: data, backlinks } = extractPageData<ThreadData>(),
