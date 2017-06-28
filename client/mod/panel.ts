@@ -196,11 +196,15 @@ class BanForm extends HidableForm {
 			}
 		}
 
-		return {
+		const data = {
 			duration,
-			global: this.inputElement("global").checked,
 			reason: this.inputElement("reason").value,
 		}
+		const g = this.inputElement("global")
+		if (g) {
+			data["global"] = g.checked
+		}
+		return data
 	}
 }
 
