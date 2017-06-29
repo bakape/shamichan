@@ -78,6 +78,7 @@ export interface ImageData {
 	MD5: string
 	SHA1: string
 	name: string
+	flag?: string
 
 	// Added client-side
 	large: boolean              // Render larger thumbnails

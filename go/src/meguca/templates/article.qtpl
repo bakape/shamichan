@@ -42,6 +42,9 @@
 					{% space %}##{% space %}{%s= lang.Get().Common.Posts[p.Auth] %}
 				{% endif %}
 			</b>
+			{% if p.Flag != "" %}
+				<img class="flag" src="/assets/flags/{%s= p.Flag %}.svg" title="{%s= p.Flag %}">
+			{% endif %}
 			<time>
 				{%s= formatTime(p.Time) %}
 			</time>

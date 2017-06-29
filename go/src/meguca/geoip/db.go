@@ -3,6 +3,7 @@ package geoip
 import (
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/oschwald/maxminddb-golang"
@@ -41,14 +42,14 @@ func LookUp(ip string) (iso string) {
 	if err := db.Lookup(dec, &record); err != nil {
 		log.Printf("country lookup for `%s`: %s", ip, err)
 	}
-	iso = record.Country.ISOCode
+	iso = strings.ToLower(record.Country.ISOCode)
 
-	if iso == "US" {
+	if iso == "us" {
 		t := time.Now()
 		if t.Month() == time.July {
 			day := t.Day()
 			if 3 >= day && day <= 5 {
-				iso = "IL"
+				iso = "il"
 			}
 		}
 	}
