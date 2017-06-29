@@ -6,6 +6,7 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
+	"meguca/geoip"
 	"meguca/parser"
 	"meguca/websockets/feeds"
 	"strings"
@@ -64,12 +65,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		return
 	}
 
-	post, err = constructPost(
-		req.ReplyCreationRequest,
-		conf.ForcedAnon,
-		ip,
-		req.Board,
-	)
+	post, err = constructPost(req.ReplyCreationRequest, conf, ip)
 	if err != nil {
 		return
 	}
@@ -135,7 +131,7 @@ func CreatePost(
 		return
 	}
 
-	post, err = constructPost(req, conf.ForcedAnon, ip, board)
+	post, err = constructPost(req, conf, ip)
 	if err != nil {
 		return
 	}
@@ -236,8 +232,8 @@ func getBoardConfig(board string) (conf config.BoardConfigs, err error) {
 // Construct the common parts of the new post for both threads and replies
 func constructPost(
 	req ReplyCreationRequest,
-	forcedAnon bool,
-	ip, board string,
+	conf config.BoardConfigs,
+	ip string,
 ) (
 	post db.Post, err error,
 ) {
@@ -248,16 +244,20 @@ func constructPost(
 				Sage: req.Sage,
 				Body: req.Body,
 			},
-			Board: board,
+			Board: conf.ID,
 		},
 		IP: ip,
 	}
 
-	if !forcedAnon {
+	if !conf.ForcedAnon {
 		post.Name, post.Trip, err = parser.ParseName(req.Name)
 		if err != nil {
 			return
 		}
+	}
+
+	if conf.Flags {
+		post.Flag = geoip.LookUp(ip)
 	}
 
 	if utf8.RuneCountInString(req.Body) > common.MaxLenBody {
@@ -279,7 +279,7 @@ func constructPost(
 	// Attach staff position title after validations
 	if req.UserID != "" {
 		var pos auth.ModerationLevel
-		pos, err = db.FindPosition(board, req.UserID)
+		pos, err = db.FindPosition(conf.ID, req.UserID)
 		if err != nil {
 			return
 		}
@@ -312,7 +312,7 @@ func constructPost(
 	} else {
 		post.Links, post.Commands, err = parser.ParseBody(
 			[]byte(req.Body),
-			board,
+			conf.ID,
 		)
 		if err != nil {
 			return

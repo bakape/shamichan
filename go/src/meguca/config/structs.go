@@ -46,6 +46,7 @@ type BoardPublic struct {
 	ReadOnly   bool   `json:"readOnly"`
 	TextOnly   bool   `json:"textOnly"`
 	ForcedAnon bool   `json:"forcedAnon"`
+	Flags      bool   `json:"flags"`
 	DefaultCSS string `json:"defaultCSS"`
 	Title      string `json:"title"`
 	Notice     string `json:"notice"`

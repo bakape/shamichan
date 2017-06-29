@@ -88,6 +88,10 @@
 			"Mail kontaktowy",
 			"Mail kontaktowy znajdujący się na górze strony."
 		],
+		"flags": [
+			"Country flags",
+			"Display poster country flags on posts"
+		],
 		"forcedAnon": [
 			"Wymuszona anonimowość",
 			"Wyłącz nazwy użytkowników, tripkody i maile w postach"
