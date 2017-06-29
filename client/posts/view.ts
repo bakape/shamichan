@@ -159,6 +159,7 @@ export default class PostView extends ImageHandler {
         if (flag) {
             const el = this.el.querySelector(".flag")
             el.setAttribute("src", `/assets/flags/${flag}.svg`)
+            el.setAttribute("title", flag)
             el.hidden = false
         }
     }
