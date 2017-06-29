@@ -149,6 +149,8 @@ the password "password"
 * Change the default password
 * Create a board from the administration panel
 * Configure server from the administration panel
+* To enable country flags on posts download and place `GeoLite2-Country.mmdb`
+into the root directory
 
 ## Development
 * See `./docs` for more documentation
