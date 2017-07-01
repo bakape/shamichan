@@ -12,6 +12,12 @@ import (
 // nil, if database not loaded
 var db *maxminddb.Reader
 
+var NY *time.Location
+
+func init() {
+	NY, _ = time.LoadLocation("America/New_York")
+}
+
 func Load() error {
 	var err error
 	db, err = maxminddb.Open("GeoLite2-Country.mmdb")
@@ -44,13 +50,10 @@ func LookUp(ip string) (iso string) {
 	}
 	iso = strings.ToLower(record.Country.ISOCode)
 
-	if iso == "us" {
-		t := time.Now()
-		if t.Month() == time.July {
-			day := t.Day()
-			if 3 >= day && day <= 5 {
-				iso = "il"
-			}
+	if iso == "us" && NY != nil {
+		t := time.Now().In(NY)
+		if t.Month() == time.July && t.Day() == 4 {
+			iso = "il"
 		}
 	}
 
