@@ -93,9 +93,10 @@ allow caching of generated posts.
 	<div id="catalog">
 		{% for _, t := range b %}
 			{% code idStr:= strconv.FormatUint(t.ID, 10) %}
+			{% code hasImage := t.Image != nil && t.Image.ThumbType != common.NoFile %}
 			<article id="p{%s= idStr %}" {%= postClass(t.Post) %} data-id="{%s= idStr %}">
 				{%= deletedToggle() %}
-				{% if t.Image != nil %}
+				{% if hasImage %}
 					<figure>
 						{% code img := *t.Image %}
 						<a href="/{%s= t.Board %}/{%s= idStr %}">
@@ -116,7 +117,7 @@ allow caching of generated posts.
 						/
 						{%s= strconv.FormatUint(uint64(t.ImageCtr), 10) %}
 					</span>
-					{% if t.Image == nil %}
+					{% if !hasImage %}
 						{%= expandLink(t.Board, idStr) %}
 					{% endif %}
 					{%= last100Link(t.Board, idStr) %}

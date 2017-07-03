@@ -94,17 +94,5 @@ func detectZip(data []byte) (string, string) {
 func processArchive(src thumbnailer.Source, _ thumbnailer.Options) (
 	thumbnailer.Source, thumbnailer.Thumbnail, error,
 ) {
-	thumb := thumbnailer.Thumbnail{
-		Image: thumbnailer.Image{
-			Data: MustAsset("archive.png"),
-			Dims: thumbnailer.Dims{
-				Width:  150,
-				Height: 150,
-			},
-		},
-		IsPNG: true,
-	}
-	src.Width = 150
-	src.Height = 150
-	return src, thumb, nil
+	return src, thumbnailer.Thumbnail{}, nil
 }

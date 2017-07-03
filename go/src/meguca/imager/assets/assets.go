@@ -82,13 +82,11 @@ func relativeThumbPath(thumbType uint8, SHA1 string) string {
 func ImageSearchPath(img common.ImageCommon) string {
 	switch img.FileType {
 	case common.JPEG, common.PNG, common.GIF:
-		if img.Size > 8<<20 {
-			return relativeThumbPath(img.ThumbType, img.SHA1)
+		if img.Size < 8<<20 {
+			return RelativeSourcePath(img.FileType, img.SHA1)
 		}
-		return RelativeSourcePath(img.FileType, img.SHA1)
-	default:
-		return relativeThumbPath(img.ThumbType, img.SHA1)
 	}
+	return relativeThumbPath(img.ThumbType, img.SHA1)
 }
 
 func imageRoot() string {
@@ -127,10 +125,14 @@ func Write(SHA1 string, fileType, thumbType uint8, src, thumb []byte) error {
 
 	ch := make(chan error)
 	go func() {
-		ch <- writeFile(paths[0], src)
+		if thumb == nil {
+			ch <- nil
+		} else {
+			ch <- writeFile(paths[1], thumb)
+		}
 	}()
 
-	for _, err := range [...]error{writeFile(paths[1], thumb), <-ch} {
+	for _, err := range [...]error{writeFile(paths[0], src), <-ch} {
 		switch {
 		// Ignore files already written by another thread or process
 		case err == nil, os.IsExist(err):

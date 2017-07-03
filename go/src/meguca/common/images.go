@@ -18,6 +18,7 @@ const (
 	TGZ
 	TXZ
 	FLAC
+	NoFile
 )
 
 // Extensions maps internal file types to their canonical file extensions

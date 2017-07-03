@@ -2,7 +2,6 @@ package imager
 
 import (
 	"meguca/common"
-	. "meguca/test"
 	"strings"
 	"testing"
 
@@ -52,19 +51,13 @@ func TestProcessArchive(t *testing.T) {
 		},
 	}
 
-	fallback := readFallbackThumb(t, "archive.png")
-
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			thumb, img, err := processFile(
-				readSample(t, c.file),
-				common.ImageCommon{},
-				dummyOpts,
-			)
-
+			var img common.ImageCommon
+			_, err := processFile(readSample(t, c.file), &img, dummyOpts)
 			if c.err != "" {
 				if err == nil {
 					t.Fatalf("expected an error")
@@ -78,8 +71,6 @@ func TestProcessArchive(t *testing.T) {
 			}
 
 			assertFileType(t, img.FileType, c.typ)
-			AssertBufferEquals(t, thumb, fallback)
-			assertDims(t, img.Dims, [4]uint16{150, 150, 150, 150})
 		})
 	}
 }
