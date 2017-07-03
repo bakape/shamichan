@@ -44,11 +44,6 @@ func TestProcessArchive(t *testing.T) {
 			file: "sample.tar.xz",
 			typ:  common.TXZ,
 		},
-		{
-			name: "file too small",
-			file: "sample.txt",
-			err:  "unsupported MIME type",
-		},
 	}
 
 	for i := range cases {

@@ -38,6 +38,7 @@ var (
 		mimeTarXZ:         common.TXZ,
 		mimeZip:           common.ZIP,
 		"audio/x-flac":    common.FLAC,
+		mimeText:          common.TXT,
 	}
 
 	// MIME types from thumbnailer to accept
@@ -55,6 +56,7 @@ var (
 		mimeTarGZ:         true,
 		mimeTarXZ:         true,
 		"audio/x-flac":    true,
+		mimeText:          true,
 	}
 
 	errTooLarge = errors.New("file too large")
@@ -64,8 +66,7 @@ var (
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
-	maxSize := config.Get().MaxSize << 20
-	r.Body = http.MaxBytesReader(w, r.Body, int64(maxSize))
+	r.Body = http.MaxBytesReader(w, r.Body, int64(config.Get().MaxSize<<20))
 
 	code, id, err := ParseUpload(r)
 	if err != nil {

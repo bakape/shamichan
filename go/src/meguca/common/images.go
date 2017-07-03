@@ -19,6 +19,7 @@ const (
 	TXZ
 	FLAC
 	NoFile
+	TXT
 )
 
 // Extensions maps internal file types to their canonical file extensions
@@ -36,6 +37,7 @@ var Extensions = map[uint8]string{
 	TGZ:      "tar.gz",
 	TXZ:      "tar.xz",
 	FLAC:     "flac",
+	TXT:      "txt",
 }
 
 // Image contains a post's image and thumbnail data

@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"io"
 
-	"github.com/bakape/thumbnailer"
 	"github.com/ulikunitz/xz"
 )
 
@@ -15,22 +14,6 @@ const (
 	mimeTarGZ = "application/gzip"
 	mimeTarXZ = "application/x-xz"
 )
-
-func init() {
-	fns := [...]thumbnailer.MatcherFunc{
-		detect7z,
-		detectZip,
-		detectTarGZ,
-		detectTarXZ,
-	}
-	for _, fn := range fns {
-		thumbnailer.RegisterMatcher(fn)
-	}
-
-	for _, m := range [...]string{mimeZip, mime7Zip, mimeTarGZ, mimeTarXZ} {
-		thumbnailer.RegisterProcessor(m, processArchive)
-	}
-}
 
 // Detect if file is a TAR archive compressed with GZIP
 func detectTarGZ(buf []byte) (mime string, ext string) {
@@ -88,11 +71,4 @@ func detectZip(data []byte) (string, string) {
 		return mimeZip, "zip"
 	}
 	return "", ""
-}
-
-// Attach thumbnail to archive uploads and return
-func processArchive(src thumbnailer.Source, _ thumbnailer.Options) (
-	thumbnailer.Source, thumbnailer.Thumbnail, error,
-) {
-	return src, thumbnailer.Thumbnail{}, nil
 }

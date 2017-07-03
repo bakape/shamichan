@@ -203,6 +203,7 @@ function renderImagePreview(event: MouseEvent) {
 		case fileTypes["7z"]:
 		case fileTypes["tar.gz"]:
 		case fileTypes["tar.xz"]:
+		case fileTypes.txt:
 			return clear()
 		case fileTypes.webm:
 			if (!options.webmHover) {

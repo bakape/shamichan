@@ -35,7 +35,8 @@ License: GNU AGPL
 
 <details><summary>Files and images</summary>
 
-- JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ are supported
+- JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ, TAR.XZ, TXT
+are supported
 - Transparent PNG and GIF thumbnails
 - Configurable size limits
 - Inbuilt reverse image search

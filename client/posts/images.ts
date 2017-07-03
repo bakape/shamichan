@@ -282,6 +282,7 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes["7z"]:
 			case fileTypes["tar.gz"]:
 			case fileTypes["tar.xz"]:
+			case fileTypes.txt:
 				event.preventDefault()
 				return this.el.querySelector("figcaption a[download]").click()
 			case fileTypes.mp3:
