@@ -1,5 +1,6 @@
-select op, board, editing, banned, spoiler, deleted, sage, id, time, body, name,
-		trip, auth, links, commands, imageName, images.*
+select op, board, editing, banned, spoiler, deleted, sage, id, time, body, flag,
+		name, trip, auth, links, commands, imageName,
+		images.*
 	from posts
 	left outer join images
 		on posts.SHA1 = images.SHA1

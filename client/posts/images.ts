@@ -8,42 +8,6 @@ import options from "../options"
 import { getModel, posts, config } from "../state"
 import lang from "../lang"
 
-// Specs for handling image search link clicks
-type ImageSearchSpec = {
-	type: ISType
-	url: string
-}
-
-// Types of data requested by the search provider
-const enum ISType { src, MD5, SHA1 }
-
-const ISSpecs: ImageSearchSpec[] = [
-	{
-		type: ISType.src,
-		url: "https://www.google.com/searchbyimage?image_url=",
-	},
-	{
-		type: ISType.src,
-		url: "http://iqdb.org/?url=",
-	},
-	{
-		type: ISType.src,
-		url: "http://saucenao.com/search.php?db=999&url=",
-	},
-	{
-		type: ISType.src,
-		url: "https://whatanime.ga/?url=",
-	},
-	{
-		type: ISType.MD5,
-		url: "https://desuarchive.org/_/search/image/",
-	},
-	{
-		type: ISType.SHA1,
-		url: "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
-	},
-]
-
 // Expand all image thumbnails automatically
 export let expandAll = false
 
@@ -97,24 +61,41 @@ export default class ImageHandler extends View<Post> {
 	// Render the actual thumbnail image
 	private renderThumbnail() {
 		const el = this.el.querySelector("figure a"),
-			data = this.model.image,
-			src = sourcePath(data.SHA1, data.fileType)
+			{ SHA1, fileType, thumbType, dims, large, spoiler } = this
+				.model
+				.image,
+			src = sourcePath(SHA1, fileType)
 		let thumb: string,
-			[, , thumbWidth, thumbHeight] = data.dims
+			[, , thumbWidth, thumbHeight] = dims
 
-		if (data.spoiler && options.spoilers) {
+		if (thumbType === fileTypes.noFile) {
+			// No thumbnail exists
+			let file: string
+			switch (fileType) {
+				case fileTypes.mp4:
+				case fileTypes.mp3:
+				case fileTypes.ogg:
+				case fileTypes.flac:
+					file = "audio"
+					break
+				default:
+					file = "file"
+			}
+			thumb = `/assets/${file}.png`
+			thumbHeight = thumbWidth = 150
+		} else if (spoiler && options.spoilers) {
 			// Spoilered and spoilers enabled
 			thumb = '/assets/spoil/default.jpg'
 			thumbHeight = thumbWidth = 150
-		} else if (data.fileType === fileTypes.gif && options.autogif) {
+		} else if (fileType === fileTypes.gif && options.autogif) {
 			// Animated GIF thumbnails
 			thumb = src
 		} else {
-			thumb = thumbPath(data.SHA1, data.thumbType)
+			thumb = thumbPath(SHA1, thumbType)
 		}
 
 		// Downscale thumbnail for higher DPI, unless specified not to
-		if (!data.large && (thumbWidth > 125 || thumbHeight > 125)) {
+		if (!large && (thumbWidth > 125 || thumbHeight > 125)) {
 			thumbWidth *= 0.8333
 			thumbHeight *= 0.8333
 		}
@@ -188,7 +169,12 @@ export default class ImageHandler extends View<Post> {
 					el.textContent = s
 					break
 				case "dims":
-					el.textContent = `${data.dims[0]}x${data.dims[1]}`
+					const [w, h] = data.dims
+					if (!w && !h) {
+						el.hidden = true
+					} else {
+						el.textContent = `${w}x${h}`
+					}
 					break
 			}
 		}
@@ -202,52 +188,90 @@ export default class ImageHandler extends View<Post> {
 		})
 		link.innerHTML = name
 
-		// Assign URLs to image search links
-		const ch = el.querySelector(".image-search-container").children
-		for (let i = 0; i < ch.length; i++) {
-			const { type, url } = ISSpecs[i]
-			let arg: string
-			switch (type) {
-				case ISType.src:
-					arg = this.resolveFuzzyIS()
-					break
-				case ISType.MD5:
-					arg = data.MD5
-					break
-				case ISType.SHA1:
-					arg = data.SHA1
-					break
-			}
-			ch[i].setAttribute("href", url + arg)
-		}
+		this.renderImageSearch(el)
 
 		el.hidden = false
 	}
 
-	// Resolve URL of image search providers, that require to download the
-	// image file
-	private resolveFuzzyIS(): string {
-		const { fileType, thumbType, SHA1, size } = this.model.image
-		let root: string,
+	// Assign URLs to image search links
+	private renderImageSearch(figcaption: Element) {
+		const { fileType, thumbType, SHA1, MD5, size } = this.model.image,
+			el = figcaption.querySelector(".image-search-container")
+		if (thumbType === fileTypes.noFile || fileType === fileTypes.pdf) {
+			el.hidden = true
+			return
+		}
+
+		// Resolve URL of image search providers, that require to download the
+		// image file
+		let url: string,
+			root: string,
 			type: fileTypes
 		switch (fileType) {
 			case fileTypes.jpg:
 			case fileTypes.gif:
 			case fileTypes.png:
-				if (size > 8 << 20) {
-					root = "thumb"
-					type = thumbType
-				} else {
+				if (size < 8 << 20) {
 					root = "src"
 					type = fileType
 				}
 				break
-			default:
-				root = "thumb"
-				type = thumbType
 		}
-		const s = `/assets/images/${root}/${SHA1}.${fileTypes[type]}`
-		return encodeURI(location.origin + s)
+		if (!root) {
+			root = "thumb"
+			type = thumbType
+		}
+		url = `/assets/images/${root}/${SHA1}.${fileTypes[type]}`
+		url = encodeURI(location.origin + url)
+
+		const [google, iqdb, saucenao, whatanime, desuarchive, exhentai] =
+			Array.from(el.children) as HTMLElement[]
+		google.setAttribute(
+			"href",
+			"https://www.google.com/searchbyimage?image_url=" + url,
+		)
+		iqdb.setAttribute(
+			"href",
+			"http://iqdb.org/?url=" + url,
+		)
+		saucenao.setAttribute(
+			"href",
+			"http://saucenao.com/search.php?db=999&url=" + url,
+		)
+		whatanime.setAttribute(
+			"href",
+			"https://whatanime.ga/?url=" + url,
+		)
+
+		if (desuarchive) {
+			switch (fileType) {
+				case fileTypes.jpg:
+				case fileTypes.png:
+				case fileTypes.gif:
+				case fileTypes.webm:
+					desuarchive.setAttribute(
+						"href",
+						"https://desuarchive.org/_/search/image/" + MD5,
+					)
+					break
+				default:
+					desuarchive.remove()
+			}
+		}
+		if (exhentai) {
+			switch (fileType) {
+				case fileTypes.jpg:
+				case fileTypes.png:
+					exhentai.setAttribute(
+						"href",
+						"http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash="
+						+ SHA1,
+					)
+					break
+				default:
+					exhentai.remove()
+			}
+		}
 	}
 
 	public toggleImageExpansion(event: MouseEvent) {
@@ -263,6 +287,7 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes["7z"]:
 			case fileTypes["tar.gz"]:
 			case fileTypes["tar.xz"]:
+			case fileTypes.txt:
 				event.preventDefault()
 				return this.el.querySelector("figcaption a[download]").click()
 			case fileTypes.mp3:

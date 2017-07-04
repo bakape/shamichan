@@ -1,14 +1,14 @@
 // Post and image hover previews
 
-import { posts, getModel } from "../state"
+import { posts, getModel, page } from "../state"
 import options from "../options"
 import {
 	setAttrs, getClosestID, fetchJSON, hook, emitChanges, ChangeEmitter
 } from "../util"
 import { Post } from "./model"
-import ImageHandler from "./images"
+import ImageHandler, { sourcePath } from "./images"
 import PostView from "./view"
-import { PostData } from "../common"
+import { PostData, fileTypes } from "../common"
 
 interface MouseMove extends ChangeEmitter {
 	event: MouseEvent
@@ -173,13 +173,18 @@ function clonePost(el: HTMLElement): HTMLElement {
 }
 
 function renderImagePreview(event: MouseEvent) {
-	if (!options.imageHover) {
+	if (!options.imageHover || page.catalog) {
 		return
 	}
 	const target = event.target as HTMLElement
-	const bypass = target.tagName !== "IMG"
-		|| target.classList.contains("expanded")
-		|| target.classList.contains("catalog")
+	let bypass = target.tagName !== "IMG",
+		post: Post
+	if (!bypass) {
+		post = getModel(target)
+		bypass = !post
+			|| post.image.expanded
+			|| post.image.thumbType === fileTypes.noFile
+	}
 	if (bypass) {
 		if (imagePreview) {
 			imagePreview.remove()
@@ -188,37 +193,28 @@ function renderImagePreview(event: MouseEvent) {
 		return
 	}
 
-	const link = target.closest("a")
-	if (!link) {
-		return
-	}
-	const src = link.getAttribute("href"),
-		ext = src.slice(src.lastIndexOf(".") + 1)
 	let tag: string
 
-	switch (ext) {
-		case "pdf": // Nothing to preview for these
-		case "mp3":
-		case "flac":
-		case "zip":
-		case "7z":
-		case "gz":
-		case "xz":
+	switch (post.image.fileType) {
+		case fileTypes.pdf: // Nothing to preview for these
+		case fileTypes.mp3:
+		case fileTypes.flac:
+		case fileTypes.zip:
+		case fileTypes["7z"]:
+		case fileTypes["tar.gz"]:
+		case fileTypes["tar.xz"]:
+		case fileTypes.txt:
 			return clear()
-		case "webm":
+		case fileTypes.webm:
 			if (!options.webmHover) {
 				return clear()
 			}
 			tag = "video"
 			break
-		case "mp4":
-		case "ogg":
-			if (!options.webmHover) {
-				return clear()
-			}
-			const model = getModel(link)
+		case fileTypes.mp4:
+		case fileTypes.ogg:
 			// No video OGG and MP4 are treated just like MP3
-			if (!model || !model.image.video) {
+			if (!options.webmHover || !post.image.video) {
 				return clear()
 			}
 			tag = "video"
@@ -229,7 +225,7 @@ function renderImagePreview(event: MouseEvent) {
 
 	const el = document.createElement(tag)
 	setAttrs(el, {
-		src: src,
+		src: sourcePath(post.image.SHA1, post.image.fileType),
 		autoplay: "",
 		loop: "",
 	})

@@ -88,6 +88,10 @@
 			"Email na spätnú väzbu",
 			"User feedback email to display in the top banner"
 		],
+		"flags": [
+			"Country flags",
+			"Display poster country flags on posts"
+		],
 		"forcedAnon": [
 			"Vynútená anonymita",
 			"Zruš uživateľské mená, výletokódy a emaily v plagátoch"

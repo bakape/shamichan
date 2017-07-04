@@ -29,6 +29,7 @@ export class Post extends Model implements PostData {
 	public auth: string
 	public subject: string
 	public board: string
+	public flag: string
 	public state: TextState
 	public commands: Command[]
 	public backlinks: { [id: number]: number }

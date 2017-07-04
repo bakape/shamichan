@@ -50,7 +50,7 @@ create table images (
 	size int not null,
 	MD5 char(22) not null,
 	SHA1 char(40) primary key,
-	Title varchar(100) not null,
+	Title varchar(200) not null,
 	Artist varchar(100) not null
 );
 
@@ -64,7 +64,8 @@ create table boards (
 	readOnly boolean not null,
 	textOnly boolean not null,
 	forcedAnon boolean not null,
-	disableRobots boolean not null default false,
+	disableRobots boolean default false,
+	flags boolean default false,
 	id text primary key,
 	created timestamp not null,
 	defaultCSS text not null,
@@ -122,6 +123,7 @@ create table posts (
 	op bigint not null references threads on delete cascade,
 	time bigint not null,
 	board text not null,
+	flag char(2),
 	trip char(10),
 	auth varchar(20),
 	SHA1 char(40) references images on delete set null,

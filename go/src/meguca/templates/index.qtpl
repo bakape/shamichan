@@ -57,6 +57,7 @@
 				<input type="checkbox" class="mod-checkbox hidden">
 				<h3 hidden></h3>
 				<b class="name"></b>
+				<img class="flag" hidden>
 				<time></time>
 				<nav>
 					<a>
@@ -120,7 +121,7 @@
 				{%= cancel() %}
 				<input name="done" type="button" value="{%s= ln.UI["done"] %}" hidden>
 				<span class="upload-container" hidden>
-					<input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip">
+					<input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip, audio/x-flac, text/plain">
 					<span data-id="spoiler">
 						<label>
 							<input type="checkbox" name="spoiler">

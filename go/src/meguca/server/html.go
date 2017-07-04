@@ -1,8 +1,6 @@
 package server
 
 import (
-	"database/sql"
-	"fmt"
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/common"
@@ -10,7 +8,6 @@ import (
 	"meguca/db"
 	"meguca/templates"
 	"net/http"
-	"strconv"
 )
 
 // Apply headers and write HTML to client
@@ -257,27 +254,4 @@ func noscriptCaptcha(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	serveHTML(w, r, "", []byte(templates.NoscriptCaptcha(ip)), nil)
-}
-
-// Redirect the client to the appropriate board through a cross-board redirect
-func crossRedirect(w http.ResponseWriter, r *http.Request) {
-	idStr := extractParam(r, "id")
-	id, err := strconv.ParseUint(idStr, 10, 64)
-	if err != nil {
-		text404(w)
-		return
-	}
-
-	board, op, err := db.GetPostParenthood(id)
-	switch err {
-	case nil:
-		url := r.URL
-		url.Path = fmt.Sprintf("/%s/%d", board, op)
-		url.Fragment = "p" + idStr
-		http.Redirect(w, r, url.String(), 301)
-	case sql.ErrNoRows:
-		text404(w)
-	default:
-		text500(w, r, err)
-	}
 }

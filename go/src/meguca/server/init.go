@@ -10,6 +10,7 @@ import (
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/db"
+	"meguca/geoip"
 	"meguca/imager/assets"
 	"meguca/lang"
 	"meguca/templates"
@@ -136,7 +137,7 @@ func startServer() {
 			log.Fatal(err)
 		}
 	}
-	load(db.LoadDB, assets.CreateDirs)
+	load(db.LoadDB, assets.CreateDirs, geoip.Load)
 	load(lang.Load)
 	load(templates.Compile)
 

@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"database/sql"
 	"io/ioutil"
-	"testing"
-
 	"meguca/common"
 	"meguca/imager/assets"
 	. "meguca/test"
+	"testing"
 )
 
 func TestGetImage(t *testing.T) {

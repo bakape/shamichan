@@ -2,14 +2,13 @@ package imager
 
 import (
 	"io/ioutil"
-	"os"
-	"path/filepath"
-	"testing"
-
 	"meguca/config"
 	"meguca/db"
 	"meguca/imager/assets"
 	. "meguca/test"
+	"os"
+	"path/filepath"
+	"testing"
 )
 
 func TestMain(m *testing.M) {
@@ -46,7 +45,7 @@ func readSample(t *testing.T, name string) []byte {
 
 // How do we assert a thumbnail?
 func assertThumbnail(t *testing.T, thumb []byte) {
-	if len(thumb) < 100 {
+	if thumb != nil && len(thumb) < 100 {
 		t.Fatal("thumbnail too small")
 	}
 }

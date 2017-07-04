@@ -29,6 +29,7 @@ Generic post object
 | time | uint | + | Unix timestamp of post creation |
 | id | uint | + | ID number of post. Unique globally, including across boards. |
 | body | string | + | text body of post |
+| flag | string | - | poster country ISO code |
 | name | string | - | poster name |
 | trip | string | - | poster tripcode |
 | auth | string | - | signifies staff posting with staff title enabled; one of "admin", "owners", "moderators" or "janitors" |

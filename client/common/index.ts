@@ -78,6 +78,7 @@ export interface ImageData {
 	MD5: string
 	SHA1: string
 	name: string
+	flag?: string
 
 	// Added client-side
 	large: boolean              // Render larger thumbnails
@@ -89,5 +90,5 @@ export interface ImageData {
 // Possible file types of a post image
 export enum fileTypes {
 	jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz",
-	flac,
+	flac, noFile, txt
 }

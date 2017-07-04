@@ -30,11 +30,8 @@ func TestProcessWebm(t *testing.T) {
 		t.Run(c.testName, func(t *testing.T) {
 			t.Parallel()
 
-			thumb, img, err := processFile(
-				readSample(t, c.name),
-				common.ImageCommon{},
-				dummyOpts,
-			)
+			var img common.ImageCommon
+			thumb, err := processFile(readSample(t, c.name), &img, dummyOpts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -90,14 +87,14 @@ func TestProcessOGG(t *testing.T) {
 			file:   "no_video",
 			audio:  true,
 			length: 5,
-			dims:   [4]uint16{150, 150, 150, 150},
+			dims:   [4]uint16{0x0, 0x0, 0x0, 0x0},
 		},
 		{
 			name:   "opus",
 			file:   "opus",
 			audio:  true,
 			length: 5,
-			dims:   [4]uint16{150, 150, 150, 150},
+			dims:   [4]uint16{0x0, 0x0, 0x0, 0x0},
 		},
 		{
 			name:   "with cover art",
@@ -113,9 +110,10 @@ func TestProcessOGG(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			thumb, img, err := processFile(
+			var img common.ImageCommon
+			thumb, err := processFile(
 				readSample(t, c.file+".ogg"),
-				common.ImageCommon{},
+				&img,
 				dummyOpts,
 			)
 			if err != c.err {
@@ -164,14 +162,14 @@ func TestProcessMP4(t *testing.T) {
 			file:   "aac",
 			audio:  true,
 			length: 13,
-			dims:   [4]uint16{150, 150, 150, 150},
+			dims:   [4]uint16{0x0, 0x0, 0x0, 0x0},
 		},
 		{
 			name:   "mp3",
 			file:   "mp3",
 			audio:  true,
 			length: 13,
-			dims:   [4]uint16{150, 150, 150, 150},
+			dims:   [4]uint16{0x0, 0x0, 0x0, 0x0},
 		},
 		{
 			name:   "h264",
@@ -193,9 +191,10 @@ func TestProcessMP4(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			thumb, img, err := processFile(
+			var img common.ImageCommon
+			thumb, err := processFile(
 				readSample(t, c.file+".mp4"),
-				common.ImageCommon{},
+				&img,
 				dummyOpts,
 			)
 			if err != c.err {

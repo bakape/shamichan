@@ -147,13 +147,21 @@ export default class PostView extends ImageHandler {
         const nav = this.el.querySelector("nav"),
             link = nav.firstElementChild as HTMLAnchorElement,
             quote = nav.lastElementChild as HTMLAnchorElement,
-            { id } = this.model
+            { id, flag } = this.model
         let url = `#p${id}`
         if (!page.thread && !page.catalog) {
             url = `/all/${id}?last=100` + url
         }
         quote.href = link.href = url
         quote.textContent = id.toString()
+
+        // Render country flag, if any
+        if (flag) {
+            const el = this.el.querySelector(".flag")
+            el.setAttribute("src", `/assets/flags/${flag}.svg`)
+            el.setAttribute("title", flag)
+            el.hidden = false
+        }
     }
 
     // Renders a time element. Can be either absolute or relative.

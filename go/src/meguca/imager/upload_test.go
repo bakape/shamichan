@@ -161,17 +161,6 @@ func TestSuccessfulFormParse(t *testing.T) {
 	}
 }
 
-func TestWrongFileType(t *testing.T) {
-	data := readSample(t, "sample.txt")
-
-	code, _, err := newThumbnail(data, common.ImageCommon{})
-
-	if s := fmt.Sprint(err); !strings.HasPrefix(s, "unsupported MIME type:") {
-		UnexpectedError(t, err)
-	}
-	assertCode(t, code, 400)
-}
-
 func TestNewThumbnail(t *testing.T) {
 	assertTableClear(t, "images")
 	resetDirs(t)

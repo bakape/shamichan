@@ -1,5 +1,3 @@
-//go:generate go-bindata -o bin_data.go --pkg imager --nocompress --nometadata archive.png audio.png
-
 // Package imager handles image, video, etc. upload requests and processing
 package imager
 
@@ -40,6 +38,7 @@ var (
 		mimeTarXZ:         common.TXZ,
 		mimeZip:           common.ZIP,
 		"audio/x-flac":    common.FLAC,
+		mimeText:          common.TXT,
 	}
 
 	// MIME types from thumbnailer to accept
@@ -57,6 +56,7 @@ var (
 		mimeTarGZ:         true,
 		mimeTarXZ:         true,
 		"audio/x-flac":    true,
+		mimeText:          true,
 	}
 
 	errTooLarge = errors.New("file too large")
@@ -66,8 +66,7 @@ var (
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
-	maxSize := config.Get().MaxSize << 20
-	r.Body = http.MaxBytesReader(w, r.Body, int64(maxSize))
+	r.Body = http.MaxBytesReader(w, r.Body, int64(config.Get().MaxSize<<20))
 
 	code, id, err := ParseUpload(r)
 	if err != nil {
@@ -177,7 +176,7 @@ func parseUploadForm(req *http.Request) error {
 // pass the image data to the client.
 func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
 	conf := config.Get()
-	thumb, img, err := processFile(data, img, thumbnailer.Options{
+	thumb, err := processFile(data, &img, thumbnailer.Options{
 		JPEGQuality: conf.JPEGQuality,
 		MaxSourceDims: thumbnailer.Dims{
 			Width:  uint(conf.MaxWidth),
@@ -206,53 +205,48 @@ func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
 // Separate function for easier testability
 func processFile(
 	data []byte,
-	img common.ImageCommon,
+	img *common.ImageCommon,
 	opts thumbnailer.Options,
 ) (
-	[]byte, common.ImageCommon, error,
+	thumbData []byte,
+	err error,
 ) {
 	src, thumb, err := thumbnailer.ProcessBuffer(data, opts)
 	switch err {
 	case nil:
 	case thumbnailer.ErrNoCoverArt:
+		err = nil
 	default:
-		return nil, img, err
+		return
 	}
 
-	img.Audio = src.HasAudio
-	img.Video = src.HasVideo
+	thumbData = thumb.Data
 
 	img.FileType = mimeTypes[src.Mime]
 	if img.FileType == common.PNG {
 		img.APNG = apngdetector.Detect(data)
 	}
-	if thumb.IsPNG {
+	if thumb.Data == nil {
+		img.ThumbType = common.NoFile
+	} else if thumb.IsPNG {
 		img.ThumbType = common.PNG
-	} else {
-		img.ThumbType = common.JPEG
 	}
 
+	img.Audio = src.HasAudio
+	img.Video = src.HasVideo
 	img.Length = uint32(src.Length / time.Second)
 	img.Size = len(data)
 	img.Artist = src.Artist
 	img.Title = src.Title
-
-	// MP3, OGG and MP4 might only contain audio and need a fallback thumbnail
-	if thumb.Data == nil {
-		img.ThumbType = common.PNG
-		img.Dims = [4]uint16{150, 150, 150, 150}
-		thumb.Data = MustAsset("audio.png")
-	} else {
-		img.Dims = [4]uint16{
-			uint16(src.Width),
-			uint16(src.Height),
-			uint16(thumb.Width),
-			uint16(thumb.Height),
-		}
+	img.Dims = [4]uint16{
+		uint16(src.Width),
+		uint16(src.Height),
+		uint16(thumb.Width),
+		uint16(thumb.Height),
 	}
 
 	sum := md5.Sum(data)
 	img.MD5 = base64.RawURLEncoding.EncodeToString(sum[:])
 
-	return thumb.Data, img, nil
+	return
 }

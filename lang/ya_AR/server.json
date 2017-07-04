@@ -88,6 +88,10 @@
 			"Feedback email",
 			"User feedback email to display in the top banner"
 		],
+		"flags": [
+			"Country flags",
+			"Display poster country flags on posts"
+		],
 		"forcedAnon": [
 			"Forced Anonymous",
 			"Disable user names, tripcodes and emails on posts"

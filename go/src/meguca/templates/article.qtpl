@@ -42,6 +42,9 @@
 					{% space %}##{% space %}{%s= lang.Get().Common.Posts[p.Auth] %}
 				{% endif %}
 			</b>
+			{% if p.Flag != "" %}
+				<img class="flag" src="/assets/flags/{%s= p.Flag %}.svg" title="{%s= p.Flag %}">
+			{% endif %}
 			<time>
 				{%s= formatTime(p.Time) %}
 			</time>
@@ -73,52 +76,53 @@
 		{% if p.Image != nil %}
 			{% code img := *p.Image %}
 			{% code src =  assets.SourcePath(img.FileType, img.SHA1) %}
-			{% code ISSrc := c.root + assets.ImageSearchPath(img.ImageCommon) %}
 			<figcaption class="spaced">
 				<a class="image-toggle act" hidden></a>
 				<span class="spaced image-search-container">
-					<a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url={%s= ISSrc %}">
-						G
-					</a>
-					<a class="image-search iqdb" target="_blank" rel="nofollow" href="http://iqdb.org/?url={%s= ISSrc %}">
-						Iq
-					</a>
-					<a class="image-search saucenao" target="_blank" rel="nofollow" href="http://saucenao.com/search.php?db=999&url={%s= ISSrc %}">
-						Sn
-					</a>
-					<a class="image-search whatAnime" target="_blank" rel="nofollow" href="https://whatanime.ga/?url={%s= ISSrc %}">
-						Wa
-					</a>
-					<a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{%s= img.MD5 %}">
-						Ds
-					</a>
-					<a class="image-search exhentai" target="_blank" rel="nofollow" href="http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash={%s= img.SHA1 %}">
-						Ex
-					</a>
+					{%= imageSearch(c.root, img) %}
 				</span>
 				<span class="fileinfo">
-					{% if img.Artist != "" %}<span class="media-artist">{%s= img.Artist %}</span>{% endif %}
-					{% if img.Title != "" %}<span class="media-title">{%s= img.Title %}</span>{% endif %}
-					{% if img.Audio %}<span class="has-audio">♫</span>{% endif %}
-					{% if img.Length != 0 %}<span class="media-length">
-						{% code l := img.Length %}
-						{% if l < 60 %}
-							{%s= fmt.Sprintf("0:%02d", l) %}
-						{% else %}
-							{% code min := l / 60 %}
-							{%s= fmt.Sprintf("%02d:%02d", min, l - min * 60) %}
-						{% endif %}
+					{% if img.Artist != "" %}
+						<span class="media-artist">
+							{%s= img.Artist %}
+						</span>
+					{% endif %}
+					{% if img.Title != "" %}
+						<span class="media-title">
+							{%s= img.Title %}
+						</span>
+					{% endif %}
+					{% if img.Audio %}
+						<span class="has-audio">
+							♫
+						</span>
+					{% endif %}
+					{% if img.Length != 0 %}
+						<span class="media-length">
+							{% code l := img.Length %}
+							{% if l < 60 %}
+								{%s= fmt.Sprintf("0:%02d", l) %}
+							{% else %}
+								{% code min := l / 60 %}
+								{%s= fmt.Sprintf("%02d:%02d", min, l - min * 60) %}
+							{% endif %}
 						</span>
 					{% endif %}
 					{% if img.APNG %}
-						<span class="is-apng">APNG</span>
+						<span class="is-apng">
+							APNG
+						</span>
 					{% endif %}
-					<span class="filesize">{%s= readableFileSize(img.Size) %}</span>
-					<span class="dims">
-					{%s= strconv.FormatUint(uint64(img.Dims[0]), 10) %}
-					x
-					{%s= strconv.FormatUint(uint64(img.Dims[1]), 10) %}
-					</span>
+						<span class="filesize">
+							{%s= readableFileSize(img.Size) %}
+						</span>
+					{% if img.Dims != [4]uint16{} %}
+						<span class="dims">
+							{%s= strconv.FormatUint(uint64(img.Dims[0]), 10) %}
+							x
+							{%s= strconv.FormatUint(uint64(img.Dims[1]), 10) %}
+						</span>
+					{% endif %}
 				</span>
 				{% code name := imageName(img.FileType, img.Name) %}
 				<a href="{%s= assets.RelativeSourcePath(img.FileType, img.SHA1) %}" download="{%s= name %}">
@@ -131,15 +135,31 @@
 				{% code img := *p.Image %}
 				<figure>
 					<a target="_blank" href="{%s= src %}">
-						{% if img.Spoiler %}
+						{% code var w, h string  %}
+						{% switch %}
+						{% case img.ThumbType == common.NoFile %}
+							{% code var file string %}
+							{% switch img.FileType %}
+							{% case common.MP4, common.MP3, common.OGG, common.FLAC %}
+								{% code file = "audio" %}
+							{% default %}
+								{% code file = "file" %}
+							{% endswitch %}
+							<img src="/assets/{%s= file %}.png" width="125" height="125">
+						{% case img.Spoiler %}
 							{% comment %}
 								TODO: board-specific server-side spoiler rendering
 							{% endcomment %}
-							<img src="/assets/spoil/default.jpg" width="125" height="125">
-						{% else %}
-							{% code w, h := correctDims(c.subject != "", img.Dims[2], img.Dims[3]) %}
+							{% if c.subject == "" %}
+								{% code w, h = "125", "125" %}
+							{% else %}
+								{% code w, h = "150", "150" %}
+							{% endif %}
+							<img src="/assets/spoil/default.jpg" width="{%s= w %}" height="{%s= h %}">
+						{% default %}
+							{% code w, h = correctDims(c.subject != "", img.Dims[2], img.Dims[3]) %}
 							<img src="{%s= assets.ThumbPath(img.ThumbType, img.SHA1) %}" width="{%s= w %}" height="{%s= h %}">
-						{% endif %}
+						{% endswitch %}
 					</a>
 				</figure>
 			{% endif %}
@@ -175,4 +195,37 @@
 			</span>
 		{% endif %}
 	</article>
+{% endstripspace %}{% endfunc %}
+
+Render image search links according to file type
+{% func imageSearch(root string, img common.Image) %}{% stripspace %}
+	{% if img.ThumbType == common.NoFile || img.FileType == common.PDF %}
+		{% return %}
+	{% endif %}
+
+	{% code url := root + assets.ImageSearchPath(img.ImageCommon) %}
+	<a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url={%s= url %}">
+		G
+	</a>
+	<a class="image-search iqdb" target="_blank" rel="nofollow" href="http://iqdb.org/?url={%s= url %}">
+		Iq
+	</a>
+	<a class="image-search saucenao" target="_blank" rel="nofollow" href="http://saucenao.com/search.php?db=999&url={%s= url %}">
+		Sn
+	</a>
+	<a class="image-search whatAnime" target="_blank" rel="nofollow" href="https://whatanime.ga/?url={%s= url %}">
+		Wa
+	</a>
+	{% switch img.FileType %}
+	{% case common.JPEG, common.PNG, common.GIF, common.WEBM %}
+		<a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/{%s= img.MD5 %}">
+			Ds
+		</a>
+	{% endswitch %}
+	{% switch img.FileType %}
+	{% case common.JPEG, common.PNG %}
+		<a class="image-search exhentai" target="_blank" rel="nofollow" href="http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash={%s= img.SHA1 %}">
+			Ex
+		</a>
+	{% endswitch %}
 {% endstripspace %}{% endfunc %}

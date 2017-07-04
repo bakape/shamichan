@@ -120,7 +120,7 @@ var upgrades = []func(*sql.Tx) error{
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
-				ADD COLUMN disableRobots bool not null default false`,
+				ADD COLUMN disableRobots bool default false`,
 		)
 		return
 	},
@@ -212,6 +212,27 @@ var upgrades = []func(*sql.Tx) error{
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN defaultCSS text default 'moe'`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE posts
+				ADD COLUMN flag char(2)`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE boards
+				ADD COLUMN flags bool default false`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`alter table images
+				alter column title type varchar(200)`,
 		)
 		return
 	},

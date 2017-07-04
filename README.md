@@ -35,7 +35,8 @@ License: GNU AGPL
 
 <details><summary>Files and images</summary>
 
-- JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ are supported
+- JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ, TAR.XZ, TXT
+are supported
 - Transparent PNG and GIF thumbnails
 - Configurable size limits
 - Inbuilt reverse image search
@@ -149,6 +150,8 @@ the password "password"
 * Change the default password
 * Create a board from the administration panel
 * Configure server from the administration panel
+* To enable country flags on posts download and place `GeoLite2-Country.mmdb`
+into the root directory
 
 ## Development
 * See `./docs` for more documentation

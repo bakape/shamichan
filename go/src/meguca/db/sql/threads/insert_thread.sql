@@ -8,13 +8,14 @@ select insert_thread(
 	$7::bigint,
 	$8::bigint,
 	$9::varchar(2000),
-	$10::varchar(50),
-	$11::char(10),
-	$12::varchar(20),
-	$13::bytea,
-	$14::inet,
-	$15::char(40),
-	$16::varchar(200),
-	$17::bigint[][2],
-	$18::json[]
+	$10::char(2),
+	$11::varchar(50),
+	$12::char(10),
+	$13::varchar(20),
+	$14::bytea,
+	$15::inet,
+	$16::char(40),
+	$17::varchar(200),
+	$18::bigint[][2],
+	$19::json[]
 );
