@@ -3,14 +3,17 @@ package server
 import (
 	"bytes"
 	"compress/gzip"
+	"database/sql"
 	"fmt"
 	"log"
 	"meguca/auth"
 	"meguca/config"
+	"meguca/db"
 	"meguca/imager"
 	"meguca/util"
 	"meguca/websockets"
 	"net/http"
+	"strconv"
 
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"
@@ -186,4 +189,31 @@ func serveRobotsTXT(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain")
 	buf.WriteTo(w)
+}
+
+// Redirect the client to the appropriate board through a cross-board redirect
+func crossRedirect(w http.ResponseWriter, r *http.Request) {
+	idStr := extractParam(r, "id")
+	id, err := strconv.ParseUint(idStr, 10, 64)
+	if err != nil {
+		text404(w)
+		return
+	}
+
+	board, op, err := db.GetPostParenthood(id)
+	switch err {
+	case nil:
+		url := r.URL
+		url.Path = fmt.Sprintf("/%s/%d", board, op)
+		if url.Query().Get("last") != "" {
+			url.Fragment = "bottom"
+		} else {
+			url.Fragment = "p" + idStr
+		}
+		http.Redirect(w, r, url.String(), 301)
+	case sql.ErrNoRows:
+		text404(w)
+	default:
+		text500(w, r, err)
+	}
 }
