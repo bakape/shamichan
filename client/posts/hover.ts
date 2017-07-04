@@ -211,7 +211,7 @@ function renderImagePreview(event: MouseEvent) {
 			}
 			tag = "video"
 			break
-		case fileTypes.mp3:
+		case fileTypes.mp4:
 		case fileTypes.ogg:
 			// No video OGG and MP4 are treated just like MP3
 			if (!options.webmHover || !post.image.video) {
