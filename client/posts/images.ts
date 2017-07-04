@@ -169,7 +169,12 @@ export default class ImageHandler extends View<Post> {
 					el.textContent = s
 					break
 				case "dims":
-					el.textContent = `${data.dims[0]}x${data.dims[1]}`
+					const [w, h] = data.dims
+					if (!w && !h) {
+						el.hidden = true
+					} else {
+						el.textContent = `${w}x${h}`
+					}
 					break
 			}
 		}

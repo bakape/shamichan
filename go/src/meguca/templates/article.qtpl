@@ -116,11 +116,13 @@
 						<span class="filesize">
 							{%s= readableFileSize(img.Size) %}
 						</span>
-					<span class="dims">
-						{%s= strconv.FormatUint(uint64(img.Dims[0]), 10) %}
-						x
-						{%s= strconv.FormatUint(uint64(img.Dims[1]), 10) %}
-					</span>
+					{% if img.Dims != [4]uint16{} %}
+						<span class="dims">
+							{%s= strconv.FormatUint(uint64(img.Dims[0]), 10) %}
+							x
+							{%s= strconv.FormatUint(uint64(img.Dims[1]), 10) %}
+						</span>
+					{% endif %}
 				</span>
 				{% code name := imageName(img.FileType, img.Name) %}
 				<a href="{%s= assets.RelativeSourcePath(img.FileType, img.SHA1) %}" download="{%s= name %}">
