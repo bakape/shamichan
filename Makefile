@@ -30,6 +30,12 @@ client: client_vendor
 client_deps:
 	npm install --progress false --depth 0
 
+wasm:
+	cargo build --target=wasm32-unknown-emscripten --release
+
+wasm_dev:
+	cargo build --target=wasm32-unknown-emscripten
+
 watch:
 	$(gulp) -w
 
@@ -64,7 +70,7 @@ client_clean:
 	rm -rf www/js www/css/*.css www/css/maps www/lang node_modules
 
 clean: client_clean
-	rm -rf .build .ffmpeg .package meguca-*.zip meguca-*.tar.xz meguca meguca.exe
+	rm -rf .build .ffmpeg .package target meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 	$(MAKE) -C scripts/migration/3to4 clean
 ifeq ($(is_windows), true)
 	rm -rf /.meguca_build *.dll
