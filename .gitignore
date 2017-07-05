@@ -12,6 +12,7 @@ www/illya.webm
 www/css/*.css
 www/css/maps
 www/js
+www/wasm
 www/lang
 thumb_*.png
 thumb_*.jpg

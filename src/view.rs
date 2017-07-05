@@ -1,9 +1,8 @@
-use libc;
+use externs::*;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::collections::hash_map::DefaultHasher;
-use std::ffi::{CStr, CString};
 use std::fmt::Write;
 use std::hash::Hash;
 use std::hash::Hasher;
@@ -15,66 +14,6 @@ static mut ID_COUNTER: u64 = 0;
 pub fn new_id() -> String {
 	unsafe { ID_COUNTER += 1 };
 	format!("brunhild-{}", unsafe { ID_COUNTER })
-}
-
-pub trait Interop {
-	fn as_int(self, _: &mut Vec<CString>) -> libc::c_int;
-}
-
-impl Interop for i32 {
-	fn as_int(self, _: &mut Vec<CString>) -> libc::c_int {
-		return self;
-	}
-}
-
-impl<'a> Interop for &'a str {
-	fn as_int(self, arena: &mut Vec<CString>) -> libc::c_int {
-		let c = CString::new(self).unwrap();
-		let ret = c.as_ptr() as libc::c_int;
-		arena.push(c);
-		return ret;
-	}
-}
-
-impl<'a> Interop for *const libc::c_void {
-	fn as_int(self, _: &mut Vec<CString>) -> libc::c_int {
-		return self as libc::c_int;
-	}
-}
-
-extern "C" {
-	pub fn emscripten_asm_const(s: *const libc::c_char);
-	pub fn emscripten_asm_const_int(s: *const libc::c_char,
-	                                ...)
-	                                -> libc::c_int;
-}
-
-// Macros for executing JavaScript function.
-// Function arguments must implement Interop.
-// Function body must be a zero-terminated binary string.
-#[macro_export]
-macro_rules! js {
-    ( ($( $x:expr ),*) $y:expr ) => {
-        {
-            let mut arena:Vec<CString> = Vec::new();
-            const LOCAL: &'static [u8] = $y;
-            unsafe {
-				emscripten_asm_const_int(
-					&LOCAL[0] as *const _ as *const libc::c_char,
-					$(Interop::as_int($x, &mut arena)),
-					*)
-			}
-        }
-    };
-    ( $y:expr ) => {
-        {
-            const LOCAL: &'static [u8] = $y;
-            unsafe {
-				emscripten_asm_const_int(
-					&LOCAL[0] as *const _ as *const libc::c_char)
-			}
-        }
-    };
 }
 
 // Attributes of a view's root element
@@ -131,7 +70,9 @@ pub trait View<CH: View = NOOP>: State {
 	}
 }
 
-pub struct NOOP {
+// This view does nothing. Acts as a child type for views without children.
+#[allow(private_in_public)]
+struct NOOP {
 	id: String,
 }
 
@@ -239,10 +180,7 @@ impl Node {
 			let old_ID = self.id.clone();
 			let mut w = String::with_capacity(1 << 10);
 			*self = Node::new(v, &mut w);
-			js!{ (old_ID.as_str(), w.as_str()) b"
-				document.getElementByID($0).outerHTML = $1
-			\0"};
-			return;
+			return set_outer_HTML(&old_ID, &w);
 		}
 
 		let state = v.state();
@@ -258,9 +196,7 @@ impl Node {
 			if changed {
 				let mut w = String::with_capacity(1 << 10);
 				v.render_inner(&mut w);
-				js!{ (self.id.as_str(), w.as_str()) b"
-					document.getElementByID($0).innerHTML = $1
-				\0"};
+				return set_inner_HTML(&self.id, &w);
 			}
 		} else {
 			self.diff_children(children);
@@ -282,12 +218,7 @@ impl Node {
 
 		// Remove nodes from the end
 		if diff < 0 {
-			js!{ (self.id.as_str(), -diff) b"
-				const el = document.getElementByID($0)
-				for (let i = 0; i <= $1; i++){
-					el.lastChild.remove()
-				}
-			\0"};
+			pop_children(&self.id, -diff);
 			self.children.truncate(views.len())
 		}
 
@@ -305,12 +236,4 @@ impl Node {
 			}
 		}
 	}
-}
-
-fn append_element(parent_id: &str, html: &str) {
-	js!{ (parent_id, html) b"
-		const cont = document.createElement('template')
-		cont.innerHTML = $1
-		document.getElementByID($0).append(cont.firstChild)
-	\0"};
 }

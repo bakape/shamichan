@@ -1,7 +1,8 @@
 extern crate libc;
 
+mod externs;
 mod view;
 
 fn main() {
-	println!("Hello, world!");
+	externs::alert("Hello world!");
 }
