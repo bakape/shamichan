@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 extern crate libc;
 
 mod externs;
@@ -7,19 +5,26 @@ mod externs;
 mod view;
 
 use std::cell::RefCell;
+use std::fmt::Write;
 use std::rc::Rc;
 use view::*;
 
 fn main() {
 	let child = Rc::new(RefCell::new(Child {
 	                                     id: new_id(),
-	                                     data: String::from("Hello world!"),
+	                                     data: 0,
 	                                 }));
-	let root = Rc::new(RefCell::new(Root {
-	                                    id: new_id(),
-	                                    child,
-	                                }));
-	let tree = Tree::new("hover-overlay", root);
+	let root: Rc<RefCell<Box<View>>> =
+		Rc::new(RefCell::new(Box::new(Root {
+		                                  id: new_id(),
+		                                  child: child.clone(),
+		                              })));
+	set_root("hover-overlay", root);
+	start();
+	(*child).borrow_mut().increment();
+	(*child).borrow_mut().increment();
+	(*child).borrow_mut().increment();
+	(*child).borrow_mut().increment();
 }
 
 struct Root {
@@ -40,13 +45,20 @@ impl View for Root {
 #[derive(Hash, Clone)]
 struct Child {
 	id: String,
-	data: String,
+	data: u64,
 }
 
 impl View for Child {
 	implement_id!();
 
 	fn render_inner(&self, w: &mut String) {
-		w.push_str(&self.data);
+		write!(w, "Hello world: {}", self.data).unwrap();
+	}
+}
+
+impl Child {
+	fn increment(&mut self) {
+		self.data += 1;
+		update(self);
 	}
 }

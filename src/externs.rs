@@ -35,7 +35,7 @@ pub fn append_element(id: &str, html: &str) {
 	pass_html!(id, html, ffi::append_element);
 }
 
-mod ffi {
+pub mod ffi {
 	use libc::*;
 
 	extern "C" {
@@ -44,5 +44,8 @@ mod ffi {
 		pub fn set_inner_html(id: *const c_char, html: *const c_char);
 		pub fn append_element(id: *const c_char, html: *const c_char);
 		pub fn pop_children(id: *const c_char, count: c_int);
+		pub fn emscripten_set_main_loop(func: extern "C" fn(),
+		                                fps: c_int,
+		                                infinite: c_int);
 	}
 }

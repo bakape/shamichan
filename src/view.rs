@@ -9,11 +9,13 @@ use std::hash::Hasher;
 use std::rc::Rc;
 
 static mut ID_COUNTER: u64 = 0;
+static mut TREE: *mut Tree = 0 as *mut Tree;
 
 // Generate a new unique view ID
 pub fn new_id() -> String {
+	let s = format!("brunhild-{}", unsafe { ID_COUNTER });
 	unsafe { ID_COUNTER += 1 };
-	format!("brunhild-{}", unsafe { ID_COUNTER })
+	s
 }
 
 // Attributes of a view's root element
@@ -81,44 +83,28 @@ macro_rules! implement_id {
 	)
 }
 
-// This view does nothing. Acts as a child type for views without children.
-pub struct NOOP {
-	id: String,
-}
-
-pub struct Tree<T>
-	where T: View
-{
-	view: Rc<RefCell<T>>,
+struct Tree {
 	node: Node,
+	view: Rc<RefCell<Box<View>>>,
 	updated: HashSet<String>,
 }
 
-impl<T> Tree<T>
-    where T: for<'a> View
-{
-	pub fn new(parent_id: &str, v: Rc<RefCell<T>>) -> Tree<T> {
-		// TODO: Register render function with RAF
-
+impl Tree {
+	fn new(parent_id: &str, v: Rc<RefCell<Box<View>>>) -> Tree {
 		let mut w = String::with_capacity(1 << 10);
-		let node = Node::new(&*v.borrow(), &mut w);
+		let node = Node::new(&*v.borrow().as_ref(), &mut w);
 		append_element(parent_id, &mut w);
 		Tree {
-			view: v.clone(),
 			node,
+			view: v.clone(),
 			updated: HashSet::new(),
 		}
 	}
 
+	// Diffs the tree. Call this in emscripten_set_main_loop with `fps = 0`.
 	fn diff(&mut self) {
 		self.node
-			.check_marked(&mut self.updated, &*self.view.borrow());
-		self.updated.clear();
-	}
-
-	// Mark view and its children as updated and thus needing a diff.
-	pub fn update<V: View>(&mut self, v: V) {
-		self.updated.insert(v.ID());
+			.check_marked(&mut self.updated, (&*self.view.borrow()).as_ref());
 	}
 }
 
@@ -240,5 +226,41 @@ impl Node {
 				append_element(&self.id, &w);
 			}
 		}
+	}
+}
+
+// Set the root element for the tree and attach it to the DOM.
+// Must be run before any calls to update(), start() or diff().
+pub fn set_root(parent_id: &str, v: Rc<RefCell<Box<View>>>) {
+	unsafe { TREE = Box::into_raw(Box::new(Tree::new(parent_id, v))) };
+}
+
+// Mark view and its children as updated and thus needing a diff
+pub fn update<V: View>(v: &V) {
+	with_tree(|t| t.updated.insert(v.ID()));
+}
+
+// Safely accesses the global tree and passes it to func
+fn with_tree<F, R>(func: F) -> R
+	where F: Fn(&mut Box<Tree>) -> R
+{
+	let mut tree = unsafe { Box::from_raw(TREE) };
+	let re = func(&mut tree);
+	unsafe { TREE = Box::into_raw(tree) };
+	re
+}
+
+// Diffs all trees.
+// This is registered to emscripten_set_main_loop by start().
+// If you wish to use a different function for the main loop, call this in
+// emscripten_set_main_loop with `fps = 0`.
+pub extern "C" fn diff() {
+	with_tree(|t| t.diff());
+}
+
+// Register diff with emscripten event loop to start updating the DOM
+pub fn start() {
+	unsafe {
+		ffi::emscripten_set_main_loop(diff, 0, 0);
 	}
 }
