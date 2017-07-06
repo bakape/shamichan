@@ -43,11 +43,12 @@ impl<H> State for H
 
 // Base unit of manipulation. Set CH to type of child view, if the view will be
 // able to have child views.
-pub trait View<CH: View = NOOP>: State {
+pub trait View: State {
 	// Return the ID of a view. All views must store a constant ID.
 	// IDs chosen by the user must be unique.
 	// If you do not wish to assign a custom ID, generate one with new_id().
-	fn id(&self) -> String;
+	#[allow(non_snake_case)]
+	fn ID(&self) -> String;
 
 	// Returns the tag of the root element
 	fn tag(&self) -> String {
@@ -65,27 +66,28 @@ pub trait View<CH: View = NOOP>: State {
 
 	// Returns child views. Should be left default for views, that implement
 	// render_inner().
-	fn children(&self) -> Vec<CH> {
+	fn children(&self) -> Vec<Box<View>> {
 		Vec::new()
 	}
 }
 
+// Implements ID() of View, for structs, that have and `id: String` field
+#[macro_export]
+macro_rules! implement_id {
+	() => (
+		fn ID(&self) -> String {
+			self.id.clone()
+		}
+	)
+}
+
 // This view does nothing. Acts as a child type for views without children.
-#[allow(private_in_public)]
-struct NOOP {
+pub struct NOOP {
 	id: String,
 }
 
-impl State for NOOP {}
-
-impl<'a> View for NOOP {
-	fn id(&self) -> String {
-		String::new()
-	}
-}
-
 pub struct Tree<T>
-	where T: for<'a> View
+	where T: View
 {
 	view: Rc<RefCell<T>>,
 	node: Node,
@@ -116,7 +118,7 @@ impl<T> Tree<T>
 
 	// Mark view and its children as updated and thus needing a diff.
 	pub fn update<V: View>(&mut self, v: V) {
-		self.updated.insert(v.id());
+		self.updated.insert(v.ID());
 	}
 }
 
@@ -130,8 +132,8 @@ struct Node {
 }
 
 impl Node {
-	fn new<V: View>(v: &V, w: &mut String) -> Node {
-		let id = v.id();
+	fn new(v: &View, w: &mut String) -> Node {
+		let id = v.ID();
 		let tag = v.tag();
 		let attrs = v.attrs();
 
@@ -145,7 +147,10 @@ impl Node {
 		}
 		w.push('>');
 		v.render_inner(w);
-		let children = v.children().iter().map(|v| Node::new(v, w)).collect();
+		let children = v.children()
+			.iter()
+			.map(|v| Node::new(v.as_ref(), w))
+			.collect();
 		write!(w, "</{}>", tag).unwrap();
 
 		Node {
@@ -159,7 +164,7 @@ impl Node {
 	}
 
 	// Check, if node is marked as updated.
-	fn check_marked<V: View>(&mut self, marked: &mut HashSet<String>, v: &V) {
+	fn check_marked(&mut self, marked: &mut HashSet<String>, v: &View) {
 		// Diff the node and its subtree
 		if marked.contains(&self.id) {
 			marked.remove(&self.id);
@@ -170,17 +175,17 @@ impl Node {
 		// Descend down the subtree, checking for marked nodes
 		for (ref mut n, v) in
 			self.children.iter_mut().zip(v.children().iter()) {
-			n.check_marked(marked, v);
+			n.check_marked(marked, v.as_ref());
 		}
 	}
 
-	fn diff<V: View>(&mut self, v: &V) {
+	fn diff(&mut self, v: &View) {
 		// Completely replace node and subtree
-		if v.id() != self.id {
-			let old_ID = self.id.clone();
+		if v.ID() != self.id {
+			let old_id = self.id.clone();
 			let mut w = String::with_capacity(1 << 10);
 			*self = Node::new(v, &mut w);
-			return set_outer_HTML(&old_ID, &w);
+			return set_outer_html(&old_id, &w);
 		}
 
 		let state = v.state();
@@ -196,7 +201,7 @@ impl Node {
 			if changed {
 				let mut w = String::with_capacity(1 << 10);
 				v.render_inner(&mut w);
-				return set_inner_HTML(&self.id, &w);
+				return set_inner_html(&self.id, &w);
 			}
 		} else {
 			self.diff_children(children);
@@ -213,7 +218,7 @@ impl Node {
 		self.attrs = attrs;
 	}
 
-	fn diff_children<V: View>(&mut self, views: Vec<V>) {
+	fn diff_children(&mut self, views: Vec<Box<View>>) {
 		let diff = (views.len() as i32) - (self.children.len() as i32);
 
 		// Remove nodes from the end
@@ -223,7 +228,7 @@ impl Node {
 		}
 
 		for (ref mut n, v) in self.children.iter_mut().zip(views.iter()) {
-			n.diff(v);
+			n.diff(v.as_ref());
 		}
 
 		// Append nodes
@@ -231,7 +236,7 @@ impl Node {
 			let mut w = String::with_capacity(1 << 10);
 			for ch in views.iter().skip(self.children.len()) {
 				w.truncate(0);
-				self.children.push(Node::new(ch, &mut w));
+				self.children.push(Node::new(ch.as_ref(), &mut w));
 				append_element(&self.id, &w);
 			}
 		}

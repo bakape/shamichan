@@ -4,7 +4,7 @@ mergeInto(LibraryManager.library, {
 	alert: function (msg) {
 		alert(Pointer_stringify(msg))
 	},
-	set_outer_HTML: function (id, html) {
+	set_outer_html: function (id, html) {
 		document.getElementById(Pointer_stringify(id))
 			.outerHTML = Pointer_stringify(html)
 		return
@@ -15,7 +15,7 @@ mergeInto(LibraryManager.library, {
 		return
 	},
 	pop_children: function (id, n) {
-		var el = document.getElementByID(Pointer_stringify(id))
+		var el = document.getElementById(Pointer_stringify(id))
 		for (var i = 0; i <= n; i++) {
 			el.lastChild.remove()
 		}
@@ -23,7 +23,7 @@ mergeInto(LibraryManager.library, {
 	append_element: function (id, html) {
 		var cont = document.createElement('template')
 		cont.innerHTML = Pointer_stringify(html)
-		document.getElementByID(Pointer_stringify(id))
+		document.getElementById(Pointer_stringify(id))
 			.appendChild(cont.content.firstChild)
 	}
 })

@@ -1,4 +1,3 @@
-use libc::*;
 use std::ffi::CString;
 
 pub fn alert(msg: &str) {
@@ -18,12 +17,12 @@ macro_rules! pass_html {
 	)
 }
 
-pub fn set_outer_HTML(id: &str, html: &str) {
-	pass_html!(id, html, ffi::set_outer_HTML);
+pub fn set_outer_html(id: &str, html: &str) {
+	pass_html!(id, html, ffi::set_outer_html);
 }
 
-pub fn set_inner_HTML(id: &str, html: &str) {
-	pass_html!(id, html, ffi::set_inner_HTML);
+pub fn set_inner_html(id: &str, html: &str) {
+	pass_html!(id, html, ffi::set_inner_html);
 }
 
 pub fn pop_children(id: &str, n: i32) {
@@ -41,8 +40,8 @@ mod ffi {
 
 	extern "C" {
 		pub fn alert(msg: *const c_char);
-		pub fn set_outer_HTML(id: *const c_char, html: *const c_char);
-		pub fn set_inner_HTML(id: *const c_char, html: *const c_char);
+		pub fn set_outer_html(id: *const c_char, html: *const c_char);
+		pub fn set_inner_html(id: *const c_char, html: *const c_char);
 		pub fn append_element(id: *const c_char, html: *const c_char);
 		pub fn pop_children(id: *const c_char, count: c_int);
 	}
