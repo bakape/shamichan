@@ -31,8 +31,12 @@ pub fn pop_children(id: &str, n: i32) {
 	unsafe { ffi::pop_children(__id, n) }
 }
 
-pub fn append_element(id: &str, html: &str) {
-	pass_html!(id, html, ffi::append_element);
+pub fn append(id: &str, html: &str) {
+	pass_html!(id, html, ffi::append);
+}
+
+pub fn append_by_selector(sel: &str, html: &str) {
+	pass_html!(sel, html, ffi::append);
 }
 
 pub mod ffi {
@@ -42,7 +46,8 @@ pub mod ffi {
 		pub fn alert(msg: *const c_char);
 		pub fn set_outer_html(id: *const c_char, html: *const c_char);
 		pub fn set_inner_html(id: *const c_char, html: *const c_char);
-		pub fn append_element(id: *const c_char, html: *const c_char);
+		pub fn append(id: *const c_char, html: *const c_char);
+		pub fn append_by_selector(id: *const c_char, html: *const c_char);
 		pub fn pop_children(id: *const c_char, count: c_int);
 		pub fn emscripten_set_main_loop(func: extern "C" fn(),
 		                                fps: c_int,
