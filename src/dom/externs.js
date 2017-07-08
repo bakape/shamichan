@@ -14,12 +14,6 @@ mergeInto(LibraryManager.library, {
 			.innerHTML = Pointer_stringify(html)
 		return
 	},
-	pop_children: function (id, n) {
-		var el = document.getElementById(Pointer_stringify(id))
-		for (var i = 0; i <= n; i++) {
-			el.lastChild.remove()
-		}
-	},
 	append: function (id, html) {
 		var cont = document.createElement('template')
 		cont.innerHTML = Pointer_stringify(html)
@@ -31,5 +25,23 @@ mergeInto(LibraryManager.library, {
 		cont.innerHTML = Pointer_stringify(html)
 		document.querySelector(Pointer_stringify(sel))
 			.appendChild(cont.content.firstChild)
-	}
+	},
+	prepend: function (id, html) {
+		var cont = document.createElement('template')
+		cont.innerHTML = Pointer_stringify(html)
+		var el = document.getElementById(Pointer_stringify(id))
+		el.insertBefore(cont.content.firstChild, el.firstChild)
+	},
+	before: function (id, html) {
+		var cont = document.createElement('template')
+		cont.innerHTML = Pointer_stringify(html)
+		var el = document.getElementById(Pointer_stringify(id))
+		el.parentNode.insertBefore(cont.content.firstChild, el)
+	},
+	after: function (id, html) {
+		var cont = document.createElement('template')
+		cont.innerHTML = Pointer_stringify(html)
+		var el = document.getElementById(Pointer_stringify(id))
+		el.parentNode.insertBefore(cont.content.firstChild, el.nextSibling)
+	},
 })

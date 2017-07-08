@@ -5,5 +5,5 @@ target = "wasm32-unknown-emscripten"
 # These arguments get passed to emcc (the Emscripten linker).
 # This tells the linker that these external symbols are not undefined.
 rustflags = [
-    "-Clink-args=--js-library src/externs.js"
+    "-Clink-args=--js-library src/dom/externs.js"
 ]
