@@ -77,8 +77,19 @@ function toggleSpoilers() {
 // Animated GIF thumbnails
 function toggleAutoGIF() {
 	loopPosts(
-		({ image }) =>
-			!!image && image.fileType === fileTypes.gif,
+		({ image }) => {
+			if (!image) {
+				return false
+			}
+			switch (image.fileType) {
+				case fileTypes.gif:
+					return true
+				case fileTypes.png:
+					return image.apng
+				default:
+					return false
+			}
+		},
 		({ view }) =>
 			view.renderImage(false),
 	)
