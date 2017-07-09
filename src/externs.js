@@ -1,9 +1,6 @@
 'use strict'
 
 mergeInto(LibraryManager.library, {
-	alert: function (msg) {
-		alert(Pointer_stringify(msg))
-	},
 	set_outer_html: function (id, html) {
 		document.getElementById(Pointer_stringify(id))
 			.outerHTML = Pointer_stringify(html)
@@ -13,6 +10,14 @@ mergeInto(LibraryManager.library, {
 		document.getElementById(Pointer_stringify(id))
 			.innerHTML = Pointer_stringify(html)
 		return
+	},
+	get_inner_html: function (id) {
+		var el = document.getElementById(Pointer_stringify(id))
+		var html = el ? el.innerHTML : ""
+		var len = html.length + 1
+		var buf = Module._malloc(len)
+		stringToUTF8(html, buf, len)
+		return buf
 	},
 	append: function (id, html) {
 		var cont = document.createElement('template')

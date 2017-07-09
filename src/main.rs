@@ -1,9 +1,11 @@
 extern crate libc;
 
+#[macro_use]
+mod externs;
 mod dom;
 
 fn main() {
 	dom::start();
-	dom::set_inner_html("threads", "");
-	dom::append("threads", "Hello world!");
+
+	println!("{}", dom::get_inner_html("post-data"));
 }

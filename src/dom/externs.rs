@@ -1,19 +1,5 @@
 use std::ffi::CString;
 
-// Cast &str to C string, while keeping the same variable name.
-// Needed to make sure the string is not dropped before the C  function returns.
-macro_rules! to_C_string {
-	( $var:ident, $fn:expr ) => (
-		{
-			let $var = CString::new($var).unwrap();
-			{
-				let $var = $var.as_ptr();
-				$fn
-			}
-		}
-	)
-}
-
 // Define functions for writing to the DOM
 macro_rules! define_writers {
 	( $( $id:ident ),* ) => (
@@ -44,6 +30,18 @@ pub fn remove(id: &str) {
 	})
 }
 
+// Returns the inner HTML of an element by ID.
+// If no element found, an empty String is returned.
+// Usage of this function will cause extra repaints, so use sparingly.
+#[allow(dead_code)]
+pub fn get_inner_html(id: &str) -> String {
+	to_C_string!(id, {
+		unsafe { CString::from_raw(ffi::get_inner_html(id)) }
+			.into_string()
+			.unwrap()
+	})
+}
+
 mod ffi {
 	use libc::*;
 
@@ -66,5 +64,6 @@ mod ffi {
 
 	extern "C" {
 		pub fn remove(id: *const c_char);
+		pub fn get_inner_html(id: *const c_char) -> *mut c_char;
 	}
 }

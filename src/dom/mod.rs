@@ -1,3 +1,4 @@
+pub use self::externs::get_inner_html;
 use libc::*;
 use std::borrow::BorrowMut;
 use std::cell::RefCell;
