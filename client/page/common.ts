@@ -1,10 +1,10 @@
-import { setBoardConfig, hidden, mine, posts, page, config } from "../state"
+import { setBoardConfig, hidden, mine, posts, page } from "../state"
 import options from "../options"
 import { PostData, fileTypes } from "../common"
 import { Post, PostView, hideRecursively } from "../posts"
 import lang from "../lang"
 import { postAdded, notifyAboutReply } from "../ui"
-import { pluralize, extractJSON } from "../util"
+import { extractJSON } from "../util"
 import { posterName } from "../options"
 
 const threads = document.getElementById("threads")
@@ -51,11 +51,6 @@ export function extractPost(
 	// Render time-zone correction or relative time. Will do unneeded work,
 	// if client is on UTC. Meh.
 	view.renderTime()
-
-	// Localize staff titles
-	if (post.auth && options.lang !== config.defaultLang) {
-		view.renderName()
-	}
 
 	localizeLinks(model)
 	localizeBacklinks(model)
@@ -137,48 +132,11 @@ export function hidePosts() {
 // Apply extra client-side localizations. Not done server-side for better
 // cacheability.
 export function localizeThreads() {
-	localizeOmitted()
 	if (posterName() || options.anonymise) {
 		const name = posterName() || lang.posts["anon"]
 		for (let el of threads.querySelectorAll(".name")) {
 			el.textContent = name
 		}
-	} else if (options.lang !== config.defaultLang) {
-		// Localize posts without a poster name or tripcode
-		for (let el of threads.querySelectorAll(".name")) {
-			if (el.textContent === "Anonymous") {
-				el.textContent = lang.posts["anon"]
-			}
-		}
-
-		// Localize banned post notices
-		for (let el of threads.querySelectorAll(".banned")) {
-			el.innerText = lang.posts["banned"]
-		}
-	}
-}
-
-// Localize omitted post and image span
-function localizeOmitted() {
-	if (options.lang === config.defaultLang) {
-		return
-	}
-	for (let el of threads.querySelectorAll(".omit")) {
-		if (!el) {
-			continue
-		}
-
-		const posts = parseInt(el.getAttribute("data-omit")),
-			images = parseInt(el.getAttribute("data-image-omit"))
-		let text = pluralize(posts, lang.plurals["post"])
-		if (images) {
-			text += ` ${lang.posts["and"]} `
-				+ pluralize(images, lang.plurals["image"])
-		}
-		text += ` ${lang.posts["omitted"]} `
-
-		el.firstChild.replaceWith(text)
-		el.querySelector("a").textContent = lang.posts["seeAll"]
 	}
 }
 

@@ -40,7 +40,6 @@ interface Options extends ChangeEmitter {
 	done: number
 	expandAll: number
 	workMode: number
-	lang: string
 	inlineFit: string
 	theme: string
 	customCSS: string
