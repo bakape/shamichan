@@ -19,7 +19,6 @@ macro_rules! define_writers {
 define_writers!(set_outer_html,
                 set_inner_html,
                 append,
-                append_by_selector,
                 prepend,
                 before,
                 after);
@@ -57,7 +56,6 @@ mod ffi {
 	define_writers!(set_outer_html,
 	                set_inner_html,
 	                append,
-	                append_by_selector,
 	                prepend,
 	                before,
 	                after);

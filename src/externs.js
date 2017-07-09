@@ -25,12 +25,6 @@ mergeInto(LibraryManager.library, {
 		document.getElementById(Pointer_stringify(id))
 			.appendChild(cont.content.firstChild)
 	},
-	append_by_selector: function (sel, html) {
-		var cont = document.createElement('template')
-		cont.innerHTML = Pointer_stringify(html)
-		document.querySelector(Pointer_stringify(sel))
-			.appendChild(cont.content.firstChild)
-	},
 	prepend: function (id, html) {
 		var cont = document.createElement('template')
 		cont.innerHTML = Pointer_stringify(html)
