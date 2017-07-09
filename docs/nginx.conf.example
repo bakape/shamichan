@@ -42,7 +42,7 @@ server {
 	gzip on;
 	gzip_proxied any;
 	gzip_comp_level 6;
-	gzip_types text/plain text/css application/json application/javascript application/x-javascript text/javascript;
+	gzip_types text/plain text/css application/json application/javascript application/x-javascript text/javascript application/octet-stream;
 
 	location / {
 		proxy_pass http://meguca/;
