@@ -84,12 +84,12 @@
 				<span class="fileinfo">
 					{% if img.Artist != "" %}
 						<span class="media-artist">
-							{%s= img.Artist %}
+							{%s img.Artist %}
 						</span>
 					{% endif %}
 					{% if img.Title != "" %}
 						<span class="media-title">
-							{%s= img.Title %}
+							{%s img.Title %}
 						</span>
 					{% endif %}
 					{% if img.Audio %}
