@@ -360,7 +360,13 @@ func (c *bodyContext) parseCommands(bit string) {
 	val := c.Commands[c.state.iDice]
 	switch bit {
 	case "flip":
-		inner = strconv.AppendBool(inner, val.Flip)
+		var s string
+		if val.Flip {
+			s = "flap"
+		} else {
+			s = "flop"
+		}
+		inner = append(inner, s...)
 		c.state.iDice++
 	case "8ball":
 		inner = append(inner, val.Eightball...)

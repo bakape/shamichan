@@ -340,6 +340,8 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
     let inner: string
     switch (bit) {
         case "flip":
+            inner = commands[state.iDice++].val ? "flap" : "flop"
+            break
         case "8ball":
         case "pyu":
         case "pcount":
