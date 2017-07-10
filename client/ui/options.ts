@@ -114,11 +114,7 @@ export default class OptionsPanel extends TabbedModal {
 				return
 		}
 
-		if (!model.validate(val)) {
-			el.value = ''
-		} else {
-			options[id] = val
-		}
+		options[id] = val
 	}
 
 	// Dump options to JSON file and upload to user

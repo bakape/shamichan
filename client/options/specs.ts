@@ -26,9 +26,6 @@ export type OptionSpec = {
 
 	// Should the function not be executed on model population?
 	noExecOnStart?: boolean
-
-	// Function that validates the users input
-	validation?: (val: any) => boolean
 }
 
 function renderBackground(_: boolean) {

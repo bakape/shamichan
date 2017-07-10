@@ -132,14 +132,6 @@ class OptionModel {
 		}
 		trigger("renderOptionValue", this.id, this.spec.type, val)
 	}
-
-	// Perform value validation, if any. Otherwise return true.
-	public validate(val: any): boolean {
-		if (this.spec.validation) {
-			return this.spec.validation(val)
-		}
-		return true
-	}
 }
 
 export function initOptions() {
