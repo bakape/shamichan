@@ -80,7 +80,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "#flip",
 			in:   "#flip\n#flip",
-			out:  "<strong>#flip (true)</strong><br><strong>#flip (false)</strong>",
+			out:  "<strong>#flip (flap)</strong><br><strong>#flip (flop)</strong>",
 			commands: []common.Command{
 				{
 					Type: common.Flip,
@@ -188,7 +188,7 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "too few commands",
 			in:   "#flip\n#flip",
-			out:  "<strong>#flip (true)</strong><br>#flip",
+			out:  "<strong>#flip (flap)</strong><br>#flip",
 			commands: []common.Command{
 				{
 					Type: common.Flip,
