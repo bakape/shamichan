@@ -33,13 +33,13 @@ client_deps:
 wasm:
 	mkdir -p www/wasm
 	cargo build --target=wasm32-unknown-emscripten --release
-	cp target/wasm32-unknown-emscripten/release/deps/client*.wasm www/wasm/main.wasm
+	cp `ls -S target/wasm32-unknown-emscripten/release/deps/client*.wasm | tail -n 1` www/wasm/main.wasm
 	sed 's/client-[0-9a-f]\{16\}\./main\./' target/wasm32-unknown-emscripten/release/client.js > www/wasm/main.js
 
 wasm_debug:
 	mkdir -p www/wasm
 	cargo build --target=wasm32-unknown-emscripten
-	cp target/wasm32-unknown-emscripten/debug/deps/client*.wasm www/wasm/main.wasm
+	cp `ls -S target/wasm32-unknown-emscripten/debug/deps/client*.wasm | tail -n 1` www/wasm/main.wasm
 	sed 's/client-[0-9a-f]\{16\}\./main\./' target/wasm32-unknown-emscripten/debug/client.js > www/wasm/main.js
 
 watch:
