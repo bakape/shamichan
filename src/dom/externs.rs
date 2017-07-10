@@ -35,9 +35,7 @@ pub fn remove(id: &str) {
 #[allow(dead_code)]
 pub fn get_inner_html(id: &str) -> String {
 	to_C_string!(id, {
-		unsafe { CString::from_raw(ffi::get_inner_html(id)) }
-			.into_string()
-			.unwrap()
+		from_C_string!(ffi::get_inner_html(id))
 	})
 }
 

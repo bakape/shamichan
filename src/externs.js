@@ -43,4 +43,14 @@ mergeInto(LibraryManager.library, {
 		var el = document.getElementById(Pointer_stringify(id))
 		el.parentNode.insertBefore(cont.content.firstChild, el.nextSibling)
 	},
+	local_storage_set: function (key, val) {
+		localStorage.setItem(key, val)
+	},
+	local_storage_get: function (key) {
+		var s = localStorage.getItem(key) || ""
+		var len = s.length + 1
+		var buf = Module._malloc(len)
+		stringToUTF8(s, buf, len)
+		return buf
+	},
 })

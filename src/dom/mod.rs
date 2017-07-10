@@ -84,6 +84,10 @@ fn with_mutations<F>(func: F)
 // If you wish to use a different function for the main loop, call this in
 // emscripten_set_main_loop with `fps = 0`.
 pub extern "C" fn flush_mutations() {
+	// TODO: Intelligently deduplicate repeated set_inner_html and
+	// set_outer_html. Will need to include checks for null elements in all
+	// operations.
+
 	with_mutations(|mutations| {
 		for mutation in mutations.iter() {
 			let id = &mutation.id;
