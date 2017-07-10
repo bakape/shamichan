@@ -25,6 +25,7 @@ export interface PostData {
 	trip: string
 	auth: string
 	board?: string
+	flag?: string
 	state: TextState
 	links?: PostLink[]
 	commands?: Command[]
@@ -78,7 +79,6 @@ export interface ImageData {
 	MD5: string
 	SHA1: string
 	name: string
-	flag?: string
 
 	// Added client-side
 	large: boolean              // Render larger thumbnails

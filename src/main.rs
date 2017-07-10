@@ -1,11 +1,17 @@
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
+extern crate serde;
 extern crate libc;
 
 #[macro_use]
 mod externs;
 mod dom;
+mod posts;
 
 fn main() {
 	dom::start();
 
-	println!("{}", dom::get_inner_html("post-data"));
+	let json: posts::Board = serde_json::from_str(&dom::get_inner_html("post-data",),)
+		.unwrap();
 }
