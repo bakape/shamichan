@@ -117,7 +117,8 @@ A reference list of commands can be found in `./docs/installation.md`
 * make
 * pkg-config
 * pthread
-* ffmpeg >= 3.0 libraries (libavcodec, libavutil, libavformat) compiled with:
+* ffmpeg >= 3.0 libraries (libavcodec, libavutil, libavformat, libswscale)
+compiled with:
     * libvpx
     * libvorbis
     * libopus
