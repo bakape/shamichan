@@ -8,6 +8,7 @@ extern crate libc;
 mod externs;
 mod dom;
 mod posts;
+mod options;
 
 fn main() {
 	dom::start();

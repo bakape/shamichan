@@ -1,6 +1,10 @@
+use externs::local_storage;
+use serde_json;
 use std::default::Default;
+use std::fmt;
 
 #[allow(non_snake_case)]
+#[derive(Deserialize)]
 pub struct Options {
 	hideThumbs: bool,
 	imageHover: bool,
@@ -61,13 +65,19 @@ impl Default for Options {
 			expandAll: 69,
 			workMode: 66,
 			inlineFit: String::from("width"),
-			theme: String::from("moe"), // TODO: Read from configs
+			theme: String::from("ashita"), // TODO: Read from configs
 			customCSS: String::new(),
 		}
 	}
 }
 
-fn load_options() -> Options {
-	let mut opts = Options::default();
-	opts
+fn load() -> Options {
+	let s = local_storage::get("options");
+	if s.is_empty() {
+		return Options::default();
+	}
+	match serde_json::from_str::<Options>(&s) {
+		Ok(opts) => opts,
+		_ => Options::default(),
+	}
 }
