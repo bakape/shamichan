@@ -9,7 +9,7 @@ All commands assume to be run by the root user.
 echo 'deb http://ftp.debian.org/debian jessie-backports main contrib non-free
 deb-src http://ftp.debian.org/debian jessie-backports main contrib non-free' >> /etc/apt/sources.list
 apt-get update
-apt-get install -t jessie-backports -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libgraphicsmagick1-dev git zip
+apt-get install -t jessie-backports -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libgraphicsmagick1-dev git zip
 apt-get dist-upgrade -y
 
 # Install Node.js

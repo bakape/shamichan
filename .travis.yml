@@ -1,4 +1,14 @@
-services: docker
-script:
-  - docker build -t meguca_test .
-  - docker run -t meguca_test
+language: go
+services: postgresql
+sudo: required
+dist: trusty
+before_install:
+    - nvm install node
+    - nvm use node
+    - sudo add-apt-repository ppa:jonathonf/ffmpeg-3 -y
+    - sudo apt-get update
+    - sudo apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libgraphicsmagick1-dev git
+    - sudo apt-get dist-upgrade -y
+    - sudo -u postgres createuser meguca
+    - sudo -u postgres createdb -T template0 -E UTF8 -O meguca meguca
+script: make all test
