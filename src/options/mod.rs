@@ -1,7 +1,8 @@
+#![allow(dead_code)] // TEMP
+
 use externs::local_storage;
 use serde_json;
 use std::default::Default;
-use std::fmt;
 
 #[allow(non_snake_case)]
 #[derive(Deserialize)]

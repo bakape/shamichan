@@ -1,3 +1,4 @@
+#![allow(dead_code)] // TEMP
 
 // Data of any post - either reply or OP
 #[derive(Default, Deserialize)]

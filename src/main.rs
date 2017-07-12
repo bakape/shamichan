@@ -13,6 +13,6 @@ mod options;
 fn main() {
 	dom::start();
 
-	let json: posts::Board = serde_json::from_str(&dom::get_inner_html("post-data",),)
+	let _: posts::Board = serde_json::from_str(&dom::get_inner_html("post-data",),)
 		.unwrap();
 }
