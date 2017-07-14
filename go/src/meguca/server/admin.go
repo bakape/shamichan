@@ -305,7 +305,8 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		Created: time.Now(),
 		BoardConfigs: config.BoardConfigs{
 			BoardPublic: config.BoardPublic{
-				Title: msg.Title,
+				Title:      msg.Title,
+				DefaultCSS: config.Get().DefaultCSS,
 			},
 			ID:        msg.ID,
 			Eightball: config.EightballDefaults,
