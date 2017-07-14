@@ -28,3 +28,4 @@ db.db
 easyjson-bootstrap*.go
 target
 GeoLite2-Country.mmdb
+package-lock.json
