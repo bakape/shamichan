@@ -16,7 +16,7 @@ import (
 
 const (
 	// TestConnArgs contains ConnArgs used for tests
-	TestConnArgs = `user=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
+	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
 )
 
 var (
