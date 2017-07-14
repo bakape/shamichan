@@ -10,7 +10,7 @@ export class PasswordChangeForm extends AccountForm {
 	}
 
 	protected send() {
-		this.postResponse("/html/change-password", req => {
+		this.postResponse("/api/change-password", req => {
 			req["old"] = this.inputElement("oldPassword").value
 			req["new"] = this.inputElement("newPassword").value
 		})
