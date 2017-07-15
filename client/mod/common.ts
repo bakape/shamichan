@@ -17,8 +17,9 @@ export function validatePasswordMatch(
 	parent: Element, name1: string, name2: string
 ) {
 	const el1 = inputElement(parent, name1),
-		el2 = inputElement(parent, name2),
-		v = el2.value !== el1.value ? lang.ui["mustMatch"] : ""
-	el1.onchange = el2.onchange = () =>
-		el2.setCustomValidity(v)
+		el2 = inputElement(parent, name2)
+	el1.onchange = el2.onchange = () => {
+		const s = el2.value !== el1.value ? lang.ui["mustMatch"] : ""
+		el2.setCustomValidity(s)
+	}
 }
