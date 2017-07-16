@@ -94,19 +94,35 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64, index bool) {
 	for i, l := range lines {
 		// Prevent successive empty lines
 		if len(l) == 0 {
-			// Don't break, if body ends with newline
 			if !c.state.lastLineEmpty && i != last {
 				c.string("<br>")
 			}
 			c.state.lastLineEmpty = true
-			c.state.quote = false
 			continue
 		}
-		c.state.lastLineEmpty = false
 
-		c.initLine(l[0])
+		c.state.quote = false
+		if l[0] == '>' {
+			c.string("<em>")
+			c.state.quote = true
+		}
+		if c.state.spoiler {
+			c.string("<del>")
+		}
+
 		fn(l)
-		c.terminateTags(i != last)
+
+		if c.state.spoiler {
+			c.string("</del>")
+		}
+		if c.state.quote {
+			c.string("</em>")
+		}
+		// Don't break, if body ends with newline and avoid successive newLines
+		if i != last && !c.state.lastLineEmpty {
+			c.string("<br>")
+		}
+		c.state.lastLineEmpty = false
 	}
 }
 
@@ -129,19 +145,6 @@ func (c *bodyContext) byte(b byte) {
 // Parse a line that is no longer being edited
 func (c *bodyContext) parseTerminatedLine(line string) {
 	c.parseCode(line, (*c).parseFragment)
-}
-
-// Open a new line container and check for quotes
-func (c *bodyContext) initLine(first byte) {
-	c.state.quote = false
-	c.state.lastLineEmpty = false
-	if first == '>' {
-		c.string("<em>")
-		c.state.quote = true
-	}
-	if c.state.spoiler {
-		c.string("<del>")
-	}
 }
 
 // Detect code tags
@@ -443,15 +446,7 @@ func (c *bodyContext) writeInvalidCommand(s string) {
 
 // Close any open HTML tags
 func (c *bodyContext) terminateTags(newLine bool) {
-	if c.state.spoiler {
-		c.string("</del>")
-	}
-	if c.state.quote {
-		c.string("</em>")
-	}
-	if newLine {
-		c.string("<br>")
-	}
+
 }
 
 // Parse a line that is still being edited

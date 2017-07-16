@@ -39,13 +39,30 @@ export default function renderBody(data: PostData): string {
                 html += "<br>"
             }
             state.lastLineEmpty = true
-            state.quote = false
             continue
         }
 
-        html += initLine(l, state)
-            + fn(l, data)
-            + terminateTags(state, i != last)
+        state.quote = false
+        if (l[0] === ">") {
+            state.quote = true
+            html += "<em>"
+        }
+        if (state.spoiler) {
+            html += "<del>"
+        }
+
+        html += fn(l, data)
+
+        if (state.spoiler) {
+            html += "</del>"
+        }
+        if (state.quote) {
+            html += "</em>"
+        }
+        if (i != last && !state.lastLineEmpty) {
+            html += "<br>"
+        }
+        state.lastLineEmpty = false
     }
 
     return html
@@ -123,35 +140,6 @@ function parseSpoilers(
             html += fn(frag)
             break
         }
-    }
-    return html
-}
-
-// Open a new line container and check for quotes
-function initLine(line: string, state: TextState): string {
-    let html = ""
-    state.quote = state.lastLineEmpty = false
-    if (line[0] === ">") {
-        state.quote = true
-        html += "<em>"
-    }
-    if (state.spoiler) {
-        html += "<del>"
-    }
-    return html
-}
-
-// Close all open tags at line end
-function terminateTags(state: TextState, newLine: boolean): string {
-    let html = ""
-    if (state.spoiler) {
-        html += "</del>"
-    }
-    if (state.quote) {
-        html += "</em>"
-    }
-    if (newLine) {
-        html += "<br>"
     }
     return html
 }
