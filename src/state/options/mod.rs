@@ -4,6 +4,7 @@ use externs::local_storage;
 use serde_json;
 use std::default::Default;
 
+// Client-side options
 #[allow(non_snake_case)]
 #[derive(Deserialize)]
 pub struct Options {
@@ -65,14 +66,14 @@ impl Default for Options {
 			done: 83,
 			expandAll: 69,
 			workMode: 66,
-			inlineFit: String::from("width"),
-			theme: String::from("ashita"), // TODO: Read from configs
+			inlineFit: "width".to_string(),
+			theme: "moe".to_string(), // TODO: Read from configs
 			customCSS: String::new(),
 		}
 	}
 }
 
-fn load() -> Options {
+pub fn load() -> Options {
 	let s = local_storage::get("options");
 	if s.is_empty() {
 		return Options::default();

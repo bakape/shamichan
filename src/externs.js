@@ -53,4 +53,11 @@ mergeInto(LibraryManager.library, {
 		stringToUTF8(s, buf, len)
 		return buf
 	},
+	page_url: function () {
+		var s = location.href
+		var len = s.length + 1
+		var buf = Module._malloc(len)
+		stringToUTF8(s, buf, len)
+		return buf
+	}
 })

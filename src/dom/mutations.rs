@@ -37,12 +37,14 @@ macro_rules! define_mutators {
 	)
 }
 
-define_mutators!(set_outer_html,
-                 set_inner_html,
-                 append,
-                 prepend,
-                 before,
-                 after);
+define_mutators!(
+	set_outer_html,
+	set_inner_html,
+	append,
+	prepend,
+	before,
+	after
+);
 
 // Remove a node by ID
 pub fn remove(id: &str) {
@@ -55,15 +57,16 @@ fn push_mutation(id: &str, data: MutationData) {
 	// set_outer_html. Will need to include checks for null elements in all
 	// operations.
 	with_mutations(|m| {
-		               m.push(Mutation {
-		                          id: String::from(id),
-		                          data: data,
-		                      })
-		              });
+		m.push(Mutation {
+			id: String::from(id),
+			data: data,
+		})
+	});
 }
 
 fn with_mutations<F>(func: F)
-	where F: FnOnce(&mut Vec<Mutation>)
+where
+	F: FnOnce(&mut Vec<Mutation>),
 {
 	MUTATIONS.with(|r| func(r.borrow_mut().borrow_mut()));
 }
@@ -73,7 +76,6 @@ fn with_mutations<F>(func: F)
 // If you wish to use a different function for the main loop, call this in
 // emscripten_set_main_loop with `fps = 0`.
 pub extern "C" fn flush_mutations() {
-
 	with_mutations(|mutations| {
 		for mutation in mutations.iter() {
 			let id = &mutation.id;
@@ -111,12 +113,14 @@ mod externs {
 	 )
 }
 
-	define_writers!(set_outer_html,
-	                set_inner_html,
-	                append,
-	                prepend,
-	                before,
-	                after);
+	define_writers!(
+		set_outer_html,
+		set_inner_html,
+		append,
+		prepend,
+		before,
+		after
+	);
 
 	pub fn remove(id: &str) {
 		to_C_string!(id, {
@@ -138,19 +142,21 @@ mod externs {
 
 		// Define external functions for writing to the DOM
 		macro_rules! define_writers {
-		( $( $id:ident ),* ) => (
-			extern "C" {
-				$( pub fn $id(id: *const c_char, html: *const c_char); )*
-			}
-		)
-	}
+			( $( $id:ident ),* ) => (
+				extern "C" {
+					$( pub fn $id(id: *const c_char, html: *const c_char); )*
+				}
+			)
+		}
 
-		define_writers!(set_outer_html,
-		                set_inner_html,
-		                append,
-		                prepend,
-		                before,
-		                after);
+		define_writers!(
+			set_outer_html,
+			set_inner_html,
+			append,
+			prepend,
+			before,
+			after
+		);
 
 		extern "C" {
 			pub fn remove(id: *const c_char);
