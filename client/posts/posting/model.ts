@@ -43,9 +43,9 @@ export default class FormModel extends Post {
 			state: {
 				spoiler: false,
 				quote: false,
-				lastLineEmpty: false,
 				code: false,
 				haveSyncwatch: false,
+				newlines: 0,
 				iDice: 0,
 			},
 		})

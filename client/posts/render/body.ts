@@ -19,30 +19,26 @@ export default function renderBody(data: PostData): string {
     const state: TextState = data.state = {
         spoiler: false,
         quote: false,
-        lastLineEmpty: false,
         code: false,
         haveSyncwatch: false,
+        newlines: 0,
         iDice: 0,
     }
     let html = ""
 
-    const fn = data.editing ? parseOpenLine : parseTerminatedLine,
-        lines = data.body.split("\n"),
-        last = lines.length - 1
-    for (let i = 0; i < lines.length; i++) {
-        const l = lines[i]
-
+    const fn = data.editing ? parseOpenLine : parseTerminatedLine
+    for (let l of data.body.split("\n")) {
         // Prevent successive empty lines
+        if (html && state.newlines < 2) {
+            html += "<br>"
+        }
         if (!l.length) {
-            // Don't break, if body ends with newline
-            if (!state.lastLineEmpty && i !== last) {
-                html += "<br>"
-            }
-            state.lastLineEmpty = true
+            state.newlines++
             continue
         }
 
         state.quote = false
+        state.newlines = 0
         if (l[0] === ">") {
             state.quote = true
             html += "<em>"
@@ -59,10 +55,6 @@ export default function renderBody(data: PostData): string {
         if (state.quote) {
             html += "</em>"
         }
-        if (i != last && !state.lastLineEmpty) {
-            html += "<br>"
-        }
-        state.lastLineEmpty = false
     }
 
     return html

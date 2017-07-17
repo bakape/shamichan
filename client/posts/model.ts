@@ -45,9 +45,9 @@ export class Post extends Model implements PostData {
 		this.state = {
 			spoiler: false,
 			quote: false,
-			lastLineEmpty: false,
 			code: false,
 			haveSyncwatch: false,
+			newlines: 0,
 			iDice: 0,
 		}
 	}

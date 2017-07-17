@@ -36,9 +36,9 @@ export interface PostData {
 export type TextState = {
 	spoiler: boolean
 	quote: boolean
-	lastLineEmpty: boolean
 	code: boolean
 	haveSyncwatch: boolean
+	newlines: number
 	iDice: number // Index of the next dice array item to use
 }
 

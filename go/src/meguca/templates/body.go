@@ -65,8 +65,9 @@ var (
 type bodyContext struct {
 	index bool     // Rendered for an index page
 	state struct { // Body parser state
-		spoiler, quote, lastLineEmpty, code bool
-		iDice                               int
+		spoiler, quote, code bool
+		newlines             uint
+		iDice                int
 	}
 	common.Post
 	OP uint64
@@ -89,19 +90,18 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64, index bool) {
 		fn = c.parseTerminatedLine
 	}
 
-	lines := strings.Split(c.Body, "\n")
-	last := len(lines) - 1
-	for i, l := range lines {
+	for i, l := range strings.Split(c.Body, "\n") {
 		// Prevent successive empty lines
+		if i != 0 && c.state.newlines < 2 {
+			c.string("<br>")
+		}
 		if len(l) == 0 {
-			if !c.state.lastLineEmpty && i != last {
-				c.string("<br>")
-			}
-			c.state.lastLineEmpty = true
+			c.state.newlines++
 			continue
 		}
 
 		c.state.quote = false
+		c.state.newlines = 0
 		if l[0] == '>' {
 			c.string("<em>")
 			c.state.quote = true
@@ -118,11 +118,6 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64, index bool) {
 		if c.state.quote {
 			c.string("</em>")
 		}
-		// Don't break, if body ends with newline and avoid successive newLines
-		if i != last && !c.state.lastLineEmpty {
-			c.string("<br>")
-		}
-		c.state.lastLineEmpty = false
 	}
 }
 
