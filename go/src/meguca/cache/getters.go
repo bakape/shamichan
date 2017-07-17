@@ -70,8 +70,8 @@ func getData(s *store, f FrontEnd) (
 		if err != nil {
 			return
 		}
-		s.updateCounter = ctr
 	}
+	s.updateCounter = ctr
 	data, err = f.GetFresh(s.key)
 	if err != nil {
 		return
