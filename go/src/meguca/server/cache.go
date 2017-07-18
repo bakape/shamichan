@@ -6,6 +6,7 @@ import (
 	"errors"
 	"meguca/cache"
 	"meguca/common"
+	"meguca/config"
 	"meguca/db"
 	"meguca/templates"
 	"net/http"
@@ -91,6 +92,17 @@ var boardCache = cache.FrontEnd{
 				pages = append(pages, page)
 			}
 		}
+
+		// Hide threads from NSFW boards, if enabled
+		var (
+			confs    map[string]config.BoardConfContainer
+			hideNSFW bool
+		)
+		if k.Board == "all" && config.Get().HideNSFW {
+			hideNSFW = true
+			confs = config.GetAllBoardConfigs()
+		}
+
 		for i, id := range ids {
 			// Start a new page
 			if i%15 == 0 {
@@ -107,11 +119,17 @@ var boardCache = cache.FrontEnd{
 			if err != nil {
 				return nil, err
 			}
+			t := data.(common.Thread)
+
+			if hideNSFW && confs[t.Board].NSFW {
+				continue
+			}
+
 			if len(page.json) != 1 {
 				page.json = append(page.json, ',')
 			}
 			page.json = append(page.json, json...)
-			page.data = append(page.data, data.(common.Thread))
+			page.data = append(page.data, t)
 		}
 		closePage()
 
@@ -173,7 +191,7 @@ var boardPageCache = cache.FrontEnd{
 	},
 
 	Size: func(_ interface{}, _, html []byte) int {
-		// Only the HTML is owned byt this store. All other data is just
+		// Only the HTML is owned by this store. All other data is just
 		// borrowed from boardCache.
 		return len(html)
 	},

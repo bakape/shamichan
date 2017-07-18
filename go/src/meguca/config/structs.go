@@ -7,6 +7,7 @@ type Configs struct {
 	Public
 	PruneBoards   bool `json:"pruneBoards"`
 	Pyu           bool `json:"pyu"`
+	HideNSFW      bool `json:"hideNSFW"`
 	JPEGQuality   uint8
 	MaxWidth      uint16 `json:"maxWidth"`
 	MaxHeight     uint16 `json:"maxHeight"`
@@ -43,10 +44,11 @@ type BoardConfigs struct {
 
 // BoardPublic contains publically accessible board-specific configurations
 type BoardPublic struct {
-	ReadOnly   bool   `json:"readOnly"`
-	TextOnly   bool   `json:"textOnly"`
-	ForcedAnon bool   `json:"forcedAnon"`
-	Flags      bool   `json:"flags"`
+	ReadOnly   bool `json:"readOnly"`
+	TextOnly   bool `json:"textOnly"`
+	ForcedAnon bool `json:"forcedAnon"`
+	Flags      bool `json:"flags"`
+	NSFW       bool
 	DefaultCSS string `json:"defaultCSS"`
 	Title      string `json:"title"`
 	Notice     string `json:"notice"`

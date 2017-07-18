@@ -147,13 +147,14 @@ func GetBoardConfigs(b string) BoardConfContainer {
 
 // GetAllBoardConfigs returns board-specific configurations for all boards. Do
 // not modify the retrieved structs.
-func GetAllBoardConfigs() []BoardConfContainer {
+func GetAllBoardConfigs() map[string]BoardConfContainer {
 	boardMu.RLock()
 	defer boardMu.RUnlock()
 
-	conf := make([]BoardConfContainer, 0, len(boardConfigs))
-	for _, c := range boardConfigs {
-		conf = append(conf, c)
+	// Copy map
+	conf := make(map[string]BoardConfContainer, len(boardConfigs))
+	for id, c := range boardConfigs {
+		conf[id] = c
 	}
 	return conf
 }

@@ -1,5 +1,9 @@
 {
 	"forms": {
+		"NSFW": [
+			"Not Safe For Work",
+			"Board allows material, that are not safe to be viewed in a work environment"
+		],
 		"FAQ": [
 			"FAQ",
 			"Текст FAQ"
@@ -107,6 +111,10 @@
 		"hidden": [
 			"Скрыто: 0",
 			"Очистить список скрытого"
+		],
+		"hideNSFW": [
+			"Hide NSFW on /all/",
+			"Hide boards tagged as not safe for work from the /all/ metaboard"
 		],
 		"hideRecursively": [
 			"Recursive post hiding",

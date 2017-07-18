@@ -66,6 +66,7 @@ create table boards (
 	forcedAnon boolean not null,
 	disableRobots boolean default false,
 	flags boolean default false,
+	NSFW boolean default false,
 	id text primary key,
 	created timestamp not null,
 	defaultCSS text not null,

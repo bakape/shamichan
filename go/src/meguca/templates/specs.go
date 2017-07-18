@@ -118,6 +118,7 @@ var specs = map[string][]inputSpec{
 		{ID: "forcedAnon"},
 		{ID: "disableRobots"},
 		{ID: "flags"},
+		{ID: "NSFW"},
 		{
 			ID:        "title",
 			Type:      _string,
@@ -180,6 +181,7 @@ var specs = map[string][]inputSpec{
 			Min:      1,
 			Required: true,
 		},
+		{ID: "hideNSFW"},
 		{
 			ID:   "rootURL",
 			Type: _string,

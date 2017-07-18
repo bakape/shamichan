@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"meguca/common"
+	"meguca/config"
 	"meguca/util"
 
 	"github.com/boltdb/bolt"
@@ -263,12 +264,26 @@ func GetThreadIDs(board string) ([]uint64, error) {
 }
 
 // GetAllBoardCatalog retrieves all threads for the "/all/" meta-board
-func GetAllBoardCatalog() (common.Board, error) {
+func GetAllBoardCatalog() (threads common.Board, err error) {
 	r, err := prepared["get_all_board"].Query()
 	if err != nil {
-		return nil, err
+		return
 	}
-	return scanCatalog(r)
+	threads, err = scanCatalog(r)
+	if err != nil || !config.Get().HideNSFW {
+		return
+	}
+
+	// Hide threads from NSFW boards, if enabled
+	filtered := make(common.Board, 0, len(threads))
+	confs := config.GetAllBoardConfigs()
+	for _, t := range threads {
+		if !confs[t.Board].NSFW {
+			filtered = append(filtered, t)
+		}
+	}
+	threads = filtered
+	return
 }
 
 // Retrieves all threads IDs in bump order
