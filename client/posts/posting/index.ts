@@ -117,7 +117,18 @@ function quotePost(e: MouseEvent) {
 				return el === post
 			// Selection end is at blockquote end
 			case "end":
-				return el.closest("article") === post.nextSibling
+				if (el.closest("article") === post.nextSibling) {
+					return true
+				}
+				if (el.tagName === "SECTION") {
+					// Avoids capturing the [Reply] button
+					const i = lastSelection.text.lastIndexOf("\n")
+					if (i >= 0) {
+						lastSelection.text = lastSelection.text.slice(0, i)
+					}
+					return true
+				}
+				return false
 		}
 	}
 	let sel = ""
@@ -344,7 +355,7 @@ export default () => {
 			lastSelection = {
 				start: sel.anchorNode,
 				end: sel.focusNode,
-				text: sel.toString(),
+				text: sel.toString().trim(),
 			}
 		}
 	})
