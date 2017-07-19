@@ -57,11 +57,13 @@ Uploaded file data attached to post
 
 ## fileTypes
 Enum representing all available file types an uploaded file can be. These are
-also the canonical file extensions of these types. The extensions of thumbnails
-is `.png` for all file types, except for `.jpg`, in which case it is `.jpg`.
+also the canonical file extensions of these types.
+
+`noFile` specifies, that there is no associated file on the server. It is used
+for uploaded files without thumbnails in the `thumbType` field.
 
 ```
-jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz"
+jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz", flac, noFile, txt
 ```
 
 ## PostLinks
