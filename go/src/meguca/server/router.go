@@ -98,6 +98,8 @@ func createRouter() http.Handler {
 	html.GET("/set-loading", loadingAnimationForm)
 	html.GET("/bans/:board", banList)
 	html.GET("/mod-log/:board", modLog)
+	html.GET("/report/:id", reportForm)
+	html.GET("/reports/:board", reportList)
 
 	// JSON API
 	json := r.NewGroup("/json")
@@ -144,6 +146,7 @@ func createRouter() http.Handler {
 	api.POST("/unban/:board", unban)
 	api.POST("/set-banners", setBanners)
 	api.POST("/set-loading", setLoadingAnimation)
+	api.POST("/report", report)
 
 	// Captcha API
 	captcha := api.NewGroup("/captcha")

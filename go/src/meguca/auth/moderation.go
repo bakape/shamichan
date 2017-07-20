@@ -89,6 +89,13 @@ type BanRecord struct {
 	Expires    time.Time
 }
 
+// Contains data of a reported post
+type Report struct {
+	ID, Target    uint64
+	Created       time.Time
+	Board, Reason string
+}
+
 // IsBanned returns if the IP is banned on the target board
 func IsBanned(board, ip string) (banned bool) {
 	bansMu.RLock()

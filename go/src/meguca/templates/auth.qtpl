@@ -31,18 +31,16 @@ BanPage renders a ban page for a banned user
 
 // Renders a list of bans for a specific page with optional unbanning API links
 {% func BanList(bans []auth.BanRecord, board string, canUnban bool) %}{% stripspace %}
-	{% code ln := lang.Get().UI %}
 	{%= tableStyle() %}
 	<form method="post" action="/api/unban/{%s= board %}">
 		<table>
-			<tr>
-				{% for _, id := range [...]string{"reason", "by", "post", "posterID", "expires"} %}
-					<th>{%s= ln[id] %}</th>
-				{% endfor %}
-				{% if canUnban %}
-					<th>{%s= ln["unban"] %}</th>
-				{% endif %}
-			</tr>
+			{% code headers := []string{
+				"reason", "by", "post", "posterID", "expires",
+			} %}
+			{% if canUnban %}
+				{% code headers = append(headers, "unban") %}
+			{% endif %}
+			{%= tableHeaders(headers...) %}
 			{% code salt := config.Get().Salt %}
 			{% for _, b := range bans %}
 				<tr>
@@ -87,11 +85,7 @@ Renders a moderation log page
 	{% code ln := lang.Get().UI %}
 	{%= tableStyle() %}
 	<table>
-		<tr>
-			{% for _, id := range [...]string{"type", "by", "post", "time"} %}
-				<th>{%s= ln[id] %}</th>
-			{% endfor %}
-		</tr>
+		{%= tableHeaders("type", "by", "post", "time") %}
 		{% for _, l := range log %}
 			<tr>
 				<td>

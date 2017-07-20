@@ -41,6 +41,7 @@ func runMinuteTasks() {
 func runHourTasks() {
 	logPrepared(
 		"expire_user_sessions", "remove_identity_info", "expire_mod_log",
+		"expire_reports",
 	)
 	logError("thread cleanup", deleteOldThreads())
 	logError("board cleanup", deleteUnusedBoards())

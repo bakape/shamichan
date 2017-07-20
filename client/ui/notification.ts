@@ -7,8 +7,7 @@ import { scrollToAnchor, importTemplate } from "../util"
 import { View } from "../base"
 
 // Displayed, when there is no image in post
-const defaultIcon = "/assets/notification-icon.png",
-	overlay = document.getElementById("modal-overlay")
+const defaultIcon = "/assets/notification-icon.png"
 
 // Notify the user that one of their posts has been replied to
 export default function notifyAboutReply(post: Post) {
@@ -61,6 +60,6 @@ export class OverlayNotification extends View<null> {
 		this.on("click", () =>
 			this.remove())
 		this.el.querySelector("b").textContent = text
-		overlay.prepend(this.el)
+		document.getElementById("modal-overlay").prepend(this.el)
 	}
 }

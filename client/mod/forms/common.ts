@@ -48,7 +48,7 @@ export abstract class AccountForm extends FormView {
 	}
 
 	// Handle the response of a POST request
-	protected async  handlePostResponse(res: Response) {
+	protected async handlePostResponse(res: Response) {
 		switch (res.status) {
 			case 200:
 				this.remove()

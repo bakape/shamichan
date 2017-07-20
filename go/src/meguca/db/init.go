@@ -173,8 +173,8 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		q := [...]string{
+	func(tx *sql.Tx) error {
+		return execAll(tx,
 			`alter table boards
 				alter column id type text`,
 			`alter table bans
@@ -189,14 +189,7 @@ var upgrades = []func(*sql.Tx) error{
 				alter column board type text`,
 			`alter table posts
 				alter column board type text`,
-		}
-		for _, q := range q {
-			_, err = tx.Exec(q)
-			if err != nil {
-				return
-			}
-		}
-		return
+		)
 	},
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
@@ -243,6 +236,21 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) error {
+		return execAll(tx,
+			`create table reports (
+				id bigserial primary key,
+				target bigint not null,
+				board text not null,
+				reason text not null,
+				by inet not null,
+				illegal boolean not null,
+				created timestamp default (now() at time zone 'utc')
+			)`,
+			`create index report_board on reports (board)`,
+			`create index report_created on reports (created)`,
+		)
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
@@ -250,13 +258,13 @@ var upgrades = []func(*sql.Tx) error{
 func LoadDB() (err error) {
 	db, err = sql.Open("postgres", ConnArgs)
 	if err != nil {
-		return err
+		return
 	}
 
 	var exists bool
 	err = db.QueryRow(getQuery("init/check_db_exists.sql")).Scan(&exists)
 	if err != nil {
-		return err
+		return
 	}
 
 	tasks := make([]func() error, 0, 16)
@@ -282,8 +290,9 @@ func LoadDB() (err error) {
 		},
 	)
 
-	if err := util.Waterfall(tasks...); err != nil {
-		return err
+	err = util.Waterfall(tasks...)
+	if err != nil {
+		return
 	}
 
 	if !IsTest {

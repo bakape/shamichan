@@ -139,13 +139,6 @@ export class FormDataForm extends SelectedBoardForm {
 	protected async send() {
 		const data = new FormData(this.el)
 		data.append("board", this.board)
-		if (this.captcha) {
-			const c = this.captcha.data()
-			for (let k in c) {
-				data.append(k, c[k])
-			}
-		}
-
 		this.handlePostResponse(await fetch(this.destURL, {
 			method: "POST",
 			credentials: "include",

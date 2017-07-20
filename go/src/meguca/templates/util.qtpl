@@ -2,6 +2,7 @@
 {% import "fmt" %}
 {% import "meguca/common" %}
 {% import "meguca/assets" %}
+{% import "meguca/lang" %}
 
 Renders the tab selection butts in tabbed windows
 {% func tabButts(names []string) %}{% stripspace %}
@@ -112,4 +113,14 @@ Render an image or video asset
 	<div id="loading-image">
 		{%= asset(fmt.Sprintf("/assets/loading/%s", board), assets.Loading.Get(board).Mime) %}
 	</div>
+{% endstripspace %}{% endfunc %}
+
+Render localized table headers by UI translation ID
+{% func tableHeaders(ids ...string) %}{% stripspace %}
+	{% code ln := lang.Get().UI %}
+	<tr>
+		{% for _, id := range ids %}
+			<th>{%s= ln[id] %}</th>
+		{% endfor %}
+	</tr>
 {% endstripspace %}{% endfunc %}

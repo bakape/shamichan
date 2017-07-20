@@ -8,6 +8,7 @@ import { position, ModerationLevel } from "../mod"
 import { postJSON } from "../util"
 import CollectionView from "./collectionView"
 import { PostData } from "../common"
+import ReportForm from "./report"
 
 interface ControlButton extends Element {
 	_popup_menu: MenuView
@@ -28,6 +29,15 @@ const actions: { [key: string]: ItemSpec } = {
 			return true
 		},
 		handler: hidePost,
+	},
+	report: {
+		text: lang.ui["report"],
+		shouldRender(m) {
+			return true
+		},
+		handler(m) {
+			new ReportForm(m.id)
+		},
 	},
 	viewSameIP: {
 		text: lang.posts["viewBySameIP"],
@@ -116,9 +126,11 @@ class MenuView extends View<Post> {
 
 	// Run appropriate handler on click or simply remove the menu
 	private handleClick(e: Event) {
-		actions[(e.target as Element).getAttribute('data-id')]
-			.handler(this.model)
-		this.remove()
+		const act = actions[(e.target as Element).getAttribute('data-id')]
+		if (act) {
+			act.handler(this.model)
+			this.remove()
+		}
 	}
 
 	// Also dereference from parent .control element

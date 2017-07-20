@@ -133,7 +133,7 @@
 			</div>
 		</template>
 		<template name="notification">
-			<div class="notification modal glass">
+			<div class="notification modal glass show">
 				<b class="admin"><b>
 			</div>
 		</template>

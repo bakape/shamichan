@@ -140,3 +140,15 @@ create index op on posts (op);
 create index image on posts (SHA1);
 create index editing on posts (editing);
 create index ip on posts (ip);
+
+create table reports (
+	id bigserial primary key,
+	target bigint not null,
+	board text not null,
+	reason text not null,
+	by inet not null,
+	illegal boolean not null,
+	created timestamp default (now() at time zone 'utc')
+);
+create index report_board on reports (board);
+create index report_created on reports (created);

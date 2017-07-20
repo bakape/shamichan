@@ -35,7 +35,7 @@ var (
 	errTitleTooLong     = common.ErrTooLong("board title")
 	errNoticeTooLong    = common.ErrTooLong("notice")
 	errRulesTooLong     = common.ErrTooLong("rules")
-	errBanReasonTooLong = common.ErrTooLong("ban reason")
+	errReasonTooLong    = common.ErrTooLong("reason")
 	errInvalidBoardName = errors.New("invalid board name")
 	errBoardNameTaken   = errors.New("board name taken")
 	errAccessDenied     = errors.New("access denied")
@@ -446,8 +446,8 @@ func ban(w http.ResponseWriter, r *http.Request) {
 	case msg.Global && creds.UserID != "admin":
 		text403(w, errAccessDenied)
 		return
-	case len(msg.Reason) > common.MaxBanReasonLength:
-		text400(w, errBanReasonTooLong)
+	case len(msg.Reason) > common.MaxLenReason:
+		text400(w, errReasonTooLong)
 		return
 	case msg.Reason == "":
 		text400(w, errNoReason)
