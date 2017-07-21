@@ -103,26 +103,25 @@ export function loadFromDB(...threads: number[]): Promise<Set<number>[]> {
 
 // Store the ID of a post this client created
 export function storeMine(id: number, op: number) {
-	store(mine, "mine", id, op)
+	mine.add(id)
+	storeID("mine", id, op, tenDays)
 }
 
 // Store the ID of a post that replied to one of the user's posts
 export function storeSeenReply(id: number, op: number) {
-	store(seenReplies, "seen", id, op)
+	seenReplies.add(id)
+	storeID("seen", id, op, tenDays)
 }
 
 export function storeSeenPost(id: number, op: number) {
-	store(seenPosts, "seenPost", id, op)
+	seenPosts.add(id)
+	storeID("seenPost", id, op, tenDays)
 }
 
 // Store the ID of a post or thread to hide
 export function storeHidden(id: number, op: number) {
-	store(hidden, "hidden", id, op)
-}
-
-function store(set: Set<number>, key: string, id: number, op: number) {
-	set.add(id)
-	storeID(key, id, op, tenDays)
+	hidden.add(id)
+	storeID("hidden", id, op, tenDays * 3 * 6)
 }
 
 export function setBoardConfig(c: BoardConfigs) {
