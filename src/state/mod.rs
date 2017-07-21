@@ -6,7 +6,6 @@ use libc::*;
 use std::borrow::BorrowMut;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashSet};
-use url::Url;
 
 thread_local!{
 	static STATE: RefCell<State> = RefCell::new(State::default())
@@ -60,16 +59,15 @@ pub struct Page {
 	last_n: u32,
 	page: u32,
 	board: String,
-	href: String,
 }
 
 impl Page {
 	// Parse page URL
-	pub fn from_url(url: &str) -> Page {
-		let u = Url::parse(url).unwrap();
-		let mut path = u.path_segments().unwrap();
-		let board = path.next().unwrap();
-		let (thread, catalog): (u64, bool) = match path.next() {
+	pub fn from_url(path: &str, query: &str) -> Page {
+		let mut path_split = path[1..].split("/");
+		let board = path_split.next().unwrap();
+		println!("{}", board);
+		let (thread, catalog): (u64, bool) = match path_split.next() {
 			Some(s) => {
 				if s == "catalog" {
 					(0, true)
@@ -83,28 +81,36 @@ impl Page {
 			None => (0, false),
 		};
 
-		let mut q = u.query_pairs();
-		macro_rules! parse {
-			($key:expr) => (
-				match q.find(|q| q.0 == $key) {
+		let mut page = 0u32;
+		let mut last_n = 0u32;
+		if query != "" {
+			let mut split = query[1..].split("&");
+			let mut parse =
+				|key: &str| match split.find(|q| q.starts_with(key)) {
 					Some(q) => {
-						match q.1.parse::<u32>() {
-							Ok(i) => i,
-							_ => 0,
+						match q.split("=").last() {
+							Some(i) => {
+								match i.parse::<u32>() {
+									Ok(i) => i,
+									_ => 0,
+								}
+							}
+							None => 0,
 						}
 					}
 					None => 0,
-				}
-			)
+				};
+
+			page = parse("page");
+			last_n = parse("last");
 		}
 
 		Page {
 			thread,
 			catalog,
-			page: parse!("page"),
-			last_n: parse!("last"),
+			page,
+			last_n,
 			board: board.to_string(),
-			href: url.to_string(),
 		}
 	}
 }
@@ -112,7 +118,10 @@ impl Page {
 pub fn load() {
 	with_state(|state| {
 		state.options = options::load();
-		state.page = Page::from_url(&from_C_string!(page_url()));
+		state.page = Page::from_url(
+			&from_C_string!(page_path()),
+			&from_C_string!(page_query()),
+		);
 	})
 }
 
@@ -125,5 +134,6 @@ where
 }
 
 extern "C" {
-	fn page_url() -> *mut c_char;
+	fn page_path() -> *mut c_char;
+	fn page_query() -> *mut c_char;
 }

@@ -13,10 +13,10 @@ mergeInto(LibraryManager.library, {
 	},
 	get_inner_html: function (id) {
 		var el = document.getElementById(Pointer_stringify(id))
-		var html = el ? el.innerHTML : ""
-		var len = html.length + 1
+		var s = el ? el.innerHTML : ""
+		var len = s.length + 1
 		var buf = Module._malloc(len)
-		stringToUTF8(html, buf, len)
+		stringToUTF8(s, buf, len)
 		return buf
 	},
 	append: function (id, html) {
@@ -53,8 +53,15 @@ mergeInto(LibraryManager.library, {
 		stringToUTF8(s, buf, len)
 		return buf
 	},
-	page_url: function () {
-		var s = location.href
+	page_path: function () {
+		var s = location.pathname
+		var len = s.length + 1
+		var buf = Module._malloc(len)
+		stringToUTF8(s, buf, len)
+		return buf
+	},
+	page_query: function () {
+		var s = location.search
 		var len = s.length + 1
 		var buf = Module._malloc(len)
 		stringToUTF8(s, buf, len)
