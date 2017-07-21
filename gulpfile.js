@@ -11,7 +11,7 @@ const babel = require("gulp-babel"),
 	rename = require('gulp-rename'),
 	sourcemaps = require('gulp-sourcemaps'),
 	ts = require('gulp-typescript'),
-	uglify = require('gulp-uglify')
+	uglify = require('gulp-uglify/composer')(require("uglify-es"), console)
 
 // Keep script alive and rebuild on file changes
 // Triggered with the `-w` flag
@@ -71,6 +71,8 @@ function buildES6() {
 	tasks.push(name)
 	gulp.task(name, () =>
 		buildClient()
+			.pipe(uglify())
+			.on('error', handleError)
 			.pipe(sourcemaps.write('maps'))
 			.pipe(gulp.dest('www/js/es6')))
 
