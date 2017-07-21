@@ -457,7 +457,7 @@ function handleImageClick(event: MouseEvent) {
 	const bypass = options.inlineFit === "none"
 		|| event.which !== 1
 		|| el.classList.contains("catalog")
-		|| !el.matches("figure img")
+		|| !el.matches("figure img, figure video")
 	if (bypass) {
 		return
 	}
