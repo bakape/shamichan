@@ -177,7 +177,7 @@ function renderImagePreview(event: MouseEvent) {
 		return
 	}
 	const target = event.target as HTMLElement
-	let bypass = target.tagName !== "IMG",
+	let bypass = !target.matches("figure img"),
 		post: Post
 	if (!bypass) {
 		post = getModel(target)
