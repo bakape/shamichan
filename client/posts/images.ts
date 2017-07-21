@@ -454,11 +454,10 @@ export function sourcePath(SHA1: string, fileType: fileTypes): string {
 // each view.
 function handleImageClick(event: MouseEvent) {
 	const el = event.target as Element
-	const bypass = options.inlineFit === "none"
+	if (options.inlineFit === "none"
 		|| event.which !== 1
 		|| el.classList.contains("catalog")
-		|| !el.matches("figure img, figure video")
-	if (bypass) {
+	) {
 		return
 	}
 	const model = getModel(el)
@@ -523,7 +522,7 @@ function shouldAutoExpand(model: Post): boolean {
 }
 
 on(document, "click", handleImageClick, {
-	selector: "img, video",
+	selector: "figure img, figure video",
 })
 on(document, "click", toggleHiddenThumbnail, {
 	passive: true,
