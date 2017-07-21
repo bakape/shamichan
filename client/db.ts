@@ -140,13 +140,21 @@ export function readIDs(store: string, ...ops: number[]): Promise<number[]> {
 	if (isCuck || !ops.length) {
 		return fakePromise([])
 	}
-	ops.sort((a, b) =>
-		a - b)
+	return Promise.all(
+		ops.map(id =>
+			readThreadIDs(store, id))
+	)
+		.then(ids =>
+			[].concat(...ids))
+}
+
+// Reads post IDs for a single thread
+function readThreadIDs(store: string, op: number): Promise<number[]> {
 	return new Promise<number[]>((resolve, reject) => {
 		const ids: number[] = [],
 			req = newTransaction(store, false)
 				.index("op")
-				.openCursor(IDBKeyRange.bound(ops[0], ops[ops.length - 1]))
+				.openCursor(IDBKeyRange.bound(op, op))
 
 		req.onerror = err =>
 			reject(err)
@@ -154,9 +162,7 @@ export function readIDs(store: string, ...ops: number[]): Promise<number[]> {
 		req.onsuccess = event => {
 			const cursor = (event as any).target.result as IDBCursorWithValue
 			if (cursor) {
-				if (ops.includes(cursor.value.op)) {
-					ids.push(cursor.value.id)
-				}
+				ids.push(cursor.value.id)
 				cursor.continue()
 			} else {
 				resolve(ids)
