@@ -1,5 +1,6 @@
 create or replace function insert_thread(
 	subject varchar(100),
+	nonLive bool,
 	imageCtr bigint,
 	editing bool,
 	spoiler bool,
@@ -20,9 +21,9 @@ create or replace function insert_thread(
 	commands json[]
 ) returns void as $$
 	insert into threads (
-		board, id, postCtr, imageCtr, replyTime, bumpTime, subject
+		board, id, postCtr, imageCtr, replyTime, bumpTime, subject, nonLive
 	)
-		values (board, id, 1, imageCtr, now, now, subject);
+		values (board, id, 1, imageCtr, now, now, subject, nonLive);
 	insert into posts (
 		editing, spoiler, id, board, op, time, body, flag, name, trip, auth,
 		password, ip, SHA1, imageName, links, commands

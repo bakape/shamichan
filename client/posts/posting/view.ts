@@ -165,7 +165,7 @@ export default class FormView extends PostView {
 
         document.getElementById("thread-container").append(this.el)
         this.resizeSpacer()
-        this.setEditing(identity.live)
+        this.setEditing(!this.model.nonLive)
     }
 
     // Resize bottomSpacer to the same top position as this post

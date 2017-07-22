@@ -208,6 +208,10 @@
 			"Meno",
 			"Name to attach to new posts"
 		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		],
 		"newPassword": [
 			"New password",
 			""

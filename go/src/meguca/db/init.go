@@ -251,6 +251,20 @@ var upgrades = []func(*sql.Tx) error{
 			`create index report_created on reports (created)`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE boards
+				ADD COLUMN nonLive bool default false`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE threads
+				ADD COLUMN nonLive bool default false`,
+		)
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both

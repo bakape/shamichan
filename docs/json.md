@@ -95,6 +95,7 @@ extends [Post](#post)
 | Field | Type | Required | Description |
 |---|---|:---:|---|
 | abbrev | bool | - | Specifies, if the thread is abbreviated and does not contain all of its replies |
+| nonLive | bool | - | Specifies, if live post updates have been disabled in this thread |
 | postCtr | uint | + | Number of posts in the thread |
 | imageCtr | uint | + | Number of posts with images in the thread |
 | replyTime | uint | + | Unix timestamp of the time of the last reply in the thread |
@@ -130,6 +131,7 @@ extends [Post](#post)
 | readOnly | bool | Specifies, if thread and post creation has been disabled on this board |
 | textOnly | bool | Specifies, if file upload has been disabled |
 | forcedAnon | bool | Specifies, if poster names and tripcodes have been disabled |
+| nonLive | bool | Specifies, if live post updates have been disabled on this board |
 | title | string | Title of the board |
 | notice | string | Short notice from the board owner |
 | rules | string | Rules of current board |

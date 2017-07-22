@@ -67,6 +67,7 @@ create table boards (
 	disableRobots boolean default false,
 	flags boolean default false,
 	NSFW boolean default false,
+	nonLive bool default false,
 	id text primary key,
 	created timestamp not null,
 	defaultCSS text not null,
@@ -101,6 +102,7 @@ create sequence post_id;
 
 create table threads (
 	sticky boolean default false,
+	nonLive bool default false,
 	board text not null references boards on delete cascade,
 	id bigint primary key,
 	postCtr bigint not null,

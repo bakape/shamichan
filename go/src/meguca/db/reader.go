@@ -181,8 +181,11 @@ func scanOP(r rowScanner) (t common.Thread, err error) {
 		img  imageScanner
 	)
 
-	args := make([]interface{}, 0, 34)
-	args = append(args, threadScanArgs(&t)...)
+	args := make([]interface{}, 0, 35)
+	args = append(args,
+		&t.Sticky, &t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
+		&t.Subject, &t.NonLive,
+	)
 	args = append(args, post.ScanArgs()...)
 	args = append(args, img.ScanArgs()...)
 	err = r.Scan(args...)
@@ -398,14 +401,6 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 	err = injectOpenBodies(open)
 
 	return
-}
-
-// Return arguments for scanning a common.Thread from the DB
-func threadScanArgs(t *common.Thread) []interface{} {
-	return []interface{}{
-		&t.Sticky, &t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-		&t.Subject,
-	}
 }
 
 func scanThreadIDs(table tableScanner) (ids []uint64, err error) {

@@ -295,14 +295,17 @@ func WritePost(tx *sql.Tx, p Post) (err error) {
 }
 
 // InsertThread inserts a new thread into the database
-func InsertThread(subject string, p Post) (err error) {
+func InsertThread(subject string, nonLive bool, p Post) (err error) {
 	imgCtr := 0
 	if p.Image != nil {
 		imgCtr = 1
 	}
 	err = execPrepared(
 		"insert_thread",
-		append([]interface{}{subject, imgCtr}, genPostCreationArgs(p)...)...,
+		append(
+			[]interface{}{subject, nonLive, imgCtr},
+			genPostCreationArgs(p)...,
+		)...,
 	)
 	if err != nil {
 		return
@@ -364,4 +367,10 @@ func GetPostPassword(id uint64) (p []byte, err error) {
 func SetPostCounter(c uint64) error {
 	_, err := db.Exec(`SELECT setval('post_id', $1)`, c)
 	return err
+}
+
+// Check, if a thread has live post updates disabled
+func CheckThreadNonLive(id uint64) (nonLive bool, err error) {
+	err = prepared["check_thread_nonlive"].QueryRow(id).Scan(&nonLive)
+	return
 }

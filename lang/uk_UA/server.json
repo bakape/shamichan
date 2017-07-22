@@ -208,6 +208,10 @@
 			"Ім'я",
 			"Ім'я на постах"
 		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		],
 		"newPassword": [
 			"New password",
 			""

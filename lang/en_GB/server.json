@@ -36,6 +36,10 @@
 			"Board title",
 			"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
 		],
+		"body": [
+			"Body",
+			"Text body of the post"
+		],
 		"captcha": [
 			"Captcha",
 			"Ask users to complete a captcha for certain tasks like registration and thread creation"
@@ -207,6 +211,10 @@
 		"name": [
 			"Name",
 			"Name to attach to new posts"
+		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
 		],
 		"newPassword": [
 			"New password",

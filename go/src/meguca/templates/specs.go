@@ -50,10 +50,11 @@ var specs = map[string][]inputSpec{
 			Autocomplete: "off",
 		},
 		inputSpec{
-			ID:        "body",
-			Type:      _textarea,
-			Rows:      5,
-			MaxLength: common.MaxLenBody,
+			ID:          "body",
+			Type:        _textarea,
+			Rows:        5,
+			MaxLength:   common.MaxLenBody,
+			Placeholder: true,
 		},
 	},
 	"login": {
@@ -115,6 +116,7 @@ var specs = map[string][]inputSpec{
 	"configureBoard": {
 		{ID: "readOnly"},
 		{ID: "textOnly"},
+		{ID: "nonLive"},
 		{ID: "forcedAnon"},
 		{ID: "disableRobots"},
 		{ID: "flags"},

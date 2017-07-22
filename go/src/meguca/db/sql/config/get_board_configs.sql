@@ -1,4 +1,4 @@
-select readOnly, textOnly, forcedAnon, disableRobots, flags, NSFW,
+select readOnly, textOnly, forcedAnon, disableRobots, flags, NSFW, nonLive,
 		id,	defaultCSS, title, notice, rules, eightball
 	from boards
 	where id = $1

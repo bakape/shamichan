@@ -23,6 +23,7 @@ var (
 
 // ThreadCreationRequest contains data for creating a new thread
 type ThreadCreationRequest struct {
+	NonLive bool
 	ReplyCreationRequest
 	Subject, Board string
 }
@@ -90,7 +91,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	}
 	post.OP = post.ID
 
-	err = db.InsertThread(subject, post)
+	err = db.InsertThread(subject, conf.NonLive || req.NonLive, post)
 	return
 }
 
@@ -129,6 +130,16 @@ func CreatePost(
 	if req.Body == "" && !hasImage {
 		err = errNoTextOrImage
 		return
+	}
+
+	// Disable live updates, if thread is non-live
+	if req.Open {
+		var disabled bool
+		disabled, err = db.CheckThreadNonLive(op)
+		if err != nil {
+			return
+		}
+		req.Open = !disabled
 	}
 
 	post, err = constructPost(req, conf, ip)

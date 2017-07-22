@@ -208,6 +208,10 @@
 			"Login",
 			"Imię, które będzie używane przy nowych postach"
 		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		],
 		"newPassword": [
 			"New password",
 			""

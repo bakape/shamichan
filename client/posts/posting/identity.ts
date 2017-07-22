@@ -48,7 +48,9 @@ class IdentityPanel extends BannerModal {
 					el.value = identity[name]
 					break
 				case "checkbox":
-					el.checked = identity[name]
+					if (!el.disabled) {
+						el.checked = identity[name]
+					}
 					break
 			}
 		}

@@ -13,7 +13,10 @@ import identity, { newAllocRequest } from "./identity"
 export default class FormModel extends Post {
 	public sentAllocRequest: boolean
 	public isAllocated: boolean
-	public nonLive = !identity.live  // Disable live post updates
+
+	// Disable live post updates
+	public nonLive = (posts.get(page.thread) as any).nonLive || !identity.live
+
 	public needCaptcha: boolean // Need to solve a captcha to allocate
 
 	// Text that is not submitted yet to defer post allocation

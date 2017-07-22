@@ -53,6 +53,7 @@ export interface Command {
 
 // Data of an OP post
 export interface ThreadData extends PostData {
+	nonLive: boolean
 	postCtr: number
 	imageCtr: number
 	replyTime: number

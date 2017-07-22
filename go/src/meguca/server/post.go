@@ -22,9 +22,11 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Map form data to websocket thread creation request
+	f := r.Form
 	req := websockets.ThreadCreationRequest{
-		Subject:              r.Form.Get("subject"),
-		Board:                r.Form.Get("board"),
+		Subject:              f.Get("subject"),
+		Board:                f.Get("board"),
+		NonLive:              f.Get("nonLive") == "on",
 		ReplyCreationRequest: repReq,
 	}
 
