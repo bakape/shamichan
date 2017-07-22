@@ -39,7 +39,7 @@ func Compile() error {
 // Board renders board page HTML for noscript browsers. withIndex specifies, if
 // the rendered board page should be embedded in the index page
 func Board(
-	b string,
+	b, theme string,
 	page, total int,
 	pos auth.ModerationLevel,
 	minimal, catalog bool,
@@ -60,25 +60,19 @@ func Board(
 		return []byte(html)
 	}
 
-	theme := conf.DefaultCSS
-	if b == "all" {
-		theme = config.Get().DefaultCSS
-	}
-
 	return execIndex(html, title, theme, pos)
 }
 
 // Thread renders thread page HTML for noscript browsers
 func Thread(
 	id uint64,
-	board, title string,
+	board, title, theme string,
 	abbrev bool,
 	pos auth.ModerationLevel,
 	postHTML []byte,
 ) []byte {
 	title = html.EscapeString(fmt.Sprintf("/%s/ - %s", board, title))
 	html := renderThread(postHTML, id, board, abbrev, pos)
-	theme := config.GetBoardConfigs(board).DefaultCSS
 	return execIndex(html, title, theme, pos)
 }
 

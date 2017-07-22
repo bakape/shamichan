@@ -72,13 +72,31 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 		n = p.pageNumber
 		total = p.pageTotal
 	}
-	html = templates.Board(b, n, total, pos, isMinimal(r), catalog, html)
+
+	html = templates.Board(
+		b, resolveTheme(r, b),
+		n, total,
+		pos,
+		r.URL.Query().Get("minimal") == "true", catalog,
+		html,
+	)
 	serveHTML(w, r, etag, html, nil)
 }
 
-// Returns, if the minimal query string is not set
-func isMinimal(r *http.Request) bool {
-	return r.URL.Query().Get("minimal") == "true"
+// Resolve theme to render in accordance to client and board settings.
+// Needed to prevent Flash Of Unstyled Content.
+func resolveTheme(r *http.Request, board string) string {
+	if c, err := r.Cookie("theme"); err == nil {
+		for _, t := range common.Themes {
+			if c.Value == t {
+				return c.Value
+			}
+		}
+	}
+	if board == "all" {
+		return config.Get().DefaultCSS
+	}
+	return config.GetBoardConfigs(board).DefaultCSS
 }
 
 // Asserts a thread exists on the specific board and renders the index template
@@ -109,7 +127,13 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 
 	b := extractParam(r, "board")
 	title := data.(common.Thread).Subject
-	html = templates.Thread(id, b, title, lastN != 0, pos, html)
+	html = templates.Thread(
+		id,
+		b, title, resolveTheme(r, b),
+		lastN != 0,
+		pos,
+		html,
+	)
 	serveHTML(w, r, etag, html, nil)
 }
 

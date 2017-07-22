@@ -1,7 +1,7 @@
 // Specs for individual option models
 
 import { config } from '../state'
-import { makeEl, HTML } from "../util"
+import { makeEl, HTML, setCookie } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
 import initRadio from "./r-a-dio"
@@ -134,6 +134,7 @@ export const specs: { [id: string]: OptionSpec } = {
 			document
 				.getElementById('theme-css')
 				.setAttribute('href', `/assets/css/${theme}.css`)
+			setCookie("theme", theme, 365 * 10)
 		},
 	},
 	// Custom user-set background

@@ -165,6 +165,13 @@ export function inputElement(
 	return parent.querySelector(`input[name="${name}"]`) as HTMLInputElement
 }
 
+// Set a global cookie, that expires after `days`
+export function setCookie(key: string, val: string, days: number) {
+	let date = new Date()
+	date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
+	document.cookie = `${key}=${val}; expires=${date.toUTCString()}; path=/;`
+}
+
 // Get a cookie value by name. Returns empty string, if none.
 export function getCookie(id: string): string {
 	const kv = document.cookie

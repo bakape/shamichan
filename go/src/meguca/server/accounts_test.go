@@ -91,20 +91,18 @@ func TestIsLoggedIn(t *testing.T) {
 
 func setLoginCookies(r *http.Request, creds auth.SessionCreds) {
 	expires := time.Now().Add(time.Hour)
-	loginCookie := http.Cookie{
+	r.AddCookie(&http.Cookie{
 		Name:    "loginID",
 		Value:   creds.UserID,
 		Path:    "/",
 		Expires: expires,
-	}
-	sessionCookie := http.Cookie{
+	})
+	r.AddCookie(&http.Cookie{
 		Name:    "session",
 		Value:   creds.Session,
 		Path:    "/",
 		Expires: expires,
-	}
-	r.AddCookie(&loginCookie)
-	r.AddCookie(&sessionCookie)
+	})
 }
 
 func assertError(

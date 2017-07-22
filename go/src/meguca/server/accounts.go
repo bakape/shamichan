@@ -87,20 +87,18 @@ func commitLogin(w http.ResponseWriter, r *http.Request, userID string) {
 	// deleted
 	expires := time.Now().
 		Add(time.Duration(config.Get().SessionExpiry)*time.Hour*24 - time.Hour)
-	loginCookie := http.Cookie{
+	http.SetCookie(w, &http.Cookie{
 		Name:    "loginID",
 		Value:   userID,
 		Path:    "/",
 		Expires: expires,
-	}
-	sessionCookie := http.Cookie{
+	})
+	http.SetCookie(w, &http.Cookie{
 		Name:    "session",
 		Value:   token,
 		Path:    "/",
 		Expires: expires,
-	}
-	http.SetCookie(w, &loginCookie)
-	http.SetCookie(w, &sessionCookie)
+	})
 }
 
 // Log into a registered user account
