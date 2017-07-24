@@ -56,8 +56,9 @@ func formatEtag(ctr uint64, hash string, pos auth.ModerationLevel) string {
 	return string(buf)
 }
 
-// Write a []byte to the client
+// Write a []byte to the client. Must receive the entire response body at once.
 func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
+	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
 	_, err := w.Write(data)
 	if err != nil {
 		logError(r, err)
