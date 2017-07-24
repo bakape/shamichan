@@ -41,9 +41,9 @@
 				<input name="subject" placeholder="{%s= ln.UI["subject"] %}" required type="text" maxlength="100">
 				<br>
 				{%= noscriptPostCreationFields(pos) %}
-				<label>
-					{% code nl:= ln.Forms["nonLive"] %}
-					<input type="checkbox" name="nonLive" title="{%s= nl[1] %}" {% if conf.NonLive %}checked disabled{% endif %}>
+				{% code nl:= ln.Forms["nonLive"] %}
+				<label title="{%s= nl[1] %}">
+					<input type="checkbox" name="nonLive" {% if conf.NonLive %}checked disabled{% endif %}>
 					{%s= nl[0] %}
 				</label>
 				<br>
