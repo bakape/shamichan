@@ -132,8 +132,11 @@ export function hidePosts() {
 // Apply extra client-side localizations. Not done server-side for better
 // cacheability.
 export function localizeThreads() {
-	if (posterName() || options.anonymise) {
-		const name = posterName() || lang.posts["anon"]
+	let name = posterName()
+	if (name || options.anonymise) {
+		if (!name) {
+			name = lang.posts["anon"]
+		}
 		for (let el of threads.querySelectorAll(".name")) {
 			el.textContent = name
 		}

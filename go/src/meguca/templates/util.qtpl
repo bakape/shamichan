@@ -38,16 +38,16 @@ Render a link to another post. Can optionally be cross-thread.
 
 {% func expandLink(board, id string) %}{% stripspace %}
 	<span class="act">
-		<a class="expand-link" href="/{%s= board %}/{%s= id %}">
-			Expand
+		<a href="/{%s= board %}/{%s= id %}">
+			{%s= lang.Get().Common.Posts["expand"] %}
 		</a>
 	</span>
 {% endstripspace %}{% endfunc %}
 
 {% func last100Link(board, id string) %}{% stripspace %}
 	<span class="act">
-		<a class="lastN-link" href="/{%s= board %}/{%s= id %}?last=100#bottom">
-			Last 100
+		<a href="/{%s= board %}/{%s= id %}?last=100#bottom">
+			{%s= lang.Get().Common.UI["expand"] %}{%space %}100
 		</a>
 	</span>
 {% endstripspace %}{% endfunc %}

@@ -91,14 +91,6 @@ export async function render() {
 		await extractThreads()
 	}
 
-	// Add extra localizations
-	for (let el of threads.querySelectorAll(".lastN-link")) {
-		el.textContent = `${lang.ui["last"]} 100`
-	}
-	for (let el of threads.querySelectorAll(".expand-link")) {
-		el.textContent = lang.posts["expand"]
-	}
-
 	renderRefreshButton(threads.querySelector("#refresh > a"))
 	if (!page.catalog) {
 		findSyncwatches(threads)
