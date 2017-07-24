@@ -46,7 +46,7 @@ Render a link to another post. Can optionally be cross-thread.
 
 {% func last100Link(board, id string) %}{% stripspace %}
 	<span class="act">
-		<a class="lastN-link" href="/{%s= board %}/{%s= id %}?last=100">
+		<a class="lastN-link" href="/{%s= board %}/{%s= id %}?last=100#bottom">
 			Last 100
 		</a>
 	</span>
