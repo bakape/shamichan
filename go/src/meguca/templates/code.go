@@ -327,6 +327,9 @@ func highlightSyntax(text string) []byte {
 		prev = b
 	}
 
+	if typ == word {
+		w.escape(token)
+	}
 	if typ != unmatched {
 		w.close()
 	}

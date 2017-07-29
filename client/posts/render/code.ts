@@ -277,6 +277,10 @@ export default function highlightSyntax(text: string): string {
 				break
 		}
 	}
+
+	if (typ === type.word) {
+		html += escape(token)
+	}
 	if (typ !== type.unmatched) {
 		html += close
 	}
