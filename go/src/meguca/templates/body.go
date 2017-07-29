@@ -91,6 +91,8 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64, index bool) {
 	}
 
 	for i, l := range strings.Split(c.Body, "\n") {
+		c.state.quote = false
+
 		// Prevent successive empty lines
 		if i != 0 && c.state.newlines < 2 {
 			c.string("<br>")
@@ -100,7 +102,6 @@ func streambody(w *quicktemplate.Writer, p common.Post, op uint64, index bool) {
 			continue
 		}
 
-		c.state.quote = false
 		c.state.newlines = 0
 		if l[0] == '>' {
 			c.string("<em>")

@@ -28,6 +28,8 @@ export default function renderBody(data: PostData): string {
 
     const fn = data.editing ? parseOpenLine : parseTerminatedLine
     for (let l of data.body.split("\n")) {
+        state.quote = false
+
         // Prevent successive empty lines
         if (html && state.newlines < 2) {
             html += "<br>"
@@ -37,7 +39,6 @@ export default function renderBody(data: PostData): string {
             continue
         }
 
-        state.quote = false
         state.newlines = 0
         if (l[0] === ">") {
             state.quote = true
