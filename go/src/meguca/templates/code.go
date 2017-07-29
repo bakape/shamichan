@@ -347,9 +347,9 @@ func (w *codeWriter) wrapOperator(b byte) {
 
 // Returns if byte is an ASCII alphanumeric, $ or _
 func isWordByte(b byte) bool {
-	return b == 36 ||
-		(b >= 48 && b <= 57) ||
-		(b >= 65 && b <= 90) ||
-		b == 95 ||
-		(b >= 97 && b <= 122)
+	return b == '$' ||
+		(b >= '0' && b <= '9') ||
+		(b >= 'A' && b <= 'Z') ||
+		b == '_' ||
+		(b >= 'a' && b <= 'z')
 }
