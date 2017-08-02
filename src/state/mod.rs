@@ -2,10 +2,15 @@
 
 mod options;
 
+use dom::get_inner_html;
 use libc::*;
+use posts::{Post, Thread};
+use serde_json;
 use std::borrow::BorrowMut;
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::mem::transmute;
+use std::slice;
 
 thread_local!{
 	static STATE: RefCell<State> = RefCell::new(State::default())
@@ -17,10 +22,12 @@ pub struct State {
 	pub board_configs: BoardConfigs,
 	pub options: options::Options,
 	pub page: Page,
+	pub thread: Option<ThreadState>,
 	pub seen_posts: HashSet<u64>,
 	pub seen_replies: HashSet<u64>,
 	pub mine: HashSet<u64>,
 	pub hidden: HashSet<u64>,
+	pub posts: HashMap<u64, Post>,
 }
 
 // Server-wide global configurations
@@ -66,7 +73,6 @@ impl Page {
 	pub fn from_url(path: &str, query: &str) -> Page {
 		let mut path_split = path[1..].split("/");
 		let board = path_split.next().unwrap();
-		println!("{}", board);
 		let (thread, catalog): (u64, bool) = match path_split.next() {
 			Some(s) => {
 				if s == "catalog" {
@@ -115,14 +121,68 @@ impl Page {
 	}
 }
 
-pub fn load() {
+// Thread-specific state of the page
+pub struct ThreadState {
+	post_count: u64,
+	image_count: u64,
+	reply_time: u64,
+	bump_time: u64,
+}
+
+// Type of internal ID storage
+#[repr(i32)]
+enum Store {
+	Mine,
+	SeenReplies,
+	SeenPosts,
+	Hidden,
+}
+
+pub fn load() -> Result<(), serde_json::Error> {
+	unsafe { load_db() };
 	with_state(|state| {
 		state.options = options::load();
 		state.page = Page::from_url(
 			&from_C_string!(page_path()),
 			&from_C_string!(page_query()),
 		);
+
+		// Parse post JSON into application state
+		let s = get_inner_html("post-data");
+		if state.page.thread != 0 {
+			let t: Thread = serde_json::from_str(&s)?;
+			state.thread = Some(ThreadState {
+				post_count: t.postCtr,
+				image_count: t.imageCtr,
+				reply_time: t.replyTime,
+				bump_time: t.bumpTime,
+			});
+			extract_thread(state, &t);
+		} else {
+			let board: Vec<Thread> = serde_json::from_str(&s)?;
+			state.thread = None;
+			for t in board.iter() {
+				extract_thread(state, &t);
+			}
+		}
+
+		// TODO: Parse JSON data and get thread numbers
+		unsafe { load_ids(vec![1].as_ptr(), 1) };
+
+		Ok(())
 	})
+}
+
+// Extract thread post data from intermediary parsed JSON struct
+fn extract_thread(state: &mut State, t: &Thread) {
+	state.posts.insert(t.id, Post::from(t));
+	if let Some(ref posts) = t.posts {
+		for p in posts.iter() {
+			let mut c = p.clone();
+			c.op = t.id;
+			state.posts.insert(p.id, c);
+		}
+	}
 }
 
 // Run function, with the state of the application as an argument
@@ -136,4 +196,20 @@ where
 extern "C" {
 	fn page_path() -> *mut c_char;
 	fn page_query() -> *mut c_char;
+	fn load_db();
+	fn load_ids(threads: *const uint64_t, len: c_int);
+}
+
+// Set internal post ID storage set from array
+#[no_mangle]
+pub extern "C" fn set_store(typ: c_int, ids: *mut uint64_t, len: usize) {
+	with_state(|state| {
+		let it = unsafe { slice::from_raw_parts(ids, len) }.iter();
+		match unsafe { transmute(typ) } {
+			Store::Mine => state.mine.extend(it),
+			Store::SeenReplies => state.seen_replies.extend(it),
+			Store::SeenPosts => state.seen_posts.extend(it),
+			Store::Hidden => state.hidden.extend(it),
+		};
+	});
 }

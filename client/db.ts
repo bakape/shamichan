@@ -2,7 +2,10 @@
 
 const dbVersion = 7
 
-let db: IDBDatabase
+// Express DB reediness as a promise
+let db: Promise<IDBDatabase> = new Promise((resolve) =>
+	resolve_db = resolve)
+let resolve_db: (db: IDBDatabase) => void
 
 // FF IndexedDB implementation is broken in private mode.
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=781982
@@ -30,7 +33,7 @@ export function open(): Promise<void> {
 
 		// Prepare for operation
 		r.onsuccess = () => {
-			db = r.result as IDBDatabase
+			const db = r.result as IDBDatabase
 
 			db.onerror = throwErr
 			resolve()
@@ -39,6 +42,9 @@ export function open(): Promise<void> {
 			db.onversionchange = () =>
 				(db.close(),
 					location.reload(true))
+
+			// Set DB as ready
+			resolve_db(db)
 
 			// Delay for quicker starts
 			setTimeout(() => {
@@ -59,7 +65,7 @@ export function open(): Promise<void> {
 
 // Upgrade or initialize the database
 function upgradeDB(event: IDBVersionChangeEvent) {
-	db = (event.target as any).result as IDBDatabase
+	const db = (event.target as any).result as IDBDatabase
 	switch (event.oldVersion) {
 		case 0:
 		case 1:
@@ -111,8 +117,8 @@ function throwErr(err: ErrorEvent) {
 }
 
 // Delete expired keys from post ID object stores
-function deleteExpired(name: string) {
-	const req = newTransaction(name, true)
+async function deleteExpired(name: string) {
+	const req = (await newTransaction(name, true))
 		.index("expires")
 		.openCursor(IDBKeyRange.upperBound(Date.now()))
 
@@ -129,14 +135,17 @@ function deleteExpired(name: string) {
 }
 
 // Helper for initiating transactions on a single object store
-function newTransaction(store: string, write: boolean): IDBObjectStore {
-	const t = db.transaction(store, write ? "readwrite" : "readonly")
+async function newTransaction(
+	store: string,
+	write: boolean,
+): Promise<IDBObjectStore> {
+	const t = (await db).transaction(store, write ? "readwrite" : "readonly")
 	t.onerror = throwErr
 	return t.objectStore(store)
 }
 
 // Read the contents of a postStore for specific threads into an array
-export function readIDs(store: string, ...ops: number[]): Promise<number[]> {
+export function readIDs(store: string, ops: number[]): Promise<number[]> {
 	if (isCuck || !ops.length) {
 		return fakePromise([])
 	}
@@ -150,9 +159,9 @@ export function readIDs(store: string, ...ops: number[]): Promise<number[]> {
 
 // Reads post IDs for a single thread
 function readThreadIDs(store: string, op: number): Promise<number[]> {
-	return new Promise<number[]>((resolve, reject) => {
+	return new Promise<number[]>(async (resolve, reject) => {
 		const ids: number[] = [],
-			req = newTransaction(store, false)
+			req = (await newTransaction(store, false))
 				.index("op")
 				.openCursor(IDBKeyRange.bound(op, op))
 
@@ -187,18 +196,18 @@ export function storeID(store: string, id: number, op: number, expiry: number) {
 	})
 }
 
-function addObj(store: string, obj: any) {
-	newTransaction(store, true).add(obj).onerror = throwErr
+async function addObj(store: string, obj: any) {
+	(await newTransaction(store, true)).add(obj).onerror = throwErr
 }
 
 // Clear the target object store asynchronously
-export function clearStore(store: string) {
+export async function clearStore(store: string) {
 	if (isCuck) {
 		return
 	}
-	const trans = newTransaction(store, true),
-		req = trans.clear()
-	req.onerror = throwErr
+	(await newTransaction(store, true))
+		.clear()
+		.onerror = throwErr
 }
 
 // Retrieve an object from a specific object store
@@ -206,9 +215,8 @@ export function getObj<T>(store: string, id: any): Promise<T> {
 	if (isCuck) {
 		return fakePromise({} as any)
 	}
-	return new Promise<T>((resolve, reject) => {
-		const t = newTransaction(store, false),
-			r = t.get(id)
+	return new Promise<T>(async (resolve, reject) => {
+		const r = (await newTransaction(store, false)).get(id)
 		r.onerror = () =>
 			reject(r.error)
 		r.onsuccess = () =>
@@ -221,9 +229,8 @@ export function putObj(store: string, obj: any): Promise<void> {
 	if (isCuck) {
 		return fakePromise(undefined)
 	}
-	return new Promise<void>((resolve, reject) => {
-		const t = newTransaction(store, true),
-			r = t.put(obj)
+	return new Promise<void>(async (resolve, reject) => {
+		const r = (await newTransaction(store, true)).put(obj)
 		r.onerror = () =>
 			reject(r.error)
 		r.onsuccess = () =>

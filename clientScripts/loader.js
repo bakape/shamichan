@@ -89,14 +89,14 @@
 	for (var i = 0; i < es6Tests.length; i++) {
 		if (!check(es6Tests[i])) {
 			window.legacy = true
-			polyfills.push("vendor/polyfill.min")
+			polyfills.push("js/vendor/polyfill.min")
 			break
 		}
 	}
 
 	// Fetch API
 	if (!checkFunction("window.fetch")) {
-		polyfills.push('vendor/fetch')
+		polyfills.push('js/vendor/fetch')
 	}
 
 	var DOMMethods = [
@@ -133,7 +133,7 @@
 	}
 
 	if (!DOMUpToDate || window.legacy) {
-		polyfills.push('vendor/dom4')
+		polyfills.push('js/vendor/dom4')
 	}
 
 	// Stdlib functions and methods
@@ -149,18 +149,23 @@
 	]
 	for (var i = 0; i < stdlibTests.length; i++) {
 		if (!checkFunction(stdlibTests[i])) {
-			polyfills.push("vendor/core.min")
+			polyfills.push("js/vendor/core.min")
 			break
 		}
 	}
 
 	if (!checkFunction("Proxy")) {
-		polyfills.push("vendor/proxy.min")
+		polyfills.push("js/vendor/proxy.min")
 	}
 
 	// Remove prefixes on Web Crypto API for Safari
 	if (!checkFunction("window.crypto.subtle.digest")) {
 		window.crypto.subtle = window.crypto.webkitSubtle
+	}
+
+	var wasm = /[\?&]wasm=true/.test(location.search)
+	if (wasm) {
+		polyfills.push("wasm/db")
 	}
 
 	var head = document.getElementsByTagName('head')[0]
@@ -205,7 +210,7 @@
 	function loadScript(path) {
 		var script = document.createElement('script')
 		script.type = 'text/javascript'
-		script.src = '/assets/js/' + path + '.js'
+		script.src = '/assets/' + path + '.js'
 		head.appendChild(script)
 		return script
 	}
@@ -217,9 +222,9 @@
 				Array.prototype[Symbol.iterator]
 		}
 
-		if (/[\?&]wasm=true/.test(location.search)) {
+		if (wasm) {
+			// TODO: asm.js fallback with Module["asmjsCodeFile"]
 			window.Module = {}
-
 			fetch("/assets/wasm/main.wasm")
 				.then(function (res) {
 					return res.arrayBuffer()
@@ -231,12 +236,11 @@
 					document.head.appendChild(script)
 				})
 		} else {
-			loadScript("es" + (window.legacy ? 5 : 6) + "/main")
+			loadScript("js/es" + (window.legacy ? 5 : 6) + "/main")
 				.onload = function () {
 					require("main")
 				}
 		}
-
 
 		if ('serviceWorker' in navigator) {
 			navigator.serviceWorker

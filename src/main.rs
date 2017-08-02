@@ -8,9 +8,12 @@ extern crate libc;
 mod externs;
 mod dom;
 mod posts;
-mod state;
+pub mod state;
 
 fn main() {
 	dom::start();
-	state::load();
+	// let data:  = serde_json::from_str(&dom::get_inner_html("post_data"));
+	if let Err(e) = state::load() {
+		println!("{}", e);
+	}
 }

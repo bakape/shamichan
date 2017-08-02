@@ -34,13 +34,15 @@ wasm:
 	mkdir -p www/wasm
 	cargo build --target=wasm32-unknown-emscripten --release
 	cp `ls -S target/wasm32-unknown-emscripten/release/deps/client*.wasm | tail -n 1` www/wasm/main.wasm
-	sed 's/client-[0-9a-f]\{16\}\./main\./' target/wasm32-unknown-emscripten/release/client.js > www/wasm/main.js
+	cp `ls -S target/wasm32-unknown-emscripten/release/deps/client*.asm.js | tail -n 1` www/wasm/main.asm.js
+	sed 's/client-[0-9a-f]\{16\}\./main\./g' target/wasm32-unknown-emscripten/release/client.js > www/wasm/main.js
 
 wasm_debug:
 	mkdir -p www/wasm
 	cargo build --target=wasm32-unknown-emscripten
 	cp `ls -S target/wasm32-unknown-emscripten/debug/deps/client*.wasm | tail -n 1` www/wasm/main.wasm
-	sed 's/client-[0-9a-f]\{16\}\./main\./' target/wasm32-unknown-emscripten/debug/client.js > www/wasm/main.js
+	cp `ls -S target/wasm32-unknown-emscripten/debug/deps/client*.asm.js | tail -n 1` www/wasm/main.asm.js
+	sed 's/client-[0-9a-f]\{16\}\./main\./g' target/wasm32-unknown-emscripten/debug/client.js > www/wasm/main.js
 
 watch:
 	$(gulp) -w
@@ -73,7 +75,7 @@ update_deps:
 	npm update
 
 client_clean:
-	rm -rf www/js www/css/*.css www/css/maps www/lang node_modules
+	rm -rf www/js www/wasm www/css/*.css www/css/maps www/lang node_modules
 
 clean: client_clean
 	rm -rf .build .ffmpeg .package target meguca-*.zip meguca-*.tar.xz meguca meguca.exe
