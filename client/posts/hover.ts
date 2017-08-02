@@ -1,6 +1,6 @@
 // Post and image hover previews
 
-import { posts, getModel, page } from "../state"
+import { posts, getModel, page, storeSeenPost } from "../state"
 import options from "../options"
 import {
 	setAttrs, getClosestID, fetchJSON, hook, emitChanges, ChangeEmitter
@@ -260,6 +260,9 @@ async function renderPostPreview(event: MouseEvent) {
 		} else {
 			return
 		}
+	} else if (!post.seenOnce) {
+		post.seenOnce = true
+		storeSeenPost(post.id, post.op)
 	}
 	postPreview = new PostPreview(post, target)
 }
