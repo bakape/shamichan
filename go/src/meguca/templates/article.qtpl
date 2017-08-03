@@ -164,7 +164,7 @@
 				</figure>
 			{% endif %}
 			<blockquote>
-				{%= body(p, c.op, c.index) %}
+				{%= body(p, c.op, c.board, c.index) %}
 			</blockquote>
 			{% if p.Banned %}
 				<b class="admin banned">

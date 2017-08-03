@@ -307,7 +307,7 @@ func TestRenderBody(t *testing.T) {
 			w := quicktemplate.AcquireWriter(buf)
 			defer quicktemplate.ReleaseWriter(w)
 
-			streambody(w, p, c.op, false)
+			streambody(w, p, c.op, "a", false)
 
 			if s := string(buf.B); s != c.out {
 				LogUnexpected(t, c.out, s)

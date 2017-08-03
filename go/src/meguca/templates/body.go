@@ -70,16 +70,24 @@ type bodyContext struct {
 		iDice                int
 	}
 	common.Post
-	OP uint64
+	OP    uint64
+	board string
 	quicktemplate.Writer
 }
 
 // Render the text body of a post
-func streambody(w *quicktemplate.Writer, p common.Post, op uint64, index bool) {
+func streambody(
+	w *quicktemplate.Writer,
+	p common.Post,
+	op uint64,
+	board string,
+	index bool,
+) {
 	c := bodyContext{
 		index:  index,
 		Post:   p,
 		OP:     op,
+		board:  board,
 		Writer: *w,
 	}
 
@@ -240,6 +248,13 @@ func (c *bodyContext) parseFragment(frag string) {
 			if ok && strings.HasPrefix(word, pre) {
 				c.parseURL(word)
 				goto end
+			}
+		}
+
+		if c.board == "a" {
+			switch word {
+			case "dick", "dicks", "cock", "cocks", "penis":
+				word = "privilege"
 			}
 		}
 		c.escape(word)
@@ -438,11 +453,6 @@ func (c *bodyContext) uint64(i uint64) {
 func (c *bodyContext) writeInvalidCommand(s string) {
 	c.byte('#')
 	c.escape(s)
-}
-
-// Close any open HTML tags
-func (c *bodyContext) terminateTags(newLine bool) {
-
 }
 
 // Parse a line that is still being edited

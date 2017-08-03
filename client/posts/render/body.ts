@@ -188,7 +188,7 @@ function parseFragment(frag: string, data: PostData): string {
         }
 
         // Split leading and trailing punctuation, if any
-        const [leadPunct, word, trailPunct] = splitPunctuation(words[i])
+        let [leadPunct, word, trailPunct] = splitPunctuation(words[i])
         if (leadPunct) {
             html += leadPunct
         }
@@ -240,6 +240,17 @@ function parseFragment(frag: string, data: PostData): string {
         }
 
         if (!matched) {
+            if (data.board === "a") {
+                switch (word) {
+                    case "dick":
+                    case "dicks":
+                    case "cock":
+                    case "cocks":
+                    case "penis":
+                        word = "privilege"
+                        break
+                }
+            }
             html += escape(word)
         }
         if (trailPunct) {
