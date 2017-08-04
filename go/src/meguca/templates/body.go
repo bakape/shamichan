@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/valyala/quicktemplate"
 )
@@ -24,6 +25,7 @@ const (
 var (
 	linkRegexp      = regexp.MustCompile(`^>>(>*)(\d+)$`)
 	referenceRegexp = regexp.MustCompile(`^>>>(>*)\/(\w+)\/$`)
+	dickRegex       = regexp.MustCompile(`(?i)(dick|cock)s?`)
 
 	providers = map[int]string{
 		youTube:    "Youtube",
@@ -251,9 +253,10 @@ func (c *bodyContext) parseFragment(frag string) {
 			}
 		}
 
-		if c.board == "a" {
-			switch word {
-			case "dick", "dicks", "cock", "cocks", "penis":
+		if c.board == "a" && dickRegex.MatchString(word) {
+			if unicode.IsUpper(rune(word[0])) {
+				word = "Privilege"
+			} else {
 				word = "privilege"
 			}
 		}

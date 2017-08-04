@@ -240,16 +240,10 @@ function parseFragment(frag: string, data: PostData): string {
         }
 
         if (!matched) {
-            if (data.board === "a") {
-                switch (word) {
-                    case "dick":
-                    case "dicks":
-                    case "cock":
-                    case "cocks":
-                    case "penis":
-                        word = "privilege"
-                        break
-                }
+            if (data.board === "a" && /(cock|dick)s?/i) {
+                word = word[0] === word[0].toUpperCase()
+                    ? "Privilege"
+                    : "privilege"
             }
             html += escape(word)
         }
