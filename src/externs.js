@@ -67,31 +67,35 @@ mergeInto(LibraryManager.library, {
 		stringToUTF8(s, buf, len)
 		return buf
 	},
-	load_db: function () {
-		require("db").open()
-	},
-	load_ids: function (threads, len) {
-		// The original array will be freed on the Rust side after db.load()
+	load_db: function (threads, len) {
+		// The original array will be freed on the Rust side after db.open()
 		var ops = new Array(len)
 		for (var i = 0; i < len; i++) {
 			ops[i] = getValue(threads + i * 8, 'i64')
 		}
 
-		var read = require("db").readIDs
+		var db = require("db")
+		var read = db.readIDs
 		var store = Module.cwrap("set_store", null, ["number", "array"])
-		Promise.all([
-			read("mine", threads).then(function (ids) {
-				store(0, ids)
-			}),
-			read("seen", threads).then(function (ids) {
-				store(1, ids)
-			}),
-			read("seenPost", threads).then(function (ids) {
-				store(2, ids)
-			}),
-			read("hidden", threads).then(function (ids) {
-				store(3, ids)
-			}),
-		])
+		db.open()
+			.then(function () {
+				return Promise.all([
+					read("mine", threads).then(function (ids) {
+						store(0, ids)
+					}),
+					read("seen", threads).then(function (ids) {
+						store(1, ids)
+					}),
+					read("seenPost", threads).then(function (ids) {
+						store(2, ids)
+					}),
+					read("hidden", threads).then(function (ids) {
+						store(3, ids)
+					})
+				])
+			})
+			.then(function () {
+				// TODO: Call page render Rust function
+			})
 	}
 })

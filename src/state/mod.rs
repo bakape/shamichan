@@ -139,7 +139,6 @@ enum Store {
 }
 
 pub fn load() -> Result<(), serde_json::Error> {
-	unsafe { load_db() };
 	with_state(|state| {
 		state.options = options::load();
 		state.page = Page::from_url(
@@ -149,7 +148,9 @@ pub fn load() -> Result<(), serde_json::Error> {
 
 		// Parse post JSON into application state
 		let s = get_inner_html("post-data");
+		let mut threads = Vec::<u64>::with_capacity(15);
 		if state.page.thread != 0 {
+			threads.push(state.page.thread);
 			let t: Thread = serde_json::from_str(&s)?;
 			state.thread = Some(ThreadState {
 				post_count: t.postCtr,
@@ -162,12 +163,15 @@ pub fn load() -> Result<(), serde_json::Error> {
 			let board: Vec<Thread> = serde_json::from_str(&s)?;
 			state.thread = None;
 			for t in board.iter() {
+				threads.push(t.id);
 				extract_thread(state, &t);
 			}
+
+			// TODO: Catalog pages
+
 		}
 
-		// TODO: Parse JSON data and get thread numbers
-		unsafe { load_ids(vec![1].as_ptr(), 1) };
+		unsafe { load_db(threads.as_ptr(), threads.len() as c_int) };
 
 		Ok(())
 	})
@@ -196,8 +200,7 @@ where
 extern "C" {
 	fn page_path() -> *mut c_char;
 	fn page_query() -> *mut c_char;
-	fn load_db();
-	fn load_ids(threads: *const uint64_t, len: c_int);
+	fn load_db(threads: *const uint64_t, len: c_int);
 }
 
 // Set internal post ID storage set from array

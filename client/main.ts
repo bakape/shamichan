@@ -18,7 +18,7 @@ import initModeration from "./mod"
 async function start() {
 	extractConfigs()
 
-	open()
+	await open()
 	if (page.thread) {
 		await loadFromDB(page.thread)
 
