@@ -240,7 +240,7 @@ function parseFragment(frag: string, data: PostData): string {
         }
 
         if (!matched) {
-            if (data.board === "a" && /(cock|dick)s?/i) {
+            if (data.board === "a" && /(cock|dick)s?/i.test(word)) {
                 word = word[0] === word[0].toUpperCase()
                     ? "Privilege"
                     : "privilege"
