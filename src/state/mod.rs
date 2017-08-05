@@ -153,10 +153,10 @@ pub fn load() -> Result<(), serde_json::Error> {
 			threads.push(state.page.thread);
 			let t: Thread = serde_json::from_str(&s)?;
 			state.thread = Some(ThreadState {
-				post_count: t.postCtr,
-				image_count: t.imageCtr,
-				reply_time: t.replyTime,
-				bump_time: t.bumpTime,
+				post_count: t.post_ctr,
+				image_count: t.image_ctr,
+				reply_time: t.reply_time,
+				bump_time: t.bump_time,
 			});
 			extract_thread(state, &t);
 		} else {
