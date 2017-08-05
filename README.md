@@ -29,12 +29,14 @@ License: GNU AGPL
 - Keyboard post navigation
 - Explicitly visible sage
 - Responsive seen post detection
+- Score-based antispam system
+- Optional recursive post hiding
 
 </details>
 
 <details><summary>Files and images</summary>
 
-- JPEG, PNG, APNG, WEBM, MP3, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ, TAR.XZ, TXT
+- JPEG, PNG, APNG, WEBM, MP3, FLAC, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ, TAR.XZ, TXT
 are supported
 - Transparent PNG and GIF thumbnails
 - Configurable size limits
@@ -79,10 +81,17 @@ are supported
 - Board-level and global bans
 - Transparent post deletion
 - Viewing of all post made by same IP
+- Deleting all posts with same IP
 - Option to disable search indexing on board
 - Sticky threads
 - Public ban list
 - Public moderation log
+- Mod image spoilering
+- Image banners
+- Custom per-board loading image
+- Default board theme setting
+- Optional poster country flag display
+- Option to hide NSFW boards from /all/
 
 </details>
 

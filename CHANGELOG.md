@@ -2,6 +2,67 @@
 All notable changes to this project will be documented in this file.
 Project uses [Semantic Versioning](http://semver.org/)
 
+## v4.4.0 - 2017-08-05
+* Fix
+	- Ban expiry
+	- Post creation captcha input
+	- Modifier keys on [Reply]
+	- Scrolling post into view on cross-quote link clicks
+	- Undefined in unset textarea
+	- Quotes with triple clicks on last line
+	- New thread OP not registering as seen
+	- Reply form overflowing screen on small displays
+	- Figcaption wrapping wrong on small screens
+	- Sticky toggling
+	- More visible post collection modals on some themes
+	- Persist moderation through cache
+	- Image download links
+	- Mine key duplication
+	- Duplicate reply notifications
+	- Don't show extra captcha input on thread creation
+	- Bugs with default language not being en_GB
+	- Prevent rand.Intn(0) crashes
+	- Handle embed fetch errors
+	- XSS attack vector for media artists and title
+	- Cache update counter persistence
+	- Prevent covering of top links on mobile
+	- Prevent zalgo overflowing post
+	- Code tags sometimes skipping symbols after operators
+	- Mark hover-previewed posts as seen
+* Add
+	- Score-based antispam system
+	- Delete all posts with same IP
+	- Mod image spoilering
+	- Image banners
+	- ru_RU locale
+	- Custom per-board loading image
+	- FLAC uploads
+	- Default board theme setting
+	- Optional recursive post hiding
+	- Poster country flag board option
+	- Option to hide NSFW boards from /all/
+* Change
+	- Scale mascot to no more than 50% of screen
+	- Change the applied custom CSS on CSS change
+	- Render navigation on board page bottom too
+	- Let janitors view posts by same IP
+	- Enable moderation independent of the board you are viewing
+	- Reduce cache staleness time to one second
+	- Reduce JS for thread creation
+	- Don't establish WS connection on board pages
+	- Scroll to bottom on last100 clicks
+	- Expand board name limit to 10 chars
+	- Don't display [Last 100] on last 100 pages
+	- Expire deleted threads 3 times faster
+	- Don't allocate fake thumbnails, if none
+	- Increase max media title size to 200 chars
+	- Trigger animated thumbnails for APNG
+	- Bump required FFMPEG version
+	- Omit trailing newlines in post body
+	- Render relative time in absolute time tooltip
+* Remove
+	- Remove HTML History API integration
+
 ## v4.3.0 - 2017-05-18
 * Fix
 	- Links, hash commands, etc. not breaking on edge punctuation
