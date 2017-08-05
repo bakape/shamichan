@@ -166,13 +166,11 @@ export default class PostView extends ImageHandler {
 
     // Renders a time element. Can be either absolute or relative.
     public renderTime() {
-        let text = this.readableTime()
+        const abs = this.readableTime()
+        const rel = relativeTime(this.model.time)
         const el = this.el.querySelector("time")
-        if (options.relativeTime) {
-            el.setAttribute("title", text)
-            text = relativeTime(this.model.time)
-        }
-        el.textContent = text
+        el.setAttribute("title", options.relativeTime ? abs : rel)
+        el.textContent = options.relativeTime ? rel : abs
     }
 
     // Renders classic absolute timestamp

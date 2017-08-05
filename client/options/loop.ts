@@ -23,9 +23,9 @@ export default () => {
 	}
 }
 
-// Rerender time every minute, if relative time is set
+// Rerender time every minute
 setInterval(() => {
-	if (options.relativeTime && !page.catalog) {
+	if (!page.catalog) {
 		renderTime()
 	}
 }, 60000)
