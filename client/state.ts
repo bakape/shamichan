@@ -88,7 +88,7 @@ function read(href: string): PageState {
 }
 
 // Load post number sets for specific threads from the database
-export function loadFromDB(...threads: number[]): Promise<Set<number>[]> {
+export function loadFromDB(...threads: number[]) {
 	return Promise.all([
 		readIDs("mine", threads).then(ids =>
 			mine = new Set(ids)),

@@ -47,8 +47,10 @@ function isBanned(): boolean {
 }
 
 async function extractCatalogModels() {
+	// Don't really need these in the catalog, so just load empty sets
+	await loadFromDB()
+
 	const { threads, backlinks } = extractPageData<ThreadData[]>()
-	await loadIDStores(threads)
 	for (let t of threads) {
 		if (t.image) {
 			t.image.large = true
@@ -57,13 +59,12 @@ async function extractCatalogModels() {
 	}
 }
 
-async function loadIDStores(threads: ThreadData[]) {
-	await loadFromDB(...(threads as ThreadData[]).map(t => t.id))
-}
-
 async function extractThreads() {
 	const { threads, backlinks } = extractPageData<ThreadData[]>()
-	await loadIDStores(threads)
+	await loadFromDB(...(threads as ThreadData[])
+		.map(t =>
+			t.id)
+	)
 	for (let thread of threads) {
 		const { posts } = thread
 		delete thread.posts
