@@ -30,7 +30,7 @@ function subtract(attr: string): (a: Post, b: Post) => number {
 		b[attr] - a[attr]
 }
 
-// Render a board fresh board page
+// Render a fresh board page
 export function renderFresh(html: string) {
 	lastFetchTime = Math.floor(Date.now() / 1000)
 	threads.innerHTML = html

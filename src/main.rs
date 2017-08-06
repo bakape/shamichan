@@ -9,7 +9,7 @@ mod externs;
 mod dom;
 mod posts;
 pub mod state;
-mod page;
+pub mod page;
 
 fn main() {
 	dom::start();

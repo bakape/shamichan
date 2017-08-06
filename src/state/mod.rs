@@ -18,7 +18,7 @@ thread_local!{
 
 #[derive(Default)]
 pub struct State {
-	pub configs: Configs,
+	pub config: Configs,
 	pub board_configs: BoardConfigs,
 	pub options: options::Options,
 	pub page: Page,
@@ -32,30 +32,31 @@ pub struct State {
 
 // Server-wide global configurations
 #[derive(Deserialize, Default)]
-#[allow(non_snake_case)]
+#[serde(rename_all = "camelCase")]
 pub struct Configs {
-	captcha: bool,
-	mature: bool,
-	disableUserBoards: bool,
-	pruneThreads: bool,
-	threadExpiryMin: u32,
-	threadExpiryMax: u32,
-	defaultLang: String,
-	defaultCSS: String,
-	imageRootOverride: String,
-	links: BTreeMap<String, String>,
+	pub captcha: bool,
+	pub mature: bool,
+	pub disable_user_boards: bool,
+	pub prune_threads: bool,
+	pub thread_expiry_min: u32,
+	pub thread_expiry_max: u32,
+	pub default_lang: String,
+	#[serde(rename = "defaultCSS")]
+	pub default_css: String,
+	pub image_root_override: String,
+	pub links: BTreeMap<String, String>,
 }
 
 // Board-specific configurations
 #[derive(Deserialize, Default)]
-#[allow(non_snake_case)]
+#[serde(rename_all = "camelCase")]
 pub struct BoardConfigs {
-	readOnly: bool,
-	textOnly: bool,
-	forcedAnon: bool,
-	title: String,
-	notice: String,
-	rules: String,
+	pub read_only: bool,
+	pub text_only: bool,
+	pub forced_anon: bool,
+	pub title: String,
+	pub notice: String,
+	pub rules: String,
 }
 
 // Describes the current page
@@ -145,6 +146,7 @@ pub fn load() -> Result<(), serde_json::Error> {
 			&from_C_string!(page_path()),
 			&from_C_string!(page_query()),
 		);
+		state.config = serde_json::from_str(&from_C_string!(get_config()))?;
 
 		// Parse post JSON into application state
 		let s = get_inner_html("post-data");
@@ -201,6 +203,7 @@ extern "C" {
 	fn page_path() -> *mut c_char;
 	fn page_query() -> *mut c_char;
 	fn load_db(threads: *const uint64_t, len: c_int);
+	fn get_config() -> *mut c_char;
 }
 
 // Set internal post ID storage set from array
