@@ -53,7 +53,10 @@ export default function () {
 export function incrementPostCount(post: boolean, hasImage: boolean) {
     if (post) {
         postCtr++
-        bumpTime = Math.floor(Date.now() / 1000) // An estimate, but good enough
+        if (postCtr < 3000) {
+            // An estimate, but good enough
+            bumpTime = Math.floor(Date.now() / 1000)
+        }
     }
     if (hasImage) {
         imgCtr++
@@ -75,7 +78,7 @@ function renderPostCounter() {
             if (isDeleted) {
                 days /= 3
             }
-            if (days < min) {
+            if (postCtr < 3000 && days < min) {
                 days = min
             }
 
