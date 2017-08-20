@@ -29,9 +29,12 @@ export default class ModPanel extends View<null> {
 				passive: true
 			})
 		this.inputElement("clear")
-			.addEventListener("click", () => this.clearCheckboxes(), {
-				passive: true,
-			})
+			.addEventListener("click", () => {
+				for (let el of this.getChecked()) {
+					el.checked = false
+				}
+			},
+			{ passive: true })
 
 		const checkboxToggle = this.inputElement("showCheckboxes")
 		checkboxToggle.checked = displayCheckboxes
@@ -90,19 +93,16 @@ export default class ModPanel extends View<null> {
 				f.clear()
 				break
 		}
+
+		for (let el of checked) {
+			el.checked = false
+		}
 	}
 
 	// Get selected post checkboxes
 	private getChecked(): HTMLInputElement[] {
 		return document
 			.querySelectorAll(".mod-checkbox:checked") as HTMLInputElement[]
-	}
-
-	// Clear any selected post checkboxes
-	private clearCheckboxes() {
-		for (let el of this.getChecked()) {
-			el.checked = false
-		}
 	}
 
 	// Return current action mode
