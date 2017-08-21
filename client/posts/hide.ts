@@ -34,12 +34,18 @@ export function hideRecursively(post: Post) {
 	// don't persist these.
 	hidden.add(post.id)
 
-	if (!post.backlinks || !options.hideRecursively) {
-		return
+	if (post.backlinks && options.hideRecursively) {
+		for (let id in post.backlinks) {
+			const p = posts.get(parseInt(id))
+			if (p) {
+				hideRecursively(p)
+			}
+		}
 	}
-	for (let id in post.backlinks) {
-		const p = posts.get(parseInt(id))
-		if (p) {
+
+	// Also hide all replies, if OP hidden
+	if (post.id === post.op) {
+		for (let p of posts) {
 			hideRecursively(p)
 		}
 	}
