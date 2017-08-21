@@ -46,7 +46,9 @@ export function hideRecursively(post: Post) {
 	// Also hide all replies, if OP hidden
 	if (post.id === post.op) {
 		for (let p of posts) {
-			hideRecursively(p)
+			if (p.op === post.id) {
+				hideRecursively(p)
+			}
 		}
 	}
 }
