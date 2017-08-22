@@ -36,6 +36,10 @@
 			"Заголовок дошки",
 			"Заголовок нової дошки наприклад 'Аніме та Манга'. Не більше 100 символів"
 		],
+		"body": [
+			"Body",
+			"Text body of the post"
+		],
 		"captcha": [
 			"Капча",
 			"Питати користувачів при регістрації та створенні тхреду"
@@ -243,6 +247,10 @@
 		"password": [
 			"Password",
 			""
+		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
 		],
 		"postInlineExpand": [
 			"Inline Post Link Expansion",

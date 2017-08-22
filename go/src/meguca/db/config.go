@@ -71,7 +71,7 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 	var eightball pq.StringArray
 	err = r.Scan(
 		&c.ReadOnly, &c.TextOnly, &c.ForcedAnon, &c.DisableRobots, &c.Flags,
-		&c.NSFW, &c.NonLive,
+		&c.NSFW, &c.NonLive, &c.PosterIDs,
 		&c.ID, &c.DefaultCSS, &c.Title, &c.Notice, &c.Rules, &eightball,
 	)
 	c.Eightball = []string(eightball)
@@ -82,7 +82,7 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 	_, err := getStatement(tx, "write_board").Exec(
 		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots, c.Flags,
-		c.NSFW, c.NonLive,
+		c.NSFW, c.NonLive, c.PosterIDs,
 		c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
 		pq.StringArray(c.Eightball),
 	)
@@ -94,7 +94,7 @@ func UpdateBoard(c config.BoardConfigs) error {
 	return execPrepared(
 		"update_board",
 		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots, c.Flags,
-		c.NSFW, c.NonLive,
+		c.NSFW, c.NonLive, c.PosterIDs,
 		c.DefaultCSS, c.Title, c.Notice, c.Rules,
 		pq.StringArray(c.Eightball),
 	)

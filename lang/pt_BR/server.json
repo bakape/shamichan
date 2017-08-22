@@ -36,6 +36,10 @@
 			"Board title",
 			"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
 		],
+		"body": [
+			"Body",
+			"Text body of the post"
+		],
 		"captcha": [
 			"Captcha",
 			"Ask users to complete a captcha for certain tasks like registration and thread creation"
@@ -243,6 +247,10 @@
 		"password": [
 			"Password",
 			""
+		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
 		],
 		"postInlineExpand": [
 			"Inline Post Link Expansion",

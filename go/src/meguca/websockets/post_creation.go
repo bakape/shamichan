@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"encoding/binary"
 	"errors"
 	"meguca/auth"
 	"meguca/common"
@@ -12,6 +13,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/bakape/mnemonics"
 )
 
 var (
@@ -91,8 +94,23 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	}
 	post.OP = post.ID
 
+	if conf.PosterIDs {
+		computePosterID(&post)
+	}
+
 	err = db.InsertThread(subject, conf.NonLive || req.NonLive, post)
 	return
+}
+
+// Compute thread-level poster identification mnemonic and assign to post
+func computePosterID(p *db.Post) {
+	salt := config.Get().Salt
+	b := make([]byte, 0, len(salt)+len(p.IP)+8)
+	b = append(b, salt...)
+	b = append(b, p.IP...)
+	binary.LittleEndian.PutUint64(b, p.OP)
+
+	p.PosterID = mnemonic.FromBuffer(b)
 }
 
 // CreatePost creates a new post and writes it to the database.
@@ -159,6 +177,10 @@ func CreatePost(
 	post.ID, err = db.NewPostID()
 	if err != nil {
 		return
+	}
+
+	if conf.PosterIDs {
+		computePosterID(&post)
 	}
 
 	msg, err = common.EncodeMessage(common.MessageInsertPost, post.Post)

@@ -248,6 +248,10 @@
 			"Password",
 			""
 		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
+		],
 		"postInlineExpand": [
 			"Inline Post Link Expansion",
 			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."

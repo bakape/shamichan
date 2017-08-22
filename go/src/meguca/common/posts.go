@@ -53,6 +53,7 @@ type Post struct {
 	Time     int64       `json:"time"`
 	Body     string      `json:"body"`
 	Flag     string      `json:"flag,omitempty"`
+	PosterID string      `json:"posterID,omitempty"`
 	Name     string      `json:"name,omitempty"`
 	Trip     string      `json:"trip,omitempty"`
 	Auth     string      `json:"auth,omitempty"`

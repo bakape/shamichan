@@ -36,6 +36,10 @@
 			"Tytuł działu",
 			"Tytuł nowego działu, coś jak 'Animu & Mango'. Do 100 znaków."
 		],
+		"body": [
+			"Body",
+			"Text body of the post"
+		],
 		"captcha": [
 			"Captcha",
 			"Poproś użytkownika o wypełnienie captchy przy takich rzeczach jak rejestracja i tworzenie tematu"
@@ -243,6 +247,10 @@
 		"password": [
 			"Password",
 			""
+		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
 		],
 		"postInlineExpand": [
 			"Inline Post Link Expansion",

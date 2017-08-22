@@ -206,25 +206,19 @@ export default class PostView extends ImageHandler {
         }
 
         let html = ""
-        const { trip, name, auth, sage } = this.model
-
+        const { trip, name, auth, sage, posterID } = this.model
         if (name || !trip) {
-            if (name) {
-                html += escape(name)
-            } else {
-                html += lang.posts["anon"]
-            }
-            if (trip) {
-                html += ' '
-            }
+            html += `<span>${name ? escape(name) : lang.posts["anon"]}</span>`
         }
-
         if (trip) {
             html += `<code>!${escape(trip)}</code>`
         }
+        if (posterID) {
+            html += `<span>(${escape(posterID)})</span>`
+        }
         if (auth) { // Render staff title
             el.classList.add("admin")
-            html += ` ## ${lang.posts[auth] || "??"}`
+            html += `<span>## ${lang.posts[auth] || "??"}</span>`
         }
         el.classList.toggle("sage", !!sage)
         el.innerHTML = html

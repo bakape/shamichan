@@ -30,6 +30,7 @@ Generic post object
 | id | uint | + | ID number of post. Unique globally, including across boards. |
 | body | string | + | text body of post |
 | flag | string | - | poster country ISO code |
+| posterID | string | - | thread-level poster identification mnemonic |
 | name | string | - | poster name |
 | trip | string | - | poster tripcode |
 | auth | string | - | signifies staff posting with staff title enabled; one of "admin", "owners", "moderators" or "janitors" |

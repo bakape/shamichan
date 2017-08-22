@@ -56,7 +56,7 @@
 			<header class="spaced">
 				<input type="checkbox" class="mod-checkbox hidden">
 				<h3 hidden></h3>
-				<b class="name"></b>
+				<b class="name spaced"></b>
 				<img class="flag" hidden>
 				<time></time>
 				<nav>

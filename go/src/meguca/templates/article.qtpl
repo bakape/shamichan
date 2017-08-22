@@ -7,6 +7,7 @@
 
 {% func renderArticle(p common.Post, c articleContext) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
+	{% code ln := lang.Get() %}
 	<article id="p{%s= id %}" {%= postClass(p) %}>
 		{%= deletedToggle() %}
 		<header class="spaced">
@@ -22,24 +23,30 @@
 					「{%s c.subject %}」
 				</h3>
 			{% endif %}
-			<b class="name{% if p.Auth != "" %}{% space %}admin{% endif %}{% if p.Sage %}{% space %}sage{% endif %}">
+			<b class="name spaced{% if p.Auth != "" %}{% space %}admin{% endif %}{% if p.Sage %}{% space %}sage{% endif %}">
 				{% if p.Name != "" || p.Trip == "" %}
-					{% if p.Name != "" %}
-						{%s p.Name %}
-					{% else %}
-						Anonymous
-					{% endif %}
-					{% if p.Trip != "" %}
-						{% space %}
-					{% endif %}
+					<span>
+						{% if p.Name != "" %}
+							{%s p.Name %}
+						{% else %}
+							{%s= ln.Common.Posts["anon"] %}
+						{% endif %}
+					</span>
 				{% endif %}
 				{% if p.Trip != "" %}
 					<code>
 						!{%s p.Trip %}
 					</code>
 				{% endif %}
+				{% if p.PosterID != "" %}
+					<span>
+						({%s p.PosterID %})
+					</span>
+				{% endif %}
 				{% if p.Auth != "" %}
-					{% space %}##{% space %}{%s= lang.Get().Common.Posts[p.Auth] %}
+					<span>
+						##{% space %}{%s= ln.Common.Posts[p.Auth] %}
+					</span>
 				{% endif %}
 			</b>
 			{% if p.Flag != "" %}
@@ -168,7 +175,7 @@
 			</blockquote>
 			{% if p.Banned %}
 				<b class="admin banned">
-					{%s= lang.Get().Common.Posts["banned"] %}
+					{%s= ln.Common.Posts["banned"] %}
 				</b>
 			{% endif %}
 		</div>

@@ -50,6 +50,7 @@ type BoardPublic struct {
 	Flags      bool `json:"flags"`
 	NonLive    bool `json:"nonLive"`
 	NSFW       bool
+	PosterIDs  bool   `json:"posterIDs"`
 	DefaultCSS string `json:"defaultCSS"`
 	Title      string `json:"title"`
 	Notice     string `json:"notice"`

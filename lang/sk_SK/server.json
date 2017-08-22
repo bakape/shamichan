@@ -36,6 +36,10 @@
 			"Titúlok dosky",
 			"Titúlok novej dosky ako napríklad 'Politika & Sranie'. Maximálne 100 znakov."
 		],
+		"body": [
+			"Body",
+			"Text body of the post"
+		],
 		"captcha": [
 			"Kapča",
 			"Ask users to complete a captcha for certain tasks like registration and thread creation"
@@ -243,6 +247,10 @@
 		"password": [
 			"Password",
 			""
+		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
 		],
 		"postInlineExpand": [
 			"Inline Post Link Expansion",

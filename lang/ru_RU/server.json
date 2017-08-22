@@ -36,6 +36,10 @@
 			"Заголовок доски",
 			"Заголовок новый доски, например «Аниме и манга», максимум 100 символов"
 		],
+		"body": [
+			"Body",
+			"Text body of the post"
+		],
 		"captcha": [
 			"Капча",
 			"Заставлять пользователей вводить капчу для некоторых действий, например при регистрации и создании треда"
@@ -243,6 +247,10 @@
 		"password": [
 			"Пароль",
 			""
+		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
 		],
 		"postInlineExpand": [
 			"Раскрытие ссылок на посты",
