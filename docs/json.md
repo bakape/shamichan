@@ -16,6 +16,7 @@ omitted.
 | /json/board-config/:board | GET | - | [BoardConfig](#boardconfig) | Returns public board-specific configurations for the specific board |
 | /json/extensions | GET | - | [fileTypes](#filetypes) | Returns a map of the current filetype enums to their canonical extensions |
 | /json/board-list | GET | - | [][BoardTitle](#boardtitle) | Returns an array of the currently created boards and their assigned titles |
+| /json/ip-count | GET | - | int | Returns number of unique connected IPs |
 
 ## Post
 Generic post object

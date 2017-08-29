@@ -7,8 +7,9 @@ import (
 
 // Clients stores all synchronized websocket clients in a thread-safe map
 var clients = ClientMap{
-	// Start with 100 to avoid reallocations on server start
+	// Start with 128 to avoid reallocations on server start
 	clients: make(map[common.Client]syncID, 128),
+	ips:     make(map[string]int, 128),
 }
 
 func init() {
@@ -20,6 +21,8 @@ func init() {
 type ClientMap struct {
 	// Map of clients to the threads or boards they are synced to
 	clients map[common.Client]syncID
+	// Count of clients by IP
+	ips map[string]int
 	sync.RWMutex
 }
 
@@ -35,8 +38,11 @@ type syncID struct {
 // automatically unsubscribed.
 func SyncClient(cl common.Client, op uint64, board string) (*Feed, error) {
 	clients.Lock()
-	old := clients.clients[cl]
+	old, ok := clients.clients[cl]
 	clients.clients[cl] = syncID{op, board}
+	if !ok {
+		clients.ips[cl.IP()]++
+	}
 	clients.Unlock()
 
 	if old.op != 0 {
@@ -52,8 +58,16 @@ func SyncClient(cl common.Client, op uint64, board string) (*Feed, error) {
 // to feed
 func RemoveClient(cl common.Client) {
 	clients.Lock()
+
 	old := clients.clients[cl]
 	delete(clients.clients, cl)
+
+	ip := cl.IP()
+	clients.ips[ip]--
+	if clients.ips[ip] == 0 {
+		delete(clients.ips, ip)
+	}
+
 	clients.Unlock()
 
 	if old.op != 0 {
@@ -61,8 +75,8 @@ func RemoveClient(cl common.Client) {
 	}
 }
 
-// GetSync returns if the client is synced and  the thread and board it is
-// synced to.
+// GetSync returns if the client is synced and the thread and board it is
+// synced to
 func GetSync(cl common.Client) (synced bool, op uint64, board string) {
 	clients.RLock()
 	defer clients.RUnlock()
@@ -71,6 +85,13 @@ func GetSync(cl common.Client) (synced bool, op uint64, board string) {
 	op = sync.op
 	board = sync.board
 	return
+}
+
+// Return number of unique connected IPs
+func IPCount() int {
+	clients.RLock()
+	defer clients.RUnlock()
+	return len(clients.ips)
 }
 
 // GetByIPAndBoard retrieves all Clients that match the passed IP on a board

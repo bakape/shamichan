@@ -10,6 +10,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	"meguca/util"
+	"meguca/websockets/feeds"
 	"net/http"
 	"strconv"
 )
@@ -203,4 +204,9 @@ func serveBoardList(res http.ResponseWriter, req *http.Request) {
 // version-independent backwards compatibility with external applications.
 func serveExtensionMap(w http.ResponseWriter, r *http.Request) {
 	serveJSON(w, r, "", common.Extensions)
+}
+
+// Serve number of unique connected IPs
+func serveIPCount(w http.ResponseWriter, r *http.Request) {
+	serveJSON(w, r, "", feeds.IPCount())
 }

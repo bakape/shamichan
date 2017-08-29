@@ -116,6 +116,7 @@ func createRouter() http.Handler {
 	json.GET("/extensions", serveExtensionMap)
 	json.GET("/board-config/:board", serveBoardConfigs)
 	json.GET("/board-list", serveBoardList)
+	json.GET("/ip-count", serveIPCount)
 
 	// Internal API
 	api := r.NewGroup("/api")
