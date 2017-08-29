@@ -1,5 +1,5 @@
 export node_bins=$(PWD)/node_modules/.bin
-export uglifyjs=$(node_bins)/uglifyjs
+export uglifyjs=$(node_bins)/uglifyjs --mangle safari10=true
 export gulp=$(node_bins)/gulp
 export is_windows=false
 binary=meguca

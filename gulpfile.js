@@ -11,7 +11,16 @@ const babel = require("gulp-babel"),
 	rename = require('gulp-rename'),
 	sourcemaps = require('gulp-sourcemaps'),
 	ts = require('gulp-typescript'),
-	uglify = require('gulp-uglify/composer')(require("uglify-es"), console)
+	_uglify = require('gulp-uglify/composer')(require("uglify-es"), console)
+
+// Apple a shit and buggy.
+// Hack to fix bug in Safari/iOS 10
+const uglify = () =>
+	_uglify({
+		mangle: {
+			safari10: true,
+		}
+	})
 
 // Keep script alive and rebuild on file changes
 // Triggered with the `-w` flag
