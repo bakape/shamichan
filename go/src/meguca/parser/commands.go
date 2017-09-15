@@ -4,8 +4,9 @@ package parser
 
 import (
 	"bytes"
+	"crypto/rand"
 	"errors"
-	"math/rand"
+	"math/big"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
@@ -22,8 +23,13 @@ var (
 	errDieTooBig    = errors.New("die too big")
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
+// Returns a cryptographically secure pseudorandom int in the interval [0;max)
+func randInt(max int) int {
+	i, _ := rand.Int(rand.Reader, big.NewInt(int64(max)))
+	if i == nil { // Fuck error reporting here
+		return 0
+	}
+	return int(i.Int64())
 }
 
 // Parse a matched hash command
@@ -33,14 +39,14 @@ func parseCommand(match []byte, board string) (com common.Command, err error) {
 	// Coin flip
 	case bytes.Equal(match, []byte("flip")):
 		com.Type = common.Flip
-		com.Flip = rand.Intn(2) == 0
+		com.Flip = randInt(2) == 1
 
 	// 8ball; select random string from the the 8ball answer array
 	case bytes.Equal(match, []byte("8ball")):
 		com.Type = common.EightBall
 		answers := config.GetBoardConfigs(board).Eightball
 		if len(answers) != 0 {
-			com.Eightball = answers[rand.Intn(len(answers))]
+			com.Eightball = answers[randInt(len(answers))]
 		}
 
 	// Increment pyu counter
@@ -103,7 +109,7 @@ func parseDice(match string) (val []uint16, err error) {
 	val = make([]uint16, rolls)
 	for i := 0; i < rolls; i++ {
 		if max != 0 {
-			val[i] = uint16(rand.Intn(max)) + 1
+			val[i] = uint16(randInt(max)) + 1
 		} else {
 			val[i] = 0
 		}
