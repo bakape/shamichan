@@ -340,7 +340,7 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
 
             // Validate dice
             const m = bit.match(/^(\d*)d(\d+)$/)
-            if (parseInt(m[1]) > 10 || parseInt(m[2]) > 100) {
+            if (parseInt(m[1]) > 10 || parseInt(m[2]) > 10000) {
                 return "#" + bit
             }
 
