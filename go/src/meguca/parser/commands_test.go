@@ -28,7 +28,7 @@ func TestDice(t *testing.T) {
 		err        error
 		rolls, max int
 	}{
-		{"too many sides", `d101`, errDieTooBig, 0, 0},
+		{"too many sides", `d10001`, errDieTooBig, 0, 0},
 		{"too many dice", `11d100`, errTooManyRolls, 0, 0},
 		{"valid single die", `d10`, nil, 1, 10},
 		{"valid multiple dice", `10d100`, nil, 10, 100},
