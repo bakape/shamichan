@@ -79,15 +79,6 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		return
 	}
 
-	post.ID, err = db.NewPostID()
-	if err != nil {
-		return
-	}
-	post.OP = post.ID
-	if conf.PosterIDs {
-		computePosterID(&post)
-	}
-
 	// Must ensure image token usage is done atomically, as not to cause
 	// possible data races with unused image cleanup
 	tx, err := db.StartTransaction()
@@ -96,7 +87,15 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	}
 	defer db.RollbackOnError(tx, &err)
 
-	// Perform this last, so there are less dangling images because of any error
+	post.ID, err = db.NewPostID(tx)
+	if err != nil {
+		return
+	}
+	post.OP = post.ID
+	if conf.PosterIDs {
+		computePosterID(&post)
+	}
+
 	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
 	if hasImage {
 		img := req.Image
@@ -179,10 +178,6 @@ func CreatePost(
 	}
 
 	post.OP = op
-	post.ID, err = db.NewPostID()
-	if err != nil {
-		return
-	}
 	if conf.PosterIDs {
 		computePosterID(&post)
 	}
@@ -194,6 +189,11 @@ func CreatePost(
 		return
 	}
 	defer db.RollbackOnError(tx, &err)
+
+	post.ID, err = db.NewPostID(tx)
+	if err != nil {
+		return
+	}
 
 	if hasImage {
 		img := req.Image

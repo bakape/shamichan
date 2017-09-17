@@ -226,8 +226,8 @@ func ThreadCounter(id uint64) (uint64, error) {
 }
 
 // NewPostID reserves a new post ID
-func NewPostID() (id uint64, err error) {
-	err = prepared["new_post_id"].QueryRow().Scan(&id)
+func NewPostID(tx *sql.Tx) (id uint64, err error) {
+	err = getStatement(tx, "new_post_id").QueryRow().Scan(&id)
 	return id, err
 }
 
