@@ -407,6 +407,7 @@
 		"loadCaptcha": "Click to load captcha",
 		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
 		"lockedToBottom": "Aşağı gönderildi",
+		"lockThread": "Toggle thread lock",
 		"logout": "Logout",
 		"logoutAll": "Log out all devices",
 		"newThread": "Yeni konu",

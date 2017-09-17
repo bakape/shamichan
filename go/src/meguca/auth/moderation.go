@@ -66,6 +66,7 @@ const (
 	DeletePost
 	DeleteImage
 	SpoilerImage
+	LockThread
 )
 
 // Single entry in the moderation log

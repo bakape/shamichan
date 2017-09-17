@@ -22,14 +22,6 @@ type Post struct {
 	IP       string
 }
 
-// Thread is a template for writing new threads to the database
-type Thread struct {
-	ID                  uint64
-	PostCtr, ImageCtr   uint32
-	ReplyTime, BumpTime int64
-	Subject, Board      string
-}
-
 // For decoding and encoding the tuple arrays we store links in
 type linkRow [][2]uint64
 
@@ -172,15 +164,6 @@ func (c commandRow) Value() (driver.Value, error) {
 	return strArr.Value()
 }
 
-// ValidateOP confirms the specified thread exists on specific board
-func ValidateOP(id uint64, board string) (valid bool, err error) {
-	err = prepared["validate_op"].QueryRow(id, board).Scan(&valid)
-	if err == sql.ErrNoRows {
-		return false, nil
-	}
-	return
-}
-
 // GetPostOP retrieves the parent thread ID of the passed post
 func GetPostOP(id uint64) (op uint64, err error) {
 	err = prepared["get_post_op"].QueryRow(id).Scan(&op)
@@ -218,11 +201,6 @@ func BoardCounter(board string) (uint64, error) {
 // AllBoardCounter retrieves the progress counter of the /all/ board
 func AllBoardCounter() (uint64, error) {
 	return getCounter("all_board_counter")
-}
-
-// ThreadCounter retrieves the progress counter of a thread
-func ThreadCounter(id uint64) (uint64, error) {
-	return getCounter("thread_counter", id)
 }
 
 // NewPostID reserves a new post ID
@@ -297,66 +275,6 @@ func WritePost(tx *sql.Tx, p Post) (err error) {
 	return
 }
 
-// InsertThread inserts a new thread into the database
-func InsertThread(subject string, nonLive bool, p Post) (err error) {
-	imgCtr := 0
-	if p.Image != nil {
-		imgCtr = 1
-	}
-	err = execPrepared(
-		"insert_thread",
-		append(
-			[]interface{}{subject, nonLive, imgCtr},
-			genPostCreationArgs(p)...,
-		)...,
-	)
-	if err != nil {
-		return
-	}
-
-	if p.Editing {
-		err = SetOpenBody(p.ID, []byte(p.Body))
-	}
-
-	return
-}
-
-// WriteThread writes a thread and it's OP to the database. Only used for tests
-// and migrations.
-func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
-	passedTx := tx != nil
-	if !passedTx {
-		tx, err = db.Begin()
-		if err != nil {
-			return err
-		}
-		defer RollbackOnError(tx, &err)
-	}
-
-	_, err = tx.Stmt(prepared["write_op"]).Exec(
-		t.Board,
-		t.ID,
-		t.PostCtr,
-		t.ImageCtr,
-		t.ReplyTime,
-		t.BumpTime,
-		t.Subject,
-	)
-	if err != nil {
-		return err
-	}
-
-	err = WritePost(tx, p)
-	if err != nil {
-		return err
-	}
-
-	if !passedTx {
-		return tx.Commit()
-	}
-	return nil
-}
-
 // GetPostPassword retrieves a post's modification password
 func GetPostPassword(id uint64) (p []byte, err error) {
 	err = prepared["get_post_password"].QueryRow(id).Scan(&p)
@@ -370,10 +288,4 @@ func GetPostPassword(id uint64) (p []byte, err error) {
 func SetPostCounter(c uint64) error {
 	_, err := db.Exec(`SELECT setval('post_id', $1)`, c)
 	return err
-}
-
-// Check, if a thread has live post updates disabled
-func CheckThreadNonLive(id uint64) (nonLive bool, err error) {
-	err = prepared["check_thread_nonlive"].QueryRow(id).Scan(&nonLive)
-	return
 }

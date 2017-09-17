@@ -254,6 +254,11 @@ func SetThreadSticky(id uint64, sticky bool) error {
 	return execPrepared("set_sticky", id, sticky)
 }
 
+// Set the ability of users to post in a specific thread
+func SetThreadLock(id uint64, locked bool, by string) error {
+	return execPrepared("set_locked", id, locked, by)
+}
+
 // Retrieve moderation log for a specific board
 func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 	r, err := prepared["get_mod_log"].Query(board)
