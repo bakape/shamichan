@@ -244,6 +244,10 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 
 	if post.Editing {
+		err = db.SetOpenBody(post.ID, []byte(post.Body))
+		if err != nil {
+			return
+		}
 		c.post.init(post.StandalonePost)
 	}
 	c.feed.InsertPost(post.StandalonePost, c.post.body, msg)

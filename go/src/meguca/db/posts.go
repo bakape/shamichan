@@ -232,18 +232,10 @@ func NewPostID(tx *sql.Tx) (id uint64, err error) {
 }
 
 // InsertPost inserts a post into an existing thread.
-func InsertPost(tx *sql.Tx, p Post, sage bool) (err error) {
-	_, err = getStatement(tx, "insert_post").
+func InsertPost(tx *sql.Tx, p Post, sage bool) error {
+	_, err := getStatement(tx, "insert_post").
 		Exec(append(genPostCreationArgs(p), sage)...)
-	if err != nil {
-		return
-	}
-
-	if p.Editing {
-		err = SetOpenBody(p.ID, []byte(p.Body))
-	}
-
-	return
+	return err
 }
 
 func genPostCreationArgs(p Post) []interface{} {
