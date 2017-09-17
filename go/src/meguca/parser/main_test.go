@@ -17,6 +17,7 @@ func init() {
 }
 
 func assertTableClear(t *testing.T, tables ...string) {
+	t.Helper()
 	if err := db.ClearTables(tables...); err != nil {
 		t.Fatal(err)
 	}

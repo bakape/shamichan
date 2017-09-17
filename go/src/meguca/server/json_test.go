@@ -172,6 +172,8 @@ func TestPostJSON(t *testing.T) {
 
 // Setup the database for testing post-related paths
 func setupPosts(t *testing.T) {
+	t.Helper()
+
 	assertTableClear(t, "boards")
 	if err := db.SetPostCounter(11); err != nil {
 		t.Fatal(err)

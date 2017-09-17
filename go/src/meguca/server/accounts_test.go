@@ -20,6 +20,8 @@ var sampleLoginCreds = auth.SessionCreds{
 }
 
 func writeSampleUser(t *testing.T) {
+	t.Helper()
+
 	hash, err := auth.BcryptHash(samplePassword, 3)
 	if err != nil {
 		t.Fatal(err)
@@ -111,6 +113,7 @@ func assertError(
 	code int,
 	err error,
 ) {
+	t.Helper()
 	assertCode(t, rec, code)
 	if err != nil {
 		assertBody(t, rec, fmt.Sprintf("%d %s\n", code, err))
@@ -271,6 +274,8 @@ func TestRegistrationValidations(t *testing.T) {
 }
 
 func assertLogin(t *testing.T, rec *httptest.ResponseRecorder, loggedIn bool) {
+	t.Helper()
+
 	// Extract cookies from recorder
 	req := http.Request{
 		Header: http.Header{
@@ -289,6 +294,8 @@ func assertLogin(t *testing.T, rec *httptest.ResponseRecorder, loggedIn bool) {
 }
 
 func assertLoginNoCookie(t *testing.T, userID, session string, loggedIn bool) {
+	t.Helper()
+
 	is, err := db.IsLoggedIn(userID, session)
 	switch {
 	case err != nil:
@@ -404,6 +411,8 @@ func TestLogout(t *testing.T) {
 }
 
 func writeSampleSessions(t *testing.T) (string, [2]string) {
+	t.Helper()
+
 	const id = "123"
 	tokens := [2]string{genSession(), genSession()}
 	hash, err := auth.BcryptHash("foo", 3)

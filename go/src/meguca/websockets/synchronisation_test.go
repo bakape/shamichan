@@ -63,6 +63,7 @@ func TestSyncToBoard(t *testing.T) {
 }
 
 func skipMessage(t *testing.T, con *websocket.Conn) {
+	t.Helper()
 	_, _, err := con.ReadMessage()
 	if err != nil {
 		t.Error(err)
@@ -97,6 +98,8 @@ func TestRegisterSync(t *testing.T) {
 }
 
 func assertSyncID(t *testing.T, cl *Client, id uint64, board string) {
+	t.Helper()
+
 	synced, _id, _board := feeds.GetSync(cl)
 	if !synced {
 		t.Error("client not synced")
@@ -159,6 +162,8 @@ func sendMessage(
 	typ common.MessageType,
 	data interface{},
 ) {
+	t.Helper()
+
 	err := conn.WriteMessage(websocket.TextMessage, encodeMessage(t, typ, data))
 	if err != nil {
 		t.Fatal(err)
@@ -170,6 +175,8 @@ func encodeMessage(
 	typ common.MessageType,
 	data interface{},
 ) []byte {
+	t.Helper()
+
 	msg, err := common.EncodeMessage(typ, data)
 	if err != nil {
 		t.Fatal(err)

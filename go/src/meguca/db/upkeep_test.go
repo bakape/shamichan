@@ -89,6 +89,8 @@ func TestOpenPostClosing(t *testing.T) {
 }
 
 func assertDeleted(t *testing.T, q string, del bool) {
+	t.Helper()
+
 	q = fmt.Sprintf(`select exists (select 1 %s)`, q)
 	var exists bool
 	err := db.QueryRow(q).Scan(&exists)
@@ -103,11 +105,15 @@ func assertDeleted(t *testing.T, q string, del bool) {
 }
 
 func assertBoardDeleted(t *testing.T, id string, del bool) {
+	t.Helper()
+
 	q := fmt.Sprintf(`from boards where id = '%s'`, id)
 	assertDeleted(t, q, del)
 }
 
 func assertThreadDeleted(t *testing.T, id uint64, del bool) {
+	t.Helper()
+
 	q := fmt.Sprintf(`from threads where id = '%d'`, id)
 	assertDeleted(t, q, del)
 }
@@ -216,6 +222,8 @@ func testDeleteUnusedBoards(t *testing.T) {
 }
 
 func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
+	t.Helper()
+
 	for _, op := range ops {
 		unix := op.time.Unix()
 		thread := Thread{

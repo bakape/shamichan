@@ -14,12 +14,14 @@ import (
 // LogUnexpected fails the test and prints the values in an
 // `expected: X got: Y` format
 func LogUnexpected(t *testing.T, expected, got interface{}) {
+	t.Helper()
 	t.Fatalf("\nexpected: %#v\ngot:      %#v", expected, got)
 }
 
 // AssertDeepEquals asserts two values are deeply equal or fails the test, if
 // not
 func AssertDeepEquals(t *testing.T, res, std interface{}) {
+	t.Helper()
 	if !reflect.DeepEqual(res, std) {
 		LogUnexpected(t, std, res)
 	}
@@ -27,12 +29,15 @@ func AssertDeepEquals(t *testing.T, res, std interface{}) {
 
 // UnexpectedError fails the test with an unexpected error message
 func UnexpectedError(t *testing.T, err error) {
+	t.Helper()
 	t.Fatalf("unexpected error: %s", err)
 }
 
 // AssertFileEquals reads a file from disk and asserts it equals the standard
 // buffer
 func AssertFileEquals(t *testing.T, path string, std []byte) {
+	t.Helper()
+
 	buf, err := ioutil.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -42,6 +47,8 @@ func AssertFileEquals(t *testing.T, path string, std []byte) {
 
 // AssertBufferEquals asserts two buffers are equal
 func AssertBufferEquals(t *testing.T, buf, std []byte) {
+	t.Helper()
+
 	if !bytes.Equal(buf, std) {
 		t.Fatalf("files not equal: `%s` : `%s`", string(std), string(buf))
 	}
@@ -58,6 +65,8 @@ func GenString(len int) string {
 
 // ReadSample reads a sample file of passed file name
 func ReadSample(t *testing.T, name string) []byte {
+	t.Helper()
+
 	path := filepath.Join("testdata", name)
 	data, err := ioutil.ReadFile(path)
 	if err != nil {

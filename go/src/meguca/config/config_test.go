@@ -137,6 +137,8 @@ func TestSetDifferentBoardConfigs(t *testing.T) {
 }
 
 func testBoardConfChange(t *testing.T, conf BoardConfigs) {
+	t.Helper()
+
 	changed, err := SetBoardConfigs(conf)
 	if err != nil {
 		t.Fatal(err)

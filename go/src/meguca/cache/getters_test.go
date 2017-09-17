@@ -50,6 +50,7 @@ func TestGetJSON(t *testing.T) {
 }
 
 func assertCount(t *testing.T, action string, std, n int) {
+	t.Helper()
 	if n != std {
 		t.Errorf("%s too many times: %d", action, n)
 	}

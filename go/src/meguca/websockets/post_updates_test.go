@@ -118,12 +118,14 @@ func awaitFlush() {
 }
 
 func writeSamplePost(t testing.TB) {
+	t.Helper()
 	if err := db.WritePost(nil, samplePost); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func assertOpenPost(t *testing.T, cl *Client, len int, buf string) {
+	t.Helper()
 	if l := cl.post.len; l != len {
 		t.Errorf("unexpected openPost body length: %d", l)
 	}
@@ -133,6 +135,8 @@ func assertOpenPost(t *testing.T, cl *Client, len int, buf string) {
 }
 
 func assertBody(t *testing.T, id uint64, body string) {
+	t.Helper()
+
 	post, err := db.GetPost(id)
 	if err != nil {
 		t.Fatal(err)
@@ -356,6 +360,8 @@ func TestClosePost(t *testing.T) {
 }
 
 func assertPostClosed(t *testing.T, id uint64) {
+	t.Helper()
+
 	post, err := db.GetPost(id)
 	if err != nil {
 		t.Fatal(err)
@@ -672,6 +678,7 @@ func TestInsertImage(t *testing.T) {
 }
 
 func writeSampleImage(t *testing.T) {
+	t.Helper()
 	if err := db.WriteImage(nil, stdJPEG); err != nil {
 		t.Fatal(err)
 	}

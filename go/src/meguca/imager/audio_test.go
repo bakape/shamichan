@@ -22,12 +22,14 @@ func TestProcessMP3NoCover(t *testing.T) {
 }
 
 func assertFileType(t *testing.T, res, std uint8) {
+	t.Helper()
 	if res != std {
 		t.Errorf("unexpected file type: %d : %d", std, res)
 	}
 }
 
 func assertLength(t *testing.T, res, std uint32) {
+	t.Helper()
 	if res != std {
 		t.Errorf("unexpected length: %d : %d", std, res)
 	}

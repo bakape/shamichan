@@ -26,6 +26,7 @@ func TestMain(m *testing.M) {
 }
 
 func resetDirs(t *testing.T) {
+	t.Helper()
 	if err := ResetDirs(); err != nil {
 		t.Fatal(err)
 	}

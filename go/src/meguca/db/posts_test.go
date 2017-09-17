@@ -37,6 +37,7 @@ func TestValidateOp(t *testing.T) {
 }
 
 func writeSampleBoard(t *testing.T) {
+	t.Helper()
 	b := BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "a",
@@ -49,6 +50,7 @@ func writeSampleBoard(t *testing.T) {
 }
 
 func writeSampleThread(t *testing.T) {
+	t.Helper()
 	thread := Thread{
 		ID:    1,
 		Board: "a",

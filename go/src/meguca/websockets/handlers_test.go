@@ -8,6 +8,8 @@ import (
 )
 
 func marshalJSON(t testing.TB, msg interface{}) []byte {
+	t.Helper()
+
 	data, err := json.Marshal(msg)
 	if err != nil {
 		t.Fatal(err)

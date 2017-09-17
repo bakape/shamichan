@@ -173,6 +173,8 @@ func testCreateThreadTextOnly(t *testing.T) {
 }
 
 func setBoardConfigs(t testing.TB, textOnly bool) {
+	t.Helper()
+
 	config.ClearBoards()
 	_, err := config.SetBoardConfigs(config.BoardConfigs{
 		ID: "a",
@@ -186,6 +188,8 @@ func setBoardConfigs(t testing.TB, textOnly bool) {
 }
 
 func assertIP(t *testing.T, id uint64, ip string) {
+	t.Helper()
+
 	res, err := db.GetIP(id)
 	if err != nil {
 		t.Fatal(err)
@@ -385,6 +389,8 @@ func TestPostCreation(t *testing.T) {
 }
 
 func registerClient(t testing.TB, cl *Client, id uint64, board string) {
+	t.Helper()
+
 	var err error
 	cl.feed, err = feeds.SyncClient(cl, id, board)
 	if err != nil {
@@ -397,6 +403,8 @@ func encodeMessageType(typ common.MessageType) string {
 }
 
 func prepareForPostCreation(t testing.TB) {
+	t.Helper()
+
 	assertTableClear(t, "boards", "images")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -406,6 +414,8 @@ func prepareForPostCreation(t testing.TB) {
 }
 
 func writeSampleBoard(t testing.TB) {
+	t.Helper()
+
 	b := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "a",
@@ -418,6 +428,8 @@ func writeSampleBoard(t testing.TB) {
 }
 
 func writeSampleThread(t testing.TB) {
+	t.Helper()
+
 	now := time.Now().Unix()
 	thread := db.Thread{
 		ID:        1,

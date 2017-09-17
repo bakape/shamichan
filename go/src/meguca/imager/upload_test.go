@@ -35,6 +35,8 @@ func newRequest(
 	body io.Reader,
 	w *multipart.Writer,
 ) *http.Request {
+	t.Helper()
+
 	req := httptest.NewRequest("PUT", "/", body)
 	if err := w.Close(); err != nil {
 		t.Fatal(err)
@@ -50,18 +52,22 @@ func setHeaders(req *http.Request, headers map[string]string) {
 }
 
 func assertCode(t *testing.T, res, std int) {
+	t.Helper()
 	if res != std {
 		t.Errorf("unexpected status code: %d : %d", std, res)
 	}
 }
 
 func assertTableClear(t *testing.T, tables ...string) {
+	t.Helper()
 	if err := db.ClearTables(tables...); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func newJPEGRequest(t *testing.T) *http.Request {
+	t.Helper()
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 	b, w := newMultiWriter()
@@ -82,6 +88,8 @@ func newJPEGRequest(t *testing.T) *http.Request {
 }
 
 func getImageRecord(t *testing.T, id string) common.ImageCommon {
+	t.Helper()
+
 	img, err := db.GetImage(id)
 	if err != nil {
 		t.Fatal(err)
@@ -91,6 +99,8 @@ func getImageRecord(t *testing.T, id string) common.ImageCommon {
 
 // Assert image file assets were created with the correct paths
 func assertFiles(t *testing.T, src, id string, fileType, thumbType uint8) {
+	t.Helper()
+
 	var (
 		paths [3]string
 		data  [3][]byte

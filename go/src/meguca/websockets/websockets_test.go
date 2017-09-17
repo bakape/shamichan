@@ -46,6 +46,8 @@ func init() {
 }
 
 func newWSServer(t testing.TB) *mockWSServer {
+	t.Helper()
+
 	connSender := make(chan *websocket.Conn)
 	handler := func(res http.ResponseWriter, req *http.Request) {
 		conn, err := upgrader.Upgrade(res, req, nil)
@@ -62,12 +64,16 @@ func newWSServer(t testing.TB) *mockWSServer {
 }
 
 func (m *mockWSServer) Close() {
+	m.t.Helper()
+
 	m.server.CloseClientConnections()
 	m.server.Close()
 	close(m.connSender)
 }
 
 func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
+	m.t.Helper()
+
 	wcl := dialServer(m.t, m.server)
 	cl, err := newClient(<-m.connSender, httptest.NewRequest("GET", "/", nil))
 	if err != nil {
@@ -77,6 +83,8 @@ func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
 }
 
 func dialServer(t testing.TB, sv *httptest.Server) *websocket.Conn {
+	t.Helper()
+
 	wcl, _, err := dialer.Dial(strings.Replace(sv.URL, "http", "ws", 1), nil)
 	if err != nil {
 		t.Fatal(err)
@@ -85,12 +93,16 @@ func dialServer(t testing.TB, sv *httptest.Server) *websocket.Conn {
 }
 
 func assertTableClear(t testing.TB, tables ...string) {
+	t.Helper()
+
 	if err := db.ClearTables(tables...); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func readListenErrors(t *testing.T, cl *Client, sv *mockWSServer) {
+	t.Helper()
+
 	defer sv.Done()
 	if err := cl.listen(); err != nil && err != websocket.ErrCloseSent {
 		t.Fatal(err)
@@ -98,6 +110,8 @@ func readListenErrors(t *testing.T, cl *Client, sv *mockWSServer) {
 }
 
 func assertMessage(t *testing.T, con *websocket.Conn, std string) {
+	t.Helper()
+
 	typ, msg, err := con.ReadMessage()
 	if err != nil {
 		t.Error(err)
@@ -116,12 +130,15 @@ func assertWebsocketError(
 	prefix string,
 	sv *mockWSServer,
 ) {
+	t.Helper()
+
 	defer sv.Done()
 	_, _, err := conn.ReadMessage()
 	assertErrorPrefix(t, err, prefix)
 }
 
 func assertErrorPrefix(t *testing.T, err error, prefix string) {
+	t.Helper()
 	if errMsg := fmt.Sprint(err); !strings.HasPrefix(errMsg, prefix) {
 		t.Fatalf("unexpected error prefix: `%s` : `%s`", prefix, errMsg)
 	}
@@ -152,6 +169,8 @@ func captureLog(fn func()) string {
 }
 
 func assertLog(t *testing.T, input, std string) {
+	t.Helper()
+
 	std = `\d+/\d+/\d+ \d+:\d+:\d+ ` + std
 	if strings.HasPrefix(std, input) {
 		LogUnexpected(t, std, input)
@@ -230,6 +249,7 @@ func TestHandleMessage(t *testing.T) {
 }
 
 func assertHandlerError(t *testing.T, cl *Client, msg []byte, prefix string) {
+	t.Helper()
 	err := cl.handleMessage(websocket.TextMessage, msg)
 	assertErrorPrefix(t, err, prefix)
 }
@@ -256,6 +276,7 @@ func assertListenError(
 	prefix string,
 	sv *mockWSServer,
 ) {
+	t.Helper()
 	defer sv.Done()
 	assertErrorPrefix(t, cl.listen(), prefix)
 }
@@ -275,6 +296,8 @@ func TestClientClosure(t *testing.T) {
 }
 
 func normalCloseWebClient(t *testing.T, wcl *websocket.Conn) {
+	t.Helper()
+
 	msg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "")
 	deadline := time.Now().Add(time.Second)
 	err := wcl.WriteControl(websocket.CloseMessage, msg, deadline)

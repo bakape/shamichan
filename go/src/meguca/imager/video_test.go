@@ -45,6 +45,7 @@ func TestProcessWebm(t *testing.T) {
 }
 
 func assertAudio(t *testing.T, res, std bool) {
+	t.Helper()
 	if res != std {
 		t.Error("unexpected audio flag value")
 	}

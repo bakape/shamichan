@@ -33,12 +33,14 @@ func TestGetImage(t *testing.T) {
 }
 
 func writeSampleImage(t *testing.T) {
+	t.Helper()
 	if err := WriteImage(nil, assets.StdJPEG.ImageCommon); err != nil {
 		t.Fatal(err)
 	}
 }
 
 func setupImageDirs(t *testing.T) func() {
+	t.Helper()
 	if err := assets.CreateDirs(); err != nil {
 		t.Fatal(err)
 	}

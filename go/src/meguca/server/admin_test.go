@@ -22,11 +22,14 @@ var adminLoginCreds = auth.SessionCreds{
 func newJSONPair(t *testing.T, url string, data interface{}) (
 	*httptest.ResponseRecorder, *http.Request,
 ) {
+	t.Helper()
+
 	body := encodeBody(t, data)
 	return httptest.NewRecorder(), httptest.NewRequest("POST", url, body)
 }
 
 func encodeBody(t *testing.T, data interface{}) io.Reader {
+	t.Helper()
 	return bytes.NewReader(marshalJSON(t, data))
 }
 
@@ -258,6 +261,8 @@ func TestValidateBoardCreation(t *testing.T) {
 }
 
 func writeSampleBoard(t testing.TB) {
+	t.Helper()
+
 	b := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "a",
@@ -273,6 +278,8 @@ func writeSampleBoard(t testing.TB) {
 }
 
 func writeSampleBoardOwner(t *testing.T) {
+	t.Helper()
+
 	tx, err := db.StartTransaction()
 	if err != nil {
 		t.Fatal(err)
@@ -369,6 +376,8 @@ func TestServePrivateServerConfigs(t *testing.T) {
 }
 
 func writeAdminAccount(t *testing.T) {
+	t.Helper()
+
 	err := db.CreateAdminAccount()
 	if err != nil {
 		t.Fatal(err)
@@ -521,6 +530,8 @@ func TestDeletePost(t *testing.T) {
 }
 
 func writeSampleThread(t *testing.T) {
+	t.Helper()
+
 	thread := db.Thread{
 		ID:        1,
 		Board:     "a",

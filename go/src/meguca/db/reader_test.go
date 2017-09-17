@@ -199,6 +199,7 @@ func testGetAllBoard(t *testing.T) {
 // Assert image equality and then override to not compare pointer addresses
 // with reflection
 func assertImage(t *testing.T, thread *common.Thread, std *common.Image) {
+	t.Helper()
 	if std != nil {
 		if thread.Image == nil {
 			t.Fatalf("no image on thread %d", thread.ID)
