@@ -73,29 +73,22 @@ func NewImageToken(SHA1 string) (token string, err error) {
 
 // UseImageToken deletes an image allocation token and returns the matching
 // processed image. If no token exists, returns ErrInvalidToken.
-func UseImageToken(token string) (img common.ImageCommon, err error) {
+func UseImageToken(tx *sql.Tx, token string) (
+	img common.ImageCommon, err error,
+) {
 	if len(token) != common.LenImageToken {
 		err = ErrInvalidToken
-		return
-	}
-	tx, err := db.Begin()
-	if err != nil {
 		return
 	}
 
 	var SHA1 string
 	err = tx.Stmt(prepared["use_image_token"]).QueryRow(token).Scan(&SHA1)
 	if err != nil {
-		tx.Rollback()
 		return
 	}
 
 	img, err = scanImage(tx.Stmt(prepared["get_image"]).QueryRow(SHA1))
-	if err != nil {
-		tx.Rollback()
-		return
-	}
-	return img, tx.Commit()
+	return
 }
 
 // AllocateImage allocates an image's file resources to their respective served
@@ -138,8 +131,9 @@ func HasImage(id uint64) (has bool, err error) {
 }
 
 // InsertImage insert and image into and existing open post
-func InsertImage(id uint64, img common.Image) (err error) {
-	return execPrepared("insert_image", id, img.SHA1, img.Name)
+func InsertImage(tx *sql.Tx, id uint64, img common.Image) error {
+	_, err := getStatement(tx, "insert_image").Exec(id, img.SHA1, img.Name)
+	return err
 }
 
 // SpoilerImage spoilers an already allocated image

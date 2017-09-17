@@ -231,9 +231,10 @@ func NewPostID() (id uint64, err error) {
 	return id, err
 }
 
-// InsertPost inserts a post into an existing thread
-func InsertPost(p Post, sage bool) (err error) {
-	err = execPrepared("insert_post", append(genPostCreationArgs(p), sage)...)
+// InsertPost inserts a post into an existing thread.
+func InsertPost(tx *sql.Tx, p Post, sage bool) (err error) {
+	_, err = getStatement(tx, "insert_post").
+		Exec(append(genPostCreationArgs(p), sage)...)
 	if err != nil {
 		return
 	}
@@ -297,14 +298,16 @@ func WritePost(tx *sql.Tx, p Post) (err error) {
 	return
 }
 
-// InsertThread inserts a new thread into the database
-func InsertThread(subject string, nonLive bool, p Post) (err error) {
+// InsertThread inserts a new thread into the database.
+func InsertThread(tx *sql.Tx, subject string, nonLive bool, p Post) (
+	err error,
+) {
 	imgCtr := 0
 	if p.Image != nil {
 		imgCtr = 1
 	}
-	err = execPrepared(
-		"insert_thread",
+
+	_, err = getStatement(tx, "insert_thread").Exec(
 		append(
 			[]interface{}{subject, nonLive, imgCtr},
 			genPostCreationArgs(p)...,

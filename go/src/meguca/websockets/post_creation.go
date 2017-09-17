@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"database/sql"
 	"encoding/binary"
 	"errors"
 	"meguca/auth"
@@ -78,27 +79,39 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		return
 	}
 
-	// Perform this last, so there are less dangling images because of any error
-	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
-	if hasImage {
-		img := req.Image
-		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
-		if err != nil {
-			return
-		}
-	}
-
 	post.ID, err = db.NewPostID()
 	if err != nil {
 		return
 	}
 	post.OP = post.ID
-
 	if conf.PosterIDs {
 		computePosterID(&post)
 	}
 
-	err = db.InsertThread(subject, conf.NonLive || req.NonLive, post)
+	// Must ensure image token usage is done atomically, as not to cause
+	// possible data races with unused image cleanup
+	tx, err := db.StartTransaction()
+	if err != nil {
+		return
+	}
+	defer db.RollbackOnError(tx, &err)
+
+	// Perform this last, so there are less dangling images because of any error
+	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
+	if hasImage {
+		img := req.Image
+		post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
+		if err != nil {
+			return
+		}
+	}
+
+	err = db.InsertThread(tx, subject, conf.NonLive || req.NonLive, post)
+	if err != nil {
+		return
+	}
+
+	err = tx.Commit()
 	return
 }
 
@@ -165,22 +178,29 @@ func CreatePost(
 		return
 	}
 
-	if hasImage {
-		img := req.Image
-		post.Image, err = getImage(img.Token, img.Name, img.Spoiler)
-		if err != nil {
-			return
-		}
-	}
-
 	post.OP = op
 	post.ID, err = db.NewPostID()
 	if err != nil {
 		return
 	}
-
 	if conf.PosterIDs {
 		computePosterID(&post)
+	}
+
+	// Must ensure image token usage is done atomically, as not to cause
+	// possible data races with unused image cleanup
+	tx, err := db.StartTransaction()
+	if err != nil {
+		return
+	}
+	defer db.RollbackOnError(tx, &err)
+
+	if hasImage {
+		img := req.Image
+		post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
+		if err != nil {
+			return
+		}
 	}
 
 	msg, err = common.EncodeMessage(common.MessageInsertPost, post.Post)
@@ -188,7 +208,12 @@ func CreatePost(
 		return
 	}
 
-	err = db.InsertPost(post, req.Sage)
+	err = db.InsertPost(tx, post, req.Sage)
+	if err != nil {
+		return
+	}
+
+	err = tx.Commit()
 	return
 }
 
@@ -358,12 +383,14 @@ func constructPost(
 // Performs some validations and retrieves processed image data by token ID.
 // Embeds spoiler and image name in result struct. The last extension is
 // stripped from the name.
-func getImage(token, name string, spoiler bool) (img *common.Image, err error) {
+func getImage(tx *sql.Tx, token, name string, spoiler bool) (
+	img *common.Image, err error,
+) {
 	if len(name) > 200 {
 		return nil, errImageNameTooLong
 	}
 
-	imgCommon, err := db.UseImageToken(token)
+	imgCommon, err := db.UseImageToken(tx, token)
 	switch err {
 	case nil:
 	case db.ErrInvalidToken:

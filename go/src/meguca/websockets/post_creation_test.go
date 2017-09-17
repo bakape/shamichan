@@ -214,8 +214,21 @@ func TestGetInvalidImage(t *testing.T) {
 		c := cases[i]
 		t.Run(c.testName, func(t *testing.T) {
 			t.Parallel()
-			if _, err := getImage(c.token, c.name, false); err != c.err {
+
+			tx, err := db.StartTransaction()
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer db.RollbackOnError(tx, &err)
+
+			_, err = getImage(tx, c.token, c.name, false)
+			if err != c.err {
 				UnexpectedError(t, err)
+			}
+
+			err = tx.Commit()
+			if err != nil {
+				t.Fatal(err)
 			}
 		})
 	}

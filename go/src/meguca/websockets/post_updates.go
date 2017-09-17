@@ -288,14 +288,24 @@ func (c *Client) insertImage(data []byte) (err error) {
 		return errTextOnly
 	}
 
-	img, err := getImage(req.Token, req.Name, req.Spoiler)
+	tx, err := db.StartTransaction()
+	if err != nil {
+		return
+	}
+	defer db.RollbackOnError(tx, &err)
+
+	img, err := getImage(tx, req.Token, req.Name, req.Spoiler)
 	if err != nil {
 		return
 	}
 	c.post.hasImage = true
 	c.post.isSpoilered = req.Spoiler
 
-	err = db.InsertImage(c.post.id, *img)
+	err = db.InsertImage(tx, c.post.id, *img)
+	if err != nil {
+		return
+	}
+	err = tx.Commit()
 	if err != nil {
 		return
 	}

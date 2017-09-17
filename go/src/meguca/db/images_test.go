@@ -102,10 +102,22 @@ func TestImageTokens(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	img, err := UseImageToken(token)
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer RollbackOnError(tx, &err)
+
+	img, err := UseImageToken(tx, token)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = tx.Commit()
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	std := assets.StdJPEG.ImageCommon
 	if img != std {
 		LogUnexpected(t, img, std)
