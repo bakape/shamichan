@@ -407,7 +407,6 @@
 		"loadCaptcha": "Кликните для загрузки капчи",
 		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
 		"lockedToBottom": "Закрепить внизу",
-		"lockThread": "Toggle thread lock",
 		"logout": "Выход",
 		"logoutAll": "Разлогинить все сессии",
 		"newThread": "Новый тред",

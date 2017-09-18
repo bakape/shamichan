@@ -72,13 +72,30 @@ const actions: { [key: string]: ItemSpec } = {
 		// Toggle sticky flag on a thread
 		async handler(m) {
 			const res = await postJSON("/api/sticky", {
-				sticky: !m.sticky,
 				id: m.id,
+				val: !m.sticky,
 			})
 			if (res.status !== 200) {
 				return alert(await res.text())
 			}
 			m.sticky = !m.sticky
+			m.view.renderSticky()
+		},
+	},
+	toggleLock: {
+		text: lang.ui["lockThread"],
+		shouldRender(m) {
+			return position >= ModerationLevel.moderator && m.id === m.op
+		},
+		async handler(m) {
+			const res = await postJSON("/api/lock-thread", {
+				id: m.id,
+				val: !m.locked,
+			})
+			if (res.status !== 200) {
+				return alert(await res.text())
+			}
+			m.locked = !m.locked
 			m.view.renderSticky()
 		},
 	},

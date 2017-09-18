@@ -19,6 +19,7 @@ export class Post extends Model implements PostData {
 	public sage: boolean
 	public banned: boolean
 	public sticky: boolean
+	public locked: boolean
 	public seenOnce: boolean
 	public hidden: boolean
 	public image: ImageData

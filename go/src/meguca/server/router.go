@@ -144,6 +144,7 @@ func createRouter() http.Handler {
 	api.POST("/assign-staff", assignStaff)
 	api.POST("/same-IP/:id", getSameIPPosts)
 	api.POST("/sticky", setThreadSticky)
+	api.POST("/lock-thread", setThreadLock)
 	api.POST("/unban/:board", unban)
 	api.POST("/set-banners", setBanners)
 	api.POST("/set-loading", setLoadingAnimation)
