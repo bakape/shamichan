@@ -94,7 +94,8 @@
 		"finished": "Завершено",
 		"importDone": "Импорт завершён. Страница будет перезагружена.",
 		"importCorrupt": "Импорт не удался. Файл повреждён.",
-		"confirmDelete": "Удалить все посты с этого IP?"
+		"confirmDelete": "Удалить все посты с этого IP?",
+		"lockThread": "Toggle thread lock"
 	},
 	"sync": [
 		"отключён",

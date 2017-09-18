@@ -46,6 +46,7 @@ export const enum postState {
 	needCaptcha,    // Awaiting a captcha to be solved
 	sendingNonLive, // Sending a request to a allocate a post in non-live mode
 	errored,        // Suffered unrecoverable error
+	threadLocked,   // Post creation disabled in thread
 }
 export const enum postEvent {
 	sync,          // Synchronized to the server

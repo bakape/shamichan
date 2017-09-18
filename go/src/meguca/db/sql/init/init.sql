@@ -123,6 +123,7 @@ create table posts (
 	deleted boolean,
 	banned boolean,
 	sage boolean,
+	locked boolean default false,
 	id bigint primary key,
 	op bigint not null references threads on delete cascade,
 	time bigint not null,

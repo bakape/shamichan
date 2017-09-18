@@ -94,7 +94,8 @@
 		"finished": "Finished",
 		"importDone": "Import successful. The page will now reload.",
 		"importCorrupt": "Import failed. File corrupt",
-		"confirmDelete": "Delete all posts by this IP?"
+		"confirmDelete": "Delete all posts by this IP?",
+		"lockThread": "Toggle thread lock"
 	},
 	"sync": [
 		"odpojený",

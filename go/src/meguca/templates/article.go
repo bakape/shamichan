@@ -10,11 +10,11 @@ import (
 
 // Extra data passed, when rendering an article
 type articleContext struct {
-	index, sticky        bool
-	omit, imageOmit      int
-	op                   uint64
-	board, subject, root string
-	backlinks            backlinks
+	index, sticky, locked bool
+	omit, imageOmit       int
+	op                    uint64
+	board, subject, root  string
+	backlinks             backlinks
 }
 
 // Map of all backlinks on a page

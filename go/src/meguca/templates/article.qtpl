@@ -13,6 +13,7 @@
 		<header class="spaced">
 			<input type="checkbox" class="mod-checkbox hidden">
 			{%= renderSticky(c.sticky) %}
+			{%= renderLocked(c.locked) %}
 			{% if c.subject != "" %}
 				{% if c.board != "" %}
 					<b class="board">

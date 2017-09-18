@@ -5,20 +5,22 @@
 {% import "meguca/auth" %}
 {% import "encoding/json" %}
 
-{% func renderThread(postHTML []byte, id uint64, board string, abbrev bool, pos auth.ModerationLevel) %}{% stripspace %}
+{% func renderThread(postHTML []byte, id uint64, board string, abbrev, locked bool, pos auth.ModerationLevel) %}{% stripspace %}
 	{% code conf := config.GetBoardConfigs(board) %}
 	{% code ln := lang.Get() %}
-	<form id="new-reply-form" action="/api/create-reply" method="post" enctype="multipart/form-data" class="top-margin hidden">
-		<input name="board" type="text" value="{%s= board %}" hidden>
-		<input name="op" type="text" value="{%s= strconv.FormatUint(id, 10) %}" hidden>
-		{%= input(sageSpec.wrap(), ln) %}
-		{%= noscriptPostCreationFields(pos) %}
-		{% if !conf.TextOnly %}
-			{%= uploadForm() %}
-		{% endif %}
-		{%= captcha() %}
-		{%= submit(true) %}
-	</form>
+	{% if !locked %}
+		<form id="new-reply-form" action="/api/create-reply" method="post" enctype="multipart/form-data" class="top-margin hidden">
+			<input name="board" type="text" value="{%s= board %}" hidden>
+			<input name="op" type="text" value="{%s= strconv.FormatUint(id, 10) %}" hidden>
+			{%= input(sageSpec.wrap(), ln) %}
+			{%= noscriptPostCreationFields(pos) %}
+			{% if !conf.TextOnly %}
+				{%= uploadForm() %}
+			{% endif %}
+			{%= captcha() %}
+			{%= submit(true) %}
+		</form>
+	{% endif %}
 	<span class="aside-container top-margin">
 		<span class="act" id="top">
 			<a href="#bottom">
@@ -46,11 +48,13 @@
 	<hr>
 	{%z= postHTML %}
 	<div id="bottom-spacer"></div>
-	<aside class="act posting glass">
-		<a>
-			{%s= ln.UI["reply"] %}
-		</a>
-	</aside>
+	{% if !locked %}
+		<aside class="act posting glass">
+			<a>
+				{%s= ln.UI["reply"] %}
+			</a>
+		</aside>
+	{% endif %}
 	<hr>
 	<span class="aside-container">
 		<span class="act" id="bottom">
@@ -103,6 +107,7 @@ Common functionality between index board pages and threads pages
 	{% code c := articleContext{
 		index: index,
 		sticky: t.Sticky,
+		locked: t.Locked,
 		op: t.ID,
 		board: t.Board,
 		subject: t.Subject,
@@ -113,6 +118,7 @@ Common functionality between index board pages and threads pages
 	{%= renderArticle(t.Post, c) %}
 
 	{% code c.sticky = false %}
+	{% code c.locked = false %}
 	{% code c.omit, c.imageOmit = 0, 0 %}
 	{% code c.subject = "" %}
 	{% for _, p := range t.Posts %}

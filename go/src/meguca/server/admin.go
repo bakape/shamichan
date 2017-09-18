@@ -594,24 +594,43 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 
 // Set the sticky flag of a thread
 func setThreadSticky(w http.ResponseWriter, r *http.Request) {
+	handleBoolRequest(w, r, func(id uint64, val bool, _ string) error {
+		return db.SetThreadSticky(id, val)
+	})
+}
+
+// Handle moderation request, that takes a boolean parameter,
+// fn is the database call to be used for performing this operation.
+func handleBoolRequest(
+	w http.ResponseWriter,
+	r *http.Request,
+	fn func(id uint64, val bool, userID string) error,
+) {
 	var msg struct {
-		ID     uint64
-		Sticky bool
+		ID  uint64
+		Val bool
 	}
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
-	if _, _, ok := canModeratePost(w, r, msg.ID, auth.Moderator); !ok {
+
+	_, userID, ok := canModeratePost(w, r, msg.ID, auth.Moderator)
+	if !ok {
 		return
 	}
 
-	switch err := db.SetThreadSticky(msg.ID, msg.Sticky); err {
+	switch err := fn(msg.ID, msg.Val, userID); err {
 	case nil:
 	case sql.ErrNoRows:
 		text400(w, err)
 	default:
 		text500(w, r, err)
 	}
+}
+
+// Set the locked flag of a thread
+func setThreadLock(w http.ResponseWriter, r *http.Request) {
+	handleBoolRequest(w, r, db.SetThreadLock)
 }
 
 // Render list of bans on a board with unban links for authenticated staff

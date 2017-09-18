@@ -162,6 +162,16 @@ func CreatePost(
 		return
 	}
 
+	// Assert thread is not locked
+	locked, err := db.CheckThreadLocked(op)
+	switch {
+	case err != nil:
+		return
+	case locked:
+		err = errors.New("thread is locked")
+		return
+	}
+
 	// Disable live updates, if thread is non-live
 	if req.Open {
 		var disabled bool

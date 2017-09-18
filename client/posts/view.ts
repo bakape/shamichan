@@ -255,14 +255,22 @@ export default class PostView extends ImageHandler {
 
     // Render the sticky status of a thread OP
     public renderSticky() {
-        const old = this.el.querySelector(".sticky")
+        this.renderIcon("sticky", this.model.sticky)
+    }
+
+    // Render thread lock status
+    public renderLocked() {
+        this.renderIcon("locked", this.model.locked)
+    }
+
+    // Render an SVG icon in the header
+    private renderIcon(id: string, render: boolean) {
+        const old = this.el.querySelector("." + id)
         if (old) {
             old.remove()
         }
-        if (this.model.sticky) {
-            this.el
-                .querySelector(".mod-checkbox")
-                .after(importTemplate("sticky"))
+        if (render) {
+            this.el.querySelector(".mod-checkbox").after(importTemplate(id))
         }
     }
 

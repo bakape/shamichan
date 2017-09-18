@@ -5,6 +5,7 @@ import {
 } from "./common"
 import { findSyncwatches } from "../posts"
 import { config } from "../state"
+import { postSM, postState } from "../posts"
 
 const counters = document.getElementById("thread-post-counters"),
     threads = document.getElementById("threads")
@@ -47,6 +48,11 @@ export default function () {
     localizeThreads()
     reparseOpenPosts()
     findSyncwatches(threads)
+
+    // Needs to be done, to  stop the FSM
+    if (data.locked) {
+        postSM.state = postState.threadLocked
+    }
 }
 
 // Increment thread post counters and rerender the indicator in the banner

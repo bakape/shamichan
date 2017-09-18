@@ -38,6 +38,7 @@ export default class FormModel extends Post {
 			banned: false,
 			sage: false,
 			sticky: false,
+			locked: false,
 			time: Math.floor(Date.now() / 1000),
 			body: "",
 			name: "",

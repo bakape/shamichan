@@ -82,7 +82,7 @@ Post link, that will redirect to the post from any page
 
 Renders a moderation log page
 {% func ModLog(log []auth.ModLogEntry) %}{% stripspace %}
-	{% code ln := lang.Get().UI %}
+	{% code ln := lang.Get() %}
 	{%= tableStyle() %}
 	<table>
 		{%= tableHeaders("type", "by", "post", "time") %}
@@ -91,15 +91,17 @@ Renders a moderation log page
 				<td>
 					{% switch l.Type %}
 					{% case auth.BanPost %}
-						{%s= ln["ban"] %}
+						{%s= ln.UI["ban"] %}
 					{% case auth.UnbanPost %}
-						{%s= ln["unban"] %}
+						{%s= ln.UI["unban"] %}
 					{% case auth.DeletePost %}
-						{%s= ln["deletePost"] %}
+						{%s= ln.UI["deletePost"] %}
 					{% case auth.DeleteImage %}
-						{%s= ln["deleteImage"] %}
+						{%s= ln.UI["deleteImage"] %}
 					{% case auth.SpoilerImage %}
-						{%s= ln["spoilerImage"] %}
+						{%s= ln.UI["spoilerImage"] %}
+					{% case auth.LockThread %}
+						{%s= ln.Common.UI["lockThread"] %}
 					{% endswitch %}
 				</td>
 				<td>{%s l.By %}</td>

@@ -182,10 +182,10 @@ func scanOP(r rowScanner) (t common.Thread, err error) {
 		img  imageScanner
 	)
 
-	args := make([]interface{}, 0, 36)
+	args := make([]interface{}, 0, 37)
 	args = append(args,
 		&t.Sticky, &t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-		&t.Subject, &t.NonLive,
+		&t.Subject, &t.NonLive, &t.Locked,
 	)
 	args = append(args, post.ScanArgs()...)
 	args = append(args, img.ScanArgs()...)
