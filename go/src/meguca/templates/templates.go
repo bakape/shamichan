@@ -67,12 +67,12 @@ func Board(
 func Thread(
 	id uint64,
 	board, title, theme string,
-	abbrev bool,
+	abbrev, locked bool,
 	pos auth.ModerationLevel,
 	postHTML []byte,
 ) []byte {
 	title = html.EscapeString(fmt.Sprintf("/%s/ - %s", board, title))
-	html := renderThread(postHTML, id, board, abbrev, pos)
+	html := renderThread(postHTML, id, board, abbrev, locked, pos)
 	return execIndex(html, title, theme, pos)
 }
 

@@ -126,11 +126,11 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b := extractParam(r, "board")
-	title := data.(common.Thread).Subject
+	thread := data.(common.Thread)
 	html = templates.Thread(
 		id,
-		b, title, resolveTheme(r, b),
-		lastN != 0,
+		b, thread.Subject, resolveTheme(r, b),
+		lastN != 0, thread.Locked,
 		pos,
 		html,
 	)

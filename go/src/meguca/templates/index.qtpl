@@ -140,6 +140,9 @@
 		<template name="sticky">
 			{%= renderSticky(true) %}
 		</template>
+		<template name="locked">
+			{%= renderLocked(true) %}
+		</template>
 		{% if pos > auth.NotLoggedIn %}
 			<template name="keyValue">
 				{%= keyValueForm("", "") %}

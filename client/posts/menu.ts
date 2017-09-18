@@ -96,7 +96,7 @@ const actions: { [key: string]: ItemSpec } = {
 				return alert(await res.text())
 			}
 			m.locked = !m.locked
-			m.view.renderSticky()
+			m.view.renderLocked()
 		},
 	},
 }
