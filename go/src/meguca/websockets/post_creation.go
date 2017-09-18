@@ -122,7 +122,7 @@ func computePosterID(p *db.Post) {
 	b = append(b, p.IP...)
 	binary.LittleEndian.PutUint64(b, p.OP)
 
-	p.PosterID = mnemonic.FromBuffer(b)
+	p.PosterID = mnemonic.FantasyName(b)
 }
 
 // CreatePost creates a new post and writes it to the database.

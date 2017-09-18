@@ -47,7 +47,10 @@ BanPage renders a ban page for a banned user
 					<td>{%s b.Reason %}</td>
 					<td>{%s b.By %}</td>
 					<td>{%= staticPostLink(b.ForPost) %}</td>
-					<td>{%s mnemonic.Mnemonic(b.IP, salt) %}</td>
+					{% code buf := make([]byte, 0, len(salt)+len(b.IP)) %}
+					{% code buf = append(buf, salt...) %}
+					{% code buf = append(buf, b.IP...) %}
+					<td>{%s mnemonic.FantasyName(buf) %}</td>
 					<td>{%s b.Expires.Format(time.UnixDate) %}</td>
 					{% if canUnban %}
 						<td>
