@@ -2,14 +2,15 @@
 
 mod options;
 
-use dom::get_inner_html;
-use libc::*;
+use brunhild::get_inner_html;
+use libc::uint64_t;
 use posts::{Post, Thread};
 use serde_json;
 use std::borrow::BorrowMut;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::mem::transmute;
+use std::os::raw::{c_char, c_int};
 use std::slice;
 
 thread_local!{
