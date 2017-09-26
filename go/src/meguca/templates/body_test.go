@@ -171,8 +171,8 @@ func TestRenderBody(t *testing.T) {
 		},
 		{
 			name: "too many dice faces",
-			in:   "#2d101",
-			out:  "#2d101",
+			in:   "#2d10001",
+			out:  "#2d10001",
 			commands: []common.Command{
 				{
 					Type: common.Dice,

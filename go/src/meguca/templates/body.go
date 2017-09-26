@@ -406,7 +406,8 @@ func (c *bodyContext) parseCommands(bit string) {
 				return
 			}
 		}
-		if sides, err := strconv.Atoi(m[2]); err != nil || sides > 100 {
+		sides, err := strconv.Atoi(m[2])
+		if err != nil || sides > common.MaxDiceSides {
 			c.writeInvalidCommand(bit)
 			return
 		}

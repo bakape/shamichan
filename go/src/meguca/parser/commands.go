@@ -102,7 +102,7 @@ func parseDice(match string) (val []uint16, err error) {
 	switch {
 	case err != nil:
 		return
-	case max > 10000:
+	case max > common.MaxDiceSides:
 		return nil, errDieTooBig
 	}
 

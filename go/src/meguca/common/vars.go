@@ -22,6 +22,7 @@ const (
 	MaxLenReason       = 100
 	MaxNumBanners      = 20
 	MaxAssetSize       = 100 << 10
+	MaxDiceSides       = 10000
 )
 
 // Various cryptographic token exact lengths
