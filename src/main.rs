@@ -13,7 +13,12 @@ pub mod state;
 pub mod page;
 
 fn main() {
+	if let Err(e) = page::init() {
+		println!("{}", e);
+		return;
+	}
 	brunhild::start();
+
 	// let data:  = serde_json::from_str(&dom::get_inner_html("post_data"));
 	if let Err(e) = state::load() {
 		println!("{}", e);

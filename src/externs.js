@@ -5,7 +5,7 @@ mergeInto(LibraryManager.library, {
 		localStorage.setItem(Pointer_stringify(key), Pointer_stringify(val))
 	},
 	local_storage_get: function (key) {
-		var s = localStorage.getItem(key) || ""
+		var s = localStorage.getItem(Pointer_stringify(key)) || ""
 		var len = s.length + 1
 		var buf = Module._malloc(len)
 		stringToUTF8(s, buf, len)
