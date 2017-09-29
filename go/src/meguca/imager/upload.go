@@ -196,6 +196,15 @@ func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
 		return 500, "", err
 	}
 
+	// Some media has retardedly long meta strings. Just truncate them, instead
+	// of rejecting.
+	if len(img.Artist) > 100 {
+		img.Artist = img.Artist[:100]
+	}
+	if len(img.Title) > 200 {
+		img.Title = img.Title[:200]
+	}
+
 	if err := db.AllocateImage(data, thumb, img); err != nil {
 		return 500, "", err
 	}
