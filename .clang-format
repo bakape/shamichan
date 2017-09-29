@@ -10,8 +10,9 @@ AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
-AlignAfterOpenBracket: true
+AlignAfterOpenBracket: BAS_AlwaysBreak
 AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: true
 BinPackArguments: false
 BinPackParameters: false
+AlignConsecutiveAssignments: true

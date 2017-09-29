@@ -32,17 +32,27 @@ client_deps:
 
 wasm:
 	mkdir -p www/wasm
-	cargo build --target=wasm32-unknown-emscripten --release
-	cp `ls -S target/wasm32-unknown-emscripten/release/deps/client*.wasm | tail -n 1` www/wasm/main.wasm
-	sed 's/client-[0-9a-f]\{16\}\./main\./g' target/wasm32-unknown-emscripten/release/client.js > www/wasm/main.js
-	$(uglifyjs) `ls -S target/wasm32-unknown-emscripten/release/deps/client*.asm.js | tail -n 1` -o www/wasm/main.asm.js
+	emcc \
+		-std=c++1z \
+		--bind \
+		-Oz --closure 1 -s MODULARIZE=1 \
+		-s NO_EXIT_RUNTIME=1 \
+		-s WASM=1 \
+		client_cpp/main.cpp -o www/wasm/main.js
+
+# TODO: Generate asm.js fallback. This can be done by compiling to .bc and then
+# conpiling that to .wasm and .ams.js
+# emcc --separate-asm -Wno-separate-asm -Oz --closure 2 -s MODULARIZE=1 -s WASM=1 -s ASM_JS=1 client_cpp/main.cpp -o www/wasm/main.js
 
 wasm_debug:
 	mkdir -p www/wasm
-	cargo build --target=wasm32-unknown-emscripten
-	cp `ls -S target/wasm32-unknown-emscripten/debug/deps/client*.wasm | tail -n 1` www/wasm/main.wasm
-	sed 's/client-[0-9a-f]\{16\}\./main\./g' target/wasm32-unknown-emscripten/debug/client.js > www/wasm/main.js
-	cp `ls -S target/wasm32-unknown-emscripten/debug/deps/client*.asm.js | tail -n 1` www/wasm/main.asm.js
+	emcc \
+		-std=c++1z \
+		--bind \
+		-g \
+		-s NO_EXIT_RUNTIME=1 \
+		-s WASM=1 \
+		client_cpp/main.cpp -o www/wasm/main.js
 
 watch:
 	$(gulp) -w

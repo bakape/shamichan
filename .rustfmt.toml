@@ -1,6 +1,0 @@
-max_width = 80
-reorder_imports = true
-reorder_imported_names = true
-hard_tabs = true
-wrap_comments = true
-use_try_shorthand = true

@@ -1,6 +1,0 @@
-[submodule "src/-f"]
-	path = src/-f
-	url = https://github.com/bakape/brunhild.git
-[submodule "src/brunhild"]
-	path = src/brunhild
-	url = https://github.com/bakape/brunhild.git

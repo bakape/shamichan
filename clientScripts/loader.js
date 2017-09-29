@@ -164,9 +164,6 @@
 	}
 
 	var wasm = /[\?&]wasm=true/.test(location.search)
-	if (wasm) {
-		polyfills.push("wasm/db")
-	}
 
 	var head = document.getElementsByTagName('head')[0]
 
@@ -224,12 +221,14 @@
 
 		if (wasm) {
 			// TODO: asm.js fallback with Module["asmjsCodeFile"]
+			// TODO: Preallocate memory to Module['wasmMemory']
 			window.Module = {}
 			fetch("/assets/wasm/main.wasm")
 				.then(function (res) {
 					return res.arrayBuffer()
 				})
 				.then(function (bytes) {
+					// TODO: Parallel downloads of main.js and main.wasm
 					Module.wasmBinary = bytes
 					var script = document.createElement('script')
 					script.src = "/assets/wasm/main.js"
