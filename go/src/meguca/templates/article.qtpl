@@ -51,7 +51,11 @@
 				{% endif %}
 			</b>
 			{% if p.Flag != "" %}
-				<img class="flag" src="/assets/flags/{%s= p.Flag %}.svg" title="{%s= p.Flag %}">
+				{% code title, ok := countryMap[p.Flag] %}
+				{% if !ok %}
+					{% code title = p.Flag %}
+				{% endif %}
+				<img class="flag" src="/assets/flags/{%s= p.Flag %}.svg" title="{%s= title %}">
 			{% endif %}
 			<time>
 				{%s= formatTime(p.Time) %}

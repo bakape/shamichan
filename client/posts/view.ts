@@ -9,6 +9,7 @@ import { findSyncwatches } from "./syncwatch"
 import lang from "../lang"
 import { page } from "../state"
 import options from "../options"
+import countries from "./countries"
 
 // Base post view class
 export default class PostView extends ImageHandler {
@@ -159,7 +160,7 @@ export default class PostView extends ImageHandler {
         if (flag) {
             const el = this.el.querySelector(".flag")
             el.setAttribute("src", `/assets/flags/${flag}.svg`)
-            el.setAttribute("title", flag)
+            el.setAttribute("title", countries[flag] || flag)
             el.hidden = false
         }
     }
