@@ -67,8 +67,8 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 
 // Log an error together with the client's IP and stack trace
 func logError(r *http.Request, err interface{}) {
-	ip, err := auth.GetIP(r)
-	if err != nil {
+	ip, ipErr := auth.GetIP(r)
+	if ipErr != nil {
 		ip = "invalid IP"
 	}
 	log.Printf("server: %s: %s\n%s\n", ip, err, debug.Stack())
