@@ -20,6 +20,7 @@ const (
 	MaxLenRules        = 5000
 	MaxLenEightball    = 2000
 	MaxLenReason       = 100
+	MaxLenCustomJS     = 5000
 	MaxNumBanners      = 20
 	MaxAssetSize       = 100 << 10
 	MaxDiceSides       = 10000

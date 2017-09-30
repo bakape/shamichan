@@ -3,6 +3,7 @@
 package templates
 
 import (
+	"fmt"
 	"meguca/config"
 	"reflect"
 	"sort"
@@ -23,7 +24,12 @@ func configurationTable(v reflect.Value, key string, needCaptcha bool) string {
 
 	// Assign values to all specs
 	for i, s := range withValues {
-		v := v.FieldByName(strings.Title(s.ID))
+		key := strings.Title(s.ID)
+		v := v.FieldByName(key)
+		if !v.IsValid() {
+			// Programmer error. Should not happen in production.
+			panic(fmt.Errorf("struct key not found: %s", key))
+		}
 		switch k := v.Kind(); k {
 		case reflect.Uint8, reflect.Uint16:
 			v = v.Convert(reflect.TypeOf(uint(0)))

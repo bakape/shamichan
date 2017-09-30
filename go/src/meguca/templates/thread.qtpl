@@ -82,6 +82,7 @@
 		<span id="lock" style="visibility: hidden;">
 			{%s= ln.UI["lockedToBottom"] %}
 		</span>
+		{%= customJS(conf.Js) %}
 	</span>
 	{%= loadingImage(board) %}
 {% endstripspace %}{% endfunc %}

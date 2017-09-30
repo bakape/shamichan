@@ -36,6 +36,7 @@ var (
 	errNoticeTooLong    = common.ErrTooLong("notice")
 	errRulesTooLong     = common.ErrTooLong("rules")
 	errReasonTooLong    = common.ErrTooLong("reason")
+	errJSTooLong        = common.ErrTooLong("custom JavaScript")
 	errInvalidBoardName = errors.New("invalid board name")
 	errBoardNameTaken   = errors.New("board name taken")
 	errAccessDenied     = errors.New("access denied")
@@ -178,6 +179,8 @@ func validateBoardConfigs(
 		err = errRulesTooLong
 	case len(conf.Title) > common.MaxLenBoardTitle:
 		err = errTitleTooLong
+	case len(conf.Js) > common.MaxLenCustomJS:
+		err = errJSTooLong
 	}
 	if err == nil {
 		matched := false

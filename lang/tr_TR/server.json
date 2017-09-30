@@ -164,6 +164,10 @@
 			"IQDB",
 			"iqdb.org resim arama"
 		],
+		"js": [
+			"Custom JavaScript",
+			"Apply custom JavaScript to all pages on the board. Maximum of 5000 characters."
+		],
 		"janitors": [
 			"Janitors",
 			"Janitor account IDs. Janitors can only delete posts."

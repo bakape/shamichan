@@ -91,6 +91,7 @@
 		{% endif %}
 	</span>
 	{%= loadingImage(conf.ID) %}
+	{%= customJS(conf.Js) %}
 {% endstripspace %}{% endfunc %}
 
 CatalogThreads renders thread content for a catalog page. Separate function to
@@ -238,4 +239,11 @@ Link to a different paginated board page
 	<a href="?page={%d i %}">
 		{%s= text %}
 	</a>
+{% endstripspace %}{% endfunc %}
+
+Render board-owner-set custom JavaScript
+{% func customJS(js string) %}{% stripspace %}
+	{% if js != "" %}
+		<script id="custom-js">{%s= js %}</script>
+	{% endif %}
 {% endstripspace %}{% endfunc %}

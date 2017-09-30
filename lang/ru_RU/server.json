@@ -164,6 +164,10 @@
 			"IQDB",
 			"iqdb.org поиск по картинкам"
 		],
+		"js": [
+			"Custom JavaScript",
+			"Apply custom JavaScript to all pages on the board. Maximum of 5000 characters."
+		],
 		"janitors": [
 			"Помощники",
 			"Аккаунты помощников (могут только удалять посты)"

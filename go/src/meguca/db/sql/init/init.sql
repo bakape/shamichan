@@ -75,6 +75,7 @@ create table boards (
 	title varchar(100) not null,
 	notice varchar(500) not null,
 	rules varchar(5000) not null,
+	js varchar(5000) default '',
 	eightball text[] not null
 );
 
