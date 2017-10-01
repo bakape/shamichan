@@ -1,8 +1,11 @@
+#include "brunhild/init.hpp"
 #include "brunhild/mutations.hpp"
 #include <emscripten.h>
 
 int main()
 {
-    EM_ASM("document.getElementById('threads').innerHTML = 'Hello World!'");
+    init();
+
+    set_inner_html("threads", "Hello World!");
     return 0;
 }

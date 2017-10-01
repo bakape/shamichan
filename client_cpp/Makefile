@@ -1,9 +1,9 @@
 export EMCCFLAGS=-std=c++1z -s NO_EXIT_RUNTIME=1
 LTO=
 ifeq ($(DEBUG),1)
-	export EMCCFLAGS+= -g4
+	export EMCCFLAGS+= -g4 -s DEMANGLE_SUPPORT=1
 else
-	export EMCCFLAGS+= -Oz --closure 1 -s MODULARIZE=1 -g0
+	export EMCCFLAGS+= -Oz -g0
 	LTO=--llvm-lto 3
 endif
 
