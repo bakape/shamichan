@@ -1,6 +1,6 @@
 package templates
 
-// Maps country codes to english names
+// Maps country codes to English names
 var countryMap = map[string]string{"ad": "Andorra",
 	"ae": "United Arab Emirates",
 	"af": "Afghanistan",

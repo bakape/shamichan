@@ -28,3 +28,8 @@ db.db
 easyjson-bootstrap*.go
 GeoLite2-Country.mmdb
 package-lock.json
+*.wasm
+*.wast
+*.map
+*.bc
+client_cpp/*.js
