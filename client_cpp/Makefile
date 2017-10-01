@@ -7,7 +7,7 @@ else
 	LTO=--llvm-lto 3
 endif
 
-all: clean main.bc
+all: clean_output main.bc
 	$(MAKE) -C brunhild
 	emcc main.bc brunhild/*.bc -o linked.bc $(EMCCFLAGS) $(LTO)
 ifneq ($(DEBUG),1)
@@ -18,6 +18,9 @@ endif
 main.bc:
 	emcc $(EMCCFLAGS) main.cpp -o main.bc
 
-clean:
-	rm -f *.wasm *.wast *.js *.wasm.map *.js *.bc
+clean_output:
+	rm -f *.wasm *.wast *.js *.wasm.map *.js
+
+clean: clean_output
+	rm -rf *.bc
 	$(MAKE) -C brunhild clean

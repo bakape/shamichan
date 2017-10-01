@@ -2,8 +2,11 @@
 #include <emscripten.h>
 #include <set>
 
+namespace brunhild {
+using std::string;
+
 // All pending mutations quickly accessible by element ID
-unordered_map<string, Mutations> mutations;
+std::unordered_map<string, Mutations> mutations;
 
 // Stores mutation order, so we can somewhat make sure, new children are not
 // manipulated, before insertion.
@@ -210,4 +213,5 @@ void Mutations::exec(const string& id)
             },
             c_id, c_key);
     }
+}
 }
