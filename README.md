@@ -1,5 +1,8 @@
 [![GoDoc](https://godoc.org/github.com/bakape/meguca?status.svg)](https://godoc.org/github.com/bakape/meguca)
 
+# meguca
+real-time anonymous imageboard focused on high performance, free speech and transparent moderation
+
 Platforms: Linux, OSX, Win64
 
 License: GNU AGPL
