@@ -9,15 +9,15 @@ endif
 
 all: clean main.bc
 	$(MAKE) -C brunhild
+	emcc main.bc brunhild/*.bc -o linked.bc $(EMCCFLAGS) $(LTO)
 ifneq ($(DEBUG),1)
-	emcc main.bc brunhild/*.bc -o main.js --separate-asm -Wno-separate-asm $(EMCCFLAGS) $(LTO)
+	emcc linked.bc -o main.js --separate-asm -Wno-separate-asm $(EMCCFLAGS)
 endif
-	emcc main.bc brunhild/*.bc -o main.js -s WASM=1 $(EMCCFLAGS) $(LTO)
+	emcc linked.bc -o main.js -s WASM=1 $(EMCCFLAGS)
 
 main.bc:
 	emcc $(EMCCFLAGS) main.cpp -o main.bc
 
 clean:
-	rm -f *.wasm *.wast *.js *.wasm.map *.js
-	rm -f main.bc
+	rm -f *.wasm *.wast *.js *.wasm.map *.js *.bc
 	$(MAKE) -C brunhild clean
