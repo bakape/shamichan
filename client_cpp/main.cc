@@ -1,5 +1,5 @@
-#include "brunhild/init.hpp"
-#include "brunhild/mutations.hpp"
+#include "brunhild/init.hh"
+#include "brunhild/mutations.hh"
 
 int main()
 {

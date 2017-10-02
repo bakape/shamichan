@@ -1,6 +1,6 @@
-all: $(addsuffix .bc, $(basename $(wildcard *.cpp)))
+all: $(addsuffix .bc, $(basename $(wildcard *.cc)))
 
-%.bc: %.cpp
+%.bc: %.cc
 	emcc $(EMCCFLAGS) $^ -o $@
 
 clean:

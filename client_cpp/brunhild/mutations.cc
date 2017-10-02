@@ -1,4 +1,4 @@
-#include "mutations.hpp"
+#include "mutations.hh"
 #include <emscripten.h>
 #include <set>
 
@@ -91,11 +91,6 @@ extern "C" void flush()
     mutations.clear();
 }
 
-// Pass HTML to the JS side to modify the DOM
-#define pass_html(html, js)                                                    \
-    auto c_html = html.c_str();                                                \
-    EM_ASM_INT(js, c_id, c_html);
-
 void Mutations::exec(const string& id)
 {
     auto c_id = id.c_str();
@@ -105,28 +100,32 @@ void Mutations::exec(const string& id)
     // Before and after inserts need to happen, even if the element is going to
     // be removed
     for (auto& html : before) {
-        pass_html(html, {
-            var el = document.getElementById(Pointer_stringify($0));
-            if (!el) {
+        EM_ASM_INT(
+            {
+                var el = document.getElementById(Pointer_stringify($0));
+                if (!el) {
+                    return 0;
+                }
+                var cont = document.createElement('div');
+                cont.innerHTML = Pointer_stringify($1);
+                el.parentNode.insertBefore(cont.firstChild, el);
                 return 0;
-            }
-            var cont = document.createElement('div');
-            cont.innerHTML = Pointer_stringify($1);
-            el.parentNode.insertBefore(cont.firstChild, el);
-            return 0;
-        });
+            },
+            c_id, html.c_str());
     }
     for (auto& html : after) {
-        pass_html(html, {
-            var el = document.getElementById(Pointer_stringify($0));
-            if (!el) {
+        EM_ASM_INT(
+            {
+                var el = document.getElementById(Pointer_stringify($0));
+                if (!el) {
+                    return 0;
+                }
+                var cont = document.createElement('div');
+                cont.innerHTML = Pointer_stringify($1);
+                el.parentNode.insertBefore(cont.firstChild, el.nextSibling);
                 return 0;
-            }
-            var cont = document.createElement('div');
-            cont.innerHTML = Pointer_stringify($1);
-            el.parentNode.insertBefore(cont.firstChild, el.nextSibling);
-            return 0;
-        });
+            },
+            c_id, html.c_str());
     }
 
     if (remove_el) {
@@ -144,52 +143,58 @@ void Mutations::exec(const string& id)
     }
 
     if (set_outer_html.size()) {
-        pass_html(set_outer_html, {
-            var el = document.getElementById(Pointer_stringify($0));
-            if (el) {
-                el.outerHTML = Pointer_stringify($1);
-            }
-            return 0;
-        });
+        EM_ASM_INT(
+            {
+                var el = document.getElementById(Pointer_stringify($0));
+                if (el) {
+                    el.outerHTML = Pointer_stringify($1);
+                }
+                return 0;
+            },
+            c_id, set_outer_html.c_str());
     }
     if (set_inner_html.size()) {
-        pass_html(set_inner_html, {
-            var el = document.getElementById(Pointer_stringify($0));
-            if (el) {
-                el.innerHTML = Pointer_stringify($1);
-            }
-            return 0;
-        });
+        EM_ASM_INT(
+            {
+                var el = document.getElementById(Pointer_stringify($0));
+                if (el) {
+                    el.innerHTML = Pointer_stringify($1);
+                }
+                return 0;
+            },
+            c_id, set_inner_html.c_str());
     }
 
     for (auto& html : append) {
-        pass_html(html, {
-            var el = document.getElementById(Pointer_stringify($0));
-            if (!el) {
+        EM_ASM_INT(
+            {
+                var el = document.getElementById(Pointer_stringify($0));
+                if (!el) {
+                    return 0;
+                }
+                var cont = document.createElement('div');
+                cont.innerHTML = Pointer_stringify($1);
+                el.parentNode.insertBefore(cont.firstChild, el.nextSibling);
                 return 0;
-            }
-            var cont = document.createElement('div');
-            cont.innerHTML = Pointer_stringify($1);
-            el.parentNode.insertBefore(cont.firstChild, el.nextSibling);
-            return 0;
-        });
+            },
+            c_id, html.c_str());
     }
     for (auto& html : prepend) {
-        pass_html(html, {
-            var el = document.getElementById(Pointer_stringify($0));
-            if (!el) {
+        EM_ASM_INT(
+            {
+                var el = document.getElementById(Pointer_stringify($0));
+                if (!el) {
+                    return 0;
+                }
+                var cont = document.createElement('div');
+                cont.innerHTML = Pointer_stringify($1);
+                el.insertBefore(cont.firstChild, el.firstChild);
                 return 0;
-            }
-            var cont = document.createElement('div');
-            cont.innerHTML = Pointer_stringify($1);
-            el.insertBefore(cont.firstChild, el.firstChild);
-            return 0;
-        });
+            },
+            c_id, html.c_str());
     }
 
     for (auto& kv : set_attr) {
-        auto key = kv.first.c_str();
-        auto val = kv.second.c_str();
         EM_ASM_INT(
             {
                 var el = document.getElementById(Pointer_stringify($0));
@@ -199,10 +204,9 @@ void Mutations::exec(const string& id)
                 }
                 return 0;
             },
-            c_id, key, val);
+            c_id, kv.first.c_str(), kv.second.c_str());
     }
     for (auto& key : remove_attr) {
-        auto c_key = key.c_str();
         EM_ASM_INT(
             {
                 var el = document.getElementById(Pointer_stringify($1));
@@ -211,7 +215,7 @@ void Mutations::exec(const string& id)
                 }
                 return 0;
             },
-            c_id, c_key);
+            c_id, key.c_str());
     }
 }
 }

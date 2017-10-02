@@ -16,7 +16,7 @@ endif
 	emcc linked.bc -o main.js -s WASM=1 $(EMCCFLAGS)
 
 main.bc:
-	emcc $(EMCCFLAGS) main.cpp -o main.bc
+	emcc $(EMCCFLAGS) main.cc -o main.bc
 
 clean_output:
 	rm -f *.wasm *.wast *.js *.wasm.map *.js
