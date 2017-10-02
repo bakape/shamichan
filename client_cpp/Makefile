@@ -1,4 +1,4 @@
-export EMCCFLAGS=-std=c++1z -s NO_EXIT_RUNTIME=1
+export EMCCFLAGS=-std=c++11 -s NO_EXIT_RUNTIME=1
 LTO=
 ifeq ($(DEBUG),1)
 	export EMCCFLAGS+= -g4 -s DEMANGLE_SUPPORT=1
