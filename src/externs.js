@@ -1,16 +1,6 @@
 'use strict'
 
 mergeInto(LibraryManager.library, {
-	local_storage_set: function (key, val) {
-		localStorage.setItem(Pointer_stringify(key), Pointer_stringify(val))
-	},
-	local_storage_get: function (key) {
-		var s = localStorage.getItem(Pointer_stringify(key)) || ""
-		var len = s.length + 1
-		var buf = Module._malloc(len)
-		stringToUTF8(s, buf, len)
-		return buf
-	},
 	page_path: function () {
 		var s = location.pathname
 		var len = s.length + 1
