@@ -43,12 +43,5 @@ mergeInto(LibraryManager.library, {
 				])
 			})
 			.then(Module.cwrap("render_page", null, []))
-	},
-	get_config: function () {
-		var s = JSON.stringify(window.config)
-		var len = s.length + 1
-		var buf = Module._malloc(len)
-		stringToUTF8(s, buf, len)
-		return buf
 	}
 })

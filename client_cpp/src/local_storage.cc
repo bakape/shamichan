@@ -1,5 +1,5 @@
-#include "local_storage.hh"
 #include <emscripten.h>
+#include <string>
 
 using std::string;
 

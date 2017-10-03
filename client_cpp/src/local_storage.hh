@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string>
 
 void local_storage_set(const std::string key, const std::string val);
