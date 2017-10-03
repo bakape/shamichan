@@ -1,5 +1,5 @@
 #include "state.hh"
-#include "../json.hh"
+#include "json.hh"
 
 using json = nlohmann::json;
 
