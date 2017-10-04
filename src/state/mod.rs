@@ -19,89 +19,13 @@ thread_local!{
 
 #[derive(Default)]
 pub struct State {
-    pub board_configs: BoardConfigs,
     pub options: options::Options,
-    pub page: Page,
     pub thread: Option<ThreadState>,
     pub seen_posts: HashSet<u64>,
     pub seen_replies: HashSet<u64>,
     pub mine: HashSet<u64>,
     pub hidden: HashSet<u64>,
     pub posts: HashMap<u64, Post>,
-}
-
-// Board-specific configurations
-#[derive(Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct BoardConfigs {
-    pub read_only: bool,
-    pub text_only: bool,
-    pub forced_anon: bool,
-    pub title: String,
-    pub notice: String,
-    pub rules: String,
-}
-
-// Describes the current page
-#[derive(Default)]
-pub struct Page {
-    catalog: bool,
-    thread: u64,
-    last_n: u32,
-    page: u32,
-    board: String,
-}
-
-impl Page {
-    // Parse page URL
-    pub fn from_url(path: &str, query: &str) -> Page {
-        let mut path_split = path[1..].split("/");
-        let board = path_split.next().unwrap();
-        let (thread, catalog): (u64, bool) = match path_split.next() {
-            Some(s) => {
-                if s == "catalog" {
-                    (0, true)
-                } else {
-                    match s.parse::<u64>() {
-                        Ok(id) => (id, false),
-                        _ => (0, false),
-                    }
-                }
-            }
-            None => (0, false),
-        };
-
-        let mut page = 0u32;
-        let mut last_n = 0u32;
-        if query != "" {
-            let mut split = query[1..].split("&");
-            let mut parse = |key: &str| match split.find(|q| q.starts_with(key)) {
-                Some(q) => {
-                    match q.split("=").last() {
-                        Some(i) => {
-                            match i.parse::<u32>() {
-                                Ok(i) => i,
-                                _ => 0,
-                            }
-                        }
-                        None => 0,
-                    }
-                }
-                None => 0,
-            };
-
-            page = parse("page");
-            last_n = parse("last");
-        }
-
-        Page {
-            thread,
-            catalog,
-            page,
-            last_n,
-            board: board.to_string(),
-        }
-    }
 }
 
 // Thread-specific state of the page
@@ -124,7 +48,6 @@ enum Store {
 pub fn load() -> Result<(), serde_json::Error> {
     with_state(|state| {
         state.options = options::load();
-        state.page = Page::from_url(&from_C_string!(page_path()), &from_C_string!(page_query()));
 
         // Parse post JSON into application state
         let s = get_inner_html("post-data");

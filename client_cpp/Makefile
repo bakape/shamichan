@@ -1,5 +1,6 @@
 # -Winvalid-pp-token triggers on empty JS strings in macros
-export EMCCFLAGS=-std=c++11 -s NO_EXIT_RUNTIME=1 -Wno-invalid-pp-token
+WARNINGS=-Wall -Wextra -Wno-sign-compare -Wno-invalid-pp-token
+export EMCCFLAGS=-std=c++11 --bind  -s NO_EXIT_RUNTIME=1 $(WARNINGS)
 LTO=
 ifeq ($(DEBUG),1)
 	export EMCCFLAGS+= -g4 -s DEMANGLE_SUPPORT=1

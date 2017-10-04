@@ -1,20 +1,6 @@
 'use strict'
 
 mergeInto(LibraryManager.library, {
-	page_path: function () {
-		var s = location.pathname
-		var len = s.length + 1
-		var buf = Module._malloc(len)
-		stringToUTF8(s, buf, len)
-		return buf
-	},
-	page_query: function () {
-		var s = location.search
-		var len = s.length + 1
-		var buf = Module._malloc(len)
-		stringToUTF8(s, buf, len)
-		return buf
-	},
 	load_db: function (threads, len) {
 		// The original array will be freed on the Rust side after db.open()
 		var ops = new Array(len)

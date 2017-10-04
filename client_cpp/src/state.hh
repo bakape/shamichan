@@ -6,7 +6,7 @@
 using std::string;
 using std::unordered_map;
 
-// Server-wide global configurations
+// Public server-wide global configurations
 class Config {
 public:
     bool captcha, mature, disable_user_boards, prune_threads;
@@ -20,3 +20,39 @@ public:
 
 // Server-wide global configuration, that affects the client
 extern Config* config;
+
+// Public board-specific configurations
+class BoardConfig {
+public:
+    bool read_only, text_only, forced_anon;
+    string title, notice, rules;
+
+    // Parse JSON string
+    BoardConfig(const string&);
+};
+
+// Public board-specific configurations
+extern BoardConfig* board_config;
+
+// Describes the current page
+class Page {
+public:
+    bool catalog;
+    unsigned int last_n, page;
+    uint64_t thread;
+    string board;
+
+    // Detect the current page, by reading the current URL
+    void detect();
+
+private:
+    // Find a numeric query parameter and parse it.
+    // Returns 0, if none found.
+    unsigned int find_query_param(const string& query, const string& param);
+};
+
+// Describes the current page
+extern Page* page;
+
+// Load initial application state
+void load_state();
