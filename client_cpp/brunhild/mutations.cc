@@ -56,7 +56,7 @@ void remove(string id)
 void set_attr(string id, string key, string val)
 {
     auto& mut = mutations[id];
-    mut.set_attr[id] = key;
+    mut.set_attr[key] = val;
     mutation_order.insert(id);
 }
 
