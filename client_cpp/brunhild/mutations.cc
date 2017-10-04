@@ -63,8 +63,8 @@ void set_attr(string id, string key, string val)
 void remove_attr(string id, string key)
 {
     auto& mut = mutations[id];
-    mut.set_attr.erase(id);
-    mutation_order.insert(id);
+    mut.set_attr.erase(key);
+    mutation_order.insert(key);
 }
 
 void Mutations::free_inner()

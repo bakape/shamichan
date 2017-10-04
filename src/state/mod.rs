@@ -101,8 +101,6 @@ where
 }
 
 extern "C" {
-    fn page_path() -> *mut c_char;
-    fn page_query() -> *mut c_char;
     fn load_db(threads: *const uint64_t, len: c_int);
 }
 
