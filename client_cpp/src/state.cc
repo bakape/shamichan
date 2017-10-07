@@ -1,4 +1,5 @@
 #include "state.hh"
+#include "db.hh"
 #include "json.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
@@ -9,9 +10,14 @@ using emscripten::val;
 Config* config = nullptr;
 BoardConfig* board_config = nullptr;
 Page* page = nullptr;
+PostIDs* post_ids = nullptr;
 
 void load_state()
 {
+    // Loading is mostly async, so get it started faster
+    post_ids = new PostIDs{};
+    load_db();
+
     // TODO: This should be read from a concurrent server fetch
     const char* conf = (char*)EM_ASM_INT_V({
         var s = JSON.stringify(window.config);
@@ -106,4 +112,27 @@ unsigned int Page::find_query_param(const string& query, const string& param)
     i += param.size() + 1;
     const string s = query.substr(i, query.find_first_of('&', i));
     return std::stoul(s);
+}
+
+void add_to_storage(int typ, const uint64_t* ids, size_t len)
+{
+    std::unordered_set<uint64_t>* set = nullptr;
+    switch (static_cast<StorageType>(typ)) {
+    case StorageType::mine:
+        set = &post_ids->mine;
+        break;
+    case StorageType::seen_posts:
+        set = &post_ids->seen_posts;
+        break;
+    case StorageType::seen_replies:
+        set = &post_ids->seen_replies;
+        break;
+    case StorageType::hidden:
+        set = &post_ids->hidden;
+        break;
+    }
+    set->reserve(set->size() + len / sizeof(uint64_t));
+    for (int i = 0; i < len; i++) {
+        set->insert(*(ids + i * sizeof(uint64_t)));
+    }
 }

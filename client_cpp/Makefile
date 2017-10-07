@@ -3,7 +3,9 @@ WARNINGS=-Wall -Wextra -Wno-sign-compare -Wno-invalid-pp-token
 export EMCCFLAGS=-std=c++1z --bind  -s NO_EXIT_RUNTIME=1 $(WARNINGS)
 LTO=
 ifeq ($(DEBUG),1)
-	export EMCCFLAGS+= -g4 -s DEMANGLE_SUPPORT=1
+	# -O0 is too large to load in the browser. Fails with:
+	# LinkError: table import 128 has maximum larger than maximum 24960
+	export EMCCFLAGS+= -O1 -g4 -s DEMANGLE_SUPPORT=1
 else
 	export EMCCFLAGS+= -Oz -g0
 	LTO=--llvm-lto 3

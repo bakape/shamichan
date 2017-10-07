@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 using std::string;
 using std::unordered_map;
@@ -56,3 +57,19 @@ extern Page* page;
 
 // Load initial application state
 void load_state();
+
+// Stores post ID of various catagories
+struct PostIDs {
+    std::unordered_set<uint64_t> mine, // Post, the user has created
+        seen_replies, // Replies to the user's posts, the user has seen
+        seen_posts, // Posts the user has seen
+        hidden; // Posts the user has hidden
+};
+
+extern PostIDs* post_ids;
+
+// Types of post ID storage in the database
+enum class StorageType : int { mine, seen_replies, seen_posts, hidden };
+
+// Add thread IDs of the specified type to post ID sets on the C++ side
+void add_to_storage(int typ, const uint64_t* ids, size_t len);

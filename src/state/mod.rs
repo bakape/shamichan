@@ -21,10 +21,6 @@ thread_local!{
 pub struct State {
     pub options: options::Options,
     pub thread: Option<ThreadState>,
-    pub seen_posts: HashSet<u64>,
-    pub seen_replies: HashSet<u64>,
-    pub mine: HashSet<u64>,
-    pub hidden: HashSet<u64>,
     pub posts: HashMap<u64, Post>,
 }
 
@@ -34,15 +30,6 @@ pub struct ThreadState {
     image_count: u64,
     reply_time: u64,
     bump_time: u64,
-}
-
-// Type of internal ID storage
-#[repr(i32)]
-enum Store {
-    Mine,
-    SeenReplies,
-    SeenPosts,
-    Hidden,
 }
 
 pub fn load() -> Result<(), serde_json::Error> {
@@ -98,22 +85,4 @@ where
     F: FnOnce(&mut State) -> R,
 {
     STATE.with(|r| func(r.borrow_mut().borrow_mut()))
-}
-
-extern "C" {
-    fn load_db(threads: *const uint64_t, len: c_int);
-}
-
-// Set internal post ID storage set from array
-#[no_mangle]
-pub extern "C" fn set_store(typ: c_int, ids: *mut uint64_t, len: usize) {
-    with_state(|state| {
-        let it = unsafe { slice::from_raw_parts(ids, len) }.iter();
-        match unsafe { transmute(typ) } {
-            Store::Mine => state.mine.extend(it),
-            Store::SeenReplies => state.seen_replies.extend(it),
-            Store::SeenPosts => state.seen_posts.extend(it),
-            Store::Hidden => state.hidden.extend(it),
-        };
-    });
 }
