@@ -2,6 +2,7 @@
 package imager
 
 import (
+	"bytes"
 	"crypto/md5"
 	"crypto/sha1"
 	"database/sql"
@@ -76,7 +77,7 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 // UploadImageHash attempts to skip image upload, if the file has already
-// been thumbnailed and is stored on the server. The client sends and SHA1 hash
+// been thumbnailed and is stored on the server. The client sends an SHA1 hash
 // of the file it wants to upload. The server looks up, if such a file is
 // thumbnailed. If yes, generates and sends a new image allocation token to
 // the client.
@@ -132,10 +133,13 @@ func ParseUpload(req *http.Request) (int, string, error) {
 	}
 	defer file.Close()
 
-	data, err := ioutil.ReadAll(file)
+	buf := bytes.NewBuffer(thumbnailer.GetBuffer())
+	_, err = buf.ReadFrom(file)
 	if err != nil {
 		return 500, "", err
 	}
+	data := buf.Bytes()
+	defer thumbnailer.ReturnBuffer(data)
 
 	sum := sha1.Sum(data)
 	SHA1 := hex.EncodeToString(sum[:])
@@ -195,6 +199,11 @@ func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
 	default:
 		return 500, "", err
 	}
+	defer func() {
+		if thumb != nil {
+			thumbnailer.ReturnBuffer(thumb)
+		}
+	}()
 
 	// Some media has retardedly long meta strings. Just truncate them, instead
 	// of rejecting.

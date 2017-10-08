@@ -1,8 +1,8 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
-	"io/ioutil"
 	"meguca/assets"
 	"meguca/auth"
 	"meguca/common"
@@ -135,6 +135,7 @@ func setBanners(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			return
 		}
+		defer thumbnailer.ReturnBuffer(out.Data)
 		banners = append(banners, out)
 	}
 
@@ -170,6 +171,8 @@ func parseAssetForm(w http.ResponseWriter, r *http.Request, maxSize uint) (
 
 // Read a file from an asset submition form.
 // If ok == false, caller should return.
+// Call thumbnailer.ReturnBuffer() on out.Data to return the buffer to the
+// memory pool.
 func readAssetFile(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -182,17 +185,19 @@ func readAssetFile(
 ) {
 	defer f.Close()
 
-	buf, err := ioutil.ReadAll(f)
+	_buf := bytes.NewBuffer(thumbnailer.GetBuffer())
+	_, err := _buf.ReadFrom(f)
 	if err != nil {
 		text500(w, r, err)
 		return
 	}
+	buf := _buf.Bytes()
 	if len(buf) > common.MaxAssetSize {
 		sendFileError(w, h, "too large")
 		return
 	}
 
-	src, _, err := thumbnailer.ProcessBuffer(buf, opts)
+	src, thumb, err := thumbnailer.ProcessBuffer(buf, opts)
 	switch {
 	case err != nil:
 		sendFileError(w, h, err.Error())
@@ -204,6 +209,9 @@ func readAssetFile(
 			Data: buf,
 			Mime: src.Mime,
 		}
+	}
+	if thumb.Data != nil {
+		thumbnailer.ReturnBuffer(thumb.Data)
 	}
 	return
 }
@@ -235,6 +243,7 @@ func setLoadingAnimation(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			return
 		}
+		defer thumbnailer.ReturnBuffer(out.Data)
 	case http.ErrMissingFile:
 		err = nil
 	default:
