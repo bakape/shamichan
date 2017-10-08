@@ -4,8 +4,7 @@ import { page, posts, loadFromDB, displayLoading } from '../state'
 import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
 import {
-	extractConfigs, localizeThreads, extractPost, reparseOpenPosts,
-	extractPageData, hidePosts,
+	extractConfigs, extractPost, reparseOpenPosts, extractPageData, hidePosts,
 } from "./common"
 import { ThreadData } from "../common"
 
@@ -80,7 +79,6 @@ async function extractThreads() {
 		}
 	}
 	hidePosts()
-	localizeThreads()
 	reparseOpenPosts()
 }
 

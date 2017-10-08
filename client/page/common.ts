@@ -5,9 +5,6 @@ import { Post, PostView, hideRecursively } from "../posts"
 import lang from "../lang"
 import { postAdded, notifyAboutReply } from "../ui"
 import { extractJSON } from "../util"
-import { posterName } from "../options"
-
-const threads = document.getElementById("threads")
 
 // Find board configurations in the HTML and apply them
 export function extractConfigs() {
@@ -51,6 +48,10 @@ export function extractPost(
 	// Render time-zone correction or relative time. Will do unneeded work,
 	// if client is on UTC. Meh.
 	view.renderTime()
+
+	// There are many client-side localizations for names, so best rerender
+	// them all.
+	view.renderName()
 
 	localizeLinks(model)
 	localizeBacklinks(model)
@@ -125,20 +126,6 @@ export function hidePosts() {
 	for (let post of posts) {
 		if (hidden.has(post.id)) {
 			hideRecursively(post)
-		}
-	}
-}
-
-// Apply extra client-side localizations
-export function localizeThreads() {
-	let name = posterName()
-	if (name || options.anonymise) {
-		if (!name) {
-			name = lang.posts["anon"]
-		}
-		const s = `<span>${name}</span>`
-		for (let el of threads.querySelectorAll(".name")) {
-			el.innerHTML = s
 		}
 	}
 }

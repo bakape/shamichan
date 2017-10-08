@@ -7,7 +7,7 @@ import ImageHandler from "./images"
 import { ViewAttrs } from "../base"
 import { findSyncwatches } from "./syncwatch"
 import lang from "../lang"
-import { page } from "../state"
+import { page, mine } from "../state"
 import options from "../options"
 import countries from "./countries"
 
@@ -207,7 +207,7 @@ export default class PostView extends ImageHandler {
         }
 
         let html = ""
-        const { trip, name, auth, sage, posterID } = this.model
+        const { trip, name, auth, sage, posterID, id } = this.model
         if (name || !trip) {
             html += `<span>${name ? escape(name) : lang.posts["anon"]}</span>`
         }
@@ -220,6 +220,9 @@ export default class PostView extends ImageHandler {
         if (auth) { // Render staff title
             el.classList.add("admin")
             html += `<span>## ${lang.posts[auth] || "??"}</span>`
+        }
+        if (mine.has(id)) {
+            html += `<i>${lang.posts["you"]}</i>`
         }
         el.classList.toggle("sage", !!sage)
         el.innerHTML = html
