@@ -138,7 +138,7 @@ func startServer() {
 		}
 	}
 	load(db.LoadDB, assets.CreateDirs, geoip.Load)
-	load(lang.Load)
+	load(lang.Load, listenToThreadDeletion)
 	load(templates.Compile)
 
 	if err := startWebServer(); err != nil {

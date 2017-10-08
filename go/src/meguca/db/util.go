@@ -133,7 +133,7 @@ func getQuery(id string) string {
 }
 
 // Assigns a function to listen to Postgres notifications on a channel
-func listenFunc(event string, fn func(msg string) error) (err error) {
+func Listen(event string, fn func(msg string) error) (err error) {
 	if IsTest {
 		return
 	}

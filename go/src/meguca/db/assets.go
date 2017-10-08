@@ -54,7 +54,7 @@ func loadBanners() (err error) {
 		assets.Banners.Set(board, files)
 	}
 
-	return listenFunc("banners_updated", updateBanners)
+	return Listen("banners_updated", updateBanners)
 }
 
 // Load all assets by prepared query key and pass them to fn one by one
@@ -152,7 +152,7 @@ func loadLoadingAnimations() (err error) {
 		return
 	}
 
-	return listenFunc("loading_animation_updated", updateLoadingAnimation)
+	return Listen("loading_animation_updated", updateLoadingAnimation)
 }
 
 func updateLoadingAnimation(board string) (err error) {

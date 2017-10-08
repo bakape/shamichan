@@ -25,7 +25,7 @@ func loadConfigs() error {
 	}
 	config.Set(conf)
 
-	return listenFunc("config_updates", updateConfigs)
+	return Listen("config_updates", updateConfigs)
 }
 
 // GetConfigs retrieves global configurations. Only used in tests.
@@ -64,7 +64,7 @@ func loadBoardConfigs() error {
 		return err
 	}
 
-	return listenFunc("board_updated", updateBoardConfigs)
+	return Listen("board_updated", updateBoardConfigs)
 }
 
 func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {

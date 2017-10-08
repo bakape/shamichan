@@ -1,2 +1,2 @@
-select max(replyTime) from threads
+select max(replyTime) + count(*) from threads
 	where board = $1

@@ -4,6 +4,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"meguca/cache"
 	"meguca/common"
 	"meguca/config"
@@ -11,6 +12,7 @@ import (
 	"meguca/templates"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Contains data of a board page
@@ -216,4 +218,27 @@ func boardCacheArgs(r *http.Request, board string, catalog bool) (
 		f = boardPageCache
 	}
 	return
+}
+
+// Start cache upkeep proccesses. Requires a ready DB connection.
+func listenToThreadDeletion() error {
+	return db.Listen("thread_deleted", func(msg string) (err error) {
+		split := strings.Split(msg, ":")
+		if len(split) != 2 {
+			return fmt.Errorf("unparsable thread deletion message: '%s'", msg)
+		}
+		board := split[0]
+		id, err := strconv.ParseUint(split[1], 10, 64)
+		if err != nil {
+			return
+		}
+
+		// Clear all cache records associated with a thread
+		for _, i := range [...]int{0, 5, 100} {
+			cache.Delete(cache.ThreadKey(id, i))
+		}
+		cache.DeleteByBoard(board)
+
+		return nil
+	})
 }

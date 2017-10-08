@@ -78,7 +78,7 @@ func loadBans() error {
 	if err := RefreshBanCache(); err != nil {
 		return err
 	}
-	return listenFunc("bans_updated", func(_ string) error {
+	return Listen("bans_updated", func(_ string) error {
 		return RefreshBanCache()
 	})
 }
