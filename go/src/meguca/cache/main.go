@@ -72,10 +72,14 @@ func Clear() {
 }
 
 // Update the total used memory counter and evict, if over limit
-func updateUsedSize(delta int) {
+func updateUsedSize(k Key, delta int) {
 	mu.Lock()
 	defer mu.Unlock()
 
+	// Guard against asynchronous double eviction
+	if _, ok := cache[k]; !ok {
+		return
+	}
 	totalUsed += delta
 
 	for totalUsed > int(Size)*(1<<20) {
@@ -110,7 +114,7 @@ func (s *store) update(data interface{}, json, html []byte, f FrontEnd) {
 	s.sizeMu.Unlock()
 
 	// In a separate goroutine, to ensure there is never any lock intersection
-	go updateUsedSize(delta)
+	go updateUsedSize(s.key, delta)
 }
 
 // Calculating the actual memory footprint of the stored post data is expensive.
