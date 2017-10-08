@@ -113,12 +113,12 @@ func TestPostJSON(t *testing.T) {
 			name: "valid thread",
 			url:  "/boards/a/1",
 			code: 200,
-			etag: "W/12",
+			etag: "W/11",
 		},
 		{
 			name:   "thread etags match",
 			url:    "/boards/a/1",
-			header: "W/12",
+			header: "W/11",
 			code:   304,
 		},
 		{
