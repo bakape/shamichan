@@ -32,7 +32,6 @@ const tasks = []
 // Client JS files
 buildES6()
 buildES5()
-buildDB()
 
 // Various little scripts
 createTask('scripts', 'clientScripts/*.js', src =>
@@ -89,29 +88,6 @@ function buildES6() {
 	// Recompile on source update, if running with the `-w` flag
 	if (watch) {
 		gulp.watch('client/**/*.ts', [name])
-	}
-}
-
-// Wrapper for accessing IndexedDB from WASM
-function buildDB() {
-	const name = 'db'
-	tasks.push(name)
-	gulp.task(name, () =>
-		gulp.src('client/db.ts')
-			.pipe(sourcemaps.init())
-			.pipe(ts.createProject('client/tsconfig.json', {
-				typescript: require("typescript"),
-				outFile: "wasm/db.js",
-			})())
-			.on('error', handleError)
-			.pipe(uglify())
-			.on('error', handleError)
-			.pipe(sourcemaps.write('maps'))
-			.pipe(gulp.dest('www/wasm')))
-
-	// Recompile on source update, if running with the `-w` flag
-	if (watch) {
-		gulp.watch('client/db.ts', [name])
 	}
 }
 
