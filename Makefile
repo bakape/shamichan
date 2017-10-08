@@ -73,7 +73,7 @@ update_deps:
 	npm update
 
 client_clean:
-	rm -rf www/js www/wasm www/css/*.css www/css/maps www/lang node_modules
+	rm -rf www/js www/wasm www/css/*.css www/css/maps node_modules
 
 clean: client_clean clean_wasm
 	rm -rf .build .ffmpeg .package target meguca-*.zip meguca-*.tar.xz meguca meguca.exe

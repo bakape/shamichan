@@ -15,7 +15,6 @@
     "gulp": "^3.8.11",
     "gulp-babel": "^6.1.2",
     "gulp-cssnano": "^2.0.0",
-    "gulp-jsonminify": "^1.0.0",
     "gulp-less": "^3.0.1",
     "gulp-rename": "^1.2.2",
     "gulp-sourcemaps": "^2.2.0",

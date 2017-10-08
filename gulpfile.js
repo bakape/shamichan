@@ -5,7 +5,6 @@
 const babel = require("gulp-babel"),
 	gulp = require('gulp'),
 	gutil = require('gulp-util'),
-	jsonminify = require('gulp-jsonminify'),
 	less = require('gulp-less'),
 	nano = require('gulp-cssnano'),
 	rename = require('gulp-rename'),
@@ -63,14 +62,6 @@ createTask('scripts', 'clientScripts/*.js', src =>
 			gulp.start('css'))
 	}
 }
-
-// Language packs
-createTask('lang', 'lang/**/*.json', src =>
-	src
-		.pipe(jsonminify())
-		.on('error', handleError)
-		.pipe(gulp.dest('www/lang'))
-)
 
 gulp.task('default', tasks)
 
