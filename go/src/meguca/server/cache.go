@@ -238,6 +238,7 @@ func listenToThreadDeletion() error {
 			cache.Delete(cache.ThreadKey(id, i))
 		}
 		cache.DeleteByBoard(board)
+		cache.DeleteByBoard("all")
 
 		return nil
 	})
