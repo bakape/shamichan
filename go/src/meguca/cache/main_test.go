@@ -11,7 +11,7 @@ import (
 // Basic test for deadlocks
 func TestConcurrency(t *testing.T) {
 	Clear()
-	Size = 0.00000001
+	Size = 1
 
 	f := FrontEnd{
 		GetCounter: func(k Key) (uint64, error) {

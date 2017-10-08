@@ -66,7 +66,7 @@ func Clear() {
 	mu.Lock()
 	defer mu.Unlock()
 
-	ll = list.New()
+	ll = ll.Init()
 	cache = make(map[Key]*list.Element, 10)
 	totalUsed = 0
 }
