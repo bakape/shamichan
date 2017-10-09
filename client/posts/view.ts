@@ -230,6 +230,8 @@ export default class PostView extends ImageHandler {
 
     // Render "USER WAS BANNED FOR THIS POST" message
     public renderBanned() {
+        this.uncheckModerationBox()
+
         const el = firstChild(this.el.querySelector(".post-container"), el =>
             el.classList.contains("banned"))
         if (el) {
@@ -255,6 +257,7 @@ export default class PostView extends ImageHandler {
     // Render indications that a post had been deleted
     public renderDeleted() {
         this.el.classList.add("deleted")
+        this.uncheckModerationBox()
     }
 
     // Render the sticky status of a thread OP
