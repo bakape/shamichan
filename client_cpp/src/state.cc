@@ -114,9 +114,9 @@ unsigned int Page::find_query_param(const string& query, const string& param)
     return std::stoul(s);
 }
 
-void add_to_storage(int typ, const uint64_t* ids, size_t len)
+void add_to_storage(int typ, const std::vector<unsigned long> ids)
 {
-    std::unordered_set<uint64_t>* set = nullptr;
+    std::unordered_set<unsigned long>* set = nullptr;
     switch (static_cast<StorageType>(typ)) {
     case StorageType::mine:
         set = &post_ids->mine;
@@ -131,8 +131,6 @@ void add_to_storage(int typ, const uint64_t* ids, size_t len)
         set = &post_ids->hidden;
         break;
     }
-    set->reserve(set->size() + len / sizeof(uint64_t));
-    for (int i = 0; i < len; i++) {
-        set->insert(*(ids + i * sizeof(uint64_t)));
-    }
+    set->reserve(set->size() + ids.size());
+    set->insert(ids.begin(), ids.end());
 }

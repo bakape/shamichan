@@ -14,7 +14,7 @@ endif
 all: clean_output
 	$(MAKE) -C brunhild
 	$(MAKE) -C src
-	emcc src/*.bc brunhild/*.bc -o linked.bc $(EMCCFLAGS) $(LTO)
+	emcc src/*.bc src/page/*.bc brunhild/*.bc -o linked.bc $(EMCCFLAGS) $(LTO)
 ifneq ($(DEBUG),1)
 	emcc linked.bc -o main.js --separate-asm -Wno-separate-asm $(EMCCFLAGS)
 endif

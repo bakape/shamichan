@@ -1,10 +1,8 @@
+#include "state.hh"
 #include <emscripten.h>
-#include <emscripten/bind.h>
 #include <string>
 #include <unordered_set>
 #include <vector>
-
-using emscripten::val;
 
 const int db_version = 7;
 
@@ -13,7 +11,7 @@ bool has_errored = false;
 
 // Threads to load on the call from db_is_ready(). Keeps us from passing the
 // thread ID array to JS, when opening the thread.
-std::vector<uint64_t>* threads_to_load = nullptr;
+std::vector<unsigned long>* threads_to_load = nullptr;
 
 // TODO: Deal with Firefox private Module
 void load_db()
@@ -24,12 +22,12 @@ void load_db()
             window.postStores = ([
                 // Posts created by this client
                 'mine',
-                // Posts hidden by client
-                'hidden',
                 // Replies to the user's posts that have already been seen
                 'seen',
                 // Posts that the user has viewed or scrolled past
                 'seenPost',
+                // Posts hidden by client
+                'hidden',
             ]);
 
             window.handle_db_error = function(e)
@@ -113,15 +111,47 @@ void load_db()
         db_version);
 }
 
-void load_post_ids(const std::vector<uint64_t>& threads)
+void load_post_ids(const std::vector<unsigned long>& threads)
 {
+    if (!threads.size() || has_errored) {
+        return;
+    }
+
     EM_ASM_INT(
         {
-            var ops = new Array($1);
+            var left = $1 * postStores.length;
+
             for (var i = 0; i < $1; i++) {
-                ops[i] = getValue($0 + i * 8, 'i64')
+                var id = getValue($0 + i * 8, 'i64');
+                for (var j = 0; j < postStores.length; j++) {
+                    read(id, j, postStores[j]);
+                }
             }
 
+            // Need to scope variables to function, because async. ES5 a shit.
+            function read(op, typ, name)
+            {
+                var ids = new Module.VectorUint64();
+                var t = db.transaction(name, "readonly");
+                t.onerror = handle_db_error;
+
+                var range = IDBKeyRange.bound(op, op);
+                var req = t.objectStore(name).index("op").openCursor(range);
+                req.onerror = handle_db_error;
+                req.onsuccess = function(event)
+                {
+                    var cursor = event.target.result;
+                    if (cursor) {
+                        ids.push_back(cursor.value.id);
+                        cursor.continue();
+                    } else {
+                        Module.add_to_storage(typ, ids);
+                        if (--left == 0) {
+                            Module.render_page();
+                        }
+                    }
+                };
+            }
         },
         threads.data(), threads.size());
 }
@@ -135,14 +165,8 @@ void handle_db_error(std::string err)
 void db_is_ready()
 {
     // TODO: Load actual thread IDS from post data
-    threads_to_load = new std::vector<uint64_t>;
-    threads_to_load->push_back(73);
+    threads_to_load = new std::vector<unsigned long>;
+    threads_to_load->push_back(108);
     load_post_ids(*threads_to_load);
     delete threads_to_load;
-}
-
-EMSCRIPTEN_BINDINGS(module)
-{
-    emscripten::function("handle_db_error", &handle_db_error);
-    emscripten::function("db_is_ready", &db_is_ready);
 }
