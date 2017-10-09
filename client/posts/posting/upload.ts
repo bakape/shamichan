@@ -49,7 +49,7 @@ export default class UploadForm extends View<Post> {
         if (!navigator.onLine || this.isUploading) {
             return null
         }
-        if (file.size > config.maxSize) {
+        if (file.size > (config.maxSize << 20)) {
             this.status.textContent = "file too large"
             return null
         }
