@@ -185,7 +185,7 @@ ThreadDecoder::ThreadDecoder(json& j)
     image_ctr = j["imageCtr"];
     reply_time = j["replyTime"];
     bump_time = j["bumpTime"];
-    if (page->catalog) {
+    if (!page->catalog) {
         auto& p = j.at("posts");
         posts.reserve(p.size());
         for (auto& data : p) {
