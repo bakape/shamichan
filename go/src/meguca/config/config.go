@@ -45,7 +45,6 @@ var (
 	Defaults = Configs{
 		BoardExpiry:   7,
 		JPEGQuality:   90,
-		MaxSize:       5,
 		MaxHeight:     6000,
 		MaxWidth:      6000,
 		SessionExpiry: 30,
@@ -58,6 +57,7 @@ var (
 			DefaultLang:     "en_GB",
 			ThreadExpiryMin: 7,
 			ThreadExpiryMax: 14,
+			MaxSize:         5,
 			Links:           map[string]string{"4chan": "http://www.4chan.org/"},
 		},
 	}

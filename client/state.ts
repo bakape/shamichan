@@ -13,6 +13,7 @@ interface Configs {
 	pruneThreads: boolean
 	threadExpiryMin: number
 	threadExpiryMax: number
+	maxSize: number
 	defaultLang: string
 	defaultCSS: string
 	imageRootOverride: string

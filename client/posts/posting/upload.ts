@@ -2,6 +2,7 @@ import lang from '../../lang'
 import { load, postText } from '../../util'
 import { Post } from "../model"
 import { View } from "../../base"
+import { config } from "../../state"
 
 // Precompute 00 - ff strings for conversion to hexadecimal strings
 const precomputedHex = new Array(256)
@@ -46,6 +47,10 @@ export default class UploadForm extends View<Post> {
         file: File = this.input.files[0],
     ): Promise<FileData> {
         if (!navigator.onLine || this.isUploading) {
+            return null
+        }
+        if (file.size > config.maxSize) {
+            this.status.textContent = "file too large"
             return null
         }
 
