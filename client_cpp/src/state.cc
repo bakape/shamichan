@@ -1,22 +1,26 @@
 #include "state.hh"
 #include "db.hh"
-#include "json.hh"
+#include "posts/models.hh"
+#include "util.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
 
 using json = nlohmann::json;
-using emscripten::val;
 
 Config* config = nullptr;
 BoardConfig* board_config = nullptr;
 Page* page = nullptr;
 PostIDs* post_ids = nullptr;
+std::unordered_map<uint64_t, Post>* posts = nullptr;
 
 void load_state()
 {
-    // Loading is mostly async, so get it started faster
+    page = new Page();
+    page->detect();
+
+    posts = new std::unordered_map<uint64_t, Post>();
     post_ids = new PostIDs{};
-    load_db();
+    load_db(load_posts());
 
     // TODO: This should be read from a concurrent server fetch
     const char* conf = (char*)EM_ASM_INT_V({
@@ -38,9 +42,6 @@ void load_state()
     });
     board_config = new BoardConfig(string(board_conf));
     delete[] board_conf;
-
-    page = new Page();
-    page->detect();
 }
 
 Config::Config(const string& s)
@@ -77,7 +78,7 @@ BoardConfig::BoardConfig(const string& s)
 
 void Page::detect()
 {
-    val location = val::global("location");
+    emscripten::val location = emscripten::val::global("location");
     const string path = location["pathname"].as<string>();
     const string query = location["search"].as<string>();
 
@@ -116,7 +117,7 @@ unsigned int Page::find_query_param(const string& query, const string& param)
 
 void add_to_storage(int typ, const std::vector<unsigned long> ids)
 {
-    std::unordered_set<unsigned long>* set = nullptr;
+    std::unordered_set<uint64_t>* set = nullptr;
     switch (static_cast<StorageType>(typ)) {
     case StorageType::mine:
         set = &post_ids->mine;
@@ -133,4 +134,62 @@ void add_to_storage(int typ, const std::vector<unsigned long> ids)
     }
     set->reserve(set->size() + ids.size());
     set->insert(ids.begin(), ids.end());
+}
+
+EMSCRIPTEN_BINDINGS(module_state)
+{
+    emscripten::register_vector<unsigned long>("VectorUint64");
+    emscripten::function("add_to_storage", &add_to_storage);
+}
+
+static std::vector<uint64_t> load_posts()
+{
+    auto j = json::parse(get_inner_html("post-data"));
+    auto thread_ids = std::vector<uint64_t>(15);
+    if (page->thread) {
+        thread_ids.push_back(extract_thread(j));
+    } else {
+        for (auto& thread : j) {
+            thread_ids.push_back(extract_thread(thread));
+        }
+
+        // TODO: Catalog pages
+    }
+
+    return thread_ids;
+}
+
+static uint64_t extract_thread(json& j)
+{
+    // TODO: Actually use the thread metadata
+    auto thread = ThreadDecoder(j);
+    posts->reserve(posts->size() + thread.posts.size() + 1);
+
+    auto op = Post(j);
+    const string board = op.board;
+    const uint64_t thread_id = op.id;
+    (*posts)[thread_id] = op;
+
+    for (auto post : thread.posts) {
+        post.board = board;
+        post.op = thread_id;
+        (*posts)[post.id] = post;
+    }
+
+    return thread_id;
+}
+
+ThreadDecoder::ThreadDecoder(json& j)
+{
+    post_ctr = j["postCtr"];
+    image_ctr = j["imageCtr"];
+    reply_time = j["replyTime"];
+    bump_time = j["bumpTime"];
+    if (page->catalog) {
+        auto& p = j.at("posts");
+        posts.reserve(p.size());
+        for (auto& data : p) {
+            posts.push_back(Post(data));
+        }
+    }
 }

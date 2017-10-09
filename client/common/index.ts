@@ -33,7 +33,7 @@ export interface PostData {
 }
 
 // State of a post's text. Used for adding enclosing tags to the HTML while
-// parsing
+// parsing.
 export type TextState = {
 	spoiler: boolean
 	quote: boolean

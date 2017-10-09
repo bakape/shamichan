@@ -1,5 +1,6 @@
 #include "state.hh"
 #include <emscripten.h>
+#include <emscripten/bind.h>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -11,11 +12,13 @@ bool has_errored = false;
 
 // Threads to load on the call from db_is_ready(). Keeps us from passing the
 // thread ID array to JS, when opening the thread.
-std::vector<unsigned long>* threads_to_load = nullptr;
+std::vector<uint64_t>* threads_to_load = nullptr;
 
 // TODO: Deal with Firefox private Module
-void load_db()
+void load_db(std::vector<uint64_t> thread_ids)
 {
+    threads_to_load = new std::vector<uint64_t>(thread_ids);
+
     EM_ASM_INT(
         {
             // Expiring post ID object stores
@@ -111,7 +114,7 @@ void load_db()
         db_version);
 }
 
-void load_post_ids(const std::vector<unsigned long>& threads)
+void load_post_ids(const std::vector<uint64_t>& threads)
 {
     if (!threads.size() || has_errored) {
         return;
@@ -164,9 +167,12 @@ void handle_db_error(std::string err)
 
 void db_is_ready()
 {
-    // TODO: Load actual thread IDS from post data
-    threads_to_load = new std::vector<unsigned long>;
-    threads_to_load->push_back(108);
     load_post_ids(*threads_to_load);
     delete threads_to_load;
+}
+
+EMSCRIPTEN_BINDINGS(module_db)
+{
+    emscripten::function("handle_db_error", &handle_db_error);
+    emscripten::function("db_is_ready", &db_is_ready);
 }

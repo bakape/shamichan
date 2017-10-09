@@ -1,11 +1,16 @@
 #pragma once
 
+#include "json.hh"
+#include "posts/models.hh"
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 
 using std::string;
-using std::unordered_map;
+
+// Contains all posts currently loaded on the page. Posts might or might not
+// be actually displayed.
+extern std::unordered_map<uint64_t, Post>* posts;
 
 // Public server-wide global configurations
 class Config {
@@ -13,7 +18,7 @@ public:
     bool captcha, mature, disable_user_boards, prune_threads;
     unsigned int thread_expiry_min, thread_expiry_max;
     string default_lang, default_css, image_root_override;
-    unordered_map<string, string> links;
+    std::unordered_map<string, string> links;
 
     // Parse JSON string
     Config(const string&);
@@ -58,9 +63,18 @@ extern Page* page;
 // Load initial application state
 void load_state();
 
+// Load posts from inlined JSON. Returns a vector of detected thread IDs.
+// TODO: Fetch this as binary data from the server. It is probably a good idea
+// to do this and configuration fetches in one request.
+static std::vector<uint64_t> load_posts();
+
+// Extract thread data from JSON and populate post collection. Returns the id
+// of the extracted thread;
+static uint64_t extract_thread(nlohmann::json& j);
+
 // Stores post ID of various catagories
 struct PostIDs {
-    std::unordered_set<unsigned long> mine, // Post, the user has created
+    std::unordered_set<uint64_t> mine, // Post, the user has created
         seen_replies, // Replies to the user's posts, the user has seen
         seen_posts, // Posts the user has seen
         hidden; // Posts the user has hidden
@@ -71,5 +85,13 @@ extern PostIDs* post_ids;
 // Types of post ID storage in the database
 enum class StorageType : int { mine, seen_replies, seen_posts, hidden };
 
-// Add thread IDs of the specified type to post ID sets on the C++ side
-void add_to_storage(int typ, const std::vector<unsigned long> ids);
+// Used to decode thread JSON
+// TODO: Get rid of this in favour of a binary decoder
+class ThreadDecoder : Thread {
+public:
+    uint64_t id;
+    std::vector<Post> posts;
+
+    // Parse from JSON
+    ThreadDecoder(nlohmann::json& j);
+};

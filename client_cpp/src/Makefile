@@ -1,9 +1,12 @@
-all: page $(addsuffix .bc, $(basename $(wildcard *.cc)))
+all: page posts $(addsuffix .bc, $(basename $(wildcard *.cc)))
 
-.PHONY: page
+.PHONY: page posts
 
 page:
 	$(MAKE) -C page
+
+posts:
+	$(MAKE) -C posts
 
 %.bc: %.cc
 	emcc $(EMCCFLAGS) $^ -o $@
@@ -11,3 +14,4 @@ page:
 clean:
 	rm -f *.bc
 	$(MAKE) -C page clean
+	$(MAKE) -C posts clean
