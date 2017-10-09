@@ -1,11 +1,12 @@
 # -Winvalid-pp-token triggers on empty JS strings in macros
 WARNINGS=-Wall -Wextra -Wno-sign-compare -Wno-invalid-pp-token -Wno-unused-function
-export EMCCFLAGS=-std=c++1z --bind  -s NO_EXIT_RUNTIME=1 $(WARNINGS)
+# TODO: Disable exceptions, once we get rid of JSON parsing
+export EMCCFLAGS=-std=c++1z --bind  -s NO_EXIT_RUNTIME=1 $(WARNINGS) -s DISABLE_EXCEPTION_CATCHING=0
 LTO=
 ifeq ($(DEBUG),1)
 	# -O0 is too large to load in the browser. Fails with:
 	# LinkError: table import 128 has maximum larger than maximum 24960
-	export EMCCFLAGS+= -O1 -g4 -s DEMANGLE_SUPPORT=1 -s DISABLE_EXCEPTION_CATCHING=0
+	export EMCCFLAGS+= -O1 -g4 -s DEMANGLE_SUPPORT=1
 else
 	export EMCCFLAGS+= -Oz -g0
 	LTO=--llvm-lto 3
