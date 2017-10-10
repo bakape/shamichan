@@ -51,13 +51,13 @@ Command::Command(nlohmann::json& j)
         flip = val;
         break;
     case Type::eight_ball:
-        *eight_ball = val;
+        eight_ball = val;
         break;
     case Type::pyu:
-        pyu = val;
+        count = val;
         break;
     case Type::pcount:
-        pcount = val;
+        count = val;
         break;
     case Type::sync_watch:
         for (int i = 0; i < 5; i++) {
@@ -65,17 +65,8 @@ Command::Command(nlohmann::json& j)
         }
         break;
     case Type::dice:
-        *dice = val.get<std::vector<uint16_t>>();
+        dice = val.get<std::vector<uint16_t>>();
         break;
-    }
-}
-
-Command::~Command()
-{
-    if (typ == Type::eight_ball) {
-        delete eight_ball;
-    } else if (typ == Type::dice) {
-        delete dice;
     }
 }
 
@@ -113,7 +104,7 @@ Post::Post(nlohmann::json& j)
         auto& l = j.at("links");
         links.reserve(l.size());
         for (auto& val : l) {
-            links.push_back({ val[0], val[1] });
+            links[val[0]] = {.op = val[1] };
         }
     });
 }

@@ -165,10 +165,9 @@ static uint64_t extract_thread(json& j)
     auto thread = ThreadDecoder(j);
     posts->reserve(posts->size() + thread.posts.size() + 1);
 
-    auto op = Post(j);
-    const string board = op.board;
-    const uint64_t thread_id = op.id;
-    (*posts)[thread_id] = op;
+    const string board = j["board"];
+    const uint64_t thread_id = j["id"];
+    (*posts)[thread_id] = Post(j);
 
     for (auto post : thread.posts) {
         post.board = board;

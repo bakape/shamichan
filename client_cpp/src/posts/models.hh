@@ -5,7 +5,7 @@
 #include <optional>
 #include <stdint.h>
 #include <string>
-#include <tuple>
+#include <unordered_map>
 #include <vector>
 
 // Possible file types of a post image or thumbnail
@@ -44,7 +44,7 @@ public:
     Image() {}
 
     // Parse from JSON
-    Image(nlohmann::json& j);
+    Image(nlohmann::json&);
 };
 
 // State of a post's text. Used for adding enclosing tags to the HTML while
@@ -57,21 +57,27 @@ struct TextState {
 // Single hash command result delivered from the server
 class Command {
 public:
+    // Indicates the contained type
     enum class Type { dice, flip, eight_ball, sync_watch, pyu, pcount } typ;
-    union {
-        bool flip;
-        uint64_t pyu, pcount;
-        uint64_t sync_watch[5];
-        std::string* eight_ball;
-        std::vector<uint16_t>* dice;
-    };
 
-    Command() {}
+    // Use typ, to get out the relevant value
+    bool flip;
+    uint64_t count;
+    uint64_t sync_watch[5];
+    std::vector<uint16_t> dice;
+    std::string eight_ball;
 
     // Parse from JSON
-    Command(nlohmann::json& j);
+    Command(nlohmann::json&);
+};
 
-    ~Command();
+// Data associated with link to another post. Is always pared in a map with
+// the ID of the linked post as a key.
+struct LinkData {
+    // The post and its subtree is now a child of the link
+    bool is_inlined = false;
+    // Parent thread ID of the post
+    uint64_t op;
 };
 
 // Generic post model
@@ -84,13 +90,14 @@ public:
     std::optional<std::string> name, trip, auth, subject, flag, poster_id;
     TextState state;
     std::vector<Command> commands;
-    std::map<uint64_t, uint64_t> backlinks;
-    std::vector<std::tuple<uint64_t, uint64_t>> links;
-
-    Post() {}
+    std::map<uint64_t, LinkData> backlinks;
+    std::unordered_map<uint64_t, LinkData> links;
 
     // Parse from JSON
-    Post(nlohmann::json& j);
+    Post(nlohmann::json&);
+
+    // Required to place Post into collections
+    Post() {}
 };
 
 // Contains thread metadata
