@@ -34,9 +34,7 @@ void Options::load()
     load_uint(expand_all, "expandAll");
     load_uint(work_mode, "workMode");
 
-    if (auto const s = local_storage_get("inlineFit"); s == "none") {
-        inline_fit = FittingMode::none;
-    } else if (s == "width") {
+    if (auto const s = local_storage_get("inlineFit"); s == "width") {
         inline_fit = FittingMode::width;
     } else if (s == "screen") {
         inline_fit = FittingMode::screen;

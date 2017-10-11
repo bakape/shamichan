@@ -34,8 +34,8 @@ Image::Image(nlohmann::json& j)
 
     parse_opt(length);
     size = j["size"];
-    parse_opt(artist);
-    parse_opt(title);
+    parse_opt_string(artist);
+    parse_opt_string(title);
     MD5 = j["MD5"];
     SHA1 = j["SHA1"];
     name = j["name"];

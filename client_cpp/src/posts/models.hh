@@ -30,18 +30,24 @@ enum class FileType : uint8_t {
 
 class Image {
 public:
-    bool apng, audio, video, spoiler,
+    std::optional<bool> apng, // PNG image is APNG
+        audio, // Has audio
+        video, // Has video
+        spoiler, // Is spoilered
         large, // Render larger thumbnails
         expanded, // Thumbnail is expanded
-        taller_than_viewport, // Image is taller than the current viewport
+        taller_than_viewport, // Image is taller than the viewport
         revealed; // Revealing a hidden image with [Show]
-    FileType file_type, thumb_type;
+    FileType file_type, // File type of source file
+        thumb_type; // File type of thumbnail
     uint16_t dims[4];
-    uint32_t length;
+    std::optional<uint32_t> length; // Length of media, if a media file
     uint64_t size;
-    std::string artist, title, MD5, SHA1, name;
-
-    Image() {}
+    std::optional<std::string> artist, // Media file artist meta info
+        title; // Media file title meta info
+    std::string MD5, // MD5 hash of source file
+        SHA1, // SHA1 hash of source file
+        name; // Name the file was uploaded with
 
     // Parse from JSON
     Image(nlohmann::json&);
@@ -50,8 +56,12 @@ public:
 // State of a post's text. Used for adding enclosing tags to the HTML while
 // parsing.
 struct TextState {
-    bool spoiler, quote, code, have_syncwatch;
-    int newlines, dice_index; // Index of the next dice array item to use
+    bool spoiler = false, // Current text is spoilered
+        quote = false, // Current line is spoilered
+        code = false, // Text is inside code block
+        have_syncwatch = false; // Text contains #syncwatch command(s)
+    int newlines = 0, // Number of newlines in text
+        dice_index = 0; // Index of the next dice array item to use
 };
 
 // Single hash command result delivered from the server
@@ -61,11 +71,11 @@ public:
     enum class Type { dice, flip, eight_ball, sync_watch, pyu, pcount } typ;
 
     // Use typ, to get out the relevant value
-    bool flip;
-    uint64_t count;
-    uint64_t sync_watch[5];
-    std::vector<uint16_t> dice;
-    std::string eight_ball;
+    bool flip; // Result of flip command
+    uint64_t count; // Somekind of counter result
+    uint64_t sync_watch[5]; // Syncwatch parameters
+    std::vector<uint16_t> dice; // Result of dice throw
+    std::string eight_ball; // Result of #8ball command
 
     // Parse from JSON
     Command(nlohmann::json&);
@@ -83,15 +93,27 @@ struct LinkData {
 // Generic post model
 class Post {
 public:
-    bool editing, deleted, sage, banned, sticky, locked, seenOnce, hidden;
+    std::optional<bool> editing, // Post is currrently being edited
+        deleted, // Deleted by moderator
+        sage, // Poster disabled bumping of the parent thread
+        banned, // Banned for this post by moderator
+        sticky, // Thread is stickied. Only for OPs.
+        locked, // Thread is locked. Only for OPs.
+        seen, // The user has already seen this post
+        hidden; // The post has been hidden by the user
     std::optional<Image> image;
     uint64_t id, op, time;
     std::string body, board;
-    std::optional<std::string> name, trip, auth, subject, flag, poster_id;
+    std::optional<std::string> name, // Name of poster
+        trip, // Trip code of poster
+        auth, // Staff title of poster
+        subject, // Subject of thread. Only for OPs.
+        flag, // Country code of poster
+        poster_id; // Thread-level poster ID
     TextState state;
-    std::vector<Command> commands;
-    std::map<uint64_t, LinkData> backlinks;
-    std::unordered_map<uint64_t, LinkData> links;
+    std::vector<Command> commands; // Results of hash commands
+    std::map<uint64_t, LinkData> backlinks; // Posts linking to this post
+    std::unordered_map<uint64_t, LinkData> links; // Posts linked by this post
 
     // Parse from JSON
     Post(nlohmann::json&);
@@ -103,5 +125,8 @@ public:
 // Contains thread metadata
 class Thread {
 public:
-    uint64_t post_ctr, image_ctr, reply_time, bump_time;
+    uint64_t post_ctr, // Number of posts in thread
+        image_ctr, // Number of images in thread
+        reply_time, // Unix timestamp of last reply
+        bump_time; // Unix timestamp of last bump
 };

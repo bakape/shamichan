@@ -5,22 +5,39 @@
 // Client-side options
 class Options {
 public:
-    bool hide_thumbs = false, image_hover = true, webm_hover = false,
-         notification = true, anonymise = false, post_inline_expand = true,
-         relative_time = false, now_playing = false, illya_dance = false,
-         illya_dance_mute = false, horizontal_posting = false,
-         hide_recursively = false, work_mode_toggle = false, user_BG = false,
-         custom_css_toggle = false, mascot = false, always_lock = false;
-    unsigned int new_post = 78, toggle_spoiler = 73, done = 83, expand_all = 69,
-                 work_mode = 66;
+    bool hide_thumbs = false, // Hide file thumbnails
+        image_hover = true, // Preview images on hover
+        webm_hover = false, // Preview videos on hover
+        notification = true, // Display quote notifications, when tab is hidden
+        anonymise = false, // Hide all poster names and trips
+        post_inline_expand = true, // Expand post links inline on click
+        relative_time = false, // Display timestamps relative to now
+        now_playing = false, // Show r/a/dio Now Playing info in top banner
+        illya_dance = false, // Dancing loli in background
+        illya_dance_mute = false, // Mute dancing loli
+        horizontal_posting = false, // Arrange posts in a flexbox
+        hide_recursively = false, // Hide posts, that quote a hidden post
+        work_mode_toggle = false, // Work mode AKA Boss mode
+        user_BG = false, // Show custom user-set background
+        custom_css_toggle = false, // Enable user-ser CSS
+        mascot = false, // Show user-set mascot
+        always_lock = false; // Lock to thread bottom, even when tab hidden
+
+    // Keybinding
+    unsigned int new_post = 78, // Create new post
+        toggle_spoiler = 73, // Toggle image spoiler
+        done = 83, // Close post
+        expand_all = 69, // Expand all images
+        work_mode = 66; // Toggle Work AKA Boss mode
+
+    // Fitting mode for image expansion
     enum class FittingMode {
-        none,
-        width,
-        screen
+        width, // Fit to width
+        screen // Fit to screen
     } inline_fit
         = FittingMode::width;
-    std::string theme = "moe", // TODO: Read from configs
-        custom_css = "";
+    std::string theme = "moe", // CSS theme; TODO: Read default from configs
+        custom_css = ""; // Custom user-set CSS
 
     // Read options from memory and/or load defaults, where needed
     Options() { load(); }
