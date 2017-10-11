@@ -1,5 +1,6 @@
 #include "state.hh"
 #include "db.hh"
+#include "lang.hh"
 #include "options/main.hh"
 #include "posts/models.hh"
 #include "util.hh"
@@ -22,6 +23,7 @@ void load_state()
     page = new Page();
     page->detect();
     options = new Options();
+    lang = new LanguagePack();
 
     posts = new std::unordered_map<uint64_t, Post>();
     post_ids = new PostIDs{};
