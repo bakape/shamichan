@@ -1,5 +1,6 @@
 #include "state.hh"
 #include "db.hh"
+#include "options/main.hh"
 #include "posts/models.hh"
 #include "util.hh"
 #include <emscripten.h>
@@ -15,8 +16,12 @@ std::unordered_map<uint64_t, Post>* posts = nullptr;
 
 void load_state()
 {
+    // Order is important to prevent race conditions after the database is
+    // loaded
+
     page = new Page();
     page->detect();
+    options = new Options();
 
     posts = new std::unordered_map<uint64_t, Post>();
     post_ids = new PostIDs{};
