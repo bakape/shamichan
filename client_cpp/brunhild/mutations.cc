@@ -93,7 +93,18 @@ extern "C" void flush()
 
 void Mutations::exec(const string& id)
 {
-    auto c_id = id.c_str();
+    // Assign element to global variable, so we don't have to look it up each
+    // time
+    const bool exists = (bool)EM_ASM_INT(
+        {
+            window.__el = document.getElementById(Pointer_stringify($0));
+            return !!window.__el;
+        },
+        id.c_str());
+    if (!exists) {
+        // Nothing we can do
+        return;
+    }
 
     // TODO: Do these loops in one JS call, if possible
 
@@ -102,120 +113,74 @@ void Mutations::exec(const string& id)
     for (auto& html : before) {
         EM_ASM_INT(
             {
-                var el = document.getElementById(Pointer_stringify($0));
-                if (!el) {
-                    return 0;
-                }
+                var el = window.__el;
                 var cont = document.createElement('div');
-                cont.innerHTML = Pointer_stringify($1);
+                cont.innerHTML = Pointer_stringify($0);
                 el.parentNode.insertBefore(cont.firstChild, el);
-                return 0;
             },
-            c_id, html.c_str());
+            html.c_str());
     }
     for (auto& html : after) {
         EM_ASM_INT(
             {
-                var el = document.getElementById(Pointer_stringify($0));
-                if (!el) {
-                    return 0;
-                }
+                var el = window.__el;
                 var cont = document.createElement('div');
-                cont.innerHTML = Pointer_stringify($1);
+                cont.innerHTML = Pointer_stringify($0);
                 el.parentNode.insertBefore(cont.firstChild, el.nextSibling);
-                return 0;
             },
-            c_id, html.c_str());
+            html.c_str());
     }
 
     if (remove_el) {
-        EM_ASM_INT(
-            {
-                var el = document.getElementById(Pointer_stringify($0));
-                if (!el) {
-                    el.parentNode.removeChild(el);
-                }
-                return 0;
-            },
-            c_id);
+        EM_ASM({
+            var el = window.__el;
+            el.parentNode.removeChild(el);
+        });
         // If the element is to be removed, nothing else needs to be done
         return;
     }
 
     if (set_outer_html.size()) {
-        EM_ASM_INT(
-            {
-                var el = document.getElementById(Pointer_stringify($0));
-                if (el) {
-                    el.outerHTML = Pointer_stringify($1);
-                }
-                return 0;
-            },
-            c_id, set_outer_html.c_str());
+        EM_ASM_INT({ window.__el.outerHTML = Pointer_stringify($0); },
+            set_outer_html.c_str());
     }
     if (set_inner_html.size()) {
-        EM_ASM_INT(
-            {
-                var el = document.getElementById(Pointer_stringify($0));
-                if (el) {
-                    el.innerHTML = Pointer_stringify($1);
-                }
-                return 0;
-            },
-            c_id, set_inner_html.c_str());
+        EM_ASM_INT({ window.__el.innerHTML = Pointer_stringify($0); },
+            set_inner_html.c_str());
     }
 
     for (auto& html : append) {
         EM_ASM_INT(
             {
-                var el = document.getElementById(Pointer_stringify($0));
-                if (!el) {
-                    return 0;
-                }
+                var el = window.__el;
                 var cont = document.createElement('div');
-                cont.innerHTML = Pointer_stringify($1);
+                cont.innerHTML = Pointer_stringify($0);
                 el.parentNode.insertBefore(cont.firstChild, el.nextSibling);
-                return 0;
             },
-            c_id, html.c_str());
+            html.c_str());
     }
     for (auto& html : prepend) {
         EM_ASM_INT(
             {
-                var el = document.getElementById(Pointer_stringify($0));
-                if (!el) {
-                    return 0;
-                }
+                var el = window.__el;
                 var cont = document.createElement('div');
-                cont.innerHTML = Pointer_stringify($1);
+                cont.innerHTML = Pointer_stringify($0);
                 el.insertBefore(cont.firstChild, el.firstChild);
-                return 0;
             },
-            c_id, html.c_str());
+            html.c_str());
     }
 
     for (auto& kv : set_attr) {
         EM_ASM_INT(
             {
-                var el = document.getElementById(Pointer_stringify($0));
-                if (el) {
-                    el.setAttribute(
-                        Pointer_stringify($1), Pointer_stringify($2));
-                }
-                return 0;
+                window.__el.setAttribute(
+                    Pointer_stringify($0), Pointer_stringify($1));
             },
-            c_id, kv.first.c_str(), kv.second.c_str());
+            kv.first.c_str(), kv.second.c_str());
     }
     for (auto& key : remove_attr) {
-        EM_ASM_INT(
-            {
-                var el = document.getElementById(Pointer_stringify($1));
-                if (el) {
-                    el.removeAttribute(Pointer_stringify($1));
-                }
-                return 0;
-            },
-            c_id, key.c_str());
+        EM_ASM_INT({ window.__el.removeAttribute(Pointer_stringify($0)); },
+            key.c_str());
     }
 }
 }
