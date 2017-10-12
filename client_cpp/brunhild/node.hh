@@ -1,3 +1,6 @@
+#pragma once
+
+#include "view.hh"
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -16,7 +19,7 @@ public:
     std::vector<Node> children;
 
     // Renders Node and subtree to HTML
-    std::string html();
+    std::string html() const;
 
     // Creates a Node with optional attributes and children
     Node(std::string tag, Attrs attrs = {}, std::vector<Node> children = {})
@@ -31,7 +34,8 @@ public:
 
 private:
     // Write node as HTML to stream
-    void write_html(std::ostringstream&);
+    friend class View;
+    void write_html(std::ostringstream&) const;
 };
 
 // Generate a new unique element ID
