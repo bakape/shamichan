@@ -25,26 +25,14 @@ public:
     // Append a node as an HTML string to the view's DOM element
     void append(std::string html);
 
-    // Append a Node to the view's DOM element
-    void append(const Node&);
-
     // Prepend a node as an HTML string to the view's DOM element
     void prepend(std::string html);
-
-    // Prepend a Node to the view's DOM element
-    void prepend(const Node&);
 
     // Insert a node as an HTML string before this view's DOM element
     void before(std::string html);
 
-    // Insert a Node before this view's DOM element
-    void before(const Node&);
-
     // Insert a node as an HTML string after this view's DOM element
     void after(std::string html);
-
-    // Insert a Node after this view's DOM element
-    void after(const Node&);
 
     // Sets the inner HTML of the view's DOM element
     // More efficient than individual appends, etc.

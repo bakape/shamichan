@@ -8,19 +8,11 @@ namespace brunhild {
 
 void View::append(std::string html) { brunhild::append(id, html); }
 
-void View::append(const Node& node) { append(node.html()); }
-
 void View::prepend(std::string html) { brunhild::prepend(id, html); }
-
-void View::prepend(const Node& node) { prepend(node.html()); }
 
 void View::before(std::string html) { brunhild::before(id, html); }
 
-void View::before(const Node& node) { before(node.html()); }
-
 void View::after(std::string html) { brunhild::after(id, html); }
-
-void View::after(const Node& node) { after(node.html()); }
 
 void View::set_inner_html(std::string html)
 {
