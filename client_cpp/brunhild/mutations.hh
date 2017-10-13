@@ -40,7 +40,7 @@ void after(std::string id, std::string html);
 void set_inner_html(std::string id, std::string html);
 
 // Set outer html of an element
-void set_inner_html(std::string id, std::string html);
+void set_outer_html(std::string id, std::string html);
 
 // Remove an element
 void remove(std::string id);

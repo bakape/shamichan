@@ -18,9 +18,6 @@ public:
     Attrs attrs;
     std::vector<Node> children;
 
-    // Renders Node and subtree to HTML
-    std::string html() const;
-
     // Creates a Node with optional attributes and children
     Node(std::string tag, Attrs attrs = {}, std::vector<Node> children = {})
         : tag(tag)
@@ -29,13 +26,14 @@ public:
     {
     }
 
+    // Renders Node and subtree to HTML
+    std::string html() const;
+
+    // Write node as HTML to stream
+    void write_html(std::ostringstream&) const;
+
     // Creates a text Node. This node can only be a child of another Node.
     static Node text(std::string);
-
-private:
-    // Write node as HTML to stream
-    friend class View;
-    void write_html(std::ostringstream&) const;
 };
 
 // Generate a new unique element ID
