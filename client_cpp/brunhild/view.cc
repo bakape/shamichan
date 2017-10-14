@@ -19,7 +19,7 @@ void View::set_inner_html(std::string html)
     brunhild::set_inner_html(id, html);
 }
 
-void View::set_children(const std::vector<Node>& children)
+void View::set_children(const Children& children)
 {
     std::ostringstream s;
     for (auto& ch : children) {
@@ -54,6 +54,11 @@ void VirtualView::ensure_id(Node& node)
 }
 
 std::string VirtualView::html() const { return saved.html(); }
+
+void VirtualView::write_html(std::ostringstream& s) const
+{
+    saved.write_html(s);
+}
 
 void VirtualView::patch(Node node) { patch_node(saved, node); }
 
@@ -100,8 +105,32 @@ void VirtualView::patch_attrs(Node& old, Attrs attrs)
     old.attrs = attrs;
 }
 
-void VirtualView::patch_children(Node& old, std::vector<Node> children)
+void VirtualView::patch_children(Node& old, Children children)
 {
+    // Text nodes can not be addressed by ID and require special handling
+    if (old.children.size() == 1 && old.children[0].is_text()) {
+        if (children.size() == 1 && children[0].is_text()) { // Hot path
+            if (old.attrs["_text"] != children[0].attrs["_text"]) {
+                set_inner_html(old.attrs["id"], children[0].attrs["_text"]);
+                old.children = children;
+            }
+            return;
+        }
+
+        std::ostringstream s;
+        for (auto& ch : children) {
+            ensure_id(ch);
+            ch.write_html(s);
+        }
+        old.children = children;
+        set_inner_html(old.attrs["id"], s.str());
+        return;
+    } else if (children.size() == 1 && children[0].is_text()) {
+        set_inner_html(old.attrs["id"], children[0].attrs["_text"]);
+        old.children = children;
+        return;
+    }
+
     int diff = children.size() - old.children.size();
 
     // Remove Nodes from the end

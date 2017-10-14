@@ -44,4 +44,4 @@ private:
 };
 
 // Contains the plugable langauge pack
-extern LanguagePack* lang;
+extern LanguagePack const* lang;

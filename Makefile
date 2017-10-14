@@ -51,13 +51,13 @@ client_vendor: client_deps
 	$(uglifyjs) node_modules/whatwg-fetch/fetch.js -o www/js/vendor/fetch.js
 	$(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
 
-server: generate server_deps
+server: server_deps generate
 	go build -v -o $(binary) meguca
 ifeq ($(is_windows), true)
 	cp /mingw64/bin/*.dll ./
 endif
 
-generate:
+generate: server_deps
 	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
 	rm -f go/src/meguca/common/*_easyjson.go
 	rm -f go/src/meguca/config/*_easyjson.go

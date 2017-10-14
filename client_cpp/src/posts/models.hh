@@ -33,11 +33,7 @@ public:
     std::optional<bool> apng, // PNG image is APNG
         audio, // Has audio
         video, // Has video
-        spoiler, // Is spoilered
-        large, // Render larger thumbnails
-        expanded, // Thumbnail is expanded
-        taller_than_viewport, // Image is taller than the viewport
-        revealed; // Revealing a hidden image with [Show]
+        spoiler; // Is spoilered
     FileType file_type, // File type of source file
         thumb_type; // File type of thumbnail
     uint16_t dims[4];
@@ -51,17 +47,6 @@ public:
 
     // Parse from JSON
     Image(nlohmann::json&);
-};
-
-// State of a post's text. Used for adding enclosing tags to the HTML while
-// parsing.
-struct TextState {
-    bool spoiler = false, // Current text is spoilered
-        quote = false, // Current line is spoilered
-        code = false, // Text is inside code block
-        have_syncwatch = false; // Text contains #syncwatch command(s)
-    int newlines = 0, // Number of newlines in text
-        dice_index = 0; // Index of the next dice array item to use
 };
 
 // Single hash command result delivered from the server
@@ -90,19 +75,23 @@ struct LinkData {
     uint64_t op;
 };
 
+// Forward declaration
+class PostView;
+
 // Generic post model
 class Post {
 public:
-    std::optional<bool> editing, // Post is currrently being edited
-        deleted, // Deleted by moderator
-        sage, // Poster disabled bumping of the parent thread
-        banned, // Banned for this post by moderator
-        sticky, // Thread is stickied. Only for OPs.
-        locked, // Thread is locked. Only for OPs.
-        seen, // The user has already seen this post
-        hidden; // The post has been hidden by the user
+    bool editing = false, // Post is currrently being edited
+        deleted = false, // Deleted by moderator
+        sage = false, // Poster disabled bumping of the parent thread
+        banned = false, // Banned for this post by moderator
+        sticky = false, // Thread is stickied. Only for OPs.
+        locked = false, // Thread is locked. Only for OPs.
+        seen = false, // The user has already seen this post
+        hidden = false; // The post has been hidden by the user
     std::optional<Image> image;
-    uint64_t id, op, time;
+    uint64_t id, op;
+    time_t time;
     std::string body, board;
     std::optional<std::string> name, // Name of poster
         trip, // Trip code of poster
@@ -110,16 +99,23 @@ public:
         subject, // Subject of thread. Only for OPs.
         flag, // Country code of poster
         poster_id; // Thread-level poster ID
-    TextState state;
     std::vector<Command> commands; // Results of hash commands
     std::map<uint64_t, LinkData> backlinks; // Posts linking to this post
     std::unordered_map<uint64_t, LinkData> links; // Posts linked by this post
+    PostView* view = nullptr;
 
     // Parse from JSON
     Post(nlohmann::json&);
 
     // Required to place Post into collections
     Post() {}
+
+    ~Post()
+    {
+        if (view) {
+            delete view;
+        }
+    }
 };
 
 // Contains thread metadata

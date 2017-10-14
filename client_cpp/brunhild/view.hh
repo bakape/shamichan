@@ -41,7 +41,7 @@ public:
     // Sets the children of the view's DOM element. This removes the previous
     // children of the element.
     // More efficient than individual appends, etc.
-    void set_children(const std::vector<Node>&);
+    void set_children(const Children&);
 
     // Remove the view's element from the DOM. The view should be considered in
     // an invalid state after this.
@@ -72,6 +72,9 @@ public:
     // inserted into a parent view or passed to one of DOM mutation functions.
     std::string html() const;
 
+    // Same as html(), but writes to a stream to reduce allocations
+    void write_html(std::ostringstream&) const;
+
     // Patch the view's subtree against the updated subtree in Node.
     // Can only be called after the view has been inserted into the DOM.
     void patch(Node);
@@ -91,6 +94,6 @@ private:
     void patch_attrs(Node& old, Attrs attrs);
 
     // Patch element's subtree
-    void patch_children(Node& old, std::vector<Node> children);
+    void patch_children(Node& old, Children children);
 };
 }

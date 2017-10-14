@@ -1,4 +1,5 @@
 #include "models.hh"
+#include "view.hh"
 
 using json = nlohmann::json;
 using std::string;

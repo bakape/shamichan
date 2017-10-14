@@ -43,10 +43,9 @@ export function relativeTime(then: number): string {
     if (time < 1) {
         if (time > -5) { // Assume to be client clock imprecision
             return lang.posts["justNow"]
-        } else {
-            isFuture = true
-            time = -time
         }
+        isFuture = true
+        time = -time
     }
 
     const divide = [60, 24, 30, 12],

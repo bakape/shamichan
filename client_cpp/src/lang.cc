@@ -2,7 +2,7 @@
 #include "json.hh"
 #include "util.hh"
 
-LanguagePack* lang = nullptr;
+LanguagePack const* lang = nullptr;
 
 using json = nlohmann::json;
 

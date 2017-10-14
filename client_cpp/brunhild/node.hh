@@ -1,6 +1,5 @@
 #pragma once
 
-#include "view.hh"
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -26,16 +25,51 @@ public:
     {
     }
 
+    // Creates a Node with attributes and a text node as the only child.
+    // Escaped specifies, if the text should be escaped.
+    Node(std::string tag, Attrs attrs, std::string text, bool escape = false)
+        : tag(tag)
+        , attrs(attrs)
+        , children({ escape ? Node::escaped(text) : Node::text(text) })
+    {
+    }
+
+    // Creates a Node with a text node as the only child.
+    // Escaped specifies, if the text should be escaped.
+    Node(std::string tag, std::string text, bool escape = false)
+        : tag(tag)
+        , attrs()
+        , children({ escape ? Node::escaped(text) : Node::text(text) })
+    {
+    }
+
     // Renders Node and subtree to HTML
     std::string html() const;
 
     // Write node as HTML to stream
     void write_html(std::ostringstream&) const;
 
-    // Creates a text Node. This node can only be a child of another Node.
+    // Resets the node and frees up used resources
+    void clear();
+
+    // Returns, if node is a text node
+    bool is_text() { return tag == "_text"; }
+
+private:
+    // Creates a text Node. This node can only be a child of another Node and
+    // must be the only child.
     static Node text(std::string);
+
+    // Like Node::text(), but escapes the text to protect against XSS attacks
+    static Node escaped(const std::string&);
 };
+
+// Subtree of a Node
+typedef std::vector<Node> Children;
 
 // Generate a new unique element ID
 std::string new_id();
+
+// Escape a user-submitted unsafe string to protect against XSS
+std::string escape(const std::string& s);
 }
