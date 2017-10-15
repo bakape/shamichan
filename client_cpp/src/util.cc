@@ -20,7 +20,9 @@ std::string get_inner_html(const std::string& id)
 
 std::string pluralize(int n, const std::tuple<std::string, std::string>& word)
 {
-    auto s = std::to_string(n) + ' ';
+    std::string s;
+    s.reserve(32);
+    s += std::to_string(n) + ' ';
     switch (n) {
     case 1:
     case -1:
@@ -30,4 +32,12 @@ std::string pluralize(int n, const std::tuple<std::string, std::string>& word)
         s += std::get<1>(word);
     }
     return s;
+}
+
+void pad(std::string& out, unsigned int n)
+{
+    if (n < 10) {
+        out += '0';
+    }
+    out += std::to_string(n);
 }

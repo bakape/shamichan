@@ -5,45 +5,44 @@
 #include "../util.hh"
 #include "countries.hh"
 #include "models.hh"
-#include <iomanip>
-#include <iostream>
-#include <sstream>
 #include <tuple>
 
 using brunhild::Children;
 
 Node PostView::render(const Post& p)
 {
-    brunhild::Attrs attrs;
-    attrs["id"] = "#p" + std::to_string(p.id);
-    attrs["class"] = "glass";
+    Node n = { "article",
+        {
+            { "id", "#p" + std::to_string(p.id) },
+        } };
+    n.children.reserve(5);
+
+    n.attrs["class"] = "glass";
     if (p.editing) {
-        attrs["class"] += " editing";
+        n.attrs["class"] += " editing";
     }
 
-    Children ch;
-    ch.reserve(5);
     if (p.deleted) {
-        attrs["class"] += " deleted";
-        ch.push_back({ "input",
+        n.attrs["class"] += " deleted";
+        n.children.push_back({ "input",
             {
                 { "type", "checkbox" }, { "class", "deleted-toggle" },
             } });
     }
-    ch.push_back(render_header(p));
+    n.children.push_back(render_header(p));
 
-    return Node("article", attrs, ch);
+    return n;
 }
 
 Node PostView::render_header(const Post& p)
 {
-    Children ch;
-    ch.reserve(8);
+    Node n = { "header", { { "class", "spaced" } } };
+    n.children.reserve(8);
 
     // TODO: Check if staff, and render moderator checkbox
 
     if (p.sticky) {
-        ch.push_back({ "svg",
+        n.children.push_back({ "svg",
             {
                 { "xmlns", "http://www.w3.org/2000/svg" }, { "width", "8" },
                 { "height", "8" }, { "viewBox", "0 0 8 8" },
@@ -51,7 +50,7 @@ Node PostView::render_header(const Post& p)
             R"'(<path d="M1.34 0a.5.5 0 0 0 .16 1h.5v2h-1c-.55 0-1 .45-1 1h3v3l.44 1 .56-1v-3h3c0-.55-.45-1-1-1h-1v-2h.5a.5.5 0 1 0 0-1h-4a.5.5 0 0 0-.09 0 .5.5 0 0 0-.06 0z" />)'" });
     }
     if (p.locked) {
-        ch.push_back({ "svg",
+        n.children.push_back({ "svg",
             {
                 { "xmlns", "http://www.w3.org/2000/svg" }, { "width", "8" },
                 { "height", "8" }, { "viewBox", "0 0 8 8" },
@@ -63,26 +62,26 @@ Node PostView::render_header(const Post& p)
         std::string s;
         s.reserve(p.subject->size() + 6); // +2 unicode chars
         s = "「" + *p.subject + "」";
-        ch.push_back({ "h3", s, true });
+        n.children.push_back({ "h3", s, true });
     }
-    ch.push_back(render_name(p));
+    n.children.push_back(render_name(p));
     if (p.flag) {
         auto& flag = *p.flag;
-        ch.push_back({ "img",
+        n.children.push_back({ "img",
             {
                 { "class", "flag" },
                 { "src", "/assets/flags/" + flag + ".svg" },
                 { "title", countries.count(flag) ? countries.at(flag) : flag },
             } });
     }
-    ch.push_back(render_time(p.time));
+    n.children.push_back(render_time(p.time));
 
     const auto id_str = std::to_string(p.id);
     std::string url = "#p" + id_str;
     if (!page->thread && !page->catalog) {
         url = "/all/" + id_str + "?last=100" + url;
     }
-    ch.push_back({ "nav", {},
+    n.children.push_back({ "nav", {},
         {
             { "a",
                 {
@@ -95,7 +94,7 @@ Node PostView::render_header(const Post& p)
                 },
                 id_str },
         } });
-    ch.push_back({ "a", { { "class", "control" } },
+    n.children.push_back({ "a", { { "class", "control" } },
         {
             { "svg",
                 {
@@ -105,7 +104,7 @@ Node PostView::render_header(const Post& p)
                 R"'(<path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" />)'" },
         } });
 
-    return Node("header", { { "class", "spaced" } }, ch);
+    return n;
 }
 
 Node PostView::render_name(const Post& p)
@@ -147,15 +146,21 @@ Node PostView::render_name(const Post& p)
 
 Node PostView::render_time(time_t time)
 {
+    using std::to_string;
+
     auto then = std::localtime(&time);
-    std::ostringstream s;
-    s << std::setfill('0') << std::setw(2);
+    std::string abs;
+    abs.reserve(64);
 
     // Renders classic absolute timestamp
-    s << then->tm_mday << ' ' << lang->calendar[then->tm_mon] << ' '
-      << 1900 + then->tm_year << " (" << lang->week[then->tm_wday] << ") "
-      << then->tm_hour << ':' << then->tm_min;
-    const auto abs = s.str();
+    pad(abs, then->tm_mday);
+    abs += ' ';
+    abs += lang->calendar[then->tm_mon] + ' ';
+    abs += to_string(1900 + then->tm_year);
+    abs += " (" + lang->week[then->tm_wday] + ") ";
+    pad(abs, then->tm_hour);
+    abs = +':';
+    pad(abs, then->tm_min);
 
     const auto rel = relative_time(time);
 

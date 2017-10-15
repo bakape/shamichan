@@ -1,6 +1,5 @@
 #pragma once
 
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -25,7 +24,8 @@ public:
     {
     }
 
-    // Creates a Node with attributes and a text node as the only child.
+    // Creates a Node with attributes and a text node or subtree in the form of
+    // an HTML string as the only child.
     // Escaped specifies, if the text should be escaped.
     Node(std::string tag, Attrs attrs, std::string text, bool escape = false)
         : tag(tag)
@@ -34,7 +34,8 @@ public:
     {
     }
 
-    // Creates a Node with a text node as the only child.
+    // Creates a Node with a text node or subtree in the form of an HTML string
+    // as the only child.
     // Escaped specifies, if the text should be escaped.
     Node(std::string tag, std::string text, bool escape = false)
         : tag(tag)
@@ -46,8 +47,8 @@ public:
     // Renders Node and subtree to HTML
     std::string html() const;
 
-    // Write node as HTML to stream
-    void write_html(std::ostringstream&) const;
+    // Write node as HTML to string
+    void write_html(std::string&) const;
 
     // Resets the node and frees up used resources
     void clear();
@@ -70,6 +71,7 @@ typedef std::vector<Node> Children;
 // Generate a new unique element ID
 std::string new_id();
 
-// Escape a user-submitted unsafe string to protect against XSS
-std::string escape(const std::string& s);
+// Escape a user-submitted unsafe string s to protect against XSS and write it
+// to out
+void escape(std::string& out, const std::string& s);
 }

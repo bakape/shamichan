@@ -6,39 +6,41 @@ namespace brunhild {
 
 std::string new_id()
 {
-    std::ostringstream s;
-    s << "bh-" << id_counter++;
-    return s.str();
+    std::string s;
+    s.reserve(16);
+    s += "bh-" + std::to_string(id_counter++);
+    return s;
 }
 
 std::string Node::html() const
 {
-    std::ostringstream s;
+    std::string s;
+    s.reserve(1 << 10);
     write_html(s);
-    return s.str();
+    return s;
 }
 
-void Node::write_html(std::ostringstream& s) const
+void Node::write_html(std::string& s) const
 {
     if (tag == "_text") {
-        s << attrs.at("_text");
+        s += attrs.at("_text");
         return;
     }
 
-    s << '<' << tag;
+    s += '<' + tag;
     for (auto & [ key, val ] : attrs) {
-        s << ' ' << key;
+        s += ' ' + key;
         if (val != "") {
-            s << "=\"" << val << '"';
+            s += "=\"" + val + '"';
         }
     }
-    s << '>';
+    s += '>';
 
     for (auto& ch : children) {
         ch.write_html(s);
     }
 
-    s << "</" << tag << '>';
+    s += "</" + tag + '>';
 }
 
 Node Node::text(std::string text)
@@ -53,10 +55,8 @@ void Node::clear()
     children.clear();
 }
 
-std::string escape(const std::string& s)
+void escape(std::string& out, const std::string& s)
 {
-    std::string out;
-    out.reserve(s.size() * 1.2);
     for (auto ch : s) {
         switch (ch) {
         case '&':
@@ -81,11 +81,13 @@ std::string escape(const std::string& s)
             out += ch;
         }
     }
-    return out;
 }
 
 Node Node::escaped(const std::string& s)
 {
-    return Node::text(brunhild::escape(s));
+    std::string out;
+    out.reserve(s.size() * 1.2);
+    brunhild::escape(out, s);
+    return Node::text(out);
 }
 }
