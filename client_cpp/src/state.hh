@@ -4,13 +4,14 @@
 #include "posts/models.hh"
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <unordered_set>
 
 using std::string;
 
 // Contains all posts currently loaded on the page. Posts might or might not
 // be actually displayed.
-extern std::unordered_map<uint64_t, Post>* posts;
+extern std::map<uint64_t, Post>* posts;
 
 // Public server-wide global configurations
 class Config {

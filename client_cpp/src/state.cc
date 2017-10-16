@@ -13,7 +13,7 @@ Config* config = nullptr;
 BoardConfig* board_config = nullptr;
 Page* page = nullptr;
 PostIDs* post_ids = nullptr;
-std::unordered_map<uint64_t, Post>* posts = nullptr;
+std::map<uint64_t, Post>* posts = nullptr;
 
 void load_state()
 {
@@ -25,7 +25,7 @@ void load_state()
     options = new Options();
     lang = new LanguagePack();
 
-    posts = new std::unordered_map<uint64_t, Post>();
+    posts = new std::map<uint64_t, Post>();
     post_ids = new PostIDs{};
     load_db(load_posts());
 
@@ -170,7 +170,6 @@ static uint64_t extract_thread(json& j)
 {
     // TODO: Actually use the thread metadata
     auto thread = ThreadDecoder(j);
-    posts->reserve(posts->size() + thread.posts.size() + 1);
 
     const string board = j["board"];
     const uint64_t thread_id = j["id"];
