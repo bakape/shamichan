@@ -14,6 +14,7 @@ BoardConfig* board_config = nullptr;
 Page* page = nullptr;
 PostIDs* post_ids = nullptr;
 std::map<uint64_t, Post>* posts = nullptr;
+string const* location_origin = nullptr;
 
 void load_state()
 {
@@ -23,32 +24,32 @@ void load_state()
     page = new Page();
     page->detect();
     options = new Options();
+    options->load();
     lang = new LanguagePack();
 
     posts = new std::map<uint64_t, Post>();
     post_ids = new PostIDs{};
     load_db(load_posts());
 
+    location_origin = new string(
+        emscripten::val::global("location")["origin"].as<string>());
+
     // TODO: This should be read from a concurrent server fetch
-    const char* conf = (char*)EM_ASM_INT_V({
+    config = new Config(convert_c_string(EM_ASM_INT_V({
         var s = JSON.stringify(window.config);
         var len = s.length + 1;
         var buf = Module._malloc(len);
         stringToUTF8(s, buf, len);
         return buf;
-    });
-    config = new Config(string(conf));
-    delete[] conf;
+    })));
 
-    const char* board_conf = (char*)EM_ASM_INT_V({
+    board_config = new BoardConfig(convert_c_string(EM_ASM_INT_V({
         var s = document.getElementById('board-configs').innerHTML;
         var len = s.length + 1;
         var buf = Module._malloc(len);
         stringToUTF8(s, buf, len);
         return buf;
-    });
-    board_config = new BoardConfig(string(board_conf));
-    delete[] board_conf;
+    })));
 }
 
 Config::Config(const string& s)

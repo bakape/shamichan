@@ -42,6 +42,13 @@ private:
     // Renders a time element. Can be either absolute or relative.
     Node render_time(time_t);
 
+    // Render the information caption above the image.
+    // Set reveal to true, if in hidden thumbnail mode, to reveal the thumbnail.
+    Node render_figcaption(const Image& img, bool reveal = false);
+
+    // Render reverse image search links
+    Node render_image_search(const Image& img);
+
     bool expanded = false, // Thumbnail is expanded
         taller_than_viewport = false, // Image is taller than the viewport
         revealed = false; // Revealing a hidden image with [Show]

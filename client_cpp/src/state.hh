@@ -2,9 +2,9 @@
 
 #include "json.hh"
 #include "posts/models.hh"
+#include <map>
 #include <string>
 #include <unordered_map>
-#include <map>
 #include <unordered_set>
 
 using std::string;
@@ -12,6 +12,9 @@ using std::string;
 // Contains all posts currently loaded on the page. Posts might or might not
 // be actually displayed.
 extern std::map<uint64_t, Post>* posts;
+
+// Caches the origin of the page
+extern string const* location_origin;
 
 // Public server-wide global configurations
 class Config {

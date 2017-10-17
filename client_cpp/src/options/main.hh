@@ -23,6 +23,10 @@ public:
         mascot = false, // Show user-set mascot
         always_lock = false; // Lock to thread bottom, even when tab hidden
 
+    // Reverse image search engines
+    bool google = true, iqdb = false, sauce_nao = true, what_anime = false,
+         desu_storage = false, exhentai = false;
+
     // Keybinding
     unsigned int new_post = 78, // Create new post
         toggle_spoiler = 73, // Toggle image spoiler
@@ -38,9 +42,6 @@ public:
         = FittingMode::width;
     std::string theme = "moe", // CSS theme; TODO: Read default from configs
         custom_css = ""; // Custom user-set CSS
-
-    // Read options from memory and/or load defaults, where needed
-    Options() { load(); }
 
     // Load properties from localStorage
     void load();

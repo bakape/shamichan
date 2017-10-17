@@ -227,7 +227,7 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes.jpg:
 			case fileTypes.gif:
 			case fileTypes.png:
-				if (size < 8 << 20) {
+				if (size < 8 << 20) { // Limit on many engines
 					root = "src"
 					type = fileType
 				}

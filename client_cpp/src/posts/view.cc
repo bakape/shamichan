@@ -11,11 +11,8 @@ using brunhild::Children;
 
 Node PostView::render(const Post& p)
 {
-    Node n = { "article",
-        {
-            { "id", "#p" + std::to_string(p.id) },
-        } };
-    n.children.reserve(5);
+    Node n = { "article", { { "id", "#p" + std::to_string(p.id) } } };
+    n.children.reserve(6);
 
     n.attrs["class"] = "glass";
     if (p.editing) {
@@ -24,12 +21,20 @@ Node PostView::render(const Post& p)
 
     if (p.deleted) {
         n.attrs["class"] += " deleted";
-        n.children.push_back({ "input",
-            {
-                { "type", "checkbox" }, { "class", "deleted-toggle" },
-            } });
+        n.children.push_back({
+            "input", { { "type", "checkbox" }, { "class", "deleted-toggle" } },
+        });
     }
     n.children.push_back(render_header(p));
+
+    Children pc_ch;
+    pc_ch.reserve(2);
+    if (p.image) {
+        n.attrs["class"] += " media";
+        n.children.push_back(render_figcaption(*p.image));
+    }
+
+    n.children.push_back({ "div", { { "class", "post-container" } }, pc_ch });
 
     return n;
 }
@@ -42,20 +47,24 @@ Node PostView::render_header(const Post& p)
     // TODO: Check if staff, and render moderator checkbox
 
     if (p.sticky) {
-        n.children.push_back({ "svg",
+        n.children.push_back({
+            "svg",
             {
                 { "xmlns", "http://www.w3.org/2000/svg" }, { "width", "8" },
                 { "height", "8" }, { "viewBox", "0 0 8 8" },
             },
-            R"'(<path d="M1.34 0a.5.5 0 0 0 .16 1h.5v2h-1c-.55 0-1 .45-1 1h3v3l.44 1 .56-1v-3h3c0-.55-.45-1-1-1h-1v-2h.5a.5.5 0 1 0 0-1h-4a.5.5 0 0 0-.09 0 .5.5 0 0 0-.06 0z" />)'" });
+            R"'(<path d="M1.34 0a.5.5 0 0 0 .16 1h.5v2h-1c-.55 0-1 .45-1 1h3v3l.44 1 .56-1v-3h3c0-.55-.45-1-1-1h-1v-2h.5a.5.5 0 1 0 0-1h-4a.5.5 0 0 0-.09 0 .5.5 0 0 0-.06 0z" />)'",
+        });
     }
     if (p.locked) {
-        n.children.push_back({ "svg",
+        n.children.push_back({
+            "svg",
             {
                 { "xmlns", "http://www.w3.org/2000/svg" }, { "width", "8" },
                 { "height", "8" }, { "viewBox", "0 0 8 8" },
             },
-            R"'(<path d="M3 0c-1.1 0-2 .9-2 2v1h-1v4h6v-4h-1v-1c0-1.1-.9-2-2-2zm0 1c.56 0 1 .44 1 1v1h-2v-1c0-.56.44-1 1-1z" transform="translate(1)" />)'" });
+            R"'(<path d="M3 0c-1.1 0-2 .9-2 2v1h-1v4h6v-4h-1v-1c0-1.1-.9-2-2-2zm0 1c.56 0 1 .44 1 1v1h-2v-1c0-.56.44-1 1-1z" transform="translate(1)" />)'",
+        });
     }
 
     if (p.subject) {
@@ -67,12 +76,14 @@ Node PostView::render_header(const Post& p)
     n.children.push_back(render_name(p));
     if (p.flag) {
         auto& flag = *p.flag;
-        n.children.push_back({ "img",
+        n.children.push_back({
+            "img",
             {
                 { "class", "flag" },
                 { "src", "/assets/flags/" + flag + ".svg" },
                 { "title", countries.count(flag) ? countries.at(flag) : flag },
-            } });
+            },
+        });
     }
     n.children.push_back(render_time(p.time));
 
@@ -81,38 +92,45 @@ Node PostView::render_header(const Post& p)
     if (!page->thread && !page->catalog) {
         url = "/all/" + id_str + "?last=100" + url;
     }
-    n.children.push_back({ "nav", {},
+    n.children.push_back({
+        "nav", {},
         {
-            { "a",
+            {
+                "a",
                 {
                     { "href", url },
                 },
-                "No." },
-            { "a",
+                "No.",
+            },
+            {
+                "a",
                 {
                     { "class", "quote" }, { "href", url },
                 },
-                id_str },
-        } });
-    n.children.push_back({ "a", { { "class", "control" } },
+                id_str,
+            },
+        },
+    });
+    n.children.push_back({
+        "a", { { "class", "control" } },
         {
-            { "svg",
+            {
+                "svg",
                 {
                     { "xmlns", "http://www.w3.org/2000/svg" }, { "width", "8" },
                     { "height", "8" }, { "viewBox", "0 0 8 8" },
                 },
-                R"'(<path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" />)'" },
-        } });
+                R"'(<path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" />)'",
+            },
+        },
+    });
 
     return n;
 }
 
 Node PostView::render_name(const Post& p)
 {
-    Node n("b",
-        {
-            { "class", "name spaced" },
-        });
+    Node n("b", { { "class", "name spaced" } });
     n.children.reserve(5);
     if (p.sage) {
         n.attrs["class"] += " sage";
@@ -164,10 +182,7 @@ Node PostView::render_time(time_t time)
 
     const auto rel = relative_time(time);
 
-    return Node("time",
-        {
-            { "title", options->relative_time ? abs : rel },
-        },
+    return Node("time", { { "title", options->relative_time ? abs : rel } },
         options->relative_time ? rel : abs);
 }
 
