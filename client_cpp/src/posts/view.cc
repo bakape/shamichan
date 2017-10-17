@@ -209,7 +209,7 @@ std::string relative_time(time_t then)
     }
 
     const int divide[4] = { 60, 24, 30, 12 };
-    const string unit[4] = { "minute", "hour", "day", "month" };
+    const static string unit[4] = { "minute", "hour", "day", "month" };
     for (int i = 0; i < 4; i++) {
         if (t < divide[i]) {
             return ago(t, lang->plurals.at(unit[i]), is_future);
