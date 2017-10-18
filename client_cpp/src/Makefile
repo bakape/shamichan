@@ -12,7 +12,7 @@ options:
 	$(MAKE) -C options
 
 %.bc: %.cc
-	emcc $(EMCCFLAGS) $^ -o $@
+	emcc $^ -o $@ $(EMCCFLAGS)
 
 clean:
 	rm -f *.bc
