@@ -16,6 +16,46 @@ PostIDs* post_ids = nullptr;
 std::map<uint64_t, Post>* posts = nullptr;
 string const* location_origin = nullptr;
 
+// Extract thread data from JSON and populate post collection. Returns the id
+// of the extracted thread;
+static uint64_t extract_thread(json& j)
+{
+    // TODO: Actually use the thread metadata
+    auto thread = ThreadDecoder(j);
+
+    const string board = j["board"];
+    const uint64_t thread_id = j["id"];
+    (*posts)[thread_id] = Post(j);
+
+    for (auto post : thread.posts) {
+        post.board = board;
+        post.op = thread_id;
+        (*posts)[post.id] = post;
+    }
+
+    return thread_id;
+}
+
+// Load posts from inlined JSON. Returns a vector of detected thread IDs.
+// TODO: Fetch this as binary data from the server. It is probably a good idea
+// to do this and configuration fetches in one request.
+static std::vector<uint64_t> load_posts()
+{
+    auto j = json::parse(get_inner_html("post-data"));
+    auto thread_ids = std::vector<uint64_t>(15);
+    if (page->thread) {
+        thread_ids.push_back(extract_thread(j));
+    } else {
+        for (auto& thread : j) {
+            thread_ids.push_back(extract_thread(thread));
+        }
+
+        // TODO: Catalog pages
+    }
+
+    return thread_ids;
+}
+
 void load_state()
 {
     // Order is important to prevent race conditions after the database is
@@ -148,41 +188,6 @@ EMSCRIPTEN_BINDINGS(module_state)
 {
     emscripten::register_vector<unsigned long>("VectorUint64");
     emscripten::function("add_to_storage", &add_to_storage);
-}
-
-static std::vector<uint64_t> load_posts()
-{
-    auto j = json::parse(get_inner_html("post-data"));
-    auto thread_ids = std::vector<uint64_t>(15);
-    if (page->thread) {
-        thread_ids.push_back(extract_thread(j));
-    } else {
-        for (auto& thread : j) {
-            thread_ids.push_back(extract_thread(thread));
-        }
-
-        // TODO: Catalog pages
-    }
-
-    return thread_ids;
-}
-
-static uint64_t extract_thread(json& j)
-{
-    // TODO: Actually use the thread metadata
-    auto thread = ThreadDecoder(j);
-
-    const string board = j["board"];
-    const uint64_t thread_id = j["id"];
-    (*posts)[thread_id] = Post(j);
-
-    for (auto post : thread.posts) {
-        post.board = board;
-        post.op = thread_id;
-        (*posts)[post.id] = post;
-    }
-
-    return thread_id;
 }
 
 ThreadDecoder::ThreadDecoder(json& j)
