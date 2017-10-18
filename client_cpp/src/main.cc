@@ -1,10 +1,15 @@
 #include "../brunhild/init.hh"
 #include "local_storage.hh"
 #include "state.hh"
+#include "util.hh"
 
 int main()
 {
-    load_state();
-    brunhild::init();
+    try {
+        load_state();
+        brunhild::init();
+    } catch (const std::exception& ex) {
+        console_log(ex.what());
+    }
     return 0;
 }
