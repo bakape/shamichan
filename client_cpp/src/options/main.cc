@@ -31,7 +31,7 @@ void Options::load()
     load_bool(iqdb, "iqdb");
     load_bool(sauce_nao, "saucenao");
     load_bool(what_anime, "whatAnime");
-    load_bool(desu_storage, "desuStorage");
+    load_bool(desu_storage, "desustorage");
     load_bool(exhentai, "exhentai");
 
     load_uint(new_post, "newPost");
