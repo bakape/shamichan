@@ -18,7 +18,7 @@ string local_storage_get(const string key)
     char* val = (char*)EM_ASM_INT(
         {
             var s = localStorage.getItem(Pointer_stringify($0)) || '';
-            var len = s.length + 1;
+            var len = lengthBytesUTF8(s) + 1;
             var buf = Module._malloc(len);
             stringToUTF8(s, buf, len);
             return buf;

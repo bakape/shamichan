@@ -15,7 +15,7 @@ std::string get_inner_html(const std::string& id)
     return convert_c_string(EM_ASM_INT(
         {
             var s = document.getElementById(Pointer_stringify($0)).innerHTML;
-            var len = s.length + 1;
+            var len = lengthBytesUTF8(s) + 1;
             var buf = Module._malloc(len);
             stringToUTF8(s, buf, len);
             return buf;

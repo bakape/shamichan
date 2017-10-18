@@ -76,7 +76,7 @@ void load_state()
     // TODO: This should be read from a concurrent server fetch
     config = new Config(convert_c_string(EM_ASM_INT_V({
         var s = JSON.stringify(window.config);
-        var len = s.length + 1;
+        var len = lengthBytesUTF8(s) + 1;
         var buf = Module._malloc(len);
         stringToUTF8(s, buf, len);
         return buf;
@@ -84,7 +84,7 @@ void load_state()
 
     board_config = new BoardConfig(convert_c_string(EM_ASM_INT_V({
         var s = document.getElementById('board-configs').innerHTML;
-        var len = s.length + 1;
+        var len = lengthBytesUTF8(s) + 1;
         var buf = Module._malloc(len);
         stringToUTF8(s, buf, len);
         return buf;
