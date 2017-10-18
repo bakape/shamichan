@@ -44,10 +44,11 @@ static std::unordered_set<uint64_t> load_posts()
 {
     auto j = json::parse(get_inner_html("post-data"));
     auto thread_ids = std::unordered_set<uint64_t>();
-    thread_ids.reserve(15);
     if (page->thread) {
+        thread_ids.reserve(1);
         thread_ids.insert(extract_thread(j));
     } else {
+        thread_ids.reserve(15);
         for (auto& thread : j) {
             thread_ids.insert(extract_thread(thread));
         }
