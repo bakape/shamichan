@@ -6,6 +6,7 @@
 #include "util.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <unordered_set>
 
 using json = nlohmann::json;
 
@@ -39,15 +40,16 @@ static uint64_t extract_thread(json& j)
 // Load posts from inlined JSON. Returns a vector of detected thread IDs.
 // TODO: Fetch this as binary data from the server. It is probably a good idea
 // to do this and configuration fetches in one request.
-static std::vector<uint64_t> load_posts()
+static std::unordered_set<uint64_t> load_posts()
 {
     auto j = json::parse(get_inner_html("post-data"));
-    auto thread_ids = std::vector<uint64_t>(15);
+    auto thread_ids = std::unordered_set<uint64_t>();
+    thread_ids.reserve(15);
     if (page->thread) {
-        thread_ids.push_back(extract_thread(j));
+        thread_ids.insert(extract_thread(j));
     } else {
         for (auto& thread : j) {
-            thread_ids.push_back(extract_thread(thread));
+            thread_ids.insert(extract_thread(thread));
         }
 
         // TODO: Catalog pages

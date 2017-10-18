@@ -12,12 +12,12 @@ bool has_errored = false;
 
 // Threads to load on the call from db_is_ready(). Keeps us from passing the
 // thread ID array to JS, when opening the thread.
-std::vector<uint64_t>* threads_to_load = nullptr;
+std::unordered_set<uint64_t>* threads_to_load = nullptr;
 
 // TODO: Deal with Firefox private Module
-void load_db(std::vector<uint64_t> thread_ids)
+void load_db(std::unordered_set<uint64_t> thread_ids)
 {
-    threads_to_load = new std::vector<uint64_t>(thread_ids);
+    threads_to_load = new std::unordered_set<uint64_t>(thread_ids);
 
     EM_ASM_INT(
         {
@@ -114,11 +114,14 @@ void load_db(std::vector<uint64_t> thread_ids)
         db_version);
 }
 
-void load_post_ids(const std::vector<uint64_t>& threads)
+void load_post_ids(const std::unordered_set<uint64_t>& threads)
 {
     if (!threads.size() || has_errored) {
         return;
     }
+
+    // Copy to vector, so we can pass it to JS
+    const std::vector<uint64_t> vec(threads.begin(), threads.end());
 
     EM_ASM_INT(
         {
@@ -131,7 +134,8 @@ void load_post_ids(const std::vector<uint64_t>& threads)
                 }
             }
 
-            // Need to scope variables to function, because async. ES5 a shit.
+            // Need to scope variables to function, because async. ES5 a
+            // shit.
             function read(op, typ, name)
             {
                 var ids = new Module.VectorUint64();
@@ -156,7 +160,7 @@ void load_post_ids(const std::vector<uint64_t>& threads)
                 };
             }
         },
-        threads.data(), threads.size());
+        vec.data(), vec.size());
 }
 
 void handle_db_error(std::string err)
