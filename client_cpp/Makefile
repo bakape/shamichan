@@ -10,7 +10,7 @@ ifeq ($(DEBUG),1)
 	# -O0 is too large to load in the browser. Fails with:
 	# LinkError: table import 128 has maximum larger than maximum 24960
 	COMPILE_FLAGS+= -O1 -g4
-	SETTINGS+= -s DEMANGLE_SUPPORT=1 -s ASSERTIONS=1 -s EXCEPTION_DEBUG=1
+	SETTINGS+= -s DEMANGLE_SUPPORT=1 -s ASSERTIONS=1
 else
 	COMPILE_FLAGS+= -Oz -g0 --llvm-lto 3
 endif
