@@ -39,10 +39,6 @@ static Node image_search_link(int i, const std::string& url)
 
     return Node("a",
         {
-            // TODO: Rework the CSS for this class. Would also be better to
-            // move the class one level up.
-            { "style", "font-weight: 700;" },
-            // { "class", "image-search" },
             { "target", "_blank" }, { "rel", "nofollow" },
             { "href", url_starts[i] + url },
         },
@@ -51,7 +47,14 @@ static Node image_search_link(int i, const std::string& url)
 
 Node PostView::render_image_search(const Image& img)
 {
-    Node n = { "span", { { "class", "spaced" } } };
+    Node n = {
+        "span",
+        {
+            { "class", "spaced" },
+            // TODO: Rework the CSS for this class
+            { "style", "font-weight: 700;" },
+        },
+    };
     n.children.reserve(6);
 
     // Resolve URL of image search providers, that require to download the
