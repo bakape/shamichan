@@ -35,7 +35,7 @@ void load_db(std::unordered_set<uint64_t> thread_ids)
 
             window.handle_db_error = function(e)
             {
-                Module.handle_db_error(e.toString());
+                Module._handle_db_error(e.toString());
             };
 
             var r = indexedDB.open('meguca', $0);
@@ -177,6 +177,6 @@ void db_is_ready()
 
 EMSCRIPTEN_BINDINGS(module_db)
 {
-    emscripten::function("handle_db_error", &handle_db_error);
+    emscripten::function("_handle_db_error", &handle_db_error);
     emscripten::function("db_is_ready", &db_is_ready);
 }
