@@ -27,10 +27,6 @@ void load_state()
     options->load();
     lang = new LanguagePack();
 
-    posts = new std::map<uint64_t, Post>();
-    post_ids = new PostIDs{};
-    load_db(load_posts());
-
     location_origin = new string(
         emscripten::val::global("location")["origin"].as<string>());
 
@@ -50,6 +46,10 @@ void load_state()
         stringToUTF8(s, buf, len);
         return buf;
     })));
+
+    posts = new std::map<uint64_t, Post>();
+    post_ids = new PostIDs{};
+    load_db(load_posts());
 }
 
 Config::Config(const string& s)
