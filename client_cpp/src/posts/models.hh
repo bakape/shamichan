@@ -41,14 +41,14 @@ const std::unordered_map<FileType, std::string> file_extentions = {
 
 class Image {
 public:
-    std::optional<bool> apng, // PNG image is APNG
-        audio, // Has audio
-        video, // Has video
-        spoiler; // Is spoilered
+    bool apng = false, // PNG image is APNG
+        audio = false, // Has audio
+        video = false, // Has video
+        spoiler = false; // Is spoilered
     FileType file_type, // File type of source file
         thumb_type; // File type of thumbnail
     uint16_t dims[4];
-    std::optional<uint32_t> length; // Length of media, if a media file
+    uint32_t length = 0; // Length of media, if a media file
     uint64_t size;
     std::optional<std::string> artist, // Media file artist meta info
         title; // Media file title meta info

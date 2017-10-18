@@ -49,6 +49,9 @@ private:
     // Render reverse image search links
     Node render_image_search(const Image& img);
 
+    // Render uploaded file meta information
+    Node render_file_info(const Image& img);
+
     bool expanded = false, // Thumbnail is expanded
         taller_than_viewport = false, // Image is taller than the viewport
         revealed = false; // Revealing a hidden image with [Show]
