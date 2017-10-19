@@ -1,4 +1,4 @@
-#include "main.hh"
+#include "options.hh"
 #include "../local_storage.hh"
 
 // TODO: Expose Options::load() to JS side for modification loading

@@ -1,6 +1,6 @@
 #include "../../brunhild/util.hh"
 #include "../lang.hh"
-#include "../options/main.hh"
+#include "../options/options.hh"
 #include "../state.hh"
 #include "../util.hh"
 #include "models.hh"

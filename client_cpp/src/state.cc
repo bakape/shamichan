@@ -1,7 +1,7 @@
 #include "state.hh"
 #include "db.hh"
 #include "lang.hh"
-#include "options/main.hh"
+#include "options/options.hh"
 #include "posts/models.hh"
 #include "util.hh"
 #include <emscripten.h>

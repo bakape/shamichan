@@ -50,7 +50,7 @@ struct url_encode {
 private:
     const std::string& str;
 
-    const static hex[] = "0123456789abcdef";
+    constexpr static char hex[17] = "0123456789abcdef";
 
     // Converts character code to hex to HEX
     static char to_hex(char code) { return hex[code & 15]; }

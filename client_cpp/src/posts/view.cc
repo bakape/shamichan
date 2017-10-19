@@ -1,6 +1,6 @@
 #include "view.hh"
 #include "../lang.hh"
-#include "../options/main.hh"
+#include "../options/options.hh"
 #include "../state.hh"
 #include "../util.hh"
 #include "countries.hh"
