@@ -2,6 +2,7 @@
 
 #include "node.hh"
 #include <optional>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -72,8 +73,8 @@ public:
     // inserted into a parent view or passed to one of DOM mutation functions.
     std::string html() const;
 
-    // Same as html(), but writes to a string to reduce allocations
-    void write_html(std::string&) const;
+    // Same as html(), but writes to a stream to reduce allocations
+    void write_html(std::ostringstream&) const;
 
     // Patch the view's subtree against the updated subtree in Node.
     // Can only be called after the view has been inserted into the DOM.

@@ -1,12 +1,15 @@
+#include "../../brunhild/util.hh"
 #include "../lang.hh"
 #include "../options/main.hh"
 #include "../state.hh"
 #include "../util.hh"
 #include "models.hh"
 #include "view.hh"
+#include <iomanip>
 #include <sstream>
 
 using brunhild::escape;
+using std::ostringstream;
 
 Node PostView::render_figcaption(const Image& img, bool reveal)
 {
@@ -29,21 +32,14 @@ Node PostView::render_figcaption(const Image& img, bool reveal)
 
     // File name + download link
     auto& ext = file_extentions.at(img.file_type);
-    string name, url;
-    name.reserve(img.name.size() * 1.2);
-    escape(name, img.name);
-    name += '.';
-    name += ext;
-    url.reserve(72);
-    url += "/assets/images/src/";
-    url += img.SHA1;
-    url += '.';
-    url += ext;
+    ostringstream name, url;
+    name << escape(img.name) << '.' << ext;
+    url << "/assets/images/src/" << img.SHA1 << '.' << ext;
     n.children.push_back({ "a",
         {
-            { "href", url }, { "download", name },
+            { "href", url.str() }, { "download", name.str() },
         },
-        name });
+        name.str() });
 
     return n;
 }
@@ -97,16 +93,10 @@ Node PostView::render_image_search(const Image& img)
         root = "thumb";
         typ = img.thumb_type;
     }
-    string url;
-    url.reserve(128);
-    url += *location_origin;
-    url += "/assets/images/";
-    url += root;
-    url += '/';
-    url += img.SHA1;
-    url += '.';
-    url += file_extentions.at(typ);
-    url = url_encode(url);
+    ostringstream unencoded, url;
+    unencoded << *location_origin << "/assets/images/" << root << '/'
+              << img.SHA1 << '.' << file_extentions.at(typ);
+    url << url_encode(unencoded.str());
 
     const bool enabled[6] = {
         options->google, options->iqdb, options->sauce_nao, options->what_anime,
@@ -114,7 +104,7 @@ Node PostView::render_image_search(const Image& img)
     };
     for (int i = 0; i < 4; i++) {
         if (enabled[i]) {
-            n.children.push_back(image_search_link(i, url));
+            n.children.push_back(image_search_link(i, url.str()));
         }
     }
     if (enabled[4]) {
@@ -123,14 +113,14 @@ Node PostView::render_image_search(const Image& img)
         case FileType::png:
         case FileType::gif:
         case FileType::webm:
-            n.children.push_back(image_search_link(4, url));
+            n.children.push_back(image_search_link(4, url.str()));
         }
     }
     if (enabled[5]) {
         switch (img.file_type) {
         case FileType::jpg:
         case FileType::png:
-            n.children.push_back(image_search_link(5, url));
+            n.children.push_back(image_search_link(5, url.str()));
         }
     }
 
@@ -139,73 +129,63 @@ Node PostView::render_image_search(const Image& img)
 
 Node PostView::render_file_info(const Image& img)
 {
-    using std::to_string;
+    using std::setw;
 
-    string s;
-    s.reserve(32);
+    ostringstream s;
     bool first = true;
-    s += '(';
+    s << '(';
 
 // Appends a comma and a space after the first invocation
 #define comma()                                                                \
     if (!first) {                                                              \
-        s += ", ";                                                             \
+        s << ", ";                                                             \
     } else {                                                                   \
         first = false;                                                         \
     }
 
     if (img.artist) {
         comma();
-        escape(s, *img.artist);
+        s << escape(*img.artist);
     }
     if (img.title) {
         comma();
-        escape(s, *img.title);
+        s << escape(*img.title);
     }
     if (img.audio) {
         comma();
-        s += "♫";
+        s << "♫";
     }
     if (img.length) {
         comma();
         if (img.length < 60) {
-            s += "0:";
-            pad(s, img.length);
+            s << "0:" << setw(2) << img.length;
         } else {
-            pad(s, img.length / 60);
-            s += ':';
-            pad(s, img.length % 60);
+            s << setw(2) << img.length / 60 << ':' << setw(2)
+              << img.length % 60;
         }
     }
     if (img.apng) {
         comma();
-        s += "APNG";
+        s << "APNG";
     }
 
     // Readable file size
     comma();
     if (img.size < 1 << 10) {
-        s += to_string(img.size);
-        s += " B";
+        s << img.size << " B";
     } else if (img.size < 1 << 20) {
-        s += to_string(img.size / (1 << 10));
-        s += " KB";
+        s << img.size / (1 << 10) << " KB";
     } else {
-        std::ostringstream str;
-        str << std::setprecision(1) << std::fixed
-            << (float)img.size / (1 << 20);
-        s += str.str();
-        s += " MB";
+        s << std::setprecision(1) << std::fixed << (float)img.size / (1 << 20)
+          << " MB";
     }
 
     // Media dimensions
     if (const auto[w, h, _, __] = img.dims; w && h) {
         comma();
-        s += to_string(w);
-        s += 'x';
-        s += to_string(h);
+        s << w << 'x' << h;
     }
 
-    s += ')';
-    return Node("span", s);
+    s << ')';
+    return Node("span", s.str());
 }

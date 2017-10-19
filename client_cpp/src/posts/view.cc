@@ -5,6 +5,8 @@
 #include "../util.hh"
 #include "countries.hh"
 #include "models.hh"
+#include <iomanip>
+#include <sstream>
 #include <tuple>
 
 using brunhild::Children;
@@ -164,26 +166,21 @@ Node PostView::render_name(const Post& p)
 
 Node PostView::render_time(time_t time)
 {
-    using std::to_string;
+    using std::setw;
 
     auto then = std::localtime(&time);
-    std::string abs;
-    abs.reserve(64);
 
     // Renders classic absolute timestamp
-    pad(abs, then->tm_mday);
-    abs += ' ';
-    abs += lang->calendar[then->tm_mon] + ' ';
-    abs += to_string(1900 + then->tm_year);
-    abs += " (" + lang->week[then->tm_wday] + ") ";
-    pad(abs, then->tm_hour);
-    abs = +':';
-    pad(abs, then->tm_min);
+    std::ostringstream abs;
+    abs << setw(2) << then->tm_mday << ' ' << lang->calendar[then->tm_mon]
+        << ' ' << 1900 + then->tm_year << " (" << lang->week[then->tm_wday]
+        << ") " << setw(2) << then->tm_hour << ':' << setw(2) << then->tm_min;
 
     const auto rel = relative_time(time);
 
-    return Node("time", { { "title", options->relative_time ? abs : rel } },
-        options->relative_time ? rel : abs);
+    return Node("time",
+        { { "title", options->relative_time ? abs.str() : rel } },
+        options->relative_time ? rel : abs.str());
 }
 
 // Renders "56 minutes ago" or "in 56 minutes" like relative time text

@@ -1,6 +1,7 @@
 #include "view.hh"
 #include "mutations.hh"
 #include <algorithm>
+#include <sstream>
 #include <vector>
 
 namespace brunhild {
@@ -20,12 +21,11 @@ void View::set_inner_html(std::string html)
 
 void View::set_children(const Children& children)
 {
-    std::string s;
-    s.reserve(1 << 10);
+    std::ostringstream s;
     for (auto& ch : children) {
         ch.write_html(s);
     }
-    set_inner_html(s);
+    set_inner_html(s.str());
 }
 
 void View::remove() { brunhild::remove(id); }
@@ -55,7 +55,10 @@ void VirtualView::ensure_id(Node& node)
 
 std::string VirtualView::html() const { return saved.html(); }
 
-void VirtualView::write_html(std::string& s) const { saved.write_html(s); }
+void VirtualView::write_html(std::ostringstream& s) const
+{
+    saved.write_html(s);
+}
 
 void VirtualView::patch(Node node) { patch_node(saved, node); }
 
@@ -114,14 +117,13 @@ void VirtualView::patch_children(Node& old, Children children)
             return;
         }
 
-        std::string s;
-        s.reserve(1 << 10);
+        std::ostringstream s;
         for (auto& ch : children) {
             ensure_id(ch);
             ch.write_html(s);
         }
         old.children = children;
-        set_inner_html(old.attrs["id"], s);
+        set_inner_html(old.attrs["id"], s.str());
         return;
     } else if (children.size() == 1 && children[0].is_text()) {
         set_inner_html(old.attrs["id"], children[0].attrs["_text"]);

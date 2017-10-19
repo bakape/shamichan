@@ -3,16 +3,16 @@
 #include "../state.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <sstream>
 
 void render_page()
 {
-    std::string s;
-    s.reserve(10 << 10);
+    std::ostringstream s;
     for (auto & [ id, p ] : *posts) {
         p.view = new PostView(p);
         p.view->write_html(s);
     }
-    brunhild::set_inner_html("threads", s);
+    brunhild::set_inner_html("threads", s.str());
 }
 
 EMSCRIPTEN_BINDINGS(module_page)
