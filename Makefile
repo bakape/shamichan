@@ -51,18 +51,21 @@ client_vendor: client_deps
 	$(uglifyjs) node_modules/whatwg-fetch/fetch.js -o www/js/vendor/fetch.js
 	$(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
 
-server: server_deps generate
+server: generate server_deps
 	go build -v -o $(binary) meguca
 ifeq ($(is_windows), true)
 	cp /mingw64/bin/*.dll ./
 endif
 
-generate: server_deps
+generate: clean_generated
 	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
+	go generate meguca/...
+
+clean_generated:
+	rm -f go/src/meguca/db/bin_data.go go/src/meguca/lang/bin_data.go go/src/meguca/assets/bin_data.go
 	rm -f go/src/meguca/common/*_easyjson.go
 	rm -f go/src/meguca/config/*_easyjson.go
 	rm -f go/src/meguca/templates/*.qtpl.go
-	go generate meguca/...
 
 server_deps:
 	go list -f '{{.Deps}}' meguca | tr -d '[]' | xargs go get -v
@@ -75,7 +78,7 @@ update_deps:
 client_clean:
 	rm -rf www/js www/wasm www/css/*.css www/css/maps node_modules
 
-clean: client_clean clean_wasm
+clean: client_clean clean_wasm clean_generated
 	rm -rf .build .ffmpeg .package target meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 	$(MAKE) -C scripts/migration/3to4 clean
 ifeq ($(is_windows), true)
