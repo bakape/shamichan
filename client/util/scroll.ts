@@ -69,18 +69,17 @@ document.addEventListener("scroll", () => {
 // Use a MutationObserver to jump to the bottom of the page when a new
 // post is made, unless the user has scrolled up from the bottom
 let threadContainer = document.getElementById("thread-container")
-let threadObserver = new MutationObserver((mut) => {
-	mut.forEach(() => {
+if (threadContainer !== null) {
+	let threadObserver = new MutationObserver((mut) => {
 		if (!scrolled) {
 			scrollToBottom()
 		}
 	})
-})
-threadObserver.observe(threadContainer, {
-	childList: true,
-	attributes: false,
-	characterData: false,
-})
+	threadObserver.observe(threadContainer, {
+		childList: true,
+		subtree: true,
+	})
+}
 
 // Unlock from bottom, when the tab is hidden, unless set not to
 document.addEventListener("visibilitychange", () => {
