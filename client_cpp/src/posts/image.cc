@@ -11,7 +11,7 @@
 using brunhild::escape;
 using std::ostringstream;
 
-Node PostView::render_figcaption(const Image& img, bool reveal)
+Node PostView::render_figcaption(const Image& img)
 {
     Node n = { "figcaption", { { "class", "spaced" } } };
     n.children.reserve(4);
@@ -22,7 +22,7 @@ Node PostView::render_figcaption(const Image& img, bool reveal)
             {
                 { "class", "act" },
             },
-            lang->posts.at(reveal ? "hide" : "show"),
+            lang->posts.at(reveal_thumbnail ? "hide" : "show"),
         });
     }
     if (img.thumb_type != FileType::no_file && img.file_type != FileType::pdf) {
@@ -188,4 +188,58 @@ Node PostView::render_file_info(const Image& img)
 
     s << ')';
     return Node("span", s.str());
+}
+
+Node PostView::render_image(const Image& img)
+{
+    const std::string src = img.source_path();
+    std::string thumb;
+    uint16_t h, w;
+
+    if (img.thumb_type == FileType::no_file) {
+        // No thumbnail exists. Assign default.
+        std::string file;
+        switch (img.file_type) {
+        case FileType::mp4:
+        case FileType::mp3:
+        case FileType::ogg:
+        case FileType::flac:
+            file = "audio";
+            break;
+        default:
+            file = "file";
+        }
+        thumb = "/assets/" + file + ".png";
+        h = w = 150;
+    } else if (img.spoiler) {
+        thumb = "/assets/spoil/default.jpg";
+        h = w = 150;
+    } else {
+        thumb = img.thumb_path();
+        w = img.dims[2];
+        h = img.dims[3];
+    }
+
+    // Downscale thumbnail for higher DPI, unless specified not to
+    if (!large_thumbnail && (w > 125 || h > 125)) {
+        w *= 0.8333;
+        h *= 0.8333;
+    }
+
+    return {
+        "figure", {},
+        { {
+            "a",
+            {
+                { "href", src }, { "target", "_blank" },
+            },
+            { {
+                "img",
+                {
+                    { "src", thumb }, { "width", std::to_string(w) },
+                    { "height", std::to_string(h) },
+                },
+            } },
+        } },
+    };
 }

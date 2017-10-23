@@ -1,5 +1,7 @@
 #include "models.hh"
+#include "../state.hh"
 #include "view.hh"
+#include <sstream>
 
 using json = nlohmann::json;
 using std::string;
@@ -69,6 +71,30 @@ Command::Command(nlohmann::json& j)
         dice = val.get<std::vector<uint16_t>>();
         break;
     }
+}
+
+std::string Image::image_root() const
+{
+    if (config->image_root_override != "") {
+        return config->image_root_override;
+    }
+    return "/assets/images";
+}
+
+std::string Image::thumb_path() const
+{
+    std::ostringstream s;
+    s << image_root() << "/thumb/" << SHA1 << '.'
+      << file_extentions.at(thumb_type);
+    return s.str();
+}
+
+std::string Image::source_path() const
+{
+    std::ostringstream s;
+    s << image_root() << "/src/" << SHA1 << '.'
+      << file_extentions.at(file_type);
+    return s.str();
 }
 
 Post::Post(nlohmann::json& j)

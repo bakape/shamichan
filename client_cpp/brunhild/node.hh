@@ -45,6 +45,8 @@ public:
     {
     }
 
+    Node() = default;
+
     // Renders Node and subtree to HTML
     std::string html() const;
 

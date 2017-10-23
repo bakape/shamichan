@@ -24,12 +24,16 @@ struct TextState {
 class PostView : public brunhild::VirtualView {
 public:
     // Initializes a new PostView with data from model
-    PostView(const Post& model)
-        : brunhild::VirtualView(render(model))
-    {
-    }
+    PostView(const Post& model) { init(render(model)); }
 
 private:
+    bool expand_image = false, // Expand image thumbnail to full view
+        taller_than_viewport = false, // Image is taller than the viewport
+        reveal_thumbnail = false, // Reveal a hidden image with [Show]
+        large_thumbnail = false; // Render a bigger thumbnail
+
+    TextState state;
+
     // Generates the post's node tree
     Node render(const Post&);
 
@@ -44,7 +48,7 @@ private:
 
     // Render the information caption above the image.
     // Set reveal to true, if in hidden thumbnail mode, to reveal the thumbnail.
-    Node render_figcaption(const Image& img, bool reveal = false);
+    Node render_figcaption(const Image& img);
 
     // Render reverse image search links
     Node render_image_search(const Image& img);
@@ -52,11 +56,8 @@ private:
     // Render uploaded file meta information
     Node render_file_info(const Image& img);
 
-    bool expanded = false, // Thumbnail is expanded
-        taller_than_viewport = false, // Image is taller than the viewport
-        revealed = false; // Revealing a hidden image with [Show]
-
-    TextState state;
+    // Render a thumbnail or expanded source media content
+    Node render_image(const Image& img);
 };
 
 // Renders readable elapsed time since Unix timestamp then

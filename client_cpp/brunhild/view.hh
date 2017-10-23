@@ -59,15 +59,8 @@ public:
 // passed Nodes to the current state of the DOM and appropriate pathing.
 class VirtualView {
 public:
-    // ID of the element
-    const std::string id;
-
-    // Constructs a VirtualView from a Node subtree as a staring point.
-    // Also returns the output HTML to be inserted into a parent's subtree.
-    // Note, that this instance still needs to be placed into the DOM by
-    // attaching to a View or directly passing the output of html() to one of
-    // the DOM mutation functions.
-    VirtualView(Node);
+    // Initialize the view with a Node subtree
+    void init(Node);
 
     // Renders the view's subtree as HTML. After this call, the HTML must be
     // inserted into a parent view or passed to one of DOM mutation functions.

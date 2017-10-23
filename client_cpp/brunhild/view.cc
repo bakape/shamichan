@@ -37,9 +37,9 @@ void View::set_attr(std::string key, std::string val)
 
 void View::remove_attr(std::string key) { brunhild::remove_attr(id, key); }
 
-VirtualView::VirtualView(Node node)
-    : saved(node)
+void VirtualView::init(Node node)
 {
+    saved = node;
     ensure_id(saved);
 }
 

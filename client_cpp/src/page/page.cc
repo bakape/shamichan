@@ -3,6 +3,7 @@
 #include "../state.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <memory>
 #include <sstream>
 
 void render_page()

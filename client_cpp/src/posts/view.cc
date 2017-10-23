@@ -33,7 +33,13 @@ Node PostView::render(const Post& p)
     pc_ch.reserve(2);
     if (p.image) {
         n.attrs["class"] += " media";
+        large_thumbnail = p.op == p.id;
         n.children.push_back(render_figcaption(*p.image));
+        if ((!options->hide_thumbs && !options->work_mode_toggle)
+            || reveal_thumbnail) {
+            console_log(std::to_string(reveal_thumbnail));
+            pc_ch.push_back(render_image(*p.image));
+        }
     }
 
     n.children.push_back({ "div", { { "class", "post-container" } }, pc_ch });

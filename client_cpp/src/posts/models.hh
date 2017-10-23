@@ -56,8 +56,20 @@ public:
         SHA1, // SHA1 hash of source file
         name; // Name the file was uploaded with
 
+    Image() = default;
+
     // Parse from JSON
     Image(nlohmann::json&);
+
+    // Returns the path to this files's thumbnail
+    std::string thumb_path() const;
+
+    // Returns the path to the source file
+    std::string source_path() const;
+
+private:
+    // Returns the root hosting address of all images
+    std::string image_root() const;
 };
 
 // Single hash command result delivered from the server
@@ -115,18 +127,12 @@ public:
     std::unordered_map<uint64_t, LinkData> links; // Posts linked by this post
     PostView* view = nullptr;
 
+    Post() = default;
+
     // Parse from JSON
     Post(nlohmann::json&);
 
-    // Required to place Post into collections
-    Post() {}
-
-    ~Post()
-    {
-        if (view) {
-            delete view;
-        }
-    }
+    ~Post() { delete view; }
 };
 
 // Contains thread metadata
