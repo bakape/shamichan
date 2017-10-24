@@ -6,9 +6,16 @@
 #include "util.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <map>
+#include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 using json = nlohmann::json;
+
+// Inverse map of posts linking posts by post ID.
+// <linked_post_id <linker_post_id, {false, linker_post_thread_id}>>
+typedef std::unordered_map<uint64_t, std::map<uint64_t, LinkData>> Backlinks;
 
 Config* config = nullptr;
 BoardConfig* board_config = nullptr;
@@ -17,20 +24,34 @@ PostIDs* post_ids = nullptr;
 std::map<uint64_t, Post>* posts = nullptr;
 string const* location_origin = nullptr;
 
-// Extract thread data from JSON and populate post collection. Returns the id
-// of the extracted thread;
-static uint64_t extract_thread(json& j)
+// Places inverse post links into backlinks for later assignment to individual
+// post models
+static void extract_backlinks(const Post& p, Backlinks& backlinks)
+{
+    for (auto && [ target_id, _ ] : p.links) {
+        backlinks[target_id][p.id] = { false, p.op };
+    }
+}
+
+// Extract thread data from JSON and populate post collection.
+// Places inverse post links into backlinks for later assignment to individual
+// post models.
+// Returns the id of the extracted thread;
+static uint64_t extract_thread(json& j, Backlinks& backlinks)
 {
     // TODO: Actually use the thread metadata
     auto thread = ThreadDecoder(j);
 
     const string board = j["board"];
     const uint64_t thread_id = j["id"];
-    (*posts)[thread_id] = Post(j);
+    const auto op = Post(j);
+    extract_backlinks(op, backlinks);
+    (*posts)[thread_id] = op;
 
     for (auto post : thread.posts) {
         post.board = board;
         post.op = thread_id;
+        extract_backlinks(post, backlinks);
         (*posts)[post.id] = post;
     }
 
@@ -42,18 +63,27 @@ static uint64_t extract_thread(json& j)
 // to do this and configuration fetches in one request.
 static std::unordered_set<uint64_t> load_posts()
 {
+    Backlinks backlinks;
+    backlinks.reserve(128);
     auto j = json::parse(get_inner_html("post-data"));
     auto thread_ids = std::unordered_set<uint64_t>();
     if (page->thread) {
         thread_ids.reserve(1);
-        thread_ids.insert(extract_thread(j));
+        thread_ids.insert(extract_thread(j, backlinks));
     } else {
         thread_ids.reserve(15);
         for (auto& thread : j) {
-            thread_ids.insert(extract_thread(thread));
+            thread_ids.insert(extract_thread(thread, backlinks));
         }
 
         // TODO: Catalog pages
+    }
+
+    // Assign backlinks to their post models
+    for (auto[target_id, data] : backlinks) {
+        if (posts->count(target_id)) {
+            posts->at(target_id).backlinks = std::move(data);
+        }
     }
 
     return thread_ids;

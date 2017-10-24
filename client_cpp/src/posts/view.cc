@@ -4,6 +4,7 @@
 #include "../state.hh"
 #include "../util.hh"
 #include "countries.hh"
+#include "links.hh"
 #include "models.hh"
 #include <iomanip>
 #include <sstream>
@@ -37,12 +38,19 @@ Node PostView::render(const Post& p)
         n.children.push_back(render_figcaption(*p.image));
         if ((!options->hide_thumbs && !options->work_mode_toggle)
             || reveal_thumbnail) {
-            console_log(std::to_string(reveal_thumbnail));
             pc_ch.push_back(render_image(*p.image));
         }
     }
-
     n.children.push_back({ "div", { { "class", "post-container" } }, pc_ch });
+
+    if (p.backlinks.size()) {
+        Node bl("span", { { "class", "backlinks" } });
+        bl.children.reserve(p.backlinks.size());
+        for (auto && [ id, data ] : p.backlinks) {
+            bl.children.push_back(render_post_link(id, data));
+        }
+        n.children.push_back(bl);
+    }
 
     return n;
 }

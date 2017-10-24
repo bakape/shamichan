@@ -26,6 +26,13 @@ public:
     // Initializes a new PostView with data from model
     PostView(const Post& model) { init(render(model)); }
 
+    // Constructs a slave View. Used for insertion into a parent view's subtree,
+    // when inlining linked posts.
+    PostView() {}
+
+    // Generates the view's node tree
+    Node render(const Post&);
+
 private:
     bool expand_image = false, // Expand image thumbnail to full view
         taller_than_viewport = false, // Image is taller than the viewport
@@ -33,9 +40,6 @@ private:
         large_thumbnail = false; // Render a bigger thumbnail
 
     TextState state;
-
-    // Generates the post's node tree
-    Node render(const Post&);
 
     // Render the header on top of the post
     Node render_header(const Post&);
