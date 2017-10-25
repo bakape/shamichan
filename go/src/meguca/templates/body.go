@@ -18,6 +18,7 @@ import (
 // Embeddable URL types
 const (
 	youTube = iota
+	hookTube
 	soundCloud
 	vimeo
 )
@@ -29,6 +30,7 @@ var (
 
 	providers = map[int]string{
 		youTube:    "Youtube",
+		hookTube:   "Hooktube",
 		soundCloud: "SoundCloud",
 		vimeo:      "Vimeo",
 	}
@@ -43,6 +45,14 @@ var (
 		{
 			youTube,
 			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/([a-zA-Z0-9_-]+)`),
+		},
+		{
+			hookTube,
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?hooktube\.com\/watch\/?\?(?:.+&)?v=([^&]+)`),
+		},
+		{
+			hookTube,
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?hooktube\.com\/embed\/([a-zA-Z0-9_-]+)`),
 		},
 		{
 			soundCloud,
