@@ -63,7 +63,7 @@ function isAtBottom(): boolean {
 // Scrolled when the page is scrolled, unless it's at the bottom
 document.addEventListener("scroll", () => {
 	scrolled = !isAtBottom()
-	atBottom = isAtBottom()
+	checkBottom();
 }, { passive: true })
 
 // Use a MutationObserver to jump to the bottom of the page when a new
