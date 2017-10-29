@@ -67,9 +67,9 @@ var (
 type bodyContext struct {
 	index bool     // Rendered for an index page
 	state struct { // Body parser state
-		spoiler, quote, code bool
-		newlines             uint
-		iDice                int
+		spoiler, quote, code, bold, italic bool
+		newlines                           uint
+		iDice                              int
 	}
 	common.Post
 	OP    uint64
@@ -120,9 +120,21 @@ func streambody(
 		if c.state.spoiler {
 			c.string("<del>")
 		}
+		if c.state.bold {
+			c.string("<b>")
+		}
+		if c.state.italic {
+			c.string("<i>")
+		}
 
 		fn(l)
 
+		if c.state.italic {
+			c.string("</i>")
+		}
+		if c.state.bold {
+			c.string("</b>")
+		}
 		if c.state.spoiler {
 			c.string("</del>")
 		}
@@ -181,25 +193,94 @@ func (c *bodyContext) formatCode(frag string, fn func(string)) {
 	}
 }
 
-// Injects spoiler tags and calls fn on the remaining parts
+// Inject spoiler tags and call fn on the remaining parts
 func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
+	_fn := func(frag string) {
+		c.parseBolds(frag, fn)
+	}
+
 	for {
 		i := strings.Index(frag, "**")
 		if i != -1 {
-			fn(frag[:i])
-			if c.state.quote {
-				c.string("</em>")
+			_fn(frag[:i])
+
+			if c.state.italic {
+				c.string("</i>")
 			}
+			if c.state.bold {
+				c.string("</b>")
+			}
+
 			if c.state.spoiler {
 				c.string("</del>")
 			} else {
 				c.string("<del>")
 			}
-			if c.state.quote {
-				c.string("<em>")
+
+			if c.state.bold {
+				c.string("<b>")
+			}
+			if c.state.italic {
+				c.string("<i>")
 			}
 
 			c.state.spoiler = !c.state.spoiler
+			frag = frag[i+2:]
+		} else {
+			_fn(frag)
+			break
+		}
+	}
+}
+
+// Inject bold tags and call fn on the remaining parts
+func (c *bodyContext) parseBolds(frag string, fn func(string)) {
+	_fn := func(frag string) {
+		c.parseItalics(frag, fn)
+	}
+
+	for {
+		i := strings.Index(frag, "__")
+		if i != -1 {
+			_fn(frag[:i])
+
+			if c.state.italic {
+				c.string("</i>")
+			}
+
+			if c.state.bold {
+				c.string("</b>")
+			} else {
+				c.string("<b>")
+			}
+
+			if c.state.italic {
+				c.string("<i>")
+			}
+
+			c.state.bold = !c.state.bold
+			frag = frag[i+2:]
+		} else {
+			_fn(frag)
+			break
+		}
+	}
+}
+
+// Inject italic tags and call fn on the remaining parts
+func (c *bodyContext) parseItalics(frag string, fn func(string)) {
+	for {
+		i := strings.Index(frag, "~~")
+		if i != -1 {
+			fn(frag[:i])
+
+			if c.state.italic {
+				c.string("</i>")
+			} else {
+				c.string("<i>")
+			}
+
+			c.state.italic = !c.state.italic
 			frag = frag[i+2:]
 		} else {
 			fn(frag)

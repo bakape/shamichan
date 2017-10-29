@@ -72,6 +72,11 @@ func TestRenderBody(t *testing.T) {
 			out:  "<del>foo</del>",
 		},
 		{
+			name: "nested formating",
+			in:   "foo** bar__b~~a__z**h~~",
+			out:  `foo<del> bar<b>b<i>a</i></b><i>z</i></del><i>h</i>`,
+		},
+		{
 			name:    "trailing empty open line",
 			in:      "foo\n",
 			out:     "foo<br>",

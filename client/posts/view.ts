@@ -61,13 +61,12 @@ export default class PostView extends ImageHandler {
 
     // Get the current Element for text to be written to
     private buffer(): Element {
-        const { state: { spoiler, quote } } = this.model
+        const { state: { spoiler, quote, bold, italic } } = this.model
         let buf = this.el.querySelector("blockquote") as Element
-        if (quote) {
-            buf = buf.lastElementChild
-        }
-        if (spoiler) {
-            buf = buf.lastElementChild
+        for (let b of [quote, spoiler, bold, italic]) {
+            if (b) {
+                buf = buf.lastElementChild
+            }
         }
         return buf
     }

@@ -48,6 +48,8 @@ export class Post extends Model implements PostData {
 			spoiler: false,
 			quote: false,
 			code: false,
+			bold: false,
+			italic: false,
 			haveSyncwatch: false,
 			newlines: 0,
 			iDice: 0,
@@ -223,13 +225,18 @@ export class Post extends Model implements PostData {
 }
 
 function endsWithTag(body: string): boolean {
+	const sl = body[body.length - 2]
 	switch (body[body.length - 1]) {
 		case ">":
 			return true
 		case "*":
-			return body[body.length - 2] === "*"
+			return sl === "*"
 		case "`":
-			return body[body.length - 2] === "`"
+			return sl === "`"
+		case "_":
+			return sl === "_"
+		case "~":
+			return sl === "~"
 	}
 	return false
 }

@@ -75,7 +75,11 @@ var (
 
 // Default string for the FAQ panel
 const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, FLAC, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ.
-Encase text in ** to spoiler and in ` + "``" + ` to highlight programing code syntax.
+<hr>Encase text in:
+  ** for spoilers
+  __ for bold
+  ~~ for italics
+  ` + "``" + ` for programing code highlighting
 <hr>Hash commands:
 #d100 #2d100 - Roll dice
 #flip - Coin flip
