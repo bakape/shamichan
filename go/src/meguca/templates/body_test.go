@@ -295,7 +295,7 @@ func TestRenderBody(t *testing.T) {
 		},
 		{
 			name: "hooktube embed",
-			in:   "https://www.hooktube.com/watch?v=z0f4Wgi94eo",
+			in:   "https://hooktube.com/watch?v=z0f4Wgi94eo",
 			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"3\" href=\"https://hooktube.com/embed/z0f4Wgi94eo\">[HookTube] ???</a></em>",
 		},
 		{
