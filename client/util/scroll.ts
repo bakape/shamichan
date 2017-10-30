@@ -6,6 +6,7 @@ import { trigger } from "./hooks"
 const banner = document.getElementById("banner")
 
 let scrolled = false
+let locked = false;
 
 // Indicates if the page is scrolled to its bottom
 export let atBottom: boolean
@@ -60,18 +61,19 @@ function isAtBottom(): boolean {
 		>= document.documentElement.offsetHeight
 }
 
-// Scrolled when the page is scrolled, unless it's at the bottom
+// If we are at the bottom, lock
 document.addEventListener("scroll", () => {
 	scrolled = !isAtBottom()
-	atBottom = isAtBottom()
+	locked = !scrolled;
+	checkBottom();
 }, { passive: true })
 
 // Use a MutationObserver to jump to the bottom of the page when a new
-// post is made, unless the user has scrolled up from the bottom
+// post is made, we are locked to the bottom or the user set the alwaysLock option
 let threadContainer = document.getElementById("thread-container")
 if (threadContainer !== null) {
 	let threadObserver = new MutationObserver((mut) => {
-		if (!scrolled) {
+		if (locked || (trigger("getOptions").alwaysLock && !scrolled)) {
 			scrollToBottom()
 		}
 	})
@@ -81,11 +83,10 @@ if (threadContainer !== null) {
 	})
 }
 
-// Unlock from bottom, when the tab is hidden, unless set not to
+// Unlock from bottom, when the tab is hidden
 document.addEventListener("visibilitychange", () => {
-	const opts = trigger("getOptions")
-	if (document.hidden && (opts && !opts.alwaysLock)) {
-		atBottom = false
+	if (document.hidden) {
+		locked = false
 	}
 })
 

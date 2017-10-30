@@ -105,6 +105,7 @@ create sequence post_id;
 create table threads (
 	sticky boolean default false,
 	nonLive bool default false,
+	locked boolean default false,
 	board text not null references boards on delete cascade,
 	id bigint primary key,
 	postCtr bigint not null,
@@ -124,7 +125,6 @@ create table posts (
 	deleted boolean,
 	banned boolean,
 	sage boolean,
-	locked boolean default false,
 	id bigint primary key,
 	op bigint not null references threads on delete cascade,
 	time bigint not null,

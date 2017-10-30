@@ -293,6 +293,34 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
+	// Fix consequences of bug in init.sql
+	func(tx *sql.Tx) (err error) {
+		q := `SELECT EXISTS (SELECT 1
+			FROM information_schema.columns
+			WHERE table_schema='public'
+				AND table_name='posts'
+				AND column_name='locked'
+		)`
+		var exists bool
+		err = tx.QueryRow(q).Scan(&exists)
+		if err != nil || !exists {
+			return
+		}
+
+		// Correct it
+		_, err = tx.Exec(
+			`ALTER TABLE posts
+				DROP COLUMN locked`,
+		)
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec(
+			`ALTER TABLE threads
+				ADD COLUMN locked bool default false`,
+		)
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both

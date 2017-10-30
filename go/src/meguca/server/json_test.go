@@ -113,12 +113,12 @@ func TestPostJSON(t *testing.T) {
 			name: "valid thread",
 			url:  "/boards/a/1",
 			code: 200,
-			etag: "W/11",
+			etag: "W/\"11\"",
 		},
 		{
 			name:   "thread etags match",
 			url:    "/boards/a/1",
-			header: "W/11",
+			header: "W/\"11\"",
 			code:   304,
 		},
 		{
@@ -130,24 +130,24 @@ func TestPostJSON(t *testing.T) {
 			name: "valid board",
 			url:  "/boards/a/",
 			code: 200,
-			etag: "W/12",
+			etag: "W/\"12\"",
 		},
 		{
 			name:   "board etag matches",
 			url:    "/boards/a/",
-			header: "W/12",
+			header: "W/\"12\"",
 			code:   304,
 		},
 		{
 			name: "all board",
 			url:  "/boards/all/",
 			code: 200,
-			etag: "W/12",
+			etag: "W/\"12\"",
 		},
 		{
 			name:   "/all/ board etag matches",
 			url:    "/boards/all/",
-			header: "W/12",
+			header: "W/\"12\"",
 			code:   304,
 		},
 	}

@@ -38,6 +38,8 @@ export type TextState = {
 	spoiler: boolean
 	quote: boolean
 	code: boolean
+	italic: boolean
+	bold: boolean
 	haveSyncwatch: boolean
 	newlines: number
 	iDice: number // Index of the next dice array item to use

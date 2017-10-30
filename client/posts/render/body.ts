@@ -20,6 +20,8 @@ export default function renderBody(data: PostData): string {
         spoiler: false,
         quote: false,
         code: false,
+        bold: false,
+        italic: false,
         haveSyncwatch: false,
         newlines: 0,
         iDice: 0,
@@ -47,9 +49,21 @@ export default function renderBody(data: PostData): string {
         if (state.spoiler) {
             html += "<del>"
         }
+        if (state.bold) {
+            html += "<b>"
+        }
+        if (state.italic) {
+            html += "<i>"
+        }
 
         html += fn(l, data)
 
+        if (state.italic) {
+            html += "</i>"
+        }
+        if (state.bold) {
+            html += "</b>"
+        }
         if (state.spoiler) {
             html += "</del>"
         }
@@ -108,26 +122,95 @@ function formatCode(
     return html
 }
 
-// Injects spoiler tags and calls fn on the remaining parts
+// Inject spoiler tags and call fn on the remaining parts
 function parseSpoilers(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
+    const _fn = (frag: string) =>
+        parseBolds(frag, state, fn)
+    let html = ""
+    while (true) {
+        const i = frag.indexOf("**")
+        if (i !== -1) {
+            html += _fn(frag.slice(0, i))
+
+            if (state.italic) {
+                html += "</i>"
+            }
+            if (state.bold) {
+                html += "</b>"
+            }
+
+            html += `<${state.spoiler ? '/' : ''}del>`
+
+            if (state.bold) {
+                html += "<b>"
+            }
+            if (state.italic) {
+                html += "<i>"
+            }
+
+            state.spoiler = !state.spoiler
+            frag = frag.substring(i + 2)
+        } else {
+            html += _fn(frag)
+            break
+        }
+    }
+    return html
+}
+
+// Inject bold tags and call fn on the remaining parts
+function parseBolds(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
+    const _fn = (frag: string) =>
+        parseItalics(frag, state, fn)
+    let html = ""
+    while (true) {
+        const i = frag.indexOf("__")
+        if (i !== -1) {
+            html += _fn(frag.slice(0, i))
+
+            if (state.italic) {
+                html += "</i>"
+            }
+
+            html += `<${state.bold ? '/' : ''}b>`
+
+            if (state.italic) {
+                html += "<i>"
+            }
+
+            state.bold = !state.bold
+            frag = frag.substring(i + 2)
+        } else {
+            html += _fn(frag)
+            break
+        }
+    }
+    return html
+}
+
+// Inject italic tags and call fn on the remaining parts
+function parseItalics(
     frag: string,
     state: TextState,
     fn: (frag: string) => string,
 ): string {
     let html = ""
     while (true) {
-        const i = frag.indexOf("**")
+        const i = frag.indexOf("~~")
         if (i !== -1) {
             html += fn(frag.slice(0, i))
-            if (state.quote) {
-                html += "</em>"
-            }
-            html += `<${state.spoiler ? '/' : ''}del>`
-            if (state.quote) {
-                html += "<em>"
-            }
 
-            state.spoiler = !state.spoiler
+            html += `<${state.italic ? '/' : ''}i>`
+
+            state.italic = !state.italic
             frag = frag.substring(i + 2)
         } else {
             html += fn(frag)
