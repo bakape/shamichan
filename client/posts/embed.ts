@@ -7,16 +7,16 @@ type OEmbedDoc = {
 }
 
 // Types of different embeds by provider
-enum provider { Youtube, SoundCloud, Vimeo, Hooktube }
+enum provider { YouTube, SoundCloud, Vimeo, HookTube }
 
 // Matching patterns and their respective providers
 const patterns: [provider, RegExp][] = [
 	[
-		provider.Youtube,
+		provider.YouTube,
 		/https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=([^&]+)/,
 	],
 	[
-		provider.Youtube,
+		provider.YouTube,
 		/https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/([a-zA-Z0-9_-]+)/,
 	],
 	[
@@ -28,11 +28,11 @@ const patterns: [provider, RegExp][] = [
 		/https?:\/\/(?:www\.)?vimeo\.com\/.+/,
 	],
 	[
-		provider.Hooktube,
+		provider.HookTube,
 		/https?:\/\/(?:[^\.]+\.)?hooktube\.com\/watch\/?\?(?:.+&)?v=([^&]+)/,
 	],
 	[
-		provider.Hooktube,
+		provider.HookTube,
 		/https?:\/\/(?:[^\.]+\.)?hooktube\.com\/embed\/([a-zA-Z0-9_-]+)/,
 	],
 ]
@@ -43,7 +43,7 @@ const formatters: { [key: number]: (s: string) => string } = {}
 // Map of providers to information fetcher functions
 const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
 
-for (let p of ["Youtube", "SoundCloud", "Vimeo", "Hooktube"]) {
+for (let p of ["YouTube", "SoundCloud", "Vimeo", "HookTube"]) {
 	const id = (provider as any)[p] as number
 	formatters[id] = formatNoEmbed(id)
 	fetchers[id] = fetchNoEmbed(id)
@@ -163,4 +163,3 @@ on(document, "mouseover", fetchMeta, {
 on(document, "click", toggleExpansion, {
 	selector: "a.embed",
 })
-

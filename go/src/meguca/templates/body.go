@@ -29,10 +29,10 @@ var (
 	dickRegex       = regexp.MustCompile(`(?i)(dick|cock)s?`)
 
 	providers = map[int]string{
-		youTube:    "Youtube",
+		youTube:    "YouTube",
 		soundCloud: "SoundCloud",
 		vimeo:      "Vimeo",
-		hookTube:   "Hooktube",
+		hookTube:   "HookTube",
 	}
 	embedPatterns = [...]struct {
 		typ  int
