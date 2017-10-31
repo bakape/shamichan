@@ -30,7 +30,6 @@ Node render_post_link(uint64_t id, const LinkData& data)
     }
 
     Node n = Node("em");
-    n.children.reserve(3);
     n.children.push_back({
         "a",
         {

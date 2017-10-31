@@ -51,7 +51,7 @@ export default class FormModel extends Post {
 				bold: false,
 				italic: false,
 				haveSyncwatch: false,
-				newlines: 0,
+				successive_newlines: 0,
 				iDice: 0,
 			},
 		})

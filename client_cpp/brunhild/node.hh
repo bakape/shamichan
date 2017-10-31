@@ -1,9 +1,9 @@
 #pragma once
 
+#include <list>
 #include <sstream>
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 namespace brunhild {
 
@@ -15,10 +15,10 @@ class Node {
 public:
     std::string tag;
     Attrs attrs;
-    std::vector<Node> children;
+    std::list<Node> children;
 
     // Creates a Node with optional attributes and children
-    Node(std::string tag, Attrs attrs = {}, std::vector<Node> children = {})
+    Node(std::string tag, Attrs attrs = {}, std::list<Node> children = {})
         : tag(tag)
         , attrs(attrs)
         , children(children)
@@ -57,7 +57,7 @@ public:
     void clear();
 
     // Returns, if node is a text node
-    bool is_text() { return tag == "_text"; }
+    bool is_text() const { return tag == "_text"; }
 
 private:
     // Creates a text Node. This node can only be a child of another Node and
@@ -69,7 +69,7 @@ private:
 };
 
 // Subtree of a Node
-typedef std::vector<Node> Children;
+typedef std::list<Node> Children;
 
 // Generate a new unique element ID
 std::string new_id();

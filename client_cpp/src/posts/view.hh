@@ -16,7 +16,7 @@ struct TextState {
         quote = false, // Current line is spoilered
         code = false, // Text is inside code block
         have_syncwatch = false; // Text contains #syncwatch command(s)
-    int newlines = 0, // Number of newlines in text
+    int successive_newlines = 0, // Number of successive newlines in text
         dice_index = 0; // Index of the next dice array item to use
 };
 
@@ -52,16 +52,19 @@ private:
 
     // Render the information caption above the image.
     // Set reveal to true, if in hidden thumbnail mode, to reveal the thumbnail.
-    Node render_figcaption(const Image& img);
+    Node render_figcaption(const Image&);
 
     // Render reverse image search links
-    Node render_image_search(const Image& img);
+    Node render_image_search(const Image&);
 
     // Render uploaded file meta information
-    Node render_file_info(const Image& img);
+    Node render_file_info(const Image&);
 
     // Render a thumbnail or expanded source media content
-    Node render_image(const Image& img);
+    Node render_image(const Image&);
+
+    // Render the text body of a post
+    Node render_body(const Post&);
 };
 
 // Renders readable elapsed time since Unix timestamp then

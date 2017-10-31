@@ -23,7 +23,7 @@ export default function renderBody(data: PostData): string {
         bold: false,
         italic: false,
         haveSyncwatch: false,
-        newlines: 0,
+        successive_newlines: 0,
         iDice: 0,
     }
     let html = ""
@@ -33,15 +33,15 @@ export default function renderBody(data: PostData): string {
         state.quote = false
 
         // Prevent successive empty lines
-        if (html && state.newlines < 2) {
+        if (html && state.successive_newlines < 2) {
             html += "<br>"
         }
         if (!l.length) {
-            state.newlines++
+            state.successive_newlines++
             continue
         }
 
-        state.newlines = 0
+        state.successive_newlines = 0
         if (l[0] === ">") {
             state.quote = true
             html += "<em>"

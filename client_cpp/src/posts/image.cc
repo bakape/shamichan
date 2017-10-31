@@ -14,7 +14,6 @@ using std::ostringstream;
 Node PostView::render_figcaption(const Image& img)
 {
     Node n = { "figcaption", { { "class", "spaced" } } };
-    n.children.reserve(4);
 
     if (options->hide_thumbs || options->work_mode_toggle) {
         n.children.push_back({
@@ -73,7 +72,6 @@ Node PostView::render_image_search(const Image& img)
             { "style", "font-weight: 700;" },
         },
     };
-    n.children.reserve(6);
 
     // Resolve URL of image search providers, that require to download the
     // image file

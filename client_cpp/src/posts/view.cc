@@ -15,7 +15,6 @@ using brunhild::Children;
 Node PostView::render(const Post& p)
 {
     Node n = { "article", { { "id", "#p" + std::to_string(p.id) } } };
-    n.children.reserve(6);
 
     n.attrs["class"] = "glass";
     if (p.editing) {
@@ -31,7 +30,6 @@ Node PostView::render(const Post& p)
     n.children.push_back(render_header(p));
 
     Children pc_ch;
-    pc_ch.reserve(2);
     if (p.image) {
         n.attrs["class"] += " media";
         large_thumbnail = p.op == p.id;
@@ -41,11 +39,11 @@ Node PostView::render(const Post& p)
             pc_ch.push_back(render_image(*p.image));
         }
     }
+    pc_ch.push_back(render_body(p));
     n.children.push_back({ "div", { { "class", "post-container" } }, pc_ch });
 
     if (p.backlinks.size()) {
         Node bl("span", { { "class", "backlinks" } });
-        bl.children.reserve(p.backlinks.size());
         for (auto && [ id, data ] : p.backlinks) {
             bl.children.push_back(render_post_link(id, data));
         }
@@ -58,7 +56,6 @@ Node PostView::render(const Post& p)
 Node PostView::render_header(const Post& p)
 {
     Node n = { "header", { { "class", "spaced" } } };
-    n.children.reserve(8);
 
     // TODO: Check if staff, and render moderator checkbox
 
@@ -147,7 +144,6 @@ Node PostView::render_header(const Post& p)
 Node PostView::render_name(const Post& p)
 {
     Node n("b", { { "class", "name spaced" } });
-    n.children.reserve(5);
     if (p.sage) {
         n.attrs["class"] += " sage";
     }
