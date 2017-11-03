@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../brunhild/view.hh"
 #include "../json.hh"
 #include <map>
 #include <optional>
@@ -7,6 +8,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+using brunhild::Node;
 
 // Possible file types of a post image or thumbnail
 enum class FileType : uint8_t {
@@ -44,7 +47,10 @@ public:
     bool apng = false, // PNG image is APNG
         audio = false, // Has audio
         video = false, // Has video
-        spoiler = false; // Is spoilered
+        spoiler = false, // Is spoilered
+        expanded = false, // Expand image thumbnail to full view
+        taller_than_viewport = false, // Image is taller than the viewport
+        reveal_thumbnail = false; // Reveal a hidden image with [Show]
     FileType file_type, // File type of source file
         thumb_type; // File type of thumbnail
     uint16_t dims[4];
@@ -98,11 +104,8 @@ struct LinkData {
     uint64_t op;
 };
 
-// Forward declaration
-class PostView;
-
 // Generic post model
-class Post {
+class Post : public brunhild::VirtualView {
 public:
     bool editing = false, // Post is currrently being edited
         deleted = false, // Deleted by moderator
@@ -111,7 +114,8 @@ public:
         sticky = false, // Thread is stickied. Only for OPs.
         locked = false, // Thread is locked. Only for OPs.
         seen = false, // The user has already seen this post
-        hidden = false; // The post has been hidden by the user
+        hidden = false, // The post has been hidden by the user
+        is_rendered = false; // Is Post currently represented inside the DOM?
     std::optional<Image> image;
     uint64_t id, op;
     time_t time;
@@ -125,14 +129,51 @@ public:
     std::vector<Command> commands; // Results of hash commands
     std::map<uint64_t, LinkData> backlinks; // Posts linking to this post
     std::unordered_map<uint64_t, LinkData> links; // Posts linked by this post
-    PostView* view = nullptr;
 
     Post() = default;
 
     // Parse from JSON
     Post(nlohmann::json&);
 
-    ~Post() { delete view; }
+    // Generates the model's node tree
+    Node render();
+
+private:
+    // State of a post's text. Used for adding enclosing tags to the HTML while
+    // parsing.
+    struct TextState {
+        bool spoiler = false, // Current text is spoilered
+            quote = false, // Current line is spoilered
+            code = false, // Text is inside code block
+            have_syncwatch = false; // Text contains #syncwatch command(s)
+        int successive_newlines = 0, // Number of successive newlines in text
+            dice_index = 0; // Index of the next dice array item to use
+    } state;
+
+    // Render the header on top of the post
+    Node render_header();
+
+    // Render the name and tripcode in the header
+    Node render_name();
+
+    // Renders a time element. Can be either absolute or relative.
+    Node render_time();
+
+    // Render the information caption above the image.
+    // Set reveal to true, if in hidden thumbnail mode, to reveal the thumbnail.
+    Node render_figcaption();
+
+    // Render reverse image search links
+    Node render_image_search();
+
+    // Render uploaded file meta information
+    Node render_file_info();
+
+    // Render a thumbnail or expanded source media content
+    Node render_image();
+
+    // Render the text body of a post
+    Node render_body();
 };
 
 // Contains thread metadata

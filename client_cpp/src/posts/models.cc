@@ -1,6 +1,5 @@
 #include "models.hh"
 #include "../state.hh"
-#include "view.hh"
 #include <sstream>
 
 using json = nlohmann::json;

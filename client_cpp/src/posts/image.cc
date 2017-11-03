@@ -4,15 +4,16 @@
 #include "../state.hh"
 #include "../util.hh"
 #include "models.hh"
-#include "view.hh"
 #include <iomanip>
 #include <sstream>
 
 using brunhild::escape;
 using std::ostringstream;
 
-Node PostView::render_figcaption(const Image& img)
+Node Post::render_figcaption()
 {
+    auto& img = *image;
+
     Node n = { "figcaption", { { "class", "spaced" } } };
 
     if (options->hide_thumbs || options->work_mode_toggle) {
@@ -21,13 +22,13 @@ Node PostView::render_figcaption(const Image& img)
             {
                 { "class", "act" },
             },
-            lang->posts.at(reveal_thumbnail ? "hide" : "show"),
+            lang->posts.at(img.reveal_thumbnail ? "hide" : "show"),
         });
     }
     if (img.thumb_type != FileType::no_file && img.file_type != FileType::pdf) {
-        n.children.push_back(render_image_search(img));
+        n.children.push_back(render_image_search());
     }
-    n.children.push_back(render_file_info(img));
+    n.children.push_back(render_file_info());
 
     // File name + download link
     auto& ext = file_extentions.at(img.file_type);
@@ -62,8 +63,9 @@ static Node image_search_link(int i, const string& url)
         abbrev[i]);
 }
 
-Node PostView::render_image_search(const Image& img)
+Node Post::render_image_search()
 {
+    auto& img = *image;
     Node n = {
         "span",
         {
@@ -125,10 +127,11 @@ Node PostView::render_image_search(const Image& img)
     return n;
 }
 
-Node PostView::render_file_info(const Image& img)
+Node Post::render_file_info()
 {
     using std::setw;
 
+    auto& img = *image;
     ostringstream s;
     bool first = true;
     s << '(';
@@ -188,8 +191,11 @@ Node PostView::render_file_info(const Image& img)
     return Node("span", s.str());
 }
 
-Node PostView::render_image(const Image& img)
+Node Post::render_image()
 {
+    // TODO: Expanded image rendering
+
+    auto& img = *image;
     const std::string src = img.source_path();
     std::string thumb;
     uint16_t h, w;
@@ -218,8 +224,8 @@ Node PostView::render_image(const Image& img)
         h = img.dims[3];
     }
 
-    // Downscale thumbnail for higher DPI, unless specified not to
-    if (!large_thumbnail && (w > 125 || h > 125)) {
+    // Downscale thumbnail for higher DPI, unless Post is an OP
+    if (op != id && (w > 125 || h > 125)) {
         w *= 0.8333;
         h *= 0.8333;
     }

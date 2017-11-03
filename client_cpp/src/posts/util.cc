@@ -1,12 +1,45 @@
-#include "../../brunhild/node.hh"
+#include "../util.hh"
 #include "../lang.hh"
 #include "../options/options.hh"
 #include "../state.hh"
-#include "view.hh"
-#include <sstream>
+#include "models.hh"
+#include <ctime>
 #include <string>
+#include <tuple>
 
-using brunhild::Node;
+// Renders "56 minutes ago" or "in 56 minutes" like relative time text
+static std::string ago(
+    time_t n, const std::tuple<std::string, std::string>& units, bool is_future)
+{
+    auto count = pluralize(n, units);
+    return is_future ? lang->posts.at("in") + " " + count
+                     : count + " " + lang->posts.at("ago");
+}
+
+std::string relative_time(time_t then)
+{
+    auto now = (float)std::time(0);
+    auto t = (now - (float)then) / 60;
+    auto is_future = false;
+    if (t < 1) {
+        if (t > -5) { // Assume to be client clock imprecision
+            return lang->posts.at("justNow");
+        }
+        is_future = true;
+        t = -t;
+    }
+
+    const int divide[4] = { 60, 24, 30, 12 };
+    const static std::string unit[4] = { "minute", "hour", "day", "month" };
+    for (int i = 0; i < 4; i++) {
+        if (t < divide[i]) {
+            return ago(t, lang->plurals.at(unit[i]), is_future);
+        }
+        t /= divide[i];
+    }
+
+    return ago(t, lang->plurals.at("year"), is_future);
+}
 
 Node render_post_link(uint64_t id, const LinkData& data)
 {
@@ -49,11 +82,7 @@ Node render_post_link(uint64_t id, const LinkData& data)
 
     // Inline linked-to post
     if (data.is_inlined) {
-        auto& model = posts->at(id);
-        if (!model.view) {
-            model.view = new PostView();
-        }
-        n.children.push_back(model.view->render(model));
+        n.children.push_back(posts->at(id).render());
     }
 
     return n;

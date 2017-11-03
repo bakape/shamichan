@@ -1,5 +1,8 @@
-#pragma once
-
+#include "../lang.hh"
+#include "../options/options.hh"
+#include "../state.hh"
+#include "models.hh"
+#include "util.hh"
 #include <string>
 #include <unordered_map>
 
@@ -101,3 +104,145 @@ const std::unordered_map<std::string, std::string> countries = {
     { "ws", "Samoa" }, { "ye", "Yemen" }, { "yt", "Mayotte" },
     { "za", "South Africa" }, { "zm", "Zambia" }, { "zw", "Zimbabwe" },
 };
+
+Node Post::render_header()
+{
+    Node n = { "header", { { "class", "spaced" } } };
+
+    // TODO: Check if staff, and render moderator checkbox
+
+    if (sticky) {
+        n.children.push_back({
+            "svg",
+            {
+                { "xmlns", "http://www.w3.org/2000/svg" }, { "width", "8" },
+                { "height", "8" }, { "viewBox", "0 0 8 8" },
+            },
+            R"'(<path d="M1.34 0a.5.5 0 0 0 .16 1h.5v2h-1c-.55 0-1 .45-1 1h3v3l.44 1 .56-1v-3h3c0-.55-.45-1-1-1h-1v-2h.5a.5.5 0 1 0 0-1h-4a.5.5 0 0 0-.09 0 .5.5 0 0 0-.06 0z" />)'",
+        });
+    }
+    if (locked) {
+        n.children.push_back({
+            "svg",
+            {
+                { "xmlns", "http://www.w3.org/2000/svg" }, { "width", "8" },
+                { "height", "8" }, { "viewBox", "0 0 8 8" },
+            },
+            R"'(<path d="M3 0c-1.1 0-2 .9-2 2v1h-1v4h6v-4h-1v-1c0-1.1-.9-2-2-2zm0 1c.56 0 1 .44 1 1v1h-2v-1c0-.56.44-1 1-1z" transform="translate(1)" />)'",
+        });
+    }
+
+    if (subject) {
+        std::string s;
+        s.reserve(subject->size() + 6); // +2 unicode chars
+        s = "「" + *subject + "」";
+        n.children.push_back({ "h3", s, true });
+    }
+    n.children.push_back(render_name());
+    if (flag) {
+        n.children.push_back({
+            "img",
+            {
+                { "class", "flag" },
+                { "src", "/assets/flags/" + *flag + ".svg" },
+                {
+                    "title",
+                    countries.count(*flag) ? countries.at(*flag) : *flag,
+                },
+            },
+        });
+    }
+    n.children.push_back(render_time());
+
+    const auto id_str = std::to_string(id);
+    std::string url = "#p" + id_str;
+    if (!page->thread && !page->catalog) {
+        url = "/all/" + id_str + "?last=100" + url;
+    }
+    n.children.push_back({
+        "nav", {},
+        {
+            {
+                "a",
+                {
+                    { "href", url },
+                },
+                "No.",
+            },
+            {
+                "a",
+                {
+                    { "class", "quote" }, { "href", url },
+                },
+                id_str,
+            },
+        },
+    });
+    n.children.push_back({
+        "a", { { "class", "control" } },
+        {
+            {
+                "svg",
+                {
+                    { "xmlns", "http://www.w3.org/2000/svg" }, { "width", "8" },
+                    { "height", "8" }, { "viewBox", "0 0 8 8" },
+                },
+                R"'(<path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" />)'",
+            },
+        },
+    });
+
+    return n;
+}
+
+Node Post::render_name()
+{
+    Node n("b", { { "class", "name spaced" } });
+    if (sage) {
+        n.attrs["class"] += " sage";
+    }
+
+    if (options->anonymise) {
+        n.children = { Node("span", lang->posts.at("anon")) };
+        return n;
+    }
+
+    if (name || !trip) {
+        n.children.push_back(name ? Node("span", *name, true)
+                                  : Node("span", lang->posts.at("anon")));
+    }
+    if (trip) {
+        n.children.push_back({ "code", "!" + *trip, true });
+    }
+    if (poster_id) {
+        n.children.push_back({ "span", *poster_id, true });
+    }
+    if (auth) {
+        n.attrs["class"] += " admin";
+        n.children.push_back({ "span", "## " + lang->posts.at(*auth) });
+    }
+    if (post_ids->mine.count(id)) {
+        n.children.push_back({ "i", lang->posts.at("you") });
+    }
+
+    return n;
+}
+
+Node Post::render_time()
+{
+    using std::setw;
+
+    auto then = std::localtime(&time);
+
+    // Renders classic absolute timestamp
+    std::ostringstream abs;
+    abs << setw(2) << then->tm_mday << ' ' << lang->calendar[then->tm_mon]
+        << ' ' << 1900 + then->tm_year << " (" << lang->week[then->tm_wday]
+        << ") " << setw(2) << then->tm_hour << ':' << setw(2) << then->tm_min;
+
+    const auto rel = relative_time(time);
+
+    return Node("time",
+        { { "title", options->relative_time ? abs.str() : rel } },
+        options->relative_time ? rel : abs.str());
+}

@@ -1,11 +1,9 @@
-#include "view.hh"
+#include "models.hh"
 #include <string_view>
-
-// TODO: Also use string view for string FFI, where possible
 
 using std::string_view;
 
-Node PostView::render_body(const Post& p)
+Node Post::render_body()
 {
     Node n("blockquote");
 
@@ -13,8 +11,8 @@ Node PostView::render_body(const Post& p)
     size_t i = 0;
     do {
         i = next + 1;
-        next = p.body.find_first_of('\n', i);
-        string_view line(&p.body[i], next - i);
+        next = body.find_first_of('\n', i);
+        string_view line(&body[i], next - i);
 
         state.quote = false;
 
