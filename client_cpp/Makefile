@@ -1,8 +1,7 @@
 # -Winvalid-pp-token triggers on empty JS strings in macros
 WARNINGS=-Wall -Wextra -Wno-sign-compare -Wno-invalid-pp-token -Wno-unused-function -Wno-delete-incomplete -Wno-switch -Wno-almost-asm
 
-# TODO: Disable exceptions, once we get rid of JSON parsing
-SETTINGS=-s NO_EXIT_RUNTIME=1 -s DISABLE_EXCEPTION_CATCHING=0 -s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1
+SETTINGS=-s NO_EXIT_RUNTIME=1 -s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1
 
 COMPILE_FLAGS=-std=c++1z --bind
 

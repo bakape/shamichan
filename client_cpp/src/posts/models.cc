@@ -7,17 +7,16 @@ using std::string;
 
 // Deserialize a property that might or might not be present from a kew of the
 // same name
-#define parse_opt(key) catch_opt({ key = j.at(#key); })
+#define parse_opt(key)                                                         \
+    if (j.count(#key)) {                                                       \
+        key = j[#key];                                                         \
+    }
 
 // Same as parse_opt, but explicitly converts to an std::string.
-// Needed with std::optional fields.
-#define parse_opt_string(key) catch_opt({ key = j.at(#key).get<string>(); });
-
-// Catch exceptions from JSON properties not existing
-#define catch_opt(code)                                                        \
-    try {                                                                      \
-        code                                                                   \
-    } catch (json::out_of_range & e) {                                         \
+// Needed with std::optional<std::string> fields.
+#define parse_opt_string(key)                                                  \
+    if (j.count(#key)) {                                                       \
+        key = j.at(#key).get<string>();                                        \
     }
 
 Image::Image(nlohmann::json& j)
@@ -72,7 +71,7 @@ Command::Command(nlohmann::json& j)
     }
 }
 
-std::string Image::image_root() const
+string Image::image_root() const
 {
     if (config->image_root_override != "") {
         return config->image_root_override;
@@ -80,7 +79,7 @@ std::string Image::image_root() const
     return "/assets/images";
 }
 
-std::string Image::thumb_path() const
+string Image::thumb_path() const
 {
     std::ostringstream s;
     s << image_root() << "/thumb/" << SHA1 << '.'
@@ -88,7 +87,7 @@ std::string Image::thumb_path() const
     return s.str();
 }
 
-std::string Image::source_path() const
+string Image::source_path() const
 {
     std::ostringstream s;
     s << image_root() << "/src/" << SHA1 << '.'
@@ -116,21 +115,25 @@ Post::Post(nlohmann::json& j)
     parse_opt_string(auth);
     parse_opt_string(subject);
     parse_opt_string(flag);
-    catch_opt({ poster_id = j.at("posterID").get<string>(); });
+    if (j.count("posterID")) {
+        poster_id = j["posterID"].get<string>();
+    }
 
-    catch_opt({ image = Image(j.at("image")); });
-    catch_opt({
-        auto& c = j.at("commands");
+    if (j.count("image")) {
+        image = Image(j["image"]);
+    }
+    if (j.count("commands")) {
+        auto& c = j["commands"];
         commands.reserve(c.size());
         for (auto& com : c) {
             commands.push_back(Command(com));
         }
-    });
-    catch_opt({
-        auto& l = j.at("links");
+    }
+    if (j.count("links")) {
+        auto& l = j["links"];
         links.reserve(l.size());
         for (auto& val : l) {
             links[val[0]] = {.op = val[1] };
         }
-    });
+    }
 }
