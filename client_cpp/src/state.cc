@@ -104,7 +104,7 @@ void load_state()
         emscripten::val::global("location")["origin"].as<string>());
 
     // TODO: This should be read from a concurrent server fetch
-    config = new Config(convert_c_string(EM_ASM_INT_V({
+    config = new Config(c_string_view((char*)EM_ASM_INT_V({
         var s = JSON.stringify(window.config);
         var len = lengthBytesUTF8(s) + 1;
         var buf = Module._malloc(len);
@@ -112,7 +112,7 @@ void load_state()
         return buf;
     })));
 
-    board_config = new BoardConfig(convert_c_string(EM_ASM_INT_V({
+    board_config = new BoardConfig(c_string_view((char*)EM_ASM_INT_V({
         var s = document.getElementById('board-configs').innerHTML;
         var len = lengthBytesUTF8(s) + 1;
         var buf = Module._malloc(len);
@@ -125,7 +125,7 @@ void load_state()
     load_db(load_posts());
 }
 
-Config::Config(const string& s)
+Config::Config(const c_string_view& s)
 {
     auto j = json::parse(s);
 
@@ -145,7 +145,7 @@ Config::Config(const string& s)
     }
 }
 
-BoardConfig::BoardConfig(const string& s)
+BoardConfig::BoardConfig(const c_string_view& s)
 {
     auto j = json::parse(s);
 

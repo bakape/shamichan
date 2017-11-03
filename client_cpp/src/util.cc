@@ -1,17 +1,12 @@
+#include "util.hh"
 #include <emscripten.h>
 #include <string>
+#include <string_view>
 #include <tuple>
 
-std::string convert_c_string(int str_p)
+c_string_view get_inner_html(const std::string& id)
 {
-    std::string s((char*)str_p);
-    delete[](char*) str_p;
-    return s;
-}
-
-std::string get_inner_html(const std::string& id)
-{
-    return convert_c_string(EM_ASM_INT(
+    return c_string_view((char*)EM_ASM_INT(
         {
             var s = document.getElementById(Pointer_stringify($0)).innerHTML;
             var len = lengthBytesUTF8(s) + 1;

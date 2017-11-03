@@ -2,6 +2,7 @@
 
 #include "json.hh"
 #include "posts/models.hh"
+#include "util.hh"
 #include <map>
 #include <string>
 #include <unordered_map>
@@ -25,7 +26,7 @@ public:
     std::unordered_map<string, string> links;
 
     // Parse JSON string
-    Config(const string&);
+    Config(const c_string_view&);
 };
 
 // Server-wide global configuration, that affects the client
@@ -38,7 +39,7 @@ public:
     string title, notice, rules;
 
     // Parse JSON string
-    BoardConfig(const string&);
+    BoardConfig(const c_string_view&);
 };
 
 // Public board-specific configurations
