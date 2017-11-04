@@ -137,3 +137,26 @@ Post::Post(nlohmann::json& j)
         }
     }
 }
+
+void TextState::reset(Node* root)
+{
+    spoiler = false;
+    quote = false;
+    code = false;
+    bold = false;
+    italic = false;
+    have_syncwatch = false;
+    successive_newlines = 0;
+    dice_index = 0;
+    parents.clear();
+
+    parents.push_back(root);
+}
+
+void TextState::append(Node n, bool descend)
+{
+    parents.back()->children.push_back(n);
+    if (descend) {
+        parents.push_back(&parents.back()->children.back());
+    }
+}

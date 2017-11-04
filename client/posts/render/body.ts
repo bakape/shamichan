@@ -58,6 +58,7 @@ export default function renderBody(data: PostData): string {
 
         html += fn(l, data)
 
+        // Close any unclosed tags
         if (state.italic) {
             html += "</i>"
         }

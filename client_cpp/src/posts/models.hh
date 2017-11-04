@@ -6,6 +6,7 @@
 #include <optional>
 #include <stdint.h>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -104,6 +105,37 @@ struct LinkData {
     uint64_t op;
 };
 
+// State of a post's text. Used for adding enclosing tags to the HTML while
+// parsing.
+class TextState {
+public:
+    bool spoiler = false, // Current text is spoilered
+        quote = false, // Current line is spoilered
+        code = false, // Text is inside code block
+        bold = false, // Text inside bold tag
+        italic = false, // Text inside italic tag
+        have_syncwatch = false; // Text contains #syncwatch command(s)
+    int successive_newlines = 0, // Number of successive newlines in text
+        dice_index = 0; // Index of the next dice array item to use
+
+    // Reset to initial values and sets Node as the new root parent.
+    void reset(Node* root);
+
+    // Append a Node to the current lowermost parent.
+    // If descend = true, make it the next parent to append to.
+    void append(Node n, bool descend = false);
+
+    // Acsend one level up the parent tree and make it the next node to append
+    // to
+    void ascend() { parents.pop_back(); }
+
+private:
+    // Last child nodes of the blockquote subtree.
+    // Used to keep track of nodes to append to, while populating the
+    // subtree.
+    std::vector<Node*> parents;
+};
+
 // Generic post model
 class Post : public brunhild::VirtualView {
 public:
@@ -139,16 +171,7 @@ public:
     Node render();
 
 private:
-    // State of a post's text. Used for adding enclosing tags to the HTML while
-    // parsing.
-    struct TextState {
-        bool spoiler = false, // Current text is spoilered
-            quote = false, // Current line is spoilered
-            code = false, // Text is inside code block
-            have_syncwatch = false; // Text contains #syncwatch command(s)
-        int successive_newlines = 0, // Number of successive newlines in text
-            dice_index = 0; // Index of the next dice array item to use
-    } state;
+    TextState state;
 
     // Render the header on top of the post
     Node render_header();
@@ -160,7 +183,6 @@ private:
     Node render_time();
 
     // Render the information caption above the image.
-    // Set reveal to true, if in hidden thumbnail mode, to reveal the thumbnail.
     Node render_figcaption();
 
     // Render reverse image search links
@@ -174,6 +196,130 @@ private:
 
     // Render the text body of a post
     Node render_body();
+
+    // Parse temporary links in open posts, that still may be edited
+    void parse_temp_links(std::string_view);
+
+    // Parse a line fragment into an HTML subtree
+    void parse_fragment(std::string_view);
+
+    // Highlight common programming code syntax
+    void highlight_syntax(std::string_view);
+
+    // Split string_view into subviews and run either on_match or filler on
+    // the fragments appropriately.
+    template <class F_M, class F_UM>
+    void parse_string(
+        std::string_view frag, const std::string sep, F_UM filler, F_M on_match)
+    {
+        while (1) {
+            const size_t i = frag.find(sep);
+            if (i != -1) {
+                filler(frag.substr(0, i));
+                frag = frag.substr(i + sep.size());
+                on_match();
+            } else {
+                filler(frag);
+                break;
+            }
+        }
+    }
+
+    // Detect and format code tags. Call fn on unmatched sub-fragments.
+    template <class F> void parse_code(std::string_view frag, F fn)
+    {
+        parse_string(frag, "``",
+            [this, fn](std::string_view frag) {
+                if (state.code) {
+                    // Strip quotes
+                    size_t num_quotes = 0;
+                    while (frag.size() && frag[0] == '>') {
+                        frag = frag.substr(1);
+                    }
+                    if (num_quotes) {
+                        std::string s;
+                        s.reserve(4 * num_quotes);
+                        for (int i = 0; i <= num_quotes; i++) {
+                            s += "&gt;";
+                        }
+                        state.append({ "span", s });
+                    }
+
+                    highlight_syntax(frag);
+                } else {
+                    parse_spoilers(frag, fn);
+                }
+            },
+            [this]() { state.code = !state.code; });
+    }
+
+    // Inject spoiler tags and call fn on the remaining parts
+    template <class F> void parse_spoilers(std::string_view frag, F fn)
+    {
+        parse_string(frag, "**",
+            [this, fn](std::string_view frag) { parse_bolds(frag, fn); },
+            [this]() {
+                if (state.italic) {
+                    state.ascend();
+                }
+                if (state.bold) {
+                    state.ascend();
+                }
+
+                if (state.spoiler) {
+                    state.ascend();
+                } else {
+                    state.append({ "del" }, true);
+                }
+
+                if (state.bold) {
+                    state.append({ "b" }, true);
+                }
+                if (state.italic) {
+                    state.append({ "i" }, true);
+                }
+
+                state.spoiler = !state.spoiler;
+            });
+    }
+
+    // Inject bold tags and call fn on the remaining parts
+    template <class F> void parse_bolds(std::string_view frag, F fn)
+    {
+        parse_string(frag, "__",
+            [this, fn](std::string_view frag) { parse_italics(frag, fn); },
+            [this]() {
+                if (state.italic) {
+                    state.ascend();
+                }
+
+                if (state.bold) {
+                    state.ascend();
+                } else {
+                    state.append({ "b" }, true);
+                }
+
+                if (state.italic) {
+                    state.append({ "i" }, true);
+                }
+
+                state.bold = !state.bold;
+            });
+    }
+
+    // Inject italic tags and call fn on the remaining parts
+    template <class F> void parse_italics(std::string_view frag, F fn)
+    {
+        parse_string(frag, "~~", fn, [this]() {
+            if (state.italic) {
+                state.ascend();
+            } else {
+                state.append({ "i" }, true);
+            }
+
+            state.italic = !state.italic;
+        });
+    }
 };
 
 // Contains thread metadata
