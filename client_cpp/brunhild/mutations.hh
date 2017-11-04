@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -10,7 +11,7 @@ namespace brunhild {
 class Mutations {
 public:
     bool remove_el;
-    std::string set_inner_html, set_outer_html;
+    std::optional<std::string> set_inner_html, set_outer_html;
     std::vector<std::string> append, prepend, before, after, remove_attr;
     std::unordered_map<std::string, std::string> set_attr;
 

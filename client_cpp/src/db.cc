@@ -166,7 +166,7 @@ void load_post_ids(const std::unordered_set<uint64_t>& threads)
 void handle_db_error(std::string err)
 {
     has_errored = true;
-    EM_ASM_INT({ console.error(Pointer_stringify($0)); }, err.c_str());
+    EM_ASM_INT({ console.error(UTF8ToString($0)); }, err.c_str());
 }
 
 void db_is_ready()

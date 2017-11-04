@@ -7,13 +7,14 @@
 
 void render_page()
 {
+    brunhild::set_inner_html("threads", "");
+
     std::ostringstream s;
     for (auto & [ id, p ] : *posts) {
         p.is_rendered = true;
         p.init(p.render());
-        p.write_html(s);
+        brunhild::append("threads", p.html());
     }
-    brunhild::set_inner_html("threads", s.str());
 }
 
 EMSCRIPTEN_BINDINGS(module_page)

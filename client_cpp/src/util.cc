@@ -8,7 +8,7 @@ c_string_view get_inner_html(const std::string& id)
 {
     return c_string_view((char*)EM_ASM_INT(
         {
-            var s = document.getElementById(Pointer_stringify($0)).innerHTML;
+            var s = document.getElementById(UTF8ToString($0)).innerHTML;
             var len = lengthBytesUTF8(s) + 1;
             var buf = Module._malloc(len);
             stringToUTF8(s, buf, len);
@@ -35,5 +35,5 @@ std::string pluralize(int n, const std::tuple<std::string, std::string>& word)
 
 void console_log(const std::string& s)
 {
-    EM_ASM_INT({ console.log(Pointer_stringify($0)); }, s.c_str());
+    EM_ASM_INT({ console.log(UTF8ToString($0)); }, s.c_str());
 }
