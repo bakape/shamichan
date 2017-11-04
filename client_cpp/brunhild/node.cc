@@ -35,6 +35,11 @@ void Node::write_html(std::ostringstream& s) const
     }
     s << '>';
 
+    // These should be left empty and unterminated
+    if (tag == "br" || tag == "wbr") {
+        return;
+    }
+
     for (auto& ch : children) {
         ch.write_html(s);
     }
