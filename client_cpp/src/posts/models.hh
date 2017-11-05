@@ -209,117 +209,26 @@ private:
     // Split string_view into subviews and run either on_match or filler on
     // the fragments appropriately.
     template <class F_M, class F_UM>
-    void parse_string(
-        std::string_view frag, const std::string sep, F_UM filler, F_M on_match)
-    {
-        while (1) {
-            const size_t i = frag.find(sep);
-            if (i != -1) {
-                filler(frag.substr(0, i));
-                frag = frag.substr(i + sep.size());
-                on_match();
-            } else {
-                filler(frag);
-                break;
-            }
-        }
-    }
+    void parse_string(std::string_view frag, const std::string sep, F_UM filler,
+        F_M on_match);
 
     // Detect and format code tags. Call fn on unmatched sub-fragments.
-    template <class F> void parse_code(std::string_view frag, F fn)
-    {
-        parse_string(frag, "``",
-            [this, fn](std::string_view frag) {
-                if (state.code) {
-                    // Strip quotes
-                    size_t num_quotes = 0;
-                    while (frag.size() && frag[0] == '>') {
-                        frag = frag.substr(1);
-                    }
-                    if (num_quotes) {
-                        std::string s;
-                        s.reserve(4 * num_quotes);
-                        for (int i = 0; i <= num_quotes; i++) {
-                            s += "&gt;";
-                        }
-                        state.append({ "span", s });
-                    }
-
-                    highlight_syntax(frag);
-                } else {
-                    parse_spoilers(frag, fn);
-                }
-            },
-            [this]() { state.code = !state.code; });
-    }
+    template <class F> void parse_code(std::string_view frag, F fn);
 
     // Inject spoiler tags and call fn on the remaining parts
-    template <class F> void parse_spoilers(std::string_view frag, F fn)
-    {
-        parse_string(frag, "**",
-            [this, fn](std::string_view frag) { parse_bolds(frag, fn); },
-            [this]() {
-                if (state.italic) {
-                    state.ascend();
-                }
-                if (state.bold) {
-                    state.ascend();
-                }
-
-                if (state.spoiler) {
-                    state.ascend();
-                } else {
-                    state.append({ "del" }, true);
-                }
-
-                if (state.bold) {
-                    state.append({ "b" }, true);
-                }
-                if (state.italic) {
-                    state.append({ "i" }, true);
-                }
-
-                state.spoiler = !state.spoiler;
-            });
-    }
+    template <class F> void parse_spoilers(std::string_view frag, F fn);
 
     // Inject bold tags and call fn on the remaining parts
-    template <class F> void parse_bolds(std::string_view frag, F fn)
-    {
-        parse_string(frag, "__",
-            [this, fn](std::string_view frag) { parse_italics(frag, fn); },
-            [this]() {
-                if (state.italic) {
-                    state.ascend();
-                }
-
-                if (state.bold) {
-                    state.ascend();
-                } else {
-                    state.append({ "b" }, true);
-                }
-
-                if (state.italic) {
-                    state.append({ "i" }, true);
-                }
-
-                state.bold = !state.bold;
-            });
-    }
+    template <class F> void parse_bolds(std::string_view frag, F fn);
 
     // Inject italic tags and call fn on the remaining parts
-    template <class F> void parse_italics(std::string_view frag, F fn)
-    {
-        parse_string(frag, "~~", fn, [this]() {
-            if (state.italic) {
-                state.ascend();
-            } else {
-                state.append({ "i" }, true);
-            }
+    template <class F> void parse_italics(std::string_view frag, F fn);
 
-            state.italic = !state.italic;
-        });
-    }
+    // Parse a string into words and call fn on each word.
+    // Handles space padding and leading/trailing punctuation.
+    // fn receives a string_view of the word and a buffer for building text
+    // nodes.
+    template <class F> void parse_words(std::string_view frag, F fn);
 };
 
 // Contains thread metadata
