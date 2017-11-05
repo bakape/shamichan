@@ -58,11 +58,4 @@ void Node::clear()
     attrs.clear();
     children.clear();
 }
-
-Node Node::escaped(const std::string& s)
-{
-    std::ostringstream out;
-    out << brunhild::escape(s);
-    return Node::text(out.str());
-}
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "util.hh"
 #include <list>
 #include <sstream>
 #include <string>
@@ -31,7 +32,7 @@ public:
     Node(std::string tag, Attrs attrs, std::string text, bool escape = false)
         : tag(tag)
         , attrs(attrs)
-        , children({ escape ? Node::escaped(text) : Node::text(text) })
+        , children({ Node::text(escape ? brunhild::escape(text) : text) })
     {
     }
 
@@ -41,7 +42,7 @@ public:
     Node(std::string tag, std::string text, bool escape = false)
         : tag(tag)
         , attrs()
-        , children({ escape ? Node::escaped(text) : Node::text(text) })
+        , children({ Node::text(escape ? brunhild::escape(text) : text) })
     {
     }
 
@@ -63,9 +64,6 @@ private:
     // Creates a text Node. This node can only be a child of another Node and
     // must be the only child.
     static Node text(std::string);
-
-    // Like Node::text(), but escapes the text to protect against XSS attacks
-    static Node escaped(const std::string&);
 };
 
 // Subtree of a Node
