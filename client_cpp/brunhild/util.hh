@@ -37,6 +37,8 @@ struct escape {
             case '`':
                 os << "&#x60;";
                 break;
+            case '\0':
+                break;
             default:
                 os << ch;
             }
