@@ -1,6 +1,8 @@
 #include "../lang.hh"
 #include "../state.hh"
+#include "etc.hh"
 #include "models.hh"
+#include <cctype>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -273,12 +275,9 @@ template <class F> void Post::parse_words(std::string_view frag, F fn)
     }
 }
 
-// Parses link to a post.
-// If valid, returns number of extra '>' in front of the link and ID of the
-// post, the link is pointing to.
-static optional<tuple<int, uint64_t>> parse_post_link(string_view word)
+// Strip leading '>' and return stripped count
+static int strip_gt(string_view& word)
 {
-    // Count leading '>'
     int count = 0;
     while (word.size()) {
         if (word[0] == '>') {
@@ -288,6 +287,16 @@ static optional<tuple<int, uint64_t>> parse_post_link(string_view word)
             break;
         }
     }
+    return count;
+}
+
+// Parses link to a post.
+// If valid, returns number of extra '>' in front of the link and ID of the
+// post, the link is pointing to.
+static optional<tuple<int, uint64_t>> parse_post_link(string_view word)
+{
+    // Count leading '>'
+    int count = strip_gt(word);
     if (count < 2) {
         return nullopt;
     }
@@ -297,12 +306,10 @@ static optional<tuple<int, uint64_t>> parse_post_link(string_view word)
     if (!word.size()) {
         return nullopt;
     }
-    int i = 0;
-    while (i < word.size()) {
-        if (word[i] < '0' || word[i] > '9') {
+    for (char ch : word) {
+        if (!isdigit(ch)) {
             return nullopt;
         }
-        i++;
     }
 
     return { { count, std::stoull(string(word)) } };
@@ -327,6 +334,15 @@ static Node render_temp_link(uint64_t id)
     };
 }
 
+void Post::flush_prelink_text(int gt_count, string& buf)
+{
+    for (int i = 0; i < gt_count; i++) {
+        buf += '>';
+    }
+    state.append({ "span", buf, true });
+    buf.clear();
+}
+
 // Parse temporary links in open posts, that still may be edited
 void Post::parse_temp_links(string_view frag)
 {
@@ -336,12 +352,7 @@ void Post::parse_temp_links(string_view frag)
             if (auto l = parse_post_link(word); l) {
                 // Text preceding the link
                 auto[count, id] = *l;
-                for (int i = 0; i < count; i++) {
-                    buf += '>';
-                }
-                state.append({ "span", buf, true });
-                buf.clear();
-
+                flush_prelink_text(count, buf);
                 state.append(render_temp_link(id));
                 matched = true;
             }
@@ -355,5 +366,99 @@ void Post::parse_temp_links(string_view frag)
 // Parse a line fragment of a closed post
 void Post::parse_fragment(string_view frag)
 {
-    state.append({ "span", string(frag), true });
+    parse_words(frag, [this](string_view word, string& buf) {
+        if (!word.size()) {
+            return;
+        }
+
+        bool matched = false;
+        switch (word[0]) {
+        case '>':
+            // Post links
+            if (auto l = parse_post_link(word); l) {
+                auto[count, id] = *l;
+                flush_prelink_text(count, buf);
+
+                // In case the server parsed this differently.
+                // Maybe older version.
+                if (links.count(id)) {
+                    state.append(render_post_link(id, links[id]));
+                    matched = true;
+                    break;
+                }
+            }
+
+            // Internal and custom reference URLs
+            if (auto l = parse_reference(word); l) {
+                auto[count, n] = *l;
+                flush_prelink_text(count, buf);
+                state.append(n);
+                matched = true;
+            }
+            break;
+        case '#': // Hash commands
+            // TODO
+            break;
+
+            // default:
+            // Generic HTTP(S) URLs, magnet links and embeds
+            // Checking the first byte is much cheaper than a function call.
+            // Do that first, as most cases won't match.
+        }
+        if (!matched) {
+            buf += word;
+        }
+    });
+}
+
+// Render and anchor link that opens in a new tab
+static Node new_tab_link(string url, string_view text)
+{
+    return {
+        "a",
+        {
+            { "rel", "noreferrer" }, { "href", brunhild::escape(string(url)) },
+            { "target", "_blank" },
+        },
+        string(text), true,
+    };
+}
+
+optional<tuple<int, Node>> Post::parse_reference(string_view word)
+{
+    int gts = strip_gt(word);
+    if (gts < 3) {
+        return nullopt;
+    }
+    gts -= 3;
+
+    // Strip '/'
+    if (word.size() < 3 || word.front() != '/' || word.back() != '/') {
+        return nullopt;
+    }
+    word = word.substr(1, word.size() - 2);
+
+    // Verify the rest is alphanumerics
+    for (char ch : word) {
+        if (!isalnum(ch)) {
+            return nullopt;
+        }
+    }
+
+    string href;
+    const string s(word);
+    if (boards->count(s)) { // Linking a board
+        href.reserve(s.size() + 2);
+        href = '/' + s + '/';
+    } else if (config->links.count(s)) { // Custom external URL
+        href = config->links.at(s);
+    } else {
+        return nullopt;
+    }
+
+    string text;
+    text.reserve(word.size() + 5);
+    text = ">>>/" + s + "/";
+
+    return { { gts, new_tab_link(href, text) } };
 }

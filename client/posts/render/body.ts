@@ -300,7 +300,6 @@ function parseFragment(frag: string, data: PostData): string {
                 if (m) {
                     html += parseReference(m)
                     matched = true
-                    break
                 }
                 break
             case "#": // Hash commands

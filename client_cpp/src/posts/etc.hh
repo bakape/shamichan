@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../brunhild/node.hh"
+#include "models.hh"
 #include <ctime>
 #include <string>
 

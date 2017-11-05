@@ -8,22 +8,20 @@
 #include <unordered_map>
 #include <unordered_set>
 
-using std::string;
-
 // Contains all posts currently loaded on the page. Posts might or might not
 // be actually displayed.
 extern std::map<uint64_t, Post>* posts;
 
 // Caches the origin of the page
-extern string const* location_origin;
+extern std::string const* location_origin;
 
 // Public server-wide global configurations
 class Config {
 public:
     bool captcha, mature, disable_user_boards, prune_threads;
     unsigned int thread_expiry_min, thread_expiry_max;
-    string default_lang, default_css, image_root_override;
-    std::unordered_map<string, string> links;
+    std::string default_lang, default_css, image_root_override;
+    std::unordered_map<std::string, std::string> links;
 
     // Parse JSON string
     Config(const c_string_view&);
@@ -36,7 +34,7 @@ extern Config* config;
 class BoardConfig {
 public:
     bool read_only, text_only, forced_anon;
-    string title, notice, rules;
+    std::string title, notice, rules;
 
     // Parse JSON string
     BoardConfig(const c_string_view&);
@@ -45,13 +43,16 @@ public:
 // Public board-specific configurations
 extern BoardConfig* board_config;
 
+// All boards currently registered on the server
+extern std::unordered_set<std::string>* boards;
+
 // Describes the current page
 class Page {
 public:
     bool catalog;
     unsigned int last_n, page;
     unsigned long thread;
-    string board;
+    std::string board;
 
     // Detect the current page, by reading the current URL
     void detect();
@@ -59,7 +60,8 @@ public:
 private:
     // Find a numeric query parameter and parse it.
     // Returns 0, if none found.
-    unsigned int find_query_param(const string& query, const string& param);
+    unsigned int find_query_param(
+        const std::string& query, const std::string& param);
 };
 
 // Describes the current page

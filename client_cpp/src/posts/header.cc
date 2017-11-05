@@ -1,8 +1,8 @@
 #include "../lang.hh"
 #include "../options/options.hh"
 #include "../state.hh"
+#include "etc.hh"
 #include "models.hh"
-#include "util.hh"
 #include <string>
 #include <unordered_map>
 

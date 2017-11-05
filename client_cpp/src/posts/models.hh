@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <unordered_map>
 #include <vector>
 
@@ -229,6 +230,13 @@ private:
     // fn receives a string_view of the word and a buffer for building text
     // nodes.
     template <class F> void parse_words(std::string_view frag, F fn);
+
+    // Flushes text preceding a link and appends gt_count ">" symbols
+    void flush_prelink_text(int gt_count, std::string& buf);
+
+    // Parse internally-defined or board reference URL.
+    // Returns preceding '>' count and link Node, if matched.
+    std::optional<std::tuple<int, Node>> parse_reference(std::string_view word);
 };
 
 // Contains thread metadata

@@ -12,17 +12,19 @@
 #include <utility>
 
 using json = nlohmann::json;
+using std::string;
 
 // Inverse map of posts linking posts by post ID.
 // <linked_post_id <linker_post_id, {false, linker_post_thread_id}>>
 typedef std::unordered_map<uint64_t, std::map<uint64_t, LinkData>> Backlinks;
 
-Config* config = nullptr;
-BoardConfig* board_config = nullptr;
-Page* page = nullptr;
-PostIDs* post_ids = nullptr;
-std::map<uint64_t, Post>* posts = nullptr;
-string const* location_origin = nullptr;
+Config* config;
+BoardConfig* board_config;
+Page* page;
+PostIDs* post_ids;
+std::map<uint64_t, Post>* posts;
+string const* location_origin;
+std::unordered_set<string>* boards;
 
 // Places inverse post links into backlinks for later assignment to individual
 // post models
@@ -104,6 +106,7 @@ void load_state()
         emscripten::val::global("location")["origin"].as<string>());
 
     // TODO: This should be read from a concurrent server fetch
+
     config = new Config(c_string_view((char*)EM_ASM_INT_V({
         var s = JSON.stringify(window.config);
         var len = lengthBytesUTF8(s) + 1;
@@ -111,6 +114,16 @@ void load_state()
         stringToUTF8(s, buf, len);
         return buf;
     })));
+
+    std::unordered_set<string> b_temp
+        = json::parse(c_string_view((char*)EM_ASM_INT_V({
+              var s = JSON.stringify(window.boards);
+              var len = lengthBytesUTF8(s) + 1;
+              var buf = Module._malloc(len);
+              stringToUTF8(s, buf, len);
+              return buf;
+          })));
+    boards = new std::unordered_set<string>(b_temp);
 
     board_config = new BoardConfig(c_string_view((char*)EM_ASM_INT_V({
         var s = document.getElementById('board-configs').innerHTML;

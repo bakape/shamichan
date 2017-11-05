@@ -9,6 +9,7 @@
 
 using brunhild::escape;
 using std::ostringstream;
+using std::string;
 
 Node Post::render_figcaption()
 {
