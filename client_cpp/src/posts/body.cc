@@ -84,7 +84,7 @@ Node Post::render_body()
 
 template <class F_M, class F_UM>
 void Post::parse_string(
-    std::string_view frag, const std::string sep, F_UM filler, F_M on_match)
+    string_view frag, const string sep, F_UM filler, F_M on_match)
 {
     while (1) {
         const size_t i = frag.find(sep);
@@ -99,10 +99,10 @@ void Post::parse_string(
     }
 }
 
-template <class F> void Post::parse_code(std::string_view frag, F fn)
+template <class F> void Post::parse_code(string_view frag, F fn)
 {
     parse_string(frag, "``",
-        [this, fn](std::string_view frag) {
+        [this, fn](string_view frag) {
             if (state.code) {
                 // Strip quotes
                 size_t num_quotes = 0;
@@ -110,7 +110,7 @@ template <class F> void Post::parse_code(std::string_view frag, F fn)
                     frag = frag.substr(1);
                 }
                 if (num_quotes) {
-                    std::string s;
+                    string s;
                     s.reserve(4 * num_quotes);
                     for (int i = 0; i <= num_quotes; i++) {
                         s += "&gt;";
@@ -126,10 +126,10 @@ template <class F> void Post::parse_code(std::string_view frag, F fn)
         [this]() { state.code = !state.code; });
 }
 
-template <class F> void Post::parse_spoilers(std::string_view frag, F fn)
+template <class F> void Post::parse_spoilers(string_view frag, F fn)
 {
     parse_string(frag, "**",
-        [this, fn](std::string_view frag) { parse_bolds(frag, fn); },
+        [this, fn](string_view frag) { parse_bolds(frag, fn); },
         [this]() {
             if (state.italic) {
                 state.ascend();
@@ -155,10 +155,10 @@ template <class F> void Post::parse_spoilers(std::string_view frag, F fn)
         });
 }
 
-template <class F> void Post::parse_bolds(std::string_view frag, F fn)
+template <class F> void Post::parse_bolds(string_view frag, F fn)
 {
     parse_string(frag, "__",
-        [this, fn](std::string_view frag) { parse_italics(frag, fn); },
+        [this, fn](string_view frag) { parse_italics(frag, fn); },
         [this]() {
             if (state.italic) {
                 state.ascend();
@@ -178,7 +178,7 @@ template <class F> void Post::parse_bolds(std::string_view frag, F fn)
         });
 }
 
-template <class F> void Post::parse_italics(std::string_view frag, F fn)
+template <class F> void Post::parse_italics(string_view frag, F fn)
 {
     parse_string(frag, "~~", fn, [this]() {
         if (state.italic) {
@@ -243,7 +243,7 @@ static tuple<char, string_view, char> split_punctuation(const string_view word)
     return re;
 }
 
-template <class F> void Post::parse_words(std::string_view frag, F fn)
+template <class F> void Post::parse_words(string_view frag, F fn)
 {
     bool first = true;
     string buf;
@@ -400,6 +400,7 @@ void Post::parse_fragment(string_view frag)
             // TODO
             break;
 
+            // TODO
             // default:
             // Generic HTTP(S) URLs, magnet links and embeds
             // Checking the first byte is much cheaper than a function call.

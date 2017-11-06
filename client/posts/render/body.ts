@@ -401,7 +401,7 @@ function parseURL(bit: string): string {
 
 // Parse a hash command
 function parseCommand(bit: string, { commands, state }: PostData): string {
-    // Guard against invalid dice rolls and parsing lines in the post form
+    // Guard against invalid dice rolls
     if (!commands || !commands[state.iDice]) {
         return "#" + bit
     }

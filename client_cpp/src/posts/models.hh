@@ -237,6 +237,12 @@ private:
     // Parse internally-defined or board reference URL.
     // Returns preceding '>' count and link Node, if matched.
     std::optional<std::tuple<int, Node>> parse_reference(std::string_view word);
+
+    // Parse hash commands. Return Node, if matched.
+    std::optional<Node> parse_commands(std::string_view word);
+
+    // Parse syncwatch command and return Node, if matched
+    std::optional<Node> parse_syncwatch(std::string_view frag);
 };
 
 // Contains thread metadata
