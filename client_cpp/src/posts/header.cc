@@ -7,7 +7,7 @@
 #include <unordered_map>
 
 // Maps country codes to English names
-const std::unordered_map<std::string, std::string> countries = {
+const static std::unordered_map<std::string, std::string> countries = {
     { "ad", "Andorra" }, { "ae", "United Arab Emirates" },
     { "af", "Afghanistan" }, { "ag", "Antigua and Barbuda" },
     { "ai", "Anguilla" }, { "al", "Albania" }, { "am", "Armenia" },

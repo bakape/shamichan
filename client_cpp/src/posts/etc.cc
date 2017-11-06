@@ -1,22 +1,24 @@
-#include "../util.hh"
+#include "etc.hh"
 #include "../lang.hh"
 #include "../options/options.hh"
 #include "../state.hh"
+#include "../util.hh"
 #include "models.hh"
-#include <ctime>
-#include <string>
 #include <tuple>
 
+using std::string;
+using std::string_view;
+
 // Renders "56 minutes ago" or "in 56 minutes" like relative time text
-static std::string ago(
-    time_t n, const std::tuple<std::string, std::string>& units, bool is_future)
+static string ago(
+    time_t n, const std::tuple<string, string>& units, bool is_future)
 {
     auto count = pluralize(n, units);
     return is_future ? lang->posts.at("in") + " " + count
                      : count + " " + lang->posts.at("ago");
 }
 
-std::string relative_time(time_t then)
+string relative_time(time_t then)
 {
     auto now = (float)std::time(0);
     auto t = (now - (float)then) / 60;
@@ -30,7 +32,7 @@ std::string relative_time(time_t then)
     }
 
     const int divide[4] = { 60, 24, 30, 12 };
-    const static std::string unit[4] = { "minute", "hour", "day", "month" };
+    const static string unit[4] = { "minute", "hour", "day", "month" };
     for (int i = 0; i < 4; i++) {
         if (t < divide[i]) {
             return ago(t, lang->plurals.at(unit[i]), is_future);
@@ -45,7 +47,7 @@ Node render_post_link(uint64_t id, const LinkData& data)
 {
     const bool cross_thread = data.op != page->thread;
     const bool index_page = !page->thread && !page->catalog;
-    const std::string id_str = std::to_string(id);
+    const string id_str = std::to_string(id);
 
     std::ostringstream url;
     if (cross_thread || index_page) {
@@ -85,5 +87,20 @@ Node render_post_link(uint64_t id, const LinkData& data)
         n.children.push_back(posts->at(id).render());
     }
 
+    return n;
+}
+
+Node render_link(string_view url, string_view text, bool new_tab)
+{
+    Node n({
+        "a",
+        {
+            { "rel", "noreferrer" }, { "href", brunhild::escape(string(url)) },
+        },
+        string(text), true,
+    });
+    if (new_tab) {
+        n.attrs["target"] = "_blank";
+    }
     return n;
 }

@@ -9,7 +9,6 @@ import highlightSyntax from "./code"
 const urlPrefixes = {
     'h': "http",
     'm': "magnet:?",
-    'i': "irc",
     'f': "ftp",
     'b': "bitcoin",
 }

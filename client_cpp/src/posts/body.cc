@@ -2,6 +2,7 @@
 #include "../state.hh"
 #include "etc.hh"
 #include "models.hh"
+#include "url.hh"
 #include <cctype>
 #include <optional>
 #include <string>
@@ -375,7 +376,7 @@ void Post::parse_fragment(string_view frag)
         switch (word[0]) {
         case '>':
             // Post links
-            if (auto l = parse_post_link(word); l) {
+            if (auto l = parse_post_link(word)) {
                 auto[count, id] = *l;
                 flush_prelink_text(count, buf);
 
@@ -389,40 +390,33 @@ void Post::parse_fragment(string_view frag)
             }
 
             // Internal and custom reference URLs
-            if (auto l = parse_reference(word); l) {
+            if (auto l = parse_reference(word)) {
                 auto[count, n] = *l;
                 flush_prelink_text(count, buf);
                 state.append(n);
                 matched = true;
             }
             break;
-        case '#': // Hash commands
-            // TODO
+        case '#':
+            // Hash commands
+            if (auto n = parse_commands(word)) {
+                flush_prelink_text(0, buf);
+                state.append(*n);
+                matched = true;
+            }
             break;
-
-            // TODO
-            // default:
-            // Generic HTTP(S) URLs, magnet links and embeds
-            // Checking the first byte is much cheaper than a function call.
-            // Do that first, as most cases won't match.
+        default:
+            // Generic HTTP(S)/FTP(S) URLs, magnet links and embeds
+            if (auto n = parse_url(word)) {
+                flush_prelink_text(0, buf);
+                state.append(*n);
+                matched = true;
+            }
         }
         if (!matched) {
             buf += word;
         }
     });
-}
-
-// Render and anchor link that opens in a new tab
-static Node new_tab_link(string url, string_view text)
-{
-    return {
-        "a",
-        {
-            { "rel", "noreferrer" }, { "href", brunhild::escape(string(url)) },
-            { "target", "_blank" },
-        },
-        string(text), true,
-    };
 }
 
 optional<tuple<int, Node>> Post::parse_reference(string_view word)
@@ -461,5 +455,5 @@ optional<tuple<int, Node>> Post::parse_reference(string_view word)
     text.reserve(word.size() + 5);
     text = ">>>/" + s + "/";
 
-    return { { gts, new_tab_link(href, text) } };
+    return { { gts, render_link(string_view(href), text) } };
 }

@@ -58,7 +58,6 @@ var (
 	urlPrefixes = map[byte]string{
 		'h': "http",
 		'm': "magnet:?",
-		'i': "irc",
 		'f': "ftp",
 		'b': "bitcoin",
 	}
