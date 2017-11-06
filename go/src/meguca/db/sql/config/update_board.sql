@@ -12,7 +12,6 @@ update boards
 		title = $11,
 		notice = $12,
 		rules = $13,
-		eightball = $14,
-		js = $15
+		eightball = $14
 	where id = $1
 	returning pg_notify('board_updated', $1)

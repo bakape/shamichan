@@ -39,7 +39,6 @@ type BoardConfigs struct {
 	BoardPublic
 	DisableRobots bool     `json:"disableRobots"`
 	ID            string   `json:"id"`
-	Js            string   `json:"js"`
 	Eightball     []string `json:"eightball"`
 }
 

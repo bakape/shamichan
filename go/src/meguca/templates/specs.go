@@ -145,12 +145,6 @@ var specs = map[string][]inputSpec{
 			Type:      _array,
 			MaxLength: common.MaxLenEightball,
 		},
-		{
-			ID:        "js",
-			Type:      _textarea,
-			Rows:      5,
-			MaxLength: common.MaxLenCustomJS,
-		},
 	},
 	"createBoard": {
 		{

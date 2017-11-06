@@ -72,7 +72,7 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 	err = r.Scan(
 		&c.ReadOnly, &c.TextOnly, &c.ForcedAnon, &c.DisableRobots, &c.Flags,
 		&c.NSFW, &c.NonLive, &c.PosterIDs,
-		&c.ID, &c.DefaultCSS, &c.Title, &c.Notice, &c.Rules, &eightball, &c.Js,
+		&c.ID, &c.DefaultCSS, &c.Title, &c.Notice, &c.Rules, &eightball,
 	)
 	c.Eightball = []string(eightball)
 	return
@@ -84,7 +84,7 @@ func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots, c.Flags,
 		c.NSFW, c.NonLive, c.PosterIDs,
 		c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
-		pq.StringArray(c.Eightball), c.Js,
+		pq.StringArray(c.Eightball),
 	)
 	return err
 }
@@ -95,7 +95,7 @@ func UpdateBoard(c config.BoardConfigs) error {
 		"update_board",
 		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots, c.Flags,
 		c.NSFW, c.NonLive, c.PosterIDs, c.DefaultCSS, c.Title, c.Notice,
-		c.Rules, pq.StringArray(c.Eightball), c.Js,
+		c.Rules, pq.StringArray(c.Eightball),
 	)
 }
 
