@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
-	"html"
 	"meguca/config"
 	"meguca/templates"
 	"meguca/util"
@@ -92,19 +91,11 @@ func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 
 // UpdateBoard updates board configurations
 func UpdateBoard(c config.BoardConfigs) error {
-	// Escape all 8ball answers
-	cpy := make([]string, len(c.Eightball))
-	for i := range c.Eightball {
-		cpy[i] = html.EscapeString(c.Eightball[i])
-	}
-	c.Eightball = cpy
-
 	return execPrepared(
 		"update_board",
 		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots, c.Flags,
-		c.NSFW, c.NonLive, c.PosterIDs,
-		c.DefaultCSS, html.EscapeString(c.Title), html.EscapeString(c.Notice),
-		html.EscapeString(c.Rules), pq.StringArray(c.Eightball), c.Js,
+		c.NSFW, c.NonLive, c.PosterIDs, c.DefaultCSS, c.Title, c.Notice,
+		c.Rules, pq.StringArray(c.Eightball), c.Js,
 	)
 }
 
