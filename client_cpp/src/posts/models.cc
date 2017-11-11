@@ -44,7 +44,8 @@ Image::Image(nlohmann::json& j)
 
 Command::Command(nlohmann::json& j)
 {
-    typ = static_cast<Type>(j["type"]);
+    uint8_t _typ = j["type"];
+    typ = static_cast<Type>(_typ);
 
     auto const& val = j["val"];
     switch (typ) {
@@ -133,7 +134,7 @@ Post::Post(nlohmann::json& j)
         auto& l = j["links"];
         links.reserve(l.size());
         for (auto& val : l) {
-            links[val[0]] = {.op = val[1] };
+            links[val[0]] = { false, val[1] };
         }
     }
 }

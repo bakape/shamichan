@@ -4,11 +4,11 @@
 #include <cctype>
 #include <sstream>
 
-using std::string_view;
-using std::string;
-using std::optional;
 using std::nullopt;
+using std::optional;
 using std::ostringstream;
+using std::string;
+using std::string_view;
 
 // Read any digit from string_view and return it. Returns 0 on no match.
 static unsigned int read_uint(string_view& word)
@@ -83,8 +83,9 @@ optional<Node> Post::parse_commands(string_view word)
     string name;
     name.reserve(word.size());
     while (word.size()) {
-        if (islower(word[0])) {
-            name += word[0];
+        const char ch = word[0];
+        if (islower(ch) || ch == '8') {
+            name += ch;
             word = word.substr(1);
         } else {
             break;
@@ -99,7 +100,7 @@ optional<Node> Post::parse_commands(string_view word)
     }
 
     string inner;
-    auto const& val = commands[state.dice_index + 1];
+    auto const& val = commands[state.dice_index];
     if (name == "flip") {
         check_consumed;
         inner = val.flip ? "flap" : "flop";
