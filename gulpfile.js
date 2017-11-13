@@ -71,7 +71,7 @@ function buildES6() {
 	tasks.push(name)
 	gulp.task(name, () =>
 		buildClient()
-			.pipe(uglify())
+			// .pipe(uglify())
 			.on('error', handleError)
 			.pipe(sourcemaps.write('maps'))
 			.pipe(gulp.dest('www/js/es6')))
