@@ -9,12 +9,12 @@
 #include <string_view>
 #include <tuple>
 
-using std::string_view;
-using std::string;
-using std::optional;
-using std::nullopt;
-using std::tuple;
 using std::get;
+using std::nullopt;
+using std::optional;
+using std::string;
+using std::string_view;
+using std::tuple;
 
 Node Post::render_body()
 {
@@ -328,7 +328,8 @@ static Node render_temp_link(uint64_t id)
     return {
         "a",
         {
-            { "class", "post-link temp" }, { "data-id", id_str },
+            { "class", "post-link temp" },
+            { "data-id", id_str },
             { "href", "#p" + id_str },
         },
         text,

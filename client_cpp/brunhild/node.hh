@@ -1,7 +1,7 @@
 #pragma once
 
 #include "util.hh"
-#include <list>
+#include <vector>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -16,10 +16,10 @@ class Node {
 public:
     std::string tag;
     Attrs attrs;
-    std::list<Node> children;
+    std::vector<Node> children;
 
     // Creates a Node with optional attributes and children
-    Node(std::string tag, Attrs attrs = {}, std::list<Node> children = {})
+    Node(std::string tag, Attrs attrs = {}, std::vector<Node> children = {})
         : tag(tag)
         , attrs(attrs)
         , children(children)
@@ -67,7 +67,7 @@ private:
 };
 
 // Subtree of a Node
-typedef std::list<Node> Children;
+typedef std::vector<Node> Children;
 
 // Generate a new unique element ID
 std::string new_id();

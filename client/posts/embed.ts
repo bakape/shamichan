@@ -13,11 +13,11 @@ enum provider { Youtube, SoundCloud, Vimeo }
 const patterns: [provider, RegExp][] = [
 	[
 		provider.Youtube,
-		/https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=([^&]+)/,
+		/https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=[^&]+/,
 	],
 	[
 		provider.Youtube,
-		/https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/([a-zA-Z0-9_-]+)/,
+		/https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/[a-zA-Z0-9_-]+/,
 	],
 	[
 		provider.SoundCloud,

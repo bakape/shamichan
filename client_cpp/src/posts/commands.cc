@@ -129,4 +129,5 @@ optional<Node> Post::parse_commands(string_view word)
 // TODO
 // TODO: Also need to figure out, how to handle updating these on countdown.
 // Perhaps a global registry, that gets flushed on page re-render?
+// Probably a good idea to hook these before RAF execution.
 optional<Node> Post::parse_syncwatch(std::string_view frag) { return nullopt; }

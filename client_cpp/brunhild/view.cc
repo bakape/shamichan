@@ -106,10 +106,10 @@ void VirtualView::patch_attrs(Node& old, Attrs attrs)
 void VirtualView::patch_children(Node& old, Children ch)
 {
     // Text nodes can not be addressed by ID and require special handling
-    if (old.children.size() == 1 && old.children.front().is_text()) {
+    if (old.children.size() == 1 && old.children[0].is_text()) {
         // Hot path
-        if (ch.size() == 1 && ch.front().is_text()) {
-            auto const& text = ch.front().attrs["_text"];
+        if (ch.size() == 1 && ch[0].is_text()) {
+            auto const& text = ch[0].attrs["_text"];
             if (old.attrs["_text"] != text) {
                 set_inner_html(old.attrs["id"], text);
                 old.children = ch;
@@ -125,8 +125,8 @@ void VirtualView::patch_children(Node& old, Children ch)
         old.children = ch;
         set_inner_html(old.attrs["id"], s.str());
         return;
-    } else if (ch.size() == 1 && ch.front().is_text()) {
-        set_inner_html(old.attrs["id"], ch.front().attrs["_text"]);
+    } else if (ch.size() == 1 && ch[0].is_text()) {
+        set_inner_html(old.attrs["id"], ch[0].attrs["_text"]);
         old.children = ch;
         return;
     }
@@ -148,6 +148,7 @@ void VirtualView::patch_children(Node& old, Children ch)
 
     // Append Nodes
     if (diff > 0) {
+        old.children.reserve(ch.size());
         while (ch_iter != ch.end()) {
             auto ch = *ch_iter;
             ensure_id(ch);

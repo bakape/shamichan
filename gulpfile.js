@@ -71,6 +71,7 @@ function buildES6() {
 	tasks.push(name)
 	gulp.task(name, () =>
 		buildClient()
+			// Disabled, until uglify-es stabalizes
 			// .pipe(uglify())
 			.on('error', handleError)
 			.pipe(sourcemaps.write('maps'))

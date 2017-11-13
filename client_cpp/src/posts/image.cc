@@ -16,6 +16,7 @@ Node Post::render_figcaption()
     auto& img = *image;
 
     Node n = { "figcaption", { { "class", "spaced" } } };
+    n.children.reserve(4);
 
     if (options->hide_thumbs || options->work_mode_toggle) {
         n.children.push_back({
@@ -38,7 +39,8 @@ Node Post::render_figcaption()
     url << "/assets/images/src/" << img.SHA1 << '.' << ext;
     n.children.push_back({ "a",
         {
-            { "href", url.str() }, { "download", name.str() },
+            { "href", url.str() },
+            { "download", name.str() },
         },
         name.str() });
 
@@ -51,14 +53,17 @@ static Node image_search_link(int i, const string& url)
     const static string abbrev[6] = { "G", "Iq", "Sn", "Wa", "Ds", "Ex" };
     const static string url_starts[6] = {
         "https://www.google.com/searchbyimage?image_url=",
-        "http://iqdb.org/?url=", "http://saucenao.com/search.php?db=999&url=",
-        "https://whatanime.ga/?url=", "https://desuarchive.org/_/search/image/",
+        "http://iqdb.org/?url=",
+        "http://saucenao.com/search.php?db=999&url=",
+        "https://whatanime.ga/?url=",
+        "https://desuarchive.org/_/search/image/",
         "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
     };
 
     return Node("a",
         {
-            { "target", "_blank" }, { "rel", "nofollow" },
+            { "target", "_blank" },
+            { "rel", "nofollow" },
             { "href", url_starts[i] + url },
         },
         abbrev[i]);
@@ -75,6 +80,7 @@ Node Post::render_image_search()
             { "style", "font-weight: 700;" },
         },
     };
+    n.children.reserve(6);
 
     // Resolve URL of image search providers, that require to download the
     // image file
@@ -100,8 +106,12 @@ Node Post::render_image_search()
     url << url_encode(unencoded.str());
 
     const bool enabled[6] = {
-        options->google, options->iqdb, options->sauce_nao, options->what_anime,
-        options->desu_storage, options->exhentai,
+        options->google,
+        options->iqdb,
+        options->sauce_nao,
+        options->what_anime,
+        options->desu_storage,
+        options->exhentai,
     };
     for (int i = 0; i < 4; i++) {
         if (enabled[i]) {
@@ -197,13 +207,13 @@ Node Post::render_image()
     // TODO: Expanded image rendering
 
     auto& img = *image;
-    const std::string src = img.source_path();
-    std::string thumb;
+    const string src = img.source_path();
+    string thumb;
     uint16_t h, w;
 
     if (img.thumb_type == FileType::no_file) {
         // No thumbnail exists. Assign default.
-        std::string file;
+        string file;
         switch (img.file_type) {
         case FileType::mp4:
         case FileType::mp3:
@@ -232,19 +242,26 @@ Node Post::render_image()
     }
 
     return {
-        "figure", {},
-        { {
-            "a",
+        "figure",
+        {},
+        {
             {
-                { "href", src }, { "target", "_blank" },
-            },
-            { {
-                "img",
+                "a",
                 {
-                    { "src", thumb }, { "width", std::to_string(w) },
-                    { "height", std::to_string(h) },
+                    { "href", src },
+                    { "target", "_blank" },
                 },
-            } },
-        } },
+                {
+                    {
+                        "img",
+                        {
+                            { "src", thumb },
+                            { "width", std::to_string(w) },
+                            { "height", std::to_string(h) },
+                        },
+                    },
+                },
+            },
+        },
     };
 }

@@ -34,14 +34,22 @@ enum class FileType : uint8_t {
 };
 
 // Maps file_type to the appropriate file extension
-const std::unordered_map<FileType, std::string> file_extentions = {
-    { FileType::jpg, "jpg" }, { FileType::png, "png" },
-    { FileType::gif, "gif" }, { FileType::webm, "webm" },
-    { FileType::pdf, "pdf" }, { FileType::svg, "svg" },
-    { FileType::mp4, "mp4" }, { FileType::mp3, "mp3" },
-    { FileType::ogg, "ogg" }, { FileType::zip, "zip" }, { FileType::_7z, "7z" },
-    { FileType::targz, "tar.gz" }, { FileType::tarxz, "tar.xz" },
-    { FileType::flac, "flac" }, { FileType::txt, "txt" },
+const static std::unordered_map<FileType, std::string> file_extentions = {
+    { FileType::jpg, "jpg" },
+    { FileType::png, "png" },
+    { FileType::gif, "gif" },
+    { FileType::webm, "webm" },
+    { FileType::pdf, "pdf" },
+    { FileType::svg, "svg" },
+    { FileType::mp4, "mp4" },
+    { FileType::mp3, "mp3" },
+    { FileType::ogg, "ogg" },
+    { FileType::zip, "zip" },
+    { FileType::_7z, "7z" },
+    { FileType::targz, "tar.gz" },
+    { FileType::tarxz, "tar.xz" },
+    { FileType::flac, "flac" },
+    { FileType::txt, "txt" },
 };
 
 class Image {
@@ -84,7 +92,14 @@ private:
 class Command {
 public:
     // Indicates the contained type
-    enum class Type { dice, flip, eight_ball, sync_watch, pyu, pcount } typ;
+    enum class Type : uint8_t {
+        dice,
+        flip,
+        eight_ball,
+        sync_watch,
+        pyu,
+        pcount
+    } typ;
 
     // Use typ, to get out the relevant value
     bool flip; // Result of flip command

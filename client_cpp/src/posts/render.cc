@@ -5,6 +5,7 @@
 Node Post::render()
 {
     Node n = { "article", { { "id", "#p" + std::to_string(id) } } };
+    n.children.reserve(4);
 
     n.attrs["class"] = "glass";
     if (editing) {
@@ -14,12 +15,17 @@ Node Post::render()
     if (deleted) {
         n.attrs["class"] += " deleted";
         n.children.push_back({
-            "input", { { "type", "checkbox" }, { "class", "deleted-toggle" } },
+            "input",
+            {
+                { "type", "checkbox" },
+                { "class", "deleted-toggle" },
+            },
         });
     }
     n.children.push_back(render_header());
 
     brunhild::Children pc_ch;
+    pc_ch.reserve(2);
     if (image) {
         n.attrs["class"] += " media";
         n.children.push_back(render_figcaption());
