@@ -134,16 +134,24 @@ public:
     int successive_newlines = 0, // Number of successive newlines in text
         dice_index = 0; // Index of the next dice array item to use
 
+    // Used for building text nodes. Flushed on append() or ascend().
+    std::string buf;
+
     // Reset to initial values and sets Node as the new root parent.
     void reset(Node* root);
 
     // Append a Node to the current lowermost parent.
     // If descend = true, make it the next parent to append to.
-    void append(Node n, bool descend = false);
+    // gt_count prepends "greater than" symbols in the text node before this
+    // node.
+    void append(Node n, bool descend = false, unsigned int gt_count = 0);
 
     // Acsend one level up the parent tree and make it the next node to append
     // to
-    void ascend() { parents.pop_back(); }
+    void ascend();
+
+    // Flush text buffer into escaped text node, if not empty
+    void flush_text();
 
 private:
     // Last child nodes of the blockquote subtree.
@@ -245,9 +253,6 @@ private:
     // fn receives a string_view of the word and a buffer for building text
     // nodes.
     template <class F> void parse_words(std::string_view frag, F fn);
-
-    // Flushes text preceding a link and appends gt_count ">" symbols
-    void flush_prelink_text(int gt_count, std::string& buf);
 
     // Parse internally-defined or board reference URL.
     // Returns preceding '>' count and link Node, if matched.

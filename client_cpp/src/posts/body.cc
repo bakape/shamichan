@@ -247,13 +247,12 @@ static tuple<char, string_view, char> split_punctuation(const string_view word)
 template <class F> void Post::parse_words(string_view frag, F fn)
 {
     bool first = true;
-    string buf;
-    buf.reserve(frag.size());
+    state.buf.reserve(frag.size());
 
     parse_string(frag, " ",
-        [this, &first, &buf, fn](auto frag) {
+        [this, &first, fn](string_view frag) {
             if (!first) {
-                buf += ' ';
+                state.buf += ' ';
             } else {
                 first = false;
             }
@@ -261,19 +260,17 @@ template <class F> void Post::parse_words(string_view frag, F fn)
             // Split leading and trailing punctuation, if any
             auto[lead_punct, word, trail_punct] = split_punctuation(frag);
             if (lead_punct) {
-                buf += lead_punct;
+                state.buf += lead_punct;
             }
-            fn(word, buf);
+            fn(word);
             if (trail_punct) {
-                buf += trail_punct;
+                state.buf += trail_punct;
             }
         },
         []() {});
 
     // Append any leftover text
-    if (buf.size()) {
-        state.append({ "span", buf, true });
-    }
+    state.flush_text();
 }
 
 // Strip leading '>' and return stripped count
@@ -336,31 +333,21 @@ static Node render_temp_link(uint64_t id)
     };
 }
 
-void Post::flush_prelink_text(int gt_count, string& buf)
-{
-    for (int i = 0; i < gt_count; i++) {
-        buf += '>';
-    }
-    state.append({ "span", buf, true });
-    buf.clear();
-}
-
 // Parse temporary links in open posts, that still may be edited
 void Post::parse_temp_links(string_view frag)
 {
-    parse_words(frag, [this](string_view word, string& buf) {
+    parse_words(frag, [this](string_view word) {
         bool matched = false;
         if (word.size() && word[0] == '>') {
             if (auto l = parse_post_link(word); l) {
                 // Text preceding the link
                 auto[count, id] = *l;
-                flush_prelink_text(count, buf);
-                state.append(render_temp_link(id));
+                state.append(render_temp_link(id), false, count);
                 matched = true;
             }
         }
         if (!matched) {
-            buf += word;
+            state.buf += word;
         }
     });
 }
@@ -368,7 +355,7 @@ void Post::parse_temp_links(string_view frag)
 // Parse a line fragment of a closed post
 void Post::parse_fragment(string_view frag)
 {
-    parse_words(frag, [this](string_view word, string& buf) {
+    parse_words(frag, [this](string_view word) {
         if (!word.size()) {
             return;
         }
@@ -379,12 +366,11 @@ void Post::parse_fragment(string_view frag)
             // Post links
             if (auto l = parse_post_link(word)) {
                 auto[count, id] = *l;
-                flush_prelink_text(count, buf);
 
                 // In case the server parsed this differently.
                 // Maybe older version.
                 if (links.count(id)) {
-                    state.append(render_post_link(id, links[id]));
+                    state.append(render_post_link(id, links[id]), false, count);
                     matched = true;
                     break;
                 }
@@ -393,15 +379,13 @@ void Post::parse_fragment(string_view frag)
             // Internal and custom reference URLs
             if (auto l = parse_reference(word)) {
                 auto[count, n] = *l;
-                flush_prelink_text(count, buf);
-                state.append(n);
+                state.append(n, false, count);
                 matched = true;
             }
             break;
         case '#':
             // Hash commands
             if (auto n = parse_commands(word)) {
-                flush_prelink_text(0, buf);
                 state.append(*n);
                 matched = true;
             }
@@ -409,13 +393,12 @@ void Post::parse_fragment(string_view frag)
         default:
             // Generic HTTP(S)/FTP(S) URLs, magnet links and embeds
             if (auto n = parse_url(word)) {
-                flush_prelink_text(0, buf);
                 state.append(*n);
                 matched = true;
             }
         }
         if (!matched) {
-            buf += word;
+            state.buf += word;
         }
     });
 }

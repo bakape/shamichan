@@ -149,15 +149,38 @@ void TextState::reset(Node* root)
     have_syncwatch = false;
     successive_newlines = 0;
     dice_index = 0;
+    buf.clear();
     parents.clear();
 
     parents.push_back(root);
 }
 
-void TextState::append(Node n, bool descend)
+void TextState::append(Node n, bool descend, unsigned int gt_count)
 {
+    // Append escaped '>'
+    for (unsigned int i = 0; i < gt_count; i++) {
+        buf += "&gt;";
+    }
+
+    // Flush pending text node
+    flush_text();
+
     parents.back()->children.push_back(n);
     if (descend) {
         parents.push_back(&parents.back()->children.back());
+    }
+}
+void TextState::ascend()
+{
+    flush_text();
+    parents.pop_back();
+}
+
+void TextState::flush_text()
+{
+    if (buf.size()) {
+        Node n("span", buf, true);
+        buf.clear();
+        append(n);
     }
 }

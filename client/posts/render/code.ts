@@ -250,7 +250,7 @@ export default function highlightSyntax(text: string): string {
 					if (next === "(") {
 						html += headers.function + escape(token) + close
 					} else if (keywords[token]) {
-						html += headers.operator + token + close
+						html += wrapOperator(token)
 					} else {
 						html += escape(token)
 					}
