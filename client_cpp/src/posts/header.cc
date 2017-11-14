@@ -246,9 +246,10 @@ Node Post::render_time()
 
     // Renders classic absolute timestamp
     std::ostringstream abs;
-    abs << setw(2) << then->tm_mday << ' ' << lang->calendar[then->tm_mon]
-        << ' ' << 1900 + then->tm_year << " (" << lang->week[then->tm_wday]
-        << ") " << setw(2) << then->tm_hour << ':' << setw(2) << then->tm_min;
+    abs << std::setfill('0') << setw(2) << then->tm_mday << ' '
+        << lang->calendar[then->tm_mon] << ' ' << 1900 + then->tm_year << " ("
+        << lang->week[then->tm_wday] << ") " << setw(2) << then->tm_hour << ':'
+        << setw(2) << then->tm_min;
 
     const auto rel = relative_time(time);
 

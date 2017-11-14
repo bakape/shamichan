@@ -1,7 +1,10 @@
 // Hash command parsing and rendering
 
+#include "../lang.hh"
 #include "models.hh"
 #include <cctype>
+#include <ctime>
+#include <iomanip>
 #include <sstream>
 
 using std::nullopt;
@@ -10,8 +13,9 @@ using std::ostringstream;
 using std::string;
 using std::string_view;
 
-// Read any digit from string_view and return it. Returns 0 on no match.
-static unsigned int read_uint(string_view& word)
+// Read any digit from string_view and return it, if any.
+// Rejects numbers longer than 5 digits.
+static optional<unsigned int> parse_uint(string_view& word)
 {
     string num;
     num.reserve(5);
@@ -24,13 +28,10 @@ static unsigned int read_uint(string_view& word)
             break;
         }
     }
-    if (num.size() > 5) {
-        return 0;
+    if (num.size() > 5 || !num.size()) {
+        return nullopt;
     }
-    if (num.size()) {
-        return std::stoul(num);
-    }
-    return 0;
+    return { std::stoul(num) };
 }
 
 // Parse dice rolls and return inner command string, if matched
@@ -41,15 +42,29 @@ static string parse_dice(string& name, string_view word, const Command& val)
 
     // Has leading digits
     if (name == "") {
-        dice = read_uint(word);
+        if (auto d = parse_uint(word)) {
+            dice = *d;
+        } else {
+            return "";
+        }
         if (!word.size() || word[0] != 'd') {
             return "";
         }
         word = word.substr(1);
     }
-    name = string(word);
 
-    faces = read_uint(word); // Should consume the rest of the text
+    // Rebuild command syntax
+    name.clear();
+    if (dice) {
+        name += std::to_string(dice);
+    }
+    name += 'd' + std::to_string(faces);
+
+    if (auto f = parse_uint(word)) { // Must consume the rest of the text
+        faces = *f;
+    } else {
+        return "";
+    }
     if (word.size() || dice > 10 || faces > 10000) {
         return "";
     }
@@ -126,8 +141,86 @@ optional<Node> Post::parse_commands(string_view word)
     return { { "strong", os.str(), true } };
 }
 
-// TODO
 // TODO: Also need to figure out, how to handle updating these on countdown.
 // Perhaps a global registry, that gets flushed on page re-render?
 // Probably a good idea to hook these before RAF execution.
-optional<Node> Post::parse_syncwatch(std::string_view frag) { return nullopt; }
+optional<Node> Post::parse_syncwatch(std::string_view frag)
+{
+    using std::setw;
+
+    // Parse and validate
+    if (!frag.size()) {
+        return nullopt;
+    }
+    if (!parse_uint(frag) || frag.size() < 2 || frag[0] != ':') {
+        return nullopt;
+    }
+    frag = frag.substr(1);
+    if (!parse_uint(frag)) {
+        return nullopt;
+    }
+
+    // Hour parameter is optional, so only the first 2 parameters are required
+    if (frag.size() && frag[0] == ':') {
+        frag = frag.substr(1);
+        if (!parse_uint(frag)) {
+            return nullopt;
+        }
+    }
+
+    // Validate optional offset parameter
+    if (frag.size()) {
+        if (frag.size() < 2) {
+            return nullopt;
+        }
+        switch (frag[0]) {
+        case '+':
+        case '-':
+            frag = frag.substr(1);
+            break;
+        default:
+            return nullopt;
+        }
+
+        // Must be fully consumbed now
+        if (!parse_uint(frag) || frag.size()) {
+            return nullopt;
+        }
+    }
+
+    // Format inner string
+    // TODO: Apply offset from server clock
+    const auto[hours, min, sec, start, end]
+        = commands[state.dice_index++].sync_watch;
+    const uint64_t now = std::time(0);
+    ostringstream s;
+    if (now > end) {
+        s << lang->ui.at("finished");
+    } else if (now < start) {
+        s << start - now;
+    } else {
+        uint64_t diff = now - start;
+        const auto hours_elapsed = diff / 3600;
+        diff %= 3600;
+        const auto min_elapsed = diff / 60;
+        diff %= 60;
+
+        s << std::setfill('0') << setw(2) << hours_elapsed << ':' << setw(2)
+          << min_elapsed << ':' << setw(2) << diff << " / " << setw(2) << hours
+          << ':' << setw(2) << min << ':' << setw(2) << sec;
+    }
+
+    return {
+        {
+            "em",
+            {},
+            {
+                {
+                    "strong",
+                    { { "class", "embed syncwatch" } },
+                    s.str(),
+                },
+            },
+        },
+    };
+}
