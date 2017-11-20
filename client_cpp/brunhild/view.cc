@@ -1,6 +1,9 @@
 #include "view.hh"
 #include "mutations.hh"
 #include <sstream>
+#include <utility>
+
+using std::move;
 
 namespace brunhild {
 
@@ -67,20 +70,20 @@ void VirtualView::patch_node(Node& old, Node node)
         || (node.attrs.count("id") && node.attrs.at("id") != old.attrs["id"]);
     if (replace) {
         const auto old_id = old.attrs.at("id");
-        old = node;
+        old = move(node);
         ensure_id(old);
         set_outer_html(old_id, old.html());
         return;
     }
 
-    patch_attrs(old, node.attrs);
-    patch_children(old, node);
+    patch_attrs(old, move(node.attrs));
+    patch_children(old, move(node));
 }
 
 void VirtualView::patch_attrs(Node& old, Attrs attrs)
 {
     // Attributes added or changed
-    for (auto && [ key, val ] : attrs) {
+    for (auto & [ key, val ] : attrs) {
         if (key != "id" && (!old.attrs.count(key) || old.attrs[key] != val)) {
             old.attrs[key] = val;
             set_attr(old.attrs.at("id"), key, val);
@@ -88,7 +91,7 @@ void VirtualView::patch_attrs(Node& old, Attrs attrs)
     }
 
     // Attributes removed
-    for (auto && [ key, _ ] : old.attrs) {
+    for (auto & [ key, _ ] : old.attrs) {
         if (key != "id" && !attrs.count(key)) {
             old.attrs.erase(key);
             remove_attr(old.attrs.at("id"), key);
@@ -105,7 +108,7 @@ void VirtualView::patch_children(Node& old, Node node)
         if (node.inner_html) {
             if (*old.inner_html != *node.inner_html) {
                 set_inner_html(old.attrs.at("id"), *node.inner_html);
-                old.inner_html = node.inner_html;
+                old.inner_html = move(node.inner_html);
             }
             return;
         }
@@ -115,14 +118,14 @@ void VirtualView::patch_children(Node& old, Node node)
             ensure_id(ch);
             ch.write_html(s);
         }
-        old.children = node.children;
+        old.children = move(node.children);
         old.inner_html = std::nullopt;
         set_inner_html(old.attrs.at("id"), s.str());
         return;
     } else if (node.inner_html) {
         set_inner_html(old.attrs.at("id"), *node.inner_html);
         old.children.clear();
-        old.inner_html = node.inner_html;
+        old.inner_html = move(node.inner_html);
         return;
     }
 
@@ -130,7 +133,7 @@ void VirtualView::patch_children(Node& old, Node node)
 
     // Diff existing nodes
     for (int i = 0; i < old.children.size() && i < node.children.size(); i++) {
-        patch_node(old.children[i], node.children[i]);
+        patch_node(old.children[i], move(node.children[i]));
     }
 
     if (diff > 0) {
@@ -139,7 +142,7 @@ void VirtualView::patch_children(Node& old, Node node)
             auto& ch = node.children[i];
             ensure_id(ch);
             append(old.attrs.at("id"), ch.html());
-            old.children.push_back(ch);
+            old.children.push_back(move(ch));
         }
     } else {
         // Remove Nodes from the end
