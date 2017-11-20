@@ -59,6 +59,12 @@ public:
     // Write node as HTML to stream
     void write_html(std::ostringstream&) const;
 
+    // Converts the subtree of the node into an HTML string and sets it to
+    // inner_html. This can reduce the diffing and memory costs of large mostly
+    // static subtrees, but will cause any changes to replace the entire
+    // subtree.
+    void stringify_subtree();
+
     // Resets the node and frees up used resources
     void clear();
 };

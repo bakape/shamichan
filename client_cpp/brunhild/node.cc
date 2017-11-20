@@ -46,6 +46,16 @@ void Node::write_html(std::ostringstream& s) const
     s << "</" << tag << '>';
 }
 
+void Node::stringify_subtree()
+{
+    std::ostringstream s;
+    for (auto& ch : children) {
+        ch.write_html(s);
+    }
+    inner_html = s.str();
+    children.clear();
+}
+
 void Node::clear()
 {
     tag.clear();

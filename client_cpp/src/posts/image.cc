@@ -44,6 +44,7 @@ Node Post::render_figcaption()
         },
         name.str() });
 
+    n.stringify_subtree();
     return n;
 }
 
@@ -241,7 +242,7 @@ Node Post::render_image()
         h *= 0.8333;
     }
 
-    return {
+    Node n({
         "figure",
         {},
         {
@@ -263,5 +264,7 @@ Node Post::render_image()
                 },
             },
         },
-    };
+    });
+    n.stringify_subtree();
+    return n;
 }

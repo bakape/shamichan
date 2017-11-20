@@ -185,23 +185,11 @@ Node Post::render_header()
             },
         },
     });
-    n.children.push_back({
-        "a",
-        { { "class", "control" } },
-        {
-            {
-                "svg",
-                {
-                    { "xmlns", "http://www.w3.org/2000/svg" },
-                    { "width", "8" },
-                    { "height", "8" },
-                    { "viewBox", "0 0 8 8" },
-                },
-                R"'(<path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" />)'",
-            },
-        },
-    });
 
+    n.children.push_back({ "a", { { "class", "control" } },
+        R"'(<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" /></svg>)'" });
+
+    n.stringify_subtree();
     return n;
 }
 
