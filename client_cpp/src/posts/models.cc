@@ -139,6 +139,21 @@ Post::Post(nlohmann::json& j)
     }
 }
 
+void Post::patch()
+{
+    // Post not currently displayed
+    if (!is_rendered) {
+        return;
+    }
+
+    // Proxy to top-most parent post, if inlined
+    if (inlined_into) {
+        return posts->at(inlined_into).patch();
+    }
+
+    VirtualView::patch(render());
+}
+
 void TextState::reset(Node* root)
 {
     spoiler = false;

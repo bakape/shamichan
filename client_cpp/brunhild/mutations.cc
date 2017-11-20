@@ -5,6 +5,9 @@
 namespace brunhild {
 using std::string;
 
+void (*before_flush)() = nullptr;
+void (*after_flush)() = nullptr;
+
 // All pending mutations quickly accessible by element ID
 std::unordered_map<string, Mutations> mutations;
 
@@ -12,19 +15,29 @@ std::unordered_map<string, Mutations> mutations;
 // manipulated, before insertion.
 std::set<string> mutation_order;
 
-// Push simple vector-based mutation to stack
-#define push_mutation(typ)                                                     \
-    auto& mut = mutations[id];                                                 \
-    mut.typ.push_back(html);                                                   \
+void append(string id, string html)
+{
+    mutations[id].append.push_back(html);
     mutation_order.insert(id);
+}
 
-void append(string id, string html) { push_mutation(append) }
+void prepend(string id, string html)
+{
+    mutations[id].prepend.push_back(html);
+    mutation_order.insert(id);
+}
 
-void prepend(string id, string html) { push_mutation(prepend) }
+void before(string id, string html)
+{
+    mutations[id].before.push_back(html);
+    mutation_order.insert(id);
+}
 
-void before(string id, string html) { push_mutation(before) }
-
-void after(string id, string html) { push_mutation(after) }
+void after(string id, string html)
+{
+    mutations[id].after.push_back(html);
+    mutation_order.insert(id);
+}
 
 void set_inner_html(string id, string html)
 {
@@ -55,15 +68,13 @@ void remove(string id)
 
 void set_attr(string id, string key, string val)
 {
-    auto& mut = mutations[id];
-    mut.set_attr[key] = val;
+    mutations[id].set_attr[key] = val;
     mutation_order.insert(id);
 }
 
 void remove_attr(string id, string key)
 {
-    auto& mut = mutations[id];
-    mut.set_attr.erase(key);
+    mutations[id].set_attr.erase(key);
     mutation_order.insert(key);
 }
 
@@ -84,11 +95,23 @@ void Mutations::free_outer()
 
 extern "C" void flush()
 {
-    for (const string& id : mutation_order) {
-        mutations.at(id).exec(id);
+    try {
+        if (before_flush) {
+            (*before_flush)();
+        }
+
+        for (const string& id : mutation_order) {
+            mutations.at(id).exec(id);
+        }
+        mutation_order.clear();
+        mutations.clear();
+
+        if (after_flush) {
+            (*after_flush)();
+        }
+    } catch (const std::exception& ex) {
+        EM_ASM_INT({ console.log(UTF8ToString($0)); }, ex.what());
     }
-    mutation_order.clear();
-    mutations.clear();
 }
 
 void Mutations::exec(const string& id)

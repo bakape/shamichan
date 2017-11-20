@@ -163,27 +163,47 @@ private:
 // Generic post model
 class Post : public brunhild::VirtualView {
 public:
-    bool editing = false, // Post is currrently being edited
-        deleted = false, // Deleted by moderator
-        sage = false, // Poster disabled bumping of the parent thread
-        banned = false, // Banned for this post by moderator
-        sticky = false, // Thread is stickied. Only for OPs.
-        locked = false, // Thread is locked. Only for OPs.
-        seen = false, // The user has already seen this post
-        hidden = false, // The post has been hidden by the user
-        is_rendered = false; // Is Post currently represented inside the DOM?
+    // Post is currrently being edited
+    bool editing = false,
+         // Deleted by moderator
+        deleted = false,
+         // Poster disabled bumping of the parent thread
+        sage = false,
+         // Banned for this post by moderator
+        banned = false,
+         // Thread is stickied. Only for OPs.
+        sticky = false,
+         // Thread is locked. Only for OPs.
+        locked = false,
+         // The user has already seen this post
+        seen = false,
+         // The post has been hidden by the user
+        hidden = false,
+         // Is Post currently represented inside the DOM?
+        is_rendered = false;
+
     std::optional<Image> image;
+
+    // ID of post this post is currently inlined into, if any
+    uint64_t inlined_into = 0;
+
     uint64_t id, op;
+
     time_t time;
+
     std::string body, board;
+
     std::optional<std::string> name, // Name of poster
         trip, // Trip code of poster
         auth, // Staff title of poster
         subject, // Subject of thread. Only for OPs.
         flag, // Country code of poster
         poster_id; // Thread-level poster ID
+
     std::vector<Command> commands; // Results of hash commands
+
     std::map<uint64_t, LinkData> backlinks; // Posts linking to this post
+
     std::unordered_map<uint64_t, LinkData> links; // Posts linked by this post
 
     Post() = default;
@@ -193,6 +213,11 @@ public:
 
     // Generates the model's node tree
     Node render();
+
+    // Patch the current contents of the post into the DOM.
+    // If the post is currently inlined into another post, this method will
+    // delegate the patch to the topmost parent.
+    void patch();
 
 private:
     TextState state;

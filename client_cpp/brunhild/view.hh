@@ -59,7 +59,8 @@ public:
 // passed Nodes to the current state of the DOM and appropriate pathing.
 class VirtualView {
 public:
-    // Initialize the view with a Node subtree
+    // Initialize the view with a Node subtree.
+    // Takes ownership of Node.
     void init(Node);
 
     // Renders the view's subtree as HTML. After this call, the HTML must be
@@ -71,6 +72,7 @@ public:
 
     // Patch the view's subtree against the updated subtree in Node.
     // Can only be called after the view has been inserted into the DOM.
+    // Takes ownership of Node.
     void patch(Node);
 
 private:
@@ -88,6 +90,6 @@ private:
     void patch_attrs(Node& old, Attrs attrs);
 
     // Patch element's subtree
-    void patch_children(Node& old, Children children);
+    void patch_children(Node& old, Node node);
 };
 }

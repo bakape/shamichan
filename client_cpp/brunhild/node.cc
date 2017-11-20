@@ -21,11 +21,6 @@ std::string Node::html() const
 
 void Node::write_html(std::ostringstream& s) const
 {
-    if (tag == "_text") {
-        s << attrs.at("_text");
-        return;
-    }
-
     s << '<' << tag;
     for (auto & [ key, val ] : attrs) {
         s << ' ' << key;
@@ -40,16 +35,15 @@ void Node::write_html(std::ostringstream& s) const
         return;
     }
 
-    for (auto& ch : children) {
-        ch.write_html(s);
+    if (inner_html) {
+        s << *inner_html;
+    } else {
+        for (auto& ch : children) {
+            ch.write_html(s);
+        }
     }
 
     s << "</" << tag << '>';
-}
-
-Node Node::text(std::string text)
-{
-    return Node("_text", { { "_text", text } });
 }
 
 void Node::clear()
@@ -57,5 +51,6 @@ void Node::clear()
     tag.clear();
     attrs.clear();
     children.clear();
+    inner_html = std::nullopt;
 }
 }

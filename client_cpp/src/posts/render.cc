@@ -4,7 +4,7 @@
 
 Node Post::render()
 {
-    Node n = { "article", { { "id", "#p" + std::to_string(id) } } };
+    Node n("article");
     n.children.reserve(4);
 
     n.attrs["class"] = "glass";

@@ -10,7 +10,7 @@ namespace brunhild {
 // Pending mutations for an element
 class Mutations {
 public:
-    bool remove_el;
+    bool remove_el = false;
     std::optional<std::string> set_inner_html, set_outer_html;
     std::vector<std::string> append, prepend, before, after, remove_attr;
     std::unordered_map<std::string, std::string> set_attr;
@@ -54,4 +54,10 @@ void remove_attr(std::string id, std::string key);
 
 // Flush all pending DOM mutations
 extern "C" void flush();
+
+// Function to run before flushing DOM updates
+extern void (*before_flush)();
+
+// Function to run after flushing DOM updates
+extern void (*after_flush)();
 }

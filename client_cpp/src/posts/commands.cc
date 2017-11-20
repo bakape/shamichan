@@ -1,17 +1,47 @@
 // Hash command parsing and rendering
 
 #include "../lang.hh"
+#include "../state.hh"
 #include "models.hh"
 #include <cctype>
 #include <ctime>
 #include <iomanip>
 #include <sstream>
+#include <unordered_map>
 
 using std::nullopt;
 using std::optional;
 using std::ostringstream;
 using std::string;
 using std::string_view;
+using std::unordered_map;
+
+// IDs of posts, that are pending a rerender to update the syncwatch and the
+// time they should be rerender at. Specifying a timestamp helps avoid useless
+// subtree diffs.
+unordered_map<uint64_t, time_t> pending_rerender;
+
+void rerender_syncwatches()
+{
+    if (!pending_rerender.size()) {
+        return;
+    }
+
+    // Prevent modifications from patching affecting the iterated map
+    unordered_map<uint64_t, time_t> m(pending_rerender);
+    const auto now = std::time(0);
+
+    for (auto[id, when] : m) {
+        if (now >= when) {
+            pending_rerender.erase(id);
+
+            // Posts might have been removed by now
+            if (posts->count(id)) {
+                posts->at(id).patch();
+            }
+        }
+    }
+}
 
 // Read any digit from string_view and return it, if any.
 // Rejects numbers longer than 5 digits.
@@ -192,22 +222,27 @@ optional<Node> Post::parse_syncwatch(std::string_view frag)
     // TODO: Apply offset from server clock
     const auto[hours, min, sec, start, end]
         = commands[state.dice_index++].sync_watch;
-    const uint64_t now = std::time(0);
+    const auto now = std::time(0);
     ostringstream s;
     if (now > end) {
         s << lang->ui.at("finished");
-    } else if (now < start) {
-        s << start - now;
     } else {
-        uint64_t diff = now - start;
-        const auto hours_elapsed = diff / 3600;
-        diff %= 3600;
-        const auto min_elapsed = diff / 60;
-        diff %= 60;
+        if (now < start) {
+            s << start - now;
+        } else {
+            uint64_t diff = now - start;
+            const auto hours_elapsed = diff / 3600;
+            diff %= 3600;
+            const auto min_elapsed = diff / 60;
+            diff %= 60;
 
-        s << std::setfill('0') << setw(2) << hours_elapsed << ':' << setw(2)
-          << min_elapsed << ':' << setw(2) << diff << " / " << setw(2) << hours
-          << ':' << setw(2) << min << ':' << setw(2) << sec;
+            s << std::setfill('0') << setw(2) << hours_elapsed << ':' << setw(2)
+              << min_elapsed << ':' << setw(2) << diff << " / " << setw(2)
+              << hours << ':' << setw(2) << min << ':' << setw(2) << sec;
+        }
+
+        // Schedule next render to update counter
+        pending_rerender[id] = now + 1;
     }
 
     return {

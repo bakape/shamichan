@@ -1,10 +1,11 @@
 #pragma once
 
 #include "util.hh"
-#include <vector>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace brunhild {
 
@@ -14,9 +15,17 @@ typedef std::unordered_map<std::string, std::string> Attrs;
 // Represents an HTML element. Can be used to construct node tries more easily.
 class Node {
 public:
+    // Tag of the Element
     std::string tag;
+
+    // Attributes and properties of the Element
     Attrs attrs;
+
+    // Children of the element
     std::vector<Node> children;
+
+    // Inner HTML of the Element. If set, children are ignored
+    std::optional<std::string> inner_html;
 
     // Creates a Node with optional attributes and children
     Node(std::string tag, Attrs attrs = {}, std::vector<Node> children = {})
@@ -26,23 +35,19 @@ public:
     {
     }
 
-    // Creates a Node with attributes and a text node or subtree in the form of
-    // an HTML string as the only child.
+    // Creates a Node with html set as the inner contents.
     // Escaped specifies, if the text should be escaped.
-    Node(std::string tag, Attrs attrs, std::string text, bool escape = false)
+    Node(std::string tag, Attrs attrs, std::string html, bool escape = false)
         : tag(tag)
         , attrs(attrs)
-        , children({ Node::text(escape ? brunhild::escape(text) : text) })
+        , inner_html(escape ? brunhild::escape(html) : html)
     {
     }
 
-    // Creates a Node with a text node or subtree in the form of an HTML string
-    // as the only child.
+    // Creates a Node with html set as the inner contents.
     // Escaped specifies, if the text should be escaped.
-    Node(std::string tag, std::string text, bool escape = false)
-        : tag(tag)
-        , attrs()
-        , children({ Node::text(escape ? brunhild::escape(text) : text) })
+    Node(std::string tag, std::string html, bool escape = false)
+        : Node(tag, {}, html, escape)
     {
     }
 
@@ -56,14 +61,6 @@ public:
 
     // Resets the node and frees up used resources
     void clear();
-
-    // Returns, if node is a text node
-    bool is_text() const { return tag == "_text"; }
-
-private:
-    // Creates a text Node. This node can only be a child of another Node and
-    // must be the only child.
-    static Node text(std::string);
 };
 
 // Subtree of a Node
