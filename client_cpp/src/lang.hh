@@ -35,12 +35,7 @@ private:
         std::unordered_map<std::string, std::string>&, nlohmann::json&);
 
     // Load an array of strings of known size from JSON
-    template <class T> void load_array(T& arr, nlohmann::json& j)
-    {
-        for (int i = 0; i < std::extent<T>::value; i++) {
-            arr[i] = j[i];
-        }
-    }
+    template <class T> void load_array(T& arr, nlohmann::json& j);
 };
 
 // Contains the plugable langauge pack

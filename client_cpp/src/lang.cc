@@ -27,6 +27,13 @@ LanguagePack::LanguagePack()
     load_array(sync, j["sync"]);
 }
 
+template <class T> void LanguagePack::load_array(T& arr, nlohmann::json& j)
+{
+    for (int i = 0; i < std::extent<T>::value; i++) {
+        arr[i] = j[i];
+    }
+}
+
 void LanguagePack::load_map(
     std::unordered_map<std::string, std::string>& m, nlohmann::json& j)
 {
