@@ -51,9 +51,6 @@ async function extractCatalogModels() {
 
 	const { threads, backlinks } = extractPageData<ThreadData[]>()
 	for (let t of threads) {
-		if (t.image) {
-			t.image.large = true
-		}
 		extractPost(t, t.id, t.board, backlinks)
 	}
 }
@@ -70,9 +67,6 @@ async function extractThreads() {
 		if (extractPost(thread, thread.id, thread.board, backlinks)) {
 			document.querySelector(`section[data-id="${thread.id}"]`).remove()
 			continue
-		}
-		if (thread.image) {
-			thread.image.large = true
 		}
 		for (let post of posts) {
 			extractPost(post, thread.id, thread.board, backlinks)

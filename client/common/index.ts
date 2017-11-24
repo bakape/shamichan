@@ -85,7 +85,6 @@ export interface ImageData {
 	name: string
 
 	// Added client-side
-	large: boolean              // Render larger thumbnails
 	expanded: boolean           // Thumbnail is expanded
 	tallerThanViewport: boolean // Image is taller than the current viewport
 	revealed: boolean           // Revealing a hidden image with [Show]

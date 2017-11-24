@@ -72,7 +72,7 @@ export default class ImageHandler extends View<Post> {
 	// Render the actual thumbnail image
 	private renderThumbnail() {
 		const el = this.el.querySelector("figure a"),
-			{ SHA1, fileType, thumbType, dims, large, spoiler, apng } = this
+			{ SHA1, fileType, thumbType, dims, spoiler, apng } = this
 				.model
 				.image,
 			src = sourcePath(SHA1, fileType)
@@ -108,12 +108,6 @@ export default class ImageHandler extends View<Post> {
 			thumb = src
 		} else {
 			thumb = thumbPath(SHA1, thumbType)
-		}
-
-		// Downscale thumbnail for higher DPI, unless specified not to
-		if (!large && (thumbWidth > 125 || thumbHeight > 125)) {
-			thumbWidth *= 0.8333
-			thumbHeight *= 0.8333
 		}
 
 		el.setAttribute("href", src)

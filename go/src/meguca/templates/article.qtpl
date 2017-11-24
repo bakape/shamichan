@@ -147,7 +147,6 @@
 				{% code img := *p.Image %}
 				<figure>
 					<a target="_blank" href="{%s= src %}">
-						{% code var w, h string  %}
 						{% switch %}
 						{% case img.ThumbType == common.NoFile %}
 							{% code var file string %}
@@ -157,20 +156,14 @@
 							{% default %}
 								{% code file = "file" %}
 							{% endswitch %}
-							<img src="/assets/{%s= file %}.png" width="125" height="125">
+							<img src="/assets/{%s= file %}.png" width="150" height="150">
 						{% case img.Spoiler %}
 							{% comment %}
 								TODO: board-specific server-side spoiler rendering
 							{% endcomment %}
-							{% if c.subject == "" %}
-								{% code w, h = "125", "125" %}
-							{% else %}
-								{% code w, h = "150", "150" %}
-							{% endif %}
-							<img src="/assets/spoil/default.jpg" width="{%s= w %}" height="{%s= h %}">
+							<img src="/assets/spoil/default.jpg" width="150" height="150">
 						{% default %}
-							{% code w, h = correctDims(c.subject != "", img.Dims[2], img.Dims[3]) %}
-							<img src="{%s= assets.ThumbPath(img.ThumbType, img.SHA1) %}" width="{%s= w %}" height="{%s= h %}">
+							<img src="{%s= assets.ThumbPath(img.ThumbType, img.SHA1) %}" width="{%d int(img.Dims[2]) %}" height="{%d int(img.Dims[3]) %}">
 						{% endswitch %}
 					</a>
 				</figure>

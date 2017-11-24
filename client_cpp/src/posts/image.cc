@@ -236,12 +236,6 @@ Node Post::render_image()
         h = img.dims[3];
     }
 
-    // Downscale thumbnail for higher DPI, unless Post is an OP
-    if (op != id && (w > 125 || h > 125)) {
-        w *= 0.8333;
-        h *= 0.8333;
-    }
-
     Node n({
         "figure",
         {},
