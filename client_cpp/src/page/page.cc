@@ -1,19 +1,21 @@
 #include "../../brunhild/mutations.hh"
 #include "../posts/models.hh"
 #include "../state.hh"
+#include "../util.hh"
+#include "thread.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <sstream>
 
 void render_page()
 {
-    std::ostringstream s;
-    for (auto & [ id, p ] : *posts) {
-        p.is_rendered = true;
-        p.init(p.render());
-        p.write_html(s);
+    try {
+        if (page->thread) {
+            render_thread();
+        }
+    } catch (const std::exception& ex) {
+        console::error(ex.what());
     }
-    brunhild::set_inner_html("threads", s.str());
 }
 
 EMSCRIPTEN_BINDINGS(module_page)

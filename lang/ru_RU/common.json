@@ -95,7 +95,15 @@
 		"importDone": "Импорт завершён. Страница будет перезагружена.",
 		"importCorrupt": "Импорт не удался. Файл повреждён.",
 		"confirmDelete": "Удалить все посты с этого IP?",
-		"lockThread": "Toggle thread lock"
+		"lockThread": "Toggle thread lock",
+		"return": "Назад",
+		"catalog": "Каталог",
+		"reply": "Ответить",
+		"top": "Верх",
+		"lockedToBottom": "Закрепить внизу",
+		"showNotice": "Объявление",
+		"rules": "Показать правила",
+		"bottom": "Низ"
 	},
 	"sync": [
 		"отключён",

@@ -71,5 +71,13 @@ private:
     static char to_hex(char code) { return hex[code & 15]; }
 };
 
+namespace console {
 // Log string to JS console
-void console_log(const std::string&);
+void log(const std::string&);
+
+// Log string to JS console as warning
+void warn(const std::string&);
+
+// Log string to JS console as error
+void error(const std::string&);
+}

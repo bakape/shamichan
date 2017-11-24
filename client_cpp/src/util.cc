@@ -33,7 +33,15 @@ std::string pluralize(int n, const std::tuple<std::string, std::string>& word)
     return s;
 }
 
-void console_log(const std::string& s)
-{
-    EM_ASM_INT({ console.log(UTF8ToString($0)); }, s.c_str());
+namespace console {
+
+#define def_logger(key)                                                        \
+    void key(const std::string& s)                                             \
+    {                                                                          \
+        EM_ASM_INT({ console.key(UTF8ToString($0)); }, s.c_str());             \
+    }
+
+def_logger(log);
+def_logger(warn);
+def_logger(error);
 }

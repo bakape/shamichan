@@ -72,6 +72,9 @@ public:
 // Subtree of a Node
 typedef std::vector<Node> Children;
 
+// Renders Children to HTML with fewer allocations
+std::string render_children(const Children&);
+
 // Generate a new unique element ID
 std::string new_id();
 }

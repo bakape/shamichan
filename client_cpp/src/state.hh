@@ -15,6 +15,9 @@ extern std::map<uint64_t, Post>* posts;
 // Caches the origin of the page
 extern std::string const* location_origin;
 
+// Loaded thread metadata
+extern std::unordered_map<uint64_t, Thread>* threads;
+
 // Public server-wide global configurations
 class Config {
 public:
@@ -85,7 +88,7 @@ enum class StorageType : int { mine, seen_replies, seen_posts, hidden };
 
 // Used to decode thread JSON
 // TODO: Get rid of this in favour of a binary decoder
-class ThreadDecoder : Thread {
+class ThreadDecoder : public Thread {
 public:
     uint64_t id;
     std::vector<Post> posts;

@@ -110,7 +110,7 @@ extern "C" void flush()
             (*after_flush)();
         }
     } catch (const std::exception& ex) {
-        EM_ASM_INT({ console.log(UTF8ToString($0)); }, ex.what());
+        EM_ASM_INT({ console.error(UTF8ToString($0)); }, ex.what());
     }
 }
 

@@ -95,7 +95,15 @@
 		"importDone": "Import successful. The page will now reload.",
 		"importCorrupt": "Import failed. File corrupt",
 		"confirmDelete": "Delete all posts by this IP?",
-		"lockThread": "Toggle thread lock"
+		"lockThread": "Toggle thread lock",
+		"return": "Návrat",
+		"catalog": "Katalóg",
+		"reply": "Odpovedať",
+		"top": "Vrch",
+		"lockedToBottom": "Zamknuté na spodok",
+		"showNotice": "Upozornenie",
+		"rules": "Pravidlá",
+		"bottom": "Dolu"
 	},
 	"sync": [
 		"odpojený",

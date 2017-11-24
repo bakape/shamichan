@@ -2,6 +2,7 @@
 #include "db.hh"
 #include "lang.hh"
 #include "options/options.hh"
+#include "posts/hide.hh"
 #include "posts/models.hh"
 #include "util.hh"
 #include <emscripten.h>
@@ -25,6 +26,7 @@ PostIDs* post_ids;
 std::map<uint64_t, Post>* posts;
 string const* location_origin;
 std::unordered_set<string>* boards;
+std::unordered_map<uint64_t, Thread>* threads;
 
 // Places inverse post links into backlinks for later assignment to individual
 // post models
@@ -46,9 +48,11 @@ static uint64_t extract_thread(json& j, Backlinks& backlinks)
 
     const string board = j["board"];
     const uint64_t thread_id = j["id"];
-    const auto op = Post(j);
+    auto op = Post(j);
+    op.op = thread_id;
     extract_backlinks(op, backlinks);
-    (*posts)[thread_id] = op;
+    (*threads)[thread_id] = static_cast<Thread>(thread);
+    (*posts)[thread_id] = std::move(op);
 
     for (auto post : thread.posts) {
         post.board = board;
@@ -87,6 +91,8 @@ static std::unordered_set<uint64_t> load_posts()
             posts->at(target_id).backlinks = std::move(data);
         }
     }
+
+    recurse_hidden_posts();
 
     return thread_ids;
 }
@@ -135,6 +141,7 @@ void load_state()
 
     posts = new std::map<uint64_t, Post>();
     post_ids = new PostIDs{};
+    threads = new std::unordered_map<uint64_t, Thread>();
     load_db(load_posts());
 }
 
@@ -238,6 +245,12 @@ EMSCRIPTEN_BINDINGS(module_state)
 
 ThreadDecoder::ThreadDecoder(json& j)
 {
+    if (j.count("deleted")) {
+        deleted = j["deleted"];
+    }
+    if (j.count("locked")) {
+        locked = j["locked"];
+    }
     post_ctr = j["postCtr"];
     image_ctr = j["imageCtr"];
     reply_time = j["replyTime"];

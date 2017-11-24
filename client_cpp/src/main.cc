@@ -12,7 +12,7 @@ int main()
         brunhild::before_flush = &rerender_syncwatches;
         brunhild::init();
     } catch (const std::exception& ex) {
-        console_log(ex.what());
+        console::error(ex.what());
     }
     return 0;
 }

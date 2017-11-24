@@ -24,17 +24,17 @@
 	<span class="aside-container top-margin">
 		<span class="act" id="top">
 			<a href="#bottom">
-				{%s= ln.UI["bottom"] %}
+				{%s= ln.Common.UI["bottom"] %}
 			</a>
 		</span>
 		<span class="act">
 			<a href=".">
-				{%s= ln.UI["return"] %}
+				{%s= ln.Common.UI["return"] %}
 			</a>
 		</span>
 		<span class="act">
 			<a href="catalog">
-				{%s= ln.UI["catalog"] %}
+				{%s= ln.Common.UI["catalog"] %}
 			</a>
 		</span>
 		<span id="expand-images" class="act">
@@ -42,8 +42,8 @@
 				{%s= ln.Common.Posts["expandImages"] %}
 			</a>
 		</span>
-		{%= hoverReveal("span", conf.Notice, ln.UI["showNotice"]) %}
-		{%= hoverReveal("span", conf.Rules, ln.UI["rules"]) %}
+		{%= hoverReveal("span", conf.Notice, ln.Common.UI["showNotice"]) %}
+		{%= hoverReveal("span", conf.Rules, ln.Common.UI["rules"]) %}
 	</span>
 	<hr>
 	{%z= postHTML %}
@@ -51,7 +51,7 @@
 	{% if !locked %}
 		<aside class="act posting glass">
 			<a>
-				{%s= ln.UI["reply"] %}
+				{%s= ln.Common.UI["reply"] %}
 			</a>
 		</aside>
 	{% endif %}
@@ -59,17 +59,17 @@
 	<span class="aside-container">
 		<span class="act" id="bottom">
 			<a href=".">
-				{%s= ln.UI["return"] %}
+				{%s= ln.Common.UI["return"] %}
 			</a>
 		</span>
 		<span class="act">
 			<a href="catalog">
-				{%s= ln.UI["catalog"] %}
+				{%s= ln.Common.UI["catalog"] %}
 			</a>
 		</span>
 		<span class="act">
 			<a href="#top">
-				{%s= ln.UI["top"] %}
+				{%s= ln.Common.UI["top"] %}
 			</a>
 		</span>
 		{% if !abbrev %}

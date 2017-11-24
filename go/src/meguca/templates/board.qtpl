@@ -63,8 +63,8 @@
 		{% if !catalog %}
 			{%= pagination(page, total) %}
 		{% endif %}
-		{%= hoverReveal("aside", conf.Notice, ln.UI["showNotice"]) %}
-		{%= hoverReveal("aside", conf.Rules, ln.UI["rules"]) %}
+		{%= hoverReveal("aside", conf.Notice, ln.Common.UI["showNotice"]) %}
+		{%= hoverReveal("aside", conf.Rules, ln.Common.UI["rules"]) %}
 		<span id="catalog-controls" class="margin-spaced">
 			<input type="text" name="search" placeholder="{%s= ln.UI["search"] %}" title="{%s= ln.UI["searchTooltip"] %}">
 			{% if catalog %}

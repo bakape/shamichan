@@ -177,8 +177,6 @@ public:
         locked = false,
          // The user has already seen this post
         seen = false,
-         // The post has been hidden by the user
-        hidden = false,
          // Is Post currently represented inside the DOM?
         is_rendered = false;
 
@@ -293,6 +291,9 @@ private:
 // Contains thread metadata
 class Thread {
 public:
+    bool deleted = false, // Thread deleted by staff
+        locked = false; // Thread locked by staff
+
     uint64_t post_ctr, // Number of posts in thread
         image_ctr, // Number of images in thread
         reply_time, // Unix timestamp of last reply
