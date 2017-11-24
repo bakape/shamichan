@@ -527,7 +527,7 @@ function shouldAutoExpand(model: Post): boolean {
 }
 
 on(document, "click", handleImageClick, {
-	selector: "figure img, figure video",
+	selector: "figure img, figure video, figure a",
 })
 on(document, "click", toggleHiddenThumbnail, {
 	passive: true,
