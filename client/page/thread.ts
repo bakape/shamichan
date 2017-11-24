@@ -82,7 +82,7 @@ function renderPostCounter() {
             if (isDeleted) {
                 days /= 3
             }
-            if (postCtr < 3000 && days < min) {
+            if (days < min) {
                 days = min
             }
 
