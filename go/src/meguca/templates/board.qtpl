@@ -192,7 +192,7 @@ Render image upload form
 
 Link to catalog or board page
 {% func catalogLink(catalog bool) %}{% stripspace %}
-	{% code ln := lang.Get().UI %}
+	{% code ln := lang.Get().Common.UI %}
 	<aside class="act glass">
 		{% if catalog %}
 			<a href=".">
