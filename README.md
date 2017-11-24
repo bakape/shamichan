@@ -122,7 +122,7 @@ are supported
 A reference list of commands can be found in `./docs/installation.md`
 
 ### Build dependencies
-* [Go](https://golang.org/doc/install) >=1.9 (for building server)
+* [Go](https://golang.org/doc/install) >=1.9.2 (for building server)
 * [Node.js](https://nodejs.org) >=5.0 (for building client)
 * GCC or Clang
 * make
