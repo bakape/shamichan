@@ -7,7 +7,7 @@
 
 const int db_version = 7;
 
-// Database has errorred and all future calls should be ignored.
+// Database has errored and all future calls should be ignored
 bool has_errored = false;
 
 // Threads to load on the call from db_is_ready(). Keeps us from passing the

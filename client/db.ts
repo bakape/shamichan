@@ -4,11 +4,11 @@ const dbVersion = 7
 
 let db: IDBDatabase
 
+// Database has errored and all future calls should be ignored
 // FF IndexedDB implementation is broken in private mode.
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=781982
-// Catch the error and NOOP all further DB requests.
-let isCuck: boolean
-const gayNiggerSemen = "A mutation operation was attempted on a database that did not allow mutations."
+// This helps bypass this.
+let hasErrored = false;
 
 // Expiring post ID object stores
 const postStores = [
@@ -49,11 +49,9 @@ export function open(): Promise<void> {
 		}
 	})
 		.catch(err => {
-			if (err.message === gayNiggerSemen) {
-				isCuck = true
-			} else {
-				throw err
-			}
+			hasErrored = true
+			console.error("Error loading IndexedDB. All further DB access will be ignored")
+			console.error(err)
 		})
 }
 
@@ -137,7 +135,7 @@ function newTransaction(store: string, write: boolean): IDBObjectStore {
 
 // Read the contents of a postStore for specific threads into an array
 export function readIDs(store: string, ops: number[]): Promise<number[]> {
-	if (isCuck || !ops.length) {
+	if (hasErrored || !ops.length) {
 		return fakePromise([])
 	}
 	return Promise.all(
@@ -178,7 +176,7 @@ function fakePromise<T>(res: T): Promise<T> {
 
 // Asynchronously insert a new expiring post id object into a postStore
 export function storeID(store: string, id: number, op: number, expiry: number) {
-	if (isCuck) {
+	if (hasErrored) {
 		return
 	}
 	addObj(store, {
@@ -193,7 +191,7 @@ function addObj(store: string, obj: any) {
 
 // Clear the target object store asynchronously
 export function clearStore(store: string) {
-	if (isCuck) {
+	if (hasErrored) {
 		return
 	}
 	const trans = newTransaction(store, true),
@@ -203,7 +201,7 @@ export function clearStore(store: string) {
 
 // Retrieve an object from a specific object store
 export function getObj<T>(store: string, id: any): Promise<T> {
-	if (isCuck) {
+	if (hasErrored) {
 		return fakePromise({} as any)
 	}
 	return new Promise<T>((resolve, reject) => {
@@ -218,7 +216,7 @@ export function getObj<T>(store: string, id: any): Promise<T> {
 
 // Put an object in the specific object store
 export function putObj(store: string, obj: any): Promise<void> {
-	if (isCuck) {
+	if (hasErrored) {
 		return fakePromise(undefined)
 	}
 	return new Promise<void>((resolve, reject) => {
