@@ -1,8 +1,7 @@
 # -Winvalid-pp-token triggers on empty JS strings in macros
 WARNINGS=-Wall -Wextra -Wno-sign-compare -Wno-invalid-pp-token -Wno-unused-function -Wno-delete-incomplete -Wno-switch -Wno-almost-asm
 
-SETTINGS=-s NO_EXIT_RUNTIME=1 -s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1
-
+SETTINGS=-s NO_EXIT_RUNTIME=1 -s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -s NO_FILESYSTEM=1
 COMPILE_FLAGS=-std=c++1z --bind
 
 ifeq ($(DEBUG),1)
@@ -11,18 +10,18 @@ ifeq ($(DEBUG),1)
 	COMPILE_FLAGS+= -O1 -g4
 	SETTINGS+= -s DEMANGLE_SUPPORT=1 -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0
 else
-	COMPILE_FLAGS+= -Oz -g0 --llvm-lto 3
+	COMPILE_FLAGS+= -Oz -g0 --llvm-lto 1
 endif
-export EMCCFLAGS=$(COMPILE_FLAGS) $(SETTINGS) $(WARNINGS)
+export EMCCFLAGS=$(COMPILE_FLAGS) $(WARNINGS)
 
 all: clean_output
 	$(MAKE) -C brunhild
 	$(MAKE) -C src
-	emcc src/*.bc src/page/*.bc src/posts/*.bc src/options/*.bc brunhild/*.bc -o linked.bc $(EMCCFLAGS)
+	emcc src/*.bc src/page/*.bc src/posts/*.bc src/options/*.bc brunhild/*.bc -o linked.bc $(EMCCFLAGS) $(SETTINGS)
 ifneq ($(DEBUG),1)
-	emcc linked.bc -o main.js --separate-asm -Wno-separate-asm $(EMCCFLAGS)
+	emcc linked.bc -o main.js --separate-asm -Wno-separate-asm $(EMCCFLAGS) $(SETTINGS)
 endif
-	emcc linked.bc -o main.js -s WASM=1 $(EMCCFLAGS)
+	emcc linked.bc -o main.js -s WASM=1 $(EMCCFLAGS) $(SETTINGS)
 
 clean_output:
 	rm -f *.wasm *.wast *.js *.wasm.map *.js
