@@ -22,7 +22,7 @@
 		<aside id="thread-form-container" class="glass">
 			<span class="act">
 				<a class="new-thread-button">
-					{%s= ln.UI["newThread"] %}
+					{%s= ln.Common.UI["newThread"] %}
 				</a>
 			</span>
 			<form id="new-thread-form" action="/api/create-thread" method="post" enctype="multipart/form-data" class="hidden">

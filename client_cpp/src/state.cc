@@ -19,14 +19,15 @@ using std::string;
 // <linked_post_id <linker_post_id, {false, linker_post_thread_id}>>
 typedef std::unordered_map<uint64_t, std::map<uint64_t, LinkData>> Backlinks;
 
-Config* config;
-BoardConfig* board_config;
+Config const* config;
+BoardConfig const* board_config;
 Page* page;
 PostIDs* post_ids;
 std::map<uint64_t, Post>* posts;
 string const* location_origin;
-std::unordered_set<string>* boards;
+std::unordered_set<string> const* boards;
 std::unordered_map<uint64_t, Thread>* threads;
+std::map<string, string> const* board_titles;
 
 // Places inverse post links into backlinks for later assignment to individual
 // post models
@@ -111,6 +112,12 @@ void load_state()
     location_origin = new string(
         emscripten::val::global("location")["origin"].as<string>());
 
+    std::map<string, string> titles;
+    for (auto& pair : json::parse(get_inner_html("board-title-data"))) {
+        titles[pair["id"]] = pair["title"];
+    }
+    board_titles = new std::map<string, string>(titles);
+
     // TODO: This should be read from a concurrent server fetch
 
     config = new Config(c_string_view((char*)EM_ASM_INT_V({
@@ -172,9 +179,16 @@ BoardConfig::BoardConfig(const c_string_view& s)
     read_only = j["readOnly"];
     text_only = j["textOnly"];
     forced_anon = j["forcedAnon"];
+    non_live = j["nonLive"];
     title = j["title"];
     rules = j["rules"];
     notice = j["notice"];
+
+    auto& b = j["banners"];
+    banners.reserve(b.size());
+    for (auto& type : b) {
+        banners.push_back(static_cast<FileType>(type));
+    }
 }
 
 void Page::detect()

@@ -91,6 +91,9 @@
 		"last": "Ostatni",
 		"postsImages": "Posts/Images/TTL",
 		"report": "Zgłoś",
+		"submit": "Zatwierdź",
+		"cancel": "Cofnij",
+		"newThread": "Nowy temat",
 		"finished": "Zakończono",
 		"importDone": "Import successful. The page will now reload.",
 		"importCorrupt": "Import failed. File corrupt",
@@ -111,5 +114,11 @@
 		"synchronizacja",
 		"zsynchronizowano",
 		"brak synchronizacji"
-	]
+	],
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
+	}
 }

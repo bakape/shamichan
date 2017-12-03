@@ -31,23 +31,29 @@ public:
 };
 
 // Server-wide global configuration, that affects the client
-extern Config* config;
+extern Config const* config;
 
 // Public board-specific configurations
 class BoardConfig {
 public:
-    bool read_only, text_only, forced_anon;
+    bool read_only, text_only, forced_anon, non_live;
     std::string title, notice, rules;
+
+    // Banner file types
+    std::vector<FileType> banners;
 
     // Parse JSON string
     BoardConfig(const c_string_view&);
 };
 
+// Map of all existing boards to their titles
+extern std::map<std::string, std::string> const* board_titles;
+
 // Public board-specific configurations
-extern BoardConfig* board_config;
+extern BoardConfig const* board_config;
 
 // All boards currently registered on the server
-extern std::unordered_set<std::string>* boards;
+extern std::unordered_set<std::string> const* boards;
 
 // Describes the current page
 class Page {

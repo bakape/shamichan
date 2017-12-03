@@ -91,6 +91,9 @@
 		"last": "Posledné",
 		"postsImages": "Posts/Images/TTL",
 		"report": "Nahlásiť",
+		"submit": "Odoslať",
+		"cancel": "Zrušiť",
+		"newThread": "Nové vlákno",
 		"finished": "Finished",
 		"importDone": "Import successful. The page will now reload.",
 		"importCorrupt": "Import failed. File corrupt",
@@ -111,5 +114,11 @@
 		"synchronizuje sa",
 		"zosynchronizovaný",
 		"desynchronizovaný"
-	]
+	],
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
+	}
 }

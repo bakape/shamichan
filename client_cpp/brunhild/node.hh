@@ -9,8 +9,8 @@
 
 namespace brunhild {
 
-// Element attributes. "" values are omitted from rendered the HTML.
-typedef std::unordered_map<std::string, std::string> Attrs;
+// Element attributes. std::nullopt values are omitted from rendered HTML.
+typedef std::unordered_map<std::string, std::optional<std::string>> Attrs;
 
 // Represents an HTML element. Can be used to construct node tries more easily.
 class Node {

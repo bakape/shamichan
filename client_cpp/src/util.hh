@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../brunhild/node.hh"
 #include <cctype>
 #include <ostream>
 #include <string>
@@ -36,31 +37,7 @@ struct url_encode {
     {
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const url_encode& u)
-    {
-        for (auto ch : u.str) {
-            // Keep alphanumeric and other accepted characters intact
-            if (isalnum(ch)) {
-                os << ch;
-                continue;
-            }
-            switch (ch) {
-            case '-':
-            case '_':
-            case '.':
-            case '~':
-                os << ch;
-                break;
-            case ' ':
-                os << '+';
-                break;
-            default:
-                // Any other characters are percent-encoded.
-                os << '%' << to_hex(ch >> 4) << to_hex(ch & 15);
-            }
-        }
-        return os;
-    }
+    friend std::ostream& operator<<(std::ostream& os, const url_encode& u);
 
 private:
     const std::string& str;
@@ -70,6 +47,9 @@ private:
     // Converts character code to hex to HEX
     static char to_hex(char code) { return hex[code & 15]; }
 };
+
+// Render submit button with and optional cancel button
+brunhild::Children render_submit(bool cancel);
 
 namespace console {
 // Log string to JS console

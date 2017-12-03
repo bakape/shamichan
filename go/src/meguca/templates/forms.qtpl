@@ -143,7 +143,7 @@ Render form for inputting array-like data
 
 Render submit and cancel buttons
 {% func submit(cancel bool) %}{% stripspace %}
-	<input type="submit" value="{%s= lang.Get().UI["submit"] %}">
+	<input type="submit" value="{%s= lang.Get().Common.UI["submit"] %}">
 	{% if cancel %}
 		{%= cancel() %}
 	{% endif %}
@@ -152,7 +152,7 @@ Render submit and cancel buttons
 
 Renders a cancel button
 {% func cancel() %}{% stripspace %}
-	<input type="button" name="cancel" value="{%s= lang.Get().UI["cancel"] %}">
+	<input type="button" name="cancel" value="{%s= lang.Get().Common.UI["cancel"] %}">
 {% endstripspace %}{% endfunc %}
 
 Render link to request new noscript captcha

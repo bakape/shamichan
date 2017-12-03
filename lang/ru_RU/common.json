@@ -91,6 +91,9 @@
 		"last": "Последний",
 		"postsImages": "Посты/Картинки/TTL",
 		"report": "Пожаловаться",
+		"submit": "Отправить",
+		"cancel": "Отменить",
+		"newThread": "Новый тред",
 		"finished": "Завершено",
 		"importDone": "Импорт завершён. Страница будет перезагружена.",
 		"importCorrupt": "Импорт не удался. Файл повреждён.",
@@ -111,5 +114,11 @@
 		"синхронизация",
 		"синхронизирован",
 		"рассинхронизирован"
-	]
+	],
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
+	}
 }

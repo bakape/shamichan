@@ -1,4 +1,5 @@
 #include "util.hh"
+#include "lang.hh"
 #include <emscripten.h>
 #include <string>
 #include <string_view>
@@ -31,6 +32,58 @@ std::string pluralize(int n, const std::tuple<std::string, std::string>& word)
         s += std::get<1>(word);
     }
     return s;
+}
+
+std::ostream& operator<<(std::ostream& os, const url_encode& u)
+{
+    for (auto ch : u.str) {
+        // Keep alphanumeric and other accepted characters intact
+        if (isalnum(ch)) {
+            os << ch;
+            continue;
+        }
+        switch (ch) {
+        case '-':
+        case '_':
+        case '.':
+        case '~':
+            os << ch;
+            break;
+        case ' ':
+            os << '+';
+            break;
+        default:
+            // Any other characters are percent-encoded.
+            os << '%' << url_encode::to_hex(ch >> 4)
+               << url_encode::to_hex(ch & 15);
+        }
+    }
+    return os;
+}
+
+brunhild::Children render_submit(bool cancel)
+{
+    brunhild::Children ch;
+    ch.reserve(3);
+    ch.push_back({
+        "input",
+        {
+            { "type", "submit" },
+            { "value", lang->ui.at("submit") },
+        },
+    });
+    if (cancel) {
+        ch.push_back({
+            "input",
+            {
+                { "type", "button" },
+                { "name", "cancel" },
+                { "value", lang->ui.at("submit") },
+            },
+        });
+    }
+    ch.push_back({ "div", { { "class", "form-response admin" } } });
+    return ch;
 }
 
 namespace console {

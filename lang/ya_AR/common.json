@@ -91,6 +91,9 @@
 		"last": "Last",
 		"postsImages": "Missives/Portraits/TTL",
 		"report": "Report",
+		"submit": "Submit",
+		"cancel": "Cancel",
+		"newThread": "New thread",
 		"finished": "Yer picture show is finished",
 		"importDone": "Import successful. The page will now reload.",
 		"importCorrupt": "Import failed. File corrupt",
@@ -111,5 +114,11 @@
 		"syncing",
 		"synced",
 		"desynced"
-	]
+	],
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
+	}
 }

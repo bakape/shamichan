@@ -69,7 +69,7 @@ void VirtualView::patch_node(Node& old, Node node)
     const auto replace = old.tag != node.tag
         || (node.attrs.count("id") && node.attrs.at("id") != old.attrs["id"]);
     if (replace) {
-        const auto old_id = old.attrs.at("id");
+        const auto old_id = *old.attrs.at("id");
         old = move(node);
         ensure_id(old);
         set_outer_html(old_id, old.html());
@@ -86,7 +86,7 @@ void VirtualView::patch_attrs(Node& old, Attrs attrs)
     for (auto & [ key, val ] : attrs) {
         if (key != "id" && (!old.attrs.count(key) || old.attrs[key] != val)) {
             old.attrs[key] = val;
-            set_attr(old.attrs.at("id"), key, val);
+            set_attr(*old.attrs.at("id"), key, *val);
         }
     }
 
@@ -94,7 +94,7 @@ void VirtualView::patch_attrs(Node& old, Attrs attrs)
     for (auto & [ key, _ ] : old.attrs) {
         if (key != "id" && !attrs.count(key)) {
             old.attrs.erase(key);
-            remove_attr(old.attrs.at("id"), key);
+            remove_attr(*old.attrs.at("id"), key);
         }
     }
 }
@@ -107,7 +107,7 @@ void VirtualView::patch_children(Node& old, Node node)
         // Hot path
         if (node.inner_html) {
             if (*old.inner_html != *node.inner_html) {
-                set_inner_html(old.attrs.at("id"), *node.inner_html);
+                set_inner_html(*old.attrs.at("id"), *node.inner_html);
                 old.inner_html = move(node.inner_html);
             }
             return;
@@ -120,10 +120,10 @@ void VirtualView::patch_children(Node& old, Node node)
         }
         old.children = move(node.children);
         old.inner_html = std::nullopt;
-        set_inner_html(old.attrs.at("id"), s.str());
+        set_inner_html(*old.attrs.at("id"), s.str());
         return;
     } else if (node.inner_html) {
-        set_inner_html(old.attrs.at("id"), *node.inner_html);
+        set_inner_html(*old.attrs.at("id"), *node.inner_html);
         old.children.clear();
         old.inner_html = move(node.inner_html);
         return;
@@ -141,13 +141,13 @@ void VirtualView::patch_children(Node& old, Node node)
         for (int i = old.children.size(); i < diff; i++) {
             auto& ch = node.children[i];
             ensure_id(ch);
-            append(old.attrs.at("id"), ch.html());
+            append(*old.attrs.at("id"), ch.html());
             old.children.push_back(move(ch));
         }
     } else {
         // Remove Nodes from the end
         while (diff < 0) {
-            brunhild::remove(old.children.back().attrs["id"]);
+            brunhild::remove(*old.children.back().attrs.at("id"));
             old.children.pop_back();
             diff++;
         }

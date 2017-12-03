@@ -91,6 +91,9 @@
 		"last": "Son",
 		"postsImages": "Posts/Images/TTL",
 		"report": "İspiyonla",
+		"submit": "Submit",
+		"cancel": "İptal",
+		"newThread": "Yeni konu",
 		"finished": "Bitti",
 		"importDone": "Import successful. The page will now reload.",
 		"importCorrupt": "Import failed. File corrupt",
@@ -111,5 +114,11 @@
 		"syncing",
 		"synced",
 		"desynced"
-	]
+	],
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
+	}
 }

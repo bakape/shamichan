@@ -1,40 +1,13 @@
 #include "../../brunhild/mutations.hh"
 #include "../lang.hh"
 #include "../state.hh"
+#include "page.hh"
 #include <ctime>
 #include <optional>
 #include <sstream>
 
 using brunhild::Node;
 using std::string;
-
-// Render notice widget, that reveals text on hover
-static Node render_hover_reveal(string tag, string label, string text)
-{
-    Node n{
-        tag,
-        { { "class", "hover-reveal" } },
-        {
-            { "span", { { "class", "act" } }, label },
-            { "span", { { "class", "popup-menu glass" } }, text, true },
-        },
-    };
-    if (tag == "aside") {
-        n.attrs["class"] += " glass";
-    }
-    return n;
-}
-
-// Renders a clickable button element.
-// If href = std::nullopt, no href property is set on the link
-static Node render_button(std::optional<string> href, string text)
-{
-    Node a("a", text);
-    if (href) {
-        a.attrs["href"] = *href;
-    }
-    return { "span", { { "class", "act" } }, { a } };
-}
 
 void render_thread()
 {
@@ -98,6 +71,7 @@ void render_thread()
     n.write_html(s);
 
     brunhild::set_inner_html("threads", s.str());
+    set_title(format_title(page->board, *posts->at(page->thread).subject));
 }
 
 void render_post_counter()

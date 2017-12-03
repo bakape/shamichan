@@ -55,6 +55,9 @@ type BoardPublic struct {
 	Title      string `json:"title"`
 	Notice     string `json:"notice"`
 	Rules      string `json:"rules"`
+
+	// Can't use []uint8, because it marshals to string
+	Banners []uint16 `json:"banners"`
 }
 
 // BoardConfContainer contains configurations for an individual board as well

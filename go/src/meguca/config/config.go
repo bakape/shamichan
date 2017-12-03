@@ -28,7 +28,8 @@ var (
 		BoardConfigs: BoardConfigs{
 			ID: "all",
 			BoardPublic: BoardPublic{
-				Title: "Aggregator metaboard",
+				Title:   "Aggregator metaboard",
+				Banners: []uint16{},
 			},
 		},
 		Hash: "0",

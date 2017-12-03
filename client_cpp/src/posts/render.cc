@@ -9,11 +9,11 @@ Node Post::render()
 
     n.attrs["class"] = "glass";
     if (editing) {
-        n.attrs["class"] += " editing";
+        *n.attrs["class"] += " editing";
     }
 
     if (deleted) {
-        n.attrs["class"] += " deleted";
+        *n.attrs["class"] += " deleted";
         n.children.push_back({
             "input",
             {
@@ -27,7 +27,6 @@ Node Post::render()
     brunhild::Children pc_ch;
     pc_ch.reserve(2);
     if (image) {
-        n.attrs["class"] += " media";
         n.children.push_back(render_figcaption());
         if ((!options->hide_thumbs && !options->work_mode_toggle)
             || image->reveal_thumbnail) {

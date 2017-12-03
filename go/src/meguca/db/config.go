@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
+	"meguca/assets"
 	"meguca/config"
 	"meguca/templates"
 	"meguca/util"
@@ -56,6 +57,7 @@ func loadBoardConfigs() error {
 		if err != nil {
 			return err
 		}
+		c.Banners = assets.Banners.FileTypes(c.ID)
 		if _, err := config.SetBoardConfigs(c); err != nil {
 			return err
 		}
@@ -119,6 +121,9 @@ func updateBoardConfigs(board string) error {
 	default:
 		return err
 	}
+
+	// Inject banners into configuration struct
+	conf.Banners = assets.Banners.FileTypes(board)
 
 	changed, err := config.SetBoardConfigs(conf)
 	switch {
