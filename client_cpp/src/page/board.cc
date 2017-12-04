@@ -11,6 +11,17 @@ using brunhild::Node;
 using std::ostringstream;
 using std::string;
 
+// Render Links to different pages of the board index
+// TODO: Pagination - total page count not yet exported
+static Node render_pagination() { return { "span", "TODO" }; }
+
+// Render a link to a catalog or board page
+static Node render_catalog_link()
+{
+    return render_button(page->catalog ? "." : "catalog",
+        lang->ui.at(page->catalog ? "return" : "catalog"), true);
+}
+
 // Render form for creating new threads
 static Node render_thread_form()
 {
@@ -81,7 +92,54 @@ static Node render_thread_form()
     });
     form.children.push_back({ "br" });
 
-    // TODO: Upload form
+    // File upload form
+    if (page->board == "all" || !board_config->text_only) {
+        form.children.push_back({
+            "span",
+            { { "class", "upload-container" } },
+            {
+                {
+                    "span",
+                    {},
+                    {
+                        {
+                            "label",
+                            {},
+                            {
+                                {
+                                    "input",
+                                    {
+                                        { "type", "checkbox" },
+                                        { "name", "spoiler" },
+                                    },
+                                },
+                                { "span", lang->posts.at("spoiler") },
+                            },
+                        },
+                    },
+                },
+                { "strong", { { "class", "upload-status" } } },
+                { "br" },
+                {
+                    "input",
+                    {
+                        { "type", "file" },
+                        { "name", "image" },
+                        {
+                            "accept",
+                            "image/png, image/gif, image/jpeg, video/webm, "
+                            "video/ogg, audio/ogg, application/ogg, video/mp4, "
+                            "audio/mp4, audio/mp3, application/zip, "
+                            "application/x-7z-compressed, application/x-xz, "
+                            "application/x-gzip, audio/x-flac, text/plain",
+                        },
+                    },
+                },
+                { "br" },
+            },
+        });
+    }
+
     // TODO: Captcha
 
     auto submit = render_submit(true);
@@ -123,10 +181,33 @@ static void render_index_page()
     set_title(title);
 
     Node aside_container("span", { { "class", "aside-container" } });
-    aside_container.children.reserve(8);
-    aside_container.children.push_back(render_thread_form());
+    auto& ch = aside_container.children;
+    const Node cat_link = render_catalog_link();
+    const Node pagination = render_pagination();
+    ch.reserve(8);
+    ch.push_back(render_thread_form());
+    ch.push_back({
+        "aside",
+        {
+            { "id", "refresh" },
+            { "class", "act glass" },
+        },
+        { { "a", lang->ui.at("refresh") } },
+    });
+    ch.push_back(cat_link);
+    ch.push_back(pagination);
+    push_board_hover_info(ch);
+    aside_container.write_html(s);
 
-    // TODO: The rest
+    s << "<hr>";
+
+    // TODO: Render threads
+
+    ch.clear();
+    ch.push_back(cat_link);
+    ch.push_back(pagination);
+
+    // TODO: Render loading image
 
     aside_container.write_html(s);
 

@@ -23,14 +23,7 @@ void render_thread()
             render_button("catalog", lang->ui.at("catalog")),
             render_button(std::nullopt, lang->posts.at("expandImages")),
         });
-    if (board_config->notice != "") {
-        n.children.push_back(render_hover_reveal(
-            "span", board_config->notice, lang->ui.at("showNotice")));
-    }
-    if (board_config->rules != "") {
-        n.children.push_back(render_hover_reveal(
-            "span", board_config->rules, lang->ui.at("rules")));
-    }
+    push_board_hover_info(n.children);
     n.write_html(s);
 
     s << "<hr><section id=\"thread-container\">";
