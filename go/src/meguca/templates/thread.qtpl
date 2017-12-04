@@ -80,7 +80,7 @@
 			</span>
 		{% endif %}
 		<span id="lock" style="visibility: hidden;">
-			{%s= ln.UI["lockedToBottom"] %}
+			{%s= ln.Common.UI["lockedToBottom"] %}
 		</span>
 	</span>
 	{%= loadingImage(board) %}
