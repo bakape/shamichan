@@ -208,7 +208,7 @@ Link to catalog or board page
 
 Links to different pages of the board index
 {% func pagination(page, total int) %}{% stripspace %}
-	<aside class="glass pagination spaced">
+	<aside class="glass spaced">
 		{% if page != 0 %}
 			{% if page-1 != 0 %}
 				{%= pageLink(0, "<<") %}

@@ -1,5 +1,5 @@
 # -Winvalid-pp-token triggers on empty JS strings in macros
-WARNINGS=-Wall -Wextra -Wno-sign-compare -Wno-invalid-pp-token -Wno-unused-function -Wno-delete-incomplete -Wno-switch -Wno-almost-asm
+WARNINGS=-Wall -Wextra -Wno-sign-compare -Wno-invalid-pp-token -Wno-unused-function -Wno-delete-incomplete -Wno-switch -Wno-almost-asm -Wno-return-type
 
 SETTINGS=-s NO_EXIT_RUNTIME=1 -s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -s NO_FILESYSTEM=1
 COMPILE_FLAGS=-std=c++1z --bind

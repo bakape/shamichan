@@ -6,7 +6,7 @@ import { relativeTime, Post, findSyncwatches } from "../posts"
 import {
 	extractConfigs, extractPost, reparseOpenPosts, extractPageData, hidePosts,
 } from "./common"
-import { ThreadData } from "../common"
+import { BoardData } from "../common"
 
 type SortFunction = (a: Post, b: Post) => number
 
@@ -49,18 +49,16 @@ async function extractCatalogModels() {
 	// Don't really need these in the catalog, so just load empty sets
 	await loadFromDB()
 
-	const { threads, backlinks } = extractPageData<ThreadData[]>()
+	const { threads: { threads }, backlinks } = extractPageData<BoardData>()
 	for (let t of threads) {
 		extractPost(t, t.id, t.board, backlinks)
 	}
 }
 
 async function extractThreads() {
-	const { threads, backlinks } = extractPageData<ThreadData[]>()
-	await loadFromDB(...(threads as ThreadData[])
-		.map(t =>
-			t.id)
-	)
+	const { threads: { threads }, backlinks } = extractPageData<BoardData>()
+	await loadFromDB(...(threads).map(t =>
+		t.id))
 	for (let thread of threads) {
 		const { posts } = thread
 		delete thread.posts

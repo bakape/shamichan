@@ -66,6 +66,12 @@ export interface ThreadData extends PostData {
 	posts?: PostData[]
 }
 
+// Data of a board page
+export type BoardData = {
+	pages: number
+	threads: ThreadData[]
+}
+
 // Image data embeddable in posts and thread hashes
 export interface ImageData {
 	apng: boolean

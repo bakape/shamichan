@@ -10,19 +10,22 @@ var ParseBody func([]byte, string) ([][2]uint64, []Command, error)
 //easyjson:json
 // Board is defined to enable marshalling optimizations and sorting by sticky
 // threads
-type Board []Thread
+type Board struct {
+	Pages   int      `json:"pages"`
+	Threads []Thread `json:"threads"`
+}
 
 func (b Board) Len() int {
-	return len(b)
+	return len(b.Threads)
 }
 
 func (b Board) Swap(i, j int) {
-	b[i], b[j] = b[j], b[i]
+	b.Threads[i], b.Threads[j] = b.Threads[j], b.Threads[i]
 }
 
 func (b Board) Less(i, j int) bool {
 	// So it gets sorted with sticky threads first
-	return b[i].Sticky
+	return b.Threads[i].Sticky
 }
 
 // Thread is a transport/export wrapper that stores both the thread metadata,

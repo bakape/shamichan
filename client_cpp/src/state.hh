@@ -59,7 +59,7 @@ extern std::unordered_set<std::string> const* boards;
 class Page {
 public:
     bool catalog;
-    unsigned int last_n, page;
+    unsigned int last_n, page, page_total;
     unsigned long thread;
     std::string board;
 

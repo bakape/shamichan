@@ -98,7 +98,38 @@ static void render_index_threads(ostringstream& s)
 
 // Render Links to different pages of the board index
 // TODO: Pagination - total page count not yet exported
-static Node render_pagination() { return { "span", "TODO" }; }
+static Node render_pagination()
+{
+    const unsigned int n = page->page;
+    const unsigned int total = page->page_total;
+    ostringstream s;
+
+    auto link = [&s](unsigned int i, string text) {
+        s << "<a href=\"?page=" << i << "\">" << text << "</a>";
+    };
+
+    if (n) {
+        if (n - 1) {
+            link(0, "<<");
+        }
+        link(n - 1, "<");
+    }
+    for (unsigned int i = 0; i < total; i++) {
+        if (i != n) {
+            link(i, std::to_string(i));
+        } else {
+            s << "<b>" << i << "</b>";
+        }
+    }
+    if (n != total - 1) {
+        link(n + 1, ">");
+        if (n + 1 != total - 1) {
+            link(total - 1, ">>");
+        }
+    }
+
+    return { "aside", { { "class", "glass spaced" } }, s.str() };
+}
 
 // Render a link to a catalog or board page
 static Node render_catalog_link()
@@ -280,7 +311,9 @@ static void render_index_page()
         { { "a", lang->ui.at("refresh") } },
     });
     ch.push_back(cat_link);
-    ch.push_back(pagination);
+    if (!page->catalog) {
+        ch.push_back(pagination);
+    }
     push_board_hover_info(ch);
     aside_container.write_html(s);
 
@@ -290,7 +323,9 @@ static void render_index_page()
 
     ch.clear();
     ch.push_back(cat_link);
-    ch.push_back(pagination);
+    if (!page->catalog) {
+        ch.push_back(pagination);
+    }
 
     // TODO: Render loading image
 

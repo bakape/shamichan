@@ -76,10 +76,11 @@ static std::unordered_set<uint64_t> load_posts()
     auto thread_ids = std::unordered_set<uint64_t>();
     if (page->thread) {
         thread_ids.reserve(1);
-        thread_ids.insert(extract_thread(j, backlinks));
+        thread_ids.insert(extract_thread(j["threads"], backlinks));
     } else {
+        page->page_total = j["pages"];
         thread_ids.reserve(15);
-        for (auto& thread : j) {
+        for (auto& thread : j["threads"]) {
             thread_ids.insert(extract_thread(thread, backlinks));
         }
 
@@ -193,6 +194,9 @@ BoardConfig::BoardConfig(const c_string_view& s)
 
 void Page::detect()
 {
+    // This needs to be parsed from the board data, if any
+    page_total = 0;
+
     emscripten::val location = emscripten::val::global("location");
     const string path = location["pathname"].as<string>();
     const string query = location["search"].as<string>();
