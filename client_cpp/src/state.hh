@@ -96,7 +96,6 @@ enum class StorageType : int { mine, seen_replies, seen_posts, hidden };
 // TODO: Get rid of this in favour of a binary decoder
 class ThreadDecoder : public Thread {
 public:
-    uint64_t id;
     std::vector<Post> posts;
 
     // Parse from JSON

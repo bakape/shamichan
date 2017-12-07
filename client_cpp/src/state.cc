@@ -265,8 +265,13 @@ ThreadDecoder::ThreadDecoder(json& j)
     if (j.count("locked")) {
         locked = j["locked"];
     }
+    if (j.count("sticky")) {
+        locked = j["sticky"];
+    }
+    id = j["id"];
     post_ctr = j["postCtr"];
     image_ctr = j["imageCtr"];
+    time = j["time"];
     reply_time = j["replyTime"];
     bump_time = j["bumpTime"];
     if (!page->catalog) {

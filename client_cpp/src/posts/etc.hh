@@ -6,6 +6,13 @@
 #include <string>
 #include <string_view>
 
+// Checkbox for toggling deleted post display
+const brunhild::Node delete_toggle = brunhild::Node("input",
+    {
+        { "type", "checkbox" },
+        { "class", "deleted-toggle" },
+    });
+
 // Renders readable elapsed time since Unix timestamp then
 std::string relative_time(time_t then);
 

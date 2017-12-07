@@ -28,7 +28,6 @@ void render_thread()
 
     s << "<hr><section id=\"thread-container\">";
     for (auto & [ id, p ] : *posts) {
-        p.is_rendered = true;
         p.init(p.render());
         p.write_html(s);
     }

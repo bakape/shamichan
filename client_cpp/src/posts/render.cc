@@ -14,13 +14,7 @@ Node Post::render()
 
     if (deleted) {
         *n.attrs["class"] += " deleted";
-        n.children.push_back({
-            "input",
-            {
-                { "type", "checkbox" },
-                { "class", "deleted-toggle" },
-            },
-        });
+        n.children.push_back(delete_toggle);
     }
     n.children.push_back(render_header());
 

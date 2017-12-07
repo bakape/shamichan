@@ -206,7 +206,7 @@ Link to catalog or board page
 	</aside>
 {% endstripspace %}{% endfunc %}
 
-Links to different pages og the board index
+Links to different pages of the board index
 {% func pagination(page, total int) %}{% stripspace %}
 	<aside class="glass pagination spaced">
 		{% if page != 0 %}

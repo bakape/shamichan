@@ -59,8 +59,8 @@ public:
 // passed Nodes to the current state of the DOM and appropriate pathing.
 class VirtualView {
 public:
-    // Initialize the view with a Node subtree.
-    // Takes ownership of Node.
+    // Initialize the view with a Node subtree. Takes ownership of Node.
+    // Calling more then once will overwrite previous state.
     void init(Node);
 
     // Renders the view's subtree as HTML. After this call, the HTML must be

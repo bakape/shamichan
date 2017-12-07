@@ -1,15 +1,100 @@
 #include "../../brunhild/mutations.hh"
 #include "../lang.hh"
+#include "../posts/etc.hh"
+#include "../posts/models.hh"
 #include "../state.hh"
 #include "../util.hh"
 #include "page.hh"
+#include <algorithm>
 #include <optional>
 #include <sstream>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 using brunhild::Node;
 using std::ostringstream;
 using std::string;
+
+// Modes for sorting threads
+enum class SortMode { bump, last_reply, creation, reply_count, file_count };
+
+// Current thread sorting mode
+SortMode sort_mode = SortMode::bump;
+
+// Generate a sorted vector of thread references according to current sorting
+// mode
+static std::vector<Thread*> sort_threads()
+{
+    std::vector<Thread*> t;
+    t.reserve(threads->size());
+    for (auto & [ _, thread ] : *threads) {
+        t.push_back(&thread);
+    }
+
+    const bool is_all = page->board == "all";
+    std::sort(t.begin(), t.end(), [=](auto a, auto b) {
+        if (is_all || (a->sticky && b->sticky)) {
+            switch (sort_mode) {
+            case SortMode::bump:
+                return a->bump_time < b->bump_time;
+            case SortMode::last_reply:
+                return a->reply_time < b->reply_time;
+            case SortMode::creation:
+                return a->time < b->time;
+            case SortMode::reply_count:
+                return a->post_ctr < b->post_ctr;
+            case SortMode::file_count:
+                return a->image_ctr < b->image_ctr;
+            }
+        }
+        if (a->sticky) {
+            return false;
+        }
+        if (b->sticky) {
+            return true;
+        }
+    });
+
+    return t;
+}
+
+// Render threads on a board page
+static void render_index_threads(ostringstream& s)
+{
+    // Group all posts by thread. These are already sorted by post ID.
+    std::unordered_map<uint64_t, std::vector<Post*>> by_thread;
+    by_thread.reserve(threads->size());
+    for (auto & [ _, p ] : *posts) {
+        by_thread[p.op].push_back(&p);
+    }
+
+    sort_mode = SortMode::bump;
+    s << "<div id=index-thread-container>";
+    const auto sorted = sort_threads();
+    for (int i = 0; i < sorted.size(); i++) {
+        const auto t = sorted[i];
+
+        s << "<section class=\"index-thread";
+        if (t->deleted) {
+            s << " deleted";
+        }
+        s << "\">";
+        if (t->deleted) {
+            delete_toggle.write_html(s);
+        }
+
+        for (auto p : by_thread[t->id]) {
+            p->render().write_html(s);
+        }
+
+        if (i != sorted.size() - 1) {
+            s << "<hr>";
+        }
+        s << "</section>";
+    }
+    s << "</div><hr>";
+}
 
 // Render Links to different pages of the board index
 // TODO: Pagination - total page count not yet exported
@@ -201,7 +286,7 @@ static void render_index_page()
 
     s << "<hr>";
 
-    // TODO: Render threads
+    render_index_threads(s);
 
     ch.clear();
     ch.push_back(cat_link);

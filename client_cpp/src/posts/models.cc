@@ -141,10 +141,8 @@ Post::Post(nlohmann::json& j)
 
 void Post::patch()
 {
-    // Post not currently displayed
-    if (!is_rendered) {
-        return;
-    }
+    // TODO: Check if post is not displayed? Not sure we will need this in the
+    // future.
 
     // Proxy to top-most parent post, if inlined
     if (inlined_into) {

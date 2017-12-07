@@ -176,9 +176,7 @@ public:
          // Thread is locked. Only for OPs.
         locked = false,
          // The user has already seen this post
-        seen = false,
-         // Is Post currently represented inside the DOM?
-        is_rendered = false;
+        seen = false;
 
     std::optional<Image> image;
 
@@ -292,9 +290,11 @@ private:
 class Thread {
 public:
     bool deleted = false, // Thread deleted by staff
-        locked = false; // Thread locked by staff
-
-    uint64_t post_ctr, // Number of posts in thread
+        locked = false, // Thread locked by staff
+        sticky = false; // Stuck to board page top by stuff
+    uint64_t id, // ID of the thread
+        time, // Creation time
+        post_ctr, // Number of posts in thread
         image_ctr, // Number of images in thread
         reply_time, // Unix timestamp of last reply
         bump_time; // Unix timestamp of last bump
