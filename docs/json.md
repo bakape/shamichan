@@ -7,7 +7,7 @@ omitted.
 | URL | Type | Request payload | Response payload | Description |
 |---|---|---|---|---|
 | /json/boards/all/?page=N | GET | - | [][Thread](#thread) | Returns all threads from all boards, complete with the last 5 replies, as an array of [Thread](#thread). The response is paginated and N specifies the page. N defaults to 0. |
-| /json/boards/:board/?page=N | GET | - | [][Thread](#thread) | Returns threads from a board, specified by the `:board` parameter, complete with the last 5 replies, as an array of [Thread](#thread). The response is paginated and N specifies the page. N defaults to 0. |
+| /json/boards/:board/?page=N | GET | - | Board(#board) | Returns threads from a board, specified by the `:board` parameter, complete with the last 5 replies, as an array of [Thread](#thread). The response is paginated and N specifies the page. N defaults to 0. |
 | /json/boards/all/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
 | /json/boards/:board/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
 | /json/boards/:board/:thread | GET | - | [Thread](#thread) | Returns a specific thread on a specific board. Accepts the `last=N` query parameter. `N` specifies the maximum amount of replies to return and can be either 5 or 100. |
@@ -89,6 +89,13 @@ The "val" field contains the following data for each command type:
 | syncWatch | [5]uint | stores data of the synchronized time counter as [hours, minutes, seconds, start_time, end_time] |
 | pyu | uint | increment generic global counter and store current value |
 | pcount | uint | store current global counter without incrementing |
+
+## Board
+
+| Field | Type | Required | Description |
+|---|---|:---:|---|
+| pages | uint | + | Number of pages in total on the board |
+| threads | [][Thread](#thread) | + | Threads on the current page of the board |
 
 ## Thread
 
