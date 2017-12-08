@@ -7,7 +7,7 @@ omitted.
 | URL | Type | Request payload | Response payload | Description |
 |---|---|---|---|---|
 | /json/boards/all/?page=N | GET | - | [][Thread](#thread) | Returns all threads from all boards, complete with the last 5 replies, as an array of [Thread](#thread). The response is paginated and N specifies the page. N defaults to 0. |
-| /json/boards/:board/?page=N | GET | - | Board(#board) | Returns threads from a board, specified by the `:board` parameter, complete with the last 5 replies, as an array of [Thread](#thread). The response is paginated and N specifies the page. N defaults to 0. |
+| /json/boards/:board/?page=N | GET | - | [Board](#board) | Returns threads from a board, specified by the `:board` parameter, complete with the last 5 replies, as an array of [Thread](#thread). The response is paginated and N specifies the page. N defaults to 0. |
 | /json/boards/all/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
 | /json/boards/:board/catalog | GET | - | [][Thread](#thread) | Same as above, but does not return any replies |
 | /json/boards/:board/:thread | GET | - | [Thread](#thread) | Returns a specific thread on a specific board. Accepts the `last=N` query parameter. `N` specifies the maximum amount of replies to return and can be either 5 or 100. |
