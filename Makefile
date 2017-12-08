@@ -79,7 +79,7 @@ client_clean:
 	rm -rf www/js www/wasm www/css/*.css www/css/maps node_modules
 
 clean: client_clean clean_wasm clean_generated
-	rm -rf .build .ffmpeg .package target meguca-*.zip meguca-*.tar.xz meguca meguca.exe
+	rm -rf .build .ffmpeg .package go/pkg target meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 	$(MAKE) -C scripts/migration/3to4 clean
 ifeq ($(is_windows), true)
 	rm -rf /.meguca_build *.dll

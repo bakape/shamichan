@@ -166,6 +166,12 @@ the password "password"
 into the root directory
 
 ## Development
+
+* Prebuilt docker development image
+    * Install [Docker](https://www.docker.com/)
+    * `docker build -t meguca_dev .` to build the image
+    * `docker run -t -i meguca_dev` to start and login into the image
+    * `service postgresql start` to start the database server
 * See `./docs` for more documentation
 * `./meguca` or `./meguca debug` run the server in development mode
 * `make server` and `make client` build the server and client separately
