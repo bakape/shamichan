@@ -68,8 +68,10 @@ async function syncOpenPost(
 	}
 
 	if (hasImage && !model.image) {
-		model.image = (await fetchPost(id)).image
-		model.view.renderImage(false)
+		// Possible conflict due to deleted image
+		if (model.image = (await fetchPost(id)).image) {
+			model.view.renderImage(false)
+		}
 	}
 	if (spoilered && !model.image.spoiler) {
 		model.image.spoiler = true
