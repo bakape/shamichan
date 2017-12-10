@@ -9,7 +9,6 @@ import highlightSyntax from "./code"
 const urlPrefixes = {
     'h': "http",
     'm': "magnet:?",
-    'i': "irc",
     'f': "ftp",
     'b': "bitcoin",
 }
@@ -23,7 +22,7 @@ export default function renderBody(data: PostData): string {
         bold: false,
         italic: false,
         haveSyncwatch: false,
-        newlines: 0,
+        successive_newlines: 0,
         iDice: 0,
     }
     let html = ""
@@ -33,15 +32,15 @@ export default function renderBody(data: PostData): string {
         state.quote = false
 
         // Prevent successive empty lines
-        if (html && state.newlines < 2) {
+        if (html && state.successive_newlines < 2) {
             html += "<br>"
         }
         if (!l.length) {
-            state.newlines++
+            state.successive_newlines++
             continue
         }
 
-        state.newlines = 0
+        state.successive_newlines = 0
         if (l[0] === ">") {
             state.quote = true
             html += "<em>"
@@ -58,6 +57,7 @@ export default function renderBody(data: PostData): string {
 
         html += fn(l, data)
 
+        // Close any unclosed tags
         if (state.italic) {
             html += "</i>"
         }
@@ -299,7 +299,6 @@ function parseFragment(frag: string, data: PostData): string {
                 if (m) {
                     html += parseReference(m)
                     matched = true
-                    break
                 }
                 break
             case "#": // Hash commands
@@ -323,11 +322,6 @@ function parseFragment(frag: string, data: PostData): string {
         }
 
         if (!matched) {
-            if (data.board === "a" && /(cock|dick)s?/i.test(word)) {
-                word = word[0] === word[0].toUpperCase()
-                    ? "Privilege"
-                    : "privilege"
-            }
             html += escape(word)
         }
         if (trailPunct) {
@@ -401,7 +395,7 @@ function parseURL(bit: string): string {
 
 // Parse a hash command
 function parseCommand(bit: string, { commands, state }: PostData): string {
-    // Guard against invalid dice rolls and parsing lines in the post form
+    // Guard against invalid dice rolls
     if (!commands || !commands[state.iDice]) {
         return "#" + bit
     }

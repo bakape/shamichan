@@ -22,7 +22,7 @@
 		<aside id="thread-form-container" class="glass">
 			<span class="act">
 				<a class="new-thread-button">
-					{%s= ln.UI["newThread"] %}
+					{%s= ln.Common.UI["newThread"] %}
 				</a>
 			</span>
 			<form id="new-thread-form" action="/api/create-thread" method="post" enctype="multipart/form-data" class="hidden">
@@ -63,8 +63,8 @@
 		{% if !catalog %}
 			{%= pagination(page, total) %}
 		{% endif %}
-		{%= hoverReveal("aside", conf.Notice, ln.UI["showNotice"]) %}
-		{%= hoverReveal("aside", conf.Rules, ln.UI["rules"]) %}
+		{%= hoverReveal("aside", conf.Notice, ln.Common.UI["showNotice"]) %}
+		{%= hoverReveal("aside", conf.Rules, ln.Common.UI["rules"]) %}
 		<span id="catalog-controls" class="margin-spaced">
 			<input type="text" name="search" placeholder="{%s= ln.UI["search"] %}" title="{%s= ln.UI["searchTooltip"] %}">
 			{% if catalog %}
@@ -91,7 +91,6 @@
 		{% endif %}
 	</span>
 	{%= loadingImage(conf.ID) %}
-	{%= customJS(conf.Js) %}
 {% endstripspace %}{% endfunc %}
 
 CatalogThreads renders thread content for a catalog page. Separate function to
@@ -193,7 +192,7 @@ Render image upload form
 
 Link to catalog or board page
 {% func catalogLink(catalog bool) %}{% stripspace %}
-	{% code ln := lang.Get().UI %}
+	{% code ln := lang.Get().Common.UI %}
 	<aside class="act glass">
 		{% if catalog %}
 			<a href=".">
@@ -207,9 +206,9 @@ Link to catalog or board page
 	</aside>
 {% endstripspace %}{% endfunc %}
 
-Links to different pages og the board index
+Links to different pages of the board index
 {% func pagination(page, total int) %}{% stripspace %}
-	<aside class="glass pagination spaced">
+	<aside class="glass spaced">
 		{% if page != 0 %}
 			{% if page-1 != 0 %}
 				{%= pageLink(0, "<<") %}
@@ -239,11 +238,4 @@ Link to a different paginated board page
 	<a href="?page={%d i %}">
 		{%s= text %}
 	</a>
-{% endstripspace %}{% endfunc %}
-
-Render board-owner-set custom JavaScript
-{% func customJS(js string) %}{% stripspace %}
-	{% if js != "" %}
-		<script id="custom-js">{%s= js %}</script>
-	{% endif %}
 {% endstripspace %}{% endfunc %}

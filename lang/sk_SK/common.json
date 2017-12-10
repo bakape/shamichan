@@ -91,11 +91,22 @@
 		"last": "Posledné",
 		"postsImages": "Posts/Images/TTL",
 		"report": "Nahlásiť",
+		"submit": "Odoslať",
+		"cancel": "Zrušiť",
+		"newThread": "Nové vlákno",
 		"finished": "Finished",
 		"importDone": "Import successful. The page will now reload.",
 		"importCorrupt": "Import failed. File corrupt",
 		"confirmDelete": "Delete all posts by this IP?",
-		"lockThread": "Toggle thread lock"
+		"lockThread": "Toggle thread lock",
+		"return": "Návrat",
+		"catalog": "Katalóg",
+		"reply": "Odpovedať",
+		"top": "Vrch",
+		"lockedToBottom": "Zamknuté na spodok",
+		"showNotice": "Upozornenie",
+		"rules": "Pravidlá",
+		"bottom": "Dolu"
 	},
 	"sync": [
 		"odpojený",
@@ -103,5 +114,11 @@
 		"synchronizuje sa",
 		"zosynchronizovaný",
 		"desynchronizovaný"
-	]
+	],
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
+	}
 }

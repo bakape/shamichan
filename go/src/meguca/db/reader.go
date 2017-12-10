@@ -268,25 +268,25 @@ func GetThreadIDs(board string) ([]uint64, error) {
 }
 
 // GetAllBoardCatalog retrieves all threads for the "/all/" meta-board
-func GetAllBoardCatalog() (threads common.Board, err error) {
+func GetAllBoardCatalog() (board common.Board, err error) {
 	r, err := prepared["get_all_board"].Query()
 	if err != nil {
 		return
 	}
-	threads, err = scanCatalog(r)
+	board, err = scanCatalog(r)
 	if err != nil || !config.Get().HideNSFW {
 		return
 	}
 
 	// Hide threads from NSFW boards, if enabled
-	filtered := make(common.Board, 0, len(threads))
+	filtered := make([]common.Thread, 0, len(board.Threads))
 	confs := config.GetAllBoardConfigs()
-	for _, t := range threads {
+	for _, t := range board.Threads {
 		if !confs[t.Board].NSFW {
 			filtered = append(filtered, t)
 		}
 	}
-	threads = filtered
+	board.Threads = filtered
 	return
 }
 
@@ -378,7 +378,7 @@ func GetThreadMutations(id uint64) (deleted, banned []uint64, err error) {
 
 func scanCatalog(table tableScanner) (board common.Board, err error) {
 	defer table.Close()
-	board = make(common.Board, 0, 32)
+	board.Threads = make([]common.Thread, 0, 32)
 
 	var t common.Thread
 	for table.Next() {
@@ -386,7 +386,7 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 		if err != nil {
 			return
 		}
-		board = append(board, t)
+		board.Threads = append(board.Threads, t)
 	}
 	err = table.Err()
 	if err != nil {
@@ -394,9 +394,9 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 	}
 
 	open := make([]*common.Post, 0, 16)
-	for i := range board {
-		if board[i].Editing {
-			open = append(open, &board[i].Post)
+	for i := range board.Threads {
+		if board.Threads[i].Editing {
+			open = append(open, &board.Threads[i].Post)
 		}
 	}
 	err = injectOpenBodies(open)

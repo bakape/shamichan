@@ -13,13 +13,15 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/mailru/easyjson/jwriter"
 )
 
 // Contains data of a board page
 type pageStore struct {
-	pageNumber, pageTotal int
-	json                  []byte
-	data                  common.Board
+	pageNumber int
+	json       []byte
+	data       common.Board
 }
 
 var errPageOverflow = errors.New("page not found")
@@ -54,7 +56,8 @@ var catalogCache = cache.FrontEnd{
 	},
 
 	RenderHTML: func(data interface{}, json []byte) []byte {
-		return []byte(templates.CatalogThreads(data.(common.Board), json))
+		s := templates.CatalogThreads(data.(common.Board).Threads, json)
+		return []byte(s)
 	},
 }
 
@@ -89,8 +92,7 @@ var boardCache = cache.FrontEnd{
 			page  pageStore
 		)
 		closePage := func() {
-			if page.data != nil {
-				page.json = append(page.json, ']')
+			if page.data.Threads != nil {
 				pages = append(pages, page)
 			}
 		}
@@ -111,13 +113,14 @@ var boardCache = cache.FrontEnd{
 				closePage()
 				page = pageStore{
 					pageNumber: len(pages),
-					json:       append(make([]byte, 0, 1<<10), '['),
-					data:       make(common.Board, 0, 15),
+					data: common.Board{
+						Threads: make([]common.Thread, 0, 15),
+					},
 				}
 			}
 
 			k := cache.ThreadKey(id, 5)
-			json, data, _, err := cache.GetJSONAndData(k, threadCache)
+			_, data, _, err := cache.GetJSONAndData(k, threadCache)
 			if err != nil {
 				return nil, err
 			}
@@ -127,26 +130,29 @@ var boardCache = cache.FrontEnd{
 				continue
 			}
 
-			if len(page.json) != 1 {
-				page.json = append(page.json, ',')
-			}
-			page.json = append(page.json, json...)
-			page.data = append(page.data, t)
+			page.data.Threads = append(page.data.Threads, t)
 		}
 		closePage()
 
-		// Record total page count in all stores
+		// Record total page count in all stores and generate JSON
 		l := len(pages)
 		if l == 0 { // Empty board
 			l = 1
 			pages = []pageStore{
 				{
-					json: []byte("[]"),
+					json: []byte(`{"threads":[],"pages":1}`),
 				},
 			}
 		}
 		for i := range pages {
-			pages[i].pageTotal = l
+			p := &pages[i]
+			p.data.Pages = l
+			var w jwriter.Writer
+			p.data.MarshalEasyJSON(&w)
+			p.json, err = w.BuildBytes(nil)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		return pages, nil
@@ -189,7 +195,8 @@ var boardPageCache = cache.FrontEnd{
 	},
 
 	RenderHTML: func(data interface{}, json []byte) []byte {
-		return []byte(templates.IndexThreads(data.(pageStore).data, json))
+		s := templates.IndexThreads(data.(pageStore).data.Threads, json)
+		return []byte(s)
 	},
 
 	Size: func(_ interface{}, _, html []byte) int {

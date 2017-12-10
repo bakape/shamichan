@@ -1,8 +1,9 @@
 #include "view.hh"
 #include "mutations.hh"
-#include <algorithm>
 #include <sstream>
-#include <vector>
+#include <utility>
+
+using std::move;
 
 namespace brunhild {
 
@@ -65,92 +66,91 @@ void VirtualView::patch(Node node) { patch_node(saved, node); }
 void VirtualView::patch_node(Node& old, Node node)
 {
     // Completely replace node and subtree
-    bool replace = old.tag != node.tag;
-    if (!replace) {
-        if (node.attrs.count("id") && node.attrs["id"] != old.attrs["id"]) {
-            replace = true;
-        }
-    }
+    const auto replace = old.tag != node.tag
+        || (node.attrs.count("id")
+               && node.attrs.at("id") != old.attrs.at("id"));
     if (replace) {
-        auto const old_id = old.attrs["id"];
-        old = node;
+        const auto old_id = old.attrs.at("id");
+        old = move(node);
+        ensure_id(old);
         set_outer_html(old_id, old.html());
         return;
     }
 
-    patch_attrs(old, node.attrs);
-    patch_children(old, node.children);
+    patch_attrs(old, move(node.attrs));
+    patch_children(old, move(node));
 }
 
 void VirtualView::patch_attrs(Node& old, Attrs attrs)
 {
-    if (old.attrs == attrs) {
-        return;
-    }
-
     // Attributes added or changed
-    for (auto && [ key, val ] : attrs) {
-        if (!old.attrs.count(key) || old.attrs[key] != val) {
-            set_attr(old.attrs["id"], key, val);
+    for (auto & [ key, val ] : attrs) {
+        if (key != "id" && (!old.attrs.count(key) || old.attrs[key] != val)) {
+            old.attrs[key] = val;
+            set_attr(old.attrs.at("id"), key, val);
         }
     }
 
     // Attributes removed
-    for (auto && [ key, _ ] : old.attrs) {
-        if (!attrs.count(key)) {
-            remove_attr(old.attrs["id"], key);
+    for (auto & [ key, _ ] : old.attrs) {
+        if (key != "id" && !attrs.count(key)) {
+            old.attrs.erase(key);
+            remove_attr(old.attrs.at("id"), key);
         }
     }
-
-    old.attrs = attrs;
 }
 
-void VirtualView::patch_children(Node& old, Children children)
+void VirtualView::patch_children(Node& old, Node node)
 {
-    // Text nodes can not be addressed by ID and require special handling
-    if (old.children.size() == 1 && old.children[0].is_text()) {
-        if (children.size() == 1 && children[0].is_text()) { // Hot path
-            if (old.attrs["_text"] != children[0].attrs["_text"]) {
-                set_inner_html(old.attrs["id"], children[0].attrs["_text"]);
-                old.children = children;
+    // HTML string contents can not be addressed by ID and require special
+    // handling
+    if (old.inner_html) {
+        // Hot path
+        if (node.inner_html) {
+            if (*old.inner_html != *node.inner_html) {
+                set_inner_html(old.attrs.at("id"), *node.inner_html);
+                old.inner_html = move(node.inner_html);
             }
             return;
         }
 
         std::ostringstream s;
-        for (auto& ch : children) {
+        for (auto& ch : node.children) {
             ensure_id(ch);
             ch.write_html(s);
         }
-        old.children = children;
-        set_inner_html(old.attrs["id"], s.str());
+        old.children = move(node.children);
+        old.inner_html = std::nullopt;
+        set_inner_html(old.attrs.at("id"), s.str());
         return;
-    } else if (children.size() == 1 && children[0].is_text()) {
-        set_inner_html(old.attrs["id"], children[0].attrs["_text"]);
-        old.children = children;
+    } else if (node.inner_html) {
+        set_inner_html(old.attrs.at("id"), *node.inner_html);
+        old.children.clear();
+        old.inner_html = move(node.inner_html);
         return;
     }
 
-    int diff = children.size() - old.children.size();
+    int diff = node.children.size() - old.children.size();
 
-    // Remove Nodes from the end
-    while (diff < 0) {
-        brunhild::remove(old.children.back().attrs["id"]);
-        old.children.pop_back();
-        diff++;
+    // Diff existing nodes
+    for (int i = 0; i < old.children.size() && i < node.children.size(); i++) {
+        patch_node(old.children[i], move(node.children[i]));
     }
 
-    for (int i = 0; i < old.children.size(); i++) {
-        patch_node(old.children[i], children[i]);
-    }
-
-    // Append Nodes
     if (diff > 0) {
+        // Append Nodes
         for (int i = old.children.size(); i < diff; i++) {
-            auto ch = children[i];
+            auto& ch = node.children[i];
             ensure_id(ch);
-            append(old.attrs["id"], ch.html());
-            old.children.push_back(ch);
+            append(old.attrs.at("id"), ch.html());
+            old.children.push_back(move(ch));
+        }
+    } else {
+        // Remove Nodes from the end
+        while (diff < 0) {
+            brunhild::remove(old.children.back().attrs.at("id"));
+            old.children.pop_back();
+            diff++;
         }
     }
 }

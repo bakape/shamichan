@@ -21,11 +21,6 @@ std::string Node::html() const
 
 void Node::write_html(std::ostringstream& s) const
 {
-    if (tag == "_text") {
-        s << attrs.at("_text");
-        return;
-    }
-
     s << '<' << tag;
     for (auto & [ key, val ] : attrs) {
         s << ' ' << key;
@@ -35,16 +30,35 @@ void Node::write_html(std::ostringstream& s) const
     }
     s << '>';
 
-    for (auto& ch : children) {
-        ch.write_html(s);
+    // These should be left empty and unterminated
+    if (tag == "br" || tag == "wbr") {
+        return;
+    }
+
+    if (inner_html) {
+        s << *inner_html;
+    } else {
+        for (auto& ch : children) {
+            ch.write_html(s);
+        }
     }
 
     s << "</" << tag << '>';
 }
 
-Node Node::text(std::string text)
+std::string render_children(const Children& children)
 {
-    return Node("_text", { { "_text", text } });
+    std::ostringstream s;
+    for (auto& ch : children) {
+        ch.write_html(s);
+    }
+    return s.str();
+}
+
+void Node::stringify_subtree()
+{
+    inner_html = render_children(children);
+    children.clear();
 }
 
 void Node::clear()
@@ -52,12 +66,6 @@ void Node::clear()
     tag.clear();
     attrs.clear();
     children.clear();
-}
-
-Node Node::escaped(const std::string& s)
-{
-    std::ostringstream out;
-    out << brunhild::escape(s);
-    return Node::text(out.str());
+    inner_html = std::nullopt;
 }
 }

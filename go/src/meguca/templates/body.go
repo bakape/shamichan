@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/valyala/quicktemplate"
 )
@@ -26,7 +25,6 @@ const (
 var (
 	linkRegexp      = regexp.MustCompile(`^>>(>*)(\d+)$`)
 	referenceRegexp = regexp.MustCompile(`^>>>(>*)\/(\w+)\/$`)
-	dickRegex       = regexp.MustCompile(`(?i)(dick|cock)s?`)
 
 	providers = map[int]string{
 		youTube:    "YouTube",
@@ -40,11 +38,11 @@ var (
 	}{
 		{
 			youTube,
-			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=([^&]+)`),
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=[^&]+`),
 		},
 		{
 			youTube,
-			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/([a-zA-Z0-9_-]+)`),
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/[a-zA-Z0-9_-]+`),
 		},
 		{
 			soundCloud,
@@ -68,7 +66,6 @@ var (
 	urlPrefixes = map[byte]string{
 		'h': "http",
 		'm': "magnet:?",
-		'i': "irc",
 		'f': "ftp",
 		'b': "bitcoin",
 	}
@@ -78,7 +75,7 @@ type bodyContext struct {
 	index bool     // Rendered for an index page
 	state struct { // Body parser state
 		spoiler, quote, code, bold, italic bool
-		newlines                           uint
+		successive_newlines                uint
 		iDice                              int
 	}
 	common.Post
@@ -114,15 +111,15 @@ func streambody(
 		c.state.quote = false
 
 		// Prevent successive empty lines
-		if i != 0 && c.state.newlines < 2 {
+		if i != 0 && c.state.successive_newlines < 2 {
 			c.string("<br>")
 		}
 		if len(l) == 0 {
-			c.state.newlines++
+			c.state.successive_newlines++
 			continue
 		}
 
-		c.state.newlines = 0
+		c.state.successive_newlines = 0
 		if l[0] == '>' {
 			c.string("<em>")
 			c.state.quote = true
@@ -344,13 +341,6 @@ func (c *bodyContext) parseFragment(frag string) {
 			}
 		}
 
-		if c.board == "a" && dickRegex.MatchString(word) {
-			if unicode.IsUpper(rune(word[0])) {
-				word = "Privilege"
-			} else {
-				word = "privilege"
-			}
-		}
 		c.escape(word)
 
 	end:

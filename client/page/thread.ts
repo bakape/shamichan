@@ -36,9 +36,6 @@ export default function () {
     }
 
     extractPost(data, data.id, data.board, backlinks)
-    if (data.image) {
-        data.image.large = true
-    }
 
     for (let post of posts) {
         extractPost(post, data.id, data.board, backlinks)
@@ -82,7 +79,7 @@ function renderPostCounter() {
             if (isDeleted) {
                 days /= 3
             }
-            if (postCtr < 3000 && days < min) {
+            if (days < min) {
                 days = min
             }
 

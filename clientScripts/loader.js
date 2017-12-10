@@ -241,7 +241,12 @@
 				}
 		}
 
-		if ('serviceWorker' in navigator) {
+		if ('serviceWorker' in navigator
+			&& (
+				location.protocol === "https:"
+				|| location.hostname === "localhost"
+			)
+		) {
 			navigator.serviceWorker
 				.register("/worker.js")
 				.catch(function (err) {

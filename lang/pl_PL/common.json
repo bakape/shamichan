@@ -91,11 +91,22 @@
 		"last": "Ostatni",
 		"postsImages": "Posts/Images/TTL",
 		"report": "Zgłoś",
+		"submit": "Zatwierdź",
+		"cancel": "Cofnij",
+		"newThread": "Nowy temat",
 		"finished": "Zakończono",
 		"importDone": "Import successful. The page will now reload.",
 		"importCorrupt": "Import failed. File corrupt",
 		"confirmDelete": "Delete all posts by this IP?",
-		"lockThread": "Toggle thread lock"
+		"lockThread": "Toggle thread lock",
+		"return": "Powrót",
+		"catalog": "Katalog",
+		"reply": "Odpowiedź",
+		"top": "Na górę",
+		"lockedToBottom": "Jesteś na samym dole",
+		"showNotice": "Powiadomienie",
+		"rules": "Zasady",
+		"bottom": "Na dół"
 	},
 	"sync": [
 		"odłączono",
@@ -103,5 +114,11 @@
 		"synchronizacja",
 		"zsynchronizowano",
 		"brak synchronizacji"
-	]
+	],
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
+	}
 }

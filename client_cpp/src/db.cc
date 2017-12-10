@@ -7,17 +7,17 @@
 
 const int db_version = 7;
 
-// Database has errorred and all future calls should be ignored.
+// Database has errored and all future calls should be ignored
 bool has_errored = false;
 
 // Threads to load on the call from db_is_ready(). Keeps us from passing the
 // thread ID array to JS, when opening the thread.
-std::unordered_set<uint64_t>* threads_to_load = nullptr;
+std::unordered_set<unsigned long>* threads_to_load = nullptr;
 
 // TODO: Deal with Firefox private Module
-void load_db(std::unordered_set<uint64_t> thread_ids)
+void load_db(std::unordered_set<unsigned long> thread_ids)
 {
-    threads_to_load = new std::unordered_set<uint64_t>(thread_ids);
+    threads_to_load = new std::unordered_set<unsigned long>(thread_ids);
 
     EM_ASM_INT(
         {
@@ -114,14 +114,14 @@ void load_db(std::unordered_set<uint64_t> thread_ids)
         db_version);
 }
 
-void load_post_ids(const std::unordered_set<uint64_t>& threads)
+void load_post_ids(const std::unordered_set<unsigned long>& threads)
 {
     if (!threads.size() || has_errored) {
         return;
     }
 
     // Copy to vector, so we can pass it to JS
-    const std::vector<uint64_t> vec(threads.begin(), threads.end());
+    const std::vector<unsigned long> vec(threads.begin(), threads.end());
 
     EM_ASM_INT(
         {
@@ -163,13 +163,15 @@ void load_post_ids(const std::unordered_set<uint64_t>& threads)
         vec.data(), vec.size());
 }
 
-void handle_db_error(std::string err)
+// Handle a database error
+static void handle_db_error(std::string err)
 {
     has_errored = true;
-    EM_ASM_INT({ console.error(Pointer_stringify($0)); }, err.c_str());
+    EM_ASM_INT({ console.error(UTF8ToString($0)); }, err.c_str());
 }
 
-void db_is_ready()
+// Signals the database is ready. Called from the JS side.
+static void db_is_ready()
 {
     load_post_ids(*threads_to_load);
     delete threads_to_load;

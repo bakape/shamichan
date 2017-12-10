@@ -321,6 +321,13 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE boards
+				DROP COLUMN js`,
+		)
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
@@ -350,13 +357,19 @@ func LoadDB() (err error) {
 		tasks,
 		func() error {
 			tasks := []func() error{
-				openBoltDB, loadConfigs, loadBoardConfigs, loadBans,
+				openBoltDB, loadConfigs, loadBans,
 				loadBanners, loadLoadingAnimations,
 			}
 			if !exists {
 				tasks = append(tasks, CreateAdminAccount)
 			}
-			return util.Parallel(tasks...)
+			if err := util.Parallel(tasks...); err != nil {
+				return err
+			}
+
+			// Depends on loadBanners and loadLoadingAnimations, so has to be
+			// sequential
+			return loadBoardConfigs()
 		},
 	)
 

@@ -64,6 +64,7 @@ func TestUpdateOnAddBoard(t *testing.T) {
 			ID: "a",
 			BoardPublic: config.BoardPublic{
 				ForcedAnon: true,
+				Banners:    []uint16{},
 			},
 			Eightball: []string{"yes"},
 		},
@@ -93,6 +94,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 			ID: "a",
 			BoardPublic: config.BoardPublic{
 				ForcedAnon: true,
+				Banners:    []uint16{},
 			},
 			Eightball: []string{"yes"},
 		},

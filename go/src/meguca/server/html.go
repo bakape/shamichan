@@ -70,7 +70,7 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 	if !catalog {
 		p := data.(pageStore)
 		n = p.pageNumber
-		total = p.pageTotal
+		total = p.data.Pages
 	}
 
 	html = templates.Board(

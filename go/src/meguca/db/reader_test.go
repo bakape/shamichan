@@ -157,7 +157,7 @@ func testGetPost(t *testing.T) {
 func testGetAllBoard(t *testing.T) {
 	t.Parallel()
 
-	std := common.Board{
+	std := []common.Thread{
 		{
 			Post: common.Post{
 				ID:    3,
@@ -190,10 +190,10 @@ func testGetAllBoard(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for i := range board {
-		assertImage(t, &board[i], std[i].Image)
+	for i := range board.Threads {
+		assertImage(t, &board.Threads[i], std[i].Image)
 	}
-	AssertDeepEquals(t, board, std)
+	AssertDeepEquals(t, board.Threads, std)
 }
 
 // Assert image equality and then override to not compare pointer addresses
@@ -214,12 +214,12 @@ func testGetBoard(t *testing.T) {
 
 	cases := [...]struct {
 		name, id string
-		std      common.Board
+		std      []common.Thread
 	}{
 		{
 			name: "full",
 			id:   "c",
-			std: common.Board{
+			std: []common.Thread{
 				{
 					Post: common.Post{
 						ID:    3,
@@ -241,7 +241,7 @@ func testGetBoard(t *testing.T) {
 		{
 			name: "empty",
 			id:   "z",
-			std:  common.Board{},
+			std:  []common.Thread{},
 		},
 	}
 
@@ -254,10 +254,10 @@ func testGetBoard(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			for i := range board {
-				assertImage(t, &board[i], c.std[i].Image)
+			for i := range board.Threads {
+				assertImage(t, &board.Threads[i], c.std[i].Image)
 			}
-			AssertDeepEquals(t, board, c.std)
+			AssertDeepEquals(t, board.Threads, c.std)
 		})
 	}
 }

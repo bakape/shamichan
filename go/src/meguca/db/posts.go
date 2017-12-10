@@ -130,15 +130,15 @@ func (c *commandRow) Scan(src interface{}) error {
 }
 
 func (c *commandRow) scanBytes(data []byte) (err error) {
-	var bArr pq.ByteaArray
-	err = bArr.Scan(data)
+	var sArr pq.StringArray
+	err = sArr.Scan(data)
 	if err != nil {
 		return
 	}
 
-	*c = make([]common.Command, len(bArr))
-	for i := range bArr {
-		err = (*c)[i].UnmarshalJSON(bArr[i])
+	*c = make([]common.Command, len(sArr))
+	for i := range sArr {
+		err = (*c)[i].UnmarshalJSON([]byte(sArr[i]))
 		if err != nil {
 			return
 		}

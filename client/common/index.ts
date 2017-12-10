@@ -41,7 +41,7 @@ export type TextState = {
 	italic: boolean
 	bold: boolean
 	haveSyncwatch: boolean
-	newlines: number
+	successive_newlines: number
 	iDice: number // Index of the next dice array item to use
 }
 
@@ -66,6 +66,12 @@ export interface ThreadData extends PostData {
 	posts?: PostData[]
 }
 
+// Data of a board page
+export type BoardData = {
+	pages: number
+	threads: ThreadData[]
+}
+
 // Image data embeddable in posts and thread hashes
 export interface ImageData {
 	apng: boolean
@@ -85,7 +91,6 @@ export interface ImageData {
 	name: string
 
 	// Added client-side
-	large: boolean              // Render larger thumbnails
 	expanded: boolean           // Thumbnail is expanded
 	tallerThanViewport: boolean // Image is taller than the current viewport
 	revealed: boolean           // Revealing a hidden image with [Show]

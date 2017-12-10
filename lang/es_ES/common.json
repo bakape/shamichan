@@ -91,11 +91,22 @@
 		"last": "Últimos",
 		"postsImages": "Posts/Images/TTL",
 		"report": "Reportar",
+		"submit": "Submit",
+		"cancel": "Cancelar",
+		"newThread": "Nuevo Hilo",
 		"finished": "Terminado",
 		"importDone": "Import successful. The page will now reload.",
 		"importCorrupt": "Import failed. File corrupt",
 		"confirmDelete": "Delete all posts by this IP?",
-		"lockThread": "Toggle thread lock"
+		"lockThread": "Toggle thread lock",
+		"return": "Regresar",
+		"catalog": "Catalog",
+		"reply": "Respuesta",
+		"top": "Arriba",
+		"lockedToBottom": "Pegado al fondo",
+		"showNotice": "Notice",
+		"rules": "Rules",
+		"bottom": "Abajo"
 	},
 	"sync": [
 		"disconnected",
@@ -103,5 +114,11 @@
 		"syncing",
 		"synced",
 		"desynced"
-	]
+	],
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
+	}
 }

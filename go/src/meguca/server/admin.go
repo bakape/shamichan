@@ -179,8 +179,6 @@ func validateBoardConfigs(
 		err = errRulesTooLong
 	case len(conf.Title) > common.MaxLenBoardTitle:
 		err = errTitleTooLong
-	case len(conf.Js) > common.MaxLenCustomJS:
-		err = errJSTooLong
 	}
 	if err == nil {
 		matched := false

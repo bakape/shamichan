@@ -3,8 +3,7 @@ import { postJSON, toggleHeadStyle } from "../util"
 import { Post } from "../posts"
 import { getModel } from "../state"
 
-let panel: ModPanel,
-	displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true",
+let displayCheckboxes = localStorage.getItem("hideModCheckboxes") !== "true",
 	checkboxStyler: (toggle: boolean) => void
 
 // Moderation panel with various post moderation and other controls
@@ -16,7 +15,6 @@ export default class ModPanel extends View<null> {
 		)
 
 		super({ el: document.getElementById("moderation-panel") })
-		panel = this
 		new BanForm()
 		new NotificationForm()
 

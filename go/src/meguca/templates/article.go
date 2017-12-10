@@ -85,15 +85,6 @@ func readableFileSize(s int) string {
 	}
 }
 
-// Correct thumbnail dimensions for smaller reply thumbnails
-func correctDims(large bool, w, h uint16) (string, string) {
-	if !large && (w > 125 || h > 125) {
-		w = uint16(float32(w) * 0.8333)
-		h = uint16(float32(h) * 0.8333)
-	}
-	return strconv.FormatUint(uint64(w), 10), strconv.FormatUint(uint64(h), 10)
-}
-
 // Extract reverse links to linked posts on a page
 func extractBacklinks(cap int, threads ...common.Thread) backlinks {
 	bls := make(backlinks, cap)
