@@ -43,7 +43,7 @@ string relative_time(time_t then)
     return ago(t, lang->plurals.at("year"), is_future);
 }
 
-Node render_post_link(uint64_t id, const LinkData& data)
+Node render_post_link(unsigned long id, const LinkData& data)
 {
     const bool cross_thread = data.op != page->thread;
     const bool index_page = !page->thread && !page->catalog;

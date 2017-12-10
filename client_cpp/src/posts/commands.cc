@@ -19,7 +19,7 @@ using std::unordered_map;
 // IDs of posts, that are pending a rerender to update the syncwatch and the
 // time they should be rerender at. Specifying a timestamp helps avoid useless
 // subtree diffs.
-unordered_map<uint64_t, time_t> pending_rerender;
+unordered_map<unsigned long, time_t> pending_rerender;
 
 void rerender_syncwatches()
 {
@@ -28,7 +28,7 @@ void rerender_syncwatches()
     }
 
     // Prevent modifications from patching affecting the iterated map
-    unordered_map<uint64_t, time_t> m(pending_rerender);
+    unordered_map<unsigned long, time_t> m(pending_rerender);
     const auto now = std::time(0);
 
     for (auto[id, when] : m) {
@@ -230,7 +230,7 @@ optional<Node> Post::parse_syncwatch(std::string_view frag)
         if (now < start) {
             s << start - now;
         } else {
-            uint64_t diff = now - start;
+            unsigned long diff = now - start;
             const auto hours_elapsed = diff / 3600;
             diff %= 3600;
             const auto min_elapsed = diff / 60;

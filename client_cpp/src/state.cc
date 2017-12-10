@@ -17,16 +17,17 @@ using std::string;
 
 // Inverse map of posts linking posts by post ID.
 // <linked_post_id <linker_post_id, {false, linker_post_thread_id}>>
-typedef std::unordered_map<uint64_t, std::map<uint64_t, LinkData>> Backlinks;
+typedef std::unordered_map<unsigned long, std::map<unsigned long, LinkData>>
+    Backlinks;
 
 Config const* config;
 BoardConfig const* board_config;
 Page* page;
 PostIDs* post_ids;
-std::map<uint64_t, Post>* posts;
+std::map<unsigned long, Post>* posts;
 string const* location_origin;
 std::unordered_set<string> const* boards;
-std::unordered_map<uint64_t, Thread>* threads;
+std::unordered_map<unsigned long, Thread>* threads;
 std::map<string, string> const* board_titles;
 
 // Places inverse post links into backlinks for later assignment to individual
@@ -42,13 +43,13 @@ static void extract_backlinks(const Post& p, Backlinks& backlinks)
 // Places inverse post links into backlinks for later assignment to individual
 // post models.
 // Returns the id of the extracted thread;
-static uint64_t extract_thread(json& j, Backlinks& backlinks)
+static unsigned long extract_thread(json& j, Backlinks& backlinks)
 {
     // TODO: Actually use the thread metadata
     auto thread = ThreadDecoder(j);
 
     const string board = j["board"];
-    const uint64_t thread_id = j["id"];
+    const unsigned long thread_id = j["id"];
     auto op = Post(j);
     op.op = thread_id;
     extract_backlinks(op, backlinks);
@@ -68,12 +69,12 @@ static uint64_t extract_thread(json& j, Backlinks& backlinks)
 // Load posts from inlined JSON. Returns a vector of detected thread IDs.
 // TODO: Fetch this as binary data from the server. It is probably a good idea
 // to do this and configuration fetches in one request.
-static std::unordered_set<uint64_t> load_posts()
+static std::unordered_set<unsigned long> load_posts()
 {
     Backlinks backlinks;
     backlinks.reserve(128);
     auto j = json::parse(get_inner_html("post-data"));
-    auto thread_ids = std::unordered_set<uint64_t>();
+    auto thread_ids = std::unordered_set<unsigned long>();
     if (page->thread) {
         thread_ids.reserve(1);
         thread_ids.insert(extract_thread(j["threads"], backlinks));
@@ -147,9 +148,9 @@ void load_state()
         return buf;
     })));
 
-    posts = new std::map<uint64_t, Post>();
+    posts = new std::map<unsigned long, Post>();
     post_ids = new PostIDs{};
-    threads = new std::unordered_map<uint64_t, Thread>();
+    threads = new std::unordered_map<unsigned long, Thread>();
     load_db(load_posts());
 }
 
@@ -236,7 +237,7 @@ unsigned int Page::find_query_param(const string& query, const string& param)
 
 void add_to_storage(int typ, const std::vector<unsigned long> ids)
 {
-    std::unordered_set<uint64_t>* set = nullptr;
+    std::unordered_set<unsigned long>* set = nullptr;
     switch (static_cast<StorageType>(typ)) {
     case StorageType::mine:
         set = &post_ids->mine;

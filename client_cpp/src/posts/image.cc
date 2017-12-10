@@ -299,7 +299,7 @@ void handle_image_click(const brunhild::EventTarget& target)
         return;
     }
     auto const& id_str = target.attrs.at("data-id");
-    const uint64_t id = std::stoull(id_str);
+    const unsigned long id = std::stoull(id_str);
     if (!posts->count(id)) {
         return;
     }

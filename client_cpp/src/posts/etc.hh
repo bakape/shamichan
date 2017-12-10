@@ -17,7 +17,7 @@ const brunhild::Node delete_toggle = brunhild::Node("input",
 std::string relative_time(time_t then);
 
 // Render a link to a post with optional inlined linked post
-brunhild::Node render_post_link(uint64_t id, const LinkData& data);
+brunhild::Node render_post_link(unsigned long id, const LinkData& data);
 
 // Render and anchor link. new_tab specifies, if it opens in a new tab.
 brunhild::Node render_link(

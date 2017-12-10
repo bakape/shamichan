@@ -10,13 +10,13 @@
 
 // Contains all posts currently loaded on the page. Posts might or might not
 // be actually displayed.
-extern std::map<uint64_t, Post>* posts;
+extern std::map<unsigned long, Post>* posts;
 
 // Caches the origin of the page
 extern std::string const* location_origin;
 
 // Loaded thread metadata
-extern std::unordered_map<uint64_t, Thread>* threads;
+extern std::unordered_map<unsigned long, Thread>* threads;
 
 // Public server-wide global configurations
 class Config {
@@ -81,7 +81,7 @@ void load_state();
 
 // Stores post ID of various catagories
 struct PostIDs {
-    std::unordered_set<uint64_t> mine, // Post, the user has created
+    std::unordered_set<unsigned long> mine, // Post, the user has created
         seen_replies, // Replies to the user's posts, the user has seen
         seen_posts, // Posts the user has seen
         hidden; // Posts the user has hidden

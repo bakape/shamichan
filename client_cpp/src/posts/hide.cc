@@ -3,7 +3,8 @@
 #include "models.hh"
 
 // Set posts linking this post as hidden, but do not persist this
-static void set_linking_hidden(const std::map<uint64_t, LinkData>& backlinks)
+static void set_linking_hidden(
+    const std::map<unsigned long, LinkData>& backlinks)
 {
     for (auto & [ id, _ ] : backlinks) {
         // Skip posts already marked as hidden. Those will have or have already

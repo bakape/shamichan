@@ -65,7 +65,7 @@ public:
         thumb_type; // File type of thumbnail
     uint16_t dims[4];
     uint32_t length = 0; // Length of media, if a media file
-    uint64_t size;
+    unsigned long size;
     std::optional<std::string> artist, // Media file artist meta info
         title; // Media file title meta info
     std::string MD5, // MD5 hash of source file
@@ -103,8 +103,8 @@ public:
 
     // Use typ, to get out the relevant value
     bool flip; // Result of flip command
-    uint64_t count; // Somekind of counter result
-    uint64_t sync_watch[5]; // Syncwatch parameters
+    unsigned long count; // Somekind of counter result
+    unsigned long sync_watch[5]; // Syncwatch parameters
     std::vector<uint16_t> dice; // Result of dice throw
     std::string eight_ball; // Result of #8ball command
 
@@ -118,7 +118,7 @@ struct LinkData {
     // The post and its subtree is now a child of the link
     bool is_inlined = false;
     // Parent thread ID of the post
-    uint64_t op;
+    unsigned long op;
 };
 
 // State of a post's text. Used for adding enclosing tags to the HTML while
@@ -181,9 +181,9 @@ public:
     std::optional<Image> image;
 
     // ID of post this post is currently inlined into, if any
-    uint64_t inlined_into = 0;
+    unsigned long inlined_into = 0;
 
-    uint64_t id, op;
+    unsigned long id, op;
 
     time_t time;
 
@@ -198,9 +198,10 @@ public:
 
     std::vector<Command> commands; // Results of hash commands
 
-    std::map<uint64_t, LinkData> backlinks; // Posts linking to this post
+    std::map<unsigned long, LinkData> backlinks; // Posts linking to this post
 
-    std::unordered_map<uint64_t, LinkData> links; // Posts linked by this post
+    std::unordered_map<unsigned long, LinkData>
+        links; // Posts linked by this post
 
     Post() = default;
 
@@ -296,7 +297,7 @@ public:
     bool deleted = false, // Thread deleted by staff
         locked = false, // Thread locked by staff
         sticky = false; // Stuck to board page top by stuff
-    uint64_t id, // ID of the thread
+    unsigned long id, // ID of the thread
         time, // Creation time
         post_ctr, // Number of posts in thread
         image_ctr, // Number of images in thread

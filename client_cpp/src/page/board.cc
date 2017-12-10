@@ -63,7 +63,7 @@ static std::vector<Thread*> sort_threads()
 static void render_index_threads(ostringstream& s)
 {
     // Group all posts by thread. These are already sorted by post ID.
-    std::unordered_map<uint64_t, std::vector<Post*>> by_thread;
+    std::unordered_map<unsigned long, std::vector<Post*>> by_thread;
     by_thread.reserve(threads->size());
     for (auto & [ _, p ] : *posts) {
         by_thread[p.op].push_back(&p);

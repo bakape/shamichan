@@ -287,7 +287,7 @@ static int strip_gt(string_view& word)
 // Parses link to a post.
 // If valid, returns number of extra '>' in front of the link and ID of the
 // post, the link is pointing to.
-static optional<tuple<int, uint64_t>> parse_post_link(string_view word)
+static optional<tuple<int, unsigned long>> parse_post_link(string_view word)
 {
     // Count leading '>'
     int count = strip_gt(word);
@@ -310,7 +310,7 @@ static optional<tuple<int, uint64_t>> parse_post_link(string_view word)
 }
 
 // Render a temporary link for open posts
-static Node render_temp_link(uint64_t id)
+static Node render_temp_link(unsigned long id)
 {
     const string id_str = std::to_string(id);
     string text = ">>" + id_str;
