@@ -75,7 +75,13 @@ void set_attr(string id, string key, string val)
 void remove_attr(string id, string key)
 {
     mutations[id].set_attr.erase(key);
-    mutation_order.insert(key);
+    mutation_order.insert(id);
+}
+
+void scroll_into_view(string id)
+{
+    mutations[id].scroll_into_view = true;
+    mutation_order.insert(id);
 }
 
 void Mutations::free_inner()
@@ -201,6 +207,10 @@ void Mutations::exec(const string& id)
     for (auto& key : remove_attr) {
         EM_ASM_INT(
             { window.__el.removeAttribute(UTF8ToString($0)); }, key.c_str());
+    }
+
+    if (scroll_into_view) {
+        EM_ASM({ window.__el.scrollIntoView(); });
     }
 }
 }

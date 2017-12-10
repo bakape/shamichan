@@ -197,7 +197,7 @@ Node Post::render_name()
 {
     Node n("b", { { "class", "name spaced" } });
     if (sage) {
-        *n.attrs["class"] += " sage";
+        n.attrs["class"] += " sage";
     }
 
     if (options->anonymise) {
@@ -216,7 +216,7 @@ Node Post::render_name()
         n.children.push_back({ "span", *poster_id, true });
     }
     if (auth) {
-        *n.attrs["class"] += " admin";
+        n.attrs["class"] += " admin";
         n.children.push_back({ "span", "## " + lang->posts.at(*auth) });
     }
     if (post_ids->mine.count(id)) {

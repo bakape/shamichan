@@ -10,7 +10,7 @@ namespace brunhild {
 // Pending mutations for an element
 class Mutations {
 public:
-    bool remove_el = false;
+    bool remove_el = false, scroll_into_view = false;
     std::optional<std::string> set_inner_html, set_outer_html;
     std::vector<std::string> append, prepend, before, after, remove_attr;
     std::unordered_map<std::string, std::string> set_attr;
@@ -51,6 +51,9 @@ void set_attr(std::string id, std::string key, std::string val);
 
 // Remove an element attribute
 void remove_attr(std::string id, std::string key);
+
+// Scroll and element into the viewport
+void scroll_into_view(std::string id);
 
 // Flush all pending DOM mutations
 extern "C" void flush();

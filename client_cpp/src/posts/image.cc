@@ -1,9 +1,13 @@
+#include "../../brunhild/events.hh"
+#include "../../brunhild/mutations.hh"
 #include "../../brunhild/util.hh"
 #include "../lang.hh"
 #include "../options/options.hh"
 #include "../state.hh"
 #include "../util.hh"
 #include "models.hh"
+#include <emscripten.h>
+#include <emscripten/bind.h>
 #include <iomanip>
 #include <sstream>
 
@@ -149,7 +153,7 @@ Node Post::render_file_info()
     s << '(';
 
 // Appends a comma and a space after the first invocation
-#define comma()                                                                \
+#define COMMA                                                                  \
     if (!first) {                                                              \
         s << ", ";                                                             \
     } else {                                                                   \
@@ -157,19 +161,19 @@ Node Post::render_file_info()
     }
 
     if (img.artist) {
-        comma();
+        COMMA
         s << escape(*img.artist);
     }
     if (img.title) {
-        comma();
+        COMMA
         s << escape(*img.title);
     }
     if (img.audio) {
-        comma();
+        COMMA
         s << "♫";
     }
     if (img.length) {
-        comma();
+        COMMA
         if (img.length < 60) {
             s << "0:" << setw(2) << img.length;
         } else {
@@ -178,12 +182,12 @@ Node Post::render_file_info()
         }
     }
     if (img.apng) {
-        comma();
+        COMMA
         s << "APNG";
     }
 
     // Readable file size
-    comma();
+    COMMA
     if (img.size < 1 << 10) {
         s << img.size << " B";
     } else if (img.size < 1 << 20) {
@@ -195,7 +199,7 @@ Node Post::render_file_info()
 
     // Media dimensions
     if (const auto[w, h, _, __] = img.dims; w && h) {
-        comma();
+        COMMA
         s << w << 'x' << h;
     }
 
@@ -205,37 +209,70 @@ Node Post::render_file_info()
 
 Node Post::render_image()
 {
-    // TODO: Expanded image rendering
-
     auto& img = *image;
     const string src = img.source_path();
-    string thumb;
-    uint16_t h, w;
+    Node img_el;
 
-    if (img.thumb_type == FileType::no_file) {
-        // No thumbnail exists. Assign default.
-        string file;
+    if (img.expanded) {
+
+        // TODO: Expanded audio controls (including for no video MP4 and OGG)
+
+        img_el.attrs["class"]
+            = options->inline_fit == Options::FittingMode::width
+            ? "fit-to-width"
+            : "fit-to-screen";
+        img_el.attrs["src"] = src;
         switch (img.file_type) {
-        case FileType::mp4:
-        case FileType::mp3:
         case FileType::ogg:
-        case FileType::flac:
-            file = "audio";
+        case FileType::mp4:
+        case FileType::webm:
+            img_el.tag = "video";
+            img_el.attrs["autoplay"] = img_el.attrs["controls"]
+                = img_el.attrs["loop"] = "";
             break;
         default:
-            file = "file";
+            img_el.tag = "img";
         }
-        thumb = "/assets/" + file + ".png";
-        h = w = 150;
-    } else if (img.spoiler) {
-        thumb = "/assets/spoil/default.jpg";
-        h = w = 150;
     } else {
-        thumb = img.thumb_path();
-        w = img.dims[2];
-        h = img.dims[3];
+        string thumb;
+        uint16_t h, w;
+
+        if (img.thumb_type == FileType::no_file) {
+            // No thumbnail exists. Assign default.
+            string file;
+            switch (img.file_type) {
+            case FileType::mp4:
+            case FileType::mp3:
+            case FileType::ogg:
+            case FileType::flac:
+                file = "audio";
+                break;
+            default:
+                file = "file";
+            }
+            thumb = "/assets/" + file + ".png";
+            h = w = 150;
+        } else if (img.spoiler) {
+            thumb = "/assets/spoil/default.jpg";
+            h = w = 150;
+        } else {
+            thumb = img.thumb_path();
+            w = img.dims[2];
+            h = img.dims[3];
+        }
+
+        img_el = {
+            "img",
+            {
+                { "src", thumb },
+                { "width", std::to_string(w) },
+                { "height", std::to_string(h) },
+            },
+        };
     }
 
+    const string id_str = std::to_string(id);
+    img_el.attrs["data-id"] = id_str;
     Node n({
         "figure",
         {},
@@ -245,20 +282,60 @@ Node Post::render_image()
                 {
                     { "href", src },
                     { "target", "_blank" },
+                    { "data-id", id_str },
                 },
-                {
-                    {
-                        "img",
-                        {
-                            { "src", thumb },
-                            { "width", std::to_string(w) },
-                            { "height", std::to_string(h) },
-                        },
-                    },
-                },
+                { img_el },
             },
         },
     });
     n.stringify_subtree();
     return n;
+}
+
+void handle_image_click(const brunhild::EventTarget& target)
+{
+    // Identify and validate parent post
+    if (page->catalog || !target.attrs.count("data-id")) {
+        return;
+    }
+    auto const& id_str = target.attrs.at("data-id");
+    const uint64_t id = std::stoull(id_str);
+    if (!posts->count(id)) {
+        return;
+    }
+    auto& p = posts->at(id);
+    if (!p.image) {
+        return;
+    }
+    auto& img = *p.image;
+
+    // Simply download the file
+    switch (img.file_type) {
+    case FileType::pdf:
+    case FileType::zip:
+    case FileType::_7z:
+    case FileType::targz:
+    case FileType::tarxz:
+    case FileType::txt:
+        EM_ASM_INT(
+            {
+                if (!document.querySelector) {
+                    // Really old browser. Fuck it!
+                    return;
+                }
+                document.getElementById('p' + $0.toString())
+                    .querySelector('figcaption a[download]')
+                    .click();
+            },
+            id);
+        return;
+    }
+
+    img.expanded = !img.expanded;
+    if (options->inline_fit == Options::FittingMode::width
+        && img.dims[1] > emscripten::val::global("window")["innerHeight"]
+                             .as<unsigned int>()) {
+        brunhild::scroll_into_view('p' + id_str);
+    }
+    p.patch();
 }

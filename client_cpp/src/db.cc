@@ -163,13 +163,15 @@ void load_post_ids(const std::unordered_set<uint64_t>& threads)
         vec.data(), vec.size());
 }
 
-void handle_db_error(std::string err)
+// Handle a database error
+static void handle_db_error(std::string err)
 {
     has_errored = true;
     EM_ASM_INT({ console.error(UTF8ToString($0)); }, err.c_str());
 }
 
-void db_is_ready()
+// Signals the database is ready. Called from the JS side.
+static void db_is_ready()
 {
     load_post_ids(*threads_to_load);
     delete threads_to_load;

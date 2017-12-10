@@ -85,7 +85,8 @@ static void render_index_threads(ostringstream& s)
         }
 
         for (auto p : by_thread[t->id]) {
-            p->render().write_html(s);
+            p->init();
+            p->write_html(s);
         }
 
         if (i != sorted.size() - 1) {
@@ -156,7 +157,7 @@ static Node render_thread_form()
         Node sel("select",
             {
                 { "name", "board" },
-                { "required", std::nullopt },
+                { "required", "" },
             });
         sel.children.reserve(board_titles->size());
         for (auto & [ board, title ] : *board_titles) {
@@ -178,7 +179,7 @@ static Node render_thread_form()
                 { "type", "text" },
                 { "name", "board" },
                 { "value", page->board },
-                { "hidden", std::nullopt },
+                { "hidden", "" },
             },
         });
     }
@@ -197,8 +198,8 @@ static Node render_thread_form()
                         { "name", "nonLive" },
                     });
                     if (board_config->non_live) {
-                        attrs["checked"] = std::nullopt;
-                        attrs["disabled"] = std::nullopt;
+                        attrs["checked"] = "";
+                        attrs["disabled"] = "";
                     }
                     return attrs;
                 }(),

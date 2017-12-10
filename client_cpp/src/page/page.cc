@@ -52,7 +52,7 @@ static Node render_hover_reveal(string tag, string label, string text)
         },
     };
     if (tag == "aside") {
-        *n.attrs["class"] += " glass";
+        n.attrs["class"] += " glass";
     }
     return n;
 }

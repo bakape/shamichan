@@ -24,8 +24,8 @@ void Node::write_html(std::ostringstream& s) const
     s << '<' << tag;
     for (auto & [ key, val ] : attrs) {
         s << ' ' << key;
-        if (val) {
-            s << "=\"" << *val << '"';
+        if (val != "") {
+            s << "=\"" << val << '"';
         }
     }
     s << '>';

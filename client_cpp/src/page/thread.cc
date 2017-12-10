@@ -28,7 +28,7 @@ void render_thread()
 
     s << "<hr><section id=\"thread-container\">";
     for (auto & [ id, p ] : *posts) {
-        p.init(p.render());
+        p.init();
         p.write_html(s);
     }
     s << "</section><div id=\"bottom-spacer\"></div>";

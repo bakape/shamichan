@@ -4,16 +4,16 @@
 
 Node Post::render()
 {
-    Node n("article");
+    Node n("article", { { "id", 'p' + std::to_string(id) } });
     n.children.reserve(4);
 
     n.attrs["class"] = "glass";
     if (editing) {
-        *n.attrs["class"] += " editing";
+        n.attrs["class"] += " editing";
     }
 
     if (deleted) {
-        *n.attrs["class"] += " deleted";
+        n.attrs["class"] += " deleted";
         n.children.push_back(delete_toggle);
     }
     n.children.push_back(render_header());
