@@ -18,6 +18,9 @@ void init_posts()
             }
             switch (e.target.tagName) {
             case "A":
+                if (e.target.getAttribute("target") == "_blank") {
+                    return;
+                }
             case "IMG":
                 e.preventDefault();
             }
