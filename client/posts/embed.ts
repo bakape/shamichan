@@ -7,7 +7,7 @@ type OEmbedDoc = {
 }
 
 // Types of different embeds by provider
-enum provider { Youtube, SoundCloud, Vimeo }
+enum provider { YouTube, SoundCloud, Vimeo, HookTube }
 
 // Matching patterns and their respective providers
 const patterns: [provider, RegExp][] = [
@@ -27,6 +27,14 @@ const patterns: [provider, RegExp][] = [
 		provider.Vimeo,
 		/https?:\/\/(?:www\.)?vimeo\.com\/.+/,
 	],
+	[
+		provider.HookTube,
+		/https?:\/\/(?:[^\.]+\.)?hooktube\.com\/watch\/?\?(?:.+&)?v=([^&]+)/,
+	],
+	[
+		provider.HookTube,
+		/https?:\/\/(?:[^\.]+\.)?hooktube\.com\/embed\/([a-zA-Z0-9_-]+)/,
+	],
 ]
 
 // Map of providers to formatter functions
@@ -35,7 +43,7 @@ const formatters: { [key: number]: (s: string) => string } = {}
 // Map of providers to information fetcher functions
 const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
 
-for (let p of ["Youtube", "SoundCloud", "Vimeo"]) {
+for (let p of ["YouTube", "SoundCloud", "Vimeo", "HookTube"]) {
 	const id = (provider as any)[p] as number
 	formatters[id] = formatNoEmbed(id)
 	fetchers[id] = fetchNoEmbed(id)
@@ -155,4 +163,3 @@ on(document, "mouseover", fetchMeta, {
 on(document, "click", toggleExpansion, {
 	selector: "a.embed",
 })
-

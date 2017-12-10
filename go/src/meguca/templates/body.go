@@ -19,6 +19,7 @@ const (
 	youTube = iota
 	soundCloud
 	vimeo
+	hookTube
 )
 
 var (
@@ -26,9 +27,10 @@ var (
 	referenceRegexp = regexp.MustCompile(`^>>>(>*)\/(\w+)\/$`)
 
 	providers = map[int]string{
-		youTube:    "Youtube",
+		youTube:    "YouTube",
 		soundCloud: "SoundCloud",
 		vimeo:      "Vimeo",
+		hookTube:   "HookTube",
 	}
 	embedPatterns = [...]struct {
 		typ  int
@@ -49,6 +51,14 @@ var (
 		{
 			vimeo,
 			regexp.MustCompile(`https?:\/\/(?:www\.)?vimeo\.com\/.+`),
+		},
+		{
+			hookTube,
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?hooktube\.com\/watch\/?\?(?:.+&)?v=([^&]+)`),
+		},
+		{
+			hookTube,
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?hooktube\.com\/embed\/([a-zA-Z0-9_-]+)`),
 		},
 	}
 
