@@ -28,7 +28,7 @@ void register_handler(string type, Handler handler, string selector)
                 var type = UTF8ToString($0);
                 var sel = UTF8ToString($1);
 
-                if (!window.__bh_handler_type) {
+                if (!window.__bh_handlers) {
                     window.__bh_handlers = {};
                 }
 

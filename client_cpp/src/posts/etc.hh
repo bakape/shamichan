@@ -22,3 +22,6 @@ brunhild::Node render_post_link(unsigned long id, const LinkData& data);
 // Render and anchor link. new_tab specifies, if it opens in a new tab.
 brunhild::Node render_link(
     std::string_view url, std::string_view text, bool new_tab = true);
+
+// Match target post by attributes of an element. If none found, returns NULL.
+Post* match_post(const brunhild::Attrs&);

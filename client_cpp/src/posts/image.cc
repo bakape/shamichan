@@ -5,6 +5,7 @@
 #include "../options/options.hh"
 #include "../state.hh"
 #include "../util.hh"
+#include "etc.hh"
 #include "models.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
@@ -15,6 +16,8 @@ using brunhild::escape;
 using std::optional;
 using std::ostringstream;
 using std::string;
+
+// TODO: Expand all images and automatic image expansion
 
 Node Post::render_figcaption()
 {
@@ -27,7 +30,8 @@ Node Post::render_figcaption()
         n.children.push_back({
             "a",
             {
-                { "class", "act" },
+                { "class", "image-toggle act" },
+                { "data-id", std::to_string(id) },
             },
             lang->posts.at(img.reveal_thumbnail ? "hide" : "show"),
         });
@@ -42,12 +46,14 @@ Node Post::render_figcaption()
     ostringstream name, url;
     name << escape(img.name) << '.' << ext;
     url << "/assets/images/src/" << img.SHA1 << '.' << ext;
-    n.children.push_back({ "a",
+    n.children.push_back({
+        "a",
         {
             { "href", url.str() },
             { "download", name.str() },
         },
-        name.str() });
+        name.str(),
+    });
 
     n.stringify_subtree();
     return n;
@@ -335,19 +341,14 @@ std::tuple<Node, optional<Node>> Post::render_image()
 void handle_image_click(const brunhild::EventTarget& target)
 {
     // Identify and validate parent post
-    if (page->catalog || !target.attrs.count("data-id")) {
+    if (page->catalog) {
         return;
     }
-    auto const& id_str = target.attrs.at("data-id");
-    const unsigned long id = std::stoull(id_str);
-    if (!posts->count(id)) {
+    auto p = match_post(target.attrs);
+    if (!p || !p->image) {
         return;
     }
-    auto& p = posts->at(id);
-    if (!p.image) {
-        return;
-    }
-    auto& img = *p.image;
+    auto& img = *p->image;
 
     // Simply download the file
     switch (img.file_type) {
@@ -367,7 +368,7 @@ void handle_image_click(const brunhild::EventTarget& target)
                     .querySelector('figcaption a[download]')
                     .click();
             },
-            id);
+            p->id);
         return;
     }
 
@@ -375,7 +376,17 @@ void handle_image_click(const brunhild::EventTarget& target)
     if (options->inline_fit == Options::FittingMode::width
         && img.dims[1] > emscripten::val::global("window")["innerHeight"]
                              .as<unsigned int>()) {
-        brunhild::scroll_into_view('p' + id_str);
+        brunhild::scroll_into_view('p' + target.attrs.at("data-id"));
     }
-    p.patch();
+    p->patch();
+}
+
+void toggle_hidden_thumbnail(const brunhild::EventTarget& target)
+{
+    auto p = match_post(target.attrs);
+    if (!p || !p->image) {
+        return;
+    }
+    p->image->reveal_thumbnail = !p->image->reveal_thumbnail;
+    p->patch();
 }

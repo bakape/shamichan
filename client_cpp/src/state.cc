@@ -77,7 +77,7 @@ static std::unordered_set<unsigned long> load_posts()
     auto thread_ids = std::unordered_set<unsigned long>();
     if (page->thread) {
         thread_ids.reserve(1);
-        thread_ids.insert(extract_thread(j["threads"], backlinks));
+        thread_ids.insert(extract_thread(j, backlinks));
     } else {
         page->page_total = j["pages"];
         thread_ids.reserve(15);

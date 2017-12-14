@@ -105,3 +105,15 @@ Node render_link(string_view url, string_view text, bool new_tab)
     }
     return n;
 }
+
+Post* match_post(const brunhild::Attrs& attrs)
+{
+    if (!attrs.count("data-id")) {
+        return 0;
+    }
+    const unsigned long id = std::stoul(attrs.at("data-id"));
+    if (!posts->count(id)) {
+        return 0;
+    }
+    return &posts->at(id);
+}

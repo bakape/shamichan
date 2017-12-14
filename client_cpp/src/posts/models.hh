@@ -59,7 +59,6 @@ public:
         video = false, // Has video
         spoiler = false, // Is spoilered
         expanded = false, // Expand image thumbnail to full view
-        taller_than_viewport = false, // Image is taller than the viewport
         reveal_thumbnail = false; // Reveal a hidden image with [Show]
     FileType file_type, // File type of source file
         thumb_type; // File type of thumbnail
