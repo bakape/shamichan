@@ -12,6 +12,7 @@
 #include <sstream>
 
 using brunhild::escape;
+using std::optional;
 using std::ostringstream;
 using std::string;
 
@@ -207,72 +208,111 @@ Node Post::render_file_info()
     return Node("span", s.str());
 }
 
-Node Post::render_image()
+// Render unexpanded file thumbnail image
+static Node render_thumbnail(const Image& img)
 {
-    auto& img = *image;
-    const string src = img.source_path();
-    Node img_el;
+    string thumb;
+    uint16_t h, w;
 
-    if (img.expanded) {
-
-        // TODO: Expanded audio controls (including for no video MP4 and OGG)
-
-        img_el.attrs["class"]
-            = options->inline_fit == Options::FittingMode::width
-            ? "fit-to-width"
-            : "fit-to-screen";
-        img_el.attrs["src"] = src;
+    if (img.thumb_type == FileType::no_file) {
+        // No thumbnail exists. Assign default.
+        string file;
         switch (img.file_type) {
-        case FileType::ogg:
         case FileType::mp4:
-        case FileType::webm:
-            img_el.tag = "video";
-            img_el.attrs["autoplay"] = img_el.attrs["controls"]
-                = img_el.attrs["loop"] = "";
+        case FileType::mp3:
+        case FileType::ogg:
+        case FileType::flac:
+            file = "audio";
             break;
         default:
-            img_el.tag = "img";
+            file = "file";
         }
+        thumb = "/assets/" + file + ".png";
+        h = w = 150;
+    } else if (img.spoiler) {
+        thumb = "/assets/spoil/default.jpg";
+        h = w = 150;
     } else {
-        string thumb;
-        uint16_t h, w;
+        thumb = img.thumb_path();
+        w = img.dims[2];
+        h = img.dims[3];
+    }
 
-        if (img.thumb_type == FileType::no_file) {
-            // No thumbnail exists. Assign default.
-            string file;
-            switch (img.file_type) {
-            case FileType::mp4:
-            case FileType::mp3:
-            case FileType::ogg:
-            case FileType::flac:
-                file = "audio";
-                break;
-            default:
-                file = "file";
-            }
-            thumb = "/assets/" + file + ".png";
-            h = w = 150;
-        } else if (img.spoiler) {
-            thumb = "/assets/spoil/default.jpg";
-            h = w = 150;
-        } else {
-            thumb = img.thumb_path();
-            w = img.dims[2];
-            h = img.dims[3];
+    return {
+        "img",
+        {
+            { "src", thumb },
+            { "width", std::to_string(w) },
+            { "height", std::to_string(h) },
+        },
+    };
+}
+
+// Render expanded file image, video or audio
+static void render_expanded(
+    const Image& img, Node& inner, optional<Node>& audio)
+{
+    const auto src = img.source_path();
+
+    switch (img.file_type) {
+    case FileType::ogg:
+    case FileType::mp4:
+        // Can have only audio
+        if (img.video) {
+            goto render_video;
         }
-
-        img_el = {
-            "img",
+    case FileType::flac:
+    case FileType::mp3:
+        // Audio controls are rendered outside the figure. Keep the
+        // thumbnail.
+        audio = {
             {
-                { "src", thumb },
-                { "width", std::to_string(w) },
-                { "height", std::to_string(h) },
+                "audio",
+                {
+                    { "autoplay", "" },
+                    { "controls", "" },
+                    { "loop`", "" },
+                    { "src", src },
+                },
             },
         };
+        inner = render_thumbnail(img);
+        return;
+    case FileType::webm:
+    render_video:
+        inner = {
+            "video",
+            {
+                { "autoplay", "" },
+                { "controls", "" },
+                { "loop`", "" },
+            },
+        };
+        break;
+    default:
+        inner = { "img" };
+    }
+
+    inner.attrs["class"] = options->inline_fit == Options::FittingMode::width
+        ? "fit-to-width"
+        : "fit-to-screen";
+    inner.attrs["src"] = src;
+}
+
+std::tuple<Node, optional<Node>> Post::render_image()
+{
+    auto& img = *image;
+    Node inner;
+    optional<Node> audio;
+
+    if (img.expanded) {
+        render_expanded(img, inner, audio);
+    } else {
+        inner = render_thumbnail(img);
     }
 
     const string id_str = std::to_string(id);
-    img_el.attrs["data-id"] = id_str;
+    inner.attrs["data-id"] = id_str;
     Node n({
         "figure",
         {},
@@ -280,16 +320,16 @@ Node Post::render_image()
             {
                 "a",
                 {
-                    { "href", src },
+                    { "href", img.source_path() },
                     { "target", "_blank" },
                     { "data-id", id_str },
                 },
-                { img_el },
+                { inner },
             },
         },
     });
     n.stringify_subtree();
-    return n;
+    return { n, audio };
 }
 
 void handle_image_click(const brunhild::EventTarget& target)

@@ -24,7 +24,13 @@ Node Post::render()
         n.children.push_back(render_figcaption());
         if ((!options->hide_thumbs && !options->work_mode_toggle)
             || image->reveal_thumbnail) {
-            pc_ch.push_back(render_image());
+            auto[figure, audio] = render_image();
+            pc_ch.push_back(figure);
+
+            // Will be false almost always, so need to reserve memory for this
+            if (audio) {
+                pc_ch.push_back(*audio);
+            }
         }
     }
     pc_ch.push_back(render_body());

@@ -242,7 +242,7 @@ private:
     Node render_file_info();
 
     // Render a thumbnail or expanded source media content
-    Node render_image();
+    std::tuple<Node, std::optional<Node>> render_image();
 
     // Render the text body of a post
     Node render_body();
