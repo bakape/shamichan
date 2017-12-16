@@ -31,7 +31,7 @@ export const enum connEvent {
 export const connSM = new FSM<connState, connEvent>(connState.loading)
 
 function connect() {
-	nullSocket()
+	close_socket()
 	if (window.location.protocol == 'file:') {
 		console.error("Page downloaded locally. Refusing to sync.")
 		return
@@ -47,16 +47,11 @@ function connect() {
 	}
 }
 
-// Strip all handlers and remove references from Websocket instance
-function nullSocket() {
+// Close socket and remove all references
+function close_socket() {
 	if (socket) {
-		socket.onclose
-			= socket.onmessage
-			= socket.onopen
-			= socket.onclose
-			= socket.onerror
-			= socket
-			= null
+		socket.close()
+		socket = null
 	}
 }
 
@@ -119,7 +114,7 @@ function prepareToSync(): connState {
 }
 
 function clearModuleState() {
-	nullSocket()
+	close_socket()
 	if (attemptTimer) {
 		clearTimeout(attemptTimer)
 		attemptTimer = 0

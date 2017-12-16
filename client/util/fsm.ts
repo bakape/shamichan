@@ -34,7 +34,7 @@ export default class FSM<S extends Stringable, E extends Stringable> {
 	}
 
 	// Specify an event and handler, that will execute, when this event is fired
-	// on any state.
+	// on any state
 	public wildAct(event: E, handler: (arg?: any) => S) {
 		this.wilds[event.toString()] = handler
 	}
@@ -53,7 +53,7 @@ export default class FSM<S extends Stringable, E extends Stringable> {
 		} else {
 			const transition = this.transitionString(this.state, event),
 				handler = this.transitions[transition]
-			if (!handler) { // Not registered. NOOP
+			if (!handler) { // Not registered. NOP
 				return
 			}
 			result = handler(arg)

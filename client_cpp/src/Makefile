@@ -1,6 +1,6 @@
-all: page posts options $(addsuffix .bc, $(basename $(wildcard *.cc)))
+all: page posts options connection $(addsuffix .bc, $(basename $(wildcard *.cc)))
 
-.PHONY: page posts options
+.PHONY: page posts options connection
 
 page:
 	$(MAKE) -C page
@@ -10,6 +10,9 @@ posts:
 
 options:
 	$(MAKE) -C options
+
+connection:
+	$(MAKE) -C connection
 
 %.bc: %.cc
 	emcc $^ -o $@ $(EMCCFLAGS)

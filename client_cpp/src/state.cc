@@ -1,4 +1,5 @@
 #include "state.hh"
+#include "connection/state.hh"
 #include "db.hh"
 #include "lang.hh"
 #include "options/options.hh"
@@ -12,7 +13,7 @@
 #include <unordered_set>
 #include <utility>
 
-using json = nlohmann::json;
+using nlohmann::json;
 using std::string;
 
 // Inverse map of posts linking posts by post ID.
@@ -151,6 +152,7 @@ void load_state()
     posts = new std::map<unsigned long, Post>();
     post_ids = new PostIDs{};
     threads = new std::unordered_map<unsigned long, Thread>();
+    init_connection();
     load_db(load_posts());
 }
 

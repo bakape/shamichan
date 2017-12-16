@@ -17,7 +17,7 @@ export EMCCFLAGS=$(COMPILE_FLAGS) $(WARNINGS)
 all: clean_output
 	$(MAKE) -C brunhild
 	$(MAKE) -C src
-	emcc src/*.bc src/page/*.bc src/posts/*.bc src/options/*.bc brunhild/*.bc -o linked.bc $(COMPILE_FLAGS) $(SETTINGS)
+	emcc src/*.bc src/page/*.bc src/posts/*.bc src/options/*.bc src/connection/*.bc brunhild/*.bc -o linked.bc $(COMPILE_FLAGS) $(SETTINGS)
 ifneq ($(DEBUG),1)
 	emcc linked.bc -o main.js --separate-asm -Wno-separate-asm $(COMPILE_FLAGS) $(SETTINGS)
 endif
