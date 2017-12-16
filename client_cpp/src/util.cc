@@ -1,11 +1,16 @@
 #include "util.hh"
 #include "lang.hh"
 #include <emscripten.h>
+#include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <tuple>
 
-c_string_view get_inner_html(const std::string& id)
+using brunhild::Node;
+using std::string;
+
+c_string_view get_inner_html(const string& id)
 {
     return c_string_view((char*)EM_ASM_INT(
         {
@@ -18,19 +23,22 @@ c_string_view get_inner_html(const std::string& id)
         id.c_str()));
 }
 
-std::string pluralize(int n, const std::tuple<std::string, std::string>& word)
+string pluralize(int n, string word)
 {
     std::string s;
     s.reserve(32);
-    s += std::to_string(n) + ' ';
+    s = std::to_string(n) + ' ';
+
+    auto& ln = lang->plurals.at(word);
     switch (n) {
     case 1:
     case -1:
-        s += std::get<0>(word);
+        s += std::get<0>(ln);
         break;
     default:
-        s += std::get<1>(word);
+        s += std::get<1>(ln);
     }
+
     return s;
 }
 
@@ -86,15 +94,42 @@ brunhild::Children render_submit(bool cancel)
     return ch;
 }
 
+Node render_button(std::optional<string> href, string text, bool aside)
+{
+    Node a("a", text);
+    if (href) {
+        a.attrs["href"] = *href;
+    }
+    string cls = "act";
+    if (aside) {
+        cls += " glass";
+    }
+    return { aside ? "aside" : "span", { { "class", cls } }, { a } };
+}
+
+Node render_expand_link(string board, unsigned long id)
+{
+    std::ostringstream s;
+    s << '/' << board << '/' << id;
+    return render_button(s.str(), lang->posts.at("expand"));
+}
+
+Node render_last_100_link(string board, unsigned long id)
+{
+    std::ostringstream s;
+    s << '/' << board << '/' << id << "?last=100#bottom";
+    return render_button(s.str(), lang->ui.at("last") + " 100");
+}
+
 namespace console {
 
-#define def_logger(key)                                                        \
-    void key(const std::string& s)                                             \
+#define DEF_LOGGER(key)                                                        \
+    void key(const string& s)                                                  \
     {                                                                          \
         EM_ASM_INT({ console.key(UTF8ToString($0)); }, s.c_str());             \
     }
 
-def_logger(log);
-def_logger(warn);
-def_logger(error);
+DEF_LOGGER(log)
+DEF_LOGGER(warn)
+DEF_LOGGER(error)
 }

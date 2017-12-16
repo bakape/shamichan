@@ -4,14 +4,15 @@
 #include "../state.hh"
 #include "../util.hh"
 #include "models.hh"
-#include <tuple>
+#include <sstream>
 
 using std::string;
 using std::string_view;
 
 // Renders "56 minutes ago" or "in 56 minutes" like relative time text
-static string ago(
-    time_t n, const std::tuple<string, string>& units, bool is_future)
+// Units is the index used to retrieve the language pack value for unit
+// pluralization.
+static string ago(time_t n, string units, bool is_future)
 {
     auto count = pluralize(n, units);
     return is_future ? lang->posts.at("in") + " " + count
@@ -35,12 +36,12 @@ string relative_time(time_t then)
     const static string unit[4] = { "minute", "hour", "day", "month" };
     for (int i = 0; i < 4; i++) {
         if (t < divide[i]) {
-            return ago(t, lang->plurals.at(unit[i]), is_future);
+            return ago(t, unit[i], is_future);
         }
         t /= divide[i];
     }
 
-    return ago(t, lang->plurals.at("year"), is_future);
+    return ago(t, "year", is_future);
 }
 
 Node render_post_link(unsigned long id, const LinkData& data)

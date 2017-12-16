@@ -7,24 +7,24 @@ using std::string;
 
 // Deserialize a property that might or might not be present from a kew of the
 // same name
-#define parse_opt(key)                                                         \
+#define PARSE_OPT(key)                                                         \
     if (j.count(#key)) {                                                       \
         key = j[#key];                                                         \
     }
 
 // Same as parse_opt, but explicitly converts to an std::string.
 // Needed with std::optional<std::string> fields.
-#define parse_opt_string(key)                                                  \
+#define PARSE_OPT_STRING(key)                                                  \
     if (j.count(#key)) {                                                       \
         key = j.at(#key).get<string>();                                        \
     }
 
 Image::Image(nlohmann::json& j)
 {
-    parse_opt(apng);
-    parse_opt(audio);
-    parse_opt(video);
-    parse_opt(spoiler);
+    PARSE_OPT(apng);
+    PARSE_OPT(audio);
+    PARSE_OPT(video);
+    PARSE_OPT(spoiler);
     file_type = static_cast<FileType>(j["fileType"]);
     thumb_type = static_cast<FileType>(j["thumbType"]);
 
@@ -33,10 +33,10 @@ Image::Image(nlohmann::json& j)
         dims[i] = j_dims[i];
     }
 
-    parse_opt(length);
+    PARSE_OPT(length);
     size = j["size"];
-    parse_opt_string(artist);
-    parse_opt_string(title);
+    PARSE_OPT_STRING(artist);
+    PARSE_OPT_STRING(title);
     MD5 = j["MD5"];
     SHA1 = j["SHA1"];
     name = j["name"];
@@ -98,24 +98,24 @@ string Image::source_path() const
 
 Post::Post(nlohmann::json& j)
 {
-    parse_opt(editing);
-    parse_opt(deleted);
-    parse_opt(sage);
-    parse_opt(banned);
-    parse_opt(sticky);
-    parse_opt(locked);
+    PARSE_OPT(editing);
+    PARSE_OPT(deleted);
+    PARSE_OPT(sage);
+    PARSE_OPT(banned);
+    PARSE_OPT(sticky);
+    PARSE_OPT(locked);
 
     id = j["id"];
-    parse_opt(op);
+    PARSE_OPT(op);
     time = j["time"];
 
     body = j["body"];
-    parse_opt(board);
-    parse_opt_string(name);
-    parse_opt_string(trip);
-    parse_opt_string(auth);
-    parse_opt_string(subject);
-    parse_opt_string(flag);
+    PARSE_OPT(board);
+    PARSE_OPT_STRING(name);
+    PARSE_OPT_STRING(trip);
+    PARSE_OPT_STRING(auth);
+    PARSE_OPT_STRING(subject);
+    PARSE_OPT_STRING(flag);
     if (j.count("posterID")) {
         poster_id = j["posterID"].get<string>();
     }

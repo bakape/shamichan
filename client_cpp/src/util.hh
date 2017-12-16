@@ -2,6 +2,7 @@
 
 #include "../brunhild/node.hh"
 #include <cctype>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -27,8 +28,21 @@ private:
 // Read inner HTML from DOM element by ID
 c_string_view get_inner_html(const std::string& id);
 
-// Return either the singular or plural form of a translation, depending on n
-std::string pluralize(int n, const std::tuple<std::string, std::string>& word);
+// Return either the singular or plural form of a translation, depending on n.
+// word is the index used for finding the localization tuple.
+std::string pluralize(int n, std::string word);
+
+// Renders a clickable button element.
+// If href = std::nullopt, no href property is set on the link.
+// If aside = true, renders the button as an <aside> element, instead of <span>.
+brunhild::Node render_button(
+    std::optional<std::string> href, std::string text, bool aside = false);
+
+// Render a link to expand a thread
+brunhild::Node render_expand_link(std::string board, unsigned long id);
+
+// Render a link to only display the last 100  posts of a thread
+brunhild::Node render_last_100_link(std::string board, unsigned long id);
 
 // URL encode a string to pass into an ostream
 struct url_encode {

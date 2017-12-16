@@ -295,7 +295,8 @@ class Thread {
 public:
     bool deleted = false, // Thread deleted by staff
         locked = false, // Thread locked by staff
-        sticky = false; // Stuck to board page top by stuff
+        sticky = false, // Stuck to board page top by stuff
+        abbrev = false; // Some replies omitted from thread
     unsigned long id, // ID of the thread
         time, // Creation time
         post_ctr, // Number of posts in thread

@@ -179,13 +179,13 @@
 		</div>
 		{% if c.omit != 0 %}
 			<span class="omit" data-omit="{%d c.omit %}" data-image-omit="{%d c.imageOmit %}">
-				{%d c.omit %}{% space %}post{% if c.omit > 1 %}s{% endif %}
-				{% space %}and{% space %}{%d c.imageOmit %}
-				{% space %}image{% if c.imageOmit > 1 %}s{% endif %}
+				{%s= pluralize(c.omit, "post") %}
+				{% space %}{%s= ln.Common.Posts["and"] %}{% space %}
+				{%s= pluralize(c.imageOmit, "image") %}
 				{% space %}omitted{% space %}
 				<span class="act">
 					<a href="{%s= strconv.FormatUint(c.op, 10) %}">
-						See All
+						{%s= ln.Common.Posts["seeAll"] %}
 					</a>
 				</span>
 			</span>

@@ -69,16 +69,3 @@ void push_board_hover_info(brunhild::Children& ch)
             tag, board_config->rules, lang->ui.at("rules")));
     }
 }
-
-Node render_button(std::optional<string> href, string text, bool aside)
-{
-    Node a("a", text);
-    if (href) {
-        a.attrs["href"] = *href;
-    }
-    string cls = "act";
-    if (aside) {
-        cls += " glass";
-    }
-    return { aside ? "aside" : "span", { { "class", cls } }, { a } };
-}

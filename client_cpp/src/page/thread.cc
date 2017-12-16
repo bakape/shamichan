@@ -47,11 +47,7 @@ void render_thread()
     n.children.push_back(render_button(".", lang->ui.at("return")));
     n.children.push_back(render_button("catalog", lang->ui.at("catalog")));
     n.children.push_back(render_button("#top", lang->ui.at("top")));
-    if (!page->last_n) {
-        std::ostringstream s;
-        s << lang->ui.at("last") << ' ' << 100;
-        n.children.push_back(render_button("?last=100#bottom", s.str()));
-    }
+    n.children.push_back(render_last_100_link(page->board, page->thread));
     n.children.push_back({
         "span",
         {

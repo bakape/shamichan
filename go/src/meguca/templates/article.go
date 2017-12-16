@@ -108,3 +108,21 @@ func extractBacklinks(cap int, threads ...common.Thread) backlinks {
 
 	return bls
 }
+
+// Returns the stringified n + the plural or singular word from the language
+// by index word
+func pluralize(n int, word string) string {
+	b := make([]byte, 0, 32)
+	b = strconv.AppendInt(b, int64(n), 10)
+	b = append(b, ' ')
+
+	ln := lang.Get().Common.Plurals[word]
+	switch n {
+	case 1, -1:
+		b = append(b, ln[0]...)
+	default:
+		b = append(b, ln[1]...)
+	}
+
+	return string(b)
+}

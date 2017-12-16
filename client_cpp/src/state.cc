@@ -264,15 +264,16 @@ EMSCRIPTEN_BINDINGS(module_state)
 
 ThreadDecoder::ThreadDecoder(json& j)
 {
-    if (j.count("deleted")) {
-        deleted = j["deleted"];
+// Decode a key, that may not be in the object
+#define OPT_DECODE(key)                                                        \
+    if (j.count(#key)) {                                                       \
+        key = j[#key];                                                         \
     }
-    if (j.count("locked")) {
-        locked = j["locked"];
-    }
-    if (j.count("sticky")) {
-        locked = j["sticky"];
-    }
+
+    OPT_DECODE(deleted)
+    OPT_DECODE(locked)
+    OPT_DECODE(sticky)
+    OPT_DECODE(abbrev)
     id = j["id"];
     post_ctr = j["postCtr"];
     image_ctr = j["imageCtr"];
