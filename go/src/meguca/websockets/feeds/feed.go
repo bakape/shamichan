@@ -152,7 +152,7 @@ func (f *Feed) Start() (err error) {
 				p.Image = &msg.Image
 				f.cache.Posts[msg.id] = p
 				f.cache.ImageCtr++
-				f.write(msg)
+				f.write(msg.msg)
 
 			// Various post-related messages
 			case msg := <-f.sendPostMessage:
