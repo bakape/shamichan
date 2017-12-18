@@ -1,5 +1,3 @@
-//go:generate easyjson $GOFILE
-
 package feeds
 
 import (
@@ -47,7 +45,6 @@ func newThreadCache(t common.Thread) threadCache {
 	return c
 }
 
-//easyjson:json
 // Message used for synchronizing clients to the feed state.
 // This is the version used by the current JS client.
 type syncMessage struct {

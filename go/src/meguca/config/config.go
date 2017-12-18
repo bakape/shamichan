@@ -4,12 +4,11 @@
 package config
 
 import (
+	"encoding/json"
 	"meguca/util"
 	"reflect"
 	"sort"
 	"sync"
-
-	"github.com/mailru/easyjson"
 )
 
 var (
@@ -90,7 +89,7 @@ const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, 
 // Generate /all/ board configs
 func init() {
 	var err error
-	AllBoardConfigs.JSON, err = easyjson.Marshal(AllBoardConfigs.BoardPublic)
+	AllBoardConfigs.JSON, err = json.Marshal(AllBoardConfigs.BoardPublic)
 	if err != nil {
 		panic(err)
 	}
@@ -106,7 +105,7 @@ func Get() *Configs {
 
 // Set sets the internal configuration struct
 func Set(c Configs) error {
-	client, err := easyjson.Marshal(c.Public)
+	client, err := json.Marshal(c.Public)
 	if err != nil {
 		return err
 	}
@@ -209,7 +208,7 @@ func SetBoardConfigs(conf BoardConfigs) (bool, error) {
 		BoardConfigs: conf,
 	}
 	var err error
-	cont.JSON, err = easyjson.Marshal(conf.BoardPublic)
+	cont.JSON, err = json.Marshal(conf.BoardPublic)
 	if err != nil {
 		return false, err
 	}

@@ -1,5 +1,3 @@
-//go:generate easyjson --all --no_std_marshalers $GOFILE
-
 package config
 
 // Configs stores the global server configuration
