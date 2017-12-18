@@ -55,9 +55,7 @@ func (c *Client) synchronise(data []byte) error {
 
 // Register fresh client sync or change from previous sync
 func (c *Client) registerSync(id uint64, board string) (err error) {
-	// Don't close OP's, as navigating to the thread is a natural part of
-	// thread creation
-	if c.post.id != 0 && c.post.id != c.post.op {
+	if c.post.id != 0 {
 		err = c.closePreviousPost()
 		if err != nil {
 			return
