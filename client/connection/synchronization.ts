@@ -20,8 +20,8 @@ type SyncData = {
 
 // State of an open post
 type OpenPost = {
-	hasImage?: boolean
-	spoilered?: boolean
+	hasImage: boolean
+	spoilered: boolean
 	body: string
 }
 
@@ -142,35 +142,30 @@ handlers[message.synchronise] = async (data: SyncData) => {
 			proms.push(fetchUnclosed(post))
 		}
 	}
-
 	for (let key in open) {
 		const id = parseInt(key)
 		if (id >= minID) {
 			proms.push(syncOpenPost(id, open[key]))
 		}
 	}
-
 	for (let id of recent) {
 		// Missing posts, that are open, will be fetched by the loop above
 		if (id >= minID && !posts.get(id) && !open[id]) {
 			proms.push(fetchMissingPost(id))
 		}
 	}
-
 	for (let id of banned) {
 		const post = posts.get(id)
 		if (post && !post.banned) {
 			post.setBanned()
 		}
 	}
-
 	for (let id of deleted) {
 		const post = posts.get(id)
 		if (post && !post.deleted) {
 			post.setDeleted()
 		}
 	}
-
 	for (let id of deletedImage) {
 		const post = posts.get(id)
 		if (post && post.image) {
@@ -178,10 +173,12 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		}
 	}
 
-	await Promise.all(proms).catch(e => {
-		alert(e)
-		throw e
-	})
+	if (proms.length) {
+		await Promise.all(proms).catch(e => {
+			alert(e)
+			throw e
+		})
+	}
 
 	displayLoading(false)
 	connSM.feed(connEvent.sync)

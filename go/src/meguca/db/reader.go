@@ -4,9 +4,7 @@ import (
 	"database/sql"
 	"meguca/common"
 	"meguca/config"
-	"meguca/util"
 
-	"github.com/boltdb/bolt"
 	"github.com/lib/pq"
 )
 
@@ -297,83 +295,6 @@ func GetAllThreadsIDs() ([]uint64, error) {
 		return nil, err
 	}
 	return scanThreadIDs(r)
-}
-
-// GetRecentPosts retrieves posts created in the thread in the last 15 minutes.
-// Posts that are being editted also have their Body property set.
-func GetRecentPosts(op uint64) (posts []PostStats, err error) {
-	r, err := prepared["get_recent_posts"].Query(op)
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	posts = make([]PostStats, 0, 64)
-	var p PostStats
-	for r.Next() {
-		err = r.Scan(&p.ID, &p.Time, &p.Editing, &p.HasImage, &p.Spoilered)
-		if err != nil {
-			return
-		}
-		posts = append(posts, p)
-	}
-	err = r.Err()
-	if err != nil {
-		return
-	}
-
-	// Get open post bodies
-	if len(posts) != 0 {
-		var tx *bolt.Tx
-		tx, err = boltDB.Begin(false)
-		if err != nil {
-			return
-		}
-		defer tx.Rollback()
-
-		buc := tx.Bucket([]byte("open_bodies"))
-		for i, p := range posts {
-			if !p.Editing {
-				continue
-			}
-			// Buffer is only valid for the transaction. Need to copy.
-			posts[i].Body = util.CloneBytes(buc.Get(encodeUint64Heap(p.ID)))
-		}
-	}
-
-	return
-}
-
-// Retvies mutations, that can happen to posts in a thread, after the post is
-// closed
-func GetThreadMutations(id uint64) (deleted, banned []uint64, err error) {
-	deleted = make([]uint64, 0, 16)
-	banned = make([]uint64, 0, 16)
-	r, err := prepared["get_thread_mutations"].Query(id)
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	var (
-		isDeleted, isBanned sql.NullBool
-		postID              uint64
-	)
-	for r.Next() {
-		err = r.Scan(&postID, &isDeleted, &isBanned)
-		if err != nil {
-			return
-		}
-		if isDeleted.Bool {
-			deleted = append(deleted, postID)
-		}
-		if isBanned.Bool {
-			banned = append(banned, postID)
-		}
-	}
-	err = r.Err()
-
-	return
 }
 
 func scanCatalog(table tableScanner) (board common.Board, err error) {

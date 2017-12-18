@@ -65,6 +65,7 @@ clean_generated:
 	rm -f go/src/meguca/db/bin_data.go go/src/meguca/lang/bin_data.go go/src/meguca/assets/bin_data.go
 	rm -f go/src/meguca/common/*_easyjson.go
 	rm -f go/src/meguca/config/*_easyjson.go
+	rm -f go/src/meguca/websockets/feeds/*_easyjson.go
 	rm -f go/src/meguca/templates/*.qtpl.go
 
 server_deps:

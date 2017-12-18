@@ -46,6 +46,7 @@ func addToFeed(id uint64, c common.Client) (feed *Feed, err error) {
 			insertPost:      make(chan postCreationMessage),
 			sendPostMessage: make(chan postMessage),
 			setOpenBody:     make(chan postBodyModMessage),
+			insertImage:     make(chan imageInsertionMessage),
 			clients:         make([]common.Client, 0, 8),
 			messageBuffer:   make([]byte, 0, 1<<10),
 		}

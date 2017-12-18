@@ -3,15 +3,15 @@ package feeds
 import (
 	"meguca/common"
 	"meguca/db"
-	"strconv"
 	"time"
 )
+
+// TODO: Propagate thread modetation events to all clients live
 
 type postMessageType uint8
 
 const (
 	closePost postMessageType = iota
-	insertImage
 	spoilerImage
 	deletePost
 	ban
@@ -25,21 +25,19 @@ type postMessage struct {
 }
 
 type postCreationMessage struct {
-	open, hasImage bool
-	id             uint64
-	time           int64
-	body, msg      []byte
+	common.Post
+	msg []byte
+}
+
+type imageInsertionMessage struct {
+	id uint64
+	common.Image
+	msg []byte
 }
 
 type postBodyModMessage struct {
 	id        uint64
 	msg, body []byte
-}
-
-type openPostCacheEntry struct {
-	hasImage, spoilered bool
-	created             int64
-	body                []byte
 }
 
 // A feed with synchronization logic of a certain thread
@@ -50,6 +48,8 @@ type Feed struct {
 	ticker
 	// Buffer of unsent messages
 	messageBuffer
+	// Entire thread cached into memory
+	cache threadCache
 	// Add a client
 	add chan common.Client
 	// Remove client
@@ -58,44 +58,23 @@ type Feed struct {
 	send chan []byte
 	// Insert a new post into the thread and propagate to listeners
 	insertPost chan postCreationMessage
+	// Insert an image into an already allocated post
+	insertImage chan imageInsertionMessage
 	// Send various simple messages targeted at a specific post
 	sendPostMessage chan postMessage
 	// Set body of an open post
 	setOpenBody chan postBodyModMessage
 	// Subscribed clients
 	clients []common.Client
-	// Recent posts in the thread
-	recent map[uint64]int64
-	// Currently open posts
-	open map[uint64]openPostCacheEntry
-	// Deleted and banned posts
-	deleted, deletedImage, banned []uint64
 }
 
 // Read existing posts into cache and start main loop
 func (f *Feed) Start() (err error) {
-	// Read recent post data into memory
-	recent, err := db.GetRecentPosts(f.id)
+	thread, err := db.GetThread(f.id, 0)
 	if err != nil {
 		return
 	}
-	f.recent = make(map[uint64]int64, len(recent)*2)
-	f.open = make(map[uint64]openPostCacheEntry, 16)
-	for _, p := range recent {
-		f.recent[p.ID] = p.Time
-		f.open[p.ID] = openPostCacheEntry{
-			hasImage:  p.HasImage,
-			spoilered: p.Spoilered,
-			created:   p.Time,
-			body:      p.Body,
-		}
-	}
-
-	// Read deleted and banned post IDs
-	f.deleted, f.banned, err = db.GetThreadMutations(f.id)
-	if err != nil {
-		return
-	}
+	f.cache = newThreadCache(thread)
 
 	go func() {
 		// Stop the timer, if there are no messages and resume on new ones.
@@ -103,16 +82,13 @@ func (f *Feed) Start() (err error) {
 		f.start()
 		defer f.pause()
 
-		cleanUp := time.NewTicker(time.Minute)
-		defer cleanUp.Stop()
-
 		for {
 			select {
 
 			// Add client
 			case c := <-f.add:
 				f.clients = append(f.clients, c)
-				c.Send(f.genSyncMessage())
+				c.Send(f.cache.genSyncMessage())
 				f.sendIPCount()
 
 			// Remove client and close feed, if no clients left
@@ -147,64 +123,62 @@ func (f *Feed) Start() (err error) {
 					}
 				}
 
-			// Remove stale cache entries (older than 15 minutes)
-			case <-cleanUp.C:
-				till := time.Now().Add(-15 * time.Minute).Unix()
-				for id, created := range f.recent {
-					if created < till {
-						delete(f.recent, id)
-					}
-				}
-				for id, p := range f.open {
-					if p.created < till {
-						delete(f.open, id)
-					}
-				}
-
 			// Insert a new post, cache and propagate
 			case p := <-f.insertPost:
 				f.startIfPaused()
-				f.recent[p.id] = p.time
-				if p.open {
-					f.open[p.id] = openPostCacheEntry{
-						hasImage: p.hasImage,
-						created:  p.time,
-						body:     p.body,
-					}
-				}
-				// Don't write insert messages, when reclaiming posts
-				if p.msg != nil {
+				f.cache.Posts[p.ID] = p.Post
+				if p.msg != nil { // Post is being reclaimed by a DC-ed client
 					f.write(p.msg)
+					if f.cache.PostCtr <= 3000 {
+						f.cache.BumpTime = time.Now().Unix()
+					}
+					f.cache.PostCtr++
+					if p.Image != nil {
+						f.cache.ImageCtr++
+					}
 				}
 
 			// Set the body of an open post and propagate
 			case msg := <-f.setOpenBody:
 				f.startIfPaused()
-				p := f.open[msg.id]
-				p.body = msg.body
-				f.open[msg.id] = p
+				p := f.cache.Posts[msg.id]
+				p.Body = string(msg.body)
+				f.cache.Posts[msg.id] = p
 				f.write(msg.msg)
+
+			case msg := <-f.insertImage:
+				f.startIfPaused()
+				p := f.cache.Posts[msg.id]
+				p.Image = &msg.Image
+				f.cache.Posts[msg.id] = p
+				f.cache.ImageCtr++
 
 			// Various post-related messages
 			case msg := <-f.sendPostMessage:
 				f.startIfPaused()
 				switch msg.typ {
 				case closePost:
-					delete(f.open, msg.id)
-				case insertImage:
-					p := f.open[msg.id]
-					p.hasImage = true
-					f.open[msg.id] = p
+					p := f.cache.Posts[msg.id]
+					p.Editing = false
+					f.cache.Posts[msg.id] = p
 				case spoilerImage:
-					p := f.open[msg.id]
-					p.spoilered = true
-					f.open[msg.id] = p
+					p := f.cache.Posts[msg.id]
+					if p.Image != nil {
+						p.Image.Spoiler = true
+					}
+					f.cache.Posts[msg.id] = p
 				case ban:
-					f.banned = append(f.banned, msg.id)
+					p := f.cache.Posts[msg.id]
+					p.Banned = true
+					f.cache.Posts[msg.id] = p
 				case deletePost:
-					f.deleted = append(f.deleted, msg.id)
+					p := f.cache.Posts[msg.id]
+					p.Deleted = true
+					f.cache.Posts[msg.id] = p
 				case deleteImage:
-					f.deletedImage = append(f.deletedImage, msg.id)
+					p := f.cache.Posts[msg.id]
+					p.Image = nil
+					f.cache.Posts[msg.id] = p
 				}
 				f.write(msg.msg)
 			}
@@ -225,67 +199,6 @@ func (f *Feed) bufferMessage(msg []byte) {
 	f.write(msg)
 }
 
-// Generate a message for synchronizing to the current status of the update
-// feed. The client has to compare this state to it's own and resolve any
-// missing entries or conflicts.
-// Handwritten to be as non-blocking as possible.
-func (f *Feed) genSyncMessage() []byte {
-	b := make([]byte, 0, 1<<10)
-
-	first := true
-	comma := func() {
-		if !first {
-			b = append(b, ',')
-		}
-		first = false
-	}
-
-	b = append(b, `30{"recent":[`...)
-	for id := range f.recent {
-		comma()
-		b = strconv.AppendUint(b, id, 10)
-	}
-
-	b = append(b, `],"open":{`...)
-
-	first = true
-	for id, p := range f.open {
-		comma()
-
-		b = append(b, '"')
-		b = strconv.AppendUint(b, id, 10)
-		b = append(b, `":{"body":`...)
-		b = strconv.AppendQuote(b, string(p.body))
-		if p.hasImage {
-			b = append(b, `,"hasImage":true`...)
-		}
-		if p.spoilered {
-			b = append(b, `,"spoilered":true`...)
-		}
-		b = append(b, '}')
-	}
-	b = append(b, '}')
-
-	encodeUints := func(key string, is []uint64) {
-		b = append(b, `,"`...)
-		b = append(b, key...)
-		b = append(b, `":[`...)
-		first = true
-		for _, i := range is {
-			comma()
-			b = strconv.AppendUint(b, i, 10)
-		}
-		b = append(b, ']')
-	}
-	encodeUints("banned", f.banned)
-	encodeUints("deleted", f.deleted)
-	encodeUints("deletedImage", f.deletedImage)
-
-	b = append(b, '}')
-
-	return b
-}
-
 // Send unique IP count to all connected clients
 func (f *Feed) sendIPCount() {
 	ips := make(map[string]struct{}, len(f.clients))
@@ -301,18 +214,18 @@ func (f *Feed) sendIPCount() {
 // and propagate to listeners
 func (f *Feed) InsertPost(post common.StandalonePost, body, msg []byte) {
 	f.insertPost <- postCreationMessage{
-		open:     post.Editing,
-		id:       post.ID,
-		hasImage: post.Image != nil,
-		time:     post.Time,
-		body:     body,
-		msg:      msg,
+		Post: post.Post,
+		msg:  msg,
 	}
 }
 
 // Insert an image into an already allocated post
-func (f *Feed) InsertImage(id uint64, msg []byte) {
-	f._sendPostMessage(insertImage, id, msg)
+func (f *Feed) InsertImage(id uint64, img common.Image, msg []byte) {
+	f.insertImage <- imageInsertionMessage{
+		id:    id,
+		Image: img,
+		msg:   msg,
+	}
 }
 
 // Small helper method

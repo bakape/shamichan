@@ -320,7 +320,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 	if err != nil {
 		return
 	}
-	c.feed.InsertImage(c.post.id, msg)
+	c.feed.InsertImage(c.post.id, *img, msg)
 
 	return c.incrementSpamScore(auth.ImageScore)
 }
