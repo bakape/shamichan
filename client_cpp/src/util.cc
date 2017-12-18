@@ -121,6 +121,11 @@ Node render_last_100_link(string board, unsigned long id)
     return render_button(s.str(), lang->ui.at("last") + " 100");
 }
 
+void alert(std::string msg)
+{
+    EM_ASM_INT({ alert(UTF8ToString($0)); }, msg.c_str());
+}
+
 namespace console {
 
 #define DEF_LOGGER(key)                                                        \

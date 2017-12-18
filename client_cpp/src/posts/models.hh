@@ -205,7 +205,10 @@ public:
     Post() = default;
 
     // Parse from JSON
-    Post(nlohmann::json&);
+    Post(nlohmann::json& j) { extend(j); }
+
+    // Extend post data by parsing new values from JSON
+    void extend(nlohmann::json&);
 
     // Generates the model's node tree
     Node render();
@@ -218,6 +221,11 @@ public:
     // If the post is currently inlined into another post, this method will
     // delegate the patch to the topmost parent.
     void patch();
+
+    // Check if this post replied to one of the user's posts and trigger
+    // handlers.
+    // Set and render backlinks on any linked posts.
+    void propagate_links();
 
 private:
     TextState state;

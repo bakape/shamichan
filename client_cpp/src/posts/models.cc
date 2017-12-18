@@ -1,5 +1,6 @@
 #include "models.hh"
 #include "../state.hh"
+#include "hide.hh"
 #include <sstream>
 
 using json = nlohmann::json;
@@ -96,7 +97,7 @@ string Image::source_path() const
     return s.str();
 }
 
-Post::Post(nlohmann::json& j)
+void Post::extend(nlohmann::json& j)
 {
     PARSE_OPT(editing);
     PARSE_OPT(deleted);
@@ -125,6 +126,7 @@ Post::Post(nlohmann::json& j)
     }
     if (j.count("commands")) {
         auto& c = j["commands"];
+        commands.clear(); // No to duplicate existing entries
         commands.reserve(c.size());
         for (auto& com : c) {
             commands.push_back(Command(com));
@@ -150,6 +152,23 @@ void Post::patch()
     }
 
     VirtualView::patch(render());
+}
+
+void Post::propagate_links()
+{
+
+    // TODO: Notify about replies, if this post links to one of the user's posts
+
+    for (auto && [ id, _ ] : links) {
+        if (posts->count(id)) {
+            auto& target = posts->at(id);
+            target.backlinks[this->id] = LinkData{ false, this->op };
+            target.patch();
+        }
+        if (post_ids->hidden.count(id)) {
+            hide_recursively(*this);
+        }
+    }
 }
 
 void TextState::reset(Node* root)
@@ -183,6 +202,7 @@ void TextState::append(Node n, bool descend, unsigned int gt_count)
         parents.push_back(&parents.back()->children.back());
     }
 }
+
 void TextState::ascend()
 {
     flush_text();

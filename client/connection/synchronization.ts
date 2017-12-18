@@ -134,57 +134,54 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		}
 	}
 
-	// Board pages currently have no sync data
-	if (data) {
-		const { open, recent, banned, deleted, deletedImage } = data,
-			proms: Promise<void>[] = []
+	const { open, recent, banned, deleted, deletedImage } = data,
+		proms: Promise<void>[] = []
 
-		for (let post of posts) {
-			if (post.editing && !(post.id in open)) {
-				proms.push(fetchUnclosed(post))
-			}
+	for (let post of posts) {
+		if (post.editing && !(post.id in open)) {
+			proms.push(fetchUnclosed(post))
 		}
-
-		for (let key in open) {
-			const id = parseInt(key)
-			if (id >= minID) {
-				proms.push(syncOpenPost(id, open[key]))
-			}
-		}
-
-		for (let id of recent) {
-			// Missing posts, that are open, will be fetched by the loop above
-			if (id >= minID && !posts.get(id) && !open[id]) {
-				proms.push(fetchMissingPost(id))
-			}
-		}
-
-		for (let id of banned) {
-			const post = posts.get(id)
-			if (post && !post.banned) {
-				post.setBanned()
-			}
-		}
-
-		for (let id of deleted) {
-			const post = posts.get(id)
-			if (post && !post.deleted) {
-				post.setDeleted()
-			}
-		}
-
-		for (let id of deletedImage) {
-			const post = posts.get(id)
-			if (post && post.image) {
-				post.removeImage()
-			}
-		}
-
-		await Promise.all(proms).catch(e => {
-			alert(e)
-			throw e
-		})
 	}
+
+	for (let key in open) {
+		const id = parseInt(key)
+		if (id >= minID) {
+			proms.push(syncOpenPost(id, open[key]))
+		}
+	}
+
+	for (let id of recent) {
+		// Missing posts, that are open, will be fetched by the loop above
+		if (id >= minID && !posts.get(id) && !open[id]) {
+			proms.push(fetchMissingPost(id))
+		}
+	}
+
+	for (let id of banned) {
+		const post = posts.get(id)
+		if (post && !post.banned) {
+			post.setBanned()
+		}
+	}
+
+	for (let id of deleted) {
+		const post = posts.get(id)
+		if (post && !post.deleted) {
+			post.setDeleted()
+		}
+	}
+
+	for (let id of deletedImage) {
+		const post = posts.get(id)
+		if (post && post.image) {
+			post.removeImage()
+		}
+	}
+
+	await Promise.all(proms).catch(e => {
+		alert(e)
+		throw e
+	})
 
 	displayLoading(false)
 	connSM.feed(connEvent.sync)

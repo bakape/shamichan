@@ -1,5 +1,5 @@
 #include "state.hh"
-#include "connection/state.hh"
+#include "connection/connection.hh"
 #include "db.hh"
 #include "lang.hh"
 #include "options/options.hh"
@@ -23,13 +23,16 @@ typedef std::unordered_map<unsigned long, std::map<unsigned long, LinkData>>
 
 Config const* config;
 BoardConfig const* board_config;
+std::unordered_set<string> const* boards;
+std::map<string, string> const* board_titles;
+
 Page* page;
+bool debug = false;
+string const* location_origin;
+
 PostIDs* post_ids;
 std::map<unsigned long, Post>* posts;
-string const* location_origin;
-std::unordered_set<string> const* boards;
 std::unordered_map<unsigned long, Thread>* threads;
-std::map<string, string> const* board_titles;
 
 // Places inverse post links into backlinks for later assignment to individual
 // post models
@@ -106,6 +109,9 @@ void load_state()
     // Order is important to prevent race conditions after the database is
     // loaded
 
+    debug = emscripten::val::global("location")["search"].as<string>().find(
+                "debug=true")
+        != -1;
     page = new Page();
     page->detect();
     options = new Options();
@@ -152,7 +158,7 @@ void load_state()
     posts = new std::map<unsigned long, Post>();
     post_ids = new PostIDs{};
     threads = new std::unordered_map<unsigned long, Thread>();
-    init_connection();
+    init_connectivity();
     load_db(load_posts());
 }
 

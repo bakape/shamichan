@@ -66,13 +66,17 @@ static optional<Node> render_omitted(unsigned long id)
 Node Post::render()
 {
     Node n("article", { { "id", 'p' + std::to_string(id) } });
+    if (post_ids->hidden.count(id)) {
+        // No need to do useless work
+        n.attrs["class"] = "hidden";
+        return n;
+    }
     n.children.reserve(4);
 
     n.attrs["class"] = "glass";
     if (editing) {
         n.attrs["class"] += " editing";
     }
-
     if (deleted) {
         n.attrs["class"] += " deleted";
         n.children.push_back(delete_toggle);

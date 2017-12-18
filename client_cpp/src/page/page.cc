@@ -1,5 +1,6 @@
 #include "../../brunhild/mutations.hh"
 #include "../../brunhild/util.hh"
+#include "../connection/sync.hh"
 #include "../lang.hh"
 #include "../state.hh"
 #include "../util.hh"

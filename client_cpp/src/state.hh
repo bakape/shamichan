@@ -18,6 +18,9 @@ extern std::string const* location_origin;
 // Loaded thread metadata
 extern std::unordered_map<unsigned long, Thread>* threads;
 
+// Debug mode. Can be enabled by setting the "debug=true" query string.
+extern bool debug;
+
 // Public server-wide global configurations
 class Config {
 public:

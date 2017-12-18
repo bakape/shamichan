@@ -3,7 +3,14 @@
 #include "../fsm.hh"
 
 // Websocket connection and synchronization with server states
-enum class SyncStatus { disconnected, connecting, syncing, synced, desynced };
+enum class SyncStatus {
+    disconnected,
+    connecting,
+    syncing,
+    synced,
+    desynced,
+    hide
+};
 
 // States of the connection finite state machine
 enum class ConnState {
@@ -19,8 +26,11 @@ enum class ConnState {
 // Events passable to the connection FSM
 enum class ConnEvent { start, open, close, retry, error, sync };
 
+// Finite state machine for managing websocket connectivity
+extern FSM<ConnState, ConnEvent>* conn_SM;
+
 // Message types of the WebSocket communication protocol
-enum class Message {
+enum class Message : uint8_t {
     invalid,
 
     // 1 - 29 modify post model state
@@ -67,11 +77,8 @@ enum class Message {
     captcha,
 };
 
-// Finite state machine for managing websocket connectivity
-extern FSM<ConnState, ConnEvent>* conn_SM;
-
 // Initialize websocket connectivity module
-void init_connection();
+void init_connectivity();
 
 // Send a websocket message the server
 void send_message(Message, std::string);

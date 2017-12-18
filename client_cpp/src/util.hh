@@ -65,6 +65,9 @@ private:
 // Render submit button with and optional cancel button
 brunhild::Children render_submit(bool cancel);
 
+// Call the JS alert() function
+void alert(std::string);
+
 namespace console {
 // Log string to JS console
 void log(const std::string&);
