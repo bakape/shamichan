@@ -43,9 +43,12 @@ article {
 		width: 100%;
 		overflow: hidden; // Prevents vertical zalgo
 	}
-	article .post-container {
-		display: flex;
-    		flex-direction: column;
+	article {
+		display: table;
+		.post-container {
+			display: flex;
+			flex-direction: column;
+		}
 	}
 }
 
