@@ -119,6 +119,10 @@ handlers[message.reclaim] = (code: number) => {
 // Synchronise to the server and start receiving updates on the appropriate
 // channel. If there are any missed messages, fetch them.
 handlers[message.synchronise] = async (data: SyncData) => {
+	if (!page.thread) {
+		return
+	}
+
 	// Skip posts before the first post in a shortened thread
 	let minID = 0
 	if (page.lastN) {

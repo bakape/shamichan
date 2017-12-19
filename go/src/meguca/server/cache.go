@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jwriter"
 )
 
@@ -84,6 +85,22 @@ var boardCache = cache.FrontEnd{
 		}
 		if err != nil {
 			return nil, err
+		}
+
+		// Empty board
+		if len(ids) == 0 {
+			data := common.Board{Threads: []common.Thread{}}
+			json, err := easyjson.Marshal(data)
+			if err != nil {
+				return nil, err
+			}
+			return []pageStore{
+				{
+					pageNumber: 1,
+					json:       json,
+					data:       data,
+				},
+			}, nil
 		}
 
 		// Get data and JSON for these views and paginate
