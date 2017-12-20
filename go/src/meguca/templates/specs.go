@@ -48,6 +48,7 @@ var specs = map[string][]inputSpec{
 			MaxLength:    common.MaxLenName,
 			Placeholder:  true,
 			Autocomplete: "off",
+			NoID:         true,
 		},
 		inputSpec{
 			ID:          "body",
@@ -55,6 +56,7 @@ var specs = map[string][]inputSpec{
 			Rows:        5,
 			MaxLength:   common.MaxLenBody,
 			Placeholder: true,
+			NoID:        true,
 		},
 	},
 	"login": {
