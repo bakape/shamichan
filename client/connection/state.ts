@@ -31,7 +31,6 @@ export const enum connEvent {
 export const connSM = new FSM<connState, connEvent>(connState.loading)
 
 function connect() {
-	close_socket()
 	if (window.location.protocol == 'file:') {
 		console.error("Page downloaded locally. Refusing to sync.")
 		return
@@ -44,14 +43,6 @@ function connect() {
 		onMessage(data, false)
 	if (debug) {
 		(window as any).socket = socket
-	}
-}
-
-// Close socket and remove all references
-function close_socket() {
-	if (socket) {
-		socket.close()
-		socket = null
 	}
 }
 
@@ -113,8 +104,8 @@ function prepareToSync(): connState {
 	return connState.syncing
 }
 
-function clearModuleState() {
-	close_socket()
+// Reset connection attempt timer and counter
+function resetConnectionAttempts() {
 	if (attemptTimer) {
 		clearTimeout(attemptTimer)
 		attemptTimer = 0
@@ -170,7 +161,7 @@ connSM.act(connState.syncing, connEvent.sync, () => {
 })
 
 connSM.wildAct(connEvent.close, event => {
-	clearModuleState()
+	resetConnectionAttempts()
 	if (debug) {
 		console.error(event)
 	}
@@ -202,7 +193,7 @@ connSM.act(connState.dropped, connEvent.retry, () => {
 // Invalid message or some other critical error
 connSM.wildAct(connEvent.error, () => {
 	renderStatus(syncStatus.desynced)
-	clearModuleState()
+	resetConnectionAttempts()
 	return connState.desynced
 })
 

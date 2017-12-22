@@ -59,7 +59,7 @@ enum class Message : uint8_t {
 
     // Invokes no operation on the server. Used to test the client's connection
     // in situations, when you can't be certain the client is still connected.
-    NOOP,
+    NOP,
 
     // Transmit current synced IP count to client
     sync_count,

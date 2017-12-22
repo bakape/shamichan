@@ -3,6 +3,7 @@
 #include "db.hh"
 #include "lang.hh"
 #include "options/options.hh"
+#include "page/page.hh"
 #include "posts/hide.hh"
 #include "posts/models.hh"
 #include "util.hh"
@@ -13,6 +14,7 @@
 #include <unordered_set>
 #include <utility>
 
+using emscripten::val;
 using nlohmann::json;
 using std::string;
 
@@ -46,16 +48,15 @@ static void extract_backlinks(const Post& p, Backlinks& backlinks)
 // Extract thread data from JSON and populate post collection.
 // Places inverse post links into backlinks for later assignment to individual
 // post models.
-// Returns the id of the extracted thread;
-static unsigned long extract_thread(json& j, Backlinks& backlinks)
+static void extract_thread(json& j, Backlinks& backlinks)
 {
-    // TODO: Actually use the thread metadata
+    // TODO: Homogenize board and thread page data structure
     auto thread = ThreadDecoder(j);
-
-    const string board = j["board"];
-    const unsigned long thread_id = j["id"];
-    auto op = Post(j);
+    auto op = page->thread ? thread.posts[0] : Post(j);
+    const string board = thread.board;
+    const unsigned long thread_id = op.id;
     op.op = thread_id;
+    op.board = board;
     extract_backlinks(op, backlinks);
     (*threads)[thread_id] = static_cast<Thread>(thread);
     (*posts)[thread_id] = std::move(op);
@@ -66,27 +67,19 @@ static unsigned long extract_thread(json& j, Backlinks& backlinks)
         extract_backlinks(post, backlinks);
         (*posts)[post.id] = post;
     }
-
-    return thread_id;
 }
 
-// Load posts from inlined JSON. Returns a vector of detected thread IDs.
-// TODO: Fetch this as binary data from the server. It is probably a good idea
-// to do this and configuration fetches in one request.
-static std::unordered_set<unsigned long> load_posts()
+void load_posts(std::string_view data)
 {
     Backlinks backlinks;
     backlinks.reserve(128);
-    auto j = json::parse(get_inner_html("post-data"));
-    auto thread_ids = std::unordered_set<unsigned long>();
+    auto j = json::parse(data);
     if (page->thread) {
-        thread_ids.reserve(1);
-        thread_ids.insert(extract_thread(j, backlinks));
+        extract_thread(j, backlinks);
     } else {
         page->page_total = j["pages"];
-        thread_ids.reserve(15);
         for (auto& thread : j["threads"]) {
-            thread_ids.insert(extract_thread(thread, backlinks));
+            extract_thread(thread, backlinks);
         }
 
         // TODO: Catalog pages
@@ -100,8 +93,6 @@ static std::unordered_set<unsigned long> load_posts()
     }
 
     recurse_hidden_posts();
-
-    return thread_ids;
 }
 
 void load_state()
@@ -109,8 +100,7 @@ void load_state()
     // Order is important to prevent race conditions after the database is
     // loaded
 
-    debug = emscripten::val::global("location")["search"].as<string>().find(
-                "debug=true")
+    debug = val::global("location")["search"].as<string>().find("debug=true")
         != -1;
     page = new Page();
     page->detect();
@@ -118,8 +108,8 @@ void load_state()
     options->load();
     lang = new LanguagePack();
 
-    location_origin = new string(
-        emscripten::val::global("location")["origin"].as<string>());
+    location_origin
+        = new string(val::global("location")["origin"].as<string>());
 
     std::map<string, string> titles;
     for (auto& pair : json::parse(get_inner_html("board-title-data"))) {
@@ -159,7 +149,17 @@ void load_state()
     post_ids = new PostIDs{};
     threads = new std::unordered_map<unsigned long, Thread>();
     init_connectivity();
-    load_db(load_posts());
+    auto wg = new WaitGroup(2, &load_post_ids);
+    open_db(wg);
+    if (page->thread) {
+        conn_SM->feed(ConnEvent::start);
+        conn_SM->once(ConnState::synced, [=]() { wg->done(); });
+    } else {
+        // TODO: Do this with an XHR
+        const c_string_view data = get_inner_html("post-data");
+        load_posts(static_cast<std::string_view>(data));
+        wg->done();
+    }
 }
 
 Config::Config(const c_string_view& s)
@@ -206,7 +206,7 @@ void Page::detect()
     // This needs to be parsed from the board data, if any
     page_total = 0;
 
-    emscripten::val location = emscripten::val::global("location");
+    val location = val::global("location");
     const string path = location["pathname"].as<string>();
     const string query = location["search"].as<string>();
 
@@ -281,13 +281,19 @@ ThreadDecoder::ThreadDecoder(json& j)
     OPT_DECODE(deleted)
     OPT_DECODE(locked)
     OPT_DECODE(sticky)
-    OPT_DECODE(abbrev)
-    id = j["id"];
+    if (j.count("nonLive")) {
+        non_live = j["nonLive"];
+    }
+
+    // Redundant field on thread pages
+    id = page->thread ? page->thread : (unsigned long)(j["id"]);
+
     post_ctr = j["postCtr"];
     image_ctr = j["imageCtr"];
     time = j["time"];
     reply_time = j["replyTime"];
     bump_time = j["bumpTime"];
+    board = j["board"];
     if (!page->catalog) {
         auto& p = j.at("posts");
         posts.reserve(p.size());

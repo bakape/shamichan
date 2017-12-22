@@ -16,15 +16,16 @@ using std::string;
 
 void render_page()
 {
-    try {
+    log_exceptions([]() {
         if (page->thread) {
             render_thread();
         } else {
             render_board();
         }
-    } catch (const std::exception& ex) {
-        console::error(ex.what());
-    }
+
+        // TODO: Hide loading image
+
+    });
 }
 
 EMSCRIPTEN_BINDINGS(module_page)

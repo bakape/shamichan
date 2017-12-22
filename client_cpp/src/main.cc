@@ -8,13 +8,11 @@
 
 int main()
 {
-    try {
+    log_exceptions([]() {
         brunhild::before_flush = &rerender_syncwatches;
         brunhild::init();
         load_state();
         init_posts();
-    } catch (const std::exception& ex) {
-        console::error(ex.what());
-    }
+    });
     return 0;
 }

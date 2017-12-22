@@ -2,6 +2,7 @@
 
 #include "../brunhild/node.hh"
 #include <cctype>
+#include <functional>
 #include <optional>
 #include <ostream>
 #include <string>
@@ -65,6 +66,31 @@ private:
 // Render submit button with and optional cancel button
 brunhild::Children render_submit(bool cancel);
 
+// Defers execution of a function, until a set amount of jobs are completed.
+// Will dealocate itself, after all jobs are completed.
+class WaitGroup {
+public:
+    // Defers execution of cb(), until done() has been called jobs times
+    WaitGroup(unsigned int jobs, std::function<void()> cb)
+        : jobs(jobs)
+        , cb(cb)
+    {
+    }
+
+    // Mark a jobs as completed
+    void done()
+    {
+        if (--jobs == 0) {
+            cb();
+            delete this;
+        }
+    }
+
+private:
+    unsigned int jobs;
+    std::function<void()> cb;
+};
+
 // Call the JS alert() function
 void alert(std::string);
 
@@ -77,4 +103,17 @@ void warn(const std::string&);
 
 // Log string to JS console as error
 void error(const std::string&);
+}
+
+// Log and rethrow exceptions in fn to provide as much information as possible
+// during debugging.
+// Should be compiled away as dead code during production builds.
+template <class F> void log_exceptions(F fn)
+{
+    try {
+        fn();
+    } catch (const std::exception& ex) {
+        console::error(ex.what());
+        throw ex;
+    }
 }

@@ -30,12 +30,10 @@ void http_request(std::string url, HTTPCallback cb)
 static void run_http_callback(
     unsigned int id, unsigned short code, std::string data)
 {
-    try {
+    log_exceptions([&]() {
         callbacks.at(id)(code, data);
         callbacks.erase(id);
-    } catch (const std::exception& ex) {
-        console::error(ex.what());
-    }
+    });
 }
 
 EMSCRIPTEN_BINDINGS(module_http)

@@ -1,4 +1,4 @@
-//go:generate easyjson --all --no_std_marshalers $GOFILE
+//go:generate easyjson --all $GOFILE
 
 package common
 

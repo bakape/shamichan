@@ -117,6 +117,7 @@ extern "C" void flush()
         }
     } catch (const std::exception& ex) {
         EM_ASM_INT({ console.error(UTF8ToString($0)); }, ex.what());
+        throw ex;
     }
 }
 

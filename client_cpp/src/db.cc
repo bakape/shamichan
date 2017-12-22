@@ -1,4 +1,7 @@
+#include "page/page.hh"
 #include "state.hh"
+#include "util.hh"
+#include <cstdint>
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <string>
@@ -10,15 +13,11 @@ const int db_version = 7;
 // Database has errored and all future calls should be ignored
 bool has_errored = false;
 
-// Threads to load on the call from db_is_ready(). Keeps us from passing the
-// thread ID array to JS, when opening the thread.
-std::unordered_set<unsigned long>* threads_to_load = nullptr;
+// Has completed or errored out of loading the database at least once
+bool has_loaded = false;
 
-// TODO: Deal with Firefox private Module
-void load_db(std::unordered_set<unsigned long> thread_ids)
+void open_db(WaitGroup* wg)
 {
-    threads_to_load = new std::unordered_set<unsigned long>(thread_ids);
-
     EM_ASM_INT(
         {
             // Expiring post ID object stores
@@ -35,7 +34,7 @@ void load_db(std::unordered_set<unsigned long> thread_ids)
 
             window.handle_db_error = function(e)
             {
-                Module._handle_db_error(e.toString());
+                Module._handle_db_error(e.toString(), $1);
             };
 
             var r = indexedDB.open('meguca', $0);
@@ -81,7 +80,7 @@ void load_db(std::unordered_set<unsigned long> thread_ids)
                     location.reload(true);
                 };
 
-                Module.db_is_ready();
+                Module.db_is_ready($1);
 
                 // Delete expired keys from post ID object stores.
                 // Delay for quicker starts.
@@ -111,17 +110,22 @@ void load_db(std::unordered_set<unsigned long> thread_ids)
                     10000);
             }
         },
-        db_version);
+        db_version, reinterpret_cast<int>(wg));
 }
 
-void load_post_ids(const std::unordered_set<unsigned long>& threads)
+void load_post_ids()
 {
-    if (!threads.size() || has_errored) {
+    if (!threads->size() || has_errored) {
+        render_page();
         return;
     }
 
-    // Copy to vector, so we can pass it to JS
-    const std::vector<unsigned long> vec(threads.begin(), threads.end());
+    // Map to vector, so we can pass it to JS
+    std::vector<unsigned long> ids;
+    ids.reserve(threads->size());
+    for (auto && [ id, _ ] : *threads) {
+        ids.push_back(id);
+    }
 
     EM_ASM_INT(
         {
@@ -160,21 +164,23 @@ void load_post_ids(const std::unordered_set<unsigned long>& threads)
                 };
             }
         },
-        vec.data(), vec.size());
-}
-
-// Handle a database error
-static void handle_db_error(std::string err)
-{
-    has_errored = true;
-    EM_ASM_INT({ console.error(UTF8ToString($0)); }, err.c_str());
+        ids.data(), ids.size());
 }
 
 // Signals the database is ready. Called from the JS side.
-static void db_is_ready()
+static void db_is_ready(int wg)
 {
-    load_post_ids(*threads_to_load);
-    delete threads_to_load;
+    has_loaded = true;
+    reinterpret_cast<WaitGroup*>(wg)->done();
+}
+
+// Handle a database error
+static void handle_db_error(std::string err, int wg)
+{
+    console::error(err);
+    if (!has_loaded) {
+        db_is_ready(wg);
+    }
 }
 
 EMSCRIPTEN_BINDINGS(module_db)

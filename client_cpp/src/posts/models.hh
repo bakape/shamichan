@@ -304,11 +304,13 @@ public:
     bool deleted = false, // Thread deleted by staff
         locked = false, // Thread locked by staff
         sticky = false, // Stuck to board page top by stuff
-        abbrev = false; // Some replies omitted from thread
+        abbrev = false, // Some replies omitted from thread
+        non_live = false; // Live post updates disabled in thread
     unsigned long id, // ID of the thread
         time, // Creation time
         post_ctr, // Number of posts in thread
         image_ctr, // Number of images in thread
         reply_time, // Unix timestamp of last reply
         bump_time; // Unix timestamp of last bump
+    std::string board; // Parent board
 };

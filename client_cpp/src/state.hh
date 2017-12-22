@@ -82,6 +82,11 @@ extern Page* page;
 // Load initial application state
 void load_state();
 
+// Load posts from inlined JSON. Returns a vector of detected thread IDs.
+// TODO: Fetch this as binary data from the server. It is probably a good idea
+// to do this and configuration fetches in one request.
+void load_posts(std::string_view data);
+
 // Stores post ID of various catagories
 struct PostIDs {
     std::unordered_set<unsigned long> mine, // Post, the user has created

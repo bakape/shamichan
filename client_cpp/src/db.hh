@@ -1,11 +1,11 @@
 #pragma once
 
+#include "util.hh"
 #include <string>
 #include <unordered_set>
 
-// Open a connection to the IndexedDB database and load data for specific
-// threads
-void load_db(std::unordered_set<unsigned long> thread_ids);
+// Open a connection to the IndexedDB database. Reports readiness to WaitGroup*.
+void open_db(WaitGroup*);
 
-// Load post ID sets from the database for the passed threads
-void load_post_ids(const std::unordered_set<unsigned long>& threads);
+// Load post ID sets from the database
+void load_post_ids();

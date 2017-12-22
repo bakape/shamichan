@@ -19,8 +19,9 @@ var (
 )
 
 type syncRequest struct {
-	Thread uint64
-	Board  string
+	NewProtocol, Last100 bool
+	Thread               uint64
+	Board                string
 }
 
 type reclaimRequest struct {
@@ -50,6 +51,10 @@ func (c *Client) synchronise(data []byte) error {
 		}
 	}
 
+	c.mu.Lock()
+	c.newProtocol = msg.NewProtocol
+	c.last100 = msg.Last100
+	c.mu.Unlock()
 	return c.registerSync(msg.Thread, msg.Board)
 }
 

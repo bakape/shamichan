@@ -13,8 +13,10 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"sync"
 	"time"
 
+	"github.com/bakape/thumbnailer"
 	"github.com/gorilla/websocket"
 )
 
@@ -50,10 +52,17 @@ func (e errInvalidFrame) Error() string {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
+	// Using the new protocol for C++ clients
+	newProtocol bool
+	// Client is requesting only the last 100 posts
+	last100 bool
 	// Have received first message, which must be a common.MessageSynchronise
 	gotFirstMessage bool
 	// Post currently open by the client
 	post openPost
+	// Protects checking and setting interface properties through the
+	// common.Client interface
+	mu sync.RWMutex
 	// Currently subscribed to update feed, if any
 	feed *feeds.Feed
 	// Underlying websocket connection
@@ -142,6 +151,11 @@ func (c *Client) listenerLoop() error {
 		case msg := <-c.sendExternal:
 			if err := c.send(msg); err != nil {
 				return err
+			}
+			// If the buffer is big enough, it was probably from the pool to
+			// begin with. Return it.
+			if cap(msg) >= thumbnailer.MinBufSize {
+				thumbnailer.ReturnBuffer(msg)
 			}
 		case <-ping.C:
 			deadline := time.Now().Add(pingWriteTimeout)
@@ -342,4 +356,18 @@ func (c *Client) Redirect(board string) {
 // written to after assignment.
 func (c *Client) IP() string {
 	return c.ip
+}
+
+// Return, if client is using new protocol for C++ clients
+func (c *Client) NewProtocol() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.newProtocol
+}
+
+// Return, id client is requesting only the last 100 posts
+func (c *Client) Last100() bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.last100
 }

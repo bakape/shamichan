@@ -1,4 +1,4 @@
-//go:generate easyjson --all --no_std_marshalers $GOFILE
+//go:generate easyjson --all $GOFILE
 
 // Package common contains common shared types, variables and constants used
 // throughout the project

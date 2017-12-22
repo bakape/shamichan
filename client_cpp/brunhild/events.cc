@@ -78,6 +78,7 @@ static void run_event_handler(
         }
     } catch (const std::exception& ex) {
         EM_ASM_INT({ console.error(UTF8ToString($0)); }, ex.what());
+        throw ex;
     }
 }
 
