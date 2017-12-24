@@ -1,5 +1,5 @@
 import { FSM } from "../util"
-import { debug } from "../state"
+import { debug, page } from "../state"
 import { message, handlers } from "./messages"
 import { renderStatus } from "./ui"
 import { synchronise } from "./synchronization"
@@ -137,6 +137,9 @@ connSM.wildAct(connEvent.close, event => {
 // scheduler for new attempts
 connSM.on(connState.dropped, scheduleReconnect)
 connSM.act(connState.dropped, connEvent.retry, () => {
+	if (!page.thread) {
+		return connState.dropped
+	}
 	if (!navigator.onLine) {
 		scheduleReconnect()
 		return connState.dropped
