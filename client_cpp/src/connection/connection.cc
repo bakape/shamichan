@@ -121,6 +121,7 @@ EMSCRIPTEN_BINDINGS(module_conn)
     function("on_socket_close", &on_close);
     function("on_socket_message", &on_message);
     function("retry_to_connect", &retry_to_connect);
+    function("resync_conn_SM", &resync_conn_SM);
 }
 
 static void connect()
