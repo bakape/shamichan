@@ -1,23 +1,21 @@
-List of installation and update commands to set up meguca on Debian jessie.
-Use as a reference. Copy paste at your own risk.
+List of installation and update commands to set up meguca on Debian stretch.
+__Use as a reference. Copy paste at your own risk.__
 All commands assume to be run by the root user.
 
 ## Install
 
 ```bash
 # Install C dependencies
-echo 'deb http://ftp.debian.org/debian jessie-backports main contrib non-free
-deb-src http://ftp.debian.org/debian jessie-backports main contrib non-free' >> /etc/apt/sources.list
 apt-get update
-apt-get install -t jessie-backports -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libgraphicsmagick1-dev git zip
+apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libgraphicsmagick1-dev git
 apt-get dist-upgrade -y
 
 # Install Node.js
-wget -qO- https://deb.nodesource.com/setup_7.x | bash -
+wget -qO- https://deb.nodesource.com/setup_9.x | bash -
 apt-get install -y nodejs
 
 # Install and init PostgreSQL
-echo deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main >> /etc/apt/sources.list.d/pgdg.list
+echo deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main >> /etc/apt/sources.list.d/pgdg.list
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 apt-get update
 apt-get install -y postgresql
@@ -28,12 +26,12 @@ createdb -T template0 -E UTF8 -O meguca meguca
 exit
 
 # Install Go
-wget -O- https://storage.googleapis.com/golang/go1.9.linux-amd64.tar.gz | tar xpz -C /usr/local
+wget -O- https://storage.googleapis.com/golang/go1.9.2.linux-amd64.tar.gz | tar xpz -C /usr/local
 echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 source /etc/profile
 
 # Clone and build meguca
-git clone -b v3.1.0 https://github.com/bakape/meguca.git /meguca
+git clone https://github.com/bakape/meguca.git /meguca
 cd /meguca
 make
 
@@ -49,8 +47,6 @@ cd /meguca
 
 # Pull changes
 git pull
-git tag
-git checkout v4.0.0
 
 # Rebuild
 make update_deps all
