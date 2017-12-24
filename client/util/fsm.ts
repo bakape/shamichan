@@ -58,6 +58,9 @@ export default class FSM<S extends Stringable, E extends Stringable> {
 			}
 			result = handler(arg)
 		}
+		if (this.state === result) {
+			return
+		}
 		this.state = result
 		const r = result.toString()
 		this.stateHandlers.forEach(r, fn =>

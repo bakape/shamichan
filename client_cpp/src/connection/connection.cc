@@ -94,23 +94,23 @@ static void retry_to_connect()
     log_exceptions([]() { conn_SM->feed(ConnEvent::retry); });
 }
 
-// Work around browser slowing down/suspending tabs and keep the FSM up to date
-// with the actual status.
-static void on_window_focus()
+// Work around browser slowing down/suspending tabs and keep the FSM up to
+// date with the actual status.
+static void resync_conn_SM()
 {
-    if (!emscripten::val::global("navigator")["online"].as<bool>()) {
-        return;
-    }
-    switch (conn_SM->state()) {
-    // Ensure still connected, in case the computer went to sleep or
-    // hibernate or the mobile browser tab was suspended.
-    case ConnState::synced:
-        send_message(Message::NOP, "");
-    case ConnState::desynced:
-        break;
-    default:
-        conn_SM->feed(ConnEvent::retry);
-    }
+    log_exceptions([]() {
+        switch (conn_SM->state()) {
+            // Ensure still connected, in case the computer went to sleep or
+            // hibernate or the mobile browser tab was suspended.
+        case ConnState::synced:
+            send_message(Message::NOP, "");
+            break;
+        case ConnState::desynced:
+            break;
+        default:
+            conn_SM->feed(ConnEvent::retry);
+        }
+    });
 }
 
 EMSCRIPTEN_BINDINGS(module_conn)
@@ -169,22 +169,16 @@ static void render_sync_count(unsigned int n)
     brunhild::set_inner_html("sync_counter", s);
 }
 
-// Prepare for synchronization with server
-static ConnState prepare_to_sync()
+// Schedule an attempt to reconnect after a connection loss
+static void schedule_reconnect()
 {
-    render_status(SyncStatus::connecting);
-    send_sync_request();
     EM_ASM({
-        window.__connection_attempt_timer
-            = setTimeout(window.reset_connection_attempts, 10000);
+        // Wait maxes out at ~1min
+        var wait
+            = Math.min(Math.floor(++window.__connection_attempt_count / 2), 12);
+        wait = 500 * Math.pow(1.5, wait);
+        setTimeout(Module.retry_to_connect, wait);
     });
-    return ConnState::syncing;
-}
-
-// Reset timer and count for connection attempts
-static void reset_connection_attempts()
-{
-    EM_ASM({ window.reset_connection_attempts(); });
 }
 
 void init_connectivity()
@@ -193,19 +187,13 @@ void init_connectivity()
 
     // Define some JS-side functions and listeners
     EM_ASM({
-        window.reset_connection_attempts = function()
-        {
-            if (window.__connection_attempt_timer) {
-                clearTimeout(window.__connection_attempt_timer);
-                window.__connection_attempt_timer = 0;
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && navigator.onLine) {
+                Module.resync_conn_SM();
             }
-            window.__connection_attempt_count = 0;
-        };
-
-        window.addEventListener('online', function() {
-            window.reset_connection_attempts();
-            Module.retry_to_connect();
         });
+        window.addEventListener(
+            'online', function() { Module.retry_to_connect(); });
         window.addEventListener('offline', function() {
             if (window.__socket) {
                 window.__socket.close();
@@ -215,42 +203,42 @@ void init_connectivity()
     });
 
     // Define transition rules for the connection FSM
+
     conn_SM->act(ConnState::loading, ConnEvent::start, []() {
         render_status(SyncStatus::connecting);
         connect();
         return ConnState::connecting;
     });
-    conn_SM->act(ConnState::connecting, ConnEvent::open, &prepare_to_sync);
-    conn_SM->act(ConnState::reconnecting, ConnEvent::open, &prepare_to_sync);
+    conn_SM->act(ConnState::connecting, ConnEvent::open, []() {
+        render_status(SyncStatus::connecting);
+        send_sync_request();
+        return ConnState::syncing;
+    });
     conn_SM->act(ConnState::syncing, ConnEvent::sync, []() {
         render_status(SyncStatus::synced);
         return ConnState::synced;
     });
+
     conn_SM->wild_act(ConnEvent::close, []() {
         render_status(SyncStatus::disconnected);
-        EM_ASM({
-            window.reset_connection_attempts();
-
-            // Wait maxes out at ~1min
-            var wait = Math.min(
-                Math.floor(++window.__connection_attempt_count / 2), 12);
-            wait = 500 * Math.pow(1.5, wait);
-            window.__connection_attempt_timer
-                = setTimeout(Module.retry_to_connect, wait);
-        });
         return ConnState::dropped;
     });
-    conn_SM->wild_act(ConnEvent::error, []() {
-        reset_connection_attempts();
-        render_status(SyncStatus::desynced);
-        return ConnState::desynced;
-    });
+
+    // This is called even on a dropped -> dropped "transition", so it acts as a
+    // scheduler for new attempts
+    conn_SM->on(ConnState::dropped, schedule_reconnect);
     conn_SM->act(ConnState::dropped, ConnEvent::retry, []() {
-        if (!emscripten::val::global("navigator")["online"].as<bool>()) {
+        if (!emscripten::val::global("navigator")["onLine"].as<bool>()) {
+            schedule_reconnect();
             return ConnState::dropped;
         }
         connect();
         render_status(SyncStatus::connecting);
-        return ConnState::reconnecting;
+        return ConnState::connecting;
+    });
+
+    conn_SM->wild_act(ConnEvent::error, []() {
+        render_status(SyncStatus::desynced);
+        return ConnState::desynced;
     });
 }

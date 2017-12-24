@@ -64,6 +64,9 @@ public:
             result = transitions[key]();
         }
 
+        if (result == _state) {
+            return;
+        }
         for (auto& fn : state_handlers[result]) {
             fn();
         }

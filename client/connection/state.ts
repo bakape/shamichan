@@ -9,8 +9,7 @@ const path =
 	+ `://${location.host}/api/socket`
 
 let socket: WebSocket,
-	attempts: number,
-	attemptTimer: number
+	attempts: number
 
 // Websocket connection and synchronization with server states
 export const enum syncStatus {
@@ -19,7 +18,7 @@ export const enum syncStatus {
 
 // States of the connection finite state machine
 export const enum connState {
-	loading, connecting, syncing, synced, reconnecting, dropped, desynced
+	loading, connecting, syncing, synced, dropped, desynced
 }
 
 // Events passable to the connection FSM
@@ -97,27 +96,69 @@ function onMessage(data: string, extracted: boolean) {
 	}
 }
 
-function prepareToSync(): connState {
+export function start() {
+	connSM.feed(connEvent.start)
+}
+
+// Schedule attempts to reconnect
+function scheduleReconnect() {
+	// Wait maxes out at ~1min
+	const wait = 500 * Math.pow(1.5, Math.min(Math.floor(++attempts / 2), 12))
+	setTimeout(connSM.feeder(connEvent.retry), wait)
+}
+
+connSM.act(connState.loading, connEvent.start, () => {
+	renderStatus(syncStatus.connecting)
+	connect()
+	return connState.connecting
+})
+
+connSM.act(connState.connecting, connEvent.open, () => {
+	attempts = 0
 	renderStatus(syncStatus.connecting)
 	synchronise()
-	attemptTimer = setTimeout(resetAttempts, 10000) as any
 	return connState.syncing
-}
+})
 
-// Reset connection attempt timer and counter
-function resetConnectionAttempts() {
-	if (attemptTimer) {
-		clearTimeout(attemptTimer)
-		attemptTimer = 0
+connSM.act(connState.syncing, connEvent.sync, () => {
+	renderStatus(syncStatus.synced)
+	return connState.synced
+})
+
+connSM.wildAct(connEvent.close, event => {
+	if (debug) {
+		console.error(event)
 	}
-}
+	renderStatus(syncStatus.disconnected)
+	return connState.dropped
+})
 
-// Work around browser slowing down/suspending tabs and keep the FSM up to date
-// with the actual status.
-function onWindowFocus() {
+// This is called even on a dropped -> dropped "transition", so it acts as a
+// scheduler for new attempts
+connSM.on(connState.dropped, scheduleReconnect)
+connSM.act(connState.dropped, connEvent.retry, () => {
 	if (!navigator.onLine) {
+		scheduleReconnect()
+		return connState.dropped
+	}
+	connect()
+	renderStatus(syncStatus.connecting)
+	return connState.connecting
+})
+
+// Invalid message or some other critical error
+connSM.wildAct(connEvent.error, () => {
+	renderStatus(syncStatus.desynced)
+	return connState.desynced
+})
+
+document.addEventListener('visibilitychange', event => {
+	if (document.hidden || !navigator.onLine) {
 		return
 	}
+
+	// Work around browser slowing down/suspending tabs and keep the FSM up to
+	// date with the actual status.
 	switch (connSM.state) {
 		// Ensure still connected, in case the computer went to sleep or
 		// hibernate or the mobile browser tab was suspended.
@@ -129,82 +170,7 @@ function onWindowFocus() {
 		default:
 			connSM.feed(connEvent.retry)
 	}
-}
-
-// Reset the reconnection attempt counter and timers
-function resetAttempts() {
-	if (attemptTimer) {
-		clearTimeout(attemptTimer)
-		attemptTimer = 0
-	}
-	attempts = 0
-}
-
-export function start() {
-	connSM.feed(connEvent.start)
-}
-
-connSM.act(connState.loading, connEvent.start, () => {
-	renderStatus(syncStatus.connecting)
-	attempts = 0
-	connect()
-	return connState.connecting
 })
 
-for (let state of [connState.connecting, connState.reconnecting]) {
-	connSM.act(state, connEvent.open, prepareToSync)
-}
-
-connSM.act(connState.syncing, connEvent.sync, () => {
-	renderStatus(syncStatus.synced)
-	return connState.synced
-})
-
-connSM.wildAct(connEvent.close, event => {
-	resetConnectionAttempts()
-	if (debug) {
-		console.error(event)
-	}
-	renderStatus(syncStatus.disconnected)
-
-	// Wait maxes out at ~1min
-	const wait = 500 * Math.pow(1.5, Math.min(Math.floor(++attempts / 2), 12))
-	setTimeout(connSM.feeder(connEvent.retry), wait)
-
-	return connState.dropped
-})
-
-connSM.act(connState.dropped, connEvent.retry, () => {
-	if (!navigator.onLine) {
-		return connState.dropped
-	}
-
-	connect()
-
-	// Don't show this immediately so we don't thrash on network loss
-	setTimeout(() => {
-		if (connSM.state === connState.reconnecting) {
-			renderStatus(syncStatus.connecting)
-		}
-	}, 100)
-	return connState.reconnecting
-})
-
-// Invalid message or some other critical error
-connSM.wildAct(connEvent.error, () => {
-	renderStatus(syncStatus.desynced)
-	resetConnectionAttempts()
-	return connState.desynced
-})
-
-document.addEventListener('visibilitychange', event => {
-	if (!(event.target as Document).hidden) {
-		onWindowFocus()
-	}
-})
-
-window.addEventListener('online', () => {
-	resetAttempts()
-	connSM.feed(connEvent.retry)
-})
+window.addEventListener('online', connSM.feeder(connEvent.retry))
 window.addEventListener('offline', connSM.feeder(connEvent.close))

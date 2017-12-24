@@ -18,7 +18,6 @@ enum class ConnState {
     connecting,
     syncing,
     synced,
-    reconnecting,
     dropped,
     desynced
 };

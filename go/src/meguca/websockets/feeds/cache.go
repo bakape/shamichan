@@ -19,7 +19,7 @@ type threadCache struct {
 }
 
 type threadMeta struct {
-	id        uint64 `json:"-"`
+	id        uint64
 	Sticky    bool   `json:"sticky"`
 	NonLive   bool   `json:"nonLive"`
 	Locked    bool   `json:"locked"`
