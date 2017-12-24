@@ -127,6 +127,9 @@ EMSCRIPTEN_BINDINGS(module_conn)
 static void connect()
 {
     EM_ASM({
+        if (window.__socket) {
+            window.__socket.close();
+        }
         var path = (location.protocol == 'https:' ? 'wss' : 'ws') + '://'
             + location.host + '/api/socket';
         var s = window.__socket = new WebSocket(path);
