@@ -2,12 +2,9 @@
 package imager
 
 import (
-	"bytes"
 	"crypto/md5"
-	"crypto/sha1"
 	"database/sql"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"io/ioutil"
 	"log"
@@ -120,8 +117,9 @@ func LogError(w http.ResponseWriter, r *http.Request, code int, err error) {
 }
 
 // ParseUpload parses the upload form. Separate function for cleaner error
-// handling and reusability. Returns the HTTP status code of the response and an
-// error, if any.
+// handling and reusability.
+// Returns the HTTP status code of the response, the ID of the generated image
+// and an error, if any.
 func ParseUpload(req *http.Request) (int, string, error) {
 	if err := parseUploadForm(req); err != nil {
 		return 400, "", err
@@ -133,26 +131,10 @@ func ParseUpload(req *http.Request) (int, string, error) {
 	}
 	defer file.Close()
 
-	buf := bytes.NewBuffer(thumbnailer.GetBuffer())
-	_, err = buf.ReadFrom(file)
-	if err != nil {
-		return 500, "", err
-	}
-	data := buf.Bytes()
-	defer thumbnailer.ReturnBuffer(data)
-
-	sum := sha1.Sum(data)
-	SHA1 := hex.EncodeToString(sum[:])
-	img, err := db.GetImage(SHA1)
-	switch err {
-	case nil: // Already have a thumbnail
-		return newImageToken(SHA1)
-	case sql.ErrNoRows:
-		img.SHA1 = SHA1
-		return newThumbnail(data, img)
-	default:
-		return 500, "", err
-	}
+	ch := make(chan thumbnailingResponse)
+	requestThumbnailing <- thumbnailingRequest{file, ch}
+	res := <-ch
+	return res.code, res.imageID, res.err
 }
 
 func newImageToken(SHA1 string) (int, string, error) {
