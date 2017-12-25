@@ -178,16 +178,12 @@ func (c *Client) closeConnections(err error) error {
 	var closeType int
 	switch err.(type) {
 	case *websocket.CloseError:
+		// Silence these types of closure
 		switch err.(*websocket.CloseError).Code {
-
-		// Normal client-side websocket closure
-		case websocket.CloseNormalClosure, websocket.CloseGoingAway:
+		case websocket.CloseNormalClosure, websocket.CloseGoingAway,
+			websocket.CloseNoStatusReceived, websocket.CloseAbnormalClosure:
 			err = nil
 			closeType = websocket.CloseNormalClosure
-
-		// Ignore abnormal websocket closure as a network fault
-		case websocket.CloseAbnormalClosure:
-			err = nil
 		}
 	case nil:
 		closeType = websocket.CloseNormalClosure
