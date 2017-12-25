@@ -5,7 +5,7 @@ import { boardConfig } from "../../state"
 import {
     setAttrs, importTemplate, atBottom, scrollToBottom, firstChild,
 } from "../../util"
-import { postSM, postEvent, postState } from "."
+import { postSM, postEvent } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
 import { CaptchaView } from "../../ui"
@@ -57,7 +57,6 @@ export default class FormView extends PostView {
             this.upload.input.addEventListener("change", () =>
                 this.model.uploadFile())
         }
-        this.inputElement("done").hidden = !this.model.nonLive
 
         const bq = this.el.querySelector("blockquote")
         bq.innerHTML = ""
@@ -165,7 +164,6 @@ export default class FormView extends PostView {
 
         document.getElementById("thread-container").append(this.el)
         this.resizeSpacer()
-        this.setEditing(!this.model.nonLive)
     }
 
     // Resize bottomSpacer to the same top position as this post
@@ -218,15 +216,10 @@ export default class FormView extends PostView {
     }
 
     // Replace the current body and set the cursor to the input's end.
-    // commit sets, if the onInput method should be run.
-    public replaceText(body: string, commit: boolean) {
+    public replaceText(body: string) {
         const el = this.input
         el.value = body
-        if (commit) {
-            this.onInput()
-        } else {
-            this.resizeInput()
-        }
+        this.onInput()
         requestAnimationFrame(() => {
             el.focus()
             el.setSelectionRange(body.length, body.length)
@@ -285,12 +278,6 @@ export default class FormView extends PostView {
 
     // Toggle the spoiler input checkbox
     public toggleSpoiler() {
-        if (this.model.image && postSM.state !== postState.halted) {
-            this.upload.spoiler.remove()
-            this.model.commitSpoiler()
-            return
-        }
-
         const el = this
             .upload
             .spoiler

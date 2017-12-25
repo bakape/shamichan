@@ -114,8 +114,7 @@ func testCreateThread(t *testing.T) {
 
 	req := ThreadCreationRequest{
 		ReplyCreationRequest: ReplyCreationRequest{
-			Name:     "name",
-			Password: "123",
+			Name: "name",
 			Image: ImageRequest{
 				Name:    "foo.jpeg",
 				Token:   token,
@@ -157,8 +156,7 @@ func writeSampleImage(t *testing.T) {
 func testCreateThreadTextOnly(t *testing.T) {
 	post, err := CreateThread(ThreadCreationRequest{
 		ReplyCreationRequest: ReplyCreationRequest{
-			Name:     "name",
-			Password: "123",
+			Name: "name",
 		},
 		Subject: "subject",
 		Board:   "a",
@@ -297,9 +295,8 @@ func TestPostCreation(t *testing.T) {
 	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
-		Open:     true,
-		Body:     "Δ",
-		Password: "123",
+		Open: true,
+		Body: "Δ",
 		Image: ImageRequest{
 			Name:    "foo.jpeg",
 			Token:   token,
@@ -422,8 +419,7 @@ func TestTextOnlyPostCreation(t *testing.T) {
 	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
-		Body:     "a",
-		Password: "123",
+		Body: "a",
 	}
 
 	if err := cl.insertPost(marshalJSON(t, req)); err != nil {
@@ -452,8 +448,7 @@ func BenchmarkPostCreation(b *testing.B) {
 	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
-		Body:     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-		Password: "123",
+		Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
 	}
 
 	b.ResetTimer()
@@ -485,8 +480,7 @@ func TestPostCreationForcedAnon(t *testing.T) {
 	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
-		Body:     "a",
-		Password: "123",
+		Body: "a",
 	}
 
 	if err := cl.insertPost(marshalJSON(t, req)); err != nil {

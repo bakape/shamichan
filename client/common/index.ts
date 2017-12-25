@@ -11,7 +11,6 @@ export type PostLink = [number, number]
 // Data of any post. In addition to server-sent JSON includes the state
 // property.
 export interface PostData {
-	editing: boolean
 	deleted: boolean
 	banned: boolean
 	sage: boolean
@@ -56,7 +55,6 @@ export interface Command {
 
 // Data of an OP post
 export interface ThreadData extends PostData {
-	nonLive: boolean
 	postCtr: number
 	imageCtr: number
 	replyTime: number

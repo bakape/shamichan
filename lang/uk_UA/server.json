@@ -176,10 +176,6 @@
 			"Зовнніші посилання",
 			"Додавати видаляти та редагувати зовнішні посилання >>>/4chan/"
 		],
-		"live": [
-			"Live",
-			"Show your post to others as it is being typed"
-		],
 		"mascot": [
 			"Mascot",
 			"Toggle mascot display"
@@ -211,10 +207,6 @@
 		"name": [
 			"Ім'я",
 			"Ім'я на постах"
-		],
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
 		],
 		"newPassword": [
 			"New password",
@@ -400,7 +392,6 @@
 		"id": "ID",
 		"identity": "Особистість",
 		"illegal": "Illegal content",
-		"live": "Live",
 		"loadCaptcha": "Click to load captcha",
 		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
 		"logout": "Вийти",

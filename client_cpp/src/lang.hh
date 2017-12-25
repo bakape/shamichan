@@ -19,9 +19,7 @@ public:
 
     TupleMap
         // Contains tuples of the word in singular and plural form
-        plurals,
-        // Data for rendering input forms
-        forms;
+        plurals;
 
     // Months names
     std::string calendar[12];

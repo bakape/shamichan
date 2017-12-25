@@ -99,7 +99,6 @@ string Image::source_path() const
 
 void Post::extend(nlohmann::json& j)
 {
-    PARSE_OPT(editing);
     PARSE_OPT(deleted);
     PARSE_OPT(sage);
     PARSE_OPT(banned);

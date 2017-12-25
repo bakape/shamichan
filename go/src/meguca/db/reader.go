@@ -65,7 +65,7 @@ type postScanner struct {
 
 func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
-		&p.Editing, &p.banned, &p.spoiler, &p.deleted, &p.sage, &p.ID, &p.Time,
+		&p.banned, &p.spoiler, &p.deleted, &p.sage, &p.ID, &p.Time,
 		&p.Body, &p.flag, &p.name, &p.trip, &p.auth, &p.links, &p.commands,
 		&p.imageName, &p.posterID,
 	}
@@ -207,7 +207,7 @@ func scanOP(r rowScanner) (t common.Thread, err error) {
 	args := make([]interface{}, 0, 37)
 	args = append(args,
 		&t.Sticky, &t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-		&t.Subject, &t.NonLive, &t.Locked,
+		&t.Subject, &t.Locked,
 	)
 	args = append(args, post.ScanArgs()...)
 	args = append(args, img.ScanArgs()...)

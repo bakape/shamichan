@@ -23,7 +23,6 @@ func TestRenderBody(t *testing.T) {
 
 	cases := [...]struct {
 		name, in, out string
-		editing       bool
 		op            uint64
 		links         [][2]uint64
 		commands      []common.Command
@@ -34,32 +33,14 @@ func TestRenderBody(t *testing.T) {
 			out:  "foo<br>bar",
 		},
 		{
-			name:    "open post",
-			in:      "foo\nbar",
-			out:     "foo<br>bar",
-			editing: true,
-		},
-		{
 			name: "closed post quote",
 			in:   ">foo\nbar",
 			out:  "<em>&gt;foo</em><br>bar",
 		},
 		{
-			name:    "open post quote",
-			in:      ">foo\nbar",
-			out:     "<em>&gt;foo</em><br>bar",
-			editing: true,
-		},
-		{
 			name: "closed post spoiler",
 			in:   "foo**bar** baz",
 			out:  "foo<del>bar</del> baz",
-		},
-		{
-			name:    "open post spoiler",
-			in:      "foo**bar** baz",
-			out:     "foo<del>bar</del> baz",
-			editing: true,
 		},
 		{
 			name: "hide empty lines",
@@ -75,12 +56,6 @@ func TestRenderBody(t *testing.T) {
 			name: "nested formating",
 			in:   "foo** bar__b~~a__z**h~~",
 			out:  `foo<del> bar<b>b<i>a</i></b><i>z</i></del><i>h</i>`,
-		},
-		{
-			name:    "trailing empty open line",
-			in:      "foo\n",
-			out:     "foo<br>",
-			editing: true,
 		},
 		{
 			name: "#flip",
@@ -302,7 +277,6 @@ func TestRenderBody(t *testing.T) {
 
 			p := common.Post{
 				Body:     c.in,
-				Editing:  c.editing,
 				Links:    c.links,
 				Commands: c.commands,
 			}

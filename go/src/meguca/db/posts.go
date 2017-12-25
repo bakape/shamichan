@@ -18,8 +18,7 @@ import (
 type Post struct {
 	Deleted bool
 	common.StandalonePost
-	Password []byte
-	IP       string
+	IP string
 }
 
 // For decoding and encoding the tuple arrays we store links in
@@ -247,8 +246,8 @@ func genPostCreationArgs(p Post) []interface{} {
 	}
 
 	return []interface{}{
-		p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, flag, posterID,
-		name, trip, auth, p.Password, ip, img, imgName,
+		spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, flag, posterID,
+		name, trip, auth, ip, img, imgName,
 		linkRow(p.Links), commandRow(p.Commands),
 	}
 }

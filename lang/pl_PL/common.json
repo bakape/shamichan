@@ -114,11 +114,5 @@
 		"synchronizacja",
 		"zsynchronizowano",
 		"brak synchronizacji"
-	],
-	"forms": {
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		]
-	}
+	]
 }

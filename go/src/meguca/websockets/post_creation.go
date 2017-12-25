@@ -29,7 +29,6 @@ var (
 
 // ThreadCreationRequest contains data for creating a new thread
 type ThreadCreationRequest struct {
-	NonLive bool
 	ReplyCreationRequest
 	Subject, Board string
 }
@@ -41,7 +40,7 @@ type ReplyCreationRequest struct {
 	Image      ImageRequest
 	auth.SessionCreds
 	auth.Captcha
-	Name, Password, Body string
+	Name, Body string
 }
 
 // ImageRequest contains data for allocating an image
@@ -107,7 +106,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		}
 	}
 
-	err = db.InsertThread(tx, subject, conf.NonLive || req.NonLive, post)
+	err = db.InsertThread(tx, subject, post)
 	if err != nil {
 		return
 	}
@@ -171,16 +170,6 @@ func CreatePost(
 	case locked:
 		err = errors.New("thread is locked")
 		return
-	}
-
-	// Disable live updates, if thread is non-live
-	if req.Open {
-		var disabled bool
-		disabled, err = db.CheckThreadNonLive(op)
-		if err != nil {
-			return
-		}
-		req.Open = !disabled
 	}
 
 	post, err = constructPost(req, conf, ip)

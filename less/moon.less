@@ -17,11 +17,8 @@ article {
 	article {
 		border: @border;
 	}
-	&.highlight:not(.editing), &:target {
+	&.highlight, &:target {
 		background-color: #f5f5f5;
-	}
-	&.editing {
-		background-color: #fa6;
 	}
 }
 
@@ -46,7 +43,7 @@ nav a {
 	color: blue;
 }
 
-.modal, .preview:not(.editing), .popup-menu, .side-panel {
+.modal, .preview, .popup-menu, .side-panel {
 	background-color: #f5f5f5;
 }
 
@@ -66,7 +63,7 @@ a.tab-sel {
 	}
 }
 
-.reply-form:not(.editing) {
+.reply-form {
 	background: white;
 }
 

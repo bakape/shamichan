@@ -27,7 +27,6 @@ type Pack struct {
 	Common          struct {
 		Posts   map[string]string    `json:"posts"`
 		Plurals map[string][2]string `json:"plurals"`
-		Forms   map[string][2]string `json:"forms"`
 		Time    map[string][]string  `json:"time"`
 		UI      map[string]string    `json:"ui"`
 		Sync    []string             `json:"sync"`
