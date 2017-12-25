@@ -1,22 +1,18 @@
 import { handlers, message } from "./messages"
 import { connSM, connEvent, send } from "./state"
 import { page, posts, displayLoading } from "../state"
+import { insertPost } from "../client"
+import { uncachedGET } from "../util"
+import { PostData } from "../common"
 
 // Passed from the server to allow the client to synchronise state, before
-// consuming any incoming update messages.
+// consuming any incoming update messages
 type SyncData = {
-	recent: number[] // Posts created within the last 15 minutes
-	open: { [id: number]: OpenPost } // Posts currently open
-	deleted: number[] // Posts deleted
-	deletedImage: number[] // Posts deleted in this thread
-	banned: number[] // Posts banned in this thread
-}
-
-// State of an open post
-type OpenPost = {
-	hasImage: boolean
-	spoilered: boolean
-	body: string
+	replies: number[]
+	banned: number[]
+	deleted: number[]
+	spoilered: number[]
+	deletedImages: number[]
 }
 
 // Send a requests to the server to synchronise to the current page and
@@ -28,19 +24,19 @@ export function synchronise() {
 	})
 }
 
-// // Fetch a post not present on the client and render it
-// async function fetchMissingPost(id: number) {
-// 	insertPost(await fetchPost(id))
-// 	posts.get(id).view.reposition()
-// }
+// Fetch a post not present on the client and render it
+async function fetchMissingPost(id: number) {
+	insertPost(await fetchPost(id))
+	posts.get(id).view.reposition()
+}
 
-// async function fetchPost(id: number): Promise<PostData> {
-// 	const r = await uncachedGET(`/json/post/${id}`)
-// 	if (r.status !== 200) {
-// 		throw await r.text()
-// 	}
-// 	return r.json()
-// }
+async function fetchPost(id: number): Promise<PostData> {
+	const r = await uncachedGET(`/json/post/${id}`)
+	if (r.status !== 200) {
+		throw await r.text()
+	}
+	return r.json()
+}
 
 // Synchronise to the server and start receiving updates on the appropriate
 // channel. If there are any missed messages, fetch them.
@@ -64,52 +60,46 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		}
 	}
 
-	// TODO
-	// const { open, recent, banned, deleted, deletedImage } = data,
-	// 	proms: Promise<void>[] = []
+	const { replies, banned, deleted, spoilered, deletedImages, } = data,
+		proms: Promise<void>[] = []
 
-	// for (let post of posts) {
-	// 	if (post.editing && !(post.id in open)) {
-	// 		proms.push(fetchUnclosed(post))
-	// 	}
-	// }
-	// for (let key in open) {
-	// 	const id = parseInt(key)
-	// 	if (id >= minID) {
-	// 		proms.push(syncOpenPost(id, open[key]))
-	// 	}
-	// }
-	// for (let id of recent) {
-	// 	// Missing posts, that are open, will be fetched by the loop above
-	// 	if (id >= minID && !posts.get(id) && !open[id]) {
-	// 		proms.push(fetchMissingPost(id))
-	// 	}
-	// }
-	// for (let id of banned) {
-	// 	const post = posts.get(id)
-	// 	if (post && !post.banned) {
-	// 		post.setBanned()
-	// 	}
-	// }
-	// for (let id of deleted) {
-	// 	const post = posts.get(id)
-	// 	if (post && !post.deleted) {
-	// 		post.setDeleted()
-	// 	}
-	// }
-	// for (let id of deletedImage) {
-	// 	const post = posts.get(id)
-	// 	if (post && post.image) {
-	// 		post.removeImage()
-	// 	}
-	// }
+	for (let id of replies) {
+		if (!posts.get(id) && id > minID) {
+			proms.push(fetchMissingPost(id))
+		}
+	}
+	for (let id of banned) {
+		const p = posts.get(id)
+		if (p && !p.banned) {
+			p.setBanned()
+		}
+	}
+	for (let id of deleted) {
+		const p = posts.get(id)
+		if (p && !p.deleted) {
+			p.setDeleted()
+		}
+	}
+	for (let id of spoilered) {
+		const p = posts.get(id)
+		if (p && p.image && !p.image.spoiler) {
+			p.image.spoiler = true
+			p.view.renderImage(false)
+		}
+	}
+	for (let id of deletedImages) {
+		const p = posts.get(id)
+		if (p && p.image) {
+			p.removeImage()
+		}
+	}
 
-	// if (proms.length) {
-	// 	await Promise.all(proms).catch(e => {
-	// 		alert(e)
-	// 		throw e
-	// 	})
-	// }
+	if (proms.length) {
+		await Promise.all(proms).catch(e => {
+			alert(e)
+			throw e
+		})
+	}
 
 	displayLoading(false)
 	connSM.feed(connEvent.sync)

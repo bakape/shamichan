@@ -72,7 +72,8 @@ func (f *Feed) Start() (err error) {
 			case c := <-f.add:
 				f.clients = append(f.clients, c)
 				buf, _ := json.Marshal(f.state)
-				c.Send(common.PrependMessageType(common.MessageConcat, buf))
+				c.Send(common.PrependMessageType(common.MessageSynchronise,
+					buf))
 				f.sendIPCount()
 
 			// Remove client and close feed, if no clients left
