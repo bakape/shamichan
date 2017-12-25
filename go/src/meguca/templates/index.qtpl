@@ -118,8 +118,8 @@
 				{%= submit(true) %}
 			</form>
 			<div id="post-controls">
-				{%= cancel() %}
 				<input name="done" type="button" value="{%s= ln.UI["done"] %}">
+				{%= cancel() %}
 				<span class="upload-container" hidden>
 					<input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip, audio/x-flac, text/plain">
 					<span data-id="spoiler">
