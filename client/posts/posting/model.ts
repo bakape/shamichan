@@ -1,19 +1,17 @@
 import { message, send, handlers } from "../../connection"
 import { Post } from "../model"
-import { PostData } from "../../common"
 import FormView from "./view"
-import { posts, storeMine, page, storeSeenPost } from "../../state"
-import { postSM, postEvent } from "."
+import { storeMine, page, storeSeenPost } from "../../state"
 import { newAllocRequest } from "./identity"
 
 // Form Model of an OP post
 export default class FormModel extends Post {
-	public needCaptcha: boolean // Need to solve a captcha to allocate
+	// Need to solve a captcha to submit
+	public needCaptcha: boolean
 
-	// Text that is not submitted yet to defer post allocation
-	public bufferedFile: File // Same for file uploads
+	// File to be uploaded
+	private file: File
 
-	public inputBody = ""
 	public view: FormView
 
 	// Pass and ID, if you wish to hijack an existing model. To create a new
@@ -48,7 +46,7 @@ export default class FormModel extends Post {
 
 	// Compare new value to old and generate appropriate commands
 	public parseInput(val: string): void {
-		const old = this.inputBody
+		const old = this.body
 
 		// Rendering hack shenanigans - ignore
 		if (old === val) {
@@ -72,18 +70,14 @@ export default class FormModel extends Post {
 			this.view.trimInput(val.length - trimmed.length)
 			return this.parseInput(trimmed)
 		}
-	}
 
-	// Turn post form into a regular post, because it has expired after a
-	// period of posting ability loss
-	public abandon() {
-		this.view.cleanUp()
+		this.body = val
 	}
 
 	// Add a link to the target post in the input
 	public addReference(id: number, sel: string) {
 		let s = ""
-		const old = this.inputBody,
+		const old = this.body,
 			newLine = !old || old.endsWith("\n")
 
 		if (sel) {
@@ -110,52 +104,30 @@ export default class FormModel extends Post {
 		this.view.replaceText(old + s)
 	}
 
-	// Commit a post made with live updates disabled
-	public async commitNonLive() {
-		if (!this.bufferedFile) {
-			return postSM.feed(postEvent.done)
+	// Commit a post to server
+	public async commit() {
+		if (!this.file && !this.body) {
+			// Empty post
+			return this.remove()
 		}
 
 		const req = newAllocRequest()
-		if (this.bufferedFile) {
-			req["image"] = await this.view.upload.uploadFile(this.bufferedFile)
+		if (this.file) {
+			req["image"] = await this.view.upload.uploadFile(this.file)
 		}
-		req["body"] = this.body = this.inputBody
+		req["body"] = this.body
 
 		send(message.insertPost, req)
 		handlers[message.postID] = (id: number) => {
-			this.id = id
-			this.op = page.thread
-			this.seenOnce = true
 			storeSeenPost(this.id, this.op)
 			storeMine(this.id, this.op)
-			posts.add(this)
 			delete handlers[message.postID]
 		}
-	}
-
-	// Handle draft post allocation
-	// TODO
-	public onAllocation(data: PostData) {
-		// // May sometimes be called multiple times, because of reconnects
-		// if (this.isAllocated) {
-		// 	return
-		// }
-
-		// this.isAllocated = true
-		// extend(this, data)
-		// this.view.renderAlloc()
-		// if (data.image) {
-		// 	this.insertImage(this.image)
-		// }
-		// if (this.nonLive) {
-		// 	this.propagateLinks()
-		// 	postSM.feed(postEvent.done)
-		// }
+		this.remove()
 	}
 
 	// Upload the file and request its allocation
 	public uploadFile(file?: File) {
-		this.bufferedFile = file || this.view.upload.input.files[0]
+		this.file = file || this.view.upload.input.files[0]
 	}
 }

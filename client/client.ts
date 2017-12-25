@@ -1,8 +1,8 @@
 // Core websocket message handlers
 
 import { handlers, message, connSM, connEvent } from './connection'
-import { posts, page } from './state'
-import { Post, PostView, postEvent, postSM } from './posts'
+import { posts, page, mine } from './state'
+import { Post, PostView } from './posts'
 import { PostData } from "./common"
 import { postAdded } from "./ui"
 import { incrementPostCount } from "./page"
@@ -24,19 +24,12 @@ export function insertPost(data: PostData) {
 		data.name = posterName()
 	}
 
-	// TODO: Own post handling
-	// const existing = posts.get(data.id)
-	// if (existing) {
-	// 	if (existing instanceof FormModel && !existing.isAllocated) {
-	// 		existing.onAllocation(data)
-	// 		incrementPostCount(true, "image" in data)
-	// 	}
-	// 	return
-	// }
-
 	const model = new Post(data)
 	model.op = page.thread
 	model.board = page.board
+	if (mine.has(model.id)) {
+		model.seenOnce = true
+	}
 	posts.add(model)
 	const view = new PostView(model, null)
 
@@ -84,10 +77,8 @@ export default () => {
 		handle(id, m =>
 			m.setBanned())
 
-	handlers[message.redirect] = (board: string) => {
-		postSM.feed(postEvent.reset)
+	handlers[message.redirect] = (board: string) =>
 		location.href = `/${board}/`
-	}
 
 	handlers[message.notification] = (text: string) =>
 		new OverlayNotification(text)

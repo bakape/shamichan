@@ -38,8 +38,8 @@ let postForm: FormView,
 export const enum postState {
 	none,           // No state. Awaiting first connection.
 	ready,          // Ready to create posts
-	locked,         // No post open. Post creation controls locked.
-	draft,          // Post open, but not yet allocated.
+	draft,          // Post open and being modified
+	locked,         // Post submission controls locked
 	needCaptcha,    // Awaiting a captcha to be solved
 	errored,        // Suffered unrecoverable error
 	threadLocked,   // Post creation disabled in thread
@@ -48,10 +48,8 @@ export const enum postEvent {
 	sync,          // Synchronized to the server
 	disconnect,    // Disconnected from server
 	error,         // Unrecoverable error
-	done,          // Post closed
 	open,          // New post opened
-	reset,         // Set to none. Used during page navigation.
-	abandon,       // Abandon ownership of any open post
+	done,          // Post closed
 	captchaSolved, // New captcha solved and submitted
 }
 export const postSM = new FSM<postState, postEvent>(postState.none)
@@ -151,7 +149,6 @@ async function openReply(e: MouseEvent) {
 	if (e.which !== 1
 		|| !page.thread
 		|| e.ctrlKey
-		|| connSM.state !== connState.synced
 	) {
 		return
 	}
@@ -166,6 +163,12 @@ export default () => {
 	connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
 	connSM.on(connState.desynced, postSM.feeder(postEvent.error))
 
+	// Regained connectivity, when no post open
+	postSM.act(postState.locked, postEvent.sync, () => {
+		postForm.disableSubmission(false)
+		return postState.draft
+	})
+
 	// The server notified a captcha will be required on the next post
 	handlers[message.captcha] = () =>
 		needCaptcha = true
@@ -176,51 +179,35 @@ export default () => {
 
 	// Set up client to create new posts
 	postSM.on(postState.ready, () => {
-		window.onbeforeunload = postForm = postModel = null
-		stylePostControls(el => {
-			el.style.display = ""
-			el.classList.remove("disabled")
-		})
+		postForm = postModel = null
+		stylePostControls(el =>
+			el.style.display = "")
 	})
 
 	// Handle connection loss
 	postSM.wildAct(postEvent.disconnect, () => {
-		needCaptcha = false
-
 		switch (postSM.state) {
 			case postState.draft:
-				// TODO: Prevent committing post
-				// postForm.remove()
-				// postModel = postForm = null
-				stylePostControls(el =>
-					el.style.display = "")
-				break
+			case postState.needCaptcha:
 			case postState.locked:
+				postForm.disableSubmission(true)
 				return postState.locked
+			case postState.threadLocked:
+				return postState.threadLocked
+			default:
+				return postState.ready
 		}
-
-		stylePostControls(el =>
-			el.classList.add("disabled"))
-
-		return postState.locked
 	})
-
-	// Regained connectivity, when no post open
-	postSM.act(postState.locked, postEvent.sync, () =>
-		postState.ready)
 
 	// Handle critical errors
 	postSM.wildAct(postEvent.error, () => {
 		stylePostControls(el =>
 			el.classList.add("errored"))
-		postForm && postForm.renderError()
-		window.onbeforeunload = null
+		if (postForm) {
+			postForm.renderError()
+		}
 		return postState.errored
 	})
-
-	// Reset state during page navigation
-	postSM.wildAct(postEvent.reset, () =>
-		postState.ready)
 
 	// Open a new post creation form, if none open
 	postSM.act(postState.ready, postEvent.open, () => {
@@ -236,11 +223,6 @@ export default () => {
 	// New captcha submitted
 	postSM.act(postState.needCaptcha, postEvent.captchaSolved, () => {
 		postModel.needCaptcha = needCaptcha = false
-		// TODO
-		// if (postModel.bufferedFile && !postModel.nonLive) {
-		// 	postModel.uploadFile(postModel.bufferedFile)
-		// 	postModel.bufferedFile = null
-		// }
 		return postState.draft
 	})
 
@@ -257,24 +239,37 @@ export default () => {
 
 	// Close unallocated draft
 	postSM.act(postState.draft, postEvent.done, (e?: Event) => {
-		let commitNonLive = false
+		let commit = false
 		if (e) {
 			if (e.target instanceof HTMLInputElement) {
-				commitNonLive = e.target.getAttribute("name") === "done"
+				commit = e.target.getAttribute("name") === "done"
 			} else if (e instanceof KeyboardEvent) {
-				commitNonLive = e.which === options.done
+				commit = e.which === options.done
 			}
 		}
-		if (commitNonLive) {
+		if (commit) {
 			if (postModel.needCaptcha) { // New captcha submitted
 				needCaptcha = false
 			}
-			postModel.commitNonLive()
+			postModel.commit()
 			return postState.ready
 		}
 
-		postForm.remove()
+		postModel.remove()
 		return postState.ready
+	})
+
+	// Cancel draft during disconnect
+	postSM.act(postState.locked, postEvent.done, (e?: Event) => {
+		if (e) {
+			if (e.target instanceof HTMLInputElement
+				&& e.target.getAttribute("name") === "cancel"
+			) {
+				postModel.remove()
+				return postState.ready
+			}
+		}
+		return postState.locked
 	})
 
 	// Handle clicks on the [Reply] button
