@@ -217,6 +217,9 @@ export default () => {
 		if (needCaptcha) {
 			return postState.needCaptcha
 		}
+		if (connSM.state !== connState.synced) {
+			return postState.locked
+		}
 		return postState.draft
 	})
 
