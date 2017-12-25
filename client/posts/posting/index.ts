@@ -12,6 +12,7 @@ import options from "../../options"
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
+export { expandThreadForm } from "./threads"
 
 // Sent to the FSM via the "open" and "hijack" events
 export type FormMessage = {

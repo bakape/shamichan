@@ -9,9 +9,6 @@ export default class FormModel extends Post {
 	// Need to solve a captcha to submit
 	public needCaptcha: boolean
 
-	// File to be uploaded
-	private file: File
-
 	public view: FormView
 
 	// Pass and ID, if you wish to hijack an existing model. To create a new
@@ -106,14 +103,18 @@ export default class FormModel extends Post {
 
 	// Commit a post to server
 	public async commit() {
-		if (!this.file && !this.body) {
+		let file: File
+		if (this.view.upload) {
+			file = this.view.upload.input.files[0]
+		}
+		if (!file && !this.body) {
 			// Empty post
 			return this.remove()
 		}
 
 		const req = newAllocRequest()
-		if (this.file) {
-			req["image"] = await this.view.upload.uploadFile(this.file)
+		if (file) {
+			req["image"] = await this.view.upload.uploadFile(file)
 		}
 		req["body"] = this.body
 
@@ -126,8 +127,10 @@ export default class FormModel extends Post {
 		this.remove()
 	}
 
-	// Upload the file and request its allocation
-	public uploadFile(file?: File) {
-		this.file = file || this.view.upload.input.files[0]
+	// Upload the files to be uploaded
+	public setUploads(files: FileList) {
+		if (files && this.view.upload) {
+			(this.view.upload.input.files as any) = files
+		}
 	}
 }

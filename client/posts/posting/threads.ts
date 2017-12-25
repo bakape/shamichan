@@ -1,4 +1,4 @@
-import { on } from '../../util'
+import { on, scrollToElement } from '../../util'
 import { CaptchaView } from "../../ui"
 
 function expand(e: Event) {
@@ -7,6 +7,15 @@ function expand(e: Event) {
 	const c = el.querySelector(".captcha-container")
 	if (c) {
 		new CaptchaView(c)
+	}
+}
+
+// Manually expand thread creation form, if any
+export function expandThreadForm() {
+	const tf = document.querySelector("aside:not(.expanded) .new-thread-button")
+	if (tf) {
+		tf.click()
+		scrollToElement(tf)
 	}
 }
 
