@@ -92,11 +92,51 @@ func (p postScanner) Image() (bool, string) {
 }
 
 // PostStats contains post open status, body and creation time
-type PostStats struct {
-	Editing, HasImage, Spoilered bool
-	ID                           uint64
-	Time                         int64
-	Body                         []byte
+type ThreadState struct {
+	Replies   []uint64 `json:"replies"`
+	Banned    []uint64 `json:"banned"`
+	Deleted   []uint64 `json:"deleted"`
+	Spoilered []uint64 `json:"spoilered"`
+}
+
+// Retrieves thread post modification state. Used for synchronizing clients.
+func GetThreadState(op uint64) (state ThreadState, err error) {
+	r, err := prepared["get_thread_state"].Query(op)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	state = ThreadState{
+		Replies:   make([]uint64, 0, 512),
+		Banned:    make([]uint64, 0, 16),
+		Deleted:   make([]uint64, 0, 16),
+		Spoilered: make([]uint64, 0, 16),
+	}
+	var (
+		id                         uint64
+		banned, deleted, spoilered sql.NullBool
+	)
+	for r.Next() {
+		err = r.Scan(&id, &banned, &deleted, &spoilered)
+		if err != nil {
+			return
+		}
+		if id != op {
+			state.Replies = append(state.Replies, id)
+		}
+		if banned.Bool {
+			state.Banned = append(state.Banned, id)
+		}
+		if deleted.Bool {
+			state.Deleted = append(state.Deleted, id)
+		}
+		if spoilered.Bool {
+			state.Spoilered = append(state.Spoilered, id)
+		}
+	}
+	err = r.Err()
+	return
 }
 
 // GetThread retrieves public thread data from the database
@@ -155,22 +195,6 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 		t.Posts = append(t.Posts, p)
 	}
 	err = r.Err()
-	if err != nil {
-		return
-	}
-
-	// Inject bodies into open posts
-	open := make([]*common.Post, 0, 32)
-	if t.Editing {
-		open = append(open, &t.Post)
-	}
-	for i := range t.Posts {
-		if t.Posts[i].Editing {
-			open = append(open, &t.Posts[i])
-		}
-	}
-	err = injectOpenBodies(open)
-
 	return
 }
 
@@ -232,14 +256,6 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 	if res.Image != nil {
 		res.Image.Spoiler, res.Image.Name = post.Image()
 	}
-
-	if res.Editing {
-		res.Body, err = GetOpenBody(res.ID)
-		if err != nil {
-			return
-		}
-	}
-
 	return
 }
 
@@ -310,18 +326,6 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 		board.Threads = append(board.Threads, t)
 	}
 	err = table.Err()
-	if err != nil {
-		return
-	}
-
-	open := make([]*common.Post, 0, 16)
-	for i := range board.Threads {
-		if board.Threads[i].Editing {
-			open = append(open, &board.Threads[i].Post)
-		}
-	}
-	err = injectOpenBodies(open)
-
 	return
 }
 
@@ -340,23 +344,4 @@ func scanThreadIDs(table tableScanner) (ids []uint64, err error) {
 	err = table.Err()
 
 	return
-}
-
-// Inject open post bodies from the embedded database into the posts
-func injectOpenBodies(posts []*common.Post) error {
-	if len(posts) == 0 {
-		return nil
-	}
-
-	tx, err := boltDB.Begin(false)
-	if err != nil {
-		return err
-	}
-
-	buc := tx.Bucket([]byte("open_bodies"))
-	for _, p := range posts {
-		p.Body = string(buc.Get(encodeUint64Heap(p.ID)))
-	}
-
-	return tx.Rollback()
 }

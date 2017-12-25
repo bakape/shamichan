@@ -21,9 +21,9 @@ func TestStreamUpdates(t *testing.T) {
 	assertMessage(
 		t,
 		wcl,
-		`30{"recent":[1],"banned":[],"deleted":[],"deletedImage":[],"open":{}}`,
+		`32{"replies":[],"banned":[],"deleted":[],"spoilered":[],"deletedImages":[]}`,
 	)
-	assertMessage(t, wcl, "33351")
+	assertMessage(t, wcl, "33341")
 
 	// Send message
 	feeds.SendTo(1, []byte("foo"))

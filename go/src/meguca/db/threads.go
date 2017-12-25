@@ -39,17 +39,8 @@ func InsertThread(tx *sql.Tx, subject string, nonLive bool, p Post) (
 			genPostCreationArgs(p)...,
 		)...,
 	)
-	if err != nil {
-		return
-	}
-
-	if p.Editing {
-		err = SetOpenBody(p.ID, []byte(p.Body))
-	}
-
 	return
 }
-
 
 // WriteThread writes a thread and it's OP to the database. Only used for tests
 // and migrations.
