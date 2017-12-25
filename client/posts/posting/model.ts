@@ -120,8 +120,8 @@ export default class FormModel extends Post {
 
 		send(message.insertPost, req)
 		handlers[message.postID] = (id: number) => {
-			storeSeenPost(this.id, this.op)
-			storeMine(this.id, this.op)
+			storeSeenPost(id, page.thread)
+			storeMine(id, page.thread)
 			delete handlers[message.postID]
 		}
 		this.remove()
