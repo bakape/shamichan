@@ -2,7 +2,7 @@
 
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts, page, mine } from './state'
-import { Post, PostView } from './posts'
+import { Post, PostView, findSyncwatches } from './posts'
 import { PostData } from "./common"
 import { postAdded, OverlayNotification } from "./ui"
 import { incrementPostCount } from "./page"
@@ -46,6 +46,7 @@ export function insertPost(data: PostData) {
 
 	postAdded(model)
 	incrementPostCount(true, "image" in data)
+	findSyncwatches(view.el)
 
 	// Show new post separator
 	if (document.hidden) {
