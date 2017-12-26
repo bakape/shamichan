@@ -13,6 +13,7 @@ import options from "../../options"
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
+export { expandThreadForm } from "./threads"
 
 // Sent to the FSM via the "open" and "hijack" events
 export type FormMessage = {
@@ -278,9 +279,10 @@ export default () => {
 	// New captcha submitted
 	postSM.act(postState.needCaptcha, postEvent.captchaSolved, () => {
 		postModel.needCaptcha = needCaptcha = false
-		if (postModel.bufferedFile && !postModel.nonLive) {
-			postModel.uploadFile(postModel.bufferedFile)
-			postModel.bufferedFile = null
+		if ((postForm.upload && postForm.upload.input.files.length)
+			&& !postModel.nonLive
+		) {
+			postModel.uploadFile()
 		}
 		return postState.draft
 	})

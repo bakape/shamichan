@@ -54,8 +54,6 @@ export default class FormView extends PostView {
 
         if (!boardConfig.textOnly) {
             this.upload = new UploadForm(this.model, this.el)
-            this.upload.input.addEventListener("change", () =>
-                this.model.uploadFile())
         }
         this.inputElement("done").hidden = !this.model.nonLive
 
