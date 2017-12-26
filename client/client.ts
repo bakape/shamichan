@@ -50,13 +50,11 @@ export function insertPost(data: PostData) {
 	// Show new post separator
 	if (document.hidden) {
 		let hr = document.getElementById("new-post-hr")
-		if (hr) {
-			hr.remove()
-		} else {
+		if (!hr) {
 			hr = document.createElement("hr")
 			hr.id = "new-post-hr"
+			view.el.before(hr)
 		}
-		view.el.before(hr)
 	}
 }
 
