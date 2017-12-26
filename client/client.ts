@@ -4,10 +4,9 @@ import { handlers, message, connSM, connEvent } from './connection'
 import { posts, page, mine } from './state'
 import { Post, PostView } from './posts'
 import { PostData } from "./common"
-import { postAdded } from "./ui"
+import { postAdded, OverlayNotification } from "./ui"
 import { incrementPostCount } from "./page"
 import { posterName } from "./options"
-import { OverlayNotification } from "./ui"
 
 // Run a function on a model, if it exists
 function handle(id: number, fn: (m: Post) => void) {
@@ -47,6 +46,18 @@ export function insertPost(data: PostData) {
 
 	postAdded(model)
 	incrementPostCount(true, "image" in data)
+
+	// Show new post separator
+	if (document.hidden) {
+		let hr = document.getElementById("new-post-hr")
+		if (hr) {
+			hr.remove()
+		} else {
+			hr = document.createElement("hr")
+			hr.id = "new-post-hr"
+		}
+		view.el.before(hr)
+	}
 }
 
 export default () => {

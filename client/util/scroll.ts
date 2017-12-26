@@ -64,8 +64,16 @@ function isAtBottom(): boolean {
 // If we are at the bottom, lock
 document.addEventListener("scroll", () => {
 	scrolled = !isAtBottom()
-	locked = !scrolled;
-	checkBottom();
+	locked = !scrolled
+	checkBottom()
+
+	// Remove last unread post indicator, if any
+	if (atBottom && page.thread) {
+		const hr = document.getElementById("new-post-hr")
+		if (hr) {
+			hr.remove()
+		}
+	}
 }, { passive: true })
 
 // Use a MutationObserver to jump to the bottom of the page when a new
