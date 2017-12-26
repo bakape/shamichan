@@ -64,7 +64,7 @@ func TestPostJSON(t *testing.T) {
 	setBoards(t, "a")
 	cache.Clear()
 
-	const postEtag = "a4zNrodc4KPHzi8fB980CA"
+	const postEtag = "aZggEVf/3trOeEWhFT7wxQ"
 
 	cases := [...]struct {
 		name, url, header string
