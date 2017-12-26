@@ -10,7 +10,7 @@ import (
 // Score values of various actions
 const (
 	// Single character update
-	CharScore = time.Minute / 1000
+	CharScore = time.Minute / 350
 
 	// Post creation
 	PostCreationScore = time.Second * 10

@@ -3,7 +3,14 @@ export const enum message {
 	invalid,
 
 	// 1 - 29 modify post model state
+	_,
 	insertPost,
+	append,
+	backspace,
+	splice,
+	closePost,
+	__,
+	insertImage,
 	spoiler,
 	deletePost,
 	banned,
@@ -11,6 +18,7 @@ export const enum message {
 
 	// >= 30 are miscellaneous and do not write to post models
 	synchronise = 30,
+	reclaim,
 
 	// Send new post ID to client
 	postID,

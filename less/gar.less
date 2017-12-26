@@ -23,11 +23,19 @@ article {
 	article {
 		border: @border;
 	}
-	&.highlight, &:target {
+	&.highlight:not(.editing), &:target {
 		background-color: #ffb8d5;
 		border-color: #ef93c5;
 		article {
 			border: solid 1px #ef93c5;
+		}
+	}
+	&.editing {
+		background: #b7bbb6 url('chevrons.png');
+		border-color: gray;
+		background-attachment: fixed;
+		article {
+			border: solid 1px gray;
 		}
 	}
 }
@@ -77,7 +85,9 @@ a.tab-sel {
 }
 
 .preview {
-	background-color: #f9f0d9;
+	&:not(.editing) {
+		background-color: #f9f0d9;
+	}
 	border-right: 1px solid #e9e0c9;
 	border-bottom: 1px solid #e9e0c9;
 }

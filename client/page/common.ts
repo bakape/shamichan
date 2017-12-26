@@ -129,3 +129,14 @@ export function hidePosts() {
 		}
 	}
 }
+
+// If the post is still open, rerender its body, to sync the parser state.
+// Needs to be done after models are populated to resolve temporary image links
+// in open posts.
+export function reparseOpenPosts() {
+	for (let m of posts) {
+		if (m.editing) {
+			m.view.reparseBody()
+		}
+	}
+}

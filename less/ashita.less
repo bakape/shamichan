@@ -32,8 +32,45 @@ article.highlight, article:target, .popup-menu {
 }
 
 .preview {
-	background-color: #1d1d21;
+	&:not(.editing) {
+		background-color: #1d1d21;
+	}
 	border-color: #111;
+}
+
+.editing-mixin() {
+	background-color: #cec952;
+	border-color: #aa3;
+	color: black;
+	& > header, & > figcaption {
+		a, b:not(.admin):not(.sage) {
+			color: #222;
+		}
+	}
+	& > .post-container > blockquote, & > .backlinks {
+		& > em > a, & > a {
+			color: #222;
+		}
+		& > em {
+			color: #656d28;
+		}
+	}
+	code.code-tag {
+		background: #222;
+	}
+}
+
+#threads {
+	&:not(.custom-BG) section > article.editing:not(:first-child) {
+		.editing-mixin;
+	}
+	&.custom-BG section > article.editing {
+		.editing-mixin;
+	}
+}
+
+article.preview.editing {
+	.editing-mixin;
 }
 
 body {

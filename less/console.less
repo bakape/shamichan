@@ -26,8 +26,14 @@ article {
 	form {
 		margin-top: 10pt;
 	}
-	&.highlight, &:target {
+	&.highlight:not(.editing), &:target {
 		background-color: #222;
+	}
+	&.editing {
+		background-color: #0000b2;
+		header, b {
+			color: white;
+		}
 	}
 	article {
 		border: @border;
@@ -147,13 +153,15 @@ hr {
 	content: "<";
 }
 
-.modal, .preview, .popup-menu, .side-panel {
+.modal, .preview:not(.editing), .popup-menu, .side-panel {
 	border: @border;
 	background: black;
 }
 
 .preview {
-	background: black;
+	&:not(.editing) {
+		background: black;
+	}
 	border: @border;
 }
 

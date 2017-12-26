@@ -19,7 +19,10 @@ article, aside, .popup-menu, .modal, .side-panel {
 }
 
 article {
-	&.highlight, &:target {
+	&.editing {
+		background-color: rgba(105, 105, 105, 0.9);
+	}
+	&.highlight:not(.editing), &:target {
 		background-color: lighten(@postBG, 10%);
 	}
 }

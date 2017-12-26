@@ -176,6 +176,10 @@
 			"Внешние ссылки",
 			"Добавить, удалить или редактировать внешние ссылки типа >>>/4chan/"
 		],
+		"live": [
+			"Live",
+			"Показывать посты другим пока они набираются"
+		],
 		"mascot": [
 			"Маскот",
 			"Отображать маскота"
@@ -207,6 +211,10 @@
 		"name": [
 			"Имя",
 			"Отображать имя у новых постов"
+		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
 		],
 		"newPassword": [
 			"Новый пароль",
@@ -392,6 +400,7 @@
 		"id": "ID",
 		"identity": "Личность",
 		"illegal": "Illegal content",
+		"live": "Live",
 		"loadCaptcha": "Кликните для загрузки капчи",
 		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
 		"logout": "Выход",

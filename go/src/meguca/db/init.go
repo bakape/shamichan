@@ -328,22 +328,6 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
-			`DROP INDEX editing`,
-			`ALTER TABLE boards
-				DROP COLUMN nonLive`,
-			`ALTER TABLE posts
-				DROP COLUMN editing`,
-		)
-	},
-	func(tx *sql.Tx) (err error) {
-		_, err = tx.Exec(
-			`ALTER TABLE posts
-				DROP COLUMN password`,
-		)
-		return
-	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both

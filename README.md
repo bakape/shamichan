@@ -12,12 +12,14 @@ License: GNU AGPL
 
 <details><summary>Posts and posting</summary>
 
+- Character by character post updates
 - Hovering quick reply for post authoring
 - Dice roll, coin flip and eightball commands
 - Desktop notifications  and "(You)" links on quote
 - Post link hover previews, including cross-thread
 - Inline post link expansion
 - Optional relative post timestamps
+- Non-temporal and recursive post linking
 - No posts per thread or threads per board limit
 - Forced anonymity display mode
 - Post hiding
@@ -25,7 +27,9 @@ License: GNU AGPL
 - Optional automatic deletion of unused threads and boards
 - Automatic URL linkification
 - Automatic intelligent quoting of selected text, when quoting a post
-- Programming code tags with syntax highlighting
+- Live programming code tags with syntax highlighting
+- Automatic open post recovery after a disconnect
+- Toggleable non-live post creation
 - Keyboard post navigation
 - Explicitly visible sage
 - Responsive seen post detection
@@ -52,7 +56,7 @@ are supported
 
 - Low memory and CPU usage
 - No frameworks and optimized code on both client and server
-- Optimised file upload processing written in C with GraphicsMagick and ffmpeg
+- File upload processing written in C with GraphicsMagick and ffmpeg
 - Inbuilt custom multi-level LRU cache
 
 </details>

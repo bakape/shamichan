@@ -22,13 +22,27 @@ func (c *Client) runHandler(typ common.MessageType, msg []byte) error {
 	switch typ {
 	case common.MessageSynchronise:
 		return c.synchronise(data)
+	case common.MessageReclaim:
+		return c.reclaimPost(data)
+	case common.MessageAppend:
+		return c.appendRune(data)
+	case common.MessageBackspace:
+		return c.backspace()
+	case common.MessageClosePost:
+		return c.closePost()
+	case common.MessageSplice:
+		return c.spliceText(data)
 	case common.MessageInsertPost:
 		return c.insertPost(data)
 	case common.MessageCaptcha:
 		return c.submitCaptcha(data)
+	case common.MessageInsertImage:
+		return c.insertImage(data)
 	case common.MessageNOOP:
 		// No operation message handler. Used as a one way pseudo-ping.
 		return nil
+	case common.MessageSpoiler:
+		return c.spoilerImage()
 	default:
 		return errInvalidPayload(msg)
 	}

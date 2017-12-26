@@ -17,6 +17,77 @@ type threadExpiryCases []struct {
 	time  time.Time
 }
 
+func TestOpenPostClosing(t *testing.T) {
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+	common.ParseBody = func(_ []byte, _ string) (
+		[][2]uint64, []common.Command, error,
+	) {
+		return nil, nil, nil
+	}
+
+	tooOld := time.Now().Add(-time.Minute * 31).Unix()
+	posts := [...]Post{
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID:      2,
+					Editing: true,
+					Time:    tooOld,
+				},
+				OP: 1,
+			},
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					ID:      3,
+					Editing: true,
+					Time:    time.Now().Unix(),
+				},
+				OP: 1,
+			},
+		},
+	}
+	for _, p := range posts {
+		if err := WritePost(nil, p); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := closeDanglingPosts(); err != nil {
+		t.Fatal(err)
+	}
+
+	cases := [...]struct {
+		name    string
+		id      uint64
+		editing bool
+	}{
+		{"closed", 2, false},
+		{"untouched", 3, true},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+			var editing bool
+			err := db.
+				QueryRow(`SELECT editing FROM posts WHERE id = $1`, c.id).
+				Scan(&editing)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if editing != c.editing {
+				LogUnexpected(t, c.editing, editing)
+			}
+		})
+	}
+
+}
+
 func assertDeleted(t *testing.T, q string, del bool) {
 	t.Helper()
 

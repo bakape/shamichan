@@ -1,9 +1,9 @@
 package feeds
 
 import (
-	"encoding/json"
 	"meguca/common"
 	"meguca/db"
+	"time"
 )
 
 // TODO: Propagate thread modetation events to all clients live
@@ -11,7 +11,7 @@ import (
 type postMessageType uint8
 
 const (
-	insertPost postMessageType = iota
+	closePost postMessageType = iota
 	spoilerImage
 	deletePost
 	ban
@@ -24,9 +24,20 @@ type postMessage struct {
 	msg []byte
 }
 
-type threadState struct {
-	db.ThreadState
-	DeletedImages []uint64 `json:"deletedImages"`
+type postCreationMessage struct {
+	common.Post
+	msg []byte
+}
+
+type imageInsertionMessage struct {
+	id uint64
+	common.Image
+	msg []byte
+}
+
+type postBodyModMessage struct {
+	id        uint64
+	msg, body []byte
 }
 
 // A feed with synchronization logic of a certain thread
@@ -37,27 +48,33 @@ type Feed struct {
 	ticker
 	// Buffer of unsent messages
 	messageBuffer
-	// Data used for synchronizing clients to the feed state.
-	state threadState
+	// Entire thread cached into memory
+	cache threadCache
 	// Add a client
 	add chan common.Client
 	// Remove client
 	remove chan common.Client
 	// Propagates mesages to all listeners
 	send chan []byte
+	// Insert a new post into the thread and propagate to listeners
+	insertPost chan postCreationMessage
+	// Insert an image into an already allocated post
+	insertImage chan imageInsertionMessage
 	// Send various simple messages targeted at a specific post
 	sendPostMessage chan postMessage
+	// Set body of an open post
+	setOpenBody chan postBodyModMessage
 	// Subscribed clients
 	clients []common.Client
 }
 
 // Read existing posts into cache and start main loop
 func (f *Feed) Start() (err error) {
-	f.state.ThreadState, err = db.GetThreadState(f.id)
+	thread, err := db.GetThread(f.id, 0)
 	if err != nil {
 		return
 	}
-	f.state.DeletedImages = make([]uint64, 0, 16)
+	f.cache = newThreadCache(thread)
 
 	go func() {
 		// Stop the timer, if there are no messages and resume on new ones.
@@ -71,9 +88,11 @@ func (f *Feed) Start() (err error) {
 			// Add client
 			case c := <-f.add:
 				f.clients = append(f.clients, c)
-				buf, _ := json.Marshal(f.state)
-				c.Send(common.PrependMessageType(common.MessageSynchronise,
-					buf))
+				if c.NewProtocol() {
+					c.Send(f.cache.encodeThread(c.Last100()))
+				} else {
+					c.Send(f.cache.genSyncMessage())
+				}
 				f.sendIPCount()
 
 			// Remove client and close feed, if no clients left
@@ -108,22 +127,70 @@ func (f *Feed) Start() (err error) {
 					}
 				}
 
+			// Insert a new post, cache and propagate
+			case p := <-f.insertPost:
+				f.startIfPaused()
+				f.cache.Posts[p.ID] = p.Post
+				if p.msg != nil { // Post not being reclaimed by a DC-ed client
+					f.write(p.msg)
+					if f.cache.PostCtr <= 3000 {
+						f.cache.BumpTime = time.Now().Unix()
+					}
+					f.cache.PostCtr++
+					if p.Image != nil {
+						f.cache.ImageCtr++
+					}
+				} else {
+					f.cache.deleteMemoized(p.ID)
+				}
+
+			// Set the body of an open post and propagate
+			case msg := <-f.setOpenBody:
+				f.startIfPaused()
+				p := f.cache.Posts[msg.id]
+				p.Body = string(msg.body)
+				f.cache.Posts[msg.id] = p
+				f.write(msg.msg)
+				f.cache.deleteMemoized(msg.id)
+
+			case msg := <-f.insertImage:
+				f.startIfPaused()
+				p := f.cache.Posts[msg.id]
+				p.Image = &msg.Image
+				f.cache.Posts[msg.id] = p
+				f.cache.ImageCtr++
+				f.write(msg.msg)
+				f.cache.deleteMemoized(msg.id)
+
 			// Various post-related messages
 			case msg := <-f.sendPostMessage:
+				f.startIfPaused()
 				switch msg.typ {
-				case insertPost:
-					f.state.Replies = append(f.state.Replies, msg.id)
+				case closePost:
+					p := f.cache.Posts[msg.id]
+					p.Editing = false
+					f.cache.Posts[msg.id] = p
 				case spoilerImage:
-					f.state.Spoilered = append(f.state.Spoilered, msg.id)
+					p := f.cache.Posts[msg.id]
+					if p.Image != nil {
+						p.Image.Spoiler = true
+					}
+					f.cache.Posts[msg.id] = p
 				case ban:
-					f.state.Banned = append(f.state.Banned, msg.id)
+					p := f.cache.Posts[msg.id]
+					p.Banned = true
+					f.cache.Posts[msg.id] = p
 				case deletePost:
-					f.state.Deleted = append(f.state.Deleted, msg.id)
+					p := f.cache.Posts[msg.id]
+					p.Deleted = true
+					f.cache.Posts[msg.id] = p
 				case deleteImage:
-					f.state.DeletedImages = append(f.state.DeletedImages,
-						msg.id)
+					p := f.cache.Posts[msg.id]
+					p.Image = nil
+					f.cache.Posts[msg.id] = p
 				}
-				f.bufferMessage(msg.msg)
+				f.write(msg.msg)
+				f.cache.deleteMemoized(msg.id)
 			}
 		}
 	}()
@@ -153,6 +220,24 @@ func (f *Feed) sendIPCount() {
 	f.bufferMessage(msg)
 }
 
+// Insert a new post into the thread or reclaim an open post after disconnect
+// and propagate to listeners
+func (f *Feed) InsertPost(post common.StandalonePost, body, msg []byte) {
+	f.insertPost <- postCreationMessage{
+		Post: post.Post,
+		msg:  msg,
+	}
+}
+
+// Insert an image into an already allocated post
+func (f *Feed) InsertImage(id uint64, img common.Image, msg []byte) {
+	f.insertImage <- imageInsertionMessage{
+		id:    id,
+		Image: img,
+		msg:   msg,
+	}
+}
+
 // Small helper method
 func (f *Feed) _sendPostMessage(typ postMessageType, id uint64, msg []byte) {
 	f.sendPostMessage <- postMessage{
@@ -162,10 +247,8 @@ func (f *Feed) _sendPostMessage(typ postMessageType, id uint64, msg []byte) {
 	}
 }
 
-// Insert a new post into the thread or reclaim an open post after disconnect
-// and propagate to listeners
-func (f *Feed) InsertPost(id uint64, msg []byte) {
-	f._sendPostMessage(insertPost, id, msg)
+func (f *Feed) ClosePost(id uint64, msg []byte) {
+	f._sendPostMessage(closePost, id, msg)
 }
 
 func (f *Feed) SpoilerImage(id uint64, msg []byte) {
@@ -182,4 +265,13 @@ func (f *Feed) deletePost(id uint64, msg []byte) {
 
 func (f *Feed) deleteImage(id uint64, msg []byte) {
 	f._sendPostMessage(deleteImage, id, msg)
+}
+
+// Set body of an open post and send update message to clients
+func (f *Feed) SetOpenBody(id uint64, body, msg []byte) {
+	f.setOpenBody <- postBodyModMessage{
+		id:   id,
+		msg:  msg,
+		body: body,
+	}
 }

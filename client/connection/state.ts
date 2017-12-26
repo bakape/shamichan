@@ -85,17 +85,16 @@ function leftPad(type: message): string {
 
 // Routes messages from the server to the respective handler
 function onMessage(data: string, extracted: boolean) {
+	// First two characters of a message define its type
+	const type = parseInt(data.slice(0, 2))
+
 	if (debug) {
 		console.log(extracted ? "\t>" : ">", data)
 	}
 
-	// First two characters of a message define its type
-	const type = parseInt(data.slice(0, 2))
-	data = data.slice(2)
-
 	// Split several concatenated messages
 	if (type === message.concat) {
-		for (let msg of data.split('\u0000')) {
+		for (let msg of data.slice(2).split('\u0000')) {
 			onMessage(msg, true)
 		}
 		return
@@ -103,7 +102,7 @@ function onMessage(data: string, extracted: boolean) {
 
 	const handler = handlers[type]
 	if (handler) {
-		handler(JSON.parse(data))
+		handler(JSON.parse(data.slice(2)))
 	}
 }
 

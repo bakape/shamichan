@@ -176,6 +176,10 @@
 			"External links",
 			"Add, remove or edit external >>>/4chan/-type references"
 		],
+		"live": [
+			"Live",
+			"Show your post to others as it is being typed"
+		],
 		"mascot": [
 			"Mascot",
 			"Toggle mascot display"
@@ -207,6 +211,10 @@
 		"name": [
 			"Name",
 			"Name to attach to new posts"
+		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
 		],
 		"newPassword": [
 			"New password",
@@ -392,6 +400,7 @@
 		"id": "ID",
 		"identity": "Identity",
 		"illegal": "Illegal content",
+		"live": "Live",
 		"loadCaptcha": "Click to load captcha",
 		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
 		"logout": "Logout",

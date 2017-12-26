@@ -49,6 +49,41 @@ article, aside {
     border: none;
 }
 
+.editing-mixin() {
+    background-color: #fa9cfd;
+    border-color: #bc5dc5;
+    color: #000;
+	& > header, & > figcaption {
+		a, b:not(.admin):not(.sage) {
+			color: #222;
+		}
+	}
+	& > .post-container > blockquote, & > .backlinks {
+		& > em > a, & > a {
+			color: #222;
+		}
+		& > em {
+			color: #656d28;
+		}
+	}
+    code.code-tag {
+		background: @postBG;
+	}
+}
+
+#threads {
+	&:not(.custom-BG) section > article.editing:not(:first-child) {
+		.editing-mixin;
+	}
+	&.custom-BG section > article.editing {
+		.editing-mixin;
+	}
+}
+
+article.preview.editing {
+	.editing-mixin;
+}
+
 #banner, .modal, .popup-menu, .preview, .reply-form, .side-panel:not(:empty) {
     box-shadow: 0px -1px 7px 0px rgba(0,0,0,0.5);
 }
@@ -107,7 +142,7 @@ a:hover, blockquote a {
     border-color: none;
 }
 
-.preview {
+.preview:not(.editing) {
     background-color: #1d1d21;
 }
 

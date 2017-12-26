@@ -67,6 +67,7 @@ create table boards (
 	disableRobots boolean default false,
 	flags boolean default false,
 	NSFW boolean default false,
+	nonLive bool default false,
 	posterIDs bool default false,
 	id text primary key,
 	created timestamp not null,
@@ -102,6 +103,7 @@ create sequence post_id;
 
 create table threads (
 	sticky boolean default false,
+	nonLive bool default false,
 	locked boolean default false,
 	board text not null references boards on delete cascade,
 	id bigint primary key,
@@ -117,6 +119,7 @@ create index replyTime on threads (replyTime);
 create index sticky on threads (sticky);
 
 create table posts (
+	editing boolean not null,
 	spoiler boolean,
 	deleted boolean,
 	banned boolean,
@@ -133,12 +136,14 @@ create table posts (
 	name varchar(50),
 	imageName varchar(200),
 	body varchar(2000) not null,
+	password bytea,
 	ip inet,
 	links bigint[][2],
 	commands json[]
 );
 create index op on posts (op);
 create index image on posts (SHA1);
+create index editing on posts (editing);
 create index ip on posts (ip);
 
 create table reports (

@@ -114,7 +114,8 @@ func testCreateThread(t *testing.T) {
 
 	req := ThreadCreationRequest{
 		ReplyCreationRequest: ReplyCreationRequest{
-			Name: "name",
+			Name:     "name",
+			Password: "123",
 			Image: ImageRequest{
 				Name:    "foo.jpeg",
 				Token:   token,
@@ -146,17 +147,11 @@ func testCreateThread(t *testing.T) {
 	AssertDeepEquals(t, thread, std)
 }
 
-func writeSampleImage(t *testing.T) {
-	t.Helper()
-	if err := db.WriteImage(nil, stdJPEG); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func testCreateThreadTextOnly(t *testing.T) {
 	post, err := CreateThread(ThreadCreationRequest{
 		ReplyCreationRequest: ReplyCreationRequest{
-			Name: "name",
+			Name:     "name",
+			Password: "123",
 		},
 		Subject: "subject",
 		Board:   "a",
@@ -243,6 +238,43 @@ func TestGetInvalidImage(t *testing.T) {
 	}
 }
 
+func TestClosePreviousPostOnCreation(t *testing.T) {
+	feeds.Clear()
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+	writeSamplePost(t)
+	if err := db.SetPostCounter(5); err != nil {
+		t.Fatal(err)
+	}
+	setBoardConfigs(t, true)
+
+	sv := newWSServer(t)
+	defer sv.Close()
+	cl, wcl := sv.NewClient()
+	registerClient(t, cl, 1, "a")
+	cl.post = openPost{
+		id:    2,
+		op:    1,
+		len:   3,
+		board: "a",
+		time:  time.Now().Unix(),
+		body:  []byte("abc"),
+	}
+	data := marshalJSON(t, ReplyCreationRequest{
+		Name:     "name",
+		Body:     "foo",
+		Password: "123",
+	})
+
+	if err := cl.insertPost(data); err != nil {
+		t.Fatal(err)
+	}
+
+	assertMessage(t, wcl, `326`)
+	assertPostClosed(t, 2)
+}
+
 func TestPostCreationValidations(t *testing.T) {
 	setBoardConfigs(t, false)
 
@@ -295,8 +327,9 @@ func TestPostCreation(t *testing.T) {
 	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
-		Open: true,
-		Body: "Δ",
+		Open:     true,
+		Body:     "Δ",
+		Password: "123",
 		Image: ImageRequest{
 			Name:    "foo.jpeg",
 			Token:   token,
@@ -312,8 +345,9 @@ func TestPostCreation(t *testing.T) {
 
 	stdPost := common.StandalonePost{
 		Post: common.Post{
-			ID:   6,
-			Body: "Δ",
+			Editing: true,
+			ID:      6,
+			Body:    "Δ",
 			Image: &common.Image{
 				Name:        "foo",
 				Spoiler:     true,
@@ -341,6 +375,17 @@ func TestPostCreation(t *testing.T) {
 	}
 	AssertDeepEquals(t, thread.PostCtr, uint32(1))
 	AssertDeepEquals(t, thread.ImageCtr, uint32(2))
+
+	AssertDeepEquals(t, cl.post, openPost{
+		id:          6,
+		op:          1,
+		time:        stdPost.Time,
+		board:       "a",
+		len:         1,
+		hasImage:    true,
+		isSpoilered: true,
+		body:        []byte("Δ"),
+	})
 }
 
 func registerClient(t testing.TB, cl *Client, id uint64, board string) {
@@ -419,7 +464,8 @@ func TestTextOnlyPostCreation(t *testing.T) {
 	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
-		Body: "a",
+		Body:     "a",
+		Password: "123",
 	}
 
 	if err := cl.insertPost(marshalJSON(t, req)); err != nil {
@@ -433,6 +479,9 @@ func TestTextOnlyPostCreation(t *testing.T) {
 	}
 	if hasImage {
 		t.Error("DB post has image")
+	}
+	if cl.post.hasImage {
+		t.Error("openPost has image")
 	}
 }
 
@@ -448,12 +497,16 @@ func BenchmarkPostCreation(b *testing.B) {
 	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
-		Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+		Body:     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+		Password: "123",
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		if err := cl.insertPost(marshalJSON(b, req)); err != nil {
+			b.Fatal(err)
+		}
+		if err := cl.closePost(); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -480,7 +533,8 @@ func TestPostCreationForcedAnon(t *testing.T) {
 	defer cl.Close(nil)
 
 	req := ReplyCreationRequest{
-		Body: "a",
+		Body:     "a",
+		Password: "123",
 	}
 
 	if err := cl.insertPost(marshalJSON(t, req)); err != nil {

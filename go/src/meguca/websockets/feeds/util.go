@@ -1,17 +1,12 @@
 package feeds
 
 import (
-	"meguca/common"
 	"meguca/util"
-	"strconv"
 	"time"
 )
 
 // TickerInterval sets the interval of ticker flushes
 const TickerInterval = time.Millisecond * 100
-
-// Converted to string only ahead of time
-var concatHeader = strconv.Itoa(int(common.MessageConcat))
 
 // A time.Ticker that can be "paused"
 type ticker struct {
@@ -41,7 +36,7 @@ type messageBuffer []byte
 // Write writes a message to b
 func (b *messageBuffer) write(data []byte) {
 	if len(*b) == 0 {
-		*b = append(*b, concatHeader...)
+		*b = append(*b, "33"...)
 	} else {
 		*b = append(*b, 0)
 	}

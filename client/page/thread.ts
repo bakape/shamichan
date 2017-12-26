@@ -1,5 +1,7 @@
 import { ThreadData } from "../common"
-import { extractConfigs, extractPost, extractPageData, hidePosts } from "./common"
+import {
+    extractConfigs, extractPost, reparseOpenPosts, extractPageData, hidePosts,
+} from "./common"
 import { findSyncwatches } from "../posts"
 import { config } from "../state"
 import { postSM, postState } from "../posts"
@@ -26,12 +28,20 @@ export default function () {
     isDeleted = data.deleted
     renderPostCounter()
 
+    // Disable live posting toggle in non-live threads
+    if (data.nonLive) {
+        const el = document.getElementById("live") as HTMLInputElement
+        el.checked = false
+        el.disabled = true
+    }
+
     extractPost(data, data.id, data.board, backlinks)
 
     for (let post of posts) {
         extractPost(post, data.id, data.board, backlinks)
     }
     hidePosts()
+    reparseOpenPosts()
     findSyncwatches(threads)
 
     // Needs to be done, to  stop the FSM

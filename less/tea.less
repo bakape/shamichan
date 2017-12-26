@@ -27,11 +27,18 @@ article {
 	article {
 		border: solid @border;
 	}
-	&.highlight, &:target {
+	&.highlight:not(.editing), &:target {
 		background-color: #b9ccb4;
 		border-color: #9fbf9d;
 		article {
 			border: solid 1px #9fbf9d;
+		}
+	}
+	&.editing {
+		background-color: #f0e5ba;
+		border-color: #dbd1aa;
+		article {
+			border: solid 1px #dbd1aa
 		}
 	}
 }
@@ -72,7 +79,7 @@ hr {
 	background-color: #f9fcf7;
 }
 
-.modal, .preview .popup-menu, .side-panel {
+.modal, .preview:not(.editing), .popup-menu, .side-panel {
 	background-color: #f6faf3;
 	border-right: 1px solid #e5e8e2;
 	border-bottom: 1px solid #e5e8e2;

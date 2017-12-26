@@ -2,16 +2,18 @@ import PostView from "../view"
 import FormModel from "./model"
 import { Post } from "../model"
 import { boardConfig } from "../../state"
-import { setAttrs, importTemplate, atBottom, scrollToBottom } from "../../util"
-import { postSM, postEvent } from "."
+import {
+    setAttrs, importTemplate, atBottom, scrollToBottom, firstChild,
+} from "../../util"
+import { postSM, postEvent, postState } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
 import { CaptchaView } from "../../ui"
-import { message, send, connSM, connState } from "../../connection"
+import { message, send } from "../../connection"
 
 // Element at the bottom of the thread to keep the fixed reply form from
 // overlapping any other posts, when scrolled till bottom
-const bottomSpacer = document.getElementById("bottom-spacer")
+let bottomSpacer: HTMLElement
 
 // Post creation and update view
 export default class FormView extends PostView {
@@ -25,24 +27,7 @@ export default class FormView extends PostView {
     constructor(model: Post) {
         super(model, null)
         this.renderInputs()
-
-        this.el.classList.add("reply-form")
-        this.el.querySelector("header").classList.add("temporary")
-        this.renderIdentity()
-
-        // Keep this post and bottomSpacer the same height
-        this.observer = new MutationObserver(() =>
-            this.resizeSpacer())
-        this.observer.observe(this.el, {
-            childList: true,
-            attributes: true,
-            characterData: true,
-            subtree: true,
-        })
-
-        document.getElementById("thread-container").append(this.el)
-        this.resizeSpacer()
-        this.disableSubmission(connSM.state === connState.dropped)
+        this.initDraft()
     }
 
     // Render extra input fields for inputting text and optionally uploading
@@ -69,7 +54,10 @@ export default class FormView extends PostView {
 
         if (!boardConfig.textOnly) {
             this.upload = new UploadForm(this.model, this.el)
+            this.upload.input.addEventListener("change", () =>
+                this.model.uploadFile())
         }
+        this.inputElement("done").hidden = !this.model.nonLive
 
         const bq = this.el.querySelector("blockquote")
         bq.innerHTML = ""
@@ -121,7 +109,8 @@ export default class FormView extends PostView {
         })
 
         requestAnimationFrame(() =>
-            (cont.querySelector("input[type=number]") as HTMLElement)
+            (cont
+                .querySelector("input[type=number]") as HTMLElement)
                 .focus())
     }
 
@@ -144,8 +133,48 @@ export default class FormView extends PostView {
         this.renderName()
     }
 
+    // Show button for closing allocated posts
+    private showDone() {
+        const c = firstChild(this.el.querySelector("#post-controls"), ch =>
+            ch.getAttribute("name") === "cancel")
+        if (c) {
+            c.remove()
+        }
+        const d = this.inputElement("done")
+        if (d) {
+            d.hidden = false
+        }
+    }
+
+    // Initialize extra elements for a draft unallocated post
+    private initDraft() {
+        bottomSpacer = document.getElementById("bottom-spacer")
+        this.el.classList.add("reply-form")
+        this.el.querySelector("header").classList.add("temporary")
+        this.renderIdentity()
+
+        // Keep this post and bottomSpacer the same height
+        this.observer = new MutationObserver(() =>
+            this.resizeSpacer())
+        this.observer.observe(this.el, {
+            childList: true,
+            attributes: true,
+            characterData: true,
+            subtree: true,
+        })
+
+        document.getElementById("thread-container").append(this.el)
+        this.resizeSpacer()
+        this.setEditing(!this.model.nonLive)
+    }
+
     // Resize bottomSpacer to the same top position as this post
     private resizeSpacer() {
+        // Not a reply
+        if (!bottomSpacer) {
+            return
+        }
+
         const { height } = this.el.getBoundingClientRect()
         // Avoid needless writes
         if (this.previousHeight === height) {
@@ -153,6 +182,11 @@ export default class FormView extends PostView {
         }
         this.previousHeight = height
         bottomSpacer.style.height = `calc(${height}px - 2.1em)`
+    }
+
+    private removeUploadForm() {
+        this.upload.input.remove()
+        this.upload.status.remove()
     }
 
     // Handle input events on this.input
@@ -184,10 +218,15 @@ export default class FormView extends PostView {
     }
 
     // Replace the current body and set the cursor to the input's end.
-    public replaceText(body: string) {
+    // commit sets, if the onInput method should be run.
+    public replaceText(body: string, commit: boolean) {
         const el = this.input
         el.value = body
-        this.onInput()
+        if (commit) {
+            this.onInput()
+        } else {
+            this.resizeInput()
+        }
         requestAnimationFrame(() => {
             el.focus()
             el.setSelectionRange(body.length, body.length)
@@ -198,17 +237,36 @@ export default class FormView extends PostView {
         })
     }
 
-    // Clean up on form removal
-    public remove() {
-        super.remove()
+    // Transform form into a generic post. Removes any dangling form controls
+    // and frees up references.
+    public cleanUp() {
         if (this.upload && this.upload.isUploading) {
             this.upload.cancel()
         }
-        this.observer.disconnect()
-        bottomSpacer.style.height = ""
-        if (atBottom) {
-            scrollToBottom()
+        this.el.classList.remove("reply-form")
+        const pc = this.el.querySelector("#post-controls")
+        if (pc) {
+            pc.remove()
         }
+        if (bottomSpacer) {
+            bottomSpacer.style.height = ""
+            if (atBottom) {
+                scrollToBottom()
+            }
+        }
+        if (this.observer) {
+            this.observer.disconnect()
+        }
+        bottomSpacer
+            = this.observer
+            = this.upload
+            = null
+    }
+
+    // Clean up on form removal
+    public remove() {
+        super.remove()
+        this.cleanUp()
     }
 
     // Lock the post form after a critical error occurs
@@ -217,8 +275,22 @@ export default class FormView extends PostView {
         this.input.setAttribute("contenteditable", "false")
     }
 
+    // Transition into allocated post
+    public renderAlloc() {
+        this.id = this.el.id = "p" + this.model.id
+        this.el.querySelector("header").classList.remove("temporary")
+        this.renderHeader()
+        this.showDone()
+    }
+
     // Toggle the spoiler input checkbox
     public toggleSpoiler() {
+        if (this.model.image && postSM.state !== postState.halted) {
+            this.upload.spoiler.remove()
+            this.model.commitSpoiler()
+            return
+        }
+
         const el = this
             .upload
             .spoiler
@@ -226,13 +298,19 @@ export default class FormView extends PostView {
         el.checked = !el.checked
     }
 
-    // Disable or enable the post and captcha submission buttons
-    public disableSubmission(disable: boolean) {
-        this.inputElement("done").disabled = disable
-        const captchaSubmit = (this.el
-            .querySelector("input[type=submit]") as HTMLInputElement)
-        if (captchaSubmit) {
-            captchaSubmit.disabled = disable
+    // Insert image into an open post
+    public insertImage() {
+        this.renderImage(false)
+        this.resizeInput()
+        this.removeUploadForm()
+
+        const { spoiler } = this.upload
+        if (this.model.image.spoiler) {
+            spoiler.remove()
+        } else {
+            spoiler.addEventListener("change", this.toggleSpoiler.bind(this), {
+                passive: true,
+            })
         }
     }
 }

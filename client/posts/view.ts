@@ -19,6 +19,9 @@ export default class PostView extends ImageHandler {
             attrs.el = el
         } else {
             attrs.class = 'glass'
+            if (model.editing) {
+                attrs.class += ' editing'
+            }
             if (model.deleted) {
                 attrs.class += " deleted"
             }
@@ -178,6 +181,12 @@ export default class PostView extends ImageHandler {
             + `${pad(d.getHours())}:${pad(d.getMinutes())}`
     }
 
+    // Close an open post and clean up
+    public closePost() {
+        this.setEditing(false)
+        this.reparseBody()
+    }
+
     // Stop post from displaying
     public hide() {
         this.el.style.display = "none"
@@ -237,6 +246,11 @@ export default class PostView extends ImageHandler {
     // Add or remove highlight to post
     public setHighlight(on: boolean) {
         this.el.classList.toggle("highlight", on)
+    }
+
+    // Set display as an open post, that is being edited
+    public setEditing(on: boolean) {
+        this.el.classList.toggle("editing", on)
     }
 
     // Render indications that a post had been deleted

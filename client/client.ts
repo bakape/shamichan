@@ -1,12 +1,32 @@
 // Core websocket message handlers
 
 import { handlers, message, connSM, connEvent } from './connection'
-import { posts, page, mine } from './state'
-import { Post, PostView, findSyncwatches } from './posts'
-import { PostData } from "./common"
-import { postAdded, OverlayNotification } from "./ui"
+import { posts, page } from './state'
+import { Post, FormModel, PostView, postEvent, postSM } from './posts'
+import { PostLink, Command, PostData, ImageData } from "./common"
+import { postAdded } from "./ui"
 import { incrementPostCount } from "./page"
 import { posterName } from "./options"
+import { OverlayNotification } from "./ui"
+
+// Message for splicing the contents of the current line
+export type SpliceResponse = {
+	id: number
+	start: number
+	len: number
+	text: string
+}
+
+type CloseMessage = {
+	id: number
+	links: PostLink[] | null
+	commands: Command[] | null
+}
+
+// Message for inserting images into an open post
+interface ImageMessage extends ImageData {
+	id: number
+}
 
 // Run a function on a model, if it exists
 function handle(id: number, fn: (m: Post) => void) {
@@ -23,16 +43,24 @@ export function insertPost(data: PostData) {
 		data.name = posterName()
 	}
 
+	const existing = posts.get(data.id)
+	if (existing) {
+		if (existing instanceof FormModel && !existing.isAllocated) {
+			existing.onAllocation(data)
+			incrementPostCount(true, "image" in data)
+		}
+		return
+	}
+
 	const model = new Post(data)
 	model.op = page.thread
 	model.board = page.board
-	if (mine.has(model.id)) {
-		model.seenOnce = true
-	}
 	posts.add(model)
 	const view = new PostView(model, null)
 
-	model.propagateLinks()
+	if (!model.editing) {
+		model.propagateLinks()
+	}
 
 	// Find last allocated post and insert after it
 	const last = document
@@ -46,17 +74,6 @@ export function insertPost(data: PostData) {
 
 	postAdded(model)
 	incrementPostCount(true, "image" in data)
-	findSyncwatches(view.el)
-
-	// Show new post separator
-	if (document.hidden) {
-		let hr = document.getElementById("new-post-hr")
-		if (!hr) {
-			hr = document.createElement("hr")
-			hr.id = "new-post-hr"
-			view.el.before(hr)
-		}
-	}
 }
 
 export default () => {
@@ -71,9 +88,42 @@ export default () => {
 
 	handlers[message.insertPost] = insertPost
 
+	handlers[message.insertImage] = (msg: ImageMessage) =>
+		handle(msg.id, m => {
+			delete msg.id
+			if (!("image" in m)) {
+				incrementPostCount(false, true)
+			}
+			m.insertImage(msg)
+		})
+
 	handlers[message.spoiler] = (id: number) =>
 		handle(id, m =>
 			m.spoilerImage())
+
+	handlers[message.append] = ([id, char]: [number, number]) =>
+		handle(id, m =>
+			m.append(char))
+
+	handlers[message.backspace] = (id: number) =>
+		handle(id, m =>
+			m.backspace())
+
+	handlers[message.splice] = (msg: SpliceResponse) =>
+		handle(msg.id, m =>
+			m.splice(msg))
+
+	handlers[message.closePost] = ({ id, links, commands }: CloseMessage) =>
+		handle(id, m => {
+			if (links) {
+				m.links = links
+				m.propagateLinks()
+			}
+			if (commands) {
+				m.commands = commands
+			}
+			m.closePost()
+		})
 
 	handlers[message.deletePost] = (id: number) =>
 		handle(id, m =>
@@ -87,8 +137,10 @@ export default () => {
 		handle(id, m =>
 			m.setBanned())
 
-	handlers[message.redirect] = (board: string) =>
+	handlers[message.redirect] = (board: string) => {
+		postSM.feed(postEvent.reset)
 		location.href = `/${board}/`
+	}
 
 	handlers[message.notification] = (text: string) =>
 		new OverlayNotification(text)

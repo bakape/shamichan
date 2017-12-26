@@ -184,6 +184,31 @@ static Node render_thread_form()
         });
     }
 
+    // Live post editing toggle for thread
+    auto & [ label, title ] = lang->forms.at("nonLive");
+    form.children.push_back({
+        "label",
+        { { "title", title } },
+        {
+            {
+                "input",
+                []() {
+                    brunhild::Attrs attrs({
+                        { "type", "checkbox" },
+                        { "name", "nonLive" },
+                    });
+                    if (board_config->non_live) {
+                        attrs["checked"] = "";
+                        attrs["disabled"] = "";
+                    }
+                    return attrs;
+                }(),
+            },
+            label,
+        },
+    });
+    form.children.push_back({ "br" });
+
     // File upload form
     if (page->board == "all" || !board_config->text_only) {
         form.children.push_back({

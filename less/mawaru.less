@@ -23,11 +23,18 @@ article {
 	article {
 		border: @border;
 	}
-	&.highlight, &:target {
+	&.highlight:not(.editing), &:target {
 		background-color: #333;
 		border-color: #222;
 		article {
 			border: solid 1px #222;
+		}
+	}
+	&.editing {
+		background-color: #311;
+		border-color: #200;
+		article {
+			border: solid 1px #200;
 		}
 	}
 }
@@ -73,7 +80,9 @@ hr {
 }
 
 .preview {
-	background-color: #111;
+	&:not(.editing) {
+		background-color: #111;
+	}
 	border-right: 1px solid #000;
 	border-bottom: 1px solid #000;
 }

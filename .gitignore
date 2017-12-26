@@ -33,4 +33,3 @@ package-lock.json
 *.map
 *.bc
 client_cpp/*.js
-debug.test

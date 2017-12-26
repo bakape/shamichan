@@ -23,11 +23,18 @@ article {
 	article {
 		border: @border;
 	}
-	&.highlight, &:target {
+	&.highlight:not(.editing), &:target {
 		background-color: #d6bad0;
 		border-color: #ba9dbf;
 		article {
 			border: solid 1px #ba9dbf;
+		}
+	}
+	&.editing {
+		background-color: #fa6;
+		border-color: #e95;
+		article {
+			border: solid 1px #e95;
 		}
 	}
 }
@@ -65,7 +72,7 @@ hr {
 	background-color: #f5f5f5;
 }
 
-.modal, .preview, .popup-menu, .side-panel {
+.modal, .preview:not(.editing), .popup-menu, .side-panel {
 	background-color: white;
 	border-right: 1px solid #eee;
 	border-bottom: 1px solid #eee;

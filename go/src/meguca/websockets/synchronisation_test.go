@@ -1,9 +1,13 @@
 package websockets
 
 import (
+	"meguca/auth"
 	"meguca/common"
+	"meguca/db"
+	"meguca/imager/assets"
 	. "meguca/test"
 	"meguca/websockets/feeds"
+	"strconv"
 	"testing"
 
 	"github.com/gorilla/websocket"
@@ -145,7 +149,7 @@ func TestSyncToThread(t *testing.T) {
 
 	skipMessage(t, wcl)
 	skipMessage(t, wcl)
-	assertMessage(t, wcl, "32341")
+	assertMessage(t, wcl, "33351")
 	assertSyncID(t, cl, 1, "a")
 
 	cl.Close(nil)
@@ -178,4 +182,82 @@ func encodeMessage(
 		t.Fatal(err)
 	}
 	return msg
+}
+
+func TestReclaimPost(t *testing.T) {
+	feeds.Clear()
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+
+	const pw = "123"
+	hash, err := auth.BcryptHash(pw, 6)
+	if err != nil {
+		t.Fatal(err)
+	}
+	posts := [...]db.Post{
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					Editing: true,
+					Image:   &assets.StdJPEG,
+					ID:      2,
+					Body:    "abc\ndef",
+					Time:    3,
+				},
+				OP:    1,
+				Board: "a",
+			},
+			Password: hash,
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					Editing: false,
+					ID:      3,
+				},
+				OP:    1,
+				Board: "a",
+			},
+			Password: hash,
+		},
+	}
+	for _, p := range posts {
+		if err := db.WritePost(nil, p); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	cases := [...]struct {
+		name     string
+		id       uint64
+		password string
+		code     int
+	}{
+		{"no post", 99, "", 1},
+		{"already closed", 3, "", 1},
+		{"wrong password", 2, "aaaaaaaa", 1},
+		{"valid", 2, pw, 0},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			sv := newWSServer(t)
+			defer sv.Close()
+			cl, wcl := sv.NewClient()
+			registerClient(t, cl, 1, "a")
+			req := reclaimRequest{
+				ID:       c.id,
+				Password: c.password,
+			}
+			if err := cl.reclaimPost(marshalJSON(t, req)); err != nil {
+				t.Fatal(err)
+			}
+
+			assertMessage(t, wcl, `31`+strconv.Itoa(c.code))
+		})
+	}
 }

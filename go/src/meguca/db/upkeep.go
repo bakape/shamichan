@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"log"
 	"math"
+	"meguca/common"
 	"meguca/config"
 	"meguca/imager/assets"
 	"strings"
@@ -33,6 +34,7 @@ func runCleanupTasks() {
 }
 
 func runMinuteTasks() {
+	logError("open post cleanup", closeDanglingPosts())
 	logPrepared("expire_image_tokens", "expire_bans")
 }
 
@@ -44,6 +46,7 @@ func runHourTasks() {
 	logError("thread cleanup", deleteOldThreads())
 	logError("board cleanup", deleteUnusedBoards())
 	logError("image cleanup", deleteUnusedImages())
+	logError("delete dangling open post bodies", cleanUpOpenPostBodies())
 	_, err := db.Exec(`vacuum`)
 	logError("vaccum database", err)
 }
@@ -58,6 +61,53 @@ func logError(prefix string, err error) {
 	if err != nil {
 		log.Printf("%s: %s\n", prefix, err)
 	}
+}
+
+// Close any open posts that have not been closed for 30 minutes
+func closeDanglingPosts() error {
+	r, err := prepared["get_expired_open_posts"].Query()
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	type post struct {
+		id, op uint64
+		board  string
+	}
+
+	posts := make([]post, 0, 8)
+	for r.Next() {
+		var p post
+		err = r.Scan(&p.id, &p.op, &p.board)
+		if err != nil {
+			return err
+		}
+		posts = append(posts, p)
+	}
+	err = r.Err()
+	if err != nil {
+		return err
+	}
+
+	for _, p := range posts {
+		// Get post body from BoltDB
+		body, err := GetOpenBody(p.id)
+		if err != nil {
+			return err
+		}
+
+		links, com, err := common.ParseBody([]byte(body), p.board)
+		if err != nil {
+			return err
+		}
+		err = ClosePost(p.id, p.op, body, links, com)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Delete boards that are older than N days and have not had any new posts for

@@ -14,6 +14,7 @@ LanguagePack::LanguagePack()
     load_map(posts, j["posts"]);
     load_map(ui, j["ui"]);
     load_tuple_map(plurals, j["plurals"]);
+    load_tuple_map(forms, j["forms"]);
     load_array(calendar, t["calendar"]);
     load_array(week, t["week"]);
     load_array(sync, j["sync"]);

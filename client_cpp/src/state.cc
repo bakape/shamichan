@@ -189,6 +189,7 @@ BoardConfig::BoardConfig(const c_string_view& s)
     read_only = j["readOnly"];
     text_only = j["textOnly"];
     forced_anon = j["forcedAnon"];
+    non_live = j["nonLive"];
     title = j["title"];
     rules = j["rules"];
     notice = j["notice"];
@@ -280,6 +281,9 @@ ThreadDecoder::ThreadDecoder(json& j)
     OPT_DECODE(deleted)
     OPT_DECODE(locked)
     OPT_DECODE(sticky)
+    if (j.count("nonLive")) {
+        non_live = j["nonLive"];
+    }
 
     // Redundant field on thread pages
     id = page->thread ? page->thread : (unsigned long)(j["id"]);

@@ -32,6 +32,7 @@ var (
 
 var specs = map[string][]inputSpec{
 	"identity": {
+		{ID: "live"},
 		sageSpec,
 		{
 			ID:           "name",
@@ -117,6 +118,7 @@ var specs = map[string][]inputSpec{
 	"configureBoard": {
 		{ID: "readOnly"},
 		{ID: "textOnly"},
+		{ID: "nonLive"},
 		{ID: "forcedAnon"},
 		{ID: "disableRobots"},
 		{ID: "flags"},

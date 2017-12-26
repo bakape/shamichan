@@ -2,7 +2,7 @@
 
 import { page, mine } from '../../state'
 import lang from '../../lang'
-import { pluralize } from "../../util"
+import { makeAttrs, pluralize } from "../../util"
 
 // Render a link to other posts
 export function renderPostLink(id: number, op: number): string {
@@ -17,6 +17,21 @@ export function renderPostLink(id: number, op: number): string {
         html += ' ' + lang.posts["you"]
     }
     html += `</a><a class="hash-link" href="${url}"> #</a>`
+    return html
+}
+
+// Render a temporary link for open posts
+export function renderTempLink(id: number): string {
+    const attrs = {
+        class: "post-link temp",
+        "data-id": id.toString(),
+        href: `#p${id}`,
+    }
+    let html = `<a ${makeAttrs(attrs)}>>>${id}`
+    if (mine.has(id)) {
+        html += ' ' + lang.posts["you"]
+    }
+    html += "</a>"
     return html
 }
 

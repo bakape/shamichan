@@ -34,6 +34,7 @@ func (b Board) Less(i, j int) bool {
 type Thread struct {
 	Abbrev    bool   `json:"abbrev,omitempty"`
 	Sticky    bool   `json:"sticky,omitempty"`
+	NonLive   bool   `json:"nonLive,omitempty"`
 	Locked    bool   `json:"locked,omitempty"`
 	PostCtr   uint32 `json:"postCtr"`
 	ImageCtr  uint32 `json:"imageCtr"`
@@ -48,6 +49,7 @@ type Thread struct {
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {
+	Editing  bool        `json:"editing,omitempty"`
 	Banned   bool        `json:"banned,omitempty"`
 	Deleted  bool        `json:"deleted,omitempty"`
 	Sage     bool        `json:"sage,omitempty"`

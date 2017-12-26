@@ -3,7 +3,9 @@ import lang from '../lang'
 import { page, posts, loadFromDB, displayLoading } from '../state'
 import options from '../options'
 import { relativeTime, Post, findSyncwatches } from "../posts"
-import { extractConfigs, extractPost, extractPageData, hidePosts } from "./common"
+import {
+	extractConfigs, extractPost, reparseOpenPosts, extractPageData, hidePosts,
+} from "./common"
 import { BoardData } from "../common"
 
 type SortFunction = (a: Post, b: Post) => number
@@ -69,6 +71,7 @@ async function extractThreads() {
 		}
 	}
 	hidePosts()
+	reparseOpenPosts()
 }
 
 // Apply client-side modifications to a board page's HTML

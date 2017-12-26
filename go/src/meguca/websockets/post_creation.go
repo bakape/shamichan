@@ -23,12 +23,11 @@ var (
 	errInvalidImageToken = errors.New("invalid image token")
 	errImageNameTooLong  = errors.New("image name too long")
 	errNoTextOrImage     = errors.New("no text or image")
-	errTooManyLines      = errors.New("too many lines in post body")
-	errTextOnly          = errors.New("text only board")
 )
 
 // ThreadCreationRequest contains data for creating a new thread
 type ThreadCreationRequest struct {
+	NonLive bool
 	ReplyCreationRequest
 	Subject, Board string
 }
@@ -40,7 +39,7 @@ type ReplyCreationRequest struct {
 	Image      ImageRequest
 	auth.SessionCreds
 	auth.Captcha
-	Name, Body string
+	Name, Password, Body string
 }
 
 // ImageRequest contains data for allocating an image
@@ -106,7 +105,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		}
 	}
 
-	err = db.InsertThread(tx, subject, post)
+	err = db.InsertThread(tx, subject, conf.NonLive || req.NonLive, post)
 	if err != nil {
 		return
 	}
@@ -139,6 +138,7 @@ func CreatePost(
 	if auth.IsBanned(board, ip) {
 		err = errBanned
 		return
+
 	}
 	if needCaptcha {
 		if !auth.AuthenticateCaptcha(req.Captcha) {
@@ -170,6 +170,16 @@ func CreatePost(
 	case locked:
 		err = errors.New("thread is locked")
 		return
+	}
+
+	// Disable live updates, if thread is non-live
+	if req.Open {
+		var disabled bool
+		disabled, err = db.CheckThreadNonLive(op)
+		if err != nil {
+			return
+		}
+		req.Open = !disabled
 	}
 
 	post, err = constructPost(req, conf, ip)
@@ -219,6 +229,11 @@ func CreatePost(
 
 // Insert a new post into the database
 func (c *Client) insertPost(data []byte) (err error) {
+	err = c.closePreviousPost()
+	if err != nil {
+		return
+	}
+
 	var req ReplyCreationRequest
 	err = decodeMessage(data, &req)
 	if err != nil {
@@ -238,27 +253,20 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 
-	c.feed.InsertPost(post.ID, msg)
+	if post.Editing {
+		err = db.SetOpenBody(post.ID, []byte(post.Body))
+		if err != nil {
+			return
+		}
+		c.post.init(post.StandalonePost)
+	}
+	c.feed.InsertPost(post.StandalonePost, c.post.body, msg)
 
-	score := auth.PostCreationScore +
-		auth.CharScore*time.Duration(len(post.Body))
+	score := auth.PostCreationScore + auth.CharScore*time.Duration(c.post.len)
 	if post.Image != nil {
 		score += auth.ImageScore
 	}
 	return c.incrementSpamScore(score)
-}
-
-// Increment the spam score for this IP by score. If the client requires a new
-// solved captcha, send a notification.
-func (c *Client) incrementSpamScore(score time.Duration) error {
-	exceeds, err := auth.IncrementSpamScore(c.ip, score)
-	if err != nil {
-		return err
-	}
-	if exceeds {
-		return c.sendMessage(common.MessageCaptcha, 0)
-	}
-	return nil
 }
 
 // Reset the IP's spam score, by submitting a captcha
@@ -273,6 +281,14 @@ func (c *Client) submitCaptcha(data []byte) (err error) {
 		return errInValidCaptcha
 	}
 	auth.ResetSpamScore(c.ip)
+	return nil
+}
+
+// If the client has a previous post, close it silently
+func (c *Client) closePreviousPost() error {
+	if c.post.id != 0 {
+		return c.closePost()
+	}
 	return nil
 }
 
@@ -352,10 +368,29 @@ func constructPost(
 		}
 	}
 
-	post.Links, post.Commands, err = parser.ParseBody(
-		[]byte(req.Body),
-		conf.ID,
-	)
+	if req.Open {
+		post.Editing = true
+
+		// Posts that are committed in one action need not a password, as they
+		// are closed on commit and can not be reclaimed
+		err = parser.VerifyPostPassword(req.Password)
+		if err != nil {
+			return
+		}
+		post.Password, err = auth.BcryptHash(req.Password, 4)
+		if err != nil {
+			return
+		}
+	} else {
+		post.Links, post.Commands, err = parser.ParseBody(
+			[]byte(req.Body),
+			conf.ID,
+		)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 

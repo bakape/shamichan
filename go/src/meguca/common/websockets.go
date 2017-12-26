@@ -12,7 +12,14 @@ type MessageType uint8
 // 1 - 29 modify post model state
 const (
 	MessageInvalid MessageType = iota
+	_
 	MessageInsertPost
+	MessageAppend
+	MessageBackspace
+	MessageSplice
+	MessageClosePost
+	_
+	MessageInsertImage
 	MessageSpoiler
 	MessageDeletePost
 	MessageBanned
@@ -22,6 +29,7 @@ const (
 // >= 30 are miscellaneous and do not write to post models
 const (
 	MessageSynchronise MessageType = 30 + iota
+	MessageReclaim
 
 	// Send new post ID to client
 	MessagePostID
@@ -58,6 +66,9 @@ var (
 	// SendTo sends a message to a feed, if it exists
 	SendTo func(id uint64, msg []byte)
 
+	// ClosePost closes a post in a feed, if it exists
+	ClosePost func(id, op uint64, msg []byte)
+
 	// Propagate a message about a post being banned
 	BanPost func(id, op uint64) error
 
@@ -77,6 +88,8 @@ type Client interface {
 	Send([]byte)
 	Redirect(board string)
 	IP() string
+	NewProtocol() bool
+	Last100() bool
 	Close(error)
 }
 

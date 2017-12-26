@@ -327,7 +327,7 @@ func TestSendMessage(t *testing.T) {
 		typ common.MessageType
 		msg string
 	}{
-		{common.MessageInsertPost, "01null"},  // 1 char type string
+		{common.MessageInsertPost, "02null"},  // 1 char type string
 		{common.MessageSynchronise, "30null"}, // 2 char type string
 	}
 

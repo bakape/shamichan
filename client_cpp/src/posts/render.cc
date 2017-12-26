@@ -74,6 +74,9 @@ Node Post::render()
     n.children.reserve(4);
 
     n.attrs["class"] = "glass";
+    if (editing) {
+        n.attrs["class"] += " editing";
+    }
     if (deleted) {
         n.attrs["class"] += " deleted";
         n.children.push_back(delete_toggle);

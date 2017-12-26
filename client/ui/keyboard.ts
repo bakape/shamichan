@@ -1,9 +1,9 @@
 // Keyboard shortcuts and such
 
 import options from "../options"
-import { FormModel, postSM, postEvent, toggleExpandAll, toggleGallery, expandThreadForm } from "../posts"
+import { FormModel, postSM, postEvent, toggleExpandAll, toggleGallery } from "../posts"
 import { page } from "../state"
-import { trigger } from "../util"
+import { scrollToElement, trigger } from "../util"
 
 // Bind keyboard event listener to the document
 export default () =>
@@ -38,8 +38,13 @@ function handleShortcut(event: KeyboardEvent) {
 			case options.newPost:
 				if (page.thread) {
 					postSM.feed(postEvent.open)
-				} else {
-					expandThreadForm()
+					break
+				}
+				const tf = document
+					.querySelector("aside:not(.expanded) .new-thread-button")
+				if (tf) {
+					tf.click()
+					scrollToElement(tf)
 				}
 				break
 			case options.done:

@@ -1,5 +1,5 @@
-import { config, boards } from '../../state'
-import { renderPostLink } from './etc'
+import { config, boards, posts } from '../../state'
+import { renderPostLink, renderTempLink } from './etc'
 import { PostData, PostLink, TextState } from '../../common'
 import { escape, makeAttrs } from '../../util'
 import { parseEmbeds } from "../embed"
@@ -27,6 +27,7 @@ export default function renderBody(data: PostData): string {
     }
     let html = ""
 
+    const fn = data.editing ? parseOpenLine : parseTerminatedLine
     for (let l of data.body.split("\n")) {
         state.quote = false
 
@@ -54,7 +55,7 @@ export default function renderBody(data: PostData): string {
             html += "<i>"
         }
 
-        html += parseCode(l, data)
+        html += fn(l, data)
 
         // Close any unclosed tags
         if (state.italic) {
@@ -74,26 +75,41 @@ export default function renderBody(data: PostData): string {
     return html
 }
 
+
+// Parse a single line, that is no longer being edited
+function parseTerminatedLine(line: string, data: PostData): string {
+    return parseCode(line, data.state, frag =>
+        parseFragment(frag, data))
+}
+
 // Detect code tags
-function parseCode(frag: string, data: PostData): string {
+function parseCode(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
     let html = ""
     while (true) {
         const i = frag.indexOf("``")
         if (i !== -1) {
-            html += formatCode(frag.slice(0, i), data)
+            html += formatCode(frag.slice(0, i), state, fn)
             frag = frag.substring(i + 2)
-            data.state.code = !data.state.code
+            state.code = !state.code
         } else {
-            html += formatCode(frag, data)
+            html += formatCode(frag, state, fn)
             break
         }
     }
     return html
 }
 
-function formatCode(frag: string, data: PostData): string {
+function formatCode(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
     let html = ""
-    if (data.state.code) {
+    if (state.code) {
         // Strip quotes
         while (frag[0] === '>') {
             html += "&gt;"
@@ -101,19 +117,24 @@ function formatCode(frag: string, data: PostData): string {
         }
         html += highlightSyntax(frag)
     } else {
-        html += parseSpoilers(frag, data)
+        html += parseSpoilers(frag, state, fn)
     }
     return html
 }
 
 // Inject spoiler tags and call fn on the remaining parts
-function parseSpoilers(frag: string, data: PostData): string {
+function parseSpoilers(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
+    const _fn = (frag: string) =>
+        parseBolds(frag, state, fn)
     let html = ""
-    const { state } = data
     while (true) {
         const i = frag.indexOf("**")
         if (i !== -1) {
-            html += parseBolds(frag.slice(0, i), data)
+            html += _fn(frag.slice(0, i))
 
             if (state.italic) {
                 html += "</i>"
@@ -134,7 +155,7 @@ function parseSpoilers(frag: string, data: PostData): string {
             state.spoiler = !state.spoiler
             frag = frag.substring(i + 2)
         } else {
-            html += parseBolds(frag, data)
+            html += _fn(frag)
             break
         }
     }
@@ -142,13 +163,18 @@ function parseSpoilers(frag: string, data: PostData): string {
 }
 
 // Inject bold tags and call fn on the remaining parts
-function parseBolds(frag: string, data: PostData): string {
+function parseBolds(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
+    const _fn = (frag: string) =>
+        parseItalics(frag, state, fn)
     let html = ""
-    const { state } = data
     while (true) {
         const i = frag.indexOf("__")
         if (i !== -1) {
-            html += parseItalics(frag.slice(0, i), data)
+            html += _fn(frag.slice(0, i))
 
             if (state.italic) {
                 html += "</i>"
@@ -163,7 +189,7 @@ function parseBolds(frag: string, data: PostData): string {
             state.bold = !state.bold
             frag = frag.substring(i + 2)
         } else {
-            html += parseItalics(frag, data)
+            html += _fn(frag)
             break
         }
     }
@@ -171,21 +197,65 @@ function parseBolds(frag: string, data: PostData): string {
 }
 
 // Inject italic tags and call fn on the remaining parts
-function parseItalics(frag: string, data: PostData): string {
+function parseItalics(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
     let html = ""
-    const { state } = data
     while (true) {
         const i = frag.indexOf("~~")
         if (i !== -1) {
-            html += parseFragment(frag.slice(0, i), data)
+            html += fn(frag.slice(0, i))
 
             html += `<${state.italic ? '/' : ''}i>`
 
             state.italic = !state.italic
             frag = frag.substring(i + 2)
         } else {
-            html += parseFragment(frag, data)
+            html += fn(frag)
             break
+        }
+    }
+    return html
+}
+
+// Parse a line that is still being edited
+function parseOpenLine(line: string, { state }: PostData): string {
+    return parseCode(line, state, parseOpenLinks)
+}
+
+// Parse temporary links, that still may be edited
+function parseOpenLinks(frag: string): string {
+    let html = ""
+    const words = frag.split(" ")
+    for (let i = 0; i < words.length; i++) {
+        if (i !== 0) {
+            html += " "
+        }
+
+        // Split leading and trailing punctuation, if any
+        const [leadPunct, word, trailPunct] = splitPunctuation(words[i])
+        if (leadPunct) {
+            html += leadPunct
+        }
+
+        let matched = false
+        if (word && word[0] === ">") {
+            const m = word.match(/^>>(>*)(\d+)$/)
+            if (m) {
+                const id = parseInt(m[2])
+                if (posts.has(id)) {
+                    html += m[1] + renderTempLink(id)
+                    matched = true
+                }
+            }
+        }
+        if (!matched) {
+            html += escape(word)
+        }
+        if (trailPunct) {
+            html += trailPunct
         }
     }
     return html

@@ -8,6 +8,8 @@ import (
 	"meguca/common"
 	"meguca/db"
 	"meguca/websockets/feeds"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -49,11 +51,22 @@ func (c *Client) synchronise(data []byte) error {
 		}
 	}
 
+	c.mu.Lock()
+	c.newProtocol = msg.NewProtocol
+	c.last100 = msg.Last100
+	c.mu.Unlock()
 	return c.registerSync(msg.Thread, msg.Board)
 }
 
 // Register fresh client sync or change from previous sync
 func (c *Client) registerSync(id uint64, board string) (err error) {
+	if c.post.id != 0 {
+		err = c.closePreviousPost()
+		if err != nil {
+			return
+		}
+	}
+
 	c.feed, err = feeds.SyncClient(c, id, board)
 	if err != nil {
 		return
@@ -65,4 +78,49 @@ func (c *Client) registerSync(id uint64, board string) (err error) {
 		return c.sendMessage(common.MessageSynchronise, nil)
 	}
 	return
+}
+
+// Reclaim an open post after connection loss or navigating away.
+//
+// TODO: Technically there is no locking performed so a single post may be open
+// by multiple clients. This opens us up to some exploits, but nothing severe.
+// Still need to think of a solution.
+func (c *Client) reclaimPost(data []byte) error {
+	if err := c.closePreviousPost(); err != nil {
+		return err
+	}
+
+	var req reclaimRequest
+	if err := decodeMessage(data, &req); err != nil {
+		return err
+	}
+
+	hash, err := db.GetPostPassword(req.ID)
+	switch {
+	case err != nil:
+		return err
+	case hash == nil:
+		return c.sendMessage(common.MessageReclaim, 1)
+	}
+
+	switch err = auth.BcryptCompare(req.Password, hash); err {
+	case nil:
+	case bcrypt.ErrMismatchedHashAndPassword:
+		return c.sendMessage(common.MessageReclaim, 1)
+	default:
+		return err
+	}
+
+	post, err := db.GetPost(req.ID)
+	switch {
+	case err != nil:
+		return err
+	case !post.Editing:
+		return c.sendMessage(common.MessageReclaim, 1)
+	}
+
+	c.post.init(post)
+	c.feed.InsertPost(post, c.post.body, nil)
+
+	return c.sendMessage(common.MessageReclaim, 0)
 }

@@ -4,6 +4,7 @@ import FormModel from "./model"
 import FormView from "./view"
 import { connState, connSM, handlers, message } from "../../connection"
 import { on, FSM, hook } from "../../util"
+import lang from "../../lang"
 import identity, { initIdentity } from "./identity"
 import { boardConfig, page } from "../../state"
 import initDrop from "./drop"
@@ -12,7 +13,6 @@ import options from "../../options"
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
-export { expandThreadForm } from "./threads"
 
 // Sent to the FSM via the "open" and "hijack" events
 export type FormMessage = {
@@ -39,9 +39,12 @@ let postForm: FormView,
 export const enum postState {
 	none,           // No state. Awaiting first connection.
 	ready,          // Ready to create posts
-	draft,          // Post open and being modified
-	locked,         // Post submission controls locked
+	halted,         // Post allocated to the server but no connectivity
+	locked,         // No post open. Post creation controls locked.
+	alloc,          // Post open and allocated to the server
+	draft,          // Post open, but not yet allocated.
 	needCaptcha,    // Awaiting a captcha to be solved
+	sendingNonLive, // Sending a request to a allocate a post in non-live mode
 	errored,        // Suffered unrecoverable error
 	threadLocked,   // Post creation disabled in thread
 }
@@ -49,8 +52,12 @@ export const enum postEvent {
 	sync,          // Synchronized to the server
 	disconnect,    // Disconnected from server
 	error,         // Unrecoverable error
-	open,          // New post opened
 	done,          // Post closed
+	open,          // New post opened
+	reset,         // Set to none. Used during page navigation.
+	alloc,         // Allocated the draft post to the server
+	reclaim,       // Ownership of post reclaimed after connectivity loss
+	abandon,       // Abandon ownership of any open post
 	captchaSolved, // New captcha solved and submitted
 }
 export const postSM = new FSM<postState, postEvent>(postState.none)
@@ -64,6 +71,13 @@ function stylePostControls(fn: (el: HTMLElement) => void) {
 	if (el) {
 		fn(el)
 	}
+}
+
+// Ensures you are nagged at by the browser, when navigating away from an
+// unfinished allocated post.
+function bindNagging() {
+	window.onbeforeunload = (event: BeforeUnloadEvent) =>
+		event.returnValue = lang.ui["unfinishedPost"]
 }
 
 // Insert target post's number as a link into the text body. If text in the
@@ -145,11 +159,22 @@ function updateIdentity() {
 	}
 }
 
+// Toggle live update committing on the input form, if any
+function toggleLive(live: boolean) {
+	if (!postModel || postModel.sentAllocRequest) {
+		return
+	}
+	postForm.setEditing(live)
+	postForm.inputElement("done").hidden = live
+	postModel.nonLive = !live
+}
+
 async function openReply(e: MouseEvent) {
 	// Don't trigger, when user is trying to open in a new tab
 	if (e.which !== 1
 		|| !page.thread
 		|| e.ctrlKey
+		|| connSM.state !== connState.synced
 	) {
 		return
 	}
@@ -164,12 +189,6 @@ export default () => {
 	connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
 	connSM.on(connState.desynced, postSM.feeder(postEvent.error))
 
-	// Regained connectivity, when no post open
-	postSM.act(postState.locked, postEvent.sync, () => {
-		postForm.disableSubmission(false)
-		return postState.draft
-	})
-
 	// The server notified a captcha will be required on the next post
 	handlers[message.captcha] = () =>
 		needCaptcha = true
@@ -180,35 +199,70 @@ export default () => {
 
 	// Set up client to create new posts
 	postSM.on(postState.ready, () => {
-		postForm = postModel = null
-		stylePostControls(el =>
-			el.style.display = "")
+		window.onbeforeunload = postForm = postModel = null
+		stylePostControls(el => {
+			el.style.display = ""
+			el.classList.remove("disabled")
+		})
 	})
 
 	// Handle connection loss
 	postSM.wildAct(postEvent.disconnect, () => {
+		needCaptcha = false
+
 		switch (postSM.state) {
-			case postState.draft:
-			case postState.needCaptcha:
+			case postState.alloc:       // Pause current allocated post
+			case postState.halted:
+				return postState.halted
+			case postState.draft:       // Clear any unallocated postForm
+				postForm.remove()
+				postModel = postForm = null
+				stylePostControls(el =>
+					el.style.display = "")
+				break
 			case postState.locked:
-				postForm.disableSubmission(true)
 				return postState.locked
-			case postState.threadLocked:
-				return postState.threadLocked
-			default:
-				return postState.ready
 		}
+
+		stylePostControls(el =>
+			el.classList.add("disabled"))
+
+		return postState.locked
 	})
+
+	// Regained connectivity, when post is allocated
+	postSM.act(postState.halted, postEvent.reclaim, () =>
+		postState.alloc)
+
+	// Regained connectivity too late and post can no longer be reclaimed
+	postSM.act(postState.halted, postEvent.abandon, () => {
+		postModel.abandon()
+		return postState.ready
+	})
+
+	// Regained connectivity, when no post open
+	postSM.act(postState.locked, postEvent.sync, () =>
+		postState.ready)
 
 	// Handle critical errors
 	postSM.wildAct(postEvent.error, () => {
 		stylePostControls(el =>
 			el.classList.add("errored"))
-		if (postForm) {
-			postForm.renderError()
-		}
+		postForm && postForm.renderError()
+		window.onbeforeunload = null
 		return postState.errored
 	})
+
+	// Reset state during page navigation
+	postSM.wildAct(postEvent.reset, () =>
+		postState.ready)
+
+	// Transition a draft post into allocated state. All the logic for this is
+	// model- and view-side.
+	postSM.act(postState.draft, postEvent.alloc, () =>
+		postState.alloc)
+
+	postSM.on(postState.alloc, bindNagging)
 
 	// Open a new post creation form, if none open
 	postSM.act(postState.ready, postEvent.open, () => {
@@ -218,15 +272,16 @@ export default () => {
 		if (needCaptcha) {
 			return postState.needCaptcha
 		}
-		if (connSM.state !== connState.synced) {
-			return postState.locked
-		}
 		return postState.draft
 	})
 
 	// New captcha submitted
 	postSM.act(postState.needCaptcha, postEvent.captchaSolved, () => {
 		postModel.needCaptcha = needCaptcha = false
+		if (postModel.bufferedFile && !postModel.nonLive) {
+			postModel.uploadFile(postModel.bufferedFile)
+			postModel.bufferedFile = null
+		}
 		return postState.draft
 	})
 
@@ -237,43 +292,46 @@ export default () => {
 	})
 
 	// Hide post controls, when a postForm is open
-	postSM.on(postState.draft, () =>
+	const hidePostControls = () =>
 		stylePostControls(el =>
-			el.style.display = "none"))
+			el.style.display = "none")
+	postSM.on(postState.draft, hidePostControls)
+	postSM.on(postState.alloc, () =>
+		hidePostControls())
 
 	// Close unallocated draft
 	postSM.act(postState.draft, postEvent.done, (e?: Event) => {
-		let commit = false
-		if (e) {
+		// Commit a draft made as a non-live post
+		let commitNonLive = false
+		if (e && postModel.nonLive) {
 			if (e.target instanceof HTMLInputElement) {
-				commit = e.target.getAttribute("name") === "done"
+				commitNonLive = e.target.getAttribute("name") === "done"
 			} else if (e instanceof KeyboardEvent) {
-				commit = e.which === options.done
+				commitNonLive = e.which === options.done
 			}
 		}
-		if (commit) {
+		if (commitNonLive) {
 			if (postModel.needCaptcha) { // New captcha submitted
 				needCaptcha = false
 			}
-			postModel.commit()
-			return postState.ready
+			postModel.commitNonLive()
+			return postState.sendingNonLive
 		}
 
-		postModel.remove()
+		postForm.remove()
 		return postState.ready
 	})
 
-	// Cancel draft during disconnect
-	postSM.act(postState.locked, postEvent.done, (e?: Event) => {
-		if (e) {
-			if (e.target instanceof HTMLInputElement
-				&& e.target.getAttribute("name") === "cancel"
-			) {
-				postModel.remove()
-				return postState.ready
-			}
-		}
-		return postState.locked
+	// Close allocated post
+	postSM.act(postState.alloc, postEvent.done, () => {
+		postModel.commitClose()
+		return postState.ready
+	})
+
+	// Just close the post, after it is committed
+	postSM.act(postState.sendingNonLive, postEvent.done, () => {
+		postModel.abandon()
+		return postState.ready
 	})
 
 	// Handle clicks on the [Reply] button
@@ -307,6 +365,7 @@ export default () => {
 	for (let id of ["name", "auth", "sage"]) {
 		identity.onChange(id, updateIdentity)
 	}
+	identity.onChange("live", toggleLive)
 
 	initDrop()
 	initThreads()

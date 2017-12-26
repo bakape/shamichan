@@ -130,6 +130,12 @@ func HasImage(id uint64) (has bool, err error) {
 	return
 }
 
+// InsertImage insert and image into and existing open post
+func InsertImage(tx *sql.Tx, id uint64, img common.Image) error {
+	_, err := getStatement(tx, "insert_image").Exec(id, img.SHA1, img.Name)
+	return err
+}
+
 // SpoilerImage spoilers an already allocated image
 func SpoilerImage(id uint64) error {
 	return execPrepared("spoiler_image", id)

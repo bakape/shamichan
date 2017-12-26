@@ -57,8 +57,9 @@ Node Post::render_body()
                 state.append({ "i" }, true);
             }
 
-            parse_code(
-                line, [this](string_view frag) { parse_fragment(frag); });
+            parse_code(line, [this](string_view frag) {
+                editing ? parse_temp_links(frag) : parse_fragment(frag);
+            });
 
             // Close any unclosed tags
             if (state.italic) {

@@ -4,29 +4,18 @@ import { postSM, postEvent } from "."
 import { trigger } from "../../util"
 import { page, boardConfig } from "../../state"
 import FormModel from "./model"
-import { expandThreadForm } from "./threads"
 
 // Handle file drop
 function onDrop(e: DragEvent) {
-	const { files } = e.dataTransfer
-	const target = e.target as HTMLElement;
+	const {files} = e.dataTransfer
 
-	if (!files.length
-		|| (target.matches && target.matches("input[type=file]"))
-	) {
+	// TODO: Drag & drop for thread creation
+	if (!files.length || !page.thread) {
 		return
 	}
 
 	e.stopPropagation()
 	e.preventDefault()
-
-	if (!page.thread) {
-		expandThreadForm();
-		(document
-			.querySelector("#new-thread-form input[type=file]") as any)
-			.files = files
-		return
-	}
 
 	if (boardConfig.textOnly) {
 		return
@@ -38,19 +27,23 @@ function onDrop(e: DragEvent) {
 	// Neither disconnected, errored or already has image
 	const m = trigger("getPostModel") as FormModel
 	if (m && !m.image) {
-		m.setUploads(files)
+		m.uploadFile(files[0])
 	}
 }
 
 function stopDefault(e: Event) {
-	e.stopPropagation()
-	e.preventDefault()
+	// No drag and drop for thread creation right now. Keep default behavior.
+	if (page.thread) {
+		e.stopPropagation()
+		e.preventDefault()
+	}
 }
 
-// Bind listeners
 export default () => {
+	// Bind listeners
+	const threads = document.getElementById("threads")
 	for (let event of ["dragenter", "dragexit", "dragover"]) {
-		document.addEventListener(event, stopDefault)
+		threads.addEventListener(event, stopDefault)
 	}
-	document.addEventListener("drop", onDrop)
+	threads.addEventListener("drop", onDrop)
 }

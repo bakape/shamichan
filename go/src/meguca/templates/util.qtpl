@@ -55,6 +55,9 @@ Render a link to another post. Can optionally be cross-thread.
 Render the class attribute of a post
 {% func postClass(p common.Post) %}{% stripspace %}
 	class="glass
+		{% if p.Editing %}
+			{% space %}editing
+		{% endif %}
 		{% if p.Deleted %}
 			{% space %}deleted
 		{% endif %}

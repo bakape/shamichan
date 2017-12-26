@@ -90,6 +90,13 @@ func streambody(
 		Writer: *w,
 	}
 
+	var fn func(string)
+	if c.Editing {
+		fn = c.parseOpenLine
+	} else {
+		fn = c.parseTerminatedLine
+	}
+
 	for i, l := range strings.Split(c.Body, "\n") {
 		c.state.quote = false
 
@@ -117,7 +124,7 @@ func streambody(
 			c.string("<i>")
 		}
 
-		c.parseCode(l)
+		fn(l)
 
 		if c.state.italic {
 			c.string("</i>")
@@ -150,22 +157,27 @@ func (c *bodyContext) byte(b byte) {
 	c.N().SZ(buf[:])
 }
 
+// Parse a line that is no longer being edited
+func (c *bodyContext) parseTerminatedLine(line string) {
+	c.parseCode(line, (*c).parseFragment)
+}
+
 // Detect code tags
-func (c *bodyContext) parseCode(frag string) {
+func (c *bodyContext) parseCode(frag string, fn func(string)) {
 	for {
 		i := strings.Index(frag, "``")
 		if i != -1 {
-			c.formatCode(frag[:i])
+			c.formatCode(frag[:i], fn)
 			frag = frag[i+2:]
 			c.state.code = !c.state.code
 		} else {
-			c.formatCode(frag)
+			c.formatCode(frag, fn)
 			break
 		}
 	}
 }
 
-func (c *bodyContext) formatCode(frag string) {
+func (c *bodyContext) formatCode(frag string, fn func(string)) {
 	if c.state.code {
 		// Strip quotes
 		for len(frag) != 0 && frag[0] == '>' {
@@ -174,16 +186,20 @@ func (c *bodyContext) formatCode(frag string) {
 		}
 		c.N().Z(highlightSyntax(frag))
 	} else {
-		c.parseSpoilers(frag)
+		c.parseSpoilers(frag, fn)
 	}
 }
 
 // Inject spoiler tags and call fn on the remaining parts
-func (c *bodyContext) parseSpoilers(frag string) {
+func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
+	_fn := func(frag string) {
+		c.parseBolds(frag, fn)
+	}
+
 	for {
 		i := strings.Index(frag, "**")
 		if i != -1 {
-			c.parseBolds(frag[:i])
+			_fn(frag[:i])
 
 			if c.state.italic {
 				c.string("</i>")
@@ -208,18 +224,22 @@ func (c *bodyContext) parseSpoilers(frag string) {
 			c.state.spoiler = !c.state.spoiler
 			frag = frag[i+2:]
 		} else {
-			c.parseBolds(frag)
+			_fn(frag)
 			break
 		}
 	}
 }
 
 // Inject bold tags and call fn on the remaining parts
-func (c *bodyContext) parseBolds(frag string) {
+func (c *bodyContext) parseBolds(frag string, fn func(string)) {
+	_fn := func(frag string) {
+		c.parseItalics(frag, fn)
+	}
+
 	for {
 		i := strings.Index(frag, "__")
 		if i != -1 {
-			c.parseItalics(frag[:i])
+			_fn(frag[:i])
 
 			if c.state.italic {
 				c.string("</i>")
@@ -238,18 +258,18 @@ func (c *bodyContext) parseBolds(frag string) {
 			c.state.bold = !c.state.bold
 			frag = frag[i+2:]
 		} else {
-			c.parseItalics(frag)
+			_fn(frag)
 			break
 		}
 	}
 }
 
 // Inject italic tags and call fn on the remaining parts
-func (c *bodyContext) parseItalics(frag string) {
+func (c *bodyContext) parseItalics(frag string, fn func(string)) {
 	for {
 		i := strings.Index(frag, "~~")
 		if i != -1 {
-			c.parseFragment(frag[:i])
+			fn(frag[:i])
 
 			if c.state.italic {
 				c.string("</i>")
@@ -260,7 +280,7 @@ func (c *bodyContext) parseItalics(frag string) {
 			c.state.italic = !c.state.italic
 			frag = frag[i+2:]
 		} else {
-			c.parseFragment(frag)
+			fn(frag)
 			break
 		}
 	}
@@ -508,4 +528,11 @@ func (c *bodyContext) uint64(i uint64) {
 func (c *bodyContext) writeInvalidCommand(s string) {
 	c.byte('#')
 	c.escape(s)
+}
+
+// Parse a line that is still being edited
+func (c *bodyContext) parseOpenLine(line string) {
+	c.parseCode(line, func(s string) {
+		c.escape(s)
+	})
 }

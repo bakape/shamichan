@@ -27,9 +27,13 @@ article {
 	width: auto;
 	margin-left:5%;
 	margin-right:5%;
-	&.highlight, &:target {
+	&.highlight:not(.editing), &:target {
 		background-color: #d6bad0;
 		border-color: #ba9dbf;
+	}
+	&.editing {
+		background-color: #EEE;
+		border-color: #E5E5E5;
 	}
 }
 
@@ -83,7 +87,9 @@ hr{
 }
 
 .preview {
-	background-color: white;
+	&:not(.editing) {
+		background-color: white;
+	}
 	border-right: 1px solid #eee;
 	border-bottom: 1px solid #eee;
 }

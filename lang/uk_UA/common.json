@@ -114,5 +114,11 @@
 		"Синхронізуємо",
 		"Синхронізовано",
 		"Розсинхронізовано"
-	]
+	],
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
+	}
 }

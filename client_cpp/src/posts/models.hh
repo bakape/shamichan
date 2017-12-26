@@ -162,8 +162,10 @@ private:
 // Generic post model
 class Post : public brunhild::VirtualView {
 public:
-    // Deleted by moderator
-    bool deleted = false,
+    // Post is currrently being edited
+    bool editing = false,
+         // Deleted by moderator
+        deleted = false,
          // Poster disabled bumping of the parent thread
         sage = false,
          // Banned for this post by moderator

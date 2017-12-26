@@ -60,7 +60,8 @@ func TestReader(t *testing.T) {
 				OP:    1,
 				Board: "a",
 			},
-			IP: "::1",
+			Password: []byte("foo"),
+			IP:       "::1",
 		},
 		{
 			StandalonePost: common.StandalonePost{

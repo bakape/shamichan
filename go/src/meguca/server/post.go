@@ -26,6 +26,7 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	req := websockets.ThreadCreationRequest{
 		Subject:              f.Get("subject"),
 		Board:                f.Get("board"),
+		NonLive:              f.Get("nonLive") == "on",
 		ReplyCreationRequest: repReq,
 	}
 
@@ -149,7 +150,7 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	feeds.InsertPostInto(post.ID, post.OP, msg)
+	feeds.InsertPostInto(post.StandalonePost, msg)
 	url := fmt.Sprintf(`/%s/%d?last100=true#bottom`, board, op)
 	http.Redirect(w, r, url, 303)
 }
