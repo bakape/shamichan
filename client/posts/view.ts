@@ -192,9 +192,13 @@ export default class PostView extends ImageHandler {
         this.setEditing(false)
         this.reparseBody()
         if (!this.movedToDeadLane) {
-            this.el.remove()
-            document.getElementById("dead-posts").append(this.el)
             this.movedToDeadLane = true
+            this.el.classList.add("fade-out")
+            setTimeout(() => {
+                this.el.remove()
+                document.getElementById("dead-posts").append(this.el)
+                this.el.classList.remove("fade-out")
+            }, 1500);
         }
     }
 
