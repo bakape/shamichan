@@ -13,6 +13,9 @@ import countries from "./countries"
 
 // Base post view class
 export default class PostView extends ImageHandler {
+    // Specifies an open post has been moved to the closed post lane
+    private movedToDeadLane: boolean
+
     constructor(model: Post, el: HTMLElement | null) {
         const attrs: ViewAttrs = { model }
         if (el) {
@@ -188,8 +191,11 @@ export default class PostView extends ImageHandler {
     public closePost() {
         this.setEditing(false)
         this.reparseBody()
-        this.el.remove()
-        document.getElementById("dead-posts").append(this.el)
+        if (!this.movedToDeadLane) {
+            this.el.remove()
+            document.getElementById("dead-posts").append(this.el)
+            this.movedToDeadLane = true
+        }
     }
 
     // Stop post from displaying

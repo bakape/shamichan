@@ -185,14 +185,8 @@ export class Post extends Model implements PostData {
 
 	// Close an open post and reparse its last line
 	public closePost() {
-		const old = this.editing
 		this.editing = false
-
-		// Prevent duplicate calls. Can happen with websocket message syncing
-		// and posts created by this client.
-		if (old) {
-			this.view.closePost()
-		}
+		this.view.closePost()
 	}
 
 	// Set post as banned
