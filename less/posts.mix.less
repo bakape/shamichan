@@ -9,7 +9,28 @@ a.referenced {
 	}
 }
 
-#thread-container, .index-thread, article {
+#thread-container {
+	display: flex;
+	flex-direction: row;
+}
+
+#dead-posts {
+	width: 65%;
+}
+
+#live-posts {
+	width: 35%;
+	bottom: 0;
+	margin-top: auto;
+	align-items: flex-end !important;
+	article {
+		blockquote {
+			min-width: initial;
+		}
+	}
+}
+
+#thread-container > section, .index-thread, article {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
@@ -18,7 +39,7 @@ a.referenced {
 article {
 	word-break: break-word;
 	word-wrap: break-word;
-	max-width: 95vw;
+	max-width: 100%;
 	.backlinks > em > a {
 		font-size: smaller;
 	}
@@ -110,6 +131,7 @@ figure {
 .fit-to-width {
 	max-width: 100%;
 }
+
 .fit-to-screen {
 	max-width: 100%;
 	max-height: 100vh;
@@ -217,7 +239,7 @@ header {
 }
 
 // Make OPs stand out, if no custom background set
-#threads:not(.custom-BG) section > article:first-of-type {
+#threads:not(.custom-BG) section > article.op {
 	margin-left: 0;
 	padding-left: 0;
 	border: none;

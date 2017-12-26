@@ -25,6 +25,9 @@ export default class PostView extends ImageHandler {
             if (model.deleted) {
                 attrs.class += " deleted"
             }
+            if (model.id === model.op) {
+                attrs.class += " op"
+            }
             attrs.tag = "article"
             attrs.id = "p" + model.id
         }
@@ -185,6 +188,8 @@ export default class PostView extends ImageHandler {
     public closePost() {
         this.setEditing(false)
         this.reparseBody()
+        this.el.remove()
+        document.getElementById("dead-posts").append(this.el)
     }
 
     // Stop post from displaying

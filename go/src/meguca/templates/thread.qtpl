@@ -89,14 +89,17 @@
 ThreadPosts renders the post content of a thread. Separate function to allow
 caching of generated posts.
 {% func ThreadPosts(t common.Thread, json []byte) %}{% stripspace %}
+	{% code bls := extractBacklinks(1<<10, t) %}
 	<section id="thread-container" data-id="{%s= strconv.FormatUint(t.ID, 10) %}">
-		{% code bls := extractBacklinks(1<<10, t) %}
-		{%= renderThreadPosts(t, bls, config.Get().RootURL, false) %}
-		<script id="post-data" type="application/json">
-			{%z= json %}
-		</script>
-		{%= encodeBacklinks(bls) %}
+		<section id=dead-posts>
+			{%= renderThreadPosts(t, bls, config.Get().RootURL, false) %}
+		</section>
+		<section id=live-posts></section>
 	</section>
+	<script id="post-data" type="application/json">
+		{%z= json %}
+	</script>
+	{%= encodeBacklinks(bls) %}
 	<script id="board-configs" type="application/json">
 		{%z= config.GetBoardConfigs(t.Board).JSON %}
 	</script>

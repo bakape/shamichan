@@ -72,7 +72,7 @@ article, aside {
 }
 
 #threads {
-	&:not(.custom-BG) section > article.editing:not(:first-child) {
+	&:not(.custom-BG) section > article.editing:not(.op) {
 		.editing-mixin;
 	}
 	&.custom-BG section > article.editing {
@@ -98,7 +98,7 @@ article.preview.editing {
     left: 0;
 }
 
-#threads:not(.custom-BG) section > article:first-child {
+#threads:not(.custom-BG) section > article.op {
     padding-left: 1em;
     padding-right: 1em;
     border: none;
