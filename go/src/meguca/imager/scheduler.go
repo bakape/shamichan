@@ -13,7 +13,7 @@ import (
 )
 
 // Balances thumbnailing across worker threads to prevent resource overuse
-var requestThumbnailing = make(chan thumbnailingRequest)
+var requestThumbnailing chan thumbnailingRequest
 
 type thumbnailingRequest struct {
 	file multipart.File
@@ -32,6 +32,7 @@ func init() {
 	if n < 1 {
 		n = 1
 	}
+	requestThumbnailing = make(chan thumbnailingRequest, n)
 	for i := 0; i < n; i++ {
 		go func() {
 			for {
@@ -39,11 +40,12 @@ func init() {
 
 				buf := bytes.NewBuffer(thumbnailer.GetBuffer())
 				_, err := buf.ReadFrom(req.file)
+				data := buf.Bytes()
 				if err != nil {
 					req.res <- thumbnailingResponse{500, "", err}
+					thumbnailer.ReturnBuffer(data)
 					continue
 				}
-				data := buf.Bytes()
 
 				sum := sha1.Sum(data)
 				SHA1 := hex.EncodeToString(sum[:])

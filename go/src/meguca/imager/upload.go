@@ -131,7 +131,7 @@ func ParseUpload(req *http.Request) (int, string, error) {
 	}
 	defer file.Close()
 
-	ch := make(chan thumbnailingResponse)
+	ch := make(chan thumbnailingResponse, 1)
 	requestThumbnailing <- thumbnailingRequest{file, ch}
 	res := <-ch
 	return res.code, res.imageID, res.err
