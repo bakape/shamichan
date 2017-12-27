@@ -74,6 +74,9 @@ Node Post::render()
     n.children.reserve(4);
 
     n.attrs["class"] = "glass";
+    if (id == op) {
+        n.attrs["class"] += " op";
+    }
     if (editing) {
         n.attrs["class"] += " editing";
     }

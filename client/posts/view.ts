@@ -22,6 +22,9 @@ export default class PostView extends ImageHandler {
             if (model.editing) {
                 attrs.class += ' editing'
             }
+            if (model.id === model.op) {
+                attrs.class += " op"
+            }
             if (model.deleted) {
                 attrs.class += " deleted"
             }

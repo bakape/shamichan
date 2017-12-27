@@ -100,7 +100,7 @@ allow caching of generated posts.
 		{% for _, t := range b %}
 			{% code idStr:= strconv.FormatUint(t.ID, 10) %}
 			{% code hasImage := t.Image != nil && t.Image.ThumbType != common.NoFile %}
-			<article id="p{%s= idStr %}" {%= postClass(t.Post) %} data-id="{%s= idStr %}">
+			<article id="p{%s= idStr %}" {%= postClass(t.Post, t.ID) %} data-id="{%s= idStr %}">
 				{%= deletedToggle() %}
 				{% if hasImage %}
 					<figure>
