@@ -77,9 +77,6 @@ Node Post::render()
     if (editing) {
         n.attrs["class"] += " editing";
     }
-    if (id == op) {
-        n.attrs["class"] += " op";
-    }
     if (deleted) {
         n.attrs["class"] += " deleted";
         n.children.push_back(delete_toggle);

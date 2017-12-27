@@ -185,9 +185,6 @@ export default class FormView extends PostView {
         }
         this.previousHeight = height
         bottomSpacer.style.height = `calc(${height}px - 2.1em)`
-        if (atBottom()) {
-            scrollToBottom()
-        }
     }
 
     private removeUploadForm() {
@@ -256,7 +253,7 @@ export default class FormView extends PostView {
         }
         if (bottomSpacer) {
             bottomSpacer.style.height = ""
-            if (atBottom()) {
+            if (atBottom) {
                 scrollToBottom()
             }
         }

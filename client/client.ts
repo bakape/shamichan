@@ -62,8 +62,16 @@ export function insertPost(data: PostData) {
 		model.propagateLinks()
 	}
 
-	document.getElementById(model.editing ? "live-posts" : "dead-posts")
-		.append(view.el)
+	// Find last allocated post and insert after it
+	const last = document
+		.getElementById("thread-container")
+		.lastElementChild
+	if (last.id === "p0") {
+		last.before(view.el)
+	} else {
+		last.after(view.el)
+	}
+
 	postAdded(model)
 	incrementPostCount(true, "image" in data)
 }

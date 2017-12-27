@@ -3,7 +3,7 @@ import {
     extractConfigs, extractPost, reparseOpenPosts, extractPageData, hidePosts,
 } from "./common"
 import { findSyncwatches } from "../posts"
-import { config, posts } from "../state"
+import { config } from "../state"
 import { postSM, postState } from "../posts"
 
 const counters = document.getElementById("thread-post-counters"),
@@ -18,7 +18,7 @@ export default function () {
     extractConfigs()
 
     const { threads: data, backlinks } = extractPageData<ThreadData>(),
-        { posts: replies } = data
+        { posts } = data
 
     data.posts = null
 
@@ -37,22 +37,12 @@ export default function () {
 
     extractPost(data, data.id, data.board, backlinks)
 
-    for (let post of replies) {
+    for (let post of posts) {
         extractPost(post, data.id, data.board, backlinks)
     }
     hidePosts()
     reparseOpenPosts()
     findSyncwatches(threads)
-
-    // Move open posts to their own section for more usable page structure
-    const liveCont = document.getElementById("live-posts")
-    for (let p of posts) {
-        if (p.editing) {
-            const { el } = p.view
-            el.remove()
-            liveCont.append(el)
-        }
-    }
 
     // Needs to be done, to  stop the FSM
     if (data.locked) {

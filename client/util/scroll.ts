@@ -8,12 +8,8 @@ const banner = document.getElementById("banner")
 let scrolled = false
 let locked = false;
 
-
 // Indicates if the page is scrolled to its bottom
-let _atBottom: boolean
-
-export const atBottom = () =>
-	_atBottom
+export let atBottom: boolean
 
 // Scroll to target anchor element, if any
 export function scrollToAnchor() {
@@ -44,19 +40,19 @@ function scrollToTop() {
 // Scroll to the bottom of the thread
 export function scrollToBottom() {
 	window.scrollTo(0, document.documentElement.scrollHeight)
-	_atBottom = true
+	atBottom = true
 }
 
 // Check, if at the bottom of the thread and render the locking indicator
 export function checkBottom() {
 	if (!page.thread) {
-		_atBottom = false
+		atBottom = false
 		return
 	}
-	_atBottom = isAtBottom()
+	atBottom = isAtBottom()
 	const lock = document.getElementById("lock")
 	if (lock) {
-		lock.style.visibility = _atBottom ? "visible" : "hidden"
+		lock.style.visibility = atBottom ? "visible" : "hidden"
 	}
 }
 
