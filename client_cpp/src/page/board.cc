@@ -98,7 +98,6 @@ static void render_index_threads(ostringstream& s)
 }
 
 // Render Links to different pages of the board index
-// TODO: Pagination - total page count not yet exported
 static Node render_pagination()
 {
     const unsigned int n = page->page;
@@ -129,7 +128,7 @@ static Node render_pagination()
         }
     }
 
-    return { "aside", { { "class", "glass spaced" } }, s.str() };
+    return { "aside", { { "class", "glass" } }, s.str() };
 }
 
 // Render a link to a catalog or board page
