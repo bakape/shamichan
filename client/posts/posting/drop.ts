@@ -9,11 +9,7 @@ import { expandThreadForm } from "./threads"
 // Handle file drop
 function onDrop(e: DragEvent) {
 	const { files } = e.dataTransfer
-	const target = e.target as HTMLElement
-
-	if (!files.length
-		|| (target.matches && target.matches("input[type=file]"))
-	) {
+	if (!files.length || isFileInput(e.target)) {
 		return
 	}
 
@@ -42,9 +38,17 @@ function onDrop(e: DragEvent) {
 	}
 }
 
+// Returns, if event target is an <input type=file>
+function isFileInput(target: EventTarget): boolean {
+	const el = target as HTMLElement
+	return el.tagName === "INPUT" && el.getAttribute("type") === "file"
+}
+
 function stopDefault(e: Event) {
-	e.stopPropagation()
-	e.preventDefault()
+	if (!isFileInput(e.target)) {
+		e.stopPropagation()
+		e.preventDefault()
+	}
 }
 
 // Bind listeners
