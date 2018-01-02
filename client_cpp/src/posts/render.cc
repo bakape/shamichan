@@ -17,13 +17,6 @@ static optional<Node> render_omitted(unsigned long id)
     }
     auto const& t = threads->at(id);
 
-    // There might still be posts missing due to deletions even in complete
-    // thread queries. Ensure we are actually retrieving an abbreviated thread
-    // before calculating.
-    if (!t.abbrev) {
-        return {};
-    }
-
     // Collect all posts for this thread
     std::vector<Post*> owned;
     owned.reserve(32);
@@ -52,8 +45,7 @@ static optional<Node> render_omitted(unsigned long id)
       << pluralize(image_omit, "image") << ' ' << lang->posts.at("omitted");
     return {
         {
-            "span",
-            { { "class", "omit spaced" } },
+            "span", { { "class", "omit spaced" } },
             // Disambiguate constructor
             brunhild::Children({
                 { "span", s.str() },
