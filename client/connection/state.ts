@@ -1,5 +1,5 @@
 import { FSM } from "../util"
-import { debug } from "../state"
+import { debug, page } from "../state"
 import { message, handlers } from "./messages"
 import { renderStatus } from "./ui"
 import { synchronise } from "./synchronization"
@@ -174,7 +174,9 @@ connSM.wildAct(connEvent.close, event => {
 	if (debug) {
 		console.error(event)
 	}
-	renderStatus(syncStatus.disconnected)
+	if (page.thread) {
+		renderStatus(syncStatus.disconnected)
+	}
 
 	// Wait maxes out at ~1min
 	const wait = 500 * Math.pow(1.5, Math.min(Math.floor(++attempts / 2), 12))
@@ -184,7 +186,7 @@ connSM.wildAct(connEvent.close, event => {
 })
 
 connSM.act(connState.dropped, connEvent.retry, () => {
-	if (!navigator.onLine) {
+	if (!navigator.onLine || !page.thread) {
 		return connState.dropped
 	}
 

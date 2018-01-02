@@ -100,8 +100,8 @@ static void resync_conn_SM()
 {
     log_exceptions([]() {
         switch (conn_SM->state()) {
-            // Ensure still connected, in case the computer went to sleep or
-            // hibernate or the mobile browser tab was suspended.
+        // Ensure still connected, in case the computer went to sleep or
+        // hibernate or the mobile browser tab was suspended.
         case ConnState::synced:
             send_message(Message::NOP, "");
             break;
@@ -224,15 +224,18 @@ void init_connectivity()
     });
 
     conn_SM->wild_act(ConnEvent::close, []() {
-        render_status(SyncStatus::disconnected);
+        if (page->thread) {
+            render_status(SyncStatus::disconnected);
+        }
         return ConnState::dropped;
     });
 
-    // This is called even on a dropped -> dropped "transition", so it acts as a
-    // scheduler for new attempts
+    // schedule_reconnect() is called even on a dropped -> dropped "transition",
+    // so this acts as a scheduler for new attempts
     conn_SM->on(ConnState::dropped, schedule_reconnect);
     conn_SM->act(ConnState::dropped, ConnEvent::retry, []() {
-        if (!emscripten::val::global("navigator")["onLine"].as<bool>()) {
+        if (!page->thread
+            || !emscripten::val::global("navigator")["onLine"].as<bool>()) {
             schedule_reconnect();
             return ConnState::dropped;
         }
