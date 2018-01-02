@@ -124,19 +124,29 @@ void Post::extend(nlohmann::json& j)
     if (j.count("image")) {
         image = Image(j["image"]);
     }
-    if (j.count("commands")) {
-        auto& c = j["commands"];
-        commands.clear(); // No to duplicate existing entries
-        commands.reserve(c.size());
-        for (auto& com : c) {
-            commands.push_back(Command(com));
-        }
-    }
+    parse_commands(j);
+    parse_links(j);
+}
+
+void Post::parse_links(nlohmann::json& j)
+{
     if (j.count("links")) {
         auto& l = j["links"];
         links.reserve(l.size());
         for (auto& val : l) {
             links[val[0]] = { false, val[1] };
+        }
+    }
+}
+
+void Post::parse_commands(nlohmann::json& j)
+{
+    if (j.count("commands")) {
+        auto& c = j["commands"];
+        commands.clear(); // Not to duplicate existing entries
+        commands.reserve(c.size());
+        for (auto& com : c) {
+            commands.push_back(Command(com));
         }
     }
 }
@@ -169,6 +179,12 @@ void Post::propagate_links()
             hide_recursively(*this);
         }
     }
+}
+
+void Post::close()
+{
+    editing = false;
+    patch();
 }
 
 void TextState::reset(Node* root)

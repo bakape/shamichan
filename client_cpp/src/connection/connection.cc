@@ -1,12 +1,17 @@
 #include "connection.hh"
 #include "../../brunhild/mutations.hh"
+#include "../../utf8/utf8.h"
 #include "../json.hh"
 #include "../lang.hh"
+#include "../page/thread.hh"
 #include "../state.hh"
 #include "../util.hh"
+#include "posts.hh"
 #include "sync.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <functional>
+#include <iterator>
 #include <string_view>
 
 using nlohmann::json;
@@ -43,6 +48,27 @@ static string encode_message(Message type, const string& msg)
     return s;
 }
 
+// Run handler on post, if post exists on page.
+// A post may not be loaded in this client but still exist in the
+// thread.
+static void if_post_exists(
+    const unsigned long id, std::function<void(Post&)> fn)
+{
+    if (posts->count(id)) {
+        auto& p = posts->at(id);
+        fn(p);
+    }
+}
+
+// Same for posts with JSON object messages and an "id" attribute, that defines
+// the post ID
+static void if_post_exists(
+    std::string_view data, std::function<void(json&, Post&)> fn)
+{
+    auto j = json::parse(data);
+    if_post_exists(j["id"].get<unsigned long>(), [&](auto& p) { fn(j, p); });
+}
+
 // Handler for messages received from the server.
 // extracted specifies, the mesage was extracted from a larger concatenated
 // message.
@@ -64,6 +90,58 @@ static void on_message(string data_str, bool extracted)
             = static_cast<Message>(std::stoul(string(data.substr(0, 2))));
         data = data.substr(2);
         switch (type) {
+        case Message::invalid:
+            alert(string(data));
+            conn_SM->feed(ConnEvent::error);
+            break;
+        case Message::insert_post:
+            insert_post(data);
+            break;
+        case Message::insert_image:
+            if_post_exists(data, [](auto& j, auto& p) {
+                p.image = Image(j);
+                p.patch();
+                threads->at(page->thread).image_ctr++;
+                render_post_counter();
+
+                // TODO: Image auto expansion
+
+            });
+            break;
+        case Message::spoiler:
+            if_post_exists(std::stoul(string(data)), [](auto& p) {
+                p.image->spoiler = true;
+                p.patch();
+            });
+            break;
+        case Message::append: {
+            auto j = json::parse(data);
+            if_post_exists(j[0].get<unsigned long>(), [&](auto& p) {
+                utf8::unchecked::append(j[1], std::back_inserter(p.body));
+                p.patch();
+            });
+        } break;
+        case Message::backspace:
+            if_post_exists(std::stoul(string(data)), [](auto& p) {
+                console::log(p.body);
+                // Removes the last UTF-8 char from the post's text
+                auto it = p.body.end();
+                utf8::unchecked::prior(it);
+                p.body = p.body.substr(0, it - p.body.begin());
+                console::log(p.body);
+                p.patch();
+            });
+            break;
+        case Message::close_post:
+            if_post_exists(data, [](auto& j, auto& p) {
+                if (j.count("links")) {
+                    p.parse_links(j);
+                    p.propagate_links();
+                }
+                p.parse_commands(j);
+                p.close();
+            });
+            break;
         case Message::synchronise:
             load_posts(data);
             conn_SM->feed(ConnEvent::sync);

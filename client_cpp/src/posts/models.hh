@@ -219,6 +219,15 @@ public:
     // Set and render backlinks on any linked posts.
     void propagate_links();
 
+    // Parse link data from JSON
+    void parse_links(nlohmann::json&);
+
+    // Parse hash command results from JSON
+    void parse_commands(nlohmann::json&);
+
+    // Close a post being edited
+    void close();
+
 private:
     TextState state;
 

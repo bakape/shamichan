@@ -1,4 +1,5 @@
 #include "view.hh"
+#include "../src/util.hh"
 #include "mutations.hh"
 #include <sstream>
 #include <utility>
