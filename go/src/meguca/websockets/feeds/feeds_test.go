@@ -12,7 +12,7 @@ func TestWriteMultipleToBuffer(t *testing.T) {
 	f.write([]byte("a"))
 	f.write([]byte("b"))
 
-	const std = "33a\u0000b"
+	const std = "33[\"a\",\"b\"]"
 	if s := string(f.flush()); s != std {
 		LogUnexpected(t, std, s)
 	}

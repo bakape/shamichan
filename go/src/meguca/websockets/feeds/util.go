@@ -1,7 +1,7 @@
 package feeds
 
 import (
-	"meguca/util"
+	"meguca/common"
 	"time"
 )
 
@@ -31,16 +31,11 @@ func (t *ticker) startIfPaused() {
 }
 
 // messageBuffer provides bufferring and concatenation for post update messages
-type messageBuffer []byte
+type messageBuffer []string
 
 // Write writes a message to b
 func (b *messageBuffer) write(data []byte) {
-	if len(*b) == 0 {
-		*b = append(*b, "33"...)
-	} else {
-		*b = append(*b, 0)
-	}
-	*b = append(*b, data...)
+	*b = append(*b, string(data))
 }
 
 // Flush flushes b into into a []byte and returns it.
@@ -49,9 +44,7 @@ func (b *messageBuffer) flush() []byte {
 	if len(*b) == 0 {
 		return nil
 	}
-
-	// Need to copy, because buffer will be sent to multiple threads
-	buf := util.CloneBytes(*b)
+	buf, _ := common.EncodeMessage(common.MessageConcat, *b)
 	*b = (*b)[:0]
 	return buf
 }

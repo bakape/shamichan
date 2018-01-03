@@ -12,7 +12,6 @@
 #include <emscripten/bind.h>
 #include <functional>
 #include <iterator>
-#include <string_view>
 
 using nlohmann::json;
 using std::string;
@@ -69,26 +68,40 @@ static void if_post_exists(
     if_post_exists(j["id"].get<unsigned long>(), [&](auto& p) { fn(j, p); });
 }
 
+// Mimics JS Array.splice() method for inserting and removing text from UTF-8
+// strings at a certain position, but in place
+static void splice(string& s, int start, int len, string text)
+{
+    auto start_pos = s.begin();
+    utf8::advance(start_pos, start, s.end());
+    auto end_pos = start_pos;
+    utf8::advance(end_pos, len, s.end());
+    string end(end_pos, s.end());
+    s = s.substr(0, start_pos - s.begin());
+    s.reserve(s.size() + text.size() + end.size());
+    s += text;
+    s += end;
+}
+
 // Handler for messages received from the server.
 // extracted specifies, the mesage was extracted from a larger concatenated
 // message.
-static void on_message(string data_str, bool extracted)
+static void on_message(std::string_view msg, bool extracted)
 {
     log_exceptions([=]() {
-        auto data = std::string_view(data_str);
         if (debug) {
             string s;
-            s.reserve(data.size() + 3);
+            s.reserve(msg.size() + 3);
             if (extracted) {
                 s += '\t';
             }
-            s += "< " + string(data);
+            s += "< " + string(msg);
             console::log(s);
         }
 
         const Message type
-            = static_cast<Message>(std::stoul(string(data.substr(0, 2))));
-        data = data.substr(2);
+            = static_cast<Message>(std::stoul(string(msg.substr(0, 2))));
+        auto data = msg.substr(2);
         switch (type) {
         case Message::invalid:
             alert(string(data));
@@ -123,12 +136,16 @@ static void on_message(string data_str, bool extracted)
         } break;
         case Message::backspace:
             if_post_exists(std::stoul(string(data)), [](auto& p) {
-                console::log(p.body);
                 // Removes the last UTF-8 char from the post's text
                 auto it = p.body.end();
                 utf8::unchecked::prior(it);
                 p.body = p.body.substr(0, it - p.body.begin());
-                console::log(p.body);
+                p.patch();
+            });
+            break;
+        case Message::splice:
+            if_post_exists(data, [](auto& j, auto& p) {
+                splice(p.body, j["start"], j["len"], j["text"]);
                 p.patch();
             });
             break;
@@ -148,14 +165,10 @@ static void on_message(string data_str, bool extracted)
             break;
         case Message::concat: {
             // Split several concatenated messages
-            size_t last = 0;
-            while (1) {
-                const size_t i = data.find(char(0), last);
-                on_message(string(data.substr(last, i)), true);
-                if (i == -1) {
-                    break;
-                }
-                last = i + 1;
+            string s;
+            for (auto& msg : json::parse(data)) {
+                s = msg;
+                on_message(std::string_view(s), true);
             }
             return;
         }
@@ -165,6 +178,17 @@ static void on_message(string data_str, bool extracted)
             return;
         }
     });
+}
+
+// Takes a raw char* as int.
+// Not using embind here, because it does not support UTF-8. This also reduces
+// copying.
+static void on_message_raw(int msg_ptr)
+{
+    // Binding to a variable keeps the underlying char* from dealocating till
+    // scope exit
+    auto v = c_string_view((char*)(msg_ptr));
+    on_message(v.substr(), false);
 }
 
 static void retry_to_connect()
@@ -197,7 +221,7 @@ EMSCRIPTEN_BINDINGS(module_conn)
 
     function("on_socket_open", &on_open);
     function("on_socket_close", &on_close);
-    function("on_socket_message", &on_message);
+    function("on_socket_message", &on_message_raw);
     function("retry_to_connect", &retry_to_connect);
     function("resync_conn_SM", &resync_conn_SM);
 }
@@ -212,8 +236,15 @@ static void connect()
             + location.host + '/api/socket';
         var s = window.__socket = new WebSocket(path);
         s.onopen = function() { Module.on_socket_open(); };
-        s.onmessage = function(e) { Module.on_socket_message(e.data, false); };
         s.onclose = function() { Module.on_socket_close(); };
+        s.onmessage = function(e)
+        {
+            var s = e.data;
+            var len = lengthBytesUTF8(s) + 1;
+            var buf = Module._malloc(len);
+            stringToUTF8(s, buf, len);
+            Module.on_socket_message(buf);
+        };
         s.onerror = function(e)
         {
             console.error(e);

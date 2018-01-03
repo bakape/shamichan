@@ -91,10 +91,11 @@ function onMessage(data: string, extracted: boolean) {
 	if (debug) {
 		console.log(extracted ? "\t>" : ">", data)
 	}
+	data = data.slice(2)
 
 	// Split several concatenated messages
 	if (type === message.concat) {
-		for (let msg of data.slice(2).split('\u0000')) {
+		for (let msg of JSON.parse(data)) {
 			onMessage(msg, true)
 		}
 		return
@@ -102,7 +103,7 @@ function onMessage(data: string, extracted: boolean) {
 
 	const handler = handlers[type]
 	if (handler) {
-		handler(JSON.parse(data.slice(2)))
+		handler(JSON.parse(data))
 	}
 }
 
