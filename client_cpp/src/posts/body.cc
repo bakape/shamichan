@@ -8,6 +8,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <type_traits>
 
 using std::get;
 using std::nullopt;
@@ -15,6 +16,36 @@ using std::optional;
 using std::string;
 using std::string_view;
 using std::tuple;
+using std::function;
+
+// Allows returning the size of a char or char*
+template <class D> size_t sep_size(D sep) { return sep.size(); }
+template <> size_t sep_size<char>(char sep[[maybe_unused]]) { return 1; }
+template <> size_t sep_size<const char*>(const char* sep)
+{
+    return strlen(sep);
+}
+
+// Split string_view into subviews on delimiter D, call on_frag on each
+// fragment and call on_match after each matched delimiter
+template <class D>
+void parse_string(string_view frag, D sep, function<void(string_view)> on_frag,
+    function<void()> on_match = []() {})
+{
+    size_t i;
+    const size_t sep_s = sep_size(sep);
+    while (1) {
+        i = frag.find(sep);
+        if (i != -1) {
+            on_frag(frag.substr(0, i));
+            frag = frag.substr(i + sep_s);
+            on_match();
+        } else {
+            on_frag(frag);
+            break;
+        }
+    }
+}
 
 Node Post::render_body()
 {
@@ -25,78 +56,59 @@ Node Post::render_body()
     state.reset(&n);
 
     bool first = true;
-    parse_string(string_view(body), "\n",
-        [this, &first](string_view line) {
-            state.quote = false;
+    parse_string(string_view(body), '\n', [this, &first](string_view line) {
+        state.quote = false;
 
-            // Prevent successive empty lines
-            if (!first) {
-                if (state.successive_newlines < 2) {
-                    state.append({ "br" });
-                }
-            } else {
-                first = false;
+        // Prevent successive empty lines
+        if (!first) {
+            if (state.successive_newlines < 2) {
+                state.append({ "br" });
             }
-            if (!line.size()) {
-                state.successive_newlines++;
-                return;
-            }
+        } else {
+            first = false;
+        }
+        if (!line.size()) {
+            state.successive_newlines++;
+            return;
+        }
 
-            state.successive_newlines = 0;
-            if (line[0] == '>') {
-                state.quote = true;
-                state.append({ "em" }, true);
-            }
-            if (state.spoiler) {
-                state.append({ "del" }, true);
-            }
-            if (state.bold) {
-                state.append({ "b" }, true);
-            }
-            if (state.italic) {
-                state.append({ "i" }, true);
-            }
+        state.successive_newlines = 0;
+        if (line[0] == '>') {
+            state.quote = true;
+            state.append({ "em" }, true);
+        }
+        if (state.spoiler) {
+            state.append({ "del" }, true);
+        }
+        if (state.bold) {
+            state.append({ "b" }, true);
+        }
+        if (state.italic) {
+            state.append({ "i" }, true);
+        }
 
-            parse_code(line, [this](string_view frag) {
-                editing ? parse_temp_links(frag) : parse_fragment(frag);
-            });
+        parse_code(line, [this](string_view frag) {
+            editing ? parse_temp_links(frag) : parse_fragment(frag);
+        });
 
-            // Close any unclosed tags
-            if (state.italic) {
-                state.ascend();
-            }
-            if (state.bold) {
-                state.ascend();
-            }
-            if (state.spoiler) {
-                state.ascend();
-            }
-            if (state.quote) {
-                state.ascend();
-            }
-        },
-        []() {});
+        // Close any unclosed tags
+        if (state.italic) {
+            state.ascend();
+        }
+        if (state.bold) {
+            state.ascend();
+        }
+        if (state.spoiler) {
+            state.ascend();
+        }
+        if (state.quote) {
+            state.ascend();
+        }
+    });
     return n;
 }
 
-template <class F_M, class F_UM>
-void Post::parse_string(
-    string_view frag, const string sep, F_UM filler, F_M on_match)
-{
-    while (1) {
-        const size_t i = frag.find(sep);
-        if (i != -1) {
-            filler(frag.substr(0, i));
-            frag = frag.substr(i + sep.size());
-            on_match();
-        } else {
-            filler(frag);
-            break;
-        }
-    }
-}
-
-template <class F> void Post::parse_code(string_view frag, F fn)
+void Post::parse_code(string_view frag, Post::OnFrag fn)
 {
     parse_string(frag, "``",
         [this, fn](string_view frag) {
@@ -123,7 +135,7 @@ template <class F> void Post::parse_code(string_view frag, F fn)
         [this]() { state.code = !state.code; });
 }
 
-template <class F> void Post::parse_spoilers(string_view frag, F fn)
+void Post::parse_spoilers(string_view frag, Post::OnFrag fn)
 {
     parse_string(frag, "**",
         [this, fn](string_view frag) { parse_bolds(frag, fn); },
@@ -152,7 +164,7 @@ template <class F> void Post::parse_spoilers(string_view frag, F fn)
         });
 }
 
-template <class F> void Post::parse_bolds(string_view frag, F fn)
+void Post::parse_bolds(string_view frag, Post::OnFrag fn)
 {
     parse_string(frag, "__",
         [this, fn](string_view frag) { parse_italics(frag, fn); },
@@ -175,7 +187,7 @@ template <class F> void Post::parse_bolds(string_view frag, F fn)
         });
 }
 
-template <class F> void Post::parse_italics(string_view frag, F fn)
+void Post::parse_italics(string_view frag, Post::OnFrag fn)
 {
     parse_string(frag, "~~", fn, [this]() {
         if (state.italic) {
@@ -240,30 +252,28 @@ static tuple<char, string_view, char> split_punctuation(const string_view word)
     return re;
 }
 
-template <class F> void Post::parse_words(string_view frag, F fn)
+void Post::parse_words(string_view frag, Post::OnFrag fn)
 {
     bool first = true;
     state.buf.reserve(frag.size());
 
-    parse_string(frag, " ",
-        [this, &first, fn](string_view frag) {
-            if (!first) {
-                state.buf += ' ';
-            } else {
-                first = false;
-            }
+    parse_string(frag, " ", [this, &first, fn](string_view frag) {
+        if (!first) {
+            state.buf += ' ';
+        } else {
+            first = false;
+        }
 
-            // Split leading and trailing punctuation, if any
-            auto[lead_punct, word, trail_punct] = split_punctuation(frag);
-            if (lead_punct) {
-                state.buf += lead_punct;
-            }
-            fn(word);
-            if (trail_punct) {
-                state.buf += trail_punct;
-            }
-        },
-        []() {});
+        // Split leading and trailing punctuation, if any
+        auto[lead_punct, word, trail_punct] = split_punctuation(frag);
+        if (lead_punct) {
+            state.buf += lead_punct;
+        }
+        fn(word);
+        if (trail_punct) {
+            state.buf += trail_punct;
+        }
+    });
 
     // Append any leftover text
     state.flush_text();
@@ -321,8 +331,7 @@ static Node render_temp_link(unsigned long id)
     return {
         "a",
         {
-            { "class", "post-link temp" },
-            { "data-id", id_str },
+            { "class", "post-link temp" }, { "data-id", id_str },
             { "href", "#p" + id_str },
         },
         text,

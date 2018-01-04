@@ -11,6 +11,8 @@ using std::optional;
 using std::string;
 using std::string_view;
 
+// TODO: Embed click handling, fetching and expansion
+
 // Types of supported embed providers
 enum class Provider { Youtube, Soundcloud, Vimeo };
 
@@ -36,24 +38,20 @@ static Node format_noembed(const Provider prov, const string href)
     // Names of providers
     const static std::unordered_map<Provider, string> names = {
         { Provider::Youtube, "Youtube" },
-        { Provider::Soundcloud, "SoundCloud" },
-        { Provider::Vimeo, "Vimeo" },
+        { Provider::Soundcloud, "SoundCloud" }, { Provider::Vimeo, "Vimeo" },
     };
 
     std::ostringstream s;
     s << '[' << names.at(prov) << "] ???";
 
     return {
-        "em",
-        {},
+        "em", {},
         {
             {
                 "a",
                 {
-                    { "rel", "noreferrer" },
-                    { "href", brunhild::escape(href) },
-                    { "class", "embed" },
-                    { "target", "_blank" },
+                    { "rel", "noreferrer" }, { "href", brunhild::escape(href) },
+                    { "class", "embed" }, { "target", "_blank" },
                 },
                 s.str(),
             },
@@ -95,7 +93,7 @@ static optional<Node> parse_embeds(string_view word)
     return nullopt;
 }
 
-optional<brunhild::Node> parse_url(string_view word)
+optional<Node> parse_url(string_view word)
 {
     if (auto n = parse_embeds(word)) {
         return n;

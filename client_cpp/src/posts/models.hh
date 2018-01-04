@@ -2,6 +2,7 @@
 
 #include "../../brunhild/view.hh"
 #include "../json.hh"
+#include <functional>
 #include <map>
 #include <optional>
 #include <stdint.h>
@@ -264,29 +265,24 @@ private:
     // Highlight common programming code syntax
     void highlight_syntax(std::string_view);
 
-    // Split string_view into subviews and run either on_match or filler on
-    // the fragments appropriately.
-    template <class F_M, class F_UM>
-    void parse_string(std::string_view frag, const std::string sep, F_UM filler,
-        F_M on_match);
+    // Function run on a separated string fragment
+    typedef std::function<void(std::string_view)> OnFrag;
 
     // Detect and format code tags. Call fn on unmatched sub-fragments.
-    template <class F> void parse_code(std::string_view frag, F fn);
+    void parse_code(std::string_view frag, OnFrag fn);
 
     // Inject spoiler tags and call fn on the remaining parts
-    template <class F> void parse_spoilers(std::string_view frag, F fn);
+    void parse_spoilers(std::string_view frag, OnFrag fn);
 
     // Inject bold tags and call fn on the remaining parts
-    template <class F> void parse_bolds(std::string_view frag, F fn);
+    void parse_bolds(std::string_view frag, OnFrag fn);
 
     // Inject italic tags and call fn on the remaining parts
-    template <class F> void parse_italics(std::string_view frag, F fn);
+    void parse_italics(std::string_view frag, OnFrag fn);
 
     // Parse a string into words and call fn on each word.
     // Handles space padding and leading/trailing punctuation.
-    // fn receives a string_view of the word and a buffer for building text
-    // nodes.
-    template <class F> void parse_words(std::string_view frag, F fn);
+    void parse_words(std::string_view frag, OnFrag fn);
 
     // Parse internally-defined or board reference URL.
     // Returns preceding '>' count and link Node, if matched.

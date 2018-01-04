@@ -1,3 +1,5 @@
+# TODO: Cut down on these and use individual warning instance supression through
+# attributes
 # -Winvalid-pp-token triggers on empty JS strings in macros
 WARNINGS=-Wall -Wextra -Wno-sign-compare -Wno-invalid-pp-token -Wno-unused-function -Wno-delete-incomplete -Wno-switch -Wno-return-type
 
