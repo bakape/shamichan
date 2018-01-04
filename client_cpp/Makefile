@@ -1,7 +1,6 @@
 # TODO: Cut down on these and use individual warning instance supression through
 # attributes
-# -Winvalid-pp-token triggers on empty JS strings in macros
-WARNINGS=-Wall -Wextra -Wno-invalid-pp-token -Wno-unused-function -Wno-delete-incomplete -Wno-switch -Wno-return-type
+WARNINGS=-Wall -Wextra -Wno-unused-function -Wno-delete-incomplete -Wno-switch -Wno-return-type
 
 SETTINGS=-s NO_EXIT_RUNTIME=1 -s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -Wno-almost-asm -s NO_FILESYSTEM=1
 COMPILE_FLAGS=-std=c++1z --bind

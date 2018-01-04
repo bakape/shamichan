@@ -40,10 +40,12 @@ void Options::load()
     load_uint(expand_all, "expandAll");
     load_uint(work_mode, "workMode");
 
-    if (auto const s = local_storage_get("inlineFit"); s == "width") {
-        inline_fit = FittingMode::width;
-    } else if (s == "screen") {
-        inline_fit = FittingMode::screen;
+    if (auto s = local_storage_get("inlineFit")) {
+        if (*s == "width") {
+            inline_fit = FittingMode::width;
+        } else if (*s == "screen") {
+            inline_fit = FittingMode::screen;
+        }
     }
 
     load_string(theme, "theme");
@@ -52,24 +54,21 @@ void Options::load()
 
 void Options::load_bool(bool& val, const std::string& key)
 {
-    auto const s = local_storage_get(key);
-    if (s != "") {
-        val = s == "true";
+    if (auto s = local_storage_get(key)) {
+        val = *s == "true";
     }
 }
 
 void Options::load_uint(unsigned int& val, const std::string& key)
 {
-    auto const s = local_storage_get(key);
-    if (s != "") {
-        val = std::stoul(s);
+    if (auto s = local_storage_get(key)) {
+        val = std::stoul(*s);
     }
 }
 
 void Options::load_string(std::string& val, const std::string& key)
 {
-    auto s = local_storage_get(key);
-    if (s != "") {
-        val = s;
+    if (auto s = local_storage_get(key)) {
+        val = *s;
     }
 }
