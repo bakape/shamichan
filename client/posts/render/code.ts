@@ -221,10 +221,6 @@ export default function highlightSyntax(text: string): string {
 							html += wrapOperator(b)
 						}
 						break
-					case "#":
-						typ = type.comment
-						html += headers.comment + b
-						break
 					case "'":
 						typ = type.quoted
 						html += headers.string + "&#39;"

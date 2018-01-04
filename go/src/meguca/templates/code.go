@@ -267,10 +267,6 @@ func highlightSyntax(text string) []byte {
 				} else {
 					w.wrapOperator(b)
 				}
-			case '#':
-				typ = comment
-				w.WriteString(commentHeader)
-				w.WriteByte(b)
 			case '\'':
 				typ = quoted
 				w.WriteString(stringHeader)
