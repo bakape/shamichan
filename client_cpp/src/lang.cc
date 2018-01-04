@@ -22,7 +22,7 @@ LanguagePack::LanguagePack()
 
 template <class T> void LanguagePack::load_array(T& arr, json& j)
 {
-    for (int i = 0; i < std::extent<T>::value; i++) {
+    for (size_t i = 0; i < std::extent<T>::value; i++) {
         arr[i] = j[i];
     }
 }

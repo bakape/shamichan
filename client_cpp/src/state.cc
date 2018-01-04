@@ -101,7 +101,7 @@ void load_state()
     // loaded
 
     debug = val::global("location")["search"].as<string>().find("debug=true")
-        != -1;
+        != string::npos;
     page = new Page();
     page->detect();
     options = new Options();
@@ -235,7 +235,7 @@ void Page::detect()
 unsigned int Page::find_query_param(const string& query, const string& param)
 {
     size_t i = query.find(param);
-    if (i == -1) {
+    if (i == string::npos) {
         return 0;
     }
     i += param.size() + 1;

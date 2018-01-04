@@ -72,7 +72,7 @@ static void render_index_threads(ostringstream& s)
     sort_mode = SortMode::bump;
     s << "<div id=index-thread-container>";
     const auto sorted = sort_threads();
-    for (int i = 0; i < sorted.size(); i++) {
+    for (size_t i = 0; i < sorted.size(); i++) {
         const auto t = sorted[i];
 
         s << "<section class=\"index-thread";

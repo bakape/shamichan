@@ -222,7 +222,7 @@ optional<Node> Post::parse_syncwatch(std::string_view frag)
     // TODO: Apply offset from server clock
     const auto[hours, min, sec, start, end]
         = commands[state.dice_index++].sync_watch;
-    const auto now = std::time(0);
+    const unsigned long now = std::time(0);
     ostringstream s;
     if (now > end) {
         s << lang->ui.at("finished");

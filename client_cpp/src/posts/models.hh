@@ -123,8 +123,8 @@ public:
         bold = false, // Text inside bold tag
         italic = false, // Text inside italic tag
         have_syncwatch = false; // Text contains #syncwatch command(s)
-    int successive_newlines = 0, // Number of successive newlines in text
-        dice_index = 0; // Index of the next dice array item to use
+    int successive_newlines = 0; // Number of successive newlines in text
+    size_t dice_index = 0; // Index of the next dice array item to use
 
     // Used for building text nodes. Flushed on append() or ascend().
     std::string buf;

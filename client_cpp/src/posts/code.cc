@@ -63,12 +63,8 @@ void Post::highlight_syntax(std::string_view frag)
     state.buf.reserve(64);
 
     auto wrap_operator = [this](char op) {
-        state.append({
-            "span",
-            { { "class", "ms-operator" } },
-            string(1, op),
-            true,
-        });
+        state.append(
+            { "span", { { "class", "ms-operator" } }, string(1, op), true });
     };
 
     string token;
@@ -77,7 +73,7 @@ void Post::highlight_syntax(std::string_view frag)
     char prev = 0;
     char b = 0;
     char next = 0;
-    for (int i = 0; i < frag.size(); i++) {
+    for (size_t i = 0; i < frag.size(); i++) {
         b = frag[i];
         next = i != frag.size() - 1 ? frag[i + 1] : 0;
 
@@ -88,11 +84,7 @@ void Post::highlight_syntax(std::string_view frag)
                 if (next == '/') {
                     type = comment;
                     state.append(
-                        {
-                            "span",
-                            { { "class", "ms-comment" } },
-                        },
-                        true);
+                        { "span", { { "class", "ms-comment" } } }, true);
                     state.buf += "//";
                     i++;
                 } else {
@@ -124,19 +116,11 @@ void Post::highlight_syntax(std::string_view frag)
             token += b;
             if (!is_identifier_char(next)) {
                 if (next == '(') {
-                    state.append({
-                        "span",
-                        { { "class", "ms-function" } },
-                        token,
-                        true,
-                    });
+                    state.append({ "span", { { "class", "ms-function" } },
+                        token, true });
                 } else if (is_keyword(token)) {
-                    state.append({
-                        "span",
-                        { { "class", "ms-operator" } },
-                        token,
-                        true,
-                    });
+                    state.append({ "span", { { "class", "ms-operator" } },
+                        token, true });
                 } else {
                     state.buf += token;
                 }

@@ -35,7 +35,7 @@ void parse_string(string_view frag, D sep, function<void(string_view)> on_frag,
     const size_t sep_s = sep_size(sep);
     while (1) {
         i = frag.find(sep);
-        if (i != -1) {
+        if (i != string::npos) {
             on_frag(frag.substr(0, i));
             frag = frag.substr(i + sep_s);
             on_match();
@@ -120,7 +120,7 @@ void Post::parse_code(string_view frag, Post::OnFrag fn)
                 if (num_quotes) {
                     string s;
                     s.reserve(4 * num_quotes);
-                    for (int i = 0; i <= num_quotes; i++) {
+                    for (size_t i = 0; i <= num_quotes; i++) {
                         s += "&gt;";
                     }
                     state.append({ "span", s });

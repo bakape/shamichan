@@ -132,13 +132,14 @@ void VirtualView::patch_children(Node& old, Node node)
     }
 
     // Diff existing nodes
-    for (int i = 0; i < old.children.size() && i < node.children.size(); i++) {
+    for (size_t i = 0; i < old.children.size() && i < node.children.size();
+         i++) {
         patch_node(old.children[i], move(node.children[i]));
     }
 
     int diff = int(node.children.size()) - int(old.children.size());
     if (diff > 0) { // Append Nodes
-        int i = old.children.size();
+        size_t i = old.children.size();
         while (i < node.children.size()) {
             auto& ch = node.children[i++];
             ensure_id(ch);
