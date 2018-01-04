@@ -17,9 +17,11 @@ void init_posts()
             if (e.which != 1 || e.ctrlKey) {
                 return;
             }
-            switch (e.target.tagName) {
+            var t = e.target;
+            switch (t.tagName) {
             case "A":
-                if (e.target.getAttribute("target") == "_blank") {
+                if (t.getAttribute("target") == "_blank"
+                    || t.getAttribute("download")) {
                     return;
                 }
             case "IMG":
