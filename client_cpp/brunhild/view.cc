@@ -131,27 +131,24 @@ void VirtualView::patch_children(Node& old, Node node)
         return;
     }
 
-    int diff = node.children.size() - old.children.size();
-
     // Diff existing nodes
     for (int i = 0; i < old.children.size() && i < node.children.size(); i++) {
         patch_node(old.children[i], move(node.children[i]));
     }
 
-    if (diff > 0) {
-        // Append Nodes
-        for (int i = old.children.size(); i < diff; i++) {
-            auto& ch = node.children[i];
+    int diff = int(node.children.size()) - int(old.children.size());
+    if (diff > 0) { // Append Nodes
+        int i = old.children.size();
+        while (i < node.children.size()) {
+            auto& ch = node.children[i++];
             ensure_id(ch);
             append(old.attrs.at("id"), ch.html());
             old.children.push_back(move(ch));
         }
-    } else {
-        // Remove Nodes from the end
-        while (diff < 0) {
+    } else { // Remove Nodes from the end
+        while (diff++ < 0) {
             brunhild::remove(old.children.back().attrs.at("id"));
             old.children.pop_back();
-            diff++;
         }
     }
 }

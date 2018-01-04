@@ -38,30 +38,6 @@ private:
     char* ch;
 };
 
-// Call F on all parts of string-like S delimeted by D
-template <class S>
-void on_split(
-    const S& frag, const char delim, std::function<void(std::string_view)> fn)
-{
-    on_split(std::string_view(frag), delim, fn);
-}
-
-// Base specialization is std::string_view to avoid allocations
-void on_split(std::string_view frag, const char delim,
-    std::function<void(std::string_view)> fn)
-{
-    while (1) {
-        const size_t i = frag.find(delim);
-        if (i != -1) {
-            fn(frag.substr(0, i));
-            frag = frag.substr(i + 1);
-        } else {
-            fn(frag);
-            break;
-        }
-    }
-}
-
 // Read inner HTML from DOM element by ID
 c_string_view get_inner_html(const std::string& id);
 
