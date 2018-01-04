@@ -10,7 +10,6 @@
 #include <tuple>
 #include <type_traits>
 
-using std::get;
 using std::nullopt;
 using std::optional;
 using std::string;
@@ -201,7 +200,7 @@ void Post::parse_italics(string_view frag, Post::OnFrag fn)
 }
 
 // Return, if b is a punctuation char
-static bool is_punctuation(const char b)
+static inline bool is_punctuation(const char b)
 {
     switch (b) {
     case '!':
@@ -226,30 +225,18 @@ static bool is_punctuation(const char b)
 // Splits off one byte of leading and trailing punctuation, if any, and returns
 // the 3 split parts. If there is no edge punctuation, the respective char
 // is null.
-static tuple<char, string_view, char> split_punctuation(const string_view word)
+static inline tuple<char, string_view, char> split_punctuation(string_view word)
 {
-    tuple<char, string_view, char> re = { 0, word, 0 };
-
-    // Split leading
-    if (word.size() < 2) {
-        return re;
+    char lead = 0, trail = 0;
+    if (word.size() > 1 && is_punctuation(word[0])) {
+        lead = word[0];
+        word = word.substr(1);
     }
-    if (is_punctuation(word[0])) {
-        get<0>(re) = word[0];
-        get<1>(re) = word.substr(1);
+    if (word.size() > 1 && is_punctuation(word.back())) {
+        trail = word.back();
+        word = word.substr(0, word.size() - 1);
     }
-
-    // Split trailing
-    const size_t l = get<1>(re).size();
-    if (l < 2) {
-        return re;
-    }
-    if (is_punctuation(get<1>(re).back())) {
-        get<2>(re) = get<1>(re).back();
-        get<1>(re) = get<1>(re).substr(0, l - 1);
-    }
-
-    return re;
+    return { lead, word, trail };
 }
 
 void Post::parse_words(string_view frag, Post::OnFrag fn)
@@ -344,7 +331,7 @@ void Post::parse_temp_links(string_view frag)
     parse_words(frag, [this](string_view word) {
         bool matched = false;
         if (word.size() && word[0] == '>') {
-            if (auto l = parse_post_link(word); l) {
+            if (auto l = parse_post_link(word)) {
                 // Text preceding the link
                 auto[count, id] = *l;
                 state.append(render_temp_link(id), false, count);
