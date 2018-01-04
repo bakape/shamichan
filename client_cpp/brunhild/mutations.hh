@@ -4,15 +4,16 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace brunhild {
 // Pending mutations for an element
-class Mutations {
-public:
+struct Mutations {
     bool remove_el = false, scroll_into_view = false;
     std::optional<std::string> set_inner_html, set_outer_html;
-    std::vector<std::string> append, prepend, before, after, remove_attr;
+    std::vector<std::string> append, prepend, before, after;
+    std::unordered_set<std::string> remove_attr;
     std::unordered_map<std::string, std::string> set_attr;
 
     // Clear mutations of element inner content to free up memory
@@ -58,9 +59,10 @@ void scroll_into_view(std::string id);
 // Flush all pending DOM mutations
 extern "C" void flush();
 
-// Function to run before flushing DOM updates
+// Function to run before flushing DOM updates. Is run on each call of flush().
 extern void (*before_flush)();
 
-// Function to run after flushing DOM updates
+// Function to run after flushing DOM updates. Is run only after flus() calls,
+// that performed DOM updates.
 extern void (*after_flush)();
 }

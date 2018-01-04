@@ -1,6 +1,5 @@
 #include "mutations.hh"
 #include <emscripten.h>
-#include <set>
 
 namespace brunhild {
 using std::string;
@@ -8,80 +7,83 @@ using std::string;
 void (*before_flush)() = nullptr;
 void (*after_flush)() = nullptr;
 
+// TODO: Should probably use some smarter data structure, that maintains both
+// mutation set insertion order and is searchable by string
+
 // All pending mutations quickly accessible by element ID
 std::unordered_map<string, Mutations> mutations;
 
 // Stores mutation order, so we can somewhat make sure, new children are not
-// manipulated, before insertion.
-std::set<string> mutation_order;
+// manipulated, before insertion
+std::vector<std::string> mutation_order;
+
+// Fetches a mutation set by element ID or creates a new one ond registers its
+// execution order
+static Mutations* get_mutation_set(string id)
+{
+    if (!mutations.count(id)) {
+        mutation_order.push_back(id);
+    }
+    return &mutations[id];
+}
 
 void append(string id, string html)
 {
-    mutations[id].append.push_back(html);
-    mutation_order.insert(id);
+    get_mutation_set(id)->append.push_back(html);
 }
 
 void prepend(string id, string html)
 {
-    mutations[id].prepend.push_back(html);
-    mutation_order.insert(id);
+    get_mutation_set(id)->prepend.push_back(html);
 }
 
 void before(string id, string html)
 {
-    mutations[id].before.push_back(html);
-    mutation_order.insert(id);
+    get_mutation_set(id)->before.push_back(html);
 }
 
 void after(string id, string html)
 {
-    mutations[id].after.push_back(html);
-    mutation_order.insert(id);
+    get_mutation_set(id)->after.push_back(html);
 }
 
 void set_inner_html(string id, string html)
 {
-    auto& mut = mutations[id];
-
+    auto mut = get_mutation_set(id);
     // These would be overwritten, so we can free up used memory
-    mut.free_inner();
-
-    mut.set_inner_html = html;
-    mutation_order.insert(id);
+    mut->free_inner();
+    mut->set_inner_html = html;
 }
 
 void set_outer_html(string id, string html)
 {
-    auto& mut = mutations[id];
-    mut.free_outer();
-    mut.set_outer_html = html;
-    mutation_order.insert(id);
+    auto mut = get_mutation_set(id);
+    mut->free_outer();
+    mut->set_outer_html = html;
 }
 
 void remove(string id)
 {
-    auto& mut = mutations[id];
-    mut.free_outer();
-    mut.remove_el = true;
-    mutation_order.insert(id);
+    auto mut = get_mutation_set(id);
+    mut->free_outer();
+    mut->remove_el = true;
 }
 
 void set_attr(string id, string key, string val)
 {
-    mutations[id].set_attr[key] = val;
-    mutation_order.insert(id);
+    get_mutation_set(id)->set_attr[key] = val;
 }
 
 void remove_attr(string id, string key)
 {
-    mutations[id].set_attr.erase(key);
-    mutation_order.insert(id);
+    auto mut = get_mutation_set(id);
+    mut->set_attr.erase(key);
+    mut->remove_attr.insert(id);
 }
 
 void scroll_into_view(string id)
 {
-    mutations[id].scroll_into_view = true;
-    mutation_order.insert(id);
+    get_mutation_set(id)->scroll_into_view = true;
 }
 
 void Mutations::free_inner()
@@ -106,7 +108,10 @@ extern "C" void flush()
             (*before_flush)();
         }
 
-        for (const string& id : mutation_order) {
+        if (!mutations.size()) {
+            return;
+        }
+        for (auto& id : mutation_order) {
             mutations.at(id).exec(id);
         }
         mutation_order.clear();
