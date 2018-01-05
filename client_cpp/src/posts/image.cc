@@ -46,14 +46,8 @@ Node Post::render_figcaption()
     ostringstream name, url;
     name << escape(img.name) << '.' << ext;
     url << "/assets/images/src/" << img.SHA1 << '.' << ext;
-    n.children.push_back({
-        "a",
-        {
-            { "href", url.str() },
-            { "download", name.str() },
-        },
-        name.str(),
-    });
+    n.children.push_back({ "a",
+        { { "href", url.str() }, { "download", name.str() } }, name.str() });
 
     n.stringify_subtree();
     return n;
@@ -62,20 +56,17 @@ Node Post::render_figcaption()
 // Render a link to the image search provider
 static Node image_search_link(int i, const string& url)
 {
-    const static string abbrev[6] = { "G", "Iq", "Sn", "Wa", "Ds", "Ex" };
-    const static string url_starts[6] = {
+    const static char* abbrev[6] = { "G", "Iq", "Sn", "Wa", "Ds", "Ex" };
+    const static char* url_starts[6] = {
         "https://www.google.com/searchbyimage?image_url=",
-        "http://iqdb.org/?url=",
-        "http://saucenao.com/search.php?db=999&url=",
-        "https://whatanime.ga/?url=",
-        "https://desuarchive.org/_/search/image/",
+        "http://iqdb.org/?url=", "http://saucenao.com/search.php?db=999&url=",
+        "https://whatanime.ga/?url=", "https://desuarchive.org/_/search/image/",
         "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
     };
 
     return Node("a",
         {
-            { "target", "_blank" },
-            { "rel", "nofollow" },
+            { "target", "_blank" }, { "rel", "nofollow" },
             { "href", url_starts[i] + url },
         },
         abbrev[i]);
@@ -83,7 +74,7 @@ static Node image_search_link(int i, const string& url)
 
 Node Post::render_image_search()
 {
-    auto& img = *image;
+    auto const& img = *image;
     Node n = {
         "span",
         {
@@ -117,14 +108,9 @@ Node Post::render_image_search()
               << img.SHA1 << '.' << file_extentions.at(typ);
     url << url_encode(unencoded.str());
 
-    const bool enabled[6] = {
-        options->google,
-        options->iqdb,
-        options->sauce_nao,
-        options->what_anime,
-        options->desu_storage,
-        options->exhentai,
-    };
+    const bool enabled[6]
+        = { options->google, options->iqdb, options->sauce_nao,
+            options->what_anime, options->desu_storage, options->exhentai };
     for (int i = 0; i < 4; i++) {
         if (enabled[i]) {
             n.children.push_back(image_search_link(i, url.str()));
@@ -247,8 +233,7 @@ static Node render_thumbnail(const Image& img)
     return {
         "img",
         {
-            { "src", thumb },
-            { "width", std::to_string(w) },
+            { "src", thumb }, { "width", std::to_string(w) },
             { "height", std::to_string(h) },
         },
     };
@@ -275,9 +260,7 @@ static void render_expanded(
             {
                 "audio",
                 {
-                    { "autoplay", "" },
-                    { "controls", "" },
-                    { "loop`", "" },
+                    { "autoplay", "" }, { "controls", "" }, { "loop`", "" },
                     { "src", src },
                 },
             },
@@ -289,9 +272,7 @@ static void render_expanded(
         inner = {
             "video",
             {
-                { "autoplay", "" },
-                { "controls", "" },
-                { "loop`", "" },
+                { "autoplay", "" }, { "controls", "" }, { "loop`", "" },
             },
         };
         break;
@@ -320,14 +301,12 @@ std::tuple<Node, optional<Node>> Post::render_image()
     const string id_str = std::to_string(id);
     inner.attrs["data-id"] = id_str;
     Node n({
-        "figure",
-        {},
+        "figure", {},
         {
             {
                 "a",
                 {
-                    { "href", img.source_path() },
-                    { "target", "_blank" },
+                    { "href", img.source_path() }, { "target", "_blank" },
                     { "data-id", id_str },
                 },
                 { inner },

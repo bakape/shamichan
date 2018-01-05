@@ -1,20 +1,16 @@
-# TODO: Cut down on these and use individual warning instance supression through
-# attributes
-WARNINGS=-Wall -Wextra -Wno-unused-function -Wno-delete-incomplete -Wno-switch -Wno-return-type
-
 SETTINGS=-s NO_EXIT_RUNTIME=1 -s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 -Wno-almost-asm -s NO_FILESYSTEM=1
 COMPILE_FLAGS=-std=c++1z --bind
 
 ifeq ($(DEBUG),1)
 	# -O0 is too large to load in the browser. Fails with:
 	# LinkError: table import 128 has maximum larger than maximum 24960
-	COMPILE_FLAGS+= -O1 -g4
-	SETTINGS+= -s DEMANGLE_SUPPORT=1 -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0
+	COMPILE_FLAGS+=-O1 -g4
+	SETTINGS+=-s DEMANGLE_SUPPORT=1 -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0
 else
-	COMPILE_FLAGS+= -Oz -g0
+	COMPILE_FLAGS+=-Oz -g0
 	LTO=--llvm-lto 3
 endif
-export EMCCFLAGS=$(COMPILE_FLAGS) $(WARNINGS)
+export EMCCFLAGS=$(COMPILE_FLAGS) -Wall -Wextra -Wno-switch
 
 all: clean_output
 	$(MAKE) -C brunhild

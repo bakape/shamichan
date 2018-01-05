@@ -36,13 +36,20 @@ static bool validate_url(string_view url)
 static Node format_noembed(const Provider prov, const string href)
 {
     // Names of providers
-    const static std::unordered_map<Provider, string> names = {
-        { Provider::Youtube, "Youtube" },
-        { Provider::Soundcloud, "SoundCloud" }, { Provider::Vimeo, "Vimeo" },
-    };
-
+    char const* name = NULL;
+    switch (prov) {
+    case Provider::Youtube:
+        name = "Youtube";
+        break;
+    case Provider::Soundcloud:
+        name = "SoundCloud";
+        break;
+    case Provider::Vimeo:
+        name = "Vimeo";
+        break;
+    }
     std::ostringstream s;
-    s << '[' << names.at(prov) << "] ???";
+    s << '[' << name << "] ???";
 
     return {
         "em", {},
@@ -67,7 +74,7 @@ static optional<Node> parse_embeds(string_view word)
     }
 
     // URL matching patterns for their respective providers
-    const static std::tuple<Provider, string> patterns[4] = {
+    const static std::tuple<Provider, char const*> patterns[4] = {
         { Provider::Youtube,
             R"'(https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=[^&]+)'" },
         { Provider::Youtube,
@@ -77,14 +84,14 @@ static optional<Node> parse_embeds(string_view word)
     };
 
     const string href(word);
-    for (auto & [ prov, pat ] : patterns) {
+    for (auto && [ prov, pat ] : patterns) {
         // Call into JS, to avoid including <regex> and bloating the binary
         const bool match = (bool)EM_ASM_INT(
             {
                 // TODO: Don't recompile RegExp on each call
                 return new RegExp(UTF8ToString($0)).test(UTF8ToString($1));
             },
-            pat.c_str(), href.c_str());
+            pat, href.c_str());
         if (match) {
             return { format_noembed(prov, href) };
         }
