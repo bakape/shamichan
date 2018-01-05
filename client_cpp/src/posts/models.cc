@@ -3,7 +3,7 @@
 #include "hide.hh"
 #include <sstream>
 
-using json = nlohmann::json;
+using nlohmann::json;
 using std::string;
 
 // Deserialize a property that might or might not be present from a kew of the
@@ -115,7 +115,6 @@ void Post::extend(nlohmann::json& j)
     PARSE_OPT_STRING(name);
     PARSE_OPT_STRING(trip);
     PARSE_OPT_STRING(auth);
-    PARSE_OPT_STRING(subject);
     PARSE_OPT_STRING(flag);
     if (j.count("posterID")) {
         poster_id = j["posterID"].get<string>();

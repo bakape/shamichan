@@ -294,6 +294,7 @@ ThreadDecoder::ThreadDecoder(json& j)
     reply_time = j["replyTime"];
     bump_time = j["bumpTime"];
     board = j["board"];
+    subject = j["subject"];
     if (!page->catalog) {
         auto& p = j.at("posts");
         posts.reserve(p.size());

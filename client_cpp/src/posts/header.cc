@@ -133,10 +133,11 @@ Node Post::render_header()
         });
     }
 
-    if (subject) {
+    if (id == op) {
+        auto const& subject = threads->at(id).subject;
         std::string s;
-        s.reserve(subject->size() + 6); // +2 unicode chars
-        s = "「" + *subject + "」";
+        s.reserve(subject.size() + 10); // +2 unicode chars
+        s = "「" + subject + "」";
         n.children.push_back({ "h3", s, true });
     }
     n.children.push_back(render_name());

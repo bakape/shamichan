@@ -1,3 +1,4 @@
+#include "thread.hh"
 #include "../../brunhild/mutations.hh"
 #include "../lang.hh"
 #include "../state.hh"
@@ -35,8 +36,7 @@ void render_thread()
 
     if (!thread.locked) {
         Node({
-                 "aside",
-                 { { "class", "act posting glass" } },
+                 "aside", { { "class", "act posting glass" } },
                  { { "a", lang->ui.at("reply") } },
              })
             .write_html(s);
@@ -49,17 +49,14 @@ void render_thread()
     n.children.push_back(render_button("#top", lang->ui.at("top")));
     n.children.push_back(render_last_100_link(page->board, page->thread));
     n.children.push_back({
-        "span",
-        {
-            { "id", "lock" },
-            { "style", "visibility: hidden;" },
-        },
+        "span", { { "id", "lock" }, { "style", "visibility: hidden;" } },
         lang->ui.at("lockedToBottom"),
     });
     n.write_html(s);
 
     brunhild::set_inner_html("threads", s.str());
-    set_title(format_title(page->board, *posts->at(page->thread).subject));
+    set_title(format_title(page->board, threads->at(page->thread).subject));
+    render_post_counter();
 }
 
 void render_post_counter()

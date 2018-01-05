@@ -184,7 +184,6 @@ public:
     std::optional<std::string> name, // Name of poster
         trip, // Trip code of poster
         auth, // Staff title of poster
-        subject, // Subject of thread. Only for OPs.
         flag, // Country code of poster
         poster_id; // Thread-level poster ID
 
@@ -308,5 +307,6 @@ public:
         image_ctr, // Number of images in thread
         reply_time, // Unix timestamp of last reply
         bump_time; // Unix timestamp of last bump
-    std::string board; // Parent board
+    std::string board, // Parent board
+        subject; // Thread subject
 };
