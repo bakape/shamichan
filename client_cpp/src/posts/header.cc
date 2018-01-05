@@ -112,6 +112,10 @@ Node Post::render_header()
 
     // TODO: Check if staff, and render moderator checkbox
 
+    if (id == op && !page->thread && page->board == "all") {
+        n.children.push_back(
+            { "b", { { "class", "board" } }, '/' + board + '/' });
+    }
     if (sticky) {
         n.children.push_back({
             "svg",
@@ -136,7 +140,7 @@ Node Post::render_header()
     if (id == op) {
         auto const& subject = threads->at(id).subject;
         std::string s;
-        s.reserve(subject.size() + 10); // +2 unicode chars
+        s.reserve(subject.size() + 8); // +2 unicode chars
         s = "「" + subject + "」";
         n.children.push_back({ "h3", s, true });
     }
@@ -181,7 +185,7 @@ Node Post::render_header()
         },
     });
 
-    if (id == op && !page->catalog) {
+    if (id == op && !page->thread && !page->catalog) {
         n.children.push_back(
             { "span", {}, brunhild::Children({ render_expand_link(board, id),
                               render_last_100_link(board, id) }) });
