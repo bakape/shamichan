@@ -19,6 +19,7 @@ const (
 	youTube = iota
 	soundCloud
 	vimeo
+	coub
 )
 
 var (
@@ -29,6 +30,7 @@ var (
 		youTube:    "Youtube",
 		soundCloud: "SoundCloud",
 		vimeo:      "Vimeo",
+		coub:       "Coub",
 	}
 	embedPatterns = [...]struct {
 		typ  int
@@ -49,6 +51,10 @@ var (
 		{
 			vimeo,
 			regexp.MustCompile(`https?:\/\/(?:www\.)?vimeo\.com\/.+`),
+		},
+		{
+			coub,
+			regexp.MustCompile(`https?:\/\/coub\.com\/view\/[a-zA-Z0-9-_]+`),
 		},
 	}
 
