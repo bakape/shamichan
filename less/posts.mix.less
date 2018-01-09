@@ -19,29 +19,9 @@ article {
 	word-break: break-word;
 	word-wrap: break-word;
 	max-width: 95vw;
-	.backlinks > em > a {
-		font-size: smaller;
-	}
-	blockquote {
-		min-width: 25em;
-		b {
-			color: inherit;
-		}
-	}
-	audio {
-		width: 300px;
-		height: 3em;
-		&::-webkit-media-controls-panel {
-			background: none;
-		}
-	}
 	ul {
 		word-wrap: normal;
     	word-break: normal;
-	}
-	.post-container {
-		width: 100%;
-		overflow: hidden; // Prevents vertical zalgo
 	}
 	article {
 		display: table;
@@ -49,6 +29,30 @@ article {
 			display: flex;
 			flex-direction: column;
 		}
+	}
+}
+
+.post-container {
+	width: 100%;
+	overflow: hidden; // Prevents vertical zalgo
+}
+
+.backlinks > em > a {
+	font-size: smaller;
+}
+
+blockquote {
+	min-width: 25em;
+	b {
+		color: inherit;
+	}
+}
+
+audio {
+	width: 300px;
+	height: 3em;
+	&::-webkit-media-controls-panel {
+		background: none;
 	}
 }
 
@@ -244,18 +248,18 @@ header {
 		vertical-align: top;
 		padding: 0.6em;
 		margin: 0.15em;
-		blockquote {
-			&:empty {
-				display: none;
-			}
-			min-width: initial;
-			margin: 0;
-			padding: 0;
-		}
 		&.deleted .deleted-toggle:checked ~ .thread-links {
 			clear: none;
 			display: inline-block;
 		}
+	}
+	blockquote {
+		&:empty {
+			display: none;
+		}
+		min-width: initial;
+		margin: 0;
+		padding: 0;
 	}
 	figure {
 		float: none;
