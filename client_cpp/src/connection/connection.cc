@@ -28,12 +28,6 @@ static void on_close()
     log_exceptions([]() { conn_SM->feed(ConnEvent::close); });
 }
 
-static void on_error(string msg)
-{
-    console::log(msg);
-    log_exceptions([]() { conn_SM->feed(ConnEvent::close); });
-}
-
 // Prepend type information to stringified message
 static string encode_message(Message type, const string& msg)
 {
@@ -81,6 +75,16 @@ static void splice(string& s, int start, int len, string text)
     s.reserve(s.size() + text.size() + end.size());
     s += text;
     s += end;
+}
+
+// Set synced IP count to n
+static void render_sync_count(unsigned int n)
+{
+    string s;
+    if (n) {
+        s = std::to_string(n);
+    }
+    brunhild::set_inner_html("sync-counter", s);
 }
 
 // Handler for messages received from the server.
@@ -162,6 +166,9 @@ static void on_message(std::string_view msg, bool extracted)
         case Message::synchronise:
             load_posts(data);
             conn_SM->feed(ConnEvent::sync);
+            break;
+        case Message::sync_count:
+            render_sync_count(std::stoul(string(data)));
             break;
         case Message::concat: {
             // Split several concatenated messages
@@ -270,16 +277,6 @@ static void render_status(SyncStatus status)
         s = lang->sync[static_cast<size_t>(status)];
     }
     brunhild::set_inner_html("sync", s);
-}
-
-// Set synced IP count to n
-static void render_sync_count(unsigned int n)
-{
-    string s;
-    if (n) {
-        s = std::to_string(n);
-    }
-    brunhild::set_inner_html("sync_counter", s);
 }
 
 // Schedule an attempt to reconnect after a connection loss
