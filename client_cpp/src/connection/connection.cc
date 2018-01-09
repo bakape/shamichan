@@ -18,15 +18,9 @@ using std::string;
 
 FSM<ConnState, ConnEvent>* conn_SM = nullptr;
 
-static void on_open()
-{
-    log_exceptions([]() { conn_SM->feed(ConnEvent::open); });
-}
+static void on_open() { conn_SM->feed(ConnEvent::open); }
 
-static void on_close()
-{
-    log_exceptions([]() { conn_SM->feed(ConnEvent::close); });
-}
+static void on_close() { conn_SM->feed(ConnEvent::close); }
 
 // Prepend type information to stringified message
 static string encode_message(Message type, const string& msg)
@@ -92,99 +86,97 @@ static void render_sync_count(unsigned int n)
 // message.
 static void on_message(std::string_view msg, bool extracted)
 {
-    log_exceptions([=]() {
-        if (debug) {
-            string s;
-            s.reserve(msg.size() + 3);
-            if (extracted) {
-                s += '\t';
+    if (debug) {
+        string s;
+        s.reserve(msg.size() + 3);
+        if (extracted) {
+            s += '\t';
+        }
+        s += "< " + string(msg);
+        console::log(s);
+    }
+
+    const Message type
+        = static_cast<Message>(std::stoul(string(msg.substr(0, 2))));
+    auto data = msg.substr(2);
+    switch (type) {
+    case Message::invalid:
+        alert(string(data));
+        conn_SM->feed(ConnEvent::error);
+        break;
+    case Message::insert_post:
+        insert_post(data);
+        break;
+    case Message::insert_image:
+        if_post_exists(data, [](auto& j, auto& p) {
+            p.image = Image(j);
+            p.patch();
+            threads->at(page->thread).image_ctr++;
+            render_post_counter();
+
+            // TODO: Image auto expansion
+
+        });
+        break;
+    case Message::spoiler:
+        if_post_exists(std::stoul(string(data)), [](auto& p) {
+            p.image->spoiler = true;
+            p.patch();
+        });
+        break;
+    case Message::append: {
+        auto j = json::parse(data);
+        if_post_exists(j[0].get<unsigned long>(), [&](auto& p) {
+            utf8::unchecked::append(j[1], std::back_inserter(p.body));
+            p.patch();
+        });
+    } break;
+    case Message::backspace:
+        if_post_exists(std::stoul(string(data)), [](auto& p) {
+            // Removes the last UTF-8 char from the post's text
+            auto it = p.body.end();
+            utf8::unchecked::prior(it);
+            p.body = p.body.substr(0, it - p.body.begin());
+            p.patch();
+        });
+        break;
+    case Message::splice:
+        if_post_exists(data, [](auto& j, auto& p) {
+            splice(p.body, j["start"], j["len"], j["text"]);
+            p.patch();
+        });
+        break;
+    case Message::close_post:
+        if_post_exists(data, [](auto& j, auto& p) {
+            if (j.count("links")) {
+                p.parse_links(j);
+                p.propagate_links();
             }
-            s += "< " + string(msg);
-            console::log(s);
+            p.parse_commands(j);
+            p.close();
+        });
+        break;
+    case Message::synchronise:
+        load_posts(data);
+        conn_SM->feed(ConnEvent::sync);
+        break;
+    case Message::sync_count:
+        render_sync_count(std::stoul(string(data)));
+        break;
+    case Message::concat: {
+        // Split several concatenated messages
+        string s;
+        for (auto& msg : json::parse(data)) {
+            s = msg;
+            on_message(std::string_view(s), true);
         }
-
-        const Message type
-            = static_cast<Message>(std::stoul(string(msg.substr(0, 2))));
-        auto data = msg.substr(2);
-        switch (type) {
-        case Message::invalid:
-            alert(string(data));
-            conn_SM->feed(ConnEvent::error);
-            break;
-        case Message::insert_post:
-            insert_post(data);
-            break;
-        case Message::insert_image:
-            if_post_exists(data, [](auto& j, auto& p) {
-                p.image = Image(j);
-                p.patch();
-                threads->at(page->thread).image_ctr++;
-                render_post_counter();
-
-                // TODO: Image auto expansion
-
-            });
-            break;
-        case Message::spoiler:
-            if_post_exists(std::stoul(string(data)), [](auto& p) {
-                p.image->spoiler = true;
-                p.patch();
-            });
-            break;
-        case Message::append: {
-            auto j = json::parse(data);
-            if_post_exists(j[0].get<unsigned long>(), [&](auto& p) {
-                utf8::unchecked::append(j[1], std::back_inserter(p.body));
-                p.patch();
-            });
-        } break;
-        case Message::backspace:
-            if_post_exists(std::stoul(string(data)), [](auto& p) {
-                // Removes the last UTF-8 char from the post's text
-                auto it = p.body.end();
-                utf8::unchecked::prior(it);
-                p.body = p.body.substr(0, it - p.body.begin());
-                p.patch();
-            });
-            break;
-        case Message::splice:
-            if_post_exists(data, [](auto& j, auto& p) {
-                splice(p.body, j["start"], j["len"], j["text"]);
-                p.patch();
-            });
-            break;
-        case Message::close_post:
-            if_post_exists(data, [](auto& j, auto& p) {
-                if (j.count("links")) {
-                    p.parse_links(j);
-                    p.propagate_links();
-                }
-                p.parse_commands(j);
-                p.close();
-            });
-            break;
-        case Message::synchronise:
-            load_posts(data);
-            conn_SM->feed(ConnEvent::sync);
-            break;
-        case Message::sync_count:
-            render_sync_count(std::stoul(string(data)));
-            break;
-        case Message::concat: {
-            // Split several concatenated messages
-            string s;
-            for (auto& msg : json::parse(data)) {
-                s = msg;
-                on_message(std::string_view(s), true);
-            }
-            return;
-        }
-        default:
-            console::warn("unknown websocket message: "
-                + encode_message(type, string(data)));
-            return;
-        }
-    });
+        return;
+    }
+    default:
+        console::warn(
+            "unknown websocket message: " + encode_message(type, string(data)));
+        return;
+    }
 }
 
 // Takes a raw char* as int.
@@ -198,28 +190,23 @@ static void on_message_raw(int msg_ptr)
     on_message(v.substr(), false);
 }
 
-static void retry_to_connect()
-{
-    log_exceptions([]() { conn_SM->feed(ConnEvent::retry); });
-}
+static void retry_to_connect() { conn_SM->feed(ConnEvent::retry); }
 
 // Work around browser slowing down/suspending tabs and keep the FSM up to
 // date with the actual status.
 static void resync_conn_SM()
 {
-    log_exceptions([]() {
-        switch (conn_SM->state()) {
-        // Ensure still connected, in case the computer went to sleep or
-        // hibernate or the mobile browser tab was suspended.
-        case ConnState::synced:
-            send_message(Message::NOP, "");
-            break;
-        case ConnState::desynced:
-            break;
-        default:
-            conn_SM->feed(ConnEvent::retry);
-        }
-    });
+    switch (conn_SM->state()) {
+    // Ensure still connected, in case the computer went to sleep or
+    // hibernate or the mobile browser tab was suspended.
+    case ConnState::synced:
+        send_message(Message::NOP, "");
+        break;
+    case ConnState::desynced:
+        break;
+    default:
+        conn_SM->feed(ConnEvent::retry);
+    }
 }
 
 EMSCRIPTEN_BINDINGS(module_conn)

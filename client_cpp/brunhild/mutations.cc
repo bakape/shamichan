@@ -103,26 +103,21 @@ void Mutations::free_outer()
 
 extern "C" void flush()
 {
-    try {
-        if (before_flush) {
-            (*before_flush)();
-        }
+    if (before_flush) {
+        (*before_flush)();
+    }
 
-        if (!mutations.size()) {
-            return;
-        }
-        for (auto& id : mutation_order) {
-            mutations.at(id).exec(id);
-        }
-        mutation_order.clear();
-        mutations.clear();
+    if (!mutations.size()) {
+        return;
+    }
+    for (auto& id : mutation_order) {
+        mutations.at(id).exec(id);
+    }
+    mutation_order.clear();
+    mutations.clear();
 
-        if (after_flush) {
-            (*after_flush)();
-        }
-    } catch (const std::exception& ex) {
-        EM_ASM_INT({ console.error(UTF8ToString($0)); }, ex.what());
-        throw ex;
+    if (after_flush) {
+        (*after_flush)();
     }
 }
 

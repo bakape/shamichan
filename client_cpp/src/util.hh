@@ -116,16 +116,3 @@ void warn(const std::string&);
 // Log string to JS console as error
 void error(const std::string&);
 }
-
-// Log and rethrow exceptions in fn to provide as much information as possible
-// during debugging.
-// Should be compiled away as dead code during production builds.
-template <class F> void log_exceptions(F fn)
-{
-    try {
-        fn();
-    } catch (const std::exception& ex) {
-        console::error(ex.what());
-        throw ex;
-    }
-}

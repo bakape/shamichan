@@ -71,14 +71,9 @@ void register_handler(string type, Handler handler, string selector)
 static void run_event_handler(
     string key, string tag, std::map<string, string> attrs)
 {
-    try {
-        const EventTarget data = { tag, Attrs(attrs.begin(), attrs.end()) };
-        for (auto fn : handlers->at(key)) {
-            (*fn)(data);
-        }
-    } catch (const std::exception& ex) {
-        EM_ASM_INT({ console.error(UTF8ToString($0)); }, ex.what());
-        throw ex;
+    const EventTarget data = { tag, Attrs(attrs.begin(), attrs.end()) };
+    for (auto fn : handlers->at(key)) {
+        (*fn)(data);
     }
 }
 

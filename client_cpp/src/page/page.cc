@@ -16,16 +16,13 @@ using std::string;
 
 void render_page()
 {
-    log_exceptions([]() {
-        if (page->thread) {
-            render_thread();
-        } else {
-            render_board();
-        }
+    if (page->thread) {
+        render_thread();
+    } else {
+        render_board();
+    }
 
-        // TODO: Hide loading image
-
-    });
+    // TODO: Hide loading image
 }
 
 EMSCRIPTEN_BINDINGS(module_page)
@@ -46,8 +43,7 @@ void set_title(string t) { brunhild::set_inner_html("page-title", t); }
 static Node render_hover_reveal(string tag, string label, string text)
 {
     Node n{
-        tag,
-        { { "class", "hover-reveal" } },
+        tag, { { "class", "hover-reveal" } },
         {
             { "span", { { "class", "act" } }, label },
             { "span", { { "class", "popup-menu glass" } }, text, true },
