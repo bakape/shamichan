@@ -122,6 +122,7 @@ class MenuView extends View<Post> {
 		this.parent = parent
 		parent._popup_menu = this
 		this.render()
+		this.model.view.el.classList.add("has-menu")
 		this.on("click", e => this.handleClick(e), {
 			passive: true,
 		})
@@ -153,6 +154,7 @@ class MenuView extends View<Post> {
 	// Also dereference from parent .control element
 	public remove() {
 		this.parent._popup_menu = null
+		this.model.view.el.classList.remove("has-menu")
 		super.remove()
 	}
 }

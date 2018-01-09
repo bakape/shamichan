@@ -19,6 +19,9 @@ article {
 	word-break: break-word;
 	word-wrap: break-word;
 	max-width: 95vw;
+	&:not(.has-menu) {
+		contain: content;
+	}
 	ul {
 		word-wrap: normal;
     	word-break: normal;
@@ -129,20 +132,26 @@ header {
 		font-family: inherit;
 		font-weight: normal;
 	}
-	.control {
-		// Widen click area
-		width: 1em;
-		height: 1em;
-
-		margin-left: 0.5em;
-		float: right;
-		svg {
-			width: 0.7em;
-			height: 0.7em;
-		}
-	}
 	&.temporary > *:not(.name) {
 		display: none;
+	}
+}
+
+.control {
+	// Widen click area
+	width: 1em;
+	height: 1em;
+
+	position: relative;
+	margin-left: 0.5em;
+	float: right;
+	svg {
+		width: 0.7em;
+		height: 0.7em;
+	}
+	.popup-menu {
+		position: absolute;
+		right: 0;
 	}
 }
 
