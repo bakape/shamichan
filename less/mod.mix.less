@@ -3,13 +3,12 @@
 	font-weight: bold;
 }
 
-#modal-overlay > & {
-	display: inline-block;
-}
-
 #moderation-panel {
 	align-self: flex-end;
 	margin-top: auto;
+	#modal-overlay > & {
+		display: inline-block;
+	}
 	&:not(.keep-visible) {
 		transform: translateX(100%);
 		opacity: 0.5;
