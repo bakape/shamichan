@@ -130,7 +130,7 @@ func TestInvalidContentLengthHeader(t *testing.T) {
 		"Content-Length": "KAWFEE",
 	})
 
-	err := parseUploadForm(req)
+	_, _, err := ParseUpload(req)
 	if s := fmt.Sprint(err); !strings.Contains(s, "invalid syntax") {
 		UnexpectedError(t, err)
 	}
@@ -143,7 +143,7 @@ func TestUploadTooLarge(t *testing.T) {
 	req := newRequest(t, b, w)
 	req.Header.Set("Content-Length", "1048577")
 
-	if err := parseUploadForm(req); err != errTooLarge {
+	if _, _, err := ParseUpload(req); err != errTooLarge {
 		UnexpectedError(t, err)
 	}
 }
@@ -156,18 +156,8 @@ func TestInvalidForm(t *testing.T) {
 		"Content-Type":   "GWEEN TEA",
 	})
 
-	if parseUploadForm(req) == nil {
+	if _, _, err := ParseUpload(req); err == nil {
 		t.Fatal("expected an error")
-	}
-}
-
-func TestSuccessfulFormParse(t *testing.T) {
-	b, w := newMultiWriter()
-	req := newRequest(t, b, w)
-	req.Header.Set("Content-Length", "1024")
-
-	if err := parseUploadForm(req); err != nil {
-		t.Fatal(err)
 	}
 }
 

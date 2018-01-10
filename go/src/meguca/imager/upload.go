@@ -20,6 +20,9 @@ import (
 	"github.com/bakape/thumbnailer"
 )
 
+// Size of an upload small enough to use a different processing priority
+const smallUploadSize = 4 << 20
+
 var (
 	// Map of MIME types to the constants used internally
 	mimeTypes = map[string]uint8{
@@ -121,19 +124,24 @@ func LogError(w http.ResponseWriter, r *http.Request, code int, err error) {
 // Returns the HTTP status code of the response, the ID of the generated image
 // and an error, if any.
 func ParseUpload(req *http.Request) (int, string, error) {
-	if err := parseUploadForm(req); err != nil {
+	length, err := strconv.ParseUint(req.Header.Get("Content-Length"), 10, 64)
+	if err != nil {
+		return 400, "", err
+	}
+	if length > uint64(config.Get().MaxSize<<20) {
+		return 400, "", errTooLarge
+	}
+	err = req.ParseMultipartForm(smallUploadSize)
+	if err != nil {
 		return 400, "", err
 	}
 
-	file, _, err := req.FormFile("image")
+	file, head, err := req.FormFile("image")
 	if err != nil {
 		return 400, "", err
 	}
 	defer file.Close()
-
-	ch := make(chan thumbnailingResponse, 1)
-	requestThumbnailing <- thumbnailingRequest{file, ch}
-	res := <-ch
+	res := <-requestThumbnailing(file, head.Size)
 	return res.code, res.imageID, res.err
 }
 
@@ -144,18 +152,6 @@ func newImageToken(SHA1 string) (int, string, error) {
 		code = 500
 	}
 	return code, token, err
-}
-
-// Parse and validate the form of the upload request
-func parseUploadForm(req *http.Request) error {
-	length, err := strconv.ParseUint(req.Header.Get("Content-Length"), 10, 64)
-	if err != nil {
-		return err
-	}
-	if length > uint64(config.Get().MaxSize<<20) {
-		return errTooLarge
-	}
-	return req.ParseMultipartForm(0)
 }
 
 // Create a new thumbnail, commit its resources to the DB and filesystem, and
