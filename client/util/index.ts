@@ -123,12 +123,11 @@ export function load(loader: Loader): Promise<Event> {
 }
 
 const escapeMap: { [key: string]: string } = {
-	'&': '&amp;',
-	'<': '&lt;',
-	'>': '&gt;',
-	'"': '&quot;',
-	"'": '&#x27;',
-	'`': '&#x60;',
+	"&": "&amp;",
+	"'": "&#39;", // "&#39;" is shorter than "&apos
+	"<": "&lt;",
+	">": "&gt;",
+	"\"": "&#34;", // "&#34;" is shorter than "&quot;"
 }
 
 // Escape a user-submitted unsafe string to protect against XSS.

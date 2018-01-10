@@ -11,11 +11,8 @@ std::string escape(const std::string& s)
         case '&':
             out += "&amp;";
             break;
-        case '\"':
-            out += "&quot;";
-            break;
         case '\'':
-            out += "&apos;";
+            out += "&#39;"; // "&#39;" is shorter than "&apos;"
             break;
         case '<':
             out += "&lt;";
@@ -23,10 +20,8 @@ std::string escape(const std::string& s)
         case '>':
             out += "&gt;";
             break;
-        case '`':
-            out += "&#x60;";
-            break;
-        case '\0':
+        case '\"':
+            out += "&#34;"; // "&#34;" is shorter than "&quot;"
             break;
         default:
             out += ch;
