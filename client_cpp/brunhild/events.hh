@@ -14,7 +14,7 @@ struct EventTarget {
     Attrs attrs;
 };
 
-// Handles an captured event
+// Handles a captured event
 typedef void (*Handler)(const EventTarget&);
 
 // Register a persistent global event handler.
