@@ -3,10 +3,10 @@
 		"ago": "pred",
 		"and": "a",
 		"anon": "Janonymous",
-		"banned": "USER WAS BANNED FOR THIS POST",
-		"contractImages": "Contract Images",
-		"deleteBySameIP": "Delete all by IP",
-		"expandImages": "Expand Images",
+		"banned": "Uživateľ bol za tento príspevok internovaný v Ilave",
+		"contractImages": "Zmenši obrázky",
+		"deleteBySameIP": "Zmaž všetky z rovnakej IP adresy",
+		"expandImages": "Expanduj obrázky",
 		"expand": "Expandovať",
 		"hide": "Schovať",
 		"in": "v",
@@ -17,11 +17,11 @@
 		"show": "Zobraziť",
 		"you": "(Ty)",
 		"admin": "Admin",
-		"owners": "Board Owner",
-		"moderators": "Moderator",
-		"janitors": "Meido",
-		"viewBySameIP": "Same IP",
-		"toggleSticky": "Toggle sticky"
+		"owners": "Majiteľ dosky",
+		"moderators": "Moderátori",
+		"janitors": "Údržbári",
+		"viewBySameIP": "Podľa rovnakých IP adries",
+		"toggleSticky": "Prepni sticky"
 	},
 	"plurals": {
 		"day": [
@@ -80,25 +80,25 @@
 	},
 	"ui": {
 		"mustMatch": "Heslá sa musia zhodovať",
-		"invalidCaptcha": "Invalid captcha",
+		"invalidCaptcha": "Neplatná kapča",
 		"quoted": "Niekto ťa citoval.",
 		"refresh": "Obnoviť",
-		"sessionExpired": "Login session expired",
+		"sessionExpired": "Sedenie vypršalo",
 		"thumbnailing": "Odtlačkujem...",
 		"unfinishedPost": "Más nedokončený plagát",
 		"uploadProgress": "odoslané...",
-		"googleSong": "Click to google song",
+		"googleSong": "Klikni pre vygúglenie pesničky",
 		"last": "Posledné",
-		"postsImages": "Posts/Images/TTL",
+		"postsImages": "Plagátov/Obrázkov/TTL",
 		"report": "Nahlásiť",
 		"submit": "Odoslať",
 		"cancel": "Zrušiť",
 		"newThread": "Nové vlákno",
-		"finished": "Finished",
-		"importDone": "Import successful. The page will now reload.",
-		"importCorrupt": "Import failed. File corrupt",
-		"confirmDelete": "Delete all posts by this IP?",
-		"lockThread": "Toggle thread lock",
+		"finished": "Hotovo",
+		"importDone": "Naimportované. Stárnka sa načíta znovu.",
+		"importCorrupt": "Import zlyhal. Poškodený súbor.",
+		"confirmDelete": "Chcete zmazať všetky plagáty z tejto IP adresy?",
+		"lockThread": "Prepni uzamknutie vlákna",
 		"return": "Návrat",
 		"catalog": "Katalóg",
 		"reply": "Odpovedať",
@@ -117,8 +117,9 @@
 	],
 	"forms": {
 		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
+			"Ne-živý",
+			"Zruš živé updaty otvorených plagátov a obrázkov"
 		]
 	}
 }
+

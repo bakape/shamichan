@@ -1,9 +1,9 @@
 {
 	"forms": {
 		"NSFW": [
-			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
-		],
+			"Nevhodné do práce",
+			"Doska povoľuje materiál, ktorý nie je bezpečné prezerať v pracovnom prostredí"
+    ],
 		"FAQ": [
 			"Information panel text",
 			"Entries for the banner's Frequently Asked Questions list and information modal"
@@ -13,20 +13,20 @@
 			"Kvalita JPEG náhľadov"
 		],
 		"alwaysLock": [
-			"Always Lock to Bottom",
+			"Vždy zamýkaj k spodku",
 			"Lock scrolling to page bottom even when tab is hidden"
 		],
 		"anonymise": [
-			"Anonymise",
-			"Display all posters as anonymous"
-		],
+			"Anonymizuj",
+			"Zobraz všetkých prispievateľov ako anonýmnych"
+    ],
 		"autogif": [
-			"Animated GIF Thumbnails",
-			"Animate GIF thumbnails"
+			"Animované GIF palconechty",
+			"Animuj GIF palconechty"
 		],
 		"boardExpiry": [
-			"Board expiry time",
-			"Number of days without new posts before a board is deleted"
+			"Čas expirácie dosky",
+			"Počet dní bez nových príspevkov predtým, než sa doska zmaže"
 		],
 		"boardName": [
 			"Názov dosky",
@@ -37,20 +37,20 @@
 			"Titúlok novej dosky ako napríklad 'Politika & Sranie'. Maximálne 100 znakov."
 		],
 		"body": [
-			"Body",
-			"Text body of the post"
+			"Telo",
+			"Telo textu nového plagátu"
 		],
 		"captcha": [
 			"Kapča",
-			"Ask users to complete a captcha for certain tasks like registration and thread creation"
+			"Požiadaj užívateľov aby vyplnili kapču pre určité úlohy ako je registrácia a vytváranie vláken"
 		],
 		"customCSS": [
 			"",
 			"User-defined CSS rules loaded on top of the selected theme"
 		],
 		"customCSSToggle": [
-			"Custom CSS",
-			"Toggle use of custom CSS"
+			"Vlastné CSS",
+			"Prepni používanie vlastného CSS"
 		],
 		"defaultCSS": [
 			"Východzia téma",
@@ -65,15 +65,15 @@
 			"desustorage.org image search"
 		],
 		"disableRobots": [
-			"Prevent crawlers",
+			"Zakáž webcrawlerov",
 			"Prevent automated website crawlers, such as search engine indexers, from accessing this board."
 		],
 		"disableUserBoards": [
-			"Disable non-admin board creation",
-			"Prevents any account apart from the 'admin' account from creating new boards"
+			"Zruš vytvárania dosiek ne-adminmi",
+			"Zabráni tomu aby akýkoľvek iný účet než admin mohol vytvárať nové dosky"
 		],
 		"done": [
-			"Dokončiťt plagát",
+			"Dokončiť plagát",
 			"Zatvoriť otvorený plagát"
 		],
 		"eightball": [
@@ -97,16 +97,16 @@
 			"User feedback email to display in the top banner"
 		],
 		"flags": [
-			"Country flags",
-			"Display poster country flags on posts"
+			"Krijnovlajočky",
+			"Zobraz vlajočku krajiny plagáta"
 		],
 		"forcedAnon": [
 			"Vynútená anonymita",
 			"Zruš uživateľské mená, výletokódy a emaily v plagátoch"
 		],
 		"galleryMode": [
-			"Gallery Mode",
-			"Only show posts containing images"
+			"Režim galérie",
+			"Zobrazí len príspevky s obrázkami"
 		],
 		"google": [
 			"Google",
@@ -146,7 +146,7 @@
 		],
 		"imageHover": [
 			"Expandovať obrázky pod kurzorom",
-			"Display image previews on hover"
+			"Zobrazí náhľad obrázku pod kurzorom"
 		],
 		"imageRootOverride": [
 			"Image root override",
@@ -317,8 +317,8 @@
 			"Povoľ používanie ** na spojlerovanie blokov textu"
 		],
 		"staffTitle": [
-			"Staff Title",
-			"Display your staff title in the post header"
+			"Názov role",
+			"Zobrazí tvoju rolu v hlavičke plagátu"
 		],
 		"textOnly": [
 			"Len text",
@@ -365,7 +365,7 @@
 			"Hides images and disables user background"
 		],
 		"workModeToggle": [
-			"Work mode",
+			"Pracovný režim",
 			"Hides images and disables user background"
 		]
 	},
@@ -375,56 +375,56 @@
 		"screen": "fit to screen"
 	},
 	"ui": {
-		"FAQ": "Information",
-		"account": "Account and board management",
+		"FAQ": "Informácie",
+		"account": "Správa účtu a dosky",
 		"add": "Pridať",
 		"apply": "Použiť",
-		"assignStaff": "Assign staff",
+		"assignStaff": "Priraď osadenstvo",
 		"ban": "Ban",
 		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
 		"by": "By",
-		"captcha": "Captcha",
-		"captchaID": "Captcha ID",
+		"captcha": "Kapča",
+		"captchaID": "Kapča ID",
 		"changePassword": "Zmeniť heslo",
-		"clear": "Clear",
+		"clear": "Vyčisti",
 		"configureBoard": "Nastaviť dosku",
 		"configureServer": "Nastaviť server",
 		"createBoard": "Vytvoriť dosku",
-		"deleteImage": "Delete image",
-		"deletePost": "Delete post",
-		"done": "Import successfull. The page will now reload.",
-		"deleteBoard": "Delete board",
-		"expires": "Expires",
-		"feedback": "Feedback",
-		"global": "Global",
+		"deleteImage": "Zmazať obrázok",
+		"deletePost": "Zmazať plagát",
+		"done": "Importované. Stránka sa načíta znovu.",
+		"deleteBoard": "Zmazať dosku",
+		"expires": "Expiruje",
+		"feedback": "Spätná väzba",
+		"global": "Globálne",
 		"id": "ID",
-		"identity": "Identity",
-		"illegal": "Illegal content",
-		"live": "Live",
-		"loadCaptcha": "Click to load captcha",
+		"identity": "Identita",
+		"illegal": "Nelegálny obsah",
+		"live": "Naživo",
+		"loadCaptcha": "Klikni pre načítanie kapči",
 		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
 		"logout": "Odhlásiť",
 		"logoutAll": "Odhlásiť zo všetkých zariadení",
-		"notification": "Notification",
-		"options": "Options",
+		"notification": "Upozornenia",
+		"options": "Voľby",
 		"ownNoBoards": "Nevlastníš žiadne dosky",
 		"pointToCatalog": "Point to Catalog",
-		"post": "Post",
-		"posterID": "Poster ID",
-		"reason": "Reason",
+		"post": "Plagát",
+		"posterID": "ID Plagáta",
+		"reason": "Dôvod",
 		"search": "Hľadať",
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
-		"setBanners": "Set banners",
-		"setLoading": "Set loading animation",
+		"setBanners": "Nastav bannery",
+		"setLoading": "Nastav animáciu načítania",
 		"sortMode": "Zoradiť vlákna podľa",
 		"spoilerImage": "Spoiler image",
 		"subject": "Predmet",
-		"sync": "Connection status",
-		"syncCount": "Unique connected IP count",
+		"sync": "Stav pripojenia",
+		"syncCount": "Počet unikátnych pripojených IP adries",
 		"text": "Text",
-		"time": "Time",
-		"type": "Type",
-		"unban": "Unban"
+		"time": "Čas",
+		"type": "Typ",
+		"unban": "Odbanuj"
 	},
 	"sortModes": [
 		"Drgnutia",
@@ -434,11 +434,11 @@
 		"Počtu súborov"
 	],
 	"tabs": [
-		"General",
-		"Style",
-		"Image Search",
-		"Fun",
-		"Shortcuts"
+		"Všeobecné",
+		"Štýl",
+		"Vyhľadávanie obrázkov",
+		"Zábava",
+		"Skratky"
 	],
 	"templates": {
 		"banPage": [
@@ -448,3 +448,4 @@
 		]
 	}
 }
+
