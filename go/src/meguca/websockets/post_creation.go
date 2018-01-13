@@ -287,7 +287,7 @@ func (c *Client) submitCaptcha(data []byte) (err error) {
 // If the client has a previous post, close it silently
 func (c *Client) closePreviousPost() error {
 	if c.post.id != 0 {
-		return c.closePost()
+		return c._closePost()
 	}
 	return nil
 }

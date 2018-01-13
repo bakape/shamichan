@@ -140,7 +140,7 @@ func DeleteImage(id, op uint64) error {
 		return err
 	}
 	return sendIfExists(op, func(f *Feed) {
-		f.deleteImage(id, msg)
+		f.DeleteImage(id, msg)
 	})
 }
 

@@ -97,8 +97,7 @@ void load_posts(std::string_view data)
 
 void load_state()
 {
-    // Order is important to prevent race conditions after the database is
-    // loaded
+    // Order is important to prevent race conditions
 
     debug = val::global("location")["search"].as<string>().find("debug=true")
         != string::npos;

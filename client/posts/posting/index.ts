@@ -325,8 +325,8 @@ export default () => {
 	})
 
 	// Close allocated post
-	postSM.act(postState.alloc, postEvent.done, () => {
-		postModel.commitClose()
+	postSM.act(postState.alloc, postEvent.done, (cancel: any) => {
+		postModel.commitClose(typeof cancel === "boolean" ? cancel : false)
 		return postState.ready
 	})
 

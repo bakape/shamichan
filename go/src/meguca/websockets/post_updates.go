@@ -10,6 +10,7 @@ import (
 	"meguca/parser"
 	"meguca/util"
 	"time"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -163,32 +164,97 @@ func (c *Client) backspace() error {
 }
 
 // Close an open post and parse the last line, if needed.
-func (c *Client) closePost() error {
+func (c *Client) closePost(data []byte) (err error) {
 	if c.post.id == 0 {
 		return errNoPostOpen
 	}
 
+	var cancel bool
+	err = decodeMessage(data, &cancel)
+	if err != nil {
+		return
+	}
+	if cancel {
+		err = c.clearPost()
+		if err != nil {
+			return
+		}
+	}
+	return c._closePost()
+}
+
+// Used to close posts internally without parsing a message
+func (c *Client) _closePost() (err error) {
 	var (
 		links [][2]uint64
 		com   []common.Command
-		err   error
 	)
+
 	if c.post.len != 0 {
-		links, com, err = parser.ParseBody(c.post.body, c.post.board)
-		if err != nil {
-			return err
+		// If post has noting but whitespace, remove all text
+		hasText := false
+		for _, r := range c.post.body {
+			if !unicode.IsSpace(rune(r)) {
+				hasText = true
+				break
+			}
+		}
+		if !hasText {
+			err = c.clearText()
+			if err != nil {
+				return
+			}
+		} else {
+			links, com, err = parser.ParseBody(c.post.body, c.post.board)
+			if err != nil {
+				return
+			}
 		}
 	}
 
 	err = db.ClosePost(c.post.id, c.post.op, string(c.post.body), links, com)
 	if err != nil {
-		return err
+		return
 	}
 	c.post = openPost{}
-	return nil
+	return
 }
 
-// Splice the text in the open post. This call is also used for text pastes.
+// Clear all open post contents
+func (c *Client) clearPost() (err error) {
+	if c.post.len != 0 {
+		err = c.clearText()
+		if err != nil {
+			return
+		}
+	}
+	if c.post.hasImage {
+		err = db.DeleteOwnedImage(c.post.id)
+		if err != nil {
+			return
+		}
+		var msg []byte
+		msg, err = common.EncodeMessage(common.MessageDeleteImage, c.post.id)
+		if err != nil {
+			return
+		}
+		c.feed.DeleteImage(c.post.id, msg)
+		c.post.hasImage = false
+	}
+	return
+}
+
+// Clear all text in open post
+func (c *Client) clearText() error {
+	return c._spliceText(spliceRequest{
+		spliceCoords: spliceCoords{
+			Start: 0,
+			Len:   uint(c.post.len),
+		},
+	})
+}
+
+// Splice the text in the open post
 func (c *Client) spliceText(data []byte) error {
 	if has, err := c.hasPost(); err != nil {
 		return err
@@ -196,11 +262,20 @@ func (c *Client) spliceText(data []byte) error {
 		return nil
 	}
 
-	// Decode and validate
 	var (
 		req spliceRequest
 		err = decodeMessage(data, &req)
 	)
+	if err != nil {
+		return err
+	}
+	return c._spliceText(req)
+}
+
+// Separate function, so we can call splicing internally without encoding a
+// message
+func (c *Client) _spliceText(req spliceRequest) (err error) {
+	// Validate
 	switch {
 	case err != nil:
 		return err

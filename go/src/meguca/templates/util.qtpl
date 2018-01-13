@@ -66,6 +66,10 @@ Render the class attribute of a post
 		{% endif %}
 		{% if p.ID == op %}
 			{% space %}op
+		{% else %}
+			{% if !p.Editing && p.Image == nil && len(p.Body) == 0 %}
+				{% space %}hidden
+			{% endif %}
 		{% endif %}
 	"
 {% endstripspace %}{% endfunc %}

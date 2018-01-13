@@ -2,9 +2,7 @@ import PostView from "../view"
 import FormModel from "./model"
 import { Post } from "../model"
 import { boardConfig } from "../../state"
-import {
-    setAttrs, importTemplate, atBottom, scrollToBottom, firstChild,
-} from "../../util"
+import { setAttrs, importTemplate, atBottom, scrollToBottom } from "../../util"
 import { postSM, postEvent, postState } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
@@ -48,8 +46,10 @@ export default class FormView extends PostView {
             this.onInput()
         })
         this.onClick({
-            "input[name=\"done\"]": postSM.feeder(postEvent.done),
-            "input[name=\"cancel\"]": postSM.feeder(postEvent.done),
+            "input[name=\"done\"]": () =>
+                postSM.feed(postEvent.done, false),
+            "input[name=\"cancel\"]": () =>
+                postSM.feed(postEvent.done, true),
         })
 
         if (!boardConfig.textOnly) {
@@ -138,11 +138,6 @@ export default class FormView extends PostView {
 
     // Show button for closing allocated posts
     private showDone() {
-        const c = firstChild(this.el.querySelector("#post-controls"), ch =>
-            ch.getAttribute("name") === "cancel")
-        if (c) {
-            c.remove()
-        }
         const d = this.inputElement("done")
         if (d) {
             d.hidden = false

@@ -204,7 +204,7 @@ func TestClosePostWithHashCommand(t *testing.T) {
 		body:  []byte("#flip"),
 	}
 
-	if err := cl.closePost(); err != nil {
+	if err := cl._closePost(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -286,7 +286,7 @@ func TestClosePostWithLinks(t *testing.T) {
 	}
 	setBoardConfigs(t, false)
 
-	if err := cl.closePost(); err != nil {
+	if err := cl._closePost(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -350,7 +350,7 @@ func TestClosePost(t *testing.T) {
 	}
 	cl.feed.InsertPost(samplePost.StandalonePost, cl.post.body, nil)
 
-	if err := cl.closePost(); err != nil {
+	if err := cl._closePost(); err != nil {
 		t.Fatal(err)
 	}
 

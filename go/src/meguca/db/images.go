@@ -140,3 +140,8 @@ func InsertImage(tx *sql.Tx, id uint64, img common.Image) error {
 func SpoilerImage(id uint64) error {
 	return execPrepared("spoiler_image", id)
 }
+
+// Delete an image as part of clearing a post
+func DeleteOwnedImage(id uint64) error {
+	return execPrepared("delete_owned_image", id)
+}

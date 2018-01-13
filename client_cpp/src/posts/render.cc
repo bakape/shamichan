@@ -58,10 +58,10 @@ static optional<Node> render_omitted(unsigned long id)
 Node Post::render()
 {
     Node n("article", { { "id", 'p' + std::to_string(id) } });
-    if (post_ids->hidden.count(id)) {
-        // No need to do useless work
+    if (post_ids->hidden.count(id)
+        || (!editing && !body.size() && !image && id != op)) {
         n.attrs["class"] = "hidden";
-        return n;
+        return n; // No need to do useless work
     }
     n.children.reserve(4);
 

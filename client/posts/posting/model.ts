@@ -59,23 +59,17 @@ export default class FormModel extends Post {
 	// Append a character to the model's body and reparse the line, if it's a
 	// newline
 	public append(code: number) {
-		if (this.editing) {
-			this.body += String.fromCodePoint(code)
-		}
+		this.body += String.fromCodePoint(code)
 	}
 
 	// Remove the last character from the model's body
 	public backspace() {
-		if (this.editing) {
-			this.body = this.body.slice(0, -1)
-		}
+		this.body = this.body.slice(0, -1)
 	}
 
 	// Splice the last line of the body
 	public splice(msg: SpliceResponse) {
-		if (this.editing) {
-			this.spliceText(msg)
-		}
+		this.spliceText(msg)
 	}
 
 	// Compare new value to old and generate appropriate commands
@@ -165,8 +159,9 @@ export default class FormModel extends Post {
 		this.inputBody = v
 	}
 
-	// Close the form and revert to regular post
-	public commitClose() {
+	// Close the form and revert to regular post. Cancel also erases all post
+	// contents.
+	public commitClose(cancel: boolean) {
 		// It is possible to have never committed anything, if all you have in
 		// the body is one quote and an image allocated.
 		if (this.bufferedText) {
@@ -174,9 +169,11 @@ export default class FormModel extends Post {
 			this.parseInput(this.bufferedText)
 		}
 
-		this.body = this.inputBody
 		this.abandon()
-		this.send(message.closePost, null)
+		this.send(message.closePost, !!cancel) // Ensure boolean type
+		if (cancel) {
+			this.view.hide()
+		}
 	}
 
 	// Turn post form into a regular post, because it has expired after a
@@ -244,7 +241,7 @@ export default class FormModel extends Post {
 			req["image"] = await this.view.upload.uploadFile(files[0])
 		}
 		if (this.bufferedText) {
-			req["body"] = this.body = this.bufferedText
+			req["body"] = this.bufferedText
 		}
 
 		send(message.insertPost, req)
@@ -280,7 +277,6 @@ export default class FormModel extends Post {
 		req["open"] = !this.nonLive
 		if (body) {
 			req["body"] = body
-			this.body = body
 			this.inputBody = body
 		}
 		if (image) {

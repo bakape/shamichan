@@ -263,7 +263,7 @@ func (f *Feed) deletePost(id uint64, msg []byte) {
 	f._sendPostMessage(deletePost, id, msg)
 }
 
-func (f *Feed) deleteImage(id uint64, msg []byte) {
+func (f *Feed) DeleteImage(id uint64, msg []byte) {
 	f._sendPostMessage(deleteImage, id, msg)
 }
 

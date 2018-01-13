@@ -29,7 +29,7 @@ func (c *Client) runHandler(typ common.MessageType, msg []byte) error {
 	case common.MessageBackspace:
 		return c.backspace()
 	case common.MessageClosePost:
-		return c.closePost()
+		return c.closePost(data)
 	case common.MessageSplice:
 		return c.spliceText(data)
 	case common.MessageInsertPost:
