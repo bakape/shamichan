@@ -7,7 +7,7 @@ type OEmbedDoc = {
 }
 
 // Types of different embeds by provider
-enum provider { Youtube, SoundCloud, Vimeo }
+enum provider { Youtube, SoundCloud, Vimeo, Coub }
 
 // Matching patterns and their respective providers
 const patterns: [provider, RegExp][] = [
@@ -27,6 +27,11 @@ const patterns: [provider, RegExp][] = [
 		provider.Vimeo,
 		/https?:\/\/(?:www\.)?vimeo\.com\/.+/,
 	],
+	[
+		provider.Coub,
+		/https?:\/\/(?:www\.)?coub\.com\/view\/.+/,
+	],
+
 ]
 
 // Map of providers to formatter functions
@@ -35,7 +40,7 @@ const formatters: { [key: number]: (s: string) => string } = {}
 // Map of providers to information fetcher functions
 const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
 
-for (let p of ["Youtube", "SoundCloud", "Vimeo"]) {
+for (let p of ["Youtube", "SoundCloud", "Vimeo", "Coub"]) {
 	const id = (provider as any)[p] as number
 	formatters[id] = formatNoEmbed(id)
 	fetchers[id] = fetchNoEmbed(id)
