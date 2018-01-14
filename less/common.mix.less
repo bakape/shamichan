@@ -10,6 +10,91 @@ blockquote strong {
 	color: mix(@body, @link);
 }
 
+.super_roll {
+    animation: pink_blinker 0.4s linear 25;
+    color: pink;
+}
+@keyframes pink_blinker {
+    50% {
+        color: deeppink
+    }
+}
+
+.lewd_roll {
+    animation: lewd_blinker 0.7s linear 15;
+    color: pink;
+}
+@keyframes lewd_blinker {
+    50% {
+        color: #FFD6E1
+    }
+}
+
+.kuso_roll {
+    animation: brown_blinker 1s linear 10;
+    color: #825025;
+}
+@keyframes brown_blinker {
+    50% {
+        opacity: 0.7
+    }
+}
+
+.dubs_roll {
+    animation: blue_blinker 0.4s linear 25;
+    color: aqua;
+}
+@keyframes blue_blinker {
+    50% {
+        color: blue
+    }
+}
+
+.trips_roll {
+    animation: yellow_blinker 0.4s linear 25;
+    color: yellow;
+}
+@keyframes yellow_blinker {
+    50% {
+        color: darkorange
+    }
+}
+
+.quads_roll {
+    animation: green_blinker 0.4s linear 25;
+    color: lime;
+}
+@keyframes green_blinker {
+    50% {
+        color: darkgreen
+    }
+}
+
+.rainbow_roll {
+    animation: rainbow_blinker 2s linear 5;
+    color: red;
+}
+@keyframes rainbow_blinker {
+    14% {
+        color: orange
+    }
+    28% {
+        color: yellow
+    }
+    42% {
+        color: green
+    }
+    57% {
+        color: blue
+    }
+    71% {
+        color: indigo
+    }
+    85% {
+        color: violet
+    }
+}
+
 .modal hr {
 	border-top: 1px solid @link;
 }

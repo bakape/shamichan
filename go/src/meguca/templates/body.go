@@ -450,6 +450,7 @@ func (c *bodyContext) parseCommands(bit string) {
 		return
 	}
 
+    formatting := "<strong>"
 	inner := make([]byte, 0, 32)
 	val := c.Commands[c.state.iDice]
 	switch bit {
@@ -477,8 +478,10 @@ func (c *bodyContext) parseCommands(bit string) {
 
 		// Validate dice
 		m := common.DiceRegexp.FindStringSubmatch(bit)
+        rolls := 1
 		if m[1] != "" {
-			if rolls, err := strconv.Atoi(m[1]); err != nil || rolls > 10 {
+            var err error
+			if rolls, err = strconv.Atoi(m[1]); err != nil || rolls > 10 {
 				c.writeInvalidCommand(bit)
 				return
 			}
@@ -502,13 +505,62 @@ func (c *bodyContext) parseCommands(bit string) {
 			inner = append(inner, " = "...)
 			inner = strconv.AppendUint(inner, sum, 10)
 		}
+
+        formatting = getRollFormatting(uint64(rolls), uint64(sides), sum)
 	}
 
-	c.string(`<strong>#`)
+    c.string(formatting)
+	c.string(`#`)
 	c.string(bit)
 	c.string(` (`)
 	c.N().Z(inner)
 	c.string(`)</strong>`)
+}
+
+func getRollFormatting(numberOfDice uint64, facesPerDie uint64, sum uint64) string {
+    maxRoll := numberOfDice * facesPerDie
+    // no special formatting for small rolls
+    if maxRoll < 10 || facesPerDie == 1 {
+        return "<strong>"
+    }
+
+    if numberOfDice == 1 && facesPerDie == sum && sum == 7777 { // Marrying navy-tan!
+        return "<strong class=\"rainbow_roll\">Congrats! You get to marry navy-tan! ";
+    } else if maxRoll == sum {
+        return "<strong class=\"super_roll\">";
+    } else if sum == 1 {
+        return "<strong class=\"kuso_roll\">";
+    } else if sum == 69 || sum == 6969 {
+        return "<strong class=\"lewd_roll\">";
+    } else if checkEm(sum) {
+        if sum < 100 {
+            return "<strong class=\"dubs_roll\">";
+        } else if sum < 1000 {
+            return "<strong class=\"trips_roll\">";
+        } else if sum < 10000 {
+            return "<strong class=\"quads_roll\">";
+        } else {// QUINTS!!!
+            return "<strong class=\"rainbow_roll\">";
+        }
+    }
+    return "<strong>"
+}
+
+// If num is made of the same digit repeating
+func checkEm(num uint64) bool {
+    if num < 10 {
+        return false
+    }
+    digit := num % 10
+    for {
+        num /= 10
+        if num == 0 {
+            return true
+        }
+        if num % 10 != digit {
+            return false
+        }
+    }
 }
 
 // Format a synchronized time counter
