@@ -9,7 +9,7 @@ import { trigger, emitChanges, ChangeEmitter, hook } from "../util"
 export { store as storeBackground } from "./background"
 export { store as storeMascot } from "./mascot"
 export * from "./specs"
-export { posterName } from "./r-a-dio"
+export { posterName } from "./nowPlaying"
 
 // Delete legacy options localStorage entry, if any
 localStorage.removeItem("options")
@@ -24,7 +24,7 @@ interface Options extends ChangeEmitter {
 	anonymise: boolean
 	postInlineExpand: boolean
 	relativeTime: boolean
-	nowPlaying: boolean
+	nowPlaying: string
 	illyaDance: boolean
 	illyaDanceMute: boolean
 	horizontalPosting: boolean

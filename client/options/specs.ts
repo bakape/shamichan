@@ -4,7 +4,7 @@ import { config } from '../state'
 import { makeEl, HTML, setCookie } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
-import initEden from "./eden"
+import initNowPlaying from "./nowPlaying"
 import options from "."
 
 // Types of option models
@@ -86,10 +86,12 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	// Relative post timestamps
 	relativeTime: {},
-	// R/a/dio now playing banner
+	// R/a/dio or Eden now playing banner
 	nowPlaying: {
+		type: optionType.menu,
+		default: "none",
 		noExecOnStart: true,
-		exec: initEden,
+		exec: initNowPlaying,
 	},
 	// Illya dance in the background
 	illyaDance: {

@@ -1,4 +1,4 @@
-// R/a/dio integration
+// R/a/dio  and Eden integration
 
 import { HTML, makeAttrs, fetchJSON } from '../util'
 import options from '.'
@@ -24,25 +24,40 @@ const songMap = new Map([
 	[/Super Special/i, 'Super Special'],
 ])
 
-// Fetch JSON from R/a/dio's API and rerender the banner, if different data
+// Fetch JSON from R/a/dio's or Eden's API and rerender the banner, if different data
 // received
 async function fetchData() {
-	const [res, err] = await fetchJSON<any>('https://r-a-d.io/api')
-	if (err) {
-		return console.warn(err)
-	}
-	const {
-		main: {
-			np,
-			listeners,
-			dj: {
-				djname: dj,
-			},
-		},
-	}
-		= res
+    let newData = {} as RadioData
+    if (options.nowPlaying === "r/a/dio") {
+	    const [res, err] = await fetchJSON<any>('https://r-a-d.io/api')
+	    if (err) {
+		    return console.warn(err)
+	    }
+	    const {
+		    main: {
+			    np,
+			    listeners,
+			    dj: {
+				    djname: dj,
+			    },
+		    },
+	    }
+		    = res
+        newData = { np, listeners, dj }
+    } else if (options.nowPlaying === "eden") {
+	    const [res, err] = await fetchJSON<any>('https://edenofthewest.com/ajax/status.php')
+	    if (err) {
+		    return console.warn(err)
+	    }
+	    const {
+            dj: dj,
+            current: np,
+            listeners: listeners
+	    }
+		    = res
+        newData = { np, listeners, dj }
+    }
 
-	const newData: RadioData = { np, listeners, dj }
 	if (!isMatch(newData, data)) {
 		data = newData
 		render()
@@ -61,7 +76,7 @@ function isMatch(a: {}, b: {}): boolean {
 
 // Render the banner message text
 function render() {
-	if (!options.nowPlaying) {
+	if (options.nowPlaying === "none") {
 		el.innerHTML = _posterName = ""
 		return
 	}
@@ -84,8 +99,9 @@ function render() {
 		href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
 		target: "_blank",
 	}
+    const site = options.nowPlaying === "eden" ? "edenofthewest.com" : "r-a-d.io"
 	el.innerHTML = HTML
-		`<a href="http://r-a-d.io/" target="_blank">
+		`<a href="https://${site}/" target="_blank">
 			[${data.listeners.toString()}] ${data.dj}
 		</a>
 		&nbsp;&nbsp;
@@ -106,8 +122,8 @@ export default function () {
 
 	// Handle toggling of the option
 	let timer = setInterval(fetchData, 10000)
-	options.onChange("nowPlaying", enabled => {
-		if (!enabled) {
+	options.onChange("nowPlaying", selection => {
+		if (selection === "none") {
 			clearInterval(timer)
 			render()
 		} else {

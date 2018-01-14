@@ -309,7 +309,11 @@ var optionSpecs = [...][]inputSpec{
 		{ID: "exhentai"},
 	},
 	{
-		{ID: "nowPlaying"},
+		{
+			ID:      "nowPlaying",
+			Type:    _select,
+			Options: []string{"none", "r/a/dio", "eden"},
+		},
 		{ID: "illyaDance"},
 		{ID: "illyaDanceMute"},
 	},
