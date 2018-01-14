@@ -194,7 +194,7 @@ func (c *Client) _closePost() (err error) {
 		// If post has noting but whitespace, remove all text
 		hasText := false
 		for _, r := range c.post.body {
-			if !unicode.IsSpace(rune(r)) {
+			if !unicode.IsSpace(rune(r)) && r != '\n' {
 				hasText = true
 				break
 			}
