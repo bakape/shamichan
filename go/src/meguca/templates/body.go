@@ -524,9 +524,7 @@ func getRollFormatting(numberOfDice uint64, facesPerDie uint64, sum uint64) stri
 		return "<strong>"
 	}
 
-	if numberOfDice == 1 && facesPerDie == sum && sum == 7777 { // Marrying navy-tan!
-		return "<strong class=\"rainbow_roll\">Congrats! You get to marry navy-tan! "
-	} else if maxRoll == sum {
+	if maxRoll == sum {
 		return "<strong class=\"super_roll\">"
 	} else if sum == 1 {
 		return "<strong class=\"kuso_roll\">"
