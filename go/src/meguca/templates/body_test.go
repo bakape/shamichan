@@ -144,22 +144,44 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "single roll dice",
 			in:   "#d20",
-			out:  "<strong>#d20 (22)</strong>",
+			out:  "<strong>#d20 (21)</strong>",
 			commands: []common.Command{
 				{
 					Type: common.Dice,
-					Dice: []uint16{22},
+					Dice: []uint16{21},
+				},
+			},
+		},
+		{
+			name: "dubs roll dice",
+			in:   "#d20",
+			out:  "<strong class=\"dubs_roll\">#d20 (11)</strong>",
+			commands: []common.Command{
+				{
+					Type: common.Dice,
+					Dice: []uint16{11},
+				},
+			},
+		},
+		{
+			name: "max roll dice",
+			in:   "#d20",
+			out:  "<strong class=\"super_roll\">#d20 (20)</strong>",
+			commands: []common.Command{
+				{
+					Type: common.Dice,
+					Dice: []uint16{20},
 				},
 			},
 		},
 		{
 			name: "multiple roll dice",
 			in:   "#2d20",
-			out:  "<strong>#2d20 (22 + 33 = 55)</strong>",
+			out:  "<strong>#2d20 (21 + 33 = 54)</strong>",
 			commands: []common.Command{
 				{
 					Type: common.Dice,
-					Dice: []uint16{22, 33},
+					Dice: []uint16{21, 33},
 				},
 			},
 		},
