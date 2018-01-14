@@ -76,6 +76,10 @@ Node Post::render()
         n.attrs["class"] += " deleted";
         n.children.push_back(delete_toggle);
     }
+    if (image && image->expanded) {
+        // To allow fullscreen video
+        n.attrs["class"] += " no-contain";
+    }
     n.children.push_back(render_header());
 
     brunhild::Children pc_ch;

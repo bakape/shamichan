@@ -353,6 +353,7 @@ export default class ImageHandler extends View<Post> {
 					a.remove()
 				}
 				this.el.querySelector("figure img").hidden = false
+				this.el.classList.remove("no-contain")
 				break
 		}
 
@@ -404,6 +405,9 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes.ogg:
 			case fileTypes.mp4:
 			case fileTypes.webm:
+				// To allow fullscreen video
+				this.el.classList.add("no-contain")
+
 				const video = document.createElement("video")
 				setAttrs(video, {
 					src,
