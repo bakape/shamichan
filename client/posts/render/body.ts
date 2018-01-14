@@ -400,6 +400,7 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
         return "#" + bit
     }
 
+    let formatting = "<strong>"
     let inner: string
     switch (bit) {
         case "flip":
@@ -420,6 +421,7 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             if (parseInt(m[1]) > 10 || parseInt(m[2]) > 10000) {
                 return "#" + bit
             }
+            const sides = parseInt(m[2])
 
             const rolls = commands[state.iDice++].val as number[]
             inner = ""
@@ -434,9 +436,57 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             if (rolls.length > 1) {
                 inner += " = " + sum
             }
+
+            formatting = getRollFormatting(rolls.length, sides, sum)
     }
 
-    return `<strong>#${bit} (${inner})</strong>`
+    return `${formatting}#${bit} (${inner})</strong>`
+}
+
+function getRollFormatting(numberOfDice: number, facesPerDie: number, sum: number): string {
+    const maxRoll = numberOfDice * facesPerDie
+    // no special formatting for small rolls
+    if (maxRoll < 10 || facesPerDie == 1) {
+        return "<strong>"
+    }
+
+    if (numberOfDice == 1 && facesPerDie == sum && sum == 7777) { // Marrying navy-tan!
+        return "<strong class=\"rainbow_roll\">Congrats! You get to marry navy-tan! ";
+    } else if (maxRoll == sum) {
+        return "<strong class=\"super_roll\">";
+    } else if (sum == 1) {
+        return "<strong class=\"kuso_roll\">";
+    } else if (sum == 69 || sum == 6969) {
+        return "<strong class=\"lewd_roll\">";
+    } else if (checkEm(sum)) {
+        if (sum < 100) {
+            return "<strong class=\"dubs_roll\">";
+        } else if (sum < 1000) {
+            return "<strong class=\"trips_roll\">";
+        } else if (sum < 10000) {
+            return "<strong class=\"quads_roll\">";
+        } else {// QUINTS!!!
+            return "<strong class=\"rainbow_roll\">";
+        }
+    }
+    return "<strong>"
+}
+
+// If num is made of the same digit repeating
+function checkEm(num: number): boolean {
+    if (num < 10) {
+        return false
+    }
+    const digit = num % 10
+    while (true) {
+        num = Math.floor(num/10)
+        if (num == 0) {
+            return true
+        }
+        if (num % 10 != digit) {
+            return false
+        }
+    }
 }
 
 // Format a synchronized time counter
