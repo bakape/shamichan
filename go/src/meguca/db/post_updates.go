@@ -27,7 +27,7 @@ func ClosePost(id, op uint64, body string, links [][2]uint64, com []common.Comma
 	}
 
 	if !IsTest {
-		common.ClosePost(id, op, msg)
+		common.ClosePost(id, op, links, com, msg)
 	}
 	return deleteOpenPostBody(id)
 }

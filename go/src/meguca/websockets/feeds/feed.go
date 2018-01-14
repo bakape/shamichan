@@ -11,8 +11,7 @@ import (
 type postMessageType uint8
 
 const (
-	closePost postMessageType = iota
-	spoilerImage
+	spoilerImage postMessageType = iota
 	deletePost
 	ban
 	deleteImage
@@ -27,6 +26,13 @@ type postMessage struct {
 type postCreationMessage struct {
 	common.Post
 	msg []byte
+}
+
+type postCloseMessage struct {
+	id       uint64
+	links    [][2]uint64
+	commands []common.Command
+	msg      []byte
 }
 
 type imageInsertionMessage struct {
@@ -60,6 +66,8 @@ type Feed struct {
 	insertPost chan postCreationMessage
 	// Insert an image into an already allocated post
 	insertImage chan imageInsertionMessage
+	// Send message to close a post along with parsed post data
+	closePost chan postCloseMessage
 	// Send various simple messages targeted at a specific post
 	sendPostMessage chan postMessage
 	// Set body of an open post
@@ -144,6 +152,17 @@ func (f *Feed) Start() (err error) {
 					f.cache.deleteMemoized(p.ID)
 				}
 
+			// Close an open post
+			case msg := <-f.closePost:
+				f.startIfPaused()
+				p := f.cache.Posts[msg.id]
+				p.Editing = false
+				p.Links = msg.links
+				p.Commands = msg.commands
+				f.cache.Posts[msg.id] = p
+				f.write(msg.msg)
+				f.cache.deleteMemoized(msg.id)
+
 			// Set the body of an open post and propagate
 			case msg := <-f.setOpenBody:
 				f.startIfPaused()
@@ -166,10 +185,6 @@ func (f *Feed) Start() (err error) {
 			case msg := <-f.sendPostMessage:
 				f.startIfPaused()
 				switch msg.typ {
-				case closePost:
-					p := f.cache.Posts[msg.id]
-					p.Editing = false
-					f.cache.Posts[msg.id] = p
 				case spoilerImage:
 					p := f.cache.Posts[msg.id]
 					if p.Image != nil {
@@ -247,8 +262,13 @@ func (f *Feed) _sendPostMessage(typ postMessageType, id uint64, msg []byte) {
 	}
 }
 
-func (f *Feed) ClosePost(id uint64, msg []byte) {
-	f._sendPostMessage(closePost, id, msg)
+func (f *Feed) ClosePost(
+	id uint64,
+	links [][2]uint64,
+	commands []common.Command,
+	msg []byte,
+) {
+	f.closePost <- postCloseMessage{id, links, commands, msg}
 }
 
 func (f *Feed) SpoilerImage(id uint64, msg []byte) {

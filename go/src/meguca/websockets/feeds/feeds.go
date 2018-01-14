@@ -44,6 +44,7 @@ func addToFeed(id uint64, c common.Client) (feed *Feed, err error) {
 			remove:          make(chan common.Client),
 			send:            make(chan []byte),
 			insertPost:      make(chan postCreationMessage),
+			closePost:       make(chan postCloseMessage),
 			sendPostMessage: make(chan postMessage),
 			setOpenBody:     make(chan postBodyModMessage),
 			insertImage:     make(chan imageInsertionMessage),
@@ -104,9 +105,14 @@ func InsertPostInto(post common.StandalonePost, msg []byte) {
 }
 
 // ClosePost closes a post in a feed, if it exists
-func ClosePost(id, op uint64, msg []byte) {
+func ClosePost(
+	id, op uint64,
+	links [][2]uint64,
+	commands []common.Command,
+	msg []byte,
+) {
 	sendIfExists(op, func(f *Feed) {
-		f.ClosePost(id, msg)
+		f.ClosePost(id, links, commands, msg)
 	})
 }
 
