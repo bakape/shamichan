@@ -4,7 +4,7 @@ import { config } from '../state'
 import { makeEl, HTML, setCookie } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
-import initRadio from "./r-a-dio"
+import initEden from "./eden"
 import options from "."
 
 // Types of option models
@@ -89,7 +89,7 @@ export const specs: { [id: string]: OptionSpec } = {
 	// R/a/dio now playing banner
 	nowPlaying: {
 		noExecOnStart: true,
-		exec: initRadio,
+		exec: initEden,
 	},
 	// Illya dance in the background
 	illyaDance: {
