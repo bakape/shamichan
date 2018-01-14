@@ -31,6 +31,14 @@ async function start() {
 		}
 	}
 
+	// Check for legacy options and remap
+	const oldNowPlaying = localStorage.getItem("nowPlaying")
+	if (oldNowPlaying === "true") {
+		localStorage.setItem("nowPlaying", "r/a/dio")
+	} else if (oldNowPlaying === "false") {
+		localStorage.setItem("nowPlaying", "none")
+	}
+
 	initOptions()
 
 	if (page.thread) {
