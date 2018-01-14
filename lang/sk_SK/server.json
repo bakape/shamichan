@@ -1,9 +1,5 @@
 {
 	"forms": {
-		"NSFW": [
-			"Nevhodné do práce",
-			"Doska povoľuje materiál, ktorý nie je bezpečné prezerať v pracovnom prostredí"
-    ],
 		"FAQ": [
 			"Information panel text",
 			"Entries for the banner's Frequently Asked Questions list and information modal"
@@ -12,6 +8,10 @@
 			"JPEG kompresia náhľadu",
 			"Kvalita JPEG náhľadov"
 		],
+		"NSFW": [
+			"Nevhodné do práce",
+			"Doska povoľuje materiál, ktorý nie je bezpečné prezerať v pracovnom prostredí"
+		],
 		"alwaysLock": [
 			"Vždy zamýkaj k spodku",
 			"Lock scrolling to page bottom even when tab is hidden"
@@ -19,7 +19,7 @@
 		"anonymise": [
 			"Anonymizuj",
 			"Zobraz všetkých prispievateľov ako anonýmnych"
-    ],
+		],
 		"autogif": [
 			"Animované GIF palconechty",
 			"Animuj GIF palconechty"
@@ -212,10 +212,6 @@
 			"Meno",
 			"Name to attach to new posts"
 		],
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		],
 		"newPassword": [
 			"New password",
 			""
@@ -223,6 +219,10 @@
 		"newPost": [
 			"Nový plagát",
 			"Otvoriť nový plagát"
+		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
 		],
 		"notice": [
 			"Oznámenie",
@@ -248,13 +248,13 @@
 			"Password",
 			""
 		],
-		"posterIDs": [
-			"Poster IDs",
-			"Display thread-level IP-based poster identification mnemonics on posts"
-		],
 		"postInlineExpand": [
 			"Inline Post Link Expansion",
 			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
+		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
 		],
 		"pruneBoards": [
 			"Prune boards",
@@ -352,13 +352,13 @@
 			"",
 			"Image to use as the background"
 		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
-		],
 		"webmHover": [
 			"Expandovať WebM pod kurzorom",
 			"Display WebM previews on hover. Requires Image Hover Expansion enabled."
+		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"Work mode",
@@ -371,8 +371,29 @@
 	},
 	"options": {
 		"none": "none",
-		"width": "fit to width",
-		"screen": "fit to screen"
+		"screen": "fit to screen",
+		"width": "fit to width"
+	},
+	"sortModes": [
+		"Drgnutia",
+		"Posledného príspevku",
+		"Čas vytvorenia",
+		"Počtu odpovedí",
+		"Počtu súborov"
+	],
+	"tabs": [
+		"Všeobecné",
+		"Štýl",
+		"Vyhľadávanie obrázkov",
+		"Zábava",
+		"Skratky"
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
 	},
 	"ui": {
 		"FAQ": "Informácie",
@@ -390,10 +411,10 @@
 		"configureBoard": "Nastaviť dosku",
 		"configureServer": "Nastaviť server",
 		"createBoard": "Vytvoriť dosku",
+		"deleteBoard": "Zmazať dosku",
 		"deleteImage": "Zmazať obrázok",
 		"deletePost": "Zmazať plagát",
 		"done": "Importované. Stránka sa načíta znovu.",
-		"deleteBoard": "Zmazať dosku",
 		"expires": "Expiruje",
 		"feedback": "Spätná väzba",
 		"global": "Globálne",
@@ -425,27 +446,5 @@
 		"time": "Čas",
 		"type": "Typ",
 		"unban": "Odbanuj"
-	},
-	"sortModes": [
-		"Drgnutia",
-		"Posledného príspevku",
-		"Čas vytvorenia",
-		"Počtu odpovedí",
-		"Počtu súborov"
-	],
-	"tabs": [
-		"Všeobecné",
-		"Štýl",
-		"Vyhľadávanie obrázkov",
-		"Zábava",
-		"Skratky"
-	],
-	"templates": {
-		"banPage": [
-			"You have been banned from /%s/ by %s for the following reason:",
-			"Your ban will expire on %s or in %s.",
-			"According to our server, your IP is %s."
-		]
 	}
 }
-

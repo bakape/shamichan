@@ -1,27 +1,9 @@
 {
-	"posts": {
-		"ago": "тому",
-		"and": "та",
-		"anon": "Анонім",
-		"banned": "USER WAS BANNED FOR THIS POST",
-		"contractImages": "Contract Images",
-		"deleteBySameIP": "Delete all by IP",
-		"expandImages": "Expand Images",
-		"expand": "Розгорнути",
-		"hide": "Сховати",
-		"in": "у",
-		"justNow": "щойно",
-		"omitted": "пропущенно",
-		"seeAll": "Показати все",
-		"spoiler": "Спойлер",
-		"show": "Показати",
-		"you": "(Ви)",
-		"admin": "Admin",
-		"owners": "Board Owner",
-		"moderators": "Moderator",
-		"janitors": "Meido",
-		"viewBySameIP": "Same IP",
-		"toggleSticky": "Toggle sticky"
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
 	},
 	"plurals": {
 		"day": [
@@ -53,6 +35,37 @@
 			"роки"
 		]
 	},
+	"posts": {
+		"admin": "Admin",
+		"ago": "тому",
+		"and": "та",
+		"anon": "Анонім",
+		"banned": "USER WAS BANNED FOR THIS POST",
+		"contractImages": "Contract Images",
+		"deleteBySameIP": "Delete all by IP",
+		"expand": "Розгорнути",
+		"expandImages": "Expand Images",
+		"hide": "Сховати",
+		"in": "у",
+		"janitors": "Meido",
+		"justNow": "щойно",
+		"moderators": "Moderator",
+		"omitted": "пропущенно",
+		"owners": "Board Owner",
+		"seeAll": "Показати все",
+		"show": "Показати",
+		"spoiler": "Спойлер",
+		"toggleSticky": "Toggle sticky",
+		"viewBySameIP": "Same IP",
+		"you": "(Ви)"
+	},
+	"sync": [
+		"Від'єднано",
+		"Приєднуємось",
+		"Синхронізуємо",
+		"Синхронізовано",
+		"Розсинхронізовано"
+	],
 	"time": {
 		"calendar": [
 			"Січеня",
@@ -79,46 +92,33 @@
 		]
 	},
 	"ui": {
-		"mustMatch": "Паролі мають співпадати",
+		"bottom": "Дно",
+		"cancel": "Скасувати",
+		"catalog": "Каталог",
+		"confirmDelete": "Delete all posts by this IP?",
+		"finished": "Готово.",
+		"googleSong": "Клікніть для гугль пісні",
+		"importCorrupt": "Import failed. File corrupt",
+		"importDone": "Import successful. The page will now reload.",
 		"invalidCaptcha": "Invalid captcha",
+		"last": "Останні",
+		"lockThread": "Toggle thread lock",
+		"lockedToBottom": "Прив'язано до дна",
+		"mustMatch": "Паролі мають співпадати",
+		"newThread": "Новий тред",
+		"postsImages": "Posts/Images/TTL",
 		"quoted": "Вас було процитовано",
 		"refresh": "Оновити",
-		"sessionExpired": "Login session expired",
-		"thumbnailing": "Прев'ювання..",
-		"unfinishedPost": "Ви маєте незакінчений пост",
-		"uploadProgress": "завантаження...",
-		"googleSong": "Клікніть для гугль пісні",
-		"last": "Останні",
-		"postsImages": "Posts/Images/TTL",
-		"report": "Зарепортити",
-		"submit": "Надіслати",
-		"cancel": "Скасувати",
-		"newThread": "Новий тред",
-		"finished": "Готово.",
-		"importDone": "Import successful. The page will now reload.",
-		"importCorrupt": "Import failed. File corrupt",
-		"confirmDelete": "Delete all posts by this IP?",
-		"lockThread": "Toggle thread lock",
-		"return": "Повернутися",
-		"catalog": "Каталог",
 		"reply": "Відповісти",
-		"top": "Шапка",
-		"lockedToBottom": "Прив'язано до дна",
-		"showNotice": "Повідомлення",
+		"report": "Зарепортити",
+		"return": "Повернутися",
 		"rules": "Правила",
-		"bottom": "Дно"
-	},
-	"sync": [
-		"Від'єднано",
-		"Приєднуємось",
-		"Синхронізуємо",
-		"Синхронізовано",
-		"Розсинхронізовано"
-	],
-	"forms": {
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		]
+		"sessionExpired": "Login session expired",
+		"showNotice": "Повідомлення",
+		"submit": "Надіслати",
+		"thumbnailing": "Прев'ювання..",
+		"top": "Шапка",
+		"unfinishedPost": "Ви маєте незакінчений пост",
+		"uploadProgress": "завантаження..."
 	}
 }

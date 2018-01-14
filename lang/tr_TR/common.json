@@ -1,27 +1,9 @@
 {
-	"posts": {
-		"ago": "ago",
-		"and": "and",
-		"anon": "Anon",
-		"banned": "USER WAS BANNED FOR THIS POST",
-		"contractImages": "Contract Images",
-		"deleteBySameIP": "Delete all by IP",
-		"expandImages": "Expand Images",
-		"expand": "Genişlet",
-		"hide": "Gizle",
-		"in": "in",
-		"justNow": "şimdi",
-		"omitted": "omitted",
-		"seeAll": "Hepsini göster",
-		"spoiler": "Spoiler",
-		"show": "Göster",
-		"you": "(Sen)",
-		"admin": "Admin",
-		"owners": "Board Owner",
-		"moderators": "Moderator",
-		"janitors": "Meido",
-		"viewBySameIP": "Same IP",
-		"toggleSticky": "Toggle sticky"
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
 	},
 	"plurals": {
 		"day": [
@@ -53,6 +35,37 @@
 			"yıl"
 		]
 	},
+	"posts": {
+		"admin": "Admin",
+		"ago": "ago",
+		"and": "and",
+		"anon": "Anon",
+		"banned": "USER WAS BANNED FOR THIS POST",
+		"contractImages": "Contract Images",
+		"deleteBySameIP": "Delete all by IP",
+		"expand": "Genişlet",
+		"expandImages": "Expand Images",
+		"hide": "Gizle",
+		"in": "in",
+		"janitors": "Meido",
+		"justNow": "şimdi",
+		"moderators": "Moderator",
+		"omitted": "omitted",
+		"owners": "Board Owner",
+		"seeAll": "Hepsini göster",
+		"show": "Göster",
+		"spoiler": "Spoiler",
+		"toggleSticky": "Toggle sticky",
+		"viewBySameIP": "Same IP",
+		"you": "(Sen)"
+	},
+	"sync": [
+		"disconnected",
+		"connecting",
+		"syncing",
+		"synced",
+		"desynced"
+	],
 	"time": {
 		"calendar": [
 			"Oca",
@@ -79,46 +92,33 @@
 		]
 	},
 	"ui": {
-		"mustMatch": "Passwords must match",
+		"bottom": "Alt",
+		"cancel": "İptal",
+		"catalog": "Catalog",
+		"confirmDelete": "Delete all posts by this IP?",
+		"finished": "Bitti",
+		"googleSong": "Şarkıyı googleda aratmak için tıklayın",
+		"importCorrupt": "Import failed. File corrupt",
+		"importDone": "Import successful. The page will now reload.",
 		"invalidCaptcha": "Invalid captcha",
+		"last": "Son",
+		"lockThread": "Toggle thread lock",
+		"lockedToBottom": "Aşağı gönderildi",
+		"mustMatch": "Passwords must match",
+		"newThread": "Yeni konu",
+		"postsImages": "Posts/Images/TTL",
 		"quoted": "Biri sizden alıntı yaptı",
 		"refresh": "Refresh",
-		"sessionExpired": "Login session expired",
-		"thumbnailing": "Thumbnailing...",
-		"unfinishedPost": "You have an unfinished post",
-		"uploadProgress": "uploaded...",
-		"googleSong": "Şarkıyı googleda aratmak için tıklayın",
-		"last": "Son",
-		"postsImages": "Posts/Images/TTL",
-		"report": "İspiyonla",
-		"submit": "Submit",
-		"cancel": "İptal",
-		"newThread": "Yeni konu",
-		"finished": "Bitti",
-		"importDone": "Import successful. The page will now reload.",
-		"importCorrupt": "Import failed. File corrupt",
-		"confirmDelete": "Delete all posts by this IP?",
-		"lockThread": "Toggle thread lock",
-		"return": "Geri Dön",
-		"catalog": "Catalog",
 		"reply": "Cevapla",
-		"top": "Üst",
-		"lockedToBottom": "Aşağı gönderildi",
-		"showNotice": "Notice",
+		"report": "İspiyonla",
+		"return": "Geri Dön",
 		"rules": "Rules",
-		"bottom": "Alt"
-	},
-	"sync": [
-		"disconnected",
-		"connecting",
-		"syncing",
-		"synced",
-		"desynced"
-	],
-	"forms": {
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		]
+		"sessionExpired": "Login session expired",
+		"showNotice": "Notice",
+		"submit": "Submit",
+		"thumbnailing": "Thumbnailing...",
+		"top": "Üst",
+		"unfinishedPost": "You have an unfinished post",
+		"uploadProgress": "uploaded..."
 	}
 }

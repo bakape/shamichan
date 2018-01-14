@@ -1,9 +1,5 @@
 {
 	"forms": {
-		"NSFW": [
-			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
-		],
 		"FAQ": [
 			"Інформаційни блок тексту",
 			"Записи для баннеру списку ФАК та інформаційни модальних вікон"
@@ -11,6 +7,10 @@
 		"JPEGQuality": [
 			"Якість JPEG ",
 			"Якість для пре JPEG превюшок"
+		],
+		"NSFW": [
+			"Not Safe For Work",
+			"Board allows material, that are not safe to be viewed in a work environment"
 		],
 		"alwaysLock": [
 			"Завжди прив'язувати до дна",
@@ -212,10 +212,6 @@
 			"Ім'я",
 			"Ім'я на постах"
 		],
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		],
 		"newPassword": [
 			"New password",
 			""
@@ -223,6 +219,10 @@
 		"newPost": [
 			"Новий Пост",
 			"Відкрити новий пост"
+		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
 		],
 		"notice": [
 			"Повістка",
@@ -248,13 +248,13 @@
 			"Password",
 			""
 		],
-		"posterIDs": [
-			"Poster IDs",
-			"Display thread-level IP-based poster identification mnemonics on posts"
-		],
 		"postInlineExpand": [
 			"Inline Post Link Expansion",
 			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
+		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
 		],
 		"pruneBoards": [
 			"Prune boards",
@@ -352,13 +352,13 @@
 			"",
 			"Власна картинка на фон сторінки"
 		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
-		],
 		"webmHover": [
 			"Розгортання webm",
 			"WebMки розгротаються при наведенні мишки"
+		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"Робочий режим",
@@ -371,8 +371,29 @@
 	},
 	"options": {
 		"none": "жодного",
-		"width": "підігнати по ширині",
-		"screen": "підігнати по екрану"
+		"screen": "підігнати по екрану",
+		"width": "підігнати по ширині"
+	},
+	"sortModes": [
+		"Час бампу",
+		"Час з останньої відповіді",
+		"Час створення",
+		"Кількість відповідей",
+		"Кількість файлів"
+	],
+	"tabs": [
+		"Головна",
+		"Стиль",
+		"Пошук зображень",
+		"Fun",
+		"Шорткати"
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
 	},
 	"ui": {
 		"FAQ": "ФАКю",
@@ -390,10 +411,10 @@
 		"configureBoard": "Налаштувати борду",
 		"configureServer": "Налаштувати сервер",
 		"createBoard": "Створити борду",
+		"deleteBoard": "Delete board",
 		"deleteImage": "Delete image",
 		"deletePost": "Delete post",
 		"done": "Імпорт успішний. Зараз сторінка перезавантажиться.",
-		"deleteBoard": "Delete board",
 		"expires": "Expires",
 		"feedback": "Відгуки",
 		"global": "Global",
@@ -425,26 +446,5 @@
 		"time": "Time",
 		"type": "Type",
 		"unban": "Unban"
-	},
-	"sortModes": [
-		"Час бампу",
-		"Час з останньої відповіді",
-		"Час створення",
-		"Кількість відповідей",
-		"Кількість файлів"
-	],
-	"tabs": [
-		"Головна",
-		"Стиль",
-		"Пошук зображень",
-		"Fun",
-		"Шорткати"
-	],
-	"templates": {
-		"banPage": [
-			"You have been banned from /%s/ by %s for the following reason:",
-			"Your ban will expire on %s or in %s.",
-			"According to our server, your IP is %s."
-		]
 	}
 }

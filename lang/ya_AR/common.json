@@ -1,27 +1,9 @@
 {
-	"posts": {
-		"ago": "ago",
-		"and": "and",
-		"anon": "Matey",
-		"banned": "YER MATE WALKED THE PLANK FOR THIS POST",
-		"contractImages": "Contract Portraits",
-		"deleteBySameIP": "Delete all by IP",
-		"expandImages": "Expand Portraits",
-		"expand": "Expand",
-		"hide": "Banish",
-		"in": "in",
-		"justNow": "jus' now",
-		"omitted": "banished",
-		"seeAll": "Reveal All",
-		"spoiler": "Put Yer Message in a Bottle",
-		"show": "Reveal",
-		"you": "(Ye)",
-		"admin": "Pirate King",
-		"owners": "Captain",
-		"moderators": "First Mate",
-		"janitors": "Cabin Boy",
-		"viewBySameIP": "Same IP",
-		"toggleSticky": "Toggle sticky"
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
 	},
 	"plurals": {
 		"day": [
@@ -53,6 +35,37 @@
 			"years"
 		]
 	},
+	"posts": {
+		"admin": "Pirate King",
+		"ago": "ago",
+		"and": "and",
+		"anon": "Matey",
+		"banned": "YER MATE WALKED THE PLANK FOR THIS POST",
+		"contractImages": "Contract Portraits",
+		"deleteBySameIP": "Delete all by IP",
+		"expand": "Expand",
+		"expandImages": "Expand Portraits",
+		"hide": "Banish",
+		"in": "in",
+		"janitors": "Cabin Boy",
+		"justNow": "jus' now",
+		"moderators": "First Mate",
+		"omitted": "banished",
+		"owners": "Captain",
+		"seeAll": "Reveal All",
+		"show": "Reveal",
+		"spoiler": "Put Yer Message in a Bottle",
+		"toggleSticky": "Toggle sticky",
+		"viewBySameIP": "Same IP",
+		"you": "(Ye)"
+	},
+	"sync": [
+		"disconnected",
+		"connecting",
+		"syncing",
+		"synced",
+		"desynced"
+	],
 	"time": {
 		"calendar": [
 			"Jan",
@@ -79,46 +92,33 @@
 		]
 	},
 	"ui": {
-		"mustMatch": "Yer magic word must match",
+		"bottom": "Bottom",
+		"cancel": "Cancel",
+		"catalog": "Catalog",
+		"confirmDelete": "Delete all posts by this IP?",
+		"finished": "Yer picture show is finished",
+		"googleSong": "Consult the Oracle",
+		"importCorrupt": "Import failed. File corrupt",
+		"importDone": "Import successful. The page will now reload.",
 		"invalidCaptcha": "Captcha is belly up",
+		"last": "Last",
+		"lockThread": "Toggle thread lock",
+		"lockedToBottom": "Locked to bottom",
+		"mustMatch": "Yer magic word must match",
+		"newThread": "New thread",
+		"postsImages": "Missives/Portraits/TTL",
 		"quoted": "Arr, ye have been quoted matey",
 		"refresh": "Reload",
-		"sessionExpired": "Yer session expired",
-		"thumbnailing": "Transcribing yer portrait...",
-		"unfinishedPost": "Yer missive is incomplete",
-		"uploadProgress": "uploaded...",
-		"googleSong": "Consult the Oracle",
-		"last": "Last",
-		"postsImages": "Missives/Portraits/TTL",
-		"report": "Report",
-		"submit": "Submit",
-		"cancel": "Cancel",
-		"newThread": "New thread",
-		"finished": "Yer picture show is finished",
-		"importDone": "Import successful. The page will now reload.",
-		"importCorrupt": "Import failed. File corrupt",
-		"confirmDelete": "Delete all posts by this IP?",
-		"lockThread": "Toggle thread lock",
-		"return": "Return",
-		"catalog": "Catalog",
 		"reply": "Reply",
-		"top": "Top",
-		"lockedToBottom": "Locked to bottom",
-		"showNotice": "Notice",
+		"report": "Report",
+		"return": "Return",
 		"rules": "Show Rules",
-		"bottom": "Bottom"
-	},
-	"sync": [
-		"disconnected",
-		"connecting",
-		"syncing",
-		"synced",
-		"desynced"
-	],
-	"forms": {
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		]
+		"sessionExpired": "Yer session expired",
+		"showNotice": "Notice",
+		"submit": "Submit",
+		"thumbnailing": "Transcribing yer portrait...",
+		"top": "Top",
+		"unfinishedPost": "Yer missive is incomplete",
+		"uploadProgress": "uploaded..."
 	}
 }

@@ -1,27 +1,9 @@
 {
-	"posts": {
-		"ago": "pred",
-		"and": "a",
-		"anon": "Janonymous",
-		"banned": "Uživateľ bol za tento príspevok internovaný v Ilave",
-		"contractImages": "Zmenši obrázky",
-		"deleteBySameIP": "Zmaž všetky z rovnakej IP adresy",
-		"expandImages": "Expanduj obrázky",
-		"expand": "Expandovať",
-		"hide": "Schovať",
-		"in": "v",
-		"justNow": "Práve teraz",
-		"omitted": "vynechané",
-		"seeAll": "Zobraziť všetky",
-		"spoiler": "Spoiler",
-		"show": "Zobraziť",
-		"you": "(Ty)",
-		"admin": "Admin",
-		"owners": "Majiteľ dosky",
-		"moderators": "Moderátori",
-		"janitors": "Údržbári",
-		"viewBySameIP": "Podľa rovnakých IP adries",
-		"toggleSticky": "Prepni sticky"
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
 	},
 	"plurals": {
 		"day": [
@@ -53,6 +35,37 @@
 			"rokov"
 		]
 	},
+	"posts": {
+		"admin": "Admin",
+		"ago": "pred",
+		"and": "a",
+		"anon": "Janonymous",
+		"banned": "Uživateľ bol za tento príspevok internovaný v Ilave",
+		"contractImages": "Zmenši obrázky",
+		"deleteBySameIP": "Zmaž všetky z rovnakej IP adresy",
+		"expand": "Expandovať",
+		"expandImages": "Expanduj obrázky",
+		"hide": "Schovať",
+		"in": "v",
+		"janitors": "Údržbári",
+		"justNow": "Práve teraz",
+		"moderators": "Moderátori",
+		"omitted": "vynechané",
+		"owners": "Majiteľ dosky",
+		"seeAll": "Zobraziť všetky",
+		"show": "Zobraziť",
+		"spoiler": "Spoiler",
+		"toggleSticky": "Prepni sticky",
+		"viewBySameIP": "Podľa rovnakých IP adries",
+		"you": "(Ty)"
+	},
+	"sync": [
+		"odpojený",
+		"pripája sa",
+		"synchronizuje sa",
+		"zosynchronizovaný",
+		"desynchronizovaný"
+	],
 	"time": {
 		"calendar": [
 			"Jan",
@@ -79,47 +92,33 @@
 		]
 	},
 	"ui": {
-		"mustMatch": "Heslá sa musia zhodovať",
+		"bottom": "Dolu",
+		"cancel": "Zrušiť",
+		"catalog": "Katalóg",
+		"confirmDelete": "Chcete zmazať všetky plagáty z tejto IP adresy?",
+		"finished": "Hotovo",
+		"googleSong": "Klikni pre vygúglenie pesničky",
+		"importCorrupt": "Import zlyhal. Poškodený súbor.",
+		"importDone": "Naimportované. Stárnka sa načíta znovu.",
 		"invalidCaptcha": "Neplatná kapča",
+		"last": "Posledné",
+		"lockThread": "Prepni uzamknutie vlákna",
+		"lockedToBottom": "Zamknuté na spodok",
+		"mustMatch": "Heslá sa musia zhodovať",
+		"newThread": "Nové vlákno",
+		"postsImages": "Plagátov/Obrázkov/TTL",
 		"quoted": "Niekto ťa citoval.",
 		"refresh": "Obnoviť",
-		"sessionExpired": "Sedenie vypršalo",
-		"thumbnailing": "Odtlačkujem...",
-		"unfinishedPost": "Más nedokončený plagát",
-		"uploadProgress": "odoslané...",
-		"googleSong": "Klikni pre vygúglenie pesničky",
-		"last": "Posledné",
-		"postsImages": "Plagátov/Obrázkov/TTL",
-		"report": "Nahlásiť",
-		"submit": "Odoslať",
-		"cancel": "Zrušiť",
-		"newThread": "Nové vlákno",
-		"finished": "Hotovo",
-		"importDone": "Naimportované. Stárnka sa načíta znovu.",
-		"importCorrupt": "Import zlyhal. Poškodený súbor.",
-		"confirmDelete": "Chcete zmazať všetky plagáty z tejto IP adresy?",
-		"lockThread": "Prepni uzamknutie vlákna",
-		"return": "Návrat",
-		"catalog": "Katalóg",
 		"reply": "Odpovedať",
-		"top": "Vrch",
-		"lockedToBottom": "Zamknuté na spodok",
-		"showNotice": "Upozornenie",
+		"report": "Nahlásiť",
+		"return": "Návrat",
 		"rules": "Pravidlá",
-		"bottom": "Dolu"
-	},
-	"sync": [
-		"odpojený",
-		"pripája sa",
-		"synchronizuje sa",
-		"zosynchronizovaný",
-		"desynchronizovaný"
-	],
-	"forms": {
-		"nonLive": [
-			"Ne-živý",
-			"Zruš živé updaty otvorených plagátov a obrázkov"
-		]
+		"sessionExpired": "Sedenie vypršalo",
+		"showNotice": "Upozornenie",
+		"submit": "Odoslať",
+		"thumbnailing": "Odtlačkujem...",
+		"top": "Vrch",
+		"unfinishedPost": "Más nedokončený plagát",
+		"uploadProgress": "odoslané..."
 	}
 }
-

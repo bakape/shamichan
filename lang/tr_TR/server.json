@@ -1,9 +1,5 @@
 {
 	"forms": {
-		"NSFW": [
-			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
-		],
 		"FAQ": [
 			"Information panel text",
 			"Entries for the banner's Frequently Asked Questions list and information modal"
@@ -11,6 +7,10 @@
 		"JPEGQuality": [
 			"JPEG thumbnail quality",
 			"Quality of image JPEG thumbnails"
+		],
+		"NSFW": [
+			"Not Safe For Work",
+			"Board allows material, that are not safe to be viewed in a work environment"
 		],
 		"alwaysLock": [
 			"Her zaman aşağıda kal",
@@ -212,10 +212,6 @@
 			"Name",
 			"Name to attach to new posts"
 		],
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		],
 		"newPassword": [
 			"New password",
 			""
@@ -223,6 +219,10 @@
 		"newPost": [
 			"Yeni gönderi",
 			"Yeni gönderiyi aç"
+		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
 		],
 		"notice": [
 			"Notice",
@@ -248,13 +248,13 @@
 			"Password",
 			""
 		],
-		"posterIDs": [
-			"Poster IDs",
-			"Display thread-level IP-based poster identification mnemonics on posts"
-		],
 		"postInlineExpand": [
 			"Inline Post Link Expansion",
 			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
+		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
 		],
 		"pruneBoards": [
 			"Prune boards",
@@ -352,13 +352,13 @@
 			"",
 			"Arkaplan için resim seç"
 		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
-		],
 		"webmHover": [
 			"Üstündeyken genişlet(WebM)",
 			"Fare üstüne geldiğinde WebMleri genişlet. Resim ayarı açık olmalıdır"
+		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"İş modu",
@@ -371,8 +371,29 @@
 	},
 	"options": {
 		"none": "yok",
-		"width": "genişlemeye sığdır",
-		"screen": "fit to screen"
+		"screen": "fit to screen",
+		"width": "genişlemeye sığdır"
+	},
+	"sortModes": [
+		"Bump time",
+		"Last reply time",
+		"Creation time",
+		"Reply count",
+		"File count"
+	],
+	"tabs": [
+		"Genel",
+		"Stil",
+		"ResimAra",
+		"Eğlence",
+		"Kısayollar"
+	],
+	"templates": {
+		"banPage": [
+			"You have been banned from /%s/ by %s for the following reason:",
+			"Your ban will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
 	},
 	"ui": {
 		"FAQ": "Information",
@@ -390,10 +411,10 @@
 		"configureBoard": "Configure board",
 		"configureServer": "Configure server",
 		"createBoard": "Create board",
+		"deleteBoard": "Delete board",
 		"deleteImage": "Delete image",
 		"deletePost": "Delete post",
 		"done": "Import successfull. The page will now reload.",
-		"deleteBoard": "Delete board",
 		"expires": "Expires",
 		"feedback": "Feedback",
 		"global": "Global",
@@ -425,26 +446,5 @@
 		"time": "Time",
 		"type": "Type",
 		"unban": "Unban"
-	},
-	"sortModes": [
-		"Bump time",
-		"Last reply time",
-		"Creation time",
-		"Reply count",
-		"File count"
-	],
-	"tabs": [
-		"Genel",
-		"Stil",
-		"ResimAra",
-		"Eğlence",
-		"Kısayollar"
-	],
-	"templates": {
-		"banPage": [
-			"You have been banned from /%s/ by %s for the following reason:",
-			"Your ban will expire on %s or in %s.",
-			"According to our server, your IP is %s."
-		]
 	}
 }

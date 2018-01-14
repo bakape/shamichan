@@ -1,9 +1,5 @@
 {
 	"forms": {
-		"NSFW": [
-			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
-		],
 		"FAQ": [
 			"FAQ",
 			"Текст FAQ"
@@ -11,6 +7,10 @@
 		"JPEGQuality": [
 			"Качество превью",
 			"JPEG-качество превью изображений"
+		],
+		"NSFW": [
+			"Not Safe For Work",
+			"Board allows material, that are not safe to be viewed in a work environment"
 		],
 		"alwaysLock": [
 			"Закрепить внизу",
@@ -212,10 +212,6 @@
 			"Имя",
 			"Отображать имя у новых постов"
 		],
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		],
 		"newPassword": [
 			"Новый пароль",
 			""
@@ -223,6 +219,10 @@
 		"newPost": [
 			"Новый пост",
 			"Открыть новый пост"
+		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
 		],
 		"notice": [
 			"Объявление",
@@ -248,13 +248,13 @@
 			"Пароль",
 			""
 		],
-		"posterIDs": [
-			"Poster IDs",
-			"Display thread-level IP-based poster identification mnemonics on posts"
-		],
 		"postInlineExpand": [
 			"Раскрытие ссылок на посты",
 			"Раскрывать ссылки на посты по клику, иначе переместиться к указанному посту"
+		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
 		],
 		"pruneBoards": [
 			"Автоочистка досок",
@@ -352,13 +352,13 @@
 			"",
 			"Фоновое изображение"
 		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga поиск по аниме-скриншоту"
-		],
 		"webmHover": [
 			"Раскрытие WebM по наведению",
 			"Раскрывать вебмки по наведению, раскрытие изображений также должно быть включено"
+		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga поиск по аниме-скриншоту"
 		],
 		"workMode": [
 			"Режим босса",
@@ -371,8 +371,29 @@
 	},
 	"options": {
 		"none": "нет",
-		"width": "подогнать по ширине",
-		"screen": "подогнать по экрану"
+		"screen": "подогнать по экрану",
+		"width": "подогнать по ширине"
+	},
+	"sortModes": [
+		"Время бампа",
+		"Время последнего ответа",
+		"Время создания",
+		"Число ответов",
+		"Число файлов"
+	],
+	"tabs": [
+		"Основное",
+		"Стили",
+		"Поиск изображений",
+		"Развлечения",
+		"Горячие клавиши"
+	],
+	"templates": {
+		"banPage": [
+			"Вы были забанены на /%s/ модератором %s по причине:",
+			"Ваш бан истечёт %s или в %s.",
+			"Ваш IP — %s."
+		]
 	},
 	"ui": {
 		"FAQ": "FAQ",
@@ -390,10 +411,10 @@
 		"configureBoard": "Настроить доску",
 		"configureServer": "Настроить борду",
 		"createBoard": "Создать доску",
+		"deleteBoard": "Удалить доску",
 		"deleteImage": "Удалить изображение",
 		"deletePost": "Удалить пост",
 		"done": "Готово",
-		"deleteBoard": "Удалить доску",
 		"expires": "Истекает",
 		"feedback": "Обратная связь",
 		"global": "Глобальный",
@@ -425,26 +446,5 @@
 		"time": "Время",
 		"type": "Тип",
 		"unban": "Разбанить"
-	},
-	"sortModes": [
-		"Время бампа",
-		"Время последнего ответа",
-		"Время создания",
-		"Число ответов",
-		"Число файлов"
-	],
-	"tabs": [
-		"Основное",
-		"Стили",
-		"Поиск изображений",
-		"Развлечения",
-		"Горячие клавиши"
-	],
-	"templates": {
-		"banPage": [
-			"Вы были забанены на /%s/ модератором %s по причине:",
-			"Ваш бан истечёт %s или в %s.",
-			"Ваш IP — %s."
-		]
 	}
 }

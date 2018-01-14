@@ -12,6 +12,13 @@ const en = {
 const targets = fs.readdirSync("lang").filter(n =>
     n !== "en_GB" && /^\w{2}_\w{2}$/.test(n))
 
+for (let key in en) {
+    sortMaps(en[key])
+    const path = `lang/en_GB/${key}.json`
+    fs.unlinkSync(path)
+    fs.writeFileSync(path, JSON.stringify(en[key], null, "\t"))
+}
+
 for (let t of targets) {
     const source = {
         arrays: {},
@@ -38,7 +45,7 @@ function readJSON(path) {
 }
 
 function traverse(map, key, val) {
-    if (typeof val === "object" && !Array.isArray(val)) {
+    if (isMap(val)) {
         for (let key in val) {
             traverse(map, key, val[key])
         }
@@ -51,7 +58,7 @@ function traverse(map, key, val) {
 function traverseCopy(src, dest) {
     for (let key in dest) {
         const val = dest[key]
-        if (typeof val === "object" && !Array.isArray(val)) {
+        if (isMap(val)) {
             traverseCopy(src, val)
             continue
         }
@@ -60,5 +67,27 @@ function traverseCopy(src, dest) {
         if (key in dict) {
             dest[key] = dict[key]
         }
+    }
+}
+
+function isMap(val) {
+    return typeof val === "object" && !Array.isArray(val)
+}
+
+// Resort objects for cleaner language packs
+function sortMaps(val) {
+    if (!isMap(val)) {
+        return
+    }
+    const keys = Object.keys(val).sort()
+    const copy = JSON.parse(JSON.stringify(val))
+    for (let key of keys) {
+        delete val[key]
+    }
+    for (let key of keys) {
+        val[key] = copy[key]
+    }
+    for (let key in val) {
+        sortMaps(val[key])
     }
 }

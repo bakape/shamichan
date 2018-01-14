@@ -1,27 +1,9 @@
 {
-	"posts": {
-		"ago": "тому",
-		"and": "и",
-		"anon": "Аноним",
-		"banned": "USER WAS BANNED FOR THIS POST",
-		"contractImages": "Свернуть изображения",
-		"deleteBySameIP": "Удалить все с этого IP",
-		"expandImages": "Развернуть изображения",
-		"expand": "Развернуть",
-		"hide": "Скрыть",
-		"in": "в",
-		"justNow": "только что",
-		"omitted": "пропущено",
-		"seeAll": "Смотреть все",
-		"spoiler": "Спойлер",
-		"show": "Показать",
-		"you": "(Вы)",
-		"admin": "Админ",
-		"owners": "Владелец доски",
-		"moderators": "Модератор",
-		"janitors": "Помощник",
-		"viewBySameIP": "Тот же IP",
-		"toggleSticky": "Прикрепить"
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
 	},
 	"plurals": {
 		"day": [
@@ -53,6 +35,37 @@
 			"лет"
 		]
 	},
+	"posts": {
+		"admin": "Админ",
+		"ago": "тому",
+		"and": "и",
+		"anon": "Аноним",
+		"banned": "USER WAS BANNED FOR THIS POST",
+		"contractImages": "Свернуть изображения",
+		"deleteBySameIP": "Удалить все с этого IP",
+		"expand": "Развернуть",
+		"expandImages": "Развернуть изображения",
+		"hide": "Скрыть",
+		"in": "в",
+		"janitors": "Помощник",
+		"justNow": "только что",
+		"moderators": "Модератор",
+		"omitted": "пропущено",
+		"owners": "Владелец доски",
+		"seeAll": "Смотреть все",
+		"show": "Показать",
+		"spoiler": "Спойлер",
+		"toggleSticky": "Прикрепить",
+		"viewBySameIP": "Тот же IP",
+		"you": "(Вы)"
+	},
+	"sync": [
+		"отключён",
+		"соединение",
+		"синхронизация",
+		"синхронизирован",
+		"рассинхронизирован"
+	],
 	"time": {
 		"calendar": [
 			"Янв",
@@ -79,46 +92,33 @@
 		]
 	},
 	"ui": {
-		"mustMatch": "Пароли должны совпадать",
+		"bottom": "Низ",
+		"cancel": "Отменить",
+		"catalog": "Каталог",
+		"confirmDelete": "Удалить все посты с этого IP?",
+		"finished": "Завершено",
+		"googleSong": "Нажмите чтобы искать песню",
+		"importCorrupt": "Импорт не удался. Файл повреждён.",
+		"importDone": "Импорт завершён. Страница будет перезагружена.",
 		"invalidCaptcha": "Неверная капча",
+		"last": "Последний",
+		"lockThread": "Toggle thread lock",
+		"lockedToBottom": "Закрепить внизу",
+		"mustMatch": "Пароли должны совпадать",
+		"newThread": "Новый тред",
+		"postsImages": "Посты/Картинки/TTL",
 		"quoted": "Вас процитировали",
 		"refresh": "Обновить",
-		"sessionExpired": "Сессия истекла",
-		"thumbnailing": "Генерация превью…",
-		"unfinishedPost": "У вас есть незавершённый пост",
-		"uploadProgress": "загрузка…",
-		"googleSong": "Нажмите чтобы искать песню",
-		"last": "Последний",
-		"postsImages": "Посты/Картинки/TTL",
-		"report": "Пожаловаться",
-		"submit": "Отправить",
-		"cancel": "Отменить",
-		"newThread": "Новый тред",
-		"finished": "Завершено",
-		"importDone": "Импорт завершён. Страница будет перезагружена.",
-		"importCorrupt": "Импорт не удался. Файл повреждён.",
-		"confirmDelete": "Удалить все посты с этого IP?",
-		"lockThread": "Toggle thread lock",
-		"return": "Назад",
-		"catalog": "Каталог",
 		"reply": "Ответить",
-		"top": "Верх",
-		"lockedToBottom": "Закрепить внизу",
-		"showNotice": "Объявление",
+		"report": "Пожаловаться",
+		"return": "Назад",
 		"rules": "Показать правила",
-		"bottom": "Низ"
-	},
-	"sync": [
-		"отключён",
-		"соединение",
-		"синхронизация",
-		"синхронизирован",
-		"рассинхронизирован"
-	],
-	"forms": {
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		]
+		"sessionExpired": "Сессия истекла",
+		"showNotice": "Объявление",
+		"submit": "Отправить",
+		"thumbnailing": "Генерация превью…",
+		"top": "Верх",
+		"unfinishedPost": "У вас есть незавершённый пост",
+		"uploadProgress": "загрузка…"
 	}
 }

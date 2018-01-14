@@ -1,27 +1,9 @@
 {
-	"posts": {
-		"ago": "temu",
-		"and": "i",
-		"anon": "Anonymous",
-		"banned": "USER WAS BANNED FOR THIS POST",
-		"contractImages": "Contract Images",
-		"deleteBySameIP": "Delete all by IP",
-		"expandImages": "Expand Images",
-		"expand": "Otwórz",
-		"hide": "Ukryj",
-		"in": "w",
-		"justNow": "przed chwilą",
-		"omitted": "pominęto",
-		"seeAll": "Pokaż wszystkie",
-		"spoiler": "Spojler",
-		"show": "Pokaż",
-		"you": "(Ty)",
-		"admin": "Admin",
-		"owners": "Board Owner",
-		"moderators": "Moderator",
-		"janitors": "Meido",
-		"viewBySameIP": "Same IP",
-		"toggleSticky": "Toggle sticky"
+	"forms": {
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
+		]
 	},
 	"plurals": {
 		"day": [
@@ -53,6 +35,37 @@
 			"lat"
 		]
 	},
+	"posts": {
+		"admin": "Admin",
+		"ago": "temu",
+		"and": "i",
+		"anon": "Anonymous",
+		"banned": "USER WAS BANNED FOR THIS POST",
+		"contractImages": "Contract Images",
+		"deleteBySameIP": "Delete all by IP",
+		"expand": "Otwórz",
+		"expandImages": "Expand Images",
+		"hide": "Ukryj",
+		"in": "w",
+		"janitors": "Meido",
+		"justNow": "przed chwilą",
+		"moderators": "Moderator",
+		"omitted": "pominęto",
+		"owners": "Board Owner",
+		"seeAll": "Pokaż wszystkie",
+		"show": "Pokaż",
+		"spoiler": "Spojler",
+		"toggleSticky": "Toggle sticky",
+		"viewBySameIP": "Same IP",
+		"you": "(Ty)"
+	},
+	"sync": [
+		"odłączono",
+		"trwa łączenie",
+		"synchronizacja",
+		"zsynchronizowano",
+		"brak synchronizacji"
+	],
 	"time": {
 		"calendar": [
 			"Styczeń",
@@ -79,46 +92,33 @@
 		]
 	},
 	"ui": {
-		"mustMatch": "Podane hasła muszą być takie same",
+		"bottom": "Na dół",
+		"cancel": "Cofnij",
+		"catalog": "Katalog",
+		"confirmDelete": "Delete all posts by this IP?",
+		"finished": "Zakończono",
+		"googleSong": "Kliknij, żeby wyszukać piosenkę",
+		"importCorrupt": "Import failed. File corrupt",
+		"importDone": "Import successful. The page will now reload.",
 		"invalidCaptcha": "Nieprawidłowa captcha",
+		"last": "Ostatni",
+		"lockThread": "Toggle thread lock",
+		"lockedToBottom": "Jesteś na samym dole",
+		"mustMatch": "Podane hasła muszą być takie same",
+		"newThread": "Nowy temat",
+		"postsImages": "Posts/Images/TTL",
 		"quoted": "Zostałeś zacytowany",
 		"refresh": "Odśwież",
-		"sessionExpired": "Login session expired",
-		"thumbnailing": "Miniaturyzowanie...",
-		"unfinishedPost": "Masz niezakończony post",
-		"uploadProgress": "przesłano...",
-		"googleSong": "Kliknij, żeby wyszukać piosenkę",
-		"last": "Ostatni",
-		"postsImages": "Posts/Images/TTL",
-		"report": "Zgłoś",
-		"submit": "Zatwierdź",
-		"cancel": "Cofnij",
-		"newThread": "Nowy temat",
-		"finished": "Zakończono",
-		"importDone": "Import successful. The page will now reload.",
-		"importCorrupt": "Import failed. File corrupt",
-		"confirmDelete": "Delete all posts by this IP?",
-		"lockThread": "Toggle thread lock",
-		"return": "Powrót",
-		"catalog": "Katalog",
 		"reply": "Odpowiedź",
-		"top": "Na górę",
-		"lockedToBottom": "Jesteś na samym dole",
-		"showNotice": "Powiadomienie",
+		"report": "Zgłoś",
+		"return": "Powrót",
 		"rules": "Zasady",
-		"bottom": "Na dół"
-	},
-	"sync": [
-		"odłączono",
-		"trwa łączenie",
-		"synchronizacja",
-		"zsynchronizowano",
-		"brak synchronizacji"
-	],
-	"forms": {
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		]
+		"sessionExpired": "Login session expired",
+		"showNotice": "Powiadomienie",
+		"submit": "Zatwierdź",
+		"thumbnailing": "Miniaturyzowanie...",
+		"top": "Na górę",
+		"unfinishedPost": "Masz niezakończony post",
+		"uploadProgress": "przesłano..."
 	}
 }

@@ -1,9 +1,5 @@
 {
 	"forms": {
-		"NSFW": [
-			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
-		],
 		"FAQ": [
 			"Information panel text",
 			"Entries for the banner's Frequently Asked Questions list and information modal"
@@ -11,6 +7,10 @@
 		"JPEGQuality": [
 			"JPEG thumbnail quality",
 			"Quality of image JPEG thumbnails"
+		],
+		"NSFW": [
+			"Not Safe For Work",
+			"Board allows material, that are not safe to be viewed in a work environment"
 		],
 		"alwaysLock": [
 			"Always Lock to Bottom",
@@ -212,10 +212,6 @@
 			"Name",
 			"Name to attach to new posts"
 		],
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		],
 		"newPassword": [
 			"New password",
 			""
@@ -223,6 +219,10 @@
 		"newPost": [
 			"New Post",
 			"Open new post"
+		],
+		"nonLive": [
+			"Non-live",
+			"Disable live updates of open post text and images"
 		],
 		"notice": [
 			"Notice",
@@ -248,13 +248,13 @@
 			"Password",
 			""
 		],
-		"posterIDs": [
-			"Poster IDs",
-			"Display thread-level IP-based poster identification mnemonics on posts"
-		],
 		"postInlineExpand": [
 			"Inline Post Link Expansion",
 			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
+		],
+		"posterIDs": [
+			"Poster IDs",
+			"Display thread-level IP-based poster identification mnemonics on posts"
 		],
 		"pruneBoards": [
 			"Prune boards",
@@ -352,13 +352,13 @@
 			"",
 			"Image to use as the background"
 		],
-		"whatAnime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
-		],
 		"webmHover": [
 			"WebM Hover Expansion",
 			"Display WebM previews on hover. Requires Image Hover Expansion enabled."
+		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot search"
 		],
 		"workMode": [
 			"Work mode",
@@ -371,8 +371,29 @@
 	},
 	"options": {
 		"none": "none",
-		"width": "fit to width",
-		"screen": "fit to screen"
+		"screen": "fit to screen",
+		"width": "fit to width"
+	},
+	"sortModes": [
+		"Bump time",
+		"Last reply time",
+		"Creation time",
+		"Reply count",
+		"File count"
+	],
+	"tabs": [
+		"General",
+		"Style",
+		"Image Search",
+		"Fun",
+		"Shortcuts"
+	],
+	"templates": {
+		"banPage": [
+			"Ye have been banished from /%s/ by %s for the following reason:",
+			"Yer banishment will expire on %s or in %s.",
+			"According to our server, your IP is %s."
+		]
 	},
 	"ui": {
 		"FAQ": "Information",
@@ -390,10 +411,10 @@
 		"configureBoard": "Configure board",
 		"configureServer": "Configure server",
 		"createBoard": "Create board",
+		"deleteBoard": "Delete board",
 		"deleteImage": "Delete image",
 		"deletePost": "Delete post",
 		"done": "Done",
-		"deleteBoard": "Delete board",
 		"expires": "Expires",
 		"feedback": "Feedback",
 		"global": "Global",
@@ -425,26 +446,5 @@
 		"time": "Time",
 		"type": "Type",
 		"unban": "Unban"
-	},
-	"sortModes": [
-		"Bump time",
-		"Last reply time",
-		"Creation time",
-		"Reply count",
-		"File count"
-	],
-	"tabs": [
-		"General",
-		"Style",
-		"Image Search",
-		"Fun",
-		"Shortcuts"
-	],
-	"templates": {
-		"banPage": [
-			"Ye have been banished from /%s/ by %s for the following reason:",
-			"Yer banishment will expire on %s or in %s.",
-			"According to our server, your IP is %s."
-		]
 	}
 }
