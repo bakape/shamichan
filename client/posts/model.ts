@@ -40,6 +40,9 @@ export class Post extends Model implements PostData {
 	constructor(attrs: PostData) {
 		super()
 		extend(this, attrs)
+		if (this.isEmpty()) {
+			this.hidden = true
+		}
 		this.seenOnce = seenPosts.has(this.id)
 
 		// All kinds of interesting races can happen, so best ensure a model
@@ -186,7 +189,18 @@ export class Post extends Model implements PostData {
 	// Close an open post and reparse its last line
 	public closePost() {
 		this.editing = false
+		if (this.isEmpty()) {
+			this.hide()
+		}
 		this.view.closePost()
+	}
+
+	// Return if post has no content and can be hidden
+	public isEmpty() {
+		return !this.editing
+			&& !this.body.length
+			&& !this.image
+			&& this.id !== this.op
 	}
 
 	// Set post as banned
@@ -211,7 +225,7 @@ export class Post extends Model implements PostData {
 
 	// Returns, if this post has been seen already
 	public seen() {
-		if (this.seenOnce) {
+		if (this.hidden || this.seenOnce) {
 			return true
 		}
 		if (document.hidden) {

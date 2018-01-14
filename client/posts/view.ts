@@ -21,7 +21,8 @@ export default class PostView extends ImageHandler {
             attrs.class = 'glass'
             if (model.editing) {
                 attrs.class += ' editing'
-            } else if (!model.image && model.id !== model.op) {
+            }
+            if (model.isEmpty()) {
                 attrs.class += " hidden"
             }
             if (model.id === model.op) {
@@ -188,10 +189,6 @@ export default class PostView extends ImageHandler {
 
     // Close an open post and clean up
     public closePost() {
-        const { body, image, id, op } = this.model
-        if (!body.length && !image && id !== op) {
-            this.hide()
-        }
         this.setEditing(false)
         this.reparseBody()
     }
