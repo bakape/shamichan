@@ -172,7 +172,7 @@ func (c *Client) listenerLoop() error {
 			if err != nil {
 				return err
 			}
-			if err := c.registerSync(0, board); err != nil {
+			if err := c.registerSync(syncRequest{Board: board}); err != nil {
 				return err
 			}
 		}

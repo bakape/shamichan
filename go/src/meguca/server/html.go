@@ -47,7 +47,7 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 	html, data, ctr, err := cache.GetHTML(boardCacheArgs(r, b, catalog))
 	switch err {
 	case nil:
-	case errPageOverflow:
+	case cache.ErrPageOverflow:
 		text404(w)
 		return
 	default:
@@ -68,9 +68,9 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 
 	var n, total int
 	if !catalog {
-		p := data.(pageStore)
-		n = p.pageNumber
-		total = p.data.Pages
+		p := data.(cache.PageStore)
+		n = p.PageNumber
+		total = p.Data.Pages
 	}
 
 	html = templates.Board(
@@ -108,7 +108,7 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 
 	lastN := detectLastN(r)
 	k := cache.ThreadKey(id, lastN)
-	html, data, ctr, err := cache.GetHTML(k, threadCache)
+	html, data, ctr, err := cache.GetHTML(k, cache.ThreadFE)
 	if err != nil {
 		respondToJSONError(w, r, err)
 		return

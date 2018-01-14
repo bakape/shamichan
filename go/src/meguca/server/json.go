@@ -136,7 +136,7 @@ func threadJSON(w http.ResponseWriter, r *http.Request) {
 	}
 
 	k := cache.ThreadKey(id, detectLastN(r))
-	data, _, ctr, err := cache.GetJSONAndData(k, threadCache)
+	data, _, ctr, err := cache.GetJSONAndData(k, cache.ThreadFE)
 	if err != nil {
 		respondToJSONError(w, r, err)
 		return
@@ -188,7 +188,7 @@ func boardJSON(w http.ResponseWriter, r *http.Request, catalog bool) {
 	switch err {
 	case nil:
 		writeJSON(w, r, formatEtag(ctr, "", auth.NotLoggedIn), data)
-	case errPageOverflow:
+	case cache.ErrPageOverflow:
 		text404(w)
 	default:
 		text500(w, r, err)

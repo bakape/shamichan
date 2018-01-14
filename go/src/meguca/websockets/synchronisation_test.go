@@ -90,7 +90,11 @@ func TestRegisterSync(t *testing.T) {
 
 	// Both for new syncs and switching syncs
 	for _, s := range syncs {
-		if err := cl.registerSync(s.id, s.board); err != nil {
+		err := cl.registerSync(syncRequest{
+			Thread: s.id,
+			Board:  s.board,
+		})
+		if err != nil {
 			t.Fatal(err)
 		}
 		assertSyncID(t, cl, s.id, s.board)

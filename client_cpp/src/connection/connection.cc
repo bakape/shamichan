@@ -317,9 +317,7 @@ void init_connectivity()
     });
 
     conn_SM->wild_act(ConnEvent::close, []() {
-        if (page->thread) {
-            render_status(SyncStatus::disconnected);
-        }
+        render_status(SyncStatus::disconnected);
         return ConnState::dropped;
     });
 
@@ -327,8 +325,7 @@ void init_connectivity()
     // so this acts as a scheduler for new attempts
     conn_SM->on(ConnState::dropped, schedule_reconnect);
     conn_SM->act(ConnState::dropped, ConnEvent::retry, []() {
-        if (!page->thread
-            || !emscripten::val::global("navigator")["onLine"].as<bool>()) {
+        if (!emscripten::val::global("navigator")["onLine"].as<bool>()) {
             schedule_reconnect();
             return ConnState::dropped;
         }

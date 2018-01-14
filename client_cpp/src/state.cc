@@ -150,15 +150,8 @@ void load_state()
     init_connectivity();
     auto wg = new WaitGroup(2, &load_post_ids);
     open_db(wg);
-    if (page->thread) {
-        conn_SM->feed(ConnEvent::start);
-        conn_SM->once(ConnState::synced, [=]() { wg->done(); });
-    } else {
-        // TODO: Do this with an XHR
-        const c_string_view data = get_inner_html("post-data");
-        load_posts(static_cast<std::string_view>(data));
-        wg->done();
-    }
+    conn_SM->feed(ConnEvent::start);
+    conn_SM->once(ConnState::synced, [=]() { wg->done(); });
 }
 
 Config::Config(const c_string_view& s)

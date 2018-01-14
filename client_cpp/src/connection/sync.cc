@@ -7,14 +7,12 @@ using nlohmann::json;
 
 void send_sync_request()
 {
-    send_message(Message::synchronise,
-        json({
-                 { "newProtocol", true },
-                 { "last100", page->last_n != 0 },
-                 { "board", page->board },
-                 { "thread", page->thread },
-             })
-            .dump());
+    auto j = json({
+        { "newProtocol", true }, { "last100", page->last_n != 0 },
+        { "catalog", page->catalog }, { "board", page->board },
+        { "page", page->page }, { "thread", page->thread },
+    });
+    send_message(Message::synchronise, j.dump());
 
     // TODO: Reclaim open posts
 }
