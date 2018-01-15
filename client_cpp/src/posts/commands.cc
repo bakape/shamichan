@@ -8,6 +8,7 @@
 #include <iomanip>
 #include <sstream>
 #include <unordered_map>
+#include <utility>
 
 using std::nullopt;
 using std::optional;
@@ -64,10 +65,30 @@ static optional<unsigned int> parse_uint(string_view& word)
     return { std::stoul(num) };
 }
 
-// Parse dice rolls and return inner command string, if matched
-static string parse_dice(string& name, string_view word, const Command& val)
+// If num is made of the same digit repeating
+static bool check_em(unsigned int num)
 {
-    unsigned int dice = 0;
+    if (num < 10) {
+        return false;
+    }
+    const auto digit = num % 10;
+    while (1) {
+        num /= 10;
+        if (!num) {
+            return true;
+        }
+        if (num % 10 != digit) {
+            return false;
+        }
+    }
+}
+
+// Parse dice rolls and return inner command string and formatting class, if
+// matched
+static std::pair<string, string> parse_dice(
+    string& name, string_view word, const Command& val)
+{
+    unsigned int dice = 1;
     unsigned int faces = 0;
 
     // Has leading digits
@@ -75,29 +96,29 @@ static string parse_dice(string& name, string_view word, const Command& val)
         if (auto d = parse_uint(word)) {
             dice = *d;
         } else {
-            return "";
+            return {};
         }
         if (!word.size() || word[0] != 'd') {
-            return "";
+            return {};
         }
         word = word.substr(1);
     }
 
-    // Rebuild command syntax
-    name.clear();
-    if (dice) {
-        name += std::to_string(dice);
-    }
-    name += 'd' + std::to_string(faces);
-
     if (auto f = parse_uint(word)) { // Must consume the rest of the text
         faces = *f;
     } else {
-        return "";
+        return {};
     }
     if (word.size() || dice > 10 || faces > 10000) {
-        return "";
+        return {};
     }
+
+    // Rebuild command syntax
+    name.clear();
+    if (dice != 1) {
+        name += std::to_string(dice);
+    }
+    name += 'd' + std::to_string(faces);
 
     ostringstream os;
     unsigned int sum = 0;
@@ -111,7 +132,31 @@ static string parse_dice(string& name, string_view word, const Command& val)
     if (val.dice.size() > 1) {
         os << " = " << sum;
     }
-    return os.str();
+
+    // Determine roll formatting class
+    string cls;
+    const unsigned int max_roll = dice * faces;
+    if (max_roll >= 10 && faces != 1) { // no special formatting for small rolls
+        if (max_roll == sum) {
+            cls = "super_roll";
+        } else if (sum == dice) {
+            cls = "kuso_roll";
+        } else if (sum == 69 || sum == 6969) {
+            cls = "lewd_roll";
+        } else if (check_em(sum)) {
+            if (sum < 100) {
+                cls = "dubs_roll";
+            } else if (sum < 1000) {
+                cls = "trips_roll";
+            } else if (sum < 10000) {
+                cls = "quads_roll";
+            } else {
+                cls = "rainbow_roll";
+            }
+        }
+    }
+
+    return { os.str(), cls };
 }
 
 optional<Node> Post::parse_commands(string_view word)
@@ -145,6 +190,7 @@ optional<Node> Post::parse_commands(string_view word)
     }
 
     string inner;
+    string cls;
     auto const& val = commands[state.dice_index];
     if (name == "flip") {
         check_consumed;
@@ -158,7 +204,9 @@ optional<Node> Post::parse_commands(string_view word)
     } else if (name == "sw") {
         return parse_syncwatch(word);
     } else {
-        inner = parse_dice(name, word, val);
+        auto p = parse_dice(name, word, val);
+        inner = p.first;
+        cls = p.second;
     }
     if (inner == "") {
         return nullopt;
@@ -168,7 +216,7 @@ optional<Node> Post::parse_commands(string_view word)
     ostringstream os;
     os << '#' << name << " (" << inner << ')';
 
-    return { { "strong", os.str(), true } };
+    return { { "strong", { { "class", cls } }, os.str(), true } };
 }
 
 // TODO: Also need to figure out, how to handle updating these on countdown.
@@ -247,13 +295,10 @@ optional<Node> Post::parse_syncwatch(std::string_view frag)
 
     return {
         {
-            "em",
-            {},
+            "em", {},
             {
                 {
-                    "strong",
-                    { { "class", "embed syncwatch" } },
-                    s.str(),
+                    "strong", { { "class", "embed syncwatch" } }, s.str(),
                 },
             },
         },
