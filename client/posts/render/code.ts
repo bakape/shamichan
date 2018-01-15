@@ -38,6 +38,7 @@ const keywords = {
 	"clone": true,
 	"compl": true,
 	"const": true,
+	"constexpr": true,
 	"continue": true,
 	"debugger": true,
 	"decimal": true,

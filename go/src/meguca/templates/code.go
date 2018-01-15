@@ -46,6 +46,7 @@ var keywords = map[string]bool{
 	"clone":        true,
 	"compl":        true,
 	"const":        true,
+	"constexpr":    true,
 	"continue":     true,
 	"debugger":     true,
 	"decimal":      true,
