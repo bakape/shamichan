@@ -6,7 +6,7 @@ const babel = require("gulp-babel"),
 	gulp = require('gulp'),
 	gutil = require('gulp-util'),
 	less = require('gulp-less'),
-	nano = require('gulp-cssnano'),
+	cssmin = require('gulp-cssmin'),
 	rename = require('gulp-rename'),
 	sourcemaps = require('gulp-sourcemaps'),
 	ts = require('gulp-typescript'),
@@ -51,7 +51,7 @@ createTask('scripts', 'clientScripts/*.js', src =>
 			.pipe(sourcemaps.init())
 			.pipe(less())
 			.on('error', handleError)
-			.pipe(nano())
+			.pipe(cssmin())
 			.pipe(sourcemaps.write('maps'))
 			.pipe(gulp.dest('www/css'))
 	)
