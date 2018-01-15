@@ -452,7 +452,7 @@ function getRollFormatting(numberOfDice: number, facesPerDie: number, sum: numbe
 
     if (maxRoll == sum) {
         return "<strong class=\"super_roll\">";
-    } else if (sum == 1) {
+    } else if (sum == numberOfDice) {
         return "<strong class=\"kuso_roll\">";
     } else if (sum == 69 || sum == 6969) {
         return "<strong class=\"lewd_roll\">";
