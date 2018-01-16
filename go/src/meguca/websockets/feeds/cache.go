@@ -142,7 +142,7 @@ func (c *threadCache) encodeThread(last100 bool) []byte {
 	sort.Sort(uintSorter(ids))
 
 	if last100 {
-		i := len(ids) - 100
+		i := len(ids) - 99
 		if i > 0 {
 			// Keep OP in the array
 			sliced := make([]uint64, 100)
