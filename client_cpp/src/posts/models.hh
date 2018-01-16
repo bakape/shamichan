@@ -90,7 +90,8 @@ public:
         eight_ball,
         sync_watch,
         pyu,
-        pcount
+        pcount,
+        roulette
     } typ;
 
     // Use typ, to get out the relevant value

@@ -469,6 +469,13 @@ func (c *bodyContext) parseCommands(bit string) {
 	case "pyu", "pcount":
 		inner = strconv.AppendUint(inner, val.Pyu, 10)
 		c.state.iDice++
+	case "roulette":
+		inner = strconv.AppendUint(inner, uint64(val.Roulette), 10)
+		// set formatting if the poster died
+		if val.Roulette == 1 {
+			formatting = "<strong class=\"super_roll\">"
+		}
+		c.state.iDice++
 	default:
 		if strings.HasPrefix(bit, "sw") {
 			c.formatSyncwatch(val.SyncWatch)

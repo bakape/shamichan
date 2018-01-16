@@ -201,6 +201,12 @@ optional<Node> Post::parse_commands(string_view word)
     } else if (name == "pyu" || name == "pcount") {
         check_consumed;
         inner = std::to_string(val.count);
+    } else if (name == "roulette") {
+        check_consumed;
+        inner = std::to_string(val.roulette);
+        if (val.roulette == 1) {
+            cls = super_roll;
+        }
     } else if (name == "sw") {
         return parse_syncwatch(word);
     } else {

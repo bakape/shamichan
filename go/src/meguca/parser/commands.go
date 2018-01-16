@@ -63,6 +63,11 @@ func parseCommand(match []byte, board string) (com common.Command, err error) {
 			com.Pyu, err = db.GetPyu()
 		}
 
+	// Roulette
+	case bytes.Equal(match, []byte("roulette")):
+		com.Type = common.Roulette
+		com.Roulette = 1
+
 	default:
 		matchStr := string(match)
 
