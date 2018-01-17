@@ -87,6 +87,18 @@ func SetPyu(c uint) error {
 	return err
 }
 
+// DecrementRoulette retrieves current roulette counter and decrements it
+func DecrementRoulette() (c uint8, err error) {
+	err = prepared["decrement_roulette"].QueryRow().Scan(&c)
+	return
+}
+
+// ResetRoulette resets the roulette counter to 6
+func ResetRoulette() (err error) {
+	_, err = prepared["reset_roulette"].Exec()
+	return
+}
+
 func getExecutor(tx *sql.Tx, key string) executor {
 	if tx != nil {
 		return tx.Stmt(prepared[key])
