@@ -413,9 +413,9 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             break
         case "roulette":
             let val = commands[state.iDice++].val
-            inner = val.toString()
+            inner = val[0].toString() + "/" + val[1].toString()
             // set formatting if the poster died
-            if (val == 1) {
+            if (val[0] == 1) {
                 formatting = "<strong class=\"super_roll\">"
             }
             break

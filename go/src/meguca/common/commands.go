@@ -45,7 +45,7 @@ const (
 // SyncWatch: [5]uint64
 // Pyu: uint64
 // Pcount: uint64
-// Roulette: uint8
+// Roulette: [2]uint8
 type Command struct {
 	Type      CommandType
 	Flip      bool
@@ -53,7 +53,7 @@ type Command struct {
 	SyncWatch [5]uint64
 	Eightball string
 	Dice      []uint16
-	Roulette  uint8
+	Roulette  [2]uint8
 }
 
 // MarshalJSON implements json.Marshaler
@@ -96,7 +96,14 @@ func (c Command) MarshalEasyJSON(w *jwriter.Writer) {
 		}
 		w.RawByte(']')
 	case Roulette:
-		w.Uint8(c.Roulette)
+		w.RawByte('[')
+		for i, v := range c.Roulette {
+			if i != 0 {
+				w.RawByte(',')
+			}
+			w.Uint8(v)
+		}
+		w.RawByte(']')
 	}
 
 	w.RawByte('}')

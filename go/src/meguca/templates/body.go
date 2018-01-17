@@ -470,9 +470,11 @@ func (c *bodyContext) parseCommands(bit string) {
 		inner = strconv.AppendUint(inner, val.Pyu, 10)
 		c.state.iDice++
 	case "roulette":
-		inner = strconv.AppendUint(inner, uint64(val.Roulette), 10)
+		inner = strconv.AppendUint(inner, uint64(val.Roulette[0]), 10)
+		inner = append(inner, "/"...)
+        inner = strconv.AppendUint(inner, uint64(val.Roulette[1]), 10)
 		// set formatting if the poster died
-		if val.Roulette == 1 {
+		if val.Roulette[0] == 1 {
 			formatting = "<strong class=\"super_roll\">"
 		}
 		c.state.iDice++

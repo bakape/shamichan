@@ -89,7 +89,7 @@ The "val" field contains the following data for each command type:
 | syncWatch | [5]uint | stores data of the synchronized time counter as [hours, minutes, seconds, start_time, end_time] |
 | pyu | uint | increment generic global counter and store current value |
 | pcount | uint | store current global counter without incrementing |
-| roulette | uint | russian roulette, a 1 indicates that the poster has died |
+| roulette | [2]uint | russian roulette, a 1 indicates that the poster has died [roll, max] |
 
 ## Board
 

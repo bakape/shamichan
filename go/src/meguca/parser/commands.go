@@ -66,7 +66,7 @@ func parseCommand(match []byte, board string) (com common.Command, err error) {
 	// Roulette
 	case bytes.Equal(match, []byte("roulette")):
 		com.Type = common.Roulette
-		com.Roulette = 1
+		com.Roulette = [2]uint8{1, 6}
 
 	default:
 		matchStr := string(match)
