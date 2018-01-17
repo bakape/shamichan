@@ -66,13 +66,14 @@ func parseCommand(match []byte, board string) (com common.Command, err error) {
 	// Roulette
 	case bytes.Equal(match, []byte("roulette")):
 		com.Type = common.Roulette
-		max, err := db.DecrementRoulette()
+		var max uint8
+		max, err = db.DecrementRoulette()
 		if err != nil {
-			panic(err)
+			return
 		}
 		roll := uint8(randInt(int(max)) + 1)
 		if roll == 1 {
-			db.ResetRoulette()
+			err = db.ResetRoulette()
 		}
 		com.Roulette = [2]uint8{roll, max}
 
