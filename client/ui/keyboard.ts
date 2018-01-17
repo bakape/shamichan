@@ -43,7 +43,7 @@ function handleShortcut(event: KeyboardEvent) {
 				}
 				break
 			case options.done:
-				postSM.feed(postEvent.done, event)
+				postSM.feed(postEvent.done, null)
 				break
 			case options.toggleSpoiler:
 				const m = trigger("getPostModel") as FormModel

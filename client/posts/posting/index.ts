@@ -9,7 +9,6 @@ import identity, { initIdentity } from "./identity"
 import { boardConfig, page } from "../../state"
 import initDrop from "./drop"
 import initThreads from "./threads"
-import options from "../../options"
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
@@ -301,15 +300,15 @@ export default () => {
 	postSM.on(postState.alloc, () =>
 		hidePostControls())
 
-	// Close unallocated draft
-	postSM.act(postState.draft, postEvent.done, (e?: Event) => {
+	// Close unallocated draft or commit in non-live mode
+	postSM.act(postState.draft, postEvent.done, (val?: any) => {
 		// Commit a draft made as a non-live post
 		let commitNonLive = false
-		if (e && postModel.nonLive) {
-			if (e.target instanceof HTMLInputElement) {
-				commitNonLive = e.target.getAttribute("name") === "done"
-			} else if (e instanceof KeyboardEvent) {
-				commitNonLive = e.which === options.done
+		if (postModel.nonLive) {
+			if (typeof val === "boolean") {
+				commitNonLive = !val
+			} else {
+				commitNonLive = true
 			}
 		}
 		if (commitNonLive) {
