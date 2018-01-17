@@ -142,6 +142,28 @@ func TestRenderBody(t *testing.T) {
 			},
 		},
 		{
+			name: "live roulette",
+			in:   "#roulette",
+			out:  "<strong>#roulette (5/6)</strong>",
+			commands: []common.Command{
+				{
+					Type:     common.Roulette,
+					Roulette: [2]uint8{5, 6},
+				},
+			},
+		},
+		{
+			name: "dead roulette",
+			in:   "#roulette",
+			out:  "<strong class=\"dead\">#roulette (1/6)</strong>",
+			commands: []common.Command{
+				{
+					Type:     common.Roulette,
+					Roulette: [2]uint8{1, 6},
+				},
+			},
+		},
+		{
 			name: "single roll dice",
 			in:   "#d20",
 			out:  "<strong>#d20 (21)</strong>",
