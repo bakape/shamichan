@@ -475,7 +475,7 @@ func (c *bodyContext) parseCommands(bit string) {
         inner = strconv.AppendUint(inner, uint64(val.Roulette[1]), 10)
 		// set formatting if the poster died
 		if val.Roulette[0] == 1 {
-			formatting = "<strong class=\"super_roll\">"
+			formatting = "<strong class=\"dead\">"
 		}
 		c.state.iDice++
 	default:

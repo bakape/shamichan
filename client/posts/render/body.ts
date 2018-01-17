@@ -416,7 +416,7 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             inner = val[0].toString() + "/" + val[1].toString()
             // set formatting if the poster died
             if (val[0] == 1) {
-                formatting = "<strong class=\"super_roll\">"
+                formatting = "<strong class=\"dead\">"
             }
             break
         default:

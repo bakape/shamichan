@@ -205,7 +205,7 @@ optional<Node> Post::parse_commands(string_view word)
         check_consumed;
         inner = std::to_string(val.roulette[0]) + "/" + std::to_string(val.roulette[1]);
         if (val.roulette[0] == 1) {
-            cls = "super_roll";
+            cls = "dead";
         }
     } else if (name == "sw") {
         return parse_syncwatch(word);
