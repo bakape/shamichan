@@ -107,14 +107,13 @@ extern "C" void flush()
         (*before_flush)();
     }
 
-    if (!mutations.size()) {
-        return;
+    if (mutations.size()) {
+        for (auto& id : mutation_order) {
+            mutations.at(id).exec(id);
+        }
+        mutation_order.clear();
+        mutations.clear();
     }
-    for (auto& id : mutation_order) {
-        mutations.at(id).exec(id);
-    }
-    mutation_order.clear();
-    mutations.clear();
 
     if (after_flush) {
         (*after_flush)();

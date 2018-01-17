@@ -8,7 +8,7 @@ using nlohmann::json;
 void send_sync_request()
 {
     auto j = json({
-        { "newProtocol", true }, { "last100", page->last_n != 0 },
+        { "newProtocol", true }, { "last100", page->last_100 },
         { "catalog", page->catalog }, { "board", page->board },
         { "page", page->page }, { "thread", page->thread },
     });

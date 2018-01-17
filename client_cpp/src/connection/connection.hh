@@ -23,7 +23,7 @@ enum class ConnState {
 };
 
 // Events passable to the connection FSM
-enum class ConnEvent { start, open, close, retry, error, sync };
+enum class ConnEvent { start, open, close, retry, error, sync, switch_sync };
 
 // Finite state machine for managing websocket connectivity
 extern FSM<ConnState, ConnEvent>* conn_SM;

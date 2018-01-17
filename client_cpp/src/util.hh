@@ -83,7 +83,7 @@ brunhild::Children render_submit(bool cancel);
 class WaitGroup {
 public:
     // Defers execution of cb(), until done() has been called jobs times
-    WaitGroup(unsigned int jobs, std::function<void()> cb)
+    WaitGroup(unsigned jobs, std::function<void()> cb)
         : jobs(jobs)
         , cb(cb)
     {
@@ -99,7 +99,7 @@ public:
     }
 
 private:
-    unsigned int jobs;
+    unsigned jobs;
     std::function<void()> cb;
 };
 

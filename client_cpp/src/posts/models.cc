@@ -202,10 +202,10 @@ void TextState::reset(Node* root)
     parents.push_back(root);
 }
 
-void TextState::append(Node n, bool descend, unsigned int gt_count)
+void TextState::append(Node n, bool descend, unsigned gt_count)
 {
     // Append escaped '>'
-    for (unsigned int i = 0; i < gt_count; i++) {
+    for (unsigned i = 0; i < gt_count; i++) {
         buf += "&gt;";
     }
 

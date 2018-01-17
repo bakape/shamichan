@@ -43,7 +43,7 @@ void render_thread()
     }
     s << "<hr>";
 
-    n = Node("span", { { "class", "aside-container" } });
+    n = Node("span", { { "class", "aside-container" }, { "id", "bottom" } });
     n.children.push_back(render_button(".", lang->ui.at("return")));
     n.children.push_back(render_button("catalog", lang->ui.at("catalog")));
     n.children.push_back(render_button("#top", lang->ui.at("top")));

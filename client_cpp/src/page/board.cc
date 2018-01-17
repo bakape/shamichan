@@ -100,11 +100,11 @@ static void render_index_threads(ostringstream& s)
 // Render Links to different pages of the board index
 static Node render_pagination()
 {
-    const unsigned int n = page->page;
-    const unsigned int total = page->page_total;
+    const unsigned n = page->page;
+    const unsigned total = page->page_total;
     ostringstream s;
 
-    auto link = [&s](unsigned int i, string text) {
+    auto link = [&s](unsigned i, string text) {
         s << "<a href=\"?page=" << i << "\">" << text << "</a>";
     };
 
@@ -114,7 +114,7 @@ static Node render_pagination()
         }
         link(n - 1, "<");
     }
-    for (unsigned int i = 0; i < total; i++) {
+    for (unsigned i = 0; i < total; i++) {
         if (i != n) {
             link(i, std::to_string(i));
         } else {

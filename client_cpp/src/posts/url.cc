@@ -13,6 +13,8 @@ using std::string_view;
 
 // TODO: Embed click handling, fetching and expansion
 
+// TODO: Add Coub.com
+
 // Types of supported embed providers
 enum class Provider { Youtube, Soundcloud, Vimeo };
 

@@ -28,7 +28,7 @@ public:
          desu_storage = false, exhentai = false;
 
     // Keybinding
-    unsigned int new_post = 78, // Create new post
+    unsigned new_post = 78, // Create new post
         toggle_spoiler = 73, // Toggle image spoiler
         done = 83, // Close post
         expand_all = 69, // Expand all images
@@ -51,7 +51,7 @@ private:
     void load_bool(bool& val, const std::string& key);
 
     // Load a uint property from localStorage, or a default
-    void load_uint(unsigned int& val, const std::string& key);
+    void load_uint(unsigned& val, const std::string& key);
 
     // Load a string property from localStorage, or a default
     void load_string(std::string& val, const std::string& key);

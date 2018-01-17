@@ -7,9 +7,11 @@
 #include "posts/hide.hh"
 #include "posts/models.hh"
 #include "util.hh"
+#include <array>
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <map>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -101,14 +103,13 @@ void load_state()
 
     debug = val::global("location")["search"].as<string>().find("debug=true")
         != string::npos;
-    page = new Page();
-    page->detect();
+    auto location = val::global("location");
+    location_origin = new string(location["origin"].as<string>());
+    page = new Page(
+        location["href"].as<string>().substr(location_origin->size()));
     options = new Options();
     options->load();
     lang = new LanguagePack();
-
-    location_origin
-        = new string(val::global("location")["origin"].as<string>());
 
     std::map<string, string> titles;
     for (auto& pair : json::parse(get_inner_html("board-title-data"))) {
@@ -193,46 +194,89 @@ BoardConfig::BoardConfig(const c_string_view& s)
     }
 }
 
-void Page::detect()
+// Parse string_view to unsigned int. Invalid string returns 0.
+static unsigned parse_uint(const std::string_view s)
 {
-    // This needs to be parsed from the board data, if any
-    page_total = 0;
-
-    val location = val::global("location");
-    const string path = location["pathname"].as<string>();
-    const string query = location["search"].as<string>();
-
-    // Parse the path URL
-    size_t i = path.find_first_of('/', 1);
-    board = path.substr(1, i - 1);
-    if (i != path.size() - 1) {
-        const string thread_str = path.substr(i + 1, -1);
-        if (thread_str == "catalog") {
-            catalog = true;
-        } else {
-            thread = std::stoul(thread_str);
+    static constexpr std::array<unsigned, 20> pow10 = []() {
+        std::array<unsigned, 20> arr = { { 0 } };
+        arr[0] = 1;
+        for (unsigned i = 1; i < 20; i++) {
+            arr[i] = arr[i - 1] * 10;
         }
+        return arr;
+    }();
+
+    const size_t size = s.size();
+    if (size > 20) {
+        return 0;
     }
 
-    // Parse query string
-    if (query != "") {
-        if (thread) {
-            last_n = find_query_param(query, "last");
-        } else if (!catalog) {
-            page = find_query_param(query, "page");
+    unsigned result = 0;
+    for (size_t i = 0; i < size; i++) {
+        const char ch = s[i];
+        if (ch < '0' || ch > '9') {
+            return 0;
         }
+        result += pow10[size - i - 1] * (ch - '0');
     }
+    return result;
 }
 
-unsigned int Page::find_query_param(const string& query, const string& param)
+// Find a numeric query parameter and parse it.
+// Returns 0, if none found.
+static unsigned find_query_param(std::string_view query, const char* param)
 {
     size_t i = query.find(param);
     if (i == string::npos) {
         return 0;
     }
-    i += param.size() + 1;
-    const string s = query.substr(i, query.find_first_of('&', i));
-    return std::stoul(s);
+    i += strlen(param) + 1;
+    return parse_uint(query.substr(i, query.find_first_of('&', i)));
+}
+
+Page::Page(const string& href)
+{
+    const auto i_query = href.find('?');
+    const auto i_hash = href.find('#');
+    const auto view = std::string_view(href);
+
+    // Parse the path URL
+    size_t i = string::npos;
+    if (i_hash != string::npos) {
+        i = i_hash;
+    }
+    if (i_query != string::npos) {
+        i = i_query;
+    }
+    const auto path = view.substr(0, i);
+    i = path.find_first_of('/', 1);
+    board = path.substr(1, i - 1);
+    if (i != path.size() - 1) {
+        const auto thread_str = path.substr(i + 1, -1);
+        if (thread_str == "catalog") {
+            catalog = true;
+        } else {
+            thread = parse_uint(thread_str);
+        }
+    }
+
+    // Parse query string
+    if (i_query != string::npos) {
+        const auto query = view.substr(i_query, i_hash);
+        if (thread) {
+            last_100 = find_query_param(query, "last") == 100;
+        } else if (!catalog) {
+            page = find_query_param(query, "page");
+        }
+    }
+
+    // Parse hash
+    if (i_hash != string::npos) {
+        const auto hash = view.substr(i_hash);
+        if (hash.size() >= 3) {
+            post = parse_uint(hash.substr(2));
+        }
+    }
 }
 
 void add_to_storage(int typ, const std::vector<unsigned long> ids)

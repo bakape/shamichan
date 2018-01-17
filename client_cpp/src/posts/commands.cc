@@ -46,7 +46,7 @@ void rerender_syncwatches()
 
 // Read any digit from string_view and return it, if any.
 // Rejects numbers longer than 5 digits.
-static optional<unsigned int> parse_uint(string_view& word)
+static optional<unsigned> parse_uint(string_view& word)
 {
     string num;
     num.reserve(5);
@@ -66,7 +66,7 @@ static optional<unsigned int> parse_uint(string_view& word)
 }
 
 // If num is made of the same digit repeating
-static bool check_em(unsigned int num)
+static bool check_em(unsigned num)
 {
     if (num < 10) {
         return false;
@@ -88,8 +88,8 @@ static bool check_em(unsigned int num)
 static std::pair<string, string> parse_dice(
     string& name, string_view word, const Command& val)
 {
-    unsigned int dice = 1;
-    unsigned int faces = 0;
+    unsigned dice = 1;
+    unsigned faces = 0;
 
     // Has leading digits
     if (name == "") {
@@ -121,7 +121,7 @@ static std::pair<string, string> parse_dice(
     name += 'd' + std::to_string(faces);
 
     ostringstream os;
-    unsigned int sum = 0;
+    unsigned sum = 0;
     for (auto roll : val.dice) {
         if (sum) {
             os << " + ";
@@ -135,7 +135,7 @@ static std::pair<string, string> parse_dice(
 
     // Determine roll formatting class
     string cls;
-    const unsigned int max_roll = dice * faces;
+    const unsigned max_roll = dice * faces;
     if (max_roll >= 10 && faces != 1) { // no special formatting for small rolls
         if (max_roll == sum) {
             cls = "super_roll";

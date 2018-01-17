@@ -13,20 +13,27 @@ void init_posts()
     // Block all clicks on <a> from exhibiting browser default behavior, unless
     // the user intends to navigate to a new tab or open a browser menu
     EM_ASM({
-        document.addEventListener("click", function(e) {
+        document.addEventListener('click', function(e) {
             if (e.which != 1 || e.ctrlKey) {
                 return;
             }
             var t = e.target;
             switch (t.tagName) {
-            case "A":
-                if (t.getAttribute("target") == "_blank"
-                    || t.getAttribute("download")) {
+            case 'A':
+                if (t.getAttribute('target') == '_blank'
+                    || t.getAttribute('download')) {
                     return;
                 }
-            case "IMG":
+            case 'IMG':
                 e.preventDefault();
             }
         });
+    });
+
+    // TODO: Remove this and the causing CSS, once transitioned to C++ client
+    EM_ASM({
+        var el = document.createElement('style');
+        el.innerHTML = '.hash-link {display: unset;}';
+        document.head.appendChild(el);
     });
 }

@@ -72,7 +72,7 @@ static void splice(string& s, int start, int len, string text)
 }
 
 // Set synced IP count to n
-static void render_sync_count(unsigned int n)
+static void render_sync_count(unsigned n)
 {
     string s;
     if (n) {
@@ -98,6 +98,19 @@ static void on_message(std::string_view msg, bool extracted)
 
     const Message type
         = static_cast<Message>(std::stoul(string(msg.substr(0, 2))));
+
+    // Guard against messages possibly resulted from rapid changing of feeds and
+    // high latency
+    if (conn_SM->state() != ConnState::synced) {
+        switch (type) {
+        case Message::invalid:
+        case Message::synchronise:
+            break;
+        default:
+            return;
+        }
+    }
+
     auto data = msg.substr(2);
     switch (type) {
     case Message::invalid:
@@ -315,6 +328,10 @@ void init_connectivity()
         render_status(SyncStatus::synced);
         return ConnState::synced;
     });
+
+    // Switching from one update feed to another
+    conn_SM->act(ConnState::synced, ConnEvent::switch_sync,
+        []() { return ConnState::syncing; });
 
     conn_SM->wild_act(ConnEvent::close, []() {
         render_status(SyncStatus::disconnected);

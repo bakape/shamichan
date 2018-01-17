@@ -354,7 +354,7 @@ void handle_image_click(const brunhild::EventTarget& target)
     img.expanded = !img.expanded;
     if (options->inline_fit == Options::FittingMode::width
         && img.dims[1] > emscripten::val::global("window")["innerHeight"]
-                             .as<unsigned int>()) {
+                             .as<unsigned>()) {
         brunhild::scroll_into_view('p' + target.attrs.at("data-id"));
     }
     p->patch();

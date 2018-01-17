@@ -59,7 +59,7 @@ void Options::load_bool(bool& val, const std::string& key)
     }
 }
 
-void Options::load_uint(unsigned int& val, const std::string& key)
+void Options::load_uint(unsigned& val, const std::string& key)
 {
     if (auto s = local_storage_get(key)) {
         val = std::stoul(*s);

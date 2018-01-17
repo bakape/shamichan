@@ -62,7 +62,6 @@ extern "C" void flush();
 // Function to run before flushing DOM updates. Is run on each call of flush().
 extern void (*before_flush)();
 
-// Function to run after flushing DOM updates. Is run only after flush() calls,
-// that performed DOM updates.
+// Function to run after flushing DOM updates. IIs run on each call of flush().
 extern void (*after_flush)();
 }

@@ -136,7 +136,7 @@ public:
     // If descend = true, make it the next parent to append to.
     // gt_count prepends "greater than" symbols in the text node before this
     // node.
-    void append(Node n, bool descend = false, unsigned int gt_count = 0);
+    void append(Node n, bool descend = false, unsigned gt_count = 0);
 
     // Acsend one level up the parent tree and make it the next node to append
     // to

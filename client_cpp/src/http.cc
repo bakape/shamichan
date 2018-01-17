@@ -5,14 +5,14 @@
 #include <map>
 
 // All registered callbacks
-std::map<unsigned int, HTTPCallback> callbacks;
+std::map<unsigned, HTTPCallback> callbacks;
 
 // Last ID used
-unsigned int last_id = 0;
+unsigned last_id = 0;
 
 void http_request(std::string url, HTTPCallback cb)
 {
-    const unsigned int id = last_id++;
+    const unsigned id = last_id++;
     callbacks[id] = cb;
     EM_ASM_INT(
         {
@@ -28,7 +28,7 @@ void http_request(std::string url, HTTPCallback cb)
 }
 
 static void run_http_callback(
-    unsigned int id, unsigned short code, std::string data)
+    unsigned id, unsigned short code, std::string data)
 {
     callbacks.at(id)(code, data);
     callbacks.erase(id);

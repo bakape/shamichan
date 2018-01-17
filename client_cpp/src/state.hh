@@ -25,7 +25,7 @@ extern bool debug;
 class Config {
 public:
     bool captcha, mature, disable_user_boards, prune_threads;
-    unsigned int thread_expiry_min, thread_expiry_max;
+    unsigned thread_expiry_min, thread_expiry_max;
     std::string default_lang, default_css, image_root_override;
     std::unordered_map<std::string, std::string> links;
 
@@ -61,19 +61,12 @@ extern std::unordered_set<std::string> const* boards;
 // Describes the current page
 class Page {
 public:
-    bool catalog;
-    unsigned int last_n, page, page_total;
-    unsigned long thread;
+    bool catalog = false, last_100 = false;
+    unsigned page = 0, page_total = 0;
+    unsigned long thread = 0, post = 0;
     std::string board;
 
-    // Detect the current page, by reading the current URL
-    void detect();
-
-private:
-    // Find a numeric query parameter and parse it.
-    // Returns 0, if none found.
-    unsigned int find_query_param(
-        const std::string& query, const std::string& param);
+    Page(const std::string&);
 };
 
 // Describes the current page

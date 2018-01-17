@@ -69,15 +69,13 @@ Node render_post_link(unsigned long id, const LinkData& data)
     n.children.reserve(2);
     n.children.push_back({ "a",
         {
-            { "class", "post-link" },
-            { "href", url.str() },
+            { "class", "post-link" }, { "href", url.str() },
         },
         text.str() });
     if (options->post_inline_expand) {
         n.children.push_back({ "a",
             {
-                { "class", "hash-link" },
-                { "href", url.str() },
+                { "class", "hash-link" }, { "href", url.str() },
             },
             " #" });
     }
@@ -95,11 +93,9 @@ Node render_link(string_view url, string_view text, bool new_tab)
     Node n({
         "a",
         {
-            { "rel", "noreferrer" },
-            { "href", brunhild::escape(string(url)) },
+            { "rel", "noreferrer" }, { "href", brunhild::escape(string(url)) },
         },
-        string(text),
-        true,
+        string(text), true,
     });
     if (new_tab) {
         n.attrs["target"] = "_blank";
