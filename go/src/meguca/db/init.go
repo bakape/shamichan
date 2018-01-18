@@ -360,6 +360,12 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`INSERT INTO main VALUES ('roulette', '6')`,
+		)
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both

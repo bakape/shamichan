@@ -5,7 +5,8 @@ create table main (
 insert into main (id, val) values
 	('version', %d),
 	('config', '%s'),
-	('pyu', '0');
+	('pyu', '0'),
+	('roulette', '6');
 
 create table accounts (
 	id varchar(20) primary key,

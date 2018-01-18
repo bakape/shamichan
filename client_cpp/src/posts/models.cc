@@ -70,6 +70,10 @@ Command::Command(nlohmann::json& j)
     case Type::dice:
         dice = val.get<std::vector<uint16_t>>();
         break;
+    case Type::roulette:
+        roulette[0] = val[0];
+        roulette[1] = val[1];
+        break;
     }
 }
 

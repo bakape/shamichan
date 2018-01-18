@@ -302,7 +302,7 @@ function parseFragment(frag: string, data: PostData): string {
                 }
                 break
             case "#": // Hash commands
-                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?)$/)
+                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette)$/)
                 if (m) {
                     html += parseCommand(m[1], data)
                     matched = true
@@ -410,6 +410,14 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
         case "pyu":
         case "pcount":
             inner = commands[state.iDice++].val.toString()
+            break
+        case "roulette":
+            let val = commands[state.iDice++].val
+            inner = val[0].toString() + "/" + val[1].toString()
+            // set formatting if the poster died
+            if (val[0] == 1) {
+                formatting = "<strong class=\"dead\">"
+            }
             break
         default:
             if (bit.startsWith("sw")) {

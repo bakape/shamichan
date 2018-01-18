@@ -90,7 +90,8 @@ public:
         eight_ball,
         sync_watch,
         pyu,
-        pcount
+        pcount,
+        roulette
     } typ;
 
     // Use typ, to get out the relevant value
@@ -99,6 +100,7 @@ public:
     unsigned long sync_watch[5]; // Syncwatch parameters
     std::vector<uint16_t> dice; // Result of dice throw
     std::string eight_ball; // Result of #8ball command
+    unsigned int roulette[2]; // Result of #roulette command
 
     // Parse from JSON
     Command(nlohmann::json&);
