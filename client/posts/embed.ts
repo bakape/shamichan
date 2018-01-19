@@ -125,16 +125,12 @@ async function toggleExpansion(e: MouseEvent) {
 
 	if (el.classList.contains("expanded")) {
 		el.classList.remove("expanded")
-		el.closest("article").classList.remove("no-contain")
 		const iframe = el.lastChild
 		if (iframe) {
 			iframe.remove()
 		}
 		return
 	}
-
-	// Full screening of embeds won't work with contain: content
-	el.closest("article").classList.add("no-contain")
 
 	// The embed was clicked before a mouseover (ex: touch screen)
 	if (!el.hasAttribute("data-html")) {
