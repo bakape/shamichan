@@ -13,7 +13,7 @@ const (
 	CharScore = time.Minute / 350
 
 	// Post creation
-	PostCreationScore = time.Second * 10
+	PostCreationScore = time.Second * 20
 
 	// Image insertion score
 	ImageScore = time.Second * 20
