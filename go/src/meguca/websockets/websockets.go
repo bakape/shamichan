@@ -307,7 +307,11 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 
 // logError writes the client's websocket error to the error log (or stdout)
 func (c *Client) logError(err error) {
-	log.Printf("error by %s: %v\n%s\n", c.ip, err, debug.Stack())
+	switch err {
+	case auth.ErrBanned, auth.ErrSpamDected:
+	default:
+		log.Printf("error by %s: %v\n%s\n", c.ip, err, debug.Stack())
+	}
 }
 
 // Close closes a websocket connection with the provided status code and
