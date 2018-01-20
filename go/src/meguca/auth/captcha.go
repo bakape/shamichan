@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log"
 	"meguca/config"
 	"net/http"
 	"sync"
@@ -16,6 +17,9 @@ var (
 	noscriptCaptchas = noscriptCaptchaMap{
 		m: make(map[string]noscriptCaptcha, 64),
 	}
+	failedCaptchas = failedCaptchaMap{
+		m: make(map[string]failedCaptcha, 64),
+	}
 )
 
 func init() {
@@ -26,6 +30,7 @@ func init() {
 		for {
 			<-t
 			noscriptCaptchas.cleanUp()
+			failedCaptchas.cleanUp()
 		}
 	}()
 }
@@ -82,6 +87,49 @@ func (n *noscriptCaptchaMap) cleanUp() {
 	}
 }
 
+// Stores failed captcha attempts
+type failedCaptchaMap struct {
+	sync.Mutex
+	m map[string]failedCaptcha
+}
+
+type failedCaptcha struct {
+	count      int
+	firsFailed time.Time
+}
+
+// Increments the failed captcha attempts of an IP. Returns, if the user should
+// be banned
+func (f *failedCaptchaMap) increment(ip string) bool {
+	f.Lock()
+	defer f.Unlock()
+
+	cur, ok := f.m[ip]
+	cur.count++
+	if cur.count == 3 {
+		delete(f.m, ip)
+		return true
+	}
+	if !ok {
+		cur.firsFailed = time.Now()
+	}
+	f.m[ip] = cur
+	return false
+}
+
+// Remove entries older than 20 minutes
+func (f *failedCaptchaMap) cleanUp() {
+	f.Lock()
+	defer f.Unlock()
+
+	till := time.Now().Add(-20 * time.Minute)
+	for ip, fc := range f.m {
+		if fc.firsFailed.Before(till) {
+			delete(f.m, ip)
+		}
+	}
+}
+
 // NewCaptchaID creates a new captcha and write its ID to the client
 func NewCaptchaID(w http.ResponseWriter, _ *http.Request) {
 	h := w.Header()
@@ -103,10 +151,17 @@ func ServeCaptcha(w http.ResponseWriter, r *http.Request) {
 
 // AuthenticateCaptcha posts a request to the SolveMedia API to authenticate a
 // captcha
-func AuthenticateCaptcha(req Captcha) bool {
+func AuthenticateCaptcha(req Captcha, ip string) bool {
 	// Captchas disabled or running tests. Can not use API, when testing
 	if !config.Get().Captcha {
 		return true
 	}
-	return captcha.VerifyString(req.CaptchaID, req.Solution)
+	passed := captcha.VerifyString(req.CaptchaID, req.Solution)
+	if !passed && failedCaptchas.increment(ip) {
+		err := SystemBan(ip, "bot detected", time.Now().Add(time.Hour*24*2))
+		if err != nil {
+			log.Printf("automatic ban: %s\n", err)
+		}
+	}
+	return passed
 }

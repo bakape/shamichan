@@ -103,13 +103,18 @@ func commitLogin(w http.ResponseWriter, r *http.Request, userID string) {
 
 // Log into a registered user account
 func login(w http.ResponseWriter, r *http.Request) {
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		text400(w, err)
+		return
+	}
 	var req loginCreds
 	switch {
 	case !decodeJSON(w, r, &req):
 		return
 	case !trimLoginID(&req.ID):
 		return
-	case !auth.AuthenticateCaptcha(req.Captcha):
+	case !auth.AuthenticateCaptcha(req.Captcha, ip):
 		text403(w, errInvalidCaptcha)
 		return
 	}
@@ -212,11 +217,16 @@ func checkPasswordAndCaptcha(
 	password string,
 	captcha auth.Captcha,
 ) bool {
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		text400(w, err)
+		return false
+	}
 	switch {
 	case password == "", len(password) > common.MaxLenPassword:
 		text400(w, errInvalidPassword)
 		return false
-	case !auth.AuthenticateCaptcha(captcha):
+	case !auth.AuthenticateCaptcha(captcha, ip):
 		text403(w, errInvalidCaptcha)
 		return false
 	}

@@ -366,6 +366,31 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		// Fuck any wise guy trying to create an account nad block an upgrade
+		_, err = tx.Exec(
+			`DELETE FROM accounts
+			WHERE id = 'system'`,
+		)
+		if err != nil {
+			return
+		}
+
+		password, err := auth.RandomID(32)
+		if err != nil {
+			return
+		}
+		hash, err := auth.BcryptHash(password, 10)
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec(
+			`insert into accounts (id, password)
+			values ('system', $1)`,
+			hash,
+		)
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
@@ -399,7 +424,7 @@ func LoadDB() (err error) {
 				loadBanners, loadLoadingAnimations,
 			}
 			if !exists {
-				tasks = append(tasks, CreateAdminAccount)
+				tasks = append(tasks, CreateAdminAccount, createSystemAccount)
 			}
 			if err := util.Parallel(tasks...); err != nil {
 				return err
@@ -503,6 +528,19 @@ func CreateAdminAccount() error {
 		return err
 	}
 	return RegisterAccount("admin", hash)
+}
+
+// Create inaccessible account used for automatic internal purposes
+func createSystemAccount() (err error) {
+	password, err := auth.RandomID(32)
+	if err != nil {
+		return
+	}
+	hash, err := auth.BcryptHash(password, 10)
+	if err != nil {
+		return
+	}
+	return RegisterAccount("system", hash)
 }
 
 // ClearTables deletes the contents of specified DB tables. Only used for tests.

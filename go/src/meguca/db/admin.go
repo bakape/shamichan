@@ -7,6 +7,22 @@ import (
 	"time"
 )
 
+// Forward function to avoid circular dependency
+func init() {
+	auth.SystemBan = func(ip, reason string, expires time.Time) (err error) {
+		err = execPrepared("write_ban", ip, "all", 0, reason, "system", expires)
+		if err != nil {
+			return
+		}
+		_, err = db.Exec(`notify bans_updated`)
+		if err != nil {
+			return
+		}
+		auth.DisconnectBannedIP(ip, "all")
+		return
+	}
+}
+
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
 // banned IPs.
 func Ban(board, reason, by string, expires time.Time, ids ...uint64) (

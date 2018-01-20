@@ -16,7 +16,6 @@ import (
 var (
 	errInvalidBoard  = errors.New("invalid board")
 	errInvalidThread = errors.New("invalid thread")
-	errBanned        = errors.New("you are banned from this board")
 )
 
 type syncRequest struct {
@@ -42,7 +41,7 @@ func (c *Client) synchronise(data []byte) error {
 	case !auth.IsBoard(msg.Board):
 		return errInvalidBoard
 	case auth.IsBanned(msg.Board, c.ip):
-		return errBanned
+		return auth.ErrBanned
 	case msg.Thread != 0:
 		valid, err := db.ValidateOP(msg.Thread, msg.Board)
 		switch {

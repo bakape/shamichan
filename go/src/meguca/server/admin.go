@@ -103,7 +103,12 @@ func canPerform(
 		text400(w, errInvalidBoardName)
 		return
 	}
-	if captcha != nil && !auth.AuthenticateCaptcha(*captcha) {
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		text400(w, err)
+		return
+	}
+	if captcha != nil && !auth.AuthenticateCaptcha(*captcha, ip) {
 		text403(w, errInvalidCaptcha)
 		return
 	}
@@ -112,7 +117,7 @@ func canPerform(
 		return
 	}
 
-	can, err := db.CanPerform(creds.UserID, board, level)
+	can, err = db.CanPerform(creds.UserID, board, level)
 	switch {
 	case err != nil:
 		text500(w, r, err)
@@ -276,7 +281,11 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate request data
-	var err error
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		text400(w, err)
+		return
+	}
 	switch {
 	case creds.UserID != "admin" && config.Get().DisableUserBoards:
 		err = errAccessDenied
@@ -287,7 +296,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		err = errInvalidBoardName
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
-	case !auth.AuthenticateCaptcha(msg.Captcha):
+	case !auth.AuthenticateCaptcha(msg.Captcha, ip):
 		err = errInvalidCaptcha
 	}
 	if err != nil {
@@ -495,11 +504,9 @@ func ban(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Redirect all banned connected clients to the /all/ board
+		// Disconnect all banned clients on affected board
 		for ip := range ips {
-			for _, cl := range common.GetByIPAndBoard(ip, board) {
-				cl.Redirect("all")
-			}
+			auth.DisconnectBannedIP(ip, board)
 		}
 	}
 }

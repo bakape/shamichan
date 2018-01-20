@@ -19,10 +19,15 @@ func report(w http.ResponseWriter, r *http.Request) {
 	}
 	f := r.Form
 
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		text400(w, err)
+		return
+	}
 	if !auth.AuthenticateCaptcha(auth.Captcha{
 		CaptchaID: f.Get("captchaID"),
 		Solution:  f.Get("captcha"),
-	}) {
+	}, ip) {
 		text403(w, errInvalidCaptcha)
 		return
 	}
@@ -43,12 +48,6 @@ func report(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !assertNotBanned(w, r, board) {
-		return
-	}
-
-	ip, err := auth.GetIP(r)
-	if err != nil {
-		text400(w, err)
 		return
 	}
 
