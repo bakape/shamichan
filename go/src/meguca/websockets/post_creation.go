@@ -261,6 +261,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 		c.post.init(post.StandalonePost)
 	}
 	c.feed.InsertPost(post.StandalonePost, c.post.body, msg)
+	CheckRouletteBan(post.Commands, post.Board, post.ID)
 
 	score := auth.PostCreationScore + auth.CharScore*time.Duration(c.post.len)
 	if post.Image != nil {

@@ -217,19 +217,23 @@ func (c *Client) _closePost() (err error) {
 		return
 	}
 
+	CheckRouletteBan(com, c.post.board, c.post.id)
+
+	c.post = openPost{}
+	return
+}
+
+func CheckRouletteBan(commands []common.Command, board string, id uint64) {
 	// Meme ban if the poster lost at #roulette
-	for _, command := range com {
+	for _, command := range commands {
 		if command.Type == common.Roulette {
 			if command.Roulette[0] == 1 {
 				// don't bother error checking
-				db.Ban(c.post.board, "lost at #roulette", "system", time.Now().Add(time.Second*30), c.post.id)
+				db.Ban(board, "lost at #roulette", "system", time.Now().Add(time.Second*30), id)
 				break
 			}
 		}
 	}
-
-	c.post = openPost{}
-	return
 }
 
 // Clear all open post contents
