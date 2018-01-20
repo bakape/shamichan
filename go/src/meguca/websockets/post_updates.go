@@ -216,6 +216,18 @@ func (c *Client) _closePost() (err error) {
 	if err != nil {
 		return
 	}
+
+	// Meme ban if the poster lost at #roulette
+	for _, command := range com {
+		if command.Type == common.Roulette {
+			if command.Roulette[0] == 1 {
+				// don't bother error checking
+				db.Ban(c.post.board, "lost at #roulette", "system", time.Now().Add(time.Second*30), c.post.id)
+				break
+			}
+		}
+	}
+
 	c.post = openPost{}
 	return
 }
