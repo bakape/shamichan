@@ -88,7 +88,7 @@ function renderPostCounter() {
 
             text += ` / `
             if (days > 1) {
-                text += `${Math.round(days)}d`
+                text += `${Math.round(days)}j`
             } else {
                 text += `${Math.round(days / 24)}h`
             }

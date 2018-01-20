@@ -100,7 +100,7 @@ public:
     unsigned long sync_watch[5]; // Syncwatch parameters
     std::vector<uint16_t> dice; // Result of dice throw
     std::string eight_ball; // Result of #8ball command
-    unsigned int roulette[2]; // Result of #roulette command
+	unsigned int roulette[2]; // Result of #roulette command
 
     // Parse from JSON
     Command(nlohmann::json&);
@@ -245,9 +245,6 @@ private:
     // Render the information caption above the image.
     Node render_figcaption();
 
-    // Render reverse image search links
-    Node render_image_search();
-
     // Render uploaded file meta information
     Node render_file_info();
 
@@ -302,6 +299,7 @@ public:
     bool deleted = false, // Thread deleted by staff
         locked = false, // Thread locked by staff
         sticky = false, // Stuck to board page top by stuff
+        abbrev = false, // Some replies omitted from thread
         non_live = false; // Live post updates disabled in thread
     unsigned long id, // ID of the thread
         time, // Creation time

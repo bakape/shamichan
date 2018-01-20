@@ -85,7 +85,7 @@ void render_post_counter()
 
             s << " / ";
             if (days > 1) {
-                s << (int)(days) << 'd';
+                s << (int)(days) << 'j';
             } else {
                 s << (int)(days / 24) << 'h';
             }

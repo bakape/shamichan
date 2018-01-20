@@ -1,6 +1,6 @@
 {
-    "name": "meguca.org",
-    "short_name": "meguca.org",
+    "name": "Egophobe",
+    "short_name": "egopho.be",
     "icons": [
         {
             "src": "/assets/mobile/icon48.png",
@@ -31,6 +31,6 @@
     "start_url": "/",
     "display": "fullscreen",
     "orientation": "any",
-    "theme_color": "#1d1f21",
-    "background_color": "#1d1f21"
+    "theme_color": "#e1e9fc",
+    "background_color": "#e1e9fc"
 }

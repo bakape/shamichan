@@ -17,9 +17,6 @@ void Options::load()
     load_bool(anonymise, "anonymise");
     load_bool(post_inline_expand, "postInlineExpand");
     load_bool(relative_time, "relativeTime");
-    load_bool(now_playing, "nowPlaying");
-    load_bool(illya_dance, "illyaDance");
-    load_bool(illya_dance_mute, "illyaDanceMute");
     load_bool(horizontal_posting, "horizontalPosting");
     load_bool(hide_recursively, "hideRecursively");
     load_bool(work_mode_toggle, "workModeToggle");
@@ -27,12 +24,6 @@ void Options::load()
     load_bool(custom_css_toggle, "customCSS");
     load_bool(mascot, "mascot");
     load_bool(always_lock, "alwaysLock");
-    load_bool(google, "google");
-    load_bool(iqdb, "iqdb");
-    load_bool(sauce_nao, "saucenao");
-    load_bool(what_anime, "whatAnime");
-    load_bool(desu_storage, "desustorage");
-    load_bool(exhentai, "exhentai");
 
     load_uint(new_post, "newPost");
     load_uint(toggle_spoiler, "toggleSpoiler");
@@ -40,13 +31,12 @@ void Options::load()
     load_uint(expand_all, "expandAll");
     load_uint(work_mode, "workMode");
 
-    if (auto s = local_storage_get("inlineFit")) {
-        if (*s == "width") {
+	if (auto s = local_storage_get("inlineFit")) {
+        if (*s == "largeur") {
             inline_fit = FittingMode::width;
-        } else if (*s == "screen") {
+        } else if (*s == "moniteur") {
             inline_fit = FittingMode::screen;
         }
-    }
 
     load_string(theme, "theme");
     load_string(custom_css, "customCSS");

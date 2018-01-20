@@ -4,7 +4,6 @@ import { config } from '../state'
 import { makeEl, HTML, setCookie } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
-import initNowPlaying from "./nowPlaying"
 import options from "."
 
 // Types of option models
@@ -38,7 +37,7 @@ export const specs: { [id: string]: OptionSpec } = {
 	// Thumbnail inline expansion mode
 	inlineFit: {
 		type: optionType.menu,
-		default: "width",
+		default: "largeur",
 	},
 	// Hide thumbnails
 	hideThumbs: {},
@@ -86,23 +85,6 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	// Relative post timestamps
 	relativeTime: {},
-	// R/a/dio or Eden now playing banner
-	nowPlaying: {
-		type: optionType.menu,
-		default: "none",
-		noExecOnStart: true,
-		exec: initNowPlaying,
-	},
-	// Illya dance in the background
-	illyaDance: {
-		noExecOnStart: true,
-		exec: renderBackground,
-	},
-	// Mute Illya dance
-	illyaDanceMute: {
-		noExecOnStart: true,
-		exec: renderBackground,
-	},
 	// Tile posts horizontally too
 	horizontalPosting: {
 		exec: toggleHeadStyle(
@@ -181,27 +163,6 @@ export const specs: { [id: string]: OptionSpec } = {
 	// Lock thread scrolling to bottom, when bottom in view, even when the
 	// tab is hidden
 	alwaysLock: {},
-	// Image search link toggles
-	google: {
-		default: true,
-		exec: toggleImageSearch("google"),
-	},
-	iqdb: {
-		exec: toggleImageSearch("iqdb"),
-	},
-	saucenao: {
-		default: true,
-		exec: toggleImageSearch("saucenao"),
-	},
-	whatAnime: {
-		exec: toggleImageSearch("whatAnime"),
-	},
-	desustorage: {
-		exec: toggleImageSearch("desustorage"),
-	},
-	exhentai: {
-		exec: toggleImageSearch("exhentai"),
-	},
 	// Shortcut keys
 	newPost: {
 		default: 78,
@@ -227,11 +188,6 @@ export const specs: { [id: string]: OptionSpec } = {
 		default: 71,
 		type: optionType.shortcut,
 	},
-}
-
-// Create a function that toggles the visibility of an image search link
-function toggleImageSearch(engine: string): (toggle: boolean) => void {
-	return toggleHeadStyle(engine, `.${engine}{display:initial;}`)
 }
 
 // Toggle an optional style element in the head

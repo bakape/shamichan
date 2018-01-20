@@ -6,7 +6,6 @@ import { Post, FormModel, PostView, postEvent, postSM } from './posts'
 import { PostLink, Command, PostData, ImageData } from "./common"
 import { postAdded } from "./ui"
 import { incrementPostCount } from "./page"
-import { posterName } from "./options"
 import { OverlayNotification } from "./ui"
 
 // Message for splicing the contents of the current line
@@ -38,10 +37,6 @@ function handle(id: number, fn: (m: Post) => void) {
 
 // Insert a post into the models and DOM
 export function insertPost(data: PostData) {
-	// R/a/dio song name override
-	if (posterName()) {
-		data.name = posterName()
-	}
 
 	const existing = posts.get(data.id)
 	if (existing) {

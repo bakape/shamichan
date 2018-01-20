@@ -27,7 +27,7 @@ var (
 		BoardConfigs: BoardConfigs{
 			ID: "all",
 			BoardPublic: BoardPublic{
-				Title:   "Aggregator metaboard",
+				Title:   "Egophobe",
 				Banners: []uint16{},
 			},
 		},
@@ -48,13 +48,13 @@ var (
 		MaxHeight:     6000,
 		MaxWidth:      6000,
 		SessionExpiry: 30,
-		Salt:          "LALALALALALALALALALALALALALALALALALALALA",
-		FeedbackEmail: "admin@email.com",
-		RootURL:       "http://localhost",
+		Salt:          "",
+		FeedbackEmail: "contact@egopho.be",
+		RootURL:       "https://planches.egopho.be",
 		FAQ:           defaultFAQ,
 		Public: Public{
-			DefaultCSS:      "moe",
-			DefaultLang:     "en_GB",
+			DefaultCSS:      "egophobe",
+			DefaultLang:     "fr_FR",
 			ThreadExpiryMin: 7,
 			ThreadExpiryMax: 14,
 			MaxSize:         5,
@@ -64,27 +64,17 @@ var (
 
 	// EightballDefaults contains the default eightball answer set
 	EightballDefaults = []string{
-		"Yes",
-		"No",
-		"Maybe",
-		"It can't be helped",
-		"Hell yeah, motherfucker!",
-		"Anta baka?",
+		"Oui",
+		"Non",
+		"Peut-être",
+		"Ce n'est pas à l'ordre du jour",
+		"Sans aucun doute",
+		"Je n'ai pas compris la question",
 	}
 )
 
 // Default string for the FAQ panel
-const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, FLAC, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ.
-<hr>Encase text in:
-  ** for spoilers
-  __ for bold
-  ~~ for italics
-  ` + "``" + ` for programing code highlighting
-<hr>Hash commands:
-#d100 #2d100 - Roll dice
-#flip - Coin flip
-#8ball - An 8ball
-#sw24:30 #sw2:24:30 #sw24:30+30 #sw24:30-30 - "Syncwatch" synchronized time counter`
+const defaultFAQ = `Egophobe`
 
 // Generate /all/ board configs
 func init() {

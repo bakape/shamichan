@@ -7,7 +7,7 @@ import (
 )
 
 // NOTE: After adding inputSpec structs with new ID fields, be sure to add the
-// description to at least `lang/en_GB/server.json.forms`. Then run
+// description to at least `lang/fr_FR/server.json.forms`. Then run
 // `scripts/migrate_lang.js` to insert temporary placeholders into any language
 // packs missing translations.
 
@@ -270,7 +270,7 @@ var optionSpecs = [...][]inputSpec{
 		{
 			ID:      "inlineFit",
 			Type:    _select,
-			Options: []string{"none", "width", "screen"},
+			Options: []string{"aucune", "largeur", "moniteur"},
 		},
 		{ID: "hideThumbs"},
 		{ID: "workModeToggle"},
@@ -299,23 +299,6 @@ var optionSpecs = [...][]inputSpec{
 			Type: _textarea,
 			Rows: 3,
 		},
-	},
-	{
-		{ID: "google"},
-		{ID: "iqdb"},
-		{ID: "saucenao"},
-		{ID: "whatAnime"},
-		{ID: "desustorage"},
-		{ID: "exhentai"},
-	},
-	{
-		{
-			ID:      "nowPlaying",
-			Type:    _select,
-			Options: []string{"none", "r/a/dio", "eden"},
-		},
-		{ID: "illyaDance"},
-		{ID: "illyaDanceMute"},
 	},
 	{
 		{

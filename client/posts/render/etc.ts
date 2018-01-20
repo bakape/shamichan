@@ -66,5 +66,5 @@ function ago(time: number, units: [string, string], isFuture: boolean): string {
     if (isFuture) {
         return `${lang.posts["in"]} ${count}`
     }
-    return `${count} ${lang.posts["ago"]}`
+    return `${lang.posts["ago"]} ${count}`
 }

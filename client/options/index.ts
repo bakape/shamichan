@@ -9,7 +9,6 @@ import { trigger, emitChanges, ChangeEmitter, hook } from "../util"
 export { store as storeBackground } from "./background"
 export { store as storeMascot } from "./mascot"
 export * from "./specs"
-export { posterName } from "./nowPlaying"
 
 // Delete legacy options localStorage entry, if any
 localStorage.removeItem("options")
@@ -24,9 +23,6 @@ interface Options extends ChangeEmitter {
 	anonymise: boolean
 	postInlineExpand: boolean
 	relativeTime: boolean
-	nowPlaying: string
-	illyaDance: boolean
-	illyaDanceMute: boolean
 	horizontalPosting: boolean
 	hideRecursively: boolean
 	replyRight: boolean
@@ -142,7 +138,7 @@ export function initOptions() {
 
 	// Conditionally load and execute optional modules
 	for (let opt of [
-		"userBG", "nowPlaying", "illyaDance", "mascot", "customCSSToggle",
+		"userBG", "mascot", "customCSSToggle",
 	]) {
 		if (options[opt]) {
 			models[opt].execute(true)

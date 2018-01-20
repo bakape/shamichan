@@ -204,7 +204,7 @@ var upgrades = []func(*sql.Tx) error{
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
-				ADD COLUMN defaultCSS text default 'moe'`,
+				ADD COLUMN defaultCSS text default 'egophobe'`,
 		)
 		return
 	},
@@ -365,9 +365,9 @@ var upgrades = []func(*sql.Tx) error{
 			`INSERT INTO main VALUES ('roulette', '6')`,
 		)
 		return
-	},
+ 	},
 	func(tx *sql.Tx) (err error) {
-		// Fuck any wise guy trying to create an account nad block an upgrade
+		// Fuck any wise guy trying to create an account and block an upgrade
 		_, err = tx.Exec(
 			`DELETE FROM accounts
 			WHERE id = 'system'`,

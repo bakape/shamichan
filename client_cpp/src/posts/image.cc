@@ -36,9 +36,6 @@ Node Post::render_figcaption()
             lang->posts.at(img.reveal_thumbnail ? "hide" : "show"),
         });
     }
-    if (img.thumb_type != FileType::no_file && img.file_type != FileType::pdf) {
-        n.children.push_back(render_image_search());
-    }
     n.children.push_back(render_file_info());
 
     // File name + download link
@@ -50,89 +47,6 @@ Node Post::render_figcaption()
         { { "href", url.str() }, { "download", name.str() } }, name.str() });
 
     n.stringify_subtree();
-    return n;
-}
-
-// Render a link to the image search provider
-static Node image_search_link(int i, const string& url)
-{
-    const static char* abbrev[6] = { "G", "Iq", "Sn", "Wa", "Ds", "Ex" };
-    const static char* url_starts[6] = {
-        "https://www.google.com/searchbyimage?image_url=",
-        "http://iqdb.org/?url=", "http://saucenao.com/search.php?db=999&url=",
-        "https://whatanime.ga/?url=", "https://desuarchive.org/_/search/image/",
-        "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
-    };
-
-    return Node("a",
-        {
-            { "target", "_blank" }, { "rel", "nofollow" },
-            { "href", url_starts[i] + url },
-        },
-        abbrev[i]);
-}
-
-Node Post::render_image_search()
-{
-    auto const& img = *image;
-    Node n = {
-        "span",
-        {
-            { "class", "spaced" },
-            // TODO: Rework the CSS for this class
-            { "style", "font-weight: 700;" },
-        },
-    };
-    n.children.reserve(6);
-
-    // Resolve URL of image search providers, that require to download the
-    // image file
-    string root;
-    FileType typ;
-    switch (img.file_type) {
-    case FileType::jpg:
-    case FileType::gif:
-    case FileType::png:
-        if (img.size < 8 << 20) { // Limit on many providers
-            root = "src";
-            typ = img.file_type;
-        }
-        break;
-    }
-    if (root == "") {
-        root = "thumb";
-        typ = img.thumb_type;
-    }
-    ostringstream unencoded, url;
-    unencoded << *location_origin << "/assets/images/" << root << '/'
-              << img.SHA1 << '.' << file_extentions.at(typ);
-    url << url_encode(unencoded.str());
-
-    const bool enabled[6]
-        = { options->google, options->iqdb, options->sauce_nao,
-            options->what_anime, options->desu_storage, options->exhentai };
-    for (int i = 0; i < 4; i++) {
-        if (enabled[i]) {
-            n.children.push_back(image_search_link(i, url.str()));
-        }
-    }
-    if (enabled[4]) {
-        switch (img.file_type) {
-        case FileType::jpg:
-        case FileType::png:
-        case FileType::gif:
-        case FileType::webm:
-            n.children.push_back(image_search_link(4, url.str()));
-        }
-    }
-    if (enabled[5]) {
-        switch (img.file_type) {
-        case FileType::jpg:
-        case FileType::png:
-            n.children.push_back(image_search_link(5, url.str()));
-        }
-    }
-
     return n;
 }
 

@@ -32,7 +32,7 @@ func init() {
 	}
 	config.Set(config.Configs{
 		Public: config.Public{
-			DefaultLang: "en_GB",
+			DefaultLang: "fr_FR",
 		},
 	})
 	if err := util.Waterfall(lang.Load, templates.Compile); err != nil {

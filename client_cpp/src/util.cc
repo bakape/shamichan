@@ -118,7 +118,7 @@ Node render_last_100_link(string board, unsigned long id)
 {
     std::ostringstream s;
     s << '/' << board << '/' << id << "?last=100#bottom";
-    return render_button(s.str(), lang->ui.at("last") + " 100");
+    return render_button(s.str(), "100 " + lang->ui.at("last"));
 }
 
 void alert(std::string msg)

@@ -47,7 +47,7 @@ Render a link to another post. Can optionally be cross-thread.
 {% func last100Link(board, id string) %}{% stripspace %}
 	<span class="act">
 		<a href="/{%s= board %}/{%s= id %}?last=100#bottom">
-			{%s= lang.Get().Common.UI["last"] %}{%space %}100
+			100{%space %}{%s= lang.Get().Common.UI["last"] %}
 		</a>
 	</span>
 {% endstripspace %}{% endfunc %}

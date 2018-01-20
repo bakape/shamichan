@@ -14,7 +14,7 @@ func TestThreadHTML(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	setBoards(t, "a")
-	(*config.Get()).DefaultLang = "en_GB"
+	(*config.Get()).DefaultLang = "fr_FR"
 
 	cases := [...]struct {
 		name, url string
@@ -41,7 +41,7 @@ func TestBoardHTML(t *testing.T) {
 	cache.Clear()
 	setupPosts(t)
 	setBoards(t, "a")
-	(*config.Get()).DefaultLang = "en_GB"
+	(*config.Get()).DefaultLang = "fr_FR"
 
 	cases := [...]struct {
 		name, url string
@@ -68,7 +68,7 @@ func TestBoardHTML(t *testing.T) {
 func TestOwnedBoardSelection(t *testing.T) {
 	assertTableClear(t, "boards", "accounts")
 	config.ClearBoards()
-	(*config.Get()).DefaultLang = "en_GB"
+	(*config.Get()).DefaultLang = "fr_FR"
 	writeAdminAccount(t)
 	writeSampleUser(t)
 
@@ -142,7 +142,7 @@ func TestOwnedBoardSelection(t *testing.T) {
 
 func TestBoardConfigurationForm(t *testing.T) {
 	config.ClearBoards()
-	(*config.Get()).DefaultLang = "en_GB"
+	(*config.Get()).DefaultLang = "fr_FR"
 	assertTableClear(t, "accounts", "boards")
 	writeSampleBoard(t)
 	writeSampleUser(t)
@@ -169,7 +169,7 @@ func TestBoardConfigurationForm(t *testing.T) {
 }
 
 func TestStaticTemplates(t *testing.T) {
-	(*config.Get()).DefaultLang = "en_GB"
+	(*config.Get()).DefaultLang = "fr_FR"
 
 	cases := [...]struct {
 		name, url string
@@ -195,7 +195,7 @@ func TestStaticTemplates(t *testing.T) {
 func TestServerConfigurationForm(t *testing.T) {
 	assertTableClear(t, "accounts")
 	writeAdminAccount(t)
-	(*config.Get()).DefaultLang = "en_GB"
+	(*config.Get()).DefaultLang = "fr_FR"
 
 	rec, req := newJSONPair(t, "/html/configure-server", nil)
 	setLoginCookies(req, adminLoginCreds)

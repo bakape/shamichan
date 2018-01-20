@@ -89,13 +89,13 @@ func TestBoardConfiguration(t *testing.T) {
 		Eightball: []string{},
 		BoardPublic: config.BoardPublic{
 			ForcedAnon: true,
-			DefaultCSS: "moe",
+			DefaultCSS: "egophobe",
 		},
 	}
 	init := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			BoardPublic: config.BoardPublic{
-				DefaultCSS: "moe",
+				DefaultCSS: "egophobe",
 			},
 			ID:        board,
 			Eightball: []string{},
@@ -135,7 +135,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			"all is well",
 			config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
-					DefaultCSS: "moe",
+					DefaultCSS: "egophobe",
 				},
 			},
 			nil,
@@ -396,7 +396,7 @@ func TestServerConfigSetting(t *testing.T) {
 	writeAdminAccount(t)
 
 	msg := config.Defaults
-	msg.DefaultCSS = "ashita"
+	msg.DefaultCSS = "egophobe"
 	rec, req := newJSONPair(t, "/api/configure-server", msg)
 	setLoginCookies(req, adminLoginCreds)
 	router.ServeHTTP(rec, req)
@@ -408,7 +408,7 @@ func TestServerConfigSetting(t *testing.T) {
 		t.Fatal(err)
 	}
 	std := config.Defaults
-	std.DefaultCSS = "ashita"
+	std.DefaultCSS = "egophobe"
 	AssertDeepEquals(t, conf, std)
 }
 

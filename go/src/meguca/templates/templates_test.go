@@ -16,7 +16,7 @@ func init() {
 	}
 	config.Set(config.Configs{
 		Public: config.Public{
-			DefaultLang: "en_GB",
+			DefaultLang: "fr_FR",
 		},
 	})
 

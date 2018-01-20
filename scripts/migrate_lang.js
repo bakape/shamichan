@@ -5,18 +5,18 @@
 
 const fs = require("fs")
 
-const en = {
-    server: readJSON("lang/en_GB/server.json", "utf8"),
-    common: readJSON("lang/en_GB/common.json", "utf8"),
+const fr = {
+    server: readJSON("lang/fr_FR/server.json", "utf8"),
+    common: readJSON("lang/fr_FR/common.json", "utf8"),
 }
 const targets = fs.readdirSync("lang").filter(n =>
-    n !== "en_GB" && /^\w{2}_\w{2}$/.test(n))
+    n !== "fr_FR" && /^\w{2}_\w{2}$/.test(n))
 
-for (let key in en) {
-    sortMaps(en[key])
-    const path = `lang/en_GB/${key}.json`
+for (let key in fr) {
+    sortMaps(fr[key])
+    const path = `lang/fr_FR/${key}.json`
     fs.unlinkSync(path)
-    fs.writeFileSync(path, JSON.stringify(en[key], null, "\t"))
+    fs.writeFileSync(path, JSON.stringify(fr[key], null, "\t"))
 }
 
 for (let t of targets) {
@@ -32,7 +32,7 @@ for (let t of targets) {
         fs.unlinkSync(path)
     }
 
-    const dest = JSON.parse(JSON.stringify(en)) // Deep clone
+    const dest = JSON.parse(JSON.stringify(fr)) // Deep clone
     traverseCopy(source, dest)
     for (let key in dest) {
         const path = `${dir}/${key}.json`

@@ -1,10 +1,7 @@
-import { BannerModal } from "../base"
-
 export default () => {
-	for (let id of ["options", "FAQ", "identity", "account"]) {
+	for (let id of ["options", "identity", "account"]) {
 		highlightBanner(id)
 	}
-	new BannerModal(document.getElementById("FAQ"))
 }
 
 // Highlight options button by fading out and in, if no options are set

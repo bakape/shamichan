@@ -1,9 +1,9 @@
 {
-    "name": "Meguca.org",
-    "description": "Realtime imageboard",
+    "name": "Egophobe",
+    "description": "Imageboard en temps réel",
     "developer": {
-        "name": "bakape",
-        "url": "https://github.com/bakape/meguca"
+        "name": "Chapodalu",
+        "url": "https://www.egopho.be/"
     },
     "launch_path": "/",
     "icons": {
@@ -15,6 +15,6 @@
         "192": "/mobile/icon192",
         "512": "/mobile/icon512"
     },
-    "default_locale": "en",
+    "default_locale": "fr",
     "fullscreen": true
 }

@@ -16,7 +16,7 @@ static string ago(time_t n, string units, bool is_future)
 {
     auto count = pluralize(n, units);
     return is_future ? lang->posts.at("in") + " " + count
-                     : count + " " + lang->posts.at("ago");
+                     : lang->posts.at("ago") + " " + count;
 }
 
 string relative_time(time_t then)

@@ -75,7 +75,7 @@
 		{% if !abbrev %}
 			<span class="act">
 				<a href="?last=100#bottom">
-					{%s= ln.Common.UI["last"] %}{% space %}100
+					100{% space %}{%s= ln.Common.UI["last"] %}
 				</a>
 			</span>
 		{% endif %}

@@ -197,91 +197,6 @@ export default class ImageHandler extends View<Post> {
 			download: name,
 		})
 		link.innerHTML = name
-
-		this.renderImageSearch(el)
-
-		el.hidden = false
-	}
-
-	// Assign URLs to image search links
-	private renderImageSearch(figcaption: Element) {
-		const { fileType, thumbType, SHA1, MD5, size } = this.model.image,
-			el = figcaption.querySelector(".image-search-container")
-		if (thumbType === fileTypes.noFile || fileType === fileTypes.pdf) {
-			el.hidden = true
-			return
-		}
-
-		// Resolve URL of image search providers, that require to download the
-		// image file
-		let url: string,
-			root: string,
-			type: fileTypes
-		switch (fileType) {
-			case fileTypes.jpg:
-			case fileTypes.gif:
-			case fileTypes.png:
-				if (size < 8 << 20) { // Limit on many engines
-					root = "src"
-					type = fileType
-				}
-				break
-		}
-		if (!root) {
-			root = "thumb"
-			type = thumbType
-		}
-		url = `/assets/images/${root}/${SHA1}.${fileTypes[type]}`
-		url = encodeURI(location.origin + url)
-
-		const [google, iqdb, saucenao, whatanime, desuarchive, exhentai] =
-			Array.from(el.children) as HTMLElement[]
-		google.setAttribute(
-			"href",
-			"https://www.google.com/searchbyimage?image_url=" + url,
-		)
-		iqdb.setAttribute(
-			"href",
-			"http://iqdb.org/?url=" + url,
-		)
-		saucenao.setAttribute(
-			"href",
-			"http://saucenao.com/search.php?db=999&url=" + url,
-		)
-		whatanime.setAttribute(
-			"href",
-			"https://whatanime.ga/?url=" + url,
-		)
-
-		if (desuarchive) {
-			switch (fileType) {
-				case fileTypes.jpg:
-				case fileTypes.png:
-				case fileTypes.gif:
-				case fileTypes.webm:
-					desuarchive.setAttribute(
-						"href",
-						"https://desuarchive.org/_/search/image/" + MD5,
-					)
-					break
-				default:
-					desuarchive.remove()
-			}
-		}
-		if (exhentai) {
-			switch (fileType) {
-				case fileTypes.jpg:
-				case fileTypes.png:
-					exhentai.setAttribute(
-						"href",
-						"http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash="
-						+ SHA1,
-					)
-					break
-				default:
-					exhentai.remove()
-			}
-		}
 	}
 
 	public toggleImageExpansion(event: MouseEvent) {
@@ -376,16 +291,16 @@ export default class ImageHandler extends View<Post> {
 		let cls = "expanded "
 
 		switch (mode) {
-			case "none":
+			case "aucune":
 				return
-			case "width":
+			case "largeur":
 				cls += "fit-to-width"
 				img.tallerThanViewport = img.dims[1] > window.innerHeight
 				if (img.tallerThanViewport && !noScroll) {
 					this.el.scrollIntoView()
 				}
 				break
-			case "screen":
+			case "moniteur":
 				cls += "fit-to-screen"
 				break
 		}
@@ -404,6 +319,7 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes.ogg:
 			case fileTypes.mp4:
 			case fileTypes.webm:
+
 				const video = document.createElement("video")
 				setAttrs(video, {
 					src,
