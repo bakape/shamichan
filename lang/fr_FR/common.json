@@ -1,0 +1,124 @@
+{
+	"forms": {
+		"nonLive": [
+			"Différé",
+			"Désactive la synchronisation en direct des messages"
+		]
+	},
+	"plurals": {
+		"day": [
+			"jour",
+			"jours"
+		],
+		"hour": [
+			"heure",
+			"heures"
+		],
+		"image": [
+			"image",
+			"images"
+		],
+		"minute": [
+			"minute",
+			"minutes"
+		],
+		"month": [
+			"mois",
+			"mois"
+		],
+		"post": [
+			"message",
+			"messages"
+		],
+		"year": [
+			"année",
+			"années"
+		]
+	},
+	"posts": {
+		"admin": "Administrateur",
+		"ago": "Il y a",
+		"and": "et",
+		"anon": "Anonyme",
+		"banned": "L'UTILISATEUR A ÉTÉ BANNI POUR CE MESSAGE",
+		"contractImages": "Réduire les images",
+		"deleteBySameIP": "IP : tout supprimer",
+		"expand": "Rejoindre",
+		"expandImages": "Étendre les images",
+		"hide": "Cacher",
+		"in": "dans",
+		"janitors": "Concierge",
+		"justNow": "à l'instant",
+		"moderators": "Modérateur",
+		"omitted": "ignorés",
+		"owners": "Propriétaire",
+		"seeAll": "Tout voir",
+		"show": "Afficher",
+		"spoiler": "Spoiler",
+		"toggleSticky": "Épingler",
+		"viewBySameIP": "IP : voir",
+		"you": "(Vous)"
+	},
+	"sync": [
+		"Déconnecté",
+		"Connexion",
+		"Synchro...",
+		"Direct",
+		"Déconnecté"
+	],
+	"time": {
+		"calendar": [
+			"Jan",
+			"Fév",
+			"Mar",
+			"Avr",
+			"Mai",
+			"Juin",
+			"Juil",
+			"Aoû",
+			"Sep",
+			"Oct",
+			"Nov",
+			"Déc"
+		],
+		"week": [
+			"Dim",
+			"Lun",
+			"Mar",
+			"Mer",
+			"Jeu",
+			"Ven",
+			"Sam"
+		]
+	},
+	"ui": {
+		"bottom": "Bas",
+		"cancel": "Annuler",
+		"catalog": "Catalogue",
+		"confirmDelete": "Supprimer tous les messages de cette IP ?",
+		"finished": "Terminé",
+		"googleSong": "Click to google song",
+		"importCorrupt": "L'importation a échoué pour cause de fichier corrompu.",
+		"importDone": "L'importation a réussi. La page va maintenant être rechargée.",
+		"invalidCaptcha": "Captcha incorrect",
+		"last": "derniers",
+		"lockThread": "Verrouiller",
+		"lockedToBottom": "Fixé au bas",
+		"mustMatch": "Les mots de passe doivent correspondre",
+		"newThread": "Nouveau sujet",
+		"postsImages": "Messages / Images / TTL",
+		"quoted": "Vous avez été cité",
+		"refresh": "Actualiser",
+		"reply": "Répondre",
+		"report": "Signaler",
+		"return": "Retour",
+		"rules": "Règles",
+		"sessionExpired": "La session a expiré",
+		"showNotice": "Infos",
+		"submit": "Envoyer",
+		"thumbnailing": "Miniaturisation...",
+		"top": "Haut",
+		"unfinishedPost": "Vous avez un message inachevé",
+		"uploadProgress": "téléchargé..."
+	}
+}
