@@ -201,6 +201,24 @@ var specs = map[string][]inputSpec{
 		},
 		{ID: "captcha"},
 		{
+			ID:       "charScore",
+			Type:     _number,
+			Min:      0,
+			Required: true,
+		},
+		{
+			ID:       "postCreationScore",
+			Type:     _number,
+			Min:      0,
+			Required: true,
+		},
+		{
+			ID:       "imageScore",
+			Type:     _number,
+			Min:      0,
+			Required: true,
+		},
+		{
 			ID:       "sessionExpiry",
 			Type:     _number,
 			Min:      1,

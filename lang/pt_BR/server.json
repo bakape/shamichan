@@ -44,6 +44,10 @@
 			"Captcha",
 			"Ask users to complete a captcha for certain tasks like registration and thread creation"
 		],
+		"charScore": [
+			"Character spam score",
+			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
+		],
 		"customCSS": [
 			"",
 			"User-defined CSS rules loaded on top of the selected theme"
@@ -152,6 +156,10 @@
 			"Image root override",
 			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
 		],
+		"imageScore": [
+			"Image spam score",
+			"Antispam weight of posting an image. After exceeding the limit the user will need to solve a captcha."
+		],
 		"import": [
 			"Importar",
 			"Importar opções de arquivo"
@@ -247,6 +255,10 @@
 		"password": [
 			"Password",
 			""
+		],
+		"postCreationScore": [
+			"Post creation spam score",
+			"Antispam weight of creating a new post. After exceeding the limit the user will need to solve a captcha."
 		],
 		"postInlineExpand": [
 			"Inline Post Link Expansion",

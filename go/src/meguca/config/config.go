@@ -43,15 +43,18 @@ var (
 
 	// Defaults contains the default server configuration values
 	Defaults = Configs{
-		BoardExpiry:   7,
-		JPEGQuality:   90,
-		MaxHeight:     6000,
-		MaxWidth:      6000,
-		SessionExpiry: 30,
-		Salt:          "LALALALALALALALALALALALALALALALALALALALA",
-		FeedbackEmail: "admin@email.com",
-		RootURL:       "http://localhost",
-		FAQ:           defaultFAQ,
+		BoardExpiry:       7,
+		JPEGQuality:       90,
+		MaxHeight:         6000,
+		MaxWidth:          6000,
+		SessionExpiry:     30,
+		Salt:              "LALALALALALALALALALALALALALALALALALALALA",
+		FeedbackEmail:     "admin@email.com",
+		RootURL:           "http://localhost",
+		FAQ:               defaultFAQ,
+		CharScore:         170,
+		PostCreationScore: 20000,
+		ImageScore:        20000,
 		Public: Public{
 			DefaultCSS:      "moe",
 			DefaultLang:     "en_GB",

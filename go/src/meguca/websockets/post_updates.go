@@ -9,7 +9,6 @@ import (
 	"meguca/db"
 	"meguca/parser"
 	"meguca/util"
-	"time"
 	"unicode"
 	"unicode/utf8"
 )
@@ -116,7 +115,7 @@ func (c *Client) appendRune(data []byte) (err error) {
 // n specifies the number of characters updated.
 func (c *Client) updateBody(msg []byte, n int) error {
 	c.feed.SetOpenBody(c.post.id, c.post.body, msg)
-	err := c.incrementSpamScore(time.Duration(n) * auth.CharScore)
+	err := c.incrementSpamScore(uint(n) * config.Get().CharScore)
 	if err != nil {
 		return err
 	}
@@ -125,7 +124,7 @@ func (c *Client) updateBody(msg []byte, n int) error {
 
 // Increment the spam score for this IP by score. If the client requires a new
 // solved captcha, send a notification.
-func (c *Client) incrementSpamScore(score time.Duration) error {
+func (c *Client) incrementSpamScore(score uint) error {
 	exceeds, err := auth.IncrementSpamScore(c.ip, score)
 	if err != nil {
 		return err
@@ -397,7 +396,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 	}
 	c.feed.InsertImage(c.post.id, *img, msg)
 
-	return c.incrementSpamScore(auth.ImageScore)
+	return c.incrementSpamScore(config.Get().ImageScore)
 }
 
 // Spoiler an already inserted image in an unclosed post

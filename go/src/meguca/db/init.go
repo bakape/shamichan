@@ -93,29 +93,10 @@ var upgrades = []func(*sql.Tx) error{
 	},
 	// Set default expiry configs, to keep all threads from deleting
 	func(tx *sql.Tx) (err error) {
-		var s string
-		err = tx.QueryRow("SELECT val FROM main WHERE id = 'config'").Scan(&s)
-		if err != nil {
-			return
-		}
-		conf, err := decodeConfigs(s)
-		if err != nil {
-			return
-		}
-
-		conf.ThreadExpiryMin = config.Defaults.ThreadExpiryMin
-		conf.ThreadExpiryMax = config.Defaults.ThreadExpiryMax
-		buf, err := json.Marshal(conf)
-		if err != nil {
-			return
-		}
-		_, err = tx.Exec(
-			`UPDATE main
-				SET val = $1
-				WHERE id = 'config'`,
-			string(buf),
-		)
-		return
+		return patchConfigs(tx, func(conf *config.Configs) {
+			conf.ThreadExpiryMin = config.Defaults.ThreadExpiryMin
+			conf.ThreadExpiryMax = config.Defaults.ThreadExpiryMax
+		})
 	},
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
@@ -391,6 +372,13 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		return patchConfigs(tx, func(conf *config.Configs) {
+			conf.CharScore = config.Defaults.CharScore
+			conf.PostCreationScore = config.Defaults.PostCreationScore
+			conf.ImageScore = config.Defaults.ImageScore
+		})
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
@@ -570,4 +558,31 @@ func ClearTables(tables ...string) error {
 		}
 	}
 	return nil
+}
+
+// Patches server configuration during upgrades
+func patchConfigs(tx *sql.Tx, fn func(*config.Configs)) (err error) {
+	var s string
+	err = tx.QueryRow("SELECT val FROM main WHERE id = 'config'").Scan(&s)
+	if err != nil {
+		return
+	}
+	conf, err := decodeConfigs(s)
+	if err != nil {
+		return
+	}
+
+	fn(&conf)
+
+	buf, err := json.Marshal(conf)
+	if err != nil {
+		return
+	}
+	_, err = tx.Exec(
+		`UPDATE main
+			SET val = $1
+			WHERE id = 'config'`,
+		string(buf),
+	)
+	return
 }

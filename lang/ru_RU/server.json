@@ -44,6 +44,10 @@
 			"Капча",
 			"Заставлять пользователей вводить капчу для некоторых действий, например при регистрации и создании треда"
 		],
+		"charScore": [
+			"Character spam score",
+			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
+		],
 		"customCSS": [
 			"",
 			"Определяемые пользователем CSS-правила, применяемые поверх выбранной темы"
@@ -152,6 +156,10 @@
 			"Нестандартный хост изображений",
 			"Для размещения изображений на отдельном хосте (например для CDN) введите его полный адрес, например «https://images.meguca.org»"
 		],
+		"imageScore": [
+			"Image spam score",
+			"Antispam weight of posting an image. After exceeding the limit the user will need to solve a captcha."
+		],
 		"import": [
 			"Импорт",
 			"Импорт настроек из файла"
@@ -247,6 +255,10 @@
 		"password": [
 			"Пароль",
 			""
+		],
+		"postCreationScore": [
+			"Post creation spam score",
+			"Antispam weight of creating a new post. After exceeding the limit the user will need to solve a captcha."
 		],
 		"postInlineExpand": [
 			"Раскрытие ссылок на посты",

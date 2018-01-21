@@ -7,18 +7,6 @@ import (
 	"time"
 )
 
-// Score values of various actions
-const (
-	// Single character update
-	CharScore = time.Minute / 350
-
-	// Post creation
-	PostCreationScore = time.Second * 20
-
-	// Image insertion score
-	ImageScore = time.Second * 20
-)
-
 var (
 	// The poster is almost certainly spamming
 	ErrSpamDected = errors.New("spam detected")
@@ -99,7 +87,7 @@ func (s *spamCounter) canPost() bool {
 
 // Increment spam detection score, after performing an action.
 // Returns, if the limit was exceeded.
-func (s *spamCounter) increment(by time.Duration) (bool, error) {
+func (s *spamCounter) increment(by uint) (bool, error) {
 	now := time.Now()
 	s.Lock()
 	defer s.Unlock()
@@ -108,7 +96,7 @@ func (s *spamCounter) increment(by time.Duration) (bool, error) {
 	if now.Sub(s.counter) > time.Minute {
 		s.init()
 	}
-	s.counter = s.counter.Add(by)
+	s.counter = s.counter.Add(time.Duration(by) * time.Millisecond)
 
 	if s.counter.Sub(now) > time.Minute*10 {
 		// This surely is not done by normal human interaction
@@ -133,7 +121,7 @@ func CanPost(ip string) bool {
 
 // Increment spam detection score to an IP, after performing an action.
 // Returns, if the limit was exceeded.
-func IncrementSpamScore(ip string, score time.Duration) (bool, error) {
+func IncrementSpamScore(ip string, score uint) (bool, error) {
 	if !config.Get().Captcha {
 		return false, nil
 	}

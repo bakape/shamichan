@@ -262,9 +262,10 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 	c.feed.InsertPost(post.StandalonePost, c.post.body, msg)
 
-	score := auth.PostCreationScore + auth.CharScore*time.Duration(c.post.len)
+	conf := config.Get()
+	score := conf.PostCreationScore + conf.CharScore*uint(c.post.len)
 	if post.Image != nil {
-		score += auth.ImageScore
+		score += conf.ImageScore
 	}
 	return c.incrementSpamScore(score)
 }
