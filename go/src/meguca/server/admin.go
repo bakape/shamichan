@@ -498,15 +498,10 @@ func ban(w http.ResponseWriter, r *http.Request) {
 	// Apply bans
 	expires := time.Now().Add(time.Duration(msg.Duration) * time.Minute)
 	for board, ids := range byBoard {
-		ips, err := db.Ban(board, msg.Reason, creds.UserID, expires, ids...)
+		err := db.Ban(board, msg.Reason, creds.UserID, expires, ids...)
 		if err != nil {
 			text500(w, r, err)
 			return
-		}
-
-		// Disconnect all banned clients on affected board
-		for ip := range ips {
-			auth.DisconnectBannedIP(ip, board)
 		}
 	}
 }

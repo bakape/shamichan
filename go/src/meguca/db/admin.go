@@ -26,23 +26,27 @@ func init() {
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
 // banned IPs.
 func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
-	ips map[string]uint64, err error,
+	err error,
 ) {
 	type post struct {
 		id, op uint64
 	}
 
 	// Retrieve matching posts
-	ips = make(map[string]uint64, len(ids))
-	posts := make([]post, 0, len(ids))
+	var (
+		ips   = make(map[string]uint64, len(ids))
+		posts = make([]post, 0, len(ids))
+		ip    string
+	)
 	for _, id := range ids {
-		ip, err := GetIP(id)
+		ip, err = GetIP(id)
 		switch err {
 		case nil:
 		case sql.ErrNoRows:
+			err = nil
 			continue
 		default:
-			return nil, err
+			return
 		}
 		ips[ip] = id
 		posts = append(posts, post{id: id})
@@ -82,6 +86,10 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 	if len(ips) != 0 {
 		_, err = db.Exec(`notify bans_updated`)
 	}
+	for ip, _ := range ips {
+		auth.DisconnectBannedIP(ip, board)
+	}
+
 	return
 }
 
