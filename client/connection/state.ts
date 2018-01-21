@@ -183,7 +183,9 @@ connSM.wildAct(connEvent.close, event => {
 	const wait = 500 * Math.pow(1.5, Math.min(Math.floor(++attempts / 2), 12))
 	setTimeout(connSM.feeder(connEvent.retry), wait)
 
-	return connState.dropped
+	return connSM.state === connState.desynced
+		? connState.desynced
+		: connState.dropped
 })
 
 connSM.act(connState.dropped, connEvent.retry, () => {

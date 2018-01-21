@@ -335,7 +335,8 @@ void init_connectivity()
 
     conn_SM->wild_act(ConnEvent::close, []() {
         render_status(SyncStatus::disconnected);
-        return ConnState::dropped;
+        return conn_SM->state() == ConnState::desynced ? ConnState::desynced
+                                                       : ConnState::dropped;
     });
 
     // schedule_reconnect() is called even on a dropped -> dropped "transition",
