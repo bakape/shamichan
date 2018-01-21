@@ -9,6 +9,7 @@ import (
 	"meguca/db"
 	"meguca/parser"
 	"meguca/util"
+	"time"
 	"unicode"
 	"unicode/utf8"
 )
@@ -222,14 +223,16 @@ func (c *Client) _closePost() (err error) {
 	return
 }
 
-func CheckRouletteBan(commands []common.Command, board string, id uint64) (err error) {
-	// Meme ban if the poster lost at #roulette
+// Meme ban if the poster lost at #roulette
+func CheckRouletteBan(commands []common.Command, board string, id uint64) (
+	err error,
+) {
 	for _, command := range commands {
 		if command.Type == common.Roulette {
 			if command.Roulette[0] == 1 {
-				// don't bother error checking
-				_, err = db.Ban(board, "lost at #roulette", "system", time.Now().Add(time.Second*30), id)
-				break
+				_, err = db.Ban(board, "lost at #roulette", "system",
+					time.Now().Add(time.Second*30), id)
+				return
 			}
 		}
 	}
