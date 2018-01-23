@@ -157,7 +157,7 @@ func CreatePost(
 
 	// Post must have either at least one character or an image to be allocated
 	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
-	if !hasMeaningfulText([]byte(req.Body)) && !hasImage {
+	if !req.Open && !hasMeaningfulText([]byte(req.Body)) && !hasImage {
 		err = errNoTextOrImage
 		return
 	}
