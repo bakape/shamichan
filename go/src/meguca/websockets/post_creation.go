@@ -138,6 +138,7 @@ func CreatePost(
 	if auth.IsBanned(board, ip) {
 		err = auth.ErrBanned
 		return
+
 	}
 	if needCaptcha {
 		if !auth.AuthenticateCaptcha(req.Captcha, ip) {
@@ -156,7 +157,7 @@ func CreatePost(
 
 	// Post must have either at least one character or an image to be allocated
 	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
-	if !req.Open && !hasMeaningfulText([]byte(req.Body)) && !hasImage {
+	if req.Body == "" && !hasImage {
 		err = errNoTextOrImage
 		return
 	}
@@ -224,18 +225,6 @@ func CreatePost(
 
 	err = tx.Commit()
 	return
-}
-
-// Return, if text has any chars aside from whitespace and formating
-func hasMeaningfulText(s []byte) bool {
-	for _, r := range s {
-		switch r {
-		case '\t', '\n', '\v', '\f', '\r', ' ', 0x85, 0xA0, '_', '`', '~', '*':
-		default:
-			return true
-		}
-	}
-	return false
 }
 
 // Insert a new post into the database

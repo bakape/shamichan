@@ -10,6 +10,7 @@ import (
 	"meguca/parser"
 	"meguca/util"
 	"time"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -162,7 +163,7 @@ func (c *Client) backspace() error {
 	return c.updateBody(msg, 1)
 }
 
-// Close an open post and parse the text body, if needed
+// Close an open post and parse the last line, if needed.
 func (c *Client) closePost(data []byte) (err error) {
 	if c.post.id == 0 {
 		return errNoPostOpen
@@ -184,37 +185,39 @@ func (c *Client) closePost(data []byte) (err error) {
 
 // Used to close posts internally without parsing a message
 func (c *Client) _closePost() (err error) {
-	if !hasMeaningfulText(c.post.body) {
-		err = c.clearText()
-		if err != nil {
-			return
-		}
-	}
-	if c.post.len == 0 && !c.post.hasImage {
-		err = c.clearPost()
-		if err != nil {
-			return
-		}
-	}
-
 	var (
 		links [][2]uint64
 		com   []common.Command
 	)
+
 	if c.post.len != 0 {
-		links, com, err = parser.ParseBody(c.post.body, c.post.board)
-		if err != nil {
-			return
+		// If post has noting but whitespace, remove all text
+		hasText := false
+		for _, r := range c.post.body {
+			if !unicode.IsSpace(rune(r)) {
+				hasText = true
+				break
+			}
+		}
+		if !hasText {
+			err = c.clearText()
+			if err != nil {
+				return
+			}
+		} else {
+			links, com, err = parser.ParseBody(c.post.body, c.post.board)
+			if err != nil {
+				return
+			}
 		}
 	}
+
 	err = db.ClosePost(c.post.id, c.post.op, string(c.post.body), links, com)
 	if err != nil {
 		return
 	}
+
 	err = CheckRouletteBan(com, c.post.board, c.post.id)
-	if err != nil {
-		return
-	}
 
 	c.post = openPost{}
 	return
