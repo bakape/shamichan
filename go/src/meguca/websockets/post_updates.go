@@ -10,7 +10,6 @@ import (
 	"meguca/parser"
 	"meguca/util"
 	"time"
-	"unicode"
 	"unicode/utf8"
 )
 
@@ -191,15 +190,7 @@ func (c *Client) _closePost() (err error) {
 	)
 
 	if c.post.len != 0 {
-		// If post has noting but whitespace, remove all text
-		hasText := false
-		for _, r := range c.post.body {
-			if !unicode.IsSpace(rune(r)) && r != '\n' {
-				hasText = true
-				break
-			}
-		}
-		if !hasText {
+		if !hasMeaningfulText(c.post.body) {
 			err = c.clearText()
 			if err != nil {
 				return
