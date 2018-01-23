@@ -13,7 +13,6 @@ import (
 	"meguca/websockets/feeds"
 	"strings"
 	"time"
-	"unicode"
 	"unicode/utf8"
 
 	"github.com/bakape/mnemonics"
@@ -230,11 +229,8 @@ func CreatePost(
 // Return, if text has any chars aside from whitespace and formating
 func hasMeaningfulText(s []byte) bool {
 	for _, r := range s {
-		if unicode.IsSpace(rune(r)) {
-			return true
-		}
 		switch r {
-		case '_', '`', '~', '*':
+		case '\t', '\n', '\v', '\f', '\r', ' ', 0x85, 0xA0, '_', '`', '~', '*':
 		default:
 			return true
 		}
