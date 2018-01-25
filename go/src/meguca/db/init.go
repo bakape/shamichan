@@ -379,6 +379,20 @@ var upgrades = []func(*sql.Tx) error{
 			conf.ImageScore = config.Defaults.ImageScore
 		})
 	},
+	func(tx *sql.Tx) (err error) {
+		var rcount string
+		err = tx.QueryRow(
+			`SELECT COUNT(*) FROM mod_log WHERE board != 'all' AND by = 'system' AND type = 0`,
+		).Scan(&rcount)
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec(
+			`INSERT INTO main VALUES ('rcount', $1)`,
+			rcount,
+		)
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
