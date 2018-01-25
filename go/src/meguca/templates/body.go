@@ -478,6 +478,9 @@ func (c *bodyContext) parseCommands(bit string) {
 			formatting = "<strong class=\"dead\">"
 		}
 		c.state.iDice++
+	case "rcount":
+		inner = strconv.AppendUint(inner, val.Rcount, 10)
+		c.state.iDice++
 	default:
 		if strings.HasPrefix(bit, "sw") {
 			c.formatSyncwatch(val.SyncWatch)

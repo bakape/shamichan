@@ -99,6 +99,18 @@ func ResetRoulette() (err error) {
 	return
 }
 
+// GetRcount retrieves current roulette counter
+func GetRcount() (c uint64, err error) {
+	err = prepared["get_rcount"].QueryRow().Scan(&c)
+	return
+}
+
+// IncrementRcount increments the roulette counter by one
+func IncrementRcount() (err error) {
+	_, err = prepared["increment_rcount"].Exec()
+	return
+}
+
 func getExecutor(tx *sql.Tx, key string) executor {
 	if tx != nil {
 		return tx.Stmt(prepared[key])

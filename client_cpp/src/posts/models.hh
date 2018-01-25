@@ -91,7 +91,8 @@ public:
         sync_watch,
         pyu,
         pcount,
-        roulette
+        roulette,
+        rcount
     } typ;
 
     // Use typ, to get out the relevant value
@@ -101,6 +102,7 @@ public:
     std::vector<uint16_t> dice; // Result of dice throw
     std::string eight_ball; // Result of #8ball command
     unsigned int roulette[2]; // Result of #roulette command
+    unsigned long rcount; // Deaths from #roulette
 
     // Parse from JSON
     Command(nlohmann::json&);

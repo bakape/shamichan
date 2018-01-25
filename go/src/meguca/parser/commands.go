@@ -77,6 +77,11 @@ func parseCommand(match []byte, board string) (com common.Command, err error) {
 		}
 		com.Roulette = [2]uint8{roll, max}
 
+	// Return current roulette count
+	case bytes.Equal(match, []byte("rcount")):
+		com.Type = common.Rcount
+		com.Rcount, err = db.GetRcount()
+
 	default:
 		matchStr := string(match)
 

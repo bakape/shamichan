@@ -73,6 +73,8 @@ Command::Command(nlohmann::json& j)
     case Type::roulette:
         roulette[0] = val[0];
         roulette[1] = val[1];
+    case Type::rcount:
+        rcount = val;
         break;
     }
 }
