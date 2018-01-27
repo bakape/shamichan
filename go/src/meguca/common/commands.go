@@ -49,7 +49,6 @@ const (
 // Pyu: uint64
 // Pcount: uint64
 // Roulette: [2]uint8
-// Rcount: uint64
 type Command struct {
 	Type      CommandType
 	Flip      bool
