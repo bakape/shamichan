@@ -198,7 +198,7 @@ optional<Node> Post::parse_commands(string_view word)
     } else if (name == "8ball") {
         check_consumed;
         inner = val.eight_ball;
-    } else if (name == "pyu" || name == "pcount") {
+    } else if (name == "pyu" || name == "pcount" || name == "rcount") {
         check_consumed;
         inner = std::to_string(val.count);
     } else if (name == "roulette") {
@@ -207,9 +207,6 @@ optional<Node> Post::parse_commands(string_view word)
         if (val.roulette[0] == 1) {
             cls = "dead";
         }
-    } else if (name == "rcount") {
-        check_consumed;
-        inner = std::to_string(val.rcount);
     } else if (name == "sw") {
         return parse_syncwatch(word);
     } else {

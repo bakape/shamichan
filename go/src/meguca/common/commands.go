@@ -58,7 +58,6 @@ type Command struct {
 	Eightball string
 	Dice      []uint16
 	Roulette  [2]uint8
-	Rcount    uint64
 }
 
 // MarshalJSON implements json.Marshaler
@@ -78,7 +77,7 @@ func (c Command) MarshalEasyJSON(w *jwriter.Writer) {
 	switch c.Type {
 	case Flip:
 		w.Bool(c.Flip)
-	case Pyu, Pcount:
+	case Pyu, Pcount, Rcount:
 		w.Uint64(c.Pyu)
 	case SyncWatch:
 		w.RawByte('[')
@@ -109,8 +108,6 @@ func (c Command) MarshalEasyJSON(w *jwriter.Writer) {
 			w.Uint8(v)
 		}
 		w.RawByte(']')
-	case Rcount:
-		w.Uint64(c.Rcount)
 	}
 
 	w.RawByte('}')
@@ -153,7 +150,7 @@ func (c *Command) UnmarshalJSON(data []byte) error {
 		err = json.Unmarshal(data, &c.Roulette)
 	case Rcount:
 		c.Type = Rcount
-		err = json.Unmarshal(data, &c.Rcount)
+		err = json.Unmarshal(data, &c.Pyu)
 	default:
 		return fmt.Errorf("unknown command type: %d", typ)
 	}

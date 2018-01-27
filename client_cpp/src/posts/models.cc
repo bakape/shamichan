@@ -57,9 +57,8 @@ Command::Command(nlohmann::json& j)
         eight_ball = val;
         break;
     case Type::pyu:
-        count = val;
-        break;
     case Type::pcount:
+    case Type::rcount:
         count = val;
         break;
     case Type::sync_watch:
@@ -73,8 +72,6 @@ Command::Command(nlohmann::json& j)
     case Type::roulette:
         roulette[0] = val[0];
         roulette[1] = val[1];
-    case Type::rcount:
-        rcount = val;
         break;
     }
 }

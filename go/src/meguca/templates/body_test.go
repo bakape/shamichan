@@ -169,8 +169,8 @@ func TestRenderBody(t *testing.T) {
 			out:  "<strong>#rcount (2)</strong>",
 			commands: []common.Command{
 				{
-					Type:   common.Rcount,
-					Rcount: 2,
+					Type: common.Rcount,
+					Pyu:  2,
 				},
 			},
 		},

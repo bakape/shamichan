@@ -466,7 +466,7 @@ func (c *bodyContext) parseCommands(bit string) {
 	case "8ball":
 		inner = append(inner, val.Eightball...)
 		c.state.iDice++
-	case "pyu", "pcount":
+	case "pyu", "pcount", "rcount":
 		inner = strconv.AppendUint(inner, val.Pyu, 10)
 		c.state.iDice++
 	case "roulette":
@@ -477,9 +477,6 @@ func (c *bodyContext) parseCommands(bit string) {
 		if val.Roulette[0] == 1 {
 			formatting = "<strong class=\"dead\">"
 		}
-		c.state.iDice++
-	case "rcount":
-		inner = strconv.AppendUint(inner, val.Rcount, 10)
 		c.state.iDice++
 	default:
 		if strings.HasPrefix(bit, "sw") {
