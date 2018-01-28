@@ -42,7 +42,7 @@ class BoardNavigation extends View<null> {
 			</nav>`
 
 		this.el.innerHTML = html
-		document.querySelector("#banner").prepend(this.el)
+		document.getElementById("banner").prepend(this.el)
 	}
 
 	private togglePanel(el: Element) {
@@ -60,7 +60,7 @@ class BoardSelectionPanel extends View<null> {
 	private parentEl: Element
 
 	constructor(parentEl: Element) {
-		super({})
+		super({ class: "board-selection-panel" })
 		this.parentEl = parentEl
 		this.render()
 		this.onClick({
@@ -121,6 +121,9 @@ class BoardSelectionPanel extends View<null> {
 		}
 
 		this.parentEl.textContent = "-"
+		for (let el of document.querySelectorAll(".board-selection-panel")) {
+			el.remove()
+		}
 		panel.append(this.el)
 	}
 
