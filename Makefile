@@ -39,7 +39,7 @@ ifeq ($(DEBUG),1)
 	cp client_cpp/*.wast client_cpp/*.wasm.map www/wasm
 endif
 
-clean_wasm:
+wasm_clean:
 	$(MAKE) -C client_cpp clean
 
 watch:
@@ -79,7 +79,7 @@ update_deps:
 client_clean:
 	rm -rf www/js www/wasm www/css/*.css www/css/maps node_modules
 
-clean: client_clean clean_wasm clean_generated
+clean: client_clean wasm_clean clean_generated
 	rm -rf .build .ffmpeg .package go/pkg target meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 	$(MAKE) -C scripts/migration/3to4 clean
 ifeq ($(is_windows), true)
