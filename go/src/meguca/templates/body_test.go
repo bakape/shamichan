@@ -164,6 +164,17 @@ func TestRenderBody(t *testing.T) {
 			},
 		},
 		{
+			name: "#rcount",
+			in:   "#rcount",
+			out:  "<strong>#rcount (2)</strong>",
+			commands: []common.Command{
+				{
+					Type: common.Rcount,
+					Pyu:  2,
+				},
+			},
+		},
+		{
 			name: "single roll dice",
 			in:   "#d20",
 			out:  "<strong>#d20 (21)</strong>",

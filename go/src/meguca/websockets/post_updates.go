@@ -230,8 +230,23 @@ func CheckRouletteBan(commands []common.Command, board string, id uint64) (
 	for _, command := range commands {
 		if command.Type == common.Roulette {
 			if command.Roulette[0] == 1 {
-				return db.Ban(board, "lost at #roulette", "system",
+				tx, err := db.StartTransaction()
+				if err != nil {
+					return err
+				}
+				defer db.RollbackOnError(tx, &err)
+
+				err = db.Ban(board, "lost at #roulette", "system",
 					time.Now().Add(time.Second*30), id)
+				if err != nil {
+					return err
+				}
+				err = db.IncrementRcount()
+				if err != nil {
+					return err
+				}
+				err = tx.Commit()
+				return err
 			}
 		}
 	}

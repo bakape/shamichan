@@ -35,6 +35,9 @@ const (
 	// Russian Roulette, first poster has a 1/6 chance of dying, then 1/5, etc
 	// resets to 1/6 chance after someone dies
 	Roulette
+
+	// Rcount - number of bans handed out from #roulette
+	Rcount
 )
 
 // Command contains the type and value array of hash commands, such as dice
@@ -73,7 +76,7 @@ func (c Command) MarshalEasyJSON(w *jwriter.Writer) {
 	switch c.Type {
 	case Flip:
 		w.Bool(c.Flip)
-	case Pyu, Pcount:
+	case Pyu, Pcount, Rcount:
 		w.Uint64(c.Pyu)
 	case SyncWatch:
 		w.RawByte('[')
@@ -144,6 +147,9 @@ func (c *Command) UnmarshalJSON(data []byte) error {
 	case Roulette:
 		c.Type = Roulette
 		err = json.Unmarshal(data, &c.Roulette)
+	case Rcount:
+		c.Type = Rcount
+		err = json.Unmarshal(data, &c.Pyu)
 	default:
 		return fmt.Errorf("unknown command type: %d", typ)
 	}

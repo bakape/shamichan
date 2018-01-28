@@ -6,7 +6,8 @@ insert into main (id, val) values
 	('version', %d),
 	('config', '%s'),
 	('pyu', '0'),
-	('roulette', '6');
+	('roulette', '6'),
+	('rcount', '0');
 
 create table accounts (
 	id varchar(20) primary key,

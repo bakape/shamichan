@@ -58,9 +58,8 @@ Command::Command(nlohmann::json& j)
         eight_ball = val;
         break;
     case Type::pyu:
-        count = val;
-        break;
     case Type::pcount:
+    case Type::rcount:
         count = val;
         break;
     case Type::sync_watch:

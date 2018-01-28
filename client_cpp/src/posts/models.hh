@@ -99,7 +99,8 @@ public:
         sync_watch,
         pyu,
         pcount,
-        roulette
+        roulette,
+        rcount
     } typ;
 
     // Use typ, to get out the relevant value
