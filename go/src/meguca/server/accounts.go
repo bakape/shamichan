@@ -8,6 +8,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -89,7 +90,7 @@ func commitLogin(w http.ResponseWriter, r *http.Request, userID string) {
 		Add(time.Duration(config.Get().SessionExpiry)*time.Hour*24 - time.Hour)
 	http.SetCookie(w, &http.Cookie{
 		Name:    "loginID",
-		Value:   userID,
+		Value:   url.QueryEscape(userID),
 		Path:    "/",
 		Expires: expires,
 	})
@@ -264,7 +265,7 @@ func extractLoginCreds(r *http.Request) (creds auth.SessionCreds) {
 		creds.Session = c.Value
 	}
 	if c, err := r.Cookie("loginID"); err == nil {
-		creds.UserID = strings.TrimSpace(c.Value)
+		creds.UserID, _ = url.QueryUnescape(strings.TrimSpace(c.Value))
 	}
 	return
 }
