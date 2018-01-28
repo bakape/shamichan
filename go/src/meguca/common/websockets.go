@@ -63,6 +63,9 @@ var (
 	// GetByIPAndBoard retrieves all Clients that match the passed IP on a board
 	GetByIPAndBoard func(ip, board string) []Client
 
+	// Return connected clients with matching ip
+	GetClientsByIp func(ip string) []Client
+
 	// SendTo sends a message to a feed, if it exists
 	SendTo func(id uint64, msg []byte)
 

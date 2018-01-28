@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"meguca/common"
 	"meguca/config"
 	"sync"
 	"time"
@@ -119,13 +120,30 @@ func CanPost(ip string) bool {
 	return spamCounters.get(ip).canPost()
 }
 
-// Increment spam detection score to an IP, after performing an action.
-// Returns, if the limit was exceeded.
-func IncrementSpamScore(ip string, score uint) (bool, error) {
+// Increment spam detection score to an IP, after performing an action and send
+// captcha requests, if score exceeded.
+func IncrementSpamScore(ip string, score uint) (err error) {
 	if !config.Get().Captcha {
-		return false, nil
+		return
 	}
-	return spamCounters.get(ip).increment(score)
+	exceeds, err := spamCounters.get(ip).increment(score)
+	if err != nil {
+		return
+	}
+
+	// Send captcha request to all connected clients
+	if exceeds {
+		var msg []byte
+		msg, err = common.EncodeMessage(common.MessageCaptcha, 0)
+		if err != nil {
+			return
+		}
+		for _, cl := range common.GetClientsByIp(ip) {
+			cl.Send(msg)
+		}
+	}
+
+	return
 }
 
 // Reset a spam score to zero by IP

@@ -126,14 +126,7 @@ func (c *Client) updateBody(msg []byte, n int) error {
 // Increment the spam score for this IP by score. If the client requires a new
 // solved captcha, send a notification.
 func (c *Client) incrementSpamScore(score uint) error {
-	exceeds, err := auth.IncrementSpamScore(c.ip, score)
-	if err != nil {
-		return err
-	}
-	if exceeds {
-		return c.sendMessage(common.MessageCaptcha, 0)
-	}
-	return nil
+	return auth.IncrementSpamScore(c.ip, score)
 }
 
 // Remove one character from the end of the line in the open post
