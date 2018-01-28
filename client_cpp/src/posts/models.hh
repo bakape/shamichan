@@ -36,13 +36,21 @@ enum class FileType : uint8_t {
 
 // Maps file_type to the appropriate file extension
 const static std::unordered_map<FileType, std::string> file_extentions = {
-    { FileType::jpg, "jpg" }, { FileType::png, "png" },
-    { FileType::gif, "gif" }, { FileType::webm, "webm" },
-    { FileType::pdf, "pdf" }, { FileType::svg, "svg" },
-    { FileType::mp4, "mp4" }, { FileType::mp3, "mp3" },
-    { FileType::ogg, "ogg" }, { FileType::zip, "zip" }, { FileType::_7z, "7z" },
-    { FileType::targz, "tar.gz" }, { FileType::tarxz, "tar.xz" },
-    { FileType::flac, "flac" }, { FileType::txt, "txt" },
+    { FileType::jpg, "jpg" },
+    { FileType::png, "png" },
+    { FileType::gif, "gif" },
+    { FileType::webm, "webm" },
+    { FileType::pdf, "pdf" },
+    { FileType::svg, "svg" },
+    { FileType::mp4, "mp4" },
+    { FileType::mp3, "mp3" },
+    { FileType::ogg, "ogg" },
+    { FileType::zip, "zip" },
+    { FileType::_7z, "7z" },
+    { FileType::targz, "tar.gz" },
+    { FileType::tarxz, "tar.xz" },
+    { FileType::flac, "flac" },
+    { FileType::txt, "txt" },
 };
 
 class Image {
@@ -215,6 +223,10 @@ public:
     // If the post is currently inlined into another post, this method will
     // delegate the patch to the topmost parent.
     void patch();
+
+    // Remove a post from global collection and it's associated DOM element,
+    // if any
+    void remove();
 
     // Check if this post replied to one of the user's posts and trigger
     // handlers.

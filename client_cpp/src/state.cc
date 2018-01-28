@@ -4,7 +4,6 @@
 #include "lang.hh"
 #include "options/options.hh"
 #include "page/page.hh"
-#include "posts/hide.hh"
 #include "posts/models.hh"
 #include "util.hh"
 #include <array>
@@ -93,8 +92,6 @@ void load_posts(std::string_view data)
             posts->at(target_id).backlinks = std::move(data);
         }
     }
-
-    recurse_hidden_posts();
 }
 
 void load_state()

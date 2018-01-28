@@ -12,29 +12,27 @@ void init_navigation()
         history.scrollRestoration = 'manual';
         document.addEventListener("click",
             function(e) {
-                if (e.which != 1 || e.ctrlKey) {
+                var t = e.target;
+                if (e.which != 1 || e.ctrlKey || t.tagName != 'A'
+                    || t.getAttribute('target') == '_blank'
+                    || t.getAttribute('download')
+                    || !t.href.startsWith(location.origin)) {
                     return;
                 }
-                var t = e.target;
-                if (t.tagName == 'A' && t.getAttribute('target') != '_blank'
-                    && !t.getAttribute('download')
-                    && t.href.startsWith(location.origin)) {
-
-                    switch (t.getAttribute('href')) {
-                    case '#bottom':
-                    case '#top':
-                        location.hash = t.getAttribute('href');
-                        return;
-                    }
-
-                    if (t.classList.contains('post-link')
-                        && localStorage.getItem('postInlineExpand') == 'true') {
-                        return;
-                    }
-
-                    Module.try_navigate_page(
-                        t.href.slice(location.origin.length));
+                switch (t.getAttribute('href')) {
+                case '#bottom':
+                case '#top':
+                    location.hash = t.getAttribute('href');
+                    return;
                 }
+                if (t.classList.contains('post-link')) {
+                    if (t.classList.contains("strikethrough")
+                        || localStorage.getItem('postInlineExpand') == 'true') {
+                        return;
+                    }
+                }
+
+                Module.try_navigate_page(t.href.slice(location.origin.length));
             },
             { passive : true });
     });

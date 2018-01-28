@@ -2,9 +2,11 @@
 #include "../../brunhild/util.hh"
 #include "../connection/sync.hh"
 #include "../lang.hh"
+#include "../posts/hide.hh"
 #include "../state.hh"
 #include "../util.hh"
 #include "board.hh"
+#include "scroll.hh"
 #include "thread.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
@@ -16,10 +18,22 @@ using std::string;
 
 void render_page()
 {
+    recurse_hidden_posts();
+
     if (page->thread) {
         render_thread();
     } else {
         render_board();
+    }
+
+    if (page->post) {
+        scroll_to_post(page->post);
+    } else {
+        const string s
+            = emscripten::val::global("location")["hash"].as<string>();
+        if (s == "#top" || s == "#bottom") {
+            brunhild::scroll_into_view(s.substr(1));
+        }
     }
 
     // TODO: Hide loading image
@@ -43,7 +57,8 @@ void set_title(string t) { brunhild::set_inner_html("page-title", t); }
 static Node render_hover_reveal(string tag, string label, string text)
 {
     Node n{
-        tag, { { "class", "hover-reveal" } },
+        tag,
+        { { "class", "hover-reveal" } },
         {
             { "span", { { "class", "act" } }, label },
             { "span", { { "class", "popup-menu glass" } }, text, true },

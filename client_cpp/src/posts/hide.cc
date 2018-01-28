@@ -1,48 +1,55 @@
 #include "../options/options.hh"
 #include "../state.hh"
 #include "models.hh"
+#include <unordered_set>
 
-// Set posts linking this post as hidden, but do not persist this.
-// If patch = true, patch changes on hidden posts.
-static void set_linking_hidden(
-    const std::map<unsigned long, LinkData>& backlinks, bool patch = false)
+// Recursively gather links of posts linking to the parent post
+static void recurse_backlinks(
+    const std::map<unsigned long, LinkData>& backlinks,
+    std::unordered_set<unsigned long>& to_hide)
 {
     for (auto & [ id, _ ] : backlinks) {
         // Skip posts already marked as hidden. Those will have or have already
         // had posts linking them marked recursively by other calls
         if (!post_ids->hidden.count(id) && posts->count(id)) {
             post_ids->hidden.insert(id);
-            auto& target = posts->at(id);
-            if (patch) {
-                target.patch();
-            }
-            set_linking_hidden(target.backlinks);
+            to_hide.insert(id);
+            recurse_backlinks(posts->at(id).backlinks, to_hide);
         }
     }
 }
 
 void recurse_hidden_posts()
 {
-    if (!options->hide_recursively) {
-        return;
+    std::unordered_set<unsigned long> to_hide;
+
+    const bool recurse = options->hide_recursively;
+    for (auto const & [ id, p ] : *posts) {
+        if (post_ids->hidden.count(id)) {
+            to_hide.insert(id);
+            if (recurse) {
+                recurse_backlinks(p.backlinks, to_hide);
+            }
+        }
     }
 
-    for (auto const & [ _, p ] : *posts) {
-        if (post_ids->hidden.count(p.id)) {
-            set_linking_hidden(p.backlinks);
-        }
+    for (auto id : to_hide) {
+        posts->erase(id);
     }
 }
 
 void hide_recursively(Post& post)
 {
-    if (post_ids->hidden.count(post.id)) { // Already hidden
-        return;
+    std::unordered_set<unsigned long> to_hide;
+    post_ids->hidden.insert(post.id);
+    if (options->hide_recursively) {
+        recurse_backlinks(post.backlinks, to_hide);
     }
 
-    post_ids->hidden.insert(post.id);
-    post.patch();
-    if (options->hide_recursively) {
-        set_linking_hidden(post.backlinks, true);
+    post.remove();
+    for (auto id : to_hide) {
+        if (posts->count(id)) {
+            posts->at(id).remove();
+        }
     }
 }

@@ -1,4 +1,5 @@
 #include "models.hh"
+#include "../../brunhild/mutations.hh"
 #include "../state.hh"
 #include "hide.hh"
 #include <sstream>
@@ -165,6 +166,16 @@ void Post::patch()
     }
 
     VirtualView::patch(render());
+}
+
+void Post::remove()
+{
+    if (inlined_into) {
+        posts->at(inlined_into).patch();
+    } else {
+        brunhild::remove('p' + std::to_string(id));
+    }
+    posts->erase(id);
 }
 
 void Post::propagate_links()

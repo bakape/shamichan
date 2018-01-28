@@ -45,7 +45,8 @@ static optional<Node> render_omitted(unsigned long id)
       << pluralize(image_omit, "image") << ' ' << lang->posts.at("omitted");
     return {
         {
-            "span", { { "class", "omit spaced" } },
+            "span",
+            { { "class", "omit spaced" } },
             // Disambiguate constructor
             brunhild::Children({
                 { "span", s.str() },
@@ -58,11 +59,6 @@ static optional<Node> render_omitted(unsigned long id)
 Node Post::render()
 {
     Node n("article", { { "id", 'p' + std::to_string(id) } });
-    if (post_ids->hidden.count(id)
-        || (!editing && !body.size() && !image && id != op)) {
-        n.attrs["class"] = "hidden";
-        return n; // No need to do useless work
-    }
     n.children.reserve(4);
 
     n.attrs["class"] = "glass";

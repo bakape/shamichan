@@ -16,8 +16,5 @@ int main()
     init_posts();
     init_navigation();
     init_scrolling();
-    if (page->post) {
-        scroll_to_post(page->post);
-    }
     return 0;
 }

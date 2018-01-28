@@ -93,7 +93,7 @@ void open_db(WaitGroup* wg)
 
                             var range = IDBKeyRange.upperBound(Date.now());
                             var req = t.objectStore(name)
-                                          .index("expires")
+                                          .index('expires')
                                           .openCursor(range);
                             req.onerror = handle_db_error;
                             req.onsuccess = function(event)
@@ -129,10 +129,11 @@ void load_post_ids()
 
     EM_ASM_INT(
         {
-            var left = $1 * postStores.length;
+            var left = 0;
 
             for (var i = 0; i < $1; i++) {
                 var id = getValue($0 + i * 8, 'i64');
+                left += postStores.length;
                 for (var j = 0; j < postStores.length; j++) {
                     read(id, j, postStores[j]);
                 }
@@ -143,11 +144,11 @@ void load_post_ids()
             function read(op, typ, name)
             {
                 var ids = new Module.VectorUint64();
-                var t = db.transaction(name, "readonly");
+                var t = db.transaction(name, 'readonly');
                 t.onerror = handle_db_error;
 
                 var range = IDBKeyRange.bound(op, op);
-                var req = t.objectStore(name).index("op").openCursor(range);
+                var req = t.objectStore(name).index('op').openCursor(range);
                 req.onerror = handle_db_error;
                 req.onsuccess = function(event)
                 {
