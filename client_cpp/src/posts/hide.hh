@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../posts/models.hh"
+
 // Remove all hidden posts from post collection.
 // If recursive post hiding is enabled, recursively scan post list and remove
 // all posts, that link hidden posts
