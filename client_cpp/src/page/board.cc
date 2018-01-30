@@ -143,8 +143,10 @@ static Node render_thread_form()
 {
     Node form("form",
         {
-            { "id", "new-thread-form" }, { "action", "/api/create-thread" },
-            { "method", "post" }, { "enctype", "multipart/form-data" },
+            { "id", "new-thread-form" },
+            { "action", "/api/create-thread" },
+            { "method", "post" },
+            { "enctype", "multipart/form-data" },
             { "class", "hidden" },
         });
     form.children.reserve(10);
@@ -153,7 +155,8 @@ static Node render_thread_form()
     if (page->board == "all") {
         Node sel("select",
             {
-                { "name", "board" }, { "required", "" },
+                { "name", "board" },
+                { "required", "" },
             });
         sel.children.reserve(board_titles->size());
         for (auto & [ board, title ] : *board_titles) {
@@ -172,8 +175,10 @@ static Node render_thread_form()
         form.children.push_back({
             "input",
             {
-                { "type", "text" }, { "name", "board" },
-                { "value", page->board }, { "hidden", "" },
+                { "type", "text" },
+                { "name", "board" },
+                { "value", page->board },
+                { "hidden", "" },
             },
         });
     }
@@ -181,13 +186,15 @@ static Node render_thread_form()
     // Live post editing toggle for thread
     auto & [ label, title ] = lang->forms.at("nonLive");
     form.children.push_back({
-        "label", { { "title", title } },
+        "label",
+        { { "title", title } },
         {
             {
                 "input",
                 []() {
                     brunhild::Attrs attrs({
-                        { "type", "checkbox" }, { "name", "nonLive" },
+                        { "type", "checkbox" },
+                        { "name", "nonLive" },
                     });
                     if (board_config->non_live) {
                         attrs["checked"] = "";
@@ -204,13 +211,16 @@ static Node render_thread_form()
     // File upload form
     if (page->board == "all" || !board_config->text_only) {
         form.children.push_back({
-            "span", { { "class", "upload-container" } },
+            "span",
+            { { "class", "upload-container" } },
             {
                 {
-                    "span", {},
+                    "span",
+                    {},
                     {
                         {
-                            "label", {},
+                            "label",
+                            {},
                             {
                                 {
                                     "input",
@@ -224,18 +234,21 @@ static Node render_thread_form()
                         },
                     },
                 },
-                { "strong", { { "class", "upload-status" } } }, { "br" },
+                { "strong", { { "class", "upload-status" } } },
+                { "br" },
                 {
                     "input",
                     {
-                        { "type", "file" }, { "name", "image" },
+                        { "type", "file" },
+                        { "name", "image" },
                         {
                             "accept",
                             "image/png, image/gif, image/jpeg, video/webm, "
                             "video/ogg, audio/ogg, application/ogg, video/mp4, "
                             "audio/mp4, audio/mp3, application/zip, "
                             "application/x-7z-compressed, application/x-xz, "
-                            "application/x-gzip, audio/x-flac, text/plain",
+                            "application/x-gzip, audio/x-flac, text/plain, "
+                            "application/pdf, video/quicktime, audio/x-flac",
                         },
                     },
                 },
@@ -252,11 +265,13 @@ static Node render_thread_form()
     return {
         "aside",
         {
-            { "id", "thread-form-container" }, { "class", "glass" },
+            { "id", "thread-form-container" },
+            { "class", "glass" },
         },
         // Disambiguate constructor
         brunhild::Children({
-            render_button(std::nullopt, lang->ui.at("newThread")), form,
+            render_button(std::nullopt, lang->ui.at("newThread")),
+            form,
         }),
     };
 }
@@ -291,7 +306,8 @@ static void render_index_page()
     ch.push_back({
         "aside",
         {
-            { "id", "refresh" }, { "class", "act glass" },
+            { "id", "refresh" },
+            { "class", "act glass" },
         },
         { { "a", lang->ui.at("refresh") } },
     });
