@@ -49,30 +49,36 @@ Command::Command(nlohmann::json& j)
     uint8_t _typ = j["type"];
     typ = static_cast<Type>(_typ);
 
-    auto const& val = j["val"];
+    auto const& v = j["val"];
     switch (typ) {
     case Type::flip:
-        flip = val;
+        val = v.get<bool>();
         break;
     case Type::eight_ball:
-        eight_ball = val;
+        eight_ball = v;
         break;
     case Type::pyu:
     case Type::pcount:
     case Type::rcount:
-        count = val;
+        val = v.get<unsigned long>();
         break;
-    case Type::sync_watch:
+    case Type::sync_watch: {
+        std::array<unsigned long, 5> arr;
         for (int i = 0; i < 5; i++) {
-            sync_watch[i] = val[i];
+            arr[i] = v[i];
         }
-        break;
-    case Type::dice:
-        dice = val.get<std::vector<uint16_t>>();
-        break;
+        val = arr;
+    } break;
+    case Type::dice: {
+        std::array<uint16_t, 10> arr = { { 0 } };
+        const int size = v.size();
+        for (int i = 0; i < size; i++) {
+            arr[i] = v[i];
+        }
+        val = arr;
+    } break;
     case Type::roulette:
-        roulette[0] = val[0];
-        roulette[1] = val[1];
+        val = std::array<uint8_t, 2>({ { v[0], v[1] } });
         break;
     }
 }
@@ -175,6 +181,8 @@ void Post::remove()
         brunhild::remove('p' + std::to_string(id));
     }
     posts->erase(id);
+
+    // TODO: Rerender all posts linking this post
 }
 
 void Post::propagate_links()

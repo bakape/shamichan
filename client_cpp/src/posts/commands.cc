@@ -122,14 +122,17 @@ static std::pair<string, string> parse_dice(
 
     ostringstream os;
     unsigned sum = 0;
-    for (auto roll : val.dice) {
+    for (auto roll : std::get<std::array<uint16_t, 10>>(val.val)) {
+        if (!roll) { // Array is zero padded
+            break;
+        }
         if (sum) {
             os << " + ";
         }
         sum += roll;
         os << roll;
     }
-    if (val.dice.size() > 1) {
+    if (dice > 1) {
         os << " = " << sum;
     }
 
@@ -194,17 +197,18 @@ optional<Node> Post::parse_commands(string_view word)
     auto const& val = commands[state.dice_index];
     if (name == "flip") {
         check_consumed;
-        inner = val.flip ? "flap" : "flop";
+        inner = std::get<bool>(val.val) ? "flap" : "flop";
     } else if (name == "8ball") {
         check_consumed;
         inner = val.eight_ball;
     } else if (name == "pyu" || name == "pcount" || name == "rcount") {
         check_consumed;
-        inner = std::to_string(val.count);
+        inner = std::to_string(std::get<unsigned long>(val.val));
     } else if (name == "roulette") {
         check_consumed;
-        inner = std::to_string(val.roulette[0]) + "/" + std::to_string(val.roulette[1]);
-        if (val.roulette[0] == 1) {
+        const auto arr = std::get<std::array<uint8_t, 2>>(val.val);
+        inner = std::to_string(arr[0]) + '/' + std::to_string(arr[1]);
+        if (arr[0] == 1) {
             cls = "dead";
         }
     } else if (name == "sw") {
@@ -275,7 +279,8 @@ optional<Node> Post::parse_syncwatch(std::string_view frag)
     // Format inner string
     // TODO: Apply offset from server clock
     const auto[hours, min, sec, start, end]
-        = commands[state.dice_index++].sync_watch;
+        = std::get<std::array<unsigned long, 5>>(
+            commands[state.dice_index++].val);
     const unsigned long now = std::time(0);
     ostringstream s;
     if (now > end) {
@@ -301,10 +306,13 @@ optional<Node> Post::parse_syncwatch(std::string_view frag)
 
     return {
         {
-            "em", {},
+            "em",
+            {},
             {
                 {
-                    "strong", { { "class", "embed syncwatch" } }, s.str(),
+                    "strong",
+                    { { "class", "embed syncwatch" } },
+                    s.str(),
                 },
             },
         },

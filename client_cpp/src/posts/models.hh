@@ -2,6 +2,7 @@
 
 #include "../../brunhild/view.hh"
 #include "../json.hh"
+#include <array>
 #include <functional>
 #include <map>
 #include <optional>
@@ -10,6 +11,7 @@
 #include <string_view>
 #include <tuple>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 using brunhild::Node;
@@ -104,12 +106,10 @@ public:
     } typ;
 
     // Use typ, to get out the relevant value
-    bool flip; // Result of flip command
-    unsigned long count; // Somekind of counter result
-    unsigned long sync_watch[5]; // Syncwatch parameters
-    std::vector<uint16_t> dice; // Result of dice throw
+    std::variant<bool, unsigned long, std::array<unsigned long, 5>,
+        std::array<uint16_t, 10>, std::array<uint8_t, 2>>
+        val;
     std::string eight_ball; // Result of #8ball command
-    unsigned int roulette[2]; // Result of #roulette command
 
     // Parse from JSON
     Command(nlohmann::json&);
