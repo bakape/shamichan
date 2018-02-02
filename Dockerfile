@@ -4,4 +4,4 @@ ENV PATH="${PATH}:/usr/local/go/bin"
 RUN mkdir -p /meguca
 WORKDIR /meguca
 COPY . .
-RUN make all
+RUN make all wasm
