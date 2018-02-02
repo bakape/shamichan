@@ -2,12 +2,19 @@
 package parser
 
 import (
+	"errors"
 	"meguca/common"
 	"meguca/util"
 	"regexp"
+	"unicode"
 )
 
-var linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
+var (
+	linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
+
+	// String or rune contains nonprintable character
+	ErrContainsNonPrintable = errors.New("contains non-printable characters")
+)
 
 // Needed to avoid cyclic imports for the 'db' package
 func init() {
@@ -18,6 +25,11 @@ func init() {
 func ParseBody(body []byte, board string) (
 	links [][2]uint64, com []common.Command, err error,
 ) {
+	if !IsPrintableString(string(body), true) {
+		err = ErrContainsNonPrintable
+		return
+	}
+
 	start := 0
 
 	for i, b := range body {
@@ -70,4 +82,37 @@ func ParseBody(body []byte, board string) (
 	}
 
 	return
+}
+
+// Checks, if r is printable.
+// Also accepts tabs, and newlines, if multiline = true.
+func IsPrintable(r rune, multiline bool) bool {
+	switch r {
+	case '\t', '\n':
+		return multiline
+	default:
+		return unicode.IsPrint(r)
+	}
+}
+
+// Checks, if all of s is printable.
+// Also accepts tabs, and newlines, if multiline = true.
+func IsPrintableString(s string, multiline bool) bool {
+	for _, r := range []rune(s) {
+		if !IsPrintable(r, multiline) {
+			return false
+		}
+	}
+	return true
+}
+
+// Checks, if all of s is printable.
+// Also accepts tabs, and newlines, if multiline = true.
+func IsPrintableRunes(s []rune, multiline bool) bool {
+	for _, r := range s {
+		if !IsPrintable(r, multiline) {
+			return false
+		}
+	}
+	return true
 }

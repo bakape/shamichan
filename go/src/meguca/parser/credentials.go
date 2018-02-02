@@ -4,9 +4,10 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/aquilax/tripcode"
-	"meguca/config"
 	"meguca/common"
+	"meguca/config"
+
+	"github.com/aquilax/tripcode"
 )
 
 var (
@@ -16,11 +17,13 @@ var (
 
 // ParseName parses the name field into a name and tripcode, if any
 func ParseName(name string) (string, string, error) {
-	if name == "" {
+	switch {
+	case name == "":
 		return name, name, nil
-	}
-	if len(name) > common.MaxLenName {
+	case len(name) > common.MaxLenName:
 		return "", "", common.ErrNameTooLong
+	case !IsPrintableString(name, false):
+		return "", "", ErrContainsNonPrintable
 	}
 	name = strings.TrimSpace(name)
 
@@ -41,23 +44,29 @@ func ParseName(name string) (string, string, error) {
 
 // ParseSubject verifies and trims a thread subject string
 func ParseSubject(s string) (string, error) {
-	if s == "" {
+	switch {
+	case s == "":
 		return s, errNoSubject
-	}
-	if len(s) > common.MaxLenSubject {
+	case len(s) > common.MaxLenSubject:
 		return s, common.ErrSubjectTooLong
+	case !IsPrintableString(s, false):
+		return s, ErrContainsNonPrintable
+	default:
+		return strings.TrimSpace(s), nil
 	}
-	return strings.TrimSpace(s), nil
 }
 
 // VerifyPostPassword verifies a post password exists does not surpass the
 // maximum allowed length
 func VerifyPostPassword(s string) error {
-	if s == "" {
+	switch {
+	case s == "":
 		return errNoPostPassword
-	}
-	if len(s) > common.MaxLenPostPassword {
+	case len(s) > common.MaxLenPostPassword:
 		return common.ErrPostPasswordTooLong
+	case !IsPrintableString(s, false):
+		return ErrContainsNonPrintable
+	default:
+		return nil
 	}
-	return nil
 }
