@@ -22,8 +22,10 @@ func ParseName(name string) (string, string, error) {
 		return name, name, nil
 	case len(name) > common.MaxLenName:
 		return "", "", common.ErrNameTooLong
-	case !IsPrintableString(name, false):
-		return "", "", ErrContainsNonPrintable
+	}
+	err := IsPrintableString(name, false)
+	if err != nil {
+		return "", "", err
 	}
 	name = strings.TrimSpace(name)
 
@@ -49,11 +51,11 @@ func ParseSubject(s string) (string, error) {
 		return s, errNoSubject
 	case len(s) > common.MaxLenSubject:
 		return s, common.ErrSubjectTooLong
-	case !IsPrintableString(s, false):
-		return s, ErrContainsNonPrintable
-	default:
-		return strings.TrimSpace(s), nil
 	}
+	if err := IsPrintableString(s, false); err != nil {
+		return s, err
+	}
+	return strings.TrimSpace(s), nil
 }
 
 // VerifyPostPassword verifies a post password exists does not surpass the
@@ -64,9 +66,7 @@ func VerifyPostPassword(s string) error {
 		return errNoPostPassword
 	case len(s) > common.MaxLenPostPassword:
 		return common.ErrPostPasswordTooLong
-	case !IsPrintableString(s, false):
-		return ErrContainsNonPrintable
 	default:
-		return nil
+		return IsPrintableString(s, false)
 	}
 }

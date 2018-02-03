@@ -91,13 +91,15 @@ func (c *Client) appendRune(data []byte) (err error) {
 		return
 	case char == 0:
 		return common.ErrContainsNull
-	case !parser.IsPrintable(char, true):
-		return parser.ErrContainsNonPrintable
 	case char == '\n':
 		c.post.lines++
 		if c.post.lines > common.MaxLinesBody {
 			return errTooManyLines
 		}
+	}
+	err = parser.IsPrintable(char, true)
+	if err != nil {
+		return
 	}
 
 	msg, err := common.EncodeMessage(
@@ -290,15 +292,14 @@ func (c *Client) spliceText(data []byte) error {
 		return nil
 	}
 
-	var (
-		req spliceRequest
-		err = decodeMessage(data, &req)
-	)
+	var req spliceRequest
+	err := decodeMessage(data, &req)
 	if err != nil {
 		return err
 	}
-	if !parser.IsPrintableRunes(req.Text, true) {
-		return parser.ErrContainsNonPrintable
+	err = parser.IsPrintableRunes(req.Text, true)
+	if err != nil {
+		return err
 	}
 	return c._spliceText(req)
 }

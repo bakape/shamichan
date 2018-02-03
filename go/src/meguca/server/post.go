@@ -12,6 +12,7 @@ import (
 	"meguca/websockets/feeds"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // Create a thread with a closed OP
@@ -89,8 +90,10 @@ func parsePostCreationForm(w http.ResponseWriter, r *http.Request) (
 
 	f := r.Form
 	req = websockets.ReplyCreationRequest{
+		// HTTP uses "\r\n" for newlines, but "\r" is considered non-printable
+		// and raises parser.ErrContainsNonPrintable during parsing.
+		Body: strings.Replace(f.Get("body"), "\r", "", -1),
 		Name: f.Get("name"),
-		Body: f.Get("body"),
 		Sage: f.Get("sage") == "on",
 		Captcha: auth.Captcha{
 			CaptchaID: f.Get("captchaID"),
