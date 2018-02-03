@@ -4,6 +4,7 @@
 #include "../json.hh"
 #include "../lang.hh"
 #include "../page/thread.hh"
+#include "../posts/commands.hh"
 #include "../state.hh"
 #include "../util.hh"
 #include "posts.hh"
@@ -120,23 +121,6 @@ static void on_message(std::string_view msg, bool extracted)
     case Message::insert_post:
         insert_post(data);
         break;
-    case Message::insert_image:
-        if_post_exists(data, [](auto& j, auto& p) {
-            p.image = Image(j);
-            p.patch();
-            threads->at(page->thread).image_ctr++;
-            render_post_counter();
-
-            // TODO: Image auto expansion
-
-        });
-        break;
-    case Message::spoiler:
-        if_post_exists(std::stoul(string(data)), [](auto& p) {
-            p.image->spoiler = true;
-            p.patch();
-        });
-        break;
     case Message::append: {
         auto j = json::parse(data);
         if_post_exists(j[0].get<unsigned long>(), [&](auto& p) {
@@ -169,13 +153,47 @@ static void on_message(std::string_view msg, bool extracted)
             p.close();
         });
         break;
+    case Message::insert_image:
+        if_post_exists(data, [](auto& j, auto& p) {
+            p.image = Image(j);
+            p.patch();
+            threads->at(page->thread).image_ctr++;
+            render_post_counter();
+
+            // TODO: Image auto expansion
+
+        });
+        break;
+    case Message::spoiler:
+        if_post_exists(std::stoul(string(data)), [](auto& p) {
+            p.image->spoiler = true;
+            p.patch();
+        });
+        break;
+    case Message::delete_post:
+        if_post_exists(std::stoul(string(data)), [](auto& p) {
+            p.deleted = true;
+            p.patch();
+        });
+        break;
+    case Message::banned:
+        if_post_exists(std::stoul(string(data)), [](auto& p) {
+            p.banned = true;
+            p.patch();
+        });
+        break;
+    case Message::delete_image:
+        if_post_exists(std::stoul(string(data)), [](auto& p) {
+            p.image = std::nullopt;
+            p.patch();
+        });
+        break;
     case Message::synchronise:
         load_posts(data);
         conn_SM->feed(ConnEvent::sync);
         break;
-    case Message::sync_count:
-        render_sync_count(std::stoul(string(data)));
-        break;
+    // TODO: reclaim
+    // TODO: post_id
     case Message::concat: {
         // Split several concatenated messages
         string s;
@@ -185,6 +203,15 @@ static void on_message(std::string_view msg, bool extracted)
         }
         return;
     }
+    case Message::sync_count:
+        render_sync_count(std::stoul(string(data)));
+        break;
+    case Message::server_time:
+        server_time_offset = json::parse(data);
+        break;
+        // TODO: redirect
+        // TODO: notification
+        // TODO: captcha
     default:
         console::warn(
             "unknown websocket message: " + encode_message(type, string(data)));

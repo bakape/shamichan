@@ -90,6 +90,10 @@ Node Post::render()
         }
     }
     pc_ch.push_back(render_body());
+    if (banned) {
+        n.children.push_back(
+            { "b", { { "class", "admin banned" } }, lang->posts.at("banned") });
+    }
     n.children.push_back({ "div", { { "class", "post-container" } }, pc_ch });
 
     if (id == op) {

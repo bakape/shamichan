@@ -17,6 +17,8 @@ using std::string;
 using std::string_view;
 using std::unordered_map;
 
+long server_time_offset = 0;
+
 // IDs of posts, that are pending a rerender to update the syncwatch and the
 // time they should be rerender at. Specifying a timestamp helps avoid useless
 // subtree diffs.
@@ -281,7 +283,7 @@ optional<Node> Post::parse_syncwatch(std::string_view frag)
     const auto[hours, min, sec, start, end]
         = std::get<std::array<unsigned long, 5>>(
             commands[state.dice_index++].val);
-    const unsigned long now = std::time(0);
+    const unsigned long now = std::time(0) + server_time_offset;
     ostringstream s;
     if (now > end) {
         s << lang->ui.at("finished");
