@@ -46,7 +46,7 @@ func Start() {
 	flag.StringVar(
 		&address,
 		"a",
-		":8000",
+		"127.0.0.1:8000", // Specifying host restricts incoming IP range
 		"address to listen on for incoming HTTP connections",
 	)
 	flag.Float64Var(&cache.Size, "c", 1<<7, "cache size in MB")

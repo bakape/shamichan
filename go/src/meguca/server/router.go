@@ -21,7 +21,7 @@ import (
 
 var (
 	// Address is the listening address of the HTTP web server
-	address = ":8000"
+	address string
 
 	// Defines if HTTPS should be used for listening for incoming connections.
 	// Requires sslCert and sslKey to be set.
