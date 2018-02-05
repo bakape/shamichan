@@ -16,7 +16,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bakape/thumbnailer"
 	"github.com/gorilla/websocket"
 )
 
@@ -151,11 +150,6 @@ func (c *Client) listenerLoop() error {
 		case msg := <-c.sendExternal:
 			if err := c.send(msg); err != nil {
 				return err
-			}
-			// If the buffer is big enough, it was probably from the pool to
-			// begin with. Return it.
-			if cap(msg) >= thumbnailer.MinBufSize {
-				thumbnailer.ReturnBuffer(msg)
 			}
 		case <-ping.C:
 			deadline := time.Now().Add(pingWriteTimeout)

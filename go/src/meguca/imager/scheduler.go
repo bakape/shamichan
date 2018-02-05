@@ -2,15 +2,12 @@ package imager
 
 import (
 	"bytes"
-	"container/list"
 	"crypto/sha1"
 	"database/sql"
 	"encoding/hex"
 	"errors"
 	"meguca/db"
 	"mime/multipart"
-	"runtime"
-	"time"
 
 	"github.com/bakape/thumbnailer"
 )
@@ -51,56 +48,13 @@ func requestThumbnailing(
 	return ch
 }
 
-// Schedule larger thumbnailing jobs to reduce resource contention
+// Queue larger thumbnailing jobs to reduce resource contention
 func init() {
 	go func() {
-		var (
-			waiting     = list.New()
-			canSchedule = runtime.NumCPU() + 1
-			done        = make(chan bool)
-		)
-
-		doJob := func(req jobRequest) {
-			// Perform thumbnailing in separate goroutine, so we can time
-			// out the request after 10 seconds. Unsure why this happens,
-			// but lengthy requests should not block workers.
-			to := time.NewTimer(time.Second * 10)
-
-			// Buffer to prevent timed out goroutines from leaking
-			ch := make(chan thumbnailingResponse, 1)
-
-			go func() {
-				code, id, err := processRequest(req.file)
-				ch <- thumbnailingResponse{code, id, err}
-			}()
-			go func() {
-				select {
-				case res := <-ch:
-					req.res <- res
-				case <-to.C:
-					req.res <- thumbnailingResponse{500, "", errTimedOut}
-				}
-				to.Stop()
-				done <- true
-			}()
-		}
-
 		for {
-			select {
-			case req := <-scheduleJob:
-				if canSchedule == 0 {
-					waiting.PushBack(req)
-				} else {
-					canSchedule--
-					doJob(req)
-				}
-			case <-done:
-				canSchedule++
-				if waiting.Len() != 0 {
-					canSchedule--
-					doJob(waiting.Remove(waiting.Front()).(jobRequest))
-				}
-			}
+			req := <-scheduleJob
+			code, id, err := processRequest(req.file)
+			req.res <- thumbnailingResponse{code, id, err}
 		}
 	}()
 }

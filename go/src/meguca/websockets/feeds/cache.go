@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bakape/thumbnailer"
 	"github.com/mailru/easyjson"
 )
 
@@ -152,7 +151,7 @@ func (c *threadCache) encodeThread(last100 bool) []byte {
 		}
 	}
 
-	b := thumbnailer.GetBuffer()
+	b := make([]byte, 0, 1<<10)
 	b = append(b, `30{"sticky":`...)
 	b = strconv.AppendBool(b, c.Sticky)
 	b = append(b, `,"nonLive":`...)
