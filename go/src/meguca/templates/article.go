@@ -18,7 +18,7 @@ type articleContext struct {
 }
 
 // Map of all backlinks on a page
-type backlinks map[uint64][]common.Link
+type backlinks map[uint64]map[uint64]common.Link
 
 // Returns image name with proper extension
 func imageName(fileType uint8, name string) string {
@@ -88,23 +88,25 @@ func readableFileSize(s int) string {
 // Extract reverse links to linked posts on a page
 func extractBacklinks(cap int, threads ...common.Thread) backlinks {
 	bls := make(backlinks, cap)
-	register := func(p common.Post, op uint64) {
+	register := func(p common.Post, op uint64, board string) {
 		for _, l := range p.Links {
-			// Check, if link is not already in the array
-			for _, existing := range bls[l.ID] {
-				if existing.ID == l.ID {
-					goto skip
-				}
+			m, ok := bls[l.ID]
+			if !ok {
+				m = make(map[uint64]common.Link, 4)
+				bls[l.ID] = m
 			}
-			bls[l.ID] = append(bls[l.ID], l)
-		skip:
+			m[p.ID] = common.Link{
+				ID:    p.ID,
+				OP:    op,
+				Board: board,
+			}
 		}
 	}
 
 	for _, t := range threads {
-		register(t.Post, t.ID)
+		register(t.Post, t.ID, t.Board)
 		for _, p := range t.Posts {
-			register(p, t.ID)
+			register(p, t.ID, t.Board)
 		}
 	}
 
