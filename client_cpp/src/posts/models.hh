@@ -122,6 +122,8 @@ struct LinkData {
     bool is_inlined = false;
     // Parent thread ID of the post
     unsigned long op;
+    // Parent board id
+    std::string board;
 };
 
 // State of a post's text. Used for adding enclosing tags to the HTML while
@@ -200,7 +202,8 @@ public:
 
     std::vector<Command> commands; // Results of hash commands
 
-    std::map<unsigned long, LinkData> backlinks; // Posts linking to this post
+    // Posts linking to this post. Backlinks need to be sorted, thus std::map.
+    std::map<unsigned long, LinkData> backlinks;
 
     std::unordered_map<unsigned long, LinkData>
         links; // Posts linked by this post

@@ -4,10 +4,8 @@ package db
 import (
 	"database/sql"
 	"database/sql/driver"
-	"errors"
 	"fmt"
 	"meguca/common"
-	"strconv"
 
 	"github.com/lib/pq"
 	"github.com/mailru/easyjson"
@@ -20,96 +18,6 @@ type Post struct {
 	common.StandalonePost
 	Password []byte
 	IP       string
-}
-
-// For decoding and encoding the tuple arrays we store links in
-type linkRow [][2]uint64
-
-func (l *linkRow) Scan(src interface{}) error {
-	switch src := src.(type) {
-	case []byte:
-		return l.scanBytes(src)
-	case string:
-		return l.scanBytes([]byte(src))
-	case nil:
-		*l = nil
-		return nil
-	default:
-		return fmt.Errorf("db: cannot convert %T to [][2]uint", src)
-	}
-}
-
-func (l *linkRow) scanBytes(src []byte) error {
-	length := len(src)
-	if length < 6 {
-		return errors.New("db: source too short")
-	}
-
-	src = src[1 : length-1]
-
-	// Determine needed size and preallocate final array
-	commas := 0
-	for _, b := range src {
-		if b == ',' {
-			commas++
-		}
-	}
-	*l = make(linkRow, 0, (commas-1)/2+1)
-
-	var (
-		inner bool
-		next  [2]uint64
-		err   error
-		buf   = make([]byte, 0, 16)
-	)
-	for _, b := range src {
-		switch b {
-		case '{': // New tuple
-			inner = true
-			buf = buf[0:0]
-		case ',':
-			if inner { // End of first uint
-				next[0], err = strconv.ParseUint(string(buf), 10, 64)
-				if err != nil {
-					return err
-				}
-				buf = buf[0:0]
-			}
-		case '}': // End of tuple
-			next[1], err = strconv.ParseUint(string(buf), 10, 64)
-			if err != nil {
-				return err
-			}
-			*l = append(*l, next)
-		default:
-			buf = append(buf, b)
-		}
-	}
-
-	return nil
-}
-
-func (l linkRow) Value() (driver.Value, error) {
-	n := len(l)
-	if n == 0 {
-		return nil, nil
-	}
-
-	b := make([]byte, 1, 16)
-	b[0] = '{'
-	for i, l := range l {
-		if i != 0 {
-			b = append(b, ',')
-		}
-		b = append(b, '{')
-		b = strconv.AppendUint(b, l[0], 10)
-		b = append(b, ',')
-		b = strconv.AppendUint(b, l[1], 10)
-		b = append(b, '}')
-	}
-	b = append(b, '}')
-
-	return string(b), nil
 }
 
 // For encoding and decoding hash command results
@@ -211,9 +119,12 @@ func NewPostID(tx *sql.Tx) (id uint64, err error) {
 
 // InsertPost inserts a post into an existing thread.
 func InsertPost(tx *sql.Tx, p Post, sage bool) error {
-	_, err := getStatement(tx, "insert_post").
+	_, err := getExecutor(tx, "insert_post").
 		Exec(append(genPostCreationArgs(p), sage)...)
-	return err
+	if err != nil {
+		return err
+	}
+	return writeLinks(tx, p.ID, p.Links)
 }
 
 func genPostCreationArgs(p Post) []interface{} {
@@ -248,8 +159,7 @@ func genPostCreationArgs(p Post) []interface{} {
 
 	return []interface{}{
 		p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, flag, posterID,
-		name, trip, auth, p.Password, ip, img, imgName,
-		linkRow(p.Links), commandRow(p.Commands),
+		name, trip, auth, p.Password, ip, img, imgName, commandRow(p.Commands),
 	}
 }
 
@@ -265,7 +175,7 @@ func WritePost(tx *sql.Tx, p Post) (err error) {
 		err = SetOpenBody(p.ID, []byte(p.Body))
 	}
 
-	return
+	return writeLinks(tx, p.ID, p.Links)
 }
 
 // GetPostPassword retrieves a post's modification password

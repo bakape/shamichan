@@ -27,7 +27,7 @@ func init() {
 
 // ParseBody parses the entire post text body for commands and links
 func ParseBody(body []byte, board string) (
-	links [][2]uint64, com []common.Command, err error,
+	links []common.Link, com []common.Command, err error,
 ) {
 	err = IsPrintableString(string(body), true)
 	if err != nil {
@@ -59,12 +59,12 @@ func ParseBody(body []byte, board string) (
 			if m == nil {
 				continue
 			}
-			var l [2]uint64
+			var l common.Link
 			l, err = parseLink(m)
 			switch {
 			case err != nil:
 				return
-			case l[0] != 0:
+			case l.ID != 0:
 				links = append(links, l)
 			}
 		case '#':

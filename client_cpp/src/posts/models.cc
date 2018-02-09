@@ -143,7 +143,7 @@ void Post::parse_links(nlohmann::json& j)
         auto& l = j["links"];
         links.reserve(l.size());
         for (auto& val : l) {
-            links[val[0]] = { false, val[1] };
+            links[val["id"]] = { false, val["op"], val["board"] };
         }
     }
 }
@@ -193,7 +193,7 @@ void Post::propagate_links()
     for (auto && [ id, _ ] : links) {
         if (posts->count(id)) {
             auto& target = posts->at(id);
-            target.backlinks[this->id] = LinkData{ false, this->op };
+            target.backlinks[this->id] = LinkData{ false, op, board };
             target.patch();
         }
         if (post_ids->hidden.count(id)) {

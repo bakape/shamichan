@@ -4,6 +4,7 @@
 {% import "meguca/auth" %}
 {% import "meguca/config" %}
 {% import "meguca/lang" %}
+{% import "meguca/common" %}
 {% import "github.com/bakape/mnemonics" %}
 
 BanPage renders a ban page for a banned user
@@ -80,7 +81,7 @@ Common style for plain html tables
 
 Post link, that will redirect to the post from any page
 {% func staticPostLink(id uint64) %}{% stripspace %}
-	{%= postLink(id, false, true) %}
+	{%= postLink(common.Link{id, id, "all"}, true, true) %}
 {% endstripspace %}{% endfunc %}
 
 Renders a moderation log page

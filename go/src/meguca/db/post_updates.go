@@ -5,12 +5,12 @@ import (
 )
 
 // ClosePost closes an open post and commits any links and hash commands
-func ClosePost(id, op uint64, body string, links [][2]uint64, com []common.Command) (
+func ClosePost(id, op uint64, body string, links []common.Link, com []common.Command) (
 	err error,
 ) {
 	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
 		ID       uint64           `json:"id"`
-		Links    [][2]uint64      `json:"links,omitempty"`
+		Links    []common.Link    `json:"links,omitempty"`
 		Commands []common.Command `json:"commands,omitempty"`
 	}{
 		ID:       id,
@@ -18,10 +18,23 @@ func ClosePost(id, op uint64, body string, links [][2]uint64, com []common.Comma
 		Commands: com,
 	})
 	if err != nil {
-		return err
+		return
 	}
 
-	err = execPrepared("close_post", id, body, linkRow(links), commandRow(com))
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer RollbackOnError(tx, &err)
+	_, err = tx.Stmt(prepared["close_post"]).Exec(id, body, commandRow(com))
+	if err != nil {
+		return
+	}
+	err = writeLinks(tx, id, links)
+	if err != nil {
+		return
+	}
+	err = tx.Commit()
 	if err != nil {
 		return
 	}

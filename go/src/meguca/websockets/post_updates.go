@@ -183,7 +183,7 @@ func (c *Client) closePost(data []byte) (err error) {
 // Used to close posts internally without parsing a message
 func (c *Client) _closePost() (err error) {
 	var (
-		links [][2]uint64
+		links []common.Link
 		com   []common.Command
 	)
 

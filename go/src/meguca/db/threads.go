@@ -33,12 +33,16 @@ func InsertThread(tx *sql.Tx, subject string, nonLive bool, p Post) (
 		imgCtr = 1
 	}
 
-	_, err = getStatement(tx, "insert_thread").Exec(
+	_, err = getExecutor(tx, "insert_thread").Exec(
 		append(
 			[]interface{}{subject, nonLive, imgCtr},
 			genPostCreationArgs(p)...,
 		)...,
 	)
+	if err != nil {
+		return
+	}
+	err = writeLinks(tx, p.ID, p.Links)
 	if err != nil {
 		return
 	}
@@ -49,7 +53,6 @@ func InsertThread(tx *sql.Tx, subject string, nonLive bool, p Post) (
 
 	return
 }
-
 
 // WriteThread writes a thread and it's OP to the database. Only used for tests
 // and migrations.

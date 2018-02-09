@@ -34,7 +34,12 @@ export class Post extends Model implements PostData {
 	public posterID: string
 	public state: TextState
 	public commands: Command[]
-	public backlinks: { [id: number]: number }
+	public backlinks: {
+		[id: number]: {
+			op: number
+			board: string
+		}
+	}
 	public links: PostLink[]
 
 	constructor(attrs: PostData) {
@@ -139,10 +144,14 @@ export class Post extends Model implements PostData {
 			notifyAboutReply(this)
 		}
 		if (this.links) {
-			for (let [id] of this.links) {
+			for (let { id } of this.links) {
 				const post = posts.get(id)
 				if (post) {
-					post.insertBacklink(this.id, this.op)
+					post.insertBacklink({
+						id: this.id,
+						op: this.op,
+						board: this.board,
+					})
 				}
 				if (hidden.has(id)) {
 					hideRecursively(this)
@@ -156,7 +165,7 @@ export class Post extends Model implements PostData {
 		if (!this.links) {
 			return false
 		}
-		for (let [id] of this.links) {
+		for (let { id } of this.links) {
 			if (mine.has(id)) {
 				return true
 			}
@@ -165,11 +174,11 @@ export class Post extends Model implements PostData {
 	}
 
 	// Insert data about another post linking this post into the model
-	public insertBacklink(id: number, op: number) {
+	public insertBacklink({ id, op, board }: PostLink) {
 		if (!this.backlinks) {
 			this.backlinks = {}
 		}
-		this.backlinks[id] = op
+		this.backlinks[id] = { op, board }
 		this.view.renderBacklinks()
 	}
 

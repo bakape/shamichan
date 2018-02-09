@@ -6,7 +6,11 @@
 export const isCuck = navigator.userAgent.toLowerCase().includes("firefox")
 
 // Generic link object containing target post board and thread
-export type PostLink = [number, number]
+export type PostLink = {
+	id: number
+	op: number
+	board: string
+}
 
 // Data of any post. In addition to server-sent JSON includes the state
 // property.

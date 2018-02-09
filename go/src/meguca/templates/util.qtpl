@@ -17,19 +17,21 @@ Renders the tab selection butts in tabbed windows
 {% endstripspace %}{% endfunc %}
 
 Render a link to another post. Can optionally be cross-thread.
-{% func postLink(id uint64, cross, index bool) %}{% stripspace %}
-	{% code idBuf := strconv.AppendUint(make([]byte, 0, 16), id, 10) %}
-	{% code url := make([]byte, 0, 32) %}
-	{% if cross || index %}
-		{% code url = append(url, "/all/"...) %}
-		{% code url = strconv.AppendUint(url, id, 10) %}
+{% func postLink(link common.Link, cross, boardPage bool) %}{% stripspace %}
+	{% code idBuf := strconv.AppendUint(make([]byte, 0, 16), link.ID, 10) %}
+	{% code url := make([]byte, 0, 64) %}
+	{% if cross %}
+		{% code url = append(url, '/') %}
+		{% code url = append(url, link.Board...) %}
+		{% code url = append(url, '/') %}
+		{% code url = strconv.AppendUint(url, link.OP, 10) %}
 	{% endif %}
 	{% code url = append(url, "#p"...) %}
 	{% code url = append(url, idBuf...) %}
 	<a class="post-link" data-id="{%z= idBuf %}" href="{%z= url %}">
 		>>
 		{%z= idBuf %}
-		{% if cross %}
+		{% if cross && !boardPage %}
 			{% space %}➡
 		{% endif %}
 	</a>

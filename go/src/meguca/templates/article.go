@@ -18,7 +18,7 @@ type articleContext struct {
 }
 
 // Map of all backlinks on a page
-type backlinks map[uint64]map[uint64]uint64
+type backlinks map[uint64][]common.Link
 
 // Returns image name with proper extension
 func imageName(fileType uint8, name string) string {
@@ -90,12 +90,14 @@ func extractBacklinks(cap int, threads ...common.Thread) backlinks {
 	bls := make(backlinks, cap)
 	register := func(p common.Post, op uint64) {
 		for _, l := range p.Links {
-			m, ok := bls[l[0]]
-			if !ok {
-				m = make(map[uint64]uint64, 4)
-				bls[l[0]] = m
+			// Check, if link is not already in the array
+			for _, existing := range bls[l.ID] {
+				if existing.ID == l.ID {
+					goto skip
+				}
 			}
-			m[p.ID] = op
+			bls[l.ID] = append(bls[l.ID], l)
+		skip:
 		}
 	}
 

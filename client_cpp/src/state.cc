@@ -42,7 +42,7 @@ std::unordered_map<unsigned long, Thread>* threads;
 static void extract_backlinks(const Post& p, Backlinks& backlinks)
 {
     for (auto && [ target_id, _ ] : p.links) {
-        backlinks[target_id][p.id] = { false, p.op };
+        backlinks[target_id][p.id] = { false, p.op, p.board };
     }
 }
 
@@ -146,7 +146,10 @@ void load_state()
     post_ids = new PostIDs{};
     threads = new std::unordered_map<unsigned long, Thread>();
     init_connectivity();
-    auto wg = new WaitGroup(2, &load_post_ids);
+    auto wg = new WaitGroup(2, []() {
+        auto wg = new WaitGroup(1, &render_page);
+        load_post_ids(wg);
+    });
     open_db(wg);
     conn_SM->feed(ConnEvent::start);
     conn_SM->once(ConnState::synced, [=]() { wg->done(); });

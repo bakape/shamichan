@@ -22,7 +22,7 @@ func TestOpenPostClosing(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	common.ParseBody = func(_ []byte, _ string) (
-		[][2]uint64, []common.Command, error,
+		[]common.Link, []common.Command, error,
 	) {
 		return nil, nil, nil
 	}

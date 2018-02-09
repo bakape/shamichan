@@ -140,13 +140,20 @@ create table posts (
 	body varchar(2000) not null,
 	password bytea,
 	ip inet,
-	links bigint[][2],
 	commands json[]
 );
 create index op on posts (op);
 create index image on posts (SHA1);
 create index editing on posts (editing);
 create index ip on posts (ip);
+
+create table links (
+	source bigint not null references posts on delete cascade,
+	target bigint not null references posts on delete cascade,
+	primary key(source, target)
+);
+create index link_source on links (source);
+create index link_target on links (target);
 
 create table reports (
 	id bigserial primary key,

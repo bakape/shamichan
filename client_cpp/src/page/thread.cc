@@ -21,7 +21,8 @@ void render_thread()
         {
             render_button("#bottom", lang->ui.at("bottom")),
             render_button(".", lang->ui.at("return")),
-            render_button("catalog", lang->ui.at("catalog")),
+            { "span", "TODO: Catalog" },
+            // render_button("catalog", lang->ui.at("catalog")),
             render_button(std::nullopt, lang->posts.at("expandImages")),
         });
     push_board_hover_info(n.children);
@@ -46,7 +47,7 @@ void render_thread()
 
     n = Node("span", { { "class", "aside-container" }, { "id", "bottom" } });
     n.children.push_back(render_button(".", lang->ui.at("return")));
-    n.children.push_back(render_button("catalog", lang->ui.at("catalog")));
+    n.children.push_back({ "span", "TODO: Catalog" });
     n.children.push_back(render_button("#top", lang->ui.at("top")));
     n.children.push_back(render_last_100_link(page->board, page->thread));
     n.children.push_back({

@@ -190,11 +190,11 @@
 				</span>
 			</span>
 		{% endif %}
-		{% if bls := c.backlinks[p.ID]; bls != nil %}
+		{% if bls := c.backlinks[p.ID]; len(bls) != 0 %}
 			<span class="backlinks spaced">
-				{% for id, op := range bls %}
+				{% for _, l := range bls %}
 					<em>
-						{%= postLink(id, op != c.op, c.index) %}
+						{%= postLink(l, c.index || l.OP != c.op, c.index) %}
 					</em>
 				{% endfor %}
 			</span>

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"database/sql"
+	"meguca/common"
 	"strconv"
 
 	"meguca/db"
@@ -9,16 +10,20 @@ import (
 
 // Extract post links from a text fragment, verify and retrieve their
 // parenthood
-func parseLink(match [][]byte) (link [2]uint64, err error) {
+func parseLink(match [][]byte) (link common.Link, err error) {
 	id, err := strconv.ParseUint(string(match[1]), 10, 64)
 	if err != nil {
 		return
 	}
 
-	op, err := db.GetPostOP(id)
+	board, op, err := db.GetPostParenthood(id)
 	switch err {
 	case nil:
-		link = [2]uint64{id, op}
+		link = common.Link{
+			ID:    id,
+			OP:    op,
+			Board: board,
+		}
 	case sql.ErrNoRows: // Points to invalid post. Ignore.
 		err = nil
 	}

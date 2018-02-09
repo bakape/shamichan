@@ -393,6 +393,75 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		execAll(tx,
+			`create table links (
+				source bigint not null references posts on delete cascade,
+				target bigint not null references posts on delete cascade,
+				primary key(source, target)
+			);`,
+			`create index link_source on links (source);`,
+			`create index link_target on links (target);`,
+		)
+		if err != nil {
+			return
+		}
+
+		// Read all posts and links
+		r, err := tx.Query(
+			`select p.id, p.op, p.links from posts as p
+			join threads as t on t.id = p.op`,
+		)
+		if err != nil {
+			return
+		}
+		defer r.Close()
+		var (
+			posts  = make(map[uint64]bool, 1<<10)
+			links  = make(map[uint64]uint64, 1<<10)
+			id, op uint64
+			lr     linkRow
+		)
+		for r.Next() {
+			err = r.Scan(&id, &op, &lr)
+			if err != nil {
+				return
+			}
+			posts[id] = true
+			for _, pair := range lr {
+				links[id] = pair[0]
+			}
+		}
+		if err != nil {
+			return
+		}
+
+		// Remove legacy link row
+		_, err = tx.Exec(`alter table posts drop column links`)
+		if err != nil {
+			return
+		}
+
+		// Write only verified links to new table
+		q, err := tx.Prepare(
+			`insert into links (source, target)
+			values ($1, $2)`,
+		)
+		if err != nil {
+			return
+		}
+		for source, target := range links {
+			if !posts[source] || !posts[target] {
+				continue
+			}
+			_, err = q.Exec(source, target)
+			if err != nil {
+				return
+			}
+		}
+
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both

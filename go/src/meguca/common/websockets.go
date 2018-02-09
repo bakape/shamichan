@@ -72,7 +72,7 @@ var (
 	// ClosePost closes a post in a feed, if it exists
 	ClosePost func(
 		id, op uint64,
-		links [][2]uint64,
+		links []Link,
 		commands []Command,
 		msg []byte,
 	)

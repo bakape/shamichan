@@ -355,14 +355,14 @@ func (c *bodyContext) parsePostLink(m []string) {
 	}
 
 	id, _ := strconv.ParseUint(string(m[2]), 10, 64)
-	var op uint64
+	var data common.Link
 	for _, l := range c.Links {
-		if l[0] == id {
-			op = l[1]
+		if l.ID == id {
+			data = l
 			break
 		}
 	}
-	if op == 0 {
+	if data.ID == 0 {
 		c.string(m[0])
 		return
 	}
@@ -370,7 +370,7 @@ func (c *bodyContext) parsePostLink(m []string) {
 	if len(m[1]) != 0 { // Write extra quotes
 		c.string(m[1])
 	}
-	streampostLink(&c.Writer, id, op != c.OP, c.index)
+	streampostLink(&c.Writer, data, c.index || data.OP != c.OP, c.index)
 }
 
 // Parse internal or customly set reference URL

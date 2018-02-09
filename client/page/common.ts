@@ -14,7 +14,14 @@ export function extractConfigs() {
 // Extract pregenerated rendered post data from DOM
 export function extractPageData<T>(): {
 	threads: T,
-	backlinks: { [id: number]: { [id: number]: number } },
+	backlinks: {
+		[id: number]: {
+			[id: number]: {
+				op: number
+				board: string
+			}
+		}
+	},
 } {
 	return {
 		threads: extractJSON("post-data"),
@@ -28,7 +35,14 @@ export function extractPost(
 	post: PostData,
 	op: number,
 	board: string,
-	backlinks: { [id: number]: { [id: number]: number } },
+	backlinks: {
+		[id: number]: {
+			[id: number]: {
+				op: number
+				board: string
+			}
+		}
+	},
 ) {
 	const el = document.getElementById(`p${post.id}`)
 	post.op = op

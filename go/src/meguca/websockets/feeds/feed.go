@@ -30,7 +30,7 @@ type postCreationMessage struct {
 
 type postCloseMessage struct {
 	id       uint64
-	links    [][2]uint64
+	links    []common.Link
 	commands []common.Command
 	msg      []byte
 }
@@ -264,7 +264,7 @@ func (f *Feed) _sendPostMessage(typ postMessageType, id uint64, msg []byte) {
 
 func (f *Feed) ClosePost(
 	id uint64,
-	links [][2]uint64,
+	links []common.Link,
 	commands []common.Command,
 	msg []byte,
 ) {

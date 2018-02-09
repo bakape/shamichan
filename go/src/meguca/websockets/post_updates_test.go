@@ -294,7 +294,7 @@ func TestClosePostWithLinks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, post.Links, [][2]uint64{{22, 21}})
+	AssertDeepEquals(t, post.Links, []common.Link{{22, 21, "a"}})
 }
 
 func TestBackspace(t *testing.T) {

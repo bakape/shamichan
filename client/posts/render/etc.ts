@@ -3,17 +3,17 @@
 import { page, mine } from '../../state'
 import lang from '../../lang'
 import { makeAttrs, pluralize } from "../../util"
+import { PostLink } from "../../common"
 
 // Render a link to other posts
-export function renderPostLink(id: number, op: number): string {
-    const cross = op !== page.thread,
-        index = !page.thread && !page.catalog,
-        url = `${(cross || index) ? `/all/${id}` : ""}#p${id}`
-    let html = `<a class="post-link" data-id="${id}" href="${url}">>>${id}`
-    if (cross && !index) {
+export function renderPostLink(link: PostLink): string {
+    const cross = link.op !== page.thread,
+        url = `${cross ? `/${link.board}/${link.op}` : ""}#p${link.id}`
+    let html = `<a class="post-link" data-id="${link.id}" href="${url}">>>${link.id}`
+    if (cross && page.thread) {
         html += " ➡"
     }
-    if (mine.has(id)) { // Post, I made
+    if (mine.has(link.id)) { // Post, I made
         html += ' ' + lang.posts["you"]
     }
     html += `</a><a class="hash-link" href="${url}"> #</a>`

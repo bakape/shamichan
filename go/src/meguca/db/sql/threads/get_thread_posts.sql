@@ -1,6 +1,6 @@
 with t as (
 	select editing, banned, spoiler, deleted, sage, id, time, body, flag,
-		name, trip, auth, links, commands, imageName, posterID,
+		name, trip, auth, commands, imageName, posterID,
 		images.*
 	from posts
 	left outer join images

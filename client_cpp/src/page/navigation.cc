@@ -1,4 +1,7 @@
 #include "../connection/connection.hh"
+#include "../connection/sync.hh"
+#include "../db.hh"
+#include "../page/page.hh"
 #include "../state.hh"
 #include "../util.hh"
 #include "scroll.hh"
@@ -10,6 +13,13 @@ void init_navigation()
 {
     EM_ASM({
         history.scrollRestoration = 'manual';
+
+        window.onpopstate = function(e)
+        {
+            var loc = e.target.location;
+            Module.try_navigate_page(loc.href.slice(loc.origin.length), false);
+        };
+
         document.addEventListener("click",
             function(e) {
                 var t = e.target;
@@ -32,14 +42,16 @@ void init_navigation()
                     }
                 }
 
-                Module.try_navigate_page(t.href.slice(location.origin.length));
+                Module.try_navigate_page(
+                    t.href.slice(location.origin.length), true);
             },
             { passive : true });
     });
 }
 
-// Determine, if href points to a resource on the
-static void try_navigate_page(std::string href)
+// Determine, if href points to a resource on the.
+// Need push signifies history.pushState() needs to be called.
+static void try_navigate_page(std::string href, bool need_push)
 {
     if (conn_SM->state() != ConnState::synced) {
         return;
@@ -57,13 +69,39 @@ static void try_navigate_page(std::string href)
             return;
         }
         scroll_to_post(next_state.post);
-        EM_ASM_INT({ location.hash = '#p' + $0; }, next_state.post);
+        if (need_push) {
+            EM_ASM_INT({ location.hash = '#p' + $0; }, next_state.post);
+        }
         delete page;
         page = new Page(next_state);
         return;
     }
 
-    // TODO: Toggle loading animation
+    // TODO: Reset postform
+    delete page;
+    page = new Page(next_state);
+    posts->clear();
+    threads->clear();
+
+    // TODO: Fetch new board configs, if needed (maybe send these in sync
+    // message, if board config hash changed?)
+
+    // TODO: New server configuration propagation. Need hash comparison on
+    // server.
+
+    // TODO: Display loading animation
+
+    auto wg = new WaitGroup(
+        2, [ full_href = *location_origin + href, need_push ]() {
+            render_page();
+            if (need_push) {
+                EM_ASM({ history.pushState(null, null, UTF8ToString($0)); },
+                    full_href.c_str());
+            }
+        });
+    load_post_ids(wg);
+    conn_SM->feed(ConnEvent::switch_sync);
+    conn_SM->once(ConnState::synced, [=]() { wg->done(); });
 }
 
 EMSCRIPTEN_BINDINGS(module_navigation)

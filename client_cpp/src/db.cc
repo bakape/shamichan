@@ -1,4 +1,3 @@
-#include "page/page.hh"
 #include "state.hh"
 #include "util.hh"
 #include <cstdint>
@@ -113,11 +112,10 @@ void open_db(WaitGroup* wg)
         db_version, reinterpret_cast<int>(wg));
 }
 
-void load_post_ids()
+void load_post_ids(WaitGroup* wg)
 {
     if (!threads->size() || has_errored) {
-        render_page();
-        return;
+        return wg->done();
     }
 
     // Map to vector, so we can pass it to JS
@@ -159,13 +157,13 @@ void load_post_ids()
                     } else {
                         Module.add_to_storage(typ, ids);
                         if (--left == 0) {
-                            Module.render_page();
+                            Module.db_is_ready($2);
                         }
                     }
                 };
             }
         },
-        ids.data(), ids.size());
+        ids.data(), ids.size(), wg);
 }
 
 // Signals the database is ready. Called from the JS side.

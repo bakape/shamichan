@@ -70,9 +70,9 @@ func TestParseBody(t *testing.T) {
 	if l := len(com); l != 3 {
 		t.Errorf("unexpected command count: %d", l)
 	}
-	AssertDeepEquals(t, links, [][2]uint64{
-		{8, 1},
-		{6, 1},
+	AssertDeepEquals(t, links, []common.Link{
+		{8, 1, "a"},
+		{6, 1, "a"},
 	})
 }
 

@@ -10,7 +10,7 @@
 using std::optional;
 
 // Render omitted post and image count for shortened threads by thread ID
-static optional<Node> render_omitted(unsigned long id)
+static optional<Node> render_omitted(unsigned long id, std::string board)
 {
     if (!threads->count(id)) {
         return {};
@@ -50,7 +50,8 @@ static optional<Node> render_omitted(unsigned long id)
             // Disambiguate constructor
             brunhild::Children({
                 { "span", s.str() },
-                render_button(std::to_string(id), lang->posts.at("seeAll")),
+                render_button(
+                    absolute_thread_url(id, board), lang->posts.at("seeAll")),
             }),
         },
     };
@@ -97,7 +98,7 @@ Node Post::render()
     n.children.push_back({ "div", { { "class", "post-container" } }, pc_ch });
 
     if (id == op) {
-        if (auto omit = render_omitted(id); omit) {
+        if (auto omit = render_omitted(id, board); omit) {
             n.children.push_back(*omit);
         }
     }

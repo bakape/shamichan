@@ -25,7 +25,7 @@ func TestRenderBody(t *testing.T) {
 		name, in, out string
 		editing       bool
 		op            uint64
-		links         [][2]uint64
+		links         []common.Link
 		commands      []common.Command
 	}{
 		{
@@ -265,28 +265,28 @@ func TestRenderBody(t *testing.T) {
 			name:  "1 invalid link",
 			in:    ">>20",
 			out:   "<em>>>20</em>",
-			links: [][2]uint64{{21, 21}},
+			links: []common.Link{{21, 21, "a"}},
 		},
 		{
 			name:  "valid link",
 			in:    ">>21",
 			out:   `<em><a class="post-link" data-id="21" href="#p21">>>21</a><a class="hash-link" href="#p21"> #</a></em>`,
 			op:    20,
-			links: [][2]uint64{{21, 20}},
+			links: []common.Link{{21, 20, "a"}},
 		},
 		{
 			name:  "valid link with extra quotes",
 			in:    ">>>>21",
 			out:   `<em>>><a class="post-link" data-id="21" href="#p21">>>21</a><a class="hash-link" href="#p21"> #</a></em>`,
 			op:    20,
-			links: [][2]uint64{{21, 20}},
+			links: []common.Link{{21, 20, "a"}},
 		},
 		{
 			name:  "valid cross-thread link",
 			in:    ">>21",
-			out:   `<em><a class="post-link" data-id="21" href="/all/21#p21">>>21 ➡</a><a class="hash-link" href="/all/21#p21"> #</a></em>`,
+			out:   `<em><a class="post-link" data-id="21" href="/c/22#p21">>>21 ➡</a><a class="hash-link" href="/c/22#p21"> #</a></em>`,
 			op:    20,
-			links: [][2]uint64{{21, 22}},
+			links: []common.Link{{21, 22, "c"}},
 		},
 		{
 			name: "invalid reference",

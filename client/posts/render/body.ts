@@ -338,17 +338,17 @@ function parsePostLink(m: string[], links: PostLink[]): string {
         return m[0]
     }
     const id = parseInt(m[2])
-    let op: number
+    let data: PostLink
     for (let l of links) {
-        if (l[0] === id) {
-            op = l[1]
+        if (l.id === id) {
+            data = l
             break
         }
     }
-    if (!op) {
+    if (!data) {
         return m[0]
     }
-    return m[1] + renderPostLink(id, op)
+    return m[1] + renderPostLink(data)
 }
 
 // Parse internal or customly set reference URL
@@ -486,7 +486,7 @@ function checkEm(num: number): boolean {
     }
     const digit = num % 10
     while (true) {
-        num = Math.floor(num/10)
+        num = Math.floor(num / 10)
         if (num == 0) {
             return true
         }

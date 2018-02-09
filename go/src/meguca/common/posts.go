@@ -5,7 +5,7 @@
 package common
 
 // ParseBody forwards parser.ParseBody to avoid cyclic imports in db/upkeep
-var ParseBody func([]byte, string) ([][2]uint64, []Command, error)
+var ParseBody func([]byte, string) ([]Link, []Command, error)
 
 //easyjson:json
 // Board is defined to enable marshalling optimizations and sorting by sticky
@@ -49,21 +49,28 @@ type Thread struct {
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {
-	Editing  bool        `json:"editing,omitempty"`
-	Banned   bool        `json:"banned,omitempty"`
-	Deleted  bool        `json:"deleted,omitempty"`
-	Sage     bool        `json:"sage,omitempty"`
-	ID       uint64      `json:"id"`
-	Time     int64       `json:"time"`
-	Body     string      `json:"body"`
-	Flag     string      `json:"flag,omitempty"`
-	PosterID string      `json:"posterID,omitempty"`
-	Name     string      `json:"name,omitempty"`
-	Trip     string      `json:"trip,omitempty"`
-	Auth     string      `json:"auth,omitempty"`
-	Links    [][2]uint64 `json:"links,omitempty"`
-	Commands []Command   `json:"commands,omitempty"`
-	Image    *Image      `json:"image,omitempty"`
+	Editing  bool      `json:"editing,omitempty"`
+	Banned   bool      `json:"banned,omitempty"`
+	Deleted  bool      `json:"deleted,omitempty"`
+	Sage     bool      `json:"sage,omitempty"`
+	ID       uint64    `json:"id"`
+	Time     int64     `json:"time"`
+	Body     string    `json:"body"`
+	Flag     string    `json:"flag,omitempty"`
+	PosterID string    `json:"posterID,omitempty"`
+	Name     string    `json:"name,omitempty"`
+	Trip     string    `json:"trip,omitempty"`
+	Auth     string    `json:"auth,omitempty"`
+	Links    []Link    `json:"links,omitempty"`
+	Commands []Command `json:"commands,omitempty"`
+	Image    *Image    `json:"image,omitempty"`
+}
+
+// Describes a link from one post to another
+type Link struct {
+	ID    uint64 `json:"id"`
+	OP    uint64 `json:"op"`
+	Board string `json:"board"`
 }
 
 // StandalonePost is a post view that includes the "op" and "board" fields,

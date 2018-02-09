@@ -120,8 +120,10 @@ Node Post::render_header()
         n.children.push_back({
             "svg",
             {
-                { "xmlns", "http://www.w3.org/2000/svg" }, { "width", "8" },
-                { "height", "8" }, { "viewBox", "0 0 8 8" },
+                { "xmlns", "http://www.w3.org/2000/svg" },
+                { "width", "8" },
+                { "height", "8" },
+                { "viewBox", "0 0 8 8" },
             },
             R"'(<path d="M1.34 0a.5.5 0 0 0 .16 1h.5v2h-1c-.55 0-1 .45-1 1h3v3l.44 1 .56-1v-3h3c0-.55-.45-1-1-1h-1v-2h.5a.5.5 0 1 0 0-1h-4a.5.5 0 0 0-.09 0 .5.5 0 0 0-.06 0z" />)'",
         });
@@ -130,8 +132,10 @@ Node Post::render_header()
         n.children.push_back({
             "svg",
             {
-                { "xmlns", "http://www.w3.org/2000/svg" }, { "width", "8" },
-                { "height", "8" }, { "viewBox", "0 0 8 8" },
+                { "xmlns", "http://www.w3.org/2000/svg" },
+                { "width", "8" },
+                { "height", "8" },
+                { "viewBox", "0 0 8 8" },
             },
             R"'(<path d="M3 0c-1.1 0-2 .9-2 2v1h-1v4h6v-4h-1v-1c0-1.1-.9-2-2-2zm0 1c.56 0 1 .44 1 1v1h-2v-1c0-.56.44-1 1-1z" transform="translate(1)" />)'",
         });
@@ -162,11 +166,12 @@ Node Post::render_header()
 
     const auto id_str = std::to_string(id);
     std::string url = "#p" + id_str;
-    if (!page->thread && !page->catalog) {
-        url = "/all/" + id_str + "?last=100" + url;
+    if (!page->thread) {
+        url = absolute_thread_url(id, board) + "?last=100" + url;
     }
     n.children.push_back({
-        "nav", {},
+        "nav",
+        {},
         {
             {
                 "a",
@@ -178,7 +183,8 @@ Node Post::render_header()
             {
                 "a",
                 {
-                    { "class", "quote" }, { "href", url },
+                    { "class", "quote" },
+                    { "href", url },
                 },
                 id_str,
             },
@@ -186,9 +192,9 @@ Node Post::render_header()
     });
 
     if (id == op && !page->thread && !page->catalog) {
-        n.children.push_back(
-            { "span", {}, brunhild::Children({ render_expand_link(board, id),
-                              render_last_100_link(board, id) }) });
+        n.children.push_back({ "span", {},
+            brunhild::Children({ render_expand_link(board, id),
+                render_last_100_link(board, id) }) });
     }
 
     n.children.push_back({ "a", { { "class", "control" } },

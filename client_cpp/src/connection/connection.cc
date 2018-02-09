@@ -93,7 +93,7 @@ static void on_message(std::string_view msg, bool extracted)
         if (extracted) {
             s += '\t';
         }
-        s += "< " + string(msg);
+        s += "> " + string(msg);
         console::log(s);
     }
 
@@ -357,8 +357,10 @@ void init_connectivity()
     });
 
     // Switching from one update feed to another
-    conn_SM->act(ConnState::synced, ConnEvent::switch_sync,
-        []() { return ConnState::syncing; });
+    conn_SM->act(ConnState::synced, ConnEvent::switch_sync, []() {
+        send_sync_request();
+        return ConnState::syncing;
+    });
 
     conn_SM->wild_act(ConnEvent::close, []() {
         render_status(SyncStatus::disconnected);

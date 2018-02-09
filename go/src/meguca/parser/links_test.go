@@ -45,15 +45,15 @@ func TestParseLinks(t *testing.T) {
 
 	cases := [...]struct {
 		name, in string
-		links    [][2]uint64
+		links    []common.Link
 	}{
 		{"no links", "foo bar baz", nil},
 		{
 			"valid links",
 			" >>>88  >>6 >>>>8",
-			[][2]uint64{
-				{6, 1},
-				{8, 1},
+			[]common.Link{
+				{6, 1, "a"},
+				{8, 1, "a"},
 			},
 		},
 		{"all links invalid", " >>88 >>2 >>33", nil},

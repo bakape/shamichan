@@ -134,8 +134,9 @@ static Node render_pagination()
 // Render a link to a catalog or board page
 static Node render_catalog_link()
 {
-    return render_button(page->catalog ? "." : "catalog",
-        lang->ui.at(page->catalog ? "return" : "catalog"), true);
+    // render_button(page->catalog ? "." : "catalog",
+    //     lang->ui.at(page->catalog ? "return" : "catalog"), true);
+    return { "aside", "TODO: Catalog" };
 }
 
 // Render form for creating new threads

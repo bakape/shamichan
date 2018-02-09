@@ -107,7 +107,7 @@ func InsertPostInto(post common.StandalonePost, msg []byte) {
 // ClosePost closes a post in a feed, if it exists
 func ClosePost(
 	id, op uint64,
-	links [][2]uint64,
+	links []common.Link,
 	commands []common.Command,
 	msg []byte,
 ) {

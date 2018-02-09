@@ -66,8 +66,12 @@ func TestReader(t *testing.T) {
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
-					ID:    3,
-					Links: [][2]uint64{{1, 1}},
+					ID: 3,
+					Links: []common.Link{{
+						ID:    1,
+						OP:    1,
+						Board: "a",
+					}},
 					Commands: []common.Command{
 						{
 							Type: common.Flip,
@@ -135,8 +139,12 @@ func testGetPost(t *testing.T) {
 	// Valid read
 	std := common.StandalonePost{
 		Post: common.Post{
-			ID:    3,
-			Links: [][2]uint64{{1, 1}},
+			ID: 3,
+			Links: []common.Link{{
+				ID:    1,
+				OP:    1,
+				Board: "a",
+			}},
 			Commands: []common.Command{
 				{
 					Type: common.Flip,
@@ -160,8 +168,12 @@ func testGetAllBoard(t *testing.T) {
 	std := []common.Thread{
 		{
 			Post: common.Post{
-				ID:    3,
-				Links: [][2]uint64{{1, 1}},
+				ID: 3,
+				Links: []common.Link{{
+					ID:    1,
+					OP:    1,
+					Board: "a",
+				}},
 				Commands: []common.Command{
 					{
 						Type: common.Flip,
@@ -222,8 +234,12 @@ func testGetBoard(t *testing.T) {
 			std: []common.Thread{
 				{
 					Post: common.Post{
-						ID:    3,
-						Links: [][2]uint64{{1, 1}},
+						ID: 3,
+						Links: []common.Link{{
+							ID:    1,
+							OP:    1,
+							Board: "a",
+						}},
 						Commands: []common.Command{
 							{
 								Type: common.Flip,
@@ -315,8 +331,12 @@ func testGetThread(t *testing.T) {
 				BumpTime:  5,
 				PostCtr:   1,
 				Post: common.Post{
-					ID:    3,
-					Links: [][2]uint64{{1, 1}},
+					ID: 3,
+					Links: []common.Link{{
+						ID:    1,
+						OP:    1,
+						Board: "a",
+					}},
 					Commands: []common.Command{
 						{
 							Type: common.Flip,

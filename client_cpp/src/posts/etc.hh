@@ -16,7 +16,10 @@ const brunhild::Node delete_toggle = brunhild::Node("input",
 // Renders readable elapsed time since Unix timestamp then
 std::string relative_time(time_t then);
 
-// Render a link to a post with optional inlined linked post
+// Generate absolute URL of a thread
+std::string absolute_thread_url(unsigned long id, std::string board);
+
+// Render a link to a post with optional inlined linked post.
 brunhild::Node render_post_link(unsigned long id, const LinkData& data);
 
 // Render and anchor link. new_tab specifies, if it opens in a new tab.

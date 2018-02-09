@@ -69,7 +69,13 @@ jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz", fla
 ```
 
 ## PostLinks
-Array of linked post and parent thread tuples - [][2]uint
+Link to another post
+
+| Field | Type | Required | Description |
+|---|---|:---:|---|
+| id | uint | + | linked post ID |
+| op | bool | + | linked post parent thread |
+| board | bool | + | linked post parent board |
 
 ## Command
 Results of an executed hash command. Several different object types implement
