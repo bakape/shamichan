@@ -2,7 +2,7 @@ import { message, send, handlers } from "../../connection"
 import { Post } from "../model"
 import { ImageData, PostData } from "../../common"
 import FormView from "./view"
-import { posts, storeMine, page, storeSeenPost } from "../../state"
+import { posts, storeMine, page, storeSeenPost, boardConfig } from "../../state"
 import { postSM, postEvent, postState } from "."
 import { extend } from "../../util"
 import { SpliceResponse } from "../../client"
@@ -237,7 +237,7 @@ export default class FormModel extends Post {
 		this.sentAllocRequest = true
 
 		const req = newAllocRequest()
-		if (files.length) {
+		if (this.view.upload && files.length) {
 			req["image"] = await this.view.upload.uploadFile(files[0])
 		}
 		if (this.bufferedText) {
@@ -308,6 +308,9 @@ export default class FormModel extends Post {
 
 	// Upload the file and request its allocation
 	public async uploadFile(files?: FileList) {
+		if (boardConfig.textOnly) {
+			return
+		}
 		if (files && this.view.upload) {
 			(this.view.upload.input.files as any) = files
 		}
