@@ -1,8 +1,30 @@
 #include "mutations.hh"
 #include <emscripten.h>
+#include <optional>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace brunhild {
 using std::string;
+
+// Pending mutations for an element
+struct Mutations {
+    bool remove_el = false, scroll_into_view = false;
+    std::optional<std::string> set_inner_html, set_outer_html;
+    std::vector<std::string> append, prepend, before, after;
+    std::unordered_set<std::string> remove_attr;
+    std::unordered_map<std::string, std::string> set_attr;
+
+    // Clear mutations of element inner content to free up memory
+    void free_inner();
+
+    // Clear mutations of element inner and outer content to free up memory
+    void free_outer();
+
+    // Execute buffered mutations
+    void exec(const std::string& id);
+};
 
 void (*before_flush)() = nullptr;
 void (*after_flush)() = nullptr;
@@ -17,8 +39,11 @@ std::unordered_map<string, Mutations> mutations;
 // manipulated, before insertion
 std::vector<std::string> mutation_order;
 
-// Fetches a mutation set by element ID or creates a new one ond registers its
-// execution order
+// Tasks to execute after next mutation flush
+std::vector<std::function<void()>> tasks;
+
+// Fetches a mutation set by element ID or creates a new one ond registers
+// its execution order
 static Mutations* get_mutation_set(string id)
 {
     if (!mutations.count(id)) {
@@ -101,6 +126,8 @@ void Mutations::free_outer()
     set_outer_html = std::nullopt;
 }
 
+void schedule_task(std::function<void()> t) { tasks.push_back(t); }
+
 extern "C" void flush()
 {
     if (before_flush) {
@@ -118,6 +145,11 @@ extern "C" void flush()
     if (after_flush) {
         (*after_flush)();
     }
+
+    for (auto& t : tasks) {
+        t();
+    }
+    tasks.clear();
 }
 
 void Mutations::exec(const string& id)

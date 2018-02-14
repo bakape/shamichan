@@ -3,6 +3,7 @@
 #include "../../brunhild/node.hh"
 #include "models.hh"
 #include <ctime>
+#include <emscripten/val.h>
 #include <string>
 #include <string_view>
 
@@ -27,4 +28,4 @@ brunhild::Node render_link(
     std::string_view url, std::string_view text, bool new_tab = true);
 
 // Match target post by attributes of an element. If none found, returns NULL.
-Post* match_post(const brunhild::Attrs&);
+Post* match_post(emscripten::val&);

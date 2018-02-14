@@ -1,9 +1,11 @@
 #pragma once
 
+#include "events.hh"
 #include "node.hh"
 #include <optional>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace brunhild {
@@ -12,15 +14,38 @@ namespace brunhild {
 // This is for convience only and you are not required to use this class to
 // structure your application.
 class View {
+protected:
+    // Describes an event to be prevented or handled
+    struct EventFilter {
+        std::string type, // DOM event type (click, hover, ...)
+            selector; // specifies any CSS selector the event target should be
+                      // matched against
+    };
+
+    // Handlers for events on the root node or inside view's subtree.
+    // Override this to handle DOM events.
+    const std::vector<std::pair<EventFilter, Handler>> event_handlers;
+
 public:
     // ID of the element
     const std::string id;
 
-    // Constructs a View with an optional element ID. If none is specified, a
-    // unique ID is automatically generated.
-    View(std::string id = new_id())
-        : id(id)
+    // Method of attaching the View's root element to its parent
+    enum class InsertionMode { append, prepend, before, after };
+
+    // Constructs a View with an optional and attaches it to parent element.
+    // node is the root node and subtree of the element.
+    // If root element ID is not specified, a unique ID is automatically
+    // generated. mode sets in what way the element is attached to its parent.
+    View(const std::string& parent_id, Node node,
+        InsertionMode mode = InsertionMode::append);
+
+    // Unregisters any event handlers
+    ~View()
     {
+        for (auto id : event_handler_ids) {
+            unregister_handler(id);
+        }
     }
 
     // Append a node as an HTML string to the view's DOM element
@@ -53,6 +78,9 @@ public:
 
     // Remove an attribute from the view's DOM element
     void remove_attr(std::string key);
+
+private:
+    std::vector<long> event_handler_ids;
 };
 
 // Base class for views implementing a virtual DOM subtree with diffing of

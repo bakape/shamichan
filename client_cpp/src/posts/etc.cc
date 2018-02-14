@@ -57,8 +57,8 @@ Node render_post_link(unsigned long id, const LinkData& data)
     const string id_str = std::to_string(id);
 
     std::ostringstream url;
-    if (cross_thread ) {
-        url <<'/' << data.board << '/' << data.op;
+    if (cross_thread) {
+        url << '/' << data.board << '/' << data.op;
     }
     url << "#p" << id_str;
 
@@ -117,12 +117,14 @@ Node render_link(string_view url, string_view text, bool new_tab)
     return n;
 }
 
-Post* match_post(const brunhild::Attrs& attrs)
+Post* match_post(emscripten::val& event)
 {
-    if (!attrs.count("data-id")) {
+    string attr
+        = event["target"].call<string>("getAttribute", string("data-id"));
+    if (attr == "") {
         return 0;
     }
-    const unsigned long id = std::stoul(attrs.at("data-id"));
+    const unsigned long id = std::stoul(attr);
     if (!posts->count(id)) {
         return 0;
     }

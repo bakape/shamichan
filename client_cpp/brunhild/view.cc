@@ -1,12 +1,42 @@
 #include "view.hh"
 #include "../src/util.hh"
 #include "mutations.hh"
+#include <emscripten.h>
 #include <sstream>
 #include <utility>
 
 using std::move;
+using std::string;
 
 namespace brunhild {
+
+View::View(const string& parent_id, Node node, InsertionMode mode)
+    : id(node.attrs.count("id") ? node.attrs["id"] : new_id())
+{
+    // In case the ID was automatically generated
+    node.attrs["id"] = id;
+
+    const auto html = node.html();
+    switch (mode) {
+    case InsertionMode::append:
+        brunhild::append(parent_id, html);
+        break;
+    case InsertionMode::prepend:
+        brunhild::prepend(parent_id, html);
+        break;
+    case InsertionMode::before:
+        brunhild::before(parent_id, html);
+        break;
+    case InsertionMode::after:
+        brunhild::after(parent_id, html);
+        break;
+    }
+
+    for (auto & [ filter, fn ] : event_handlers) {
+        event_handler_ids.push_back(
+            register_handler(filter.type, fn, filter.selector));
+    }
+}
 
 void View::append(std::string html) { brunhild::append(id, html); }
 

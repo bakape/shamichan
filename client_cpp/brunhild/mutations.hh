@@ -1,31 +1,9 @@
 #pragma once
 
-#include <optional>
+#include <functional>
 #include <string>
-#include <tuple>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
 
 namespace brunhild {
-// Pending mutations for an element
-struct Mutations {
-    bool remove_el = false, scroll_into_view = false;
-    std::optional<std::string> set_inner_html, set_outer_html;
-    std::vector<std::string> append, prepend, before, after;
-    std::unordered_set<std::string> remove_attr;
-    std::unordered_map<std::string, std::string> set_attr;
-
-    // Clear mutations of element inner content to free up memory
-    void free_inner();
-
-    // Clear mutations of element inner and outer content to free up memory
-    void free_outer();
-
-    // Execute buffered mutations
-    void exec(const std::string& id);
-};
-
 // Append a node to a parent
 void append(std::string id, std::string html);
 
@@ -64,4 +42,7 @@ extern void (*before_flush)();
 
 // Function to run after flushing DOM updates. IIs run on each call of flush().
 extern void (*after_flush)();
+
+// Schedule a task to execute after the next mutation flush
+void schedule_task(std::function<void()>);
 }

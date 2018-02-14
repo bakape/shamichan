@@ -1,28 +1,21 @@
 #include "events.hh"
 #include <emscripten.h>
-#include <emscripten/bind.h>
 #include <map>
 #include <unordered_map>
-#include <vector>
 
 using std::string;
-using std::unordered_map;
-using std::vector;
 
 namespace brunhild {
-
 // All registered event handlers
-unordered_map<string, vector<Handler>>* handlers = nullptr;
+std::unordered_map<string, std::unordered_map<long, Handler>> handlers;
 
-void register_handler(string type, Handler handler, string selector)
+long id_counter = 0;
+
+long register_handler(string type, Handler handler, string selector)
 {
-    if (!handlers) {
-        handlers = new unordered_map<string, vector<Handler>>();
-    }
-
     const string key = type + ':' + selector;
 
-    if (!handlers->count(key)) {
+    if (!handlers.count(key)) {
         EM_ASM_INT(
             {
                 var type = UTF8ToString($0);
@@ -42,20 +35,11 @@ void register_handler(string type, Handler handler, string selector)
                                 return;
                             }
 
-                            var attrs; // Lazy attribute encoding
                             for (var sel in window.__bh_handlers[type]) {
                                 if (sel && (!t.matches || !t.matches(sel))) {
                                     continue;
                                 }
-                                if (!attrs) {
-                                    attrs = new Module._StringMap();
-                                    var a = t.attributes;
-                                    for (var i = 0; i < a.length; i++) {
-                                        attrs.set(a[i].name, a[i].value);
-                                    }
-                                }
-                                Module._run_event_handler(
-                                    type + ':' + sel, t.tagName, attrs);
+                                Module._run_event_handlers(type + ':' + sel, e);
                             }
                         },
                         { passive : true });
@@ -65,23 +49,32 @@ void register_handler(string type, Handler handler, string selector)
             type.c_str(), selector.c_str());
     }
 
-    (*handlers)[key].push_back(handler);
+    const long id = id_counter++;
+    handlers[key][id] = handler;
+    return id;
 }
 
-static void run_event_handler(
-    string key, string tag, std::map<string, string> attrs)
+void unregister_handler(long id)
 {
-    const EventTarget data = { tag, Attrs(attrs.begin(), attrs.end()) };
-    for (auto fn : handlers->at(key)) {
-        (*fn)(data);
+    for (auto & [ _, h_set ] : handlers) {
+        for (auto[h_id, _] : h_set) {
+            if (h_id == id) {
+                h_set.erase(h_id);
+                return;
+            }
+        }
+    }
+}
+
+static void run_event_handlers(string key, emscripten::val event)
+{
+    for (auto & [ _, h ] : handlers.at(key)) {
+        (*h)(event);
     }
 }
 
 EMSCRIPTEN_BINDINGS(module_events)
 {
-    using namespace emscripten;
-
-    function("_run_event_handler", &run_event_handler);
-    register_map<string, string>("_StringMap");
+    emscripten::function("_run_event_handlers", &run_event_handlers);
 }
 }

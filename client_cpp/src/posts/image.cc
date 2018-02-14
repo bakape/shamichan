@@ -59,14 +59,17 @@ static Node image_search_link(int i, const string& url)
     const static char* abbrev[6] = { "G", "Iq", "Sn", "Wa", "Ds", "Ex" };
     const static char* url_starts[6] = {
         "https://www.google.com/searchbyimage?image_url=",
-        "http://iqdb.org/?url=", "http://saucenao.com/search.php?db=999&url=",
-        "https://whatanime.ga/?url=", "https://desuarchive.org/_/search/image/",
+        "http://iqdb.org/?url=",
+        "http://saucenao.com/search.php?db=999&url=",
+        "https://whatanime.ga/?url=",
+        "https://desuarchive.org/_/search/image/",
         "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
     };
 
     return Node("a",
         {
-            { "target", "_blank" }, { "rel", "nofollow" },
+            { "target", "_blank" },
+            { "rel", "nofollow" },
             { "href", url_starts[i] + url },
         },
         abbrev[i]);
@@ -110,7 +113,7 @@ Node Post::render_image_search()
 
     const bool enabled[6]
         = { options->google, options->iqdb, options->sauce_nao,
-            options->what_anime, options->desu_storage, options->exhentai };
+              options->what_anime, options->desu_storage, options->exhentai };
     for (int i = 0; i < 4; i++) {
         if (enabled[i]) {
             n.children.push_back(image_search_link(i, url.str()));
@@ -233,7 +236,8 @@ static Node render_thumbnail(const Image& img)
     return {
         "img",
         {
-            { "src", thumb }, { "width", std::to_string(w) },
+            { "src", thumb },
+            { "width", std::to_string(w) },
             { "height", std::to_string(h) },
         },
     };
@@ -260,7 +264,9 @@ static void render_expanded(
             {
                 "audio",
                 {
-                    { "autoplay", "" }, { "controls", "" }, { "loop`", "" },
+                    { "autoplay", "" },
+                    { "controls", "" },
+                    { "loop`", "" },
                     { "src", src },
                 },
             },
@@ -272,7 +278,9 @@ static void render_expanded(
         inner = {
             "video",
             {
-                { "autoplay", "" }, { "controls", "" }, { "loop`", "" },
+                { "autoplay", "" },
+                { "controls", "" },
+                { "loop`", "" },
             },
         };
         break;
@@ -301,12 +309,14 @@ std::tuple<Node, optional<Node>> Post::render_image()
     const string id_str = std::to_string(id);
     inner.attrs["data-id"] = id_str;
     Node n({
-        "figure", {},
+        "figure",
+        {},
         {
             {
                 "a",
                 {
-                    { "href", img.source_path() }, { "target", "_blank" },
+                    { "href", img.source_path() },
+                    { "target", "_blank" },
                     { "data-id", id_str },
                 },
                 { inner },
@@ -317,13 +327,13 @@ std::tuple<Node, optional<Node>> Post::render_image()
     return { n, audio };
 }
 
-void handle_image_click(const brunhild::EventTarget& target)
+void handle_image_click(emscripten::val& event)
 {
-    // Identify and validate parent post
     if (page->catalog) {
         return;
     }
-    auto p = match_post(target.attrs);
+    // Identify and validate parent post
+    auto p = match_post(event);
     if (!p || !p->image) {
         return;
     }
@@ -353,16 +363,17 @@ void handle_image_click(const brunhild::EventTarget& target)
 
     img.expanded = !img.expanded;
     if (options->inline_fit == Options::FittingMode::width
-        && img.dims[1] > emscripten::val::global("window")["innerHeight"]
-                             .as<unsigned>()) {
-        brunhild::scroll_into_view('p' + target.attrs.at("data-id"));
+        && img.dims[1]
+            > emscripten::val::global("window")["innerHeight"].as<unsigned>()) {
+        brunhild::scroll_into_view('p'
+            + event["target"].call<string>("getAttribute", string("data-id")));
     }
     p->patch();
 }
 
-void toggle_hidden_thumbnail(const brunhild::EventTarget& target)
+void toggle_hidden_thumbnail(emscripten::val& event)
 {
-    auto p = match_post(target.attrs);
+    auto p = match_post(event);
     if (!p || !p->image) {
         return;
     }
