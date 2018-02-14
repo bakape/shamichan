@@ -201,14 +201,15 @@ const operators = {
 }
 
 export default function highlightSyntax(text: string): string {
-	let html = `<code class="code-tag">`,
-		token = "",
-		typ = type.unmatched
+	let html = `<code class="code-tag">`
+	let token = ""
+	let typ = type.unmatched
+	let next = ""
+	let prev = ""
 
 	for (let i = 0; i < text.length; i++) {
-		const prev = text[i - 1] || "",
-			b = text[i],
-			next = text[i + 1] || ""
+		const b = text[i]
+		next = i != text.length - 1 ? text[i + 1] : ""
 
 		switch (typ) {
 			case type.unmatched:
@@ -273,6 +274,8 @@ export default function highlightSyntax(text: string): string {
 				html += escape(b)
 				break
 		}
+
+		prev = b
 	}
 
 	if (typ === type.word) {

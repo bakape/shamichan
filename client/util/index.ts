@@ -132,7 +132,7 @@ const escapeMap: { [key: string]: string } = {
 
 // Escape a user-submitted unsafe string to protect against XSS.
 export function escape(str: string): string {
-	return str.replace(/[&<>'"`]/g, char =>
+	return str.replace(/[&'<>"]/g, char =>
 		escapeMap[char])
 }
 
