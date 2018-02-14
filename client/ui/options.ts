@@ -54,6 +54,9 @@ export default class OptionsPanel extends TabbedModal {
 	// Assign a single option value. Called on changes to the options externally
 	// not from the options panel
 	private assignValue(id: string, type: optionType, val: any) {
+		if (type == optionType.none) {
+			return
+		}
 		const el = document.getElementById(id) as HTMLInputElement
 
 		switch (type) {

@@ -9,7 +9,7 @@ import options from "."
 
 // Types of option models
 export const enum optionType {
-	checkbox, number, image, shortcut, menu, textarea,
+	checkbox, number, image, shortcut, menu, textarea, none
 }
 
 // Full schema of the option interface
@@ -222,6 +222,14 @@ export const specs: { [id: string]: OptionSpec } = {
 	workMode: {
 		default: 66,
 		type: optionType.shortcut,
+	},
+	galleryModeToggle: {
+		type: optionType.none,
+		exec: toggleHeadStyle(
+			"gallery",
+			"#threads article:not(.media):not(.editing):not(.reply-form)"
+			+ "{display: none;}",
+		)
 	},
 	galleryMode: {
 		default: 71,

@@ -30,6 +30,7 @@ interface Options extends ChangeEmitter {
 	horizontalPosting: boolean
 	hideRecursively: boolean
 	replyRight: boolean
+	galleryModeToggle: boolean
 	workModeToggle: boolean
 	userBG: boolean
 	customCSSToggle: boolean

@@ -1,7 +1,7 @@
 // Keyboard shortcuts and such
 
 import options from "../options"
-import { FormModel, postSM, postEvent, toggleExpandAll, toggleGallery, expandThreadForm } from "../posts"
+import { FormModel, postSM, postEvent, toggleExpandAll, expandThreadForm } from "../posts"
 import { page } from "../state"
 import { trigger } from "../util"
 
@@ -52,7 +52,7 @@ function handleShortcut(event: KeyboardEvent) {
 				}
 				break
 			case options.galleryMode:
-				toggleGallery()
+				options.galleryModeToggle = !options.galleryModeToggle
 				break
 			case options.expandAll:
 				toggleExpandAll()
