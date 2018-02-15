@@ -1,13 +1,13 @@
 import { Post } from './model'
 import {
-    makeFrag, importTemplate, getID, escape, firstChild, pad
+    makeFrag, importTemplate, getID, escape, firstChild, pad, on
 } from '../util'
 import { parseBody, relativeTime, renderPostLink } from './render'
 import ImageHandler from "./images"
 import { ViewAttrs } from "../base"
 import { findSyncwatches } from "./syncwatch"
 import lang from "../lang"
-import { page, mine } from "../state"
+import { page, mine, posts } from "../state"
 import options from "../options"
 import countries from "./countries"
 
@@ -180,8 +180,18 @@ export default class PostView extends ImageHandler {
         const abs = this.readableTime()
         const rel = relativeTime(this.model.time)
         const el = this.el.querySelector("time")
-        el.setAttribute("title", options.relativeTime ? abs : rel)
-        el.textContent = options.relativeTime ? rel : abs
+        // this is called on all posts in a thread by a timer
+        // minimize DOM mutations when there's nothing to update
+        const currentTitle = el.getAttribute("title")
+        const newTitle = options.relativeTime ? abs : rel
+        if(currentTitle != newTitle) {
+          el.setAttribute("title", newTitle)
+        }
+        const currentText = el.textContent;
+        const newText = options.relativeTime ? rel : abs;
+        if(currentText != newText) {
+          el.textContent = newText
+        }
     }
 
     // Renders classic absolute timestamp
@@ -317,3 +327,28 @@ export default class PostView extends ImageHandler {
         sec.append(this.el)
     }
 }
+
+function updateTimeTooltip(event: MouseEvent) {
+	// tooltip only needs updates when the text node contains absolute time
+	if(options.relativeTime) {
+		return
+	}
+	if(!(event.target instanceof HTMLElement)) {
+		return
+	}
+	const target = event.target
+	const post = target.closest("article[id^=p]")
+	const postId = post && post.id.match(/\d+/)[0] as any|0
+	const model = postId && posts.get(postId)
+	const view = model && model.view
+	if(!view) {
+		return;
+	}
+
+	view.renderTime();
+}
+
+on(document, "mouseover", updateTimeTooltip, {
+	passive: true,
+	selector: "time",
+})
