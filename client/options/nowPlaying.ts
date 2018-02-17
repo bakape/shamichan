@@ -1,6 +1,6 @@
 // R/a/dio  and Eden integration
 
-import { HTML, makeAttrs, fetchJSON } from '../util'
+import { HTML, makeAttrs, fetchJSON, escape } from '../util'
 import options from '.'
 import lang from '../lang'
 
@@ -27,36 +27,36 @@ const songMap = new Map([
 // Fetch JSON from R/a/dio's or Eden's API and rerender the banner, if different data
 // received
 async function fetchData() {
-    let newData = {} as RadioData
-    if (options.nowPlaying === "r/a/dio") {
-	    const [res, err] = await fetchJSON<any>('https://r-a-d.io/api')
-	    if (err) {
-		    return console.warn(err)
-	    }
-	    const {
-		    main: {
-			    np,
-			    listeners,
-			    dj: {
-				    djname: dj,
-			    },
-		    },
-	    }
-		    = res
-        newData = { np, listeners, dj }
-    } else if (options.nowPlaying === "eden") {
-	    const [res, err] = await fetchJSON<any>('https://edenofthewest.com/ajax/status.php')
-	    if (err) {
-		    return console.warn(err)
-	    }
-	    const {
-            dj: dj,
-            current: np,
-            listeners: listeners
-	    }
-		    = res
-        newData = { np, listeners, dj }
-    }
+	let newData = {} as RadioData
+	if (options.nowPlaying === "r/a/dio") {
+		const [res, err] = await fetchJSON<any>('https://r-a-d.io/api')
+		if (err) {
+			return console.warn(err)
+		}
+		const {
+			main: {
+				np,
+				listeners,
+				dj: {
+					djname: dj,
+				},
+			},
+		}
+			= res
+		newData = { np, listeners, dj }
+	} else if (options.nowPlaying === "eden") {
+		const [res, err] = await fetchJSON<any>('https://edenofthewest.com/ajax/status.php')
+		if (err) {
+			return console.warn(err)
+		}
+		const {
+			dj: dj,
+			current: np,
+			listeners: listeners
+		}
+			= res
+		newData = { np, listeners, dj }
+	}
 
 	if (!isMatch(newData, data)) {
 		data = newData
@@ -99,15 +99,15 @@ function render() {
 		href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
 		target: "_blank",
 	}
-    const site = options.nowPlaying === "eden" ? "edenofthewest.com" : "r-a-d.io"
+	const site = options.nowPlaying === "eden" ? "edenofthewest.com" : "r-a-d.io"
 	el.innerHTML = HTML
 		`<a href="https://${site}/" target="_blank">
-			[${data.listeners.toString()}] ${data.dj}
+			[${escape(data.listeners.toString())}] ${escape(data.dj)}
 		</a>
 		&nbsp;&nbsp;
 		<a ${makeAttrs(attrs)}>
 			<b>
-				${data.np}
+				${escape(data.np)}
 			</b>
 		</a>`
 }
