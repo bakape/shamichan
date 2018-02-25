@@ -21,7 +21,8 @@ public:
         user_BG = false, // Show custom user-set background
         custom_css_toggle = false, // Enable user-ser CSS
         mascot = false, // Show user-set mascot
-        always_lock = false; // Lock to thread bottom, even when tab hidden
+        always_lock = false, // Lock to thread bottom, even when tab hidden
+        gallery_mode_toggle = false; // Mode for better image viewing
 
     // Reverse image search engines
     bool google = true, iqdb = false, sauce_nao = true, what_anime = false,

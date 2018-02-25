@@ -363,7 +363,7 @@ export default class ImageHandler extends View<Post> {
 
 		// Scroll the post back into view, if contracting images taller than
 		// the viewport
-		if (img.tallerThanViewport && scroll) {
+		if (img.tallerThanViewport && scroll && !options.galleryModeToggle) {
 			this.el.scrollIntoView()
 		}
 
@@ -381,7 +381,9 @@ export default class ImageHandler extends View<Post> {
 			case "width":
 				cls += "fit-to-width"
 				img.tallerThanViewport = img.dims[1] > window.innerHeight
-				if (img.tallerThanViewport && !noScroll) {
+				if (img.tallerThanViewport
+					&& !noScroll
+					&& !options.galleryModeToggle) {
 					this.el.scrollIntoView()
 				}
 				break

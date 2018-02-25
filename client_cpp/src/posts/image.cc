@@ -107,13 +107,12 @@ Node Post::render_image_search()
         typ = img.thumb_type;
     }
     ostringstream unencoded, url;
-    unencoded << location_origin << "/assets/images/" << root << '/'
-              << img.SHA1 << '.' << file_extentions.at(typ);
+    unencoded << location_origin << "/assets/images/" << root << '/' << img.SHA1
+              << '.' << file_extentions.at(typ);
     url << url_encode(unencoded.str());
 
-    const bool enabled[6]
-        = { options.google, options.iqdb, options.sauce_nao,
-              options.what_anime, options.desu_storage, options.exhentai };
+    const bool enabled[6] = { options.google, options.iqdb, options.sauce_nao,
+        options.what_anime, options.desu_storage, options.exhentai };
     for (int i = 0; i < 4; i++) {
         if (enabled[i]) {
             n.children.push_back(image_search_link(i, url.str()));
@@ -363,6 +362,7 @@ void handle_image_click(emscripten::val& event)
 
     img.expanded = !img.expanded;
     if (options.inline_fit == Options::FittingMode::width
+        && !options.gallery_mode_toggle
         && img.dims[1]
             > emscripten::val::global("window")["innerHeight"].as<unsigned>()) {
         brunhild::scroll_into_view('p'

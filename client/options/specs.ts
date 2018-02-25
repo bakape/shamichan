@@ -227,8 +227,30 @@ export const specs: { [id: string]: OptionSpec } = {
 		type: optionType.none,
 		exec: toggleHeadStyle(
 			"gallery",
-			"#threads article:not(.media):not(.editing):not(.reply-form)"
-			+ "{display: none;}",
+			`#threads article:not(.media),
+.fileinfo,
+blockquote,
+.backlinks,
+header {
+	display: none;
+}
+#thread-container, article.media:not(.editing):not(.reply-form) {
+	display: inline-table;
+}
+.post-container {
+	display: flex;
+	min-width: initial;
+}
+figure {
+	margin-left: auto;
+    margin-right: auto;
+}
+article {
+	padding: 0.5em;
+}
+article figure {
+	margin: 0;
+}`,
 		)
 	},
 	galleryMode: {

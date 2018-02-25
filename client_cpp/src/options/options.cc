@@ -31,6 +31,7 @@ void Options::load()
     load_bool(what_anime, "whatAnime");
     load_bool(desu_storage, "desustorage");
     load_bool(exhentai, "exhentai");
+    load_bool(gallery_mode_toggle, "galleryModeToggle");
 
     load_uint(new_post, "newPost");
     load_uint(toggle_spoiler, "toggleSpoiler");
