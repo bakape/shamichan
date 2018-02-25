@@ -242,14 +242,22 @@ header {
 	min-width: initial;
 }
 figure {
+	margin: 0;
 	margin-left: auto;
-    margin-right: auto;
+	margin-right: auto;
+}
+figcaption {
+	text-align: center;
 }
 article {
 	padding: 0.5em;
 }
-article figure {
-	margin: 0;
+a[download] {
+    font-size: 0;
+}
+a[download]::before {
+    content: " 🡇";
+    font-size: 15px;
 }`,
 		)
 	},
