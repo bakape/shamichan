@@ -4,8 +4,7 @@
 #include <string>
 
 int scroll_by = 0;
-
-unsigned top_banner_height = 0;
+static unsigned top_banner_height = 0;
 
 void compensate_scrolling()
 {

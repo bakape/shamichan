@@ -33,14 +33,14 @@ void (*after_flush)() = nullptr;
 // mutation set insertion order and is searchable by string
 
 // All pending mutations quickly accessible by element ID
-std::unordered_map<string, Mutations> mutations;
+static std::unordered_map<string, Mutations> mutations;
 
 // Stores mutation order, so we can somewhat make sure, new children are not
 // manipulated, before insertion
-std::vector<std::string> mutation_order;
+static std::vector<std::string> mutation_order;
 
 // Tasks to execute after next mutation flush
-std::vector<std::function<void()>> tasks;
+static std::vector<std::function<void()>> tasks;
 
 // Fetches a mutation set by element ID or creates a new one ond registers
 // its execution order

@@ -33,7 +33,7 @@ public:
     std::string sync[5];
 
     // Load from inlined JSON in the DOM
-    LanguagePack();
+    void load();
 
 private:
     // Load <string, string> map from JSON
@@ -47,4 +47,4 @@ private:
 };
 
 // Contains the plugable langauge pack
-extern LanguagePack const* lang;
+extern LanguagePack lang;

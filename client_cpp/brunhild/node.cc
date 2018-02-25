@@ -1,7 +1,7 @@
 #include "node.hh"
 #include "util.hh"
 
-unsigned long long id_counter = 0;
+static unsigned long long id_counter = 0;
 
 namespace brunhild {
 

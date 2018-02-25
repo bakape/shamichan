@@ -58,4 +58,4 @@ private:
 };
 
 // Client-side options
-extern Options* options;
+extern Options options;

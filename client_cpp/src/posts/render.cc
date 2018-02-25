@@ -12,15 +12,15 @@ using std::optional;
 // Render omitted post and image count for shortened threads by thread ID
 static optional<Node> render_omitted(unsigned long id, std::string board)
 {
-    if (!threads->count(id)) {
+    if (!threads.count(id)) {
         return {};
     }
-    auto const& t = threads->at(id);
+    auto const& t = threads.at(id);
 
     // Collect all posts for this thread
     std::vector<Post*> owned;
     owned.reserve(32);
-    for (auto & [ _, p ] : *posts) {
+    for (auto & [ _, p ] : posts) {
         if (p.op == id) {
             owned.push_back(&p);
         }
@@ -41,8 +41,8 @@ static optional<Node> render_omitted(unsigned long id, std::string board)
     }
 
     std::ostringstream s;
-    s << pluralize(omit, "post") << ' ' << lang->posts.at("and") << ' '
-      << pluralize(image_omit, "image") << ' ' << lang->posts.at("omitted");
+    s << pluralize(omit, "post") << ' ' << lang.posts.at("and") << ' '
+      << pluralize(image_omit, "image") << ' ' << lang.posts.at("omitted");
     return {
         {
             "span",
@@ -51,7 +51,7 @@ static optional<Node> render_omitted(unsigned long id, std::string board)
             brunhild::Children({
                 { "span", s.str() },
                 render_button(
-                    absolute_thread_url(id, board), lang->posts.at("seeAll")),
+                    absolute_thread_url(id, board), lang.posts.at("seeAll")),
             }),
         },
     };
@@ -79,7 +79,7 @@ Node Post::render()
     pc_ch.reserve(2);
     if (image) {
         n.children.push_back(render_figcaption());
-        if ((!options->hide_thumbs && !options->work_mode_toggle)
+        if ((!options.hide_thumbs && !options.work_mode_toggle)
             || image->reveal_thumbnail) {
             auto[figure, audio] = render_image();
             pc_ch.push_back(figure);
@@ -93,7 +93,7 @@ Node Post::render()
     pc_ch.push_back(render_body());
     if (banned) {
         n.children.push_back(
-            { "b", { { "class", "admin banned" } }, lang->posts.at("banned") });
+            { "b", { { "class", "admin banned" } }, lang.posts.at("banned") });
     }
     n.children.push_back({ "div", { { "class", "post-container" } }, pc_ch });
 

@@ -20,14 +20,14 @@ void render_page()
 {
     recurse_hidden_posts();
 
-    if (page->thread) {
+    if (page.thread) {
         render_thread();
     } else {
         render_board();
     }
 
-    if (page->post) {
-        scroll_to_post(page->post);
+    if (page.post) {
+        scroll_to_post(page.post);
     } else {
         const string s
             = emscripten::val::global("location")["hash"].as<string>();
@@ -72,13 +72,13 @@ static Node render_hover_reveal(string tag, string label, string text)
 
 void push_board_hover_info(brunhild::Children& ch)
 {
-    const char* tag = page->thread ? "span" : "aside";
-    if (board_config->notice != "") {
+    const char* tag = page.thread ? "span" : "aside";
+    if (board_config.notice != "") {
         ch.push_back(render_hover_reveal(
-            tag, board_config->notice, lang->ui.at("showNotice")));
+            tag, board_config.notice, lang.ui.at("showNotice")));
     }
-    if (board_config->rules != "") {
+    if (board_config.rules != "") {
         ch.push_back(render_hover_reveal(
-            tag, board_config->rules, lang->ui.at("rules")));
+            tag, board_config.rules, lang.ui.at("rules")));
     }
 }

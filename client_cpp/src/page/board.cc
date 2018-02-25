@@ -20,19 +20,19 @@ using std::string;
 enum class SortMode { bump, last_reply, creation, reply_count, file_count };
 
 // Current thread sorting mode
-SortMode sort_mode = SortMode::bump;
+static SortMode sort_mode = SortMode::bump;
 
 // Generate a sorted vector of thread references according to current sorting
 // mode
 static std::vector<Thread*> sort_threads()
 {
     std::vector<Thread*> t;
-    t.reserve(threads->size());
-    for (auto & [ _, thread ] : *threads) {
+    t.reserve(threads.size());
+    for (auto & [ _, thread ] : threads) {
         t.push_back(&thread);
     }
 
-    const bool is_all = page->board == "all";
+    const bool is_all = page.board == "all";
     std::sort(t.begin(), t.end(), [=](auto a, auto b) {
         if (!is_all && !(a->sticky && b->sticky)) {
             if (a->sticky) {
@@ -64,8 +64,8 @@ static void render_index_threads(ostringstream& s)
 {
     // Group all posts by thread. These are already sorted by post ID.
     std::unordered_map<unsigned long, std::vector<Post*>> by_thread;
-    by_thread.reserve(threads->size());
-    for (auto & [ _, p ] : *posts) {
+    by_thread.reserve(threads.size());
+    for (auto & [ _, p ] : posts) {
         by_thread[p.op].push_back(&p);
     }
 
@@ -100,8 +100,8 @@ static void render_index_threads(ostringstream& s)
 // Render Links to different pages of the board index
 static Node render_pagination()
 {
-    const unsigned n = page->page;
-    const unsigned total = page->page_total;
+    const unsigned n = page.page;
+    const unsigned total = page.page_total;
     ostringstream s;
 
     auto link = [&s](unsigned i, string text) {
@@ -134,8 +134,8 @@ static Node render_pagination()
 // Render a link to a catalog or board page
 static Node render_catalog_link()
 {
-    // render_button(page->catalog ? "." : "catalog",
-    //     lang->ui.at(page->catalog ? "return" : "catalog"), true);
+    // render_button(page.catalog ? "." : "catalog",
+    //     lang.ui.at(page.catalog ? "return" : "catalog"), true);
     return { "aside", "TODO: Catalog" };
 }
 
@@ -153,14 +153,14 @@ static Node render_thread_form()
     form.children.reserve(10);
 
     // Board selection input
-    if (page->board == "all") {
+    if (page.board == "all") {
         Node sel("select",
             {
                 { "name", "board" },
                 { "required", "" },
             });
-        sel.children.reserve(board_titles->size());
-        for (auto & [ board, title ] : *board_titles) {
+        sel.children.reserve(board_titles.size());
+        for (auto & [ board, title ] : board_titles) {
             sel.children.push_back({
                 "option",
                 {
@@ -178,14 +178,14 @@ static Node render_thread_form()
             {
                 { "type", "text" },
                 { "name", "board" },
-                { "value", page->board },
+                { "value", page.board },
                 { "hidden", "" },
             },
         });
     }
 
     // Live post editing toggle for thread
-    auto & [ label, title ] = lang->forms.at("nonLive");
+    auto & [ label, title ] = lang.forms.at("nonLive");
     form.children.push_back({
         "label",
         { { "title", title } },
@@ -197,7 +197,7 @@ static Node render_thread_form()
                         { "type", "checkbox" },
                         { "name", "nonLive" },
                     });
-                    if (board_config->non_live) {
+                    if (board_config.non_live) {
                         attrs["checked"] = "";
                         attrs["disabled"] = "";
                     }
@@ -210,7 +210,7 @@ static Node render_thread_form()
     form.children.push_back({ "br" });
 
     // File upload form
-    if (page->board == "all" || !board_config->text_only) {
+    if (page.board == "all" || !board_config.text_only) {
         form.children.push_back({
             "span",
             { { "class", "upload-container" } },
@@ -230,7 +230,7 @@ static Node render_thread_form()
                                         { "name", "spoiler" },
                                     },
                                 },
-                                { "span", lang->posts.at("spoiler") },
+                                { "span", lang.posts.at("spoiler") },
                             },
                         },
                     },
@@ -271,7 +271,7 @@ static Node render_thread_form()
         },
         // Disambiguate constructor
         brunhild::Children({
-            render_button(std::nullopt, lang->ui.at("newThread")),
+            render_button(std::nullopt, lang.ui.at("newThread")),
             form,
         }),
     };
@@ -283,7 +283,7 @@ static void render_index_page()
     ostringstream s;
 
     // Render a random banner, if any
-    if (auto const& b = board_config->banners; b.size()) {
+    if (auto const& b = board_config.banners; b.size()) {
         s << "<h1 class=image-banner>";
         const int i = rand() % b.size();
         if (b[i] == FileType::webm) {
@@ -291,10 +291,10 @@ static void render_index_page()
         } else {
             s << "<img";
         }
-        s << " src=\"/assets/banners/" << page->board << '/' << i << "\"></h1>";
+        s << " src=\"/assets/banners/" << page.board << '/' << i << "\"></h1>";
     }
 
-    const string title = format_title(page->board, board_config->title);
+    const string title = format_title(page.board, board_config.title);
     s << "<h1 id=page-title>" << title << "</h1>";
     set_title(title);
 
@@ -310,10 +310,10 @@ static void render_index_page()
             { "id", "refresh" },
             { "class", "act glass" },
         },
-        { { "a", lang->ui.at("refresh") } },
+        { { "a", lang.ui.at("refresh") } },
     });
     ch.push_back(cat_link);
-    if (!page->catalog) {
+    if (!page.catalog) {
         ch.push_back(pagination);
     }
     push_board_hover_info(ch);
@@ -325,7 +325,7 @@ static void render_index_page()
 
     ch.clear();
     ch.push_back(cat_link);
-    if (!page->catalog) {
+    if (!page.catalog) {
         ch.push_back(pagination);
     }
 

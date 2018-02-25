@@ -34,7 +34,7 @@ public:
         const bool catalog = point_to_catalog();
         s << '[';
         board_link(s, "all", catalog);
-        for (auto& b : *boards) {
+        for (auto& b : boards) {
             s << " / ";
             board_link(s, b, catalog);
         }
@@ -81,7 +81,7 @@ protected:
                         { "type", "text" },
                         { "class", "full-width" },
                         { "name", "search" },
-                        { "placeholder", lang->ui.at("search") },
+                        { "placeholder", lang.ui.at("search") },
                     },
                 },
                 { "br" },
@@ -97,8 +97,8 @@ protected:
     Node render_footer() override
     {
         Children ch;
-        ch.reserve(board_titles->size());
-        for (auto & [ board, title ] : *board_titles) {
+        ch.reserve(board_titles.size());
+        for (auto & [ board, title ] : board_titles) {
             ch.push_back({
                 "label",
                 {},
@@ -135,7 +135,7 @@ protected:
                             { "type", "checkbox" },
                             { "name", "pointToCatalog" },
                         },
-                        lang->ui.at("pointToCatalog"),
+                        lang.ui.at("pointToCatalog"),
                     },
                 },
             },
@@ -153,7 +153,6 @@ void BoardNavigation::init()
 
     View::init();
     on("click", ".board-selection", [this](auto& _) {
-        console::log("running handler");
         if (selection_open) {
             bsf.remove();
         } else {

@@ -2,11 +2,11 @@
 #include "json.hh"
 #include "util.hh"
 
-LanguagePack const* lang;
+LanguagePack lang;
 
 using nlohmann::json;
 
-LanguagePack::LanguagePack()
+void LanguagePack::load()
 {
     auto j = json::parse(get_inner_html("lang-data"));
     auto& t = j["time"];

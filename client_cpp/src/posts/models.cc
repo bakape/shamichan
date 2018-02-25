@@ -85,8 +85,8 @@ Command::Command(nlohmann::json& j)
 
 string Image::image_root() const
 {
-    if (config->image_root_override != "") {
-        return config->image_root_override;
+    if (config.image_root_override != "") {
+        return config.image_root_override;
     }
     return "/assets/images";
 }
@@ -167,7 +167,7 @@ void Post::patch()
 
     // Proxy to top-most parent post, if inlined
     if (inlined_into) {
-        return posts->at(inlined_into).patch();
+        return posts.at(inlined_into).patch();
     }
 
     View::patch();
@@ -176,11 +176,11 @@ void Post::patch()
 void Post::remove()
 {
     if (inlined_into) {
-        posts->at(inlined_into).patch();
+        posts.at(inlined_into).patch();
     } else {
         View::remove();
     }
-    posts->erase(id);
+    posts.erase(id);
 
     // TODO: Rerender all posts linking this post
 }
@@ -191,12 +191,12 @@ void Post::propagate_links()
     // TODO: Notify about replies, if this post links to one of the user's posts
 
     for (auto && [ id, _ ] : links) {
-        if (posts->count(id)) {
-            auto& target = posts->at(id);
+        if (posts.count(id)) {
+            auto& target = posts.at(id);
             target.backlinks[this->id] = LinkData{ false, op, board };
             target.patch();
         }
-        if (post_ids->hidden.count(id)) {
+        if (post_ids.hidden.count(id)) {
             hide_recursively(*this);
         }
     }

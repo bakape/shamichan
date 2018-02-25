@@ -29,7 +29,7 @@ string pluralize(int n, string word)
     s.reserve(32);
     s = std::to_string(n) + ' ';
 
-    auto& ln = lang->plurals.at(word);
+    auto& ln = lang.plurals.at(word);
     switch (n) {
     case 1:
     case -1:
@@ -77,7 +77,7 @@ brunhild::Children render_submit(bool cancel)
         "input",
         {
             { "type", "submit" },
-            { "value", lang->ui.at("submit") },
+            { "value", lang.ui.at("submit") },
         },
     });
     if (cancel) {
@@ -86,7 +86,7 @@ brunhild::Children render_submit(bool cancel)
             {
                 { "type", "button" },
                 { "name", "cancel" },
-                { "value", lang->ui.at("submit") },
+                { "value", lang.ui.at("submit") },
             },
         });
     }
@@ -111,14 +111,14 @@ Node render_expand_link(string board, unsigned long id)
 {
     std::ostringstream s;
     s << '/' << board << '/' << id;
-    return render_button(s.str(), lang->posts.at("expand"));
+    return render_button(s.str(), lang.posts.at("expand"));
 }
 
 Node render_last_100_link(string board, unsigned long id)
 {
     std::ostringstream s;
     s << '/' << board << '/' << id << "?last=100#bottom";
-    return render_button(s.str(), lang->ui.at("last") + " 100");
+    return render_button(s.str(), lang.ui.at("last") + " 100");
 }
 
 void alert(std::string msg)

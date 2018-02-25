@@ -53,35 +53,32 @@ void init_navigation()
 // Need push signifies history.pushState() needs to be called.
 static void try_navigate_page(std::string href, bool need_push)
 {
-    if (conn_SM->state() != ConnState::synced) {
+    if (conn_SM.state() != ConnState::synced) {
         return;
     }
 
     Page next_state(href);
 
     // Does the link point to the same page as this one?
-    const bool same_page = next_state.catalog == page->catalog
-        && next_state.last_100 == page->last_100
-        && next_state.page == page->page && next_state.thread == page->thread
-        && next_state.board == page->board;
+    const bool same_page = next_state.catalog == page.catalog
+        && next_state.last_100 == page.last_100 && next_state.page == page.page
+        && next_state.thread == page.thread && next_state.board == page.board;
     if (same_page) {
-        if (!posts->count(next_state.post)) {
+        if (!posts.count(next_state.post)) {
             return;
         }
         scroll_to_post(next_state.post);
         if (need_push) {
             EM_ASM_INT({ location.hash = '#p' + $0; }, next_state.post);
         }
-        delete page;
-        page = new Page(next_state);
+        page = next_state;
         return;
     }
 
     // TODO: Reset postform
-    delete page;
-    page = new Page(next_state);
-    posts->clear();
-    threads->clear();
+    page = next_state;
+    posts.clear();
+    threads.clear();
 
     // TODO: Fetch new board configs, if needed (maybe send these in sync
     // message, if board config hash changed?)
@@ -91,17 +88,17 @@ static void try_navigate_page(std::string href, bool need_push)
 
     // TODO: Display loading animation
 
-    auto wg = new WaitGroup(
-        2, [ full_href = *location_origin + href, need_push ]() {
-            render_page();
-            if (need_push) {
-                EM_ASM({ history.pushState(null, null, UTF8ToString($0)); },
-                    full_href.c_str());
-            }
-        });
+    auto wg
+        = new WaitGroup(2, [ full_href = location_origin + href, need_push ]() {
+              render_page();
+              if (need_push) {
+                  EM_ASM({ history.pushState(null, null, UTF8ToString($0)); },
+                      full_href.c_str());
+              }
+          });
     load_post_ids(wg);
-    conn_SM->feed(ConnEvent::switch_sync);
-    conn_SM->once(ConnState::synced, [=]() { wg->done(); });
+    conn_SM.feed(ConnEvent::switch_sync);
+    conn_SM.once(ConnState::synced, [=]() { wg->done(); });
 }
 
 EMSCRIPTEN_BINDINGS(module_navigation)

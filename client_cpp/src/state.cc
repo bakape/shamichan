@@ -24,18 +24,18 @@ using std::string;
 typedef std::unordered_map<unsigned long, std::map<unsigned long, LinkData>>
     Backlinks;
 
-Config const* config;
-BoardConfig const* board_config;
-std::unordered_set<string> const* boards;
-std::map<string, string> const* board_titles;
+Config config;
+BoardConfig board_config;
+std::unordered_set<string> boards;
+std::map<string, string> board_titles;
 
-Page* page;
+Page page;
 bool debug = false;
-string const* location_origin;
+string location_origin;
 
-PostIDs* post_ids;
-std::map<unsigned long, Post>* posts;
-std::unordered_map<unsigned long, Thread>* threads;
+PostIDs post_ids;
+std::map<unsigned long, Post> posts;
+std::unordered_map<unsigned long, Thread> threads;
 
 // Places inverse post links into backlinks for later assignment to individual
 // post models
@@ -53,20 +53,20 @@ static void extract_thread(json& j, Backlinks& backlinks)
 {
     // TODO: Homogenize board and thread page data structure
     auto thread = ThreadDecoder(j);
-    auto op = page->thread ? thread.posts[0] : Post(j);
+    auto op = page.thread ? thread.posts[0] : Post(j);
     const string board = thread.board;
     const unsigned long thread_id = op.id;
     op.op = thread_id;
     op.board = board;
     extract_backlinks(op, backlinks);
-    (*threads)[thread_id] = static_cast<Thread>(thread);
-    (*posts)[thread_id] = std::move(op);
+    (threads)[thread_id] = static_cast<Thread>(thread);
+    (posts)[thread_id] = std::move(op);
 
     for (auto post : thread.posts) {
         post.board = board;
         post.op = thread_id;
         extract_backlinks(post, backlinks);
-        (*posts)[post.id] = post;
+        (posts)[post.id] = post;
     }
 }
 
@@ -75,10 +75,10 @@ void load_posts(std::string_view data)
     Backlinks backlinks;
     backlinks.reserve(128);
     auto j = json::parse(data);
-    if (page->thread) {
+    if (page.thread) {
         extract_thread(j, backlinks);
     } else {
-        page->page_total = j["pages"];
+        page.page_total = j["pages"];
         for (auto& thread : j["threads"]) {
             extract_thread(thread, backlinks);
         }
@@ -88,8 +88,8 @@ void load_posts(std::string_view data)
 
     // Assign backlinks to their post models
     for (auto[target_id, data] : backlinks) {
-        if (posts->count(target_id)) {
-            posts->at(target_id).backlinks = std::move(data);
+        if (posts.count(target_id)) {
+            posts.at(target_id).backlinks = std::move(data);
         }
     }
 }
@@ -101,58 +101,50 @@ void load_state()
     debug = val::global("location")["search"].as<string>().find("debug=true")
         != string::npos;
     auto location = val::global("location");
-    location_origin = new string(location["origin"].as<string>());
-    page = new Page(
-        location["href"].as<string>().substr(location_origin->size()));
-    options = new Options();
-    options->load();
-    lang = new LanguagePack();
+    location_origin = location["origin"].as<string>();
+    page = { location["href"].as<string>().substr(location_origin.size()) };
+    options.load();
+    lang.load();
 
-    std::map<string, string> titles;
     for (auto& pair : json::parse(get_inner_html("board-title-data"))) {
-        titles[pair["id"]] = pair["title"];
+        board_titles[pair["id"]] = pair["title"];
     }
-    board_titles = new std::map<string, string>(titles);
 
     // TODO: This should be read from a concurrent server fetch
 
-    config = new Config(c_string_view((char*)EM_ASM_INT_V({
+    config = { c_string_view((char*)EM_ASM_INT_V({
         var s = JSON.stringify(window.config);
         var len = lengthBytesUTF8(s) + 1;
         var buf = Module._malloc(len);
         stringToUTF8(s, buf, len);
         return buf;
-    })));
+    })) };
 
-    std::unordered_set<string> b_temp
-        = json::parse(c_string_view((char*)EM_ASM_INT_V({
-              var s = JSON.stringify(window.boards);
-              var len = lengthBytesUTF8(s) + 1;
-              var buf = Module._malloc(len);
-              stringToUTF8(s, buf, len);
-              return buf;
-          })));
-    boards = new std::unordered_set<string>(b_temp);
+    boards = json::parse(c_string_view((char*)EM_ASM_INT_V({
+        var s = JSON.stringify(window.boards);
+        var len = lengthBytesUTF8(s) + 1;
+        var buf = Module._malloc(len);
+        stringToUTF8(s, buf, len);
+        return buf;
+    })))
+                 .get<std::unordered_set<std::string>>();
 
-    board_config = new BoardConfig(c_string_view((char*)EM_ASM_INT_V({
+    board_config = { c_string_view((char*)EM_ASM_INT_V({
         var s = document.getElementById('board-configs').innerHTML;
         var len = lengthBytesUTF8(s) + 1;
         var buf = Module._malloc(len);
         stringToUTF8(s, buf, len);
         return buf;
-    })));
+    })) };
 
-    posts = new std::map<unsigned long, Post>();
-    post_ids = new PostIDs{};
-    threads = new std::unordered_map<unsigned long, Thread>();
     init_connectivity();
     auto wg = new WaitGroup(2, []() {
         auto wg = new WaitGroup(1, &render_page);
         load_post_ids(wg);
     });
     open_db(wg);
-    conn_SM->feed(ConnEvent::start);
-    conn_SM->once(ConnState::synced, [=]() { wg->done(); });
+    conn_SM.feed(ConnEvent::start);
+    conn_SM.once(ConnState::synced, [=]() { wg->done(); });
 }
 
 Config::Config(const c_string_view& s)
@@ -284,16 +276,16 @@ void add_to_storage(int typ, const std::vector<unsigned long> ids)
     std::unordered_set<unsigned long>* set = nullptr;
     switch (static_cast<StorageType>(typ)) {
     case StorageType::mine:
-        set = &post_ids->mine;
+        set = &post_ids.mine;
         break;
     case StorageType::seen_posts:
-        set = &post_ids->seen_posts;
+        set = &post_ids.seen_posts;
         break;
     case StorageType::seen_replies:
-        set = &post_ids->seen_replies;
+        set = &post_ids.seen_replies;
         break;
     case StorageType::hidden:
-        set = &post_ids->hidden;
+        set = &post_ids.hidden;
         break;
     }
     set->reserve(set->size() + ids.size());
@@ -322,7 +314,7 @@ ThreadDecoder::ThreadDecoder(json& j)
     }
 
     // Redundant field on thread pages
-    id = page->thread ? page->thread : (unsigned long)(j["id"]);
+    id = page.thread ? page.thread : (unsigned long)(j["id"]);
 
     post_ctr = j["postCtr"];
     image_ctr = j["imageCtr"];
@@ -331,7 +323,7 @@ ThreadDecoder::ThreadDecoder(json& j)
     bump_time = j["bumpTime"];
     board = j["board"];
     subject = j["subject"];
-    if (!page->catalog) {
+    if (!page.catalog) {
         auto& p = j.at("posts");
         posts.reserve(p.size());
         for (auto& data : p) {

@@ -310,9 +310,9 @@ static Node render_temp_link(unsigned long id)
 {
     const string id_str = std::to_string(id);
     string text = ">>" + id_str;
-    if (post_ids->mine.count(id)) {
+    if (post_ids.mine.count(id)) {
         text += ' ';
-        text += lang->posts.at("you");
+        text += lang.posts.at("you");
     }
     return {
         "a",
@@ -418,11 +418,11 @@ optional<tuple<int, Node>> Post::parse_reference(string_view word)
 
     string href;
     const string s(word);
-    if (boards->count(s)) { // Linking a board
+    if (boards.count(s)) { // Linking a board
         href.reserve(s.size() + 2);
         href = '/' + s + '/';
-    } else if (config->links.count(s)) { // Custom external URL
-        href = config->links.at(s);
+    } else if (config.links.count(s)) { // Custom external URL
+        href = config.links.at(s);
     } else {
         return nullopt;
     }

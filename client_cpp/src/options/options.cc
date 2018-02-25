@@ -1,9 +1,7 @@
 #include "options.hh"
 #include "../local_storage.hh"
 
-// TODO: Expose Options::load() to JS side for modification loading
-
-Options* options = nullptr;
+Options options;
 
 // TODO: Implement observer pattern. We don't actually need unregistering
 // though and can use function pointers only as observers.

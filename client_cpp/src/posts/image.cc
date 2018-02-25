@@ -26,14 +26,14 @@ Node Post::render_figcaption()
     Node n = { "figcaption", { { "class", "spaced" } } };
     n.children.reserve(4);
 
-    if (options->hide_thumbs || options->work_mode_toggle) {
+    if (options.hide_thumbs || options.work_mode_toggle) {
         n.children.push_back({
             "a",
             {
                 { "class", "image-toggle act" },
                 { "data-id", std::to_string(id) },
             },
-            lang->posts.at(img.reveal_thumbnail ? "hide" : "show"),
+            lang.posts.at(img.reveal_thumbnail ? "hide" : "show"),
         });
     }
     if (img.thumb_type != FileType::no_file && img.file_type != FileType::pdf) {
@@ -107,13 +107,13 @@ Node Post::render_image_search()
         typ = img.thumb_type;
     }
     ostringstream unencoded, url;
-    unencoded << *location_origin << "/assets/images/" << root << '/'
+    unencoded << location_origin << "/assets/images/" << root << '/'
               << img.SHA1 << '.' << file_extentions.at(typ);
     url << url_encode(unencoded.str());
 
     const bool enabled[6]
-        = { options->google, options->iqdb, options->sauce_nao,
-              options->what_anime, options->desu_storage, options->exhentai };
+        = { options.google, options.iqdb, options.sauce_nao,
+              options.what_anime, options.desu_storage, options.exhentai };
     for (int i = 0; i < 4; i++) {
         if (enabled[i]) {
             n.children.push_back(image_search_link(i, url.str()));
@@ -288,7 +288,7 @@ static void render_expanded(
         inner = { "img" };
     }
 
-    inner.attrs["class"] = options->inline_fit == Options::FittingMode::width
+    inner.attrs["class"] = options.inline_fit == Options::FittingMode::width
         ? "fit-to-width"
         : "fit-to-screen";
     inner.attrs["src"] = src;
@@ -329,7 +329,7 @@ std::tuple<Node, optional<Node>> Post::render_image()
 
 void handle_image_click(emscripten::val& event)
 {
-    if (page->catalog) {
+    if (page.catalog) {
         return;
     }
     // Identify and validate parent post
@@ -362,7 +362,7 @@ void handle_image_click(emscripten::val& event)
     }
 
     img.expanded = !img.expanded;
-    if (options->inline_fit == Options::FittingMode::width
+    if (options.inline_fit == Options::FittingMode::width
         && img.dims[1]
             > emscripten::val::global("window")["innerHeight"].as<unsigned>()) {
         brunhild::scroll_into_view('p'

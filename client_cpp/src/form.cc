@@ -17,14 +17,14 @@ brunhild::Node Form::render()
                 "input",
                 {
                     { "type", "submit" },
-                    { "value", lang->ui.at("submit") },
+                    { "value", lang.ui.at("submit") },
                 },
             },
             {
                 "input",
                 {
                     { "type", "button" },
-                    { "value", lang->ui.at("cancel") },
+                    { "value", lang.ui.at("cancel") },
                     { "name", "cancel" },
                 },
             },

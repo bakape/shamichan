@@ -22,7 +22,7 @@ long server_time_offset = 0;
 // IDs of posts, that are pending a rerender to update the syncwatch and the
 // time they should be rerender at. Specifying a timestamp helps avoid useless
 // subtree diffs.
-unordered_map<unsigned long, time_t> pending_rerender;
+static unordered_map<unsigned long, time_t> pending_rerender;
 
 void rerender_syncwatches()
 {
@@ -39,8 +39,8 @@ void rerender_syncwatches()
             pending_rerender.erase(id);
 
             // Posts might have been removed by now
-            if (posts->count(id)) {
-                posts->at(id).patch();
+            if (posts.count(id)) {
+                posts.at(id).patch();
             }
         }
     }
@@ -286,7 +286,7 @@ optional<Node> Post::parse_syncwatch(std::string_view frag)
     const unsigned long now = std::time(0) + server_time_offset;
     ostringstream s;
     if (now > end) {
-        s << lang->ui.at("finished");
+        s << lang.ui.at("finished");
     } else {
         if (now < start) {
             s << start - now;

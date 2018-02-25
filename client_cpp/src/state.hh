@@ -10,13 +10,13 @@
 
 // Contains all posts currently loaded on the page. Posts might or might not
 // be actually displayed.
-extern std::map<unsigned long, Post>* posts;
+extern std::map<unsigned long, Post> posts;
 
 // Caches the origin of the page
-extern std::string const* location_origin;
+extern std::string location_origin;
 
 // Loaded thread metadata
-extern std::unordered_map<unsigned long, Thread>* threads;
+extern std::unordered_map<unsigned long, Thread> threads;
 
 // Debug mode. Can be enabled by setting the "debug=true" query string.
 extern bool debug;
@@ -29,12 +29,14 @@ public:
     std::string default_lang, default_css, image_root_override;
     std::unordered_map<std::string, std::string> links;
 
+    Config() {}
+
     // Parse JSON string
     Config(const c_string_view&);
 };
 
 // Server-wide global configuration, that affects the client
-extern Config const* config;
+extern Config config;
 
 // Public board-specific configurations
 class BoardConfig {
@@ -45,18 +47,20 @@ public:
     // Banner file types
     std::vector<FileType> banners;
 
+    BoardConfig() {}
+
     // Parse JSON string
     BoardConfig(const c_string_view&);
 };
 
-// Map of all existing boards to their titles
-extern std::map<std::string, std::string> const* board_titles;
-
 // Public board-specific configurations
-extern BoardConfig const* board_config;
+extern BoardConfig board_config;
+
+// Map of all existing boards to their titles
+extern std::map<std::string, std::string> board_titles;
 
 // All boards currently registered on the server
-extern std::unordered_set<std::string> const* boards;
+extern std::unordered_set<std::string> boards;
 
 // Describes the current page
 class Page {
@@ -66,11 +70,13 @@ public:
     unsigned long thread = 0, post = 0;
     std::string board;
 
+    Page() {}
+
     Page(const std::string&);
 };
 
 // Describes the current page
-extern Page* page;
+extern Page page;
 
 // Load initial application state
 void load_state();
@@ -88,7 +94,7 @@ struct PostIDs {
         hidden; // Posts the user has hidden
 };
 
-extern PostIDs* post_ids;
+extern PostIDs post_ids;
 
 // Types of post ID storage in the database
 enum class StorageType : int { mine, seen_replies, seen_posts, hidden };

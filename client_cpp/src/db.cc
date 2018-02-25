@@ -7,13 +7,13 @@
 #include <unordered_set>
 #include <vector>
 
-const int db_version = 7;
+const static int db_version = 7;
 
 // Database has errored and all future calls should be ignored
-bool has_errored = false;
+static bool has_errored = false;
 
 // Has completed or errored out of loading the database at least once
-bool has_loaded = false;
+static bool has_loaded = false;
 
 void open_db(WaitGroup* wg)
 {
@@ -114,14 +114,14 @@ void open_db(WaitGroup* wg)
 
 void load_post_ids(WaitGroup* wg)
 {
-    if (!threads->size() || has_errored) {
+    if (!threads.size() || has_errored) {
         return wg->done();
     }
 
     // Map to vector, so we can pass it to JS
     std::vector<unsigned long> ids;
-    ids.reserve(threads->size());
-    for (auto && [ id, _ ] : *threads) {
+    ids.reserve(threads.size());
+    for (auto && [ id, _ ] : threads) {
         ids.push_back(id);
     }
 

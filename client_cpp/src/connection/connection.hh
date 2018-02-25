@@ -26,7 +26,7 @@ enum class ConnState {
 enum class ConnEvent { start, open, close, retry, error, sync, switch_sync };
 
 // Finite state machine for managing websocket connectivity
-extern FSM<ConnState, ConnEvent>* conn_SM;
+extern FSM<ConnState, ConnEvent> conn_SM;
 
 // Message types of the WebSocket communication protocol
 enum class Message : uint8_t {

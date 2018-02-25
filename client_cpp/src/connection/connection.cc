@@ -17,11 +17,11 @@
 using nlohmann::json;
 using std::string;
 
-FSM<ConnState, ConnEvent>* conn_SM = nullptr;
+FSM<ConnState, ConnEvent> conn_SM = { ConnState::loading };
 
-static void on_open() { conn_SM->feed(ConnEvent::open); }
+static void on_open() { conn_SM.feed(ConnEvent::open); }
 
-static void on_close() { conn_SM->feed(ConnEvent::close); }
+static void on_close() { conn_SM.feed(ConnEvent::close); }
 
 // Prepend type information to stringified message
 static string encode_message(Message type, const string& msg)
@@ -42,8 +42,8 @@ static string encode_message(Message type, const string& msg)
 static void if_post_exists(
     const unsigned long id, std::function<void(Post&)> fn)
 {
-    if (posts->count(id)) {
-        auto& p = posts->at(id);
+    if (posts.count(id)) {
+        auto& p = posts.at(id);
         fn(p);
     }
 }
@@ -102,7 +102,7 @@ static void on_message(std::string_view msg, bool extracted)
 
     // Guard against messages possibly resulted from rapid changing of feeds and
     // high latency
-    if (conn_SM->state() != ConnState::synced) {
+    if (conn_SM.state() != ConnState::synced) {
         switch (type) {
         case Message::invalid:
         case Message::synchronise:
@@ -116,7 +116,7 @@ static void on_message(std::string_view msg, bool extracted)
     switch (type) {
     case Message::invalid:
         alert(string(data));
-        conn_SM->feed(ConnEvent::error);
+        conn_SM.feed(ConnEvent::error);
         break;
     case Message::insert_post:
         insert_post(data);
@@ -157,7 +157,7 @@ static void on_message(std::string_view msg, bool extracted)
         if_post_exists(data, [](auto& j, auto& p) {
             p.image = Image(j);
             p.patch();
-            threads->at(page->thread).image_ctr++;
+            threads.at(page.thread).image_ctr++;
             render_post_counter();
 
             // TODO: Image auto expansion
@@ -190,7 +190,7 @@ static void on_message(std::string_view msg, bool extracted)
         break;
     case Message::synchronise:
         load_posts(data);
-        conn_SM->feed(ConnEvent::sync);
+        conn_SM.feed(ConnEvent::sync);
         break;
     // TODO: reclaim
     // TODO: post_id
@@ -230,13 +230,13 @@ static void on_message_raw(int msg_ptr)
     on_message(v.substr(), false);
 }
 
-static void retry_to_connect() { conn_SM->feed(ConnEvent::retry); }
+static void retry_to_connect() { conn_SM.feed(ConnEvent::retry); }
 
 // Work around browser slowing down/suspending tabs and keep the FSM up to
 // date with the actual status.
 static void resync_conn_SM()
 {
-    switch (conn_SM->state()) {
+    switch (conn_SM.state()) {
     // Ensure still connected, in case the computer went to sleep or
     // hibernate or the mobile browser tab was suspended.
     case ConnState::synced:
@@ -245,7 +245,7 @@ static void resync_conn_SM()
     case ConnState::desynced:
         break;
     default:
-        conn_SM->feed(ConnEvent::retry);
+        conn_SM.feed(ConnEvent::retry);
     }
 }
 
@@ -301,7 +301,7 @@ static void render_status(SyncStatus status)
 {
     string s;
     if (status != SyncStatus::hide) {
-        s = lang->sync[static_cast<size_t>(status)];
+        s = lang.sync[static_cast<size_t>(status)];
     }
     brunhild::set_inner_html("sync", s);
 }
@@ -320,8 +320,6 @@ static void schedule_reconnect()
 
 void init_connectivity()
 {
-    conn_SM = new FSM<ConnState, ConnEvent>(ConnState::loading);
-
     // Define some JS-side functions and listeners
     EM_ASM({
         document.addEventListener('visibilitychange', function() {
@@ -341,37 +339,37 @@ void init_connectivity()
 
     // Define transition rules for the connection FSM
 
-    conn_SM->act(ConnState::loading, ConnEvent::start, []() {
+    conn_SM.act(ConnState::loading, ConnEvent::start, []() {
         render_status(SyncStatus::connecting);
         connect();
         return ConnState::connecting;
     });
-    conn_SM->act(ConnState::connecting, ConnEvent::open, []() {
+    conn_SM.act(ConnState::connecting, ConnEvent::open, []() {
         render_status(SyncStatus::connecting);
         send_sync_request();
         return ConnState::syncing;
     });
-    conn_SM->act(ConnState::syncing, ConnEvent::sync, []() {
+    conn_SM.act(ConnState::syncing, ConnEvent::sync, []() {
         render_status(SyncStatus::synced);
         return ConnState::synced;
     });
 
     // Switching from one update feed to another
-    conn_SM->act(ConnState::synced, ConnEvent::switch_sync, []() {
+    conn_SM.act(ConnState::synced, ConnEvent::switch_sync, []() {
         send_sync_request();
         return ConnState::syncing;
     });
 
-    conn_SM->wild_act(ConnEvent::close, []() {
+    conn_SM.wild_act(ConnEvent::close, []() {
         render_status(SyncStatus::disconnected);
-        return conn_SM->state() == ConnState::desynced ? ConnState::desynced
-                                                       : ConnState::dropped;
+        return conn_SM.state() == ConnState::desynced ? ConnState::desynced
+                                                      : ConnState::dropped;
     });
 
     // schedule_reconnect() is called even on a dropped -> dropped "transition",
     // so this acts as a scheduler for new attempts
-    conn_SM->on(ConnState::dropped, schedule_reconnect);
-    conn_SM->act(ConnState::dropped, ConnEvent::retry, []() {
+    conn_SM.on(ConnState::dropped, schedule_reconnect);
+    conn_SM.act(ConnState::dropped, ConnEvent::retry, []() {
         if (!emscripten::val::global("navigator")["onLine"].as<bool>()) {
             schedule_reconnect();
             return ConnState::dropped;
@@ -381,7 +379,7 @@ void init_connectivity()
         return ConnState::connecting;
     });
 
-    conn_SM->wild_act(ConnEvent::error, []() {
+    conn_SM.wild_act(ConnEvent::error, []() {
         render_status(SyncStatus::desynced);
         return ConnState::desynced;
     });

@@ -5,10 +5,10 @@
 #include <map>
 
 // All registered callbacks
-std::map<unsigned, HTTPCallback> callbacks;
+static std::map<unsigned, HTTPCallback> callbacks;
 
 // Last ID used
-unsigned last_id = 0;
+static unsigned last_id = 0;
 
 void http_request(std::string url, HTTPCallback cb)
 {

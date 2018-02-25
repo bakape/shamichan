@@ -15,8 +15,8 @@ using std::string_view;
 static string ago(time_t n, string units, bool is_future)
 {
     auto count = pluralize(n, units);
-    return is_future ? lang->posts.at("in") + " " + count
-                     : count + " " + lang->posts.at("ago");
+    return is_future ? lang.posts.at("in") + " " + count
+                     : count + " " + lang.posts.at("ago");
 }
 
 string relative_time(time_t then)
@@ -26,7 +26,7 @@ string relative_time(time_t then)
     auto is_future = false;
     if (t < 1) {
         if (t > -5) { // Assume to be client clock imprecision
-            return lang->posts.at("justNow");
+            return lang.posts.at("justNow");
         }
         is_future = true;
         t = -t;
@@ -53,7 +53,7 @@ std::string absolute_thread_url(unsigned long id, string board)
 
 Node render_post_link(unsigned long id, const LinkData& data)
 {
-    const bool cross_thread = data.op != page->thread;
+    const bool cross_thread = data.op != page.thread;
     const string id_str = std::to_string(id);
 
     std::ostringstream url;
@@ -64,17 +64,17 @@ Node render_post_link(unsigned long id, const LinkData& data)
 
     std::ostringstream text;
     text << ">>" << id_str;
-    if (cross_thread && page->thread) {
+    if (cross_thread && page.thread) {
         text << " ➡";
     }
-    if (post_ids->mine.count(id)) { // Post, the user made
-        text << ' ' << lang->posts.at("you");
+    if (post_ids.mine.count(id)) { // Post, the user made
+        text << ' ' << lang.posts.at("you");
     }
 
     Node n = Node("em");
     n.children.reserve(2);
     string cls = "post-link";
-    if (post_ids->hidden.count(id)) {
+    if (post_ids.hidden.count(id)) {
         cls += " strikethrough";
     }
     n.children.push_back({ "a",
@@ -83,7 +83,7 @@ Node render_post_link(unsigned long id, const LinkData& data)
             { "href", url.str() },
         },
         text.str() });
-    if (options->post_inline_expand) {
+    if (options.post_inline_expand) {
         n.children.push_back({ "a",
             {
                 { "class", "hash-link" },
@@ -93,8 +93,8 @@ Node render_post_link(unsigned long id, const LinkData& data)
     }
 
     // Inline linked-to post
-    if (data.is_inlined && posts->count(id)) {
-        n.children.push_back(posts->at(id).render());
+    if (data.is_inlined && posts.count(id)) {
+        n.children.push_back(posts.at(id).render());
     }
 
     return n;
@@ -125,8 +125,8 @@ Post* match_post(emscripten::val& event)
         return 0;
     }
     const unsigned long id = std::stoul(attr);
-    if (!posts->count(id)) {
+    if (!posts.count(id)) {
         return 0;
     }
-    return &posts->at(id);
+    return &posts.at(id);
 }
