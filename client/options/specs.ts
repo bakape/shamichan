@@ -234,7 +234,7 @@ blockquote,
 header {
 	display: none;
 }
-#thread-container, article.media:not(.editing):not(.reply-form) {
+#thread-container, article:not(.reply-form) {
 	display: inline-table;
 }
 .post-container {
@@ -251,6 +251,7 @@ figcaption {
 }
 article {
 	padding: 0.5em;
+	width: fit-content;
 }
 a[download] {
     font-size: 0;
