@@ -29,7 +29,7 @@ void render_thread()
     n.write_html(s);
 
     s << "<hr><section id=\"thread-container\">";
-    for (auto & [ id, p ] : *posts) {
+    for (auto & [ _, p ] : *posts) {
         p.init();
         p.write_html(s);
     }

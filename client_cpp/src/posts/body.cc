@@ -10,12 +10,12 @@
 #include <tuple>
 #include <type_traits>
 
+using std::function;
 using std::nullopt;
 using std::optional;
 using std::string;
 using std::string_view;
 using std::tuple;
-using std::function;
 
 // Allows returning the size of a char or char*
 template <class D> size_t sep_size(D sep) { return sep.size(); }
@@ -35,12 +35,11 @@ void parse_string(string_view frag, D sep, function<void(string_view)> on_frag,
     const size_t sep_s = sep_size(sep);
     while (1) {
         i = frag.find(sep);
+        on_frag(frag.substr(0, i));
         if (i != string::npos) {
-            on_frag(frag.substr(0, i));
             frag = frag.substr(i + sep_s);
             on_match();
         } else {
-            on_frag(frag);
             break;
         }
     }
@@ -318,7 +317,8 @@ static Node render_temp_link(unsigned long id)
     return {
         "a",
         {
-            { "class", "post-link temp" }, { "data-id", id_str },
+            { "class", "post-link temp" },
+            { "data-id", id_str },
             { "href", "#p" + id_str },
         },
         text,

@@ -1,6 +1,7 @@
 #include "../brunhild/init.hh"
 #include "../brunhild/mutations.hh"
 #include "local_storage.hh"
+#include "page/header.hh"
 #include "page/navigation.hh"
 #include "page/scroll.hh"
 #include "posts/commands.hh"
@@ -17,6 +18,7 @@ int main()
     init_posts();
     init_navigation();
     init_scrolling();
+    init_top_header();
 
     // Block all clicks on <a> from exhibiting browser default behavior, unless
     // the user intends to navigate to a new tab or open a browser menu.
@@ -37,9 +39,8 @@ int main()
                 e.preventDefault();
             }
         });
-        document.addEventListener('submit', function (e) {
-            e.preventDefault();
-        });
+        document.addEventListener(
+            'submit', function(e) { e.preventDefault(); });
     });
 
     return 0;

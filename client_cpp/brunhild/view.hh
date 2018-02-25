@@ -2,94 +2,31 @@
 
 #include "events.hh"
 #include "node.hh"
-#include <optional>
+#include <emscripten/val.h>
+#include <functional>
 #include <sstream>
 #include <string>
-#include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 namespace brunhild {
 
-// Base class for structured DOM view representations.
-// This is for convience only and you are not required to use this class to
-// structure your application.
-class View {
-protected:
-    // Describes an event to be prevented or handled
-    struct EventFilter {
-        std::string type, // DOM event type (click, hover, ...)
-            selector; // specifies any CSS selector the event target should be
-                      // matched against
-    };
-
-    // Handlers for events on the root node or inside view's subtree.
-    // Override this to handle DOM events.
-    const std::vector<std::pair<EventFilter, Handler>> event_handlers;
-
-public:
-    // ID of the element
-    const std::string id;
-
-    // Method of attaching the View's root element to its parent
-    enum class InsertionMode { append, prepend, before, after };
-
-    // Constructs a View with an optional and attaches it to parent element.
-    // node is the root node and subtree of the element.
-    // If root element ID is not specified, a unique ID is automatically
-    // generated. mode sets in what way the element is attached to its parent.
-    View(const std::string& parent_id, Node node,
-        InsertionMode mode = InsertionMode::append);
-
-    // Unregisters any event handlers
-    ~View()
-    {
-        for (auto id : event_handler_ids) {
-            unregister_handler(id);
-        }
-    }
-
-    // Append a node as an HTML string to the view's DOM element
-    void append(std::string html);
-
-    // Prepend a node as an HTML string to the view's DOM element
-    void prepend(std::string html);
-
-    // Insert a node as an HTML string before this view's DOM element
-    void before(std::string html);
-
-    // Insert a node as an HTML string after this view's DOM element
-    void after(std::string html);
-
-    // Sets the inner HTML of the view's DOM element
-    // More efficient than individual appends, etc.
-    void set_inner_html(std::string html);
-
-    // Sets the children of the view's DOM element. This removes the previous
-    // children of the element.
-    // More efficient than individual appends, etc.
-    void set_children(const Children&);
-
-    // Remove the view's element from the DOM. The view should be considered in
-    // an invalid state after this.
-    void remove();
-
-    // Set the value of an attribute on the view's DOM element
-    void set_attr(std::string key, std::string val);
-
-    // Remove an attribute from the view's DOM element
-    void remove_attr(std::string key);
-
-private:
-    std::vector<long> event_handler_ids;
-};
-
 // Base class for views implementing a virtual DOM subtree with diffing of
 // passed Nodes to the current state of the DOM and appropriate pathing.
-class VirtualView {
+// You are not required to use this class for structureing your applications and
+// can freely build your own abstractions on top of the functions in
+// mutations.hh.
+class View {
 public:
-    // Initialize the view with a Node subtree. Takes ownership of Node.
+    // Render the root node and its subtree. Chaning the "id" attribute of the
+    // root node will invalidate all event_handlers for this View.
+    virtual Node render() = 0;
+
+    // Initialize the view with a Node subtree. Separate function, so you can
+    // optimise DOM writes as you see fit (outside your subclass constructor)
+    // and allocate View in static memory.
     // Calling more then once will overwrite previous state.
-    void init(Node);
+    void init();
 
     // Renders the view's subtree as HTML. After this call, the HTML must be
     // inserted into a parent view or passed to one of DOM mutation functions.
@@ -98,12 +35,31 @@ public:
     // Same as html(), but writes to a stream to reduce allocations
     void write_html(std::ostringstream&) const;
 
-    // Patch the view's subtree against the updated subtree in Node.
+    // Patch the view's subtree against the updated subtree.
     // Can only be called after the view has been inserted into the DOM.
-    // Takes ownership of Node.
-    void patch(Node);
+    void patch();
+
+    // Removes the View from the DOM and any DOM events listeners
+    virtual void remove();
+
+    // Add DOM event handler to view. Must be called after init().
+    // These will persist, until remove() is called, View is destroyed or init()
+    // is called again.
+    // If you have many instances of the same View subclass, it
+    // is  recommended to use register_handler with View collection lookup on
+    // your side to reduce DOM event listener count.
+    // type: DOM event type (click, hover, ...)
+    // selector: any CSS selector the event target should be matched against
+    void on(std::string type, std::string selector, Handler handler);
+
+    ~View() { remove_event_handlers(); }
+
+    // Returns root node id. Only valid after init() has run.
+    std::string id() const { return saved.attrs.at("id"); }
 
 private:
+    std::vector<long> event_handlers;
+
     // Contains data about the state of the DOM subtree after the last patch
     // call
     Node saved;
@@ -119,5 +75,7 @@ private:
 
     // Patch element's subtree
     void patch_children(Node& old, Node node);
+
+    void remove_event_handlers();
 };
 }

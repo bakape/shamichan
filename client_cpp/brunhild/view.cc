@@ -1,8 +1,12 @@
 #include "view.hh"
 #include "../src/util.hh"
+#include "events.hh"
 #include "mutations.hh"
+#include <algorithm>
 #include <emscripten.h>
+#include <emscripten/bind.h>
 #include <sstream>
+#include <string_view>
 #include <utility>
 
 using std::move;
@@ -10,72 +14,13 @@ using std::string;
 
 namespace brunhild {
 
-View::View(const string& parent_id, Node node, InsertionMode mode)
-    : id(node.attrs.count("id") ? node.attrs["id"] : new_id())
+void View::init()
 {
-    // In case the ID was automatically generated
-    node.attrs["id"] = id;
-
-    const auto html = node.html();
-    switch (mode) {
-    case InsertionMode::append:
-        brunhild::append(parent_id, html);
-        break;
-    case InsertionMode::prepend:
-        brunhild::prepend(parent_id, html);
-        break;
-    case InsertionMode::before:
-        brunhild::before(parent_id, html);
-        break;
-    case InsertionMode::after:
-        brunhild::after(parent_id, html);
-        break;
-    }
-
-    for (auto & [ filter, fn ] : event_handlers) {
-        event_handler_ids.push_back(
-            register_handler(filter.type, fn, filter.selector));
-    }
-}
-
-void View::append(std::string html) { brunhild::append(id, html); }
-
-void View::prepend(std::string html) { brunhild::prepend(id, html); }
-
-void View::before(std::string html) { brunhild::before(id, html); }
-
-void View::after(std::string html) { brunhild::after(id, html); }
-
-void View::set_inner_html(std::string html)
-{
-    brunhild::set_inner_html(id, html);
-}
-
-void View::set_children(const Children& children)
-{
-    std::ostringstream s;
-    for (auto& ch : children) {
-        ch.write_html(s);
-    }
-    set_inner_html(s.str());
-}
-
-void View::remove() { brunhild::remove(id); }
-
-void View::set_attr(std::string key, std::string val)
-{
-    brunhild::set_attr(id, key, val);
-}
-
-void View::remove_attr(std::string key) { brunhild::remove_attr(id, key); }
-
-void VirtualView::init(Node node)
-{
-    saved = node;
+    saved = render();
     ensure_id(saved);
 }
 
-void VirtualView::ensure_id(Node& node)
+void View::ensure_id(Node& node)
 {
     if (!node.attrs.count("id")) {
         node.attrs["id"] = new_id();
@@ -85,16 +30,19 @@ void VirtualView::ensure_id(Node& node)
     }
 }
 
-std::string VirtualView::html() const { return saved.html(); }
+std::string View::html() const { return saved.html(); }
 
-void VirtualView::write_html(std::ostringstream& s) const
+void View::write_html(std::ostringstream& s) const { saved.write_html(s); }
+
+void View::remove()
 {
-    saved.write_html(s);
+    brunhild::remove(saved.attrs["id"]);
+    remove_event_handlers();
 }
 
-void VirtualView::patch(Node node) { patch_node(saved, node); }
+void View::patch() { patch_node(saved, render()); }
 
-void VirtualView::patch_node(Node& old, Node node)
+void View::patch_node(Node& old, Node node)
 {
     // Completely replace node and subtree
     const auto replace = old.tag != node.tag
@@ -112,7 +60,7 @@ void VirtualView::patch_node(Node& old, Node node)
     patch_children(old, move(node));
 }
 
-void VirtualView::patch_attrs(Node& old, Attrs attrs)
+void View::patch_attrs(Node& old, Attrs attrs)
 {
     // Attributes added or changed
     for (auto & [ key, val ] : attrs) {
@@ -131,7 +79,7 @@ void VirtualView::patch_attrs(Node& old, Attrs attrs)
     }
 }
 
-void VirtualView::patch_children(Node& old, Node node)
+void View::patch_children(Node& old, Node node)
 {
     // HTML string contents can not be addressed by ID and require special
     // handling
@@ -182,5 +130,52 @@ void VirtualView::patch_children(Node& old, Node node)
             old.children.pop_back();
         }
     }
+}
+
+void View::on(std::string type, std::string selector, Handler handler)
+{
+    // Need to prepend root node ID to all selectors
+    std::ostringstream s;
+    if (const string id_str = id(); selector != "") {
+        std::string_view view = { selector };
+        size_t i;
+        while (1) {
+            i = view.find(',');
+            auto frag = view.substr(0, i);
+
+            // If this comma is inside a selector like :not(.foo,.bar), skip the
+            // appropriate amount of closing brackets. Assumes correct CSS
+            // syntax.
+            const auto opening = std::count(frag.begin(), frag.end(), '(');
+            if (opening) {
+                const auto closing = std::count(frag.begin(), frag.end(), ')');
+                if (closing != opening) {
+                    i = view.find(',', view.find(")", i, closing - opening));
+                    frag = view.substr(0, i);
+                }
+            }
+
+            s << '#' << id_str << ' ' << frag;
+            if (i != std::string::npos) {
+                view = view.substr(i + 1);
+                s << ',';
+            } else {
+                break;
+            }
+        }
+    } else {
+        // Select all children, if no selector
+        s << '#' << id_str << " *";
+    }
+
+    event_handlers.push_back(register_handler(type, handler, s.str()));
+}
+
+void View::remove_event_handlers()
+{
+    for (auto id : event_handlers) {
+        unregister_handler(id);
+    }
+    event_handlers.clear();
 }
 }

@@ -6,14 +6,28 @@
 using std::string;
 
 namespace brunhild {
-// All registered event handlers
-std::unordered_map<string, std::unordered_map<long, Handler>> handlers;
 
-long id_counter = 0;
+// used to identify event handler targets
+typedef std::pair<std::string, std::string> Key;
+
+struct pairhash {
+public:
+    template <typename T, typename U>
+    std::size_t operator()(const std::pair<T, U>& x) const
+    {
+        return std::hash<T>()(x.first) ^ (std::hash<U>()(x.second) << 1);
+    }
+};
+
+// All registered event handlers
+static std::unordered_map<Key, std::unordered_map<long, Handler>, pairhash>
+    handlers;
+
+static long id_counter = 0;
 
 long register_handler(string type, Handler handler, string selector)
 {
-    const string key = type + ':' + selector;
+    const Key key = { type, selector };
 
     if (!handlers.count(key)) {
         EM_ASM_INT(
@@ -36,10 +50,9 @@ long register_handler(string type, Handler handler, string selector)
                             }
 
                             for (var sel in window.__bh_handlers[type]) {
-                                if (sel && (!t.matches || !t.matches(sel))) {
-                                    continue;
+                                if (!sel || t.matches(sel)) {
+                                    Module._run_event_handlers(type, sel, e);
                                 }
-                                Module._run_event_handlers(type + ':' + sel, e);
                             }
                         },
                         { passive : true });
@@ -56,20 +69,32 @@ long register_handler(string type, Handler handler, string selector)
 
 void unregister_handler(long id)
 {
-    for (auto & [ _, h_set ] : handlers) {
+    for (auto & [ key, h_set ] : handlers) {
         for (auto[h_id, _] : h_set) {
             if (h_id == id) {
                 h_set.erase(h_id);
+                // Not removing global listener completely, as that would
+                // require tracking handler functions
+                EM_ASM_INT(
+                    {
+                        delete window
+                            .__bh_handlers[UTF8ToString($0)][UTF8ToString($1)];
+                    },
+                    key.first.c_str(), key.second.c_str());
                 return;
             }
         }
     }
 }
 
-static void run_event_handlers(string key, emscripten::val event)
+static void run_event_handlers(string type, string sel, emscripten::val event)
 {
+    const Key key = { type, sel };
+    if (!handlers.count(key)) {
+        return;
+    }
     for (auto & [ _, h ] : handlers.at(key)) {
-        (*h)(event);
+        h(event);
     }
 }
 

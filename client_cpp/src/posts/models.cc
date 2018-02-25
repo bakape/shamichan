@@ -170,7 +170,7 @@ void Post::patch()
         return posts->at(inlined_into).patch();
     }
 
-    VirtualView::patch(render());
+    View::patch();
 }
 
 void Post::remove()
@@ -178,7 +178,7 @@ void Post::remove()
     if (inlined_into) {
         posts->at(inlined_into).patch();
     } else {
-        brunhild::remove('p' + std::to_string(id));
+        View::remove();
     }
     posts->erase(id);
 

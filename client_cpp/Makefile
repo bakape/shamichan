@@ -10,7 +10,7 @@ else
 	COMPILE_FLAGS+=-Oz -g0
 	LTO=--llvm-lto 3
 endif
-export EMCCFLAGS=$(COMPILE_FLAGS) -Wall -Wextra -Wno-switch
+export EMCCFLAGS=$(COMPILE_FLAGS) -Wall -Wextra -Wno-switch -Wno-unused-parameter
 
 all: clean_output
 	$(MAKE) -C brunhild
@@ -25,5 +25,6 @@ clean_output:
 	rm -f *.wasm *.wast *.js *.wasm.map *.js
 
 clean: clean_output
+	rm -f *.bc
 	$(MAKE) -C brunhild clean
 	$(MAKE) -C src clean

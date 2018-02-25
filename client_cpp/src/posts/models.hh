@@ -166,7 +166,7 @@ private:
 };
 
 // Generic post model
-class Post : public brunhild::VirtualView {
+class Post : public brunhild::View {
 public:
     // Post is currrently being edited
     bool editing = false,
@@ -218,10 +218,6 @@ public:
 
     // Generates the model's node tree
     Node render();
-
-    // Initialize (or reinitialize) virtual subtree with a freshly generated
-    // node tree. Must be called before inserting post HTML into DOM.
-    void init() { brunhild::VirtualView::init(render()); }
 
     // Patch the current contents of the post into the DOM.
     // If the post is currently inlined into another post, this method will

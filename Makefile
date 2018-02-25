@@ -57,11 +57,11 @@ ifeq ($(is_windows), true)
 	cp /mingw64/bin/*.dll ./
 endif
 
-generate: clean_generated
+generate: generate_clean
 	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
 	go generate meguca/...
 
-clean_generated:
+generate_clean:
 	rm -f go/src/meguca/db/bin_data.go go/src/meguca/lang/bin_data.go go/src/meguca/assets/bin_data.go
 	rm -f go/src/meguca/common/*_easyjson.go
 	rm -f go/src/meguca/config/*_easyjson.go
@@ -79,7 +79,7 @@ update_deps:
 client_clean:
 	rm -rf www/js www/wasm www/css/*.css www/css/maps node_modules
 
-clean: client_clean wasm_clean clean_generated
+clean: client_clean wasm_clean generate_clean
 	rm -rf .build .ffmpeg .package go/pkg target meguca-*.zip meguca-*.tar.xz meguca meguca.exe
 	$(MAKE) -C scripts/migration/3to4 clean
 ifeq ($(is_windows), true)
