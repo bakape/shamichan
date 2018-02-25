@@ -376,6 +376,9 @@ void Post::parse_fragment(string_view frag)
             }
             break;
         case '#':
+            if (state.quote) {
+                break;
+            }
             // Hash commands
             if (auto n = parse_commands(word)) {
                 state.append(*n);

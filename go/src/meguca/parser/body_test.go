@@ -61,7 +61,7 @@ func TestParseBody(t *testing.T) {
 	}
 
 	links, com, err := ParseBody(
-		[]byte("#flip?\n>>8\n>>>6 (#flip)\n#flip"),
+		[]byte("#flip?\n>>8\n>>>6 \n(#flip)\n>foo #flip bar \n#flip"),
 		"a",
 	)
 	if err != nil {

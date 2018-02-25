@@ -323,6 +323,9 @@ func (c *bodyContext) parseFragment(frag string) {
 				goto end
 			}
 		case '#': // Hash commands
+			if c.state.quote {
+				goto end
+			}
 			if m := common.CommandRegexp.FindStringSubmatch(word); m != nil {
 				c.parseCommands(string(m[1]))
 				goto end

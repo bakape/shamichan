@@ -35,6 +35,7 @@ func ParseBody(body []byte, board string) (
 	}
 
 	start := 0
+	lineStart := 0
 
 	for i, b := range body {
 		switch b {
@@ -50,14 +51,14 @@ func ParseBody(body []byte, board string) (
 		_, word, _ := util.SplitPunctuation(body[start:i])
 		start = i + 1
 		if len(word) == 0 {
-			continue
+			goto next
 		}
 
 		switch word[0] {
 		case '>':
 			m := linkRegexp.FindSubmatch(word)
 			if m == nil {
-				continue
+				goto next
 			}
 			var l common.Link
 			l, err = parseLink(m)
@@ -68,20 +69,28 @@ func ParseBody(body []byte, board string) (
 				links = append(links, l)
 			}
 		case '#':
+			if body[lineStart] == '>' { // Ignore hash commands in quotes
+				goto next
+			}
 			m := common.CommandRegexp.FindSubmatch(word)
 			if m == nil {
-				continue
+				goto next
 			}
 			var c common.Command
 			c, err = parseCommand(m[1], board)
 			switch err {
 			case nil:
 				com = append(com, c)
-			case errTooManyRolls, errDieTooBig: // Consider command invalid
+			case errTooManyRolls, errDieTooBig:
+				// Consider command invalid
 				err = nil
 			default:
 				return
 			}
+		}
+	next:
+		if b == '\n' {
+			lineStart = i + 1
 		}
 	}
 

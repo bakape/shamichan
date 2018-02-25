@@ -302,6 +302,9 @@ function parseFragment(frag: string, data: PostData): string {
                 }
                 break
             case "#": // Hash commands
+                if (data.state.quote) {
+                    break
+                }
                 m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$/)
                 if (m) {
                     html += parseCommand(m[1], data)
