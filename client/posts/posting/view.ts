@@ -261,6 +261,21 @@ export default class FormView extends PostView {
             = null
     }
 
+    // Special override for displaying the post, as if it was committed to
+    // server. Increases perceived response speed.
+    public closePost() {
+        let oldBody: string;
+        if (this.model.inputBody) {
+            oldBody = this.model.body
+            this.model.body = this.model.inputBody
+            this.model.inputBody = null
+        }
+        super.closePost()
+        if (oldBody) {
+            this.model.body = oldBody
+        }
+    }
+
     // Clean up on form removal
     public remove() {
         super.remove()

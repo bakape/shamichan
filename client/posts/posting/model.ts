@@ -163,7 +163,7 @@ export default class FormModel extends Post {
 	// contents.
 	public commitClose(cancel: boolean) {
 		// It is possible to have never committed anything, if all you have in
-		// the body is one quote and an image allocated.
+		// the body is one quote
 		if (this.bufferedText) {
 			this.nonLive = false
 			this.parseInput(this.bufferedText)
