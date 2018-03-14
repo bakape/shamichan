@@ -73,14 +73,16 @@ void unregister_handler(long id)
         for (auto[h_id, _] : h_set) {
             if (h_id == id) {
                 h_set.erase(h_id);
-                // Not removing global listener completely, as that would
-                // require tracking handler functions
-                EM_ASM_INT(
-                    {
-                        delete window
-                            .__bh_handlers[UTF8ToString($0)][UTF8ToString($1)];
-                    },
-                    key.first.c_str(), key.second.c_str());
+                if (h_set.empty()) {
+                    // Not removing global listener completely, as that would
+                    // require tracking handler functions
+                    EM_ASM_INT(
+                        {
+                            delete window.__bh_handlers[UTF8ToString($0)]
+                                                       [UTF8ToString($1)];
+                        },
+                        key.first.c_str(), key.second.c_str());
+                }
                 return;
             }
         }
@@ -93,7 +95,8 @@ static void run_event_handlers(string type, string sel, emscripten::val event)
     if (!handlers.count(key)) {
         return;
     }
-    for (auto & [ _, h ] : handlers.at(key)) {
+    auto copy = handlers.at(key); // Handler might invalidate this iterator
+    for (auto & [ id, h ] : copy) {
         h(event);
     }
 }

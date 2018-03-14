@@ -18,9 +18,6 @@ public:
 
     void init();
 
-    // Add special logic to exec on event removal
-    virtual void remove() { View::remove(); }
-
 protected:
     const brunhild::Attrs attrs;
 

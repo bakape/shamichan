@@ -5,13 +5,12 @@
 #include "../local_storage.hh"
 #include "../page/page.hh"
 #include "../state.hh"
+#include <memory>
 #include <sstream>
 #include <vector>
 
 using brunhild::Children;
 using brunhild::Node;
-
-static bool selection_open = false;
 
 // Returns, if board links should point to catalog pages
 static bool point_to_catalog()
@@ -28,20 +27,7 @@ public:
     // Not in constructor, so we can allocate it to static memory
     void init();
 
-    Node render()
-    {
-        std::ostringstream s;
-        const bool catalog = point_to_catalog();
-        s << '[';
-        board_link(s, "all", catalog);
-        for (auto& b : boards) {
-            s << " / ";
-            board_link(s, b, catalog);
-        }
-        s << "] [<a class=\"board-selection bold mono\">"
-          << (selection_open ? "-" : "+") << "</a>]";
-        return { "nav", { { "id", "board-navigation" } }, s.str() };
-    }
+    Node render();
 
 private:
     // Renders a link to a board
@@ -58,8 +44,7 @@ private:
 
 class BoardSelectionForm : public Form {
 public:
-    // Not in constructor, so we can allocate it to static memory
-    void init()
+    BoardSelectionForm()
     {
         Form::init();
         brunhild::append("left-panel", html());
@@ -72,14 +57,12 @@ protected:
     Node render_inputs() override
     {
         return {
-            "div",
-            {},
+            "div", {},
             {
                 {
                     "input",
                     {
-                        { "type", "text" },
-                        { "class", "full-width" },
+                        { "type", "text" }, { "class", "full-width" },
                         { "name", "search" },
                         { "placeholder", lang.ui.at("search") },
                     },
@@ -100,19 +83,16 @@ protected:
         ch.reserve(board_titles.size());
         for (auto & [ board, title ] : board_titles) {
             ch.push_back({
-                "label",
-                {},
+                "label", {},
                 {
                     {
                         "input",
                         {
-                            { "type", "checkbox" },
-                            { "name", board },
+                            { "type", "checkbox" }, { "name", board },
                         },
                     },
                     {
-                        "a",
-                        { { "href", '/' + board + '/' } },
+                        "a", { { "href", '/' + board + '/' } },
                         format_title(board, title),
                     },
                     { "br" },
@@ -126,8 +106,7 @@ protected:
     {
         return {
             {
-                "label",
-                {},
+                "label", {},
                 {
                     {
                         "input",
@@ -144,7 +123,22 @@ protected:
 };
 
 static BoardNavigation bn;
-static BoardSelectionForm bsf;
+static std::unique_ptr<BoardSelectionForm> bsf;
+
+Node BoardNavigation::render()
+{
+    std::ostringstream s;
+    const bool catalog = point_to_catalog();
+    s << '[';
+    board_link(s, "all", catalog);
+    for (auto& b : boards) {
+        s << " / ";
+        board_link(s, b, catalog);
+    }
+    s << "] [<a class=\"board-selection bold mono\">" << (bsf ? "-" : "+")
+      << "</a>]";
+    return { "nav", { { "id", "board-navigation" } }, s.str() };
+}
 
 void BoardNavigation::init()
 {
@@ -153,11 +147,10 @@ void BoardNavigation::init()
 
     View::init();
     on("click", ".board-selection", [this](auto& _) {
-        if (selection_open) {
-            bsf.remove();
+        if (bsf) {
+            bsf->remove();
         } else {
-            selection_open = true;
-            bsf.init();
+            bsf.reset(new BoardSelectionForm());
         }
         patch();
     });
@@ -166,8 +159,8 @@ void BoardNavigation::init()
 
 void BoardSelectionForm::remove()
 {
-    Form::remove();
-    selection_open = false;
+    View::remove();
+    bsf = nullptr;
     bn.patch();
 }
 
