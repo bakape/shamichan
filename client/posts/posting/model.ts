@@ -278,6 +278,9 @@ export default class FormModel extends Post {
 		if (body) {
 			req["body"] = body
 			this.inputBody = body
+		} else if (this.bufferedText) { // Submitting an image and quote
+			req["body"] = this.inputBody = this.bufferedText
+			this.bufferedText = ""
 		}
 		if (image) {
 			req["image"] = image
