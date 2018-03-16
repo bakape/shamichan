@@ -101,7 +101,7 @@ func ParseBody(body []byte, board string) (
 // Also accepts tabs, and newlines, if multiline = true.
 func IsPrintable(r rune, multiline bool) error {
 	switch r {
-	case '\t', '\n':
+	case '\t', '\n', 12288: // Japanese space
 		if !multiline {
 			return ErrNonPrintable(r)
 		}
