@@ -25,13 +25,26 @@ func init() {
 	common.ParseBody = ParseBody
 }
 
-// ParseBody parses the entire post text body for commands and links
-func ParseBody(body []byte, board string) (
+// ParseBody parses the entire post text body for commands and links.
+// internal: function was called by automated upkeep task
+func ParseBody(body []byte, board string, internal bool) (
 	links []common.Link, com []common.Command, err error,
 ) {
 	err = IsPrintableString(string(body), true)
 	if err != nil {
-		return
+		if internal {
+			err = nil
+			// Strip any non-printables for automated post closing
+			s := make([]byte, 0, len(body))
+			for _, r := range []rune(string(body)) {
+				if IsPrintable(r, true) == nil {
+					s = append(s, string(r)...)
+				}
+			}
+			body = s
+		} else {
+			return
+		}
 	}
 
 	start := 0

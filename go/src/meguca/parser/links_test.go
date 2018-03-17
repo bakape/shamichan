@@ -64,7 +64,7 @@ func TestParseLinks(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			links, _, err := ParseBody([]byte(c.in), "a")
+			links, _, err := ParseBody([]byte(c.in), "a", false)
 			if err != nil {
 				t.Fatal(err)
 			}

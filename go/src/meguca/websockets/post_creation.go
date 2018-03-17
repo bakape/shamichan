@@ -390,6 +390,7 @@ func constructPost(
 		post.Links, post.Commands, err = parser.ParseBody(
 			[]byte(req.Body),
 			conf.ID,
+			false,
 		)
 		if err != nil {
 			return

@@ -5,7 +5,7 @@
 package common
 
 // ParseBody forwards parser.ParseBody to avoid cyclic imports in db/upkeep
-var ParseBody func([]byte, string) ([]Link, []Command, error)
+var ParseBody func([]byte, string, bool) ([]Link, []Command, error)
 
 //easyjson:json
 // Board is defined to enable marshalling optimizations and sorting by sticky
