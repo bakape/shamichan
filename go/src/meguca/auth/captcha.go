@@ -158,7 +158,7 @@ func AuthenticateCaptcha(req Captcha, ip string) bool {
 	}
 	passed := captcha.VerifyString(req.CaptchaID, req.Solution)
 	if !passed && failedCaptchas.increment(ip) {
-		err := SystemBan(ip, "bot detected", time.Now().Add(time.Hour*24*2))
+		err := SystemBan(ip, "bot detected", time.Now().Add(time.Hour*48))
 		if err != nil {
 			log.Printf("automatic ban: %s\n", err)
 		}
