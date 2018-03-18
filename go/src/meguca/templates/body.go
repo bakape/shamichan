@@ -70,9 +70,9 @@ var (
 type bodyContext struct {
 	index bool     // Rendered for an index page
 	state struct { // Body parser state
-		spoiler, quote, code, bold, italic bool
-		successive_newlines                uint
-		iDice                              int
+		spoiler, quote, code, bold, italic, blue, red bool
+		successive_newlines                           uint
+		iDice                                         int
 	}
 	common.Post
 	OP    uint64
@@ -129,9 +129,21 @@ func streambody(
 		if c.state.italic {
 			c.string("<i>")
 		}
+		if c.state.blue {
+			c.string("<span style=\"color:blue;\">")
+		}
+		if c.state.red {
+			c.string("<span style=\"color:red;\">")
+		}
 
 		fn(l)
 
+		if c.state.red {
+			c.string("</span>")
+		}
+		if c.state.blue {
+			c.string("</span>")
+		}
 		if c.state.italic {
 			c.string("</i>")
 		}
@@ -213,6 +225,12 @@ func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
 			if c.state.bold {
 				c.string("</b>")
 			}
+			if c.state.red {
+				c.string("</span>")
+			}
+			if c.state.blue {
+				c.string("</span>")
+			}
 
 			if c.state.spoiler {
 				c.string("</del>")
@@ -220,6 +238,12 @@ func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
 				c.string("<del>")
 			}
 
+			if c.state.blue {
+				c.string("<span style=\"color:blue;\">")
+			}
+			if c.state.red {
+				c.string("<span style=\"color:red;\">")
+			}
 			if c.state.bold {
 				c.string("<b>")
 			}
@@ -250,6 +274,12 @@ func (c *bodyContext) parseBolds(frag string, fn func(string)) {
 			if c.state.italic {
 				c.string("</i>")
 			}
+			if c.state.blue {
+				c.string("</span>")
+			}
+			if c.state.red {
+				c.string("</span>")
+			}
 
 			if c.state.bold {
 				c.string("</b>")
@@ -257,6 +287,12 @@ func (c *bodyContext) parseBolds(frag string, fn func(string)) {
 				c.string("<b>")
 			}
 
+			if c.state.red {
+				c.string("<span style=\"color:red;\">")
+			}
+			if c.state.blue {
+				c.string("<span style=\"color:blue;\">")
+			}
 			if c.state.italic {
 				c.string("<i>")
 			}
@@ -272,18 +308,92 @@ func (c *bodyContext) parseBolds(frag string, fn func(string)) {
 
 // Inject italic tags and call fn on the remaining parts
 func (c *bodyContext) parseItalics(frag string, fn func(string)) {
+	_fn := func(frag string) {
+		c.parseBlues(frag, fn)
+	}
+	
 	for {
 		i := strings.Index(frag, "~~")
 		if i != -1 {
-			fn(frag[:i])
+			_fn(frag[:i])
+			
+			if c.state.blue {
+				c.string("</span>")
+			}
+			if c.state.red {
+				c.string("</span>")
+			}
 
 			if c.state.italic {
 				c.string("</i>")
 			} else {
 				c.string("<i>")
 			}
+			
+			if c.state.red {
+				c.string("<span style=\"color:red;\">")
+			}
+			if c.state.blue {
+				c.string("<span style=\"color:blue;\">")
+			}
 
 			c.state.italic = !c.state.italic
+			frag = frag[i+2:]
+		} else {
+			_fn(frag)
+			break
+		}
+	}
+}
+
+// Inject blue color tags and call fn on the remaining parts
+func (c *bodyContext) parseBlues(frag string, fn func(string)) {
+	_fn := func(frag string) {
+		c.parseReds(frag, fn)
+	}
+	
+	for {
+		i := strings.Index(frag, "^^")
+		if i != -1 {
+			_fn(frag[:i])
+			
+			if c.state.red {
+				c.string("</span>")
+			}
+
+			if c.state.blue {
+				c.string("</span>")
+			} else {
+				c.string("<span style=\"color:blue;\">")
+			}
+
+			if c.state.red {
+				c.string("<span style=\"color:red;\">")
+			}
+
+			c.state.blue = !c.state.blue
+			frag = frag[i+2:]
+		} else {
+			_fn(frag)
+			break
+		}
+	}
+}
+
+// Inject red color tags and call fn on the remaining parts
+func (c *bodyContext) parseReds(frag string, fn func(string)) {
+	for {
+		i := strings.Index(frag, "%%")
+		if i != -1 {
+			fn(frag[:i])
+			
+			if c.state.red {
+				c.string("</span>")
+			} else {
+				c.string("<span style=\"color:red;\">")
+			}
+
+			c.state.red = !c.state.red
 			frag = frag[i+2:]
 		} else {
 			fn(frag)

@@ -44,6 +44,8 @@ export type TextState = {
 	code: boolean
 	italic: boolean
 	bold: boolean
+	red: boolean
+	blue: boolean
 	haveSyncwatch: boolean
 	successive_newlines: number
 	iDice: number // Index of the next dice array item to use
