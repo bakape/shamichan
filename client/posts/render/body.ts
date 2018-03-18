@@ -156,20 +156,20 @@ function parseSpoilers(
 			if (state.bold) {
 				html += "</b>"
 			}
-			if (state.red) {
+			if (state.blue) {
 				html += "</span>"
 			}
-			if (state.blue) {
+			if (state.red) {
 				html += "</span>"
 			}
 
 			html += `<${state.spoiler ? '/' : ''}del>`
 
-			if (state.blue) {
-				html += "<span style=\"color:blue;\">"
-			}
 			if (state.red) {
 				html += "<span style=\"color:red;\">"
+			}
+			if (state.blue) {
+				html += "<span style=\"color:blue;\">"
 			}
 			if (state.bold) {
 				html += "<b>"
@@ -284,7 +284,7 @@ function parseBlues(
 		parseReds(frag, state, fn)
 	let html = ""
 	while (true) {
-		const i = frag.indexOf("^^")
+		const i = frag.indexOf("^b")
 		if (i !== -1) {
 			html += _fn(frag.slice(0, i))
 			
@@ -316,7 +316,7 @@ function parseReds(
 ): string {
 	let html = ""
 	while (true) {
-		const i = frag.indexOf("%%")
+		const i = frag.indexOf("^r")
 		if (i !== -1) {
 			html += fn(frag.slice(0, i))
 			

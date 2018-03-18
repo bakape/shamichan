@@ -225,10 +225,10 @@ func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
 			if c.state.bold {
 				c.string("</b>")
 			}
-			if c.state.red {
+			if c.state.blue {
 				c.string("</span>")
 			}
-			if c.state.blue {
+			if c.state.red {
 				c.string("</span>")
 			}
 
@@ -238,11 +238,11 @@ func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
 				c.string("<del>")
 			}
 
-			if c.state.blue {
-				c.string("<span style=\"color:blue;\">")
-			}
 			if c.state.red {
 				c.string("<span style=\"color:red;\">")
+			}
+			if c.state.blue {
+				c.string("<span style=\"color:blue;\">")
 			}
 			if c.state.bold {
 				c.string("<b>")
@@ -353,7 +353,7 @@ func (c *bodyContext) parseBlues(frag string, fn func(string)) {
 	}
 	
 	for {
-		i := strings.Index(frag, "^^")
+		i := strings.Index(frag, "^b")
 		if i != -1 {
 			_fn(frag[:i])
 			
@@ -383,7 +383,7 @@ func (c *bodyContext) parseBlues(frag string, fn func(string)) {
 // Inject red color tags and call fn on the remaining parts
 func (c *bodyContext) parseReds(frag string, fn func(string)) {
 	for {
-		i := strings.Index(frag, "%%")
+		i := strings.Index(frag, "^r")
 		if i != -1 {
 			fn(frag[:i])
 			
