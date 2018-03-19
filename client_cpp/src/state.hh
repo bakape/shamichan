@@ -1,9 +1,9 @@
 #pragma once
 
-#include "json.hh"
 #include "posts/models.hh"
 #include "util.hh"
 #include <map>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -57,10 +57,7 @@ public:
 extern BoardConfig board_config;
 
 // Map of all existing boards to their titles
-extern std::map<std::string, std::string> board_titles;
-
-// All boards currently registered on the server
-extern std::unordered_set<std::string> boards;
+extern std::map<std::string, std::string> boards;
 
 // Describes the current page
 class Page {

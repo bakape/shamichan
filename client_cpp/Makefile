@@ -10,6 +10,7 @@ else
 	COMPILE_FLAGS+=-Oz -g0
 	LTO=--llvm-lto 3
 endif
+COMPILE_FLAGS:=$(COMPILE_FLAGS) -I$(abspath ./json/include)
 export EMCCFLAGS=$(COMPILE_FLAGS) -Wall -Wextra -Wno-switch -Wno-unused-parameter
 
 all: clean_output

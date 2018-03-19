@@ -1,24 +1,16 @@
-all: page posts options connection $(addsuffix .bc, $(basename $(wildcard *.cc)))
+DIRS=$(subst /,,$(wildcard */))
+.PHONY: all $(DIRS)
 
-.PHONY: page posts options connection
+all: $(DIRS) $(addsuffix .bc, $(basename $(wildcard *.cc)))
 
-page:
-	$(MAKE) -C page
-
-posts:
-	$(MAKE) -C posts
-
-options:
-	$(MAKE) -C options
-
-connection:
-	$(MAKE) -C connection
+$(DIRS):
+	$(MAKE) -C $@
 
 %.bc: %.cc
 	emcc $^ -o $@ $(EMCCFLAGS)
 
-clean:
+clean: $(addsuffix _clean,$(DIRS))
 	rm -f *.bc
-	$(MAKE) -C page clean
-	$(MAKE) -C posts clean
-	$(MAKE) -C options clean
+
+$(addsuffix _clean,$(DIRS)):
+	$(MAKE) -C $(subst _clean,,$@) clean

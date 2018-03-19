@@ -54,7 +54,7 @@ public:
 
     ~View() { remove_event_handlers(); }
 
-    // Returns root node id. Only valid after init() has run.
+    // Returns root node id. Only valid after init() has been called.
     std::string id() const { return saved.attrs.at("id"); }
 
 private:

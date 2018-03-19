@@ -178,8 +178,7 @@ class BoardSelectionPanel extends View<null> {
 
 // Write selected boards to localStorage
 function persistSelected() {
-	const data = JSON.stringify(Array.from(selected))
-	localStorage.setItem("selectedBoards", data)
+	localStorage.setItem("selectedBoards", [...selected].join())
 }
 
 // Shift thread to the right, when the side panel is rendered or mutated
@@ -208,7 +207,14 @@ export default () => {
 	// Read selected boards from localStorage
 	const sel = localStorage.getItem("selectedBoards")
 	if (sel) {
-		for (let b of JSON.parse(sel)) {
+		let arr: string[];
+		if (sel.includes("[")) {
+			// Migrate away from JSON
+			arr = JSON.parse(sel);
+		} else {
+			arr = sel.split(',');
+		}
+		for (let b of arr) {
 			selected.add(b)
 		}
 	}

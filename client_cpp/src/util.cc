@@ -1,6 +1,7 @@
 #include "util.hh"
 #include "lang.hh"
 #include <emscripten.h>
+#include <locale>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -76,16 +77,14 @@ brunhild::Children render_submit(bool cancel)
     ch.push_back({
         "input",
         {
-            { "type", "submit" },
-            { "value", lang.ui.at("submit") },
+            { "type", "submit" }, { "value", lang.ui.at("submit") },
         },
     });
     if (cancel) {
         ch.push_back({
             "input",
             {
-                { "type", "button" },
-                { "name", "cancel" },
+                { "type", "button" }, { "name", "cancel" },
                 { "value", lang.ui.at("submit") },
             },
         });
@@ -124,6 +123,17 @@ Node render_last_100_link(string board, unsigned long id)
 void alert(std::string msg)
 {
     EM_ASM_INT({ alert(UTF8ToString($0)); }, msg.c_str());
+}
+
+std::string to_lower(const std::string& s)
+{
+    auto loc = std::locale();
+    std::string conv;
+    conv.reserve(s.size());
+    for (auto ch : s) {
+        conv += std::tolower(ch, loc);
+    }
+    return conv;
 }
 
 namespace console {

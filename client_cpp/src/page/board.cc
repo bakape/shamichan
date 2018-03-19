@@ -159,8 +159,8 @@ static Node render_thread_form()
                 { "name", "board" },
                 { "required", "" },
             });
-        sel.children.reserve(board_titles.size());
-        for (auto & [ board, title ] : board_titles) {
+        sel.children.reserve(boards.size());
+        for (auto & [ board, title ] : boards) {
             sel.children.push_back({
                 "option",
                 {

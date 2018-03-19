@@ -1,6 +1,6 @@
-#include "../json.hh"
 #include "../state.hh"
 #include "connection.hh"
+#include <nlohmann/json.hpp>
 #include <unordered_map>
 
 using nlohmann::json;

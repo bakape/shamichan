@@ -96,6 +96,7 @@
 		"cancel": "Cofnij",
 		"catalog": "Katalog",
 		"confirmDelete": "Delete all posts by this IP?",
+		"done": "Importowanie zakończone sukcesem. Strona zostanie teraz odświeżona",
 		"finished": "Zakończono",
 		"googleSong": "Kliknij, żeby wyszukać piosenkę",
 		"importCorrupt": "Import failed. File corrupt",

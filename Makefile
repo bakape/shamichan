@@ -87,7 +87,7 @@ ifeq ($(is_windows), true)
 endif
 
 dist_clean: clean
-	rm -rf images error.log
+	rm -rf images error.log db.db
 
 test:
 	go test --race -p 1 meguca/...

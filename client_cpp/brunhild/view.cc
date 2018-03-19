@@ -62,21 +62,25 @@ void View::patch_node(Node& old, Node node)
 
 void View::patch_attrs(Node& old, Attrs attrs)
 {
+    const std::string id = old.attrs.at("id");
+
     // Attributes added or changed
     for (auto & [ key, val ] : attrs) {
         if (key != "id" && (!old.attrs.count(key) || old.attrs[key] != val)) {
-            old.attrs[key] = val;
-            set_attr(old.attrs.at("id"), key, val);
+            set_attr(id, key, val);
         }
     }
 
     // Attributes removed
+    std::vector<std::string> to_remove;
     for (auto & [ key, _ ] : old.attrs) {
         if (key != "id" && !attrs.count(key)) {
-            old.attrs.erase(key);
-            remove_attr(old.attrs.at("id"), key);
+            remove_attr(id, key);
         }
     }
+
+    old.attrs = attrs;
+    old.attrs["id"] = id;
 }
 
 void View::patch_children(Node& old, Node node)

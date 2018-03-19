@@ -1,5 +1,6 @@
 #include "../lang.hh"
 #include "../state.hh"
+#include "../util.hh"
 #include "etc.hh"
 #include "models.hh"
 #include "url.hh"
@@ -17,14 +18,6 @@ using std::string;
 using std::string_view;
 using std::tuple;
 
-// Allows returning the size of a char or char*
-template <class D> size_t sep_size(D sep) { return sep.size(); }
-template <> size_t sep_size<char>(char sep[[maybe_unused]]) { return 1; }
-template <> size_t sep_size<const char*>(const char* sep)
-{
-    return strlen(sep);
-}
-
 // Split string_view into subviews on delimiter D, call on_frag on each
 // fragment and call on_match after each matched delimiter
 template <class D>
@@ -32,7 +25,7 @@ void parse_string(string_view frag, D sep, function<void(string_view)> on_frag,
     function<void()> on_match = []() {})
 {
     size_t i;
-    const size_t sep_s = sep_size(sep);
+    const size_t sep_s = string_size(sep);
     while (1) {
         i = frag.find(sep);
         on_frag(frag.substr(0, i));
@@ -317,8 +310,7 @@ static Node render_temp_link(unsigned long id)
     return {
         "a",
         {
-            { "class", "post-link temp" },
-            { "data-id", id_str },
+            { "class", "post-link temp" }, { "data-id", id_str },
             { "href", "#p" + id_str },
         },
         text,

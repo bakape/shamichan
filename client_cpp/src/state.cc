@@ -26,8 +26,7 @@ typedef std::unordered_map<unsigned long, std::map<unsigned long, LinkData>>
 
 Config config;
 BoardConfig board_config;
-std::unordered_set<string> boards;
-std::map<string, string> board_titles;
+std::map<std::string, std::string> boards;
 
 Page page;
 bool debug = false;
@@ -107,7 +106,7 @@ void load_state()
     lang.load();
 
     for (auto& pair : json::parse(get_inner_html("board-title-data"))) {
-        board_titles[pair["id"]] = pair["title"];
+        boards[pair["id"]] = pair["title"];
     }
 
     // TODO: This should be read from a concurrent server fetch
@@ -119,15 +118,6 @@ void load_state()
         stringToUTF8(s, buf, len);
         return buf;
     })) };
-
-    boards = json::parse(c_string_view((char*)EM_ASM_INT_V({
-        var s = JSON.stringify(window.boards);
-        var len = lengthBytesUTF8(s) + 1;
-        var buf = Module._malloc(len);
-        stringToUTF8(s, buf, len);
-        return buf;
-    })))
-                 .get<std::unordered_set<std::string>>();
 
     board_config = { c_string_view((char*)EM_ASM_INT_V({
         var s = document.getElementById('board-configs').innerHTML;

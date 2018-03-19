@@ -96,6 +96,7 @@
 		"cancel": "Скасувати",
 		"catalog": "Каталог",
 		"confirmDelete": "Delete all posts by this IP?",
+		"done": "Імпорт успішний. Зараз сторінка перезавантажиться.",
 		"finished": "Готово.",
 		"googleSong": "Клікніть для гугль пісні",
 		"importCorrupt": "Import failed. File corrupt",

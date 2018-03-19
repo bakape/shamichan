@@ -1,9 +1,9 @@
 #include "posts.hh"
 #include "../../brunhild/mutations.hh"
-#include "../json.hh"
 #include "../page/thread.hh"
 #include "../posts/models.hh"
 #include "../state.hh"
+#include <nlohmann/json.hpp>
 
 using nlohmann::json;
 

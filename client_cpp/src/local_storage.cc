@@ -8,7 +8,7 @@ void local_storage_set(const string& key, const string& val)
 {
     EM_ASM_INT(
         {
-            localStorage.setItem(UTF8ToString(@0), UTF8ToString(@1));
+            localStorage.setItem(UTF8ToString($0), UTF8ToString($1));
             return 0;
         },
         key.c_str(), val.c_str());

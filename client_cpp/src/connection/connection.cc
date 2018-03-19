@@ -1,7 +1,6 @@
 #include "connection.hh"
 #include "../../brunhild/mutations.hh"
 #include "../../utf8/utf8.h"
-#include "../json.hh"
 #include "../lang.hh"
 #include "../page/thread.hh"
 #include "../posts/commands.hh"
@@ -13,6 +12,7 @@
 #include <emscripten/bind.h>
 #include <functional>
 #include <iterator>
+#include <nlohmann/json.hpp>
 
 using nlohmann::json;
 using std::string;
@@ -209,9 +209,9 @@ static void on_message(std::string_view msg, bool extracted)
     case Message::server_time:
         server_time_offset = json::parse(data);
         break;
-        // TODO: redirect
-        // TODO: notification
-        // TODO: captcha
+    // TODO: redirect
+    // TODO: notification
+    // TODO: captcha
     default:
         console::warn(
             "unknown websocket message: " + encode_message(type, string(data)));

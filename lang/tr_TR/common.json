@@ -96,6 +96,7 @@
 		"cancel": "İptal",
 		"catalog": "Catalog",
 		"confirmDelete": "Delete all posts by this IP?",
+		"done": "Import successfull. The page will now reload.",
 		"finished": "Bitti",
 		"googleSong": "Şarkıyı googleda aratmak için tıklayın",
 		"importCorrupt": "Import failed. File corrupt",
