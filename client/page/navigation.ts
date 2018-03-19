@@ -208,7 +208,7 @@ export default () => {
 	const sel = localStorage.getItem("selectedBoards")
 	if (sel) {
 		let arr: string[];
-		if (sel.includes("[")) {
+		if (sel.startsWith("[")) {
 			// Migrate away from JSON
 			arr = JSON.parse(sel);
 		} else {
