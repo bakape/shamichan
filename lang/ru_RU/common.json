@@ -110,6 +110,8 @@
 		"pointToCatalog": "Перейти к каталогу",
 		"postsImages": "Посты/Картинки/TTL",
 		"quoted": "Вас процитировали",
+		"redirectByIP": "Redirect all by IP",
+		"redirectByThread": "Redirect all by thread",
 		"refresh": "Обновить",
 		"reply": "Ответить",
 		"report": "Пожаловаться",

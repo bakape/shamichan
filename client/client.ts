@@ -2,7 +2,7 @@
 
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts, page } from './state'
-import { Post, FormModel, PostView, postEvent, postSM } from './posts'
+import { Post, FormModel, PostView } from './posts'
 import { PostLink, Command, PostData, ImageData } from "./common"
 import { postAdded } from "./ui"
 import { incrementPostCount } from "./page"
@@ -137,10 +137,8 @@ export default () => {
 		handle(id, m =>
 			m.setBanned())
 
-	handlers[message.redirect] = (board: string) => {
-		postSM.feed(postEvent.reset)
-		location.href = `/${board}/`
-	}
+	handlers[message.redirect] = (url: string) =>
+		location.href = url
 
 	handlers[message.notification] = (text: string) =>
 		new OverlayNotification(text)

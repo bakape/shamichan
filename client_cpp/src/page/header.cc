@@ -158,8 +158,12 @@ static void read_selected()
 {
     selected_boards.clear();
     if (auto s = local_storage_get("selectedBoards"); s) {
-        split_string(*s, ',',
-            [](std::string_view s) { selected_boards.insert(std::string(s)); });
+        split_string(*s, ',', [](std::string_view s) {
+            auto str = std::string(s);
+            if (boards.count(str)) {
+                selected_boards.insert(str);
+            }
+        });
     }
 }
 

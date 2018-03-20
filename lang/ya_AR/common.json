@@ -110,6 +110,8 @@
 		"pointToCatalog": "Point to Catalog",
 		"postsImages": "Missives/Portraits/TTL",
 		"quoted": "Arr, ye have been quoted matey",
+		"redirectByIP": "Redirect all by IP",
+		"redirectByThread": "Redirect all by thread",
 		"refresh": "Reload",
 		"reply": "Reply",
 		"report": "Report",

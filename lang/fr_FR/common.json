@@ -110,6 +110,8 @@
 		"pointToCatalog": "Vers le catalogue",
 		"postsImages": "Messages / Images / TTL",
 		"quoted": "Vous avez été cité",
+		"redirectByIP": "Redirect all by IP",
+		"redirectByThread": "Redirect all by thread",
 		"refresh": "Actualiser",
 		"reply": "Répondre",
 		"report": "Signaler",

@@ -1,11 +1,11 @@
 import { View } from "../base"
 import { Post } from "./model"
 import { getModel } from "../state"
-import { on } from "../util"
+import { on, postJSON, HTML } from "../util"
+import { FormView } from "../ui"
 import lang from "../lang"
 import { hidePost } from "./hide"
 import { position, ModerationLevel } from "../mod"
-import { postJSON } from "../util"
 import CollectionView from "./collectionView"
 import { PostData } from "../common"
 import ReportForm from "./report"
@@ -17,8 +17,41 @@ interface ControlButton extends Element {
 // Spec for a single item of the drop down menu
 type ItemSpec = {
 	text: string
+	keepOpen?: boolean // Keep open after click
 	shouldRender: (m: Post) => boolean
 	handler: (m: Post) => void | Promise<void>
+}
+
+// Form with one text field for submitting redirects
+class RedirectForm extends FormView {
+	private apiPath: string
+	private parentID: number
+
+	constructor(parent: Element, parentID: number, apiPath: string) {
+		super({ tag: "form" })
+		this.apiPath = apiPath
+		this.parentID = parentID
+		this.el.innerHTML = HTML`
+			<br>
+			<input type=text name=url>
+			<br>
+			<input type="submit" value="${lang.ui["submit"]}">
+			<input type="button" name="cancel" value="${lang.ui["cancel"]}">
+			<div class="form-response admin"></div>`
+		parent.querySelector(".control .popup-menu").append(this.el)
+	}
+
+	protected send() {
+		let url = (this.el
+			.querySelector("input[type=text]") as HTMLInputElement)
+			.value
+		url = `/api/redirect/${this.apiPath}/${this.parentID}/`
+			+ encodeURIComponent(url)
+		fetch(url, {
+			method: "POST",
+			credentials: 'include',
+		})
+	}
 }
 
 // Actions to be performed by the items in the popup menu
@@ -99,13 +132,37 @@ const actions: { [key: string]: ItemSpec } = {
 			m.view.renderLocked()
 		},
 	},
+	redirectByIP: {
+		text: lang.ui["redirectByIP"],
+		keepOpen: true,
+		shouldRender(m) {
+			return position >= ModerationLevel.admin && likelyHasIP(m)
+		},
+		handler(m) {
+			new RedirectForm(m.view.el, m.id, "by-ip")
+		},
+	},
+	redirectByThread: {
+		text: lang.ui["redirectByThread"],
+		keepOpen: true,
+		shouldRender(m) {
+			return position >= ModerationLevel.admin && m.id === m.op
+		},
+		handler(m) {
+			new RedirectForm(m.view.el, m.id, "by-thread")
+		},
+	},
 }
 
 // Returns, if the post still likely has an IP attached and the client is
 // logged in
 function canModerateIP(m: Post): boolean {
-	return position >= ModerationLevel.janitor
-		&& m.time > Date.now() / 1000 - 24 * 7 * 3600
+	return position >= ModerationLevel.janitor && likelyHasIP(m)
+}
+
+// Return, if post is fresh enough to likely not have its IP deleted yet
+function likelyHasIP(m: Post): boolean {
+	return m.time > Date.now() / 1000 - 24 * 7 * 3600
 }
 
 // Post header drop down menu
@@ -146,7 +203,9 @@ class MenuView extends View<Post> {
 		const act = actions[(e.target as Element).getAttribute('data-id')]
 		if (act) {
 			act.handler(this.model)
-			this.remove()
+			if (!act.keepOpen) {
+				this.remove()
+			}
 		}
 	}
 

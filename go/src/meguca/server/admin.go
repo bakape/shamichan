@@ -15,6 +15,7 @@ import (
 	"meguca/templates"
 	"meguca/websockets/feeds"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"time"
@@ -724,6 +725,7 @@ func unban(w http.ResponseWriter, r *http.Request) {
 
 // Serve moderation log for a specific board
 func modLog(w http.ResponseWriter, r *http.Request) {
+
 	board := extractParam(r, "board")
 	if !auth.IsBoard(board) {
 		text404(w)
@@ -737,4 +739,70 @@ func modLog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	serveHTML(w, r, "", []byte(templates.ModLog(log)), nil)
+}
+
+// Decodes params for client forced redirection. If ok = false , caller
+// should abort.
+func decodeRedirect(w http.ResponseWriter, r *http.Request) (
+	id uint64, address string, ok bool,
+) {
+	if _, can := canPerform(w, r, "all", auth.Admin, nil); !can {
+		return
+	}
+
+	id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
+	if err != nil {
+		text400(w, err)
+		return
+	}
+	address, err = url.QueryUnescape(extractParam(r, "url"))
+	if err != nil {
+		text400(w, err)
+		return
+	}
+	ok = true
+	return
+}
+
+// Redirect all clients with the same IP as the target post to a URL
+func redirectByIP(w http.ResponseWriter, r *http.Request) {
+	id, url, ok := decodeRedirect(w, r)
+	if !ok {
+		return
+	}
+
+	ip, err := db.GetIP(id)
+	if err == sql.ErrNoRows || ip == "" {
+		text404(w)
+		return
+	} else if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	msg, err := common.EncodeMessage(common.MessageRedirect, url)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	for _, c := range feeds.GetByIP(ip) {
+		c.Send(msg)
+	}
+}
+
+// Redirect all clients in the same thread to a URL
+func redirectByThread(w http.ResponseWriter, r *http.Request) {
+	id, url, ok := decodeRedirect(w, r)
+	if !ok {
+		return
+	}
+
+	msg, err := common.EncodeMessage(common.MessageRedirect, url)
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+	for _, c := range feeds.GetByThread(id) {
+		c.Send(msg)
+	}
 }

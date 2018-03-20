@@ -162,7 +162,7 @@ func (c *Client) listenerLoop() error {
 				return err
 			}
 		case board := <-c.redirect:
-			err := c.sendMessage(common.MessageRedirect, board)
+			err := c.sendMessage(common.MessageRedirect, "/"+board+"/")
 			if err != nil {
 				return err
 			}
