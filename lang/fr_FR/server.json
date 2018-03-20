@@ -268,6 +268,10 @@
 			"ID",
 			"Affiche un code d'identification par sujet lié à l'adresse IP de l'utilisateur"
 		],
+		"rbText": [
+			"Red/Blue Text",
+			"Display red and blue text if formatted with '^r' or '^b'"
+		],
 		"pruneBoards": [
 			"Suppr. auto des planches",
 			"Supprime automatiquement les planches sans nouveaux messages depuis un certain nombre de jours"

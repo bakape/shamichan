@@ -8,10 +8,11 @@ update boards
 		NSFW = $7,
 		nonLive = $8,
 		posterIDs = $9,
-		defaultCSS = $10,
-		title = $11,
-		notice = $12,
-		rules = $13,
-		eightball = $14
+		rbText = $10,
+		defaultCSS = $11,
+		title = $12,
+		notice = $13,
+		rules = $14,
+		eightball = $15
 	where id = $1
 	returning pg_notify('board_updated', $1)
