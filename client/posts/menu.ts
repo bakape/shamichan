@@ -51,6 +51,7 @@ class RedirectForm extends FormView {
 			method: "POST",
 			credentials: 'include',
 		})
+		this.remove()
 	}
 }
 
