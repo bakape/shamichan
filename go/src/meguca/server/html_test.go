@@ -103,21 +103,13 @@ func TestOwnedBoardSelection(t *testing.T) {
 			[]string{"admin"},
 		},
 	}
-	tx, err := db.StartTransaction()
-	if err != nil {
-		t.Fatal(err)
-	}
 	for _, s := range staff {
-		err := db.WriteStaff(tx, s.id, map[string][]string{
+		err := db.WriteStaff(s.id, map[string][]string{
 			"owners": s.owners,
 		})
 		if err != nil {
-			tx.Rollback()
 			t.Fatal(err)
 		}
-	}
-	if err := tx.Commit(); err != nil {
-		t.Fatal(err)
 	}
 
 	cases := [...]struct {
@@ -147,18 +139,10 @@ func TestBoardConfigurationForm(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleUser(t)
 
-	tx, err := db.StartTransaction()
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = db.WriteStaff(tx, "a", map[string][]string{
+	err := db.WriteStaff("a", map[string][]string{
 		"owners": {"user1"},
 	})
 	if err != nil {
-		tx.Rollback()
-		t.Fatal(err)
-	}
-	if err := tx.Commit(); err != nil {
 		t.Fatal(err)
 	}
 

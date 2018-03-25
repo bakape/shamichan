@@ -119,6 +119,7 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 	if err != nil {
 		return
 	}
+	defer r.Close()
 	for r.Next() {
 		var board string
 		err = r.Scan(&board)

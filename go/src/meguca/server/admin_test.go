@@ -280,19 +280,10 @@ func writeSampleBoard(t testing.TB) {
 func writeSampleBoardOwner(t *testing.T) {
 	t.Helper()
 
-	tx, err := db.StartTransaction()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer db.RollbackOnError(tx, &err)
-
-	err = db.WriteStaff(tx, "a", map[string][]string{
+	err := db.WriteStaff("a", map[string][]string{
 		"owners": {"user1"},
 	})
 	if err != nil {
-		t.Fatal(err)
-	}
-	if err := tx.Commit(); err != nil {
 		t.Fatal(err)
 	}
 }

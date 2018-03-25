@@ -109,7 +109,7 @@ func canPerform(
 		text400(w, err)
 		return
 	}
-	if captcha != nil && !auth.AuthenticateCaptcha(*captcha, ip) {
+	if captcha != nil && !auth.AuthenticateCaptcha(*captcha, ip, db.SystemBan) {
 		text403(w, errInvalidCaptcha)
 		return
 	}
@@ -297,7 +297,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		err = errInvalidBoardName
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
-	case !auth.AuthenticateCaptcha(msg.Captcha, ip):
+	case !auth.AuthenticateCaptcha(msg.Captcha, ip, db.SystemBan):
 		err = errInvalidCaptcha
 	}
 	if err != nil {
@@ -305,14 +305,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx, err := db.StartTransaction()
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	defer db.RollbackOnError(tx, &err)
-
-	err = db.WriteBoard(tx, db.BoardConfigs{
+	err = db.WriteBoard(nil, db.BoardConfigs{
 		Created: time.Now(),
 		BoardConfigs: config.BoardConfigs{
 			BoardPublic: config.BoardPublic{
@@ -333,15 +326,12 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.WriteStaff(tx, msg.ID, map[string][]string{
+	err = db.WriteStaff(msg.ID, map[string][]string{
 		"owners": []string{creds.UserID},
 	})
 	if err != nil {
 		text500(w, r, err)
 		return
-	}
-	if err := tx.Commit(); err != nil {
-		text500(w, r, err)
 	}
 }
 
@@ -552,15 +542,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Write to database
-	tx, err := db.StartTransaction()
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	defer db.RollbackOnError(tx, &err)
-
-	err = db.WriteStaff(tx, msg.Board, map[string][]string{
+	err := db.WriteStaff(msg.Board, map[string][]string{
 		"owners":     msg.Owners,
 		"moderators": msg.Moderators,
 		"janitors":   msg.Janitors,
@@ -568,11 +550,6 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		text500(w, r, err)
 		return
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		text500(w, r, err)
 	}
 }
 

@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"meguca/common"
 	"strconv"
-
-	"github.com/lib/pq"
 )
 
 // For decoding and encoding the tuple arrays we used to store links in.
@@ -104,12 +102,22 @@ func (l linkRow) Value() (driver.Value, error) {
 
 // Get links originating from posts by id
 func getLinks(ids ...uint64) (links map[uint64][]common.Link, err error) {
-	arg := make(pq.Int64Array, len(ids))
-	for i := 0; i < len(ids); i++ {
-		arg[i] = int64(ids[i])
+	arg := make([]byte, 1, 256)
+	arg[0] = '{'
+	for i, id := range ids {
+		if i != 0 {
+			arg = append(arg, ',')
+		}
+		arg = strconv.AppendUint(arg, id, 10)
 	}
+	arg = append(arg, '}')
 
-	r, err := prepared["get_links"].Query(arg)
+	r, err := sq.Select("l.source, l.target, p.op, t.board").
+		From("links as l").
+		Join("posts as p on l.target = p.id").
+		Join("threads as t on p.op = t.id").
+		Where("l.source = any(?::bigint[])", string(arg)).
+		Query()
 	if err != nil {
 		return
 	}

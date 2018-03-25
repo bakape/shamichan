@@ -27,7 +27,7 @@ func report(w http.ResponseWriter, r *http.Request) {
 	if !auth.AuthenticateCaptcha(auth.Captcha{
 		CaptchaID: f.Get("captchaID"),
 		Solution:  f.Get("captcha"),
-	}, ip) {
+	}, ip, db.SystemBan) {
 		text403(w, errInvalidCaptcha)
 		return
 	}

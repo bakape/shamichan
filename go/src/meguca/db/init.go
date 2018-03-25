@@ -10,6 +10,8 @@ import (
 	"meguca/util"
 	"time"
 
+	"github.com/Masterminds/squirrel"
+
 	"github.com/boltdb/bolt"
 	_ "github.com/lib/pq" // Postgres driver
 )
@@ -31,6 +33,9 @@ var (
 
 	// Stores the postgres database instance
 	db *sql.DB
+
+	// Statement builder and cacher
+	sq squirrel.StatementBuilderType
 
 	// Embedded database for temporary storage
 	boltDB *bolt.DB
@@ -471,6 +476,9 @@ func LoadDB() (err error) {
 	if err != nil {
 		return
 	}
+
+	sq = squirrel.StatementBuilder.RunWith(squirrel.NewStmtCacheProxy(db)).
+		PlaceholderFormat(squirrel.Dollar)
 
 	var exists bool
 	err = db.QueryRow(getQuery("init/check_db_exists.sql")).Scan(&exists)

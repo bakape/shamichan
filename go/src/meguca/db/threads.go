@@ -1,6 +1,9 @@
 package db
 
-import "database/sql"
+import (
+	"database/sql"
+	"time"
+)
 
 // Thread is a template for writing new threads to the database
 type Thread struct {
@@ -104,4 +107,34 @@ func queryBool(id uint64, queryID string) (val bool, err error) {
 // Check, if a thread has been locked by a moderator
 func CheckThreadLocked(id uint64) (bool, error) {
 	return queryBool(id, "check_thread_locked")
+}
+
+// Increment thread update, bump, post and image counters
+func bumpThread(id uint64, bump, newPost, newImage bool) (err error) {
+	now := time.Now().Unix()
+	q := sq.Update("threads").
+		Set("replyTime", now)
+
+	if bump {
+		var postCount int
+		err = sq.Select("postCtr").
+			From("threads").
+			Where("id = ?", id).
+			Scan(&postCount)
+		if err != nil {
+			return
+		}
+		if postCount < 3000 {
+			q = q.Set("bumpTime", now)
+		}
+	}
+	if newPost {
+		q = q.Set("postCtr", "postCtr + 1")
+	}
+	if newImage {
+		q = q.Set("imageCtr", " imageCtr + 1")
+	}
+
+	_, err = q.Where("id = ?", id).Exec()
+	return err
 }

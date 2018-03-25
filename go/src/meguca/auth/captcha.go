@@ -150,15 +150,18 @@ func ServeCaptcha(w http.ResponseWriter, r *http.Request) {
 }
 
 // AuthenticateCaptcha posts a request to the SolveMedia API to authenticate a
-// captcha
-func AuthenticateCaptcha(req Captcha, ip string) bool {
+// captcha.
+// SystemBan forwards db.SystemBan to avoid circular imports
+func AuthenticateCaptcha(req Captcha, ip string,
+	systemBan func(string, string, time.Time) error,
+) bool {
 	// Captchas disabled or running tests. Can not use API, when testing
 	if !config.Get().Captcha {
 		return true
 	}
 	passed := captcha.VerifyString(req.CaptchaID, req.Solution)
 	if !passed && failedCaptchas.increment(ip) {
-		err := SystemBan(ip, "bot detected", time.Now().Add(time.Hour*48))
+		err := systemBan(ip, "bot detected", time.Now().Add(time.Hour*48))
 		if err != nil {
 			log.Printf("automatic ban: %s\n", err)
 		}
