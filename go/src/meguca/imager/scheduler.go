@@ -28,7 +28,7 @@ type thumbnailingResponse struct {
 	err     error
 }
 
-// Balances thumbnailing across worker threads to prevent resource overuse
+// Queues larger uplaod processing to prevent resource overuse
 func requestThumbnailing(
 	file multipart.File,
 	size int64,

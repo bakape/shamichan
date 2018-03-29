@@ -27,7 +27,6 @@ go/src/meguca/imager/images
 db.db
 easyjson-bootstrap*.go
 GeoLite2-Country.mmdb
-package-lock.json
 *.wasm
 *.wast
 *.map
