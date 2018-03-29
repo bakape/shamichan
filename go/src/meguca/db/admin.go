@@ -235,23 +235,34 @@ func ModSpoilerImage(id uint64, by string) error {
 // WriteStaff writes staff positions of a specific board. Old rows are
 // overwritten.
 func WriteStaff(board string, staff map[string][]string) (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer RollbackOnError(tx, &err)
+
 	// Remove previous staff entries
-	_, err = sq.Delete("staff").Where("board  = ?", board).Exec()
+	_, err = tx.Exec("delete from staff where board = $1", board)
 	if err != nil {
 		return
 	}
 
 	// Write new ones
-	q := sq.Insert("staff").Columns("board", "account", "position")
+	q, err := tx.Prepare(`insert into staff (board, account, position)
+		values($1, $2, $3)`)
+	if err != nil {
+		return
+	}
 	for pos, accounts := range staff {
 		for _, a := range accounts {
-			_, err = q.Values(board, a, pos).Exec()
+			_, err = q.Exec(board, a, pos)
 			if err != nil {
 				return
 			}
 		}
 	}
 
+	err = tx.Commit()
 	return
 }
 

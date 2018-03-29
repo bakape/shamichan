@@ -179,7 +179,7 @@ func Listen(event string, fn func(msg string) error) (err error) {
 				continue
 			}
 			if err := fn(msg.Extra); err != nil {
-				log.Println(err)
+				log.Printf("error on database event `%s`: %s\n", event, err)
 			}
 		}
 	}()
