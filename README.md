@@ -142,8 +142,8 @@ compiled with:
     * libpng
     * libjpeg
     * postscript
+* ghostscript
 * git
-* zip
 
 ### Linux and OSX
 * Run `make`
