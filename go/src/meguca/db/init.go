@@ -262,6 +262,13 @@ var upgrades = []func(*sql.Tx) error{
 	},
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
+			`ALTER TABLE boards
+				ADD COLUMN rbText bool default false`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
 			`ALTER TABLE threads
 				ADD COLUMN locked bool default false`,
 		)
