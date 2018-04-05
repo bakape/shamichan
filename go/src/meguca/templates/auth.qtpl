@@ -19,7 +19,7 @@ BanPage renders a ban page for a banned user
 		</b>
 		<br>
 		<br>
-		{% code exp := correctTimeZone(rec.Expires) %}
+		{% code exp := rec.Expires.Round(time.Second) %}
 		{% code date := exp.Format(time.UnixDate) %}
 		{% code till := exp.Sub(time.Now().Round(time.Second)).String() %}
 		{%s= fmt.Sprintf(ln[1], bold(date), bold(till)) %}
@@ -30,7 +30,7 @@ BanPage renders a ban page for a banned user
 	</div>
 {% endstripspace %}{% endfunc %}
 
-// Renders a list of bans for a specific page with optional unbanning API links
+Renders a list of bans for a specific page with optional unbanning API links
 {% func BanList(bans []auth.BanRecord, board string, canUnban bool) %}{% stripspace %}
 	{%= tableStyle() %}
 	<form method="post" action="/api/unban/{%s= board %}">

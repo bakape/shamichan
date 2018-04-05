@@ -68,6 +68,9 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 		id, op uint64
 	}
 
+	// Location is not preserved in postres. Need to convert to UTC.
+	expires = expires.UTC()
+
 	// Retrieve matching posts
 	var (
 		ips   = make(map[string]uint64, len(ids))
