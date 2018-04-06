@@ -5,22 +5,58 @@ import (
 	"meguca/auth"
 	"meguca/common"
 	"time"
+
+	"github.com/Masterminds/squirrel"
 )
 
-// Forward function to avoid circular dependency
-func init() {
-	auth.SystemBan = func(ip, reason string, expires time.Time) (err error) {
-		err = execPrepared("write_ban", ip, "all", 0, reason, "system", expires)
-		if err != nil {
-			return
-		}
-		_, err = db.Exec(`notify bans_updated`)
-		if err != nil {
-			return
-		}
-		auth.DisconnectBannedIP(ip, "all")
+// Write moderation action to log
+func logModeration(typ auth.ModerationAction, board string, postID uint64,
+	by string,
+) error {
+	_, err := sq.Insert("mod_log").
+		Columns("type", "board", "id", "by").
+		Values(int(typ), board, postID, by).
+		Exec()
+	return err
+}
+
+func writeBan(ip, board, reason, by string, postID uint64,
+	expires time.Time) (
+	err error,
+) {
+	_, err = sq.Insert("bans").
+		Columns("ip", "board", "forPost", "reason", "by", "expires").
+		Values(ip, board, postID, reason, by, expires).
+		Suffix("on conflict do nothing").
+		Exec()
+	if err != nil {
 		return
 	}
+	return logModeration(auth.BanPost, board, 0, by)
+}
+
+// Propagate ban updates through DB and disconnect all banned IPs
+func propagateBans(board string, ips ...string) error {
+	if len(ips) != 0 {
+		if _, err := db.Exec(`notify bans_updated`); err != nil {
+			return err
+		}
+	}
+	if !IsTest {
+		for _, ip := range ips {
+			auth.DisconnectBannedIP(ip, board)
+		}
+	}
+	return nil
+}
+
+// Automatically ban an IP
+func SystemBan(ip, reason string, expires time.Time) (err error) {
+	err = writeBan(ip, "all", reason, "system", 0, expires)
+	if err != nil {
+		return
+	}
+	return propagateBans("all", ip)
 }
 
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
@@ -31,6 +67,9 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 	type post struct {
 		id, op uint64
 	}
+
+	// Location is not preserved in postres. Need to convert to UTC.
+	expires = expires.UTC()
 
 	// Retrieve matching posts
 	var (
@@ -63,7 +102,14 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 
 	// Write ban messages to posts
 	for _, post := range posts {
-		err = execPrepared("ban_post", post.id)
+		_, err = sq.Update("posts").
+			Set("banned", true).
+			Where("id = ?", post.id).
+			Exec()
+		if err != nil {
+			return
+		}
+		err = bumpThread(post.op, false, false, false)
 		if err != nil {
 			return
 		}
@@ -77,25 +123,33 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 
 	// Write bans to the ban table
 	for ip, id := range ips {
-		err = execPrepared("write_ban", ip, board, id, reason, by, expires)
+		err = writeBan(ip, board, reason, by, id, expires)
 		if err != nil {
 			return
 		}
 	}
 
-	if len(ips) != 0 {
-		_, err = db.Exec(`notify bans_updated`)
-	}
+	ipArr := make([]string, 0, len(ips))
 	for ip, _ := range ips {
-		auth.DisconnectBannedIP(ip, board)
+		ipArr = append(ipArr, ip)
 	}
-
-	return
+	return propagateBans(board, ipArr...)
 }
 
 // Lift a ban from a specific post on a specific board
-func Unban(board string, id uint64, by string) error {
-	return execPrepared("unban", board, id, by)
+func Unban(board string, id uint64, by string) (err error) {
+	_, err = sq.Delete("bans").
+		Where("board = ? and forPost = ?", board, id).
+		Exec()
+	if err != nil {
+		return
+	}
+	err = logModeration(auth.UnbanPost, board, id, by)
+	if err != nil {
+		return
+	}
+	_, err = db.Exec("notify bans_updated")
+	return
 }
 
 func loadBans() error {
@@ -110,7 +164,7 @@ func loadBans() error {
 // RefreshBanCache loads up to date bans from the database and caches them in
 // memory
 func RefreshBanCache() (err error) {
-	r, err := db.Query(`SELECT ip, board FROM bans`)
+	r, err := sq.Select("ip", "board").From("bans").Query()
 	if err != nil {
 		return
 	}
@@ -136,22 +190,30 @@ func RefreshBanCache() (err error) {
 
 // DeletePost marks the target post as deleted
 func DeletePost(id uint64, by string) error {
-	return moderatePost(id, by, "delete_post", common.DeletePost)
+	q := sq.Update("posts").Set("deleted", true)
+	return moderatePost(id, auth.DeletePost, by, q, common.DeletePost)
 }
 
 func moderatePost(
-	id uint64,
-	by, query string,
-	propagate func(id, op uint64) error,
+	id uint64, typ auth.ModerationAction, by string,
+	query squirrel.UpdateBuilder, propagate func(id, op uint64) error,
 ) (
 	err error,
 ) {
-	err = execPrepared(query, id, by)
+	_, err = query.Where("id = ?", id).Exec()
 	if err != nil {
 		return
 	}
 
-	op, err := GetPostOP(id)
+	board, op, err := GetPostParenthood(id)
+	if err != nil {
+		return
+	}
+	err = logModeration(typ, board, id, by)
+	if err != nil {
+		return
+	}
+	err = bumpThread(op, false, false, false)
 	if err != nil {
 		return
 	}
@@ -163,44 +225,61 @@ func moderatePost(
 
 // Permanently delete an image from a post
 func DeleteImage(id uint64, by string) error {
-	return moderatePost(id, by, "delete_image", common.DeleteImage)
+	q := sq.Update("posts").Set("SHA1", nil)
+	return moderatePost(id, auth.DeleteImage, by, q, common.DeleteImage)
 }
 
 // Spoiler image as a moderator
-func ModSpoilerImage(id uint64, by string) (err error) {
-	return moderatePost(id, by, "mod_spoiler_image", common.SpoilerImage)
+func ModSpoilerImage(id uint64, by string) error {
+	q := sq.Update("posts").Set("spoiler", true)
+	return moderatePost(id, auth.SpoilerImage, by, q, common.SpoilerImage)
 }
 
 // WriteStaff writes staff positions of a specific board. Old rows are
-// overwritten. tx must not be nil.
-func WriteStaff(tx *sql.Tx, board string, staff map[string][]string) error {
-	// Remove previous staff entries
-	_, err := tx.Stmt(prepared["clear_staff"]).Exec(board)
+// overwritten.
+func WriteStaff(board string, staff map[string][]string) (err error) {
+	tx, err := db.Begin()
 	if err != nil {
-		return err
+		return
+	}
+	defer RollbackOnError(tx, &err)
+
+	// Remove previous staff entries
+	_, err = tx.Exec("delete from staff where board = $1", board)
+	if err != nil {
+		return
 	}
 
 	// Write new ones
-	q := tx.Stmt(prepared["write_staff"])
+	q, err := tx.Prepare(`insert into staff (board, account, position)
+		values($1, $2, $3)`)
+	if err != nil {
+		return
+	}
 	for pos, accounts := range staff {
 		for _, a := range accounts {
 			_, err = q.Exec(board, a, pos)
 			if err != nil {
-				return err
+				return
 			}
 		}
 	}
 
-	return nil
+	err = tx.Commit()
+	return
 }
 
 // GetStaff retrieves all staff positions of a specific board
 func GetStaff(board string) (staff map[string][]string, err error) {
 	staff = make(map[string][]string, 3)
-	r, err := prepared["get_staff"].Query(board)
+	r, err := sq.Select("account", "position").
+		From("staff").
+		Where("board = ?", board).
+		Query()
 	if err != nil {
 		return
 	}
+	defer r.Close()
 	for r.Next() {
 		var acc, pos string
 		err = r.Scan(&acc, &pos)
@@ -236,7 +315,11 @@ func GetSameIPPosts(id uint64, board string) (
 	posts []common.StandalonePost, err error,
 ) {
 	// Get posts ids
-	r, err := prepared["get_same_ip_posts"].Query(id, board)
+	r, err := sq.Select("id").
+		From("posts").
+		Where(`ip = (select ip from posts where id = ?) and board = ?`,
+			id, board).
+		Query()
 	if err != nil {
 		return
 	}
@@ -275,17 +358,35 @@ func GetSameIPPosts(id uint64, board string) (
 
 // Set the sticky field on a thread
 func SetThreadSticky(id uint64, sticky bool) error {
-	return execPrepared("set_sticky", id, sticky)
+	_, err := sq.Update("threads").
+		Set("sticky", sticky).
+		Where("id = ?", id).
+		Exec()
+	if err != nil {
+		return err
+	}
+	return bumpThread(id, false, false, false)
 }
 
 // Set the ability of users to post in a specific thread
 func SetThreadLock(id uint64, locked bool, by string) error {
-	return execPrepared("set_locked", id, locked, by)
+	_, err := sq.Update("threads").
+		Set("locked", locked).
+		Where("id = ?", id).
+		Exec()
+	if err != nil {
+		return err
+	}
+	return bumpThread(id, false, false, false)
 }
 
 // Retrieve moderation log for a specific board
 func GetModLog(board string) (log []auth.ModLogEntry, err error) {
-	r, err := prepared["get_mod_log"].Query(board)
+	r, err := sq.Select("id", "by", "created").
+		From("mod_log").
+		Where("board = ?", board).
+		OrderBy("created desc").
+		Query()
 	if err != nil {
 		return
 	}

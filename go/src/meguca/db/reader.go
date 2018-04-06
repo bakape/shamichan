@@ -5,7 +5,38 @@ import (
 	"meguca/common"
 	"meguca/config"
 
+	"github.com/Masterminds/squirrel"
+
 	"github.com/lib/pq"
+)
+
+const (
+	postSelectsSQL = `p.editing, p.banned, p.spoiler, p.deleted, p.sage, p.id,
+	p.time, p.body, p.flag, p.name, p.trip, p.auth, p.commands, p.imageName,
+	p.posterID,
+	i.*`
+
+	threadSelectsSQL = `t.sticky, t.board, t.postCtr, t.imageCtr, t.replyTime,
+	t.bumpTime, t.subject, t.nonLive, t.locked, ` + postSelectsSQL
+
+	getOPSQL = `
+	select ` + threadSelectsSQL + `
+	from threads as t
+	inner join posts as p on t.id = p.id
+	left outer join images as i on p.SHA1 = i.SHA1
+	where t.id = $1`
+
+	getThreadPostsSQL = `
+	with thread as (
+		select ` + postSelectsSQL + `
+		from posts as p
+		left outer join images as i on p.SHA1 = i.SHA1
+		where p.op = $1 and p.id != $1
+		order by p.id desc
+		limit $2
+	)
+	select * from thread
+	order by id asc`
 )
 
 type imageScanner struct {
@@ -110,7 +141,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	}
 
 	// Get thread metadata and OP
-	t, err = scanOP(tx.Stmt(prepared["get_thread"]).QueryRow(id))
+	t, err = scanOP(tx.QueryRow(getOPSQL, id))
 	if err != nil {
 		return
 	}
@@ -127,7 +158,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	} else {
 		cap = int(t.PostCtr)
 	}
-	r, err := tx.Stmt(prepared["get_thread_posts"]).Query(id, limit)
+	r, err := tx.Query(getThreadPostsSQL, id, limit)
 	if err != nil {
 		return
 	}
@@ -240,7 +271,12 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 	args = append(args, post.ScanArgs()...)
 	args = append(args, img.ScanArgs()...)
 
-	err = prepared["get_post"].QueryRow(id).Scan(args...)
+	err = sq.Select("p.op, p.board, "+postSelectsSQL).
+		From("posts as p").
+		LeftJoin("images as i on p.SHA1 = i.SHA1").
+		Where("id = ?", id).
+		QueryRow().
+		Scan(args...)
 	if err != nil {
 		return
 	}
@@ -269,9 +305,19 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 	return
 }
 
+func getOPs() squirrel.SelectBuilder {
+	return sq.Select(threadSelectsSQL).
+		From("threads as t").
+		Join("posts as p on t.id = p.id").
+		LeftJoin("images as i on p.SHA1 = i.SHA1")
+}
+
 // GetBoardCatalog retrieves all OPs of a single board
 func GetBoardCatalog(board string) (b common.Board, err error) {
-	r, err := prepared["get_board"].Query(board)
+	r, err := getOPs().
+		Where("t.board = ?", board).
+		OrderBy("sticky desc, bumpTime desc").
+		Query()
 	if err != nil {
 		return
 	}
@@ -285,7 +331,11 @@ func GetBoardCatalog(board string) (b common.Board, err error) {
 
 // Retrieves all threads IDs on the board in bump order with stickies first
 func GetThreadIDs(board string) ([]uint64, error) {
-	r, err := prepared["get_board_thread_ids"].Query(board)
+	r, err := sq.Select("id").
+		From("threads").
+		Where("board = ?", board).
+		OrderBy("bumpTime desc").
+		Query()
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +344,9 @@ func GetThreadIDs(board string) ([]uint64, error) {
 
 // GetAllBoardCatalog retrieves all threads for the "/all/" meta-board
 func GetAllBoardCatalog() (board common.Board, err error) {
-	r, err := prepared["get_all_board"].Query()
+	r, err := getOPs().
+		OrderBy("bumpTime desc").
+		Query()
 	if err != nil {
 		return
 	}
@@ -321,7 +373,10 @@ func GetAllBoardCatalog() (board common.Board, err error) {
 
 // Retrieves all threads IDs in bump order
 func GetAllThreadsIDs() ([]uint64, error) {
-	r, err := prepared["get_all_thread_ids"].Query()
+	r, err := sq.Select("id").
+		From("threads").
+		OrderBy("bumpTime desc").
+		Query()
 	if err != nil {
 		return nil, err
 	}

@@ -7,6 +7,8 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"time"
+
+	"github.com/Masterminds/squirrel"
 )
 
 // Common errors
@@ -21,7 +23,11 @@ func IsLoggedIn(user, session string) (loggedIn bool, err error) {
 		return
 	}
 
-	err = prepared["is_logged_in"].QueryRow(user, session).Scan(&loggedIn)
+	err = sq.Select("true").
+		From("sessions").
+		Where("account = ? and token = ?", user, session).
+		QueryRow().
+		Scan(&loggedIn)
 	if err == sql.ErrNoRows {
 		err = nil
 	}
@@ -30,8 +36,11 @@ func IsLoggedIn(user, session string) (loggedIn bool, err error) {
 
 // RegisterAccount writes the ID and password hash of a new user account to the
 // database
-func RegisterAccount(ID string, hash []byte) error {
-	err := execPrepared("register_account", ID, hash)
+func RegisterAccount(id string, hash []byte) error {
+	_, err := sq.Insert("accounts").
+		Columns("id", "password").
+		Values(id, hash).
+		Exec()
 	if IsConflictError(err) {
 		return ErrUserNameTaken
 	}
@@ -40,7 +49,11 @@ func RegisterAccount(ID string, hash []byte) error {
 
 // GetPassword retrieves the login password hash of the registered user account
 func GetPassword(id string) (hash []byte, err error) {
-	err = prepared["get_password"].QueryRow(id).Scan(&hash)
+	err = sq.Select("password").
+		From("accounts").
+		Where("id = ?", id).
+		QueryRow().
+		Scan(&hash)
 	return
 }
 
@@ -51,7 +64,10 @@ func FindPosition(board, userID string) (pos auth.ModerationLevel, err error) {
 		return auth.Admin, nil
 	}
 
-	r, err := prepared["get_positions"].Query(userID, board)
+	r, err := sq.Select("position").
+		From("staff").
+		Where("account = ? and board = ?", userID, board).
+		Query()
 	if err != nil {
 		return
 	}
@@ -85,27 +101,36 @@ func FindPosition(board, userID string) (pos auth.ModerationLevel, err error) {
 // WriteLoginSession writes a new user login session to the DB
 func WriteLoginSession(account, token string) error {
 	expiryTime := time.Duration(config.Get().SessionExpiry) * time.Hour * 24
-	return execPrepared(
-		"write_login_session",
-		account,
-		token,
-		time.Now().Add(expiryTime),
-	)
+	_, err := sq.Insert("sessions").
+		Columns("account", "token", "expires").
+		Values(account, token, time.Now().Add(expiryTime)).
+		Exec()
+	return err
 }
 
 // LogOut logs the account out of one specific session
 func LogOut(account, token string) error {
-	return execPrepared("log_out", account, token)
+	_, err := sq.Delete("sessions").
+		Where("account = ? and token = ?", account, token).
+		Exec()
+	return err
 }
 
 // LogOutAll logs an account out of all user sessions
 func LogOutAll(account string) error {
-	return execPrepared("log_out_all", account)
+	_, err := sq.Delete("sessions").
+		Where("account = ?", account).
+		Exec()
+	return err
 }
 
 // ChangePassword changes an existing user's login password
 func ChangePassword(account string, hash []byte) error {
-	return execPrepared("change_password", account, hash)
+	_, err := sq.Update("accounts").
+		Set("password", hash).
+		Where("id = ?", account).
+		Exec()
+	return err
 }
 
 // GetOwnedBoards returns boards the account holder owns
@@ -115,10 +140,14 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 		return config.GetBoards(), nil
 	}
 
-	r, err := prepared["get_owned_boards"].Query(account)
+	r, err := sq.Select("board").
+		From("staff").
+		Where("account = ? and position = 'owners'", account).
+		Query()
 	if err != nil {
 		return
 	}
+	defer r.Close()
 	for r.Next() {
 		var board string
 		err = r.Scan(&board)
@@ -131,18 +160,31 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 	return
 }
 
-// GetBanInfo retrieves information about a specific ban
-func GetBanInfo(ip, board string) (b auth.BanRecord, err error) {
-	err = prepared["get_ban_info"].
-		QueryRow(ip, board).
-		Scan(&b.IP, &b.Board, &b.ForPost, &b.Reason, &b.By, &b.Expires)
+func getBans() squirrel.SelectBuilder {
+	return sq.Select("ip", "board", "forPost", "reason", "by", "expires").
+		From("bans")
+}
+
+func scanBanRecord(rs rowScanner) (b auth.BanRecord, err error) {
+	err = rs.Scan(&b.IP, &b.Board, &b.ForPost, &b.Reason, &b.By, &b.Expires)
 	return
+}
+
+// GetBanInfo retrieves information about a specific ban
+func GetBanInfo(ip, board string) (auth.BanRecord, error) {
+	r := getBans().
+		Where("ip = ? and board = ? and expires >= now()", ip, board).
+		QueryRow()
+	return scanBanRecord(r)
 }
 
 // Get all bans on a specific board. "all" counts as a valid board value.
 func GetBoardBans(board string) (b []auth.BanRecord, err error) {
 	b = make([]auth.BanRecord, 0, 64)
-	r, err := prepared["get_bans_by_board"].Query(board)
+
+	r, err := getBans().
+		Where("board = ? and expires >= now()", board).
+		Query()
 	if err != nil {
 		return
 	}
@@ -150,7 +192,7 @@ func GetBoardBans(board string) (b []auth.BanRecord, err error) {
 
 	var rec auth.BanRecord
 	for r.Next() {
-		err = r.Scan(&rec.IP, &rec.ForPost, &rec.Reason, &rec.By, &rec.Expires)
+		rec, err = scanBanRecord(r)
 		if err != nil {
 			return
 		}
@@ -166,6 +208,10 @@ func GetBoardBans(board string) (b []auth.BanRecord, err error) {
 // days will not have this information.
 func GetIP(id uint64) (string, error) {
 	var ip sql.NullString
-	err := prepared["get_ip"].QueryRow(id).Scan(&ip)
+	err := sq.Select("ip").
+		From("posts").
+		Where("id = ?", id).
+		QueryRow().
+		Scan(&ip)
 	return ip.String, err
 }

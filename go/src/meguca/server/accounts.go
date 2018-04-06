@@ -115,7 +115,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	case !trimLoginID(&req.ID):
 		return
-	case !auth.AuthenticateCaptcha(req.Captcha, ip):
+	case !auth.AuthenticateCaptcha(req.Captcha, ip, db.SystemBan):
 		text403(w, errInvalidCaptcha)
 		return
 	}
@@ -227,7 +227,7 @@ func checkPasswordAndCaptcha(
 	case password == "", len(password) > common.MaxLenPassword:
 		text400(w, errInvalidPassword)
 		return false
-	case !auth.AuthenticateCaptcha(captcha, ip):
+	case !auth.AuthenticateCaptcha(captcha, ip, db.SystemBan):
 		text403(w, errInvalidCaptcha)
 		return false
 	}

@@ -1,141 +1,138 @@
 package db
 
 import (
-	"database/sql"
 	"meguca/assets"
-	"meguca/common"
 )
 
-// Overwrite list of banners in the DB, for a specific board
-func SetBanners(board string, banners []assets.File) (err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer RollbackOnError(tx, &err)
-
-	_, err = tx.Stmt(prepared["clear_banners"]).Exec(board)
-	if err != nil {
-		return
-	}
-
-	q := tx.Stmt(prepared["set_banner"])
-	for i, f := range banners {
-		_, err = q.Exec(board, i, f.Data, f.Mime)
-		if err != nil {
-			return
-		}
-	}
-
-	_, err = tx.Exec("select pg_notify('banners_updated', $1)", board)
-	if err != nil {
-		return
-	}
-
-	err = tx.Commit()
-	return
-}
-
-func loadBanners() (err error) {
-	// Load all banners and group by board
-	byBoard := make(map[string][]assets.File, 64)
-	err = loadAllAssets("load_all_banners", func(b string, f assets.File) {
-		files := byBoard[b]
-		if files == nil {
-			files = make([]assets.File, 0, common.MaxNumBanners)
-		}
-		byBoard[b] = append(files, f)
-	})
-	if err != nil {
-		return
-	}
-
-	for board, files := range byBoard {
-		assets.Banners.Set(board, files)
-	}
-
-	return Listen("banners_updated", updateBanners)
-}
-
-// Load all assets by prepared query key and pass them to fn one by one
-func loadAllAssets(q string, fn func(board string, file assets.File)) (
-	err error,
-) {
-	r, err := prepared[q].Query()
+// Load all assets from and pass them to load. Start listening for changes.
+func loadAssets(table string,
+	load func(board string, files []assets.File),
+) (err error) {
+	r, err := sq.Select("board", "data", "mime").From(table).Query()
 	if err != nil {
 		return
 	}
 	defer r.Close()
 
-	var (
-		board string
-		file  assets.File
-	)
+	byBoard := make(map[string][]assets.File, 64)
 	for r.Next() {
+		var (
+			board string
+			file  assets.File
+		)
 		err = r.Scan(&board, &file.Data, &file.Mime)
 		if err != nil {
 			return
 		}
-
-		fn(board, file)
-	}
-	return r.Err()
-}
-
-func updateBanners(board string) (err error) {
-	r, err := prepared["load_banners"].Query(board)
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	files := make([]assets.File, 0, common.MaxNumBanners)
-	for r.Next() {
-		var (
-			data []byte
-			mime string
-		)
-		err = r.Scan(&data, &mime)
-		if err != nil {
-			return
-		}
-		files = append(files, assets.File{
-			Data: data,
-			Mime: mime,
-		})
+		byBoard[board] = append(byBoard[board], file)
 	}
 	err = r.Err()
 	if err != nil {
 		return
 	}
 
-	assets.Banners.Set(board, files)
-	return
+	for board, files := range byBoard {
+		load(board, files)
+	}
+
+	return Listen(table+"_updated", updateAssets(table, load))
 }
 
-// Set loading animation for specific board. Nil file.Data means the default
-// animation should be used.
-func SetLoadingAnimation(board string, file assets.File) (err error) {
+// Returns function for reading assets from db on board asset updates.
+// Not inlined to ease testing.
+func updateAssets(table string,
+	load func(board string, files []assets.File),
+) func(string) error {
+	return func(board string) (err error) {
+		r, err := sq.Select("data", "mime").
+			From(table).
+			Where("board  = ?", board).
+			Query()
+		if err != nil {
+			return
+		}
+		defer r.Close()
+
+		files := make([]assets.File, 0, 16)
+		for r.Next() {
+			var (
+				data []byte
+				mime string
+			)
+			err = r.Scan(&data, &mime)
+			if err != nil {
+				return
+			}
+			files = append(files, assets.File{
+				Data: data,
+				Mime: mime,
+			})
+		}
+		err = r.Err()
+		if err != nil {
+			return
+		}
+
+		load(board, files)
+		return
+	}
+}
+
+func loadBanners() error {
+	return loadAssets("banners", assets.Banners.Set)
+}
+
+func loadLoadingAnimations() error {
+	return loadAssets("loading_animations", setLoadingAnimation)
+}
+
+// Outlined to ease testing
+func setLoadingAnimation(board string, files []assets.File) {
+	var f assets.File
+	if len(files) != 0 {
+		f = files[0]
+	}
+	assets.Loading.Set(board, f)
+}
+
+// Overwrite any existing assets in the DB
+func setAssets(table, board string, files []assets.File) (err error) {
 	tx, err := db.Begin()
 	if err != nil {
 		return
 	}
 	defer RollbackOnError(tx, &err)
 
-	_, err = tx.Stmt(prepared["clear_loading"]).Exec(board)
+	sql, args, err := sq.Delete(table).Where("board = ?", board).ToSql()
+	if err != nil {
+		return
+	}
+	_, err = tx.Exec(sql, args...)
 	if err != nil {
 		return
 	}
 
-	if file.Data != nil {
-		_, err = tx.Stmt(prepared["set_loading"]).
-			Exec(board, file.Data, file.Mime)
-		if err != nil {
-			return
+	sql, _, err = sq.Insert(table).
+		Columns("board", "data", "mime").
+		Values("?", "?", "?").
+		ToSql()
+	if err != nil {
+		return
+	}
+	q, err := tx.Prepare(sql)
+	if err != nil {
+		return
+	}
+	for _, f := range files {
+		if f.Data != nil {
+			_, err = q.Exec(board, f.Data, f.Mime)
+			if err != nil {
+				return
+			}
 		}
 	}
 
-	_, err = tx.Exec("select pg_notify('loading_animation_updated', $1)", board)
+	_, err = tx.Exec("select pg_notify($1 || '_updated', $2)", table, board)
 	if err != nil {
 		return
 	}
@@ -144,24 +141,17 @@ func SetLoadingAnimation(board string, file assets.File) (err error) {
 	return
 }
 
-func loadLoadingAnimations() (err error) {
-	err = loadAllAssets("load_all_loading", func(b string, f assets.File) {
-		assets.Loading.Set(b, f)
-	})
-	if err != nil {
-		return
-	}
-
-	return Listen("loading_animation_updated", updateLoadingAnimation)
+// Overwrite list of banners in the DB, for a specific board
+func SetBanners(board string, banners []assets.File) error {
+	return setAssets("banners", board, banners)
 }
 
-func updateLoadingAnimation(board string) (err error) {
-	var f assets.File
-	err = prepared["load_loading"].QueryRow(board).Scan(&f.Data, &f.Mime)
-	switch err {
-	case nil, sql.ErrNoRows:
-		assets.Loading.Set(board, f)
-		err = nil
+// Set loading animation for specific board. Nil file.Data means the default
+// animation should be used.
+func SetLoadingAnimation(board string, file assets.File) error {
+	var files []assets.File
+	if file.Data != nil {
+		files = append(files, file)
 	}
-	return
+	return setAssets("loading_animations", board, files)
 }

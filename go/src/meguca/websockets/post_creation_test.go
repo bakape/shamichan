@@ -405,7 +405,7 @@ func encodeMessageType(typ common.MessageType) string {
 func prepareForPostCreation(t testing.TB) {
 	t.Helper()
 
-	assertTableClear(t, "boards", "images")
+	assertTableClear(t, "boards", "images", "bans")
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	if err := db.SetPostCounter(5); err != nil {

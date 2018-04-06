@@ -3,7 +3,6 @@ package templates
 import (
 	"html"
 	"meguca/common"
-	"time"
 )
 
 // CalculateOmit returns the omitted post and image counts for a thread
@@ -40,20 +39,4 @@ func bold(s string) string {
 	b = append(b, s...)
 	b = append(b, "</b>"...)
 	return string(b)
-}
-
-// Manually correct time zone, because it gets stored wrong in the database
-// somehow.
-func correctTimeZone(t time.Time) time.Time {
-	t = t.Round(time.Second)
-	return time.Date(
-		t.Year(),
-		t.Month(),
-		t.Day(),
-		t.Hour(),
-		t.Minute(),
-		t.Second(),
-		0,
-		time.Local,
-	).UTC()
 }

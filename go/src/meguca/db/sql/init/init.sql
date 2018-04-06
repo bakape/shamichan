@@ -14,6 +14,24 @@ create table accounts (
 	password bytea not null
 );
 
+create table boards (
+	readOnly boolean not null,
+	textOnly boolean not null,
+	forcedAnon boolean not null,
+	disableRobots boolean default false,
+	flags boolean default false,
+	NSFW boolean default false,
+	nonLive bool default false,
+	posterIDs bool default false,
+	id text primary key,
+	created timestamp not null,
+	defaultCSS text not null,
+	title varchar(100) not null,
+	notice varchar(500) not null,
+	rules varchar(5000) not null,
+	eightball text[] not null
+);
+
 create table sessions (
 	account varchar(20) not null references accounts on delete cascade,
 	token text not null,
@@ -22,7 +40,7 @@ create table sessions (
 );
 
 create table bans (
-	board text not null,
+	board text not null references boards on delete cascade,
 	ip inet not null,
 	forPost bigint default 0,
 	by varchar(20) not null,
@@ -33,7 +51,7 @@ create table bans (
 
 create table mod_log (
 	type smallint not null,
-	board text not null,
+	board text not null references boards on delete cascade,
 	id bigint not null,
 	by varchar(20) not null,
 	created timestamp default (now() at time zone 'utc')
@@ -62,24 +80,6 @@ create table image_tokens (
 	expires timestamp not null
 );
 
-create table boards (
-	readOnly boolean not null,
-	textOnly boolean not null,
-	forcedAnon boolean not null,
-	disableRobots boolean default false,
-	flags boolean default false,
-	NSFW boolean default false,
-	nonLive bool default false,
-	posterIDs bool default false,
-	id text primary key,
-	created timestamp not null,
-	defaultCSS text not null,
-	title varchar(100) not null,
-	notice varchar(500) not null,
-	rules varchar(5000) not null,
-	eightball text[] not null
-);
-
 create table staff (
 	board text not null references boards on delete cascade,
 	account varchar(20) not null references accounts on delete cascade,
@@ -90,7 +90,6 @@ create index staff_account on staff (account);
 
 create table banners (
 	board text not null references boards on delete cascade,
-	id smallint not null,
 	data bytea not null,
 	mime text not null
 );

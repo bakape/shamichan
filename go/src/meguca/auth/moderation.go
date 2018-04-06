@@ -12,10 +12,6 @@ var (
 	bans      = map[string]map[string]bool{}
 	bansMu    sync.RWMutex
 	ErrBanned = errors.New("you are banned from this board")
-
-	// Automatically ban an IP. Initialized by db package. Var here to avoid
-	// circular dependencies.
-	SystemBan func(ip, reason string, expires time.Time) error
 )
 
 // ModerationLevel defines the level required to perform an action

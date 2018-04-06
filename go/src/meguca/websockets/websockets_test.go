@@ -43,6 +43,10 @@ func init() {
 	if err := db.LoadDB(); err != nil {
 		panic(err)
 	}
+	err := db.ClearTables("boards", "accounts")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func newWSServer(t testing.TB) *mockWSServer {

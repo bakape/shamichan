@@ -61,8 +61,10 @@ func writeSampleThread(t *testing.T) {
 				ID:   1,
 				Time: time.Now().Unix(),
 			},
-			OP: 1,
+			OP:    1,
+			Board: "a",
 		},
+		IP: "::1",
 	}
 	if err := WriteThread(nil, thread, op); err != nil {
 		t.Fatal(err)
