@@ -14,6 +14,24 @@ create table accounts (
 	password bytea not null
 );
 
+create table boards (
+	readOnly boolean not null,
+	textOnly boolean not null,
+	forcedAnon boolean not null,
+	disableRobots boolean default false,
+	flags boolean default false,
+	NSFW boolean default false,
+	nonLive bool default false,
+	posterIDs bool default false,
+	id text primary key,
+	created timestamp not null,
+	defaultCSS text not null,
+	title varchar(100) not null,
+	notice varchar(500) not null,
+	rules varchar(5000) not null,
+	eightball text[] not null
+);
+
 create table sessions (
 	account varchar(20) not null references accounts on delete cascade,
 	token text not null,
@@ -60,24 +78,6 @@ create table image_tokens (
 	token char(86) not null primary key,
 	SHA1 char(40) not null references images on delete cascade,
 	expires timestamp not null
-);
-
-create table boards (
-	readOnly boolean not null,
-	textOnly boolean not null,
-	forcedAnon boolean not null,
-	disableRobots boolean default false,
-	flags boolean default false,
-	NSFW boolean default false,
-	nonLive bool default false,
-	posterIDs bool default false,
-	id text primary key,
-	created timestamp not null,
-	defaultCSS text not null,
-	title varchar(100) not null,
-	notice varchar(500) not null,
-	rules varchar(5000) not null,
-	eightball text[] not null
 );
 
 create table staff (
