@@ -22,7 +22,7 @@ create table sessions (
 );
 
 create table bans (
-	board text not null,
+	board text not null references boards on delete cascade,
 	ip inet not null,
 	forPost bigint default 0,
 	by varchar(20) not null,
@@ -33,7 +33,7 @@ create table bans (
 
 create table mod_log (
 	type smallint not null,
-	board text not null,
+	board text not null references boards on delete cascade,
 	id bigint not null,
 	by varchar(20) not null,
 	created timestamp default (now() at time zone 'utc')

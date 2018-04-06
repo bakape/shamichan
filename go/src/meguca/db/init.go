@@ -471,6 +471,14 @@ var upgrades = []func(*sql.Tx) error{
 		_, err = tx.Exec(`ALTER TABLE banners DROP COLUMN id`)
 		return
 	},
+	func(tx *sql.Tx) error {
+		return execAll(tx,
+			`ALTER TABLE mod_log ADD CONSTRAINT mod_log_board_fkey
+			FOREIGN KEY (board) REFERENCES boards(id) ON DELETE CASCADE`,
+			`ALTER TABLE bans ADD CONSTRAINT bans_board_fkey
+			FOREIGN KEY (board) REFERENCES boards(id) ON DELETE CASCADE`,
+		)
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
