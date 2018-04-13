@@ -56,7 +56,7 @@ func TestInsertThread(t *testing.T) {
 		if _, err := config.SetBoardConfigs(c.BoardConfigs); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.WriteBoard(nil, c); err != nil {
+		if err := db.WriteBoard(c); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -422,7 +422,7 @@ func writeSampleBoard(t testing.TB) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := db.WriteBoard(nil, b); err != nil {
+	if err := db.WriteBoard(b); err != nil {
 		t.Fatal(err)
 	}
 }

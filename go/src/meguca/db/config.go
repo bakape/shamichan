@@ -9,6 +9,7 @@ import (
 	"meguca/util"
 	"time"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 )
 
@@ -32,7 +33,11 @@ func loadConfigs() error {
 // GetConfigs retrieves global configurations. Only used in tests.
 func GetConfigs() (c config.Configs, err error) {
 	var enc string
-	err = db.QueryRow(`SELECT val FROM main WHERE id = 'config'`).Scan(&enc)
+	err = sq.Select("val").
+		From("main").
+		Where("id = 'config'").
+		QueryRow().
+		Scan(&enc)
 	if err != nil {
 		return
 	}
@@ -45,8 +50,17 @@ func decodeConfigs(data string) (c config.Configs, err error) {
 	return
 }
 
+func getBoardConfigs() squirrel.SelectBuilder {
+	return sq.Select(
+		"readOnly", "textOnly", "forcedAnon", "disableRobots", "flags", "NSFW",
+		"nonLive", "posterIDs", "id", "defaultCSS", "title", "notice", "rules",
+		"eightball",
+	).
+		From("boards")
+}
+
 func loadBoardConfigs() error {
-	r, err := prepared["get_all_board_configs"].Query()
+	r, err := getBoardConfigs().Query()
 	if err != nil {
 		return err
 	}
@@ -81,24 +95,57 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 }
 
 // WriteBoard writes a board complete with configurations to the database
-func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
-	_, err := getStatement(tx, "write_board").Exec(
-		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots, c.Flags,
-		c.NSFW, c.NonLive, c.PosterIDs,
-		c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
-		pq.StringArray(c.Eightball),
-	)
+func WriteBoard(c BoardConfigs) error {
+	_, err := sq.Insert("boards").
+		Columns(
+			"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
+			"flags", "NSFW", "nonLive",
+			"posterIDs", "created", "defaultCSS", "title", "notice", "rules",
+			"eightball",
+		).
+		Values(
+			c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots, c.Flags,
+			c.NSFW, c.NonLive, c.PosterIDs,
+			c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
+			pq.StringArray(c.Eightball),
+		).
+		Exec()
+	if err != nil {
+		return err
+	}
+
+	return notifyBoardUpdated(c.ID)
+}
+
+func notifyBoardUpdated(board string) error {
+	_, err := db.Exec("select pg_notify('board_updated', $1)", board)
 	return err
 }
 
 // UpdateBoard updates board configurations
 func UpdateBoard(c config.BoardConfigs) error {
-	return execPrepared(
-		"update_board",
-		c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots, c.Flags,
-		c.NSFW, c.NonLive, c.PosterIDs, c.DefaultCSS, c.Title, c.Notice,
-		c.Rules, pq.StringArray(c.Eightball),
-	)
+	_, err := sq.Update("boards").
+		SetMap(map[string]interface{}{
+			"readOnly":      c.ReadOnly,
+			"textOnly":      c.TextOnly,
+			"forcedAnon":    c.ForcedAnon,
+			"disableRobots": c.DisableRobots,
+			"flags":         c.Flags,
+			"NSFW":          c.NSFW,
+			"nonLive":       c.NonLive,
+			"posterIDs":     c.PosterIDs,
+			"defaultCSS":    c.DefaultCSS,
+			"title":         c.Title,
+			"notice":        c.Notice,
+			"rules":         c.Rules,
+			"eightball":     pq.StringArray(c.Eightball),
+		}).
+		Where("id = ?", c.ID).
+		Exec()
+	if err != nil {
+		return err
+	}
+	return notifyBoardUpdated(c.ID)
 }
 
 func updateConfigs(data string) error {
@@ -138,7 +185,8 @@ func updateBoardConfigs(board string) error {
 
 // GetBoardConfigs retrives the configurations of a specific board
 func GetBoardConfigs(board string) (config.BoardConfigs, error) {
-	return scanBoardConfigs(prepared["get_board_configs"].QueryRow(board))
+	q := getBoardConfigs().Where("id = ?", board)
+	return scanBoardConfigs(q.QueryRow())
 }
 
 func recompileTemplates() error {
@@ -152,10 +200,19 @@ func recompileTemplates() error {
 }
 
 // WriteConfigs writes new global configurations to the database
-func WriteConfigs(c config.Configs) error {
+func WriteConfigs(c config.Configs) (err error) {
 	data, err := json.Marshal(c)
 	if err != nil {
-		return err
+		return
 	}
-	return execPrepared("write_configs", string(data))
+	s := string(data)
+	_, err = sq.Update("main").
+		Set("val", s).
+		Where("id = 'config'").
+		Exec()
+	if err != nil {
+		return
+	}
+	_, err = db.Exec("select pg_notify('config_updates', $1)", s)
+	return
 }

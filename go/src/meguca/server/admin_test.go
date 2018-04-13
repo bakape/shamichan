@@ -67,7 +67,7 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.WriteBoard(nil, conf); err != nil {
+	if err := db.WriteBoard(conf); err != nil {
 		t.Fatal(err)
 	}
 	writeSampleUser(t)
@@ -101,7 +101,7 @@ func TestBoardConfiguration(t *testing.T) {
 			Eightball: []string{},
 		},
 	}
-	if err := db.WriteBoard(nil, init); err != nil {
+	if err := db.WriteBoard(init); err != nil {
 		t.Fatal(err)
 	}
 
@@ -269,7 +269,7 @@ func writeSampleBoard(t testing.TB) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := db.WriteBoard(nil, b); err != nil {
+	if err := db.WriteBoard(b); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := config.SetBoardConfigs(b.BoardConfigs); err != nil {
@@ -431,7 +431,7 @@ func TestDeletePost(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := db.WriteBoard(nil, cConfigs)
+	err := db.WriteBoard(cConfigs)
 	if err != nil {
 		t.Fatal(err)
 	}

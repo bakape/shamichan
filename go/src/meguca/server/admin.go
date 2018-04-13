@@ -305,7 +305,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.WriteBoard(nil, db.BoardConfigs{
+	err = db.WriteBoard(db.BoardConfigs{
 		Created: time.Now(),
 		BoardConfigs: config.BoardConfigs{
 			BoardPublic: config.BoardPublic{

@@ -9,17 +9,21 @@ import (
 
 func TestLoadConfigs(t *testing.T) {
 	config.Clear()
-	assertExec(t, `UPDATE main SET val = '{"mature":true}' WHERE id = 'config'`)
+	std := config.Configs{
+		Public: config.Public{
+			Mature: true,
+		},
+	}
+	err := WriteConfigs(std)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if err := loadConfigs(); err != nil {
 		t.Fatal(err)
 	}
 
-	AssertDeepEquals(t, config.Get(), &config.Configs{
-		Public: config.Public{
-			Mature: true,
-		},
-	})
+	AssertDeepEquals(t, config.Get(), &std)
 }
 
 func TestUpdateConfigs(t *testing.T) {
@@ -69,7 +73,7 @@ func TestUpdateOnAddBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := WriteBoard(nil, std); err != nil {
+	if err := WriteBoard(std); err != nil {
 		t.Fatal(err)
 	}
 
@@ -99,7 +103,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := WriteBoard(nil, std); err != nil {
+	if err := WriteBoard(std); err != nil {
 		t.Fatal(err)
 	}
 
@@ -113,11 +117,12 @@ func TestUpdateBoardConfigs(t *testing.T) {
 		std.BoardConfigs,
 	)
 
-	assertExec(t,
-		`UPDATE boards
-			SET title = 'foo'
-			WHERE id = 'a'`,
-	)
+	conf := std.BoardConfigs
+	conf.Title = "foo"
+	err := UpdateBoard(conf)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if err := updateBoardConfigs("a"); err != nil {
 		t.Fatal(err)

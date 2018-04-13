@@ -86,7 +86,7 @@ func writeSampleBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := db.WriteBoard(nil, b); err != nil {
+	if err := db.WriteBoard(b); err != nil {
 		t.Fatal(err)
 	}
 }
