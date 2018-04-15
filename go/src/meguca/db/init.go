@@ -473,6 +473,8 @@ var upgrades = []func(*sql.Tx) error{
 	},
 	func(tx *sql.Tx) error {
 		return execAll(tx,
+			`DELETE FROM mod_log`,
+			`DELETE FROM bans`,
 			`ALTER TABLE mod_log ADD CONSTRAINT mod_log_board_fkey
 			FOREIGN KEY (board) REFERENCES boards(id) ON DELETE CASCADE`,
 			`ALTER TABLE bans ADD CONSTRAINT bans_board_fkey
