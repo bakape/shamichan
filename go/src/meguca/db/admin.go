@@ -38,7 +38,7 @@ func writeBan(
 	if err != nil {
 		return
 	}
-	return logModeration(tx, auth.BanPost, board, 0, by)
+	return logModeration(tx, auth.BanPost, board, postID, by)
 }
 
 // Propagate ban updates through DB and disconnect all banned IPs
