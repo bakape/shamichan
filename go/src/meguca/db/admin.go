@@ -10,13 +10,11 @@ import (
 )
 
 // Write moderation action to log
-func logModeration(tx *sql.Tx, typ auth.ModerationAction, board string,
-	postID uint64, by string,
-) error {
+func logModeration(tx *sql.Tx, e auth.ModLogEntry) error {
 	return withTransaction(tx,
 		sq.Insert("mod_log").
-			Columns("type", "board", "id", "by").
-			Values(int(typ), board, postID, by),
+			Columns("type", "board", "id", "by", "length", "reason").
+			Values(int(e.Type), e.Board, e.ID, e.By, e.Length, e.Reason),
 	).Exec()
 }
 
@@ -38,7 +36,14 @@ func writeBan(
 	if err != nil {
 		return
 	}
-	return logModeration(tx, auth.BanPost, board, postID, by)
+	return logModeration(tx, auth.ModLogEntry{
+		Type:   auth.BanPost,
+		Board:  board,
+		ID:     postID,
+		By:     by,
+		Length: uint64(expires.Sub(time.Now()).Seconds()),
+		Reason: reason,
+	})
 }
 
 // Propagate ban updates through DB and disconnect all banned IPs
@@ -163,7 +168,12 @@ func Unban(board string, id uint64, by string) error {
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, auth.UnbanPost, board, id, by)
+		err = logModeration(tx, auth.ModLogEntry{
+			Type:  auth.UnbanPost,
+			Board: board,
+			ID:    id,
+			By:    by,
+		})
 		if err != nil {
 			return
 		}
@@ -231,7 +241,12 @@ func moderatePost(
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, typ, board, id, by)
+		err = logModeration(tx, auth.ModLogEntry{
+			Type:  typ,
+			Board: board,
+			ID:    id,
+			By:    by,
+		})
 		if err != nil {
 			return
 		}
@@ -408,7 +423,7 @@ func SetThreadLock(id uint64, locked bool, by string) error {
 
 // Retrieve moderation log for a specific board
 func GetModLog(board string) (log []auth.ModLogEntry, err error) {
-	r, err := sq.Select("type", "id", "by", "created").
+	r, err := sq.Select("type", "id", "by", "created", "length", "reason").
 		From("mod_log").
 		Where("board = ?", board).
 		OrderBy("created desc").
@@ -419,15 +434,14 @@ func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 	defer r.Close()
 
 	log = make([]auth.ModLogEntry, 0, 64)
-	var entry auth.ModLogEntry
+	e := auth.ModLogEntry{Board: board}
 	for r.Next() {
-		err = r.Scan(&entry.Type, &entry.ID, &entry.By, &entry.Created)
+		err = r.Scan(&e.Type, &e.ID, &e.By, &e.Created, &e.Length, &e.Reason)
 		if err != nil {
 			return
 		}
-		log = append(log, entry)
+		log = append(log, e)
 	}
 	err = r.Err()
-
 	return
 }

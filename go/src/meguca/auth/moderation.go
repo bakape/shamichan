@@ -74,10 +74,10 @@ const (
 
 // Single entry in the moderation log
 type ModLogEntry struct {
-	Type    ModerationAction
-	ID      uint64
-	By      string
-	Created time.Time
+	Type              ModerationAction
+	ID, Length        uint64
+	Created           time.Time
+	Board, By, Reason string
 }
 
 // Ban holdsan entry of an IP being banned from a board

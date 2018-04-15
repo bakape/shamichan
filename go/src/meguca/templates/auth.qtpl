@@ -89,7 +89,7 @@ Renders a moderation log page
 	{% code ln := lang.Get() %}
 	{%= tableStyle() %}
 	<table>
-		{%= tableHeaders("type", "by", "post", "time") %}
+		{%= tableHeaders("type", "by", "post", "time", "reason", "duration") %}
 		{% for _, l := range log %}
 			<tr>
 				<td>
@@ -109,8 +109,18 @@ Renders a moderation log page
 					{% endswitch %}
 				</td>
 				<td>{%s l.By %}</td>
-				<td>{%= staticPostLink(l.ID) %}</td>
+				<td>
+					{% if l.ID != 0 %}
+						{%= staticPostLink(l.ID) %}
+					{% endif %}
+				</td>
 				<td>{%s l.Created.Format(time.UnixDate) %}</td>
+				<td>{%s l.Reason %}</td>
+				<td>
+					{% if l.Length != 0 %}
+						{%s (time.Second * time.Duration(l.Length)).String() %}
+					{% endif %}
+				</td>
 			</tr>
 		{% endfor %}
 	</table>

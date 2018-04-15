@@ -54,7 +54,9 @@ create table mod_log (
 	board text not null references boards on delete cascade,
 	id bigint not null,
 	by varchar(20) not null,
-	created timestamp default (now() at time zone 'utc')
+	created timestamp default (now() at time zone 'utc'),
+	length bigint default 0,
+	reason text default ''
 );
 create index mod_log_board on mod_log (board);
 create index mod_log_created on mod_log (created);

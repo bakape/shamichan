@@ -487,6 +487,12 @@ var upgrades = []func(*sql.Tx) error{
 			`ALTER TABLE threads DROP COLUMN imageCtr`,
 		)
 	},
+	func(tx *sql.Tx) error {
+		return execAll(tx,
+			`ALTER TABLE mod_log ADD COLUMN length bigint default 0`,
+			`ALTER TABLE mod_log ADD COLUMN reason text default ''`,
+		)
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
