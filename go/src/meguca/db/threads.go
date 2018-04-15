@@ -15,7 +15,10 @@ type Thread struct {
 
 // ThreadCounter retrieves the progress counter of a thread
 func ThreadCounter(id uint64) (uint64, error) {
-	return getCounter("thread_counter", id)
+	q := sq.Select("replyTime").
+		From("threads").
+		Where("id = ?", id)
+	return getCounter(q)
 }
 
 // ValidateOP confirms the specified thread exists on specific board
@@ -31,29 +34,18 @@ func ValidateOP(id uint64, board string) (valid bool, err error) {
 func InsertThread(tx *sql.Tx, subject string, nonLive bool, p Post) (
 	err error,
 ) {
-	imgCtr := 0
-	if p.Image != nil {
-		imgCtr = 1
-	}
-
-	_, err = getExecutor(tx, "insert_thread").Exec(
-		append(
-			[]interface{}{subject, nonLive, imgCtr},
-			genPostCreationArgs(p)...,
-		)...,
-	)
-	if err != nil {
-		return
-	}
-	err = writeLinks(tx, p.ID, p.Links)
+	err = withTransaction(tx,
+		sq.Insert("threads").
+			Columns(
+				"board", "id", "replyTime", "bumpTime", "subject", "nonLive",
+			).
+			Values(p.Board, p.ID, p.Time, p.Time, subject, nonLive),
+	).Exec()
 	if err != nil {
 		return
 	}
 
-	if p.Editing {
-		err = SetOpenBody(p.ID, []byte(p.Body))
-	}
-
+	err = WritePost(tx, p, false, false)
 	return
 }
 
@@ -72,8 +64,6 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 	_, err = tx.Stmt(prepared["write_op"]).Exec(
 		t.Board,
 		t.ID,
-		t.PostCtr,
-		t.ImageCtr,
 		t.ReplyTime,
 		t.BumpTime,
 		t.Subject,
@@ -82,7 +72,7 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 		return err
 	}
 
-	err = WritePost(tx, p)
+	err = WritePost(tx, p, false, false)
 	if err != nil {
 		return err
 	}
@@ -110,31 +100,34 @@ func CheckThreadLocked(id uint64) (bool, error) {
 }
 
 // Increment thread update, bump, post and image counters
-func bumpThread(id uint64, bump, newPost, newImage bool) (err error) {
+func bumpThread(tx *sql.Tx, id uint64, bump bool) (err error) {
 	now := time.Now().Unix()
-	q := sq.Update("threads").
-		Set("replyTime", now)
+	q := sq.Update("threads").Set("replyTime", now)
 
 	if bump {
-		var postCount int
-		err = sq.Select("postCtr").
-			From("threads").
-			Where("id = ?", id).
-			Scan(&postCount)
+		var (
+			r         rowScanner
+			postCount uint
+		)
+		r, err = withTransaction(tx,
+			sq.Select("count(*)").
+				From("posts").
+				Where("op = ?", id),
+		).
+			QueryRow()
 		if err != nil {
 			return
 		}
+		err = r.Scan(&postCount)
+		if err != nil {
+			return
+		}
+
 		if postCount < 3000 {
 			q = q.Set("bumpTime", now)
 		}
 	}
-	if newPost {
-		q = q.Set("postCtr", "postCtr + 1")
-	}
-	if newImage {
-		q = q.Set("imageCtr", " imageCtr + 1")
-	}
 
-	_, err = q.Where("id = ?", id).Exec()
+	err = withTransaction(tx, q.Where("id = ?", id)).Exec()
 	return err
 }

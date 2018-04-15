@@ -108,8 +108,6 @@ create table threads (
 	locked boolean default false,
 	board text not null references boards on delete cascade,
 	id bigint primary key,
-	postCtr bigint not null,
-	imageCtr bigint not null,
 	bumpTime bigint not null,
 	replyTime bigint not null,
 	subject varchar(100) not null

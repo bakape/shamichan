@@ -283,7 +283,7 @@ func copyThread(id uint64) (err error) {
 		return tx.Commit()
 	}
 	for i := 1; i < len(posts); i++ {
-		err = db.WritePost(tx, posts[i].Post)
+		err = db.WritePost(tx, posts[i].Post, false, false)
 		if err != nil {
 			return
 		}

@@ -113,7 +113,8 @@ func TestGetSameIPPosts(t *testing.T) {
 }
 
 func TestGetModLOg(t *testing.T) {
-	prepareForModeration(t)
+	t.Run("ban_unban", TestBanUnban) // Se we have something in the log
+
 	_, err := GetModLog("a")
 	if err != nil {
 		t.Fatal(err)

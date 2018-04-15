@@ -131,10 +131,19 @@ func HasImage(id uint64) (has bool, err error) {
 }
 
 // InsertImage insert and image into and existing open post
-func InsertImage(tx *sql.Tx, id uint64, img common.Image) error {
-	_, err := getStatement(tx, "insert_image").
-		Exec(id, img.SHA1, img.Name, img.Spoiler)
-	return err
+func InsertImage(tx *sql.Tx, id, op uint64, img common.Image) (err error) {
+	q := sq.Update("posts").
+		SetMap(map[string]interface{}{
+			"SHA1":      img.SHA1,
+			"imageName": img.Name,
+			"spoiler":   img.Spoiler,
+		}).
+		Where("id = ?", id)
+	err = withTransaction(tx, q).Exec()
+	if err != nil {
+		return
+	}
+	return bumpThread(tx, op, false)
 }
 
 // SpoilerImage spoilers an already allocated image

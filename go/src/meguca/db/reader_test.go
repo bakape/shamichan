@@ -40,14 +40,12 @@ func TestReader(t *testing.T) {
 			Board:     "a",
 			ReplyTime: 1,
 			BumpTime:  1,
-			PostCtr:   3,
 		},
 		{
 			ID:        3,
 			Board:     "c",
 			ReplyTime: 3,
 			BumpTime:  5,
-			PostCtr:   1,
 		},
 	}
 	posts := [...]Post{
@@ -112,10 +110,16 @@ func TestReader(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	for i := len(threads); i < len(posts); i++ {
-		if err := WritePost(nil, posts[i]); err != nil {
-			t.Fatal(err)
+	err := InTransaction(func(tx *sql.Tx) (err error) {
+		for i := len(threads); i < len(posts); i++ {
+			if err = WritePost(tx, posts[i], false, false); err != nil {
+				return
+			}
 		}
+		return
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	t.Run("GetAllBoard", testGetAllBoard)
@@ -192,6 +196,7 @@ func testGetAllBoard(t *testing.T) {
 				Image: &assets.StdJPEG,
 			},
 			PostCtr:   3,
+			ImageCtr:  1,
 			Board:     "a",
 			ReplyTime: 1,
 			BumpTime:  1,
@@ -283,6 +288,7 @@ func testGetThread(t *testing.T) {
 
 	thread1 := common.Thread{
 		PostCtr:   3,
+		ImageCtr:  1,
 		ReplyTime: 1,
 		BumpTime:  1,
 		Board:     "a",

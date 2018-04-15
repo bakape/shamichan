@@ -4,12 +4,15 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"meguca/util"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 )
 
@@ -31,6 +34,63 @@ type tableScanner interface {
 	Close() error
 }
 
+// Allows easily running squirrel queries with transactions
+type transactionalQuery struct {
+	tx *sql.Tx
+	sq squirrel.Sqlizer
+}
+
+func withTransaction(tx *sql.Tx, q squirrel.Sqlizer) transactionalQuery {
+	return transactionalQuery{
+		tx: tx,
+		sq: q,
+	}
+}
+
+// Runs function inside a transaction and handles comminting and rollback on
+// error
+func InTransaction(fn func(*sql.Tx) error) (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer RollbackOnError(tx, &err)
+
+	err = fn(tx)
+	if err != nil {
+		return
+	}
+
+	err = tx.Commit()
+	return
+}
+
+func (t transactionalQuery) Exec() (err error) {
+	sql, args, err := t.sq.ToSql()
+	if err != nil {
+		return
+	}
+	_, err = t.tx.Exec(sql, args...)
+	return
+}
+
+func (t transactionalQuery) Query() (ts tableScanner, err error) {
+	sql, args, err := t.sq.ToSql()
+	if err != nil {
+		return
+	}
+	return t.tx.Query(sql, args...)
+}
+
+func (t transactionalQuery) QueryRow() (rs rowScanner, err error) {
+	sql, args, err := t.sq.ToSql()
+	if err != nil {
+		return
+	}
+	rs = t.tx.QueryRow(sql, args...)
+	return
+}
+
 // Generate prepared statements
 func genPrepared() error {
 	names := AssetNames()
@@ -41,11 +101,6 @@ func genPrepared() error {
 		switch {
 		case strings.HasPrefix(id, "init"):
 			continue
-		case strings.HasPrefix(id, "functions"):
-			_, err := db.Exec(getQuery(id))
-			if err != nil {
-				return err
-			}
 		default:
 			left = append(left, id)
 		}
@@ -56,7 +111,7 @@ func genPrepared() error {
 		k := strings.TrimSuffix(filepath.Base(id), ".sql")
 		prepared[k], err = db.Prepare(getQuery(id))
 		if err != nil {
-			return err
+			return util.WrapError(fmt.Sprintf("error preparing %s:", k), err)
 		}
 	}
 

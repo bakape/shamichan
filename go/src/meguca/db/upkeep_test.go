@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"meguca/common"
 	"meguca/config"
@@ -50,10 +51,17 @@ func TestOpenPostClosing(t *testing.T) {
 			},
 		},
 	}
-	for _, p := range posts {
-		if err := WritePost(nil, p); err != nil {
-			t.Fatal(err)
+	err := InTransaction(func(tx *sql.Tx) error {
+		for _, p := range posts {
+			err := WritePost(tx, p, false, false)
+			if err != nil {
+				return err
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	if err := closeDanglingPosts(); err != nil {

@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"database/sql"
 	"meguca/common"
 	"meguca/db"
 	. "meguca/test"
@@ -119,7 +120,10 @@ func awaitFlush() {
 
 func writeSamplePost(t testing.TB) {
 	t.Helper()
-	if err := db.WritePost(nil, samplePost); err != nil {
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WritePost(tx, samplePost, false, false)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 }
@@ -188,7 +192,10 @@ func TestClosePostWithHashCommand(t *testing.T) {
 			OP: 1,
 		},
 	}
-	if err := db.WritePost(nil, post); err != nil {
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WritePost(tx, post, false, false)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -267,10 +274,16 @@ func TestClosePostWithLinks(t *testing.T) {
 			},
 		},
 	}
-	for _, p := range posts {
-		if err := db.WritePost(nil, p); err != nil {
-			t.Fatal(err)
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		for _, p := range posts {
+			if err := db.WritePost(tx, p, false, false); err != nil {
+				return err
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	sv := newWSServer(t)
@@ -302,10 +315,7 @@ func TestBackspace(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	err := db.WritePost(nil, samplePost)
-	if err != nil {
-		t.Fatal(err)
-	}
+	writeSamplePost(t)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -333,9 +343,7 @@ func TestClosePost(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	if err := db.WritePost(nil, samplePost); err != nil {
-		t.Fatal(err)
-	}
+	writeSamplePost(t)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -515,7 +523,10 @@ func TestSplice(t *testing.T) {
 					OP:    1,
 				},
 			}
-			if err := db.WritePost(nil, post); err != nil {
+			err := db.InTransaction(func(tx *sql.Tx) error {
+				return db.WritePost(tx, post, false, false)
+			})
+			if err != nil {
 				t.Fatal(err)
 			}
 
@@ -566,7 +577,10 @@ func TestCloseOldOpenPost(t *testing.T) {
 			OP: 1,
 		},
 	}
-	if err := db.WritePost(nil, post); err != nil {
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WritePost(tx, post, false, false)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -644,7 +658,10 @@ func TestInsertImage(t *testing.T) {
 			OP:    1,
 		},
 	}
-	if err := db.WritePost(nil, post); err != nil {
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WritePost(tx, post, false, false)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 

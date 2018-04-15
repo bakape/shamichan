@@ -16,8 +16,19 @@ const (
 	p.posterID,
 	i.*`
 
-	threadSelectsSQL = `t.sticky, t.board, t.postCtr, t.imageCtr, t.replyTime,
-	t.bumpTime, t.subject, t.nonLive, t.locked, ` + postSelectsSQL
+	threadSelectsSQL = `t.sticky, t.board,
+	(
+		select count(*)
+		from posts
+		where t.id = posts.op
+	),
+	(
+		select count(*)
+		from posts
+		where t.id = posts.op
+			and posts.SHA1 is not null
+	),
+	t.replyTime, t.bumpTime, t.subject, t.nonLive, t.locked, ` + postSelectsSQL
 
 	getOPSQL = `
 	select ` + threadSelectsSQL + `

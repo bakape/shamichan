@@ -10,29 +10,35 @@ import (
 )
 
 // Write moderation action to log
-func logModeration(typ auth.ModerationAction, board string, postID uint64,
-	by string,
+func logModeration(tx *sql.Tx, typ auth.ModerationAction, board string,
+	postID uint64, by string,
 ) error {
-	_, err := sq.Insert("mod_log").
-		Columns("type", "board", "id", "by").
-		Values(int(typ), board, postID, by).
-		Exec()
-	return err
+	return withTransaction(tx,
+		sq.Insert("mod_log").
+			Columns("type", "board", "id", "by").
+			Values(int(typ), board, postID, by),
+	).Exec()
 }
 
-func writeBan(ip, board, reason, by string, postID uint64,
-	expires time.Time) (
+func writeBan(
+	tx *sql.Tx,
+	ip, board, reason, by string,
+	postID uint64,
+	expires time.Time,
+) (
 	err error,
 ) {
-	_, err = sq.Insert("bans").
-		Columns("ip", "board", "forPost", "reason", "by", "expires").
-		Values(ip, board, postID, reason, by, expires).
-		Suffix("on conflict do nothing").
+	err = withTransaction(tx,
+		sq.Insert("bans").
+			Columns("ip", "board", "forPost", "reason", "by", "expires").
+			Values(ip, board, postID, reason, by, expires).
+			Suffix("on conflict do nothing"),
+	).
 		Exec()
 	if err != nil {
 		return
 	}
-	return logModeration(auth.BanPost, board, 0, by)
+	return logModeration(tx, auth.BanPost, board, 0, by)
 }
 
 // Propagate ban updates through DB and disconnect all banned IPs
@@ -52,11 +58,14 @@ func propagateBans(board string, ips ...string) error {
 
 // Automatically ban an IP
 func SystemBan(ip, reason string, expires time.Time) (err error) {
-	err = writeBan(ip, "all", reason, "system", 0, expires)
+	err = InTransaction(func(tx *sql.Tx) error {
+		return writeBan(tx, ip, "all", reason, "system", 0, expires)
+	})
 	if err != nil {
 		return
 	}
-	return propagateBans("all", ip)
+	err = propagateBans("all", ip)
+	return
 }
 
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
@@ -66,14 +75,15 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 ) {
 	type post struct {
 		id, op uint64
+		ip     string
 	}
 
-	// Location is not preserved in postres. Need to convert to UTC.
+	// Location is not preserved in postgres. Need to convert to UTC.
 	expires = expires.UTC()
 
 	// Retrieve matching posts
 	var (
-		ips   = make(map[string]uint64, len(ids))
+		ips   = make(map[string]bool, len(ids))
 		posts = make([]post, 0, len(ids))
 		ip    string
 	)
@@ -87,29 +97,48 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 		default:
 			return
 		}
-		ips[ip] = id
-		posts = append(posts, post{id: id})
+		ips[ip] = true
+		posts = append(posts, post{
+			id: id,
+			ip: ip,
+		})
 	}
 
 	// Retrieve their OPs
-	for i, post := range posts {
-		post.op, err = GetPostOP(post.id)
+	for i := range posts {
+		posts[i].op, err = GetPostOP(posts[i].id)
 		if err != nil {
 			return
 		}
-		posts[i] = post
 	}
 
-	// Write ban messages to posts
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer RollbackOnError(tx, &err)
+
+	// Write ban messages to posts and ban table
 	for _, post := range posts {
-		_, err = sq.Update("posts").
-			Set("banned", true).
-			Where("id = ?", post.id).
+		err = withTransaction(tx,
+			sq.Update("posts").
+				Set("banned", true).
+				Where("id = ?", post.id),
+		).
 			Exec()
 		if err != nil {
 			return
 		}
-		err = bumpThread(post.op, false, false, false)
+		err = bumpThread(tx, post.op, false)
+		if err != nil {
+			return
+		}
+		err = writeBan(tx, ip, board, reason, by, post.id, expires)
+		if err != nil {
+			return
+		}
+
+		err = tx.Commit()
 		if err != nil {
 			return
 		}
@@ -121,14 +150,6 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 		}
 	}
 
-	// Write bans to the ban table
-	for ip, id := range ips {
-		err = writeBan(ip, board, reason, by, id, expires)
-		if err != nil {
-			return
-		}
-	}
-
 	ipArr := make([]string, 0, len(ips))
 	for ip, _ := range ips {
 		ipArr = append(ipArr, ip)
@@ -137,19 +158,23 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 }
 
 // Lift a ban from a specific post on a specific board
-func Unban(board string, id uint64, by string) (err error) {
-	_, err = sq.Delete("bans").
-		Where("board = ? and forPost = ?", board, id).
-		Exec()
-	if err != nil {
+func Unban(board string, id uint64, by string) error {
+	return InTransaction(func(tx *sql.Tx) (err error) {
+		err = withTransaction(tx,
+			sq.Delete("bans").
+				Where("board = ? and forPost = ?", board, id),
+		).
+			Exec()
+		if err != nil {
+			return
+		}
+		err = logModeration(tx, auth.UnbanPost, board, id, by)
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec("notify bans_updated")
 		return
-	}
-	err = logModeration(auth.UnbanPost, board, id, by)
-	if err != nil {
-		return
-	}
-	_, err = db.Exec("notify bans_updated")
-	return
+	})
 }
 
 func loadBans() error {
@@ -185,7 +210,7 @@ func RefreshBanCache() (err error) {
 	}
 	auth.SetBans(bans...)
 
-	return nil
+	return
 }
 
 // DeletePost marks the target post as deleted
@@ -196,27 +221,31 @@ func DeletePost(id uint64, by string) error {
 
 func moderatePost(
 	id uint64, typ auth.ModerationAction, by string,
-	query squirrel.UpdateBuilder, propagate func(id, op uint64) error,
+	query squirrel.UpdateBuilder,
+	propagate func(id, op uint64) error,
 ) (
 	err error,
 ) {
-	_, err = query.Where("id = ?", id).Exec()
-	if err != nil {
-		return
-	}
-
 	board, op, err := GetPostParenthood(id)
 	if err != nil {
 		return
 	}
-	err = logModeration(typ, board, id, by)
+
+	err = InTransaction(func(tx *sql.Tx) (err error) {
+		err = withTransaction(tx, query.Where("id = ?", id)).Exec()
+		if err != nil {
+			return
+		}
+		err = logModeration(tx, typ, board, id, by)
+		if err != nil {
+			return
+		}
+		return bumpThread(tx, op, false)
+	})
 	if err != nil {
 		return
 	}
-	err = bumpThread(op, false, false, false)
-	if err != nil {
-		return
-	}
+
 	if !IsTest {
 		err = propagate(id, op)
 	}
@@ -238,35 +267,34 @@ func ModSpoilerImage(id uint64, by string) error {
 // WriteStaff writes staff positions of a specific board. Old rows are
 // overwritten.
 func WriteStaff(board string, staff map[string][]string) (err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer RollbackOnError(tx, &err)
+	return InTransaction(func(tx *sql.Tx) (err error) {
+		// Remove previous staff entries
+		err = withTransaction(tx,
+			sq.Delete("staff").
+				Where("board  = ?", board),
+		).
+			Exec()
+		if err != nil {
+			return
+		}
 
-	// Remove previous staff entries
-	_, err = tx.Exec("delete from staff where board = $1", board)
-	if err != nil {
-		return
-	}
-
-	// Write new ones
-	q, err := tx.Prepare(`insert into staff (board, account, position)
-		values($1, $2, $3)`)
-	if err != nil {
-		return
-	}
-	for pos, accounts := range staff {
-		for _, a := range accounts {
-			_, err = q.Exec(board, a, pos)
-			if err != nil {
-				return
+		// Write new ones
+		q, err := tx.Prepare(`insert into staff (board, account, position)
+			values($1, $2, $3)`)
+		if err != nil {
+			return
+		}
+		for pos, accounts := range staff {
+			for _, a := range accounts {
+				_, err = q.Exec(board, a, pos)
+				if err != nil {
+					return
+				}
 			}
 		}
-	}
 
-	err = tx.Commit()
-	return
+		return
+	})
 }
 
 // GetStaff retrieves all staff positions of a specific board
@@ -280,6 +308,7 @@ func GetStaff(board string) (staff map[string][]string, err error) {
 		return
 	}
 	defer r.Close()
+
 	for r.Next() {
 		var acc, pos string
 		err = r.Scan(&acc, &pos)
@@ -288,6 +317,7 @@ func GetStaff(board string) (staff map[string][]string, err error) {
 		}
 		staff[pos] = append(staff[pos], acc)
 	}
+
 	err = r.Err()
 	return
 }
@@ -356,33 +386,34 @@ func GetSameIPPosts(id uint64, board string) (
 	return
 }
 
+func setThreadBool(id uint64, key string, val bool) error {
+	return InTransaction(func(tx *sql.Tx) (err error) {
+		err = withTransaction(tx,
+			sq.Update("threads").
+				Set(key, val).
+				Where("id = ?", id),
+		).
+			Exec()
+		if err != nil {
+			return
+		}
+		return bumpThread(tx, id, false)
+	})
+}
+
 // Set the sticky field on a thread
 func SetThreadSticky(id uint64, sticky bool) error {
-	_, err := sq.Update("threads").
-		Set("sticky", sticky).
-		Where("id = ?", id).
-		Exec()
-	if err != nil {
-		return err
-	}
-	return bumpThread(id, false, false, false)
+	return setThreadBool(id, "sticky", sticky)
 }
 
 // Set the ability of users to post in a specific thread
 func SetThreadLock(id uint64, locked bool, by string) error {
-	_, err := sq.Update("threads").
-		Set("locked", locked).
-		Where("id = ?", id).
-		Exec()
-	if err != nil {
-		return err
-	}
-	return bumpThread(id, false, false, false)
+	return setThreadBool(id, "locked", locked)
 }
 
 // Retrieve moderation log for a specific board
 func GetModLog(board string) (log []auth.ModLogEntry, err error) {
-	r, err := sq.Select("id", "by", "created").
+	r, err := sq.Select("type", "id", "by", "created").
 		From("mod_log").
 		Where("board = ?", board).
 		OrderBy("created desc").

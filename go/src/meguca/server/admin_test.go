@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"io"
 	"meguca/auth"
@@ -476,10 +477,17 @@ func TestDeletePost(t *testing.T) {
 			},
 		},
 	}
-	for _, p := range posts {
-		if err := db.WritePost(nil, p); err != nil {
-			t.Fatal(err)
+	err = db.InTransaction(func(tx *sql.Tx) error {
+		for _, p := range posts {
+			err := db.WritePost(tx, p, false, false)
+			if err != nil {
+				return err
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	data := []uint64{2, 4}

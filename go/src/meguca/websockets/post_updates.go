@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"meguca/auth"
@@ -395,24 +396,18 @@ func (c *Client) insertImage(data []byte) (err error) {
 		return errTextOnly
 	}
 
-	tx, err := db.StartTransaction()
-	if err != nil {
-		return
-	}
-	defer db.RollbackOnError(tx, &err)
+	var img common.Image
+	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+		_img, err := getImage(tx, req.Token, req.Name, req.Spoiler)
+		if err != nil {
+			return err
+		}
+		img = *_img
+		c.post.hasImage = true
+		c.post.isSpoilered = req.Spoiler
 
-	img, err := getImage(tx, req.Token, req.Name, req.Spoiler)
-	if err != nil {
-		return
-	}
-	c.post.hasImage = true
-	c.post.isSpoilered = req.Spoiler
-
-	err = db.InsertImage(tx, c.post.id, *img)
-	if err != nil {
-		return
-	}
-	err = tx.Commit()
+		return db.InsertImage(tx, c.post.id, c.post.op, img)
+	})
 	if err != nil {
 		return
 	}
@@ -422,12 +417,12 @@ func (c *Client) insertImage(data []byte) (err error) {
 		common.Image
 	}{
 		ID:    c.post.id,
-		Image: *img,
+		Image: img,
 	})
 	if err != nil {
 		return
 	}
-	c.feed.InsertImage(c.post.id, *img, msg)
+	c.feed.InsertImage(c.post.id, img, msg)
 
 	return c.incrementSpamScore(config.Get().ImageScore)
 }

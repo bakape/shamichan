@@ -479,6 +479,12 @@ var upgrades = []func(*sql.Tx) error{
 			FOREIGN KEY (board) REFERENCES boards(id) ON DELETE CASCADE`,
 		)
 	},
+	func(tx *sql.Tx) error {
+		return execAll(tx,
+			`ALTER TABLE threads DROP COLUMN postCtr`,
+			`ALTER TABLE threads DROP COLUMN imageCtr`,
+		)
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both

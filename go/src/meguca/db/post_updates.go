@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"meguca/common"
 )
 
@@ -21,20 +22,26 @@ func ClosePost(id, op uint64, body string, links []common.Link, com []common.Com
 		return
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
+	err = InTransaction(func(tx *sql.Tx) (err error) {
+		q := sq.Update("posts").
+			SetMap(map[string]interface{}{
+				"editing":  false,
+				"body":     body,
+				"commands": commandRow(com),
+				"password": nil,
+			}).
+			Where("id = ?", id)
+		err = withTransaction(tx, q).Exec()
+		if err != nil {
+			return
+		}
+		err = writeLinks(tx, id, links)
+		if err != nil {
+			return
+		}
+		err = bumpThread(tx, op, false)
 		return
-	}
-	defer RollbackOnError(tx, &err)
-	_, err = tx.Stmt(prepared["close_post"]).Exec(id, body, commandRow(com))
-	if err != nil {
-		return
-	}
-	err = writeLinks(tx, id, links)
-	if err != nil {
-		return
-	}
-	err = tx.Commit()
+	})
 	if err != nil {
 		return
 	}

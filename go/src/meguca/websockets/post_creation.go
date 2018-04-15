@@ -194,36 +194,27 @@ func CreatePost(
 
 	// Must ensure image token usage is done atomically, as not to cause
 	// possible data races with unused image cleanup
-	tx, err := db.StartTransaction()
-	if err != nil {
-		return
-	}
-	defer db.RollbackOnError(tx, &err)
-
-	post.ID, err = db.NewPostID(tx)
-	if err != nil {
-		return
-	}
-
-	if hasImage {
-		img := req.Image
-		post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
+	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+		post.ID, err = db.NewPostID(tx)
 		if err != nil {
 			return
 		}
-	}
 
-	msg, err = common.EncodeMessage(common.MessageInsertPost, post.Post)
-	if err != nil {
-		return
-	}
+		if hasImage {
+			img := req.Image
+			post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
+			if err != nil {
+				return
+			}
+		}
 
-	err = db.InsertPost(tx, post, req.Sage)
-	if err != nil {
-		return
-	}
+		msg, err = common.EncodeMessage(common.MessageInsertPost, post.Post)
+		if err != nil {
+			return
+		}
 
-	err = tx.Commit()
+		return db.WritePost(tx, post, true, req.Sage)
+	})
 	return
 }
 

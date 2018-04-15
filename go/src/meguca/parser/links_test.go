@@ -1,12 +1,12 @@
 package parser
 
 import (
-	"testing"
-
+	"database/sql"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"testing"
 )
 
 func TestParseLinks(t *testing.T) {
@@ -37,10 +37,17 @@ func TestParseLinks(t *testing.T) {
 			},
 		},
 	}
-	for _, p := range posts {
-		if err := db.WritePost(nil, p); err != nil {
-			t.Fatal(err)
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		for _, p := range posts {
+			err := db.WritePost(tx, p, false, false)
+			if err != nil {
+				return err
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	cases := [...]struct {

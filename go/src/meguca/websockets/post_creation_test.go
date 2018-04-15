@@ -373,8 +373,8 @@ func TestPostCreation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, thread.PostCtr, uint32(1))
-	AssertDeepEquals(t, thread.ImageCtr, uint32(2))
+	AssertDeepEquals(t, thread.PostCtr, uint32(2))
+	AssertDeepEquals(t, thread.ImageCtr, uint32(1))
 
 	AssertDeepEquals(t, cl.post, openPost{
 		id:          6,
