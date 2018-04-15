@@ -199,7 +199,7 @@ export default class PostView extends ImageHandler {
         const d = new Date(this.model.time * 1000)
         return `${pad(d.getDate())} ${lang.time.calendar[d.getMonth()]} `
             + `${d.getFullYear()} (${lang.time.week[d.getDay()]}) `
-            + `${pad(d.getHours())}:${pad(d.getMinutes())}`
+            + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
     }
 
     // Close an open post and clean up
