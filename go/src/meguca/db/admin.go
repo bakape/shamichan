@@ -109,37 +109,35 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 		}
 	}
 
-	tx, err := db.Begin()
+	// Write ban messages to posts and ban table
+	err = InTransaction(func(tx *sql.Tx) (err error) {
+		for _, post := range posts {
+			err = withTransaction(tx,
+				sq.Update("posts").
+					Set("banned", true).
+					Where("id = ?", post.id),
+			).
+				Exec()
+			if err != nil {
+				return
+			}
+			err = bumpThread(tx, post.op, false)
+			if err != nil {
+				return
+			}
+			err = writeBan(tx, ip, board, reason, by, post.id, expires)
+			if err != nil {
+				return
+			}
+		}
+		return
+	})
 	if err != nil {
 		return
 	}
-	defer RollbackOnError(tx, &err)
 
-	// Write ban messages to posts and ban table
-	for _, post := range posts {
-		err = withTransaction(tx,
-			sq.Update("posts").
-				Set("banned", true).
-				Where("id = ?", post.id),
-		).
-			Exec()
-		if err != nil {
-			return
-		}
-		err = bumpThread(tx, post.op, false)
-		if err != nil {
-			return
-		}
-		err = writeBan(tx, ip, board, reason, by, post.id, expires)
-		if err != nil {
-			return
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			return
-		}
-		if !IsTest {
+	if !IsTest {
+		for _, post := range posts {
 			err = common.BanPost(post.id, post.op)
 			if err != nil {
 				return
