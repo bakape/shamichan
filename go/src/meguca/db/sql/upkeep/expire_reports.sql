@@ -1,2 +1,2 @@
 delete from reports
-	where created < now() + '-7 days'
+	where created < now() at time zone 'utc' + '-7 days'

@@ -1,2 +1,2 @@
 delete from sessions
-	where expires < now()
+	where expires < now() at time zone 'utc'

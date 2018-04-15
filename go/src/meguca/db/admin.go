@@ -31,7 +31,7 @@ func writeBan(
 	err = withTransaction(tx,
 		sq.Insert("bans").
 			Columns("ip", "board", "forPost", "reason", "by", "expires").
-			Values(ip, board, postID, reason, by, expires).
+			Values(ip, board, postID, reason, by, expires.UTC()).
 			Suffix("on conflict do nothing"),
 	).
 		Exec()
@@ -77,9 +77,6 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 		id, op uint64
 		ip     string
 	}
-
-	// Location is not preserved in postgres. Need to convert to UTC.
-	expires = expires.UTC()
 
 	// Retrieve matching posts
 	var (

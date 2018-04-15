@@ -162,7 +162,8 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 
 func getBans() squirrel.SelectBuilder {
 	return sq.Select("ip", "board", "forPost", "reason", "by", "expires").
-		From("bans")
+		From("bans").
+		Where("expires >= now() at time zone 'utc'")
 }
 
 func scanBanRecord(rs rowScanner) (b auth.BanRecord, err error) {
@@ -173,7 +174,7 @@ func scanBanRecord(rs rowScanner) (b auth.BanRecord, err error) {
 // GetBanInfo retrieves information about a specific ban
 func GetBanInfo(ip, board string) (auth.BanRecord, error) {
 	r := getBans().
-		Where("ip = ? and board = ? and expires >= now()", ip, board).
+		Where("ip = ? and board = ?", ip, board).
 		QueryRow()
 	return scanBanRecord(r)
 }
@@ -183,7 +184,7 @@ func GetBoardBans(board string) (b []auth.BanRecord, err error) {
 	b = make([]auth.BanRecord, 0, 64)
 
 	r, err := getBans().
-		Where("board = ? and expires >= now()", board).
+		Where("board = ?", board).
 		Query()
 	if err != nil {
 		return
