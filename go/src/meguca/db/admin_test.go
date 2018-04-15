@@ -9,7 +9,7 @@ import (
 func TestBanUnban(t *testing.T) {
 	prepareForModeration(t)
 
-	if err := Ban("a", "test", "admin", time.Now(), 1); err != nil {
+	if err := Ban("a", "test", "admin", time.Now(), true, 1); err != nil {
 		t.Fatal(err)
 	}
 	if err := Unban("a", 1, "admin"); err != nil {

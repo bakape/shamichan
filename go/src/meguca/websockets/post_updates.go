@@ -235,7 +235,7 @@ func CheckRouletteBan(commands []common.Command, board string, id uint64) (
 				defer db.RollbackOnError(tx, &err)
 
 				err = db.Ban(board, "lost at #roulette", "system",
-					time.Now().Add(time.Second*30), id)
+					time.Now().Add(time.Second*30), false, id)
 				if err != nil {
 					return err
 				}

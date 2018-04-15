@@ -23,6 +23,7 @@ func writeBan(
 	ip, board, reason, by string,
 	postID uint64,
 	expires time.Time,
+	log bool,
 ) (
 	err error,
 ) {
@@ -33,7 +34,7 @@ func writeBan(
 			Suffix("on conflict do nothing"),
 	).
 		Exec()
-	if err != nil {
+	if err != nil || !log {
 		return
 	}
 	return logModeration(tx, auth.ModLogEntry{
@@ -64,7 +65,7 @@ func propagateBans(board string, ips ...string) error {
 // Automatically ban an IP
 func SystemBan(ip, reason string, expires time.Time) (err error) {
 	err = InTransaction(func(tx *sql.Tx) error {
-		return writeBan(tx, ip, "all", reason, "system", 0, expires)
+		return writeBan(tx, ip, "all", reason, "system", 0, expires, true)
 	})
 	if err != nil {
 		return
@@ -75,7 +76,7 @@ func SystemBan(ip, reason string, expires time.Time) (err error) {
 
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
 // banned IPs.
-func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
+func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 	err error,
 ) {
 	type post struct {
@@ -130,7 +131,7 @@ func Ban(board, reason, by string, expires time.Time, ids ...uint64) (
 			if err != nil {
 				return
 			}
-			err = writeBan(tx, ip, board, reason, by, post.id, expires)
+			err = writeBan(tx, ip, board, reason, by, post.id, expires, log)
 			if err != nil {
 				return
 			}
