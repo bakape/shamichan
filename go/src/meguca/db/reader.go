@@ -345,7 +345,7 @@ func GetThreadIDs(board string) ([]uint64, error) {
 	r, err := sq.Select("id").
 		From("threads").
 		Where("board = ?", board).
-		OrderBy("bumpTime desc").
+		OrderBy("sticky desc, bumpTime desc").
 		Query()
 	if err != nil {
 		return nil, err
