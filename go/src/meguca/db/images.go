@@ -191,3 +191,20 @@ func DeleteOwnedImage(id uint64) error {
 		Exec()
 	return err
 }
+
+// Returns random video ID by board
+func RandomVideo(board string) (sha1 string, err error) {
+	err = sq.Select("p.SHA1").
+		From("posts as p").
+		Join("images as i on i.SHA1 = p.SHA1").
+		Where(squirrel.Eq{
+			"p.board":    board,
+			"i.audio":    true,
+			"i.fileType": int(common.WEBM),
+		}).
+		OrderBy("RANDOM()").
+		Limit(1).
+		QueryRow().
+		Scan(&sha1)
+	return
+}

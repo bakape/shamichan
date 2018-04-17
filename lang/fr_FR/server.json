@@ -212,6 +212,10 @@
 			"Largeur limite",
 			"Largeur maximale des images téléchargées"
 		],
+		"meguTV": [
+			"MeguTV",
+			"Play random board-specific videos in overlay player"
+		],
 		"moderators": [
 			"Modérateurs",
 			"Peut supprimer les messages, bannir et distinguer les utilisateurs"

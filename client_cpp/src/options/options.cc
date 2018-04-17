@@ -32,6 +32,7 @@ void Options::load()
     load_bool(desu_storage, "desustorage");
     load_bool(exhentai, "exhentai");
     load_bool(gallery_mode_toggle, "galleryModeToggle");
+    load_bool(megu_tv, "meguTV");
 
     load_uint(new_post, "newPost");
     load_uint(toggle_spoiler, "toggleSpoiler");

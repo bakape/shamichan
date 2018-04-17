@@ -198,3 +198,34 @@ func TestDeleteOwnedImage(t *testing.T) {
 	}
 	AssertDeepEquals(t, has, false)
 }
+
+func TestRandomVideo(t *testing.T) {
+	img := assets.StdJPEG
+	img.FileType = common.WEBM
+	img.Audio = true
+
+	assertTableClear(t, "images", "boards")
+	err := WriteImage(img.ImageCommon)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeSampleBoard(t)
+	writeSampleThread(t)
+	err = InTransaction(func(tx *sql.Tx) (err error) {
+		return InsertImage(tx, 1, 1, img)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sha1, err := RandomVideo("a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	AssertDeepEquals(t, sha1, img.SHA1)
+
+	_, err = RandomVideo("c")
+	if err != sql.ErrNoRows {
+		t.Fatalf("unexpected error: %s", err)
+	}
+}

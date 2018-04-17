@@ -75,6 +75,8 @@ create table images (
 	Title varchar(200) not null,
 	Artist varchar(100) not null
 );
+create index image_fileType on images (fileType);
+create index image_audio on images (audio);
 
 create table image_tokens (
 	token char(86) not null primary key,
@@ -145,6 +147,7 @@ create index op on posts (op);
 create index image on posts (SHA1);
 create index editing on posts (editing);
 create index ip on posts (ip);
+create index post_board on posts (board);
 
 create table links (
 	source bigint not null references posts on delete cascade,

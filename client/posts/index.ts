@@ -6,6 +6,7 @@ export { clearHidden, hideRecursively } from "./hide"
 export * from "./render"
 export { default as PostCollection } from "./collection"
 export { findSyncwatches } from "./syncwatch"
+export { sourcePath } from "./images"
 
 import initEtc from "./etc"
 import initPosting from "./posting"

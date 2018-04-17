@@ -493,6 +493,13 @@ var upgrades = []func(*sql.Tx) error{
 			`ALTER TABLE mod_log ADD COLUMN reason text default ''`,
 		)
 	},
+	func(tx *sql.Tx) error {
+		return execAll(tx,
+			`create index image_fileType on images (fileType)`,
+			`create index image_audio on images (audio)`,
+			`create index post_board on posts (board)`,
+		)
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both

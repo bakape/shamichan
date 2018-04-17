@@ -212,6 +212,10 @@
 			"Limit na výšky obrázka",
 			"Maximum width of uploaded images"
 		],
+		"meguTV": [
+			"MeguTV",
+			"Play random board-specific videos in overlay player"
+		],
 		"moderators": [
 			"Moderators",
 			"Moderator account IDs. Moderators can delete posts, ban posters and distinguish posters by their mnemonic IDs."

@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"meguca/assets"
 	"meguca/auth"
@@ -295,4 +296,31 @@ func serveAssetFromMemory(
 // Serve board-specific loading animation
 func serveLoadingAnimation(w http.ResponseWriter, r *http.Request) {
 	serveAssetFromMemory(w, r, assets.Loading.Get(extractParam(r, "board")))
+}
+
+// Returns random video ID by or 404
+func serveRandomVideoId(w http.ResponseWriter, r *http.Request) {
+	board := extractParam(r, "board")
+	if !auth.IsNonMetaBoard(board) {
+		text404(w)
+		return
+	}
+
+	sha1, err := db.RandomVideo(board)
+	switch err {
+	case nil:
+	case sql.ErrNoRows:
+		text404(w)
+		return
+	default:
+		text500(w, r, err)
+		return
+	}
+
+	h := w.Header()
+	h.Set("Cache-Control", "no-cache")
+	h.Set("Content-Type", "text/plain")
+	h.Set("Content-Length", strconv.Itoa(len(sha1)))
+
+	w.Write([]byte(sha1))
 }

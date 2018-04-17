@@ -5,6 +5,7 @@ import { makeEl, HTML, setCookie } from "../util"
 import { render as renderBG } from "./background"
 import { render as renderMascot } from "./mascot"
 import initNowPlaying from "./nowPlaying"
+import initTV from "./meguTV"
 import options from "."
 
 // Types of option models
@@ -92,6 +93,10 @@ export const specs: { [id: string]: OptionSpec } = {
 		default: "none",
 		noExecOnStart: true,
 		exec: initNowPlaying,
+	},
+	// Random video player
+	meguTV: {
+		exec: initTV,
 	},
 	// Illya dance in the background
 	illyaDance: {

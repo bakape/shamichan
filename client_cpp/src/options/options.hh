@@ -22,7 +22,8 @@ public:
         custom_css_toggle = false, // Enable user-ser CSS
         mascot = false, // Show user-set mascot
         always_lock = false, // Lock to thread bottom, even when tab hidden
-        gallery_mode_toggle = false; // Mode for better image viewing
+        gallery_mode_toggle = false, // Mode for better image viewing
+        megu_tv = false; // Play random videos
 
     // Reverse image search engines
     bool google = true, iqdb = false, sauce_nao = true, what_anime = false,

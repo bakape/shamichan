@@ -149,6 +149,7 @@ func createRouter() http.Handler {
 	api.POST("/set-banners", setBanners)
 	api.POST("/set-loading", setLoadingAnimation)
 	api.POST("/report", report)
+	api.GET("/random-video/:board", serveRandomVideoId)
 
 	redir := api.NewGroup("/redirect")
 	redir.POST("/by-ip/:id/*url", redirectByIP)
