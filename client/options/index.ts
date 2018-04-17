@@ -144,6 +144,7 @@ export function initOptions() {
 	// Conditionally load and execute optional modules
 	for (let opt of [
 		"userBG", "nowPlaying", "illyaDance", "mascot", "customCSSToggle",
+		"meguTV",
 	]) {
 		if (options[opt]) {
 			models[opt].execute(true)

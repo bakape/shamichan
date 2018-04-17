@@ -96,6 +96,7 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	// Random video player
 	meguTV: {
+		noExecOnStart: true,
 		exec: initTV,
 	},
 	// Illya dance in the background
