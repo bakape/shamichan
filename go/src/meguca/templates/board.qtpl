@@ -66,7 +66,7 @@
 		{%= hoverReveal("aside", conf.Notice, ln.Common.UI["showNotice"]) %}
 		{%= hoverReveal("aside", conf.Rules, ln.Common.UI["rules"]) %}
 		<span id="catalog-controls" class="margin-spaced">
-			<input type="text" name="search" placeholder="{%s= ln.UI["search"] %}" title="{%s= ln.UI["searchTooltip"] %}">
+			<input type="text" name="search" placeholder="{%s= ln.Common.UI["search"] %}" title="{%s= ln.UI["searchTooltip"] %}">
 			{% if catalog %}
 				<select name="sortMode">
 					{% for i, s := range [...]string{"bump", "lastReply", "creation", "replyCount", "fileCount"} %}
