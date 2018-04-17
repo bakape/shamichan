@@ -441,7 +441,7 @@ func (c *Client) spoilerImage() (err error) {
 		return errors.New("already spoilered")
 	}
 
-	err = db.SpoilerImage(c.post.id)
+	err = db.SpoilerImage(c.post.id, c.post.op)
 	if err != nil {
 		return
 	}

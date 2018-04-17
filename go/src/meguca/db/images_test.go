@@ -34,7 +34,7 @@ func TestGetImage(t *testing.T) {
 
 func writeSampleImage(t *testing.T) {
 	t.Helper()
-	if err := WriteImage(nil, assets.StdJPEG.ImageCommon); err != nil {
+	if err := WriteImage(assets.StdJPEG.ImageCommon); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -124,4 +124,77 @@ func TestImageTokens(t *testing.T) {
 	if img != std {
 		LogUnexpected(t, img, std)
 	}
+}
+
+func TestInsertImage(t *testing.T) {
+	assertTableClear(t, "images", "boards")
+	writeSampleImage(t)
+	writeSampleBoard(t)
+	writeSampleThread(t)
+
+	checkHas := func(std bool) {
+		has, err := HasImage(1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		AssertDeepEquals(t, has, std)
+	}
+
+	checkHas(false)
+
+	insertSampleImage(t)
+	checkHas(true)
+
+	post, err := GetPost(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	AssertDeepEquals(t, post.Image, &assets.StdJPEG)
+}
+
+func insertSampleImage(t *testing.T) {
+	err := InTransaction(func(tx *sql.Tx) (err error) {
+		return InsertImage(tx, 1, 1, assets.StdJPEG)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSpoilerImage(t *testing.T) {
+	assertTableClear(t, "images", "boards")
+	writeSampleImage(t)
+	writeSampleBoard(t)
+	writeSampleThread(t)
+	insertSampleImage(t)
+
+	err := SpoilerImage(1, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	post, err := GetPost(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	AssertDeepEquals(t, post.Image.Spoiler, true)
+}
+
+func TestDeleteOwnedImage(t *testing.T) {
+	assertTableClear(t, "images", "boards")
+	writeSampleImage(t)
+	writeSampleBoard(t)
+	writeSampleThread(t)
+	insertSampleImage(t)
+
+	err := DeleteOwnedImage(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	has, err := HasImage(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	AssertDeepEquals(t, has, false)
 }

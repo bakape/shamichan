@@ -1,6 +1,7 @@
 package db
 
 import (
+	"meguca/auth"
 	. "meguca/test"
 	"testing"
 	"time"
@@ -113,10 +114,48 @@ func TestGetSameIPPosts(t *testing.T) {
 }
 
 func TestGetModLOg(t *testing.T) {
-	t.Run("ban_unban", TestBanUnban) // Se we have something in the log
+	t.Run("ban_unban", TestBanUnban) // So we have something in the log
 
 	_, err := GetModLog("a")
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestCanPerform(t *testing.T) {
+	prepareForModeration(t)
+	writeSampleUser(t)
+	err := WriteStaff("a", map[string][]string{
+		"moderators": []string{sampleUserID},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cases := [...]struct {
+		name, user, board string
+		auth              auth.ModerationLevel
+		can               bool
+	}{
+		{"can mod /all/", "admin", "all", auth.Admin, true},
+		{"can't mod /all/", sampleUserID, "all", auth.Admin, false},
+		{"admin can mod anything", "admin", "a", auth.BoardOwner, true},
+		{"user can't mod anything", sampleUserID, "all", auth.Moderator, false},
+		{"can mod own level", sampleUserID, "a", auth.Moderator, true},
+		{"can mod lower level", sampleUserID, "a", auth.Janitor, true},
+		{"can't mod higher level", sampleUserID, "a", auth.Janitor, true},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			can, err := CanPerform(c.user, c.board, c.auth)
+			if err != nil {
+				t.Fatal(err)
+			}
+			AssertDeepEquals(t, can, c.can)
+		})
 	}
 }

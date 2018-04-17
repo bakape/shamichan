@@ -16,11 +16,12 @@ var (
 	//  StdJPEG is a JPEG sample image standard struct. Only used in tests.
 	StdJPEG = common.Image{
 		ImageCommon: common.ImageCommon{
-			SHA1:     "012a2f912c9ee93ceb0ccb8684a29ec571990a94",
-			FileType: common.JPEG,
-			Dims:     StdDims["jpeg"],
-			MD5:      "YOQQklgfezKbBXuEAsqopw",
-			Size:     300792,
+			SHA1:      "012a2f912c9ee93ceb0ccb8684a29ec571990a94",
+			FileType:  common.JPEG,
+			ThumbType: common.JPEG,
+			Dims:      StdDims["jpeg"],
+			MD5:       "YOQQklgfezKbBXuEAsqopw",
+			Size:      300792,
 		},
 		Name:    "sample.jpg",
 		Spoiler: true,

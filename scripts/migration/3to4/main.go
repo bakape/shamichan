@@ -118,22 +118,16 @@ func copyImages() (err error) {
 		return
 	}
 
-	tx, err := db.StartTransaction()
-	if err != nil {
-		return
-	}
-	defer db.RollbackOnError(tx, &err)
-
 	for i, img := range imgs {
 		images = append(images, img.SHA1)
-		err = db.WriteImage(tx, img)
+		err = db.WriteImage(img)
 		if err != nil {
 			return
 		}
 		printProgress(h, i, len(imgs))
 	}
 
-	return tx.Commit()
+	return
 }
 
 func copyBoards() (err error) {

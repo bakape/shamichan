@@ -696,7 +696,7 @@ func TestInsertImage(t *testing.T) {
 
 func writeSampleImage(t *testing.T) {
 	t.Helper()
-	if err := db.WriteImage(nil, stdJPEG); err != nil {
+	if err := db.WriteImage(stdJPEG); err != nil {
 		t.Fatal(err)
 	}
 }
