@@ -41,7 +41,7 @@ func formatTime(sec int64) string {
 	month := ln["calendar"][int(m)-1]
 
 	// Premature optimization
-	buf := make([]byte, 0, 17+len(weekday)+len(month))
+	buf := make([]byte, 0, 20+len(weekday)+len(month))
 	buf = pad(buf, day)
 	buf = append(buf, ' ')
 	buf = append(buf, month...)
@@ -53,6 +53,8 @@ func formatTime(sec int64) string {
 	buf = pad(buf, t.Hour())
 	buf = append(buf, ':')
 	buf = pad(buf, t.Minute())
+	buf = append(buf, ':')
+	buf = pad(buf, t.Second())
 
 	return string(buf)
 }

@@ -412,7 +412,7 @@ Node Post::render_time()
     abs << std::setfill('0') << setw(2) << then->tm_mday << ' '
         << lang.calendar[then->tm_mon] << ' ' << 1900 + then->tm_year << " ("
         << lang.week[then->tm_wday] << ") " << setw(2) << then->tm_hour << ':'
-        << setw(2) << then->tm_min;
+        << setw(2) << then->tm_min << ':' << setw(2) << then->tm_sec;
 
     const auto rel = relative_time(time);
 
