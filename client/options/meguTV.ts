@@ -51,7 +51,6 @@ function render() {
 			el.controls = true;
 			el.src = sourcePath(playlist[i].sha1, playlist[i].fileType);
 		}
-		cont.append(el);
 
 		// Buffer videos about to play by playing them hidden and muted
 		if (!i) {
@@ -62,6 +61,7 @@ function render() {
 			el.muted = true;
 			el.classList.add("hidden");
 		}
+		cont.append(el);
 		el.play();
 	}
 }
