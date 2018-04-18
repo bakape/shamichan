@@ -199,7 +199,7 @@ func TestDeleteOwnedImage(t *testing.T) {
 	AssertDeepEquals(t, has, false)
 }
 
-func TestRandomVideo(t *testing.T) {
+func TestVideoPlaylist(t *testing.T) {
 	img := assets.StdJPEG
 	img.FileType = common.WEBM
 	img.Audio = true
@@ -218,14 +218,27 @@ func TestRandomVideo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sha1, _, err := RandomVideo("a")
+	videos, err := VideoPlaylist("a")
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, sha1, img.SHA1)
+	AssertDeepEquals(t, videos[0].SHA1, img.SHA1)
+}
 
-	_, _, err = RandomVideo("c")
-	if err != sql.ErrNoRows {
-		t.Fatalf("unexpected error: %s", err)
+func TestImageExists(t *testing.T) {
+	assertTableClear(t, "images")
+
+	exists, err := ImageExists(assets.StdJPEG.SHA1)
+	if err != nil {
+		t.Fatal(err)
 	}
+	AssertDeepEquals(t, exists, false)
+
+	writeSampleImage(t)
+
+	exists, err = ImageExists(assets.StdJPEG.SHA1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	AssertDeepEquals(t, exists, true)
 }

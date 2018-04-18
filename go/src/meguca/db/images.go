@@ -25,6 +25,12 @@ var (
 	ErrInvalidToken = errors.New("invalid image token")
 )
 
+type Video struct {
+	FileType uint8         `json:"fileType"`
+	Duration time.Duration `json:"-"`
+	SHA1     string        `json:"sha1"`
+}
+
 // WriteImage writes a processed image record to the DB
 func WriteImage(i common.ImageCommon) error {
 	dims := pq.GenericArray{A: i.Dims}
@@ -192,23 +198,53 @@ func DeleteOwnedImage(id uint64) error {
 	return err
 }
 
-// Returns random video ID by board
-func RandomVideo(board string) (sha1 string, length uint, err error) {
-	q := sq.Select("i.SHA1", "i.length").
+// Returns a video playlist for a board
+func VideoPlaylist(board string) (videos []Video, err error) {
+	r, err := sq.Select("i.SHA1", "i.fileType", "i.length").
 		From("images as i").
 		Where(`
-			exists(select 1 from posts as p
+			exists(select 1
+				from posts as p
 				where p.sha1 = i.sha1 and p.board = ?)
-			and filetype = ? and audio = true`,
+			and filetype in (?, ?)
+			and audio = true
+			and length <= 600`,
 			board,
 			int(common.WEBM),
+			int(common.MP4),
 		).
 		OrderBy("RANDOM()").
-		Limit(1)
-	sql, _, _ := q.ToSql()
-	println(sql)
-	err = q.
-		QueryRow().
-		Scan(&sha1, &length)
+		Query()
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	videos = make([]Video, 0, 128)
+	var (
+		v   Video
+		dur uint64
+	)
+	for r.Next() {
+		err = r.Scan(&v.SHA1, &v.FileType, &dur)
+		if err != nil {
+			return
+		}
+		v.Duration = time.Duration(dur) * time.Second
+		videos = append(videos, v)
+	}
+	err = r.Err()
+	return
+}
+
+// Return, if image exists
+func ImageExists(sha1 string) (exists bool, err error) {
+	err = sq.Select("1").
+		From("images").
+		Where("sha1 = ?", sha1).
+		Scan(&exists)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
 	return
 }

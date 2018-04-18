@@ -57,7 +57,7 @@ const (
 	// Notify the client, he needs a captcha solved
 	MessageCaptcha
 
-	// Passes MeguTV currently playing data
+	// Passes MeguTV playlist data
 	MessageMeguTV
 )
 

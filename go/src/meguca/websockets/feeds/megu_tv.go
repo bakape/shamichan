@@ -3,7 +3,7 @@
 package feeds
 
 import (
-	"database/sql"
+	"log"
 	"meguca/common"
 	"meguca/db"
 	"time"
@@ -11,63 +11,74 @@ import (
 
 type tvFeed struct {
 	baseFeed
-	sha1, board string
-	startedAt   time.Time
-	duration    time.Duration
+	board     string
+	startedAt time.Time
+	playList  []db.Video
 }
 
-func (f *tvFeed) readVideo() (err error) {
-	var length uint
-	f.sha1, length, err = db.RandomVideo(f.board)
-	if err != nil {
-		return
-	}
-	f.duration = time.Second * time.Duration(length)
-	f.startedAt = time.Now()
+func (f *tvFeed) readPlaylist() (err error) {
+	f.playList, err = db.VideoPlaylist(f.board)
 	return
 }
 
 func (f *tvFeed) start(board string) (err error) {
 	f.board = board
-	err = f.readVideo()
-	switch err {
-	case nil:
-	case sql.ErrNoRows:
-		err = nil
-	default:
-		return err
+	err = f.readPlaylist()
+	if err != nil {
+		return
 	}
 
 	go func() {
-		timer := time.NewTimer(f.duration)
+		dur := time.Hour // In case there are no videos
+		if len(f.playList) != 0 {
+			dur = f.playList[0].Duration
+		}
+		f.startedAt = time.Now()
+		timer := time.NewTimer(dur)
 		defer timer.Stop()
 
 		for {
 			select {
 			case c := <-f.add:
 				f.addClient(c)
-				msg := f.encodeMessage()
-				if msg != nil {
-					c.Send(msg)
-				}
+				c.Send(f.encodePlaylist())
 			case c := <-f.remove:
 				if f.removeClient(c) {
 					return
 				}
 			case <-timer.C:
-				switch err := f.readVideo(); err {
-				case nil:
-					msg := f.encodeMessage()
-					if msg != nil {
-						for _, c := range f.clients {
-							c.Send(msg)
-						}
+				// Refetch playlist, if too short or file missing
+				needFetch := false
+				if len(f.playList) < 2 {
+					needFetch = true
+				} else {
+					exists, err := db.ImageExists(f.playList[1].SHA1)
+					if err != nil {
+						log.Printf("verifying video exists: %s\n", err)
+						continue
 					}
-					timer.Reset(f.duration)
-				case sql.ErrNoRows:
-				default:
-
+					needFetch = !exists
 				}
+				if needFetch {
+					err := f.readPlaylist()
+					if err != nil {
+						log.Printf("fetching video playlist: %s\n", err)
+						continue
+					}
+				} else {
+					// Otherwise decrease list by one
+					f.playList = f.playList[1:]
+				}
+				f.startedAt = time.Now()
+				msg := f.encodePlaylist()
+				for _, c := range f.clients {
+					c.Send(msg)
+				}
+				dur := time.Hour // If empty playlist
+				if len(f.playList) != 0 {
+					dur = f.playList[0].Duration
+				}
+				timer.Reset(dur)
 			}
 		}
 	}()
@@ -75,16 +86,20 @@ func (f *tvFeed) start(board string) (err error) {
 	return
 }
 
-func (f *tvFeed) encodeMessage() []byte {
-	if f.sha1 == "" {
-		return nil
+func (f *tvFeed) encodePlaylist() []byte {
+	i := 2
+	if len(f.playList) < 2 {
+		i = len(f.playList)
 	}
-	msg, _ := common.EncodeMessage(common.MessageMeguTV, struct {
-		Elapsed uint   `json:"elapsed"`
-		Sha1    string `json:"sha1"`
+	msg, err := common.EncodeMessage(common.MessageMeguTV, struct {
+		Elapsed  float64    `json:"elapsed"`
+		Playlist []db.Video `json:"playlist"`
 	}{
-		Elapsed: uint(time.Now().Sub(f.startedAt).Seconds()),
-		Sha1:    f.sha1,
+		Elapsed:  time.Now().Sub(f.startedAt).Seconds(),
+		Playlist: f.playList[:i],
 	})
+	if err != nil {
+		log.Printf("video playlist encoding: %s\n", err)
+	}
 	return msg
 }

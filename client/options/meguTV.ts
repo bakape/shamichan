@@ -1,40 +1,75 @@
 import options from ".";
-import { HTML, makeFrag } from "../util";
+import { setAttrs } from "../util";
 import { page } from "../state";
 import { sourcePath } from "../posts";
 import { fileTypes } from "../common"
 import { handlers, message } from "../connection"
 
-type Video = {
+type Data = {
 	elapsed: number;
-	sha1: string
+	playlist: Video[]
 };
 
-let sha1 = "";
+type Video = {
+	sha1: string
+	fileType: fileTypes
+};
+
+let playlist: Video[];
 let lastStart = 0;
 
 function render() {
-	let el = document.getElementById("megu-tv-player") as HTMLVideoElement;
-	if (!el) {
-		const html = HTML
-			`<div id=megu-tv class="modal glass" style="display: block;">
-				<video id=megu-tv-player controls style="max-width:30vw"></video>
-			</div>`;
-		document.getElementById("modal-overlay").prepend(makeFrag(html));
-		el = document.getElementById("megu-tv-player") as HTMLVideoElement;
+	if (!playlist) {
+		return
 	}
 
-	if (sha1) {
-		el.src = sourcePath(sha1, fileTypes.webm);
-		el.currentTime = Math.floor(Date.now() / 1000) - lastStart;
+	let cont = document.getElementById("megu-tv")
+	if (!cont) {
+		cont = document.createElement("div")
+		setAttrs(cont, {
+			id: "megu-tv",
+			class: "modal glass",
+			style: "display: block;",
+		});
+		document.getElementById("modal-overlay").prepend(cont);
+	}
+
+	// Remove old videos and add new ones, while preserving existing one.
+	// Should help caching.
+	const existing: { [sha1: string]: HTMLVideoElement } = {};
+	for (let ch of [...cont.children] as HTMLVideoElement[]) {
+		ch.pause();
+		ch.remove();
+		existing[ch.getAttribute("data-sha1")] = ch;
+	}
+	for (let i = 0; i < playlist.length; i++) {
+		let el = existing[playlist[i].sha1];
+		if (!el) {
+			el = document.createElement("video");
+			el.setAttribute("data-sha1", playlist[i].sha1);
+			el.setAttribute("style", "max-width:30vw");
+			el.controls = true;
+			el.src = sourcePath(playlist[i].sha1, playlist[i].fileType);
+		}
+		cont.append(el);
+
+		// Buffer videos about to play by playing them hidden and muted
+		if (!i) {
+			el.currentTime = Date.now() / 1000 - lastStart;
+			el.classList.remove("hidden");
+			el.muted = false;
+		} else {
+			el.muted = true;
+			el.classList.add("hidden");
+		}
 		el.play();
 	}
 }
 
 export function persistMessages() {
-	handlers[message.meguTV] = (data: Video) => {
-		sha1 = data.sha1;
-		lastStart = Math.floor(Date.now() / 1000) - data.elapsed;
+	handlers[message.meguTV] = (data: Data) => {
+		lastStart = Date.now() / 1000 - data.elapsed;
+		playlist = data.playlist;
 		if (options.meguTV) {
 			render();
 		}
