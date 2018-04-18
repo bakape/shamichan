@@ -11,7 +11,8 @@ import (
 // Contains and manages all active update feeds
 var feeds = feedMap{
 	// 64 len map to avoid some possible reallocation as the server starts
-	feeds: make(map[uint64]*Feed, 64),
+	feeds:   make(map[uint64]*Feed, 64),
+	tvFeeds: make(map[string]*tvFeed, 64),
 }
 
 // Export without circular dependency
@@ -26,55 +27,77 @@ func init() {
 
 // Container for managing client<->update-feed assignment and interaction
 type feedMap struct {
-	feeds map[uint64]*Feed
-	mu    sync.RWMutex
+	feeds   map[uint64]*Feed
+	tvFeeds map[string]*tvFeed
+	mu      sync.RWMutex
 }
 
 // Add client to feed and send it the current status of the feed for
 // synchronization to the feed's internal state
-func addToFeed(id uint64, c common.Client) (feed *Feed, err error) {
+func addToFeed(id uint64, board string, c common.Client) (
+	feed *Feed, err error,
+) {
 	feeds.mu.Lock()
 	defer feeds.mu.Unlock()
 
-	feed, ok := feeds.feeds[id]
-	if !ok {
-		feed = &Feed{
-			id:              id,
-			add:             make(chan common.Client),
-			remove:          make(chan common.Client),
-			send:            make(chan []byte),
-			insertPost:      make(chan postCreationMessage),
-			closePost:       make(chan postCloseMessage),
-			sendPostMessage: make(chan postMessage),
-			setOpenBody:     make(chan postBodyModMessage),
-			insertImage:     make(chan imageInsertionMessage),
-			clients:         make([]common.Client, 0, 8),
-			messageBuffer:   make([]string, 0, 64),
+	var ok bool
+
+	if id != 0 {
+		feed, ok = feeds.feeds[id]
+		if !ok {
+			feed = &Feed{
+				id:              id,
+				send:            make(chan []byte),
+				insertPost:      make(chan postCreationMessage),
+				closePost:       make(chan postCloseMessage),
+				sendPostMessage: make(chan postMessage),
+				setOpenBody:     make(chan postBodyModMessage),
+				insertImage:     make(chan imageInsertionMessage),
+				messageBuffer:   make([]string, 0, 64),
+			}
+			feed.baseFeed.init()
+			feeds.feeds[id] = feed
+			err = feed.Start()
+			if err != nil {
+				return
+			}
 		}
-		feeds.feeds[id] = feed
-		err = feed.Start()
+		feed.add <- c
+	}
+
+	tvf, ok := feeds.tvFeeds[board]
+	if !ok {
+		tvf = &tvFeed{}
+		tvf.init()
+		feeds.tvFeeds[board] = tvf
+		err = tvf.start(board)
 		if err != nil {
 			return
 		}
 	}
+	tvf.add <- c
 
-	feed.add <- c
 	return
 }
 
 // Remove client from a subscribed feed
-func removeFromFeed(id uint64, c common.Client) {
+func removeFromFeed(id uint64, board string, c common.Client) {
 	feeds.mu.Lock()
 	defer feeds.mu.Unlock()
 
-	feed := feeds.feeds[id]
-	if feed == nil {
-		return
+	if feed := feeds.feeds[id]; feed != nil {
+		feed.remove <- c
+		// If the feeds sends a non-nil, it means it closed
+		if nil != <-feed.remove {
+			delete(feeds.feeds, feed.id)
+		}
 	}
-	feed.remove <- c
-	// If the feeds sends a non-nil, it means it closed
-	if nil != <-feed.remove {
-		delete(feeds.feeds, feed.id)
+
+	if feed := feeds.tvFeeds[board]; feed != nil {
+		feed.remove <- c
+		if nil != <-feed.remove {
+			delete(feeds.tvFeeds, feed.board)
+		}
 	}
 }
 

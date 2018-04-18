@@ -44,6 +44,9 @@ export const enum message {
 
 	// Notification about needing a captcha on the next post allocation
 	captcha,
+
+	// Data concerning live random video feed
+	meguTV,
 }
 
 export type MessageHandler = (msg: {}) => void

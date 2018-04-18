@@ -46,13 +46,10 @@ func SyncClient(cl common.Client, op uint64, board string) (*Feed, error) {
 	}
 	clients.Unlock()
 
-	if old.op != 0 {
-		removeFromFeed(old.op, cl)
+	if ok {
+		removeFromFeed(old.op, old.board, cl)
 	}
-	if op == 0 {
-		return nil, nil
-	}
-	return addToFeed(op, cl)
+	return addToFeed(op, board, cl)
 }
 
 // RemoveClient removes a client from the global client map and any subscribed
@@ -60,7 +57,7 @@ func SyncClient(cl common.Client, op uint64, board string) (*Feed, error) {
 func RemoveClient(cl common.Client) {
 	clients.Lock()
 
-	old := clients.clients[cl]
+	old, ok := clients.clients[cl]
 	delete(clients.clients, cl)
 
 	ip := cl.IP()
@@ -71,8 +68,8 @@ func RemoveClient(cl common.Client) {
 
 	clients.Unlock()
 
-	if old.op != 0 {
-		removeFromFeed(old.op, cl)
+	if ok {
+		removeFromFeed(old.op, old.board, cl)
 	}
 }
 

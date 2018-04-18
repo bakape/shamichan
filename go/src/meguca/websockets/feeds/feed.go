@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-// TODO: Propagate thread modetation events to all clients live
-
 type postMessageType uint8
 
 const (
@@ -52,14 +50,12 @@ type Feed struct {
 	id uint64
 	// Message flushing ticker
 	ticker
+	// Common functionality
+	baseFeed
 	// Buffer of unsent messages
 	messageBuffer
 	// Entire thread cached into memory
 	cache threadCache
-	// Add a client
-	add chan common.Client
-	// Remove client
-	remove chan common.Client
 	// Propagates mesages to all listeners
 	send chan []byte
 	// Insert a new post into the thread and propagate to listeners
@@ -72,8 +68,6 @@ type Feed struct {
 	sendPostMessage chan postMessage
 	// Set body of an open post
 	setOpenBody chan postBodyModMessage
-	// Subscribed clients
-	clients []common.Client
 }
 
 // Read existing posts into cache and start main loop
@@ -95,7 +89,7 @@ func (f *Feed) Start() (err error) {
 
 			// Add client
 			case c := <-f.add:
-				f.clients = append(f.clients, c)
+				f.addClient(c)
 				if c.NewProtocol() {
 					c.Send(f.cache.encodeThread(c.Last100()))
 				} else {
@@ -105,20 +99,10 @@ func (f *Feed) Start() (err error) {
 
 			// Remove client and close feed, if no clients left
 			case c := <-f.remove:
-				for i, cl := range f.clients {
-					if cl == c {
-						copy(f.clients[i:], f.clients[i+1:])
-						f.clients[len(f.clients)-1] = nil
-						f.clients = f.clients[:len(f.clients)-1]
-						break
-					}
-				}
-				if len(f.clients) != 0 {
-					f.remove <- nil
-					f.sendIPCount()
-				} else {
-					f.remove <- c
+				if f.removeClient(c) {
 					return
+				} else {
+					f.sendIPCount()
 				}
 
 			// Buffer external message and prepare for sending to all clients

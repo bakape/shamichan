@@ -74,6 +74,9 @@ enum class Message : uint8_t {
 
     // Notification about needing a captcha on the next post allocation
     captcha,
+
+    // Data concerning random video feed
+    megu_tv,
 };
 
 // Initialize websocket connectivity module

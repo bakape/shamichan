@@ -56,6 +56,9 @@ const (
 
 	// Notify the client, he needs a captcha solved
 	MessageCaptcha
+
+	// Passes MeguTV currently playing data
+	MessageMeguTV
 )
 
 // Forwarded functions from "meguca/websockets/feeds" to avoid circular imports

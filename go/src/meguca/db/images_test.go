@@ -218,13 +218,13 @@ func TestRandomVideo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	sha1, err := RandomVideo("a")
+	sha1, _, err := RandomVideo("a")
 	if err != nil {
 		t.Fatal(err)
 	}
 	AssertDeepEquals(t, sha1, img.SHA1)
 
-	_, err = RandomVideo("c")
+	_, _, err = RandomVideo("c")
 	if err != sql.ErrNoRows {
 		t.Fatalf("unexpected error: %s", err)
 	}

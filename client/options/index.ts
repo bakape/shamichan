@@ -10,6 +10,7 @@ export { store as storeBackground } from "./background"
 export { store as storeMascot } from "./mascot"
 export * from "./specs"
 export { posterName } from "./nowPlaying"
+export { persistMessages } from "./meguTV"
 
 // Delete legacy options localStorage entry, if any
 localStorage.removeItem("options")
@@ -24,6 +25,7 @@ interface Options extends ChangeEmitter {
 	anonymise: boolean
 	postInlineExpand: boolean
 	relativeTime: boolean
+	meguTV: boolean
 	nowPlaying: string
 	illyaDance: boolean
 	illyaDanceMute: boolean

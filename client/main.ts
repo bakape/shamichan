@@ -13,6 +13,7 @@ import {
 } from "./util"
 import assignHandlers from "./client"
 import initModeration from "./mod"
+import { persistMessages } from "./options"
 
 // Load all stateful modules in dependency order
 async function start() {
@@ -61,6 +62,7 @@ async function start() {
 			}
 		})
 
+		persistMessages()
 		connect()
 		checkBottom()
 		assignHandlers()
