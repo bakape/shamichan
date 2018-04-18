@@ -194,16 +194,20 @@ func DeleteOwnedImage(id uint64) error {
 
 // Returns random video ID by board
 func RandomVideo(board string) (sha1 string, length uint, err error) {
-	err = sq.Select("p.SHA1", "i.length").
-		From("posts as p").
-		Join("images as i on i.SHA1 = p.SHA1").
-		Where(squirrel.Eq{
-			"p.board":    board,
-			"i.audio":    true,
-			"i.fileType": int(common.WEBM),
-		}).
+	q := sq.Select("i.SHA1", "i.length").
+		From("images as i").
+		Where(`
+			exists(select 1 from posts as p
+				where p.sha1 = i.sha1 and p.board = ?)
+			and filetype = ?`,
+			board,
+			int(common.WEBM),
+		).
 		OrderBy("RANDOM()").
-		Limit(1).
+		Limit(1)
+	sql, _, _ := q.ToSql()
+	println(sql)
+	err = q.
 		QueryRow().
 		Scan(&sha1, &length)
 	return
