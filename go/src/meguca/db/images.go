@@ -199,7 +199,7 @@ func RandomVideo(board string) (sha1 string, length uint, err error) {
 		Where(`
 			exists(select 1 from posts as p
 				where p.sha1 = i.sha1 and p.board = ?)
-			and filetype = ?`,
+			and filetype = ? and audio = true`,
 			board,
 			int(common.WEBM),
 		).
