@@ -43,6 +43,7 @@ interface Options extends ChangeEmitter {
 	done: number
 	expandAll: number
 	workMode: number
+	audioVolume: number
 	inlineFit: string
 	theme: string
 	customCSS: string

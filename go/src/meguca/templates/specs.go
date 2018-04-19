@@ -277,6 +277,12 @@ var optionSpecs = [...][]inputSpec{
 	{
 		{ID: "imageHover"},
 		{ID: "webmHover"},
+		{
+			ID:   "audioVolume",
+			Type: _range,
+			Min:  0,
+			Max:  100,
+		},
 		{ID: "notification"},
 		{ID: "anonymise"},
 		{ID: "hideRecursively"},

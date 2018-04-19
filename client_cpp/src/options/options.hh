@@ -36,6 +36,9 @@ public:
         expand_all = 69, // Expand all images
         work_mode = 66; // Toggle Work AKA Boss mode
 
+    // Audio volume for media players
+    unsigned audio_volume = 100;
+
     // Fitting mode for image expansion
     enum class FittingMode {
         width, // Fit to width

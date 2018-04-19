@@ -65,6 +65,7 @@ export default class OptionsPanel extends TabbedModal {
 				break
 			case optionType.number:
 			case optionType.menu:
+			case optionType.range:
 			case optionType.textarea:
 				el.value = val as string || ""
 				break
@@ -93,6 +94,7 @@ export default class OptionsPanel extends TabbedModal {
 				val = el.checked
 				break
 			case optionType.number:
+			case optionType.range:
 				val = parseInt(el.value)
 				break
 			case optionType.menu:

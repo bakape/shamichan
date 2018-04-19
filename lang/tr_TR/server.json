@@ -20,6 +20,10 @@
 			"Anonim yap",
 			"Herkesi anonim göster"
 		],
+		"audioVolume": [
+			"Audio volume",
+			"Volume of audio in music and video players"
+		],
 		"autogif": [
 			"Hareketli GIF küçükresimleri",
 			"GIF küçükresimleri hareket etsin"

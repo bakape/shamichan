@@ -20,6 +20,10 @@
 			"Anonymiser",
 			"Cache le nom de tous les utilisateurs"
 		],
+		"audioVolume": [
+			"Audio volume",
+			"Volume of audio in music and video players"
+		],
 		"autogif": [
 			"Vignettes GIF animées",
 			"Anime les GIF miniaturisés"

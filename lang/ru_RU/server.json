@@ -20,6 +20,10 @@
 			"Анонимизация",
 			"Отображать всех постеров анонимами"
 		],
+		"audioVolume": [
+			"Audio volume",
+			"Volume of audio in music and video players"
+		],
 		"autogif": [
 			"Анимированные GIF-превью",
 			"Анимированные GIF-превью"

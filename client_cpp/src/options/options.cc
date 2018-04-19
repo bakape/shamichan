@@ -39,6 +39,7 @@ void Options::load()
     load_uint(done, "done");
     load_uint(expand_all, "expandAll");
     load_uint(work_mode, "workMode");
+    load_uint(audio_volume, "audioVolume");
 
     if (auto s = local_storage_get("inlineFit")) {
         if (*s == "width") {

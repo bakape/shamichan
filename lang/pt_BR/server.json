@@ -20,6 +20,10 @@
 			"Anonimizar",
 			"Mostra todos os postadores como anônimos"
 		],
+		"audioVolume": [
+			"Audio volume",
+			"Volume of audio in music and video players"
+		],
 		"autogif": [
 			"Miniaturas de GIF animadas",
 			"Miniaturas de GIF animadas"

@@ -230,6 +230,9 @@ function renderImagePreview(event: MouseEvent) {
 		loop: "",
 	})
 	imagePreview = el
+	if (tag === "video") {
+		(el as HTMLVideoElement).volume = options.audioVolume / 100
+	}
 	overlay.append(el)
 }
 

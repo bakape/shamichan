@@ -50,6 +50,7 @@ function render() {
 			el.setAttribute("style", "max-width:30vw");
 			el.controls = true;
 			el.src = sourcePath(playlist[i].sha1, playlist[i].fileType);
+			el.volume = options.audioVolume / 100;
 		}
 
 		// Buffer videos about to play by playing them hidden and muted

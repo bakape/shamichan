@@ -242,6 +242,12 @@ static Node render_thumbnail(const Image& img)
     };
 }
 
+// Format audio volume option setter to string
+static string format_volume_setter()
+{
+    return "this.volume=" + std::to_string((float)options.audio_volume/100);
+}
+
 // Render expanded file image, video or audio
 static void render_expanded(
     const Image& img, Node& inner, optional<Node>& audio)
@@ -267,6 +273,7 @@ static void render_expanded(
                     { "controls", "" },
                     { "loop`", "" },
                     { "src", src },
+                    { "onloadstart", format_volume_setter() },
                 },
             },
         };
@@ -280,6 +287,7 @@ static void render_expanded(
                 { "autoplay", "" },
                 { "controls", "" },
                 { "loop`", "" },
+                { "onloadstart", format_volume_setter() },
             },
         };
         break;

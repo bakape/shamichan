@@ -10,7 +10,7 @@ import options from "."
 
 // Types of option models
 export const enum optionType {
-	checkbox, number, image, shortcut, menu, textarea, none
+	checkbox, number, image, shortcut, menu, textarea, none, range,
 }
 
 // Full schema of the option interface
@@ -55,6 +55,11 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	// WebM hover expansion
 	webmHover: {},
+	// Volume of audio for music and video players
+	audioVolume: {
+		type: optionType.range,
+		default: 100,
+	},
 	// Animated GIF thumbnails
 	autogif: {},
 	// Enable thumbnail spoilers

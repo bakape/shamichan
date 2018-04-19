@@ -415,6 +415,7 @@ export default class ImageHandler extends View<Post> {
 					loop: "",
 				})
 				imgEl.hidden = true
+				video.volume = options.audioVolume / 100
 				figure.append(video)
 				break
 			default:
@@ -437,6 +438,7 @@ export default class ImageHandler extends View<Post> {
 			controls: "",
 			src: sourcePath(img.SHA1, img.fileType),
 		})
+		el.volume = options.audioVolume / 100
 		this.model.image.expanded = true
 		this.el.querySelector("figure").after(el)
 	}

@@ -25,6 +25,7 @@ const (
 	_array
 	_image
 	_shortcut
+	_range
 )
 
 // Spec of an option passed into the rendering function
@@ -105,6 +106,10 @@ func (w *formWriter) input(spec inputSpec) {
 		if spec.Max != 0 {
 			w.attr("max", strconv.Itoa(spec.Max))
 		}
+	case _range:
+		w.typ("range")
+		w.attr("min", strconv.Itoa(spec.Min))
+		w.attr("max", strconv.Itoa(spec.Max))
 	case _password, _string:
 		if spec.Type == _string {
 			w.typ("text")

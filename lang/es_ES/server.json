@@ -20,6 +20,10 @@
 			"Anonimizar",
 			"Muestra todos los posters como anónimo"
 		],
+		"audioVolume": [
+			"Audio volume",
+			"Volume of audio in music and video players"
+		],
 		"autogif": [
 			"Thumbnail de GIF animado",
 			"Anima thumbnails de GIF"
