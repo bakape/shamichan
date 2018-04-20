@@ -147,6 +147,40 @@ func streambody(
 	}
 }
 
+// Open and close any tags up to level, if they are set.
+// Increment level by 1 for each tag deeper you go.
+func (c *bodyContext) wrapTags(level int) {
+	states := [...]bool{
+		c.state.spoiler,
+		c.state.bold,
+		c.state.italic,
+	}
+	opening := [...]string{
+		"<del>",
+		"<b>",
+		"<i>",
+	}
+	closing := [...]string{
+		"</del>",
+		"</b>",
+		"</i>",
+	}
+
+	for i := len(states) - 1; i >= level; i-- {
+		if states[i] {
+			c.string(closing[i])
+		}
+	}
+	if !states[level] {
+		c.string(opening[level])
+	}
+	for i := level + 1; i < len(states); i++ {
+		if states[i] {
+			c.string(opening[i])
+		}
+	}
+}
+
 // Write string without escaping
 func (c *bodyContext) string(s string) {
 	c.N().S(s)
@@ -206,27 +240,7 @@ func (c *bodyContext) parseSpoilers(frag string, fn func(string)) {
 		i := strings.Index(frag, "**")
 		if i != -1 {
 			_fn(frag[:i])
-
-			if c.state.italic {
-				c.string("</i>")
-			}
-			if c.state.bold {
-				c.string("</b>")
-			}
-
-			if c.state.spoiler {
-				c.string("</del>")
-			} else {
-				c.string("<del>")
-			}
-
-			if c.state.bold {
-				c.string("<b>")
-			}
-			if c.state.italic {
-				c.string("<i>")
-			}
-
+			c.wrapTags(0)
 			c.state.spoiler = !c.state.spoiler
 			frag = frag[i+2:]
 		} else {
@@ -246,21 +260,7 @@ func (c *bodyContext) parseBolds(frag string, fn func(string)) {
 		i := strings.Index(frag, "__")
 		if i != -1 {
 			_fn(frag[:i])
-
-			if c.state.italic {
-				c.string("</i>")
-			}
-
-			if c.state.bold {
-				c.string("</b>")
-			} else {
-				c.string("<b>")
-			}
-
-			if c.state.italic {
-				c.string("<i>")
-			}
-
+			c.wrapTags(1)
 			c.state.bold = !c.state.bold
 			frag = frag[i+2:]
 		} else {
@@ -276,13 +276,7 @@ func (c *bodyContext) parseItalics(frag string, fn func(string)) {
 		i := strings.Index(frag, "~~")
 		if i != -1 {
 			fn(frag[:i])
-
-			if c.state.italic {
-				c.string("</i>")
-			} else {
-				c.string("<i>")
-			}
-
+			c.wrapTags(2)
 			c.state.italic = !c.state.italic
 			frag = frag[i+2:]
 		} else {

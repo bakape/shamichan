@@ -99,6 +99,31 @@ Node Post::render_body()
     return n;
 }
 
+void Post::wrap_tags(size_t level)
+{
+    const size_t size = 3;
+    const bool states[size] = {
+        state.spoiler, state.bold, state.italic,
+    };
+    static const Node opening[size] = {
+        { "del" }, { "b" }, { "i" },
+    };
+
+    for (size_t i = size - 1; i >= level; i--) {
+        if (states[i]) {
+            state.ascend();
+        }
+    }
+    if (!states[level]) {
+        state.append(opening[level], true);
+    }
+    for (size_t i = level + 1; i < size; i++) {
+        if (states[i]) {
+            state.append(opening[i], true);
+        }
+    }
+}
+
 void Post::parse_code(string_view frag, Post::OnFrag fn)
 {
     parse_string(frag, "``",

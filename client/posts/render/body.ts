@@ -75,6 +75,41 @@ export default function renderBody(data: PostData): string {
     return html
 }
 
+// Open and close any tags up to level, if they are set.
+// Increment level by 1 for each tag deeper you go.
+function wrapTags(level: number, state: TextState): string {
+    const states = [
+        state.spoiler,
+        state.bold,
+        state.italic,
+    ]
+    const opening = [
+        "<del>",
+        "<b>",
+        "<i>",
+    ]
+    const closing = [
+        "</del>",
+        "</b>",
+        "</i>",
+    ]
+
+    let html = ""
+    for (let i = states.length - 1; i >= level; i--) {
+        if (states[i]) {
+            html += closing[i]
+        }
+    }
+    if (!states[level]) {
+        html += opening[level]
+    }
+    for (let i = level + 1; i < states.length; i++) {
+        if (states[i]) {
+            html += opening[i]
+        }
+    }
+    return html
+}
 
 // Parse a single line, that is no longer being edited
 function parseTerminatedLine(line: string, data: PostData): string {
@@ -134,24 +169,7 @@ function parseSpoilers(
     while (true) {
         const i = frag.indexOf("**")
         if (i !== -1) {
-            html += _fn(frag.slice(0, i))
-
-            if (state.italic) {
-                html += "</i>"
-            }
-            if (state.bold) {
-                html += "</b>"
-            }
-
-            html += `<${state.spoiler ? '/' : ''}del>`
-
-            if (state.bold) {
-                html += "<b>"
-            }
-            if (state.italic) {
-                html += "<i>"
-            }
-
+            html += _fn(frag.slice(0, i)) + wrapTags(0, state)
             state.spoiler = !state.spoiler
             frag = frag.substring(i + 2)
         } else {
@@ -174,18 +192,7 @@ function parseBolds(
     while (true) {
         const i = frag.indexOf("__")
         if (i !== -1) {
-            html += _fn(frag.slice(0, i))
-
-            if (state.italic) {
-                html += "</i>"
-            }
-
-            html += `<${state.bold ? '/' : ''}b>`
-
-            if (state.italic) {
-                html += "<i>"
-            }
-
+            html += _fn(frag.slice(0, i)) + wrapTags(1, state)
             state.bold = !state.bold
             frag = frag.substring(i + 2)
         } else {
@@ -206,10 +213,7 @@ function parseItalics(
     while (true) {
         const i = frag.indexOf("~~")
         if (i !== -1) {
-            html += fn(frag.slice(0, i))
-
-            html += `<${state.italic ? '/' : ''}i>`
-
+            html += fn(frag.slice(0, i)) + wrapTags(2, state)
             state.italic = !state.italic
             frag = frag.substring(i + 2)
         } else {
