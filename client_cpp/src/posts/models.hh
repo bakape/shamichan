@@ -281,7 +281,7 @@ private:
 
     // Open and close any tags up to level, if they are set.
     // Increment level by 1 for each tag deeper you go.
-    void wrap_tags(size_t level);
+    void wrap_tags(int level);
 
     // Inject bold tags and call fn on the remaining parts
     void parse_bolds(std::string_view frag, OnFrag fn);

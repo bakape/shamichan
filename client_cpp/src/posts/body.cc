@@ -99,9 +99,9 @@ Node Post::render_body()
     return n;
 }
 
-void Post::wrap_tags(size_t level)
+void Post::wrap_tags(int level)
 {
-    const size_t size = 3;
+    const int size = 3;
     const bool states[size] = {
         state.spoiler, state.bold, state.italic,
     };
@@ -109,7 +109,7 @@ void Post::wrap_tags(size_t level)
         { "del" }, { "b" }, { "i" },
     };
 
-    for (size_t i = size - 1; i >= level; i--) {
+    for (int i = size - 1; i >= level; i--) {
         if (states[i]) {
             state.ascend();
         }
@@ -117,7 +117,7 @@ void Post::wrap_tags(size_t level)
     if (!states[level]) {
         state.append(opening[level], true);
     }
-    for (size_t i = level + 1; i < size; i++) {
+    for (int i = level + 1; i < size; i++) {
         if (states[i]) {
             state.append(opening[i], true);
         }
@@ -156,26 +156,7 @@ void Post::parse_spoilers(string_view frag, Post::OnFrag fn)
     parse_string(frag, "**",
         [this, fn](string_view frag) { parse_bolds(frag, fn); },
         [this]() {
-            if (state.italic) {
-                state.ascend();
-            }
-            if (state.bold) {
-                state.ascend();
-            }
-
-            if (state.spoiler) {
-                state.ascend();
-            } else {
-                state.append({ "del" }, true);
-            }
-
-            if (state.bold) {
-                state.append({ "b" }, true);
-            }
-            if (state.italic) {
-                state.append({ "i" }, true);
-            }
-
+            wrap_tags(0);
             state.spoiler = !state.spoiler;
         });
 }
@@ -185,20 +166,7 @@ void Post::parse_bolds(string_view frag, Post::OnFrag fn)
     parse_string(frag, "__",
         [this, fn](string_view frag) { parse_italics(frag, fn); },
         [this]() {
-            if (state.italic) {
-                state.ascend();
-            }
-
-            if (state.bold) {
-                state.ascend();
-            } else {
-                state.append({ "b" }, true);
-            }
-
-            if (state.italic) {
-                state.append({ "i" }, true);
-            }
-
+            wrap_tags(1);
             state.bold = !state.bold;
         });
 }
@@ -206,12 +174,7 @@ void Post::parse_bolds(string_view frag, Post::OnFrag fn)
 void Post::parse_italics(string_view frag, Post::OnFrag fn)
 {
     parse_string(frag, "~~", fn, [this]() {
-        if (state.italic) {
-            state.ascend();
-        } else {
-            state.append({ "i" }, true);
-        }
-
+        wrap_tags(2);
         state.italic = !state.italic;
     });
 }
