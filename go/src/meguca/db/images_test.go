@@ -8,6 +8,7 @@ import (
 	"meguca/imager/assets"
 	. "meguca/test"
 	"testing"
+	"time"
 )
 
 func TestGetImage(t *testing.T) {
@@ -200,19 +201,21 @@ func TestDeleteOwnedImage(t *testing.T) {
 }
 
 func TestVideoPlaylist(t *testing.T) {
-	img := assets.StdJPEG
-	img.FileType = common.WEBM
-	img.Audio = true
+	std := assets.StdJPEG
+	std.FileType = common.WEBM
+	std.Audio = true
+	std.Video = true
+	std.Length = 60
 
 	assertTableClear(t, "images", "boards")
-	err := WriteImage(img.ImageCommon)
+	err := WriteImage(std.ImageCommon)
 	if err != nil {
 		t.Fatal(err)
 	}
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	err = InTransaction(func(tx *sql.Tx) (err error) {
-		return InsertImage(tx, 1, 1, img)
+		return InsertImage(tx, 1, 1, std)
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -222,7 +225,13 @@ func TestVideoPlaylist(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, videos[0].SHA1, img.SHA1)
+	AssertDeepEquals(t, videos, []Video{
+		{
+			FileType: common.WEBM,
+			Duration: time.Minute,
+			SHA1:     std.SHA1,
+		},
+	})
 }
 
 func TestImageExists(t *testing.T) {
