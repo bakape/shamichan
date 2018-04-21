@@ -8,4 +8,5 @@ do
     sleep 1
 done
 
-make test
+. /emsdk/emsdk_env.sh
+make test wasm
