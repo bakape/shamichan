@@ -1,7 +1,7 @@
 import options from ".";
 import { setAttrs } from "../util";
 import { page } from "../state";
-import { sourcePath } from "../posts";
+import { sourcePath, serverNow } from "../posts";
 import { fileTypes } from "../common"
 import { handlers, message } from "../connection"
 
@@ -55,7 +55,7 @@ function render() {
 
 		// Buffer videos about to play by playing them hidden and muted
 		if (!i) {
-			el.currentTime = Date.now() / 1000 - lastStart;
+			el.currentTime = serverNow() - lastStart;
 			el.classList.remove("hidden");
 			el.muted = false;
 		} else {
@@ -69,7 +69,7 @@ function render() {
 
 export function persistMessages() {
 	handlers[message.meguTV] = (data: Data) => {
-		lastStart = Date.now() / 1000 - data.elapsed;
+		lastStart = serverNow() - data.elapsed;
 		playlist = data.playlist;
 		if (options.meguTV) {
 			render();

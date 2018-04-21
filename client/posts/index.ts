@@ -5,7 +5,7 @@ export { default as ImageHandler, toggleExpandAll, thumbPath } from "./images"
 export { clearHidden, hideRecursively } from "./hide"
 export * from "./render"
 export { default as PostCollection } from "./collection"
-export { findSyncwatches } from "./syncwatch"
+export { findSyncwatches, serverNow } from "./syncwatch"
 export { sourcePath } from "./images"
 
 import initEtc from "./etc"

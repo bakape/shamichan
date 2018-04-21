@@ -5,7 +5,12 @@ import { handlers, message } from "../connection"
 let offset = 0
 
 handlers[message.serverTime] = (time: number) =>
-	offset = Math.floor(Date.now() / 1000) - time
+	offset = Date.now() / 1000 - time
+
+// Returns current server Unix time with some time offset compensation
+export function serverNow(): number {
+	return Date.now() / 1000 + offset
+}
 
 // Synchronized time counter for things like watching animu together and such
 class Syncwatch {
@@ -26,7 +31,7 @@ class Syncwatch {
 	}
 
 	private render() {
-		const now = Math.round(Date.now() / 1000) + offset
+		const now = Math.round(serverNow())
 		if (now > this.end) {
 			this.el.innerText = lang.ui["finished"]
 			return
