@@ -78,10 +78,10 @@ Node Post::render_body()
             state.append({ "i" }, true);
         }
         if (state.red) {
-            state.append({ "span", { "class", "red" }}, true);
+            state.append({ "span", {{ "class", "red" }}}, true);
         }
         if (state.blue) {
-            state.append({ "span", { "class", "blue" }}, true);
+            state.append({ "span", {{ "class", "blue" }}}, true);
         }
 
         parse_code(line, [this](string_view frag) {
@@ -118,7 +118,7 @@ void Post::wrap_tags(int level)
         state.spoiler, state.bold, state.italic, state.red, state.blue,
     };
     static const Node opening[size] = {
-        { "del" }, { "b" }, { "i" }, { "span", { "class", "red" }}, { "span", { "class", "blue" }},
+        { "del" }, { "b" }, { "i" }, { "span", {{ "class", "red" }}}, { "span", {{ "class", "blue" }}},
     };
 
     for (int i = size - 1; i >= level; i--) {
@@ -189,6 +189,8 @@ void Post::parse_italics(string_view frag, Post::OnFrag fn)
         [this, fn](string_view frag) {
             if (board_config.rb_text) {
                 parse_reds(frag, fn);
+            } else {
+                fn(frag);
             }
         },
         [this]() {
