@@ -209,7 +209,7 @@ func VideoPlaylist(board string) (videos []Video, err error) {
 			and filetype in (?, ?)
 			and audio = true
 			and video = true
-			and length <= 600`,
+			and length between 10 and 600`,
 			board,
 			int(common.WEBM),
 			int(common.MP4),
