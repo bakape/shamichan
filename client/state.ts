@@ -25,6 +25,7 @@ export interface BoardConfigs {
 	readOnly: boolean
 	textOnly: boolean
 	forcedAnon: boolean
+	rbText: boolean
 	title: string
 	notice: string
 	rules: string

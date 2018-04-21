@@ -215,6 +215,8 @@ void TextState::reset(Node* root)
     code = false;
     bold = false;
     italic = false;
+    red = false;
+    blue = false;
     have_syncwatch = false;
     successive_newlines = 0;
     dice_index = 0;

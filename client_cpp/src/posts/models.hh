@@ -127,6 +127,8 @@ public:
         code = false, // Text is inside code block
         bold = false, // Text inside bold tag
         italic = false, // Text inside italic tag
+        red = false, // Text inside red color tag
+        blue = false, // Text inside blue color tag
         have_syncwatch = false; // Text contains #syncwatch command(s)
     int successive_newlines = 0; // Number of successive newlines in text
     size_t dice_index = 0; // Index of the next dice array item to use
@@ -288,6 +290,12 @@ private:
 
     // Inject italic tags and call fn on the remaining parts
     void parse_italics(std::string_view frag, OnFrag fn);
+    
+    // Inject red color tags and call fn on the remaining parts
+    void parse_reds(std::string_view frag, OnFrag fn);
+    
+    // Inject red color tags and call fn on the remaining parts
+    void parse_blues(std::string_view frag, OnFrag fn);
 
     // Parse a string into words and call fn on each word.
     // Handles space padding and leading/trailing punctuation.

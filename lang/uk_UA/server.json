@@ -288,6 +288,10 @@
 			"#pyu",
 			"Не питати"
 		],
+		"rbText": [
+			"Red/Blue Text",
+			"Display red and blue text if formatted with '^r' or '^b'"
+		],
 		"readOnly": [
 			"Лише читати",
 			"Вимикає створення постів"

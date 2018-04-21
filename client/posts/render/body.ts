@@ -1,4 +1,4 @@
-import { config, boards, posts } from '../../state'
+import { config, boards, boardConfig, posts } from '../../state'
 import { renderPostLink, renderTempLink } from './etc'
 import { PostData, PostLink, TextState } from '../../common'
 import { escape, makeAttrs } from '../../util'
@@ -21,6 +21,8 @@ export default function renderBody(data: PostData): string {
         code: false,
         bold: false,
         italic: false,
+        red: false,
+        blue: false,
         haveSyncwatch: false,
         successive_newlines: 0,
         iDice: 0,
@@ -54,10 +56,22 @@ export default function renderBody(data: PostData): string {
         if (state.italic) {
             html += "<i>"
         }
+        if (state.red) {
+            html += "<span class=\"red\">"
+        }
+        if (state.blue) {
+            html += "<span class=\"blue\">"
+        }
 
         html += fn(l, data)
 
         // Close any unclosed tags
+        if (state.blue) {
+            html += "</span>"
+        }
+        if (state.red) {
+            html += "</span>"
+        }
         if (state.italic) {
             html += "</i>"
         }
@@ -82,16 +96,22 @@ function wrapTags(level: number, state: TextState): string {
         state.spoiler,
         state.bold,
         state.italic,
+        state.red,
+        state.blue,
     ]
     const opening = [
         "<del>",
         "<b>",
         "<i>",
+        "<span class=\"red\">",
+        "<span class=\"blue\">",
     ]
     const closing = [
         "</del>",
         "</b>",
         "</i>",
+        "</span>",
+        "</span>",
     ]
 
     let html = ""
@@ -209,12 +229,59 @@ function parseItalics(
     state: TextState,
     fn: (frag: string) => string,
 ): string {
+    const _fn = (frag: string) =>
+        boardConfig.rbText ? parseReds(frag, state, fn) : fn(frag)
     let html = ""
     while (true) {
         const i = frag.indexOf("~~")
         if (i !== -1) {
-            html += fn(frag.slice(0, i)) + wrapTags(2, state)
+            html += _fn(frag.slice(0, i)) + wrapTags(2, state)
             state.italic = !state.italic
+            frag = frag.substring(i + 2)
+        } else {
+            html += _fn(frag)
+            break
+        }
+    }
+    return html
+}
+
+// Inject red color tags and call fn on the remaining parts
+function parseReds(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
+    const _fn = (frag: string) =>
+        parseBlues(frag, state, fn)
+    let html = ""
+    
+    while (true) {
+        const i = frag.indexOf("^r")
+        if (i !== -1) {
+            html += _fn(frag.slice(0, i)) + wrapTags(3, state)
+            state.red = !state.red
+            frag = frag.substring(i + 2)
+        } else {
+            html += _fn(frag)
+            break
+        }
+    }
+    return html
+}
+
+// Inject blue color tags and call fn on the remaining parts
+function parseBlues(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
+    let html = ""
+    while (true) {
+        const i = frag.indexOf("^b")
+        if (i !== -1) {
+            html += fn(frag.slice(0, i)) + wrapTags(4, state)
+            state.blue = !state.blue
             frag = frag.substring(i + 2)
         } else {
             html += fn(frag)

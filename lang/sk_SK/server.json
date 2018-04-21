@@ -288,6 +288,10 @@
 			"#pyu",
 			"Nepýtaj sa"
 		],
+		"rbText": [
+			"Red/Blue Text",
+			"Display red and blue text if formatted with '^r' or '^b'"
+		],
 		"readOnly": [
 			"Len na čítanie",
 			"Zakázať prispievanie"
