@@ -131,7 +131,8 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 			if err != nil {
 				return
 			}
-			err = writeBan(tx, ip, board, reason, by, post.id, expires, log)
+			err = writeBan(tx, post.ip, board, reason, by, post.id, expires,
+				log)
 			if err != nil {
 				return
 			}
