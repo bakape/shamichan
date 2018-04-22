@@ -1,0 +1,130 @@
+@import "common.mix.less";
+@body: #dac9af;
+@link: #e08c11;
+@em: #b5bd68;
+@del: black;
+@postBG: #25211b;
+@border: 1px solid #352915;
+@bold: #f7f3ed;
+@admin: #f00000;
+@mod: #9b5cff;
+@red: @admin;
+@blue: #57e8ed;
+
+blockquote a:hover {
+	color: @link;
+}
+
+a:hover, blockquote a {
+	color: lighten(@link, 20%);
+}
+
+article, aside, .modal, .side-panel {
+	background-color: @postBG;
+	border-left: 1px solid lighten(@postBG, 10%);
+	border-top: 1px solid lighten(@postBG, 10%);
+	border-right: 1px solid darken(@postBG, 10%);
+	border-bottom: 1px solid darken(@postBG, 10%);
+}
+
+article article {
+	border-color: fade(@link, 10%);
+}
+
+article.highlight, article:target, .popup-menu {
+	background-color: #27221a;
+	border-color: #111;
+}
+
+.preview {
+	&:not(.editing) {
+		background-color: #27221a;
+	}
+	border-color: #111;
+}
+
+.editing-mixin() {
+	background-color: #dab680;
+	border-color: #352915;
+	color: black;
+	& > header, & > figcaption {
+		a, b:not(.admin):not(.sage) {
+			color: #222;
+		}
+	}
+	& > .post-container > blockquote, & > .backlinks {
+		& > em > a, & > a {
+			color: #222;
+		}
+		& > em {
+			color: #656d28;
+		}
+	}
+	.red {
+		color: #ae0000;
+	}
+	code.code-tag {
+		background: #222;
+	}
+}
+
+#threads {
+	&:not(.custom-BG) section > article.editing:not(.op) {
+		.editing-mixin;
+	}
+	&.custom-BG section > article.editing {
+		.editing-mixin;
+	}
+}
+
+article.preview.editing {
+	.editing-mixin;
+}
+
+body {
+	background-color: #1d160c;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+}
+
+.embed {
+	background-color: white;
+}
+
+h1 {
+	font: bolder 28px Tahoma;
+	letter-spacing: -2px;
+}
+
+h2 {
+	font-family: Tahoma;
+}
+
+h3 {
+	color: #ce52c9;
+}
+
+hr {
+	border-top: 1px solid #2b251c;
+}
+
+.popup-menu {
+	// Need extra override for open posts
+	color: @body;
+	li:hover {
+		background-color: #4a3413;
+	}
+}
+
+.omit {
+	color: #90744b;
+}
+
+a.tab-sel {
+	color: fade(@link, 70%);
+}
+
+// Makes post more visible, because modals have the same background colour
+.post-collection article {
+	border: 1px solid fade(@link, 10%);
+}

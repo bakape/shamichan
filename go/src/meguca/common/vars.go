@@ -38,8 +38,8 @@ var (
 		"ya_AR", "ru_RU",
 	}
 	Themes = []string{
-		"ashita", "console", "egophobe", "gar", "glass", "higan", "inumi",
-		"mawaru", "moe", "moon", "ocean", "rave", "tea",
+		"ashita", "console", "egophobe", "gar", "glass", "gowno", "higan",
+		"inumi", "mawaru", "moe", "moon", "ocean", "rave", "tea",
 	}
 )
 
