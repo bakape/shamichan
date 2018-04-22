@@ -4,6 +4,7 @@
 package feeds
 
 import (
+	"errors"
 	"meguca/common"
 	"sync"
 )
@@ -65,6 +66,20 @@ func addToFeed(id uint64, board string, c common.Client) (
 		feed.add <- c
 	}
 
+	return
+}
+
+// Subscribe to random video stream. Clients are automatically unsubscribed,
+// when leaving their current sync feed.
+func SubscribeToMeguTV(c common.Client) (err error) {
+	feeds.mu.Lock()
+	defer feeds.mu.Unlock()
+
+	sync, _, board := GetSync(c)
+	if !sync {
+		return errors.New("meguTV: not synced")
+	}
+
 	tvf, ok := feeds.tvFeeds[board]
 	if !ok {
 		tvf = &tvFeed{}
@@ -76,7 +91,6 @@ func addToFeed(id uint64, board string, c common.Client) (
 		}
 	}
 	tvf.add <- c
-
 	return
 }
 

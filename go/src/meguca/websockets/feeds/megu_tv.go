@@ -70,10 +70,7 @@ func (f *tvFeed) start(board string) (err error) {
 					f.playList = f.playList[1:]
 				}
 				f.startedAt = time.Now()
-				msg := f.encodePlaylist()
-				for _, c := range f.clients {
-					c.Send(msg)
-				}
+				f.sendToAll(f.encodePlaylist())
 				dur := time.Hour // If empty playlist
 				if len(f.playList) != 0 {
 					dur = f.playList[0].Duration

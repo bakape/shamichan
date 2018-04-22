@@ -3,7 +3,7 @@ import { setAttrs } from "../util";
 import { page } from "../state";
 import { sourcePath, serverNow } from "../posts";
 import { fileTypes } from "../common"
-import { handlers, message } from "../connection"
+import { handlers, message, connSM, connState, send } from "../connection"
 
 type Data = {
 	elapsed: number;
@@ -75,12 +75,24 @@ export function persistMessages() {
 			render();
 		}
 	}
+
+	// Subscribe to feed on connection
+	connSM.on(connState.synced, subscribe);
+}
+
+function subscribe() {
+	if (options.meguTV) {
+		send(message.meguTV, null);
+	}
 }
 
 export default function () {
 	const el = document.getElementById("megu-tv");
 	if (el || page.board === "all" || !page.thread) {
 		return;
+	}
+	if (connSM.state === connState.synced) {
+		subscribe();
 	}
 	render();
 

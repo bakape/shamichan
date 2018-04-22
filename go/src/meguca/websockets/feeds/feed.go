@@ -114,9 +114,7 @@ func (f *Feed) Start() (err error) {
 				if buf := f.flush(); buf == nil {
 					f.pause()
 				} else {
-					for _, c := range f.clients {
-						c.Send(buf)
-					}
+					f.sendToAll(buf)
 				}
 
 			// Insert a new post, cache and propagate
@@ -211,7 +209,7 @@ func (f *Feed) bufferMessage(msg []byte) {
 // Send unique IP count to all connected clients
 func (f *Feed) sendIPCount() {
 	ips := make(map[string]struct{}, len(f.clients))
-	for _, c := range f.clients {
+	for c := range f.clients {
 		ips[c.IP()] = struct{}{}
 	}
 

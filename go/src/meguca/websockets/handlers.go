@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"meguca/common"
+	"meguca/websockets/feeds"
 )
 
 var errInValidCaptcha = errors.New("invalid captcha provided")
@@ -43,6 +44,8 @@ func (c *Client) runHandler(typ common.MessageType, msg []byte) error {
 		return nil
 	case common.MessageSpoiler:
 		return c.spoilerImage()
+	case common.MessageMeguTV:
+		return feeds.SubscribeToMeguTV(c)
 	default:
 		return errInvalidPayload(msg)
 	}

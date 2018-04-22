@@ -56,34 +56,34 @@ type baseFeed struct {
 	// Remove client
 	remove chan common.Client
 	// Subscribed clients
-	clients []common.Client
+	clients map[common.Client]bool
 }
 
 func (b *baseFeed) init() {
 	b.add = make(chan common.Client)
 	b.remove = make(chan common.Client)
-	b.clients = make([]common.Client, 0, 8)
+	b.clients = make(map[common.Client]bool, 8)
 }
 
 func (b *baseFeed) addClient(c common.Client) {
-	b.clients = append(b.clients, c)
+	b.clients[c] = true
 }
 
 // If returned true, closing feed and parent listener loop should exit
 func (b *baseFeed) removeClient(c common.Client) bool {
-	for i, cl := range b.clients {
-		if cl == c {
-			copy(b.clients[i:], b.clients[i+1:])
-			b.clients[len(b.clients)-1] = nil
-			b.clients = b.clients[:len(b.clients)-1]
-			break
-		}
-	}
+	delete(b.clients, c)
 	if len(b.clients) != 0 {
 		b.remove <- nil
 		return false
 	} else {
 		b.remove <- c
 		return true
+	}
+}
+
+// Send a message to all connected clients
+func (b *baseFeed) sendToAll(msg []byte) {
+	for c := range b.clients {
+		c.Send(msg)
 	}
 }
