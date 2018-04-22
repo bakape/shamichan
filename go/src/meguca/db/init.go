@@ -500,6 +500,13 @@ var upgrades = []func(*sql.Tx) error{
 			`create index post_board on posts (board)`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE boards
+				ADD COLUMN rbText bool default false`,
+		)
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both

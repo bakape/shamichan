@@ -165,6 +165,7 @@ BoardConfig::BoardConfig(const c_string_view& s)
     text_only = j["textOnly"];
     forced_anon = j["forcedAnon"];
     non_live = j["nonLive"];
+    rb_text = j["rbText"];
     title = j["title"];
     rules = j["rules"];
     notice = j["notice"];

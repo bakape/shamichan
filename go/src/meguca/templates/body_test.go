@@ -73,8 +73,8 @@ func TestRenderBody(t *testing.T) {
 		},
 		{
 			name: "nested formating",
-			in:   "foo** bar__b~~a__z**h~~",
-			out:  `foo<del> bar<b>b<i>a</i></b><i>z</i></del><i>h</i>`,
+			in:   "foo** bar__b~~a__z^re^r^br^b**h~~",
+			out:  `foo<del> bar<b>b<i>a</i></b><i>z<span class="red">e</span><span class="blue">r</span></i></del><i>h</i>`,
 		},
 		{
 			name:    "trailing empty open line",
@@ -367,7 +367,7 @@ func TestRenderBody(t *testing.T) {
 			w := quicktemplate.AcquireWriter(buf)
 			defer quicktemplate.ReleaseWriter(w)
 
-			streambody(w, p, c.op, "a", false)
+			streambody(w, p, c.op, "a", false, true)
 
 			if s := string(buf.B); s != c.out {
 				LogUnexpected(t, c.out, s)

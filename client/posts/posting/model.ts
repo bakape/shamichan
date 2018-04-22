@@ -49,6 +49,8 @@ export default class FormModel extends Post {
 				code: false,
 				bold: false,
 				italic: false,
+				red: false,
+				blue: false,
 				haveSyncwatch: false,
 				successive_newlines: 0,
 				iDice: 0,

@@ -70,7 +70,7 @@ var (
 type bodyContext struct {
 	index bool     // Rendered for an index page
 	state struct { // Body parser state
-		spoiler, quote, code, bold, italic bool
+		spoiler, quote, code, bold, italic, red, blue, rbText bool
 		successive_newlines                uint
 		iDice                              int
 	}
@@ -87,6 +87,7 @@ func streambody(
 	op uint64,
 	board string,
 	index bool,
+	rbText bool,
 ) {
 	c := bodyContext{
 		index:  index,
@@ -95,6 +96,7 @@ func streambody(
 		board:  board,
 		Writer: *w,
 	}
+	c.state.rbText = rbText
 
 	var fn func(string)
 	if c.Editing {
@@ -129,9 +131,21 @@ func streambody(
 		if c.state.italic {
 			c.string("<i>")
 		}
+		if c.state.red {
+			c.string("<span class=\"red\">")
+		}
+		if c.state.blue {
+			c.string("<span class=\"blue\">")
+		}
 
 		fn(l)
 
+		if c.state.blue {
+			c.string("</span>")
+		}
+		if c.state.red {
+			c.string("</span>")
+		}
 		if c.state.italic {
 			c.string("</i>")
 		}
@@ -154,16 +168,22 @@ func (c *bodyContext) wrapTags(level int) {
 		c.state.spoiler,
 		c.state.bold,
 		c.state.italic,
+		c.state.red,
+		c.state.blue,
 	}
 	opening := [...]string{
 		"<del>",
 		"<b>",
 		"<i>",
+		"<span class=\"red\">",
+		"<span class=\"blue\">",
 	}
 	closing := [...]string{
 		"</del>",
 		"</b>",
 		"</i>",
+		"</span>",
+		"</span>",
 	}
 
 	for i := len(states) - 1; i >= level; i-- {
@@ -272,12 +292,56 @@ func (c *bodyContext) parseBolds(frag string, fn func(string)) {
 
 // Inject italic tags and call fn on the remaining parts
 func (c *bodyContext) parseItalics(frag string, fn func(string)) {
+	_fn := func(frag string) {
+		if (c.state.rbText) {
+			c.parseReds(frag, fn)
+		} else {
+			fn(frag)
+		}
+	}
+
 	for {
 		i := strings.Index(frag, "~~")
 		if i != -1 {
-			fn(frag[:i])
+			_fn(frag[:i])
 			c.wrapTags(2)
 			c.state.italic = !c.state.italic
+			frag = frag[i+2:]
+		} else {
+			_fn(frag)
+			break
+		}
+	}
+}
+
+// Inject red color tags and call fn on the remaining parts
+func (c *bodyContext) parseReds(frag string, fn func(string)) {
+	_fn := func(frag string) {
+		c.parseBlues(frag, fn)
+	}
+
+	for {
+		i := strings.Index(frag, "^r")
+		if i != -1 {
+			_fn(frag[:i])
+			c.wrapTags(3)
+			c.state.red = !c.state.red
+			frag = frag[i+2:]
+		} else {
+			_fn(frag)
+			break
+		}
+	}
+}
+
+// Inject blue color tags and call fn on the remaining parts
+func (c *bodyContext) parseBlues(frag string, fn func(string)) {
+	for {
+		i := strings.Index(frag, "^b")
+		if i != -1 {
+			fn(frag[:i])
+			c.wrapTags(4)
+			c.state.blue = !c.state.blue
 			frag = frag[i+2:]
 		} else {
 			fn(frag)

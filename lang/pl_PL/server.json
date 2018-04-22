@@ -288,6 +288,10 @@
 			"#pyu",
 			"Nie pytaj"
 		],
+		"rbText": [
+			"Red/Blue Text",
+			"Display red and blue text if formatted with '^r' or '^b'"
+		],
 		"readOnly": [
 			"Tylko do odczytu",
 			"Wyłącz możliwość postowania"

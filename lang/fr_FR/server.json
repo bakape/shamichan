@@ -288,6 +288,10 @@
 			"#pyu",
 			"Secret"
 		],
+		"rbText": [
+			"Red/Blue Text",
+			"Display red and blue text if formatted with '^r' or '^b'"
+		],
 		"readOnly": [
 			"Lecture seule",
 			"Désactive la création de nouveaux messages"

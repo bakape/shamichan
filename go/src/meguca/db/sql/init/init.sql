@@ -23,6 +23,7 @@ create table boards (
 	NSFW boolean default false,
 	nonLive bool default false,
 	posterIDs bool default false,
+	rbText bool default false,
 	id text primary key,
 	created timestamp not null,
 	defaultCSS text not null,

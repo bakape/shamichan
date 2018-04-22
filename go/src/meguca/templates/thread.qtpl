@@ -108,6 +108,7 @@ Common functionality between index board pages and threads pages
 		index: index,
 		sticky: t.Sticky,
 		locked: t.Locked,
+		rbText: false,
 		op: t.ID,
 		board: t.Board,
 		subject: t.Subject,
@@ -119,6 +120,7 @@ Common functionality between index board pages and threads pages
 
 	{% code c.sticky = false %}
 	{% code c.locked = false %}
+	{% code c.rbText = config.GetBoardConfigs(c.board).RbText %}
 	{% code c.omit, c.imageOmit = 0, 0 %}
 	{% code c.subject = "" %}
 	{% for _, p := range t.Posts %}

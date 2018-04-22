@@ -10,7 +10,7 @@ import (
 
 // Extra data passed, when rendering an article
 type articleContext struct {
-	index, sticky, locked bool
+	index, sticky, locked, rbText bool
 	omit, imageOmit       int
 	op                    uint64
 	board, subject, root  string
