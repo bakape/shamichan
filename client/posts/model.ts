@@ -7,6 +7,7 @@ import { mine, seenPosts, storeSeenPost, posts, hidden } from "../state"
 import { notifyAboutReply } from "../ui"
 import { PostData, TextState, PostLink, Command, ImageData } from "../common"
 import { hideRecursively } from "./hide"
+import options from "../options"
 
 // Generic post model
 export class Post extends Model implements PostData {
@@ -155,7 +156,7 @@ export class Post extends Model implements PostData {
 						board: this.board,
 					})
 				}
-				if (hidden.has(id)) {
+				if (options.hideRecursively && hidden.has(id)) {
 					hideRecursively(this)
 				}
 			}
