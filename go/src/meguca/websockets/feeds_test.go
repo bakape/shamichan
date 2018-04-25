@@ -24,9 +24,6 @@ func TestStreamUpdates(t *testing.T) {
 		`30{"recent":[1],"banned":[],"deleted":[],"deletedImage":[],"open":{}}`,
 	)
 
-	// Drop meguTV message
-	skipMessage(t, wcl)
-
 	assertMessage(t, wcl, "33[\"351\"]")
 
 	// Send message
