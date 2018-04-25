@@ -120,28 +120,6 @@ func TestRenderBody(t *testing.T) {
 			},
 		},
 		{
-			name: "#pyu",
-			in:   "#pyu",
-			out:  "<strong>#pyu (1)</strong>",
-			commands: []common.Command{
-				{
-					Type: common.Pyu,
-					Pyu:  1,
-				},
-			},
-		},
-		{
-			name: "#pcount",
-			in:   "#pcount",
-			out:  "<strong>#pcount (2)</strong>",
-			commands: []common.Command{
-				{
-					Type: common.Pcount,
-					Pyu:  2,
-				},
-			},
-		},
-		{
 			name: "live roulette",
 			in:   "#roulette",
 			out:  "<strong>#roulette (5/6)</strong>",
