@@ -15,7 +15,6 @@ import (
 	"meguca/templates"
 	"meguca/websockets/feeds"
 	"net/http"
-	"net/url"
 	"regexp"
 	"strconv"
 	"time"
@@ -723,22 +722,17 @@ func modLog(w http.ResponseWriter, r *http.Request) {
 func decodeRedirect(w http.ResponseWriter, r *http.Request) (
 	id uint64, address string, ok bool,
 ) {
+	var msg struct {
+		ID  uint64
+		URL string
+	}
 	if _, can := canPerform(w, r, "all", auth.Admin, nil); !can {
 		return
 	}
-
-	id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
-	if err != nil {
-		text400(w, err)
+	if !decodeJSON(w, r, &msg) {
 		return
 	}
-	address, err = url.QueryUnescape(extractParam(r, "url"))
-	if err != nil {
-		text400(w, err)
-		return
-	}
-	ok = true
-	return
+	return msg.ID, msg.URL, true
 }
 
 // Redirect all clients with the same IP as the target post to a URL

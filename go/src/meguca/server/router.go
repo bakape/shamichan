@@ -151,8 +151,8 @@ func createRouter() http.Handler {
 	api.POST("/report", report)
 
 	redir := api.NewGroup("/redirect")
-	redir.POST("/by-ip/:id/*url", redirectByIP)
-	redir.POST("/by-thread/:id/*url", redirectByThread)
+	redir.POST("/by-ip", redirectByIP)
+	redir.POST("/by-thread", redirectByThread)
 
 	// Captcha API
 	captcha := api.NewGroup("/captcha")

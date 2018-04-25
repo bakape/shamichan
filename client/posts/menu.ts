@@ -41,15 +41,14 @@ class RedirectForm extends FormView {
 		parent.querySelector(".control .popup-menu").append(this.el)
 	}
 
-	protected send() {
+	protected async send() {
 		let url = (this.el
 			.querySelector("input[type=text]") as HTMLInputElement)
 			.value
-		url = `/api/redirect/${this.apiPath}/${this.parentID}/`
-			+ encodeURIComponent(url)
-		fetch(url, {
-			method: "POST",
-			credentials: 'include',
+		postJSON
+		await postJSON(`/api/redirect/${this.apiPath}`, {
+			id: this.parentID,
+			url,
 		})
 		this.remove()
 	}
