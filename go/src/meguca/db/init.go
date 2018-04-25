@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"meguca/auth"
+	"meguca/common"
 	"meguca/config"
 	"meguca/util"
 	"time"
@@ -507,6 +508,66 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		// Read all commands
+		r, err := withTransaction(tx,
+			sq.Select("id", "commands").
+				From("posts").
+				Where("commands is not null"),
+		).
+			Query()
+		if err != nil {
+			return
+		}
+		comms := make(map[uint64][]common.Command, 1024)
+		var id uint64
+		for r.Next() {
+			var com commandRow
+			err = r.Scan(&id, &com)
+			if err != nil {
+				return
+			}
+			comms[id] = []common.Command(com)
+		}
+		err = r.Err()
+		if err != nil {
+			return
+		}
+
+		prep, err := tx.Prepare(
+			`update posts
+			set commands = $2
+			where id = $1`)
+		if err != nil {
+			return
+		}
+
+		// Remove all #pyu/#pcount commands
+		new := make(commandRow, 0, 64)
+		for id, comms := range comms {
+			new = new[:0]
+			for _, c := range comms {
+				switch c.Type {
+				case common.Pyu, common.Pcount:
+				default:
+					new = append(new, c)
+				}
+			}
+			val := new
+			if len(new) == 0 {
+				val = nil
+			}
+			_, err = prep.Exec(id, val)
+			if err != nil {
+				return
+			}
+		}
+
+		return
+	},
+	func(tx *sql.Tx) error {
+		return withTransaction(tx, sq.Delete("main").Where("id = 'pyu'")).Exec()
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
@@ -517,7 +578,8 @@ func LoadDB() (err error) {
 		return
 	}
 
-	sq = squirrel.StatementBuilder.RunWith(squirrel.NewStmtCacheProxy(db)).
+	sq = squirrel.StatementBuilder.
+		RunWith(squirrel.NewStmtCacheProxy(db)).
 		PlaceholderFormat(squirrel.Dollar)
 
 	var exists bool

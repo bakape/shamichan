@@ -49,20 +49,6 @@ func parseCommand(match []byte, board string) (com common.Command, err error) {
 			com.Eightball = answers[randInt(len(answers))]
 		}
 
-	// Increment pyu counter
-	case bytes.Equal(match, []byte("pyu")):
-		if config.Get().Pyu {
-			com.Type = common.Pyu
-			com.Pyu, err = db.IncrementPyu()
-		}
-
-	// Return current pyu count
-	case bytes.Equal(match, []byte("pcount")):
-		if config.Get().Pyu {
-			com.Type = common.Pcount
-			com.Pyu, err = db.GetPyu()
-		}
-
 	// Roulette
 	case bytes.Equal(match, []byte("roulette")):
 		com.Type = common.Roulette

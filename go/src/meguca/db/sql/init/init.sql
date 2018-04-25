@@ -5,7 +5,6 @@ create table main (
 insert into main (id, val) values
 	('version', %d),
 	('config', '%s'),
-	('pyu', '0'),
 	('roulette', '6'),
 	('rcount', '0');
 

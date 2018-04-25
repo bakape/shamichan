@@ -255,7 +255,7 @@ function parseReds(
     const _fn = (frag: string) =>
         parseBlues(frag, state, fn)
     let html = ""
-    
+
     while (true) {
         const i = frag.indexOf("^r")
         if (i !== -1) {
@@ -376,7 +376,7 @@ function parseFragment(frag: string, data: PostData): string {
                 if (data.state.quote) {
                     break
                 }
-                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$/)
+                m = word.match(/^#(flip|\d*d\d+|8ball|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$/)
                 if (m) {
                     html += parseCommand(m[1], data)
                     matched = true
@@ -481,8 +481,6 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             inner = commands[state.iDice++].val ? "flap" : "flop"
             break
         case "8ball":
-        case "pyu":
-        case "pcount":
         case "rcount":
             inner = commands[state.iDice++].val.toString()
             break

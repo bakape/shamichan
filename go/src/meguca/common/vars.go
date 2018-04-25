@@ -45,6 +45,6 @@ var (
 
 // Common Regex expressions
 var (
-	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$`)
+	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$`)
 	DiceRegexp    = regexp.MustCompile(`(\d*)d(\d+)`)
 )

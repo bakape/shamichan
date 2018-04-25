@@ -4,7 +4,6 @@ package config
 type Configs struct {
 	Public
 	PruneBoards       bool `json:"pruneBoards"`
-	Pyu               bool `json:"pyu"`
 	HideNSFW          bool `json:"hideNSFW"`
 	JPEGQuality       uint8
 	MaxWidth          uint16 `json:"maxWidth"`

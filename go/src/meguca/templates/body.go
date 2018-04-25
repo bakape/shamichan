@@ -527,7 +527,7 @@ func (c *bodyContext) parseCommands(bit string) {
 	case "8ball":
 		inner = append(inner, val.Eightball...)
 		c.state.iDice++
-	case "pyu", "pcount", "rcount":
+	case "rcount":
 		inner = strconv.AppendUint(inner, val.Pyu, 10)
 		c.state.iDice++
 	case "roulette":

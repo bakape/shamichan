@@ -26,10 +26,8 @@ const (
 	// episode time during group anime watching and such
 	SyncWatch
 
-	// Pyu - don't ask
+	// Legacy values
 	Pyu
-
-	// Pcount - don't ask
 	Pcount
 
 	// Russian Roulette, first poster has a 1/6 chance of dying, then 1/5, etc
@@ -76,7 +74,7 @@ func (c Command) MarshalEasyJSON(w *jwriter.Writer) {
 	switch c.Type {
 	case Flip:
 		w.Bool(c.Flip)
-	case Pyu, Pcount, Rcount:
+	case Rcount:
 		w.Uint64(c.Pyu)
 	case SyncWatch:
 		w.RawByte('[')
@@ -129,15 +127,11 @@ func (c *Command) UnmarshalJSON(data []byte) error {
 	case Flip:
 		c.Type = Flip
 		err = json.Unmarshal(data, &c.Flip)
-	case Pyu:
-		c.Type = Pyu
-		err = json.Unmarshal(data, &c.Pyu)
-	case Pcount:
-		c.Type = Pcount
-		err = json.Unmarshal(data, &c.Pyu)
 	case SyncWatch:
 		c.Type = SyncWatch
 		err = json.Unmarshal(data, &c.SyncWatch)
+	case Pyu, Pcount: // Only used for migrations
+		c.Type = Pyu
 	case EightBall:
 		c.Type = EightBall
 		err = json.Unmarshal(data, &c.Eightball)

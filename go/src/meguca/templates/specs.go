@@ -235,7 +235,6 @@ var specs = map[string][]inputSpec{
 			Options: common.Langs,
 		},
 		defaultThemeSpec,
-		{ID: "pyu"},
 		{
 			ID:       "maxWidth",
 			Type:     _number,

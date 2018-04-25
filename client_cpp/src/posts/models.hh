@@ -91,8 +91,8 @@ public:
         flip,
         eight_ball,
         sync_watch,
-        pyu,
-        pcount,
+        _,
+        __,
         roulette,
         rcount
     } typ;
@@ -290,10 +290,10 @@ private:
 
     // Inject italic tags and call fn on the remaining parts
     void parse_italics(std::string_view frag, OnFrag fn);
-    
+
     // Inject red color tags and call fn on the remaining parts
     void parse_reds(std::string_view frag, OnFrag fn);
-    
+
     // Inject red color tags and call fn on the remaining parts
     void parse_blues(std::string_view frag, OnFrag fn);
 

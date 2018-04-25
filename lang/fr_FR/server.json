@@ -284,10 +284,6 @@
 			"Suppr. auto des sujets",
 			"Supprime automatiquement les sujets sans nouveaux messages depuis un certain nombre de jours"
 		],
-		"pyu": [
-			"#pyu",
-			"Secret"
-		],
 		"rbText": [
 			"Red/Blue Text",
 			"Display red and blue text if formatted with '^r' or '^b'"
