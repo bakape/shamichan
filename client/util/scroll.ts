@@ -57,8 +57,10 @@ export function checkBottom() {
 }
 
 function isAtBottom(): boolean {
-	return window.innerHeight + window.scrollY
-		>= document.documentElement.offsetHeight
+	return window.innerHeight
+		+ window.scrollY
+		- document.documentElement.offsetHeight
+		> -1
 }
 
 // If we are at the bottom, lock
