@@ -7,8 +7,25 @@
 {% import "meguca/common" %}
 {% import "github.com/bakape/mnemonics" %}
 
+// Header of a standalone HTML page
+{% func htmlHeader() %}{% stripspace %}
+	<!DOCTYPE html>
+	<html>
+		<head>
+			<meta charset="utf-8"/>
+		</head>
+		<body>
+{% endstripspace %}{% endfunc %}
+
+// End of a standalone HTML page
+{% func htmlEnd() %}{% stripspace %}
+		</body>
+	</html>
+{% endstripspace %}{% endfunc %}
+
 BanPage renders a ban page for a banned user
 {% func BanPage(rec auth.BanRecord) %}{% stripspace %}
+	{%= htmlHeader() %}
 	{% code ln := lang.Get().Templates["banPage"] %}
 	<div class="ban-page glass">
 		{%s= fmt.Sprintf(ln[0], bold(rec.Board), bold(rec.By)) %}
@@ -28,10 +45,12 @@ BanPage renders a ban page for a banned user
 		{%s= fmt.Sprintf(ln[2], bold(rec.IP)) %}
 		<br>
 	</div>
+	{%= htmlEnd() %}
 {% endstripspace %}{% endfunc %}
 
 Renders a list of bans for a specific page with optional unbanning API links
 {% func BanList(bans []auth.BanRecord, board string, canUnban bool) %}{% stripspace %}
+	{%= htmlHeader() %}
 	{%= tableStyle() %}
 	<form method="post" action="/api/unban/{%s= board %}">
 		<table>
@@ -65,6 +84,7 @@ Renders a list of bans for a specific page with optional unbanning API links
 			{%= submit(false) %}
 		{% endif %}
 	</form>
+	{%= htmlEnd() %}
 {% endstripspace %}{% endfunc %}
 
 Common style for plain html tables
@@ -86,6 +106,7 @@ Post link, that will redirect to the post from any page
 
 Renders a moderation log page
 {% func ModLog(log []auth.ModLogEntry) %}{% stripspace %}
+	{%= htmlHeader() %}
 	{% code ln := lang.Get() %}
 	{%= tableStyle() %}
 	<table>
@@ -124,4 +145,5 @@ Renders a moderation log page
 			</tr>
 		{% endfor %}
 	</table>
+	{%= htmlEnd() %}
 {% endstripspace %}{% endfunc %}
