@@ -4,10 +4,10 @@
 
 const babel = require("gulp-babel"),
 	gulp = require('gulp'),
-	gutil = require('gulp-util'),
 	less = require('gulp-less'),
-	cssmin = require('gulp-cssmin'),
+	cssmin = require('gulp-clean-css'),
 	rename = require('gulp-rename'),
+	gwatch = require("gulp-watch"),
 	sourcemaps = require('gulp-sourcemaps'),
 	ts = require('gulp-typescript'),
 	_uglify = require('gulp-uglify/composer')(require("uglify-es"), console)
@@ -23,7 +23,7 @@ const uglify = () =>
 
 // Keep script alive and rebuild on file changes
 // Triggered with the `-w` flag
-const watch = gutil.env.w
+const watch = gwatch.w
 
 // Dependency tasks for the default tasks
 const tasks = []
@@ -63,7 +63,7 @@ createTask('scripts', 'clientScripts/*.js', src =>
 	}
 }
 
-gulp.task('default', tasks)
+gulp.task('default', gulp.series(tasks))
 
 // Builds the client files of the appropriate ECMAScript version
 function buildES6() {
@@ -90,7 +90,7 @@ function buildES5() {
 	gulp.task(name, () =>
 		buildClient()
 			.pipe(babel({
-				presets: ['latest'],
+				presets: ['../node_modules/babel-preset-env'],
 			}))
 			.pipe(uglify())
 			.on('error', handleError)
