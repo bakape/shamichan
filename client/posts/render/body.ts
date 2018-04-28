@@ -229,8 +229,7 @@ function parseItalics(
     state: TextState,
     fn: (frag: string) => string,
 ): string {
-    const _fn = (frag: string) =>
-        boardConfig.rbText ? parseReds(frag, state, fn) : fn(frag)
+    const _fn = (frag: string) => parseReds(frag, state, fn)
     let html = ""
     while (true) {
         const i = frag.indexOf("~~")
@@ -256,17 +255,31 @@ function parseReds(
         parseBlues(frag, state, fn)
     let html = ""
 
-    while (true) {
-        const i = frag.indexOf("^r")
-        if (i !== -1) {
-            html += _fn(frag.slice(0, i)) + wrapTags(3, state)
-            state.red = !state.red
-            frag = frag.substring(i + 2)
-        } else {
-            html += _fn(frag)
-            break
+    if (boardConfig.rbText) {
+        while (true) {
+            const i = frag.indexOf("^r")
+            if (i !== -1) {
+                html += _fn(frag.slice(0, i)) + wrapTags(3, state)
+                state.red = !state.red
+                frag = frag.substring(i + 2)
+            } else {
+                html += _fn(frag)
+                break
+            }
+        }
+    } else {
+        while (true) {
+            const i = frag.indexOf("^r")
+            if (i !== -1) {
+                html += _fn(frag.slice(0, i))
+                frag = frag.substring(i + 2)
+            } else {
+                html += _fn(frag)
+                break
+            }
         }
     }
+
     return html
 }
 
@@ -277,17 +290,32 @@ function parseBlues(
     fn: (frag: string) => string,
 ): string {
     let html = ""
-    while (true) {
-        const i = frag.indexOf("^b")
-        if (i !== -1) {
-            html += fn(frag.slice(0, i)) + wrapTags(4, state)
-            state.blue = !state.blue
-            frag = frag.substring(i + 2)
-        } else {
-            html += fn(frag)
-            break
+
+    if (boardConfig.rbText) {
+        while (true) {
+            const i = frag.indexOf("^b")
+            if (i !== -1) {
+                html += fn(frag.slice(0, i)) + wrapTags(4, state)
+                state.blue = !state.blue
+                frag = frag.substring(i + 2)
+            } else {
+                html += fn(frag)
+                break
+            }
+        }
+    } else {
+        while (true) {
+            const i = frag.indexOf("^b")
+            if (i !== -1) {
+                html += fn(frag.slice(0, i))
+                frag = frag.substring(i + 2)
+            } else {
+                html += fn(frag)
+                break
+            }
         }
     }
+
     return html
 }
 

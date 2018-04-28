@@ -186,13 +186,7 @@ void Post::parse_bolds(string_view frag, Post::OnFrag fn)
 void Post::parse_italics(string_view frag, Post::OnFrag fn)
 {
     parse_string(frag, "~~",
-        [this, fn](string_view frag) {
-            if (board_config.rb_text) {
-                parse_reds(frag, fn);
-            } else {
-                fn(frag);
-            }
-        },
+        [this, fn](string_view frag) { parse_reds(frag, fn); },
         [this]() {
             wrap_tags(2);
             state.italic = !state.italic;
@@ -201,20 +195,29 @@ void Post::parse_italics(string_view frag, Post::OnFrag fn)
 
 void Post::parse_reds(string_view frag, Post::OnFrag fn)
 {
-    parse_string(frag, "^r",
+    if (board_config.rb_text) {
+        parse_string(frag, "^r",
         [this, fn](string_view frag) { parse_blues(frag, fn); },
         [this]() {
             wrap_tags(3);
             state.red = !state.red;
         });
+    } else {
+        parse_string(frag, "^r",
+        [this, fn](string_view frag) { parse_blues(frag, fn); });
+    }
 }
 
 void Post::parse_blues(string_view frag, Post::OnFrag fn)
 {
-    parse_string(frag, "^b", fn, [this]() {
-        wrap_tags(4);
-        state.blue = !state.blue;
-    });
+    if (board_config.rb_text) {
+        parse_string(frag, "^b", fn, [this]() {
+            wrap_tags(4);
+            state.blue = !state.blue;
+        });
+    } else {
+        parse_string(frag, "^b", fn);
+    }
 }
 
 // Return, if b is a punctuation char
