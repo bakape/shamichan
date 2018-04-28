@@ -135,12 +135,16 @@ func setBanners(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			return
 		}
-		defer thumbnailer.ReturnBuffer(out.Data)
 		banners = append(banners, out)
 	}
 
 	if err := db.SetBanners(board, banners); err != nil {
 		text500(w, r, err)
+	}
+	for _, f := range banners {
+		if f.Data != nil {
+			thumbnailer.ReturnBuffer(f.Data)
+		}
 	}
 }
 
@@ -192,6 +196,11 @@ func readAssetFile(
 		return
 	}
 	buf := _buf.Bytes()
+	if len(buf) == 0 { // No file
+		ok = true
+		thumbnailer.ReturnBuffer(_buf.Bytes())
+		return
+	}
 	if len(buf) > common.MaxAssetSize {
 		sendFileError(w, h, "too large")
 		return
@@ -243,7 +252,6 @@ func setLoadingAnimation(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			return
 		}
-		defer thumbnailer.ReturnBuffer(out.Data)
 	case http.ErrMissingFile:
 		err = nil
 	default:
@@ -253,6 +261,9 @@ func setLoadingAnimation(w http.ResponseWriter, r *http.Request) {
 
 	if err := db.SetLoadingAnimation(board, out); err != nil {
 		text500(w, r, err)
+	}
+	if out.Data != nil {
+		thumbnailer.ReturnBuffer(out.Data)
 	}
 }
 
