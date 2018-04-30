@@ -18,6 +18,12 @@ using std::string;
 using std::string_view;
 using std::tuple;
 
+// Opening tags for text formatting
+static const Node opening_tags[TextState::tag_depth] = {
+    { "del" }, { "b" }, { "i" }, { "span", { { "class", "red" } } },
+    { "span", { { "class", "blue" } } },
+};
+
 // Split string_view into subviews on delimiter D, call on_frag on each
 // fragment and call on_match after each matched delimiter
 template <class D>
@@ -68,20 +74,11 @@ Node Post::render_body()
             state.quote = true;
             state.append({ "em" }, true);
         }
-        if (state.spoiler) {
-            state.append({ "del" }, true);
-        }
-        if (state.bold) {
-            state.append({ "b" }, true);
-        }
-        if (state.italic) {
-            state.append({ "i" }, true);
-        }
-        if (state.red) {
-            state.append({ "span", {{ "class", "red" }}}, true);
-        }
-        if (state.blue) {
-            state.append({ "span", {{ "class", "blue" }}}, true);
+        auto states = state.as_array();
+        for (int i = 0; i < (int)states.size(); i++) {
+            if (states[i]) {
+                state.append(opening_tags[i], true);
+            }
         }
 
         parse_code(line, [this](string_view frag) {
@@ -89,20 +86,11 @@ Node Post::render_body()
         });
 
         // Close any unclosed tags
-        if (state.blue) {
-            state.ascend();
-        }
-        if (state.red) {
-            state.ascend();
-        }
-        if (state.italic) {
-            state.ascend();
-        }
-        if (state.bold) {
-            state.ascend();
-        }
-        if (state.spoiler) {
-            state.ascend();
+        states = state.as_array(); // State might have changed during parsing
+        for (auto s : states) {
+            if (s) {
+                state.ascend();
+            }
         }
         if (state.quote) {
             state.ascend();
@@ -113,25 +101,19 @@ Node Post::render_body()
 
 void Post::wrap_tags(int level)
 {
-    const int size = 5;
-    const bool states[size] = {
-        state.spoiler, state.bold, state.italic, state.red, state.blue,
-    };
-    static const Node opening[size] = {
-        { "del" }, { "b" }, { "i" }, { "span", {{ "class", "red" }}}, { "span", {{ "class", "blue" }}},
-    };
+    const auto states = state.as_array();
 
-    for (int i = size - 1; i >= level; i--) {
+    for (int i = TextState::tag_depth - 1; i >= level; i--) {
         if (states[i]) {
             state.ascend();
         }
     }
     if (!states[level]) {
-        state.append(opening[level], true);
+        state.append(opening_tags[level], true);
     }
-    for (int i = level + 1; i < size; i++) {
+    for (int i = level + 1; i < TextState::tag_depth; i++) {
         if (states[i]) {
-            state.append(opening[i], true);
+            state.append(opening_tags[i], true);
         }
     }
 }

@@ -152,6 +152,16 @@ public:
     // Flush text buffer into escaped text node, if not empty
     void flush_text();
 
+    // Layers of formatting for the parser to descend.
+    // <em> not included, as it is line-based.
+    static const int tag_depth = 5;
+
+    // Returns all flags as array ordered by parent to child
+    inline std::array<bool, tag_depth> as_array() const
+    {
+        return { { spoiler, bold, italic, red, blue } };
+    }
+
 private:
     // Last child nodes of the blockquote subtree.
     // Used to keep track of nodes to append to, while populating the
