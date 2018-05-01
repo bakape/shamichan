@@ -74,8 +74,10 @@ Node render_post_link(unsigned long id, const LinkData& data)
     Node n = Node("em");
     n.children.reserve(2);
     string cls = "post-link";
+    string hash_cls = "hash-link";
     if (post_ids.hidden.count(id)) {
         cls += " strikethrough";
+        hash_cls += " strikethrough";
     }
     n.children.push_back({ "a",
         {
@@ -85,7 +87,7 @@ Node render_post_link(unsigned long id, const LinkData& data)
     if (options.post_inline_expand) {
         n.children.push_back({ "a",
             {
-                { "class", "hash-link" }, { "href", url.str() },
+                { "class", hash_cls }, { "href", url.str() },
             },
             " #" });
     }

@@ -41,6 +41,9 @@ void init_navigation()
                         || localStorage.getItem('postInlineExpand') == 'true') {
                         return;
                     }
+                } else if (t.classList.contains('hash-link')
+                    && t.classList.contains("strikethrough")) {
+                    return;
                 }
 
                 Module.try_navigate_page(

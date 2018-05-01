@@ -58,6 +58,10 @@ static optional<Node> render_omitted(unsigned long id, std::string board)
 
 Node PostView::render_model()
 {
+    if (post_ids.hidden.count(m->id)) {
+        return { "article", { { "hidden", "" } } };
+    }
+
     Node n = { "article", { { "class", "glass" } } };
     n.children.reserve(4);
 
