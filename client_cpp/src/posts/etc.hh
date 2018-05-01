@@ -2,6 +2,7 @@
 
 #include "../../brunhild/node.hh"
 #include "models.hh"
+#include "view.hh"
 #include <ctime>
 #include <emscripten/val.h>
 #include <string>
@@ -10,8 +11,7 @@
 // Checkbox for toggling deleted post display
 const brunhild::Node delete_toggle = brunhild::Node("input",
     {
-        { "type", "checkbox" },
-        { "class", "deleted-toggle" },
+        { "type", "checkbox" }, { "class", "deleted-toggle" },
     });
 
 // Renders readable elapsed time since Unix timestamp then
@@ -29,3 +29,6 @@ brunhild::Node render_link(
 
 // Match target post by attributes of an element. If none found, returns NULL.
 Post* match_post(emscripten::val&);
+
+// Match target post view and model by attributes of an element.
+std::optional<std::tuple<Post*, PostView*>> match_view(emscripten::val& event);

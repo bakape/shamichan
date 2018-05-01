@@ -43,7 +43,7 @@ std::vector<emscripten::val> Form::get_inputs()
     using namespace emscripten;
 
     return vecFromJSArray<val>(val::global("document")
-                                   .call<val>("getElementById", id())
+                                   .call<val>("getElementById", id)
                                    .call<val>("querySelectorAll",
                                        std::string("input,textarea,select")));
 }

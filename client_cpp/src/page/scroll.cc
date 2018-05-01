@@ -1,5 +1,7 @@
 #include "scroll.hh"
 #include "../../brunhild/mutations.hh"
+#include "../posts/view.hh"
+#include "../state.hh"
 #include <emscripten.h>
 #include <string>
 
@@ -24,6 +26,13 @@ void init_scrolling()
 
 void scroll_to_post(unsigned id)
 {
-    brunhild::scroll_into_view('p' + std::to_string(id));
+    if (!posts.count(id)) {
+        return;
+    }
+    auto& p = posts.at(id);
+    if (!p.views.size()) {
+        return;
+    }
+    brunhild::scroll_into_view((*p.views.begin())->id);
     scroll_by = -top_banner_height;
 }

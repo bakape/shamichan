@@ -12,7 +12,8 @@ using std::string;
 struct Mutations {
     bool remove_el = false, scroll_into_view = false;
     std::optional<std::string> set_inner_html, set_outer_html;
-    std::vector<std::string> append, prepend, before, after;
+    std::vector<std::string> append, prepend, before, after, move_prepend,
+        move_after;
     std::unordered_set<std::string> remove_attr;
     std::unordered_map<std::string, std::string> set_attr;
 
@@ -72,6 +73,18 @@ void after(string id, string html)
     get_mutation_set(id)->after.push_back(html);
 }
 
+// Move child node to the front of the parent
+void move_prepend(string parent_id, string child_id)
+{
+    get_mutation_set(parent_id)->move_prepend.push_back(child_id);
+}
+
+// Move child node after a sibling in the parent
+void move_after(string sibling_id, string child_id)
+{
+    get_mutation_set(sibling_id)->move_prepend.push_back(child_id);
+}
+
 void set_inner_html(string id, string html)
 {
     auto mut = get_mutation_set(id);
@@ -115,6 +128,8 @@ void Mutations::free_inner()
 {
     append.clear();
     prepend.clear();
+    move_prepend.clear();
+    move_after.clear();
     set_inner_html = std::nullopt;
 }
 
@@ -229,6 +244,24 @@ void Mutations::exec(const string& id)
                 el.insertBefore(cont.firstChild, el.firstChild);
             },
             html.c_str());
+    }
+    for (auto& child_id : move_prepend) {
+        EM_ASM_INT(
+            {
+                var el = window.__el;
+                el.insertBefore(
+                    document.getElementById(UTF8ToString($0)), el.firstChild);
+            },
+            child_id.c_str());
+    }
+    for (auto& child_id : move_after) {
+        EM_ASM_INT(
+            {
+                var el = window.__el;
+                el.parentNode.insertBefore(
+                    document.getElementById(UTF8ToString($0)), el.nextSibling);
+            },
+            child_id.c_str());
     }
 
     for (auto& kv : set_attr) {

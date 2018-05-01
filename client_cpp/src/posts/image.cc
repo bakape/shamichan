@@ -6,7 +6,7 @@
 #include "../state.hh"
 #include "../util.hh"
 #include "etc.hh"
-#include "models.hh"
+#include "view.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
 #include <iomanip>
@@ -19,9 +19,9 @@ using std::string;
 
 // TODO: Expand all images and automatic image expansion
 
-Node Post::render_figcaption()
+Node PostView::render_figcaption()
 {
-    auto& img = *image;
+    auto& img = *m->image;
 
     Node n = { "figcaption", { { "class", "spaced" } } };
     n.children.reserve(4);
@@ -31,9 +31,9 @@ Node Post::render_figcaption()
             "a",
             {
                 { "class", "image-toggle act" },
-                { "data-id", std::to_string(id) },
+                { "data-id", std::to_string(m->id) },
             },
-            lang.posts.at(img.reveal_thumbnail ? "hide" : "show"),
+            lang.posts.at(reveal_thumbnail ? "hide" : "show"),
         });
     }
     if (img.thumb_type != FileType::no_file && img.file_type != FileType::pdf) {
@@ -59,25 +59,22 @@ static Node image_search_link(int i, const string& url)
     const static char* abbrev[6] = { "G", "Iq", "Sn", "Wa", "Ds", "Ex" };
     const static char* url_starts[6] = {
         "https://www.google.com/searchbyimage?image_url=",
-        "http://iqdb.org/?url=",
-        "http://saucenao.com/search.php?db=999&url=",
-        "https://whatanime.ga/?url=",
-        "https://desuarchive.org/_/search/image/",
+        "http://iqdb.org/?url=", "http://saucenao.com/search.php?db=999&url=",
+        "https://whatanime.ga/?url=", "https://desuarchive.org/_/search/image/",
         "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
     };
 
     return Node("a",
         {
-            { "target", "_blank" },
-            { "rel", "nofollow" },
+            { "target", "_blank" }, { "rel", "nofollow" },
             { "href", url_starts[i] + url },
         },
         abbrev[i]);
 }
 
-Node Post::render_image_search()
+Node PostView::render_image_search()
 {
-    auto const& img = *image;
+    auto const& img = *m->image;
     Node n = {
         "span",
         {
@@ -138,11 +135,11 @@ Node Post::render_image_search()
     return n;
 }
 
-Node Post::render_file_info()
+Node PostView::render_file_info()
 {
     using std::setw;
 
-    auto& img = *image;
+    auto& img = *m->image;
     ostringstream s;
     bool first = true;
     s << '(';
@@ -235,8 +232,7 @@ static Node render_thumbnail(const Image& img)
     return {
         "img",
         {
-            { "src", thumb },
-            { "width", std::to_string(w) },
+            { "src", thumb }, { "width", std::to_string(w) },
             { "height", std::to_string(h) },
         },
     };
@@ -245,7 +241,7 @@ static Node render_thumbnail(const Image& img)
 // Format audio volume option setter to string
 static string format_volume_setter()
 {
-    return "this.volume=" + std::to_string((float)options.audio_volume/100);
+    return "this.volume=" + std::to_string((float)options.audio_volume / 100);
 }
 
 // Render expanded file image, video or audio
@@ -269,11 +265,8 @@ static void render_expanded(
             {
                 "audio",
                 {
-                    { "autoplay", "" },
-                    { "controls", "" },
-                    { "loop`", "" },
-                    { "src", src },
-                    { "onloadstart", format_volume_setter() },
+                    { "autoplay", "" }, { "controls", "" }, { "loop`", "" },
+                    { "src", src }, { "onloadstart", format_volume_setter() },
                 },
             },
         };
@@ -284,9 +277,7 @@ static void render_expanded(
         inner = {
             "video",
             {
-                { "autoplay", "" },
-                { "controls", "" },
-                { "loop`", "" },
+                { "autoplay", "" }, { "controls", "" }, { "loop`", "" },
                 { "onloadstart", format_volume_setter() },
             },
         };
@@ -301,29 +292,27 @@ static void render_expanded(
     inner.attrs["src"] = src;
 }
 
-std::tuple<Node, optional<Node>> Post::render_image()
+std::tuple<Node, optional<Node>> PostView::render_image()
 {
-    auto& img = *image;
+    auto& img = *m->image;
     Node inner;
     optional<Node> audio;
 
-    if (img.expanded) {
+    if (expanded) {
         render_expanded(img, inner, audio);
     } else {
         inner = render_thumbnail(img);
     }
 
-    const string id_str = std::to_string(id);
+    const string id_str = std::to_string(m->id);
     inner.attrs["data-id"] = id_str;
     Node n({
-        "figure",
-        {},
+        "figure", {},
         {
             {
                 "a",
                 {
-                    { "href", img.source_path() },
-                    { "target", "_blank" },
+                    { "href", img.source_path() }, { "target", "_blank" },
                     { "data-id", id_str },
                 },
                 { inner },
@@ -340,11 +329,15 @@ void handle_image_click(emscripten::val& event)
         return;
     }
     // Identify and validate parent post
-    auto p = match_post(event);
-    if (!p || !p->image) {
+    auto res = match_view(event);
+    if (!res) {
         return;
     }
-    auto& img = *p->image;
+    auto[model, view] = *res;
+    if (!model->image) {
+        return;
+    }
+    auto& img = *model->image;
 
     // Simply download the file
     switch (img.file_type) {
@@ -360,31 +353,34 @@ void handle_image_click(emscripten::val& event)
                     // Really old browser. Fuck it!
                     return;
                 }
-                document.getElementById('p' + $0.toString())
+                document.getElementById(UTF8ToString($0))
                     .querySelector('figcaption a[download]')
                     .click();
             },
-            p->id);
+            view->id.data());
         return;
     }
 
-    img.expanded = !img.expanded;
+    view->expanded = !view->expanded;
     if (options.inline_fit == Options::FittingMode::width
         && !options.gallery_mode_toggle
         && img.dims[1]
             > emscripten::val::global("window")["innerHeight"].as<unsigned>()) {
-        brunhild::scroll_into_view('p'
-            + event["target"].call<string>("getAttribute", string("data-id")));
+        brunhild::scroll_into_view(view->id);
     }
-    p->patch();
+    view->patch();
 }
 
 void toggle_hidden_thumbnail(emscripten::val& event)
 {
-    auto p = match_post(event);
-    if (!p || !p->image) {
+    auto res = match_view(event);
+    if (!res) {
         return;
     }
-    p->image->reveal_thumbnail = !p->image->reveal_thumbnail;
-    p->patch();
+    auto[model, view] = *res;
+    if (!model->image) {
+        return;
+    }
+    view->reveal_thumbnail = !view->reveal_thumbnail;
+    view->patch();
 }

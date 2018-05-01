@@ -1,4 +1,5 @@
 #include "node.hh"
+#include "mutations.hh"
 #include "util.hh"
 
 static unsigned long long id_counter = 0;
@@ -12,6 +13,38 @@ std::string new_id()
     return s.str();
 }
 
+void Attrs::write_html(std::ostringstream& s) const
+{
+    for (auto & [ key, val ] : *this) {
+        s << ' ' << key;
+        if (val != "") {
+            s << "=\"" << val << '"';
+        }
+    }
+}
+
+void Attrs::patch(Attrs attrs)
+{
+    const auto id = (*this)["id"];
+
+    // Attributes added or changed
+    for (auto & [ key, val ] : attrs) {
+        if (key != "id" && (!count(key) || at(key) != val)) {
+            set_attr(id, key, val);
+        }
+    }
+
+    // Attributes removed
+    for (auto & [ key, _ ] : *this) {
+        if (key != "id" && !attrs.count(key)) {
+            remove_attr(id, key);
+        }
+    }
+
+    *this = attrs;
+    (*this)["id"] = id;
+}
+
 std::string Node::html() const
 {
     std::ostringstream s;
@@ -22,12 +55,7 @@ std::string Node::html() const
 void Node::write_html(std::ostringstream& s) const
 {
     s << '<' << tag;
-    for (auto & [ key, val ] : attrs) {
-        s << ' ' << key;
-        if (val != "") {
-            s << "=\"" << val << '"';
-        }
-    }
+    attrs.write_html(s);
     s << '>';
 
     // These should be left empty and unterminated

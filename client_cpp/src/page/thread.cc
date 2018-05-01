@@ -28,17 +28,16 @@ void render_thread()
     push_board_hover_info(n.children);
     n.write_html(s);
 
-    s << "<hr><section id=\"thread-container\">";
-    for (auto & [ _, p ] : posts) {
-        p.init();
-        p.write_html(s);
-    }
-    s << "</section><div id=\"bottom-spacer\"></div>";
+    s << "<hr>";
+
+    // TODO: Store this somewhere
+    auto tv = new ThreadView(page.thread, "thread-container");
+    tv->write_html(s);
+    s << "<div id=\"bottom-spacer\"></div>";
 
     if (!thread.locked) {
         Node({
-                 "aside",
-                 { { "class", "act posting glass" } },
+                 "aside", { { "class", "act posting glass" } },
                  { { "a", lang.ui.at("reply") } },
              })
             .write_html(s);
@@ -51,8 +50,7 @@ void render_thread()
     n.children.push_back(render_button("#top", lang.ui.at("top")));
     n.children.push_back(render_last_100_link(page.board, page.thread));
     n.children.push_back({
-        "span",
-        { { "id", "lock" }, { "style", "visibility: hidden;" } },
+        "span", { { "id", "lock" }, { "style", "visibility: hidden;" } },
         lang.ui.at("lockedToBottom"),
     });
     n.write_html(s);
@@ -95,4 +93,33 @@ void render_post_counter()
         }
     }
     brunhild::set_inner_html("thread-post-counters", s.str());
+}
+
+std::vector<Post*> ThreadView::get_list()
+{
+    std::vector<Post*> re;
+    re.reserve(1 << 9);
+    for (auto & [ _, p ] : posts) {
+        if (p.op == thread_id) {
+            re.push_back(&posts.at(p.id));
+        }
+    }
+    return re;
+}
+
+std::shared_ptr<PostView> ThreadView::create_child(Post* p)
+{
+    auto v = std::shared_ptr<PostView>(new PostView(p->id));
+    p->views.insert(v);
+    return v;
+}
+
+std::map<unsigned long, ThreadView*> ThreadView::instances;
+
+void ThreadView::clear()
+{
+    for (auto[_, v] : ThreadView::instances) {
+        v->~ThreadView();
+    }
+    ThreadView::instances.clear();
 }

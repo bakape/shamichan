@@ -2,6 +2,7 @@
 #include "../../brunhild/mutations.hh"
 #include "../state.hh"
 #include "hide.hh"
+#include "view.hh"
 #include <sstream>
 
 using nlohmann::json;
@@ -158,25 +159,13 @@ void Post::parse_commands(nlohmann::json& j)
     }
 }
 
-void Post::patch()
-{
-    // TODO: Check if post is not displayed? Not sure we will need this in the
-    // future.
-
-    // Proxy to top-most parent post, if inlined
-    if (inlined_into) {
-        return posts.at(inlined_into).patch();
-    }
-
-    View::patch();
-}
-
 void Post::remove()
 {
     if (inlined_into) {
         posts.at(inlined_into).patch();
-    } else {
-        View::remove();
+    }
+    for (auto& v : views) {
+        v->remove();
     }
     posts.erase(id);
 
@@ -200,57 +189,15 @@ void Post::propagate_links()
     }
 }
 
+void Post::patch()
+{
+    for (auto& v : views) {
+        v->patch();
+    }
+}
+
 void Post::close()
 {
     editing = false;
     patch();
-}
-
-void TextState::reset(Node* root)
-{
-    spoiler = false;
-    quote = false;
-    code = false;
-    bold = false;
-    italic = false;
-    red = false;
-    blue = false;
-    have_syncwatch = false;
-    successive_newlines = 0;
-    dice_index = 0;
-    buf.clear();
-    parents.clear();
-
-    parents.push_back(root);
-}
-
-void TextState::append(Node n, bool descend, unsigned gt_count)
-{
-    // Append escaped '>'
-    for (unsigned i = 0; i < gt_count; i++) {
-        buf += "&gt;";
-    }
-
-    // Flush pending text node
-    flush_text();
-
-    parents.back()->children.push_back(n);
-    if (descend) {
-        parents.push_back(&parents.back()->children.back());
-    }
-}
-
-void TextState::ascend()
-{
-    flush_text();
-    parents.pop_back();
-}
-
-void TextState::flush_text()
-{
-    if (buf.size()) {
-        Node n("span", buf, true);
-        buf.clear();
-        append(n);
-    }
 }

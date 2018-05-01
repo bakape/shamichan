@@ -9,8 +9,18 @@
 
 namespace brunhild {
 
-// Element attributes. std::nullopt values are omitted from rendered HTML.
-typedef std::unordered_map<std::string, std::string> Attrs;
+// Element attributes
+class Attrs : public std::unordered_map<std::string, std::string> {
+    typedef std::unordered_map<std::string, std::string> Base;
+    using Base::Base;
+
+public:
+    // Write attrs as HTML to stream
+    void write_html(std::ostringstream&) const;
+
+    // Diff attributes with new value and apply patches to the DOM
+    void patch(Attrs attrs);
+};
 
 // Represents an HTML element. Can be used to construct node tries more easily.
 class Node {

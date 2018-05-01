@@ -23,8 +23,6 @@ void insert_post(std::string_view msg)
     // for all further operations
     (posts)[p.id] = p;
     auto& ref = posts.at(p.id);
-    ref.init();
-    brunhild::append("thread-container", ref.html());
     if (!ref.editing) {
         ref.propagate_links();
     }
@@ -34,6 +32,7 @@ void insert_post(std::string_view msg)
     if (ref.image) {
         t.image_ctr++;
     }
+    ThreadView::instances[page.thread]->patch();
     render_post_counter();
 
     // TODO: Unread post counting

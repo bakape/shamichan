@@ -10,6 +10,12 @@ void append(std::string id, std::string html);
 // Prepend a node to a parent
 void prepend(std::string id, std::string html);
 
+// Move child node to the front of the parent
+void move_prepend(std::string parent_id, std::string child_id);
+
+// Move child node after a sibling in the parent
+void move_after(std::string sibling_id, std::string child_id);
+
 // Insert a node before a sibling
 void before(std::string id, std::string html);
 

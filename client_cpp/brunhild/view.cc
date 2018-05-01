@@ -14,10 +14,51 @@ using std::string;
 
 namespace brunhild {
 
-void View::init()
+void BaseView::on(std::string type, std::string selector, Handler handler)
 {
-    saved = render();
-    ensure_id(saved);
+    // Need to prepend root node ID to all selectors
+    std::ostringstream s;
+    if (selector != "") {
+        std::string_view view = { selector };
+        size_t i;
+        while (1) {
+            i = view.find(',');
+            auto frag = view.substr(0, i);
+
+            // If this comma is inside a selector like :not(.foo,.bar), skip the
+            // appropriate amount of closing brackets. Assumes correct CSS
+            // syntax.
+            const auto opening = std::count(frag.begin(), frag.end(), '(');
+            if (opening) {
+                const auto closing = std::count(frag.begin(), frag.end(), ')');
+                if (closing != opening) {
+                    i = view.find(',', view.find(")", i, closing - opening));
+                    frag = view.substr(0, i);
+                }
+            }
+
+            s << '#' << id << ' ' << frag;
+            if (i != std::string::npos) {
+                view = view.substr(i + 1);
+                s << ',';
+            } else {
+                break;
+            }
+        }
+    } else {
+        // Select all children, if no selector
+        s << '#' << id << " *";
+    }
+
+    event_handlers.push_back(register_handler(type, handler, s.str()));
+}
+
+void BaseView::remove_event_handlers()
+{
+    for (auto id : event_handlers) {
+        unregister_handler(id);
+    }
+    event_handlers.clear();
 }
 
 void View::ensure_id(Node& node)
@@ -34,13 +75,21 @@ std::string View::html() const { return saved.html(); }
 
 void View::write_html(std::ostringstream& s) const { saved.write_html(s); }
 
-void View::remove()
+void View::remove() { brunhild::remove(id); }
+
+void View::init()
 {
-    brunhild::remove(saved.attrs["id"]);
-    remove_event_handlers();
+    saved = render();
+    saved.attrs["id"] = id;
+    ensure_id(saved);
 }
 
-void View::patch() { patch_node(saved, render()); }
+void View::patch()
+{
+    auto node = render();
+    node.attrs["id"] = id;
+    patch_node(saved, node);
+}
 
 void View::patch_node(Node& old, Node node)
 {
@@ -56,31 +105,8 @@ void View::patch_node(Node& old, Node node)
         return;
     }
 
-    patch_attrs(old, move(node.attrs));
+    old.attrs.patch(move(node.attrs));
     patch_children(old, move(node));
-}
-
-void View::patch_attrs(Node& old, Attrs attrs)
-{
-    const std::string id = old.attrs.at("id");
-
-    // Attributes added or changed
-    for (auto & [ key, val ] : attrs) {
-        if (key != "id" && (!old.attrs.count(key) || old.attrs[key] != val)) {
-            set_attr(id, key, val);
-        }
-    }
-
-    // Attributes removed
-    std::vector<std::string> to_remove;
-    for (auto & [ key, _ ] : old.attrs) {
-        if (key != "id" && !attrs.count(key)) {
-            remove_attr(id, key);
-        }
-    }
-
-    old.attrs = attrs;
-    old.attrs["id"] = id;
 }
 
 void View::patch_children(Node& old, Node node)
@@ -134,52 +160,5 @@ void View::patch_children(Node& old, Node node)
             old.children.pop_back();
         }
     }
-}
-
-void View::on(std::string type, std::string selector, Handler handler)
-{
-    // Need to prepend root node ID to all selectors
-    std::ostringstream s;
-    if (const string id_str = id(); selector != "") {
-        std::string_view view = { selector };
-        size_t i;
-        while (1) {
-            i = view.find(',');
-            auto frag = view.substr(0, i);
-
-            // If this comma is inside a selector like :not(.foo,.bar), skip the
-            // appropriate amount of closing brackets. Assumes correct CSS
-            // syntax.
-            const auto opening = std::count(frag.begin(), frag.end(), '(');
-            if (opening) {
-                const auto closing = std::count(frag.begin(), frag.end(), ')');
-                if (closing != opening) {
-                    i = view.find(',', view.find(")", i, closing - opening));
-                    frag = view.substr(0, i);
-                }
-            }
-
-            s << '#' << id_str << ' ' << frag;
-            if (i != std::string::npos) {
-                view = view.substr(i + 1);
-                s << ',';
-            } else {
-                break;
-            }
-        }
-    } else {
-        // Select all children, if no selector
-        s << '#' << id_str << " *";
-    }
-
-    event_handlers.push_back(register_handler(type, handler, s.str()));
-}
-
-void View::remove_event_handlers()
-{
-    for (auto id : event_handlers) {
-        unregister_handler(id);
-    }
-    event_handlers.clear();
 }
 }

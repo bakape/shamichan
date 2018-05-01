@@ -3,7 +3,7 @@
 #include "../state.hh"
 #include "../util.hh"
 #include "etc.hh"
-#include "models.hh"
+#include "view.hh"
 #include <sstream>
 #include <vector>
 
@@ -45,8 +45,7 @@ static optional<Node> render_omitted(unsigned long id, std::string board)
       << pluralize(image_omit, "image") << ' ' << lang.posts.at("omitted");
     return {
         {
-            "span",
-            { { "class", "omit spaced" } },
+            "span", { { "class", "omit spaced" } },
             // Disambiguate constructor
             brunhild::Children({
                 { "span", s.str() },
@@ -57,19 +56,18 @@ static optional<Node> render_omitted(unsigned long id, std::string board)
     };
 }
 
-Node Post::render()
+Node PostView::render_model()
 {
-    Node n("article", { { "id", 'p' + std::to_string(id) } });
+    Node n = { "article", { { "class", "glass" } } };
     n.children.reserve(4);
 
-    n.attrs["class"] = "glass";
-    if (id == op) {
+    if (m->id == m->op) {
         n.attrs["class"] += " op";
     }
-    if (editing) {
+    if (m->editing) {
         n.attrs["class"] += " editing";
     }
-    if (deleted) {
+    if (m->deleted) {
         n.attrs["class"] += " deleted";
         n.children.push_back(delete_toggle);
     }
@@ -77,10 +75,10 @@ Node Post::render()
 
     brunhild::Children pc_ch;
     pc_ch.reserve(2);
-    if (image) {
+    if (m->image) {
         n.children.push_back(render_figcaption());
         if ((!options.hide_thumbs && !options.work_mode_toggle)
-            || image->reveal_thumbnail) {
+            || reveal_thumbnail) {
             auto[figure, audio] = render_image();
             pc_ch.push_back(figure);
 
@@ -91,21 +89,21 @@ Node Post::render()
         }
     }
     pc_ch.push_back(render_body());
-    if (banned) {
+    if (m->banned) {
         n.children.push_back(
             { "b", { { "class", "admin banned" } }, lang.posts.at("banned") });
     }
     n.children.push_back({ "div", { { "class", "post-container" } }, pc_ch });
 
-    if (id == op) {
-        if (auto omit = render_omitted(id, board); omit) {
+    if (m->id == m->op) {
+        if (auto omit = render_omitted(m->id, m->board); omit) {
             n.children.push_back(*omit);
         }
     }
-    if (backlinks.size()) {
+    if (m->backlinks.size()) {
         Node bl("span", { { "class", "backlinks" } });
-        for (auto && [ id, data ] : backlinks) {
-            bl.children.push_back(render_post_link(id, data));
+        for (auto && [ id, data ] : m->backlinks) {
+            bl.children.push_back(render_link(id, data));
         }
         n.children.push_back(bl);
     }

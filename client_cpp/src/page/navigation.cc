@@ -2,6 +2,7 @@
 #include "../connection/sync.hh"
 #include "../db.hh"
 #include "../page/page.hh"
+#include "../page/thread.hh"
 #include "../state.hh"
 #include "../util.hh"
 #include "scroll.hh"
@@ -79,6 +80,7 @@ static void try_navigate_page(std::string href, bool need_push)
     page = next_state;
     posts.clear();
     threads.clear();
+    ThreadView::clear();
 
     // TODO: Fetch new board configs, if needed (maybe send these in sync
     // message, if board config hash changed?)

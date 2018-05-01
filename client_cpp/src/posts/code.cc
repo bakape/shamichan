@@ -1,4 +1,4 @@
-#include "models.hh"
+#include "view.hh"
 #include <algorithm>
 #include <cctype>
 #include <iterator>
@@ -54,7 +54,7 @@ static bool is_operator(const char b)
     return std::binary_search(std::begin(operators), std::end(operators), b);
 }
 
-void Post::highlight_syntax(std::string_view frag)
+void PostView::highlight_syntax(std::string_view frag)
 {
     if (!frag.size()) {
         return;

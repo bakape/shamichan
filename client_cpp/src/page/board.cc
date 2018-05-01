@@ -1,3 +1,4 @@
+#include "board.hh"
 #include "../../brunhild/mutations.hh"
 #include "../lang.hh"
 #include "../posts/etc.hh"
@@ -9,7 +10,6 @@
 #include <optional>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 using brunhild::Node;
@@ -62,37 +62,14 @@ static std::vector<Thread*> sort_threads()
 // Render threads on a board page
 static void render_index_threads(ostringstream& s)
 {
-    // Group all posts by thread. These are already sorted by post ID.
-    std::unordered_map<unsigned long, std::vector<Post*>> by_thread;
-    by_thread.reserve(threads.size());
-    for (auto & [ _, p ] : posts) {
-        by_thread[p.op].push_back(&p);
-    }
-
+    // TODO: Port to a ListView
+    // TODO: Seperate with <hr>
     sort_mode = SortMode::bump;
     s << "<div id=index-thread-container>";
     const auto sorted = sort_threads();
     for (size_t i = 0; i < sorted.size(); i++) {
-        const auto t = sorted[i];
-
-        s << "<section class=\"index-thread";
-        if (t->deleted) {
-            s << " deleted";
-        }
-        s << "\">";
-        if (t->deleted) {
-            delete_toggle.write_html(s);
-        }
-
-        for (auto p : by_thread[t->id]) {
-            p->init();
-            p->write_html(s);
-        }
-
-        if (i != sorted.size() - 1) {
-            s << "<hr>";
-        }
-        s << "</section>";
+        auto v = new BoardThreadView(sorted[i]->id);
+        v->write_html(s);
     }
     s << "</div><hr>";
 }
@@ -144,10 +121,8 @@ static Node render_thread_form()
 {
     Node form("form",
         {
-            { "id", "new-thread-form" },
-            { "action", "/api/create-thread" },
-            { "method", "post" },
-            { "enctype", "multipart/form-data" },
+            { "id", "new-thread-form" }, { "action", "/api/create-thread" },
+            { "method", "post" }, { "enctype", "multipart/form-data" },
             { "class", "hidden" },
         });
     form.children.reserve(10);
@@ -156,8 +131,7 @@ static Node render_thread_form()
     if (page.board == "all") {
         Node sel("select",
             {
-                { "name", "board" },
-                { "required", "" },
+                { "name", "board" }, { "required", "" },
             });
         sel.children.reserve(boards.size());
         for (auto & [ board, title ] : boards) {
@@ -176,10 +150,8 @@ static Node render_thread_form()
         form.children.push_back({
             "input",
             {
-                { "type", "text" },
-                { "name", "board" },
-                { "value", page.board },
-                { "hidden", "" },
+                { "type", "text" }, { "name", "board" },
+                { "value", page.board }, { "hidden", "" },
             },
         });
     }
@@ -187,15 +159,13 @@ static Node render_thread_form()
     // Live post editing toggle for thread
     auto & [ label, title ] = lang.forms.at("nonLive");
     form.children.push_back({
-        "label",
-        { { "title", title } },
+        "label", { { "title", title } },
         {
             {
                 "input",
                 []() {
                     brunhild::Attrs attrs({
-                        { "type", "checkbox" },
-                        { "name", "nonLive" },
+                        { "type", "checkbox" }, { "name", "nonLive" },
                     });
                     if (board_config.non_live) {
                         attrs["checked"] = "";
@@ -212,16 +182,13 @@ static Node render_thread_form()
     // File upload form
     if (page.board == "all" || !board_config.text_only) {
         form.children.push_back({
-            "span",
-            { { "class", "upload-container" } },
+            "span", { { "class", "upload-container" } },
             {
                 {
-                    "span",
-                    {},
+                    "span", {},
                     {
                         {
-                            "label",
-                            {},
+                            "label", {},
                             {
                                 {
                                     "input",
@@ -235,13 +202,11 @@ static Node render_thread_form()
                         },
                     },
                 },
-                { "strong", { { "class", "upload-status" } } },
-                { "br" },
+                { "strong", { { "class", "upload-status" } } }, { "br" },
                 {
                     "input",
                     {
-                        { "type", "file" },
-                        { "name", "image" },
+                        { "type", "file" }, { "name", "image" },
                         {
                             "accept",
                             "image/png, image/gif, image/jpeg, video/webm, "
@@ -266,13 +231,11 @@ static Node render_thread_form()
     return {
         "aside",
         {
-            { "id", "thread-form-container" },
-            { "class", "glass" },
+            { "id", "thread-form-container" }, { "class", "glass" },
         },
         // Disambiguate constructor
         brunhild::Children({
-            render_button(std::nullopt, lang.ui.at("newThread")),
-            form,
+            render_button(std::nullopt, lang.ui.at("newThread")), form,
         }),
     };
 }
@@ -307,8 +270,7 @@ static void render_index_page()
     ch.push_back({
         "aside",
         {
-            { "id", "refresh" },
-            { "class", "act glass" },
+            { "id", "refresh" }, { "class", "act glass" },
         },
         { { "a", lang.ui.at("refresh") } },
     });

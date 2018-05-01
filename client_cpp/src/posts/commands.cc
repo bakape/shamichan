@@ -2,7 +2,7 @@
 
 #include "../lang.hh"
 #include "../state.hh"
-#include "models.hh"
+#include "view.hh"
 #include <cctype>
 #include <ctime>
 #include <iomanip>
@@ -164,10 +164,10 @@ static std::pair<string, string> parse_dice(
     return { os.str(), cls };
 }
 
-optional<Node> Post::parse_commands(string_view word)
+optional<Node> PostView::parse_commands(string_view word)
 {
     // Guard against invalid dice rolls
-    if (state.dice_index >= commands.size()) {
+    if (state.dice_index >= m->commands.size()) {
         return nullopt;
     }
 
@@ -196,7 +196,7 @@ optional<Node> Post::parse_commands(string_view word)
 
     string inner;
     string cls;
-    auto const& val = commands[state.dice_index];
+    auto const& val = m->commands[state.dice_index];
     if (name == "flip") {
         check_consumed;
         inner = std::get<bool>(val.val) ? "flap" : "flop";
@@ -234,7 +234,7 @@ optional<Node> Post::parse_commands(string_view word)
 // TODO: Also need to figure out, how to handle updating these on countdown.
 // Perhaps a global registry, that gets flushed on page re-render?
 // Probably a good idea to hook these before RAF execution.
-optional<Node> Post::parse_syncwatch(std::string_view frag)
+optional<Node> PostView::parse_syncwatch(std::string_view frag)
 {
     using std::setw;
 
@@ -282,7 +282,7 @@ optional<Node> Post::parse_syncwatch(std::string_view frag)
     // TODO: Apply offset from server clock
     const auto[hours, min, sec, start, end]
         = std::get<std::array<unsigned long, 5>>(
-            commands[state.dice_index++].val);
+            m->commands[state.dice_index++].val);
     const unsigned long now = std::time(0) + server_time_offset;
     ostringstream s;
     if (now > end) {
@@ -303,7 +303,7 @@ optional<Node> Post::parse_syncwatch(std::string_view frag)
         }
 
         // Schedule next render to update counter
-        pending_rerender[id] = now + 1;
+        pending_rerender[m->id] = now + 1;
     }
 
     return {

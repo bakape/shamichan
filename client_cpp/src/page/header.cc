@@ -29,9 +29,7 @@ static bool point_to_catalog()
 
 class BoardNavigation : public brunhild::View {
 public:
-    // Not in constructor, so we can allocate it to static memory
-    void init();
-
+    BoardNavigation();
     Node render();
 
 private:
@@ -132,7 +130,7 @@ private:
     std::string filter;
 };
 
-static BoardNavigation bn;
+static std::unique_ptr<BoardNavigation> bn;
 static std::unique_ptr<BoardSelectionForm> bsf;
 
 Node BoardNavigation::render()
@@ -167,7 +165,8 @@ static void read_selected()
     }
 }
 
-void BoardNavigation::init()
+BoardNavigation::BoardNavigation()
+    : View("board-navigation")
 {
     // TODO: Remove, when server-side templates ported
     brunhild::remove("board-navigation");
@@ -190,7 +189,7 @@ BoardSelectionForm::BoardSelectionForm()
 {
     // Need to reduce any chance conflicts between multiple tabs
     read_selected();
-    bn.patch();
+    bn->patch();
 
     Form::init();
 
@@ -218,7 +217,7 @@ BoardSelectionForm::BoardSelectionForm()
                 "selectedBoards", join_to_string(selected_boards));
         }
 
-        bn.patch();
+        bn->patch();
     });
 
     brunhild::append("left-panel", html());
@@ -228,7 +227,7 @@ void BoardSelectionForm::remove()
 {
     View::remove();
     bsf = nullptr;
-    bn.patch();
+    bn->patch();
 }
 
-void init_top_header() { bn.init(); }
+void init_top_header() { bn.reset(new BoardNavigation()); }

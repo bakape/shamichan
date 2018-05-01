@@ -2,14 +2,15 @@
 #include "../state.hh"
 #include "../util.hh"
 #include "etc.hh"
-#include "models.hh"
 #include "url.hh"
+#include "view.hh"
 #include <cctype>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 using std::function;
 using std::nullopt;
@@ -44,16 +45,16 @@ void parse_string(string_view frag, D sep, function<void(string_view)> on_frag,
     }
 }
 
-Node Post::render_body()
+Node PostView::render_body()
 {
     Node n("blockquote");
-    if (!body.size()) {
+    if (!m->body.size()) {
         return n;
     }
     state.reset(&n);
 
     bool first = true;
-    parse_string(string_view(body), '\n', [this, &first](string_view line) {
+    parse_string(string_view(m->body), '\n', [this, &first](string_view line) {
         state.quote = false;
 
         // Prevent successive empty lines
@@ -82,7 +83,7 @@ Node Post::render_body()
         }
 
         parse_code(line, [this](string_view frag) {
-            editing ? parse_temp_links(frag) : parse_fragment(frag);
+            m->editing ? parse_temp_links(frag) : parse_fragment(frag);
         });
 
         // Close any unclosed tags
@@ -99,7 +100,7 @@ Node Post::render_body()
     return n;
 }
 
-void Post::wrap_tags(int level)
+void PostView::wrap_tags(int level)
 {
     const auto states = state.as_array();
 
@@ -118,7 +119,7 @@ void Post::wrap_tags(int level)
     }
 }
 
-void Post::parse_code(string_view frag, Post::OnFrag fn)
+void PostView::parse_code(string_view frag, PostView::OnFrag fn)
 {
     parse_string(frag, "``",
         [this, fn](string_view frag) {
@@ -145,7 +146,7 @@ void Post::parse_code(string_view frag, Post::OnFrag fn)
         [this]() { state.code = !state.code; });
 }
 
-void Post::parse_spoilers(string_view frag, Post::OnFrag fn)
+void PostView::parse_spoilers(string_view frag, PostView::OnFrag fn)
 {
     parse_string(frag, "**",
         [this, fn](string_view frag) { parse_bolds(frag, fn); },
@@ -155,7 +156,7 @@ void Post::parse_spoilers(string_view frag, Post::OnFrag fn)
         });
 }
 
-void Post::parse_bolds(string_view frag, Post::OnFrag fn)
+void PostView::parse_bolds(string_view frag, PostView::OnFrag fn)
 {
     parse_string(frag, "__",
         [this, fn](string_view frag) { parse_italics(frag, fn); },
@@ -165,7 +166,7 @@ void Post::parse_bolds(string_view frag, Post::OnFrag fn)
         });
 }
 
-void Post::parse_italics(string_view frag, Post::OnFrag fn)
+void PostView::parse_italics(string_view frag, PostView::OnFrag fn)
 {
     parse_string(frag, "~~",
         [this, fn](string_view frag) {
@@ -181,7 +182,7 @@ void Post::parse_italics(string_view frag, Post::OnFrag fn)
         });
 }
 
-void Post::parse_reds(string_view frag, Post::OnFrag fn)
+void PostView::parse_reds(string_view frag, PostView::OnFrag fn)
 {
     parse_string(frag, "^r",
         [this, fn](string_view frag) { parse_blues(frag, fn); },
@@ -191,7 +192,7 @@ void Post::parse_reds(string_view frag, Post::OnFrag fn)
         });
 }
 
-void Post::parse_blues(string_view frag, Post::OnFrag fn)
+void PostView::parse_blues(string_view frag, PostView::OnFrag fn)
 {
     parse_string(frag, "^b", fn, [this]() {
         wrap_tags(4);
@@ -239,7 +240,7 @@ static inline tuple<char, string_view, char> split_punctuation(string_view word)
     return { lead, word, trail };
 }
 
-void Post::parse_words(string_view frag, Post::OnFrag fn)
+void PostView::parse_words(string_view frag, PostView::OnFrag fn)
 {
     bool first = true;
     state.buf.reserve(frag.size());
@@ -326,7 +327,7 @@ static Node render_temp_link(unsigned long id)
 }
 
 // Parse temporary links in open posts, that still may be edited
-void Post::parse_temp_links(string_view frag)
+void PostView::parse_temp_links(string_view frag)
 {
     parse_words(frag, [this](string_view word) {
         bool matched = false;
@@ -345,7 +346,7 @@ void Post::parse_temp_links(string_view frag)
 }
 
 // Parse a line fragment of a closed post
-void Post::parse_fragment(string_view frag)
+void PostView::parse_fragment(string_view frag)
 {
     parse_words(frag, [this](string_view word) {
         if (!word.size()) {
@@ -361,8 +362,8 @@ void Post::parse_fragment(string_view frag)
 
                 // In case the server parsed this differently.
                 // Maybe older version.
-                if (links.count(id)) {
-                    state.append(render_post_link(id, links[id]), false, count);
+                if (m->links.count(id)) {
+                    state.append(render_link(id, m->links[id]), false, count);
                     matched = true;
                     break;
                 }
@@ -398,7 +399,7 @@ void Post::parse_fragment(string_view frag)
     });
 }
 
-optional<tuple<int, Node>> Post::parse_reference(string_view word)
+optional<tuple<int, Node>> PostView::parse_reference(string_view word)
 {
     int gts = strip_gt(word);
     if (gts < 3) {
@@ -434,5 +435,20 @@ optional<tuple<int, Node>> Post::parse_reference(string_view word)
     text.reserve(word.size() + 5);
     text = ">>>/" + s + "/";
 
-    return { { gts, render_link(string_view(href), text) } };
+    return { { gts, ::render_link(string_view(href), text) } };
+}
+
+Node PostView::render_link(unsigned long id, const LinkData& data)
+{
+    auto n = render_post_link(id, data);
+
+    // Inline linked-to post
+    if (data.is_inlined && posts.count(id)) {
+        if (!inlined_posts.count(id)) {
+            inlined_posts[id] = std::unique_ptr<PostView>(new PostView(id));
+        }
+        n.children.push_back(inlined_posts.at(id)->render());
+    }
+
+    return n;
 }

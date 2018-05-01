@@ -3,7 +3,7 @@
 #include "../options/options.hh"
 #include "../state.hh"
 #include "../util.hh"
-#include "models.hh"
+#include "view.hh"
 #include <sstream>
 
 using std::string;
@@ -79,22 +79,15 @@ Node render_post_link(unsigned long id, const LinkData& data)
     }
     n.children.push_back({ "a",
         {
-            { "class", cls },
-            { "href", url.str() },
+            { "class", cls }, { "href", url.str() },
         },
         text.str() });
     if (options.post_inline_expand) {
         n.children.push_back({ "a",
             {
-                { "class", "hash-link" },
-                { "href", url.str() },
+                { "class", "hash-link" }, { "href", url.str() },
             },
             " #" });
-    }
-
-    // Inline linked-to post
-    if (data.is_inlined && posts.count(id)) {
-        n.children.push_back(posts.at(id).render());
     }
 
     return n;
@@ -105,11 +98,9 @@ Node render_link(string_view url, string_view text, bool new_tab)
     Node n({
         "a",
         {
-            { "rel", "noreferrer" },
-            { "href", brunhild::escape(string(url)) },
+            { "rel", "noreferrer" }, { "href", brunhild::escape(string(url)) },
         },
-        string(text),
-        true,
+        string(text), true,
     });
     if (new_tab) {
         n.attrs["target"] = "_blank";
@@ -129,4 +120,21 @@ Post* match_post(emscripten::val& event)
         return 0;
     }
     return &posts.at(id);
+}
+
+std::optional<std::tuple<Post*, PostView*>> match_view(emscripten::val& event)
+{
+    auto model = match_post(event);
+    if (!model) {
+        return {};
+    }
+    const string id = event["target"]
+                          .call<emscripten::val>("closest", string("article"))
+                          .call<string>("getAttribute", string("id"));
+    for (auto v : model->views) {
+        if (v->id == id) {
+            return { { model, v.get() } };
+        }
+    }
+    return {};
 }
