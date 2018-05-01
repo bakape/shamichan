@@ -96,13 +96,14 @@ public:
     {
         if (--jobs == 0) {
             cb();
-            delete this;
+            this->~WaitGroup();
         }
     }
 
 private:
     unsigned jobs;
     std::function<void()> cb;
+    ~WaitGroup() = default;
 };
 
 // Call the JS alert() function
