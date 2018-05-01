@@ -192,6 +192,9 @@ static void on_message(std::string_view msg, bool extracted)
         load_posts(data);
         conn_SM.feed(ConnEvent::sync);
         break;
+    case Message::configs:
+        board_config = { json::parse(data) };
+        break;
     // TODO: reclaim
     // TODO: post_id
     case Message::concat: {

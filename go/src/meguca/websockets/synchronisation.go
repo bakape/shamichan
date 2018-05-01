@@ -7,6 +7,7 @@ import (
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/common"
+	"meguca/config"
 	"meguca/db"
 	"meguca/websockets/feeds"
 
@@ -19,10 +20,10 @@ var (
 )
 
 type syncRequest struct {
-	NewProtocol, Last100, Catalog bool
-	Page                          uint
-	Thread                        uint64
-	Board                         string
+	Last100, Catalog      bool
+	Page, ProtocolVersion uint
+	Thread                uint64
+	Board                 string
 }
 
 type reclaimRequest struct {
@@ -53,9 +54,24 @@ func (c *Client) synchronise(data []byte) error {
 	}
 
 	c.mu.Lock()
-	c.newProtocol = msg.NewProtocol
+	// TODO: Specifying a different version should error out after the WASM
+	// client is phased in
+	c.newProtocol = msg.ProtocolVersion == common.ProtocolVersion
 	c.last100 = msg.Last100
 	c.mu.Unlock()
+
+	if msg.ProtocolVersion == common.ProtocolVersion {
+		buf, err := common.EncodeMessage(common.MessageConfigs,
+			config.GetBoardConfigs(msg.Board).BoardConfigs)
+		if err != nil {
+			return err
+		}
+		err = c.send(buf)
+		if err != nil {
+			return err
+		}
+	}
+
 	return c.registerSync(msg)
 }
 
@@ -72,7 +88,7 @@ func (c *Client) registerSync(req syncRequest) (err error) {
 	if err != nil || req.Thread != 0 {
 		return
 	}
-	if !req.NewProtocol {
+	if req.ProtocolVersion != common.ProtocolVersion {
 		return c.sendMessage(common.MessageSynchronise, nil)
 	}
 

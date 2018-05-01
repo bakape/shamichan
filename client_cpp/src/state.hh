@@ -49,8 +49,8 @@ public:
 
     BoardConfig() {}
 
-    // Parse JSON string
-    BoardConfig(const c_string_view&);
+    // Parse from JSON
+    BoardConfig(nlohmann::json&&);
 };
 
 // Public board-specific configurations

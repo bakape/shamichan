@@ -6,6 +6,9 @@ import (
 	"strconv"
 )
 
+// Websocket protocol version
+const ProtocolVersion = 1
+
 // MessageType is the identifier code for websocket message types
 type MessageType uint8
 
@@ -59,6 +62,10 @@ const (
 
 	// Passes MeguTV playlist data
 	MessageMeguTV
+
+	// Used by the client to send it's protocol version and by the server to
+	// send server and board configurations
+	MessageConfigs
 )
 
 // Forwarded functions from "meguca/websockets/feeds" to avoid circular imports

@@ -77,6 +77,9 @@ enum class Message : uint8_t {
 
     // Data concerning random video feed
     megu_tv,
+
+    // Transmits configurations to client
+    configs,
 };
 
 // Initialize websocket connectivity module

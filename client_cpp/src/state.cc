@@ -119,14 +119,6 @@ void load_state()
         return buf;
     })) };
 
-    board_config = { c_string_view((char*)EM_ASM_INT_V({
-        var s = document.getElementById('board-configs').innerHTML;
-        var len = lengthBytesUTF8(s) + 1;
-        var buf = Module._malloc(len);
-        stringToUTF8(s, buf, len);
-        return buf;
-    })) };
-
     init_connectivity();
     auto wg = new WaitGroup(2, []() {
         auto wg = new WaitGroup(1, &render_page);
@@ -157,10 +149,8 @@ Config::Config(const c_string_view& s)
     }
 }
 
-BoardConfig::BoardConfig(const c_string_view& s)
+BoardConfig::BoardConfig(nlohmann::json&& j)
 {
-    auto j = json::parse(s);
-
     read_only = j["readOnly"];
     text_only = j["textOnly"];
     forced_anon = j["forcedAnon"];

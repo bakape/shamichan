@@ -5,10 +5,12 @@
 
 using nlohmann::json;
 
+const unsigned protocol_version = 1;
+
 void send_sync_request()
 {
     auto j = json({
-        { "newProtocol", true }, { "last100", page.last_100 },
+        { "protocolVersion", protocol_version }, { "last100", page.last_100 },
         { "catalog", page.catalog }, { "board", page.board },
         { "page", page.page }, { "thread", page.thread },
     });
