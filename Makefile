@@ -34,7 +34,7 @@ wasm:
 	mkdir -p www/wasm
 	$(MAKE) -C client_cpp
 	rm -f www/wasm/main.*
-	cp client_cpp/*.wasm client_cpp/*.js www/wasm
+	cp client_cpp/*.wasm client_cpp/*.js client_cpp/*.wasm.map www/wasm
 ifeq ($(DEBUG),1)
 	cp client_cpp/*.wast client_cpp/*.wasm.map www/wasm
 endif

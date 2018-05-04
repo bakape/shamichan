@@ -2,9 +2,7 @@ SETTINGS=-s NO_EXIT_RUNTIME=1 -s TOTAL_MEMORY=67108864 -s ALLOW_MEMORY_GROWTH=1 
 COMPILE_FLAGS=-std=c++1z --bind
 
 ifeq ($(DEBUG),1)
-	# -O0 is too large to load in the browser. Fails with:
-	# LinkError: table import 128 has maximum larger than maximum 24960
-	COMPILE_FLAGS+=-O1 -g4
+	COMPILE_FLAGS+=-g4
 	SETTINGS+=-s DEMANGLE_SUPPORT=1 -s ASSERTIONS=2 -s DISABLE_EXCEPTION_CATCHING=0
 else
 	COMPILE_FLAGS+=-Oz -g0
