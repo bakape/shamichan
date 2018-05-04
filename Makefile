@@ -41,6 +41,7 @@ endif
 
 wasm_clean:
 	$(MAKE) -C client_cpp clean
+	rm -f www/wasm/*.js www/wasm/*.wasm www/wasm/*.map www/wasm/*.wast
 
 watch:
 	$(gulp) -w
@@ -77,7 +78,7 @@ update_deps:
 	npm update
 
 client_clean:
-	rm -rf www/js www/wasm www/css/*.css www/css/maps node_modules
+	rm -rf www/js www/css/*.css www/css/maps node_modules
 
 clean: client_clean wasm_clean generate_clean
 	rm -rf .build .ffmpeg .package go/pkg target meguca-*.zip meguca-*.tar.xz meguca meguca.exe

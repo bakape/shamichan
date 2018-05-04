@@ -31,7 +31,7 @@ public:
     virtual std::string html() const = 0;
 
     // Same as html(), but writes to a stream to reduce allocations
-    virtual void write_html(std::ostringstream&) const = 0;
+    virtual void write_html(Rope&) const = 0;
 
     // Creates new view with an optional root node ID
     BaseView(std::string id = new_id())
@@ -77,7 +77,7 @@ public:
     std::string html() const;
 
     // Same as html(), but writes to a stream to reduce allocations
-    void write_html(std::ostringstream&) const;
+    void write_html(Rope&) const;
 
     // Patch the view's subtree against the updated subtree.
     // Can only be called after the view has been inserted into the DOM.
@@ -243,13 +243,13 @@ public:
     // Renders the view's subtree as HTML
     std::string html() const
     {
-        std::ostringstream s;
+        Rope s;
         write_html(s);
         return s.str();
     }
 
     // Same as html(), but writes to a stream to reduce allocations
-    void write_html(std::ostringstream& s) const
+    void write_html(Rope& s) const
     {
         s << '<' << tag;
         saved_attrs.write_html(s);

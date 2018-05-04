@@ -32,7 +32,7 @@ void parse_string(string_view frag, D sep, function<void(string_view)> on_frag,
     function<void()> on_match = []() {})
 {
     size_t i;
-    const size_t sep_s = string_size(sep);
+    const size_t sep_s = brunhild::string_size(sep);
     while (1) {
         i = frag.find(sep);
         on_frag(frag.substr(0, i));
@@ -180,14 +180,14 @@ void PostView::parse_reds(string_view frag, PostView::OnFrag fn)
 {
     if (board_config.rb_text) {
         parse_string(frag, "^r",
-        [this, fn](string_view frag) { parse_blues(frag, fn); },
-        [this]() {
-            wrap_tags(3);
-            state.red = !state.red;
-        });
+            [this, fn](string_view frag) { parse_blues(frag, fn); },
+            [this]() {
+                wrap_tags(3);
+                state.red = !state.red;
+            });
     } else {
         parse_string(frag, "^r",
-        [this, fn](string_view frag) { parse_blues(frag, fn); });
+            [this, fn](string_view frag) { parse_blues(frag, fn); });
     }
 }
 

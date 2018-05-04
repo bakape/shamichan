@@ -16,7 +16,7 @@ class Attrs : public std::unordered_map<std::string, std::string> {
 
 public:
     // Write attrs as HTML to stream
-    void write_html(std::ostringstream&) const;
+    void write_html(Rope&) const;
 
     // Diff attributes with new value and apply patches to the DOM
     void patch(Attrs attrs);
@@ -67,7 +67,7 @@ public:
     std::string html() const;
 
     // Write node as HTML to stream
-    void write_html(std::ostringstream&) const;
+    void write_html(Rope&) const;
 
     // Converts the subtree of the node into an HTML string and sets it to
     // inner_html. This can reduce the diffing and memory costs of large mostly

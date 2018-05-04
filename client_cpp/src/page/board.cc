@@ -14,6 +14,7 @@
 
 using brunhild::Node;
 using std::ostringstream;
+using brunhild::Rope;
 using std::string;
 
 // Modes for sorting threads
@@ -60,7 +61,7 @@ static std::vector<Thread*> sort_threads()
 }
 
 // Render threads on a board page
-static void render_index_threads(ostringstream& s)
+static void render_index_threads(Rope& s)
 {
     // TODO: Port to a ListView
     // TODO: Seperate with <hr>
@@ -243,7 +244,7 @@ static Node render_thread_form()
 // Render board index page
 static void render_index_page()
 {
-    ostringstream s;
+    Rope s;
 
     // Render a random banner, if any
     if (auto const& b = board_config.banners; b.size()) {
@@ -254,7 +255,8 @@ static void render_index_page()
         } else {
             s << "<img";
         }
-        s << " src=\"/assets/banners/" << page.board << '/' << i << "\"></h1>";
+        s << " src=\"/assets/banners/" << page.board << '/' << std::to_string(i)
+          << "\"></h1>";
     }
 
     const string title = format_title(page.board, board_config.title);

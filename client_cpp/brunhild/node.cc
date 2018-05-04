@@ -13,7 +13,7 @@ std::string new_id()
     return s.str();
 }
 
-void Attrs::write_html(std::ostringstream& s) const
+void Attrs::write_html(Rope& s) const
 {
     for (auto & [ key, val ] : *this) {
         s << ' ' << key;
@@ -52,12 +52,12 @@ void Attrs::patch(Attrs attrs)
 
 std::string Node::html() const
 {
-    std::ostringstream s;
+    Rope s;
     write_html(s);
     return s.str();
 }
 
-void Node::write_html(std::ostringstream& s) const
+void Node::write_html(Rope& s) const
 {
     s << '<' << tag;
     attrs.write_html(s);
@@ -81,7 +81,7 @@ void Node::write_html(std::ostringstream& s) const
 
 std::string render_children(const Children& children)
 {
-    std::ostringstream s;
+    Rope s;
     for (auto& ch : children) {
         ch.write_html(s);
     }

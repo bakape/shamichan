@@ -15,7 +15,7 @@ void render_thread()
     // TODO: Disable live posting toggle in non-live threads
 
     const Thread& thread = threads.at(page.thread);
-    std::ostringstream s;
+    brunhild::Rope s;
 
     Node n("span", { { "class", "aside-container top-margin" } },
         {

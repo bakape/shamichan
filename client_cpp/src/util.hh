@@ -112,17 +112,6 @@ void alert(std::string);
 // Convert string to lowercase
 std::string to_lower(const std::string&);
 
-// Allows returning the size of a std::string, char or char*
-template <class D> inline size_t string_size(D sep) { return sep.size(); }
-template <> size_t inline string_size<char>(char sep[[maybe_unused]])
-{
-    return 1;
-}
-template <> size_t inline string_size<const char*>(const char* sep)
-{
-    return strlen(sep);
-}
-
 // Run function an all parts of string-like T split by separator sep
 template <class T, class U>
 inline void split_string(
@@ -130,7 +119,7 @@ inline void split_string(
 {
     auto _frag = std::string_view(frag);
     size_t i;
-    const size_t sep_s = string_size(sep);
+    const size_t sep_s = brunhild::string_size(sep);
     while (1) {
         i = _frag.find(sep);
         on_frag(_frag.substr(0, i));

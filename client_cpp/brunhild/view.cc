@@ -17,7 +17,7 @@ namespace brunhild {
 void BaseView::on(std::string type, std::string selector, Handler handler)
 {
     // Need to prepend root node ID to all selectors
-    std::ostringstream s;
+    Rope s;
     if (selector != "") {
         std::string_view view = { selector };
         size_t i;
@@ -73,7 +73,7 @@ void View::ensure_id(Node& node)
 
 std::string View::html() const { return saved.html(); }
 
-void View::write_html(std::ostringstream& s) const { saved.write_html(s); }
+void View::write_html(Rope& s) const { saved.write_html(s); }
 
 void View::remove() { brunhild::remove(id); }
 
@@ -123,7 +123,7 @@ void View::patch_children(Node& old, Node node)
             return;
         }
 
-        std::ostringstream s;
+        Rope s;
         for (auto& ch : node.children) {
             ensure_id(ch);
             ch.write_html(s);
