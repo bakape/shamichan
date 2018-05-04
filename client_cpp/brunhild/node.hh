@@ -22,7 +22,7 @@ public:
     void patch(Attrs attrs);
 };
 
-// Represents an HTML element. Can be used to construct node tries more easily.
+// Represents an HTML element. Can be used to construct node trees more easily.
 class Node {
 public:
     // Tag of the Element

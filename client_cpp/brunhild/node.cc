@@ -26,11 +26,13 @@ void Attrs::write_html(std::ostringstream& s) const
 void Attrs::patch(Attrs attrs)
 {
     const auto id = (*this)["id"];
+    bool patched = false;
 
     // Attributes added or changed
     for (auto & [ key, val ] : attrs) {
         if (key != "id" && (!count(key) || at(key) != val)) {
             set_attr(id, key, val);
+            patched = true;
         }
     }
 
@@ -38,11 +40,14 @@ void Attrs::patch(Attrs attrs)
     for (auto & [ key, _ ] : *this) {
         if (key != "id" && !attrs.count(key)) {
             remove_attr(id, key);
+            patched = true;
         }
     }
 
-    *this = attrs;
-    (*this)["id"] = id;
+    if (patched) {
+        *this = attrs;
+        (*this)["id"] = id;
+    }
 }
 
 std::string Node::html() const
