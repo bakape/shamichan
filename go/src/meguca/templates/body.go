@@ -293,11 +293,7 @@ func (c *bodyContext) parseBolds(frag string, fn func(string)) {
 // Inject italic tags and call fn on the remaining parts
 func (c *bodyContext) parseItalics(frag string, fn func(string)) {
 	_fn := func(frag string) {
-		if (c.state.rbText) {
-			c.parseReds(frag, fn)
-		} else {
-			fn(frag)
-		}
+		c.parseReds(frag, fn)
 	}
 
 	for {
@@ -319,13 +315,20 @@ func (c *bodyContext) parseReds(frag string, fn func(string)) {
 	_fn := func(frag string) {
 		c.parseBlues(frag, fn)
 	}
+	_rbText := func() {}
+
+	if c.state.rbText {
+		_rbText = func() {
+			c.wrapTags(3)
+			c.state.red = !c.state.red
+		}
+	}
 
 	for {
 		i := strings.Index(frag, "^r")
 		if i != -1 {
 			_fn(frag[:i])
-			c.wrapTags(3)
-			c.state.red = !c.state.red
+			_rbText()
 			frag = frag[i+2:]
 		} else {
 			_fn(frag)
@@ -336,12 +339,20 @@ func (c *bodyContext) parseReds(frag string, fn func(string)) {
 
 // Inject blue color tags and call fn on the remaining parts
 func (c *bodyContext) parseBlues(frag string, fn func(string)) {
+	_rbText := func() {}
+
+	if c.state.rbText {
+		_rbText = func() {
+			c.wrapTags(4)
+			c.state.blue = !c.state.blue
+		}
+	}
+
 	for {
 		i := strings.Index(frag, "^b")
 		if i != -1 {
 			fn(frag[:i])
-			c.wrapTags(4)
-			c.state.blue = !c.state.blue
+			_rbText()
 			frag = frag[i+2:]
 		} else {
 			fn(frag)

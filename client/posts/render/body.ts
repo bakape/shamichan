@@ -229,8 +229,7 @@ function parseItalics(
     state: TextState,
     fn: (frag: string) => string,
 ): string {
-    const _fn = (frag: string) =>
-        boardConfig.rbText ? parseReds(frag, state, fn) : fn(frag)
+    const _fn = (frag: string) => parseReds(frag, state, fn)
     let html = ""
     while (true) {
         const i = frag.indexOf("~~")
@@ -254,19 +253,24 @@ function parseReds(
 ): string {
     const _fn = (frag: string) =>
         parseBlues(frag, state, fn)
+    const _rbText = boardConfig.rbText ? () => {
+        const wrapped = wrapTags(3, state)
+        state.red = !state.red
+        return wrapped
+    } : () => ""
     let html = ""
 
     while (true) {
         const i = frag.indexOf("^r")
         if (i !== -1) {
-            html += _fn(frag.slice(0, i)) + wrapTags(3, state)
-            state.red = !state.red
+            html += _fn(frag.slice(0, i)) + _rbText()
             frag = frag.substring(i + 2)
         } else {
             html += _fn(frag)
             break
         }
     }
+
     return html
 }
 
@@ -276,18 +280,24 @@ function parseBlues(
     state: TextState,
     fn: (frag: string) => string,
 ): string {
+    const _rbText = boardConfig.rbText ? () => {
+        const wrapped = wrapTags(4, state)
+        state.blue = !state.blue
+        return wrapped
+    } : () => ""
     let html = ""
+
     while (true) {
         const i = frag.indexOf("^b")
         if (i !== -1) {
-            html += fn(frag.slice(0, i)) + wrapTags(4, state)
-            state.blue = !state.blue
+            html += fn(frag.slice(0, i)) + _rbText()
             frag = frag.substring(i + 2)
         } else {
             html += fn(frag)
             break
         }
     }
+
     return html
 }
 
