@@ -25,10 +25,12 @@ var (
 	// metaboard. Constant.
 	AllBoardConfigs = BoardConfContainer{
 		BoardConfigs: BoardConfigs{
-			ID: "all",
+			ID:        "all",
+			Eightball: EightballDefaults,
 			BoardPublic: BoardPublic{
-				Title:   "Aggregator metaboard",
-				Banners: []uint16{},
+				DefaultCSS: Defaults.DefaultCSS,
+				Title:      "Aggregator metaboard",
+				Banners:    []uint16{},
 			},
 		},
 		Hash: "0",
