@@ -16,7 +16,7 @@ else
 	endif
 endif
 COMPILE_FLAGS:=$(COMPILE_FLAGS) -I$(abspath ./json/include)
-export EMCCFLAGS=$(COMPILE_FLAGS) -Wall -Wextra -Wno-switch -Wno-unused-parameter
+export EMCCFLAGS=$(COMPILE_FLAGS) -Wall -Wextra -Wno-switch -Wno-unused-parameter -Werror
 
 all: clean_output
 	$(MAKE) -C brunhild

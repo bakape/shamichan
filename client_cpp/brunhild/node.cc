@@ -101,4 +101,6 @@ void Node::clear()
     children.clear();
     inner_html = std::nullopt;
 }
+
+void Node::hide() { attrs["hide"] = ""; }
 }

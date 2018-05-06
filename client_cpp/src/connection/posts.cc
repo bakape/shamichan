@@ -32,7 +32,9 @@ void insert_post(std::string_view msg)
     if (ref.image) {
         t.image_ctr++;
     }
-    ThreadView::instances[page.thread]->patch();
+    if (auto v = ThreadView::instances[page.thread]; v) {
+        v->patch();
+    }
     render_post_counter();
 
     // TODO: Unread post counting

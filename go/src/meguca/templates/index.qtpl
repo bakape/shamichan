@@ -154,7 +154,7 @@
 	</head>
 	<body>
 		<div id="user-background"></div>
-		<div id="overlay-container">
+		<div class="overlay-container">
 			{% comment %}
 				Top banner
 			{% endcomment %}

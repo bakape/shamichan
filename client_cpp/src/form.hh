@@ -19,13 +19,13 @@ public:
     {
     }
 
-    void init();
-
     // Query all form input elements
     std::vector<emscripten::val> get_inputs();
 
 protected:
     const brunhild::Attrs attrs;
+
+    virtual void init();
 
     // Handles sumbit event
     virtual void on_submit(emscripten::val&){};

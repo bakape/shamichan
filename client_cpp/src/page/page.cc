@@ -1,3 +1,4 @@
+#include "page.hh"
 #include "../../brunhild/mutations.hh"
 #include "../../brunhild/util.hh"
 #include "../connection/sync.hh"
@@ -19,12 +20,7 @@ using std::string;
 void render_page()
 {
     recurse_hidden_posts();
-
-    if (page.thread) {
-        render_thread();
-    } else {
-        render_board();
-    }
+    PageView::instance->patch(true);
 
     if (page.post) {
         scroll_to_post(page.post);
@@ -57,8 +53,7 @@ void set_title(string t) { brunhild::set_inner_html("page-title", t); }
 static Node render_hover_reveal(string tag, string label, string text)
 {
     Node n{
-        tag,
-        { { "class", "hover-reveal" } },
+        tag, { { "class", "hover-reveal" } },
         {
             { "span", { { "class", "act" } }, label },
             { "span", { { "class", "popup-menu glass" } }, text, true },
@@ -78,7 +73,49 @@ void push_board_hover_info(brunhild::Children& ch)
             tag, board_config.notice, lang.ui.at("showNotice")));
     }
     if (board_config.rules != "") {
-        ch.push_back(render_hover_reveal(
-            tag, board_config.rules, lang.ui.at("rules")));
+        ch.push_back(
+            render_hover_reveal(tag, board_config.rules, lang.ui.at("rules")));
     }
+}
+
+Node ImageBanner::render()
+{
+    Node n("h1", { { "class", "image-banner" } });
+
+    auto const& b = board_config.banners;
+    if (page.thread || !b.size()) {
+        n.hide();
+        return n;
+    }
+
+    Node ch;
+    const int i = rand() % b.size();
+    if (b[i] == FileType::webm) {
+        ch.tag = "video";
+        ch.attrs = { { "autoplay", "" }, { "loop", "" } };
+    } else {
+        ch.tag = "img";
+    }
+    std::ostringstream s;
+    s << "/assets/banners/" << page.board << '/' << i;
+    ch.attrs["src"] = s.str();
+    n.children = { ch };
+
+    return n;
+}
+
+Node PageTitle::render()
+{
+    Node n("h1");
+    if (page.thread) {
+        n.hide();
+        return n;
+    }
+    n.inner_html = { format_title(page.board, boards[page.board]) };
+    return n;
+}
+
+std::vector<brunhild::BaseView*> PageView::get_list()
+{
+    return { new ImageBanner(), new PageTitle() };
 }

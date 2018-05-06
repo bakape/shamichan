@@ -69,16 +69,12 @@ public:
     PostView(unsigned long model_id)
         : model_id(model_id)
     {
-        View::init();
     }
 
     // Patch the current contents of the post into the DOM.
     // If the post is currently inlined into another post, this method will
     // delegate the patch to the topmost parent.
-    void patch();
-
-    // Remove posts and dealocate memory
-    void remove();
+    void patch(bool deep = false);
 
     Post* get_model();
 

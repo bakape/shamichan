@@ -130,8 +130,8 @@ private:
     std::string filter;
 };
 
-static std::unique_ptr<BoardNavigation> bn;
-static std::unique_ptr<BoardSelectionForm> bsf;
+static std::shared_ptr<BoardNavigation> bn;
+static std::shared_ptr<BoardSelectionForm> bsf;
 
 Node BoardNavigation::render()
 {
@@ -172,7 +172,6 @@ BoardNavigation::BoardNavigation()
     brunhild::remove("board-navigation");
 
     read_selected();
-    View::init();
     on("click", ".board-selection", [this](auto& _) {
         if (bsf) {
             bsf->remove();
@@ -190,8 +189,6 @@ BoardSelectionForm::BoardSelectionForm()
     // Need to reduce any chance conflicts between multiple tabs
     read_selected();
     bn->patch();
-
-    Form::init();
 
     on("input", "input[name=search]", [this](auto& event) {
         filter = event["target"]["value"].template as<std::string>();

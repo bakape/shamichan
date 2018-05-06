@@ -6,23 +6,14 @@ Post* PostView::get_model()
     return posts.count(model_id) ? &posts.at(model_id) : NULL;
 }
 
-void PostView::patch()
+void PostView::patch(bool deep)
 {
-    // TODO: Check if post is not displayed? Not sure we will need this in the
-    // future.
-
     // Proxy to top-most parent post, if inlined
     if (const auto inlined_into = get_model()->inlined_into; inlined_into) {
         return posts.at(inlined_into).patch();
     }
 
     ModelView::patch();
-}
-
-void PostView::remove()
-{
-    View::remove();
-    this->~PostView();
 }
 
 void TextState::reset(Node* root)

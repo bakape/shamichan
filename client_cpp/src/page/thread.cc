@@ -107,10 +107,10 @@ std::vector<Post*> ThreadView::get_list()
     return re;
 }
 
-std::shared_ptr<PostView> ThreadView::create_child(Post* p)
+PostView* ThreadView::create_child(Post* p)
 {
-    auto v = std::shared_ptr<PostView>(new PostView(p->id));
-    p->views.insert(v);
+    auto v = new PostView(p->id);
+    p->views.insert(v->id);
     return v;
 }
 

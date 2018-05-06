@@ -77,6 +77,9 @@ public:
 
     // Resets the node and frees up used resources
     void clear();
+
+    // Shortcut for setting an node as hidden
+    void hide();
 };
 
 // Subtree of a Node

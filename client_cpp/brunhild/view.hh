@@ -5,19 +5,15 @@
 #include "node.hh"
 #include <emscripten.h>
 #include <emscripten/val.h>
-#include <functional>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace brunhild {
 
-// Base class for all views.
-// Note: for DOM event handlers to work the memory address of the view must not
-// change. This can be done by allocating it to the heap through std::shared_ptr
-// or std::unique_ptr.
+// Base class for all views
 class BaseView {
 public:
     // ID of root node
@@ -25,13 +21,14 @@ public:
 
     // Patch the view's subtree against the updated subtree.
     // Can only be called after the view has been inserted into the DOM.
-    virtual void patch() = 0;
+    // deep: should patching recurse to the view's child views
+    virtual void patch(bool deep = false) = 0;
 
     // Renders the view's subtree as HTML
-    virtual std::string html() const = 0;
+    std::string html();
 
     // Same as html(), but writes to a stream to reduce allocations
-    virtual void write_html(Rope&) const = 0;
+    virtual void write_html(Rope&) = 0;
 
     // Creates new view with an optional root node ID
     BaseView(std::string id = new_id())
@@ -47,13 +44,40 @@ public:
     // your side to reduce DOM event listener count.
     // type: DOM event type (click, hover, ...)
     // selector: any CSS selector the event target should be matched against
+    // handler: handler for a matched event
     void on(std::string type, std::string selector, Handler handler);
+
+    // Get pointer to a view by ID or NULL, if none
+    template <class T> static T* get(const std::string& id)
+    {
+        if (!BaseView::instances.count(id)) {
+            return 0;
+        }
+        return dynamic_cast<T*>(BaseView::instances.at(id).get());
+    }
+
+    // Initializes view as a root node of a view tree. Returns HTML to be
+    // inserted into the DOM.
+    std::string init_as_root();
+
+    // Removes the View from the DOM. Can only be called from the parent owning
+    // the view. The view is destructed after this and can no longer be used.
+    virtual void remove();
+
+protected:
+    // Register view in global collection and returns a pointer to it.
+    // It is paramount that no view IDs ever
+    // collide.
+    static void store(BaseView* v);
 
 private:
     // Registered DOM event handlers
     std::vector<long> event_handlers;
 
     void remove_event_handlers();
+
+    // All existing view instances
+    static std::unordered_map<std::string, std::unique_ptr<BaseView>> instances;
 };
 
 // Base class for views implementing a virtual DOM subtree with diffing of
@@ -61,8 +85,6 @@ private:
 // You are not required to use this class for structureing your applications and
 // can freely build your own abstractions on top of the functions in
 // mutations.hh.
-// NB: init() must be called in the constructor of the top-most class that
-// overrides render().
 class View : public BaseView {
 public:
     // Render the root node and its subtree.
@@ -70,22 +92,13 @@ public:
     // BaseView::id.
     virtual Node render() = 0;
 
-    // Removes the View from the DOM
-    virtual void remove();
-
-    // Renders the view's subtree as HTML
-    std::string html() const;
-
     // Same as html(), but writes to a stream to reduce allocations
-    void write_html(Rope&) const;
+    void write_html(Rope&);
 
     // Patch the view's subtree against the updated subtree.
     // Can only be called after the view has been inserted into the DOM.
-    void patch();
-
-    // Initialize view with subtree. Must be called in the constructor of the
-    // topmost class that overrides render().
-    void init();
+    // deep: does nothing on this class
+    virtual void patch(bool deep = false);
 
     // Creates a new View with an optional specific root node ID.
     View(std::string id = new_id())
@@ -93,7 +106,13 @@ public:
     {
     }
 
+protected:
+    // Initialize view with subtree
+    virtual void init();
+
 private:
+    bool is_initialized = false;
+
     // Contains data about the state of the DOM subtree after the last patch
     // call
     Node saved;
@@ -109,8 +128,14 @@ private:
 };
 
 // Utility adapter for the MV* pattern
-// NB: View::init() must be called in the constructor of the top-most class that
-// overrides render_model().
+class Model {
+public:
+    // Returns, if the model's view needs to be diffed and pathced. Can be used
+    // to optimize patching frequency or create constant views.
+    virtual bool need_patch() { return true; }
+};
+
+// Utility adapter for the MV* pattern
 template <class M> class ModelView : public View {
 public:
     // Caches model pointer and calls render_model()
@@ -120,8 +145,18 @@ public:
         return render_model();
     }
 
-    // Fetches pointer to model (for example, from some collection).
-    // Must return NULL, if model no longer exists.
+    // Patch the view's subtree against the updated subtree.
+    // Can only be called after the view has been inserted into the DOM.
+    // deep: does nothing on this class
+    void patch(bool deep = false)
+    {
+        if (get_model()->need_patch()) {
+            View::patch(deep);
+        }
+    }
+
+    // Fetches pointer to model (for example, from some collection or weak
+    // pointer). Must return NULL, if model no longer exists.
     virtual M* get_model() = 0;
 
 protected:
@@ -134,42 +169,85 @@ protected:
     virtual Node render_model() = 0;
 };
 
-// Renders and manages a list of views using a delegator method.
-// M: model
-// V: ModelView<M>
-template <class M, class V> class ListView : public BaseView {
+// Common functionality of all parent views
+template <class V> class ParentView : public BaseView {
 public:
     // Tag of root node
     const std::string tag;
 
     // Creates a new view with an optional specific root node ID.
-    ListView(std::string tag, std::string id = new_id())
+    ParentView(std::string tag, std::string id = new_id())
         : BaseView(id)
         , tag(tag)
     {
     }
 
-    // The last deriving class to override method must call init() in its
-    // constructor to  initialize the ListView
-    void init()
+    // Same as html(), but writes to a stream to reduce allocations
+    void write_html(Rope& s)
     {
-        for (auto m : get_list()) {
-            saved.push_back(create_child(m));
+        if (!is_initialized) {
+            init();
+            is_initialized = true;
         }
+
+        s << '<' << tag;
+        saved_attrs.write_html(s);
+        s << '>';
+        for (auto v : saved) {
+            v->write_html(s);
+        }
+        s << "</" << tag << '>';
+    }
+
+protected:
+    // Last rendered attributes
+    Attrs saved_attrs;
+
+    // List of views saved since last diff by ID
+    std::vector<V*> saved;
+
+    // Returns the attributes of the container view
+    virtual Attrs attrs() const { return {}; };
+
+    virtual void init()
+    {
         saved_attrs = attrs();
         saved_attrs["id"] = id;
     }
 
+private:
+    bool is_initialized = false;
+};
+
+// Renders and manages a list of views using a delegator method.
+// M: model
+// V: ModelView<M>
+template <class M, class V> class ListView : public ParentView<V> {
+    using ParentView<V>::ParentView;
+    using ParentView<V>::saved;
+    using ParentView<V>::saved_attrs;
+    using ParentView<V>::attrs;
+
+public:
+    virtual void init()
+    {
+        for (auto m : get_list()) {
+            saved.push_back(create_child(m));
+        }
+        ParentView<V>::init();
+    }
+
     // Patches the attributes of the ListView and reorders its children, while
     // also creating any missing ones an removing no longer actual children.
-    // Note: For performance reasons this method does not patch the entire
-    // subtree. To do a deep patch call patch_deep().
-    void patch()
+    // deep: should patching recurse to the view's child views
+    void patch(bool deep = false)
     {
         saved_attrs.patch(attrs());
 
         const auto new_list = get_list();
-        std::unordered_map<M*, std::shared_ptr<V>> saved_set;
+        const auto new_set
+            = std::unordered_set<M*>(new_list.begin(), new_list.end());
+        std::unordered_map<M*, V*> saved_set;
         std::vector<M*> saved_list;
 
         // Map saved views to models
@@ -189,6 +267,14 @@ public:
             }
         }
 
+        if (deep) {
+            for (auto& p : saved_set) {
+                if (new_set.count(p.first)) {
+                    p.second->patch(deep);
+                }
+            }
+        }
+
         // Diff and reorder views in the overlaping range
         for (size_t i = 0; i < saved_list.size() && i < new_list.size(); i++) {
             auto m = new_list[i];
@@ -197,7 +283,7 @@ public:
                 continue;
             }
 
-            std::shared_ptr<V> v;
+            V* v;
             if (saved_set.count(m)) {
                 v = saved_set.at(m);
                 if (!i) {
@@ -208,6 +294,7 @@ public:
                 saved_set.erase(m);
             } else {
                 v = create_child(m);
+                BaseView::store(v);
                 if (!i) {
                     prepend(BaseView::id, v->html());
                 } else {
@@ -226,55 +313,55 @@ public:
         } else {
             // Append all missing views
             for (size_t i = saved.size() - 1; i < new_list.size(); i++) {
-                saved.push_back(create_child(new_list[i]));
+                auto v = create_child(new_list[i]);
+                append(BaseView::id, v->html());
+                saved.push_back(v);
             }
         }
     }
 
-    // Patches the view and it's entire subtree
-    void patch_deep()
-    {
-        patch();
-        for (auto v : saved) {
-            v->patch();
-        }
-    }
-
-    // Renders the view's subtree as HTML
-    std::string html() const
-    {
-        Rope s;
-        write_html(s);
-        return s.str();
-    }
-
-    // Same as html(), but writes to a stream to reduce allocations
-    void write_html(Rope& s) const
-    {
-        s << '<' << tag;
-        saved_attrs.write_html(s);
-        s << '>';
-        for (auto& v : saved) {
-            v->write_html(s);
-        }
-        s << "</" << tag << '>';
-    }
-
 protected:
-    // Returns the attributes of the container view
-    virtual Attrs attrs() const { return {}; };
-
     // Returns an ordered list of models to be used to render view contents
     virtual std::vector<M*> get_list() = 0;
 
     // Create a new instance of a child view
-    virtual std::shared_ptr<V> create_child(M*) = 0;
+    virtual V* create_child(M*) = 0;
+};
 
-private:
-    // List of views since last render
-    std::vector<std::shared_ptr<V>> saved;
+// Combines multiple views as its children. The list and order of the child
+// views never mutates.
+template <class V = BaseView> class CompositeView : public ParentView<V> {
+    using ParentView<V>::ParentView;
+    using ParentView<V>::saved;
+    using ParentView<V>::saved_attrs;
+    using ParentView<V>::attrs;
 
-    // Last rendered attributes
-    Attrs saved_attrs;
+public:
+    // Patch the view's subtree against the updated subtree.
+    // Can only be called after the view has been inserted into the DOM.
+    // deep: should patching recurse to the view's child views
+    void patch(bool deep = false)
+    {
+        saved_attrs.patch(attrs());
+        if (deep) {
+            for (auto& v : saved) {
+                v->patch(deep);
+            }
+        }
+    }
+
+protected:
+    virtual void init()
+    {
+        saved = get_list();
+        for (auto v : saved) {
+            BaseView::store(v);
+        }
+        ParentView<V>::init();
+    }
+
+    // Returns an ordered list of views to be used as children of this view.
+    // This method is only called once.
+    virtual std::vector<V*> get_list() = 0;
 };
 }

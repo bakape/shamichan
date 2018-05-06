@@ -3,7 +3,7 @@
 #include "local_storage.hh"
 #include "page/header.hh"
 #include "page/navigation.hh"
-#include "page/scroll.hh"
+#include "page/page.hh"
 #include "posts/commands.hh"
 #include "posts/init.hh"
 #include "state.hh"
@@ -12,13 +12,12 @@
 int main()
 {
     brunhild::before_flush = &rerender_syncwatches;
-    brunhild::after_flush = &compensate_scrolling;
     brunhild::init();
     load_state();
     init_posts();
     init_navigation();
-    init_scrolling();
     init_top_header();
+    brunhild::set_outer_html("threads", (new PageView())->init_as_root());
 
     // Block all clicks on <a> from exhibiting browser default behavior, unless
     // the user intends to navigate to a new tab or open a browser menu.

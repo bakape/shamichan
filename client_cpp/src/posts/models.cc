@@ -159,19 +159,6 @@ void Post::parse_commands(nlohmann::json& j)
     }
 }
 
-void Post::remove()
-{
-    if (inlined_into) {
-        posts.at(inlined_into).patch();
-    }
-    for (auto& v : views) {
-        v->remove();
-    }
-    posts.erase(id);
-
-    // TODO: Rerender all posts linking this post
-}
-
 void Post::propagate_links()
 {
 
@@ -191,8 +178,10 @@ void Post::propagate_links()
 
 void Post::patch()
 {
-    for (auto& v : views) {
-        v->patch();
+    for (auto& id : views) {
+        if (auto v = brunhild::BaseView::get<PostView>(id); v) {
+            v->patch();
+        }
     }
 }
 

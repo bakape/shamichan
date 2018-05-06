@@ -14,6 +14,8 @@ using std::string;
 
 namespace brunhild {
 
+std::unordered_map<std::string, std::unique_ptr<BaseView>> BaseView::instances;
+
 void BaseView::on(std::string type, std::string selector, Handler handler)
 {
     // Need to prepend root node ID to all selectors
@@ -53,12 +55,36 @@ void BaseView::on(std::string type, std::string selector, Handler handler)
     event_handlers.push_back(register_handler(type, handler, s.str()));
 }
 
+void BaseView::remove()
+{
+    brunhild::remove(id);
+    BaseView::instances.erase(id);
+}
+
+std::string BaseView::html()
+{
+    Rope s;
+    write_html(s);
+    return s.str();
+}
+
 void BaseView::remove_event_handlers()
 {
     for (auto id : event_handlers) {
         unregister_handler(id);
     }
     event_handlers.clear();
+}
+
+void BaseView::store(BaseView* v)
+{
+    BaseView::instances[v->id] = std::unique_ptr<BaseView>(v);
+}
+
+std::string BaseView::init_as_root()
+{
+    BaseView::store(this);
+    return html();
 }
 
 void View::ensure_id(Node& node)
@@ -71,11 +97,14 @@ void View::ensure_id(Node& node)
     }
 }
 
-std::string View::html() const { return saved.html(); }
-
-void View::write_html(Rope& s) const { saved.write_html(s); }
-
-void View::remove() { brunhild::remove(id); }
+void View::write_html(Rope& s)
+{
+    if (!is_initialized) {
+        init();
+        is_initialized = true;
+    }
+    saved.write_html(s);
+}
 
 void View::init()
 {
@@ -84,7 +113,7 @@ void View::init()
     ensure_id(saved);
 }
 
-void View::patch()
+void View::patch(bool deep)
 {
     auto node = render();
     node.attrs["id"] = id;

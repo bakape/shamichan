@@ -177,6 +177,10 @@ func TestGetBoardTitles(t *testing.T) {
 			Title: "Animu & Mango",
 		},
 		{
+			ID:    "all",
+			Title: "Aggregator metaboard",
+		},
+		{
 			ID:    "g",
 			Title: "Techloligy",
 		},

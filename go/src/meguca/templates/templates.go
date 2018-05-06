@@ -95,15 +95,5 @@ func execIndex(html, title, theme string, pos auth.ModerationLevel) []byte {
 
 // Render index page for WASM clients
 func WasmIndex(theme string) []byte {
-	mu.RLock()
-	t := indexTemplates[auth.NotStaff]
-	mu.RUnlock()
-
-	return bytes.Join([][]byte{
-		t[0],
-		t[1],
-		[]byte(theme),
-		t[2],
-		t[3],
-	}, nil)
+	return []byte(renderIndexWasm(theme))
 }

@@ -19,7 +19,6 @@ public:
         : ListView("section", id)
         , thread_id(thread_id)
     {
-        init();
         ThreadView::instances[thread_id] = this;
     }
 
@@ -31,5 +30,5 @@ public:
 
 protected:
     std::vector<Post*> get_list();
-    std::shared_ptr<PostView> create_child(Post* p);
+    PostView* create_child(Post* p);
 };

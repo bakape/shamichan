@@ -175,7 +175,11 @@ func GetBoardTitles() BoardTitles {
 	boardMu.RLock()
 	defer boardMu.RUnlock()
 
-	bt := make(BoardTitles, 0, len(boardConfigs))
+	bt := make(BoardTitles, 1, len(boardConfigs)+1)
+	bt[0] = BoardTitle{
+		ID:    AllBoardConfigs.ID,
+		Title: AllBoardConfigs.Title,
+	}
 	for id, conf := range boardConfigs {
 		bt = append(bt, BoardTitle{
 			ID:    id,

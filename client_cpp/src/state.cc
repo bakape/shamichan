@@ -109,15 +109,7 @@ void load_state()
         boards[pair["id"]] = pair["title"];
     }
 
-    // TODO: This should be read from a concurrent server fetch
-
-    config = { c_string_view((char*)EM_ASM_INT_V({
-        var s = JSON.stringify(window.config);
-        var len = lengthBytesUTF8(s) + 1;
-        var buf = Module._malloc(len);
-        stringToUTF8(s, buf, len);
-        return buf;
-    })) };
+    config = { get_inner_html("conf-data") };
 
     init_connectivity();
     auto wg = new WaitGroup(2, []() {
