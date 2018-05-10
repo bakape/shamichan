@@ -39,7 +39,7 @@ var (
 	}
 	Themes = []string{
 		"ashita", "console", "egophobe", "gar", "glass", "gowno", "higan",
-		"inumi", "mawaru", "moe", "moon", "ocean", "rave", "tea",
+		"inumi", "mawaru", "moe", "moon", "ocean", "rave", "tea", "win95",
 	}
 )
 
