@@ -241,6 +241,10 @@ func TestServeBoardList(t *testing.T) {
 	{
 		"id":"a",
 		"title":"Animu"
+	},
+	{
+		"id":"all",
+		"title":"Aggregator metaboard"
 	}
 ]`)
 
