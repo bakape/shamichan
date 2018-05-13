@@ -52,6 +52,9 @@ client_vendor: client_deps
 	$(uglifyjs) node_modules/whatwg-fetch/fetch.js -o www/js/vendor/fetch.js
 	$(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
 
+css:
+	$(gulp) css
+
 server: generate server_deps
 	go build -v -o $(binary) meguca
 ifeq ($(is_windows), true)
