@@ -484,6 +484,16 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
         return "#" + bit
     }
 
+    // Protect from index shifts on boardConfig.pyu toggle
+    if (!boardConfig.pyu) {
+        switch (commands[state.iDice].type) {
+            case commandType.pyu:
+            case commandType.pcount:
+                state.iDice++
+                return "#" + bit
+        }
+    }
+
     let formatting = "<strong>"
     let inner: string
     switch (bit) {
@@ -491,15 +501,20 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             inner = commands[state.iDice++].val ? "flap" : "flop"
             break
         case "8ball":
+            inner = commands[state.iDice++].val.toString()
+            break
         case "pyu":
         case "pcount":
+            // Protect from index shifts on boardConfig.pyu toggle
+            if (!boardConfig.pyu) {
+                break
+            }
         case "rcount":
             switch (commands[state.iDice].type) {
-              case commandType.eightBall:
-              case commandType.pyu:
-              case commandType.pcount:
-              case commandType.rcount:
-                inner = commands[state.iDice++].val.toString()
+                case commandType.pyu:
+                case commandType.pcount:
+                case commandType.rcount:
+                    inner = commands[state.iDice++].val.toString()
             }
 
             break

@@ -137,6 +137,7 @@ BoardConfig::BoardConfig(nlohmann::json&& j)
     forced_anon = j["forcedAnon"];
     non_live = j["nonLive"];
     rb_text = j["rbText"];
+    pyu = j["pyu"];
     title = j["title"];
     rules = j["rules"];
     notice = j["notice"];

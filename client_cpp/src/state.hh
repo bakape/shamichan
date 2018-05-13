@@ -41,7 +41,7 @@ extern Config config;
 // Public board-specific configurations
 class BoardConfig {
 public:
-    bool read_only, text_only, forced_anon, non_live, rb_text;
+    bool read_only, text_only, forced_anon, non_live, rb_text, pyu;
     std::string title, notice, rules;
 
     // Banner file types

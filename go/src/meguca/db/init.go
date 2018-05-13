@@ -594,6 +594,40 @@ var upgrades = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		r, err := tx.Query(`select id from boards`)
+		if err != nil {
+			return
+		}
+		defer r.Close()
+
+		var boards []string
+		for r.Next() {
+			var board string
+			err = r.Scan(&board)
+			if err != nil {
+				return
+			}
+			boards = append(boards, board)
+		}
+		err = r.Err()
+		if err != nil {
+			return
+		}
+
+		q, err := tx.Prepare(`insert into pyu (id, pcount) values ($1, 0)`)
+		if err != nil {
+			return
+		}
+		for _, b := range boards {
+			_, err = q.Exec(b)
+			if err != nil {
+				return
+			}
+		}
+
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
