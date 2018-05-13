@@ -30,6 +30,17 @@
 				left: 0;
 				margin: 0;
 			}
+			.side-panel {
+				z-index: unset;
+				position: unset;
+				height: 100%;
+			}
+			#left-panel {
+				float: left;
+			}
+			#right-panel {
+				float: right;
+			}
 		</style>
 	</head>
 	<body>
@@ -74,11 +85,9 @@
 		</span>
 		<div id=page-container-wasm>
 			<div id="modal-overlay" class="overlay"></div>
-			<div>
-				<section id="left-panel" class="side-panel glass"></section>
-				<section id="threads"></section>
-				<section id="right-panel" class="side-panel glass"></section>
-			</div>
+			<section id="left-panel" class="side-panel glass"></section>
+			<section id="threads"></section>
+			<section id="right-panel" class="side-panel glass"></section>
 		</div>
 		<div class="overlay" id="hover-overlay"></div>
 		<script id=conf-data type="application/json">
