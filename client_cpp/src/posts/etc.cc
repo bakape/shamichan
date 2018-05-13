@@ -133,12 +133,9 @@ std::optional<std::tuple<Post*, PostView*>> match_view(emscripten::val& event)
     const string id = event["target"]
                           .call<emscripten::val>("closest", string("article"))
                           .call<string>("getAttribute", string("id"));
-    for (auto& v_id : model->views) {
-        if (v_id == id) {
-            if (auto v = brunhild::BaseView::get<PostView>(id); v) {
-                return { { model, v } };
-            }
-            return {};
+    for (auto& v : model->views) {
+        if (v->id == id) {
+            return { { model, v.get() } };
         }
     }
     return {};

@@ -58,6 +58,8 @@ private:
 };
 
 class PostView : public brunhild::ModelView<Post> {
+    using brunhild::ModelView<Post>::render;
+
 public:
     // ID of model the post is associated to
     const unsigned long model_id;
@@ -74,7 +76,7 @@ public:
     // Patch the current contents of the post into the DOM.
     // If the post is currently inlined into another post, this method will
     // delegate the patch to the topmost parent.
-    void patch(bool deep = false);
+    void patch();
 
     Post* get_model();
 
@@ -85,7 +87,7 @@ private:
     std::unordered_map<unsigned long, std::unique_ptr<PostView>> inlined_posts;
 
     // Generates the model's node tree
-    Node render_model();
+    Node render(Post*);
 
     // Render the header on top of the post
     Node render_header();

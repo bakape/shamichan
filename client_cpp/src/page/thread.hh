@@ -29,6 +29,6 @@ public:
     static void clear();
 
 protected:
-    std::vector<Post*> get_list();
-    PostView* create_child(Post* p);
+    virtual std::vector<Post*> get_list();
+    virtual std::shared_ptr<PostView> create_child(Post* p);
 };

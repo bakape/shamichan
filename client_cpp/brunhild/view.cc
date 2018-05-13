@@ -9,14 +9,18 @@
 #include <string_view>
 #include <utility>
 
-using std::move;
 using std::string;
 
 namespace brunhild {
 
-std::unordered_map<std::string, std::unique_ptr<BaseView>> BaseView::instances;
+View::View(std::string id)
+    : id(id)
+{
+}
 
-void BaseView::on(std::string type, std::string selector, Handler handler)
+View::~View() { remove_event_handlers(); }
+
+void View::on(std::string type, std::string selector, Handler handler)
 {
     // Need to prepend root node ID to all selectors
     Rope s;
@@ -55,20 +59,18 @@ void BaseView::on(std::string type, std::string selector, Handler handler)
     event_handlers.push_back(register_handler(type, handler, s.str()));
 }
 
-void BaseView::remove()
+emscripten::val View::el()
 {
-    brunhild::remove(id);
-    BaseView::instances.erase(id);
+    using emscripten::val;
+
+    return val::global("document").call<val>("getElementById", id);
 }
 
-std::string BaseView::html()
-{
-    Rope s;
-    write_html(s);
-    return s.str();
-}
+void View::scroll_into_view() { brunhild::scroll_into_view(id); }
 
-void BaseView::remove_event_handlers()
+void View::remove() { brunhild::remove(id); }
+
+void View::remove_event_handlers()
 {
     for (auto id : event_handlers) {
         unregister_handler(id);
@@ -76,18 +78,7 @@ void BaseView::remove_event_handlers()
     event_handlers.clear();
 }
 
-void BaseView::store(BaseView* v)
-{
-    BaseView::instances[v->id] = std::unique_ptr<BaseView>(v);
-}
-
-std::string BaseView::init_as_root()
-{
-    BaseView::store(this);
-    return html();
-}
-
-void View::ensure_id(Node& node)
+void VirtualView::ensure_id(Node& node)
 {
     if (!node.attrs.count("id")) {
         node.attrs["id"] = new_id();
@@ -97,7 +88,7 @@ void View::ensure_id(Node& node)
     }
 }
 
-void View::write_html(Rope& s)
+void VirtualView::write_html(Rope& s)
 {
     if (!is_initialized) {
         init();
@@ -106,21 +97,21 @@ void View::write_html(Rope& s)
     saved.write_html(s);
 }
 
-void View::init()
+void VirtualView::init()
 {
     saved = render();
     saved.attrs["id"] = id;
     ensure_id(saved);
 }
 
-void View::patch(bool deep)
+void VirtualView::patch()
 {
     auto node = render();
     node.attrs["id"] = id;
-    patch_node(saved, node);
+    patch_node(saved, std::move(node));
 }
 
-void View::patch_node(Node& old, Node node)
+void VirtualView::patch_node(Node& old, Node&& node)
 {
     // Completely replace node and subtree
     const auto replace = old.tag != node.tag
@@ -128,17 +119,17 @@ void View::patch_node(Node& old, Node node)
                && node.attrs.at("id") != old.attrs.at("id"));
     if (replace) {
         const auto old_id = old.attrs.at("id");
-        old = move(node);
+        old = std::move(node);
         ensure_id(old);
         set_outer_html(old_id, old.html());
         return;
     }
 
-    old.attrs.patch(move(node.attrs));
-    patch_children(old, move(node));
+    old.attrs.patch(std::move(node.attrs));
+    patch_children(old, std::move(node));
 }
 
-void View::patch_children(Node& old, Node node)
+void VirtualView::patch_children(Node& old, Node&& node)
 {
     // HTML string contents can not be addressed by ID and require special
     // handling
@@ -171,7 +162,7 @@ void View::patch_children(Node& old, Node node)
     // Diff existing nodes
     for (size_t i = 0; i < old.children.size() && i < node.children.size();
          i++) {
-        patch_node(old.children[i], move(node.children[i]));
+        patch_node(old.children[i], std::move(node.children[i]));
     }
 
     int diff = int(node.children.size()) - int(old.children.size());
@@ -181,7 +172,7 @@ void View::patch_children(Node& old, Node node)
             auto& ch = node.children[i++];
             ensure_id(ch);
             append(old.attrs.at("id"), ch.html());
-            old.children.push_back(move(ch));
+            old.children.push_back(std::move(ch));
         }
     } else { // Remove Nodes from the end
         while (diff++ < 0) {

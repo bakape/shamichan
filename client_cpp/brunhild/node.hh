@@ -9,21 +9,35 @@
 
 namespace brunhild {
 
+// Generate a new unique element ID
+std::string new_id();
+
+// Helper for serializing to HTML
+class HTMLWriter {
+public:
+    // Renders HTML string
+    std::string html();
+
+    // Write as HTML to stream
+    virtual void write_html(Rope&) = 0;
+};
+
 // Element attributes
-class Attrs : public std::unordered_map<std::string, std::string> {
+class Attrs : public std::unordered_map<std::string, std::string>,
+              public HTMLWriter {
     typedef std::unordered_map<std::string, std::string> Base;
     using Base::Base;
 
 public:
     // Write attrs as HTML to stream
-    void write_html(Rope&) const;
+    void write_html(Rope&);
 
     // Diff attributes with new value and apply patches to the DOM
-    void patch(Attrs attrs);
+    void patch(Attrs&& attrs);
 };
 
 // Represents an HTML element. Can be used to construct node trees more easily.
-class Node {
+class Node : public HTMLWriter {
 public:
     // Tag of the Element
     std::string tag;
@@ -63,11 +77,8 @@ public:
 
     Node() = default;
 
-    // Renders Node and subtree to HTML
-    std::string html() const;
-
     // Write node as HTML to stream
-    void write_html(Rope&) const;
+    void write_html(Rope&);
 
     // Converts the subtree of the node into an HTML string and sets it to
     // inner_html. This can reduce the diffing and memory costs of large mostly
@@ -78,16 +89,10 @@ public:
     // Resets the node and frees up used resources
     void clear();
 
-    // Shortcut for setting an node as hidden
+    // Shortcut for setting a node as hidden
     void hide();
 };
 
 // Subtree of a Node
 typedef std::vector<Node> Children;
-
-// Renders Children to HTML with fewer allocations
-std::string render_children(const Children&);
-
-// Generate a new unique element ID
-std::string new_id();
 }

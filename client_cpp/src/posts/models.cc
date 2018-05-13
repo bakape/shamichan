@@ -178,10 +178,8 @@ void Post::propagate_links()
 
 void Post::patch()
 {
-    for (auto& id : views) {
-        if (auto v = brunhild::BaseView::get<PostView>(id); v) {
-            v->patch();
-        }
+    for (auto& v : views) {
+        v->patch();
     }
 }
 

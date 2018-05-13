@@ -6,7 +6,7 @@ Post* PostView::get_model()
     return posts.count(model_id) ? &posts.at(model_id) : NULL;
 }
 
-void PostView::patch(bool deep)
+void PostView::patch()
 {
     // Proxy to top-most parent post, if inlined
     if (const auto inlined_into = get_model()->inlined_into; inlined_into) {

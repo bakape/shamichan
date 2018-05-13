@@ -13,7 +13,14 @@ std::string new_id()
     return s.str();
 }
 
-void Attrs::write_html(Rope& s) const
+std::string HTMLWriter::html()
+{
+    Rope s;
+    write_html(s);
+    return s.str();
+}
+
+void Attrs::write_html(Rope& s)
 {
     for (auto & [ key, val ] : *this) {
         s << ' ' << key;
@@ -23,7 +30,7 @@ void Attrs::write_html(Rope& s) const
     }
 }
 
-void Attrs::patch(Attrs attrs)
+void Attrs::patch(Attrs&& attrs)
 {
     const auto id = (*this)["id"];
     bool patched = false;
@@ -50,14 +57,7 @@ void Attrs::patch(Attrs attrs)
     }
 }
 
-std::string Node::html() const
-{
-    Rope s;
-    write_html(s);
-    return s.str();
-}
-
-void Node::write_html(Rope& s) const
+void Node::write_html(Rope& s)
 {
     s << '<' << tag;
     attrs.write_html(s);
@@ -79,18 +79,13 @@ void Node::write_html(Rope& s) const
     s << "</" << tag << '>';
 }
 
-std::string render_children(const Children& children)
+void Node::stringify_subtree()
 {
     Rope s;
     for (auto& ch : children) {
         ch.write_html(s);
     }
-    return s.str();
-}
-
-void Node::stringify_subtree()
-{
-    inner_html = render_children(children);
+    inner_html = s.str();
     children.clear();
 }
 

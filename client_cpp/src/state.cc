@@ -1,6 +1,4 @@
 #include "state.hh"
-#include "connection/connection.hh"
-#include "db.hh"
 #include "lang.hh"
 #include "options/options.hh"
 #include "page/page.hh"
@@ -110,15 +108,6 @@ void load_state()
     }
 
     config = { get_inner_html("conf-data") };
-
-    init_connectivity();
-    auto wg = new WaitGroup(2, []() {
-        auto wg = new WaitGroup(1, &render_page);
-        load_post_ids(wg);
-    });
-    open_db(wg);
-    conn_SM.feed(ConnEvent::start);
-    conn_SM.once(ConnState::synced, [=]() { wg->done(); });
 }
 
 Config::Config(const c_string_view& s)

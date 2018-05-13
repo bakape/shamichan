@@ -20,7 +20,7 @@ using std::string;
 void render_page()
 {
     recurse_hidden_posts();
-    PageView::instance->patch(true);
+    PageView::instance->patch();
 
     if (page.post) {
         scroll_to_post(page.post);
@@ -115,7 +115,7 @@ Node PageTitle::render()
     return n;
 }
 
-std::vector<brunhild::BaseView*> PageView::get_list()
+std::vector<brunhild::VirtualView*> PageView::get_list()
 {
     return { new ImageBanner(), new PageTitle() };
 }

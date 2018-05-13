@@ -107,11 +107,9 @@ std::vector<Post*> ThreadView::get_list()
     return re;
 }
 
-PostView* ThreadView::create_child(Post* p)
+std::shared_ptr<PostView> ThreadView::create_child(Post* p)
 {
-    auto v = new PostView(p->id);
-    p->views.insert(v->id);
-    return v;
+    return p->views.emplace_back(new PostView(p->id));
 }
 
 std::map<unsigned long, ThreadView*> ThreadView::instances;

@@ -220,7 +220,6 @@
 		}
 
 		if (wasm) {
-			// TODO: asm.js fallback with Module["asmjsCodeFile"]
 			// TODO: Preallocate memory to Module['wasmMemory']
 			window.Module = {}
 			fetch("/assets/wasm/main.wasm")

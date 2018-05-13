@@ -3,7 +3,7 @@
 
 void Form::init()
 {
-    View::init();
+    VirtualView::init();
     if (!no_buttons) {
         on("click", "input[name=cancel]", [this](auto& _) { remove(); });
         on("submit", "", [this](auto& event) { on_submit(event); });

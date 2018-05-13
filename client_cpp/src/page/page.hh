@@ -17,19 +17,21 @@ void set_title(std::string);
 void push_board_hover_info(brunhild::Children& ch);
 
 // Top banner with a board-specific images
-class ImageBanner : public brunhild::View {
+class ImageBanner : public brunhild::VirtualView {
+public:
     brunhild::Node render();
 };
 
 // Simple header with page title
-class PageTitle : public brunhild::View {
+class PageTitle : public brunhild::VirtualView {
+public:
     brunhild::Node render();
 };
 
-class PageView : public brunhild::CompositeView<> {
+class PageView : public brunhild::CompositeView<brunhild::VirtualView> {
 public:
     PageView()
-        : CompositeView<>("section", "threads")
+        : CompositeView<brunhild::VirtualView>("section", "threads")
     {
         PageView::instance = this;
     }
@@ -37,5 +39,5 @@ public:
     static inline PageView* instance;
 
 protected:
-    std::vector<brunhild::BaseView*> get_list();
+    std::vector<brunhild::VirtualView*> get_list();
 };

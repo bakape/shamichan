@@ -1,5 +1,7 @@
 #include "../brunhild/init.hh"
 #include "../brunhild/mutations.hh"
+#include "connection/connection.hh"
+#include "db.hh"
 #include "local_storage.hh"
 #include "page/header.hh"
 #include "page/navigation.hh"
@@ -9,6 +11,18 @@
 #include "state.hh"
 #include <emscripten.h>
 
+static void start()
+{
+    init_connectivity();
+    auto wg = new WaitGroup(2, []() {
+        auto wg = new WaitGroup(1, &render_page);
+        load_post_ids(wg);
+    });
+    open_db(wg);
+    conn_SM.feed(ConnEvent::start);
+    conn_SM.once(ConnState::synced, [=]() { wg->done(); });
+}
+
 int main()
 {
     brunhild::before_flush = &rerender_syncwatches;
@@ -17,7 +31,8 @@ int main()
     init_posts();
     init_navigation();
     init_top_header();
-    brunhild::set_outer_html("threads", (new PageView())->init_as_root());
+    brunhild::set_outer_html("threads", (new PageView())->html());
+    start();
 
     // Block all clicks on <a> from exhibiting browser default behavior, unless
     // the user intends to navigate to a new tab or open a browser menu.

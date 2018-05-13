@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../brunhild/view.hh"
 #include <array>
+#include <functional>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -10,7 +10,6 @@
 #include <string_view>
 #include <tuple>
 #include <unordered_map>
-#include <unordered_set>
 #include <variant>
 #include <vector>
 
@@ -117,7 +116,7 @@ struct LinkData {
 class PostView;
 
 // Generic post model
-struct Post : public brunhild::Model {
+struct Post {
     // Post is currrently being edited
     bool editing = false,
          // Deleted by moderator
@@ -159,9 +158,9 @@ struct Post : public brunhild::Model {
     std::unordered_map<unsigned long, LinkData>
         links; // Posts linked by this post
 
-    // Views associated to this post referenced by ID. There can be multiple,
-    // because of various previews and such.
-    std::unordered_set<std::string> views;
+    // Views associated to this post. There can be multiple, because of various
+    // previews and such.
+    std::vector<std::shared_ptr<PostView>> views;
 
     Post() = default;
 
@@ -188,6 +187,8 @@ struct Post : public brunhild::Model {
     // Close a post being edited
     void close();
 };
+
+#include "view.hh"
 
 // Contains thread metadata
 struct Thread {

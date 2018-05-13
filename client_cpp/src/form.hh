@@ -9,7 +9,7 @@
 
 // Generic input form view with optional captcha support
 // TODO: Captcha support
-class Form : public brunhild::View {
+class Form : public brunhild::VirtualView {
 public:
     // Render form with optional specificied root node attributes
     // no_buttons: no Cancel or Submit buttons are rendered

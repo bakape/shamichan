@@ -41,6 +41,11 @@ void hide_recursively(Post& post)
     post_ids.hidden.insert(post.id);
     if (options.hide_recursively) {
         recurse_backlinks(post.backlinks, to_hide);
+    } else {
+        // Still patch all links to this post
+        for (auto & [ id, _ ] : posts) {
+            to_hide->insert(id);
+        }
     }
 
     post.patch();
