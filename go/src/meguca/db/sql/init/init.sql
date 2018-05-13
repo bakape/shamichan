@@ -23,6 +23,7 @@ create table boards (
 	nonLive bool default false,
 	posterIDs bool default false,
 	rbText bool default false,
+	pyu bool default false,
 	id text primary key,
 	created timestamp not null,
 	defaultCSS text not null,
@@ -168,3 +169,18 @@ create table reports (
 );
 create index report_board on reports (board);
 create index report_created on reports (created);
+
+create table pyu (
+	id text primary key references boards on delete cascade,
+	pcount bigint default 0
+);
+
+create table pyu_limit (
+	ip inet not null,
+	board text not null references boards on delete cascade,
+	expires timestamp not null,
+	pcount smallint default 4,
+	primary key(ip, board)
+);
+create index pyu_limit_ip on pyu_limit (ip);
+create index pyu_limit_board on pyu_limit (board);

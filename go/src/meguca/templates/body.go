@@ -70,7 +70,7 @@ var (
 type bodyContext struct {
 	index bool     // Rendered for an index page
 	state struct { // Body parser state
-		spoiler, quote, code, bold, italic, red, blue, rbText bool
+		spoiler, quote, code, bold, italic, red, blue, rbText, pyu bool
 		successive_newlines                uint
 		iDice                              int
 	}
@@ -88,6 +88,7 @@ func streambody(
 	board string,
 	index bool,
 	rbText bool,
+	pyu bool,
 ) {
 	c := bodyContext{
 		index:  index,
@@ -97,6 +98,7 @@ func streambody(
 		Writer: *w,
 	}
 	c.state.rbText = rbText
+	c.state.pyu = pyu
 
 	var fn func(string)
 	if c.Editing {
@@ -538,9 +540,15 @@ func (c *bodyContext) parseCommands(bit string) {
 	case "8ball":
 		inner = append(inner, val.Eightball...)
 		c.state.iDice++
-	case "rcount":
-		inner = strconv.AppendUint(inner, val.Pyu, 10)
-		c.state.iDice++
+	case "pyu", "pcount", "rcount":
+		switch val.Type {
+			case common.Pyu, common.Pcount, common.Rcount:
+				inner = strconv.AppendUint(inner, val.Pyu, 10)
+				c.state.iDice++
+				break
+			default:
+				c.writeInvalidCommand(bit)
+		}
 	case "roulette":
 		inner = strconv.AppendUint(inner, uint64(val.Roulette[0]), 10)
 		inner = append(inner, "/"...)

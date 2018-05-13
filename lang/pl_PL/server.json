@@ -284,6 +284,10 @@
 			"Usuń tematy",
 			"Usuń tematy bez żadnych postów od N dni"
 		],
+		"pyu": [
+			"Slut enabler",
+			"Don't ask"
+		],
 		"rbText": [
 			"Red/Blue Text",
 			"Display red and blue text if formatted with '^r' or '^b'"

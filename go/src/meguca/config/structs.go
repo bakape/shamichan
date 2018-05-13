@@ -52,6 +52,7 @@ type BoardPublic struct {
 	NSFW       bool
 	PosterIDs  bool   `json:"posterIDs"`
 	RbText     bool   `json:"rbText"`
+	Pyu        bool   `json:"pyu"`
 	DefaultCSS string `json:"defaultCSS"`
 	Title      string `json:"title"`
 	Notice     string `json:"notice"`

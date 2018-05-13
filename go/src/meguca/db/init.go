@@ -568,6 +568,32 @@ var upgrades = []func(*sql.Tx) error{
 	func(tx *sql.Tx) error {
 		return withTransaction(tx, sq.Delete("main").Where("id = 'pyu'")).Exec()
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE boards
+				ADD COLUMN pyu bool default false`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`create table pyu (
+				id text primary key references boards on delete cascade,
+				pcount bigint default 0
+			);
+
+			create table pyu_limit (
+				ip inet not null,
+				board text not null references boards on delete cascade,
+				expires timestamp not null,
+				pcount smallint default 4,
+				primary key(ip, board)
+			);
+			create index pyu_limit_ip on pyu_limit (ip);
+			create index pyu_limit_board on pyu_limit (board);`,
+		)
+		return
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
