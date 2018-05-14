@@ -602,7 +602,7 @@ var upgrades = []func(*sql.Tx) error{
 		return execAll(tx,
 			`alter table boards drop column pyu`,
 			`drop table pyu`,
-			`drop table pyu_limit`
+			`drop table pyu_limit`,
 		)
 	},
 }
