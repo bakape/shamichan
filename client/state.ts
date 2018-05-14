@@ -26,7 +26,6 @@ export interface BoardConfigs {
 	textOnly: boolean
 	forcedAnon: boolean
 	rbText: boolean
-	pyu: boolean
 	title: string
 	notice: string
 	rules: string
