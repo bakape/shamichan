@@ -52,8 +52,8 @@ export type TextState = {
 }
 
 // Types of hash command entries
-export const enum commandType {
-	dice, flip, eightBall, syncWatch, pyu, pcount, roulette, rcount,
+const enum commandType {
+	dice, flip, eightBall, syncWatch, _, __, roulette, rcount,
 }
 
 // Single hash command result delivered from the server

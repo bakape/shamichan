@@ -125,7 +125,6 @@ var specs = map[string][]inputSpec{
 		{ID: "NSFW"},
 		{ID: "posterIDs"},
 		{ID: "rbText"},
-		{ID: "pyu"},
 		{
 			ID:        "title",
 			Type:      _string,

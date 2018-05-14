@@ -58,8 +58,6 @@ Command::Command(nlohmann::json& j)
     case Type::eight_ball:
         eight_ball = v;
         break;
-    case Type::pyu:
-    case Type::pcount:
     case Type::rcount:
         val = v.get<unsigned long>();
         break;

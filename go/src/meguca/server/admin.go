@@ -315,7 +315,6 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 			Eightball: config.EightballDefaults,
 		},
 	})
-
 	switch {
 	case err == nil:
 	case db.IsConflictError(err):
@@ -329,12 +328,6 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	err = db.WriteStaff(msg.ID, map[string][]string{
 		"owners": []string{creds.UserID},
 	})
-	if err != nil {
-		text500(w, r, err)
-		return
-	}
-	
-	err = db.WritePyu(msg.ID)
 	if err != nil {
 		text500(w, r, err)
 		return

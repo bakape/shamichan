@@ -33,9 +33,7 @@ func randInt(max int) int {
 }
 
 // Parse a matched hash command
-func parseCommand(match []byte, board string, id uint64, ip string) (com common.Command, err error) {
-	boardConfig := config.GetBoardConfigs(board)
-	
+func parseCommand(match []byte, board string) (com common.Command, err error) {
 	switch {
 
 	// Coin flip
@@ -46,100 +44,10 @@ func parseCommand(match []byte, board string, id uint64, ip string) (com common.
 	// 8ball; select random string from the the 8ball answer array
 	case bytes.Equal(match, []byte("8ball")):
 		com.Type = common.EightBall
-		answers := boardConfig.Eightball
+		answers := config.GetBoardConfigs(board).Eightball
 		if len(answers) != 0 {
 			com.Eightball = answers[randInt(len(answers))]
 		}
-
-	// Increment pyu counter
-	case bytes.Equal(match, []byte("pyu")):
-		com.Type = common.Pyu
-
-		if boardConfig.Pyu {
-			now := time.Now().UTC()
-			tx, err := db.StartTransaction()
-			
-			if err != nil {
-				return com, err
-			}
-
-			defer db.RollbackOnError(tx, &err)
-			exists, err := db.PyuLimitExists(tx, ip, board)
-
-			if err != nil {
-				return com, err
-			}
-
-			if !exists {
-				err = db.WritePyuLimit(tx, ip, board)
-
-				if err != nil {
-					return com, err
-				}
-			}
-
-			limit, err := db.GetPyuLimit(tx, ip, board)
-
-			if err != nil {
-				return com, err
-			}
-			
-			expires, err := db.GetPyuLimitExpires(tx, ip, board)
-
-			if err != nil {
-				return com, err
-			}
-
-			if limit == 1 {
-				err = db.SetPyuLimitExpires(tx, ip, board)
-
-				if err != nil {
-					return com, err
-				}
-			} else if limit == 0 && expires.Before(now) {
-				limit, err = db.ResetPyuLimit(tx, ip, board)
-
-				if err != nil {
-					return com, err
-				}
-			}
-
-			if limit == 0 {
-				com.Pyu, err = db.GetPcountA(tx, board)
-
-				if err != nil {
-					return com, err
-				}
-
-				err = db.Ban(board, "stop being such a slut", "system",
-								now.Add(time.Second*30), false, id)
-
-				if err != nil {
-					return com, err
-				}
-			} else {
-				com.Pyu, err = db.IncrementPcount(tx, board)
-
-				if err != nil {
-					return com, err
-				}
-
-				err = db.DecrementPyuLimit(tx, ip, board)
-
-				if err != nil {
-					return com, err
-				}
-			}
-
-			err = tx.Commit()
-		} else {
-			com.Pyu, err = db.GetPcount(board)
-		}
-
-	// Return current pyu count
-	case bytes.Equal(match, []byte("pcount")):
-		com.Type = common.Pcount
-		com.Pyu, err = db.GetPcount(board)
 
 	// Roulette
 	case bytes.Equal(match, []byte("roulette")):

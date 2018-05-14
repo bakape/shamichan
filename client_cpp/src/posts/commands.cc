@@ -203,14 +203,9 @@ optional<Node> PostView::parse_commands(string_view word)
     } else if (name == "8ball") {
         check_consumed;
         inner = val.eight_ball;
-    } else if (name == "pyu" || name == "pcount" || name == "rcount") {
-        switch (val.typ) {
-          case Command::Type::pyu:
-          case Command::Type::pcount:
-          case Command::Type::rcount:
-            check_consumed;
-            inner = std::to_string(std::get<unsigned long>(val.val));
-        }
+    } else if (name == "rcount") {
+        check_consumed;
+        inner = std::to_string(std::get<unsigned long>(val.val));
     } else if (name == "roulette") {
         check_consumed;
         const auto arr = std::get<std::array<uint8_t, 2>>(val.val);
