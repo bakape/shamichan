@@ -1,7 +1,8 @@
 {
   "name": "meguca",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "license": "AGPL-3.0",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/bakape/meguca.git"
