@@ -40,9 +40,6 @@ static std::unordered_map<string, Mutations> mutations;
 // manipulated, before insertion
 static std::vector<std::string> mutation_order;
 
-// Tasks to execute after next mutation flush
-static std::vector<std::function<void()>> tasks;
-
 // Fetches a mutation set by element ID or creates a new one ond registers
 // its execution order
 static Mutations* get_mutation_set(string id)
@@ -160,11 +157,6 @@ extern "C" void flush()
     if (after_flush) {
         (*after_flush)();
     }
-
-    for (auto& t : tasks) {
-        t();
-    }
-    tasks.clear();
 }
 
 void Mutations::exec(const string& id)

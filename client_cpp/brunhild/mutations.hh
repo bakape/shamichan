@@ -48,7 +48,4 @@ extern void (*before_flush)();
 
 // Function to run after flushing DOM updates. IIs run on each call of flush().
 extern void (*after_flush)();
-
-// Schedule a task to execute after the next mutation flush
-void schedule_task(std::function<void()>);
 }
