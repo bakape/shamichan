@@ -138,8 +138,6 @@ void Mutations::free_outer()
     set_outer_html = std::nullopt;
 }
 
-void schedule_task(std::function<void()> t) { tasks.push_back(t); }
-
 extern "C" void flush()
 {
     if (before_flush) {
