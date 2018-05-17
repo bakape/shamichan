@@ -6,7 +6,7 @@ const babel = require("gulp-babel"),
 	gulp = require('gulp'),
 	gutil = require('gulp-util'),
 	less = require('gulp-less'),
-	cssmin = require('gulp-cssmin'),
+	cssmin = require('gulp-clean-css'),
 	rename = require('gulp-rename'),
 	sourcemaps = require('gulp-sourcemaps'),
 	ts = require('gulp-typescript'),
@@ -90,7 +90,7 @@ function buildES5() {
 	gulp.task(name, () =>
 		buildClient()
 			.pipe(babel({
-				presets: ['latest'],
+				presets: ['../node_modules/babel-preset-env'],
 			}))
 			.pipe(uglify())
 			.on('error', handleError)
