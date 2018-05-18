@@ -7,16 +7,16 @@ type OEmbedDoc = {
 }
 
 // Types of different embeds by provider
-enum provider { Youtube, SoundCloud, Vimeo, Coub }
+enum provider { YouTube, SoundCloud, Vimeo, Coub, HookTube }
 
 // Matching patterns and their respective providers
 const patterns: [provider, RegExp][] = [
 	[
-		provider.Youtube,
+		provider.YouTube,
 		/https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=[^&]+/,
 	],
 	[
-		provider.Youtube,
+		provider.YouTube,
 		/https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/[a-zA-Z0-9_-]+/,
 	],
 	[
@@ -31,7 +31,14 @@ const patterns: [provider, RegExp][] = [
 		provider.Coub,
 		/https?:\/\/(?:www\.)?coub\.com\/view\/.+/,
 	],
-
+	[
+		provider.HookTube,
+		/https?:\/\/(?:[^\.]+\.)?hooktube\.com\/watch\/?\?(?:.+&)?v=([^&]+)/,
+	],
+	[
+		provider.HookTube,
+		/https?:\/\/(?:[^\.]+\.)?hooktube\.com\/embed\/([a-zA-Z0-9_-]+)/,
+	],
 ]
 
 // Map of providers to formatter functions
@@ -40,14 +47,14 @@ const formatters: { [key: number]: (s: string) => string } = {}
 // Map of providers to information fetcher functions
 const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
 
-for (let p of ["Youtube", "SoundCloud", "Vimeo", "Coub"]) {
+for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub", "HookTube"]) {
 	const id = (provider as any)[p] as number
-	formatters[id] = formatNoEmbed(id)
-	fetchers[id] = fetchNoEmbed(id)
+	formatters[id] = formatProvider(id)
+	fetchers[id] = (id === provider.HookTube ? fetchHookTube() : fetchNoEmbed(id))
 }
 
-// formatter for the noembed.com meta-provider
-function formatNoEmbed(type: provider): (s: string) => string {
+// formatter for the noembed.com meta-provider or hooktube
+function formatProvider(type: provider): (s: string) => string {
 	return (href: string) => {
 		const attrs = {
 			rel: "noreferrer",
@@ -60,22 +67,45 @@ function formatNoEmbed(type: provider): (s: string) => string {
 	}
 }
 
+// fetcher for the HookTube provider
+function fetchHookTube(): (el: Element) => Promise<void> {
+	return async (el: Element) => {
+		const url = "https://hooktube.com/embed/" + el.getAttribute("href").split("watch?v=").pop().
+			split("/embed/").pop() + "?autoplay=false",
+			data = "<iframe width=\"480\" height=\"270\" src=\"" + url + "\"</iframe>"
+
+		// >a fucking CORS proxy
+		await fetch(`https://cors-proxy.htmldriven.com/?url=${url}`).then((response) =>
+			response.text()).then((html) => {
+				el.textContent = "[HookTube] " + new DOMParser().parseFromString(html, "text/html").
+					querySelectorAll('title')[0].innerText.split("<\\/title>")[0]
+			}).catch(function(err) {
+				el.textContent = "[HookTube] Could not fetch title: " + err
+			})
+
+		el.setAttribute("data-html", encodeURIComponent(data.trim()))
+	}
+}
+
 // fetcher for the noembed.com meta-provider
 function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
 	return async (el: Element) => {
 		const url = "https://noembed.com/embed?url=" + el.getAttribute("href"),
 			[data, err] = await fetchJSON<OEmbedDoc>(url)
+
 		if (err) {
 			el.textContent = format(err)
 			el.classList.add("errored")
 			console.error(err)
 			return
 		}
+
 		if (data.error) {
 			el.textContent = format(data.error)
 			el.classList.add("errored")
 			return
 		}
+
 		el.textContent = format(data.title)
 		el.setAttribute("data-html", encodeURIComponent(data.html.trim()))
 	}
