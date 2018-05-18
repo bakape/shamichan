@@ -1,4 +1,6 @@
 services: docker
+before_install:
+  npm i npm@latest -g
 script:
   - docker build -t meguca_test .
   - docker run -t --entrypoint scripts/docker_test.sh meguca_test
@@ -8,3 +10,6 @@ notifications:
       - scorpid33@gmail.com
     on_success: never
     on_failure: always
+addons:
+    apt:
+      update: true
