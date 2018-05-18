@@ -6,17 +6,19 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"log"
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/db"
 	"meguca/geoip"
 	"meguca/imager/assets"
 	"meguca/lang"
+	"meguca/log"
 	"meguca/templates"
 	"meguca/util"
 	"os"
 	"runtime"
+
+	"github.com/go-playground/log"
 )
 
 var (
@@ -42,6 +44,8 @@ var (
 
 // Start parses command line arguments and initializes the server.
 func Start() {
+	mLog.Init("console")
+
 	// Define flags
 	flag.StringVar(
 		&address,

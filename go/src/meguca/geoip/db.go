@@ -1,12 +1,12 @@
 package geoip
 
 import (
-	"log"
 	"net"
 	"strings"
 	"time"
 
 	"github.com/oschwald/maxminddb-golang"
+	"github.com/go-playground/log"
 )
 
 // nil, if database not loaded
@@ -46,7 +46,7 @@ func LookUp(ip string) (iso string) {
 		} `maxminddb:"country"`
 	}
 	if err := db.Lookup(dec, &record); err != nil {
-		log.Printf("country lookup for `%s`: %s", ip, err)
+		log.Warnf("country lookup for `%s`: %s", ip, err)
 	}
 	iso = strings.ToLower(record.Country.ISOCode)
 

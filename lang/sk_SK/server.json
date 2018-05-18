@@ -88,6 +88,26 @@
 			"#8ball odpoveďe",
 			"List of answers for the #8ball hash command. Can contain up to 100 answers and 2000 characters total."
 		],
+		"emailErr": [
+			"Email Errors",
+			"Toggle emailing errors."
+		],
+		"emailErrMail": [
+			"Email",
+			"Error email."
+		],
+		"emailErrPass": [
+			"Password",
+			"Error email password."
+		],
+		"emailErrPort": [
+			"Email server port",
+			"Error email server port."
+		],
+		"emailErrSub": [
+			"Email server",
+			"Error email server subdomain."
+		],
 		"exhentai": [
 			"Exhentai",
 			"exhentai.org image search"

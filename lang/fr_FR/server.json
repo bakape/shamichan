@@ -88,6 +88,26 @@
 			"Questions #8ball",
 			"Peut contenir 100 questions et un total de 2000 caractères"
 		],
+		"emailErr": [
+			"Email Errors",
+			"Toggle emailing errors."
+		],
+		"emailErrMail": [
+			"Email",
+			"Error email."
+		],
+		"emailErrPass": [
+			"Password",
+			"Error email password."
+		],
+		"emailErrPort": [
+			"Email server port",
+			"Error email server port."
+		],
+		"emailErrSub": [
+			"Email server",
+			"Error email server subdomain."
+		],
 		"exhentai": [
 			"Exhentai",
 			"exhentai.org image search"

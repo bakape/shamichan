@@ -5,12 +5,12 @@
 package server
 
 import (
-	"log"
 	"os"
 	"syscall"
 	"time"
 
 	"github.com/sevlyar/go-daemon"
+	"github.com/go-playground/log"
 )
 
 func init() {
@@ -44,20 +44,20 @@ var daemonContext = &daemon.Context{
 func daemonise() {
 	child, err := daemonContext.Reborn()
 	if err != nil && err.Error() == "resource temporarily unavailable" {
-		log.Fatalln("Error: Server already running")
+		log.Fatal("Error: Server already running")
 	}
 	if child != nil {
 		return
 	}
 	daemonised = true
 	defer daemonContext.Release()
-	log.Println("Server started ------------------------------------")
+	log.Info("Server started ------------------------------------")
 
 	go startServer()
 	if err := daemon.ServeSignals(); err != nil {
 		log.Fatalf("daemon runtime error: %s\n", err)
 	}
-	log.Println("server terminated")
+	log.Info("server terminated")
 }
 
 // Terminate the running meguca server daemon

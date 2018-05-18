@@ -1,13 +1,13 @@
 package auth
 
 import (
-	"log"
 	"meguca/config"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/dchest/captcha"
+	"github.com/go-playground/log"
 )
 
 const captchaLifetime = time.Minute * 20
@@ -163,7 +163,7 @@ func AuthenticateCaptcha(req Captcha, ip string,
 	if !passed && failedCaptchas.increment(ip) {
 		err := systemBan(ip, "bot detected", time.Now().Add(time.Hour*48))
 		if err != nil {
-			log.Printf("automatic ban: %s\n", err)
+			log.Noticef("automatic ban: %s\n", err)
 		}
 	}
 	return passed
