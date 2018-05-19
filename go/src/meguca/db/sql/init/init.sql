@@ -124,7 +124,7 @@ create index sticky on threads (sticky);
 create table posts (
 	editing boolean not null,
 	spoiler boolean,
-	deleted boolean,
+	deleted boolean not null,
 	banned boolean,
 	sage boolean,
 	id bigint primary key,

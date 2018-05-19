@@ -162,13 +162,13 @@ func WritePost(tx *sql.Tx, p Post, bumpReplyTime, sage bool) (err error) {
 
 	q := sq.Insert("posts").
 		Columns(
-			"editing", "spoiler", "id", "board", "op", "time", "body", "flag",
+			"editing", "spoiler", "deleted", "id", "board", "op", "time", "body", "flag",
 			"posterID", "name", "trip", "auth", "password", "ip",
 			"SHA1", "imageName",
 			"commands",
 		).
 		Values(
-			p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, flag,
+			p.Editing, spoiler, false, p.ID, p.Board, p.OP, p.Time, p.Body, flag,
 			posterID, name, trip, auth, p.Password, ip, img, imgName,
 			commandRow(p.Commands),
 		)
@@ -206,4 +206,10 @@ func GetPostPassword(id uint64) (p []byte, err error) {
 func SetPostCounter(c uint64) error {
 	_, err := db.Exec(`SELECT setval('post_id', $1)`, c)
 	return err
+}
+
+// GetPostDeleted retrieves a post's deletion status
+func GetPostDeleted(id uint64) (del bool, err error) {
+	err = prepared["get_post_deleted"].QueryRow(id).Scan(&del)
+	return
 }
