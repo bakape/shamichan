@@ -352,6 +352,10 @@ var optionSpecs = [...][]inputSpec{
 			Type: _shortcut,
 		},
 		{
+			ID:   "cancel",
+			Type: _shortcut,
+		},
+		{
 			ID:   "toggleSpoiler",
 			Type: _shortcut,
 		},

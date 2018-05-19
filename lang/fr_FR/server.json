@@ -44,6 +44,10 @@
 			"Message",
 			"Votre message"
 		],
+		"cancel": [
+			"Cancel Post",
+			"Close open post without saving"
+		],
 		"captcha": [
 			"Captcha",
 			"Demande aux utilisateurs de compléter un captcha pour certaines tâches comme l'enregistrement ou la création d'un sujet"
