@@ -30,8 +30,9 @@ int main()
     load_state();
     init_posts();
     init_navigation();
-    init_top_header();
-    brunhild::set_outer_html("threads", (new PageView())->html());
+    brunhild::set_outer_html("threads", page_view.html());
+    brunhild::prepend("banner", board_navigation_view.html());
+
     start();
 
     // Block all clicks on <a> from exhibiting browser default behavior, unless

@@ -20,7 +20,7 @@ using std::string;
 void render_page()
 {
     recurse_hidden_posts();
-    PageView::instance->patch();
+    page_view.patch();
 
     if (page.post) {
         scroll_to_post(page.post);
@@ -113,6 +113,11 @@ Node PageTitle::render()
     }
     n.inner_html = { format_title(page.board, boards[page.board]) };
     return n;
+}
+
+PageView::PageView()
+    : CompositeView<brunhild::VirtualView>("section", "threads")
+{
 }
 
 std::vector<brunhild::VirtualView*> PageView::get_list()

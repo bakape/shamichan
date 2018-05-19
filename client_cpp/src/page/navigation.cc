@@ -85,9 +85,6 @@ static void try_navigate_page(std::string href, bool need_push)
     threads.clear();
     ThreadView::clear();
 
-    // TODO: Fetch new board configs, if needed (maybe send these in sync
-    // message, if board config hash changed?)
-
     // TODO: New server configuration propagation. Need hash comparison on
     // server.
 

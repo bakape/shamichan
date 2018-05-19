@@ -1,5 +1,11 @@
 #include "form.hh"
+#include "lang.hh"
 #include <emscripten/val.h>
+
+Form::Form(bool no_buttons)
+    : no_buttons(no_buttons)
+{
+}
 
 void Form::init()
 {
@@ -10,7 +16,15 @@ void Form::init()
     }
 }
 
+brunhild::Attrs Form::attrs() { return {}; }
+
 brunhild::Node Form::render()
+{
+    return { "form", attrs(),
+        { render_inputs(), render_controls(), render_footer() } };
+}
+
+brunhild::Node Form::render_controls()
 {
     brunhild::Node controls = { "span", { { "class", "flex" } } };
     if (!no_buttons) {
@@ -30,13 +44,10 @@ brunhild::Node Form::render()
             },
         };
     }
-
-    const auto after = render_after_controls();
-    controls.children.insert(
-        controls.children.end(), after.begin(), after.end());
-
-    return { "form", attrs, { render_inputs(), controls, render_footer() } };
+    return controls;
 }
+
+brunhild::Node Form::render_footer() { return {}; }
 
 std::vector<emscripten::val> Form::get_inputs()
 {

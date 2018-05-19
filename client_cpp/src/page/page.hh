@@ -28,14 +28,10 @@ class PageTitle : public brunhild::VirtualView {
 
 class PageView : public brunhild::CompositeView<brunhild::VirtualView> {
 public:
-    PageView()
-        : CompositeView<brunhild::VirtualView>("section", "threads")
-    {
-        PageView::instance = this;
-    }
-
-    static inline PageView* instance;
+    PageView();
 
 protected:
     std::vector<brunhild::VirtualView*> get_list();
 };
+
+inline PageView page_view;

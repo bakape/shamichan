@@ -1,11 +1,7 @@
 #pragma once
 
 #include "../brunhild/view.hh"
-#include "lang.hh"
-#include "state.hh"
 #include <emscripten/val.h>
-#include <string>
-#include <unordered_map>
 
 // Generic input form view with optional captcha support
 // TODO: Captcha support
@@ -13,34 +9,31 @@ class Form : public brunhild::VirtualView {
 public:
     // Render form with optional specificied root node attributes
     // no_buttons: no Cancel or Submit buttons are rendered
-    Form(brunhild::Attrs attrs = {}, bool no_buttons = false)
-        : attrs(attrs)
-        , no_buttons(no_buttons)
-    {
-    }
-
-    // Query all form input elements
-    std::vector<emscripten::val> get_inputs();
+    Form(bool no_buttons = false);
 
 protected:
-    const brunhild::Attrs attrs;
-
     virtual void init();
+
+    // Return root element attributes
+    virtual brunhild::Attrs attrs();
 
     // Handles sumbit event
     virtual void on_submit(emscripten::val&){};
 
-    // Render any elements after the submit and cancel buttons
-    virtual brunhild::Children render_after_controls() { return {}; }
+    // Render submit and cancel buttons
+    virtual brunhild::Node render_controls();
 
     // Render form input elements
     virtual brunhild::Node render_inputs() = 0;
 
     // Render any elements into the footer
-    virtual brunhild::Node render_footer() { return {}; }
+    virtual brunhild::Node render_footer();
+
+    brunhild::Node render();
+
+    // Query all form input elements
+    std::vector<emscripten::val> get_inputs();
 
 private:
     const bool no_buttons;
-
-    brunhild::Node render();
 };

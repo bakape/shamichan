@@ -1,21 +1,19 @@
+#include "header.hh"
 #include "../../brunhild/mutations.hh"
-#include "../../brunhild/view.hh"
-#include "../form.hh"
 #include "../lang.hh"
 #include "../local_storage.hh"
-#include "../page/page.hh"
 #include "../state.hh"
-#include "../util.hh"
+#include "page.hh"
 #include <memory>
 #include <set>
-#include <sstream>
 
-using nlohmann::json;
-using brunhild::Children;
 using brunhild::Node;
 
 // Default ordering is ascending
 std::set<std::string, std::greater<std::string>> selected_boards;
+
+// Board selection from instance
+static std::unique_ptr<BoardSelectionForm> bsf;
 
 // Returns, if board links should point to catalog pages
 static bool point_to_catalog()
@@ -25,130 +23,6 @@ static bool point_to_catalog()
         return false;
     }
     return *s == "true";
-}
-
-class BoardNavigation : public brunhild::VirtualView {
-public:
-    BoardNavigation();
-    Node render();
-
-private:
-    // Renders a link to a board
-    void board_link(
-        std::ostringstream& s, const std::string& board, bool catalog)
-    {
-        s << "<a href=\"../" << board << '/';
-        if (catalog) {
-            s << "catalog";
-        }
-        s << "\">" << board << "</a>";
-    }
-};
-
-class BoardSelectionForm : public Form {
-public:
-    BoardSelectionForm();
-    void remove() override;
-
-protected:
-    Node render_inputs() override
-    {
-        return {
-            "div", {},
-            {
-                {
-                    "input",
-                    {
-                        { "type", "text" }, { "class", "full-width" },
-                        { "name", "search" },
-                        { "placeholder", lang.ui.at("search") },
-                    },
-                },
-                { "br" },
-            },
-        };
-    }
-
-    Node render_footer() override
-    {
-        Children ch;
-        ch.reserve(boards.size());
-        const bool to_catalog = point_to_catalog();
-        std::ostringstream s;
-        for (auto & [ board, title ] : boards) {
-            s.str("");
-            s << '/' << board << '/';
-            if (to_catalog) {
-                s << "catalog";
-            }
-
-            brunhild::Attrs attrs
-                = { { "type", "checkbox" }, { "name", board } };
-            if (selected_boards.count(board)) {
-                attrs["checked"] = "";
-            }
-
-            bool display = true;
-            if (filter.size()) {
-                display = board.find(filter) != std::string::npos
-                    || to_lower(title).find(filter) != std::string::npos;
-            }
-
-            ch.push_back({
-                "label", { { "class", display ? "" : "hidden" } },
-                {
-                    { "input", attrs },
-                    {
-                        "a",
-                        // Need to copy to  prevent invalidating on reset
-                        { { "href", std::string(s.str()) } },
-                        format_title(board, title),
-                    },
-                    { "br" },
-                },
-            });
-        }
-        return { "div", {}, ch };
-    }
-
-    Children render_after_controls() override
-    {
-        brunhild::Attrs attrs
-            = { { "type", "checkbox" }, { "name", "pointToCatalog" } };
-        if (point_to_catalog()) {
-            attrs["checked"] = "";
-        }
-        return {
-            {
-                "label", {},
-                { { "input", attrs, lang.ui.at("pointToCatalog") } },
-            },
-        };
-    }
-
-private:
-    std::string filter;
-};
-
-static std::unique_ptr<BoardNavigation> bn;
-static std::unique_ptr<BoardSelectionForm> bsf;
-
-Node BoardNavigation::render()
-{
-    std::ostringstream s;
-    const bool catalog = point_to_catalog();
-    s << '[';
-    board_link(s, "all", catalog);
-    for (auto & [ b, _ ] : boards) {
-        if (!selected_boards.count(b)) {
-            continue;
-        }
-        s << " / ";
-        board_link(s, b, catalog);
-    }
-    s << "] [<a class=\"board-selection bold mono\">" << (bsf ? "-" : "+")
-      << "</a>]";
-    return { "nav", { { "id", "board-navigation" } }, s.str() };
 }
 
 // Read selected boards from localStorage
@@ -168,9 +42,10 @@ static void read_selected()
 BoardNavigation::BoardNavigation()
     : VirtualView("board-navigation")
 {
-    // TODO: Remove, when server-side templates ported
-    brunhild::remove("board-navigation");
+}
 
+void BoardNavigation::init()
+{
     read_selected();
     VirtualView::init();
     on("click", ".board-selection", [this](auto& _) {
@@ -181,20 +56,45 @@ BoardNavigation::BoardNavigation()
         }
         patch();
     });
-    brunhild::append("banner", html());
+}
+
+Node BoardNavigation::render()
+{
+    std::ostringstream s;
+    const bool catalog = point_to_catalog();
+    s << '[';
+    board_link(s, "all", catalog);
+    for (auto & [ b, _ ] : boards) {
+        if (!selected_boards.count(b)) {
+            continue;
+        }
+        s << " / ";
+        board_link(s, b, catalog);
+    }
+    s << "] [<a class=\"board-selection bold mono\">" << (bsf ? "-" : "+")
+      << "</a>]";
+    return { "nav", { { "id", "board-navigation" } }, s.str() };
+}
+
+void BoardNavigation::board_link(
+    std::ostringstream& s, const std::string& board, bool catalog)
+{
+    s << "<a href=\"../" << board << '/';
+    if (catalog) {
+        s << "catalog";
+    }
+    s << "\">" << board << "</a>";
 }
 
 BoardSelectionForm::BoardSelectionForm()
-    : Form({}, true)
+    : Form(true)
 {
     // Need to reduce any chance conflicts between multiple tabs
     read_selected();
-    bn->patch();
-
-    Form::init();
+    board_navigation_view.patch();
 
     on("input", "input[name=search]", [this](auto& event) {
-        filter = event["target"]["value"].template as<std::string>();
+        filter = to_lower(event["target"]["value"].template as<std::string>());
         patch();
     });
 
@@ -217,7 +117,7 @@ BoardSelectionForm::BoardSelectionForm()
                 "selectedBoards", join_to_string(selected_boards));
         }
 
-        bn->patch();
+        board_navigation_view.patch();
     });
 
     brunhild::append("left-panel", html());
@@ -227,7 +127,78 @@ void BoardSelectionForm::remove()
 {
     View::remove();
     bsf = nullptr;
-    bn->patch();
+    board_navigation_view.patch();
 }
 
-void init_top_header() { bn.reset(new BoardNavigation()); }
+Node BoardSelectionForm::render_inputs()
+{
+    return {
+        "div", {},
+        {
+            {
+                "input",
+                {
+                    { "type", "text" }, { "class", "full-width" },
+                    { "name", "search" },
+                    { "placeholder", lang.ui.at("search") },
+                },
+            },
+            { "br" },
+        },
+    };
+}
+
+Node BoardSelectionForm::render_footer()
+{
+    brunhild::Children ch;
+    ch.reserve(boards.size());
+    const bool to_catalog = point_to_catalog();
+    std::ostringstream s;
+    for (auto & [ board, title ] : boards) {
+        s.str("");
+        s << '/' << board << '/';
+        if (to_catalog) {
+            s << "catalog";
+        }
+
+        brunhild::Attrs attrs = { { "type", "checkbox" }, { "name", board } };
+        if (selected_boards.count(board)) {
+            attrs["checked"] = "";
+        }
+
+        bool display = true;
+        if (filter.size()) {
+            display = board.find(filter) != std::string::npos
+                || to_lower(title).find(filter) != std::string::npos;
+        }
+
+        ch.push_back({
+            "label", { { "class", display ? "" : "hidden" } },
+            {
+                { "input", attrs },
+                {
+                    "a",
+                    // Need to copy to  prevent invalidating on reset
+                    { { "href", std::string(s.str()) } },
+                    format_title(board, title),
+                },
+                { "br" },
+            },
+        });
+    }
+    return { "div", {}, ch };
+}
+
+Node BoardSelectionForm::render_controls()
+{
+    brunhild::Attrs attrs
+        = { { "type", "checkbox" }, { "name", "pointToCatalog" } };
+    if (point_to_catalog()) {
+        attrs["checked"] = "";
+    }
+    auto n = Form::render_controls();
+    n.children.push_back({
+        "label", {}, { { "input", attrs, lang.ui.at("pointToCatalog") } },
+    });
+    return n;
+}

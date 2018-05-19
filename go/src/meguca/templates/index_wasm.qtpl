@@ -54,7 +54,6 @@
 		</noscript>
 		<div id="user-background"></div>
 		<span id="banner" class="glass">
-			<nav id="board-navigation"></nav>
 			<b id="banner-center"></b>
 			<a id="banner-options" class="banner-float" title="{%s= ln.UI["options"] %}">
 				<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">

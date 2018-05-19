@@ -129,9 +129,9 @@ std::string to_lower(const std::string& s)
 {
     auto loc = std::locale();
     std::string conv;
-    conv.reserve(s.size());
-    for (auto ch : s) {
-        conv += std::tolower(ch, loc);
+    conv.resize(s.size());
+    for (size_t i = 0; i < s.size(); i++) {
+        conv[i] = std::tolower(s[i], loc);
     }
     return conv;
 }
