@@ -44,6 +44,10 @@
 			"Body",
 			"Text body of the post"
 		],
+		"cancel": [
+			"Cancel Post",
+			"Close open post without saving"
+		],
 		"captcha": [
 			"Капча",
 			"Питати користувачів при регістрації та створенні тхреду"

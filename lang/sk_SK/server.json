@@ -44,6 +44,10 @@
 			"Telo",
 			"Telo textu nového plagátu"
 		],
+		"cancel": [
+			"Cancel Post",
+			"Close open post without saving"
+		],
 		"captcha": [
 			"Kapča",
 			"Požiadaj užívateľov aby vyplnili kapču pre určité úlohy ako je registrácia a vytváranie vláken"

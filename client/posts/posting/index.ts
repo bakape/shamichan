@@ -53,6 +53,7 @@ export const enum postEvent {
 	disconnect,    // Disconnected from server
 	error,         // Unrecoverable error
 	done,          // Post closed
+	cancel,        // Post canceled
 	open,          // New post opened
 	reset,         // Set to none. Used during page navigation.
 	alloc,         // Allocated the draft post to the server
@@ -292,6 +293,12 @@ export default () => {
 		return postState.ready
 	})
 
+	// Cancelled, when needing a captcha
+	postSM.act(postState.needCaptcha, postEvent.cancel, () => {
+		postForm.remove()
+		return postState.ready
+	})
+
 	// Hide post controls, when a postForm is open
 	const hidePostControls = () =>
 		stylePostControls(el =>
@@ -323,14 +330,32 @@ export default () => {
 		return postState.ready
 	})
 
+	// Cancel unallocated draft
+	postSM.act(postState.draft, postEvent.cancel, () => {
+		postForm.remove()
+		return postState.ready
+	})
+
 	// Close allocated post
 	postSM.act(postState.alloc, postEvent.done, (cancel: any) => {
 		postModel.commitClose(typeof cancel === "boolean" ? cancel : false)
 		return postState.ready
 	})
 
+	// Cancel allocated post
+	postSM.act(postState.alloc, postEvent.cancel, () => {
+		postModel.commitClose(true)
+		return postState.ready
+	})
+
 	// Just close the post, after it is committed
 	postSM.act(postState.sendingNonLive, postEvent.done, () => {
+		postModel.abandon()
+		return postState.ready
+	})
+
+	// Just cancel the post, after it is committed
+	postSM.act(postState.sendingNonLive, postEvent.cancel, () => {
 		postModel.abandon()
 		return postState.ready
 	})

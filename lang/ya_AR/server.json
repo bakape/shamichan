@@ -44,6 +44,10 @@
 			"Body",
 			"Text body of the post"
 		],
+		"cancel": [
+			"Cancel Post",
+			"Close open post without saving"
+		],
 		"captcha": [
 			"Captcha",
 			"Ask users to complete a captcha for certain tasks like registration and thread creation"
