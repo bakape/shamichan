@@ -8,6 +8,7 @@ import lang from "../../lang"
 import identity, { initIdentity } from "./identity"
 import { boardConfig, page } from "../../state"
 import initDrop from "./drop"
+import initPaste from "./paste"
 import initThreads from "./threads"
 
 export { default as FormModel } from "./model"
@@ -394,6 +395,7 @@ export default () => {
 	identity.onChange("live", toggleLive)
 
 	initDrop()
+	initPaste()
 	initThreads()
 	initIdentity()
 }
