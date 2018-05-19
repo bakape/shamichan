@@ -605,13 +605,6 @@ var upgrades = []func(*sql.Tx) error{
 			`drop table pyu_limit`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
-		_, err = tx.Exec(
-			`update posts
-				set deleted = false`,
-		)
-		return
-	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
