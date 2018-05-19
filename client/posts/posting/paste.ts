@@ -40,16 +40,7 @@ function onPaste(e: ClipboardEvent) {
 	}
 }
 
-function stopDefault(e: Event) {
-	e.stopPropagation()
-	e.preventDefault()
-}
-
 // Bind listeners
 export default () => {
-	for (let event of ["paste"]) {
-		document.addEventListener(event, stopDefault)
-	}
-
 	document.addEventListener("paste", onPaste)
 }
