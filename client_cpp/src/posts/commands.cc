@@ -1,5 +1,6 @@
 // Hash command parsing and rendering
 
+#include "commands.hh"
 #include "../lang.hh"
 #include "../state.hh"
 #include "view.hh"
@@ -16,8 +17,6 @@ using std::ostringstream;
 using std::string;
 using std::string_view;
 using std::unordered_map;
-
-long server_time_offset = 0;
 
 // IDs of posts, that are pending a rerender to update the syncwatch and the
 // time they should be rerender at. Specifying a timestamp helps avoid useless

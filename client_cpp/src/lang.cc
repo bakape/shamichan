@@ -2,8 +2,6 @@
 #include "util.hh"
 #include <nlohmann/json.hpp>
 
-LanguagePack lang;
-
 using nlohmann::json;
 
 void LanguagePack::load()

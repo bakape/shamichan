@@ -47,4 +47,4 @@ private:
 };
 
 // Contains the plugable langauge pack
-extern LanguagePack lang;
+inline LanguagePack lang;

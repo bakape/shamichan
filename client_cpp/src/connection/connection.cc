@@ -17,8 +17,6 @@
 using nlohmann::json;
 using std::string;
 
-FSM<ConnState, ConnEvent> conn_SM = { ConnState::loading };
-
 static void on_open() { conn_SM.feed(ConnEvent::open); }
 
 static void on_close() { conn_SM.feed(ConnEvent::close); }

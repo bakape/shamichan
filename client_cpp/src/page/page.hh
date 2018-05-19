@@ -18,13 +18,11 @@ void push_board_hover_info(brunhild::Children& ch);
 
 // Top banner with a board-specific images
 class ImageBanner : public brunhild::VirtualView {
-public:
     brunhild::Node render();
 };
 
 // Simple header with page title
 class PageTitle : public brunhild::VirtualView {
-public:
     brunhild::Node render();
 };
 

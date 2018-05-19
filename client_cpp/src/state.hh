@@ -10,16 +10,16 @@
 
 // Contains all posts currently loaded on the page. Posts might or might not
 // be actually displayed.
-extern std::map<unsigned long, Post> posts;
+inline std::map<unsigned long, Post> posts;
 
 // Caches the origin of the page
-extern std::string location_origin;
+inline std::string location_origin;
 
 // Loaded thread metadata
-extern std::unordered_map<unsigned long, Thread> threads;
+inline std::unordered_map<unsigned long, Thread> threads;
 
 // Debug mode. Can be enabled by setting the "debug=true" query string.
-extern bool debug;
+inline bool debug = false;
 
 // Public server-wide global configurations
 class Config {
@@ -36,7 +36,7 @@ public:
 };
 
 // Server-wide global configuration, that affects the client
-extern Config config;
+inline Config config;
 
 // Public board-specific configurations
 class BoardConfig {
@@ -54,10 +54,10 @@ public:
 };
 
 // Public board-specific configurations
-extern BoardConfig board_config;
+inline BoardConfig board_config;
 
 // Map of all existing boards to their titles
-extern std::map<std::string, std::string> boards;
+inline std::map<std::string, std::string> boards;
 
 // Describes the current page
 class Page {
@@ -73,7 +73,7 @@ public:
 };
 
 // Describes the current page
-extern Page page;
+inline Page page;
 
 // Load initial application state
 void load_state();
@@ -91,7 +91,7 @@ struct PostIDs {
         hidden; // Posts the user has hidden
 };
 
-extern PostIDs post_ids;
+inline PostIDs post_ids;
 
 // Types of post ID storage in the database
 enum class StorageType : int { mine, seen_replies, seen_posts, hidden };

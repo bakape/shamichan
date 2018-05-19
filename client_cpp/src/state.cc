@@ -22,18 +22,6 @@ using std::string;
 typedef std::unordered_map<unsigned long, std::map<unsigned long, LinkData>>
     Backlinks;
 
-Config config;
-BoardConfig board_config;
-std::map<std::string, std::string> boards;
-
-Page page;
-bool debug = false;
-string location_origin;
-
-PostIDs post_ids;
-std::map<unsigned long, Post> posts;
-std::unordered_map<unsigned long, Thread> threads;
-
 // Places inverse post links into backlinks for later assignment to individual
 // post models
 static void extract_backlinks(const Post& p, Backlinks& backlinks)
