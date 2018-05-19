@@ -41,6 +41,9 @@
 			#right-panel {
 				float: right;
 			}
+			.hash-link {
+				display: unset;
+			}
 		</style>
 	</head>
 	<body>
