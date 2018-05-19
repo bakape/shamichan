@@ -222,8 +222,18 @@ func RefreshBanCache() (err error) {
 
 // DeletePost marks the target post as deleted
 func DeletePost(id uint64, by string) error {
-	q := sq.Update("posts").Set("deleted", true)
-	return moderatePost(id, auth.DeletePost, by, q, common.DeletePost)
+	var del sql.NullBool
+	err := prepared["get_post_deleted"].QueryRow(id).Scan(&del)
+
+	if err != nil {
+		return err
+	}
+
+	if !del.Valid || !del.Bool {
+		return moderatePost(id, auth.DeletePost, by, sq.Update("posts").Set("deleted", true), common.DeletePost)
+	}
+
+	return err
 }
 
 func moderatePost(
