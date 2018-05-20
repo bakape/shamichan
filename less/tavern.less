@@ -1,72 +1,76 @@
 @import "common.mix.less";
+@body: white;
 @link: #ef9d6a;
-@postBG: black;
+@em: #b5bd68;
+@del: black;
+@postBG: @del;
 @border: 1px solid #282a2e;
 @bold: #c5c8c6;
 @admin: #f00000;
-@mod: #ef9d6a;
-@wood: url(wood.jpg);
+@mod: @link;
+@red: @admin;
+@blue: #57e8ed;
 
 blockquote a:hover {
-	color: #ef9d6a;
+	color: @link;
 }
 
 a:hover, blockquote a, article.editing a:hover {
-	color: @wood;
+	color: url("/assets/css/wood.jpg");
 }
 
-article, aside, .modal, .pagination {
-	background:@wood;
-    color: white;
+article, aside, .popup-menu, .modal, .side-panel {
+	background:url("/assets/css/wood.jpg");
+	color: @body;
 }
 
 article.highlight, .preview, .popup-menu {
-	background: @wood;
-    color: white;
+	background: url("/assets/css/wood.jpg");
+	color: @body;
 }
 
 article.editing {
 	background:
-        linear-gradient(
-           rgba(239, 157, 106, 0.25),
-           rgba(239, 157, 106, 0.25)
-        ),
-        @wood;
-	color: white;
+		linear-gradient(
+			rgba(239, 157, 106, 0.25),
+			rgba(239, 157, 106, 0.25)
+		),
+		url("/assets/css/wood.jpg");
+	color: @body;
 	a, header {
-		color: white;
+		color: @body;
 	}
 	em {
 		color: #B7BA3E
 	}
 	li {
-		color: white;
+		color: @body;
 	}
 	.themed {
-		color: white;
+		color: @body;
 	}
 }
 
 #banner {
-	color: white;
+	color: @body;
 }
 
 body {
 	background: url(tavern.jpg);
-    background-repeat:no-repeat;
-    background-size:cover;
-    background-attachment: fixed;
+	background-repeat:no-repeat;
+	background-size:cover;
+	background-attachment: fixed;
 }
 
 body, pre, .themed, a>b {
 	font-family: Arial, Helvetica, sans-serif;
 	font-size: 10pt;
-    text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
-    color:white
+	text-shadow: -1px 0 @postBG, 0 1px @postBG, 1px 0 @postBG, 0 -1px @postBG;
+	color: @body
 }
 
 .embed {
-	background-color: white;
+	background-color: @body;
 	text-shadow: none;
 }
 
@@ -77,16 +81,16 @@ em {
 h1 {
 	font: bolder 28px Tahoma;
 	letter-spacing: -2px;
-    color: white;
+	color: @body;
 }
 
 h2 {
 	font-family: Tahoma;
-    color: white;
+	color: @body;
 }
 
 h3 {
-	color: white;
+	color: @body;
 }
 
 hr {
@@ -95,26 +99,21 @@ hr {
 
 .popup-menu li:hover {
 	background-color: #136;
-    color: white;
+	color: @body;
 }
 
 .omit {
-	color: white;
-}
-
-#lock {
-	background-image: url('ui/invlock.svg');
-	background-size: 1em 1em;
+	color: @body;
 }
 
 a.tab-sel {
-	color: #FFD897;
+	color: @body;
 }
 
 .themed {
-	color: white;
+	color: @body;
 }
 
 #banner {
-	background: @wood;
+	background: url("/assets/css/wood.jpg");
 }
