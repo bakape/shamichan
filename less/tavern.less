@@ -1,0 +1,119 @@
+@import "common.mix.less";
+@body: white;
+@link: #ef9d6a;
+@em: #b5bd68;
+@del: black;
+@postBG: @del;
+@border: 1px solid #282a2e;
+@bold: #c5c8c6;
+@admin: #f00000;
+@mod: @link;
+@red: @admin;
+@blue: #57e8ed;
+
+blockquote a:hover {
+	color: @link;
+}
+
+a:hover, blockquote a, article.editing a:hover {
+	color: url("/assets/css/wood.jpg");
+}
+
+article, aside, .popup-menu, .modal, .side-panel {
+	background:url("/assets/css/wood.jpg");
+	color: @body;
+}
+
+article.highlight, .preview, .popup-menu {
+	background: url("/assets/css/wood.jpg");
+	color: @body;
+}
+
+article.editing {
+	background:
+		linear-gradient(
+			rgba(239, 157, 106, 0.25),
+			rgba(239, 157, 106, 0.25)
+		),
+		url("/assets/css/wood.jpg");
+	color: @body;
+	a, header {
+		color: @body;
+	}
+	em {
+		color: #B7BA3E
+	}
+	li {
+		color: @body;
+	}
+	.themed {
+		color: @body;
+	}
+}
+
+#banner {
+	color: @body;
+}
+
+body {
+	background: url(tavern.jpg);
+	background-repeat:no-repeat;
+	background-size:cover;
+	background-attachment: fixed;
+}
+
+body, pre, .themed, a>b {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+	text-shadow: -1px 0 @postBG, 0 1px @postBG, 1px 0 @postBG, 0 -1px @postBG;
+	color: @body
+}
+
+.embed {
+	background-color: @body;
+	text-shadow: none;
+}
+
+em {
+	color: #B7BA3E;
+}
+
+h1 {
+	font: bolder 28px Tahoma;
+	letter-spacing: -2px;
+	color: @body;
+}
+
+h2 {
+	font-family: Tahoma;
+	color: @body;
+}
+
+h3 {
+	color: @body;
+}
+
+hr {
+	border-top: 1px solid #282a2e;
+}
+
+.popup-menu li:hover {
+	background-color: #136;
+	color: @body;
+}
+
+.omit {
+	color: @body;
+}
+
+a.tab-sel {
+	color: @body;
+}
+
+.themed {
+	color: @body;
+}
+
+#banner {
+	background: url("/assets/css/wood.jpg");
+}
