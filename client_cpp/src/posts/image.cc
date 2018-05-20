@@ -323,20 +323,23 @@ std::tuple<Node, optional<Node>> PostView::render_image()
     return { n, audio };
 }
 
+// Match view with image or return
+#define MATCH_WITH_IMAGE(event)                                                \
+    auto res = match_view(event);                                              \
+    if (!res) {                                                                \
+        return;                                                                \
+    }                                                                          \
+    auto[model, view] = *res;                                                  \
+    if (!model->image) {                                                       \
+        return;                                                                \
+    }
+
 void handle_image_click(emscripten::val& event)
 {
     if (page.catalog) {
         return;
     }
-    // Identify and validate parent post
-    auto res = match_view(event);
-    if (!res) {
-        return;
-    }
-    auto[model, view] = *res;
-    if (!model->image) {
-        return;
-    }
+    MATCH_WITH_IMAGE(event);
     auto& img = *model->image;
 
     // Simply download the file
@@ -373,14 +376,7 @@ void handle_image_click(emscripten::val& event)
 
 void toggle_hidden_thumbnail(emscripten::val& event)
 {
-    auto res = match_view(event);
-    if (!res) {
-        return;
-    }
-    auto[model, view] = *res;
-    if (!model->image) {
-        return;
-    }
+    MATCH_WITH_IMAGE(event);
     view->reveal_thumbnail = !view->reveal_thumbnail;
     view->patch();
 }
