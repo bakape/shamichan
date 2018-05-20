@@ -259,9 +259,8 @@ static void render_index_page()
           << "\"></h1>";
     }
 
-    const string title = format_title(page.board, board_config.title);
-    s << "<h1 id=page-title>" << title << "</h1>";
-    set_title(title);
+    s << "<h1 id=page-title>" << format_title(page.board, board_config.title)
+      << "</h1>";
 
     Node aside_container("span", { { "class", "aside-container" } });
     auto& ch = aside_container.children;

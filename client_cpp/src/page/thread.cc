@@ -56,8 +56,6 @@ void render_thread()
     n.write_html(s);
 
     brunhild::set_inner_html("threads", s.str());
-    set_title(format_title(page.board, threads.at(page.thread).subject));
-    render_post_counter();
 }
 
 void render_post_counter()
@@ -95,6 +93,13 @@ void render_post_counter()
     brunhild::set_inner_html("thread-post-counters", s.str());
 }
 
+ThreadView::ThreadView(unsigned long thread_id, std::string id)
+    : ListView("section", id)
+    , thread_id(thread_id)
+{
+    ThreadView::instances[thread_id] = this;
+}
+
 std::vector<Post*> ThreadView::get_list()
 {
     std::vector<Post*> re;
@@ -112,12 +117,20 @@ std::shared_ptr<PostView> ThreadView::create_child(Post* p)
     return p->views.emplace_back(new PostView(p->id));
 }
 
-std::map<unsigned long, ThreadView*> ThreadView::instances;
-
-void ThreadView::clear()
+std::vector<brunhild::View*> ThreadPageView::top_controls()
 {
-    for (auto[_, v] : ThreadView::instances) {
-        v->~ThreadView();
-    }
-    ThreadView::instances.clear();
+    return { new Button(lang.ui.at("bottom"), "#bottom"),
+        new Button(lang.ui.at("return"), "."),
+        new Button(lang.ui.at("catalog"), "catalog") };
+}
+
+std::vector<brunhild::View*> ThreadPageView::bottom_controls()
+{
+    return { new Button(lang.ui.at("top"), "#top"),
+        new Button(lang.ui.at("return"), "."),
+        new Button(lang.ui.at("catalog"), "catalog"),
+        new brunhild::NodeView({
+            "span", { { "id", "lock" }, { "style", "visibility: hidden;" } },
+            lang.ui.at("lockedToBottom"),
+        }) };
 }

@@ -43,6 +43,17 @@ string pluralize(int n, string word)
     return s;
 }
 
+url_encode::url_encode(const std::string& s)
+    : str(s)
+{
+}
+
+char url_encode::to_hex(char code)
+{
+    static const char* hex = "0123456789abcdef";
+    return hex[code & 15];
+}
+
 std::ostream& operator<<(std::ostream& os, const url_encode& u)
 {
     for (auto ch : u.str) {

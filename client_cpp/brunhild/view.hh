@@ -45,6 +45,10 @@ public:
     // Scroll the root element of View into the viewport
     void scroll_into_view();
 
+    // Patch the view's subtree against the updated subtree.
+    // Can only be called after the view has been inserted into the DOM.
+    virtual void patch() = 0;
+
 protected:
     // Returns the root element of the view
     emscripten::val el();
@@ -87,9 +91,6 @@ protected:
     // Initialize view with subtree
     virtual void init();
 
-private:
-    bool is_initialized = false;
-
     // Contains data about the state of the DOM subtree after the last patch
     // call
     Node saved;
@@ -97,11 +98,29 @@ private:
     // Ensure the Node and it's subtree all have element IDs defined
     void ensure_id(Node&);
 
+private:
+    bool is_initialized = false;
+
     // Patch an old node against the new one and generate DOM mutations
     void patch_node(Node& old, Node&& node);
 
     // Patch element's subtree
     void patch_children(Node& old, Node&& node);
+};
+
+// Simple constant view that renders a Node with its subtree
+class NodeView : public VirtualView {
+public:
+    NodeView(Node n) { saved = n; }
+    Node render() { return saved; }
+    void patch() {}
+
+protected:
+    void init()
+    {
+        saved.attrs["id"] = id;
+        ensure_id(saved);
+    }
 };
 
 // Utility adapter for the MV* pattern
@@ -137,7 +156,7 @@ protected:
 };
 
 // Common functionality of all parent views
-template <class V = VirtualView> class ParentView : public View {
+template <class V = View> class ParentView : public View {
 public:
     // Tag of root node
     const std::string tag;
@@ -174,7 +193,7 @@ protected:
     std::vector<std::shared_ptr<V>> saved;
 
     // Returns the attributes of the container view
-    virtual Attrs attrs() const { return {}; };
+    virtual Attrs attrs() { return {}; };
 
     virtual void init()
     {
@@ -289,7 +308,7 @@ protected:
 
 // Combines multiple views as its children. The list and order of the child
 // views never mutates.
-template <class V = VirtualView> class CompositeView : public ParentView<V> {
+template <class V = View> class CompositeView : public ParentView<V> {
     using ParentView<V>::ParentView;
     using ParentView<V>::saved;
     using ParentView<V>::saved_attrs;

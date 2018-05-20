@@ -11,16 +11,27 @@
 #include "thread.hh"
 #include <emscripten.h>
 #include <emscripten/bind.h>
+#include <memory>
 #include <optional>
 #include <sstream>
 
 using brunhild::Node;
 using std::string;
 
+// Contains the post-related portion of the page
+static std::unique_ptr<PageView> page_view;
+
 void render_page()
 {
     recurse_hidden_posts();
-    page_view.patch();
+    render_post_counter();
+    set_title(format_title(page.board,
+        page.thread ? threads.at(page.thread).subject : board_config.title));
+    if (page.thread) {
+        page_view.reset(new ThreadPageView());
+        brunhild::set_outer_html("threads", page_view->html());
+    }
+    // page_view.reset(page.thread ? new PageView() : new PageView());
 
     if (page.post) {
         scroll_to_post(page.post);
@@ -115,12 +126,39 @@ Node PageTitle::render()
     return n;
 }
 
-PageView::PageView()
-    : CompositeView<brunhild::VirtualView>("section", "threads")
+std::vector<brunhild::View*> PageView::get_list()
 {
+    console::log("rendering page...");
+    auto top = top_controls();
+    if (board_config.notice != "") {
+        top.push_back(new HoverTooltip("showNotice", board_config.notice));
+    }
+    if (board_config.rules != "") {
+        top.push_back(new HoverTooltip("rules", board_config.rules));
+    }
+
+    return {
+        new ImageBanner(), new PageTitle(), new AsideRow(top),
+        new brunhild::NodeView({ "hr" }), thread_container(),
+        new brunhild::NodeView({ "hr" }), new AsideRow(bottom_controls()),
+    };
 }
 
-std::vector<brunhild::VirtualView*> PageView::get_list()
+Button::Button(std::string text, std::optional<std::string> href)
+    : NodeView({ "aside", { { "class", "act glass" } }, { { "a", text } } })
 {
-    return { new ImageBanner(), new PageTitle() };
+    if (href) {
+        saved.children[0].attrs["href"] = *href;
+    }
+}
+
+HoverTooltip::HoverTooltip(std::string label_id, std::string text)
+    : NodeView({
+          "aside", { { "class", "hover-reveal glass" } },
+          {
+              { "span", { { "class", "act" } }, lang.ui.at(label_id) },
+              { "span", { { "class", "popup-menu glass" } }, text, true },
+          },
+      })
+{
 }

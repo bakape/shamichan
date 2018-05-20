@@ -30,7 +30,6 @@ int main()
     load_state();
     init_posts();
     init_navigation();
-    brunhild::set_outer_html("threads", page_view.html());
     brunhild::prepend("banner", board_navigation_view.html());
 
     start();

@@ -49,9 +49,7 @@ std::string pluralize(int n, std::string word);
 
 // Renders a clickable button element.
 // If href = std::nullopt, no href property is set on the link.
-// If aside = true, renders the button as an <aside> element, instead of <span>.
-brunhild::Node render_button(
-    std::optional<std::string> href, std::string text, bool aside = false);
+brunhild::Node render_button(std::optional<std::string> href, std::string text);
 
 // Render a link to expand a thread
 brunhild::Node render_expand_link(std::string board, unsigned long id);
@@ -61,20 +59,14 @@ brunhild::Node render_last_100_link(std::string board, unsigned long id);
 
 // URL encode a string to pass into an ostream
 struct url_encode {
-    url_encode(const std::string& s)
-        : str(s)
-    {
-    }
-
+    url_encode(const std::string& s);
     friend std::ostream& operator<<(std::ostream& os, const url_encode& u);
 
 private:
     const std::string& str;
 
-    constexpr static char hex[17] = "0123456789abcdef";
-
     // Converts character code to hex to HEX
-    static char to_hex(char code) { return hex[code & 15]; }
+    static char to_hex(char code);
 };
 
 // Render submit button with and optional cancel button
