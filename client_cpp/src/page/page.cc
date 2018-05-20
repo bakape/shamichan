@@ -92,15 +92,10 @@ void push_board_hover_info(brunhild::Children& ch)
 Node ImageBanner::render()
 {
     Node n("h1", { { "class", "image-banner" } });
-
     auto const& b = board_config.banners;
-    if (page.thread || !b.size()) {
-        n.hide();
-        return n;
-    }
-
     Node ch;
     const int i = rand() % b.size();
+
     if (b[i] == FileType::webm) {
         ch.tag = "video";
         ch.attrs = { { "autoplay", "" }, { "loop", "" } };
@@ -115,20 +110,8 @@ Node ImageBanner::render()
     return n;
 }
 
-Node PageTitle::render()
-{
-    Node n("h1");
-    if (page.thread) {
-        n.hide();
-        return n;
-    }
-    n.inner_html = { format_title(page.board, boards[page.board]) };
-    return n;
-}
-
 std::vector<brunhild::View*> PageView::get_list()
 {
-    console::log("rendering page...");
     auto top = top_controls();
     if (board_config.notice != "") {
         top.push_back(new HoverTooltip("showNotice", board_config.notice));
@@ -137,19 +120,41 @@ std::vector<brunhild::View*> PageView::get_list()
         top.push_back(new HoverTooltip("rules", board_config.rules));
     }
 
-    return {
-        new ImageBanner(), new PageTitle(), new AsideRow(top),
-        new brunhild::NodeView({ "hr" }), thread_container(),
-        new brunhild::NodeView({ "hr" }), new AsideRow(bottom_controls()),
+    std::vector<brunhild::View*> vec = {
+        new AsideRow(top, false), new brunhild::NodeView({ "hr" }),
+        thread_container(), new brunhild::NodeView({ "hr" }),
+        new AsideRow(bottom_controls(), true),
     };
+    if (!page.thread) {
+        vec.insert(vec.begin(),
+            new brunhild::NodeView(
+                { "h1", format_title(page.board, boards[page.board]) }));
+        if (board_config.banners.size()) {
+            vec.insert(vec.begin(), new ImageBanner());
+        }
+    }
+
+    return vec;
+}
+
+PageView::AsideRow::AsideRow(std::vector<brunhild::View*> list, bool bottom)
+    : CompositeView("span", bottom ? "bottom" : "top")
+    , list(list)
+{
+}
+
+brunhild::Attrs PageView::AsideRow::attrs()
+{
+    std::string cls = "aside-container";
+    if (id == "top" && page.thread) {
+        cls += " top-margin";
+    }
+    return { { "class", cls } };
 }
 
 Button::Button(std::string text, std::optional<std::string> href)
-    : NodeView({ "aside", { { "class", "act glass" } }, { { "a", text } } })
+    : NodeView(render_button(href, text, !page.thread))
 {
-    if (href) {
-        saved.children[0].attrs["href"] = *href;
-    }
 }
 
 HoverTooltip::HoverTooltip(std::string label_id, std::string text)

@@ -19,11 +19,8 @@ void push_board_hover_info(brunhild::Children& ch);
 // Top banner with a board-specific images
 class ImageBanner : public brunhild::VirtualView {
     brunhild::Node render();
-};
 
-// Simple header with page title
-class PageTitle : public brunhild::VirtualView {
-    brunhild::Node render();
+    // TODO: Change on click
 };
 
 // Contains the post-related portion of the page
@@ -47,18 +44,15 @@ protected:
     virtual std::vector<brunhild::View*> bottom_controls() = 0;
 
 private:
-    // Row of various <aside> elements on page tob and bottom
+    // Row of various <aside> elements on page top and bottom
+    // bottom: row is at page bottom
     class AsideRow : public brunhild::CompositeView<> {
     public:
-        AsideRow(std::vector<brunhild::View*> list)
-            : CompositeView("span")
-            , list(list)
-        {
-        }
+        AsideRow(std::vector<brunhild::View*> list, bool bottom);
 
     protected:
         std::vector<brunhild::View*> get_list() { return list; }
-        brunhild::Attrs attrs() { return { { "class", "aside-container" } }; }
+        brunhild::Attrs attrs();
 
     private:
         std::vector<brunhild::View*> list;

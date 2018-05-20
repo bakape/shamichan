@@ -49,7 +49,9 @@ std::string pluralize(int n, std::string word);
 
 // Renders a clickable button element.
 // If href = std::nullopt, no href property is set on the link.
-brunhild::Node render_button(std::optional<std::string> href, std::string text);
+// aside: use <aside> root node instead of <span>
+brunhild::Node render_button(
+    std::optional<std::string> href, std::string text, bool aside = false);
 
 // Render a link to expand a thread
 brunhild::Node render_expand_link(std::string board, unsigned long id);

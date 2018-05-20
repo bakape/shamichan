@@ -120,7 +120,7 @@ BoardSelectionForm::BoardSelectionForm()
         board_navigation_view.patch();
     });
 
-    brunhild::append("left-panel", html());
+    brunhild::prepend("modal-overlay", html());
 }
 
 void BoardSelectionForm::remove()
@@ -201,4 +201,9 @@ Node BoardSelectionForm::render_controls()
         "label", {}, { { "input", attrs, lang.ui.at("pointToCatalog") } },
     });
     return n;
+}
+
+brunhild::Attrs BoardSelectionForm::attrs()
+{
+    return { { "class", "modal glass" }, { "style", "margin-left: .5em;" } };
 }

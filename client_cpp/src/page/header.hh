@@ -32,6 +32,7 @@ protected:
     brunhild::Node render_inputs();
     brunhild::Node render_footer();
     brunhild::Node render_controls();
+    brunhild::Attrs attrs();
 
 private:
     std::string filter;
