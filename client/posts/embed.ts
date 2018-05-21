@@ -91,7 +91,7 @@ function fetchHookTube(): (el: Element) => Promise<void> {
 		el.textContent = format(new DOMParser().parseFromString(data.body, "text/html").
 			querySelectorAll('title')[0].innerText, provider.HookTube)
 		el.setAttribute("data-html", encodeURIComponent("<iframe width=\"480\" height=\"270\" src=\"" +
-			url + "\"</iframe>"))
+			url + "\" frameborder=\"0\"</iframe>"))
 	}
 }
 
