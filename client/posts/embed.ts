@@ -70,20 +70,28 @@ function formatProvider(type: provider): (s: string) => string {
 // fetcher for the HookTube provider
 function fetchHookTube(): (el: Element) => Promise<void> {
 	return async (el: Element) => {
-		const url = "https://hooktube.com/embed/" + el.getAttribute("href").split("watch?v=").pop().
-			split("/embed/").pop() + "?autoplay=false",
-			data = "<iframe width=\"480\" height=\"270\" src=\"" + url + "\"</iframe>"
+		// Use a CORS proxy to work around javascript's cross-domain restrictions
+		const url = "https://hooktube.com/embed/" +
+			el.getAttribute("href").split("watch?v=").pop().split("/embed/").pop() + "?autoplay=false",
+			[data, err] = await fetchJSON<any>("https://cors-proxy.htmldriven.com/?url=" + url)
 
-		// >a fucking CORS proxy
-		await fetch(`https://cors-proxy.htmldriven.com/?url=${url}`).then((response) =>
-			response.text()).then((html) => {
-				el.textContent = "[HookTube] " + new DOMParser().parseFromString(html, "text/html").
-					querySelectorAll('title')[0].innerText.split("<\\/title>")[0]
-			}).catch(function(err) {
-				el.textContent = "[HookTube] Could not fetch title: " + err
-			})
+		if (err) {
+			el.textContent = format(err, provider.HookTube)
+			el.classList.add("errored")
+			console.error(err)
+			return
+		}
 
-		el.setAttribute("data-html", encodeURIComponent(data.trim()))
+		if (data.error) {
+			el.textContent = format(data.error, provider.HookTube)
+			el.classList.add("errored")
+			return
+		}
+
+		el.textContent = format(new DOMParser().parseFromString(data.body, "text/html").
+			querySelectorAll('title')[0].innerText, provider.HookTube)
+		el.setAttribute("data-html", encodeURIComponent("<iframe width=\"480\" height=\"270\" src=\"" +
+			url + "\"</iframe>"))
 	}
 }
 
@@ -94,25 +102,25 @@ function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
 			[data, err] = await fetchJSON<OEmbedDoc>(url)
 
 		if (err) {
-			el.textContent = format(err)
+			el.textContent = format(err, type)
 			el.classList.add("errored")
 			console.error(err)
 			return
 		}
 
 		if (data.error) {
-			el.textContent = format(data.error)
+			el.textContent = format(data.error, type)
 			el.classList.add("errored")
 			return
 		}
 
-		el.textContent = format(data.title)
+		el.textContent = format(data.title, type)
 		el.setAttribute("data-html", encodeURIComponent(data.html.trim()))
 	}
+}
 
-	function format(s: string): string {
-		return `[${provider[type]}] ${s}`
-	}
+function format(s: string, type: provider): string {
+	return `[${provider[type]}] ${s}`
 }
 
 // Match and parse URL against embeddable formats. If matched, returns the
