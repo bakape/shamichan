@@ -309,12 +309,12 @@ func TestRenderBody(t *testing.T) {
 		{
 			name: "youtube embed",
 			in:   "https://www.youtube.com/watch?v=z0f4Wgi94eo",
-			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/watch?v=z0f4Wgi94eo\">[Youtube] ???</a></em>",
+			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://www.youtube.com/watch?v=z0f4Wgi94eo\">[YouTube] ???</a></em>",
 		},
 		{
 			name: "youtu.be embed",
 			in:   "https://youtu.be/z0f4Wgi94eo",
-			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://youtu.be/z0f4Wgi94eo\">[Youtube] ???</a></em>",
+			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"0\" href=\"https://youtu.be/z0f4Wgi94eo\">[YouTube] ???</a></em>",
 		},
 		{
 			name: "soundcloud embed",
@@ -325,6 +325,16 @@ func TestRenderBody(t *testing.T) {
 			name: "vimeo embed",
 			in:   "https://vimeo.com/174312494",
 			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https://vimeo.com/174312494\">[Vimeo] ???</a></em>",
+		},
+		{
+			name: "hooktube embed",
+			in:   "https://hooktube.com/watch?v=z0f4Wgi94eo",
+			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://hooktube.com/watch?v=z0f4Wgi94eo\">[HookTube] ???</a></em>",
+		},
+		{
+			name: "hooktube /embed",
+			in:   "https://hooktube.com/embed/z0f4Wgi94eo",
+			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://hooktube.com/embed/z0f4Wgi94eo\">[HookTube] ???</a></em>",
 		},
 	}
 

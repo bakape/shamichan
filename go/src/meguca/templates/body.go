@@ -20,6 +20,7 @@ const (
 	soundCloud
 	vimeo
 	coub
+	hookTube
 )
 
 var (
@@ -27,10 +28,11 @@ var (
 	referenceRegexp = regexp.MustCompile(`^>>>(>*)\/(\w+)\/$`)
 
 	providers = map[int]string{
-		youTube:    "Youtube",
+		youTube:    "YouTube",
 		soundCloud: "SoundCloud",
 		vimeo:      "Vimeo",
 		coub:       "Coub",
+		hookTube:   "HookTube",
 	}
 	embedPatterns = [...]struct {
 		typ  int
@@ -55,6 +57,14 @@ var (
 		{
 			coub,
 			regexp.MustCompile(`https?:\/\/coub\.com\/view\/[a-zA-Z0-9-_]+`),
+		},
+		{
+			hookTube,
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?hooktube\.com\/watch\/?\?(?:.+&)?v=([^&]+)`),
+		},
+		{
+			hookTube,
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?hooktube\.com\/embed\/([a-zA-Z0-9_-]+)`),
 		},
 	}
 

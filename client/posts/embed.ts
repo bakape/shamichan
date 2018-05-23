@@ -7,16 +7,16 @@ type OEmbedDoc = {
 }
 
 // Types of different embeds by provider
-enum provider { Youtube, SoundCloud, Vimeo, Coub }
+enum provider { YouTube, SoundCloud, Vimeo, Coub, HookTube }
 
 // Matching patterns and their respective providers
 const patterns: [provider, RegExp][] = [
 	[
-		provider.Youtube,
+		provider.YouTube,
 		/https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=[^&]+/,
 	],
 	[
-		provider.Youtube,
+		provider.YouTube,
 		/https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/[a-zA-Z0-9_-]+/,
 	],
 	[
@@ -31,7 +31,14 @@ const patterns: [provider, RegExp][] = [
 		provider.Coub,
 		/https?:\/\/(?:www\.)?coub\.com\/view\/.+/,
 	],
-
+	[
+		provider.HookTube,
+		/https?:\/\/(?:[^\.]+\.)?hooktube\.com\/watch\/?\?(?:.+&)?v=([^&]+)/,
+	],
+	[
+		provider.HookTube,
+		/https?:\/\/(?:[^\.]+\.)?hooktube\.com\/embed\/([a-zA-Z0-9_-]+)/,
+	],
 ]
 
 // Map of providers to formatter functions
@@ -40,14 +47,14 @@ const formatters: { [key: number]: (s: string) => string } = {}
 // Map of providers to information fetcher functions
 const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
 
-for (let p of ["Youtube", "SoundCloud", "Vimeo", "Coub"]) {
+for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub", "HookTube"]) {
 	const id = (provider as any)[p] as number
-	formatters[id] = formatNoEmbed(id)
-	fetchers[id] = fetchNoEmbed(id)
+	formatters[id] = formatProvider(id)
+	fetchers[id] = (id === provider.HookTube ? fetchHookTube() : fetchNoEmbed(id))
 }
 
-// formatter for the noembed.com meta-provider
-function formatNoEmbed(type: provider): (s: string) => string {
+// formatter for the noembed.com meta-provider or hooktube
+function formatProvider(type: provider): (s: string) => string {
 	return (href: string) => {
 		const attrs = {
 			rel: "noreferrer",
@@ -60,29 +67,60 @@ function formatNoEmbed(type: provider): (s: string) => string {
 	}
 }
 
+// fetcher for the HookTube provider
+function fetchHookTube(): (el: Element) => Promise<void> {
+	return async (el: Element) => {
+		// Use a CORS proxy to work around javascript's cross-domain restrictions
+		const url = "https://hooktube.com/embed/" +
+			el.getAttribute("href").split("watch?v=").pop().split("/embed/").pop() + "?autoplay=false",
+			[data, err] = await fetchJSON<any>("https://cors-proxy.htmldriven.com/?url=" + url)
+
+		if (err) {
+			el.textContent = format(err, provider.HookTube)
+			el.classList.add("errored")
+			console.error(err)
+			return
+		}
+
+		if (data.error) {
+			el.textContent = format(data.error, provider.HookTube)
+			el.classList.add("errored")
+			return
+		}
+
+		el.textContent = format(new DOMParser().parseFromString(data.body, "text/html").
+			querySelectorAll('title')[0].innerText, provider.HookTube)
+		el.setAttribute("data-html", encodeURIComponent("<iframe width=\"480\" height=\"270\" src=\"" +
+			url + "\" frameborder=\"0\"</iframe>"))
+	}
+}
+
 // fetcher for the noembed.com meta-provider
 function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
 	return async (el: Element) => {
 		const url = "https://noembed.com/embed?url=" + el.getAttribute("href"),
 			[data, err] = await fetchJSON<OEmbedDoc>(url)
+
 		if (err) {
-			el.textContent = format(err)
+			el.textContent = format(err, type)
 			el.classList.add("errored")
 			console.error(err)
 			return
 		}
+
 		if (data.error) {
-			el.textContent = format(data.error)
+			el.textContent = format(data.error, type)
 			el.classList.add("errored")
 			return
 		}
-		el.textContent = format(data.title)
+
+		el.textContent = format(data.title, type)
 		el.setAttribute("data-html", encodeURIComponent(data.html.trim()))
 	}
+}
 
-	function format(s: string): string {
-		return `[${provider[type]}] ${s}`
-	}
+function format(s: string, type: provider): string {
+	return `[${provider[type]}] ${s}`
 }
 
 // Match and parse URL against embeddable formats. If matched, returns the
