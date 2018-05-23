@@ -50,7 +50,16 @@ const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
 for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub", "HookTube"]) {
 	const id = (provider as any)[p] as number
 	formatters[id] = formatProvider(id)
-	fetchers[id] = (id === provider.HookTube ? fetchHookTube() : fetchNoEmbed(id))
+	switch (id) {
+		case provider.YouTube:
+			fetchers[id] = proxyYoutube
+			break
+		case provider.HookTube:
+			fetchers[id] = fetchHookTube
+			break
+		default:
+			fetchers[id] = fetchNoEmbed(id)
+	}
 }
 
 // formatter for the noembed.com meta-provider or hooktube
@@ -67,32 +76,48 @@ function formatProvider(type: provider): (s: string) => string {
 	}
 }
 
+// Proxy all youtube requests to hooktube
+function proxyYoutube(el: Element): Promise<void> {
+	el.setAttribute("href", el.getAttribute("href")
+		.replace("youtube", "hooktube")
+		.replace("youtu.be", "hooktube.com"))
+	return fetchHookTube(el)
+}
+
 // fetcher for the HookTube provider
-function fetchHookTube(): (el: Element) => Promise<void> {
-	return async (el: Element) => {
-		// Use a CORS proxy to work around javascript's cross-domain restrictions
-		const url = "https://hooktube.com/embed/" +
-			el.getAttribute("href").split("watch?v=").pop().split("/embed/").pop() + "?autoplay=false",
-			[data, err] = await fetchJSON<any>("https://cors-proxy.htmldriven.com/?url=" + url)
+async function fetchHookTube(el: Element): Promise<void> {
+	// Use a CORS proxy to work around javascript's cross-domain restrictions
+	const url =
+		"https://hooktube.com/embed/"
+		+ el.getAttribute("href")
+			.split("watch?v=")
+			.pop()
+			.split("/embed/")
+			.pop()
+		+ "?autoplay=false",
+		[data, err] = await fetchJSON<any>(
+			"https://cors-proxy.htmldriven.com/?url=" + url)
 
-		if (err) {
-			el.textContent = format(err, provider.HookTube)
-			el.classList.add("errored")
-			console.error(err)
-			return
-		}
-
-		if (data.error) {
-			el.textContent = format(data.error, provider.HookTube)
-			el.classList.add("errored")
-			return
-		}
-
-		el.textContent = format(new DOMParser().parseFromString(data.body, "text/html").
-			querySelectorAll('title')[0].innerText, provider.HookTube)
-		el.setAttribute("data-html", encodeURIComponent("<iframe width=\"480\" height=\"270\" src=\"" +
-			url + "\" frameborder=\"0\"</iframe>"))
+	if (err) {
+		el.textContent = format(err, provider.HookTube)
+		el.classList.add("errored")
+		console.error(err)
+		return
 	}
+
+	if (data.error) {
+		el.textContent = format(data.error, provider.HookTube)
+		el.classList.add("errored")
+		return
+	}
+
+	el.textContent = format(new DOMParser()
+		.parseFromString(data.body, "text/html").
+		querySelectorAll('title')[0]
+		.innerText, provider.HookTube)
+	el.setAttribute("data-html",
+		encodeURIComponent(
+			`<iframe width=480 height=270 src="${url}" frameborder=0</iframe>`))
 }
 
 // fetcher for the noembed.com meta-provider
