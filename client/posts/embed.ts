@@ -117,7 +117,7 @@ async function fetchHookTube(el: Element): Promise<void> {
 		.innerText, provider.HookTube)
 	el.setAttribute("data-html",
 		encodeURIComponent(
-			`<iframe width=480 height=270 src="${url}" frameborder=0</iframe>`))
+			`<iframe width=480 height=270 src="${url}" frameborder=0 </iframe>`))
 }
 
 // fetcher for the noembed.com meta-provider
