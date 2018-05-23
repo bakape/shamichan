@@ -371,5 +371,9 @@ var optionSpecs = [...][]inputSpec{
 			ID:   "galleryMode",
 			Type: _shortcut,
 		},
+		{
+			ID:   "meguTVShortcut",
+			Type: _shortcut,
+		},
 	},
 }

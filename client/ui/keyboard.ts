@@ -64,6 +64,9 @@ function handleShortcut(event: KeyboardEvent) {
 			case options.workMode:
 				options.workModeToggle = !options.workModeToggle
 				break
+			case options.meguTVShortcut:
+				options.meguTV = !options.meguTV
+				break
 			case 38:
 				navigateUp()
 				break

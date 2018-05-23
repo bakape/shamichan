@@ -224,6 +224,10 @@
 			"MeguTV",
 			"Play random board-specific videos in overlay player"
 		],
+		"meguTVShortcut": [
+			"MeguTV",
+			"Play random board-specific videos in overlay player"
+		],
 		"moderators": [
 			"Modérateurs",
 			"Peut supprimer les messages, bannir et distinguer les utilisateurs"

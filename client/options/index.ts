@@ -44,6 +44,7 @@ interface Options extends ChangeEmitter {
 	cancel: number
 	expandAll: number
 	workMode: number
+	meguTVShortcut: number
 	audioVolume: number
 	inlineFit: string
 	theme: string

@@ -238,6 +238,10 @@ export const specs: { [id: string]: OptionSpec } = {
 		default: 66,
 		type: optionType.shortcut,
 	},
+	meguTVShortcut: {
+		default: 84,
+		type: optionType.shortcut,
+	},
 	galleryModeToggle: {
 		type: optionType.none,
 		exec: toggleHeadStyle(
