@@ -90,11 +90,10 @@ async function fetchHookTube(el: Element): Promise<void> {
 	const url =
 		"https://hooktube.com/embed/"
 		+ el.getAttribute("href")
-			.split("watch?v=")
-			.pop()
-			.split("/embed/")
-			.pop()
-		+ "?autoplay=false",
+			.split("watch?v=").pop()
+			.split("/embed/").pop()
+			.split("#").shift()
+			.split("?").shift(),
 		[data, err] = await fetchJSON<any>(
 			"https://cors-proxy.htmldriven.com/?url=" + url)
 
@@ -117,7 +116,7 @@ async function fetchHookTube(el: Element): Promise<void> {
 		.innerText, provider.HookTube)
 	el.setAttribute("data-html",
 		encodeURIComponent(
-			`<iframe width=480 height=270 src="${url}" frameborder=0 allowfullscreen></iframe>`))
+			`<iframe width="480" height="270" src="${url}?autoplay=false" frameborder="0" allowfullscreen></iframe>`))
 }
 
 // fetcher for the noembed.com meta-provider
