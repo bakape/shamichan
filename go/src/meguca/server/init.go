@@ -24,7 +24,7 @@ var (
 	// debugMode denotes the server has been started with the `debug` parameter.
 	// This will cause not to spawn a daemon and stay attached to the launching
 	// shell.
-	daemonised bool
+	daemonized bool
 	isWindows  = runtime.GOOS == "windows"
 
 	// Is assigned in ./daemon.go to control/spawn a daemon process. That file
@@ -34,7 +34,7 @@ var (
 	// CLI mode arguments and descriptions
 	arguments = map[string]string{
 		"start":   "start the meguca server",
-		"stop":    "stop a running daemonised meguca server",
+		"stop":    "stop a running daemonized meguca server",
 		"restart": "combination of stop + start",
 		"debug":   "start server in debug mode without daemonizing (default)",
 		"help":    "print this help text",

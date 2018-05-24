@@ -19,7 +19,7 @@ func init() {
 	handleDaemon = func(arg string) {
 		switch arg {
 		case "debug":
-			mLog.Daemonised = false
+			mLog.Daemonized = false
 			mLog.Init(mLog.Console)
 			startServer()
 		case "stop":
@@ -54,7 +54,7 @@ func daemonise() {
 	if child != nil {
 		return
 	}
-	daemonised = true
+	daemonized = true
 	defer daemonContext.Release()
 	log.Info("Server started ------------------------------------")
 
@@ -86,7 +86,7 @@ func killDaemon() {
 	}
 }
 
-// Find the running daemonised meguca server process
+// Find the running daemonized meguca server process
 func findDaemon() *os.Process {
 	proc, err := daemonContext.Search()
 	if err != nil && (!os.IsNotExist(err) && err.Error() != "EOF") {

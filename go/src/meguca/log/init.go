@@ -21,8 +21,8 @@ const (
 )
 
 var (
-	// Is the server daemonised?
-	Daemonised bool = true
+	// Is the server daemonized?
+	Daemonized bool = true
 
 	// Ensures no data races
 	rw sync.RWMutex
@@ -43,7 +43,7 @@ func Init(h handler) {
 		case Console:
 			cLog = console.New(true)
 			cLog.SetTimestampFormat(DefaultTimeFormat)
-			cLog.SetDisplayColor(!Daemonised)
+			cLog.SetDisplayColor(!Daemonized)
 			log.AddHandler(cLog, log.AllLevels...)
 			break
 		case Email:
