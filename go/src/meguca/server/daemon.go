@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	"meguca/log"
+
 	"github.com/sevlyar/go-daemon"
 	"github.com/go-playground/log"
 )
@@ -17,6 +19,8 @@ func init() {
 	handleDaemon = func(arg string) {
 		switch arg {
 		case "debug":
+			mLog.Daemonised = false
+			mLog.Init(mLog.Console)
 			startServer()
 		case "stop":
 			killDaemon()
@@ -27,6 +31,7 @@ func init() {
 			killDaemon()
 			fallthrough
 		case "start":
+			mLog.Init(mLog.Console)
 			daemonise()
 		default:
 			printUsage()

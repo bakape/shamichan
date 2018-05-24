@@ -11,11 +11,21 @@ import (
 	"github.com/go-playground/log/handlers/email"
 )
 
-const DefaultTimeFormat = "2006-01-02 15:04:05"
+type handler uint8
+
+const (
+	DefaultTimeFormat = "2006-01-02 15:04:05"
+
+	Console handler = iota
+	Email
+)
 
 var (
+	// Is the server daemonised?
+	Daemonised bool = true
+
 	// Ensures no data races
-	mutex sync.RWMutex
+	rw sync.RWMutex
 
 	// Console handler
 	cLog *console.Console
@@ -25,29 +35,33 @@ var (
 )
 
 // Initialize the logger.
-func Init(handler string) {
-	mutex.Lock()
+func Init(h handler) {
+	rw.Lock()
+	defer rw.Unlock()
 
-	switch handler {
-		case "console":
+	switch h {
+		case Console:
 			cLog = console.New(true)
 			cLog.SetTimestampFormat(DefaultTimeFormat)
+			cLog.SetDisplayColor(!Daemonised)
 			log.AddHandler(cLog, log.AllLevels...)
 			break
-		case "email":
+		case Email:
 			conf := config.Get()
 			eLog = email.New(conf.EmailErrSub, int(conf.EmailErrPort), conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail, []string{conf.EmailErrMail})
 			eLog.SetTimestampFormat(DefaultTimeFormat)
 			log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel, log.FatalLevel)
 			break
 		default:
-			log.Fatal("Invalid handler: ", handler)
+			log.Fatal("Invalid handler: ", h)
 	}
-
-	mutex.Unlock()
 }
 
 // Update the logger.
 func Update() {
-	// TODO: https://github.com/go-playground/log/issues/19
+	rw.Lock()
+	defer rw.Unlock()
+
+	conf := config.Get()
+	eLog.SetEmailConfig(conf.EmailErrSub, int(conf.EmailErrPort), conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail, []string{conf.EmailErrMail})
 }

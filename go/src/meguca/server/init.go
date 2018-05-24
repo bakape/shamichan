@@ -12,7 +12,6 @@ import (
 	"meguca/geoip"
 	"meguca/imager/assets"
 	"meguca/lang"
-	"meguca/log"
 	"meguca/templates"
 	"meguca/util"
 	"os"
@@ -44,8 +43,6 @@ var (
 
 // Start parses command line arguments and initializes the server.
 func Start() {
-	mLog.Init("console")
-
 	// Define flags
 	flag.StringVar(
 		&address,
