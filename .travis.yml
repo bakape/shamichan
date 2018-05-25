@@ -1,8 +1,7 @@
 services: docker
 script:
-  - docker exec -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH"
   - docker build -t meguca_test .
-  - docker run -t --entrypoint scripts/docker_test.sh meguca_test
+  - docker run -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" -t --entrypoint scripts/docker_test.sh meguca_test
 notifications:
   email:
     recipients:
