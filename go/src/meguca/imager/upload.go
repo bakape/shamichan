@@ -117,7 +117,7 @@ func LogError(w http.ResponseWriter, r *http.Request, code int, err error) {
 		if err != nil {
 			ip = "invalid IP"
 		}
-		log.Warnf("upload error: %s: %s\n", ip, text)
+		log.Errorf("upload error: %s: %s\n", ip, text)
 	}
 }
 

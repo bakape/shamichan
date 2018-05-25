@@ -12,11 +12,12 @@ import (
 	"meguca/util"
 	"meguca/websockets"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 
 	"github.com/dimfeld/httptreemux"
-	"github.com/gorilla/handlers"
 	"github.com/go-playground/log"
+	"github.com/gorilla/handlers"
 )
 
 var (
@@ -65,7 +66,18 @@ func createRouter() http.Handler {
 	r.NotFoundHandler = func(w http.ResponseWriter, _ *http.Request) {
 		text404(w)
 	}
-	r.PanicHandler = text500
+	r.PanicHandler = func(
+		w http.ResponseWriter,
+		r *http.Request,
+		err interface{},
+	) {
+		http.Error(w, fmt.Sprintf("500 %s", err), 500)
+		ip, ipErr := auth.GetIP(r)
+		if ipErr != nil {
+			ip = "invalid IP"
+		}
+		log.Errorf("server: %s: %#v\n%s\n", ip, err, debug.Stack())
+	}
 
 	r.GET("/robots.txt", serveRobotsTXT)
 

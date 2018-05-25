@@ -40,20 +40,20 @@ func Init(h handler) {
 	defer rw.Unlock()
 
 	switch h {
-		case Console:
-			cLog = console.New(true)
-			cLog.SetTimestampFormat(DefaultTimeFormat)
-			cLog.SetDisplayColor(!Daemonized)
-			log.AddHandler(cLog, log.AllLevels...)
-			break
-		case Email:
-			conf := config.Get()
-			eLog = email.New(conf.EmailErrSub, int(conf.EmailErrPort), conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail, []string{conf.EmailErrMail})
-			eLog.SetTimestampFormat(DefaultTimeFormat)
-			log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel, log.FatalLevel)
-			break
-		default:
-			log.Fatal("Invalid handler: ", h)
+	case Console:
+		cLog = console.New(true)
+		cLog.SetTimestampFormat(DefaultTimeFormat)
+		cLog.SetDisplayColor(!Daemonized)
+		log.AddHandler(cLog, log.AllLevels...)
+		break
+	case Email:
+		conf := config.Get()
+		eLog = email.New(conf.EmailErrSub, int(conf.EmailErrPort), conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail, []string{conf.EmailErrMail})
+		eLog.SetTimestampFormat(DefaultTimeFormat)
+		log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel, log.FatalLevel)
+		break
+	default:
+		log.Fatal("Invalid handler: ", h)
 	}
 }
 

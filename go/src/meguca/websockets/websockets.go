@@ -10,13 +10,12 @@ import (
 	"meguca/util"
 	"meguca/websockets/feeds"
 	"net/http"
-	"runtime/debug"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/go-playground/log"
+	"github.com/gorilla/websocket"
 )
 
 const pingWriteTimeout = time.Second * 30
@@ -304,7 +303,7 @@ func (c *Client) logError(err error) {
 	switch err {
 	case auth.ErrBanned, auth.ErrSpamDected:
 	default:
-		log.Errorf("error by %s: %v\n%s\n", c.ip, err, debug.Stack())
+		log.Errorf("error by %s: %#v\n", c.ip, err)
 	}
 }
 

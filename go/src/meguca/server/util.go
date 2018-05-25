@@ -7,7 +7,6 @@ import (
 	"meguca/db"
 	"meguca/templates"
 	"net/http"
-	"runtime/debug"
 	"strconv"
 
 	"github.com/dimfeld/httptreemux"
@@ -69,7 +68,7 @@ func logError(r *http.Request, err interface{}) {
 	if ipErr != nil {
 		ip = "invalid IP"
 	}
-	log.Warnf("server: %s: %s\n%s\n", ip, err, debug.Stack())
+	log.Errorf("server: %s: %#v\n", ip, err)
 }
 
 // Text-only 404 response
