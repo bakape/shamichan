@@ -20,7 +20,7 @@ ifeq ($(OS), Windows_NT)
 	binary=meguca.exe
 endif
 
-.PHONY: server client imager test
+.PHONY: server client imager test_race
 
 all: server client
 
@@ -94,14 +94,13 @@ dist_clean: clean
 	rm -rf images error.log db.db
 
 test:
-	go test -covermode=atomic -coverprofile=coverage.out --race -p 1 meguca/...
-	$(go env GOPATH | awk 'BEGIN{FS=":"} {print $1}')/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $(COVERALLS_TOKEN)
-
-test_no_race:
 	go test -covermode=count -coverprofile=coverage.out -p 1 meguca/...
 	$(go env GOPATH | awk 'BEGIN{FS=":"} {print $1}')/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $(COVERALLS_TOKEN)
 
-check: test
+test_race:
+	go test --race -p 1 meguca/...
+
+check: test_race
 
 upgrade_v4: generate
 	go get -v github.com/dancannon/gorethink
