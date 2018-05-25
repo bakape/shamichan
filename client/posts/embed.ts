@@ -13,11 +13,7 @@ enum provider { YouTube, SoundCloud, Vimeo, Coub, HookTube }
 const patterns: [provider, RegExp][] = [
 	[
 		provider.YouTube,
-		/https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=[^&]+/,
-	],
-	[
-		provider.YouTube,
-		/https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/[a-zA-Z0-9_-]+/,
+		/https?:\/\/(?:[^\.]+\.)?(?:youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/watch\?v=)[a-zA-Z0-9_-]+/,
 	],
 	[
 		provider.SoundCloud,
@@ -33,11 +29,7 @@ const patterns: [provider, RegExp][] = [
 	],
 	[
 		provider.HookTube,
-		/https?:\/\/(?:[^\.]+\.)?hooktube\.com\/watch\/?\?(?:.+&)?v=([^&]+)/,
-	],
-	[
-		provider.HookTube,
-		/https?:\/\/(?:[^\.]+\.)?hooktube\.com\/embed\/([a-zA-Z0-9_-]+)/,
+		/https?:\/\/(?:[^\.]+\.)?(?:hooktube.com\/|hooktube.com\/embed\/|hooktube\.com\/watch\?v=)[a-zA-Z0-9_-]+/,
 	],
 ]
 
@@ -90,7 +82,7 @@ async function fetchHookTube(el: Element): Promise<void> {
 	const url =
 		"https://hooktube.com/embed/"
 		+ el.getAttribute("href")
-			.split("hooktube.com/").pop()
+			.split(".com/").pop()
 			.split("watch?v=").pop()
 			.split("embed/").pop()
 			.split("#").shift()

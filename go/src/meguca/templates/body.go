@@ -40,11 +40,7 @@ var (
 	}{
 		{
 			youTube,
-			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?youtube\.com\/watch\/?\?(?:.+&)?v=[^&]+`),
-		},
-		{
-			youTube,
-			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?(?:youtu\.be|youtube\.com\/embed)\/[a-zA-Z0-9_-]+`),
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?(?:youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/watch\?v=)[a-zA-Z0-9_-]+`),
 		},
 		{
 			soundCloud,
@@ -60,11 +56,7 @@ var (
 		},
 		{
 			hookTube,
-			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?hooktube\.com\/watch\/?\?(?:.+&)?v=([^&]+)`),
-		},
-		{
-			hookTube,
-			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?hooktube\.com\/embed\/([a-zA-Z0-9_-]+)`),
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?(?:hooktube.com\/|hooktube.com\/embed\/|hooktube\.com\/watch\?v=)[a-zA-Z0-9_-]+`),
 		},
 	}
 
