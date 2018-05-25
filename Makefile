@@ -94,7 +94,7 @@ dist_clean: clean
 	rm -rf images error.log db.db
 
 test:
-	go test -covermode=count -coverprofile=coverage.out --race -p 1 meguca/...
+	go test -covermode=atomic -coverprofile=coverage.out --race -p 1 meguca/...
 	$(go env GOPATH | awk 'BEGIN{FS=":"} {print $1}')/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $(COVERALLS_TOKEN)
 
 test_no_race:
