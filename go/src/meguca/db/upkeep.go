@@ -4,13 +4,14 @@ package db
 
 import (
 	"database/sql"
-	"log"
 	"math"
 	"meguca/common"
 	"meguca/config"
 	"meguca/imager/assets"
 	"strings"
 	"time"
+
+	"github.com/go-playground/log"
 )
 
 // Run database clean up tasks at server start and regular intervals. Must be
@@ -59,7 +60,7 @@ func logPrepared(ids ...string) {
 
 func logError(prefix string, err error) {
 	if err != nil {
-		log.Printf("%s: %s\n", prefix, err)
+		log.Errorf("%s: %s\n", prefix, err)
 	}
 }
 

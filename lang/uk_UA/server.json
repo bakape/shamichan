@@ -92,6 +92,26 @@
 			"#8ball відповіді",
 			"Список відповідей для #8ball хеш команд. Може містити до 100 відповідей та 2000 знаків загало."
 		],
+		"emailErr": [
+			"Email Errors",
+			"Toggle emailing errors."
+		],
+		"emailErrMail": [
+			"Email",
+			"Error email."
+		],
+		"emailErrPass": [
+			"Password",
+			"Error email password."
+		],
+		"emailErrPort": [
+			"Email server port",
+			"Error email server port."
+		],
+		"emailErrSub": [
+			"Email server",
+			"Error email server subdomain."
+		],
 		"exhentai": [
 			"Exhentai",
 			"Пошук зображень по exhentai.org"

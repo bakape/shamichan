@@ -5,18 +5,22 @@
 package server
 
 import (
-	"log"
 	"os"
 	"syscall"
 	"time"
 
+	"meguca/log"
+
 	"github.com/sevlyar/go-daemon"
+	"github.com/go-playground/log"
 )
 
 func init() {
 	handleDaemon = func(arg string) {
 		switch arg {
 		case "debug":
+			mLog.Daemonized = false
+			mLog.Init(mLog.Console)
 			startServer()
 		case "stop":
 			killDaemon()
@@ -27,6 +31,7 @@ func init() {
 			killDaemon()
 			fallthrough
 		case "start":
+			mLog.Init(mLog.Console)
 			daemonise()
 		default:
 			printUsage()
@@ -44,20 +49,20 @@ var daemonContext = &daemon.Context{
 func daemonise() {
 	child, err := daemonContext.Reborn()
 	if err != nil && err.Error() == "resource temporarily unavailable" {
-		log.Fatalln("Error: Server already running")
+		log.Fatal("Error: Server already running")
 	}
 	if child != nil {
 		return
 	}
-	daemonised = true
+	daemonized = true
 	defer daemonContext.Release()
-	log.Println("Server started ------------------------------------")
+	log.Info("Server started ------------------------------------")
 
 	go startServer()
 	if err := daemon.ServeSignals(); err != nil {
 		log.Fatalf("daemon runtime error: %s\n", err)
 	}
-	log.Println("server terminated")
+	log.Info("server terminated")
 }
 
 // Terminate the running meguca server daemon
@@ -81,7 +86,7 @@ func killDaemon() {
 	}
 }
 
-// Find the running daemonised meguca server process
+// Find the running daemonized meguca server process
 func findDaemon() *os.Process {
 	proc, err := daemonContext.Search()
 	if err != nil && (!os.IsNotExist(err) && err.Error() != "EOF") {

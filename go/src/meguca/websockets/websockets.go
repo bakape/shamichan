@@ -5,7 +5,6 @@ package websockets
 import (
 	"errors"
 	"fmt"
-	"log"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/util"
@@ -17,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/go-playground/log"
 )
 
 const pingWriteTimeout = time.Second * 30
@@ -92,7 +92,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if IPErr != nil {
 			ip = "invalid IP"
 		}
-		log.Printf("websockets: %s: %s\n", ip, err)
+		log.Errorf("websockets: %s: %s\n", ip, err)
 		return
 	}
 
@@ -304,7 +304,7 @@ func (c *Client) logError(err error) {
 	switch err {
 	case auth.ErrBanned, auth.ErrSpamDected:
 	default:
-		log.Printf("error by %s: %v\n%s\n", c.ip, err, debug.Stack())
+		log.Errorf("error by %s: %v\n%s\n", c.ip, err, debug.Stack())
 	}
 }
 

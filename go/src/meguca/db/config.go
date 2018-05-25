@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"meguca/assets"
 	"meguca/config"
+	"meguca/log"
 	"meguca/templates"
 	"meguca/util"
 	"time"
@@ -26,6 +27,7 @@ func loadConfigs() error {
 		return err
 	}
 	config.Set(conf)
+	mLog.Init(mLog.Email)
 
 	return Listen("config_updates", updateConfigs)
 }
@@ -155,6 +157,7 @@ func updateConfigs(data string) error {
 		return util.WrapError("reloading configuration", err)
 	}
 	config.Set(conf)
+	mLog.Update()
 
 	return recompileTemplates()
 }

@@ -92,6 +92,26 @@
 			"Odpowiedzi #8ball",
 			"Lista odpowiedzi komendy #8ball. Może zawierać maksymalnie 100 odpowiedzi i 2000 znaków."
 		],
+		"emailErr": [
+			"Email Errors",
+			"Toggle emailing errors."
+		],
+		"emailErrMail": [
+			"Email",
+			"Error email."
+		],
+		"emailErrPass": [
+			"Password",
+			"Error email password."
+		],
+		"emailErrPort": [
+			"Email server port",
+			"Error email server port."
+		],
+		"emailErrSub": [
+			"Email server",
+			"Error email server subdomain."
+		],
 		"exhentai": [
 			"Exhentai",
 			"exhentai.org image search"

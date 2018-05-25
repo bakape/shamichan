@@ -3,7 +3,6 @@ package server
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"meguca/auth"
 	"meguca/db"
 	"meguca/templates"
@@ -12,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/dimfeld/httptreemux"
+	"github.com/go-playground/log"
 )
 
 // Base set of HTTP headers for both HTML and JSON
@@ -69,7 +69,7 @@ func logError(r *http.Request, err interface{}) {
 	if ipErr != nil {
 		ip = "invalid IP"
 	}
-	log.Printf("server: %s: %s\n%s\n", ip, err, debug.Stack())
+	log.Warnf("server: %s: %s\n%s\n", ip, err, debug.Stack())
 }
 
 // Text-only 404 response
@@ -129,7 +129,7 @@ func assertNotBanned(
 		// If there is no row, that means the ban cache has not been updated
 		// yet with a cleared ban. Force a ban cache refresh.
 		if err := db.RefreshBanCache(); err != nil {
-			log.Printf("refreshing ban cache: %s", err)
+			log.Warnf("refreshing ban cache: %s", err)
 		}
 		return true
 	default:

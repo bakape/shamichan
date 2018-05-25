@@ -5,7 +5,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"meguca/util"
 	"path/filepath"
 	"sort"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
+	"github.com/go-playground/log"
 )
 
 // Stores generated prepared statements
@@ -216,7 +216,7 @@ func Listen(event string, fn func(msg string) error) (err error) {
 				continue
 			}
 			if err := fn(msg.Extra); err != nil {
-				log.Printf("error on database event `%s`: %s\n", event, err)
+				log.Errorf("error on database event `%s`: %s\n", event, err)
 			}
 		}
 	}()

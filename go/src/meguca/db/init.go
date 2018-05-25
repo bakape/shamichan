@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
@@ -15,6 +14,8 @@ import (
 
 	"github.com/boltdb/bolt"
 	_ "github.com/lib/pq" // Postgres driver
+
+	"github.com/go-playground/log"
 )
 
 const (
@@ -605,6 +606,14 @@ var upgrades = []func(*sql.Tx) error{
 			`drop table pyu_limit`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		return patchConfigs(tx, func(conf *config.Configs) {
+			conf.EmailErrMail = config.Defaults.EmailErrMail
+			conf.EmailErrPass = config.Defaults.EmailErrPass
+			conf.EmailErrSub = config.Defaults.EmailErrSub
+			conf.EmailErrPort = config.Defaults.EmailErrPort
+		})
+	},
 }
 
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
@@ -662,6 +671,7 @@ func LoadDB() (err error) {
 	if !IsTest {
 		go runCleanupTasks()
 	}
+
 	return nil
 }
 
@@ -675,7 +685,7 @@ func checkVersion() (err error) {
 
 	var tx *sql.Tx
 	for i := v; i < version; i++ {
-		log.Printf("upgrading database to version %d\n", i+1)
+		log.Infof("upgrading database to version %d\n", i+1)
 		tx, err = db.Begin()
 		if err != nil {
 			return
@@ -726,7 +736,7 @@ func openBoltDB() (err error) {
 
 // initDB initializes a database
 func initDB() error {
-	log.Println("initializing database")
+	log.Info("initializing database")
 
 	conf, err := json.Marshal(config.Defaults)
 	if err != nil {
