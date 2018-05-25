@@ -92,6 +92,26 @@
 			"#8ball ответы",
 			"Список ответов для команды #8ball, может содержать до 100 ответов и 2000 символов всего"
 		],
+		"emailErr": [
+			"Email Errors",
+			"Toggle emailing errors."
+		],
+		"emailErrMail": [
+			"Email",
+			"Error email."
+		],
+		"emailErrPass": [
+			"Password",
+			"Error email password."
+		],
+		"emailErrPort": [
+			"Email server port",
+			"Error email server port."
+		],
+		"emailErrSub": [
+			"Email server",
+			"Error email server subdomain."
+		],
 		"exhentai": [
 			"Exhentai",
 			"exhentai.org поиск по картинкам"

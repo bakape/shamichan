@@ -5,16 +5,21 @@ type Configs struct {
 	Public
 	PruneBoards       bool `json:"pruneBoards"`
 	HideNSFW          bool `json:"hideNSFW"`
+	EmailErr          bool `json:"emailErr"`
 	JPEGQuality       uint8
 	MaxWidth          uint16 `json:"maxWidth"`
 	MaxHeight         uint16 `json:"maxHeight"`
 	BoardExpiry       uint   `json:"boardExpiry"`
 	SessionExpiry     uint   `json:"sessionExpiry"`
+	EmailErrPort      uint   `json:"emailErrPort"`
 	CharScore         uint   `json:"charScore"`
 	PostCreationScore uint   `json:"postCreationScore"`
 	ImageScore        uint   `json:"imageScore"`
 	RootURL           string `json:"rootURL"`
 	Salt              string `json:"salt"`
+	EmailErrMail      string `json:"emailErrMail"`
+	EmailErrPass      string `json:"emailErrPass"`
+	EmailErrSub       string `json:"emailErrSub"`
 	FeedbackEmail     string `json:"feedbackEmail"`
 	FAQ               string
 }

@@ -3,10 +3,11 @@
 package feeds
 
 import (
-	"log"
 	"meguca/common"
 	"meguca/db"
 	"time"
+
+	"github.com/go-playground/log"
 )
 
 type tvFeed struct {
@@ -54,7 +55,7 @@ func (f *tvFeed) start(board string) (err error) {
 				} else {
 					exists, err := db.ImageExists(f.playList[1].SHA1)
 					if err != nil {
-						log.Printf("verifying video exists: %s\n", err)
+						log.Warnf("verifying video exists: %s\n", err)
 						continue
 					}
 					needFetch = !exists
@@ -62,7 +63,7 @@ func (f *tvFeed) start(board string) (err error) {
 				if needFetch {
 					err := f.readPlaylist()
 					if err != nil {
-						log.Printf("fetching video playlist: %s\n", err)
+						log.Warnf("fetching video playlist: %s\n", err)
 						continue
 					}
 				} else {
@@ -96,7 +97,7 @@ func (f *tvFeed) encodePlaylist() []byte {
 		Playlist: f.playList[:i],
 	})
 	if err != nil {
-		log.Printf("video playlist encoding: %s\n", err)
+		log.Warnf("video playlist encoding: %s\n", err)
 	}
 	return msg
 }

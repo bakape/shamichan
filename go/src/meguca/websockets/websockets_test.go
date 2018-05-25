@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"meguca/common"
 	"meguca/db"
 	. "meguca/test"
@@ -17,6 +16,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/go-playground/log"
+	"github.com/go-playground/log/handlers/console"
 )
 
 const (
@@ -28,6 +29,7 @@ const (
 
 var (
 	dialer = websocket.Dialer{}
+	con = console.New(true)
 )
 
 type mockWSServer struct {
@@ -38,6 +40,7 @@ type mockWSServer struct {
 }
 
 func init() {
+	log.AddHandler(con, log.AllLevels...)
 	db.ConnArgs = db.TestConnArgs
 	db.IsTest = true
 	if err := db.LoadDB(); err != nil {
@@ -166,9 +169,9 @@ func TestLogError(t *testing.T) {
 
 func captureLog(fn func()) string {
 	buf := new(bytes.Buffer)
-	log.SetOutput(buf)
+	con.SetWriter(buf)
 	fn()
-	log.SetOutput(os.Stdout)
+	con.SetWriter(os.Stdout)
 	return buf.String()
 }
 

@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"io/ioutil"
-	"log"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
@@ -18,6 +17,7 @@ import (
 
 	"github.com/Soreil/apngdetector"
 	"github.com/bakape/thumbnailer"
+	"github.com/go-playground/log"
 )
 
 // Size of an upload small enough to use a different processing priority
@@ -117,7 +117,7 @@ func LogError(w http.ResponseWriter, r *http.Request, code int, err error) {
 		if err != nil {
 			ip = "invalid IP"
 		}
-		log.Printf("upload error: %s: %s\n", ip, text)
+		log.Warnf("upload error: %s: %s\n", ip, text)
 	}
 }
 

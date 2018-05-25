@@ -225,6 +225,32 @@ var specs = map[string][]inputSpec{
 			Min:      1,
 			Required: true,
 		},
+		{ID: "emailErr"},
+		{
+			ID:           "emailErrMail",
+			Type:         _string,
+			MaxLength:    common.MaxLenUserID,
+			Required:     true,
+			Autocomplete: "error-email-username",
+		},
+		{
+			ID:           "emailErrPass",
+			Type:         _password,
+			MaxLength:    common.MaxLenPassword,
+			Required:     true,
+			Autocomplete: "current-error-email-password",
+		},
+		{
+			ID:       "emailErrSub",
+			Type:     _string,
+			Required: true,
+		},
+		{
+			ID:       "emailErrPort",
+			Type:     _number,
+			Min:      0,
+			Required: true,
+		},
 		{
 			ID:   "feedbackEmail",
 			Type: _string,

@@ -3,7 +3,6 @@ package server
 import (
 	"errors"
 	"io/ioutil"
-	"log"
 	"meguca/config"
 	"meguca/db"
 	"meguca/lang"
@@ -14,12 +13,16 @@ import (
 	"testing"
 
 	"github.com/dimfeld/httptreemux"
+	"github.com/go-playground/log"
+	"github.com/go-playground/log/handlers/console"
 )
 
 // Global router used for tests
 var router http.Handler
+var con = console.New(true)
 
 func init() {
+	log.AddHandler(con, log.AllLevels...)
 	isTest = true
 	router = createRouter()
 	webRoot = "testdata"
@@ -63,8 +66,8 @@ func TestPanicHandler(t *testing.T) {
 	rec, req := newPair("/panic")
 
 	// Prevent printing stack trace to terminal
-	log.SetOutput(ioutil.Discard)
-	defer log.SetOutput(os.Stdout)
+	con.SetWriter(ioutil.Discard)
+	defer con.SetWriter(os.Stdout)
 
 	r.ServeHTTP(rec, req)
 	assertCode(t, rec, 500)

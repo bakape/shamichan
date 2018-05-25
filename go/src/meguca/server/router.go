@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"database/sql"
 	"fmt"
-	"log"
 	"meguca/auth"
 	"meguca/config"
 	"meguca/db"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/dimfeld/httptreemux"
 	"github.com/gorilla/handlers"
+	"github.com/go-playground/log"
 )
 
 var (
@@ -45,7 +45,7 @@ var webRoot = "www"
 
 func startWebServer() (err error) {
 	r := createRouter()
-	log.Println("listening on " + address)
+	log.Info("listening on " + address)
 
 	if ssl {
 		err = http.ListenAndServeTLS(address, sslCert, sslKey, r)
