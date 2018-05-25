@@ -90,8 +90,9 @@ async function fetchHookTube(el: Element): Promise<void> {
 	const url =
 		"https://hooktube.com/embed/"
 		+ el.getAttribute("href")
+			.split("hooktube.com/").pop()
 			.split("watch?v=").pop()
-			.split("/embed/").pop()
+			.split("embed/").pop()
 			.split("#").shift()
 			.split("?").shift(),
 		[data, err] = await fetchJSON<any>(
