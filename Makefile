@@ -20,7 +20,7 @@ ifeq ($(OS), Windows_NT)
 	binary=meguca.exe
 endif
 
-.PHONY: server client imager test
+.PHONY: server client imager test_race
 
 all: server client
 
@@ -62,7 +62,7 @@ ifeq ($(is_windows), true)
 endif
 
 generate: generate_clean
-	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
+	go get -v golang.org/x/tools/cmd/cover github.com/mattn/goveralls github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
 	go generate meguca/...
 
 generate_clean:
@@ -94,12 +94,13 @@ dist_clean: clean
 	rm -rf images error.log db.db
 
 test:
+	go test -covermode=count -coverprofile=coverage.out -p 1 meguca/...
+	$(go env GOPATH | awk 'BEGIN{FS=":"} {print $1}')/bin/goveralls -coverprofile=coverage.out -service=travis-ci -repotoken $(COVERALLS_TOKEN)
+
+test_race:
 	go test --race -p 1 meguca/...
 
-test_no_race:
-	go test -p 1 meguca/...
-
-check: test
+check: test_race
 
 upgrade_v4: generate
 	go get -v github.com/dancannon/gorethink
