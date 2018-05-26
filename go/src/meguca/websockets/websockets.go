@@ -11,6 +11,7 @@ import (
 	"meguca/websockets/feeds"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -303,7 +304,10 @@ func (c *Client) logError(err error) {
 	switch err {
 	case auth.ErrBanned, auth.ErrSpamDected:
 	default:
-		log.Errorf("error by %s: %#v\n", c.ip, err)
+		// Ignore client-side connection reset
+		if !strings.HasSuffix(err.Error(), "connection reset by peer") {
+			log.Errorf("error by %s: %#v\n", c.ip, err)
+		}
 	}
 }
 
