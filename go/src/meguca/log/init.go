@@ -27,6 +27,9 @@ var (
 	// Ensures no data races
 	rw sync.RWMutex
 
+	// Ensure email handler is only added once
+	once sync.Once
+
 	// Console handler
 	cLog *console.Console
 
@@ -48,9 +51,16 @@ func Init(h handler) {
 		break
 	case Email:
 		conf := config.Get()
-		eLog = email.New(conf.EmailErrSub, int(conf.EmailErrPort), conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail, []string{conf.EmailErrMail})
+		eLog = email.New(conf.EmailErrSub, int(conf.EmailErrPort), conf.EmailErrMail, conf.EmailErrPass,
+			conf.EmailErrMail, []string{conf.EmailErrMail})
 		eLog.SetTimestampFormat(DefaultTimeFormat)
-		log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel, log.FatalLevel)
+
+		if conf.EmailErr {
+			once.Do(func() {
+				log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel, log.FatalLevel)
+			})
+		}
+
 		break
 	default:
 		log.Fatal("Invalid handler: ", h)
@@ -63,5 +73,13 @@ func Update() {
 	defer rw.Unlock()
 
 	conf := config.Get()
-	eLog.SetEmailConfig(conf.EmailErrSub, int(conf.EmailErrPort), conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail, []string{conf.EmailErrMail})
+	eLog.SetEmailConfig(conf.EmailErrSub, int(conf.EmailErrPort), conf.EmailErrMail, conf.EmailErrPass,
+		conf.EmailErrMail, []string{conf.EmailErrMail})
+
+	// TODO: Ability to change handler log levels
+	if conf.EmailErr {
+		once.Do(func() {
+			log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel, log.FatalLevel)
+		})
+	}
 }
