@@ -159,7 +159,9 @@ func updateConfigs(data string) error {
 		return util.WrapError("reloading configuration", err)
 	}
 	config.Set(conf)
-	mLog.Update()
+	if conf.EmailErr {
+		mLog.Update()
+	}
 
 	return recompileTemplates()
 }
