@@ -27,7 +27,9 @@ func loadConfigs() error {
 		return err
 	}
 	config.Set(conf)
-	mLog.Init(mLog.Email)
+	if conf.EmailErr {
+		mLog.Init(mLog.Email)
+	}
 
 	return Listen("config_updates", updateConfigs)
 }
