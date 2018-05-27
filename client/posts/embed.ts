@@ -85,6 +85,7 @@ async function fetchHookTube(el: Element): Promise<void> {
 			.split(".com/").pop()
 			.split("watch?v=").pop()
 			.split("embed/").pop()
+			.split("&").shift()
 			.split("#").shift()
 			.split("?").shift(),
 		[data, err] = await fetchJSON<any>(
