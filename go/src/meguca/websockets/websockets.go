@@ -302,7 +302,7 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 // logError writes the client's websocket error to the error log (or stdout)
 func (c *Client) logError(err error) {
 	switch err {
-	case auth.ErrBanned, auth.ErrSpamDected:
+	case auth.ErrBanned, auth.ErrSpamDected, errInValidCaptcha:
 	default:
 		// Ignore client-side connection reset
 		if !strings.HasSuffix(err.Error(), "connection reset by peer") {
