@@ -2,13 +2,12 @@ package db
 
 import (
 	"database/sql"
-	"reflect"
-	"testing"
-
 	"meguca/common"
 	"meguca/config"
 	"meguca/imager/assets"
 	. "meguca/test"
+	"reflect"
+	"testing"
 )
 
 func TestReader(t *testing.T) {
@@ -65,11 +64,18 @@ func TestReader(t *testing.T) {
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
 					ID: 3,
-					Links: []common.Link{{
-						ID:    1,
-						OP:    1,
-						Board: "a",
-					}},
+					Links: []common.Link{
+						{
+							ID:    1,
+							OP:    1,
+							Board: "a",
+						},
+						{
+							ID:    3,
+							OP:    3,
+							Board: "c",
+						},
+					},
 					Commands: []common.Command{
 						{
 							Type: common.Flip,
@@ -144,11 +150,18 @@ func testGetPost(t *testing.T) {
 	std := common.StandalonePost{
 		Post: common.Post{
 			ID: 3,
-			Links: []common.Link{{
-				ID:    1,
-				OP:    1,
-				Board: "a",
-			}},
+			Links: []common.Link{
+				{
+					ID:    1,
+					OP:    1,
+					Board: "a",
+				},
+				{
+					ID:    3,
+					OP:    3,
+					Board: "c",
+				},
+			},
 			Commands: []common.Command{
 				{
 					Type: common.Flip,
@@ -173,11 +186,18 @@ func testGetAllBoard(t *testing.T) {
 		{
 			Post: common.Post{
 				ID: 3,
-				Links: []common.Link{{
-					ID:    1,
-					OP:    1,
-					Board: "a",
-				}},
+				Links: []common.Link{
+					{
+						ID:    1,
+						OP:    1,
+						Board: "a",
+					},
+					{
+						ID:    3,
+						OP:    3,
+						Board: "c",
+					},
+				},
 				Commands: []common.Command{
 					{
 						Type: common.Flip,
@@ -240,11 +260,18 @@ func testGetBoard(t *testing.T) {
 				{
 					Post: common.Post{
 						ID: 3,
-						Links: []common.Link{{
-							ID:    1,
-							OP:    1,
-							Board: "a",
-						}},
+						Links: []common.Link{
+							{
+								ID:    1,
+								OP:    1,
+								Board: "a",
+							},
+							{
+								ID:    3,
+								OP:    3,
+								Board: "c",
+							},
+						},
 						Commands: []common.Command{
 							{
 								Type: common.Flip,
@@ -338,11 +365,18 @@ func testGetThread(t *testing.T) {
 				PostCtr:   1,
 				Post: common.Post{
 					ID: 3,
-					Links: []common.Link{{
-						ID:    1,
-						OP:    1,
-						Board: "a",
-					}},
+					Links: []common.Link{
+						{
+							ID:    1,
+							OP:    1,
+							Board: "a",
+						},
+						{
+							ID:    3,
+							OP:    3,
+							Board: "c",
+						},
+					},
 					Commands: []common.Command{
 						{
 							Type: common.Flip,

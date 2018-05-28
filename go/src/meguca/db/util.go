@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/lib/pq"
 	"github.com/go-playground/log"
+	"github.com/lib/pq"
 )
 
 // Stores generated prepared statements
@@ -47,24 +47,6 @@ func withTransaction(tx *sql.Tx, q squirrel.Sqlizer) transactionalQuery {
 	}
 }
 
-// Runs function inside a transaction and handles comminting and rollback on
-// error
-func InTransaction(fn func(*sql.Tx) error) (err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer RollbackOnError(tx, &err)
-
-	err = fn(tx)
-	if err != nil {
-		return
-	}
-
-	err = tx.Commit()
-	return
-}
-
 func (t transactionalQuery) Exec() (err error) {
 	sql, args, err := t.sq.ToSql()
 	if err != nil {
@@ -88,6 +70,24 @@ func (t transactionalQuery) QueryRow() (rs rowScanner, err error) {
 		return
 	}
 	rs = t.tx.QueryRow(sql, args...)
+	return
+}
+
+// Runs function inside a transaction and handles comminting and rollback on
+// error
+func InTransaction(fn func(*sql.Tx) error) (err error) {
+	tx, err := db.Begin()
+	if err != nil {
+		return
+	}
+	defer RollbackOnError(tx, &err)
+
+	err = fn(tx)
+	if err != nil {
+		return
+	}
+
+	err = tx.Commit()
 	return
 }
 

@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"database/sql"
 	"database/sql/driver"
 	"errors"
@@ -9,11 +10,10 @@ import (
 	"strconv"
 )
 
-// For decoding and encoding the tuple arrays we used to store links in.
-// Still needed for migrations.
-type linkRow [][2]uint64
+// Decodes post links from Postgres array aggregations
+type linkScanner []common.Link
 
-func (l *linkRow) Scan(src interface{}) error {
+func (l *linkScanner) Scan(src interface{}) error {
 	switch src := src.(type) {
 	case []byte:
 		return l.scanBytes(src)
@@ -23,14 +23,74 @@ func (l *linkRow) Scan(src interface{}) error {
 		*l = nil
 		return nil
 	default:
-		return fmt.Errorf("db: cannot convert %T to [][2]uint", src)
+		return fmt.Errorf("cannot convert %T to []common.Link", src)
 	}
 }
 
-func (l *linkRow) scanBytes(src []byte) error {
+func (l *linkScanner) scanBytes(src []byte) (err error) {
+	// Determine needed size and preallocate final array
+	n := 0
+	for _, b := range src {
+		if b == '(' {
+			n++
+		}
+	}
+	*l = make(linkScanner, 0, n)
+
+	var (
+		start = 0
+		link  common.Link
+	)
+	for i, b := range src {
+		switch b {
+		case '(':
+			start = i + 1
+		case ')':
+			split := bytes.Split(src[start:i], []byte{','})
+			if len(split) != 3 {
+				return fmt.Errorf(
+					"invalid tuple structure: `%s` at range [%d:%d]",
+					string(src), start, i)
+			}
+			link.ID, err = strconv.ParseUint(string(split[0]), 10, 64)
+			if err != nil {
+				return
+			}
+			link.OP, err = strconv.ParseUint(string(split[1]), 10, 64)
+			if err != nil {
+				return
+			}
+			link.Board = string(split[2])
+
+			*l = append(*l, link)
+		}
+	}
+
+	return
+}
+
+// For decoding and encoding the tuple arrays we used to store links in.
+// Still needed for migrations.
+type linkRowLegacy [][2]uint64
+
+func (l *linkRowLegacy) Scan(src interface{}) error {
+	switch src := src.(type) {
+	case []byte:
+		return l.scanBytes(src)
+	case string:
+		return l.scanBytes([]byte(src))
+	case nil:
+		*l = nil
+		return nil
+	default:
+		return fmt.Errorf("cannot convert %T to [][2]uint", src)
+	}
+}
+
+func (l *linkRowLegacy) scanBytes(src []byte) error {
 	length := len(src)
 	if length < 6 {
-		return errors.New("db: source too short")
+		return errors.New("source too short")
 	}
 
 	src = src[1 : length-1]
@@ -42,7 +102,7 @@ func (l *linkRow) scanBytes(src []byte) error {
 			commas++
 		}
 	}
-	*l = make(linkRow, 0, (commas-1)/2+1)
+	*l = make(linkRowLegacy, 0, (commas-1)/2+1)
 
 	var (
 		inner bool
@@ -77,7 +137,7 @@ func (l *linkRow) scanBytes(src []byte) error {
 	return nil
 }
 
-func (l linkRow) Value() (driver.Value, error) {
+func (l linkRowLegacy) Value() (driver.Value, error) {
 	n := len(l)
 	if n == 0 {
 		return nil, nil
@@ -98,48 +158,6 @@ func (l linkRow) Value() (driver.Value, error) {
 	b = append(b, '}')
 
 	return string(b), nil
-}
-
-// Get links originating from posts by id
-func getLinks(ids ...uint64) (links map[uint64][]common.Link, err error) {
-	arg := make([]byte, 1, 256)
-	arg[0] = '{'
-	for i, id := range ids {
-		if i != 0 {
-			arg = append(arg, ',')
-		}
-		arg = strconv.AppendUint(arg, id, 10)
-	}
-	arg = append(arg, '}')
-
-	r, err := sq.Select("l.source, l.target, p.op, t.board").
-		From("links as l").
-		Join("posts as p on l.target = p.id").
-		Join("threads as t on p.op = t.id").
-		Where("l.source = any(?::bigint[])", string(arg)).
-		Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-	links = make(map[uint64][]common.Link, len(ids))
-	var (
-		link   common.Link
-		source uint64
-	)
-	for r.Next() {
-		err = r.Scan(&source, &link.ID, &link.OP, &link.Board)
-		if err != nil {
-			return
-		}
-		links[source] = append(links[source], link)
-	}
-	err = r.Err()
-	if err != nil {
-		return
-	}
-
-	return
 }
 
 // Write post links to database

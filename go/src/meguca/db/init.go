@@ -427,7 +427,7 @@ var upgrades = []func(*sql.Tx) error{
 			posts  = make(map[uint64]bool, 1<<10)
 			links  = make(map[uint64]uint64, 1<<10)
 			id, op uint64
-			lr     linkRow
+			lr     linkRowLegacy
 		)
 		for r.Next() {
 			err = r.Scan(&id, &op, &lr)

@@ -35,7 +35,7 @@ func (c *commandRow) Scan(src interface{}) error {
 		*c = nil
 		return nil
 	default:
-		return fmt.Errorf("db: cannot convert %T to []common.Command", src)
+		return fmt.Errorf("cannot convert %T to []common.Command", src)
 	}
 }
 

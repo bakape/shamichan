@@ -12,7 +12,14 @@ import (
 
 const (
 	postSelectsSQL = `p.editing, p.banned, p.spoiler, p.deleted, p.sage, p.id,
-	p.time, p.body, p.flag, p.name, p.trip, p.auth, p.commands, p.imageName,
+	p.time, p.body, p.flag, p.name, p.trip, p.auth,
+	(select array_agg((l.target, linked_post.op, linked_thread.board))
+		from links as l
+		join posts as linked_post on l.target = linked_post.id
+		join threads as linked_thread on linked_post.op = linked_thread.id
+		where l.source = p.id
+	),
+	p.commands, p.imageName,
 	p.posterID,
 	i.*`
 
@@ -101,13 +108,14 @@ type postScanner struct {
 	common.Post
 	banned, spoiler, deleted, sage              sql.NullBool
 	name, trip, auth, imageName, flag, posterID sql.NullString
+	links                                       linkScanner
 	commands                                    commandRow
 }
 
 func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
 		&p.Editing, &p.banned, &p.spoiler, &p.deleted, &p.sage, &p.ID, &p.Time,
-		&p.Body, &p.flag, &p.name, &p.trip, &p.auth, &p.commands,
+		&p.Body, &p.flag, &p.name, &p.trip, &p.auth, &p.links, &p.commands,
 		&p.imageName, &p.posterID,
 	}
 }
@@ -121,6 +129,7 @@ func (p postScanner) Val() (common.Post, error) {
 	p.Auth = p.auth.String
 	p.Flag = p.flag.String
 	p.PosterID = p.posterID.String
+	p.Links = []common.Link(p.links)
 	p.Commands = []common.Command(p.commands)
 
 	return p.Post, nil
@@ -199,21 +208,6 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 		return
 	}
 
-	// Fetch links
-	ids := make([]uint64, len(t.Posts)+1)
-	ids[0] = id
-	for i := 1; i < len(ids); i++ {
-		ids[i] = t.Posts[i-1].ID
-	}
-	links, err := getLinks(ids...)
-	if err != nil {
-		return
-	}
-	injectLinks(&t.Post, links)
-	for i := 0; i < len(t.Posts); i++ {
-		injectLinks(&t.Posts[i], links)
-	}
-
 	// Inject bodies into open posts
 	open := make([]*common.Post, 0, 32)
 	if t.Editing {
@@ -227,13 +221,6 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	err = injectOpenBodies(open)
 
 	return
-}
-
-// Check for links belonging to post in link collection and copy any
-func injectLinks(p *common.Post, links map[uint64][]common.Link) {
-	if links != nil {
-		p.Links = links[p.ID]
-	}
 }
 
 func scanOP(r rowScanner) (t common.Thread, err error) {
@@ -300,12 +287,6 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 		res.Image.Spoiler, res.Image.Name = post.Image()
 	}
 
-	links, err := getLinks(id)
-	if err != nil {
-		return
-	}
-	injectLinks(&res.Post, links)
-
 	if res.Editing {
 		res.Body, err = GetOpenBody(res.ID)
 		if err != nil {
@@ -333,10 +314,6 @@ func GetBoardCatalog(board string) (b common.Board, err error) {
 		return
 	}
 	b, err = scanCatalog(r)
-	if err != nil {
-		return
-	}
-	err = fetchBoardLinks(&b)
 	return
 }
 
@@ -378,7 +355,6 @@ func GetAllBoardCatalog() (board common.Board, err error) {
 		board.Threads = filtered
 	}
 
-	err = fetchBoardLinks(&board)
 	return
 }
 
@@ -419,29 +395,6 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 	}
 	err = injectOpenBodies(open)
 
-	return
-}
-
-// Fetch and inject board page post links
-func fetchBoardLinks(b *common.Board) (err error) {
-	ids := make([]uint64, 0, 512)
-	for _, t := range b.Threads {
-		ids = append(ids, t.ID)
-		for _, p := range t.Posts {
-			ids = append(ids, p.ID)
-		}
-	}
-	links, err := getLinks(ids...)
-	if err != nil {
-		return
-	}
-
-	for i := range b.Threads {
-		injectLinks(&b.Threads[i].Post, links)
-		for j := range b.Threads[i].Posts {
-			injectLinks(&b.Threads[i].Posts[j], links)
-		}
-	}
 	return
 }
 
