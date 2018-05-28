@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/bakape/thumbnailer"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 )
@@ -64,6 +65,11 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 
 // Log an error together with the client's IP and stack trace
 func logError(r *http.Request, err interface{}) {
+	switch err.(type) {
+	case thumbnailer.UnsupportedMIMEError, thumbnailer.ErrInvalidImage:
+		return
+	}
+
 	ip, ipErr := auth.GetIP(r)
 	if ipErr != nil {
 		ip = "invalid IP"
