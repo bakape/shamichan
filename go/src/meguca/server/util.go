@@ -68,7 +68,7 @@ func logError(r *http.Request, err interface{}) {
 	if ipErr != nil {
 		ip = "invalid IP"
 	}
-	log.Errorf("server: %s: %#v\n", ip, err)
+	log.Errorf("server: by %s: %s: %#v", ip, err, err)
 }
 
 // Text-only 404 response

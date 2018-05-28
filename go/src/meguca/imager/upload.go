@@ -110,14 +110,13 @@ func UploadImageHash(w http.ResponseWriter, req *http.Request) {
 
 // LogError send the client file upload errors and logs them server-side
 func LogError(w http.ResponseWriter, r *http.Request, code int, err error) {
-	text := err.Error()
-	http.Error(w, text, code)
+	http.Error(w, err.Error(), code)
 	if !isTest {
 		ip, err := auth.GetIP(r)
 		if err != nil {
 			ip = "invalid IP"
 		}
-		log.Errorf("upload error: %s: %s\n", ip, text)
+		log.Errorf("upload error: by %s: %s: %#v", ip, err, err)
 	}
 }
 

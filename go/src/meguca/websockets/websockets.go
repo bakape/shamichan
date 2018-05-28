@@ -306,7 +306,7 @@ func (c *Client) logError(err error) {
 	default:
 		// Ignore client-side connection reset
 		if !strings.HasSuffix(err.Error(), "connection reset by peer") {
-			log.Errorf("error by %s: %#v\n", c.ip, err)
+			log.Errorf("websockets: by %s: %s: %#v", c.ip, err, err)
 		}
 	}
 }
