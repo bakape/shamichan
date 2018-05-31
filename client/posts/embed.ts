@@ -79,17 +79,20 @@ function proxyYoutube(el: Element): Promise<void> {
 // fetcher for the HookTube provider
 async function fetchHookTube(el: Element): Promise<void> {
 	// Use a CORS proxy to work around javascript's cross-domain restrictions
-	const url =
-		"https://hooktube.com/embed/"
-		+ el.getAttribute("href")
+	const ref = el.getAttribute("href"),
+		url = "https://hooktube.com/embed/" + ref
 			.split(".com/").pop()
 			.split("watch?v=").pop()
 			.split("embed/").pop()
 			.split("&").shift()
 			.split("#").shift()
 			.split("?").shift(),
-		[data, err] = await fetchJSON<any>(
-			"https://cors-proxy.htmldriven.com/?url=" + url)
+		[data, err] = await fetchJSON<any>("https://cors-proxy.htmldriven.com/?url=" + url),
+		time = !ref.includes("t=") ? "" : "&t=" + ref
+			.split("t=").pop()
+			.split("&").shift()
+			.split("#").shift()
+			.split("?").shift()
 
 	if (err) {
 		el.textContent = format(err, provider.HookTube)
@@ -110,7 +113,7 @@ async function fetchHookTube(el: Element): Promise<void> {
 		.innerText, provider.HookTube)
 	el.setAttribute("data-html",
 		encodeURIComponent(
-			`<iframe width="480" height="270" src="${url}?autoplay=false" frameborder="0" allowfullscreen></iframe>`))
+			`<iframe width="480" height="270" src="${url}?autoplay=false${time}" frameborder="0" allowfullscreen></iframe>`))
 }
 
 // fetcher for the noembed.com meta-provider
