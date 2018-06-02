@@ -309,7 +309,8 @@ func (c *Client) logError(err error) {
 		}
 	default:
 		switch err {
-		case auth.ErrBanned, auth.ErrSpamDected, errInValidCaptcha:
+		case auth.ErrBanned, auth.ErrSpamDected, errInValidCaptcha,
+			websocket.ErrCloseSent:
 			return
 		}
 	}
