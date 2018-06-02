@@ -10,6 +10,7 @@
 @mod: @link;
 @red: @admin;
 @blue: #57e8ed;
+@wood: rgba(40, 25, 20, 0.8);
 
 blockquote a:hover {
 	color: @link;
@@ -20,12 +21,12 @@ a:hover, blockquote a, article.editing a:hover {
 }
 
 article, aside, .popup-menu, .modal, .side-panel {
-	background:url("/assets/css/wood.jpg");
+	background-color: @wood;
 	color: @body;
 }
 
 article.highlight, .preview, .popup-menu {
-	background: url("/assets/css/wood.jpg");
+	background-color: @wood;
 	color: @body;
 }
 
@@ -34,8 +35,7 @@ article.editing {
 		linear-gradient(
 			rgba(239, 157, 106, 0.25),
 			rgba(239, 157, 106, 0.25)
-		),
-		url("/assets/css/wood.jpg");
+		), @wood;
 	color: @body;
 	a, header {
 		color: @body;
@@ -56,10 +56,11 @@ article.editing {
 }
 
 body {
-	background: url(tavern.jpg);
-	background-repeat:no-repeat;
+	background: url(tavern.jpg) no-repeat center;
+	/*background-repeat:no-repeat;*/
 	background-size:cover;
-	background-attachment: fixed;
+	height: 100%;
+	/*background-attachment: fixed;*/
 }
 
 body, pre, .themed, a>b {
@@ -115,5 +116,6 @@ a.tab-sel {
 }
 
 #banner {
-	background: url("/assets/css/wood.jpg");
+	background-color: @wood;
+	border-color: @wood;
 }
