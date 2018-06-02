@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
@@ -16,15 +17,24 @@ import (
 )
 
 var (
-	errNoPostOpen          = errors.New("no post open")
-	errEmptyPost           = errors.New("post body empty")
-	errTooManyLines        = errors.New("too many lines in post body")
-	errInvalidSpliceCoords = errors.New("invalid splice coordinates")
-	errSpliceTooLong       = errors.New("splice text too long")
-	errSpliceNOOP          = errors.New("splice NOOP")
-	errTextOnly            = errors.New("text only board")
-	errHasImage            = errors.New("post already has image")
+	errNoPostOpen    = errors.New("no post open")
+	errEmptyPost     = errors.New("post body empty")
+	errTooManyLines  = errors.New("too many lines in post body")
+	errSpliceTooLong = errors.New("splice text too long")
+	errSpliceNOOP    = errors.New("splice NOOP")
+	errTextOnly      = errors.New("text only board")
+	errHasImage      = errors.New("post already has image")
 )
+
+// Error created, when client supplies invalid splice coordinates to server
+type errInvalidSpliceCoords struct {
+	body string
+	req  spliceRequestString
+}
+
+func (e errInvalidSpliceCoords) Error() string {
+	return fmt.Sprintf("invalid splice coordinates: %#v", e)
+}
 
 // Like spliceRequest, but with a string Text field. Used for internal
 // conversions between []rune and string.
@@ -315,7 +325,16 @@ func (c *Client) _spliceText(req spliceRequest) (err error) {
 	case req.Start > common.MaxLenBody,
 		req.Len > common.MaxLenBody,
 		int(req.Start+req.Len) > c.post.len:
-		return errInvalidSpliceCoords
+		return &errInvalidSpliceCoords{
+			body: string(c.post.body),
+			req: spliceRequestString{
+				spliceCoords: spliceCoords{
+					Start: req.Start,
+					Len:   req.Len,
+				},
+				Text: string(req.Text),
+			},
+		}
 	case req.Len == 0 && len(req.Text) == 0:
 		return errSpliceNOOP // This does nothing. Client-side error.
 	case len(req.Text) > common.MaxLenBody:

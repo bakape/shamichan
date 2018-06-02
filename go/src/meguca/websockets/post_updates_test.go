@@ -401,7 +401,21 @@ func TestSpliceValidityChecks(t *testing.T) {
 		text, line string
 		err        error
 	}{
-		{"exceeds buffer bounds", 2, 1, "", "abc", errInvalidSpliceCoords},
+		{
+			"exceeds buffer bounds",
+			2, 1,
+			"", "abc",
+			&errInvalidSpliceCoords{
+				body: "",
+				req: spliceRequestString{
+					spliceCoords: spliceCoords{
+						Start: 2,
+						Len:   1,
+					},
+					Text: "",
+				},
+			},
+		},
 		{"NOOP", 0, 0, "", "", errSpliceNOOP},
 		{"too long", 0, 0, tooLong, "", errSpliceTooLong},
 	}
@@ -418,9 +432,7 @@ func TestSpliceValidityChecks(t *testing.T) {
 				},
 				Text: []rune(c.text),
 			}
-			if err := cl.spliceText(marshalJSON(t, req)); err != c.err {
-				UnexpectedError(t, err)
-			}
+			AssertDeepEquals(t, c.err, cl.spliceText(marshalJSON(t, req)))
 		})
 	}
 }
