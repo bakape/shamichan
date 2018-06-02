@@ -63,10 +63,10 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 	}
 }
 
-// Log an error together with the client's IP and stack trace
+// Log an error together with the client's IP
 func logError(r *http.Request, err interface{}) {
 	switch err.(type) {
-	case thumbnailer.UnsupportedMIMEError, thumbnailer.ErrInvalidImage:
+	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage:
 		return
 	}
 

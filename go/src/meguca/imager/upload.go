@@ -112,8 +112,12 @@ func UploadImageHash(w http.ResponseWriter, req *http.Request) {
 func LogError(w http.ResponseWriter, r *http.Request, code int, err error) {
 	http.Error(w, err.Error(), code)
 	if !isTest {
-		ip, err := auth.GetIP(r)
-		if err != nil {
+		switch err.(type) {
+		case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage:
+			return
+		}
+		ip, ipErr := auth.GetIP(r)
+		if ipErr != nil {
 			ip = "invalid IP"
 		}
 		log.Errorf("upload error: by %s: %s: %#v", ip, err, err)
