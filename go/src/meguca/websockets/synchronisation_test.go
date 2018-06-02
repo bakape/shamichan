@@ -130,9 +130,7 @@ func TestInvalidThreadSync(t *testing.T) {
 		Board:  "a",
 		Thread: 1,
 	})
-	if err := cl.synchronise(data); err != errInvalidThread {
-		UnexpectedError(t, err)
-	}
+	AssertDeepEquals(t, &ErrInvalidThread{1, "a"}, cl.synchronise(data))
 }
 
 func TestSyncToThread(t *testing.T) {

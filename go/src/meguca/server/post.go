@@ -135,7 +135,10 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 		text500(w, r, err)
 		return
 	case !ok:
-		text400(w, fmt.Errorf("invalid thread: /%s/%d", board, op))
+		text400(w, &websockets.ErrInvalidThread{
+			ID:    op,
+			Board: board,
+		})
 		return
 	}
 
