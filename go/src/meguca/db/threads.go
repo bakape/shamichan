@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"time"
+
+	"github.com/Masterminds/squirrel"
 )
 
 // Thread is a template for writing new threads to the database
@@ -23,7 +25,14 @@ func ThreadCounter(id uint64) (uint64, error) {
 
 // ValidateOP confirms the specified thread exists on specific board
 func ValidateOP(id uint64, board string) (valid bool, err error) {
-	err = prepared["validate_op"].QueryRow(id, board).Scan(&valid)
+	err = sq.Select("true").
+		From("threads").
+		Where(squirrel.Eq{
+			"id":    id,
+			"board": board,
+		}).
+		QueryRow().
+		Scan(&valid)
 	if err == sql.ErrNoRows {
 		return false, nil
 	}
@@ -61,13 +70,18 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 		defer RollbackOnError(tx, &err)
 	}
 
-	_, err = tx.Stmt(prepared["write_op"]).Exec(
-		t.Board,
-		t.ID,
-		t.ReplyTime,
-		t.BumpTime,
-		t.Subject,
-	)
+	err = withTransaction(tx, sq.
+		Insert("threads").
+		Columns("board", "id", "replyTime", "bumpTime", "subject").
+		Values(
+			t.Board,
+			t.ID,
+			t.ReplyTime,
+			t.BumpTime,
+			t.Subject,
+		),
+	).
+		Exec()
 	if err != nil {
 		return err
 	}
@@ -83,20 +97,23 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 	return nil
 }
 
-// Check, if a thread has live post updates disabled
-func CheckThreadNonLive(id uint64) (nonLive bool, err error) {
-	return queryBool(id, "check_thread_nonlive")
+func queryThreadBool(id uint64, key string) (val bool, err error) {
+	err = sq.Select(key).
+		From("threads").
+		Where("id = ?", id).
+		QueryRow().
+		Scan(&val)
+	return
 }
 
-// Perform a query by id that returns a boolean
-func queryBool(id uint64, queryID string) (val bool, err error) {
-	err = prepared[queryID].QueryRow(id).Scan(&val)
-	return
+// Check, if a thread has live post updates disabled
+func CheckThreadNonLive(id uint64) (bool, error) {
+	return queryThreadBool(id, "nonLive")
 }
 
 // Check, if a thread has been locked by a moderator
 func CheckThreadLocked(id uint64) (bool, error) {
-	return queryBool(id, "check_thread_locked")
+	return queryThreadBool(id, "locked")
 }
 
 // Increment thread update, bump, post and image counters
