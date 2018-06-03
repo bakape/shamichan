@@ -137,7 +137,7 @@ func ChangePassword(account string, hash []byte) error {
 func GetOwnedBoards(account string) (boards []string, err error) {
 	// admin account can perform actions on any board
 	if account == "admin" {
-		return config.GetBoards(), nil
+		return append([]string{"all"}, config.GetBoards()...), nil
 	}
 
 	r, err := sq.Select("board").

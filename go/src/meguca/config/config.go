@@ -152,9 +152,6 @@ func SetClient(json []byte, cHash string) {
 // with pregenerated public JSON of these configurations and their hash. Do
 // not modify the retrieved struct.
 func GetBoardConfigs(b string) BoardConfContainer {
-	if b == "all" {
-		return AllBoardConfigs
-	}
 	boardMu.RLock()
 	defer boardMu.RUnlock()
 	return boardConfigs[b]
@@ -185,6 +182,9 @@ func GetBoardTitles() BoardTitles {
 		Title: AllBoardConfigs.Title,
 	}
 	for id, conf := range boardConfigs {
+		if id == "all" {
+			continue
+		}
 		bt = append(bt, BoardTitle{
 			ID:    id,
 			Title: conf.Title,
@@ -201,7 +201,9 @@ func GetBoards() []string {
 	defer boardMu.RUnlock()
 	boards := make([]string, 0, len(boardConfigs))
 	for b := range boardConfigs {
-		boards = append(boards, b)
+		if b != "all" {
+			boards = append(boards, b)
+		}
 	}
 	sort.Strings(boards)
 	return boards
