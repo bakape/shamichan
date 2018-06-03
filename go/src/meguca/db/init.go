@@ -18,11 +18,14 @@ import (
 const (
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
+
+	// Specifies the default PostgreSQL connection arguments
+	DefaultConnArgs = "user=meguca password=meguca dbname=meguca sslmode=disable binary_parameters=yes"
 )
 
 var (
 	// ConnArgs specifies the PostgreSQL connection arguments
-	ConnArgs = `user=meguca password=meguca dbname=meguca sslmode=disable binary_parameters=yes`
+	ConnArgs string
 
 	// IsTest can be overridden to not launch several infinite loops during
 	// tests

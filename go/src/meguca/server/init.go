@@ -60,7 +60,7 @@ var defaultServerConfigs = serverConfigs{
 	Gzip:           newBool(false),
 	CacheSize:      newFloat(128),
 	Address:        newString("127.0.0.1:8000"),
-	Database:       newString("user=meguca password=meguca dbname=meguca sslmode=disable"),
+	Database:       newString(db.DefaultConnArgs),
 	CertPath:       newString(""),
 	ReverseProxyIP: newString(""),
 }
