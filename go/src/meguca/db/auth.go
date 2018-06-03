@@ -36,11 +36,11 @@ func IsLoggedIn(user, session string) (loggedIn bool, err error) {
 
 // RegisterAccount writes the ID and password hash of a new user account to the
 // database
-func RegisterAccount(id string, hash []byte) error {
-	_, err := sq.Insert("accounts").
+func RegisterAccount(tx *sql.Tx, id string, hash []byte) error {
+	q := sq.Insert("accounts").
 		Columns("id", "password").
-		Values(id, hash).
-		Exec()
+		Values(id, hash)
+	err := withTransaction(tx, q).Exec()
 	if IsConflictError(err) {
 		return ErrUserNameTaken
 	}

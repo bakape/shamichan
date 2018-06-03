@@ -21,7 +21,6 @@ import (
 	"runtime"
 
 	"github.com/ErikDubbelboer/gspt"
-
 	"github.com/go-playground/log"
 )
 

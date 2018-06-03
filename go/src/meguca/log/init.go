@@ -21,9 +21,6 @@ const (
 )
 
 var (
-	// Is the server daemonized?
-	Daemonized bool = true
-
 	// Ensures no data races
 	rw sync.RWMutex
 
@@ -31,7 +28,7 @@ var (
 	once sync.Once
 
 	// Console handler
-	cLog *console.Console
+	ConsoleHandler *console.Console
 
 	// Email handler
 	eLog *email.Email
@@ -44,10 +41,9 @@ func Init(h handler) {
 
 	switch h {
 	case Console:
-		cLog = console.New(true)
-		cLog.SetTimestampFormat(DefaultTimeFormat)
-		cLog.SetDisplayColor(!Daemonized)
-		log.AddHandler(cLog, log.AllLevels...)
+		ConsoleHandler = console.New(true)
+		ConsoleHandler.SetTimestampFormat(DefaultTimeFormat)
+		log.AddHandler(ConsoleHandler, log.AllLevels...)
 		break
 	case Email:
 		conf := config.Get()

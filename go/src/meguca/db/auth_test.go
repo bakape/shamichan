@@ -19,7 +19,9 @@ var (
 func writeSampleUser(t *testing.T) {
 	t.Helper()
 
-	err := RegisterAccount(sampleUserID, samplePasswordHash)
+	err := InTransaction(func(tx *sql.Tx) error {
+		return RegisterAccount(tx, sampleUserID, samplePasswordHash)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +43,9 @@ func TestRegisterAccount(t *testing.T) {
 	writeSampleUser(t)
 
 	// User name already registered
-	err := RegisterAccount(sampleUserID, samplePasswordHash)
+	err := InTransaction(func(tx *sql.Tx) error {
+		return RegisterAccount(tx, sampleUserID, samplePasswordHash)
+	})
 	if err != ErrUserNameTaken {
 		UnexpectedError(t, err)
 	}

@@ -49,7 +49,10 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for collision and write to DB
-	switch err := db.RegisterAccount(req.ID, hash); err {
+	err = db.InTransaction(func(tx *sql.Tx) error {
+		return db.RegisterAccount(tx, req.ID, hash)
+	})
+	switch err {
 	case nil:
 	case db.ErrUserNameTaken:
 		text400(w, errUserIDTaken)

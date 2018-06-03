@@ -2,10 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"encoding/json"
-	"fmt"
 	"meguca/auth"
-	"meguca/config"
 	"meguca/util"
 	"time"
 
@@ -54,7 +51,11 @@ func LoadDB() (err error) {
 		PlaceholderFormat(squirrel.Dollar)
 
 	var exists bool
-	err = db.QueryRow(getQuery("init/check_db_exists.sql")).Scan(&exists)
+	const q = `select exists (
+		select 1 from information_schema.tables
+			where table_schema = 'public' and table_name = 'main'
+	)`
+	err = db.QueryRow(q).Scan(&exists)
 	if err != nil {
 		return
 	}
@@ -74,9 +75,6 @@ func LoadDB() (err error) {
 			tasks := []func() error{
 				openBoltDB, loadConfigs, loadBans,
 				loadBanners, loadLoadingAnimations,
-			}
-			if !exists {
-				tasks = append(tasks, CreateAdminAccount, createSystemAccount)
 			}
 			if err := util.Parallel(tasks...); err != nil {
 				return err
@@ -104,46 +102,12 @@ func LoadDB() (err error) {
 func checkVersion() (err error) {
 	var v int
 	err = db.QueryRow(`select val from main where id = 'version'`).Scan(&v)
-	if err != nil {
+	switch err {
+	case nil, sql.ErrNoRows:
+		return runMigrations(v, version)
+	default:
 		return
 	}
-
-	var tx *sql.Tx
-	for i := v; i < version; i++ {
-		log.Infof("upgrading database to version %d\n", i+1)
-		tx, err = db.Begin()
-		if err != nil {
-			return
-		}
-
-		err = migrations[i-1](tx)
-		if err != nil {
-			return rollBack(tx, err)
-		}
-
-		// Write new version number
-		_, err = tx.Exec(
-			`update main set val = $1 where id = 'version'`,
-			i+1,
-		)
-		if err != nil {
-			return rollBack(tx, err)
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func rollBack(tx *sql.Tx, err error) error {
-	if rbErr := tx.Rollback(); rbErr != nil {
-		err = util.WrapError(err.Error(), rbErr)
-	}
-	return err
 }
 
 func openBoltDB() (err error) {
@@ -162,29 +126,21 @@ func openBoltDB() (err error) {
 // initDB initializes a database
 func initDB() error {
 	log.Info("initializing database")
-
-	conf, err := json.Marshal(config.Defaults)
-	if err != nil {
-		return err
-	}
-
-	q := fmt.Sprintf(getQuery("init/init.sql"), version, string(conf))
-	_, err = db.Exec(q)
-	return err
+	return runMigrations(0, version)
 }
 
 // CreateAdminAccount writes a fresh admin account with the default password to
 // the database
-func CreateAdminAccount() error {
+func CreateAdminAccount(tx *sql.Tx) (err error) {
 	hash, err := auth.BcryptHash("password", 10)
 	if err != nil {
 		return err
 	}
-	return RegisterAccount("admin", hash)
+	return RegisterAccount(tx, "admin", hash)
 }
 
 // Create inaccessible account used for automatic internal purposes
-func createSystemAccount() (err error) {
+func createSystemAccount(tx *sql.Tx) (err error) {
 	password, err := auth.RandomID(32)
 	if err != nil {
 		return
@@ -193,7 +149,7 @@ func createSystemAccount() (err error) {
 	if err != nil {
 		return
 	}
-	return RegisterAccount("system", hash)
+	return RegisterAccount(tx, "system", hash)
 }
 
 // ClearTables deletes the contents of specified DB tables. Only used for tests.
@@ -223,31 +179,4 @@ func ClearTables(tables ...string) error {
 		}
 	}
 	return nil
-}
-
-// Patches server configuration during upgrades
-func patchConfigs(tx *sql.Tx, fn func(*config.Configs)) (err error) {
-	var s string
-	err = tx.QueryRow("SELECT val FROM main WHERE id = 'config'").Scan(&s)
-	if err != nil {
-		return
-	}
-	conf, err := decodeConfigs(s)
-	if err != nil {
-		return
-	}
-
-	fn(&conf)
-
-	buf, err := json.Marshal(conf)
-	if err != nil {
-		return
-	}
-	_, err = tx.Exec(
-		`UPDATE main
-			SET val = $1
-			WHERE id = 'config'`,
-		string(buf),
-	)
-	return
 }

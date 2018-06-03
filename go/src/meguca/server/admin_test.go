@@ -380,7 +380,9 @@ func TestServePrivateServerConfigs(t *testing.T) {
 func writeAdminAccount(t *testing.T) {
 	t.Helper()
 
-	err := db.CreateAdminAccount()
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.CreateAdminAccount(tx)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

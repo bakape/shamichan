@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"fmt"
 	"meguca/auth"
 	"meguca/common"
@@ -26,14 +27,22 @@ func writeSampleUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = db.RegisterAccount(sampleLoginCreds.UserID, hash)
-	if err != nil {
-		t.Fatal(err)
-	}
+	writeAccount(t, sampleLoginCreds.UserID, hash)
 	err = db.WriteLoginSession(
 		sampleLoginCreds.UserID,
 		sampleLoginCreds.Session,
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeAccount(t *testing.T, id string, hash []byte) {
+	t.Helper()
+
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.RegisterAccount(tx, id, hash)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,12 +59,8 @@ func TestIsLoggedIn(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.RegisterAccount("user1", hash); err != nil {
-		t.Fatal(err)
-	}
-	if err := db.RegisterAccount("user2", hash); err != nil {
-		t.Fatal(err)
-	}
+	writeAccount(t, "user1", hash)
+	writeAccount(t, "user2", hash)
 
 	token := genSession()
 	if err := db.WriteLoginSession("user1", token); err != nil {
@@ -316,9 +321,7 @@ func TestLogin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.RegisterAccount(id, hash); err != nil {
-		t.Fatal(err)
-	}
+	writeAccount(t, id, hash)
 
 	cases := [...]struct {
 		name, id, password string
@@ -420,9 +423,7 @@ func writeSampleSessions(t *testing.T) (string, [2]string) {
 		t.Fatal(err)
 	}
 
-	if err := db.RegisterAccount(id, hash); err != nil {
-		t.Fatal(err)
-	}
+	writeAccount(t, id, hash)
 	for _, token := range tokens {
 		if err := db.WriteLoginSession(id, token); err != nil {
 			t.Fatal(err)

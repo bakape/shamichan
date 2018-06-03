@@ -5,22 +5,21 @@
 package server
 
 import (
+	"meguca/log"
 	"os"
 	"syscall"
 	"time"
 
-	"meguca/log"
-
-	"github.com/sevlyar/go-daemon"
 	"github.com/go-playground/log"
+	"github.com/sevlyar/go-daemon"
 )
 
 func init() {
 	handleDaemon = func(arg string) {
 		switch arg {
 		case "debug":
-			mLog.Daemonized = false
 			mLog.Init(mLog.Console)
+			mLog.ConsoleHandler.SetDisplayColor(true)
 			startServer()
 		case "stop":
 			killDaemon()
@@ -32,6 +31,7 @@ func init() {
 			fallthrough
 		case "start":
 			mLog.Init(mLog.Console)
+			mLog.ConsoleHandler.SetDisplayColor(false)
 			daemonise()
 		default:
 			printUsage()

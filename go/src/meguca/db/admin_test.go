@@ -24,7 +24,10 @@ func prepareForModeration(t *testing.T) {
 	assertTableClear(t, "accounts", "bans", "mod_log", "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	if err := CreateAdminAccount(); err != nil {
+	err := InTransaction(func(tx *sql.Tx) error {
+		return CreateAdminAccount(tx)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 }

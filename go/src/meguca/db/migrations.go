@@ -2,14 +2,147 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
+	"meguca/util"
+
+	"github.com/go-playground/log"
 )
 
-var version = len(migrations) + 1
+var version = len(migrations)
 
 var migrations = []func(*sql.Tx) error{
+	func(tx *sql.Tx) (err error) {
+		// Initialize DB
+		err = execAll(tx,
+			`create table main (
+				id text primary key,
+				val text not null
+			)`,
+			`insert into main (id, val) values
+				('version', '0'),
+				('pyu', '0')`,
+			`create table accounts (
+				id varchar(20) primary key,
+				password bytea not null
+			)`,
+			`create table sessions (
+				account varchar(20) not null references accounts on delete cascade,
+				token text not null,
+				expires timestamp not null,
+				primary key (account, token)
+			)`,
+			`create table bans (
+				board varchar(3) not null,
+				ip inet not null,
+				by varchar(20) not null,
+				reason text not null,
+				expires timestamp default now(),
+				primary key (ip, board)
+			)`,
+			`create table images (
+				apng boolean not null,
+				audio boolean not null,
+				video boolean not null,
+				fileType smallint not null,
+				thumbType smallint not null,
+				dims smallint[4] not null,
+				length int not null,
+				size int not null,
+				md5 char(22) not null,
+				sha1 char(40) primary key
+			)`,
+			`create table image_tokens (
+				token char(86) not null primary key,
+				sha1 char(40) not null references images on delete cascade,
+				expires timestamp not null
+			)`,
+			`create table boards (
+				readOnly boolean not null,
+				textOnly boolean not null,
+				forcedAnon boolean not null,
+				hashCommands boolean not null,
+				codeTags boolean not null,
+				id varchar(3) primary key,
+				ctr bigint default 0,
+				created timestamp not null,
+				title varchar(100) not null,
+				notice varchar(500) not null,
+				rules varchar(5000) not null,
+				eightball text[] not null
+			)`,
+			`create table staff (
+				board varchar(3) not null references boards on delete cascade,
+				account varchar(20) not null references accounts on delete cascade,
+				position varchar(50) not null
+			)`,
+			`create index staff_board on staff (board)`,
+			`create index staff_account on staff (account)`,
+			`create sequence post_id`,
+			`create table threads (
+				locked boolean,
+				board varchar(3) not null references boards on delete cascade,
+				id bigint primary key,
+				postCtr bigint not null,
+				imageCtr bigint not null,
+				bumpTime bigint not null,
+				replyTime bigint not null,
+				subject varchar(100) not null,
+				log text[] not null
+			)`,
+			`create index threads_board on threads (board)`,
+			`create index bumpTime on threads (bumpTime)`,
+			`create table posts (
+				editing boolean not null,
+				spoiler boolean,
+				deleted boolean,
+				banned boolean,
+				id bigint primary key,
+				op bigint not null references threads on delete cascade,
+				time bigint not null,
+				board varchar(3) not null,
+				trip char(10),
+				auth varchar(20),
+				sha1 char(40) references images on delete set null,
+				name varchar(50),
+				imageName varchar(200),
+				body varchar(2000) not null,
+				password bytea,
+				ip inet,
+				links bigint[][2],
+				backlinks bigint[][2],
+				commands json[]
+			)`,
+			`create index deleted on posts (deleted)`,
+			`create index op on posts (op)`,
+			`create index image on posts (sha1)`,
+			`create index editing on posts (editing)`,
+			`create index ip on posts (ip)`,
+		)
+		if err != nil {
+			return
+		}
+
+		data, err := json.Marshal(config.Defaults)
+		if err != nil {
+			return
+		}
+		q := sq.Insert("main").
+			Columns("id", "val").
+			Values("config", string(data))
+		err = withTransaction(tx, q).Exec()
+		if err != nil {
+			return
+		}
+
+		err = CreateAdminAccount(tx)
+		if err != nil {
+			return
+		}
+		return createSystemAccount(tx)
+	},
 	func(tx *sql.Tx) (err error) {
 		// Delete legacy columns
 		return execAll(tx,
@@ -580,4 +713,70 @@ var migrations = []func(*sql.Tx) error{
 			conf.EmailErrPort = config.Defaults.EmailErrPort
 		})
 	},
+}
+
+// Run migrations from version `from`to version `to`
+func runMigrations(from, to int) (err error) {
+	var tx *sql.Tx
+	for i := from; i < to; i++ {
+		log.Infof("upgrading database to version %d", i+1)
+		tx, err = db.Begin()
+		if err != nil {
+			return
+		}
+
+		err = migrations[i](tx)
+		if err != nil {
+			return rollBack(tx, err)
+		}
+
+		// Write new version number
+		_, err = tx.Exec(
+			`update main set val = $1 where id = 'version'`,
+			i+1,
+		)
+		if err != nil {
+			return rollBack(tx, err)
+		}
+
+		err = tx.Commit()
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func rollBack(tx *sql.Tx, err error) error {
+	if rbErr := tx.Rollback(); rbErr != nil {
+		err = util.WrapError(err.Error(), rbErr)
+	}
+	return err
+}
+
+// Patches server configuration during upgrades
+func patchConfigs(tx *sql.Tx, fn func(*config.Configs)) (err error) {
+	var s string
+	err = tx.QueryRow("SELECT val FROM main WHERE id = 'config'").Scan(&s)
+	if err != nil {
+		return
+	}
+	conf, err := decodeConfigs(s)
+	if err != nil {
+		return
+	}
+
+	fn(&conf)
+
+	buf, err := json.Marshal(conf)
+	if err != nil {
+		return
+	}
+	_, err = tx.Exec(
+		`UPDATE main
+			SET val = $1
+			WHERE id = 'config'`,
+		string(buf),
+	)
+	return
 }
