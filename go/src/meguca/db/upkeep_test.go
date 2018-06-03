@@ -127,10 +127,11 @@ func assertThreadDeleted(t *testing.T, id uint64, del bool) {
 }
 
 func TestDeleteUnusedBoards(t *testing.T) {
-	assertTableClear(t, "boards")
+	assertTableClear(t, "boards", "accounts")
 	config.Set(config.Configs{
 		BoardExpiry: 7,
 	})
+	writeAllBoard(t)
 
 	t.Run("no boards", func(t *testing.T) {
 		(*config.Get()).PruneBoards = true
@@ -143,6 +144,25 @@ func TestDeleteUnusedBoards(t *testing.T) {
 	t.Run("board with no threads", testBoardNoThreads)
 	t.Run("pruning disabled", testBoardPruningDisabled)
 	t.Run("board with threads", testDeleteUnusedBoards)
+}
+
+// Restore all board to enable global logging
+func writeAllBoard(t *testing.T) {
+	t.Helper()
+
+	err := InTransaction(func(tx *sql.Tx) (err error) {
+		err = WriteBoard(tx, BoardConfigs{
+			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
+			Created:      time.Now().UTC(),
+		})
+		if err != nil {
+			return
+		}
+		return CreateSystemAccount(tx)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func testBoardNoThreads(t *testing.T) {
@@ -303,4 +323,15 @@ func TestDeleteOldThreads(t *testing.T) {
 		assertThreadDeleted(t, 1, true)
 		assertThreadDeleted(t, 2, false)
 	})
+}
+
+func TestDeleteBoard(t *testing.T) {
+	assertTableClear(t, "boards", "accounts")
+	writeSampleBoard(t)
+	writeAllBoard(t)
+
+	err := DeleteBoard("a", "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
 }

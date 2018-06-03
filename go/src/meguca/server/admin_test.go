@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 var adminLoginCreds = auth.SessionCreds{
@@ -421,6 +422,7 @@ func TestDeleteBoard(t *testing.T) {
 	writeSampleUser(t)
 	writeSampleBoard(t)
 	writeSampleBoardOwner(t)
+	writeAllBoard(t)
 
 	rec, req := newJSONPair(t, "/api/delete-board", boardActionRequest{
 		Board: "a",
@@ -429,6 +431,25 @@ func TestDeleteBoard(t *testing.T) {
 	router.ServeHTTP(rec, req)
 
 	assertCode(t, rec, 200)
+}
+
+// Restore all board to enable global logging
+func writeAllBoard(t *testing.T) {
+	t.Helper()
+
+	err := db.InTransaction(func(tx *sql.Tx) (err error) {
+		err = db.WriteBoard(tx, db.BoardConfigs{
+			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
+			Created:      time.Now().UTC(),
+		})
+		if err != nil {
+			return
+		}
+		return db.CreateSystemAccount(tx)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestDeletePost(t *testing.T) {

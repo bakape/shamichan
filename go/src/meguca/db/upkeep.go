@@ -4,7 +4,9 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"math"
+	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/imager/assets"
@@ -66,7 +68,12 @@ func logError(prefix string, err error) {
 
 // Close any open posts that have not been closed for 30 minutes
 func closeDanglingPosts() error {
-	r, err := prepared["get_expired_open_posts"].Query()
+	r, err := sq.Select("id", "op", "board").
+		From("posts").
+		Where(`editing = true
+			and time
+				< floor(extract(epoch from now() at time zone 'utc')) - 900`).
+		Query()
 	if err != nil {
 		return err
 	}
@@ -78,8 +85,8 @@ func closeDanglingPosts() error {
 	}
 
 	posts := make([]post, 0, 8)
+	var p post
 	for r.Next() {
-		var p post
 		err = r.Scan(&p.id, &p.op, &p.board)
 		if err != nil {
 			return err
@@ -119,7 +126,65 @@ func deleteUnusedBoards() error {
 		return nil
 	}
 	min := time.Now().Add(-time.Duration(conf.BoardExpiry) * time.Hour * 24)
-	return execPrepared("delete_unused_boards", min)
+	return InTransaction(func(tx *sql.Tx) (err error) {
+		// Get all inactive boards
+		var boards []string
+		r, err := sq.Select("id").
+			From("boards").
+			Where(`created < ?
+				and id != 'all'
+				and (select coalesce(max(replyTime), 0)
+						from threads
+						where board = boards.id
+					) < ?`,
+				min, min.Unix(),
+			).
+			Query()
+		if err != nil {
+			return
+		}
+		var board string
+		for r.Next() {
+			err = r.Scan(&board)
+			if err != nil {
+				return
+			}
+			boards = append(boards, board)
+		}
+		err = r.Err()
+		if err != nil {
+			return
+		}
+
+		// Delete them and log to global moderation log
+		for _, b := range boards {
+			err = deleteBoard(tx, b, "system",
+				fmt.Sprintf("board %s deleted for inactivity", b))
+			if err != nil {
+				return
+			}
+		}
+		return
+	})
+}
+
+func deleteBoard(tx *sql.Tx, id, by, reason string) (err error) {
+	err = withTransaction(tx, sq.Delete("boards").Where("id = ?", id)).
+		Exec()
+	if err != nil {
+		return
+	}
+	err = logModeration(tx, auth.ModLogEntry{
+		Type:   auth.DeleteBoard,
+		Board:  "all",
+		By:     by,
+		Reason: reason,
+	})
+	if err != nil {
+		return
+	}
+	_, err = tx.Exec(`select pg_notify('board_updated', $1)`, id)
+	return
 }
 
 // Delete stale threads. Thread retention measured in a bumptime threshold, that
@@ -186,9 +251,11 @@ func deleteOldThreads() (err error) {
 }
 
 // DeleteBoard deletes a board and all of its contained threads and posts
-func DeleteBoard(board string) error {
-	_, err := prepared["delete_board"].Exec(board)
-	return err
+func DeleteBoard(board, by string) error {
+	return InTransaction(func(tx *sql.Tx) error {
+		return deleteBoard(tx, board, by,
+			fmt.Sprintf("board %s deleted by user", board))
+	})
 }
 
 // Delete images not used in any posts

@@ -140,7 +140,7 @@ func CreateAdminAccount(tx *sql.Tx) (err error) {
 }
 
 // Create inaccessible account used for automatic internal purposes
-func createSystemAccount(tx *sql.Tx) (err error) {
+func CreateSystemAccount(tx *sql.Tx) (err error) {
 	password, err := auth.RandomID(32)
 	if err != nil {
 		return

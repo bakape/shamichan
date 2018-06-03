@@ -70,6 +70,7 @@ const (
 	DeleteImage
 	SpoilerImage
 	LockThread
+	DeleteBoard
 )
 
 // Single entry in the moderation log

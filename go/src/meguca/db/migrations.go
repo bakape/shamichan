@@ -7,6 +7,7 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/util"
+	"time"
 
 	"github.com/go-playground/log"
 )
@@ -141,7 +142,7 @@ var migrations = []func(*sql.Tx) error{
 		if err != nil {
 			return
 		}
-		return createSystemAccount(tx)
+		return CreateSystemAccount(tx)
 	},
 	func(tx *sql.Tx) (err error) {
 		// Delete legacy columns
@@ -711,6 +712,19 @@ var migrations = []func(*sql.Tx) error{
 			conf.EmailErrPass = config.Defaults.EmailErrPass
 			conf.EmailErrSub = config.Defaults.EmailErrSub
 			conf.EmailErrPort = config.Defaults.EmailErrPort
+		})
+	},
+	// Fixes global moderation
+	func(tx *sql.Tx) (err error) {
+		err = WriteBoard(tx, BoardConfigs{
+			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
+			Created:      time.Now().UTC(),
+		})
+		if err != nil {
+			return
+		}
+		return WriteStaff(tx, "all", map[string][]string{
+			"owners": {"admin", "system"},
 		})
 	},
 }

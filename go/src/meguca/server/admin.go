@@ -306,7 +306,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 
 	err = db.InTransaction(func(tx *sql.Tx) (err error) {
 		err = db.WriteBoard(tx, db.BoardConfigs{
-			Created: time.Now(),
+			Created: time.Now().UTC(),
 			BoardConfigs: config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
 					Title:      msg.Title,
@@ -357,12 +357,12 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
-	_, ok := canPerform(w, r, msg.Board, auth.BoardOwner, &msg.Captcha)
+	creds, ok := canPerform(w, r, msg.Board, auth.BoardOwner, &msg.Captcha)
 	if !ok {
 		return
 	}
 
-	if err := db.DeleteBoard(msg.Board); err != nil {
+	if err := db.DeleteBoard(msg.Board, creds.UserID); err != nil {
 		text500(w, r, err)
 	}
 }
