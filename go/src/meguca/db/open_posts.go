@@ -27,7 +27,7 @@ func encodeUint64(i uint64) [8]byte {
 }
 
 // Same as encodeUint64, but allocates on the heap. In some cases, where the
-// buffer must persist till the end of the transaction, this is needed.
+// buffer must persist after the end of the transaction, this is needed.
 func encodeUint64Heap(i uint64) []byte {
 	buf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(buf, i)
@@ -80,18 +80,21 @@ func cleanUpOpenPostBodies() (err error) {
 	}
 	defer tx.Rollback()
 
-	var (
-		isOpen bool
-		q      = tx.Stmt(prepared["is_open_post"])
-	)
+	var isOpen bool
+	q, err := tx.Prepare(`select 'true' from posts
+		where id = $1 and editing = 'true'`)
+	if err != nil {
+		return
+	}
 	for _, id := range ids {
 		err = q.QueryRow(id).Scan(&isOpen)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				err = nil
-			} else {
-				return
-			}
+		switch err {
+		case nil:
+		case sql.ErrNoRows:
+			err = nil
+			isOpen = false
+		default:
+			return
 		}
 		if !isOpen {
 			toDelete = append(toDelete, id)
