@@ -162,7 +162,11 @@ func (l linkRowLegacy) Value() (driver.Value, error) {
 
 // Write post links to database
 func writeLinks(tx *sql.Tx, source uint64, links []common.Link) (err error) {
-	q := getExecutor(tx, "write_link")
+	q, err := tx.Prepare(`insert into links (source, target) values($1, $2)`)
+	if err != nil {
+		return
+	}
+
 	// Need to deduplicate to prevent primary key collisions
 	written := make(map[uint64]bool, len(links))
 	for _, l := range links {
