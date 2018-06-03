@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"testing"
 
 	"meguca/cache"
@@ -73,11 +74,13 @@ func TestOwnedBoardSelection(t *testing.T) {
 	writeSampleUser(t)
 
 	for _, b := range [...]string{"a", "c"} {
-		err := db.WriteBoard(db.BoardConfigs{
-			BoardConfigs: config.BoardConfigs{
-				ID:        b,
-				Eightball: []string{"yes"},
-			},
+		err := db.InTransaction(func(tx *sql.Tx) error {
+			return db.WriteBoard(tx, db.BoardConfigs{
+				BoardConfigs: config.BoardConfigs{
+					ID:        b,
+					Eightball: []string{"yes"},
+				},
+			})
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -103,13 +106,19 @@ func TestOwnedBoardSelection(t *testing.T) {
 			[]string{"admin"},
 		},
 	}
-	for _, s := range staff {
-		err := db.WriteStaff(s.id, map[string][]string{
-			"owners": s.owners,
-		})
-		if err != nil {
-			t.Fatal(err)
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		for _, s := range staff {
+			err := db.WriteStaff(tx, s.id, map[string][]string{
+				"owners": s.owners,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	cases := [...]struct {
@@ -139,8 +148,10 @@ func TestBoardConfigurationForm(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleUser(t)
 
-	err := db.WriteStaff("a", map[string][]string{
-		"owners": {"user1"},
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WriteStaff(tx, "a", map[string][]string{
+			"owners": {"user1"},
+		})
 	})
 	if err != nil {
 		t.Fatal(err)

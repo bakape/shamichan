@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"meguca/auth"
 	. "meguca/test"
 	"testing"
@@ -88,8 +89,9 @@ func TestStaff(t *testing.T) {
 	prepareForModeration(t)
 
 	staff := map[string][]string{"owners": {"admin"}}
-
-	err := WriteStaff("a", staff)
+	err := InTransaction(func(tx *sql.Tx) error {
+		return WriteStaff(tx, "a", staff)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,8 +127,10 @@ func TestGetModLOg(t *testing.T) {
 func TestCanPerform(t *testing.T) {
 	prepareForModeration(t)
 	writeSampleUser(t)
-	err := WriteStaff("a", map[string][]string{
-		"moderators": []string{sampleUserID},
+	err := InTransaction(func(tx *sql.Tx) error {
+		return WriteStaff(tx, "a", map[string][]string{
+			"moderators": []string{sampleUserID},
+		})
 	})
 	if err != nil {
 		t.Fatal(err)

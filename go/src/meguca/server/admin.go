@@ -304,31 +304,36 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.WriteBoard(db.BoardConfigs{
-		Created: time.Now(),
-		BoardConfigs: config.BoardConfigs{
-			BoardPublic: config.BoardPublic{
-				Title:      msg.Title,
-				DefaultCSS: config.Get().DefaultCSS,
+	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+		err = db.WriteBoard(tx, db.BoardConfigs{
+			Created: time.Now(),
+			BoardConfigs: config.BoardConfigs{
+				BoardPublic: config.BoardPublic{
+					Title:      msg.Title,
+					DefaultCSS: config.Get().DefaultCSS,
+				},
+				ID:        msg.ID,
+				Eightball: config.EightballDefaults,
 			},
-			ID:        msg.ID,
-			Eightball: config.EightballDefaults,
-		},
-	})
-	switch {
-	case err == nil:
-	case db.IsConflictError(err):
-		text400(w, errBoardNameTaken)
-		return
-	default:
-		text500(w, r, err)
-		return
-	}
+		})
+		switch {
+		case err == nil:
+		case db.IsConflictError(err):
+			err = errBoardNameTaken
+			text400(w, err)
+			return
+		default:
+			text500(w, r, err)
+			return
+		}
 
-	err = db.WriteStaff(msg.ID, map[string][]string{
-		"owners": []string{creds.UserID},
+		return db.WriteStaff(tx, msg.ID, map[string][]string{
+			"owners": []string{creds.UserID},
+		})
 	})
-	if err != nil {
+	switch err {
+	case errBoardNameTaken, nil:
+	default:
 		text500(w, r, err)
 		return
 	}
@@ -541,10 +546,12 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err := db.WriteStaff(msg.Board, map[string][]string{
-		"owners":     msg.Owners,
-		"moderators": msg.Moderators,
-		"janitors":   msg.Janitors,
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WriteStaff(tx, msg.Board, map[string][]string{
+			"owners":     msg.Owners,
+			"moderators": msg.Moderators,
+			"janitors":   msg.Janitors,
+		})
 	})
 	if err != nil {
 		text500(w, r, err)

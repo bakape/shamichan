@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"testing"
 
 	"meguca/config"
@@ -73,7 +74,10 @@ func TestUpdateOnAddBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := WriteBoard(std); err != nil {
+	err := InTransaction(func(tx *sql.Tx) error {
+		return WriteBoard(tx, std)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -103,7 +107,10 @@ func TestUpdateBoardConfigs(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := WriteBoard(std); err != nil {
+	err := InTransaction(func(tx *sql.Tx) error {
+		return WriteBoard(tx, std)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -119,7 +126,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 
 	conf := std.BoardConfigs
 	conf.Title = "foo"
-	err := UpdateBoard(conf)
+	err = UpdateBoard(conf)
 	if err != nil {
 		t.Fatal(err)
 	}

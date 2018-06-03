@@ -97,58 +97,60 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 }
 
 // WriteBoard writes a board complete with configurations to the database
-func WriteBoard(c BoardConfigs) error {
-	_, err := sq.Insert("boards").
+func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
+	q := sq.Insert("boards").
 		Columns(
 			"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
 			"flags", "NSFW", "nonLive",
-			"posterIDs", "rbText", "created", "defaultCSS", "title", "notice", "rules",
-			"eightball",
+			"posterIDs", "rbText", "created", "defaultCSS", "title", "notice",
+			"rules", "eightball",
 		).
 		Values(
-			c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots, c.Flags,
-			c.NSFW, c.NonLive, c.PosterIDs, c.RbText,
+			c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
+			c.Flags, c.NSFW, c.NonLive, c.PosterIDs, c.RbText,
 			c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
 			pq.StringArray(c.Eightball),
-		).
-		Exec()
+		)
+	err := withTransaction(tx, q).Exec()
 	if err != nil {
 		return err
 	}
 
-	return notifyBoardUpdated(c.ID)
+	return notifyBoardUpdated(tx, c.ID)
 }
 
-func notifyBoardUpdated(board string) error {
-	_, err := db.Exec("select pg_notify('board_updated', $1)", board)
+func notifyBoardUpdated(tx *sql.Tx, board string) error {
+	_, err := tx.Exec("select pg_notify('board_updated', $1)", board)
 	return err
 }
 
 // UpdateBoard updates board configurations
 func UpdateBoard(c config.BoardConfigs) error {
-	_, err := sq.Update("boards").
-		SetMap(map[string]interface{}{
-			"readOnly":      c.ReadOnly,
-			"textOnly":      c.TextOnly,
-			"forcedAnon":    c.ForcedAnon,
-			"disableRobots": c.DisableRobots,
-			"flags":         c.Flags,
-			"NSFW":          c.NSFW,
-			"nonLive":       c.NonLive,
-			"posterIDs":     c.PosterIDs,
-			"rbText":        c.RbText,
-			"defaultCSS":    c.DefaultCSS,
-			"title":         c.Title,
-			"notice":        c.Notice,
-			"rules":         c.Rules,
-			"eightball":     pq.StringArray(c.Eightball),
-		}).
-		Where("id = ?", c.ID).
-		Exec()
-	if err != nil {
-		return err
-	}
-	return notifyBoardUpdated(c.ID)
+	return InTransaction(func(tx *sql.Tx) error {
+		q := sq.Update("boards").
+			SetMap(map[string]interface{}{
+				"readOnly":      c.ReadOnly,
+				"textOnly":      c.TextOnly,
+				"forcedAnon":    c.ForcedAnon,
+				"disableRobots": c.DisableRobots,
+				"flags":         c.Flags,
+				"NSFW":          c.NSFW,
+				"nonLive":       c.NonLive,
+				"posterIDs":     c.PosterIDs,
+				"rbText":        c.RbText,
+				"defaultCSS":    c.DefaultCSS,
+				"title":         c.Title,
+				"notice":        c.Notice,
+				"rules":         c.Rules,
+				"eightball":     pq.StringArray(c.Eightball),
+			}).
+			Where("id = ?", c.ID)
+		err := withTransaction(tx, q).Exec()
+		if err != nil {
+			return err
+		}
+		return notifyBoardUpdated(tx, c.ID)
+	})
 }
 
 func updateConfigs(data string) error {

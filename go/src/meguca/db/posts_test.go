@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"meguca/common"
 	"meguca/config"
 	"testing"
@@ -44,7 +45,10 @@ func writeSampleBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := WriteBoard(b); err != nil {
+	err := InTransaction(func(tx *sql.Tx) error {
+		return WriteBoard(tx, b)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 }

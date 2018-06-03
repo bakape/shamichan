@@ -11,11 +11,9 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
-
 	"github.com/boltdb/bolt"
-	_ "github.com/lib/pq" // Postgres driver
-
 	"github.com/go-playground/log"
+	_ "github.com/lib/pq" // Postgres driver
 )
 
 const (

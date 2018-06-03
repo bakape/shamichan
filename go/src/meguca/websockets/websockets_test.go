@@ -15,9 +15,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/go-playground/log"
 	"github.com/go-playground/log/handlers/console"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -29,7 +29,7 @@ const (
 
 var (
 	dialer = websocket.Dialer{}
-	con = console.New(true)
+	con    = console.New(true)
 )
 
 type mockWSServer struct {

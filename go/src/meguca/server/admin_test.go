@@ -68,7 +68,10 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.WriteBoard(conf); err != nil {
+	err = db.InTransaction(func(tx *sql.Tx) error {
+		return db.WriteBoard(tx, conf)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 	writeSampleUser(t)
@@ -102,7 +105,10 @@ func TestBoardConfiguration(t *testing.T) {
 			Eightball: []string{},
 		},
 	}
-	if err := db.WriteBoard(init); err != nil {
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WriteBoard(tx, init)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -270,7 +276,10 @@ func writeSampleBoard(t testing.TB) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := db.WriteBoard(b); err != nil {
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WriteBoard(tx, b)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 	if _, err := config.SetBoardConfigs(b.BoardConfigs); err != nil {
@@ -280,9 +289,10 @@ func writeSampleBoard(t testing.TB) {
 
 func writeSampleBoardOwner(t *testing.T) {
 	t.Helper()
-
-	err := db.WriteStaff("a", map[string][]string{
-		"owners": {"user1"},
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WriteStaff(tx, "a", map[string][]string{
+			"owners": {"user1"},
+		})
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -432,7 +442,9 @@ func TestDeletePost(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := db.WriteBoard(cConfigs)
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WriteBoard(tx, cConfigs)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

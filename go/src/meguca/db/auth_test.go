@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"testing"
 	"time"
 
@@ -116,8 +117,10 @@ func TestGetPositions(t *testing.T) {
 	assertTableClear(t, "accounts", "boards")
 	writeSampleBoard(t)
 	writeSampleUser(t)
-	err := WriteStaff("a", map[string][]string{
-		"owners": []string{sampleUserID},
+	err := InTransaction(func(tx *sql.Tx) error {
+		return WriteStaff(tx, "a", map[string][]string{
+			"owners": []string{sampleUserID},
+		})
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -94,7 +94,10 @@ func writeSampleBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := db.WriteBoard(b); err != nil {
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WriteBoard(tx, b)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 }

@@ -80,15 +80,13 @@ func InTransaction(fn func(*sql.Tx) error) (err error) {
 	if err != nil {
 		return
 	}
-	defer RollbackOnError(tx, &err)
 
 	err = fn(tx)
 	if err != nil {
+		tx.Rollback()
 		return
 	}
-
-	err = tx.Commit()
-	return
+	return tx.Commit()
 }
 
 // Generate prepared statements

@@ -223,17 +223,17 @@ func RefreshBanCache() (err error) {
 // DeletePost marks the target post as deleted
 func DeletePost(id uint64, by string) error {
 	var del sql.NullBool
-	err := prepared["get_post_deleted"].QueryRow(id).Scan(&del)
-
+	err := sq.Select("deleted").From("posts").Where("id = ?", id).Scan(&del)
 	if err != nil {
 		return err
 	}
 
-	if !del.Valid || !del.Bool {
-		return moderatePost(id, auth.DeletePost, by, sq.Update("posts").Set("deleted", true), common.DeletePost)
+	if !del.Bool {
+		return moderatePost(id, auth.DeletePost, by,
+			sq.Update("posts").Set("deleted", true), common.DeletePost)
 	}
 
-	return err
+	return nil
 }
 
 func moderatePost(
@@ -288,35 +288,32 @@ func ModSpoilerImage(id uint64, by string) error {
 
 // WriteStaff writes staff positions of a specific board. Old rows are
 // overwritten.
-func WriteStaff(board string, staff map[string][]string) (err error) {
-	return InTransaction(func(tx *sql.Tx) (err error) {
-		// Remove previous staff entries
-		err = withTransaction(tx,
-			sq.Delete("staff").
-				Where("board  = ?", board),
-		).
-			Exec()
-		if err != nil {
-			return
-		}
+func WriteStaff(tx *sql.Tx, board string, staff map[string][]string) (
+	err error,
+) {
+	// Remove previous staff entries
+	err = withTransaction(tx, sq.Delete("staff").Where("board  = ?", board)).
+		Exec()
+	if err != nil {
+		return
+	}
 
-		// Write new ones
-		q, err := tx.Prepare(`insert into staff (board, account, position)
-			values($1, $2, $3)`)
-		if err != nil {
-			return
-		}
-		for pos, accounts := range staff {
-			for _, a := range accounts {
-				_, err = q.Exec(board, a, pos)
-				if err != nil {
-					return
-				}
+	// Write new ones
+	q, err := tx.Prepare(`insert into staff (board, account, position)
+		values($1, $2, $3)`)
+	if err != nil {
+		return
+	}
+	for pos, accounts := range staff {
+		for _, a := range accounts {
+			_, err = q.Exec(board, a, pos)
+			if err != nil {
+				return
 			}
 		}
+	}
 
-		return
-	})
+	return
 }
 
 // GetStaff retrieves all staff positions of a specific board

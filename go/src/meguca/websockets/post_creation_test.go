@@ -1,6 +1,7 @@
 package websockets
 
 import (
+	"database/sql"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
@@ -56,7 +57,10 @@ func TestInsertThread(t *testing.T) {
 		if _, err := config.SetBoardConfigs(c.BoardConfigs); err != nil {
 			t.Fatal(err)
 		}
-		if err := db.WriteBoard(c); err != nil {
+		err := db.InTransaction(func(tx *sql.Tx) error {
+			return db.WriteBoard(tx, c)
+		})
+		if err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -422,7 +426,10 @@ func writeSampleBoard(t testing.TB) {
 			Eightball: []string{"yes"},
 		},
 	}
-	if err := db.WriteBoard(b); err != nil {
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WriteBoard(tx, b)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 }

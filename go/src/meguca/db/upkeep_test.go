@@ -148,13 +148,18 @@ func TestDeleteUnusedBoards(t *testing.T) {
 func testBoardNoThreads(t *testing.T) {
 	(*config.Get()).PruneBoards = true
 
-	err := WriteBoard(BoardConfigs{
-		Created: time.Now().Add(-eightDays),
-		BoardConfigs: config.BoardConfigs{
-			ID:        "l",
-			Eightball: []string{},
-		},
+	err := InTransaction(func(tx *sql.Tx) error {
+		return WriteBoard(tx, BoardConfigs{
+			Created: time.Now().Add(-eightDays),
+			BoardConfigs: config.BoardConfigs{
+				ID:        "l",
+				Eightball: []string{},
+			},
+		})
 	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -168,12 +173,14 @@ func testBoardNoThreads(t *testing.T) {
 func testBoardPruningDisabled(t *testing.T) {
 	(*config.Get()).PruneBoards = false
 
-	err := WriteBoard(BoardConfigs{
-		Created: time.Now().Add(-eightDays),
-		BoardConfigs: config.BoardConfigs{
-			ID:        "x",
-			Eightball: []string{},
-		},
+	err := InTransaction(func(tx *sql.Tx) error {
+		return WriteBoard(tx, BoardConfigs{
+			Created: time.Now().Add(-eightDays),
+			BoardConfigs: config.BoardConfigs{
+				ID:        "x",
+				Eightball: []string{},
+			},
+		})
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -191,12 +198,14 @@ func testDeleteUnusedBoards(t *testing.T) {
 	expired := fresh.Add(-eightDays)
 
 	for _, id := range [...]string{"a", "c"} {
-		err := WriteBoard(BoardConfigs{
-			Created: expired,
-			BoardConfigs: config.BoardConfigs{
-				ID:        id,
-				Eightball: []string{},
-			},
+		err := InTransaction(func(tx *sql.Tx) error {
+			return WriteBoard(tx, BoardConfigs{
+				Created: expired,
+				BoardConfigs: config.BoardConfigs{
+					ID:        id,
+					Eightball: []string{},
+				},
+			})
 		})
 		if err != nil {
 			t.Fatal(err)
