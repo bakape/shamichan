@@ -5,5 +5,8 @@ package main
 import "meguca/server"
 
 func main() {
-	server.Start()
+	err := server.Start()
+	if err != nil {
+		panic(err)
+	}
 }

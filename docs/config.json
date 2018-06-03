@@ -1,0 +1,10 @@
+{
+	"ssl": false,
+	"reverseProxied": false,
+	"gzip": false,
+	"cacheSize": 128,
+	"address": "127.0.0.1:8000",
+	"database": "user=meguca password=meguca dbname=meguca sslmode=disable",
+	"certPath": "",
+	"reverseProxyIP": ""
+}

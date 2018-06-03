@@ -4,8 +4,11 @@ package server
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/db"
@@ -16,6 +19,8 @@ import (
 	"meguca/util"
 	"os"
 	"runtime"
+
+	"github.com/ErikDubbelboer/gspt"
 
 	"github.com/go-playground/log"
 )
@@ -41,49 +46,129 @@ var (
 	}
 )
 
+// Configs, that can be optionally passed through a JSON configuration file.
+// Flags override this. All fields are optional.
+type serverConfigs struct {
+	SSL, ReverseProxied, Gzip                   *bool
+	CacheSize                                   *float64
+	Address, Database, CertPath, ReverseProxyIP *string
+}
+
+var defaultServerConfigs = serverConfigs{
+	SSL:            newBool(false),
+	ReverseProxied: newBool(false),
+	Gzip:           newBool(false),
+	CacheSize:      newFloat(128),
+	Address:        newString("127.0.0.1:8000"),
+	Database:       newString("user=meguca password=meguca dbname=meguca sslmode=disable"),
+	CertPath:       newString(""),
+	ReverseProxyIP: newString(""),
+}
+
+// Creates a heap pointer to a bool
+func newBool(b bool) *bool {
+	return &b
+}
+
+// Creates a heap pointer to a uint
+func newFloat(i float64) *float64 {
+	return &i
+}
+
+// Creates a heap pointer to a uint
+func newString(s string) *string {
+	return &s
+}
+
+// Iterate struct fields and assign defaults to missing fields
+func setConfigDefaults(c *serverConfigs) {
+	d := defaultServerConfigs
+	if c.SSL == nil {
+		c.SSL = d.SSL
+	}
+	if c.ReverseProxied == nil {
+		c.ReverseProxied = d.ReverseProxied
+	}
+	if c.Gzip == nil {
+		c.Gzip = d.Gzip
+	}
+	if c.CacheSize == nil {
+		c.CacheSize = d.CacheSize
+	}
+	if c.Address == nil {
+		c.Address = d.Address
+	}
+	if c.Database == nil {
+		c.Database = d.Database
+	}
+	if c.CertPath == nil {
+		c.CertPath = d.CertPath
+	}
+	if c.ReverseProxyIP == nil {
+		c.ReverseProxyIP = d.ReverseProxyIP
+	}
+}
+
 // Start parses command line arguments and initializes the server.
-func Start() {
+func Start() error {
+	// Read config file, if any
+	var conf serverConfigs
+	buf, err := ioutil.ReadFile("config.json")
+	switch {
+	case os.IsNotExist(err):
+		err = nil
+		setConfigDefaults(&conf)
+	case err == nil:
+		err = json.Unmarshal(buf, &conf)
+		if err != nil {
+			return err
+		}
+		setConfigDefaults(&conf)
+	default:
+		return err
+	}
+
 	// Define flags
 	flag.StringVar(
 		&address,
 		"a",
 		"127.0.0.1:8000", // Specifying host restricts incoming IP range
-		"address to listen on for incoming HTTP connections",
+		*conf.Address,
 	)
-	flag.Float64Var(&cache.Size, "c", 1<<7, "cache size in MB")
+	flag.Float64Var(&cache.Size, "c", *conf.CacheSize, "cache size in MB")
 	flag.StringVar(
 		&db.ConnArgs,
 		"d",
-		`user=meguca password=meguca dbname=meguca sslmode=disable`,
+		*conf.Database,
 		"PostgreSQL connection arguments",
 	)
 	flag.BoolVar(
 		&ssl,
 		"s",
-		false,
+		*conf.SSL,
 		"serve and listen only through HTTPS. Requires -ssl-cert and "+
 			"-ssl-key to be set",
 	)
-	flag.StringVar(&sslCert, "S", "", "path to SSL certificate")
+	flag.StringVar(&sslCert, "S", *conf.CertPath, "path to SSL certificate")
 	flag.BoolVar(
 		&auth.IsReverseProxied,
 		"r",
-		false,
+		*conf.ReverseProxied,
 		"assume server is behind reverse proxy, when resolving client IPs",
 	)
 	flag.StringVar(
 		&auth.ReverseProxyIP,
 		"R",
-		"",
+		*conf.ReverseProxyIP,
 		"IP of the reverse proxy. Only needed, when reverse proxy is not on localhost.",
 	)
-	flag.BoolVar(&enableGzip, "g", false, "compress all traffic with gzip")
+	flag.BoolVar(&enableGzip, "g", *conf.Gzip, "compress all traffic with gzip")
 	flag.Usage = printUsage
 
 	// Parse command line arguments
 	flag.Parse()
 	if cache.Size < 0 {
-		log.Fatal("cache size must be a positive number")
+		return errors.New("cache size must be a positive number")
 	}
 	arg := flag.Arg(0)
 	if arg == "" {
@@ -101,8 +186,11 @@ func Start() {
 			printUsage()
 		}
 	} else {
+		gspt.SetProcTitle(os.Args[0])
 		handleDaemon(arg)
 	}
+
+	return nil
 }
 
 // Constructs and prints the CLI help text

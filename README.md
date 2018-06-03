@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/bakape/meguca.svg)](https://travis-ci.org/bakape/meguca)
 
 # meguca
-real-time anonymous imageboard focused on high performance, free speech and transparent moderation
+anonymous realtime imageboard focused on high performance, free speech and transparent moderation
 
 Platforms: Linux, OSX, Win64
 
@@ -165,6 +165,7 @@ the password "password"
 * Configure server from the administration panel
 * To enable country flags on posts download and place `GeoLite2-Country.mmdb`
 into the root directory
+* To avoid having to always type in CLI flags on server start you can specify them in `config.json` file in the project root. A sample file with all the default settings can be found in `docs/`.
 
 ## Development
 
