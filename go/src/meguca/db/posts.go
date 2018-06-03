@@ -8,7 +8,6 @@ import (
 	"meguca/common"
 
 	"github.com/Masterminds/squirrel"
-
 	"github.com/lib/pq"
 	"github.com/mailru/easyjson"
 )
@@ -122,7 +121,7 @@ func AllBoardCounter() (uint64, error) {
 
 // NewPostID reserves a new post ID
 func NewPostID(tx *sql.Tx) (id uint64, err error) {
-	err = getStatement(tx, "new_post_id").QueryRow().Scan(&id)
+	err = tx.QueryRow(`select nextval('post_id')`).Scan(&id)
 	return id, err
 }
 
@@ -195,7 +194,7 @@ func WritePost(tx *sql.Tx, p Post, bumpReplyTime, sage bool) (err error) {
 
 // GetPostPassword retrieves a post's modification password
 func GetPostPassword(id uint64) (p []byte, err error) {
-	err = prepared["get_post_password"].QueryRow(id).Scan(&p)
+	err = sq.Select("password").From("posts").Where("id = ?", id).Scan(&p)
 	if err == sql.ErrNoRows {
 		err = nil
 	}
