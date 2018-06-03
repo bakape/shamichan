@@ -87,11 +87,11 @@ func StartTransaction() (*sql.Tx, error) {
 
 // DecrementRoulette retrieves current roulette counter and decrements it
 func DecrementRoulette() (c uint8, err error) {
-	err = sq.Update("main").
-		Set("val", "(val::smallint - 1)::text").
-		Where("id = 'roulette'").
-		Suffix("returning val::smallint + 1").
-		QueryRow().
+	err = db.QueryRow(`
+		update main
+			set val = (val::smallint - 1)::text
+			where id = 'roulette'
+			returning val::smallint + 1`).
 		Scan(&c)
 	return
 }
@@ -117,10 +117,10 @@ func GetRcount() (c uint64, err error) {
 
 // IncrementRcount increments the roulette counter by one
 func IncrementRcount() (err error) {
-	_, err = sq.Update("main").
-		Set("val", "(val::bigint + 1)::text").
-		Where("id = 'rcount'").
-		Exec()
+	_, err = db.Exec(`
+		update main
+			set val = (val::bigint + 1)::text
+			where id = 'rcount'`)
 	return
 }
 
