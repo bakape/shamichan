@@ -68,7 +68,7 @@ func scanImage(rs rowScanner) (img common.ImageCommon, err error) {
 // NewImageToken inserts a new image allocation token into the DB and returns
 // it's ID
 func NewImageToken(SHA1 string) (token string, err error) {
-	expires := time.Now().Add(tokenTimeout)
+	expires := time.Now().Add(tokenTimeout).UTC()
 
 	// Loop in case there is a primary key collision
 	for {
@@ -248,4 +248,37 @@ func ImageExists(sha1 string) (exists bool, err error) {
 		err = nil
 	}
 	return
+}
+
+// Delete images not used in any posts
+func deleteUnusedImages() (err error) {
+
+	r, err := db.Query(`
+		delete from images
+		where (
+			(select count(*) from posts where SHA1 = images.SHA1)
+			+ (select count(*) from image_tokens where SHA1 = images.SHA1)
+		) = 0
+		returning SHA1, fileType, thumbType`)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	for r.Next() {
+		var (
+			sha1                string
+			fileType, thumbType uint8
+		)
+		err = r.Scan(&sha1, &fileType, &thumbType)
+		if err != nil {
+			return
+		}
+		err = assets.Delete(sha1, fileType, thumbType)
+		if err != nil {
+			return
+		}
+	}
+
+	return r.Err()
 }

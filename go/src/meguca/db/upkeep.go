@@ -9,8 +9,6 @@ import (
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
-	"meguca/imager/assets"
-	"strings"
 	"time"
 
 	"github.com/go-playground/log"
@@ -38,14 +36,14 @@ func runCleanupTasks() {
 
 func runMinuteTasks() {
 	logError("open post cleanup", closeDanglingPosts())
-	logPrepared("expire_image_tokens", "expire_bans")
+	expireRows("image_tokens", "bans")
 }
 
 func runHourTasks() {
-	logPrepared(
-		"expire_user_sessions", "remove_identity_info", "expire_mod_log",
-		"expire_reports",
-	)
+	expireRows("sessions")
+	expireBy("created < now() at time zone 'utc' + '-7 days'",
+		"mod_log", "reports")
+	logError("remove identity info", removeIdentityInfo())
 	logError("thread cleanup", deleteOldThreads())
 	logError("board cleanup", deleteUnusedBoards())
 	logError("image cleanup", deleteUnusedImages())
@@ -54,16 +52,36 @@ func runHourTasks() {
 	logError("vaccum database", err)
 }
 
-func logPrepared(ids ...string) {
-	for _, id := range ids {
-		logError(strings.Replace(id, "_", " ", -1), execPrepared(id))
+func logError(prefix string, err error) {
+	if err != nil {
+		log.Errorf("%s: %s: %#v", prefix, err, err)
 	}
 }
 
-func logError(prefix string, err error) {
-	if err != nil {
-		log.Errorf("%s: %s\n", prefix, err)
+func expireBy(criterion string, tables ...string) {
+	for _, t := range tables {
+		_, err := sq.Delete(t).
+			Where(criterion).
+			Exec()
+		if err != nil {
+			logError(fmt.Sprintf("expiring table %s rows", t), err)
+		}
 	}
+}
+
+// Expire table rows by expiry timestamp
+func expireRows(tables ...string) {
+	expireBy("expires < now() at time zone 'utc'", tables...)
+}
+
+// Remove poster-identifying info from posts older than 7 days
+func removeIdentityInfo() error {
+	_, err := sq.Update("posts").
+		Set("ip", nil).
+		Where(`time < extract(epoch from now() at time zone 'utc'
+			- interval '7 days')`).
+		Exec()
+	return err
 }
 
 // Close any open posts that have not been closed for 30 minutes
@@ -203,7 +221,20 @@ func deleteOldThreads() (err error) {
 	defer RollbackOnError(tx, &err)
 
 	// Find threads to delete
-	r, err := tx.Stmt(prepared["get_bump_data"]).Query()
+	r, err := withTransaction(tx, sq.
+		Select(
+			"posts.id",
+			"bumpTime",
+			`(select count(*)
+				from posts
+				where posts.op = threads.id
+			) as postCtr`,
+			"posts.deleted",
+		).
+		From("threads").
+		Join("posts on threads.id = posts.id"),
+	).
+		Query()
 	if err != nil {
 		return
 	}
@@ -238,12 +269,20 @@ func deleteOldThreads() (err error) {
 		return
 	}
 
-	// Deleted any matched threads
-	q := tx.Stmt(prepared["delete_thread"])
-	for _, id := range toDel {
-		_, err = q.Exec(id)
+	var q *sql.Stmt
+	if len(toDel) != 0 {
+		// Deleted any matched threads
+		q, err = tx.Prepare(`delete from threads
+			where id = $1
+			returning pg_notify('thread_deleted', board || ':' || id)`)
 		if err != nil {
 			return
+		}
+		for _, id := range toDel {
+			_, err = q.Exec(id)
+			if err != nil {
+				return
+			}
 		}
 	}
 
@@ -256,30 +295,4 @@ func DeleteBoard(board, by string) error {
 		return deleteBoard(tx, board, by,
 			fmt.Sprintf("board %s deleted by user", board))
 	})
-}
-
-// Delete images not used in any posts
-func deleteUnusedImages() (err error) {
-	r, err := prepared["delete_unused_images"].Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	for r.Next() {
-		var (
-			sha1                string
-			fileType, thumbType uint8
-		)
-		err = r.Scan(&sha1, &fileType, &thumbType)
-		if err != nil {
-			return
-		}
-		err = assets.Delete(sha1, fileType, thumbType)
-		if err != nil {
-			return
-		}
-	}
-
-	return r.Err()
 }

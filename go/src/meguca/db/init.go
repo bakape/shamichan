@@ -66,7 +66,6 @@ func LoadDB() (err error) {
 	} else if err = checkVersion(); err != nil {
 		return
 	}
-	tasks = append(tasks, genPrepared)
 
 	// Run these is parallel
 	tasks = append(

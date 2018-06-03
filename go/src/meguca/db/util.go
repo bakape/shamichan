@@ -1,23 +1,13 @@
-//go:generate go-bindata -o bin_data.go --pkg db --nometadata --prefix sql sql/...
-
 package db
 
 import (
 	"database/sql"
-	"fmt"
-	"meguca/util"
-	"path/filepath"
-	"sort"
-	"strings"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/go-playground/log"
 	"github.com/lib/pq"
 )
-
-// Stores generated prepared statements
-var prepared = make(map[string]*sql.Stmt)
 
 type executor interface {
 	Exec(args ...interface{}) (sql.Result, error)
@@ -89,33 +79,6 @@ func InTransaction(fn func(*sql.Tx) error) (err error) {
 	return tx.Commit()
 }
 
-// Generate prepared statements
-func genPrepared() error {
-	names := AssetNames()
-	sort.Strings(names)
-	left := make([]string, 0, len(names))
-
-	for _, id := range names {
-		switch {
-		case strings.HasPrefix(id, "init"):
-			continue
-		default:
-			left = append(left, id)
-		}
-	}
-
-	for _, id := range left {
-		var err error
-		k := strings.TrimSuffix(filepath.Base(id), ".sql")
-		prepared[k], err = db.Prepare(getQuery(id))
-		if err != nil {
-			return util.WrapError(fmt.Sprintf("error preparing %s:", k), err)
-		}
-	}
-
-	return nil
-}
-
 // StartTransaction initiates a new DB transaction. It is the responsibility of
 // the caller to commit or rollback the transaction.
 func StartTransaction() (*sql.Tx, error) {
@@ -124,46 +87,41 @@ func StartTransaction() (*sql.Tx, error) {
 
 // DecrementRoulette retrieves current roulette counter and decrements it
 func DecrementRoulette() (c uint8, err error) {
-	err = prepared["decrement_roulette"].QueryRow().Scan(&c)
+	err = sq.Update("main").
+		Set("val", "(val::smallint - 1)::text").
+		Where("id = 'roulette'").
+		Suffix("returning val::smallint + 1").
+		QueryRow().
+		Scan(&c)
 	return
 }
 
 // ResetRoulette resets the roulette counter to 6
 func ResetRoulette() (err error) {
-	_, err = prepared["reset_roulette"].Exec()
+	_, err = sq.Update("main").
+		Set("val", "6").
+		Where(`id = 'roulette'`).
+		Exec()
 	return
 }
 
 // GetRcount retrieves current roulette counter
 func GetRcount() (c uint64, err error) {
-	err = prepared["get_rcount"].QueryRow().Scan(&c)
+	err = sq.Select("val::bigint").
+		From("main").
+		Where("id = 'rcount'").
+		QueryRow().
+		Scan(&c)
 	return
 }
 
 // IncrementRcount increments the roulette counter by one
 func IncrementRcount() (err error) {
-	_, err = prepared["increment_rcount"].Exec()
+	_, err = sq.Update("main").
+		Set("val", "(val::bigint + 1)::text").
+		Where("id = 'rcount'").
+		Exec()
 	return
-}
-
-func getExecutor(tx *sql.Tx, key string) executor {
-	if tx != nil {
-		return tx.Stmt(prepared[key])
-	}
-	return prepared[key]
-}
-
-func execPrepared(id string, args ...interface{}) error {
-	_, err := prepared[id].Exec(args...)
-	return err
-}
-
-func getStatement(tx *sql.Tx, id string) *sql.Stmt {
-	stmt := prepared[id]
-	if tx != nil {
-		stmt = tx.Stmt(stmt)
-	}
-	return stmt
 }
 
 func setReadOnly(tx *sql.Tx) error {
@@ -184,11 +142,6 @@ func RollbackOnError(tx *sql.Tx, err *error) {
 	if *err != nil {
 		tx.Rollback()
 	}
-}
-
-// Retrieve binary-encoded SQL query
-func getQuery(id string) string {
-	return string(MustAsset(id))
 }
 
 // Assigns a function to listen to Postgres notifications on a channel
