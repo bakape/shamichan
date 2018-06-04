@@ -96,21 +96,50 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 	return
 }
 
-// WriteBoard writes a board complete with configurations to the database
+// WriteBoard pipes to WriteBoardV with the database version
 func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
-	q := sq.Insert("boards").
-		Columns(
-			"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
-			"flags", "NSFW", "nonLive",
-			"posterIDs", "rbText", "pyu", "created", "defaultCSS", "title", "notice",
-			"rules", "eightball",
-		).
-		Values(
-			c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
-			c.Flags, c.NSFW, c.NonLive, c.PosterIDs, c.RbText, c.Pyu,
-			c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
-			pq.StringArray(c.Eightball),
-		)
+	return WriteBoardV(tx, c, version)
+}
+
+// WriteBoardV writes a board complete with configurations to the database
+func WriteBoardV(tx *sql.Tx, c BoardConfigs, version int) error {
+	var q squirrel.Sqlizer
+
+	switch version {
+	case 55:
+		q = sq.Insert("boards").
+			Columns(
+				"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
+				"flags", "NSFW", "nonLive",
+				"posterIDs", "rbText", "created", "defaultCSS", "title", "notice",
+				"rules", "eightball",
+			).
+			Values(
+				c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
+				c.Flags, c.NSFW, c.NonLive, c.PosterIDs, c.RbText,
+				c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
+				pq.StringArray(c.Eightball),
+			)
+
+			break
+	default:
+		q = sq.Insert("boards").
+			Columns(
+				"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
+				"flags", "NSFW", "nonLive",
+				"posterIDs", "rbText", "pyu", "created", "defaultCSS", "title", "notice",
+				"rules", "eightball",
+			).
+			Values(
+				c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
+				c.Flags, c.NSFW, c.NonLive, c.PosterIDs, c.RbText, c.Pyu,
+				c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
+				pq.StringArray(c.Eightball),
+			)
+
+		break
+	}
+
 	err := withTransaction(tx, q).Exec()
 	if err != nil {
 		return err

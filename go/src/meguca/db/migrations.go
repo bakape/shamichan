@@ -669,12 +669,43 @@ var migrations = []func(*sql.Tx) error{
 	func(tx *sql.Tx) error {
 		return withTransaction(tx, sq.Delete("main").Where("id = 'pyu'")).Exec()
 	},
-	// Reverted migrations
-	func(tx *sql.Tx) (err error) { return },
-	func(tx *sql.Tx) (err error) { return },
-	func(tx *sql.Tx) (err error) { return },
-	func(tx *sql.Tx) (err error) { return },
-	func(tx *sql.Tx) (err error) { return },
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE boards
+				ADD COLUMN pyu bool default false`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`create table pyu (
+				id text primary key references boards on delete cascade,
+				pcount bigint default 0
+			);
+			create table pyu_limit (
+				ip inet not null,
+				board text not null references boards on delete cascade,
+				expires timestamp not null,
+				pcount smallint default 4,
+				primary key(ip, board)
+			);
+			create index pyu_limit_ip on pyu_limit (ip);
+			create index pyu_limit_board on pyu_limit (board);`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		// Reverted migration
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		// Revert changes
+		return execAll(tx,
+			`alter table boards drop column pyu`,
+			`drop table pyu`,
+			`drop table pyu_limit`,
+		)
+	},
 	func(tx *sql.Tx) (err error) {
 		return patchConfigs(tx, func(conf *config.Configs) {
 			conf.EmailErrMail = config.Defaults.EmailErrMail
@@ -683,10 +714,23 @@ var migrations = []func(*sql.Tx) error{
 			conf.EmailErrPort = config.Defaults.EmailErrPort
 		})
 	},
+	// Fixes global moderation
+	func(tx *sql.Tx) (err error) {
+		err = WriteBoardV(tx, BoardConfigs{
+			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
+			Created:      time.Now().UTC(),
+		}, 55)
+		if err != nil {
+			return
+		}
+		return WriteStaff(tx, "all", map[string][]string{
+			"owners": {"admin", "system"},
+		})
+	},
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
-			`alter table boards
-				add column pyu bool default false`,
+			`ALTER TABLE boards
+				ADD COLUMN pyu bool default false`,
 		)
 		return
 	},
@@ -740,20 +784,7 @@ var migrations = []func(*sql.Tx) error{
 			}
 		}
 
-		return
-	},
-	// Fixes global moderation
-	func(tx *sql.Tx) (err error) {
-		err = WriteBoard(tx, BoardConfigs{
-			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
-			Created:      time.Now().UTC(),
-		})
-		if err != nil {
 			return
-		}
-		return WriteStaff(tx, "all", map[string][]string{
-			"owners": {"admin", "system"},
-		})
 	},
 }
 
