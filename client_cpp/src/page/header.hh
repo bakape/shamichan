@@ -11,11 +11,6 @@ public:
 
 protected:
     void init();
-
-private:
-    // Renders a link to a board
-    void board_link(
-        std::ostringstream& s, const std::string& board, bool catalog);
 };
 
 // Beard navigation controls in the top banner

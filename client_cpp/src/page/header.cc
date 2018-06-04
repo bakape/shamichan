@@ -37,6 +37,9 @@ static void read_selected()
             }
         });
     }
+    if (!selected_boards.size()) {
+        selected_boards.insert("all");
+    }
 }
 
 BoardNavigation::BoardNavigation()
@@ -63,27 +66,25 @@ Node BoardNavigation::render()
     std::ostringstream s;
     const bool catalog = point_to_catalog();
     s << '[';
-    board_link(s, "all", catalog);
+    bool first = true;
     for (auto & [ b, _ ] : boards) {
         if (!selected_boards.count(b)) {
             continue;
         }
-        s << " / ";
-        board_link(s, b, catalog);
+        if (first) {
+            first = false;
+        } else {
+            s << " / ";
+        }
+        s << "<a href=\"../" << b << '/';
+        if (catalog) {
+            s << "catalog";
+        }
+        s << "\">" << b << "</a>";
     }
     s << "] [<a class=\"board-selection bold mono\">" << (bsf ? "-" : "+")
       << "</a>]";
     return { "nav", { { "id", "board-navigation" } }, s.str() };
-}
-
-void BoardNavigation::board_link(
-    std::ostringstream& s, const std::string& board, bool catalog)
-{
-    s << "<a href=\"../" << board << '/';
-    if (catalog) {
-        s << "catalog";
-    }
-    s << "\">" << board << "</a>";
 }
 
 BoardSelectionForm::BoardSelectionForm()

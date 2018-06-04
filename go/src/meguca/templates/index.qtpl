@@ -162,11 +162,10 @@
 				<nav id="board-navigation">
 					<noscript>
 						[
-						<a href="/all/">
-							all
-						</a>
-						{% for _, b := range boards %}
-							{% space %}/{% space %}
+						{% for i, b := range boards %}
+							{% if i != 0 %}
+								{% space %}/{% space %}
+							{% endif %}
 							<a href="/{%s= b %}/">
 								{%s= b %}
 							</a>
