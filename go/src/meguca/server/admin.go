@@ -262,10 +262,13 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 // Handle requests to create a board
 func createBoard(w http.ResponseWriter, r *http.Request) {
 	var msg boardCreationRequest
+
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
+
 	creds, ok := isLoggedIn(w, r)
+
 	if !ok {
 		return
 	}
@@ -282,10 +285,12 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 
 	// Validate request data
 	ip, err := auth.GetIP(r)
+
 	if err != nil {
 		text400(w, err)
 		return
 	}
+
 	switch {
 	case creds.UserID != "admin" && config.Get().DisableUserBoards:
 		err = errAccessDenied
@@ -299,6 +304,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	case !auth.AuthenticateCaptcha(msg.Captcha, ip, db.SystemBan):
 		err = errInvalidCaptcha
 	}
+
 	if err != nil {
 		text400(w, err)
 		return
@@ -316,6 +322,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 				Eightball: config.EightballDefaults,
 			},
 		})
+
 		switch {
 		case err == nil:
 		case db.IsConflictError(err):
@@ -331,9 +338,17 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 			"owners": []string{creds.UserID},
 		})
 	})
+
 	switch err {
 	case errBoardNameTaken, nil:
 	default:
+		text500(w, r, err)
+		return
+	}
+
+	err = db.WritePyu(msg.ID)
+
+	if err != nil {
 		text500(w, r, err)
 		return
 	}

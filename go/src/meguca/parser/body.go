@@ -4,6 +4,7 @@ package parser
 import (
 	"fmt"
 	"meguca/common"
+	"meguca/config"
 	"meguca/util"
 	"regexp"
 	"unicode"
@@ -20,14 +21,9 @@ func (e ErrNonPrintable) Error() string {
 	return fmt.Sprintf("contains non-printable character: %d", int(e))
 }
 
-// Needed to avoid cyclic imports for the 'db' package
-func init() {
-	common.ParseBody = ParseBody
-}
-
 // ParseBody parses the entire post text body for commands and links.
 // internal: function was called by automated upkeep task
-func ParseBody(body []byte, board string, internal bool) (
+func ParseBody(body []byte, board string, id uint64, ip string, internal bool) (
 	links []common.Link, com []common.Command, err error,
 ) {
 	err = IsPrintableString(string(body), true)
@@ -49,6 +45,7 @@ func ParseBody(body []byte, board string, internal bool) (
 
 	start := 0
 	lineStart := 0
+	pyu := config.GetBoardConfigs(board).Pyu
 
 	for i, b := range body {
 		switch b {
@@ -82,7 +79,8 @@ func ParseBody(body []byte, board string, internal bool) (
 				links = append(links, l)
 			}
 		case '#':
-			if body[lineStart] == '>' { // Ignore hash commands in quotes
+			// Ignore hash commands in quotes, or #pyu/#pcount if board option disabled
+			if body[lineStart] == '>' || (word[1] == 'p' && !pyu) {
 				goto next
 			}
 			m := common.CommandRegexp.FindSubmatch(word)
@@ -90,7 +88,7 @@ func ParseBody(body []byte, board string, internal bool) (
 				goto next
 			}
 			var c common.Command
-			c, err = parseCommand(m[1], board)
+			c, err = parseCommand(m[1], board, id, ip)
 			switch err {
 			case nil:
 				com = append(com, c)

@@ -1,6 +1,6 @@
 import { config, boards, boardConfig, posts } from '../../state'
 import { renderPostLink, renderTempLink } from './etc'
-import { PostData, PostLink, TextState } from '../../common'
+import { PostData, PostLink, TextState, commandType } from '../../common'
 import { escape, makeAttrs } from '../../util'
 import { parseEmbeds } from "../embed"
 import highlightSyntax from "./code"
@@ -386,7 +386,7 @@ function parseFragment(frag: string, data: PostData): string {
                 if (data.state.quote) {
                     break
                 }
-                m = word.match(/^#(flip|\d*d\d+|8ball|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$/)
+                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$/)
                 if (m) {
                     html += parseCommand(m[1], data)
                     matched = true
@@ -484,6 +484,16 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
         return "#" + bit
     }
 
+    // Protect from index shifts on boardConfig.pyu toggle
+    if (!boardConfig.pyu) {
+      switch (commands[state.iDice].type) {
+        case commandType.pyu:
+        case commandType.pcount:
+          state.iDice++
+          return "#" + bit
+      }
+    }
+
     let formatting = "<strong>"
     let inner: string
     switch (bit) {
@@ -491,8 +501,22 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             inner = commands[state.iDice++].val ? "flap" : "flop"
             break
         case "8ball":
-        case "rcount":
             inner = commands[state.iDice++].val.toString()
+            break
+        case "pyu":
+        case "pcount":
+            // Protect from index shifts on boardConfig.pyu toggle
+            if (!boardConfig.pyu) {
+                  break
+            }
+        case "rcount":
+            switch (commands[state.iDice].type) {
+              case commandType.pyu:
+              case commandType.pcount:
+              case commandType.rcount:
+                inner = commands[state.iDice++].val.toString()
+            }
+
             break
         case "roulette":
             let val = commands[state.iDice++].val

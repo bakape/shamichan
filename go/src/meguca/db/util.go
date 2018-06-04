@@ -85,6 +85,139 @@ func StartTransaction() (*sql.Tx, error) {
 	return db.Begin()
 }
 
+// WritePyu creates a new board's pyu row. Only used on board creation
+func WritePyu(b string) (err error) {
+	_, err = sq.Insert("pyu").
+		Columns("id", "pcount").
+		Values(b, 0).
+		Exec()
+
+	return
+}
+
+// GetPcount retrieves the board's pyu counter
+func GetPcount(b string) (c uint64, err error) {
+	err = sq.Select("pcount").
+		From("pyu").
+		Where("id = ?", b).
+		Scan(&c)
+
+	return
+}
+
+// GetPcount retrieves the board's pyu counter atomically
+func GetPcountA(tx *sql.Tx, b string) (c uint64, err error) {
+	r, err := withTransaction(tx, sq.Select("pcount").
+		From("pyu").
+		Where("id = ?", b)).
+		QueryRow()
+	r.Scan(&c)
+
+	return
+}
+
+// IncrementPcount increments the board's pyu counter by one and returns the new counter
+func IncrementPcount(tx *sql.Tx, b string) (c uint64, err error) {
+	pcount, err := GetPcountA(tx, b)
+
+	if err != nil {
+		return
+	}
+
+	r, err := withTransaction(tx, sq.Update("pyu").
+		Set("pcount", pcount + 1).
+		Where("id = ?", b).
+		Suffix("returning pcount")).
+		QueryRow()
+	r.Scan(&c)
+
+	return
+}
+
+// SetPcount sets the board's pyu counter. Only used in tests.
+func SetPcount(c uint64) (err error) {
+	_, err = sq.Update("pyu").
+		Set("pcount", c).
+		Exec()
+
+	return err
+}
+
+// WritePyuLimit creates a new pyu limit row. Only used on the first post of a new IP.
+func WritePyuLimit(tx *sql.Tx, ip string, b string) error {
+	return withTransaction(tx, sq.Insert("pyu_limit").
+		Columns("ip", "board", "expires", "pcount").
+		Values(ip, b, time.Now().Add(-time.Second).UTC(), 4)).
+		Exec()
+}
+
+// PyuLimitExists checks whether an IP has a pyu limit counter
+func PyuLimitExists(tx *sql.Tx, ip string, b string) (e bool, err error) {
+	r, err := withTransaction(tx, sq.Select("count(1)").
+		From("pyu_limit").
+		Where("ip = ? and board = ?", ip, b)).
+		QueryRow()
+	r.Scan(&e)
+
+	return
+}
+
+// GetPyuLimit retrieves the IP and respective board's pyu limit counter
+func GetPyuLimit(tx *sql.Tx, ip string, b string) (c uint8, err error) {
+	r, err := withTransaction(tx, sq.Select("pcount").
+		From("pyu_limit").
+		Where("ip = ? and board = ?", ip, b)).
+		QueryRow()
+	r.Scan(&c)
+
+	return
+}
+
+// GetPyuLimitExpire retrieves the IP and respective board's pyu limit expire timestamp
+func GetPyuLimitExpires(tx *sql.Tx, ip string, b string) (t time.Time, err error) {
+	r, err := withTransaction(tx, sq.Select("expires").
+		From("pyu_limit").
+		Where("ip = ? and board = ?", ip, b)).
+		QueryRow()
+	r.Scan(&t)
+
+	return
+}
+
+// SetPyuLimitExpire sets the IP and respective board's pyu limit expire timestamp
+func SetPyuLimitExpires(tx *sql.Tx, ip string, b string) error {
+	return withTransaction(tx, sq.Update("pyu_limit").
+		Set("expires", time.Now().Add(time.Hour).UTC()).
+		Where("ip = ? and board = ?", ip, b)).
+		Exec()
+}
+
+// DecrementPyuLimit decrements the pyu limit counter by one and returns the new counter
+func DecrementPyuLimit(tx *sql.Tx, ip string, b string) (err error) {
+	pcount, err := GetPyuLimit(tx, ip, b)
+
+	if err != nil {
+		return
+	}
+
+	return withTransaction(tx, sq.Update("pyu_limit").
+		Set("pcount", pcount - 1).
+		Where("ip = ? and board = ?", ip, b)).
+		Exec()
+}
+
+// ResetPyuLimit resets the pyu limit counter to 4
+func ResetPyuLimit(tx *sql.Tx, ip string, b string) (c uint8, err error) {
+	r, err := withTransaction(tx, sq.Update("pyu_limit").
+		Set("pcount", 4).
+		Where("ip = ? and board = ?", ip, b).
+		Suffix("returning pcount")).
+		QueryRow()
+	r.Scan(&c)
+
+	return
+}
+
 // DecrementRoulette retrieves current roulette counter and decrements it
 func DecrementRoulette() (c uint8, err error) {
 	err = db.QueryRow(`

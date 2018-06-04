@@ -669,10 +669,24 @@ var migrations = []func(*sql.Tx) error{
 	func(tx *sql.Tx) error {
 		return withTransaction(tx, sq.Delete("main").Where("id = 'pyu'")).Exec()
 	},
+	// Reverted migrations
+	func(tx *sql.Tx) (err error) { return },
+	func(tx *sql.Tx) (err error) { return },
+	func(tx *sql.Tx) (err error) { return },
+	func(tx *sql.Tx) (err error) { return },
+	func(tx *sql.Tx) (err error) { return },
+	func(tx *sql.Tx) (err error) {
+		return patchConfigs(tx, func(conf *config.Configs) {
+			conf.EmailErrMail = config.Defaults.EmailErrMail
+			conf.EmailErrPass = config.Defaults.EmailErrPass
+			conf.EmailErrSub = config.Defaults.EmailErrSub
+			conf.EmailErrPort = config.Defaults.EmailErrPort
+		})
+	},
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
-			`ALTER TABLE boards
-				ADD COLUMN pyu bool default false`,
+			`alter table boards
+				add column pyu bool default false`,
 		)
 		return
 	},
@@ -695,24 +709,38 @@ var migrations = []func(*sql.Tx) error{
 		return
 	},
 	func(tx *sql.Tx) (err error) {
-		// Reverted migration
+		r, err := tx.Query(`select id from boards`)
+		if err != nil {
+			return
+		}
+		defer r.Close()
+
+		var boards []string
+		for r.Next() {
+			var board string
+			err = r.Scan(&board)
+			if err != nil {
+				return
+			}
+			boards = append(boards, board)
+		}
+		err = r.Err()
+		if err != nil {
+			return
+		}
+
+		q, err := tx.Prepare(`insert into pyu (id, pcount) values ($1, 0)`)
+		if err != nil {
+			return
+		}
+		for _, b := range boards {
+			_, err = q.Exec(b)
+			if err != nil {
+				return
+			}
+		}
+
 		return
-	},
-	func(tx *sql.Tx) (err error) {
-		// Revert changes
-		return execAll(tx,
-			`alter table boards drop column pyu`,
-			`drop table pyu`,
-			`drop table pyu_limit`,
-		)
-	},
-	func(tx *sql.Tx) (err error) {
-		return patchConfigs(tx, func(conf *config.Configs) {
-			conf.EmailErrMail = config.Defaults.EmailErrMail
-			conf.EmailErrPass = config.Defaults.EmailErrPass
-			conf.EmailErrSub = config.Defaults.EmailErrSub
-			conf.EmailErrPort = config.Defaults.EmailErrPort
-		})
 	},
 	// Fixes global moderation
 	func(tx *sql.Tx) (err error) {
