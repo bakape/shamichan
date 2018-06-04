@@ -193,6 +193,7 @@ func TestServeBoardConfigs(t *testing.T) {
 		},
 	}
 	config.SetBoardConfigs(conf)
+	config.SetBoardConfigs(config.AllBoardConfigs.BoardConfigs)
 
 	cases := [...]struct {
 		name, url string
@@ -201,7 +202,8 @@ func TestServeBoardConfigs(t *testing.T) {
 	}{
 		{"invalid board", "aaa", 404, ""},
 		{"valid board", "a", 200, string(marshalJSON(t, conf.BoardPublic))},
-		{"/all/ board", "all", 200, "foo"},
+		{"/all/ board", "all", 200, string(marshalJSON(t, config.
+			AllBoardConfigs.BoardConfigs.BoardPublic))},
 	}
 
 	for i := range cases {
