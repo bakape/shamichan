@@ -2,7 +2,6 @@ package common
 
 import (
 	"errors"
-	"net"
 	"strconv"
 	"strings"
 
@@ -51,16 +50,16 @@ func CanIgnoreClientError(err error) bool {
 	switch err.(type) {
 	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage:
 		return true
-	case *net.OpError:
-		// Ignore client-side connection loss
-		s := err.Error()
-		for _, suff := range [...]string{
-			"connection reset by peer",
-			"broken pipe",
-		} {
-			if strings.HasSuffix(s, suff) {
-				return true
-			}
+	}
+
+	// Ignore client-side connection loss
+	s := err.Error()
+	for _, suff := range [...]string{
+		"connection reset by peer",
+		"broken pipe",
+	} {
+		if strings.HasSuffix(s, suff) {
+			return true
 		}
 	}
 
