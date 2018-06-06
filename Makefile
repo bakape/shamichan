@@ -62,7 +62,7 @@ ifeq ($(is_windows), true)
 endif
 
 generate: generate_clean
-	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
+	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/... github.com/bakape/thumbnailer github.com/gorilla/websocket
 	go generate meguca/...
 
 generate_clean:
