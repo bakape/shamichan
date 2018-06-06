@@ -1,11 +1,10 @@
 package auth
 
 import (
-	"net/http/httptest"
-	"testing"
-
 	"meguca/config"
 	. "meguca/test"
+	"net/http/httptest"
+	"testing"
 
 	"golang.org/x/crypto/bcrypt"
 )

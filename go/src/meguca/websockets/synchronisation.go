@@ -52,7 +52,7 @@ func (c *Client) synchronise(data []byte) error {
 	case !auth.IsBoard(msg.Board):
 		return errInvalidBoard
 	case auth.IsBanned(msg.Board, c.ip):
-		return auth.ErrBanned
+		return common.ErrBanned
 	case msg.Thread != 0:
 		valid, err := db.ValidateOP(msg.Thread, msg.Board)
 		switch {

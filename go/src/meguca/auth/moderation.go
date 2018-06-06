@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"meguca/common"
 	"sync"
 	"time"
@@ -9,9 +8,8 @@ import (
 
 var (
 	// board: IP: IsBanned
-	bans      = map[string]map[string]bool{}
-	bansMu    sync.RWMutex
-	ErrBanned = errors.New("you are banned from this board")
+	bans   = map[string]map[string]bool{}
+	bansMu sync.RWMutex
 )
 
 // ModerationLevel defines the level required to perform an action
@@ -147,7 +145,8 @@ func SetBans(b ...Ban) {
 // Disconnect all banned websocket clients matching IP from board.
 // /all/ board disconnects all clients globally.
 func DisconnectBannedIP(ip, board string) {
-	msg, err := common.EncodeMessage(common.MessageInvalid, ErrBanned.Error())
+	msg, err := common.EncodeMessage(common.MessageInvalid,
+		common.ErrBanned.Error())
 	if err != nil {
 		panic(err)
 	}

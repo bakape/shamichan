@@ -4,12 +4,9 @@ package websockets
 
 import (
 	"encoding/json"
-	"errors"
 	"meguca/common"
 	"meguca/websockets/feeds"
 )
-
-var errInValidCaptcha = errors.New("invalid captcha provided")
 
 // Decode message JSON into the supplied type. Will augment, once we switch to
 // a binary message protocol.

@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"meguca/auth"
+	"meguca/common"
 	"meguca/db"
 	"meguca/templates"
 	"net/http"
 	"strconv"
 
-	"github.com/bakape/thumbnailer"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 )
@@ -65,8 +65,7 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 
 // Log an error together with the client's IP
 func logError(r *http.Request, err interface{}) {
-	switch err.(type) {
-	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage:
+	if err, ok := err.(error); ok && common.CanIgnoreClientError(err) {
 		return
 	}
 

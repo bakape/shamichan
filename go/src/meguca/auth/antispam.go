@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"errors"
 	"meguca/common"
 	"meguca/config"
 	"sync"
@@ -9,9 +8,6 @@ import (
 )
 
 var (
-	// The poster is almost certainly spamming
-	ErrSpamDected = errors.New("spam detected")
-
 	spamCounters = spamCounterMap{
 		m: make(map[string]*spamCounter, 64),
 	}
@@ -101,7 +97,7 @@ func (s *spamCounter) increment(by uint) (bool, error) {
 
 	if s.counter.Sub(now) > time.Minute*10 {
 		// This surely is not done by normal human interaction
-		return true, ErrSpamDected
+		return true, common.ErrSpamDected
 	}
 	return s.counter.After(now), nil
 }

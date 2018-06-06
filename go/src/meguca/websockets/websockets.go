@@ -11,7 +11,6 @@ import (
 	"meguca/websockets/feeds"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -301,24 +300,10 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 
 // logError writes the client's websocket error to the error log (or stdout)
 func (c *Client) logError(err error) {
-	switch err {
-	case auth.ErrBanned, auth.ErrSpamDected, errInValidCaptcha,
-		websocket.ErrCloseSent:
+	if common.CanIgnoreClientError(err) {
 		return
 	}
-
-	// Ignore client-side connection loss
-	s := err.Error()
-	for _, suff := range [...]string{
-		"connection reset by peer",
-		"broken pipe",
-	} {
-		if strings.HasSuffix(s, suff) {
-			return
-		}
-	}
-
-	log.Errorf("websockets: by %s: %s: %#v", c.ip, s, err)
+	log.Errorf("websockets: by %s: %s: %#v", c.ip, err, err)
 }
 
 // Close closes a websocket connection with the provided status code and
