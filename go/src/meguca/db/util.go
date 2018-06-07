@@ -111,8 +111,12 @@ func GetPcountA(tx *sql.Tx, b string) (c uint64, err error) {
 		From("pyu").
 		Where("id = ?", b)).
 		QueryRow()
-	r.Scan(&c)
 
+	if err != nil {
+		return
+	}
+
+	err = r.Scan(&c)
 	return
 }
 
@@ -129,8 +133,12 @@ func IncrementPcount(tx *sql.Tx, b string) (c uint64, err error) {
 		Where("id = ?", b).
 		Suffix("returning pcount")).
 		QueryRow()
-	r.Scan(&c)
 
+	if err != nil {
+		return
+	}
+
+	err = r.Scan(&c)
 	return
 }
 
@@ -157,8 +165,12 @@ func PyuLimitExists(tx *sql.Tx, ip string, b string) (e bool, err error) {
 		From("pyu_limit").
 		Where("ip = ? and board = ?", ip, b)).
 		QueryRow()
-	r.Scan(&e)
 
+	if err != nil {
+		return
+	}
+
+	err = r.Scan(&e)
 	return
 }
 
@@ -168,8 +180,12 @@ func GetPyuLimit(tx *sql.Tx, ip string, b string) (c uint8, err error) {
 		From("pyu_limit").
 		Where("ip = ? and board = ?", ip, b)).
 		QueryRow()
-	r.Scan(&c)
 
+	if err != nil {
+		return
+	}
+
+	err = r.Scan(&c)
 	return
 }
 
@@ -179,8 +195,12 @@ func GetPyuLimitExpires(tx *sql.Tx, ip string, b string) (t time.Time, err error
 		From("pyu_limit").
 		Where("ip = ? and board = ?", ip, b)).
 		QueryRow()
-	r.Scan(&t)
 
+	if err != nil {
+		return
+	}
+
+	err = r.Scan(&t)
 	return
 }
 
@@ -213,8 +233,12 @@ func ResetPyuLimit(tx *sql.Tx, ip string, b string) (c uint8, err error) {
 		Where("ip = ? and board = ?", ip, b).
 		Suffix("returning pcount")).
 		QueryRow()
-	r.Scan(&c)
 
+	if err != nil {
+		return
+	}
+
+	err = r.Scan(&c)
 	return
 }
 

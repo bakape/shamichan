@@ -80,7 +80,7 @@ func ParseBody(body []byte, board string, id uint64, ip string, internal bool) (
 			}
 		case '#':
 			// Ignore hash commands in quotes, or #pyu/#pcount if board option disabled
-			if body[lineStart] == '>' || (word[1] == 'p' && !pyu) {
+			if body[lineStart] == '>' || (len(word) > 1 && word[1] == 'p' && !pyu) {
 				goto next
 			}
 			m := common.CommandRegexp.FindSubmatch(word)

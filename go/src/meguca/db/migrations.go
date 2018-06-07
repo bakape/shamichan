@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-playground/log"
+	"github.com/lib/pq"
 )
 
 var version = len(migrations)
@@ -716,13 +717,34 @@ var migrations = []func(*sql.Tx) error{
 	},
 	// Fixes global moderation
 	func(tx *sql.Tx) (err error) {
-		err = WriteBoardV(tx, BoardConfigs{
+		c := BoardConfigs {
 			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
 			Created:      time.Now().UTC(),
-		}, 55)
+		}
+
+		err = withTransaction(tx, sq.Insert("boards").
+			Columns(
+				"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
+				"flags", "NSFW", "nonLive",
+				"posterIDs", "rbText", "created", "defaultCSS", "title", "notice",
+				"rules", "eightball").
+			Values(
+				c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
+				c.Flags, c.NSFW, c.NonLive, c.PosterIDs, c.RbText,
+				c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
+				pq.StringArray(c.Eightball))).
+			Exec()
+
 		if err != nil {
 			return
 		}
+
+		err = notifyBoardUpdated(tx, c.ID)
+
+		if err != nil {
+			return
+		}
+
 		return WriteStaff(tx, "all", map[string][]string{
 			"owners": {"admin", "system"},
 		})
