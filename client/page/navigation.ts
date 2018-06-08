@@ -22,7 +22,14 @@ class BoardNavigation extends View<null> {
 
 	public render() {
 		let html = "["
-		const boards = Array.from(selected).sort()
+		const boards = Array.from(selected).sort((a, b) => {
+			if (a == "all") {
+				return -1
+			} else if (b == "all") {
+				return 1
+			}
+			return a < b ? 1 : -1
+		})
 		const catalog = pointToCatalog() ? "catalog" : ""
 		for (let i = 0; i < boards.length; i++) {
 			if (i !== 0) {

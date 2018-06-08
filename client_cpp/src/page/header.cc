@@ -4,13 +4,26 @@
 #include "../local_storage.hh"
 #include "../state.hh"
 #include "page.hh"
+#include <algorithm>
 #include <memory>
 #include <set>
 
 using brunhild::Node;
 
-// Default ordering is ascending
-std::set<std::string, std::greater<std::string>> selected_boards;
+// Sort /all/ in front
+struct board_sorter {
+    bool operator()(const std::string& a, const std::string& b) const
+    {
+        if (a == "all") {
+            return true;
+        } else if (b == "all") {
+            return true;
+        }
+        return a < b;
+    }
+};
+
+static std::set<std::string, board_sorter> selected_boards;
 
 // Board selection from instance
 static std::unique_ptr<BoardSelectionForm> bsf;
@@ -67,10 +80,7 @@ Node BoardNavigation::render()
     const bool catalog = point_to_catalog();
     s << '[';
     bool first = true;
-    for (auto & [ b, _ ] : boards) {
-        if (!selected_boards.count(b)) {
-            continue;
-        }
+    for (auto& b : selected_boards) {
         if (first) {
             first = false;
         } else {
