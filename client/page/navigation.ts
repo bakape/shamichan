@@ -28,7 +28,7 @@ class BoardNavigation extends View<null> {
 			} else if (b == "all") {
 				return 1
 			}
-			return a < b ? 1 : -1
+			return a > b ? 1 : -1
 		})
 		const catalog = pointToCatalog() ? "catalog" : ""
 		for (let i = 0; i < boards.length; i++) {
