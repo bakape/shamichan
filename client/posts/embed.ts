@@ -86,9 +86,6 @@ async function fetchHookTube(el: Element): Promise<void> {
 	// Use a CORS proxy to work around javascript's cross-domain restrictions
 	const ref = el.getAttribute("href"),
 		id = strip(ref.split(".com/").pop().split("watch?v=").pop().split("embed/")),
-		params = (ref.includes("start=") ? "&start=" + strip(ref.split("start=")) : "") +
-			(ref.includes("t=") ?  "&t=" + strip(ref.split("t=")) : "") +
-			(ref.includes("loop=") ? "&loop=" + strip(ref.split("loop=")) : ""),
 		[data, err] = await fetchJSON<HookTubeDoc>("https://cors-proxy.htmldriven.com/?url=" +
 			"https%3A%2F%2Fhooktube.com%2Fapi%3Fmode%3Dvideo%26id%3D" + id),
 		body = JSON.parse(data.body)
@@ -120,11 +117,15 @@ async function fetchHookTube(el: Element): Promise<void> {
 
 	el.textContent = format(body.json_1.title, provider.HookTube)
 	el.setAttribute("data-html", encodeURIComponent(
-		`<iframe width="480" height="270" src="https://hooktube.com/embed/` +
-		`${id}?autoplay=false${params}" frameborder="0" allowfullscreen></iframe>`))
+		`<iframe width="480" height="270" src="https://hooktube.com/embed/${id}?autoplay=false` +
+		check("start") + check('t') + check("loop") + `" frameborder="0" allowfullscreen></iframe>`))
 
 	function strip(s: string[]): string {
-		return s.pop().split("&").shift().split("#").shift().split("?").shift()
+		return s.pop().split('&').shift().split('#').shift().split('?').shift()
+	}
+
+	function check(s: string): string {
+		return ref.includes(`${s}=`) ? `&${s}=` + strip(ref.split(`${s}=`)) : ''
 	}
 }
 
