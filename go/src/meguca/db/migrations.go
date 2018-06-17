@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/go-playground/log"
+	"github.com/lib/pq"
 )
 
 var version = len(migrations)
@@ -716,16 +717,96 @@ var migrations = []func(*sql.Tx) error{
 	},
 	// Fixes global moderation
 	func(tx *sql.Tx) (err error) {
-		err = WriteBoard(tx, BoardConfigs{
+		c := BoardConfigs {
 			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
 			Created:      time.Now().UTC(),
-		})
+		}
+
+		err = withTransaction(tx, sq.Insert("boards").
+			Columns(
+				"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
+				"flags", "NSFW", "nonLive",
+				"posterIDs", "rbText", "created", "defaultCSS", "title", "notice",
+				"rules", "eightball").
+			Values(
+				c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
+				c.Flags, c.NSFW, c.NonLive, c.PosterIDs, c.RbText,
+				c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
+				pq.StringArray(c.Eightball))).
+			Exec()
+
 		if err != nil {
 			return
 		}
+
+		err = notifyBoardUpdated(tx, c.ID)
+
+		if err != nil {
+			return
+		}
+
 		return WriteStaff(tx, "all", map[string][]string{
 			"owners": {"admin", "system"},
 		})
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE boards
+				ADD COLUMN pyu bool default false`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`create table pyu (
+				id text primary key references boards on delete cascade,
+				pcount bigint default 0
+			);
+			create table pyu_limit (
+				ip inet not null,
+				board text not null references boards on delete cascade,
+				expires timestamp not null,
+				pcount smallint default 4,
+				primary key(ip, board)
+			);
+			create index pyu_limit_ip on pyu_limit (ip);
+			create index pyu_limit_board on pyu_limit (board);`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		r, err := tx.Query(`select id from boards`)
+		if err != nil {
+			return
+		}
+		defer r.Close()
+
+		var boards []string
+		for r.Next() {
+			var board string
+			err = r.Scan(&board)
+			if err != nil {
+				return
+			}
+			boards = append(boards, board)
+		}
+		err = r.Err()
+		if err != nil {
+			return
+		}
+
+		q, err := tx.Prepare(`insert into pyu (id, pcount) values ($1, 0)`)
+		if err != nil {
+			return
+		}
+		for _, b := range boards {
+			_, err = q.Exec(b)
+			if err != nil {
+				return
+			}
+		}
+
+			return
 	},
 }
 

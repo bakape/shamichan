@@ -85,8 +85,8 @@ public:
         flip,
         eight_ball,
         sync_watch,
-        _,
-        __,
+        pyu,
+        pcount,
         roulette,
         rcount
     } typ;

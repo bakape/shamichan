@@ -55,7 +55,7 @@ func decodeConfigs(data string) (c config.Configs, err error) {
 func getBoardConfigs() squirrel.SelectBuilder {
 	return sq.Select(
 		"readOnly", "textOnly", "forcedAnon", "disableRobots", "flags", "NSFW",
-		"nonLive", "posterIDs", "rbText", "id", "defaultCSS", "title", "notice", "rules",
+		"nonLive", "posterIDs", "rbText", "pyu", "id", "defaultCSS", "title", "notice", "rules",
 		"eightball",
 	).
 		From("boards")
@@ -89,7 +89,7 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 	var eightball pq.StringArray
 	err = r.Scan(
 		&c.ReadOnly, &c.TextOnly, &c.ForcedAnon, &c.DisableRobots, &c.Flags,
-		&c.NSFW, &c.NonLive, &c.PosterIDs, &c.RbText,
+		&c.NSFW, &c.NonLive, &c.PosterIDs, &c.RbText, &c.Pyu,
 		&c.ID, &c.DefaultCSS, &c.Title, &c.Notice, &c.Rules, &eightball,
 	)
 	c.Eightball = []string(eightball)
@@ -102,16 +102,18 @@ func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 		Columns(
 			"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
 			"flags", "NSFW", "nonLive",
-			"posterIDs", "rbText", "created", "defaultCSS", "title", "notice",
+			"posterIDs", "rbText", "pyu", "created", "defaultCSS", "title", "notice",
 			"rules", "eightball",
 		).
 		Values(
 			c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
-			c.Flags, c.NSFW, c.NonLive, c.PosterIDs, c.RbText,
+			c.Flags, c.NSFW, c.NonLive, c.PosterIDs, c.RbText, c.Pyu,
 			c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
 			pq.StringArray(c.Eightball),
 		)
+
 	err := withTransaction(tx, q).Exec()
+
 	if err != nil {
 		return err
 	}
@@ -138,6 +140,7 @@ func UpdateBoard(c config.BoardConfigs) error {
 				"nonLive":       c.NonLive,
 				"posterIDs":     c.PosterIDs,
 				"rbText":        c.RbText,
+				"pyu":           c.Pyu,
 				"defaultCSS":    c.DefaultCSS,
 				"title":         c.Title,
 				"notice":        c.Notice,

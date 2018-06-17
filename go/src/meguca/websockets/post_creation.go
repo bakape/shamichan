@@ -381,6 +381,8 @@ func constructPost(
 		post.Links, post.Commands, err = parser.ParseBody(
 			[]byte(req.Body),
 			conf.ID,
+			post.ID,
+			ip,
 			false,
 		)
 		if err != nil {

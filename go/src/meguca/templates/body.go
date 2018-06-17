@@ -72,9 +72,9 @@ var (
 type bodyContext struct {
 	index bool     // Rendered for an index page
 	state struct { // Body parser state
-		spoiler, quote, code, bold, italic, red, blue, rbText bool
-		successive_newlines                uint
-		iDice                              int
+		spoiler, quote, code, bold, italic, red, blue, rbText, pyu bool
+		successive_newlines                                        uint
+		iDice                                                      int
 	}
 	common.Post
 	OP    uint64
@@ -90,6 +90,7 @@ func streambody(
 	board string,
 	index bool,
 	rbText bool,
+	pyu bool,
 ) {
 	c := bodyContext{
 		index:  index,
@@ -99,6 +100,7 @@ func streambody(
 		Writer: *w,
 	}
 	c.state.rbText = rbText
+	c.state.pyu = pyu
 
 	var fn func(string)
 	if c.Editing {
@@ -527,6 +529,17 @@ func (c *bodyContext) parseCommands(bit string) {
 	formatting := "<strong>"
 	inner := make([]byte, 0, 32)
 	val := c.Commands[c.state.iDice]
+
+	// Protect from index shifts on boardConfig.pyu toggle
+	if !c.state.pyu {
+		switch val.Type {
+		case common.Pyu, common.Pcount:
+			c.state.iDice++
+			c.writeInvalidCommand(bit)
+			return
+		}
+	}
+
 	switch bit {
 	case "flip":
 		var s string
@@ -540,9 +553,22 @@ func (c *bodyContext) parseCommands(bit string) {
 	case "8ball":
 		inner = append(inner, val.Eightball...)
 		c.state.iDice++
-	case "rcount":
-		inner = strconv.AppendUint(inner, val.Pyu, 10)
-		c.state.iDice++
+	case "pyu", "pcount", "rcount":
+		switch val.Type {
+			case common.Pyu, common.Pcount:
+			// Protect from index shifts on boardConfig.pyu toggle
+			if !c.state.pyu {
+				c.writeInvalidCommand(bit)
+				return
+			}
+			fallthrough
+		case common.Rcount:
+			inner = strconv.AppendUint(inner, val.Pyu, 10)
+			c.state.iDice++
+			break
+		default:
+			c.writeInvalidCommand(bit)
+		}
 	case "roulette":
 		inner = strconv.AppendUint(inner, uint64(val.Roulette[0]), 10)
 		inner = append(inner, "/"...)

@@ -213,7 +213,7 @@ func (c *Client) _closePost() (err error) {
 				return
 			}
 		} else {
-			links, com, err = parser.ParseBody(c.post.body, c.post.board, false)
+			links, com, err = parser.ParseBody(c.post.body, c.post.board, c.post.id, c.ip, false)
 			if err != nil {
 				return
 			}
