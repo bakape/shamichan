@@ -119,6 +119,7 @@ func writeSampleThread(t *testing.T) {
 			},
 			OP: 1,
 		},
+		IP: "::1",
 	}
 	if err := db.WriteThread(nil, thread, op); err != nil {
 		t.Fatal(err)

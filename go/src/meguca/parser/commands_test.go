@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"database/sql"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
@@ -72,17 +73,22 @@ func Test8ball(t *testing.T) {
 }
 
 func TestPyu(t *testing.T) {
-	if err := db.SetPcount(0); err != nil {
+	assertTableClear(t, "boards", "pyu", "pyu_limit")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+
+	err := db.SetPcount(0)
+	if err != nil {
 		t.Fatal(err)
 	}
-	
-	if err := db.WritePyu("a"); err != nil {
+	err = db.WritePyu("a")
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	t.Run("disabled", func(t *testing.T) {
 		config.SetBoardConfigs(config.BoardConfigs{
-			BoardPublic: config.BoardPublic {
+			BoardPublic: config.BoardPublic{
 				Pyu: false,
 			},
 			ID: "a",
@@ -101,7 +107,7 @@ func TestPyu(t *testing.T) {
 
 	t.Run("enabled", func(t *testing.T) {
 		config.SetBoardConfigs(config.BoardConfigs{
-			BoardPublic: config.BoardPublic {
+			BoardPublic: config.BoardPublic{
 				Pyu: true,
 			},
 			ID: "a",
@@ -115,6 +121,10 @@ func TestPyu(t *testing.T) {
 			{"count on zero", "pcount", common.Pcount, 0},
 			{"increment", "pyu", common.Pyu, 1},
 			{"count", "pcount", common.Pcount, 1},
+			{"increment with limit set", "pyu", common.Pyu, 2},
+			{"increment with limit set", "pyu", common.Pyu, 3},
+			{"increment with limit set", "pyu", common.Pyu, 4},
+			{"pyu limit reached", "pyu", common.Pyu, 4},
 		}
 
 		for i := range cases {
@@ -129,6 +139,16 @@ func TestPyu(t *testing.T) {
 					Pyu:  c.Val,
 				})
 			})
+		}
+	})
+
+	t.Run("expire limit", func(t *testing.T) {
+		err := db.InTransaction(func(tx *sql.Tx) error {
+			_, err := db.ResetPyuLimit(tx, "::1", "a")
+			return err
+		})
+		if err != nil {
+			t.Fatal(err)
 		}
 	})
 }

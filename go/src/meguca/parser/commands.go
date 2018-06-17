@@ -58,7 +58,7 @@ func parseCommand(match []byte, board string, id uint64, ip string) (com common.
 		if boardConfig.Pyu {
 			now := time.Now().UTC()
 			tx, err := db.StartTransaction()
-			
+
 			if err != nil {
 				return com, err
 			}
@@ -83,7 +83,7 @@ func parseCommand(match []byte, board string, id uint64, ip string) (com common.
 			if err != nil {
 				return com, err
 			}
-			
+
 			expires, err := db.GetPyuLimitExpires(tx, ip, board)
 
 			if err != nil {
@@ -112,7 +112,7 @@ func parseCommand(match []byte, board string, id uint64, ip string) (com common.
 				}
 
 				err = db.Ban(board, "stop being such a slut", "system",
-								now.Add(time.Second*30), false, id)
+					now.Add(time.Second*30), false, id)
 
 				if err != nil {
 					return com, err
