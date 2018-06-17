@@ -1,5 +1,10 @@
 import { makeAttrs, makeFrag, escape, on, fetchJSON } from "../util"
 
+type HookTubeDoc = {
+	body?: string
+	error?: string
+}
+
 type OEmbedDoc = {
 	title?: string
 	html?: string
@@ -80,19 +85,10 @@ function proxyYoutube(el: Element): Promise<void> {
 async function fetchHookTube(el: Element): Promise<void> {
 	// Use a CORS proxy to work around javascript's cross-domain restrictions
 	const ref = el.getAttribute("href"),
-		url = "https://hooktube.com/embed/" + ref
-			.split(".com/").pop()
-			.split("watch?v=").pop()
-			.split("embed/").pop()
-			.split("&").shift()
-			.split("#").shift()
-			.split("?").shift(),
-		[data, err] = await fetchJSON<any>("https://cors-proxy.htmldriven.com/?url=" + url),
-		time = !ref.includes("t=") ? "" : "&t=" + ref
-			.split("t=").pop()
-			.split("&").shift()
-			.split("#").shift()
-			.split("?").shift()
+		id = strip(ref.split(".com/").pop().split("watch?v=").pop().split("embed/")),
+		[data, err] = await fetchJSON<HookTubeDoc>("https://cors-proxy.htmldriven.com/?url=" +
+			"https%3A%2F%2Fhooktube.com%2Fapi%3Fmode%3Dvideo%26id%3D" + id),
+		body = JSON.parse(data.body)
 
 	if (err) {
 		el.textContent = format(err, provider.HookTube)
@@ -107,13 +103,30 @@ async function fetchHookTube(el: Element): Promise<void> {
 		return
 	}
 
-	el.textContent = format(new DOMParser()
-		.parseFromString(data.body, "text/html").
-		querySelectorAll('title')[0]
-		.innerText, provider.HookTube)
-	el.setAttribute("data-html",
-		encodeURIComponent(
-			`<iframe width="480" height="270" src="${url}?autoplay=false${time}" frameborder="0" allowfullscreen></iframe>`))
+	if (body.error) {
+		el.textContent = format(body.error, provider.HookTube)
+		el.classList.add("errored")
+		return
+	}
+
+	if (!body.json_1) {
+		el.textContent = format("Invalid YouTube video ID / Unknown error", provider.HookTube)
+		el.classList.add("errored")
+		return
+	}
+
+	el.textContent = format(body.json_1.title, provider.HookTube)
+	el.setAttribute("data-html", encodeURIComponent(
+		`<iframe width="480" height="270" src="https://hooktube.com/embed/${id}?autoplay=false` +
+		check("start") + check('t') + check("loop") + `" frameborder="0" allowfullscreen></iframe>`))
+
+	function strip(s: string[]): string {
+		return s.pop().split('&').shift().split('#').shift().split('?').shift()
+	}
+
+	function check(s: string): string {
+		return ref.includes(`${s}=`) ? `&${s}=` + strip(ref.split(`${s}=`)) : ''
+	}
 }
 
 // fetcher for the noembed.com meta-provider
