@@ -4,7 +4,6 @@ package websockets
 
 import (
 	"errors"
-	"fmt"
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/common"
@@ -18,16 +17,6 @@ import (
 var (
 	errInvalidBoard = errors.New("invalid board")
 )
-
-// No such thread on this board
-type ErrInvalidThread struct {
-	ID    uint64
-	Board string
-}
-
-func (e ErrInvalidThread) Error() string {
-	return fmt.Sprintf("invalid thread: %d on board `%s`", e.ID, e.Board)
-}
 
 type syncRequest struct {
 	Last100, Catalog      bool
@@ -59,7 +48,7 @@ func (c *Client) synchronise(data []byte) error {
 		case err != nil:
 			return err
 		case !valid:
-			return &ErrInvalidThread{
+			return &common.ErrInvalidThread{
 				ID:    msg.Thread,
 				Board: msg.Board,
 			}

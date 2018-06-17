@@ -5,6 +5,7 @@ package server
 import (
 	"fmt"
 	"meguca/auth"
+	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	"meguca/imager"
@@ -135,7 +136,7 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 		text500(w, r, err)
 		return
 	case !ok:
-		text400(w, &websockets.ErrInvalidThread{
+		text400(w, &common.ErrInvalidThread{
 			ID:    op,
 			Board: board,
 		})

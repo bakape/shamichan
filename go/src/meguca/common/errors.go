@@ -2,6 +2,7 @@ package common
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -40,6 +41,16 @@ func (e ErrInvalidPostID) Error() string {
 	return "invalid post ID: " + strconv.FormatUint(uint64(e), 10)
 }
 
+// No such thread on this board
+type ErrInvalidThread struct {
+	ID    uint64
+	Board string
+}
+
+func (e ErrInvalidThread) Error() string {
+	return fmt.Sprintf("invalid thread: %d on board `%s`", e.ID, e.Board)
+}
+
 // Returns, if client-caused error can be safely ignored and not logged
 func CanIgnoreClientError(err error) bool {
 	switch err {
@@ -48,7 +59,8 @@ func CanIgnoreClientError(err error) bool {
 	}
 
 	switch err.(type) {
-	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage:
+	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage,
+		ErrInvalidThread:
 		return true
 	}
 
