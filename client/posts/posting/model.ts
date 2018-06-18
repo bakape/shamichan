@@ -93,13 +93,19 @@ export default class FormModel extends Post {
 		}
 
 		const lenDiff = val.length - old.length,
+			near = old.length + lenDiff - 1900,
 			exceeding = old.length + lenDiff - 2000
 
-		// If exceeding max body length, shorten the value, trim input and try
-		// again
-		if (exceeding > 0) {
+		// If near max body length, add the red class to the reply form text,
+		// if exceeding max body length, shorten the value, trim input and try
+		// again, otherwise ensure the class is removed.
+		if (near > 0 && exceeding <= 0) {
+			this.view.toggleReplyFormClass("red", true)
+		} else if (exceeding > 0) {
 			this.view.trimInput(exceeding)
 			return this.parseInput(val.slice(0, -exceeding))
+		} else {
+			this.view.toggleReplyFormClass("red", false)
 		}
 
 		// Remove any lines past 30
@@ -164,6 +170,9 @@ export default class FormModel extends Post {
 	// Close the form and revert to regular post. Cancel also erases all post
 	// contents.
 	public commitClose(cancel: boolean) {
+		// Remove the added class if near was triggered before
+		this.view.toggleReplyFormClass("red", false)
+
 		// It is possible to have never committed anything, if all you have in
 		// the body is one quote
 		if (this.bufferedText) {

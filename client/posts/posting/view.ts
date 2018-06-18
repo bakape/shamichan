@@ -215,6 +215,11 @@ export default class FormView extends PostView {
         this.input.value = this.input.value.slice(0, -length)
     }
 
+    // Toggle a class in the reply form text
+    public toggleReplyFormClass(c: string, b: boolean) {
+        this.el.querySelector(".post-container blockquote").classList.toggle(c, b)
+    }
+
     // Replace the current body and set the cursor to the input's end.
     // commit sets, if the onInput method should be run.
     public replaceText(body: string, commit: boolean) {
