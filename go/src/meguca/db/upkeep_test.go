@@ -22,7 +22,7 @@ func TestOpenPostClosing(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	common.ParseBody = func(_ []byte, _ string, _ bool) (
+	common.ParseBody = func(_ []byte, _ string, _ uint64, _ string, _ bool) (
 		[]common.Link, []common.Command, error,
 	) {
 		return nil, nil, nil

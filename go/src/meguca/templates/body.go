@@ -555,7 +555,7 @@ func (c *bodyContext) parseCommands(bit string) {
 		c.state.iDice++
 	case "pyu", "pcount", "rcount":
 		switch val.Type {
-			case common.Pyu, common.Pcount:
+		case common.Pyu, common.Pcount:
 			// Protect from index shifts on boardConfig.pyu toggle
 			if !c.state.pyu {
 				c.writeInvalidCommand(bit)
