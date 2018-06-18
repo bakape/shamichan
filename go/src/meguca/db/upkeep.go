@@ -86,7 +86,7 @@ func removeIdentityInfo() error {
 
 // Close any open posts that have not been closed for 30 minutes
 func closeDanglingPosts() error {
-	r, err := sq.Select("id", "op", "board").
+	r, err := sq.Select("id", "op", "board", "ip").
 		From("posts").
 		Where(`editing = true
 			and time
@@ -100,12 +100,13 @@ func closeDanglingPosts() error {
 	type post struct {
 		id, op uint64
 		board  string
+		ip     sql.NullString
 	}
 
 	posts := make([]post, 0, 8)
 	var p post
 	for r.Next() {
-		err = r.Scan(&p.id, &p.op, &p.board)
+		err = r.Scan(&p.id, &p.op, &p.board, &p.ip)
 		if err != nil {
 			return err
 		}
@@ -123,7 +124,7 @@ func closeDanglingPosts() error {
 			return err
 		}
 
-		links, com, err := common.ParseBody([]byte(body), p.board, true)
+		links, com, err := common.ParseBody([]byte(body), p.board, p.id, p.ip.String, true)
 		if err != nil {
 			return err
 		}

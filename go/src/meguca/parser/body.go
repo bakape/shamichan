@@ -21,6 +21,11 @@ func (e ErrNonPrintable) Error() string {
 	return fmt.Sprintf("contains non-printable character: %d", int(e))
 }
 
+// Needed to avoid cyclic imports for the 'db' package
+func init() {
+	common.ParseBody = ParseBody
+}
+
 // ParseBody parses the entire post text body for commands and links.
 // internal: function was called by automated upkeep task
 func ParseBody(body []byte, board string, id uint64, ip string, internal bool) (
