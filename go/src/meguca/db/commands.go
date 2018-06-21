@@ -205,13 +205,9 @@ func DecrementPyuLimit(tx *sql.Tx, ip string, b string) error {
 
 // FreePyuLimit resets the restricted status and pcount so sluts can #pyu again.
 func FreePyuLimit() error {
-	_, err := sq.Update("pyu_limit").Set("restricted", false).Exec()
-
-	if err != nil {
-		return err
-	}
-
-	_, err = sq.Update("pyu_limit").Set("pcount", 4).Exec()
+	_, err := sq.Update("pyu_limit").
+		SetMap(map[string]interface{}{"restricted":false, "pcount":4}).
+		Exec()
 	return err
 }
 
