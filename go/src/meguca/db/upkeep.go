@@ -20,14 +20,18 @@ func runCleanupTasks() {
 	// To ensure even the once an hour tasks are run shortly after server start
 	time.Sleep(time.Minute)
 	runMinuteTasks()
+	runHalfTasks()
 	runHourTasks()
 
 	min := time.Tick(time.Minute)
+	half := time.Tick(time.Minute*30)
 	hour := time.Tick(time.Hour)
 	for {
 		select {
 		case <-min:
 			runMinuteTasks()
+		case <-half:
+			runHalfTasks()
 		case <-hour:
 			runHourTasks()
 		}
@@ -37,6 +41,10 @@ func runCleanupTasks() {
 func runMinuteTasks() {
 	logError("open post cleanup", closeDanglingPosts())
 	expireRows("image_tokens", "bans")
+}
+
+func runHalfTasks() {
+	logError("unrestrict pyu_limit", FreePyuLimit())
 }
 
 func runHourTasks() {
