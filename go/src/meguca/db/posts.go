@@ -3,13 +3,9 @@ package db
 
 import (
 	"database/sql"
-	"database/sql/driver"
-	"fmt"
 	"meguca/common"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/lib/pq"
-	"github.com/mailru/easyjson"
 )
 
 // Post is for writing new posts to a database. It contains the Password
@@ -19,58 +15,6 @@ type Post struct {
 	common.StandalonePost
 	Password []byte
 	IP       string
-}
-
-// For encoding and decoding hash command results
-type commandRow []common.Command
-
-func (c *commandRow) Scan(src interface{}) error {
-	switch src := src.(type) {
-	case []byte:
-		return c.scanBytes(src)
-	case string:
-		return c.scanBytes([]byte(src))
-	case nil:
-		*c = nil
-		return nil
-	default:
-		return fmt.Errorf("cannot convert %T to []common.Command", src)
-	}
-}
-
-func (c *commandRow) scanBytes(data []byte) (err error) {
-	var sArr pq.StringArray
-	err = sArr.Scan(data)
-	if err != nil {
-		return
-	}
-
-	*c = make([]common.Command, len(sArr))
-	for i := range sArr {
-		err = (*c)[i].UnmarshalJSON([]byte(sArr[i]))
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func (c commandRow) Value() (driver.Value, error) {
-	if c == nil {
-		return nil, nil
-	}
-
-	var strArr = make(pq.StringArray, len(c))
-	for i := range strArr {
-		s, err := easyjson.Marshal(c[i])
-		if err != nil {
-			return nil, err
-		}
-		strArr[i] = string(s)
-	}
-
-	return strArr.Value()
 }
 
 func selectPost(id uint64, columns ...string) rowScanner {
