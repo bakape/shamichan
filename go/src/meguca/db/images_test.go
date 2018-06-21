@@ -105,18 +105,11 @@ func TestImageTokens(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
+	var img common.ImageCommon
+	err = InTransaction(func(tx *sql.Tx) (err error) {
+		img, err = UseImageToken(tx, token)
 		return
-	}
-	defer RollbackOnError(tx, &err)
-
-	img, err := UseImageToken(tx, token)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = tx.Commit()
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

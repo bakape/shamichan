@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"meguca/assets"
 )
 
@@ -96,49 +97,40 @@ func setLoadingAnimation(board string, files []assets.File) {
 }
 
 // Overwrite any existing assets in the DB
-func setAssets(table, board string, files []assets.File) (err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer RollbackOnError(tx, &err)
+func setAssets(table, board string, files []assets.File) error {
+	return InTransaction(func(tx *sql.Tx) (err error) {
+		sql, args, err := sq.Delete(table).Where("board = ?", board).ToSql()
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec(sql, args...)
+		if err != nil {
+			return
+		}
 
-	sql, args, err := sq.Delete(table).Where("board = ?", board).ToSql()
-	if err != nil {
-		return
-	}
-	_, err = tx.Exec(sql, args...)
-	if err != nil {
-		return
-	}
-
-	sql, _, err = sq.Insert(table).
-		Columns("board", "data", "mime").
-		Values("?", "?", "?").
-		ToSql()
-	if err != nil {
-		return
-	}
-	q, err := tx.Prepare(sql)
-	if err != nil {
-		return
-	}
-	for _, f := range files {
-		if f.Data != nil {
-			_, err = q.Exec(board, f.Data, f.Mime)
-			if err != nil {
-				return
+		sql, _, err = sq.Insert(table).
+			Columns("board", "data", "mime").
+			Values("?", "?", "?").
+			ToSql()
+		if err != nil {
+			return
+		}
+		q, err := tx.Prepare(sql)
+		if err != nil {
+			return
+		}
+		for _, f := range files {
+			if f.Data != nil {
+				_, err = q.Exec(board, f.Data, f.Mime)
+				if err != nil {
+					return
+				}
 			}
 		}
-	}
 
-	_, err = tx.Exec("select pg_notify($1 || '_updated', $2)", table, board)
-	if err != nil {
+		_, err = tx.Exec("select pg_notify($1 || '_updated', $2)", table, board)
 		return
-	}
-
-	err = tx.Commit()
-	return
+	})
 }
 
 // Overwrite list of banners in the DB, for a specific board

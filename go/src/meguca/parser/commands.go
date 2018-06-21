@@ -5,6 +5,7 @@ package parser
 import (
 	"bytes"
 	"crypto/rand"
+	"database/sql"
 	"errors"
 	"math/big"
 	"meguca/common"
@@ -33,7 +34,9 @@ func randInt(max int) int {
 }
 
 // Parse a matched hash command
-func parseCommand(match []byte, board string, id uint64, ip string) (com common.Command, err error) {
+func parseCommand(match []byte, board string, id uint64, ip string) (
+	com common.Command, err error,
+) {
 	boardConfig := config.GetBoardConfigs(board)
 
 	switch {
@@ -56,82 +59,66 @@ func parseCommand(match []byte, board string, id uint64, ip string) (com common.
 		com.Type = common.Pyu
 
 		if boardConfig.Pyu {
-			now := time.Now().UTC()
-			tx, err := db.StartTransaction()
-
-			if err != nil {
-				return com, err
-			}
-
-			defer db.RollbackOnError(tx, &err)
-			exists, err := db.PyuLimitExists(tx, ip, board)
-
-			if err != nil {
-				return com, err
-			}
-
-			if !exists {
-				err = db.WritePyuLimit(tx, ip, board)
-
+			err = db.InTransaction(func(tx *sql.Tx) (err error) {
+				now := time.Now().UTC()
+				exists, err := db.PyuLimitExists(tx, ip, board)
 				if err != nil {
-					return com, err
-				}
-			}
-
-			limit, err := db.GetPyuLimit(tx, ip, board)
-
-			if err != nil {
-				return com, err
-			}
-
-			expires, err := db.GetPyuLimitExpires(tx, ip, board)
-
-			if err != nil {
-				return com, err
-			}
-
-			if limit == 1 {
-				err = db.SetPyuLimitExpires(tx, ip, board)
-
-				if err != nil {
-					return com, err
-				}
-			} else if limit == 0 && expires.Before(now) {
-				limit, err = db.ResetPyuLimit(tx, ip, board)
-
-				if err != nil {
-					return com, err
-				}
-			}
-
-			if limit == 0 {
-				com.Pyu, err = db.GetPcountA(tx, board)
-
-				if err != nil {
-					return com, err
+					return
 				}
 
-				err = db.Ban(board, "stop being such a slut", "system",
-					now.Add(time.Second*30), false, id)
-
-				if err != nil {
-					return com, err
-				}
-			} else {
-				com.Pyu, err = db.IncrementPcount(tx, board)
-
-				if err != nil {
-					return com, err
+				if !exists {
+					err = db.WritePyuLimit(tx, ip, board)
+					if err != nil {
+						return
+					}
 				}
 
-				err = db.DecrementPyuLimit(tx, ip, board)
-
+				limit, err := db.GetPyuLimit(tx, ip, board)
 				if err != nil {
-					return com, err
+					return
 				}
-			}
 
-			err = tx.Commit()
+				expires, err := db.GetPyuLimitExpires(tx, ip, board)
+				if err != nil {
+					return
+				}
+
+				if limit == 1 {
+					err = db.SetPyuLimitExpires(tx, ip, board)
+					if err != nil {
+						return
+					}
+				} else if limit == 0 && expires.Before(now) {
+					limit, err = db.ResetPyuLimit(tx, ip, board)
+					if err != nil {
+						return
+					}
+				}
+
+				if limit == 0 {
+					com.Pyu, err = db.GetPcountA(tx, board)
+					if err != nil {
+						return
+					}
+
+					err = db.Ban(board, "stop being such a slut", "system",
+						now.Add(time.Second*30), false, id)
+					if err != nil {
+						return
+					}
+				} else {
+					com.Pyu, err = db.IncrementPcount(tx, board)
+					if err != nil {
+						return
+					}
+
+					err = db.DecrementPyuLimit(tx, ip, board)
+					if err != nil {
+						return
+					}
+				}
+				return
+			})
 		} else {
 			com.Pyu, err = db.GetPcount(board)
 		}

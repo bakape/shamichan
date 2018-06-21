@@ -67,7 +67,6 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 		if err != nil {
 			return err
 		}
-		defer RollbackOnError(tx, &err)
 	}
 
 	err = withTransaction(tx, sq.
@@ -83,11 +82,17 @@ func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
 	).
 		Exec()
 	if err != nil {
+		if !passedTx {
+			tx.Rollback()
+		}
 		return err
 	}
 
 	err = WritePost(tx, p, false, false)
 	if err != nil {
+		if !passedTx {
+			tx.Rollback()
+		}
 		return err
 	}
 

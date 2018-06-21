@@ -81,36 +81,27 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 
 	// Must ensure image token usage is done atomically, as not to cause
 	// possible data races with unused image cleanup
-	tx, err := db.StartTransaction()
-	if err != nil {
-		return
-	}
-	defer db.RollbackOnError(tx, &err)
-
-	post.ID, err = db.NewPostID(tx)
-	if err != nil {
-		return
-	}
-	post.OP = post.ID
-	if conf.PosterIDs {
-		computePosterID(&post)
-	}
-
-	hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
-	if hasImage {
-		img := req.Image
-		post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
+	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+		post.ID, err = db.NewPostID(tx)
 		if err != nil {
 			return
 		}
-	}
+		post.OP = post.ID
+		if conf.PosterIDs {
+			computePosterID(&post)
+		}
 
-	err = db.InsertThread(tx, subject, conf.NonLive || req.NonLive, post)
-	if err != nil {
-		return
-	}
+		hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
+		if hasImage {
+			img := req.Image
+			post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
+			if err != nil {
+				return
+			}
+		}
 
-	err = tx.Commit()
+		return db.InsertThread(tx, subject, conf.NonLive || req.NonLive, post)
+	})
 	return
 }
 

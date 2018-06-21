@@ -215,79 +215,75 @@ func deleteOldThreads() (err error) {
 		return
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer RollbackOnError(tx, &err)
-
-	// Find threads to delete
-	r, err := withTransaction(tx, sq.
-		Select(
-			"posts.id",
-			"bumpTime",
-			`(select count(*)
+	return InTransaction(func(tx *sql.Tx) (err error) {
+		// Find threads to delete
+		r, err := withTransaction(tx, sq.
+			Select(
+				"posts.id",
+				"bumpTime",
+				`(select count(*)
 				from posts
 				where posts.op = threads.id
 			) as postCtr`,
-			"posts.deleted",
+				"posts.deleted",
+			).
+			From("threads").
+			Join("posts on threads.id = posts.id"),
 		).
-		From("threads").
-		Join("posts on threads.id = posts.id"),
-	).
-		Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-	var (
-		now         = time.Now().Unix()
-		min         = float64(conf.ThreadExpiryMin * 24 * 3600)
-		max         = float64(conf.ThreadExpiryMax * 24 * 3600)
-		toDel       = make([]uint64, 0, 16)
-		id, postCtr uint64
-		bumpTime    int64
-		deleted     sql.NullBool
-	)
-	for r.Next() {
-		err = r.Scan(&id, &bumpTime, &postCtr, &deleted)
+			Query()
 		if err != nil {
 			return
 		}
-		threshold := min + (-max+min)*math.Pow(float64(postCtr)/3000-1, 3)
-		if deleted.Bool {
-			threshold /= 3
-		}
-		if threshold < min {
-			threshold = min
-		}
-		if float64(now-bumpTime) > threshold {
-			toDel = append(toDel, id)
-		}
-	}
-	err = r.Err()
-	if err != nil {
-		return
-	}
-
-	var q *sql.Stmt
-	if len(toDel) != 0 {
-		// Deleted any matched threads
-		q, err = tx.Prepare(`delete from threads
-			where id = $1
-			returning pg_notify('thread_deleted', board || ':' || id)`)
-		if err != nil {
-			return
-		}
-		for _, id := range toDel {
-			_, err = q.Exec(id)
+		defer r.Close()
+		var (
+			now         = time.Now().Unix()
+			min         = float64(conf.ThreadExpiryMin * 24 * 3600)
+			max         = float64(conf.ThreadExpiryMax * 24 * 3600)
+			toDel       = make([]uint64, 0, 16)
+			id, postCtr uint64
+			bumpTime    int64
+			deleted     sql.NullBool
+		)
+		for r.Next() {
+			err = r.Scan(&id, &bumpTime, &postCtr, &deleted)
 			if err != nil {
 				return
 			}
+			threshold := min + (-max+min)*math.Pow(float64(postCtr)/3000-1, 3)
+			if deleted.Bool {
+				threshold /= 3
+			}
+			if threshold < min {
+				threshold = min
+			}
+			if float64(now-bumpTime) > threshold {
+				toDel = append(toDel, id)
+			}
 		}
-	}
+		err = r.Err()
+		if err != nil {
+			return
+		}
 
-	return tx.Commit()
+		var q *sql.Stmt
+		if len(toDel) != 0 {
+			// Deleted any matched threads
+			q, err = tx.Prepare(`delete from threads
+			where id = $1
+			returning pg_notify('thread_deleted', board || ':' || id)`)
+			if err != nil {
+				return
+			}
+			for _, id := range toDel {
+				_, err = q.Exec(id)
+				if err != nil {
+					return
+				}
+			}
+		}
+
+		return
+	})
 }
 
 // DeleteBoard deletes a board and all of its contained threads and posts

@@ -79,12 +79,6 @@ func InTransaction(fn func(*sql.Tx) error) (err error) {
 	return tx.Commit()
 }
 
-// StartTransaction initiates a new DB transaction. It is the responsibility of
-// the caller to commit or rollback the transaction.
-func StartTransaction() (*sql.Tx, error) {
-	return db.Begin()
-}
-
 // WritePyu creates a new board's pyu row. Only used on board creation
 func WritePyu(b string) (err error) {
 	_, err = sq.Insert("pyu").
@@ -129,7 +123,7 @@ func IncrementPcount(tx *sql.Tx, b string) (c uint64, err error) {
 	}
 
 	r, err := withTransaction(tx, sq.Update("pyu").
-		Set("pcount", pcount + 1).
+		Set("pcount", pcount+1).
 		Where("id = ?", b).
 		Suffix("returning pcount")).
 		QueryRow()
@@ -221,7 +215,7 @@ func DecrementPyuLimit(tx *sql.Tx, ip string, b string) (err error) {
 	}
 
 	return withTransaction(tx, sq.Update("pyu_limit").
-		Set("pcount", pcount - 1).
+		Set("pcount", pcount-1).
 		Where("ip = ? and board = ?", ip, b)).
 		Exec()
 }
@@ -292,13 +286,6 @@ func IsConflictError(err error) bool {
 		return true
 	}
 	return false
-}
-
-// RollbackOnError on error undoes the transaction on error
-func RollbackOnError(tx *sql.Tx, err *error) {
-	if *err != nil {
-		tx.Rollback()
-	}
 }
 
 // Assigns a function to listen to Postgres notifications on a channel

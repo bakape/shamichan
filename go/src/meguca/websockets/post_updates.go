@@ -232,33 +232,22 @@ func (c *Client) _closePost() (err error) {
 }
 
 // Meme ban if the poster lost at #roulette
-func CheckRouletteBan(commands []common.Command, board string, id uint64) (
-	err error,
-) {
+func CheckRouletteBan(commands []common.Command, board string,
+	id uint64,
+) error {
 	for _, command := range commands {
 		if command.Type == common.Roulette {
 			if command.Roulette[0] == 1 {
-				tx, err := db.StartTransaction()
-				if err != nil {
-					return err
-				}
-				defer db.RollbackOnError(tx, &err)
-
-				err = db.Ban(board, "lost at #roulette", "system",
+				err := db.Ban(board, "lost at #roulette", "system",
 					time.Now().Add(time.Second*30), false, id)
 				if err != nil {
 					return err
 				}
-				err = db.IncrementRcount()
-				if err != nil {
-					return err
-				}
-				err = tx.Commit()
-				return err
+				return db.IncrementRcount()
 			}
 		}
 	}
-	return
+	return nil
 }
 
 // Clear all open post contents
