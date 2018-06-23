@@ -808,6 +808,12 @@ var migrations = []func(*sql.Tx) error{
 
 			return
 	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`alter table pyu_limit drop column expires`,
+			`alter table pyu_limit add column restricted bool default false`,
+		)
+	},
 }
 
 // Run migrations from version `from`to version `to`

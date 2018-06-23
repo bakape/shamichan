@@ -60,63 +60,70 @@ func parseCommand(match []byte, board string, id uint64, ip string) (
 
 		if boardConfig.Pyu {
 			err = db.InTransaction(func(tx *sql.Tx) (err error) {
-				now := time.Now().UTC()
 				exists, err := db.PyuLimitExists(tx, ip, board)
+
 				if err != nil {
 					return
 				}
 
 				if !exists {
 					err = db.WritePyuLimit(tx, ip, board)
+
 					if err != nil {
 						return
 					}
 				}
 
 				limit, err := db.GetPyuLimit(tx, ip, board)
+
 				if err != nil {
 					return
 				}
 
-				expires, err := db.GetPyuLimitExpires(tx, ip, board)
+				restricted, err := db.GetPyuLimitRestricted(tx, ip, board)
+
 				if err != nil {
 					return
 				}
 
-				if limit == 1 {
-					err = db.SetPyuLimitExpires(tx, ip, board)
-					if err != nil {
-						return
-					}
-				} else if limit == 0 && expires.Before(now) {
-					limit, err = db.ResetPyuLimit(tx, ip, board)
-					if err != nil {
-						return
-					}
-				}
-
-				if limit == 0 {
+				if restricted {
 					com.Pyu, err = db.GetPcountA(tx, board)
+
 					if err != nil {
 						return
 					}
 
 					err = db.Ban(board, "stop being such a slut", "system",
-						now.Add(time.Second*30), false, id)
+						time.Now().Add(time.Second*30), false, id)
+
 					if err != nil {
 						return
 					}
 				} else {
-					com.Pyu, err = db.IncrementPcount(tx, board)
-					if err != nil {
-						return
-					}
+					switch limit {
+					case 1:
+						err = db.SetPyuLimitRestricted(tx, ip, board)
 
-					err = db.DecrementPyuLimit(tx, ip, board)
-					if err != nil {
-						return
+						if err != nil {
+							return
+						}
+
+						fallthrough
+					default:
+						com.Pyu, err = db.IncrementPcount(tx, board)
+
+						if err != nil {
+							return
+						}
+
+						err = db.DecrementPyuLimit(tx, ip, board)
+
+						if err != nil {
+							return
+						}
 					}
 				}
+
 				return
 			})
 		} else {
