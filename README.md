@@ -125,7 +125,7 @@ A reference list of commands can be found in `./docs/installation.md`
 ### Build dependencies
 * [Go](https://golang.org/doc/install) >=1.9.2 (for building server)
 * [Node.js](https://nodejs.org) >=5.0 (for building client)
-* GCC or Clang
+* C11 and C++17 compilers
 * make
 * pkg-config
 * pthread
@@ -137,7 +137,7 @@ compiled with:
     * libtheora
     * libx264
     * libmp3lame
-* GraphicsMagick compiled with:
+* GraphicsMagick++ compiled with:
     * zlib
     * libpng
     * libjpeg
