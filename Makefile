@@ -85,7 +85,6 @@ client_clean:
 
 clean: client_clean wasm_clean generate_clean
 	rm -rf .build .ffmpeg .package go/pkg target meguca-*.zip meguca-*.tar.xz meguca meguca.exe
-	$(MAKE) -C scripts/migration/3to4 clean
 ifeq ($(is_windows), true)
 	rm -rf /.meguca_build *.dll
 endif
