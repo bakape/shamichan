@@ -8,7 +8,7 @@ let db: IDBDatabase
 // FF IndexedDB implementation is broken in private mode.
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=781982
 // This helps bypass this.
-let hasErrored = false;
+let hasErred = false;
 
 // Expiring post ID object stores
 const postStores = [
@@ -49,7 +49,7 @@ export function open(): Promise<void> {
 		}
 	})
 		.catch(err => {
-			hasErrored = true
+			hasErred = true
 			console.error("Error loading IndexedDB. All further DB access will be ignored")
 			console.error(err)
 		})
@@ -135,7 +135,7 @@ function newTransaction(store: string, write: boolean): IDBObjectStore {
 
 // Read the contents of a postStore for specific threads into an array
 export function readIDs(store: string, ops: number[]): Promise<number[]> {
-	if (hasErrored || !ops.length) {
+	if (hasErred || !ops.length) {
 		return fakePromise([])
 	}
 	return Promise.all(
@@ -176,7 +176,7 @@ function fakePromise<T>(res: T): Promise<T> {
 
 // Asynchronously insert a new expiring post id object into a postStore
 export function storeID(store: string, id: number, op: number, expiry: number) {
-	if (hasErrored) {
+	if (hasErred) {
 		return
 	}
 	addObj(store, {
@@ -191,7 +191,7 @@ function addObj(store: string, obj: any) {
 
 // Clear the target object store asynchronously
 export function clearStore(store: string) {
-	if (hasErrored) {
+	if (hasErred) {
 		return
 	}
 	const trans = newTransaction(store, true),
@@ -201,7 +201,7 @@ export function clearStore(store: string) {
 
 // Retrieve an object from a specific object store
 export function getObj<T>(store: string, id: any): Promise<T> {
-	if (hasErrored) {
+	if (hasErred) {
 		return fakePromise({} as any)
 	}
 	return new Promise<T>((resolve, reject) => {
@@ -216,7 +216,7 @@ export function getObj<T>(store: string, id: any): Promise<T> {
 
 // Put an object in the specific object store
 export function putObj(store: string, obj: any): Promise<void> {
-	if (hasErrored) {
+	if (hasErred) {
 		return fakePromise(undefined)
 	}
 	return new Promise<void>((resolve, reject) => {

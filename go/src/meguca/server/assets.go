@@ -91,12 +91,6 @@ func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 	http.ServeContent(w, r, path, modTime, file)
 }
 
-// Serve the service worker script file. It needs to be on the root scope for
-// security reasons.
-func serveWorker(w http.ResponseWriter, r *http.Request) {
-	serveFile(w, r, workerPath)
-}
-
 // Set the banners of a board
 func setBanners(w http.ResponseWriter, r *http.Request) {
 	board, ok := parseAssetForm(w, r, common.MaxNumBanners)

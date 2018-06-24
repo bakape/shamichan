@@ -182,7 +182,6 @@ func createRouter() http.Handler {
 	assets.GET("/loading/:board", serveLoadingAnimation)
 	assets.GET("/images/*path", serveImages)
 	assets.GET("/*path", serveAssets)
-	r.GET("/worker.js", serveWorker)
 
 	h := http.Handler(r)
 	if enableGzip {

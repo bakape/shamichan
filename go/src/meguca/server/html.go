@@ -30,6 +30,7 @@ func serveHTML(
 		head.Set("ETag", etag)
 	}
 	head.Set("Content-Type", "text/html")
+	head.Set("Service-Worker-Allowed", "/")
 
 	writeData(w, r, data)
 }

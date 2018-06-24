@@ -19,6 +19,7 @@ const tasks = []
 
 // Client JS files
 buildClient("frontend")
+buildClient("worker")
 
 // Various little scripts
 createTask('scripts', 'client/*.js', src =>
