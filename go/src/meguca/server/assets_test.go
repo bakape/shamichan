@@ -18,16 +18,6 @@ func TestAssetServer(t *testing.T) {
 	router.ServeHTTP(rec, req)
 }
 
-func TestServeWorker(t *testing.T) {
-	t.Parallel()
-
-	workerPath = getWorkerPath()
-
-	rec, req := newPair("/worker.js")
-	router.ServeHTTP(rec, req)
-	assertBody(t, rec, "console.log(\"Worker dess\")\n")
-}
-
 func TestImageServer(t *testing.T) {
 	t.Parallel()
 
