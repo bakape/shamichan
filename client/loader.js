@@ -27,72 +27,8 @@
 		localStorage.setItem("termsAccepted", "true")
 	}
 
-	var es6Tests = [
-		// Arrow functions
-		'return (()=>5)()===5;',
-
-		// Block scoped const
-		'"use strict";  const bar = 123; {const bar = 456;} return bar===123;',
-
-		// Block-scoped let
-		'"use strict"; let bar = 123;{ let bar = 456; }return bar === 123;',
-
-		// Computed object properties
-		"var x='y';return ({ [x]: 1 }).y === 1;",
-
-		// Shorthand object properties
-		"var a=7,b=8,c={a,b};return c.a===7 && c.b===8;",
-
-		// Template strings
-		'var a = "ba"; return `foo bar${a + "z"}` === "foo barbaz";',
-
-		// for...of
-		'var arr = [5]; for (var item of arr) return item === 5;',
-
-		// Spread operator
-		'return Math.max(...[1, 2, 3]) === 3',
-
-		// Class statement
-		'"use strict"; class C {}; return typeof C === "function"',
-
-		// Super call
-		'"use strict"; var passed = false;'
-		+ 'class B {constructor(a) {  passed = (a === "barbaz")}};'
-		+ 'class C extends B {constructor(a) {super("bar" + a)}};'
-		+ 'new C("baz"); return passed;',
-
-		// Default parameters
-		'return (function (a = 1, b = 2) { return a === 3 && b === 2; }(3));',
-
-		// Destructuring declaration
-		'var [a,,[b],c] = [5,null,[6]];return a===5 && b===6 && c===undefined',
-
-		// Parameter destructuring
-		'return function([a,,[b],c]){return a===5 && b===6 && c===undefined;}'
-		+ '([5,null,[6]])',
-
-		// Generators
-		'function * generator(){yield 5; yield 6};'
-		+ 'var iterator = generator();'
-		+ 'var item = iterator.next();'
-		+ 'var passed = item.value === 5 && item.done === false;'
-		+ 'item = iterator.next();'
-		+ 'passed &= item.value === 6 && item.done === false;'
-		+ 'item = iterator.next();'
-		+ 'passed &= item.value === undefined && item.done === true;'
-		+ 'return passed;'
-	]
-
 	var scriptCount = 0,
 		polyfills = []
-
-	for (var i = 0; i < es6Tests.length; i++) {
-		if (!check(es6Tests[i])) {
-			window.legacy = true
-			polyfills.push("js/vendor/polyfill.min")
-			break
-		}
-	}
 
 	// Fetch API
 	if (!checkFunction("window.fetch")) {
@@ -154,17 +90,12 @@
 		}
 	}
 
-	if (!checkFunction("Proxy")) {
-		polyfills.push("js/vendor/proxy.min")
-	}
-
 	// Remove prefixes on Web Crypto API for Safari
 	if (!checkFunction("window.crypto.subtle.digest")) {
 		window.crypto.subtle = window.crypto.webkitSubtle
 	}
 
 	var wasm = /[\?&]wasm=true/.test(location.search)
-
 	var head = document.getElementsByTagName('head')[0]
 
 	if (polyfills.length) {
@@ -234,9 +165,9 @@
 					document.head.appendChild(script)
 				})
 		} else {
-			loadScript("js/es" + (window.legacy ? 5 : 6) + "/main")
+			loadScript("js/main")
 				.onload = function () {
-					require("main")
+					require("frontend/main")
 				}
 		}
 

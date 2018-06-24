@@ -1,5 +1,5 @@
 export node_bins=$(PWD)/node_modules/.bin
-export uglifyjs=$(node_bins)/uglifyjs --mangle safari10=true
+export uglifyjs=$(node_bins)/uglifyjs
 export gulp=$(node_bins)/gulp
 export is_windows=false
 binary=meguca
@@ -48,7 +48,7 @@ watch:
 
 client_vendor: client_deps
 	mkdir -p www/js/vendor
-	cp node_modules/dom4/build/dom4.js node_modules/core-js/client/core.min.js node_modules/core-js/client/core.min.js.map node_modules/babel-polyfill/dist/polyfill.min.js node_modules/proxy-polyfill/proxy.min.js www/js/vendor
+	cp node_modules/dom4/build/dom4.js node_modules/core-js/client/core.min.js node_modules/core-js/client/core.min.js.map www/js/vendor
 	$(uglifyjs) node_modules/whatwg-fetch/fetch.js -o www/js/vendor/fetch.js
 	$(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
 

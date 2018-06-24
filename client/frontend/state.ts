@@ -2,7 +2,7 @@
 
 import { Post, PostCollection } from './posts'
 import { getClosestID } from './util'
-import { readIDs, storeID } from './db'
+import { readIDs, storeID } from '../common/db'
 import { send } from './connection'
 
 // Server-wide global configurations

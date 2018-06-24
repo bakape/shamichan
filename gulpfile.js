@@ -2,24 +2,13 @@
 
 'use strict'
 
-const babel = require("gulp-babel"),
-	gulp = require('gulp'),
+const gulp = require('gulp'),
 	gutil = require('gulp-util'),
 	less = require('gulp-less'),
 	cssmin = require('gulp-clean-css'),
-	rename = require('gulp-rename'),
 	sourcemaps = require('gulp-sourcemaps'),
 	ts = require('gulp-typescript'),
-	_uglify = require('gulp-uglify/composer')(require("uglify-es"), console)
-
-// Apple a shit and buggy.
-// Hack to fix bug in Safari/iOS 10
-const uglify = () =>
-	_uglify({
-		mangle: {
-			safari10: true,
-		}
-	})
+	uglify = require('gulp-uglify')
 
 // Keep script alive and rebuild on file changes
 // Triggered with the `-w` flag
@@ -29,17 +18,15 @@ const watch = gutil.env.w
 const tasks = []
 
 // Client JS files
-buildES6()
-buildES5()
+buildClient("frontend")
 
 // Various little scripts
-createTask('scripts', 'clientScripts/*.js', src =>
-	src
-		.pipe(sourcemaps.init())
+createTask('scripts', 'client/*.js', src =>
+	src.pipe(sourcemaps.init())
 		.pipe(uglify())
 		.on('error', handleError)
 		.pipe(sourcemaps.write('maps'))
-		.pipe(gulp.dest('www/js/scripts'))
+		.pipe(gulp.dest('www/js'))
 )
 
 // Compile Less to CSS
@@ -65,47 +52,21 @@ createTask('scripts', 'clientScripts/*.js', src =>
 
 gulp.task('default', tasks)
 
-// Builds the client files of the appropriate ECMAScript version
-function buildES6() {
-	const name = 'es6'
-	tasks.push(name)
-	gulp.task(name, () =>
-		buildClient()
-			// Disabled, until uglify-es stabalizes
-			// .pipe(uglify())
+function buildClient(name) {
+	createTask(name, `client/${name}/**/*.ts`, src =>
+		src.pipe(sourcemaps.init())
+			.pipe(ts.createProject(`client/${name}/tsconfig.json`, {
+				typescript: require("typescript"),
+			})())
 			.on('error', handleError)
 			.pipe(sourcemaps.write('maps'))
-			.pipe(gulp.dest('www/js/es6')))
-
-	// Recompile on source update, if running with the `-w` flag
-	if (watch) {
-		gulp.watch('client/**/*.ts', [name])
-	}
-}
-
-// Build legacy ES5 client for old browsers
-function buildES5() {
-	const name = "es5"
-	tasks.push(name)
-	gulp.task(name, () =>
-		buildClient()
-			.pipe(babel({
-				presets: ['../node_modules/babel-preset-env'],
-			}))
-			.pipe(uglify())
-			.on('error', handleError)
-			.pipe(sourcemaps.write('maps'))
-			.pipe(gulp.dest('www/js/es5'))
+			.pipe(gulp.dest('www/js'))
 	)
-}
 
-function buildClient() {
-	return gulp.src('client/**/*.ts')
-		.pipe(sourcemaps.init())
-		.pipe(ts.createProject('client/tsconfig.json', {
-			typescript: require("typescript"),
-		})())
-		.on('error', handleError)
+	// Also watch common client files
+	if (watch) {
+		gulp.watch("client/common/**/*.ts", [name])
+	}
 }
 
 // Simply log the error on continuos builds, but fail the build and exit with
