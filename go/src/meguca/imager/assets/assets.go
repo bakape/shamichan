@@ -58,7 +58,7 @@ func GetFilePaths(SHA1 string, fileType, thumbType uint8) (paths [2]string) {
 	return
 }
 
-// RelativeSourcePath returns an file's source path relative to the root path
+// Returns an file's source path relative to the root path
 func RelativeSourcePath(fileType uint8, SHA1 string) string {
 	return util.ConcatStrings(
 		"/assets/images/src/",
@@ -68,7 +68,8 @@ func RelativeSourcePath(fileType uint8, SHA1 string) string {
 	)
 }
 
-func relativeThumbPath(thumbType uint8, SHA1 string) string {
+// Returns an thumbnail's path relative to the root path
+func RelativeThumbPath(thumbType uint8, SHA1 string) string {
 	return util.ConcatStrings(
 		"/assets/images/thumb/",
 		SHA1,
@@ -87,7 +88,7 @@ func ImageSearchPath(img common.ImageCommon) string {
 			return RelativeSourcePath(img.FileType, img.SHA1)
 		}
 	}
-	return relativeThumbPath(img.ThumbType, img.SHA1)
+	return RelativeThumbPath(img.ThumbType, img.SHA1)
 }
 
 func imageRoot() string {

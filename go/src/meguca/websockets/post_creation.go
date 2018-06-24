@@ -242,7 +242,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 		}
 		c.post.init(post.StandalonePost)
 	}
-	c.feed.InsertPost(post.StandalonePost, c.post.body, msg)
+	c.feed.InsertPost(post.StandalonePost.Post, msg)
 	err = CheckRouletteBan(post.Commands, post.Board, post.ID)
 	if err != nil {
 		return

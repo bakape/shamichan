@@ -153,3 +153,40 @@ func bumpThread(tx *sql.Tx, id uint64, bump bool) (err error) {
 	err = withTransaction(tx, q.Where("id = ?", id)).Exec()
 	return err
 }
+
+// Filter threads by existence
+func FilterExistingThreads(ids ...uint64) (exist []uint64, err error) {
+	// First remove any duplicates to send less to the DB
+	dedup := make(map[uint64]struct{}, len(ids))
+	for _, id := range ids {
+		dedup[id] = struct{}{}
+	}
+	if len(dedup) != len(ids) {
+		ids = ids[:0]
+		for id := range dedup {
+			ids = append(ids, id)
+		}
+	}
+
+	r, err := sq.Select("id").
+		From("threads").
+		Where(squirrel.Eq{
+			"id": ids,
+		}).
+		Query()
+	if err != nil {
+		return
+	}
+
+	exist = make([]uint64, 0, len(ids))
+	var id uint64
+	for r.Next() {
+		err = r.Scan(&id)
+		if err != nil {
+			return
+		}
+		exist = append(exist, id)
+	}
+	err = r.Err()
+	return
+}

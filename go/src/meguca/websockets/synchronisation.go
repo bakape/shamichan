@@ -146,7 +146,7 @@ func (c *Client) reclaimPost(data []byte) error {
 	}
 
 	c.post.init(post)
-	c.feed.InsertPost(post, c.post.body, nil)
+	c.feed.InsertPost(post.Post, nil)
 
 	return c.sendMessage(common.MessageReclaim, 0)
 }

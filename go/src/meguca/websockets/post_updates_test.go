@@ -362,7 +362,7 @@ func TestClosePost(t *testing.T) {
 		board: "a",
 		body:  []byte("abc"),
 	}
-	cl.feed.InsertPost(samplePost.StandalonePost, cl.post.body, nil)
+	cl.feed.InsertPost(samplePost.Post, nil)
 
 	if err := cl._closePost(); err != nil {
 		t.Fatal(err)

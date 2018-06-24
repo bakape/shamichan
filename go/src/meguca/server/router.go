@@ -129,6 +129,7 @@ func createRouter() http.Handler {
 	json.GET("/board-config/:board", serveBoardConfigs)
 	json.GET("/board-list", serveBoardList)
 	json.GET("/ip-count", serveIPCount)
+	json.GET("/watch", serveThreadWatcher)
 
 	// Internal API
 	api := r.NewGroup("/api")

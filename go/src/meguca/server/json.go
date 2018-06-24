@@ -210,3 +210,22 @@ func serveExtensionMap(w http.ResponseWriter, r *http.Request) {
 func serveIPCount(w http.ResponseWriter, r *http.Request) {
 	serveJSON(w, r, "", feeds.IPCount())
 }
+
+// Serve updates of new posts on selected threads
+func serveThreadWatcher(w http.ResponseWriter, r *http.Request) {
+	vals := r.URL.Query()["id"]
+	threads := make([]uint64, len(vals))
+	var err error
+	for i := 0; i < len(vals); i++ {
+		threads[i], err = strconv.ParseUint(vals[i], 10, 64)
+		if err != nil {
+			text400(w, err)
+			return
+		}
+	}
+
+	err = feeds.WatchThreads(w, r, threads)
+	if err != nil {
+		text500(w, r, err)
+	}
+}

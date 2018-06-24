@@ -14,6 +14,10 @@ var feeds = feedMap{
 	// 64 len map to avoid some possible reallocation as the server starts
 	feeds:   make(map[uint64]*Feed, 64),
 	tvFeeds: make(map[string]*tvFeed, 64),
+	watchers: watcherMap{
+		waiting: make(map[uint64]map[*Watcher]struct{}, 128),
+		bound:   make(map[uint64]map[*Watcher]struct{}, 128),
+	},
 }
 
 // Export without circular dependency
@@ -26,11 +30,20 @@ func init() {
 	common.SpoilerImage = SpoilerImage
 }
 
+// Thread watchers
+type watcherMap struct {
+	// not bound to a thread and waiting for feed
+	waiting map[uint64]map[*Watcher]struct{}
+	// threads watchers are bound and actively listening to
+	bound map[uint64]map[*Watcher]struct{}
+}
+
 // Container for managing client<->update-feed assignment and interaction
 type feedMap struct {
-	feeds   map[uint64]*Feed
-	tvFeeds map[string]*tvFeed
-	mu      sync.RWMutex
+	feeds    map[uint64]*Feed
+	tvFeeds  map[string]*tvFeed
+	watchers watcherMap
+	mu       sync.RWMutex
 }
 
 // Add client to feed and send it the current status of the feed for
@@ -54,8 +67,24 @@ func addToFeed(id uint64, board string, c common.Client) (
 				sendPostMessage: make(chan postMessage),
 				setOpenBody:     make(chan postBodyModMessage),
 				insertImage:     make(chan imageInsertionMessage),
+				addWatcher:      make(chan *Watcher),
+				removeWatcher:   make(chan *Watcher),
 				messageBuffer:   make([]string, 0, 64),
 			}
+
+			// Bind all waiting watchers for this feed
+			feed.watchers = feeds.watchers.waiting[id]
+			if feed.watchers == nil {
+				feed.watchers = make(map[*Watcher]struct{})
+			}
+			// Copy map to avoid locking.
+			feeds.watchers.bound[id] = make(map[*Watcher]struct{},
+				len(feed.watchers))
+			for w := range feed.watchers {
+				feeds.watchers.bound[id][w] = struct{}{}
+			}
+			delete(feeds.watchers.waiting, id)
+
 			feed.baseFeed.init()
 			feeds.feeds[id] = feed
 			err = feed.Start()
@@ -67,6 +96,57 @@ func addToFeed(id uint64, board string, c common.Client) (
 	}
 
 	return
+}
+
+// Subscribe to new posts from threads
+func watchThreads(w *Watcher, threads []uint64) {
+	feeds.mu.Lock()
+	defer feeds.mu.Unlock()
+
+	for _, id := range threads {
+		feed := feeds.feeds[id]
+		if feed != nil {
+			feed.addWatcher <- w
+			feeds.watchers.bound[id][w] = struct{}{}
+		} else {
+			m := feeds.watchers.waiting[id]
+			if m == nil {
+				m = make(map[*Watcher]struct{})
+				feeds.watchers.waiting[id] = m
+			}
+			m[w] = struct{}{}
+		}
+	}
+}
+
+// Unwatch all threads subscribed to by this watcher
+func unwatchThreads(w *Watcher) {
+	feeds.mu.Lock()
+	defer feeds.mu.Unlock()
+
+	for id, watchers := range feeds.watchers.waiting {
+		for watcher := range watchers {
+			if watcher == w {
+				if len(watchers) == 1 {
+					delete(feeds.watchers.waiting, id)
+					goto next
+				}
+				delete(watchers, w)
+			}
+		}
+	next:
+	}
+
+	// Don't delete bound map, if empty, to keep both maps non-nil on the
+	// feedMap and the Feed side
+	for id, watchers := range feeds.watchers.bound {
+		for watcher := range watchers {
+			if watcher == w {
+				feeds.feeds[id].removeWatcher <- w
+				delete(watchers, w)
+			}
+		}
+	}
 }
 
 // Subscribe to random video stream. Clients are automatically unsubscribed,
@@ -104,6 +184,13 @@ func removeFromFeed(id uint64, board string, c common.Client) {
 		// If the feeds sends a non-nil, it means it closed
 		if nil != <-feed.remove {
 			delete(feeds.feeds, feed.id)
+
+			// Move all bound watchers back into waiting
+			w := feeds.watchers.bound[feed.id]
+			if len(w) != 0 { // Drop map, if empty
+				feeds.watchers.waiting[feed.id] = w
+			}
+			delete(feeds.watchers.bound, feed.id)
 		}
 	}
 
@@ -137,7 +224,7 @@ func sendIfExists(id uint64, fn func(*Feed)) error {
 // already closed posts.
 func InsertPostInto(post common.StandalonePost, msg []byte) {
 	sendIfExists(post.OP, func(f *Feed) {
-		f.InsertPost(post, nil, msg)
+		f.InsertPost(post.Post, msg)
 	})
 }
 

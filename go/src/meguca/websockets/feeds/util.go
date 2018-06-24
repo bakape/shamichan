@@ -56,17 +56,17 @@ type baseFeed struct {
 	// Remove client
 	remove chan common.Client
 	// Subscribed clients
-	clients map[common.Client]bool
+	clients map[common.Client]struct{}
 }
 
 func (b *baseFeed) init() {
 	b.add = make(chan common.Client)
 	b.remove = make(chan common.Client)
-	b.clients = make(map[common.Client]bool, 8)
+	b.clients = make(map[common.Client]struct{}, 8)
 }
 
 func (b *baseFeed) addClient(c common.Client) {
-	b.clients[c] = true
+	b.clients[c] = struct{}{}
 }
 
 // If returned true, closing feed and parent listener loop should exit
