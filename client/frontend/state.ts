@@ -4,24 +4,12 @@ import { Post, PostCollection } from './posts'
 import { getClosestID } from './util'
 import { readIDs, storeID } from '../common/db'
 import { send } from './connection'
+import { Configs } from "../common/types";
 
-// Server-wide global configurations
-interface Configs {
-	captcha: boolean
-	mature: boolean // Website intended for mature audiences
-	disableUserBoards: boolean
-	pruneThreads: boolean
-	threadExpiryMin: number
-	threadExpiryMax: number
-	maxSize: number
-	defaultLang: string
-	defaultCSS: string
-	imageRootOverride: string
-	links: { [key: string]: string }
-}
+export { Configs }
 
 // Board-specific configurations
-export interface BoardConfigs {
+export type BoardConfigs = {
 	readOnly: boolean
 	textOnly: boolean
 	forcedAnon: boolean

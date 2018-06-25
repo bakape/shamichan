@@ -8,7 +8,8 @@ const gulp = require('gulp'),
 	cssmin = require('gulp-clean-css'),
 	sourcemaps = require('gulp-sourcemaps'),
 	ts = require('gulp-typescript'),
-	uglify = require('gulp-uglify')
+	uglify = require('gulp-uglify'),
+	jsonminify = require("gulp-jsonminify")
 
 // Keep script alive and rebuild on file changes
 // Triggered with the `-w` flag
@@ -50,6 +51,14 @@ createTask('scripts', 'client/*.js', src =>
 			gulp.start('css'))
 	}
 }
+
+// Language packs
+createTask('lang', 'lang/**/*.json', src =>
+	src
+		.pipe(jsonminify())
+		.on('error', handleError)
+		.pipe(gulp.dest('www/lang'))
+)
 
 gulp.task('default', tasks)
 

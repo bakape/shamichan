@@ -10,6 +10,7 @@ import { boardConfig, page } from "../../state"
 import initDrop from "./drop"
 import initPaste from "./paste"
 import initThreads from "./threads"
+import { Type as IPCType } from "../../../common/ipc";
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
@@ -185,8 +186,18 @@ async function openReply(e: MouseEvent) {
 	postSM.feed(postEvent.open)
 }
 
+function watchThread() {
+	if (!navigator.serviceWorker || !navigator.serviceWorker.controller) {
+		return;
+	}
+	navigator.serviceWorker.controller.postMessage({
+		type: IPCType.watchThread,
+		thread: page.thread,
+	});
+}
+
 export default () => {
-	// Synchronise with connection state machine
+	// Synchronize with connection state machine
 	connSM.on(connState.synced, postSM.feeder(postEvent.sync))
 	connSM.on(connState.dropped, postSM.feeder(postEvent.disconnect))
 	connSM.on(connState.desynced, postSM.feeder(postEvent.error))
@@ -305,8 +316,7 @@ export default () => {
 		stylePostControls(el =>
 			el.style.display = "none")
 	postSM.on(postState.draft, hidePostControls)
-	postSM.on(postState.alloc, () =>
-		hidePostControls())
+	postSM.on(postState.alloc, hidePostControls)
 
 	// Close unallocated draft or commit in non-live mode
 	postSM.act(postState.draft, postEvent.done, (val?: any) => {
@@ -324,6 +334,7 @@ export default () => {
 				needCaptcha = false
 			}
 			postModel.commitNonLive()
+			watchThread()
 			return postState.sendingNonLive
 		}
 
@@ -340,6 +351,7 @@ export default () => {
 	// Close allocated post
 	postSM.act(postState.alloc, postEvent.done, (cancel: any) => {
 		postModel.commitClose(typeof cancel === "boolean" ? cancel : false)
+		watchThread()
 		return postState.ready
 	})
 

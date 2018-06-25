@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bakape/thumbnailer"
@@ -62,6 +63,9 @@ func cleanJoin(a, b string) string {
 
 // Server static assets
 func serveAssets(w http.ResponseWriter, r *http.Request) {
+	if strings.HasSuffix(r.RequestURI, "load-worker.js") {
+		w.Header().Set("Service-Worker-Allowed", "/")
+	}
 	serveFile(w, r, cleanJoin(webRoot, extractParam(r, "path")))
 }
 

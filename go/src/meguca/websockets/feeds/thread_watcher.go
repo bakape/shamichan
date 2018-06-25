@@ -124,7 +124,7 @@ func encodeSSEMessage(op uint64, p common.Post) ([]byte, error) {
 		Body:  p.Body,
 		Links: p.Links,
 	}
-	if i := p.Image; i != nil && i.ThumbType != common.NoFile {
+	if i := p.Image; i != nil && i.ThumbType != common.NoFile && !i.Spoiler {
 		msg.Image = assets.RelativeThumbPath(i.ThumbType, i.SHA1)
 	}
 	buf, err := json.Marshal(msg)
