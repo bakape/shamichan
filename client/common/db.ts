@@ -1,6 +1,6 @@
 // IndexedDB database controller
 
-const dbVersion = 10
+const dbVersion = 11
 
 let db: IDBDatabase
 
@@ -41,9 +41,14 @@ export function open(): Promise<void> {
 			resolve()
 
 			// Reload this tab, if another tab requires a DB upgrade
-			db.onversionchange = () =>
-				(db.close(),
-					location.reload(true))
+			db.onversionchange = () => {
+				db.close();
+				if (location.reload) {
+					location.reload(true); // Browser page
+				} else if (self && self.close) {
+					self.close(); // Service worker
+				}
+			};
 
 			// Delay for quicker starts
 			setTimeout(() => {
@@ -78,44 +83,35 @@ function upgradeDB(event: IDBVersionChangeEvent) {
 			}
 
 			// Various miscellaneous objects
-			const main = db.createObjectStore('main', { keyPath: 'id' })
-			main.add({ id: 'background' })
-			main.add({ id: 'mascot' })
-			break
+			db.createObjectStore('main', { keyPath: 'id' })
 		case 4:
-			// Can't modify data during an upgrade, so do it right after the
-			// "upgrade" completes
-			setTimeout(() => addObj("main", { id: "mascot" }), 1000)
-			break
 		case 5:
-			if (db.objectStoreNames.contains("seenPost")) {
-				break
-			}
-			createOPStore(db, "seenPost")
-			break
 		case 6:
 			// Recreate all previous post ID stores
 			for (let name of postStores) {
-				db.deleteObjectStore(name);
+				if (db.objectStoreNames.contains(name)) {
+					db.deleteObjectStore(name);
+				}
 				createOPStore(db, name)
 			}
-			break
 		case 7:
 			createExpiringStore(db, "watchedThreads");
-			break;
 		case 8:
 			(event as any).currentTarget
 				.transaction
 				.objectStore("mine")
 				.createIndex("id", "id");
-			break;
 		case 9:
 			// Recreate all postStores, so that their primary key is the post ID
 			for (let name of postStores) {
 				db.deleteObjectStore(name);
 				createOPStore(db, name);
 			}
-			break;
+		case 10:
+			// Fix possible complications after faulty upgrade
+			if (!db.objectStoreNames.contains("watchedThreads")) {
+				createExpiringStore(db, "watchedThreads");
+			}
 	}
 }
 
@@ -225,10 +221,6 @@ export function storeID(store: string, id: number, op: number, expiry: number) {
 			expires: Date.now() + expiry,
 		},
 		id, );
-}
-
-function addObj(store: string, obj: any) {
-	newTransaction(store, true).add(obj).onerror = throwErr
 }
 
 // Clear the target object store asynchronously
