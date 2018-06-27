@@ -51,6 +51,13 @@ func (e ErrInvalidThread) Error() string {
 	return fmt.Sprintf("invalid thread: %d on board `%s`", e.ID, e.Board)
 }
 
+// Rune is non-printable
+type ErrNonPrintable rune
+
+func (e ErrNonPrintable) Error() string {
+	return fmt.Sprintf("contains non-printable character: %d", int(e))
+}
+
 // Returns, if client-caused error can be safely ignored and not logged
 func CanIgnoreClientError(err error) bool {
 	switch err {
@@ -60,7 +67,7 @@ func CanIgnoreClientError(err error) bool {
 
 	switch err.(type) {
 	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage,
-		ErrInvalidThread:
+		ErrInvalidThread, ErrNonPrintable:
 		return true
 	}
 

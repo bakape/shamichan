@@ -2,7 +2,6 @@
 package parser
 
 import (
-	"fmt"
 	"meguca/common"
 	"meguca/config"
 	"meguca/util"
@@ -13,13 +12,6 @@ import (
 var (
 	linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
 )
-
-// Rune is non-printable
-type ErrNonPrintable rune
-
-func (e ErrNonPrintable) Error() string {
-	return fmt.Sprintf("contains non-printable character: %d", int(e))
-}
 
 // Needed to avoid cyclic imports for the 'db' package
 func init() {
@@ -119,11 +111,11 @@ func IsPrintable(r rune, multiline bool) error {
 	switch r {
 	case '\t', '\n', 12288: // Japanese space
 		if !multiline {
-			return ErrNonPrintable(r)
+			return common.ErrNonPrintable(r)
 		}
 	default:
 		if !unicode.IsPrint(r) {
-			return ErrNonPrintable(r)
+			return common.ErrNonPrintable(r)
 		}
 	}
 	return nil
