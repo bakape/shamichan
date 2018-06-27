@@ -1,6 +1,6 @@
 {
   "name": "meguca",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "license": "AGPL-3.0",
   "main": "index.js",
   "repository": {
