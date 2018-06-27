@@ -158,7 +158,7 @@ void PostView::parse_spoilers(string_view frag, PostView::OnFrag fn)
 
 void PostView::parse_bolds(string_view frag, PostView::OnFrag fn)
 {
-    parse_string(frag, "__",
+    parse_string(frag, "@@",
         [this, fn](string_view frag) { parse_italics(frag, fn); },
         [this]() {
             wrap_tags(1);
