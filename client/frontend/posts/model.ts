@@ -259,8 +259,8 @@ function endsWithTag(body: string): boolean {
 			return sl === "*"
 		case "`":
 			return sl === "`"
-		case "_":
-			return sl === "_"
+		case "@":
+			return sl === "@"
 		case "~":
 			return sl === "~"
 		case "r":
