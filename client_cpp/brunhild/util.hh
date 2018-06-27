@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string.h>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace brunhild {
@@ -18,11 +20,17 @@ inline size_t string_size(const char* sep) { return strlen(sep); }
 // Append-only rope data structure for more efficient HTML building
 class Rope {
     template <class T> friend Rope& operator<<(Rope& r, const T& s);
+    friend Rope& operator<<(Rope& r, const std::string& s);
+    friend Rope& operator<<(Rope& r, std::string_view s);
+    friend Rope& operator<<(Rope& r, char s);
+    friend Rope& operator<<(Rope& r, const char* s);
 
 public:
     Rope()
     {
         parts.reserve(16);
+        // Calling .back() on an empty vector would be UB, so place one part
+        // here
         parts.emplace_back().reserve(1 << 10);
     }
 
@@ -43,18 +51,29 @@ public:
 
 private:
     std::vector<std::string> parts;
+
+    template <class T> Rope& append(const T& s)
+    {
+        std::string* last = &parts.back();
+        if (last->size() + string_size(s) > last->capacity()) {
+            const auto last_cap = last->capacity();
+            last = &parts.emplace_back();
+            last->reserve(last_cap << 1);
+        }
+        *last += s;
+        return *this;
+    }
 };
 
-// Append anything appendale to a std::string to Rope
-template <class T> Rope& operator<<(Rope& r, const T& s)
+// inline prevents these from colliding with the template during linking
+inline Rope& operator<<(Rope& r, const std::string& s) { return r.append(s); }
+inline Rope& operator<<(Rope& r, std::string_view s) { return r.append(s); }
+inline Rope& operator<<(Rope& r, char s) { return r.append(s); }
+inline Rope& operator<<(Rope& r, const char* s) { return r.append(s); }
+
+// Append anything convertable with std::to_string() to Rope
+template <class T> inline Rope& operator<<(Rope& r, const T& s)
 {
-    std::string* last = &r.parts.back();
-    if (last->size() + string_size(s) > last->capacity()) {
-        const auto last_cap = last->capacity();
-        last = &r.parts.emplace_back();
-        last->reserve(last_cap << 1);
-    }
-    *last += s;
-    return r;
+    return r.append(std::to_string(s));
 }
 }

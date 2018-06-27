@@ -255,8 +255,7 @@ static void render_index_page()
         } else {
             s << "<img";
         }
-        s << " src=\"/assets/banners/" << page.board << '/' << std::to_string(i)
-          << "\"></h1>";
+        s << " src=\"/assets/banners/" << page.board << '/' << i << "\"></h1>";
     }
 
     s << "<h1 id=page-title>" << format_title(page.board, board_config.title)
