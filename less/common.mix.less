@@ -112,9 +112,16 @@ blockquote strong {
 	}
 }
 
-#banner{
+#banner {
 	background: fade(@postBG, 70%);
 	border-bottom: @border;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+#banner:hover {
+	overflow: visible;
 }
 
 b {
