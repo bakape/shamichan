@@ -67,7 +67,7 @@ func CanIgnoreClientError(err error) bool {
 
 	switch err.(type) {
 	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage,
-		ErrInvalidThread, ErrNonPrintable:
+		thumbnailer.ErrCorruptImage, ErrInvalidThread, ErrNonPrintable:
 		return true
 	}
 
