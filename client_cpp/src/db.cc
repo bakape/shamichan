@@ -7,7 +7,7 @@
 #include <unordered_set>
 #include <vector>
 
-const static int db_version = 7;
+const static int db_version = 11;
 
 // Database has errored and all future calls should be ignored
 static bool has_errored = false;
@@ -31,13 +31,22 @@ void open_db(WaitGroup* wg)
                 'hidden',
             ]);
 
+            // Expiring thread data stores
+            window.threadStores = ([
+                // Threads currently watched
+                'watchedThreads',
+            ]);
+
             window.handle_db_error = function(e)
             {
                 Module._handle_db_error(e.toString(), $1);
             };
 
             var r = indexedDB.open('meguca', $0);
-            r.onerror = function(e) { Module.handle_db_error(e.toString()); };
+            r.onerror = function(e)
+            {
+                Module._handle_db_error(e.toString(), $1);
+            };
             r.onupgradeneeded = function(event)
             {
                 var db = event.target.result;
@@ -49,22 +58,34 @@ void open_db(WaitGroup* wg)
                 case 5:
                 case 6:
                     // Delete all previous object stores
-                    for (var i = 0; i < db.objectStoreNames; i++) {
+                    for (var i = 0; i < db.objectStoreNames.length; i++) {
                         db.deleteObjectStore(db.objectStoreNames[i]);
                     }
 
                     // Expiring post ID storage
                     for (var i = 0; i < postStores.length; i++) {
-                        var s = db.createObjectStore(
-                            postStores[i], { autoIncrement : true });
+                        createOPStore(db, postStores[i]);
                     }
-                    s.createIndex('expires', 'expires');
-                    s.createIndex('op', 'op');
 
                     // Various miscellaneous objects
-                    var main = db.createObjectStore('main', { keyPath : 'id' });
-                    main.add({ id : 'background' });
-                    main.add({ id : 'mascot' });
+                    db.createObjectStore('main', { keyPath : 'id' });
+                case 7:
+                    createExpiringStore(db, 'watchedThreads');
+                case 8:
+                    event.currentTarget.transaction.objectStore('mine')
+                        .createIndex('id', 'id');
+                case 9:
+                    // Recreate all postStores, so that their primary key is the
+                    // post ID
+                    for (var i = 0; i < postStores.length; i++) {
+                        db.deleteObjectStore(postStores[i]);
+                        createOPStore(db, postStores[i]);
+                    }
+                case 10:
+                    // Fix possible complications after faulty upgrade
+                    if (!db.objectStoreNames.contains('watchedThreads')) {
+                        createExpiringStore(db, 'watchedThreads');
+                    }
                 }
             };
             r.onsuccess = function()
@@ -85,8 +106,9 @@ void open_db(WaitGroup* wg)
                 // Delay for quicker starts.
                 setTimeout(
                     function() {
-                        for (var i = 0; i < postStores.length; i++) {
-                            var name = postStores[i];
+                        var arr = postStores.concat(threadStores);
+                        for (var i = 0; i < arr.length; i++) {
+                            var name = arr[i];
                             var t = db.transaction(name, 'readwrite');
                             t.onerror = handle_db_error;
 
@@ -107,6 +129,19 @@ void open_db(WaitGroup* wg)
                         }
                     },
                     10000);
+            };
+
+            function createExpiringStore(db, name)
+            {
+                var s = db.createObjectStore(name);
+                s.createIndex('expires', 'expires');
+                return s;
+            }
+
+            // Expiring and with an "op" index
+            function createOPStore(db, name)
+            {
+                createExpiringStore(db, name).createIndex('op', 'op');
             }
         },
         db_version, reinterpret_cast<int>(wg));
