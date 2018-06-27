@@ -134,6 +134,7 @@ func createRouter() http.Handler {
 	// Internal API
 	api := r.NewGroup("/api")
 	api.GET("/socket", websockets.Handler)
+	api.GET("/health_check", healthCheck)
 	api.POST("/upload", imager.NewImageUpload)
 	api.POST("/upload-hash", imager.UploadImageHash)
 	api.POST("/create-thread", createThread)
@@ -237,4 +238,9 @@ func crossRedirect(w http.ResponseWriter, r *http.Request) {
 	default:
 		text500(w, r, err)
 	}
+}
+
+// Health check to ensure server is still online
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("God's in His heaven, all's right with the world"))
 }
