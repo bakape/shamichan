@@ -210,7 +210,7 @@ function parseBolds(
         parseItalics(frag, state, fn)
     let html = ""
     while (true) {
-        const i = frag.indexOf("__")
+        const i = frag.indexOf("@@")
         if (i !== -1) {
             html += _fn(frag.slice(0, i)) + wrapTags(1, state)
             state.bold = !state.bold

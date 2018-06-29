@@ -281,7 +281,7 @@ func (c *bodyContext) parseBolds(frag string, fn func(string)) {
 	}
 
 	for {
-		i := strings.Index(frag, "__")
+		i := strings.Index(frag, "@@")
 		if i != -1 {
 			_fn(frag[:i])
 			c.wrapTags(1)

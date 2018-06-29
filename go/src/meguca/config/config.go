@@ -86,7 +86,7 @@ var (
 const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, FLAC, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ.
 <hr>Encase text in:
   ** for spoilers
-  __ for bold
+  @@ for bold
   ~~ for italics
   ^r for red text
   ^b for blue text
