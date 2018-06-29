@@ -44,22 +44,24 @@ func Init(h handler) {
 		ConsoleHandler = console.New(true)
 		ConsoleHandler.SetTimestampFormat(DefaultTimeFormat)
 		log.AddHandler(ConsoleHandler, log.AllLevels...)
-		break
 	case Email:
 		conf := config.Get()
-		eLog = email.New(conf.EmailErrSub, int(conf.EmailErrPort), conf.EmailErrMail, conf.EmailErrPass,
-			conf.EmailErrMail, []string{conf.EmailErrMail})
+
+		eLog = email.New(conf.EmailErrSub, int(conf.EmailErrPort),
+			conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail,
+			[]string{conf.EmailErrMail})
+
+		eLog.SetEnabled(conf.EmailErr)
 		eLog.SetTimestampFormat(DefaultTimeFormat)
 
 		if conf.EmailErr {
 			once.Do(func() {
-				log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel, log.FatalLevel)
+				log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel,
+					log.AlertLevel, log.FatalLevel)
 			})
 		}
-
-		break
 	default:
-		log.Fatal("Invalid handler: ", h)
+		log.Fatal("Invalid mLog handler: ", h)
 	}
 }
 
@@ -69,13 +71,17 @@ func Update() {
 	defer rw.Unlock()
 
 	conf := config.Get()
-	eLog.SetEmailConfig(conf.EmailErrSub, int(conf.EmailErrPort), conf.EmailErrMail, conf.EmailErrPass,
-		conf.EmailErrMail, []string{conf.EmailErrMail})
 
-	// TODO: Ability to change handler log levels
+	eLog.SetEmailConfig(conf.EmailErrSub, int(conf.EmailErrPort),
+		conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail,
+		[]string{conf.EmailErrMail})
+
+	eLog.SetEnabled(conf.EmailErr)
+
 	if conf.EmailErr {
 		once.Do(func() {
-			log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel, log.FatalLevel)
+			log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel,
+				log.FatalLevel)
 		})
 	}
 }
