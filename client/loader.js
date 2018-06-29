@@ -27,6 +27,21 @@
 		localStorage.setItem("termsAccepted", "true")
 	}
 
+	// Really old browser. Run in noscript mode.
+	if (!window.WebAssembly) {
+		var ns = document.getElementsByTagName("noscript");
+		while (ns.length) { // Collection is live and changes with DOM updates
+			var el = ns[0];
+			var cont = document.createElement("div");
+			cont.innerHTML = el.innerHTML;
+			el.parentNode.replaceChild(cont, el);
+		}
+		var bc = document.getElementById("banner-center");
+		bc.classList.add("admin");
+		bc.innerHTML = "UPDATE YOUR FUCKING BROWSER";
+		return
+	}
+
 	var scriptCount = 0,
 		polyfills = []
 
@@ -151,7 +166,6 @@
 		}
 
 		if (wasm) {
-			// TODO: Preallocate memory to Module['wasmMemory']
 			window.Module = {}
 			fetch("/assets/wasm/main.wasm")
 				.then(function (res) {
