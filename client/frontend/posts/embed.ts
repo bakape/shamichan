@@ -80,11 +80,12 @@ function proxyYoutube(el: Element): Promise<void> {
 async function fetchHookTube(el: Element): Promise<void> {
 	const ref = el.getAttribute("href"),
 	id = strip(ref.split(".com/").pop().split("watch?v=").pop().split("embed/")),
-	res = await fetch(`/api/get_hooktube_title/${id}`)
+	res = await fetch(`/api/get_hooktube_title/${id}`),
+	title = await res.text()
 
 	switch (res.status) {
 	case 200:
-		el.textContent = format(await res.text(), provider.HookTube)
+		el.textContent = format(title, provider.HookTube)
 		break
 	case 500:
 		el.textContent = format("Error 500: HookTube is not available", provider.HookTube)
@@ -98,10 +99,15 @@ async function fetchHookTube(el: Element): Promise<void> {
 		return
 	}
 
+	if (!title) {
+		el.textContent = format("Error: Title does not exist // Unknown", provider.HookTube)
+		el.classList.add("errored")
+		return
+	}
+
 	el.setAttribute("data-html", encodeURIComponent(`<iframe width="480" `
-	+ `height="270" src="https://hooktube.com/embed/${id}?autoplay=false`
-	+ check("start") + check('t') + check("loop") + `" frameborder="0" `
-	+ `allowfullscreen></iframe>`))
+		+ `height="270" src="https://hooktube.com/embed/${id}?autoplay=false`
+		+ check("start") + check('t') + check("loop") + `" allowfullscreen></iframe>`))
 
 	function strip(s: string[]): string {
 		return s.pop().split('&').shift().split('#').shift().split('?').shift()
