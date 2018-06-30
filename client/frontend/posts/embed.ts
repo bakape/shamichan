@@ -107,7 +107,9 @@ async function fetchHookTube(el: Element): Promise<void> {
 
 	el.setAttribute("data-html", encodeURIComponent(`<iframe width="480" `
 		+ `height="270" src="https://hooktube.com/embed/${id}?autoplay=false`
-		+ check("start") + check('t') + check("loop") + `" allowfullscreen></iframe>`))
+		+ check("start") + check('t') + check("loop")
+		+ `" referrerpolicy="no-referrer" sandbox="allow-scripts" `
+		+ `allowfullscreen></iframe>`))
 
 	function strip(s: string[]): string {
 		return s.pop().split('&').shift().split('#').shift().split('?').shift()
