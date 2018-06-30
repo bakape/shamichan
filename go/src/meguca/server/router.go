@@ -18,6 +18,7 @@ import (
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/gorilla/handlers"
+	"github.com/badoux/goscraper"
 )
 
 var (
@@ -135,6 +136,7 @@ func createRouter() http.Handler {
 	api := r.NewGroup("/api")
 	api.GET("/socket", websockets.Handler)
 	api.GET("/health_check", healthCheck)
+	api.GET("/get_hooktube_title/:id", getHookTubeTitle)
 	api.POST("/upload", imager.NewImageUpload)
 	api.POST("/upload-hash", imager.UploadImageHash)
 	api.POST("/create-thread", createThread)
@@ -243,4 +245,17 @@ func crossRedirect(w http.ResponseWriter, r *http.Request) {
 // Health check to ensure server is still online
 func healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("God's in His heaven, all's right with the world"))
+}
+
+// Get HookTube title from ID
+func getHookTubeTitle(w http.ResponseWriter, r *http.Request) {
+	s, err := goscraper.Scrape(
+		"https://hooktube.com/embed/" + extractParam(r, "id"), 3)
+
+	if err != nil {
+		text500(w, r, err)
+		return
+	}
+
+	w.Write([]byte(s.Preview.Title))
 }

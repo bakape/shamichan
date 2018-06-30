@@ -1,10 +1,5 @@
 import { makeAttrs, makeFrag, escape, on, fetchJSON } from "../util"
 
-type HookTubeDoc = {
-	body?: string
-	error?: string
-}
-
 type OEmbedDoc = {
 	title?: string
 	html?: string
@@ -83,42 +78,38 @@ function proxyYoutube(el: Element): Promise<void> {
 
 // fetcher for the HookTube provider
 async function fetchHookTube(el: Element): Promise<void> {
-	// Use a CORS proxy to work around javascript's cross-domain restrictions
 	const ref = el.getAttribute("href"),
-		id = strip(ref.split(".com/").pop().split("watch?v=").pop().split("embed/")),
-		[data, err] = await fetchJSON<HookTubeDoc>("https://cors-proxy.htmldriven.com/?url=" +
-			"https%3A%2F%2Fhooktube.com%2Fapi%3Fmode%3Dvideo%26id%3D" + id),
-		body = JSON.parse(data.body)
+	id = strip(ref.split(".com/").pop().split("watch?v=").pop().split("embed/")),
+	res = await fetch(`/api/get_hooktube_title/${id}`),
+	title = await res.text()
 
-	if (err) {
-		el.textContent = format(err, provider.HookTube)
+	switch (res.status) {
+	case 200:
+		el.textContent = format(title, provider.HookTube)
+		break
+	case 500:
+		el.textContent = format("Error 500: HookTube is not available", provider.HookTube)
 		el.classList.add("errored")
-		console.error(err)
+		return
+	default:
+		const errmsg = `Error ${res.status}: ${res.statusText}`
+		el.textContent = format(errmsg, provider.HookTube)
+		el.classList.add("errored")
+		console.error(errmsg)
 		return
 	}
 
-	if (data.error) {
-		el.textContent = format(data.error, provider.HookTube)
-		el.classList.add("errored")
-		return
-	}
-
-	if (body.error) {
-		el.textContent = format(body.error, provider.HookTube)
-		el.classList.add("errored")
-		return
-	}
-
-	if (!body.json_1) {
-		el.textContent = format("Invalid YouTube video ID / Unknown error", provider.HookTube)
+	if (!title) {
+		el.textContent = format("Error: Title does not exist // Unknown", provider.HookTube)
 		el.classList.add("errored")
 		return
 	}
 
-	el.textContent = format(body.json_1.title, provider.HookTube)
-	el.setAttribute("data-html", encodeURIComponent(
-		`<iframe width="480" height="270" src="https://hooktube.com/embed/${id}?autoplay=false` +
-		check("start") + check('t') + check("loop") + `" frameborder="0" allowfullscreen></iframe>`))
+	el.setAttribute("data-html", encodeURIComponent(`<iframe width="480" `
+		+ `height="270" src="https://hooktube.com/embed/${id}?autoplay=false`
+		+ check("start") + check('t') + check("loop")
+		+ `" referrerpolicy="no-referrer" sandbox="allow-scripts" `
+		+ `allowfullscreen></iframe>`))
 
 	function strip(s: string[]): string {
 		return s.pop().split('&').shift().split('#').shift().split('?').shift()
