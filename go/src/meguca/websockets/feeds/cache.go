@@ -3,18 +3,12 @@ package feeds
 import (
 	"encoding/json"
 	"meguca/common"
-	"sort"
-	"strconv"
 	"time"
-
-	"github.com/mailru/easyjson"
 )
 
 // Persists thread state for syncing clients to server feed
 type threadCache struct {
-	threadMeta
-	Posts    map[uint64]common.Post
-	memoized map[uint64][]byte
+	posts map[uint64]common.Post
 }
 
 type threadMeta struct {
@@ -35,24 +29,11 @@ type threadMeta struct {
 func newThreadCache(t common.Thread) threadCache {
 	cap := len(t.Posts) * 2
 	c := threadCache{
-		threadMeta: threadMeta{
-			id:        t.ID,
-			Sticky:    t.Sticky,
-			NonLive:   t.NonLive,
-			Locked:    t.Locked,
-			PostCtr:   t.PostCtr,
-			ImageCtr:  t.ImageCtr,
-			ReplyTime: t.ReplyTime,
-			BumpTime:  t.BumpTime,
-			Subject:   t.Subject,
-			Board:     t.Board,
-		},
-		Posts:    make(map[uint64]common.Post, cap),
-		memoized: make(map[uint64][]byte, cap),
+		posts: make(map[uint64]common.Post, cap),
 	}
-	c.Posts[t.ID] = t.Post
+	c.posts[t.ID] = t.Post
 	for _, p := range t.Posts {
-		c.Posts[p.ID] = p
+		c.posts[p.ID] = p
 	}
 
 	return c
@@ -66,12 +47,6 @@ type syncMessage struct {
 	Deleted      []uint64            `json:"deleted"`
 	DeletedImage []uint64            `json:"deletedImage"`
 	Open         map[uint64]openPost `json:"open"`
-}
-
-// As syncMessage, but used for the newer protocol with C++ clients
-type cppSyncMessage struct {
-	threadMeta
-	Posts []*common.Post `json:"posts"`
 }
 
 type openPost struct {
@@ -92,7 +67,7 @@ func (c *threadCache) genSyncMessage() []byte {
 		DeletedImage: make([]uint64, 0, 16),
 		Open:         make(map[uint64]openPost, 16),
 	}
-	for id, p := range c.Posts {
+	for id, p := range c.posts {
 		if p.Time > threshold {
 			msg.Recent = append(msg.Recent, id)
 		}
@@ -116,82 +91,4 @@ func (c *threadCache) genSyncMessage() []byte {
 
 	buf, _ := json.Marshal(msg)
 	return common.PrependMessageType(common.MessageSynchronise, buf)
-}
-
-type uintSorter []uint64
-
-func (u uintSorter) Len() int {
-	return len(u)
-}
-
-func (u uintSorter) Less(i, j int) bool {
-	return u[i] < u[j]
-}
-
-func (u uintSorter) Swap(i, j int) {
-	u[i], u[j] = u[j], u[i]
-}
-
-func (c *threadCache) encodeThread(last100 bool) []byte {
-	// Map is randomly ordered, so need to map IDs and sort
-	ids := make([]uint64, 0, len(c.Posts))
-	for id, _ := range c.Posts {
-		ids = append(ids, id)
-	}
-	sort.Sort(uintSorter(ids))
-
-	if last100 {
-		i := len(ids) - 99
-		if i > 0 {
-			// Keep OP in the array
-			sliced := make([]uint64, 100)
-			sliced[0] = ids[0]
-			copy(sliced[1:], ids[i:])
-			ids = sliced
-		}
-	}
-
-	b := make([]byte, 0, 1<<10)
-	b = append(b, `30{"sticky":`...)
-	b = strconv.AppendBool(b, c.Sticky)
-	b = append(b, `,"nonLive":`...)
-	b = strconv.AppendBool(b, c.NonLive)
-	b = append(b, `,"locked":`...)
-	b = strconv.AppendBool(b, c.Locked)
-	b = append(b, `,"deleted":`...)
-	b = strconv.AppendBool(b, c.Posts[c.id].Deleted)
-	b = append(b, `,"postCtr":`...)
-	b = strconv.AppendUint(b, uint64(c.PostCtr), 10)
-	b = append(b, `,"imageCtr":`...)
-	b = strconv.AppendUint(b, uint64(c.ImageCtr), 10)
-	b = append(b, `,"time":`...)
-	b = strconv.AppendInt(b, c.Posts[c.id].Time, 10)
-	b = append(b, `,"replyTime":`...)
-	b = strconv.AppendInt(b, c.ReplyTime, 10)
-	b = append(b, `,"bumpTime":`...)
-	b = strconv.AppendInt(b, c.BumpTime, 10)
-	b = append(b, `,"subject":`...)
-	b = strconv.AppendQuote(b, c.Subject)
-	b = append(b, `,"board":`...)
-	b = strconv.AppendQuote(b, c.Board)
-	b = append(b, `,"posts":[`...)
-	for i, id := range ids {
-		if i != 0 {
-			b = append(b, ',')
-		}
-
-		mem, ok := c.memoized[id]
-		if !ok {
-			mem, _ = easyjson.Marshal(c.Posts[id])
-			c.memoized[id] = mem
-		}
-		b = append(b, mem...)
-	}
-	b = append(b, "]}"...)
-	return b
-}
-
-// Clear memoized post JSON, if any
-func (c *threadCache) deleteMemoized(id uint64) {
-	delete(c.memoized, id)
 }

@@ -55,13 +55,6 @@ func (c *Client) synchronise(data []byte) error {
 		}
 	}
 
-	c.mu.Lock()
-	// TODO: Specifying a different version should error out after the WASM
-	// client is phased in
-	c.newProtocol = msg.ProtocolVersion == common.ProtocolVersion
-	c.last100 = msg.Last100
-	c.mu.Unlock()
-
 	if msg.ProtocolVersion == common.ProtocolVersion {
 		buf, err := common.EncodeMessage(common.MessageConfigs,
 			config.GetBoardConfigs(msg.Board).BoardConfigs)

@@ -40,7 +40,7 @@ ifeq ($(DEBUG),1)
 endif
 
 wasm_clean:
-	$(MAKE) -C client_cpp clean
+	# $(MAKE) -C client_cpp clean
 	rm -f www/wasm/*.js www/wasm/*.wasm www/wasm/*.map www/wasm/*.wast
 
 watch:

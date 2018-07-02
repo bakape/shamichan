@@ -34,11 +34,6 @@ func serveHTML(
 	writeData(w, r, data)
 }
 
-// Client is requesting the new wasm page
-func isWasm(r *http.Request) bool {
-	return r.URL.Query().Get("wasm") == "true"
-}
-
 // Serves board HTML to regular or noscript clients
 func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 	if !auth.IsBoard(b) {
@@ -46,12 +41,6 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 		return
 	}
 	if !assertNotBanned(w, r, b) {
-		return
-	}
-
-	theme := resolveTheme(r, b)
-	if isWasm(r) {
-		serveHTML(w, r, "", templates.WasmIndex(theme), nil)
 		return
 	}
 
@@ -85,7 +74,7 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 	}
 
 	html = templates.Board(
-		b, theme,
+		b, resolveTheme(r, b),
 		n, total,
 		pos,
 		r.URL.Query().Get("minimal") == "true", catalog,
@@ -117,13 +106,6 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b := extractParam(r, "board")
-	theme := resolveTheme(r, b)
-	if isWasm(r) {
-		serveHTML(w, r, "", templates.WasmIndex(theme), nil)
-		return
-	}
-
 	lastN := detectLastN(r)
 	k := cache.ThreadKey(id, lastN)
 	html, data, ctr, err := cache.GetHTML(k, cache.ThreadFE)
@@ -144,9 +126,10 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	thread := data.(common.Thread)
+	b := extractParam(r, "board")
 	html = templates.Thread(
 		id,
-		b, thread.Subject, theme,
+		b, thread.Subject, resolveTheme(r, b),
 		lastN != 0, thread.Locked,
 		pos,
 		html,

@@ -1,13 +1,10 @@
 import { View } from '../base'
 import { HTML, makeFrag, uncachedGET, inputElement } from '../util'
 
-const selected = new Set<string>(),
-	panel = document.getElementById("left-panel"),
-	spacer = document.getElementById("left-spacer")
+const selected = new Set<string>();
 
 let navigation: BoardNavigation,
-	selectionPanel: BoardSelectionPanel,
-	lastPanelWidth: number
+	selectionPanel: BoardSelectionPanel
 
 // View for navigating between boards and selecting w
 class BoardNavigation extends View<null> {
@@ -67,7 +64,8 @@ class BoardSelectionPanel extends View<null> {
 	private parentEl: Element
 
 	constructor(parentEl: Element) {
-		super({ class: "board-selection-panel" })
+		super({ class: "board-selection-panel glass modal" });
+		this.el.setAttribute("style", "margin-left: .5em; display: block");
 		this.parentEl = parentEl
 		this.render()
 		this.onClick({
@@ -131,7 +129,7 @@ class BoardSelectionPanel extends View<null> {
 		for (let el of document.querySelectorAll(".board-selection-panel")) {
 			el.remove()
 		}
-		panel.append(this.el)
+		document.getElementById("modal-overlay").prepend(this.el);
 	}
 
 	public remove() {
@@ -159,7 +157,7 @@ class BoardSelectionPanel extends View<null> {
 		const term = (event.target as HTMLInputElement).value.trim(),
 			regexp = new RegExp(term, 'i')
 
-		for (let el of this.el.querySelectorAll("label")) {
+		for (let el of this.el.querySelectorAll(".board-list label")) {
 			let display: string
 			if (regexp.test(el.querySelector("a").textContent)) {
 				display = "block"
@@ -188,29 +186,12 @@ function persistSelected() {
 	localStorage.setItem("selectedBoards", [...selected].join())
 }
 
-// Shift thread to the right, when the side panel is rendered or mutated
-function shiftThread() {
-	const w = panel.offsetWidth
-	if (w === lastPanelWidth) {
-		return
-	}
-	lastPanelWidth = w
-	spacer.style.width = w + "px"
-}
-
 // Returns, if board links should point to catalog pages
 function pointToCatalog() {
 	return localStorage.getItem("pointToCatalog") === "true"
 }
 
 export default () => {
-	new MutationObserver(shiftThread).observe(panel, {
-		childList: true,
-		attributes: true,
-		characterData: true,
-		subtree: true,
-	})
-
 	// Read selected boards from localStorage
 	const sel = localStorage.getItem("selectedBoards")
 	if (sel) {

@@ -9,4 +9,4 @@ do
 done
 
 . /emsdk/emsdk_env.sh
-make test wasm
+make test # TODO: Reenable for wasm library: wasm

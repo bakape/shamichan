@@ -106,8 +106,6 @@ type Client interface {
 	Send([]byte)
 	Redirect(board string)
 	IP() string
-	NewProtocol() bool
-	Last100() bool
 	Close(error)
 }
 
