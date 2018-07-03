@@ -78,7 +78,6 @@ server_deps:
 update_deps:
 	go get -u -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
 	go list -f '{{.Deps}}' meguca | tr -d '[]' | xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' | grep -v 'meguca' | xargs go get -u -v
-	npm update
 
 client_clean:
 	rm -rf www/js www/css/*.css www/css/maps node_modules
