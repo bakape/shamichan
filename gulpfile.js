@@ -10,7 +10,6 @@ const gulp = require('gulp'),
 	ts = require('gulp-typescript'),
 	uglify = require('gulp-uglify'),
 	jsonminify = require("gulp-jsonminify")
-const compiler = require('google-closure-compiler-js').gulp();
 
 // Keep script alive and rebuild on file changes
 // Triggered with the `-w` flag
@@ -71,16 +70,15 @@ function buildClient(name) {
 				typescript: require("typescript"),
 			})())
 			.on('error', handleError)
-			.pipe(compiler({
-				// Higher levels don't seem to produce valid code
-				compilationLevel: 'WHITESPACE_ONLY',
-				warningLevel: "QUIET",
-				languageIn: "ES6",
-				languageOut: "ES6",
-				jsOutputFile: `${out}.js`,  // outputs single file
-				createSourceMap: true,
-			}))
-			.on('error', handleError)
+			// .pipe(compiler({
+			// 	// Higher levels don't seem to produce valid code
+			// 	compilationLevel: 'WHITESPACE_ONLY',
+			// 	warningLevel: "QUIET",
+			// 	languageIn: "ES6",
+			// 	languageOut: "ES6",
+			// 	jsOutputFile: `${out}.js`,  // outputs single file
+			// 	createSourceMap: true,
+			// }))
 			.pipe(sourcemaps.write('maps'))
 			.pipe(gulp.dest('www/js'))
 	)
