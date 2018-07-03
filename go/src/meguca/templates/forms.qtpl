@@ -40,7 +40,7 @@ BoardNavigation renders a board selection and search form
 				{%s= ln["pointToCatalog"] %}
 			</label>
 		</span>
-		<div>
+		<div class="board-list">
 			{% for _, b := range config.GetBoardTitles() %}
 				<label class="board">
 					<input type="checkbox" name="{%s= b.ID %}">
