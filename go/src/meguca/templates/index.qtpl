@@ -371,16 +371,25 @@
 			For hover previews
 		{% endcomment %}
 		<div class="overlay" id="hover-overlay"></div>
-		{% comment %}
-			Contains posts, page navigation, title, image banner and the catalog.
-			Is injected on the second parse of this template
-		{% endcomment %}
-		<section id="threads">
+		<div id="page-container">
+			<section id="left-panel" class="side-panel glass"></section>
 			{% comment %}
-				Post HTML and data
+				Used to move #threads to the side, when a #left-panel is shown
 			{% endcomment %}
-			$$$
-		</section>
+			<div id="left-spacer" class="side-spacer"></div>
+			{% comment %}
+				Contains posts, page navigation, title, image banner and the catalog.
+				Is injected on the second parse of this template
+			{% endcomment %}
+			<section id="threads">
+				{% comment %}
+					Post HTML and data
+				{% endcomment %}
+				$$$
+			</section>
+			<section id="right-panel" class="side-panel glass"></section>
+			<div id="right-spacer" class="side-spacer"></div>
+		</div>
 		{% comment %}
 			Dynamic module loader
 		{% endcomment %}

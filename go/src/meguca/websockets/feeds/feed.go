@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"meguca/common"
 	"meguca/db"
+	"time"
 
 	"github.com/go-playground/log"
 )
@@ -96,7 +97,11 @@ func (f *Feed) Start() (err error) {
 			// Add client
 			case c := <-f.add:
 				f.addClient(c)
-				c.Send(f.cache.genSyncMessage())
+				if c.NewProtocol() {
+					c.Send(f.cache.encodeThread(c.Last100()))
+				} else {
+					c.Send(f.cache.genSyncMessage())
+				}
 				f.sendIPCount()
 
 			// Remove client and close feed, if no clients left
@@ -127,16 +132,25 @@ func (f *Feed) Start() (err error) {
 			// Insert a new post, cache and propagate
 			case p := <-f.insertPost:
 				f.startIfPaused()
-				f.cache.posts[p.ID] = p.Post
+				f.cache.Posts[p.ID] = p.Post
 				if p.msg != nil { // Post not being reclaimed by a DC-ed client
 					f.write(p.msg)
+					if f.cache.PostCtr <= 3000 {
+						f.cache.BumpTime = time.Now().Unix()
+					}
+					f.cache.PostCtr++
+					if p.Image != nil {
+						f.cache.ImageCtr++
+					}
+				} else {
+					f.cache.deleteMemoized(p.ID)
 				}
 
 			// Close an open post
 			case msg := <-f.closePost:
 				f.startIfPaused()
 
-				p := f.cache.posts[msg.id]
+				p := f.cache.Posts[msg.id]
 				p.Editing = false
 				p.Links = msg.links
 				p.Commands = msg.commands
@@ -152,48 +166,53 @@ func (f *Feed) Start() (err error) {
 					}
 				}
 
-				f.cache.posts[msg.id] = p
+				f.cache.Posts[msg.id] = p
 				f.write(msg.msg)
+				f.cache.deleteMemoized(msg.id)
 
 			// Set the body of an open post and propagate
 			case msg := <-f.setOpenBody:
 				f.startIfPaused()
-				p := f.cache.posts[msg.id]
+				p := f.cache.Posts[msg.id]
 				p.Body = string(msg.body)
-				f.cache.posts[msg.id] = p
+				f.cache.Posts[msg.id] = p
 				f.write(msg.msg)
+				f.cache.deleteMemoized(msg.id)
 
 			case msg := <-f.insertImage:
 				f.startIfPaused()
-				p := f.cache.posts[msg.id]
+				p := f.cache.Posts[msg.id]
 				p.Image = &msg.Image
-				f.cache.posts[msg.id] = p
+				f.cache.Posts[msg.id] = p
+				f.cache.ImageCtr++
 				f.write(msg.msg)
+				f.cache.deleteMemoized(msg.id)
 
 			// Various post-related messages
 			case msg := <-f.sendPostMessage:
 				f.startIfPaused()
 				switch msg.typ {
 				case spoilerImage:
-					p := f.cache.posts[msg.id]
+					p := f.cache.Posts[msg.id]
 					if p.Image != nil {
 						p.Image.Spoiler = true
 					}
-					f.cache.posts[msg.id] = p
+					f.cache.Posts[msg.id] = p
 				case ban:
-					p := f.cache.posts[msg.id]
+					p := f.cache.Posts[msg.id]
 					p.Banned = true
-					f.cache.posts[msg.id] = p
+					f.cache.Posts[msg.id] = p
 				case deletePost:
-					p := f.cache.posts[msg.id]
+					p := f.cache.Posts[msg.id]
 					p.Deleted = true
-					f.cache.posts[msg.id] = p
+					f.cache.Posts[msg.id] = p
 				case deleteImage:
-					p := f.cache.posts[msg.id]
+					p := f.cache.Posts[msg.id]
 					p.Image = nil
-					f.cache.posts[msg.id] = p
+					f.cache.Posts[msg.id] = p
 				}
 				f.write(msg.msg)
+				f.cache.deleteMemoized(msg.id)
 			}
 		}
 	}()

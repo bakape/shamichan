@@ -92,3 +92,8 @@ func execIndex(html, title, theme string, pos auth.ModerationLevel) []byte {
 		t[3],
 	}, nil)
 }
+
+// Render index page for WASM clients
+func WasmIndex(theme string) []byte {
+	return []byte(renderIndexWasm(theme))
+}

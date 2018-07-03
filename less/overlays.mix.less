@@ -83,6 +83,27 @@
 	text-overflow: ellipsis;
 }
 
+.side-panel {
+	&:not(:empty) {
+		padding: 1em;
+	}
+	&:empty {
+		border: none;
+	}
+	z-index: 10;
+	position: fixed;
+	height: ~"calc(100% - 3.7em)";
+	bottom: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.side-spacer {
+	top: 0;
+	bottom: 0;
+	height: 100%;
+}
+
 #left-panel, #left-spacer {
 	left: 0;
 	margin-left: 0;
@@ -179,7 +200,7 @@ input[type=number], input[type=text], input[type=password], textarea {
 	pointer-events: all;
 }
 
-.modal, #banner, .reply-form, .popup-menu, .preview {
+.modal, #banner, .side-panel:not(:empty), .reply-form, .popup-menu, .preview {
 	box-shadow: 3px 3px 3px 0 rgba(0,0,0,0.5);
 }
 

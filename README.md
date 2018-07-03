@@ -185,3 +185,12 @@ the client
 thumbnails
 * To enable using Go tools in the project add the absolute path of `./go` to
 your `$GOPATH` environment variable
+
+### C++ client
+For developing the new C++ client
+
+* Run `git submodule update --init --recursive`
+* Install [Emscripten](http://kripken.github.io/emscripten-site/docs/getting_started/downloads.html)
+* Ensure Emscripten environment variables by running `source emsdk_env.sh` in your shell
+* Use `DEBUG=1 make wasm` and `make wasm_clean` to compile the C++ client and clean build directories
+* To use the C++ client for meguca add the `?wasm=true` query string to the end of the URL

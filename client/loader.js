@@ -110,7 +110,9 @@
 		window.crypto.subtle = window.crypto.webkitSubtle
 	}
 
+	var wasm = /[\?&]wasm=true/.test(location.search)
 	var head = document.getElementsByTagName('head')[0]
+
 	if (polyfills.length) {
 		for (var i = 0; i < polyfills.length; i++) {
 			scriptCount++
@@ -163,25 +165,25 @@
 				Array.prototype[Symbol.iterator]
 		}
 
-		//  TODO: Reenable for wasm library
-		// if (wasm) {
-		// 	window.Module = {}
-		// 	fetch("/assets/wasm/main.wasm")
-		// 		.then(function (res) {
-		// 			return res.arrayBuffer()
-		// 		})
-		// 		.then(function (bytes) {
-		// 			// TODO: Parallel downloads of main.js and main.wasm
-		// 			Module.wasmBinary = bytes
-		// 			var script = document.createElement('script')
-		// 			script.src = "/assets/wasm/main.js"
-		// 			document.head.appendChild(script)
-		// 		})
-		// } else {
-		loadScript("js/main").onload = function () {
-			require("frontend/main")
-		};
-		// }
+		if (wasm) {
+			window.Module = {}
+			fetch("/assets/wasm/main.wasm")
+				.then(function (res) {
+					return res.arrayBuffer()
+				})
+				.then(function (bytes) {
+					// TODO: Parallel downloads of main.js and main.wasm
+					Module.wasmBinary = bytes
+					var script = document.createElement('script')
+					script.src = "/assets/wasm/main.js"
+					document.head.appendChild(script)
+				})
+		} else {
+			loadScript("js/main")
+				.onload = function () {
+					require("frontend/main")
+				}
+		}
 
 		if ('serviceWorker' in navigator
 			&& (

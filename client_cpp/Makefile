@@ -15,16 +15,22 @@ else
 		COMPILE_FLAGS+=-O1
 	endif
 endif
+COMPILE_FLAGS:=$(COMPILE_FLAGS) -I$(abspath ./json/include)
 export EMCCFLAGS=$(COMPILE_FLAGS) -Wall -Wextra -Wno-switch -Wno-unused-parameter -Werror
 
 all: clean_output
+	$(MAKE) -C brunhild
 	$(MAKE) -C src
-	emcc -o linked.bc $(COMPILE_FLAGS) $(LTO) $(SETTINGS)
-	emcc linked.bc -o wasm.js -s WASM=1 $(COMPILE_FLAGS) $(LTO) $(SETTINGS)
+	emcc src/*.bc src/page/*.bc src/posts/*.bc src/options/*.bc src/connection/*.bc brunhild/*.bc -o linked.bc $(COMPILE_FLAGS) $(LTO) $(SETTINGS)
+ifeq ($(DEBUG),0)
+	emcc linked.bc -o main.js --separate-asm -Wno-separate-asm $(COMPILE_FLAGS) $(LTO) $(SETTINGS)
+endif
+	emcc linked.bc -o main.js -s WASM=1 $(COMPILE_FLAGS) $(LTO) $(SETTINGS)
 
 clean_output:
 	rm -f *.wasm *.wast *.js *.wasm.map *.js
 
 clean: clean_output
 	rm -f *.bc
+	$(MAKE) -C brunhild clean
 	$(MAKE) -C src clean
