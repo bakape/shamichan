@@ -192,7 +192,7 @@
 			)
 		) {
 			navigator.serviceWorker
-				.register("/assets/js/load-worker.js", { scope: "/" })
+				.register("/assets/js/worker.js", { scope: "/" })
 				.catch(function (err) {
 					throw err
 				})
