@@ -1,12 +1,16 @@
 // Common types and constants in a separate module to avoid circular
 // dependencies
 
-import { PostLink } from "../../common/types";
-export { PostLink }
-
 // Detect FireFox, so we can disable any functionality it's retarded bugs and
 // data races break
 export const isCuck = navigator.userAgent.toLowerCase().includes("firefox")
+
+// Generic link object containing target post board and thread
+export type PostLink = {
+	id: number
+	op: number
+	board: string
+}
 
 // Data of any post. In addition to server-sent JSON includes the state
 // property.

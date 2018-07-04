@@ -1,7 +1,16 @@
 // Provides type-safe and selective mappings for the language packs.
 // Must not use imports, to preserve load order.
 
-import { LanguagePack } from "../common/types";
+type LanguagePack = {
+	posts: { [key: string]: string }
+	plurals: { [key: string]: [string, string] }
+	time: {
+		calendar: string[]
+		week: string[]
+	}
+	ui: { [key: string]: string }
+	sync: string[]
+}
 
 export default JSON.parse(
 	document
