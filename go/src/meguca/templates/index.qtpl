@@ -393,6 +393,6 @@
 			{% code buf, _ = json.Marshal(config.GetBoardTitles()) %}
 			{%z= buf %}
 		</script>
-		<script src="/assets/js/loader.js"></script>
+		<script src="/assets/js/scripts/loader.js"></script>
 	</body>
 {% endstripspace %}{% endfunc %}

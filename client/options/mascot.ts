@@ -1,4 +1,4 @@
-import { putObj, getObj } from "../../common/db"
+import { putObj, getObj } from "../db"
 import options from "."
 
 type Store = {

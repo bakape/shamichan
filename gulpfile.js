@@ -18,15 +18,23 @@ const watch = gutil.env.w
 const tasks = []
 
 // Client JS files
-buildClient("frontend")
+createTask("client", `client/**/*.ts`, src =>
+	src.pipe(sourcemaps.init())
+		.pipe(ts.createProject("client/tsconfig.json", {
+			typescript: require("typescript"),
+		})())
+		.on('error', handleError)
+		.pipe(sourcemaps.write('maps'))
+		.pipe(gulp.dest('www/js'))
+)
 
 // Various little scripts
-createTask('scripts', 'client/*.js', src =>
+createTask('scripts', 'clientScripts/*.js', src =>
 	src.pipe(sourcemaps.init())
 		.pipe(uglify())
 		.on('error', handleError)
 		.pipe(sourcemaps.write('maps'))
-		.pipe(gulp.dest('www/js'))
+		.pipe(gulp.dest('www/js/scripts'))
 )
 
 // Compile Less to CSS
@@ -51,33 +59,6 @@ createTask('scripts', 'client/*.js', src =>
 }
 
 gulp.task('default', tasks)
-
-function buildClient(name) {
-	const out = name === "frontend" ? "main" : "worker";
-	createTask(name, `client/${name}/**/*.ts`, src =>
-		src.pipe(sourcemaps.init())
-			.pipe(ts.createProject(`client/${name}/tsconfig.json`, {
-				typescript: require("typescript"),
-			})())
-			.on('error', handleError)
-			// .pipe(compiler({
-			// 	// Higher levels don't seem to produce valid code
-			// 	compilationLevel: 'WHITESPACE_ONLY',
-			// 	warningLevel: "QUIET",
-			// 	languageIn: "ES6",
-			// 	languageOut: "ES6",
-			// 	jsOutputFile: `${out}.js`,  // outputs single file
-			// 	createSourceMap: true,
-			// }))
-			.pipe(sourcemaps.write('maps'))
-			.pipe(gulp.dest('www/js'))
-	)
-
-	// Also watch common client files
-	if (watch) {
-		gulp.watch("client/common/**/*.ts", [name])
-	}
-}
 
 // Simply log the error on continuos builds, but fail the build and exit with
 // an error status, if failing a one-time build. This way we can use failure to

@@ -4,7 +4,7 @@ import stackBlur from './stackBlur'
 import options from '.'
 import { displayLoading } from '../state'
 import { HTML, load } from '../util'
-import { getObj, putObj } from '../../common/db'
+import { getObj, putObj } from '../db'
 
 type BackgroundStore = {
 	id: string
@@ -97,7 +97,7 @@ async function renderBackground(bg?: BackgroundStore): Promise<void> {
 		}`
 
 	// Add blurred background image to elements, if theme is glass or ocean
-	const { theme } = options
+	const {theme} = options
 	if (theme === 'glass' || theme === 'ocean') {
 		html += ' ' + renderGlass(theme, bg.blurred)
 	}
@@ -106,7 +106,7 @@ async function renderBackground(bg?: BackgroundStore): Promise<void> {
 
 // Apply transparent blurred glass background to elements with the 'glass' class
 function renderGlass(theme: string, blob: Blob): string {
-	const { normal, editing, highlight } = colourMap[theme],
+	const {normal, editing, highlight} = colourMap[theme],
 		blurred = URL.createObjectURL(blob)
 	return HTML
 		`.glass {

@@ -83,7 +83,7 @@
 		DOMUpToDate = check(s)
 	}
 
-	if (!DOMUpToDate || window.legacy) {
+	if (!DOMUpToDate) {
 		polyfills.push('js/vendor/dom4')
 	}
 
@@ -179,10 +179,9 @@
 					document.head.appendChild(script)
 				})
 		} else {
-			loadScript("js/main")
-				.onload = function () {
-					require("frontend/main")
-				}
+			loadScript("js/main").onload = function () {
+				require("main")
+			}
 		}
 
 		if ('serviceWorker' in navigator

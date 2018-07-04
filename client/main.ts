@@ -2,7 +2,7 @@
 
 import { loadFromDB, page, posts, storeMine } from './state'
 import { start as connect, connSM, connState } from './connection'
-import { open } from '../common/db'
+import { open } from './db'
 import { initOptions } from "./options"
 import initPosts from "./posts"
 import { postSM, postEvent, FormModel } from "./posts"

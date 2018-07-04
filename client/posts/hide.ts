@@ -2,7 +2,7 @@
 
 import { storeHidden, hidden, posts } from "../state"
 import { Post } from "./model"
-import { clearStore } from "../../common/db"
+import { clearStore } from "../db"
 import { trigger } from "../util"
 import options from "../options"
 
