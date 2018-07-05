@@ -29,14 +29,7 @@ var (
 
 	// For overriding during tests
 	imageWebRoot = "images"
-
-	// Path to the service worker script. Overrideable in tests.
-	workerPath = getWorkerPath()
 )
-
-func getWorkerPath() string {
-	return filepath.FromSlash(webRoot + "/js/scripts/worker.js")
-}
 
 // More performant handler for serving image assets. These are immutable
 // (except deletion), so we can also set separate caching policies for them.
@@ -63,7 +56,7 @@ func cleanJoin(a, b string) string {
 
 // Server static assets
 func serveAssets(w http.ResponseWriter, r *http.Request) {
-	if strings.HasSuffix(r.RequestURI, "load-worker.js") {
+	if strings.HasSuffix(r.RequestURI, "worker.js") {
 		w.Header().Set("Service-Worker-Allowed", "/")
 	}
 	serveFile(w, r, cleanJoin(webRoot, extractParam(r, "path")))
