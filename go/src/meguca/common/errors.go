@@ -3,6 +3,7 @@ package common
 import (
 	"errors"
 	"fmt"
+	"meguca/util"
 	"strconv"
 	"strings"
 
@@ -60,8 +61,10 @@ func (e ErrNonPrintable) Error() string {
 
 // Returns, if client-caused error can be safely ignored and not logged
 func CanIgnoreClientError(err error) bool {
+recheck:
 	switch err {
-	case ErrBanned, ErrInvalidCaptcha, ErrSpamDected, websocket.ErrCloseSent:
+	case ErrBanned, ErrInvalidCaptcha, ErrSpamDected, websocket.ErrCloseSent,
+		nil:
 		return true
 	}
 
@@ -69,6 +72,9 @@ func CanIgnoreClientError(err error) bool {
 	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage,
 		thumbnailer.ErrCorruptImage, ErrInvalidThread, ErrNonPrintable:
 		return true
+	case util.WrappedError:
+		err = err.(util.WrappedError).Inner
+		goto recheck
 	}
 
 	// Ignore client-side connection loss
