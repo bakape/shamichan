@@ -56,16 +56,6 @@ type serverConfigs struct {
 	Address, Database, CertPath, ReverseProxyIP *string
 }
 
-// Creates a heap pointer to a uint
-func newFloat(i float64) *float64 {
-	return &i
-}
-
-// Creates a heap pointer to a uint
-func newString(s string) *string {
-	return &s
-}
-
 func validateImagerMode(m *uint) {
 	if *m > 2 {
 		panic(fmt.Errorf("invalid imager mode: %d", *m))
@@ -116,16 +106,15 @@ func Start() error {
 	switch {
 	case os.IsNotExist(err):
 		err = nil
-		setConfigDefaults(&conf)
 	case err == nil:
 		err = json.Unmarshal(buf, &conf)
 		if err != nil {
 			return err
 		}
-		setConfigDefaults(&conf)
 	default:
 		return err
 	}
+	setConfigDefaults(&conf)
 
 	// Define flags
 	flag.StringVar(
@@ -162,7 +151,7 @@ func Start() error {
 		"IP of the reverse proxy. Only needed, when reverse proxy is not on localhost.",
 	)
 	flag.BoolVar(&enableGzip, "g", *conf.Gzip, "compress all traffic with gzip")
-	flag.UintVar(conf.ImagerMode, "i", 0,
+	flag.UintVar(conf.ImagerMode, "i", *conf.ImagerMode,
 		`image processing and serving mode for this instance
 0	handle image processing and serving and all other functionality (default)
 1	handle all functionality except for image processing and serving
