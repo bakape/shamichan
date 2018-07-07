@@ -83,7 +83,7 @@ func createRouter() http.Handler {
 	r.GET("/robots.txt", serveRobotsTXT)
 
 	api := r.NewGroup("/api")
-	api.GET("/health_check", healthCheck)
+	api.GET("/health-check", healthCheck)
 	assets := r.NewGroup("/assets")
 	if config.ImagerMode != config.NoImager {
 		api.POST("/upload", imager.NewImageUpload)
