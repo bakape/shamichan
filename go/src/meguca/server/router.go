@@ -83,6 +83,7 @@ func createRouter() http.Handler {
 	r.GET("/robots.txt", serveRobotsTXT)
 
 	api := r.NewGroup("/api")
+	api.GET("/health_check", healthCheck)
 	assets := r.NewGroup("/assets")
 	if config.ImagerMode != config.NoImager {
 		api.POST("/upload", imager.NewImageUpload)
@@ -145,7 +146,6 @@ func createRouter() http.Handler {
 
 		// Internal API
 		api.GET("/socket", websockets.Handler)
-		api.GET("/health_check", healthCheck)
 		api.GET("/get_hooktube_title/:id", getHookTubeTitle)
 		api.POST("/create-thread", createThread)
 		api.POST("/create-reply", createReply)
