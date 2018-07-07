@@ -80,7 +80,7 @@ function proxyYoutube(el: Element): Promise<void> {
 async function fetchHookTube(el: Element): Promise<void> {
 	const ref = el.getAttribute("href"),
 	id = strip(ref.split(".com/").pop().split("watch?v=").pop().split("embed/")),
-	res = await fetch(`/api/get_hooktube_title/${id}`),
+	res = await fetch(`/api/get-hooktube-title/${id}`),
 	title = await res.text()
 
 	switch (res.status) {

@@ -146,7 +146,7 @@ func createRouter() http.Handler {
 
 		// Internal API
 		api.GET("/socket", websockets.Handler)
-		api.GET("/get_hooktube_title/:id", getHookTubeTitle)
+		api.GET("/get-hooktube-title/:id", getHookTubeTitle)
 		api.POST("/create-thread", createThread)
 		api.POST("/create-reply", createReply)
 		api.POST("/register", register)
