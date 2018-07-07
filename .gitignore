@@ -1,8 +1,8 @@
 .directory
-.pid
+*.pid
+*.log
 .vscode
 *.dll
-error.log
 node_modules
 /meguca
 /meguca.exe

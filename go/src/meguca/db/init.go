@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"meguca/auth"
+	"meguca/config"
 	"meguca/util"
 	"time"
 
@@ -71,9 +72,10 @@ func LoadDB() (err error) {
 	tasks = append(
 		tasks,
 		func() error {
-			tasks := []func() error{
-				openBoltDB, loadConfigs, loadBans,
-				loadBanners, loadLoadingAnimations,
+			tasks := []func() error{loadConfigs}
+			if config.ImagerMode != config.ImagerOnly {
+				tasks = append(tasks, openBoltDB, loadBanners,
+					loadLoadingAnimations, loadBans)
 			}
 			if err := util.Parallel(tasks...); err != nil {
 				return err
@@ -90,7 +92,7 @@ func LoadDB() (err error) {
 		return
 	}
 
-	if !IsTest {
+	if !IsTest && config.ImagerMode != config.ImagerOnly {
 		go runCleanupTasks()
 	}
 

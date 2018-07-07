@@ -2,6 +2,7 @@
 	"ssl": false,
 	"reverseProxied": false,
 	"gzip": false,
+	"imagerMode": 0,
 	"cacheSize": 128,
 	"address": "127.0.0.1:8000",
 	"database": "user=meguca password=meguca dbname=meguca sslmode=disable",

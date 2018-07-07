@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"meguca/auth"
 	"meguca/cache"
+	"meguca/config"
 	"meguca/db"
 	"meguca/geoip"
 	"meguca/imager/assets"
@@ -19,6 +20,7 @@ import (
 	"meguca/util"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/ErikDubbelboer/gspt"
 	"github.com/go-playground/log"
@@ -49,24 +51,9 @@ var (
 // Flags override this. All fields are optional.
 type serverConfigs struct {
 	SSL, ReverseProxied, Gzip                   *bool
+	ImagerMode                                  *uint
 	CacheSize                                   *float64
 	Address, Database, CertPath, ReverseProxyIP *string
-}
-
-var defaultServerConfigs = serverConfigs{
-	SSL:            newBool(false),
-	ReverseProxied: newBool(false),
-	Gzip:           newBool(false),
-	CacheSize:      newFloat(128),
-	Address:        newString("127.0.0.1:8000"),
-	Database:       newString(db.DefaultConnArgs),
-	CertPath:       newString(""),
-	ReverseProxyIP: newString(""),
-}
-
-// Creates a heap pointer to a bool
-func newBool(b bool) *bool {
-	return &b
 }
 
 // Creates a heap pointer to a uint
@@ -79,32 +66,45 @@ func newString(s string) *string {
 	return &s
 }
 
+func validateImagerMode(m *uint) {
+	if *m > 2 {
+		panic(fmt.Errorf("invalid imager mode: %d", *m))
+	}
+}
+
 // Iterate struct fields and assign defaults to missing fields
 func setConfigDefaults(c *serverConfigs) {
-	d := defaultServerConfigs
 	if c.SSL == nil {
-		c.SSL = d.SSL
+		c.SSL = new(bool)
 	}
 	if c.ReverseProxied == nil {
-		c.ReverseProxied = d.ReverseProxied
+		c.ReverseProxied = new(bool)
 	}
 	if c.Gzip == nil {
-		c.Gzip = d.Gzip
+		c.Gzip = new(bool)
+	}
+	if c.ImagerMode == nil {
+		c.ImagerMode = new(uint)
+	} else {
+		validateImagerMode(c.ImagerMode)
 	}
 	if c.CacheSize == nil {
-		c.CacheSize = d.CacheSize
+		c.CacheSize = new(float64)
+		*c.CacheSize = 128
 	}
 	if c.Address == nil {
-		c.Address = d.Address
+		c.Address = new(string)
+		*c.Address = "127.0.0.1:8000"
 	}
 	if c.Database == nil {
-		c.Database = d.Database
+		c.Database = new(string)
+		*c.Database = db.DefaultConnArgs
 	}
 	if c.CertPath == nil {
-		c.CertPath = d.CertPath
+		c.CertPath = new(string)
 	}
 	if c.ReverseProxyIP == nil {
-		c.ReverseProxyIP = d.ReverseProxyIP
+		c.ReverseProxyIP = new(string)
 	}
 }
 
@@ -145,8 +145,8 @@ func Start() error {
 		&ssl,
 		"s",
 		*conf.SSL,
-		"serve and listen only through HTTPS. Requires -ssl-cert and "+
-			"-ssl-key to be set",
+		"serve and listen only through HTTPS. Requires --ssl-cert and "+
+			"--ssl-key to be set",
 	)
 	flag.StringVar(&sslCert, "S", *conf.CertPath, "path to SSL certificate")
 	flag.BoolVar(
@@ -162,6 +162,11 @@ func Start() error {
 		"IP of the reverse proxy. Only needed, when reverse proxy is not on localhost.",
 	)
 	flag.BoolVar(&enableGzip, "g", *conf.Gzip, "compress all traffic with gzip")
+	flag.UintVar(conf.ImagerMode, "i", 0,
+		`image processing and serving mode for this instance
+0	handle image processing and serving and all other functionality (default)
+1	handle all functionality except for image processing and serving
+2	only handle image processing and serving`)
 	flag.Usage = printUsage
 
 	// Parse command line arguments
@@ -169,12 +174,14 @@ func Start() error {
 	if cache.Size < 0 {
 		return errors.New("cache size must be a positive number")
 	}
+	validateImagerMode(conf.ImagerMode)
+	config.ImagerMode = config.ImagerModeType(*conf.ImagerMode)
 	arg := flag.Arg(0)
 	if arg == "" {
 		arg = "debug"
 	}
 
-	// Can't daemonise in windows, so only args they have is "start" and "help"
+	// Can't daemonize in windows, so only args they have is "start" and "help"
 	if isWindows {
 		switch arg {
 		case "debug", "start":
@@ -185,7 +192,19 @@ func Start() error {
 			printUsage()
 		}
 	} else {
-		gspt.SetProcTitle(os.Args[0])
+		// Censor DB connection string, if any
+		args := make([]string, 0, len(os.Args))
+		for i := 0; i < len(os.Args); i++ {
+			arg := os.Args[i]
+			if strings.HasSuffix(arg, "-d") { // To match both -d and --d
+				args = append(args, arg, "****")
+				i++ // Jump to args after password
+			} else {
+				args = append(args, arg)
+			}
+		}
+		gspt.SetProcTitle(strings.Join(args, " "))
+
 		handleDaemon(arg)
 	}
 

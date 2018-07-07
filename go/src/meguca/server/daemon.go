@@ -5,6 +5,7 @@
 package server
 
 import (
+	"meguca/config"
 	"meguca/log"
 	"os"
 	"syscall"
@@ -16,6 +17,11 @@ import (
 
 func init() {
 	handleDaemon = func(arg string) {
+		if config.ImagerMode == config.ImagerOnly {
+			daemonContext.PidFileName = ".imager.pid"
+			daemonContext.LogFileName = "imager_error.log"
+		}
+
 		switch arg {
 		case "debug":
 			mLog.Init(mLog.Console)
@@ -32,7 +38,7 @@ func init() {
 		case "start":
 			mLog.Init(mLog.Console)
 			mLog.ConsoleHandler.SetDisplayColor(false)
-			daemonise()
+			daemonize()
 		default:
 			printUsage()
 		}
@@ -46,7 +52,7 @@ var daemonContext = &daemon.Context{
 }
 
 // Spawn a detached process to work in the background
-func daemonise() {
+func daemonize() {
 	child, err := daemonContext.Reborn()
 	if err != nil && err.Error() == "resource temporarily unavailable" {
 		log.Fatal("Error: Server already running")

@@ -11,6 +11,23 @@ import (
 	"sync"
 )
 
+// Imager functionality setting for this meguca process
+type ImagerModeType int
+
+const (
+	// Regular and imager functionality both handled by this process
+	IntegratedImager ImagerModeType = iota
+
+	// Imager functionality not handled by this process
+	NoImager
+
+	// Only imager functionality handled by this process
+	ImagerOnly
+)
+
+// Imager functionality setting for this meguca process
+var ImagerMode ImagerModeType
+
 var (
 	// Ensures no reads happen, while the configuration is reloading
 	globalMu, boardMu sync.RWMutex
@@ -20,6 +37,9 @@ var (
 
 	// Map of board IDs to their configuration structs
 	boardConfigs = map[string]BoardConfContainer{}
+
+	// Don't handle image processing and serving in this instance
+	noImager bool
 
 	// AllBoardConfigs stores board-specific configurations for the /all/
 	// metaboard. Constant.

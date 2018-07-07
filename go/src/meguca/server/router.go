@@ -15,10 +15,10 @@ import (
 	"runtime/debug"
 	"strconv"
 
+	"github.com/badoux/goscraper"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/gorilla/handlers"
-	"github.com/badoux/goscraper"
 )
 
 var (
@@ -82,110 +82,117 @@ func createRouter() http.Handler {
 
 	r.GET("/robots.txt", serveRobotsTXT)
 
-	// HTML
-	r.GET("/", redirectToDefault)
-	r.GET("/:board/", func(w http.ResponseWriter, r *http.Request) {
-		boardHTML(w, r, extractParam(r, "board"), false)
-	})
-	r.GET("/:board/catalog", func(w http.ResponseWriter, r *http.Request) {
-		boardHTML(w, r, extractParam(r, "board"), true)
-	})
-	// Needs override, because it conflicts with crossRedirect
-	r.GET("/all/catalog", func(w http.ResponseWriter, r *http.Request) {
-		// Artificially set board to "all"
-		boardHTML(w, r, "all", true)
-	})
-	r.GET("/:board/:thread", threadHTML)
-	r.GET("/all/:id", crossRedirect)
-
-	html := r.NewGroup("/html")
-	html.GET("/board-navigation", boardNavigation)
-	html.GET("/owned-boards/:userID", ownedBoardSelection)
-	html.GET("/create-board", boardCreationForm)
-	html.GET("/change-password", changePasswordForm)
-	html.GET("/captcha", renderCaptcha)
-	html.POST("/configure-board/:board", boardConfigurationForm)
-	html.POST("/configure-server", serverConfigurationForm)
-	html.GET("/assign-staff/:board", staffAssignmentForm)
-	html.GET("/set-banners", bannerSettingForm)
-	html.GET("/set-loading", loadingAnimationForm)
-	html.GET("/bans/:board", banList)
-	html.GET("/mod-log/:board", modLog)
-	html.GET("/report/:id", reportForm)
-	html.GET("/reports/:board", reportList)
-
-	// JSON API
-	json := r.NewGroup("/json")
-	boards := json.NewGroup("/boards")
-	boards.GET("/:board/", func(w http.ResponseWriter, r *http.Request) {
-		boardJSON(w, r, false)
-	})
-	boards.GET("/:board/catalog", func(w http.ResponseWriter, r *http.Request) {
-		boardJSON(w, r, true)
-	})
-	boards.GET("/:board/:thread", threadJSON)
-	json.GET("/post/:post", servePost)
-	json.GET("/config", serveConfigs)
-	json.GET("/extensions", serveExtensionMap)
-	json.GET("/board-config/:board", serveBoardConfigs)
-	json.GET("/board-list", serveBoardList)
-	json.GET("/ip-count", serveIPCount)
-	json.GET("/watch", serveThreadWatcher)
-
-	// Internal API
 	api := r.NewGroup("/api")
-	api.GET("/socket", websockets.Handler)
-	api.GET("/health_check", healthCheck)
-	api.GET("/get_hooktube_title/:id", getHookTubeTitle)
-	api.POST("/upload", imager.NewImageUpload)
-	api.POST("/upload-hash", imager.UploadImageHash)
-	api.POST("/create-thread", createThread)
-	api.POST("/create-reply", createReply)
-	api.POST("/register", register)
-	api.POST("/login", login)
-	api.POST("/logout", logout)
-	api.POST("/logout-all", logoutAll)
-	api.POST("/change-password", changePassword)
-	api.POST("/board-config/:board", servePrivateBoardConfigs)
-	api.POST("/configure-board/:board", configureBoard)
-	api.POST("/config", servePrivateServerConfigs)
-	api.POST("/configure-server", configureServer)
-	api.POST("/create-board", createBoard)
-	api.POST("/delete-board", deleteBoard)
-	api.POST("/delete-post", deletePost)
-	api.POST("/delete-image", deleteImage)
-	api.POST("/spoiler-image", modSpoilerImage)
-	api.POST("/ban", ban)
-	api.POST("/notification", sendNotification)
-	api.POST("/assign-staff", assignStaff)
-	api.POST("/same-IP/:id", getSameIPPosts)
-	api.POST("/sticky", setThreadSticky)
-	api.POST("/lock-thread", setThreadLock)
-	api.POST("/unban/:board", unban)
-	api.POST("/set-banners", setBanners)
-	api.POST("/set-loading", setLoadingAnimation)
-	api.POST("/report", report)
-
-	redir := api.NewGroup("/redirect")
-	redir.POST("/by-ip", redirectByIP)
-	redir.POST("/by-thread", redirectByThread)
-
-	// Captcha API
-	captcha := api.NewGroup("/captcha")
-	captcha.GET("/new", auth.NewCaptchaID)
-	captcha.GET("/image/*path", auth.ServeCaptcha)
-
-	// Noscript captcha API
-	NSCaptcha := captcha.NewGroup("/noscript")
-	NSCaptcha.GET("/load", noscriptCaptchaLink)
-	NSCaptcha.GET("/new", noscriptCaptcha)
-
-	// Assets
 	assets := r.NewGroup("/assets")
-	assets.GET("/banners/:board/:id", serveBanner)
-	assets.GET("/loading/:board", serveLoadingAnimation)
-	assets.GET("/images/*path", serveImages)
-	assets.GET("/*path", serveAssets)
+	if config.ImagerMode != config.NoImager {
+		api.POST("/upload", imager.NewImageUpload)
+		api.POST("/upload-hash", imager.UploadImageHash)
+
+		assets.GET("/images/*path", serveImages)
+	}
+	if config.ImagerMode != config.ImagerOnly {
+		// HTML
+		r.GET("/", redirectToDefault)
+		r.GET("/:board/", func(w http.ResponseWriter, r *http.Request) {
+			boardHTML(w, r, extractParam(r, "board"), false)
+		})
+		r.GET("/:board/catalog", func(w http.ResponseWriter, r *http.Request) {
+			boardHTML(w, r, extractParam(r, "board"), true)
+		})
+		// Needs override, because it conflicts with crossRedirect
+		r.GET("/all/catalog", func(w http.ResponseWriter, r *http.Request) {
+			// Artificially set board to "all"
+			boardHTML(w, r, "all", true)
+		})
+		r.GET("/:board/:thread", threadHTML)
+		r.GET("/all/:id", crossRedirect)
+
+		html := r.NewGroup("/html")
+		html.GET("/board-navigation", boardNavigation)
+		html.GET("/owned-boards/:userID", ownedBoardSelection)
+		html.GET("/create-board", boardCreationForm)
+		html.GET("/change-password", changePasswordForm)
+		html.GET("/captcha", renderCaptcha)
+		html.POST("/configure-board/:board", boardConfigurationForm)
+		html.POST("/configure-server", serverConfigurationForm)
+		html.GET("/assign-staff/:board", staffAssignmentForm)
+		html.GET("/set-banners", bannerSettingForm)
+		html.GET("/set-loading", loadingAnimationForm)
+		html.GET("/bans/:board", banList)
+		html.GET("/mod-log/:board", modLog)
+		html.GET("/report/:id", reportForm)
+		html.GET("/reports/:board", reportList)
+
+		// JSON API
+		json := r.NewGroup("/json")
+		boards := json.NewGroup("/boards")
+		boards.GET("/:board/", func(w http.ResponseWriter, r *http.Request) {
+			boardJSON(w, r, false)
+		})
+		boards.GET("/:board/catalog", func(w http.ResponseWriter,
+			r *http.Request,
+		) {
+			boardJSON(w, r, true)
+		})
+		boards.GET("/:board/:thread", threadJSON)
+		json.GET("/post/:post", servePost)
+		json.GET("/config", serveConfigs)
+		json.GET("/extensions", serveExtensionMap)
+		json.GET("/board-config/:board", serveBoardConfigs)
+		json.GET("/board-list", serveBoardList)
+		json.GET("/ip-count", serveIPCount)
+		json.GET("/watch", serveThreadWatcher)
+
+		// Internal API
+		api.GET("/socket", websockets.Handler)
+		api.GET("/health_check", healthCheck)
+		api.GET("/get_hooktube_title/:id", getHookTubeTitle)
+		api.POST("/create-thread", createThread)
+		api.POST("/create-reply", createReply)
+		api.POST("/register", register)
+		api.POST("/login", login)
+		api.POST("/logout", logout)
+		api.POST("/logout-all", logoutAll)
+		api.POST("/change-password", changePassword)
+		api.POST("/board-config/:board", servePrivateBoardConfigs)
+		api.POST("/configure-board/:board", configureBoard)
+		api.POST("/config", servePrivateServerConfigs)
+		api.POST("/configure-server", configureServer)
+		api.POST("/create-board", createBoard)
+		api.POST("/delete-board", deleteBoard)
+		api.POST("/delete-post", deletePost)
+		api.POST("/delete-image", deleteImage)
+		api.POST("/spoiler-image", modSpoilerImage)
+		api.POST("/ban", ban)
+		api.POST("/notification", sendNotification)
+		api.POST("/assign-staff", assignStaff)
+		api.POST("/same-IP/:id", getSameIPPosts)
+		api.POST("/sticky", setThreadSticky)
+		api.POST("/lock-thread", setThreadLock)
+		api.POST("/unban/:board", unban)
+		api.POST("/set-banners", setBanners)
+		api.POST("/set-loading", setLoadingAnimation)
+		api.POST("/report", report)
+
+		redir := api.NewGroup("/redirect")
+		redir.POST("/by-ip", redirectByIP)
+		redir.POST("/by-thread", redirectByThread)
+
+		// Captcha API
+		captcha := api.NewGroup("/captcha")
+		captcha.GET("/new", auth.NewCaptchaID)
+		captcha.GET("/image/*path", auth.ServeCaptcha)
+
+		// Noscript captcha API
+		NSCaptcha := captcha.NewGroup("/noscript")
+		NSCaptcha.GET("/load", noscriptCaptchaLink)
+		NSCaptcha.GET("/new", noscriptCaptcha)
+
+		// Assets
+		assets.GET("/banners/:board/:id", serveBanner)
+		assets.GET("/loading/:board", serveLoadingAnimation)
+		assets.GET("/*path", serveAssets)
+	}
 
 	h := http.Handler(r)
 	if enableGzip {
@@ -250,7 +257,7 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 // Get HookTube title from ID
 func getHookTubeTitle(w http.ResponseWriter, r *http.Request) {
 	s, err := goscraper.Scrape(
-		"https://hooktube.com/embed/" + extractParam(r, "id"), 3)
+		"https://hooktube.com/embed/"+extractParam(r, "id"), 3)
 
 	if err != nil {
 		text500(w, r, err)
