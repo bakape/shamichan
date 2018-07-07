@@ -551,7 +551,7 @@ func (c *bodyContext) parseCommands(bit string) {
 		inner = append(inner, s...)
 		c.state.iDice++
 	case "8ball":
-		inner = append(inner, val.Eightball...)
+		inner = append(inner, html.EscapeString(val.Eightball)...)
 		c.state.iDice++
 	case "pyu", "pcount", "rcount":
 		switch val.Type {

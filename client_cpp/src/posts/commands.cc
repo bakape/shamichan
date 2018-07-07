@@ -212,19 +212,19 @@ optional<Node> PostView::parse_commands(string_view word)
         inner = std::get<bool>(val.val) ? "flap" : "flop";
     } else if (name == "8ball") {
         check_consumed;
-        inner = val.eight_ball;
+        inner = brunhild::escape(val.eight_ball);
     } else if (name == "pyu" || name == "pcount" || name == "rcount") {
         check_consumed;
 
         switch (val.typ) {
-          case Command::Type::pyu:
-          case Command::Type::pcount:
-              // Protect from index shifts on board_config.pyu toggle
-              if (!board_config.pyu) {
-                  break;
-              }
-          case Command::Type::rcount:
-              inner = std::to_string(std::get<unsigned long>(val.val));
+        case Command::Type::pyu:
+        case Command::Type::pcount:
+            // Protect from index shifts on board_config.pyu toggle
+            if (!board_config.pyu) {
+                break;
+            }
+        case Command::Type::rcount:
+            inner = std::to_string(std::get<unsigned long>(val.val));
         }
     } else if (name == "roulette") {
         check_consumed;
