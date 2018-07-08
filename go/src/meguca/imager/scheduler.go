@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"meguca/common"
 	"meguca/db"
 	"mime/multipart"
 
@@ -23,7 +24,6 @@ type jobRequest struct {
 }
 
 type thumbnailingResponse struct {
-	code    int
 	imageID string
 	err     error
 }
@@ -35,12 +35,12 @@ func requestThumbnailing(
 ) <-chan thumbnailingResponse {
 	ch := make(chan thumbnailingResponse)
 
-	// Small uploads can be scheduled to their own goroutine concurently without
-	// much resource contention
+	// Small uploads can be scheduled to their own goroutine concurrently
+	// without much resource contention
 	if size <= smallUploadSize {
 		go func() {
-			code, id, err := processRequest(file)
-			ch <- thumbnailingResponse{code, id, err}
+			id, err := processRequest(file)
+			ch <- thumbnailingResponse{id, err}
 		}()
 	} else {
 		scheduleJob <- jobRequest{file, ch}
@@ -53,20 +53,19 @@ func init() {
 	go func() {
 		for {
 			req := <-scheduleJob
-			code, id, err := processRequest(req.file)
-			req.res <- thumbnailingResponse{code, id, err}
+			id, err := processRequest(req.file)
+			req.res <- thumbnailingResponse{id, err}
 		}
 	}()
 }
 
-func processRequest(file multipart.File) (code int, id string, err error) {
+func processRequest(file multipart.File) (string, error) {
 	buf := bytes.NewBuffer(thumbnailer.GetBuffer())
-	_, err = buf.ReadFrom(file)
+	_, err := buf.ReadFrom(file)
 	data := buf.Bytes()
 	defer thumbnailer.ReturnBuffer(data)
 	if err != nil {
-		code = 500
-		return
+		return "", common.StatusError{err, 500}
 	}
 
 	sum := sha1.Sum(data)
@@ -74,12 +73,11 @@ func processRequest(file multipart.File) (code int, id string, err error) {
 	img, err := db.GetImage(SHA1)
 	switch err {
 	case nil: // Already have a thumbnail
-		return newImageToken(SHA1)
+		return db.NewImageToken(SHA1)
 	case sql.ErrNoRows:
 		img.SHA1 = SHA1
 		return newThumbnail(data, img)
 	default:
-		code = 500
-		return
+		return "", common.StatusError{err, 500}
 	}
 }

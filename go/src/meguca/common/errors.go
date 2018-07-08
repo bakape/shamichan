@@ -4,10 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"meguca/util"
-	"strconv"
 	"strings"
 
-	"github.com/bakape/thumbnailer"
 	"github.com/gorilla/websocket"
 )
 
@@ -17,62 +15,86 @@ var (
 	ErrSubjectTooLong      = ErrTooLong("subject")
 	ErrPostPasswordTooLong = ErrTooLong("post password")
 	ErrBodyTooLong         = ErrTooLong("post body")
-	ErrInvalidCreds        = errors.New("invalid login credentials")
-	ErrContainsNull        = errors.New("null byte in non-concatenated message")
-	ErrBanned              = errors.New("you are banned from this board")
-	ErrInvalidCaptcha      = errors.New("invalid captcha provided")
-	ErrInvalidBoard        = errors.New("invalid board")
+	ErrContainsNull        = ErrInvalidInput("null byte in message")
+	ErrInvalidCaptcha      = ErrInvalidInput("captcha")
+	ErrInvalidCreds        = ErrAccessDenied("login credentials")
+	ErrBanned              = ErrAccessDenied("you are banned from this board")
 
 	// The poster is almost certainly spamming
-	ErrSpamDected = errors.New("spam detected")
+	ErrSpamDected = ErrAccessDenied("spam detected")
 )
+
+// Simple error with HTTP status code attached
+type StatusError struct {
+	Err  error
+	Code int
+}
+
+func (e StatusError) Error() string {
+	var prefix string
+	switch e.Code {
+	case 400:
+		prefix = "invalid input"
+	case 403:
+		prefix = "access denied"
+	case 404:
+		prefix = "not found"
+	case 500:
+		prefix = "internal server error"
+	}
+	return fmt.Sprintf("%s: %s", prefix, e.Err)
+}
 
 // ErrTooLong is passed, when a field exceeds the maximum string length for
 // that specific field
-type ErrTooLong string
-
-func (e ErrTooLong) Error() string {
-	return string(e) + " too long"
+func ErrTooLong(s string) error {
+	return StatusError{errors.New(s + " too long"), 400}
 }
 
-// ErrInvalidPostID signifies that the post ID passed by the client is invalid
-// in some way. In what way exactly should be evident from the API endpoint.
-type ErrInvalidPostID uint64
+// Invalid user input was suplied
+func ErrInvalidInput(s string) error {
+	return StatusError{errors.New(s), 400}
+}
 
-func (e ErrInvalidPostID) Error() string {
-	return "invalid post ID: " + strconv.FormatUint(uint64(e), 10)
+// User does not have enough access rights
+func ErrAccessDenied(s string) error {
+	return StatusError{errors.New(s), 403}
+}
+
+// User input has non-printable runes
+func ErrNonPrintable(r rune) error {
+	return StatusError{
+		fmt.Errorf("contains non-printable character: %d", int(r)),
+		400,
+	}
 }
 
 // No such thread on this board
-type ErrInvalidThread struct {
-	ID    uint64
-	Board string
+func ErrInvalidThread(id uint64, board string) error {
+	return StatusError{
+		fmt.Errorf("no thread %d on board `%s`", id, board),
+		404,
+	}
 }
 
-func (e ErrInvalidThread) Error() string {
-	return fmt.Sprintf("invalid thread: %d on board `%s`", e.ID, e.Board)
-}
-
-// Rune is non-printable
-type ErrNonPrintable rune
-
-func (e ErrNonPrintable) Error() string {
-	return fmt.Sprintf("contains non-printable character: %d", int(e))
+// Invalid board provided
+func ErrInvalidBoard(board string) error {
+	return StatusError{fmt.Errorf("board `%s` does not exist", board), 404}
 }
 
 // Returns, if client-caused error can be safely ignored and not logged
 func CanIgnoreClientError(err error) bool {
 recheck:
 	switch err {
-	case ErrBanned, ErrInvalidCaptcha, ErrSpamDected, websocket.ErrCloseSent,
-		ErrInvalidBoard, nil:
+	case websocket.ErrCloseSent, nil:
 		return true
 	}
 
 	switch err.(type) {
-	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage,
-		thumbnailer.ErrCorruptImage, ErrInvalidThread, ErrNonPrintable:
-		return true
+	case StatusError:
+		if c := err.(StatusError).Code; c >= 400 && c < 500 {
+			return true
+		}
 	case util.WrappedError:
 		err = err.(util.WrappedError).Inner
 		goto recheck

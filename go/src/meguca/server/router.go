@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"compress/gzip"
-	"database/sql"
 	"fmt"
 	"meguca/auth"
 	"meguca/config"
@@ -60,6 +59,15 @@ func startWebServer() (err error) {
 	return
 }
 
+func handlePanic(w http.ResponseWriter, r *http.Request, err interface{}) {
+	http.Error(w, fmt.Sprintf("500 %s", err), 500)
+	ip, ipErr := auth.GetIP(r)
+	if ipErr != nil {
+		ip = "invalid IP"
+	}
+	log.Errorf("server: %s: %#v\n%s\n", ip, err, debug.Stack())
+}
+
 // Create the monolithic router for routing HTTP requests. Separated into own
 // function for easier testability.
 func createRouter() http.Handler {
@@ -67,18 +75,7 @@ func createRouter() http.Handler {
 	r.NotFoundHandler = func(w http.ResponseWriter, _ *http.Request) {
 		text404(w)
 	}
-	r.PanicHandler = func(
-		w http.ResponseWriter,
-		r *http.Request,
-		err interface{},
-	) {
-		http.Error(w, fmt.Sprintf("500 %s", err), 500)
-		ip, ipErr := auth.GetIP(r)
-		if ipErr != nil {
-			ip = "invalid IP"
-		}
-		log.Errorf("server: %s: %#v\n%s\n", ip, err, debug.Stack())
-	}
+	r.PanicHandler = handlePanic
 
 	r.GET("/robots.txt", serveRobotsTXT)
 
@@ -232,21 +229,18 @@ func crossRedirect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	board, op, err := db.GetPostParenthood(id)
-	switch err {
-	case nil:
-		url := r.URL
-		url.Path = fmt.Sprintf("/%s/%d", board, op)
-		if url.Query().Get("last") != "" {
-			url.Fragment = "bottom"
-		} else {
-			url.Fragment = "p" + idStr
-		}
-		http.Redirect(w, r, url.String(), 301)
-	case sql.ErrNoRows:
-		text404(w)
-	default:
-		text500(w, r, err)
+	if err != nil {
+		httpError(w, r, err)
+		return
 	}
+	url := r.URL
+	url.Path = fmt.Sprintf("/%s/%d", board, op)
+	if url.Query().Get("last") != "" {
+		url.Fragment = "bottom"
+	} else {
+		url.Fragment = "p" + idStr
+	}
+	http.Redirect(w, r, url.String(), 301)
 }
 
 // Health check to ensure server is still online
@@ -260,7 +254,7 @@ func getHookTubeTitle(w http.ResponseWriter, r *http.Request) {
 		"https://hooktube.com/embed/"+extractParam(r, "id"), 3)
 
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 

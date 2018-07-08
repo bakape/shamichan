@@ -5,6 +5,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"meguca/common"
+	"meguca/config"
+	"meguca/db"
+	"meguca/imager/assets"
+	. "meguca/test"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -12,12 +17,6 @@ import (
 	"strings"
 	"sync"
 	"testing"
-
-	"meguca/common"
-	"meguca/config"
-	"meguca/db"
-	"meguca/imager/assets"
-	. "meguca/test"
 )
 
 func init() {
@@ -130,7 +129,7 @@ func TestInvalidContentLengthHeader(t *testing.T) {
 		"Content-Length": "KAWFEE",
 	})
 
-	_, _, err := ParseUpload(req)
+	_, err := ParseUpload(req)
 	if s := fmt.Sprint(err); !strings.Contains(s, "invalid syntax") {
 		UnexpectedError(t, err)
 	}
@@ -143,9 +142,8 @@ func TestUploadTooLarge(t *testing.T) {
 	req := newRequest(t, b, w)
 	req.Header.Set("Content-Length", "1048577")
 
-	if _, _, err := ParseUpload(req); err != errTooLarge {
-		UnexpectedError(t, err)
-	}
+	_, err := ParseUpload(req)
+	AssertDeepEquals(t, common.StatusError{errTooLarge, 400}, err)
 }
 
 func TestInvalidForm(t *testing.T) {
@@ -156,7 +154,7 @@ func TestInvalidForm(t *testing.T) {
 		"Content-Type":   "GWEEN TEA",
 	})
 
-	if _, _, err := ParseUpload(req); err == nil {
+	if _, err := ParseUpload(req); err == nil {
 		t.Fatal("expected an error")
 	}
 }
@@ -189,7 +187,7 @@ func TestAPNGThumbnailing(t *testing.T) {
 			}
 			data := readSample(t, "sample."+ext)
 
-			if _, _, err := newThumbnail(data, img); err != nil {
+			if _, err := newThumbnail(data, img); err != nil {
 				t.Fatal(err)
 			}
 
@@ -205,11 +203,8 @@ func TestNoImageUploaded(t *testing.T) {
 	req := newRequest(t, b, w)
 	req.Header.Set("Content-Length", "300792")
 
-	code, _, err := ParseUpload(req)
-	if err != http.ErrMissingFile {
-		UnexpectedError(t, err)
-	}
-	assertCode(t, code, 400)
+	_, err := ParseUpload(req)
+	AssertDeepEquals(t, common.StatusError{http.ErrMissingFile, 400}, err)
 }
 
 func TestThumbNailReuse(t *testing.T) {
@@ -218,11 +213,10 @@ func TestThumbNailReuse(t *testing.T) {
 
 	for i := 1; i <= 2; i++ {
 		req := newJPEGRequest(t)
-		code, _, err := ParseUpload(req)
+		_, err := ParseUpload(req)
 		if err != nil {
 			t.Fatal(err)
 		}
-		assertCode(t, code, 200)
 	}
 }
 
@@ -233,11 +227,10 @@ func TestUploadImageHash(t *testing.T) {
 	std := assets.StdJPEG
 
 	req := newJPEGRequest(t)
-	code, _, err := ParseUpload(req)
+	_, err := ParseUpload(req)
 	if err != nil {
 		t.Fatal(err)
 	}
-	assertCode(t, code, 200)
 
 	rec := httptest.NewRecorder()
 	b := bytes.NewReader([]byte(std.SHA1))
@@ -260,22 +253,5 @@ func TestUploadImageHashNoHash(t *testing.T) {
 	}
 	if s := rec.Body.String(); s != "" {
 		t.Errorf("unexpected response body: `%s`", s)
-	}
-}
-
-func TestErrorPassing(t *testing.T) {
-	t.Parallel()
-
-	const ip = "::1"
-	req := httptest.NewRequest("GET", "/", nil)
-	req.RemoteAddr = ip
-	rec := httptest.NewRecorder()
-
-	NewImageUpload(rec, req)
-
-	assertCode(t, rec.Code, 400)
-	const errMsg = "strconv.ParseUint: parsing \"\": invalid syntax\n"
-	if s := rec.Body.String(); s != errMsg {
-		t.Errorf("unexpected body: `%s`", s)
 	}
 }

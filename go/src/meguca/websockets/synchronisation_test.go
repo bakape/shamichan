@@ -52,9 +52,7 @@ func TestSyncToBoard(t *testing.T) {
 		Board:  "c",
 	}
 	err := cl.synchronise(marshalJSON(t, msg))
-	if err != common.ErrInvalidBoard {
-		UnexpectedError(t, err)
-	}
+	AssertDeepEquals(t, common.ErrInvalidBoard("c"), err)
 
 	// Valid synchronization
 	msg.Board = "a"
@@ -131,11 +129,7 @@ func TestInvalidThreadSync(t *testing.T) {
 		Board:  "a",
 		Thread: 1,
 	})
-	std := &common.ErrInvalidThread{
-		ID:    1,
-		Board: "a",
-	}
-	AssertDeepEquals(t, std, cl.synchronise(data))
+	AssertDeepEquals(t, common.ErrInvalidThread(1, "a"), cl.synchronise(data))
 }
 
 func TestSyncToThread(t *testing.T) {

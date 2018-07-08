@@ -1,7 +1,6 @@
 package server
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"meguca/auth"
@@ -32,7 +31,7 @@ func serveJSON(
 ) {
 	buf, err := json.Marshal(data)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	writeJSON(w, r, etag, buf)
@@ -87,26 +86,16 @@ func serveConfigs(w http.ResponseWriter, r *http.Request) {
 func servePost(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(extractParam(r, "post"), 10, 64)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
 
-	switch post, err := db.GetPost(id); err {
-	case nil:
-		serveJSON(w, r, "", post)
-	case sql.ErrNoRows:
-		text404(w)
-	default:
-		respondToJSONError(w, r, err)
+	post, err := db.GetPost(id)
+	if err != nil {
+		httpError(w, r, err)
+		return
 	}
-}
-
-func respondToJSONError(w http.ResponseWriter, r *http.Request, err error) {
-	if err == sql.ErrNoRows {
-		text404(w)
-	} else {
-		text500(w, r, err)
-	}
+	serveJSON(w, r, "", post)
 }
 
 // Serve board-specific configuration JSON
@@ -138,7 +127,7 @@ func threadJSON(w http.ResponseWriter, r *http.Request) {
 	k := cache.ThreadKey(id, detectLastN(r))
 	data, _, ctr, err := cache.GetJSONAndData(k, cache.ThreadFE)
 	if err != nil {
-		respondToJSONError(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -162,7 +151,7 @@ func validateThread(w http.ResponseWriter, r *http.Request) (uint64, bool) {
 
 	valid, err := db.ValidateOP(id, board)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return 0, false
 	}
 	if !valid {
@@ -191,7 +180,7 @@ func boardJSON(w http.ResponseWriter, r *http.Request, catalog bool) {
 	case cache.ErrPageOverflow:
 		text404(w)
 	default:
-		text500(w, r, err)
+		httpError(w, r, err)
 	}
 }
 
@@ -219,13 +208,13 @@ func serveThreadWatcher(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < len(vals); i++ {
 		threads[i], err = strconv.ParseUint(vals[i], 10, 64)
 		if err != nil {
-			text400(w, err)
+			httpError(w, r, common.StatusError{err, 400})
 			return
 		}
 	}
 
 	err = feeds.WatchThreads(w, r, threads)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 	}
 }

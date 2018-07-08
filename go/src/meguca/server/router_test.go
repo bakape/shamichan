@@ -62,7 +62,7 @@ func TestPanicHandler(t *testing.T) {
 		panic(errors.New("foo"))
 	}
 	r.GET("/panic", h)
-	r.PanicHandler = text500
+	r.PanicHandler = handlePanic
 	rec, req := newPair("/panic")
 
 	// Prevent printing stack trace to terminal

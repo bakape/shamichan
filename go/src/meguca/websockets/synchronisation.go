@@ -34,7 +34,7 @@ func (c *Client) synchronise(data []byte) error {
 	case err != nil:
 		return err
 	case !auth.IsBoard(msg.Board):
-		return common.ErrInvalidBoard
+		return common.ErrInvalidBoard(msg.Board)
 	case auth.IsBanned(msg.Board, c.ip):
 		return common.ErrBanned
 	case msg.Thread != 0:
@@ -43,10 +43,7 @@ func (c *Client) synchronise(data []byte) error {
 		case err != nil:
 			return err
 		case !valid:
-			return &common.ErrInvalidThread{
-				ID:    msg.Thread,
-				Board: msg.Board,
-			}
+			return common.ErrInvalidThread(msg.Thread, msg.Board)
 		}
 	}
 

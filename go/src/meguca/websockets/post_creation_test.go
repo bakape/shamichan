@@ -69,8 +69,8 @@ func TestInsertThread(t *testing.T) {
 		name, board string
 		err         error
 	}{
-		{"invalid board", "all", common.ErrInvalidBoard},
-		{"invalid board", "x", common.ErrInvalidBoard},
+		{"invalid board", "all", common.ErrInvalidBoard("all")},
+		{"invalid board", "x", common.ErrInvalidBoard("x")},
 		{"read-only board", "r", errReadOnly},
 	}
 
@@ -82,9 +82,8 @@ func TestInsertThread(t *testing.T) {
 			req := ThreadCreationRequest{
 				Board: c.board,
 			}
-			if _, err := CreateThread(req, ""); err != c.err {
-				UnexpectedError(t, err)
-			}
+			_, err := CreateThread(req, "")
+			AssertDeepEquals(t, c.err, err)
 		})
 	}
 

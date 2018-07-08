@@ -81,19 +81,22 @@ func text404(w http.ResponseWriter) {
 	http.Error(w, "404 not found", 404)
 }
 
-// Text-only 400 response
-func text400(w http.ResponseWriter, err error) {
-	http.Error(w, fmt.Sprintf("400 %s", err), 400)
-}
+// Send error with code and logging according to error type
+func httpError(w http.ResponseWriter, r *http.Request, err error) {
+	code := 500
+	switch err.(type) {
+	case common.StatusError:
+		code = err.(common.StatusError).Code
+	default:
+		if err == sql.ErrNoRows {
+			code = 404
+		}
+	}
 
-func text403(w http.ResponseWriter, err error) {
-	http.Error(w, fmt.Sprintf("403 %s", err), 403)
-}
-
-// Text-only 500 response
-func text500(w http.ResponseWriter, r *http.Request, err interface{}) {
-	http.Error(w, fmt.Sprintf("500 %s", err), 500)
-	logError(r, err)
+	http.Error(w, fmt.Sprintf("%d %s", code, err), code)
+	if code >= 500 && code < 600 {
+		logError(r, err)
+	}
 }
 
 // Check client is not banned on specific board. Returns true, if all clear.
@@ -105,7 +108,7 @@ func assertNotBanned(
 ) bool {
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, common.StatusError{err, 400})
 		return false
 	}
 	globally, fromBoard := auth.GetBannedLevels(board, ip)
@@ -133,11 +136,11 @@ func assertNotBanned(
 		// If there is no row, that means the ban cache has not been updated
 		// yet with a cleared ban. Force a ban cache refresh.
 		if err := db.RefreshBanCache(); err != nil {
-			log.Warnf("refreshing ban cache: %s", err)
+			log.Errorf("refreshing ban cache: %s", err)
 		}
 		return true
 	default:
-		text500(w, r, err)
+		httpError(w, r, err)
 		return false
 	}
 }

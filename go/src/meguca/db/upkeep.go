@@ -24,7 +24,7 @@ func runCleanupTasks() {
 	runHourTasks()
 
 	min := time.Tick(time.Minute)
-	half := time.Tick(time.Minute*30)
+	half := time.Tick(time.Minute * 30)
 	hour := time.Tick(time.Hour)
 	for {
 		select {
@@ -291,13 +291,5 @@ func deleteOldThreads() (err error) {
 		}
 
 		return
-	})
-}
-
-// DeleteBoard deletes a board and all of its contained threads and posts
-func DeleteBoard(board, by string) error {
-	return InTransaction(func(tx *sql.Tx) error {
-		return deleteBoard(tx, board, by,
-			fmt.Sprintf("board %s deleted by user", board))
 	})
 }

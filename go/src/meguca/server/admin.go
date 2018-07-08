@@ -30,18 +30,17 @@ const (
 )
 
 var (
-	errTooManyAnswers   = errors.New("too many eightball answers")
 	errEightballTooLong = common.ErrTooLong("eightball")
 	errTitleTooLong     = common.ErrTooLong("board title")
 	errNoticeTooLong    = common.ErrTooLong("notice")
 	errRulesTooLong     = common.ErrTooLong("rules")
 	errReasonTooLong    = common.ErrTooLong("reason")
-	errJSTooLong        = common.ErrTooLong("custom JavaScript")
-	errInvalidBoardName = errors.New("invalid board name")
-	errBoardNameTaken   = errors.New("board name taken")
-	errAccessDenied     = errors.New("access denied")
-	errNoReason         = errors.New("no reason provided")
-	errNoDuration       = errors.New("no ban duration provided")
+	errTooManyAnswers   = common.ErrInvalidInput("too many eightball answers")
+	errInvalidBoardName = common.ErrInvalidInput("invalid board name")
+	errBoardNameTaken   = common.ErrInvalidInput("board name taken")
+	errNoReason         = common.ErrInvalidInput("no reason provided")
+	errNoDuration       = common.ErrInvalidInput("no ban duration provided")
+	errAccessDenied     = common.ErrAccessDenied("missing permissions")
 
 	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,10}$`)
 )
@@ -83,7 +82,7 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := db.UpdateBoard(msg.BoardConfigs); err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 }
@@ -100,16 +99,16 @@ func canPerform(
 	creds auth.SessionCreds, can bool,
 ) {
 	if !auth.IsBoard(board) {
-		text400(w, errInvalidBoardName)
+		httpError(w, r, errInvalidBoardName)
 		return
 	}
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, err)
 		return
 	}
 	if captcha != nil && !auth.AuthenticateCaptcha(*captcha, ip, db.SystemBan) {
-		text403(w, errInvalidCaptcha)
+		httpError(w, r, errInvalidCaptcha)
 		return
 	}
 	creds, ok := isLoggedIn(w, r)
@@ -120,10 +119,10 @@ func canPerform(
 	can, err = db.CanPerform(creds.UserID, board, level)
 	switch {
 	case err != nil:
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	case !can:
-		text403(w, errAccessDenied)
+		httpError(w, r, errAccessDenied)
 		return
 	default:
 		can = true
@@ -142,19 +141,14 @@ func canModeratePost(
 	can bool,
 ) {
 	board, err := db.GetPostBoard(id)
-	switch err {
-	case nil:
-	case sql.ErrNoRows:
-		text400(w, err)
-		return
-	default:
-		text500(w, r, err)
+	if err != nil {
+		httpError(w, r, err)
 		return
 	}
 
 	creds, can := canPerform(w, r, board, level, nil)
 	if !can {
-		text403(w, errAccessDenied)
+		httpError(w, r, errAccessDenied)
 		return
 	}
 
@@ -230,7 +224,7 @@ func isAdmin(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 	if creds.UserID != "admin" {
-		text403(w, errAccessDenied)
+		httpError(w, r, errAccessDenied)
 		return false
 	}
 	return true
@@ -287,7 +281,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	ip, err := auth.GetIP(r)
 
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -304,9 +298,8 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	case !auth.AuthenticateCaptcha(msg.Captcha, ip, db.SystemBan):
 		err = errInvalidCaptcha
 	}
-
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -327,10 +320,10 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		case err == nil:
 		case db.IsConflictError(err):
 			err = errBoardNameTaken
-			text400(w, err)
+			httpError(w, r, err)
 			return
 		default:
-			text500(w, r, err)
+			httpError(w, r, err)
 			return
 		}
 
@@ -342,14 +335,13 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case errBoardNameTaken, nil:
 	default:
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
 	err = db.WritePyu(msg.ID)
-
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 }
@@ -362,7 +354,7 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := db.WriteConfigs(msg); err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 	}
 }
 
@@ -378,7 +370,7 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.DeleteBoard(msg.Board, creds.UserID); err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 	}
 }
 
@@ -403,16 +395,11 @@ func moderatePost(
 		return
 	}
 
-	switch err := fn(userID); err {
-	case nil:
-		return true
-	case sql.ErrNoRows:
-		text400(w, err)
-		return
-	default:
-		text500(w, r, err)
-		return
+	err := fn(userID)
+	if err != nil {
+		httpError(w, r, err)
 	}
+	return err == nil
 }
 
 // Same as moderatePost, but works on an array of posts
@@ -464,16 +451,16 @@ func ban(w http.ResponseWriter, r *http.Request) {
 	case !ok:
 		return
 	case msg.Global && creds.UserID != "admin":
-		text403(w, errAccessDenied)
+		httpError(w, r, errAccessDenied)
 		return
 	case len(msg.Reason) > common.MaxLenReason:
-		text400(w, errReasonTooLong)
+		httpError(w, r, errReasonTooLong)
 		return
 	case msg.Reason == "":
-		text400(w, errNoReason)
+		httpError(w, r, errNoReason)
 		return
 	case msg.Duration == 0:
-		text400(w, errNoDuration)
+		httpError(w, r, errNoDuration)
 		return
 	}
 
@@ -484,16 +471,10 @@ func ban(w http.ResponseWriter, r *http.Request) {
 	} else {
 		for _, id := range msg.IDs {
 			board, err := db.GetPostBoard(id)
-			switch err {
-			case nil:
-			case sql.ErrNoRows:
-				text400(w, err)
-				return
-			default:
-				text500(w, r, err)
+			if err != nil {
+				httpError(w, r, err)
 				return
 			}
-
 			byBoard[board] = append(byBoard[board], id)
 		}
 
@@ -510,7 +491,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 	for board, ids := range byBoard {
 		err := db.Ban(board, msg.Reason, creds.UserID, expires, true, ids...)
 		if err != nil {
-			text500(w, r, err)
+			httpError(w, r, err)
 			return
 		}
 	}
@@ -525,7 +506,7 @@ func sendNotification(w http.ResponseWriter, r *http.Request) {
 
 	data, err := common.EncodeMessage(common.MessageNotification, msg)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	for _, cl := range feeds.All() {
@@ -549,13 +530,14 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 	switch {
 	// Ensure there always is at least one board owner
 	case len(msg.Owners) == 0:
-		text400(w, errors.New("no board owners set"))
+		httpError(w, r, common.ErrInvalidInput("no board owners set"))
 		return
 	default:
 		// Maximum of 100 staff per position
 		for _, s := range [...][]string{msg.Owners, msg.Moderators, msg.Janitors} {
 			if len(s) > 100 {
-				text400(w, errors.New("too many staff per position"))
+				httpError(w, r, common.ErrInvalidInput(
+					"too many staff per position"))
 				return
 			}
 		}
@@ -569,7 +551,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 		})
 	})
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 }
@@ -578,7 +560,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, err)
 		return
 	}
 	board, _, ok := canModeratePost(w, r, id, auth.Janitor)
@@ -588,7 +570,7 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := db.GetSameIPPosts(id, board)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	serveJSON(w, r, "", posts)
@@ -621,12 +603,9 @@ func handleBoolRequest(
 		return
 	}
 
-	switch err := fn(msg.ID, msg.Val, userID); err {
-	case nil:
-	case sql.ErrNoRows:
-		text400(w, err)
-	default:
-		text500(w, r, err)
+	err := fn(msg.ID, msg.Val, userID)
+	if err != nil {
+		httpError(w, r, err)
 	}
 }
 
@@ -645,7 +624,7 @@ func banList(w http.ResponseWriter, r *http.Request) {
 
 	bans, err := db.GetBoardBans(board)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -689,7 +668,7 @@ func unban(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, jsonLimit)
 	err := r.ParseForm()
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, err)
 		return
 	}
 	var (
@@ -702,7 +681,7 @@ func unban(w http.ResponseWriter, r *http.Request) {
 		}
 		id, err = strconv.ParseUint(key, 10, 64)
 		if err != nil {
-			text400(w, err)
+			httpError(w, r, err)
 			return
 		}
 		ids = append(ids, id)
@@ -713,7 +692,7 @@ func unban(w http.ResponseWriter, r *http.Request) {
 		switch err := db.Unban(board, id, creds.UserID); err {
 		case nil, sql.ErrNoRows:
 		default:
-			text500(w, r, err)
+			httpError(w, r, err)
 			return
 		}
 	}
@@ -732,7 +711,7 @@ func modLog(w http.ResponseWriter, r *http.Request) {
 
 	log, err := db.GetModLog(board)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -769,13 +748,13 @@ func redirectByIP(w http.ResponseWriter, r *http.Request) {
 		text404(w)
 		return
 	} else if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
 	msg, err := common.EncodeMessage(common.MessageRedirect, url)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	for _, c := range feeds.GetByIP(ip) {
@@ -792,7 +771,7 @@ func redirectByThread(w http.ResponseWriter, r *http.Request) {
 
 	msg, err := common.EncodeMessage(common.MessageRedirect, url)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	for _, c := range feeds.GetByThread(id) {

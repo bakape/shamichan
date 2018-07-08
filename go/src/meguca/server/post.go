@@ -34,15 +34,14 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
 	post, err := websockets.CreateThread(req, ip)
 	if err != nil {
 
 		// TODO: Not all codes are actually 400. Need to differentiate.
-
-		text400(w, err)
+		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
 
@@ -64,7 +63,7 @@ func parsePostCreationForm(w http.ResponseWriter, r *http.Request) (
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxSize))
 	err := r.ParseMultipartForm(0)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
 
@@ -76,16 +75,15 @@ func parsePostCreationForm(w http.ResponseWriter, r *http.Request) (
 	}
 	switch err {
 	case nil:
-		var code int
-		code, token, err = imager.ParseUpload(r)
+		token, err = imager.ParseUpload(r)
 		if err != nil {
-			imager.LogError(w, r, code, err)
+			imager.LogError(w, r, err)
 			return
 		}
 	case http.ErrMissingFile:
 		err = nil
 	default:
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -126,34 +124,30 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 	// Validate thread
 	op, err := strconv.ParseUint(r.Form.Get("op"), 10, 64)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
 	board := r.Form.Get("board")
 	ok, err = db.ValidateOP(op, board)
 	switch {
 	case err != nil:
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	case !ok:
-		text400(w, &common.ErrInvalidThread{
-			ID:    op,
-			Board: board,
-		})
+		httpError(w, r, common.ErrInvalidThread(op, board))
 		return
 	}
 
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
 	post, msg, err := websockets.CreatePost(op, board, ip, true, req)
 	if err != nil {
 
 		// TODO: Not all codes are actually 400. Need to differentiate.
-
-		text400(w, err)
+		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
 

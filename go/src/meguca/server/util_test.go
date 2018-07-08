@@ -2,11 +2,8 @@ package server
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"meguca/config"
@@ -94,28 +91,4 @@ func TestText404(t *testing.T) {
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 404)
 	assertBody(t, rec, "404 not found\n")
-}
-
-func TestText40X(t *testing.T) {
-	t.Parallel()
-
-	cases := [...]struct {
-		code int
-		fn   func(http.ResponseWriter, error)
-	}{
-		{400, text400},
-		{403, text403},
-	}
-
-	for i := range cases {
-		c := cases[i]
-		t.Run(strconv.Itoa(c.code), func(t *testing.T) {
-			t.Parallel()
-
-			rec := httptest.NewRecorder()
-			c.fn(rec, errors.New("foo"))
-			assertCode(t, rec, c.code)
-			assertBody(t, rec, fmt.Sprintf("%d foo\n", c.code))
-		})
-	}
 }

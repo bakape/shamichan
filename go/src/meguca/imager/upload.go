@@ -71,9 +71,9 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	// Limit data received to the maximum uploaded file size limit
 	r.Body = http.MaxBytesReader(w, r.Body, int64(config.Get().MaxSize<<20))
 
-	code, id, err := ParseUpload(r)
+	id, err := ParseUpload(r)
 	if err != nil {
-		LogError(w, r, code, err)
+		LogError(w, r, err)
 	}
 	w.Write([]byte(id))
 }
@@ -83,85 +83,82 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 // of the file it wants to upload. The server looks up, if such a file is
 // thumbnailed. If yes, generates and sends a new image allocation token to
 // the client.
-func UploadImageHash(w http.ResponseWriter, req *http.Request) {
-	buf, err := ioutil.ReadAll(http.MaxBytesReader(w, req.Body, 40))
-	if err != nil {
-		LogError(w, req, 500, err)
-		return
-	}
-	hash := string(buf)
+func UploadImageHash(w http.ResponseWriter, r *http.Request) {
+	err := func() (err error) {
+		buf, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 40))
+		if err != nil {
+			return
+		}
+		hash := string(buf)
 
-	_, err = db.GetImage(hash)
-	switch err {
-	case nil:
-	case sql.ErrNoRows:
-		return
-	default:
-		LogError(w, req, 500, err)
-		return
-	}
-
-	token, err := db.NewImageToken(hash)
-	if err != nil {
-		LogError(w, req, 500, err)
-	}
-	w.Write([]byte(token))
-}
-
-// LogError send the client file upload errors and logs them server-side
-func LogError(w http.ResponseWriter, r *http.Request, code int, err error) {
-	http.Error(w, err.Error(), code)
-	if !isTest {
-		if common.CanIgnoreClientError(err) {
+		_, err = db.GetImage(hash)
+		switch err {
+		case nil:
+		case sql.ErrNoRows:
+			return nil
+		default:
 			return
 		}
 
-		ip, ipErr := auth.GetIP(r)
-		if ipErr != nil {
-			ip = "invalid IP"
+		token, err := db.NewImageToken(hash)
+		if err != nil {
+			return
 		}
-		log.Errorf("upload error: by %s: %s: %#v", ip, err, err)
+		w.Write([]byte(token))
+		return
+	}()
+	if err != nil {
+		LogError(w, r, err)
 	}
+}
+
+// LogError send the client file upload errors and logs them server-side
+func LogError(w http.ResponseWriter, r *http.Request, err error) {
+	code := 500
+	if err, ok := err.(common.StatusError); ok {
+		code = err.Code
+	}
+	http.Error(w, err.Error(), code)
+
+	if isTest || common.CanIgnoreClientError(err) {
+		return
+	}
+	ip, ipErr := auth.GetIP(r)
+	if ipErr != nil {
+		ip = "invalid IP"
+	}
+	log.Errorf("upload error: by %s: %s: %#v", ip, err, err)
 }
 
 // ParseUpload parses the upload form. Separate function for cleaner error
 // handling and reusability.
 // Returns the HTTP status code of the response, the ID of the generated image
 // and an error, if any.
-func ParseUpload(req *http.Request) (int, string, error) {
+func ParseUpload(req *http.Request) (string, error) {
 	length, err := strconv.ParseUint(req.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
-		return 400, "", err
+		return "", common.StatusError{err, 400}
 	}
 	if length > uint64(config.Get().MaxSize<<20) {
-		return 400, "", errTooLarge
+		return "", common.StatusError{errTooLarge, 400}
 	}
 	err = req.ParseMultipartForm(smallUploadSize)
 	if err != nil {
-		return 400, "", err
+		return "", common.StatusError{err, 400}
 	}
 
 	file, head, err := req.FormFile("image")
 	if err != nil {
-		return 400, "", err
+		return "", common.StatusError{err, 400}
 	}
 	defer file.Close()
 	res := <-requestThumbnailing(file, head.Size)
-	return res.code, res.imageID, res.err
-}
-
-func newImageToken(SHA1 string) (int, string, error) {
-	token, err := db.NewImageToken(SHA1)
-	code := 200
-	if err != nil {
-		code = 500
-	}
-	return code, token, err
+	return res.imageID, res.err
 }
 
 // Create a new thumbnail, commit its resources to the DB and filesystem, and
 // pass the image data to the client.
-func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
+func newThumbnail(data []byte, img common.ImageCommon) (string, error) {
 	conf := config.Get()
 	thumb, err := processFile(data, &img, thumbnailer.Options{
 		JPEGQuality: conf.JPEGQuality,
@@ -175,12 +172,8 @@ func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
 		},
 		AcceptedMimeTypes: allowedMimeTypes,
 	})
-	switch err.(type) {
-	case nil:
-	case thumbnailer.UnsupportedMIMEError:
-		return 400, "", err
-	default:
-		return 500, "", err
+	if err != nil {
+		return "", WrapThumbnailerError(err)
 	}
 	defer func() {
 		if thumb != nil {
@@ -198,9 +191,22 @@ func newThumbnail(data []byte, img common.ImageCommon) (int, string, error) {
 	}
 
 	if err := db.AllocateImage(data, thumb, img); err != nil {
-		return 500, "", err
+		return "", err
 	}
-	return newImageToken(img.SHA1)
+	return db.NewImageToken(img.SHA1)
+}
+
+// Wrap thumbnailer error with appropriate HTTP status code
+func WrapThumbnailerError(err error) error {
+	switch err.(type) {
+	case nil:
+		return nil
+	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage,
+		thumbnailer.ErrCorruptImage:
+		return common.StatusError{err, 400}
+	default:
+		return common.StatusError{err, 500}
+	}
 }
 
 // Separate function for easier testability

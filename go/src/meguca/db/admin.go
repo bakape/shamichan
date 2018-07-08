@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"meguca/auth"
 	"meguca/common"
 	"time"
@@ -278,6 +279,17 @@ func moderatePost(
 func DeleteImage(id uint64, by string) error {
 	q := sq.Update("posts").Set("SHA1", nil)
 	return moderatePost(id, auth.DeleteImage, by, q, common.DeleteImage)
+}
+
+// DeleteBoard deletes a board and all of its contained threads and posts
+func DeleteBoard(board, by string) error {
+	if board == "all" {
+		return common.ErrInvalidInput("can not delete /all/")
+	}
+	return InTransaction(func(tx *sql.Tx) error {
+		return deleteBoard(tx, board, by,
+			fmt.Sprintf("board %s deleted by user", board))
+	})
 }
 
 // Spoiler image as a moderator

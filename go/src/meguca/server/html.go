@@ -19,7 +19,7 @@ func serveHTML(
 	err error,
 ) {
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	head := w.Header()
@@ -62,7 +62,7 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 		text404(w)
 		return
 	default:
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -128,7 +128,7 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 	k := cache.ThreadKey(id, lastN)
 	html, data, ctr, err := cache.GetHTML(k, cache.ThreadFE)
 	if err != nil {
-		respondToJSONError(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -175,13 +175,13 @@ func extractPosition(w http.ResponseWriter, r *http.Request) (
 			board := extractParam(r, "board")
 			pos, err = db.FindPosition(board, creds.UserID)
 			if err != nil {
-				text500(w, r, err)
+				httpError(w, r, err)
 				ok = false
 				return
 			}
 		}
 	default:
-		text500(w, r, err)
+		httpError(w, r, err)
 		ok = false
 		return
 	}
@@ -208,7 +208,7 @@ func ownedBoardSelection(w http.ResponseWriter, r *http.Request) {
 	userID := extractParam(r, "userID")
 	owned, err := db.GetOwnedBoards(userID)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -240,7 +240,7 @@ func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
 func staffAssignmentForm(w http.ResponseWriter, r *http.Request) {
 	s, err := db.GetStaff(extractParam(r, "board"))
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	html := []byte(templates.StaffAssignment(
@@ -291,7 +291,7 @@ func loadingAnimationForm(w http.ResponseWriter, r *http.Request) {
 func noscriptCaptcha(w http.ResponseWriter, r *http.Request) {
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, err)
 		return
 	}
 	serveHTML(w, r, "", []byte(templates.NoscriptCaptcha(ip)), nil)

@@ -2,7 +2,6 @@ package server
 
 import (
 	"database/sql"
-	"errors"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
@@ -16,10 +15,10 @@ import (
 )
 
 var (
-	errInvalidCaptcha  = errors.New("invalid captcha")
-	errInvalidPassword = errors.New("invalid password")
-	errInvalidUserID   = errors.New("invalid login ID")
-	errUserIDTaken     = errors.New("login ID already taken")
+	errInvalidCaptcha  = common.ErrAccessDenied("invalid captcha")
+	errInvalidPassword = common.ErrInvalidInput("password")
+	errInvalidUserID   = common.ErrInvalidInput("login ID")
+	errUserIDTaken     = common.ErrInvalidInput("login ID already taken")
 )
 
 type loginCreds struct {
@@ -37,7 +36,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	var req loginCreds
 	isValid := decodeJSON(w, r, &req) &&
 		trimLoginID(&req.ID) &&
-		validateUserID(w, req.ID) &&
+		validateUserID(w, r, req.ID) &&
 		checkPasswordAndCaptcha(w, r, req.Password, req.Captcha)
 	if !isValid {
 		return
@@ -45,7 +44,8 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	hash, err := auth.BcryptHash(req.Password, 10)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
+		return
 	}
 
 	// Check for collision and write to DB
@@ -54,21 +54,18 @@ func register(w http.ResponseWriter, r *http.Request) {
 	})
 	switch err {
 	case nil:
+		commitLogin(w, r, req.ID)
 	case db.ErrUserNameTaken:
-		text400(w, errUserIDTaken)
-		return
+		httpError(w, r, errUserIDTaken)
 	default:
-		text500(w, r, err)
-		return
+		httpError(w, r, err)
 	}
-
-	commitLogin(w, r, req.ID)
 }
 
 // Separate function for easier chaining of validations
-func validateUserID(w http.ResponseWriter, id string) bool {
+func validateUserID(w http.ResponseWriter, r *http.Request, id string) bool {
 	if id == "" || len(id) > common.MaxLenUserID {
-		text400(w, errInvalidUserID)
+		httpError(w, r, errInvalidUserID)
 		return false
 	}
 	return true
@@ -79,11 +76,11 @@ func validateUserID(w http.ResponseWriter, id string) bool {
 func commitLogin(w http.ResponseWriter, r *http.Request, userID string) {
 	token, err := auth.RandomID(128)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	if err := db.WriteLoginSession(userID, token); err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -109,7 +106,7 @@ func commitLogin(w http.ResponseWriter, r *http.Request, userID string) {
 func login(w http.ResponseWriter, r *http.Request) {
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, err)
 		return
 	}
 	var req loginCreds
@@ -119,7 +116,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	case !trimLoginID(&req.ID):
 		return
 	case !auth.AuthenticateCaptcha(req.Captcha, ip, db.SystemBan):
-		text403(w, errInvalidCaptcha)
+		httpError(w, r, errInvalidCaptcha)
 		return
 	}
 
@@ -127,10 +124,10 @@ func login(w http.ResponseWriter, r *http.Request) {
 	switch err {
 	case nil:
 	case sql.ErrNoRows:
-		text403(w, common.ErrInvalidCreds)
+		httpError(w, r, common.ErrInvalidCreds)
 		return
 	default:
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -138,9 +135,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 	case nil:
 		commitLogin(w, r, req.ID)
 	case bcrypt.ErrMismatchedHashAndPassword:
-		text403(w, common.ErrInvalidCreds)
+		httpError(w, r, common.ErrInvalidCreds)
 	default:
-		text500(w, r, err)
+		httpError(w, r, err)
 	}
 }
 
@@ -163,7 +160,7 @@ func commitLogout(
 	}
 
 	if err := fn(creds); err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 	}
 }
 
@@ -188,7 +185,7 @@ func changePassword(w http.ResponseWriter, r *http.Request) {
 	// Get old hash
 	hash, err := db.GetPassword(creds.UserID)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
@@ -196,21 +193,21 @@ func changePassword(w http.ResponseWriter, r *http.Request) {
 	switch err := auth.BcryptCompare(msg.Old, hash); err {
 	case nil:
 	case bcrypt.ErrMismatchedHashAndPassword:
-		text403(w, common.ErrInvalidCreds)
+		httpError(w, r, common.ErrInvalidCreds)
 		return
 	default:
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 
 	// Old password matched, write new hash to DB
 	hash, err = auth.BcryptHash(msg.New, 10)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	if err := db.ChangePassword(creds.UserID, hash); err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 	}
 }
 
@@ -223,15 +220,15 @@ func checkPasswordAndCaptcha(
 ) bool {
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		text400(w, err)
+		httpError(w, r, err)
 		return false
 	}
 	switch {
 	case password == "", len(password) > common.MaxLenPassword:
-		text400(w, errInvalidPassword)
+		httpError(w, r, errInvalidPassword)
 		return false
 	case !auth.AuthenticateCaptcha(captcha, ip, db.SystemBan):
-		text403(w, errInvalidCaptcha)
+		httpError(w, r, errInvalidCaptcha)
 		return false
 	}
 	return true
@@ -243,20 +240,20 @@ func isLoggedIn(w http.ResponseWriter, r *http.Request) (
 ) {
 	creds = extractLoginCreds(r)
 	if creds.UserID == "" || creds.Session == "" {
-		text403(w, errAccessDenied)
+		httpError(w, r, errAccessDenied)
 		return
 	}
 
 	ok, err := db.IsLoggedIn(creds.UserID, creds.Session)
 	switch err {
 	case common.ErrInvalidCreds:
-		text403(w, err)
+		httpError(w, r, err)
 	case nil:
 		if !ok {
-			text403(w, errAccessDenied)
+			httpError(w, r, errAccessDenied)
 		}
 	default:
-		text500(w, r, err)
+		httpError(w, r, err)
 	}
 
 	return

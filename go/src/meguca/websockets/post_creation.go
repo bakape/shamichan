@@ -19,10 +19,10 @@ import (
 )
 
 var (
-	errReadOnly          = errors.New("read only board")
-	errInvalidImageToken = errors.New("invalid image token")
-	errImageNameTooLong  = errors.New("image name too long")
-	errNoTextOrImage     = errors.New("no text or image")
+	errReadOnly          = common.ErrInvalidInput("read only board")
+	errInvalidImageToken = common.ErrInvalidInput("image token")
+	errImageNameTooLong  = common.ErrTooLong("image name")
+	errNoTextOrImage     = common.ErrInvalidInput("no text or image")
 )
 
 // ThreadCreationRequest contains data for creating a new thread
@@ -55,7 +55,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 ) {
 	switch {
 	case !auth.IsNonMetaBoard(req.Board):
-		err = common.ErrInvalidBoard
+		err = common.ErrInvalidBoard(req.Board)
 		return
 	case auth.IsBanned(req.Board, ip):
 		err = common.ErrBanned

@@ -72,7 +72,7 @@ func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 
 	stats, err := file.Stat()
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	if stats.IsDir() {
@@ -115,6 +115,14 @@ func setBanners(w http.ResponseWriter, r *http.Request) {
 		banners = make([]assets.File, 0, common.MaxNumBanners)
 		files   = r.MultipartForm.File["banners"]
 	)
+	defer func() {
+		for _, f := range banners {
+			if f.Data != nil {
+				thumbnailer.ReturnBuffer(f.Data)
+			}
+		}
+	}()
+
 	for i := 0; i < common.MaxNumBanners && i < len(files); i++ {
 		h := files[i]
 		file, err := h.Open()
@@ -130,12 +138,7 @@ func setBanners(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := db.SetBanners(board, banners); err != nil {
-		text500(w, r, err)
-	}
-	for _, f := range banners {
-		if f.Data != nil {
-			thumbnailer.ReturnBuffer(f.Data)
-		}
+		httpError(w, r, err)
 	}
 }
 
@@ -151,7 +154,7 @@ func parseAssetForm(w http.ResponseWriter, r *http.Request, maxSize uint) (
 		int64(maxSize)*common.MaxAssetSize,
 	)
 	if err := r.ParseMultipartForm(0); err != nil {
-		text400(w, err)
+		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
 
@@ -183,7 +186,7 @@ func readAssetFile(
 	_buf := bytes.NewBuffer(thumbnailer.GetBuffer())
 	_, err := _buf.ReadFrom(f)
 	if err != nil {
-		text500(w, r, err)
+		httpError(w, r, err)
 		return
 	}
 	buf := _buf.Bytes()
@@ -198,6 +201,11 @@ func readAssetFile(
 	}
 
 	src, thumb, err := thumbnailer.ProcessBuffer(buf, opts)
+	defer func() {
+		if thumb.Data != nil {
+			thumbnailer.ReturnBuffer(thumb.Data)
+		}
+	}()
 	switch {
 	case err != nil:
 		sendFileError(w, h, err.Error())
@@ -209,9 +217,6 @@ func readAssetFile(
 			Data: buf,
 			Mime: src.Mime,
 		}
-	}
-	if thumb.Data != nil {
-		thumbnailer.ReturnBuffer(thumb.Data)
 	}
 	return
 }
@@ -240,21 +245,23 @@ func setLoadingAnimation(w http.ResponseWriter, r *http.Request) {
 				"video/webm": true,
 			},
 		})
+		defer func() {
+			if out.Data != nil {
+				thumbnailer.ReturnBuffer(out.Data)
+			}
+		}()
 		if !ok {
 			return
 		}
 	case http.ErrMissingFile:
 		err = nil
 	default:
-		text400(w, err)
+		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
 
 	if err := db.SetLoadingAnimation(board, out); err != nil {
-		text500(w, r, err)
-	}
-	if out.Data != nil {
-		thumbnailer.ReturnBuffer(out.Data)
+		httpError(w, r, err)
 	}
 }
 
