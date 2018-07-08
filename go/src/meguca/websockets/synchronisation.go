@@ -3,7 +3,6 @@
 package websockets
 
 import (
-	"errors"
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/common"
@@ -12,10 +11,6 @@ import (
 	"meguca/websockets/feeds"
 
 	"golang.org/x/crypto/bcrypt"
-)
-
-var (
-	errInvalidBoard = errors.New("invalid board")
 )
 
 type syncRequest struct {
@@ -39,7 +34,7 @@ func (c *Client) synchronise(data []byte) error {
 	case err != nil:
 		return err
 	case !auth.IsBoard(msg.Board):
-		return errInvalidBoard
+		return common.ErrInvalidBoard
 	case auth.IsBanned(msg.Board, c.ip):
 		return common.ErrBanned
 	case msg.Thread != 0:

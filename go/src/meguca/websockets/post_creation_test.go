@@ -69,8 +69,8 @@ func TestInsertThread(t *testing.T) {
 		name, board string
 		err         error
 	}{
-		{"invalid board", "all", errInvalidBoard},
-		{"invalid board", "x", errInvalidBoard},
+		{"invalid board", "all", common.ErrInvalidBoard},
+		{"invalid board", "x", common.ErrInvalidBoard},
 		{"read-only board", "r", errReadOnly},
 	}
 

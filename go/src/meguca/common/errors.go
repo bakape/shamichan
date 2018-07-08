@@ -21,6 +21,7 @@ var (
 	ErrContainsNull        = errors.New("null byte in non-concatenated message")
 	ErrBanned              = errors.New("you are banned from this board")
 	ErrInvalidCaptcha      = errors.New("invalid captcha provided")
+	ErrInvalidBoard        = errors.New("invalid board")
 
 	// The poster is almost certainly spamming
 	ErrSpamDected = errors.New("spam detected")
@@ -64,7 +65,7 @@ func CanIgnoreClientError(err error) bool {
 recheck:
 	switch err {
 	case ErrBanned, ErrInvalidCaptcha, ErrSpamDected, websocket.ErrCloseSent,
-		nil:
+		ErrInvalidBoard, nil:
 		return true
 	}
 

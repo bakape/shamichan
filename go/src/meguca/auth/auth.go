@@ -32,7 +32,7 @@ func IsBoard(board string) bool {
 // IsNonMetaBoard returns whether a valid board is a classic board and not
 // some other path that emulates a board
 func IsNonMetaBoard(b string) bool {
-	return config.IsBoard(b)
+	return b != "all" && config.IsBoard(b)
 }
 
 // GetIP extracts the IP of a request, honouring reverse proxies, if set

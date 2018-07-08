@@ -55,7 +55,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 ) {
 	switch {
 	case !auth.IsNonMetaBoard(req.Board):
-		err = errInvalidBoard
+		err = common.ErrInvalidBoard
 		return
 	case auth.IsBanned(req.Board, ip):
 		err = common.ErrBanned
