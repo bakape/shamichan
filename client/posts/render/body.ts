@@ -3,6 +3,7 @@ import { renderPostLink, renderTempLink } from './etc'
 import { PostData, PostLink, TextState, commandType } from '../../common'
 import { escape, makeAttrs } from '../../util'
 import { parseEmbeds } from "../embed"
+import { ModerationLevel, position } from "../../mod"
 import highlightSyntax from "./code"
 
 // URLs supported for linkification
@@ -23,6 +24,7 @@ export default function renderBody(data: PostData): string {
         italic: false,
         red: false,
         blue: false,
+        gold: false,
         haveSyncwatch: false,
         successive_newlines: 0,
         iDice: 0,
@@ -62,10 +64,16 @@ export default function renderBody(data: PostData): string {
         if (state.blue) {
             html += "<span class=\"blue\">"
         }
+        if (state.gold) {
+            html += "<span class=\"gold\">"
+        }
 
         html += fn(l, data)
 
         // Close any unclosed tags
+        if (state.gold) {
+            html += "</span>"
+        }
         if (state.blue) {
             html += "</span>"
         }
@@ -98,6 +106,7 @@ function wrapTags(level: number, state: TextState): string {
         state.italic,
         state.red,
         state.blue,
+        state.gold,
     ]
     const opening = [
         "<del>",
@@ -105,11 +114,13 @@ function wrapTags(level: number, state: TextState): string {
         "<i>",
         "<span class=\"red\">",
         "<span class=\"blue\">",
+        "<span class=\"gold\">",
     ]
     const closing = [
         "</del>",
         "</b>",
         "</i>",
+        "</span>",
         "</span>",
         "</span>",
     ]
@@ -280,6 +291,8 @@ function parseBlues(
     state: TextState,
     fn: (frag: string) => string,
 ): string {
+    const _fn = (frag: string) =>
+        parseGolds(frag, state, fn)
     const _rbText = boardConfig.rbText ? () => {
         const wrapped = wrapTags(4, state)
         state.blue = !state.blue
@@ -289,6 +302,37 @@ function parseBlues(
 
     while (true) {
         const i = frag.indexOf("^b")
+        if (i !== -1) {
+            html += _fn(frag.slice(0, i)) + _rbText()
+            frag = frag.substring(i + 2)
+        } else {
+            html += _fn(frag)
+            break
+        }
+    }
+
+    return html
+}
+
+// Inject gold color tags and call fn on the remaining parts
+function parseGolds(
+    frag: string,
+    state: TextState,
+    fn: (frag: string) => string,
+): string {
+    const _rbText = boardConfig.rbText ? () => {
+        if (position >= ModerationLevel.moderator) {
+            const wrapped = wrapTags(5, state)
+            state.gold = !state.gold
+            return wrapped
+        } else {
+            return ""
+        }
+    } : () => ""
+    let html = ""
+
+    while (true) {
+        const i = frag.indexOf("^g")
         if (i !== -1) {
             html += fn(frag.slice(0, i)) + _rbText()
             frag = frag.substring(i + 2)

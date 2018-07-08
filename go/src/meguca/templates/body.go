@@ -3,6 +3,7 @@ package templates
 import (
 	"fmt"
 	"html"
+	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/util"
@@ -72,9 +73,10 @@ var (
 type bodyContext struct {
 	index bool     // Rendered for an index page
 	state struct { // Body parser state
-		spoiler, quote, code, bold, italic, red, blue, rbText, pyu bool
-		successive_newlines                                        uint
-		iDice                                                      int
+		spoiler, quote, code, bold, italic, red, blue, gold, rbText, pyu bool
+		successive_newlines                                              uint
+		iDice                                                            int
+		position                                                         auth.ModerationLevel
 	}
 	common.Post
 	OP    uint64
@@ -91,6 +93,7 @@ func streambody(
 	index bool,
 	rbText bool,
 	pyu bool,
+	position auth.ModerationLevel,
 ) {
 	c := bodyContext{
 		index:  index,
@@ -101,6 +104,7 @@ func streambody(
 	}
 	c.state.rbText = rbText
 	c.state.pyu = pyu
+	c.state.position = position
 
 	var fn func(string)
 	if c.Editing {
@@ -141,9 +145,15 @@ func streambody(
 		if c.state.blue {
 			c.string("<span class=\"blue\">")
 		}
+		if c.state.gold {
+			c.string("<span class=\"gold\">")
+		}
 
 		fn(l)
 
+		if c.state.gold {
+			c.string("</span>")
+		}
 		if c.state.blue {
 			c.string("</span>")
 		}
@@ -174,6 +184,7 @@ func (c *bodyContext) wrapTags(level int) {
 		c.state.italic,
 		c.state.red,
 		c.state.blue,
+		c.state.gold,
 	}
 	opening := [...]string{
 		"<del>",
@@ -181,11 +192,13 @@ func (c *bodyContext) wrapTags(level int) {
 		"<i>",
 		"<span class=\"red\">",
 		"<span class=\"blue\">",
+		"<span class=\"gold\">",
 	}
 	closing := [...]string{
 		"</del>",
 		"</b>",
 		"</i>",
+		"</span>",
 		"</span>",
 		"</span>",
 	}
@@ -343,6 +356,9 @@ func (c *bodyContext) parseReds(frag string, fn func(string)) {
 
 // Inject blue color tags and call fn on the remaining parts
 func (c *bodyContext) parseBlues(frag string, fn func(string)) {
+	_fn := func(frag string) {
+		c.parseGolds(frag, fn)
+	}
 	_rbText := func() {}
 
 	if c.state.rbText {
@@ -354,6 +370,30 @@ func (c *bodyContext) parseBlues(frag string, fn func(string)) {
 
 	for {
 		i := strings.Index(frag, "^b")
+		if i != -1 {
+			_fn(frag[:i])
+			_rbText()
+			frag = frag[i+2:]
+		} else {
+			_fn(frag)
+			break
+		}
+	}
+}
+
+// Inject gold color tags and call fn on the remaining parts
+func (c *bodyContext) parseGolds(frag string, fn func(string)) {
+	_rbText := func() {}
+
+	if c.state.rbText && c.state.position >= auth.Moderator {
+		_rbText = func() {
+			c.wrapTags(5)
+			c.state.gold = !c.state.gold
+		}
+	}
+
+	for {
+		i := strings.Index(frag, "^g")
 		if i != -1 {
 			fn(frag[:i])
 			_rbText()

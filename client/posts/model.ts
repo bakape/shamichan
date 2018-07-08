@@ -61,6 +61,7 @@ export class Post extends Model implements PostData {
 			italic: false,
 			red: false,
 			blue: false,
+			gold: false,
 			haveSyncwatch: false,
 			successive_newlines: 0,
 			iDice: 0,
@@ -266,6 +267,8 @@ function endsWithTag(body: string): boolean {
 		case "r":
 			return sl === "^"
 		case "b":
+			return sl === "^"
+		case "g":
 			return sl === "^"
 	}
 	return false

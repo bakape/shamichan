@@ -115,6 +115,7 @@ Common functionality between index board pages and threads pages
 		subject: t.Subject,
 		root: root,
 		backlinks: bls,
+		position: auth.NotStaff,
 	} %}
 	{% code c.omit, c.imageOmit = CalculateOmit(t) %}
 	{%= renderArticle(t.Post, c) %}
@@ -126,6 +127,7 @@ Common functionality between index board pages and threads pages
 	{% code c.pyu = boardConfig.Pyu %}
 	{% code c.omit, c.imageOmit = 0, 0 %}
 	{% code c.subject = "" %}
+	{% code c.position.FromString(t.Post.Auth) %}
 	{% for _, p := range t.Posts %}
 		{%= renderArticle(p, c) %}
 	{% endfor %}

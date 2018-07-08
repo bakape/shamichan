@@ -110,6 +110,7 @@ const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, 
   ~~ for italics
   ^r for red text
   ^b for blue text
+  ^g for gold text (Permissions required)
   ` + "``" + ` for programing code highlighting
 <hr>Hash commands:
 #d100 #2d100 - Roll dice

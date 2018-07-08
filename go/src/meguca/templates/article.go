@@ -2,6 +2,7 @@ package templates
 
 import (
 	"html"
+	"meguca/auth"
 	"meguca/common"
 	"meguca/lang"
 	"strconv"
@@ -15,6 +16,7 @@ type articleContext struct {
 	op                    uint64
 	board, subject, root  string
 	backlinks             backlinks
+	position              auth.ModerationLevel
 }
 
 // Map of all backlinks on a page
