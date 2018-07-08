@@ -317,8 +317,8 @@
 			"Don't ask"
 		],
 		"rbText": [
-			"Red/Blue Text",
-			"Display red and blue text if formatted with '^r' or '^b'"
+			"Red/Blue/Gold Text",
+			"Display red, blue, and gold text if formatted with '^r', '^b', or '^g'"
 		],
 		"readOnly": [
 			"Лише читати",
