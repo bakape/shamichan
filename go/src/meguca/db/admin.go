@@ -425,33 +425,11 @@ func GetSameIPPosts(id uint64, board string, creds auth.SessionCreds) (
 		}
 
 		// Add a mod-log entry detailing that a meido has used meido vision
-		var name string
-		pos, err := FindPosition(board, creds.UserID)
-
-		if err != nil {
-			return
-		}
-
-		switch pos {
-		case auth.Admin:
-			name = "the admin's"
-		case auth.BoardOwner:
-			name = "a board owner's"
-		case auth.Moderator:
-			name = "a meido's"
-		case auth.Janitor:
-			name = "a janitor's"
-		default:
-			name = "Anonymous'"
-		}
-
-		// I went with 'requesting' instead of 'looking at' because deleting all
-		// posts by the same IP shares this function
 		return logModeration(tx, auth.ModLogEntry{
 			Type:   auth.MeidoVision,
-			Board:  board,
 			By:     creds.UserID,
-			Reason: "requesting " + name + " post history",
+			Board:  board,
+			ID:     id,
 		})
 	})
 
