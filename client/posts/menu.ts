@@ -5,7 +5,7 @@ import { on, postJSON, HTML } from "../util"
 import { FormView } from "../ui"
 import lang from "../lang"
 import { hidePost } from "./hide"
-import { position, ModerationLevel } from "../mod"
+import { position, ModerationLevel, loginID } from "../mod"
 import CollectionView from "./collectionView"
 import { PostData } from "../common"
 import ReportForm from "./report"
@@ -232,11 +232,17 @@ function openMenu(e: Event) {
 
 // Fetch posts with the same IP on this board
 async function getSameIPPosts(m: Post): Promise<PostData[]> {
-	const res = await postJSON(`/api/same-IP/${m.id}`, null)
+	const res = await postJSON(`/api/same-IP`, {
+		lid: loginID(),
+		id: m.id,
+		board: m.board,
+	})
+
 	if (res.status !== 200) {
 		alert(await res.text())
 		return
 	}
+
 	return await res.json()
 }
 

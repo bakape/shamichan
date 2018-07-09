@@ -69,6 +69,7 @@ const (
 	SpoilerImage
 	LockThread
 	DeleteBoard
+	MeidoVision
 )
 
 // Single entry in the moderation log

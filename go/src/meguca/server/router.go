@@ -163,7 +163,7 @@ func createRouter() http.Handler {
 		api.POST("/ban", ban)
 		api.POST("/notification", sendNotification)
 		api.POST("/assign-staff", assignStaff)
-		api.POST("/same-IP/:id", getSameIPPosts)
+		api.POST("/same-IP", getSameIPPosts)
 		api.POST("/sticky", setThreadSticky)
 		api.POST("/lock-thread", setThreadLock)
 		api.POST("/unban/:board", unban)

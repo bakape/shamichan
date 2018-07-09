@@ -40,6 +40,7 @@ var (
 	errBoardNameTaken   = common.ErrInvalidInput("board name taken")
 	errNoReason         = common.ErrInvalidInput("no reason provided")
 	errNoDuration       = common.ErrInvalidInput("no ban duration provided")
+	errMalformedRequest = common.ErrInvalidInput("malformed client request")
 	errAccessDenied     = common.ErrAccessDenied("missing permissions")
 
 	boardNameValidation = regexp.MustCompile(`^[a-z0-9]{1,10}$`)
@@ -556,23 +557,83 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Decodes params for getting posts by the same IP. If state == 1 or 2, caller
+// should abort.
+func decodeSameIPPosts(w http.ResponseWriter, r *http.Request) (
+	lid string, id uint64, board string, state uint8,
+) {
+	var msg struct {
+		LID   string
+		ID    uint64
+		BOARD string
+	}
+
+	if !decodeJSON(w, r, &msg) {
+		return lid, id, board, 1
+	}
+
+	if _, _, can := canModeratePost(w, r, msg.ID, auth.Janitor); !can {
+		return lid, id, board, 2
+	}
+
+	return msg.LID, msg.ID, msg.BOARD, 0
+}
+
+
 // Retrieve posts with the same IP on the target board
 func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
-	if err != nil {
-		httpError(w, r, err)
+	var name string
+	lid, id, board, state := decodeSameIPPosts(w, r)
+
+	if state == 1 {
+		httpError(w, r, errMalformedRequest)
 		return
-	}
-	board, _, ok := canModeratePost(w, r, id, auth.Janitor)
-	if !ok {
+	} else if state == 2 {
+		httpError(w, r, errAccessDenied)
 		return
 	}
 
 	posts, err := db.GetSameIPPosts(id, board)
+
 	if err != nil {
 		httpError(w, r, err)
 		return
 	}
+
+	pos, err := db.FindPosition(board, lid)
+
+	if err != nil {
+		httpError(w, r, err)
+		return
+	}
+
+	switch pos {
+	case auth.Admin:
+		name = "the admin's"
+	case auth.BoardOwner:
+		name = "a board owner's"
+	case auth.Moderator:
+		name = "a meido's"
+	case auth.Janitor:
+		name = "a janitor's"
+	default:
+		name = "Anonymous'"
+	}
+
+	// I went with 'requesting' instead of 'looking at' because deleting all
+	// posts by the same IP shares this function
+	err = db.LogModeration(auth.ModLogEntry{
+		Type:   auth.MeidoVision,
+		Board:  board,
+		By:     lid,
+		Reason: "requesting " + name + " post history",
+	})
+
+	if err != nil {
+		httpError(w, r, err)
+		return
+	}
+
 	serveJSON(w, r, "", posts)
 }
 

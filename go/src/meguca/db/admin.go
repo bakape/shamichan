@@ -11,7 +11,17 @@ import (
 )
 
 // Write moderation action to log
-func logModeration(tx *sql.Tx, e auth.ModLogEntry) error {
+func LogModeration(e auth.ModLogEntry) error {
+	_, err := sq.Insert("mod_log").
+		Columns("type", "board", "id", "by", "length", "reason").
+		Values(int(e.Type), e.Board, e.ID, e.By, e.Length, e.Reason).
+		Exec()
+
+	return err
+}
+
+// Write moderation action to log atomically
+func logModerationA(tx *sql.Tx, e auth.ModLogEntry) error {
 	return withTransaction(tx,
 		sq.Insert("mod_log").
 			Columns("type", "board", "id", "by", "length", "reason").
@@ -38,7 +48,7 @@ func writeBan(
 	if err != nil || !log {
 		return
 	}
-	return logModeration(tx, auth.ModLogEntry{
+	return logModerationA(tx, auth.ModLogEntry{
 		Type:   auth.BanPost,
 		Board:  board,
 		ID:     postID,
@@ -171,7 +181,7 @@ func Unban(board string, id uint64, by string) error {
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, auth.ModLogEntry{
+		err = logModerationA(tx, auth.ModLogEntry{
 			Type:  auth.UnbanPost,
 			Board: board,
 			ID:    id,
@@ -254,7 +264,7 @@ func moderatePost(
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, auth.ModLogEntry{
+		err = logModerationA(tx, auth.ModLogEntry{
 			Type:  typ,
 			Board: board,
 			ID:    id,
