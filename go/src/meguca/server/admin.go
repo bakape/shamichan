@@ -565,18 +565,19 @@ func decodeSameIPPosts(w http.ResponseWriter, r *http.Request) (
 	var msg struct {
 		LID   string
 		ID    uint64
-		BOARD string
 	}
 
 	if !decodeJSON(w, r, &msg) {
 		return lid, id, board, 1
 	}
 
-	if _, _, can := canModeratePost(w, r, msg.ID, auth.Janitor); !can {
+	board, _, can := canModeratePost(w, r, msg.ID, auth.Janitor);
+
+	if !can {
 		return lid, id, board, 2
 	}
 
-	return msg.LID, msg.ID, msg.BOARD, 0
+	return msg.LID, msg.ID, board, 0
 }
 
 

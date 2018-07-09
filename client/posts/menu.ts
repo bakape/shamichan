@@ -235,7 +235,6 @@ async function getSameIPPosts(m: Post): Promise<PostData[]> {
 	const res = await postJSON(`/api/same-IP`, {
 		lid: loginID(),
 		id: m.id,
-		board: m.board,
 	})
 
 	if (res.status !== 200) {
