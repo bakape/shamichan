@@ -447,14 +447,12 @@ func GetSameIPPosts(id uint64, board string, creds auth.SessionCreds) (
 
 		// I went with 'requesting' instead of 'looking at' because deleting all
 		// posts by the same IP shares this function
-		err = logModeration(tx, auth.ModLogEntry{
+		return logModeration(tx, auth.ModLogEntry{
 			Type:   auth.MeidoVision,
 			Board:  board,
 			By:     creds.UserID,
 			Reason: "requesting " + name + " post history",
 		})
-
-		return
 	})
 
 	return
