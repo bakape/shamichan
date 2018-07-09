@@ -11,17 +11,7 @@ import (
 )
 
 // Write moderation action to log
-func LogModeration(e auth.ModLogEntry) error {
-	_, err := sq.Insert("mod_log").
-		Columns("type", "board", "id", "by", "length", "reason").
-		Values(int(e.Type), e.Board, e.ID, e.By, e.Length, e.Reason).
-		Exec()
-
-	return err
-}
-
-// Write moderation action to log atomically
-func logModerationA(tx *sql.Tx, e auth.ModLogEntry) error {
+func logModeration(tx *sql.Tx, e auth.ModLogEntry) error {
 	return withTransaction(tx,
 		sq.Insert("mod_log").
 			Columns("type", "board", "id", "by", "length", "reason").
@@ -48,7 +38,7 @@ func writeBan(
 	if err != nil || !log {
 		return
 	}
-	return logModerationA(tx, auth.ModLogEntry{
+	return logModeration(tx, auth.ModLogEntry{
 		Type:   auth.BanPost,
 		Board:  board,
 		ID:     postID,
@@ -181,7 +171,7 @@ func Unban(board string, id uint64, by string) error {
 		if err != nil {
 			return
 		}
-		err = logModerationA(tx, auth.ModLogEntry{
+		err = logModeration(tx, auth.ModLogEntry{
 			Type:  auth.UnbanPost,
 			Board: board,
 			ID:    id,
@@ -264,7 +254,7 @@ func moderatePost(
 		if err != nil {
 			return
 		}
-		err = logModerationA(tx, auth.ModLogEntry{
+		err = logModeration(tx, auth.ModLogEntry{
 			Type:  typ,
 			Board: board,
 			ID:    id,
@@ -382,47 +372,90 @@ func CanPerform(account, board string, action auth.ModerationLevel) (
 
 // GetSameIPPosts returns posts with the same IP and on the same board as the
 // target post
-func GetSameIPPosts(id uint64, board string) (
+func GetSameIPPosts(id uint64, board string, creds auth.SessionCreds) (
 	posts []common.StandalonePost, err error,
 ) {
-	// Get posts ids
-	r, err := sq.Select("id").
-		From("posts").
-		Where(`ip = (select ip from posts where id = ?) and board = ?`,
-			id, board).
-		Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-	var ids = make([]uint64, 0, 64)
-	for r.Next() {
-		var id uint64
-		err = r.Scan(&id)
+	err = InTransaction(func(tx *sql.Tx) (err error) {
+		// Get posts ids
+		r, err := sq.Select("id").
+			From("posts").
+			Where(`ip = (select ip from posts where id = ?) and board = ?`,
+				id, board).
+			Query()
+
 		if err != nil {
 			return
 		}
-		ids = append(ids, id)
-	}
-	err = r.Err()
-	if err != nil {
-		return
-	}
 
-	// Read the matched posts
-	posts = make([]common.StandalonePost, 0, len(ids))
-	var post common.StandalonePost
-	for _, id := range ids {
-		post, err = GetPost(id)
-		switch err {
-		case nil:
-			posts = append(posts, post)
-		case sql.ErrNoRows: // Deleted in race
-			err = nil
-		default:
+		defer r.Close()
+		var ids = make([]uint64, 0, 64)
+
+		for r.Next() {
+			var id uint64
+			err = r.Scan(&id)
+
+			if err != nil {
+				return
+			}
+
+			ids = append(ids, id)
+		}
+
+		err = r.Err()
+
+		if err != nil {
 			return
 		}
-	}
+
+		// Read the matched posts
+		posts = make([]common.StandalonePost, 0, len(ids))
+		var post common.StandalonePost
+
+		for _, id := range ids {
+			post, err = GetPost(id)
+
+			switch err {
+			case nil:
+				posts = append(posts, post)
+			case sql.ErrNoRows: // Deleted in race
+				err = nil
+			default:
+				return
+			}
+		}
+
+		// Add a mod-log entry detailing that a meido has used meido vision
+		var name string
+		pos, err := FindPosition(board, creds.UserID)
+
+		if err != nil {
+			return
+		}
+
+		switch pos {
+		case auth.Admin:
+			name = "the admin's"
+		case auth.BoardOwner:
+			name = "a board owner's"
+		case auth.Moderator:
+			name = "a meido's"
+		case auth.Janitor:
+			name = "a janitor's"
+		default:
+			name = "Anonymous'"
+		}
+
+		// I went with 'requesting' instead of 'looking at' because deleting all
+		// posts by the same IP shares this function
+		err = logModeration(tx, auth.ModLogEntry{
+			Type:   auth.MeidoVision,
+			Board:  board,
+			By:     creds.UserID,
+			Reason: "requesting " + name + " post history",
+		})
+
+		return
+	})
 
 	return
 }

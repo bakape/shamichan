@@ -201,7 +201,7 @@ func deleteBoard(tx *sql.Tx, id, by, reason string) (err error) {
 	if err != nil {
 		return
 	}
-	err = logModerationA(tx, auth.ModLogEntry{
+	err = logModeration(tx, auth.ModLogEntry{
 		Type:   auth.DeleteBoard,
 		Board:  "all",
 		By:     by,
