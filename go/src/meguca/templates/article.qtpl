@@ -8,7 +8,7 @@
 {% func renderArticle(p common.Post, c articleContext) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
 	{% code ln := lang.Get() %}
-	<article id="p{%s= id %}" {%= postClass(p, c.op) %}>
+	<article id="p{%s= id %}" {% space %} {%= postClass(p, c.op) %}>
 		{%= deletedToggle() %}
 		<header class="spaced">
 			<input type="checkbox" class="mod-checkbox hidden">
