@@ -565,19 +565,13 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	board, _, ok := canModeratePost(w, r, id, auth.Janitor)
+	board, uid, ok := canModeratePost(w, r, id, auth.Janitor)
 
 	if !ok {
 		return
 	}
 
-	creds, ok := isLoggedIn(w, r)
-
-	if !ok {
-		return
-	}
-
-	posts, err := db.GetSameIPPosts(id, board, creds)
+	posts, err := db.GetSameIPPosts(id, board, uid)
 
 	if err != nil {
 		httpError(w, r, err)

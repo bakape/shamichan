@@ -109,10 +109,7 @@ func TestStaff(t *testing.T) {
 func TestGetSameIPPosts(t *testing.T) {
 	prepareForModeration(t)
 
-	res, err := GetSameIPPosts(1, "a", auth.SessionCreds {
-		UserID: sampleUserID,
-		Session: "",
-	})
+	res, err := GetSameIPPosts(1, "a", sampleUserID)
 	if err != nil {
 		t.Fatal(err)
 	}

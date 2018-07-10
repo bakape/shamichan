@@ -372,7 +372,7 @@ func CanPerform(account, board string, action auth.ModerationLevel) (
 
 // GetSameIPPosts returns posts with the same IP and on the same board as the
 // target post
-func GetSameIPPosts(id uint64, board string, creds auth.SessionCreds) (
+func GetSameIPPosts(id uint64, board string, uid string) (
 	posts []common.StandalonePost, err error,
 ) {
 	err = InTransaction(func(tx *sql.Tx) (err error) {
@@ -427,7 +427,7 @@ func GetSameIPPosts(id uint64, board string, creds auth.SessionCreds) (
 		// Add a mod-log entry detailing that a meido has used meido vision
 		return logModeration(tx, auth.ModLogEntry{
 			Type:   auth.MeidoVision,
-			By:     creds.UserID,
+			By:     uid,
 			Board:  board,
 			ID:     id,
 		})
