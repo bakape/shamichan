@@ -233,9 +233,13 @@ func startServer() {
 			log.Fatal(err)
 		}
 	}
-	load(db.LoadDB, assets.CreateDirs, geoip.Load)
-	load(lang.Load, listenToThreadDeletion)
-	load(templates.Compile)
+	load(db.LoadDB, assets.CreateDirs)
+	if config.ImagerMode != config.ImagerOnly {
+		// Depend on configs
+		load(geoip.Load, listenToThreadDeletion, lang.Load)
+		// Depends on language packs
+		load(templates.Compile)
+	}
 
 	if err := startWebServer(); err != nil {
 		log.Fatal(err)
