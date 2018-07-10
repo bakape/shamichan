@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"database/sql"
-	"errors"
 	"math/big"
 	"meguca/common"
 	"meguca/config"
@@ -20,8 +19,8 @@ import (
 var (
 	syncWatchRegexp = regexp.MustCompile(`^sw(\d+:)?(\d+):(\d+)([+-]\d+)?$`)
 
-	errTooManyRolls = errors.New("too many rolls")
-	errDieTooBig    = errors.New("die too big")
+	errTooManyRolls = common.ErrInvalidInput("too many rolls")
+	errDieTooBig    = common.ErrInvalidInput("die too big")
 )
 
 // Returns a cryptographically secure pseudorandom int in the interval [0;max)
@@ -172,6 +171,11 @@ func parseCommand(match []byte, board string, id uint64, ip string) (
 	return
 }
 
+func isNumError(err error) bool {
+	_, ok := err.(*strconv.NumError)
+	return ok
+}
+
 // Parse dice throw commands
 func parseDice(match string) (val []uint16, err error) {
 	dice := common.DiceRegexp.FindStringSubmatch(match)
@@ -183,6 +187,9 @@ func parseDice(match string) (val []uint16, err error) {
 		rolls, err = strconv.Atoi(string(dice[1]))
 		switch {
 		case err != nil:
+			if isNumError(err) {
+				err = common.StatusError{err, 400}
+			}
 			return
 		case rolls > 10:
 			return nil, errTooManyRolls
@@ -192,6 +199,9 @@ func parseDice(match string) (val []uint16, err error) {
 	max, err := strconv.Atoi(string(dice[2]))
 	switch {
 	case err != nil:
+		if isNumError(err) {
+			err = common.StatusError{err, 400}
+		}
 		return
 	case max > common.MaxDiceSides:
 		return nil, errDieTooBig

@@ -132,8 +132,17 @@ func closeDanglingPosts() error {
 			return err
 		}
 
-		links, com, err := common.ParseBody([]byte(body), p.board, p.id, p.ip.String, true)
-		if err != nil {
+		links, com, err := common.ParseBody([]byte(body), p.board, p.id,
+			p.ip.String, true)
+		// Still close posts on invalid input
+		switch err.(type) {
+		case nil:
+		case common.StatusError:
+			if err.(common.StatusError).Code != 400 {
+				return err
+			}
+			err = nil
+		default:
 			return err
 		}
 		err = ClosePost(p.id, p.op, body, links, com)
