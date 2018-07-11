@@ -21,7 +21,9 @@ async function onDrop(e: DragEvent) {
 	let file: File;
 	if (!files.length) {
 		try {
-			file = new File([await (await fetch(url)).blob()], "download");
+			let name = new URL(url).pathname;
+			name = name.slice(name.lastIndexOf("/") + 1);
+			file = new File([await (await fetch(url)).blob()], name);
 		} catch (err) {
 			alert(err);
 			return;
