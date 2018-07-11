@@ -122,12 +122,12 @@ func UseImageToken(tx *sql.Tx, token string) (
 // AllocateImage allocates an image's file resources to their respective served
 // directories and write its data to the database
 func AllocateImage(src, thumb []byte, img common.ImageCommon) error {
-	err := assets.Write(img.SHA1, img.FileType, img.ThumbType, src, thumb)
+	err := WriteImage(img)
 	if err != nil {
-		return cleanUpFailedAllocation(img, err)
+		return err
 	}
 
-	err = WriteImage(img)
+	err = assets.Write(img.SHA1, img.FileType, img.ThumbType, src, thumb)
 	if err != nil {
 		return cleanUpFailedAllocation(img, err)
 	}

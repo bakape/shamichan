@@ -190,7 +190,8 @@ func newThumbnail(data []byte, img common.ImageCommon) (string, error) {
 		img.Title = img.Title[:200]
 	}
 
-	if err := db.AllocateImage(data, thumb, img); err != nil {
+	err = db.AllocateImage(data, thumb, img)
+	if err != nil && !db.IsConflictError(err) {
 		return "", err
 	}
 	return db.NewImageToken(img.SHA1)

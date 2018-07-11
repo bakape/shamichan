@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 )
 
-const fileCreationFlags = os.O_WRONLY | os.O_CREATE | os.O_EXCL
-
 // Only used in tests, but we still need them exported
 var (
 	//  StdJPEG is a JPEG sample image standard struct. Only used in tests.
@@ -147,7 +145,7 @@ func Write(SHA1 string, fileType, thumbType uint8, src, thumb []byte) error {
 
 // Write a single file to disk with the appropriate permissions and flags
 func writeFile(path string, data []byte) error {
-	file, err := os.OpenFile(path, fileCreationFlags, 0660)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
 	if err != nil {
 		return err
 	}
