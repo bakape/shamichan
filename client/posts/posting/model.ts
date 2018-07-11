@@ -312,12 +312,15 @@ export default class FormModel extends Post {
 	}
 
 	// Upload the file and request its allocation
-	public async uploadFile(files?: FileList) {
+	public async uploadFile(files?: FileList | File) {
 		if (boardConfig.textOnly) {
 			return
 		}
 		if (files && this.view.upload) {
-			(this.view.upload.input.files as any) = files
+			// Can't set value with an individual File
+			if (files instanceof FileList) {
+				(this.view.upload.input.files as any) = files;
+			}
 		}
 
 		// Need a captcha and none submitted. Protects from no-captcha drops
@@ -331,7 +334,8 @@ export default class FormModel extends Post {
 			return
 		}
 
-		const data = await this.view.upload.uploadFile()
+		const data = await this.view.upload
+			.uploadFile(files instanceof FileList ? files[0] : files);
 		// Upload failed, canceled, image added while thumbnailing or post
 		// closed
 		if (!data || this.image || !this.editing) {

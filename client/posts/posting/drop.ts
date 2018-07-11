@@ -7,20 +7,35 @@ import FormModel from "./model"
 import { expandThreadForm } from "./threads"
 
 // Handle file drop
-function onDrop(e: DragEvent) {
-	const { files } = e.dataTransfer
-	if (!files.length || isFileInput(e.target)) {
+async function onDrop(e: DragEvent) {
+	const { files } = e.dataTransfer;
+	const url = e.dataTransfer.getData("text/uri-list");
+	if ((!files.length && !url) || isFileInput(e.target)) {
 		return
 	}
 
 	e.stopPropagation()
 	e.preventDefault()
 
+	// Fetch file from link
+	let file: File;
+	if (!files.length) {
+		try {
+			file = new File([await (await fetch(url)).blob()], "download");
+		} catch (err) {
+			alert(err);
+			return;
+		}
+	}
+
 	if (!page.thread) {
+		if (!files.length) {
+			return;
+		}
 		expandThreadForm();
 		(document
 			.querySelector("#new-thread-form input[type=file]") as any)
-			.files = files
+			.value = file;
 		return
 	}
 
@@ -31,10 +46,10 @@ function onDrop(e: DragEvent) {
 	// Create form, if none
 	postSM.feed(postEvent.open)
 
-	// Neither disconnected, errored or already has image
+	// Either disconnected, erred or already has image
 	const m = trigger("getPostModel") as FormModel
 	if (m && !m.image) {
-		m.uploadFile(files)
+		m.uploadFile(file || files);
 	}
 }
 
