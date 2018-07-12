@@ -21,8 +21,12 @@ async function onDrop(e: DragEvent) {
 	let file: File;
 	if (!files.length) {
 		try {
-			let name = new URL(url).pathname;
-			name = name.slice(name.lastIndexOf("/") + 1);
+			let u = new URL(url);
+			// Prevent URLs from meguca accidentally being posted with drag&drop
+			if (u.origin === location.origin) {
+				return;
+			}
+			const name = u.pathname.slice(u.pathname.lastIndexOf("/") + 1);
 			file = new File([await (await fetch(url)).blob()], name);
 		} catch (err) {
 			alert(err);
