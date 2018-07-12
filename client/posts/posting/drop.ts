@@ -41,7 +41,7 @@ async function onDrop(e: DragEvent) {
 		expandThreadForm();
 		(document
 			.querySelector("#new-thread-form input[type=file]") as any)
-			.value = file;
+			.files = files;
 		return
 	}
 
