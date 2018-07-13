@@ -104,12 +104,13 @@ caching of generated posts.
 
 Common functionality between index board pages and threads pages
 {% func renderThreadPosts(t common.Thread, bls backlinks, root string, index bool) %}{% stripspace %}
+	{% code boardConfig := config.GetBoardConfigs(t.Board) %}
 	{% code c := articleContext{
 		index: index,
 		sticky: t.Sticky,
 		locked: t.Locked,
-		rbText: false,
-		pyu: false,
+		rbText: boardConfig.RbText,
+		pyu: boardConfig.Pyu,
 		op: t.ID,
 		board: t.Board,
 		subject: t.Subject,
@@ -119,11 +120,8 @@ Common functionality between index board pages and threads pages
 	{% code c.omit, c.imageOmit = CalculateOmit(t) %}
 	{%= renderArticle(t.Post, c) %}
 
-	{% code boardConfig := config.GetBoardConfigs(c.board) %}
 	{% code c.sticky = false %}
 	{% code c.locked = false %}
-	{% code c.rbText = boardConfig.RbText %}
-	{% code c.pyu = boardConfig.Pyu %}
 	{% code c.omit, c.imageOmit = 0, 0 %}
 	{% code c.subject = "" %}
 	{% for _, p := range t.Posts %}
