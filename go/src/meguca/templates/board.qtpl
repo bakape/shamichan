@@ -98,6 +98,7 @@ allow caching of generated posts.
 {% func CatalogThreads(b []common.Thread, json []byte) %}{% stripspace %}
 	<div id="catalog">
 		{% for _, t := range b %}
+			{% code boardConfig := config.GetBoardConfigs(t.Board) %}
 			{% code idStr:= strconv.FormatUint(t.ID, 10) %}
 			{% code hasImage := t.Image != nil && t.Image.ThumbType != common.NoFile %}
 			<article id="p{%s= idStr %}" {% space %} {%= postClass(t.Post, t.ID) %} {% space %} data-id="{%s= idStr %}">
@@ -133,7 +134,7 @@ allow caching of generated posts.
 					「{%s t.Subject %}」
 				</h3>
 				<blockquote>
-					{%s t.Body %}
+					{%= body(t.Post, t.ID, t.Board, false, boardConfig.RbText, boardConfig.Pyu) %}
 				</blockquote>
 			</article>
 		{% endfor %}
