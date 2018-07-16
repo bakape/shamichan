@@ -82,11 +82,6 @@ func ErrInvalidBoard(board string) error {
 	return StatusError{fmt.Errorf("board `%s` does not exist", board), 404}
 }
 
-// Missing string
-func ErrMissingString(str string) error {
-	return StatusError{fmt.Errorf("expected string `%s` does not exist", str), 404}
-}
-
 // Returns, if client-caused error can be safely ignored and not logged
 func CanIgnoreClientError(err error) bool {
 recheck:

@@ -261,29 +261,26 @@ func getHookTubeTitle(w http.ResponseWriter, r *http.Request) {
 		} `json:"json_2,omitempty"`
 	}
 	
+	var err error
+	var hook hookJSON
+	var resp *http.Response
+	var buf bytes.Buffer
 	var title string
-	hook := hookJSON{}
-	url := "https://hooktube.com/api?mode=video&id=" + extractParam(r, "id")
-	resp, err := http.Get(url)
 
-	// Try 2 more times if it failed the first
-	if err != nil {
-		for i := 1; i < 3; i++ {
-			resp, err = http.Get(url)
+	for i := 0; i < 3; i++ {
+		resp, err = http.Get("https://hooktube.com/api?mode=video&id=" + extractParam(r, "id"))
 
-			if err == nil {
-				break
-			}
-		}
-
-		if err != nil {
-			httpError(w, r, err)
-			return
+		if err == nil {
+			break
 		}
 	}
 
+	if err != nil {
+		httpError(w, r, err)
+		return
+	}
+
 	defer resp.Body.Close()
-	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	respByte := buf.Bytes()
 
@@ -302,6 +299,6 @@ func getHookTubeTitle(w http.ResponseWriter, r *http.Request) {
 	if title != "" {
 		w.Write([]byte(title))
 	} else {
-		httpError(w, r, common.ErrMissingString("title"))
+		httpError(w, r, common.StatusError{fmt.Errorf("expected string `title` does not exist"), 404})
 	}
 }
