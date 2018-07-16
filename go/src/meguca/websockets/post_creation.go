@@ -159,7 +159,7 @@ func CreatePost(
 	case err != nil:
 		return
 	case locked:
-		err = errors.New("thread is locked")
+		err = common.StatusError{errors.New("thread is locked"), 400}
 		return
 	}
 
