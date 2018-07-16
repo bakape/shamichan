@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"meguca/auth"
+	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	"meguca/imager"
@@ -13,8 +14,8 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"encoding/json"
 
-	"github.com/badoux/goscraper"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/gorilla/handlers"
@@ -250,13 +251,54 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 
 // Get HookTube title from ID
 func getHookTubeTitle(w http.ResponseWriter, r *http.Request) {
-	s, err := goscraper.Scrape(
-		"https://hooktube.com/embed/"+extractParam(r, "id"), 3)
+	type hookJSON struct {
+		JSON2 struct {
+			Items []struct {
+				Snippet struct {
+					Title string `json:"title,omitempty"`
+				} `json:"snippet,omitempty"`
+			}`json:"items,omitempty"`
+		} `json:"json_2,omitempty"`
+	}
+	
+	var err error
+	var hook hookJSON
+	var resp *http.Response
+	var buf bytes.Buffer
+	var title string
+
+	for i := 0; i < 3; i++ {
+		resp, err = http.Get("https://hooktube.com/api?mode=video&id=" + extractParam(r, "id"))
+
+		if err == nil {
+			break
+		}
+	}
 
 	if err != nil {
 		httpError(w, r, err)
 		return
 	}
 
-	w.Write([]byte(s.Preview.Title))
+	defer resp.Body.Close()
+	buf.ReadFrom(resp.Body)
+	respByte := buf.Bytes()
+
+	if err := json.Unmarshal(respByte, &hook); err != nil {
+		httpError(w, r, err)
+		return
+	}
+
+	for num := range hook.JSON2.Items {
+		if hook.JSON2.Items[num].Snippet.Title != "" {
+			title = hook.JSON2.Items[num].Snippet.Title
+			break
+		}
+	}
+
+	if title != "" {
+		w.Write([]byte(title))
+	} else {
+		httpError(w, r, common.StatusError{fmt.Errorf("expected string `title` does not exist"), 404})
+	}
 }
