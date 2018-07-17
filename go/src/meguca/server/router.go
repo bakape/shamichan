@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"meguca/auth"
+	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	"meguca/imager"
@@ -13,8 +14,9 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"errors"
 
-	"github.com/badoux/goscraper"
+	"github.com/otium/ytdl"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/gorilla/handlers"
@@ -143,7 +145,7 @@ func createRouter() http.Handler {
 
 		// Internal API
 		api.GET("/socket", websockets.Handler)
-		api.GET("/get-hooktube-title/:id", getHookTubeTitle)
+		api.GET("/youtube-data/:id", youTubeData)
 		api.POST("/create-thread", createThread)
 		api.POST("/create-reply", createReply)
 		api.POST("/register", register)
@@ -248,15 +250,59 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("God's in His heaven, all's right with the world"))
 }
 
-// Get HookTube title from ID
-func getHookTubeTitle(w http.ResponseWriter, r *http.Request) {
-	s, err := goscraper.Scrape(
-		"https://hooktube.com/embed/"+extractParam(r, "id"), 3)
+// Get YouTube title and googlevideo URL from URL
+func youTubeData(w http.ResponseWriter, r *http.Request) {
+	var buf bytes.Buffer
+	info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" + extractParam(r, "id"))
 
 	if err != nil {
 		httpError(w, r, err)
 		return
 	}
 
-	w.Write([]byte(s.Preview.Title))
+	vidFormats := info.Formats.
+		Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+		Filter(ytdl.FormatResolutionKey, []interface{}{"360p"})
+	
+	if len(vidFormats) == 0 {
+		vidFormats = info.Formats.
+			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+			Worst(ytdl.FormatResolutionKey)
+		
+		if len(vidFormats) == 0 {
+			httpError(w, r, common.StatusError{errors.New("no YouTube video found"), 404})
+			return
+		}
+	}
+
+	video, err := info.GetDownloadURL(vidFormats[0])
+
+	if err != nil {
+		httpError(w, r, err)
+		return
+	}
+
+	vidHighFormats := info.Formats.
+		Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+		Best(ytdl.FormatResolutionKey)
+	
+	if len(vidHighFormats) == 0 {
+		httpError(w, r, common.StatusError{errors.New("no YouTube video found"), 404})
+		return
+	}
+	
+	videoHigh, err := info.GetDownloadURL(vidHighFormats[0])
+
+	if err != nil {
+		httpError(w, r, err)
+		return
+	}
+
+	fmt.Fprintf(&buf, "%s\n%s\n%s\n%s",
+		info.Title,
+		info.GetThumbnailURL(ytdl.ThumbnailQualityHigh).String(),
+		video.String(),
+		videoHigh.String())
+
+	w.Write(buf.Bytes())
 }

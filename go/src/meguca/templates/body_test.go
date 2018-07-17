@@ -353,21 +353,6 @@ func TestRenderBody(t *testing.T) {
 			in:   "https://vimeo.com/174312494",
 			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https://vimeo.com/174312494\">[Vimeo] ???</a></em>",
 		},
-		{
-			name: "hooktube embed",
-			in:   "https://hooktube.com/z0f4Wgi94eo",
-			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://hooktube.com/z0f4Wgi94eo\">[HookTube] ???</a></em>",
-		},
-		{
-			name: "hooktube embed",
-			in:   "https://hooktube.com/embed/z0f4Wgi94eo",
-			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://hooktube.com/embed/z0f4Wgi94eo\">[HookTube] ???</a></em>",
-		},
-		{
-			name: "hooktube embed",
-			in:   "https://hooktube.com/watch?v=z0f4Wgi94eo",
-			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://hooktube.com/watch?v=z0f4Wgi94eo\">[HookTube] ???</a></em>",
-		},
 	}
 
 	for i := range cases {
