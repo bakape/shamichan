@@ -15,6 +15,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"errors"
+	"strings"
 
 	"github.com/otium/ytdl"
 	"github.com/dimfeld/httptreemux"
@@ -300,7 +301,11 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(&buf, "%s\n%s\n%s\n%s",
 		info.Title,
-		info.GetThumbnailURL(ytdl.ThumbnailQualityHigh).String(),
+		strings.Replace(
+			info.GetThumbnailURL(ytdl.ThumbnailQualityMaxRes).String(),
+			"http://",
+			"https://",
+			1),
 		video.String(),
 		videoHigh.String())
 
