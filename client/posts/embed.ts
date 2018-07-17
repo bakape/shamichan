@@ -66,8 +66,8 @@ function fetchYouTube(): (el: Element) => Promise<void> {
 	return async (el: Element) => {
 		const ref = el.getAttribute("href"),
 		id = strip(ref.split(".be/").pop().split("embed/").pop().split("watch?v=")),
-		res = await fetch("/api/get-youtube-data/" + id),
-		[title, video] = (await res.text()).split("\n")
+		res = await fetch("/api/youtube-data/" + id),
+		[title, thumb, video, videoHigh] = (await res.text()).split("\n")
 
 		switch (res.status) {
 		case 200:
@@ -91,17 +91,30 @@ function fetchYouTube(): (el: Element) => Promise<void> {
 			return
 		}
 
+		if (!thumb) {
+			el.textContent = format("Error: Thumbnail does not exist", provider.YouTube)
+			el.classList.add("errored")
+			return
+		}
+
 		if (!video) {
 			el.textContent = format("Error: Empty googlevideo URL", provider.YouTube)
 			el.classList.add("errored")
 			return
 		}
 
+		if (!videoHigh) {
+			el.textContent = format("Error: Empty googlevideo (high res) URL", provider.YouTube)
+			el.classList.add("errored")
+			return
+		}
+
 		el.setAttribute("data-html", encodeURIComponent(
-			`<video width="480" height="270" ` + (ref.includes("loop=1") ? "loop " : '') + `controls>`
-			+ `<source src="` + video + (!ref.includes(`t=`) ? check("start") : '') + check("t") + `" type="video/mp4">`
-			+ `Your browser does not support the video tag.`
-			+ `</video>`))
+			`<video width="480" height="270" poster="`
+			+ thumb + `" ` + (ref.includes("loop=1") ? "loop " : '')
+			+ `controls><source src="`
+			+ video + (!ref.includes(`t=`) ? check("start") : '') + check("t")
+			+ `" type="video/webm">Your browser does not support the video tag.</video>`))
 			
 		function strip(s: string[]): string {
 			return s.pop().split('&').shift().split('#').shift().split('?').shift()

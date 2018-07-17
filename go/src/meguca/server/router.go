@@ -143,7 +143,7 @@ func createRouter() http.Handler {
 
 		// Internal API
 		api.GET("/socket", websockets.Handler)
-		api.GET("/get-youtube-data/:id", getYouTubeData)
+		api.GET("/youtube-data/:id", youTubeData)
 		api.POST("/create-thread", createThread)
 		api.POST("/create-reply", createReply)
 		api.POST("/register", register)
@@ -249,20 +249,34 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get YouTube title and googlevideo URL from URL
-func getYouTubeData(w http.ResponseWriter, r *http.Request) {
-	info, err := ytdl.GetVideoInfo(("https://www.youtube.com/watch?v=" + extractParam(r, "id")))
+func youTubeData(w http.ResponseWriter, r *http.Request) {
+	info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" + extractParam(r, "id"))
 
 	if err != nil {
 		httpError(w, r, err)
 		return
 	}
 
-	video, err := info.GetDownloadURL(info.Formats.Best("mp4")[0])
+	video, err := info.GetDownloadURL(info.Formats.
+		Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+		Filter(ytdl.FormatResolutionKey, []interface{}{"360p"})[0])
 
 	if err != nil {
 		httpError(w, r, err)
 		return
 	}
 
-	w.Write([]byte(info.Title + "\n" + video.String()))
+	videoHigh, err := info.GetDownloadURL(info.Formats.
+		Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+		Best(ytdl.FormatResolutionKey)[0])
+
+	if err != nil {
+		httpError(w, r, err)
+		return
+	}
+
+	w.Write([]byte(
+		info.Title + "\n" +
+		info.GetThumbnailURL(ytdl.ThumbnailQualityDefault).String() + "\n" +
+		video.String() + "\n" + videoHigh.String()))
 }
