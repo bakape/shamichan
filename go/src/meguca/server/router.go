@@ -297,6 +297,6 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte(
 		info.Title + "\n" +
-		info.GetThumbnailURL(ytdl.ThumbnailQualityDefault).String() + "\n" +
+		info.GetThumbnailURL(ytdl.ThumbnailQualityHigh).String() + "\n" +
 		video.String() + "\n" + videoHigh.String()))
 }
