@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"fmt"
 	"meguca/auth"
+	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	"meguca/imager"
@@ -13,6 +14,7 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"errors"
 
 	"github.com/otium/ytdl"
 	"github.com/dimfeld/httptreemux"
@@ -250,6 +252,7 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 
 // Get YouTube title and googlevideo URL from URL
 func youTubeData(w http.ResponseWriter, r *http.Request) {
+	var buf bytes.Buffer
 	info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" + extractParam(r, "id"))
 
 	if err != nil {
@@ -267,7 +270,7 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 			Worst(ytdl.FormatResolutionKey)
 		
 		if len(vidFormats) == 0 {
-			httpError(w, r, err)
+			httpError(w, r, common.StatusError{errors.New("no YouTube video found"), 404})
 			return
 		}
 	}
@@ -284,7 +287,7 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 		Best(ytdl.FormatResolutionKey)
 	
 	if len(vidHighFormats) == 0 {
-		httpError(w, r, err)
+		httpError(w, r, common.StatusError{errors.New("no YouTube video found"), 404})
 		return
 	}
 	
@@ -295,8 +298,11 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(
-		info.Title + "\n" +
-		info.GetThumbnailURL(ytdl.ThumbnailQualityHigh).String() + "\n" +
-		video.String() + "\n" + videoHigh.String()))
+	fmt.Fprintf(&buf, "%s\n%s\n%s\n%s",
+		info.Title,
+		info.GetThumbnailURL(ytdl.ThumbnailQualityHigh).String(),
+		video.String(),
+		videoHigh.String())
+
+	w.Write(buf.Bytes())
 }
