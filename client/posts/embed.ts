@@ -64,13 +64,9 @@ function formatProvider(type: provider): (s: string) => string {
 // fetcher for the YouTube provider
 function fetchYouTube(): (el: Element) => Promise<void> {
 	return async (el: Element) => {
-		const res = await fetch("/api/get-youtube-data/" + encodeURIComponent(
-			"https://www.youtube.com/watch?v=" + el.getAttribute("href").
-			split(".com/").pop().
-			split(".be/").pop().
-			split("embed/").pop().
-			split("watch?v=").pop()
-		)),
+		const ref = el.getAttribute("href"),
+		id = strip(ref.split(".be/").pop().split("embed/").pop().split("watch?v=")),
+		res = await fetch("/api/get-youtube-data/" + id),
 		[title, video] = (await res.text()).split("\n")
 
 		switch (res.status) {
@@ -102,10 +98,18 @@ function fetchYouTube(): (el: Element) => Promise<void> {
 		}
 
 		el.setAttribute("data-html", encodeURIComponent(
-			`<video width="480" height="270" controls>`
-			+ `<source src="` + video + `" type="video/mp4">`
+			`<video width="480" height="270" ` + (ref.includes("loop=1") ? "loop " : '') + `controls>`
+			+ `<source src="` + video + (!ref.includes(`t=`) ? check("start") : '') + check("t") + `" type="video/mp4">`
 			+ `Your browser does not support the video tag.`
 			+ `</video>`))
+			
+		function strip(s: string[]): string {
+			return s.pop().split('&').shift().split('#').shift().split('?').shift()
+		}
+
+		function check(s: string): string {
+			return ref.includes(`${s}=`) ? `#t=` + strip(ref.split(`${s}=`)) : ''
+		}
 	}
 }
 

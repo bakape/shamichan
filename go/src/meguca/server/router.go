@@ -143,7 +143,7 @@ func createRouter() http.Handler {
 
 		// Internal API
 		api.GET("/socket", websockets.Handler)
-		api.GET("/get-youtube-data/:url", getYouTubeData)
+		api.GET("/get-youtube-data/:id", getYouTubeData)
 		api.POST("/create-thread", createThread)
 		api.POST("/create-reply", createReply)
 		api.POST("/register", register)
@@ -250,7 +250,7 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 
 // Get YouTube title and googlevideo URL from URL
 func getYouTubeData(w http.ResponseWriter, r *http.Request) {
-	info, err := ytdl.GetVideoInfo(extractParam(r, "url"))
+	info, err := ytdl.GetVideoInfo(("https://www.youtube.com/watch?v=" + extractParam(r, "id")))
 
 	if err != nil {
 		httpError(w, r, err)
