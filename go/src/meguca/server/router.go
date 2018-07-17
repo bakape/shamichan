@@ -257,18 +257,38 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	video, err := info.GetDownloadURL(info.Formats.
+	vidFormats := info.Formats.
 		Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
-		Filter(ytdl.FormatResolutionKey, []interface{}{"360p"})[0])
+		Filter(ytdl.FormatResolutionKey, []interface{}{"360p"})
+	
+	if len(vidFormats) == 0 {
+		vidFormats = info.Formats.
+			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+			Worst(ytdl.FormatResolutionKey)
+		
+		if len(vidFormats) == 0 {
+			httpError(w, r, err)
+			return
+		}
+	}
+
+	video, err := info.GetDownloadURL(vidFormats[0])
 
 	if err != nil {
 		httpError(w, r, err)
 		return
 	}
 
-	videoHigh, err := info.GetDownloadURL(info.Formats.
+	vidHighFormats := info.Formats.
 		Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
-		Best(ytdl.FormatResolutionKey)[0])
+		Best(ytdl.FormatResolutionKey)
+	
+	if len(vidHighFormats) == 0 {
+		httpError(w, r, err)
+		return
+	}
+	
+	videoHigh, err := info.GetDownloadURL(vidHighFormats[0])
 
 	if err != nil {
 		httpError(w, r, err)
