@@ -66,7 +66,10 @@ func FindPosition(board, userID string) (pos auth.ModerationLevel, err error) {
 
 	r, err := sq.Select("position").
 		From("staff").
-		Where("account = ? and board = ?", userID, board).
+		Where(squirrel.Eq{
+			"account": userID,
+			"board":   []string{board, "all"},
+		}).
 		Query()
 	if err != nil {
 		return
