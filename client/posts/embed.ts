@@ -7,7 +7,7 @@ type OEmbedDoc = {
 }
 
 // Types of different embeds by provider
-enum provider { YouTube, SoundCloud, Vimeo, Coub, HookTube }
+enum provider { YouTube, SoundCloud, Vimeo, Coub }
 
 // Matching patterns and their respective providers
 const patterns: [provider, RegExp][] = [
@@ -27,10 +27,6 @@ const patterns: [provider, RegExp][] = [
 		provider.Coub,
 		/https?:\/\/(?:www\.)?coub\.com\/view\/.+/,
 	],
-	[
-		provider.HookTube,
-		/https?:\/\/(?:[^\.]+\.)?(?:hooktube.com\/|hooktube.com\/embed\/|hooktube\.com\/watch\?v=)[a-zA-Z0-9_-]+/,
-	],
 ]
 
 // Map of providers to formatter functions
@@ -39,22 +35,19 @@ const formatters: { [key: number]: (s: string) => string } = {}
 // Map of providers to information fetcher functions
 const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
 
-for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub", "HookTube"]) {
+for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub"]) {
 	const id = (provider as any)[p] as number
 	formatters[id] = formatProvider(id)
 	switch (id) {
 		case provider.YouTube:
-			fetchers[id] = proxyYoutube
-			break
-		case provider.HookTube:
-			fetchers[id] = fetchHookTube
+			fetchers[id] = fetchYouTube()
 			break
 		default:
 			fetchers[id] = fetchNoEmbed(id)
 	}
 }
 
-// formatter for the noembed.com meta-provider or hooktube
+// formatter for the noembed.com meta-provider or YouTube
 function formatProvider(type: provider): (s: string) => string {
 	return (href: string) => {
 		const attrs = {
@@ -68,55 +61,51 @@ function formatProvider(type: provider): (s: string) => string {
 	}
 }
 
-// Proxy all youtube requests to hooktube
-function proxyYoutube(el: Element): Promise<void> {
-	el.setAttribute("href", el.getAttribute("href")
-		.replace("youtube", "hooktube")
-		.replace("youtu.be", "hooktube.com"))
-	return fetchHookTube(el)
-}
+// fetcher for the YouTube provider
+function fetchYouTube(): (el: Element) => Promise<void> {
+	return async (el: Element) => {
+		const res = await fetch("/api/get-youtube-data/" + encodeURIComponent(
+			"https://www.youtube.com/watch?v=" + el.getAttribute("href").
+			split(".com/").pop().
+			split(".be/").pop().
+			split("embed/").pop().
+			split("watch?v=").pop()
+		)),
+		[title, video] = (await res.text()).split("\n")
 
-// fetcher for the HookTube provider
-async function fetchHookTube(el: Element): Promise<void> {
-	const ref = el.getAttribute("href"),
-	id = strip(ref.split(".com/").pop().split("watch?v=").pop().split("embed/")),
-	res = await fetch(`/api/get-hooktube-title/${id}`),
-	title = await res.text()
+		switch (res.status) {
+		case 200:
+			el.textContent = format(title, provider.YouTube)
+			break
+		case 500:
+			el.textContent = format("Error 500: YouTube is not available", provider.YouTube)
+			el.classList.add("errored")
+			return
+		default:
+			const errmsg = `Error ${res.status}: ${res.statusText}`
+			el.textContent = format(errmsg, provider.YouTube)
+			el.classList.add("errored")
+			console.error(errmsg)
+			return
+		}
 
-	switch (res.status) {
-	case 200:
-		el.textContent = format(title, provider.HookTube)
-		break
-	case 500:
-		el.textContent = format("Error 500: HookTube is not available", provider.HookTube)
-		el.classList.add("errored")
-		return
-	default:
-		const errmsg = `Error ${res.status}: ${res.statusText}`
-		el.textContent = format(errmsg, provider.HookTube)
-		el.classList.add("errored")
-		console.error(errmsg)
-		return
-	}
+		if (!title) {
+			el.textContent = format("Error: Title does not exist", provider.YouTube)
+			el.classList.add("errored")
+			return
+		}
 
-	if (!title) {
-		el.textContent = format("Error: Title does not exist // Unknown", provider.HookTube)
-		el.classList.add("errored")
-		return
-	}
+		if (!video) {
+			el.textContent = format("Error: Empty googlevideo URL", provider.YouTube)
+			el.classList.add("errored")
+			return
+		}
 
-	el.setAttribute("data-html", encodeURIComponent(`<iframe width="480" `
-		+ `height="270" src="https://hooktube.com/embed/${id}?autoplay=false`
-		+ check("start") + check('t') + check("loop")
-		+ `" referrerpolicy="no-referrer" sandbox="allow-scripts" `
-		+ `allowfullscreen></iframe>`))
-
-	function strip(s: string[]): string {
-		return s.pop().split('&').shift().split('#').shift().split('?').shift()
-	}
-
-	function check(s: string): string {
-		return ref.includes(`${s}=`) ? `&${s}=` + strip(ref.split(`${s}=`)) : ''
+		el.setAttribute("data-html", encodeURIComponent(
+			`<video width="480" height="270" controls>`
+			+ `<source src="` + video + `" type="video/mp4">`
+			+ `Your browser does not support the video tag.`
+			+ `</video>`))
 	}
 }
 

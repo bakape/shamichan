@@ -20,7 +20,6 @@ const (
 	soundCloud
 	vimeo
 	coub
-	hookTube
 )
 
 var (
@@ -32,7 +31,6 @@ var (
 		soundCloud: "SoundCloud",
 		vimeo:      "Vimeo",
 		coub:       "Coub",
-		hookTube:   "HookTube",
 	}
 	embedPatterns = [...]struct {
 		typ  int
@@ -53,10 +51,6 @@ var (
 		{
 			coub,
 			regexp.MustCompile(`https?:\/\/coub\.com\/view\/[a-zA-Z0-9-_]+`),
-		},
-		{
-			hookTube,
-			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?(?:hooktube.com\/|hooktube.com\/embed\/|hooktube\.com\/watch\?v=)[a-zA-Z0-9_-]+`),
 		},
 	}
 

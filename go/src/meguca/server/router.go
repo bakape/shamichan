@@ -14,7 +14,7 @@ import (
 	"runtime/debug"
 	"strconv"
 
-	"github.com/badoux/goscraper"
+	"github.com/otium/ytdl"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/gorilla/handlers"
@@ -143,7 +143,7 @@ func createRouter() http.Handler {
 
 		// Internal API
 		api.GET("/socket", websockets.Handler)
-		api.GET("/get-hooktube-title/:id", getHookTubeTitle)
+		api.GET("/get-youtube-data/:url", getYouTubeData)
 		api.POST("/create-thread", createThread)
 		api.POST("/create-reply", createReply)
 		api.POST("/register", register)
@@ -248,15 +248,21 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("God's in His heaven, all's right with the world"))
 }
 
-// Get HookTube title from ID
-func getHookTubeTitle(w http.ResponseWriter, r *http.Request) {
-	s, err := goscraper.Scrape(
-		"https://hooktube.com/embed/"+extractParam(r, "id"), 3)
+// Get YouTube title and googlevideo URL from URL
+func getYouTubeData(w http.ResponseWriter, r *http.Request) {
+	info, err := ytdl.GetVideoInfo(extractParam(r, "url"))
 
 	if err != nil {
 		httpError(w, r, err)
 		return
 	}
 
-	w.Write([]byte(s.Preview.Title))
+	video, err := info.GetDownloadURL(info.Formats.Best("mp4")[0])
+
+	if err != nil {
+		httpError(w, r, err)
+		return
+	}
+
+	w.Write([]byte(info.Title + "\n" + video.String()))
 }
