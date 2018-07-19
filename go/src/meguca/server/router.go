@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"meguca/auth"
 	"meguca/common"
@@ -14,12 +15,11 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
-	"errors"
 
-	"github.com/otium/ytdl"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/gorilla/handlers"
+	"github.com/otium/ytdl"
 )
 
 var (
@@ -41,6 +41,9 @@ var (
 	enableGzip bool
 
 	isTest bool
+
+	errNoYoutubeVideo = common.StatusError{errors.New("no YouTube video found"),
+		404}
 )
 
 // Used for overriding during tests
@@ -252,57 +255,59 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 
 // Get YouTube title and googlevideo URL from URL
 func youTubeData(w http.ResponseWriter, r *http.Request) {
-	var buf bytes.Buffer
-	info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" + extractParam(r, "id"))
-
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-
-	vidFormats := info.Formats.
-		Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
-		Filter(ytdl.FormatResolutionKey, []interface{}{"360p"})
-	
-	if len(vidFormats) == 0 {
-		vidFormats = info.Formats.
-			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
-			Worst(ytdl.FormatResolutionKey)
-		
-		if len(vidFormats) == 0 {
-			httpError(w, r, common.StatusError{errors.New("no YouTube video found"), 404})
+	err := func() (err error) {
+		var buf bytes.Buffer
+		info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" +
+			extractParam(r, "id"))
+		if err != nil {
 			return
 		}
-	}
 
-	video, err := info.GetDownloadURL(vidFormats[0])
+		vidFormats := info.Formats.
+			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+			Filter(ytdl.FormatResolutionKey, []interface{}{"360p"})
+		if len(vidFormats) == 0 {
+			vidFormats = info.Formats.
+				Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+				Worst(ytdl.FormatResolutionKey)
+			if len(vidFormats) == 0 {
+				return errNoYoutubeVideo
+			}
+		}
 
+		video, err := info.GetDownloadURL(vidFormats[0])
+		if err != nil {
+			return
+		}
+
+		vidHighFormats := info.Formats.
+			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+			Best(ytdl.FormatResolutionKey)
+		if len(vidHighFormats) == 0 {
+			return errNoYoutubeVideo
+		}
+
+		videoHigh, err := info.GetDownloadURL(vidHighFormats[0])
+		if err != nil {
+			return
+		}
+
+		fmt.Fprintf(&buf, "%s\n%s\n%s\n%s",
+			info.Title,
+			info.GetThumbnailURL(ytdl.ThumbnailQualityHigh).String(),
+			video.String(),
+			videoHigh.String())
+		w.Write(buf.Bytes())
+		return nil
+	}()
 	if err != nil {
+		if !common.CanIgnoreClientError(err) {
+			err = common.StatusError{
+				fmt.Errorf("youtube proxy on id=`%s`: %s",
+					extractParam(r, "id"), err),
+				500,
+			}
+		}
 		httpError(w, r, err)
-		return
 	}
-
-	vidHighFormats := info.Formats.
-		Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
-		Best(ytdl.FormatResolutionKey)
-	
-	if len(vidHighFormats) == 0 {
-		httpError(w, r, common.StatusError{errors.New("no YouTube video found"), 404})
-		return
-	}
-	
-	videoHigh, err := info.GetDownloadURL(vidHighFormats[0])
-
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-
-	fmt.Fprintf(&buf, "%s\n%s\n%s\n%s",
-		info.Title,
-		info.GetThumbnailURL(ytdl.ThumbnailQualityHigh).String(),
-		video.String(),
-		videoHigh.String())
-
-	w.Write(buf.Bytes())
 }
