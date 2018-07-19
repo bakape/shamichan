@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"strings"
 
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
@@ -256,7 +257,6 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 // Get YouTube title and googlevideo URL from URL
 func youTubeData(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
-		var buf bytes.Buffer
 		info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" +
 			extractParam(r, "id"))
 		if err != nil {
@@ -292,12 +292,19 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Fprintf(&buf, "%s\n%s\n%s\n%s",
+		fmt.Fprintf(
+			w,
+			"%s\n%s\n%s\n%s",
 			info.Title,
-			info.GetThumbnailURL(ytdl.ThumbnailQualityHigh).String(),
+			strings.Replace(
+				info.GetThumbnailURL(ytdl.ThumbnailQualityMaxRes).String(),
+				"http://",
+				"https://",
+				1,
+			),
 			video.String(),
-			videoHigh.String())
-		w.Write(buf.Bytes())
+			videoHigh.String(),
+		)
 		return nil
 	}()
 	if err != nil {
