@@ -258,7 +258,6 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 // Get YouTube title and googlevideo URL from URL
 func youTubeData(w http.ResponseWriter, r *http.Request) {
 	ytid := extractParam(r, "id")
-
 	err := func() (err error) {
 		info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" + ytid)
 
@@ -270,15 +269,16 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 
 		vidFormats := info.Formats.
 			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
-			Filter(ytdl.FormatResolutionKey, []interface{}{"360p"})
-		vidLen := len(vidFormats)
+			Filter(ytdl.FormatResolutionKey, []interface{}{"360p"}).
+			Filter(ytdl.FormatAudioEncodingKey, []interface{}{"aac", "opus", "vorbis"})
 
-		if vidLen == 0 {
+		if len(vidFormats) == 0 {
 			vidFormats = info.Formats.
 				Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+				Filter(ytdl.FormatAudioEncodingKey, []interface{}{"aac", "opus", "vorbis"}).
 				Worst(ytdl.FormatResolutionKey)
 
-			if vidLen == 0 {
+			if len(vidFormats) == 0 {
 				return errNoYoutubeVideo
 			}
 		}
@@ -289,15 +289,16 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		vidHighFormats := info.Formats.
-			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+		// Unfortunately, in some cases you cannot get 720p with only webm
+		vidFormats = info.Formats.
+			Filter(ytdl.FormatAudioEncodingKey, []interface{}{"aac", "opus", "vorbis"}).
 			Best(ytdl.FormatResolutionKey)
 
-		if len(vidHighFormats) == 0 {
+		if len(vidFormats) == 0 {
 			return errNoYoutubeVideo
 		}
 
-		videoHigh, err := info.GetDownloadURL(vidHighFormats[0])
+		videoHigh, err := info.GetDownloadURL(vidFormats[0])
 
 		if err != nil {
 			return

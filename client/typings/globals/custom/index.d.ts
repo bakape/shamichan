@@ -79,6 +79,9 @@ interface Node extends ChildNode, ParentNode {
 }
 
 interface Document extends ChildNode, ParentNode {
+	mozFullScreenElement: any
+	msFullscreenElement: any
+	
 	addEventListener(
 		type: string,
 		handler: EventListener,

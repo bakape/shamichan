@@ -9,6 +9,7 @@ import identity, { initIdentity } from "./identity"
 import { boardConfig, page } from "../../state"
 import initDrop from "./drop"
 import initPaste from "./paste"
+import initFullScreen from "./fullscreen"
 import initThreads from "./threads"
 
 export { default as FormModel } from "./model"
@@ -396,6 +397,7 @@ export default () => {
 
 	initDrop()
 	initPaste()
+	initFullScreen()
 	initThreads()
 	initIdentity()
 }
