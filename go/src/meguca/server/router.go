@@ -43,8 +43,8 @@ var (
 
 	isTest bool
 
-	errNoYoutubeVideo = common.StatusError{errors.New("no YouTube video found"),
-		404}
+	errNoYoutubeVideo = common.StatusError{errors.New("no YouTube video found"), 404}
+	errYouTubeLive = common.StatusError{errors.New("YouTube video is a livestream"), 501}
 )
 
 // Used for overriding during tests
@@ -256,26 +256,34 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 
 // Get YouTube title and googlevideo URL from URL
 func youTubeData(w http.ResponseWriter, r *http.Request) {
+	ytid := extractParam(r, "id")
+
 	err := func() (err error) {
-		info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" +
-			extractParam(r, "id"))
+		info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" + ytid)
+
 		if err != nil {
 			return
+		} else if info.Duration == 0 {
+			return errYouTubeLive
 		}
 
 		vidFormats := info.Formats.
 			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
 			Filter(ytdl.FormatResolutionKey, []interface{}{"360p"})
-		if len(vidFormats) == 0 {
+		vidLen := len(vidFormats)
+
+		if vidLen == 0 {
 			vidFormats = info.Formats.
 				Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
 				Worst(ytdl.FormatResolutionKey)
-			if len(vidFormats) == 0 {
+
+			if vidLen == 0 {
 				return errNoYoutubeVideo
 			}
 		}
 
 		video, err := info.GetDownloadURL(vidFormats[0])
+
 		if err != nil {
 			return
 		}
@@ -283,21 +291,20 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 		vidHighFormats := info.Formats.
 			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
 			Best(ytdl.FormatResolutionKey)
+
 		if len(vidHighFormats) == 0 {
 			return errNoYoutubeVideo
 		}
 
 		videoHigh, err := info.GetDownloadURL(vidHighFormats[0])
+
 		if err != nil {
 			return
 		}
 
-		fmt.Fprintf(
-			w,
-			"%s\n%s\n%s\n%s",
+		fmt.Fprintf(w, "%s\n%s\n%s\n%s",
 			info.Title,
-			strings.Replace(
-				info.GetThumbnailURL(ytdl.ThumbnailQualityMaxRes).String(),
+			strings.Replace(info.GetThumbnailURL(ytdl.ThumbnailQualityMaxRes).String(),
 				"http://",
 				"https://",
 				1,
@@ -305,16 +312,26 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 			video.String(),
 			videoHigh.String(),
 		)
+
 		return nil
 	}()
+
 	if err != nil {
 		if !common.CanIgnoreClientError(err) {
-			err = common.StatusError{
-				fmt.Errorf("youtube proxy on id=`%s`: %s",
-					extractParam(r, "id"), err),
-				500,
+			switch err.(common.StatusError).Code {
+			case 404:
+				err = common.StatusError{
+					fmt.Errorf("YouTube fetch error on ID `%s` %s", ytid, err),
+					500,
+				}
+			case 501:
+				err = common.StatusError{
+					fmt.Errorf("YouTube fetch error on ID `%s` %s", ytid, err),
+					501,
+				}
 			}
 		}
+		
 		httpError(w, r, err)
 	}
 }
