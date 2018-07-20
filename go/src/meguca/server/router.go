@@ -43,8 +43,9 @@ var (
 
 	isTest bool
 
-	errNoYoutubeVideo = common.StatusError{errors.New("no YouTube video found"), 404}
 	errYouTubeLive = common.StatusError{errors.New("YouTube video is a livestream"), 501}
+	errNoYoutubeVideo = common.StatusError{errors.New("no YouTube video found"), 404}
+	errNoYoutubeThumb = common.StatusError{errors.New("no YouTube thumbnail found"), 404}
 )
 
 // Used for overriding during tests
@@ -302,13 +303,51 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		thumb := info.GetThumbnailURL(ytdl.ThumbnailQualityMaxRes)
+
+		for i := 0; i < 5; i++ {
+			ok, err := func() (bool, error) {
+				// Perhaps there is a way to check the status code without fetching the body?
+				resp, err := http.Get(thumb.String())
+		
+				if err != nil {
+					return false, err
+				}
+		
+				defer resp.Body.Close()
+		
+				if resp.StatusCode == http.StatusOK {
+					return true, err
+				}
+		
+				return false, err
+			}()
+
+			if err != nil {
+				return errNoYoutubeThumb
+			}
+
+			if !ok {
+				switch i {
+				case 0:
+					thumb = info.GetThumbnailURL(ytdl.ThumbnailQualityHigh)
+				case 1:
+					thumb = info.GetThumbnailURL(ytdl.ThumbnailQualityMedium)
+				case 2:
+					thumb = info.GetThumbnailURL(ytdl.ThumbnailQualityDefault)
+				case 3:
+					thumb = info.GetThumbnailURL(ytdl.ThumbnailQualitySD)
+				default:
+					return errNoYoutubeThumb
+				}
+			} else {
+				break
+			}
+		}
+
 		fmt.Fprintf(w, "%s\n%s\n%s\n%s",
 			info.Title,
-			strings.Replace(info.GetThumbnailURL(ytdl.ThumbnailQualityMaxRes).String(),
-				"http://",
-				"https://",
-				1,
-			),
+			strings.Replace(thumb.String(), "http://", "https://", 1),
 			video.String(),
 			videoHigh.String(),
 		)
