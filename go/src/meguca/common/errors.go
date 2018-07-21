@@ -100,11 +100,14 @@ recheck:
 		goto recheck
 	}
 
-	// Ignore client-side connection loss
+	// Ignore
+	// client-side connection loss
+	// YouTube video is blocked
 	s := err.Error()
 	for _, suff := range [...]string{
 		"connection reset by peer",
 		"broken pipe",
+		"Error extracting sts from embedded url response",
 	} {
 		if strings.HasSuffix(s, suff) {
 			return true
