@@ -496,6 +496,7 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
 
     let formatting = "<strong>"
     let inner: string
+    let indirect = false;
     switch (bit) {
         case "flip":
             inner = commands[state.iDice++].val ? "flap" : "flop"
@@ -527,11 +528,19 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             }
             break
         default:
+            indirect = true;
             if (bit.startsWith("sw")) {
+                // Protect from various index shift attacks due to dynamic typing
+                if (commands[state.iDice + 1].type !== commandType.syncWatch) {
+                    return "#" + bit;
+                }
                 return formatSyncwatch(bit, commands[state.iDice++].val, state)
             }
 
             // Validate dice
+            if (commands[state.iDice + 1].type !== commandType.dice) {
+                return "#" + bit;
+            }
             const m = bit.match(/^(\d*)d(\d+)$/)
             if (parseInt(m[1]) > 10 || parseInt(m[2]) > 10000) {
                 return "#" + bit
@@ -553,6 +562,19 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             }
 
             formatting = getRollFormatting(rolls.length, sides, sum)
+    }
+
+    // Protect from various index shift attacks due to dynamic typing
+    const commandMatchers: { [bit: string]: commandType } = {
+        flip: commandType.flip,
+        "8ball": commandType.eightBall,
+        pyu: commandType.pyu,
+        pcount: commandType.pcount,
+        rcount: commandType.rcount,
+        roulette: commandType.roulette,
+    }
+    if (indirect && commandMatchers[bit] !== commands[state.iDice - 1].type) {
+        return "#" + bit;
     }
 
     return `${formatting}#${bit} (${inner})</strong>`
