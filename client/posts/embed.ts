@@ -40,7 +40,7 @@ for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub"]) {
 	formatters[id] = formatProvider(id)
 	switch (id) {
 		case provider.YouTube:
-			fetchers[id] = fetchYouTube()
+			fetchers[id] = fetchYouTube
 			break
 		default:
 			fetchers[id] = fetchNoEmbed(id)
@@ -62,67 +62,69 @@ function formatProvider(type: provider): (s: string) => string {
 }
 
 // fetcher for the YouTube provider
-function fetchYouTube(): (el: Element) => Promise<void> {
-	return async (el: Element) => {
-		const ref = el.getAttribute("href"),
-		id = strip(ref.split(".be/").pop().split("embed/").pop().split("watch?v=")),
-		res = await fetch("/api/youtube-data/" + id),
-		[title, thumb, video, videoHigh] = (await res.text()).split("\n")
+async function fetchYouTube(el: Element): Promise<void> {
+	const ref = el.getAttribute("href"),
+	id = strip(ref.split(".be/").pop().split("embed/").pop().split("watch?v=")),
+	res = await fetch("/api/youtube-data/" + id),
+	[title, thumb, video, videoHigh] = (await res.text()).split("\n")
 
-		switch (res.status) {
-		case 200:
-			el.textContent = format(title, provider.YouTube)
-			break
-		case 500:
-			el.textContent = format("Error 500: YouTube is not available", provider.YouTube)
-			el.classList.add("errored")
-			return
-		default:
-			const errmsg = `Error ${res.status}: ${res.statusText}`
-			el.textContent = format(errmsg, provider.YouTube)
-			el.classList.add("errored")
-			console.error(errmsg)
-			return
-		}
+	switch (res.status) {
+	case 200:
+		el.textContent = format(title, provider.YouTube)
+		break
+	case 415:
+		el.textContent = format("Error 415: YouTube video is a livestream", provider.YouTube)
+		el.classList.add("errored")
+		return
+	case 500:
+		el.textContent = format("Error 500: YouTube is not available", provider.YouTube)
+		el.classList.add("errored")
+		return
+	default:
+		const errmsg = `Error ${res.status}: ${res.statusText}`
+		el.textContent = format(errmsg, provider.YouTube)
+		el.classList.add("errored")
+		console.error(errmsg)
+		return
+	}
 
-		if (!title) {
-			el.textContent = format("Error: Title does not exist", provider.YouTube)
-			el.classList.add("errored")
-			return
-		}
+	if (!title) {
+		el.textContent = format("Error: Title does not exist", provider.YouTube)
+		el.classList.add("errored")
+		return
+	}
 
-		if (!thumb) {
-			el.textContent = format("Error: Thumbnail does not exist", provider.YouTube)
-			el.classList.add("errored")
-			return
-		}
+	if (!thumb) {
+		el.textContent = format("Error: Thumbnail does not exist", provider.YouTube)
+		el.classList.add("errored")
+		return
+	}
 
-		if (!video) {
-			el.textContent = format("Error: Empty googlevideo URL", provider.YouTube)
-			el.classList.add("errored")
-			return
-		}
+	if (!video) {
+		el.textContent = format("Error: Empty googlevideo URL", provider.YouTube)
+		el.classList.add("errored")
+		return
+	}
 
-		if (!videoHigh) {
-			el.textContent = format("Error: Empty googlevideo (high res) URL", provider.YouTube)
-			el.classList.add("errored")
-			return
-		}
+	if (!videoHigh) {
+		el.textContent = format("Error: Empty googlevideo (high res) URL", provider.YouTube)
+		el.classList.add("errored")
+		return
+	}
 
-		el.setAttribute("data-html", encodeURIComponent(
-			`<video width="480" height="270" poster="`
-			+ thumb + `" ` + (ref.includes("loop=1") ? "loop " : '')
-			+ `controls><source src="`
-			+ video + (!ref.includes(`t=`) ? check("start") : '') + check("t")
-			+ `" type="video/webm">Your browser does not support the video tag.</video>`))
-			
-		function strip(s: string[]): string {
-			return s.pop().split('&').shift().split('#').shift().split('?').shift()
-		}
+	el.setAttribute("data-html", encodeURIComponent(
+		`<video width="480" height="270" poster="`
+		+ thumb + `" ` + (ref.includes("loop=1") ? "loop " : '')
+		+ `controls><source src="`
+		+ video + (!ref.includes(`t=`) ? check("start") : '') + check("t")
+		+ `" type="video/webm">Your browser does not support the video tag.</video>`))
+	
+	function strip(s: string[]): string {
+		return s.pop().split('&').shift().split('#').shift().split('?').shift()
+	}
 
-		function check(s: string): string {
-			return ref.includes(`${s}=`) ? `#t=` + strip(ref.split(`${s}=`)) : ''
-		}
+	function check(s: string): string {
+		return ref.includes(`${s}=`) ? `#t=` + strip(ref.split(`${s}=`)) : ''
 	}
 }
 
