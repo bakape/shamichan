@@ -23,11 +23,11 @@ function onFullscreen(e: Event) {
             switch (res.status) {
             case 200:
                 break
+            case 415:
+                console.error("Error 415: YouTube video is a livestream")
+                return
             case 500:
                 console.error("Error 500: YouTube is not available")
-                return
-            case 501:
-                console.error("Error 501: YouTube video is a livestream")
                 return
             default:
                 console.error(`Error ${res.status}: ${res.statusText}`)

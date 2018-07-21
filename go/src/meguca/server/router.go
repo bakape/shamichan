@@ -42,10 +42,6 @@ var (
 	enableGzip bool
 
 	isTest bool
-
-	errYouTubeLive = common.StatusError{errors.New("YouTube video is a livestream"), 501}
-	errNoYoutubeVideo = common.StatusError{errors.New("no YouTube video found"), 404}
-	errNoYoutubeThumb = common.StatusError{errors.New("no YouTube thumbnail found"), 404}
 )
 
 // Used for overriding during tests
@@ -258,13 +254,14 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 // Get YouTube title and googlevideo URL from URL
 func youTubeData(w http.ResponseWriter, r *http.Request) {
 	ytid := extractParam(r, "id")
-	err := func() (err error) {
+	code, err := func() (code uint16, err error) {
+		code = 500
 		info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" + ytid)
 
 		if err != nil {
 			return
 		} else if info.Duration == 0 {
-			return errYouTubeLive
+			return errYouTubeLive(ytid)
 		}
 
 		vidFormats := info.Formats.
@@ -279,7 +276,7 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 				Worst(ytdl.FormatResolutionKey)
 
 			if len(vidFormats) == 0 {
-				return errNoYoutubeVideo
+				return errNoYoutubeVideo(ytid)
 			}
 		}
 
@@ -295,7 +292,7 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 			Best(ytdl.FormatResolutionKey)
 
 		if len(vidFormats) == 0 {
-			return errNoYoutubeVideo
+			return errNoYoutubeVideo(ytid)
 		}
 
 		videoHigh, err := info.GetDownloadURL(vidFormats[0])
@@ -325,7 +322,7 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 			}()
 
 			if err != nil {
-				return errNoYoutubeThumb
+				return errNoYoutubeThumb(ytid)
 			}
 
 			if !ok {
@@ -339,7 +336,7 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 				case 3:
 					thumb = info.GetThumbnailURL(ytdl.ThumbnailQualitySD)
 				default:
-					return errNoYoutubeThumb
+					return errNoYoutubeThumb(ytid)
 				}
 			} else {
 				break
@@ -353,25 +350,29 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 			videoHigh.String(),
 		)
 
-		return nil
+		return 200, nil
 	}()
 
 	if err != nil {
 		if !common.CanIgnoreClientError(err) {
-			switch err.(common.StatusError).Code {
-			case 404:
-				err = common.StatusError{
-					fmt.Errorf("YouTube fetch error on ID `%s` %s", ytid, err),
-					500,
-				}
-			case 501:
-				err = common.StatusError{
-					fmt.Errorf("YouTube fetch error on ID `%s` %s", ytid, err),
-					501,
-				}
+			err = common.StatusError{
+				fmt.Errorf("YouTube fetch error on ID `%s` %s", ytid, err),
+				int(code),
 			}
 		}
 		
 		httpError(w, r, err)
 	}
+}
+
+func errYouTubeLive(id string) (uint16, error) {
+	return 415, common.StatusError{errors.New("YouTube video [" + id + "] is a livestream"), 415}
+}
+
+func errNoYoutubeVideo(id string) (uint16, error) {
+	return 404, common.StatusError{errors.New("YouTube video [" + id + "] does not exist"), 404}
+}
+
+func errNoYoutubeThumb(id string) (uint16, error) {
+	return 404, common.StatusError{errors.New("YouTube thumbnail [" + id + "] does not exist"), 404}
 }

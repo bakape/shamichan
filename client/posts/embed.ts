@@ -72,12 +72,12 @@ async function fetchYouTube(el: Element): Promise<void> {
 	case 200:
 		el.textContent = format(title, provider.YouTube)
 		break
-	case 500:
-		el.textContent = format("Error 500: YouTube is not available", provider.YouTube)
+	case 415:
+		el.textContent = format("Error 415: YouTube video is a livestream", provider.YouTube)
 		el.classList.add("errored")
 		return
-	case 501:
-		el.textContent = format("Error 501: YouTube video is a livestream", provider.YouTube)
+	case 500:
+		el.textContent = format("Error 500: YouTube is not available", provider.YouTube)
 		el.classList.add("errored")
 		return
 	default:

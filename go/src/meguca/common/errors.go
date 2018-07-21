@@ -103,13 +103,11 @@ recheck:
 	// Ignore
 	// client-side connection loss
 	// YouTube video is blocked
-	// YouTube video is a livestream
 	s := err.Error()
 	for _, suff := range [...]string{
 		"connection reset by peer",
 		"broken pipe",
 		"Error extracting sts from embedded url response",
-		"YouTube video is a livestream",
 	} {
 		if strings.HasSuffix(s, suff) {
 			return true
