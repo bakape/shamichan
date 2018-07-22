@@ -496,7 +496,7 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
 
     let formatting = "<strong>"
     let inner: string
-    let indirect = false;
+    let literalMatching = true;
     switch (bit) {
         case "flip":
             inner = commands[state.iDice++].val ? "flap" : "flop"
@@ -528,17 +528,17 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             }
             break
         default:
-            indirect = true;
+            literalMatching = false;
             if (bit.startsWith("sw")) {
                 // Protect from various index shift attacks due to dynamic typing
-                if (commands[state.iDice + 1].type !== commandType.syncWatch) {
+                if (commands[state.iDice].type !== commandType.syncWatch) {
                     return "#" + bit;
                 }
                 return formatSyncwatch(bit, commands[state.iDice++].val, state)
             }
 
             // Validate dice
-            if (commands[state.iDice + 1].type !== commandType.dice) {
+            if (commands[state.iDice].type !== commandType.dice) {
                 return "#" + bit;
             }
             const m = bit.match(/^(\d*)d(\d+)$/)
@@ -573,7 +573,9 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
         rcount: commandType.rcount,
         roulette: commandType.roulette,
     }
-    if (indirect && commandMatchers[bit] !== commands[state.iDice - 1].type) {
+    if (literalMatching
+        && commandMatchers[bit] !== commands[state.iDice - 1].type
+    ) {
         return "#" + bit;
     }
 
