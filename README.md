@@ -119,6 +119,10 @@ are supported
 ## Runtime dependencies
 * [PostgresSQL](https://www.postgresql.org/download/) >= 9.5
 
+### Country flags
+
+To enable poster country flags on posts please download GeoLite2-Country.mmdb from https://www.maxmind.com and place it inside meguca's root directory. Country lookup will become available after a server restart.   
+
 ## Building from source
 A reference list of commands can be found in `./docs/installation.md`
 
