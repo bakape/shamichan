@@ -119,13 +119,17 @@ are supported
 ## Runtime dependencies
 * [PostgresSQL](https://www.postgresql.org/download/) >= 9.5
 
+### Country flags
+
+To enable poster country flags on posts please download GeoLite2-Country.mmdb from https://www.maxmind.com and place it inside meguca's root directory. Country lookup will become available after a server restart.   
+
 ## Building from source
 A reference list of commands can be found in `./docs/installation.md`
 
 ### Build dependencies
 * [Go](https://golang.org/doc/install) >=1.9.2 (for building server)
 * [Node.js](https://nodejs.org) >=5.0 (for building client)
-* C11 and C++17 compilers
+* C11 compiler
 * make
 * pkg-config
 * pthread
@@ -137,7 +141,7 @@ compiled with:
     * libtheora
     * libx264
     * libmp3lame
-* GraphicsMagick++ compiled with:
+* GraphicsMagick compiled with:
     * zlib
     * libpng
     * libjpeg
