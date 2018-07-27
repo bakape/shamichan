@@ -9,6 +9,9 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"crypto/md5"
+	"path/filepath"
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/config"
@@ -24,6 +27,7 @@ import (
 
 	"github.com/ErikDubbelboer/gspt"
 	"github.com/go-playground/log"
+	"github.com/mholt/archiver"
 )
 
 var (
@@ -103,6 +107,7 @@ func Start() error {
 	// Read config file, if any
 	var conf serverConfigs
 	buf, err := ioutil.ReadFile("config.json")
+
 	switch {
 	case os.IsNotExist(err):
 		err = nil
@@ -114,7 +119,13 @@ func Start() error {
 	default:
 		return err
 	}
+
 	setConfigDefaults(&conf)
+	err = checkGeoLite()
+
+	if err != nil {
+		return err
+	}
 
 	// Define flags
 	flag.StringVar(
@@ -244,4 +255,106 @@ func startServer() {
 	if err := startWebServer(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// checkGeoLite checks if the GeoLite2 country DB exists, and downloads if it doesn't
+func checkGeoLite() error {
+	_, err := os.Stat("GeoLite2-Country.mmdb")
+
+	if err != nil {
+		if os.IsNotExist(err) {
+			// Create the temporary archive and directory
+			tmpDir, err := ioutil.TempDir("", "tmp-")
+
+			if err != nil {
+				return err
+			}
+
+			defer os.RemoveAll(tmpDir)
+			tmp, err := ioutil.TempFile(tmpDir, "tmp-")
+
+			if err != nil {
+				return err
+			}
+			
+			// Get the archive itself and it's MD5 for security purposes
+			resp, err := http.Get("https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz")
+
+			if err != nil {
+				return err
+			}
+
+			defer resp.Body.Close()
+			respMD5, err := http.Get("https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz.md5")
+
+			if err != nil {
+				return err
+			}
+
+			defer respMD5.Body.Close()
+			// Check if the tar.gz MD5 checksum matches the MD5 checksum we just downloaded
+			bodyBytes, err := ioutil.ReadAll(resp.Body)
+			
+			if err != nil {
+				return err
+			}
+
+			md5Bytes, err := ioutil.ReadAll(respMD5.Body)
+
+			if err != nil {
+				return err
+			} else if fmt.Sprintf("%x", md5.Sum(bodyBytes)) != string(md5Bytes) {
+				return errors.New("GeoLite DB MD5 checksums do not match")
+			}
+
+			// Write the response data to the temporary tar.gz
+			_, err = tmp.Write(bodyBytes)
+
+			if err != nil {
+				return err
+			}
+
+			// Check if the tar.gz is valid, extract into temporary folder,
+			// move the DB into the executable root directory
+			if archiver.TarGz.Match(tmp.Name()) {
+				err = archiver.TarGz.Open(tmp.Name(), tmpDir)
+
+				if err != nil {
+					return err
+				}
+
+				dirs, err := filepath.Glob(tmpDir + "/GeoLite2-Country_*")
+
+				if err != nil {
+					return err
+				}
+
+				for _, d := range dirs {
+					if _, err := os.Stat(d + "/GeoLite2-Country.mmdb"); err == nil {
+						data, err := ioutil.ReadFile(d + "/GeoLite2-Country.mmdb")
+
+						if err != nil {
+							return err
+						}
+
+						err = ioutil.WriteFile("GeoLite2-Country.mmdb", data, 0644)
+
+						if err != nil {
+							return err
+						}
+						
+						return nil
+					}
+				}
+
+				return errors.New("GeoLite tar.gz does not contain GeoLite2-Country.mmdb")
+			}
+			
+			return errors.New("invalid tar.gz")
+		}
+
+		return err
+	}
+	
+	return err
 }
