@@ -29,6 +29,9 @@
 				{% if id == "all" %}
 					<select name="board" required>
 						{% for _, b := range config.GetBoardTitles() %}
+							{% if b.ID == "all" %}
+								{% continue %}
+							{% endif %}
 							<option value="{%s= b.ID %}">
 								{%= formatTitle(b.ID, b.Title) %}
 							</option>
