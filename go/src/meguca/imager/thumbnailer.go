@@ -2,6 +2,8 @@ package imager
 
 import "github.com/bakape/thumbnailer"
 
+const mimePDF = "application/pdf"
+
 func init() {
 	for _, fn := range [...]thumbnailer.MatcherFunc{
 		detect7z,
@@ -14,6 +16,8 @@ func init() {
 	}
 	for _, m := range [...]string{
 		mimeZip, mime7Zip, mimeTarGZ, mimeTarXZ, mimeText,
+		/// PDF thumbnailing can be very buggy and ghostcript is unreliable.
+		mimePDF,
 	} {
 		thumbnailer.RegisterProcessor(m, noopProcessor)
 	}
