@@ -107,6 +107,7 @@ func check() error {
 	}
 
 	newHash := string(md5Bytes)
+	diff := !(oldHash == newHash)
 
 	// Ensure the HTTP response is a MD5 hash when converted
 	if len(newHash) != 32 {
@@ -116,8 +117,8 @@ func check() error {
 	// Check if the GeoLite DB exists
 	_, err = os.Stat("GeoLite2-Country.mmdb")
 
-	if err != nil || oldHash != newHash {
-		if os.IsNotExist(err) {
+	if err != nil || diff {
+		if os.IsNotExist(err) || diff {
 			// Create the temporary archive and directory
 			tmpDir, err := ioutil.TempDir("", "tmp-")
 
