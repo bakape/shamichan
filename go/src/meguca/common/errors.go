@@ -108,6 +108,7 @@ recheck:
 		"connection reset by peer",
 		"broken pipe",
 		"Error extracting sts from embedded url response",
+		"Unable to extract dash manifest: strconv.ParseInt: parsing \"rawcc\": invalid syntax",
 	} {
 		if strings.HasSuffix(s, suff) {
 			return true

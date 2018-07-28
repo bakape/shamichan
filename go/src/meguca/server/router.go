@@ -256,7 +256,7 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 	ytid := extractParam(r, "id")
 	code, err := func() (code uint16, err error) {
 		code = 500
-		info, err := ytdl.GetVideoInfo("https://www.youtube.com/watch?v=" + ytid)
+		info, err := ytdl.GetVideoInfoFromID(ytid)
 
 		if err != nil {
 			return
