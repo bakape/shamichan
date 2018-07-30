@@ -7,6 +7,7 @@ import (
 	"os"
 	"errors"
 	"fmt"
+	"sync"
 	"io/ioutil"
 	"net/http"
 	"crypto/md5"
@@ -20,7 +21,14 @@ import (
 )
 
 // nil, if database not loaded
-var gdb *maxminddb.Reader
+var (
+	// Ensure we only load the old GeoIP DB once on server start
+	once sync.Once
+	// Ensures no data races
+	rw sync.RWMutex
+	// GeoIP database
+	gdb *maxminddb.Reader
+)
 
 // NY location
 var NY *time.Location
@@ -29,37 +37,61 @@ func init() {
 	NY, _ = time.LoadLocation("America/New_York")
 }
 
-// Load checks if the GeoLite DB exists, and loads it if it does
+// Load checks if the GeoLite DB exists, and calls load it if it does
 func Load() error {
-	err := check()
-
-	if err != nil {
-		goto warn
+	if err := check(); err != nil {
+		rw.Lock()
+		gdb = nil
+		rw.Unlock()
+		log.Warn("Unable to use GeoLite DB: ", err)
 	}
 
+	return nil
+}
+
+// loads the GeoLite DB
+func load() (err error) {
+	rw.Lock()
+	defer rw.Unlock()
 	gdb, err = maxminddb.Open("GeoLite2-Country.mmdb")
+	return
+}
 
-	if err != nil {
-		goto warn
+// reloads the GeoLite DB
+func reload() error {
+	rw.Lock()
+
+	if gdb == nil {
+		rw.Unlock()
+		return load()
 	}
 
-	return nil
+	err := gdb.Close()
 
-warn:
+	if err != nil {
+		rw.Unlock()
+		return err
+	}
+
 	gdb = nil
-	log.Warn("Unable to use GeoLite DB: ", err)
-	return nil
+	rw.Unlock()
+	return load()
 }
 
 // LookUp looks up the country ISO code of the IP
 func LookUp(ip string) (iso string) {
+	rw.RLock()
+	
 	// DB not loaded
 	if gdb == nil {
+		rw.RUnlock()
 		return
 	}
 
+	rw.RUnlock()
 	// All IPs, that make it till here should be valid, but best be safe
 	dec := net.ParseIP(ip)
+
 	if dec == nil {
 		return
 	}
@@ -69,9 +101,14 @@ func LookUp(ip string) (iso string) {
 			ISOCode string `maxminddb:"iso_code"`
 		} `maxminddb:"country"`
 	}
+
+	rw.Lock()
+
 	if err := gdb.Lookup(dec, &record); err != nil {
 		log.Warnf("country lookup for `%s`: %s", ip, err)
 	}
+
+	rw.Unlock()
 	iso = strings.ToLower(record.Country.ISOCode)
 
 	if iso == "us" && NY != nil {
@@ -107,69 +144,70 @@ func check() error {
 	}
 
 	newHash := string(md5Bytes)
-	diff := !(oldHash == newHash)
 
 	// Ensure the HTTP response is a MD5 hash when converted
 	if len(newHash) != 32 {
 		return errors.New("response is not an MD5 hash")
 	}
 	
-	// Check if the GeoLite DB exists
+	// Load the old DB one time on server start, if applicable before checking the MD5
 	_, err = os.Stat("GeoLite2-Country.mmdb")
+	invalid := os.IsNotExist(err)
 
-	if err != nil || diff {
-		if os.IsNotExist(err) || diff {
-			// Create the temporary archive and directory
-			tmpDir, err := ioutil.TempDir("", "tmp-")
+	once.Do(func() {
+		if !invalid {
+			err = load()
+		}
+	})
 
-			if err != nil {
-				return err
-			}
+	// Check if the GeoLite DB exists
+	if err != nil || invalid || oldHash != newHash {
+		// Create the temporary archive and directory
+		tmpDir, err := ioutil.TempDir("", "tmp-")
 
-			defer os.RemoveAll(tmpDir)
-			tmp, err := ioutil.TempFile(tmpDir, "tmp-")
-
-			if err != nil {
-				return err
-			}
-			
-			// Get the archive itself
-			resp, err := http.Get("https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz")
-
-			if err != nil {
-				return err
-			}
-
-			defer resp.Body.Close()
-			// Check if the tar.gz MD5 checksum matches the MD5 checksum we just downloaded
-			bodyBytes, err := ioutil.ReadAll(resp.Body)
-
-			if err != nil {
-				return err
-			} else if fmt.Sprintf("%x", md5.Sum(bodyBytes)) != newHash {
-				return errors.New("GeoLite DB MD5 checksums do not match")
-			}
-
-			// Write the response data to the temporary tar.gz and check the archive
-			_, err = tmp.Write(bodyBytes)
-
-			if err != nil {
-				return err
-			}
-
-			err = checkArchive(tmpDir, tmp, newHash)
-
-			if err != nil {
-				return err
-			}
-
-			return nil
+		if err != nil {
+			return err
 		}
 
-		return err
+		defer os.RemoveAll(tmpDir)
+		tmp, err := ioutil.TempFile(tmpDir, "tmp-")
+
+		if err != nil {
+			return err
+		}
+		
+		// Get the archive itself
+		resp, err := http.Get("https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz")
+
+		if err != nil {
+			return err
+		}
+
+		defer resp.Body.Close()
+		// Check if the tar.gz MD5 checksum matches the MD5 checksum we just downloaded
+		bodyBytes, err := ioutil.ReadAll(resp.Body)
+
+		if err != nil {
+			return err
+		} else if fmt.Sprintf("%x", md5.Sum(bodyBytes)) != newHash {
+			return errors.New("GeoLite DB MD5 checksums do not match")
+		}
+
+		// Write the response data to the temporary tar.gz and check the archive
+		_, err = tmp.Write(bodyBytes)
+
+		if err != nil {
+			return err
+		}
+
+		err = checkArchive(tmpDir, tmp, newHash)
+
+		if err != nil {
+			return err
+		}
 	}
-	
-	return err
+
+	return reload()
 }
 
 // checkArchive checks if the tar.gz is valid, extracts it into a temporary folder,
@@ -201,14 +239,8 @@ func checkArchive(tmpDir string, tmp *os.File, hash string) error {
 				if err != nil {
 					return err
 				}
-
-				err = db.SetGeoMD5(hash)
-
-				if err != nil {
-					return err
-				}
 				
-				return nil
+				return db.SetGeoMD5(hash)
 			}
 		}
 
