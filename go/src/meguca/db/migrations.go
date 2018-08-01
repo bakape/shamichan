@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
@@ -832,6 +833,21 @@ var migrations = []func(*sql.Tx) error{
 			`create index failed_captchas_ip on failed_captchas (ip)`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		var tasks []string
+		for _, t := range [...]string{
+			"image_tokens", "bans", "captchas", "failed_captchas",
+		} {
+			tasks = append(tasks, createIndex(t, "expires"))
+		}
+		tasks = append(tasks, createIndex("posts", "time"))
+		return execAll(tx, tasks...)
+	},
+}
+
+func createIndex(table, column string) string {
+	return fmt.Sprintf(`create index %s_%s on %s (%s)`, table, column, table,
+		column)
 }
 
 // Run migrations from version `from`to version `to`
