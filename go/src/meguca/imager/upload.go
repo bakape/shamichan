@@ -29,7 +29,7 @@ var (
 		"image/jpeg":      common.JPEG,
 		"image/png":       common.PNG,
 		"image/gif":       common.GIF,
-		"application/pdf": common.PDF,
+		mimePDF:           common.PDF,
 		"video/webm":      common.WEBM,
 		"application/ogg": common.OGG,
 		"video/mp4":       common.MP4,

@@ -28,7 +28,6 @@ func TestImageProcessing(t *testing.T) {
 		{"jpg", assets.StdDims["jpeg"], false},
 		{"png", assets.StdDims["png"], true},
 		{"gif", assets.StdDims["gif"], true},
-		{"pdf", assets.StdDims["pdf"], false},
 	}
 
 	for i := range cases {

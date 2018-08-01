@@ -120,8 +120,8 @@ func Start() error {
 	flag.StringVar(
 		&address,
 		"a",
-		"127.0.0.1:8000", // Specifying host restricts incoming IP range
 		*conf.Address,
+		"address to listen on",
 	)
 	flag.Float64Var(&cache.Size, "c", *conf.CacheSize, "cache size in MB")
 	flag.StringVar(

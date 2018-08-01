@@ -43,6 +43,10 @@ func TestProcessArchive(t *testing.T) {
 			name: "tar.xz",
 			file: "sample.tar.xz",
 			typ:  common.TXZ,
+		}, {
+			name: "pdf",
+			file: "sample.pdf", // Handled the same as archives
+			typ:  common.PDF,
 		},
 	}
 
