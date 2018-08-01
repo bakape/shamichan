@@ -86,8 +86,11 @@ func createRouter() http.Handler {
 	api.GET("/health-check", healthCheck)
 	assets := r.NewGroup("/assets")
 	if config.ImagerMode != config.NoImager {
+		// All upload images
 		api.POST("/upload", imager.NewImageUpload)
 		api.POST("/upload-hash", imager.UploadImageHash)
+		api.POST("/create-thread", createThread)
+		api.POST("/create-reply", createReply)
 
 		assets.GET("/images/*path", serveImages)
 	}
@@ -147,8 +150,6 @@ func createRouter() http.Handler {
 		// Internal API
 		api.GET("/socket", websockets.Handler)
 		api.GET("/youtube-data/:id", youTubeData)
-		api.POST("/create-thread", createThread)
-		api.POST("/create-reply", createReply)
 		api.POST("/register", register)
 		api.POST("/login", login)
 		api.POST("/logout", logout)
@@ -307,17 +308,17 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 			ok, err := func() (bool, error) {
 				// Perhaps there is a way to check the status code without fetching the body?
 				resp, err := http.Get(thumb.String())
-		
+
 				if err != nil {
 					return false, err
 				}
-		
+
 				defer resp.Body.Close()
-		
+
 				if resp.StatusCode == http.StatusOK {
 					return true, err
 				}
-		
+
 				return false, err
 			}()
 
@@ -360,7 +361,7 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 				int(code),
 			}
 		}
-		
+
 		httpError(w, r, err)
 	}
 }
