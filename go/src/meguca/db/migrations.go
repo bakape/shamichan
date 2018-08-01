@@ -717,7 +717,7 @@ var migrations = []func(*sql.Tx) error{
 	},
 	// Fixes global moderation
 	func(tx *sql.Tx) (err error) {
-		c := BoardConfigs {
+		c := BoardConfigs{
 			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
 			Created:      time.Now().UTC(),
 		}
@@ -806,12 +806,30 @@ var migrations = []func(*sql.Tx) error{
 			}
 		}
 
-			return
+		return
 	},
 	func(tx *sql.Tx) (err error) {
 		return execAll(tx,
 			`alter table pyu_limit drop column expires`,
 			`alter table pyu_limit add column restricted bool default false`,
+		)
+	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`create table captchas (
+				id text primary key not null,
+				solution text not null,
+				expires timestamp not null
+			)`,
+			`create table failed_captchas (
+				ip inet not null,
+				expires timestamp not null
+			)`,
+		)
+	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`create index failed_captchas_ip on failed_captchas (ip)`,
 		)
 	},
 }

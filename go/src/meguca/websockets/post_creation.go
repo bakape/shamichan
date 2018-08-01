@@ -60,8 +60,9 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	case auth.IsBanned(req.Board, ip):
 		err = common.ErrBanned
 		return
-	case !auth.AuthenticateCaptcha(req.Captcha, ip, db.SystemBan):
-		err = common.ErrInvalidCaptcha
+	}
+	err = db.AuthenticateCaptcha(req.Captcha, ip)
+	if err != nil {
 		return
 	}
 
@@ -132,8 +133,8 @@ func CreatePost(
 
 	}
 	if needCaptcha {
-		if !auth.AuthenticateCaptcha(req.Captcha, ip, db.SystemBan) {
-			err = common.ErrBanned
+		err = db.AuthenticateCaptcha(req.Captcha, ip)
+		if err != nil {
 			return
 		} else if config.Get().Captcha {
 			// Captcha solved - reset spam score.
@@ -264,8 +265,9 @@ func (c *Client) submitCaptcha(data []byte) (err error) {
 		return
 	}
 
-	if !auth.AuthenticateCaptcha(msg, c.ip, db.SystemBan) {
-		return common.ErrBanned
+	err = db.AuthenticateCaptcha(msg, c.ip)
+	if err != nil {
+		return
 	}
 	auth.ResetSpamScore(c.ip)
 	return nil

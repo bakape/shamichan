@@ -40,7 +40,7 @@ func runCleanupTasks() {
 
 func runMinuteTasks() {
 	logError("open post cleanup", closeDanglingPosts())
-	expireRows("image_tokens", "bans")
+	expireRows("image_tokens", "bans", "captchas", "failed_captchas")
 }
 
 func runHalfTasks() {

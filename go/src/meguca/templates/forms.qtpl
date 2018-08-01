@@ -1,6 +1,6 @@
 {% import "meguca/config" %}
 {% import "meguca/lang" %}
-{% import "meguca/auth" %}
+{% import captchaLib "github.com/dchest/captcha" %}
 
 OwnedBoard renders a form for selecting one of several boards owned by the user
 {% func OwnedBoard(boards config.BoardTitles) %}{% stripspace %}
@@ -166,7 +166,7 @@ Render link to request new noscript captcha
 
 Render the captcha for noscript browsers
 {% func NoscriptCaptcha(ip string) %}{% stripspace %}
-	{% code id := auth.GetNoscriptCaptcha(ip) %}
+	{% code id := captchaLib.New() %}
 	<div style="display: grid">
 		<span>
 			ID:{% space %}{%s= id %}

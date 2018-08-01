@@ -72,10 +72,10 @@ func LoadDB() (err error) {
 	tasks = append(
 		tasks,
 		func() error {
-			tasks := []func() error{loadConfigs}
+			tasks := []func() error{loadConfigs, initCaptchas, loadBans}
 			if config.ImagerMode != config.ImagerOnly {
 				tasks = append(tasks, openBoltDB, loadBanners,
-					loadLoadingAnimations, loadBans)
+					loadLoadingAnimations)
 			}
 			if err := util.Parallel(tasks...); err != nil {
 				return err
