@@ -843,6 +843,12 @@ var migrations = []func(*sql.Tx) error{
 		tasks = append(tasks, createIndex("posts", "time"))
 		return execAll(tx, tasks...)
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`INSERT INTO main VALUES ('geo_md5', 'initial value, ignore')`,
+		)
+		return
+	},
 }
 
 func createIndex(table, column string) string {

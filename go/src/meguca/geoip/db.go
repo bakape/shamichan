@@ -39,12 +39,14 @@ func init() {
 
 // Load checks if the GeoLite DB exists, and calls load it if it does
 func Load() error {
-	if err := check(); err != nil {
-		rw.Lock()
-		gdb = nil
-		rw.Unlock()
-		log.Warn("Unable to use GeoLite DB: ", err)
-	}
+	go func() {
+		if err := check(); err != nil {
+			rw.Lock()
+			defer rw.Unlock()
+			gdb = nil
+			log.Warn("Unable to use GeoLite DB: ", err)
+		}
+	}()
 
 	return nil
 }
@@ -60,35 +62,32 @@ func load() (err error) {
 // reloads the GeoLite DB
 func reload() error {
 	rw.Lock()
+	defer rw.Unlock()
 
 	if gdb == nil {
-		rw.Unlock()
 		return load()
 	}
 
 	err := gdb.Close()
 
 	if err != nil {
-		rw.Unlock()
 		return err
 	}
 
 	gdb = nil
-	rw.Unlock()
 	return load()
 }
 
 // LookUp looks up the country ISO code of the IP
 func LookUp(ip string) (iso string) {
 	rw.RLock()
-	
+	defer rw.RUnlock()
+
 	// DB not loaded
 	if gdb == nil {
-		rw.RUnlock()
 		return
 	}
 
-	rw.RUnlock()
 	// All IPs, that make it till here should be valid, but best be safe
 	dec := net.ParseIP(ip)
 
@@ -102,13 +101,11 @@ func LookUp(ip string) (iso string) {
 		} `maxminddb:"country"`
 	}
 
-	rw.Lock()
 
 	if err := gdb.Lookup(dec, &record); err != nil {
 		log.Warnf("country lookup for `%s`: %s", ip, err)
 	}
 
-	rw.Unlock()
 	iso = strings.ToLower(record.Country.ISOCode)
 
 	if iso == "us" && NY != nil {
