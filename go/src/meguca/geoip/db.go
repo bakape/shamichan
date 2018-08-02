@@ -55,27 +55,19 @@ func Load() error {
 func load() (err error) {
 	rw.Lock()
 	defer rw.Unlock()
+	
+	if gdb != nil {
+		err := gdb.Close()
+
+		if err != nil {
+			return err
+		}
+
+		gdb = nil
+	}
+
 	gdb, err = maxminddb.Open("GeoLite2-Country.mmdb")
 	return
-}
-
-// reloads the GeoLite DB
-func reload() error {
-	rw.Lock()
-	defer rw.Unlock()
-
-	if gdb == nil {
-		return load()
-	}
-
-	err := gdb.Close()
-
-	if err != nil {
-		return err
-	}
-
-	gdb = nil
-	return load()
 }
 
 // LookUp looks up the country ISO code of the IP
@@ -204,7 +196,7 @@ func check() error {
 		}
 	}
 
-	return reload()
+	return load()
 }
 
 // checkArchive checks if the tar.gz is valid, extracts it into a temporary folder,
