@@ -613,26 +613,25 @@ var migrations = []func(*sql.Tx) error{
 	},
 	func(tx *sql.Tx) (err error) {
 		// Read all commands
-		r, err := withTransaction(tx,
-			sq.Select("id", "commands").
-				From("posts").
-				Where("commands is not null"),
-		).
-			Query()
-		if err != nil {
-			return
-		}
-		comms := make(map[uint64][]common.Command, 1024)
-		var id uint64
-		for r.Next() {
-			var com commandRow
-			err = r.Scan(&id, &com)
-			if err != nil {
+		var (
+			comms = make(map[uint64][]common.Command, 1024)
+			id    uint64
+		)
+		err = queryAll(
+			withTransaction(tx,
+				sq.Select("id", "commands").
+					From("posts").
+					Where("commands is not null")),
+			func(r *sql.Rows) (err error) {
+				var com commandRow
+				err = r.Scan(&id, &com)
+				if err != nil {
+					return
+				}
+				comms[id] = []common.Command(com)
 				return
-			}
-			comms[id] = []common.Command(com)
-		}
-		err = r.Err()
+			},
+		)
 		if err != nil {
 			return
 		}

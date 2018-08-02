@@ -168,25 +168,22 @@ func FilterExistingThreads(ids ...uint64) (exist []uint64, err error) {
 		}
 	}
 
-	r, err := sq.Select("id").
-		From("threads").
-		Where(squirrel.Eq{
-			"id": ids,
-		}).
-		Query()
-	if err != nil {
-		return
-	}
-
 	exist = make([]uint64, 0, len(ids))
 	var id uint64
-	for r.Next() {
-		err = r.Scan(&id)
-		if err != nil {
+	err = queryAll(
+		sq.Select("id").
+			From("threads").
+			Where(squirrel.Eq{
+				"id": ids,
+			}),
+		func(r *sql.Rows) (err error) {
+			err = r.Scan(&id)
+			if err != nil {
+				return
+			}
+			exist = append(exist, id)
 			return
-		}
-		exist = append(exist, id)
-	}
-	err = r.Err()
+		},
+	)
 	return
 }

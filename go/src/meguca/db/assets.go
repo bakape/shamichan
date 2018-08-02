@@ -9,25 +9,22 @@ import (
 func loadAssets(table string,
 	load func(board string, files []assets.File),
 ) (err error) {
-	r, err := sq.Select("board", "data", "mime").From(table).Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
 	byBoard := make(map[string][]assets.File, 64)
-	for r.Next() {
-		var (
-			board string
-			file  assets.File
-		)
-		err = r.Scan(&board, &file.Data, &file.Mime)
-		if err != nil {
+	err = queryAll(
+		sq.Select("board", "data", "mime").From(table),
+		func(r *sql.Rows) (err error) {
+			var (
+				board string
+				file  assets.File
+			)
+			err = r.Scan(&board, &file.Data, &file.Mime)
+			if err != nil {
+				return
+			}
+			byBoard[board] = append(byBoard[board], file)
 			return
-		}
-		byBoard[board] = append(byBoard[board], file)
-	}
-	err = r.Err()
+		},
+	)
 	if err != nil {
 		return
 	}
@@ -45,31 +42,27 @@ func updateAssets(table string,
 	load func(board string, files []assets.File),
 ) func(string) error {
 	return func(board string) (err error) {
-		r, err := sq.Select("data", "mime").
-			From(table).
-			Where("board  = ?", board).
-			Query()
-		if err != nil {
-			return
-		}
-		defer r.Close()
-
 		files := make([]assets.File, 0, 16)
-		for r.Next() {
-			var (
-				data []byte
-				mime string
-			)
-			err = r.Scan(&data, &mime)
-			if err != nil {
+		err = queryAll(
+			sq.Select("data", "mime").
+				From(table).
+				Where("board  = ?", board),
+			func(r *sql.Rows) (err error) {
+				var (
+					data []byte
+					mime string
+				)
+				err = r.Scan(&data, &mime)
+				if err != nil {
+					return
+				}
+				files = append(files, assets.File{
+					Data: data,
+					Mime: mime,
+				})
 				return
-			}
-			files = append(files, assets.File{
-				Data: data,
-				Mime: mime,
-			})
-		}
-		err = r.Err()
+			},
+		)
 		if err != nil {
 			return
 		}

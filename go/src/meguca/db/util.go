@@ -25,6 +25,10 @@ type tableScanner interface {
 	Close() error
 }
 
+type queryer interface {
+	Query() (*sql.Rows, error)
+}
+
 // Allows easily running squirrel queries with transactions
 type transactionalQuery struct {
 	tx *sql.Tx
@@ -47,7 +51,7 @@ func (t transactionalQuery) Exec() (err error) {
 	return
 }
 
-func (t transactionalQuery) Query() (ts tableScanner, err error) {
+func (t transactionalQuery) Query() (r *sql.Rows, err error) {
 	sql, args, err := t.sq.ToSql()
 	if err != nil {
 		return
@@ -81,6 +85,23 @@ func InTransaction(readOnly bool, fn func(*sql.Tx) error) (err error) {
 		return
 	}
 	return tx.Commit()
+}
+
+// Run fn on all returned rows in a query
+func queryAll(q queryer, fn func(r *sql.Rows) error) (err error) {
+	r, err := q.Query()
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	for r.Next() {
+		err = fn(r)
+		if err != nil {
+			return
+		}
+	}
+	return r.Err()
 }
 
 // IsConflictError returns if an error is a unique key conflict error

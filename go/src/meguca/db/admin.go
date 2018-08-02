@@ -197,25 +197,17 @@ func loadBans() error {
 // RefreshBanCache loads up to date bans from the database and caches them in
 // memory
 func RefreshBanCache() (err error) {
-	r, err := sq.Select("ip", "board").From("bans").Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
 	bans := make([]auth.Ban, 0, 16)
-	for r.Next() {
-		var b auth.Ban
-		err = r.Scan(&b.IP, &b.Board)
-		if err != nil {
-			return
-		}
-		bans = append(bans, b)
-	}
-	err = r.Err()
-	if err != nil {
-		return
-	}
+	err = queryAll(sq.Select("ip", "board").From("bans"),
+		func(r *sql.Rows) error {
+			var b auth.Ban
+			err := r.Scan(&b.IP, &b.Board)
+			if err != nil {
+				return err
+			}
+			bans = append(bans, b)
+			return nil
+		})
 	auth.SetBans(bans...)
 
 	return
@@ -331,25 +323,19 @@ func WriteStaff(tx *sql.Tx, board string, staff map[string][]string) (
 // GetStaff retrieves all staff positions of a specific board
 func GetStaff(board string) (staff map[string][]string, err error) {
 	staff = make(map[string][]string, 3)
-	r, err := sq.Select("account", "position").
-		From("staff").
-		Where("board = ?", board).
-		Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	for r.Next() {
-		var acc, pos string
-		err = r.Scan(&acc, &pos)
-		if err != nil {
+	err = queryAll(
+		sq.Select("account", "position").
+			From("staff").
+			Where("board = ?", board),
+		func(r *sql.Rows) (err error) {
+			var acc, pos string
+			err = r.Scan(&acc, &pos)
+			if err != nil {
+				return
+			}
+			staff[pos] = append(staff[pos], acc)
 			return
-		}
-		staff[pos] = append(staff[pos], acc)
-	}
-
-	err = r.Err()
+		})
 	return
 }
 
@@ -377,32 +363,22 @@ func GetSameIPPosts(id uint64, board string, uid string) (
 ) {
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		// Get posts ids
-		r, err := sq.Select("id").
-			From("posts").
-			Where(`ip = (select ip from posts where id = ?) and board = ?`,
-				id, board).
-			Query()
-
-		if err != nil {
-			return
-		}
-
-		defer r.Close()
-		var ids = make([]uint64, 0, 64)
-
-		for r.Next() {
-			var id uint64
-			err = r.Scan(&id)
-
-			if err != nil {
+		ids := make([]uint64, 0, 64)
+		err = queryAll(
+			sq.Select("id").
+				From("posts").
+				Where(`ip = (select ip from posts where id = ?) and board = ?`,
+					id, board),
+			func(r *sql.Rows) (err error) {
+				var id uint64
+				err = r.Scan(&id)
+				if err != nil {
+					return
+				}
+				ids = append(ids, id)
 				return
-			}
-
-			ids = append(ids, id)
-		}
-
-		err = r.Err()
-
+			},
+		)
 		if err != nil {
 			return
 		}
@@ -463,25 +439,22 @@ func SetThreadLock(id uint64, locked bool, by string) error {
 
 // Retrieve moderation log for a specific board
 func GetModLog(board string) (log []auth.ModLogEntry, err error) {
-	r, err := sq.Select("type", "id", "by", "created", "length", "reason").
-		From("mod_log").
-		Where("board = ?", board).
-		OrderBy("created desc").
-		Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
 	log = make([]auth.ModLogEntry, 0, 64)
 	e := auth.ModLogEntry{Board: board}
-	for r.Next() {
-		err = r.Scan(&e.Type, &e.ID, &e.By, &e.Created, &e.Length, &e.Reason)
-		if err != nil {
+	err = queryAll(
+		sq.Select("type", "id", "by", "created", "length", "reason").
+			From("mod_log").
+			Where("board = ?", board).
+			OrderBy("created desc"),
+		func(r *sql.Rows) (err error) {
+			err = r.Scan(&e.Type, &e.ID, &e.By, &e.Created, &e.Length,
+				&e.Reason)
+			if err != nil {
+				return
+			}
+			log = append(log, e)
 			return
-		}
-		log = append(log, e)
-	}
-	err = r.Err()
+		},
+	)
 	return
 }
