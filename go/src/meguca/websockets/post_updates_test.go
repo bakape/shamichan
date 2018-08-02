@@ -120,7 +120,7 @@ func awaitFlush() {
 
 func writeSamplePost(t testing.TB) {
 	t.Helper()
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		return db.WritePost(tx, samplePost, false, false)
 	})
 	if err != nil {
@@ -192,7 +192,7 @@ func TestClosePostWithHashCommand(t *testing.T) {
 			OP: 1,
 		},
 	}
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		return db.WritePost(tx, post, false, false)
 	})
 	if err != nil {
@@ -274,7 +274,7 @@ func TestClosePostWithLinks(t *testing.T) {
 			},
 		},
 	}
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		for _, p := range posts {
 			if err := db.WritePost(tx, p, false, false); err != nil {
 				return err
@@ -541,7 +541,7 @@ func TestSplice(t *testing.T) {
 					OP:    1,
 				},
 			}
-			err := db.InTransaction(func(tx *sql.Tx) error {
+			err := db.InTransaction(false, func(tx *sql.Tx) error {
 				return db.WritePost(tx, post, false, false)
 			})
 			if err != nil {
@@ -595,7 +595,7 @@ func TestCloseOldOpenPost(t *testing.T) {
 			OP: 1,
 		},
 	}
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		return db.WritePost(tx, post, false, false)
 	})
 	if err != nil {
@@ -676,7 +676,7 @@ func TestInsertImage(t *testing.T) {
 			OP:    1,
 		},
 	}
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		return db.WritePost(tx, post, false, false)
 	})
 	if err != nil {

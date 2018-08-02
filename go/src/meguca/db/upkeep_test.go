@@ -51,7 +51,7 @@ func TestOpenPostClosing(t *testing.T) {
 			},
 		},
 	}
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(false, func(tx *sql.Tx) error {
 		for _, p := range posts {
 			err := WritePost(tx, p, false, false)
 			if err != nil {
@@ -150,7 +150,7 @@ func TestDeleteUnusedBoards(t *testing.T) {
 func writeAllBoard(t *testing.T) {
 	t.Helper()
 
-	err := InTransaction(func(tx *sql.Tx) (err error) {
+	err := InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = WriteBoard(tx, BoardConfigs{
 			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
 			Created:      time.Now().UTC(),
@@ -168,7 +168,7 @@ func writeAllBoard(t *testing.T) {
 func testBoardNoThreads(t *testing.T) {
 	(*config.Get()).PruneBoards = true
 
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(false, func(tx *sql.Tx) error {
 		return WriteBoard(tx, BoardConfigs{
 			Created: time.Now().Add(-eightDays),
 			BoardConfigs: config.BoardConfigs{
@@ -193,7 +193,7 @@ func testBoardNoThreads(t *testing.T) {
 func testBoardPruningDisabled(t *testing.T) {
 	(*config.Get()).PruneBoards = false
 
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(false, func(tx *sql.Tx) error {
 		return WriteBoard(tx, BoardConfigs{
 			Created: time.Now().Add(-eightDays),
 			BoardConfigs: config.BoardConfigs{
@@ -218,7 +218,7 @@ func testDeleteUnusedBoards(t *testing.T) {
 	expired := fresh.Add(-eightDays)
 
 	for _, id := range [...]string{"a", "c"} {
-		err := InTransaction(func(tx *sql.Tx) error {
+		err := InTransaction(false, func(tx *sql.Tx) error {
 			return WriteBoard(tx, BoardConfigs{
 				Created: expired,
 				BoardConfigs: config.BoardConfigs{

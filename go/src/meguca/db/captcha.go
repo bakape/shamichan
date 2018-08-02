@@ -54,7 +54,7 @@ func (dbCaptchaStore) Get(id string, clear bool) (digits []byte) {
 
 // Get captcha from DB and optionally remove it afterwards
 func getCaptcha(id string, clear bool) (solution string, err error) {
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		r, err := withTransaction(tx, sq.
 			Select("solution").
 			From("captchas").

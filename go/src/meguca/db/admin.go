@@ -65,7 +65,7 @@ func propagateBans(board string, ips ...string) error {
 
 // Automatically ban an IP
 func SystemBan(ip, reason string, expires time.Time) (err error) {
-	err = InTransaction(func(tx *sql.Tx) error {
+	err = InTransaction(false, func(tx *sql.Tx) error {
 		return writeBan(tx, ip, "all", reason, "system", 0, expires, true)
 	})
 	if err != nil {
@@ -117,7 +117,7 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 	}
 
 	// Write ban messages to posts and ban table
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		for _, post := range posts {
 			err = withTransaction(tx,
 				sq.Update("posts").
@@ -162,7 +162,7 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 
 // Lift a ban from a specific post on a specific board
 func Unban(board string, id uint64, by string) error {
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = withTransaction(tx,
 			sq.Delete("bans").
 				Where("board = ? and forPost = ?", board, id),
@@ -249,7 +249,7 @@ func moderatePost(
 		return
 	}
 
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = withTransaction(tx, query.Where("id = ?", id)).Exec()
 		if err != nil {
 			return
@@ -286,7 +286,7 @@ func DeleteBoard(board, by string) error {
 	if board == "all" {
 		return common.ErrInvalidInput("can not delete /all/")
 	}
-	return InTransaction(func(tx *sql.Tx) error {
+	return InTransaction(false, func(tx *sql.Tx) error {
 		return deleteBoard(tx, board, by,
 			fmt.Sprintf("board %s deleted by user", board))
 	})
@@ -375,7 +375,7 @@ func CanPerform(account, board string, action auth.ModerationLevel) (
 func GetSameIPPosts(id uint64, board string, uid string) (
 	posts []common.StandalonePost, err error,
 ) {
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		// Get posts ids
 		r, err := sq.Select("id").
 			From("posts").
@@ -426,10 +426,10 @@ func GetSameIPPosts(id uint64, board string, uid string) (
 
 		// Add a mod-log entry detailing that a meido has used meido vision
 		return logModeration(tx, auth.ModLogEntry{
-			Type:   auth.MeidoVision,
-			By:     uid,
-			Board:  board,
-			ID:     id,
+			Type:  auth.MeidoVision,
+			By:    uid,
+			Board: board,
+			ID:    id,
 		})
 	})
 
@@ -437,7 +437,7 @@ func GetSameIPPosts(id uint64, board string, uid string) (
 }
 
 func setThreadBool(id uint64, key string, val bool) error {
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = withTransaction(tx,
 			sq.Update("threads").
 				Set(key, val).

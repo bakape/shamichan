@@ -150,60 +150,52 @@ type PostStats struct {
 
 // GetThread retrieves public thread data from the database
 func GetThread(id uint64, lastN int) (t common.Thread, err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	defer tx.Commit()
-	err = setReadOnly(tx)
-	if err != nil {
-		return
-	}
-
-	// Get thread metadata and OP
-	t, err = scanOP(tx.QueryRow(getOPSQL, id))
-	if err != nil {
-		return
-	}
-	t.Abbrev = lastN != 0
-
-	// Get replies
-	var (
-		cap   int
-		limit *int
-	)
-	if lastN != 0 {
-		cap = lastN
-		limit = &lastN
-	} else {
-		cap = int(t.PostCtr)
-	}
-	r, err := tx.Query(getThreadPostsSQL, id, limit)
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	// Scan replies into []common.Post
-	var (
-		post postScanner
-		img  imageScanner
-		p    common.Post
-		args = append(post.ScanArgs(), img.ScanArgs()...)
-	)
-	t.Posts = make([]common.Post, 0, cap)
-	for r.Next() {
-		err = r.Scan(args...)
+	err = InTransaction(true, func(tx *sql.Tx) (err error) {
+		// Get thread metadata and OP
+		t, err = scanOP(tx.QueryRow(getOPSQL, id))
 		if err != nil {
 			return
 		}
-		p, err = extractPost(post, img)
+		t.Abbrev = lastN != 0
+
+		// Get replies
+		var (
+			cap   int
+			limit *int
+		)
+		if lastN != 0 {
+			cap = lastN
+			limit = &lastN
+		} else {
+			cap = int(t.PostCtr)
+		}
+		r, err := tx.Query(getThreadPostsSQL, id, limit)
 		if err != nil {
 			return
 		}
-		t.Posts = append(t.Posts, p)
-	}
-	err = r.Err()
+		defer r.Close()
+
+		// Scan replies into []common.Post
+		var (
+			post postScanner
+			img  imageScanner
+			p    common.Post
+			args = append(post.ScanArgs(), img.ScanArgs()...)
+		)
+		t.Posts = make([]common.Post, 0, cap)
+		for r.Next() {
+			err = r.Scan(args...)
+			if err != nil {
+				return
+			}
+			p, err = extractPost(post, img)
+			if err != nil {
+				return
+			}
+			t.Posts = append(t.Posts, p)
+		}
+		return r.Err()
+	})
 	if err != nil {
 		return
 	}

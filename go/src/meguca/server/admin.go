@@ -306,7 +306,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = db.WriteBoard(tx, db.BoardConfigs{
 			Created: time.Now().UTC(),
 			BoardConfigs: config.BoardConfigs{
@@ -546,7 +546,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		return db.WriteStaff(tx, msg.Board, map[string][]string{
 			"owners":     msg.Owners,
 			"moderators": msg.Moderators,

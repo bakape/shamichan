@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -64,9 +65,12 @@ func (t transactionalQuery) QueryRow() (rs rowScanner, err error) {
 }
 
 // Runs function inside a transaction and handles comminting and rollback on
-// error
-func InTransaction(fn func(*sql.Tx) error) (err error) {
-	tx, err := db.Begin()
+// error.
+// readOnly: the DBMS can optimise read-only transactions for better concurrency
+func InTransaction(readOnly bool, fn func(*sql.Tx) error) (err error) {
+	tx, err := db.BeginTx(context.Background(), &sql.TxOptions{
+		ReadOnly: readOnly,
+	})
 	if err != nil {
 		return
 	}
@@ -77,11 +81,6 @@ func InTransaction(fn func(*sql.Tx) error) (err error) {
 		return
 	}
 	return tx.Commit()
-}
-
-func setReadOnly(tx *sql.Tx) error {
-	_, err := tx.Exec("SET TRANSACTION READ ONLY")
-	return err
 }
 
 // IsConflictError returns if an error is a unique key conflict error

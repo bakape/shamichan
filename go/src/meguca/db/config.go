@@ -128,7 +128,7 @@ func notifyBoardUpdated(tx *sql.Tx, board string) error {
 
 // UpdateBoard updates board configurations
 func UpdateBoard(c config.BoardConfigs) error {
-	return InTransaction(func(tx *sql.Tx) error {
+	return InTransaction(false, func(tx *sql.Tx) error {
 		q := sq.Update("boards").
 			SetMap(map[string]interface{}{
 				"readOnly":      c.ReadOnly,

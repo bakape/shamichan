@@ -57,7 +57,7 @@ func TestInsertThread(t *testing.T) {
 		if _, err := config.SetBoardConfigs(c.BoardConfigs); err != nil {
 			t.Fatal(err)
 		}
-		err := db.InTransaction(func(tx *sql.Tx) error {
+		err := db.InTransaction(false, func(tx *sql.Tx) error {
 			return db.WriteBoard(tx, c)
 		})
 		if err != nil {
@@ -222,7 +222,7 @@ func TestGetInvalidImage(t *testing.T) {
 		t.Run(c.testName, func(t *testing.T) {
 			t.Parallel()
 
-			err := db.InTransaction(func(tx *sql.Tx) error {
+			err := db.InTransaction(false, func(tx *sql.Tx) error {
 				_, err := getImage(tx, c.token, c.name, false)
 				if err != c.err {
 					UnexpectedError(t, err)
@@ -420,7 +420,7 @@ func writeSampleBoard(t testing.TB) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		return db.WriteBoard(tx, b)
 	})
 	if err != nil {

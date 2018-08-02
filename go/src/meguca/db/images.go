@@ -174,7 +174,7 @@ func InsertImage(tx *sql.Tx, id, op uint64, img common.Image) (err error) {
 
 // SpoilerImage spoilers an already allocated image
 func SpoilerImage(id, op uint64) error {
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = withTransaction(tx,
 			sq.Update("posts").
 				Set("spoiler", true).

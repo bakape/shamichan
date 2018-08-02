@@ -24,7 +24,7 @@ func prepareForModeration(t *testing.T) {
 	assertTableClear(t, "accounts", "bans", "mod_log", "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(false, func(tx *sql.Tx) error {
 		return CreateAdminAccount(tx)
 	})
 	if err != nil {
@@ -92,7 +92,7 @@ func TestStaff(t *testing.T) {
 	prepareForModeration(t)
 
 	staff := map[string][]string{"owners": {"admin"}}
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(false, func(tx *sql.Tx) error {
 		return WriteStaff(tx, "a", staff)
 	})
 	if err != nil {
@@ -130,7 +130,7 @@ func TestGetModLOg(t *testing.T) {
 func TestCanPerform(t *testing.T) {
 	prepareForModeration(t)
 	writeSampleUser(t)
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(false, func(tx *sql.Tx) error {
 		return WriteStaff(tx, "a", map[string][]string{
 			"moderators": []string{sampleUserID},
 		})

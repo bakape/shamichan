@@ -58,7 +58,7 @@ func parseCommand(match []byte, board string, id uint64, ip string) (
 		com.Type = common.Pyu
 
 		if boardConfig.Pyu {
-			err = db.InTransaction(func(tx *sql.Tx) (err error) {
+			err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
 				exists, err := db.PyuLimitExists(tx, ip, board)
 
 				if err != nil {
