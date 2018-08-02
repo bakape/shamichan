@@ -152,3 +152,23 @@ func execAll(tx *sql.Tx, q ...string) error {
 	}
 	return nil
 }
+
+// GetGeoMD5 retrieves the GeoIP MD5 hash
+func GetGeoMD5() (hash string, err error) {
+	err = sq.Select("val::char(32)").
+		From("main").
+		Where("id = 'geo_md5'").
+		Scan(&hash)
+
+	return
+}
+
+// SetGeoMD5 sets the GeoIP MD5 hash
+func SetGeoMD5(hash string) error {
+	_, err := sq.Update("main").
+		Set("val", hash).
+		Where("id = 'geo_md5'").
+		Exec()
+		
+	return err
+}
