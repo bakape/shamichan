@@ -33,7 +33,7 @@ func randInt(max int) int {
 }
 
 // Parse a matched hash command
-func parseCommand(match []byte, board string, id uint64, ip string) (
+func parseCommand(match []byte, board string, thread uint64, id uint64, ip string) (
 	com common.Command, err error,
 ) {
 	boardConfig := config.GetBoardConfigs(board)
@@ -137,21 +137,31 @@ func parseCommand(match []byte, board string, id uint64, ip string) (
 	// Roulette
 	case bytes.Equal(match, []byte("roulette")):
 		com.Type = common.Roulette
-		var max uint8
-		max, err = db.DecrementRoulette()
-		if err != nil {
-			return
-		}
-		roll := uint8(randInt(int(max)) + 1)
-		if roll == 1 {
-			err = db.ResetRoulette()
-		}
-		com.Roulette = [2]uint8{roll, max}
+		err = db.InTransaction(false, func(tx *sql.Tx) error {
+			max, err := db.DecrementRoulette(tx, thread)
+
+			if err != nil {
+				return err
+			}
+
+			roll := uint8(randInt(int(max)) + 1)
+
+			if roll == 1 {
+				err = db.ResetRoulette(tx, thread)
+			}
+
+			com.Roulette = [2]uint8{roll, max}
+			return err
+		})
 
 	// Return current roulette count
 	case bytes.Equal(match, []byte("rcount")):
 		com.Type = common.Rcount
-		com.Pyu, err = db.GetRcount()
+		err = db.InTransaction(false, func(tx *sql.Tx) error {
+			rcount, err := db.GetRcount(tx, thread)
+			com.Pyu = uint64(rcount)
+			return err
+		})
 
 	default:
 		matchStr := string(match)

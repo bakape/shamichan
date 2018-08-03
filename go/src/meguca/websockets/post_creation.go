@@ -61,21 +61,27 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		err = common.ErrBanned
 		return
 	}
+
 	err = db.AuthenticateCaptcha(req.Captcha, ip)
+
 	if err != nil {
 		return
 	}
 
 	conf, err := getBoardConfig(req.Board)
+
 	if err != nil {
 		return
 	}
 
 	post, err = constructPost(req.ReplyCreationRequest, conf, ip)
+
 	if err != nil {
 		return
 	}
+
 	subject, err := parser.ParseSubject(req.Subject)
+	
 	if err != nil {
 		return
 	}
@@ -84,25 +90,37 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	// possible data races with unused image cleanup
 	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
 		post.ID, err = db.NewPostID(tx)
+
 		if err != nil {
 			return
 		}
+
 		post.OP = post.ID
+
 		if conf.PosterIDs {
 			computePosterID(&post)
 		}
 
 		hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
+
 		if hasImage {
 			img := req.Image
 			post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
+
 			if err != nil {
 				return
 			}
 		}
 
-		return db.InsertThread(tx, subject, conf.NonLive || req.NonLive, post)
+		err = db.InsertThread(tx, subject, conf.NonLive || req.NonLive, post)
+
+		if err != nil {
+			return
+		}
+
+		return db.WriteRoulette(tx, post.ID)
 	})
+	
 	return
 }
 
@@ -244,7 +262,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 		c.post.init(post.StandalonePost)
 	}
 	c.feed.InsertPost(post.StandalonePost.Post, msg)
-	err = CheckRouletteBan(post.Commands, post.Board, post.ID)
+	err = CheckRouletteBan(post.Commands, post.Board, post.OP, post.ID)
 	if err != nil {
 		return
 	}
@@ -374,6 +392,7 @@ func constructPost(
 		post.Links, post.Commands, err = parser.ParseBody(
 			[]byte(req.Body),
 			conf.ID,
+			post.OP,
 			post.ID,
 			ip,
 			false,

@@ -211,41 +211,84 @@ func FreePyuLimit() error {
 	return err
 }
 
-// DecrementRoulette retrieves current roulette counter and decrements it
-func DecrementRoulette() (c uint8, err error) {
-	err = db.QueryRow(`
-		update main
-			set val = (val::smallint - 1)::text
-			where id = 'roulette'
-			returning val::smallint + 1`).
-		Scan(&c)
-	return
-}
-
-// ResetRoulette resets the roulette counter to 6
-func ResetRoulette() (err error) {
-	_, err = sq.Update("main").
-		Set("val", "6").
-		Where(`id = 'roulette'`).
+// WriteRoulette creates a roulette row. Only used on creation of a thread.
+func WriteRoulette(tx *sql.Tx, t uint64) error {
+	return withTransaction(tx, sq.Insert("roulette").
+		Columns("id", "scount", "rcount").
+		Values(t, 6, 0)).
 		Exec()
+}
+
+// GetRoulette retrieves the thread's roulette counter
+func GetRoulette(tx *sql.Tx, t uint64) (c uint8, err error) {
+	r, err := withTransaction(tx, sq.Select("scount").
+		From("roulette").
+		Where("id = ?", t)).
+		QueryRow()
+
+	if err != nil {
+		return
+	}
+
+	err = r.Scan(&c)
 	return
 }
 
-// GetRcount retrieves current roulette counter
-func GetRcount() (c uint64, err error) {
-	err = sq.Select("val::bigint").
-		From("main").
-		Where("id = 'rcount'").
-		QueryRow().
-		Scan(&c)
+// DecrementRoulette decrements the thread's roulette counter by one and returns the new counter
+func DecrementRoulette(tx *sql.Tx, t uint64) (c uint8, err error) {
+	scount, err := GetRoulette(tx, t)
+
+	if err != nil {
+		return
+	}
+
+	r, err := withTransaction(tx, sq.Update("roulette").
+		Set("scount", scount-1).
+		Where("id = ?", t).
+		Suffix("returning scount")).
+		QueryRow()
+
+	if err != nil {
+		return
+	}
+
+	err = r.Scan(&c)
 	return
 }
 
-// IncrementRcount increments the roulette counter by one
-func IncrementRcount() (err error) {
-	_, err = db.Exec(`
-		update main
-			set val = (val::bigint + 1)::text
-			where id = 'rcount'`)
+// ResetRoulette resets the thread's roulette counter to 6
+func ResetRoulette(tx *sql.Tx, t uint64) (err error) {
+	return withTransaction(tx, sq.Update("roulette").
+		Set("scount", "6").
+		Where(`id = ?`, t)).
+		Exec()
+}
+
+// GetRcount retrieves the thread's rcount
+func GetRcount(tx *sql.Tx, t uint64) (c uint8, err error) {
+	r, err := withTransaction(tx, sq.Select("rcount").
+		From("roulette").
+		Where("id = ?", t)).
+		QueryRow()
+
+	if err != nil {
+		return
+	}
+
+	err = r.Scan(&c)
 	return
+}
+
+// IncrementRcount increments the thread's rcount by one
+func IncrementRcount(tx *sql.Tx, t uint64) (err error) {
+	rcount, err := GetRcount(tx, t)
+
+	if err != nil {
+		return
+	}
+	
+	return withTransaction(tx, sq.Update("roulette").
+		Set("rcount", rcount+1).
+		Where("id = ?", t)).
+		Exec()
 }
