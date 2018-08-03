@@ -175,7 +175,7 @@ func GetBanInfo(ip, board string) (auth.BanRecord, error) {
 	return scanBanRecord(r)
 }
 
-// Get all bans on a specific board. "all" counts as a valid board value.
+// GetBoardBans gets all bans on a specific board. "all" counts as a valid board value.
 func GetBoardBans(board string) (b []auth.BanRecord, err error) {
 	b = make([]auth.BanRecord, 0, 64)
 	var rec auth.BanRecord

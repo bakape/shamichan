@@ -63,7 +63,7 @@ func propagateBans(board string, ips ...string) error {
 	return nil
 }
 
-// Automatically ban an IP
+// SystemBan automatically bans an IP
 func SystemBan(ip, reason string, expires time.Time) (err error) {
 	err = InTransaction(false, func(tx *sql.Tx) error {
 		return writeBan(tx, ip, "all", reason, "system", 0, expires, true)
@@ -154,13 +154,13 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 	}
 
 	ipArr := make([]string, 0, len(ips))
-	for ip, _ := range ips {
+	for ip := range ips {
 		ipArr = append(ipArr, ip)
 	}
 	return propagateBans(board, ipArr...)
 }
 
-// Lift a ban from a specific post on a specific board
+// Unban lifts a ban from a specific post on a specific board
 func Unban(board string, id uint64, by string) error {
 	return InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = withTransaction(tx,
@@ -267,7 +267,7 @@ func moderatePost(
 	return
 }
 
-// Permanently delete an image from a post
+// DeleteImage permanently deletes an image from a post
 func DeleteImage(id uint64, by string) error {
 	q := sq.Update("posts").Set("SHA1", nil)
 	return moderatePost(id, auth.DeleteImage, by, q, common.DeleteImage)
@@ -284,7 +284,7 @@ func DeleteBoard(board, by string) error {
 	})
 }
 
-// Spoiler image as a moderator
+// ModSpoilerImage spoilers image as a moderator
 func ModSpoilerImage(id uint64, by string) error {
 	q := sq.Update("posts").Set("spoiler", true)
 	return moderatePost(id, auth.SpoilerImage, by, q, common.SpoilerImage)
@@ -427,17 +427,17 @@ func setThreadBool(id uint64, key string, val bool) error {
 	})
 }
 
-// Set the sticky field on a thread
+// SetThreadSticky sets the sticky field on a thread
 func SetThreadSticky(id uint64, sticky bool) error {
 	return setThreadBool(id, "sticky", sticky)
 }
 
-// Set the ability of users to post in a specific thread
+// SetThreadLock sets the ability of users to post in a specific thread
 func SetThreadLock(id uint64, locked bool, by string) error {
 	return setThreadBool(id, "locked", locked)
 }
 
-// Retrieve moderation log for a specific board
+// GetModLog retrieves the  moderation log for a specific board
 func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 	log = make([]auth.ModLogEntry, 0, 64)
 	e := auth.ModLogEntry{Board: board}

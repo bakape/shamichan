@@ -14,7 +14,7 @@ func Report(id uint64, board, reason, ip string, illegal bool) error {
 	return err
 }
 
-// Read reports for a specific board. Pass "all" for global reports.
+// GetReports reads reports for a specific board. Pass "all" for global reports.
 func GetReports(board string) (rep []auth.Report, err error) {
 	tmp := auth.Report{
 		Board: board,
