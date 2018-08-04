@@ -108,6 +108,7 @@ const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, 
   ** for spoilers
   @@ for bold
   ~~ for italics
+  ((())) for echoes
   ^r for red text
   ^b for blue text
   ` + "``" + ` for programing code highlighting

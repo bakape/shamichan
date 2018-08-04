@@ -73,8 +73,8 @@ func TestRenderBody(t *testing.T) {
 		},
 		{
 			name: "nested formating",
-			in:   "foo** bar@@b~~a@@z^re^r^br^b**h~~",
-			out:  `foo<del> bar<b>b<i>a</i></b><i>z<span class="red">e</span><span class="blue">r</span></i></del><i>h</i>`,
+			in:   "foo** bar@@b~~a@@z^re^r^br^b(((s)))**h~~",
+			out:  `foo<del> bar<b>b<i>a</i></b><i>z<span class="red">e</span><span class="blue">r</span><span class="echo">(((s)))</span></i></del><i>h</i>`,
 		},
 		{
 			name:    "trailing empty open line",
