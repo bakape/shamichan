@@ -66,9 +66,9 @@ var (
 type bodyContext struct {
 	index bool     // Rendered for an index page
 	state struct { // Body parser state
-		spoiler, quote, code, bold, italic, red, blue, rbText, pyu bool
-		successive_newlines                                        uint
-		iDice                                                      int
+		spoiler, quote, code, bold, italic, echo, red, blue, rbText, pyu bool
+		successiveNewlines                                               uint
+		iDice                                                            int
 	}
 	common.Post
 	OP    uint64
@@ -107,15 +107,15 @@ func streambody(
 		c.state.quote = false
 
 		// Prevent successive empty lines
-		if i != 0 && c.state.successive_newlines < 2 {
+		if i != 0 && c.state.successiveNewlines < 2 {
 			c.string("<br>")
 		}
 		if len(l) == 0 {
-			c.state.successive_newlines++
+			c.state.successiveNewlines++
 			continue
 		}
 
-		c.state.successive_newlines = 0
+		c.state.successiveNewlines = 0
 		if l[0] == '>' {
 			c.string("<em>")
 			c.state.quote = true
@@ -128,6 +128,9 @@ func streambody(
 		}
 		if c.state.italic {
 			c.string("<i>")
+		}
+		if c.state.echo {
+			c.string("<span class=\"echo\">(")
 		}
 		if c.state.red {
 			c.string("<span class=\"red\">")
@@ -142,6 +145,9 @@ func streambody(
 			c.string("</span>")
 		}
 		if c.state.red {
+			c.string("</span>")
+		}
+		if c.state.echo {
 			c.string("</span>")
 		}
 		if c.state.italic {
@@ -166,6 +172,7 @@ func (c *bodyContext) wrapTags(level int) {
 		c.state.spoiler,
 		c.state.bold,
 		c.state.italic,
+		c.state.echo,
 		c.state.red,
 		c.state.blue,
 	}
@@ -173,6 +180,7 @@ func (c *bodyContext) wrapTags(level int) {
 		"<del>",
 		"<b>",
 		"<i>",
+		"<span class=\"echo\">(",
 		"<span class=\"red\">",
 		"<span class=\"blue\">",
 	}
@@ -180,6 +188,7 @@ func (c *bodyContext) wrapTags(level int) {
 		"</del>",
 		"</b>",
 		"</i>",
+		"</span>",
 		"</span>",
 		"</span>",
 	}
@@ -291,7 +300,7 @@ func (c *bodyContext) parseBolds(frag string, fn func(string)) {
 // Inject italic tags and call fn on the remaining parts
 func (c *bodyContext) parseItalics(frag string, fn func(string)) {
 	_fn := func(frag string) {
-		c.parseReds(frag, fn)
+		c.parseEchoes(frag, fn)
 	}
 
 	for {
@@ -308,6 +317,33 @@ func (c *bodyContext) parseItalics(frag string, fn func(string)) {
 	}
 }
 
+// Inject echo class and call fn on the remaining parts
+func (c *bodyContext) parseEchoes(frag string, fn func(string)) {
+	_fn := func(frag string) {
+		c.parseReds(frag, fn)
+	}
+
+	for {
+		i := strings.Index(frag, "(((")
+		e := strings.Index(frag, ")))")
+		
+		if i != -1 && !c.state.echo {
+			_fn(frag[:i])
+			c.wrapTags(3)
+			c.state.echo = !c.state.echo
+			frag = frag[i+1:]
+		} else if e != -1 && c.state.echo {
+			_fn(frag[:e+3])
+			c.wrapTags(3)
+			c.state.echo = !c.state.echo
+			frag = frag[e+3:]
+		} else {
+			_fn(frag)
+			break
+		}
+	}
+}
+
 // Inject red color tags and call fn on the remaining parts
 func (c *bodyContext) parseReds(frag string, fn func(string)) {
 	_fn := func(frag string) {
@@ -317,7 +353,7 @@ func (c *bodyContext) parseReds(frag string, fn func(string)) {
 
 	if c.state.rbText {
 		_rbText = func() {
-			c.wrapTags(3)
+			c.wrapTags(4)
 			c.state.red = !c.state.red
 		}
 	}
@@ -341,7 +377,7 @@ func (c *bodyContext) parseBlues(frag string, fn func(string)) {
 
 	if c.state.rbText {
 		_rbText = func() {
-			c.wrapTags(4)
+			c.wrapTags(5)
 			c.state.blue = !c.state.blue
 		}
 	}

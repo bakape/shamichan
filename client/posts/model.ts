@@ -59,6 +59,7 @@ export class Post extends Model implements PostData {
 			code: false,
 			bold: false,
 			italic: false,
+			echo: false,
 			red: false,
 			blue: false,
 			haveSyncwatch: false,
@@ -252,6 +253,7 @@ export class Post extends Model implements PostData {
 
 function endsWithTag(body: string): boolean {
 	const sl = body[body.length - 2]
+
 	switch (body[body.length - 1]) {
 		case ">":
 			return true
@@ -268,5 +270,13 @@ function endsWithTag(body: string): boolean {
 		case "b":
 			return sl === "^"
 	}
+
+	switch (body.slice(body.length - 3, body.length)) {
+		case "(((":
+			return true
+		case ")))":
+			return true
+	}
+
 	return false
 }
