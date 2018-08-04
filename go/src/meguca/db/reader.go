@@ -309,7 +309,7 @@ func GetBoardCatalog(board string) (b common.Board, err error) {
 	return
 }
 
-// Retrieves all threads IDs on the board in bump order with stickies first
+// GetThreadIDs retrieves all threads IDs on the board in bump order with stickies first
 func GetThreadIDs(board string) ([]uint64, error) {
 	r, err := sq.Select("id").
 		From("threads").
@@ -350,7 +350,7 @@ func GetAllBoardCatalog() (board common.Board, err error) {
 	return
 }
 
-// Retrieves all threads IDs in bump order
+// GetAllThreadsIDs retrieves all threads IDs in bump order
 func GetAllThreadsIDs() ([]uint64, error) {
 	r, err := sq.Select("id").
 		From("threads").

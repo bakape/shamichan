@@ -126,13 +126,13 @@ func setAssets(table, board string, files []assets.File) error {
 	})
 }
 
-// Overwrite list of banners in the DB, for a specific board
+// SetBanners overwrites the list of banners in the DB, for a specific board
 func SetBanners(board string, banners []assets.File) error {
 	return setAssets("banners", board, banners)
 }
 
-// Set loading animation for specific board. Nil file.Data means the default
-// animation should be used.
+// SetLoadingAnimation sets the loading animation for a specific board.
+// Nil file.Data means the default animation should be used.
 func SetLoadingAnimation(board string, file assets.File) error {
 	var files []assets.File
 	if file.Data != nil {

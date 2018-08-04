@@ -68,8 +68,7 @@ func (t transactionalQuery) QueryRow() (rs rowScanner, err error) {
 	return
 }
 
-// Runs function inside a transaction and handles comminting and rollback on
-// error.
+// InTransaction runs a function inside a transaction and handles comminting and rollback on error.
 // readOnly: the DBMS can optimise read-only transactions for better concurrency
 func InTransaction(readOnly bool, fn func(*sql.Tx) error) (err error) {
 	tx, err := db.BeginTx(context.Background(), &sql.TxOptions{
@@ -112,7 +111,7 @@ func IsConflictError(err error) bool {
 	return false
 }
 
-// Assigns a function to listen to Postgres notifications on a channel
+// Listen assigns a function to listen to Postgres notifications on a channel
 func Listen(event string, fn func(msg string) error) (err error) {
 	if IsTest {
 		return

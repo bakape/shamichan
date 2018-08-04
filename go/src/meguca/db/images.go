@@ -25,6 +25,7 @@ var (
 	ErrInvalidToken = errors.New("invalid image token")
 )
 
+// Video structure
 type Video struct {
 	FileType uint8         `json:"fileType"`
 	Duration time.Duration `json:"-"`
@@ -189,7 +190,7 @@ func SpoilerImage(id, op uint64) error {
 	})
 }
 
-// Delete an image as part of clearing a post
+// DeleteOwnedImage deletes an image as part of clearing a post
 func DeleteOwnedImage(id uint64) error {
 	_, err := sq.Update("posts").
 		Set("SHA1", nil).
@@ -198,7 +199,7 @@ func DeleteOwnedImage(id uint64) error {
 	return err
 }
 
-// Returns a video playlist for a board
+// VideoPlaylist returns a video playlist for a board
 func VideoPlaylist(board string) (videos []Video, err error) {
 	videos = make([]Video, 0, 128)
 	var (
@@ -234,7 +235,7 @@ func VideoPlaylist(board string) (videos []Video, err error) {
 	return
 }
 
-// Return, if image exists
+// ImageExists returns, if image exists
 func ImageExists(sha1 string) (exists bool, err error) {
 	err = sq.Select("1").
 		From("images").
