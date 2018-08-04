@@ -147,7 +147,7 @@ func removeEntry(el *list.Element) {
 	s.sizeMu.Unlock()
 }
 
-// Delete all entries by the board property of Key.
+// DeleteByBoard deletes all entries by the board property of Key.
 // If no entries found, this is a NOP.
 func DeleteByBoard(board string) {
 	mu.Lock()

@@ -24,8 +24,8 @@ func init() {
 
 		switch arg {
 		case "debug":
-			mLog.Init(mLog.Console)
-			mLog.ConsoleHandler.SetDisplayColor(true)
+			mlog.Init(mlog.Console)
+			mlog.ConsoleHandler.SetDisplayColor(true)
 			startServer()
 		case "stop":
 			killDaemon()
@@ -36,8 +36,8 @@ func init() {
 			killDaemon()
 			fallthrough
 		case "start":
-			mLog.Init(mLog.Console)
-			mLog.ConsoleHandler.SetDisplayColor(false)
+			mlog.Init(mlog.Console)
+			mlog.ConsoleHandler.SetDisplayColor(false)
 			daemonize()
 		default:
 			printUsage()

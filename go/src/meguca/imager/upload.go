@@ -197,7 +197,7 @@ func newThumbnail(data []byte, img common.ImageCommon) (string, error) {
 	return db.NewImageToken(img.SHA1)
 }
 
-// Wrap thumbnailer error with appropriate HTTP status code
+// WrapThumbnailerError Wraps a thumbnailer error with the appropriate HTTP status code
 func WrapThumbnailerError(err error) error {
 	switch err.(type) {
 	case nil:

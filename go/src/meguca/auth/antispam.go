@@ -108,7 +108,7 @@ func (s *spamCounter) reset() {
 	s.init()
 }
 
-// Returns, if the user does not trigger antispam
+// CanPost returns, if the user does not trigger antispam
 func CanPost(ip string) bool {
 	if !config.Get().Captcha {
 		return true
@@ -116,7 +116,7 @@ func CanPost(ip string) bool {
 	return spamCounters.get(ip).canPost()
 }
 
-// Increment spam detection score to an IP, after performing an action and send
+// IncrementSpamScore increments spam detection score to an IP, after performing an action and send
 // captcha requests, if score exceeded.
 func IncrementSpamScore(ip string, score uint) (err error) {
 	if !config.Get().Captcha {
@@ -134,7 +134,7 @@ func IncrementSpamScore(ip string, score uint) (err error) {
 		if err != nil {
 			return
 		}
-		for _, cl := range common.GetClientsByIp(ip) {
+		for _, cl := range common.GetClientsByIP(ip) {
 			cl.Send(msg)
 		}
 	}
@@ -142,7 +142,7 @@ func IncrementSpamScore(ip string, score uint) (err error) {
 	return
 }
 
-// Reset a spam score to zero by IP
+// ResetSpamScore resets a spam score to zero by IP
 func ResetSpamScore(ip string) {
 	if !config.Get().Captcha {
 		return
@@ -150,7 +150,7 @@ func ResetSpamScore(ip string) {
 	spamCounters.get(ip).reset()
 }
 
-// Clear all spam detection data. Only use for tests.
+// ClearSpamCounters clears all spam detection data. Only use for tests.
 func ClearSpamCounters() {
 	spamCounters.clear()
 }

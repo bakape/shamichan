@@ -5,13 +5,13 @@ import (
 	"sync"
 )
 
-// Contains data and type of a file stored in memory
+// File contains data and type of a file stored in memory
 type File struct {
 	Data       []byte
 	Mime, Hash string
 }
 
-// Stores board-specific files in memory
+// FileStore stores board-specific files in memory
 type FileStore struct {
 	mu  sync.RWMutex
 	m   map[string]File
@@ -33,7 +33,7 @@ func (s *FileStore) Set(board string, file File) {
 	}
 }
 
-// Returns the file specified by board. If none found, default is returned.
+// Get returns the file specified by board. If none found, default is returned.
 // file should not be mutted.
 func (s *FileStore) Get(board string) (file File) {
 	s.mu.RLock()

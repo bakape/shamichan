@@ -135,7 +135,7 @@ func (u uintSorter) Swap(i, j int) {
 func (c *threadCache) encodeThread(last100 bool) []byte {
 	// Map is randomly ordered, so need to map IDs and sort
 	ids := make([]uint64, 0, len(c.Posts))
-	for id, _ := range c.Posts {
+	for id := range c.Posts {
 		ids = append(ids, id)
 	}
 	sort.Sort(uintSorter(ids))

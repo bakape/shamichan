@@ -47,7 +47,7 @@ type postBodyModMessage struct {
 	msg, body []byte
 }
 
-// A feed with synchronization logic of a certain thread
+// Feed is a feed with synchronization logic of a certain thread
 type Feed struct {
 	// Thread ID
 	id uint64
@@ -77,7 +77,7 @@ type Feed struct {
 	setOpenBody chan postBodyModMessage
 }
 
-// Read existing posts into cache and start main loop
+// Start read existing posts into cache and start main loop
 func (f *Feed) Start() (err error) {
 	thread, err := db.GetThread(f.id, 0)
 	if err != nil {
@@ -108,9 +108,9 @@ func (f *Feed) Start() (err error) {
 			case c := <-f.remove:
 				if f.removeClient(c) {
 					return
-				} else {
-					f.sendIPCount()
 				}
+
+				f.sendIPCount()
 
 			case w := <-f.addWatcher:
 				f.watchers[w] = struct{}{}
@@ -242,7 +242,7 @@ func (f *Feed) sendIPCount() {
 	f.bufferMessage(msg)
 }
 
-// Insert a new post into the thread or reclaim an open post after disconnect
+// InsertPost inserts a new post into the thread or reclaim an open post after disconnect
 // and propagate to listeners
 func (f *Feed) InsertPost(post common.Post, msg []byte) {
 	f.insertPost <- postCreationMessage{
@@ -251,7 +251,7 @@ func (f *Feed) InsertPost(post common.Post, msg []byte) {
 	}
 }
 
-// Insert an image into an already allocated post
+// InsertImage inserts an image into an already allocated post
 func (f *Feed) InsertImage(id uint64, img common.Image, msg []byte) {
 	f.insertImage <- imageInsertionMessage{
 		id:    id,
@@ -269,6 +269,7 @@ func (f *Feed) _sendPostMessage(typ postMessageType, id uint64, msg []byte) {
 	}
 }
 
+// ClosePost closes a feed's post
 func (f *Feed) ClosePost(
 	id uint64,
 	links []common.Link,
@@ -278,6 +279,7 @@ func (f *Feed) ClosePost(
 	f.closePost <- postCloseMessage{id, links, commands, msg}
 }
 
+// SpoilerImage spoilers a feed's image
 func (f *Feed) SpoilerImage(id uint64, msg []byte) {
 	f._sendPostMessage(spoilerImage, id, msg)
 }
@@ -290,11 +292,12 @@ func (f *Feed) deletePost(id uint64, msg []byte) {
 	f._sendPostMessage(deletePost, id, msg)
 }
 
+// DeleteImage deletes a feed's image
 func (f *Feed) DeleteImage(id uint64, msg []byte) {
 	f._sendPostMessage(deleteImage, id, msg)
 }
 
-// Set body of an open post and send update message to clients
+// SetOpenBody sets the body of an open post and send update message to clients
 func (f *Feed) SetOpenBody(id uint64, body, msg []byte) {
 	f.setOpenBody <- postBodyModMessage{
 		id:   id,

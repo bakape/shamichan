@@ -24,7 +24,7 @@ var (
 	ErrSpamDected = ErrAccessDenied("spam detected")
 )
 
-// Simple error with HTTP status code attached
+// StatusError is a simple error with HTTP status code attached
 type StatusError struct {
 	Err  error
 	Code int
@@ -51,17 +51,17 @@ func ErrTooLong(s string) error {
 	return StatusError{errors.New(s + " too long"), 400}
 }
 
-// Invalid user input was suplied
+// ErrInvalidInput is an error that invalid user input was supplied
 func ErrInvalidInput(s string) error {
 	return StatusError{errors.New(s), 400}
 }
 
-// User does not have enough access rights
+// ErrAccessDenied is an error that user does not have enough access rights
 func ErrAccessDenied(s string) error {
 	return StatusError{errors.New(s), 403}
 }
 
-// User input has non-printable runes
+// ErrNonPrintable is an error that user input has non-printable runes
 func ErrNonPrintable(r rune) error {
 	return StatusError{
 		fmt.Errorf("contains non-printable character: %d", int(r)),
@@ -69,7 +69,7 @@ func ErrNonPrintable(r rune) error {
 	}
 }
 
-// No such thread on this board
+// ErrInvalidThread is an error that no such thread on this board
 func ErrInvalidThread(id uint64, board string) error {
 	return StatusError{
 		fmt.Errorf("no thread %d on board `%s`", id, board),
@@ -77,12 +77,12 @@ func ErrInvalidThread(id uint64, board string) error {
 	}
 }
 
-// Invalid board provided
+// ErrInvalidBoard is an error that an invalid board was provided
 func ErrInvalidBoard(board string) error {
 	return StatusError{fmt.Errorf("board `%s` does not exist", board), 404}
 }
 
-// Returns, if client-caused error can be safely ignored and not logged
+// CanIgnoreClientError returns, if client-caused error can be safely ignored and not logged
 func CanIgnoreClientError(err error) bool {
 recheck:
 	switch err {

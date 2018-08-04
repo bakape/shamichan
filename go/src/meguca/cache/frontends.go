@@ -11,16 +11,17 @@ import (
 	"github.com/mailru/easyjson/jwriter"
 )
 
+// ErrPageOverflow is an error detailing that the page was not found
 var ErrPageOverflow = errors.New("page not found")
 
-// Contains data of a board page
+// PageStore contains data of a board page
 type PageStore struct {
 	PageNumber int
 	JSON       []byte
 	Data       common.Board
 }
 
-// For accessing cached thread pages
+// ThreadFE is for accessing cached thread pages
 var ThreadFE = FrontEnd{
 	GetCounter: func(k Key) (uint64, error) {
 		return db.ThreadCounter(k.ID)
@@ -35,7 +36,7 @@ var ThreadFE = FrontEnd{
 	},
 }
 
-// For accessing cached catalog pages
+// CatalogFE is for accessing cached catalog pages
 var CatalogFE = FrontEnd{
 	GetCounter: func(k Key) (uint64, error) {
 		if k.Board == "all" {
@@ -57,7 +58,7 @@ var CatalogFE = FrontEnd{
 	},
 }
 
-// For accessing cached board pages
+// BoardFE is for accessing cached board pages
 var BoardFE = FrontEnd{
 	GetCounter: func(k Key) (uint64, error) {
 		if k.Board == "all" {
@@ -179,7 +180,7 @@ var BoardFE = FrontEnd{
 	},
 }
 
-// For individual pages of a board index page
+// BoardPageFE is for individual pages of a board index page
 var BoardPageFE = FrontEnd{
 	GetCounter: func(k Key) (uint64, error) {
 		// Get the counter of the parent board

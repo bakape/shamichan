@@ -72,13 +72,14 @@ func (b *baseFeed) addClient(c common.Client) {
 // If returned true, closing feed and parent listener loop should exit
 func (b *baseFeed) removeClient(c common.Client) bool {
 	delete(b.clients, c)
+	
 	if len(b.clients) != 0 {
 		b.remove <- nil
 		return false
-	} else {
-		b.remove <- c
-		return true
 	}
+
+	b.remove <- c
+	return true
 }
 
 // Send a message to all connected clients

@@ -15,7 +15,7 @@ var (
 // ModerationLevel defines the level required to perform an action
 type ModerationLevel int8
 
-// Reads moderation level from string representation
+// FromString reads moderation level from string representation
 func (l *ModerationLevel) FromString(s string) {
 	switch s {
 	case "admin":
@@ -57,7 +57,7 @@ const (
 	Admin
 )
 
-// An action performable by moderation staff
+// ModerationAction is an action performable by moderation staff
 type ModerationAction uint8
 
 // All supported moderation actions
@@ -72,7 +72,7 @@ const (
 	MeidoVision
 )
 
-// Single entry in the moderation log
+// ModLogEntry is a single entry in the moderation log
 type ModLogEntry struct {
 	Type              ModerationAction
 	ID, Length        uint64
@@ -93,7 +93,7 @@ type BanRecord struct {
 	Expires    time.Time
 }
 
-// Contains data of a reported post
+// Report contains data of a reported post
 type Report struct {
 	ID, Target    uint64
 	Created       time.Time
@@ -143,7 +143,7 @@ func SetBans(b ...Ban) {
 	bansMu.Unlock()
 }
 
-// Disconnect all banned websocket clients matching IP from board.
+// DisconnectBannedIP disconnects all banned websocket clients matching IP from board.
 // /all/ board disconnects all clients globally.
 func DisconnectBannedIP(ip, board string) {
 	msg, err := common.EncodeMessage(common.MessageInvalid,

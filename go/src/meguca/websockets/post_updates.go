@@ -231,7 +231,7 @@ func (c *Client) _closePost() (err error) {
 	return
 }
 
-// Meme ban if the poster lost at #roulette
+// CheckRouletteBan meme bans if the poster lost at #roulette
 func CheckRouletteBan(commands []common.Command, board string,
 	id uint64,
 ) error {

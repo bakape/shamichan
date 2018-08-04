@@ -34,7 +34,7 @@ type Pack struct {
 	}
 }
 
-// Loads and parses the selected JSON language pack
+// Load loads and parses the selected JSON language pack
 func Load() (err error) {
 	lang := config.Get().DefaultLang
 
@@ -60,7 +60,7 @@ func Load() (err error) {
 	return
 }
 
-// Returns the loaded language pack
+// Get returns the loaded language pack
 func Get() Pack {
 	return pack
 }

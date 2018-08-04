@@ -11,21 +11,21 @@ import (
 	"sync"
 )
 
-// Imager functionality setting for this meguca process
+// ImagerModeType is the imager functionality setting for this meguca process
 type ImagerModeType int
 
 const (
-	// Regular and imager functionality both handled by this process
+	// IntegratedImager is regular and imager functionality both handled by this process
 	IntegratedImager ImagerModeType = iota
 
-	// Imager functionality not handled by this process
+	// NoImager is imager functionality not handled by this process
 	NoImager
 
-	// Only imager functionality handled by this process
+	// ImagerOnly is only imager functionality handled by this process
 	ImagerOnly
 )
 
-// Imager functionality setting for this meguca process
+// ImagerMode is imager functionality setting for this meguca process
 var ImagerMode ImagerModeType
 
 var (

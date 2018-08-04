@@ -105,7 +105,7 @@ func ParseBody(body []byte, board string, id uint64, ip string, internal bool) (
 	return
 }
 
-// Checks, if r is printable.
+// IsPrintable checks, if r is printable.
 // Also accepts tabs, and newlines, if multiline = true.
 func IsPrintable(r rune, multiline bool) error {
 	switch r {
@@ -121,7 +121,7 @@ func IsPrintable(r rune, multiline bool) error {
 	return nil
 }
 
-// Checks, if all of s is printable.
+// IsPrintableString checks, if all of s is printable.
 // Also accepts tabs, and newlines, if multiline = true.
 func IsPrintableString(s string, multiline bool) error {
 	for _, r := range []rune(s) {
@@ -132,7 +132,7 @@ func IsPrintableString(s string, multiline bool) error {
 	return nil
 }
 
-// Checks, if all of s is printable.
+// IsPrintableRunes checks, if all of s is printable.
 // Also accepts tabs, and newlines, if multiline = true.
 func IsPrintableRunes(s []rune, multiline bool) error {
 	for _, r := range s {
