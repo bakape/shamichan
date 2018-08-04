@@ -2,15 +2,26 @@ package db
 
 import (
 	"database/sql"
+
 	"meguca/auth"
+	"meguca/config"
+
+	"github.com/go-playground/log"
 )
 
 // Report a post for rule violations
 func Report(id uint64, board, reason, ip string, illegal bool) error {
+	// If the reported content is illegal, log an error so it will email
+	if illegal {
+		log.Errorf("Illegal content reported\nPost: %s/%s/%d\nReason: %s\nIP: %s",
+			config.Get().RootURL, board, id, reason, ip)
+	}
+
 	_, err := sq.Insert("reports").
 		Columns("target", "board", "reason", "by", "illegal").
 		Values(id, board, reason, ip, illegal).
 		Exec()
+	
 	return err
 }
 
