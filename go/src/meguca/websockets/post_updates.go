@@ -405,7 +405,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 	}
 
 	var img common.Image
-	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
 		_img, err := getImage(tx, req.Token, req.Name, req.Spoiler)
 		if err != nil {
 			return err

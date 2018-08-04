@@ -70,49 +70,41 @@ func cleanUpOpenPostBodies() (err error) {
 
 	// Find bodies with closed parents
 	toDelete := make([]uint64, 0, len(ids))
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-	err = setReadOnly(tx)
-	if err != nil {
-		return
-	}
-	defer tx.Rollback()
-
-	var isOpen bool
-	q, err := tx.Prepare(`select 'true' from posts
-		where id = $1 and editing = 'true'`)
-	if err != nil {
-		return
-	}
-	for _, id := range ids {
-		err = q.QueryRow(id).Scan(&isOpen)
-		switch err {
-		case nil:
-		case sql.ErrNoRows:
-			err = nil
-			isOpen = false
-		default:
+	return InTransaction(true, func(tx *sql.Tx) (err error) {
+		var isOpen bool
+		q, err := tx.Prepare(`select 'true' from posts
+			where id = $1 and editing = 'true'`)
+		if err != nil {
 			return
 		}
-		if !isOpen {
-			toDelete = append(toDelete, id)
-		}
-	}
-
-	// Delete closed post bodies, if any
-	if len(toDelete) == 0 {
-		return
-	}
-	return boltDB.Batch(func(tx *bolt.Tx) (err error) {
-		buc := bodyBucket(tx)
-		for _, id := range toDelete {
-			err = buc.Delete(encodeUint64Heap(id))
-			if err != nil {
+		for _, id := range ids {
+			err = q.QueryRow(id).Scan(&isOpen)
+			switch err {
+			case nil:
+			case sql.ErrNoRows:
+				err = nil
+				isOpen = false
+			default:
 				return
 			}
+			if !isOpen {
+				toDelete = append(toDelete, id)
+			}
 		}
-		return
+
+		// Delete closed post bodies, if any
+		if len(toDelete) == 0 {
+			return
+		}
+		return boltDB.Batch(func(tx *bolt.Tx) (err error) {
+			buc := bodyBucket(tx)
+			for _, id := range toDelete {
+				err = buc.Delete(encodeUint64Heap(id))
+				if err != nil {
+					return
+				}
+			}
+			return
+		})
 	})
 }

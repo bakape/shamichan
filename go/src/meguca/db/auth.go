@@ -64,40 +64,36 @@ func FindPosition(board, userID string) (pos auth.ModerationLevel, err error) {
 		return auth.Admin, nil
 	}
 
-	r, err := sq.Select("position").
-		From("staff").
-		Where(squirrel.Eq{
-			"account": userID,
-			"board":   []string{board, "all"},
-		}).
-		Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	// Read the highest position held
 	var s string
-	for r.Next() {
-		err = r.Scan(&s)
-		if err != nil {
-			return
-		}
+	err = queryAll(
+		sq.Select("position").
+			From("staff").
+			Where(squirrel.Eq{
+				"account": userID,
+				"board":   []string{board, "all"},
+			}),
+		func(r *sql.Rows) (err error) {
+			// Read the highest position held
+			err = r.Scan(&s)
+			if err != nil {
+				return
+			}
 
-		level := auth.NotStaff
-		switch s {
-		case "owners":
-			level = auth.BoardOwner
-		case "moderators":
-			level = auth.Moderator
-		case "janitors":
-			level = auth.Janitor
-		}
-		if level > pos {
-			pos = level
-		}
-	}
-	err = r.Err()
+			level := auth.NotStaff
+			switch s {
+			case "owners":
+				level = auth.BoardOwner
+			case "moderators":
+				level = auth.Moderator
+			case "janitors":
+				level = auth.Janitor
+			}
+			if level > pos {
+				pos = level
+			}
+			return
+		},
+	)
 	return
 }
 
@@ -143,23 +139,20 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 		return append([]string{"all"}, config.GetBoards()...), nil
 	}
 
-	r, err := sq.Select("board").
-		From("staff").
-		Where("account = ? and position = 'owners'", account).
-		Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-	for r.Next() {
-		var board string
-		err = r.Scan(&board)
-		if err != nil {
+	err = queryAll(
+		sq.Select("board").
+			From("staff").
+			Where("account = ? and position = 'owners'", account),
+		func(r *sql.Rows) (err error) {
+			var board string
+			err = r.Scan(&board)
+			if err != nil {
+				return
+			}
+			boards = append(boards, board)
 			return
-		}
-		boards = append(boards, board)
-	}
-	err = r.Err()
+		},
+	)
 	return
 }
 
@@ -182,29 +175,22 @@ func GetBanInfo(ip, board string) (auth.BanRecord, error) {
 	return scanBanRecord(r)
 }
 
-// Get all bans on a specific board. "all" counts as a valid board value.
+// GetBoardBans gets all bans on a specific board. "all" counts as a valid board value.
 func GetBoardBans(board string) (b []auth.BanRecord, err error) {
 	b = make([]auth.BanRecord, 0, 64)
-
-	r, err := getBans().
-		Where("board = ?", board).
-		Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
 	var rec auth.BanRecord
-	for r.Next() {
-		rec, err = scanBanRecord(r)
-		if err != nil {
+	err = queryAll(
+		getBans().Where("board = ?", board),
+		func(r *sql.Rows) (err error) {
+			rec, err = scanBanRecord(r)
+			if err != nil {
+				return
+			}
+			rec.Board = board
+			b = append(b, rec)
 			return
-		}
-		rec.Board = board
-		b = append(b, rec)
-	}
-	err = r.Err()
-
+		},
+	)
 	return
 }
 

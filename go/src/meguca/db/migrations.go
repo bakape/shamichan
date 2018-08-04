@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
@@ -612,26 +613,25 @@ var migrations = []func(*sql.Tx) error{
 	},
 	func(tx *sql.Tx) (err error) {
 		// Read all commands
-		r, err := withTransaction(tx,
-			sq.Select("id", "commands").
-				From("posts").
-				Where("commands is not null"),
-		).
-			Query()
-		if err != nil {
-			return
-		}
-		comms := make(map[uint64][]common.Command, 1024)
-		var id uint64
-		for r.Next() {
-			var com commandRow
-			err = r.Scan(&id, &com)
-			if err != nil {
+		var (
+			comms = make(map[uint64][]common.Command, 1024)
+			id    uint64
+		)
+		err = queryAll(
+			withTransaction(tx,
+				sq.Select("id", "commands").
+					From("posts").
+					Where("commands is not null")),
+			func(r *sql.Rows) (err error) {
+				var com commandRow
+				err = r.Scan(&id, &com)
+				if err != nil {
+					return
+				}
+				comms[id] = []common.Command(com)
 				return
-			}
-			comms[id] = []common.Command(com)
-		}
-		err = r.Err()
+			},
+		)
 		if err != nil {
 			return
 		}
@@ -717,7 +717,7 @@ var migrations = []func(*sql.Tx) error{
 	},
 	// Fixes global moderation
 	func(tx *sql.Tx) (err error) {
-		c := BoardConfigs {
+		c := BoardConfigs{
 			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
 			Created:      time.Now().UTC(),
 		}
@@ -806,7 +806,7 @@ var migrations = []func(*sql.Tx) error{
 			}
 		}
 
-			return
+		return
 	},
 	func(tx *sql.Tx) (err error) {
 		return execAll(tx,
@@ -814,6 +814,45 @@ var migrations = []func(*sql.Tx) error{
 			`alter table pyu_limit add column restricted bool default false`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`create table captchas (
+				id text primary key not null,
+				solution text not null,
+				expires timestamp not null
+			)`,
+			`create table failed_captchas (
+				ip inet not null,
+				expires timestamp not null
+			)`,
+		)
+	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`create index failed_captchas_ip on failed_captchas (ip)`,
+		)
+	},
+	func(tx *sql.Tx) (err error) {
+		var tasks []string
+		for _, t := range [...]string{
+			"image_tokens", "bans", "captchas", "failed_captchas",
+		} {
+			tasks = append(tasks, createIndex(t, "expires"))
+		}
+		tasks = append(tasks, createIndex("posts", "time"))
+		return execAll(tx, tasks...)
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`INSERT INTO main VALUES ('geo_md5', 'initial value, ignore')`,
+		)
+		return
+	},
+}
+
+func createIndex(table, column string) string {
+	return fmt.Sprintf(`create index %s_%s on %s (%s)`, table, column, table,
+		column)
 }
 
 // Run migrations from version `from`to version `to`

@@ -118,7 +118,7 @@ func writeSampleBoard(t testing.TB) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		return db.WriteBoard(tx, b)
 	})
 	if err != nil {

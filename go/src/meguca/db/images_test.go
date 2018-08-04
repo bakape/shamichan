@@ -106,7 +106,7 @@ func TestImageTokens(t *testing.T) {
 	}
 
 	var img common.ImageCommon
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		img, err = UseImageToken(tx, token)
 		return
 	})
@@ -147,7 +147,7 @@ func TestInsertImage(t *testing.T) {
 }
 
 func insertSampleImage(t *testing.T) {
-	err := InTransaction(func(tx *sql.Tx) (err error) {
+	err := InTransaction(false, func(tx *sql.Tx) (err error) {
 		return InsertImage(tx, 1, 1, assets.StdJPEG)
 	})
 	if err != nil {
@@ -207,7 +207,7 @@ func TestVideoPlaylist(t *testing.T) {
 	}
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		return InsertImage(tx, 1, 1, std)
 	})
 	if err != nil {

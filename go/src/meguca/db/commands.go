@@ -82,7 +82,7 @@ func GetPcount(b string) (c uint64, err error) {
 	return
 }
 
-// GetPcount retrieves the board's pyu counter atomically
+// GetPcountA retrieves the board's pyu counter atomically
 func GetPcountA(tx *sql.Tx, b string) (c uint64, err error) {
 	r, err := withTransaction(tx, sq.Select("pcount").
 		From("pyu").

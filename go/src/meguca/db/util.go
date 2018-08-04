@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"time"
 
@@ -22,6 +23,10 @@ type tableScanner interface {
 	Next() bool
 	Err() error
 	Close() error
+}
+
+type queryer interface {
+	Query() (*sql.Rows, error)
 }
 
 // Allows easily running squirrel queries with transactions
@@ -46,7 +51,7 @@ func (t transactionalQuery) Exec() (err error) {
 	return
 }
 
-func (t transactionalQuery) Query() (ts tableScanner, err error) {
+func (t transactionalQuery) Query() (r *sql.Rows, err error) {
 	sql, args, err := t.sq.ToSql()
 	if err != nil {
 		return
@@ -63,10 +68,12 @@ func (t transactionalQuery) QueryRow() (rs rowScanner, err error) {
 	return
 }
 
-// Runs function inside a transaction and handles comminting and rollback on
-// error
-func InTransaction(fn func(*sql.Tx) error) (err error) {
-	tx, err := db.Begin()
+// InTransaction runs a function inside a transaction and handles comminting and rollback on error.
+// readOnly: the DBMS can optimise read-only transactions for better concurrency
+func InTransaction(readOnly bool, fn func(*sql.Tx) error) (err error) {
+	tx, err := db.BeginTx(context.Background(), &sql.TxOptions{
+		ReadOnly: readOnly,
+	})
 	if err != nil {
 		return
 	}
@@ -79,9 +86,21 @@ func InTransaction(fn func(*sql.Tx) error) (err error) {
 	return tx.Commit()
 }
 
-func setReadOnly(tx *sql.Tx) error {
-	_, err := tx.Exec("SET TRANSACTION READ ONLY")
-	return err
+// Run fn on all returned rows in a query
+func queryAll(q queryer, fn func(r *sql.Rows) error) (err error) {
+	r, err := q.Query()
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	for r.Next() {
+		err = fn(r)
+		if err != nil {
+			return
+		}
+	}
+	return r.Err()
 }
 
 // IsConflictError returns if an error is a unique key conflict error
@@ -92,7 +111,7 @@ func IsConflictError(err error) bool {
 	return false
 }
 
-// Assigns a function to listen to Postgres notifications on a channel
+// Listen assigns a function to listen to Postgres notifications on a channel
 func Listen(event string, fn func(msg string) error) (err error) {
 	if IsTest {
 		return
@@ -131,4 +150,24 @@ func execAll(tx *sql.Tx, q ...string) error {
 		}
 	}
 	return nil
+}
+
+// GetGeoMD5 retrieves the GeoIP MD5 hash
+func GetGeoMD5() (hash string, err error) {
+	err = sq.Select("val::char(32)").
+		From("main").
+		Where("id = 'geo_md5'").
+		Scan(&hash)
+
+	return
+}
+
+// SetGeoMD5 sets the GeoIP MD5 hash
+func SetGeoMD5(hash string) error {
+	_, err := sq.Update("main").
+		Set("val", hash).
+		Where("id = 'geo_md5'").
+		Exec()
+		
+	return err
 }

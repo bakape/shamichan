@@ -61,27 +61,19 @@ func getBoardConfigs() squirrel.SelectBuilder {
 		From("boards")
 }
 
-func loadBoardConfigs() error {
-	r, err := getBoardConfigs().Query()
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-
-	for r.Next() {
+func loadBoardConfigs() (err error) {
+	err = queryAll(getBoardConfigs(), func(r *sql.Rows) (err error) {
 		c, err := scanBoardConfigs(r)
 		if err != nil {
-			return err
+			return
 		}
 		c.Banners = assets.Banners.FileTypes(c.ID)
-		if _, err := config.SetBoardConfigs(c); err != nil {
-			return err
-		}
+		_, err = config.SetBoardConfigs(c)
+		return
+	})
+	if err != nil {
+		return
 	}
-	if err := r.Err(); err != nil {
-		return err
-	}
-
 	return Listen("board_updated", updateBoardConfigs)
 }
 
@@ -128,7 +120,7 @@ func notifyBoardUpdated(tx *sql.Tx, board string) error {
 
 // UpdateBoard updates board configurations
 func UpdateBoard(c config.BoardConfigs) error {
-	return InTransaction(func(tx *sql.Tx) error {
+	return InTransaction(false, func(tx *sql.Tx) error {
 		q := sq.Update("boards").
 			SetMap(map[string]interface{}{
 				"readOnly":      c.ReadOnly,

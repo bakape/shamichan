@@ -30,7 +30,7 @@ func GetPostOP(id uint64) (op uint64, err error) {
 	return
 }
 
-// Retrieve the board and OP of a post
+// GetPostParenthood retrieves the board and OP of a post
 func GetPostParenthood(id uint64) (board string, op uint64, err error) {
 	err = selectPost(id, "board", "op").Scan(&board, &op)
 	return

@@ -232,14 +232,14 @@ var specs = map[string][]inputSpec{
 			Type:         _string,
 			MaxLength:    common.MaxLenUserID,
 			Required:     true,
-			Autocomplete: "error-email-username",
+			Autocomplete: "off",
 		},
 		{
 			ID:           "emailErrPass",
 			Type:         _password,
 			MaxLength:    common.MaxLenPassword,
 			Required:     true,
-			Autocomplete: "current-error-email-password",
+			Autocomplete: "off",
 		},
 		{
 			ID:       "emailErrSub",

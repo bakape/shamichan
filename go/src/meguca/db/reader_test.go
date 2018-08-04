@@ -28,7 +28,7 @@ func TestReader(t *testing.T) {
 		},
 	}
 	for _, b := range boards {
-		err := InTransaction(func(tx *sql.Tx) error {
+		err := InTransaction(false, func(tx *sql.Tx) error {
 			return WriteBoard(tx, b)
 		})
 		if err != nil {
@@ -119,7 +119,7 @@ func TestReader(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	err := InTransaction(func(tx *sql.Tx) (err error) {
+	err := InTransaction(false, func(tx *sql.Tx) (err error) {
 		for i := len(threads); i < len(posts); i++ {
 			if err = WritePost(tx, posts[i], false, false); err != nil {
 				return

@@ -24,10 +24,11 @@ func report(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
-	if !auth.AuthenticateCaptcha(auth.Captcha{
+	err = db.AuthenticateCaptcha(auth.Captcha{
 		CaptchaID: f.Get("captchaID"),
 		Solution:  f.Get("captcha"),
-	}, ip, db.SystemBan) {
+	}, ip)
+	if err != nil {
 		httpError(w, r, errInvalidCaptcha)
 		return
 	}

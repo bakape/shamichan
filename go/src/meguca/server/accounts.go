@@ -49,7 +49,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for collision and write to DB
-	err = db.InTransaction(func(tx *sql.Tx) error {
+	err = db.InTransaction(false, func(tx *sql.Tx) error {
 		return db.RegisterAccount(tx, req.ID, hash)
 	})
 	switch err {
@@ -115,7 +115,9 @@ func login(w http.ResponseWriter, r *http.Request) {
 		return
 	case !trimLoginID(&req.ID):
 		return
-	case !auth.AuthenticateCaptcha(req.Captcha, ip, db.SystemBan):
+	}
+	err = db.AuthenticateCaptcha(req.Captcha, ip)
+	if err != nil {
 		httpError(w, r, errInvalidCaptcha)
 		return
 	}
@@ -223,11 +225,12 @@ func checkPasswordAndCaptcha(
 		httpError(w, r, err)
 		return false
 	}
-	switch {
-	case password == "", len(password) > common.MaxLenPassword:
+	if password == "" || len(password) > common.MaxLenPassword {
 		httpError(w, r, errInvalidPassword)
 		return false
-	case !auth.AuthenticateCaptcha(captcha, ip, db.SystemBan):
+	}
+	err = db.AuthenticateCaptcha(captcha, ip)
+	if err != nil {
 		httpError(w, r, errInvalidCaptcha)
 		return false
 	}

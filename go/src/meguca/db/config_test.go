@@ -74,7 +74,7 @@ func TestUpdateOnAddBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(false, func(tx *sql.Tx) error {
 		return WriteBoard(tx, std)
 	})
 	if err != nil {
@@ -107,7 +107,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(false, func(tx *sql.Tx) error {
 		return WriteBoard(tx, std)
 	})
 	if err != nil {

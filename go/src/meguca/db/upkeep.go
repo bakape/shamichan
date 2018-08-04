@@ -40,7 +40,7 @@ func runCleanupTasks() {
 
 func runMinuteTasks() {
 	logError("open post cleanup", closeDanglingPosts())
-	expireRows("image_tokens", "bans")
+	expireRows("image_tokens", "bans", "captchas", "failed_captchas")
 }
 
 func runHalfTasks() {
@@ -94,33 +94,29 @@ func removeIdentityInfo() error {
 
 // Close any open posts that have not been closed for 30 minutes
 func closeDanglingPosts() error {
-	r, err := sq.Select("id", "op", "board", "ip").
-		From("posts").
-		Where(`editing = true
-			and time
-				< floor(extract(epoch from now() at time zone 'utc')) - 900`).
-		Query()
-	if err != nil {
-		return err
-	}
-	defer r.Close()
-
 	type post struct {
 		id, op uint64
 		board  string
 		ip     sql.NullString
 	}
-
-	posts := make([]post, 0, 8)
-	var p post
-	for r.Next() {
-		err = r.Scan(&p.id, &p.op, &p.board, &p.ip)
-		if err != nil {
-			return err
-		}
-		posts = append(posts, p)
-	}
-	err = r.Err()
+	var (
+		posts = make([]post, 0, 8)
+		p     post
+	)
+	err := queryAll(
+		sq.Select("id", "op", "board", "ip").
+			From("posts").
+			Where(`editing = true and time
+				< floor(extract(epoch from now() at time zone 'utc')) - 900`),
+		func(r *sql.Rows) (err error) {
+			err = r.Scan(&p.id, &p.op, &p.board, &p.ip)
+			if err != nil {
+				return err
+			}
+			posts = append(posts, p)
+			return
+		},
+	)
 	if err != nil {
 		return err
 	}
@@ -162,32 +158,32 @@ func deleteUnusedBoards() error {
 		return nil
 	}
 	min := time.Now().Add(-time.Duration(conf.BoardExpiry) * time.Hour * 24)
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
 		// Get all inactive boards
-		var boards []string
-		r, err := sq.Select("id").
-			From("boards").
-			Where(`created < ?
-				and id != 'all'
-				and (select coalesce(max(replyTime), 0)
-						from threads
-						where board = boards.id
-					) < ?`,
-				min, min.Unix(),
-			).
-			Query()
-		if err != nil {
-			return
-		}
-		var board string
-		for r.Next() {
-			err = r.Scan(&board)
-			if err != nil {
+		var (
+			boards []string
+			board  string
+		)
+		err = queryAll(
+			sq.Select("id").
+				From("boards").
+				Where(`created < ?
+					and id != 'all'
+					and (select coalesce(max(replyTime), 0)
+							from threads
+							where board = boards.id
+						) < ?`,
+					min, min.Unix(),
+				),
+			func(r *sql.Rows) (err error) {
+				err = r.Scan(&board)
+				if err != nil {
+					return
+				}
+				boards = append(boards, board)
 				return
-			}
-			boards = append(boards, board)
-		}
-		err = r.Err()
+			},
+		)
 		if err != nil {
 			return
 		}
@@ -232,26 +228,8 @@ func deleteOldThreads() (err error) {
 		return
 	}
 
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
 		// Find threads to delete
-		r, err := withTransaction(tx, sq.
-			Select(
-				"posts.id",
-				"bumpTime",
-				`(select count(*)
-				from posts
-				where posts.op = threads.id
-			) as postCtr`,
-				"posts.deleted",
-			).
-			From("threads").
-			Join("posts on threads.id = posts.id"),
-		).
-			Query()
-		if err != nil {
-			return
-		}
-		defer r.Close()
 		var (
 			now         = time.Now().Unix()
 			min         = float64(conf.ThreadExpiryMin * 24 * 3600)
@@ -261,23 +239,39 @@ func deleteOldThreads() (err error) {
 			bumpTime    int64
 			deleted     sql.NullBool
 		)
-		for r.Next() {
-			err = r.Scan(&id, &bumpTime, &postCtr, &deleted)
-			if err != nil {
+		err = queryAll(
+			withTransaction(tx, sq.
+				Select(
+					"posts.id",
+					"bumpTime",
+					`(select count(*)
+					from posts
+					where posts.op = threads.id
+				) as postCtr`,
+					"posts.deleted",
+				).
+				From("threads").
+				Join("posts on threads.id = posts.id"),
+			),
+			func(r *sql.Rows) (err error) {
+				err = r.Scan(&id, &bumpTime, &postCtr, &deleted)
+				if err != nil {
+					return
+				}
+				threshold := min +
+					(-max+min)*math.Pow(float64(postCtr)/3000-1, 3)
+				if deleted.Bool {
+					threshold /= 3
+				}
+				if threshold < min {
+					threshold = min
+				}
+				if float64(now-bumpTime) > threshold {
+					toDel = append(toDel, id)
+				}
 				return
-			}
-			threshold := min + (-max+min)*math.Pow(float64(postCtr)/3000-1, 3)
-			if deleted.Bool {
-				threshold /= 3
-			}
-			if threshold < min {
-				threshold = min
-			}
-			if float64(now-bumpTime) > threshold {
-				toDel = append(toDel, id)
-			}
-		}
-		err = r.Err()
+			},
+		)
 		if err != nil {
 			return
 		}
@@ -285,9 +279,10 @@ func deleteOldThreads() (err error) {
 		var q *sql.Stmt
 		if len(toDel) != 0 {
 			// Deleted any matched threads
-			q, err = tx.Prepare(`delete from threads
-			where id = $1
-			returning pg_notify('thread_deleted', board || ':' || id)`)
+			q, err = tx.Prepare(
+				`delete from threads
+				where id = $1
+				returning pg_notify('thread_deleted', board || ':' || id)`)
 			if err != nil {
 				return
 			}

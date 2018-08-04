@@ -25,6 +25,7 @@ var (
 	ErrInvalidToken = errors.New("invalid image token")
 )
 
+// Video structure
 type Video struct {
 	FileType uint8         `json:"fileType"`
 	Duration time.Duration `json:"-"`
@@ -174,7 +175,7 @@ func InsertImage(tx *sql.Tx, id, op uint64, img common.Image) (err error) {
 
 // SpoilerImage spoilers an already allocated image
 func SpoilerImage(id, op uint64) error {
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = withTransaction(tx,
 			sq.Update("posts").
 				Set("spoiler", true).
@@ -189,7 +190,7 @@ func SpoilerImage(id, op uint64) error {
 	})
 }
 
-// Delete an image as part of clearing a post
+// DeleteOwnedImage deletes an image as part of clearing a post
 func DeleteOwnedImage(id uint64) error {
 	_, err := sq.Update("posts").
 		Set("SHA1", nil).
@@ -198,47 +199,43 @@ func DeleteOwnedImage(id uint64) error {
 	return err
 }
 
-// Returns a video playlist for a board
+// VideoPlaylist returns a video playlist for a board
 func VideoPlaylist(board string) (videos []Video, err error) {
-	r, err := sq.Select("i.SHA1", "i.fileType", "i.length").
-		From("images as i").
-		Where(`
-			exists(select 1
-				from posts as p
-				where p.sha1 = i.sha1 and p.board = ?)
-			and filetype in (?, ?)
-			and audio = true
-			and video = true
-			and length between 10 and 600`,
-			board,
-			int(common.WEBM),
-			int(common.MP4),
-		).
-		OrderBy("RANDOM()").
-		Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
 	videos = make([]Video, 0, 128)
 	var (
 		v   Video
 		dur uint64
 	)
-	for r.Next() {
-		err = r.Scan(&v.SHA1, &v.FileType, &dur)
-		if err != nil {
+	err = queryAll(
+		sq.Select("i.SHA1", "i.fileType", "i.length").
+			From("images as i").
+			Where(`
+				exists(select 1
+					from posts as p
+					where p.sha1 = i.sha1 and p.board = ?)
+				and filetype in (?, ?)
+				and audio = true
+				and video = true
+				and length between 10 and 600`,
+				board,
+				int(common.WEBM),
+				int(common.MP4),
+			).
+			OrderBy("RANDOM()"),
+		func(r *sql.Rows) (err error) {
+			err = r.Scan(&v.SHA1, &v.FileType, &dur)
+			if err != nil {
+				return
+			}
+			v.Duration = time.Duration(dur) * time.Second
+			videos = append(videos, v)
 			return
-		}
-		v.Duration = time.Duration(dur) * time.Second
-		videos = append(videos, v)
-	}
-	err = r.Err()
+		},
+	)
 	return
 }
 
-// Return, if image exists
+// ImageExists returns, if image exists
 func ImageExists(sha1 string) (exists bool, err error) {
 	err = sq.Select("1").
 		From("images").

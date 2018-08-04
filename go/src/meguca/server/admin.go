@@ -107,9 +107,12 @@ func canPerform(
 		httpError(w, r, err)
 		return
 	}
-	if captcha != nil && !auth.AuthenticateCaptcha(*captcha, ip, db.SystemBan) {
-		httpError(w, r, errInvalidCaptcha)
-		return
+	if captcha != nil {
+		err = db.AuthenticateCaptcha(*captcha, ip)
+		if err != nil {
+			httpError(w, r, errInvalidCaptcha)
+			return
+		}
 	}
 	creds, ok := isLoggedIn(w, r)
 	if !ok {
@@ -295,15 +298,15 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 		err = errInvalidBoardName
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
-	case !auth.AuthenticateCaptcha(msg.Captcha, ip, db.SystemBan):
-		err = errInvalidCaptcha
+	default:
+		err = db.AuthenticateCaptcha(msg.Captcha, ip)
 	}
 	if err != nil {
 		httpError(w, r, err)
 		return
 	}
 
-	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = db.WriteBoard(tx, db.BoardConfigs{
 			Created: time.Now().UTC(),
 			BoardConfigs: config.BoardConfigs{
@@ -543,7 +546,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		return db.WriteStaff(tx, msg.Board, map[string][]string{
 			"owners":     msg.Owners,
 			"moderators": msg.Moderators,

@@ -22,7 +22,7 @@ func ClosePost(id, op uint64, body string, links []common.Link, com []common.Com
 		return
 	}
 
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		q := sq.Update("posts").
 			SetMap(map[string]interface{}{
 				"editing":  false,

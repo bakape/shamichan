@@ -111,12 +111,12 @@ func queryThreadBool(id uint64, key string) (val bool, err error) {
 	return
 }
 
-// Check, if a thread has live post updates disabled
+// CheckThreadNonLive checks, if a thread has live post updates disabled
 func CheckThreadNonLive(id uint64) (bool, error) {
 	return queryThreadBool(id, "nonLive")
 }
 
-// Check, if a thread has been locked by a moderator
+// CheckThreadLocked checks, if a thread has been locked by a moderator
 func CheckThreadLocked(id uint64) (bool, error) {
 	return queryThreadBool(id, "locked")
 }
@@ -154,7 +154,7 @@ func bumpThread(tx *sql.Tx, id uint64, bump bool) (err error) {
 	return err
 }
 
-// Filter threads by existence
+// FilterExistingThreads filters threads by existence
 func FilterExistingThreads(ids ...uint64) (exist []uint64, err error) {
 	// First remove any duplicates to send less to the DB
 	dedup := make(map[uint64]struct{}, len(ids))
@@ -168,25 +168,22 @@ func FilterExistingThreads(ids ...uint64) (exist []uint64, err error) {
 		}
 	}
 
-	r, err := sq.Select("id").
-		From("threads").
-		Where(squirrel.Eq{
-			"id": ids,
-		}).
-		Query()
-	if err != nil {
-		return
-	}
-
 	exist = make([]uint64, 0, len(ids))
 	var id uint64
-	for r.Next() {
-		err = r.Scan(&id)
-		if err != nil {
+	err = queryAll(
+		sq.Select("id").
+			From("threads").
+			Where(squirrel.Eq{
+				"id": ids,
+			}),
+		func(r *sql.Rows) (err error) {
+			err = r.Scan(&id)
+			if err != nil {
+				return
+			}
+			exist = append(exist, id)
 			return
-		}
-		exist = append(exist, id)
-	}
-	err = r.Err()
+		},
+	)
 	return
 }

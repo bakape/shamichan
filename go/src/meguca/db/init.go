@@ -17,7 +17,7 @@ const (
 	// TestConnArgs contains ConnArgs used for tests
 	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
 
-	// Specifies the default PostgreSQL connection arguments
+	// DefaultConnArgs specifies the default PostgreSQL connection arguments
 	DefaultConnArgs = "user=meguca password=meguca dbname=meguca sslmode=disable binary_parameters=yes"
 )
 
@@ -72,10 +72,10 @@ func LoadDB() (err error) {
 	tasks = append(
 		tasks,
 		func() error {
-			tasks := []func() error{loadConfigs}
+			tasks := []func() error{loadConfigs, initCaptchas, loadBans}
 			if config.ImagerMode != config.ImagerOnly {
 				tasks = append(tasks, openBoltDB, loadBanners,
-					loadLoadingAnimations, loadBans)
+					loadLoadingAnimations)
 			}
 			if err := util.Parallel(tasks...); err != nil {
 				return err
@@ -140,7 +140,7 @@ func CreateAdminAccount(tx *sql.Tx) (err error) {
 	return RegisterAccount(tx, "admin", hash)
 }
 
-// Create inaccessible account used for automatic internal purposes
+// CreateSystemAccount create an inaccessible account used for automatic internal purposes
 func CreateSystemAccount(tx *sql.Tx) (err error) {
 	password, err := auth.RandomID(32)
 	if err != nil {

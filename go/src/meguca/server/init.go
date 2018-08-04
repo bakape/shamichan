@@ -103,6 +103,7 @@ func Start() error {
 	// Read config file, if any
 	var conf serverConfigs
 	buf, err := ioutil.ReadFile("config.json")
+
 	switch {
 	case os.IsNotExist(err):
 		err = nil
@@ -114,6 +115,7 @@ func Start() error {
 	default:
 		return err
 	}
+
 	setConfigDefaults(&conf)
 
 	// Define flags
