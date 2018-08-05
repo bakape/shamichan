@@ -848,6 +848,69 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		err = withTransaction(tx, sq.Delete("main").Where("id = 'roulette'")).Exec()
+
+		if err != nil {
+			return
+		}
+
+		return withTransaction(tx, sq.Delete("main").Where("id = 'rcount'")).Exec()
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`create table roulette (
+				id bigint primary key references threads on delete cascade,
+				scount smallint default 6,
+				rcount smallint default 0
+			);
+			create index roulette_rcount on roulette (rcount);`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		var threads []uint64
+		r, err := tx.Query(`select id from threads`)
+
+		if err != nil {
+			return
+		}
+
+		defer r.Close()
+
+		for r.Next() {
+			var thread uint64
+			err = r.Scan(&thread)
+
+			if err != nil {
+				return
+			}
+
+			threads = append(threads, thread)
+		}
+
+		err = r.Err()
+
+		if err != nil {
+			return
+		}
+
+		q, err := tx.Prepare(`insert into roulette (id, scount, rcount) values ($1, 6, 0)`)
+
+		if err != nil {
+			return
+		}
+
+		for _, t := range threads {
+			_, err = q.Exec(t)
+
+			if err != nil {
+				return
+			}
+		}
+
+		return
+	},
 }
 
 func createIndex(table, column string) string {

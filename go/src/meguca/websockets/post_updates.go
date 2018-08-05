@@ -213,7 +213,7 @@ func (c *Client) _closePost() (err error) {
 				return
 			}
 		} else {
-			links, com, err = parser.ParseBody(c.post.body, c.post.board, c.post.id, c.ip, false)
+			links, com, err = parser.ParseBody(c.post.body, c.post.board, c.post.op, c.post.id, c.ip, false)
 			if err != nil {
 				return
 			}
@@ -225,25 +225,26 @@ func (c *Client) _closePost() (err error) {
 		return
 	}
 
-	err = CheckRouletteBan(com, c.post.board, c.post.id)
+	err = CheckRouletteBan(com, c.post.board, c.post.op, c.post.id)
 
 	c.post = openPost{}
 	return
 }
 
 // CheckRouletteBan meme bans if the poster lost at #roulette
-func CheckRouletteBan(commands []common.Command, board string,
-	id uint64,
-) error {
+func CheckRouletteBan(commands []common.Command, board string, thread uint64, id uint64) error {
 	for _, command := range commands {
 		if command.Type == common.Roulette {
 			if command.Roulette[0] == 1 {
-				err := db.Ban(board, "lost at #roulette", "system",
-					time.Now().Add(time.Second*30), false, id)
+				err := db.Ban(board, "lost at #roulette", "system", time.Now().Add(time.Second*30), false, id)
+				
 				if err != nil {
 					return err
 				}
-				return db.IncrementRcount()
+
+				return db.InTransaction(false, func(tx *sql.Tx) error {
+					return db.IncrementRcount(tx, thread)
+				})
 			}
 		}
 	}

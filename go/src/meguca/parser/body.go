@@ -20,7 +20,7 @@ func init() {
 
 // ParseBody parses the entire post text body for commands and links.
 // internal: function was called by automated upkeep task
-func ParseBody(body []byte, board string, id uint64, ip string, internal bool) (
+func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, internal bool) (
 	links []common.Link, com []common.Command, err error,
 ) {
 	err = IsPrintableString(string(body), true)
@@ -85,7 +85,7 @@ func ParseBody(body []byte, board string, id uint64, ip string, internal bool) (
 				goto next
 			}
 			var c common.Command
-			c, err = parseCommand(m[1], board, id, ip)
+			c, err = parseCommand(m[1], board, thread, id, ip)
 			switch err {
 			case nil:
 				com = append(com, c)
