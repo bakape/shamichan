@@ -1,5 +1,5 @@
-// Package mLog handles the log and it's handlers
-package mLog
+// Package mlog handles the log and it's handlers
+package mlog
 
 import (
 	"sync"
@@ -14,9 +14,12 @@ import (
 type handler uint8
 
 const (
+	// DefaultTimeFormat is the default time format
 	DefaultTimeFormat = "2006-01-02 15:04:05"
 
+	// Console handler is the console handler
 	Console handler = iota
+	// Email is the email handler
 	Email
 )
 
@@ -27,14 +30,14 @@ var (
 	// Ensure email handler is only added once
 	once sync.Once
 
-	// Console handler
+	// ConsoleHandler is the console handler
 	ConsoleHandler *console.Console
 
 	// Email handler
 	eLog *email.Email
 )
 
-// Initialize the logger.
+// Init initializes the logger.
 func Init(h handler) {
 	rw.Lock()
 	defer rw.Unlock()
@@ -61,7 +64,7 @@ func Init(h handler) {
 			})
 		}
 	default:
-		log.Fatal("Invalid mLog handler: ", h)
+		log.Fatal("Invalid mlog handler: ", h)
 	}
 }
 

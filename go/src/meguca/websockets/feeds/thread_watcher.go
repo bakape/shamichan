@@ -13,7 +13,7 @@ import (
 // Terminates a running watcher. Only used in tests.
 var terminateWatcher chan bool
 
-// Serve thread updates over SSE for a set of threads
+// WatchThreads serves thread updates over SSE for a set of threads
 func WatchThreads(w http.ResponseWriter, r *http.Request, threads []uint64) (
 	err error,
 ) {
@@ -70,7 +70,7 @@ func WatchThreads(w http.ResponseWriter, r *http.Request, threads []uint64) (
 	return
 }
 
-// Client watching a thread for updates
+// Watcher is the client watching a thread for updates
 type Watcher struct {
 	w       http.ResponseWriter
 	flusher http.Flusher
@@ -90,7 +90,7 @@ func (w *Watcher) Send(msg []byte) {
 	}
 }
 
-// Watcher event loop
+// Start the watcher event loop
 func (w *Watcher) Start() (err error) {
 	for {
 		select {

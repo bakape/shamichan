@@ -149,8 +149,8 @@ func unwatchThreads(w *Watcher) {
 	}
 }
 
-// Subscribe to random video stream. Clients are automatically unsubscribed,
-// when leaving their current sync feed.
+// SubscribeToMeguTV subscribes to random video stream.
+// Clients are automatically unsubscribed, when leaving their current sync feed.
 func SubscribeToMeguTV(c common.Client) (err error) {
 	feeds.mu.Lock()
 	defer feeds.mu.Unlock()
@@ -240,7 +240,7 @@ func ClosePost(
 	})
 }
 
-// Propagate a message about a post being banned
+// BanPost propagates a message about a post being banned
 func BanPost(id, op uint64) error {
 	msg, err := common.EncodeMessage(common.MessageBanned, id)
 	if err != nil {
@@ -252,7 +252,7 @@ func BanPost(id, op uint64) error {
 	})
 }
 
-// Propagate a message about a post being deleted
+// DeletePost propagates a message about a post being deleted
 func DeletePost(id, op uint64) error {
 	msg, err := common.EncodeMessage(common.MessageDeletePost, id)
 	if err != nil {
@@ -263,7 +263,7 @@ func DeletePost(id, op uint64) error {
 	})
 }
 
-// Propagate a message about an image being deleted from a post
+// DeleteImage propagates a message about an image being deleted from a post
 func DeleteImage(id, op uint64) error {
 	msg, err := common.EncodeMessage(common.MessageDeleteImage, id)
 	if err != nil {
@@ -274,7 +274,7 @@ func DeleteImage(id, op uint64) error {
 	})
 }
 
-// Propagate a message about an image being spoilered
+// SpoilerImage propagates a message about an image being spoilered
 func SpoilerImage(id, op uint64) error {
 	msg, err := common.EncodeMessage(common.MessageSpoiler, id)
 	if err != nil {
@@ -285,7 +285,7 @@ func SpoilerImage(id, op uint64) error {
 	})
 }
 
-// Remove all existing feeds and clients. Used only in tests.
+// Clear removes all existing feeds and clients. Used only in tests.
 func Clear() {
 	feeds.mu.Lock()
 	defer feeds.mu.Unlock()

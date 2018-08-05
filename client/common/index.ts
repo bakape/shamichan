@@ -42,8 +42,8 @@ export type TextState = {
 	spoiler: boolean
 	quote: boolean
 	code: boolean
-	italic: boolean
 	bold: boolean
+	italic: boolean
 	red: boolean
 	blue: boolean
 	haveSyncwatch: boolean

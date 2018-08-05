@@ -32,7 +32,7 @@ const (
 	// Pcount - don't ask
 	Pcount
 
-	// Russian Roulette, first poster has a 1/6 chance of dying, then 1/5, etc
+	// Roulette is Russian Roulette, first poster has a 1/6 chance of dying, then 1/5, etc
 	// resets to 1/6 chance after someone dies
 	Roulette
 

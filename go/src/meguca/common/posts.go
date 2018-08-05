@@ -7,9 +7,8 @@ package common
 // ParseBody forwards parser.ParseBody to avoid cyclic imports in db/upkeep
 var ParseBody func([]byte, string, uint64, string, bool) ([]Link, []Command, error)
 
-//easyjson:json
-// Board is defined to enable marshalling optimizations and sorting by sticky
-// threads
+// Board is defined to enable marshalling optimizations and sorting by sticky threads
+// easyjson:json //
 type Board struct {
 	Pages   int      `json:"pages"`
 	Threads []Thread `json:"threads"`
@@ -66,7 +65,7 @@ type Post struct {
 	Image    *Image    `json:"image,omitempty"`
 }
 
-// Describes a link from one post to another
+// Link describes a link from one post to another
 type Link struct {
 	ID    uint64 `json:"id"`
 	OP    uint64 `json:"op"`

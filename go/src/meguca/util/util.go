@@ -15,7 +15,7 @@ func WrapError(text string, err error) error {
 	}
 }
 
-// Wraps error types to create compound error chains
+// WrappedError wraps error types to create compound error chains
 type WrappedError struct {
 	Text  string
 	Inner error
@@ -41,7 +41,7 @@ func Waterfall(fns ...func() error) (err error) {
 	return
 }
 
-// Execute functions in parallel. The first error is returned, if any.
+// Parallel executes functions in parallel. The first error is returned, if any.
 func Parallel(fns ...func() error) error {
 	ch := make(chan error)
 	for i := range fns {

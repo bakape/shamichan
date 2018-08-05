@@ -27,7 +27,7 @@ func loadConfigs() error {
 		return err
 	}
 	config.Set(conf)
-	mLog.Init(mLog.Email)
+	mlog.Init(mlog.Email)
 
 	return Listen("config_updates", updateConfigs)
 }
@@ -154,7 +154,7 @@ func updateConfigs(data string) error {
 		return util.WrapError("reloading configuration", err)
 	}
 	config.Set(conf)
-	mLog.Update()
+	mlog.Update()
 
 	return recompileTemplates()
 }

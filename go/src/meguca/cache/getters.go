@@ -26,7 +26,7 @@ type FrontEnd struct {
 	Size func(data interface{}, json, html []byte) int
 }
 
-// GetJSON retrieves JSON from the cache along with unencoded post data,
+// GetJSONAndData GetJSON retrieves JSON from the cache along with unencoded post data,
 // validates, if is still fresh, or retrieves fresh data, if needed
 func GetJSONAndData(k Key, f FrontEnd) ([]byte, interface{}, uint64, error) {
 	s := getStore(k)

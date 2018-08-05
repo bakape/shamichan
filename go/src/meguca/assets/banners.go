@@ -21,7 +21,7 @@ func init() {
 	rand.Seed(time.Now().Unix())
 }
 
-// Stores multiple files by board in memory
+// BannerStore stores multiple files by board in memory
 type BannerStore struct {
 	mu sync.RWMutex
 	m  map[string][]File
@@ -45,7 +45,7 @@ func (s *BannerStore) Set(board string, files []File) {
 	}
 }
 
-// Returns the banner specified by board and ID. If none found, ok == false.
+// Get returns the banner specified by board and ID. If none found, ok == false.
 // file should not be mutted.
 func (s *BannerStore) Get(board string, id int) (file File, ok bool) {
 	s.mu.RLock()
@@ -58,7 +58,7 @@ func (s *BannerStore) Get(board string, id int) (file File, ok bool) {
 	return files[id], true
 }
 
-// Returns a random banner for the board. If none found, ok == false.
+// Random returns a random banner for the board. If none found, ok == false.
 func (s *BannerStore) Random(board string) (int, string, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -71,7 +71,7 @@ func (s *BannerStore) Random(board string) (int, string, bool) {
 	return i, files[i].Mime, true
 }
 
-// Return file types of banners for a specific board
+// FileTypes returns file types of banners for a specific board
 func (s *BannerStore) FileTypes(board string) []uint16 {
 	s.mu.RLock()
 	defer s.mu.RUnlock()

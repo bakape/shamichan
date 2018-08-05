@@ -67,7 +67,7 @@ type bodyContext struct {
 	index bool     // Rendered for an index page
 	state struct { // Body parser state
 		spoiler, quote, code, bold, italic, red, blue, rbText, pyu bool
-		successive_newlines                                        uint
+		successiveNewlines                                         uint
 		iDice                                                      int
 	}
 	common.Post
@@ -107,15 +107,15 @@ func streambody(
 		c.state.quote = false
 
 		// Prevent successive empty lines
-		if i != 0 && c.state.successive_newlines < 2 {
+		if i != 0 && c.state.successiveNewlines < 2 {
 			c.string("<br>")
 		}
 		if len(l) == 0 {
-			c.state.successive_newlines++
+			c.state.successiveNewlines++
 			continue
 		}
 
-		c.state.successive_newlines = 0
+		c.state.successiveNewlines = 0
 		if l[0] == '>' {
 			c.string("<em>")
 			c.state.quote = true

@@ -17,7 +17,7 @@ var (
 	mu             sync.RWMutex
 )
 
-// Injects dynamic variables, hashes and stores compiled templates
+// Compile injects dynamic variables, hashes and stores compiled templates
 func Compile() error {
 	levels := [...]auth.ModerationLevel{
 		auth.NotLoggedIn, auth.NotStaff, auth.Janitor, auth.Moderator,
@@ -93,7 +93,7 @@ func execIndex(html, title, theme string, pos auth.ModerationLevel) []byte {
 	}, nil)
 }
 
-// Render index page for WASM clients
+// WasmIndex render index page for WASM clients
 func WasmIndex(theme string) []byte {
 	return []byte(renderIndexWasm(theme))
 }

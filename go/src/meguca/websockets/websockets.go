@@ -350,14 +350,14 @@ func (c *Client) IP() string {
 	return c.ip
 }
 
-// Return, if client is using new protocol for C++ clients
+// NewProtocol returns, if client is using new protocol for C++ clients
 func (c *Client) NewProtocol() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.newProtocol
 }
 
-// Return, id client is requesting only the last 100 posts
+// Last100 returns, id client is requesting only the last 100 posts
 func (c *Client) Last100() bool {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
