@@ -1,7 +1,6 @@
 package imager
 
 import (
-	"bytes"
 	"crypto/sha1"
 	"database/sql"
 	"encoding/hex"
@@ -20,6 +19,7 @@ var (
 
 type jobRequest struct {
 	file multipart.File
+	size int
 	res  chan<- thumbnailingResponse
 }
 
@@ -29,9 +29,7 @@ type thumbnailingResponse struct {
 }
 
 // Queues larger uplaod processing to prevent resource overuse
-func requestThumbnailing(
-	file multipart.File,
-	size int64,
+func requestThumbnailing(file multipart.File, size int,
 ) <-chan thumbnailingResponse {
 	ch := make(chan thumbnailingResponse)
 
@@ -39,11 +37,11 @@ func requestThumbnailing(
 	// without much resource contention
 	if size <= smallUploadSize {
 		go func() {
-			id, err := processRequest(file)
+			id, err := processRequest(file, size)
 			ch <- thumbnailingResponse{id, err}
 		}()
 	} else {
-		scheduleJob <- jobRequest{file, ch}
+		scheduleJob <- jobRequest{file, size, ch}
 	}
 	return ch
 }
@@ -53,16 +51,18 @@ func init() {
 	go func() {
 		for {
 			req := <-scheduleJob
-			id, err := processRequest(req.file)
+			id, err := processRequest(req.file, req.size)
 			req.res <- thumbnailingResponse{id, err}
 		}
 	}()
 }
 
-func processRequest(file multipart.File) (string, error) {
-	buf := bytes.NewBuffer(thumbnailer.GetBuffer())
-	_, err := buf.ReadFrom(file)
-	data := buf.Bytes()
+func processRequest(file multipart.File, size int) (string, error) {
+	data := thumbnailer.GetBufferCap(size)
+	data, err := thumbnailer.ReadInto(data, file)
+	if err != nil {
+		return "", common.StatusError{err, 500}
+	}
 	defer thumbnailer.ReturnBuffer(data)
 	if err != nil {
 		return "", common.StatusError{err, 500}

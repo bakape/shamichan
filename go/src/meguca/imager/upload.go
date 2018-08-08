@@ -135,11 +135,12 @@ func LogError(w http.ResponseWriter, r *http.Request, err error) {
 // Returns the HTTP status code of the response, the ID of the generated image
 // and an error, if any.
 func ParseUpload(req *http.Request) (string, error) {
+	max := config.Get().MaxSize << 20
 	length, err := strconv.ParseUint(req.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
-		return "", common.StatusError{err, 400}
+		return "", common.StatusError{err, 413}
 	}
-	if length > uint64(config.Get().MaxSize<<20) {
+	if uint(length) > max {
 		return "", common.StatusError{errTooLarge, 400}
 	}
 	err = req.ParseMultipartForm(smallUploadSize)
@@ -151,8 +152,11 @@ func ParseUpload(req *http.Request) (string, error) {
 	if err != nil {
 		return "", common.StatusError{err, 400}
 	}
+	if uint(head.Size) > max {
+		return "", common.StatusError{errTooLarge, 413}
+	}
 	defer file.Close()
-	res := <-requestThumbnailing(file, head.Size)
+	res := <-requestThumbnailing(file, int(head.Size))
 	return res.imageID, res.err
 }
 
