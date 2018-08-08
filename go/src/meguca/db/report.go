@@ -13,15 +13,16 @@ import (
 func Report(id uint64, board, reason, ip string, illegal bool) error {
 	// If the reported content is illegal, log an error so it will email
 	if illegal {
-		log.Errorf("Illegal content reported\nPost: %s/%s/%d\nReason: %s\nIP: %s",
-			config.Get().RootURL, board, id, reason, ip)
+		log.Errorf(
+			"Illegal content reported\nPost: %s/all/%d\nReason: %s\nIP: %s",
+			config.Get().RootURL, id, reason, ip)
 	}
 
 	_, err := sq.Insert("reports").
 		Columns("target", "board", "reason", "by", "illegal").
 		Values(id, board, reason, ip, illegal).
 		Exec()
-	
+
 	return err
 }
 
