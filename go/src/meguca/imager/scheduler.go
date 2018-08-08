@@ -12,6 +12,9 @@ import (
 	"github.com/bakape/thumbnailer"
 )
 
+// Size of an upload small enough to use a different processing priority
+const smallUploadSize = 4 << 20
+
 var (
 	scheduleJob = make(chan jobRequest)
 	errTimedOut = errors.New("thumbnailing timed out")

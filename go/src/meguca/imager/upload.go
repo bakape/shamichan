@@ -20,9 +20,6 @@ import (
 	"github.com/go-playground/log"
 )
 
-// Size of an upload small enough to use a different processing priority
-const smallUploadSize = 4 << 20
-
 var (
 	// Map of MIME types to the constants used internally
 	mimeTypes = map[string]uint8{
@@ -143,7 +140,7 @@ func ParseUpload(req *http.Request) (string, error) {
 	if uint(length) > max {
 		return "", common.StatusError{errTooLarge, 400}
 	}
-	err = req.ParseMultipartForm(smallUploadSize)
+	err = req.ParseMultipartForm(0)
 	if err != nil {
 		return "", common.StatusError{err, 400}
 	}
