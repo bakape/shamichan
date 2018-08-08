@@ -159,7 +159,8 @@ func ParseUpload(req *http.Request) (string, error) {
 
 // Create a new thumbnail, commit its resources to the DB and filesystem, and
 // pass the image data to the client.
-func newThumbnail(data []byte, img common.ImageCommon) (string, error) {
+func newThumbnail(data []byte, img common.ImageCommon,
+) (token string, err error) {
 	conf := config.Get()
 	thumb, err := processFile(data, &img, thumbnailer.Options{
 		JPEGQuality: conf.JPEGQuality,
@@ -191,11 +192,17 @@ func newThumbnail(data []byte, img common.ImageCommon) (string, error) {
 		img.Title = img.Title[:200]
 	}
 
-	err = db.AllocateImage(data, thumb, img)
-	if err != nil && !db.IsConflictError(err) {
-		return "", err
-	}
-	return db.NewImageToken(img.SHA1)
+	// Being done in one transaction prevents the image from getting
+	// garbage-collected between the calls
+	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+		err = db.AllocateImage(tx, data, thumb, img)
+		if err != nil && !db.IsConflictError(err) {
+			return
+		}
+		token, err = db.NewImageTokenTx(tx, img.SHA1)
+		return
+	})
+	return
 }
 
 // WrapThumbnailerError Wraps a thumbnailer error with the appropriate HTTP status code

@@ -34,18 +34,25 @@ type Video struct {
 
 // WriteImage writes a processed image record to the DB
 func WriteImage(i common.ImageCommon) error {
-	dims := pq.GenericArray{A: i.Dims}
-	_, err := sq.Insert("images").
+	return InTransaction(false, func(tx *sql.Tx) error {
+		return writeImageTx(tx, i)
+	})
+}
+
+func writeImageTx(tx *sql.Tx, i common.ImageCommon) (err error) {
+	err = withTransaction(tx, sq.
+		Insert("images").
 		Columns(
 			"apng", "audio", "video", "fileType", "thumbType", "dims", "length",
 			"size", "MD5", "SHA1", "Title", "Artist",
 		).
 		Values(
-			i.APNG, i.Audio, i.Video, int(i.FileType), int(i.ThumbType), dims,
-			i.Length, i.Size, i.MD5, i.SHA1, i.Title, i.Artist,
-		).
+			i.APNG, i.Audio, i.Video, int(i.FileType), int(i.ThumbType),
+			pq.GenericArray{A: i.Dims}, i.Length, i.Size, i.MD5, i.SHA1,
+			i.Title, i.Artist,
+		)).
 		Exec()
-	return err
+	return
 }
 
 func getImage(sha1 string) squirrel.SelectBuilder {
@@ -69,6 +76,16 @@ func scanImage(rs rowScanner) (img common.ImageCommon, err error) {
 // NewImageToken inserts a new image allocation token into the DB and returns
 // it's ID
 func NewImageToken(SHA1 string) (token string, err error) {
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
+		token, err = NewImageTokenTx(tx, SHA1)
+		return err
+	})
+	return
+}
+
+// NewImageTokenTx inserts a new image allocation token into the DB and returns
+// it's ID in a transacion
+func NewImageTokenTx(tx *sql.Tx, SHA1 string) (token string, err error) {
 	expires := time.Now().Add(tokenTimeout).UTC()
 
 	// Loop in case there is a primary key collision
@@ -78,9 +95,10 @@ func NewImageToken(SHA1 string) (token string, err error) {
 			return
 		}
 
-		_, err = sq.Insert("image_tokens").
+		err = withTransaction(tx, sq.
+			Insert("image_tokens").
 			Columns("token", "SHA1", "expires").
-			Values(token, SHA1, expires).
+			Values(token, SHA1, expires)).
 			Exec()
 		switch {
 		case err == nil:
@@ -122,8 +140,9 @@ func UseImageToken(tx *sql.Tx, token string) (
 
 // AllocateImage allocates an image's file resources to their respective served
 // directories and write its data to the database
-func AllocateImage(src, thumb []byte, img common.ImageCommon) error {
-	err := WriteImage(img)
+func AllocateImage(tx *sql.Tx, src, thumb []byte, img common.ImageCommon,
+) error {
+	err := writeImageTx(tx, img)
 	if err != nil {
 		return err
 	}

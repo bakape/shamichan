@@ -67,7 +67,10 @@ func TestAllocateImage(t *testing.T) {
 		FileType: common.JPEG,
 	}
 
-	if err := AllocateImage(files[0], files[1], std); err != nil {
+	err := InTransaction(false, func(tx *sql.Tx) error {
+		return AllocateImage(tx, files[0], files[1], std)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 
