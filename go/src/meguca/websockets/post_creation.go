@@ -53,35 +53,31 @@ type ImageRequest struct {
 func CreateThread(req ThreadCreationRequest, ip string) (
 	post db.Post, err error,
 ) {
-	switch {
-	case !auth.IsNonMetaBoard(req.Board):
+	if !auth.IsNonMetaBoard(req.Board) {
 		err = common.ErrInvalidBoard(req.Board)
 		return
-	case auth.IsBanned(req.Board, ip):
-		err = common.ErrBanned
+	}
+	err = db.IsBanned(req.Board, ip)
+	if err != nil {
 		return
 	}
 
 	err = db.AuthenticateCaptcha(req.Captcha, ip)
-
 	if err != nil {
 		return
 	}
 
 	conf, err := getBoardConfig(req.Board)
-
 	if err != nil {
 		return
 	}
 
 	post, err = constructPost(req.ReplyCreationRequest, conf, ip)
-
 	if err != nil {
 		return
 	}
 
 	subject, err := parser.ParseSubject(req.Subject)
-	
 	if err != nil {
 		return
 	}
@@ -90,7 +86,6 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	// possible data races with unused image cleanup
 	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
 		post.ID, err = db.NewPostID(tx)
-
 		if err != nil {
 			return
 		}
@@ -106,21 +101,19 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		if hasImage {
 			img := req.Image
 			post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
-
 			if err != nil {
 				return
 			}
 		}
 
 		err = db.InsertThread(tx, subject, conf.NonLive || req.NonLive, post)
-
 		if err != nil {
 			return
 		}
 
 		return db.WriteRoulette(tx, post.ID)
 	})
-	
+
 	return
 }
 
@@ -145,10 +138,9 @@ func CreatePost(
 ) (
 	post db.Post, msg []byte, err error,
 ) {
-	if auth.IsBanned(board, ip) {
-		err = common.ErrBanned
+	err = db.IsBanned(board, ip)
+	if err != nil {
 		return
-
 	}
 	if needCaptcha {
 		err = db.AuthenticateCaptcha(req.Captcha, ip)

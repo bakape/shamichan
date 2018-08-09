@@ -35,8 +35,6 @@ func (c *Client) synchronise(data []byte) error {
 		return err
 	case !auth.IsBoard(msg.Board):
 		return common.ErrInvalidBoard(msg.Board)
-	case auth.IsBanned(msg.Board, c.ip):
-		return common.ErrBanned
 	case msg.Thread != 0:
 		valid, err := db.ValidateOP(msg.Thread, msg.Board)
 		switch {
@@ -45,6 +43,11 @@ func (c *Client) synchronise(data []byte) error {
 		case !valid:
 			return common.ErrInvalidThread(msg.Thread, msg.Board)
 		}
+	}
+
+	err = db.IsBanned(msg.Board, c.ip)
+	if err != nil {
+		return err
 	}
 
 	c.mu.Lock()

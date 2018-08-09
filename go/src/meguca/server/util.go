@@ -111,7 +111,7 @@ func assertNotBanned(
 		httpError(w, r, common.StatusError{err, 400})
 		return false
 	}
-	globally, fromBoard := auth.GetBannedLevels(board, ip)
+	globally, fromBoard := db.GetBannedLevels(board, ip)
 	if !globally && !fromBoard {
 		return true
 	}
