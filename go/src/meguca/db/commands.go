@@ -253,7 +253,7 @@ func DecrementRoulette(tx *sql.Tx, t uint64) (c uint8, err error) {
 	}
 
 	err = r.Scan(&c)
-	return
+	return c + 1, err
 }
 
 // ResetRoulette resets the thread's roulette counter to 6
