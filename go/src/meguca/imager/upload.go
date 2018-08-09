@@ -65,14 +65,35 @@ var (
 
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
-	// Limit data received to the maximum uploaded file size limit
-	r.Body = http.MaxBytesReader(w, r.Body, int64(config.Get().MaxSize<<20))
+	var id string
+	err := func() (err error) {
+		err = validateUploader(r)
+		if err != nil {
+			return
+		}
 
-	id, err := ParseUpload(r)
+		// Limit data received to the maximum uploaded file size limit
+		r.Body = http.MaxBytesReader(w, r.Body, int64(config.Get().MaxSize<<20))
+
+		id, err = ParseUpload(r)
+		return
+	}()
 	if err != nil {
 		LogError(w, r, err)
 	}
+
 	w.Write([]byte(id))
+}
+
+// Apply security restrictions to uploader
+// TODO: Needs to consider spam score
+func validateUploader(r *http.Request) (err error) {
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		return
+	}
+	err = db.IsBanned("all", ip)
+	return
 }
 
 // UploadImageHash attempts to skip image upload, if the file has already
@@ -82,6 +103,11 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 // the client.
 func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
+		err = validateUploader(r)
+		if err != nil {
+			return
+		}
+
 		buf, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 40))
 		if err != nil {
 			return
