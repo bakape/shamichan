@@ -2,14 +2,9 @@ package auth
 
 import (
 	"meguca/common"
-	"sync"
 	"time"
-)
 
-var (
-	// board: IP: IsBanned
-	bans   = map[string]map[string]bool{}
-	bansMu sync.RWMutex
+	"github.com/go-playground/log"
 )
 
 // ModerationLevel defines the level required to perform an action
@@ -100,58 +95,22 @@ type Report struct {
 	Board, Reason string
 }
 
-// IsBanned returns if the IP is banned on the target board
-func IsBanned(board, ip string) (banned bool) {
-	bansMu.RLock()
-	defer bansMu.RUnlock()
-	global := bans["all"]
-	ips := bans[board]
-
-	if global != nil && global[ip] {
-		return true
-	}
-	if ips != nil && ips[ip] {
-		return true
-	}
-	return false
-}
-
-// GetBannedLevels is like IsBanned, but returns, if the IP is banned globally
-// or only from the specific board.
-func GetBannedLevels(board, ip string) (globally, locally bool) {
-	bansMu.RLock()
-	defer bansMu.RUnlock()
-	global := bans["all"]
-	ips := bans[board]
-	return global != nil && global[ip], ips != nil && ips[ip]
-}
-
-// SetBans replaces the ban cache with the new set
-func SetBans(b ...Ban) {
-	new := map[string]map[string]bool{}
-	for _, b := range b {
-		board, ok := new[b.Board]
-		if !ok {
-			board = map[string]bool{}
-			new[b.Board] = board
-		}
-		board[b.IP] = true
-	}
-
-	bansMu.Lock()
-	bans = new
-	bansMu.Unlock()
-}
-
-// DisconnectBannedIP disconnects all banned websocket clients matching IP from board.
+// Disconnects all banned websocket clients matching IP from board.
 // /all/ board disconnects all clients globally.
-func DisconnectBannedIP(ip, board string) {
+func DisconnectByBoardAndIP(ip, board string) {
 	msg, err := common.EncodeMessage(common.MessageInvalid,
 		common.ErrBanned.Error())
 	if err != nil {
-		panic(err)
+		log.Error(err)
+		return
 	}
-	for _, cl := range common.GetByIPAndBoard(ip, board) {
+	var cls []common.Client
+	if board == "all" {
+		cls = common.GetClientsByIP(ip)
+	} else {
+		cls = common.GetByIPAndBoard(ip, board)
+	}
+	for _, cl := range cls {
 		cl.Send(msg)
 		cl.Close(nil)
 	}
