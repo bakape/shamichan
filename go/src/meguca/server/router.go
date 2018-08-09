@@ -13,6 +13,7 @@ import (
 	"meguca/util"
 	"meguca/websockets"
 	"net/http"
+	"net/url"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -257,7 +258,13 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 	ytid := extractParam(r, "id")
 	code, err := func() (code uint16, err error) {
 		code = 500
-		info, err := ytdl.GetVideoInfoFromID(ytid)
+		yturl, err := generateYouTubeURL(ytid)
+
+		if err != nil {
+			return
+		}
+
+		info, err := ytdl.GetVideoInfoFromURL(yturl)
 
 		if err != nil {
 			return
@@ -364,6 +371,23 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 
 		httpError(w, r, err)
 	}
+}
+
+// Generate the URL with the server's default lang, otherwise default to en_GB
+func generateYouTubeURL(id string) (*url.URL, error) {
+	defLang := config.Get().DefaultLang
+
+	if defLang == "" {
+		return url.Parse(fmt.Sprintf("https://www.youtube.com/watch?v=%s&gl=GB&hl=en", id))
+	}
+
+	slang := strings.Split(defLang, "_")
+
+	if (len(slang) < 2) {
+		return nil, errors.New("invalid split string length")
+	}
+
+	return url.Parse(fmt.Sprintf("https://www.youtube.com/watch?v=%s&gl=%s&hl=%s", id, slang[1], slang[0]))
 }
 
 func errYouTubeLive(id string) (uint16, error) {
