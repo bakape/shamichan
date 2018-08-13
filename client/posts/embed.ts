@@ -7,7 +7,7 @@ type OEmbedDoc = {
 }
 
 // Types of different embeds by provider
-enum provider { YouTube, SoundCloud, Vimeo, Coub }
+enum provider { YouTube, SoundCloud, Vimeo, Coub, BitChute }
 
 // Matching patterns and their respective providers
 const patterns: [provider, RegExp][] = [
@@ -27,6 +27,10 @@ const patterns: [provider, RegExp][] = [
 		provider.Coub,
 		/https?:\/\/(?:www\.)?coub\.com\/view\/.+/,
 	],
+	[
+		provider.BitChute,
+		/https?:\/\/(?:[^\.]+\.)?(?:bitchute\.com\/embed\/|bitchute\.com\/video\/)[a-zA-Z0-9_-]+/,
+	],
 ]
 
 // Map of providers to formatter functions
@@ -35,19 +39,22 @@ const formatters: { [key: number]: (s: string) => string } = {}
 // Map of providers to information fetcher functions
 const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
 
-for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub"]) {
+for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub", "BitChute"]) {
 	const id = (provider as any)[p] as number
 	formatters[id] = formatProvider(id)
 	switch (id) {
 		case provider.YouTube:
 			fetchers[id] = fetchYouTube
 			break
+		case provider.BitChute:
+			fetchers[id] = fetchBitChute
+			break
 		default:
 			fetchers[id] = fetchNoEmbed(id)
 	}
 }
 
-// formatter for the noembed.com meta-provider or YouTube
+// formatter for the noembed.com meta-provider, YouTube or BitChute
 function formatProvider(type: provider): (s: string) => string {
 	return (href: string) => {
 		const attrs = {
@@ -65,7 +72,7 @@ function formatProvider(type: provider): (s: string) => string {
 async function fetchYouTube(el: Element): Promise<void> {
 	const ref = el.getAttribute("href"),
 	id = strip(ref.split(".be/").pop().split("embed/").pop().split("watch?v=")),
-	res = await fetch("/api/youtube-data/" + id),
+	res = await fetch(`/api/youtube-data/${id}`),
 	[title, thumb, video, videoHigh] = (await res.text()).split("\n")
 
 	switch (res.status) {
@@ -115,17 +122,53 @@ async function fetchYouTube(el: Element): Promise<void> {
 	el.setAttribute("data-html", encodeURIComponent(
 		`<video width="480" height="270" poster="`
 		+ thumb + `" ` + (ref.includes("loop=1") ? "loop " : '')
-		+ `controls><source src="`
-		+ video + (!ref.includes(`t=`) ? check("start") : '') + check("t")
-		+ `" type="video/webm">Your browser does not support the video tag.</video>`))
-	
-	function strip(s: string[]): string {
-		return s.pop().split('&').shift().split('#').shift().split('?').shift()
-	}
+		+ `controls><source src="` + video
+		+ (!ref.includes(`t=`) ? check("start") : '') + check("t")
+		+ `" type="video/webm">Your browser does not support the video tag.</video>`
+	))
 
 	function check(s: string): string {
 		return ref.includes(`${s}=`) ? `#t=` + strip(ref.split(`${s}=`)) : ''
 	}
+}
+
+// fetcher for the BitChute provider
+async function fetchBitChute(el: Element): Promise<void> {
+	const ref = el.getAttribute("href"),
+	id = strip(ref.split("embed/").pop().split("video/")),
+	res = await fetch(`/api/bitchute-title/${id}`),
+	title = await res.text()
+
+	switch (res.status) {
+	case 200:
+		el.textContent = format(title, provider.BitChute)
+		break
+	case 500:
+		el.textContent = format("Error 500: BitChute is not available", provider.BitChute)
+		el.classList.add("errored")
+		return
+	default:
+		const errmsg = `Error ${res.status}: ${res.statusText}`
+		el.textContent = format(errmsg, provider.BitChute)
+		el.classList.add("errored")
+		console.error(errmsg)
+		return
+	}
+
+	if (!title) {
+		el.textContent = format("Error: Title does not exist", provider.BitChute)
+		el.classList.add("errored")
+		return
+	}
+
+	el.setAttribute("data-html", encodeURIComponent(
+		`<iframe width="480" height="270" src="https://bitchute.com/embed/${id}" `
+		+ `referrerpolicy="no-referrer" sandbox="allow-scripts" allowfullscreen></iframe>`
+	))
+}
+
+function strip(s: string[]): string {
+	return s.pop().split('&').shift().split('#').shift().split('?').shift()
 }
 
 // fetcher for the noembed.com meta-provider

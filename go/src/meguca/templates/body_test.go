@@ -353,6 +353,16 @@ func TestRenderBody(t *testing.T) {
 			in:   "https://vimeo.com/174312494",
 			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"2\" href=\"https://vimeo.com/174312494\">[Vimeo] ???</a></em>",
 		},
+		{
+			name: "bitchute embed",
+			in:   "https://www.bitchute.com/embed/z0f4Wgi94eo",
+			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://www.bitchute.com/embed/z0f4Wgi94eo\">[BitChute] ???</a></em>",
+		},
+		{
+			name: "bitchute embed",
+			in:   "https://www.bitchute.com/video/z0f4Wgi94eo",
+			out:  "<em><a rel=\"noreferrer\" class=\"embed\" target=\"_blank\" data-type=\"4\" href=\"https://www.bitchute.com/video/z0f4Wgi94eo\">[BitChute] ???</a></em>",
+		},
 	}
 
 	for i := range cases {

@@ -20,6 +20,7 @@ const (
 	soundCloud
 	vimeo
 	coub
+	bitChute
 )
 
 var (
@@ -31,6 +32,7 @@ var (
 		soundCloud: "SoundCloud",
 		vimeo:      "Vimeo",
 		coub:       "Coub",
+		bitChute:   "BitChute",
 	}
 	embedPatterns = [...]struct {
 		typ  int
@@ -51,6 +53,10 @@ var (
 		{
 			coub,
 			regexp.MustCompile(`https?:\/\/coub\.com\/view\/[a-zA-Z0-9-_]+`),
+		},
+		{
+			bitChute,
+			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?(?:bitchute\.com\/embed\/|bitchute\.com\/video\/)[a-zA-Z0-9_-]+`),
 		},
 	}
 
