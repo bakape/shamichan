@@ -95,6 +95,8 @@ recheck:
 		if c := err.(StatusError).Code; c >= 400 && c < 500 {
 			return true
 		}
+	case *websocket.CloseError:
+		return true
 	case util.WrappedError:
 		err = err.(util.WrappedError).Inner
 		goto recheck
