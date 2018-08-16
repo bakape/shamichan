@@ -10,6 +10,7 @@ import { boardConfig, page } from "../../state"
 import initDrop from "./drop"
 import initPaste from "./paste"
 import initFullScreen from "./fullscreen"
+import initImageErr from "./image"
 import initThreads from "./threads"
 
 export { default as FormModel } from "./model"
@@ -398,6 +399,7 @@ export default () => {
 	initDrop()
 	initPaste()
 	initFullScreen()
+	initImageErr()
 	initThreads()
 	initIdentity()
 }
