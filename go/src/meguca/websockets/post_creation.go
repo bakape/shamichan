@@ -227,6 +227,14 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 
+	needCaptcha, err := db.NeedCaptcha(c.ip)
+	if err != nil {
+		return
+	}
+	if needCaptcha {
+		return c.sendMessage(common.MessageCaptcha, 0)
+	}
+
 	var req ReplyCreationRequest
 	err = decodeMessage(data, &req)
 	if err != nil {
@@ -234,11 +242,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 
 	_, op, board := feeds.GetSync(c)
-	needCaptcha, err := db.NeedCaptcha(c.ip)
-	if err != nil {
-		return
-	}
-	post, msg, err := CreatePost(op, board, c.ip, needCaptcha, req)
+	post, msg, err := CreatePost(op, board, c.ip, false, req)
 	if err != nil {
 		return
 	}

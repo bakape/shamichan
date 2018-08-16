@@ -32,7 +32,7 @@ function onPaste(e: ClipboardEvent) {
 	// Create form, if none
 	postSM.feed(postEvent.open)
 
-	// Neither disconnected, errored or already has image
+	// Neither disconnected, erred or already has image
 	const m = trigger("getPostModel") as FormModel
 
 	if (m && !m.image) {

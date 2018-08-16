@@ -11,16 +11,11 @@ import initDrop from "./drop"
 import initPaste from "./paste"
 import initFullScreen from "./fullscreen"
 import initThreads from "./threads"
+import { renderCaptchaForm } from "./captcha";
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
 export { expandThreadForm } from "./threads"
-
-// Sent to the FSM via the "open" and "hijack" events
-export type FormMessage = {
-	model: FormModel,
-	view: FormView,
-}
 
 type Selection = {
 	start: Node
@@ -33,35 +28,58 @@ let postForm: FormView,
 	postModel: FormModel,
 	// Store last selected range, so we can access it after a mouse click on
 	// quote links, which cause that link to become selected
-	lastSelection: Selection,
-	// Specifies, if a captcha solved is needed to allocate a post
-	needCaptcha = false
+	lastSelection: Selection
 
 // Post authoring finite state machine
 export const enum postState {
-	none,           // No state. Awaiting first connection.
-	ready,          // Ready to create posts
-	halted,         // Post allocated to the server but no connectivity
-	locked,         // No post open. Post creation controls locked.
-	alloc,          // Post open and allocated to the server
-	draft,          // Post open, but not yet allocated.
-	needCaptcha,    // Awaiting a captcha to be solved
-	sendingNonLive, // Sending a request to a allocate a post in non-live mode
-	errored,        // Suffered unrecoverable error
-	threadLocked,   // Post creation disabled in thread
+	// No state. Awaiting first connection.
+	none,
+	// Ready to create posts
+	ready,
+	// Post allocated to the server but no connectivity
+	halted,
+	// No post open. Post creation controls locked.
+	locked,
+	// Post open and allocated to the server
+	alloc,
+	// Post open, but not yet allocating
+	draft,
+	// Sent a request to allocate a live post
+	allocating,
+	// Sending a request to a allocate a post in non-live mode
+	allocatingNonLive,
+	// Suffered unrecoverable error
+	erred,
+	// Post creation disabled in thread
+	threadLocked,
 }
 export const enum postEvent {
-	sync,          // Synchronized to the server
-	disconnect,    // Disconnected from server
-	error,         // Unrecoverable error
-	done,          // Post closed
-	cancel,        // Post canceled
-	open,          // New post opened
-	reset,         // Set to none. Used during page navigation.
-	alloc,         // Allocated the draft post to the server
-	reclaim,       // Ownership of post reclaimed after connectivity loss
-	abandon,       // Abandon ownership of any open post
-	captchaSolved, // New captcha solved and submitted
+	// Synchronized to the server
+	sync,
+	// Disconnected from server
+	disconnect,
+	// Unrecoverable error
+	error,
+	// Post closed
+	done,
+	// Post canceled
+	cancel,
+	// New post opened
+	open,
+	// Set to none. Used during page navigation.
+	reset,
+	// A live post allocation request has been sent to the server
+	sentAllocRequest,
+	// Allocated the draft post to the server
+	alloc,
+	// Ownership of post reclaimed after connectivity loss
+	reclaim,
+	// Abandon ownership of any open post
+	abandon,
+	// Server requested to solve a captcha
+	captchaRequested,
+	// Captcha successfully solved
+	captchaSolved,
 }
 export const postSM = new FSM<postState, postEvent>(postState.none)
 
@@ -162,16 +180,6 @@ function updateIdentity() {
 	}
 }
 
-// Toggle live update committing on the input form, if any
-function toggleLive(live: boolean) {
-	if (!postModel || postModel.sentAllocRequest) {
-		return
-	}
-	postForm.setEditing(live)
-	postForm.inputElement("done").hidden = live
-	postModel.nonLive = !live
-}
-
 async function openReply(e: MouseEvent) {
 	// Don't trigger, when user is trying to open in a new tab
 	if (e.which !== 1
@@ -193,8 +201,7 @@ export default () => {
 	connSM.on(connState.desynced, postSM.feeder(postEvent.error))
 
 	// The server notified a captcha will be required on the next post
-	handlers[message.captcha] = () =>
-		needCaptcha = true
+	handlers[message.captcha] = postSM.feeder(postEvent.captchaRequested);
 
 	// Initial synchronization
 	postSM.act(postState.none, postEvent.sync, () =>
@@ -202,6 +209,9 @@ export default () => {
 
 	// Set up client to create new posts
 	postSM.on(postState.ready, () => {
+		if (postModel) {
+			postModel.abandon();
+		}
 		window.onbeforeunload = postForm = postModel = null
 		stylePostControls(el => {
 			el.style.display = ""
@@ -211,8 +221,6 @@ export default () => {
 
 	// Handle connection loss
 	postSM.wildAct(postEvent.disconnect, () => {
-		needCaptcha = false
-
 		switch (postSM.state) {
 			case postState.alloc:       // Pause current allocated post
 			case postState.halted:
@@ -238,10 +246,8 @@ export default () => {
 		postState.alloc)
 
 	// Regained connectivity too late and post can no longer be reclaimed
-	postSM.act(postState.halted, postEvent.abandon, () => {
-		postModel.abandon()
-		return postState.ready
-	})
+	postSM.act(postState.halted, postEvent.abandon, () =>
+		postState.ready);
 
 	// Regained connectivity, when no post open
 	postSM.act(postState.locked, postEvent.sync, () =>
@@ -250,10 +256,10 @@ export default () => {
 	// Handle critical errors
 	postSM.wildAct(postEvent.error, () => {
 		stylePostControls(el =>
-			el.classList.add("errored"))
+			el.classList.add("erred"))
 		postForm && postForm.renderError()
 		window.onbeforeunload = null
-		return postState.errored
+		return postState.erred
 	})
 
 	// Reset state during page navigation
@@ -262,43 +268,18 @@ export default () => {
 
 	// Transition a draft post into allocated state. All the logic for this is
 	// model- and view-side.
-	postSM.act(postState.draft, postEvent.alloc, () =>
-		postState.alloc)
+	postSM.act(postState.allocating, postEvent.alloc, () =>
+		postState.alloc);
+	postSM.act(postState.allocatingNonLive, postEvent.alloc, () =>
+		postState.ready);
 
 	postSM.on(postState.alloc, bindNagging)
 
 	// Open a new post creation form, if none open
 	postSM.act(postState.ready, postEvent.open, () => {
 		postModel = new FormModel()
-		postModel.needCaptcha = needCaptcha
 		postForm = new FormView(postModel)
-		if (needCaptcha) {
-			return postState.needCaptcha
-		}
 		return postState.draft
-	})
-
-	// New captcha submitted
-	postSM.act(postState.needCaptcha, postEvent.captchaSolved, () => {
-		postModel.needCaptcha = needCaptcha = false
-		if ((postForm.upload && postForm.upload.input.files.length)
-			&& !postModel.nonLive
-		) {
-			postModel.uploadFile()
-		}
-		return postState.draft
-	})
-
-	// Cancelled, when needing a captcha
-	postSM.act(postState.needCaptcha, postEvent.done, () => {
-		postForm.remove()
-		return postState.ready
-	})
-
-	// Cancelled, when needing a captcha
-	postSM.act(postState.needCaptcha, postEvent.cancel, () => {
-		postForm.remove()
-		return postState.ready
 	})
 
 	// Hide post controls, when a postForm is open
@@ -309,28 +290,66 @@ export default () => {
 	postSM.on(postState.alloc, () =>
 		hidePostControls())
 
+	postSM.act(postState.draft, postEvent.sentAllocRequest, () =>
+		postState.allocating);
+
 	// Close unallocated draft or commit in non-live mode
-	postSM.act(postState.draft, postEvent.done, (val?: any) => {
+	postSM.act(postState.draft, postEvent.done, () => {
 		// Commit a draft made as a non-live post
-		let commitNonLive = false
-		if (postModel.nonLive) {
-			if (typeof val === "boolean") {
-				commitNonLive = !val
-			} else {
-				commitNonLive = true
-			}
-		}
-		if (commitNonLive) {
-			if (postModel.needCaptcha) { // New captcha submitted
-				needCaptcha = false
-			}
-			postModel.commitNonLive()
-			return postState.sendingNonLive
+		if (!identity.live && !isEmpty()) {
+			postModel.commitNonLive();
+			return postState.allocatingNonLive;
 		}
 
-		postForm.remove()
-		return postState.ready
+		postForm.remove();
+		return postState.ready;
 	})
+
+	// Server requested captcha. This rejects the previous post or image
+	// allocation request.
+	for (let s of [
+		postState.draft, postState.allocating, postState.allocatingNonLive,
+	]) {
+		postSM.act(s, postEvent.captchaRequested, () => {
+			postModel.inputBody = "";
+			renderCaptchaForm();
+			if (postForm.upload) {
+				postForm.upload.reset();
+			}
+			return postState.draft;
+		});
+	}
+	postSM.act(postState.alloc, postEvent.captchaRequested, () => {
+		renderCaptchaForm();
+		if (postForm.upload) {
+			postForm.upload.reset();
+		}
+		return postState.alloc;
+	})
+
+	// Attempt to resume post after solving captcha
+	postSM.act(postState.draft, postEvent.captchaSolved, () => {
+		if (!identity.live) {
+			if (isEmpty()) {
+				postForm.input.focus();
+				return postState.draft;
+			}
+			postModel.commitNonLive();
+			return postState.allocatingNonLive;
+		}
+		if (hasBufferedImage()) {
+			postModel.uploadFile(postForm.upload.input.files[0]);
+		}
+		postForm.input.focus();
+		return postState.draft;
+	});
+	postSM.act(postState.alloc, postEvent.captchaSolved, () => {
+		if (hasBufferedImage()) {
+			postModel.uploadFile(postForm.upload.input.files[0]);
+		}
+		postForm.input.focus();
+		return postState.alloc;
+	});
 
 	// Cancel unallocated draft
 	postSM.act(postState.draft, postEvent.cancel, () => {
@@ -339,10 +358,10 @@ export default () => {
 	})
 
 	// Close allocated post
-	postSM.act(postState.alloc, postEvent.done, (cancel: any) => {
-		postModel.commitClose(typeof cancel === "boolean" ? cancel : false)
-		return postState.ready
-	})
+	postSM.act(postState.alloc, postEvent.done, () => {
+		postModel.commitClose(false);
+		return postState.ready;
+	});
 
 	// Cancel allocated post
 	postSM.act(postState.alloc, postEvent.cancel, () => {
@@ -351,16 +370,12 @@ export default () => {
 	})
 
 	// Just close the post, after it is committed
-	postSM.act(postState.sendingNonLive, postEvent.done, () => {
-		postModel.abandon()
-		return postState.ready
-	})
+	postSM.act(postState.allocatingNonLive, postEvent.done, () =>
+		postState.ready);
 
 	// Just cancel the post, after it is committed
-	postSM.act(postState.sendingNonLive, postEvent.cancel, () => {
-		postModel.abandon()
-		return postState.ready
-	})
+	postSM.act(postState.allocatingNonLive, postEvent.cancel, () =>
+		postState.ready);
 
 	// Handle clicks on the [Reply] button
 	on(document, "click", openReply, {
@@ -393,11 +408,27 @@ export default () => {
 	for (let id of ["name", "auth", "sage"]) {
 		identity.onChange(id, updateIdentity)
 	}
-	identity.onChange("live", toggleLive)
+
+	// Toggle live update committing on the input form, if any
+	identity.onChange("live", (live: boolean) => {
+		if (postSM.state !== postState.draft) {
+			return;
+		}
+		postForm.setEditing(live);
+		postForm.inputElement("done").hidden = live;
+	});
 
 	initDrop()
 	initPaste()
 	initFullScreen()
 	initThreads()
 	initIdentity()
+}
+
+function isEmpty(): boolean {
+	return !postForm.input.value && !hasBufferedImage();
+}
+
+function hasBufferedImage(): boolean {
+	return postForm.upload && postForm.upload.input.files.length !== 0;
 }

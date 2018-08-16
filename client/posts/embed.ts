@@ -74,41 +74,41 @@ async function fetchYouTube(el: Element): Promise<void> {
 		break
 	case 415:
 		el.textContent = format("Error 415: YouTube video is a livestream", provider.YouTube)
-		el.classList.add("errored")
+		el.classList.add("erred")
 		return
 	case 500:
 		el.textContent = format("Error 500: YouTube is not available", provider.YouTube)
-		el.classList.add("errored")
+		el.classList.add("erred")
 		return
 	default:
 		const errmsg = `Error ${res.status}: ${res.statusText}`
 		el.textContent = format(errmsg, provider.YouTube)
-		el.classList.add("errored")
+		el.classList.add("erred")
 		console.error(errmsg)
 		return
 	}
 
 	if (!title) {
 		el.textContent = format("Error: Title does not exist", provider.YouTube)
-		el.classList.add("errored")
+		el.classList.add("erred")
 		return
 	}
 
 	if (!thumb) {
 		el.textContent = format("Error: Thumbnail does not exist", provider.YouTube)
-		el.classList.add("errored")
+		el.classList.add("erred")
 		return
 	}
 
 	if (!video) {
 		el.textContent = format("Error: Empty googlevideo URL", provider.YouTube)
-		el.classList.add("errored")
+		el.classList.add("erred")
 		return
 	}
 
 	if (!videoHigh) {
 		el.textContent = format("Error: Empty googlevideo (high res) URL", provider.YouTube)
-		el.classList.add("errored")
+		el.classList.add("erred")
 		return
 	}
 
@@ -118,7 +118,7 @@ async function fetchYouTube(el: Element): Promise<void> {
 		+ `controls><source src="`
 		+ video + (!ref.includes(`t=`) ? check("start") : '') + check("t")
 		+ `" type="video/webm">Your browser does not support the video tag.</video>`))
-	
+
 	function strip(s: string[]): string {
 		return s.pop().split('&').shift().split('#').shift().split('?').shift()
 	}
@@ -136,14 +136,14 @@ function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
 
 		if (err) {
 			el.textContent = format(err, type)
-			el.classList.add("errored")
+			el.classList.add("erred")
 			console.error(err)
 			return
 		}
 
 		if (data.error) {
 			el.textContent = format(data.error, type)
-			el.classList.add("errored")
+			el.classList.add("erred")
 			return
 		}
 
@@ -188,8 +188,8 @@ async function toggleExpansion(e: MouseEvent) {
 	const el = e.target as Element
 
 	// Don't trigger, when user is trying to open in a new tab or fetch has
-	// errored
-	if (e.which !== 1 || e.ctrlKey || el.classList.contains("errored")) {
+	// erred
+	if (e.which !== 1 || e.ctrlKey || el.classList.contains("erred")) {
 		return
 	}
 	e.preventDefault()

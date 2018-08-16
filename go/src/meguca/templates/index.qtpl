@@ -113,10 +113,6 @@
 			</figure>
 		</template>
 		<template name="post-controls">
-			<form class="antispam-captcha">
-				{%= captcha() %}
-				{%= submit(true) %}
-			</form>
 			<div id="post-controls">
 				<input name="done" type="button" value="{%s= ln.Common.UI["done"] %}">
 				{%= cancel() %}
