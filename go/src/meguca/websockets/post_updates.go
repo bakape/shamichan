@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
@@ -141,7 +140,8 @@ func (c *Client) updateBody(msg []byte, n int) error {
 // Increment the spam score for this IP by score. If the client requires a new
 // solved captcha, send a notification.
 func (c *Client) incrementSpamScore(score uint) error {
-	return auth.IncrementSpamScore(c.ip, score)
+	return db.IncrementSpamScore(c.ip, time.Duration(score)*time.Millisecond,
+		true)
 }
 
 // Remove one character from the end of the line in the open post
@@ -237,7 +237,7 @@ func CheckRouletteBan(commands []common.Command, board string, thread uint64, id
 		if command.Type == common.Roulette {
 			if command.Roulette[0] == 1 {
 				err := db.Ban(board, "lost at #roulette", "system", time.Now().Add(time.Second*30), false, id)
-				
+
 				if err != nil {
 					return err
 				}
@@ -384,6 +384,8 @@ func (c *Client) _spliceText(req spliceRequest) (err error) {
 }
 
 // Insert and image into an existing open post
+// Note: Spam score is now incremented on image thumbnailing, not assignment to
+// post.
 func (c *Client) insertImage(data []byte) (err error) {
 	has, err := c.hasPost()
 	switch {
@@ -433,7 +435,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 	}
 	c.feed.InsertImage(c.post.id, img, msg)
 
-	return c.incrementSpamScore(config.Get().ImageScore)
+	return
 }
 
 // Spoiler an already inserted image in an unclosed post

@@ -45,6 +45,7 @@ func runMinuteTasks() {
 
 func runHalfTasks() {
 	logError("unrestrict pyu_limit", FreePyuLimit())
+	logError("expire spam scores", expireSpamScores())
 }
 
 func runHourTasks() {

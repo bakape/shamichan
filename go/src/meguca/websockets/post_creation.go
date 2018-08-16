@@ -146,9 +146,9 @@ func CreatePost(
 		err = db.AuthenticateCaptcha(req.Captcha, ip)
 		if err != nil {
 			return
-		} else if config.Get().Captcha {
 			// Captcha solved - reset spam score.
-			auth.ResetSpamScore(ip)
+		} else if err = db.ResetSpamScore(ip); err != nil {
+			return
 		}
 	}
 
@@ -234,7 +234,11 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 
 	_, op, board := feeds.GetSync(c)
-	post, msg, err := CreatePost(op, board, c.ip, !auth.CanPost(c.ip), req)
+	canPost, err := db.CanPost(c.ip)
+	if err != nil {
+		return
+	}
+	post, msg, err := CreatePost(op, board, c.ip, !canPost, req)
 	if err != nil {
 		return
 	}
@@ -279,8 +283,7 @@ func (c *Client) submitCaptcha(data []byte) (err error) {
 	if err != nil {
 		return
 	}
-	auth.ResetSpamScore(c.ip)
-	return nil
+	return db.ResetSpamScore(c.ip)
 }
 
 // If the client has a previous post, close it silently

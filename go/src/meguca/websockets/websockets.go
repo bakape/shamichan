@@ -284,15 +284,6 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 		if err != nil {
 			return err
 		}
-
-		// If the IP needs a captcha on the next post allocation, notify the
-		// client
-		if !auth.CanPost(c.ip) {
-			err = c.sendMessage(common.MessageCaptcha, 0)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	return c.runHandler(typ, msg)

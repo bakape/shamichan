@@ -911,6 +911,15 @@ var migrations = []func(*sql.Tx) error{
 
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`create table spam_scores (
+				ip inet primary key,
+				score bigint not null
+			);`,
+		)
+		return
+	},
 }
 
 func createIndex(table, column string) string {
