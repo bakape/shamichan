@@ -95,8 +95,16 @@ func validateUploader(r *http.Request) (err error) {
 	if err != nil {
 		return
 	}
-	return db.IncrementSpamScore(ip,
-		time.Duration(config.Get().ImageScore)*time.Millisecond, false)
+	need, err := db.NeedCaptcha(ip)
+	if err != nil {
+		return
+	}
+	if need {
+		return common.StatusError{errors.New("captcha required"), 403}
+	}
+	db.IncrementSpamScore(ip,
+		time.Duration(config.Get().ImageScore)*time.Millisecond)
+	return
 }
 
 // UploadImageHash attempts to skip image upload, if the file has already

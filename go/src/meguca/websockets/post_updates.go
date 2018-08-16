@@ -130,18 +130,14 @@ func (c *Client) appendRune(data []byte) (err error) {
 // n specifies the number of characters updated.
 func (c *Client) updateBody(msg []byte, n int) error {
 	c.feed.SetOpenBody(c.post.id, c.post.body, msg)
-	err := c.incrementSpamScore(uint(n) * config.Get().CharScore)
-	if err != nil {
-		return err
-	}
+	c.incrementSpamScore(uint(n) * config.Get().CharScore)
 	return db.SetOpenBody(c.post.id, c.post.body)
 }
 
 // Increment the spam score for this IP by score. If the client requires a new
 // solved captcha, send a notification.
-func (c *Client) incrementSpamScore(score uint) error {
-	return db.IncrementSpamScore(c.ip, time.Duration(score)*time.Millisecond,
-		true)
+func (c *Client) incrementSpamScore(score uint) {
+	db.IncrementSpamScore(c.ip, time.Duration(score)*time.Millisecond)
 }
 
 // Remove one character from the end of the line in the open post

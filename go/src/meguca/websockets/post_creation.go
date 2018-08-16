@@ -234,11 +234,11 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 
 	_, op, board := feeds.GetSync(c)
-	canPost, err := db.CanPost(c.ip)
+	needCaptcha, err := db.NeedCaptcha(c.ip)
 	if err != nil {
 		return
 	}
-	post, msg, err := CreatePost(op, board, c.ip, !canPost, req)
+	post, msg, err := CreatePost(op, board, c.ip, needCaptcha, req)
 	if err != nil {
 		return
 	}
@@ -264,11 +264,9 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 
 	conf := config.Get()
-	score := conf.PostCreationScore + conf.CharScore*uint(c.post.len)
-	if post.Image != nil {
-		score += conf.ImageScore
-	}
-	return c.incrementSpamScore(score)
+	c.incrementSpamScore(conf.PostCreationScore +
+		conf.CharScore*uint(c.post.len))
+	return
 }
 
 // Reset the IP's spam score, by submitting a captcha
