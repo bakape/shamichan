@@ -725,12 +725,12 @@ var migrations = []func(*sql.Tx) error{
 		err = withTransaction(tx, sq.Insert("boards").
 			Columns(
 				"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
-				"flags", "NSFW", "nonLive",
+				"flags", "NSFW",
 				"posterIDs", "rbText", "created", "defaultCSS", "title", "notice",
 				"rules", "eightball").
 			Values(
 				c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
-				c.Flags, c.NSFW, c.NonLive, c.PosterIDs, c.RbText,
+				c.Flags, c.NSFW, c.PosterIDs, c.RbText,
 				c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
 				pq.StringArray(c.Eightball))).
 			Exec()
@@ -910,6 +910,21 @@ var migrations = []func(*sql.Tx) error{
 		}
 
 		return
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`create table spam_scores (
+				ip inet primary key,
+				score bigint not null
+			);`,
+		)
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`alter table boards drop column nonLive`,
+			`alter table threads drop column nonLive`,
+		)
 	},
 }
 

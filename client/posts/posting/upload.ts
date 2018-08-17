@@ -1,8 +1,9 @@
 import lang from '../../lang'
-import { load, postText } from '../../util'
+import { load } from '../../util'
 import { Post } from "../model"
 import { View } from "../../base"
 import { config } from "../../state"
+import { postSM, postEvent } from ".";
 
 // Precompute 00 - ff strings for conversion to hexadecimal strings
 const precomputedHex = new Array(256)
@@ -70,18 +71,26 @@ export default class UploadForm extends View<Post> {
             // the file thumbnailed and we don't need to upload.
             const r = new FileReader()
             r.readAsArrayBuffer(file)
-            const { target: { result } } = await load(r) as ArrayBufferLoadEvent,
-                hash = await crypto.subtle.digest("SHA-1", result),
-                [res, err] = await postText(
-                    "/api/upload-hash",
-                    bufferToHex(hash),
-                )
-            if (err) {
-                this.isUploading = false
-                throw err
-            }
-            if (res) {
-                token = res
+            const { target: { result } } = await load(r) as ArrayBufferLoadEvent;
+            const hash = await crypto.subtle.digest("SHA-1", result);
+            const res = await fetch("/api/upload-hash", {
+                method: "POST",
+                body: bufferToHex(hash),
+            });
+            switch (res.status) {
+                case 200:
+                    token = await res.text();
+                    break;
+                case 403:
+                    const text = await res.text();
+                    if (this.isCaptchaRequest(text)) {
+                        postSM.feed(postEvent.captchaRequested);
+                        return;
+                    }
+                    throw text;
+                default:
+                    this.isUploading = false;
+                    throw await res.text();
             }
         }
 
@@ -107,6 +116,10 @@ export default class UploadForm extends View<Post> {
         return img
     }
 
+    private isCaptchaRequest(s: string) {
+        return s.indexOf("captcha required") !== -1;
+    }
+
     // Upload file to server and return the file allocation token
     private async upload(file: File): Promise<string> {
         const formData = new FormData()
@@ -123,10 +136,18 @@ export default class UploadForm extends View<Post> {
         if (!this.isUploading) { // Cancelled
             return ""
         }
-        if (this.xhr.status !== 200) {
-            this.status.textContent = this.xhr.response
-            this.cancel()
-            return ""
+        switch (this.xhr.status) {
+            case 200:
+                break;
+            case 403:
+                if (this.isCaptchaRequest(this.xhr.responseText)) {
+                    postSM.feed(postEvent.captchaRequested);
+                    return;
+                }
+            default:
+                this.status.textContent = this.xhr.response
+                this.cancel()
+                return ""
         }
 
         this.isUploading = false
@@ -143,6 +164,12 @@ export default class UploadForm extends View<Post> {
             this.xhr = null
         }
         this.input.style.display = ""
+    }
+
+    // Cancel uploads and reset the view
+    public reset() {
+        this.cancel();
+        this.status.textContent = "";
     }
 
     // Render client-side upload progress

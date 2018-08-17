@@ -7,21 +7,10 @@ import { postSM, postEvent, postState } from "."
 import { extend } from "../../util"
 import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
-import identity, { newAllocRequest } from "./identity"
+import { newAllocRequest } from "./identity"
 
 // Form Model of an OP post
 export default class FormModel extends Post {
-	public sentAllocRequest: boolean
-	public isAllocated: boolean
-
-	// Disable live post updates
-	public nonLive = (posts.get(page.thread) as any).nonLive || !identity.live
-
-	public needCaptcha: boolean // Need to solve a captcha to allocate
-
-	// Text that is not submitted yet to defer post allocation
-	public bufferedText: string
-
 	public inputBody = ""
 	public view: FormView
 
@@ -76,15 +65,6 @@ export default class FormModel extends Post {
 
 	// Compare new value to old and generate appropriate commands
 	public parseInput(val: string): void {
-		// Handle live update toggling
-		if (this.nonLive) {
-			this.bufferedText = val
-			return
-		}
-
-		// Remove any buffered quote, as we are committing now
-		this.bufferedText = ""
-
 		const old = this.inputBody
 
 		// Rendering hack shenanigans - ignore
@@ -110,21 +90,21 @@ export default class FormModel extends Post {
 			return this.parseInput(trimmed)
 		}
 
-		if (!this.sentAllocRequest) {
+		if (postSM.state === postState.draft) {
 			this.requestAlloc(val, null)
 		} else if (lenDiff === 1 && val.slice(0, -1) === old) {
-			this.commitChar(val.slice(-1))
+			// Commit a character appendage to the end of the line to the server
+			const char = val.slice(-1);
+			this.inputBody += char
+			this.send(message.append, char.codePointAt(0))
 		} else if (lenDiff === -1 && old.slice(0, -1) === val) {
-			this.commitBackspace()
+			// Send a message about removing the last character of the line to
+			// the server
+			this.inputBody = this.inputBody.slice(0, -1)
+			this.send(message.backspace, null)
 		} else {
 			this.commitSplice(val)
 		}
-	}
-
-	// Commit a character appendage to the end of the line to the server
-	private commitChar(char: string) {
-		this.inputBody += char
-		this.send(message.append, char.codePointAt(0))
 	}
 
 	// Optionally buffer all data, if currently disconnected
@@ -132,13 +112,6 @@ export default class FormModel extends Post {
 		if (postSM.state !== postState.halted) {
 			send(type, msg)
 		}
-	}
-
-	// Send a message about removing the last character of the line to the
-	// server
-	private commitBackspace() {
-		this.inputBody = this.inputBody.slice(0, -1)
-		this.send(message.backspace, null)
 	}
 
 	// Commit any other input change that is not an append or backspace
@@ -163,19 +136,9 @@ export default class FormModel extends Post {
 
 	// Close the form and revert to regular post. Cancel also erases all post
 	// contents.
-	public commitClose(cancel: boolean) {
-		// It is possible to have never committed anything, if all you have in
-		// the body is one quote
-		if (this.bufferedText) {
-			this.nonLive = false
-			this.parseInput(this.bufferedText)
-		}
-
+	public commitClose() {
 		this.abandon()
-		this.send(message.closePost, !!cancel) // Ensure boolean type
-		if (cancel) {
-			this.view.hide()
-		}
+		this.send(message.closePost, null)
 	}
 
 	// Turn post form into a regular post, because it has expired after a
@@ -187,9 +150,9 @@ export default class FormModel extends Post {
 
 	// Add a link to the target post in the input
 	public addReference(id: number, sel: string) {
-		let s = ""
-		const old = this.bufferedText || this.inputBody,
-			newLine = !old || old.endsWith("\n")
+		let s = "";
+		const old = this.view.input.value;
+		const newLine = !old || old.endsWith("\n");
 
 		if (sel) {
 			if (!newLine) {
@@ -212,55 +175,19 @@ export default class FormModel extends Post {
 			}
 		}
 
-		// Don't commit a quote, if it is the first input in a post
-		let commit = true
-		if (!this.sentAllocRequest && !this.bufferedText) {
-			commit = false
-		}
-		this.view.replaceText(old + s, commit)
-
-		// Makes sure the quote is committed later, if it is the first input in
-		// the post
-		if (!commit) {
-			this.bufferedText = s
-		}
-	}
-
-	// Commit a post made with live updates disabled
-	public async commitNonLive() {
-		let files: FileList
-		if (this.view.upload) {
-			files = this.view.upload.input.files
-		}
-		if (!this.bufferedText && !files.length) {
-			return postSM.feed(postEvent.done)
-		}
-
-		this.sentAllocRequest = true
-
-		const req = newAllocRequest()
-		if (this.view.upload && files.length) {
-			req["image"] = await this.view.upload.uploadFile(files[0])
-		}
-		if (this.bufferedText) {
-			req["body"] = this.bufferedText
-		}
-
-		send(message.insertPost, req)
-		handlers[message.postID] = this.receiveID(false)
+		// Don't commit a quote, if it is the only input in a post
+		this.view.replaceText(old + s,
+			postSM.state !== postState.draft || old.length !== 0)
 	}
 
 	// Returns a function, that handles a message from the server, containing
 	// the ID of the allocated post.
-	// alloc specifies, if an alloc event should be fired on the state machine.
-	private receiveID(alloc: boolean): (id: number) => void {
+	private receiveID(): (id: number) => void {
 		return (id: number) => {
 			this.id = id
 			this.op = page.thread
 			this.seenOnce = true
-			if (alloc) {
-				postSM.feed(postEvent.alloc)
-			}
+			postSM.feed(postEvent.alloc)
 			storeSeenPost(this.id, this.op)
 			storeMine(this.id, this.op)
 			posts.add(this)
@@ -269,51 +196,38 @@ export default class FormModel extends Post {
 	}
 
 	// Request allocation of a draft post to the server
-	private requestAlloc(body: string | null, image: FileData | null) {
-		const req = newAllocRequest()
-
-		this.view.setEditing(true)
-		this.nonLive = false
-		this.sentAllocRequest = true
-
-		req["open"] = !this.nonLive
+	private requestAlloc(body: string = this.view.input.value,
+		image: FileData | null,
+	) {
+		const req = newAllocRequest();
+		req["open"] = true;
 		if (body) {
-			req["body"] = body
-			this.inputBody = body
-		} else if (this.bufferedText) { // Submitting an image and quote
-			req["body"] = this.inputBody = this.bufferedText
-			this.bufferedText = ""
+			req["body"] = this.inputBody = body;
 		}
 		if (image) {
-			req["image"] = image
+			req["image"] = image;
 		}
 
-		send(message.insertPost, req)
-		handlers[message.postID] = this.receiveID(true)
+		send(message.insertPost, req);
+		postSM.feed(postEvent.sentAllocRequest);
+		handlers[message.postID] = this.receiveID();
 	}
 
 	// Handle draft post allocation
 	public onAllocation(data: PostData) {
-		// May sometimes be called multiple times, because of reconnects
-		if (this.isAllocated) {
-			return
+		extend(this, data);
+		this.view.renderAlloc();
+		if (this.image) {
+			this.insertImage(this.image);
 		}
-
-		this.isAllocated = true
-		extend(this, data)
-		this.view.renderAlloc()
-		if (data.image) {
-			this.insertImage(this.image)
-		}
-		if (this.nonLive) {
-			this.propagateLinks()
-			postSM.feed(postEvent.done)
+		if (postSM.state !== postState.alloc) {
+			this.propagateLinks();
 		}
 	}
 
 	// Upload the file and request its allocation
 	public async uploadFile(files?: FileList | File) {
-		if (boardConfig.textOnly) {
+		if (boardConfig.textOnly || this.image) {
 			return
 		}
 		if (files && this.view.upload) {
@@ -321,17 +235,6 @@ export default class FormModel extends Post {
 			if (files instanceof FileList) {
 				(this.view.upload.input.files as any) = files;
 			}
-		}
-
-		// Need a captcha and none submitted. Protects from no-captcha drops
-		// allocating post too soon.
-		if (this.needCaptcha || this.nonLive) {
-			return
-		}
-
-		// Already have image or not in live mode
-		if (this.image) {
-			return
 		}
 
 		const data = await this.view.upload
@@ -342,7 +245,7 @@ export default class FormModel extends Post {
 			return
 		}
 
-		if (!this.sentAllocRequest) {
+		if (postSM.state === postState.draft) {
 			this.requestAlloc(null, data)
 		} else {
 			send(message.insertImage, data)

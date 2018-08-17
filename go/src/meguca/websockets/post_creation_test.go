@@ -507,7 +507,7 @@ func BenchmarkPostCreation(b *testing.B) {
 		if err := cl.insertPost(marshalJSON(b, req)); err != nil {
 			b.Fatal(err)
 		}
-		if err := cl._closePost(); err != nil {
+		if err := cl.closePost(); err != nil {
 			b.Fatal(err)
 		}
 	}

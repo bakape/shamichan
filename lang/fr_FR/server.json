@@ -44,10 +44,6 @@
 			"Message",
 			"Votre message"
 		],
-		"cancel": [
-			"Cancel Post",
-			"Close open post without saving"
-		],
 		"captcha": [
 			"Captcha",
 			"Demande aux utilisateurs de compléter un captcha pour certaines tâches comme l'enregistrement ou la création d'un sujet"
@@ -212,10 +208,6 @@
 			"Liens externes",
 			"Ajouter, supprimer ou éditer les liens de type >>>/4chan/"
 		],
-		"live": [
-			"Direct",
-			"Permet aux utilisateurs de vous voir taper votre message lettre par lettre"
-		],
 		"mascot": [
 			"Mascotte personnalisée",
 			"Active la mascotte personnalisée"
@@ -263,10 +255,6 @@
 		"newPost": [
 			"Commencer un message",
 			"Commence un nouveau message"
-		],
-		"nonLive": [
-			"Différé",
-			"Désactive la synchronisation en direct des messages"
 		],
 		"notice": [
 			"Infos",
@@ -472,7 +460,6 @@
 		"id": "ID",
 		"identity": "Identité",
 		"illegal": "Contenu illégal",
-		"live": "Direct",
 		"loadCaptcha": "Charger le captcha",
 		"loadingSpecs": "Accepte les fichiers GIF ou WEBM sans son (dimension : 300x300, taille : 100 KB).",
 		"logout": "Déconnexion",

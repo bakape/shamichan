@@ -19,22 +19,6 @@ export async function postJSON(url: string, body: any): Promise<Response> {
 	})
 }
 
-// Send a POST request with a text body to the server
-export async function postText(
-	url: string,
-	text: string,
-): Promise<[string, string]> {
-	const res = await fetch(url, {
-		method: "POST",
-		body: text,
-	})
-	const rt = await res.text()
-	if (res.status === 200) {
-		return [rt, ""]
-	}
-	return ["", rt]
-}
-
 // Avoids stale fetches from the browser cache
 export async function uncachedGET(url: string): Promise<Response> {
 	const h = new Headers()

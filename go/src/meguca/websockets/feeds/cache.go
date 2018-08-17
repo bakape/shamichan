@@ -20,7 +20,6 @@ type threadCache struct {
 type threadMeta struct {
 	id        uint64
 	Sticky    bool   `json:"sticky"`
-	NonLive   bool   `json:"nonLive"`
 	Locked    bool   `json:"locked"`
 	PostCtr   uint32 `json:"postCtr"`
 	ImageCtr  uint32 `json:"imageCtr"`
@@ -38,7 +37,6 @@ func newThreadCache(t common.Thread) threadCache {
 		threadMeta: threadMeta{
 			id:        t.ID,
 			Sticky:    t.Sticky,
-			NonLive:   t.NonLive,
 			Locked:    t.Locked,
 			PostCtr:   t.PostCtr,
 			ImageCtr:  t.ImageCtr,
@@ -154,8 +152,6 @@ func (c *threadCache) encodeThread(last100 bool) []byte {
 	b := make([]byte, 0, 1<<10)
 	b = append(b, `30{"sticky":`...)
 	b = strconv.AppendBool(b, c.Sticky)
-	b = append(b, `,"nonLive":`...)
-	b = strconv.AppendBool(b, c.NonLive)
 	b = append(b, `,"locked":`...)
 	b = strconv.AppendBool(b, c.Locked)
 	b = append(b, `,"deleted":`...)

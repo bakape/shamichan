@@ -9,10 +9,10 @@
 
 const static int db_version = 11;
 
-// Database has errored and all future calls should be ignored
-static bool has_errored = false;
+// Database has erred and all future calls should be ignored
+static bool has_erred = false;
 
-// Has completed or errored out of loading the database at least once
+// Has completed or erred out of loading the database at least once
 static bool has_loaded = false;
 
 void open_db(WaitGroup* wg)
@@ -149,7 +149,7 @@ void open_db(WaitGroup* wg)
 
 void load_post_ids(WaitGroup* wg)
 {
-    if (!threads.size() || has_errored) {
+    if (!threads.size() || has_erred) {
         return wg->done();
     }
 

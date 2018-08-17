@@ -1,10 +1,5 @@
 {
-	"forms": {
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
-		]
-	},
+	"forms": {},
 	"plurals": {
 		"day": [
 			"day",

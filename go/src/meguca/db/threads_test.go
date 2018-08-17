@@ -15,12 +15,6 @@ func TestThreadBools(t *testing.T) {
 		t.Fatal(err)
 	}
 	AssertDeepEquals(t, false, locked)
-
-	nonLive, err := CheckThreadNonLive(1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	AssertDeepEquals(t, false, nonLive)
 }
 
 func TestFilterExistingThreads(t *testing.T) {

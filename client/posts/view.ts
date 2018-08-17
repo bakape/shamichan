@@ -22,9 +22,6 @@ export default class PostView extends ImageHandler {
             if (model.editing) {
                 attrs.class += ' editing'
             }
-            if (model.isEmpty()) {
-                attrs.class += " hidden"
-            }
             if (model.id === model.op) {
                 attrs.class += " op"
             }
@@ -184,13 +181,13 @@ export default class PostView extends ImageHandler {
         // minimize DOM mutations when there's nothing to update
         const currentTitle = el.getAttribute("title")
         const newTitle = options.relativeTime ? abs : rel
-        if(currentTitle != newTitle) {
-          el.setAttribute("title", newTitle)
+        if (currentTitle != newTitle) {
+            el.setAttribute("title", newTitle)
         }
         const currentText = el.textContent;
         const newText = options.relativeTime ? rel : abs;
-        if(currentText != newText) {
-          el.textContent = newText
+        if (currentText != newText) {
+            el.textContent = newText
         }
     }
 
@@ -329,26 +326,26 @@ export default class PostView extends ImageHandler {
 }
 
 function updateTimeTooltip(event: MouseEvent) {
-	// tooltip only needs updates when the text node contains absolute time
-	if(options.relativeTime) {
-		return
-	}
-	if(!(event.target instanceof HTMLElement)) {
-		return
-	}
-	const target = event.target
-	const post = target.closest("article[id^=p]")
-	const postId = post && post.id.match(/\d+/)[0] as any|0
-	const model = postId && posts.get(postId)
-	const view = model && model.view
-	if(!view) {
-		return;
-	}
+    // tooltip only needs updates when the text node contains absolute time
+    if (options.relativeTime) {
+        return
+    }
+    if (!(event.target instanceof HTMLElement)) {
+        return
+    }
+    const target = event.target
+    const post = target.closest("article[id^=p]")
+    const postId = post && post.id.match(/\d+/)[0] as any | 0
+    const model = postId && posts.get(postId)
+    const view = model && model.view
+    if (!view) {
+        return;
+    }
 
-	view.renderTime();
+    view.renderTime();
 }
 
 on(document, "mouseover", updateTimeTooltip, {
-	passive: true,
-	selector: "time",
+    passive: true,
+    selector: "time",
 })

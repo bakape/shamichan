@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
 	"meguca/parser"
 	"meguca/util"
 	"time"
-	"unicode"
 	"unicode/utf8"
 )
 
@@ -131,17 +129,14 @@ func (c *Client) appendRune(data []byte) (err error) {
 // n specifies the number of characters updated.
 func (c *Client) updateBody(msg []byte, n int) error {
 	c.feed.SetOpenBody(c.post.id, c.post.body, msg)
-	err := c.incrementSpamScore(uint(n) * config.Get().CharScore)
-	if err != nil {
-		return err
-	}
+	c.incrementSpamScore(uint(n) * config.Get().CharScore)
 	return db.SetOpenBody(c.post.id, c.post.body)
 }
 
 // Increment the spam score for this IP by score. If the client requires a new
 // solved captcha, send a notification.
-func (c *Client) incrementSpamScore(score uint) error {
-	return auth.IncrementSpamScore(c.ip, score)
+func (c *Client) incrementSpamScore(score uint) {
+	db.IncrementSpamScore(c.ip, time.Duration(score)*time.Millisecond)
 }
 
 // Remove one character from the end of the line in the open post
@@ -172,51 +167,20 @@ func (c *Client) backspace() error {
 }
 
 // Close an open post and parse the last line, if needed.
-func (c *Client) closePost(data []byte) (err error) {
+func (c *Client) closePost() (err error) {
 	if c.post.id == 0 {
 		return errNoPostOpen
 	}
 
-	var cancel bool
-	err = decodeMessage(data, &cancel)
-	if err != nil {
-		return
-	}
-	if cancel {
-		err = c.clearPost()
-		if err != nil {
-			return
-		}
-	}
-	return c._closePost()
-}
-
-// Used to close posts internally without parsing a message
-func (c *Client) _closePost() (err error) {
 	var (
 		links []common.Link
 		com   []common.Command
 	)
-
 	if c.post.len != 0 {
-		// If post has noting but whitespace, remove all text
-		hasText := false
-		for _, r := range c.post.body {
-			if !unicode.IsSpace(rune(r)) {
-				hasText = true
-				break
-			}
-		}
-		if !hasText {
-			err = c.clearText()
-			if err != nil {
-				return
-			}
-		} else {
-			links, com, err = parser.ParseBody(c.post.body, c.post.board, c.post.op, c.post.id, c.ip, false)
-			if err != nil {
-				return
-			}
+		links, com, err = parser.ParseBody(c.post.body, c.post.board, c.post.op,
+			c.post.id, c.ip, false)
+		if err != nil {
+			return
 		}
 	}
 
@@ -226,7 +190,6 @@ func (c *Client) _closePost() (err error) {
 	}
 
 	err = CheckRouletteBan(com, c.post.board, c.post.op, c.post.id)
-
 	c.post = openPost{}
 	return
 }
@@ -237,7 +200,7 @@ func CheckRouletteBan(commands []common.Command, board string, thread uint64, id
 		if command.Type == common.Roulette {
 			if command.Roulette[0] == 1 {
 				err := db.Ban(board, "lost at #roulette", "system", time.Now().Add(time.Second*30), false, id)
-				
+
 				if err != nil {
 					return err
 				}
@@ -249,40 +212,6 @@ func CheckRouletteBan(commands []common.Command, board string, thread uint64, id
 		}
 	}
 	return nil
-}
-
-// Clear all open post contents
-func (c *Client) clearPost() (err error) {
-	if c.post.len != 0 {
-		err = c.clearText()
-		if err != nil {
-			return
-		}
-	}
-	if c.post.hasImage {
-		err = db.DeleteOwnedImage(c.post.id)
-		if err != nil {
-			return
-		}
-		var msg []byte
-		msg, err = common.EncodeMessage(common.MessageDeleteImage, c.post.id)
-		if err != nil {
-			return
-		}
-		c.feed.DeleteImage(c.post.id, msg)
-		c.post.hasImage = false
-	}
-	return
-}
-
-// Clear all text in open post
-func (c *Client) clearText() error {
-	return c._spliceText(spliceRequest{
-		spliceCoords: spliceCoords{
-			Start: 0,
-			Len:   uint(c.post.len),
-		},
-	})
 }
 
 // Splice the text in the open post
@@ -302,12 +231,7 @@ func (c *Client) spliceText(data []byte) error {
 	if err != nil {
 		return err
 	}
-	return c._spliceText(req)
-}
 
-// Separate function, so we can call splicing internally without encoding a
-// message
-func (c *Client) _spliceText(req spliceRequest) (err error) {
 	// Validate
 	switch {
 	case err != nil:
@@ -384,6 +308,8 @@ func (c *Client) _spliceText(req spliceRequest) (err error) {
 }
 
 // Insert and image into an existing open post
+// Note: Spam score is now incremented on image thumbnailing, not assignment to
+// post.
 func (c *Client) insertImage(data []byte) (err error) {
 	has, err := c.hasPost()
 	switch {
@@ -433,7 +359,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 	}
 	c.feed.InsertImage(c.post.id, img, msg)
 
-	return c.incrementSpamScore(config.Get().ImageScore)
+	return
 }
 
 // Spoiler an already inserted image in an unclosed post

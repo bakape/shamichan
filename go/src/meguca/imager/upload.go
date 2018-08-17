@@ -86,13 +86,24 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 // Apply security restrictions to uploader
-// TODO: Needs to consider spam score
 func validateUploader(r *http.Request) (err error) {
 	ip, err := auth.GetIP(r)
 	if err != nil {
 		return
 	}
 	err = db.IsBanned("all", ip)
+	if err != nil {
+		return
+	}
+	need, err := db.NeedCaptcha(ip)
+	if err != nil {
+		return
+	}
+	if need {
+		return common.StatusError{errors.New("captcha required"), 403}
+	}
+	db.IncrementSpamScore(ip,
+		time.Duration(config.Get().ImageScore)*time.Millisecond)
 	return
 }
 

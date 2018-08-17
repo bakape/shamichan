@@ -27,7 +27,6 @@ var (
 
 // ThreadCreationRequest contains data for creating a new thread
 type ThreadCreationRequest struct {
-	NonLive bool
 	ReplyCreationRequest
 	Subject, Board string
 }
@@ -106,7 +105,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 			}
 		}
 
-		err = db.InsertThread(tx, subject, conf.NonLive || req.NonLive, post)
+		err = db.InsertThread(tx, subject, post)
 		if err != nil {
 			return
 		}
@@ -146,9 +145,9 @@ func CreatePost(
 		err = db.AuthenticateCaptcha(req.Captcha, ip)
 		if err != nil {
 			return
-		} else if config.Get().Captcha {
 			// Captcha solved - reset spam score.
-			auth.ResetSpamScore(ip)
+		} else if err = db.ResetSpamScore(ip); err != nil {
+			return
 		}
 	}
 
@@ -172,16 +171,6 @@ func CreatePost(
 	case locked:
 		err = common.StatusError{errors.New("thread is locked"), 400}
 		return
-	}
-
-	// Disable live updates, if thread is non-live
-	if req.Open {
-		var disabled bool
-		disabled, err = db.CheckThreadNonLive(op)
-		if err != nil {
-			return
-		}
-		req.Open = !disabled
 	}
 
 	post, err = constructPost(req, conf, ip)
@@ -227,14 +216,24 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 
+	needCaptcha, err := db.NeedCaptcha(c.ip)
+	if err != nil {
+		return
+	}
+	if needCaptcha {
+		return c.sendMessage(common.MessageCaptcha, 0)
+	}
+
 	var req ReplyCreationRequest
 	err = decodeMessage(data, &req)
 	if err != nil {
 		return
 	}
+	// Replies created through websockets can only be open
+	req.Open = true
 
 	_, op, board := feeds.GetSync(c)
-	post, msg, err := CreatePost(op, board, c.ip, !auth.CanPost(c.ip), req)
+	post, msg, err := CreatePost(op, board, c.ip, false, req)
 	if err != nil {
 		return
 	}
@@ -260,11 +259,9 @@ func (c *Client) insertPost(data []byte) (err error) {
 	}
 
 	conf := config.Get()
-	score := conf.PostCreationScore + conf.CharScore*uint(c.post.len)
-	if post.Image != nil {
-		score += conf.ImageScore
-	}
-	return c.incrementSpamScore(score)
+	c.incrementSpamScore(conf.PostCreationScore +
+		conf.CharScore*uint(c.post.len))
+	return
 }
 
 // Reset the IP's spam score, by submitting a captcha
@@ -279,14 +276,13 @@ func (c *Client) submitCaptcha(data []byte) (err error) {
 	if err != nil {
 		return
 	}
-	auth.ResetSpamScore(c.ip)
-	return nil
+	return db.ResetSpamScore(c.ip)
 }
 
 // If the client has a previous post, close it silently
 func (c *Client) closePreviousPost() error {
 	if c.post.id != 0 {
-		return c._closePost()
+		return c.closePost()
 	}
 	return nil
 }

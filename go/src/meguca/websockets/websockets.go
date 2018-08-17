@@ -284,15 +284,6 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 		if err != nil {
 			return err
 		}
-
-		// If the IP needs a captcha on the next post allocation, notify the
-		// client
-		if !auth.CanPost(c.ip) {
-			err = c.sendMessage(common.MessageCaptcha, 0)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	return c.runHandler(typ, msg)
@@ -329,7 +320,7 @@ func (c *Client) hasPost() (bool, error) {
 	case c.post.id == 0:
 		return false, errNoPostOpen
 	case c.post.time < time.Now().Add(-time.Minute*29).Unix():
-		return false, c._closePost()
+		return false, c.closePost()
 	default:
 		return true, nil
 	}

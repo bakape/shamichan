@@ -178,6 +178,7 @@ func createRouter() http.Handler {
 
 		// Captcha API
 		captcha := api.NewGroup("/captcha")
+		captcha.POST("", authenticateCaptcha)
 		captcha.GET("/new", db.NewCaptchaID)
 		captcha.GET("/image/*path", db.ServeCaptcha)
 

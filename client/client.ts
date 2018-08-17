@@ -45,7 +45,7 @@ export function insertPost(data: PostData) {
 
 	const existing = posts.get(data.id)
 	if (existing) {
-		if (existing instanceof FormModel && !existing.isAllocated) {
+		if (existing instanceof FormModel) {
 			existing.onAllocation(data)
 			incrementPostCount(true, "image" in data)
 		}

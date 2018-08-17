@@ -14,7 +14,7 @@ export abstract class AccountForm extends FormView {
 		this.initCaptcha()
 	}
 
-	// Render a simple publically available form, that does not require to
+	// Render a simple publicly available form, that does not require to
 	// submit any private information
 	protected async renderPublicForm(url: string) {
 		const res = await uncachedGET(url)

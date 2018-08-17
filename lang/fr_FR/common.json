@@ -1,10 +1,5 @@
 {
-	"forms": {
-		"nonLive": [
-			"Différé",
-			"Désactive la synchronisation en direct des messages"
-		]
-	},
+	"forms": {},
 	"plurals": {
 		"day": [
 			"jour",

@@ -8,6 +8,7 @@ interface FormAttrs extends ViewAttrs {
 
 // Generic input form view with optional captcha support
 abstract class FormView extends View<null> {
+	public el: HTMLFormElement
 	protected captcha: CaptchaView
 	private lazyCaptcha: boolean
 

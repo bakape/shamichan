@@ -6,8 +6,6 @@ import { setAttrs, importTemplate, atBottom, scrollToBottom } from "../../util"
 import { postSM, postEvent, postState } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
-import { CaptchaView } from "../../ui"
-import { message, send } from "../../connection"
 
 // Element at the bottom of the thread to keep the fixed reply form from
 // overlapping any other posts, when scrolled till bottom
@@ -16,11 +14,10 @@ let bottomSpacer: HTMLElement
 // Post creation and update view
 export default class FormView extends PostView {
     public model: FormModel
-    private input: HTMLTextAreaElement
+    public input: HTMLTextAreaElement
     private observer: MutationObserver
     private previousHeight: number
     public upload: UploadForm
-    public captcha: CaptchaView
 
     constructor(model: Post) {
         super(model, null)
@@ -46,10 +43,7 @@ export default class FormView extends PostView {
             this.onInput()
         })
         this.onClick({
-            "input[name=\"done\"]": () =>
-                postSM.feed(postEvent.done, false),
-            "input[name=\"cancel\"]": () =>
-                postSM.feed(postEvent.done, true),
+            "input[name=\"done\"]": postSM.feeder(postEvent.done),
         })
 
         if (!boardConfig.textOnly) {
@@ -60,61 +54,12 @@ export default class FormView extends PostView {
                 }
             })
         }
-        this.inputElement("done").hidden = !this.model.nonLive
 
         const bq = this.el.querySelector("blockquote")
         bq.innerHTML = ""
         bq.append(this.input)
-
-        const captcha = this.el.querySelector(".antispam-captcha")
-        if (this.model.needCaptcha) {
-            if (captcha) {
-                this.renderCaptcha(captcha)
-            } else {
-                // Page's captcha setting has desynced from the server
-                location.reload(true)
-            }
-        } else {
-            if (captcha) {
-                captcha.style.display = "none"
-            }
-            requestAnimationFrame(() =>
-                this.input.focus())
-        }
-    }
-
-    // Request a captcha to be filled out, before the post is submitted
-    private renderCaptcha(el: HTMLElement) {
-        const cont = el.querySelector(".captcha-container")
-        this.captcha = new CaptchaView(cont)
-
-        // Hide all other post controls till the captcha is submitted
-        const controls = [
-            this.el.querySelector(".post-container"),
-            this.el.querySelector("#post-controls"),
-        ]
-        for (let el of controls) {
-            el.style.display = "none"
-        }
-
-        el.addEventListener("submit", e => {
-            e.preventDefault()
-            e.stopImmediatePropagation()
-
-            send(message.captcha, this.captcha.data())
-
-            el.remove()
-            for (let el of controls) {
-                el.style.display = ""
-            }
-            this.input.focus()
-            postSM.feed(postEvent.captchaSolved)
-        })
-
         requestAnimationFrame(() =>
-            (cont
-                .querySelector("input[type=number]") as HTMLElement)
-                .focus())
+            this.input.focus());
     }
 
     // Render a temporary view of the identity fields, so the user can see what
@@ -163,7 +108,7 @@ export default class FormView extends PostView {
 
         document.getElementById("thread-container").append(this.el)
         this.resizeSpacer()
-        this.setEditing(!this.model.nonLive)
+        this.setEditing(true);
     }
 
     // Resize bottomSpacer to the same top position as this post
@@ -183,8 +128,10 @@ export default class FormView extends PostView {
     }
 
     private removeUploadForm() {
-        this.upload.input.remove()
-        this.upload.status.remove()
+        if (this.upload) {
+            this.upload.input.remove();
+            this.upload.status.remove();
+        }
     }
 
     // Handle input events on this.input
@@ -284,7 +231,7 @@ export default class FormView extends PostView {
 
     // Lock the post form after a critical error occurs
     public renderError() {
-        this.el.classList.add("errored")
+        this.el.classList.add("erred")
         this.input.setAttribute("contenteditable", "false")
     }
 
@@ -317,6 +264,9 @@ export default class FormView extends PostView {
         this.resizeInput()
         this.removeUploadForm()
 
+        if (postSM.state !== postState.alloc) {
+            return;
+        }
         const { spoiler } = this.upload
         if (this.model.image.spoiler) {
             spoiler.remove()

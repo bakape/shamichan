@@ -40,15 +40,13 @@ func ValidateOP(id uint64, board string) (valid bool, err error) {
 }
 
 // InsertThread inserts a new thread into the database.
-func InsertThread(tx *sql.Tx, subject string, nonLive bool, p Post) (
+func InsertThread(tx *sql.Tx, subject string, p Post) (
 	err error,
 ) {
 	err = withTransaction(tx,
 		sq.Insert("threads").
-			Columns(
-				"board", "id", "replyTime", "bumpTime", "subject", "nonLive",
-			).
-			Values(p.Board, p.ID, p.Time, p.Time, subject, nonLive),
+			Columns("board", "id", "replyTime", "bumpTime", "subject").
+			Values(p.Board, p.ID, p.Time, p.Time, subject),
 	).Exec()
 	if err != nil {
 		return
@@ -109,11 +107,6 @@ func queryThreadBool(id uint64, key string) (val bool, err error) {
 		QueryRow().
 		Scan(&val)
 	return
-}
-
-// CheckThreadNonLive checks, if a thread has live post updates disabled
-func CheckThreadNonLive(id uint64) (bool, error) {
-	return queryThreadBool(id, "nonLive")
 }
 
 // CheckThreadLocked checks, if a thread has been locked by a moderator
