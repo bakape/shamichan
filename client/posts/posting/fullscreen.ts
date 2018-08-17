@@ -11,7 +11,11 @@ function onFullscreen(e: Event) {
             e.stopPropagation()
             e.preventDefault()
 
-            if (el.hasAttribute("HQ")) {
+            if (
+                el.hasAttribute("src") ||
+                el.hasAttribute("HQ") ||
+                !el.querySelector("source").getAttribute("src").includes("googlevideo")
+            ) {
                 return
             }
 
