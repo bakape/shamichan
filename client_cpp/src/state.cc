@@ -26,7 +26,7 @@ typedef std::unordered_map<unsigned long, std::map<unsigned long, LinkData>>
 // post models
 static void extract_backlinks(const Post& p, Backlinks& backlinks)
 {
-    for (auto && [ target_id, _ ] : p.links) {
+    for (auto&& [target_id, _] : p.links) {
         backlinks[target_id][p.id] = { false, p.op, p.board };
     }
 }
@@ -72,7 +72,7 @@ void load_posts(std::string_view data)
     }
 
     // Assign backlinks to their post models
-    for (auto[target_id, data] : backlinks) {
+    for (auto [target_id, data] : backlinks) {
         if (posts.count(target_id)) {
             posts.at(target_id).backlinks = std::move(data);
         }
@@ -123,7 +123,6 @@ BoardConfig::BoardConfig(nlohmann::json&& j)
     read_only = j["readOnly"];
     text_only = j["textOnly"];
     forced_anon = j["forcedAnon"];
-    non_live = j["nonLive"];
     rb_text = j["rbText"];
     pyu = j["pyu"];
     title = j["title"];
@@ -260,9 +259,6 @@ ThreadDecoder::ThreadDecoder(json& j)
     OPT_DECODE(deleted)
     OPT_DECODE(locked)
     OPT_DECODE(sticky)
-    if (j.count("nonLive")) {
-        non_live = j["nonLive"];
-    }
 
     // Redundant field on thread pages
     id = page.thread ? page.thread : (unsigned long)(j["id"]);

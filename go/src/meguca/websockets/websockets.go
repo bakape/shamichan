@@ -320,7 +320,7 @@ func (c *Client) hasPost() (bool, error) {
 	case c.post.id == 0:
 		return false, errNoPostOpen
 	case c.post.time < time.Now().Add(-time.Minute*29).Unix():
-		return false, c._closePost()
+		return false, c.closePost()
 	default:
 		return true, nil
 	}

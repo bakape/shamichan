@@ -41,7 +41,6 @@ interface Options extends ChangeEmitter {
 	newPost: number
 	toggleSpoiler: number
 	done: number
-	cancel: number
 	expandAll: number
 	workMode: number
 	meguTVShortcut: number

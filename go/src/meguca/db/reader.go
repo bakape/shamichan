@@ -35,7 +35,7 @@ const (
 		where t.id = posts.op
 			and posts.SHA1 is not null
 	),
-	t.replyTime, t.bumpTime, t.subject, t.nonLive, t.locked, ` + postSelectsSQL
+	t.replyTime, t.bumpTime, t.subject, t.locked, ` + postSelectsSQL
 
 	getOPSQL = `
 	select ` + threadSelectsSQL + `
@@ -224,7 +224,7 @@ func scanOP(r rowScanner) (t common.Thread, err error) {
 	args := make([]interface{}, 0, 37)
 	args = append(args,
 		&t.Sticky, &t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
-		&t.Subject, &t.NonLive, &t.Locked,
+		&t.Subject, &t.Locked,
 	)
 	args = append(args, post.ScanArgs()...)
 	args = append(args, img.ScanArgs()...)

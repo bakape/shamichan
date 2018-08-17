@@ -7,7 +7,7 @@ import { postSM, postEvent, postState } from "."
 import { extend } from "../../util"
 import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
-import identity, { newAllocRequest } from "./identity"
+import { newAllocRequest } from "./identity"
 
 // Form Model of an OP post
 export default class FormModel extends Post {
@@ -65,11 +65,6 @@ export default class FormModel extends Post {
 
 	// Compare new value to old and generate appropriate commands
 	public parseInput(val: string): void {
-		// Handle live update toggling
-		if (postSM.state === postState.draft && !identity.live) {
-			return
-		}
-
 		const old = this.inputBody
 
 		// Rendering hack shenanigans - ignore
@@ -141,12 +136,9 @@ export default class FormModel extends Post {
 
 	// Close the form and revert to regular post. Cancel also erases all post
 	// contents.
-	public commitClose(cancel: boolean) {
+	public commitClose() {
 		this.abandon()
-		this.send(message.closePost, !!cancel) // Ensure boolean type
-		if (cancel) {
-			this.view.hide()
-		}
+		this.send(message.closePost, null)
 	}
 
 	// Turn post form into a regular post, because it has expired after a
@@ -188,28 +180,6 @@ export default class FormModel extends Post {
 			postSM.state !== postState.draft || old.length !== 0)
 	}
 
-	// Commit a post made with live updates disabled
-	public async commitNonLive() {
-		let files: FileList
-		if (this.view.upload) {
-			files = this.view.upload.input.files
-		}
-		const text = this.view.input.value;
-		if (!text.length && !files.length) {
-			return postSM.feed(postEvent.done);
-		}
-
-		const req = newAllocRequest()
-		if (this.view.upload && files.length) {
-			req["image"] = await this.view.upload.uploadFile(files[0])
-		}
-		if (text) {
-			req["body"] = text;
-		}
-		send(message.insertPost, req);
-		handlers[message.postID] = this.receiveID();
-	}
-
 	// Returns a function, that handles a message from the server, containing
 	// the ID of the allocated post.
 	private receiveID(): (id: number) => void {
@@ -246,19 +216,18 @@ export default class FormModel extends Post {
 	// Handle draft post allocation
 	public onAllocation(data: PostData) {
 		extend(this, data);
-		if (postSM.state === postState.alloc) {
-			this.view.renderAlloc();
-			if (this.image) {
-				this.insertImage(this.image);
-			}
-		} else {
+		this.view.renderAlloc();
+		if (this.image) {
+			this.insertImage(this.image);
+		}
+		if (postSM.state !== postState.alloc) {
 			this.propagateLinks();
 		}
 	}
 
 	// Upload the file and request its allocation
 	public async uploadFile(files?: FileList | File) {
-		if (boardConfig.textOnly) {
+		if (boardConfig.textOnly || this.image) {
 			return
 		}
 		if (files && this.view.upload) {
@@ -266,11 +235,6 @@ export default class FormModel extends Post {
 			if (files instanceof FileList) {
 				(this.view.upload.input.files as any) = files;
 			}
-		}
-
-		// Already have image or not in live mode
-		if (this.image || !identity.live) {
-			return
 		}
 
 		const data = await this.view.upload

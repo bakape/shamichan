@@ -27,7 +27,6 @@ var (
 
 // ThreadCreationRequest contains data for creating a new thread
 type ThreadCreationRequest struct {
-	NonLive bool
 	ReplyCreationRequest
 	Subject, Board string
 }
@@ -106,7 +105,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 			}
 		}
 
-		err = db.InsertThread(tx, subject, conf.NonLive || req.NonLive, post)
+		err = db.InsertThread(tx, subject, post)
 		if err != nil {
 			return
 		}
@@ -174,16 +173,6 @@ func CreatePost(
 		return
 	}
 
-	// Disable live updates, if thread is non-live
-	if req.Open {
-		var disabled bool
-		disabled, err = db.CheckThreadNonLive(op)
-		if err != nil {
-			return
-		}
-		req.Open = !disabled
-	}
-
 	post, err = constructPost(req, conf, ip)
 	if err != nil {
 		return
@@ -240,6 +229,8 @@ func (c *Client) insertPost(data []byte) (err error) {
 	if err != nil {
 		return
 	}
+	// Replies created through websockets can only be open
+	req.Open = true
 
 	_, op, board := feeds.GetSync(c)
 	post, msg, err := CreatePost(op, board, c.ip, false, req)
@@ -291,7 +282,7 @@ func (c *Client) submitCaptcha(data []byte) (err error) {
 // If the client has a previous post, close it silently
 func (c *Client) closePreviousPost() error {
 	if c.post.id != 0 {
-		return c._closePost()
+		return c.closePost()
 	}
 	return nil
 }

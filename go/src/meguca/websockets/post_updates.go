@@ -11,7 +11,6 @@ import (
 	"meguca/parser"
 	"meguca/util"
 	"time"
-	"unicode"
 	"unicode/utf8"
 )
 
@@ -168,51 +167,20 @@ func (c *Client) backspace() error {
 }
 
 // Close an open post and parse the last line, if needed.
-func (c *Client) closePost(data []byte) (err error) {
+func (c *Client) closePost() (err error) {
 	if c.post.id == 0 {
 		return errNoPostOpen
 	}
 
-	var cancel bool
-	err = decodeMessage(data, &cancel)
-	if err != nil {
-		return
-	}
-	if cancel {
-		err = c.clearPost()
-		if err != nil {
-			return
-		}
-	}
-	return c._closePost()
-}
-
-// Used to close posts internally without parsing a message
-func (c *Client) _closePost() (err error) {
 	var (
 		links []common.Link
 		com   []common.Command
 	)
-
 	if c.post.len != 0 {
-		// If post has noting but whitespace, remove all text
-		hasText := false
-		for _, r := range c.post.body {
-			if !unicode.IsSpace(rune(r)) {
-				hasText = true
-				break
-			}
-		}
-		if !hasText {
-			err = c.clearText()
-			if err != nil {
-				return
-			}
-		} else {
-			links, com, err = parser.ParseBody(c.post.body, c.post.board, c.post.op, c.post.id, c.ip, false)
-			if err != nil {
-				return
-			}
+		links, com, err = parser.ParseBody(c.post.body, c.post.board, c.post.op,
+			c.post.id, c.ip, false)
+		if err != nil {
+			return
 		}
 	}
 
@@ -222,7 +190,6 @@ func (c *Client) _closePost() (err error) {
 	}
 
 	err = CheckRouletteBan(com, c.post.board, c.post.op, c.post.id)
-
 	c.post = openPost{}
 	return
 }
@@ -247,40 +214,6 @@ func CheckRouletteBan(commands []common.Command, board string, thread uint64, id
 	return nil
 }
 
-// Clear all open post contents
-func (c *Client) clearPost() (err error) {
-	if c.post.len != 0 {
-		err = c.clearText()
-		if err != nil {
-			return
-		}
-	}
-	if c.post.hasImage {
-		err = db.DeleteOwnedImage(c.post.id)
-		if err != nil {
-			return
-		}
-		var msg []byte
-		msg, err = common.EncodeMessage(common.MessageDeleteImage, c.post.id)
-		if err != nil {
-			return
-		}
-		c.feed.DeleteImage(c.post.id, msg)
-		c.post.hasImage = false
-	}
-	return
-}
-
-// Clear all text in open post
-func (c *Client) clearText() error {
-	return c._spliceText(spliceRequest{
-		spliceCoords: spliceCoords{
-			Start: 0,
-			Len:   uint(c.post.len),
-		},
-	})
-}
-
 // Splice the text in the open post
 func (c *Client) spliceText(data []byte) error {
 	if has, err := c.hasPost(); err != nil {
@@ -298,12 +231,7 @@ func (c *Client) spliceText(data []byte) error {
 	if err != nil {
 		return err
 	}
-	return c._spliceText(req)
-}
 
-// Separate function, so we can call splicing internally without encoding a
-// message
-func (c *Client) _spliceText(req spliceRequest) (err error) {
 	// Validate
 	switch {
 	case err != nil:

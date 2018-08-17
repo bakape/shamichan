@@ -46,8 +46,6 @@ export const enum postState {
 	draft,
 	// Sent a request to allocate a live post
 	allocating,
-	// Sending a request to a allocate a post in non-live mode
-	allocatingNonLive,
 	// Suffered unrecoverable error
 	erred,
 	// Post creation disabled in thread
@@ -62,8 +60,6 @@ export const enum postEvent {
 	error,
 	// Post closed
 	done,
-	// Post canceled
-	cancel,
 	// New post opened
 	open,
 	// Set to none. Used during page navigation.
@@ -270,8 +266,6 @@ export default () => {
 	// model- and view-side.
 	postSM.act(postState.allocating, postEvent.alloc, () =>
 		postState.alloc);
-	postSM.act(postState.allocatingNonLive, postEvent.alloc, () =>
-		postState.ready);
 
 	postSM.on(postState.alloc, bindNagging)
 
@@ -295,21 +289,13 @@ export default () => {
 
 	// Close unallocated draft or commit in non-live mode
 	postSM.act(postState.draft, postEvent.done, () => {
-		// Commit a draft made as a non-live post
-		if (!identity.live && !isEmpty()) {
-			postModel.commitNonLive();
-			return postState.allocatingNonLive;
-		}
-
 		postForm.remove();
 		return postState.ready;
 	})
 
 	// Server requested captcha. This rejects the previous post or image
 	// allocation request.
-	for (let s of [
-		postState.draft, postState.allocating, postState.allocatingNonLive,
-	]) {
+	for (let s of [postState.draft, postState.allocating]) {
 		postSM.act(s, postEvent.captchaRequested, () => {
 			postModel.inputBody = "";
 			renderCaptchaForm();
@@ -329,14 +315,6 @@ export default () => {
 
 	// Attempt to resume post after solving captcha
 	postSM.act(postState.draft, postEvent.captchaSolved, () => {
-		if (!identity.live) {
-			if (isEmpty()) {
-				postForm.input.focus();
-				return postState.draft;
-			}
-			postModel.commitNonLive();
-			return postState.allocatingNonLive;
-		}
 		if (hasBufferedImage()) {
 			postModel.uploadFile(postForm.upload.input.files[0]);
 		}
@@ -351,31 +329,11 @@ export default () => {
 		return postState.alloc;
 	});
 
-	// Cancel unallocated draft
-	postSM.act(postState.draft, postEvent.cancel, () => {
-		postForm.remove()
-		return postState.ready
-	})
-
 	// Close allocated post
 	postSM.act(postState.alloc, postEvent.done, () => {
-		postModel.commitClose(false);
+		postModel.commitClose();
 		return postState.ready;
 	});
-
-	// Cancel allocated post
-	postSM.act(postState.alloc, postEvent.cancel, () => {
-		postModel.commitClose(true)
-		return postState.ready
-	})
-
-	// Just close the post, after it is committed
-	postSM.act(postState.allocatingNonLive, postEvent.done, () =>
-		postState.ready);
-
-	// Just cancel the post, after it is committed
-	postSM.act(postState.allocatingNonLive, postEvent.cancel, () =>
-		postState.ready);
 
 	// Handle clicks on the [Reply] button
 	on(document, "click", openReply, {
@@ -423,10 +381,6 @@ export default () => {
 	initFullScreen()
 	initThreads()
 	initIdentity()
-}
-
-function isEmpty(): boolean {
-	return !postForm.input.value && !hasBufferedImage();
 }
 
 function hasBufferedImage(): boolean {

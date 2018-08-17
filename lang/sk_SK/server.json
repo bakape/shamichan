@@ -44,10 +44,6 @@
 			"Telo",
 			"Telo textu nového plagátu"
 		],
-		"cancel": [
-			"Cancel Post",
-			"Close open post without saving"
-		],
 		"captcha": [
 			"Kapča",
 			"Požiadaj užívateľov aby vyplnili kapču pre určité úlohy ako je registrácia a vytváranie vláken"
@@ -212,10 +208,6 @@
 			"Externé odkazy",
 			"Pridať, zmazať alebo editovať externé >>>/4chan/ odkazy"
 		],
-		"live": [
-			"Live",
-			"Show your post to others as it is being typed"
-		],
 		"mascot": [
 			"Mascot",
 			"Toggle mascot display"
@@ -263,10 +255,6 @@
 		"newPost": [
 			"Nový plagát",
 			"Otvoriť nový plagát"
-		],
-		"nonLive": [
-			"Non-live",
-			"Disable live updates of open post text and images"
 		],
 		"notice": [
 			"Oznámenie",
@@ -474,7 +462,6 @@
 		"id": "ID",
 		"identity": "Identita",
 		"illegal": "Nelegálny obsah",
-		"live": "Naživo",
 		"loadCaptcha": "Klikni pre načítanie kapči",
 		"loadingSpecs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
 		"logout": "Odhlásiť",

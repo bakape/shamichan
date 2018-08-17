@@ -53,7 +53,6 @@ type BoardPublic struct {
 	TextOnly   bool `json:"textOnly"`
 	ForcedAnon bool `json:"forcedAnon"`
 	Flags      bool `json:"flags"`
-	NonLive    bool `json:"nonLive"`
 	NSFW       bool
 	PosterIDs  bool   `json:"posterIDs"`
 	RbText     bool   `json:"rbText"`

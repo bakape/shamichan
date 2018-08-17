@@ -44,7 +44,6 @@ export default class FormView extends PostView {
         })
         this.onClick({
             "input[name=\"done\"]": postSM.feeder(postEvent.done),
-            "input[name=\"cancel\"]": postSM.feeder(postEvent.cancel),
         })
 
         if (!boardConfig.textOnly) {
@@ -55,7 +54,6 @@ export default class FormView extends PostView {
                 }
             })
         }
-        this.inputElement("done").hidden = identity.live;
 
         const bq = this.el.querySelector("blockquote")
         bq.innerHTML = ""
@@ -110,7 +108,7 @@ export default class FormView extends PostView {
 
         document.getElementById("thread-container").append(this.el)
         this.resizeSpacer()
-        this.setEditing(identity.live);
+        this.setEditing(true);
     }
 
     // Resize bottomSpacer to the same top position as this post
@@ -266,6 +264,9 @@ export default class FormView extends PostView {
         this.resizeInput()
         this.removeUploadForm()
 
+        if (postSM.state !== postState.alloc) {
+            return;
+        }
         const { spoiler } = this.upload
         if (this.model.image.spoiler) {
             spoiler.remove()
