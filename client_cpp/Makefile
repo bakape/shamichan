@@ -6,8 +6,7 @@ ifeq ($(DEBUG),)
 endif
 
 ifeq ($(DEBUG),0)
-	COMPILE_FLAGS+=-O3 -g0
-	LTO=--llvm-lto 3
+	COMPILE_FLAGS+=-O3 -g0 --llvm-lto 3
 else
 	COMPILE_FLAGS+=-g4
 	SETTINGS+=-s DEMANGLE_SUPPORT=1 -s ASSERTIONS=2 -s DISABLE_EXCEPTION_CATCHING=0
@@ -21,11 +20,11 @@ export EMCCFLAGS=$(COMPILE_FLAGS) -Wall -Wextra -Wno-switch -Wno-unused-paramete
 all: clean_output
 	$(MAKE) -C brunhild
 	$(MAKE) -C src
-	emcc src/*.bc src/page/*.bc src/posts/*.bc src/options/*.bc src/connection/*.bc brunhild/*.bc -o linked.bc $(COMPILE_FLAGS) $(LTO) $(SETTINGS)
+	emcc src/*.bc src/page/*.bc src/posts/*.bc src/options/*.bc src/connection/*.bc brunhild/*.bc -o linked.bc $(COMPILE_FLAGS) $(SETTINGS)
 ifeq ($(DEBUG),0)
-	emcc linked.bc -o main.js --separate-asm -Wno-separate-asm $(COMPILE_FLAGS) $(LTO) $(SETTINGS)
+	emcc linked.bc -o main.js --separate-asm -Wno-separate-asm $(COMPILE_FLAGS) $(SETTINGS)
 endif
-	emcc linked.bc -o main.js -s WASM=1 $(COMPILE_FLAGS) $(LTO) $(SETTINGS)
+	emcc linked.bc -o main.js -s WASM=1 $(COMPILE_FLAGS) $(SETTINGS)
 
 clean_output:
 	rm -f *.wasm *.wast *.js *.wasm.map *.js
