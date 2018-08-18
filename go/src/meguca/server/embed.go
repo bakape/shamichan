@@ -28,16 +28,28 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 		vidFormats := info.Formats.
 			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
 			Filter(ytdl.FormatResolutionKey, []interface{}{"360p"}).
-			Filter(ytdl.FormatAudioEncodingKey, []interface{}{"aac", "opus", "vorbis"})
-
+			Filter(ytdl.FormatAudioEncodingKey, []interface{}{"aac", "opus", "vorbis"}).
+			Best(ytdl.FormatVideoEncodingKey)
+			
 		if len(vidFormats) == 0 {
 			vidFormats = info.Formats.
 				Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
+				Filter(ytdl.FormatResolutionKey, []interface{}{"144p", "240p", "270p", "360p"}).
 				Filter(ytdl.FormatAudioEncodingKey, []interface{}{"aac", "opus", "vorbis"}).
-				Worst(ytdl.FormatResolutionKey)
+				Best(ytdl.FormatResolutionKey).
+				Best(ytdl.FormatVideoEncodingKey)
 
 			if len(vidFormats) == 0 {
-				return errNoYoutubeVideo(ytid)
+				vidFormats = info.Formats.
+					Filter(ytdl.FormatExtensionKey, []interface{}{"mp4", "flv", "3gp", "ts"}).
+					Filter(ytdl.FormatResolutionKey, []interface{}{"144p", "240p", "270p", "360p"}).
+					Filter(ytdl.FormatAudioEncodingKey, []interface{}{"aac", "opus", "vorbis"}).
+					Best(ytdl.FormatResolutionKey).
+					Best(ytdl.FormatVideoEncodingKey)
+				
+				if len(vidFormats) == 0 {
+					return errNoYoutubeVideo(ytid)
+				}
 			}
 		}
 
