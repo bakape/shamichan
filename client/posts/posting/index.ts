@@ -10,6 +10,7 @@ import { boardConfig, page } from "../../state"
 import initDrop from "./drop"
 import initPaste from "./paste"
 import initFullScreen from "./fullscreen"
+import initImageErr from "./image"
 import initThreads from "./threads"
 import { renderCaptchaForm } from "./captcha";
 
@@ -379,6 +380,7 @@ export default () => {
 	initDrop()
 	initPaste()
 	initFullScreen()
+	initImageErr()
 	initThreads()
 	initIdentity()
 }
