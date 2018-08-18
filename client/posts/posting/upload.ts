@@ -80,6 +80,9 @@ export default class UploadForm extends View<Post> {
             switch (res.status) {
                 case 200:
                     token = await res.text();
+                    if (this.fromCloudflare(token)) {
+                        return;
+                    }
                     break;
                 case 403:
                     const text = await res.text();
@@ -116,6 +119,17 @@ export default class UploadForm extends View<Post> {
         return img
     }
 
+    // Cloudflare sometimes requests a confirmation form on upload. If such a
+    // form is detected, returns true and resets the upload form.
+    private fromCloudflare(s: string): boolean {
+        if (s.startsWith(`<!DOCTYPE html>`)) {
+            window.open().document.write(s);
+            this.reset();
+            return true;
+        }
+        return false;
+    }
+
     private isCaptchaRequest(s: string) {
         return s.indexOf("captcha required") !== -1;
     }
@@ -138,6 +152,9 @@ export default class UploadForm extends View<Post> {
         }
         switch (this.xhr.status) {
             case 200:
+                if (this.fromCloudflare(this.xhr.responseText)) {
+                    return;
+                }
                 break;
             case 403:
                 if (this.isCaptchaRequest(this.xhr.responseText)) {
