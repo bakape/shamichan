@@ -66,30 +66,14 @@ export default class FormModel extends Post {
 	// Compare new value to old and generate appropriate commands
 	public parseInput(val: string): void {
 		const old = this.inputBody
+		val = this.trimInput(val);
 
 		// Rendering hack shenanigans - ignore
 		if (old === val) {
 			return
 		}
 
-		const lenDiff = val.length - old.length,
-			exceeding = old.length + lenDiff - 2000
-
-		// If exceeding max body length, shorten the value, trim input and try
-		// again
-		if (exceeding > 0) {
-			this.view.trimInput(exceeding)
-			return this.parseInput(val.slice(0, -exceeding))
-		}
-
-		// Remove any lines past 30
-		const lines = val.split("\n")
-		if (lines.length - 1 > 100) {
-			const trimmed = lines.slice(0, 100).join("\n")
-			this.view.trimInput(val.length - trimmed.length)
-			return this.parseInput(trimmed)
-		}
-
+		const lenDiff = val.length - old.length;
 		if (postSM.state === postState.draft) {
 			this.requestAlloc(val, null)
 		} else if (lenDiff === 1 && val.slice(0, -1) === old) {
@@ -105,6 +89,18 @@ export default class FormModel extends Post {
 		} else {
 			this.commitSplice(val)
 		}
+	}
+
+	// Trim input string, if it has too many lines
+	private trimInput(val: string): string {
+		// Remove any lines past 30
+		const lines = val.split("\n")
+		if (lines.length - 1 > 100) {
+			const trimmed = lines.slice(0, 100).join("\n")
+			this.view.trimInput(val.length - trimmed.length)
+			return trimmed;
+		}
+		return val;
 	}
 
 	// Optionally buffer all data, if currently disconnected
@@ -196,9 +192,7 @@ export default class FormModel extends Post {
 	}
 
 	// Request allocation of a draft post to the server
-	private requestAlloc(body: string = this.view.input.value,
-		image: FileData | null,
-	) {
+	private requestAlloc(body: string, image: FileData | null) {
 		const req = newAllocRequest();
 		req["open"] = true;
 		if (body) {
@@ -246,7 +240,7 @@ export default class FormModel extends Post {
 		}
 
 		if (postSM.state === postState.draft) {
-			this.requestAlloc(null, data)
+			this.requestAlloc(this.trimInput(this.view.input.value), data)
 		} else {
 			send(message.insertImage, data)
 		}
