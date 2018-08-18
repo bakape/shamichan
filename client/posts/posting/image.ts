@@ -1,8 +1,6 @@
 // Reload image if error
 // Handle event if image error
 async function onImageErr(e: Event) {
-    e.stopPropagation()
-    e.preventDefault()
     const el = (e.target as HTMLImageElement)
 
     if (el.tagName !== "IMG" || (el.complete && el.naturalWidth !== 0)) {
@@ -14,6 +12,8 @@ async function onImageErr(e: Event) {
     if (src.includes("?bs=")) {
         return
     }
+
+    e.stopPropagation()
 
     for (var i = 0; i < 31; i++) {
         if (el.complete && el.naturalWidth !== 0) {
@@ -28,5 +28,5 @@ async function onImageErr(e: Event) {
 
 // Bind listeners
 export default () => {
-    document.addEventListener("error", onImageErr, true)
+    document.addEventListener("error", onImageErr, { passive: true, capture: true })
 }
