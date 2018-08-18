@@ -181,7 +181,7 @@ func removeFromFeed(id uint64, board string, c common.Client) {
 
 	if feed := feeds.feeds[id]; feed != nil {
 		feed.remove <- c
-		// If the feeds sends a non-nil, it means it closed
+		// If the feed sends a non-nil, it means it closed
 		if nil != <-feed.remove {
 			delete(feeds.feeds, feed.id)
 
