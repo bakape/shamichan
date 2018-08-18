@@ -14,6 +14,7 @@ async function onImageErr(e: Event) {
     }
 
     e.stopPropagation()
+    e.preventDefault()
 
     for (var i = 0; i < 31; i++) {
         if (el.complete && el.naturalWidth !== 0) {
@@ -28,5 +29,5 @@ async function onImageErr(e: Event) {
 
 // Bind listeners
 export default () => {
-    document.addEventListener("error", onImageErr, { passive: true, capture: true })
+    document.addEventListener("error", onImageErr, true)
 }
