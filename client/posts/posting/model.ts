@@ -65,6 +65,16 @@ export default class FormModel extends Post {
 
 	// Compare new value to old and generate appropriate commands
 	public parseInput(val: string): void {
+		// These operations should only be performed on fresh allocations or
+		// after the server has verified the allocation
+		switch (postSM.state) {
+			case postState.draft:
+			case postState.alloc:
+				break;
+			default:
+				return;
+		}
+
 		const old = this.inputBody
 		val = this.trimInput(val);
 
@@ -103,7 +113,6 @@ export default class FormModel extends Post {
 		return val;
 	}
 
-	// Optionally buffer all data, if currently disconnected
 	private send(type: message, msg: any) {
 		if (postSM.state !== postState.halted) {
 			send(type, msg)
@@ -239,10 +248,13 @@ export default class FormModel extends Post {
 			return
 		}
 
-		if (postSM.state === postState.draft) {
-			this.requestAlloc(this.trimInput(this.view.input.value), data)
-		} else {
-			send(message.insertImage, data)
+		switch (postSM.state) {
+			case postState.draft:
+				this.requestAlloc(this.trimInput(this.view.input.value), data);
+				break;
+			case postState.alloc:
+				send(message.insertImage, data)
+				break;
 		}
 	}
 
