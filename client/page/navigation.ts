@@ -1,5 +1,5 @@
 import { View } from '../base'
-import { HTML, makeFrag, uncachedGET, inputElement } from '../util'
+import { HTML, makeFrag, inputElement } from '../util'
 
 const selected = new Set<string>();
 
@@ -93,7 +93,7 @@ class BoardSelectionPanel extends View<null> {
 
 	// Fetch the board list from the server and render the selection form
 	private async render() {
-		const r = await uncachedGET("/html/board-navigation"),
+		const r = await fetch("/html/board-navigation"),
 			text = await r.text()
 		if (r.status !== 200) {
 			throw text

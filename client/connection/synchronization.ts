@@ -4,7 +4,7 @@ import {
 	postSM, postEvent, postState, identity, FormModel, Post
 } from "../posts"
 import { page, posts, displayLoading } from "../state"
-import { trigger, uncachedGET, extend } from "../util"
+import { trigger, extend } from "../util"
 import { PostData } from "../common"
 import { insertPost } from "../client"
 
@@ -97,7 +97,7 @@ async function fetchUnclosed(post: Post) {
 }
 
 async function fetchPost(id: number): Promise<PostData> {
-	const r = await uncachedGET(`/json/post/${id}`)
+	const r = await fetch(`/json/post/${id}`)
 	if (r.status !== 200) {
 		throw await r.text()
 	}

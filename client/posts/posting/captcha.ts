@@ -1,5 +1,4 @@
 import { FormView } from "../../ui";
-import { uncachedGET } from "../../util";
 import { postSM, postEvent } from ".";
 
 let instance: CaptchaForm;
@@ -28,7 +27,7 @@ class CaptchaForm extends FormView {
 	}
 
 	private async render() {
-		const res = await uncachedGET("/html/captcha")
+		const res = await fetch("/html/captcha")
 		if (res.status !== 200) {
 			this.renderFormResponse(await res.text());
 			return;

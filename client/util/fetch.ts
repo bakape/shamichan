@@ -19,22 +19,12 @@ export async function postJSON(url: string, body: any): Promise<Response> {
 	})
 }
 
-// Avoids stale fetches from the browser cache
-export async function uncachedGET(url: string): Promise<Response> {
-	const h = new Headers()
-	h.append("Cache-Control", "no-cache")
-	return await fetch(url, {
-		method: "GET",
-		headers: h,
-	})
-}
-
 // Fetch HTML of a board page
 export async function fetchBoard(
 	board: string,
 	page: number,
 	catalog: boolean,
 ): Promise<Response> {
-	const u = `/${board}/${catalog ? "catalog" : ""}?minimal=true&page=${page}`
-	return uncachedGET(u)
+	return fetch(
+		`/${board}/${catalog ? "catalog" : ""}?minimal=true&page=${page}`)
 }
