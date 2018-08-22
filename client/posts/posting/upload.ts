@@ -115,14 +115,10 @@ export default class UploadForm extends View<Post> {
         };
     }
 
-    // Handle a server response and return, if the request succeeded
-    private handleResponse(code: number, text: string) {
+    // Handle a server response and return, if the request succeeded.
+    private handleResponse(code: number, text: string): boolean {
         switch (code) {
             case 200:
-                if (this.fromCloudflare(text)) {
-                    this.reset();
-                    return false;
-                }
                 return true;
             case 403:
                 if (this.isCaptchaRequest(text)) {
@@ -131,6 +127,14 @@ export default class UploadForm extends View<Post> {
                     return false;
                 }
             default:
+                // Cloudflare is shit and 502s randomly on image upload.
+                // Attempt again.
+                if (text.indexOf(`<!DOCTYPE html>`) !== -1) {
+                    if (this.canAllocImage()) {
+                        trigger("getPostModel").retryUpload();
+                    }
+                    return false;
+                }
                 this.reset(text);
                 return false;
         }
@@ -140,17 +144,6 @@ export default class UploadForm extends View<Post> {
     private displayStatus(status: string, title?: string) {
         this.button.textContent = status;
         this.button.title = title || "";
-    }
-
-    // Cloudflare sometimes requests a confirmation form on upload. If such a
-    // form is detected, returns true and resets the upload form.
-    private fromCloudflare(s: string): boolean {
-        if (s.indexOf(`<!DOCTYPE html>`) !== -1) {
-            window.open().document.write(s);
-            this.reset();
-            return true;
-        }
-        return false;
     }
 
     private isCaptchaRequest(s: string) {
