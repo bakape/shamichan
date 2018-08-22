@@ -229,22 +229,15 @@ export default class FormModel extends Post {
 	}
 
 	// Upload the file and request its allocation
-	public async uploadFile(files?: FileList | File) {
-		if (boardConfig.textOnly || this.image) {
-			return
+	public async uploadFile(file: File) {
+		if (!boardConfig.textOnly && !this.image) {
+			this.handleUploadResponse(await this.view.upload.uploadFile(file));
 		}
-		if (files && this.view.upload) {
-			// Can't set value with an individual File
-			if (files instanceof FileList) {
-				(this.view.upload.input.files as any) = files;
-			}
-		}
+	}
 
-		const data = await this.view.upload
-			.uploadFile(files instanceof FileList ? files[0] : files);
-		// Upload failed, canceled, image added while thumbnailing or post
-		// closed
-		if (!data || this.image || !this.editing) {
+	private handleUploadResponse(data: FileData | null) {
+		// Upload failed, canceled or image added while thumbnailing
+		if (!data || this.image) {
 			return
 		}
 
@@ -255,6 +248,13 @@ export default class FormModel extends Post {
 			case postState.alloc:
 				send(message.insertImage, data)
 				break;
+		}
+	}
+
+	// Retry to upload a file after it previously failed
+	public async retryUpload() {
+		if (this.view.upload) {
+			this.handleUploadResponse(await this.view.upload.retry());
 		}
 	}
 

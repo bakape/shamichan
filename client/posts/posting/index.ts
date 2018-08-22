@@ -315,20 +315,14 @@ export default () => {
 	})
 
 	// Attempt to resume post after solving captcha
-	postSM.act(postState.draft, postEvent.captchaSolved, () => {
-		if (hasBufferedImage()) {
-			postModel.uploadFile(postForm.upload.input.files[0]);
-		}
-		postForm.input.focus();
-		return postState.draft;
-	});
-	postSM.act(postState.alloc, postEvent.captchaSolved, () => {
-		if (hasBufferedImage()) {
-			postModel.uploadFile(postForm.upload.input.files[0]);
-		}
-		postForm.input.focus();
-		return postState.alloc;
-	});
+	for (let s of [postState.draft, postState.alloc]) {
+		const _s = s; // Persist variable in inner scope
+		postSM.act(_s, postEvent.captchaSolved, () => {
+			postModel.retryUpload();
+			postForm.input.focus();
+			return _s;
+		});
+	}
 
 	// Close allocated post
 	postSM.act(postState.alloc, postEvent.done, () => {
@@ -383,8 +377,4 @@ export default () => {
 	initImageErr()
 	initThreads()
 	initIdentity()
-}
-
-function hasBufferedImage(): boolean {
-	return postForm.upload && postForm.upload.input.files.length !== 0;
 }

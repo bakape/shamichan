@@ -90,9 +90,11 @@
 		"bottom": "Na dół",
 		"cancel": "Cofnij",
 		"catalog": "Katalog",
+		"clickToCancel": "Click to cancel",
 		"confirmDelete": "Delete all posts by this IP?",
 		"deleteBoard": "Delete board",
 		"done": "Importowanie zakończone sukcesem. Strona zostanie teraz odświeżona",
+		"fileTooLarge": "file too large",
 		"finished": "Zakończono",
 		"googleSong": "Kliknij, żeby wyszukać piosenkę",
 		"importCorrupt": "Import failed. File corrupt",
@@ -121,6 +123,7 @@
 		"thumbnailing": "Miniaturyzowanie...",
 		"top": "Na górę",
 		"unfinishedPost": "Masz niezakończony post",
+		"uploadFile": "Upload file",
 		"uploadProgress": "przesłano..."
 	}
 }

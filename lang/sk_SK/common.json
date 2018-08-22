@@ -90,9 +90,11 @@
 		"bottom": "Dolu",
 		"cancel": "Zrušiť",
 		"catalog": "Katalóg",
+		"clickToCancel": "Click to cancel",
 		"confirmDelete": "Chcete zmazať všetky plagáty z tejto IP adresy?",
 		"deleteBoard": "Zmazať dosku",
 		"done": "Importované. Stránka sa načíta znovu.",
+		"fileTooLarge": "file too large",
 		"finished": "Hotovo",
 		"googleSong": "Klikni pre vygúglenie pesničky",
 		"importCorrupt": "Import zlyhal. Poškodený súbor.",
@@ -121,6 +123,7 @@
 		"thumbnailing": "Odtlačkujem...",
 		"top": "Vrch",
 		"unfinishedPost": "Más nedokončený plagát",
+		"uploadFile": "Upload file",
 		"uploadProgress": "odoslané..."
 	}
 }

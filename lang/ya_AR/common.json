@@ -90,9 +90,11 @@
 		"bottom": "Bottom",
 		"cancel": "Cancel",
 		"catalog": "Catalog",
+		"clickToCancel": "Click to cancel",
 		"confirmDelete": "Delete all posts by this IP?",
 		"deleteBoard": "Delete board",
 		"done": "Done",
+		"fileTooLarge": "file too large",
 		"finished": "Yer picture show is finished",
 		"googleSong": "Consult the Oracle",
 		"importCorrupt": "Import failed. File corrupt",
@@ -121,6 +123,7 @@
 		"thumbnailing": "Transcribing yer portrait...",
 		"top": "Top",
 		"unfinishedPost": "Yer missive is incomplete",
+		"uploadFile": "Upload file",
 		"uploadProgress": "uploaded..."
 	}
 }

@@ -90,9 +90,11 @@
 		"bottom": "Низ",
 		"cancel": "Отменить",
 		"catalog": "Каталог",
+		"clickToCancel": "Click to cancel",
 		"confirmDelete": "Удалить все посты с этого IP?",
 		"deleteBoard": "Удалить доску",
 		"done": "Готово",
+		"fileTooLarge": "file too large",
 		"finished": "Завершено",
 		"googleSong": "Нажмите чтобы искать песню",
 		"importCorrupt": "Импорт не удался. Файл повреждён.",
@@ -121,6 +123,7 @@
 		"thumbnailing": "Генерация превью…",
 		"top": "Верх",
 		"unfinishedPost": "У вас есть незавершённый пост",
+		"uploadFile": "Upload file",
 		"uploadProgress": "загрузка…"
 	}
 }

@@ -188,7 +188,6 @@ static Node render_thread_form()
                         },
                     },
                 },
-                { "strong", { { "class", "upload-status" } } },
                 { "br" },
                 {
                     "input",

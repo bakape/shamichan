@@ -90,9 +90,11 @@
 		"bottom": "Bas",
 		"cancel": "Annuler",
 		"catalog": "Catalogue",
+		"clickToCancel": "Click to cancel",
 		"confirmDelete": "Supprimer tous les messages de cette IP ?",
 		"deleteBoard": "Supprimer une planche",
 		"done": "Terminer",
+		"fileTooLarge": "file too large",
 		"finished": "Terminé",
 		"googleSong": "Click to google song",
 		"importCorrupt": "L'importation a échoué pour cause de fichier corrompu.",
@@ -121,6 +123,7 @@
 		"thumbnailing": "Miniaturisation...",
 		"top": "Haut",
 		"unfinishedPost": "Vous avez un message inachevé",
+		"uploadFile": "Upload file",
 		"uploadProgress": "téléchargé..."
 	}
 }

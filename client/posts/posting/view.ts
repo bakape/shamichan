@@ -47,12 +47,8 @@ export default class FormView extends PostView {
         })
 
         if (!boardConfig.textOnly) {
-            this.upload = new UploadForm(this.model, this.el)
-            this.upload.input.addEventListener("change", () => {
-                if (this.upload.input.files.length) {
-                    this.model.uploadFile()
-                }
-            })
+            this.upload = new UploadForm(this.model,
+                this.el.querySelector(".upload-container"));
         }
 
         const bq = this.el.querySelector("blockquote")
@@ -127,13 +123,6 @@ export default class FormView extends PostView {
         bottomSpacer.style.height = `calc(${height}px - 2.1em)`
     }
 
-    private removeUploadForm() {
-        if (this.upload) {
-            this.upload.input.remove();
-            this.upload.status.remove();
-        }
-    }
-
     // Handle input events on this.input
     public onInput() {
         if (!this.input) {
@@ -185,8 +174,8 @@ export default class FormView extends PostView {
     // Transform form into a generic post. Removes any dangling form controls
     // and frees up references.
     public cleanUp() {
-        if (this.upload && this.upload.isUploading) {
-            this.upload.cancel()
+        if (this.upload) {
+            this.upload.cancel();
         }
         this.el.classList.remove("reply-form")
         const pc = this.el.querySelector("#post-controls")
@@ -245,35 +234,29 @@ export default class FormView extends PostView {
 
     // Toggle the spoiler input checkbox
     public toggleSpoiler() {
-        if (this.model.image && postSM.state !== postState.halted) {
-            this.upload.spoiler.remove()
-            this.model.commitSpoiler()
-            return
+        if (this.model.image && postSM.state === postState.alloc) {
+            this.upload.hideSpoilerToggle();
+            this.model.commitSpoiler();
+        } else {
+            const el = this.inputElement("spoiler");
+            el.checked = !el.checked;
         }
-
-        const el = this
-            .upload
-            .spoiler
-            .querySelector("input") as HTMLInputElement
-        el.checked = !el.checked
     }
 
     // Insert image into an open post
     public insertImage() {
-        this.renderImage(false)
-        this.resizeInput()
-        this.removeUploadForm()
+        this.renderImage(false);
+        this.resizeInput();
+        this.upload.hideButton();
 
         if (postSM.state !== postState.alloc) {
             return;
         }
-        const { spoiler } = this.upload
         if (this.model.image.spoiler) {
-            spoiler.remove()
+            this.upload.hideSpoilerToggle();
         } else {
-            spoiler.addEventListener("change", this.toggleSpoiler.bind(this), {
-                passive: true,
-            })
+            this.inputElement("spoiler").addEventListener("change",
+                this.toggleSpoiler.bind(this), { passive: true });
         }
     }
 }
