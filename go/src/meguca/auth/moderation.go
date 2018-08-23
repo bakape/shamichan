@@ -52,30 +52,7 @@ const (
 	Admin
 )
 
-// ModerationAction is an action performable by moderation staff
-type ModerationAction uint8
-
-// All supported moderation actions
-const (
-	BanPost ModerationAction = iota
-	UnbanPost
-	DeletePost
-	DeleteImage
-	SpoilerImage
-	LockThread
-	DeleteBoard
-	MeidoVision
-)
-
-// ModLogEntry is a single entry in the moderation log
-type ModLogEntry struct {
-	Type              ModerationAction
-	ID, Length        uint64
-	Created           time.Time
-	Board, By, Reason string
-}
-
-// Ban holdsan entry of an IP being banned from a board
+// Ban holds an entry of an IP being banned from a board
 type Ban struct {
 	IP, Board string
 }
@@ -95,8 +72,8 @@ type Report struct {
 	Board, Reason string
 }
 
-// Disconnects all banned websocket clients matching IP from board.
-// /all/ board disconnects all clients globally.
+// DisconnectByBoardAndIP disconnects all banned websocket clients
+// matching IP from board. /all/ board disconnects all clients globally.
 func DisconnectByBoardAndIP(ip, board string) {
 	msg, err := common.EncodeMessage(common.MessageInvalid,
 		common.ErrBanned.Error())

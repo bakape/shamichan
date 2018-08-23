@@ -27,6 +27,7 @@ const (
 	MessageDeletePost
 	MessageBanned
 	MessageDeleteImage
+	MessageMeidoVision
 )
 
 // >= 30 are miscellaneous and do not write to post models
@@ -88,16 +89,19 @@ var (
 	)
 
 	// Propagate a message about a post being banned
-	BanPost func(id, op uint64) error
+	BanPostP func(id, op uint64) error
 
 	// Propagate a message about a post being deleted
-	DeletePost func(id, op uint64) error
+	DeletePostP func(id, op uint64) error
 
 	// Propagate a message about an image being deleted from a post
-	DeleteImage func(id, op uint64) error
+	DeleteImageP func(id, op uint64) error
 
 	// Propagate a message about an image being spoilered
-	SpoilerImage func(id, op uint64) error
+	SpoilerImageP func(id, op uint64) error
+
+	// Propagate a message about a post being meido vision'd
+	MeidoVisionPostP func(id, op uint64) error
 )
 
 // Client exposes some globally accessible websocket client functionality

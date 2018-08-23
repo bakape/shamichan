@@ -3,7 +3,7 @@
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts, page } from './state'
 import { Post, FormModel, PostView } from './posts'
-import { PostLink, Command, PostData, ImageData } from "./common"
+import { PostLink, Command, PostData, ImageData, MeidoData } from "./common"
 import { postAdded } from "./ui"
 import { incrementPostCount } from "./page"
 import { posterName } from "./options"
@@ -125,17 +125,21 @@ export default () => {
 			m.closePost()
 		})
 
-	handlers[message.deletePost] = (id: number) =>
+	handlers[message.deletePost] = ({ id, modLog }: MeidoData) =>
 		handle(id, m =>
-			m.setDeleted())
+			m.setDeleted(modLog))
 
 	handlers[message.deleteImage] = (id: number) =>
 		handle(id, m =>
 			m.removeImage())
 
-	handlers[message.banned] = (id: number) =>
+	handlers[message.banned] = ({ id, modLog }: MeidoData) =>
 		handle(id, m =>
-			m.setBanned())
+			m.setBanned(modLog))
+	
+	handlers[message.meidoVision] = ({ id, modLog }: MeidoData) =>
+		handle(id, m =>
+			m.setMeidoVision(modLog))
 
 	handlers[message.redirect] = (url: string) =>
 		location.href = url

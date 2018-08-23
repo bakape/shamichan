@@ -5,8 +5,9 @@ package feeds
 
 import (
 	"errors"
-	"meguca/common"
 	"sync"
+
+	"meguca/common"
 )
 
 // Contains and manages all active update feeds
@@ -24,10 +25,11 @@ var feeds = feedMap{
 func init() {
 	common.SendTo = SendTo
 	common.ClosePost = ClosePost
-	common.BanPost = BanPost
-	common.DeletePost = DeletePost
-	common.DeleteImage = DeleteImage
-	common.SpoilerImage = SpoilerImage
+	common.BanPostP = BanPost
+	common.DeletePostP = DeletePost
+	common.DeleteImageP = DeleteImage
+	common.SpoilerImageP = SpoilerImage
+	common.MeidoVisionPostP = MeidoVisionPost
 }
 
 // Thread watchers
@@ -243,6 +245,7 @@ func ClosePost(
 // BanPost propagates a message about a post being banned
 func BanPost(id, op uint64) error {
 	msg, err := common.EncodeMessage(common.MessageBanned, id)
+
 	if err != nil {
 		return err
 	}
@@ -255,9 +258,11 @@ func BanPost(id, op uint64) error {
 // DeletePost propagates a message about a post being deleted
 func DeletePost(id, op uint64) error {
 	msg, err := common.EncodeMessage(common.MessageDeletePost, id)
+
 	if err != nil {
 		return err
 	}
+
 	return sendIfExists(op, func(f *Feed) {
 		f.deletePost(id, msg)
 	})
@@ -282,6 +287,19 @@ func SpoilerImage(id, op uint64) error {
 	}
 	return sendIfExists(op, func(f *Feed) {
 		f.SpoilerImage(id, msg)
+	})
+}
+
+// MeidoVisionPost propagates a message about a post being meido vision'd
+func MeidoVisionPost(id, op uint64) error {
+	msg, err := common.EncodeMessage(common.MessageMeidoVision, id)
+
+	if err != nil {
+		return err
+	}
+
+	return sendIfExists(op, func(f *Feed) {
+		f.meidoVisionPost(id, msg)
 	})
 }
 

@@ -5,7 +5,7 @@ import {
 } from "../posts"
 import { page, posts, displayLoading } from "../state"
 import { trigger, extend } from "../util"
-import { PostData } from "../common"
+import { PostData, MeidoData } from "../common"
 import { insertPost } from "../client"
 
 // Passed from the server to allow the client to synchronise state, before
@@ -13,9 +13,10 @@ import { insertPost } from "../client"
 type SyncData = {
 	recent: number[] // Posts created within the last 15 minutes
 	open: { [id: number]: OpenPost } // Posts currently open
-	deleted: number[] // Posts deleted
+	deleted: { [id: number]: MeidoData } // Posts deleted and data
 	deletedImage: number[] // Posts deleted in this thread
-	banned: number[] // Posts banned in this thread
+	banned: { [id: number]: MeidoData } // Posts banned in this thread and data
+	meidoVision: { [id: number]: MeidoData } // Posts meido vision'd in this thread and data
 }
 
 // State of an open post
@@ -138,7 +139,7 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		}
 	}
 
-	const { open, recent, banned, deleted, deletedImage } = data,
+	const { open, recent, banned, deleted, deletedImage, meidoVision } = data,
 		proms: Promise<void>[] = []
 
 	for (let post of posts) {
@@ -158,22 +159,28 @@ handlers[message.synchronise] = async (data: SyncData) => {
 			proms.push(fetchMissingPost(id))
 		}
 	}
-	for (let id of banned) {
-		const post = posts.get(id)
+	for (let key in banned) {
+		const post = posts.get(parseInt(key))
 		if (post && !post.banned) {
-			post.setBanned()
+			post.setBanned(banned[key].modLog)
 		}
 	}
-	for (let id of deleted) {
-		const post = posts.get(id)
+	for (let key in deleted) {
+		const post = posts.get(parseInt(key))
 		if (post && !post.deleted) {
-			post.setDeleted()
+			post.setDeleted(deleted[key].modLog)
 		}
 	}
 	for (let id of deletedImage) {
 		const post = posts.get(id)
 		if (post && post.image) {
 			post.removeImage()
+		}
+	}
+	for (let key in meidoVision) {
+		const post = posts.get(parseInt(key))
+		if (post && !post.meidoVision) {
+			post.setMeidoVision(meidoVision[key].modLog)
 		}
 	}
 

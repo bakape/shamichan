@@ -36,8 +36,8 @@ func writeBan(
 	if err != nil || !log {
 		return
 	}
-	return logModeration(tx, auth.ModLogEntry{
-		Type:   auth.BanPost,
+	return logModeration(tx, common.ModLogEntry{
+		Type:   common.BanPost,
 		Board:  board,
 		ID:     postID,
 		By:     by,
@@ -144,7 +144,7 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 
 	if !IsTest {
 		for _, post := range posts {
-			err = common.BanPost(post.id, post.op)
+			err = common.BanPostP(post.id, post.op)
 			if err != nil {
 				return
 			}
@@ -169,8 +169,8 @@ func Unban(board string, id uint64, by string) error {
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, auth.ModLogEntry{
-			Type:  auth.UnbanPost,
+		err = logModeration(tx, common.ModLogEntry{
+			Type:  common.UnbanPost,
 			Board: board,
 			ID:    id,
 			By:    by,

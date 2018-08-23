@@ -16,6 +16,7 @@ const (
 	deletePost
 	ban
 	deleteImage
+	meidoVision
 )
 
 type postMessage struct {
@@ -210,6 +211,10 @@ func (f *Feed) Start() (err error) {
 					p := f.cache.Posts[msg.id]
 					p.Image = nil
 					f.cache.Posts[msg.id] = p
+				case meidoVision:
+					p := f.cache.Posts[msg.id]
+					p.MeidoVision = true
+					f.cache.Posts[msg.id] = p
 				}
 				f.write(msg.msg)
 				f.cache.deleteMemoized(msg.id)
@@ -290,6 +295,10 @@ func (f *Feed) banPost(id uint64, msg []byte) {
 
 func (f *Feed) deletePost(id uint64, msg []byte) {
 	f._sendPostMessage(deletePost, id, msg)
+}
+
+func (f *Feed) meidoVisionPost(id uint64, msg []byte) {
+	f._sendPostMessage(meidoVision, id, msg)
 }
 
 // DeleteImage deletes a feed's image

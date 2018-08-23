@@ -2,10 +2,13 @@ package templates
 
 import (
 	"html"
-	"meguca/common"
-	"meguca/lang"
+	"math"
 	"strconv"
 	"time"
+
+	"meguca/common"
+	"meguca/lang"
+	"meguca/util"
 )
 
 // Extra data passed, when rendering an article
@@ -115,14 +118,31 @@ func extractBacklinks(cap int, threads ...common.Thread) backlinks {
 	return bls
 }
 
-// Returns the stringified n + the plural or singular word from the language
-// by index word
+// Returns human readable time
+func secondsToTime(s float64) string {
+	time := math.Floor(s) / 60
+	divide := [4]float64{60, 24, 30, 12}
+	unit := [4]string{"minute", "hour", "day", "month"}
+
+	for i := 0; i < len(divide); i++ {
+		if time < divide[i] {
+			return pluralize(int(util.ToFixed(time, 0)), unit[i])
+		}
+
+		time = math.Floor(time / divide[i])
+	}
+
+	return pluralize(int(util.ToFixed(time, 0)), "year")
+}
+
+// Returns the stringified n + the plural or singular word
+// from the language by index word
 func pluralize(n int, word string) string {
+	ln := lang.Get().Common.Plurals[word]
 	b := make([]byte, 0, 32)
 	b = strconv.AppendInt(b, int64(n), 10)
 	b = append(b, ' ')
 
-	ln := lang.Get().Common.Plurals[word]
 	switch n {
 	case 1, -1:
 		b = append(b, ln[0]...)

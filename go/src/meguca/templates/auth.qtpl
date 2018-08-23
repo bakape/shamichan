@@ -105,7 +105,7 @@ Post link, that will redirect to the post from any page
 {% endstripspace %}{% endfunc %}
 
 Renders a moderation log page
-{% func ModLog(log []auth.ModLogEntry) %}{% stripspace %}
+{% func ModLog(log []common.ModLogEntry) %}{% stripspace %}
 	{%= htmlHeader() %}
 	{% code ln := lang.Get() %}
 	{%= tableStyle() %}
@@ -115,21 +115,21 @@ Renders a moderation log page
 			<tr>
 				<td>
 					{% switch l.Type %}
-					{% case auth.BanPost %}
+					{% case common.BanPost %}
 						{%s= ln.UI["ban"] %}
-					{% case auth.UnbanPost %}
+					{% case common.UnbanPost %}
 						{%s= ln.UI["unban"] %}
-					{% case auth.DeletePost %}
+					{% case common.DeletePost %}
 						{%s= ln.UI["deletePost"] %}
-					{% case auth.DeleteImage %}
+					{% case common.DeleteImage %}
 						{%s= ln.UI["deleteImage"] %}
-					{% case auth.SpoilerImage %}
+					{% case common.SpoilerImage %}
 						{%s= ln.UI["spoilerImage"] %}
-					{% case auth.LockThread %}
+					{% case common.LockThread %}
 						{%s= ln.Common.UI["lockThread"] %}
-					{% case auth.DeleteBoard %}
+					{% case common.DeleteBoard %}
 						{%s= ln.Common.UI["deleteBoard"] %}
-					{% case auth.MeidoVision %}
+					{% case common.MeidoVision %}
 						{%s= ln.Common.UI["meidoVision"] %}
 					{% endswitch %}
 				</td>

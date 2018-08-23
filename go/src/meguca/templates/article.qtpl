@@ -1,5 +1,6 @@
 {% import "fmt" %}
 {% import "strconv" %}
+{% import "strings" %}
 {% import "meguca/common" %}
 {% import "meguca/lang" %}
 {% import "meguca/imager/assets" %}
@@ -171,9 +172,36 @@
 			<blockquote>
 				{%= body(p, c.op, c.board, c.index, c.rbText, c.pyu) %}
 			</blockquote>
-			{% if p.Banned %}
-				<b class="admin banned">
-					{%s= ln.Common.Posts["banned"] %}
+			{%code
+				var any bool
+				attrs := make([]string, 3, 3)
+				msgs := make([]string, 3, 3)
+
+				for i, val := range [3]bool{p.Banned, p.Deleted, p.MeidoVision} {
+					if val {
+						if (any) {
+							msgs[i] = "<br>"
+						}
+						
+						any = true
+						
+						switch i {
+						case 0:
+							attrs[i] = " banned"
+							msgs[i] += ln.Common.Posts["banned"] + " BY \"" + p.ModLog[i].By + "\" FOR " + secondsToTime(float64(p.ModLog[i].Length)) + ": " + p.ModLog[i].Reason
+						case 1:
+							attrs[i] = " deleted"
+							msgs[i] += "POST WAS DELETED BY \"" + p.ModLog[i].By + "\""
+						case 2:
+							attrs[i] = " meido-vision"
+							msgs[i] += "POSTS BY THE SAME IP WERE VIEWED BY \"" + p.ModLog[i].By + "\""
+						}
+					}
+				}
+			%}
+			{% if any %}
+				<b class="admin banned"{%s= strings.Join(attrs, "") %}>
+				{%s= strings.Join(msgs, "") %}
 				</b>
 			{% endif %}
 		</div>

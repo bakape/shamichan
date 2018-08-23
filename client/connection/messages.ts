@@ -15,6 +15,7 @@ export const enum message {
 	deletePost,
 	banned,
 	deleteImage,
+	meidoVision,
 
 	// >= 30 are miscellaneous and do not write to post models
 	synchronise = 30,
