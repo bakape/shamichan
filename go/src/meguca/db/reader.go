@@ -1,17 +1,18 @@
 package db
 
 import (
+	"errors"
 	"database/sql"
+
 	"meguca/common"
 	"meguca/config"
 
 	"github.com/Masterminds/squirrel"
-
 	"github.com/lib/pq"
 )
 
 const (
-	postSelectsSQL = `p.editing, p.banned, p.spoiler, p.deleted, p.sage, p.id,
+	postSelectsSQL = `p.editing, p.banned, p.spoiler, p.deleted, p.sage, p.meido_vision, p.id,
 	p.time, p.body, p.flag, p.name, p.trip, p.auth,
 	(select array_agg((l.target, linked_post.op, linked_thread.board))
 		from links as l
@@ -106,7 +107,7 @@ func (i *imageScanner) Val() *common.Image {
 
 type postScanner struct {
 	common.Post
-	banned, spoiler, deleted, sage              sql.NullBool
+	banned, spoiler, deleted, sage, meidoVision sql.NullBool
 	name, trip, auth, imageName, flag, posterID sql.NullString
 	links                                       linkScanner
 	commands                                    commandRow
@@ -114,7 +115,7 @@ type postScanner struct {
 
 func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
-		&p.Editing, &p.banned, &p.spoiler, &p.deleted, &p.sage, &p.ID, &p.Time,
+		&p.Editing, &p.banned, &p.spoiler, &p.deleted, &p.sage, &p.meidoVision, &p.ID, &p.Time,
 		&p.Body, &p.flag, &p.name, &p.trip, &p.auth, &p.links, &p.commands,
 		&p.imageName, &p.posterID,
 	}
@@ -124,6 +125,7 @@ func (p postScanner) Val() (common.Post, error) {
 	p.Banned = p.banned.Bool
 	p.Deleted = p.deleted.Bool
 	p.Sage = p.sage.Bool
+	p.MeidoVision = p.meidoVision.Bool
 	p.Name = p.name.String
 	p.Trip = p.trip.String
 	p.Auth = p.auth.String
@@ -239,13 +241,18 @@ func scanOP(r rowScanner) (t common.Thread, err error) {
 
 func extractPost(ps postScanner, is imageScanner) (p common.Post, err error) {
 	p, err = ps.Val()
+
 	if err != nil {
 		return
 	}
+
 	p.Image = is.Val()
+
 	if p.Image != nil {
 		p.Image.Spoiler, p.Image.Name = ps.Image()
 	}
+
+	err = getPostModLog(&p)
 	return
 }
 
@@ -286,7 +293,53 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 		}
 	}
 
+	err = getPostModLog(&res.Post)
 	return
+}
+
+// Returns the post with a newly populated mod-log
+func getPostModLog(p *common.Post) error {
+	if !p.Banned && !p.Deleted && !p.MeidoVision {
+		return nil
+	}
+	
+	return InTransaction(true, func(tx *sql.Tx) (err error) {
+		for i, val := range [3]bool{p.Banned, p.Deleted, p.MeidoVision} {
+			if val {
+				var typ common.ModerationAction
+
+				switch i {
+				case 0:
+					typ = common.BanPost
+				case 1:
+					typ = common.DeletePost
+				case 2:
+					typ = common.MeidoVision
+				default:
+					return errors.New("db/reader.go::getPostModLog: invalid array")
+				}
+
+				e := common.ModLogEntry {
+					Type: typ,
+					ID: p.ID,
+				}
+
+				err = sq.Select("length", "created", "board", "by", "reason").
+					From("mod_log").
+					Where("type = ?", typ).
+					Where("id = ?", p.ID).
+					Scan(&e.Length, &e.Created, &e.Board, &e.By, &e.Reason)
+
+				if err != nil {
+					return err
+				}
+
+				p.ModLog[i] = e
+			}
+		}
+
+		return
+	})
 }
 
 func getOPs() squirrel.SelectBuilder {

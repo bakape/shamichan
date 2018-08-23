@@ -10,7 +10,7 @@ import (
 )
 
 // Write moderation action to log
-func logModeration(tx *sql.Tx, e auth.ModLogEntry) error {
+func logModeration(tx *sql.Tx, e common.ModLogEntry) error {
 	return withTransaction(tx,
 		sq.Insert("mod_log").
 			Columns("type", "board", "id", "by", "length", "reason").
@@ -27,15 +27,15 @@ func DeletePost(id uint64, by string) error {
 	}
 
 	if !del.Bool {
-		return moderatePost(id, auth.DeletePost, by,
-			sq.Update("posts").Set("deleted", true), common.DeletePost)
+		return moderatePost(id, common.DeletePost, by,
+			sq.Update("posts").Set("deleted", true), common.DeletePostP)
 	}
 
 	return nil
 }
 
 func moderatePost(
-	id uint64, typ auth.ModerationAction, by string,
+	id uint64, typ common.ModerationAction, by string,
 	query squirrel.UpdateBuilder,
 	propagate func(id, op uint64) error,
 ) (
@@ -51,7 +51,7 @@ func moderatePost(
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, auth.ModLogEntry{
+		err = logModeration(tx, common.ModLogEntry{
 			Type:  typ,
 			Board: board,
 			ID:    id,
@@ -75,7 +75,7 @@ func moderatePost(
 // DeleteImage permanently deletes an image from a post
 func DeleteImage(id uint64, by string) error {
 	q := sq.Update("posts").Set("SHA1", nil)
-	return moderatePost(id, auth.DeleteImage, by, q, common.DeleteImage)
+	return moderatePost(id, common.DeleteImage, by, q, common.DeleteImageP)
 }
 
 // DeleteBoard deletes a board and all of its contained threads and posts
@@ -92,7 +92,7 @@ func DeleteBoard(board, by string) error {
 // ModSpoilerImage spoilers image as a moderator
 func ModSpoilerImage(id uint64, by string) error {
 	q := sq.Update("posts").Set("spoiler", true)
-	return moderatePost(id, auth.SpoilerImage, by, q, common.SpoilerImage)
+	return moderatePost(id, common.SpoilerImage, by, q, common.SpoilerImageP)
 }
 
 // WriteStaff writes staff positions of a specific board. Old rows are
@@ -163,7 +163,7 @@ func CanPerform(account, board string, action auth.ModerationLevel) (
 
 // GetSameIPPosts returns posts with the same IP and on the same board as the
 // target post
-func GetSameIPPosts(id uint64, board string, uid string) (
+func GetSameIPPosts(id uint64, board string, by string) (
 	posts []common.StandalonePost, err error,
 ) {
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
@@ -204,14 +204,9 @@ func GetSameIPPosts(id uint64, board string, uid string) (
 				return
 			}
 		}
-
-		// Add a mod-log entry detailing that a meido has used meido vision
-		return logModeration(tx, auth.ModLogEntry{
-			Type:  auth.MeidoVision,
-			By:    uid,
-			Board: board,
-			ID:    id,
-		})
+		
+		return moderatePost(id, common.MeidoVision, by,
+			sq.Update("posts").Set("meido_vision", true), common.MeidoVisionPostP)
 	})
 
 	return
@@ -243,9 +238,9 @@ func SetThreadLock(id uint64, locked bool, by string) error {
 }
 
 // GetModLog retrieves the  moderation log for a specific board
-func GetModLog(board string) (log []auth.ModLogEntry, err error) {
-	log = make([]auth.ModLogEntry, 0, 64)
-	e := auth.ModLogEntry{Board: board}
+func GetModLog(board string) (log []common.ModLogEntry, err error) {
+	log = make([]common.ModLogEntry, 0, 64)
+	e := common.ModLogEntry{Board: board}
 	err = queryAll(
 		sq.Select("type", "id", "by", "created", "length", "reason").
 			From("mod_log").

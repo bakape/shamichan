@@ -21,6 +21,7 @@ export interface PostData {
 	sage: boolean
 	sticky: boolean
 	locked: boolean
+	meidoVision: boolean
 	image?: ImageData
 	time: number
 	id: number
@@ -107,4 +108,18 @@ export interface ImageData {
 export enum fileTypes {
 	jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz",
 	flac, noFile, txt
+}
+
+// Message that includes a post ID and array of (3) ModLogEntry
+export type MeidoData = {
+	id: number
+	modLog: ModLogEntry[]
+}
+
+// Mod-log info for a post
+export type ModLogEntry = {
+	type:   number
+	length: number
+	by:     string
+	reason: string
 }

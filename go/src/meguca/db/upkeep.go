@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
-	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"time"
@@ -206,8 +205,8 @@ func deleteBoard(tx *sql.Tx, id, by, reason string) (err error) {
 	if err != nil {
 		return
 	}
-	err = logModeration(tx, auth.ModLogEntry{
-		Type:   auth.DeleteBoard,
+	err = logModeration(tx, common.ModLogEntry{
+		Type:   common.DeleteBoard,
 		Board:  "all",
 		By:     by,
 		Reason: reason,

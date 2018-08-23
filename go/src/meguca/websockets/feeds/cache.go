@@ -1,11 +1,12 @@
 package feeds
 
 import (
-	"encoding/json"
-	"meguca/common"
 	"sort"
 	"strconv"
 	"time"
+	"encoding/json"
+
+	"meguca/common"
 
 	"github.com/mailru/easyjson"
 )
@@ -59,11 +60,12 @@ func newThreadCache(t common.Thread) threadCache {
 // Message used for synchronizing clients to the feed state.
 // This is the version used by the current JS client.
 type syncMessage struct {
-	Recent       []uint64            `json:"recent"`
-	Banned       []uint64            `json:"banned"`
-	Deleted      []uint64            `json:"deleted"`
-	DeletedImage []uint64            `json:"deletedImage"`
-	Open         map[uint64]openPost `json:"open"`
+	Recent       []uint64                `json:"recent"`
+	Banned       map[uint64]meidoMessage `json:"banned"`
+	Deleted      map[uint64]meidoMessage `json:"deleted"`
+	DeletedImage []uint64                `json:"deletedImage"`
+	MeidoVision  map[uint64]meidoMessage `json:"meidoVision"`
+	Open         map[uint64]openPost     `json:"open"`
 }
 
 // As syncMessage, but used for the newer protocol with C++ clients
@@ -78,6 +80,11 @@ type openPost struct {
 	Body      string `json:"body"`
 }
 
+type meidoMessage struct {
+	ID     uint64                `json:"id"`
+	ModLog [3]common.ModLogEntry `json:"modLog"`
+}
+
 // Generate a message for synchronizing to the current status of the update
 // feed. The client has to compare this state to it's own and resolve any
 // missing entries or conflicts.
@@ -85,9 +92,10 @@ func (c *threadCache) genSyncMessage() []byte {
 	threshold := time.Now().Add(-time.Minute * 15).Unix()
 	msg := syncMessage{
 		Recent:       make([]uint64, 0, 16),
-		Banned:       make([]uint64, 0, 16),
-		Deleted:      make([]uint64, 0, 16),
+		Banned:       make(map[uint64]meidoMessage, 16),
+		Deleted:      make(map[uint64]meidoMessage, 16),
 		DeletedImage: make([]uint64, 0, 16),
+		MeidoVision:  make(map[uint64]meidoMessage, 16),
 		Open:         make(map[uint64]openPost, 16),
 	}
 	for id, p := range c.Posts {
@@ -105,10 +113,22 @@ func (c *threadCache) genSyncMessage() []byte {
 			msg.Open[id] = op
 		}
 		if p.Deleted {
-			msg.Deleted = append(msg.Deleted, id)
+			msg.Deleted[id] = meidoMessage {
+				ID:     p.ID,
+				ModLog: p.ModLog,
+			}
 		}
 		if p.Banned {
-			msg.Banned = append(msg.Banned, id)
+			msg.Banned[id] = meidoMessage {
+				ID:     p.ID,
+				ModLog: p.ModLog,
+			}
+		}
+		if p.MeidoVision {
+			msg.MeidoVision[id] = meidoMessage {
+				ID:     p.ID,
+				ModLog: p.ModLog,
+			}
 		}
 	}
 
