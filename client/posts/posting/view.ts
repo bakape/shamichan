@@ -6,6 +6,7 @@ import { setAttrs, importTemplate, atBottom, scrollToBottom } from "../../util"
 import { postSM, postEvent, postState } from "."
 import UploadForm from "./upload"
 import identity from "./identity"
+import lang from "../../lang";
 
 // Element at the bottom of the thread to keep the fixed reply form from
 // overlapping any other posts, when scrolled till bottom
@@ -45,6 +46,7 @@ export default class FormView extends PostView {
         this.onClick({
             "input[name=\"done\"]": postSM.feeder(postEvent.done),
         })
+        this.updateDoneButton();
 
         if (!boardConfig.textOnly) {
             this.upload = new UploadForm(this.model,
@@ -75,14 +77,6 @@ export default class FormView extends PostView {
         this.model.auth = auth ? "??" : ""
         this.model.sage = identity.sage
         this.renderName()
-    }
-
-    // Show button for closing allocated posts
-    private showDone() {
-        const d = this.inputElement("done")
-        if (d) {
-            d.hidden = false
-        }
     }
 
     // Initialize extra elements for a draft unallocated post
@@ -229,7 +223,6 @@ export default class FormView extends PostView {
         this.id = this.el.id = "p" + this.model.id
         this.el.querySelector("header").classList.remove("temporary")
         this.renderHeader()
-        this.showDone()
     }
 
     // Toggle the spoiler input checkbox
@@ -258,5 +251,31 @@ export default class FormView extends PostView {
             this.inputElement("spoiler").addEventListener("change",
                 this.toggleSpoiler.bind(this), { passive: true });
         }
+    }
+
+    // Update the display of the Done button according to postSM state
+    public updateDoneButton() {
+        const el = this.inputElement("done");
+        if (!el) {
+            return;
+        }
+        let text = lang.ui["done"];
+        let disable = false;
+        switch (postSM.state) {
+            case postState.halted:
+                disable = true;
+                break;
+            case postState.draft:
+                text = lang.ui["cancel"];
+                break;
+            case postState.alloc:
+                break;
+            case postState.allocating:
+            case postState.erred:
+                disable = true;
+                break;
+        }
+        el.disabled = disable;
+        el.value = text;
     }
 }

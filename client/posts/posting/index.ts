@@ -216,6 +216,13 @@ export default () => {
 		})
 	})
 
+	// Update Done button on any state change
+	postSM.onChange(() => {
+		if (postForm) {
+			postForm.updateDoneButton();
+		}
+	});
+
 	// Handle connection loss
 	postSM.wildAct(postEvent.disconnect, () => {
 		switch (postSM.state) {

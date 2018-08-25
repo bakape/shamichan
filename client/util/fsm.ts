@@ -8,6 +8,7 @@ interface Stringable {
 export default class FSM<S extends Stringable, E extends Stringable> {
 	private stateHandlers: SetMap<StateHandler> = new SetMap<StateHandler>()
 	private onceHandlers: SetMap<StateHandler> = new SetMap<StateHandler>()
+	private changeHandlers: (() => void)[] = []
 	private transitions: { [transition: string]: (arg?: any) => S } = {}
 	private wilds: { [event: string]: (arg?: any) => S } = {}
 	public state: S
@@ -25,6 +26,11 @@ export default class FSM<S extends Stringable, E extends Stringable> {
 	// Like on, but handler is removed after execution
 	public once(state: S, handler: StateHandler) {
 		this.onceHandlers.add(state.toString(), handler)
+	}
+
+	// Add a handler for any state change
+	public onChange(fn: () => void) {
+		this.changeHandlers.push(fn);
 	}
 
 	// Specify state transition and a handler to execute on it. The handler must
@@ -67,6 +73,9 @@ export default class FSM<S extends Stringable, E extends Stringable> {
 			fn(arg))
 		this.onceHandlers.forEach(r, fn =>
 			fn(arg))
+		for (let f of this.changeHandlers) {
+			f();
+		}
 		this.onceHandlers.removeAll(r)
 	}
 
