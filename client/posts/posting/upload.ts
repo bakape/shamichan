@@ -126,15 +126,14 @@ export default class UploadForm extends View<Post> {
                     this.reset();
                     return false;
                 }
-            default:
-                // Cloudflare is shit and 502s randomly on image upload.
-                // Attempt again.
-                if (text.indexOf(`<!DOCTYPE html>`) !== -1) {
-                    if (this.canAllocImage()) {
-                        trigger("getPostModel").retryUpload();
-                    }
+            // Retry on imager connectivity problems
+            case 502:
+                if (this.canAllocImage()) {
+                    trigger("getPostModel").retryUpload();
+                    this.reset();
                     return false;
                 }
+            default:
                 this.reset(text);
                 return false;
         }
