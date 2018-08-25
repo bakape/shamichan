@@ -75,56 +75,40 @@ async function fetchYouTube(el: Element): Promise<void> {
 		res = await fetch(`/api/youtube-data/${id}`),
 		[title, thumb, video, videoHigh] = (await res.text()).split("\n")
 
-	switch (res.status) {
-		case 200:
-			el.textContent = format(title, provider.YouTube)
-			break
-		case 415:
-			el.textContent = format("Error 415: YouTube video is a livestream", provider.YouTube)
-			el.classList.add("erred")
-			return
-		case 500:
-			el.textContent = format("Error 500: YouTube is not available", provider.YouTube)
-			el.classList.add("erred")
-			return
-		default:
-			const errmsg = `Error ${res.status}: ${res.statusText}`
-			el.textContent = format(errmsg, provider.YouTube)
-			el.classList.add("erred")
-			console.error(errmsg)
-			return
+	if (res.status != 200) {
+		return fetchNoEmbed(provider.YouTube)(el)
 	}
-
+	
 	if (!title) {
 		el.textContent = format("Error: Title does not exist", provider.YouTube)
 		el.classList.add("erred")
 		return
 	}
-
+	
 	if (!thumb) {
 		el.textContent = format("Error: Thumbnail does not exist", provider.YouTube)
 		el.classList.add("erred")
 		return
 	}
-
+	
 	if (!video) {
 		el.textContent = format("Error: Empty googlevideo URL", provider.YouTube)
 		el.classList.add("erred")
 		return
 	}
-
+	
 	if (!videoHigh) {
 		el.textContent = format("Error: Empty googlevideo (high res) URL", provider.YouTube)
 		el.classList.add("erred")
 		return
 	}
 
+	el.textContent = format(title, provider.YouTube)
 	el.setAttribute("data-html", encodeURIComponent(
-		`<video width="480" height="270" poster="`
-		+ thumb + `" ` + (ref.includes("loop=1") ? "loop " : '')
-		+ `controls><source src="` + video
-		+ (!ref.includes(`t=`) ? check("start") : '') + check("t")
-		+ `" type="video/webm">Your browser does not support the video tag.</video>`
+		`<video width="480" height="270" poster="${thumb}" `
+		+ (ref.includes("loop=1") ? "loop " : '') + `controls><source src="${video}`
+		+ (!ref.includes(`t=`) ? check("start") : '') + check("t") + `" type="`
+		+ (video.includes("mime=video%2Fwebm") ? "video/webm" : "video/mp4") + `"/>`
 	))
 
 	function check(s: string): string {
