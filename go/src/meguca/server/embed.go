@@ -46,6 +46,12 @@ func getYouTubeInfo(id string) (ret string, err error) {
 		return ret, errYouTubeLive(id)
 	}
 
+	for _, val := range info.Keywords {
+		if strings.Contains(val, "live") || strings.Contains(val, "stream") {
+			return ret, errYouTubeLive(id)
+		}
+	}
+
 	thumb := info.GetThumbnailURL(ytdl.ThumbnailQualityMaxRes)
 
 	for _, val := range [4]ytdl.ThumbnailQuality {
