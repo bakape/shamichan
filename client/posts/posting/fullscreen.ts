@@ -11,16 +11,18 @@ function onFullscreen(e: Event) {
             e.stopPropagation()
             e.preventDefault()
 
+            const source = el.querySelector("source")
+
             if (
                 el.hasAttribute("src") ||
                 el.hasAttribute("HQ") ||
-                !el.querySelector("source").getAttribute("src").includes("googlevideo")
+                !source.getAttribute("src").includes("googlevideo")
             ) {
                 return
             }
 
-            const res = await fetch("/api/youtube-data/" +
-                el.getAttribute("poster").split("vi/").pop().split('/').shift()),
+            const res = await fetch("/api/youtube-data/"
+            + el.getAttribute("poster").split("vi/").pop().split('/').shift()),
             video = (await res.text()).split("\n").pop(),
             oldTime = el.currentTime
 
@@ -43,11 +45,13 @@ function onFullscreen(e: Event) {
                 return
             }
 
-            if (video.includes("mime=video%2Fmp4")) {
-                el.querySelector("source").setAttribute("type", "video/mp4")
+            if (video.includes("mime=video%2Fwebm")) {
+                source.setAttribute("type", "video/webm")
+            } else {
+                source.setAttribute("type", "video/mp4")
             }
 
-            el.querySelector("source").setAttribute("src", video)
+            source.setAttribute("src", video)
             el.setAttribute("HQ", true)
             el.load()
             el.currentTime = oldTime
