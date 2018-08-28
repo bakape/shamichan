@@ -104,13 +104,15 @@ recheck:
 
 	// Ignore
 	// client-side connection loss
-	// YouTube video is blocked
+	// YouTube video...
 	s := err.Error()
 	for _, suff := range [...]string{
 		"connection reset by peer",
 		"broken pipe",
 		"Error extracting sts from embedded url response",
+		"Error parsing signature tokens",
 		"Unable to extract dash manifest: strconv.ParseInt: parsing \"rawcc\": invalid syntax",
+		"Unable to extract signature tokens: Error parsing signature tokens",
 	} {
 		if strings.HasSuffix(s, suff) {
 			return true
