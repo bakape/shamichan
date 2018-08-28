@@ -2,9 +2,10 @@ package feeds
 
 import (
 	"fmt"
+	"time"
+
 	"meguca/common"
 	"meguca/db"
-	"time"
 
 	"github.com/go-playground/log"
 )
@@ -16,6 +17,8 @@ const (
 	deletePost
 	ban
 	deleteImage
+	meidoVision
+	modLogPost
 )
 
 type postMessage struct {
@@ -210,6 +213,10 @@ func (f *Feed) Start() (err error) {
 					p := f.cache.Posts[msg.id]
 					p.Image = nil
 					f.cache.Posts[msg.id] = p
+				case meidoVision:
+					p := f.cache.Posts[msg.id]
+					p.MeidoVision = true
+					f.cache.Posts[msg.id] = p
 				}
 				f.write(msg.msg)
 				f.cache.deleteMemoized(msg.id)
@@ -295,6 +302,14 @@ func (f *Feed) deletePost(id uint64, msg []byte) {
 // DeleteImage deletes a feed's image
 func (f *Feed) DeleteImage(id uint64, msg []byte) {
 	f._sendPostMessage(deleteImage, id, msg)
+}
+
+func (f *Feed) meidoVision(id uint64, msg []byte) {
+	f._sendPostMessage(meidoVision, id, msg)
+}
+
+func (f *Feed) modLogPost(id uint64, msg []byte) {
+	f._sendPostMessage(modLogPost, id, msg)
 }
 
 // SetOpenBody sets the body of an open post and send update message to clients

@@ -1,13 +1,20 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
+	"database/sql"
+
 	"meguca/auth"
 	"meguca/common"
+	"meguca/templates"
 
 	"github.com/Masterminds/squirrel"
 )
+
+// Export without circular dependency
+func init() {
+	templates.GetPostModLog = GetPostModLog
+}
 
 // Write moderation action to log
 func logModeration(tx *sql.Tx, e auth.ModLogEntry) error {
@@ -67,6 +74,15 @@ func moderatePost(
 	}
 
 	if !IsTest {
+		switch typ {
+		case auth.BanPost, auth.DeletePost, auth.MeidoVision:
+			err = auth.ModLogPost(id, op, GetPostModLog(id))
+
+			if err != nil {
+				return
+			}
+		}
+
 		err = propagate(id, op)
 	}
 	return
@@ -163,7 +179,7 @@ func CanPerform(account, board string, action auth.ModerationLevel) (
 
 // GetSameIPPosts returns posts with the same IP and on the same board as the
 // target post
-func GetSameIPPosts(id uint64, board string, uid string) (
+func GetSameIPPosts(id uint64, board string, by string) (
 	posts []common.StandalonePost, err error,
 ) {
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
@@ -205,13 +221,8 @@ func GetSameIPPosts(id uint64, board string, uid string) (
 			}
 		}
 
-		// Add a mod-log entry detailing that a meido has used meido vision
-		return logModeration(tx, auth.ModLogEntry{
-			Type:  auth.MeidoVision,
-			By:    uid,
-			Board: board,
-			ID:    id,
-		})
+		return moderatePost(id, auth.MeidoVision, by,
+			sq.Update("posts").Set("meidoVision", true), common.MeidoVisionPost)
 	})
 
 	return
@@ -242,7 +253,7 @@ func SetThreadLock(id uint64, locked bool, by string) error {
 	return setThreadBool(id, "locked", locked)
 }
 
-// GetModLog retrieves the  moderation log for a specific board
+// GetModLog retrieves the moderation log for a specific board
 func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 	log = make([]auth.ModLogEntry, 0, 64)
 	e := auth.ModLogEntry{Board: board}
@@ -262,4 +273,31 @@ func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 		},
 	)
 	return
+}
+
+// GetPostModLog retrieves a post's (3) relevant mod-log entries
+func GetPostModLog(id uint64) []auth.ModLogEntry {
+	log := make([]auth.ModLogEntry, 3, 3)
+
+	for i, val := range [3]auth.ModerationAction {
+		auth.BanPost,
+		auth.DeletePost,
+		auth.MeidoVision,
+	} {
+		sq.Select("type", "id", "length", "created", "board", "by", "reason").
+			From("mod_log").
+			Where("type = ?", val).
+			Where("id = ?", id).
+			Scan(
+				&log[i].Type,
+				&log[i].ID,
+				&log[i].Length,
+				&log[i].Created,
+				&log[i].Board,
+				&log[i].By,
+				&log[i].Reason,
+			)
+	}
+
+	return log
 }

@@ -158,8 +158,8 @@ func ResetSpamScore(ip string) (err error) {
 	return
 }
 
-// Returns, if the user needs a captcha to proceed with usage of server
-// resources
+// NeedCaptcha returns, if the user needs a captcha
+// to proceed with usage of server resources
 func NeedCaptcha(ip string) (need bool, err error) {
 	conf := config.Get()
 	if !conf.Captcha {

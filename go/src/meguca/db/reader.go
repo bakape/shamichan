@@ -2,16 +2,16 @@ package db
 
 import (
 	"database/sql"
+
 	"meguca/common"
 	"meguca/config"
 
 	"github.com/Masterminds/squirrel"
-
 	"github.com/lib/pq"
 )
 
 const (
-	postSelectsSQL = `p.editing, p.banned, p.spoiler, p.deleted, p.sage, p.id,
+	postSelectsSQL = `p.editing, p.banned, p.spoiler, p.deleted, p.sage, p.meidoVision, p.id,
 	p.time, p.body, p.flag, p.name, p.trip, p.auth,
 	(select array_agg((l.target, linked_post.op, linked_thread.board))
 		from links as l
@@ -106,7 +106,7 @@ func (i *imageScanner) Val() *common.Image {
 
 type postScanner struct {
 	common.Post
-	banned, spoiler, deleted, sage              sql.NullBool
+	banned, spoiler, deleted, sage, meidoVision sql.NullBool
 	name, trip, auth, imageName, flag, posterID sql.NullString
 	links                                       linkScanner
 	commands                                    commandRow
@@ -114,7 +114,7 @@ type postScanner struct {
 
 func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
-		&p.Editing, &p.banned, &p.spoiler, &p.deleted, &p.sage, &p.ID, &p.Time,
+		&p.Editing, &p.banned, &p.spoiler, &p.deleted, &p.sage, &p.meidoVision, &p.ID, &p.Time,
 		&p.Body, &p.flag, &p.name, &p.trip, &p.auth, &p.links, &p.commands,
 		&p.imageName, &p.posterID,
 	}
@@ -124,6 +124,7 @@ func (p postScanner) Val() (common.Post, error) {
 	p.Banned = p.banned.Bool
 	p.Deleted = p.deleted.Bool
 	p.Sage = p.sage.Bool
+	p.MeidoVision = p.meidoVision.Bool
 	p.Name = p.name.String
 	p.Trip = p.trip.String
 	p.Auth = p.auth.String
@@ -365,7 +366,7 @@ func GetAllThreadsIDs() ([]uint64, error) {
 func scanCatalog(table tableScanner) (board common.Board, err error) {
 	defer table.Close()
 	board.Threads = make([]common.Thread, 0, 32)
-
+	
 	var t common.Thread
 	for table.Next() {
 		t, err = scanOP(table)
@@ -386,7 +387,7 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 		}
 	}
 	err = injectOpenBodies(open)
-
+	
 	return
 }
 

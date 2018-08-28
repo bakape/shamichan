@@ -69,10 +69,13 @@ const (
 
 // ModLogEntry is a single entry in the moderation log
 type ModLogEntry struct {
-	Type              ModerationAction
-	ID, Length        uint64
-	Created           time.Time
-	Board, By, Reason string
+	Type              ModerationAction `json:"type"`
+	ID                uint64           `json:"id"`
+	Length            uint64           `json:"length"`
+	Created           time.Time        `json:"created"`
+	Board             string           `json:"board"`
+	By                string           `json:"by"`
+	Reason            string           `json:"reason"`
 }
 
 // Ban holdsan entry of an IP being banned from a board
@@ -95,7 +98,8 @@ type Report struct {
 	Board, Reason string
 }
 
-// Disconnects all banned websocket clients matching IP from board.
+// DisconnectByBoardAndIP disconnects all banned
+// websocket clients matching IP from board.
 // /all/ board disconnects all clients globally.
 func DisconnectByBoardAndIP(ip, board string) {
 	msg, err := common.EncodeMessage(common.MessageInvalid,

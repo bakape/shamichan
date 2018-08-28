@@ -926,6 +926,12 @@ var migrations = []func(*sql.Tx) error{
 			`alter table threads drop column nonLive`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`alter table posts add column meidoVision bool default false`,
+		)
+		return
+	},
 }
 
 func createIndex(table, column string) string {

@@ -171,9 +171,10 @@
 			<blockquote>
 				{%= body(p, c.op, c.board, c.index, c.rbText, c.pyu) %}
 			</blockquote>
-			{% if p.Banned %}
-				<b class="admin banned">
-					{%s= ln.Common.Posts["banned"] %}
+			{%code any, attrs, msgs := parseModLog(p) %}
+			{% if any %}
+				<b class="admin banned"{%s= attrs %}>
+					{%s= msgs %}
 				</b>
 			{% endif %}
 		</div>

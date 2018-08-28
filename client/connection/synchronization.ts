@@ -16,6 +16,7 @@ type SyncData = {
 	deleted: number[] // Posts deleted
 	deletedImage: number[] // Posts deleted in this thread
 	banned: number[] // Posts banned in this thread
+	meidoVision: number[] // Posts meido vision'd
 }
 
 // State of an open post
@@ -138,7 +139,7 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		}
 	}
 
-	const { open, recent, banned, deleted, deletedImage } = data,
+	const { open, recent, banned, deleted, deletedImage, meidoVision } = data,
 		proms: Promise<void>[] = []
 
 	for (let post of posts) {
@@ -168,6 +169,12 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		const post = posts.get(id)
 		if (post && !post.deleted) {
 			post.setDeleted()
+		}
+	}
+	for (let id of meidoVision) {
+		const post = posts.get(id)
+		if (post && !post.meidoVision) {
+			post.setMeidoVision()
 		}
 	}
 	for (let id of deletedImage) {

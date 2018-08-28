@@ -1,11 +1,12 @@
 package feeds
 
 import (
-	"encoding/json"
-	"meguca/common"
 	"sort"
 	"strconv"
 	"time"
+	"encoding/json"
+
+	"meguca/common"
 
 	"github.com/mailru/easyjson"
 )
@@ -63,6 +64,7 @@ type syncMessage struct {
 	Banned       []uint64            `json:"banned"`
 	Deleted      []uint64            `json:"deleted"`
 	DeletedImage []uint64            `json:"deletedImage"`
+	MeidoVision  []uint64            `json:"meidoVision"`
 	Open         map[uint64]openPost `json:"open"`
 }
 
@@ -88,6 +90,7 @@ func (c *threadCache) genSyncMessage() []byte {
 		Banned:       make([]uint64, 0, 16),
 		Deleted:      make([]uint64, 0, 16),
 		DeletedImage: make([]uint64, 0, 16),
+		MeidoVision:  make([]uint64, 0, 16),
 		Open:         make(map[uint64]openPost, 16),
 	}
 	for id, p := range c.Posts {
@@ -103,6 +106,9 @@ func (c *threadCache) genSyncMessage() []byte {
 				op.Spoilered = p.Image.Spoiler
 			}
 			msg.Open[id] = op
+		}
+		if p.MeidoVision {
+			msg.MeidoVision = append(msg.MeidoVision, id)
 		}
 		if p.Deleted {
 			msg.Deleted = append(msg.Deleted, id)

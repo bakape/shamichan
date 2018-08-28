@@ -25,6 +25,7 @@ export default class FormModel extends Post {
 			deleted: false,
 			banned: false,
 			sage: false,
+			meidoVision: false,
 			sticky: false,
 			locked: false,
 			time: Math.floor(Date.now() / 1000),

@@ -5,8 +5,10 @@ package feeds
 
 import (
 	"errors"
-	"meguca/common"
 	"sync"
+
+	"meguca/auth"
+	"meguca/common"
 )
 
 // Contains and manages all active update feeds
@@ -22,12 +24,14 @@ var feeds = feedMap{
 
 // Export without circular dependency
 func init() {
+	auth.ModLogPost = ModLogPost
 	common.SendTo = SendTo
 	common.ClosePost = ClosePost
 	common.BanPost = BanPost
 	common.DeletePost = DeletePost
 	common.DeleteImage = DeleteImage
 	common.SpoilerImage = SpoilerImage
+	common.MeidoVisionPost = MeidoVisionPost
 }
 
 // Thread watchers
@@ -282,6 +286,34 @@ func SpoilerImage(id, op uint64) error {
 	}
 	return sendIfExists(op, func(f *Feed) {
 		f.SpoilerImage(id, msg)
+	})
+}
+
+// MeidoVisionPost propagates a message about a post being meido vision'd
+func MeidoVisionPost(id, op uint64) error {
+	msg, err := common.EncodeMessage(common.MessageMeidoVision, id)
+	if err != nil {
+		return err
+	}
+	return sendIfExists(op, func(f *Feed) {
+		f.meidoVision(id, msg)
+	})
+}
+
+// ModLogPost propagates a message and data about a post being moderated
+func ModLogPost(id, op uint64, log []auth.ModLogEntry) error {
+	msg, err := common.EncodeMessage(common.MessageModLogPost, struct {
+		ID  uint64             `json:"id"`
+		Log []auth.ModLogEntry `json:"log"`
+	}{
+		ID:  id,
+		Log: log,
+	})
+	if err != nil {
+		return err
+	}
+	return sendIfExists(op, func(f *Feed) {
+		f.modLogPost(id, msg)
 	})
 }
 

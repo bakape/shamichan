@@ -12,6 +12,17 @@ export type PostLink = {
 	board: string
 }
 
+// ModLogEntry is a single entry in the moderation log
+export type ModLogEntry = {
+	type:    number
+	id:      number
+	length:  number
+	created: string
+	board:   string
+	by:      string
+	reason:  string
+}
+
 // Data of any post. In addition to server-sent JSON includes the state
 // property.
 export interface PostData {
@@ -19,6 +30,7 @@ export interface PostData {
 	deleted: boolean
 	banned: boolean
 	sage: boolean
+	meidoVision: boolean
 	sticky: boolean
 	locked: boolean
 	image?: ImageData

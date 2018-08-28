@@ -10,6 +10,7 @@ import lang from "../lang"
 import { page, mine, posts } from "../state"
 import options from "../options"
 import countries from "./countries"
+import { secondsToTime } from "../util/time"
 
 // Base post view class
 export default class PostView extends ImageHandler {
@@ -55,6 +56,12 @@ export default class PostView extends ImageHandler {
         }
         if (this.model.banned) {
             this.renderBanned()
+        }
+        if (this.model.deleted) {
+            this.renderDeleted()
+        }
+        if (this.model.meidoVision) {
+            this.renderMeidoVision()
         }
         this.renderHeader()
         if (this.model.image) {
@@ -245,20 +252,80 @@ export default class PostView extends ImageHandler {
         el.innerHTML = html
     }
 
-    // Render "USER WAS BANNED FOR THIS POST" message
-    public renderBanned() {
+    // Render related mod-log status
+    public async renderStatus(type: number) {
         this.uncheckModerationBox()
+        const log = this.model.log,
+        el = this.el.querySelector(".post-container")
+        var tag: string,
+        msg: string,
+        mod: boolean,
+        last = el.lastElementChild
 
-        const el = firstChild(this.el.querySelector(".post-container"), el =>
-            el.classList.contains("banned"))
-        if (el) {
+        switch (type) {
+        case 0:
+            tag = "banned"
+            msg = lang.posts["banned"]
+
+            if (log[0].id != 0) {
+                msg += ` BY "${log[0].by}" FOR ${secondsToTime(log[0].length).toUpperCase()}: ${log[0].reason}`
+            }
+
+            break
+        case 2:
+            this.el.classList.add("deleted")
+
+            if (log[1].id != 0) {
+                tag = "deleted"
+                msg = lang.posts["deleted"] + ` BY "${log[1].by}"`
+                break
+            }
+            
+            return
+        case 7:
+            tag = "meido-vision"
+            msg = lang.posts["meidoVision"]
+
+            if (log[2].id != 0) {
+                msg += ` BY "${log[2].by}"`
+            }
+
+            break
+        default:
+            console.error("Invalid server:auth.ModerationAction type")
             return
         }
 
-        const b = document.createElement("b")
-        b.classList.add("admin", "banned")
-        b.innerText = lang.posts["banned"]
-        this.el.querySelector("blockquote").after(b)
+        if (last.tagName == "B") {
+            for (let attr of last.attributes[Symbol.iterator]()) {
+                if (attr.name == tag) {
+                    return
+                }
+
+                mod = true
+            }
+        } else {
+            last = el.insertAdjacentElement("beforeend", document.createElement("b"))
+            last.classList.add("admin", "banned")
+        }
+
+        last.setAttribute(tag, "")
+        last.insertAdjacentHTML("beforeend", `${(mod ? "<br>" : '') + msg}`)
+    }
+
+    // Render "USER WAS BANNED FOR THIS POST" message
+    public renderBanned() {
+        this.renderStatus(0)
+    }
+
+    // Render indications that a post had been deleted
+    public renderDeleted() {
+        this.renderStatus(2)
+    }
+
+    // Render that this post was viewed for posts by the same IP
+    public renderMeidoVision() {
+        this.renderStatus(7)
     }
 
     // Add or remove highlight to post
@@ -269,12 +336,6 @@ export default class PostView extends ImageHandler {
     // Set display as an open post, that is being edited
     public setEditing(on: boolean) {
         this.el.classList.toggle("editing", on)
-    }
-
-    // Render indications that a post had been deleted
-    public renderDeleted() {
-        this.el.classList.add("deleted")
-        this.uncheckModerationBox()
     }
 
     // Render the sticky status of a thread OP

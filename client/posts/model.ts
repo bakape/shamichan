@@ -5,7 +5,7 @@ import PostView from './view'
 import { SpliceResponse } from '../client'
 import { mine, seenPosts, storeSeenPost, posts, hidden } from "../state"
 import { notifyAboutReply } from "../ui"
-import { PostData, TextState, PostLink, Command, ImageData } from "../common"
+import { PostData, TextState, PostLink, Command, ImageData, ModLogEntry } from "../common"
 import { hideRecursively } from "./hide"
 import options from "../options"
 
@@ -19,6 +19,7 @@ export class Post extends Model implements PostData {
 	public deleted: boolean
 	public sage: boolean
 	public banned: boolean
+	public meidoVision: boolean
 	public sticky: boolean
 	public locked: boolean
 	public seenOnce: boolean
@@ -42,6 +43,7 @@ export class Post extends Model implements PostData {
 		}
 	}
 	public links: PostLink[]
+	public log: ModLogEntry[]
 
 	constructor(attrs: PostData) {
 		super()
@@ -212,8 +214,25 @@ export class Post extends Model implements PostData {
 
 	// Set post as deleted
 	public setDeleted() {
+		if (this.deleted) {
+			return
+		}
 		this.deleted = true
 		this.view.renderDeleted()
+	}
+
+	// Set post as meido vision being used
+	public setMeidoVision() {
+		if (this.meidoVision) {
+			return
+		}
+		this.meidoVision = true
+		this.view.renderMeidoVision()
+	}
+
+	// Set mod-log entries related to this post
+	public setModLog(log: ModLogEntry[]) {
+		this.log = log
 	}
 
 	public removeImage() {

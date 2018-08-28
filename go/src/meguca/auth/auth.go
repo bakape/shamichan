@@ -3,13 +3,15 @@
 package auth
 
 import (
+	"fmt"
+	"net"
+	"strings"
+
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
-	"meguca/config"
-	"net"
 	"net/http"
-	"strings"
+
+	"meguca/config"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -22,6 +24,10 @@ var (
 	// ReverseProxyIP specifies the IP of a non-localhost reverse proxy. Used
 	// for filtering in XFF IP determination.
 	ReverseProxyIP string
+
+	// ModLogPost propagates a message about a post being moderated
+	// Forwarded function from "meguca/websockets/feeds" to avoid circular imports
+	ModLogPost func(id, op uint64, log []ModLogEntry) error
 )
 
 // IsBoard confirms the string is a valid board

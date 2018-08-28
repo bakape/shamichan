@@ -1,4 +1,4 @@
-// Wecbsocket message handlers central file
+// Websocket message handlers central file
 
 package websockets
 
