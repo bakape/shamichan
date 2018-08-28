@@ -267,7 +267,7 @@ export default class PostView extends ImageHandler {
             tag = "banned"
             msg = lang.posts["banned"]
 
-            if (log[0].id != 0) {
+            if (log.length == 3 && log[0].type == type) {
                 msg += ` BY "${log[0].by}" FOR ${secondsToTime(log[0].length).toUpperCase()}: ${log[0].reason}`
             }
 
@@ -275,7 +275,7 @@ export default class PostView extends ImageHandler {
         case 2:
             this.el.classList.add("deleted")
 
-            if (log[1].id != 0) {
+            if (log.length == 3 && log[1].type == type) {
                 tag = "deleted"
                 msg = lang.posts["deleted"] + ` BY "${log[1].by}"`
                 break
@@ -286,7 +286,7 @@ export default class PostView extends ImageHandler {
             tag = "meido-vision"
             msg = lang.posts["meidoVision"]
 
-            if (log[2].id != 0) {
+            if (log.length == 3 && log[2].type == type) {
                 msg += ` BY "${log[2].by}"`
             }
 

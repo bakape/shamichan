@@ -1,6 +1,8 @@
 package templates
 
 import (
+	"bytes"
+	"fmt"
 	"html"
 	"math"
 	"strconv"
@@ -10,10 +12,12 @@ import (
 	"meguca/auth"
 	"meguca/common"
 	"meguca/lang"
+
+	"github.com/go-playground/log"
 )
 
 // GetPostModLog forwards db.GetPostModLog to avoid cyclic imports in cache
-var GetPostModLog func(id uint64) []auth.ModLogEntry
+var GetPostModLog func(id uint64) (mLog []auth.ModLogEntry, err error)
 
 // Extra data passed, when rendering an article
 type articleContext struct {
@@ -123,50 +127,56 @@ func extractBacklinks(cap int, threads ...common.Thread) backlinks {
 }
 
 // Returns 3 mod-log related messages by post ID
-func parseModLog(p common.Post) (any bool, attrs string, msgs string) {
+func parseModLog(p common.Post) (bool, string, string) {
+	var any bool
+	var attrs, msgs bytes.Buffer
 	ln := lang.Get().Common.Posts
-	log := GetPostModLog(p.ID)
+	mLog, err := GetPostModLog(p.ID)
 
-	for i, val := range [3]bool{p.Banned, p.Deleted, p.MeidoVision} {
-		if val {
-			switch i {
-			case 0:
-				any = true
-				attrs = " banned"
-				msgs = ln["banned"]
+	if err != nil {
+		log.Error("templates/article.go::parseModLog: ", err)
+		return false, "", ""
+	}
 
-				if log[i].ID != 0 {
-					msgs += ` BY "` + log[i].By + `" FOR ` +
-						strings.ToUpper(secondsToTime(float64(log[i].Length))) +
-						": " + log[i].Reason
-				}
-			case 1:
-				if log[i].ID != 0 {
-					if (any) {
-						msgs += "<br>"
-					}
-		
-					any = true
-					attrs += " deleted"
-					msgs += ln["deleted"] + ` BY "` + log[i].By + `"`
-				}
-			case 2:
-				if (any) {
-					msgs += "<br>"
-				}
+	if p.Banned {
+		any = true
+		attrs.WriteString(" banned")
+		msgs.WriteString(ln["banned"])
 
-				any = true
-				attrs += " meido-vision"
-				msgs += ln["meidoVision"]
-				
-				if log[i].ID != 0 {
-					msgs += ` BY "` + log[i].By + `"`
-				}
-			}
+		if mLog[0].Type == auth.BanPost {
+			msgs.WriteString(fmt.Sprintf(` BY "%s" FOR %s: %s`,
+				mLog[0].By,
+				strings.ToUpper(secondsToTime(float64(mLog[0].Length))),
+				mLog[0].Reason,
+			))
 		}
 	}
 
-	return
+	if p.Deleted && mLog[1].Type == auth.DeletePost {
+		if (any) {
+			msgs.WriteString("<br>")
+		}
+
+		any = true
+		attrs.WriteString(" deleted")
+		msgs.WriteString(fmt.Sprintf(`%s BY "%s"`, ln["deleted"], mLog[1].By))
+	}
+
+	if p.MeidoVision {
+		if (any) {
+			msgs.WriteString("<br>")
+		}
+
+		any = true
+		attrs.WriteString(" meido-vision")
+		msgs.WriteString(ln["meidoVision"])
+		
+		if mLog[2].Type == auth.MeidoVision {
+			msgs.WriteString(fmt.Sprintf(` BY "%s"`, mLog[2].By))
+		}
+	}
+
+	return any, attrs.String(), msgs.String()
 }
 
 // Returns human readable time
@@ -177,17 +187,17 @@ func secondsToTime(s float64) string {
 
 	for i := 0; i < len(divide); i++ {
 		if time < divide[i] {
-			return pluralize(int(ToFixed(time, 0)), unit[i])
+			return pluralize(int(toFixed(time, 0)), unit[i])
 		}
 
 		time = math.Floor(time / divide[i])
 	}
 
-	return pluralize(int(ToFixed(time, 0)), "year")
+	return pluralize(int(toFixed(time, 0)), "year")
 }
 
-// ToFixed truncates a float64
-func ToFixed(num float64, precision int) float64 {
+// Truncates a float64
+func toFixed(num float64, precision int) float64 {
     out := math.Pow(10, float64(precision))
     return float64(round(num * out)) / out
 }

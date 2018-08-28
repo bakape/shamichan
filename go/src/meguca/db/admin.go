@@ -76,10 +76,16 @@ func moderatePost(
 	if !IsTest {
 		switch typ {
 		case auth.BanPost, auth.DeletePost, auth.MeidoVision:
-			err = auth.ModLogPost(id, op, GetPostModLog(id))
+			mLog, err := GetPostModLog(id)
 
 			if err != nil {
-				return
+				return err
+			}
+
+			err = auth.ModLogPost(id, op, mLog)
+
+			if err != nil {
+				return err
 			}
 		}
 
@@ -276,28 +282,34 @@ func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 }
 
 // GetPostModLog retrieves a post's (3) relevant mod-log entries
-func GetPostModLog(id uint64) []auth.ModLogEntry {
-	log := make([]auth.ModLogEntry, 3, 3)
+func GetPostModLog(id uint64) (mLog []auth.ModLogEntry, err error) {
+	mLog = make([]auth.ModLogEntry, 3, 3)
 
 	for i, val := range [3]auth.ModerationAction {
 		auth.BanPost,
 		auth.DeletePost,
 		auth.MeidoVision,
 	} {
-		sq.Select("type", "id", "length", "created", "board", "by", "reason").
+		err = sq.Select("type", "id", "length", "created", "board", "by", "reason").
 			From("mod_log").
 			Where("type = ?", val).
 			Where("id = ?", id).
 			Scan(
-				&log[i].Type,
-				&log[i].ID,
-				&log[i].Length,
-				&log[i].Created,
-				&log[i].Board,
-				&log[i].By,
-				&log[i].Reason,
+				&mLog[i].Type,
+				&mLog[i].ID,
+				&mLog[i].Length,
+				&mLog[i].Created,
+				&mLog[i].Board,
+				&mLog[i].By,
+				&mLog[i].Reason,
 			)
+
+		if err != nil && err.Error() != "sql: no rows in result set" {
+			return
+		}
+
+		err = nil
 	}
 
-	return log
+	return
 }
