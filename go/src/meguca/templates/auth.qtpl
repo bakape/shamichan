@@ -130,7 +130,7 @@ Renders a moderation log page
 					{% case auth.DeleteBoard %}
 						{%s= ln.Common.UI["deleteBoard"] %}
 					{% case auth.MeidoVision %}
-						{%s= ln.Common.UI["meidoVision"] %}
+						{%s= ln.Common.UI["meidoVisionPost"] %}
 					{% endswitch %}
 				</td>
 				<td>{%s l.By %}</td>
