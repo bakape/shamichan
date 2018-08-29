@@ -75,7 +75,7 @@ func moderatePost(
 
 	if !IsTest {
 		switch typ {
-		case auth.BanPost, auth.DeletePost, auth.MeidoVision:
+		case auth.DeletePost, auth.MeidoVision:
 			mLog, err := GetPostModLog(id)
 
 			if err != nil {

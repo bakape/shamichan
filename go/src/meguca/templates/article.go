@@ -127,23 +127,22 @@ func extractBacklinks(cap int, threads ...common.Thread) backlinks {
 }
 
 // Returns 3 mod-log related messages by post ID
-func parseModLog(p common.Post) (bool, string, string) {
+func parseModLog(p common.Post) (bool, string) {
 	var any bool
-	var attrs, msgs bytes.Buffer
+	var msgs bytes.Buffer
 	ln := lang.Get().Common.Posts
 	mLog, err := GetPostModLog(p.ID)
 
 	if err != nil {
 		log.Error("templates/article.go::parseModLog: ", err)
-		return false, "", ""
+		return false, ""
 	}
 
 	if p.Banned {
 		any = true
-		attrs.WriteString(" banned")
 		msgs.WriteString(ln["banned"])
 
-		if mLog[0].Type == auth.BanPost {
+		if mLog[0].By != "" {
 			msgs.WriteString(fmt.Sprintf(` BY "%s" FOR %s: %s`,
 				mLog[0].By,
 				strings.ToUpper(secondsToTime(float64(mLog[0].Length))),
@@ -152,13 +151,12 @@ func parseModLog(p common.Post) (bool, string, string) {
 		}
 	}
 
-	if p.Deleted && mLog[1].Type == auth.DeletePost {
+	if p.Deleted && mLog[1].By != "" {
 		if (any) {
 			msgs.WriteString("<br>")
 		}
 
 		any = true
-		attrs.WriteString(" deleted")
 		msgs.WriteString(fmt.Sprintf(`%s BY "%s"`, ln["deleted"], mLog[1].By))
 	}
 
@@ -168,15 +166,14 @@ func parseModLog(p common.Post) (bool, string, string) {
 		}
 
 		any = true
-		attrs.WriteString(" meido-vision")
 		msgs.WriteString(ln["meidoVision"])
 		
-		if mLog[2].Type == auth.MeidoVision {
+		if mLog[2].By != "" {
 			msgs.WriteString(fmt.Sprintf(` BY "%s"`, mLog[2].By))
 		}
 	}
 
-	return any, attrs.String(), msgs.String()
+	return any, msgs.String()
 }
 
 // Returns human readable time

@@ -9,11 +9,11 @@ export function secondsToTime(s: number): string {
 
     for (let i = 0; i < divide.length; i++) {
         if (time < divide[i]) {
-            return pluralize(time, lang.plurals[unit[i]])
+            return pluralize(Math.round(time * 1e0), lang.plurals[unit[i]])
         }
 
         time = Math.floor(time / divide[i])
     }
 
-    return pluralize(time, lang.plurals["year"])
+    return pluralize(Math.round(time * 1e0), lang.plurals["year"])
 }

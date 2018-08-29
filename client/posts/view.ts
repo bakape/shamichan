@@ -54,14 +54,8 @@ export default class PostView extends ImageHandler {
         if (this.model.backlinks) {
             this.renderBacklinks()
         }
-        if (this.model.banned) {
-            this.renderBanned()
-        }
-        if (this.model.deleted) {
-            this.renderDeleted()
-        }
-        if (this.model.meidoVision) {
-            this.renderMeidoVision()
+        if (this.model.banned || this.model.deleted || this.model.meidoVision) {
+            this.renderStatus()
         }
         this.renderHeader()
         if (this.model.image) {
@@ -253,79 +247,57 @@ export default class PostView extends ImageHandler {
     }
 
     // Render related mod-log status
-    public async renderStatus(type: number) {
+    public renderStatus() {
         this.uncheckModerationBox()
         const log = this.model.log,
         el = this.el.querySelector(".post-container")
-        var tag: string,
-        msg: string,
-        mod: boolean,
-        last = el.lastElementChild
+        var msgs = [lang.posts["banned"], lang.posts["deleted"], lang.posts["meidoVision"]],
+        last = el.lastElementChild,
+        mod = false
 
-        switch (type) {
-        case 0:
-            tag = "banned"
-            msg = lang.posts["banned"]
-
-            if (log.length == 3 && log[0].type == type) {
-                msg += ` BY "${log[0].by}" FOR ${secondsToTime(log[0].length).toUpperCase()}: ${log[0].reason}`
+        if (log && log.length == 3) {
+            if (log[0].by) {
+                msgs[0] += ` BY "${log[0].by}" FOR ${secondsToTime(log[0].length).toUpperCase()}: ${log[0].reason}`
             }
 
-            break
-        case 2:
-            this.el.classList.add("deleted")
-
-            if (log.length == 3 && log[1].type == type) {
-                tag = "deleted"
-                msg = lang.posts["deleted"] + ` BY "${log[1].by}"`
-                break
-            }
-            
-            return
-        case 7:
-            tag = "meido-vision"
-            msg = lang.posts["meidoVision"]
-
-            if (log.length == 3 && log[2].type == type) {
-                msg += ` BY "${log[2].by}"`
+            if (log[1].by) {
+                msgs[1] += ` BY "${log[1].by}"`
             }
 
-            break
-        default:
-            console.error("Invalid server:auth.ModerationAction type")
-            return
+            if (log[2].by) {
+                msgs[2] += ` BY "${log[2].by}"`
+            }
         }
 
         if (last.tagName == "B") {
-            for (let attr of last.attributes[Symbol.iterator]()) {
-                if (attr.name == tag) {
-                    return
-                }
-
-                mod = true
-            }
-        } else {
-            last = el.insertAdjacentElement("beforeend", document.createElement("b"))
-            last.classList.add("admin", "banned")
+            last.remove()
         }
 
-        last.setAttribute(tag, "")
-        last.insertAdjacentHTML("beforeend", `${(mod ? "<br>" : '') + msg}`)
-    }
+        last = el.insertAdjacentElement("beforeend", document.createElement("b"))
+        last.classList.add("admin", "banned")
 
-    // Render "USER WAS BANNED FOR THIS POST" message
-    public renderBanned() {
-        this.renderStatus(0)
-    }
+        if (this.model.banned) {
+            mod = true
+            last.insertAdjacentHTML("beforeend", msgs[0])
+        }
 
-    // Render indications that a post had been deleted
-    public renderDeleted() {
-        this.renderStatus(2)
-    }
+        if (this.model.deleted) {
+            if (mod) {
+                msgs[1] = `<br>${msgs[1]}`
+            }
 
-    // Render that this post was viewed for posts by the same IP
-    public renderMeidoVision() {
-        this.renderStatus(7)
+            mod = true
+            this.el.classList.add("deleted")
+            last.insertAdjacentHTML("beforeend", msgs[1])
+        }
+
+        if (this.model.meidoVision) {
+            if (mod) {
+                msgs[2] = `<br>${msgs[2]}`
+            }
+
+            last.insertAdjacentHTML("beforeend", msgs[2])
+        }
     }
 
     // Add or remove highlight to post

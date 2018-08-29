@@ -209,7 +209,7 @@ export class Post extends Model implements PostData {
 			return
 		}
 		this.banned = true
-		this.view.renderBanned()
+		this.view.renderStatus()
 	}
 
 	// Set post as deleted
@@ -218,7 +218,7 @@ export class Post extends Model implements PostData {
 			return
 		}
 		this.deleted = true
-		this.view.renderDeleted()
+		this.view.renderStatus()
 	}
 
 	// Set post as meido vision being used
@@ -227,7 +227,7 @@ export class Post extends Model implements PostData {
 			return
 		}
 		this.meidoVision = true
-		this.view.renderMeidoVision()
+		this.view.renderStatus()
 	}
 
 	// Set mod-log entries related to this post
