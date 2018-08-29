@@ -111,8 +111,7 @@ recheck:
 		"broken pipe",
 		"Error extracting sts from embedded url response",
 		"Error parsing signature tokens",
-		"Unable to extract dash manifest: strconv.ParseInt: parsing \"rawcc\": invalid syntax",
-		"Unable to extract signature tokens: Error parsing signature tokens",
+		"\": invalid syntax",
 	} {
 		if strings.HasSuffix(s, suff) {
 			return true
