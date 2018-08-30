@@ -144,9 +144,21 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 
 	if !IsTest {
 		for _, post := range posts {
+			mLog, err := GetPostModLog(post.id)
+
+			if err != nil {
+				return err
+			}
+
+			err = auth.ModLogPost(post.id, post.op, mLog)
+
+			if err != nil {
+				return err
+			}
+
 			err = common.BanPost(post.id, post.op)
 			if err != nil {
-				return
+				return err
 			}
 		}
 	}
