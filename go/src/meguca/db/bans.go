@@ -1,11 +1,12 @@
 package db
 
 import (
-	"database/sql"
-	"meguca/auth"
-	"meguca/common"
 	"sync"
 	"time"
+	"database/sql"
+
+	"meguca/auth"
+	"meguca/common"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/go-playground/log"
@@ -23,27 +24,28 @@ func writeBan(
 	postID uint64,
 	expires time.Time,
 	log bool,
-) (
-	err error,
-) {
+) (e auth.ModLogEntry, err error,) {
 	err = withTransaction(tx,
 		sq.Insert("bans").
 			Columns("ip", "board", "forPost", "reason", "by", "expires").
 			Values(ip, board, postID, reason, by, expires.UTC()).
 			Suffix("on conflict do nothing"),
-	).
-		Exec()
+	).Exec()
+
 	if err != nil || !log {
 		return
 	}
-	return logModeration(tx, auth.ModLogEntry{
+
+	e = auth.ModLogEntry{
 		Type:   auth.BanPost,
 		Board:  board,
 		ID:     postID,
 		By:     by,
 		Length: uint64(expires.Sub(time.Now()).Seconds()),
 		Reason: reason,
-	})
+	}
+
+	return e, logModeration(tx, e)
 }
 
 // Propagate ban updates through DB and disconnect all banned IPs
@@ -64,7 +66,8 @@ func propagateBans(board string, ips ...string) error {
 // SystemBan automatically bans an IP
 func SystemBan(ip, reason string, expires time.Time) (err error) {
 	err = InTransaction(false, func(tx *sql.Tx) error {
-		return writeBan(tx, ip, "all", reason, "system", 0, expires, true)
+		_, err = writeBan(tx, ip, "all", reason, "system", 0, expires, true)
+		return err
 	})
 	if err != nil {
 		return
@@ -73,11 +76,9 @@ func SystemBan(ip, reason string, expires time.Time) (err error) {
 	return
 }
 
-// Ban IPs from accessing a specific board. Need to target posts. Returns all
-// banned IPs.
-func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
-	err error,
-) {
+// Ban IPs from accessing a specific board. Need to target posts.
+// Returns all banned IPs.
+func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (err error) {
 	type post struct {
 		id, op uint64
 		ip     string
@@ -88,9 +89,12 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 		ips   = make(map[string]bool, len(ids))
 		posts = make([]post, 0, len(ids))
 		ip    string
+		modLog []auth.ModLogEntry
 	)
+
 	for _, id := range ids {
 		ip, err = GetIP(id)
+
 		switch err {
 		case nil:
 		case sql.ErrNoRows:
@@ -99,6 +103,7 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 		default:
 			return
 		}
+
 		ips[ip] = true
 		posts = append(posts, post{
 			id: id,
@@ -109,6 +114,7 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 	// Retrieve their OPs
 	for i := range posts {
 		posts[i].op, err = GetPostOP(posts[i].id)
+
 		if err != nil {
 			return
 		}
@@ -121,52 +127,54 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 				sq.Update("posts").
 					Set("banned", true).
 					Where("id = ?", post.id),
-			).
-				Exec()
+			).Exec()
+
 			if err != nil {
 				return
 			}
+
 			err = bumpThread(tx, post.op, false)
+
 			if err != nil {
 				return
 			}
-			err = writeBan(tx, post.ip, board, reason, by, post.id, expires,
-				log)
+
+			e, err := writeBan(tx, post.ip, board, reason, by, post.id, expires, log)
+			
 			if err != nil {
-				return
+				return err
 			}
+
+			modLog = append(modLog, e)
 		}
+
 		return
 	})
+
 	if err != nil {
 		return
 	}
 
 	if !IsTest {
-		for _, post := range posts {
-			mLog, err := GetPostModLog(post.id)
-
-			if err != nil {
-				return err
-			}
-
-			err = auth.ModLogPost(post.id, post.op, mLog)
-
-			if err != nil {
-				return err
-			}
-
-			err = common.BanPost(post.id, post.op)
-			if err != nil {
-				return err
+		if (len(modLog) == len(posts)) {
+			for i, post := range posts {
+				if modLog[i].ID == post.id {
+					err = auth.LogModeration(post.id, post.op, modLog[i])
+	
+					if err != nil {
+						return err
+					}
+				}
 			}
 		}
 	}
 
 	ipArr := make([]string, 0, len(ips))
+
 	for ip := range ips {
 		ipArr = append(ipArr, ip)
 	}
+
 	return propagateBans(board, ipArr...)
 }
 

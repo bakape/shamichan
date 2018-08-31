@@ -25,9 +25,8 @@ var (
 	// for filtering in XFF IP determination.
 	ReverseProxyIP string
 
-	// ModLogPost propagates a message about a post being moderated
-	// Forwarded function from "meguca/websockets/feeds" to avoid circular imports
-	ModLogPost func(id, op uint64, log []ModLogEntry) error
+	// LogModeration propagates a message about a post being moderated
+	LogModeration func(id, op uint64, e ModLogEntry) error
 )
 
 // IsBoard confirms the string is a valid board

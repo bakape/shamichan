@@ -12,11 +12,11 @@ export const enum message {
 	__,
 	insertImage,
 	spoiler,
-	deletePost,
-	banned,
+	___,
+	____,
 	deleteImage,
-	meidoVision,
-	modLogPost,
+	_____,
+	logModeration,
 
 	// >= 30 are miscellaneous and do not write to post models
 	synchronise = 30,
