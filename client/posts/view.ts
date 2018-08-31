@@ -256,15 +256,15 @@ export default class PostView extends ImageHandler {
         mod = false
 
         if (log && log.length == 3) {
-            if (log[0].by) {
+            if (log[0] && log[0].by) {
                 msgs[0] += ` BY "${log[0].by}" FOR ${secondsToTime(log[0].length).toUpperCase()}: ${log[0].reason}`
             }
 
-            if (log[1].by) {
+            if (log[1] && log[1].by) {
                 msgs[1] += ` BY "${log[1].by}"`
             }
 
-            if (log[2].by) {
+            if (log[2] && log[2].by) {
                 msgs[2] += ` BY "${log[2].by}"`
             }
         }

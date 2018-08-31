@@ -203,36 +203,50 @@ export class Post extends Model implements PostData {
 		this.view.closePost()
 	}
 
-	// Set post as banned
-	public setBanned() {
-		if (this.banned) {
-			return
+	// Log this post's respective moderation entry
+	public logModeration(e: ModLogEntry) {
+		if (!this.log || this.log.length != 3) {
+			this.log = new Array(3)
 		}
-		this.banned = true
-		this.view.renderStatus()
-	}
 
-	// Set post as deleted
-	public setDeleted() {
-		if (this.deleted) {
-			return
+		switch (e.type) {
+		case 0:
+			if (this.banned) {
+				return
+			}
+
+			this.banned = true
+
+			if (e) {
+				this.log[0] = e
+			}
+
+			break
+		case 2:
+			if (this.deleted) {
+				return
+			}
+
+			this.deleted = true
+
+			if (e) {
+				this.log[1] = e
+			}
+
+			break
+		case 7:
+			if (this.meidoVision) {
+				return
+			}
+
+			this.meidoVision = true
+
+			if (e) {
+				this.log[2] = e
+			}
 		}
-		this.deleted = true
-		this.view.renderStatus()
-	}
 
-	// Set post as meido vision being used
-	public setMeidoVision() {
-		if (this.meidoVision) {
-			return
-		}
-		this.meidoVision = true
 		this.view.renderStatus()
-	}
-
-	// Set mod-log entries related to this post
-	public setModLog(log: ModLogEntry[]) {
-		this.log = log
 	}
 
 	public removeImage() {

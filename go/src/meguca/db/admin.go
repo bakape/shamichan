@@ -35,7 +35,7 @@ func DeletePost(id uint64, by string) error {
 
 	if !del.Bool {
 		return moderatePost(id, auth.DeletePost, by,
-			sq.Update("posts").Set("deleted", true), common.DeletePost)
+			sq.Update("posts").Set("deleted", true), nil)
 	}
 
 	return nil
@@ -45,30 +45,36 @@ func moderatePost(
 	id uint64, typ auth.ModerationAction, by string,
 	query squirrel.UpdateBuilder,
 	propagate func(id, op uint64) error,
-) (
-	err error,
-) {
+) (err error) {
 	board, op, err := GetPostParenthood(id)
+
 	if err != nil {
 		return
 	}
 
+	e := auth.ModLogEntry {
+		Type:  typ,
+		Board: board,
+		ID:    id,
+		By:    by,
+	}
+	
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = withTransaction(tx, query.Where("id = ?", id)).Exec()
+
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, auth.ModLogEntry{
-			Type:  typ,
-			Board: board,
-			ID:    id,
-			By:    by,
-		})
+
+		err = logModeration(tx, e)
+
 		if err != nil {
 			return
 		}
+
 		return bumpThread(tx, op, false)
 	})
+
 	if err != nil {
 		return
 	}
@@ -76,21 +82,16 @@ func moderatePost(
 	if !IsTest {
 		switch typ {
 		case auth.DeletePost, auth.MeidoVision:
-			mLog, err := GetPostModLog(id)
-
-			if err != nil {
-				return err
-			}
-
-			err = auth.ModLogPost(id, op, mLog)
-
-			if err != nil {
-				return err
-			}
+			err = auth.LogModeration(id, op, e)
+		default:
+			err = propagate(id, op)
 		}
-
-		err = propagate(id, op)
+		
+		if err != nil {
+			return
+		}
 	}
+
 	return
 }
 
@@ -228,7 +229,7 @@ func GetSameIPPosts(id uint64, board string, by string) (
 		}
 
 		return moderatePost(id, auth.MeidoVision, by,
-			sq.Update("posts").Set("meidoVision", true), common.MeidoVisionPost)
+			sq.Update("posts").Set("meidoVision", true), nil)
 	})
 
 	return

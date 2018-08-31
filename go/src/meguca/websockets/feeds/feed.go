@@ -3,7 +3,9 @@ package feeds
 import (
 	"fmt"
 	"time"
+	"encoding/json"
 
+	"meguca/auth"
 	"meguca/common"
 	"meguca/db"
 
@@ -14,11 +16,11 @@ type postMessageType uint8
 
 const (
 	spoilerImage postMessageType = iota
-	deletePost
-	ban
+	_
+	_
 	deleteImage
-	meidoVision
-	modLogPost
+	_
+	logModeration
 )
 
 type postMessage struct {
@@ -201,21 +203,28 @@ func (f *Feed) Start() (err error) {
 						p.Image.Spoiler = true
 					}
 					f.cache.Posts[msg.id] = p
-				case ban:
-					p := f.cache.Posts[msg.id]
-					p.Banned = true
-					f.cache.Posts[msg.id] = p
-				case deletePost:
-					p := f.cache.Posts[msg.id]
-					p.Deleted = true
-					f.cache.Posts[msg.id] = p
 				case deleteImage:
 					p := f.cache.Posts[msg.id]
 					p.Image = nil
 					f.cache.Posts[msg.id] = p
-				case meidoVision:
+				case logModeration:
+					var e auth.ModLogEntry
 					p := f.cache.Posts[msg.id]
-					p.MeidoVision = true
+					err = json.Unmarshal(msg.msg[2:], &e)
+
+					if err != nil {
+						log.Error("websockets/feeds/feed.go::Start: logModeration: ", err)
+					}
+
+					switch e.Type {
+					case 0:
+						p.Banned = true
+					case 2:
+						p.Deleted = true
+					case 7:
+						p.MeidoVision = true
+					}
+					
 					f.cache.Posts[msg.id] = p
 				}
 				f.write(msg.msg)
@@ -291,25 +300,13 @@ func (f *Feed) SpoilerImage(id uint64, msg []byte) {
 	f._sendPostMessage(spoilerImage, id, msg)
 }
 
-func (f *Feed) banPost(id uint64, msg []byte) {
-	f._sendPostMessage(ban, id, msg)
-}
-
-func (f *Feed) deletePost(id uint64, msg []byte) {
-	f._sendPostMessage(deletePost, id, msg)
-}
-
 // DeleteImage deletes a feed's image
 func (f *Feed) DeleteImage(id uint64, msg []byte) {
 	f._sendPostMessage(deleteImage, id, msg)
 }
 
-func (f *Feed) meidoVision(id uint64, msg []byte) {
-	f._sendPostMessage(meidoVision, id, msg)
-}
-
-func (f *Feed) modLogPost(id uint64, msg []byte) {
-	f._sendPostMessage(modLogPost, id, msg)
+func (f *Feed) logModeration(id uint64, msg []byte) {
+	f._sendPostMessage(logModeration, id, msg)
 }
 
 // SetOpenBody sets the body of an open post and send update message to clients

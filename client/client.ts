@@ -1,5 +1,4 @@
 // Core websocket message handlers
-
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts, page } from './state'
 import { Post, FormModel, PostView } from './posts'
@@ -26,11 +25,6 @@ type CloseMessage = {
 // Message for inserting images into an open post
 interface ImageMessage extends ImageData {
 	id: number
-}
-
-type ModLogPostMessage = {
-	id: number
-	log: ModLogEntry[]
 }
 
 // Run a function on a model, if it exists
@@ -130,25 +124,13 @@ export default () => {
 			m.closePost()
 		})
 
-	handlers[message.deletePost] = (id: number) =>
-		handle(id, m =>
-			m.setDeleted())
-
 	handlers[message.deleteImage] = (id: number) =>
 		handle(id, m =>
 			m.removeImage())
 
-	handlers[message.banned] = (id: number) =>
-		handle(id, m =>
-			m.setBanned())
-
-	handlers[message.meidoVision] = (id: number) =>
-		handle(id, m =>
-			m.setMeidoVision())
-
-	handlers[message.modLogPost] = ({ id, log }: ModLogPostMessage) =>
-		handle(id, m =>
-			m.setModLog(log))
+	handlers[message.logModeration] = (e: ModLogEntry) =>
+		handle(e.id, m =>
+			m.logModeration(e))
 
 	handlers[message.redirect] = (url: string) =>
 		location.href = url

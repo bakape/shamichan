@@ -24,14 +24,11 @@ var feeds = feedMap{
 
 // Export without circular dependency
 func init() {
-	auth.ModLogPost = ModLogPost
+	auth.LogModeration = LogModeration
 	common.SendTo = SendTo
 	common.ClosePost = ClosePost
-	common.BanPost = BanPost
-	common.DeletePost = DeletePost
 	common.DeleteImage = DeleteImage
 	common.SpoilerImage = SpoilerImage
-	common.MeidoVisionPost = MeidoVisionPost
 }
 
 // Thread watchers
@@ -244,29 +241,6 @@ func ClosePost(
 	})
 }
 
-// BanPost propagates a message about a post being banned
-func BanPost(id, op uint64) error {
-	msg, err := common.EncodeMessage(common.MessageBanned, id)
-	if err != nil {
-		return err
-	}
-
-	return sendIfExists(op, func(f *Feed) {
-		f.banPost(id, msg)
-	})
-}
-
-// DeletePost propagates a message about a post being deleted
-func DeletePost(id, op uint64) error {
-	msg, err := common.EncodeMessage(common.MessageDeletePost, id)
-	if err != nil {
-		return err
-	}
-	return sendIfExists(op, func(f *Feed) {
-		f.deletePost(id, msg)
-	})
-}
-
 // DeleteImage propagates a message about an image being deleted from a post
 func DeleteImage(id, op uint64) error {
 	msg, err := common.EncodeMessage(common.MessageDeleteImage, id)
@@ -289,31 +263,16 @@ func SpoilerImage(id, op uint64) error {
 	})
 }
 
-// MeidoVisionPost propagates a message about a post being meido vision'd
-func MeidoVisionPost(id, op uint64) error {
-	msg, err := common.EncodeMessage(common.MessageMeidoVision, id)
-	if err != nil {
-		return err
-	}
-	return sendIfExists(op, func(f *Feed) {
-		f.meidoVision(id, msg)
-	})
-}
+// LogModeration propagates a message about a post being moderated
+func LogModeration(id, op uint64, e auth.ModLogEntry) (err error) {
+	msg, err := common.EncodeMessage(common.MessageLogModeration, e)
 
-// ModLogPost propagates a message and data about a post being moderated
-func ModLogPost(id, op uint64, log []auth.ModLogEntry) error {
-	msg, err := common.EncodeMessage(common.MessageModLogPost, struct {
-		ID  uint64             `json:"id"`
-		Log []auth.ModLogEntry `json:"log"`
-	}{
-		ID:  id,
-		Log: log,
-	})
 	if err != nil {
-		return err
+		return
 	}
+
 	return sendIfExists(op, func(f *Feed) {
-		f.modLogPost(id, msg)
+		f.logModeration(id, msg)
 	})
 }
 

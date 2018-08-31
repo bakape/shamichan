@@ -162,19 +162,19 @@ handlers[message.synchronise] = async (data: SyncData) => {
 	for (let id of banned) {
 		const post = posts.get(id)
 		if (post && !post.banned) {
-			post.setBanned()
+			post.logModeration(null)
 		}
 	}
 	for (let id of deleted) {
 		const post = posts.get(id)
 		if (post && !post.deleted) {
-			post.setDeleted()
+			post.logModeration(null)
 		}
 	}
 	for (let id of meidoVision) {
 		const post = posts.get(id)
 		if (post && !post.meidoVision) {
-			post.setMeidoVision()
+			post.logModeration(null)
 		}
 	}
 	for (let id of deletedImage) {
