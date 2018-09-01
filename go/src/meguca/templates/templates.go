@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"html"
+	"io"
 	"meguca/auth"
 	"meguca/config"
 	"sync"
@@ -36,64 +37,47 @@ func Compile() error {
 	return nil
 }
 
-// Board renders board page HTML for noscript browsers. withIndex specifies, if
-// the rendered board page should be embedded in the index page
-func Board(
-	b, theme string,
-	page, total int,
-	pos auth.ModerationLevel,
-	minimal, catalog bool,
-	threadHTML []byte,
-) []byte {
+// Write board HTML to w
+func Board(w io.Writer, b, theme string, page, total int,
+	pos auth.ModerationLevel, minimal, catalog bool, threadHTML []byte,
+) {
 	conf := config.GetBoardConfigs(b)
 	title := html.EscapeString(fmt.Sprintf("/%s/ - %s", b, conf.Title))
-	html := renderBoard(
-		threadHTML,
-		b, title,
-		conf,
-		page, total,
-		pos,
-		catalog,
-	)
-
-	if minimal {
-		return []byte(html)
+	write := func(w io.Writer) {
+		writerenderBoard(w, threadHTML, b, title, conf, page, total, pos,
+			catalog)
 	}
 
-	return execIndex(html, title, theme, pos)
+	if minimal {
+		write(w)
+	} else {
+		execIndex(w, title, theme, pos, write)
+	}
 }
 
-// Thread renders thread page HTML for noscript browsers
-func Thread(
-	id uint64,
-	board, title, theme string,
-	abbrev, locked bool,
-	pos auth.ModerationLevel,
-	postHTML []byte,
-) []byte {
+// Writes thread page HTML
+func Thread(w io.Writer, id uint64, board, title, theme string, abbrev,
+	locked bool, pos auth.ModerationLevel, postHTML []byte,
+) {
 	title = html.EscapeString(fmt.Sprintf("/%s/ - %s", board, title))
-	html := renderThread(postHTML, id, board, abbrev, locked, pos)
-	return execIndex(html, title, theme, pos)
+	execIndex(w, title, theme, pos, func(w io.Writer) {
+		writerenderThread(w, postHTML, id, board, abbrev, locked, pos)
+	})
 }
 
 // Execute and index template in the second pass
-func execIndex(html, title, theme string, pos auth.ModerationLevel) []byte {
+func execIndex(w io.Writer, title, theme string, pos auth.ModerationLevel,
+	fn func(w io.Writer),
+) {
 	mu.RLock()
 	t := indexTemplates[pos]
 	mu.RUnlock()
 
-	return bytes.Join([][]byte{
-		t[0],
-		[]byte(title),
-		t[1],
-		[]byte(theme),
-		t[2],
-		[]byte(html),
-		t[3],
-	}, nil)
-}
-
-// WasmIndex render index page for WASM clients
-func WasmIndex(theme string) []byte {
-	return []byte(renderIndexWasm(theme))
+	w.Write(t[0])
+	w.Write([]byte(title))
+	w.Write(t[1])
+	w.Write([]byte(theme))
+	w.Write(t[2])
+	fn(w)
+	w.Write(t[3])
 }

@@ -72,7 +72,8 @@ func reportForm(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
-	serveHTML(w, r, "", []byte(templates.ReportForm(id)), nil)
+	setHTMLHeaders(w)
+	templates.WriteReportForm(w, id)
 }
 
 // Render a list of reports for the board
@@ -88,5 +89,6 @@ func reportList(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, err)
 		return
 	}
-	serveHTML(w, r, "", []byte(templates.ReportList(rep)), nil)
+	setHTMLHeaders(w)
+	templates.WriteReportList(w, rep)
 }

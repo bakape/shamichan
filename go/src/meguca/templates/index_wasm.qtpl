@@ -2,7 +2,7 @@
 {% import "meguca/config" %}
 {% import "meguca/lang" %}
 
-{% func renderIndexWasm(theme string) %}{% stripspace %}
+{% func IndexWasm(theme string) %}{% stripspace %}
 	{% code conf := config.Get() %}
 	{% code ln := lang.Get() %}
 	{% code confJSON, _ := config.GetClient() %}

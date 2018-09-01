@@ -636,9 +636,9 @@ func banList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	canUnban := detectCanPerform(r, board, auth.Moderator)
-	html := []byte(templates.BanList(bans, board, canUnban))
-	serveHTML(w, r, "", html, nil)
+	setHTMLHeaders(w)
+	templates.WriteBanList(w, bans, board,
+		detectCanPerform(r, board, auth.Moderator))
 }
 
 // Detect, if a  client can perform moderation on a board. Unlike canPerform,
@@ -710,7 +710,6 @@ func unban(w http.ResponseWriter, r *http.Request) {
 
 // Serve moderation log for a specific board
 func modLog(w http.ResponseWriter, r *http.Request) {
-
 	board := extractParam(r, "board")
 	if !auth.IsBoard(board) {
 		text404(w)
@@ -722,8 +721,8 @@ func modLog(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, err)
 		return
 	}
-
-	serveHTML(w, r, "", []byte(templates.ModLog(log)), nil)
+	setHTMLHeaders(w)
+	templates.WriteModLog(w, log)
 }
 
 // Decodes params for client forced redirection. If ok = false , caller

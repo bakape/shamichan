@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"bytes"
 	"errors"
 	"meguca/common"
 	"meguca/config"
@@ -32,7 +33,9 @@ var ThreadFE = FrontEnd{
 	},
 
 	RenderHTML: func(data interface{}, json []byte) []byte {
-		return []byte(templates.ThreadPosts(data.(common.Thread), json))
+		var b bytes.Buffer
+		templates.WriteThreadPosts(&b, data.(common.Thread), json)
+		return b.Bytes()
 	},
 }
 
@@ -53,8 +56,9 @@ var CatalogFE = FrontEnd{
 	},
 
 	RenderHTML: func(data interface{}, json []byte) []byte {
-		s := templates.CatalogThreads(data.(common.Board).Threads, json)
-		return []byte(s)
+		var b bytes.Buffer
+		templates.WriteCatalogThreads(&b, data.(common.Board).Threads, json)
+		return b.Bytes()
 	},
 }
 
@@ -209,8 +213,9 @@ var BoardPageFE = FrontEnd{
 	},
 
 	RenderHTML: func(data interface{}, json []byte) []byte {
-		s := templates.IndexThreads(data.(PageStore).Data.Threads, json)
-		return []byte(s)
+		var b bytes.Buffer
+		templates.WriteIndexThreads(&b, data.(PageStore).Data.Threads, json)
+		return b.Bytes()
 	},
 
 	Size: func(_ interface{}, _, html []byte) int {

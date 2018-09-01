@@ -10,28 +10,12 @@ import (
 	"net/http"
 )
 
-// Apply headers and write HTML to client
-func serveHTML(
-	w http.ResponseWriter,
-	r *http.Request,
-	etag string,
-	data []byte,
-	err error,
-) {
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
+func setHTMLHeaders(w http.ResponseWriter) {
 	head := w.Header()
 	for key, val := range vanillaHeaders {
 		head.Set(key, val)
 	}
-	if etag != "" {
-		head.Set("ETag", etag)
-	}
 	head.Set("Content-Type", "text/html")
-
-	writeData(w, r, data)
 }
 
 // Client is requesting the new wasm page
@@ -51,7 +35,8 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 
 	theme := resolveTheme(r, b)
 	if isWasm(r) {
-		serveHTML(w, r, "", templates.WasmIndex(theme), nil)
+		setHTMLHeaders(w)
+		templates.WriteIndexWasm(w, theme)
 		return
 	}
 
@@ -84,14 +69,15 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 		total = p.Data.Pages
 	}
 
-	html = templates.Board(
+	setHTMLHeaders(w)
+	templates.Board(
+		w,
 		b, theme,
 		n, total,
 		pos,
 		r.URL.Query().Get("minimal") == "true", catalog,
 		html,
 	)
-	serveHTML(w, r, etag, html, nil)
 }
 
 // Resolve theme to render in accordance to client and board settings.
@@ -120,7 +106,8 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 	b := extractParam(r, "board")
 	theme := resolveTheme(r, b)
 	if isWasm(r) {
-		serveHTML(w, r, "", templates.WasmIndex(theme), nil)
+		setHTMLHeaders(w)
+		templates.WriteIndexWasm(w, theme)
 		return
 	}
 
@@ -144,14 +131,15 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 	}
 
 	thread := data.(common.Thread)
-	html = templates.Thread(
+	setHTMLHeaders(w)
+	templates.Thread(
+		w,
 		id,
 		b, thread.Subject, theme,
 		lastN != 0, thread.Locked,
 		pos,
 		html,
 	)
-	serveHTML(w, r, etag, html, nil)
 }
 
 // Extract logged in position for HTML request.
@@ -191,16 +179,8 @@ func extractPosition(w http.ResponseWriter, r *http.Request) (
 
 // Render a board selection and navigation panel and write HTML to client
 func boardNavigation(w http.ResponseWriter, r *http.Request) {
-	staticTemplate(w, r, templates.BoardNavigation)
-}
-
-// Execute a simple template, that accepts no arguments
-func staticTemplate(
-	w http.ResponseWriter,
-	r *http.Request,
-	fn func() string,
-) {
-	serveHTML(w, r, "", []byte(fn()), nil)
+	setHTMLHeaders(w)
+	templates.WriteBoardNavigation(w)
 }
 
 // Serve a form for selecting one of several boards owned by the user
@@ -223,7 +203,8 @@ func ownedBoardSelection(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	serveHTML(w, r, "", []byte(templates.OwnedBoard(ownedTitles)), nil)
+	setHTMLHeaders(w)
+	templates.WriteOwnedBoard(w, ownedTitles)
 }
 
 // Renders a form for configuring a board owned by the user
@@ -233,7 +214,8 @@ func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serveHTML(w, r, "", []byte(templates.ConfigureBoard(conf)), nil)
+	setHTMLHeaders(w)
+	templates.ConfigureBoard(w, conf)
 }
 
 // Render a form for assigning staff to a board
@@ -243,15 +225,15 @@ func staffAssignmentForm(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, err)
 		return
 	}
-	html := []byte(templates.StaffAssignment(
-		[...][]string{s["owners"], s["moderators"], s["janitors"]},
-	))
-	serveHTML(w, r, "", html, nil)
+	setHTMLHeaders(w)
+	templates.StaffAssignment(w,
+		[...][]string{s["owners"], s["moderators"], s["janitors"]})
 }
 
 // Renders a form for creating new boards
 func boardCreationForm(w http.ResponseWriter, r *http.Request) {
-	staticTemplate(w, r, templates.CreateBoard)
+	setHTMLHeaders(w)
+	templates.WriteCreateBoard(w)
 }
 
 // Render the form for configuring the server
@@ -260,31 +242,36 @@ func serverConfigurationForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := []byte(templates.ConfigureServer((*config.Get())))
-	serveHTML(w, r, "", data, nil)
+	setHTMLHeaders(w)
+	templates.ConfigureServer(w, (*config.Get()))
 }
 
 // Render a form to change an account password
 func changePasswordForm(w http.ResponseWriter, r *http.Request) {
-	staticTemplate(w, r, templates.ChangePassword)
+	setHTMLHeaders(w)
+	templates.ChangePassword(w)
 }
 
 // Render a form with nothing but captcha and confirmation buttons
 func renderCaptcha(w http.ResponseWriter, r *http.Request) {
-	staticTemplate(w, r, templates.CaptchaConfirmation)
+	setHTMLHeaders(w)
+	templates.WriteCaptchaConfirmation(w)
 }
 
 // Render a link to request a new captcha
 func noscriptCaptchaLink(w http.ResponseWriter, r *http.Request) {
-	staticTemplate(w, r, templates.NoscriptCaptchaLink)
+	setHTMLHeaders(w)
+	templates.WriteNoscriptCaptchaLink(w)
 }
 
 func bannerSettingForm(w http.ResponseWriter, r *http.Request) {
-	staticTemplate(w, r, templates.BannerForm)
+	setHTMLHeaders(w)
+	templates.WriteBannerForm(w)
 }
 
 func loadingAnimationForm(w http.ResponseWriter, r *http.Request) {
-	staticTemplate(w, r, templates.LoadingAnimationForm)
+	setHTMLHeaders(w)
+	templates.WriteLoadingAnimationForm(w)
 }
 
 // Render the captcha for noscript browsers
@@ -294,5 +281,6 @@ func noscriptCaptcha(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, err)
 		return
 	}
-	serveHTML(w, r, "", []byte(templates.NoscriptCaptcha(ip)), nil)
+	setHTMLHeaders(w)
+	templates.WriteNoscriptCaptcha(w, ip)
 }
