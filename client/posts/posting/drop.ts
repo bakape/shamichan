@@ -5,6 +5,7 @@ import { trigger } from "../../util";
 import { page, boardConfig } from "../../state";
 import FormModel from "./model";
 import { expandThreadForm } from "./threads";
+import { config } from "../../state";
 
 // Handle file drop
 async function onDrop(e: DragEvent) {
@@ -39,10 +40,16 @@ async function onDrop(e: DragEvent) {
 		// Fetch file from link
 		try {
 			let u = new URL(url);
+
 			// Prevent URLs from meguca accidentally being posted with drag&drop
 			if (u.origin === location.origin) {
 				return;
 			}
+			const o = config.imageRootOverride;
+			if (o && (new URL(o)).origin === u.origin) {
+				return;
+			}
+
 			const name = u.pathname.slice(u.pathname.lastIndexOf("/") + 1);
 			file = new File([await (await fetch(url)).blob()], name);
 		} catch (err) {
