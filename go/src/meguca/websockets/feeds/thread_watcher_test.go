@@ -28,6 +28,7 @@ type dummyClient struct{}
 func (d *dummyClient) Send(_ []byte)     {}
 func (d *dummyClient) Redirect(_ string) {}
 func (d *dummyClient) IP() string        { return "::1" }
+func (d *dummyClient) LastTime() int64   { return time.Now().Unix() }
 func (d *dummyClient) NewProtocol() bool { return false }
 func (d *dummyClient) Last100() bool     { return false }
 func (d *dummyClient) Close(_ error)     {}

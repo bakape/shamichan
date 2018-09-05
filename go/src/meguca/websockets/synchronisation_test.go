@@ -151,7 +151,7 @@ func TestSyncToThread(t *testing.T) {
 
 	skipMessage(t, wcl)
 	skipMessage(t, wcl)
-	assertMessage(t, wcl, "33[\"351\"]")
+	assertMessage(t, wcl, "33[\"35{\\\"clients\\\":1,\\\"idle\\\":0}\"]")
 	assertSyncID(t, cl, 1, "a")
 
 	cl.Close(nil)
