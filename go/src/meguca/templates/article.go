@@ -178,16 +178,16 @@ func parseModLog(p common.Post) (bool, string) {
 
 // Returns human readable time
 func secondsToTime(s float64) string {
-	time := math.Floor(s) / 60
 	divide := [4]float64{60, 24, 30, 12}
 	unit := [4]string{"minute", "hour", "day", "month"}
+	time := math.Round(s) / 60
 
 	for i := 0; i < len(divide); i++ {
 		if time < divide[i] {
 			return pluralize(int(toFixed(time, 0)), unit[i])
 		}
 
-		time = math.Floor(time / divide[i])
+		time = math.Round(time / divide[i])
 	}
 
 	return pluralize(int(toFixed(time, 0)), "year")
