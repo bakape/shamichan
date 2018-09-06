@@ -13,44 +13,46 @@ const inlinedPosts = new PostCollection()
 
 // Expand or contract linked posts inline
 async function onClick(e: MouseEvent) {
-	const el = e.target as Element
-
+	const el = e.target as Element,
 	// Don't trigger, when user is trying to open in a new tab, inline
 	// expansion is disabled or the link is temporary
-	const bypass = e.which !== 1
+	bypass = e.which !== 1
 		|| e.ctrlKey
 		|| !options.postInlineExpand
 		|| el.classList.contains("temp")
+
 	if (bypass) {
 		return
 	}
 
 	e.preventDefault()
-
 	const parent = el.parentElement,
-		id = parseInt(el.getAttribute("data-id"))
+	id = parseInt(el.getAttribute("data-id"))
 
 	if (parent.lastElementChild.tagName === "ARTICLE") {
 		return contractPost(id, parent)
 	}
 
-	let model = posts.get(id) || inlinedPosts.get(id),
-		found = false
+	var model = posts.get(id) || inlinedPosts.get(id),
+	found = false
+
 	if (model) {
 		// Can not create cyclic DOM trees
 		if (model.view.el.contains(parent)) {
 			return
 		}
-		found = true
 
+		found = true
 		// Remove references, if already inlined
 		const oldParent = model.view.el.parentElement
+
 		if (oldParent.tagName === "EM") {
 			toggleLinkReferences(oldParent, id, false)
 		}
 	} else {
 		// Fetch external post from server
 		const [data] = await fetchJSON<PostData>(`/json/post/${id}`)
+
 		if (data) {
 			model = new Post(data)
 			new PostView(model, null)
@@ -65,15 +67,34 @@ async function onClick(e: MouseEvent) {
 	}
 }
 
-// contract and already expanded post and return it to its former position
+// Contract an already expanded post and return it to its former position
 function contractPost(id: number, parent: HTMLElement) {
+	const model = posts.get(id)
 	toggleLinkReferences(parent, id, false)
 
-	const model = posts.get(id)
 	if (!model) {
 		// Fetched from the server and not originally part of the thread
-		inlinedPosts.get(id).remove()
+		const inl = inlinedPosts.get(id)
+
+		if (inl) {
+			inl.remove()
+		}
 	} else {
+		const el = model.view.el.querySelector(".post-container").firstElementChild
+		var art = el.lastElementChild
+
+		if (art && art.tagName === "ARTICLE") {
+			contractPost(parseInt(art.id.slice(1)), el as HTMLElement)
+		}
+
+		for (let em of el.getElementsByTagName("EM")) {
+			art = em.lastElementChild
+
+			if (art && art.tagName === "ARTICLE") {
+				contractPost(parseInt(art.id.slice(1)), em as HTMLElement)
+			}
+		}
+
 		model.view.reposition()
 	}
 }
@@ -81,12 +102,14 @@ function contractPost(id: number, parent: HTMLElement) {
 // Highlight or unhighlight links referencing the parent post in the child post
 function toggleLinkReferences(parent: Element, childID: number, on: boolean) {
 	const p = parent.closest("article"),
-		ch = document.getElementById(`p${childID}`),
-		pID = p.closest("article").id.slice(1)
+	ch = document.getElementById(`p${childID}`),
+	pID = p.closest("article").id.slice(1)
+
 	for (let el of p.querySelectorAll(".post-link")) {
 		// Check, if not from a post inlined in the child
-		if (el.closest("article") === ch
-			&& el.getAttribute("data-id") === pID
+		if (
+			el.closest("article") === ch &&
+			el.getAttribute("data-id") === pID
 		) {
 			el.classList.toggle("referenced", on)
 		}
@@ -98,4 +121,3 @@ export default () => {
 		selector: ".post-link",
 	})
 }
-
