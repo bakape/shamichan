@@ -4,7 +4,7 @@ import { CaptchaView } from "../../ui"
 function expand(e: Event) {
 	const el = (e.target as HTMLElement).closest("aside")
 	el.classList.add("expanded")
-	const c = el.querySelector(".captcha-container")
+	const c = el.querySelector(".captcha-container") as HTMLElement
 	if (c) {
 		new CaptchaView(c)
 	}
@@ -12,7 +12,7 @@ function expand(e: Event) {
 
 // Manually expand thread creation form, if any
 export function expandThreadForm() {
-	const tf = document.querySelector("aside:not(.expanded) .new-thread-button")
+	const tf = document.querySelector("aside:not(.expanded) .new-thread-button") as HTMLElement
 	if (tf) {
 		tf.click()
 		scrollToElement(tf)

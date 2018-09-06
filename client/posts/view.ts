@@ -166,7 +166,7 @@ export default class PostView extends ImageHandler {
 
         // Render country flag, if any
         if (flag) {
-            const el = this.el.querySelector(".flag")
+            const el = this.el.querySelector(".flag") as HTMLElement
             el.setAttribute("src", `/assets/flags/${flag}.svg`)
             el.setAttribute("title", countries[flag] || flag)
             el.hidden = false

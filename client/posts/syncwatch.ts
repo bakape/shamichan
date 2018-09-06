@@ -62,7 +62,7 @@ class Syncwatch {
 
 // Find and start any non-running synchronized time counters
 export function findSyncwatches(ns: NodeSelector) {
-	for (let el of ns.querySelectorAll(".syncwatch:not(.ticking)")) {
+	for (let el of ns.querySelectorAll(".syncwatch:not(.ticking)") as NodeListOf<HTMLElement>) {
 		new Syncwatch(el)
 	}
 }

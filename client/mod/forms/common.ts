@@ -64,8 +64,9 @@ export abstract class AccountForm extends FormView {
 	// Extract values from an input form and add them to the request map
 	protected extractForm(req: {}) {
 		const els = this.el
-			.querySelectorAll("input[name], select[name], textarea[name]")
-		for (let el of els as HTMLInputElement[]) {
+			.querySelectorAll("input[name], select[name], textarea[name]") as
+			NodeListOf<HTMLInputElement>
+		for (let el of els) {
 			let val: any
 			switch (el.type) {
 				case "submit":
@@ -86,7 +87,7 @@ export abstract class AccountForm extends FormView {
 		// Read all key-value maps
 		for (let map of this.el.querySelectorAll(".map-form")) {
 			const fields = map
-				.querySelectorAll(".map-field") as HTMLInputElement[]
+				.querySelectorAll(".map-field") as NodeListOf<HTMLInputElement>
 			if (!fields.length) {
 				continue
 			}

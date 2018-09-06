@@ -2,7 +2,7 @@
 	"enableAutoDiscovery": true,
 	"compileOnSave": false,
 	"compilerOptions": {
-		"target": "ES6",
+		"target": "es2018",
 		"module": "amd",
 		"outFile": "main.js",
 		"moduleResolution": "node",

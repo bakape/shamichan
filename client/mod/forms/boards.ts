@@ -33,8 +33,8 @@ class OwnedBoardSelection extends View<null> {
 	private onSubmit(e: Event) {
 		e.preventDefault()
 		e.stopPropagation()
-		const board = ((e.target as Element)
-			.querySelector("select") as HTMLInputElement)
+		const board = (e.target as Element)
+			.querySelector("select")
 			.value
 		this.parent.renderNext(board)
 		this.parent.board = board

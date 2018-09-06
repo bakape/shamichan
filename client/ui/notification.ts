@@ -43,7 +43,7 @@ export default function notifyAboutReply(post: Post) {
 	const n = new Notification(lang.ui["quoted"], {
 		icon,
 		body: post.body,
-		vibrate: true,
+		vibrate: 200,
 	})
 	n.onclick = () => {
 		n.close()

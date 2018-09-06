@@ -99,8 +99,14 @@ export default class ModPanel extends View<null> {
 
 	// Get selected post checkboxes
 	private getChecked(): HTMLInputElement[] {
-		return document
-			.querySelectorAll(".mod-checkbox:checked") as HTMLInputElement[]
+		const query = document.querySelectorAll(".mod-checkbox:checked")
+		var el = new Array(query.length)
+
+		for (let i = 0; i < query.length; i++) {
+			el[i] = query[i]
+		}
+
+		return el
 	}
 
 	// Return current action mode
