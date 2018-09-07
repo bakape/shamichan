@@ -145,6 +145,16 @@ func (c *Client) listenerLoop() error {
 	for {
 		select {
 		case err := <-c.close:
+			go func() {
+				time.Sleep(time.Minute)
+
+				if c.post.id != 0 {
+					if err = c.closePost(); err != nil {
+						c.logError(err)
+					}
+				}
+			}()
+
 			return err
 		case msg := <-c.sendExternal:
 			if err := c.send(msg); err != nil {
