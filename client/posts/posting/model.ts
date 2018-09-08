@@ -13,6 +13,7 @@ import { newAllocRequest } from "./identity"
 export default class FormModel extends Post {
 	public inputBody = ""
 	public view: FormView
+	public allocatingImage: boolean = false;
 
 	// Pass and ID, if you wish to hijack an existing model. To create a new
 	// model pass zero.
@@ -78,9 +79,7 @@ export default class FormModel extends Post {
 
 		const old = this.inputBody
 		val = this.trimInput(val);
-
-		// Rendering hack shenanigans - ignore
-		if (old === val) {
+		if (old === val) { // Everything already submitted
 			return
 		}
 
@@ -143,6 +142,7 @@ export default class FormModel extends Post {
 	// Close the form and revert to regular post. Cancel also erases all post
 	// contents.
 	public commitClose() {
+		this.parseInput(this.view.input.value)
 		this.abandon()
 		this.send(message.closePost, null)
 	}
@@ -238,15 +238,21 @@ export default class FormModel extends Post {
 
 	private handleUploadResponse(data: FileData | null) {
 		// Upload failed, canceled or image added while thumbnailing
-		if (!data || this.image) {
+		if (!data || this.image || this.allocatingImage) {
 			return
 		}
 
 		switch (postSM.state) {
 			case postState.draft:
+				this.allocatingImage = true;
 				this.requestAlloc(this.trimInput(this.view.input.value), data);
 				break;
+			case postState.allocating:
+				// Will allocate post soon check back every 200 ms
+				setTimeout(this.handleUploadResponse.bind(this, data), 200);
+				break;
 			case postState.alloc:
+				this.allocatingImage = true;
 				send(message.insertImage, data)
 				break;
 		}
