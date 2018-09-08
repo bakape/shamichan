@@ -479,7 +479,7 @@
 		"spoilerImage": "Спойлер для изображения",
 		"subject": "Тема",
 		"sync": "Статус соединения",
-		"syncCount": "Unique connected IP/idle count",
+		"syncCount": "Unique connected IP active/total count",
 		"text": "Текст",
 		"time": "Время",
 		"type": "Тип",

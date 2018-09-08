@@ -240,26 +240,26 @@ func (f *Feed) bufferMessage(msg []byte) {
 
 // Send unique IP count to all connected clients
 func (f *Feed) sendIPCount() {
-	var idle int
+	var active int
 	ips := make(map[string]struct{}, len(f.clients))
 	pastHour := time.Now().Add(-time.Hour).Unix()
 
 	for c := range f.clients {
 		ip := c.IP()
 
-		if _, ok := ips[ip]; !ok && c.LastTime() < pastHour {
-			idle++
+		if _, ok := ips[ip]; !ok && c.LastTime() >= pastHour {
+			active++
 		}
 
 		ips[ip] = struct{}{}
 	}
 
 	msg, _ := common.EncodeMessage(common.MessageSyncCount, struct {
-		Clients int `json:"clients"`
-		Idle    int `json:"idle"`
+		Active  int `json:"active"`
+		Total   int `json:"total"`
 	}{
-		Clients: len(ips),
-		Idle:    idle,
+		Active:  active,
+		Total:   len(ips),
 	})
 
 	f.bufferMessage(msg)

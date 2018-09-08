@@ -479,7 +479,7 @@
 		"spoilerImage": "Spoiler image",
 		"subject": "Predmet",
 		"sync": "Stav pripojenia",
-		"syncCount": "Unique connected IP/idle count",
+		"syncCount": "Unique connected IP active/total count",
 		"text": "Text",
 		"time": "Čas",
 		"type": "Typ",
