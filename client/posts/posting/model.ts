@@ -4,7 +4,7 @@ import { ImageData, PostData } from "../../common"
 import FormView from "./view"
 import { posts, storeMine, page, storeSeenPost, boardConfig } from "../../state"
 import { postSM, postEvent, postState } from "."
-import { extend } from "../../util"
+import { extend, modPaste } from "../../util"
 import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
 import { newAllocRequest } from "./identity"
@@ -156,34 +156,73 @@ export default class FormModel extends Post {
 
 	// Add a link to the target post in the input
 	public addReference(id: number, sel: string) {
-		let s = "";
-		const old = this.view.input.value;
-		const newLine = !old || old.endsWith("\n");
+		const pos = this.view.input.selectionEnd,
+		old = this.view.input.value
+		let s = '',
+		b = false
+
+		switch (old.charAt(pos - 1)) {
+		case '':
+		case ' ':
+		case '\n':
+			s = `>>${id}`
+			break
+		default:
+			s = sel ? `\n>>${id}` : ` >>${id}`
+		}
+
+		switch (old.charAt(pos)) {
+		case '':
+		case ' ':
+			s += sel ? '\n' : ''
+			break
+		case '\n':
+			break
+		default:
+			b = true
+			s += sel ? '\n' : ' '
+		}
 
 		if (sel) {
-			if (!newLine) {
-				s += "\n"
+			for (let line of sel.split('\n')) {
+				s += `>${line}\n`
 			}
-		} else if (!newLine && old[old.length - 1] !== " ") {
-			s += " "
-		}
-		s += `>>${id} `
 
-		if (!sel) {
-			// If starting from a new line, insert newline after post link
-			if (newLine) {
-				s += "\n"
-			}
-		} else {
-			s += "\n"
-			for (let line of sel.split("\n")) {
-				s += ">" + line + "\n"
-			}
+			s += b ? '\n' : ''
 		}
 
 		// Don't commit a quote, if it is the only input in a post
-		this.view.replaceText(old + s,
-			postSM.state !== postState.draft || old.length !== 0)
+		this.view.replaceText(
+			old.slice(0, pos) + s + old.slice(pos),
+			pos + s.length - (b ? 1 : 0),
+			postSM.state !== postState.draft || old.length !== 0
+		)
+	}
+
+	// Paste text to the text body
+	public paste(sel: string) {
+		const start = this.view.input.selectionStart,
+		end = this.view.input.selectionEnd,
+		old = this.view.input.value
+		let p = modPaste(old, sel, end)
+
+		if (!p) {
+			return
+		}
+
+		if (start != end) {
+			p.body = old.slice(0, start) + p.body + old.slice(end)
+			p.pos -= start
+		} else {
+			p.body = old.slice(0, end) + p.body + old.slice(end)
+		}
+
+		// Don't commit a paste, if it is the only input in a post
+		this.view.replaceText(
+			p.body,
+			p.pos,
+			postSM.state !== postState.draft || old.length !== 0
+		)
 	}
 
 	// Returns a function, that handles a message from the server, containing
