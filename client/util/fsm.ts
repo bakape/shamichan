@@ -67,7 +67,6 @@ export default class FSM<S extends Stringable, E extends Stringable> {
 		if (this.state === result) {
 			return
 		}
-		this.state = result
 		const r = result.toString()
 		this.stateHandlers.forEach(r, fn =>
 			fn(arg))
@@ -77,6 +76,7 @@ export default class FSM<S extends Stringable, E extends Stringable> {
 			f();
 		}
 		this.onceHandlers.removeAll(r)
+		this.state = result
 	}
 
 	// Returns a function that executes FSM.prototype.feed with the passed
