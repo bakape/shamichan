@@ -69,8 +69,8 @@ async function onClick(e: MouseEvent) {
 
 // Contract an already expanded post and return it to its former position
 function contractPost(id: number, parent: HTMLElement) {
-	const model = posts.get(id)
 	toggleLinkReferences(parent, id, false)
+	const model = posts.get(id)
 
 	if (!model) {
 		// Fetched from the server and not originally part of the thread
@@ -80,22 +80,27 @@ function contractPost(id: number, parent: HTMLElement) {
 			inl.remove()
 		}
 	} else {
-		const el = model.view.el.querySelector(".post-container").firstElementChild
-		var art = el.lastElementChild
+		contractAll(model.view.el.querySelector(".post-container blockquote"))
+		contractAll(model.view.el.querySelector(".backlinks"))
+		model.view.reposition()
+	}
 
-		if (art && art.tagName === "ARTICLE") {
-			contractPost(parseInt(art.id.slice(1)), el as HTMLElement)
+	function contractAll(el: Element) {
+		if (!el) {
+			return
 		}
 
 		for (let em of el.getElementsByTagName("EM")) {
-			art = em.lastElementChild
-
-			if (art && art.tagName === "ARTICLE") {
-				contractPost(parseInt(art.id.slice(1)), em as HTMLElement)
-			}
+			contractArticles(em)
 		}
 
-		model.view.reposition()
+		contractArticles(el)
+	}
+
+	function contractArticles(el: Element) {
+		for (let art of el.getElementsByTagName("ARTICLE")) {
+			contractPost(parseInt(art.id.slice(1)), el as HTMLElement)
+		}
 	}
 }
 
