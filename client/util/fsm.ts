@@ -1,4 +1,4 @@
-type StateHandler = (arg?: any) => void
+type StateHandler = () => void
 
 interface Stringable {
 	toString(): string
@@ -9,9 +9,12 @@ export default class FSM<S extends Stringable, E extends Stringable> {
 	private stateHandlers: SetMap<StateHandler> = new SetMap<StateHandler>()
 	private onceHandlers: SetMap<StateHandler> = new SetMap<StateHandler>()
 	private changeHandlers: (() => void)[] = []
-	private transitions: { [transition: string]: (arg?: any) => S } = {}
-	private wilds: { [event: string]: (arg?: any) => S } = {}
+	private transitions: { [transition: string]: () => S } = {};
+	private wilds: { [event: string]: () => S } = {};
 	public state: S
+
+	private feeding: boolean = false;
+	private buffered: E[] = [];
 
 	// Create a new finite state machine with the supplied start state
 	constructor(start: S) {
@@ -51,39 +54,62 @@ export default class FSM<S extends Stringable, E extends Stringable> {
 	}
 
 	// Feed an event to the FSM
-	public feed(event: E, arg?: any) {
+	public feed(event: E) {
+		// Ensure fed events are still sequential, even if feed() ends up
+		// calling feed() down the call stack.
+		if (this.feeding) {
+			this.buffered.push(event);
+			return;
+		}
+		this.feeding = true;
+
 		let result: S
 		const e = event.toString()
 		if (e in this.wilds) {
-			result = this.wilds[e](arg)
+			result = this.wilds[e]()
 		} else {
 			const transition = this.transitionString(this.state, event),
 				handler = this.transitions[transition]
 			if (!handler) { // Not registered. NOP
-				return
+				return this.feedBuffered();
 			}
-			result = handler(arg)
+			result = handler();
 		}
 		if (this.state === result) {
-			return
+			return this.feedBuffered();
 		}
-		this.state = result
-		const r = result.toString()
-		this.stateHandlers.forEach(r, fn =>
-			fn(arg))
+
+		const r = result.toString();
+
+		// These may depend on the previous state of the FSM
 		this.onceHandlers.forEach(r, fn =>
-			fn(arg))
-		for (let f of this.changeHandlers) {
-			f();
+			fn());
+		this.onceHandlers.removeAll(r);
+
+		// But stateHandlers must apply changes according to the new state
+		this.state = result;
+		this.stateHandlers.forEach(r, fn =>
+			fn());
+		for (let fn of this.changeHandlers) {
+			fn();
 		}
-		this.onceHandlers.removeAll(r)
+
+		this.feedBuffered();
+	}
+
+	// Feed any buffered events
+	private feedBuffered() {
+		this.feeding = false;
+		if (this.buffered.length) {
+			this.feed(this.buffered.shift());
+		}
 	}
 
 	// Returns a function that executes FSM.prototype.feed with the passed
 	// argument
 	public feeder(event: E): StateHandler {
-		return arg =>
-			this.feed(event, arg)
+		return () =>
+			this.feed(event);
 	}
 }
 
