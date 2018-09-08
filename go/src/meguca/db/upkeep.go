@@ -206,17 +206,18 @@ func deleteBoard(tx *sql.Tx, id, by, reason string) (err error) {
 	if err != nil {
 		return
 	}
-	err = logModeration(tx, auth.ModLogEntry{
-		Type:   auth.DeleteBoard,
-		Board:  "all",
-		By:     by,
-		Reason: reason,
+	err = logModeration(tx, 0, auth.ModLogEntry{
+		ModerationEntry: common.ModerationEntry{
+			Type:   common.DeleteBoard,
+			By:     by,
+			Reason: reason,
+		},
+		Board: "all",
 	})
 	if err != nil {
 		return
 	}
-	_, err = tx.Exec(`select pg_notify('board_updated', $1)`, id)
-	return
+	return notifyBoardUpdated(tx, id)
 }
 
 // Delete stale threads. Thread retention measured in a bumptime threshold, that
@@ -242,13 +243,17 @@ func deleteOldThreads() (err error) {
 		err = queryAll(
 			withTransaction(tx, sq.
 				Select(
-					"posts.id",
+					"threads.id",
 					"bumpTime",
 					`(select count(*)
-					from posts
-					where posts.op = threads.id
-				) as postCtr`,
-					"posts.deleted",
+						from posts
+						where posts.op = threads.id
+						) as postCtr`,
+					fmt.Sprintf(
+						`(select exists (
+							select 1 from post_moderation
+							where post_id = threads.id and type = %d))`,
+						common.DeletePost),
 				).
 				From("threads").
 				Join("posts on threads.id = posts.id"),

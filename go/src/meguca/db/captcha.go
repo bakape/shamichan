@@ -125,7 +125,7 @@ func AuthenticateCaptcha(req auth.Captcha, ip string) (err error) {
 		return
 	}
 	if count >= 3 {
-		err = SystemBan(ip, "bot detected", time.Now().Add(time.Hour*48))
+		err = SystemBan(ip, "bot detected", time.Hour*48)
 		if err != nil {
 			return
 		}

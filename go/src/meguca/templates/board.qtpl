@@ -148,7 +148,7 @@ IndexThreads renders abbreviated threads for display on board index pages
 	<div id="index-thread-container">
 		{% for _, t := range threads %}
 			{% code idStr := strconv.FormatUint(t.ID, 10) %}
-			<section class="index-thread{% if t.Deleted %}{% space %}deleted{% endif %}" data-id="{%s= idStr %}">
+			<section class="index-thread{% if t.IsDeleted() %}{% space %}deleted{% endif %}" data-id="{%s= idStr %}">
 				{%= deletedToggle() %}
 				{%= renderThreadPosts(t, bls, root, true) %}
 				<hr>

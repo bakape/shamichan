@@ -2,12 +2,11 @@ package db
 
 import (
 	"database/sql"
-	"testing"
-	"time"
-
 	"meguca/auth"
 	"meguca/common"
 	. "meguca/test"
+	"testing"
+	"time"
 )
 
 var (
@@ -149,6 +148,7 @@ func TestGetBanRecords(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 
+	const length = time.Hour * 20
 	std := auth.BanRecord{
 		Ban: auth.Ban{
 			IP:    "::1",
@@ -156,10 +156,10 @@ func TestGetBanRecords(t *testing.T) {
 		},
 		ForPost: 1,
 		By:      "me",
-		Expires: time.Now().Add(time.Hour * 20).UTC(),
+		Expires: time.Now().Add(length).UTC(),
 	}
 
-	err := Ban(std.Board, std.Reason, std.By, std.Expires, true, std.ForPost)
+	err := Ban(std.Board, std.Reason, std.By, length, true, std.ForPost)
 	if err != nil {
 		t.Fatal(err)
 	}

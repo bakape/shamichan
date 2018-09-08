@@ -1,19 +1,14 @@
 package templates
 
 import (
-	"bytes"
-	"fmt"
 	"html"
 	"math"
 	"strconv"
-	"strings"
 	"time"
 
 	"meguca/auth"
 	"meguca/common"
 	"meguca/lang"
-
-	"github.com/go-playground/log"
 )
 
 // GetPostModLog forwards db.GetPostModLog to avoid cyclic imports in cache
@@ -22,10 +17,10 @@ var GetPostModLog func(id uint64) (mLog []auth.ModLogEntry, err error)
 // Extra data passed, when rendering an article
 type articleContext struct {
 	index, sticky, locked, rbText, pyu bool
-	omit, imageOmit       int
-	op                    uint64
-	board, subject, root  string
-	backlinks             backlinks
+	omit, imageOmit                    int
+	op                                 uint64
+	board, subject, root               string
+	backlinks                          backlinks
 }
 
 // Map of all backlinks on a page
@@ -128,52 +123,55 @@ func extractBacklinks(cap int, threads ...common.Thread) backlinks {
 
 // Returns 3 mod-log related messages by post ID
 func parseModLog(p common.Post) (bool, string) {
-	var any bool
-	var msgs bytes.Buffer
-	ln := lang.Get().Common.Posts
-	mLog, err := GetPostModLog(p.ID)
+	// TODO
+	return false, ""
 
-	if err != nil {
-		log.Error("templates/article.go::parseModLog: ", err)
-		return false, ""
-	}
+	// var any bool
+	// var msgs bytes.Buffer
+	// ln := lang.Get().Common.Posts
+	// mLog, err := GetPostModLog(p.ID)
 
-	if p.Banned {
-		any = true
-		msgs.WriteString(ln["banned"])
+	// if err != nil {
+	// 	log.Error("templates/article.go::parseModLog: ", err)
+	// 	return false, ""
+	// }
 
-		if mLog[0].By != "" {
-			msgs.WriteString(fmt.Sprintf(` BY "%s" FOR %s: %s`,
-				mLog[0].By,
-				strings.ToUpper(secondsToTime(float64(mLog[0].Length))),
-				mLog[0].Reason,
-			))
-		}
-	}
+	// if p.Banned {
+	// 	any = true
+	// 	msgs.WriteString(ln["banned"])
 
-	if p.Deleted && mLog[1].By != "" {
-		if (any) {
-			msgs.WriteString("<br>")
-		}
+	// 	if mLog[0].By != "" {
+	// 		msgs.WriteString(fmt.Sprintf(` BY "%s" FOR %s: %s`,
+	// 			mLog[0].By,
+	// 			strings.ToUpper(secondsToTime(float64(mLog[0].Length))),
+	// 			mLog[0].Reason,
+	// 		))
+	// 	}
+	// }
 
-		any = true
-		msgs.WriteString(fmt.Sprintf(`%s BY "%s"`, ln["deleted"], mLog[1].By))
-	}
+	// if p.Deleted && mLog[1].By != "" {
+	// 	if (any) {
+	// 		msgs.WriteString("<br>")
+	// 	}
 
-	if p.MeidoVision {
-		if (any) {
-			msgs.WriteString("<br>")
-		}
+	// 	any = true
+	// 	msgs.WriteString(fmt.Sprintf(`%s BY "%s"`, ln["deleted"], mLog[1].By))
+	// }
 
-		any = true
-		msgs.WriteString(ln["meidoVision"])
-		
-		if mLog[2].By != "" {
-			msgs.WriteString(fmt.Sprintf(` BY "%s"`, mLog[2].By))
-		}
-	}
+	// if p.MeidoVision {
+	// 	if (any) {
+	// 		msgs.WriteString("<br>")
+	// 	}
 
-	return any, msgs.String()
+	// 	any = true
+	// 	msgs.WriteString(ln["meidoVision"])
+
+	// 	if mLog[2].By != "" {
+	// 		msgs.WriteString(fmt.Sprintf(` BY "%s"`, mLog[2].By))
+	// 	}
+	// }
+
+	// return any, msgs.String()
 }
 
 // Returns human readable time
@@ -195,12 +193,12 @@ func secondsToTime(s float64) string {
 
 // Truncates a float64
 func toFixed(num float64, precision int) float64 {
-    out := math.Pow(10, float64(precision))
-    return float64(round(num * out)) / out
+	out := math.Pow(10, float64(precision))
+	return float64(round(num*out)) / out
 }
 
 func round(num float64) int {
-    return int(num + math.Copysign(0.5, num))
+	return int(num + math.Copysign(0.5, num))
 }
 
 // Returns the stringified n + the plural or singular word

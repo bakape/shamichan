@@ -17,33 +17,23 @@ var (
 	bansMu   sync.RWMutex
 )
 
-func writeBan(
-	tx *sql.Tx,
-	ip, board, reason, by string,
-	postID uint64,
-	expires time.Time,
-	log bool,
-) (
-	err error,
-) {
+func writeBan(tx *sql.Tx, op uint64, ip string, log bool,
+	entry auth.ModLogEntry,
+) (err error) {
+	expires := time.Now().UTC().Add(time.Second * time.Duration(entry.Length))
 	err = withTransaction(tx,
 		sq.Insert("bans").
 			Columns("ip", "board", "forPost", "reason", "by", "expires").
-			Values(ip, board, postID, reason, by, expires.UTC()).
+			Values(ip, entry.Board, entry.ID, entry.Reason, entry.By, expires).
 			Suffix("on conflict do nothing"),
 	).
 		Exec()
 	if err != nil || !log {
 		return
 	}
-	return logModeration(tx, auth.ModLogEntry{
-		Type:   auth.BanPost,
-		Board:  board,
-		ID:     postID,
-		By:     by,
-		Length: uint64(expires.Sub(time.Now()).Seconds()),
-		Reason: reason,
-	})
+
+	entry.Type = common.BanPost // Just in case the client did not set it
+	return logModeration(tx, op, entry)
 }
 
 // Propagate ban updates through DB and disconnect all banned IPs
@@ -62,9 +52,17 @@ func propagateBans(board string, ips ...string) error {
 }
 
 // SystemBan automatically bans an IP
-func SystemBan(ip, reason string, expires time.Time) (err error) {
+func SystemBan(ip, reason string, length time.Duration) (err error) {
 	err = InTransaction(false, func(tx *sql.Tx) error {
-		return writeBan(tx, ip, "all", reason, "system", 0, expires, true)
+		return writeBan(tx, 0, ip, true, auth.ModLogEntry{
+			ModerationEntry: common.ModerationEntry{
+				Type:   common.BanPost,
+				Reason: reason,
+				By:     "system",
+				Length: uint64(length / time.Second),
+			},
+			Board: "all",
+		})
 	})
 	if err != nil {
 		return
@@ -75,9 +73,9 @@ func SystemBan(ip, reason string, expires time.Time) (err error) {
 
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
 // banned IPs.
-func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
-	err error,
-) {
+func Ban(board, reason, by string, length time.Duration, log bool,
+	ids ...uint64,
+) (err error) {
 	type post struct {
 		id, op uint64
 		ip     string
@@ -117,21 +115,16 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 	// Write ban messages to posts and ban table
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		for _, post := range posts {
-			err = withTransaction(tx,
-				sq.Update("posts").
-					Set("banned", true).
-					Where("id = ?", post.id),
-			).
-				Exec()
-			if err != nil {
-				return
-			}
-			err = bumpThread(tx, post.op, false)
-			if err != nil {
-				return
-			}
-			err = writeBan(tx, post.ip, board, reason, by, post.id, expires,
-				log)
+			err = writeBan(tx, post.op, post.ip, log, auth.ModLogEntry{
+				ModerationEntry: common.ModerationEntry{
+					Type:   common.BanPost,
+					Length: uint64(length / time.Second),
+					By:     by,
+					Reason: reason,
+				},
+				Board: board,
+				ID:    post.id,
+			})
 			if err != nil {
 				return
 			}
@@ -140,27 +133,6 @@ func Ban(board, reason, by string, expires time.Time, log bool, ids ...uint64) (
 	})
 	if err != nil {
 		return
-	}
-
-	if !IsTest {
-		for _, post := range posts {
-			mLog, err := GetPostModLog(post.id)
-
-			if err != nil {
-				return err
-			}
-
-			err = auth.ModLogPost(post.id, post.op, mLog)
-
-			if err != nil {
-				return err
-			}
-
-			err = common.BanPost(post.id, post.op)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
 	ipArr := make([]string, 0, len(ips))
@@ -181,11 +153,13 @@ func Unban(board string, id uint64, by string) error {
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, auth.ModLogEntry{
-			Type:  auth.UnbanPost,
+		err = logModeration(tx, 0, auth.ModLogEntry{
+			ModerationEntry: common.ModerationEntry{
+				Type: common.UnbanPost,
+				By:   by,
+			},
 			Board: board,
 			ID:    id,
-			By:    by,
 		})
 		if err != nil {
 			return

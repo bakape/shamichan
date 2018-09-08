@@ -106,6 +106,9 @@ Post link, that will redirect to the post from any page
 
 Renders a moderation log page
 {% func ModLog(log []auth.ModLogEntry) %}{% stripspace %}
+	{% comment %}
+	TODO
+	TODO: Rename reason to value
 	{%= htmlHeader() %}
 	{% code ln := lang.Get() %}
 	{%= tableStyle() %}
@@ -150,4 +153,5 @@ Renders a moderation log page
 		{% endfor %}
 	</table>
 	{%= htmlEnd() %}
+	{% endcomment %}
 {% endstripspace %}{% endfunc %}

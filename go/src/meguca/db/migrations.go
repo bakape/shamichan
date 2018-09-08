@@ -2,12 +2,15 @@ package db
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/util"
+	"strconv"
 	"time"
 
 	"github.com/go-playground/log"
@@ -895,7 +898,8 @@ var migrations = []func(*sql.Tx) error{
 			return
 		}
 
-		q, err := tx.Prepare(`insert into roulette (id, scount, rcount) values ($1, 6, 0)`)
+		q, err := tx.Prepare(
+			`insert into roulette (id, scount, rcount) values ($1, 6, 0)`)
 
 		if err != nil {
 			return
@@ -932,11 +936,65 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		var tasks []string
+
+		for _, col := range [...]string{"deleted", "banned", "meidovision"} {
+			tasks = append(tasks, "alter table posts drop column "+col)
+		}
+		tasks = append(tasks,
+			`alter table posts add column moderated bool not null default false`,
+			`create table post_moderation (
+				post_id bigint not null references posts on delete cascade,
+				type smallint not null,
+				by text not null,
+				length bigint not null,
+				reason text not null
+			)`,
+			createIndex("post_moderation", "post_id"),
+		)
+
+		return execAll(tx, tasks...)
+	},
+	func(tx *sql.Tx) (err error) {
+		var tasks []string
+		setNotNull := func(col, typ, def string) {
+			tasks = append(tasks, fmt.Sprintf(
+				`UPDATE posts
+				SET %s = %s
+				WHERE %s IS NULL`,
+				col, def, col,
+			))
+			for _, s := range [...]string{
+				"SET DATA TYPE " + typ,
+				"SET DEFAULT " + def,
+				"SET NOT NULL",
+			} {
+				tasks = append(tasks, fmt.Sprintf(
+					`ALTER TABLE posts ALTER COLUMN %s %s`, col, s))
+			}
+		}
+
+		for _, col := range [...]string{"spoiler", "sage"} {
+			setNotNull(col, "bool", "false")
+		}
+		for _, col := range [...]string{
+			"name", "trip", "auth", "imageName", "flag", "posterID",
+		} {
+			setNotNull(col, "text", `''::text`)
+		}
+
+		return execAll(tx, tasks...)
+	},
 }
 
 func createIndex(table, column string) string {
 	return fmt.Sprintf(`create index %s_%s on %s (%s)`, table, column, table,
 		column)
+}
+
+func alterColumn(table, column string) string {
+	return fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s", table, column)
 }
 
 // Run migrations from version `from`to version `to`
@@ -1003,4 +1061,95 @@ func patchConfigs(tx *sql.Tx, fn func(*config.Configs)) (err error) {
 		string(buf),
 	)
 	return
+}
+
+// For decoding and encoding the tuple arrays we used to store links in.
+// Still needed for migrations.
+type linkRowLegacy [][2]uint64
+
+func (l *linkRowLegacy) Scan(src interface{}) error {
+	switch src := src.(type) {
+	case []byte:
+		return l.scanBytes(src)
+	case string:
+		return l.scanBytes([]byte(src))
+	case nil:
+		*l = nil
+		return nil
+	default:
+		return fmt.Errorf("cannot convert %T to [][2]uint", src)
+	}
+}
+
+func (l *linkRowLegacy) scanBytes(src []byte) error {
+	length := len(src)
+	if length < 6 {
+		return errors.New("source too short")
+	}
+
+	src = src[1 : length-1]
+
+	// Determine needed size and preallocate final array
+	commas := 0
+	for _, b := range src {
+		if b == ',' {
+			commas++
+		}
+	}
+	*l = make(linkRowLegacy, 0, (commas-1)/2+1)
+
+	var (
+		inner bool
+		next  [2]uint64
+		err   error
+		buf   = make([]byte, 0, 16)
+	)
+	for _, b := range src {
+		switch b {
+		case '{': // New tuple
+			inner = true
+			buf = buf[0:0]
+		case ',':
+			if inner { // End of first uint
+				next[0], err = strconv.ParseUint(string(buf), 10, 64)
+				if err != nil {
+					return err
+				}
+				buf = buf[0:0]
+			}
+		case '}': // End of tuple
+			next[1], err = strconv.ParseUint(string(buf), 10, 64)
+			if err != nil {
+				return err
+			}
+			*l = append(*l, next)
+		default:
+			buf = append(buf, b)
+		}
+	}
+
+	return nil
+}
+
+func (l linkRowLegacy) Value() (driver.Value, error) {
+	n := len(l)
+	if n == 0 {
+		return nil, nil
+	}
+
+	b := make([]byte, 1, 16)
+	b[0] = '{'
+	for i, l := range l {
+		if i != 0 {
+			b = append(b, ',')
+		}
+		b = append(b, '{')
+		b = strconv.AppendUint(b, l[0], 10)
+		b = append(b, ',')
+		b = strconv.AppendUint(b, l[1], 10)
+		b = append(b, '}')
+	}
+	b = append(b, '}')
+
+	return string(b), nil
 }
