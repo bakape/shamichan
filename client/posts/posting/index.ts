@@ -209,7 +209,10 @@ export default () => {
 		if (postModel) {
 			postModel.abandon();
 		}
-		window.onbeforeunload = postForm = postModel = null
+
+		// Don't null postForm. It may still be modified mid-transition
+		window.onbeforeunload = postModel = null
+
 		stylePostControls(el => {
 			el.style.display = ""
 			el.classList.remove("disabled")
