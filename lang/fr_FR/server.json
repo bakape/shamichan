@@ -477,7 +477,7 @@
 		"spoilerImage": "Dissimuler l'image",
 		"subject": "Titre",
 		"sync": "Statut de connexion",
-		"syncCount": "Nombre d'utilisateurs connectés à ce sujet",
+		"syncCount": "Unique connected IP active/total count",
 		"text": "Texte",
 		"time": "Date",
 		"type": "Type",
