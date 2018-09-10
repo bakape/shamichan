@@ -85,7 +85,7 @@ hook("getPostModel", () =>
 
 // Find the post creation button and style it, if any
 function stylePostControls(fn: (el: HTMLElement) => void) {
-	const el = document.querySelector("aside.posting")
+	const el = document.querySelector("aside.posting") as HTMLElement
 	if (el) {
 		fn(el)
 	}

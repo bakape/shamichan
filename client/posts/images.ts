@@ -206,7 +206,7 @@ export default class ImageHandler extends View<Post> {
 	// Assign URLs to image search links
 	private renderImageSearch(figcaption: Element) {
 		const { fileType, thumbType, SHA1, MD5, size } = this.model.image,
-			el = figcaption.querySelector(".image-search-container")
+			el = figcaption.querySelector(".image-search-container") as HTMLElement
 		if (thumbType === fileTypes.noFile || fileType === fileTypes.pdf) {
 			el.hidden = true
 			return
@@ -299,7 +299,7 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes["tar.xz"]:
 			case fileTypes.txt:
 				event.preventDefault()
-				return this.el.querySelector("figcaption a[download]").click()
+				return (this.el.querySelector("figcaption a[download]") as HTMLElement).click()
 			case fileTypes.mp3:
 			case fileTypes.flac:
 				event.preventDefault()
@@ -352,7 +352,7 @@ export default class ImageHandler extends View<Post> {
 				if (a) {
 					a.remove()
 				}
-				this.el.querySelector("figure img").hidden = false
+				(this.el.querySelector("figure img") as HTMLElement).hidden = false
 				break
 		}
 

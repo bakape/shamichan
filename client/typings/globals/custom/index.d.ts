@@ -11,9 +11,6 @@ interface ParentNode {
 
 interface NodeSelector {
 	querySelector(sel: string): HTMLElement
-
-	// Hack. Modern browsers have Symbol.iterator on NodeList
-	querySelectorAll(sel: string): HTMLElement[]
 }
 
 interface EventTarget {
@@ -102,7 +99,8 @@ interface ArrayBufferLoadEvent extends Event {
 }
 
 interface NotificationOptions {
-	vibrate?: boolean
+	// See: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate
+	vibrate?: VibratePattern
 }
 
 interface Array<T> {
