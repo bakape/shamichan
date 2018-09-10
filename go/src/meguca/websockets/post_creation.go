@@ -261,6 +261,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 	conf := config.Get()
 	c.incrementSpamScore(conf.PostCreationScore +
 		conf.CharScore*uint(c.post.len))
+	c.setLastTime()
 	return
 }
 
