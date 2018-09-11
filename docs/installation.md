@@ -26,7 +26,7 @@ createdb -T template0 -E UTF8 -O meguca meguca
 exit
 
 # Install Go
-wget -O- https://storage.googleapis.com/golang/go1.11—linux-amd64.tar.gz | tar xpz -C /usr/local
+wget -O- https://dl.google.com/go/go1.11.linux-amd64.tar.gz | tar xpz -C /usr/local
 echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 source /etc/profile
 
