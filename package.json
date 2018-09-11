@@ -1,6 +1,6 @@
 {
   "name": "meguca",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "AGPL-3.0",
   "main": "www/js/main.js",
   "repository": {
@@ -24,6 +24,6 @@
     "gulp-util": "latest",
     "typescript": "latest",
     "uglify-js": "latest",
-    "whatwg-fetch": "latest"
+    "whatwg-fetch": "^2.0.4"
   }
 }
