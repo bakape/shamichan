@@ -127,7 +127,7 @@ To enable poster country flags on posts please download GeoLite2-Country.mmdb fr
 A reference list of commands can be found in `./docs/installation.md`
 
 ### Build dependencies
-* [Go](https://golang.org/doc/install) >=1.9.2 (for building server)
+* [Go](https://golang.org/doc/install) >=1.11 (for building server)
 * [Node.js](https://nodejs.org) >=5.0 (for building client)
 * C11 compiler
 * make
