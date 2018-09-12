@@ -23,7 +23,6 @@
     "gulp-uglify": "latest",
     "gulp-util": "latest",
     "typescript": "latest",
-    "uglify-js": "latest",
-    "whatwg-fetch": "^2.0.4"
+    "uglify-js": "latest"
   }
 }

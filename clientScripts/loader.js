@@ -3,10 +3,10 @@
 (function () {
 	// Check if the client is an automated crawler
 	var isBot,
-	botStrings = [
-		"bot", "googlebot", "crawler", "spider", "robot", "crawling"
-	];
-	
+		botStrings = [
+			"bot", "googlebot", "crawler", "spider", "robot", "crawling"
+		];
+
 	for (var i = 0; i < botStrings.length; i++) {
 		if (navigator.userAgent.indexOf(botStrings[i]) !== -1) {
 			isBot = true;
@@ -35,7 +35,7 @@
 
 		while (ns.length) { // Collection is live and changes with DOM updates
 			var el = ns[0],
-			cont = document.createElement("div");
+				cont = document.createElement("div");
 			cont.innerHTML = el.innerHTML;
 			el.parentNode.replaceChild(cont, el);
 		}
@@ -47,29 +47,24 @@
 	}
 
 	var scriptCount = 0,
-	polyfills = [];
-
-	// Fetch API
-	if (!checkFunction("window.fetch")) {
-		polyfills.push('js/vendor/fetch');
-	}
+		polyfills = [];
 
 	var DOMUpToDate = true,
-	DOMMethods = [
-		// DOM level 4 methods
-		'Element.prototype.remove',
-		'Element.prototype.contains',
-		'Element.prototype.matches',
-		'Element.prototype.after',
-		'Element.prototype.before',
-		'Element.prototype.append',
-		'Element.prototype.prepend',
-		'Element.prototype.replaceWith',
+		DOMMethods = [
+			// DOM level 4 methods
+			'Element.prototype.remove',
+			'Element.prototype.contains',
+			'Element.prototype.matches',
+			'Element.prototype.after',
+			'Element.prototype.before',
+			'Element.prototype.append',
+			'Element.prototype.prepend',
+			'Element.prototype.replaceWith',
 
-		// DOM level 3 query methods
-		'Element.prototype.querySelector',
-		'Element.prototype.querySelectorAll'
-	];
+			// DOM level 3 query methods
+			'Element.prototype.querySelector',
+			'Element.prototype.querySelectorAll'
+		];
 
 	for (i = 0; i < DOMMethods.length; i++) {
 		if (!checkFunction(DOMMethods[i])) {
@@ -117,7 +112,7 @@
 	}
 
 	var wasm = /[\?&]wasm=true/.test(location.search),
-	head = document.getElementsByTagName('head')[0];
+		head = document.getElementsByTagName('head')[0];
 
 	if (polyfills.length) {
 		for (i = 0; i < polyfills.length; i++) {
@@ -191,7 +186,7 @@
 
 		if ('serviceWorker' in navigator && (
 			location.protocol === "https:" ||
-				location.hostname === "localhost"
+			location.hostname === "localhost"
 		)) {
 			navigator.serviceWorker
 				.register("/assets/js/scripts/worker.js", { scope: "/" })
