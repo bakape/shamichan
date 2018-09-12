@@ -232,7 +232,9 @@ export default class FormModel extends Post {
 	// Upload the file and request its allocation
 	public async uploadFile(file: File) {
 		if (!boardConfig.textOnly && !this.image) {
-			this.handleUploadResponse(await this.view.upload.uploadFile(file));
+			const pr = this.view.upload.uploadFile(file);
+			this.view.input.focus();
+			this.handleUploadResponse(await pr);
 		}
 	}
 
