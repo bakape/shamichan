@@ -174,9 +174,8 @@ export default class FormModel extends Post {
 		switch (old.charAt(pos)) {
 		case '':
 		case ' ':
-			s += sel ? '\n' : ''
-			break
 		case '\n':
+			s += sel ? '\n' : ''
 			break
 		default:
 			b = true
