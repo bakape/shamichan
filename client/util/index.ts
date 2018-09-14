@@ -12,6 +12,11 @@ export interface OnOptions extends EventListenerOptions {
 	selector?: string
 }
 
+export interface Paste {
+	body: string
+	pos: number
+}
+
 // Any object with an event-based interface for passing to load()
 interface Loader {
 	onload: EventListener
@@ -197,4 +202,42 @@ export function extractJSON(id: string): any {
 		return null
 	}
 	return JSON.parse(el.textContent)
+}
+
+// Returns modified paste which quotes all following lines
+// if first line is quoted, and new cursor position
+export function modPaste(old: string, sel: string, pos: number): Paste {
+	let s = '',
+	b = false
+
+	if (!sel) {
+		return
+	}
+
+	if (sel.charAt(0) == '>') {
+		switch (old.charAt(pos - 1)) {
+		case '':
+		case '\n':
+			break
+		default:
+			s = '\n'
+		}
+
+		for (let line of sel.split('\n')) {
+			s += `>${line}\n`
+		}
+
+		switch (old.charAt(pos)) {
+		case '':
+		case '\n':
+			break
+		default:
+			b = true
+			s += '\n'
+		}
+	} else {
+		s += sel
+	}
+
+	return {body: s, pos: b ? pos + s.length - 1 : pos + s.length}
 }

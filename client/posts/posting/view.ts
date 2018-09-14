@@ -147,17 +147,19 @@ export default class FormView extends PostView {
 
     // Replace the current body and set the cursor to the input's end.
     // commit sets, if the onInput method should be run.
-    public replaceText(body: string, commit: boolean) {
+    public replaceText(body: string, pos: number, commit: boolean) {
         const el = this.input
         el.value = body
+
         if (commit) {
             this.onInput()
         } else {
             this.resizeInput()
         }
+
         requestAnimationFrame(() => {
             el.focus()
-            el.setSelectionRange(body.length, body.length)
+            el.setSelectionRange(pos, pos)
 
             // Because Firefox refocuses the clicked <a>
             requestAnimationFrame(() =>
