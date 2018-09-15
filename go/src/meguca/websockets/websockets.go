@@ -115,7 +115,6 @@ func newClient(conn *websocket.Conn, req *http.Request) (*Client, error) {
 	}
 	return &Client{
 		ip:       ip,
-		lastTime: time.Now().Unix(),
 		close:    make(chan error, 2),
 		receive:  make(chan receivedMessage),
 		redirect: make(chan string),
