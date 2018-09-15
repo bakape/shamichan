@@ -137,7 +137,7 @@ func LoadDB() (err error) {
 		return
 	}
 
-	if !IsTest && config.ImagerMode != config.ImagerOnly {
+	if !IsTest {
 		go runCleanupTasks()
 	}
 

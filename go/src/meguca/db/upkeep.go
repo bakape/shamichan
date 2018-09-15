@@ -39,26 +39,34 @@ func runCleanupTasks() {
 }
 
 func runMinuteTasks() {
-	logError("open post cleanup", closeDanglingPosts())
-	expireRows("image_tokens", "bans", "captchas", "failed_captchas")
+	if config.ImagerMode != config.ImagerOnly {
+		logError("open post cleanup", closeDanglingPosts())
+		expireRows("image_tokens", "bans", "captchas", "failed_captchas")
+	}
 }
 
 func runHalfTasks() {
-	logError("unrestrict pyu_limit", FreePyuLimit())
-	logError("expire spam scores", expireSpamScores())
+	if config.ImagerMode != config.ImagerOnly {
+		logError("unrestrict pyu_limit", FreePyuLimit())
+		logError("expire spam scores", expireSpamScores())
+	}
 }
 
 func runHourTasks() {
-	expireRows("sessions")
-	expireBy("created < now() at time zone 'utc' + '-7 days'",
-		"mod_log", "reports")
-	logError("remove identity info", removeIdentityInfo())
-	logError("thread cleanup", deleteOldThreads())
-	logError("board cleanup", deleteUnusedBoards())
-	logError("image cleanup", deleteUnusedImages())
-	logError("delete dangling open post bodies", cleanUpOpenPostBodies())
-	_, err := db.Exec(`vacuum`)
-	logError("vaccum database", err)
+	if config.ImagerMode != config.ImagerOnly {
+		expireRows("sessions")
+		expireBy("created < now() at time zone 'utc' + '-7 days'",
+			"mod_log", "reports")
+		logError("remove identity info", removeIdentityInfo())
+		logError("thread cleanup", deleteOldThreads())
+		logError("board cleanup", deleteUnusedBoards())
+		logError("delete dangling open post bodies", cleanUpOpenPostBodies())
+		_, err := db.Exec(`vacuum`)
+		logError("vaccum database", err)
+	}
+	if config.ImagerMode != config.NoImager {
+		logError("image cleanup", deleteUnusedImages())
+	}
 }
 
 func logError(prefix string, err error) {
