@@ -161,22 +161,35 @@ export default class FormModel extends Post {
 		let s = '',
 			b = false
 
-		// Insert post link and preceding whitespace
 		switch (old.charAt(pos - 1)) {
-			case '': // Empty post
-			case ' ':
-			case '\n':
-				break;
-			default:
-				s += "\n";
+		case '':
+		case '\n':
+			b = true
+		case ' ':
+			s = `>>${id}`
+			break
+		default:
+			s = sel ? `\n>>${id}` : ` >>${id}`
 		}
-		s += `>>${id}\n`;
 
-		// Insert quoted text (if any)
+		switch (old.charAt(pos)) {
+		case '':
+		case ' ':
+		case '\n':
+			s += (b || sel) ? '\n' : ''
+			b = false
+			break
+		default:
+			b = true
+			s += sel ? '\n' : ' '
+		}
+
 		if (sel) {
 			for (let line of sel.split('\n')) {
-				s += `>${line}\n`;
+				s += `>${line}\n`
 			}
+
+			s += b ? '\n' : ''
 		}
 
 		this.view.replaceText(
