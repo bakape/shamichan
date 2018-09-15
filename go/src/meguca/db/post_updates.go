@@ -9,19 +9,6 @@ import (
 func ClosePost(id, op uint64, body string, links []common.Link,
 	com []common.Command,
 ) (err error) {
-	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
-		ID       uint64           `json:"id"`
-		Links    []common.Link    `json:"links,omitempty"`
-		Commands []common.Command `json:"commands,omitempty"`
-	}{
-		ID:       id,
-		Links:    links,
-		Commands: com,
-	})
-	if err != nil {
-		return
-	}
-
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		q := sq.Update("posts").
 			SetMap(map[string]interface{}{
@@ -47,7 +34,11 @@ func ClosePost(id, op uint64, body string, links []common.Link,
 	}
 
 	if !IsTest {
-		common.ClosePost(id, op, links, com, msg)
+		err = common.ClosePost(id, op, links, com)
+		if err != nil {
+			return
+		}
 	}
+
 	return deleteOpenPostBody(id)
 }

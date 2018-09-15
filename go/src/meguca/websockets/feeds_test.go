@@ -21,7 +21,7 @@ func TestStreamUpdates(t *testing.T) {
 	assertMessage(
 		t,
 		wcl,
-		`30{"recent":[1],"banned":[],"deleted":[],"deletedImage":[],"meidoVision":[],"open":{}}`,
+		`30{"recent":[1],"open":{},"moderation":{}}`,
 	)
 
 	assertMessage(t, wcl, "33[\"35{\\\"active\\\":0,\\\"total\\\":1}\"]")

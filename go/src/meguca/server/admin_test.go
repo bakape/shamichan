@@ -556,8 +556,8 @@ func TestDeletePost(t *testing.T) {
 			switch {
 			case err != nil:
 				t.Fatal(err)
-			case post.Deleted != c.deleted:
-				LogUnexpected(t, post.Deleted, c.deleted)
+			case post.IsDeleted() != c.deleted:
+				LogUnexpected(t, post.IsDeleted(), c.deleted)
 			}
 		})
 	}

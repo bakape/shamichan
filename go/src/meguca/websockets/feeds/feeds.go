@@ -7,7 +7,6 @@ import (
 	"errors"
 	"sync"
 
-	"meguca/auth"
 	"meguca/common"
 )
 
@@ -22,16 +21,11 @@ var feeds = feedMap{
 	},
 }
 
-// Export without circular dependency
+// Export to avoid circular dependency
 func init() {
-	auth.ModLogPost = ModLogPost
 	common.SendTo = SendTo
 	common.ClosePost = ClosePost
-	common.BanPost = BanPost
-	common.DeletePost = DeletePost
-	common.DeleteImage = DeleteImage
-	common.SpoilerImage = SpoilerImage
-	common.MeidoVisionPost = MeidoVisionPost
+	common.PropagateModeration = PropagateModeration
 }
 
 // Thread watchers
@@ -64,16 +58,17 @@ func addToFeed(id uint64, board string, c common.Client) (
 		feed, ok = feeds.feeds[id]
 		if !ok {
 			feed = &Feed{
-				id:              id,
-				send:            make(chan []byte),
-				insertPost:      make(chan postCreationMessage),
-				closePost:       make(chan postCloseMessage),
-				sendPostMessage: make(chan postMessage),
-				setOpenBody:     make(chan postBodyModMessage),
-				insertImage:     make(chan imageInsertionMessage),
-				addWatcher:      make(chan *Watcher),
-				removeWatcher:   make(chan *Watcher),
-				messageBuffer:   make([]string, 0, 64),
+				id:            id,
+				send:          make(chan []byte),
+				insertPost:    make(chan postCreationMessage),
+				closePost:     make(chan postCloseMessage),
+				spoilerImage:  make(chan message),
+				moderatePost:  make(chan moderationMessage),
+				setOpenBody:   make(chan postBodyModMessage),
+				insertImage:   make(chan imageInsertionMessage),
+				addWatcher:    make(chan *Watcher),
+				removeWatcher: make(chan *Watcher),
+				messageBuffer: make([]string, 0, 64),
 			}
 
 			// Bind all waiting watchers for this feed
@@ -233,88 +228,43 @@ func InsertPostInto(post common.StandalonePost, msg []byte) {
 }
 
 // ClosePost closes a post in a feed, if it exists
-func ClosePost(
-	id, op uint64,
-	links []common.Link,
-	commands []common.Command,
-	msg []byte,
-) {
+func ClosePost(id, op uint64, links []common.Link, commands []common.Command,
+) (err error) {
+	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
+		ID       uint64           `json:"id"`
+		Links    []common.Link    `json:"links,omitempty"`
+		Commands []common.Command `json:"commands,omitempty"`
+	}{
+		ID:       id,
+		Links:    links,
+		Commands: commands,
+	})
+	if err != nil {
+		return
+	}
+
 	sendIfExists(op, func(f *Feed) {
 		f.ClosePost(id, links, commands, msg)
 	})
+
+	return
 }
 
-// BanPost propagates a message about a post being banned
-func BanPost(id, op uint64) error {
-	msg, err := common.EncodeMessage(common.MessageBanned, id)
+func PropagateModeration(id, op uint64, entry common.ModerationEntry,
+) (err error) {
+	msg, err := common.EncodeMessage(common.MessageModeratePost, struct {
+		ID uint64 `json:"id"`
+		common.ModerationEntry
+	}{id, entry})
 	if err != nil {
-		return err
+		return
 	}
 
-	return sendIfExists(op, func(f *Feed) {
-		f.banPost(id, msg)
+	sendIfExists(op, func(f *Feed) {
+		f._moderatePost(id, msg, entry)
 	})
-}
 
-// DeletePost propagates a message about a post being deleted
-func DeletePost(id, op uint64) error {
-	msg, err := common.EncodeMessage(common.MessageDeletePost, id)
-	if err != nil {
-		return err
-	}
-	return sendIfExists(op, func(f *Feed) {
-		f.deletePost(id, msg)
-	})
-}
-
-// DeleteImage propagates a message about an image being deleted from a post
-func DeleteImage(id, op uint64) error {
-	msg, err := common.EncodeMessage(common.MessageDeleteImage, id)
-	if err != nil {
-		return err
-	}
-	return sendIfExists(op, func(f *Feed) {
-		f.DeleteImage(id, msg)
-	})
-}
-
-// SpoilerImage propagates a message about an image being spoilered
-func SpoilerImage(id, op uint64) error {
-	msg, err := common.EncodeMessage(common.MessageSpoiler, id)
-	if err != nil {
-		return err
-	}
-	return sendIfExists(op, func(f *Feed) {
-		f.SpoilerImage(id, msg)
-	})
-}
-
-// MeidoVisionPost propagates a message about a post being meido vision'd
-func MeidoVisionPost(id, op uint64) error {
-	msg, err := common.EncodeMessage(common.MessageMeidoVision, id)
-	if err != nil {
-		return err
-	}
-	return sendIfExists(op, func(f *Feed) {
-		f.meidoVision(id, msg)
-	})
-}
-
-// ModLogPost propagates a message and data about a post being moderated
-func ModLogPost(id, op uint64, log []auth.ModLogEntry) error {
-	msg, err := common.EncodeMessage(common.MessageModLogPost, struct {
-		ID  uint64             `json:"id"`
-		Log []auth.ModLogEntry `json:"log"`
-	}{
-		ID:  id,
-		Log: log,
-	})
-	if err != nil {
-		return err
-	}
-	return sendIfExists(op, func(f *Feed) {
-		f.modLogPost(id, msg)
-	})
+	return
 }
 
 // Clear removes all existing feeds and clients. Used only in tests.

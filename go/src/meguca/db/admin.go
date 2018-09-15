@@ -37,7 +37,10 @@ func logModeration(tx *sql.Tx, op uint64, e auth.ModLogEntry) (err error) {
 			return
 		}
 		if !IsTest {
-			common.PropagateModeration(e.ID, op, e.ModerationEntry)
+			err = common.PropagateModeration(e.ID, op, e.ModerationEntry)
+			if err != nil {
+				return
+			}
 		}
 	}
 	return

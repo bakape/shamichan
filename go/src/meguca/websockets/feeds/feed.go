@@ -2,27 +2,14 @@ package feeds
 
 import (
 	"fmt"
-	"time"
-
 	"meguca/common"
 	"meguca/db"
+	"time"
 
 	"github.com/go-playground/log"
 )
 
-type postMessageType uint8
-
-const (
-	spoilerImage postMessageType = iota
-	deletePost
-	ban
-	deleteImage
-	meidoVision
-	modLogPost
-)
-
-type postMessage struct {
-	typ postMessageType
+type message struct {
 	id  uint64
 	msg []byte
 }
@@ -33,21 +20,24 @@ type postCreationMessage struct {
 }
 
 type postCloseMessage struct {
-	id       uint64
+	message
 	links    []common.Link
 	commands []common.Command
-	msg      []byte
 }
 
 type imageInsertionMessage struct {
-	id uint64
+	message
 	common.Image
-	msg []byte
 }
 
 type postBodyModMessage struct {
-	id        uint64
-	msg, body []byte
+	message
+	body []byte
+}
+
+type moderationMessage struct {
+	message
+	entry common.ModerationEntry
 }
 
 type syncCount struct {
@@ -79,10 +69,12 @@ type Feed struct {
 	insertImage chan imageInsertionMessage
 	// Send message to close a post along with parsed post data
 	closePost chan postCloseMessage
-	// Send various simple messages targeted at a specific post
-	sendPostMessage chan postMessage
+	// Send message to spoiler image of a specific post
+	spoilerImage chan message
 	// Set body of an open post
 	setOpenBody chan postBodyModMessage
+	// Send message about post moderation
+	moderatePost chan moderationMessage
 	// Let sent sync counter
 	lastSyncCount syncCount
 }
@@ -200,32 +192,36 @@ func (f *Feed) Start() (err error) {
 				f.cache.deleteMemoized(msg.id)
 
 			// Various post-related messages
-			case msg := <-f.sendPostMessage:
+			case msg := <-f.spoilerImage:
 				f.startIfPaused()
-				switch msg.typ {
-				case spoilerImage:
-					p := f.cache.Posts[msg.id]
+				p := f.cache.Posts[msg.id]
+				if p.Image != nil {
+					p.Image.Spoiler = true
+				}
+				f.cache.Posts[msg.id] = p
+				f.write(msg.msg)
+				f.cache.deleteMemoized(msg.id)
+
+			// Posts being moderated
+			case msg := <-f.moderatePost:
+				f.startIfPaused()
+				p := f.cache.Posts[msg.id]
+				p.Moderated = true
+				p.Moderation = append(p.Moderation, msg.entry)
+				switch msg.entry.Type {
+				case common.DeleteImage:
+					if p.Image != nil {
+						p.Image = nil
+						f.cache.ImageCtr--
+					}
+				case common.SpoilerImage:
 					if p.Image != nil {
 						p.Image.Spoiler = true
 					}
-					f.cache.Posts[msg.id] = p
-				case ban:
-					p := f.cache.Posts[msg.id]
-					p.Banned = true
-					f.cache.Posts[msg.id] = p
-				case deletePost:
-					p := f.cache.Posts[msg.id]
-					p.Deleted = true
-					f.cache.Posts[msg.id] = p
-				case deleteImage:
-					p := f.cache.Posts[msg.id]
-					p.Image = nil
-					f.cache.Posts[msg.id] = p
-				case meidoVision:
-					p := f.cache.Posts[msg.id]
-					p.MeidoVision = true
-					f.cache.Posts[msg.id] = p
+				case common.LockThread:
+					f.cache.Locked = msg.entry.Reason == "true"
 				}
+				f.cache.Posts[msg.id] = p
 				f.write(msg.msg)
 				f.cache.deleteMemoized(msg.id)
 			}
@@ -283,18 +279,11 @@ func (f *Feed) InsertPost(post common.Post, msg []byte) {
 // InsertImage inserts an image into an already allocated post
 func (f *Feed) InsertImage(id uint64, img common.Image, msg []byte) {
 	f.insertImage <- imageInsertionMessage{
-		id:    id,
+		message: message{
+			id:  id,
+			msg: msg,
+		},
 		Image: img,
-		msg:   msg,
-	}
-}
-
-// Small helper method
-func (f *Feed) _sendPostMessage(typ postMessageType, id uint64, msg []byte) {
-	f.sendPostMessage <- postMessage{
-		typ: typ,
-		id:  id,
-		msg: msg,
 	}
 }
 
@@ -305,40 +294,40 @@ func (f *Feed) ClosePost(
 	commands []common.Command,
 	msg []byte,
 ) {
-	f.closePost <- postCloseMessage{id, links, commands, msg}
+	f.closePost <- postCloseMessage{
+		message: message{
+			id:  id,
+			msg: msg,
+		},
+		links:    links,
+		commands: commands,
+	}
 }
 
 // SpoilerImage spoilers a feed's image
 func (f *Feed) SpoilerImage(id uint64, msg []byte) {
-	f._sendPostMessage(spoilerImage, id, msg)
+	f.spoilerImage <- message{id, msg}
 }
 
-func (f *Feed) banPost(id uint64, msg []byte) {
-	f._sendPostMessage(ban, id, msg)
-}
-
-func (f *Feed) deletePost(id uint64, msg []byte) {
-	f._sendPostMessage(deletePost, id, msg)
-}
-
-// DeleteImage deletes a feed's image
-func (f *Feed) DeleteImage(id uint64, msg []byte) {
-	f._sendPostMessage(deleteImage, id, msg)
-}
-
-func (f *Feed) meidoVision(id uint64, msg []byte) {
-	f._sendPostMessage(meidoVision, id, msg)
-}
-
-func (f *Feed) modLogPost(id uint64, msg []byte) {
-	f._sendPostMessage(modLogPost, id, msg)
+func (f *Feed) _moderatePost(id uint64, msg []byte,
+	entry common.ModerationEntry,
+) {
+	f.moderatePost <- moderationMessage{
+		message: message{
+			id:  id,
+			msg: msg,
+		},
+		entry: entry,
+	}
 }
 
 // SetOpenBody sets the body of an open post and send update message to clients
 func (f *Feed) SetOpenBody(id uint64, body, msg []byte) {
 	f.setOpenBody <- postBodyModMessage{
-		id:   id,
-		msg:  msg,
+		message: message{
+			id:  id,
+			msg: msg,
+		},
 		body: body,
 	}
 }

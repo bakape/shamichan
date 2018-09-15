@@ -1,10 +1,10 @@
 package feeds
 
 import (
+	"encoding/json"
 	"sort"
 	"strconv"
 	"time"
-	"encoding/json"
 
 	"meguca/common"
 
@@ -60,12 +60,9 @@ func newThreadCache(t common.Thread) threadCache {
 // Message used for synchronizing clients to the feed state.
 // This is the version used by the current JS client.
 type syncMessage struct {
-	Recent       []uint64            `json:"recent"`
-	Banned       []uint64            `json:"banned"`
-	Deleted      []uint64            `json:"deleted"`
-	DeletedImage []uint64            `json:"deletedImage"`
-	MeidoVision  []uint64            `json:"meidoVision"`
-	Open         map[uint64]openPost `json:"open"`
+	Recent     []uint64                            `json:"recent"`
+	Open       map[uint64]openPost                 `json:"open"`
+	Moderation map[uint64][]common.ModerationEntry `json:"moderation"`
 }
 
 // As syncMessage, but used for the newer protocol with C++ clients
@@ -86,12 +83,9 @@ type openPost struct {
 func (c *threadCache) genSyncMessage() []byte {
 	threshold := time.Now().Add(-time.Minute * 15).Unix()
 	msg := syncMessage{
-		Recent:       make([]uint64, 0, 16),
-		Banned:       make([]uint64, 0, 16),
-		Deleted:      make([]uint64, 0, 16),
-		DeletedImage: make([]uint64, 0, 16),
-		MeidoVision:  make([]uint64, 0, 16),
-		Open:         make(map[uint64]openPost, 16),
+		Recent:     make([]uint64, 0, 16),
+		Open:       make(map[uint64]openPost, 16),
+		Moderation: make(map[uint64][]common.ModerationEntry, 16),
 	}
 	for id, p := range c.Posts {
 		if p.Time > threshold {
@@ -107,14 +101,8 @@ func (c *threadCache) genSyncMessage() []byte {
 			}
 			msg.Open[id] = op
 		}
-		if p.MeidoVision {
-			msg.MeidoVision = append(msg.MeidoVision, id)
-		}
-		if p.Deleted {
-			msg.Deleted = append(msg.Deleted, id)
-		}
-		if p.Banned {
-			msg.Banned = append(msg.Banned, id)
+		if len(p.Moderation) != 0 {
+			msg.Moderation[id] = p.Moderation
 		}
 	}
 
@@ -155,19 +143,20 @@ func (c *threadCache) encodeThread(last100 bool) []byte {
 		}
 	}
 
+	p := c.Posts[c.id]
 	b := make([]byte, 0, 1<<10)
 	b = append(b, `30{"sticky":`...)
 	b = strconv.AppendBool(b, c.Sticky)
 	b = append(b, `,"locked":`...)
 	b = strconv.AppendBool(b, c.Locked)
 	b = append(b, `,"deleted":`...)
-	b = strconv.AppendBool(b, c.Posts[c.id].Deleted)
+	b = strconv.AppendBool(b, p.IsDeleted())
 	b = append(b, `,"postCtr":`...)
 	b = strconv.AppendUint(b, uint64(c.PostCtr), 10)
 	b = append(b, `,"imageCtr":`...)
 	b = strconv.AppendUint(b, uint64(c.ImageCtr), 10)
 	b = append(b, `,"time":`...)
-	b = strconv.AppendInt(b, c.Posts[c.id].Time, 10)
+	b = strconv.AppendInt(b, p.Time, 10)
 	b = append(b, `,"replyTime":`...)
 	b = strconv.AppendInt(b, c.ReplyTime, 10)
 	b = append(b, `,"bumpTime":`...)

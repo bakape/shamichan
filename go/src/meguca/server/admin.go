@@ -490,9 +490,9 @@ func ban(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Apply bans
-	expires := time.Now().Add(time.Duration(msg.Duration) * time.Minute)
 	for board, ids := range byBoard {
-		err := db.Ban(board, msg.Reason, creds.UserID, expires, true, ids...)
+		err := db.Ban(board, msg.Reason, creds.UserID,
+			time.Duration(msg.Duration), true, ids...)
 		if err != nil {
 			httpError(w, r, err)
 			return
