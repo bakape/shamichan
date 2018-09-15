@@ -157,43 +157,32 @@ export default class FormModel extends Post {
 	// Add a link to the target post in the input
 	public addReference(id: number, sel: string) {
 		const pos = this.view.input.selectionEnd,
-		old = this.view.input.value
+			old = this.view.input.value
 		let s = '',
-		b = false
+			b = false
 
+		// Insert post link and preceding whitespace
 		switch (old.charAt(pos - 1)) {
-		case '':
-		case ' ':
-		case '\n':
-			s = `>>${id}`
-			break
-		default:
-			s = sel ? `\n>>${id}` : ` >>${id}`
+			case '': // Empty post
+			case ' ':
+			case '\n':
+				break;
+			default:
+				s += "\n";
 		}
+		s += `>>${id}\n`;
 
-		switch (old.charAt(pos)) {
-		case '':
-		case ' ':
-		case '\n':
-			s += sel ? '\n' : ''
-			break
-		default:
-			b = true
-			s += sel ? '\n' : ' '
-		}
-
+		// Insert quoted text (if any)
 		if (sel) {
 			for (let line of sel.split('\n')) {
-				s += `>${line}\n`
+				s += `>${line}\n`;
 			}
-
-			s += b ? '\n' : ''
 		}
 
-		// Don't commit a quote, if it is the only input in a post
 		this.view.replaceText(
 			old.slice(0, pos) + s + old.slice(pos),
 			pos + s.length - (b ? 1 : 0),
+			// Don't commit a quote, if it is the only input in a post
 			postSM.state !== postState.draft || old.length !== 0
 		)
 	}
@@ -201,8 +190,8 @@ export default class FormModel extends Post {
 	// Paste text to the text body
 	public paste(sel: string) {
 		const start = this.view.input.selectionStart,
-		end = this.view.input.selectionEnd,
-		old = this.view.input.value
+			end = this.view.input.selectionEnd,
+			old = this.view.input.value
 		let p = modPaste(old, sel, end)
 
 		if (!p) {
