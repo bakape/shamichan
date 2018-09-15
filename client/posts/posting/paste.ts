@@ -8,12 +8,24 @@ import { expandThreadForm } from "./threads";
 // Handle file or text paste
 function onPaste(e: ClipboardEvent) {
 	const text = e.clipboardData.getData("text"),
-	files = e.clipboardData.files
+		files = e.clipboardData.files
 	var threadForm: HTMLFormElement,
-	m: FormModel
+		m: FormModel
 
-	if (!text && files.length !== 1) {
-		return
+	if (files.length !== 1) {
+		if (!text) {
+			return;
+		}
+		const t = e.target as HTMLElement;
+		switch (t.tagName) {
+			case "INPUT":
+				return;
+			case "TEXTAREA":
+				if (t !== document.getElementById("text-input")) {
+					return;
+				}
+				break;
+		}
 	}
 
 	e.stopPropagation()
@@ -31,10 +43,11 @@ function onPaste(e: ClipboardEvent) {
 
 	if (text) {
 		if (threadForm) {
-			const area = threadForm.querySelector("textarea[name=body]") as HTMLTextAreaElement,
-			start = area.selectionStart,
-			end = area.selectionEnd,
-			old = area.value
+			const area = threadForm
+				.querySelector("textarea[name=body]") as HTMLTextAreaElement
+			const start = area.selectionStart;
+			const end = area.selectionEnd;
+			const old = area.value;
 			let p = modPaste(old, text, end)
 
 			if (!p) {
