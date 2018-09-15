@@ -5,6 +5,8 @@ import (
 	"meguca/auth"
 	"meguca/config"
 	"meguca/util"
+	"os"
+	"os/exec"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -42,6 +44,28 @@ var (
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
 func LoadDB() (err error) {
+	if IsTest {
+		log.Info("dropping previous test database")
+
+		c := exec.Command("psql", "-U", "meguca",
+			"-c", "drop database if exists meguca_test")
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		err = c.Run()
+		if err != nil {
+			return
+		}
+
+		c = exec.Command("createdb", "-O", "meguca", "-U", "meguca",
+			"-E", "UTF8", "meguca_test")
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		err = c.Run()
+		if err != nil {
+			return
+		}
+	}
+
 	db, err = sql.Open("postgres", ConnArgs)
 	if err != nil {
 		return
@@ -53,9 +77,9 @@ func LoadDB() (err error) {
 
 	var exists bool
 	const q = `select exists (
-		select 1 from information_schema.tables
-			where table_schema = 'public' and table_name = 'main'
-	)`
+			select 1 from information_schema.tables
+				where table_schema = 'public' and table_name = 'main'
+		)`
 	err = db.QueryRow(q).Scan(&exists)
 	if err != nil {
 		return
