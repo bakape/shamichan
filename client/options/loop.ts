@@ -51,7 +51,7 @@ function renderImages() {
 		if (options.hideThumbs || options.workModeToggle) {
 			display = "none"
 		}
-		for (let el of document.querySelectorAll("img.catalog")) {
+		for (let el of document.querySelectorAll("img.catalog") as NodeListOf<HTMLElement>) {
 			el.style.display = display
 		}
 	} else {

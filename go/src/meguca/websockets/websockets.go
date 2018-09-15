@@ -67,6 +67,8 @@ type Client struct {
 	conn *websocket.Conn
 	// Client IP
 	ip string
+	// Client last post time
+	lastTime int64
 	// Internal message receiver channel
 	receive chan receivedMessage
 	// Only used to pass messages from the Send method.
@@ -145,6 +147,16 @@ func (c *Client) listenerLoop() error {
 	for {
 		select {
 		case err := <-c.close:
+			go func() {
+				time.Sleep(time.Minute)
+
+				if c.post.id != 0 {
+					if err = c.closePost(); err != nil {
+						c.logError(err)
+					}
+				}
+			}()
+
 			return err
 		case msg := <-c.sendExternal:
 			if err := c.send(msg); err != nil {
@@ -335,10 +347,23 @@ func (c *Client) Redirect(board string) {
 	}
 }
 
-// IP returns the IP of the  client connection. Thread-safe, as the IP is never
-// written to after assignment.
+// IP returns the IP of the client connection.
+// Thread-safe, as the IP is never written to after assignment.
 func (c *Client) IP() string {
 	return c.ip
+}
+
+// LastTime returns the last post time of the client connection.
+func (c *Client) LastTime() int64 {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return c.lastTime
+}
+
+func (c *Client) setLastTime() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.lastTime = time.Now().Unix()
 }
 
 // NewProtocol returns, if client is using new protocol for C++ clients

@@ -69,7 +69,10 @@ func (l *linkScanner) scanBytes(src []byte) (err error) {
 
 // Write post links to database
 func writeLinks(tx *sql.Tx, source uint64, links []common.Link) (err error) {
-	q, err := tx.Prepare(`insert into links (source, target) values($1, $2)`)
+	q, err := tx.Prepare(
+		`insert into links (source, target)
+		values($1, $2)
+		on conflict do nothing`)
 	if err != nil {
 		return
 	}

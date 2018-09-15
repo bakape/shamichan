@@ -85,7 +85,7 @@ hook("getPostModel", () =>
 
 // Find the post creation button and style it, if any
 function stylePostControls(fn: (el: HTMLElement) => void) {
-	const el = document.querySelector("aside.posting")
+	const el = document.querySelector("aside.posting") as HTMLElement
 	if (el) {
 		fn(el)
 	}
@@ -209,7 +209,10 @@ export default () => {
 		if (postModel) {
 			postModel.abandon();
 		}
-		window.onbeforeunload = postForm = postModel = null
+
+		// Don't null postForm. It may still be modified mid-transition
+		window.onbeforeunload = postModel = null
+
 		stylePostControls(el => {
 			el.style.display = ""
 			el.classList.remove("disabled")

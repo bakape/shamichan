@@ -99,6 +99,7 @@ type Client interface {
 	Send([]byte)
 	Redirect(board string)
 	IP() string
+	LastTime() int64
 	NewProtocol() bool
 	Last100() bool
 	Close(error)

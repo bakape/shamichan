@@ -6,9 +6,9 @@ import (
 )
 
 // ClosePost closes an open post and commits any links and hash commands
-func ClosePost(id, op uint64, body string, links []common.Link, com []common.Command) (
-	err error,
-) {
+func ClosePost(id, op uint64, body string, links []common.Link,
+	com []common.Command,
+) (err error) {
 	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
 		ID       uint64           `json:"id"`
 		Links    []common.Link    `json:"links,omitempty"`

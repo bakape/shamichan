@@ -8,7 +8,13 @@
 /less
 /Makefile
 /scripts
-/www
+/www/css
+/www/favicons
+/www/flags
+/www/mobile
+/www/spoil
+/www/wasm
+/www/*.png
 /images
 /config.json
 /meguca

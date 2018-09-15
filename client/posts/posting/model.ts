@@ -4,7 +4,7 @@ import { ImageData, PostData } from "../../common"
 import FormView from "./view"
 import { posts, storeMine, page, storeSeenPost, boardConfig } from "../../state"
 import { postSM, postEvent, postState } from "."
-import { extend } from "../../util"
+import { extend, modPaste } from "../../util"
 import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
 import { newAllocRequest } from "./identity"
@@ -13,6 +13,7 @@ import { newAllocRequest } from "./identity"
 export default class FormModel extends Post {
 	public inputBody = ""
 	public view: FormView
+	public allocatingImage: boolean = false;
 
 	// Pass and ID, if you wish to hijack an existing model. To create a new
 	// model pass zero.
@@ -78,9 +79,7 @@ export default class FormModel extends Post {
 
 		const old = this.inputBody
 		val = this.trimInput(val);
-
-		// Rendering hack shenanigans - ignore
-		if (old === val) {
+		if (old === val) { // Everything already submitted
 			return
 		}
 
@@ -143,6 +142,7 @@ export default class FormModel extends Post {
 	// Close the form and revert to regular post. Cancel also erases all post
 	// contents.
 	public commitClose() {
+		this.parseInput(this.view.input.value)
 		this.abandon()
 		this.send(message.closePost, null)
 	}
@@ -156,34 +156,61 @@ export default class FormModel extends Post {
 
 	// Add a link to the target post in the input
 	public addReference(id: number, sel: string) {
-		let s = "";
-		const old = this.view.input.value;
-		const newLine = !old || old.endsWith("\n");
+		const pos = this.view.input.selectionEnd,
+			old = this.view.input.value
+		let s = '',
+			b = false
 
+		// Insert post link and preceding whitespace
+		switch (old.charAt(pos - 1)) {
+			case '': // Empty post
+			case ' ':
+			case '\n':
+				break;
+			default:
+				s += "\n";
+		}
+		s += `>>${id}\n`;
+
+		// Insert quoted text (if any)
 		if (sel) {
-			if (!newLine) {
-				s += "\n"
+			for (let line of sel.split('\n')) {
+				s += `>${line}\n`;
 			}
-		} else if (!newLine && old[old.length - 1] !== " ") {
-			s += " "
 		}
-		s += `>>${id} `
 
-		if (!sel) {
-			// If starting from a new line, insert newline after post link
-			if (newLine) {
-				s += "\n"
-			}
+		this.view.replaceText(
+			old.slice(0, pos) + s + old.slice(pos),
+			pos + s.length - (b ? 1 : 0),
+			// Don't commit a quote, if it is the only input in a post
+			postSM.state !== postState.draft || old.length !== 0
+		)
+	}
+
+	// Paste text to the text body
+	public paste(sel: string) {
+		const start = this.view.input.selectionStart,
+			end = this.view.input.selectionEnd,
+			old = this.view.input.value
+		let p = modPaste(old, sel, end)
+
+		if (!p) {
+			return
+		}
+
+		if (start != end) {
+			p.body = old.slice(0, start) + p.body + old.slice(end)
+			p.pos -= start
 		} else {
-			s += "\n"
-			for (let line of sel.split("\n")) {
-				s += ">" + line + "\n"
-			}
+			p.body = old.slice(0, end) + p.body + old.slice(end)
 		}
 
-		// Don't commit a quote, if it is the only input in a post
-		this.view.replaceText(old + s,
-			postSM.state !== postState.draft || old.length !== 0)
+		// Don't commit a paste, if it is the only input in a post
+		this.view.replaceText(
+			p.body,
+			p.pos,
+			postSM.state !== postState.draft || old.length !== 0
+		)
 	}
 
 	// Returns a function, that handles a message from the server, containing
@@ -232,21 +259,29 @@ export default class FormModel extends Post {
 	// Upload the file and request its allocation
 	public async uploadFile(file: File) {
 		if (!boardConfig.textOnly && !this.image) {
-			this.handleUploadResponse(await this.view.upload.uploadFile(file));
+			const pr = this.view.upload.uploadFile(file);
+			this.view.input.focus();
+			this.handleUploadResponse(await pr);
 		}
 	}
 
 	private handleUploadResponse(data: FileData | null) {
 		// Upload failed, canceled or image added while thumbnailing
-		if (!data || this.image) {
+		if (!data || this.image || this.allocatingImage) {
 			return
 		}
 
 		switch (postSM.state) {
 			case postState.draft:
+				this.allocatingImage = true;
 				this.requestAlloc(this.trimInput(this.view.input.value), data);
 				break;
+			case postState.allocating:
+				// Will allocate post soon check back every 200 ms
+				setTimeout(this.handleUploadResponse.bind(this, data), 200);
+				break;
 			case postState.alloc:
+				this.allocatingImage = true;
 				send(message.insertImage, data)
 				break;
 		}

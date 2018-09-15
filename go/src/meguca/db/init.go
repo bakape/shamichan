@@ -5,6 +5,9 @@ import (
 	"meguca/auth"
 	"meguca/config"
 	"meguca/util"
+	"os"
+	"os/exec"
+	"os/user"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -42,6 +45,48 @@ var (
 // LoadDB establishes connections to RethinkDB and Redis and bootstraps both
 // databases, if not yet done.
 func LoadDB() (err error) {
+	if IsTest {
+		log.Info("dropping previous test database")
+
+		// If running as root (CI like Travis or something), authenticate as the
+		// postgres user
+		var u *user.User
+		u, err = user.Current()
+		if err != nil {
+			return
+		}
+		sudo := []string{}
+		user := "meguca"
+		if u.Name == "root" {
+			sudo = append(sudo, "sudo", "-u", "postgres")
+			user = "postgres"
+		}
+
+		run := func(args ...string) error {
+			line := append(sudo, args...)
+			c := exec.Command(line[0], line[1:]...)
+			c.Stdout = os.Stdout
+			c.Stderr = os.Stderr
+			return c.Run()
+		}
+
+		err = run("psql",
+			"-U", user,
+			"-c", "drop database if exists meguca_test")
+		if err != nil {
+			return
+		}
+
+		err = run("createdb",
+			"-O", "meguca",
+			"-U", user,
+			"-E", "UTF8",
+			"meguca_test")
+		if err != nil {
+			return
+		}
+	}
+
 	db, err = sql.Open("postgres", ConnArgs)
 	if err != nil {
 		return
@@ -53,9 +98,9 @@ func LoadDB() (err error) {
 
 	var exists bool
 	const q = `select exists (
-		select 1 from information_schema.tables
-			where table_schema = 'public' and table_name = 'main'
-	)`
+			select 1 from information_schema.tables
+				where table_schema = 'public' and table_name = 'main'
+		)`
 	err = db.QueryRow(q).Scan(&exists)
 	if err != nil {
 		return
@@ -92,7 +137,7 @@ func LoadDB() (err error) {
 		return
 	}
 
-	if !IsTest && config.ImagerMode != config.ImagerOnly {
+	if !IsTest {
 		go runCleanupTasks()
 	}
 

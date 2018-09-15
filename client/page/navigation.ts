@@ -157,7 +157,7 @@ class BoardSelectionPanel extends View<null> {
 		const term = (event.target as HTMLInputElement).value.trim(),
 			regexp = new RegExp(term, 'i')
 
-		for (let el of this.el.querySelectorAll(".board-list label")) {
+		for (let el of this.el.querySelectorAll(".board-list label") as NodeListOf<HTMLElement>) {
 			let display: string
 			if (regexp.test(el.querySelector("a").textContent)) {
 				display = "block"

@@ -1,43 +1,91 @@
-// File upload via clipboard paste
-
+// File upload or text alteration via clipboard paste
 import { postSM, postEvent } from ".";
-import { trigger } from "../../util";
+import { trigger, modPaste } from "../../util";
 import { page, boardConfig } from "../../state";
 import FormModel from "./model";
 import { expandThreadForm } from "./threads";
 
-// Handle file paste
+// Handle file or text paste
 function onPaste(e: ClipboardEvent) {
-	const { files } = e.clipboardData;
+	const text = e.clipboardData.getData("text"),
+		files = e.clipboardData.files
+	var threadForm: HTMLFormElement,
+		m: FormModel
+
 	if (files.length !== 1) {
-		return;
+		if (!text) {
+			return;
+		}
+		const t = e.target as HTMLElement;
+		switch (t.tagName) {
+			case "INPUT":
+				return;
+			case "TEXTAREA":
+				if (t !== document.getElementById("text-input")) {
+					return;
+				}
+				break;
+		}
 	}
 
-	e.stopPropagation();
-	e.preventDefault();
-
-	if (boardConfig.textOnly) {
-		return;
-	}
+	e.stopPropagation()
+	e.preventDefault()
 
 	if (!page.thread) {
-		expandThreadForm();
-		(document
-			.querySelector("#new-thread-form input[type=file]") as any)
-			.files = files;
-		return;
+		expandThreadForm()
+		threadForm = document.querySelector("#new-thread-form") as HTMLFormElement
+	} else {
+		// Create form, if none
+		postSM.feed(postEvent.open)
+		// Neither disconnected, errored or already has image
+		m = trigger("getPostModel") as FormModel
 	}
 
-	// Create form, if none
-	postSM.feed(postEvent.open);
+	if (text) {
+		if (threadForm) {
+			const area = threadForm
+				.querySelector("textarea[name=body]") as HTMLTextAreaElement
+			const start = area.selectionStart;
+			const end = area.selectionEnd;
+			const old = area.value;
+			let p = modPaste(old, text, end)
 
-	// Neither disconnected, erred or already has image
-	const m = trigger("getPostModel") as FormModel;
-	if (m) {
-		m.uploadFile(files[0]);
+			if (!p) {
+				return
+			}
+
+			if (start != end) {
+				area.value = old.slice(0, start) + p.body + old.slice(end)
+				p.pos -= start
+			} else {
+				area.value = old.slice(0, end) + p.body + old.slice(end)
+			}
+
+			area.setSelectionRange(p.pos, p.pos)
+			area.focus()
+			return
+		}
+
+		if (m) {
+			m.paste(text)
+		}
+	}
+
+	if (files.length === 1) {
+		if (boardConfig.textOnly) {
+			return
+		}
+
+		if (threadForm) {
+			(threadForm.querySelector("input[type=file]") as any).files = files
+			return
+		}
+
+		if (m) {
+			m.uploadFile(files.item(0))
+		}
 	}
 }
 
 // Bind listeners
-export default () =>
-	document.addEventListener("paste", onPaste);
+export default () => document.addEventListener("paste", onPaste)

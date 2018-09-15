@@ -38,7 +38,7 @@ abstract class FormView extends View<null> {
 	// Forms, that are not rendered on initialization, need to call this method
 	// themselves
 	public initCaptcha() {
-		let captcha = this.el.querySelector(".captcha-container")
+		let captcha = this.el.querySelector(".captcha-container") as HTMLElement
 		if (captcha) {
 			// Clear any previous captcha, when reusing form
 			captcha.querySelector("img").removeAttribute("src");

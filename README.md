@@ -1,5 +1,5 @@
 [![GoDoc](https://godoc.org/github.com/bakape/meguca?status.svg)](https://godoc.org/github.com/bakape/meguca)
-[![Build Status](https://travis-ci.org/bakape/meguca.svg)](https://travis-ci.org/bakape/meguca)
+[![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=master)](https://travis-ci.org/bakape/meguca)
 
 # meguca
 anonymous realtime imageboard focused on high performance, free speech and transparent moderation
@@ -127,7 +127,7 @@ To enable poster country flags on posts please download GeoLite2-Country.mmdb fr
 A reference list of commands can be found in `./docs/installation.md`
 
 ### Build dependencies
-* [Go](https://golang.org/doc/install) >=1.9.2 (for building server)
+* [Go](https://golang.org/doc/install) >=1.11 (for building server)
 * [Node.js](https://nodejs.org) >=5.0 (for building client)
 * C11 compiler
 * make

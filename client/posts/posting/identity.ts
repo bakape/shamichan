@@ -38,7 +38,7 @@ class IdentityPanel extends BannerModal {
 	}
 
 	private assignValues() {
-		for (let el of this.el.querySelectorAll("input") as HTMLInputElement[]) {
+		for (let el of this.el.querySelectorAll("input") as NodeListOf<HTMLInputElement>) {
 			const name = el.getAttribute("name")
 			switch (el.getAttribute("type")) {
 				case "text":
