@@ -50,6 +50,11 @@ type postBodyModMessage struct {
 	msg, body []byte
 }
 
+type syncCount struct {
+	Active int `json:"active"`
+	Total  int `json:"total"`
+}
+
 // Feed is a feed with synchronization logic of a certain thread
 type Feed struct {
 	// Thread ID
@@ -78,6 +83,8 @@ type Feed struct {
 	sendPostMessage chan postMessage
 	// Set body of an open post
 	setOpenBody chan postBodyModMessage
+	// Let sent sync counter
+	lastSyncCount syncCount
 }
 
 // Start read existing posts into cache and start main loop
@@ -148,6 +155,7 @@ func (f *Feed) Start() (err error) {
 				} else {
 					f.cache.deleteMemoized(p.ID)
 				}
+				f.sendIPCount()
 
 			// Close an open post
 			case msg := <-f.closePost:
@@ -246,23 +254,21 @@ func (f *Feed) sendIPCount() {
 
 	for c := range f.clients {
 		ip := c.IP()
-
 		if _, ok := ips[ip]; !ok && c.LastTime() >= pastHour {
 			active++
 		}
-
 		ips[ip] = struct{}{}
 	}
 
-	msg, _ := common.EncodeMessage(common.MessageSyncCount, struct {
-		Active  int `json:"active"`
-		Total   int `json:"total"`
-	}{
-		Active:  active,
-		Total:   len(ips),
-	})
-
-	f.bufferMessage(msg)
+	new := syncCount{
+		Active: active,
+		Total:  len(ips),
+	}
+	if new != f.lastSyncCount {
+		f.lastSyncCount = new
+		msg, _ := common.EncodeMessage(common.MessageSyncCount, new)
+		f.bufferMessage(msg)
+	}
 }
 
 // InsertPost inserts a new post into the thread or reclaim an open post after disconnect
