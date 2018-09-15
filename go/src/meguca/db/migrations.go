@@ -943,7 +943,9 @@ func createIndex(table, column string) string {
 func runMigrations(from, to int) (err error) {
 	var tx *sql.Tx
 	for i := from; i < to; i++ {
-		log.Infof("upgrading database to version %d", i+1)
+		if !IsTest {
+			log.Infof("upgrading database to version %d", i+1)
+		}
 		tx, err = db.Begin()
 		if err != nil {
 			return
