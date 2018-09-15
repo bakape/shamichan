@@ -7,6 +7,7 @@ import (
 	"meguca/util"
 	"os"
 	"os/exec"
+	"os/user"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -47,20 +48,40 @@ func LoadDB() (err error) {
 	if IsTest {
 		log.Info("dropping previous test database")
 
-		c := exec.Command("psql", "-U", "meguca",
+		// If running as root (CI like Travis or something), authenticate as the
+		// postgres user
+		var u *user.User
+		u, err = user.Current()
+		if err != nil {
+			return
+		}
+		sudo := []string{}
+		user := "meguca"
+		if u.Name == "root" {
+			sudo = append(sudo, "sudo", "-u", "postgres")
+			user = "postgres"
+		}
+
+		run := func(args ...string) error {
+			line := append(sudo, args...)
+			c := exec.Command(line[0], line[1:]...)
+			c.Stdout = os.Stdout
+			c.Stderr = os.Stderr
+			return c.Run()
+		}
+
+		err = run("psql",
+			"-U", user,
 			"-c", "drop database if exists meguca_test")
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-		err = c.Run()
 		if err != nil {
 			return
 		}
 
-		c = exec.Command("createdb", "-O", "meguca", "-U", "meguca",
-			"-E", "UTF8", "meguca_test")
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-		err = c.Run()
+		err = run("createdb",
+			"-O", "meguca",
+			"-U", user,
+			"-E", "UTF8",
+			"meguca_test")
 		if err != nil {
 			return
 		}
