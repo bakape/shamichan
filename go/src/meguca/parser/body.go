@@ -44,6 +44,9 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 	lineStart := 0
 	pyu := config.GetBoardConfigs(board).Pyu
 
+	// Prevent link duplication
+	haveLink := make(map[uint64]bool)
+
 	for i, b := range body {
 		switch b {
 		case '\n', ' ', '\t':
@@ -73,7 +76,10 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 			case err != nil:
 				return
 			case l.ID != 0:
-				links = append(links, l)
+				if !haveLink[l.ID] {
+					haveLink[l.ID] = true
+					links = append(links, l)
+				}
 			}
 		case '#':
 			// Ignore hash commands in quotes, or #pyu/#pcount if board option disabled
