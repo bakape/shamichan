@@ -154,14 +154,17 @@ export default class FormModel extends Post {
 		this.closePost()
 	}
 
-	// Add a link to the target post in the input
+	// Add a link to the target post in the input.
 	public addReference(id: number, sel: string) {
 		const pos = this.view.input.selectionEnd,
 			old = this.view.input.value
 		let s = '',
 			b = false
 
+		// Insert post link and preceding whitespace.
 		switch (old.charAt(pos - 1)) {
+		// If empty post or newline before cursor, tell
+		// next switch to do a newline after the quote.
 		case '':
 		case '\n':
 			b = true
@@ -172,7 +175,10 @@ export default class FormModel extends Post {
 			s = sel ? `\n>>${id}` : ` >>${id}`
 		}
 
+		// Insert superceding whitespace after post link.
 		switch (old.charAt(pos)) {
+		// Remember the boolean from the last switch? If true, or
+		// selection is true, add a newline and reset boolean.
 		case '':
 		case ' ':
 		case '\n':
@@ -184,16 +190,19 @@ export default class FormModel extends Post {
 			s += sel ? '\n' : ' '
 		}
 
+		// If we do have a selection of text, then quote all lines.
 		if (sel) {
 			for (let line of sel.split('\n')) {
 				s += `>${line}\n`
 			}
 
+			// If the boolean from earlier is still true, add a newline.
 			s += b ? '\n' : ''
 		}
 
 		this.view.replaceText(
 			old.slice(0, pos) + s + old.slice(pos),
+			// If the boolean from earlier is still true, correct cursor position.
 			pos + s.length - (b ? 1 : 0),
 			// Don't commit a quote, if it is the only input in a post
 			postSM.state !== postState.draft || old.length !== 0
