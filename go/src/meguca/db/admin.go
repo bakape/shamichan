@@ -14,8 +14,8 @@ import (
 func logModeration(tx *sql.Tx, op uint64, e auth.ModLogEntry) (err error) {
 	err = withTransaction(tx,
 		sq.Insert("mod_log").
-			Columns("type", "board", "id", "by", "length", "reason").
-			Values(e.Type, e.Board, e.ID, e.By, e.Length, e.Reason)).
+			Columns("type", "board", "id", "by", "length", "data").
+			Values(e.Type, e.Board, e.ID, e.By, e.Length, e.Data)).
 		Exec()
 	if err != nil {
 		return
@@ -26,8 +26,8 @@ func logModeration(tx *sql.Tx, op uint64, e auth.ModLogEntry) (err error) {
 		common.SpoilerImage, common.LockThread, common.MeidoVision:
 		err = withTransaction(tx, sq.
 			Insert("post_moderation").
-			Columns("post_id", "type", "by", "length", "reason").
-			Values(e.ID, e.Type, e.By, e.Length, e.Reason)).
+			Columns("post_id", "type", "by", "length", "data").
+			Values(e.ID, e.Type, e.By, e.Length, e.Data)).
 			Exec()
 		if err != nil {
 			return
@@ -262,9 +262,9 @@ func SetThreadLock(id uint64, locked bool, by string) error {
 		Where("id = ?", id)
 	return moderatePost(id,
 		common.ModerationEntry{
-			Type:   common.LockThread,
-			By:     by,
-			Reason: strconv.FormatBool(locked),
+			Type: common.LockThread,
+			By:   by,
+			Data: strconv.FormatBool(locked),
 		},
 		&q)
 }
@@ -274,13 +274,13 @@ func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 	log = make([]auth.ModLogEntry, 0, 64)
 	e := auth.ModLogEntry{Board: board}
 	err = queryAll(
-		sq.Select("type", "id", "by", "created", "length", "reason").
+		sq.Select("type", "id", "by", "created", "length", "data").
 			From("mod_log").
 			Where("board = ?", board).
 			OrderBy("created desc"),
 		func(r *sql.Rows) (err error) {
 			err = r.Scan(&e.Type, &e.ID, &e.By, &e.Created, &e.Length,
-				&e.Reason)
+				&e.Data)
 			if err != nil {
 				return
 			}

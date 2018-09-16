@@ -986,6 +986,16 @@ var migrations = []func(*sql.Tx) error{
 
 		return execAll(tx, tasks...)
 	},
+	func(tx *sql.Tx) (err error) {
+		for _, t := range [...]string{"mod_log", "post_moderation"} {
+			_, err = tx.Exec(
+				fmt.Sprintf(`alter table %s rename column reason to data`, t))
+			if err != nil {
+				return
+			}
+		}
+		return
+	},
 }
 
 func createIndex(table, column string) string {

@@ -216,9 +216,9 @@ func deleteBoard(tx *sql.Tx, id, by, reason string) (err error) {
 	}
 	err = logModeration(tx, 0, auth.ModLogEntry{
 		ModerationEntry: common.ModerationEntry{
-			Type:   common.DeleteBoard,
-			By:     by,
-			Reason: reason,
+			Type: common.DeleteBoard,
+			By:   by,
+			Data: reason,
 		},
 		Board: "all",
 	})

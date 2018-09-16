@@ -24,7 +24,7 @@ func writeBan(tx *sql.Tx, op uint64, ip string, log bool,
 	err = withTransaction(tx,
 		sq.Insert("bans").
 			Columns("ip", "board", "forPost", "reason", "by", "expires").
-			Values(ip, entry.Board, entry.ID, entry.Reason, entry.By, expires).
+			Values(ip, entry.Board, entry.ID, entry.Data, entry.By, expires).
 			Suffix("on conflict do nothing"),
 	).
 		Exec()
@@ -57,7 +57,7 @@ func SystemBan(ip, reason string, length time.Duration) (err error) {
 		return writeBan(tx, 0, ip, true, auth.ModLogEntry{
 			ModerationEntry: common.ModerationEntry{
 				Type:   common.BanPost,
-				Reason: reason,
+				Data:   reason,
 				By:     "system",
 				Length: uint64(length / time.Second),
 			},
@@ -120,7 +120,7 @@ func Ban(board, reason, by string, length time.Duration, log bool,
 					Type:   common.BanPost,
 					Length: uint64(length / time.Second),
 					By:     by,
-					Reason: reason,
+					Data:   reason,
 				},
 				Board: board,
 				ID:    post.id,

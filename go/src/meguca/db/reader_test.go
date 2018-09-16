@@ -14,7 +14,7 @@ var sampleModerationEntry = common.ModerationEntry{
 	Type:   common.BanPost,
 	Length: 0,
 	By:     "admin",
-	Reason: "test",
+	Data:   "test",
 }
 
 func TestReader(t *testing.T) {
@@ -139,8 +139,8 @@ func TestReader(t *testing.T) {
 	}
 	s := sampleModerationEntry
 	_, err = sq.Insert("post_moderation").
-		Columns("post_id", "type", "by", "length", "reason").
-		Values(1, s.Type, s.By, s.Length, s.Reason).
+		Columns("post_id", "type", "by", "length", "data").
+		Values(1, s.Type, s.By, s.Length, s.Data).
 		Exec()
 	if err != nil {
 		t.Fatal(err)

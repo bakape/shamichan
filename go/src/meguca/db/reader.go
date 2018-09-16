@@ -460,7 +460,7 @@ func injectModeration(posts []*common.Post) (err error) {
 	}
 	set = append(set, ')')
 
-	r, err := sq.Select("post_id", "type", "length", "by", "reason").
+	r, err := sq.Select("post_id", "type", "length", "by", "data").
 		From("post_moderation").
 		Where(fmt.Sprintf("post_id in %s", string(set))).
 		Query()
@@ -474,7 +474,7 @@ func injectModeration(posts []*common.Post) (err error) {
 		id uint64
 	)
 	for r.Next() {
-		err = r.Scan(&id, &e.Type, &e.Length, &e.By, &e.Reason)
+		err = r.Scan(&id, &e.Type, &e.Length, &e.By, &e.Data)
 		if err != nil {
 			return
 		}

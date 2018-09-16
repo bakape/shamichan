@@ -20,5 +20,5 @@ type ModerationEntry struct {
 	Type   ModerationAction `json:"type"`
 	Length uint64           `json:"length"`
 	By     string           `json:"by"`
-	Reason string           `json:"reason"`
+	Data   string           `json:"data"`
 }
