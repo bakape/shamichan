@@ -470,6 +470,7 @@
 		"ownNoBoards": "Vous ne possédez aucune planche",
 		"post": "Message",
 		"posterID": "ID de l'utilisateur",
+		"reason": "Reason",
 		"searchTooltip": "Filtre les sujets par titre, message ou nom de planche (exemple : /pol/)",
 		"setBanners": "Bannière",
 		"setLoading": "Image de chargement",

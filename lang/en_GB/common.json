@@ -1,4 +1,12 @@
 {
+	"format": {
+		"banned": "BANNED BY %s FOR %s FOR %s",
+		"deleted": "DELETED BY %s",
+		"imageDeleted": "IMAGE DELETED BY %s",
+		"imageSpoilered": "IMAGE SPOILERED BY %s",
+		"threadLockToggled": "THREAD %s BY %s",
+		"viewedSameIP": "POST OF THE SAME IP VIEWED BY %s"
+	},
 	"forms": {},
 	"plurals": {
 		"day": [
@@ -35,17 +43,15 @@
 		"ago": "ago",
 		"and": "and",
 		"anon": "Anonymous",
-		"banned": "USER WAS BANNED FOR THIS POST",
 		"contractImages": "Contract Images",
 		"deleteBySameIP": "Delete all by IP",
-		"deleted": "POST WAS DELETED",
 		"expand": "Expand",
 		"expandImages": "Expand Images",
 		"hide": "Hide",
 		"in": "in",
 		"janitors": "Meido",
 		"justNow": "just now",
-		"meidoVision": "POSTS BY THE SAME IP WERE VIEWED",
+		"locked": "locked",
 		"moderators": "Meido++",
 		"omitted": "omitted",
 		"owners": "Board Owner",
@@ -53,6 +59,7 @@
 		"show": "Show",
 		"spoiler": "Spoiler",
 		"toggleSticky": "Toggle sticky",
+		"unlocked": "unlocked",
 		"viewBySameIP": "Same IP",
 		"you": "(You)"
 	},

@@ -1,14 +1,16 @@
 package templates
 
 import (
+	"fmt"
 	"html"
 	"math"
-	"strconv"
-	"time"
-
 	"meguca/auth"
 	"meguca/common"
 	"meguca/lang"
+	"strconv"
+	"time"
+
+	"github.com/valyala/quicktemplate"
 )
 
 // GetPostModLog forwards db.GetPostModLog to avoid cyclic imports in cache
@@ -121,57 +123,32 @@ func extractBacklinks(cap int, threads ...common.Thread) backlinks {
 	return bls
 }
 
-// Returns 3 mod-log related messages by post ID
-func parseModLog(p common.Post) (bool, string) {
-	// TODO
-	return false, ""
-
-	// var any bool
-	// var msgs bytes.Buffer
-	// ln := lang.Get().Common.Posts
-	// mLog, err := GetPostModLog(p.ID)
-
-	// if err != nil {
-	// 	log.Error("templates/article.go::parseModLog: ", err)
-	// 	return false, ""
-	// }
-
-	// if p.Banned {
-	// 	any = true
-	// 	msgs.WriteString(ln["banned"])
-
-	// 	if mLog[0].By != "" {
-	// 		msgs.WriteString(fmt.Sprintf(` BY "%s" FOR %s: %s`,
-	// 			mLog[0].By,
-	// 			strings.ToUpper(secondsToTime(float64(mLog[0].Length))),
-	// 			mLog[0].Reason,
-	// 		))
-	// 	}
-	// }
-
-	// if p.Deleted && mLog[1].By != "" {
-	// 	if (any) {
-	// 		msgs.WriteString("<br>")
-	// 	}
-
-	// 	any = true
-	// 	msgs.WriteString(fmt.Sprintf(`%s BY "%s"`, ln["deleted"], mLog[1].By))
-	// }
-
-	// if p.MeidoVision {
-	// 	if (any) {
-	// 		msgs.WriteString("<br>")
-	// 	}
-
-	// 	any = true
-	// 	msgs.WriteString(ln["meidoVision"])
-
-	// 	if mLog[2].By != "" {
-	// 		msgs.WriteString(fmt.Sprintf(` BY "%s"`, mLog[2].By))
-	// 	}
-	// }
-
-	// return any, msgs.String()
+// Write on-post moderation to template
+func streampostModeration(qw *quicktemplate.Writer, e common.ModerationEntry) {
+	w := qw.E()
+	ln := lang.Get().Common
+	f := ln.Format
+	switch e.Type {
+	case common.BanPost:
+		fmt.Fprintf(w, f["banned"], e.By, secondsToTime(float64(e.Length)),
+			e.Data)
+	case common.DeletePost:
+		fmt.Fprintf(w, f["deleted"], e.By)
+	case common.DeleteImage:
+		fmt.Fprintf(w, f["imageDeleted"], e.By)
+	case common.SpoilerImage:
+		fmt.Fprintf(w, f["imageSpoilered"], e.By)
+	case common.LockThread:
+		var action string
+		if e.Data == "true" {
+			action = ln.Posts["locked"]
+		} else {
+			action = ln.Posts["unlocked"]
+		}
+		fmt.Fprintf(w, f["threadLockToggled"], action, e.By)
+	case common.MeidoVision:
+		fmt.Fprintf(w, f["viewedSameIP"], e.By)
+	}
 }
 
 // Returns human readable time

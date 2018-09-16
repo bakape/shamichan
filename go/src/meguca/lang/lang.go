@@ -21,15 +21,16 @@ var (
 type Pack struct {
 	ID              string
 	Tabs, SortModes []string
-	Forms           map[string][2]string
 	UI, Options     map[string]string
+	Forms           map[string][2]string
 	Templates       map[string][]string
 	Common          struct {
+		UI      map[string]string    `json:"ui"`
+		Format  map[string]string    `json:"format"`
 		Posts   map[string]string    `json:"posts"`
 		Plurals map[string][2]string `json:"plurals"`
 		Forms   map[string][2]string `json:"forms"`
 		Time    map[string][]string  `json:"time"`
-		UI      map[string]string    `json:"ui"`
 		Sync    []string             `json:"sync"`
 	}
 }

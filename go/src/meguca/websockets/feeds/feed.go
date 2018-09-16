@@ -219,7 +219,7 @@ func (f *Feed) Start() (err error) {
 						p.Image.Spoiler = true
 					}
 				case common.LockThread:
-					f.cache.Locked = msg.entry.Reason == "true"
+					f.cache.Locked = msg.entry.Data == "true"
 				}
 				f.cache.Posts[msg.id] = p
 				f.write(msg.msg)
