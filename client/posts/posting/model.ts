@@ -227,12 +227,7 @@ export default class FormModel extends Post {
 			p.body = old.slice(0, end) + p.body + old.slice(end)
 		}
 
-		// Don't commit a paste, if it is the only input in a post
-		this.view.replaceText(
-			p.body,
-			p.pos,
-			postSM.state !== postState.draft || old.length !== 0
-		)
+		this.view.replaceText(p.body, p.pos, true)
 	}
 
 	// Returns a function, that handles a message from the server, containing
