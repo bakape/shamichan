@@ -103,6 +103,10 @@ export default class FormModel extends Post {
 
 	// Trim input string, if it has too many lines
 	private trimInput(val: string): string {
+		if (val.length > 2000) {
+			val = val.slice(0, 2000)
+		}
+
 		// Remove any lines past 30
 		const lines = val.split("\n")
 		if (lines.length - 1 > 100) {
@@ -110,6 +114,7 @@ export default class FormModel extends Post {
 			this.view.trimInput(val.length - trimmed.length)
 			return trimmed;
 		}
+
 		return val;
 	}
 
@@ -163,31 +168,31 @@ export default class FormModel extends Post {
 
 		// Insert post link and preceding whitespace.
 		switch (old.charAt(pos - 1)) {
-		// If empty post or newline before cursor, tell
-		// next switch to do a newline after the quote.
-		case '':
-		case '\n':
-			b = true
-		case ' ':
-			s = `>>${id}`
-			break
-		default:
-			s = sel ? `\n>>${id}` : ` >>${id}`
+			// If empty post or newline before cursor, tell
+			// next switch to do a newline after the quote.
+			case '':
+			case '\n':
+				b = true
+			case ' ':
+				s = `>>${id}`
+				break
+			default:
+				s = sel ? `\n>>${id}` : ` >>${id}`
 		}
 
 		// Insert superceding whitespace after post link.
 		switch (old.charAt(pos)) {
-		// Remember the boolean from the last switch? If true, or
-		// selection is true, add a newline and reset boolean.
-		case '':
-		case ' ':
-		case '\n':
-			s += (b || sel) ? '\n' : ''
-			b = false
-			break
-		default:
-			b = true
-			s += sel ? '\n' : ' '
+			// Remember the boolean from the last switch? If true, or
+			// selection is true, add a newline and reset boolean.
+			case '':
+			case ' ':
+			case '\n':
+				s += (b || sel) ? '\n' : ''
+				b = false
+				break
+			default:
+				b = true
+				s += sel ? '\n' : ' '
 		}
 
 		// If we do have a selection of text, then quote all lines.
