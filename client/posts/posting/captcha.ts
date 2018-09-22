@@ -7,6 +7,8 @@ let instance: CaptchaForm;
 export function renderCaptchaForm() {
 	if (!instance) {
 		instance = new CaptchaForm();
+	} else {
+		instance.focus();
 	}
 }
 
@@ -37,7 +39,14 @@ class CaptchaForm extends FormView {
 		this.el.style.display = "block";
 		document.getElementById("modal-overlay").prepend(this.el);
 		this.initCaptcha();
-		this.inputElement("captcha").focus();
+		this.focus();
+	}
+
+	public focus() {
+		const el = this.inputElement("captcha");
+		if (el) {
+			el.focus();
+		}
 	}
 
 	protected async send() {
