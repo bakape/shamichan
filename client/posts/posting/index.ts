@@ -325,13 +325,15 @@ export default () => {
 	})
 
 	// Attempt to resume post after solving captcha
-	for (let s of [postState.draft, postState.alloc]) {
-		const _s = s; // Persist variable in inner scope
-		postSM.act(_s, postEvent.captchaSolved, () => {
-			postModel.retryUpload();
-			postForm.input.focus();
-			return _s;
-		});
+	for (let s of [postState.draft, postState.allocating, postState.alloc]) {
+		// Capture variable in inner scope
+		((s: postState) => {
+			postSM.act(s, postEvent.captchaSolved, () => {
+				postModel.retryUpload();
+				postForm.input.focus();
+				return s;
+			});
+		})(s);
 	}
 
 	// Close allocated post

@@ -152,6 +152,7 @@ export default class UploadForm extends View<Post> {
     // Attempt to upload the last file input, if any
     public retry(): Promise<FileData> | null {
         if (this.bufferedFile) {
+            this.reset();
             return this.uploadFile(this.bufferedFile);
         }
         return null;
