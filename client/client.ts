@@ -3,7 +3,7 @@
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts, page } from './state'
 import { Post, FormModel, PostView } from './posts'
-import { PostLink, Command, PostData, ImageData, ModLogEntry } from "./common"
+import { PostLink, Command, PostData, ImageData, ModerationEntry } from "./common"
 import { postAdded } from "./ui"
 import { incrementPostCount } from "./page"
 import { posterName } from "./options"
@@ -28,9 +28,8 @@ interface ImageMessage extends ImageData {
 	id: number
 }
 
-type ModLogPostMessage = {
+interface ModerationMessage extends ModerationEntry {
 	id: number
-	log: ModLogEntry[]
 }
 
 // Run a function on a model, if it exists
@@ -130,25 +129,9 @@ export default () => {
 			m.closePost()
 		})
 
-	handlers[message.deletePost] = (id: number) =>
-		handle(id, m =>
-			m.setDeleted())
-
-	handlers[message.deleteImage] = (id: number) =>
-		handle(id, m =>
-			m.removeImage())
-
-	handlers[message.banned] = (id: number) =>
-		handle(id, m =>
-			m.setBanned())
-
-	handlers[message.meidoVision] = (id: number) =>
-		handle(id, m =>
-			m.setMeidoVision())
-
-	handlers[message.modLogPost] = ({ id, log }: ModLogPostMessage) =>
-		handle(id, m =>
-			m.setModLog(log))
+	handlers[message.moderatePost] = (msg: ModerationMessage) =>
+		handle(msg.id, m =>
+			m.applyModeration(msg))
 
 	handlers[message.redirect] = (url: string) =>
 		location.href = url

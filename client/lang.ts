@@ -2,13 +2,14 @@
 // Must not use imports, to preserve load order.
 
 type LanguagePack = {
+	ui: { [key: string]: string }
+	format: { [key: string]: string }
 	posts: { [key: string]: string }
 	plurals: { [key: string]: [string, string] }
 	time: {
 		calendar: string[]
 		week: string[]
 	}
-	ui: { [key: string]: string }
 	sync: string[]
 }
 

@@ -5,7 +5,7 @@ import {
 } from "../posts"
 import { page, posts, displayLoading } from "../state"
 import { trigger, extend } from "../util"
-import { PostData } from "../common"
+import { PostData, ModerationEntry } from "../common"
 import { insertPost } from "../client"
 
 // Passed from the server to allow the client to synchronise state, before
@@ -13,10 +13,7 @@ import { insertPost } from "../client"
 type SyncData = {
 	recent: number[] // Posts created within the last 15 minutes
 	open: { [id: number]: OpenPost } // Posts currently open
-	deleted: number[] // Posts deleted
-	deletedImage: number[] // Posts deleted in this thread
-	banned: number[] // Posts banned in this thread
-	meidoVision: number[] // Posts meido vision'd
+	moderation: { [id: number]: ModerationEntry[] }
 }
 
 // State of an open post
@@ -139,7 +136,7 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		}
 	}
 
-	const { open, recent, banned, deleted, deletedImage, meidoVision } = data,
+	const { open, recent, moderation } = data,
 		proms: Promise<void>[] = []
 
 	for (let post of posts) {
@@ -159,28 +156,16 @@ handlers[message.synchronise] = async (data: SyncData) => {
 			proms.push(fetchMissingPost(id))
 		}
 	}
-	for (let id of banned) {
-		const post = posts.get(id)
-		if (post && !post.banned) {
-			post.setBanned()
+	for (let id in moderation) {
+		const p = posts.get(parseInt(id));
+		if (!p) {
+			continue;
 		}
-	}
-	for (let id of deleted) {
-		const post = posts.get(id)
-		if (post && !post.deleted) {
-			post.setDeleted()
-		}
-	}
-	for (let id of meidoVision) {
-		const post = posts.get(id)
-		if (post && !post.meidoVision) {
-			post.setMeidoVision()
-		}
-	}
-	for (let id of deletedImage) {
-		const post = posts.get(id)
-		if (post && post.image) {
-			post.removeImage()
+		if (!p.moderation || p.moderation.length !== moderation[id].length) {
+			p.moderation = [];
+			for (let e of moderation[id]) {
+				p.applyModeration(e)
+			}
 		}
 	}
 

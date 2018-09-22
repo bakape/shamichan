@@ -5,7 +5,10 @@ import PostView from './view'
 import { SpliceResponse } from '../client'
 import { mine, seenPosts, storeSeenPost, posts, hidden } from "../state"
 import { notifyAboutReply } from "../ui"
-import { PostData, TextState, PostLink, Command, ImageData, ModLogEntry } from "../common"
+import {
+	PostData, TextState, PostLink, Command, ImageData,
+	ModerationEntry, ModerationAction
+} from "../common"
 import { hideRecursively } from "./hide"
 import options from "../options"
 
@@ -16,10 +19,7 @@ export class Post extends Model implements PostData {
 
 	public op: number
 	public editing: boolean
-	public deleted: boolean
 	public sage: boolean
-	public banned: boolean
-	public meidoVision: boolean
 	public sticky: boolean
 	public locked: boolean
 	public seenOnce: boolean
@@ -43,7 +43,7 @@ export class Post extends Model implements PostData {
 		}
 	}
 	public links: PostLink[]
-	public log: ModLogEntry[]
+	public moderation: ModerationEntry[]
 
 	constructor(attrs: PostData) {
 		super()
@@ -203,36 +203,47 @@ export class Post extends Model implements PostData {
 		this.view.closePost()
 	}
 
-	// Set post as banned
-	public setBanned() {
-		if (this.banned) {
-			return
+	public applyModeration(entry: ModerationEntry) {
+		if (!this.moderation) {
+			this.moderation = [];
 		}
-		this.banned = true
-		this.view.renderStatus()
+		this.moderation.push(entry);
+
+		const { type, data } = entry;
+		switch (type) {
+			case ModerationAction.deletePost:
+				this.view.el.classList.add("deleted");
+				break;
+			case ModerationAction.deleteImage:
+				if (this.image) {
+					this.image = null;
+					this.view.removeImage();
+				}
+				break;
+			case ModerationAction.spoilerImage:
+				if (this.image) {
+					this.image.spoiler = true;
+					this.view.renderImage(false);
+				}
+				break;
+			case ModerationAction.lockThread:
+				this.locked = data === 'true';
+				break;
+		}
+
+		this.view.renderModerationLog()
 	}
 
-	// Set post as deleted
-	public setDeleted() {
-		if (this.deleted) {
-			return
+	public isDeleted(): boolean {
+		if (!this.moderation) {
+			return false;
 		}
-		this.deleted = true
-		this.view.renderStatus()
-	}
-
-	// Set post as meido vision being used
-	public setMeidoVision() {
-		if (this.meidoVision) {
-			return
+		for (let { type } of this.moderation) {
+			if (type === ModerationAction.banPost) {
+				return true;
+			}
 		}
-		this.meidoVision = true
-		this.view.renderStatus()
-	}
-
-	// Set mod-log entries related to this post
-	public setModLog(log: ModLogEntry[]) {
-		this.log = log
+		return false;
 	}
 
 	public removeImage() {

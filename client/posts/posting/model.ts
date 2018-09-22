@@ -23,10 +23,7 @@ export default class FormModel extends Post {
 			id: 0,
 			op: page.thread,
 			editing: true,
-			deleted: false,
-			banned: false,
 			sage: false,
-			meidoVision: false,
 			sticky: false,
 			locked: false,
 			time: Math.floor(Date.now() / 1000),
@@ -34,6 +31,7 @@ export default class FormModel extends Post {
 			name: "",
 			auth: "",
 			trip: "",
+			moderation: [],
 			state: {
 				spoiler: false,
 				quote: false,

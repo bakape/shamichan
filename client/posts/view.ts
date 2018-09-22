@@ -11,6 +11,7 @@ import { page, mine, posts } from "../state"
 import options from "../options"
 import countries from "./countries"
 import { secondsToTime } from "../util/time"
+import { ModerationAction } from '../common';
 
 // Base post view class
 export default class PostView extends ImageHandler {
@@ -26,7 +27,7 @@ export default class PostView extends ImageHandler {
             if (model.id === model.op) {
                 attrs.class += " op"
             }
-            if (model.deleted) {
+            if (model.isDeleted()) {
                 attrs.class += " deleted"
             }
             attrs.tag = "article"
@@ -54,8 +55,8 @@ export default class PostView extends ImageHandler {
         if (this.model.backlinks) {
             this.renderBacklinks()
         }
-        if (this.model.banned || this.model.deleted || this.model.meidoVision) {
-            this.renderStatus()
+        if (this.model.moderation && this.model.moderation.length) {
+            this.renderModerationLog()
         }
         this.renderHeader()
         if (this.model.image) {
@@ -247,57 +248,54 @@ export default class PostView extends ImageHandler {
     }
 
     // Render related mod-log status
-    public renderStatus() {
+    public renderModerationLog() {
         this.uncheckModerationBox()
-        const log = this.model.log,
-        el = this.el.querySelector(".post-container")
-        var msgs = [lang.posts["banned"], lang.posts["deleted"], lang.posts["meidoVision"]],
-        last = el.lastElementChild,
-        mod = false
-
-        if (log && log.length == 3) {
-            if (log[0].by) {
-                msgs[0] += ` BY "${log[0].by}" FOR ${secondsToTime(log[0].length).toUpperCase()}: ${log[0].reason}`
-            }
-
-            if (log[1].by) {
-                msgs[1] += ` BY "${log[1].by}"`
-            }
-
-            if (log[2].by) {
-                msgs[2] += ` BY "${log[2].by}"`
+        const pc = this.el.querySelector(".post-container");
+        for (let el of Array.from(pc.children)) {
+            if (el.classList.contains("post-moderation")) {
+                el.remove();
             }
         }
 
-        if (last.tagName == "B") {
-            last.remove()
+        if (!this.model.moderation) {
+            return;
         }
-
-        last = el.insertAdjacentElement("beforeend", document.createElement("b"))
-        last.classList.add("admin", "banned")
-
-        if (this.model.banned) {
-            mod = true
-            last.insertAdjacentHTML("beforeend", msgs[0])
-        }
-
-        if (this.model.deleted) {
-            if (mod) {
-                msgs[1] = `<br>${msgs[1]}`
+        for (let { type, length, by, data } of this.model.moderation) {
+            let s: string;
+            switch (type) {
+                case ModerationAction.banPost:
+                    s = this.format('banned', by, secondsToTime(length), data);
+                    break;
+                case ModerationAction.deletePost:
+                    s = this.format('deleted', by);
+                    break;
+                case ModerationAction.deleteImage:
+                    s = this.format('imageDeleted', by);
+                    break;
+                case ModerationAction.spoilerImage:
+                    s = this.format("imageSpoilered", by)
+                    break;
+                case ModerationAction.lockThread:
+                    s = this.format("threadLockToggled",
+                        lang.posts[data === 'true' ? "locked" : "unlocked"],
+                        by)
+                    break;
+                case ModerationAction.meidoVision:
+                    s = this.format("viewedSameIP", by);
+                    break;
             }
-
-            mod = true
-            this.el.classList.add("deleted")
-            last.insertAdjacentHTML("beforeend", msgs[1])
+            const el = document.createElement('b');
+            el.setAttribute("class", "admin post-moderation");
+            el.append(s, document.createElement("br"));
+            pc.append(el);
         }
+    }
 
-        if (this.model.meidoVision) {
-            if (mod) {
-                msgs[2] = `<br>${msgs[2]}`
-            }
-
-            last.insertAdjacentHTML("beforeend", msgs[2])
-        }
+    // C-like sprintf() but only for `%s` tags
+    private format(formatKey: string, ...args: string[]): string {
+        let i = 0;
+        return lang.format[formatKey].replace(/%s/g, _ =>
+            args[i++]);
     }
 
     // Add or remove highlight to post

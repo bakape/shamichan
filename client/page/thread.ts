@@ -1,4 +1,4 @@
-import { ThreadData } from "../common"
+import { ThreadData, ModerationAction } from "../common"
 import {
     extractConfigs, extractPost, reparseOpenPosts, extractPageData, hidePosts,
 } from "./common"
@@ -25,7 +25,14 @@ export default function () {
     postCtr = data.postCtr
     imgCtr = data.imageCtr
     bumpTime = data.bumpTime
-    isDeleted = data.deleted
+    if (data.moderation) {
+        for (let { type } of data.moderation) {
+            if (type === ModerationAction.banPost) {
+                isDeleted = true;
+                break;
+            }
+        }
+    }
     renderPostCounter()
 
     extractPost(data, data.id, data.board, backlinks)
