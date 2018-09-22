@@ -76,7 +76,7 @@ export default class FormModel extends Post {
 		}
 
 		const old = this.inputBody
-		val = this.trimInput(val);
+		val = this.trimInput(val, true);
 		if (old === val) { // Everything already submitted
 			return
 		}
@@ -100,16 +100,22 @@ export default class FormModel extends Post {
 	}
 
 	// Trim input string, if it has too many lines
-	private trimInput(val: string): string {
+	private trimInput(val: string, write: boolean): string {
 		if (val.length > 2000) {
+			const extra = val.length - 2000;
 			val = val.slice(0, 2000)
+			if (write) {
+				this.view.trimInput(extra);
+			}
 		}
 
 		// Remove any lines past 30
 		const lines = val.split("\n")
 		if (lines.length - 1 > 100) {
 			const trimmed = lines.slice(0, 100).join("\n")
-			this.view.trimInput(val.length - trimmed.length)
+			if (write) {
+				this.view.trimInput(val.length - trimmed.length);
+			}
 			return trimmed;
 		}
 
@@ -218,7 +224,6 @@ export default class FormModel extends Post {
 			end = this.view.input.selectionEnd,
 			old = this.view.input.value
 		let p = modPaste(old, sel, end)
-
 		if (!p) {
 			return
 		}
@@ -229,8 +234,13 @@ export default class FormModel extends Post {
 		} else {
 			p.body = old.slice(0, end) + p.body + old.slice(end)
 		}
+		if (p.body.length > 2000) {
+			p.body = this.trimInput(p.body, false);
+			p.pos = 2000;
+		}
 
-		this.view.replaceText(p.body, p.pos, true)
+		this.view.replaceText(p.body, p.pos,
+			postSM.state !== postState.draft || old.length !== 0)
 	}
 
 	// Returns a function, that handles a message from the server, containing
@@ -294,7 +304,8 @@ export default class FormModel extends Post {
 		switch (postSM.state) {
 			case postState.draft:
 				this.allocatingImage = true;
-				this.requestAlloc(this.trimInput(this.view.input.value), data);
+				this.requestAlloc(this.trimInput(this.view.input.value, true),
+					data);
 				break;
 			case postState.allocating:
 				// Will allocate post soon check back every 200 ms
