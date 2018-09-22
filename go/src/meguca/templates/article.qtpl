@@ -171,12 +171,12 @@
 			<blockquote>
 				{%= body(p, c.op, c.board, c.index, c.rbText, c.pyu) %}
 			</blockquote>
-			{%code any, msgs := parseModLog(p) %}
-			{% if any %}
-				<b class="admin banned">
-					{%s= msgs %}
+			{% for _, e := range p.Moderation %}
+				<b class="admin post-moderation">
+					{%= postModeration(e) %}
+					<br>
 				</b>
-			{% endif %}
+			{% endfor %}
 		</div>
 		{% if c.omit != 0 %}
 			<span class="omit" data-omit="{%d c.omit %}" data-image-omit="{%d c.imageOmit %}">

@@ -110,26 +110,26 @@ Renders a moderation log page
 	{% code ln := lang.Get() %}
 	{%= tableStyle() %}
 	<table>
-		{%= tableHeaders("type", "by", "post", "time", "reason", "duration") %}
+		{%= tableHeaders("type", "by", "post", "time", "data", "duration") %}
 		{% for _, l := range log %}
 			<tr>
 				<td>
 					{% switch l.Type %}
-					{% case auth.BanPost %}
+					{% case common.BanPost %}
 						{%s= ln.UI["ban"] %}
-					{% case auth.UnbanPost %}
+					{% case common.UnbanPost %}
 						{%s= ln.UI["unban"] %}
-					{% case auth.DeletePost %}
+					{% case common.DeletePost %}
 						{%s= ln.UI["deletePost"] %}
-					{% case auth.DeleteImage %}
+					{% case common.DeleteImage %}
 						{%s= ln.UI["deleteImage"] %}
-					{% case auth.SpoilerImage %}
+					{% case common.SpoilerImage %}
 						{%s= ln.UI["spoilerImage"] %}
-					{% case auth.LockThread %}
+					{% case common.LockThread %}
 						{%s= ln.Common.UI["lockThread"] %}
-					{% case auth.DeleteBoard %}
+					{% case common.DeleteBoard %}
 						{%s= ln.Common.UI["deleteBoard"] %}
-					{% case auth.MeidoVision %}
+					{% case common.MeidoVision %}
 						{%s= ln.Common.UI["meidoVisionPost"] %}
 					{% endswitch %}
 				</td>
@@ -140,7 +140,7 @@ Renders a moderation log page
 					{% endif %}
 				</td>
 				<td>{%s l.Created.Format(time.UnixDate) %}</td>
-				<td>{%s l.Reason %}</td>
+				<td>{%s l.Data %}</td>
 				<td>
 					{% if l.Length != 0 %}
 						{%s (time.Second * time.Duration(l.Length)).String() %}

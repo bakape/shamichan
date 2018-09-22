@@ -12,25 +12,30 @@ export type PostLink = {
 	board: string
 }
 
-// ModLogEntry is a single entry in the moderation log
-export type ModLogEntry = {
-	type:    number
-	id:      number
-	length:  number
-	created: string
-	board:   string
-	by:      string
-	reason:  string
+export const enum ModerationAction {
+	banPost,
+	unbanPost,
+	deletePost,
+	deleteImage,
+	spoilerImage,
+	lockThread,
+	deleteBoard,
+	meidoVision
+}
+
+// Contains fields of a post moderation log entry
+export interface ModerationEntry {
+	type: ModerationAction
+	length: number
+	by: string
+	data: string
 }
 
 // Data of any post. In addition to server-sent JSON includes the state
 // property.
 export interface PostData {
 	editing: boolean
-	deleted: boolean
-	banned: boolean
 	sage: boolean
-	meidoVision: boolean
 	sticky: boolean
 	locked: boolean
 	image?: ImageData
@@ -46,6 +51,7 @@ export interface PostData {
 	state: TextState
 	links?: PostLink[]
 	commands?: Command[]
+	moderation?: ModerationEntry[]
 }
 
 // State of a post's text. Used for adding enclosing tags to the HTML while

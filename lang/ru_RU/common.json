@@ -1,4 +1,12 @@
 {
+	"format": {
+		"banned": "USER WAS BANNED FOR THIS POST",
+		"deleted": "POST WAS DELETED",
+		"imageDeleted": "IMAGE DELETED BY %s",
+		"imageSpoilered": "IMAGE SPOILERED BY %s",
+		"threadLockToggled": "THREAD %s BY %s",
+		"viewedSameIP": "POST OF THE SAME IP VIEWED BY %s"
+	},
 	"forms": {},
 	"plurals": {
 		"day": [
@@ -35,17 +43,15 @@
 		"ago": "тому",
 		"and": "и",
 		"anon": "Аноним",
-		"banned": "USER WAS BANNED FOR THIS POST",
 		"contractImages": "Свернуть изображения",
 		"deleteBySameIP": "Удалить все с этого IP",
-		"deleted": "POST WAS DELETED",
 		"expand": "Развернуть",
 		"expandImages": "Развернуть изображения",
 		"hide": "Скрыть",
 		"in": "в",
 		"janitors": "Помощник",
 		"justNow": "только что",
-		"meidoVision": "POSTS BY THE SAME IP WERE VIEWED",
+		"locked": "locked",
 		"moderators": "Модератор",
 		"omitted": "пропущено",
 		"owners": "Владелец доски",
@@ -53,6 +59,7 @@
 		"show": "Показать",
 		"spoiler": "Спойлер",
 		"toggleSticky": "Прикрепить",
+		"unlocked": "unlocked",
 		"viewBySameIP": "Тот же IP",
 		"you": "(Вы)"
 	},

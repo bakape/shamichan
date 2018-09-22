@@ -10,22 +10,6 @@ import (
 // ModerationLevel defines the level required to perform an action
 type ModerationLevel int8
 
-// FromString reads moderation level from string representation
-func (l *ModerationLevel) FromString(s string) {
-	switch s {
-	case "admin":
-		*l = Admin
-	case "owners":
-		*l = BoardOwner
-	case "moderators":
-		*l = Moderator
-	case "janitors":
-		*l = Janitor
-	default:
-		*l = NotStaff
-	}
-}
-
 // Returns string representation of moderation level
 func (l ModerationLevel) String() string {
 	switch l {
@@ -52,33 +36,15 @@ const (
 	Admin
 )
 
-// ModerationAction is an action performable by moderation staff
-type ModerationAction uint8
-
-// All supported moderation actions
-const (
-	BanPost ModerationAction = iota
-	UnbanPost
-	DeletePost
-	DeleteImage
-	SpoilerImage
-	LockThread
-	DeleteBoard
-	MeidoVision
-)
-
 // ModLogEntry is a single entry in the moderation log
 type ModLogEntry struct {
-	Type              ModerationAction `json:"type"`
-	ID                uint64           `json:"id"`
-	Length            uint64           `json:"length"`
-	Created           time.Time        `json:"created"`
-	Board             string           `json:"board"`
-	By                string           `json:"by"`
-	Reason            string           `json:"reason"`
+	common.ModerationEntry
+	ID      uint64    `json:"id"`
+	Created time.Time `json:"created"`
+	Board   string    `json:"board"`
 }
 
-// Ban holdsan entry of an IP being banned from a board
+// Ban holds an entry of an IP being banned from a board
 type Ban struct {
 	IP, Board string
 }

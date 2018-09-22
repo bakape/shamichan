@@ -8,7 +8,8 @@ import (
 // TickerInterval sets the interval of ticker flushes
 const TickerInterval = time.Millisecond * 100
 
-// A time.Ticker that can be "paused"
+// A time.Ticker that can be "paused". Pausing a ticker can save a considerable
+// amount of CPU cycles, if you have an external wakeup source.
 type ticker struct {
 	t *time.Ticker
 	C <-chan time.Time
@@ -72,7 +73,7 @@ func (b *baseFeed) addClient(c common.Client) {
 // If returned true, closing feed and parent listener loop should exit
 func (b *baseFeed) removeClient(c common.Client) bool {
 	delete(b.clients, c)
-	
+
 	if len(b.clients) != 0 {
 		b.remove <- nil
 		return false

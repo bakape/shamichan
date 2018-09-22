@@ -15,20 +15,14 @@ type MessageType uint8
 // 1 - 29 modify post model state
 const (
 	MessageInvalid MessageType = iota
-	_
 	MessageInsertPost
 	MessageAppend
 	MessageBackspace
 	MessageSplice
 	MessageClosePost
-	_
 	MessageInsertImage
 	MessageSpoiler
-	MessageDeletePost
-	MessageBanned
-	MessageDeleteImage
-	MessageMeidoVision
-	MessageModLogPost
+	MessageModeratePost
 )
 
 // >= 30 are miscellaneous and do not write to post models
@@ -82,27 +76,10 @@ var (
 	SendTo func(id uint64, msg []byte)
 
 	// ClosePost closes a post in a feed, if it exists
-	ClosePost func(
-		id, op uint64,
-		links []Link,
-		commands []Command,
-		msg []byte,
-	)
+	ClosePost func(id, op uint64, links []Link, commands []Command) error
 
-	// Propagate a message about a post being banned
-	BanPost func(id, op uint64) error
-
-	// Propagate a message about a post being deleted
-	DeletePost func(id, op uint64) error
-
-	// Propagate a message about an image being deleted from a post
-	DeleteImage func(id, op uint64) error
-
-	// Propagate a message about an image being spoilered
-	SpoilerImage func(id, op uint64) error
-
-	// Propagate a message about a post being meido vision'd
-	MeidoVisionPost func(id, op uint64) error
+	// Propagate a message about a post being moderated to connected clients
+	PropagateModeration func(id, op uint64, entry ModerationEntry) error
 )
 
 // Client exposes some globally accessible websocket client functionality

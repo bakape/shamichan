@@ -74,32 +74,18 @@ func NewPostID(tx *sql.Tx) (id uint64, err error) {
 // bumpReplyTime: increment thread replyTime
 // sage: don't increment bumpTime
 func WritePost(tx *sql.Tx, p Post, bumpReplyTime, sage bool) (err error) {
-	// Don't store empty strings in the database. Zero value != NULL.
+	// Don't store empty strings of these in the database. Zero value != NULL.
 	var (
-		name, trip, auth, img, imgName, ip, flag, posterID *string
-		spoiler                                            bool
+		img, ip *string
+		imgName string
+		spoiler bool
 	)
-	if p.Name != "" {
-		name = &p.Name
-	}
-	if p.Trip != "" {
-		trip = &p.Trip
-	}
-	if p.Auth != "" {
-		auth = &p.Auth
-	}
 	if p.IP != "" {
 		ip = &p.IP
 	}
-	if p.Flag != "" {
-		flag = &p.Flag
-	}
-	if p.PosterID != "" {
-		posterID = &p.PosterID
-	}
 	if p.Image != nil {
 		img = &p.Image.SHA1
-		imgName = &p.Image.Name
+		imgName = p.Image.Name
 		spoiler = p.Image.Spoiler
 	}
 
@@ -111,8 +97,9 @@ func WritePost(tx *sql.Tx, p Post, bumpReplyTime, sage bool) (err error) {
 			"commands",
 		).
 		Values(
-			p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, flag,
-			posterID, name, trip, auth, p.Password, ip, img, imgName,
+			p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, p.Flag,
+			p.PosterID, p.Name, p.Trip, p.Auth, p.Password, ip,
+			img, imgName,
 			commandRow(p.Commands),
 		)
 	err = withTransaction(tx, q).Exec()

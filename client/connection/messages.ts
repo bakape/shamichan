@@ -3,20 +3,14 @@ export const enum message {
 	invalid,
 
 	// 1 - 29 modify post model state
-	_,
 	insertPost,
 	append,
 	backspace,
 	splice,
 	closePost,
-	__,
 	insertImage,
 	spoiler,
-	deletePost,
-	banned,
-	deleteImage,
-	meidoVision,
-	modLogPost,
+	moderatePost,
 
 	// >= 30 are miscellaneous and do not write to post models
 	synchronise = 30,
@@ -49,6 +43,10 @@ export const enum message {
 
 	// Data concerning live random video feed
 	meguTV,
+
+	// Used by the client to send it's protocol version and by the server to
+	// send server and board configurations
+	configs,
 }
 
 export type MessageHandler = (msg: {}) => void

@@ -268,7 +268,6 @@ func ImageExists(sha1 string) (exists bool, err error) {
 
 // Delete images not used in any posts
 func deleteUnusedImages() (err error) {
-
 	r, err := db.Query(`
 		delete from images
 		where (

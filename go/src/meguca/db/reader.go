@@ -2,6 +2,8 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
+	"strconv"
 
 	"meguca/common"
 	"meguca/config"
@@ -11,7 +13,7 @@ import (
 )
 
 const (
-	postSelectsSQL = `p.editing, p.banned, p.spoiler, p.deleted, p.sage, p.meidoVision, p.id,
+	postSelectsSQL = `p.editing, p.moderated, p.spoiler, p.sage, p.id,
 	p.time, p.body, p.flag, p.name, p.trip, p.auth,
 	(select array_agg((l.target, linked_post.op, linked_thread.board))
 		from links as l
@@ -106,30 +108,21 @@ func (i *imageScanner) Val() *common.Image {
 
 type postScanner struct {
 	common.Post
-	banned, spoiler, deleted, sage, meidoVision sql.NullBool
-	name, trip, auth, imageName, flag, posterID sql.NullString
-	links                                       linkScanner
-	commands                                    commandRow
+	spoiler   bool
+	imageName string
+	links     linkScanner
+	commands  commandRow
 }
 
 func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
-		&p.Editing, &p.banned, &p.spoiler, &p.deleted, &p.sage, &p.meidoVision, &p.ID, &p.Time,
-		&p.Body, &p.flag, &p.name, &p.trip, &p.auth, &p.links, &p.commands,
-		&p.imageName, &p.posterID,
+		&p.Editing, &p.Moderated, &p.spoiler, &p.Sage, &p.ID, &p.Time, &p.Body,
+		&p.Flag, &p.Name, &p.Trip, &p.Auth, &p.links, &p.commands,
+		&p.imageName, &p.PosterID,
 	}
 }
 
 func (p postScanner) Val() (common.Post, error) {
-	p.Banned = p.banned.Bool
-	p.Deleted = p.deleted.Bool
-	p.Sage = p.sage.Bool
-	p.MeidoVision = p.meidoVision.Bool
-	p.Name = p.name.String
-	p.Trip = p.trip.String
-	p.Auth = p.auth.String
-	p.Flag = p.flag.String
-	p.PosterID = p.posterID.String
 	p.Links = []common.Link(p.links)
 	p.Commands = []common.Command(p.commands)
 
@@ -138,7 +131,7 @@ func (p postScanner) Val() (common.Post, error) {
 
 // Returns if image is spoiled and it's assigned name, if any
 func (p postScanner) Image() (bool, string) {
-	return p.spoiler.Bool, p.imageName.String
+	return p.spoiler, p.imageName
 }
 
 // PostStats contains post open status, body and creation time
@@ -201,34 +194,36 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 		return
 	}
 
-	// Inject bodies into open posts
-	open := make([]*common.Post, 0, 32)
-	if t.Editing {
-		open = append(open, &t.Post)
-	}
+	// Inject bodies and moderation into open posts
+	open := make([]*common.Post, 0, 64)
+	moderated := make([]*common.Post, 0, 64)
+	filterInjectable(&open, &moderated, &t.Post)
 	for i := range t.Posts {
-		if t.Posts[i].Editing {
-			open = append(open, &t.Posts[i])
-		}
+		filterInjectable(&open, &moderated, &t.Posts[i])
 	}
 	err = injectOpenBodies(open)
-
+	if err != nil {
+		return
+	}
+	err = injectModeration(moderated)
 	return
 }
 
 func scanOP(r rowScanner) (t common.Thread, err error) {
 	var (
-		post postScanner
-		img  imageScanner
+		post  postScanner
+		img   imageScanner
+		pArgs = post.ScanArgs()
+		iArgs = img.ScanArgs()
+		args  = make([]interface{}, 0, 8+len(pArgs)+len(iArgs))
 	)
-
-	args := make([]interface{}, 0, 37)
 	args = append(args,
 		&t.Sticky, &t.Board, &t.PostCtr, &t.ImageCtr, &t.ReplyTime, &t.BumpTime,
 		&t.Subject, &t.Locked,
 	)
-	args = append(args, post.ScanArgs()...)
-	args = append(args, img.ScanArgs()...)
+	args = append(args, pArgs...)
+	args = append(args, iArgs...)
+
 	err = r.Scan(args...)
 	if err != nil {
 		return
@@ -253,14 +248,16 @@ func extractPost(ps postScanner, is imageScanner) (p common.Post, err error) {
 // GetPost reads a single post from the database
 func GetPost(id uint64) (res common.StandalonePost, err error) {
 	var (
-		args = make([]interface{}, 2, 30)
-		post postScanner
-		img  imageScanner
+		post  postScanner
+		img   imageScanner
+		pArgs = post.ScanArgs()
+		iArgs = img.ScanArgs()
+		args  = make([]interface{}, 2, 2+len(pArgs)+len(iArgs))
 	)
 	args[0] = &res.OP
 	args[1] = &res.Board
-	args = append(args, post.ScanArgs()...)
-	args = append(args, img.ScanArgs()...)
+	args = append(args, pArgs...)
+	args = append(args, iArgs...)
 
 	err = sq.Select("p.op, p.board, "+postSelectsSQL).
 		From("posts as p").
@@ -282,6 +279,12 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 
 	if res.Editing {
 		res.Body, err = GetOpenBody(res.ID)
+		if err != nil {
+			return
+		}
+	}
+	if res.Moderated {
+		err = injectModeration([]*common.Post{&res.Post})
 		if err != nil {
 			return
 		}
@@ -366,7 +369,7 @@ func GetAllThreadsIDs() ([]uint64, error) {
 func scanCatalog(table tableScanner) (board common.Board, err error) {
 	defer table.Close()
 	board.Threads = make([]common.Thread, 0, 32)
-	
+
 	var t common.Thread
 	for table.Next() {
 		t, err = scanOP(table)
@@ -381,13 +384,15 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 	}
 
 	open := make([]*common.Post, 0, 16)
+	moderated := make([]*common.Post, 0, 16)
 	for i := range board.Threads {
-		if board.Threads[i].Editing {
-			open = append(open, &board.Threads[i].Post)
-		}
+		filterInjectable(&open, &moderated, &board.Threads[i].Post)
 	}
 	err = injectOpenBodies(open)
-	
+	if err != nil {
+		return
+	}
+	err = injectModeration(moderated)
 	return
 }
 
@@ -408,6 +413,16 @@ func scanThreadIDs(table tableScanner) (ids []uint64, err error) {
 	return
 }
 
+// Filter and append a post if it has injectable open bodies and/or moderation
+func filterInjectable(open, moderated *[]*common.Post, p *common.Post) {
+	if p.Editing {
+		*open = append(*open, p)
+	}
+	if p.Moderated {
+		*moderated = append(*moderated, p)
+	}
+}
+
 // Inject open post bodies from the embedded database into the posts
 func injectOpenBodies(posts []*common.Post) error {
 	if len(posts) == 0 {
@@ -425,4 +440,46 @@ func injectOpenBodies(posts []*common.Post) error {
 	}
 
 	return tx.Rollback()
+}
+
+// Inject moderation information into affected post structs
+func injectModeration(posts []*common.Post) (err error) {
+	if len(posts) == 0 {
+		return
+	}
+
+	byID := make(map[uint64]*common.Post, len(posts))
+	set := make([]byte, 1, 512)
+	set[0] = '('
+	for i, p := range posts {
+		byID[p.ID] = p
+		if i != 0 {
+			set = append(set, ',')
+		}
+		set = strconv.AppendUint(set, p.ID, 10)
+	}
+	set = append(set, ')')
+
+	r, err := sq.Select("post_id", "type", "length", "by", "data").
+		From("post_moderation").
+		Where(fmt.Sprintf("post_id in %s", string(set))).
+		Query()
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	var (
+		e  common.ModerationEntry
+		id uint64
+	)
+	for r.Next() {
+		err = r.Scan(&id, &e.Type, &e.Length, &e.By, &e.Data)
+		if err != nil {
+			return
+		}
+		byID[id].Moderation = append(byID[id].Moderation, e)
+	}
+
+	return r.Err()
 }

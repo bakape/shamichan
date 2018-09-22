@@ -1,103 +1,100 @@
 package db
 
 import (
-	"fmt"
 	"database/sql"
-
+	"fmt"
 	"meguca/auth"
 	"meguca/common"
-	"meguca/templates"
+	"strconv"
 
 	"github.com/Masterminds/squirrel"
 )
 
-// Export without circular dependency
-func init() {
-	templates.GetPostModLog = GetPostModLog
-}
-
-// Write moderation action to log
-func logModeration(tx *sql.Tx, e auth.ModLogEntry) error {
-	return withTransaction(tx,
+// Write moderation action to board-level and post-level logs
+func logModeration(tx *sql.Tx, op uint64, e auth.ModLogEntry) (err error) {
+	err = withTransaction(tx,
 		sq.Insert("mod_log").
-			Columns("type", "board", "id", "by", "length", "reason").
-			Values(int(e.Type), e.Board, e.ID, e.By, e.Length, e.Reason),
-	).Exec()
+			Columns("type", "board", "id", "by", "length", "data").
+			Values(e.Type, e.Board, e.ID, e.By, e.Length, e.Data)).
+		Exec()
+	if err != nil {
+		return
+	}
+
+	switch e.Type {
+	case common.BanPost, common.DeletePost, common.DeleteImage,
+		common.SpoilerImage, common.LockThread, common.MeidoVision:
+		err = withTransaction(tx, sq.
+			Insert("post_moderation").
+			Columns("post_id", "type", "by", "length", "data").
+			Values(e.ID, e.Type, e.By, e.Length, e.Data)).
+			Exec()
+		if err != nil {
+			return
+		}
+		err = bumpThread(tx, op, false)
+		if err != nil {
+			return
+		}
+		if !IsTest {
+			err = common.PropagateModeration(e.ID, op, e.ModerationEntry)
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
 }
 
 // DeletePost marks the target post as deleted
 func DeletePost(id uint64, by string) error {
-	var del sql.NullBool
-	err := sq.Select("deleted").From("posts").Where("id = ?", id).Scan(&del)
-	if err != nil {
-		return err
-	}
-
-	if !del.Bool {
-		return moderatePost(id, auth.DeletePost, by,
-			sq.Update("posts").Set("deleted", true), common.DeletePost)
-	}
-
-	return nil
+	return moderatePost(id,
+		common.ModerationEntry{
+			Type: common.DeletePost,
+			By:   by,
+		},
+		nil)
 }
 
-func moderatePost(
-	id uint64, typ auth.ModerationAction, by string,
-	query squirrel.UpdateBuilder,
-	propagate func(id, op uint64) error,
-) (
-	err error,
-) {
+// Apply post moderation, log and propagate to connected clients.
+// query: optional query to execute on the post
+func moderatePost(id uint64, entry common.ModerationEntry,
+	query *squirrel.UpdateBuilder,
+) (err error) {
 	board, op, err := GetPostParenthood(id)
 	if err != nil {
 		return
 	}
 
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		err = withTransaction(tx, query.Where("id = ?", id)).Exec()
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
+		err = withTransaction(tx, sq.Update("posts").Set("moderated", true)).
+			Exec()
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, auth.ModLogEntry{
-			Type:  typ,
-			Board: board,
-			ID:    id,
-			By:    by,
+		if query != nil {
+			err = withTransaction(tx, query.Where("id = ?", id)).Exec()
+			if err != nil {
+				return
+			}
+		}
+		return logModeration(tx, op, auth.ModLogEntry{
+			ModerationEntry: entry,
+			ID:              id,
+			Board:           board,
 		})
-		if err != nil {
-			return
-		}
-		return bumpThread(tx, op, false)
 	})
-	if err != nil {
-		return
-	}
-
-	if !IsTest {
-		switch typ {
-		case auth.DeletePost, auth.MeidoVision:
-			mLog, err := GetPostModLog(id)
-
-			if err != nil {
-				return err
-			}
-
-			err = auth.ModLogPost(id, op, mLog)
-
-			if err != nil {
-				return err
-			}
-		}
-
-		err = propagate(id, op)
-	}
-	return
 }
 
 // DeleteImage permanently deletes an image from a post
 func DeleteImage(id uint64, by string) error {
 	q := sq.Update("posts").Set("SHA1", nil)
-	return moderatePost(id, auth.DeleteImage, by, q, common.DeleteImage)
+	return moderatePost(id,
+		common.ModerationEntry{
+			Type: common.DeleteImage,
+			By:   by,
+		},
+		&q)
 }
 
 // DeleteBoard deletes a board and all of its contained threads and posts
@@ -114,7 +111,12 @@ func DeleteBoard(board, by string) error {
 // ModSpoilerImage spoilers image as a moderator
 func ModSpoilerImage(id uint64, by string) error {
 	q := sq.Update("posts").Set("spoiler", true)
-	return moderatePost(id, auth.SpoilerImage, by, q, common.SpoilerImage)
+	return moderatePost(id,
+		common.ModerationEntry{
+			Type: common.SpoilerImage,
+			By:   by,
+		},
+		&q)
 }
 
 // WriteStaff writes staff positions of a specific board. Old rows are
@@ -226,21 +228,25 @@ func GetSameIPPosts(id uint64, board string, by string) (
 				return
 			}
 		}
-
-		return moderatePost(id, auth.MeidoVision, by,
-			sq.Update("posts").Set("meidoVision", true), common.MeidoVisionPost)
+		return
 	})
 
+	err = moderatePost(id,
+		common.ModerationEntry{
+			Type: common.MeidoVision,
+			By:   by,
+		},
+		nil)
 	return
 }
 
-func setThreadBool(id uint64, key string, val bool) error {
+// SetThreadSticky sets the sticky field on a thread
+func SetThreadSticky(id uint64, sticky bool) error {
 	return InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = withTransaction(tx,
 			sq.Update("threads").
-				Set(key, val).
-				Where("id = ?", id),
-		).
+				Set("sticky", sticky).
+				Where("id = ?", id)).
 			Exec()
 		if err != nil {
 			return
@@ -249,14 +255,18 @@ func setThreadBool(id uint64, key string, val bool) error {
 	})
 }
 
-// SetThreadSticky sets the sticky field on a thread
-func SetThreadSticky(id uint64, sticky bool) error {
-	return setThreadBool(id, "sticky", sticky)
-}
-
 // SetThreadLock sets the ability of users to post in a specific thread
 func SetThreadLock(id uint64, locked bool, by string) error {
-	return setThreadBool(id, "locked", locked)
+	q := sq.Update("threads").
+		Set("locked", locked).
+		Where("id = ?", id)
+	return moderatePost(id,
+		common.ModerationEntry{
+			Type: common.LockThread,
+			By:   by,
+			Data: strconv.FormatBool(locked),
+		},
+		&q)
 }
 
 // GetModLog retrieves the moderation log for a specific board
@@ -264,13 +274,13 @@ func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 	log = make([]auth.ModLogEntry, 0, 64)
 	e := auth.ModLogEntry{Board: board}
 	err = queryAll(
-		sq.Select("type", "id", "by", "created", "length", "reason").
+		sq.Select("type", "id", "by", "created", "length", "data").
 			From("mod_log").
 			Where("board = ?", board).
 			OrderBy("created desc"),
 		func(r *sql.Rows) (err error) {
 			err = r.Scan(&e.Type, &e.ID, &e.By, &e.Created, &e.Length,
-				&e.Reason)
+				&e.Data)
 			if err != nil {
 				return
 			}
@@ -278,38 +288,5 @@ func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 			return
 		},
 	)
-	return
-}
-
-// GetPostModLog retrieves a post's (3) relevant mod-log entries
-func GetPostModLog(id uint64) (mLog []auth.ModLogEntry, err error) {
-	mLog = make([]auth.ModLogEntry, 3, 3)
-
-	for i, val := range [3]auth.ModerationAction {
-		auth.BanPost,
-		auth.DeletePost,
-		auth.MeidoVision,
-	} {
-		err = sq.Select("type", "id", "length", "created", "board", "by", "reason").
-			From("mod_log").
-			Where("type = ?", val).
-			Where("id = ?", id).
-			Scan(
-				&mLog[i].Type,
-				&mLog[i].ID,
-				&mLog[i].Length,
-				&mLog[i].Created,
-				&mLog[i].Board,
-				&mLog[i].By,
-				&mLog[i].Reason,
-			)
-
-		if err != nil && err.Error() != "sql: no rows in result set" {
-			return
-		}
-
-		err = nil
-	}
-
 	return
 }

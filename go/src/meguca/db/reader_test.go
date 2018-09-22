@@ -10,6 +10,13 @@ import (
 	"testing"
 )
 
+var sampleModerationEntry = common.ModerationEntry{
+	Type:   common.BanPost,
+	Length: 0,
+	By:     "admin",
+	Data:   "test",
+}
+
 func TestReader(t *testing.T) {
 	assertTableClear(t, "boards", "images")
 
@@ -54,8 +61,9 @@ func TestReader(t *testing.T) {
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
-					ID:    1,
-					Image: &assets.StdJPEG,
+					ID:        1,
+					Image:     &assets.StdJPEG,
+					Moderated: true,
 				},
 				OP:    1,
 				Board: "a",
@@ -72,11 +80,6 @@ func TestReader(t *testing.T) {
 							ID:    1,
 							OP:    1,
 							Board: "a",
-						},
-						{
-							ID:    3,
-							OP:    3,
-							Board: "c",
 						},
 					},
 					Commands: []common.Command{
@@ -130,6 +133,18 @@ func TestReader(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	_, err = sq.Update("posts").Set("moderated", true).Where("id = 1").Exec()
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := sampleModerationEntry
+	_, err = sq.Insert("post_moderation").
+		Columns("post_id", "type", "by", "length", "data").
+		Values(1, s.Type, s.By, s.Length, s.Data).
+		Exec()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	t.Run("GetAllBoard", testGetAllBoard)
 	t.Run("GetBoard", testGetBoard)
@@ -158,11 +173,6 @@ func testGetPost(t *testing.T) {
 					ID:    1,
 					OP:    1,
 					Board: "a",
-				},
-				{
-					ID:    3,
-					OP:    3,
-					Board: "c",
 				},
 			},
 			Commands: []common.Command{
@@ -195,11 +205,6 @@ func testGetAllBoard(t *testing.T) {
 						OP:    1,
 						Board: "a",
 					},
-					{
-						ID:    3,
-						OP:    3,
-						Board: "c",
-					},
 				},
 				Commands: []common.Command{
 					{
@@ -215,8 +220,10 @@ func testGetAllBoard(t *testing.T) {
 		},
 		{
 			Post: common.Post{
-				ID:    1,
-				Image: &assets.StdJPEG,
+				ID:         1,
+				Image:      &assets.StdJPEG,
+				Moderated:  true,
+				Moderation: []common.ModerationEntry{sampleModerationEntry},
 			},
 			PostCtr:   3,
 			ImageCtr:  1,
@@ -269,11 +276,6 @@ func testGetBoard(t *testing.T) {
 								OP:    1,
 								Board: "a",
 							},
-							{
-								ID:    3,
-								OP:    3,
-								Board: "c",
-							},
 						},
 						Commands: []common.Command{
 							{
@@ -323,8 +325,10 @@ func testGetThread(t *testing.T) {
 		BumpTime:  1,
 		Board:     "a",
 		Post: common.Post{
-			ID:    1,
-			Image: &assets.StdJPEG,
+			ID:         1,
+			Image:      &assets.StdJPEG,
+			Moderated:  true,
+			Moderation: []common.ModerationEntry{sampleModerationEntry},
 		},
 		Posts: []common.Post{
 			{
@@ -373,11 +377,6 @@ func testGetThread(t *testing.T) {
 							ID:    1,
 							OP:    1,
 							Board: "a",
-						},
-						{
-							ID:    3,
-							OP:    3,
-							Board: "c",
 						},
 					},
 					Commands: []common.Command{

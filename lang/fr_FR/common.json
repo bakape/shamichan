@@ -1,4 +1,12 @@
 {
+	"format": {
+		"banned": "USER WAS BANNED FOR THIS POST",
+		"deleted": "POST WAS DELETED",
+		"imageDeleted": "IMAGE DELETED BY %s",
+		"imageSpoilered": "IMAGE SPOILERED BY %s",
+		"threadLockToggled": "THREAD %s BY %s",
+		"viewedSameIP": "POST OF THE SAME IP VIEWED BY %s"
+	},
 	"forms": {},
 	"plurals": {
 		"day": [
@@ -35,17 +43,15 @@
 		"ago": "Il y a",
 		"and": "et",
 		"anon": "Anonyme",
-		"banned": "USER WAS BANNED FOR THIS POST",
 		"contractImages": "Réduire les images",
 		"deleteBySameIP": "IP : tout supprimer",
-		"deleted": "POST WAS DELETED",
 		"expand": "Rejoindre",
 		"expandImages": "Étendre les images",
 		"hide": "Cacher",
 		"in": "dans",
 		"janitors": "Concierge",
 		"justNow": "à l'instant",
-		"meidoVision": "POSTS BY THE SAME IP WERE VIEWED",
+		"locked": "locked",
 		"moderators": "Modérateur",
 		"omitted": "ignorés",
 		"owners": "Propriétaire",
@@ -53,6 +59,7 @@
 		"show": "Afficher",
 		"spoiler": "Spoiler",
 		"toggleSticky": "Épingler",
+		"unlocked": "unlocked",
 		"viewBySameIP": "IP : voir",
 		"you": "(Vous)"
 	},

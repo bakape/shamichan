@@ -5,9 +5,11 @@
 package common
 
 // ParseBody forwards parser.ParseBody to avoid cyclic imports in db/upkeep
+// TODO: Clean up this function signature
 var ParseBody func([]byte, string, uint64, uint64, string, bool) ([]Link, []Command, error)
 
-// Board is defined to enable marshalling optimizations and sorting by sticky threads
+// Board is defined to enable marshalling optimizations and sorting by sticky
+// threads
 // easyjson:json //
 type Board struct {
 	Pages   int      `json:"pages"`
@@ -47,22 +49,31 @@ type Thread struct {
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {
-	Editing     bool      `json:"editing,omitempty"`
-	Banned      bool      `json:"banned,omitempty"`
-	Deleted     bool      `json:"deleted,omitempty"`
-	MeidoVision bool      `json:"meidoVision,omitempty"`
-	Sage        bool      `json:"sage,omitempty"`
-	ID          uint64    `json:"id"`
-	Time        int64     `json:"time"`
-	Body        string    `json:"body"`
-	Flag        string    `json:"flag,omitempty"`
-	PosterID    string    `json:"posterID,omitempty"`
-	Name        string    `json:"name,omitempty"`
-	Trip        string    `json:"trip,omitempty"`
-	Auth        string    `json:"auth,omitempty"`
-	Links       []Link    `json:"links,omitempty"`
-	Commands    []Command `json:"commands,omitempty"`
-	Image       *Image    `json:"image,omitempty"`
+	Editing    bool              `json:"editing,omitempty"`
+	Moderated  bool              `json:"-"`
+	Sage       bool              `json:"sage,omitempty"`
+	ID         uint64            `json:"id"`
+	Time       int64             `json:"time"`
+	Body       string            `json:"body"`
+	Flag       string            `json:"flag,omitempty"`
+	PosterID   string            `json:"posterID,omitempty"`
+	Name       string            `json:"name,omitempty"`
+	Trip       string            `json:"trip,omitempty"`
+	Auth       string            `json:"auth,omitempty"`
+	Image      *Image            `json:"image,omitempty"`
+	Links      []Link            `json:"links,omitempty"`
+	Commands   []Command         `json:"commands,omitempty"`
+	Moderation []ModerationEntry `json:"moderaion,omitempty"`
+}
+
+// Return if post has been deleted by staff
+func (p *Post) IsDeleted() bool {
+	for _, l := range p.Moderation {
+		if l.Type == DeletePost {
+			return true
+		}
+	}
+	return false
 }
 
 // Link describes a link from one post to another
