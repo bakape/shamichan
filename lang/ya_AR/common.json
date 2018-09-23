@@ -4,6 +4,7 @@
 		"deleted": "POST WAS DELETED",
 		"imageDeleted": "IMAGE DELETED BY %s",
 		"imageSpoilered": "IMAGE SPOILERED BY %s",
+		"purgedPost": "POST PURGED BY %s FOR %s",
 		"threadLockToggled": "THREAD %s BY %s",
 		"viewedSameIP": "POST OF THE SAME IP VIEWED BY %s"
 	},

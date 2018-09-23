@@ -17,6 +17,7 @@ export default class ModPanel extends View<null> {
 		super({ el: document.getElementById("moderation-panel") })
 		new BanForm()
 		new NotificationForm()
+		new PostPurgeForm();
 
 		this.el.querySelector("form").addEventListener("submit", e =>
 			this.onSubmit(e))
@@ -59,6 +60,18 @@ export default class ModPanel extends View<null> {
 		const checked = this.getChecked(),
 			models = [...checked].map(getModel)
 
+		// Send request with post IDs to server
+		const sendIDRequests = async (formID: string, url: string) => {
+			if (!checked.length) {
+				return;
+			}
+			const args = HidableForm.forms[formID].vals();
+			for (let id of mapToIDs(models)) {
+				args["id"] = id;
+				await this.postJSON(url, args);
+			}
+		}
+
 		switch (this.getMode()) {
 			case "deletePost":
 				if (checked.length) {
@@ -79,14 +92,11 @@ export default class ModPanel extends View<null> {
 				}
 				break
 			case "ban":
-				if (checked.length) {
-					const args = HidableForm.forms["ban"].vals();
-					for (let id of mapToIDs(models)) {
-						args["id"] = id;
-						await this.postJSON("/api/ban", args);
-					}
-				}
-				break
+				await sendIDRequests("ban", "/api/ban");
+				break;
+			case "purgePost":
+				await sendIDRequests("purgePost", "/api/purge-post");
+				break;
 			case "notification":
 				const f = HidableForm.forms["notification"]
 				await this.postJSON("/api/notification", f.vals())
@@ -211,6 +221,19 @@ class BanForm extends HidableForm {
 			data["global"] = g.checked
 		}
 		return data
+	}
+}
+
+class PostPurgeForm extends HidableForm {
+	constructor() {
+		super("purgePost");
+	}
+
+	// Get input field values
+	public vals(): { [key: string]: any } {
+		return {
+			reason: this.inputElement("purge-reason").value,
+		};
 	}
 }
 

@@ -283,6 +283,9 @@ export default class PostView extends ImageHandler {
                 case ModerationAction.meidoVision:
                     s = this.format("viewedSameIP", by);
                     break;
+                case ModerationAction.purgePost:
+                    s = this.format("purgedPost", by, data);
+                    break;
             }
             const el = document.createElement('b');
             el.setAttribute("class", "admin post-moderation");

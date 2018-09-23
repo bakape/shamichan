@@ -337,6 +337,10 @@
 								</div>
 							{% endif %}
 							{% if pos == auth.Admin %}
+								<div id="purgePost-form" class="hidden">
+									<input type="text" name="purge-reason" required class="full-width" placeholder="{%s= ln.UI["reason"] %}" disabled>
+									<br>
+								</div>
 								<div id="notification-form" class="hidden">
 									<input type="text" name="notification" required class="full-width" placeholder="{%s= ln.UI["text"] %}" style="min-width: 20em;" disabled>
 									<br>
@@ -349,7 +353,7 @@
 									{% code ids = append(ids, "ban") %}
 								{% endif %}
 								{% if pos == auth.Admin %}
-									{% code ids = append(ids, "notification") %}
+									{% code ids = append(ids, "purgePost", "notification") %}
 								{% endif %}
 								{% for _, id := range ids %}
 									<option value="{%s= id %}">

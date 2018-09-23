@@ -116,21 +116,23 @@ Renders a moderation log page
 				<td>
 					{% switch l.Type %}
 					{% case common.BanPost %}
-						{%s= ln.UI["ban"] %}
+						{%s ln.UI["ban"] %}
 					{% case common.UnbanPost %}
-						{%s= ln.UI["unban"] %}
+						{%s ln.UI["unban"] %}
 					{% case common.DeletePost %}
-						{%s= ln.UI["deletePost"] %}
+						{%s ln.UI["deletePost"] %}
 					{% case common.DeleteImage %}
-						{%s= ln.UI["deleteImage"] %}
+						{%s ln.UI["deleteImage"] %}
 					{% case common.SpoilerImage %}
-						{%s= ln.UI["spoilerImage"] %}
+						{%s ln.UI["spoilerImage"] %}
 					{% case common.LockThread %}
-						{%s= ln.Common.UI["lockThread"] %}
+						{%s ln.Common.UI["lockThread"] %}
 					{% case common.DeleteBoard %}
-						{%s= ln.Common.UI["deleteBoard"] %}
+						{%s ln.Common.UI["deleteBoard"] %}
 					{% case common.MeidoVision %}
-						{%s= ln.Common.UI["meidoVisionPost"] %}
+						{%s ln.Common.UI["meidoVisionPost"] %}
+					{% case common.PurgePost %}
+						{%s ln.Common.UI["purgePost"] %}
 					{% endswitch %}
 				</td>
 				<td>{%s l.By %}</td>

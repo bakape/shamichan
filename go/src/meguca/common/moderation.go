@@ -13,6 +13,7 @@ const (
 	LockThread
 	DeleteBoard
 	MeidoVision
+	PurgePost
 )
 
 // Contains fields of a post moderation log entry

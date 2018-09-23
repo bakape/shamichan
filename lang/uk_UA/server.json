@@ -472,6 +472,7 @@
 		"ownNoBoards": "Ви не маєте жодних борд.",
 		"post": "Post",
 		"posterID": "Poster ID",
+		"purgePost": "Purge Post and Image",
 		"reason": "Reason",
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"setBanners": "Set banners",

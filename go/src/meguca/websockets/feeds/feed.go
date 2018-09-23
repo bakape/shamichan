@@ -220,6 +220,9 @@ func (f *Feed) Start() (err error) {
 					}
 				case common.LockThread:
 					f.cache.Locked = msg.entry.Data == "true"
+				case common.PurgePost:
+					p.Body = ""
+					p.Image = nil
 				}
 				f.cache.Posts[msg.id] = p
 				f.write(msg.msg)

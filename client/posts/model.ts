@@ -229,6 +229,14 @@ export class Post extends Model implements PostData {
 			case ModerationAction.lockThread:
 				this.locked = data === 'true';
 				break;
+			case ModerationAction.purgePost:
+				if (this.image) {
+					this.image = null;
+					this.view.removeImage();
+				}
+				this.body = "";
+				this.view.reparseBody()
+				break;
 		}
 
 		this.view.renderModerationLog()

@@ -436,6 +436,25 @@ func modSpoilerImage(w http.ResponseWriter, r *http.Request) {
 	moderatePosts(w, r, auth.Janitor, db.ModSpoilerImage)
 }
 
+// Clear post contents and remove any uploaded image from the server
+func purgePost(w http.ResponseWriter, r *http.Request) {
+	var msg struct {
+		ID     uint64
+		Reason string
+	}
+	if !decodeJSON(w, r, &msg) {
+		return
+	}
+	_, userID, can := canModeratePost(w, r, msg.ID, auth.Admin)
+	if !can {
+		return
+	}
+	err := db.PurgePost(msg.ID, userID, msg.Reason)
+	if err != nil {
+		httpError(w, r, err)
+	}
+}
+
 // Ban a specific IP from a specific board
 func ban(w http.ResponseWriter, r *http.Request) {
 	var msg struct {

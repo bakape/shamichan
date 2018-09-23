@@ -177,25 +177,6 @@ func TestSpoilerImage(t *testing.T) {
 	AssertDeepEquals(t, post.Image.Spoiler, true)
 }
 
-func TestDeleteOwnedImage(t *testing.T) {
-	assertTableClear(t, "images", "boards")
-	writeSampleImage(t)
-	writeSampleBoard(t)
-	writeSampleThread(t)
-	insertSampleImage(t)
-
-	err := DeleteOwnedImage(1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	has, err := HasImage(1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	AssertDeepEquals(t, has, false)
-}
-
 func TestVideoPlaylist(t *testing.T) {
 	std := assets.StdJPEG
 	std.FileType = common.WEBM

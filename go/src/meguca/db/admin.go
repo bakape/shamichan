@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"meguca/auth"
 	"meguca/common"
+	"meguca/imager/assets"
 	"strconv"
 
 	"github.com/Masterminds/squirrel"
@@ -23,7 +24,8 @@ func logModeration(tx *sql.Tx, op uint64, e auth.ModLogEntry) (err error) {
 
 	switch e.Type {
 	case common.BanPost, common.DeletePost, common.DeleteImage,
-		common.SpoilerImage, common.LockThread, common.MeidoVision:
+		common.SpoilerImage, common.LockThread, common.MeidoVision,
+		common.PurgePost:
 		err = withTransaction(tx, sq.
 			Insert("post_moderation").
 			Columns("post_id", "type", "by", "length", "data").
@@ -62,6 +64,49 @@ func DeletePost(id uint64, by string) error {
 			By:   by,
 		},
 		nil)
+}
+
+// Clear post contents and remove any uploaded image from the server
+func PurgePost(id uint64, by, reason string) (err error) {
+	post, err := GetPost(id)
+	if err != nil {
+		return
+	}
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
+		if post.Image != nil {
+			img := post.Image
+			err = withTransaction(tx, sq.
+				Delete("images").
+				Where("sha1 = ?", img.SHA1)).
+				Exec()
+			if err != nil {
+				return
+			}
+			err = assets.Delete(img.SHA1, img.FileType, img.ThumbType)
+			if err != nil {
+				return
+			}
+		}
+
+		err = withTransaction(tx, sq.
+			Update("posts").
+			Set("body", "").
+			Where("id = ?", post.ID)).
+			Exec()
+		if err != nil {
+			return
+		}
+
+		return logModeration(tx, post.OP, auth.ModLogEntry{
+			Board: post.Board,
+			ID:    post.ID,
+			ModerationEntry: common.ModerationEntry{
+				Type: common.PurgePost,
+				By:   by,
+				Data: reason,
+			},
+		})
+	})
 }
 
 // Apply post moderation, log and propagate to connected clients.

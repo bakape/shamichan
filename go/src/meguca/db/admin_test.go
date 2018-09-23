@@ -9,9 +9,14 @@ import (
 
 func prepareForModeration(t *testing.T) {
 	t.Helper()
-	assertTableClear(t, "accounts", "bans", "mod_log", "boards")
+	assertTableClear(t, "accounts", "bans", "mod_log", "boards", "images")
+
 	writeSampleBoard(t)
 	writeSampleThread(t)
+
+	writeSampleImage(t)
+	insertSampleImage(t)
+
 	err := InTransaction(false, func(tx *sql.Tx) error {
 		return CreateAdminAccount(tx)
 	})
@@ -32,6 +37,23 @@ func TestModeratePost(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+}
+
+func TestPurgePost(t *testing.T) {
+	prepareForModeration(t)
+
+	err := PurgePost(1, "admin", "test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	post, err := GetPost(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	AssertDeepEquals(t, len(post.Moderation), 1)
+	AssertDeepEquals(t, post.Image == nil, true)
+	AssertDeepEquals(t, post.Body, "")
 }
 
 func TestStickyThread(t *testing.T) {

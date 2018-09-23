@@ -209,15 +209,6 @@ func SpoilerImage(id, op uint64) error {
 	})
 }
 
-// DeleteOwnedImage deletes an image as part of clearing a post
-func DeleteOwnedImage(id uint64) error {
-	_, err := sq.Update("posts").
-		Set("SHA1", nil).
-		Where("id = ?", id).
-		Exec()
-	return err
-}
-
 // VideoPlaylist returns a video playlist for a board
 func VideoPlaylist(board string) (videos []Video, err error) {
 	videos = make([]Video, 0, 128)
