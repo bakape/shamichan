@@ -132,7 +132,7 @@ Renders a moderation log page
 					{% case common.MeidoVision %}
 						{%s ln.Common.UI["meidoVisionPost"] %}
 					{% case common.PurgePost %}
-						{%s ln.Common.UI["purgePost"] %}
+						{%s ln.UI["purgePost"] %}
 					{% endswitch %}
 				</td>
 				<td>{%s l.By %}</td>
