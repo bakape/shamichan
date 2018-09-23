@@ -439,10 +439,9 @@ func modSpoilerImage(w http.ResponseWriter, r *http.Request) {
 // Ban a specific IP from a specific board
 func ban(w http.ResponseWriter, r *http.Request) {
 	var msg struct {
-		Global   bool
-		Duration uint64
-		Reason   string
-		IDs      []uint64
+		Global       bool
+		ID, Duration uint64
+		Reason       string
 	}
 
 	// Decode and validate
@@ -452,9 +451,6 @@ func ban(w http.ResponseWriter, r *http.Request) {
 	creds, ok := isLoggedIn(w, r)
 	switch {
 	case !ok:
-		return
-	case msg.Global && creds.UserID != "admin":
-		httpError(w, r, errAccessDenied)
 		return
 	case len(msg.Reason) > common.MaxLenReason:
 		httpError(w, r, errReasonTooLong)
@@ -467,36 +463,29 @@ func ban(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Group posts by board
-	byBoard := make(map[string][]uint64, 2)
+	var (
+		board string
+		err   error
+	)
 	if msg.Global {
-		byBoard["all"] = msg.IDs
+		board = "all"
 	} else {
-		for _, id := range msg.IDs {
-			board, err := db.GetPostBoard(id)
-			if err != nil {
-				httpError(w, r, err)
-				return
-			}
-			byBoard[board] = append(byBoard[board], id)
-		}
-
-		// Assert rights to moderate for all affected boards
-		for b := range byBoard {
-			if _, ok := canPerform(w, r, b, auth.Moderator, nil); !ok {
-				return
-			}
-		}
-	}
-
-	// Apply bans
-	for board, ids := range byBoard {
-		err := db.Ban(board, msg.Reason, creds.UserID,
-			time.Duration(msg.Duration), true, ids...)
+		board, err = db.GetPostBoard(msg.ID)
 		if err != nil {
 			httpError(w, r, err)
 			return
 		}
+	}
+	if _, ok := canPerform(w, r, board, auth.Moderator, nil); !ok {
+		return
+	}
+
+	// Apply ban
+	err = db.Ban(board, msg.Reason, creds.UserID,
+		time.Minute*time.Duration(msg.Duration), msg.ID)
+	if err != nil {
+		httpError(w, r, err)
+		return
 	}
 }
 

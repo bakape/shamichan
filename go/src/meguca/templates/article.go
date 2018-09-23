@@ -3,7 +3,6 @@ package templates
 import (
 	"fmt"
 	"html"
-	"math"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/lang"
@@ -130,8 +129,7 @@ func streampostModeration(qw *quicktemplate.Writer, e common.ModerationEntry) {
 	f := ln.Format
 	switch e.Type {
 	case common.BanPost:
-		fmt.Fprintf(w, f["banned"], e.By, secondsToTime(float64(e.Length)),
-			e.Data)
+		fmt.Fprintf(w, f["banned"], e.By, secondsToTime(e.Length), e.Data)
 	case common.DeletePost:
 		fmt.Fprintf(w, f["deleted"], e.By)
 	case common.DeleteImage:
@@ -152,30 +150,22 @@ func streampostModeration(qw *quicktemplate.Writer, e common.ModerationEntry) {
 }
 
 // Returns human readable time
-func secondsToTime(s float64) string {
+func secondsToTime(s uint64) string {
 	divide := [4]float64{60, 24, 30, 12}
 	unit := [4]string{"minute", "hour", "day", "month"}
-	time := math.Round(s) / 60
+	time := float64(s) / 60
+
+	format := func(key string) string {
+		return fmt.Sprintf("%.1f %s", time, lang.Get().Common.Plurals[key][1])
+	}
 
 	for i := 0; i < len(divide); i++ {
 		if time < divide[i] {
-			return pluralize(int(toFixed(time, 0)), unit[i])
+			return format(unit[i])
 		}
-
-		time = math.Round(time / divide[i])
+		time /= divide[i]
 	}
-
-	return pluralize(int(toFixed(time, 0)), "year")
-}
-
-// Truncates a float64
-func toFixed(num float64, precision int) float64 {
-	out := math.Pow(10, float64(precision))
-	return float64(round(num*out)) / out
-}
-
-func round(num float64) int {
-	return int(num + math.Copysign(0.5, num))
+	return format("year")
 }
 
 // Returns the stringified n + the plural or singular word

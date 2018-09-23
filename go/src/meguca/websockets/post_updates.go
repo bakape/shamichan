@@ -200,7 +200,7 @@ func CheckRouletteBan(commands []common.Command, board string, thread uint64, id
 		if command.Type == common.Roulette {
 			if command.Roulette[0] == 1 {
 				err := db.Ban(board, "lost at #roulette", "system",
-					time.Second*30, false, id)
+					time.Second*30, id)
 				if err != nil {
 					return err
 				}

@@ -159,7 +159,7 @@ func TestGetBanRecords(t *testing.T) {
 		Expires: time.Now().Add(length).UTC(),
 	}
 
-	err := Ban(std.Board, std.Reason, std.By, length, true, std.ForPost)
+	err := Ban(std.Board, std.Reason, std.By, length, std.ForPost)
 	if err != nil {
 		t.Fatal(err)
 	}

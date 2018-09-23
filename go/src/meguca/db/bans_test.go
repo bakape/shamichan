@@ -11,7 +11,7 @@ func TestBanUnban(t *testing.T) {
 	prepareForModeration(t)
 	writeAllBoard(t)
 
-	err := Ban("all", "test", "admin", time.Minute, true, 1)
+	err := Ban("all", "test", "admin", time.Minute, 1)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -93,7 +93,7 @@ func parseCommand(match []byte, board string, thread uint64, id uint64, ip strin
 					}
 
 					err = db.Ban(board, "stop being such a slut", "system",
-						time.Second*30, false, id)
+						time.Second*30, id)
 					if err != nil {
 						return
 					}

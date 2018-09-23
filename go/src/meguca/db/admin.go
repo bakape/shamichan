@@ -32,6 +32,14 @@ func logModeration(tx *sql.Tx, op uint64, e auth.ModLogEntry) (err error) {
 		if err != nil {
 			return
 		}
+		err = withTransaction(tx, sq.
+			Update("posts").
+			Set("moderated", true).
+			Where("id = ?", e.ID)).
+			Exec()
+		if err != nil {
+			return
+		}
 		err = bumpThread(tx, op, false)
 		if err != nil {
 			return
@@ -67,11 +75,6 @@ func moderatePost(id uint64, entry common.ModerationEntry,
 	}
 
 	return InTransaction(false, func(tx *sql.Tx) (err error) {
-		err = withTransaction(tx, sq.Update("posts").Set("moderated", true)).
-			Exec()
-		if err != nil {
-			return
-		}
 		if query != nil {
 			err = withTransaction(tx, query.Where("id = ?", id)).Exec()
 			if err != nil {

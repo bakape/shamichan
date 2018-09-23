@@ -32,7 +32,7 @@ export default class ModPanel extends View<null> {
 					el.checked = false
 				}
 			},
-			{ passive: true })
+				{ passive: true })
 
 		const checkboxToggle = this.inputElement("showCheckboxes")
 		checkboxToggle.checked = displayCheckboxes
@@ -80,9 +80,11 @@ export default class ModPanel extends View<null> {
 				break
 			case "ban":
 				if (checked.length) {
-					const args = HidableForm.forms["ban"].vals()
-					args["ids"] = mapToIDs(models)
-					await this.postJSON("/api/ban", args)
+					const args = HidableForm.forms["ban"].vals();
+					for (let id of mapToIDs(models)) {
+						args["id"] = id;
+						await this.postJSON("/api/ban", args);
+					}
 				}
 				break
 			case "notification":

@@ -996,6 +996,13 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`alter table bans drop constraint bans_pkey`,
+			createIndex("bans", "ip"),
+			createIndex("bans", "board"),
+		)
+	},
 }
 
 func createIndex(table, column string) string {

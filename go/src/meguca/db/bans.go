@@ -17,18 +17,16 @@ var (
 	bansMu   sync.RWMutex
 )
 
-func writeBan(tx *sql.Tx, op uint64, ip string, log bool,
-	entry auth.ModLogEntry,
+func writeBan(tx *sql.Tx, op uint64, ip string, entry auth.ModLogEntry,
 ) (err error) {
 	expires := time.Now().UTC().Add(time.Second * time.Duration(entry.Length))
 	err = withTransaction(tx,
 		sq.Insert("bans").
 			Columns("ip", "board", "forPost", "reason", "by", "expires").
-			Values(ip, entry.Board, entry.ID, entry.Data, entry.By, expires).
-			Suffix("on conflict do nothing"),
+			Values(ip, entry.Board, entry.ID, entry.Data, entry.By, expires),
 	).
 		Exec()
-	if err != nil || !log {
+	if err != nil {
 		return
 	}
 
@@ -37,24 +35,21 @@ func writeBan(tx *sql.Tx, op uint64, ip string, log bool,
 }
 
 // Propagate ban updates through DB and disconnect all banned IPs
-func propagateBans(board string, ips ...string) error {
-	if len(ips) != 0 {
-		if _, err := db.Exec(`notify bans_updated`); err != nil {
-			return err
-		}
+func propagateBans(board string, ip string) (err error) {
+	_, err = db.Exec(`notify bans_updated`)
+	if err != nil {
+		return
 	}
 	if !IsTest {
-		for _, ip := range ips {
-			auth.DisconnectByBoardAndIP(ip, board)
-		}
+		auth.DisconnectByBoardAndIP(ip, board)
 	}
-	return nil
+	return
 }
 
 // SystemBan automatically bans an IP
 func SystemBan(ip, reason string, length time.Duration) (err error) {
 	err = InTransaction(false, func(tx *sql.Tx) error {
-		return writeBan(tx, 0, ip, true, auth.ModLogEntry{
+		return writeBan(tx, 0, ip, auth.ModLogEntry{
 			ModerationEntry: common.ModerationEntry{
 				Type:   common.BanPost,
 				Data:   reason,
@@ -73,73 +68,39 @@ func SystemBan(ip, reason string, length time.Duration) (err error) {
 
 // Ban IPs from accessing a specific board. Need to target posts. Returns all
 // banned IPs.
-func Ban(board, reason, by string, length time.Duration, log bool,
-	ids ...uint64,
+func Ban(board, reason, by string, length time.Duration, id uint64,
 ) (err error) {
-	type post struct {
-		id, op uint64
-		ip     string
+	ip, err := GetIP(id)
+	switch err {
+	case nil:
+	case sql.ErrNoRows:
+		return nil
+	default:
+		return
 	}
-
-	// Retrieve matching posts
-	var (
-		ips   = make(map[string]bool, len(ids))
-		posts = make([]post, 0, len(ids))
-		ip    string
-	)
-	for _, id := range ids {
-		ip, err = GetIP(id)
-		switch err {
-		case nil:
-		case sql.ErrNoRows:
-			err = nil
-			continue
-		default:
-			return
-		}
-		ips[ip] = true
-		posts = append(posts, post{
-			id: id,
-			ip: ip,
-		})
-	}
-
-	// Retrieve their OPs
-	for i := range posts {
-		posts[i].op, err = GetPostOP(posts[i].id)
-		if err != nil {
-			return
-		}
+	op, err := GetPostOP(id)
+	if err != nil {
+		return
 	}
 
 	// Write ban messages to posts and ban table
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		for _, post := range posts {
-			err = writeBan(tx, post.op, post.ip, log, auth.ModLogEntry{
-				ModerationEntry: common.ModerationEntry{
-					Type:   common.BanPost,
-					Length: uint64(length / time.Second),
-					By:     by,
-					Data:   reason,
-				},
-				Board: board,
-				ID:    post.id,
-			})
-			if err != nil {
-				return
-			}
-		}
-		return
+		return writeBan(tx, op, ip, auth.ModLogEntry{
+			ModerationEntry: common.ModerationEntry{
+				Type:   common.BanPost,
+				Length: uint64(length / time.Second),
+				By:     by,
+				Data:   reason,
+			},
+			Board: board,
+			ID:    id,
+		})
 	})
 	if err != nil {
 		return
 	}
 
-	ipArr := make([]string, 0, len(ips))
-	for ip := range ips {
-		ipArr = append(ipArr, ip)
-	}
-	return propagateBans(board, ipArr...)
+	return propagateBans(board, ip)
 }
 
 // Unban lifts a ban from a specific post on a specific board
@@ -180,8 +141,10 @@ func loadBans() error {
 
 func selectBans(colums ...string) squirrel.SelectBuilder {
 	return sq.Select(colums...).
+		Options("distinct on (ip, board)").
 		From("bans").
-		Where("expires > now() at time zone 'utc'")
+		Where("expires > now() at time zone 'utc'").
+		OrderBy("ip", "board", "expires desc")
 }
 
 // RefreshBanCache loads up to date bans from the database and caches them in

@@ -1,19 +1,19 @@
 // Time related aids
 import lang from '../lang'
-import { pluralize } from "."
 
 export function secondsToTime(s: number): string {
-    const divide = [60, 24, 30, 12],
-    unit = ['minute', 'hour', 'day', 'month']
-    let time = Math.round(s) / 60
+    const divide = [60, 24, 30, 12];
+    const unit = ['minute', 'hour', 'day', 'month'];
+    let time = s / 60;
+
+    const format = (key: string) =>
+        `${time.toFixed(1)} ${lang.plurals[key][1]}`;
 
     for (let i = 0; i < divide.length; i++) {
         if (time < divide[i]) {
-            return pluralize(parseInt(time.toFixed(0), 10), lang.plurals[unit[i]])
+            return format(unit[i]);
         }
-
-        time = Math.round(time / divide[i])
+        time /= divide[i];
     }
-
-    return pluralize(parseInt(time.toFixed(0), 10), lang.plurals["year"])
+    return format("year");
 }
