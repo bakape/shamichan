@@ -221,22 +221,22 @@ export default class FormModel extends Post {
 	// Paste text to the text body
 	public paste(sel: string) {
 		const start = this.view.input.selectionStart,
-			end = this.view.input.selectionEnd,
-			old = this.view.input.value
+		end = this.view.input.selectionEnd,
+		old = this.view.input.value
 		let p = modPaste(old, sel, end)
+
 		if (!p) {
 			return
 		}
 
-		if (start != end) {
-			p.body = old.slice(0, start) + p.body + old.slice(end)
-			p.pos -= start
-		} else {
-			p.body = old.slice(0, end) + p.body + old.slice(end)
-		}
 		if (p.body.length > 2000) {
 			p.body = this.trimInput(p.body, false);
 			p.pos = 2000;
+		} else if (start != end) {
+			p.body = old.slice(0, start) + p.body + old.slice(end)
+			p.pos -= (end - start)
+		} else {
+			p.body = old.slice(0, end) + p.body + old.slice(end)
 		}
 
 		this.view.replaceText(p.body, p.pos,
