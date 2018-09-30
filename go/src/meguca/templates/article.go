@@ -154,9 +154,9 @@ func streampostModeration(qw *quicktemplate.Writer, e common.ModerationEntry) {
 
 // Returns human readable time
 func secondsToTime(s uint64) string {
-	divide := [4]float64{60, 24, 30, 12}
-	unit := [4]string{"minute", "hour", "day", "month"}
-	time := float64(s) / 60
+	divide := [5]float64{60, 60, 24, 30, 12}
+	unit := [5]string{"second", "minute", "hour", "day", "month"}
+	time := float64(s)
 
 	format := func(key string) string {
 		tmp := fmt.Sprintf("%.1f", time)
@@ -164,7 +164,10 @@ func secondsToTime(s uint64) string {
 
 		if strings.Contains(tmp, ".0") {
 			tmp = tmp[:len(tmp) - 2]
-			plural = lang.Get().Common.Plurals[key][0]
+
+			if tmp == "1" {
+				plural = lang.Get().Common.Plurals[key][0]
+			}
 		}
 
 		return fmt.Sprintf("%s %s", tmp, plural)
@@ -174,8 +177,10 @@ func secondsToTime(s uint64) string {
 		if time < divide[i] {
 			return format(unit[i])
 		}
+
 		time /= divide[i]
 	}
+
 	return format("year")
 }
 
