@@ -264,7 +264,7 @@ export default class PostView extends ImageHandler {
             let s: string;
             switch (type) {
                 case ModerationAction.banPost:
-                    s = this.format('banned', by, secondsToTime(length), data);
+                    s = this.format('banned', by, secondsToTime(length).toUpperCase(), data);
                     break;
                 case ModerationAction.deletePost:
                     s = this.format('deleted', by);

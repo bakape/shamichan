@@ -7,6 +7,7 @@ import (
 	"meguca/common"
 	"meguca/lang"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/valyala/quicktemplate"
@@ -129,7 +130,7 @@ func streampostModeration(qw *quicktemplate.Writer, e common.ModerationEntry) {
 	f := ln.Format
 	switch e.Type {
 	case common.BanPost:
-		fmt.Fprintf(w, f["banned"], e.By, secondsToTime(e.Length), e.Data)
+		fmt.Fprintf(w, f["banned"], e.By, strings.ToUpper(secondsToTime(e.Length)), e.Data)
 	case common.DeletePost:
 		fmt.Fprintf(w, f["deleted"], e.By)
 	case common.DeleteImage:
@@ -153,20 +154,33 @@ func streampostModeration(qw *quicktemplate.Writer, e common.ModerationEntry) {
 
 // Returns human readable time
 func secondsToTime(s uint64) string {
-	divide := [4]float64{60, 24, 30, 12}
-	unit := [4]string{"minute", "hour", "day", "month"}
-	time := float64(s) / 60
+	divide := [5]float64{60, 60, 24, 30, 12}
+	unit := [5]string{"second", "minute", "hour", "day", "month"}
+	time := float64(s)
 
 	format := func(key string) string {
-		return fmt.Sprintf("%.1f %s", time, lang.Get().Common.Plurals[key][1])
+		tmp := fmt.Sprintf("%.1f", time)
+		plural := lang.Get().Common.Plurals[key][1]
+
+		if strings.Contains(tmp, ".0") {
+			tmp = tmp[:len(tmp) - 2]
+
+			if tmp == "1" {
+				plural = lang.Get().Common.Plurals[key][0]
+			}
+		}
+
+		return fmt.Sprintf("%s %s", tmp, plural)
 	}
 
 	for i := 0; i < len(divide); i++ {
 		if time < divide[i] {
 			return format(unit[i])
 		}
+
 		time /= divide[i]
 	}
+
 	return format("year")
 }
 
