@@ -6,7 +6,7 @@
 		"imageSpoilered": "IMAGE SPOILERED BY '%s'",
 		"purgedPost": "POST PURGED BY '%s' FOR \"%s\"",
 		"threadLockToggled": "THREAD %s BY '%s'",
-		"viewedSameIP": "POST OF THE SAME IP VIEWED BY '%s'"
+		"viewedSameIP": "POSTS OF THE SAME IP WERE VIEWED BY '%s'"
 	},
 	"forms": {},
 	"plurals": {
