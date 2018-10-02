@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"meguca/common"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -138,7 +139,7 @@ func bumpThread(tx *sql.Tx, id uint64, bump bool) (err error) {
 			return
 		}
 
-		if postCount < 3000 {
+		if postCount < common.BumpLimit {
 			q = q.Set("bumpTime", now)
 		}
 	}

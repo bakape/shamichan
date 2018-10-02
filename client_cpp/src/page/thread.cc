@@ -37,7 +37,8 @@ void render_thread()
 
     if (!thread.locked) {
         Node({
-                 "aside", { { "class", "act posting glass" } },
+                 "aside",
+                 { { "class", "act posting glass" } },
                  { { "a", lang.ui.at("reply") } },
              })
             .write_html(s);
@@ -50,7 +51,8 @@ void render_thread()
     n.children.push_back(render_button("#top", lang.ui.at("top")));
     n.children.push_back(render_last_100_link(page.board, page.thread));
     n.children.push_back({
-        "span", { { "id", "lock" }, { "style", "visibility: hidden;" } },
+        "span",
+        { { "id", "lock" }, { "style", "visibility: hidden;" } },
         lang.ui.at("lockedToBottom"),
     });
     n.write_html(s);
@@ -70,7 +72,7 @@ void render_post_counter()
             // Calculate expiry age
             const auto min = config.thread_expiry_min;
             const auto max = config.thread_expiry_max;
-            const double p = (double)(t.post_ctr) / 3000 - 1;
+            const double p = (double)(t.post_ctr) / 10000 - 1;
             double days = min + (-max + min) * p * p * p;
             if (t.deleted) {
                 days /= 3;
@@ -104,7 +106,7 @@ std::vector<Post*> ThreadView::get_list()
 {
     std::vector<Post*> re;
     re.reserve(1 << 9);
-    for (auto & [ _, p ] : posts) {
+    for (auto& [_, p] : posts) {
         if (p.op == thread_id) {
             re.push_back(&posts.at(p.id));
         }
@@ -130,7 +132,8 @@ std::vector<brunhild::View*> ThreadPageView::bottom_controls()
         new Button(lang.ui.at("return"), "."),
         new Button(lang.ui.at("catalog"), "catalog"),
         new brunhild::NodeView({
-            "span", { { "id", "lock" }, { "style", "visibility: hidden;" } },
+            "span",
+            { { "id", "lock" }, { "style", "visibility: hidden;" } },
             lang.ui.at("lockedToBottom"),
         }) };
 }

@@ -272,7 +272,7 @@ func deleteOldThreads() (err error) {
 					return
 				}
 				threshold := min +
-					(-max+min)*math.Pow(float64(postCtr)/3000-1, 3)
+					(-max+min)*math.Pow(float64(postCtr)/common.BumpLimit-1, 3)
 				if deleted.Bool {
 					threshold /= 3
 				}

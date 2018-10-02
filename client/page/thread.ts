@@ -54,7 +54,7 @@ export default function () {
 export function incrementPostCount(post: boolean, hasImage: boolean) {
     if (post) {
         postCtr++
-        if (postCtr < 3000) {
+        if (postCtr < 10000) {
             // An estimate, but good enough
             bumpTime = Math.floor(Date.now() / 1000)
         }
@@ -75,7 +75,7 @@ function renderPostCounter() {
             // Calculate expiry age
             const min = config.threadExpiryMin,
                 max = config.threadExpiryMax
-            let days = min + (-max + min) * (postCtr / 3000 - 1) ** 3
+            let days = min + (-max + min) * (postCtr / 10000 - 1) ** 3
             if (isDeleted) {
                 days /= 3
             }

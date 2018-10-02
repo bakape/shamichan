@@ -137,7 +137,7 @@ func (f *Feed) Start() (err error) {
 				f.cache.Posts[p.ID] = p.Post
 				if p.msg != nil { // Post not being reclaimed by a DC-ed client
 					f.write(p.msg)
-					if f.cache.PostCtr <= 3000 {
+					if f.cache.PostCtr <= common.BumpLimit {
 						f.cache.BumpTime = time.Now().Unix()
 					}
 					f.cache.PostCtr++
