@@ -59,14 +59,17 @@ static Node image_search_link(int i, const string& url)
     const static char* abbrev[6] = { "G", "Iq", "Sn", "Wa", "Ds", "Ex" };
     const static char* url_starts[6] = {
         "https://www.google.com/searchbyimage?image_url=",
-        "http://iqdb.org/?url=", "http://saucenao.com/search.php?db=999&url=",
-        "https://whatanime.ga/?url=", "https://desuarchive.org/_/search/image/",
+        "http://iqdb.org/?url=",
+        "http://saucenao.com/search.php?db=999&url=",
+        "https://trace.moe/?url=",
+        "https://desuarchive.org/_/search/image/",
         "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
     };
 
     return Node("a",
         {
-            { "target", "_blank" }, { "rel", "nofollow" },
+            { "target", "_blank" },
+            { "rel", "nofollow" },
             { "href", url_starts[i] + url },
         },
         abbrev[i]);
@@ -190,7 +193,7 @@ Node PostView::render_file_info()
     }
 
     // Media dimensions
-    if (const auto[w, h, _, __] = img.dims; w && h) {
+    if (const auto [w, h, _, __] = img.dims; w && h) {
         COMMA
         s << w << 'x' << h;
     }
@@ -232,7 +235,8 @@ static Node render_thumbnail(const Image& img)
     return {
         "img",
         {
-            { "src", thumb }, { "width", std::to_string(w) },
+            { "src", thumb },
+            { "width", std::to_string(w) },
             { "height", std::to_string(h) },
         },
     };
@@ -265,8 +269,11 @@ static void render_expanded(
             {
                 "audio",
                 {
-                    { "autoplay", "" }, { "controls", "" }, { "loop`", "" },
-                    { "src", src }, { "onloadstart", format_volume_setter() },
+                    { "autoplay", "" },
+                    { "controls", "" },
+                    { "loop`", "" },
+                    { "src", src },
+                    { "onloadstart", format_volume_setter() },
                 },
             },
         };
@@ -277,7 +284,9 @@ static void render_expanded(
         inner = {
             "video",
             {
-                { "autoplay", "" }, { "controls", "" }, { "loop`", "" },
+                { "autoplay", "" },
+                { "controls", "" },
+                { "loop`", "" },
                 { "onloadstart", format_volume_setter() },
             },
         };
@@ -307,12 +316,14 @@ std::tuple<Node, optional<Node>> PostView::render_image()
     const string id_str = std::to_string(m->id);
     inner.attrs["data-id"] = id_str;
     Node n({
-        "figure", {},
+        "figure",
+        {},
         {
             {
                 "a",
                 {
-                    { "href", img.source_path() }, { "target", "_blank" },
+                    { "href", img.source_path() },
+                    { "target", "_blank" },
                     { "data-id", id_str },
                 },
                 { inner },
@@ -329,7 +340,7 @@ std::tuple<Node, optional<Node>> PostView::render_image()
     if (!res) {                                                                \
         return;                                                                \
     }                                                                          \
-    auto[model, view] = *res;                                                  \
+    auto [model, view] = *res;                                                 \
     if (!model->image) {                                                       \
         return;                                                                \
     }

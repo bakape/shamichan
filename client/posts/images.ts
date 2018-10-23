@@ -250,7 +250,7 @@ export default class ImageHandler extends View<Post> {
 		)
 		whatanime.setAttribute(
 			"href",
-			"https://whatanime.ga/?url=" + url,
+			"https://trace.moe/?url=" + url,
 		)
 
 		if (desuarchive) {
