@@ -54,36 +54,6 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf(`/%s/%d`, req.Board, post.ID), 303)
 }
 
-// Authenticate a captcha solution
-func authenticateCaptcha(w http.ResponseWriter, r *http.Request) {
-	err := func() (err error) {
-		err = r.ParseForm()
-		if err != nil {
-			return common.StatusError{err, 400}
-		}
-		ip, err := auth.GetIP(r)
-		if err != nil {
-			return
-		}
-		err = db.AuthenticateCaptcha(extractCaptcha(r), ip)
-		if err != nil {
-			return
-		}
-		db.ResetSpamScore(ip)
-		return
-	}()
-	if err != nil {
-		httpError(w, r, err)
-	}
-}
-
-func extractCaptcha(r *http.Request) auth.Captcha {
-	return auth.Captcha{
-		CaptchaID: r.Form.Get("captchaID"),
-		Solution:  r.Form.Get("captcha"),
-	}
-}
-
 // ok = false, if failed and caller should return
 func parsePostCreationForm(w http.ResponseWriter, r *http.Request) (
 	req websockets.ReplyCreationRequest, ok bool,
@@ -120,11 +90,11 @@ func parsePostCreationForm(w http.ResponseWriter, r *http.Request) (
 	req = websockets.ReplyCreationRequest{
 		// HTTP uses "\r\n" for newlines, but "\r" is considered non-printable
 		// and raises parser.ErrContainsNonPrintable during parsing.
-		Body:    strings.Replace(f.Get("body"), "\r", "", -1),
-		Name:    f.Get("name"),
-		Sage:    f.Get("sage") == "on",
-		Captcha: extractCaptcha(r),
+		Body: strings.Replace(f.Get("body"), "\r", "", -1),
+		Name: f.Get("name"),
+		Sage: f.Get("sage") == "on",
 	}
+	req.Captcha.Solution.FromRequest(r)
 	if f.Get("staffTitle") == "on" {
 		req.SessionCreds = extractLoginCreds(r)
 	}

@@ -2,11 +2,10 @@ package server
 
 import (
 	"database/sql"
-	"testing"
-
 	"meguca/cache"
 	"meguca/config"
 	"meguca/db"
+	"testing"
 )
 
 func TestThreadHTML(t *testing.T) {
@@ -172,7 +171,6 @@ func TestStaticTemplates(t *testing.T) {
 		{"create board", "/html/create-board"},
 		{"board navigation panel", "/html/board-navigation"},
 		{"change password", "/html/change-password"},
-		{"captcha confirmation", "/html/captcha"},
 	}
 
 	for i := range cases {

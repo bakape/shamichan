@@ -41,7 +41,7 @@ func runCleanupTasks() {
 func runMinuteTasks() {
 	if config.ImagerMode != config.ImagerOnly {
 		logError("open post cleanup", closeDanglingPosts())
-		expireRows("image_tokens", "bans", "captchas", "failed_captchas")
+		expireRows("image_tokens", "bans", "failed_captchas")
 	}
 }
 

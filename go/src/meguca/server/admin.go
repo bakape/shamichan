@@ -108,7 +108,7 @@ func canPerform(
 		return
 	}
 	if captcha != nil {
-		err = db.AuthenticateCaptcha(*captcha, ip)
+		err = db.ValidateCaptcha(*captcha, ip)
 		if err != nil {
 			httpError(w, r, errInvalidCaptcha)
 			return
@@ -299,7 +299,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
 	default:
-		err = db.AuthenticateCaptcha(msg.Captcha, ip)
+		err = db.ValidateCaptcha(msg.Captcha, ip)
 	}
 	if err != nil {
 		httpError(w, r, err)

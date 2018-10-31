@@ -61,7 +61,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		return
 	}
 
-	err = db.AuthenticateCaptcha(req.Captcha, ip)
+	err = db.ValidateCaptcha(req.Captcha, ip)
 	if err != nil {
 		return
 	}
@@ -142,7 +142,7 @@ func CreatePost(
 		return
 	}
 	if needCaptcha {
-		err = db.AuthenticateCaptcha(req.Captcha, ip)
+		err = db.ValidateCaptcha(req.Captcha, ip)
 		if err != nil {
 			return
 			// Captcha solved - reset spam score.
@@ -273,7 +273,7 @@ func (c *Client) submitCaptcha(data []byte) (err error) {
 		return
 	}
 
-	err = db.AuthenticateCaptcha(msg, c.ip)
+	err = db.ValidateCaptcha(msg, c.ip)
 	if err != nil {
 		return
 	}

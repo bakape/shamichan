@@ -153,17 +153,15 @@ func parseAssetForm(w http.ResponseWriter, r *http.Request, maxSize uint) (
 		r.Body,
 		int64(maxSize)*common.MaxAssetSize,
 	)
-	if err := r.ParseMultipartForm(0); err != nil {
+	err := r.ParseMultipartForm(0)
+	if err != nil {
 		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
 
-	f := r.Form
-	board = f.Get("board")
-	_, ok = canPerform(w, r, board, auth.BoardOwner, &auth.Captcha{
-		CaptchaID: f.Get("captchaID"),
-		Solution:  f.Get("captcha"),
-	})
+	var c auth.Captcha
+	c.FromRequest(r)
+	_, ok = canPerform(w, r, r.Form.Get("board"), auth.BoardOwner, &c)
 	return
 }
 

@@ -1003,6 +1003,17 @@ var migrations = []func(*sql.Tx) error{
 			createIndex("bans", "board"),
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		err = patchConfigs(tx, func(conf *config.Configs) {
+			conf.CaptchaTags = config.Defaults.CaptchaTags
+			conf.OverrideCaptchaTags = map[string][]string{}
+		})
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec(`drop table captchas`)
+		return
+	},
 }
 
 func createIndex(table, column string) string {

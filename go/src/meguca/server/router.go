@@ -89,6 +89,12 @@ func createRouter() http.Handler {
 		api.POST("/create-reply", createReply)
 
 		assets.GET("/images/*path", serveImages)
+
+		// Captcha API
+		captcha := api.NewGroup("/captcha")
+		captcha.GET("/:board", serveNewCaptcha)
+		captcha.POST("/:board", authenticateCaptcha)
+		captcha.GET("/confirmation", renderCaptchaConfirmation)
 	}
 	if config.ImagerMode != config.ImagerOnly {
 		// HTML
@@ -112,7 +118,6 @@ func createRouter() http.Handler {
 		html.GET("/owned-boards/:userID", ownedBoardSelection)
 		html.GET("/create-board", boardCreationForm)
 		html.GET("/change-password", changePasswordForm)
-		html.GET("/captcha", renderCaptcha)
 		html.POST("/configure-board/:board", boardConfigurationForm)
 		html.POST("/configure-server", serverConfigurationForm)
 		html.GET("/assign-staff/:board", staffAssignmentForm)
@@ -176,17 +181,6 @@ func createRouter() http.Handler {
 		redir := api.NewGroup("/redirect")
 		redir.POST("/by-ip", redirectByIP)
 		redir.POST("/by-thread", redirectByThread)
-
-		// Captcha API
-		captcha := api.NewGroup("/captcha")
-		captcha.POST("", authenticateCaptcha)
-		captcha.GET("/new", db.NewCaptchaID)
-		captcha.GET("/image/*path", db.ServeCaptcha)
-
-		// Noscript captcha API
-		NSCaptcha := captcha.NewGroup("/noscript")
-		NSCaptcha.GET("/load", noscriptCaptchaLink)
-		NSCaptcha.GET("/new", noscriptCaptcha)
 
 		// Assets
 		assets.GET("/banners/:board/:id", serveBanner)

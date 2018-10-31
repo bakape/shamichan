@@ -252,18 +252,6 @@ func changePasswordForm(w http.ResponseWriter, r *http.Request) {
 	templates.ChangePassword(w)
 }
 
-// Render a form with nothing but captcha and confirmation buttons
-func renderCaptcha(w http.ResponseWriter, r *http.Request) {
-	setHTMLHeaders(w)
-	templates.WriteCaptchaConfirmation(w)
-}
-
-// Render a link to request a new captcha
-func noscriptCaptchaLink(w http.ResponseWriter, r *http.Request) {
-	setHTMLHeaders(w)
-	templates.WriteNoscriptCaptchaLink(w)
-}
-
 func bannerSettingForm(w http.ResponseWriter, r *http.Request) {
 	setHTMLHeaders(w)
 	templates.WriteBannerForm(w)
@@ -272,15 +260,4 @@ func bannerSettingForm(w http.ResponseWriter, r *http.Request) {
 func loadingAnimationForm(w http.ResponseWriter, r *http.Request) {
 	setHTMLHeaders(w)
 	templates.WriteLoadingAnimationForm(w)
-}
-
-// Render the captcha for noscript browsers
-func noscriptCaptcha(w http.ResponseWriter, r *http.Request) {
-	ip, err := auth.GetIP(r)
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-	setHTMLHeaders(w)
-	templates.WriteNoscriptCaptcha(w, ip)
 }
