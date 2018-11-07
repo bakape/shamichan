@@ -1,12 +1,14 @@
 import { on, scrollToElement } from '../../util'
-import { CaptchaView } from "../../ui"
 
 function expand(e: Event) {
 	const el = (e.target as HTMLElement).closest("aside")
-	el.classList.add("expanded")
+	el.classList.add("expanded");
 	const c = el.querySelector(".captcha-container") as HTMLElement
 	if (c) {
-		new CaptchaView(c)
+		const ns = c.querySelector("noscript");
+		if (ns) {
+			c.innerHTML = ns.innerHTML;
+		}
 	}
 }
 

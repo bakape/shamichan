@@ -445,7 +445,6 @@
 		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
 		"by": "By",
 		"captcha": "Captcha",
-		"captchaID": "Captcha ID",
 		"changePassword": "Zmień hasło",
 		"clear": "Clear",
 		"configureBoard": "Konfiguracja działu",

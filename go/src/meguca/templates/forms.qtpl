@@ -73,7 +73,6 @@ CaptchaConfirmation renders a confirmation form with an optional captcha
 		<noscript>
 			<iframe width="462" height="525" scrolling="no" marginwidth="0" marginheight="0" src="/api/captcha/all"></iframe>
 		</noscript>
-		<input style="width:462px;" type="text" name="captchouli-id" placeholder="{%s= lang.Get().UI["captchaID"] %}" required>
 	</div>
 {% endstripspace %}{% endfunc %}
 

@@ -1,8 +1,8 @@
 export * from "./banner"
-export { default as FormView } from "./forms"
+export { default as FormView, FormAttrs } from "./forms"
 export { postAdded } from "./tab"
 export { default as notifyAboutReply, OverlayNotification } from "./notification"
-export { default as CaptchaView } from "./captcha"
+export { renderCaptchaForm } from "./captcha"
 
 import initKeyboard from "./keyboard"
 import initTab from "./tab"

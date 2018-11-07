@@ -76,7 +76,10 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, int64(config.Get().MaxSize<<20))
 
 		id, err = ParseUpload(r)
-		return
+		if err != nil {
+			return
+		}
+		return incrementSpamScore(r)
 	}()
 	if err != nil {
 		LogError(w, r, err)
@@ -102,8 +105,6 @@ func validateUploader(r *http.Request) (err error) {
 	if need {
 		return common.StatusError{errors.New("captcha required"), 403}
 	}
-	db.IncrementSpamScore(ip,
-		time.Duration(config.Get().ImageScore)*time.Millisecond)
 	return
 }
 
@@ -134,6 +135,10 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		err = incrementSpamScore(r)
+		if err != nil {
+			return
+		}
 		token, err := db.NewImageToken(hash)
 		if err != nil {
 			return
@@ -144,6 +149,16 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		LogError(w, r, err)
 	}
+}
+
+func incrementSpamScore(r *http.Request) (err error) {
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		return
+	}
+	db.IncrementSpamScore(ip,
+		time.Duration(config.Get().ImageScore)*time.Millisecond)
+	return
 }
 
 // LogError send the client file upload errors and logs them server-side
@@ -186,10 +201,10 @@ func ParseUpload(req *http.Request) (string, error) {
 	if err != nil {
 		return "", common.StatusError{err, 400}
 	}
+	defer file.Close()
 	if uint(head.Size) > max {
 		return "", common.StatusError{errTooLarge, 413}
 	}
-	defer file.Close()
 	res := <-requestThumbnailing(file, int(head.Size))
 	return res.imageID, res.err
 }

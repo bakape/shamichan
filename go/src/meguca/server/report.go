@@ -7,6 +7,7 @@ import (
 	"meguca/templates"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // Report a post for rule violations
@@ -24,10 +25,13 @@ func report(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
-	var c auth.Captcha
-	c.FromRequest(r)
-	err = db.ValidateCaptcha(c, ip)
+
+	has, err := db.SolvedCaptchaRecently(ip, time.Minute)
 	if err != nil {
+		httpError(w, r, err)
+		return
+	}
+	if !has {
 		httpError(w, r, errInvalidCaptcha)
 		return
 	}

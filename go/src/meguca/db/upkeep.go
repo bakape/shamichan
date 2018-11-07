@@ -49,6 +49,7 @@ func runHalfTasks() {
 	if config.ImagerMode != config.ImagerOnly {
 		logError("unrestrict pyu_limit", FreePyuLimit())
 		logError("expire spam scores", expireSpamScores())
+		logError("expire last solved captcha times", expireLastSolvedCaptchas())
 	}
 }
 

@@ -8,9 +8,6 @@ let visible: BannerModal
 
 // A modal element, that is positioned fixed right beneath the banner
 export class BannerModal extends View<null> {
-	// Hook to execute, when the the modal is displayed
-	protected showHook: () => void
-
 	constructor(el: HTMLElement) {
 		super({ el })
 		bannerModals[this.id] = this
@@ -39,9 +36,6 @@ export class BannerModal extends View<null> {
 	private show() {
 		this.el.style.display = 'block'
 		visible = this
-		if (this.showHook) {
-			this.showHook()
-		}
 	}
 
 	// Hide the element
@@ -53,9 +47,6 @@ export class BannerModal extends View<null> {
 
 // A view that supports switching between multiple tabs
 export class TabbedModal extends BannerModal {
-	// Hook a function to execute on tab switching
-	protected tabHook: (id: number) => void
-
 	constructor(el: HTMLElement) {
 		super(el)
 		this.onClick({
@@ -81,10 +72,6 @@ export class TabbedModal extends BannerModal {
 				continue
 			}
 			el.classList.add("tab-sel")
-		}
-
-		if (this.tabHook) {
-			this.tabHook(parseInt(id))
 		}
 	}
 }

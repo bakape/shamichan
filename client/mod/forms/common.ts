@@ -11,7 +11,6 @@ export abstract class AccountForm extends FormView {
 	protected render() {
 		accountPanel.toggleMenu(false)
 		accountPanel.el.append(this.el)
-		this.initCaptcha()
 	}
 
 	// Render a simple publicly available form, that does not require to
@@ -42,7 +41,6 @@ export abstract class AccountForm extends FormView {
 	// Use fn to add any data to the request object.
 	protected async postResponse(url: string, fn: (data: {}) => void) {
 		const data = {}
-		this.injectCaptcha(data)
 		fn(data)
 		await this.handlePostResponse(await postJSON(url, data))
 	}

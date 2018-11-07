@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/bakape/captchouli"
 )
 
 func TestCaptchaService(t *testing.T) {
@@ -32,6 +34,7 @@ func TestCaptchaService(t *testing.T) {
 	if CaptchaService("a") == nil {
 		t.Fatal()
 	}
+	CreateTestCaptcha(t)
 }
 
 func TestDecodeCaptcha(t *testing.T) {
@@ -45,7 +48,7 @@ func TestDecodeCaptcha(t *testing.T) {
 	b64 := base64.StdEncoding.EncodeToString(std.CaptchaID[:])
 
 	q := url.Values{
-		"captchouli-id": {b64},
+		captchouli.IDKey: {b64},
 	}
 	for _, i := range std.Solution {
 		q.Set(fmt.Sprintf("captchouli-%d", i), "on")

@@ -1,12 +1,22 @@
 package db
 
 import (
+	"database/sql"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"time"
 
 	"github.com/bakape/captchouli"
+)
+
+const (
+	// Period for how long to keep records of any captcha being solved withing
+	// this period
+	lastSolvedCaptchaRetention = time.Hour * 3
+
+	// Limit of allowed incorrect captchas per hour
+	incorrectCaptchaLimit = 10
 )
 
 // ValidateCaptcha with captcha backend
@@ -17,7 +27,17 @@ func ValidateCaptcha(req auth.Captcha, ip string) (err error) {
 	err = captchouli.CheckCaptcha(req.CaptchaID, req.Solution)
 	switch err {
 	case nil:
-		return
+		_, err = sq.Insert("last_solved_captchas").
+			Columns("ip").
+			Values(ip).
+			Suffix(
+				`on conflict (ip) do
+				update set time = now() at time zone 'utc'`).
+			Exec()
+		if err != nil {
+			return
+		}
+		return resetSpamScore(ip)
 	case captchouli.ErrInvalidSolution:
 		_, err = sq.Insert("failed_captchas").
 			Columns("ip", "expires").
@@ -36,7 +56,7 @@ func ValidateCaptcha(req auth.Captcha, ip string) (err error) {
 		if err != nil {
 			return
 		}
-		if count >= 6 {
+		if count >= incorrectCaptchaLimit {
 			err = SystemBan(ip, "bot detected", time.Hour*48)
 			if err != nil {
 				return
@@ -47,4 +67,24 @@ func ValidateCaptcha(req auth.Captcha, ip string) (err error) {
 	default:
 		return
 	}
+}
+
+// Returns, if IP has solved a captcha within the last dur
+func SolvedCaptchaRecently(ip string, dur time.Duration) (has bool, err error) {
+	err = sq.Select("true").
+		From("last_solved_captchas").
+		Where("ip = ? and time > ?", ip, time.Now().UTC().Add(-dur)).
+		QueryRow().
+		Scan(&has)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
+	return
+}
+
+func expireLastSolvedCaptchas() (err error) {
+	_, err = sq.Delete("last_solved_captchas").
+		Where("time < ?", time.Now().UTC().Add(-lastSolvedCaptchaRetention)).
+		Exec()
+	return
 }

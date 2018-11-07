@@ -182,8 +182,8 @@ export const specs: { [id: string]: OptionSpec } = {
 				el = document
 					.getElementById("custom-CSS-style") as HTMLStyleElement
 			}
-			el.innerHTML = options.customCSS
-			el.disabled = !on
+			el.innerHTML = options.customCSS;
+			(el as any).disabled = !on
 		},
 	},
 	customCSS: {
@@ -302,6 +302,6 @@ function toggleHeadStyle(
 
 		// The disabled property only exists on elements in the DOM, so we do
 		// another query
-		(document.getElementById(id) as HTMLStyleElement).disabled = !toggle
+		(document.getElementById(id) as any).disabled = !toggle
 	}
 }

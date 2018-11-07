@@ -1,7 +1,8 @@
-import { View, ViewAttrs } from "../../base"
+import { View } from "../../base"
 import { makeFrag, postJSON } from "../../util"
 import { AccountForm } from "./common"
 import { loginID } from "../common"
+import { FormAttrs } from "../../ui";
 
 // Render the <select> for picking the owned board you want to manipulate
 class OwnedBoardSelection extends View<null> {
@@ -49,7 +50,8 @@ abstract class SelectedBoardForm extends AccountForm {
 
 	public abstract renderNext(board: string): void
 
-	constructor(attrs: ViewAttrs) {
+	constructor(attrs: FormAttrs) {
+		attrs.needCaptcha = true;
 		attrs.tag = "form"
 		super(attrs)
 		this.boardSelector = new OwnedBoardSelection(this)
@@ -70,7 +72,6 @@ export class BoardConfigForm extends SelectedBoardForm {
 			case 200:
 				const frag = makeFrag(await res.text())
 				this.el.append(frag)
-				this.initCaptcha()
 				break
 			case 403:
 				this.handle403()
@@ -93,7 +94,7 @@ export class BoardDeletionForm extends SelectedBoardForm {
 	}
 
 	public renderNext(board: string) {
-		this.renderPublicForm("/html/captcha")
+		this.renderPublicForm("/api/captcha/confirmation")
 	}
 
 	protected send() {
@@ -150,7 +151,10 @@ export class FormDataForm extends SelectedBoardForm {
 // Panel view for creating boards
 export class BoardCreationForm extends AccountForm {
 	constructor() {
-		super({ tag: "form" })
+		super({
+			tag: "form",
+			needCaptcha: true,
+		})
 		this.renderPublicForm("/html/create-board")
 	}
 

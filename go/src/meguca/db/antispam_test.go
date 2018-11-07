@@ -1,6 +1,7 @@
 package db
 
 import (
+	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	. "meguca/test"
@@ -11,18 +12,39 @@ import (
 )
 
 func TestSpamScores(t *testing.T) {
-	assertTableClear(t, "spam_scores")
+	config.Set(config.Configs{
+		CaptchaTags: config.Defaults.CaptchaTags,
+		Public: config.Public{
+			Captcha: true,
+		},
+	})
+	assertTableClear(t, "spam_scores", "last_solved_captchas")
+	err := auth.LoadCaptchaServices()
+	if err != nil {
+		t.Fatal(err)
+	}
 	spamDetection := newListener(t, "spam_detected")
 	defer spamDetection.Close()
 	now := time.Now().Round(time.Second)
-	(*config.Get()).Captcha = true
+
+	for _, ip := range [...]string{
+		"226.209.126.221",
+		"131.215.1.14",
+		"99.188.17.210",
+		"71.189.25.162",
+	} {
+		err := ValidateCaptcha(auth.CreateTestCaptcha(t), ip)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 
 	for ip, score := range map[string]int64{
-		"131.215.1.14":  now.Add(-2 * spamDetectionThreshold).Unix(),
+		"131.215.1.14":  now.Add(-20 * spamDetectionThreshold).Unix(),
 		"99.188.17.210": now.Add(-5 * time.Second).Unix(),
 		"71.189.25.162": now.Add(10 * spamDetectionThreshold).Unix(),
 	} {
-		_, err := sq.Insert("spam_scores").
+		_, err = sq.Insert("spam_scores").
 			Columns("ip", "score").
 			Values(ip, score).
 			Exec()
@@ -38,44 +60,27 @@ func TestSpamScores(t *testing.T) {
 		"99.188.17.210":   time.Second * 10,
 		"71.189.25.162":   spamDetectionThreshold,
 	}
-	err := flushSpamScores()
+	err = flushSpamScores()
 	spamMu.Unlock()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	threshold := now.Add(-spamDetectionThreshold)
 	cases := [...]struct {
 		name, ip       string
-		start          time.Time
 		needCaptcha    bool
 		needCaptchaErr error
 	}{
-		{"fresh write", "226.209.126.221", threshold, false, nil},
-		{"overwrite stale value", "131.215.1.14", threshold, false, nil},
-		{"increment DB value", "99.188.17.210", now.Add(-5 * time.Second), true,
-			nil},
-		{"spam", "71.189.25.162", now.Add(10 * spamDetectionThreshold), true,
-			common.ErrSpamDected},
+		{"fresh write", "226.209.126.221", false, nil},
+		{"overwrite stale value", "131.215.1.14", false, nil},
+		{"increment DB value", "99.188.17.210", true, nil},
+		{"spam", "71.189.25.162", true, common.ErrSpamDected},
+		{"no captcha solved in 3h", "143.195.24.54", true, nil},
 	}
 
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			var res int64
-			err := sq.Select("score").
-				From("spam_scores").
-				Where("ip = ?", c.ip).
-				QueryRow().
-				Scan(&res)
-			if err != nil {
-				t.Fatal(err)
-			}
-			spamMu.RLock()
-			defer spamMu.RUnlock()
-			AssertDeepEquals(t, time.Unix(res, 0).String(),
-				c.start.Add(spamScoreBuffer[c.ip]).String())
-
 			need, err := NeedCaptcha(c.ip)
 			if err != c.needCaptchaErr {
 				UnexpectedError(t, err)
@@ -91,7 +96,7 @@ func TestSpamScores(t *testing.T) {
 
 	t.Run("clear score", func(t *testing.T) {
 		const ip = "99.188.17.210"
-		err := ResetSpamScore(ip)
+		err := resetSpamScore(ip)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -47,11 +47,6 @@ var (
 
 type boardActionRequest struct {
 	Board string
-	auth.Captcha
-}
-type boardConfigSettingRequest struct {
-	auth.Captcha
-	config.BoardConfigs
 }
 
 type boardCreationRequest struct {
@@ -72,16 +67,16 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
 
 // Set board-specific configurations to the user's owned board
 func configureBoard(w http.ResponseWriter, r *http.Request) {
-	var msg boardConfigSettingRequest
+	var msg config.BoardConfigs
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
 	msg.ID = extractParam(r, "board")
-	_, ok := canPerform(w, r, msg.ID, auth.BoardOwner, &msg.Captcha)
-	if !ok || !validateBoardConfigs(w, msg.BoardConfigs) {
+	_, ok := canPerform(w, r, msg.ID, auth.BoardOwner, true)
+	if !ok || !validateBoardConfigs(w, msg) {
 		return
 	}
-	if err := db.UpdateBoard(msg.BoardConfigs); err != nil {
+	if err := db.UpdateBoard(msg); err != nil {
 		httpError(w, r, err)
 		return
 	}
@@ -94,7 +89,7 @@ func canPerform(
 	r *http.Request,
 	board string,
 	level auth.ModerationLevel,
-	captcha *auth.Captcha,
+	needCaptcha bool,
 ) (
 	creds auth.SessionCreds, can bool,
 ) {
@@ -107,9 +102,13 @@ func canPerform(
 		httpError(w, r, err)
 		return
 	}
-	if captcha != nil {
-		err = db.ValidateCaptcha(*captcha, ip)
+	if needCaptcha {
+		has, err := db.SolvedCaptchaRecently(ip, time.Minute)
 		if err != nil {
+			httpError(w, r, err)
+			return
+		}
+		if !has {
 			httpError(w, r, errInvalidCaptcha)
 			return
 		}
@@ -149,7 +148,7 @@ func canModeratePost(
 		return
 	}
 
-	creds, can := canPerform(w, r, board, level, nil)
+	creds, can := canPerform(w, r, board, level, false)
 	if !can {
 		httpError(w, r, errAccessDenied)
 		return
@@ -242,7 +241,7 @@ func boardConfData(w http.ResponseWriter, r *http.Request) (
 		conf  config.BoardConfigs
 		board = extractParam(r, "board")
 	)
-	if _, ok := canPerform(w, r, board, auth.BoardOwner, nil); !ok {
+	if _, ok := canPerform(w, r, board, auth.BoardOwner, false); !ok {
 		return conf, false
 	}
 
@@ -299,7 +298,16 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 	case len(msg.Title) > 100:
 		err = errTitleTooLong
 	default:
-		err = db.ValidateCaptcha(msg.Captcha, ip)
+		var has bool
+		has, err = db.SolvedCaptchaRecently(ip, time.Minute)
+		if err != nil {
+			httpError(w, r, err)
+			return
+		}
+		if !has {
+			httpError(w, r, errInvalidCaptcha)
+			return
+		}
 	}
 	if err != nil {
 		httpError(w, r, err)
@@ -367,7 +375,7 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
-	creds, ok := canPerform(w, r, msg.Board, auth.BoardOwner, &msg.Captcha)
+	creds, ok := canPerform(w, r, msg.Board, auth.BoardOwner, true)
 	if !ok {
 		return
 	}
@@ -495,7 +503,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if _, ok := canPerform(w, r, board, auth.Moderator, nil); !ok {
+	if _, ok := canPerform(w, r, board, auth.Moderator, false); !ok {
 		return
 	}
 
@@ -534,7 +542,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &msg) {
 		return
 	}
-	_, ok := canPerform(w, r, msg.Board, auth.BoardOwner, &msg.Captcha)
+	_, ok := canPerform(w, r, msg.Board, auth.BoardOwner, true)
 	if !ok {
 		return
 	}
@@ -675,7 +683,7 @@ func detectCanPerform(
 // Unban a specific board -> banned post combination
 func unban(w http.ResponseWriter, r *http.Request) {
 	board := extractParam(r, "board")
-	creds, ok := canPerform(w, r, board, auth.BoardOwner, nil)
+	creds, ok := canPerform(w, r, board, auth.BoardOwner, false)
 	if !ok {
 		return
 	}
@@ -742,7 +750,7 @@ func decodeRedirect(w http.ResponseWriter, r *http.Request) (
 		ID  uint64
 		URL string
 	}
-	if _, can := canPerform(w, r, "all", auth.Admin, nil); !can {
+	if _, can := canPerform(w, r, "all", auth.Admin, false); !can {
 		return
 	}
 	if !decodeJSON(w, r, &msg) {

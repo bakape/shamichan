@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"meguca/config"
 	"net/http"
+	"net/http/httptest"
 	"sync"
+	"testing"
 
 	"github.com/bakape/captchouli"
 )
@@ -145,5 +147,22 @@ func LoadCaptchaServices() (err error) {
 	globalService = g
 	overrideServices = over
 
+	return
+}
+
+// Create a sample captcha for testing purposes and return it with its solution
+func CreateTestCaptcha(t *testing.T) (c Captcha) {
+	t.Helper()
+
+	r := httptest.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	err := CaptchaService("all").ServeNewCaptcha(w, r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.CaptchaID, c.Solution, err = captchouli.ExtractCaptcha(w.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
 	return
 }

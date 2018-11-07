@@ -33,17 +33,14 @@ func authenticateCaptcha(w http.ResponseWriter, r *http.Request) {
 		var c auth.Captcha
 		c.FromRequest(r)
 		err = db.ValidateCaptcha(c, ip)
-		switch err {
-		case nil:
-		case common.ErrInvalidCaptcha:
-			http.Redirect(w, r, r.RemoteAddr, 302)
-			return nil
-		default:
-			return
+		if err == common.ErrInvalidCaptcha {
+			b := extractParam(r, "board")
+			s := auth.CaptchaService(b)
+			if s == nil {
+				return errCaptchasNotReady(b)
+			}
+			return s.ServeNewCaptcha(w, r)
 		}
-
-		w.Write([]byte(r.Form.Get("captchouli-id")))
-		err = db.ResetSpamScore(ip)
 		return
 	}()
 	if err != nil {
@@ -70,10 +67,4 @@ func serveNewCaptcha(w http.ResponseWriter, r *http.Request) {
 func renderCaptchaConfirmation(w http.ResponseWriter, r *http.Request) {
 	setHTMLHeaders(w)
 	templates.WriteCaptchaConfirmation(w)
-}
-
-// Render a link to request a new captcha
-func noscriptCaptchaLink(w http.ResponseWriter, r *http.Request) {
-	setHTMLHeaders(w)
-	templates.WriteNoscriptCaptchaLink(w, extractParam(r, "board"))
 }

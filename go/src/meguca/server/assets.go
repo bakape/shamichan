@@ -159,9 +159,7 @@ func parseAssetForm(w http.ResponseWriter, r *http.Request, maxSize uint) (
 		return
 	}
 
-	var c auth.Captcha
-	c.FromRequest(r)
-	_, ok = canPerform(w, r, r.Form.Get("board"), auth.BoardOwner, &c)
+	_, ok = canPerform(w, r, r.Form.Get("board"), auth.BoardOwner, true)
 	return
 }
 

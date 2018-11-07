@@ -116,8 +116,12 @@ func login(w http.ResponseWriter, r *http.Request) {
 	case !trimLoginID(&req.ID):
 		return
 	}
-	err = db.ValidateCaptcha(req.Captcha, ip)
+	has, err := db.SolvedCaptchaRecently(ip, time.Minute)
 	if err != nil {
+		httpError(w, r, err)
+		return
+	}
+	if !has {
 		httpError(w, r, errInvalidCaptcha)
 		return
 	}
@@ -229,8 +233,12 @@ func checkPasswordAndCaptcha(
 		httpError(w, r, errInvalidPassword)
 		return false
 	}
-	err = db.ValidateCaptcha(captcha, ip)
+	has, err := db.SolvedCaptchaRecently(ip, time.Minute)
 	if err != nil {
+		httpError(w, r, err)
+		return false
+	}
+	if !has {
 		httpError(w, r, errInvalidCaptcha)
 		return false
 	}

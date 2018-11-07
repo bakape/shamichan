@@ -37,7 +37,6 @@ type ReplyCreationRequest struct {
 	Sage, Open bool
 	Image      ImageRequest
 	auth.SessionCreds
-	auth.Captcha
 	Name, Password, Body string
 }
 
@@ -60,22 +59,14 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	if err != nil {
 		return
 	}
-
-	err = db.ValidateCaptcha(req.Captcha, ip)
-	if err != nil {
-		return
-	}
-
 	conf, err := getBoardConfig(req.Board)
 	if err != nil {
 		return
 	}
-
 	post, err = constructPost(req.ReplyCreationRequest, conf, ip)
 	if err != nil {
 		return
 	}
-
 	subject, err := parser.ParseSubject(req.Subject)
 	if err != nil {
 		return
@@ -132,7 +123,6 @@ func computePosterID(p *db.Post) {
 func CreatePost(
 	op uint64,
 	board, ip string,
-	needCaptcha bool,
 	req ReplyCreationRequest,
 ) (
 	post db.Post, msg []byte, err error,
@@ -140,15 +130,6 @@ func CreatePost(
 	err = db.IsBanned(board, ip)
 	if err != nil {
 		return
-	}
-	if needCaptcha {
-		err = db.ValidateCaptcha(req.Captcha, ip)
-		if err != nil {
-			return
-			// Captcha solved - reset spam score.
-		} else if err = db.ResetSpamScore(ip); err != nil {
-			return
-		}
 	}
 
 	conf, err := getBoardConfig(board)
@@ -233,7 +214,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 	req.Open = true
 
 	_, op, board := feeds.GetSync(c)
-	post, msg, err := CreatePost(op, board, c.ip, false, req)
+	post, msg, err := CreatePost(op, board, c.ip, req)
 	if err != nil {
 		return
 	}
@@ -263,21 +244,6 @@ func (c *Client) insertPost(data []byte) (err error) {
 		conf.CharScore*uint(c.post.len))
 	c.setLastTime()
 	return
-}
-
-// Reset the IP's spam score, by submitting a captcha
-func (c *Client) submitCaptcha(data []byte) (err error) {
-	var msg auth.Captcha
-	err = decodeMessage(data, &msg)
-	if err != nil {
-		return
-	}
-
-	err = db.ValidateCaptcha(msg, c.ip)
-	if err != nil {
-		return
-	}
-	return db.ResetSpamScore(c.ip)
 }
 
 // If the client has a previous post, close it silently
