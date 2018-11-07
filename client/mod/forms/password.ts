@@ -4,7 +4,10 @@ import { validatePasswordMatch } from "../common"
 // View for changing a password
 export class PasswordChangeForm extends AccountForm {
 	constructor() {
-		super({ tag: "form" })
+		super({
+			tag: "form",
+			needCaptcha: true,
+		});
 		this.renderPublicForm("/html/change-password").then(() =>
 			validatePasswordMatch(this.el, "newPassword", "repeat"))
 	}
