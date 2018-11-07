@@ -26,10 +26,12 @@ func authenticateCaptcha(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return common.StatusError{err, 400}
 		}
+
 		ip, err := auth.GetIP(r)
 		if err != nil {
 			return
 		}
+
 		var c auth.Captcha
 		c.FromRequest(r)
 		err = db.ValidateCaptcha(c, ip)
@@ -41,6 +43,11 @@ func authenticateCaptcha(w http.ResponseWriter, r *http.Request) {
 			}
 			return s.ServeNewCaptcha(w, r)
 		}
+		if err != nil {
+			return
+		}
+
+		w.Write([]byte("OK"))
 		return
 	}()
 	if err != nil {

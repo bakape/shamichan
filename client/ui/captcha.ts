@@ -80,13 +80,15 @@ class CaptchaForm extends FormView {
 			body: this.query(body),
 			method: "POST"
 		});
+		const t = await res.text();
 		switch (res.status) {
 			case 200:
-				this.remove();
-				this.onSuccess();
-				break;
-			case 205:
-				this.el.innerHTML = await res.text();
+				if (t !== "OK") {
+					this.el.innerHTML = t;
+				} else {
+					this.remove();
+					this.onSuccess();
+				}
 				break;
 			default:
 				this.renderFormResponse(await res.text());
