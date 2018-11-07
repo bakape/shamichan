@@ -6,7 +6,7 @@ upstream meguca {
 	server 127.0.0.1:8000;
 }
 
-# Uncomment, if running image processing in a speparate process
+# Uncomment, if running image processing in a separate process
 #upstream imager {
 #        server 127.0.0.1:8001;
 #}
@@ -81,7 +81,7 @@ server {
 		proxy_set_header Connection $connection_upgrade;
 	}
 
-# Uncomment, if running image processing in a speparate process
+# Uncomment, if running image processing in a separate process
 #	location /api/upload {
 #		proxy_pass http://imager;
 #		proxy_buffering off;
@@ -113,6 +113,11 @@ server {
 #	}
 #
 #	location /assets/images {
+#		proxy_pass http://imager;
+#		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#	}
+#
+#	location /api/captcha {
 #		proxy_pass http://imager;
 #		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 #	}

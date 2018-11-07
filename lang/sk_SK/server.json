@@ -48,6 +48,10 @@
 			"Kapča",
 			"Požiadaj užívateľov aby vyplnili kapču pre určité úlohy ako je registrácia a vytváranie vláken"
 		],
+		"captchaTags": [
+			"Captcha tags",
+			"Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
+		],
 		"charScore": [
 			"Character spam score",
 			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
@@ -272,6 +276,10 @@
 			"Old password",
 			""
 		],
+		"overrideCaptchaTags": [
+			"Override Captcha Tags",
+			"Mapping of boards to tags to use as the solution on the specified board."
+		],
 		"owners": [
 			"Owners",
 			"Owner account IDs. Board owners have full access to all board controls. Must contain at least one."
@@ -445,7 +453,6 @@
 		"bannerSpecs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
 		"by": "By",
 		"captcha": "Kapča",
-		"captchaID": "Kapča ID",
 		"changePassword": "Zmeniť heslo",
 		"clear": "Vyčisti",
 		"configureBoard": "Nastaviť dosku",

@@ -22,34 +22,36 @@ func logModeration(tx *sql.Tx, op uint64, e auth.ModLogEntry) (err error) {
 		return
 	}
 
-	switch e.Type {
-	case common.BanPost, common.DeletePost, common.DeleteImage,
-		common.SpoilerImage, common.LockThread, common.MeidoVision,
-		common.PurgePost:
-		err = withTransaction(tx, sq.
-			Insert("post_moderation").
-			Columns("post_id", "type", "by", "length", "data").
-			Values(e.ID, e.Type, e.By, e.Length, e.Data)).
-			Exec()
-		if err != nil {
-			return
-		}
-		err = withTransaction(tx, sq.
-			Update("posts").
-			Set("moderated", true).
-			Where("id = ?", e.ID)).
-			Exec()
-		if err != nil {
-			return
-		}
-		err = bumpThread(tx, op, false)
-		if err != nil {
-			return
-		}
-		if !IsTest {
-			err = common.PropagateModeration(e.ID, op, e.ModerationEntry)
+	if e.ID != 0 {
+		switch e.Type {
+		case common.BanPost, common.DeletePost, common.DeleteImage,
+			common.SpoilerImage, common.LockThread, common.MeidoVision,
+			common.PurgePost:
+			err = withTransaction(tx, sq.
+				Insert("post_moderation").
+				Columns("post_id", "type", "by", "length", "data").
+				Values(e.ID, e.Type, e.By, e.Length, e.Data)).
+				Exec()
 			if err != nil {
 				return
+			}
+			err = withTransaction(tx, sq.
+				Update("posts").
+				Set("moderated", true).
+				Where("id = ?", e.ID)).
+				Exec()
+			if err != nil {
+				return
+			}
+			err = bumpThread(tx, op, false)
+			if err != nil {
+				return
+			}
+			if !IsTest {
+				err = common.PropagateModeration(e.ID, op, e.ModerationEntry)
+				if err != nil {
+					return
+				}
 			}
 		}
 	}

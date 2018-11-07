@@ -28,8 +28,7 @@ export const position: ModerationLevel = (window as any).position
 // Only active AccountPanel instance
 export let accountPanel: AccountPanel
 
-let loginForm: LoginForm,
-	registrationForm: LoginForm
+let registrationForm: LoginForm
 
 // Account login and registration
 class AccountPanel extends TabbedModal {
@@ -61,22 +60,6 @@ class AccountPanel extends TabbedModal {
 
 		if (position > ModerationLevel.notStaff) {
 			new ModPanel()
-		} else {
-			this.tabHook = id => {
-				switch (id) {
-					case 0:
-						loginForm.initCaptcha()
-						break
-					case 1:
-						registrationForm.initCaptcha()
-						break
-				}
-			}
-			this.showHook = () => {
-				if (position === ModerationLevel.notLoggedIn) {
-					loginForm.initCaptcha()
-				}
-			}
 		}
 	}
 
@@ -126,7 +109,7 @@ class LoginForm extends FormView {
 	constructor(id: string, url: string) {
 		super({
 			el: document.getElementById(id),
-			lazyCaptcha: true,
+			needCaptcha: true,
 		})
 		this.url = "/api/" + url
 	}
@@ -137,7 +120,6 @@ class LoginForm extends FormView {
 		for (let key of ['id', 'password']) {
 			req[key] = this.inputElement(key).value
 		}
-		this.injectCaptcha(req)
 
 		const res = await postJSON(this.url, req)
 		switch (res.status) {
@@ -153,7 +135,7 @@ class LoginForm extends FormView {
 export default () => {
 	accountPanel = new AccountPanel()
 	if (position === ModerationLevel.notLoggedIn) {
-		loginForm = new LoginForm("login-form", "login")
+		new LoginForm("login-form", "login")
 		registrationForm = new LoginForm("registration-form", "register")
 		validatePasswordMatch(registrationForm.el, "password", "repeat")
 	}

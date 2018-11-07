@@ -1,6 +1,5 @@
 {% import "meguca/config" %}
 {% import "meguca/lang" %}
-{% import captchaLib "github.com/dchest/captcha" %}
 
 OwnedBoard renders a form for selecting one of several boards owned by the user
 {% func OwnedBoard(boards config.BoardTitles) %}{% stripspace %}
@@ -70,14 +69,10 @@ CaptchaConfirmation renders a confirmation form with an optional captcha
 	{% if !config.Get().Captcha %}
 		{% return %}
 	{% endif %}
-	{% code ln := lang.Get().UI %}
 	<div class="captcha-container full-width">
-		<img>
 		<noscript>
-			<iframe width="240" height="100" marginwidth="0" marginheight="0" src="/api/captcha/noscript/load"></iframe>
+			<iframe width="462" height="525" scrolling="no" marginwidth="0" marginheight="0" src="/api/captcha/all"></iframe>
 		</noscript>
-		<input type="text" name="captchaID" placeholder="{%s= ln["captchaID"] %}" required>
-		<input name="captcha" placeholder="{%s= ln["captcha"] %}" type="number" autocomplete="off" required>
 	</div>
 {% endstripspace %}{% endfunc %}
 
@@ -156,23 +151,12 @@ Renders a cancel button
 {% endstripspace %}{% endfunc %}
 
 Render link to request new noscript captcha
-{% func NoscriptCaptchaLink() %}{% stripspace %}
-	<a href="/api/captcha/noscript/new" style="display: flex; width: 100%; height: 100%;">
+{% func NoscriptCaptchaLink(board string) %}{% stripspace %}
+	<a href="/api/captcha/{%s board %}" style="display: flex; width: 100%; height: 100%;">
 		<span style="align-self: center; margin: auto;">
 			{%s= lang.Get().UI["loadCaptcha"] %}
 		</span>
 	</a>
-{% endstripspace %}{% endfunc %}
-
-Render the captcha for noscript browsers
-{% func NoscriptCaptcha(ip string) %}{% stripspace %}
-	{% code id := captchaLib.New() %}
-	<div style="display: grid">
-		<span>
-			ID:{% space %}{%s= id %}
-		</span>
-		<img src="/api/captcha/image/{%s= id %}.png">
-	</div>
 {% endstripspace %}{% endfunc %}
 
 {% func BannerForm() %}{% stripspace %}

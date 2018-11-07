@@ -9,6 +9,7 @@ export default class ReportForm extends FormView {
 		super({
 			tag: "form",
 			class: "modal glass show report-form",
+			needCaptcha: true,
 		})
 		this.render(id)
 	}
@@ -22,7 +23,6 @@ export default class ReportForm extends FormView {
 		switch (res.status) {
 			case 200:
 				this.el.append(makeFrag(t))
-				this.initCaptcha()
 				this.inputElement("reason").focus()
 				break
 			default:

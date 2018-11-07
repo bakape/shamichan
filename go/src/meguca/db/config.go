@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"meguca/assets"
+	"meguca/auth"
 	"meguca/config"
 	"meguca/log"
 	"meguca/templates"
@@ -155,7 +156,7 @@ func updateConfigs(data string) error {
 	config.Set(conf)
 	mlog.Update()
 
-	return recompileTemplates()
+	return util.Parallel(recompileTemplates, auth.LoadCaptchaServices)
 }
 
 func updateBoardConfigs(board string) error {

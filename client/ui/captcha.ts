@@ -1,66 +1,97 @@
-import { View } from '../base'
+import FormView from "./forms";
+import { hook } from "../util";
+import { page } from "../state";
 
-// Wrapper around Solve Media's captcha service AJAX API
-export default class CaptchaView extends View<null> {
-	private captchaID: string
-	private input: HTMLInputElement
+let instance: CaptchaForm;
 
-	constructor(el: HTMLElement) {
-		super({ el })
+// Render a modal captcha input form
+export function renderCaptchaForm(onSuccess: () => void) {
+	if (!instance) {
+		instance = new CaptchaForm(onSuccess);
+	} else {
+		instance.onSuccess = onSuccess;
+		instance.focus();
+	}
+}
 
-		// <noscript> loaded with AJAX can still load and cause submission
-		// problems. Remove any.
-		const ns = this.el.querySelector("noscript")
-		if (ns) {
-			ns.remove()
-		}
+// Prevents circular dependency
+hook("renderCaptchaForm", renderCaptchaForm);
 
-		// Exposed outside through data() and therefore should always be defined
-		this.input = this.el
-			.querySelector(`input[name="captcha"]`) as HTMLInputElement
+// Floating captcha input modal
+class CaptchaForm extends FormView {
+	public onSuccess: () => void;
 
-		this.render().catch(e => {
-			alert(e)
-			throw e
-		})
+	constructor(onSuccess: () => void) {
+		super({
+			tag: "div",
+			class: "modal glass",
+			id: "captcha-form",
+		});
+		instance = this;
+		this.onSuccess = onSuccess;
+		this.render();
 	}
 
-	// Render the actual captcha
+	public remove() {
+		instance = null;
+		super.remove();
+	}
+
 	private async render() {
-		// Hide before fetch to prevent popping
-		const cID = this.inputElement("captchaID")
-		cID.hidden = true
-
-		const r = await fetch(`/api/captcha/new`),
-			text = await r.text()
-		if (r.status !== 200) {
-			throw text
+		document.getElementById("modal-overlay").prepend(this.el);
+		const res = await fetch(
+			`/api/captcha/${page.board}?${this.query({}).toString()}`)
+		if (res.status !== 200) {
+			this.renderFormResponse(await res.text());
+			return;
 		}
-		this.captchaID = text;
-		this.el
-			.querySelector("img")
-			.setAttribute("src", `/api/captcha/image/${this.captchaID}.png`)
-
-		// Set captchaID, to enable sending with FormData()
-		cID.value = this.captchaID
+		const s = await res.text();
+		this.el.innerHTML = s;
+		this.el.style.margin = "auto";
+		this.el.style.display = "block";
+		this.focus();
 	}
 
-	// Returns the data from the captcha widget
-	public data(): { [key: string]: string } {
-		// Captchas are disabled. Cache-induced race.
-		if (!this.input) {
-			return {}
-		}
-
-		return {
-			captchaID: this.captchaID,
-			solution: this.input.value,
+	public focus() {
+		const el = this.inputElement("captchouli-0");
+		if (el) {
+			el.focus();
 		}
 	}
 
-	// Load a new captcha
-	public reload() {
-		this.input.value = ""
-		this.render()
+	private query(d: { [key: string]: string }): URLSearchParams {
+		d["captchouli-color"] = "inherit";
+		d["captchouli-background"] = "inherit";
+		return new URLSearchParams(d);
+	}
+
+	protected async send() {
+		const body: { [key: string]: string } = {
+			"captchouli-id": this.inputElement("captchouli-id").value,
+		};
+		for (let i = 0; i < 9; i++) {
+			const k = `captchouli-${i}`;
+			if (this.inputElement(k).checked) {
+				body[k] = "on";
+			}
+		}
+
+		const res = await fetch(`/api/captcha/${page.board}`, {
+			body: this.query(body),
+			method: "POST"
+		});
+		const t = await res.text();
+		switch (res.status) {
+			case 200:
+				if (t !== "OK") {
+					this.el.innerHTML = t;
+				} else {
+					this.remove();
+					this.onSuccess();
+				}
+				break;
+			default:
+				this.renderFormResponse(await res.text());
+		}
 	}
 }

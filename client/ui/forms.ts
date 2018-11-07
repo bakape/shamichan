@@ -1,21 +1,23 @@
-import { importTemplate, extend } from '../util'
+import { importTemplate, trigger } from '../util'
 import { View, ViewAttrs } from '../base'
-import CaptchaView from './captcha'
+import { config } from "../state";
 
-interface FormAttrs extends ViewAttrs {
-	lazyCaptcha?: boolean
+export interface FormAttrs extends ViewAttrs {
+	needCaptcha?: boolean
 }
 
 // Generic input form view with optional captcha support
 abstract class FormView extends View<null> {
 	public el: HTMLFormElement
-	protected captcha: CaptchaView
-	private lazyCaptcha: boolean
+	private needCaptcha: boolean = false;
 
 	protected abstract send(): void
 
 	constructor(attrs: FormAttrs) {
 		super(attrs)
+		if (attrs.needCaptcha) {
+			this.needCaptcha = true;
+		}
 		this.onClick({
 			"input[name=cancel]": () =>
 				this.remove(),
@@ -28,60 +30,27 @@ abstract class FormView extends View<null> {
 		})
 		this.on("submit", e =>
 			this.submit(e))
-
-		this.lazyCaptcha = attrs.lazyCaptcha
-		if (!attrs.lazyCaptcha) {
-			this.initCaptcha()
-		}
 	}
 
-	// Forms, that are not rendered on initialization, need to call this method
-	// themselves
-	public initCaptcha() {
-		let captcha = this.el.querySelector(".captcha-container") as HTMLElement
-		if (captcha) {
-			// Clear any previous captcha, when reusing form
-			captcha.querySelector("img").removeAttribute("src");
-			(captcha.querySelector(`input[name="captcha"]`) as HTMLInputElement)
-				.value = ""
-
-			this.captcha = new CaptchaView(captcha)
-		}
-	}
 
 	// Submit form to server. Pass it to the assigned handler function
 	private submit(event: Event) {
 		event.preventDefault()
-		this.send()
-	}
-
-	// Also destroy captcha, if any
-	public remove() {
-		if (this.captcha) {
-			this.captcha.remove()
-		}
-		super.remove()
-	}
-
-	// Inject captcha data into the request struct, if any
-	protected injectCaptcha(req: {}) {
-		if (this.captcha) {
-			extend(req, this.captcha.data())
+		if (config.captcha && this.needCaptcha) {
+			// Prevents circular dependency
+			trigger("renderCaptchaForm", this.send.bind(this));
+		} else {
+			this.send();
 		}
 	}
 
 	// Render a text comment about the response status below the form
 	protected renderFormResponse(text: string) {
-		this.el.querySelector(".form-response").textContent = text
-		this.reloadCaptcha()
-	}
-
-	// Load a new captcha, if present and response code is not 0
-	public reloadCaptcha() {
-		if (this.captcha) {
-			this.captcha.reload()
-		} else if (this.lazyCaptcha) {
-			this.initCaptcha()
+		const el = this.el.querySelector(".form-response");
+		if (el) {
+			el.textContent = text;
+		} else {
+			alert(text);
 		}
 	}
 

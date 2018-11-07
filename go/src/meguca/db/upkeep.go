@@ -41,7 +41,7 @@ func runCleanupTasks() {
 func runMinuteTasks() {
 	if config.ImagerMode != config.ImagerOnly {
 		logError("open post cleanup", closeDanglingPosts())
-		expireRows("image_tokens", "bans", "captchas", "failed_captchas")
+		expireRows("image_tokens", "bans", "failed_captchas")
 	}
 }
 
@@ -49,6 +49,7 @@ func runHalfTasks() {
 	if config.ImagerMode != config.ImagerOnly {
 		logError("unrestrict pyu_limit", FreePyuLimit())
 		logError("expire spam scores", expireSpamScores())
+		logError("expire last solved captcha times", expireLastSolvedCaptchas())
 	}
 }
 

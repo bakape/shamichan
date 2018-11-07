@@ -146,8 +146,8 @@ func IncrementSpamScore(ip string, increment time.Duration) {
 	spamScoreBuffer[ip] += increment
 }
 
-// ResetSpamScore resets a spam score to zero by IP
-func ResetSpamScore(ip string) (err error) {
+// resetSpamScore resets a spam score to zero by IP
+func resetSpamScore(ip string) (err error) {
 	if !config.Get().Captcha {
 		return
 	}
@@ -161,10 +161,20 @@ func ResetSpamScore(ip string) (err error) {
 // NeedCaptcha returns, if the user needs a captcha
 // to proceed with usage of server resources
 func NeedCaptcha(ip string) (need bool, err error) {
-	conf := config.Get()
-	if !conf.Captcha {
+	if !config.Get().Captcha {
 		return
 	}
+
+	// Require a captcha, if none have been solved in 3 hours
+	has, err := SolvedCaptchaRecently(ip, lastSolvedCaptchaRetention)
+	if err != nil {
+		return
+	}
+	if !has {
+		need = true
+		return
+	}
+
 	spamMu.RLock()
 	defer spamMu.RUnlock()
 

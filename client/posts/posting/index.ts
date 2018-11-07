@@ -12,7 +12,7 @@ import initPaste from "./paste"
 import initFullScreen from "./fullscreen"
 import initImageErr from "./image"
 import initThreads from "./threads"
-import { renderCaptchaForm } from "./captcha";
+import { renderCaptchaForm } from "../../ui/captcha";
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
@@ -309,7 +309,7 @@ export default () => {
 	for (let s of [postState.draft, postState.allocating]) {
 		postSM.act(s, postEvent.captchaRequested, () => {
 			postModel.inputBody = "";
-			renderCaptchaForm();
+			renderCaptchaForm(postSM.feeder(postEvent.captchaSolved));
 			if (postForm.upload) {
 				postForm.upload.reset();
 			}
@@ -317,7 +317,7 @@ export default () => {
 		});
 	}
 	postSM.act(postState.alloc, postEvent.captchaRequested, () => {
-		renderCaptchaForm();
+		renderCaptchaForm(postSM.feeder(postEvent.captchaSolved));
 		if (postForm.upload) {
 			postForm.upload.reset();
 		}

@@ -48,6 +48,10 @@
 			"Captcha",
 			"Demande aux utilisateurs de compléter un captcha pour certaines tâches comme l'enregistrement ou la création d'un sujet"
 		],
+		"captchaTags": [
+			"Captcha tags",
+			"Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
+		],
 		"charScore": [
 			"Character spam score",
 			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
@@ -272,6 +276,10 @@
 			"Ancien mot de passe",
 			""
 		],
+		"overrideCaptchaTags": [
+			"Override Captcha Tags",
+			"Mapping of boards to tags to use as the solution on the specified board."
+		],
 		"owners": [
 			"Propriétaires",
 			"Possède les pleins pouvoirs"
@@ -443,7 +451,6 @@
 		"bannerSpecs": "Accepte jusqu'à 20 fichiers JPEG, PNG, GIF ou WEBM sans son (dimension : 300x100, taille : 100 KB).",
 		"by": "Par",
 		"captcha": "Captcha",
-		"captchaID": "Captcha",
 		"changePassword": "Mot de passe",
 		"clear": "Vider",
 		"configureBoard": "Configurer une planche",

@@ -2,10 +2,10 @@
 // Handle fullscreen activation
 function onFullscreen(e: Event) {
     [
-        document.fullscreenElement,
-        document.webkitFullscreenElement,
-        document.mozFullScreenElement,
-        document.msFullscreenElement
+        (document as any).fullscreenElement,
+        (document as any).webkitFullscreenElement,
+        (document as any).mozFullScreenElement,
+        (document as any).msFullscreenElement
     ].forEach(async el => {
         if (el) {
             e.stopPropagation()
@@ -22,22 +22,22 @@ function onFullscreen(e: Event) {
             }
 
             const res = await fetch("/api/youtube-data/"
-            + el.getAttribute("poster").split("vi/").pop().split('/').shift()),
-            video = (await res.text()).split("\n").pop(),
-            oldTime = el.currentTime
+                + el.getAttribute("poster").split("vi/").pop().split('/').shift()),
+                video = (await res.text()).split("\n").pop(),
+                oldTime = el.currentTime
 
             switch (res.status) {
-            case 200:
-                break
-            case 415:
-                console.error("Error 415: YouTube video is a livestream")
-                return
-            case 500:
-                console.error("Error 500: YouTube is not available")
-                return
-            default:
-                console.error(`Error ${res.status}: ${res.statusText}`)
-                return
+                case 200:
+                    break
+                case 415:
+                    console.error("Error 415: YouTube video is a livestream")
+                    return
+                case 500:
+                    console.error("Error 500: YouTube is not available")
+                    return
+                default:
+                    console.error(`Error ${res.status}: ${res.statusText}`)
+                    return
             }
 
             if (!video) {

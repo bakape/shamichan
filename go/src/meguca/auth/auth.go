@@ -3,15 +3,13 @@
 package auth
 
 import (
-	"fmt"
-	"net"
-	"strings"
-
 	"crypto/rand"
 	"encoding/base64"
-	"net/http"
-
+	"fmt"
 	"meguca/config"
+	"net"
+	"net/http"
+	"strings"
 
 	"golang.org/x/crypto/bcrypt"
 )

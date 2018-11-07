@@ -1003,15 +1003,31 @@ var migrations = []func(*sql.Tx) error{
 			createIndex("bans", "board"),
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		err = patchConfigs(tx, func(conf *config.Configs) {
+			conf.CaptchaTags = config.Defaults.CaptchaTags
+			conf.OverrideCaptchaTags = map[string]string{}
+		})
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec(`drop table captchas`)
+		return
+	},
+	func(tx *sql.Tx) error {
+		return execAll(tx,
+			`create table last_solved_captchas (
+				ip inet primary key,
+				time timestamp not null default (now() at time zone 'utc')
+			)`,
+			createIndex("last_solved_captchas", "time"),
+		)
+	},
 }
 
 func createIndex(table, column string) string {
 	return fmt.Sprintf(`create index %s_%s on %s (%s)`, table, column, table,
 		column)
-}
-
-func alterColumn(table, column string) string {
-	return fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s", table, column)
 }
 
 // Run migrations from version `from`to version `to`

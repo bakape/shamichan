@@ -116,7 +116,7 @@ func TestBoardConfiguration(t *testing.T) {
 	writeSampleUser(t)
 	writeSampleBoardOwner(t)
 
-	data := boardConfigSettingRequest{
+	data := config.BoardConfigs{
 		BoardConfigs: conf,
 	}
 	rec, req := newJSONPair(t, "/api/configure-board/a", data)

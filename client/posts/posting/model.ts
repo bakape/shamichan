@@ -221,8 +221,8 @@ export default class FormModel extends Post {
 	// Paste text to the text body
 	public paste(sel: string) {
 		const start = this.view.input.selectionStart,
-		end = this.view.input.selectionEnd,
-		old = this.view.input.value
+			end = this.view.input.selectionEnd,
+			old = this.view.input.value
 		let p = modPaste(old, sel, end)
 
 		if (!p) {
@@ -321,6 +321,7 @@ export default class FormModel extends Post {
 	// Retry to upload a file after it previously failed
 	public async retryUpload() {
 		if (this.view.upload) {
+			this.allocatingImage = false;
 			this.handleUploadResponse(await this.view.upload.retry());
 		}
 	}

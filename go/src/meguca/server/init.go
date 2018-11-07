@@ -21,6 +21,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/ErikDubbelboer/gspt"
 	"github.com/go-playground/log"
@@ -235,13 +236,28 @@ func startServer() {
 			log.Fatal(err)
 		}
 	}
+
 	load(db.LoadDB, assets.CreateDirs)
+
+	// Depend on configs
+	var (
+		wg    sync.WaitGroup
+		tasks []func() error
+	)
 	if config.ImagerMode != config.ImagerOnly {
-		// Depend on configs
-		load(geoip.Load, listenToThreadDeletion, lang.Load)
-		// Depends on language packs
-		load(templates.Compile)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			load(lang.Load)
+			load(templates.Compile) // Depends on language packs
+		}()
+		tasks = append(tasks, geoip.Load, listenToThreadDeletion)
 	}
+	if config.ImagerMode != config.NoImager {
+		tasks = append(tasks, auth.LoadCaptchaServices)
+	}
+	load(tasks...)
+	wg.Wait()
 
 	if err := startWebServer(); err != nil {
 		log.Fatal(err)

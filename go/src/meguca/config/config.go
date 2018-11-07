@@ -81,6 +81,9 @@ var (
 		FeedbackEmail:     "admin@email.com",
 		RootURL:           "http://localhost",
 		FAQ:               defaultFAQ,
+		CaptchaTags: []string{"patchouli_knowledge", "cirno", "hakurei_reimu",
+			"kirisame_marisa", "konpaku_youmu"},
+		OverrideCaptchaTags: map[string]string{},
 		Public: Public{
 			DefaultCSS:      "moe",
 			DefaultLang:     "en_GB",
