@@ -13,7 +13,7 @@ License: GNU AGPL
 
 ### Country flags
 
-To enable poster country flags on posts please download GeoLite2-Country.mmdb from https://www.maxmind.com and place it inside meguca's root directory. Country lookup will become available after a server restart.   
+To enable poster country flags on posts please download GeoLite2-Country.mmdb from https://www.maxmind.com and place it inside meguca's root directory. Country lookup will become available after a server restart.
 
 ## Building from source
 A reference list of commands can be found in `./docs/installation.md`
@@ -39,6 +39,7 @@ compiled with:
     * libjpeg
     * postscript
 * ghostscript
+* OpenCV >= 2
 * git
 
 ### Linux and OSX
