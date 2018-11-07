@@ -22,8 +22,8 @@ type Configs struct {
 	EmailErrSub         string `json:"emailErrSub"`
 	FeedbackEmail       string `json:"feedbackEmail"`
 	FAQ                 string
-	CaptchaTags         []string            `json:"captchaTags"`
-	OverrideCaptchaTags map[string][]string `json:"overrideCaptchaTags"`
+	CaptchaTags         []string          `json:"captchaTags"`
+	OverrideCaptchaTags map[string]string `json:"overrideCaptchaTags"`
 }
 
 // Public contains configurations exposeable through public availability APIs

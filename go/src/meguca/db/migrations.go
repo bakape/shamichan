@@ -1006,7 +1006,7 @@ var migrations = []func(*sql.Tx) error{
 	func(tx *sql.Tx) (err error) {
 		err = patchConfigs(tx, func(conf *config.Configs) {
 			conf.CaptchaTags = config.Defaults.CaptchaTags
-			conf.OverrideCaptchaTags = map[string][]string{}
+			conf.OverrideCaptchaTags = map[string]string{}
 		})
 		if err != nil {
 			return

@@ -135,7 +135,7 @@ func LoadCaptchaServices() (err error) {
 	}
 	over := make(map[string]*captchouli.Service, len(conf.OverrideCaptchaTags))
 	for b, tags := range conf.OverrideCaptchaTags {
-		opts.Tags = tags
+		opts.Tags = []string{tags}
 		over[b], err = captchouli.NewService(opts)
 		if err != nil {
 			return

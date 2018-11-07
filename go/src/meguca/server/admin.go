@@ -364,6 +364,11 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &msg) || !isAdmin(w, r) {
 		return
 	}
+	if len(msg.CaptchaTags) < 3 {
+		httpError(w, r,
+			common.StatusError{errors.New("too few captcha tags"), 400})
+		return
+	}
 	if err := db.WriteConfigs(msg); err != nil {
 		httpError(w, r, err)
 	}

@@ -48,6 +48,10 @@
 			"Капча",
 			"Питати користувачів при регістрації та створенні тхреду"
 		],
+		"captchaTags": [
+			"Captcha tags",
+			"Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
+		],
 		"charScore": [
 			"Character spam score",
 			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
@@ -271,6 +275,10 @@
 		"oldPassword": [
 			"Old password",
 			""
+		],
+		"overrideCaptchaTags": [
+			"Override Captcha Tags",
+			"Mapping of boards to tags to use as the solution on the specified board."
 		],
 		"owners": [
 			"Owners",
