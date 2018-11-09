@@ -5,16 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"meguca/db"
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
+	"meguca/db"
+
 	"github.com/go-playground/log"
 	"github.com/oschwald/maxminddb-golang"
+	// TODO: Rewrite for archiver v3
+	"gopkg.in/mholt/archiver.v2"
 )
 
 // nil, if database not loaded
@@ -198,39 +202,39 @@ func check() error {
 // checkArchive checks if the tar.gz is valid, extracts it into a temporary folder,
 // then moves the DB into the executable root directory
 func checkArchive(tmpDir string, tmp *os.File, hash string) error {
-	// if archiver.TarGz.Match(tmp.Name()) {
-	// 	err := archiver.TarGz.Open(tmp.Name(), tmpDir)
+	if archiver.TarGz.Match(tmp.Name()) {
+		err := archiver.TarGz.Open(tmp.Name(), tmpDir)
 
-	// 	if err != nil {
-	// 		return err
-	// 	}
+		if err != nil {
+			return err
+		}
 
-	// 	dirs, err := filepath.Glob(tmpDir + "/GeoLite2-Country_*")
+		dirs, err := filepath.Glob(tmpDir + "/GeoLite2-Country_*")
 
-	// 	if err != nil {
-	// 		return err
-	// 	}
+		if err != nil {
+			return err
+		}
 
-	// 	for _, d := range dirs {
-	// 		if _, err := os.Stat(d + "/GeoLite2-Country.mmdb"); err == nil {
-	// 			data, err := ioutil.ReadFile(d + "/GeoLite2-Country.mmdb")
+		for _, d := range dirs {
+			if _, err := os.Stat(d + "/GeoLite2-Country.mmdb"); err == nil {
+				data, err := ioutil.ReadFile(d + "/GeoLite2-Country.mmdb")
 
-	// 			if err != nil {
-	// 				return err
-	// 			}
+				if err != nil {
+					return err
+				}
 
-	// 			err = ioutil.WriteFile("GeoLite2-Country.mmdb", data, 0644)
+				err = ioutil.WriteFile("GeoLite2-Country.mmdb", data, 0644)
 
-	// 			if err != nil {
-	// 				return err
-	// 			}
+				if err != nil {
+					return err
+				}
 
-	// 			return db.SetGeoMD5(hash)
-	// 		}
-	// 	}
+				return db.SetGeoMD5(hash)
+			}
+		}
 
-	// 	return errors.New("GeoLite tar.gz does not contain GeoLite2-Country.mmdb")
-	// }
+		return errors.New("GeoLite tar.gz does not contain GeoLite2-Country.mmdb")
+	}
 
 	return errors.New("invalid tar.gz")
 }
