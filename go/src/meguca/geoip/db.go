@@ -1,20 +1,23 @@
 package geoip
 
 import (
-	"crypto/md5"
+	"net"
+	"strings"
+	"time"
+	"os"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"meguca/db"
-	"net"
-	"net/http"
-	"os"
-	"strings"
 	"sync"
-	"time"
+	"io/ioutil"
+	"net/http"
+	"crypto/md5"
+	"path/filepath"
 
-	"github.com/go-playground/log"
+	"meguca/db"
+
 	"github.com/oschwald/maxminddb-golang"
+	"github.com/go-playground/log"
+	"github.com/mholt/archiver"
 )
 
 // nil, if database not loaded
@@ -52,7 +55,7 @@ func Load() error {
 func load() (err error) {
 	rw.Lock()
 	defer rw.Unlock()
-
+	
 	if gdb != nil {
 		err := gdb.Close()
 
@@ -89,6 +92,7 @@ func LookUp(ip string) (iso string) {
 			ISOCode string `maxminddb:"iso_code"`
 		} `maxminddb:"country"`
 	}
+
 
 	if err := gdb.Lookup(dec, &record); err != nil {
 		log.Warnf("country lookup for `%s`: %s", ip, err)
@@ -134,7 +138,7 @@ func check() error {
 	if len(newHash) != 32 {
 		return errors.New("response is not an MD5 hash")
 	}
-
+	
 	// Load the old DB one time on server start, if applicable before checking the MD5
 	_, err = os.Stat("GeoLite2-Country.mmdb")
 	invalid := os.IsNotExist(err)
@@ -160,7 +164,7 @@ func check() error {
 		if err != nil {
 			return err
 		}
-
+		
 		// Get the archive itself
 		resp, err := http.Get("https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz")
 
@@ -198,39 +202,39 @@ func check() error {
 // checkArchive checks if the tar.gz is valid, extracts it into a temporary folder,
 // then moves the DB into the executable root directory
 func checkArchive(tmpDir string, tmp *os.File, hash string) error {
-	// if archiver.TarGz.Match(tmp.Name()) {
-	// 	err := archiver.TarGz.Open(tmp.Name(), tmpDir)
+	if archiver.TarGz.Match(tmp.Name()) {
+		err := archiver.TarGz.Open(tmp.Name(), tmpDir)
 
-	// 	if err != nil {
-	// 		return err
-	// 	}
+		if err != nil {
+			return err
+		}
 
-	// 	dirs, err := filepath.Glob(tmpDir + "/GeoLite2-Country_*")
+		dirs, err := filepath.Glob(tmpDir + "/GeoLite2-Country_*")
 
-	// 	if err != nil {
-	// 		return err
-	// 	}
+		if err != nil {
+			return err
+		}
 
-	// 	for _, d := range dirs {
-	// 		if _, err := os.Stat(d + "/GeoLite2-Country.mmdb"); err == nil {
-	// 			data, err := ioutil.ReadFile(d + "/GeoLite2-Country.mmdb")
+		for _, d := range dirs {
+			if _, err := os.Stat(d + "/GeoLite2-Country.mmdb"); err == nil {
+				data, err := ioutil.ReadFile(d + "/GeoLite2-Country.mmdb")
 
-	// 			if err != nil {
-	// 				return err
-	// 			}
+				if err != nil {
+					return err
+				}
 
-	// 			err = ioutil.WriteFile("GeoLite2-Country.mmdb", data, 0644)
+				err = ioutil.WriteFile("GeoLite2-Country.mmdb", data, 0644)
 
-	// 			if err != nil {
-	// 				return err
-	// 			}
+				if err != nil {
+					return err
+				}
+				
+				return db.SetGeoMD5(hash)
+			}
+		}
 
-	// 			return db.SetGeoMD5(hash)
-	// 		}
-	// 	}
-
-	// 	return errors.New("GeoLite tar.gz does not contain GeoLite2-Country.mmdb")
-	// }
+		return errors.New("GeoLite tar.gz does not contain GeoLite2-Country.mmdb")
+	}
 
 	return errors.New("invalid tar.gz")
 }
