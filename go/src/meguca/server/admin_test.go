@@ -87,6 +87,7 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 
 func TestBoardConfiguration(t *testing.T) {
 	assertTableClear(t, "accounts", "boards")
+	(*config.Get()).Captcha = false
 
 	const board = "a"
 	conf := config.BoardConfigs{
@@ -116,9 +117,7 @@ func TestBoardConfiguration(t *testing.T) {
 	writeSampleUser(t)
 	writeSampleBoardOwner(t)
 
-	data := config.BoardConfigs{
-		BoardConfigs: conf,
-	}
+	data := conf
 	rec, req := newJSONPair(t, "/api/configure-board/a", data)
 	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)
@@ -212,6 +211,7 @@ func TestValidateBoardCreation(t *testing.T) {
 	assertTableClear(t, "boards", "accounts")
 	writeSampleBoard(t)
 	writeSampleUser(t)
+	(*config.Get()).Captcha = false
 
 	cases := [...]struct {
 		name, id, title string
@@ -303,6 +303,7 @@ func writeSampleBoardOwner(t *testing.T) {
 func TestBoardCreation(t *testing.T) {
 	assertTableClear(t, "boards", "accounts")
 	writeSampleUser(t)
+	(*config.Get()).Captcha = false
 
 	const (
 		id    = "a"
@@ -423,6 +424,7 @@ func TestDeleteBoard(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleBoardOwner(t)
 	writeAllBoard(t)
+	(*config.Get()).Captcha = false
 
 	rec, req := newJSONPair(t, "/api/delete-board", boardActionRequest{
 		Board: "a",

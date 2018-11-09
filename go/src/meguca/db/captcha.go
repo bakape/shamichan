@@ -71,6 +71,10 @@ func ValidateCaptcha(req auth.Captcha, ip string) (err error) {
 
 // Returns, if IP has solved a captcha within the last dur
 func SolvedCaptchaRecently(ip string, dur time.Duration) (has bool, err error) {
+	if !config.Get().Captcha {
+		has = true
+		return
+	}
 	err = sq.Select("true").
 		From("last_solved_captchas").
 		Where("ip = ? and time > ?", ip, time.Now().UTC().Add(-dur)).

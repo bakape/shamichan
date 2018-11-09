@@ -2,10 +2,9 @@ package db
 
 import (
 	"database/sql"
-	"testing"
-
 	"meguca/config"
 	. "meguca/test"
+	"testing"
 )
 
 func TestLoadConfigs(t *testing.T) {
@@ -24,20 +23,6 @@ func TestLoadConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertDeepEquals(t, config.Get(), &std)
-}
-
-func TestUpdateConfigs(t *testing.T) {
-	config.Set(config.Configs{})
-
-	std := config.Configs{
-		Public: config.Public{
-			Mature: true,
-		},
-	}
-	if err := updateConfigs(`{"mature":true}`); err != nil {
-		t.Fatal(err)
-	}
 	AssertDeepEquals(t, config.Get(), &std)
 }
 

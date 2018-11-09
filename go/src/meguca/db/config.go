@@ -6,7 +6,7 @@ import (
 	"meguca/assets"
 	"meguca/auth"
 	"meguca/config"
-	"meguca/log"
+	mlog "meguca/log"
 	"meguca/templates"
 	"meguca/util"
 	"time"
@@ -148,8 +148,8 @@ func UpdateBoard(c config.BoardConfigs) error {
 	})
 }
 
-func updateConfigs(data string) error {
-	conf, err := decodeConfigs(data)
+func updateConfigs(_ string) error {
+	conf, err := GetConfigs()
 	if err != nil {
 		return util.WrapError("reloading configuration", err)
 	}
@@ -206,14 +206,13 @@ func WriteConfigs(c config.Configs) (err error) {
 	if err != nil {
 		return
 	}
-	s := string(data)
 	_, err = sq.Update("main").
-		Set("val", s).
+		Set("val", string(data)).
 		Where("id = 'config'").
 		Exec()
 	if err != nil {
 		return
 	}
-	_, err = db.Exec("select pg_notify('config_updates', $1)", s)
+	_, err = db.Exec("select pg_notify('config_updates', '')")
 	return
 }

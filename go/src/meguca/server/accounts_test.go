@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"meguca/auth"
 	"meguca/common"
+	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
 	"net/http"
@@ -147,6 +148,7 @@ func TestNotLoggedIn(t *testing.T) {
 func TestChangePassword(t *testing.T) {
 	assertTableClear(t, "accounts")
 	writeSampleUser(t)
+	(*config.Get()).Captcha = false
 
 	const new = "654321"
 
