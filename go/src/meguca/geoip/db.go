@@ -1,23 +1,24 @@
 package geoip
 
 import (
-	"net"
-	"strings"
-	"time"
-	"os"
+	"crypto/md5"
 	"errors"
 	"fmt"
-	"sync"
 	"io/ioutil"
+	"net"
 	"net/http"
-	"crypto/md5"
+	"os"
 	"path/filepath"
+	"strings"
+	"sync"
+	"time"
 
 	"meguca/db"
 
-	"github.com/oschwald/maxminddb-golang"
 	"github.com/go-playground/log"
-	"github.com/mholt/archiver"
+	"github.com/oschwald/maxminddb-golang"
+	// TODO: Rewrite for archiver v3
+	"gopkg.in/mholt/archiver.v2"
 )
 
 // nil, if database not loaded
@@ -55,7 +56,7 @@ func Load() error {
 func load() (err error) {
 	rw.Lock()
 	defer rw.Unlock()
-	
+
 	if gdb != nil {
 		err := gdb.Close()
 
@@ -92,7 +93,6 @@ func LookUp(ip string) (iso string) {
 			ISOCode string `maxminddb:"iso_code"`
 		} `maxminddb:"country"`
 	}
-
 
 	if err := gdb.Lookup(dec, &record); err != nil {
 		log.Warnf("country lookup for `%s`: %s", ip, err)
@@ -138,7 +138,7 @@ func check() error {
 	if len(newHash) != 32 {
 		return errors.New("response is not an MD5 hash")
 	}
-	
+
 	// Load the old DB one time on server start, if applicable before checking the MD5
 	_, err = os.Stat("GeoLite2-Country.mmdb")
 	invalid := os.IsNotExist(err)
@@ -164,7 +164,7 @@ func check() error {
 		if err != nil {
 			return err
 		}
-		
+
 		// Get the archive itself
 		resp, err := http.Get("https://geolite.maxmind.com/download/geoip/database/GeoLite2-Country.tar.gz")
 
@@ -228,7 +228,7 @@ func checkArchive(tmpDir string, tmp *os.File, hash string) error {
 				if err != nil {
 					return err
 				}
-				
+
 				return db.SetGeoMD5(hash)
 			}
 		}
