@@ -15,7 +15,7 @@ Report submission form
 		{%s= ln["illegal"] %}
 		<br>
 	</label>
-	{%= captcha() %}
+	{%= captcha("all") %}
 	{%= submit(true) %}
 {% endstripspace %}{% endfunc %}
 

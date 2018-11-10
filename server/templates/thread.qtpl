@@ -17,7 +17,7 @@
 			{% if !conf.TextOnly %}
 				{%= uploadForm() %}
 			{% endif %}
-			{%= captcha() %}
+			{%= captcha(board) %}
 			{%= submit(true) %}
 		</form>
 	{% endif %}

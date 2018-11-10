@@ -247,7 +247,7 @@ func CreateBoard() string {
 //line forms.qtpl:63
 func StreamCaptchaConfirmation(qw422016 *qt422016.Writer) {
 	//line forms.qtpl:64
-	streamcaptcha(qw422016)
+	streamcaptcha(qw422016, "all")
 	//line forms.qtpl:65
 	streamsubmit(qw422016, true)
 //line forms.qtpl:66
@@ -280,7 +280,7 @@ func CaptchaConfirmation() string {
 }
 
 //line forms.qtpl:68
-func streamcaptcha(qw422016 *qt422016.Writer) {
+func streamcaptcha(qw422016 *qt422016.Writer, board string) {
 	//line forms.qtpl:69
 	if !config.Get().Captcha {
 		//line forms.qtpl:70
@@ -288,27 +288,31 @@ func streamcaptcha(qw422016 *qt422016.Writer) {
 		//line forms.qtpl:71
 	}
 	//line forms.qtpl:71
-	qw422016.N().S(`<div class="captcha-container full-width"><noscript><iframe width="462" height="525" scrolling="no" marginwidth="0" marginheight="0" src="/api/captcha/all"></iframe></noscript></div>`)
+	qw422016.N().S(`<div class="captcha-container full-width"><noscript><iframe width="462" height="525" scrolling="no" marginwidth="0" marginheight="0" src="/api/captcha/`)
+	//line forms.qtpl:74
+	qw422016.N().S(board)
+	//line forms.qtpl:74
+	qw422016.N().S(`}"></iframe></noscript></div>`)
 //line forms.qtpl:77
 }
 
 //line forms.qtpl:77
-func writecaptcha(qq422016 qtio422016.Writer) {
+func writecaptcha(qq422016 qtio422016.Writer, board string) {
 	//line forms.qtpl:77
 	qw422016 := qt422016.AcquireWriter(qq422016)
 	//line forms.qtpl:77
-	streamcaptcha(qw422016)
+	streamcaptcha(qw422016, board)
 	//line forms.qtpl:77
 	qt422016.ReleaseWriter(qw422016)
 //line forms.qtpl:77
 }
 
 //line forms.qtpl:77
-func captcha() string {
+func captcha(board string) string {
 	//line forms.qtpl:77
 	qb422016 := qt422016.AcquireByteBuffer()
 	//line forms.qtpl:77
-	writecaptcha(qb422016)
+	writecaptcha(qb422016, board)
 	//line forms.qtpl:77
 	qs422016 := string(qb422016.B)
 	//line forms.qtpl:77
@@ -409,7 +413,7 @@ func streamtableForm(qw422016 *qt422016.Writer, specs []inputSpec, needCaptcha b
 	//line forms.qtpl:105
 	if needCaptcha {
 		//line forms.qtpl:106
-		streamcaptcha(qw422016)
+		streamcaptcha(qw422016, "all")
 		//line forms.qtpl:107
 	}
 	//line forms.qtpl:108
@@ -697,7 +701,7 @@ func StreamBannerForm(qw422016 *qt422016.Writer) {
 	//line forms.qtpl:164
 	qw422016.N().S(`</div><br><input type="file" name="banners" multiple accept="image/png, image/gif, image/jpeg, video/webm"><br>`)
 	//line forms.qtpl:169
-	streamcaptcha(qw422016)
+	streamcaptcha(qw422016, "all")
 	//line forms.qtpl:170
 	streamsubmit(qw422016, true)
 //line forms.qtpl:171
@@ -738,7 +742,7 @@ func StreamLoadingAnimationForm(qw422016 *qt422016.Writer) {
 	//line forms.qtpl:175
 	qw422016.N().S(`</div><br><input type="file" name="image" accept="image/gif, video/webm"><br>`)
 	//line forms.qtpl:180
-	streamcaptcha(qw422016)
+	streamcaptcha(qw422016, "all")
 	//line forms.qtpl:181
 	streamsubmit(qw422016, true)
 //line forms.qtpl:182

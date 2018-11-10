@@ -47,7 +47,7 @@
 				{% if id == "all" || !conf.TextOnly %}
 					{%= uploadForm() %}
 				{% endif %}
-				{%= captcha() %}
+				{%= captcha(id) %}
 				{%= submit(false) %}
 			</form>
 		</aside>

@@ -269,7 +269,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 		//line index.qtpl:255
 		streamtable(qw422016, specs["login"])
 		//line index.qtpl:256
-		streamcaptcha(qw422016)
+		streamcaptcha(qw422016, "all")
 		//line index.qtpl:257
 		streamsubmit(qw422016, false)
 		//line index.qtpl:257
@@ -277,7 +277,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 		//line index.qtpl:262
 		streamtable(qw422016, specs["register"])
 		//line index.qtpl:263
-		streamcaptcha(qw422016)
+		streamcaptcha(qw422016, "all")
 		//line index.qtpl:264
 		streamsubmit(qw422016, false)
 		//line index.qtpl:264

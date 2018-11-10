@@ -66,7 +66,7 @@ func streamrenderThread(qw422016 *qt422016.Writer, postHTML []byte, id uint64, b
 			//line thread.qtpl:19
 		}
 		//line thread.qtpl:20
-		streamcaptcha(qw422016)
+		streamcaptcha(qw422016, board)
 		//line thread.qtpl:21
 		streamsubmit(qw422016, true)
 		//line thread.qtpl:21

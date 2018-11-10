@@ -61,17 +61,17 @@ CreateBoard renders a the form for creating new boards
 
 CaptchaConfirmation renders a confirmation form with an optional captcha
 {% func CaptchaConfirmation() %}{% stripspace %}
-	{%= captcha() %}
+	{%= captcha("all") %}
 	{%= submit(true) %}
 {% endstripspace %}{% endfunc %}
 
-{% func captcha() %}{% stripspace %}
+{% func captcha(board string) %}{% stripspace %}
 	{% if !config.Get().Captcha %}
 		{% return %}
 	{% endif %}
 	<div class="captcha-container full-width">
 		<noscript>
-			<iframe width="462" height="525" scrolling="no" marginwidth="0" marginheight="0" src="/api/captcha/all"></iframe>
+			<iframe width="462" height="525" scrolling="no" marginwidth="0" marginheight="0" src="/api/captcha/{%s= board %}}"></iframe>
 		</noscript>
 	</div>
 {% endstripspace %}{% endfunc %}
@@ -103,7 +103,7 @@ Form formatted as a table, with cancel and submit buttons
 {% func tableForm(specs []inputSpec, needCaptcha bool) %}{% stripspace %}
 	{%= table(specs) %}
 	{% if needCaptcha %}
-		{%= captcha() %}
+		{%= captcha("all") %}
 	{% endif %}
 	{%= submit(true) %}
 {% endstripspace %}{% endfunc %}
@@ -166,7 +166,7 @@ Render link to request new noscript captcha
 	<br>
 	<input type="file" name="banners" multiple accept="image/png, image/gif, image/jpeg, video/webm">
 	<br>
-	{%= captcha() %}
+	{%= captcha("all") %}
 	{%= submit(true) %}
 {% endstripspace %}{% endfunc %}
 
@@ -177,6 +177,6 @@ Render link to request new noscript captcha
 	<br>
 	<input type="file" name="image" accept="image/gif, video/webm">
 	<br>
-	{%= captcha() %}
+	{%= captcha("all") %}
 	{%= submit(true) %}
 {% endstripspace %}{% endfunc %}

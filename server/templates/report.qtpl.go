@@ -58,7 +58,7 @@ func StreamReportForm(qw422016 *qt422016.Writer, id uint64) {
 	//line report.qtpl:15
 	qw422016.N().S(`<br></label>`)
 	//line report.qtpl:18
-	streamcaptcha(qw422016)
+	streamcaptcha(qw422016, "all")
 	//line report.qtpl:19
 	streamsubmit(qw422016, true)
 //line report.qtpl:20
