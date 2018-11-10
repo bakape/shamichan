@@ -4,7 +4,6 @@ import (
 	"crypto/sha1"
 	"database/sql"
 	"encoding/hex"
-	"errors"
 	"meguca/common"
 	"meguca/db"
 	"mime/multipart"
@@ -12,12 +11,8 @@ import (
 	"github.com/bakape/thumbnailer"
 )
 
-// Size of an upload small enough to use a different processing priority
-const smallUploadSize = 4 << 20
-
 var (
-	scheduleJob = make(chan jobRequest)
-	errTimedOut = errors.New("thumbnailing timed out")
+	scheduleJob = make(chan jobRequest, 128)
 )
 
 type jobRequest struct {
@@ -31,25 +26,15 @@ type thumbnailingResponse struct {
 	err     error
 }
 
-// Queues larger uplaod processing to prevent resource overuse
+// Queues upload processing to prevent resource overuse
 func requestThumbnailing(file multipart.File, size int,
 ) <-chan thumbnailingResponse {
 	ch := make(chan thumbnailingResponse)
-
-	// Small uploads can be scheduled to their own goroutine concurrently
-	// without much resource contention
-	if size <= smallUploadSize {
-		go func() {
-			id, err := processRequest(file, size)
-			ch <- thumbnailingResponse{id, err}
-		}()
-	} else {
-		scheduleJob <- jobRequest{file, size, ch}
-	}
+	scheduleJob <- jobRequest{file, size, ch}
 	return ch
 }
 
-// Queue larger thumbnailing jobs to reduce resource contention
+// Queue thumbnailing jobs to reduce resource contention and prevent OOM
 func init() {
 	go func() {
 		for {
