@@ -12,7 +12,7 @@ import initPaste from "./paste"
 import initFullScreen from "./fullscreen"
 import initImageErr from "./image"
 import initThreads from "./threads"
-import { renderCaptchaForm } from "../../ui/captcha";
+import { renderCaptchaForm, captchaLoaded } from "../../ui/captcha";
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
@@ -300,6 +300,9 @@ export default () => {
 
 	// Close unallocated draft or commit in non-live mode
 	postSM.act(postState.draft, postEvent.done, () => {
+		if (captchaLoaded()) {
+			return postState.draft;
+		}
 		postForm.remove();
 		return postState.ready;
 	})
@@ -338,6 +341,9 @@ export default () => {
 
 	// Close allocated post
 	postSM.act(postState.alloc, postEvent.done, () => {
+		if (captchaLoaded()) {
+			return postState.alloc;
+		}
 		postModel.commitClose();
 		return postState.ready;
 	});

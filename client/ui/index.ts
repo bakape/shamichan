@@ -2,7 +2,7 @@ export * from "./banner"
 export { default as FormView, FormAttrs } from "./forms"
 export { postAdded } from "./tab"
 export { default as notifyAboutReply, OverlayNotification } from "./notification"
-export { renderCaptchaForm } from "./captcha"
+export { renderCaptchaForm, captchaLoaded } from "./captcha"
 
 import initKeyboard from "./keyboard"
 import initTab from "./tab"

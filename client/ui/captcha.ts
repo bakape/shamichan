@@ -16,6 +16,8 @@ export function renderCaptchaForm(onSuccess: () => void) {
 	}
 }
 
+export const captchaLoaded = () => !!instance;
+
 // Prevents circular dependency
 hook("renderCaptchaForm", renderCaptchaForm);
 
