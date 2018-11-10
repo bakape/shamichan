@@ -54,6 +54,9 @@ ifeq ($(is_windows), true)
 	cp /mingw64/bin/*.dll ./
 endif
 
+server_no_fetch:
+	cd server; go build -v -o ../$(binary)
+
 generate: generate_clean
 	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/... github.com/bakape/thumbnailer github.com/gorilla/websocket
 	go generate ./server/...
