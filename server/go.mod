@@ -11,7 +11,7 @@ require (
 	github.com/andybalholm/cascadia v1.0.0 // indirect
 	github.com/aquilax/tripcode v0.0.0-20171231053406-db58da84bb12
 	github.com/badoux/goscraper v0.0.0-20170322173343-0213ced70878
-	github.com/bakape/captchouli v0.0.0-20181109192733-0efc89017889
+	github.com/bakape/captchouli v0.0.0-20181110211337-c3e768f42d6d
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
 	github.com/bakape/thumbnailer v0.0.0-20181109212531-f191a43e9c3c
 	github.com/boltdb/bolt v1.3.1

@@ -14,6 +14,8 @@ github.com/badoux/goscraper v0.0.0-20170322173343-0213ced70878 h1:ICGowALx67ojFa
 github.com/badoux/goscraper v0.0.0-20170322173343-0213ced70878/go.mod h1:5iU5AiceCVP7wmrAIn/9YhJzvmErX/GihV/T2o5QUpM=
 github.com/bakape/captchouli v0.0.0-20181109192733-0efc89017889 h1:84q/htSZcz6Kbm5HRzBDOAOKRSCuJfIGS4pxGbLLUHc=
 github.com/bakape/captchouli v0.0.0-20181109192733-0efc89017889/go.mod h1:D//bGpjsn/zGcFPVVN3CVipP7PLOmXeXii8p/9SyGpc=
+github.com/bakape/captchouli v0.0.0-20181110211337-c3e768f42d6d h1:72ZV02MeFkLQZHcQM1tL8NLI2/R/03zIxamzfyTcixw=
+github.com/bakape/captchouli v0.0.0-20181110211337-c3e768f42d6d/go.mod h1:D//bGpjsn/zGcFPVVN3CVipP7PLOmXeXii8p/9SyGpc=
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992 h1:n89d5g4t1+7ROrwElvy5W/knDo3bUKWOZ77acIdHA04=
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992/go.mod h1:+x6GUyBL1gkeUoBPZAEzF9u04TGIFEljjrqMpGT0KVE=
 github.com/bakape/thumbnailer v0.0.0-20181109212531-f191a43e9c3c h1:Q8X+ZsA71wSFFRd0isvIUEmpI2wIBSPXS75DSjyXfBo=
