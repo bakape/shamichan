@@ -16,14 +16,11 @@ www/wasm
 www/lang
 thumb_*.png
 thumb_*.jpg
-*.qtpl.go
-bin_data.go
-*_easyjson.go
 scripts/migration/3to4/3to4
 /go/pkg
 /images
-go/src/meguca/imager/assets/images
-go/src/meguca/imager/images
+server/imager/assets/images
+server/imager/images
 db.db
 easyjson-bootstrap*.go
 GeoLite2-Country.mmdb
