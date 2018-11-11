@@ -17,10 +17,10 @@ www/lang
 thumb_*.png
 thumb_*.jpg
 scripts/migration/3to4/3to4
-/go/pkg
+/server/pkg
 /images
-server/imager/assets/images
-server/imager/images
+server/src/meguca/imager/assets/images
+server/src/meguca/imager/images
 db.db
 easyjson-bootstrap*.go
 GeoLite2-Country.mmdb

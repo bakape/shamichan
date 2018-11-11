@@ -4,6 +4,14 @@ export gulp=$(node_bins)/gulp
 export is_windows=false
 binary=meguca
 
+ifeq ($(GOPATH),)
+	export PATH:=$(PATH):$(HOME)/go/bin
+	export GOPATH=$(HOME)/go:$(PWD)/server
+else
+	export PATH:=$(PATH):$(GOPATH)/bin
+	export GOPATH:=$(GOPATH):$(PWD)/server
+endif
+
 # Differentiate between Unix and mingw builds
 ifeq ($(OS), Windows_NT)
 	export PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig/
@@ -47,32 +55,34 @@ client_vendor: client_deps
 css:
 	$(gulp) css
 
-server:
-	cd server; go get -v
-	cd server; go build -v -o ../$(binary)
+server: server_deps
+	cd ./server/src/meguca/; go build -v -o ../../../$(binary)
 ifeq ($(is_windows), true)
 	cp /mingw64/bin/*.dll ./
 endif
 
+server_deps:
+	go list -f '{{.Deps}}' meguca | tr -d '[]' | xargs go get -v
+
+update_deps:
+	go get -u -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
+	go list -f '{{.Deps}}' meguca | tr -d '[]' | xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' | grep -v 'meguca' | xargs go get -u -v
+
 server_no_fetch:
-	cd server; go build -v -o ../$(binary)
+	cd ./server/src/meguca/; go build -v -o ../../../$(binary)
 
 generate: generate_clean
-	go get -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/... github.com/bakape/thumbnailer github.com/gorilla/websocket
-	go generate ./server/...
+	cd ./server/src/meguca/; go generate ./...
 
 generate_clean:
-	rm -f server/db/bin_data.go server/lang/bin_data.go server/assets/bin_data.go
-	rm -f server/common/*_easyjson.go
-	rm -f server/config/*_easyjson.go
-	rm -f server/websockets/feeds/*_easyjson.go
-	rm -f server/templates/*.qtpl.go
+	rm -f ./server/src/meguca/db/bin_data.go ./server/src/meguca/lang/bin_data.go ./server/src/meguca/assets/bin_data.go
+	rm -f ./server/src/meguca/templates/*.qtpl.go
 
 client_clean:
 	rm -rf www/js www/css/*.css www/css/maps node_modules
 
-clean: client_clean wasm_clean generate_clean
-	rm -rf .build .ffmpeg .package target meguca-*.zip meguca-*.tar.xz meguca meguca.exe
+clean: client_clean wasm_clean
+	rm -rf .build .ffmpeg .package target meguca-*.zip meguca-*.tar.xz meguca meguca.exe server/pkg
 ifeq ($(is_windows), true)
 	rm -rf /.meguca_build *.dll
 endif
@@ -81,10 +91,10 @@ dist_clean: clean
 	rm -rf images error.log db.db
 
 test:
-	cd server; go test --race -p 1 ./...
+	cd ./server/src/meguca/; go test --race -p 1 ./...
 
 test_no_race:
-	cd server; go test -p 1 ./...
+	cd ./server/src/meguca/; go test -p 1 ./...
 
 check: test
 

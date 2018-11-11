@@ -1,0 +1,182 @@
+{% import "meguca/config" %}
+{% import "meguca/lang" %}
+
+OwnedBoard renders a form for selecting one of several boards owned by the user
+{% func OwnedBoard(boards config.BoardTitles) %}{% stripspace %}
+	{% if len(boards) != 0 %}
+		<select name="boards" required>
+			{% for _, b := range boards %}
+				<option value="{%s= b.ID %}">
+					{%= formatTitle(b.ID, b.Title) %}
+				</option>
+			{% endfor %}
+		</select>
+		<br>
+		{%= submit(true) %}
+	{% else %}
+		{%s= lang.Get().UI["ownNoBoards"] %}
+		<br>
+		<br>
+		{%= cancel() %}
+		<div class="form-response admin"></div>
+	{% endif %}
+{% endstripspace %}{% endfunc %}
+
+{% func formatTitle(id, title string) %}{% stripspace %}
+	/{%s= id %}/{% space %}-{% space %}{%s title %}
+{% endstripspace %}{% endfunc %}
+
+BoardNavigation renders a board selection and search form
+{% func BoardNavigation() %}{% stripspace %}
+	{% code ln := lang.Get().Common.UI %}
+	<input type="text" class="full-width" name="search" placeholder="{%s= ln["search"] %}">
+	<br>
+	<form>
+		<span class="flex">
+			{%= submit(true) %}
+			<label>
+				<input type="checkbox" name="pointToCatalog">
+				{%s= ln["pointToCatalog"] %}
+			</label>
+		</span>
+		<div class="board-list">
+			{% for _, b := range config.GetBoardTitles() %}
+				<label class="board">
+					<input type="checkbox" name="{%s= b.ID %}">
+					<a href="/{%s= b.ID %}/">
+						{%= formatTitle(b.ID, b.Title) %}
+					</a>
+					<br>
+				</label>
+			{% endfor %}
+		</div>
+	</form>
+{% endstripspace %}{% endfunc %}
+
+CreateBoard renders a the form for creating new boards
+{% func CreateBoard() %}{% stripspace %}
+	{%= table(specs["createBoard"]) %}
+	{%= CaptchaConfirmation() %}
+{% endstripspace %}{% endfunc %}
+
+CaptchaConfirmation renders a confirmation form with an optional captcha
+{% func CaptchaConfirmation() %}{% stripspace %}
+	{%= captcha("all") %}
+	{%= submit(true) %}
+{% endstripspace %}{% endfunc %}
+
+{% func captcha(board string) %}{% stripspace %}
+	{% if !config.Get().Captcha %}
+		{% return %}
+	{% endif %}
+	<div class="captcha-container full-width">
+		<noscript>
+			<iframe width="462" height="525" scrolling="no" marginwidth="0" marginheight="0" src="/api/captcha/{%s= board %}}"></iframe>
+		</noscript>
+	</div>
+{% endstripspace %}{% endfunc %}
+
+Form for inputting key-value map-like data
+{% func keyValueForm(k, v string) %}{% stripspace %}
+	<span>
+		<input type="text" class="map-field" value="{%s k %}">
+		<input type="text" class="map-field" value="{%s v %}">
+		<a class="map-remove">
+			[X]
+		</a>
+		<br>
+	</span>
+{% endstripspace %}{% endfunc %}
+
+Form for inputting one array-like form item
+{% func arrayItemForm(v string) %}{% stripspace %}
+	<span>
+		<input type="text" class="array-field" value="{%s v %}">
+		<a class="array-remove">
+			[X]
+		</a>
+		<br>
+	</span>
+{% endstripspace %}{% endfunc %}
+
+Form formatted as a table, with cancel and submit buttons
+{% func tableForm(specs []inputSpec, needCaptcha bool) %}{% stripspace %}
+	{%= table(specs) %}
+	{% if needCaptcha %}
+		{%= captcha("all") %}
+	{% endif %}
+	{%= submit(true) %}
+{% endstripspace %}{% endfunc %}
+
+Render a map form for inputting map-like data
+{% func renderMap(spec inputSpec) %}{% stripspace %}
+	{% code ln := lang.Get() %}
+	<div class="map-form" name="{%s= spec.ID %}" title="{%s= ln.Forms[spec.ID][1] %}">
+		{% for k, v := range spec.Val.(map[string]string) %}
+			{%= keyValueForm(k, v) %}
+		{% endfor %}
+		<a class="map-add">
+			{%s= ln.UI["add"] %}
+		</a>
+		<br>
+	</div>
+{% endstripspace %}{% endfunc %}
+
+Render form for inputting array-like data
+{% func renderArray(spec inputSpec) %}{% stripspace %}
+	{% code ln := lang.Get() %}
+	<div class="array-form" name="{%s= spec.ID %}" title="{%s= ln.Forms[spec.ID][1] %}">
+		{% for _, v := range spec.Val.([]string) %}
+			{%= arrayItemForm(v) %}
+		{% endfor %}
+		<a class="array-add">
+			{%s= ln.UI["add"] %}
+		</a>
+		<br>
+	</div>
+{% endstripspace %}{% endfunc %}
+
+Render submit and cancel buttons
+{% func submit(cancel bool) %}{% stripspace %}
+	<input type="submit" value="{%s= lang.Get().Common.UI["submit"] %}">
+	{% if cancel %}
+		{%= cancel() %}
+	{% endif %}
+	<div class="form-response admin"></div>
+{% endstripspace %}{% endfunc %}
+
+Renders a cancel button
+{% func cancel() %}{% stripspace %}
+	<input type="button" name="cancel" value="{%s= lang.Get().Common.UI["cancel"] %}">
+{% endstripspace %}{% endfunc %}
+
+Render link to request new noscript captcha
+{% func NoscriptCaptchaLink(board string) %}{% stripspace %}
+	<a href="/api/captcha/{%s board %}" style="display: flex; width: 100%; height: 100%;">
+		<span style="align-self: center; margin: auto;">
+			{%s= lang.Get().UI["loadCaptcha"] %}
+		</span>
+	</a>
+{% endstripspace %}{% endfunc %}
+
+{% func BannerForm() %}{% stripspace %}
+	<div style="white-space: normal;">
+		{%s= lang.Get().UI["bannerSpecs"] %}
+	</div>
+	<br>
+	<input type="file" name="banners" multiple accept="image/png, image/gif, image/jpeg, video/webm">
+	<br>
+	{%= captcha("all") %}
+	{%= submit(true) %}
+{% endstripspace %}{% endfunc %}
+
+{% func LoadingAnimationForm() %}{% stripspace %}
+	<div style="white-space: normal;">
+		{%s= lang.Get().UI["loadingSpecs"] %}
+	</div>
+	<br>
+	<input type="file" name="image" accept="image/gif, video/webm">
+	<br>
+	{%= captcha("all") %}
+	{%= submit(true) %}
+{% endstripspace %}{% endfunc %}
