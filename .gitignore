@@ -18,6 +18,7 @@ thumb_*.png
 thumb_*.jpg
 scripts/migration/3to4/3to4
 /server/pkg
+/server/bin
 /images
 server/src/meguca/imager/assets/images
 server/src/meguca/imager/images
