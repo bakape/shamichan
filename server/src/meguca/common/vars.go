@@ -23,7 +23,7 @@ const (
 	MaxNumBanners      = 20
 	MaxAssetSize       = 100 << 10
 	MaxDiceSides       = 10000
-	BumpLimit          = 10000
+	BumpLimit          = 5000
 )
 
 // Various cryptographic token exact lengths
