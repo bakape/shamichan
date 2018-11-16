@@ -332,6 +332,12 @@ export default () => {
 		// Capture variable in inner scope
 		((s: postState) => {
 			postSM.act(s, postEvent.captchaSolved, () => {
+				if (postSM.state === postState.draft) {
+					const b = postForm.input.value;
+					if (b) {
+						postModel.parseInput(b);
+					}
+				}
 				postModel.retryUpload();
 				postForm.input.focus();
 				return s;
