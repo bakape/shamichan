@@ -105,7 +105,13 @@ class CaptchaForm extends FormView {
 				}
 				break;
 			default:
-				this.renderFormResponse(await res.text());
+				this.renderFormResponse(t);
 		}
+	}
+
+	// Render a text comment about the response status below the form
+	protected renderFormResponse(text: string) {
+		this.el.querySelector("form").innerHTML = text;
+		this.el.classList.add("admin");
 	}
 }
