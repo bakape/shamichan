@@ -4,7 +4,7 @@ import { page } from "../state";
 
 let instance: CaptchaForm;
 
-const overlay = document.getElementById("modal-overlay");
+const overlay = document.getElementById("captcha-overlay");
 
 // Render a modal captcha input form
 export function renderCaptchaForm(onSuccess: () => void) {
@@ -33,22 +33,12 @@ class CaptchaForm extends FormView {
 		});
 		instance = this;
 		this.onSuccess = onSuccess;
-		this.setModalVisibility(false)
 		this.render();
-	}
-
-	// (Un-)Hide all other modals
-	private setModalVisibility(visible: boolean) {
-		for (let el of [...overlay.children]) {
-			(el as HTMLElement).style.visibility =
-				visible ? 'visible' : 'hidden';
-		}
 	}
 
 	public remove() {
 		instance = null;
 		super.remove();
-		this.setModalVisibility(true);
 	}
 
 	private async render() {
@@ -62,7 +52,6 @@ class CaptchaForm extends FormView {
 		const s = await res.text();
 		this.el.innerHTML = s;
 		this.el.style.margin = "auto";
-		this.el.style.display = "block";
 		this.focus();
 	}
 

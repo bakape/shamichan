@@ -82,7 +82,8 @@
 		<div id=page-container>
 			<section id="threads"></section>
 		</div>
-		<div class="overlay" id="hover-overlay"></div>
+		<div class="overlay top-overlay" id="hover-overlay"></div>
+		<div id="captcha-overlay" class="overlay top-overlay"></div>
 		<script id=conf-data type="application/json">
 			{%z= confJSON %}
 		</script>

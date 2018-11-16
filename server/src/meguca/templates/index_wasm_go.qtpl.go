@@ -84,50 +84,50 @@ func StreamIndexWasm(qw422016 *qt422016.Writer, theme string) {
 	//line index_wasm_go.qtpl:78
 	qw422016.N().S(ln.UI["sync"])
 	//line index_wasm_go.qtpl:78
-	qw422016.N().S(`"></b></span><div id="modal-overlay" class="overlay"></div></div><div id=page-container><section id="threads"></section></div><div class="overlay" id="hover-overlay"></div><script id=conf-data type="application/json">`)
-	//line index_wasm_go.qtpl:87
+	qw422016.N().S(`"></b></span><div id="modal-overlay" class="overlay"></div></div><div id=page-container><section id="threads"></section></div><div class="overlay top-overlay" id="hover-overlay"></div><div id="captcha-overlay" class="overlay top-overlay"></div><script id=conf-data type="application/json">`)
+	//line index_wasm_go.qtpl:88
 	qw422016.N().Z(confJSON)
-	//line index_wasm_go.qtpl:87
+	//line index_wasm_go.qtpl:88
 	qw422016.N().S(`</script><script id="lang-data" type="application/json">`)
-	//line index_wasm_go.qtpl:90
+	//line index_wasm_go.qtpl:91
 	buf, _ := json.Marshal(ln.Common)
 
-	//line index_wasm_go.qtpl:91
+	//line index_wasm_go.qtpl:92
 	qw422016.N().Z(buf)
-	//line index_wasm_go.qtpl:91
+	//line index_wasm_go.qtpl:92
 	qw422016.N().S(`</script><script id="board-title-data" type="application/json">`)
-	//line index_wasm_go.qtpl:94
+	//line index_wasm_go.qtpl:95
 	buf, _ = json.Marshal(config.GetBoardTitles())
 
-	//line index_wasm_go.qtpl:95
+	//line index_wasm_go.qtpl:96
 	qw422016.N().Z(buf)
-	//line index_wasm_go.qtpl:95
+	//line index_wasm_go.qtpl:96
 	qw422016.N().S(`</script><script src="/assets/js/scripts/loader.js"></script></body>`)
-//line index_wasm_go.qtpl:99
+//line index_wasm_go.qtpl:100
 }
 
-//line index_wasm_go.qtpl:99
+//line index_wasm_go.qtpl:100
 func WriteIndexWasm(qq422016 qtio422016.Writer, theme string) {
-	//line index_wasm_go.qtpl:99
+	//line index_wasm_go.qtpl:100
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line index_wasm_go.qtpl:99
+	//line index_wasm_go.qtpl:100
 	StreamIndexWasm(qw422016, theme)
-	//line index_wasm_go.qtpl:99
+	//line index_wasm_go.qtpl:100
 	qt422016.ReleaseWriter(qw422016)
-//line index_wasm_go.qtpl:99
+//line index_wasm_go.qtpl:100
 }
 
-//line index_wasm_go.qtpl:99
+//line index_wasm_go.qtpl:100
 func IndexWasm(theme string) string {
-	//line index_wasm_go.qtpl:99
+	//line index_wasm_go.qtpl:100
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line index_wasm_go.qtpl:99
+	//line index_wasm_go.qtpl:100
 	WriteIndexWasm(qb422016, theme)
-	//line index_wasm_go.qtpl:99
+	//line index_wasm_go.qtpl:100
 	qs422016 := string(qb422016.B)
-	//line index_wasm_go.qtpl:99
+	//line index_wasm_go.qtpl:100
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line index_wasm_go.qtpl:99
+	//line index_wasm_go.qtpl:100
 	return qs422016
-//line index_wasm_go.qtpl:99
+//line index_wasm_go.qtpl:100
 }

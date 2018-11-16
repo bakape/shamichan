@@ -484,52 +484,52 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 	//line index.qtpl:368
 	qw422016.N().S(`</div></div>`)
 	//line index.qtpl:373
-	qw422016.N().S(`<div class="overlay" id="hover-overlay"></div>`)
-	//line index.qtpl:378
+	qw422016.N().S(`<div class="overlay top-overlay" id="hover-overlay"></div><div id="captcha-overlay" class="overlay top-overlay"></div>`)
+	//line index.qtpl:379
 	qw422016.N().S(`<section id="threads">`)
-	//line index.qtpl:382
+	//line index.qtpl:383
 	qw422016.N().S(`$$$</section>`)
-	//line index.qtpl:387
+	//line index.qtpl:388
 	qw422016.N().S(`<script src="/assets/js/vendor/almond.js"></script><script id="lang-data" type="application/json">`)
-	//line index.qtpl:390
+	//line index.qtpl:391
 	buf, _ := json.Marshal(ln.Common)
 
-	//line index.qtpl:391
+	//line index.qtpl:392
 	qw422016.N().Z(buf)
-	//line index.qtpl:391
+	//line index.qtpl:392
 	qw422016.N().S(`</script><script id="board-title-data" type="application/json">`)
-	//line index.qtpl:394
+	//line index.qtpl:395
 	buf, _ = json.Marshal(config.GetBoardTitles())
 
-	//line index.qtpl:395
+	//line index.qtpl:396
 	qw422016.N().Z(buf)
-	//line index.qtpl:395
+	//line index.qtpl:396
 	qw422016.N().S(`</script><script src="/assets/js/scripts/loader.js"></script></body>`)
-//line index.qtpl:399
+//line index.qtpl:400
 }
 
-//line index.qtpl:399
+//line index.qtpl:400
 func writerenderIndex(qq422016 qtio422016.Writer, pos auth.ModerationLevel) {
-	//line index.qtpl:399
+	//line index.qtpl:400
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line index.qtpl:399
+	//line index.qtpl:400
 	streamrenderIndex(qw422016, pos)
-	//line index.qtpl:399
+	//line index.qtpl:400
 	qt422016.ReleaseWriter(qw422016)
-//line index.qtpl:399
+//line index.qtpl:400
 }
 
-//line index.qtpl:399
+//line index.qtpl:400
 func renderIndex(pos auth.ModerationLevel) string {
-	//line index.qtpl:399
+	//line index.qtpl:400
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line index.qtpl:399
+	//line index.qtpl:400
 	writerenderIndex(qb422016, pos)
-	//line index.qtpl:399
+	//line index.qtpl:400
 	qs422016 := string(qb422016.B)
-	//line index.qtpl:399
+	//line index.qtpl:400
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line index.qtpl:399
+	//line index.qtpl:400
 	return qs422016
-//line index.qtpl:399
+//line index.qtpl:400
 }
