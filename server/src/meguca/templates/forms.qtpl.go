@@ -292,7 +292,7 @@ func streamcaptcha(qw422016 *qt422016.Writer, board string) {
 	//line forms.qtpl:74
 	qw422016.N().S(board)
 	//line forms.qtpl:74
-	qw422016.N().S(`}"></iframe></noscript></div>`)
+	qw422016.N().S(`"></iframe></noscript></div>`)
 //line forms.qtpl:77
 }
 

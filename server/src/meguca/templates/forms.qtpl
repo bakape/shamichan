@@ -71,7 +71,7 @@ CaptchaConfirmation renders a confirmation form with an optional captcha
 	{% endif %}
 	<div class="captcha-container full-width">
 		<noscript>
-			<iframe width="462" height="525" scrolling="no" marginwidth="0" marginheight="0" src="/api/captcha/{%s= board %}}"></iframe>
+			<iframe width="462" height="525" scrolling="no" marginwidth="0" marginheight="0" src="/api/captcha/{%s= board %}"></iframe>
 		</noscript>
 	</div>
 {% endstripspace %}{% endfunc %}
