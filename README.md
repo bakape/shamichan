@@ -37,8 +37,6 @@ compiled with:
     * zlib
     * libpng
     * libjpeg
-    * postscript
-* ghostscript
 * OpenCV >= 2
 * git
 
