@@ -159,7 +159,8 @@ func parseAssetForm(w http.ResponseWriter, r *http.Request, maxSize uint) (
 		return
 	}
 
-	_, ok = canPerform(w, r, r.Form.Get("board"), auth.BoardOwner, true)
+	board = r.Form.Get("board")
+	_, ok = canPerform(w, r, board, auth.BoardOwner, true)
 	return
 }
 
