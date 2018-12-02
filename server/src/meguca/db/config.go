@@ -178,7 +178,7 @@ func updateBoardConfigs(board string) error {
 	case err != nil:
 		return util.WrapError("reloading board configuration", err)
 	case changed:
-		return recompileTemplates()
+		return util.Parallel(recompileTemplates, auth.LoadCaptchaServices)
 	default:
 		return nil
 	}

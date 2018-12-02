@@ -125,10 +125,19 @@ func LoadCaptchaServices() (err error) {
 	}
 
 	opts := captchouli.Options{
-		AllowExplicit: true,
-		Quiet:         true,
-		Tags:          conf.CaptchaTags,
+		Quiet: true,
+		Tags:  conf.CaptchaTags,
 	}
+	setRatings := func(board string) {
+		if config.GetBoardConfigs(board).NSFW {
+			opts.Explicitness = []captchouli.Rating{captchouli.Safe,
+				captchouli.Questionable, captchouli.Explicit}
+		} else {
+			opts.Explicitness = nil
+		}
+	}
+
+	setRatings("all")
 	g, err := captchouli.NewService(opts)
 	if err != nil {
 		return
@@ -136,6 +145,7 @@ func LoadCaptchaServices() (err error) {
 	over := make(map[string]*captchouli.Service, len(conf.OverrideCaptchaTags))
 	for b, tags := range conf.OverrideCaptchaTags {
 		opts.Tags = []string{tags}
+		setRatings(b)
 		over[b], err = captchouli.NewService(opts)
 		if err != nil {
 			return
