@@ -56,16 +56,16 @@ func SyncClient(cl common.Client, op uint64, board string) (*Feed, error) {
 // to feed
 func RemoveClient(cl common.Client) {
 	clients.Lock()
-
 	old, ok := clients.clients[cl]
-	delete(clients.clients, cl)
+	if ok {
+		delete(clients.clients, cl)
 
-	ip := cl.IP()
-	clients.ips[ip]--
-	if clients.ips[ip] == 0 {
-		delete(clients.ips, ip)
+		ip := cl.IP()
+		clients.ips[ip]--
+		if clients.ips[ip] == 0 {
+			delete(clients.ips, ip)
+		}
 	}
-
 	clients.Unlock()
 
 	if ok {
