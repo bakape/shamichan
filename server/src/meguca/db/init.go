@@ -1,3 +1,5 @@
+//go:generate go-bindata -o sql.go --pkg db --nometadata -nocompress --prefix sql sql/...
+
 package db
 
 import (
@@ -120,7 +122,7 @@ func LoadDB() (err error) {
 			tasks := []func() error{loadConfigs, loadBans, handleSpamScores}
 			if config.ImagerMode != config.ImagerOnly {
 				tasks = append(tasks, openBoltDB, loadBanners,
-					loadLoadingAnimations)
+					loadLoadingAnimations, loadThreadPostCounts)
 			}
 			if err := util.Parallel(tasks...); err != nil {
 				return err

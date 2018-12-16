@@ -2,11 +2,117 @@ package db
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"meguca/common"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/Masterminds/squirrel"
 )
+
+var (
+	postCountCache           = make(map[uint64]uint64)
+	postCountCacheMu         sync.RWMutex
+	errTooManyWatchedThreads = common.StatusError{
+		errors.New("too many watched threads"), 400}
+)
+
+// Diff of passed and actual thread posts counts
+type ThreadPostCountDiff struct {
+	Changed map[uint64]int `json:"changed"`
+	Deleted []uint64       `json:"deleted"`
+}
+
+// Return diff of passed and actual thread post counts
+func DiffThreadPostCounts(old map[uint64]uint64) (
+	diff ThreadPostCountDiff, err error,
+) {
+	if len(old) > 1000 {
+		err = errTooManyWatchedThreads
+		return
+	}
+
+	postCountCacheMu.RLock()
+	defer postCountCacheMu.RUnlock()
+
+	diff.Changed = make(map[uint64]int, len(old))
+	diff.Deleted = make([]uint64, 0)
+	for thread, count := range old {
+		actual, ok := postCountCache[thread]
+		if !ok {
+			diff.Deleted = append(diff.Deleted, thread)
+		} else if delta := int(actual) - int(count); delta != 0 {
+			diff.Changed[thread] = delta
+		}
+	}
+
+	return
+}
+
+func loadThreadPostCounts() (err error) {
+	r, err := sq.Select("op, count(*)").
+		From("posts").
+		GroupBy("op").
+		Query()
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	postCountCacheMu.Lock()
+	defer postCountCacheMu.Unlock()
+
+	var thread, postCount uint64
+	for r.Next() {
+		err = r.Scan(&thread, &postCount)
+		if err != nil {
+			return
+		}
+		postCountCache[thread] = postCount
+	}
+	err = r.Err()
+	if err != nil {
+		return
+	}
+
+	err = Listen("thread_deleted", func(msg string) (err error) {
+		id, err := strconv.ParseUint(msg, 10, 64)
+		if err != nil {
+			return
+		}
+
+		postCountCacheMu.Lock()
+		delete(postCountCache, id)
+		postCountCacheMu.Unlock()
+		return
+	})
+	if err != nil {
+		return
+	}
+
+	return Listen("new_post_in_thread", func(msg string) (err error) {
+		split := strings.Split(msg, ",")
+		if len(split) != 2 {
+			return fmt.Errorf("invalid message: `%s`", msg)
+		}
+		id, err := strconv.ParseUint(split[0], 10, 64)
+		if err != nil {
+			return
+		}
+		postCount, err := strconv.ParseUint(split[1], 10, 64)
+		if err != nil {
+			return
+		}
+
+		postCountCacheMu.Lock()
+		postCountCache[id] = postCount
+		postCountCacheMu.Unlock()
+		return
+	})
+}
 
 // Thread is a template for writing new threads to the database
 type Thread struct {
@@ -18,10 +124,9 @@ type Thread struct {
 
 // ThreadCounter retrieves the progress counter of a thread
 func ThreadCounter(id uint64) (uint64, error) {
-	q := sq.Select("replyTime").
-		From("threads").
-		Where("id = ?", id)
-	return getCounter(q)
+	postCountCacheMu.RLock()
+	defer postCountCacheMu.RUnlock()
+	return postCountCache[id], nil
 }
 
 // ValidateOP confirms the specified thread exists on specific board
@@ -146,38 +251,4 @@ func bumpThread(tx *sql.Tx, id uint64, bump bool) (err error) {
 
 	err = withTransaction(tx, q.Where("id = ?", id)).Exec()
 	return err
-}
-
-// FilterExistingThreads filters threads by existence
-func FilterExistingThreads(ids ...uint64) (exist []uint64, err error) {
-	// First remove any duplicates to send less to the DB
-	dedup := make(map[uint64]struct{}, len(ids))
-	for _, id := range ids {
-		dedup[id] = struct{}{}
-	}
-	if len(dedup) != len(ids) {
-		ids = ids[:0]
-		for id := range dedup {
-			ids = append(ids, id)
-		}
-	}
-
-	exist = make([]uint64, 0, len(ids))
-	var id uint64
-	err = queryAll(
-		sq.Select("id").
-			From("threads").
-			Where(squirrel.Eq{
-				"id": ids,
-			}),
-		func(r *sql.Rows) (err error) {
-			err = r.Scan(&id)
-			if err != nil {
-				return
-			}
-			exist = append(exist, id)
-			return
-		},
-	)
-	return
 }

@@ -113,10 +113,6 @@ func IsConflictError(err error) bool {
 
 // Listen assigns a function to listen to Postgres notifications on a channel
 func Listen(event string, fn func(msg string) error) (err error) {
-	if IsTest {
-		return
-	}
-
 	l := pq.NewListener(
 		ConnArgs,
 		time.Second,
@@ -134,7 +130,9 @@ func Listen(event string, fn func(msg string) error) (err error) {
 				continue
 			}
 			if err := fn(msg.Extra); err != nil {
-				log.Errorf("error on database event `%s`: %s\n", event, err)
+				log.Errorf(
+					"error on database event id=`%s` msg=`%s` error=`%s`\n",
+					event, msg.Extra, err)
 			}
 		}
 	}()
@@ -168,6 +166,6 @@ func SetGeoMD5(hash string) error {
 		Set("val", hash).
 		Where("id = 'geo_md5'").
 		Exec()
-		
+
 	return err
 }

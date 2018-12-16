@@ -200,21 +200,16 @@ func serveIPCount(w http.ResponseWriter, r *http.Request) {
 	serveJSON(w, r, "", feeds.IPCount())
 }
 
-// Serve updates of new posts on selected threads
-func serveThreadWatcher(w http.ResponseWriter, r *http.Request) {
-	vals := r.URL.Query()["id"]
-	threads := make([]uint64, len(vals))
-	var err error
-	for i := 0; i < len(vals); i++ {
-		threads[i], err = strconv.ParseUint(vals[i], 10, 64)
-		if err != nil {
-			httpError(w, r, common.StatusError{err, 400})
-			return
-		}
+func serveThreadUpdates(w http.ResponseWriter, r *http.Request) {
+	var data map[uint64]uint64
+	if decodeJSON(w, r, &data) {
+		return
 	}
 
-	err = feeds.WatchThreads(w, r, threads)
+	diff, err := db.DiffThreadPostCounts(data)
 	if err != nil {
 		httpError(w, r, err)
+	} else {
+		serveJSON(w, r, "", diff)
 	}
 }

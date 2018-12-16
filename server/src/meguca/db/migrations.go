@@ -1023,11 +1023,32 @@ var migrations = []func(*sql.Tx) error{
 			createIndex("last_solved_captchas", "time"),
 		)
 	},
+	func(tx *sql.Tx) error {
+		return execAll(tx,
+			loadSQL("triggers/notify_thread_post_count"),
+			`create trigger notify_thread_post_count
+			after insert
+			on posts
+			for each row
+			execute procedure notify_thread_post_count()`,
+
+			loadSQL("triggers/notify_thread_deleted"),
+			`create trigger notify_thread_deleted
+			after delete
+			on threads
+			for each row
+			execute procedure notify_thread_deleted()`,
+		)
+	},
 }
 
 func createIndex(table, column string) string {
 	return fmt.Sprintf(`create index %s_%s on %s (%s)`, table, column, table,
 		column)
+}
+
+func loadSQL(path string) string {
+	return string(MustAsset(path + ".sql"))
 }
 
 // Run migrations from version `from`to version `to`

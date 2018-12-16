@@ -146,7 +146,7 @@ func createRouter() http.Handler {
 		json.GET("/board-config/:board", serveBoardConfigs)
 		json.GET("/board-list", serveBoardList)
 		json.GET("/ip-count", serveIPCount)
-		json.GET("/watch", serveThreadWatcher)
+		json.POST("/thread-updates", serveThreadUpdates)
 
 		// Internal API
 		api.GET("/socket", websockets.Handler)

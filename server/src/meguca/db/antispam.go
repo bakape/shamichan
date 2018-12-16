@@ -51,6 +51,9 @@ func handleSpamScores() (err error) {
 		return
 	}
 	return Listen("spam_detected", func(ip string) (err error) {
+		if IsTest {
+			return
+		}
 		for _, cl := range common.GetClientsByIP(ip) {
 			cl.Send(spamMsg)
 			cl.Close(nil)
