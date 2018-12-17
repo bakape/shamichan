@@ -148,7 +148,7 @@ func TestNotLoggedIn(t *testing.T) {
 func TestChangePassword(t *testing.T) {
 	assertTableClear(t, "accounts")
 	writeSampleUser(t)
-	(*config.Get()).Captcha = false
+	config.Set(config.Configs{})
 
 	const new = "654321"
 

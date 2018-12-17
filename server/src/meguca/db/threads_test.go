@@ -26,6 +26,13 @@ func TestDiffPostCount(t *testing.T) {
 	postCountCache = make(map[uint64]uint64)
 	postCountCacheMu.Unlock()
 
+	IsTest = false
+	err := listenForThreadUpdates()
+	if err != nil {
+		t.Fatal(err)
+	}
+	IsTest = true
+
 	prepareThreads(t)
 
 	init := map[uint64]uint64{
@@ -53,7 +60,7 @@ func TestDiffPostCount(t *testing.T) {
 
 	assert()
 
-	_, err := sq.Delete("threads").
+	_, err = sq.Delete("threads").
 		Where("id = 3").
 		Exec()
 	if err != nil {

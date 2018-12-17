@@ -113,6 +113,10 @@ func IsConflictError(err error) bool {
 
 // Listen assigns a function to listen to Postgres notifications on a channel
 func Listen(event string, fn func(msg string) error) (err error) {
+	if IsTest {
+		return
+	}
+
 	l := pq.NewListener(
 		ConnArgs,
 		time.Second,

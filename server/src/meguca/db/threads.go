@@ -78,6 +78,11 @@ func loadThreadPostCounts() (err error) {
 		return
 	}
 
+	return listenForThreadUpdates()
+}
+
+// Separate function for easier testing
+func listenForThreadUpdates() (err error) {
 	err = Listen("thread_deleted", func(msg string) (err error) {
 		id, err := strconv.ParseUint(msg, 10, 64)
 		if err != nil {
@@ -124,9 +129,10 @@ type Thread struct {
 
 // ThreadCounter retrieves the progress counter of a thread
 func ThreadCounter(id uint64) (uint64, error) {
-	postCountCacheMu.RLock()
-	defer postCountCacheMu.RUnlock()
-	return postCountCache[id], nil
+	q := sq.Select("replyTime").
+		From("threads").
+		Where("id = ?", id)
+	return getCounter(q)
 }
 
 // ValidateOP confirms the specified thread exists on specific board

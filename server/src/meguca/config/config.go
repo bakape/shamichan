@@ -282,8 +282,8 @@ func RemoveBoard(b string) {
 
 // Clear resets package state. Only use in tests.
 func Clear() {
-	globalMu.RLock()
-	defer globalMu.RUnlock()
+	globalMu.Lock()
+	defer globalMu.Unlock()
 
 	global = &Configs{}
 	clientJSON = nil

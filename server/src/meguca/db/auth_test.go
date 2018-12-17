@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"meguca/auth"
 	"meguca/common"
+	"meguca/config"
 	. "meguca/test"
 	"testing"
 	"time"
@@ -53,6 +54,7 @@ func TestRegisterAccount(t *testing.T) {
 func TestChangePassword(t *testing.T) {
 	assertTableClear(t, "accounts")
 	writeSampleUser(t)
+	config.Set(config.Configs{})
 
 	pass, err := GetPassword(sampleUserID)
 	if err != nil {
