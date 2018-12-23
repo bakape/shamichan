@@ -1,5 +1,5 @@
 import { importTemplate, trigger } from '../util'
-import { View, ViewAttrs } from '../base'
+import { View, ViewAttrs, Model } from '../base'
 import { config } from "../state";
 
 export interface FormAttrs extends ViewAttrs {
@@ -7,7 +7,7 @@ export interface FormAttrs extends ViewAttrs {
 }
 
 // Generic input form view with optional captcha support
-abstract class FormView extends View<null> {
+abstract class FormView extends View<Model> {
 	public el: HTMLFormElement
 	private needCaptcha: boolean = false;
 

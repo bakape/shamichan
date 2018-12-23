@@ -202,7 +202,7 @@ func serveIPCount(w http.ResponseWriter, r *http.Request) {
 
 func serveThreadUpdates(w http.ResponseWriter, r *http.Request) {
 	var data map[uint64]uint64
-	if decodeJSON(w, r, &data) {
+	if !decodeJSON(w, r, &data) {
 		return
 	}
 

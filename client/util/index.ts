@@ -208,7 +208,7 @@ export function extractJSON(id: string): any {
 // if first line is quoted, and new cursor position
 export function modPaste(old: string, sel: string, pos: number): Paste {
 	let s = '',
-	b = false
+		b = false
 
 	if (!sel) {
 		return
@@ -216,11 +216,11 @@ export function modPaste(old: string, sel: string, pos: number): Paste {
 
 	if (sel.charAt(0) == '>') {
 		switch (old.charAt(pos - 1)) {
-		case '':
-		case '\n':
-			break
-		default:
-			s = '\n'
+			case '':
+			case '\n':
+				break
+			default:
+				s = '\n'
 		}
 
 		for (let line of sel.split('\n')) {
@@ -228,16 +228,16 @@ export function modPaste(old: string, sel: string, pos: number): Paste {
 		}
 
 		switch (old.charAt(pos)) {
-		case '':
-		case '\n':
-			break
-		default:
-			b = true
-			s += '\n'
+			case '':
+			case '\n':
+				break
+			default:
+				b = true
+				s += '\n'
 		}
 	} else {
 		s += sel
 	}
 
-	return {body: s, pos: b ? pos + s.length - 1 : pos + s.length}
+	return { body: s, pos: b ? pos + s.length - 1 : pos + s.length }
 }

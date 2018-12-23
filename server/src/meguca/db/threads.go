@@ -22,8 +22,8 @@ var (
 
 // Diff of passed and actual thread posts counts
 type ThreadPostCountDiff struct {
-	Changed map[uint64]int `json:"changed"`
-	Deleted []uint64       `json:"deleted"`
+	Changed map[uint64]uint64 `json:"changed"`
+	Deleted []uint64          `json:"deleted"`
 }
 
 // Return diff of passed and actual thread post counts
@@ -38,14 +38,14 @@ func DiffThreadPostCounts(old map[uint64]uint64) (
 	postCountCacheMu.RLock()
 	defer postCountCacheMu.RUnlock()
 
-	diff.Changed = make(map[uint64]int, len(old))
+	diff.Changed = make(map[uint64]uint64, len(old))
 	diff.Deleted = make([]uint64, 0)
 	for thread, count := range old {
 		actual, ok := postCountCache[thread]
 		if !ok {
 			diff.Deleted = append(diff.Deleted, thread)
-		} else if delta := int(actual) - int(count); delta != 0 {
-			diff.Changed[thread] = delta
+		} else if actual != count {
+			diff.Changed[thread] = actual
 		}
 	}
 

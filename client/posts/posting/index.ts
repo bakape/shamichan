@@ -6,13 +6,14 @@ import { connState, connSM, handlers, message } from "../../connection"
 import { on, FSM, hook } from "../../util"
 import lang from "../../lang"
 import identity, { initIdentity } from "./identity"
-import { boardConfig, page } from "../../state"
+import * as state from "../../state";
 import initDrop from "./drop"
 import initPaste from "./paste"
 import initFullScreen from "./fullscreen"
 import initImageErr from "./image"
 import initThreads from "./threads"
 import { renderCaptchaForm, captchaLoaded } from "../../ui/captcha";
+import * as page from "../../page";
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
@@ -104,7 +105,7 @@ function quotePost(e: MouseEvent) {
 	// Don't trigger, when user is trying to open in a new tab
 	const bypass = e.which !== 1
 		|| e.ctrlKey
-		|| (page.thread && connSM.state !== connState.synced)
+		|| (state.page.thread && connSM.state !== connState.synced)
 	if (bypass) {
 		return
 	}
@@ -158,7 +159,7 @@ function quotePost(e: MouseEvent) {
 	const id = parseInt(post.id.slice(1))
 
 	// On board pages, first navigate to the thread
-	if (!page.thread) {
+	if (!state.page.thread) {
 		location.href = target.href
 
 		// Store, so a reply is opened, when the page is loaded
@@ -172,7 +173,7 @@ function quotePost(e: MouseEvent) {
 
 // Update the draft post's fields on identity change, if any
 function updateIdentity() {
-	if (postSM.state === postState.draft && !boardConfig.forcedAnon) {
+	if (postSM.state === postState.draft && !state.boardConfig.forcedAnon) {
 		postForm.renderIdentity()
 	}
 }
@@ -180,7 +181,7 @@ function updateIdentity() {
 async function openReply(e: MouseEvent) {
 	// Don't trigger, when user is trying to open in a new tab
 	if (e.which !== 1
-		|| !page.thread
+		|| !state.page.thread
 		|| e.ctrlKey
 		|| connSM.state !== connState.synced
 	) {
@@ -278,7 +279,8 @@ export default () => {
 	postSM.act(postState.allocating, postEvent.alloc, () =>
 		postState.alloc);
 
-	postSM.on(postState.alloc, bindNagging)
+	postSM.on(postState.alloc, bindNagging);
+	postSM.on(postState.alloc, page.watchCurrentThread);
 
 	// Open a new post creation form, if none open
 	postSM.act(postState.ready, postEvent.open, () => {

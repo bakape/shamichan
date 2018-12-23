@@ -14,7 +14,7 @@ export class Model {
 }
 
 // Generic view class, that all over view classes extend
-export default class View<M> {
+export default class View<M extends Model> {
 	public model: M
 	public el: HTMLElement
 	public id: string | number

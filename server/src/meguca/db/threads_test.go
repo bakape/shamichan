@@ -41,7 +41,7 @@ func TestDiffPostCount(t *testing.T) {
 		4: 6,
 	}
 	std := ThreadPostCountDiff{
-		Changed: map[uint64]int{
+		Changed: map[uint64]uint64{
 			1: 3,
 		},
 		Deleted: []uint64{4},

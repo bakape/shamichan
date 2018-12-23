@@ -1,13 +1,13 @@
 // IndexedDB database controller
 
-const dbVersion = 11
+const dbVersion = 12;
 
 let db: IDBDatabase
 
 // Database has erred and all future calls should be ignored
 // FF IndexedDB implementation is broken in private mode.
 // See https://bugzilla.mozilla.org/show_bug.cgi?id=781982
-// This helps bypass this.
+// This helps bypass it.
 let hasErred = false;
 
 // Expiring post ID object stores
@@ -21,6 +21,7 @@ const postStores = [
 // Expiring thread data stores
 const threadStores = [
 	"watchedThreads", // Threads currently watched
+	"openThreads",    // Threads recently opened
 ];
 
 // Open a connection to the IndexedDB database
@@ -112,11 +113,24 @@ function upgradeDB(event: IDBVersionChangeEvent) {
 			if (!db.objectStoreNames.contains("watchedThreads")) {
 				createExpiringStore(db, "watchedThreads");
 			}
+		case 11:
+			// Reset and recreate
+			db.deleteObjectStore("watchedThreads");
+			createExpiringStore(db, "watchedThreads", true);
+
+			createExpiringStore(db, "openThreads", true);
 	}
 }
 
-function createExpiringStore(db: IDBDatabase, name: string): IDBObjectStore {
-	const s = db.createObjectStore(name);
+function createExpiringStore(db: IDBDatabase,
+	name: string,
+	primaryKeyed: boolean = false,
+): IDBObjectStore {
+	const args = {};
+	if (primaryKeyed) {
+		args["keyPath"] = "id";
+	}
+	const s = db.createObjectStore(name, args);
 	s.createIndex("expires", "expires");
 	return s
 }
@@ -159,7 +173,7 @@ function newTransaction(store: string, write: boolean): IDBObjectStore {
 // Read the contents of a postStore for specific threads into an array
 export function readIDs(store: string, ops: number[]): Promise<number[]> {
 	if (hasErred || !ops.length) {
-		return fakePromise([])
+		return Promise.resolve([])
 	}
 	return Promise.all(
 		ops.map(id =>
@@ -182,7 +196,7 @@ export async function readIDRange(store: string,
 	criteria?: (s: IDBObjectStore) => IDBRequest,
 ): Promise<number[]> {
 	if (hasErred) {
-		return fakePromise([]);
+		return Promise.resolve([]);
 	}
 	return new Promise<number[]>((resolve, reject) => {
 		const s = newTransaction(store, false);
@@ -204,9 +218,24 @@ export async function readIDRange(store: string,
 	});
 }
 
-function fakePromise<T>(res: T): Promise<T> {
-	return new Promise(r =>
-		r(res))
+// Run function for each record in store
+export async function forEach<T>(store: string, fn: (data: T) => void) {
+	return new Promise<void>((resolve, reject) => {
+		const req = newTransaction(store, false).openCursor();
+
+		req.onerror = err =>
+			reject(err);
+
+		req.onsuccess = event => {
+			const cursor = (event as any).target.result as IDBCursorWithValue;
+			if (cursor) {
+				fn(cursor.value);
+				cursor.continue();
+			} else {
+				resolve();
+			}
+		};
+	});
 }
 
 // Asynchronously insert a new expiring post id object into a postStore
@@ -214,13 +243,12 @@ export function storeID(store: string, id: number, op: number, expiry: number) {
 	if (hasErred) {
 		return;
 	}
-	putObj(
-		store,
+	putObj(store,
 		{
 			id, op,
 			expires: Date.now() + expiry,
 		},
-		id, );
+		id);
 }
 
 // Clear the target object store asynchronously
@@ -236,7 +264,7 @@ export function clearStore(store: string) {
 // Retrieve an object from a specific object store
 export function getObj<T>(store: string, id: any): Promise<T> {
 	if (hasErred) {
-		return fakePromise({} as any)
+		throw new Error("IndexedDB not accessible");
 	}
 	return new Promise<T>((resolve, reject) => {
 		const t = newTransaction(store, false),
@@ -252,7 +280,7 @@ export function getObj<T>(store: string, id: any): Promise<T> {
 export function putObj(store: string, obj: any, key: any = undefined,
 ): Promise<void> {
 	if (hasErred) {
-		return fakePromise(undefined)
+		return Promise.resolve(undefined)
 	}
 	return new Promise<void>((resolve, reject) => {
 		const t = newTransaction(store, true),
@@ -267,7 +295,7 @@ export function putObj(store: string, obj: any, key: any = undefined,
 // Delete an object from a store by ID
 export function deleteObj(store: string, id: number): Promise<void> {
 	if (hasErred) {
-		return fakePromise(undefined);
+		return Promise.resolve(undefined);
 	}
 	return new Promise<void>((resolve, reject) => {
 		const t = newTransaction(store, true);
