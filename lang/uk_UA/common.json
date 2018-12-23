@@ -138,7 +138,9 @@
 		"thumbnailing": "Прев'ювання..",
 		"top": "Шапка",
 		"unfinishedPost": "Ви маєте незакінчений пост",
+		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
-		"uploadProgress": "завантаження..."
+		"uploadProgress": "завантаження...",
+		"watchThread": "Watch thread"
 	}
 }

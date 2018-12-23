@@ -245,5 +245,5 @@ async function getSameIPPosts(m: Post): Promise<PostData[]> {
 export default () =>
 	on(document, "click", openMenu, {
 		passive: true,
-		selector: ".control, .control svg, .control svg path",
+		selector: ".control, .control svg, .control path",
 	})

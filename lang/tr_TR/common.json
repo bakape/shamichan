@@ -138,7 +138,9 @@
 		"thumbnailing": "Thumbnailing...",
 		"top": "Üst",
 		"unfinishedPost": "You have an unfinished post",
+		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
-		"uploadProgress": "uploaded..."
+		"uploadProgress": "uploaded...",
+		"watchThread": "Watch thread"
 	}
 }

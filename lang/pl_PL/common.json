@@ -138,7 +138,9 @@
 		"thumbnailing": "Miniaturyzowanie...",
 		"top": "Na górę",
 		"unfinishedPost": "Masz niezakończony post",
+		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
-		"uploadProgress": "przesłano..."
+		"uploadProgress": "przesłano...",
+		"watchThread": "Watch thread"
 	}
 }

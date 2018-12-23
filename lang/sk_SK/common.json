@@ -138,7 +138,9 @@
 		"thumbnailing": "Odtlačkujem...",
 		"top": "Vrch",
 		"unfinishedPost": "Más nedokončený plagát",
+		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
-		"uploadProgress": "odoslané..."
+		"uploadProgress": "odoslané...",
+		"watchThread": "Watch thread"
 	}
 }

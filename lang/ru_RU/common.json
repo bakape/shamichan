@@ -138,7 +138,9 @@
 		"thumbnailing": "Генерация превью…",
 		"top": "Верх",
 		"unfinishedPost": "У вас есть незавершённый пост",
+		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
-		"uploadProgress": "загрузка…"
+		"uploadProgress": "загрузка…",
+		"watchThread": "Watch thread"
 	}
 }

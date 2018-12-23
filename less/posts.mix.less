@@ -135,22 +135,26 @@ header {
 	}
 }
 
-.control {
+.svg-link {
 	// Widen click area
 	width: 1em;
 	height: 1em;
 
-	position: relative;
-	margin-left: 0.5em;
-	float: right;
 	svg {
 		width: 0.7em;
 		height: 0.7em;
 	}
-	.popup-menu {
-		position: absolute;
-		right: 0;
+
+	header & {
+		position: relative;
+		margin-left: 0.5em;
+		float: right;
 	}
+}
+
+.control .popup-menu {
+	position: absolute;
+	right: 0;
 }
 
 .omit {
@@ -280,7 +284,6 @@ header {
 
 .thread-links {
 	padding: 0.3em;
-	font-size: smaller;
 }
 
 .omit {

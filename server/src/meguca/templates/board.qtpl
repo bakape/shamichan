@@ -125,6 +125,7 @@ allow caching of generated posts.
 						{%= expandLink(t.Board, idStr) %}
 					{% endif %}
 					{%= last100Link(t.Board, idStr) %}
+					{%= threadWatcherToggle(t.ID) %}
 				</span>
 				<br>
 				<h3>

@@ -4,13 +4,15 @@ import lang from "../lang";
 import * as thread from "./thread";
 import * as options from "../options";
 import * as posts from "../posts";
+import * as util from "../util";
+import * as board from "./board";
 
 interface OpenThreadRecord {
 	id: number;
 	time: number;
 }
 
-interface WatchedThreadRecord {
+export interface WatchedThreadRecord {
 	id: number;
 	postCount: number;
 	subject: string;
@@ -31,7 +33,9 @@ async function putExpiring(store: string,
 	await db.putObj(store, data).catch(console.error);
 }
 
-async function getStored(): Promise<{ [id: number]: WatchedThreadRecord }> {
+// Return all watched threads
+export async function getWatchedThreads()
+	: Promise<{ [id: number]: WatchedThreadRecord }> {
 	const watched = {};
 	await db.forEach<WatchedThreadRecord>("watchedThreads", rec =>
 		watched[rec.id] = rec);
@@ -55,7 +59,7 @@ async function fetchWatchedThreads() {
 	if (last && parseInt(last) > Date.now() - 60 * 1000) {
 		return;
 	}
-	const watched = await getStored();
+	const watched = await getWatchedThreads();
 	if (!Object.keys(watched).length) {
 		return;
 	}
@@ -95,7 +99,6 @@ async function fetchWatchedThreads() {
 		proms.push(unwatchThread(id));
 	}
 
-
 	if (options.canNotify()) {
 		for (let thread of toNotify) {
 			const data = watched[thread];
@@ -103,14 +106,16 @@ async function fetchWatchedThreads() {
 
 			const opts = options.notificationOpts();
 			const delta = diff.changed[id] - data.postCount;
-			opts.body = lang.format["newPostsInThread"]
-				.replace("%d", delta.toString());
+			opts.body = `「${data.subject}」`
 			opts.tag = `watched_thread:${id}`;
 			opts.renotify = true;
 			if (options.canShowImages() && data.thumbnailURL) {
-				opts.icon = data.thumbnailURL;
+				opts.image = data.thumbnailURL;
 			}
-			const n = new Notification(data.subject, opts);
+			const n = new Notification(
+				lang.format["newPostsInThread"]
+					.replace("%d", delta.toString()),
+				opts);
 			n.onclick = () => {
 				let u = `/all/${id}`;
 				if (delta <= 100) {
@@ -136,8 +141,41 @@ function markThreadOpened() {
 export function init() {
 	setInterval(markThreadOpened, 1000);
 	markThreadOpened();
+
 	setInterval(fetchWatchedThreads, 60 * 1000);
 	fetchWatchedThreads();
+
+	localizeThreadWatchToggles();
+
+	// Handle toggle clicks
+	util.on(document,
+		"click",
+		(e: MouseEvent) => {
+			if (e.which != 1) {
+				return;
+			}
+			const el = (e.target as Element).closest(".watcher-toggle");
+			const id = parseInt(el.getAttribute("data-id"));
+			let p;
+			if (el.classList.contains("enabled")) {
+				augmentToggle(el, false);
+				p = unwatchThread(id);
+			} else {
+				if (state.page.thread) {
+					p = watchCurrentThread();
+				} else {
+					const { subject, postCtr } = board.threads[id];
+					p = watchThread(id, postCtr, subject);
+				}
+				augmentToggle(el, true);
+			}
+			p.catch(console.error);
+		},
+		{
+			selector:
+				".watcher-toggle, .watcher-toggle svg, .watcher-toggle path",
+			passive: true,
+		});
 }
 
 // Mark thread as watched
@@ -161,10 +199,28 @@ export async function watchThread(id: number, postCount: number,
 export async function watchCurrentThread() {
 	if (state.page.thread) {
 		await watchThread(state.page.thread, thread.postCount, thread.subject);
+		augmentToggle(document.querySelector(".watcher-toggle"), true);
 	}
 }
 
 // Unmark thread as watched or simply bump post count
 export async function unwatchThread(id: number) {
 	await db.deleteObj("watchedThreads", id);
+}
+
+// Toggle all thread watching buttons according to DB state
+async function localizeThreadWatchToggles() {
+	const watched = new Set(Object.keys(await getWatchedThreads()));
+	for (let el of document.querySelectorAll(".watcher-toggle")) {
+		if (watched.has(el.getAttribute("data-id"))) {
+			augmentToggle(el, true);
+		}
+	}
+}
+
+// Augment thread watching toggle
+function augmentToggle(el: Element, enabled: boolean) {
+	el.classList.toggle("enabled", enabled);
+	el.setAttribute("title",
+		lang.ui[enabled ? "unwatchThread" : "watchThread"]);
 }

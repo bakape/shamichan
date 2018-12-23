@@ -327,396 +327,398 @@ func StreamCatalogThreads(qw422016 *qt422016.Writer, b []common.Thread, json []b
 		}
 		//line board.qtpl:127
 		streamlast100Link(qw422016, t.Board, idStr)
-		//line board.qtpl:127
+		//line board.qtpl:128
+		streamthreadWatcherToggle(qw422016, t.ID)
+		//line board.qtpl:128
 		qw422016.N().S(`</span><br><h3>「`)
-		//line board.qtpl:131
+		//line board.qtpl:132
 		qw422016.E().S(t.Subject)
-		//line board.qtpl:131
+		//line board.qtpl:132
 		qw422016.N().S(`」</h3><blockquote>`)
-		//line board.qtpl:134
+		//line board.qtpl:135
 		streambody(qw422016, t.Post, t.ID, t.Board, false, boardConfig.RbText, boardConfig.Pyu)
-		//line board.qtpl:134
+		//line board.qtpl:135
 		qw422016.N().S(`</blockquote></article>`)
-		//line board.qtpl:137
+		//line board.qtpl:138
 	}
-	//line board.qtpl:137
+	//line board.qtpl:138
 	qw422016.N().S(`<script id="post-data" type="application/json">`)
-	//line board.qtpl:139
+	//line board.qtpl:140
 	qw422016.N().Z(json)
-	//line board.qtpl:139
+	//line board.qtpl:140
 	qw422016.N().S(`</script></div>`)
-//line board.qtpl:142
+//line board.qtpl:143
 }
 
-//line board.qtpl:142
+//line board.qtpl:143
 func WriteCatalogThreads(qq422016 qtio422016.Writer, b []common.Thread, json []byte) {
-	//line board.qtpl:142
+	//line board.qtpl:143
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line board.qtpl:142
+	//line board.qtpl:143
 	StreamCatalogThreads(qw422016, b, json)
-	//line board.qtpl:142
+	//line board.qtpl:143
 	qt422016.ReleaseWriter(qw422016)
-//line board.qtpl:142
+//line board.qtpl:143
 }
 
-//line board.qtpl:142
+//line board.qtpl:143
 func CatalogThreads(b []common.Thread, json []byte) string {
-	//line board.qtpl:142
+	//line board.qtpl:143
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line board.qtpl:142
+	//line board.qtpl:143
 	WriteCatalogThreads(qb422016, b, json)
-	//line board.qtpl:142
+	//line board.qtpl:143
 	qs422016 := string(qb422016.B)
-	//line board.qtpl:142
+	//line board.qtpl:143
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line board.qtpl:142
+	//line board.qtpl:143
 	return qs422016
-//line board.qtpl:142
+//line board.qtpl:143
 }
 
 // IndexThreads renders abbreviated threads for display on board index pages
 
-//line board.qtpl:145
+//line board.qtpl:146
 func StreamIndexThreads(qw422016 *qt422016.Writer, threads []common.Thread, json []byte) {
-	//line board.qtpl:146
+	//line board.qtpl:147
 	root := config.Get().RootURL
 
-	//line board.qtpl:147
+	//line board.qtpl:148
 	bls := extractBacklinks(15*6, threads...)
 
-	//line board.qtpl:147
+	//line board.qtpl:148
 	qw422016.N().S(`<div id="index-thread-container">`)
-	//line board.qtpl:149
+	//line board.qtpl:150
 	for _, t := range threads {
-		//line board.qtpl:150
+		//line board.qtpl:151
 		idStr := strconv.FormatUint(t.ID, 10)
 
-		//line board.qtpl:150
+		//line board.qtpl:151
 		qw422016.N().S(`<section class="index-thread`)
-		//line board.qtpl:151
-		if t.IsDeleted() {
-			//line board.qtpl:151
-			qw422016.N().S(` `)
-			//line board.qtpl:151
-			qw422016.N().S(`deleted`)
-			//line board.qtpl:151
-		}
-		//line board.qtpl:151
-		qw422016.N().S(`" data-id="`)
-		//line board.qtpl:151
-		qw422016.N().S(idStr)
-		//line board.qtpl:151
-		qw422016.N().S(`">`)
 		//line board.qtpl:152
+		if t.IsDeleted() {
+			//line board.qtpl:152
+			qw422016.N().S(` `)
+			//line board.qtpl:152
+			qw422016.N().S(`deleted`)
+			//line board.qtpl:152
+		}
+		//line board.qtpl:152
+		qw422016.N().S(`" data-id="`)
+		//line board.qtpl:152
+		qw422016.N().S(idStr)
+		//line board.qtpl:152
+		qw422016.N().S(`">`)
+		//line board.qtpl:153
 		streamdeletedToggle(qw422016)
-		//line board.qtpl:153
+		//line board.qtpl:154
 		streamrenderThreadPosts(qw422016, t, bls, root, true)
-		//line board.qtpl:153
+		//line board.qtpl:154
 		qw422016.N().S(`<hr></section>`)
-		//line board.qtpl:156
+		//line board.qtpl:157
 	}
-	//line board.qtpl:156
+	//line board.qtpl:157
 	qw422016.N().S(`<script id="post-data" type="application/json">`)
-	//line board.qtpl:158
+	//line board.qtpl:159
 	qw422016.N().Z(json)
-	//line board.qtpl:158
+	//line board.qtpl:159
 	qw422016.N().S(`</script>`)
-	//line board.qtpl:160
+	//line board.qtpl:161
 	streamencodeBacklinks(qw422016, bls)
-	//line board.qtpl:160
+	//line board.qtpl:161
 	qw422016.N().S(`</div>`)
-//line board.qtpl:162
+//line board.qtpl:163
 }
 
-//line board.qtpl:162
+//line board.qtpl:163
 func WriteIndexThreads(qq422016 qtio422016.Writer, threads []common.Thread, json []byte) {
-	//line board.qtpl:162
+	//line board.qtpl:163
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line board.qtpl:162
+	//line board.qtpl:163
 	StreamIndexThreads(qw422016, threads, json)
-	//line board.qtpl:162
+	//line board.qtpl:163
 	qt422016.ReleaseWriter(qw422016)
-//line board.qtpl:162
+//line board.qtpl:163
 }
 
-//line board.qtpl:162
+//line board.qtpl:163
 func IndexThreads(threads []common.Thread, json []byte) string {
-	//line board.qtpl:162
+	//line board.qtpl:163
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line board.qtpl:162
+	//line board.qtpl:163
 	WriteIndexThreads(qb422016, threads, json)
-	//line board.qtpl:162
+	//line board.qtpl:163
 	qs422016 := string(qb422016.B)
-	//line board.qtpl:162
+	//line board.qtpl:163
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line board.qtpl:162
+	//line board.qtpl:163
 	return qs422016
-//line board.qtpl:162
+//line board.qtpl:163
 }
 
 // Render noscript-specific post creation fields
 
-//line board.qtpl:165
+//line board.qtpl:166
 func streamnoscriptPostCreationFields(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
-	//line board.qtpl:166
+	//line board.qtpl:167
 	ln := lang.Get()
 
-	//line board.qtpl:167
+	//line board.qtpl:168
 	if pos > auth.NotStaff {
-		//line board.qtpl:168
-		streaminput(qw422016, staffTitleSpec.wrap(), ln)
 		//line board.qtpl:169
+		streaminput(qw422016, staffTitleSpec.wrap(), ln)
+		//line board.qtpl:170
 	}
-	//line board.qtpl:170
+	//line board.qtpl:171
 	for _, s := range specs["noscriptPostCreation"] {
-		//line board.qtpl:171
-		streaminput(qw422016, s, ln)
 		//line board.qtpl:172
+		streaminput(qw422016, s, ln)
+		//line board.qtpl:173
 	}
-//line board.qtpl:173
+//line board.qtpl:174
 }
 
-//line board.qtpl:173
+//line board.qtpl:174
 func writenoscriptPostCreationFields(qq422016 qtio422016.Writer, pos auth.ModerationLevel) {
-	//line board.qtpl:173
+	//line board.qtpl:174
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line board.qtpl:173
+	//line board.qtpl:174
 	streamnoscriptPostCreationFields(qw422016, pos)
-	//line board.qtpl:173
+	//line board.qtpl:174
 	qt422016.ReleaseWriter(qw422016)
-//line board.qtpl:173
+//line board.qtpl:174
 }
 
-//line board.qtpl:173
+//line board.qtpl:174
 func noscriptPostCreationFields(pos auth.ModerationLevel) string {
-	//line board.qtpl:173
+	//line board.qtpl:174
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line board.qtpl:173
+	//line board.qtpl:174
 	writenoscriptPostCreationFields(qb422016, pos)
-	//line board.qtpl:173
+	//line board.qtpl:174
 	qs422016 := string(qb422016.B)
-	//line board.qtpl:173
+	//line board.qtpl:174
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line board.qtpl:173
+	//line board.qtpl:174
 	return qs422016
-//line board.qtpl:173
+//line board.qtpl:174
 }
 
 // Render image upload form
 
-//line board.qtpl:176
+//line board.qtpl:177
 func streamuploadForm(qw422016 *qt422016.Writer) {
-	//line board.qtpl:176
+	//line board.qtpl:177
 	qw422016.N().S(`<span class="upload-container"><span data-id="spoiler"><label><input type="checkbox" name="spoiler">`)
-	//line board.qtpl:181
+	//line board.qtpl:182
 	qw422016.N().S(lang.Get().Common.Posts["spoiler"])
-	//line board.qtpl:181
+	//line board.qtpl:182
 	qw422016.N().S(`</label></span><br><input type="file" name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip, audio/x-flac, text/plain, application/pdf, video/quicktime, audio/x-flac"><br></span>`)
-//line board.qtpl:188
+//line board.qtpl:189
 }
 
-//line board.qtpl:188
+//line board.qtpl:189
 func writeuploadForm(qq422016 qtio422016.Writer) {
-	//line board.qtpl:188
+	//line board.qtpl:189
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line board.qtpl:188
+	//line board.qtpl:189
 	streamuploadForm(qw422016)
-	//line board.qtpl:188
+	//line board.qtpl:189
 	qt422016.ReleaseWriter(qw422016)
-//line board.qtpl:188
+//line board.qtpl:189
 }
 
-//line board.qtpl:188
+//line board.qtpl:189
 func uploadForm() string {
-	//line board.qtpl:188
+	//line board.qtpl:189
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line board.qtpl:188
+	//line board.qtpl:189
 	writeuploadForm(qb422016)
-	//line board.qtpl:188
+	//line board.qtpl:189
 	qs422016 := string(qb422016.B)
-	//line board.qtpl:188
+	//line board.qtpl:189
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line board.qtpl:188
+	//line board.qtpl:189
 	return qs422016
-//line board.qtpl:188
+//line board.qtpl:189
 }
 
 // Link to catalog or board page
 
-//line board.qtpl:191
+//line board.qtpl:192
 func streamcatalogLink(qw422016 *qt422016.Writer, catalog bool) {
-	//line board.qtpl:192
+	//line board.qtpl:193
 	ln := lang.Get().Common.UI
 
-	//line board.qtpl:192
+	//line board.qtpl:193
 	qw422016.N().S(`<aside class="act glass">`)
-	//line board.qtpl:194
+	//line board.qtpl:195
 	if catalog {
-		//line board.qtpl:194
+		//line board.qtpl:195
 		qw422016.N().S(`<a href=".">`)
-		//line board.qtpl:196
+		//line board.qtpl:197
 		qw422016.N().S(ln["return"])
-		//line board.qtpl:196
+		//line board.qtpl:197
 		qw422016.N().S(`</a>`)
-		//line board.qtpl:198
+		//line board.qtpl:199
 	} else {
-		//line board.qtpl:198
+		//line board.qtpl:199
 		qw422016.N().S(`<a href="catalog">`)
-		//line board.qtpl:200
+		//line board.qtpl:201
 		qw422016.N().S(ln["catalog"])
-		//line board.qtpl:200
+		//line board.qtpl:201
 		qw422016.N().S(`</a>`)
-		//line board.qtpl:202
+		//line board.qtpl:203
 	}
-	//line board.qtpl:202
+	//line board.qtpl:203
 	qw422016.N().S(`</aside>`)
-//line board.qtpl:204
+//line board.qtpl:205
 }
 
-//line board.qtpl:204
+//line board.qtpl:205
 func writecatalogLink(qq422016 qtio422016.Writer, catalog bool) {
-	//line board.qtpl:204
+	//line board.qtpl:205
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line board.qtpl:204
+	//line board.qtpl:205
 	streamcatalogLink(qw422016, catalog)
-	//line board.qtpl:204
+	//line board.qtpl:205
 	qt422016.ReleaseWriter(qw422016)
-//line board.qtpl:204
+//line board.qtpl:205
 }
 
-//line board.qtpl:204
+//line board.qtpl:205
 func catalogLink(catalog bool) string {
-	//line board.qtpl:204
+	//line board.qtpl:205
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line board.qtpl:204
+	//line board.qtpl:205
 	writecatalogLink(qb422016, catalog)
-	//line board.qtpl:204
+	//line board.qtpl:205
 	qs422016 := string(qb422016.B)
-	//line board.qtpl:204
+	//line board.qtpl:205
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line board.qtpl:204
+	//line board.qtpl:205
 	return qs422016
-//line board.qtpl:204
+//line board.qtpl:205
 }
 
 // Links to different pages of the board index
 
-//line board.qtpl:207
+//line board.qtpl:208
 func streampagination(qw422016 *qt422016.Writer, page, total int) {
-	//line board.qtpl:207
+	//line board.qtpl:208
 	qw422016.N().S(`<aside class="glass spaced">`)
-	//line board.qtpl:209
+	//line board.qtpl:210
 	if page != 0 {
-		//line board.qtpl:210
+		//line board.qtpl:211
 		if page-1 != 0 {
-			//line board.qtpl:211
-			streampageLink(qw422016, 0, "<<")
 			//line board.qtpl:212
+			streampageLink(qw422016, 0, "<<")
+			//line board.qtpl:213
 		}
-		//line board.qtpl:213
-		streampageLink(qw422016, page-1, "<")
 		//line board.qtpl:214
+		streampageLink(qw422016, page-1, "<")
+		//line board.qtpl:215
 	}
-	//line board.qtpl:215
+	//line board.qtpl:216
 	for i := 0; i < total; i++ {
-		//line board.qtpl:216
+		//line board.qtpl:217
 		if i != page {
-			//line board.qtpl:217
+			//line board.qtpl:218
 			streampageLink(qw422016, i, strconv.Itoa(i))
-			//line board.qtpl:218
+			//line board.qtpl:219
 		} else {
-			//line board.qtpl:218
+			//line board.qtpl:219
 			qw422016.N().S(`<b>`)
-			//line board.qtpl:220
+			//line board.qtpl:221
 			qw422016.N().D(i)
-			//line board.qtpl:220
+			//line board.qtpl:221
 			qw422016.N().S(`</b>`)
-			//line board.qtpl:222
+			//line board.qtpl:223
 		}
-		//line board.qtpl:223
+		//line board.qtpl:224
 	}
-	//line board.qtpl:224
+	//line board.qtpl:225
 	if page != total-1 {
-		//line board.qtpl:225
-		streampageLink(qw422016, page+1, ">")
 		//line board.qtpl:226
+		streampageLink(qw422016, page+1, ">")
+		//line board.qtpl:227
 		if page+1 != total-1 {
-			//line board.qtpl:227
-			streampageLink(qw422016, total-1, ">>")
 			//line board.qtpl:228
+			streampageLink(qw422016, total-1, ">>")
+			//line board.qtpl:229
 		}
-		//line board.qtpl:229
+		//line board.qtpl:230
 	}
-	//line board.qtpl:229
+	//line board.qtpl:230
 	qw422016.N().S(`</aside>`)
-//line board.qtpl:231
+//line board.qtpl:232
 }
 
-//line board.qtpl:231
+//line board.qtpl:232
 func writepagination(qq422016 qtio422016.Writer, page, total int) {
-	//line board.qtpl:231
+	//line board.qtpl:232
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line board.qtpl:231
+	//line board.qtpl:232
 	streampagination(qw422016, page, total)
-	//line board.qtpl:231
+	//line board.qtpl:232
 	qt422016.ReleaseWriter(qw422016)
-//line board.qtpl:231
+//line board.qtpl:232
 }
 
-//line board.qtpl:231
+//line board.qtpl:232
 func pagination(page, total int) string {
-	//line board.qtpl:231
+	//line board.qtpl:232
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line board.qtpl:231
+	//line board.qtpl:232
 	writepagination(qb422016, page, total)
-	//line board.qtpl:231
+	//line board.qtpl:232
 	qs422016 := string(qb422016.B)
-	//line board.qtpl:231
+	//line board.qtpl:232
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line board.qtpl:231
+	//line board.qtpl:232
 	return qs422016
-//line board.qtpl:231
+//line board.qtpl:232
 }
 
 // Link to a different paginated board page
 
-//line board.qtpl:234
+//line board.qtpl:235
 func streampageLink(qw422016 *qt422016.Writer, i int, text string) {
-	//line board.qtpl:234
+	//line board.qtpl:235
 	qw422016.N().S(`<a href="?page=`)
-	//line board.qtpl:235
+	//line board.qtpl:236
 	qw422016.N().D(i)
-	//line board.qtpl:235
+	//line board.qtpl:236
 	qw422016.N().S(`">`)
-	//line board.qtpl:236
+	//line board.qtpl:237
 	qw422016.N().S(text)
-	//line board.qtpl:236
+	//line board.qtpl:237
 	qw422016.N().S(`</a>`)
-//line board.qtpl:238
+//line board.qtpl:239
 }
 
-//line board.qtpl:238
+//line board.qtpl:239
 func writepageLink(qq422016 qtio422016.Writer, i int, text string) {
-	//line board.qtpl:238
+	//line board.qtpl:239
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line board.qtpl:238
+	//line board.qtpl:239
 	streampageLink(qw422016, i, text)
-	//line board.qtpl:238
+	//line board.qtpl:239
 	qt422016.ReleaseWriter(qw422016)
-//line board.qtpl:238
+//line board.qtpl:239
 }
 
-//line board.qtpl:238
+//line board.qtpl:239
 func pageLink(i int, text string) string {
-	//line board.qtpl:238
+	//line board.qtpl:239
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line board.qtpl:238
+	//line board.qtpl:239
 	writepageLink(qb422016, i, text)
-	//line board.qtpl:238
+	//line board.qtpl:239
 	qs422016 := string(qb422016.B)
-	//line board.qtpl:238
+	//line board.qtpl:239
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line board.qtpl:238
+	//line board.qtpl:239
 	return qs422016
-//line board.qtpl:238
+//line board.qtpl:239
 }
