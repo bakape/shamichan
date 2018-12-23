@@ -123,7 +123,7 @@ Render an image or video asset
 {% endstripspace %}{% endfunc %}
 
 {% func loadingImage(board string) %}{% stripspace %}
-	<div id="loading-image">
+	<div id="loading-image" class="noscript-hide">
 		{%= asset(fmt.Sprintf("/assets/loading/%s", board), assets.Loading.Get(board).Mime) %}
 	</div>
 {% endstripspace %}{% endfunc %}

@@ -581,7 +581,7 @@ func asset(url, mime string) string {
 //line util.qtpl:125
 func streamloadingImage(qw422016 *qt422016.Writer, board string) {
 	//line util.qtpl:125
-	qw422016.N().S(`<div id="loading-image">`)
+	qw422016.N().S(`<div id="loading-image" class="noscript-hide">`)
 	//line util.qtpl:127
 	streamasset(qw422016, fmt.Sprintf("/assets/loading/%s", board), assets.Loading.Get(board).Mime)
 	//line util.qtpl:127

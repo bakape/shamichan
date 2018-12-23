@@ -124,7 +124,7 @@ func streamrenderBoard(qw422016 *qt422016.Writer, threadHTML []byte, id, title s
 	//line board.qtpl:51
 	streamsubmit(qw422016, false)
 	//line board.qtpl:51
-	qw422016.N().S(`</form></aside><aside id="refresh" class="act glass"><a>`)
+	qw422016.N().S(`</form></aside><aside id="refresh" class="act glass noscript-hide"><a>`)
 	//line board.qtpl:56
 	qw422016.N().S(ln.Common.UI["refresh"])
 	//line board.qtpl:56
@@ -142,7 +142,7 @@ func streamrenderBoard(qw422016 *qt422016.Writer, threadHTML []byte, id, title s
 	//line board.qtpl:64
 	streamhoverReveal(qw422016, "aside", conf.Rules, ln.Common.UI["rules"])
 	//line board.qtpl:64
-	qw422016.N().S(`<span id="catalog-controls" class="margin-spaced"><input type="text" name="search" placeholder="`)
+	qw422016.N().S(`<span id="catalog-controls" class="margin-spaced noscript-hide"><input type="text" name="search" placeholder="`)
 	//line board.qtpl:66
 	qw422016.N().S(ln.Common.UI["search"])
 	//line board.qtpl:66

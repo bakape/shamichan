@@ -82,7 +82,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 	//line index.qtpl:55
 	streamdeletedToggle(qw422016)
 	//line index.qtpl:55
-	qw422016.N().S(`<header class="spaced"><input type="checkbox" class="mod-checkbox hidden"><h3 hidden></h3><b class="name spaced"></b><img class="flag" hidden><time></time><nav><a>No.</a><a class="quote"></a></nav><a class="control"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" /></svg></a></header><div class="post-container"><blockquote></blockquote></div></template><template name="figcaption"><figcaption class="spaced"><a class="image-toggle act" hidden></a><span class="spaced image-search-container">`)
+	qw422016.N().S(`<header class="spaced"><input type="checkbox" class="mod-checkbox hidden"><h3 hidden></h3><b class="name spaced"></b><img class="flag" hidden><time></time><nav><a>No.</a><a class="quote"></a></nav><a class="control noscript-hide"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" /></svg></a></header><div class="post-container"><blockquote></blockquote></div></template><template name="figcaption"><figcaption class="spaced"><a class="image-toggle act" hidden></a><span class="spaced image-search-container">`)
 	//line index.qtpl:82
 	engines := [...][2]string{
 		{"google", "G"},

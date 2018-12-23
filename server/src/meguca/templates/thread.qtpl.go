@@ -86,7 +86,7 @@ func streamrenderThread(qw422016 *qt422016.Writer, postHTML []byte, id uint64, b
 	//line thread.qtpl:37
 	qw422016.N().S(ln.Common.UI["catalog"])
 	//line thread.qtpl:37
-	qw422016.N().S(`</a></span><span id="expand-images" class="act"><a>`)
+	qw422016.N().S(`</a></span><span id="expand-images" class="act noscript-hide"><a>`)
 	//line thread.qtpl:42
 	qw422016.N().S(ln.Common.Posts["expandImages"])
 	//line thread.qtpl:42
@@ -104,7 +104,7 @@ func streamrenderThread(qw422016 *qt422016.Writer, postHTML []byte, id uint64, b
 	//line thread.qtpl:51
 	if !locked {
 		//line thread.qtpl:51
-		qw422016.N().S(`<aside class="act posting glass"><a>`)
+		qw422016.N().S(`<aside class="act posting glass noscript-hide"><a>`)
 		//line thread.qtpl:54
 		qw422016.N().S(ln.Common.UI["reply"])
 		//line thread.qtpl:54

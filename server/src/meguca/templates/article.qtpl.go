@@ -222,7 +222,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, c articleCont
 		//line article.qtpl:80
 	}
 	//line article.qtpl:80
-	qw422016.N().S(`<a class="control"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" /></svg></a></header>`)
+	qw422016.N().S(`<a class="control noscript-hide"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" /></svg></a></header>`)
 	//line article.qtpl:87
 	var src string
 
