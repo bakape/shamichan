@@ -19,3 +19,7 @@ interface ArrayBufferTarget extends EventTarget {
 interface ArrayBufferLoadEvent extends Event {
 	target: ArrayBufferTarget
 }
+
+interface NotificationOptions {
+	sticky?: boolean;
+}

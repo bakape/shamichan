@@ -48,19 +48,19 @@ func StreamIndexWasm(qw422016 *qt422016.Writer, theme string) {
 	//line index_wasm_go.qtpl:43
 	qw422016.N().S(ln.UI["fuckOff"])
 	//line index_wasm_go.qtpl:43
-	qw422016.N().S(`</span></div></noscript><div id="user-background"></div><div class=overlay-container><span id="banner" class="glass"><b id="banner-center"></b><a id="banner-options" class="banner-float" title="`)
+	qw422016.N().S(`</span></div></noscript><div id="user-background"></div><div class=overlay-container><span id="banner" class="glass"><b id="banner-center"></b><a id="banner-options" class="banner-float svg-link noscript-hide" title="`)
 	//line index_wasm_go.qtpl:50
 	qw422016.N().S(ln.UI["options"])
 	//line index_wasm_go.qtpl:50
-	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M3.5 0l-.5 1.19c-.1.03-.19.08-.28.13l-1.19-.5-.72.72.5 1.19c-.05.1-.09.18-.13.28l-1.19.5v1l1.19.5c.04.1.08.18.13.28l-.5 1.19.72.72 1.19-.5c.09.04.18.09.28.13l.5 1.19h1l.5-1.19c.09-.04.19-.08.28-.13l1.19.5.72-.72-.5-1.19c.04-.09.09-.19.13-.28l1.19-.5v-1l-1.19-.5c-.03-.09-.08-.19-.13-.28l.5-1.19-.72-.72-1.19.5c-.09-.04-.19-.09-.28-.13l-.5-1.19h-1zm.5 2.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5z"/></svg></a><a id="banner-identity" class="banner-float" title="`)
+	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M3.5 0l-.5 1.19c-.1.03-.19.08-.28.13l-1.19-.5-.72.72.5 1.19c-.05.1-.09.18-.13.28l-1.19.5v1l1.19.5c.04.1.08.18.13.28l-.5 1.19.72.72 1.19-.5c.09.04.18.09.28.13l.5 1.19h1l.5-1.19c.09-.04.19-.08.28-.13l1.19.5.72-.72-.5-1.19c.04-.09.09-.19.13-.28l1.19-.5v-1l-1.19-.5c-.03-.09-.08-.19-.13-.28l.5-1.19-.72-.72-1.19.5c-.09-.04-.19-.09-.28-.13l-.5-1.19h-1zm.5 2.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5z"/></svg></a><a id="banner-identity" class="banner-float svg-link noscript-hide" title="`)
 	//line index_wasm_go.qtpl:55
 	qw422016.N().S(ln.UI["identity"])
 	//line index_wasm_go.qtpl:55
-	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M4 0c-1.1 0-2 1.12-2 2.5s.9 2.5 2 2.5 2-1.12 2-2.5-.9-2.5-2-2.5zm-2.09 5c-1.06.05-1.91.92-1.91 2v1h8v-1c0-1.08-.84-1.95-1.91-2-.54.61-1.28 1-2.09 1-.81 0-1.55-.39-2.09-1z" /></svg></a><a id="banner-account" class="banner-float" title="`)
+	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M4 0c-1.1 0-2 1.12-2 2.5s.9 2.5 2 2.5 2-1.12 2-2.5-.9-2.5-2-2.5zm-2.09 5c-1.06.05-1.91.92-1.91 2v1h8v-1c0-1.08-.84-1.95-1.91-2-.54.61-1.28 1-2.09 1-.81 0-1.55-.39-2.09-1z" /></svg></a><a id="banner-account" class="banner-float svg-link noscript-hide" title="`)
 	//line index_wasm_go.qtpl:60
 	qw422016.N().S(ln.UI["account"])
 	//line index_wasm_go.qtpl:60
-	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="m 2,2.681 c -1.31,0 -2,1.01 -2,2 0,0.99 0.69,2 2,2 0.79,0 1.42,-0.56 2,-1.22 0.58,0.66 1.19,1.22 2,1.22 1.31,0 2,-1.01 2,-2 0,-0.99 -0.69,-2 -2,-2 -0.81,0 -1.42,0.56 -2,1.22 C 3.42,3.241 2.79,2.681 2,2.681 Z m 0,1 c 0.42,0 0.88,0.47 1.34,1 -0.46,0.53 -0.92,1 -1.34,1 -0.74,0 -1,-0.54 -1,-1 0,-0.46 0.26,-1 1,-1 z m 4,0 c 0.74,0 1,0.54 1,1 0,0.46 -0.26,1 -1,1 -0.43,0 -0.89,-0.47 -1.34,-1 0.46,-0.53 0.91,-1 1.34,-1 z" id="path4" /></svg></a><a id="banner-FAQ" class="banner-float" title="`)
+	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="m 2,2.681 c -1.31,0 -2,1.01 -2,2 0,0.99 0.69,2 2,2 0.79,0 1.42,-0.56 2,-1.22 0.58,0.66 1.19,1.22 2,1.22 1.31,0 2,-1.01 2,-2 0,-0.99 -0.69,-2 -2,-2 -0.81,0 -1.42,0.56 -2,1.22 C 3.42,3.241 2.79,2.681 2,2.681 Z m 0,1 c 0.42,0 0.88,0.47 1.34,1 -0.46,0.53 -0.92,1 -1.34,1 -0.74,0 -1,-0.54 -1,-1 0,-0.46 0.26,-1 1,-1 z m 4,0 c 0.74,0 1,0.54 1,1 0,0.46 -0.26,1 -1,1 -0.43,0 -0.89,-0.47 -1.34,-1 0.46,-0.53 0.91,-1 1.34,-1 z" id="path4" /></svg></a><a id="banner-FAQ" class="banner-float svg-link noscript-hide" title="`)
 	//line index_wasm_go.qtpl:65
 	qw422016.N().S(ln.UI["FAQ"])
 	//line index_wasm_go.qtpl:65
@@ -68,19 +68,19 @@ func StreamIndexWasm(qw422016 *qt422016.Writer, theme string) {
 	//line index_wasm_go.qtpl:70
 	qw422016.E().S(conf.FeedbackEmail)
 	//line index_wasm_go.qtpl:70
-	qw422016.N().S(`" target="_blank" class="banner-float" title="`)
+	qw422016.N().S(`" target="_blank" class="banner-float svg-link noscript-hide" title="`)
 	//line index_wasm_go.qtpl:70
 	qw422016.N().S(ln.UI["feedback"])
 	//line index_wasm_go.qtpl:70
-	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M0 0v1l4 2 4-2v-1h-8zm0 2v4h8v-4l-4 2-4-2z" transform="translate(0 1)" /></svg></a><span id="banner-extensions" class="hide-empty banner-float"></span><b id="thread-post-counters" class="act hide-empty banner-float" title="`)
+	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M0 0v1l4 2 4-2v-1h-8zm0 2v4h8v-4l-4 2-4-2z" transform="translate(0 1)" /></svg></a><span id="banner-extensions" class="hide-empty banner-float svg-link noscript-hide"></span><b id="thread-post-counters" class="act hide-empty banner-float svg-link noscript-hide" title="`)
 	//line index_wasm_go.qtpl:76
 	qw422016.N().S(ln.Common.UI["postsImages"])
 	//line index_wasm_go.qtpl:76
-	qw422016.N().S(`"></b><b id="sync-counter" class="act hide-empty banner-float" title="`)
+	qw422016.N().S(`"></b><b id="sync-counter" class="act hide-empty banner-float svg-link noscript-hide" title="`)
 	//line index_wasm_go.qtpl:77
 	qw422016.N().S(ln.UI["syncCount"])
 	//line index_wasm_go.qtpl:77
-	qw422016.N().S(`"></b><b id="sync" class="banner-float" title="`)
+	qw422016.N().S(`"></b><b id="sync" class="banner-float svg-link noscript-hide" title="`)
 	//line index_wasm_go.qtpl:78
 	qw422016.N().S(ln.UI["sync"])
 	//line index_wasm_go.qtpl:78

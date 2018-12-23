@@ -37,7 +37,7 @@
 				{%s= ln.Common.UI["catalog"] %}
 			</a>
 		</span>
-		<span id="expand-images" class="act">
+		<span id="expand-images" class="act noscript-hide">
 			<a>
 				{%s= ln.Common.Posts["expandImages"] %}
 			</a>
@@ -49,7 +49,7 @@
 	{%z= postHTML %}
 	<div id="bottom-spacer"></div>
 	{% if !locked %}
-		<aside class="act posting glass">
+		<aside class="act posting glass noscript-hide">
 			<a>
 				{%s= ln.Common.UI["reply"] %}
 			</a>

@@ -6,7 +6,9 @@ import { open } from './db'
 import { initOptions } from "./options"
 import initPosts from "./posts"
 import { postSM, postEvent, FormModel } from "./posts"
-import { renderBoard, extractConfigs, renderThread } from './page'
+import {
+	renderBoard, extractConfigs, renderThread, init as initPage
+} from './page'
 import initUI from "./ui"
 import {
 	checkBottom, getCookie, deleteCookie, trigger, scrollToBottom,
@@ -70,6 +72,7 @@ async function start() {
 		await renderBoard()
 	}
 
+	initPage()
 	initPosts()
 	initUI()
 	initModeration()

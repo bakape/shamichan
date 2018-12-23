@@ -22,7 +22,7 @@
     "gulp-typescript": "4.0.2",
     "gulp-uglify": "3.0.1",
     "gulp-util": "3.0.8",
-    "typescript": "3.1.6",
+    "typescript": "^3.2.2",
     "uglify-js": "3.4.9"
   }
 }

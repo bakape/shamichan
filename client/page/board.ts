@@ -6,7 +6,7 @@ import { relativeTime, Post, findSyncwatches } from "../posts"
 import {
 	extractConfigs, extractPost, reparseOpenPosts, extractPageData, hidePosts,
 } from "./common"
-import { BoardData } from "../common"
+import { BoardData, ThreadData } from "../common"
 
 type SortFunction = (a: Post, b: Post) => number
 
@@ -18,7 +18,10 @@ const sorts: { [name: string]: SortFunction } = {
 	replyCount: subtract("postCtr"),
 	fileCount: subtract("imageCtr"),
 }
-const threads = document.getElementById("threads")
+const threadsEl = document.getElementById("threads")
+
+// Thread currently loaded on the page
+export const threads: { [id: number]: ThreadData } = {};
 
 // Unix time of last board page render. Used for automatic refreshes.
 let lastFetchTime = Date.now() / 1000
@@ -32,7 +35,7 @@ function subtract(attr: string): (a: Post, b: Post) => number {
 // Render a fresh board page
 export function renderFresh(html: string) {
 	lastFetchTime = Math.floor(Date.now() / 1000)
-	threads.innerHTML = html
+	threadsEl.innerHTML = html
 	if (isBanned()) {
 		return
 	}
@@ -49,25 +52,27 @@ async function extractCatalogModels() {
 	// Don't really need these in the catalog, so just load empty sets
 	await loadFromDB()
 
-	const { threads: { threads }, backlinks } = extractPageData<BoardData>()
-	for (let t of threads) {
-		extractPost(t, t.id, t.board, backlinks)
+	const data = extractPageData<BoardData>();
+	for (let t of data.threads.threads) {
+		threads[t.id] = t;
+		extractPost(t, t.id, t.board, data.backlinks)
 	}
 }
 
 async function extractThreads() {
-	const { threads: { threads }, backlinks } = extractPageData<BoardData>()
-	await loadFromDB(...(threads).map(t =>
-		t.id))
-	for (let thread of threads) {
+	const data = extractPageData<BoardData>();
+	await loadFromDB(...(data.threads.threads).map(t =>
+		t.id));
+	for (let thread of data.threads.threads) {
 		const { posts } = thread
 		delete thread.posts
-		if (extractPost(thread, thread.id, thread.board, backlinks)) {
+		threads[thread.id] = thread;
+		if (extractPost(thread, thread.id, thread.board, data.backlinks)) {
 			document.querySelector(`section[data-id="${thread.id}"]`).remove()
 			continue
 		}
 		for (let post of posts) {
-			extractPost(post, thread.id, thread.board, backlinks)
+			extractPost(post, thread.id, thread.board, data.backlinks)
 		}
 	}
 	hidePosts()
@@ -82,11 +87,11 @@ export async function render() {
 		await extractThreads()
 	}
 
-	renderRefreshButton(threads.querySelector("#refresh > a"))
+	renderRefreshButton(threadsEl.querySelector("#refresh > a"))
 	if (!page.catalog) {
-		findSyncwatches(threads)
+		findSyncwatches(threadsEl)
 	} else {
-		(threads.querySelector("select[name=sortMode]") as HTMLSelectElement)
+		(threadsEl.querySelector("select[name=sortMode]") as HTMLSelectElement)
 			.value = localStorage.getItem("catalogSort") || "bump"
 		sortThreads(true)
 	}
@@ -213,19 +218,19 @@ setInterval(() => {
 	if (document.hidden) {
 		refreshBoard()
 	} else {
-		renderRefreshButton(threads.querySelector("#refresh > a"))
+		renderRefreshButton(threadsEl.querySelector("#refresh > a"))
 	}
 }, 600000)
 
-on(threads, "input", onSortChange, {
+on(threadsEl, "input", onSortChange, {
 	passive: true,
 	selector: "select[name=sortMode]",
 })
-on(threads, "input", onSearchChange, {
+on(threadsEl, "input", onSearchChange, {
 	passive: true,
 	selector: "input[name=search]",
 })
-on(threads, "click", refreshBoard, {
+on(threadsEl, "click", refreshBoard, {
 	passive: true,
 	selector: "#refresh > a",
 })

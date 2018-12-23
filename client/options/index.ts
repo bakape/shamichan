@@ -166,3 +166,28 @@ export function initOptions() {
 	initMascot()
 	initLoops()
 }
+
+// Return, if user can be notified with desktop notifications
+export function canNotify(): boolean {
+	return options.notification
+		&& typeof Notification === "function"
+		&& (Notification as any).permission === "granted";
+}
+
+// Returns, if images can be shown on the page
+export function canShowImages(): boolean {
+	return !options.hideThumbs && !options.workModeToggle;
+}
+
+// Construct common base for all notification options
+export function notificationOpts(): NotificationOptions {
+	const re: NotificationOptions = {};
+	if (canShowImages()) {
+		re.icon = re.badge = "/assets/notification-icon.png";
+	}
+	return {
+		vibrate: 500,
+		requireInteraction: true,
+		sticky: true,
+	};
+}

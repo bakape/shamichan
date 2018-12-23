@@ -17,7 +17,8 @@ var sampleModerationEntry = common.ModerationEntry{
 	Data:   "test",
 }
 
-func TestReader(t *testing.T) {
+func prepareThreads(t *testing.T) {
+	t.Helper()
 	assertTableClear(t, "boards", "images")
 
 	boards := [...]BoardConfigs{
@@ -145,6 +146,11 @@ func TestReader(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+}
+
+func TestReader(t *testing.T) {
+	prepareThreads(t)
 
 	t.Run("GetAllBoard", testGetAllBoard)
 	t.Run("GetBoard", testGetBoard)

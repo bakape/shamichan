@@ -4,6 +4,7 @@
 		"deleted": "DELETED BY '%s'",
 		"imageDeleted": "IMAGE DELETED BY '%s'",
 		"imageSpoilered": "IMAGE SPOILERED BY '%s'",
+		"newPostsInThread": "%d new posts in thread.",
 		"purgedPost": "POST PURGED BY '%s' FOR \"%s\"",
 		"threadLockToggled": "THREAD %s BY '%s'",
 		"viewedSameIP": "POSTS OF THE SAME IP WERE VIEWED BY '%s'"
@@ -137,7 +138,9 @@
 		"thumbnailing": "Miniaturyzowanie...",
 		"top": "Na górę",
 		"unfinishedPost": "Masz niezakończony post",
+		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
-		"uploadProgress": "przesłano..."
+		"uploadProgress": "przesłano...",
+		"watchThread": "Watch thread"
 	}
 }

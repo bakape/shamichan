@@ -8,10 +8,13 @@ import { postSM, postState } from "../posts"
 
 const counters = document.getElementById("thread-post-counters"),
     threads = document.getElementById("threads")
-let postCtr = 0,
-    imgCtr = 0,
+
+let imgCtr = 0,
     bumpTime = 0,
     isDeleted = false
+
+export let postCount = 0;
+export let subject = "";
 
 // Render the HTML of a thread page
 export default function () {
@@ -22,7 +25,8 @@ export default function () {
 
     data.posts = null
 
-    postCtr = data.postCtr
+    postCount = data.postCtr;
+    subject = data.subject;
     imgCtr = data.imageCtr
     bumpTime = data.bumpTime
     if (data.moderation) {
@@ -53,8 +57,8 @@ export default function () {
 // Increment thread post counters and rerender the indicator in the banner
 export function incrementPostCount(post: boolean, hasImage: boolean) {
     if (post) {
-        postCtr++
-        if (postCtr < 5000) {
+        postCount++
+        if (postCount < 5000) {
             // An estimate, but good enough
             bumpTime = Math.floor(Date.now() / 1000)
         }
@@ -67,15 +71,15 @@ export function incrementPostCount(post: boolean, hasImage: boolean) {
 
 function renderPostCounter() {
     let text = ""
-    if (postCtr) {
-        text = `${postCtr} / ${imgCtr}`
+    if (postCount) {
+        text = `${postCount} / ${imgCtr}`
 
         // Calculate estimated thread expiry time
         if (config.pruneThreads) {
             // Calculate expiry age
             const min = config.threadExpiryMin,
                 max = config.threadExpiryMax
-            let days = min + (-max + min) * (postCtr / 5000 - 1) ** 3
+            let days = min + (-max + min) * (postCount / 5000 - 1) ** 3
             if (isDeleted) {
                 days /= 3
             }

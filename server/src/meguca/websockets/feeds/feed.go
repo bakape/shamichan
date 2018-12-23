@@ -1,12 +1,9 @@
 package feeds
 
 import (
-	"fmt"
 	"meguca/common"
 	"meguca/db"
 	"time"
-
-	"github.com/go-playground/log"
 )
 
 type message struct {
@@ -53,10 +50,6 @@ type Feed struct {
 	ticker
 	// Common functionality
 	baseFeed
-	// Watchers currently subscibed to new closed post messages
-	watchers      map[*Watcher]struct{}
-	addWatcher    chan *Watcher
-	removeWatcher chan *Watcher
 	// Buffer of unsent messages
 	messageBuffer
 	// Entire thread cached into memory
@@ -114,11 +107,6 @@ func (f *Feed) Start() (err error) {
 
 				f.sendIPCount()
 
-			case w := <-f.addWatcher:
-				f.watchers[w] = struct{}{}
-			case w := <-f.removeWatcher:
-				delete(f.watchers, w)
-
 			// Buffer external message and prepare for sending to all clients
 			case msg := <-f.send:
 				f.bufferMessage(msg)
@@ -157,17 +145,6 @@ func (f *Feed) Start() (err error) {
 				p.Editing = false
 				p.Links = msg.links
 				p.Commands = msg.commands
-
-				// Send partial closed post to thread watchers
-				if len(f.watchers) != 0 {
-					msg, err := encodeSSEMessage(f.id, p)
-					if err != nil {
-						log.Error(fmt.Errorf("SSE encoding: %s", err))
-					}
-					for w := range f.watchers {
-						w.Send(msg)
-					}
-				}
 
 				f.cache.Posts[msg.id] = p
 				f.write(msg.msg)

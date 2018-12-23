@@ -1,13 +1,10 @@
 import { storeSeenReply, seenReplies } from "../state"
-import options from "../options"
+import * as options from "../options";
 import lang from "../lang"
 import { thumbPath, Post } from "../posts"
 import { repliedToMe } from "./tab"
-import { scrollToAnchor, importTemplate } from "../util"
+import * as util from "../util"
 import { View } from "../base"
-
-// Displayed, when there is no image in post
-const defaultIcon = "/assets/notification-icon.png"
 
 // Notify the user that one of their posts has been replied to
 export default function notifyAboutReply(post: Post) {
@@ -20,43 +17,36 @@ export default function notifyAboutReply(post: Post) {
 	}
 	repliedToMe(post)
 
-	if (!options.notification
-		|| typeof Notification !== "function"
-		|| (Notification as any).permission !== "granted"
-	) {
+	if (!options.canNotify()) {
 		return
 	}
 
-	let icon: string
-	if (!options.hideThumbs && !options.workModeToggle) {
-		if (post.image) {
-			const { SHA1, thumbType } = post.image
-			if (post.image.spoiler) {
-				icon = '/assets/spoil/default.jpg'
-			} else {
-				icon = thumbPath(SHA1, thumbType)
-			}
+	const opts = options.notificationOpts();
+	if (options.canShowImages() && post.image) {
+		const { SHA1, thumbType, spoiler } = post.image;
+		if (spoiler) {
+			opts.image = '/assets/spoil/default.jpg';
 		} else {
-			icon = defaultIcon
+			opts.image = thumbPath(SHA1, thumbType);
 		}
 	}
-	const n = new Notification(lang.ui["quoted"], {
-		icon,
-		body: post.body,
-		vibrate: 200,
-	})
+	opts.body = post.body;
+	const n = new Notification(lang.ui["quoted"], opts)
 	n.onclick = () => {
 		n.close()
 		window.focus()
 		location.hash = "#p" + post.id
-		scrollToAnchor()
+		util.scrollToAnchor()
 	}
 }
 
 // Textual notification at the top of the page
 export class OverlayNotification extends View<null> {
 	constructor(text: string) {
-		super({ el: importTemplate("notification").firstChild as HTMLElement })
+		super({
+			el: util.importTemplate("notification")
+				.firstChild as HTMLElement,
+		})
 		this.on("click", () =>
 			this.remove())
 		this.el.querySelector("b").textContent = text

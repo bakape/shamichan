@@ -2,9 +2,3 @@ services: docker
 script:
   - docker build -t meguca_test .
   - docker run -t --entrypoint scripts/docker_test.sh meguca_test
-notifications:
-  email:
-    recipients:
-      - scorpid33@gmail.com
-    on_success: never
-    on_failure: always

@@ -14,14 +14,21 @@ a {
 	}
 }
 
-a, .control {
+a, .svg-link {
 	cursor: pointer;
 }
 
-.control, .banner-float {
-	svg {
-		fill: currentColor;
-	}
+.svg-link svg {
+	fill: currentColor;
+}
+
+.watcher-toggle.svg-link svg {
+	width: 1em;
+	height: 1em;
+}
+
+.watcher-toggle.enabled {
+	border: solid 1px currentColor;
 }
 
 article, aside {
@@ -76,7 +83,7 @@ iframe {
 	font-weight: bold;
 }
 
-.popup-menu, .act, .control {
+.popup-menu, .act, .svg-link {
 	-webkit-user-select: none;
 	-moz-user-select: none;
 	-ms-user-select: none;
@@ -285,7 +292,7 @@ td {
 		}
 		height: 1.5em;
 	}
-	.banner-float {
+	.banner-float.svg-link  {
 		svg {
 			width: 1.2em;
 			height: 1.2em;
