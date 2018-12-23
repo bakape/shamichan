@@ -6,6 +6,7 @@ import * as options from "../options";
 import * as posts from "../posts";
 import * as util from "../util";
 import * as board from "./board";
+import isCuck from "../common/index.ts";
 
 interface OpenThreadRecord {
 	id: number;
@@ -110,7 +111,11 @@ async function fetchWatchedThreads() {
 			opts.tag = `watched_thread:${id}`;
 			opts.renotify = true;
 			if (options.canShowImages() && data.thumbnailURL) {
-				opts.image = data.thumbnailURL;
+				if (isCuck) {
+					opts.icon = data.thumbnailURL;
+				} else {
+					opts.image = data.thumbnailURL;
+				}
 			}
 			const n = new Notification(
 				lang.format["newPostsInThread"]
