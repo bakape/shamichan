@@ -6,7 +6,7 @@ import * as options from "../options";
 import * as posts from "../posts";
 import * as util from "../util";
 import * as board from "./board";
-import isCuck from "../common/index.ts";
+import { isCuck } from "../common";
 
 interface OpenThreadRecord {
 	id: number;
