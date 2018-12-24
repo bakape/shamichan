@@ -3,12 +3,10 @@
 package server
 
 import (
-	"fmt"
 	"meguca/cache"
 	"meguca/db"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 // Returns arguments for accessing the board page JSON/HTML cache
@@ -35,12 +33,7 @@ func boardCacheArgs(r *http.Request, board string, catalog bool) (
 // Start cache upkeep proccesses. Requires a ready DB connection.
 func listenToThreadDeletion() error {
 	return db.Listen("thread_deleted", func(msg string) (err error) {
-		split := strings.Split(msg, ":")
-		if len(split) != 2 {
-			return fmt.Errorf("unparsable thread deletion message: '%s'", msg)
-		}
-		board := split[0]
-		id, err := strconv.ParseUint(split[1], 10, 64)
+		board, id, err := db.SplitBoardAndID(msg)
 		if err != nil {
 			return
 		}

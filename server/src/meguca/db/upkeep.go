@@ -293,10 +293,7 @@ func deleteOldThreads() (err error) {
 		var q *sql.Stmt
 		if len(toDel) != 0 {
 			// Deleted any matched threads
-			q, err = tx.Prepare(
-				`delete from threads
-				where id = $1
-				returning pg_notify('thread_deleted', board || ':' || id)`)
+			q, err = tx.Prepare(`delete from threads where id = $1`)
 			if err != nil {
 				return
 			}

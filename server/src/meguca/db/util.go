@@ -3,6 +3,9 @@ package db
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -172,4 +175,23 @@ func SetGeoMD5(hash string) error {
 		Exec()
 
 	return err
+}
+
+// Split message containing a board and post/thread ID
+func SplitBoardAndID(msg string) (board string, id uint64, err error) {
+	setErr := func() {
+		err = fmt.Errorf("unparsable message: '%s'", msg)
+	}
+
+	split := strings.Split(msg, ",")
+	if len(split) != 2 {
+		setErr()
+		return
+	}
+	board = split[0]
+	id, err = strconv.ParseUint(split[1], 10, 64)
+	if err != nil {
+		setErr()
+	}
+	return
 }

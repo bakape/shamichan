@@ -84,7 +84,7 @@ func loadThreadPostCounts() (err error) {
 // Separate function for easier testing
 func listenForThreadUpdates() (err error) {
 	err = Listen("thread_deleted", func(msg string) (err error) {
-		id, err := strconv.ParseUint(msg, 10, 64)
+		_, id, err := SplitBoardAndID(msg)
 		if err != nil {
 			return
 		}
@@ -99,17 +99,21 @@ func listenForThreadUpdates() (err error) {
 	}
 
 	return Listen("new_post_in_thread", func(msg string) (err error) {
+		retErr := func() error {
+			return fmt.Errorf("invalid message: `%s`", msg)
+		}
+
 		split := strings.Split(msg, ",")
 		if len(split) != 2 {
-			return fmt.Errorf("invalid message: `%s`", msg)
+			return retErr()
 		}
 		id, err := strconv.ParseUint(split[0], 10, 64)
 		if err != nil {
-			return
+			return retErr()
 		}
 		postCount, err := strconv.ParseUint(split[1], 10, 64)
 		if err != nil {
-			return
+			return retErr()
 		}
 
 		postCountCacheMu.Lock()

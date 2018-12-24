@@ -48,7 +48,7 @@ func (fi bindataFileInfo) Sys() interface{} {
 var _triggersNotify_thread_deletedSql = []byte(`create function notify_thread_deleted()
 returns trigger as $$
 begin
-	perform pg_notify('thread_deleted', old.id::text);
+	perform pg_notify('thread_deleted', old.board || ',' || old.id);
 	return null;
 end;
 $$ language plpgsql;
