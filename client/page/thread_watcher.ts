@@ -86,6 +86,10 @@ async function fetchWatchedThreads() {
 	const proms = [];
 	const toNotify = [];
 	const opened = await getOpenedThreads();
+	if (state.page.thread) {
+		// Accounts fot some latency between the DB
+		opened.add(state.page.thread);
+	}
 	for (let k in diff.changed) {
 		const id = parseInt(k);
 
