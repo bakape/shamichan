@@ -45,7 +45,7 @@ func (fi bindataFileInfo) Sys() interface{} {
 	return nil
 }
 
-var _triggersNotify_thread_deletedSql = []byte(`create function notify_thread_deleted()
+var _triggersNotify_thread_deletedSql = []byte(`create or replace function notify_thread_deleted()
 returns trigger as $$
 begin
 	perform pg_notify('thread_deleted', old.board || ',' || old.id);
@@ -69,7 +69,7 @@ func triggersNotify_thread_deletedSql() (*asset, error) {
 	return a, nil
 }
 
-var _triggersNotify_thread_post_countSql = []byte(`create function notify_thread_post_count()
+var _triggersNotify_thread_post_countSql = []byte(`create or replace function notify_thread_post_count()
 returns trigger as $$
 begin
 	perform pg_notify('new_post_in_thread', new.op || ',' || (

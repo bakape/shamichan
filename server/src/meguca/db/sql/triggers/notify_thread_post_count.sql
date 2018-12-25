@@ -1,4 +1,4 @@
-create function notify_thread_post_count()
+create or replace function notify_thread_post_count()
 returns trigger as $$
 begin
 	perform pg_notify('new_post_in_thread', new.op || ',' || (

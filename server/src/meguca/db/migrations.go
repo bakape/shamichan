@@ -1040,6 +1040,13 @@ var migrations = []func(*sql.Tx) error{
 			execute procedure notify_thread_deleted()`,
 		)
 	},
+	func(tx *sql.Tx) error {
+		// Apply function changes
+		return execAll(tx,
+			loadSQL("triggers/notify_thread_post_count"),
+			loadSQL("triggers/notify_thread_deleted"),
+		)
+	},
 }
 
 func createIndex(table, column string) string {
