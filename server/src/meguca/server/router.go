@@ -4,15 +4,19 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"meguca/assets"
 	"meguca/auth"
 	"meguca/config"
 	"meguca/db"
 	"meguca/imager"
 	"meguca/util"
 	"meguca/websockets"
+	"mime/multipart"
 	"net/http"
+	"net/http/httptest"
 	"runtime/debug"
 	"strconv"
+	"time"
 
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
@@ -38,6 +42,8 @@ var (
 	enableGzip bool
 
 	isTest bool
+
+	healthCheckMsg = []byte("God's in His heaven, all's right with the world")
 )
 
 // Used for overriding during tests
@@ -242,5 +248,56 @@ func crossRedirect(w http.ResponseWriter, r *http.Request) {
 
 // Health check to ensure server is still online
 func healthCheck(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("God's in His heaven, all's right with the world"))
+	if config.ImagerMode != config.NoImager {
+		// Ensure thumbnailing queue is not blocked
+		err := func() (err error) {
+			const name = "invalid_upload.psd"
+			buf, err := assets.Asset(name)
+			if err != nil {
+				return
+			}
+
+			var body bytes.Buffer
+			wr := multipart.NewWriter(&body)
+			f, err := wr.CreateFormFile("image", name)
+			if err != nil {
+				return
+			}
+			_, err = f.Write(buf)
+			if err != nil {
+				return
+			}
+
+			req := httptest.NewRequest("POST", "/api/upload", &body)
+			req.Header.Set("Content-Length", strconv.Itoa(len(buf)))
+			req.Header.Set("Content-Type", wr.FormDataContentType())
+
+			ch := make(chan error)
+			go func() {
+				rec := httptest.NewRecorder()
+				imager.NewImageUpload(rec, req)
+				if rec.Code == 400 {
+					ch <- nil
+				} else {
+					ch <- fmt.Errorf(
+						"invalid healthcheck upload: code=%d body=`%s`",
+						rec.Code, rec.Body.String())
+				}
+			}()
+
+			timer := time.NewTimer(time.Second * 10)
+			defer timer.Stop()
+			select {
+			case <-timer.C:
+				return fmt.Errorf("healthcheck upload timeout")
+			case err = <-ch:
+				return
+			}
+		}()
+		if err != nil {
+			httpError(w, r, err)
+			return
+		}
+	}
+	w.Write(healthCheckMsg)
 }

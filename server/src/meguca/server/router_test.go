@@ -90,3 +90,9 @@ func TestGzip(t *testing.T) {
 		t.Fatal("response not gzipped")
 	}
 }
+
+func TestHealthcheck(t *testing.T) {
+	rec, req := newPair("/api/health-check")
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 200)
+}

@@ -227,7 +227,12 @@ func newThumbnail(data []byte, img common.ImageCommon,
 		AcceptedMimeTypes: allowedMimeTypes,
 	})
 	if err != nil {
-		return "", WrapThumbnailerError(err)
+		switch err.(type) {
+		case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage,
+			thumbnailer.ErrCorruptImage:
+			err = common.StatusError{err, 400}
+		}
+		return "", err
 	}
 	defer func() {
 		if thumb != nil {
@@ -255,19 +260,6 @@ func newThumbnail(data []byte, img common.ImageCommon,
 		return
 	})
 	return
-}
-
-// WrapThumbnailerError Wraps a thumbnailer error with the appropriate HTTP status code
-func WrapThumbnailerError(err error) error {
-	switch err.(type) {
-	case nil:
-		return nil
-	case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage,
-		thumbnailer.ErrCorruptImage:
-		return common.StatusError{err, 400}
-	default:
-		return common.StatusError{err, 500}
-	}
 }
 
 // Separate function for easier testability
