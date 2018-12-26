@@ -2,6 +2,7 @@ package imager
 
 import (
 	"meguca/common"
+	"meguca/test"
 	"strings"
 	"testing"
 
@@ -56,7 +57,7 @@ func TestProcessArchive(t *testing.T) {
 			t.Parallel()
 
 			var img common.ImageCommon
-			_, err := processFile(readSample(t, c.file), &img, dummyOpts)
+			_, err := processFile(test.ReadSample(t, c.file), &img, dummyOpts)
 			if c.err != "" {
 				if err == nil {
 					t.Fatalf("expected an error")

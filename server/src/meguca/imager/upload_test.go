@@ -9,7 +9,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	"meguca/imager/assets"
-	. "meguca/test"
+	"meguca/test"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -75,7 +75,7 @@ func newJPEGRequest(t *testing.T) *http.Request {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = file.Write(readSample(t, assets.StdJPEG.Name))
+	_, err = file.Write(test.ReadSample(t, assets.StdJPEG.Name))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,7 +116,7 @@ func assertFiles(t *testing.T, src, id string, fileType, thumbType uint8) {
 		}
 	}
 
-	AssertBufferEquals(t, data[0], data[1])
+	test.AssertBufferEquals(t, data[0], data[1])
 	if len(data[1]) < len(data[2]) {
 		t.Error("unexpected file size difference")
 	}
@@ -131,7 +131,7 @@ func TestInvalidContentLengthHeader(t *testing.T) {
 
 	_, err := ParseUpload(req)
 	if s := fmt.Sprint(err); !strings.Contains(s, "invalid syntax") {
-		UnexpectedError(t, err)
+		test.UnexpectedError(t, err)
 	}
 }
 
@@ -143,7 +143,7 @@ func TestUploadTooLarge(t *testing.T) {
 	req.Header.Set("Content-Length", "1048577")
 
 	_, err := ParseUpload(req)
-	AssertDeepEquals(t, common.StatusError{errTooLarge, 400}, err)
+	test.AssertDeepEquals(t, common.StatusError{errTooLarge, 400}, err)
 }
 
 func TestInvalidForm(t *testing.T) {
@@ -169,7 +169,7 @@ func TestNewThumbnail(t *testing.T) {
 	assertCode(t, rec.Code, 200)
 
 	img := getImageRecord(t, assets.StdJPEG.SHA1)
-	AssertDeepEquals(t, img, assets.StdJPEG.ImageCommon)
+	test.AssertDeepEquals(t, img, assets.StdJPEG.ImageCommon)
 	assertFiles(t, "sample.jpg", assets.StdJPEG.SHA1, common.JPEG, common.JPEG)
 }
 
@@ -185,7 +185,7 @@ func TestAPNGThumbnailing(t *testing.T) {
 			img := common.ImageCommon{
 				SHA1: ext,
 			}
-			data := readSample(t, "sample."+ext)
+			data := test.ReadSample(t, "sample."+ext)
 
 			if _, err := newThumbnail(data, img); err != nil {
 				t.Fatal(err)
@@ -204,7 +204,7 @@ func TestNoImageUploaded(t *testing.T) {
 	req.Header.Set("Content-Length", "300792")
 
 	_, err := ParseUpload(req)
-	AssertDeepEquals(t, common.StatusError{http.ErrMissingFile, 400}, err)
+	test.AssertDeepEquals(t, common.StatusError{http.ErrMissingFile, 400}, err)
 }
 
 func TestThumbNailReuse(t *testing.T) {

@@ -3,6 +3,7 @@ package imager
 import (
 	"meguca/common"
 	"meguca/imager/assets"
+	"meguca/test"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ func TestProcessMP3NoCover(t *testing.T) {
 	t.Parallel()
 
 	var img common.ImageCommon
-	_, err := processFile(readSample(t, "sample.mp3"), &img, dummyOpts)
+	_, err := processFile(test.ReadSample(t, "sample.mp3"), &img, dummyOpts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,7 +40,8 @@ func TestProcessMP3(t *testing.T) {
 	t.Parallel()
 
 	var img common.ImageCommon
-	thumb, err := processFile(readSample(t, "with_cover.mp3"), &img, dummyOpts)
+	thumb, err := processFile(test.ReadSample(t, "with_cover.mp3"),
+		&img, dummyOpts)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -3,6 +3,7 @@ package imager
 import (
 	"meguca/common"
 	"meguca/imager/assets"
+	"meguca/test"
 	"testing"
 )
 
@@ -31,7 +32,8 @@ func TestProcessWebm(t *testing.T) {
 			t.Parallel()
 
 			var img common.ImageCommon
-			thumb, err := processFile(readSample(t, c.name), &img, dummyOpts)
+			thumb, err := processFile(test.ReadSample(t, c.name),
+				&img, dummyOpts)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -113,7 +115,7 @@ func TestProcessOGG(t *testing.T) {
 
 			var img common.ImageCommon
 			thumb, err := processFile(
-				readSample(t, c.file+".ogg"),
+				test.ReadSample(t, c.file+".ogg"),
 				&img,
 				dummyOpts,
 			)
@@ -194,7 +196,7 @@ func TestProcessMP4(t *testing.T) {
 
 			var img common.ImageCommon
 			thumb, err := processFile(
-				readSample(t, c.file+".mp4"),
+				test.ReadSample(t, c.file+".mp4"),
 				&img,
 				dummyOpts,
 			)

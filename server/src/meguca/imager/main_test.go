@@ -1,13 +1,11 @@
 package imager
 
 import (
-	"io/ioutil"
 	"meguca/config"
 	"meguca/db"
 	"meguca/imager/assets"
 	. "meguca/test"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -33,17 +31,6 @@ func resetDirs(t *testing.T) {
 	if err := assets.ResetDirs(); err != nil {
 		t.Fatal(err)
 	}
-}
-
-func readSample(t *testing.T, name string) []byte {
-	t.Helper()
-
-	path := filepath.Join("testdata", name)
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return data
 }
 
 // How do we assert a thumbnail?

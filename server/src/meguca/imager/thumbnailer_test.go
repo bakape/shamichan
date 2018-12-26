@@ -6,6 +6,7 @@ import (
 	"meguca/common"
 	"meguca/config"
 	"meguca/imager/assets"
+	"meguca/test"
 	"os"
 	"path/filepath"
 	"testing"
@@ -37,7 +38,7 @@ func TestImageProcessing(t *testing.T) {
 
 			var img common.ImageCommon
 			thumb, err := processFile(
-				readSample(t, "sample."+c.ext),
+				test.ReadSample(t, "sample."+c.ext),
 				&img,
 				thumbnailer.Options{
 					ThumbDims: thumbnailer.Dims{
