@@ -271,6 +271,7 @@ func healthCheck(w http.ResponseWriter, r *http.Request) {
 			req := httptest.NewRequest("POST", "/api/upload", &body)
 			req.Header.Set("Content-Length", strconv.Itoa(len(buf)))
 			req.Header.Set("Content-Type", wr.FormDataContentType())
+			req.Header.Set("Authorization", "Bearer "+config.Get().Salt)
 
 			ch := make(chan error)
 			go func() {

@@ -90,6 +90,12 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 
 // Apply security restrictions to uploader
 func validateUploader(r *http.Request) (err error) {
+	if s := r.Header.Get("Authorization"); s != "" &&
+		s == "Bearer "+config.Get().Salt {
+		// Internal upload bypass
+		return nil
+	}
+
 	ip, err := auth.GetIP(r)
 	if err != nil {
 		return
