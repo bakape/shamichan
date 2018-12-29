@@ -122,7 +122,7 @@ export const specs: { [id: string]: OptionSpec } = {
 				display:flex;
 				flex-direction: row;
 				flex-wrap: wrap;
-				align-items: baseline;
+				align-items: center;
 			}`,
 		)
 	},
