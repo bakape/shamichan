@@ -25,9 +25,9 @@ export default function notifyAboutReply(post: Post) {
 	if (options.canShowImages() && post.image) {
 		const { SHA1, thumbType, spoiler } = post.image;
 		if (spoiler) {
-			opts.image = '/assets/spoil/default.jpg';
+			opts.icon = '/assets/spoil/default.jpg';
 		} else {
-			opts.image = thumbPath(SHA1, thumbType);
+			opts.icon = thumbPath(SHA1, thumbType);
 		}
 	}
 	opts.body = post.body;
