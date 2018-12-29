@@ -400,6 +400,10 @@
 			"",
 			"Image à utiliser en guise que fond"
 		],
+		"watchThreadsOnReply": [
+			"Watch threads on reply",
+			"Automatically add thread to watched threads on reply"
+		],
 		"webmHover": [
 			"WebM au passage de la souris",
 			"Affiche une prévisualisation du WebM au passage de la souris (nécessite l'option du dessus)"

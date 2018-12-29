@@ -400,6 +400,10 @@
 			"",
 			"Image to use as the background"
 		],
+		"watchThreadsOnReply": [
+			"Watch threads on reply",
+			"Automatically add thread to watched threads on reply"
+		],
 		"webmHover": [
 			"WebM Hover Expansion",
 			"Display WebM previews on hover. Requires Image Hover Expansion enabled."

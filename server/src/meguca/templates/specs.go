@@ -317,6 +317,7 @@ var optionSpecs = [...][]inputSpec{
 			Max:  100,
 		},
 		{ID: "notification"},
+		{ID: "watchThreadsOnReply"},
 		{ID: "anonymise"},
 		{ID: "hideRecursively"},
 		{ID: "postInlineExpand"},

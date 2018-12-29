@@ -400,6 +400,10 @@
 			"",
 			"Imagem para usar como fundo"
 		],
+		"watchThreadsOnReply": [
+			"Watch threads on reply",
+			"Automatically add thread to watched threads on reply"
+		],
 		"webmHover": [
 			"Expansão de WebM ao pairar",
 			"Mostra prévias de WebM ao pairar. Requer Expansão de Imagem ao Pairar ativado."

@@ -400,6 +400,10 @@
 			"",
 			"Власна картинка на фон сторінки"
 		],
+		"watchThreadsOnReply": [
+			"Watch threads on reply",
+			"Automatically add thread to watched threads on reply"
+		],
 		"webmHover": [
 			"Розгортання webm",
 			"WebMки розгротаються при наведенні мишки"

@@ -78,6 +78,10 @@ export const specs: { [id: string]: OptionSpec } = {
 			}
 		},
 	},
+	// Thread watcher
+	watchThreadsOnReply: {
+		default: true,
+	},
 	// Anonymise all poster names
 	anonymise: {},
 	// Hide posts that linked to a hidden post
@@ -243,38 +247,38 @@ export const specs: { [id: string]: OptionSpec } = {
 		exec: toggleHeadStyle(
 			"gallery",
 			`#threads article:not(.media),
-.fileinfo,
-blockquote,
-.backlinks,
-header {
-	display: none;
-}
-#thread-container, article:not(.reply-form) {
-	display: inline-table;
-}
-.post-container {
-	display: flex;
-	min-width: initial;
-}
-figure {
-	margin: 0;
-	margin-left: auto;
-	margin-right: auto;
-}
-figcaption {
-	text-align: center;
-}
-article {
-	padding: 0.5em;
-	width: fit-content;
-}
-a[download] {
-    font-size: 0;
-}
-a[download]::before {
-    content: " 🡇";
-    font-size: 15px;
-}`,
+			.fileinfo,
+			blockquote,
+			.backlinks,
+			header {
+				display: none;
+			}
+			#thread-container, article:not(.reply-form) {
+				display: inline-table;
+			}
+			.post-container {
+				display: flex;
+				min-width: initial;
+			}
+			figure {
+				margin: 0;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			figcaption {
+				text-align: center;
+			}
+			article {
+				padding: 0.5em;
+				width: fit-content;
+			}
+			a[download] {
+				font-size: 0;
+			}
+			a[download]::before {
+				content: " 🡇";
+				font-size: 15px;
+			}`,
 		)
 	},
 	galleryMode: {

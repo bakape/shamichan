@@ -400,6 +400,10 @@
 			"",
 			"Arkaplan için resim seç"
 		],
+		"watchThreadsOnReply": [
+			"Watch threads on reply",
+			"Automatically add thread to watched threads on reply"
+		],
 		"webmHover": [
 			"Üstündeyken genişlet(WebM)",
 			"Fare üstüne geldiğinde WebMleri genişlet. Resim ayarı açık olmalıdır"

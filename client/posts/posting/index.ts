@@ -14,6 +14,7 @@ import initImageErr from "./image"
 import initThreads from "./threads"
 import { renderCaptchaForm, captchaLoaded } from "../../ui/captcha";
 import * as page from "../../page";
+import options from "../../options";
 
 export { default as FormModel } from "./model"
 export { default as identity } from "./identity"
@@ -280,7 +281,11 @@ export default () => {
 		postState.alloc);
 
 	postSM.on(postState.alloc, bindNagging);
-	postSM.on(postState.alloc, page.watchCurrentThread);
+	postSM.on(postState.alloc, () => {
+		if (options.watchThreadsOnReply) {
+			page.watchCurrentThread();
+		}
+	});
 
 	// Open a new post creation form, if none open
 	postSM.act(postState.ready, postEvent.open, () => {

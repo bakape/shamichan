@@ -22,6 +22,7 @@ interface Options extends ChangeEmitter {
 	autogif: boolean
 	spoilers: boolean
 	notification: boolean
+	watchThreadsOnReply: boolean
 	anonymise: boolean
 	postInlineExpand: boolean
 	relativeTime: boolean

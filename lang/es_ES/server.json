@@ -400,6 +400,10 @@
 			"",
 			"Imagen para usar como fondo personalizado"
 		],
+		"watchThreadsOnReply": [
+			"Watch threads on reply",
+			"Automatically add thread to watched threads on reply"
+		],
 		"webmHover": [
 			"Expansión de WebM al pasar el ratón",
 			"Muestra una previsualización del WebM al pasar. Requiere tener Expansion de imagen al pasar el ratón activado."

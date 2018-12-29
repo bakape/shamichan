@@ -400,6 +400,10 @@
 			"",
 			"Фоновое изображение"
 		],
+		"watchThreadsOnReply": [
+			"Watch threads on reply",
+			"Automatically add thread to watched threads on reply"
+		],
 		"webmHover": [
 			"Раскрытие WebM по наведению",
 			"Раскрывать вебмки по наведению, раскрытие изображений также должно быть включено"
