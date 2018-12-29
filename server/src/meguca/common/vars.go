@@ -36,7 +36,7 @@ const (
 var (
 	Langs = []string{
 		"en_GB", "es_ES", "fr_FR", "pl_PL", "pt_BR", "sk_SK", "tr_TR", "uk_UA",
-		"ya_AR", "ru_RU",
+		"ru_RU",
 	}
 	Themes = []string{
 		"ashita", "console", "egophobe", "gar", "glass", "gowno", "higan",
