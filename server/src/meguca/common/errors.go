@@ -112,6 +112,7 @@ recheck:
 		"Error extracting sts from embedded url response",
 		"Error parsing signature tokens",
 		"\": invalid syntax",
+		"Error %!d(string=150)",
 	} {
 		if strings.HasSuffix(s, suff) {
 			return true
