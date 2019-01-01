@@ -31,13 +31,14 @@ export default function notifyAboutReply(post: Post) {
 		}
 	}
 	opts.body = post.body;
+	opts.data = post.id; // Persist target, even if browser tab closed
 	const n = new Notification(lang.ui["quoted"], opts)
-	n.onclick = () => {
-		n.close()
-		window.focus()
-		location.hash = "#p" + post.id
-		util.scrollToAnchor()
-	}
+	n.onclick = function () {
+		this.close();
+		window.focus();
+		location.hash = "#p" + this.data;
+		util.scrollToAnchor();
+	};
 }
 
 // Textual notification at the top of the page

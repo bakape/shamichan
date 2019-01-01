@@ -188,7 +188,5 @@ export function notificationOpts(): NotificationOptions {
 	}
 	return {
 		vibrate: 500,
-		requireInteraction: true,
-		sticky: true,
 	};
 }
