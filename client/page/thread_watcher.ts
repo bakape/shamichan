@@ -111,6 +111,10 @@ async function fetchWatchedThreads() {
 			const opts = options.notificationOpts();
 			const delta = diff.changed[id] - data.postCount;
 			opts.body = `「${data.subject}」`
+
+			// Persist target, even if browser tab closed
+			opts.data = { id, delta };
+
 			opts.tag = `watched_thread:${id}`;
 			opts.renotify = true;
 			if (options.canShowImages() && data.thumbnailURL) {
@@ -120,7 +124,8 @@ async function fetchWatchedThreads() {
 				lang.format["newPostsInThread"]
 					.replace("%d", delta.toString()),
 				opts);
-			n.onclick = () => {
+			n.onclick = function () {
+				const { id, delta } = this.data;
 				let u = `/all/${id}`;
 				if (delta <= 100) {
 					u += "?last=100";
