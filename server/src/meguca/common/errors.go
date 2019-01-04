@@ -117,6 +117,9 @@ recheck:
 			return true
 		}
 	}
+	if strings.HasPrefix(s, "YouTube") {
+		return true
+	}
 
 	return false
 }
