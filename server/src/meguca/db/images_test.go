@@ -3,35 +3,14 @@ package db
 import (
 	"bytes"
 	"database/sql"
+	"encoding/json"
 	"io/ioutil"
 	"meguca/common"
 	"meguca/imager/assets"
-	. "meguca/test"
+	"meguca/test"
 	"testing"
 	"time"
 )
-
-func TestGetImage(t *testing.T) {
-	assertTableClear(t, "images")
-	writeSampleImage(t)
-
-	t.Run("nonexistent", func(t *testing.T) {
-		t.Parallel()
-		_, err := GetImage(GenString(40))
-		if err != sql.ErrNoRows {
-			UnexpectedError(t, err)
-		}
-	})
-	t.Run("existent", func(t *testing.T) {
-		t.Parallel()
-
-		img, err := GetImage(assets.StdJPEG.SHA1)
-		if err != nil {
-			t.Fatal(err)
-		}
-		AssertDeepEquals(t, img, assets.StdJPEG.ImageCommon)
-	})
-}
 
 func writeSampleImage(t *testing.T) {
 	t.Helper()
@@ -56,14 +35,14 @@ func TestAllocateImage(t *testing.T) {
 	assertTableClear(t, "images")
 	defer setupImageDirs(t)()
 
-	id := GenString(40)
+	id := test.GenString(40)
 	var files [2][]byte
 	for i, name := range [...]string{"sample", "thumb"} {
-		files[i] = ReadSample(t, name+".jpg")
+		files[i] = test.ReadSample(t, name+".jpg")
 	}
 	std := common.ImageCommon{
 		SHA1:     id,
-		MD5:      GenString(22),
+		MD5:      test.GenString(22),
 		FileType: common.JPEG,
 	}
 
@@ -76,6 +55,7 @@ func TestAllocateImage(t *testing.T) {
 
 	// Assert files and remove them
 	t.Run("files", func(t *testing.T) {
+		t.Parallel()
 		for i, path := range assets.GetFilePaths(id, common.JPEG, common.JPEG) {
 			buf, err := ioutil.ReadFile(path)
 			if err != nil {
@@ -89,69 +69,89 @@ func TestAllocateImage(t *testing.T) {
 
 	// Assert database record
 	t.Run("db row", func(t *testing.T) {
-		img, err := GetImage(id)
+		t.Parallel()
+
+		var buf []byte
+		err := sq.Select("to_json(*)").
+			From("images").
+			Where("id = ?", id).
+			QueryRow().
+			Scan(&buf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var img common.ImageCommon
+		err = json.Unmarshal(buf, &img)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if img != std {
-			LogUnexpected(t, std, img)
+			test.LogUnexpected(t, std, img)
 		}
 	})
 }
 
-func TestImageTokens(t *testing.T) {
-	assertTableClear(t, "images")
-	writeSampleImage(t)
+func newImageToken(t *testing.T, sha1 string) (token string) {
+	t.Helper()
 
-	token, err := NewImageToken(assets.StdJPEG.SHA1)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var img common.ImageCommon
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		img, err = UseImageToken(tx, token)
+	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+		token, err = NewImageToken(tx, sha1)
 		return
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	std := assets.StdJPEG.ImageCommon
-	if img != std {
-		LogUnexpected(t, img, std)
-	}
+	return
 }
 
 func TestInsertImage(t *testing.T) {
 	assertTableClear(t, "images", "boards")
-	writeSampleImage(t)
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	prepareThreads(t)
+	token := newImageToken(t, assets.StdJPEG.SHA1)
+	const postID = 3
 
 	checkHas := func(std bool) {
-		has, err := HasImage(1)
+		has, err := HasImage(postID)
 		if err != nil {
 			t.Fatal(err)
 		}
-		AssertDeepEquals(t, has, std)
+		test.AssertDeepEquals(t, has, std)
 	}
 
 	checkHas(false)
 
-	insertSampleImage(t)
-	checkHas(true)
-
-	post, err := GetPost(1)
+	std := assets.StdJPEG
+	buf, err := InsertImage(postID, token, std.Name, std.Spoiler)
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, post.Image, &assets.StdJPEG)
+
+	checkHas(true)
+
+	type result struct {
+		common.Image
+		ID uint64
+	}
+
+	var img result
+	err = json.Unmarshal(buf, &img)
+	if err != nil {
+		t.Fatal(err)
+	}
+	test.AssertDeepEquals(t, img, result{
+		ID:    postID,
+		Image: std,
+	})
 }
 
 func insertSampleImage(t *testing.T) {
+	t.Helper()
+
+	token := newImageToken(t, assets.StdJPEG.SHA1)
 	err := InTransaction(false, func(tx *sql.Tx) (err error) {
-		return InsertImage(tx, 1, 1, assets.StdJPEG)
+		std := assets.StdJPEG
+		_, err = InsertImage(1, token, std.Name, std.Spoiler)
+		return
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -174,7 +174,7 @@ func TestSpoilerImage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, post.Image.Spoiler, true)
+	test.AssertDeepEquals(t, post.Image.Spoiler, true)
 }
 
 func TestVideoPlaylist(t *testing.T) {
@@ -191,8 +191,10 @@ func TestVideoPlaylist(t *testing.T) {
 	}
 	writeSampleBoard(t)
 	writeSampleThread(t)
+	token := newImageToken(t, std.SHA1)
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		return InsertImage(tx, 1, 1, std)
+		_, err = InsertImage(1, token, std.Name, std.Spoiler)
+		return
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -202,7 +204,7 @@ func TestVideoPlaylist(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, videos, []Video{
+	test.AssertDeepEquals(t, videos, []Video{
 		{
 			FileType: common.WEBM,
 			Duration: time.Minute,
@@ -218,7 +220,7 @@ func TestImageExists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, exists, false)
+	test.AssertDeepEquals(t, exists, false)
 
 	writeSampleImage(t)
 
@@ -226,5 +228,5 @@ func TestImageExists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, exists, true)
+	test.AssertDeepEquals(t, exists, true)
 }

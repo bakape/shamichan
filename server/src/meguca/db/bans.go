@@ -17,21 +17,19 @@ var (
 	bansMu   sync.RWMutex
 )
 
-func writeBan(tx *sql.Tx, op uint64, ip string, entry auth.ModLogEntry,
-) (err error) {
-	expires := time.Now().UTC().Add(time.Second * time.Duration(entry.Length))
-	err = withTransaction(tx,
-		sq.Insert("bans").
-			Columns("ip", "board", "forPost", "reason", "by", "expires").
-			Values(ip, entry.Board, entry.ID, entry.Data, entry.By, expires),
-	).
+func writeBan(tx *sql.Tx, ip string, entry auth.ModLogEntry) (err error) {
+	_, err = sq.Insert("bans").
+		Columns("ip", "board", "forPost", "reason", "by", "expires").
+		Values(ip, entry.Board, entry.ID, entry.Data, entry.By,
+			time.Now().UTC().Add(time.Second*time.Duration(entry.Length))).
+		RunWith(tx).
 		Exec()
 	if err != nil {
 		return
 	}
 
-	entry.Type = common.BanPost // Just in case the client did not set it
-	return logModeration(tx, op, entry)
+	entry.Type = common.BanPost // Just in case the caller did not set it
+	return logModeration(tx, entry)
 }
 
 // Propagate ban updates through DB and disconnect all banned IPs
@@ -49,7 +47,7 @@ func propagateBans(board string, ip string) (err error) {
 // SystemBan automatically bans an IP
 func SystemBan(ip, reason string, length time.Duration) (err error) {
 	err = InTransaction(false, func(tx *sql.Tx) error {
-		return writeBan(tx, 0, ip, auth.ModLogEntry{
+		return writeBan(tx, ip, auth.ModLogEntry{
 			ModerationEntry: common.ModerationEntry{
 				Type:   common.BanPost,
 				Data:   reason,
@@ -78,14 +76,10 @@ func Ban(board, reason, by string, length time.Duration, id uint64,
 	default:
 		return
 	}
-	op, err := GetPostOP(id)
-	if err != nil {
-		return
-	}
 
 	// Write ban messages to posts and ban table
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		return writeBan(tx, op, ip, auth.ModLogEntry{
+		return writeBan(tx, ip, auth.ModLogEntry{
 			ModerationEntry: common.ModerationEntry{
 				Type:   common.BanPost,
 				Length: uint64(length / time.Second),
@@ -106,15 +100,14 @@ func Ban(board, reason, by string, length time.Duration, id uint64,
 // Unban lifts a ban from a specific post on a specific board
 func Unban(board string, id uint64, by string) error {
 	return InTransaction(false, func(tx *sql.Tx) (err error) {
-		err = withTransaction(tx,
-			sq.Delete("bans").
-				Where("board = ? and forPost = ?", board, id),
-		).
+		_, err = sq.Delete("bans").
+			Where("board = ? and forPost = ?", board, id).
+			RunWith(tx).
 			Exec()
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, 0, auth.ModLogEntry{
+		err = logModeration(tx, auth.ModLogEntry{
 			ModerationEntry: common.ModerationEntry{
 				Type: common.UnbanPost,
 				By:   by,

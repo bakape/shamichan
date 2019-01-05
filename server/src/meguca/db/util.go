@@ -13,62 +13,8 @@ import (
 	"github.com/lib/pq"
 )
 
-type executor interface {
-	Exec(args ...interface{}) (sql.Result, error)
-}
-
 type rowScanner interface {
 	Scan(dest ...interface{}) error
-}
-
-type tableScanner interface {
-	rowScanner
-	Next() bool
-	Err() error
-	Close() error
-}
-
-type queryer interface {
-	Query() (*sql.Rows, error)
-}
-
-// Allows easily running squirrel queries with transactions
-type transactionalQuery struct {
-	tx *sql.Tx
-	sq squirrel.Sqlizer
-}
-
-func withTransaction(tx *sql.Tx, q squirrel.Sqlizer) transactionalQuery {
-	return transactionalQuery{
-		tx: tx,
-		sq: q,
-	}
-}
-
-func (t transactionalQuery) Exec() (err error) {
-	sql, args, err := t.sq.ToSql()
-	if err != nil {
-		return
-	}
-	_, err = t.tx.Exec(sql, args...)
-	return
-}
-
-func (t transactionalQuery) Query() (r *sql.Rows, err error) {
-	sql, args, err := t.sq.ToSql()
-	if err != nil {
-		return
-	}
-	return t.tx.Query(sql, args...)
-}
-
-func (t transactionalQuery) QueryRow() (rs rowScanner, err error) {
-	sql, args, err := t.sq.ToSql()
-	if err != nil {
-		return
-	}
-	rs = t.tx.QueryRow(sql, args...)
-	return
 }
 
 // InTransaction runs a function inside a transaction and handles comminting and rollback on error.
@@ -90,7 +36,8 @@ func InTransaction(readOnly bool, fn func(*sql.Tx) error) (err error) {
 }
 
 // Run fn on all returned rows in a query
-func queryAll(q queryer, fn func(r *sql.Rows) error) (err error) {
+func queryAll(q squirrel.SelectBuilder, fn func(r *sql.Rows) error,
+) (err error) {
 	r, err := q.Query()
 	if err != nil {
 		return

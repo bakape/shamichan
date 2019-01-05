@@ -331,7 +331,9 @@ func (c *Client) insertImage(data []byte) (err error) {
 		return errTextOnly
 	}
 
-	var img common.Image
+	img := common.Image{
+		Spoiler: req.Spoiler,
+	}
 	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
 		_img, err := getImage(tx, req.Token, req.Name, req.Spoiler)
 		if err != nil {
@@ -341,23 +343,22 @@ func (c *Client) insertImage(data []byte) (err error) {
 		c.post.hasImage = true
 		c.post.isSpoilered = req.Spoiler
 
-		return db.InsertImage(tx, c.post.id, c.post.op, img)
+		return db.InsertImage(c.post.id, req.Token)
 	})
 	if err != nil {
 		return
 	}
 
-	msg, err := common.EncodeMessage(common.MessageInsertImage, struct {
-		ID uint64 `json:"id"`
-		common.Image
-	}{
-		ID:    c.post.id,
-		Image: img,
-	})
+	name, err := formatImageName(req.Name)
 	if err != nil {
 		return
 	}
-	c.feed.InsertImage(c.post.id, img, msg)
+	msg, err := db.InsertImage(c.post.id, req.Token, name, req.Spoiler)
+	if err != nil {
+		return
+	}
+	c.feed.InsertImage(c.post.id, req.Spoiler,
+		common.PrependMessageType(common.MessageInsertImage, msg))
 
 	return
 }

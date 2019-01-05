@@ -70,7 +70,7 @@ func writeSampleThread(t *testing.T) {
 		},
 		IP: "::1",
 	}
-	if err := WriteThread(nil, thread, op); err != nil {
+	if err := WriteThread(thread, op); err != nil {
 		t.Fatal(err)
 	}
 }

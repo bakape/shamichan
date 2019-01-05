@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"meguca/db"
 	"net"
 	"net/http"
 	"os"
@@ -13,10 +14,9 @@ import (
 	"sync"
 	"time"
 
-	"meguca/db"
-
 	"github.com/go-playground/log"
 	"github.com/oschwald/maxminddb-golang"
+
 	// TODO: Rewrite for archiver v3
 	"gopkg.in/mholt/archiver.v2"
 )

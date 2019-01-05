@@ -84,9 +84,7 @@ func TestDiffPostCount(t *testing.T) {
 					Board: "a",
 				},
 				IP: "::1",
-			},
-			true,
-			false)
+			})
 	})
 	if err != nil {
 		t.Fatal(err)

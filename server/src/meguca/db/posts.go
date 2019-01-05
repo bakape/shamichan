@@ -71,9 +71,7 @@ func NewPostID(tx *sql.Tx) (id uint64, err error) {
 
 // WritePost writes a post struct to the database. Only used in tests and
 // migrations.
-// bumpReplyTime: increment thread replyTime
-// sage: don't increment bumpTime
-func WritePost(tx *sql.Tx, p Post, bumpReplyTime, sage bool) (err error) {
+func WritePost(tx *sql.Tx, p Post) (err error) {
 	// Don't store empty strings of these in the database. Zero value != NULL.
 	var (
 		img, ip *string
@@ -89,7 +87,7 @@ func WritePost(tx *sql.Tx, p Post, bumpReplyTime, sage bool) (err error) {
 		spoiler = p.Image.Spoiler
 	}
 
-	q := sq.Insert("posts").
+	_, err = sq.Insert("posts").
 		Columns(
 			"editing", "spoiler", "id", "board", "op", "time", "body", "flag",
 			"posterID", "name", "trip", "auth", "password", "ip",
@@ -101,20 +99,15 @@ func WritePost(tx *sql.Tx, p Post, bumpReplyTime, sage bool) (err error) {
 			p.PosterID, p.Name, p.Trip, p.Auth, p.Password, ip,
 			img, imgName,
 			commandRow(p.Commands),
-		)
-	err = withTransaction(tx, q).Exec()
+		).
+		RunWith(tx).
+		Exec()
 	if err != nil {
 		return
 	}
 	err = writeLinks(tx, p.ID, p.Links)
 	if err != nil {
 		return
-	}
-	if bumpReplyTime {
-		err = bumpThread(tx, p.OP, !sage)
-		if err != nil {
-			return
-		}
 	}
 
 	if p.Editing {

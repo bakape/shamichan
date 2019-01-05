@@ -91,61 +91,46 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 
 // WriteBoard writes a board complete with configurations to the database
 func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
-	q := sq.Insert("boards").
+	_, err := sq.Insert("boards").
 		Columns(
 			"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
 			"flags", "NSFW",
-			"posterIDs", "rbText", "pyu", "created", "defaultCSS", "title", "notice",
-			"rules", "eightball",
+			"posterIDs", "rbText", "pyu", "created", "defaultCSS", "title",
+			"notice", "rules", "eightball",
 		).
 		Values(
 			c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
 			c.Flags, c.NSFW, c.PosterIDs, c.RbText, c.Pyu,
 			c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
 			pq.StringArray(c.Eightball),
-		)
-
-	err := withTransaction(tx, q).Exec()
-
-	if err != nil {
-		return err
-	}
-
-	return notifyBoardUpdated(tx, c.ID)
-}
-
-func notifyBoardUpdated(tx *sql.Tx, board string) error {
-	_, err := tx.Exec("select pg_notify('board_updated', $1)", board)
+		).
+		RunWith(tx).
+		Exec()
 	return err
 }
 
 // UpdateBoard updates board configurations
-func UpdateBoard(c config.BoardConfigs) error {
-	return InTransaction(false, func(tx *sql.Tx) error {
-		q := sq.Update("boards").
-			SetMap(map[string]interface{}{
-				"readOnly":      c.ReadOnly,
-				"textOnly":      c.TextOnly,
-				"forcedAnon":    c.ForcedAnon,
-				"disableRobots": c.DisableRobots,
-				"flags":         c.Flags,
-				"NSFW":          c.NSFW,
-				"posterIDs":     c.PosterIDs,
-				"rbText":        c.RbText,
-				"pyu":           c.Pyu,
-				"defaultCSS":    c.DefaultCSS,
-				"title":         c.Title,
-				"notice":        c.Notice,
-				"rules":         c.Rules,
-				"eightball":     pq.StringArray(c.Eightball),
-			}).
-			Where("id = ?", c.ID)
-		err := withTransaction(tx, q).Exec()
-		if err != nil {
-			return err
-		}
-		return notifyBoardUpdated(tx, c.ID)
-	})
+func UpdateBoard(c config.BoardConfigs) (err error) {
+	_, err = sq.Update("boards").
+		SetMap(map[string]interface{}{
+			"readOnly":      c.ReadOnly,
+			"textOnly":      c.TextOnly,
+			"forcedAnon":    c.ForcedAnon,
+			"disableRobots": c.DisableRobots,
+			"flags":         c.Flags,
+			"NSFW":          c.NSFW,
+			"posterIDs":     c.PosterIDs,
+			"rbText":        c.RbText,
+			"pyu":           c.Pyu,
+			"defaultCSS":    c.DefaultCSS,
+			"title":         c.Title,
+			"notice":        c.Notice,
+			"rules":         c.Rules,
+			"eightball":     pq.StringArray(c.Eightball),
+		}).
+		Where("id = ?", c.ID).
+		Exec()
+	return
 }
 
 func updateConfigs(_ string) error {

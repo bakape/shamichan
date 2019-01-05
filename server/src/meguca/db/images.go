@@ -9,7 +9,6 @@ import (
 	"meguca/util"
 	"time"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 )
 
@@ -32,7 +31,7 @@ type Video struct {
 	SHA1     string        `json:"sha1"`
 }
 
-// WriteImage writes a processed image record to the DB
+// WriteImage writes a processed image record to the DB. Only used in tests.
 func WriteImage(i common.ImageCommon) error {
 	return InTransaction(false, func(tx *sql.Tx) error {
 		return writeImageTx(tx, i)
@@ -40,7 +39,7 @@ func WriteImage(i common.ImageCommon) error {
 }
 
 func writeImageTx(tx *sql.Tx, i common.ImageCommon) (err error) {
-	err = withTransaction(tx, sq.
+	_, err = sq.
 		Insert("images").
 		Columns(
 			"apng", "audio", "video", "fileType", "thumbType", "dims", "length",
@@ -50,42 +49,15 @@ func writeImageTx(tx *sql.Tx, i common.ImageCommon) (err error) {
 			i.APNG, i.Audio, i.Video, int(i.FileType), int(i.ThumbType),
 			pq.GenericArray{A: i.Dims}, i.Length, i.Size, i.MD5, i.SHA1,
 			i.Title, i.Artist,
-		)).
+		).
+		RunWith(tx).
 		Exec()
 	return
 }
 
-func getImage(sha1 string) squirrel.SelectBuilder {
-	return sq.Select("*").From("images").Where("SHA1 = ?", sha1)
-}
-
-// GetImage retrieves a thumbnailed image record from the DB
-func GetImage(SHA1 string) (common.ImageCommon, error) {
-	return scanImage(getImage(SHA1))
-}
-
-func scanImage(rs rowScanner) (img common.ImageCommon, err error) {
-	var scanner imageScanner
-	err = rs.Scan(scanner.ScanArgs()...)
-	if err != nil {
-		return
-	}
-	return scanner.Val().ImageCommon, nil
-}
-
 // NewImageToken inserts a new image allocation token into the DB and returns
-// it's ID
-func NewImageToken(SHA1 string) (token string, err error) {
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		token, err = NewImageTokenTx(tx, SHA1)
-		return err
-	})
-	return
-}
-
-// NewImageTokenTx inserts a new image allocation token into the DB and returns
 // it's ID in a transacion
-func NewImageTokenTx(tx *sql.Tx, SHA1 string) (token string, err error) {
+func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
 	expires := time.Now().Add(tokenTimeout).UTC()
 
 	// Loop in case there is a primary key collision
@@ -95,10 +67,11 @@ func NewImageTokenTx(tx *sql.Tx, SHA1 string) (token string, err error) {
 			return
 		}
 
-		err = withTransaction(tx, sq.
+		_, err = sq.
 			Insert("image_tokens").
 			Columns("token", "SHA1", "expires").
-			Values(token, SHA1, expires)).
+			Values(token, SHA1, expires).
+			RunWith(tx).
 			Exec()
 		switch {
 		case err == nil:
@@ -109,33 +82,6 @@ func NewImageTokenTx(tx *sql.Tx, SHA1 string) (token string, err error) {
 			return
 		}
 	}
-}
-
-// UseImageToken deletes an image allocation token and returns the matching
-// processed image. If no token exists, returns ErrInvalidToken.
-func UseImageToken(tx *sql.Tx, token string) (
-	img common.ImageCommon, err error,
-) {
-	if len(token) != common.LenImageToken {
-		err = ErrInvalidToken
-		return
-	}
-
-	var SHA1 string
-	q := sq.Delete("image_tokens").
-		Where("token = ?", token).
-		Suffix("returning SHA1")
-	r, err := withTransaction(tx, q).QueryRow()
-	if err != nil {
-		return
-	}
-	err = r.Scan(&SHA1)
-	if err != nil {
-		return
-	}
-
-	img, err = scanImage(getImage(SHA1))
-	return
 }
 
 // AllocateImage allocates an image's file resources to their respective served
@@ -176,37 +122,28 @@ func HasImage(id uint64) (has bool, err error) {
 	return
 }
 
-// InsertImage insert and image into and existing open post
-func InsertImage(tx *sql.Tx, id, op uint64, img common.Image) (err error) {
-	q := sq.Update("posts").
-		SetMap(map[string]interface{}{
-			"SHA1":      img.SHA1,
-			"imageName": img.Name,
-			"spoiler":   img.Spoiler,
-		}).
-		Where("id = ?", id)
-	err = withTransaction(tx, q).Exec()
-	if err != nil {
-		return
-	}
-	return bumpThread(tx, op, false)
+// InsertImage insert and image into and existing open post and return image
+// JSON
+func InsertImage(postID uint64, token, name string, spoiler bool) (
+	json []byte, err error,
+) {
+	err = db.QueryRow(
+		`select insert_image($1::bigint,
+			$2::char(86),
+			$3::varchar(200),
+			$4::bool)`,
+		token, name, spoiler, postID).
+		Scan(json)
+	return
 }
 
 // SpoilerImage spoilers an already allocated image
 func SpoilerImage(id, op uint64) error {
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
-		err = withTransaction(tx,
-			sq.Update("posts").
-				Set("spoiler", true).
-				Where("id = ?", id),
-		).
-			Exec()
-		if err != nil {
-			return
-		}
-
-		return bumpThread(tx, op, false)
-	})
+	_, err := sq.Update("posts").
+		Set("spoiler", true).
+		Where("id = ?", id).
+		Exec()
+	return err
 }
 
 // VideoPlaylist returns a video playlist for a board
@@ -231,7 +168,7 @@ func VideoPlaylist(board string) (videos []Video, err error) {
 				int(common.WEBM),
 				int(common.MP4),
 			).
-			OrderBy("RANDOM()"),
+			OrderBy("random()"),
 		func(r *sql.Rows) (err error) {
 			err = r.Scan(&v.SHA1, &v.FileType, &dur)
 			if err != nil {

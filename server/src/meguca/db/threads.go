@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 )
@@ -156,109 +155,48 @@ func ValidateOP(id uint64, board string) (valid bool, err error) {
 }
 
 // InsertThread inserts a new thread into the database.
-func InsertThread(tx *sql.Tx, subject string, p Post) (
-	err error,
-) {
-	err = withTransaction(tx,
-		sq.Insert("threads").
-			Columns("board", "id", "replyTime", "bumpTime", "subject").
-			Values(p.Board, p.ID, p.Time, p.Time, subject),
-	).Exec()
+func InsertThread(tx *sql.Tx, subject string, p Post) (err error) {
+	_, err = sq.Insert("threads").
+		Columns("board", "id", "replyTime", "bumpTime", "subject").
+		Values(p.Board, p.ID, p.Time, p.Time, subject).
+		RunWith(tx).
+		Exec()
 	if err != nil {
 		return
 	}
 
-	err = WritePost(tx, p, false, false)
+	err = WritePost(tx, p)
 	return
 }
 
-// WriteThread writes a thread and it's OP to the database. Only used for tests
-// and migrations.
-func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
-	passedTx := tx != nil
-	if !passedTx {
-		tx, err = db.Begin()
+// WriteThread writes a thread and it's OP to the database. Only used for tests.
+func WriteThread(t Thread, p Post) (err error) {
+	return InTransaction(false, func(tx *sql.Tx) (err error) {
+		_, err = sq.
+			Insert("threads").
+			Columns("board", "id", "replyTime", "bumpTime", "subject").
+			Values(
+				t.Board,
+				t.ID,
+				t.ReplyTime,
+				t.BumpTime,
+				t.Subject,
+			).
+			RunWith(tx).
+			Exec()
 		if err != nil {
-			return err
+			return
 		}
-	}
-
-	err = withTransaction(tx, sq.
-		Insert("threads").
-		Columns("board", "id", "replyTime", "bumpTime", "subject").
-		Values(
-			t.Board,
-			t.ID,
-			t.ReplyTime,
-			t.BumpTime,
-			t.Subject,
-		),
-	).
-		Exec()
-	if err != nil {
-		if !passedTx {
-			tx.Rollback()
-		}
-		return err
-	}
-
-	err = WritePost(tx, p, false, false)
-	if err != nil {
-		if !passedTx {
-			tx.Rollback()
-		}
-		return err
-	}
-
-	if !passedTx {
-		return tx.Commit()
-	}
-	return nil
-}
-
-func queryThreadBool(id uint64, key string) (val bool, err error) {
-	err = sq.Select(key).
-		From("threads").
-		Where("id = ?", id).
-		QueryRow().
-		Scan(&val)
-	return
+		return WritePost(tx, p)
+	})
 }
 
 // CheckThreadLocked checks, if a thread has been locked by a moderator
-func CheckThreadLocked(id uint64) (bool, error) {
-	return queryThreadBool(id, "locked")
-}
-
-// Increment thread update, bump, post and image counters
-func bumpThread(tx *sql.Tx, id uint64, bump bool) (err error) {
-	now := time.Now().Unix()
-	q := sq.Update("threads").Set("replyTime", now)
-
-	if bump {
-		var (
-			r         rowScanner
-			postCount uint
-		)
-		r, err = withTransaction(tx,
-			sq.Select("count(*)").
-				From("posts").
-				Where("op = ?", id),
-		).
-			QueryRow()
-		if err != nil {
-			return
-		}
-		err = r.Scan(&postCount)
-		if err != nil {
-			return
-		}
-
-		if postCount < common.BumpLimit {
-			q = q.Set("bumpTime", now)
-		}
-	}
-
-	err = withTransaction(tx, q.Where("id = ?", id)).Exec()
-	return err
+func CheckThreadLocked(id uint64) (locked bool, err error) {
+	err = sq.Select("locked").
+		From("threads").
+		Where("id = ?", id).
+		QueryRow().
+		Scan(&locked)
+	return
 }

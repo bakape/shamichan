@@ -97,11 +97,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 		}
 
 		err = db.InsertThread(tx, subject, post)
-		if err != nil {
-			return
-		}
-
-		return db.WriteRoulette(tx, post.ID)
+		return
 	})
 
 	return
@@ -344,6 +340,9 @@ func constructPost(
 			return
 		}
 	} else {
+		// TODO: Move DB checks out of the parser. The parser should just parse.
+		// Return slices of pointers to links and commands that need to be
+		// validated.
 		post.Links, post.Commands, err = parser.ParseBody(
 			[]byte(req.Body),
 			conf.ID,
@@ -360,37 +359,18 @@ func constructPost(
 	return
 }
 
-// Performs some validations and retrieves processed image data by token ID.
-// Embeds spoiler and image name in result struct. The last extension is
-// stripped from the name.
-func getImage(tx *sql.Tx, token, name string, spoiler bool) (
-	img *common.Image, err error,
-) {
+// Trim on the last dot in the file name, but also strip for .tar.gz and
+// .tar.xz as special cases.
+func formatImageName(name string) (string, error) {
 	if len(name) > 200 {
-		return nil, errImageNameTooLong
+		return "", errImageNameTooLong
 	}
 
-	imgCommon, err := db.UseImageToken(tx, token)
-	switch err {
-	case nil:
-	case db.ErrInvalidToken:
-		return nil, errInvalidImageToken
-	default:
-		return nil, err
-	}
-
-	// Trim on the last dot in the file name, but also strip for .tar.gz and
-	// .tar.xz as special cases.
 	if i := strings.LastIndexByte(name, '.'); i != -1 {
 		name = name[:i]
+		if strings.HasSuffix(name, ".tar") {
+			name = name[:len(name)-4]
+		}
 	}
-	if strings.HasSuffix(name, ".tar") {
-		name = name[:len(name)-4]
-	}
-
-	return &common.Image{
-		ImageCommon: imgCommon,
-		Spoiler:     spoiler,
-		Name:        name,
-	}, nil
+	return name, nil
 }

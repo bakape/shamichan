@@ -50,8 +50,6 @@ func (e errInvalidFrame) Error() string {
 // Client stores and manages a websocket-connected remote client and its
 // interaction with the server and database
 type Client struct {
-	// Using the new protocol for C++ clients
-	newProtocol bool
 	// Client is requesting only the last 100 posts
 	last100 bool
 	// Have received first message, which must be a common.MessageSynchronise
@@ -364,18 +362,4 @@ func (c *Client) setLastTime() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.lastTime = time.Now().Unix()
-}
-
-// NewProtocol returns, if client is using new protocol for C++ clients
-func (c *Client) NewProtocol() bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.newProtocol
-}
-
-// Last100 returns, id client is requesting only the last 100 posts
-func (c *Client) Last100() bool {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	return c.last100
 }

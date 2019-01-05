@@ -48,7 +48,7 @@ func addToFeed(id uint64, board string, c common.Client) (
 				id:            id,
 				send:          make(chan []byte),
 				insertPost:    make(chan postCreationMessage),
-				closePost:     make(chan postCloseMessage),
+				closePost:     make(chan message),
 				spoilerImage:  make(chan message),
 				moderatePost:  make(chan moderationMessage),
 				setOpenBody:   make(chan postBodyModMessage),
@@ -146,8 +146,8 @@ func ClosePost(id, op uint64, links []common.Link, commands []common.Command,
 ) (err error) {
 	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
 		ID       uint64           `json:"id"`
-		Links    []common.Link    `json:"links,omitempty"`
-		Commands []common.Command `json:"commands,omitempty"`
+		Links    []common.Link    `json:"links"`
+		Commands []common.Command `json:"commands"`
 	}{
 		ID:       id,
 		Links:    links,
@@ -158,7 +158,7 @@ func ClosePost(id, op uint64, links []common.Link, commands []common.Command,
 	}
 
 	sendIfExists(op, func(f *Feed) {
-		f.ClosePost(id, links, commands, msg)
+		f.ClosePost(id, msg)
 	})
 
 	return

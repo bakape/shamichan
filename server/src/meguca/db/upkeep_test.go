@@ -53,7 +53,7 @@ func TestOpenPostClosing(t *testing.T) {
 	}
 	err := InTransaction(false, func(tx *sql.Tx) error {
 		for _, p := range posts {
-			err := WritePost(tx, p, false, false)
+			err := WritePost(tx, p)
 			if err != nil {
 				return err
 			}
@@ -278,7 +278,7 @@ func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
 				OP:    op.id,
 			},
 		}
-		if err := WriteThread(nil, thread, post); err != nil {
+		if err := WriteThread(thread, post); err != nil {
 			t.Fatal(err)
 		}
 	}
