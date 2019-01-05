@@ -92,7 +92,9 @@ recheck:
 
 	switch err.(type) {
 	case StatusError:
-		if c := err.(StatusError).Code; c >= 400 && c < 500 {
+		err := err.(StatusError)
+		c := err.Code
+		if (c >= 400 && c < 500) || strings.HasPrefix(err.Error(), "YouTube") {
 			return true
 		}
 	case *websocket.CloseError:
@@ -104,7 +106,6 @@ recheck:
 
 	// Ignore
 	// client-side connection loss
-	// YouTube video...
 	s := err.Error()
 	for _, suff := range [...]string{
 		"connection reset by peer",
@@ -112,14 +113,10 @@ recheck:
 		"Error extracting sts from embedded url response",
 		"Error parsing signature tokens",
 		"\": invalid syntax",
-		"Error %!d(string=150)",
 	} {
 		if strings.HasSuffix(s, suff) {
 			return true
 		}
-	}
-	if strings.HasPrefix(s, "YouTube") {
-		return true
 	}
 
 	return false
