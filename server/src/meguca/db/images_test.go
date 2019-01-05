@@ -55,7 +55,6 @@ func TestAllocateImage(t *testing.T) {
 
 	// Assert files and remove them
 	t.Run("files", func(t *testing.T) {
-		t.Parallel()
 		for i, path := range assets.GetFilePaths(id, common.JPEG, common.JPEG) {
 			buf, err := ioutil.ReadFile(path)
 			if err != nil {
@@ -69,12 +68,10 @@ func TestAllocateImage(t *testing.T) {
 
 	// Assert database record
 	t.Run("db row", func(t *testing.T) {
-		t.Parallel()
-
 		var buf []byte
-		err := sq.Select("to_json(*)").
-			From("images").
-			Where("id = ?", id).
+		err := sq.Select("to_jsonb(i)").
+			From("images i").
+			Where("sha1 = ?", id).
 			QueryRow().
 			Scan(&buf)
 		if err != nil {

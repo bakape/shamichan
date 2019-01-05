@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	"meguca/auth"
-	. "meguca/test"
+	"meguca/test"
 	"testing"
 )
 
@@ -51,9 +51,9 @@ func TestPurgePost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, len(post.Moderation), 1)
-	AssertDeepEquals(t, post.Image == nil, true)
-	AssertDeepEquals(t, post.Body, "")
+	test.AssertDeepEquals(t, len(post.Moderation), 1)
+	test.AssertDeepEquals(t, post.Image == nil, true)
+	test.AssertDeepEquals(t, post.Body, "")
 }
 
 func TestStickyThread(t *testing.T) {
@@ -113,7 +113,7 @@ func TestStaff(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, res, staff)
+	test.AssertDeepEquals(t, res, staff)
 }
 
 func TestGetSameIPPosts(t *testing.T) {
@@ -172,7 +172,7 @@ func TestCanPerform(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			AssertDeepEquals(t, can, c.can)
+			test.AssertDeepEquals(t, can, c.can)
 		})
 	}
 }

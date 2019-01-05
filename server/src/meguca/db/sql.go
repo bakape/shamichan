@@ -89,23 +89,23 @@ create function insert_image(post_id bigint, token char(86), name varchar(200),
 	spoiler bool)
 returns jsonb as $$
 declare
-	sha1 char(40);
+	image_id char(40);
 	data jsonb;
 begin
 	update posts
-		set sha1 = use_image_token(token),
-			imageName = name,
-			spoiler = spoiler
+		set sha1 = use_image_token(insert_image.token),
+			imageName = insert_image.name,
+			spoiler = insert_image.spoiler
 		where id = post_id
-		returning posts.sha1 into sha1;
+		returning posts.sha1 into image_id;
 
-	select to_jsonb(*) into data
+	select to_jsonb(i) into data
 		from images i
-		where i.sha1 = sha1;
-	perform jsonb_insert(data, '{id}', to_jsonb(post_id));
-	perform jsonb_insert(data, '{spoiler}', to_jsonb(spoiler));
-	perform jsonb_insert(data, '{name}', to_jsonb(name));
-	return data;
+		where i.sha1 = image_id;
+	return data || jsonb_build_object(
+		'id', post_id,
+		'spoiler', spoiler,
+		'name', name);
 end;
 $$ language plpgsql;
 `)
@@ -188,7 +188,7 @@ declare
 	sha1 char(40);
 begin
 	delete from image_tokens
-		where image_tokens.token = token
+		where image_tokens.token = use_image_token.token
 		returning image_tokens.sha1 into sha1;
 	if sha1 is null then
 		raise exception 'invalid image token';

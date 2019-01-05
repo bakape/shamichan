@@ -132,8 +132,8 @@ func InsertImage(postID uint64, token, name string, spoiler bool) (
 			$2::char(86),
 			$3::varchar(200),
 			$4::bool)`,
-		token, name, spoiler, postID).
-		Scan(json)
+		postID, token, name, spoiler).
+		Scan(&json)
 	return
 }
 
