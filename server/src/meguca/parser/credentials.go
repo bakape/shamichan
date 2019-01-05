@@ -7,7 +7,7 @@ import (
 	"meguca/common"
 	"meguca/config"
 
-	"github.com/aquilax/tripcode"
+	"github.com/bakape/tripcode"
 )
 
 var (
