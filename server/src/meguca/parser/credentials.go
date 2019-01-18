@@ -2,12 +2,11 @@ package parser
 
 import (
 	"errors"
-	"strings"
-
 	"meguca/common"
 	"meguca/config"
+	"strings"
 
-	"github.com/bakape/tripcode"
+	"github.com/aquilax/tripcode"
 )
 
 var (
