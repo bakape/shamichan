@@ -94,7 +94,8 @@ recheck:
 	case StatusError:
 		err := err.(StatusError)
 		c := err.Code
-		if (c >= 400 && c < 500) || strings.HasPrefix(err.Error(), "YouTube") {
+		if (c >= 400 && c < 500) ||
+			strings.HasPrefix(err.Err.Error(), "YouTube") {
 			return true
 		}
 	case *websocket.CloseError:

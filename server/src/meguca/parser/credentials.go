@@ -2,10 +2,9 @@ package parser
 
 import (
 	"errors"
-	"strings"
-
 	"meguca/common"
 	"meguca/config"
+	"strings"
 
 	"github.com/aquilax/tripcode"
 )
