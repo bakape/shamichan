@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"meguca/auth"
 	"meguca/common"
 	"meguca/db"
 	. "meguca/test"
@@ -82,7 +83,12 @@ func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
 	m.t.Helper()
 
 	wcl := dialServer(m.t, m.server)
-	cl, err := newClient(<-m.connSender, httptest.NewRequest("GET", "/", nil))
+	r := httptest.NewRequest("GET", "/", nil)
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		m.t.Fatal(err)
+	}
+	cl, err := newClient(<-m.connSender, r, ip)
 	if err != nil {
 		m.t.Fatal(err)
 	}
@@ -149,22 +155,6 @@ func assertErrorPrefix(t *testing.T, err error, prefix string) {
 	if errMsg := fmt.Sprint(err); !strings.HasPrefix(errMsg, prefix) {
 		t.Fatalf("unexpected error prefix: `%s` : `%s`", prefix, errMsg)
 	}
-}
-
-func TestLogError(t *testing.T) {
-	const (
-		ip  = "::1"
-		msg = "Install Gentoo"
-	)
-	sv := newWSServer(t)
-	defer sv.Close()
-	cl, _ := sv.NewClient()
-	cl.ip = ip
-
-	log := captureLog(func() {
-		cl.logError(errors.New(msg))
-	})
-	assertLog(t, log, fmt.Sprintf("error by %s: %s\n", ip, msg))
 }
 
 func captureLog(fn func()) string {
@@ -317,7 +307,10 @@ func TestHandler(t *testing.T) {
 	t.Parallel()
 
 	// Proper connection and client-side close
-	sv := httptest.NewServer(http.HandlerFunc(Handler))
+	sv := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			Handler(w, r)
+		}))
 	defer sv.Close()
 	wcl := dialServer(t, sv)
 	normalCloseWebClient(t, wcl)
