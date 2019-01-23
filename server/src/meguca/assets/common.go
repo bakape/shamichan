@@ -109,7 +109,6 @@ func WatchVideoDir() {
 	}
 
 	defer watcher.Close()
-	done := make(chan bool)
 
 	go func() {
 		for {
@@ -140,6 +139,4 @@ func WatchVideoDir() {
 	if err != nil {
 		log.Error(err)
 	}
-
-	<-done
 }
