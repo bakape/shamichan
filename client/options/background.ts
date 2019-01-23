@@ -48,8 +48,8 @@ export function render(bg?: BackgroundStore) {
 	style.innerHTML = ''
 
 	let showOPBG = false
-	if (options.illyaDance) {
-		renderIllya()
+	if (options.bgVideo !== 'none') {
+		renderBgVideo()
 		showOPBG = true
 	} else if (options.userBG && !options.workModeToggle) {
 		renderBackground(bg)
@@ -58,18 +58,12 @@ export function render(bg?: BackgroundStore) {
 	toggleOPBackground(showOPBG)
 }
 
-// Attach Illya Dance to the background
-function renderIllya() {
-	let args = 'autoplay loop'
-	if (options.illyaDanceMute) {
-		args += ' muted'
-	}
-	const html = HTML
-		`<video ${args}>
-			<source src="/assets/illya.webm" type="video/webm">
-			<source src="/assets/illya.mp4" type="video/mp4">
+// Attach video to the background
+function renderBgVideo() {
+	container.innerHTML = HTML
+		`<video autoplay loop${options.bgMute ? ' muted' : ''}>
+			<source src="/assets/videos/${options.bgVideo}" type="${options.bgVideo.split('.').pop() === "webm" ? "video/webm" : "video/mp4"}">
 		</video>`
-	container.innerHTML = html
 }
 
 // Wrap the OP in a background for better visibility

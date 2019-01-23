@@ -372,9 +372,13 @@ var optionSpecs = [...][]inputSpec{
 			Type:    _select,
 			Options: []string{"none", "r/a/dio", "eden"},
 		},
+		{
+			ID:      "bgVideo",
+			Type:    _select,
+			Options: []string{"none"},
+		},
+		{ID: "bgMute"},
 		{ID: "meguTV"},
-		{ID: "illyaDance"},
-		{ID: "illyaDanceMute"},
 	},
 	{
 		{

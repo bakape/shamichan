@@ -54,6 +54,9 @@ export let boards: string[] = (window as any).boards
 
 export let boardConfig: BoardConfigs
 
+// Currently existing background videos
+export let bgVideos: string[] = (window as any).bgVideos
+
 // Load initial page state
 export const page = read(location.href)
 

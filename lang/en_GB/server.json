@@ -28,6 +28,14 @@
 			"Animated GIF Thumbnails",
 			"Animate GIF thumbnails"
 		],
+		"bgMute": [
+			"Mute Background Video",
+			"Mute the background video"
+		],
+		"bgVideo": [
+			"Background Video",
+			"Admin-specified memes piped straight into you're monitor"
+		],
 		"boardExpiry": [
 			"Board expiry time",
 			"Number of days without new posts before a board is deleted"
@@ -167,14 +175,6 @@
 		"id": [
 			"Login",
 			""
-		],
-		"illyaDance": [
-			"Illya Dance",
-			"Dancing loli in the background"
-		],
-		"illyaDanceMute": [
-			"Mute Illya",
-			"Mute dancing loli"
 		],
 		"imageHover": [
 			"Image Hover Expansion",

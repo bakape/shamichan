@@ -28,6 +28,14 @@
 			"Miniaturas de GIF animadas",
 			"Miniaturas de GIF animadas"
 		],
+		"bgMute": [
+			"Mute Background Video",
+			"Mute the background video"
+		],
+		"bgVideo": [
+			"Background Video",
+			"Admin-specified memes piped straight into you're monitor"
+		],
 		"boardExpiry": [
 			"Board expiry time",
 			"Number of days without new posts before a board is deleted"
@@ -167,14 +175,6 @@
 		"id": [
 			"Login",
 			""
-		],
-		"illyaDance": [
-			"Illya Dance",
-			"Loli dançando no fundo"
-		],
-		"illyaDanceMute": [
-			"Mutar a Illya",
-			"Loli dançando sem som"
 		],
 		"imageHover": [
 			"Expansão de Imagem ao Pairar",

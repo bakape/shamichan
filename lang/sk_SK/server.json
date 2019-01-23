@@ -28,6 +28,14 @@
 			"Animované GIF palconechty",
 			"Animuj GIF palconechty"
 		],
+		"bgMute": [
+			"Mute Background Video",
+			"Mute the background video"
+		],
+		"bgVideo": [
+			"Background Video",
+			"Admin-specified memes piped straight into you're monitor"
+		],
 		"boardExpiry": [
 			"Čas expirácie dosky",
 			"Počet dní bez nových príspevkov predtým, než sa doska zmaže"
@@ -167,14 +175,6 @@
 		"id": [
 			"Login",
 			""
-		],
-		"illyaDance": [
-			"Illya Dance",
-			"Dancing loli in the background"
-		],
-		"illyaDanceMute": [
-			"Mute Illya",
-			"Mute dancing loli"
 		],
 		"imageHover": [
 			"Expandovať obrázky pod kurzorom",

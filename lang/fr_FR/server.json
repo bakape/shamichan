@@ -28,6 +28,14 @@
 			"Vignettes GIF animées",
 			"Anime les GIF miniaturisés"
 		],
+		"bgMute": [
+			"Mute Background Video",
+			"Mute the background video"
+		],
+		"bgVideo": [
+			"Background Video",
+			"Admin-specified memes piped straight into you're monitor"
+		],
 		"boardExpiry": [
 			"Expiration d'une planche",
 			"Nombre de jours sans nouveaux messages avant la suppression d'une planche"
@@ -167,14 +175,6 @@
 		"id": [
 			"Identifiant",
 			""
-		],
-		"illyaDance": [
-			"Illya Dance",
-			"Dancing loli in the background"
-		],
-		"illyaDanceMute": [
-			"Mute Illya",
-			"Mute dancing loli"
 		],
 		"imageHover": [
 			"Image au passage de la souris",

@@ -5,14 +5,15 @@
 package server
 
 import (
-	"meguca/config"
-	"meguca/log"
 	"os"
 	"syscall"
 	"time"
 
 	"github.com/go-playground/log"
 	"github.com/sevlyar/go-daemon"
+
+	"meguca/config"
+	"meguca/log"
 )
 
 func init() {

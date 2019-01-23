@@ -7,13 +7,12 @@ node_modules
 /meguca
 /meguca.exe
 scripts/*.local.sh
-www/illya.mp4
-www/illya.webm
 www/css/*.css
 www/css/maps
 www/js
 www/wasm
 www/lang
+www/videos
 thumb_*.png
 thumb_*.jpg
 scripts/migration/3to4/3to4
