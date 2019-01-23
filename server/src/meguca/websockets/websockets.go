@@ -88,10 +88,6 @@ type receivedMessage struct {
 // Handler is an http.HandleFunc that responds to new websocket connection
 // requests.
 func Handler(w http.ResponseWriter, r *http.Request) (err error) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return
-	}
 	ip, err := auth.GetIP(r)
 	if err != nil {
 		return
@@ -102,7 +98,6 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return
 	}
-	db.IncrementSpamScore(ip, 20*time.Second)
 	err = db.AssertNotSpammer(ip)
 	if err != nil {
 		return
@@ -112,6 +107,11 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 		return
 	}
 	defer feeds.UnregisterIP(ip)
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return
+	}
 
 	c, err := newClient(conn, r, ip)
 	if err != nil {
