@@ -40,7 +40,7 @@ func RegisterIP(ip string) (err error) {
 	defer ips.Unlock()
 
 	online := ips.ips[ip]
-	if online >= 9 {
+	if online >= 16 {
 		return common.ErrTooManyConnections
 	}
 
