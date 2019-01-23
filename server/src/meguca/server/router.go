@@ -155,7 +155,12 @@ func createRouter() http.Handler {
 		json.POST("/thread-updates", serveThreadUpdates)
 
 		// Internal API
-		api.GET("/socket", websockets.Handler)
+		api.GET("/socket", func(w http.ResponseWriter, r *http.Request) {
+			err := websockets.Handler(w, r)
+			if err != nil {
+				httpError(w, r, err)
+			}
+		})
 		api.GET("/youtube-data/:id", youTubeData)
 		api.GET("/bitchute-title/:id", bitChuteTitle)
 		api.POST("/register", register)

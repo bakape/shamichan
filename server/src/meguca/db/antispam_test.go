@@ -19,12 +19,11 @@ func TestSpamScores(t *testing.T) {
 		},
 	})
 	assertTableClear(t, "spam_scores", "last_solved_captchas")
+	writeAllBoard(t)
 	err := auth.LoadCaptchaServices()
 	if err != nil {
 		t.Fatal(err)
 	}
-	spamDetection := newListener(t, "spam_detected")
-	defer spamDetection.Close()
 	now := time.Now().Round(time.Second)
 
 	for _, ip := range [...]string{
@@ -74,7 +73,7 @@ func TestSpamScores(t *testing.T) {
 		{"fresh write", "226.209.126.221", false, nil},
 		{"overwrite stale value", "131.215.1.14", false, nil},
 		{"increment DB value", "99.188.17.210", true, nil},
-		{"spam", "71.189.25.162", true, common.ErrSpamDected},
+		{"spam", "71.189.25.162", false, common.ErrSpamDected},
 		{"no captcha solved in 3h", "143.195.24.54", true, nil},
 	}
 
@@ -88,11 +87,6 @@ func TestSpamScores(t *testing.T) {
 			AssertDeepEquals(t, need, c.needCaptcha)
 		})
 	}
-
-	t.Run("spam detection propagation", func(t *testing.T) {
-		msg := <-spamDetection.Notify
-		AssertDeepEquals(t, msg.Extra, "71.189.25.162")
-	})
 
 	t.Run("clear score", func(t *testing.T) {
 		const ip = "99.188.17.210"
