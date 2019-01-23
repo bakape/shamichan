@@ -48,7 +48,7 @@ export function render(bg?: BackgroundStore) {
 	style.innerHTML = ''
 
 	let showOPBG = false
-	if (options.bgVideo != 'none') {
+	if (options.bgVideo !== 'none') {
 		renderBgVideo()
 		showOPBG = true
 	} else if (options.userBG && !options.workModeToggle) {
@@ -62,7 +62,7 @@ export function render(bg?: BackgroundStore) {
 function renderBgVideo() {
 	container.innerHTML = HTML
 		`<video autoplay loop${options.bgMute ? ' muted' : ''}>
-			<source src="/assets/videos/${options.bgVideo}" type="${options.bgVideo.split('.').pop() == "webm" ? "video/webm" : "video/mp4"}">
+			<source src="/assets/videos/${options.bgVideo}" type="${options.bgVideo.split('.').pop() === "webm" ? "video/webm" : "video/mp4"}">
 		</video>`
 }
 

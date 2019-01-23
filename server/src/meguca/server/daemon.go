@@ -12,7 +12,6 @@ import (
 	"github.com/go-playground/log"
 	"github.com/sevlyar/go-daemon"
 
-	"meguca/assets"
 	"meguca/config"
 	"meguca/log"
 )
@@ -28,7 +27,6 @@ func init() {
 		case "debug":
 			mlog.Init(mlog.Console)
 			mlog.ConsoleHandler.SetDisplayColor(true)
-			go assets.WatchVideoDir()
 			startServer()
 		case "stop":
 			killDaemon()
@@ -41,7 +39,6 @@ func init() {
 		case "start":
 			mlog.Init(mlog.Console)
 			mlog.ConsoleHandler.SetDisplayColor(false)
-			go assets.WatchVideoDir()
 			daemonize()
 		default:
 			printUsage()

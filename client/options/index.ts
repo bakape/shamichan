@@ -149,10 +149,7 @@ export function initOptions() {
 
 	// Manually change bgVideo select as it is dynamically generated
 	const bgElement = document.getElementById("bgVideo")
-
-	for (let val of bgElement.getElementsByTagName("option")) {
-		val.remove()
-	}
+	bgElement.innerHTML = ""
 
 	for (let val of bgVideos) {
 		const opt = document.createElement("option")

@@ -71,12 +71,11 @@ func generateVideoNames() {
 	rw.Lock()
 	defer rw.Unlock()
 
-	ret := []string{"none"}
+	videoNames = []string{"none"}
 	files, err := ioutil.ReadDir("www/videos")
 
 	if err != nil {
 		log.Error(err)
-		videoNames = ret
 		return
 	}
 
@@ -85,11 +84,9 @@ func generateVideoNames() {
 		ext := filepath.Ext(name)
 
 		if ext == ".webm" || ext == ".mp4" {
-			ret = append(ret, name)
+			videoNames = append(videoNames, name)
 		}
 	}
-
-	videoNames = ret
 }
 
 // GetVideoNames fetches videoNames behind a mutex
