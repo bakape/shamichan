@@ -156,7 +156,7 @@ func updateConfigs(_ string) error {
 	config.Set(conf)
 	mlog.Update()
 
-	return util.Parallel(recompileTemplates, auth.LoadCaptchaServices)
+	return util.Parallel(templates.Recompile, auth.LoadCaptchaServices)
 }
 
 func updateBoardConfigs(board string) error {
@@ -165,7 +165,7 @@ func updateBoardConfigs(board string) error {
 	case nil:
 	case sql.ErrNoRows:
 		config.RemoveBoard(board)
-		return recompileTemplates()
+		return templates.Recompile()
 	default:
 		return err
 	}
@@ -178,7 +178,7 @@ func updateBoardConfigs(board string) error {
 	case err != nil:
 		return util.WrapError("reloading board configuration", err)
 	case changed:
-		return util.Parallel(recompileTemplates, auth.LoadCaptchaServices)
+		return util.Parallel(templates.Recompile, auth.LoadCaptchaServices)
 	default:
 		return nil
 	}
@@ -188,16 +188,6 @@ func updateBoardConfigs(board string) error {
 func GetBoardConfigs(board string) (config.BoardConfigs, error) {
 	q := getBoardConfigs().Where("id = ?", board)
 	return scanBoardConfigs(q.QueryRow())
-}
-
-func recompileTemplates() error {
-	if IsTest {
-		return nil
-	}
-	if err := templates.Compile(); err != nil {
-		return util.WrapError("recompiling templates", err)
-	}
-	return nil
 }
 
 // WriteConfigs writes new global configurations to the database
