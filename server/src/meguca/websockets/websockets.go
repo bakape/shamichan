@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"meguca/auth"
 	"meguca/common"
+	"meguca/db"
 	"meguca/util"
 	"meguca/websockets/feeds"
 	"net/http"
@@ -86,33 +87,39 @@ type receivedMessage struct {
 
 // Handler is an http.HandleFunc that responds to new websocket connection
 // requests.
-func Handler(w http.ResponseWriter, r *http.Request) {
+func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		ip, IPErr := auth.GetIP(r)
-		if IPErr != nil {
-			ip = "invalid IP"
-		}
-		log.Errorf("websockets: %s: %s\n", ip, err)
+		return
+	}
+	ip, err := auth.GetIP(r)
+	if err != nil {
 		return
 	}
 
-	c, err := newClient(conn, r)
+	// Prevents connection spam
+	err = db.IsBanned("all", ip)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("400 %s", err), 400)
 		return
 	}
-	if err := c.listen(); err != nil {
-		c.logError(err)
+	db.IncrementSpamScore(ip, 20*time.Second)
+	err = db.AssertNotSpammer(ip)
+	if err != nil {
+		return
 	}
+
+	c, err := newClient(conn, r, ip)
+	if err != nil {
+		return
+	}
+	return c.listen()
 }
 
 // newClient creates a new websocket client
-func newClient(conn *websocket.Conn, req *http.Request) (*Client, error) {
-	ip, err := auth.GetIP(req)
-	if err != nil {
-		return nil, err
-	}
+func newClient(conn *websocket.Conn, req *http.Request, ip string,
+) (
+	*Client, error,
+) {
 	return &Client{
 		ip:       ip,
 		close:    make(chan error, 2),
@@ -147,16 +154,6 @@ func (c *Client) listenerLoop() error {
 	for {
 		select {
 		case err := <-c.close:
-			go func() {
-				time.Sleep(time.Minute)
-
-				if c.post.id != 0 {
-					if err = c.closePost(); err != nil {
-						c.logError(err)
-					}
-				}
-			}()
-
 			return err
 		case msg := <-c.sendExternal:
 			if err := c.send(msg); err != nil {
