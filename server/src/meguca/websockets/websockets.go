@@ -98,10 +98,6 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return
 	}
-	err = db.AssertNotSpammer(ip)
-	if err != nil {
-		return
-	}
 	err = feeds.RegisterIP(ip)
 	if err != nil {
 		return
