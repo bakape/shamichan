@@ -688,7 +688,7 @@ func detectCanPerform(
 // Unban a specific board -> banned post combination
 func unban(w http.ResponseWriter, r *http.Request) {
 	board := extractParam(r, "board")
-	creds, ok := canPerform(w, r, board, auth.BoardOwner, false)
+	creds, ok := canPerform(w, r, board, auth.Moderator, false)
 	if !ok {
 		return
 	}
