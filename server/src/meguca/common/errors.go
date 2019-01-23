@@ -19,6 +19,7 @@ var (
 	ErrInvalidCaptcha      = ErrInvalidInput("captcha")
 	ErrInvalidCreds        = ErrAccessDenied("login credentials")
 	ErrBanned              = ErrAccessDenied("you are banned from this board")
+	ErrTooManyConnections  = ErrAccessDenied("too many connections")
 
 	// The poster is almost certainly spamming
 	ErrSpamDected = ErrAccessDenied("spam detected")
