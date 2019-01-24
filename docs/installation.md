@@ -32,7 +32,7 @@ source /etc/profile
 
 # Clone and build meguca
 git clone https://github.com/bakape/meguca.git meguca
-cd /meguca
+cd meguca
 make
 
 # Run meguca
@@ -43,7 +43,7 @@ make
 ## Update
 
 ```bash
-cd /meguca
+cd meguca
 
 # Pull changes
 git pull
