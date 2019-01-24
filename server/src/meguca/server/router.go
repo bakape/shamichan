@@ -51,7 +51,14 @@ var webRoot = "www"
 
 func startWebServer() (err error) {
 	r := createRouter()
-	log.Info("listening on " + address)
+
+	var w bytes.Buffer
+	w.WriteString("listening on http")
+	if ssl {
+		w.WriteByte('s')
+	}
+	fmt.Fprintf(&w, "://%s", address)
+	log.Info(w.String())
 
 	if ssl {
 		err = http.ListenAndServeTLS(address, sslCert, sslKey, r)
