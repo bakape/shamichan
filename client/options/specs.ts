@@ -103,20 +103,22 @@ export const specs: { [id: string]: OptionSpec } = {
 		noExecOnStart: true,
 		exec: initNowPlaying,
 	},
+	// User-specified video in the background
+	bgVideo: {
+		type: optionType.menu,
+		default: "none",
+		noExecOnStart: true,
+		exec: renderBackground,
+	},
+	// Mute user-specified background video
+	bgMute: {
+		noExecOnStart: true,
+		exec: renderBackground,
+	},
 	// Random video player
 	meguTV: {
 		noExecOnStart: true,
 		exec: initTV,
-	},
-	// Illya dance in the background
-	illyaDance: {
-		noExecOnStart: true,
-		exec: renderBackground,
-	},
-	// Mute Illya dance
-	illyaDanceMute: {
-		noExecOnStart: true,
-		exec: renderBackground,
 	},
 	// Tile posts horizontally too
 	horizontalPosting: {

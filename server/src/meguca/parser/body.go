@@ -46,6 +46,8 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 
 	// Prevent link duplication
 	haveLink := make(map[uint64]bool)
+	// Prevent #pyu duplication
+	isSlut := false
 
 	for i, b := range body {
 		switch b {
@@ -91,7 +93,7 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 				goto next
 			}
 			var c common.Command
-			c, err = parseCommand(m[1], board, thread, id, ip)
+			c, err = parseCommand(m[1], board, thread, id, ip, &isSlut)
 			switch err {
 			case nil:
 				com = append(com, c)

@@ -28,6 +28,14 @@
 			"Анімовані прев'ю GIFок",
 			"Анімувати прев'ю GIFок"
 		],
+		"bgMute": [
+			"Mute Background Video",
+			"Mute the background video"
+		],
+		"bgVideo": [
+			"Background Video",
+			"Admin-specified memes piped straight into you're monitor"
+		],
 		"boardExpiry": [
 			"Board expiry time",
 			"Number of days without new posts before a board is deleted"
@@ -167,14 +175,6 @@
 		"id": [
 			"Login",
 			""
-		],
-		"illyaDance": [
-			"Ілля танцюрист",
-			"Лоля танцює на фоні"
-		],
-		"illyaDanceMute": [
-			"Заткнути Іллю",
-			"Заткнути лолю яка танцює"
 		],
 		"imageHover": [
 			"Розгортання зображень",

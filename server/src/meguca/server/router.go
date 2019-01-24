@@ -51,7 +51,14 @@ var webRoot = "www"
 
 func startWebServer() (err error) {
 	r := createRouter()
-	log.Info("listening on " + address)
+
+	var w bytes.Buffer
+	w.WriteString("listening on http")
+	if ssl {
+		w.WriteByte('s')
+	}
+	fmt.Fprintf(&w, "://%s", address)
+	log.Info(w.String())
 
 	if ssl {
 		err = http.ListenAndServeTLS(address, sslCert, sslKey, r)
@@ -155,7 +162,12 @@ func createRouter() http.Handler {
 		json.POST("/thread-updates", serveThreadUpdates)
 
 		// Internal API
-		api.GET("/socket", websockets.Handler)
+		api.GET("/socket", func(w http.ResponseWriter, r *http.Request) {
+			err := websockets.Handler(w, r)
+			if err != nil {
+				httpError(w, r, err)
+			}
+		})
 		api.GET("/youtube-data/:id", youTubeData)
 		api.GET("/bitchute-title/:id", bitChuteTitle)
 		api.POST("/register", register)

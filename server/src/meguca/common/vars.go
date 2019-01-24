@@ -4,6 +4,13 @@ import (
 	"regexp"
 )
 
+var (
+	// GetVideoNames is a forwarded function from "meguca/assets" to avoid circular imports
+	GetVideoNames func() []string
+	// Recompile is a forwarded function from "meguca/templates" to avoid circular imports
+	Recompile func() error
+)
+
 // Maximum lengths of various input fields
 const (
 	MaxLenName         = 50

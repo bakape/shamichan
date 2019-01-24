@@ -19,8 +19,7 @@ var (
 	spamMu          sync.RWMutex
 )
 
-// Listen for requests for clients to fill in captchas on their next post and
-// periodically flush buffered spam scores to DB
+// Periodically flush buffered spam scores to DB
 func handleSpamScores() (err error) {
 	if !IsTest {
 		go func() {
@@ -44,19 +43,7 @@ func handleSpamScores() (err error) {
 			}
 		}()
 	}
-
-	spamMsg, err := common.EncodeMessage(common.MessageInvalid,
-		common.ErrSpamDected)
-	if err != nil {
-		return
-	}
-	return Listen("spam_detected", func(ip string) (err error) {
-		for _, cl := range common.GetClientsByIP(ip) {
-			cl.Send(spamMsg)
-			cl.Close(nil)
-		}
-		return
-	})
+	return nil
 }
 
 // Flush spam scores from map to DB
@@ -72,10 +59,6 @@ func flushSpamScores() (err error) {
 			values ($1, $2)
 			on conflict (ip) do update
 				set score = EXCLUDED.score`)
-		if err != nil {
-			return
-		}
-		disconnect, err := tx.Prepare(`select pg_notify('spam_detected', $1)`)
 		if err != nil {
 			return
 		}
@@ -95,7 +78,7 @@ func flushSpamScores() (err error) {
 				return
 			}
 			if isSpam(now, score) {
-				_, err = disconnect.Exec(ip)
+				err = banForSpam(tx, ip)
 				if err != nil {
 					return
 				}
@@ -103,6 +86,10 @@ func flushSpamScores() (err error) {
 		}
 		return
 	})
+}
+
+func banForSpam(tx *sql.Tx, ip string) error {
+	return systemBanTx(tx, ip, "spam detected", time.Hour*48)
 }
 
 // This surely is not done by normal human interaction
@@ -175,11 +162,20 @@ func NeedCaptcha(ip string) (need bool, err error) {
 		return
 	}
 
+	score, err := getSpamScore(ip)
+	if err != nil {
+		return
+	}
+	return score.After(time.Now()), err
+}
+
+// Merge cached and DB value and return current score
+func getSpamScore(ip string) (score time.Time, err error) {
 	spamMu.RLock()
 	defer spamMu.RUnlock()
 
 	now := time.Now().Round(time.Second)
-	score, err := mergeSpamScore(spamScoreBuffer[ip],
+	score, err = mergeSpamScore(spamScoreBuffer[ip],
 		now.Add(-spamDetectionThreshold),
 		sq.Select("score").
 			From("spam_scores").
@@ -189,9 +185,21 @@ func NeedCaptcha(ip string) (need bool, err error) {
 		return
 	}
 	if isSpam(now, score) {
+		err = InTransaction(false, func(tx *sql.Tx) error {
+			return banForSpam(tx, ip)
+		})
+		if err != nil {
+			return
+		}
 		err = common.ErrSpamDected
 	}
-	return score.After(now), err
+	return
+}
+
+// Check if IP is spammer
+func AssertNotSpammer(ip string) (err error) {
+	_, err = getSpamScore(ip)
+	return
 }
 
 // Delete spam scores that are no longer used

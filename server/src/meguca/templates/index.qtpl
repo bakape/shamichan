@@ -3,6 +3,7 @@
 {% import "meguca/config" %}
 {% import "meguca/lang" %}
 {% import "meguca/auth" %}
+{% import "meguca/assets" %}
 
 {% func renderIndex(pos auth.ModerationLevel) %}{% stripspace %}
 	{% code conf := config.Get() %}
@@ -43,7 +44,9 @@
 				configHash = '{%s= confHash %}',
 				{% code boardJSON, _ := json.Marshal(boards) %}
 				boards = {%z= boardJSON %},
-				position = {%d int(pos) %};
+				position = {%d int(pos) %},
+				{% code videosJSON, _ := json.Marshal(assets.GetVideoNames()) %}
+				bgVideos = {%z= videosJSON %};
 			if (localStorage.theme !== config.DefaultCSS) {
 				document.getElementById('theme-css').href = '/assets/css/' + localStorage.theme + '.css'
 			}

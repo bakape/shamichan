@@ -8,10 +8,18 @@ import (
 	"fmt"
 	"html"
 	"io"
-	"meguca/auth"
-	"meguca/config"
 	"sync"
+
+	"meguca/auth"
+	"meguca/common"
+	"meguca/config"
+	"meguca/util"
 )
+
+// Export to avoid circular dependency
+func init() {
+	common.Recompile = Recompile
+}
 
 var (
 	indexTemplates map[auth.ModerationLevel][4][]byte
@@ -24,7 +32,9 @@ func Compile() error {
 		auth.NotLoggedIn, auth.NotStaff, auth.Janitor, auth.Moderator,
 		auth.BoardOwner, auth.Admin,
 	}
+
 	t := make(map[auth.ModerationLevel][4][]byte, len(levels))
+
 	for _, pos := range levels {
 		split := bytes.Split([]byte(renderIndex(pos)), []byte("$$$"))
 		t[pos] = [4][]byte{split[0], split[1], split[2], split[3]}
@@ -37,7 +47,16 @@ func Compile() error {
 	return nil
 }
 
-// Write board HTML to w
+// Recompile templates
+func Recompile() error {
+	if err := Compile(); err != nil {
+		return util.WrapError("recompiling templates", err)
+	}
+
+	return nil
+}
+
+// Board writes board HTML to w
 func Board(w io.Writer, b, theme string, page, total int,
 	pos auth.ModerationLevel, minimal, catalog bool, threadHTML []byte,
 ) {
@@ -55,7 +74,7 @@ func Board(w io.Writer, b, theme string, page, total int,
 	}
 }
 
-// Writes thread page HTML
+// Thread writes thread page HTML
 func Thread(w io.Writer, id uint64, board, title, theme string, abbrev,
 	locked bool, pos auth.ModerationLevel, postHTML []byte,
 ) {

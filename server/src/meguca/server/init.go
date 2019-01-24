@@ -9,6 +9,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	ass "meguca/assets"
 	"meguca/auth"
 	"meguca/cache"
 	"meguca/config"
@@ -252,6 +253,7 @@ func startServer() {
 			load(templates.Compile) // Depends on language packs
 		}()
 		tasks = append(tasks, geoip.Load, listenToThreadDeletion)
+		go ass.WatchVideoDir()
 	}
 	if config.ImagerMode != config.NoImager {
 		tasks = append(tasks, auth.LoadCaptchaServices)

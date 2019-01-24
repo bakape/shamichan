@@ -44,18 +44,25 @@ func propagateBans(board string, ip string) (err error) {
 	return
 }
 
-// SystemBan automatically bans an IP
+// Automatically bans an IP
 func SystemBan(ip, reason string, length time.Duration) (err error) {
-	err = InTransaction(false, func(tx *sql.Tx) error {
-		return writeBan(tx, ip, auth.ModLogEntry{
-			ModerationEntry: common.ModerationEntry{
-				Type:   common.BanPost,
-				Data:   reason,
-				By:     "system",
-				Length: uint64(length / time.Second),
-			},
-			Board: "all",
-		})
+	return InTransaction(false, func(tx *sql.Tx) error {
+		return systemBanTx(tx, ip, reason, length)
+	})
+}
+
+func systemBanTx(tx *sql.Tx, ip, reason string, length time.Duration,
+) (
+	err error,
+) {
+	return writeBan(tx, ip, auth.ModLogEntry{
+		ModerationEntry: common.ModerationEntry{
+			Type:   common.BanPost,
+			Data:   reason,
+			By:     "system",
+			Length: uint64(length / time.Second),
+		},
+		Board: "all",
 	})
 	if err != nil {
 		return
