@@ -5,6 +5,7 @@ import initBackground from "./background"
 import initLoops from "./loop"
 import initMascot from "./mascot"
 import { trigger, emitChanges, ChangeEmitter, hook } from "../util"
+import { bgVideos } from "../state"
 
 export { store as storeBackground } from "./background"
 export { store as storeMascot } from "./mascot"
@@ -28,8 +29,8 @@ interface Options extends ChangeEmitter {
 	relativeTime: boolean
 	meguTV: boolean
 	nowPlaying: string
-	illyaDance: boolean
-	illyaDanceMute: boolean
+	bgVideo: string
+	bgMute: boolean
 	horizontalPosting: boolean
 	hideRecursively: boolean
 	replyRight: boolean
@@ -146,9 +147,20 @@ export function initOptions() {
 		new OptionModel(id, specs[id])
 	}
 
+	// Manually change bgVideo select as it is dynamically generated
+	const bgElement = document.getElementById("bgVideo")
+	bgElement.innerHTML = ""
+
+	for (let val of bgVideos) {
+		const opt = document.createElement("option")
+		opt.value = val
+		opt.innerText = val
+		bgElement.append(opt);
+	}
+
 	// Conditionally load and execute optional modules
 	for (let opt of [
-		"userBG", "nowPlaying", "illyaDance", "mascot", "customCSSToggle",
+		"userBG", "nowPlaying", "bgVideo", "mascot", "customCSSToggle",
 		"meguTV",
 	]) {
 		if (options[opt]) {

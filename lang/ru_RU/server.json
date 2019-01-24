@@ -28,6 +28,14 @@
 			"Анимированные GIF-превью",
 			"Анимированные GIF-превью"
 		],
+		"bgMute": [
+			"Mute Background Video",
+			"Mute the background video"
+		],
+		"bgVideo": [
+			"Background Video",
+			"Admin-specified memes piped straight into you're monitor"
+		],
 		"boardExpiry": [
 			"Время жизни доски",
 			"Число дней без постов до автоудаления доски"
@@ -167,14 +175,6 @@
 		"id": [
 			"Логин",
 			""
-		],
-		"illyaDance": [
-			"Танец Илии",
-			"Танцующая лоли на фоне"
-		],
-		"illyaDanceMute": [
-			"Заглушить Илию",
-			"Заглушить танцующую лолю"
 		],
 		"imageHover": [
 			"Раскрытие изображений по наведению",
