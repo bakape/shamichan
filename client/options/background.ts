@@ -60,10 +60,14 @@ export function render(bg?: BackgroundStore) {
 
 // Attach video to the background
 function renderBgVideo() {
-	container.innerHTML = HTML
-		`<video autoplay loop${options.bgMute ? ' muted' : ''}>
-			<source src="/assets/videos/${options.bgVideo}" type="${options.bgVideo.split('.').pop() === "webm" ? "video/webm" : "video/mp4"}">
-		</video>`
+	if (options.workModeToggle) {
+		container.innerHTML = ""
+	} else {
+		container.innerHTML = HTML
+			`<video autoplay loop${options.bgMute ? ' muted' : ''}>
+				<source src="/assets/videos/${options.bgVideo}" type="${options.bgVideo.split('.').pop() === "webm" ? "video/webm" : "video/mp4"}">
+			</video>`
+	}
 }
 
 // Wrap the OP in a background for better visibility
