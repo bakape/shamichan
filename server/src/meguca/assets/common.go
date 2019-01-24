@@ -100,15 +100,13 @@ func GetVideoNames() []string {
 	return videoNames
 }
 
-// WatchVideoDir watches the www/videos directory for changes
+// WatchVideoDir watches the www/videos directory for changes.
 func WatchVideoDir() {
 	watcher, err := fsnotify.NewWatcher()
 
 	if err != nil {
 		log.Error(err)
 	}
-
-	defer watcher.Close()
 
 	go func() {
 		for {
