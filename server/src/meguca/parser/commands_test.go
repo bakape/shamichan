@@ -10,9 +10,10 @@ import (
 )
 
 func TestFlip(t *testing.T) {
+	var isSlut bool
 	t.Parallel()
 
-	com, err := parseCommand([]byte("flip"), "a", 1, 1, "::1")
+	com, err := parseCommand([]byte("flip"), "a", 1, 1, "::1", &isSlut)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,6 +23,7 @@ func TestFlip(t *testing.T) {
 }
 
 func TestDice(t *testing.T) {
+	var isSlut bool
 	t.Parallel()
 
 	cases := [...]struct {
@@ -37,7 +39,7 @@ func TestDice(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			com, err := parseCommand([]byte(c.in), "a", 1, 1, "::1")
+			com, err := parseCommand([]byte(c.in), "a", 1, 1, "::1", &isSlut)
 			if err != c.err {
 				t.Fatalf("unexpected error: %s : %s", c.err, err)
 			} else {
@@ -53,13 +55,14 @@ func TestDice(t *testing.T) {
 }
 
 func Test8ball(t *testing.T) {
+	var isSlut bool
 	answers := []string{"Yes", "No"}
 	config.SetBoardConfigs(config.BoardConfigs{
 		ID:        "a",
 		Eightball: answers,
 	})
 
-	com, err := parseCommand([]byte("8ball"), "a", 1, 1, "::1")
+	com, err := parseCommand([]byte("8ball"), "a", 1, 1, "::1", &isSlut)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,6 +76,7 @@ func Test8ball(t *testing.T) {
 }
 
 func TestPyu(t *testing.T) {
+	var isSlut bool
 	assertTableClear(t, "boards", "pyu", "pyu_limit")
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -95,7 +99,7 @@ func TestPyu(t *testing.T) {
 		})
 
 		for _, in := range [...]string{"pyu", "pcount"} {
-			com, err := parseCommand([]byte(in), "a", 1, 1, "::1")
+			com, err := parseCommand([]byte(in), "a", 1, 1, "::1", &isSlut)
 			if err != nil {
 				t.Error(err)
 			}
@@ -130,7 +134,7 @@ func TestPyu(t *testing.T) {
 		for i := range cases {
 			c := cases[i]
 			t.Run(c.name, func(t *testing.T) {
-				com, err := parseCommand([]byte(c.in), "a", 1, 1, "::1")
+				com, err := parseCommand([]byte(c.in), "a", 1, 1, "::1", &isSlut)
 				if err != nil {
 					t.Fatal(err)
 				}

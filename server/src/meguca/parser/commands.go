@@ -33,7 +33,7 @@ func randInt(max int) int {
 }
 
 // Parse a matched hash command
-func parseCommand(match []byte, board string, thread uint64, id uint64, ip string) (
+func parseCommand(match []byte, board string, thread uint64, id uint64, ip string, isSlut *bool) (
 	com common.Command, err error,
 ) {
 	boardConfig := config.GetBoardConfigs(board)
@@ -92,8 +92,12 @@ func parseCommand(match []byte, board string, thread uint64, id uint64, ip strin
 						return
 					}
 
-					err = db.Ban(board, "stop being such a slut", "system",
-						time.Second*30, id)
+					if !*isSlut {
+						*isSlut = true
+						err = db.Ban(board, "stop being such a slut", "system",
+							time.Second*30, id)
+					}
+
 					if err != nil {
 						return
 					}
