@@ -1,13 +1,21 @@
 package db
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
-func init() {
-	ConnArgs = TestConnArgs
-	IsTest = true
-	if err := LoadDB(); err != nil {
+func TestMain(m *testing.M) {
+	close, err := LoadTestDB("db")
+	if err != nil {
 		panic(err)
 	}
+	code := m.Run()
+	err = close()
+	if err != nil {
+		panic(err)
+	}
+	os.Exit(code)
 }
 
 func assertTableClear(t *testing.T, tables ...string) {

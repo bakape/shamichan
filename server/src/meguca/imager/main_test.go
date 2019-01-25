@@ -10,19 +10,25 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	db.ConnArgs = db.TestConnArgs
-	db.IsTest = true
-	config.Set(config.Configs{})
-	if err := db.LoadDB(); err != nil {
+	close, err := db.LoadTestDB("imager")
+	if err != nil {
 		panic(err)
 	}
+
+	config.Set(config.Configs{})
 	if err := assets.CreateDirs(); err != nil {
 		panic(err)
 	}
-	defer assets.DeleteDirs()
 
 	code := m.Run()
-
+	err = close()
+	if err != nil {
+		panic(err)
+	}
+	err = assets.DeleteDirs()
+	if err != nil {
+		panic(err)
+	}
 	os.Exit(code)
 }
 

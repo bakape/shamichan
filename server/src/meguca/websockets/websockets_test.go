@@ -40,17 +40,20 @@ type mockWSServer struct {
 	sync.WaitGroup
 }
 
-func init() {
-	log.AddHandler(con, log.AllLevels...)
-	db.ConnArgs = db.TestConnArgs
-	db.IsTest = true
-	if err := db.LoadDB(); err != nil {
-		panic(err)
-	}
-	err := db.ClearTables("boards", "accounts")
+func TestMain(m *testing.M) {
+	close, err := db.LoadTestDB("websockets")
 	if err != nil {
 		panic(err)
 	}
+
+	log.AddHandler(con, log.AllLevels...)
+
+	code := m.Run()
+	err = close()
+	if err != nil {
+		panic(err)
+	}
+	os.Exit(code)
 }
 
 func newWSServer(t testing.TB) *mockWSServer {

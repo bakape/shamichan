@@ -4,6 +4,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"meguca/auth"
 	"meguca/config"
 	"meguca/util"
@@ -19,9 +20,6 @@ import (
 )
 
 const (
-	// TestConnArgs contains ConnArgs used for tests
-	TestConnArgs = `user=meguca password=meguca dbname=meguca_test sslmode=disable binary_parameters=yes`
-
 	// DefaultConnArgs specifies the default PostgreSQL connection arguments
 	DefaultConnArgs = "user=meguca password=meguca dbname=meguca sslmode=disable binary_parameters=yes"
 )
@@ -44,51 +42,74 @@ var (
 	boltDB *bolt.DB
 )
 
-// LoadDB establishes connections to RethinkDB and Redis and bootstraps both
-// databases, if not yet done.
-func LoadDB() (err error) {
-	if IsTest {
-		log.Info("dropping previous test database")
+// Connects to PostgreSQL database and performs schema upgrades
+func LoadDB() error {
+	return loadDB("")
+}
 
-		// If running as root (CI like Travis or something), authenticate as the
-		// postgres user
-		var u *user.User
-		u, err = user.Current()
-		if err != nil {
-			return
-		}
-		sudo := []string{}
-		user := "meguca"
-		if u.Name == "root" {
-			sudo = append(sudo, "sudo", "-u", "postgres")
-			user = "postgres"
-		}
+// Create and load testing database. Call close() to clean up temporary
+// resources.
+func LoadTestDB(suffix string) (close func() error, err error) {
+	IsTest = true
 
-		run := func(args ...string) error {
-			line := append(sudo, args...)
-			c := exec.Command(line[0], line[1:]...)
-			c.Stdout = os.Stdout
-			c.Stderr = os.Stderr
-			return c.Run()
-		}
-
-		err = run("psql",
-			"-U", user,
-			"-c", "drop database if exists meguca_test")
-		if err != nil {
-			return
-		}
-
-		err = run("createdb",
-			"-O", "meguca",
-			"-U", user,
-			"-E", "UTF8",
-			"meguca_test")
-		if err != nil {
-			return
-		}
+	// If running as root (CI like Travis or something), authenticate as the
+	// postgres user
+	var u *user.User
+	u, err = user.Current()
+	if err != nil {
+		return
+	}
+	var sudo []string
+	user := "meguca"
+	if u.Name == "root" {
+		sudo = append(sudo, "sudo", "-u", "postgres")
+		user = "postgres"
 	}
 
+	run := func(args ...string) error {
+		line := append(sudo, args...)
+		c := exec.Command(line[0], line[1:]...)
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		return c.Run()
+	}
+
+	suffix = "_" + suffix
+	name := "meguca_test" + suffix
+
+	err = run("psql",
+		"-U", user,
+		"-c", "drop database if exists "+name)
+	if err != nil {
+		return
+	}
+
+	close = func() (err error) {
+		err = boltDB.Close()
+		if err != nil {
+			return
+		}
+		return os.Remove(fmt.Sprintf("db%s.db", suffix))
+	}
+
+	fmt.Println("creating test database:", name)
+	err = run("createdb",
+		"-O", "meguca",
+		"-U", user,
+		"-E", "UTF8",
+		name)
+	if err != nil {
+		return
+	}
+
+	ConnArgs = fmt.Sprintf(
+		"postgres://%s@localhost:5432/%s?sslmode=disable&binary_parameters=yes",
+		user, name)
+	err = loadDB(suffix)
+	return
+}
+
+func loadDB(dbSuffix string) (err error) {
 	db, err = sql.Open("postgres", ConnArgs)
 	if err != nil {
 		return
@@ -121,7 +142,7 @@ func LoadDB() (err error) {
 		func() error {
 			tasks := []func() error{loadConfigs, loadBans, handleSpamScores}
 			if config.ImagerMode != config.ImagerOnly {
-				tasks = append(tasks, openBoltDB, loadBanners,
+				tasks = append(tasks, openBoltDB(dbSuffix), loadBanners,
 					loadLoadingAnimations, loadThreadPostCounts)
 			}
 			if err := util.Parallel(tasks...); err != nil {
@@ -158,17 +179,22 @@ func checkVersion() (err error) {
 	}
 }
 
-func openBoltDB() (err error) {
-	boltDB, err = bolt.Open("db.db", 0600, &bolt.Options{
-		Timeout: time.Second,
-	})
-	if err != nil {
-		return
+func openBoltDB(dbSuffix string) func() error {
+	return func() (err error) {
+		boltDB, err = bolt.Open(
+			fmt.Sprintf("db%s.db", dbSuffix),
+			0600,
+			&bolt.Options{
+				Timeout: time.Second,
+			})
+		if err != nil {
+			return
+		}
+		return boltDB.Update(func(tx *bolt.Tx) error {
+			_, err := tx.CreateBucketIfNotExists([]byte("open_bodies"))
+			return err
+		})
 	}
-	return boltDB.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("open_bodies"))
-		return err
-	})
 }
 
 // initDB initializes a database

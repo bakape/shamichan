@@ -31,3 +31,4 @@ GeoLite2-Country.mmdb
 client_cpp/*.js
 debug.test
 /config.json
+db_*.db

@@ -34,7 +34,10 @@ func TestCaptchaService(t *testing.T) {
 	if CaptchaService("a") == nil {
 		t.Fatal()
 	}
-	CreateTestCaptcha(t)
+	_, err = CreateTestCaptcha()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestDecodeCaptcha(t *testing.T) {

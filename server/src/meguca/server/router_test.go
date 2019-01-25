@@ -21,18 +21,18 @@ import (
 var router http.Handler
 var con = console.New(true)
 
-func init() {
+func TestMain(m *testing.M) {
+	close, err := db.LoadTestDB("server")
+	if err != nil {
+		panic(err)
+	}
+
 	log.AddHandler(con, log.AllLevels...)
 	isTest = true
 	router = createRouter()
 	webRoot = "testdata"
 	imageWebRoot = "testdata"
-	db.ConnArgs = db.TestConnArgs
-	db.IsTest = true
 
-	if err := db.LoadDB(); err != nil {
-		panic(err)
-	}
 	config.Set(config.Configs{
 		Public: config.Public{
 			DefaultLang: "en_GB",
@@ -41,6 +41,13 @@ func init() {
 	if err := util.Waterfall(lang.Load, templates.Compile); err != nil {
 		panic(err)
 	}
+
+	code := m.Run()
+	err = close()
+	if err != nil {
+		panic(err)
+	}
+	os.Exit(code)
 }
 
 func TestAllBoardRedirect(t *testing.T) {
