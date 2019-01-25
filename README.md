@@ -75,6 +75,7 @@ the client
 thumbnails
 * To enable using Go tools in the project add the absolute path of `./go` to
 your `$GOPATH` environment variable
+* To run server unit test add database creation rights to your PostgreSQL role
 
 ### C++ client
 For developing the new C++ client
