@@ -96,5 +96,9 @@ test:
 test_no_race:
 	cd ./server/src/meguca/; go test ./...
 
+test_docker:
+	docker build -t meguca_test .
+	docker run -t --rm --entrypoint scripts/docker_test.sh meguca_test
+
 check: test
 
