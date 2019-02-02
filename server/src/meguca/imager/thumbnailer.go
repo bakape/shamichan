@@ -1,6 +1,11 @@
 package imager
 
-import "github.com/bakape/thumbnailer"
+import (
+	"image"
+	"io"
+
+	"github.com/bakape/thumbnailer"
+)
 
 const mimePDF = "application/pdf"
 
@@ -16,7 +21,8 @@ func init() {
 	}
 	for _, m := range [...]string{
 		mimeZip, mime7Zip, mimeTarGZ, mimeTarXZ, mimeText,
-		/// PDF thumbnailing can be very buggy and ghostcript is unreliable.
+		/// PDF thumbnailing can be very buggy and ghostcript is unreliable and
+		// a security risk
 		mimePDF,
 	} {
 		thumbnailer.RegisterProcessor(m, noopProcessor)
@@ -25,8 +31,10 @@ func init() {
 
 // Does nothing.
 // Needed for the thumbnailer to accept these as validly processed.
-func noopProcessor(src thumbnailer.Source, _ thumbnailer.Options) (
-	thumbnailer.Source, thumbnailer.Thumbnail, error,
+func noopProcessor(rs io.ReadSeeker, _ *thumbnailer.Source,
+	_ thumbnailer.Options,
+) (
+	image.Image, error,
 ) {
-	return src, thumbnailer.Thumbnail{}, nil
+	return nil, thumbnailer.ErrCantThumbnail
 }

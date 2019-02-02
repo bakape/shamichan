@@ -119,14 +119,9 @@
 							{% endif %}
 						</span>
 					{% endif %}
-					{% if img.APNG %}
-						<span class="is-apng">
-							APNG
-						</span>
-					{% endif %}
-						<span class="filesize">
-							{%s= readableFileSize(img.Size) %}
-						</span>
+					<span class="filesize">
+						{%s= readableFileSize(img.Size) %}
+					</span>
 					{% if img.Dims != [4]uint16{} %}
 						<span class="dims">
 							{%s= strconv.FormatUint(uint64(img.Dims[0]), 10) %}

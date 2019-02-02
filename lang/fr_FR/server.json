@@ -4,10 +4,6 @@
 			"Panneau d'information",
 			"Message à afficher dans la Foire Aux Questions"
 		],
-		"JPEGQuality": [
-			"Qualité des vignettes JPEG",
-			"Règle la qualité des JPEG miniaturisés"
-		],
 		"NSFW": [
 			"NSFW",
 			"Cette planche autorise du contenu qui n'est pas recommandé dans un environnement de travail"

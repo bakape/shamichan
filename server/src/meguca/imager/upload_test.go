@@ -162,6 +162,11 @@ func TestInvalidForm(t *testing.T) {
 func TestNewThumbnail(t *testing.T) {
 	assertTableClear(t, "images")
 	resetDirs(t)
+	config.Set(config.Configs{
+		Public: config.Public{
+			MaxSize: 10,
+		},
+	})
 
 	req := newJPEGRequest(t)
 	rec := httptest.NewRecorder()
@@ -170,32 +175,7 @@ func TestNewThumbnail(t *testing.T) {
 
 	img := getImageRecord(t, assets.StdJPEG.SHA1)
 	test.AssertDeepEquals(t, img, assets.StdJPEG.ImageCommon)
-	assertFiles(t, "sample.jpg", assets.StdJPEG.SHA1, common.JPEG, common.JPEG)
-}
-
-func TestAPNGThumbnailing(t *testing.T) {
-	assertTableClear(t, "images")
-	resetDirs(t)
-
-	for _, e := range [...]string{"png", "apng"} {
-		ext := e
-		t.Run(ext, func(t *testing.T) {
-			t.Parallel()
-
-			img := common.ImageCommon{
-				SHA1: ext,
-			}
-			data := test.ReadSample(t, "sample."+ext)
-
-			if _, err := newThumbnail(data, img); err != nil {
-				t.Fatal(err)
-			}
-
-			if getImageRecord(t, ext).APNG != (ext == "apng") {
-				t.Fatal("unexpected APNG flag value")
-			}
-		})
-	}
+	assertFiles(t, "sample.jpg", assets.StdJPEG.SHA1, common.JPEG, common.WEBP)
 }
 
 func TestNoImageUploaded(t *testing.T) {

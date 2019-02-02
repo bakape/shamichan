@@ -53,8 +53,7 @@ const static std::unordered_map<FileType, std::string> file_extentions = {
 };
 
 struct Image {
-    bool apng = false, // PNG image is APNG
-        audio = false, // Has audio
+    bool audio = false, // Has audio
         video = false, // Has video
         spoiler = false; // Is spoilered
     FileType file_type, // File type of source file

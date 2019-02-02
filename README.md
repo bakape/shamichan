@@ -33,10 +33,6 @@ compiled with:
     * libtheora
     * libx264
     * libmp3lame
-* GraphicsMagick compiled with:
-    * zlib
-    * libpng
-    * libjpeg
 * OpenCV >= 2
 * git
 

@@ -1,8 +1,8 @@
 package assets
 
 import (
+	"bytes"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"meguca/common"
@@ -108,18 +108,6 @@ func TestDeleteMissingAssets(t *testing.T) {
 	}
 }
 
-func TestWriteFile(t *testing.T) {
-	resetDirs(t)
-
-	std := []byte("abc")
-	path := filepath.FromSlash("images/src/write_test")
-	if err := writeFile(path, std); err != nil {
-		t.Fatal(err)
-	}
-
-	AssertFileEquals(t, path, std)
-}
-
 func TestWriteAssets(t *testing.T) {
 	resetDirs(t)
 
@@ -133,7 +121,9 @@ func TestWriteAssets(t *testing.T) {
 		{4, 5, 6},
 	}
 
-	if err := Write(name, fileType, thumbType, std[0], std[1]); err != nil {
+	err := Write(name, fileType, thumbType, bytes.NewReader(std[0]),
+		bytes.NewReader(std[1]))
+	if err != nil {
 		t.Fatal(err)
 	}
 

@@ -24,7 +24,6 @@ using std::string;
 
 Image::Image(nlohmann::json& j)
 {
-    PARSE_OPT(apng);
     PARSE_OPT(audio);
     PARSE_OPT(video);
     PARSE_OPT(spoiler);
@@ -166,10 +165,10 @@ void Post::propagate_links()
 
     // TODO: Notify about replies, if this post links to one of the user's posts
 
-    for (auto && [ id, _ ] : links) {
+    for (auto&& [id, _] : links) {
         if (posts.count(id)) {
             auto& target = posts.at(id);
-            target.backlinks[this->id] = LinkData{ false, op, board };
+            target.backlinks[this->id] = LinkData { false, op, board };
             target.patch();
         }
         if (post_ids.hidden.count(id)) {
