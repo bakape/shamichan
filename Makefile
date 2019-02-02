@@ -65,7 +65,7 @@ server_deps:
 	go list -f '{{.Deps}}' meguca | tr -d '[]' | xargs go get -v
 
 update_deps:
-	go get -u -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
+	go get -u -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/...
 	go list -f '{{.Deps}}' meguca | tr -d '[]' | xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' | grep -v 'meguca' | xargs go get -u -v
 
 server_no_fetch:
