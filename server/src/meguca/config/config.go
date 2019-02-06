@@ -66,7 +66,6 @@ var (
 	// Defaults contains the default server configuration values
 	Defaults = Configs{
 		BoardExpiry:       7,
-		JPEGQuality:       90,
 		MaxHeight:         6000,
 		MaxWidth:          6000,
 		SessionExpiry:     30,

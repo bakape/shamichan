@@ -4,15 +4,23 @@ import (
 	"crypto/sha1"
 	"database/sql"
 	"encoding/hex"
+	"hash"
+	"io"
 	"meguca/common"
 	"meguca/db"
 	"mime/multipart"
-
-	"github.com/bakape/thumbnailer"
+	"sync"
 )
 
 var (
 	scheduleJob = make(chan jobRequest, 128)
+
+	// Pool of temp buffers used for hashing
+	buf512Pool = sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 512)
+		},
+	}
 )
 
 type jobRequest struct {
@@ -45,27 +53,53 @@ func init() {
 	}()
 }
 
-func processRequest(file multipart.File, size int) (string, error) {
-	data := thumbnailer.GetBufferCap(size)
-	data, err := thumbnailer.ReadInto(data, file)
-	if err != nil {
-		return "", common.StatusError{err, 500}
-	}
-	defer thumbnailer.ReturnBuffer(data)
-	if err != nil {
-		return "", common.StatusError{err, 500}
-	}
+// Hash file to string
+func hashFile(rs io.ReadSeeker, h hash.Hash, encode func([]byte) string,
+) (
+	hash string, read int, err error,
+) {
 
-	sum := sha1.Sum(data)
-	SHA1 := hex.EncodeToString(sum[:])
+	_, err = rs.Seek(0, 0)
+	if err != nil {
+		return
+	}
+	buf := buf512Pool.Get().([]byte)
+	defer buf512Pool.Put(buf)
+
+	for {
+		buf = buf[:512] // Reset slicing
+
+		var n int
+		n, err = rs.Read(buf)
+		buf = buf[:n]
+		read += n
+		switch err {
+		case nil:
+			h.Write(buf)
+		case io.EOF:
+			err = nil
+			hash = encode(h.Sum(buf))
+			return
+		default:
+			return
+		}
+	}
+}
+
+func processRequest(file multipart.File, size int) (token string, err error) {
+	SHA1, _, err := hashFile(file, sha1.New(), hex.EncodeToString)
+	if err != nil {
+		return
+	}
 	img, err := db.GetImage(SHA1)
 	switch err {
 	case nil: // Already have a thumbnail
 		return db.NewImageToken(SHA1)
 	case sql.ErrNoRows:
 		img.SHA1 = SHA1
-		return newThumbnail(data, img)
+		return newThumbnail(file, img)
 	default:
-		return "", common.StatusError{err, 500}
+		err = common.StatusError{err, 500}
+		return
 	}
 }

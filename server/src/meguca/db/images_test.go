@@ -7,6 +7,7 @@ import (
 	"meguca/common"
 	"meguca/imager/assets"
 	. "meguca/test"
+	"os"
 	"testing"
 	"time"
 )
@@ -57,10 +58,15 @@ func TestAllocateImage(t *testing.T) {
 	defer setupImageDirs(t)()
 
 	id := GenString(40)
-	var files [2][]byte
+	var files [2]*os.File
 	for i, name := range [...]string{"sample", "thumb"} {
-		files[i] = ReadSample(t, name+".jpg")
+		files[i] = OpenSample(t, name+".jpg")
 	}
+	defer func() {
+		for _, f := range files {
+			f.Close()
+		}
+	}()
 	std := common.ImageCommon{
 		SHA1:     id,
 		MD5:      GenString(22),
@@ -81,7 +87,16 @@ func TestAllocateImage(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			if !bytes.Equal(buf, files[i]) {
+
+			_, err = files[i].Seek(0, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			res, err := ioutil.ReadAll(files[i])
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !bytes.Equal(buf, res) {
 				t.Error("invalid file")
 			}
 		}

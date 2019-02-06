@@ -4,10 +4,6 @@
 			"Інформаційни блок тексту",
 			"Записи для баннеру списку ФАК та інформаційни модальних вікон"
 		],
-		"JPEGQuality": [
-			"Якість JPEG ",
-			"Якість для пре JPEG превюшок"
-		],
 		"NSFW": [
 			"Not Safe For Work",
 			"Board allows material, that are not safe to be viewed in a work environment"

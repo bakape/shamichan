@@ -13,7 +13,9 @@ func TestProcessMP3NoCover(t *testing.T) {
 	t.Parallel()
 
 	var img common.ImageCommon
-	_, err := processFile(test.ReadSample(t, "sample.mp3"), &img, dummyOpts)
+	f := test.OpenSample(t, "sample.mp3")
+	defer f.Close()
+	_, err := processFile(f, &img, dummyOpts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,8 +42,9 @@ func TestProcessMP3(t *testing.T) {
 	t.Parallel()
 
 	var img common.ImageCommon
-	thumb, err := processFile(test.ReadSample(t, "with_cover.mp3"),
-		&img, dummyOpts)
+	f := test.OpenSample(t, "with_cover.mp3")
+	defer f.Close()
+	thumb, err := processFile(f, &img, dummyOpts)
 	if err != nil {
 		t.Fatal(err)
 	}

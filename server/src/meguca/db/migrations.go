@@ -1047,6 +1047,10 @@ var migrations = []func(*sql.Tx) error{
 			loadSQL("triggers/notify_thread_deleted"),
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(`alter table images drop column apng`)
+		return
+	},
 }
 
 func createIndex(table, column string) string {

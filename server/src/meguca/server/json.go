@@ -201,15 +201,21 @@ func serveIPCount(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveThreadUpdates(w http.ResponseWriter, r *http.Request) {
-	var data map[uint64]uint64
-	if !decodeJSON(w, r, &data) {
-		return
-	}
+	err := func() (err error) {
+		var data map[uint64]uint64
+		err = decodeJSON(w, r, &data)
+		if err != nil {
+			return
+		}
 
-	diff, err := db.DiffThreadPostCounts(data)
+		diff, err := db.DiffThreadPostCounts(data)
+		if err != nil {
+			return
+		}
+		serveJSON(w, r, "", diff)
+		return
+	}()
 	if err != nil {
 		httpError(w, r, err)
-	} else {
-		serveJSON(w, r, "", diff)
 	}
 }

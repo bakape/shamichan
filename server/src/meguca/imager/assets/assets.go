@@ -2,6 +2,7 @@
 package assets
 
 import (
+	"io"
 	"meguca/common"
 	"meguca/config"
 	"meguca/util"
@@ -14,9 +15,10 @@ var (
 	//  StdJPEG is a JPEG sample image standard struct. Only used in tests.
 	StdJPEG = common.Image{
 		ImageCommon: common.ImageCommon{
+			Video:     true,
 			SHA1:      "012a2f912c9ee93ceb0ccb8684a29ec571990a94",
 			FileType:  common.JPEG,
-			ThumbType: common.JPEG,
+			ThumbType: common.WEBP,
 			Dims:      StdDims["jpeg"],
 			MD5:       "YOQQklgfezKbBXuEAsqopw",
 			Size:      300792,
@@ -120,7 +122,10 @@ func SourcePath(fileType uint8, SHA1 string) string {
 }
 
 // Write writes file assets to disk
-func Write(SHA1 string, fileType, thumbType uint8, src, thumb []byte) error {
+func Write(SHA1 string, fileType, thumbType uint8, src, thumb io.ReadSeeker,
+) (
+	err error,
+) {
 	paths := GetFilePaths(SHA1, fileType, thumbType)
 
 	ch := make(chan error)
@@ -144,15 +149,19 @@ func Write(SHA1 string, fileType, thumbType uint8, src, thumb []byte) error {
 }
 
 // Write a single file to disk with the appropriate permissions and flags
-func writeFile(path string, data []byte) error {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
+func writeFile(path string, src io.ReadSeeker) (err error) {
+	file, err := os.Create(path)
 	if err != nil {
-		return err
+		return
 	}
 	defer file.Close()
 
-	_, err = file.Write(data)
-	return err
+	_, err = src.Seek(0, 0)
+	if err != nil {
+		return
+	}
+	_, err = io.Copy(file, src)
+	return
 }
 
 // Delete deletes file assets belonging to a single upload

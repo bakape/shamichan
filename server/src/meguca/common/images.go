@@ -18,6 +18,7 @@ const (
 	FLAC
 	NoFile
 	TXT
+	WEBP
 )
 
 // Extensions maps internal file types to their canonical file extensions
@@ -25,6 +26,7 @@ var Extensions = map[uint8]string{
 	JPEG:     "jpg",
 	PNG:      "png",
 	GIF:      "gif",
+	WEBP:     "webp",
 	MP3:      "mp3",
 	MP4:      "mp4",
 	WEBM:     "webm",
@@ -48,7 +50,6 @@ type Image struct {
 // ImageCommon contains the common data shared between multiple post referencing
 // the same image
 type ImageCommon struct {
-	APNG  bool `json:"apng,omitempty"`
 	Audio bool `json:"audio,omitempty"`
 	// Only used for file formats like OGG and MP4 that may or may not contain
 	// video
