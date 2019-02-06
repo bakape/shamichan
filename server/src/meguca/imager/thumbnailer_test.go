@@ -21,14 +21,13 @@ func TestImageProcessing(t *testing.T) {
 	})
 
 	cases := [...]struct {
-		ext   string
-		dims  [4]uint16
-		isPNG bool
+		ext  string
+		dims [4]uint16
 	}{
-		{"jpg", assets.StdDims["jpeg"], false},
-		{"png", assets.StdDims["png"], true},
-		{"gif", assets.StdDims["gif"], true},
-		// TODO: Add webp sample
+		{"jpg", assets.StdDims["jpeg"]},
+		{"png", assets.StdDims["png"]},
+		{"webp", assets.StdDims["png"]},
+		{"gif", assets.StdDims["gif"]},
 	}
 
 	for i := range cases {
