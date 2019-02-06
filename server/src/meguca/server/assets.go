@@ -31,6 +31,20 @@ var (
 	imageWebRoot = "images"
 )
 
+type fileError struct {
+	name, msg string
+}
+
+func (e fileError) Error() string {
+	return fmt.Sprintf("invalid file %s: %s", e.name, e.msg)
+}
+
+func newFileError(h *multipart.FileHeader, msg string) error {
+	return common.StatusError{
+		Err: fileError{h.Filename, msg},
+	}
+}
+
 // More performant handler for serving image assets. These are immutable
 // (except deletion), so we can also set separate caching policies for them.
 func serveImages(w http.ResponseWriter, r *http.Request) {
@@ -90,54 +104,54 @@ func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 
 // Set the banners of a board
 func setBanners(w http.ResponseWriter, r *http.Request) {
-	board, ok := parseAssetForm(w, r, common.MaxNumBanners)
-	if !ok {
-		return
-	}
-
-	var (
-		opts = thumbnailer.Options{
-			MaxSourceDims: thumbnailer.Dims{
-				Width:  300,
-				Height: 100,
-			},
-			ThumbDims: thumbnailer.Dims{
-				Width:  300,
-				Height: 100,
-			},
-			AcceptedMimeTypes: map[string]bool{
-				"image/jpeg": true,
-				"image/png":  true,
-				"image/gif":  true,
-				"video/webm": true,
-			},
-		}
-		banners = make([]assets.File, 0, common.MaxNumBanners)
-		files   = r.MultipartForm.File["banners"]
-	)
-	defer func() {
-		for _, f := range banners {
-			if f.Data != nil {
-				thumbnailer.ReturnBuffer(f.Data)
-			}
-		}
-	}()
-
-	for i := 0; i < common.MaxNumBanners && i < len(files); i++ {
-		h := files[i]
-		file, err := h.Open()
+	err := func() (err error) {
+		board, err := parseAssetForm(w, r, common.MaxNumBanners)
 		if err != nil {
-			sendFileError(w, h, err.Error())
 			return
 		}
-		out, ok := readAssetFile(w, r, file, h, opts)
-		if !ok {
-			return
-		}
-		banners = append(banners, out)
-	}
 
-	if err := db.SetBanners(board, banners); err != nil {
+		var (
+			opts = thumbnailer.Options{
+				MaxSourceDims: thumbnailer.Dims{
+					Width:  300,
+					Height: 100,
+				},
+				ThumbDims: thumbnailer.Dims{
+					Width:  300,
+					Height: 100,
+				},
+				AcceptedMimeTypes: map[string]bool{
+					"image/jpeg": true,
+					"image/png":  true,
+					"image/gif":  true,
+					"video/webm": true,
+				},
+			}
+			banners = make([]assets.File, 0, common.MaxNumBanners)
+			files   = r.MultipartForm.File["banners"]
+			file    multipart.File
+			h       *multipart.FileHeader
+			out     assets.File
+		)
+
+		for i := 0; i < common.MaxNumBanners && i < len(files); i++ {
+			h = files[i]
+			file, err = h.Open()
+			if err != nil {
+				err = newFileError(h, err.Error())
+				return
+			}
+
+			out, err = readAssetFile(w, r, file, h, opts)
+			if err != nil {
+				return
+			}
+			banners = append(banners, out)
+		}
+
+		return db.SetBanners(board, banners)
+	}()
+	if err != nil {
 		httpError(w, r, err)
 	}
 }
@@ -145,22 +159,19 @@ func setBanners(w http.ResponseWriter, r *http.Request) {
 // Parse form for uploading file assets for a board.
 // maxSize specifies maximum number of common.MaxAssetSize to accept.
 // If ok == false, caller should return.
-func parseAssetForm(w http.ResponseWriter, r *http.Request, maxSize uint) (
-	board string, ok bool,
+func parseAssetForm(w http.ResponseWriter, r *http.Request, maxCount uint,
+) (
+	board string, err error,
 ) {
-	r.Body = http.MaxBytesReader(
-		w,
-		r.Body,
-		int64(maxSize)*common.MaxAssetSize,
-	)
-	err := r.ParseMultipartForm(0)
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxCount)*common.MaxAssetSize)
+	err = r.ParseMultipartForm(0)
 	if err != nil {
-		httpError(w, r, common.StatusError{err, 400})
+		err = common.StatusError{err, 400}
 		return
 	}
 
 	board = r.Form.Get("board")
-	_, ok = canPerform(w, r, board, auth.BoardOwner, true)
+	_, err = canPerform(w, r, board, auth.BoardOwner, true)
 	return
 }
 
@@ -168,50 +179,35 @@ func parseAssetForm(w http.ResponseWriter, r *http.Request, maxSize uint) (
 // If ok == false, caller should return.
 // Call thumbnailer.ReturnBuffer() on out.Data to return the buffer to the
 // memory pool.
-func readAssetFile(
-	w http.ResponseWriter,
-	r *http.Request,
-	f multipart.File,
-	h *multipart.FileHeader,
-	opts thumbnailer.Options,
+func readAssetFile(w http.ResponseWriter, r *http.Request, f multipart.File,
+	h *multipart.FileHeader, opts thumbnailer.Options,
 ) (
-	out assets.File,
-	ok bool,
+	out assets.File, err error,
 ) {
 	defer f.Close()
 
-	_buf := bytes.NewBuffer(thumbnailer.GetBuffer())
-	_, err := _buf.ReadFrom(f)
+	var buf bytes.Buffer
+	_, err = buf.ReadFrom(f)
 	if err != nil {
-		httpError(w, r, err)
 		return
 	}
-	buf := _buf.Bytes()
-	if len(buf) == 0 { // No file
-		ok = true
-		thumbnailer.ReturnBuffer(_buf.Bytes())
+	if buf.Len() == 0 { // No file
 		return
 	}
-	if len(buf) > common.MaxAssetSize {
-		sendFileError(w, h, "too large")
+	if buf.Len() > common.MaxAssetSize {
+		err = newFileError(h, "too large")
 		return
 	}
 
-	src, thumb, err := thumbnailer.ProcessBuffer(buf, opts)
-	defer func() {
-		if thumb.Data != nil {
-			thumbnailer.ReturnBuffer(thumb.Data)
-		}
-	}()
+	src, _, err := thumbnailer.Process(bytes.NewReader(buf.Bytes()), opts)
 	switch {
 	case err != nil:
-		sendFileError(w, h, err.Error())
+		err = newFileError(h, err.Error())
 	case src.HasAudio:
-		sendFileError(w, h, "has audio")
+		err = newFileError(h, "has audio")
 	default:
-		ok = true
 		out = assets.File{
-			Data: buf,
+			Data: buf.Bytes(),
 			Mime: src.Mime,
 		}
 	}
@@ -219,51 +215,45 @@ func readAssetFile(
 }
 
 func setLoadingAnimation(w http.ResponseWriter, r *http.Request) {
-	board, ok := parseAssetForm(w, r, 1)
-	if !ok {
-		return
-	}
-
-	var out assets.File
-	file, h, err := r.FormFile("image")
-	switch err {
-	case nil:
-		out, ok = readAssetFile(w, r, file, h, thumbnailer.Options{
-			MaxSourceDims: thumbnailer.Dims{
-				Width:  300,
-				Height: 300,
-			},
-			ThumbDims: thumbnailer.Dims{
-				Width:  300,
-				Height: 300,
-			},
-			AcceptedMimeTypes: map[string]bool{
-				"image/gif":  true,
-				"video/webm": true,
-			},
-		})
-		defer func() {
-			if out.Data != nil {
-				thumbnailer.ReturnBuffer(out.Data)
-			}
-		}()
-		if !ok {
+	err := func() (err error) {
+		board, err := parseAssetForm(w, r, 1)
+		if err != nil {
 			return
 		}
-	case http.ErrMissingFile:
-		err = nil
-	default:
-		httpError(w, r, common.StatusError{err, 400})
-		return
-	}
 
-	if err := db.SetLoadingAnimation(board, out); err != nil {
+		var out assets.File
+		file, h, err := r.FormFile("image")
+		switch err {
+		case nil:
+			out, err = readAssetFile(w, r, file, h, thumbnailer.Options{
+				MaxSourceDims: thumbnailer.Dims{
+					Width:  300,
+					Height: 300,
+				},
+				ThumbDims: thumbnailer.Dims{
+					Width:  300,
+					Height: 300,
+				},
+				AcceptedMimeTypes: map[string]bool{
+					"image/gif":  true,
+					"video/webm": true,
+				},
+			})
+			if err != nil {
+				return
+			}
+		case http.ErrMissingFile:
+			err = nil
+		default:
+			err = newFileError(h, err.Error())
+			return
+		}
+
+		return db.SetLoadingAnimation(board, out)
+	}()
+	if err != nil {
 		httpError(w, r, err)
 	}
-}
-
-func sendFileError(w http.ResponseWriter, h *multipart.FileHeader, msg string) {
-	http.Error(w, fmt.Sprintf("400 invalid file %s: %s", h.Filename, msg), 400)
 }
 
 // Serve board-specific image banner files

@@ -70,11 +70,11 @@ func TestIsLoggedIn(t *testing.T) {
 
 	cases := [...]struct {
 		name, user, session string
-		isValid             bool
+		err                 error
 	}{
-		{"valid", "user1", token, true},
-		{"invalid session", "user2", genSession(), false},
-		{"not registered", "nope", genSession(), false},
+		{"valid", "user1", token, nil},
+		{"invalid session", "user2", genSession(), errAccessDenied},
+		{"not registered", "nope", genSession(), errAccessDenied},
 	}
 
 	for i := range cases {
@@ -87,11 +87,9 @@ func TestIsLoggedIn(t *testing.T) {
 				UserID:  c.user,
 				Session: c.session,
 			})
-			if _, isValid := isLoggedIn(rec, req); isValid != c.isValid {
-				LogUnexpected(t, c.isValid, isValid)
-			}
-			if !c.isValid {
-				assertError(t, rec, 403, errAccessDenied)
+			_, err := isLoggedIn(rec, req)
+			if err != c.err {
+				LogUnexpected(t, c.err, err)
 			}
 		})
 	}

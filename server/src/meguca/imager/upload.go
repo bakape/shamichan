@@ -267,8 +267,6 @@ func newThumbnail(f multipart.File, img common.ImageCommon,
 		return
 	}
 
-	// TODO: Return encoded thumbnail to pool
-
 	// Being done in one transaction prevents the image DB record from getting
 	// garbage-collected between the calls
 	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
