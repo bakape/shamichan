@@ -1,6 +1,7 @@
 {% import "fmt" %}
 {% import "strconv" %}
 {% import "meguca/common" %}
+{% import "meguca/config" %}
 {% import "meguca/lang" %}
 {% import "meguca/imager/assets" %}
 {% import "meguca/util" %}
@@ -8,6 +9,7 @@
 {% func renderArticle(p common.Post, c articleContext) %}{% stripspace %}
 	{% code id := strconv.FormatUint(p.ID, 10) %}
 	{% code ln := lang.Get() %}
+	{% code disableLiveBan := config.Get().DisableLiveBan %}
 	<article id="p{%s= id %}" {% space %} {%= postClass(p, c.op) %}>
 		{%= deletedToggle() %}
 		<header class="spaced">
@@ -166,10 +168,18 @@
 				{%= body(p, c.op, c.board, c.index, c.rbText, c.pyu) %}
 			</blockquote>
 			{% for _, e := range p.Moderation %}
-				<b class="admin post-moderation">
-					{%= postModeration(e) %}
-					<br>
-				</b>
+				{% if disableLiveBan && e.Type != common.BanPost %}
+					<b class="admin post-moderation">
+						{%= postModeration(e) %}
+						<br>
+					</b>
+				{% endif %}
+				{% if !disableLiveBan && e.Type == common.BanPost %}
+					<b class="admin post-moderation">
+						{%= postModeration(e) %}
+						<br>
+					</b>
+				{% endif %}
 			{% endfor %}
 		</div>
 		{% if c.omit != 0 %}
