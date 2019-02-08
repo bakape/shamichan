@@ -84,6 +84,7 @@ var (
 			"kirisame_marisa", "konpaku_youmu"},
 		OverrideCaptchaTags: map[string]string{},
 		Public: Public{
+			DisableLiveBan:  false,
 			DefaultCSS:      "moe",
 			DefaultLang:     "en_GB",
 			ThreadExpiryMin: 7,

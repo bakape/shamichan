@@ -80,6 +80,10 @@
 			"DesuStorage",
 			"desustorage.org поиск по картинкам"
 		],
+		"disableLiveBan": [
+			"Disable live ban",
+			"Toggle showing live bans client-side."
+		],
 		"disableRobots": [
 			"Блокировать роботов",
 			"Запретить ботам и поисковым роботам доступ к доске"

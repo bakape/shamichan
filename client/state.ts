@@ -11,6 +11,7 @@ interface Configs {
 	mature: boolean // Website intended for mature audiences
 	disableUserBoards: boolean
 	pruneThreads: boolean
+	disableLiveBan: boolean
 	threadExpiryMin: number
 	threadExpiryMax: number
 	maxSize: number

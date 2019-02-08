@@ -80,6 +80,10 @@
 			"DesuStorage",
 			"desustorage.org image search"
 		],
+		"disableLiveBan": [
+			"Disable live ban",
+			"Toggle showing live bans client-side."
+		],
 		"disableRobots": [
 			"Bloquer les robots",
 			"Empêche les robots d'exploration d'accéder à la planche"

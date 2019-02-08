@@ -1051,6 +1051,11 @@ var migrations = []func(*sql.Tx) error{
 		_, err = tx.Exec(`alter table images drop column apng`)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		return patchConfigs(tx, func(conf *config.Configs) {
+			conf.DisableLiveBan = config.Defaults.DisableLiveBan
+		})
+	},
 }
 
 func createIndex(table, column string) string {

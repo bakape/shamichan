@@ -7,7 +7,7 @@ import ImageHandler from "./images"
 import { ViewAttrs } from "../base"
 import { findSyncwatches } from "./syncwatch"
 import lang from "../lang"
-import { page, mine, posts } from "../state"
+import { page, mine, posts, config } from "../state"
 import options from "../options"
 import countries from "./countries"
 import { secondsToTime } from "../util/time"
@@ -250,47 +250,58 @@ export default class PostView extends ImageHandler {
     // Render related mod-log status
     public renderModerationLog() {
         this.uncheckModerationBox()
-        const pc = this.el.querySelector(".post-container");
+        const pc = this.el.querySelector(".post-container")
+
         for (let el of Array.from(pc.children)) {
             if (el.classList.contains("post-moderation")) {
-                el.remove();
+                el.remove()
             }
         }
 
         if (!this.model.moderation) {
-            return;
+            return
         }
+
         for (let { type, length, by, data } of this.model.moderation) {
-            let s: string;
+            let s: string
+
             switch (type) {
                 case ModerationAction.banPost:
-                    s = this.format('banned', by, secondsToTime(length).toUpperCase(), data);
-                    break;
+                    if (config.disableLiveBan) {
+                        continue
+                    }
+
+                    s = this.format('banned', by, secondsToTime(length).toUpperCase(), data)
+                    break
                 case ModerationAction.deletePost:
-                    s = this.format('deleted', by);
-                    break;
+                    s = this.format('deleted', by)
+                    break
                 case ModerationAction.deleteImage:
-                    s = this.format('imageDeleted', by);
-                    break;
+                    s = this.format('imageDeleted', by)
+                    break
                 case ModerationAction.spoilerImage:
                     s = this.format("imageSpoilered", by)
-                    break;
+                    break
                 case ModerationAction.lockThread:
-                    s = this.format("threadLockToggled",
+                    s = this.format(
+                        "threadLockToggled",
                         lang.posts[data === 'true' ? "locked" : "unlocked"],
-                        by)
-                    break;
+                        by
+                    )
+
+                    break
                 case ModerationAction.meidoVision:
-                    s = this.format("viewedSameIP", by);
-                    break;
+                    s = this.format("viewedSameIP", by)
+                    break
                 case ModerationAction.purgePost:
-                    s = this.format("purgedPost", by, data);
-                    break;
+                    s = this.format("purgedPost", by, data)
+                    break
             }
-            const el = document.createElement('b');
-            el.setAttribute("class", "admin post-moderation");
-            el.append(s, document.createElement("br"));
-            pc.append(el);
+
+            const el = document.createElement('b')
+            el.setAttribute("class", "admin post-moderation")
+            el.append(s, document.createElement("br"))
+            pc.append(el)
         }
     }
 

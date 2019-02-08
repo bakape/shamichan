@@ -31,6 +31,7 @@ type Public struct {
 	Mature            bool              `json:"mature"`
 	DisableUserBoards bool              `json:"disableUserBoards"`
 	PruneThreads      bool              `json:"pruneThreads"`
+	DisableLiveBan    bool              `json:"disableLiveBan"`
 	ThreadExpiryMin   uint              `json:"threadExpiryMin"`
 	ThreadExpiryMax   uint              `json:"threadExpiryMax"`
 	MaxSize           uint              `json:"maxSize"`
