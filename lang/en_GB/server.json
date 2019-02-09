@@ -4,10 +4,6 @@
 			"Information panel text",
 			"Entries for the banner's Frequently Asked Questions list and information modal"
 		],
-		"JPEGQuality": [
-			"JPEG thumbnail quality",
-			"Quality of image JPEG thumbnails"
-		],
 		"NSFW": [
 			"Not Safe For Work",
 			"Board allows material, that are not safe to be viewed in a work environment"

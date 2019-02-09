@@ -56,124 +56,116 @@ type boardCreationRequest struct {
 
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
 // decoding succeeded.
-func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{}) bool {
-	decoder := json.NewDecoder(io.LimitReader(r.Body, jsonLimit))
-	if err := decoder.Decode(dest); err != nil {
-		http.Error(w, fmt.Sprintf("400 %s", err), 400)
-		return false
+func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{},
+) (
+	err error,
+) {
+	err = json.NewDecoder(io.LimitReader(r.Body, jsonLimit)).Decode(dest)
+	if err != nil {
+		err = common.StatusError{err, 400}
 	}
-	return true
+	return
 }
 
 // Set board-specific configurations to the user's owned board
 func configureBoard(w http.ResponseWriter, r *http.Request) {
-	var msg config.BoardConfigs
-	if !decodeJSON(w, r, &msg) {
-		return
-	}
-	msg.ID = extractParam(r, "board")
-	_, ok := canPerform(w, r, msg.ID, auth.BoardOwner, true)
-	if !ok || !validateBoardConfigs(w, msg) {
-		return
-	}
-	if err := db.UpdateBoard(msg); err != nil {
+	err := func() (err error) {
+		var msg config.BoardConfigs
+		err = decodeJSON(w, r, &msg)
+		if err != nil {
+			return
+		}
+
+		msg.ID = extractParam(r, "board")
+		_, err = canPerform(w, r, msg.ID, auth.BoardOwner, true)
+		if err != nil {
+			return
+		}
+
+		err = validateBoardConfigs(w, msg)
+		if err != nil {
+			return
+		}
+		return db.UpdateBoard(msg)
+	}()
+	if err != nil {
 		httpError(w, r, err)
-		return
 	}
 }
 
 // Assert user can perform a moderation action. If the action does not need a
 // captcha verification, pass captcha as nil.
-func canPerform(
-	w http.ResponseWriter,
-	r *http.Request,
-	board string,
-	level auth.ModerationLevel,
-	needCaptcha bool,
+func canPerform(w http.ResponseWriter, r *http.Request, board string,
+	level auth.ModerationLevel, needCaptcha bool,
 ) (
-	creds auth.SessionCreds, can bool,
+	creds auth.SessionCreds, err error,
 ) {
 	if !auth.IsBoard(board) {
-		httpError(w, r, errInvalidBoardName)
+		err = errInvalidBoardName
 		return
 	}
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		httpError(w, r, err)
 		return
 	}
 	if needCaptcha {
-		has, err := db.SolvedCaptchaRecently(ip, time.Minute)
+		var has bool
+		has, err = db.SolvedCaptchaRecently(ip, time.Minute)
 		if err != nil {
-			httpError(w, r, err)
 			return
 		}
 		if !has {
-			httpError(w, r, errInvalidCaptcha)
+			err = errInvalidCaptcha
 			return
 		}
 	}
-	creds, ok := isLoggedIn(w, r)
-	if !ok {
+	creds, err = isLoggedIn(w, r)
+	if err != nil {
 		return
 	}
 
-	can, err = db.CanPerform(creds.UserID, board, level)
+	can, err := db.CanPerform(creds.UserID, board, level)
 	switch {
 	case err != nil:
-		httpError(w, r, err)
-		return
 	case !can:
-		httpError(w, r, errAccessDenied)
-		return
-	default:
-		can = true
-		return
+		err = errAccessDenied
 	}
+	return
 }
 
 // Assert client can moderate a post of unknown parenthood and return userID
-func canModeratePost(
-	w http.ResponseWriter,
-	r *http.Request,
-	id uint64,
+func canModeratePost(w http.ResponseWriter, r *http.Request, id uint64,
 	level auth.ModerationLevel,
 ) (
-	board, userID string,
-	can bool,
+	board, userID string, err error,
 ) {
-	board, err := db.GetPostBoard(id)
+	board, err = db.GetPostBoard(id)
 	if err != nil {
-		httpError(w, r, err)
 		return
 	}
 
-	creds, can := canPerform(w, r, board, level, false)
-	if !can {
-		httpError(w, r, errAccessDenied)
+	creds, err := canPerform(w, r, board, level, false)
+	if err != nil {
 		return
 	}
-
 	userID = creds.UserID
 	return
 }
 
 // Validate length limit compliance of various fields
-func validateBoardConfigs(
-	w http.ResponseWriter,
-	conf config.BoardConfigs,
-) bool {
+func validateBoardConfigs(w http.ResponseWriter, conf config.BoardConfigs,
+) (
+	err error,
+) {
 	totalLen := 0
 	for _, answer := range conf.Eightball {
 		totalLen += len(answer)
 	}
-
-	var err error
 	switch {
-	case len(conf.Eightball) > maxAnswers:
-		err = errTooManyAnswers
 	case totalLen > maxEightballLen:
 		err = errEightballTooLong
+	case len(conf.Eightball) > maxAnswers:
+		err = errTooManyAnswers
 	case len(conf.Notice) > common.MaxLenNotice:
 		err = errNoticeTooLong
 	case len(conf.Rules) > common.MaxLenRules:
@@ -181,32 +173,30 @@ func validateBoardConfigs(
 	case len(conf.Title) > common.MaxLenBoardTitle:
 		err = errTitleTooLong
 	}
-	if err == nil {
-		matched := false
-		for _, t := range common.Themes {
-			if conf.DefaultCSS == t {
-				matched = true
-				break
-			}
-		}
-		if !matched {
-			err = errors.New("invalid default theme")
-		}
-	}
 	if err != nil {
-		http.Error(w, fmt.Sprintf("400 %s", err), 400)
-		return false
+		return
 	}
 
-	return true
+	matched := false
+	for _, t := range common.Themes {
+		if conf.DefaultCSS == t {
+			matched = true
+			break
+		}
+	}
+	if !matched {
+		err = common.ErrInvalidInput("invalid default theme")
+	}
+	return
 }
 
 // Serve the current board configurations to the client, including publically
 // unexposed ones. Intended to be used before setting the the configs with
 // configureBoard().
 func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
-	conf, ok := boardConfData(w, r)
-	if !ok {
+	conf, err := boardConfData(w, r)
+	if err != nil {
+		httpError(w, r, err)
 		return
 	}
 	serveJSON(w, r, "", conf)
@@ -215,177 +205,177 @@ func servePrivateBoardConfigs(w http.ResponseWriter, r *http.Request) {
 // Serve the current server configurations. Available only to the "admin"
 // account
 func servePrivateServerConfigs(w http.ResponseWriter, r *http.Request) {
-	if isAdmin(w, r) {
-		serveJSON(w, r, "", config.Get())
+	err := isAdmin(w, r)
+	if err != nil {
+		httpError(w, r, err)
+		return
 	}
+	serveJSON(w, r, "", config.Get())
 }
 
-func isAdmin(w http.ResponseWriter, r *http.Request) bool {
-	creds, ok := isLoggedIn(w, r)
-	if !ok {
-		return false
+func isAdmin(w http.ResponseWriter, r *http.Request) (err error) {
+	creds, err := isLoggedIn(w, r)
+	if err != nil {
+		return
 	}
 	if creds.UserID != "admin" {
-		httpError(w, r, errAccessDenied)
-		return false
+		err = errAccessDenied
 	}
-	return true
+	return
 }
 
 // Determine, if the client has access rights to the configurations, and return
 // them, if so
-func boardConfData(w http.ResponseWriter, r *http.Request) (
-	config.BoardConfigs, bool,
+func boardConfData(w http.ResponseWriter, r *http.Request,
+) (
+	conf config.BoardConfigs, err error,
 ) {
-	var (
-		conf  config.BoardConfigs
-		board = extractParam(r, "board")
-	)
-	if _, ok := canPerform(w, r, board, auth.BoardOwner, false); !ok {
-		return conf, false
+	board := extractParam(r, "board")
+	_, err = canPerform(w, r, board, auth.BoardOwner, false)
+	if err != nil {
+		return
 	}
 
 	conf = config.GetBoardConfigs(board).BoardConfigs
 	conf.ID = board
 	if conf.ID == "" {
-		text404(w)
-		return conf, false
+		err = errInvalidBoardName
 	}
-
-	return conf, true
+	return
 }
 
 // Handle requests to create a board
 func createBoard(w http.ResponseWriter, r *http.Request) {
-	var msg boardCreationRequest
-
-	if !decodeJSON(w, r, &msg) {
-		return
-	}
-
-	creds, ok := isLoggedIn(w, r)
-
-	if !ok {
-		return
-	}
-
-	// Returns, if the board name, matches a reserved ID
-	isReserved := func() bool {
-		for _, s := range [...]string{"html", "json", "api", "assets", "all"} {
-			if msg.ID == s {
-				return true
-			}
-		}
-		return false
-	}
-
-	// Validate request data
-	ip, err := auth.GetIP(r)
-
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-
-	switch {
-	case creds.UserID != "admin" && config.Get().DisableUserBoards:
-		err = errAccessDenied
-	case !boardNameValidation.MatchString(msg.ID),
-		msg.ID == "",
-		len(msg.ID) > common.MaxLenBoardID,
-		isReserved():
-		err = errInvalidBoardName
-	case len(msg.Title) > 100:
-		err = errTitleTooLong
-	default:
-		var has bool
-		has, err = db.SolvedCaptchaRecently(ip, time.Minute)
+	err := func() (err error) {
+		var msg boardCreationRequest
+		err = decodeJSON(w, r, &msg)
 		if err != nil {
-			httpError(w, r, err)
+			return
+		}
+
+		creds, err := isLoggedIn(w, r)
+		if err != nil {
+			return
+		}
+
+		// Validate request data
+		switch {
+		case creds.UserID != "admin" && config.Get().DisableUserBoards:
+			err = errAccessDenied
+		case !boardNameValidation.MatchString(msg.ID),
+			msg.ID == "",
+			len(msg.ID) > common.MaxLenBoardID,
+			// Returns, if the board name, matches a reserved ID
+			func() bool {
+				for _, s := range [...]string{
+					"html", "json", "api", "assets", "all",
+				} {
+					if msg.ID == s {
+						return true
+					}
+				}
+				return false
+			}():
+			err = errInvalidBoardName
+		case len(msg.Title) > 100:
+			err = errTitleTooLong
+		}
+		if err != nil {
+			return
+		}
+
+		ip, err := auth.GetIP(r)
+		if err != nil {
+			return
+		}
+		has, err := db.SolvedCaptchaRecently(ip, time.Minute)
+		if err != nil {
 			return
 		}
 		if !has {
-			httpError(w, r, errInvalidCaptcha)
+			err = errInvalidCaptcha
 			return
 		}
-	}
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
 
-	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
-		err = db.WriteBoard(tx, db.BoardConfigs{
-			Created: time.Now().UTC(),
-			BoardConfigs: config.BoardConfigs{
-				BoardPublic: config.BoardPublic{
-					Title:      msg.Title,
-					DefaultCSS: config.Get().DefaultCSS,
+		err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+			err = db.WriteBoard(tx, db.BoardConfigs{
+				Created: time.Now().UTC(),
+				BoardConfigs: config.BoardConfigs{
+					BoardPublic: config.BoardPublic{
+						Title:      msg.Title,
+						DefaultCSS: config.Get().DefaultCSS,
+					},
+					ID:        msg.ID,
+					Eightball: config.EightballDefaults,
 				},
-				ID:        msg.ID,
-				Eightball: config.EightballDefaults,
-			},
-		})
+			})
+			switch {
+			case err == nil:
+			case db.IsConflictError(err):
+				err = errBoardNameTaken
+				return
+			default:
+				return
+			}
 
-		switch {
-		case err == nil:
-		case db.IsConflictError(err):
-			err = errBoardNameTaken
-			httpError(w, r, err)
-			return
-		default:
-			httpError(w, r, err)
+			return db.WriteStaff(tx, msg.ID, map[string][]string{
+				"owners": []string{creds.UserID},
+			})
+		})
+		if err != nil {
 			return
 		}
 
-		return db.WriteStaff(tx, msg.ID, map[string][]string{
-			"owners": []string{creds.UserID},
-		})
-	})
-
-	switch err {
-	case errBoardNameTaken, nil:
-	default:
-		httpError(w, r, err)
+		err = db.WritePyu(msg.ID)
 		return
-	}
-
-	err = db.WritePyu(msg.ID)
+	}()
 	if err != nil {
 		httpError(w, r, err)
-		return
 	}
 }
 
 // Set the server configuration to match the one sent from the admin account
 // user
 func configureServer(w http.ResponseWriter, r *http.Request) {
-	var msg config.Configs
-	if !decodeJSON(w, r, &msg) || !isAdmin(w, r) {
+	err := func() (err error) {
+		var msg config.Configs
+		err = decodeJSON(w, r, &msg)
+		if err != nil {
+			return
+		}
+		err = isAdmin(w, r)
+		if err != nil {
+			return
+		}
+
+		if len(msg.CaptchaTags) < 3 {
+			err = common.StatusError{errors.New("too few captcha tags"), 400}
+			return
+		}
+		err = db.WriteConfigs(msg)
 		return
-	}
-	if len(msg.CaptchaTags) < 3 {
-		httpError(w, r,
-			common.StatusError{errors.New("too few captcha tags"), 400})
-		return
-	}
-	if err := db.WriteConfigs(msg); err != nil {
+	}()
+	if err != nil {
 		httpError(w, r, err)
 	}
 }
 
 // Delete a board owned by the client
 func deleteBoard(w http.ResponseWriter, r *http.Request) {
-	var msg boardActionRequest
-	if !decodeJSON(w, r, &msg) {
-		return
-	}
-	creds, ok := canPerform(w, r, msg.Board, auth.BoardOwner, true)
-	if !ok {
-		return
-	}
+	err := func() (err error) {
+		var msg boardActionRequest
+		err = decodeJSON(w, r, &msg)
+		if err != nil {
+			return
+		}
+		creds, err := canPerform(w, r, msg.Board, auth.BoardOwner, true)
+		if err != nil {
+			return
+		}
 
-	if err := db.DeleteBoard(msg.Board, creds.UserID); err != nil {
+		return db.DeleteBoard(msg.Board, creds.UserID)
+	}()
+	if err != nil {
 		httpError(w, r, err)
 	}
 }
@@ -397,45 +387,41 @@ func deletePost(w http.ResponseWriter, r *http.Request) {
 
 // Perform a moderation action an a single post. If ok == false, the caller
 // should return.
-func moderatePost(
-	w http.ResponseWriter,
-	r *http.Request,
-	id uint64,
-	level auth.ModerationLevel,
-	fn func(userID string) error,
+func moderatePost(w http.ResponseWriter, r *http.Request, id uint64,
+	level auth.ModerationLevel, fn func(userID string) error,
 ) (
-	ok bool,
+	err error,
 ) {
-	_, userID, can := canModeratePost(w, r, id, level)
-	if !can {
+	_, userID, err := canModeratePost(w, r, id, level)
+	if err != nil {
 		return
 	}
-
-	err := fn(userID)
-	if err != nil {
-		httpError(w, r, err)
-	}
-	return err == nil
+	return fn(userID)
 }
 
 // Same as moderatePost, but works on an array of posts
-func moderatePosts(
-	w http.ResponseWriter,
-	r *http.Request,
-	level auth.ModerationLevel,
-	fn func(id uint64, userID string) error,
+func moderatePosts(w http.ResponseWriter, r *http.Request,
+	level auth.ModerationLevel, fn func(id uint64, userID string) error,
 ) {
-	var ids []uint64
-	if !decodeJSON(w, r, &ids) {
-		return
-	}
-	for _, id := range ids {
-		ok := moderatePost(w, r, id, auth.Janitor, func(userID string) error {
-			return fn(id, userID)
-		})
-		if !ok {
+	err := func() (err error) {
+		var ids []uint64
+		err = decodeJSON(w, r, &ids)
+		if err != nil {
 			return
 		}
+		for _, id := range ids {
+			err = moderatePost(w, r, id, auth.Janitor,
+				func(userID string) error {
+					return fn(id, userID)
+				})
+			if err != nil {
+				return
+			}
+		}
+		return
+	}()
+	if err != nil {
+		httpError(w, r, err)
 	}
 }
 
@@ -451,18 +437,22 @@ func modSpoilerImage(w http.ResponseWriter, r *http.Request) {
 
 // Clear post contents and remove any uploaded image from the server
 func purgePost(w http.ResponseWriter, r *http.Request) {
-	var msg struct {
-		ID     uint64
-		Reason string
-	}
-	if !decodeJSON(w, r, &msg) {
-		return
-	}
-	_, userID, can := canModeratePost(w, r, msg.ID, auth.Admin)
-	if !can {
-		return
-	}
-	err := db.PurgePost(msg.ID, userID, msg.Reason)
+	err := func() (err error) {
+		var msg struct {
+			ID     uint64
+			Reason string
+		}
+		err = decodeJSON(w, r, &msg)
+		if err != nil {
+			return
+		}
+
+		_, userID, err := canModeratePost(w, r, msg.ID, auth.Admin)
+		if err != nil {
+			return
+		}
+		return db.PurgePost(msg.ID, userID, msg.Reason)
+	}()
 	if err != nil {
 		httpError(w, r, err)
 	}
@@ -470,139 +460,147 @@ func purgePost(w http.ResponseWriter, r *http.Request) {
 
 // Ban a specific IP from a specific board
 func ban(w http.ResponseWriter, r *http.Request) {
-	var msg struct {
-		Global       bool
-		ID, Duration uint64
-		Reason       string
-	}
-
-	// Decode and validate
-	if !decodeJSON(w, r, &msg) {
-		return
-	}
-	creds, ok := isLoggedIn(w, r)
-	switch {
-	case !ok:
-		return
-	case len(msg.Reason) > common.MaxLenReason:
-		httpError(w, r, errReasonTooLong)
-		return
-	case msg.Reason == "":
-		httpError(w, r, errNoReason)
-		return
-	case msg.Duration == 0:
-		httpError(w, r, errNoDuration)
-		return
-	}
-
-	var (
-		board string
-		err   error
-	)
-	if msg.Global {
-		board = "all"
-	} else {
-		board, err = db.GetPostBoard(msg.ID)
+	err := func() (err error) {
+		var msg struct {
+			Global       bool
+			ID, Duration uint64
+			Reason       string
+		}
+		err = decodeJSON(w, r, &msg)
 		if err != nil {
-			httpError(w, r, err)
 			return
 		}
-	}
-	if _, ok := canPerform(w, r, board, auth.Moderator, false); !ok {
-		return
-	}
 
-	// Apply ban
-	err = db.Ban(board, msg.Reason, creds.UserID,
-		time.Minute*time.Duration(msg.Duration), msg.ID)
+		creds, err := isLoggedIn(w, r)
+		switch {
+		case err != nil:
+		case len(msg.Reason) > common.MaxLenReason:
+			err = errReasonTooLong
+		case msg.Reason == "":
+			err = errNoReason
+		case msg.Duration == 0:
+			err = errNoDuration
+		}
+		if err != nil {
+			return
+		}
+
+		var board string
+		if msg.Global {
+			board = "all"
+		} else {
+			board, err = db.GetPostBoard(msg.ID)
+			if err != nil {
+				return
+			}
+		}
+		_, err = canPerform(w, r, board, auth.Moderator, false)
+		if err != nil {
+			return
+		}
+
+		// Apply ban
+		return db.Ban(board, msg.Reason, creds.UserID,
+			time.Minute*time.Duration(msg.Duration), msg.ID)
+	}()
 	if err != nil {
 		httpError(w, r, err)
-		return
 	}
 }
 
 // Send a textual message to all connected clients
 func sendNotification(w http.ResponseWriter, r *http.Request) {
-	var msg string
-	if !decodeJSON(w, r, &msg) || !isAdmin(w, r) {
-		return
-	}
+	err := func() (err error) {
+		var msg string
+		err = decodeJSON(w, r, &msg)
+		if err != nil {
+			return
+		}
+		err = isAdmin(w, r)
+		if err != nil {
+			return
+		}
 
-	data, err := common.EncodeMessage(common.MessageNotification, msg)
+		data, err := common.EncodeMessage(common.MessageNotification, msg)
+		if err != nil {
+			return
+		}
+		for _, cl := range feeds.All() {
+			cl.Send(data)
+		}
+		return
+	}()
 	if err != nil {
 		httpError(w, r, err)
-		return
-	}
-	for _, cl := range feeds.All() {
-		cl.Send(data)
 	}
 }
 
 // Assign moderation staff to a board
 func assignStaff(w http.ResponseWriter, r *http.Request) {
-	var msg struct {
-		boardActionRequest
-		Owners, Moderators, Janitors []string
-	}
-	if !decodeJSON(w, r, &msg) {
-		return
-	}
-	_, ok := canPerform(w, r, msg.Board, auth.BoardOwner, true)
-	if !ok {
-		return
-	}
-	switch {
-	// Ensure there always is at least one board owner
-	case len(msg.Owners) == 0:
-		httpError(w, r, common.ErrInvalidInput("no board owners set"))
-		return
-	default:
+	err := func() (err error) {
+		var msg struct {
+			boardActionRequest
+			Owners, Moderators, Janitors []string
+		}
+		err = decodeJSON(w, r, &msg)
+		if err != nil {
+			return
+		}
+		_, err = canPerform(w, r, msg.Board, auth.BoardOwner, true)
+		if err != nil {
+			return
+		}
+
+		// Ensure there always is at least one board owner
+		if len(msg.Owners) == 0 {
+			return common.ErrInvalidInput("no board owners set")
+		}
 		// Maximum of 100 staff per position
-		for _, s := range [...][]string{msg.Owners, msg.Moderators, msg.Janitors} {
+		for _, s := range [...][]string{
+			msg.Owners, msg.Moderators, msg.Janitors,
+		} {
 			if len(s) > 100 {
-				httpError(w, r, common.ErrInvalidInput(
-					"too many staff per position"))
-				return
+				return common.ErrInvalidInput("too many staff per position")
 			}
 		}
-	}
 
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WriteStaff(tx, msg.Board, map[string][]string{
-			"owners":     msg.Owners,
-			"moderators": msg.Moderators,
-			"janitors":   msg.Janitors,
+		return db.InTransaction(false, func(tx *sql.Tx) error {
+			return db.WriteStaff(tx, msg.Board, map[string][]string{
+				"owners":     msg.Owners,
+				"moderators": msg.Moderators,
+				"janitors":   msg.Janitors,
+			})
 		})
-	})
+	}()
 	if err != nil {
 		httpError(w, r, err)
-		return
 	}
 }
 
 // Retrieve posts with the same IP on the target board
 func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
+	err := func() (err error) {
+		id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
+		if err != nil {
+			err = common.StatusError{err, 400}
+			return
+		}
 
+		board, uid, err := canModeratePost(w, r, id, auth.Janitor)
+		if err != nil {
+			return
+		}
+
+		posts, err := db.GetSameIPPosts(id, board, uid)
+		if err != nil {
+			return
+		}
+		serveJSON(w, r, "", posts)
+		return
+	}()
 	if err != nil {
 		httpError(w, r, err)
-		return
 	}
-
-	board, uid, ok := canModeratePost(w, r, id, auth.Janitor)
-
-	if !ok {
-		return
-	}
-
-	posts, err := db.GetSameIPPosts(id, board, uid)
-
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-
-	serveJSON(w, r, "", posts)
 }
 
 // Set the sticky flag of a thread
@@ -614,25 +612,26 @@ func setThreadSticky(w http.ResponseWriter, r *http.Request) {
 
 // Handle moderation request, that takes a boolean parameter,
 // fn is the database call to be used for performing this operation.
-func handleBoolRequest(
-	w http.ResponseWriter,
-	r *http.Request,
+func handleBoolRequest(w http.ResponseWriter, r *http.Request,
 	fn func(id uint64, val bool, userID string) error,
 ) {
-	var msg struct {
-		ID  uint64
-		Val bool
-	}
-	if !decodeJSON(w, r, &msg) {
-		return
-	}
+	err := func() (err error) {
+		var msg struct {
+			ID  uint64
+			Val bool
+		}
+		err = decodeJSON(w, r, &msg)
+		if err != nil {
+			return
+		}
 
-	_, userID, ok := canModeratePost(w, r, msg.ID, auth.Moderator)
-	if !ok {
-		return
-	}
+		_, userID, err := canModeratePost(w, r, msg.ID, auth.Moderator)
+		if err != nil {
+			return
+		}
 
-	err := fn(msg.ID, msg.Val, userID)
+		return fn(msg.ID, msg.Val, userID)
+	}()
 	if err != nil {
 		httpError(w, r, err)
 	}
@@ -687,46 +686,54 @@ func detectCanPerform(
 
 // Unban a specific board -> banned post combination
 func unban(w http.ResponseWriter, r *http.Request) {
-	board := extractParam(r, "board")
-	creds, ok := canPerform(w, r, board, auth.Moderator, false)
-	if !ok {
-		return
-	}
+	err := func() (err error) {
+		board := extractParam(r, "board")
+		creds, err := canPerform(w, r, board, auth.Moderator, false)
+		if err != nil {
+			return
+		}
 
-	// Extract post IDs from form
-	r.Body = http.MaxBytesReader(w, r.Body, jsonLimit)
-	err := r.ParseForm()
+		// Extract post IDs from form
+		r.Body = http.MaxBytesReader(w, r.Body, jsonLimit)
+		err = r.ParseForm()
+		if err != nil {
+			err = common.StatusError{err, 400}
+			return
+		}
+		var (
+			id  uint64
+			ids = make([]uint64, 0, 32)
+		)
+		for key, vals := range r.Form {
+			if len(vals) == 0 || vals[0] != "on" {
+				continue
+			}
+			id, err = strconv.ParseUint(key, 10, 64)
+			if err != nil {
+				err = common.StatusError{err, 400}
+				return
+			}
+			ids = append(ids, id)
+		}
+
+		// Unban posts
+		for _, id := range ids {
+			err = db.Unban(board, id, creds.UserID)
+			switch err {
+			case nil:
+			case sql.ErrNoRows:
+				err = nil
+			default:
+				return
+			}
+		}
+
+		http.Redirect(w, r, fmt.Sprintf("/%s/", board), 303)
+		return
+	}()
 	if err != nil {
 		httpError(w, r, err)
-		return
 	}
-	var (
-		id  uint64
-		ids = make([]uint64, 0, 32)
-	)
-	for key, vals := range r.Form {
-		if len(vals) == 0 || vals[0] != "on" {
-			continue
-		}
-		id, err = strconv.ParseUint(key, 10, 64)
-		if err != nil {
-			httpError(w, r, err)
-			return
-		}
-		ids = append(ids, id)
-	}
-
-	// Unban posts
-	for _, id := range ids {
-		switch err := db.Unban(board, id, creds.UserID); err {
-		case nil, sql.ErrNoRows:
-		default:
-			httpError(w, r, err)
-			return
-		}
-	}
-
-	http.Redirect(w, r, fmt.Sprintf("/%s/", board), 303)
 }
 
 // Serve moderation log for a specific board
@@ -746,63 +753,75 @@ func modLog(w http.ResponseWriter, r *http.Request) {
 	templates.WriteModLog(w, log)
 }
 
-// Decodes params for client forced redirection. If ok = false , caller
-// should abort.
+// Decodes params for client forced redirection
 func decodeRedirect(w http.ResponseWriter, r *http.Request) (
-	id uint64, address string, ok bool,
+	id uint64, address string, err error,
 ) {
 	var msg struct {
 		ID  uint64
 		URL string
 	}
-	if _, can := canPerform(w, r, "all", auth.Admin, false); !can {
+	err = decodeJSON(w, r, &msg)
+	if err != nil {
 		return
 	}
-	if !decodeJSON(w, r, &msg) {
-		return
-	}
-	return msg.ID, msg.URL, true
+	id = msg.ID
+	address = msg.URL
+	_, err = canPerform(w, r, "all", auth.Admin, false)
+	return
 }
 
 // Redirect all clients with the same IP as the target post to a URL
 func redirectByIP(w http.ResponseWriter, r *http.Request) {
-	id, url, ok := decodeRedirect(w, r)
-	if !ok {
-		return
-	}
+	err := func() (err error) {
+		id, url, err := decodeRedirect(w, r)
+		if err != nil {
+			return
+		}
 
-	ip, err := db.GetIP(id)
-	if err == sql.ErrNoRows || ip == "" {
-		text404(w)
-		return
-	} else if err != nil {
-		httpError(w, r, err)
-		return
-	}
+		ip, err := db.GetIP(id)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				err = common.StatusError{errors.New("no such post"), 404}
+			}
+			return
+		}
+		if ip == "" {
+			return common.StatusError{errors.New("no IP on post"), 404}
+		}
 
-	msg, err := common.EncodeMessage(common.MessageRedirect, url)
+		msg, err := common.EncodeMessage(common.MessageRedirect, url)
+		if err != nil {
+			return
+		}
+		for _, c := range feeds.GetByIP(ip) {
+			c.Send(msg)
+		}
+		return
+	}()
 	if err != nil {
 		httpError(w, r, err)
-		return
-	}
-	for _, c := range feeds.GetByIP(ip) {
-		c.Send(msg)
 	}
 }
 
 // Redirect all clients in the same thread to a URL
 func redirectByThread(w http.ResponseWriter, r *http.Request) {
-	id, url, ok := decodeRedirect(w, r)
-	if !ok {
-		return
-	}
+	err := func() (err error) {
+		id, url, err := decodeRedirect(w, r)
+		if err != nil {
+			return
+		}
 
-	msg, err := common.EncodeMessage(common.MessageRedirect, url)
+		msg, err := common.EncodeMessage(common.MessageRedirect, url)
+		if err != nil {
+			return
+		}
+		for _, c := range feeds.GetByThread(id) {
+			c.Send(msg)
+		}
+		return
+	}()
 	if err != nil {
 		httpError(w, r, err)
-		return
-	}
-	for _, c := range feeds.GetByThread(id) {
-		c.Send(msg)
 	}
 }

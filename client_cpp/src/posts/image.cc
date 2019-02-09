@@ -176,10 +176,6 @@ Node PostView::render_file_info()
               << img.length % 60;
         }
     }
-    if (img.apng) {
-        COMMA
-        s << "APNG";
-    }
 
     // Readable file size
     COMMA

@@ -2,23 +2,32 @@
 package imager
 
 import (
+	"bytes"
 	"crypto/md5"
 	"database/sql"
 	"encoding/base64"
 	"errors"
+	"image"
+	"io"
 	"io/ioutil"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
 	"meguca/db"
+	"mime/multipart"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
-	"github.com/Soreil/apngdetector"
+	"github.com/chai2010/webp"
+
 	"github.com/bakape/thumbnailer"
 	"github.com/go-playground/log"
 )
+
+// Minimal capacity of large buffers in the pool
+const largeBufCap = 12 << 10
 
 var (
 	// Map of MIME types to the constants used internally
@@ -26,6 +35,7 @@ var (
 		"image/jpeg":      common.JPEG,
 		"image/png":       common.PNG,
 		"image/gif":       common.GIF,
+		"image/webp":      common.WEBP,
 		mimePDF:           common.PDF,
 		"video/webm":      common.WEBM,
 		"application/ogg": common.OGG,
@@ -45,6 +55,7 @@ var (
 		"image/jpeg":      true,
 		"image/png":       true,
 		"image/gif":       true,
+		"image/webp":      true,
 		"application/pdf": true,
 		"video/webm":      true,
 		"application/ogg": true,
@@ -61,7 +72,21 @@ var (
 
 	errTooLarge = errors.New("file too large")
 	isTest      bool
+
+	// Large buffer pool of length=0 capacity=12+KB
+	largeBufPool = sync.Pool{
+		New: func() interface{} {
+			return make([]byte, 0, largeBufCap)
+		},
+	}
 )
+
+// Return large buffer pool, if eligable
+func returnLargeBuf(buf []byte) {
+	if cap(buf) >= largeBufCap {
+		largeBufPool.Put(buf[:0])
+	}
+}
 
 // NewImageUpload  handles the clients' image (or other file) upload request
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
@@ -217,11 +242,12 @@ func ParseUpload(req *http.Request) (string, error) {
 
 // Create a new thumbnail, commit its resources to the DB and filesystem, and
 // pass the image data to the client.
-func newThumbnail(data []byte, img common.ImageCommon,
-) (token string, err error) {
+func newThumbnail(f multipart.File, img common.ImageCommon,
+) (
+	token string, err error,
+) {
 	conf := config.Get()
-	thumb, err := processFile(data, &img, thumbnailer.Options{
-		JPEGQuality: conf.JPEGQuality,
+	thumb, err := processFile(f, &img, thumbnailer.Options{
 		MaxSourceDims: thumbnailer.Dims{
 			Width:  uint(conf.MaxWidth),
 			Height: uint(conf.MaxHeight),
@@ -232,33 +258,23 @@ func newThumbnail(data []byte, img common.ImageCommon,
 		},
 		AcceptedMimeTypes: allowedMimeTypes,
 	})
+	defer returnLargeBuf(thumb)
 	if err != nil {
 		switch err.(type) {
-		case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage,
-			thumbnailer.ErrCorruptImage:
+		case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage:
 			err = common.StatusError{err, 400}
 		}
-		return "", err
-	}
-	defer func() {
-		if thumb != nil {
-			thumbnailer.ReturnBuffer(thumb)
-		}
-	}()
-
-	// Some media has retardedly long meta strings. Just truncate them, instead
-	// of rejecting.
-	if len(img.Artist) > 100 {
-		img.Artist = img.Artist[:100]
-	}
-	if len(img.Title) > 200 {
-		img.Title = img.Title[:200]
+		return
 	}
 
-	// Being done in one transaction prevents the image from getting
+	// Being done in one transaction prevents the image DB record from getting
 	// garbage-collected between the calls
 	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
-		err = db.AllocateImage(tx, data, thumb, img)
+		var thumbR io.ReadSeeker
+		if thumb != nil {
+			thumbR = bytes.NewReader(thumb)
+		}
+		err = db.AllocateImage(tx, f, thumbR, img)
 		if err != nil && !db.IsConflictError(err) {
 			return
 		}
@@ -269,50 +285,74 @@ func newThumbnail(data []byte, img common.ImageCommon,
 }
 
 // Separate function for easier testability
-func processFile(
-	data []byte,
-	img *common.ImageCommon,
+func processFile(f multipart.File, img *common.ImageCommon,
 	opts thumbnailer.Options,
 ) (
-	thumbData []byte,
-	err error,
+	thumb []byte, err error,
 ) {
-	src, thumb, err := thumbnailer.ProcessBuffer(data, opts)
+	src, thumbImage, err := thumbnailer.Process(f, opts)
+	defer func() {
+		// Add image internal buffer to pool
+		if thumbImage == nil {
+			return
+		}
+		// Only image type used in thumbnailer by default
+		img, ok := thumbImage.(*image.RGBA)
+		if ok {
+			returnLargeBuf(img.Pix)
+		}
+	}()
 	switch err {
 	case nil:
-	case thumbnailer.ErrNoCoverArt:
+		img.ThumbType = common.WEBP
+	case thumbnailer.ErrCantThumbnail:
 		err = nil
+		img.ThumbType = common.NoFile
 	default:
 		return
 	}
 
-	thumbData = thumb.Data
-
 	img.FileType = mimeTypes[src.Mime]
-	if img.FileType == common.PNG {
-		img.APNG = apngdetector.Detect(data)
-	}
-	if thumb.Data == nil {
-		img.ThumbType = common.NoFile
-	} else if thumb.IsPNG {
-		img.ThumbType = common.PNG
-	}
 
 	img.Audio = src.HasAudio
 	img.Video = src.HasVideo
 	img.Length = uint32(src.Length / time.Second)
-	img.Size = len(data)
+
+	// Some media has retardedly long meta strings. Just truncate them, instead
+	// of rejecting.
 	img.Artist = src.Artist
 	img.Title = src.Title
-	img.Dims = [4]uint16{
-		uint16(src.Width),
-		uint16(src.Height),
-		uint16(thumb.Width),
-		uint16(thumb.Height),
+	if len(img.Artist) > 100 {
+		img.Artist = img.Artist[:100]
+	}
+	if len(img.Title) > 200 {
+		img.Title = img.Title[:200]
 	}
 
-	sum := md5.Sum(data)
-	img.MD5 = base64.RawURLEncoding.EncodeToString(sum[:])
+	img.Dims = [4]uint16{uint16(src.Width), uint16(src.Height), 0, 0}
+	if thumbImage != nil {
+		b := thumbImage.Bounds()
+		img.Dims[2] = uint16(b.Dx())
+		img.Dims[3] = uint16(b.Dy())
+	}
+
+	img.MD5, img.Size, err = hashFile(f, md5.New(),
+		base64.RawURLEncoding.EncodeToString)
+	if err != nil {
+		return
+	}
+
+	if thumbImage != nil {
+		w := bytes.NewBuffer(largeBufPool.Get().([]byte))
+		err = webp.Encode(w, thumbImage, &webp.Options{
+			Lossless: false,
+			Quality:  90,
+		})
+		if err != nil {
+			return
+		}
+		thumb = w.Bytes()
+	}
 
 	return
 }

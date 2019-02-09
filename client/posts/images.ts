@@ -72,7 +72,7 @@ export default class ImageHandler extends View<Post> {
 	// Render the actual thumbnail image
 	private renderThumbnail() {
 		const el = this.el.querySelector("figure a"),
-			{ SHA1, fileType, thumbType, dims, spoiler, apng } = this
+			{ SHA1, fileType, thumbType, dims, spoiler } = this
 				.model
 				.image,
 			src = sourcePath(SHA1, fileType)
@@ -98,12 +98,7 @@ export default class ImageHandler extends View<Post> {
 			// Spoilered and spoilers enabled
 			thumb = '/assets/spoil/default.jpg'
 			thumbHeight = thumbWidth = 150
-		} else if (options.autogif
-			&& (
-				fileType === fileTypes.gif
-				|| (fileType === fileTypes.png && apng)
-			)
-		) {
+		} else if (options.autogif && fileType === fileTypes.gif) {
 			// Animated GIF thumbnails
 			thumb = src
 		} else {
@@ -160,9 +155,6 @@ export default class ImageHandler extends View<Post> {
 						}
 						el.textContent = s
 					}
-					break
-				case "is-apng":
-					el.hidden = !data.apng
 					break
 				case "filesize":
 					const { size } = data

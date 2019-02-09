@@ -100,7 +100,6 @@ export type BoardData = {
 
 // Image data embeddable in posts and thread hashes
 export interface ImageData {
-	apng: boolean
 	audio: boolean
 	video: boolean
 	spoiler: boolean
@@ -125,5 +124,5 @@ export interface ImageData {
 // Possible file types of a post image
 export enum fileTypes {
 	jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz",
-	flac, noFile, txt
+	flac, noFile, txt, webp,
 }

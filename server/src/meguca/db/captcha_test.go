@@ -32,10 +32,18 @@ func TestCaptchas(t *testing.T) {
 		err       error
 	}
 
+	c1, err := auth.CreateTestCaptcha()
+	if err != nil {
+		t.Fatal(err)
+	}
+	c2, err := auth.CreateTestCaptcha()
+	if err != nil {
+		t.Fatal(err)
+	}
 	cases := []testCase{
 		{"invalid", auth.Captcha{}, false, common.ErrInvalidCaptcha},
-		{"valid", auth.CreateTestCaptcha(t), true, nil},
-		{"upsert last solved table", auth.CreateTestCaptcha(t), true, nil},
+		{"valid", c1, true, nil},
+		{"upsert last solved table", c2, true, nil},
 	}
 	for i := 1; i < incorrectCaptchaLimit-1; i++ {
 		cases = append(cases, testCase{"invalid", auth.Captcha{}, true,

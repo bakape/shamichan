@@ -33,10 +33,6 @@ compiled with:
     * libtheora
     * libx264
     * libmp3lame
-* GraphicsMagick compiled with:
-    * zlib
-    * libpng
-    * libjpeg
 * OpenCV >= 2
 * git
 
@@ -75,6 +71,10 @@ the client
 thumbnails
 * To enable using Go tools in the project add the absolute path of `./go` to
 your `$GOPATH` environment variable
+* `make {test,test_no_race,test_docker}` run regular, without data race
+detection and Dockerized test suites, respectively
+* To run server unit tests (unless Dockerized) add database creation rights to
+your PostgreSQL role
 
 ### C++ client
 For developing the new C++ client

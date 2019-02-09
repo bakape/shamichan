@@ -298,306 +298,300 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, c articleCont
 			qw422016.N().S(`</span>`)
 			//line article.qtpl:121
 		}
-		//line article.qtpl:122
-		if img.APNG {
-			//line article.qtpl:122
-			qw422016.N().S(`<span class="is-apng">APNG</span>`)
-			//line article.qtpl:126
-		}
-		//line article.qtpl:126
+		//line article.qtpl:121
 		qw422016.N().S(`<span class="filesize">`)
-		//line article.qtpl:128
+		//line article.qtpl:123
 		qw422016.N().S(readableFileSize(img.Size))
-		//line article.qtpl:128
+		//line article.qtpl:123
 		qw422016.N().S(`</span>`)
-		//line article.qtpl:130
+		//line article.qtpl:125
 		if img.Dims != [4]uint16{} {
-			//line article.qtpl:130
+			//line article.qtpl:125
 			qw422016.N().S(`<span class="dims">`)
-			//line article.qtpl:132
+			//line article.qtpl:127
 			qw422016.N().S(strconv.FormatUint(uint64(img.Dims[0]), 10))
-			//line article.qtpl:132
+			//line article.qtpl:127
 			qw422016.N().S(`x`)
-			//line article.qtpl:134
+			//line article.qtpl:129
 			qw422016.N().S(strconv.FormatUint(uint64(img.Dims[1]), 10))
-			//line article.qtpl:134
+			//line article.qtpl:129
 			qw422016.N().S(`</span>`)
-			//line article.qtpl:136
+			//line article.qtpl:131
 		}
-		//line article.qtpl:136
+		//line article.qtpl:131
 		qw422016.N().S(`</span>`)
-		//line article.qtpl:138
+		//line article.qtpl:133
 		name := imageName(img.FileType, img.Name)
 
-		//line article.qtpl:138
+		//line article.qtpl:133
 		qw422016.N().S(`<a href="`)
-		//line article.qtpl:139
+		//line article.qtpl:134
 		qw422016.N().S(assets.RelativeSourcePath(img.FileType, img.SHA1))
-		//line article.qtpl:139
+		//line article.qtpl:134
 		qw422016.N().S(`" download="`)
-		//line article.qtpl:139
+		//line article.qtpl:134
 		qw422016.N().S(name)
-		//line article.qtpl:139
+		//line article.qtpl:134
 		qw422016.N().S(`">`)
-		//line article.qtpl:140
+		//line article.qtpl:135
 		qw422016.N().S(name)
-		//line article.qtpl:140
+		//line article.qtpl:135
 		qw422016.N().S(`</a></figcaption>`)
-		//line article.qtpl:143
+		//line article.qtpl:138
 	}
-	//line article.qtpl:143
+	//line article.qtpl:138
 	qw422016.N().S(`<div class="post-container">`)
-	//line article.qtpl:145
+	//line article.qtpl:140
 	if p.Image != nil {
-		//line article.qtpl:146
+		//line article.qtpl:141
 		img := *p.Image
 
-		//line article.qtpl:146
+		//line article.qtpl:141
 		qw422016.N().S(`<figure><a target="_blank" href="`)
-		//line article.qtpl:148
+		//line article.qtpl:143
 		qw422016.N().S(src)
-		//line article.qtpl:148
+		//line article.qtpl:143
 		qw422016.N().S(`">`)
-		//line article.qtpl:149
+		//line article.qtpl:144
 		switch {
-		//line article.qtpl:150
+		//line article.qtpl:145
 		case img.ThumbType == common.NoFile:
-			//line article.qtpl:151
+			//line article.qtpl:146
 			var file string
 
-			//line article.qtpl:152
+			//line article.qtpl:147
 			switch img.FileType {
-			//line article.qtpl:153
+			//line article.qtpl:148
 			case common.MP4, common.MP3, common.OGG, common.FLAC:
-				//line article.qtpl:154
+				//line article.qtpl:149
 				file = "audio"
 
-			//line article.qtpl:155
+			//line article.qtpl:150
 			default:
-				//line article.qtpl:156
+				//line article.qtpl:151
 				file = "file"
 
-				//line article.qtpl:157
+				//line article.qtpl:152
 			}
-			//line article.qtpl:157
+			//line article.qtpl:152
 			qw422016.N().S(`<img src="/assets/`)
-			//line article.qtpl:158
+			//line article.qtpl:153
 			qw422016.N().S(file)
-			//line article.qtpl:158
+			//line article.qtpl:153
 			qw422016.N().S(`.png" width="150" height="150">`)
-		//line article.qtpl:159
+		//line article.qtpl:154
 		case img.Spoiler:
-			//line article.qtpl:162
+			//line article.qtpl:157
 			qw422016.N().S(`<img src="/assets/spoil/default.jpg" width="150" height="150">`)
-		//line article.qtpl:164
+		//line article.qtpl:159
 		default:
-			//line article.qtpl:164
+			//line article.qtpl:159
 			qw422016.N().S(`<img src="`)
-			//line article.qtpl:165
+			//line article.qtpl:160
 			qw422016.N().S(assets.ThumbPath(img.ThumbType, img.SHA1))
-			//line article.qtpl:165
+			//line article.qtpl:160
 			qw422016.N().S(`" width="`)
-			//line article.qtpl:165
+			//line article.qtpl:160
 			qw422016.N().D(int(img.Dims[2]))
-			//line article.qtpl:165
+			//line article.qtpl:160
 			qw422016.N().S(`" height="`)
-			//line article.qtpl:165
+			//line article.qtpl:160
 			qw422016.N().D(int(img.Dims[3]))
-			//line article.qtpl:165
+			//line article.qtpl:160
 			qw422016.N().S(`">`)
-			//line article.qtpl:166
+			//line article.qtpl:161
 		}
-		//line article.qtpl:166
+		//line article.qtpl:161
 		qw422016.N().S(`</a></figure>`)
-		//line article.qtpl:169
+		//line article.qtpl:164
 	}
-	//line article.qtpl:169
+	//line article.qtpl:164
 	qw422016.N().S(`<blockquote>`)
-	//line article.qtpl:171
+	//line article.qtpl:166
 	streambody(qw422016, p, c.op, c.board, c.index, c.rbText, c.pyu)
-	//line article.qtpl:171
+	//line article.qtpl:166
 	qw422016.N().S(`</blockquote>`)
-	//line article.qtpl:173
+	//line article.qtpl:168
 	for _, e := range p.Moderation {
-		//line article.qtpl:173
+		//line article.qtpl:168
 		qw422016.N().S(`<b class="admin post-moderation">`)
-		//line article.qtpl:175
+		//line article.qtpl:170
 		streampostModeration(qw422016, e)
-		//line article.qtpl:175
+		//line article.qtpl:170
 		qw422016.N().S(`<br></b>`)
-		//line article.qtpl:178
+		//line article.qtpl:173
 	}
-	//line article.qtpl:178
+	//line article.qtpl:173
 	qw422016.N().S(`</div>`)
-	//line article.qtpl:180
+	//line article.qtpl:175
 	if c.omit != 0 {
-		//line article.qtpl:180
+		//line article.qtpl:175
 		qw422016.N().S(`<span class="omit" data-omit="`)
-		//line article.qtpl:181
+		//line article.qtpl:176
 		qw422016.N().D(c.omit)
-		//line article.qtpl:181
+		//line article.qtpl:176
 		qw422016.N().S(`" data-image-omit="`)
-		//line article.qtpl:181
+		//line article.qtpl:176
 		qw422016.N().D(c.imageOmit)
-		//line article.qtpl:181
+		//line article.qtpl:176
 		qw422016.N().S(`">`)
-		//line article.qtpl:182
+		//line article.qtpl:177
 		qw422016.N().S(pluralize(c.omit, "post"))
-		//line article.qtpl:183
+		//line article.qtpl:178
 		qw422016.N().S(` `)
-		//line article.qtpl:183
+		//line article.qtpl:178
 		qw422016.N().S(ln.Common.Posts["and"])
-		//line article.qtpl:183
+		//line article.qtpl:178
 		qw422016.N().S(` `)
-		//line article.qtpl:184
+		//line article.qtpl:179
 		qw422016.N().S(pluralize(c.imageOmit, "image"))
-		//line article.qtpl:185
+		//line article.qtpl:180
 		qw422016.N().S(` `)
-		//line article.qtpl:185
+		//line article.qtpl:180
 		qw422016.N().S(`omitted`)
-		//line article.qtpl:185
+		//line article.qtpl:180
 		qw422016.N().S(` `)
-		//line article.qtpl:185
+		//line article.qtpl:180
 		qw422016.N().S(`<span class="act"><a href="`)
-		//line article.qtpl:187
+		//line article.qtpl:182
 		qw422016.N().S(strconv.FormatUint(c.op, 10))
-		//line article.qtpl:187
+		//line article.qtpl:182
 		qw422016.N().S(`">`)
-		//line article.qtpl:188
+		//line article.qtpl:183
 		qw422016.N().S(ln.Common.Posts["seeAll"])
-		//line article.qtpl:188
+		//line article.qtpl:183
 		qw422016.N().S(`</a></span></span>`)
-		//line article.qtpl:192
+		//line article.qtpl:187
 	}
-	//line article.qtpl:193
+	//line article.qtpl:188
 	if bls := c.backlinks[p.ID]; len(bls) != 0 {
-		//line article.qtpl:193
+		//line article.qtpl:188
 		qw422016.N().S(`<span class="backlinks spaced">`)
-		//line article.qtpl:195
+		//line article.qtpl:190
 		for _, l := range bls {
-			//line article.qtpl:195
+			//line article.qtpl:190
 			qw422016.N().S(`<em>`)
-			//line article.qtpl:197
+			//line article.qtpl:192
 			streampostLink(qw422016, l, c.index || l.OP != c.op, c.index)
-			//line article.qtpl:197
+			//line article.qtpl:192
 			qw422016.N().S(`</em>`)
-			//line article.qtpl:199
+			//line article.qtpl:194
 		}
-		//line article.qtpl:199
+		//line article.qtpl:194
 		qw422016.N().S(`</span>`)
-		//line article.qtpl:201
+		//line article.qtpl:196
 	}
-	//line article.qtpl:201
+	//line article.qtpl:196
 	qw422016.N().S(`</article>`)
-//line article.qtpl:203
+//line article.qtpl:198
 }
 
-//line article.qtpl:203
+//line article.qtpl:198
 func writerenderArticle(qq422016 qtio422016.Writer, p common.Post, c articleContext) {
-	//line article.qtpl:203
+	//line article.qtpl:198
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line article.qtpl:203
+	//line article.qtpl:198
 	streamrenderArticle(qw422016, p, c)
-	//line article.qtpl:203
+	//line article.qtpl:198
 	qt422016.ReleaseWriter(qw422016)
-//line article.qtpl:203
+//line article.qtpl:198
 }
 
-//line article.qtpl:203
+//line article.qtpl:198
 func renderArticle(p common.Post, c articleContext) string {
-	//line article.qtpl:203
+	//line article.qtpl:198
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line article.qtpl:203
+	//line article.qtpl:198
 	writerenderArticle(qb422016, p, c)
-	//line article.qtpl:203
+	//line article.qtpl:198
 	qs422016 := string(qb422016.B)
-	//line article.qtpl:203
+	//line article.qtpl:198
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line article.qtpl:203
+	//line article.qtpl:198
 	return qs422016
-//line article.qtpl:203
+//line article.qtpl:198
 }
 
 // Render image search links according to file type
 
-//line article.qtpl:206
+//line article.qtpl:201
 func streamimageSearch(qw422016 *qt422016.Writer, root string, img common.Image) {
-	//line article.qtpl:207
+	//line article.qtpl:202
 	if img.ThumbType == common.NoFile || img.FileType == common.PDF {
-		//line article.qtpl:208
+		//line article.qtpl:203
 		return
-		//line article.qtpl:209
+		//line article.qtpl:204
 	}
-	//line article.qtpl:211
+	//line article.qtpl:206
 	url := root + assets.ImageSearchPath(img.ImageCommon)
 
-	//line article.qtpl:211
+	//line article.qtpl:206
 	qw422016.N().S(`<a class="image-search google" target="_blank" rel="nofollow" href="https://www.google.com/searchbyimage?image_url=`)
-	//line article.qtpl:212
+	//line article.qtpl:207
 	qw422016.N().S(url)
-	//line article.qtpl:212
+	//line article.qtpl:207
 	qw422016.N().S(`">G</a><a class="image-search iqdb" target="_blank" rel="nofollow" href="http://iqdb.org/?url=`)
-	//line article.qtpl:215
+	//line article.qtpl:210
 	qw422016.N().S(url)
-	//line article.qtpl:215
+	//line article.qtpl:210
 	qw422016.N().S(`">Iq</a><a class="image-search saucenao" target="_blank" rel="nofollow" href="http://saucenao.com/search.php?db=999&url=`)
-	//line article.qtpl:218
+	//line article.qtpl:213
 	qw422016.N().S(url)
-	//line article.qtpl:218
+	//line article.qtpl:213
 	qw422016.N().S(`">Sn</a><a class="image-search whatAnime" target="_blank" rel="nofollow" href="https://trace.moe/?url=`)
-	//line article.qtpl:221
+	//line article.qtpl:216
 	qw422016.N().S(url)
-	//line article.qtpl:221
+	//line article.qtpl:216
 	qw422016.N().S(`">Wa</a>`)
-	//line article.qtpl:224
+	//line article.qtpl:219
 	switch img.FileType {
-	//line article.qtpl:225
+	//line article.qtpl:220
 	case common.JPEG, common.PNG, common.GIF, common.WEBM:
-		//line article.qtpl:225
+		//line article.qtpl:220
 		qw422016.N().S(`<a class="image-search desustorage" target="_blank" rel="nofollow" href="https://desuarchive.org/_/search/image/`)
-		//line article.qtpl:226
+		//line article.qtpl:221
 		qw422016.N().S(img.MD5)
-		//line article.qtpl:226
+		//line article.qtpl:221
 		qw422016.N().S(`">Ds</a>`)
-		//line article.qtpl:229
+		//line article.qtpl:224
 	}
-	//line article.qtpl:230
+	//line article.qtpl:225
 	switch img.FileType {
-	//line article.qtpl:231
+	//line article.qtpl:226
 	case common.JPEG, common.PNG:
-		//line article.qtpl:231
+		//line article.qtpl:226
 		qw422016.N().S(`<a class="image-search exhentai" target="_blank" rel="nofollow" href="http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=`)
-		//line article.qtpl:232
+		//line article.qtpl:227
 		qw422016.N().S(img.SHA1)
-		//line article.qtpl:232
+		//line article.qtpl:227
 		qw422016.N().S(`">Ex</a>`)
-		//line article.qtpl:235
+		//line article.qtpl:230
 	}
-//line article.qtpl:236
+//line article.qtpl:231
 }
 
-//line article.qtpl:236
+//line article.qtpl:231
 func writeimageSearch(qq422016 qtio422016.Writer, root string, img common.Image) {
-	//line article.qtpl:236
+	//line article.qtpl:231
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line article.qtpl:236
+	//line article.qtpl:231
 	streamimageSearch(qw422016, root, img)
-	//line article.qtpl:236
+	//line article.qtpl:231
 	qt422016.ReleaseWriter(qw422016)
-//line article.qtpl:236
+//line article.qtpl:231
 }
 
-//line article.qtpl:236
+//line article.qtpl:231
 func imageSearch(root string, img common.Image) string {
-	//line article.qtpl:236
+	//line article.qtpl:231
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line article.qtpl:236
+	//line article.qtpl:231
 	writeimageSearch(qb422016, root, img)
-	//line article.qtpl:236
+	//line article.qtpl:231
 	qs422016 := string(qb422016.B)
-	//line article.qtpl:236
+	//line article.qtpl:231
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line article.qtpl:236
+	//line article.qtpl:231
 	return qs422016
-//line article.qtpl:236
+//line article.qtpl:231
 }

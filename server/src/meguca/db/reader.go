@@ -60,7 +60,7 @@ const (
 )
 
 type imageScanner struct {
-	APNG, Audio, Video, Spoiler       sql.NullBool
+	Audio, Video, Spoiler             sql.NullBool
 	FileType, ThumbType, Length, Size sql.NullInt64
 	Name, SHA1, MD5, Title, Artist    sql.NullString
 	Dims                              pq.Int64Array
@@ -70,7 +70,7 @@ type imageScanner struct {
 // sql.Scanner.Scan()
 func (i *imageScanner) ScanArgs() []interface{} {
 	return []interface{}{
-		&i.APNG, &i.Audio, &i.Video, &i.FileType, &i.ThumbType, &i.Dims,
+		&i.Audio, &i.Video, &i.FileType, &i.ThumbType, &i.Dims,
 		&i.Length, &i.Size, &i.MD5, &i.SHA1, &i.Title, &i.Artist,
 	}
 }
@@ -89,7 +89,6 @@ func (i *imageScanner) Val() *common.Image {
 	return &common.Image{
 		Spoiler: i.Spoiler.Bool,
 		ImageCommon: common.ImageCommon{
-			APNG:      i.APNG.Bool,
 			Audio:     i.Audio.Bool,
 			Video:     i.Video.Bool,
 			FileType:  uint8(i.FileType.Int64),

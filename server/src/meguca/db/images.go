@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"io"
 	"meguca/auth"
 	"meguca/common"
 	"meguca/imager/assets"
@@ -42,11 +43,11 @@ func writeImageTx(tx *sql.Tx, i common.ImageCommon) (err error) {
 	_, err = sq.
 		Insert("images").
 		Columns(
-			"apng", "audio", "video", "fileType", "thumbType", "dims", "length",
+			"audio", "video", "fileType", "thumbType", "dims", "length",
 			"size", "MD5", "SHA1", "Title", "Artist",
 		).
 		Values(
-			i.APNG, i.Audio, i.Video, int(i.FileType), int(i.ThumbType),
+			i.Audio, i.Video, int(i.FileType), int(i.ThumbType),
 			pq.GenericArray{A: i.Dims}, i.Length, i.Size, i.MD5, i.SHA1,
 			i.Title, i.Artist,
 		).
@@ -86,9 +87,11 @@ func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
 
 // AllocateImage allocates an image's file resources to their respective served
 // directories and write its data to the database
-func AllocateImage(tx *sql.Tx, src, thumb []byte, img common.ImageCommon,
-) error {
-	err := writeImageTx(tx, img)
+func AllocateImage(tx *sql.Tx, src, thumb io.ReadSeeker, img common.ImageCommon,
+) (
+	err error,
+) {
+	err = writeImageTx(tx, img)
 	if err != nil {
 		return err
 	}

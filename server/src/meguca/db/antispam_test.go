@@ -7,8 +7,6 @@ import (
 	. "meguca/test"
 	"testing"
 	"time"
-
-	"github.com/lib/pq"
 )
 
 func TestSpamScores(t *testing.T) {
@@ -32,7 +30,11 @@ func TestSpamScores(t *testing.T) {
 		"99.188.17.210",
 		"71.189.25.162",
 	} {
-		err := ValidateCaptcha(auth.CreateTestCaptcha(t), ip)
+		c, err := auth.CreateTestCaptcha()
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = ValidateCaptcha(c, ip)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -107,19 +109,4 @@ func TestSpamScores(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
-}
-
-func newListener(t *testing.T, channel string) *pq.Listener {
-	t.Helper()
-	l := pq.NewListener(
-		TestConnArgs,
-		time.Second,
-		time.Second*10,
-		func(_ pq.ListenerEventType, _ error) {},
-	)
-	err := l.Listen(channel)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return l
 }

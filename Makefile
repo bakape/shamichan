@@ -65,7 +65,7 @@ server_deps:
 	go list -f '{{.Deps}}' meguca | tr -d '[]' | xargs go get -v
 
 update_deps:
-	go get -u -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/... github.com/mailru/easyjson/...
+	go get -u -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/...
 	go list -f '{{.Deps}}' meguca | tr -d '[]' | xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' | grep -v 'meguca' | xargs go get -u -v
 
 server_no_fetch:
@@ -91,10 +91,14 @@ dist_clean: clean
 	rm -rf images error.log db.db
 
 test:
-	cd ./server/src/meguca/; go test --race -p 1 ./...
+	cd ./server/src/meguca/; go test --race ./...
 
 test_no_race:
-	cd ./server/src/meguca/; go test -p 1 ./...
+	cd ./server/src/meguca/; go test ./...
+
+test_docker:
+	docker build -t meguca_test .
+	docker run -t --rm --entrypoint scripts/docker_test.sh meguca_test
 
 check: test
 

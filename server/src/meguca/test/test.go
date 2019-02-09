@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"io/ioutil"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -73,4 +74,15 @@ func ReadSample(t *testing.T, name string) []byte {
 		t.Error(err)
 	}
 	return data
+}
+
+// Opens a sample file for reading
+func OpenSample(t *testing.T, name string) *os.File {
+	t.Helper()
+
+	f, err := os.Open(filepath.Join("testdata", name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return f
 }

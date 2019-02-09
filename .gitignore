@@ -15,6 +15,7 @@ www/lang
 www/videos
 thumb_*.png
 thumb_*.jpg
+thumb_*.webp
 scripts/migration/3to4/3to4
 /server/pkg
 /server/bin
@@ -31,3 +32,4 @@ GeoLite2-Country.mmdb
 client_cpp/*.js
 debug.test
 /config.json
+db_*.db

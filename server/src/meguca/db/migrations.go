@@ -1057,6 +1057,10 @@ var migrations = []func(*sql.Tx) error{
 		})
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(`alter table images drop column apng`)
+		return
+	},
 }
 
 func createIndex(table, column string) string {

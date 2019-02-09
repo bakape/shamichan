@@ -155,7 +155,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			errTooManyAnswers,
 		},
 		{
-			"compound eightball length to big",
+			"compound eightball length too big",
 			config.BoardConfigs{
 				Eightball: []string{GenString(maxEightballLen + 1)},
 			},
@@ -196,12 +196,9 @@ func TestValidateBoardConfigs(t *testing.T) {
 			t.Parallel()
 
 			rec := httptest.NewRecorder()
-			if b := validateBoardConfigs(rec, c.BoardConfigs); b != (c.err == nil) {
+			err := validateBoardConfigs(rec, c.BoardConfigs)
+			if err != c.err {
 				t.Fatal("unexpected result")
-			}
-			if c.err != nil {
-				assertCode(t, rec, 400)
-				assertBody(t, rec, fmt.Sprintf("400 %s\n", c.err))
 			}
 		})
 	}

@@ -209,13 +209,19 @@ func ownedBoardSelection(w http.ResponseWriter, r *http.Request) {
 
 // Renders a form for configuring a board owned by the user
 func boardConfigurationForm(w http.ResponseWriter, r *http.Request) {
-	conf, isValid := boardConfData(w, r)
-	if !isValid {
-		return
-	}
+	err := func() (err error) {
+		conf, err := boardConfData(w, r)
+		if err != nil {
+			return
+		}
 
-	setHTMLHeaders(w)
-	templates.ConfigureBoard(w, conf)
+		setHTMLHeaders(w)
+		templates.ConfigureBoard(w, conf)
+		return
+	}()
+	if err != nil {
+		httpError(w, r, err)
+	}
 }
 
 // Render a form for assigning staff to a board
@@ -238,12 +244,20 @@ func boardCreationForm(w http.ResponseWriter, r *http.Request) {
 
 // Render the form for configuring the server
 func serverConfigurationForm(w http.ResponseWriter, r *http.Request) {
-	if !isAdmin(w, r) {
-		return
-	}
+	err := func() (err error) {
+		err = isAdmin(w, r)
+		if err != nil {
+			return
+		}
 
-	setHTMLHeaders(w)
-	templates.ConfigureServer(w, (*config.Get()))
+		setHTMLHeaders(w)
+		templates.ConfigureServer(w, (*config.Get()))
+		return
+
+	}()
+	if err != nil {
+		httpError(w, r, err)
+	}
 }
 
 // Render a form to change an account password

@@ -33,54 +33,61 @@ type passwordChangeRequest struct {
 
 // Register a new user account
 func register(w http.ResponseWriter, r *http.Request) {
-	var req loginCreds
-	isValid := decodeJSON(w, r, &req) &&
-		trimLoginID(&req.ID) &&
-		validateUserID(w, r, req.ID) &&
-		checkPasswordAndCaptcha(w, r, req.Password, req.Captcha)
-	if !isValid {
-		return
-	}
+	err := func() (err error) {
+		var req loginCreds
+		err = decodeJSON(w, r, &req)
+		if err != nil {
+			return
+		}
+		trimLoginID(&req.ID)
+		err = validateUserID(w, r, req.ID)
+		if err != nil {
+			return
+		}
+		err = checkPasswordAndCaptcha(w, r, req.Password, req.Captcha)
+		if err != nil {
+			return
+		}
 
-	hash, err := auth.BcryptHash(req.Password, 10)
+		hash, err := auth.BcryptHash(req.Password, 10)
+		if err != nil {
+			return
+		}
+
+		// Check for collision and write to DB
+		err = db.InTransaction(false, func(tx *sql.Tx) error {
+			return db.RegisterAccount(tx, req.ID, hash)
+		})
+		if err != nil {
+			if err == db.ErrUserNameTaken {
+				err = errUserIDTaken
+			}
+			return
+		}
+		return commitLogin(w, req.ID)
+	}()
 	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-
-	// Check for collision and write to DB
-	err = db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.RegisterAccount(tx, req.ID, hash)
-	})
-	switch err {
-	case nil:
-		commitLogin(w, r, req.ID)
-	case db.ErrUserNameTaken:
-		httpError(w, r, errUserIDTaken)
-	default:
 		httpError(w, r, err)
 	}
 }
 
 // Separate function for easier chaining of validations
-func validateUserID(w http.ResponseWriter, r *http.Request, id string) bool {
+func validateUserID(w http.ResponseWriter, r *http.Request, id string) error {
 	if id == "" || len(id) > common.MaxLenUserID {
-		httpError(w, r, errInvalidUserID)
-		return false
+		return errInvalidUserID
 	}
-	return true
+	return nil
 }
 
 // If login successful, generate a session token and commit to DB. Otherwise
 // write error message to client.
-func commitLogin(w http.ResponseWriter, r *http.Request, userID string) {
+func commitLogin(w http.ResponseWriter, userID string) (err error) {
 	token, err := auth.RandomID(128)
 	if err != nil {
-		httpError(w, r, err)
 		return
 	}
-	if err := db.WriteLoginSession(userID, token); err != nil {
-		httpError(w, r, err)
+	err = db.WriteLoginSession(userID, token)
+	if err != nil {
 		return
 	}
 
@@ -100,49 +107,55 @@ func commitLogin(w http.ResponseWriter, r *http.Request, userID string) {
 		Path:    "/",
 		Expires: expires,
 	})
+	return
 }
 
 // Log into a registered user account
 func login(w http.ResponseWriter, r *http.Request) {
-	ip, err := auth.GetIP(r)
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-	var req loginCreds
-	switch {
-	case !decodeJSON(w, r, &req):
-		return
-	case !trimLoginID(&req.ID):
-		return
-	}
-	has, err := db.SolvedCaptchaRecently(ip, time.Minute)
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-	if !has {
-		httpError(w, r, errInvalidCaptcha)
-		return
-	}
+	err := func() (err error) {
+		var req loginCreds
+		err = decodeJSON(w, r, &req)
+		if err != nil {
+			return
+		}
+		trimLoginID(&req.ID)
 
-	hash, err := db.GetPassword(req.ID)
-	switch err {
-	case nil:
-	case sql.ErrNoRows:
-		httpError(w, r, common.ErrInvalidCreds)
-		return
-	default:
-		httpError(w, r, err)
-		return
-	}
+		ip, err := auth.GetIP(r)
+		if err != nil {
+			return
+		}
+		has, err := db.SolvedCaptchaRecently(ip, time.Minute)
+		if err != nil {
+			return
+		}
+		if !has {
+			err = errInvalidCaptcha
+			return
+		}
 
-	switch err := auth.BcryptCompare(req.Password, hash); err {
-	case nil:
-		commitLogin(w, r, req.ID)
-	case bcrypt.ErrMismatchedHashAndPassword:
-		httpError(w, r, common.ErrInvalidCreds)
-	default:
+		hash, err := db.GetPassword(req.ID)
+		switch err {
+		case nil:
+		case sql.ErrNoRows:
+			err = common.ErrInvalidCreds
+			return
+		default:
+			return
+		}
+
+		err = auth.BcryptCompare(req.Password, hash)
+		switch err {
+		case nil:
+		case bcrypt.ErrMismatchedHashAndPassword:
+			err = common.ErrInvalidCreds
+			return
+		default:
+			return
+		}
+
+		return commitLogin(w, req.ID)
+	}()
+	if err != nil {
 		httpError(w, r, err)
 	}
 }
@@ -160,12 +173,14 @@ func commitLogout(
 	r *http.Request,
 	fn func(auth.SessionCreds) error,
 ) {
-	creds, ok := isLoggedIn(w, r)
-	if !ok {
-		return
-	}
-
-	if err := fn(creds); err != nil {
+	err := func() (err error) {
+		creds, err := isLoggedIn(w, r)
+		if err != nil {
+			return
+		}
+		return fn(creds)
+	}()
+	if err != nil {
 		httpError(w, r, err)
 	}
 }
@@ -179,94 +194,92 @@ func logoutAll(w http.ResponseWriter, r *http.Request) {
 
 // Change the account password
 func changePassword(w http.ResponseWriter, r *http.Request) {
-	var msg passwordChangeRequest
-	if !decodeJSON(w, r, &msg) {
-		return
-	}
-	creds, ok := isLoggedIn(w, r)
-	if !ok || !checkPasswordAndCaptcha(w, r, msg.New, msg.Captcha) {
-		return
-	}
+	err := func() (err error) {
+		var msg passwordChangeRequest
+		err = decodeJSON(w, r, &msg)
+		if err != nil {
+			return
+		}
 
-	// Get old hash
-	hash, err := db.GetPassword(creds.UserID)
+		creds, err := isLoggedIn(w, r)
+		if err != nil {
+			return
+		}
+		err = checkPasswordAndCaptcha(w, r, msg.New, msg.Captcha)
+		if err != nil {
+			return
+		}
+
+		// Get old hash
+		hash, err := db.GetPassword(creds.UserID)
+		if err != nil {
+			return
+		}
+
+		// Validate old password
+		err = auth.BcryptCompare(msg.Old, hash)
+		switch err {
+		case nil:
+		case bcrypt.ErrMismatchedHashAndPassword:
+			err = common.ErrInvalidCreds
+			return
+		default:
+			return
+		}
+
+		// Old password matched, write new hash to DB
+		hash, err = auth.BcryptHash(msg.New, 10)
+		if err != nil {
+			return
+		}
+		return db.ChangePassword(creds.UserID, hash)
+	}()
 	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-
-	// Validate old password
-	switch err := auth.BcryptCompare(msg.Old, hash); err {
-	case nil:
-	case bcrypt.ErrMismatchedHashAndPassword:
-		httpError(w, r, common.ErrInvalidCreds)
-		return
-	default:
-		httpError(w, r, err)
-		return
-	}
-
-	// Old password matched, write new hash to DB
-	hash, err = auth.BcryptHash(msg.New, 10)
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-	if err := db.ChangePassword(creds.UserID, hash); err != nil {
 		httpError(w, r, err)
 	}
 }
 
 // Check password length and authenticate captcha, if needed
-func checkPasswordAndCaptcha(
-	w http.ResponseWriter,
-	r *http.Request,
-	password string,
-	captcha auth.Captcha,
-) bool {
+func checkPasswordAndCaptcha(w http.ResponseWriter, r *http.Request,
+	password string, captcha auth.Captcha,
+) (
+	err error,
+) {
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		httpError(w, r, err)
-		return false
+		return
 	}
 	if password == "" || len(password) > common.MaxLenPassword {
-		httpError(w, r, errInvalidPassword)
-		return false
+		return errInvalidPassword
 	}
 	has, err := db.SolvedCaptchaRecently(ip, time.Minute)
 	if err != nil {
-		httpError(w, r, err)
-		return false
+		return
 	}
 	if !has {
-		httpError(w, r, errInvalidCaptcha)
-		return false
+		err = errInvalidCaptcha
 	}
-	return true
+	return
 }
 
 // Assert the user login session ID is valid and returns the login credentials
-func isLoggedIn(w http.ResponseWriter, r *http.Request) (
-	creds auth.SessionCreds, ok bool,
+func isLoggedIn(w http.ResponseWriter, r *http.Request,
+) (
+	creds auth.SessionCreds, err error,
 ) {
 	creds = extractLoginCreds(r)
 	if creds.UserID == "" || creds.Session == "" {
-		httpError(w, r, errAccessDenied)
+		err = errAccessDenied
 		return
 	}
 
 	ok, err := db.IsLoggedIn(creds.UserID, creds.Session)
-	switch err {
-	case common.ErrInvalidCreds:
-		httpError(w, r, err)
-	case nil:
-		if !ok {
-			httpError(w, r, errAccessDenied)
-		}
-	default:
-		httpError(w, r, err)
+	if err != nil {
+		return
 	}
-
+	if !ok {
+		err = errAccessDenied
+	}
 	return
 }
 
@@ -281,8 +294,7 @@ func extractLoginCreds(r *http.Request) (creds auth.SessionCreds) {
 	return
 }
 
-// Trim spaces from loginID. Chainable with other authenticators.
-func trimLoginID(id *string) bool {
+// Trim spaces from loginID
+func trimLoginID(id *string) {
 	*id = strings.TrimSpace(*id)
-	return true
 }

@@ -287,13 +287,6 @@ var specs = map[string][]inputSpec{
 			Required: true,
 		},
 		{
-			ID:       "JPEGQuality",
-			Type:     _number,
-			Min:      1,
-			Required: true,
-			Max:      100,
-		},
-		{
 			ID:   "FAQ",
 			Type: _textarea,
 			Rows: 5,
