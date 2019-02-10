@@ -246,6 +246,9 @@ func testGetAllBoard(t *testing.T) {
 	for i := range board.Threads {
 		assertImage(t, &board.Threads[i], std[i].Image)
 	}
+	for i := range board.Threads {
+		syncThreadVariables(&board.Threads[i], std[i])
+	}
 	AssertDeepEquals(t, board.Threads, std)
 }
 
@@ -316,9 +319,21 @@ func testGetBoard(t *testing.T) {
 			for i := range board.Threads {
 				assertImage(t, &board.Threads[i], c.std[i].Image)
 			}
+			for i := range board.Threads {
+				syncThreadVariables(&board.Threads[i], c.std[i])
+			}
 			AssertDeepEquals(t, board.Threads, c.std)
 		})
 	}
+}
+
+// Sync variables that are generated from external state and can not be easily
+// tested
+func syncThreadVariables(dst *common.Thread, src common.Thread) {
+	dst.ID = src.ID
+	dst.ReplyTime = src.ReplyTime
+	dst.Time = src.Time
+	dst.BumpTime = src.BumpTime
 }
 
 func testGetThread(t *testing.T) {
@@ -412,6 +427,7 @@ func testGetThread(t *testing.T) {
 				UnexpectedError(t, err)
 			}
 			assertImage(t, &thread, c.std.Image)
+			syncThreadVariables(&thread, c.std)
 			AssertDeepEquals(t, thread, c.std)
 		})
 	}

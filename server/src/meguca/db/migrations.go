@@ -1019,12 +1019,16 @@ var migrations = []func(*sql.Tx) error{
 		)
 	},
 	func(tx *sql.Tx) error {
-		// Moved to next migration
+		// Moved
 		return nil
 	},
 	func(tx *sql.Tx) error {
-		// Moved to next migration
+		// Moved
 		return nil
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(`alter table images drop column apng`)
+		return
 	},
 	func(tx *sql.Tx) (err error) {
 		// Drop legacy functions and triggers
@@ -1055,10 +1059,6 @@ var migrations = []func(*sql.Tx) error{
 			"posts":   {"insert", "update"},
 			"threads": {"insert", "update", "delete"},
 		})
-		return
-	},
-	func(tx *sql.Tx) (err error) {
-		_, err = tx.Exec(`alter table images drop column apng`)
 		return
 	},
 }

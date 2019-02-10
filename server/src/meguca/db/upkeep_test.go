@@ -278,7 +278,20 @@ func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
 				OP:    op.id,
 			},
 		}
-		if err := WriteThread(thread, post); err != nil {
+		err := WriteThread(thread, post)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Override bump time from trigger
+		_, err = sq.Update("threads").
+			SetMap(map[string]interface{}{
+				"replytime": unix,
+				"bumptime":  unix,
+			}).
+			Where("id = ?", op.id).
+			Exec()
+		if err != nil {
 			t.Fatal(err)
 		}
 	}

@@ -19,24 +19,29 @@ var (
 	spamMu          sync.RWMutex
 )
 
+// Sync cache and DB spam scores
+//
+// Separated for testing.
+func syncSpamScores() (err error) {
+	spamMu.Lock()
+	defer spamMu.Unlock()
+
+	if len(spamScoreBuffer) == 0 {
+		return
+	}
+	err = flushSpamScores()
+	for ip := range spamScoreBuffer {
+		delete(spamScoreBuffer, ip)
+	}
+	return
+}
+
 // Periodically flush buffered spam scores to DB
 func handleSpamScores() (err error) {
 	if !IsTest {
 		go func() {
 			for range time.Tick(time.Second) {
-				err := func() (err error) {
-					spamMu.Lock()
-					defer spamMu.Unlock()
-
-					if len(spamScoreBuffer) == 0 {
-						return
-					}
-					err = flushSpamScores()
-					for ip := range spamScoreBuffer {
-						delete(spamScoreBuffer, ip)
-					}
-					return
-				}()
+				err := syncSpamScores()
 				if err != nil {
 					log.Errorf("spam score buffer flush: %s", err)
 				}
