@@ -2,13 +2,13 @@ package server
 
 import (
 	"fmt"
-	"strings"
 	"net/http"
+	"strings"
 
 	"meguca/common"
 
-	"github.com/otium/ytdl"
 	"github.com/badoux/goscraper"
+	"github.com/otium/ytdl"
 )
 
 // Get YouTube video information by ID
@@ -25,7 +25,7 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 
 // Get BitChute video title by ID
 func bitChuteTitle(w http.ResponseWriter, r *http.Request) {
-	s, err := goscraper.Scrape("https://www.bitchute.com/embed/" + extractParam(r, "id"), 3)
+	s, err := goscraper.Scrape("https://www.bitchute.com/embed/"+extractParam(r, "id"), 3)
 
 	if err != nil {
 		httpError(w, r, err)
@@ -54,14 +54,16 @@ func getYouTubeInfo(id string) (ret string, err error) {
 
 	thumb := info.GetThumbnailURL(ytdl.ThumbnailQualityMaxRes)
 
-	for _, val := range [4]ytdl.ThumbnailQuality {
+	for _, val := range [4]ytdl.ThumbnailQuality{
 		ytdl.ThumbnailQualityHigh,
 		ytdl.ThumbnailQualityMedium,
 		ytdl.ThumbnailQualityDefault,
 		ytdl.ThumbnailQualitySD,
 	} {
 		resp, err := http.Get(thumb.String())
-		resp.Body.Close()
+		if resp != nil {
+			resp.Body.Close()
+		}
 
 		if err == nil {
 			if resp.StatusCode == http.StatusOK {
@@ -82,7 +84,7 @@ func getYouTubeInfo(id string) (ret string, err error) {
 		Filter(ytdl.FormatResolutionKey, []interface{}{"360p"}).
 		Filter(ytdl.FormatAudioEncodingKey, []interface{}{"aac", "opus", "vorbis"}).
 		Best(ytdl.FormatVideoEncodingKey)
-		
+
 	if len(vidFormats) == 0 {
 		vidFormats = info.Formats.
 			Filter(ytdl.FormatExtensionKey, []interface{}{"webm"}).
@@ -98,7 +100,7 @@ func getYouTubeInfo(id string) (ret string, err error) {
 				Filter(ytdl.FormatAudioEncodingKey, []interface{}{"aac", "opus", "vorbis"}).
 				Best(ytdl.FormatResolutionKey).
 				Best(ytdl.FormatVideoEncodingKey)
-			
+
 			if len(vidFormats) == 0 {
 				return ret, errNoYoutubeVideo(id)
 			}
