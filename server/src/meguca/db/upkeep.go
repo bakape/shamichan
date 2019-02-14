@@ -178,7 +178,7 @@ func deleteUnusedBoards() error {
 				From("boards").
 				Where(`created < ?
 					and id != 'all'
-					and (select coalesce(max(replyTime), 0)
+					and (select coalesce(max(bumpTime), 0)
 							from threads
 							where board = boards.id
 						) < ?`,

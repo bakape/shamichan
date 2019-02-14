@@ -146,6 +146,19 @@ func TestDeleteUnusedBoards(t *testing.T) {
 	t.Run("board with threads", testDeleteUnusedBoards)
 }
 
+// Board creation time is not passed in standard board creation
+func patchBoardCreationTime(t *testing.T, id string, ti time.Time) {
+	t.Helper()
+
+	_, err := sq.Update("boards").
+		Set("created", ti).
+		Where("id = ?", id).
+		Exec()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 // Restore all board to enable global logging
 func writeAllBoard(t *testing.T) {
 	t.Helper()
@@ -170,7 +183,6 @@ func testBoardNoThreads(t *testing.T) {
 
 	err := InTransaction(false, func(tx *sql.Tx) error {
 		return WriteBoard(tx, BoardConfigs{
-			Created: time.Now().Add(-eightDays),
 			BoardConfigs: config.BoardConfigs{
 				ID:        "l",
 				Eightball: []string{},
@@ -180,9 +192,7 @@ func testBoardNoThreads(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err != nil {
-		t.Fatal(err)
-	}
+	patchBoardCreationTime(t, "l", time.Now().Add(-eightDays))
 
 	if err := deleteUnusedBoards(); err != nil {
 		t.Fatal(err)
@@ -195,7 +205,6 @@ func testBoardPruningDisabled(t *testing.T) {
 
 	err := InTransaction(false, func(tx *sql.Tx) error {
 		return WriteBoard(tx, BoardConfigs{
-			Created: time.Now().Add(-eightDays),
 			BoardConfigs: config.BoardConfigs{
 				ID:        "x",
 				Eightball: []string{},
@@ -205,6 +214,7 @@ func testBoardPruningDisabled(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	patchBoardCreationTime(t, "x", time.Now().Add(-eightDays))
 
 	if err := deleteUnusedBoards(); err != nil {
 		t.Fatal(err)
@@ -220,7 +230,6 @@ func testDeleteUnusedBoards(t *testing.T) {
 	for _, id := range [...]string{"a", "c"} {
 		err := InTransaction(false, func(tx *sql.Tx) error {
 			return WriteBoard(tx, BoardConfigs{
-				Created: expired,
 				BoardConfigs: config.BoardConfigs{
 					ID:        id,
 					Eightball: []string{},
@@ -230,6 +239,7 @@ func testDeleteUnusedBoards(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		patchBoardCreationTime(t, id, expired)
 	}
 
 	writeExpiringThreads(t, threadExpiryCases{
@@ -246,6 +256,7 @@ func testDeleteUnusedBoards(t *testing.T) {
 		deleted     bool
 	}{
 		{"deleted", "a", true},
+		{"deleted", "x", true},
 		{"untouched", "c", false},
 	}
 
@@ -286,8 +297,7 @@ func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
 		// Override bump time from trigger
 		_, err = sq.Update("threads").
 			SetMap(map[string]interface{}{
-				"replytime": unix,
-				"bumptime":  unix,
+				"bumptime": unix,
 			}).
 			Where("id = ?", op.id).
 			Exec()
