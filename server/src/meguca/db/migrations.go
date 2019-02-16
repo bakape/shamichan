@@ -9,6 +9,7 @@ import (
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
+	comp_sql "meguca/db/sql"
 	"meguca/util"
 	"strconv"
 	"time"
@@ -1061,6 +1062,17 @@ var migrations = []func(*sql.Tx) error{
 		})
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`alter table posts
+				alter column id set default nextval('post_id'),
+				alter column time set default extract(epoch from now())`,
+			`alter table threads
+				alter column id set default nextval('post_id'),
+				alter column replyTime set default extract(epoch from now()),
+				alter column bumpTime set default extract(epoch from now())`,
+		)
+	},
 }
 
 func createIndex(table, column string) string {
@@ -1113,7 +1125,7 @@ func dropFunctions(tx *sql.Tx, names ...string) (err error) {
 
 func loadSQL(tx *sql.Tx, paths ...string) (err error) {
 	for _, p := range paths {
-		_, err = tx.Exec(string(MustAsset(p + ".sql")))
+		_, err = tx.Exec(string(comp_sql.MustAsset(p + ".sql")))
 		if err != nil {
 			return
 		}

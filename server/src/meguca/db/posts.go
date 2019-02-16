@@ -24,12 +24,6 @@ func selectPost(id uint64, columns ...string) rowScanner {
 		QueryRow()
 }
 
-// GetPostOP retrieves the parent thread ID of the passed post
-func GetPostOP(id uint64) (op uint64, err error) {
-	err = selectPost(id, "op").Scan(&op)
-	return
-}
-
 // GetPostParenthood retrieves the board and OP of a post
 func GetPostParenthood(id uint64) (board string, op uint64, err error) {
 	err = selectPost(id, "board", "op").Scan(&board, &op)
@@ -61,12 +55,6 @@ func AllBoardCounter() (uint64, error) {
 	q := sq.Select("max(replyTime) + count(*)").
 		From("threads")
 	return getCounter(q)
-}
-
-// NewPostID reserves a new post ID
-func NewPostID(tx *sql.Tx) (id uint64, err error) {
-	err = tx.QueryRow(`select nextval('post_id')`).Scan(&id)
-	return id, err
 }
 
 // WritePost writes a post struct to the database. Only used in tests and
@@ -116,6 +104,35 @@ func WritePost(tx *sql.Tx, p Post) (err error) {
 	return
 }
 
+// Insert Post into thread and set its ID and creation time.
+// Thread OPs must have their post ID set to the thread ID.
+// Any images are to be inserted in a separate call.
+func InsertPost(tx *sql.Tx, p *Post) (err error) {
+	args := make([]interface{}, 0, 16)
+	args = append(args,
+		p.Editing, p.Board, p.OP, p.Body, p.Flag,
+		p.PosterID, p.Name, p.Trip, p.Auth, p.Password, p.IP)
+
+	q := sq.Insert("posts").
+		Columns(
+			"editing", "board", "op", "body", "flag",
+			"posterID", "name", "trip", "auth", "password", "ip",
+		)
+
+	if p.ID != 0 { // OP of a thread
+		q = q.Columns("id")
+		args = append(args, p.ID)
+	}
+
+	err = q.
+		Values(args...).
+		Suffix("returning id, time").
+		RunWith(tx).
+		QueryRow().
+		Scan(&p.ID, &p.Time)
+	return
+}
+
 // GetPostPassword retrieves a post's modification password
 func GetPostPassword(id uint64) (p []byte, err error) {
 	err = sq.Select("password").From("posts").Where("id = ?", id).Scan(&p)
@@ -125,7 +142,8 @@ func GetPostPassword(id uint64) (p []byte, err error) {
 	return
 }
 
-// SetPostCounter sets the post counter. Should only be used in tests.
+// SetPostCounter sets the post counter.
+// Should only be used in tests.
 func SetPostCounter(c uint64) error {
 	_, err := db.Exec(`SELECT setval('post_id', $1)`, c)
 	return err

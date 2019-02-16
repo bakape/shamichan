@@ -128,7 +128,7 @@ func (c *Client) appendRune(data []byte) (err error) {
 // embedded database. Requires locking of c.openPost.
 // n specifies the number of characters updated.
 func (c *Client) updateBody(msg []byte, n int) error {
-	c.feed.SetOpenBody(c.post.id, c.post.body, msg)
+	c.feed.SetOpenBody(c.post.id, string(c.post.body), msg)
 	c.incrementSpamScore(uint(n) * config.Get().CharScore)
 	return db.SetOpenBody(c.post.id, c.post.body)
 }
@@ -331,24 +331,6 @@ func (c *Client) insertImage(data []byte) (err error) {
 		return errTextOnly
 	}
 
-	img := common.Image{
-		Spoiler: req.Spoiler,
-	}
-	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
-		_img, err := getImage(tx, req.Token, req.Name, req.Spoiler)
-		if err != nil {
-			return err
-		}
-		img = *_img
-		c.post.hasImage = true
-		c.post.isSpoilered = req.Spoiler
-
-		return db.InsertImage(c.post.id, req.Token)
-	})
-	if err != nil {
-		return
-	}
-
 	name, err := formatImageName(req.Name)
 	if err != nil {
 		return
@@ -357,6 +339,8 @@ func (c *Client) insertImage(data []byte) (err error) {
 	if err != nil {
 		return
 	}
+	c.post.hasImage = true
+	c.post.isSpoilered = req.Spoiler
 	c.feed.InsertImage(c.post.id, req.Spoiler,
 		common.PrependMessageType(common.MessageInsertImage, msg))
 

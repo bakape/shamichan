@@ -235,13 +235,13 @@ func (f *Feed) InsertPost(p common.Post, msg []byte) {
 }
 
 // InsertImage inserts an image into an already allocated post
-func (f *Feed) InsertImage(id uint64, img common.Image, msg []byte) {
+func (f *Feed) InsertImage(id uint64, spoilered bool, msg []byte) {
 	f.insertImage <- imageInsertionMessage{
 		message: message{
 			id:  id,
 			msg: msg,
 		},
-		spoilered: img.Spoiler,
+		spoilered: spoilered,
 	}
 }
 

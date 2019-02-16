@@ -69,6 +69,10 @@ func (l *linkScanner) scanBytes(src []byte) (err error) {
 
 // Write post links to database
 func writeLinks(tx *sql.Tx, source uint64, links []common.Link) (err error) {
+	if len(links) == 0 {
+		return
+	}
+
 	q, err := tx.Prepare(
 		`insert into links (source, target)
 		values($1, $2)
@@ -77,7 +81,7 @@ func writeLinks(tx *sql.Tx, source uint64, links []common.Link) (err error) {
 		return
 	}
 
-	// Need to deduplicate to prevent primary key collisions
+	// Dedup to prevent needless I/O
 	written := make(map[uint64]bool, len(links))
 	for _, l := range links {
 		if written[l.ID] {

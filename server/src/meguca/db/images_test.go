@@ -101,6 +101,21 @@ func TestAllocateImage(t *testing.T) {
 			test.LogUnexpected(t, std, img)
 		}
 	})
+
+	// Minor cleanup test
+	t.Run("delete unused", func(t *testing.T) {
+		err := deleteUnusedImages()
+		if err != nil {
+			t.Fatal(err)
+		}
+		exists, err := ImageExists(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if exists {
+			t.Fatal("image not deleted")
+		}
+	})
 }
 
 func newImageToken(t *testing.T, sha1 string) (token string) {
@@ -133,7 +148,11 @@ func TestInsertImage(t *testing.T) {
 	checkHas(false)
 
 	std := assets.StdJPEG
-	buf, err := InsertImage(postID, token, std.Name, std.Spoiler)
+	var buf []byte
+	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+		buf, err = InsertImage(tx, postID, token, std.Name, std.Spoiler)
+		return
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,7 +181,7 @@ func insertSampleImage(t *testing.T) {
 	token := newImageToken(t, assets.StdJPEG.SHA1)
 	err := InTransaction(false, func(tx *sql.Tx) (err error) {
 		std := assets.StdJPEG
-		_, err = InsertImage(1, token, std.Name, std.Spoiler)
+		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler)
 		return
 	})
 	if err != nil {
@@ -205,7 +224,7 @@ func TestVideoPlaylist(t *testing.T) {
 	writeSampleThread(t)
 	token := newImageToken(t, std.SHA1)
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		_, err = InsertImage(1, token, std.Name, std.Spoiler)
+		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler)
 		return
 	})
 	if err != nil {

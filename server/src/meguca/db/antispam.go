@@ -20,7 +20,6 @@ var (
 )
 
 // Sync cache and DB spam scores
-//
 // Separated for testing.
 func syncSpamScores() (err error) {
 	spamMu.Lock()

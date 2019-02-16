@@ -19,6 +19,8 @@ type rowScanner interface {
 
 // InTransaction runs a function inside a transaction and handles comminting and rollback on error.
 // readOnly: the DBMS can optimise read-only transactions for better concurrency
+//
+// TODO: Get rid off readOnly param, once reader ported to output JSON
 func InTransaction(readOnly bool, fn func(*sql.Tx) error) (err error) {
 	tx, err := db.BeginTx(context.Background(), &sql.TxOptions{
 		ReadOnly: readOnly,

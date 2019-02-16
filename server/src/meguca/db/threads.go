@@ -155,18 +155,19 @@ func ValidateOP(id uint64, board string) (valid bool, err error) {
 }
 
 // InsertThread inserts a new thread into the database.
-func InsertThread(tx *sql.Tx, subject string, p Post) (err error) {
-	_, err = sq.Insert("threads").
-		Columns("board", "id", "replyTime", "bumpTime", "subject").
-		Values(p.Board, p.ID, p.Time, p.Time, subject).
+// Sets ID, OP and time on inserted post.
+func InsertThread(tx *sql.Tx, subject string, p *Post) (err error) {
+	err = sq.Insert("threads").
+		Columns("board", "subject").
+		Values(p.Board, subject).
+		Suffix("returning id").
 		RunWith(tx).
-		Exec()
+		Scan(&p.ID)
 	if err != nil {
 		return
 	}
-
-	err = WritePost(tx, p)
-	return
+	p.OP = p.ID
+	return InsertPost(tx, p)
 }
 
 // WriteThread writes a thread and it's OP to the database. Only used for tests.

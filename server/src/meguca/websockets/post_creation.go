@@ -12,10 +12,9 @@ import (
 	"meguca/parser"
 	"meguca/websockets/feeds"
 	"strings"
-	"time"
 	"unicode/utf8"
 
-	"github.com/bakape/mnemonics"
+	mnemonic "github.com/bakape/mnemonics"
 )
 
 var (
@@ -86,8 +85,8 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 			computePosterID(&post)
 		}
 
-		hasImage := !conf.TextOnly && req.Image.Token != "" && req.Image.Name != ""
-
+		hasImage := !conf.TextOnly && req.Image.Token != "" &&
+			req.Image.Name != ""
 		if hasImage {
 			img := req.Image
 			post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
@@ -270,7 +269,6 @@ func constructPost(
 	post = db.Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
-				Time: time.Now().Unix(),
 				Sage: req.Sage,
 				Body: req.Body,
 			},

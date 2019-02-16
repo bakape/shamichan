@@ -358,3 +358,39 @@ func TestDeleteBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRemoveIdentityInfo(t *testing.T) {
+	p := insertPost(t)
+
+	_, err := sq.Update("posts").
+		Set("time", time.Now().Add(-8*24*time.Hour).Unix()).
+		Where("id = ?", p.ID).
+		Exec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = removeIdentityInfo()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var (
+		ip sql.NullString
+		pw []byte
+	)
+	err = sq.Select("ip", "password").
+		From("posts").
+		Where("id = ?", p.ID).
+		QueryRow().
+		Scan(&ip, &pw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ip.String != "" {
+		t.Fatal(ip.String)
+	}
+	if pw != nil {
+		t.Fatal(pw)
+	}
+}

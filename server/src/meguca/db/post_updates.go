@@ -31,6 +31,7 @@ func ClosePost(id, op uint64, body string, links []common.Link,
 	}
 
 	if !IsTest {
+		// TODO: Propagate this with DB listener
 		err = common.ClosePost(id, op, links, com)
 		if err != nil {
 			return

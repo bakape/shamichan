@@ -96,8 +96,10 @@ func expireRows(tables ...string) {
 func removeIdentityInfo() error {
 	_, err := sq.Update("posts").
 		Set("ip", nil).
+		Set("password", nil).
 		Where(`time < extract(epoch from now() at time zone 'utc'
 			- interval '7 days')`).
+		Where("ip is not null").
 		Exec()
 	return err
 }

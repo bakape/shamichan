@@ -1,5 +1,3 @@
-//go:generate go-bindata -o sql.go --pkg db --nometadata -nocompress --prefix sql sql/...
-
 package db
 
 import (

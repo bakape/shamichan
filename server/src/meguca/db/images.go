@@ -127,7 +127,8 @@ func HasImage(id uint64) (has bool, err error) {
 
 // InsertImage insert and image into and existing open post and return image
 // JSON
-func InsertImage(postID uint64, token, name string, spoiler bool) (
+func InsertImage(tx *sql.Tx, postID uint64, token, name string, spoiler bool,
+) (
 	json []byte, err error,
 ) {
 	err = db.QueryRow(

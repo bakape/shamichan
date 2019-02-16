@@ -83,7 +83,7 @@ func cleanUpOpenPostBodies() (err error) {
 			case nil:
 			case sql.ErrNoRows:
 				err = nil
-				isOpen = false
+				isOpen = false // Treat missing as closed
 			default:
 				return
 			}
