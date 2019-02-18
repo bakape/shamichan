@@ -144,3 +144,16 @@ func SplitBoardAndID(msg string) (board string, id uint64, err error) {
 	}
 	return
 }
+
+// Try to extract an exception message, if err is *pq.Error
+func extractException(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	pqErr, ok := err.(*pq.Error)
+	if ok {
+		return pqErr.Message
+	}
+	return ""
+}

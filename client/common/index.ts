@@ -111,8 +111,8 @@ export interface ImageData {
 	size: number
 	// [width, height, thumbnail_width, thumbnail_height]
 	dims: [number, number, number, number]
-	MD5: string
-	SHA1: string
+	md5: string
+	sha1: string
 	name: string
 
 	// Added client-side

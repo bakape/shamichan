@@ -9,6 +9,7 @@ import (
 	"meguca/imager/assets"
 	"meguca/test"
 	"os"
+	"sync"
 	"testing"
 	"time"
 )
@@ -34,18 +35,15 @@ func setupImageDirs(t *testing.T) func() {
 
 func TestAllocateImage(t *testing.T) {
 	assertTableClear(t, "images")
-	defer setupImageDirs(t)()
+	cleanUp := setupImageDirs(t)
 
+	var wg sync.WaitGroup
+	wg.Add(3)
 	id := test.GenString(40)
 	var files [2]*os.File
 	for i, name := range [...]string{"sample", "thumb"} {
 		files[i] = test.OpenSample(t, name+".jpg")
 	}
-	defer func() {
-		for _, f := range files {
-			f.Close()
-		}
-	}()
 	std := common.ImageCommon{
 		SHA1:     id,
 		MD5:      test.GenString(22),
@@ -61,6 +59,15 @@ func TestAllocateImage(t *testing.T) {
 
 	// Assert files and remove them
 	t.Run("files", func(t *testing.T) {
+		t.Parallel()
+		defer wg.Done()
+
+		defer func() {
+			for _, f := range files {
+				f.Close()
+			}
+		}()
+
 		for i, path := range assets.GetFilePaths(id, common.JPEG, common.JPEG) {
 			buf, err := ioutil.ReadFile(path)
 			if err != nil {
@@ -83,6 +90,9 @@ func TestAllocateImage(t *testing.T) {
 
 	// Assert database record
 	t.Run("db row", func(t *testing.T) {
+		t.Parallel()
+		defer wg.Done()
+
 		var buf []byte
 		err := sq.Select("to_jsonb(i)").
 			From("images i").
@@ -102,13 +112,31 @@ func TestAllocateImage(t *testing.T) {
 		}
 	})
 
+	t.Run("get image", func(t *testing.T) {
+		t.Parallel()
+		defer wg.Done()
+
+		_, err := GetImage(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	// Minor cleanup test
 	t.Run("delete unused", func(t *testing.T) {
+		t.Parallel()
+		wg.Wait()
+		defer cleanUp()
+
 		err := deleteUnusedImages()
 		if err != nil {
 			t.Fatal(err)
 		}
-		exists, err := ImageExists(id)
+		var exists bool
+		err = InTransaction(false, func(tx *sql.Tx) (err error) {
+			exists, err = ImageExists(tx, id)
+			return
+		})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -149,14 +177,18 @@ func TestInsertImage(t *testing.T) {
 
 	std := assets.StdJPEG
 	var buf []byte
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
-		buf, err = InsertImage(tx, postID, token, std.Name, std.Spoiler)
-		return
-	})
+
+	insert := func() error {
+		return InTransaction(false, func(tx *sql.Tx) (err error) {
+			buf, err = InsertImage(tx, postID, token, std.Name, std.Spoiler)
+			return
+		})
+	}
+
+	err := insert()
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	checkHas(true)
 
 	type result struct {
@@ -173,6 +205,12 @@ func TestInsertImage(t *testing.T) {
 		ID:    postID,
 		Image: std,
 	})
+
+	// Test token is properly expended
+	err = insert()
+	if err != ErrInvalidToken {
+		t.Fatal(err)
+	}
 }
 
 func insertSampleImage(t *testing.T) {
@@ -247,7 +285,11 @@ func TestVideoPlaylist(t *testing.T) {
 func TestImageExists(t *testing.T) {
 	assertTableClear(t, "images")
 
-	exists, err := ImageExists(assets.StdJPEG.SHA1)
+	var exists bool
+	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+		exists, err = ImageExists(tx, assets.StdJPEG.SHA1)
+		return
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -255,7 +297,10 @@ func TestImageExists(t *testing.T) {
 
 	writeSampleImage(t)
 
-	exists, err = ImageExists(assets.StdJPEG.SHA1)
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
+		exists, err = ImageExists(tx, assets.StdJPEG.SHA1)
+		return
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

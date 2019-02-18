@@ -78,13 +78,13 @@ func WritePost(tx *sql.Tx, p Post) (err error) {
 	_, err = sq.Insert("posts").
 		Columns(
 			"editing", "spoiler", "id", "board", "op", "time", "body", "flag",
-			"posterID", "name", "trip", "auth", "password", "ip",
+			"name", "trip", "auth", "password", "ip",
 			"SHA1", "imageName",
 			"commands",
 		).
 		Values(
 			p.Editing, spoiler, p.ID, p.Board, p.OP, p.Time, p.Body, p.Flag,
-			p.PosterID, p.Name, p.Trip, p.Auth, p.Password, ip,
+			p.Name, p.Trip, p.Auth, p.Password, ip,
 			img, imgName,
 			commandRow(p.Commands),
 		).
@@ -111,12 +111,12 @@ func InsertPost(tx *sql.Tx, p *Post) (err error) {
 	args := make([]interface{}, 0, 16)
 	args = append(args,
 		p.Editing, p.Board, p.OP, p.Body, p.Flag,
-		p.PosterID, p.Name, p.Trip, p.Auth, p.Password, p.IP)
+		p.Name, p.Trip, p.Auth, p.Password, p.IP)
 
 	q := sq.Insert("posts").
 		Columns(
 			"editing", "board", "op", "body", "flag",
-			"posterID", "name", "trip", "auth", "password", "ip",
+			"name", "trip", "auth", "password", "ip",
 		)
 
 	if p.ID != 0 { // OP of a thread

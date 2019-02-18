@@ -59,6 +59,6 @@ type ImageCommon struct {
 	Size      int       `json:"size"`
 	Artist    string    `json:"artist"`
 	Title     string    `json:"title"`
-	MD5       string
-	SHA1      string
+	MD5       string    `json:"md5"`
+	SHA1      string    `json:"sha1"`
 }

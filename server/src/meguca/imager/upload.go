@@ -145,7 +145,7 @@ func validateUploader(r *http.Request) (err error) {
 // thumbnailed. If yes, generates and sends a new image allocation token to
 // the client.
 func UploadImageHash(w http.ResponseWriter, r *http.Request) {
-	err := func() (err error) {
+	token, err := func() (token string, err error) {
 		err = validateUploader(r)
 		if err != nil {
 			return
@@ -155,30 +155,28 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		hash := string(buf)
+		sha1 := string(buf)
 
-		_, err = db.GetImage(hash)
-		switch err {
-		case nil:
-		case sql.ErrNoRows:
-			return nil
-		default:
+		err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+			exists, err := db.ImageExists(tx, sha1)
+			if err != nil {
+				return
+			}
+			if exists {
+				token, err = db.NewImageToken(tx, sha1)
+			}
+			return
+		})
+		if err != nil {
 			return
 		}
-
 		err = incrementSpamScore(r)
-		if err != nil {
-			return
-		}
-		token, err := db.NewImageToken(hash)
-		if err != nil {
-			return
-		}
-		w.Write([]byte(token))
 		return
 	}()
 	if err != nil {
 		LogError(w, r, err)
+	} else if token != "" {
+		w.Write([]byte(token))
 	}
 }
 
@@ -242,10 +240,12 @@ func ParseUpload(req *http.Request) (string, error) {
 
 // Create a new thumbnail, commit its resources to the DB and filesystem, and
 // pass the image data to the client.
-func newThumbnail(f multipart.File, img common.ImageCommon,
-) (
+func newThumbnail(f multipart.File, SHA1 string) (
 	token string, err error,
 ) {
+	var img common.ImageCommon
+	img.SHA1 = SHA1
+
 	conf := config.Get()
 	thumb, err := processFile(f, &img, thumbnailer.Options{
 		MaxSourceDims: thumbnailer.Dims{
@@ -278,7 +278,7 @@ func newThumbnail(f multipart.File, img common.ImageCommon,
 		if err != nil && !db.IsConflictError(err) {
 			return
 		}
-		token, err = db.NewImageTokenTx(tx, img.SHA1)
+		token, err = db.NewImageToken(tx, img.SHA1)
 		return
 	})
 	return

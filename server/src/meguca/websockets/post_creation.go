@@ -2,7 +2,7 @@ package websockets
 
 import (
 	"database/sql"
-	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"meguca/auth"
 	"meguca/common"
@@ -13,8 +13,6 @@ import (
 	"meguca/websockets/feeds"
 	"strings"
 	"unicode/utf8"
-
-	mnemonic "github.com/bakape/mnemonics"
 )
 
 var (
@@ -74,43 +72,45 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 	// Must ensure image token usage is done atomically, as not to cause
 	// possible data races with unused image cleanup
 	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
-		post.ID, err = db.NewPostID(tx)
+		err = db.InsertThread(tx, subject, &post)
 		if err != nil {
 			return
 		}
 
-		post.OP = post.ID
-
-		if conf.PosterIDs {
-			computePosterID(&post)
-		}
-
-		hasImage := !conf.TextOnly && req.Image.Token != "" &&
-			req.Image.Name != ""
-		if hasImage {
-			img := req.Image
-			post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
+		if !conf.TextOnly && req.Image.Token != "" &&
+			req.Image.Name != "" {
+			err = insertImage(tx, req.Image, &post)
 			if err != nil {
 				return
 			}
 		}
-
-		err = db.InsertThread(tx, subject, post)
 		return
 	})
 
 	return
 }
 
-// Compute thread-level poster identification mnemonic and assign to post
-func computePosterID(p *db.Post) {
-	salt := config.Get().Salt
-	b := make([]byte, 0, len(salt)+len(p.IP)+8)
-	b = append(b, salt...)
-	b = append(b, p.IP...)
-	binary.LittleEndian.PutUint64(b, p.OP)
+// Insert image into a post on post creation
+func insertImage(tx *sql.Tx, req ImageRequest, p *db.Post) (err error) {
+	err = formatImageName(&req.Name)
+	if err != nil {
+		return
+	}
 
-	p.PosterID = mnemonic.FantasyName(b)
+	// TODO: Get rid of this redundant decoding once we switch to a JSON-only
+	// application server
+	buf, err := db.InsertImage(tx, p.ID, req.Token, req.Name, req.Spoiler)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(buf, &p.Image)
+	if err != nil {
+		return
+	}
+
+	p.Image.Name = req.Name
+	p.Image.Spoiler = req.Spoiler
+	return
 }
 
 // CreatePost creates a new post and writes it to the database.
@@ -155,33 +155,26 @@ func CreatePost(
 	}
 
 	post.OP = op
-	if conf.PosterIDs {
-		computePosterID(&post)
-	}
 
 	// Must ensure image token usage is done atomically, as not to cause
 	// possible data races with unused image cleanup
 	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
-		post.ID, err = db.NewPostID(tx)
+		err = db.InsertPost(tx, &post)
 		if err != nil {
 			return
 		}
 
 		if hasImage {
-			img := req.Image
-			post.Image, err = getImage(tx, img.Token, img.Name, img.Spoiler)
+			err = insertImage(tx, req.Image, &post)
 			if err != nil {
 				return
 			}
 		}
 
-		msg, err = common.EncodeMessage(common.MessageInsertPost, post.Post)
-		if err != nil {
-			return
-		}
-
-		return db.WritePost(tx, post, true, req.Sage)
+		return
 	})
+
+	msg, err = common.EncodeMessage(common.MessageInsertPost, post.Post)
 	return
 }
 
@@ -359,16 +352,16 @@ func constructPost(
 
 // Trim on the last dot in the file name, but also strip for .tar.gz and
 // .tar.xz as special cases.
-func formatImageName(name string) (string, error) {
-	if len(name) > 200 {
-		return "", errImageNameTooLong
+func formatImageName(name *string) (err error) {
+	if len(*name) > 200 {
+		return errImageNameTooLong
 	}
 
-	if i := strings.LastIndexByte(name, '.'); i != -1 {
-		name = name[:i]
-		if strings.HasSuffix(name, ".tar") {
-			name = name[:len(name)-4]
+	if i := strings.LastIndexByte(*name, '.'); i != -1 {
+		*name = (*name)[:i]
+		if strings.HasSuffix(*name, ".tar") {
+			*name = (*name)[:len(*name)-4]
 		}
 	}
-	return name, nil
+	return
 }

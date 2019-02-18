@@ -22,7 +22,6 @@ const (
 		where l.source = p.id
 	),
 	p.commands, p.imageName,
-	p.posterID,
 	i.*`
 
 	threadSelectsSQL = `t.sticky, t.board,
@@ -117,7 +116,7 @@ func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
 		&p.Editing, &p.Moderated, &p.spoiler, &p.Sage, &p.ID, &p.Time, &p.Body,
 		&p.Flag, &p.Name, &p.Trip, &p.Auth, &p.links, &p.commands,
-		&p.imageName, &p.PosterID,
+		&p.imageName,
 	}
 }
 

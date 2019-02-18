@@ -18,12 +18,7 @@ func TestStreamUpdates(t *testing.T) {
 	registerClient(t, cl, 1, "a")
 	go readListenErrors(t, cl, sv)
 
-	assertMessage(
-		t,
-		wcl,
-		`30{"recent":[1],"open":{},"moderation":{}}`,
-	)
-
+	assertMessage(t, wcl, `30{"recent":{},"moderation":{}}`)
 	assertMessage(t, wcl, "33[\"35{\\\"active\\\":0,\\\"total\\\":1}\"]")
 
 	// Send message

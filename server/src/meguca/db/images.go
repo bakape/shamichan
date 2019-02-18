@@ -57,7 +57,7 @@ func writeImageTx(tx *sql.Tx, i common.ImageCommon) (err error) {
 }
 
 // NewImageToken inserts a new image allocation token into the DB and returns
-// it's ID in a transacion
+// it's ID
 func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
 	expires := time.Now().Add(tokenTimeout).UTC()
 
@@ -83,6 +83,18 @@ func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
 			return
 		}
 	}
+}
+
+// ImageExists returns, if image exists
+func ImageExists(tx *sql.Tx, sha1 string) (exists bool, err error) {
+	err = sq.Select("1").
+		From("images").
+		Where("sha1 = ?", sha1).
+		Scan(&exists)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
+	return
 }
 
 // AllocateImage allocates an image's file resources to their respective served
@@ -131,14 +143,33 @@ func InsertImage(tx *sql.Tx, postID uint64, token, name string, spoiler bool,
 ) (
 	json []byte, err error,
 ) {
-	err = db.QueryRow(
+	err = tx.QueryRow(
 		`select insert_image($1::bigint,
 			$2::char(86),
 			$3::varchar(200),
 			$4::bool)`,
 		postID, token, name, spoiler).
 		Scan(&json)
+	if extractException(err) == "invalid image token" {
+		err = ErrInvalidToken
+	}
 	return
+}
+
+// GetImage retrieves a thumbnailed image record from the DB.
+//
+// Only used in tests.
+func GetImage(sha1 string) (img common.ImageCommon, err error) {
+	var scanner imageScanner
+	err = sq.Select("*").
+		From("images").
+		Where("SHA1 = ?", sha1).
+		QueryRow().
+		Scan(scanner.ScanArgs()...)
+	if err != nil {
+		return
+	}
+	return scanner.Val().ImageCommon, nil
 }
 
 // SpoilerImage spoilers an already allocated image
@@ -183,18 +214,6 @@ func VideoPlaylist(board string) (videos []Video, err error) {
 			return
 		},
 	)
-	return
-}
-
-// ImageExists returns, if image exists
-func ImageExists(sha1 string) (exists bool, err error) {
-	err = sq.Select("1").
-		From("images").
-		Where("sha1 = ?", sha1).
-		Scan(&exists)
-	if err == sql.ErrNoRows {
-		err = nil
-	}
 	return
 }
 

@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"hash"
 	"io"
-	"meguca/common"
 	"meguca/db"
 	"mime/multipart"
 	"sync"
@@ -91,15 +90,22 @@ func processRequest(file multipart.File, size int) (token string, err error) {
 	if err != nil {
 		return
 	}
-	img, err := db.GetImage(SHA1)
-	switch err {
-	case nil: // Already have a thumbnail
-		return db.NewImageToken(SHA1)
-	case sql.ErrNoRows:
-		img.SHA1 = SHA1
-		return newThumbnail(file, img)
-	default:
-		err = common.StatusError{err, 500}
+	var exists bool
+	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+		exists, err = db.ImageExists(tx, SHA1)
+		if err != nil {
+			return
+		}
+		if exists { // Already have a thumbnail
+			token, err = db.NewImageToken(tx, SHA1)
+		}
+		return
+	})
+	if err != nil {
 		return
 	}
+	if !exists {
+		token, err = newThumbnail(file, SHA1)
+	}
+	return
 }

@@ -732,11 +732,11 @@ var migrations = []func(*sql.Tx) error{
 			Columns(
 				"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
 				"flags", "NSFW",
-				"posterIDs", "rbText", "created", "defaultCSS", "title",
+				"rbText", "created", "defaultCSS", "title",
 				"notice", "rules", "eightball").
 			Values(
 				c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
-				c.Flags, c.NSFW, c.PosterIDs, c.RbText,
+				c.Flags, c.NSFW, c.RbText,
 				c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
 				pq.StringArray(c.Eightball)).
 			RunWith(tx).
@@ -1066,11 +1066,14 @@ var migrations = []func(*sql.Tx) error{
 		return execAll(tx,
 			`alter table posts
 				alter column id set default nextval('post_id'),
-				alter column time set default extract(epoch from now())`,
+				alter column time set default extract(epoch from now()),
+				drop column posterID`,
 			`alter table threads
 				alter column id set default nextval('post_id'),
 				alter column replyTime set default extract(epoch from now()),
 				alter column bumpTime set default extract(epoch from now())`,
+			`alter table boards
+				drop column posterIDs`,
 		)
 	},
 }

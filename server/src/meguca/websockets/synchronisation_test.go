@@ -226,7 +226,7 @@ func TestReclaimPost(t *testing.T) {
 	}
 	err = db.InTransaction(false, func(tx *sql.Tx) error {
 		for _, p := range posts {
-			err := db.WritePost(tx, p, false, false)
+			err := db.WritePost(tx, p)
 			if err != nil {
 				return err
 			}

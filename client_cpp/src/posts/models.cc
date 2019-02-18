@@ -39,8 +39,8 @@ Image::Image(nlohmann::json& j)
     size = j["size"];
     PARSE_OPT_STRING(artist);
     PARSE_OPT_STRING(title);
-    MD5 = j["MD5"];
-    SHA1 = j["SHA1"];
+    md5 = j["md5"];
+    sha1 = j["sha1"];
     name = j["name"];
 }
 
@@ -94,7 +94,7 @@ string Image::image_root() const
 string Image::thumb_path() const
 {
     std::ostringstream s;
-    s << image_root() << "/thumb/" << SHA1 << '.'
+    s << image_root() << "/thumb/" << sha1 << '.'
       << file_extentions.at(thumb_type);
     return s.str();
 }
@@ -102,7 +102,7 @@ string Image::thumb_path() const
 string Image::source_path() const
 {
     std::ostringstream s;
-    s << image_root() << "/src/" << SHA1 << '.'
+    s << image_root() << "/src/" << sha1 << '.'
       << file_extentions.at(file_type);
     return s.str();
 }
@@ -126,9 +126,6 @@ void Post::extend(nlohmann::json& j)
     PARSE_OPT_STRING(trip);
     PARSE_OPT_STRING(auth);
     PARSE_OPT_STRING(flag);
-    if (j.count("posterID")) {
-        poster_id = j["posterID"].get<string>();
-    }
 
     if (j.count("image")) {
         image = Image(j["image"]);

@@ -12,14 +12,14 @@ import { insertPost } from "../client"
 // consuming any incoming update messages.
 type SyncData = {
 	recent: number[] // Posts created within the last 15 minutes
-	open: { [id: number]: OpenPost } // Posts currently open
 	moderation: { [id: number]: ModerationEntry[] }
 }
 
-// State of an open post
-type OpenPost = {
-	hasImage: boolean
+// State of a post
+type PostState = {
+	hash_image: boolean
 	spoilered: boolean
+	closed: boolean
 	body: string
 }
 
@@ -47,36 +47,33 @@ export function synchronise() {
 	}
 }
 
-// Sync open posts to the state they are in on the server's update feed
+// Sync recent posts to the state they are in on the server's update feed
 // dispatcher
-async function syncOpenPost(
-	id: number,
-	{ hasImage, body, spoilered }: OpenPost,
-) {
+async function syncRecentPost(id: number, p: PostState) {
 	let model = posts.get(id)
 
 	if (!model) {
 		await fetchMissingPost(id)
 		model = posts.get(id)
-	} else if (model instanceof FormModel && model.editing) {
+	} else if (model instanceof FormModel) {
 		// Don't rerender post form text
-		model.inputBody = model.body = body
+		model.inputBody = model.body = p.body
 		model.view.onInput()
 		return
 	}
 
-	if (hasImage && !model.image) {
+	if (p.hash_image && !model.image) {
 		// Possible conflict due to deleted image
 		if (model.image = (await fetchPost(id)).image) {
 			model.view.renderImage(false)
 		}
 	}
-	if (spoilered && !model.image.spoiler) {
+	if (p.spoilered && !model.image.spoiler) {
 		model.image.spoiler = true
 		model.view.renderImage(false)
 	}
-	if (body) {
-		model.body = body
+	if (p.body) {
+		model.body = p.body
 	}
 	model.view.reparseBody()
 }
@@ -136,7 +133,7 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		}
 	}
 
-	const { open, recent, moderation } = data,
+	const { recent, moderation } = data,
 		proms: Promise<void>[] = []
 
 	for (let post of posts) {
@@ -144,16 +141,10 @@ handlers[message.synchronise] = async (data: SyncData) => {
 			proms.push(fetchUnclosed(post))
 		}
 	}
-	for (let key in open) {
+	for (let key in recent) {
 		const id = parseInt(key)
 		if (id >= minID) {
-			proms.push(syncOpenPost(id, open[key]))
-		}
-	}
-	for (let id of recent) {
-		// Missing posts, that are open, will be fetched by the loop above
-		if (id >= minID && !posts.get(id) && !open[id]) {
-			proms.push(fetchMissingPost(id))
+			proms.push(syncRecentPost(id, open[key]))
 		}
 	}
 	for (let id in moderation) {

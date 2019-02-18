@@ -63,8 +63,8 @@ struct Image {
     unsigned long size;
     std::optional<std::string> artist, // Media file artist meta info
         title; // Media file title meta info
-    std::string MD5, // MD5 hash of source file
-        SHA1, // SHA1 hash of source file
+    std::string md5, // md5 hash of source file
+        sha1, // sha1 hash of source file
         name; // Name the file was uploaded with
 
     Image() = default;

@@ -117,6 +117,9 @@ begin
 			spoiler = insert_image.spoiler
 		where id = post_id
 		returning posts.sha1 into image_id;
+	if image_id is null then
+		raise exception 'post not found';
+	end if;
 
 	select to_jsonb(i) into data
 		from images i

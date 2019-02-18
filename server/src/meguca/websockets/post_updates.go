@@ -331,11 +331,16 @@ func (c *Client) insertImage(data []byte) (err error) {
 		return errTextOnly
 	}
 
-	name, err := formatImageName(req.Name)
+	err = formatImageName(&req.Name)
 	if err != nil {
 		return
 	}
-	msg, err := db.InsertImage(c.post.id, req.Token, name, req.Spoiler)
+	var msg []byte
+	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+		msg, err = db.InsertImage(tx, c.post.id, req.Token, req.Name,
+			req.Spoiler)
+		return
+	})
 	if err != nil {
 		return
 	}
