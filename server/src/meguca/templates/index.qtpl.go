@@ -50,7 +50,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 	boards := config.GetBoards()
 
 	//line index.qtpl:12
-	qw422016.N().S(`<!doctype html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0"><meta name="application-name" content="meguca"><meta name="description" content="Realtime imageboard"><link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico"><title id="page-title">`)
+	qw422016.N().S(`<!doctype html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="application-name" content="meguca"><meta name="description" content="Realtime imageboard"><link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico"><title id="page-title">`)
 	//line index.qtpl:23
 	qw422016.N().S(`$$$</title><link rel="manifest" href="/assets/mobile/manifest.json">`)
 	//line index.qtpl:29

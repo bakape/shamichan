@@ -13,7 +13,7 @@
 	<!doctype html>
 	<head>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0">
+		<meta name="viewport" content="width=device-width">
 		<meta name="application-name" content="meguca">
 		<meta name="description" content="Realtime imageboard">
 		<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico">
