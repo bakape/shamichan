@@ -2,10 +2,9 @@ package server
 
 import (
 	"fmt"
+	"meguca/common"
 	"net/http"
 	"strings"
-
-	"meguca/common"
 
 	"github.com/badoux/goscraper"
 	"github.com/otium/ytdl"

@@ -108,14 +108,6 @@ func dialServer(t testing.TB, sv *httptest.Server) *websocket.Conn {
 	return wcl
 }
 
-func assertTableClear(t testing.TB, tables ...string) {
-	t.Helper()
-
-	if err := db.ClearTables(tables...); err != nil {
-		t.Fatal(err)
-	}
-}
-
 func readListenErrors(t *testing.T, cl *Client, sv *mockWSServer) {
 	t.Helper()
 

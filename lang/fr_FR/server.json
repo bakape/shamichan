@@ -292,10 +292,6 @@
 			"Étendre le message",
 			"Étendre le message cité au sein même de la publication"
 		],
-		"posterIDs": [
-			"ID",
-			"Affiche un code d'identification par sujet lié à l'adresse IP de l'utilisateur"
-		],
 		"pruneBoards": [
 			"Suppr. auto des planches",
 			"Supprime automatiquement les planches sans nouveaux messages depuis un certain nombre de jours"
@@ -476,7 +472,6 @@
 		"options": "Paramètres",
 		"ownNoBoards": "Vous ne possédez aucune planche",
 		"post": "Message",
-		"posterID": "ID de l'utilisateur",
 		"purgePost": "Purge post/image",
 		"reason": "Reason",
 		"searchTooltip": "Filtre les sujets par titre, message ou nom de planche (exemple : /pol/)",

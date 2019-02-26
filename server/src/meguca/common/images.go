@@ -42,7 +42,7 @@ var Extensions = map[uint8]string{
 
 // Image contains a post's image and thumbnail data
 type Image struct {
-	Spoiler bool `json:"spoiler,omitempty"`
+	Spoiler bool `json:"spoiler"`
 	ImageCommon
 	Name string `json:"name"`
 }
@@ -50,17 +50,15 @@ type Image struct {
 // ImageCommon contains the common data shared between multiple post referencing
 // the same image
 type ImageCommon struct {
-	Audio bool `json:"audio,omitempty"`
-	// Only used for file formats like OGG and MP4 that may or may not contain
-	// video
-	Video     bool      `json:"video,omitempty"`
+	Audio     bool      `json:"audio"`
+	Video     bool      `json:"video"`
 	FileType  uint8     `json:"fileType"`
 	ThumbType uint8     `json:"thumbType"`
-	Length    uint32    `json:"length,omitempty"`
+	Length    uint32    `json:"length"`
 	Dims      [4]uint16 `json:"dims"`
 	Size      int       `json:"size"`
-	Artist    string    `json:"artist,omitempty"`
-	Title     string    `json:"title,omitempty"`
-	MD5       string
-	SHA1      string
+	Artist    string    `json:"artist"`
+	Title     string    `json:"title"`
+	MD5       string    `json:"md5"`
+	SHA1      string    `json:"sha1"`
 }

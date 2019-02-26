@@ -2,8 +2,9 @@ package feeds
 
 import (
 	"meguca/common"
-	"meguca/db"
 	"time"
+
+	"github.com/go-playground/log"
 )
 
 type message struct {
@@ -12,24 +13,18 @@ type message struct {
 }
 
 type postCreationMessage struct {
-	common.Post
-	msg []byte
-}
-
-type postCloseMessage struct {
 	message
-	links    []common.Link
-	commands []common.Command
+	cachedPost
 }
 
 type imageInsertionMessage struct {
+	spoilered bool
 	message
-	common.Image
 }
 
 type postBodyModMessage struct {
 	message
-	body []byte
+	body string
 }
 
 type moderationMessage struct {
@@ -61,7 +56,7 @@ type Feed struct {
 	// Insert an image into an already allocated post
 	insertImage chan imageInsertionMessage
 	// Send message to close a post along with parsed post data
-	closePost chan postCloseMessage
+	closePost chan message
 	// Send message to spoiler image of a specific post
 	spoilerImage chan message
 	// Set body of an open post
@@ -74,11 +69,10 @@ type Feed struct {
 
 // Start read existing posts into cache and start main loop
 func (f *Feed) Start() (err error) {
-	thread, err := db.GetThread(f.id, 0)
+	f.cache, err = newThreadCache(f.id)
 	if err != nil {
 		return
 	}
-	f.cache = newThreadCache(thread)
 
 	go func() {
 		// Stop the timer, if there are no messages and resume on new ones.
@@ -92,11 +86,13 @@ func (f *Feed) Start() (err error) {
 			// Add client
 			case c := <-f.add:
 				f.addClient(c)
-				if c.NewProtocol() {
-					c.Send(f.cache.encodeThread(c.Last100()))
-				} else {
-					c.Send(f.cache.genSyncMessage())
+
+				msg, err := f.cache.getSyncMessage()
+				if err != nil {
+					log.Errorf("sync message: %s", err)
 				}
+				c.Send(msg)
+
 				f.sendIPCount()
 
 			// Remove client and close feed, if no clients left
@@ -120,95 +116,68 @@ func (f *Feed) Start() (err error) {
 				}
 
 			// Insert a new post, cache and propagate
-			case p := <-f.insertPost:
-				f.startIfPaused()
-				f.cache.Posts[p.ID] = p.Post
-				if p.msg != nil { // Post not being reclaimed by a DC-ed client
-					f.write(p.msg)
-					if f.cache.PostCtr <= common.BumpLimit {
-						f.cache.BumpTime = time.Now().Unix()
-					}
-					f.cache.PostCtr++
-					if p.Image != nil {
-						f.cache.ImageCtr++
-					}
-				} else {
-					f.cache.deleteMemoized(p.ID)
-				}
+			case msg := <-f.insertPost:
+				f.modifyPost(msg.message, func(p *cachedPost) {
+					*p = msg.cachedPost
+				})
 				f.sendIPCount()
-
-			// Close an open post
-			case msg := <-f.closePost:
-				f.startIfPaused()
-
-				p := f.cache.Posts[msg.id]
-				p.Editing = false
-				p.Links = msg.links
-				p.Commands = msg.commands
-
-				f.cache.Posts[msg.id] = p
-				f.write(msg.msg)
-				f.cache.deleteMemoized(msg.id)
 
 			// Set the body of an open post and propagate
 			case msg := <-f.setOpenBody:
-				f.startIfPaused()
-				p := f.cache.Posts[msg.id]
-				p.Body = string(msg.body)
-				f.cache.Posts[msg.id] = p
-				f.write(msg.msg)
-				f.cache.deleteMemoized(msg.id)
+				f.modifyPost(msg.message, func(p *cachedPost) {
+					p.Body = msg.body
+				})
 
 			case msg := <-f.insertImage:
-				f.startIfPaused()
-				p := f.cache.Posts[msg.id]
-				p.Image = &msg.Image
-				f.cache.Posts[msg.id] = p
-				f.cache.ImageCtr++
-				f.write(msg.msg)
-				f.cache.deleteMemoized(msg.id)
+				f.modifyPost(msg.message, func(p *cachedPost) {
+					p.HasImage = true
+					p.Spoilered = msg.spoilered
+				})
 
-			// Various post-related messages
 			case msg := <-f.spoilerImage:
-				f.startIfPaused()
-				p := f.cache.Posts[msg.id]
-				if p.Image != nil {
-					p.Image.Spoiler = true
-				}
-				f.cache.Posts[msg.id] = p
-				f.write(msg.msg)
-				f.cache.deleteMemoized(msg.id)
+				f.modifyPost(msg, func(p *cachedPost) {
+					p.Spoilered = true
+				})
+
+			case msg := <-f.closePost:
+				f.modifyPost(msg, func(p *cachedPost) {
+					p.Closed = true
+				})
 
 			// Posts being moderated
 			case msg := <-f.moderatePost:
-				f.startIfPaused()
-				p := f.cache.Posts[msg.id]
-				p.Moderated = true
-				p.Moderation = append(p.Moderation, msg.entry)
-				switch msg.entry.Type {
-				case common.DeleteImage:
-					if p.Image != nil {
-						p.Image = nil
-						f.cache.ImageCtr--
+				f.modifyPost(msg.message, func(p *cachedPost) {
+					switch msg.entry.Type {
+					case common.PurgePost:
+						p.Body = ""
+						fallthrough
+					case common.DeleteImage:
+						p.HasImage = false
+						p.Spoilered = false
+					case common.SpoilerImage:
+						p.Spoilered = true
 					}
-				case common.SpoilerImage:
-					if p.Image != nil {
-						p.Image.Spoiler = true
-					}
-				case common.LockThread:
-					f.cache.Locked = msg.entry.Data == "true"
-				case common.PurgePost:
-					p.Body = ""
-					p.Image = nil
-				}
-				f.cache.Posts[msg.id] = p
-				f.write(msg.msg)
-				f.cache.deleteMemoized(msg.id)
+				})
+				f.cache.Moderation[msg.id] = append(f.cache.Moderation[msg.id],
+					msg.entry)
 			}
 		}
 	}()
 
 	return
+}
+
+func (f *Feed) modifyPost(msg message, fn func(*cachedPost)) {
+	f.startIfPaused()
+
+	p := f.cache.Recent[msg.id]
+	fn(&p)
+	f.cache.Recent[msg.id] = p
+
+	if msg.msg != nil {
+		f.write(msg.msg)
+	}
+	f.cache.clearMemoized()
 }
 
 // Send a message to all listening clients
@@ -249,38 +218,38 @@ func (f *Feed) sendIPCount() {
 
 // InsertPost inserts a new post into the thread or reclaim an open post after disconnect
 // and propagate to listeners
-func (f *Feed) InsertPost(post common.Post, msg []byte) {
+func (f *Feed) InsertPost(p common.Post, msg []byte) {
 	f.insertPost <- postCreationMessage{
-		Post: post,
-		msg:  msg,
+		message: message{
+			id:  p.ID,
+			msg: msg,
+		},
+		cachedPost: cachedPost{
+			HasImage:  p.Image != nil,
+			Spoilered: p.Image != nil && p.Image.Spoiler,
+			Time:      p.Time,
+			Closed:    !p.Editing,
+			Body:      p.Body,
+		},
 	}
 }
 
 // InsertImage inserts an image into an already allocated post
-func (f *Feed) InsertImage(id uint64, img common.Image, msg []byte) {
+func (f *Feed) InsertImage(id uint64, spoilered bool, msg []byte) {
 	f.insertImage <- imageInsertionMessage{
 		message: message{
 			id:  id,
 			msg: msg,
 		},
-		Image: img,
+		spoilered: spoilered,
 	}
 }
 
 // ClosePost closes a feed's post
-func (f *Feed) ClosePost(
-	id uint64,
-	links []common.Link,
-	commands []common.Command,
-	msg []byte,
-) {
-	f.closePost <- postCloseMessage{
-		message: message{
-			id:  id,
-			msg: msg,
-		},
-		links:    links,
-		commands: commands,
+func (f *Feed) ClosePost(id uint64, msg []byte) {
+	f.closePost <- message{
+		id:  id,
+		msg: msg,
 	}
 }
 
@@ -302,7 +271,7 @@ func (f *Feed) _moderatePost(id uint64, msg []byte,
 }
 
 // SetOpenBody sets the body of an open post and send update message to clients
-func (f *Feed) SetOpenBody(id uint64, body, msg []byte) {
+func (f *Feed) SetOpenBody(id uint64, body string, msg []byte) {
 	f.setOpenBody <- postBodyModMessage{
 		message: message{
 			id:  id,

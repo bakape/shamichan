@@ -292,10 +292,6 @@
 			"Inline Post Link Expansion",
 			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
 		],
-		"posterIDs": [
-			"Poster IDs",
-			"Display thread-level IP-based poster identification mnemonics on posts"
-		],
 		"pruneBoards": [
 			"Prune boards",
 			"Delete boards that have not had any new posts for N days"
@@ -478,7 +474,6 @@
 		"options": "Voľby",
 		"ownNoBoards": "Nevlastníš žiadne dosky",
 		"post": "Plagát",
-		"posterID": "ID Plagáta",
 		"purgePost": "Purge post/image",
 		"reason": "Reason",
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",

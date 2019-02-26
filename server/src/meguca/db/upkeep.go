@@ -96,8 +96,10 @@ func expireRows(tables ...string) {
 func removeIdentityInfo() error {
 	_, err := sq.Update("posts").
 		Set("ip", nil).
+		Set("password", nil).
 		Where(`time < extract(epoch from now() at time zone 'utc'
 			- interval '7 days')`).
+		Where("ip is not null").
 		Exec()
 	return err
 }
@@ -178,7 +180,7 @@ func deleteUnusedBoards() error {
 				From("boards").
 				Where(`created < ?
 					and id != 'all'
-					and (select coalesce(max(replyTime), 0)
+					and (select coalesce(max(bumpTime), 0)
 							from threads
 							where board = boards.id
 						) < ?`,
@@ -210,12 +212,11 @@ func deleteUnusedBoards() error {
 }
 
 func deleteBoard(tx *sql.Tx, id, by, reason string) (err error) {
-	err = withTransaction(tx, sq.Delete("boards").Where("id = ?", id)).
-		Exec()
+	_, err = sq.Delete("boards").Where("id = ?", id).RunWith(tx).Exec()
 	if err != nil {
 		return
 	}
-	err = logModeration(tx, 0, auth.ModLogEntry{
+	err = logModeration(tx, auth.ModLogEntry{
 		ModerationEntry: common.ModerationEntry{
 			Type: common.DeleteBoard,
 			By:   by,
@@ -223,10 +224,7 @@ func deleteBoard(tx *sql.Tx, id, by, reason string) (err error) {
 		},
 		Board: "all",
 	})
-	if err != nil {
-		return
-	}
-	return notifyBoardUpdated(tx, id)
+	return
 }
 
 // Delete stale threads. Thread retention measured in a bumptime threshold, that
@@ -250,7 +248,7 @@ func deleteOldThreads() (err error) {
 			deleted     sql.NullBool
 		)
 		err = queryAll(
-			withTransaction(tx, sq.
+			sq.
 				Select(
 					"threads.id",
 					"bumpTime",
@@ -265,8 +263,8 @@ func deleteOldThreads() (err error) {
 						common.DeletePost),
 				).
 				From("threads").
-				Join("posts on threads.id = posts.id"),
-			),
+				Join("posts on threads.id = posts.id").
+				RunWith(tx),
 			func(r *sql.Rows) (err error) {
 				err = r.Scan(&id, &bumpTime, &postCtr, &deleted)
 				if err != nil {

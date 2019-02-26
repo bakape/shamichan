@@ -1,11 +1,10 @@
 package parser
 
 import (
-	"os"
-	"testing"
-
 	"meguca/config"
 	"meguca/db"
+	"os"
+	"testing"
 )
 
 func TestMain(m *testing.M) {
@@ -22,11 +21,4 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 	os.Exit(code)
-}
-
-func assertTableClear(t *testing.T, tables ...string) {
-	t.Helper()
-	if err := db.ClearTables(tables...); err != nil {
-		t.Fatal(err)
-	}
 }

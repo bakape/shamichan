@@ -55,7 +55,6 @@ type BoardPublic struct {
 	ForcedAnon bool `json:"forcedAnon"`
 	Flags      bool `json:"flags"`
 	NSFW       bool
-	PosterIDs  bool   `json:"posterIDs"`
 	RbText     bool   `json:"rbText"`
 	Pyu        bool   `json:"pyu"`
 	DefaultCSS string `json:"defaultCSS"`

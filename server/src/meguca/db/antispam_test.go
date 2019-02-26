@@ -109,4 +109,11 @@ func TestSpamScores(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+
+	t.Run("sync", func(t *testing.T) {
+		err := syncSpamScores()
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 }

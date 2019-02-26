@@ -128,6 +128,7 @@ func Write(SHA1 string, fileType, thumbType uint8, src, thumb io.ReadSeeker,
 ) {
 	paths := GetFilePaths(SHA1, fileType, thumbType)
 
+	// Write files in parallel
 	ch := make(chan error)
 	go func() {
 		if thumb == nil {
@@ -139,7 +140,7 @@ func Write(SHA1 string, fileType, thumbType uint8, src, thumb io.ReadSeeker,
 
 	for _, err := range [...]error{writeFile(paths[0], src), <-ch} {
 		switch {
-		// Ignore files already written by another thread or process
+		// Ignore files already written and not cleaned up for some reason
 		case err == nil, os.IsExist(err):
 		default:
 			return err

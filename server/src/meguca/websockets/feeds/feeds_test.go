@@ -1,9 +1,26 @@
 package feeds
 
 import (
-	. "meguca/test"
+	"meguca/db"
+	"meguca/test"
+	"meguca/test/test_db"
+	"os"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	close, err := db.LoadTestDB("feeds")
+	if err != nil {
+		panic(err)
+	}
+
+	code := m.Run()
+	err = close()
+	if err != nil {
+		panic(err)
+	}
+	os.Exit(code)
+}
 
 func TestWriteMultipleToBuffer(t *testing.T) {
 	t.Parallel()
@@ -14,6 +31,13 @@ func TestWriteMultipleToBuffer(t *testing.T) {
 
 	const std = "33[\"a\",\"b\"]"
 	if s := string(f.flush()); s != std {
-		LogUnexpected(t, std, s)
+		test.LogUnexpected(t, std, s)
 	}
+}
+
+func TestHandleModeration(t *testing.T) {
+	Clear()
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 }

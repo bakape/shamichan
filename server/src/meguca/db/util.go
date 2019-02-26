@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"meguca/common"
 	"strconv"
 	"strings"
 	"time"
@@ -13,66 +14,14 @@ import (
 	"github.com/lib/pq"
 )
 
-type executor interface {
-	Exec(args ...interface{}) (sql.Result, error)
-}
-
 type rowScanner interface {
 	Scan(dest ...interface{}) error
 }
 
-type tableScanner interface {
-	rowScanner
-	Next() bool
-	Err() error
-	Close() error
-}
-
-type queryer interface {
-	Query() (*sql.Rows, error)
-}
-
-// Allows easily running squirrel queries with transactions
-type transactionalQuery struct {
-	tx *sql.Tx
-	sq squirrel.Sqlizer
-}
-
-func withTransaction(tx *sql.Tx, q squirrel.Sqlizer) transactionalQuery {
-	return transactionalQuery{
-		tx: tx,
-		sq: q,
-	}
-}
-
-func (t transactionalQuery) Exec() (err error) {
-	sql, args, err := t.sq.ToSql()
-	if err != nil {
-		return
-	}
-	_, err = t.tx.Exec(sql, args...)
-	return
-}
-
-func (t transactionalQuery) Query() (r *sql.Rows, err error) {
-	sql, args, err := t.sq.ToSql()
-	if err != nil {
-		return
-	}
-	return t.tx.Query(sql, args...)
-}
-
-func (t transactionalQuery) QueryRow() (rs rowScanner, err error) {
-	sql, args, err := t.sq.ToSql()
-	if err != nil {
-		return
-	}
-	rs = t.tx.QueryRow(sql, args...)
-	return
-}
-
 // InTransaction runs a function inside a transaction and handles comminting and rollback on error.
 // readOnly: the DBMS can optimise read-only transactions for better concurrency
+//
+// TODO: Get rid off readOnly param, once reader ported to output JSON
 func InTransaction(readOnly bool, fn func(*sql.Tx) error) (err error) {
 	tx, err := db.BeginTx(context.Background(), &sql.TxOptions{
 		ReadOnly: readOnly,
@@ -90,7 +39,8 @@ func InTransaction(readOnly bool, fn func(*sql.Tx) error) (err error) {
 }
 
 // Run fn on all returned rows in a query
-func queryAll(q queryer, fn func(r *sql.Rows) error) (err error) {
+func queryAll(q squirrel.SelectBuilder, fn func(r *sql.Rows) error,
+) (err error) {
 	r, err := q.Query()
 	if err != nil {
 		return
@@ -116,7 +66,7 @@ func IsConflictError(err error) bool {
 
 // Listen assigns a function to listen to Postgres notifications on a channel
 func Listen(event string, fn func(msg string) error) (err error) {
-	if IsTest {
+	if common.IsTest {
 		return
 	}
 
@@ -177,21 +127,61 @@ func SetGeoMD5(hash string) error {
 	return err
 }
 
+// PostgreSQL notification message parse error
+type ErrMsgParse string
+
+func (e ErrMsgParse) Error() string {
+	return fmt.Sprintf("unparsable message: `%s`", string(e))
+}
+
 // Split message containing a board and post/thread ID
 func SplitBoardAndID(msg string) (board string, id uint64, err error) {
-	setErr := func() {
-		err = fmt.Errorf("unparsable message: '%s'", msg)
-	}
-
 	split := strings.Split(msg, ",")
 	if len(split) != 2 {
-		setErr()
-		return
+		goto fail
 	}
 	board = split[0]
 	id, err = strconv.ParseUint(split[1], 10, 64)
 	if err != nil {
-		setErr()
+		goto fail
 	}
 	return
+
+fail:
+	err = ErrMsgParse(msg)
+	return
+}
+
+// Split message containing a list of uint64 numbers.
+// Returns error, if message did not contain n integers.
+func SplitUint64s(msg string, n int) (arr []uint64, err error) {
+	parts := strings.Split(msg, ",")
+	if len(parts) != n {
+		goto fail
+	}
+	for _, p := range parts {
+		i, err := strconv.ParseUint(p, 10, 64)
+		if err != nil {
+			goto fail
+		}
+		arr = append(arr, i)
+	}
+	return
+
+fail:
+	err = ErrMsgParse(msg)
+	return
+}
+
+// Try to extract an exception message, if err is *pq.Error
+func extractException(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	pqErr, ok := err.(*pq.Error)
+	if ok {
+		return pqErr.Message
+	}
+	return ""
 }

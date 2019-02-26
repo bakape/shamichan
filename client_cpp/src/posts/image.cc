@@ -45,7 +45,7 @@ Node PostView::render_figcaption()
     auto& ext = file_extentions.at(img.file_type);
     ostringstream name, url;
     name << escape(img.name) << '.' << ext;
-    url << "/assets/images/src/" << img.SHA1 << '.' << ext;
+    url << "/assets/images/src/" << img.sha1 << '.' << ext;
     n.children.push_back({ "a",
         { { "href", url.str() }, { "download", name.str() } }, name.str() });
 
@@ -107,7 +107,7 @@ Node PostView::render_image_search()
         typ = img.thumb_type;
     }
     ostringstream unencoded, url;
-    unencoded << location_origin << "/assets/images/" << root << '/' << img.SHA1
+    unencoded << location_origin << "/assets/images/" << root << '/' << img.sha1
               << '.' << file_extentions.at(typ);
     url << url_encode(unencoded.str());
 

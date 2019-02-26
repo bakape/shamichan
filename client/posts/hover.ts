@@ -225,7 +225,7 @@ function renderImagePreview(event: MouseEvent) {
 
 	const el = document.createElement(tag)
 	setAttrs(el, {
-		src: sourcePath(post.image.SHA1, post.image.fileType),
+		src: sourcePath(post.image.sha1, post.image.fileType),
 		autoplay: "",
 		loop: "",
 	})

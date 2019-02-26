@@ -81,7 +81,7 @@ export default class UploadForm extends View<Post> {
         if (location.protocol === "https:"
             || location.hostname === "localhost"
         ) {
-            // First send a an SHA1 hash to the server, in case it already has
+            // First send a an sha1 hash to the server, in case it already has
             // the file thumbnailed and we don't need to upload.
             const r = new FileReader();
             r.readAsArrayBuffer(file);

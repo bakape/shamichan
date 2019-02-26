@@ -5,6 +5,7 @@ import (
 	"meguca/common"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"meguca/websockets/feeds"
 	"testing"
 	"time"
@@ -87,9 +88,9 @@ func TestAppendBodyTooLong(t *testing.T) {
 
 func TestAppendRune(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 	writeSamplePost(t)
 
 	sv := newWSServer(t)
@@ -121,7 +122,7 @@ func awaitFlush() {
 func writeSamplePost(t testing.TB) {
 	t.Helper()
 	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WritePost(tx, samplePost, false, false)
+		return db.WritePost(tx, samplePost)
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -152,9 +153,9 @@ func assertBody(t *testing.T, id uint64, body string) {
 
 func BenchmarkAppend(b *testing.B) {
 	feeds.Clear()
-	assertTableClear(b, "boards")
-	writeSampleBoard(b)
-	writeSampleThread(b)
+	test_db.ClearTables(b, "boards")
+	test_db.WriteSampleBoard(b)
+	test_db.WriteSampleThread(b)
 	writeSamplePost(b)
 
 	sv := newWSServer(b)
@@ -179,9 +180,9 @@ func BenchmarkAppend(b *testing.B) {
 
 func TestClosePostWithHashCommand(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 
 	post := db.Post{
 		StandalonePost: common.StandalonePost{
@@ -193,7 +194,7 @@ func TestClosePostWithHashCommand(t *testing.T) {
 		},
 	}
 	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WritePost(tx, post, false, false)
+		return db.WritePost(tx, post)
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -233,9 +234,9 @@ func TestClosePostWithHashCommand(t *testing.T) {
 
 func TestClosePostWithLinks(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 
 	thread := db.Thread{
 		ID:    21,
@@ -249,7 +250,7 @@ func TestClosePostWithLinks(t *testing.T) {
 			OP: 21,
 		},
 	}
-	if err := db.WriteThread(nil, thread, op); err != nil {
+	if err := db.WriteThread(thread, op); err != nil {
 		t.Fatal(err)
 	}
 
@@ -276,7 +277,7 @@ func TestClosePostWithLinks(t *testing.T) {
 	}
 	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		for _, p := range posts {
-			if err := db.WritePost(tx, p, false, false); err != nil {
+			if err := db.WritePost(tx, p); err != nil {
 				return err
 			}
 		}
@@ -318,9 +319,9 @@ func TestClosePostWithLinks(t *testing.T) {
 
 func TestBackspace(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 	writeSamplePost(t)
 
 	sv := newWSServer(t)
@@ -346,9 +347,9 @@ func TestBackspace(t *testing.T) {
 
 func TestClosePost(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 	writeSamplePost(t)
 
 	sv := newWSServer(t)
@@ -445,8 +446,8 @@ func TestSpliceValidityChecks(t *testing.T) {
 
 func TestSplice(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
 	setBoardConfigs(t, false)
 
 	const longSplice = `Never gonna give you up Never gonna let you down Never gonna run around and desert you Never gonna make you cry Never gonna say goodbye Never gonna tell a lie and hurt you `
@@ -527,8 +528,8 @@ func TestSplice(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			assertTableClear(t, "threads")
-			writeSampleThread(t)
+			test_db.ClearTables(t, "threads")
+			test_db.WriteSampleThread(t)
 
 			post := db.Post{
 				StandalonePost: common.StandalonePost{
@@ -542,7 +543,7 @@ func TestSplice(t *testing.T) {
 				},
 			}
 			err := db.InTransaction(false, func(tx *sql.Tx) error {
-				return db.WritePost(tx, post, false, false)
+				return db.WritePost(tx, post)
 			})
 			if err != nil {
 				t.Fatal(err)
@@ -580,9 +581,9 @@ func TestSplice(t *testing.T) {
 
 func TestCloseOldOpenPost(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 
 	then := time.Now().Add(time.Minute * -30).Unix()
 	post := db.Post{
@@ -596,7 +597,7 @@ func TestCloseOldOpenPost(t *testing.T) {
 		},
 	}
 	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WritePost(tx, post, false, false)
+		return db.WritePost(tx, post)
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -661,9 +662,9 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 
 func TestInsertImage(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards", "images")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards", "images")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 	writeSampleImage(t)
 	setBoardConfigs(t, false)
 
@@ -677,13 +678,17 @@ func TestInsertImage(t *testing.T) {
 		},
 	}
 	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WritePost(tx, post, false, false)
+		return db.WritePost(tx, post)
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	token, err := db.NewImageToken(stdJPEG.SHA1)
+	var token string
+	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+		token, err = db.NewImageToken(tx, stdJPEG.SHA1)
+		return
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

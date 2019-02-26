@@ -9,6 +9,7 @@ import (
 	"meguca/auth"
 	"meguca/common"
 	"meguca/config"
+	comp_sql "meguca/db/sql"
 	"meguca/util"
 	"strconv"
 	"time"
@@ -135,10 +136,11 @@ var migrations = []func(*sql.Tx) error{
 		if err != nil {
 			return
 		}
-		q := sq.Insert("main").
+		_, err = sq.Insert("main").
 			Columns("id", "val").
-			Values("config", string(data))
-		err = withTransaction(tx, q).Exec()
+			Values("config", string(data)).
+			RunWith(tx).
+			Exec()
 		if err != nil {
 			return
 		}
@@ -621,10 +623,10 @@ var migrations = []func(*sql.Tx) error{
 			id    uint64
 		)
 		err = queryAll(
-			withTransaction(tx,
-				sq.Select("id", "commands").
-					From("posts").
-					Where("commands is not null")),
+			sq.Select("id", "commands").
+				From("posts").
+				Where("commands is not null").
+				RunWith(tx),
 			func(r *sql.Rows) (err error) {
 				var com commandRow
 				err = r.Scan(&id, &com)
@@ -671,7 +673,8 @@ var migrations = []func(*sql.Tx) error{
 		return
 	},
 	func(tx *sql.Tx) error {
-		return withTransaction(tx, sq.Delete("main").Where("id = 'pyu'")).Exec()
+		_, err := sq.Delete("main").Where("id = 'pyu'").RunWith(tx).Exec()
+		return err
 	},
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
@@ -725,25 +728,19 @@ var migrations = []func(*sql.Tx) error{
 			Created:      time.Now().UTC(),
 		}
 
-		err = withTransaction(tx, sq.Insert("boards").
+		_, err = sq.Insert("boards").
 			Columns(
 				"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
 				"flags", "NSFW",
-				"posterIDs", "rbText", "created", "defaultCSS", "title", "notice",
-				"rules", "eightball").
+				"rbText", "created", "defaultCSS", "title",
+				"notice", "rules", "eightball").
 			Values(
 				c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
-				c.Flags, c.NSFW, c.PosterIDs, c.RbText,
+				c.Flags, c.NSFW, c.RbText,
 				c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
-				pq.StringArray(c.Eightball))).
+				pq.StringArray(c.Eightball)).
+			RunWith(tx).
 			Exec()
-
-		if err != nil {
-			return
-		}
-
-		err = notifyBoardUpdated(tx, c.ID)
-
 		if err != nil {
 			return
 		}
@@ -852,13 +849,12 @@ var migrations = []func(*sql.Tx) error{
 		return
 	},
 	func(tx *sql.Tx) (err error) {
-		err = withTransaction(tx, sq.Delete("main").Where("id = 'roulette'")).Exec()
-
+		_, err = sq.Delete("main").Where("id = 'roulette'").RunWith(tx).Exec()
 		if err != nil {
 			return
 		}
-
-		return withTransaction(tx, sq.Delete("main").Where("id = 'rcount'")).Exec()
+		_, err = sq.Delete("main").Where("id = 'rcount'").RunWith(tx).Exec()
+		return
 	},
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(
@@ -1024,32 +1020,61 @@ var migrations = []func(*sql.Tx) error{
 		)
 	},
 	func(tx *sql.Tx) error {
-		return execAll(tx,
-			loadSQL("triggers/notify_thread_post_count"),
-			`create trigger notify_thread_post_count
-			after insert
-			on posts
-			for each row
-			execute procedure notify_thread_post_count()`,
-
-			loadSQL("triggers/notify_thread_deleted"),
-			`create trigger notify_thread_deleted
-			after delete
-			on threads
-			for each row
-			execute procedure notify_thread_deleted()`,
-		)
+		// Moved
+		return nil
 	},
 	func(tx *sql.Tx) error {
-		// Apply function changes
-		return execAll(tx,
-			loadSQL("triggers/notify_thread_post_count"),
-			loadSQL("triggers/notify_thread_deleted"),
-		)
+		// Moved
+		return nil
 	},
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(`alter table images drop column apng`)
 		return
+	},
+	func(tx *sql.Tx) (err error) {
+		// Drop legacy functions and triggers
+		err = dropFunctions(tx, "notify_thread_post_count",
+			"notify_thread_deleted")
+		if err != nil {
+			return
+		}
+
+		err = registerFunctions(tx, "post_count", "post_op", "bump_thread",
+			"use_image_token", "insert_image")
+		if err != nil {
+			return
+		}
+
+		_, err = tx.Exec("alter table mod_log rename column id to post_id")
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec("alter table mod_log add column id serial primary key")
+		if err != nil {
+			return
+		}
+
+		err = registerTriggers(tx, map[string][]string{
+			"boards":  {"insert", "update", "delete"},
+			"mod_log": {"insert"},
+			"posts":   {"insert", "update"},
+			"threads": {"insert", "update", "delete"},
+		})
+		return
+	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`alter table posts
+				alter column id set default nextval('post_id'),
+				alter column time set default extract(epoch from now()),
+				drop column posterID`,
+			`alter table threads
+				alter column id set default nextval('post_id'),
+				alter column replyTime set default extract(epoch from now()),
+				alter column bumpTime set default extract(epoch from now())`,
+			`alter table boards
+				drop column posterIDs`,
+		)
 	},
 }
 
@@ -1058,39 +1083,81 @@ func createIndex(table, column string) string {
 		column)
 }
 
-func loadSQL(path string) string {
-	return string(MustAsset(path + ".sql"))
+// Register triggers and trigger functions for each board in triggers
+func registerTriggers(tx *sql.Tx, triggers map[string][]string) (err error) {
+	for table, events := range triggers {
+		err = loadSQL(tx, "triggers/"+table)
+		if err != nil {
+			return
+		}
+		for _, e := range events {
+			name := fmt.Sprintf(`on_%s_%s`, table, e)
+			_, err = tx.Exec(fmt.Sprintf(
+				`create trigger %s
+					after %s on %s
+					for each row
+					execute procedure %s()`,
+				name, e, table, name))
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
+func registerFunctions(tx *sql.Tx, files ...string) (err error) {
+	for _, f := range files {
+		err = loadSQL(tx, "functions/"+f)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func dropFunctions(tx *sql.Tx, names ...string) (err error) {
+	for _, n := range names {
+		_, err = tx.Exec(fmt.Sprintf("drop function if exists %s cascade", n))
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func loadSQL(tx *sql.Tx, paths ...string) (err error) {
+	for _, p := range paths {
+		_, err = tx.Exec(string(comp_sql.MustAsset(p + ".sql")))
+		if err != nil {
+			return
+		}
+	}
+	return
 }
 
 // Run migrations from version `from`to version `to`
 func runMigrations(from, to int) (err error) {
-	var tx *sql.Tx
 	for i := from; i < to; i++ {
-		if !IsTest {
+		if !common.IsTest {
 			log.Infof("upgrading database to version %d", i+1)
 		}
-		tx, err = db.Begin()
-		if err != nil {
+		err = InTransaction(false, func(tx *sql.Tx) (err error) {
+			err = migrations[i](tx)
+			if err != nil {
+				return
+			}
+
+			// Write new version number
+			_, err = tx.Exec(
+				`update main set val = $1 where id = 'version'`,
+				i+1,
+			)
 			return
-		}
-
-		err = migrations[i](tx)
+		})
 		if err != nil {
-			return rollBack(tx, err)
-		}
-
-		// Write new version number
-		_, err = tx.Exec(
-			`update main set val = $1 where id = 'version'`,
-			i+1,
-		)
-		if err != nil {
-			return rollBack(tx, err)
-		}
-
-		err = tx.Commit()
-		if err != nil {
-			return
+			return fmt.Errorf("migration error: %d -> %d: %s: %#v",
+				i, i+1, err, err)
 		}
 	}
 	return

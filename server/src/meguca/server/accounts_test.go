@@ -8,6 +8,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -54,7 +55,7 @@ func genSession() string {
 }
 
 func TestIsLoggedIn(t *testing.T) {
-	assertTableClear(t, "accounts")
+	test_db.ClearTables(t, "accounts")
 
 	hash, err := auth.BcryptHash(samplePassword, 3)
 	if err != nil {
@@ -125,7 +126,7 @@ func assertError(
 }
 
 func TestNotLoggedIn(t *testing.T) {
-	assertTableClear(t, "accounts", "boards")
+	test_db.ClearTables(t, "accounts", "boards")
 	writeSampleBoard(t)
 
 	fns := [...]http.HandlerFunc{servePrivateServerConfigs, changePassword}
@@ -144,7 +145,7 @@ func TestNotLoggedIn(t *testing.T) {
 }
 
 func TestChangePassword(t *testing.T) {
-	assertTableClear(t, "accounts")
+	test_db.ClearTables(t, "accounts")
 	writeSampleUser(t)
 	config.Set(config.Configs{})
 
@@ -211,7 +212,7 @@ func TestChangePassword(t *testing.T) {
 }
 
 func TestRegistrationValidations(t *testing.T) {
-	assertTableClear(t, "accounts")
+	test_db.ClearTables(t, "accounts")
 
 	cases := [...]struct {
 		name, id, password string
@@ -311,7 +312,7 @@ func assertLoginNoCookie(t *testing.T, userID, session string, loggedIn bool) {
 }
 
 func TestLogin(t *testing.T) {
-	assertTableClear(t, "accounts")
+	test_db.ClearTables(t, "accounts")
 
 	const (
 		id       = "123"
@@ -370,7 +371,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestLogout(t *testing.T) {
-	assertTableClear(t, "accounts")
+	test_db.ClearTables(t, "accounts")
 	id, tokens := writeSampleSessions(t)
 
 	cases := [...]struct {
@@ -434,7 +435,7 @@ func writeSampleSessions(t *testing.T) (string, [2]string) {
 }
 
 func TestLogoutAll(t *testing.T) {
-	assertTableClear(t, "accounts")
+	test_db.ClearTables(t, "accounts")
 	id, tokens := writeSampleSessions(t)
 
 	rec, req := newJSONPair(t, "/api/logout-all", nil)

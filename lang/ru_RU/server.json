@@ -292,10 +292,6 @@
 			"Раскрытие ссылок на посты",
 			"Раскрывать ссылки на посты по клику, иначе переместиться к указанному посту"
 		],
-		"posterIDs": [
-			"Poster IDs",
-			"Display thread-level IP-based poster identification mnemonics on posts"
-		],
 		"pruneBoards": [
 			"Автоочистка досок",
 			"Удалять доски на которых давно не было постов"
@@ -478,7 +474,6 @@
 		"options": "Опции",
 		"ownNoBoards": "Вы не владеете ни одной доской",
 		"post": "Пост",
-		"posterID": "ID постера",
 		"purgePost": "Purge post/image",
 		"reason": "Reason",
 		"searchTooltip": "Фильтровать треды по теме, содержанию и имени доски (обрамлённую бэкслэшами), допустимы регулярные выражения",

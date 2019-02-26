@@ -30,9 +30,9 @@ func (b Board) Less(i, j int) bool {
 // its opening post data and its contained posts. The composite type itself is
 // not stored in the database.
 type Thread struct {
-	Abbrev    bool   `json:"abbrev,omitempty"`
-	Sticky    bool   `json:"sticky,omitempty"`
-	Locked    bool   `json:"locked,omitempty"`
+	Abbrev    bool   `json:"abbrev"`
+	Sticky    bool   `json:"sticky"`
+	Locked    bool   `json:"locked"`
 	PostCtr   uint32 `json:"postCtr"`
 	ImageCtr  uint32 `json:"imageCtr"`
 	ReplyTime int64  `json:"replyTime"`
@@ -46,21 +46,20 @@ type Thread struct {
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {
-	Editing    bool              `json:"editing,omitempty"`
+	Editing    bool              `json:"editing"`
 	Moderated  bool              `json:"-"`
-	Sage       bool              `json:"sage,omitempty"`
+	Sage       bool              `json:"sage"`
 	ID         uint64            `json:"id"`
 	Time       int64             `json:"time"`
 	Body       string            `json:"body"`
-	Flag       string            `json:"flag,omitempty"`
-	PosterID   string            `json:"posterID,omitempty"`
-	Name       string            `json:"name,omitempty"`
-	Trip       string            `json:"trip,omitempty"`
-	Auth       string            `json:"auth,omitempty"`
-	Image      *Image            `json:"image,omitempty"`
-	Links      []Link            `json:"links,omitempty"`
-	Commands   []Command         `json:"commands,omitempty"`
-	Moderation []ModerationEntry `json:"moderaion,omitempty"`
+	Flag       string            `json:"flag"`
+	Name       string            `json:"name"`
+	Trip       string            `json:"trip"`
+	Auth       string            `json:"auth"`
+	Image      *Image            `json:"image"`
+	Links      []Link            `json:"links"`
+	Commands   []Command         `json:"commands"`
+	Moderation []ModerationEntry `json:"moderaion"`
 }
 
 // Return if post has been deleted by staff

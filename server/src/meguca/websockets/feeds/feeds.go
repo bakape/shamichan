@@ -5,9 +5,9 @@ package feeds
 
 import (
 	"errors"
-	"sync"
-
 	"meguca/common"
+	"meguca/db"
+	"sync"
 )
 
 // Contains and manages all active update feeds
@@ -21,7 +21,6 @@ var feeds = feedMap{
 func init() {
 	common.SendTo = SendTo
 	common.ClosePost = ClosePost
-	common.PropagateModeration = PropagateModeration
 }
 
 // Container for managing client<->update-feed assignment and interaction
@@ -48,7 +47,7 @@ func addToFeed(id uint64, board string, c common.Client) (
 				id:            id,
 				send:          make(chan []byte),
 				insertPost:    make(chan postCreationMessage),
-				closePost:     make(chan postCloseMessage),
+				closePost:     make(chan message),
 				spoilerImage:  make(chan message),
 				moderatePost:  make(chan moderationMessage),
 				setOpenBody:   make(chan postBodyModMessage),
@@ -117,13 +116,14 @@ func removeFromFeed(id uint64, board string, c common.Client) {
 
 // SendTo sends a message to a feed, if it exists
 func SendTo(id uint64, msg []byte) {
-	sendIfExists(id, func(f *Feed) {
+	sendIfExists(id, func(f *Feed) error {
 		f.Send(msg)
+		return nil
 	})
 }
 
 // Run a send function of a feed, if it exists
-func sendIfExists(id uint64, fn func(*Feed)) error {
+func sendIfExists(id uint64, fn func(*Feed) error) error {
 	feeds.mu.RLock()
 	defer feeds.mu.RUnlock()
 
@@ -136,8 +136,9 @@ func sendIfExists(id uint64, fn func(*Feed)) error {
 // InsertPostInto inserts a post into a tread feed, if it exists. Only use for
 // already closed posts.
 func InsertPostInto(post common.StandalonePost, msg []byte) {
-	sendIfExists(post.OP, func(f *Feed) {
+	sendIfExists(post.OP, func(f *Feed) error {
 		f.InsertPost(post.Post, msg)
+		return nil
 	})
 }
 
@@ -146,8 +147,8 @@ func ClosePost(id, op uint64, links []common.Link, commands []common.Command,
 ) (err error) {
 	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
 		ID       uint64           `json:"id"`
-		Links    []common.Link    `json:"links,omitempty"`
-		Commands []common.Command `json:"commands,omitempty"`
+		Links    []common.Link    `json:"links"`
+		Commands []common.Command `json:"commands"`
 	}{
 		ID:       id,
 		Links:    links,
@@ -157,28 +158,45 @@ func ClosePost(id, op uint64, links []common.Link, commands []common.Command,
 		return
 	}
 
-	sendIfExists(op, func(f *Feed) {
-		f.ClosePost(id, links, commands, msg)
+	sendIfExists(op, func(f *Feed) error {
+		f.ClosePost(id, msg)
+		return nil
 	})
 
 	return
 }
 
-func PropagateModeration(id, op uint64, entry common.ModerationEntry,
-) (err error) {
-	msg, err := common.EncodeMessage(common.MessageModeratePost, struct {
-		ID uint64 `json:"id"`
-		common.ModerationEntry
-	}{id, entry})
+// Initialize internal runtime
+func Init() (err error) {
+	return db.Listen("post_moderated", func(msg string) (err error) {
+		return handlePostModeration(msg)
+	})
+}
+
+// Separate function for testing
+func handlePostModeration(msg string) (err error) {
+	arr, err := db.SplitUint64s(msg, 2)
 	if err != nil {
 		return
 	}
+	op, logID := arr[0], arr[1]
+	return sendIfExists(op, func(f *Feed) (err error) {
+		e, err := db.GetModLogEntry(logID)
+		if err != nil {
+			return
+		}
 
-	sendIfExists(op, func(f *Feed) {
-		f._moderatePost(id, msg, entry)
+		msg, err := common.EncodeMessage(common.MessageModeratePost, struct {
+			ID uint64 `json:"id"`
+			common.ModerationEntry
+		}{e.ID, e.ModerationEntry})
+		if err != nil {
+			return
+		}
+
+		f._moderatePost(e.ID, msg, e.ModerationEntry)
+		return
 	})
-
-	return
 }
 
 // Clear removes all existing feeds and clients. Used only in tests.

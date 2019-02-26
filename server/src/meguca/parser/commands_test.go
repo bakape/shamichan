@@ -6,6 +6,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"testing"
 )
 
@@ -77,7 +78,7 @@ func Test8ball(t *testing.T) {
 
 func TestPyu(t *testing.T) {
 	var isSlut bool
-	assertTableClear(t, "boards", "pyu", "pyu_limit")
+	test_db.ClearTables(t, "boards", "pyu", "pyu_limit")
 	writeSampleBoard(t)
 	writeSampleThread(t)
 

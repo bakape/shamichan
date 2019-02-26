@@ -1,11 +1,10 @@
-//go:generate go-bindata -o sql.go --pkg db --nometadata -nocompress --prefix sql sql/...
-
 package db
 
 import (
 	"database/sql"
 	"fmt"
 	"meguca/auth"
+	"meguca/common"
 	"meguca/config"
 	"meguca/util"
 	"os"
@@ -28,10 +27,6 @@ var (
 	// ConnArgs specifies the PostgreSQL connection arguments
 	ConnArgs string
 
-	// IsTest can be overridden to not launch several infinite loops during
-	// tests
-	IsTest bool
-
 	// Stores the postgres database instance
 	db *sql.DB
 
@@ -50,7 +45,7 @@ func LoadDB() error {
 // Create and load testing database. Call close() to clean up temporary
 // resources.
 func LoadTestDB(suffix string) (close func() error, err error) {
-	IsTest = true
+	common.IsTest = true
 
 	// If running as root (CI like Travis or something), authenticate as the
 	// postgres user
@@ -160,7 +155,7 @@ func loadDB(dbSuffix string) (err error) {
 		return
 	}
 
-	if !IsTest {
+	if !common.IsTest {
 		go runCleanupTasks()
 	}
 

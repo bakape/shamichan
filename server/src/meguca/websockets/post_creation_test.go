@@ -6,6 +6,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"meguca/websockets/feeds"
 	"strconv"
 	"testing"
@@ -24,10 +25,7 @@ var (
 )
 
 func TestInsertThread(t *testing.T) {
-	assertTableClear(t, "boards", "images")
-	if err := db.SetPostCounter(5); err != nil {
-		t.Fatal(err)
-	}
+	test_db.ClearTables(t, "boards", "images")
 
 	conf := [...]db.BoardConfigs{
 		{
@@ -93,7 +91,11 @@ func TestInsertThread(t *testing.T) {
 
 func testCreateThread(t *testing.T) {
 	writeSampleImage(t)
-	token, err := db.NewImageToken(stdJPEG.SHA1)
+	var token string
+	err := db.InTransaction(false, func(tx *sql.Tx) (err error) {
+		token, err = db.NewImageToken(tx, stdJPEG.SHA1)
+		return
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -104,7 +106,6 @@ func testCreateThread(t *testing.T) {
 		ImageCtr: 1,
 		PostCtr:  1,
 		Post: common.Post{
-			ID:   6,
 			Name: "name",
 			Image: &common.Image{
 				Spoiler:     true,
@@ -128,11 +129,13 @@ func testCreateThread(t *testing.T) {
 		Subject: "subject",
 		Board:   "c",
 	}
-	if _, err := CreateThread(req, "::1"); err != nil {
+	p, err := CreateThread(req, "::1")
+	if err != nil {
 		t.Fatal(err)
 	}
+	std.ID = p.ID
 
-	thread, err := db.GetThread(6, 0)
+	thread, err := db.GetThread(p.ID, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +161,7 @@ func testCreateThreadTextOnly(t *testing.T) {
 		},
 		Subject: "subject",
 		Board:   "a",
-	}, "")
+	}, "::1")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -166,7 +169,7 @@ func testCreateThreadTextOnly(t *testing.T) {
 		t.Error("image inserted")
 	}
 
-	hasImage, err := db.HasImage(7)
+	hasImage, err := db.HasImage(post.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,47 +203,11 @@ func assertIP(t *testing.T, id uint64, ip string) {
 	AssertDeepEquals(t, res, ip)
 }
 
-func TestGetInvalidImage(t *testing.T) {
-	assertTableClear(t, "images")
-
-	const (
-		name  = "foo.jpeg"
-		token = "dasdasd-ad--dsad-ads-d-ad-"
-	)
-
-	cases := [...]struct {
-		testName, token, name string
-		err                   error
-	}{
-		{"token too long", GenString(128), name, errInvalidImageToken},
-		{"image name too long", token, GenString(201), errImageNameTooLong},
-		{"no token in DB", token, name, errInvalidImageToken},
-	}
-
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.testName, func(t *testing.T) {
-			t.Parallel()
-
-			err := db.InTransaction(false, func(tx *sql.Tx) error {
-				_, err := getImage(tx, c.token, c.name, false)
-				if err != c.err {
-					UnexpectedError(t, err)
-				}
-				return nil
-			})
-			if err != nil {
-				t.Fatal(err)
-			}
-		})
-	}
-}
-
 func TestClosePreviousPostOnCreation(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 	writeSamplePost(t)
 	if err := db.SetPostCounter(5); err != nil {
 		t.Fatal(err)
@@ -312,7 +279,11 @@ func TestPostCreation(t *testing.T) {
 	prepareForPostCreation(t)
 	setBoardConfigs(t, false)
 	writeSampleImage(t)
-	token, err := db.NewImageToken(stdJPEG.SHA1)
+	var token string
+	err := db.InTransaction(false, func(tx *sql.Tx) (err error) {
+		token, err = db.NewImageToken(tx, stdJPEG.SHA1)
+		return
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -335,7 +306,8 @@ func TestPostCreation(t *testing.T) {
 		},
 	}
 
-	if err := cl.insertPost(marshalJSON(t, req)); err != nil {
+	err = cl.insertPost(marshalJSON(t, req))
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -403,52 +375,10 @@ func encodeMessageType(typ common.MessageType) string {
 func prepareForPostCreation(t testing.TB) {
 	t.Helper()
 
-	assertTableClear(t, "boards", "images", "bans")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards", "images", "bans")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 	if err := db.SetPostCounter(5); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func writeSampleBoard(t testing.TB) {
-	t.Helper()
-
-	b := db.BoardConfigs{
-		BoardConfigs: config.BoardConfigs{
-			ID:        "a",
-			Eightball: []string{"yes"},
-		},
-	}
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WriteBoard(tx, b)
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func writeSampleThread(t testing.TB) {
-	t.Helper()
-
-	now := time.Now().Unix()
-	thread := db.Thread{
-		ID:        1,
-		Board:     "a",
-		PostCtr:   0,
-		ImageCtr:  1,
-		ReplyTime: now,
-	}
-	op := db.Post{
-		StandalonePost: common.StandalonePost{
-			Post: common.Post{
-				ID:   1,
-				Time: time.Now().Unix(),
-			},
-			OP: 1,
-		},
-	}
-	if err := db.WriteThread(nil, thread, op); err != nil {
 		t.Fatal(err)
 	}
 }

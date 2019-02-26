@@ -72,10 +72,10 @@ export default class ImageHandler extends View<Post> {
 	// Render the actual thumbnail image
 	private renderThumbnail() {
 		const el = this.el.querySelector("figure a"),
-			{ SHA1, fileType, thumbType, dims, spoiler } = this
+			{ sha1, fileType, thumbType, dims, spoiler } = this
 				.model
 				.image,
-			src = sourcePath(SHA1, fileType)
+			src = sourcePath(sha1, fileType)
 		let thumb: string,
 			[, , thumbWidth, thumbHeight] = dims
 
@@ -102,7 +102,7 @@ export default class ImageHandler extends View<Post> {
 			// Animated GIF thumbnails
 			thumb = src
 		} else {
-			thumb = thumbPath(SHA1, thumbType)
+			thumb = thumbPath(sha1, thumbType)
 		}
 
 		el.setAttribute("href", src)
@@ -185,7 +185,7 @@ export default class ImageHandler extends View<Post> {
 		const ext = fileTypes[data.fileType],
 			name = `${escape(data.name)}.${ext}`
 		setAttrs(el.lastElementChild, {
-			href: `/assets/images/src/${data.SHA1}.${ext}`,
+			href: `/assets/images/src/${data.sha1}.${ext}`,
 			download: name,
 		})
 		link.innerHTML = name
@@ -197,7 +197,7 @@ export default class ImageHandler extends View<Post> {
 
 	// Assign URLs to image search links
 	private renderImageSearch(figcaption: Element) {
-		const { fileType, thumbType, SHA1, MD5, size } = this.model.image,
+		const { fileType, thumbType, sha1, md5, size } = this.model.image,
 			el = figcaption.querySelector(".image-search-container") as HTMLElement
 		if (thumbType === fileTypes.noFile || fileType === fileTypes.pdf) {
 			el.hidden = true
@@ -223,7 +223,7 @@ export default class ImageHandler extends View<Post> {
 			root = "thumb"
 			type = thumbType
 		}
-		url = `/assets/images/${root}/${SHA1}.${fileTypes[type]}`
+		url = `/assets/images/${root}/${sha1}.${fileTypes[type]}`
 		url = encodeURI(location.origin + url)
 
 		const [google, iqdb, saucenao, whatanime, desuarchive, exhentai] =
@@ -253,7 +253,7 @@ export default class ImageHandler extends View<Post> {
 				case fileTypes.webm:
 					desuarchive.setAttribute(
 						"href",
-						"https://desuarchive.org/_/search/image/" + MD5,
+						"https://desuarchive.org/_/search/image/" + md5,
 					)
 					break
 				default:
@@ -267,7 +267,7 @@ export default class ImageHandler extends View<Post> {
 					exhentai.setAttribute(
 						"href",
 						"http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash="
-						+ SHA1,
+						+ sha1,
 					)
 					break
 				default:
@@ -393,7 +393,7 @@ export default class ImageHandler extends View<Post> {
 
 		const figure = this.el.querySelector("figure"),
 			imgEl = figure.querySelector("img"),
-			src = sourcePath(img.SHA1, img.fileType)
+			src = sourcePath(img.sha1, img.fileType)
 		switch (img.fileType) {
 			case fileTypes.ogg:
 			case fileTypes.mp4:
@@ -428,7 +428,7 @@ export default class ImageHandler extends View<Post> {
 			autoplay: "",
 			loop: "",
 			controls: "",
-			src: sourcePath(img.SHA1, img.fileType),
+			src: sourcePath(img.sha1, img.fileType),
 		})
 		el.volume = options.audioVolume / 100
 		this.model.image.expanded = true
@@ -442,13 +442,13 @@ function imageRoot(): string {
 
 // Get the thumbnail path of an image, accounting for not thumbnail of specific
 // type being present
-export function thumbPath(SHA1: string, thumbType: fileTypes): string {
-	return `${imageRoot()}/thumb/${SHA1}.${fileTypes[thumbType]}`
+export function thumbPath(sha1: string, thumbType: fileTypes): string {
+	return `${imageRoot()}/thumb/${sha1}.${fileTypes[thumbType]}`
 }
 
 // Resolve the path to the source file of an upload
-export function sourcePath(SHA1: string, fileType: fileTypes): string {
-	return `${imageRoot()}/src/${SHA1}.${fileTypes[fileType]}`
+export function sourcePath(sha1: string, fileType: fileTypes): string {
+	return `${imageRoot()}/src/${sha1}.${fileTypes[fileType]}`
 }
 
 // Delegate image clicks to views. More performant than dedicated listeners for

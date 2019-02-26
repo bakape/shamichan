@@ -91,6 +91,10 @@ func generateVideoNames() {
 
 // GetVideoNames fetches videoNames behind a mutex
 func GetVideoNames() []string {
+	if common.IsTest {
+		return []string{}
+	}
+
 	once.Do(func() {
 		generateVideoNames()
 	})

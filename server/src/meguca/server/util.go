@@ -101,22 +101,21 @@ func httpError(w http.ResponseWriter, r *http.Request, err error) {
 
 // Check client is not banned on specific board. Returns true, if all clear.
 // Renders ban page and returns false otherwise.
-func assertNotBanned(
-	w http.ResponseWriter,
-	r *http.Request,
-	board string,
+func assertNotBanned(w http.ResponseWriter, r *http.Request, board string,
 ) bool {
 	ip, err := auth.GetIP(r)
 	if err != nil {
 		httpError(w, r, common.StatusError{err, 400})
 		return false
 	}
-	globally, fromBoard := db.GetBannedLevels(board, ip)
-	if !globally && !fromBoard {
+	err = db.IsBanned(board, ip)
+	switch err {
+	case nil:
 		return true
-	}
-	if globally {
-		board = "all"
+	case common.ErrBanned:
+	default:
+		httpError(w, r, err)
+		return false
 	}
 
 	rec, err := db.GetBanInfo(ip, board)
@@ -129,8 +128,7 @@ func assertNotBanned(
 		}
 		head.Set("Content-Type", "text/html")
 		head.Set("Cache-Control", "no-store")
-		html := []byte(templates.BanPage(rec))
-		w.Write(html)
+		templates.WriteBanPage(w, rec)
 		return false
 	case sql.ErrNoRows:
 		// If there is no row, that means the ban cache has not been updated

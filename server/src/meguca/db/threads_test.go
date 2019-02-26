@@ -26,12 +26,12 @@ func TestDiffPostCount(t *testing.T) {
 	postCountCache = make(map[uint64]uint64)
 	postCountCacheMu.Unlock()
 
-	IsTest = false
+	common.IsTest = false
 	err := listenForThreadUpdates()
 	if err != nil {
 		t.Fatal(err)
 	}
-	IsTest = true
+	common.IsTest = true
 
 	prepareThreads(t)
 
@@ -84,9 +84,7 @@ func TestDiffPostCount(t *testing.T) {
 					Board: "a",
 				},
 				IP: "::1",
-			},
-			true,
-			false)
+			})
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -94,4 +92,32 @@ func TestDiffPostCount(t *testing.T) {
 
 	std.Changed[1] = 4
 	assert()
+}
+
+func TestInsertThread(t *testing.T) {
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+
+	p := Post{
+		StandalonePost: common.StandalonePost{
+			Board: "a",
+		},
+		IP:       "::1",
+		Password: []byte("6+53653cs3ds"),
+	}
+	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+		return InsertThread(tx, "test", &p)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Time == 0 {
+		t.Fatal(p.Time)
+	}
+	if p.OP == 0 {
+		t.Fatal(p.OP)
+	}
+	if p.ID == 0 {
+		t.Fatal(p.ID)
+	}
 }

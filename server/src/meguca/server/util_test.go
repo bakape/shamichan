@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"meguca/config"
-	"meguca/db"
 )
 
 func newRequest(url string) *http.Request {
@@ -22,13 +21,6 @@ func assertCode(t *testing.T, rec *httptest.ResponseRecorder, std int) {
 	t.Helper()
 	if rec.Code != std {
 		t.Errorf("unexpected status code: %d : %d", std, rec.Code)
-	}
-}
-
-func assertTableClear(t *testing.T, tables ...string) {
-	t.Helper()
-	if err := db.ClearTables(tables...); err != nil {
-		t.Fatal(err)
 	}
 }
 

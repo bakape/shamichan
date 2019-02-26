@@ -39,11 +39,6 @@
 						!{%s p.Trip %}
 					</code>
 				{% endif %}
-				{% if p.PosterID != "" %}
-					<span>
-						({%s p.PosterID %})
-					</span>
-				{% endif %}
 				{% if p.Auth != "" %}
 					<span>
 						##{% space %}{%s= ln.Common.Posts[p.Auth] %}

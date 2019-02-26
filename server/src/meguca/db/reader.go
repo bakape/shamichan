@@ -22,7 +22,6 @@ const (
 		where l.source = p.id
 	),
 	p.commands, p.imageName,
-	p.posterID,
 	i.*`
 
 	threadSelectsSQL = `t.sticky, t.board,
@@ -67,7 +66,7 @@ type imageScanner struct {
 }
 
 // Returns and array of pointers to the struct fields for passing to
-// rowScanner.Scan()
+// sql.Scanner.Scan()
 func (i *imageScanner) ScanArgs() []interface{} {
 	return []interface{}{
 		&i.Audio, &i.Video, &i.FileType, &i.ThumbType, &i.Dims,
@@ -117,7 +116,7 @@ func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
 		&p.Editing, &p.Moderated, &p.spoiler, &p.Sage, &p.ID, &p.Time, &p.Body,
 		&p.Flag, &p.Name, &p.Trip, &p.Auth, &p.links, &p.commands,
-		&p.imageName, &p.PosterID,
+		&p.imageName,
 	}
 }
 
@@ -301,39 +300,23 @@ func getOPs() squirrel.SelectBuilder {
 
 // GetBoardCatalog retrieves all OPs of a single board
 func GetBoardCatalog(board string) (b common.Board, err error) {
-	r, err := getOPs().
+	b, err = scanCatalog(getOPs().
 		Where("t.board = ?", board).
-		OrderBy("sticky desc, bumpTime desc").
-		Query()
-	if err != nil {
-		return
-	}
-	b, err = scanCatalog(r)
+		OrderBy("sticky desc, bumpTime desc"))
 	return
 }
 
 // GetThreadIDs retrieves all threads IDs on the board in bump order with stickies first
 func GetThreadIDs(board string) ([]uint64, error) {
-	r, err := sq.Select("id").
+	return scanThreadIDs(sq.Select("id").
 		From("threads").
 		Where("board = ?", board).
-		OrderBy("sticky desc, bumpTime desc").
-		Query()
-	if err != nil {
-		return nil, err
-	}
-	return scanThreadIDs(r)
+		OrderBy("sticky desc, bumpTime desc"))
 }
 
 // GetAllBoardCatalog retrieves all threads for the "/all/" meta-board
 func GetAllBoardCatalog() (board common.Board, err error) {
-	r, err := getOPs().
-		OrderBy("bumpTime desc").
-		Query()
-	if err != nil {
-		return
-	}
-	board, err = scanCatalog(r)
+	board, err = scanCatalog(getOPs().OrderBy("bumpTime desc"))
 	if err != nil {
 		return
 	}
@@ -355,29 +338,21 @@ func GetAllBoardCatalog() (board common.Board, err error) {
 
 // GetAllThreadsIDs retrieves all threads IDs in bump order
 func GetAllThreadsIDs() ([]uint64, error) {
-	r, err := sq.Select("id").
+	return scanThreadIDs(sq.Select("id").
 		From("threads").
-		OrderBy("bumpTime desc").
-		Query()
-	if err != nil {
-		return nil, err
-	}
-	return scanThreadIDs(r)
+		OrderBy("bumpTime desc"))
 }
 
-func scanCatalog(table tableScanner) (board common.Board, err error) {
-	defer table.Close()
+func scanCatalog(q squirrel.SelectBuilder) (board common.Board, err error) {
 	board.Threads = make([]common.Thread, 0, 32)
-
-	var t common.Thread
-	for table.Next() {
-		t, err = scanOP(table)
+	err = queryAll(q, func(r *sql.Rows) (err error) {
+		t, err := scanOP(r)
 		if err != nil {
 			return
 		}
 		board.Threads = append(board.Threads, t)
-	}
-	err = table.Err()
+		return
+	})
 	if err != nil {
 		return
 	}
@@ -395,20 +370,17 @@ func scanCatalog(table tableScanner) (board common.Board, err error) {
 	return
 }
 
-func scanThreadIDs(table tableScanner) (ids []uint64, err error) {
-	defer table.Close()
-
+func scanThreadIDs(q squirrel.SelectBuilder) (ids []uint64, err error) {
 	ids = make([]uint64, 0, 64)
-	var id uint64
-	for table.Next() {
-		err = table.Scan(&id)
+	err = queryAll(q, func(r *sql.Rows) (err error) {
+		var id uint64
+		err = r.Scan(&id)
 		if err != nil {
 			return
 		}
 		ids = append(ids, id)
-	}
-	err = table.Err()
-
+		return
+	})
 	return
 }
 

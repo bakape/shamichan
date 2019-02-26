@@ -6,6 +6,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"testing"
 	"time"
 )
@@ -31,7 +32,7 @@ func TestParseLine(t *testing.T) {
 }
 
 func TestParseBody(t *testing.T) {
-	assertTableClear(t, "boards")
+	test_db.ClearTables(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
 
@@ -57,7 +58,7 @@ func TestParseBody(t *testing.T) {
 	}
 	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		for _, p := range posts {
-			err := db.WritePost(tx, p, false, false)
+			err := db.WritePost(tx, p)
 			if err != nil {
 				return err
 			}
@@ -122,7 +123,8 @@ func writeSampleThread(t *testing.T) {
 		},
 		IP: "::1",
 	}
-	if err := db.WriteThread(nil, thread, op); err != nil {
+	err := db.WriteThread(thread, op)
+	if err != nil {
 		t.Fatal(err)
 	}
 }

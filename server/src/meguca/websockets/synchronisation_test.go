@@ -7,6 +7,7 @@ import (
 	"meguca/db"
 	"meguca/imager/assets"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"meguca/websockets/feeds"
 	"strconv"
 	"testing"
@@ -16,9 +17,9 @@ import (
 
 func TestOldFeedClosing(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -72,9 +73,9 @@ func skipMessage(t *testing.T, con *websocket.Conn) {
 
 func TestRegisterSync(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -118,8 +119,8 @@ func assertSyncID(t *testing.T, cl *Client, id uint64, board string) {
 
 func TestInvalidThreadSync(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -129,14 +130,15 @@ func TestInvalidThreadSync(t *testing.T) {
 		Board:  "a",
 		Thread: 1,
 	})
-	AssertDeepEquals(t, common.ErrInvalidThread(1, "a"), cl.synchronise(data))
+	AssertDeepEquals(t, common.ErrInvalidThread(1, "a").Error(),
+		cl.synchronise(data).Error())
 }
 
 func TestSyncToThread(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 
 	sv := newWSServer(t)
 	defer sv.Close()
@@ -188,9 +190,9 @@ func encodeMessage(
 
 func TestReclaimPost(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 
 	const pw = "123"
 	hash, err := auth.BcryptHash(pw, 6)
@@ -226,7 +228,7 @@ func TestReclaimPost(t *testing.T) {
 	}
 	err = db.InTransaction(false, func(tx *sql.Tx) error {
 		for _, p := range posts {
-			err := db.WritePost(tx, p, false, false)
+			err := db.WritePost(tx, p)
 			if err != nil {
 				return err
 			}

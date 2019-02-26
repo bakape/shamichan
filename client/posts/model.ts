@@ -33,7 +33,6 @@ export class Post extends Model implements PostData {
 	public subject: string
 	public board: string
 	public flag: string
-	public posterID: string
 	public state: TextState
 	public commands: Command[]
 	public backlinks: {

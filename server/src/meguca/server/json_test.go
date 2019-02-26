@@ -5,6 +5,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"strings"
 	"testing"
 )
@@ -64,7 +65,7 @@ func TestPostJSON(t *testing.T) {
 	setBoards(t, "a")
 	cache.Clear()
 
-	const postEtag = "aZggEVf/3trOeEWhFT7wxQ"
+	const postEtag = "PaeloSx234o+Muw3I8u/2g"
 
 	cases := [...]struct {
 		name, url, header string
@@ -110,45 +111,9 @@ func TestPostJSON(t *testing.T) {
 			code: 404,
 		},
 		{
-			name: "valid thread",
-			url:  "/boards/a/1",
-			code: 200,
-			etag: "W/\"11\"",
-		},
-		{
-			name:   "thread etags match",
-			url:    "/boards/a/1",
-			header: "W/\"11\"",
-			code:   304,
-		},
-		{
 			name: "invalid board",
 			url:  "/boards/nope/",
 			code: 404,
-		},
-		{
-			name: "valid board",
-			url:  "/boards/a/",
-			code: 200,
-			etag: "W/\"12\"",
-		},
-		{
-			name:   "board etag matches",
-			url:    "/boards/a/",
-			header: "W/\"12\"",
-			code:   304,
-		},
-		{
-			name: "all board",
-			url:  "/boards/all/",
-			code: 200,
-			etag: "W/\"12\"",
-		},
-		{
-			name:   "/all/ board etag matches",
-			url:    "/boards/all/",
-			header: "W/\"12\"",
-			code:   304,
 		},
 	}
 
@@ -174,7 +139,7 @@ func TestPostJSON(t *testing.T) {
 func setupPosts(t *testing.T) {
 	t.Helper()
 
-	assertTableClear(t, "boards")
+	test_db.ClearTables(t, "boards")
 	if err := db.SetPostCounter(11); err != nil {
 		t.Fatal(err)
 	}

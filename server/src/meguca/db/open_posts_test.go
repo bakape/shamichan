@@ -27,7 +27,7 @@ func TestCleanUpOpenPostBodies(t *testing.T) {
 						Editing: p.open,
 					},
 				},
-			}, false, false)
+			})
 			if err != nil {
 				return
 			}

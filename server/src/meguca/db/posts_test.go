@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"meguca/common"
 	"meguca/config"
+	"meguca/test"
 	"testing"
 	"time"
 )
@@ -70,7 +71,56 @@ func writeSampleThread(t *testing.T) {
 		},
 		IP: "::1",
 	}
-	if err := WriteThread(nil, thread, op); err != nil {
+	if err := WriteThread(thread, op); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func insertPost(t *testing.T) (p Post) {
+	t.Helper()
+
+	assertTableClear(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+
+	// Prevent key collision
+	_, err := sq.Select("nextval('post_id')").Exec()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p = Post{
+		StandalonePost: common.StandalonePost{
+			OP:    1,
+			Board: "a",
+		},
+		IP:       "::1",
+		Password: []byte("6+53653cs3ds"),
+	}
+	err = InTransaction(false, func(tx *sql.Tx) error {
+		return InsertPost(tx, &p)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return
+}
+
+func TestInsertPost(t *testing.T) {
+	p := insertPost(t)
+	if p.Time == 0 {
+		t.Fatal(p.Time)
+	}
+	if p.ID == 0 {
+		t.Fatal(p.ID)
+	}
+}
+
+func TestGetPostPassword(t *testing.T) {
+	p := insertPost(t)
+	res, err := GetPostPassword(p.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	test.AssertDeepEquals(t, res, p.Password)
 }

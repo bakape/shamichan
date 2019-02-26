@@ -77,9 +77,6 @@ var (
 
 	// ClosePost closes a post in a feed, if it exists
 	ClosePost func(id, op uint64, links []Link, commands []Command) error
-
-	// Propagate a message about a post being moderated to connected clients
-	PropagateModeration func(id, op uint64, entry ModerationEntry) error
 )
 
 // Client exposes some globally accessible websocket client functionality
@@ -89,23 +86,24 @@ type Client interface {
 	Redirect(board string)
 	IP() string
 	LastTime() int64
-	NewProtocol() bool
-	Last100() bool
 	Close(error)
 }
 
 // EncodeMessage encodes a message for sending through websockets or writing to
 // the replication log.
 func EncodeMessage(typ MessageType, msg interface{}) ([]byte, error) {
-	data, err := json.Marshal(msg)
-	switch {
-	case err != nil:
-		return nil, err
-	case typ != MessageConcat && bytes.IndexRune(data, 0) != -1:
-		return nil, ErrContainsNull
-	default:
-		return PrependMessageType(typ, data), nil
+	var w bytes.Buffer
+	if typ < 10 {
+		w.WriteByte('0')
 	}
+	w.WriteString(strconv.Itoa(int(typ)))
+
+	err := json.NewEncoder(&w).Encode(msg)
+	if err != nil {
+		return nil, err
+	}
+	w.Truncate(w.Len() - 1)
+	return w.Bytes(), nil
 }
 
 // PrependMessageType prepends the encoded websocket message type to an already
