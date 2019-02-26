@@ -11,7 +11,7 @@ import { insertPost } from "../client"
 // Passed from the server to allow the client to synchronise state, before
 // consuming any incoming update messages.
 type SyncData = {
-	recent: number[] // Posts created within the last 15 minutes
+	recent: PostState[] // Posts created within the last 15 minutes
 	moderation: { [id: number]: ModerationEntry[] }
 }
 
@@ -137,14 +137,14 @@ handlers[message.synchronise] = async (data: SyncData) => {
 		proms: Promise<void>[] = []
 
 	for (let post of posts) {
-		if (post.editing && !(post.id in open)) {
+		if (post.editing && !(post.id in recent)) {
 			proms.push(fetchUnclosed(post))
 		}
 	}
 	for (let key in recent) {
 		const id = parseInt(key)
 		if (id >= minID) {
-			proms.push(syncRecentPost(id, open[key]))
+			proms.push(syncRecentPost(id, recent[key]))
 		}
 	}
 	for (let id in moderation) {
