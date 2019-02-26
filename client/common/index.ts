@@ -103,8 +103,8 @@ export interface ImageData {
 	audio: boolean
 	video: boolean
 	spoiler: boolean
-	fileType: fileTypes
-	thumbType: fileTypes
+	file_type: fileTypes
+	thumb_type: fileTypes
 	length?: number
 	artist?: string
 	title?: string

@@ -12,7 +12,7 @@ type Data = {
 
 type Video = {
 	sha1: string
-	fileType: fileTypes
+	file_type: fileTypes
 };
 
 let playlist: Video[];
@@ -49,7 +49,7 @@ function render() {
 			el.setAttribute("data-sha1", playlist[i].sha1);
 			el.setAttribute("style", "max-width:30vw");
 			el.controls = true;
-			el.src = sourcePath(playlist[i].sha1, playlist[i].fileType);
+			el.src = sourcePath(playlist[i].sha1, playlist[i].file_type);
 			el.volume = options.audioVolume / 100;
 		}
 

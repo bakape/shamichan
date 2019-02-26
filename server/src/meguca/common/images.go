@@ -52,8 +52,8 @@ type Image struct {
 type ImageCommon struct {
 	Audio     bool      `json:"audio"`
 	Video     bool      `json:"video"`
-	FileType  uint8     `json:"fileType"`
-	ThumbType uint8     `json:"thumbType"`
+	FileType  uint8     `json:"file_type"`
+	ThumbType uint8     `json:"thumb_type"`
 	Length    uint32    `json:"length"`
 	Dims      [4]uint16 `json:"dims"`
 	Size      int       `json:"size"`

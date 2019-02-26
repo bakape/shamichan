@@ -72,17 +72,17 @@ export default class ImageHandler extends View<Post> {
 	// Render the actual thumbnail image
 	private renderThumbnail() {
 		const el = this.el.querySelector("figure a"),
-			{ sha1, fileType, thumbType, dims, spoiler } = this
+			{ sha1, file_type: file_type, thumb_type: thumbType, dims, spoiler } = this
 				.model
 				.image,
-			src = sourcePath(sha1, fileType)
+			src = sourcePath(sha1, file_type)
 		let thumb: string,
 			[, , thumbWidth, thumbHeight] = dims
 
 		if (thumbType === fileTypes.noFile) {
 			// No thumbnail exists
 			let file: string
-			switch (fileType) {
+			switch (file_type) {
 				case fileTypes.mp4:
 				case fileTypes.mp3:
 				case fileTypes.ogg:
@@ -98,7 +98,7 @@ export default class ImageHandler extends View<Post> {
 			// Spoilered and spoilers enabled
 			thumb = '/assets/spoil/default.jpg'
 			thumbHeight = thumbWidth = 150
-		} else if (options.autogif && fileType === fileTypes.gif) {
+		} else if (options.autogif && file_type === fileTypes.gif) {
 			// Animated GIF thumbnails
 			thumb = src
 		} else {
@@ -182,7 +182,7 @@ export default class ImageHandler extends View<Post> {
 		}
 
 		// Render a name + download link of an image
-		const ext = fileTypes[data.fileType],
+		const ext = fileTypes[data.file_type],
 			name = `${escape(data.name)}.${ext}`
 		setAttrs(el.lastElementChild, {
 			href: `/assets/images/src/${data.sha1}.${ext}`,
@@ -197,7 +197,7 @@ export default class ImageHandler extends View<Post> {
 
 	// Assign URLs to image search links
 	private renderImageSearch(figcaption: Element) {
-		const { fileType, thumbType, sha1, md5, size } = this.model.image,
+		const { file_type: fileType, thumb_type: thumbType, sha1, md5, size } = this.model.image,
 			el = figcaption.querySelector(".image-search-container") as HTMLElement
 		if (thumbType === fileTypes.noFile || fileType === fileTypes.pdf) {
 			el.hidden = true
@@ -282,7 +282,7 @@ export default class ImageHandler extends View<Post> {
 			return this.contractImage(event, true)
 		}
 
-		switch (img.fileType) {
+		switch (img.file_type) {
 			// Simply download the file
 			case fileTypes.pdf:
 			case fileTypes.zip:
@@ -321,7 +321,7 @@ export default class ImageHandler extends View<Post> {
 	public contractImage(e: MouseEvent | null, scroll: boolean) {
 		const img = this.model.image
 
-		switch (img.fileType) {
+		switch (img.file_type) {
 			case fileTypes.ogg:
 			case fileTypes.mp3:
 			case fileTypes.flac:
@@ -393,8 +393,8 @@ export default class ImageHandler extends View<Post> {
 
 		const figure = this.el.querySelector("figure"),
 			imgEl = figure.querySelector("img"),
-			src = sourcePath(img.sha1, img.fileType)
-		switch (img.fileType) {
+			src = sourcePath(img.sha1, img.file_type)
+		switch (img.file_type) {
 			case fileTypes.ogg:
 			case fileTypes.mp4:
 			case fileTypes.webm:
@@ -428,7 +428,7 @@ export default class ImageHandler extends View<Post> {
 			autoplay: "",
 			loop: "",
 			controls: "",
-			src: sourcePath(img.sha1, img.fileType),
+			src: sourcePath(img.sha1, img.file_type),
 		})
 		el.volume = options.audioVolume / 100
 		this.model.image.expanded = true
@@ -512,7 +512,7 @@ function shouldAutoExpand(model: Post): boolean {
 	if (!model.image) {
 		return false
 	}
-	switch (model.image.fileType) {
+	switch (model.image.file_type) {
 		case fileTypes.jpg:
 		case fileTypes.png:
 		case fileTypes.gif:

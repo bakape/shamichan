@@ -27,7 +27,7 @@ var (
 
 // Video structure
 type Video struct {
-	FileType uint8         `json:"fileType"`
+	FileType uint8         `json:"file_type"`
 	Duration time.Duration `json:"-"`
 	SHA1     string        `json:"sha1"`
 }
@@ -43,7 +43,7 @@ func writeImageTx(tx *sql.Tx, i common.ImageCommon) (err error) {
 	_, err = sq.
 		Insert("images").
 		Columns(
-			"audio", "video", "fileType", "thumbType", "dims", "length",
+			"audio", "video", "file_type", "thumb_type", "dims", "length",
 			"size", "MD5", "SHA1", "Title", "Artist",
 		).
 		Values(
@@ -189,13 +189,13 @@ func VideoPlaylist(board string) (videos []Video, err error) {
 		dur uint64
 	)
 	err = queryAll(
-		sq.Select("i.SHA1", "i.fileType", "i.length").
+		sq.Select("i.SHA1", "i.file_type", "i.length").
 			From("images as i").
 			Where(`
 				exists(select 1
 					from posts as p
 					where p.sha1 = i.sha1 and p.board = ?)
-				and filetype in (?, ?)
+				and file_type in (?, ?)
 				and audio = true
 				and video = true
 				and length between 10 and 600`,
@@ -225,7 +225,7 @@ func deleteUnusedImages() (err error) {
 			(select count(*) from posts where SHA1 = images.SHA1)
 			+ (select count(*) from image_tokens where SHA1 = images.SHA1)
 		) = 0
-		returning SHA1, fileType, thumbType`)
+		returning SHA1, file_type, thumb_type`)
 	if err != nil {
 		return
 	}

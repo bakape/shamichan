@@ -76,7 +76,7 @@ export function extractPost(
 		if (options.hideThumbs
 			|| options.workModeToggle
 			|| (image.spoiler && !options.spoilers)
-			|| (image.fileType === fileTypes.gif && options.autogif)
+			|| (image.file_type === fileTypes.gif && options.autogif)
 		) {
 			view.renderImage(false)
 		}

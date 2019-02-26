@@ -81,7 +81,7 @@ function toggleAutoGIF() {
 			if (!image) {
 				return false
 			}
-			switch (image.fileType) {
+			switch (image.file_type) {
 				case fileTypes.gif:
 					return true
 				default:

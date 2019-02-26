@@ -183,7 +183,7 @@ function renderImagePreview(event: MouseEvent) {
 		post = getModel(target)
 		bypass = !post
 			|| post.image.expanded
-			|| post.image.thumbType === fileTypes.noFile
+			|| post.image.thumb_type === fileTypes.noFile
 	}
 	if (bypass) {
 		if (imagePreview) {
@@ -195,7 +195,7 @@ function renderImagePreview(event: MouseEvent) {
 
 	let tag: string
 
-	switch (post.image.fileType) {
+	switch (post.image.file_type) {
 		case fileTypes.pdf: // Nothing to preview for these
 		case fileTypes.mp3:
 		case fileTypes.flac:
@@ -225,7 +225,7 @@ function renderImagePreview(event: MouseEvent) {
 
 	const el = document.createElement(tag)
 	setAttrs(el, {
-		src: sourcePath(post.image.sha1, post.image.fileType),
+		src: sourcePath(post.image.sha1, post.image.file_type),
 		autoplay: "",
 		loop: "",
 	})

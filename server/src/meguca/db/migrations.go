@@ -1076,6 +1076,12 @@ var migrations = []func(*sql.Tx) error{
 				drop column posterIDs`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`alter table images rename column fileType to file_type`,
+			`alter table images rename column thumbType to thumb_type`,
+		)
+	},
 }
 
 func createIndex(table, column string) string {

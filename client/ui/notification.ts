@@ -23,7 +23,7 @@ export default function notifyAboutReply(post: Post) {
 
 	const opts = options.notificationOpts();
 	if (options.canShowImages() && post.image) {
-		const { sha1, thumbType, spoiler } = post.image;
+		const { sha1, thumb_type: thumbType, spoiler } = post.image;
 		if (spoiler) {
 			opts.icon = '/assets/spoil/default.jpg';
 		} else {

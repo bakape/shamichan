@@ -198,7 +198,7 @@ export async function watchThread(id: number, postCount: number,
 	const data: WatchedThreadRecord = { id, postCount, subject };
 	const p = state.posts.get(id);
 	if (p && p.image) {
-		data.thumbnailURL = posts.thumbPath(p.image.sha1, p.image.thumbType);
+		data.thumbnailURL = posts.thumbPath(p.image.sha1, p.image.thumb_type);
 	}
 
 	await putExpiring("watchedThreads", id, data);
