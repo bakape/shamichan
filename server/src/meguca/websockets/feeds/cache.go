@@ -2,7 +2,12 @@ package feeds
 
 import (
 	"meguca/common"
+	"meguca/db"
+	"time"
 )
+
+// One minute higher than post open limit, to reduce border cases
+const retentionTime = 16 * time.Minute
 
 // Persists thread state for syncing clients to server feed
 type threadCache struct {
@@ -10,15 +15,51 @@ type threadCache struct {
 	memoized []byte
 }
 
+func retentionThreshold() int64 {
+	return time.Now().Add(-retentionTime).Unix()
+}
+
 func newThreadCache(id uint64) (c threadCache, err error) {
 	c = threadCache{
 		syncMessage: syncMessage{
-			Recent:     make(map[uint64]cachedPost),
-			Moderation: make(map[uint64][]common.ModerationEntry),
+			Recent:     make(map[uint64]cachedPost, 16),
+			Moderation: make(map[uint64][]common.ModerationEntry, 16),
 		},
 	}
-	// TODO: Read data from DB
+	thread, err := db.GetThread(id, 0)
+	if err != nil {
+		return
+	}
+
+	threshold := retentionThreshold()
+	for _, p := range thread.Posts {
+		if p.Time > threshold {
+			c.Recent[p.ID] = cachedPost{
+				HasImage:  p.Image != nil,
+				Spoilered: p.Image != nil && p.Image.Spoiler,
+				Closed:    !p.Editing,
+				Time:      p.Time,
+				Body:      p.Body,
+			}
+		}
+		if p.Moderated {
+			c.Moderation[p.ID] = p.Moderation
+		}
+	}
+
+	// TODO: Clean up the cache periodically
 	return
+}
+
+// Evict posts past evictionLimit
+func (c *threadCache) evict() {
+	c.clearMemoized()
+	threshold := retentionThreshold()
+	for id, p := range c.Recent {
+		if p.Time < threshold {
+			delete(c.Recent, id)
+		}
+	}
 }
 
 // Message used for synchronizing clients to the feed state.

@@ -201,3 +201,7 @@ func CheckThreadLocked(id uint64) (locked bool, err error) {
 		Scan(&locked)
 	return
 }
+
+func Read()  {
+
+}

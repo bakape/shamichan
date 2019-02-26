@@ -80,8 +80,14 @@ func (f *Feed) Start() (err error) {
 		f.start()
 		defer f.pause()
 
+		evictionTimer := time.NewTicker(time.Minute)
+		defer evictionTimer.Stop()
+
 		for {
 			select {
+
+			case <-evictionTimer.C:
+				f.cache.evict()
 
 			// Add client
 			case c := <-f.add:
