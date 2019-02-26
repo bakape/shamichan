@@ -26,12 +26,12 @@ func TestDiffPostCount(t *testing.T) {
 	postCountCache = make(map[uint64]uint64)
 	postCountCacheMu.Unlock()
 
-	IsTest = false
+	common.IsTest = false
 	err := listenForThreadUpdates()
 	if err != nil {
 		t.Fatal(err)
 	}
-	IsTest = true
+	common.IsTest = true
 
 	prepareThreads(t)
 

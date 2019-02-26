@@ -6,11 +6,12 @@ import (
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"testing"
 )
 
 func TestParseLinks(t *testing.T) {
-	assertTableClear(t, "boards")
+	test_db.ClearTables(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	config.SetBoardConfigs(config.BoardConfigs{

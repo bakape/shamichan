@@ -1,15 +1,16 @@
 package websockets
 
 import (
+	"meguca/test/test_db"
 	"meguca/websockets/feeds"
 	"testing"
 )
 
 func TestStreamUpdates(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 
 	sv := newWSServer(t)
 	defer sv.Close()

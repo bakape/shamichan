@@ -1139,7 +1139,7 @@ func loadSQL(tx *sql.Tx, paths ...string) (err error) {
 // Run migrations from version `from`to version `to`
 func runMigrations(from, to int) (err error) {
 	for i := from; i < to; i++ {
-		if !IsTest {
+		if !common.IsTest {
 			log.Infof("upgrading database to version %d", i+1)
 		}
 		err = InTransaction(false, func(tx *sql.Tx) (err error) {

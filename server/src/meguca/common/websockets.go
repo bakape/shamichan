@@ -77,9 +77,6 @@ var (
 
 	// ClosePost closes a post in a feed, if it exists
 	ClosePost func(id, op uint64, links []Link, commands []Command) error
-
-	// Propagate a message about a post being moderated to connected clients
-	PropagateModeration func(id, op uint64, entry ModerationEntry) error
 )
 
 // Client exposes some globally accessible websocket client functionality

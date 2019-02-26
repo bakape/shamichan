@@ -5,12 +5,13 @@ import (
 	"meguca/cache"
 	"meguca/config"
 	"meguca/db"
+	"meguca/test/test_db"
 	"testing"
 )
 
 func TestThreadHTML(t *testing.T) {
 	cache.Clear()
-	assertTableClear(t, "boards")
+	test_db.ClearTables(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	setBoards(t, "a")
@@ -66,7 +67,7 @@ func TestBoardHTML(t *testing.T) {
 }
 
 func TestOwnedBoardSelection(t *testing.T) {
-	assertTableClear(t, "boards", "accounts")
+	test_db.ClearTables(t, "boards", "accounts")
 	config.ClearBoards()
 	(*config.Get()).DefaultLang = "en_GB"
 	writeAdminAccount(t)
@@ -143,7 +144,7 @@ func TestOwnedBoardSelection(t *testing.T) {
 func TestBoardConfigurationForm(t *testing.T) {
 	config.ClearBoards()
 	(*config.Get()).DefaultLang = "en_GB"
-	assertTableClear(t, "accounts", "boards")
+	test_db.ClearTables(t, "accounts", "boards")
 	writeSampleBoard(t)
 	writeSampleUser(t)
 
@@ -186,7 +187,7 @@ func TestStaticTemplates(t *testing.T) {
 }
 
 func TestServerConfigurationForm(t *testing.T) {
-	assertTableClear(t, "accounts")
+	test_db.ClearTables(t, "accounts")
 	writeAdminAccount(t)
 	(*config.Get()).DefaultLang = "en_GB"
 

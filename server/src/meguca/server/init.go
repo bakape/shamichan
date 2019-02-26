@@ -19,6 +19,7 @@ import (
 	"meguca/lang"
 	"meguca/templates"
 	"meguca/util"
+	"meguca/websockets/feeds"
 	"os"
 	"runtime"
 	"strings"
@@ -258,6 +259,7 @@ func startServer() {
 	if config.ImagerMode != config.NoImager {
 		tasks = append(tasks, auth.LoadCaptchaServices)
 	}
+	tasks = append(tasks, feeds.Init)
 	load(tasks...)
 	wg.Wait()
 

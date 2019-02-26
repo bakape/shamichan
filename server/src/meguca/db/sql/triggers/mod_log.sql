@@ -11,7 +11,7 @@ begin
 			where id = new.post_id
 			returning posts.op into op;
 		perform pg_notify('post_moderated',
-			concat_ws(',', op, new.post_id, new.id));
+			concat_ws(',', op, new.id));
 	end if;
 	return null;
 end;

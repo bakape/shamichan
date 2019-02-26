@@ -128,10 +128,25 @@ func TestGetSameIPPosts(t *testing.T) {
 	}
 }
 
-func TestGetModLOg(t *testing.T) {
+func TestGetModLog(t *testing.T) {
 	t.Run("ban_unban", TestBanUnban) // So we have something in the log
 
 	_, err := GetModLog("a")
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetModLogEntry(t *testing.T) {
+	t.Run("ban_unban", TestBanUnban) // So we have something in the log
+
+	var id uint64
+	err := sq.Select("id").From("mod_log").Limit(1).QueryRow().Scan(&id)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = GetModLogEntry(id)
 	if err != nil {
 		t.Fatal(err)
 	}

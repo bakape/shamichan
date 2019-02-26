@@ -37,7 +37,7 @@ func syncSpamScores() (err error) {
 
 // Periodically flush buffered spam scores to DB
 func handleSpamScores() (err error) {
-	if !IsTest {
+	if !common.IsTest {
 		go func() {
 			for range time.Tick(time.Second) {
 				err := syncSpamScores()

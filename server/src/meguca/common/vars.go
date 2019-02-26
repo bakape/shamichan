@@ -9,6 +9,9 @@ var (
 	GetVideoNames func() []string
 	// Recompile is a forwarded function from "meguca/templates" to avoid circular imports
 	Recompile func() error
+
+	// Project is being uint tested
+	IsTest bool
 )
 
 // Maximum lengths of various input fields

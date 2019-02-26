@@ -10,6 +10,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -36,7 +37,7 @@ func encodeBody(t *testing.T, data interface{}) io.Reader {
 }
 
 func TestNotBoardOwner(t *testing.T) {
-	assertTableClear(t, "accounts", "boards")
+	test_db.ClearTables(t, "accounts", "boards")
 	writeSampleBoard(t)
 	writeSampleUser(t)
 
@@ -56,13 +57,16 @@ func TestNotBoardOwner(t *testing.T) {
 }
 
 func TestServePrivateBoardConfigs(t *testing.T) {
-	assertTableClear(t, "boards", "accounts")
+	test_db.ClearTables(t, "boards", "accounts")
 
 	config.ClearBoards()
 	conf := db.BoardConfigs{
 		BoardConfigs: config.BoardConfigs{
 			ID:        "a",
 			Eightball: []string{"a", "b", "c"},
+			BoardPublic: config.BoardPublic{
+				Banners: []uint16{},
+			},
 		},
 	}
 	_, err := config.SetBoardConfigs(conf.BoardConfigs)
@@ -86,7 +90,7 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 }
 
 func TestBoardConfiguration(t *testing.T) {
-	assertTableClear(t, "accounts", "boards")
+	test_db.ClearTables(t, "accounts", "boards")
 	(*config.Get()).Captcha = false
 
 	const board = "a"
@@ -204,11 +208,17 @@ func TestValidateBoardConfigs(t *testing.T) {
 	}
 }
 
+func disableCaptcha() {
+	conf := *config.Get()
+	conf.Captcha = false
+	config.Set(conf)
+}
+
 func TestValidateBoardCreation(t *testing.T) {
-	assertTableClear(t, "boards", "accounts")
+	test_db.ClearTables(t, "boards", "accounts")
 	writeSampleBoard(t)
 	writeSampleUser(t)
-	(*config.Get()).Captcha = false
+	disableCaptcha()
 
 	cases := [...]struct {
 		name, id, title string
@@ -298,9 +308,9 @@ func writeSampleBoardOwner(t *testing.T) {
 }
 
 func TestBoardCreation(t *testing.T) {
-	assertTableClear(t, "boards", "accounts")
+	test_db.ClearTables(t, "boards", "accounts")
 	writeSampleUser(t)
-	(*config.Get()).Captcha = false
+	disableCaptcha()
 
 	const (
 		id    = "a"
@@ -333,7 +343,7 @@ func TestBoardCreation(t *testing.T) {
 }
 
 func TestServePrivateServerConfigs(t *testing.T) {
-	assertTableClear(t, "accounts")
+	test_db.ClearTables(t, "accounts")
 	writeSampleUser(t)
 	writeAdminAccount(t)
 	if err := config.Set(config.Defaults); err != nil {
@@ -392,7 +402,7 @@ func writeAdminAccount(t *testing.T) {
 }
 
 func TestServerConfigSetting(t *testing.T) {
-	assertTableClear(t, "accounts")
+	test_db.ClearTables(t, "accounts")
 	if err := db.WriteConfigs(config.Defaults); err != nil {
 		t.Fatal(err)
 	}
@@ -416,12 +426,12 @@ func TestServerConfigSetting(t *testing.T) {
 }
 
 func TestDeleteBoard(t *testing.T) {
-	assertTableClear(t, "accounts", "boards")
+	test_db.ClearTables(t, "accounts", "boards")
 	writeSampleUser(t)
 	writeSampleBoard(t)
 	writeSampleBoardOwner(t)
 	writeAllBoard(t)
-	(*config.Get()).Captcha = false
+	disableCaptcha()
 
 	rec, req := newJSONPair(t, "/api/delete-board", boardActionRequest{
 		Board: "a",
@@ -452,7 +462,7 @@ func writeAllBoard(t *testing.T) {
 }
 
 func TestDeletePost(t *testing.T) {
-	assertTableClear(t, "accounts", "boards")
+	test_db.ClearTables(t, "accounts", "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	writeSampleUser(t)

@@ -11,8 +11,6 @@ import (
 	"github.com/Masterminds/squirrel"
 )
 
-// TODO: Refactor PropagateModeration() for DB triggers
-
 // Write moderation action to board-level and post-level logs
 func logModeration(tx *sql.Tx, e auth.ModLogEntry) (err error) {
 	_, err = sq.Insert("mod_log").
@@ -303,5 +301,18 @@ func GetModLog(board string) (log []auth.ModLogEntry, err error) {
 			return
 		},
 	)
+	return
+}
+
+// GetModLog retrieves the moderation log entry by ID
+func GetModLogEntry(id uint64) (e auth.ModLogEntry, err error) {
+	err = sq.
+		Select("type", "board", "post_id", "by", "created", "length",
+			"data").
+		From("mod_log").
+		Where("id = ?", id).
+		QueryRow().
+		Scan(&e.Type, &e.Board, &e.ID, &e.By, &e.Created, &e.Length,
+			&e.Data)
 	return
 }

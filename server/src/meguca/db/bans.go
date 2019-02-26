@@ -38,7 +38,7 @@ func propagateBans(board string, ip string) (err error) {
 	if err != nil {
 		return
 	}
-	if !IsTest {
+	if !common.IsTest {
 		auth.DisconnectByBoardAndIP(ip, board)
 	}
 	return
@@ -219,7 +219,7 @@ func IsBanned(board, ip string) error {
 		if matched {
 			// Also refresh the cache to keep stale positives from
 			// triggering a check again
-			if !IsTest {
+			if !common.IsTest {
 				go func() {
 					err := RefreshBanCache()
 					if err != nil {

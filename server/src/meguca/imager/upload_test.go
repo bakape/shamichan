@@ -10,6 +10,7 @@ import (
 	"meguca/db"
 	"meguca/imager/assets"
 	"meguca/test"
+	"meguca/test/test_db"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -54,13 +55,6 @@ func assertCode(t *testing.T, res, std int) {
 	t.Helper()
 	if res != std {
 		t.Errorf("unexpected status code: %d : %d", std, res)
-	}
-}
-
-func assertTableClear(t *testing.T, tables ...string) {
-	t.Helper()
-	if err := db.ClearTables(tables...); err != nil {
-		t.Fatal(err)
 	}
 }
 
@@ -160,7 +154,7 @@ func TestInvalidForm(t *testing.T) {
 }
 
 func TestNewThumbnail(t *testing.T) {
-	assertTableClear(t, "images")
+	test_db.ClearTables(t, "images")
 	resetDirs(t)
 	config.Set(config.Configs{
 		Public: config.Public{
@@ -188,7 +182,7 @@ func TestNoImageUploaded(t *testing.T) {
 }
 
 func TestThumbNailReuse(t *testing.T) {
-	assertTableClear(t, "images")
+	test_db.ClearTables(t, "images")
 	resetDirs(t)
 
 	for i := 1; i <= 2; i++ {
@@ -201,7 +195,7 @@ func TestThumbNailReuse(t *testing.T) {
 }
 
 func TestUploadImageHash(t *testing.T) {
-	assertTableClear(t, "images")
+	test_db.ClearTables(t, "images")
 	resetDirs(t)
 
 	std := assets.StdJPEG
@@ -222,7 +216,7 @@ func TestUploadImageHash(t *testing.T) {
 }
 
 func TestUploadImageHashNoHash(t *testing.T) {
-	assertTableClear(t, "images")
+	test_db.ClearTables(t, "images")
 
 	rec := httptest.NewRecorder()
 	b := bytes.NewReader([]byte(assets.StdJPEG.SHA1))

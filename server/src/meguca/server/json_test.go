@@ -5,6 +5,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"strings"
 	"testing"
 )
@@ -138,7 +139,7 @@ func TestPostJSON(t *testing.T) {
 func setupPosts(t *testing.T) {
 	t.Helper()
 
-	assertTableClear(t, "boards")
+	test_db.ClearTables(t, "boards")
 	if err := db.SetPostCounter(11); err != nil {
 		t.Fatal(err)
 	}

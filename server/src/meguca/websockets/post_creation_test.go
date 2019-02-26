@@ -6,6 +6,7 @@ import (
 	"meguca/config"
 	"meguca/db"
 	. "meguca/test"
+	"meguca/test/test_db"
 	"meguca/websockets/feeds"
 	"strconv"
 	"testing"
@@ -24,7 +25,7 @@ var (
 )
 
 func TestInsertThread(t *testing.T) {
-	assertTableClear(t, "boards", "images")
+	test_db.ClearTables(t, "boards", "images")
 
 	conf := [...]db.BoardConfigs{
 		{
@@ -204,9 +205,9 @@ func assertIP(t *testing.T, id uint64, ip string) {
 
 func TestClosePreviousPostOnCreation(t *testing.T) {
 	feeds.Clear()
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 	writeSamplePost(t)
 	if err := db.SetPostCounter(5); err != nil {
 		t.Fatal(err)
@@ -374,52 +375,10 @@ func encodeMessageType(typ common.MessageType) string {
 func prepareForPostCreation(t testing.TB) {
 	t.Helper()
 
-	assertTableClear(t, "boards", "images", "bans")
-	writeSampleBoard(t)
-	writeSampleThread(t)
+	test_db.ClearTables(t, "boards", "images", "bans")
+	test_db.WriteSampleBoard(t)
+	test_db.WriteSampleThread(t)
 	if err := db.SetPostCounter(5); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func writeSampleBoard(t testing.TB) {
-	t.Helper()
-
-	b := db.BoardConfigs{
-		BoardConfigs: config.BoardConfigs{
-			ID:        "a",
-			Eightball: []string{"yes"},
-		},
-	}
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WriteBoard(tx, b)
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func writeSampleThread(t testing.TB) {
-	t.Helper()
-
-	now := time.Now().Unix()
-	thread := db.Thread{
-		ID:        1,
-		Board:     "a",
-		PostCtr:   0,
-		ImageCtr:  1,
-		ReplyTime: now,
-	}
-	op := db.Post{
-		StandalonePost: common.StandalonePost{
-			Post: common.Post{
-				ID:   1,
-				Time: time.Now().Unix(),
-			},
-			OP: 1,
-		},
-	}
-	if err := db.WriteThread(thread, op); err != nil {
 		t.Fatal(err)
 	}
 }
