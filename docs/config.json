@@ -7,5 +7,6 @@
 	"address": "127.0.0.1:8000",
 	"database": "user=meguca password=meguca dbname=meguca sslmode=disable",
 	"certPath": "",
+	"keyPath": "",
 	"reverseProxyIP": ""
 }

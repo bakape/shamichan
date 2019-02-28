@@ -53,10 +53,10 @@ var (
 // Configs, that can be optionally passed through a JSON configuration file.
 // Flags override this. All fields are optional.
 type serverConfigs struct {
-	SSL, ReverseProxied, Gzip                   *bool
-	ImagerMode                                  *uint
-	CacheSize                                   *float64
-	Address, Database, CertPath, ReverseProxyIP *string
+	SSL, ReverseProxied, Gzip                            *bool
+	ImagerMode                                           *uint
+	CacheSize                                            *float64
+	Address, Database, CertPath, KeyPath, ReverseProxyIP *string
 }
 
 func validateImagerMode(m *uint) {
@@ -95,6 +95,9 @@ func setConfigDefaults(c *serverConfigs) {
 	}
 	if c.CertPath == nil {
 		c.CertPath = new(string)
+	}
+	if c.KeyPath == nil {
+		c.KeyPath = new(string)
 	}
 	if c.ReverseProxyIP == nil {
 		c.ReverseProxyIP = new(string)
@@ -139,10 +142,10 @@ func Start() error {
 		&ssl,
 		"s",
 		*conf.SSL,
-		"serve and listen only through HTTPS. Requires --ssl-cert and "+
-			"--ssl-key to be set",
+		"serve and listen only through HTTPS. Requires -S and -K to be set.",
 	)
 	flag.StringVar(&sslCert, "S", *conf.CertPath, "path to SSL certificate")
+	flag.StringVar(&sslKey, "K", *conf.KeyPath, "path to SSL key")
 	flag.BoolVar(
 		&auth.IsReverseProxied,
 		"r",
