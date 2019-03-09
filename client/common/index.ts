@@ -124,5 +124,5 @@ export interface ImageData {
 // Possible file types of a post image
 export enum fileTypes {
 	jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz",
-	flac, noFile, txt, webp,
+	flac, noFile, txt, webp, rar, cbz, cbr,
 }

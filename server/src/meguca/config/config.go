@@ -105,7 +105,7 @@ var (
 )
 
 // Default string for the FAQ panel
-const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, FLAC, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ and TAR.XZ.
+const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, FLAC, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ, TAR.XZ, RAR, CBZ, CBR.
 <hr>Encase text in:
   ** for spoilers
   @@ for bold

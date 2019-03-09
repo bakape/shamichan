@@ -24,11 +24,19 @@ func TestProcessArchive(t *testing.T) {
 	cases := [...]struct {
 		name, file, err string
 		typ             uint8
+		hasThumb        bool
 	}{
 		{
-			name: "ZIP",
-			file: "sample.zip",
-			typ:  common.ZIP,
+			name:     "ZIP",
+			file:     "sample.zip",
+			typ:      common.CBZ,
+			hasThumb: true,
+		},
+		{
+			name:     "RAR",
+			file:     "sample.rar",
+			typ:      common.CBR,
+			hasThumb: true,
 		},
 		{
 			name: "7zip",
@@ -44,7 +52,8 @@ func TestProcessArchive(t *testing.T) {
 			name: "tar.xz",
 			file: "sample.tar.xz",
 			typ:  common.TXZ,
-		}, {
+		},
+		{
 			name: "pdf",
 			file: "sample.pdf", // Handled the same as archives
 			typ:  common.PDF,
@@ -59,7 +68,7 @@ func TestProcessArchive(t *testing.T) {
 			var img common.ImageCommon
 			f := test.OpenSample(t, c.file)
 			defer f.Close()
-			_, err := processFile(f, &img, dummyOpts)
+			thumb, err := processFile(f, &img, dummyOpts)
 			if c.err != "" {
 				if err == nil {
 					t.Fatalf("expected an error")
@@ -70,6 +79,10 @@ func TestProcessArchive(t *testing.T) {
 				return
 			} else if err != nil {
 				t.Fatal(err)
+			}
+			hasThumb := len(thumb) != 0
+			if hasThumb != c.hasThumb {
+				t.Fatalf("unexpected thumbnail generation: %t", hasThumb)
 			}
 
 			assertFileType(t, img.FileType, c.typ)

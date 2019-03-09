@@ -56,19 +56,3 @@ func detectTarXZ(buf []byte) (mime string, ext string) {
 	}
 	return
 }
-
-// Detect if file is a 7zip archive
-func detect7z(buf []byte) (string, string) {
-	if bytes.HasPrefix(buf, []byte{'7', 'z', 0xBC, 0xAF, 0x27, 0x1C}) {
-		return mime7Zip, "7z"
-	}
-	return "", ""
-}
-
-// Detect zip archives
-func detectZip(data []byte) (string, string) {
-	if bytes.HasPrefix(data, []byte("\x50\x4B\x03\x04")) {
-		return mimeZip, "zip"
-	}
-	return "", ""
-}

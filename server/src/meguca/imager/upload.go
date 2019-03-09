@@ -32,43 +32,29 @@ const largeBufCap = 12 << 10
 var (
 	// Map of MIME types to the constants used internally
 	mimeTypes = map[string]uint8{
-		"image/jpeg":      common.JPEG,
-		"image/png":       common.PNG,
-		"image/gif":       common.GIF,
-		"image/webp":      common.WEBP,
-		mimePDF:           common.PDF,
-		"video/webm":      common.WEBM,
-		"application/ogg": common.OGG,
-		"video/mp4":       common.MP4,
-		"video/quicktime": common.MP4,
-		"audio/mpeg":      common.MP3,
-		mime7Zip:          common.SevenZip,
-		mimeTarGZ:         common.TGZ,
-		mimeTarXZ:         common.TXZ,
-		mimeZip:           common.ZIP,
-		"audio/x-flac":    common.FLAC,
-		mimeText:          common.TXT,
+		"image/jpeg":                    common.JPEG,
+		"image/png":                     common.PNG,
+		"image/gif":                     common.GIF,
+		"image/webp":                    common.WEBP,
+		mimePDF:                         common.PDF,
+		"video/webm":                    common.WEBM,
+		"application/ogg":               common.OGG,
+		"video/mp4":                     common.MP4,
+		"video/quicktime":               common.MP4,
+		"audio/mpeg":                    common.MP3,
+		mime7Zip:                        common.SevenZip,
+		mimeTarGZ:                       common.TGZ,
+		mimeTarXZ:                       common.TXZ,
+		mimeZip:                         common.ZIP,
+		"audio/x-flac":                  common.FLAC,
+		mimeText:                        common.TXT,
+		"application/x-rar-compressed":  common.RAR,
+		"application/vnd.comicbook+zip": common.CBZ,
+		"application/vnd.comicbook-rar": common.CBR,
 	}
 
 	// MIME types from thumbnailer to accept
-	allowedMimeTypes = map[string]bool{
-		"image/jpeg":      true,
-		"image/png":       true,
-		"image/gif":       true,
-		"image/webp":      true,
-		"application/pdf": true,
-		"video/webm":      true,
-		"application/ogg": true,
-		"video/mp4":       true,
-		"video/quicktime": true,
-		"audio/mpeg":      true,
-		mimeZip:           true,
-		mime7Zip:          true,
-		mimeTarGZ:         true,
-		mimeTarXZ:         true,
-		"audio/x-flac":    true,
-		mimeText:          true,
-	}
+	allowedMimeTypes map[string]bool
 
 	errTooLarge = errors.New("file too large")
 	isTest      bool
@@ -80,6 +66,13 @@ var (
 		},
 	}
 )
+
+func init() {
+	allowedMimeTypes = make(map[string]bool, len(mimeTypes))
+	for t := range mimeTypes {
+		allowedMimeTypes[t] = true
+	}
+}
 
 // Return large buffer pool, if eligable
 func returnLargeBuf(buf []byte) {

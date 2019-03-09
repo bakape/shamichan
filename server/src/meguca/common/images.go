@@ -19,6 +19,9 @@ const (
 	NoFile
 	TXT
 	WEBP
+	RAR
+	CBZ
+	CBR
 )
 
 // Extensions maps internal file types to their canonical file extensions
@@ -38,6 +41,9 @@ var Extensions = map[uint8]string{
 	TXZ:      "tar.xz",
 	FLAC:     "flac",
 	TXT:      "txt",
+	RAR:      "rar",
+	CBZ:      "cbz",
+	CBR:      "cbr",
 }
 
 // Image contains a post's image and thumbnail data

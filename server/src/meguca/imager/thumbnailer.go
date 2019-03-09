@@ -11,8 +11,6 @@ const mimePDF = "application/pdf"
 
 func init() {
 	for _, fn := range [...]thumbnailer.MatcherFunc{
-		detect7z,
-		detectZip,
 		detectTarGZ,
 		detectTarXZ,
 		detectText, // Has to be last, in case any other formats are pure UTF-8
@@ -20,7 +18,7 @@ func init() {
 		thumbnailer.RegisterMatcher(fn)
 	}
 	for _, m := range [...]string{
-		mimeZip, mime7Zip, mimeTarGZ, mimeTarXZ, mimeText,
+		mime7Zip, mimeTarGZ, mimeTarXZ, mimeText,
 		/// PDF thumbnailing can be very buggy and ghostcript is unreliable and
 		// a security risk
 		mimePDF,
