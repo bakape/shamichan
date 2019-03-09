@@ -8,7 +8,7 @@ import {
 import { Post } from "./model"
 import ImageHandler, { sourcePath } from "./images"
 import PostView from "./view"
-import { PostData, fileTypes } from "../common"
+import { PostData, fileTypes, isExpandable } from "../common"
 
 interface MouseMove extends ChangeEmitter {
 	event: MouseEvent
@@ -194,33 +194,28 @@ function renderImagePreview(event: MouseEvent) {
 	}
 
 	let tag: string
-
-	switch (post.image.file_type) {
-		case fileTypes.pdf: // Nothing to preview for these
-		case fileTypes.mp3:
-		case fileTypes.flac:
-		case fileTypes.zip:
-		case fileTypes["7z"]:
-		case fileTypes["tar.gz"]:
-		case fileTypes["tar.xz"]:
-		case fileTypes.txt:
-			return clear()
-		case fileTypes.webm:
-			if (!options.webmHover) {
-				return clear()
-			}
-			tag = "video"
-			break
-		case fileTypes.mp4:
-		case fileTypes.ogg:
-			// No video OGG and MP4 are treated just like MP3
-			if (!options.webmHover || !post.image.video) {
-				return clear()
-			}
-			tag = "video"
-			break
-		default:
-			tag = "img"
+	if (isExpandable(post.image.file_type)) {
+		switch (post.image.file_type) {
+			case fileTypes.webm:
+				if (!options.webmHover) {
+					return clear()
+				}
+				tag = "video"
+				break
+			case fileTypes.mp4:
+			case fileTypes.ogg:
+				// No video OGG and MP4 are treated just like MP3
+				if (!options.webmHover || !post.image.video) {
+					return clear()
+				}
+				tag = "video"
+				break
+			default:
+				tag = "img"
+		}
+	} else {
+		// Nothing to preview for these
+		return clear()
 	}
 
 	const el = document.createElement(tag)

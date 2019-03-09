@@ -126,3 +126,23 @@ export enum fileTypes {
 	jpg, png, gif, webm, pdf, svg, mp4, mp3, ogg, zip, "7z", "tar.gz", "tar.xz",
 	flac, noFile, txt, webp, rar, cbz, cbr,
 }
+
+// Return, if source file type can be expanded
+export function isExpandable(t: fileTypes): boolean {
+	switch (t) {
+		case fileTypes.pdf: // Nothing to preview for these
+		case fileTypes.mp3:
+		case fileTypes.flac:
+		case fileTypes.zip:
+		case fileTypes["7z"]:
+		case fileTypes["tar.gz"]:
+		case fileTypes["tar.xz"]:
+		case fileTypes.txt:
+		case fileTypes.rar:
+		case fileTypes.cbr:
+		case fileTypes.cbz:
+			return false;
+		default:
+			return true;
+	}
+}

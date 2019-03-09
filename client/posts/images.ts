@@ -1,5 +1,5 @@
 import { Post } from "./model"
-import { fileTypes } from "../common"
+import { fileTypes, isExpandable } from "../common"
 import { View } from "../base"
 import {
 	setAttrs, on, trigger, firstChild, importTemplate, escape, pad
@@ -283,15 +283,7 @@ export default class ImageHandler extends View<Post> {
 		}
 
 		switch (img.file_type) {
-			// Simply download the file
-			case fileTypes.pdf:
-			case fileTypes.zip:
-			case fileTypes["7z"]:
-			case fileTypes["tar.gz"]:
-			case fileTypes["tar.xz"]:
-			case fileTypes.txt:
-				event.preventDefault()
-				return (this.el.querySelector("figcaption a[download]") as HTMLElement).click()
+
 			case fileTypes.mp3:
 			case fileTypes.flac:
 				event.preventDefault()
@@ -305,6 +297,13 @@ export default class ImageHandler extends View<Post> {
 					return this.expandImage(event, false)
 				}
 			default:
+				if (!isExpandable(img.file_type)) {
+					// Simply download the file
+					event.preventDefault()
+					return (this.el
+						.querySelector("figcaption a[download]") as HTMLElement)
+						.click()
+				}
 				return this.expandImage(event, false)
 		}
 	}
