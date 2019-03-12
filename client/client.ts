@@ -82,13 +82,6 @@ export function insertPost(data: PostData) {
 
 export default () => {
 	handlers[message.invalid] = (msg: string) => {
-		if (msg.includes("you are banned")) {
-			// Crash this tab with no survivors
-			const ar = [];
-			while (1) {
-				ar.push([]);
-			}
-		}
 
 		// TODO: More user-friendly critical error reporting
 
