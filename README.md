@@ -9,7 +9,7 @@ Platforms: Linux, OSX, Win64
 License: GNU AGPL
 
 ## Runtime dependencies
-* [PostgresSQL](https://www.postgresql.org/download/) >= 9.5
+* [PostgresSQL](https://www.postgresql.org/download/) >= 10.0
 
 ### Country flags
 
