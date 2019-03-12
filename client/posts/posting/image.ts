@@ -3,26 +3,25 @@
 async function onImageErr(e: Event) {
     const el = (e.target as HTMLImageElement)
 
-    if (el.tagName !== "IMG" || (el.complete && el.naturalWidth !== 0)) {
+    if (el.tagName !== "IMG"
+        || (el.complete && el.naturalWidth !== 0)
+        || el.getAttribute("data-handling-error")
+    ) {
         return
     }
+    el.setAttribute("data-handling-error", "1");
 
-    const src = el.getAttribute("src")
-
-    if (src.includes("?bs=")) {
-        return
-    }
 
     e.stopPropagation()
     e.preventDefault()
 
-    for (var i = 0; i < 31; i++) {
+    for (var i = 0; i < 30; i++) {
         if (el.complete && el.naturalWidth !== 0) {
             break
         }
-        
+
         // Force refresh the cache
-        el.setAttribute("src", `${src}?bs=${i}`)
+        el.src = el.src;
         await new Promise(resolve => setTimeout(resolve, 2000))
     }
 }
