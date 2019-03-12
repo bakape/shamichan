@@ -65,12 +65,7 @@ into the root directory
 * `make server` and `make client` build the server and client separately
 * `make watch` watches the file system for changes and incrementally rebuilds
 the client
-* `make update_deps` updates all dependencies
 * `make clean` removes files from the previous compilation
-* `make dist_clean` in addition to the above removes uploaded files and their
-thumbnails
-* To enable using Go tools in the project add the absolute path of `./go` to
-your `$GOPATH` environment variable
 * `make {test,test_no_race,test_docker}` run regular, without data race
 detection and Dockerized test suites, respectively
 * To run server unit tests (unless Dockerized) add database creation rights to

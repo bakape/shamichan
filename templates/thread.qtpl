@@ -1,0 +1,137 @@
+{% import "strconv" %}
+{% import "github.com/bakape/meguca/lang" %}
+{% import "github.com/bakape/meguca/common" %}
+{% import "github.com/bakape/meguca/config" %}
+{% import "github.com/bakape/meguca/auth" %}
+{% import "encoding/json" %}
+
+{% func renderThread(postHTML []byte, id uint64, board string, abbrev, locked bool, pos auth.ModerationLevel) %}{% stripspace %}
+	{% code conf := config.GetBoardConfigs(board) %}
+	{% code ln := lang.Get() %}
+	{% if !locked %}
+		<form id="new-reply-form" action="/api/create-reply" method="post" enctype="multipart/form-data" class="top-margin hidden">
+			<input name="board" type="text" value="{%s= board %}" hidden>
+			<input name="op" type="text" value="{%s= strconv.FormatUint(id, 10) %}" hidden>
+			{%= input(sageSpec.wrap(), ln) %}
+			{%= noscriptPostCreationFields(pos) %}
+			{% if !conf.TextOnly %}
+				{%= uploadForm() %}
+			{% endif %}
+			{%= captcha(board) %}
+			{%= submit(true) %}
+		</form>
+	{% endif %}
+	<span class="aside-container top-margin">
+		<span class="act" id="top">
+			<a href="#bottom">
+				{%s= ln.Common.UI["bottom"] %}
+			</a>
+		</span>
+		<span class="act">
+			<a href=".">
+				{%s= ln.Common.UI["return"] %}
+			</a>
+		</span>
+		<span class="act">
+			<a href="catalog">
+				{%s= ln.Common.UI["catalog"] %}
+			</a>
+		</span>
+		<span id="expand-images" class="act noscript-hide">
+			<a>
+				{%s= ln.Common.Posts["expandImages"] %}
+			</a>
+		</span>
+		{%= hoverReveal("span", conf.Notice, ln.Common.UI["showNotice"]) %}
+		{%= hoverReveal("span", conf.Rules, ln.Common.UI["rules"]) %}
+	</span>
+	<hr>
+	{%z= postHTML %}
+	<div id="bottom-spacer"></div>
+	{% if !locked %}
+		<aside class="act posting glass noscript-hide">
+			<a>
+				{%s= ln.Common.UI["reply"] %}
+			</a>
+		</aside>
+	{% endif %}
+	<hr>
+	<span class="aside-container">
+		<span class="act" id="bottom">
+			<a href=".">
+				{%s= ln.Common.UI["return"] %}
+			</a>
+		</span>
+		<span class="act">
+			<a href="catalog">
+				{%s= ln.Common.UI["catalog"] %}
+			</a>
+		</span>
+		<span class="act">
+			<a href="#top">
+				{%s= ln.Common.UI["top"] %}
+			</a>
+		</span>
+		{% if !abbrev %}
+			<span class="act">
+				<a href="?last=100#bottom">
+					{%s= ln.Common.UI["last"] %}{% space %}100
+				</a>
+			</span>
+		{% endif %}
+		<span id="lock" style="visibility: hidden;">
+			{%s= ln.Common.UI["lockedToBottom"] %}
+		</span>
+	</span>
+	{%= loadingImage(board) %}
+{% endstripspace %}{% endfunc %}
+
+ThreadPosts renders the post content of a thread. Separate function to allow
+caching of generated posts.
+{% func ThreadPosts(t common.Thread, json []byte) %}{% stripspace %}
+	<section id="thread-container" data-id="{%s= strconv.FormatUint(t.ID, 10) %}">
+		{% code bls := extractBacklinks(1<<10, t) %}
+		{%= renderThreadPosts(t, bls, config.Get().RootURL, false) %}
+		<script id="post-data" type="application/json">
+			{%z= json %}
+		</script>
+		{%= encodeBacklinks(bls) %}
+	</section>
+	<script id="board-configs" type="application/json">
+		{%z= config.GetBoardConfigs(t.Board).JSON %}
+	</script>
+{% endstripspace %}{% endfunc %}
+
+Common functionality between index board pages and threads pages
+{% func renderThreadPosts(t common.Thread, bls backlinks, root string, index bool) %}{% stripspace %}
+	{% code boardConfig := config.GetBoardConfigs(t.Board) %}
+	{% code c := articleContext{
+		index: index,
+		sticky: t.Sticky,
+		locked: t.Locked,
+		rbText: boardConfig.RbText,
+		pyu: boardConfig.Pyu,
+		op: t.ID,
+		board: t.Board,
+		subject: t.Subject,
+		root: root,
+		backlinks: bls,
+	} %}
+	{% code c.omit, c.imageOmit = CalculateOmit(t) %}
+	{%= renderArticle(t.Post, c) %}
+
+	{% code c.sticky = false %}
+	{% code c.locked = false %}
+	{% code c.omit, c.imageOmit = 0, 0 %}
+	{% code c.subject = "" %}
+	{% for _, p := range t.Posts %}
+		{%= renderArticle(p, c) %}
+	{% endfor %}
+{% endstripspace %}{% endfunc %}
+
+{% func encodeBacklinks(bls backlinks) %}{% stripspace %}
+	<script id="backlink-data" type="application/json">
+		{% code buf, _ := json.Marshal(bls) %}
+		{%z= buf %}
+	</script>
+{% endstripspace %}{% endfunc %}
