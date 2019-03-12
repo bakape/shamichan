@@ -2,23 +2,14 @@ export node_bins=$(PWD)/node_modules/.bin
 export uglifyjs=$(node_bins)/uglifyjs
 export gulp=$(node_bins)/gulp
 export is_windows=false
-binary=meguca
+export GO111MODULE=on
 
-ifeq ($(GOPATH),)
-	export PATH:=$(PATH):$(HOME)/go/bin
-	export GOPATH=$(HOME)/go:$(PWD)/server
-else
-	export PATH:=$(PATH):$(GOPATH)/bin
-	export GOPATH:=$(GOPATH):$(PWD)/server
-endif
-
-# Differentiate between Unix and mingw builds
+# Differentiate between Unix-like and mingw builds
 ifeq ($(OS), Windows_NT)
 	export PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig/
 	export PKG_CONFIG_LIBDIR=/mingw64/lib/pkgconfig/
 	export PATH:=$(PATH):/mingw64/bin/
 	export is_windows=true
-	binary=meguca.exe
 endif
 
 .PHONY: server client imager test
@@ -55,28 +46,11 @@ client_vendor: client_deps
 css:
 	$(gulp) css
 
-server: server_deps
-	cd ./server/src/meguca/; go build -v -o ../../../$(binary)
-ifeq ($(is_windows), true)
-	cp /mingw64/bin/*.dll ./
-endif
+generate:
+	go generate ./...
 
-server_deps:
-	go list -f '{{.Deps}}' meguca | tr -d '[]' | xargs go get -v
-
-update_deps:
-	go get -u -v github.com/valyala/quicktemplate/qtc github.com/jteeuwen/go-bindata/...
-	go list -f '{{.Deps}}' meguca | tr -d '[]' | xargs go list -e -f '{{if not .Standard}}{{.ImportPath}}{{end}}' | grep -v 'meguca' | xargs go get -u -v
-
-server_no_fetch:
-	cd ./server/src/meguca/; go build -v -o ../../../$(binary)
-
-generate: generate_clean
-	cd ./server/src/meguca/; go generate ./...
-
-generate_clean:
-	rm -f ./server/src/meguca/db/bin_data.go ./server/src/meguca/lang/bin_data.go ./server/src/meguca/assets/bin_data.go
-	rm -f ./server/src/meguca/templates/*.qtpl.go
+server:
+	go build -v
 
 client_clean:
 	rm -rf www/js www/css/*.css www/css/maps node_modules
@@ -87,18 +61,13 @@ ifeq ($(is_windows), true)
 	rm -rf /.meguca_build *.dll
 endif
 
-dist_clean: clean
-	rm -rf images error.log db.db
-
 test:
-	cd ./server/src/meguca/; go test --race ./...
+	go test --race ./...
 
 test_no_race:
-	cd ./server/src/meguca/; go test ./...
+	go test ./...
 
 test_docker:
 	docker build -t meguca_test .
 	docker run -t --rm --entrypoint scripts/docker_test.sh meguca_test
-
-check: test
 
