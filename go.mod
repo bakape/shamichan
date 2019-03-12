@@ -1,7 +1,5 @@
 module github.com/bakape/meguca
 
-go 1.12
-
 replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.0
 
 require (
