@@ -21,6 +21,8 @@ github.com/bakape/thumbnailer v0.0.0-20190309152521-0b14c8002954 h1:NWkxJXoX+dPD
 github.com/bakape/thumbnailer v0.0.0-20190309152521-0b14c8002954/go.mod h1:9PoZJpoK7Nzyuu2xsjd4tgL/d55KO0fnobYvwm8x/68=
 github.com/bakape/thumbnailer v0.0.0-20190312061701-3d9565548e57 h1:y04zWQmS9nPzdEPPRykPswofUYHOnnIASqI0KSs153U=
 github.com/bakape/thumbnailer v0.0.0-20190312061701-3d9565548e57/go.mod h1:s7Sm20txJX+qAc11XFnLPqDPXnYShoscD3++dZKTxIc=
+github.com/bakape/thumbnailer v0.0.0-20190313202626-e737add357f7 h1:DHX8jbvH0n4Hvo1vjfZ3qb9syGtlC5/Gkmcb9l/0C8A=
+github.com/bakape/thumbnailer v0.0.0-20190313202626-e737add357f7/go.mod h1:s7Sm20txJX+qAc11XFnLPqDPXnYShoscD3++dZKTxIc=
 github.com/bakape/thumbnailer v1.0.0 h1:fmaLCJ6sJ5wCAUmB3hhzgFAZ5G3cpueo3olI9N0ox3E=
 github.com/bakape/thumbnailer v1.0.0/go.mod h1:PVB2nXXJHD4KAUWn9HaNKtWeDeAb9BFQ7oDOAdZCKUM=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=
