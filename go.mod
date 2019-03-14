@@ -9,7 +9,7 @@ require (
 	github.com/Sirupsen/logrus v0.0.0-00010101000000-000000000000 // indirect
 	github.com/aquilax/tripcode v1.0.0
 	github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c
-	github.com/bakape/captchouli v1.0.0
+	github.com/bakape/captchouli v1.0.1
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
 	github.com/bakape/thumbnailer v0.0.0-20190313202626-e737add357f7
 	github.com/boltdb/bolt v1.3.1
