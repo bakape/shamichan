@@ -1,10 +1,11 @@
 package auth
 
 import (
-	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/bakape/meguca/config"
+	. "github.com/bakape/meguca/test"
 
 	"golang.org/x/crypto/bcrypt"
 )

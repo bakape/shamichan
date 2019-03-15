@@ -32,6 +32,16 @@ export interface ModerationEntry {
 	data: string
 }
 
+// Possible staff access levels
+export const enum ModerationLevel {
+	notLoggedIn = - 1,
+	notStaff,
+	janitor,
+	moderator,
+	boardOwner,
+	admin,
+}
+
 // Data of any post. In addition to server-sent JSON includes the state
 // property.
 export interface PostData {
@@ -46,7 +56,7 @@ export interface PostData {
 	body: string
 	name: string
 	trip: string
-	auth: string
+	auth: ModerationLevel
 	board?: string
 	flag?: string
 	state: TextState

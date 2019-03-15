@@ -6,11 +6,11 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	"time"
-
 	"github.com/go-playground/log"
 )
 

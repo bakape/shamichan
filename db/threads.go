@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/bakape/meguca/common"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/bakape/meguca/common"
 )
 
 var (
@@ -202,6 +202,6 @@ func CheckThreadLocked(id uint64) (locked bool, err error) {
 	return
 }
 
-func Read()  {
+func Read() {
 
 }

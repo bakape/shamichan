@@ -2,11 +2,13 @@ package server
 
 import (
 	"database/sql"
+	"testing"
+
 	"github.com/bakape/meguca/cache"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/test/test_db"
-	"testing"
 )
 
 func TestThreadHTML(t *testing.T) {
@@ -108,8 +110,8 @@ func TestOwnedBoardSelection(t *testing.T) {
 	}
 	err := db.InTransaction(false, func(tx *sql.Tx) error {
 		for _, s := range staff {
-			err := db.WriteStaff(tx, s.id, map[string][]string{
-				"owners": s.owners,
+			err := db.WriteStaff(tx, s.id, map[common.ModerationLevel][]string{
+				common.BoardOwner: s.owners,
 			})
 			if err != nil {
 				t.Fatal(err)
@@ -149,8 +151,8 @@ func TestBoardConfigurationForm(t *testing.T) {
 	writeSampleUser(t)
 
 	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WriteStaff(tx, "a", map[string][]string{
-			"owners": {"user1"},
+		return db.WriteStaff(tx, "a", map[common.ModerationLevel][]string{
+			common.BoardOwner: {"user1"},
 		})
 	})
 	if err != nil {

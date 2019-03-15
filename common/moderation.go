@@ -1,5 +1,10 @@
 package common
 
+var (
+	modLevelStrings = [...]string{"", "janitors", "moderators", "owners",
+		"admin"}
+)
+
 // ModerationAction is an action performable by moderation staff
 type ModerationAction uint8
 
@@ -23,3 +28,25 @@ type ModerationEntry struct {
 	By     string           `json:"by"`
 	Data   string           `json:"data"`
 }
+
+// ModerationLevel defines the level required to perform an action or the
+// permission level held by a user
+type ModerationLevel int8
+
+// Returns string representation of moderation level
+func (l ModerationLevel) String() string {
+	if l < Janitor {
+		return ""
+	}
+	return modLevelStrings[int(l)]
+}
+
+// All available moderation levels
+const (
+	NotLoggedIn ModerationLevel = iota - 1
+	NotStaff
+	Janitor
+	Moderator
+	BoardOwner
+	Admin
+)

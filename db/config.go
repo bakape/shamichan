@@ -3,15 +3,15 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
+	"time"
+
+	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/assets"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	mlog "github.com/bakape/meguca/log"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
-	"time"
-
-	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 )
 

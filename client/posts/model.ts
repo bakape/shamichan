@@ -7,7 +7,7 @@ import { mine, seenPosts, storeSeenPost, posts, hidden } from "../state"
 import { notifyAboutReply } from "../ui"
 import {
 	PostData, TextState, PostLink, Command, ImageData,
-	ModerationEntry, ModerationAction
+	ModerationEntry, ModerationAction, ModerationLevel,
 } from "../common"
 import { hideRecursively } from "./hide"
 import options from "../options"
@@ -29,7 +29,7 @@ export class Post extends Model implements PostData {
 	public body: string
 	public name: string
 	public trip: string
-	public auth: string
+	public auth: ModerationLevel
 	public subject: string
 	public board: string
 	public flag: string

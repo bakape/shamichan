@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
-	"github.com/bakape/meguca/common"
 	"strconv"
+
+	"github.com/bakape/meguca/common"
 )
 
 // Decodes post links from Postgres array aggregations

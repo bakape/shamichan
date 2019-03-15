@@ -5,7 +5,6 @@ import (
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
-
 	"github.com/go-playground/log"
 )
 

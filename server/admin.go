@@ -8,16 +8,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
+	"regexp"
+	"strconv"
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/websockets/feeds"
-	"net/http"
-	"regexp"
-	"strconv"
-	"time"
 )
 
 const (
@@ -77,7 +78,7 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 		}
 
 		msg.ID = extractParam(r, "board")
-		_, err = canPerform(w, r, msg.ID, auth.BoardOwner, true)
+		_, err = canPerform(w, r, msg.ID, common.BoardOwner, true)
 		if err != nil {
 			return
 		}
@@ -96,7 +97,7 @@ func configureBoard(w http.ResponseWriter, r *http.Request) {
 // Assert user can perform a moderation action. If the action does not need a
 // captcha verification, pass captcha as nil.
 func canPerform(w http.ResponseWriter, r *http.Request, board string,
-	level auth.ModerationLevel, needCaptcha bool,
+	level common.ModerationLevel, needCaptcha bool,
 ) (
 	creds auth.SessionCreds, err error,
 ) {
@@ -135,7 +136,7 @@ func canPerform(w http.ResponseWriter, r *http.Request, board string,
 
 // Assert client can moderate a post of unknown parenthood and return userID
 func canModeratePost(w http.ResponseWriter, r *http.Request, id uint64,
-	level auth.ModerationLevel,
+	level common.ModerationLevel,
 ) (
 	board, userID string, err error,
 ) {
@@ -231,7 +232,7 @@ func boardConfData(w http.ResponseWriter, r *http.Request,
 	conf config.BoardConfigs, err error,
 ) {
 	board := extractParam(r, "board")
-	_, err = canPerform(w, r, board, auth.BoardOwner, false)
+	_, err = canPerform(w, r, board, common.BoardOwner, false)
 	if err != nil {
 		return
 	}
@@ -318,9 +319,10 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			return db.WriteStaff(tx, msg.ID, map[string][]string{
-				"owners": []string{creds.UserID},
-			})
+			return db.WriteStaff(tx, msg.ID,
+				map[common.ModerationLevel][]string{
+					common.BoardOwner: []string{creds.UserID},
+				})
 		})
 		if err != nil {
 			return
@@ -368,7 +370,7 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		creds, err := canPerform(w, r, msg.Board, auth.BoardOwner, true)
+		creds, err := canPerform(w, r, msg.Board, common.BoardOwner, true)
 		if err != nil {
 			return
 		}
@@ -382,13 +384,13 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 
 // Delete one or multiple posts on a moderated board
 func deletePost(w http.ResponseWriter, r *http.Request) {
-	moderatePosts(w, r, auth.Janitor, db.DeletePost)
+	moderatePosts(w, r, common.Janitor, db.DeletePost)
 }
 
 // Perform a moderation action an a single post. If ok == false, the caller
 // should return.
 func moderatePost(w http.ResponseWriter, r *http.Request, id uint64,
-	level auth.ModerationLevel, fn func(userID string) error,
+	level common.ModerationLevel, fn func(userID string) error,
 ) (
 	err error,
 ) {
@@ -401,7 +403,7 @@ func moderatePost(w http.ResponseWriter, r *http.Request, id uint64,
 
 // Same as moderatePost, but works on an array of posts
 func moderatePosts(w http.ResponseWriter, r *http.Request,
-	level auth.ModerationLevel, fn func(id uint64, userID string) error,
+	level common.ModerationLevel, fn func(id uint64, userID string) error,
 ) {
 	err := func() (err error) {
 		var ids []uint64
@@ -410,7 +412,7 @@ func moderatePosts(w http.ResponseWriter, r *http.Request,
 			return
 		}
 		for _, id := range ids {
-			err = moderatePost(w, r, id, auth.Janitor,
+			err = moderatePost(w, r, id, common.Janitor,
 				func(userID string) error {
 					return fn(id, userID)
 				})
@@ -427,12 +429,12 @@ func moderatePosts(w http.ResponseWriter, r *http.Request,
 
 // Permanently delete an image from a post
 func deleteImage(w http.ResponseWriter, r *http.Request) {
-	moderatePosts(w, r, auth.Janitor, db.DeleteImage)
+	moderatePosts(w, r, common.Janitor, db.DeleteImage)
 }
 
 // Spoiler image as a moderator
 func modSpoilerImage(w http.ResponseWriter, r *http.Request) {
-	moderatePosts(w, r, auth.Janitor, db.ModSpoilerImage)
+	moderatePosts(w, r, common.Janitor, db.ModSpoilerImage)
 }
 
 // Clear post contents and remove any uploaded image from the server
@@ -447,7 +449,7 @@ func purgePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		_, userID, err := canModeratePost(w, r, msg.ID, auth.Admin)
+		_, userID, err := canModeratePost(w, r, msg.ID, common.Admin)
 		if err != nil {
 			return
 		}
@@ -494,7 +496,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		_, err = canPerform(w, r, board, auth.Moderator, false)
+		_, err = canPerform(w, r, board, common.Moderator, false)
 		if err != nil {
 			return
 		}
@@ -546,7 +548,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		_, err = canPerform(w, r, msg.Board, auth.BoardOwner, true)
+		_, err = canPerform(w, r, msg.Board, common.BoardOwner, true)
 		if err != nil {
 			return
 		}
@@ -565,11 +567,12 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 		}
 
 		return db.InTransaction(false, func(tx *sql.Tx) error {
-			return db.WriteStaff(tx, msg.Board, map[string][]string{
-				"owners":     msg.Owners,
-				"moderators": msg.Moderators,
-				"janitors":   msg.Janitors,
-			})
+			return db.WriteStaff(tx, msg.Board,
+				map[common.ModerationLevel][]string{
+					common.BoardOwner: msg.Owners,
+					common.Moderator:  msg.Moderators,
+					common.Janitor:    msg.Janitors,
+				})
 		})
 	}()
 	if err != nil {
@@ -586,7 +589,7 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		board, uid, err := canModeratePost(w, r, id, auth.Janitor)
+		board, uid, err := canModeratePost(w, r, id, common.Janitor)
 		if err != nil {
 			return
 		}
@@ -625,7 +628,7 @@ func handleBoolRequest(w http.ResponseWriter, r *http.Request,
 			return
 		}
 
-		_, userID, err := canModeratePost(w, r, msg.ID, auth.Moderator)
+		_, userID, err := canModeratePost(w, r, msg.ID, common.Moderator)
 		if err != nil {
 			return
 		}
@@ -658,7 +661,7 @@ func banList(w http.ResponseWriter, r *http.Request) {
 
 	setHTMLHeaders(w)
 	templates.WriteBanList(w, bans, board,
-		detectCanPerform(r, board, auth.Moderator))
+		detectCanPerform(r, board, common.Moderator))
 }
 
 // Detect, if a  client can perform moderation on a board. Unlike canPerform,
@@ -666,7 +669,7 @@ func banList(w http.ResponseWriter, r *http.Request) {
 func detectCanPerform(
 	r *http.Request,
 	board string,
-	level auth.ModerationLevel,
+	level common.ModerationLevel,
 ) (
 	can bool,
 ) {
@@ -688,7 +691,7 @@ func detectCanPerform(
 func unban(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
 		board := extractParam(r, "board")
-		creds, err := canPerform(w, r, board, auth.Moderator, false)
+		creds, err := canPerform(w, r, board, common.Moderator, false)
 		if err != nil {
 			return
 		}
@@ -767,7 +770,7 @@ func decodeRedirect(w http.ResponseWriter, r *http.Request) (
 	}
 	id = msg.ID
 	address = msg.URL
-	_, err = canPerform(w, r, "all", auth.Admin, false)
+	_, err = canPerform(w, r, "all", common.Admin, false)
 	return
 }
 

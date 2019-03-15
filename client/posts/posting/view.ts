@@ -74,7 +74,7 @@ export default class FormView extends PostView {
         this.el.querySelector(".name").classList.remove("admin")
         this.model.name = name.trim()
         this.model.trip = trip
-        this.model.auth = auth ? "??" : ""
+        this.model.auth = auth ? -1 : 0 // Force question marks
         this.model.sage = identity.sage
         this.renderName()
     }

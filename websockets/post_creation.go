@@ -4,6 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"strings"
+	"unicode/utf8"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -11,8 +14,6 @@ import (
 	"github.com/bakape/meguca/geoip"
 	"github.com/bakape/meguca/parser"
 	"github.com/bakape/meguca/websockets/feeds"
-	"strings"
-	"unicode/utf8"
 )
 
 var (
@@ -299,21 +300,20 @@ func constructPost(
 
 	// Attach staff position title after validations
 	if req.UserID != "" {
-		var pos auth.ModerationLevel
-		pos, err = db.FindPosition(conf.ID, req.UserID)
+		post.Auth, err = db.FindPosition(conf.ID, req.UserID)
 		if err != nil {
 			return
 		}
-		post.Auth = pos.String()
-
-		var loggedIn bool
-		loggedIn, err = db.IsLoggedIn(req.UserID, req.Session)
-		if err != nil {
-			return
-		}
-		if !loggedIn {
-			err = common.ErrInvalidCreds
-			return
+		if post.Auth != 0 {
+			var loggedIn bool
+			loggedIn, err = db.IsLoggedIn(req.UserID, req.Session)
+			if err != nil {
+				return
+			}
+			if !loggedIn {
+				err = common.ErrInvalidCreds
+				return
+			}
 		}
 	}
 

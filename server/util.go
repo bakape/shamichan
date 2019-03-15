@@ -3,13 +3,13 @@ package server
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
-	"net/http"
-	"strconv"
-
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 )
@@ -36,7 +36,7 @@ func checkClientEtag(
 }
 
 // Combine the progress counter and optional configuration hash into a weak etag
-func formatEtag(ctr uint64, hash string, pos auth.ModerationLevel) string {
+func formatEtag(ctr uint64, hash string, pos common.ModerationLevel) string {
 	buf := append(make([]byte, 0, 128), "W/\""...)
 	buf = strconv.AppendUint(buf, ctr, 10)
 
@@ -47,7 +47,7 @@ func formatEtag(ctr uint64, hash string, pos auth.ModerationLevel) string {
 	if hash != "" {
 		addOpt(hash)
 	}
-	if pos != auth.NotLoggedIn {
+	if pos != common.NotLoggedIn {
 		addOpt(pos.String())
 	}
 

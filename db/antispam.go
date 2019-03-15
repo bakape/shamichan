@@ -2,11 +2,11 @@ package db
 
 import (
 	"database/sql"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 	"sync"
 	"time"
 
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 	"github.com/go-playground/log"
 )
 

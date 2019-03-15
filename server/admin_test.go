@@ -5,16 +5,17 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 )
 
 var adminLoginCreds = auth.SessionCreds{
@@ -298,8 +299,8 @@ func writeSampleBoard(t testing.TB) {
 func writeSampleBoardOwner(t *testing.T) {
 	t.Helper()
 	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WriteStaff(tx, "a", map[string][]string{
-			"owners": {"user1"},
+		return db.WriteStaff(tx, "a", map[common.ModerationLevel][]string{
+			common.BoardOwner: {"user1"},
 		})
 	})
 	if err != nil {

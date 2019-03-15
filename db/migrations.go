@@ -745,7 +745,38 @@ var migrations = []func(*sql.Tx) error{
 			return
 		}
 
-		return WriteStaff(tx, "all", map[string][]string{
+		// Legacy function
+		writeStaff := func(tx *sql.Tx, board string,
+			staff map[string][]string,
+		) (err error) {
+			// Remove previous staff entries
+			_, err = sq.Delete("staff").
+				Where("board  = ?", board).
+				RunWith(tx).
+				Exec()
+			if err != nil {
+				return
+			}
+
+			// Write new ones
+			q, err := tx.Prepare(`insert into staff (board, account, position)
+				values($1, $2, $3)`)
+			if err != nil {
+				return
+			}
+			for pos, accounts := range staff {
+				for _, a := range accounts {
+					_, err = q.Exec(board, a, pos)
+					if err != nil {
+						return
+					}
+				}
+			}
+
+			return
+		}
+
+		return writeStaff(tx, "all", map[string][]string{
 			"owners": {"admin", "system"},
 		})
 	},
@@ -1081,6 +1112,127 @@ var migrations = []func(*sql.Tx) error{
 			`alter table images rename column fileType to file_type`,
 			`alter table images rename column thumbType to thumb_type`,
 		)
+	},
+	func(tx *sql.Tx) (err error) {
+		modLevels := map[string]common.ModerationLevel{
+			"janitors":   common.Janitor,
+			"moderators": common.Moderator,
+			"owners":     common.BoardOwner,
+			"admin":      common.Admin,
+		}
+
+		modTable := func(table, column string) (err error) {
+			return execAll(tx,
+				fmt.Sprintf(`alter table %s drop column %s`, table, column),
+				fmt.Sprintf(
+					`alter table %s
+						add column %s smallint not null default 0`,
+					table, column),
+			)
+		}
+
+		// Port all post moderation titles
+		{
+			titles := make(map[uint64]common.ModerationLevel)
+
+			var r *sql.Rows
+			r, err = sq.Select("id", "auth").
+				From("posts").
+				Where("auth is not null").
+				RunWith(tx).
+				Query()
+			if err != nil {
+				return
+			}
+			defer r.Close()
+
+			var (
+				id   uint64
+				auth sql.NullString
+			)
+			for r.Next() {
+				err = r.Scan(&id, &auth)
+				if err != nil {
+					return
+				}
+				pos := modLevels[auth.String]
+				if pos >= common.Janitor {
+					titles[id] = pos
+				}
+			}
+			err = r.Err()
+			if err != nil {
+				return
+			}
+
+			err = modTable("posts", "auth")
+			if err != nil {
+				return
+			}
+
+			for id, pos := range titles {
+				_, err = sq.Update("posts").
+					Set("auth", int(pos)).
+					Where("id = ?", id).
+					RunWith(tx).
+					Exec()
+				if err != nil {
+					return
+				}
+			}
+		}
+
+		// Port staff table
+		{
+			type row struct {
+				account, board string
+				position       common.ModerationLevel
+			}
+
+			var positions []row
+
+			var r *sql.Rows
+			r, err = sq.Delete("staff").
+				Suffix("returning account, board, position").
+				RunWith(tx).
+				Query()
+			if err != nil {
+				return
+			}
+			defer r.Close()
+
+			var account, board, pos string
+			for r.Next() {
+				err = r.Scan(&account, &board, &pos)
+				if err != nil {
+					return
+				}
+				positions = append(positions,
+					row{account, board, modLevels[pos]})
+			}
+			err = r.Err()
+			if err != nil {
+				return
+			}
+
+			err = modTable("staff", "position")
+			if err != nil {
+				return
+			}
+
+			for _, r := range positions {
+				_, err = sq.Insert("staff").
+					Columns("account", "board", "position").
+					Values(r.account, r.board, r.position).
+					RunWith(tx).
+					Exec()
+				if err != nil {
+					return
+				}
+			}
+		}
+
+		return
 	},
 }
 

@@ -3,9 +3,9 @@ package db
 
 import (
 	"database/sql"
-	"github.com/bakape/meguca/common"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/bakape/meguca/common"
 )
 
 // Post is for writing new posts to a database. It contains the Password

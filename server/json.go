@@ -3,6 +3,9 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+	"strconv"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
@@ -10,8 +13,6 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
 	"github.com/bakape/meguca/websockets/feeds"
-	"net/http"
-	"strconv"
 )
 
 var errNoImage = errors.New("post has no image")
@@ -131,7 +132,7 @@ func threadJSON(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, r, formatEtag(ctr, "", auth.NotLoggedIn), data)
+	writeJSON(w, r, formatEtag(ctr, "", common.NotLoggedIn), data)
 }
 
 // Confirms a the thread exists on the board and returns its ID. If an error
@@ -176,7 +177,7 @@ func boardJSON(w http.ResponseWriter, r *http.Request, catalog bool) {
 	data, _, ctr, err := cache.GetJSONAndData(boardCacheArgs(r, b, catalog))
 	switch err {
 	case nil:
-		writeJSON(w, r, formatEtag(ctr, "", auth.NotLoggedIn), data)
+		writeJSON(w, r, formatEtag(ctr, "", common.NotLoggedIn), data)
 	case cache.ErrPageOverflow:
 		text404(w)
 	default:

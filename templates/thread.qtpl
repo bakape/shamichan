@@ -2,10 +2,9 @@
 {% import "github.com/bakape/meguca/lang" %}
 {% import "github.com/bakape/meguca/common" %}
 {% import "github.com/bakape/meguca/config" %}
-{% import "github.com/bakape/meguca/auth" %}
 {% import "encoding/json" %}
 
-{% func renderThread(postHTML []byte, id uint64, board string, abbrev, locked bool, pos auth.ModerationLevel) %}{% stripspace %}
+{% func renderThread(postHTML []byte, id uint64, board string, abbrev, locked bool, pos common.ModerationLevel) %}{% stripspace %}
 	{% code conf := config.GetBoardConfigs(board) %}
 	{% code ln := lang.Get() %}
 	{% if !locked %}

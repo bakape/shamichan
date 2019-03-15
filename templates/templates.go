@@ -10,7 +10,6 @@ import (
 	"io"
 	"sync"
 
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
@@ -22,18 +21,18 @@ func init() {
 }
 
 var (
-	indexTemplates map[auth.ModerationLevel][4][]byte
+	indexTemplates map[common.ModerationLevel][4][]byte
 	mu             sync.RWMutex
 )
 
 // Compile injects dynamic variables, hashes and stores compiled templates
 func Compile() error {
-	levels := [...]auth.ModerationLevel{
-		auth.NotLoggedIn, auth.NotStaff, auth.Janitor, auth.Moderator,
-		auth.BoardOwner, auth.Admin,
+	levels := [...]common.ModerationLevel{
+		common.NotLoggedIn, common.NotStaff, common.Janitor, common.Moderator,
+		common.BoardOwner, common.Admin,
 	}
 
-	t := make(map[auth.ModerationLevel][4][]byte, len(levels))
+	t := make(map[common.ModerationLevel][4][]byte, len(levels))
 
 	for _, pos := range levels {
 		split := bytes.Split([]byte(renderIndex(pos)), []byte("$$$"))
@@ -58,7 +57,7 @@ func Recompile() error {
 
 // Board writes board HTML to w
 func Board(w io.Writer, b, theme string, page, total int,
-	pos auth.ModerationLevel, minimal, catalog bool, threadHTML []byte,
+	pos common.ModerationLevel, minimal, catalog bool, threadHTML []byte,
 ) {
 	conf := config.GetBoardConfigs(b)
 	title := html.EscapeString(fmt.Sprintf("/%s/ - %s", b, conf.Title))
@@ -76,7 +75,7 @@ func Board(w io.Writer, b, theme string, page, total int,
 
 // Thread writes thread page HTML
 func Thread(w io.Writer, id uint64, board, title, theme string, abbrev,
-	locked bool, pos auth.ModerationLevel, postHTML []byte,
+	locked bool, pos common.ModerationLevel, postHTML []byte,
 ) {
 	title = html.EscapeString(fmt.Sprintf("/%s/ - %s", board, title))
 	execIndex(w, title, theme, pos, func(w io.Writer) {
@@ -85,7 +84,7 @@ func Thread(w io.Writer, id uint64, board, title, theme string, abbrev,
 }
 
 // Execute and index template in the second pass
-func execIndex(w io.Writer, title, theme string, pos auth.ModerationLevel,
+func execIndex(w io.Writer, title, theme string, pos common.ModerationLevel,
 	fn func(w io.Writer),
 ) {
 	mu.RLock()

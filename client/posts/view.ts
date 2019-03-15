@@ -13,6 +13,9 @@ import countries from "./countries"
 import { secondsToTime } from "../util/time"
 import { ModerationAction } from '../common';
 
+
+const modLevelStrings = ["", "janitors", "moderators", "owners", "admin"];
+
 // Base post view class
 export default class PostView extends ImageHandler {
     constructor(model: Post, el: HTMLElement | null) {
@@ -235,7 +238,8 @@ export default class PostView extends ImageHandler {
         }
         if (auth) { // Render staff title
             el.classList.add("admin")
-            html += `<span>## ${lang.posts[auth] || "??"}</span>`
+            html +=
+                `<span>## ${lang.posts[modLevelStrings[auth]] || "??"}</span>`;
         }
         if (mine.has(id)) {
             html += `<i>${lang.posts["you"]}</i>`

@@ -49,13 +49,13 @@ type Post struct {
 	Editing    bool              `json:"editing"`
 	Moderated  bool              `json:"-"`
 	Sage       bool              `json:"sage"`
+	Auth       ModerationLevel   `json:"auth"`
 	ID         uint64            `json:"id"`
 	Time       int64             `json:"time"`
 	Body       string            `json:"body"`
 	Flag       string            `json:"flag"`
 	Name       string            `json:"name"`
 	Trip       string            `json:"trip"`
-	Auth       string            `json:"auth"`
 	Image      *Image            `json:"image"`
 	Links      []Link            `json:"links"`
 	Commands   []Command         `json:"commands"`

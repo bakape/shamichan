@@ -13,8 +13,12 @@ github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c h1:eacIMsthlVgjQ8
 github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c/go.mod h1:5iU5AiceCVP7wmrAIn/9YhJzvmErX/GihV/T2o5QUpM=
 github.com/bakape/boorufetch v1.0.0 h1:Cv4LAxZUYYUNmmgMFDrgyoeOHKROTUsE83vLaMnciSg=
 github.com/bakape/boorufetch v1.0.0/go.mod h1:5w+CugEba6no6uHTyaDMjZeYq5Xir8C6A9xtZr/wsbs=
+github.com/bakape/boorufetch v1.0.1 h1:lTgxhYNQazFB/0SElkkcH3xX6URlHxvTiPgtbt4hIQ0=
+github.com/bakape/boorufetch v1.0.1/go.mod h1:5w+CugEba6no6uHTyaDMjZeYq5Xir8C6A9xtZr/wsbs=
 github.com/bakape/captchouli v1.0.0 h1:kbj4SFQ/2jYSxoXRYKQux/enYVy3bytNBcNouzPyT8w=
 github.com/bakape/captchouli v1.0.0/go.mod h1:yaKvv/khz7NGvDFSARl57h6WjASg2QJUdd+L9S2e8FU=
+github.com/bakape/captchouli v1.0.1 h1:UfG351N0qSF9/e3X3QaKTXmumn7q8edN1O5OmlOAzrA=
+github.com/bakape/captchouli v1.0.1/go.mod h1:5lk1FfadAtzGtNKktjNHPvpNEAwKuadBnBilY4F8lkw=
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992 h1:n89d5g4t1+7ROrwElvy5W/knDo3bUKWOZ77acIdHA04=
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992/go.mod h1:+x6GUyBL1gkeUoBPZAEzF9u04TGIFEljjrqMpGT0KVE=
 github.com/bakape/thumbnailer v0.0.0-20190309152521-0b14c8002954 h1:NWkxJXoX+dPDdspjMzVbnHxFzOdDwvll2TncjNwSTz4=

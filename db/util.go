@@ -4,12 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/bakape/meguca/common"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/bakape/meguca/common"
 	"github.com/go-playground/log"
 	"github.com/lib/pq"
 )

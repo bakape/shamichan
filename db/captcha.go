@@ -2,12 +2,12 @@ package db
 
 import (
 	"database/sql"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 	"time"
 
 	"github.com/bakape/captchouli"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 )
 
 const (

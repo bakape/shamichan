@@ -2,12 +2,13 @@ package db
 
 import (
 	"database/sql"
+	"testing"
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"testing"
-	"time"
 )
 
 var (
@@ -123,8 +124,8 @@ func TestGetPositions(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleUser(t)
 	err := InTransaction(false, func(tx *sql.Tx) error {
-		return WriteStaff(tx, "a", map[string][]string{
-			"owners": []string{sampleUserID},
+		return WriteStaff(tx, "a", map[common.ModerationLevel][]string{
+			common.BoardOwner: []string{sampleUserID},
 		})
 	})
 	if err != nil {
@@ -135,7 +136,7 @@ func TestGetPositions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, pos, auth.BoardOwner)
+	AssertDeepEquals(t, pos, common.BoardOwner)
 
 	owned, err := GetOwnedBoards(sampleUserID)
 	if err != nil {

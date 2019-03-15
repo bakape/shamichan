@@ -1,39 +1,10 @@
 package auth
 
 import (
-	"github.com/bakape/meguca/common"
 	"time"
 
+	"github.com/bakape/meguca/common"
 	"github.com/go-playground/log"
-)
-
-// ModerationLevel defines the level required to perform an action
-type ModerationLevel int8
-
-// Returns string representation of moderation level
-func (l ModerationLevel) String() string {
-	switch l {
-	case Admin:
-		return "admin"
-	case BoardOwner:
-		return "owners"
-	case Moderator:
-		return "moderators"
-	case Janitor:
-		return "janitors"
-	default:
-		return ""
-	}
-}
-
-// All available moderation levels
-const (
-	NotLoggedIn ModerationLevel = iota - 1
-	NotStaff
-	Janitor
-	Moderator
-	BoardOwner
-	Admin
 )
 
 // ModLogEntry is a single entry in the moderation log

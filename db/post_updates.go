@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+
 	"github.com/bakape/meguca/common"
 )
 

@@ -5,6 +5,7 @@ import { FormView } from "../ui"
 import { TabbedModal } from "../base"
 import { validatePasswordMatch } from "./common"
 import ModPanel from "./panel"
+import { ModerationLevel } from "../common";
 import {
 	PasswordChangeForm, ServerConfigForm, BoardConfigForm, BoardCreationForm,
 	BoardDeletionForm, StaffAssignmentForm, FormDataForm,
@@ -12,15 +13,6 @@ import {
 
 export { loginID, sessionToken } from "./common"
 
-// Possible staff access levels
-export const enum ModerationLevel {
-	notLoggedIn = - 1,
-	notStaff,
-	janitor,
-	moderator,
-	boardOwner,
-	admin,
-}
 
 // Current staff position on this page
 export const position: ModerationLevel = (window as any).position

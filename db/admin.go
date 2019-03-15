@@ -3,12 +3,12 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/imager/assets"
 	"strconv"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/imager/assets"
 )
 
 // Write moderation action to board-level and post-level logs
@@ -138,9 +138,9 @@ func ModSpoilerImage(id uint64, by string) error {
 
 // WriteStaff writes staff positions of a specific board. Old rows are
 // overwritten.
-func WriteStaff(tx *sql.Tx, board string, staff map[string][]string) (
-	err error,
-) {
+func WriteStaff(tx *sql.Tx, board string,
+	staff map[common.ModerationLevel][]string,
+) (err error) {
 	// Remove previous staff entries
 	_, err = sq.Delete("staff").
 		Where("board  = ?", board).
@@ -169,14 +169,18 @@ func WriteStaff(tx *sql.Tx, board string, staff map[string][]string) (
 }
 
 // GetStaff retrieves all staff positions of a specific board
-func GetStaff(board string) (staff map[string][]string, err error) {
-	staff = make(map[string][]string, 3)
+func GetStaff(board string,
+) (staff map[common.ModerationLevel][]string, err error) {
+	staff = make(map[common.ModerationLevel][]string, 3)
 	err = queryAll(
 		sq.Select("account", "position").
 			From("staff").
 			Where("board = ?", board),
 		func(r *sql.Rows) (err error) {
-			var acc, pos string
+			var (
+				acc string
+				pos common.ModerationLevel
+			)
 			err = r.Scan(&acc, &pos)
 			if err != nil {
 				return
@@ -189,18 +193,21 @@ func GetStaff(board string) (staff map[string][]string, err error) {
 
 // CanPerform returns, if the account can perform an action of ModerationLevel
 // 'action' on the target board
-func CanPerform(account, board string, action auth.ModerationLevel) (
+func CanPerform(account, board string, action common.ModerationLevel) (
 	can bool, err error,
 ) {
 	switch {
 	case account == "admin": // admin account can do anything
 		return true, nil
-	case action == auth.Admin: // Only admin account can perform Admin actions
+	case action == common.Admin: // Only admin account can perform Admin actions
 		return false, nil
 	}
 
 	pos, err := FindPosition(board, account)
 	can = pos >= action
+	if err == sql.ErrNoRows {
+		err = nil
+	}
 	return
 }
 

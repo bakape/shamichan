@@ -2,9 +2,11 @@ package db
 
 import (
 	"database/sql"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/test"
 	"testing"
+
+	"github.com/bakape/meguca/common"
+
+	"github.com/bakape/meguca/test"
 )
 
 func prepareForModeration(t *testing.T) {
@@ -101,7 +103,7 @@ func TestLockThread(t *testing.T) {
 func TestStaff(t *testing.T) {
 	prepareForModeration(t)
 
-	staff := map[string][]string{"owners": {"admin"}}
+	staff := map[common.ModerationLevel][]string{common.BoardOwner: {"admin"}}
 	err := InTransaction(false, func(tx *sql.Tx) error {
 		return WriteStaff(tx, "a", staff)
 	})
@@ -156,8 +158,8 @@ func TestCanPerform(t *testing.T) {
 	prepareForModeration(t)
 	writeSampleUser(t)
 	err := InTransaction(false, func(tx *sql.Tx) error {
-		return WriteStaff(tx, "a", map[string][]string{
-			"moderators": []string{sampleUserID},
+		return WriteStaff(tx, "a", map[common.ModerationLevel][]string{
+			common.Moderator: []string{sampleUserID},
 		})
 	})
 	if err != nil {
@@ -166,16 +168,16 @@ func TestCanPerform(t *testing.T) {
 
 	cases := [...]struct {
 		name, user, board string
-		auth              auth.ModerationLevel
+		auth              common.ModerationLevel
 		can               bool
 	}{
-		{"can mod /all/", "admin", "all", auth.Admin, true},
-		{"can't mod /all/", sampleUserID, "all", auth.Admin, false},
-		{"admin can mod anything", "admin", "a", auth.BoardOwner, true},
-		{"user can't mod anything", sampleUserID, "all", auth.Moderator, false},
-		{"can mod own level", sampleUserID, "a", auth.Moderator, true},
-		{"can mod lower level", sampleUserID, "a", auth.Janitor, true},
-		{"can't mod higher level", sampleUserID, "a", auth.Janitor, true},
+		{"can mod /all/", "admin", "all", common.Admin, true},
+		{"can't mod /all/", sampleUserID, "all", common.Admin, false},
+		{"admin can mod anything", "admin", "a", common.BoardOwner, true},
+		{"can't mod anything", sampleUserID, "all", common.Moderator, false},
+		{"can mod own level", sampleUserID, "a", common.Moderator, true},
+		{"can mod lower level", sampleUserID, "a", common.Janitor, true},
+		{"can't mod higher level", sampleUserID, "a", common.Janitor, true},
 	}
 
 	for i := range cases {

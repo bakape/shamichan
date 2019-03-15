@@ -3,12 +3,12 @@ package db
 import (
 	"database/sql"
 	"errors"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 )
 
 // Common errors
@@ -60,41 +60,20 @@ func GetPassword(id string) (hash []byte, err error) {
 
 // FindPosition returns the highest matching position of a user on a certain
 // board. As a special case the admin user will always return "admin".
-func FindPosition(board, userID string) (pos auth.ModerationLevel, err error) {
+func FindPosition(board, userID string) (pos common.ModerationLevel, err error) {
 	if userID == "admin" {
-		return auth.Admin, nil
+		return common.Admin, nil
 	}
 
-	var s string
-	err = queryAll(
-		sq.Select("position").
-			From("staff").
-			Where(squirrel.Eq{
-				"account": userID,
-				"board":   []string{board, "all"},
-			}),
-		func(r *sql.Rows) (err error) {
-			// Read the highest position held
-			err = r.Scan(&s)
-			if err != nil {
-				return
-			}
-
-			level := auth.NotStaff
-			switch s {
-			case "owners":
-				level = auth.BoardOwner
-			case "moderators":
-				level = auth.Moderator
-			case "janitors":
-				level = auth.Janitor
-			}
-			if level > pos {
-				pos = level
-			}
-			return
-		},
-	)
+	err = sq.Select("position").
+		From("staff").
+		Where(squirrel.Eq{
+			"account": userID,
+			"board":   []string{board, "all"},
+		}).
+		OrderBy("position desc").
+		QueryRow().
+		Scan(&pos)
 	return
 }
 
@@ -143,7 +122,7 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 	err = queryAll(
 		sq.Select("board").
 			From("staff").
-			Where("account = ? and position = 'owners'", account),
+			Where("account = ? and position = ?", account, common.BoardOwner),
 		func(r *sql.Rows) (err error) {
 			var board string
 			err = r.Scan(&board)

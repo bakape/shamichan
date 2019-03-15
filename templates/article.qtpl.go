@@ -86,7 +86,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, c articleCont
 	//line article.qtpl:26
 	qw422016.N().S(`<b class="name spaced`)
 	//line article.qtpl:27
-	if p.Auth != "" {
+	if p.Auth != common.NotStaff {
 		//line article.qtpl:27
 		qw422016.N().S(` `)
 		//line article.qtpl:27
@@ -132,13 +132,13 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, c articleCont
 		//line article.qtpl:41
 	}
 	//line article.qtpl:42
-	if p.Auth != "" {
+	if p.Auth != common.NotStaff {
 		//line article.qtpl:42
 		qw422016.N().S(`<span>##`)
 		//line article.qtpl:44
 		qw422016.N().S(` `)
 		//line article.qtpl:44
-		qw422016.N().S(ln.Common.Posts[p.Auth])
+		qw422016.N().S(ln.Common.Posts[p.Auth.String()])
 		//line article.qtpl:44
 		qw422016.N().S(`</span>`)
 		//line article.qtpl:46

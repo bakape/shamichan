@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-
-	"github.com/Masterminds/squirrel"
 	"github.com/lib/pq"
 )
 

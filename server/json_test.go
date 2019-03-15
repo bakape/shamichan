@@ -1,13 +1,14 @@
 package server
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
-	"strings"
-	"testing"
 )
 
 func removeIndentation(s string) string {
@@ -86,14 +87,6 @@ func TestPostJSON(t *testing.T) {
 			name: "existing post",
 			url:  "/post/1",
 			code: 200,
-			etag: postEtag,
-		},
-		{
-			name:   "post etag matches",
-			url:    "/post/1",
-			header: postEtag,
-			code:   304,
-			etag:   "",
 		},
 		{
 			name: "invalid thread board",
@@ -128,7 +121,7 @@ func TestPostJSON(t *testing.T) {
 			}
 			router.ServeHTTP(rec, req)
 			assertCode(t, rec, c.code)
-			if c.code == 200 {
+			if c.code == 200 && c.etag != "" {
 				assertEtag(t, rec, c.etag)
 			}
 		})

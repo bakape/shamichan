@@ -17,7 +17,7 @@ import "github.com/bakape/meguca/config"
 import "github.com/bakape/meguca/lang"
 
 //line index.qtpl:5
-import "github.com/bakape/meguca/auth"
+import "github.com/bakape/meguca/common"
 
 //line index.qtpl:6
 import "github.com/bakape/meguca/assets"
@@ -36,7 +36,7 @@ var (
 )
 
 //line index.qtpl:8
-func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
+func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 	//line index.qtpl:9
 	conf := config.Get()
 
@@ -148,7 +148,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 	//line index.qtpl:139
 	qw422016.N().S(`</template>`)
 	//line index.qtpl:141
-	if pos > auth.NotLoggedIn {
+	if pos > common.NotLoggedIn {
 		//line index.qtpl:141
 		qw422016.N().S(`<template name="keyValue">`)
 		//line index.qtpl:143
@@ -253,7 +253,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 	fields := specs["identity"]
 
 	//line index.qtpl:235
-	if pos > auth.NotStaff {
+	if pos > common.NotStaff {
 		//line index.qtpl:236
 		fields = make([]inputSpec, 1, len(fields)+1)
 
@@ -272,7 +272,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 	//line index.qtpl:244
 	qw422016.N().S(`<div id="account-panel" class="modal glass">`)
 	//line index.qtpl:246
-	if pos == auth.NotLoggedIn {
+	if pos == common.NotLoggedIn {
 		//line index.qtpl:246
 		qw422016.N().S(`<div id="login-forms">`)
 		//line index.qtpl:248
@@ -321,7 +321,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 			//line index.qtpl:278
 		}
 		//line index.qtpl:279
-		if pos == auth.Admin {
+		if pos == common.Admin {
 			//line index.qtpl:279
 			qw422016.N().S(`<a id="configureServer">`)
 			//line index.qtpl:281
@@ -397,11 +397,11 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 	//line index.qtpl:315
 	qw422016.N().S(`</div></div>`)
 	//line index.qtpl:318
-	if pos > auth.NotStaff {
+	if pos > common.NotStaff {
 		//line index.qtpl:318
 		qw422016.N().S(`<div id="moderation-panel" class="modal glass"><form>`)
 		//line index.qtpl:321
-		if pos >= auth.Moderator {
+		if pos >= common.Moderator {
 			//line index.qtpl:321
 			qw422016.N().S(`<div id="ban-form" class="hidden">`)
 			//line index.qtpl:323
@@ -425,7 +425,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 			//line index.qtpl:327
 			qw422016.N().S(`" disabled><br>`)
 			//line index.qtpl:329
-			if pos == auth.Admin {
+			if pos == common.Admin {
 				//line index.qtpl:329
 				qw422016.N().S(`<label><input type="checkbox" name="global">`)
 				//line index.qtpl:332
@@ -439,7 +439,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 			//line index.qtpl:336
 		}
 		//line index.qtpl:337
-		if pos == auth.Admin {
+		if pos == common.Admin {
 			//line index.qtpl:337
 			qw422016.N().S(`<div id="purgePost-form" class="hidden"><input type="text" name="purge-reason" required class="full-width" placeholder="`)
 			//line index.qtpl:339
@@ -458,14 +458,14 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 		ids := append(make([]string, 0, 5), "deletePost", "deleteImage", "spoilerImage")
 
 		//line index.qtpl:350
-		if pos >= auth.Moderator {
+		if pos >= common.Moderator {
 			//line index.qtpl:351
 			ids = append(ids, "ban")
 
 			//line index.qtpl:352
 		}
 		//line index.qtpl:353
-		if pos == auth.Admin {
+		if pos == common.Admin {
 			//line index.qtpl:354
 			ids = append(ids, "purgePost", "notification")
 
@@ -525,7 +525,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos auth.ModerationLevel) {
 }
 
 //line index.qtpl:398
-func writerenderIndex(qq422016 qtio422016.Writer, pos auth.ModerationLevel) {
+func writerenderIndex(qq422016 qtio422016.Writer, pos common.ModerationLevel) {
 	//line index.qtpl:398
 	qw422016 := qt422016.AcquireWriter(qq422016)
 	//line index.qtpl:398
@@ -536,7 +536,7 @@ func writerenderIndex(qq422016 qtio422016.Writer, pos auth.ModerationLevel) {
 }
 
 //line index.qtpl:398
-func renderIndex(pos auth.ModerationLevel) string {
+func renderIndex(pos common.ModerationLevel) string {
 	//line index.qtpl:398
 	qb422016 := qt422016.AcquireByteBuffer()
 	//line index.qtpl:398

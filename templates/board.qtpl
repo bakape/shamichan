@@ -3,11 +3,10 @@
 {% import "github.com/bakape/meguca/config" %}
 {% import "github.com/bakape/meguca/common" %}
 {% import "github.com/bakape/meguca/lang" %}
-{% import "github.com/bakape/meguca/auth" %}
 {% import "github.com/bakape/meguca/imager/assets" %}
 {% import ass "github.com/bakape/meguca/assets" %}
 
-{% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, page, total int, pos auth.ModerationLevel, catalog bool) %}{% stripspace %}
+{% func renderBoard(threadHTML []byte, id, title string, conf config.BoardConfContainer, page, total int, pos common.ModerationLevel, catalog bool) %}{% stripspace %}
 	{% code ln := lang.Get() %}
 	{% code bannerID, mime, ok := ass.Banners.Random(conf.ID) %}
 	{% if ok %}
@@ -163,9 +162,9 @@ IndexThreads renders abbreviated threads for display on board index pages
 {% endstripspace %}{% endfunc %}
 
 Render noscript-specific post creation fields
-{% func noscriptPostCreationFields(pos auth.ModerationLevel) %}{% stripspace %}
+{% func noscriptPostCreationFields(pos common.ModerationLevel) %}{% stripspace %}
 	{% code ln := lang.Get() %}
-	{% if pos > auth.NotStaff %}
+	{% if pos > common.NotStaff %}
 		{%= input(staffTitleSpec.wrap(), ln) %}
 	{% endif %}
 	{% for _, s := range specs["noscriptPostCreation"] %}

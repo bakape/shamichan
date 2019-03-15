@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"io"
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/util"
-	"time"
-
 	"github.com/lib/pq"
 )
 

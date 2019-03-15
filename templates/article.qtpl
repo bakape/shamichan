@@ -24,7 +24,7 @@
 					「{%s c.subject %}」
 				</h3>
 			{% endif %}
-			<b class="name spaced{% if p.Auth != "" %}{% space %}admin{% endif %}{% if p.Sage %}{% space %}sage{% endif %}">
+			<b class="name spaced{% if p.Auth != common.NotStaff %}{% space %}admin{% endif %}{% if p.Sage %}{% space %}sage{% endif %}">
 				{% if p.Name != "" || p.Trip == "" %}
 					<span>
 						{% if p.Name != "" %}
@@ -39,9 +39,9 @@
 						!{%s p.Trip %}
 					</code>
 				{% endif %}
-				{% if p.Auth != "" %}
+				{% if p.Auth != common.NotStaff %}
 					<span>
-						##{% space %}{%s= ln.Common.Posts[p.Auth] %}
+						##{% space %}{%s= ln.Common.Posts[p.Auth.String()] %}
 					</span>
 				{% endif %}
 			</b>

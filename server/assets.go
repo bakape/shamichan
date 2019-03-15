@@ -3,10 +3,6 @@ package server
 import (
 	"bytes"
 	"fmt"
-	"github.com/bakape/meguca/assets"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -15,6 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bakape/meguca/assets"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/thumbnailer"
 )
 
@@ -170,7 +169,7 @@ func parseAssetForm(w http.ResponseWriter, r *http.Request, maxCount uint,
 	}
 
 	board = r.Form.Get("board")
-	_, err = canPerform(w, r, board, auth.BoardOwner, true)
+	_, err = canPerform(w, r, board, common.BoardOwner, true)
 	return
 }
 

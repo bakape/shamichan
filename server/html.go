@@ -1,13 +1,14 @@
 package server
 
 import (
+	"net/http"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
-	"net/http"
 )
 
 func setHTMLHeaders(w http.ResponseWriter) {
@@ -145,10 +146,10 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 // Extract logged in position for HTML request.
 // If ok == false, caller should return.
 func extractPosition(w http.ResponseWriter, r *http.Request) (
-	pos auth.ModerationLevel, ok bool,
+	pos common.ModerationLevel, ok bool,
 ) {
 	ok = true
-	pos = auth.NotLoggedIn
+	pos = common.NotLoggedIn
 	creds := extractLoginCreds(r)
 	if creds.UserID == "" {
 		return
@@ -233,7 +234,8 @@ func staffAssignmentForm(w http.ResponseWriter, r *http.Request) {
 	}
 	setHTMLHeaders(w)
 	templates.StaffAssignment(w,
-		[...][]string{s["owners"], s["moderators"], s["janitors"]})
+		[...][]string{s[common.BoardOwner], s[common.Moderator],
+			s[common.Janitor]})
 }
 
 // Renders a form for creating new boards

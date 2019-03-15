@@ -5,9 +5,9 @@ import { on, postJSON, HTML } from "../util"
 import { FormView } from "../ui"
 import lang from "../lang"
 import { hidePost } from "./hide"
-import { position, ModerationLevel } from "../mod"
+import { position } from "../mod"
 import CollectionView from "./collectionView"
-import { PostData } from "../common"
+import { PostData, ModerationLevel } from "../common"
 import ReportForm from "./report"
 
 interface ControlButton extends Element {

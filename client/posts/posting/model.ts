@@ -29,7 +29,7 @@ export default class FormModel extends Post {
 			time: Math.floor(Date.now() / 1000),
 			body: "",
 			name: "",
-			auth: "",
+			auth: 0,
 			trip: "",
 			moderation: [],
 			state: {

@@ -5,8 +5,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
-	"github.com/bakape/meguca/common"
 
+	"github.com/bakape/meguca/common"
 	"github.com/lib/pq"
 )
 
