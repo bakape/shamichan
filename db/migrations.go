@@ -1234,6 +1234,10 @@ var migrations = []func(*sql.Tx) error{
 
 		return
 	},
+	func(tx *sql.Tx) error {
+		// Reload triggers
+		return loadSQL(tx, "triggers/boards")
+	},
 }
 
 func createIndex(table, column string) string {

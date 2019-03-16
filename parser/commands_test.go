@@ -2,12 +2,13 @@ package parser
 
 import (
 	"database/sql"
+	"testing"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
-	"testing"
 )
 
 func TestFlip(t *testing.T) {
@@ -81,15 +82,6 @@ func TestPyu(t *testing.T) {
 	test_db.ClearTables(t, "boards", "pyu", "pyu_limit")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-
-	err := db.SetPcount(0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = db.WritePyu("a")
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	t.Run("disabled", func(t *testing.T) {
 		config.SetBoardConfigs(config.BoardConfigs{

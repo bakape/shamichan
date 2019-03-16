@@ -62,16 +62,6 @@ func (c commandRow) Value() (driver.Value, error) {
 	return strArr.Value()
 }
 
-// WritePyu creates a new board's pyu row. Only used on board creation
-func WritePyu(b string) error {
-	_, err := sq.Insert("pyu").
-		Columns("id", "pcount").
-		Values(b, 0).
-		Exec()
-
-	return err
-}
-
 // GetPcount retrieves the board's pyu counter
 func GetPcount(b string) (c uint64, err error) {
 	err = sq.Select("pcount").
@@ -108,15 +98,6 @@ func IncrementPcount(tx *sql.Tx, b string) (c uint64, err error) {
 		QueryRow().
 		Scan(&c)
 	return
-}
-
-// SetPcount sets the board's pyu counter. Only used in tests.
-func SetPcount(c uint64) error {
-	_, err := sq.Update("pyu").
-		Set("pcount", c).
-		Exec()
-
-	return err
 }
 
 // WritePyuLimit creates a new pyu limit row. Only used on the first post of a new IP.

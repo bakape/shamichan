@@ -324,11 +324,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 					common.BoardOwner: []string{creds.UserID},
 				})
 		})
-		if err != nil {
-			return
-		}
 
-		err = db.WritePyu(msg.ID)
 		return
 	}()
 	if err != nil {
