@@ -4,6 +4,12 @@ package server
 
 import (
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
+	"unicode/utf8"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -11,11 +17,6 @@ import (
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/websockets"
 	"github.com/bakape/meguca/websockets/feeds"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
-	"unicode/utf8"
 )
 
 // Create a thread with a closed OP
@@ -179,5 +180,5 @@ func incrementSpamscore(ip, body string, isOP bool) {
 	if isOP {
 		s += conf.PostCreationScore * 2
 	}
-	db.IncrementSpamScore(ip, time.Duration(s))
+	db.IncrementSpamScore(ip, s)
 }

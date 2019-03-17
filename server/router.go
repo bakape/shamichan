@@ -14,7 +14,6 @@ import (
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/util"
 	"github.com/bakape/meguca/websockets"
-
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/gorilla/handlers"
@@ -37,8 +36,6 @@ var (
 	// Defines, if all traffic should be piped through a gzip compression
 	// -decompression handler
 	enableGzip bool
-
-	isTest bool
 
 	healthCheckMsg = []byte("God's in His heaven, all's right with the world")
 )
@@ -178,7 +175,8 @@ func createRouter() http.Handler {
 		api.POST("/configure-server", configureServer)
 		api.POST("/create-board", createBoard)
 		api.POST("/delete-board", deleteBoard)
-		api.POST("/delete-post", deletePost)
+		api.POST("/delete-posts", deletePost)
+		api.POST("/delete-posts/by-ip", deletePostsByIP)
 		api.POST("/delete-image", deleteImage)
 		api.POST("/spoiler-image", modSpoilerImage)
 		api.POST("/ban", ban)

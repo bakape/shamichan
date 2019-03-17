@@ -5,12 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/test/test_db"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -18,11 +12,14 @@ import (
 	"strings"
 	"sync"
 	"testing"
-)
 
-func init() {
-	isTest = true
-}
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager/assets"
+	"github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test/test_db"
+)
 
 func newMultiWriter() (*bytes.Buffer, *multipart.Writer) {
 	body := new(bytes.Buffer)

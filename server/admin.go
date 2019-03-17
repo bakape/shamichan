@@ -57,10 +57,7 @@ type boardCreationRequest struct {
 
 // Decode JSON sent in a request with a read limit of 8 KB. Returns if the
 // decoding succeeded.
-func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{},
-) (
-	err error,
-) {
+func decodeJSON(r *http.Request, dest interface{}) (err error) {
 	err = json.NewDecoder(io.LimitReader(r.Body, jsonLimit)).Decode(dest)
 	if err != nil {
 		err = common.StatusError{err, 400}
@@ -72,7 +69,7 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, dest interface{},
 func configureBoard(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
 		var msg config.BoardConfigs
-		err = decodeJSON(w, r, &msg)
+		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}
@@ -105,18 +102,9 @@ func canPerform(w http.ResponseWriter, r *http.Request, board string,
 		err = errInvalidBoardName
 		return
 	}
-	ip, err := auth.GetIP(r)
-	if err != nil {
-		return
-	}
 	if needCaptcha {
-		var has bool
-		has, err = db.SolvedCaptchaRecently(ip, time.Minute)
+		err = assertSolvedCaptcha(r)
 		if err != nil {
-			return
-		}
-		if !has {
-			err = errInvalidCaptcha
 			return
 		}
 	}
@@ -249,7 +237,7 @@ func boardConfData(w http.ResponseWriter, r *http.Request,
 func createBoard(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
 		var msg boardCreationRequest
-		err = decodeJSON(w, r, &msg)
+		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}
@@ -337,7 +325,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 func configureServer(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
 		var msg config.Configs
-		err = decodeJSON(w, r, &msg)
+		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}
@@ -362,7 +350,7 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 func deleteBoard(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
 		var msg boardActionRequest
-		err = decodeJSON(w, r, &msg)
+		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}
@@ -380,7 +368,69 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 
 // Delete one or multiple posts on a moderated board
 func deletePost(w http.ResponseWriter, r *http.Request) {
-	moderatePosts(w, r, common.Janitor, db.DeletePost)
+	err := func() (err error) {
+		if !assertNotBanned(w, r, "all") {
+			return
+		}
+
+		var ids []uint64
+		err = decodeJSON(r, &ids)
+		if err != nil {
+			return
+		}
+
+		ip, err := auth.GetIP(r)
+		if err != nil {
+			return
+		}
+		db.IncrementSpamScore(ip, config.Get().CharScore*10)
+
+		creds, err := isLoggedIn(w, r)
+		if err != nil {
+			return
+		}
+		for _, id := range ids {
+			err = db.DeletePost(id, creds.UserID)
+			if err != nil {
+				return
+			}
+		}
+		return
+	}()
+	if err != nil {
+		httpError(w, r, err)
+	}
+}
+
+// Delete posts of the same IP as target post on board
+func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
+	err := func() (err error) {
+		if !assertNotBanned(w, r, "all") {
+			return
+		}
+
+		var req struct {
+			ID uint64
+		}
+		err = decodeJSON(r, &req)
+		if err != nil {
+			return
+		}
+
+		// Moderation rights are checked in plpgsql
+		err = assertSolvedCaptcha(r)
+		if err != nil {
+			return
+		}
+		creds, err := isLoggedIn(w, r)
+		if err != nil {
+			return
+		}
+		return db.DeletePostsByIP(req.ID, creds.UserID)
+	}()
+	if err != nil {
+		httpError(w, r, err)
+	}
 }
 
 // Perform a moderation action an a single post. If ok == false, the caller
@@ -403,7 +453,7 @@ func moderatePosts(w http.ResponseWriter, r *http.Request,
 ) {
 	err := func() (err error) {
 		var ids []uint64
-		err = decodeJSON(w, r, &ids)
+		err = decodeJSON(r, &ids)
 		if err != nil {
 			return
 		}
@@ -440,7 +490,7 @@ func purgePost(w http.ResponseWriter, r *http.Request) {
 			ID     uint64
 			Reason string
 		}
-		err = decodeJSON(w, r, &msg)
+		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}
@@ -464,7 +514,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 			ID, Duration uint64
 			Reason       string
 		}
-		err = decodeJSON(w, r, &msg)
+		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}
@@ -510,7 +560,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 func sendNotification(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
 		var msg string
-		err = decodeJSON(w, r, &msg)
+		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}
@@ -540,7 +590,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 			boardActionRequest
 			Owners, Moderators, Janitors []string
 		}
-		err = decodeJSON(w, r, &msg)
+		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}
@@ -576,12 +626,20 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Extract `id` path parameter from request
+func extractID(r *http.Request) (uint64, error) {
+	id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
+	if err != nil {
+		err = common.StatusError{err, 400}
+	}
+	return id, err
+}
+
 // Retrieve posts with the same IP on the target board
 func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
-		id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
+		id, err := extractID(r)
 		if err != nil {
-			err = common.StatusError{err, 400}
 			return
 		}
 
@@ -602,11 +660,6 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Delete posts of the same IP as target post on board
-func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
-
-}
-
 // Set the sticky flag of a thread
 func setThreadSticky(w http.ResponseWriter, r *http.Request) {
 	handleBoolRequest(w, r, func(id uint64, val bool, _ string) error {
@@ -624,7 +677,7 @@ func handleBoolRequest(w http.ResponseWriter, r *http.Request,
 			ID  uint64
 			Val bool
 		}
-		err = decodeJSON(w, r, &msg)
+		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}
@@ -765,7 +818,7 @@ func decodeRedirect(w http.ResponseWriter, r *http.Request) (
 		ID  uint64
 		URL string
 	}
-	err = decodeJSON(w, r, &msg)
+	err = decodeJSON(r, &msg)
 	if err != nil {
 		return
 	}

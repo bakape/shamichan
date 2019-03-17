@@ -35,7 +35,7 @@ type passwordChangeRequest struct {
 func register(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
 		var req loginCreds
-		err = decodeJSON(w, r, &req)
+		err = decodeJSON(r, &req)
 		if err != nil {
 			return
 		}
@@ -114,7 +114,7 @@ func commitLogin(w http.ResponseWriter, userID string) (err error) {
 func login(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
 		var req loginCreds
-		err = decodeJSON(w, r, &req)
+		err = decodeJSON(r, &req)
 		if err != nil {
 			return
 		}
@@ -196,7 +196,7 @@ func logoutAll(w http.ResponseWriter, r *http.Request) {
 func changePassword(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
 		var msg passwordChangeRequest
-		err = decodeJSON(w, r, &msg)
+		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}

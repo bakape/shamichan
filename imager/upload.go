@@ -10,19 +10,18 @@ import (
 	"image"
 	"io"
 	"io/ioutil"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
 	"mime/multipart"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/chai2010/webp"
-
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"github.com/bakape/thumbnailer"
+	"github.com/chai2010/webp"
 	"github.com/go-playground/log"
 )
 
@@ -57,7 +56,6 @@ var (
 	allowedMimeTypes map[string]bool
 
 	errTooLarge = errors.New("file too large")
-	isTest      bool
 
 	// Large buffer pool of length=0 capacity=12+KB
 	largeBufPool = sync.Pool{
@@ -178,8 +176,7 @@ func incrementSpamScore(r *http.Request) (err error) {
 	if err != nil {
 		return
 	}
-	db.IncrementSpamScore(ip,
-		time.Duration(config.Get().ImageScore)*time.Millisecond)
+	db.IncrementSpamScore(ip, config.Get().ImageScore)
 	return
 }
 
@@ -191,7 +188,7 @@ func LogError(w http.ResponseWriter, r *http.Request, err error) {
 	}
 	http.Error(w, err.Error(), code)
 
-	if isTest || common.CanIgnoreClientError(err) {
+	if common.IsTest || common.CanIgnoreClientError(err) {
 		return
 	}
 	ip, ipErr := auth.GetIP(r)

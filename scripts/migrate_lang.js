@@ -3,18 +3,19 @@
 
 "use strict"
 
-const fs = require("fs")
+const fs = require("fs");
 
+const root = "static/src/lang";
 const en = {
-    server: readJSON("lang/languages/en_GB/server.json", "utf8"),
-    common: readJSON("lang/languages/en_GB/common.json", "utf8"),
+    server: readJSON(`${root}/en_GB/server.json`, "utf8"),
+    common: readJSON(`${root}/en_GB/common.json`, "utf8"),
 }
-const targets = fs.readdirSync("lang").filter(n =>
+const targets = fs.readdirSync(root).filter(n =>
     n !== "en_GB" && /^\w{2}_\w{2}$/.test(n))
 
 for (let key in en) {
     sortMaps(en[key])
-    const path = `lang/languages/en_GB/${key}.json`
+    const path = `${root}/en_GB/${key}.json`
     fs.unlinkSync(path)
     fs.writeFileSync(path, JSON.stringify(en[key], null, "\t"))
 }
@@ -24,7 +25,7 @@ for (let t of targets) {
         arrays: {},
         strings: {},
     }
-    const dir = `lang/${t}`
+    const dir = `${root}/${t}`
 
     for (let f of fs.readdirSync(dir)) {
         const path = `${dir}/${f}`

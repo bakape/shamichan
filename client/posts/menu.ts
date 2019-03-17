@@ -1,8 +1,8 @@
 import { View } from "../base"
 import { Post } from "./model"
-import { getModel } from "../state"
+import { getModel, config } from "../state"
 import { on, postJSON, HTML } from "../util"
-import { FormView } from "../ui"
+import { FormView, renderCaptchaForm } from "../ui"
 import lang from "../lang"
 import { hidePost } from "./hide"
 import { position } from "../mod"
@@ -82,18 +82,19 @@ const actions: { [key: string]: ItemSpec } = {
 	deleteSameIP: {
 		text: lang.posts["deleteBySameIP"],
 		shouldRender: canModerateIP,
-		async handler(m) {
-			const posts = await getSameIPPosts(m)
-			if (!posts) {
-				return
-			}
-			if (!confirm(lang.ui["confirmDelete"])) {
-				return
-			}
-			const res = await postJSON("/api/delete-post", posts.map(m =>
-				m.id))
-			if (res.status !== 200) {
-				alert(await res.text())
+		handler(m) {
+			const run = async () => {
+				const res = await postJSON("/api/delete-posts/by-ip", {
+					id: m.id,
+				})
+				if (res.status !== 200) {
+					alert(await res.text());
+				}
+			};
+			if (config.captcha) {
+				renderCaptchaForm(run);
+			} else {
+				run();
 			}
 		},
 	},

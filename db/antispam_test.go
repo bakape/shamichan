@@ -1,12 +1,13 @@
 package db
 
 import (
+	"testing"
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"testing"
-	"time"
 )
 
 func TestSpamScores(t *testing.T) {
@@ -16,7 +17,8 @@ func TestSpamScores(t *testing.T) {
 			Captcha: true,
 		},
 	})
-	assertTableClear(t, "spam_scores", "last_solved_captchas")
+	assertTableClear(t, "spam_scores", "last_solved_captchas", "boards",
+		"accounts")
 	writeAllBoard(t)
 	err := auth.LoadCaptchaServices()
 	if err != nil {

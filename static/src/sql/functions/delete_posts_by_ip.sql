@@ -1,4 +1,4 @@
-create function delete_posts_by_ip(id bigint, account text)
+create or replace function delete_posts_by_ip(id bigint, account text)
 returns void as $$
 declare
 	target_board text;
@@ -26,13 +26,9 @@ begin
 				where p.ip = target_ip
 					and t.board = target_board
 					-- Ensure not already deleted
-					and not exists (select 1
-									from post_moderation pm
-									where pm.post_id = p.id
-										and pm.type = 2))
+					and not is_deleted(p.id))
 	loop
-		insert into mod_log (type, board, post_id, "by")
-			values (2, target_board, id, account);
+		perform delete_post(id, account, target_board);
 	end loop;
 end;
 $$ language plpgsql;

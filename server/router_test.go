@@ -12,7 +12,6 @@ import (
 	"github.com/bakape/meguca/lang"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
-
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/go-playground/log/handlers/console"
@@ -29,7 +28,6 @@ func TestMain(m *testing.M) {
 	}
 
 	log.AddHandler(con, log.AllLevels...)
-	isTest = true
 	router = createRouter()
 	webRoot = "testdata"
 	imageWebRoot = "testdata"

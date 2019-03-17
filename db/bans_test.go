@@ -1,15 +1,15 @@
 package db
 
 import (
-	"github.com/bakape/meguca/common"
-	. "github.com/bakape/meguca/test"
 	"testing"
 	"time"
+
+	"github.com/bakape/meguca/common"
+	. "github.com/bakape/meguca/test"
 )
 
 func TestBanUnban(t *testing.T) {
 	prepareForModeration(t)
-	writeAllBoard(t)
 
 	err := Ban("all", "test", "admin", time.Minute, 1)
 	if err != nil {

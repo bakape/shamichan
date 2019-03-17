@@ -20,8 +20,21 @@ func prepareForModeration(t *testing.T) {
 	writeSampleImage(t)
 	insertSampleImage(t)
 
-	err := InTransaction(false, func(tx *sql.Tx) error {
-		return CreateAdminAccount(tx)
+	writeAllBoard(t)
+	writeAdminAccount(t)
+}
+
+func writeAdminAccount(t *testing.T) {
+	t.Helper()
+
+	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+		err = RegisterAccount(tx, "admin", samplePasswordHash)
+		if err != nil {
+			return
+		}
+		return WriteStaff(tx, "all", map[common.ModerationLevel][]string{
+			common.BoardOwner: {"admin"},
+		})
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -48,6 +61,7 @@ func TestDeletePostsByIP(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	writeAllBoard(t)
+	writeAdminAccount(t)
 
 	err := InTransaction(false, func(tx *sql.Tx) (err error) {
 		err = RegisterAccount(tx, "user1", samplePasswordHash)
@@ -61,18 +75,7 @@ func TestDeletePostsByIP(t *testing.T) {
 			return
 		}
 
-		err = RegisterAccount(tx, "user2", samplePasswordHash)
-		if err != nil {
-			return
-		}
-
-		err = RegisterAccount(tx, "admin", samplePasswordHash)
-		if err != nil {
-			return
-		}
-		return WriteStaff(tx, "all", map[common.ModerationLevel][]string{
-			common.BoardOwner: {"admin"},
-		})
+		return RegisterAccount(tx, "user2", samplePasswordHash)
 	})
 	if err != nil {
 		t.Fatal(err)

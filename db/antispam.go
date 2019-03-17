@@ -126,15 +126,15 @@ func mergeSpamScore(buffered time.Duration, threshold time.Time, r rowScanner,
 // IncrementSpamScore increments spam detection score of an IP and sends
 // captcha requests, if score exceeded.
 // ip: IP of client
-// increment: increment amount
-func IncrementSpamScore(ip string, increment time.Duration) {
+// increment: increment amount in milliseconds
+func IncrementSpamScore(ip string, increment uint) {
 	if !config.Get().Captcha {
 		return
 	}
 
 	spamMu.Lock()
 	defer spamMu.Unlock()
-	spamScoreBuffer[ip] += increment
+	spamScoreBuffer[ip] += time.Duration(increment) * time.Millisecond
 }
 
 // resetSpamScore resets a spam score to zero by IP

@@ -1245,6 +1245,10 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return registerFunctions(tx, "delete_posts_by_ip", "assert_can_perform")
 	},
+	func(tx *sql.Tx) (err error) {
+		return registerFunctions(tx, "is_deleted", "delete_post",
+			"delete_posts_by_ip")
+	},
 }
 
 func createIndex(table, column string) string {

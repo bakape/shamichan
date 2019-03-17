@@ -2,11 +2,13 @@ package server
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
-	"net/http"
 )
 
 // Signifies captcha service is not yet loaded
@@ -74,4 +76,20 @@ func serveNewCaptcha(w http.ResponseWriter, r *http.Request) {
 func renderCaptchaConfirmation(w http.ResponseWriter, r *http.Request) {
 	setHTMLHeaders(w)
 	templates.WriteCaptchaConfirmation(w)
+}
+
+// Assert IP has solved a captcha
+func assertSolvedCaptcha(r *http.Request) (err error) {
+	ip, err := auth.GetIP(r)
+	if err != nil {
+		return
+	}
+	has, err := db.SolvedCaptchaRecently(ip, time.Minute)
+	if err != nil {
+		return
+	}
+	if !has {
+		err = errInvalidCaptcha
+	}
+	return
 }

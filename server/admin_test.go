@@ -537,7 +537,7 @@ func TestDeletePost(t *testing.T) {
 	}
 
 	data := []uint64{2, 4}
-	const url = "/api/delete-post"
+	const url = "/api/delete-posts"
 	rec, req := newJSONPair(t, url, data)
 	setLoginCookies(req, sampleLoginCreds)
 	router.ServeHTTP(rec, req)

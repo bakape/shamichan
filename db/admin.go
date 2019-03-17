@@ -21,16 +21,6 @@ func logModeration(tx *sql.Tx, e auth.ModLogEntry) (err error) {
 	return
 }
 
-// DeletePost marks the target post as deleted
-func DeletePost(id uint64, by string) error {
-	return moderatePost(id,
-		common.ModerationEntry{
-			Type: common.DeletePost,
-			By:   by,
-		},
-		nil)
-}
-
 // Clear post contents and remove any uploaded image from the server
 func PurgePost(id uint64, by, reason string) (err error) {
 	post, err := GetPost(id)
@@ -267,13 +257,22 @@ func GetSameIPPosts(id uint64, board string, by string) (
 }
 
 // Delete posts of the same IP as target post on board
-func DeletePostsByIP(id uint64, account string) (err error) {
-	_, err = db.Exec("select delete_posts_by_ip($1::bigint, $2::text)",
+func DeletePostsByIP(id uint64, account string) error {
+	return runDeletion(id, account, "delete_posts_by_ip")
+}
+
+func runDeletion(id uint64, account, function string) (err error) {
+	_, err = db.Exec(fmt.Sprintf("select %s($1::bigint, $2::text)", function),
 		id, account)
 	if extractException(err) == "access denied" {
 		err = common.ErrNoPermissions
 	}
 	return
+}
+
+// DeletePost marks the target post as deleted
+func DeletePost(id uint64, by string) error {
+	return runDeletion(id, by, "delete_post")
 }
 
 // SetThreadSticky sets the sticky field on a thread
