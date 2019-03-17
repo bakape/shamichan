@@ -1,0 +1,492 @@
+{
+	"forms": {
+		"FAQ": [
+			"Informatie panel text",
+			"Invoer voor de lijst met veelgestelde vragen en de informatie modal"
+		],
+		"NSFW": [
+			"Niet veilig voor werk",
+			"Bord staat materiaal toe dat niet veilig is om te worden bekeken in een werkomgeving"
+		],
+		"alwaysLock": [
+			"Always Lock to Bottom",
+			"Vergrendel scrollen naar pagina onderaan, zelfs als het tabblad verborgen is"
+		],
+		"anonymise": [
+			"Anonimiseren",
+			"Toon alle posts als anoniem"
+		],
+		"audioVolume": [
+			"Audio volume",
+			"Volume van audio in muziek- en videospelers."
+		],
+		"autogif": [
+			"Animated GIF Thumbnails",
+			"Animate GIF thumbnails"
+		],
+		"bgMute": [
+			"Mute Achtergrond Video",
+			"Mute de achtergrond video"
+		],
+		"bgVideo": [
+			"Achtergrond Video",
+			"Admin-specified memes piped straight into you're monitor"
+		],
+		"boardExpiry": [
+			"Board vervaldatum",
+			"Aantal dagen zonder nieuwe berichten voordat een bord is verwijderd"
+		],
+		"boardName": [
+			"Board naam",
+			"Naam van het board. Kan tot 10 Latijnse letters of cijfers in kleine letters bevatten."
+		],
+		"boardTitle": [
+			"Board titel",
+			"Titel van het nieuwe board, net als 'Animu & Mango'. Tot 100 tekens lang."
+		],
+		"body": [
+			"Body",
+			"Text body van de post"
+		],
+		"captcha": [
+			"Captcha",
+			"Vraag gebruikers een captcha te voltooien voor bepaalde taken, zoals registratie en het maken van threads"
+		],
+		"captchaTags": [
+			"Captcha tags",
+			"Tags die worden gebruikt voor captcha-oplossingen. Eén tag wordt willekeurig gekozen voor elke gegenereerde captcha. Vereist om minimaal 3 verschillende tags te bevatten."
+		],
+		"charScore": [
+			"Karakter spam score",
+			"Antispam van het wijzigen van een teken in een bericht. Na overschrijding van de limiet moet de gebruiker een captcha oplossen."
+		],
+		"customCSS": [
+			"",
+			"Door de gebruiker gedefinieerde CSS-regels die boven het geselecteerde thema zijn geladen"
+		],
+		"customCSSToggle": [
+			"Custom CSS",
+			"Toggle use of custom CSS"
+		],
+		"defaultCSS": [
+			"Standaard thema",
+			"Thema dat standaard wordt geladen, wanneer er geen is ingesteld door de client"
+		],
+		"defaultLang": [
+			"Standaard taal",
+			"Taal pakket by standaard laden"
+		],
+		"desustorage": [
+			"DesuStorage",
+			"desustorage.org afbeelding zoeken"
+		],
+		"disableRobots": [
+			"Crawlers voorkomen",
+			"Voorkomen dat geautomatiseerde website-crawlers, zoals indexeerders voor zoekmachines, toegang krijgen tot dit forum."
+		],
+		"disableUserBoards": [
+			"Schakel het maken van niet-beheerdersborden uit",
+			"Voorkomt dat een ander account dan het 'admin'account nieuwe boards maakt"
+		],
+		"done": [
+			"Voltooi bericht",
+			"Open bericht sluiten"
+		],
+		"eightball": [
+			"#8ball antwoorden",
+			"Lijst met antwoorden voor de #8ball hash command. Kan maximaal 100 antwoorden en 2000 tekens bevatten."
+		],
+		"emailErr": [
+			"Email fouten",
+			"Toggle emailing fouten."
+		],
+		"emailErrMail": [
+			"Email",
+			"Fout email."
+		],
+		"emailErrPass": [
+			"Wachtwoord",
+			"Fout email wachtwoord."
+		],
+		"emailErrPort": [
+			"Email server port",
+			"Fout email server port."
+		],
+		"emailErrSub": [
+			"Email server",
+			"Fout email server subdomain."
+		],
+		"exhentai": [
+			"Exhentai",
+			"exhentai.org afbeelding zoeken"
+		],
+		"expandAll": [
+			"Alle afbeeldingen uitbreiden",
+			"Alle afbeeldingen uitbreiden. Webm, PDF en MP3 en je eigen bericht worden niet beïnvloed. Nieuwe bericht afbeeldingen worden ook uitgebreid."
+		],
+		"export": [
+			"Exporteren",
+			"Exporteer opties naar bestand"
+		],
+		"feedbackEmail": [
+			"Feedback email",
+			"E-mail met gebruikersfeedback om in de bovenste balk weer te geven"
+		],
+		"flags": [
+			"Landen vlaggen",
+			"Toon poster land vlaggen op berichten"
+		],
+		"forcedAnon": [
+			"Geforceerd Anoniem",
+			"Schakel gebruikersnamen, tripcodes en e-mails op berichten uit"
+		],
+		"galleryMode": [
+			"Galerij Mode",
+			"Toon alleen berichten met afbeeldingen"
+		],
+		"google": [
+			"Google",
+			"Google afbeelding zoeken"
+		],
+		"hidden": [
+			"Verborgen: 0",
+			"Verwijder verborgen berichten"
+		],
+		"hideNSFW": [
+			"NSFW verbergen op / alles /",
+			"Verberg boards die als niet veilig zijn gemarkeerd voor werk vanuit de / alles / metaboard"
+		],
+		"hideRecursively": [
+			"Recursieve post verbergen",
+			"Verberg alle berichten die recursief op een verborgen bericht hebben geantwoord"
+		],
+		"hideThumbs": [
+			"Thumbnails verbergen",
+			"Geef een [Show] knop weer in plaats van thumbnails"
+		],
+		"horizontalPosting": [
+			"Horizontaal Posting",
+			"38chan nostalgia"
+		],
+		"id": [
+			"Inloggen",
+			""
+		],
+		"imageHover": [
+			"Beeldverlenging Uitbreiding",
+			"Geef previews van beelden"
+		],
+		"imageRootOverride": [
+			"Afbeelding root overschrijden",
+			"Als u afbeeldingen van een andere locatie zoals een CDN wilt hosten, voert u hier het volledige root-adres in. Laat leeg om het standaard adres te gebruiken. Voorbeeld: 'https://images.meguca.org' "
+		],
+		"imageScore": [
+			"Afbeeldingen spam score",
+			"Antispam van het plaatsen van een afbeelding. Na overschrijding van de limiet moet de gebruiker een captcha oplossen."
+		],
+		"import": [
+			"Importeren",
+			"Importeer opties van bestand"
+		],
+		"inlineFit": [
+			"Uitbreiding",
+			"Breid afbeeldingen uit in het bovenliggende bericht en wijzig het formaat volgens de instellingen"
+		],
+		"iqdb": [
+			"IQDB",
+			"iqdb.org afbeelding zoeken"
+		],
+		"janitors": [
+			"Janitors",
+			"Janitor account IDs. Janitors kunnen bericht alleen verwijderen."
+		],
+		"lang": [
+			"Taal",
+			"Verander interface taal"
+		],
+		"links": [
+			"Externe links",
+			"Toevoegen, Verwijderen of berwerk externe >>>/4chan/-type referenties"
+		],
+		"mascot": [
+			"Mascot",
+			"Toggle mascot display"
+		],
+		"mascotImage": [
+			"",
+			"Afbeelding gebruiken voor de mascot"
+		],
+		"mature": [
+			"Volwassen inhoud",
+			"Informeer de gebruiker dat de website tijdens het eerste bezoek inhoud met een volwassen karakter bevat"
+		],
+		"maxHeight": [
+			"Afbeelding height limiet",
+			"Maximaal height van geüpload afbeeldingen"
+		],
+		"maxSize": [
+			"Afbeelding grootte limiet",
+			"Maximaal grootte om afbeeldingen te uploaden in MB"
+		],
+		"maxWidth": [
+			"Afbeelding width limiet",
+			"Maximaal width van geüpload afbeeldingen"
+		],
+		"meguTV": [
+			"MeguTV",
+			"Speel willekeurige bordspecifieke video's in de overlay-speler"
+		],
+		"meguTVShortcut": [
+			"MeguTV",
+			"Speel willekeurige bordspecifieke video's in de overlay-speler"
+		],
+		"moderators": [
+			"Moderators",
+			"Moderator account IDs. Moderators kunnen berichten verwijderen, posters uitsluiten en posters onderscheiden door hun IDs."
+		],
+		"name": [
+			"Naam",
+			"Naam die aan nieuwe berichten moet worden toegevoegd"
+		],
+		"newPassword": [
+			"Niewe wachtwoord",
+			""
+		],
+		"newPost": [
+			"Nieuwe bericht",
+			"Open nieuwe bericht"
+		],
+		"notice": [
+			"Notitie",
+			"Korte informatieve boodschap bovenaan de pagina"
+		],
+		"notification": [
+			"Desktop Notificaties",
+			"Ontvang bureaubladmeldingen wanneer deze worden geciteerd of een syncwatch gaat beginnen"
+		],
+		"nowPlaying": [
+			"Nu banner aan het spelen",
+			"Momenteel speelt het nummer op r / a / dio of eden en andere streaminformatie in de bovenste balk."
+		],
+		"oldPassword": [
+			"Oud wachtwoord",
+			""
+		],
+		"overrideCaptchaTags": [
+			"Captcha Tags Overschrijden",
+			"Mapping of boards to tags to use as the solution on the specified board."
+		],
+		"owners": [
+			"Eigenaars",
+			"Eigenaar account IDs. Eigenaars hebben volledige toegang tot alle besturingselementen op het bord. Moet ten minste één bevatten."
+		],
+		"password": [
+			"Wachtwoord",
+			""
+		],
+		"postCreationScore": [
+			"Postcreatie spamscore",
+			"Antispam bij het maken van een nieuw bericht. Na overschrijding van de limiet moet de gebruiker een captcha oplossen."
+		],
+		"postInlineExpand": [
+			"Inline uitbreiding van berichtkoppeling",
+			"Inline gekoppelde post onder de berichtlink op klik. Wanneer uitgeschakeld, navigeert u naar het gekoppelde bericht."
+		],
+		"pruneBoards": [
+			"Boards uitwissen",
+			"Verwijder borden die N dagen geen nieuwe berichten hebben gehad"
+		],
+		"pruneThreads": [
+			"Topics uitwissen",
+			"Verwijder topics die gedurende N dagen geen berichten hebben gehad"
+		],
+		"pyu": [
+			"Slet enabler",
+			"Vraag niet"
+		],
+		"rbText": [
+			"Red/Blue Text",
+			"Rode en blauwe tekst weergeven als deze is opgemaakt met '^r' of '^b'"
+		],
+		"readOnly": [
+			"Alleen lezen",
+			"Schakel het maken van berichten uit"
+		],
+		"register": [
+			"Registreren",
+			""
+		],
+		"relativeTime": [
+			"Relatieve tijdstempels",
+			"Relatieve bericht tijdstempels. vb.: '1 uur geleden'"
+		],
+		"repeat": [
+			"Herhaal",
+			""
+		],
+		"replyRight": [
+			"[Reply] aan Rechts",
+			"Verplaats antwoordknop aan de rechterkant van de pagina"
+		],
+		"rootURL": [
+			"Root URL",
+			"Root URL van de imageboard. Vereist voor sommige image search-providers om te werken."
+		],
+		"rules": [
+			"Regels",
+			"Board regels om weer te geven in het regelmodaal venster"
+		],
+		"sage": [
+			"Sage",
+			"Bump de topic niet op de bovenkant van het board bij het maken van de post."
+		],
+		"salt": [
+			"Secure salt",
+			"Salt voor veilige tripcode en mnemonic generatie. Aanbevolen om minimaal 40 tekens lang te zijn."
+		],
+		"saucenao": [
+			"SauceNao",
+			"saucenao.com afbeelding zoeken"
+		],
+		"sessionExpiry": [
+			"Account sessie verstrijken",
+			"Tijd in dagen totdat gebruikersaccounts automatisch worden afgemeld"
+		],
+		"spoilers": [
+			"Afbeelding Spoilers",
+			"Spoiler afbeeldingen niet"
+		],
+		"staffTitle": [
+			"Staff Titel",
+			"Toon de titel van uw personeel in de berichtkop"
+		],
+		"textOnly": [
+			"Text alleen",
+			"Disable bestanden uploads"
+		],
+		"theme": [
+			"Thema",
+			"Kies CSS thema"
+		],
+		"threadExpiryMax": [
+			"Maximaal topic verval tijd",
+			"Aantal dagen zonder nieuwe berichten voordat een topic is verwijderd"
+		],
+		"threadExpiryMin": [
+			"Minimaal topic verval tijd",
+			"Aantal dagen zonder nieuwe berichten voordat een topic is verwijderd"
+		],
+		"title": [
+			"Board titel",
+			"Korte beschrijvende titel van het board"
+		],
+		"toggleSpoiler": [
+			"Afbeelding Spoiler",
+			"Toggle spoiler in de opening van een bericht"
+		],
+		"userBG": [
+			"Eigen Achtergrond",
+			"Toggle eigen pagina achtergrond"
+		],
+		"userBGImage": [
+			"",
+			"Afbeelding om te gebruiken als achtergrond."
+		],
+		"watchThreadsOnReply": [
+			"Bekijk topics op replies",
+			"Automatisch topcis toevoegen aan gekeken discussies op replies"
+		],
+		"webmHover": [
+			"WebM Hover uitbreiding",
+			"WebM-voorbeelden weergeven op hover. Vereist Image Hover Uitbreiding ingeschakeld."
+		],
+		"whatAnime": [
+			"WhatAnime",
+			"whatanime.ga anime screenshot zoeken"
+		],
+		"workMode": [
+			"Work mode",
+			"Verberg afbeeldingen en deactiveert gebruiker achtergrond"
+		],
+		"workModeToggle": [
+			"Werk mode",
+			"Verberg afbeeldingen en deactiveert gebruiker achtergrond"
+		]
+	},
+	"options": {
+		"none": "geen",
+		"screen": "fit to screen",
+		"width": "fit to width"
+	},
+	"sortModes": [
+		"Bump tijd",
+		"Laatste reply tijd",
+		"Gecreerd tijd",
+		"Aantal replies",
+		"Aantal bestanden"
+	],
+	"tabs": [
+		"Generaal",
+		"Style",
+		"Afbeelding Zoeken",
+		"Pret",
+		"Shortcuts"
+	],
+	"templates": {
+		"banPage": [
+			"U bent verbannen van /%s/ door %s voor de volgende reden:",
+			"Uw ban will zal vervallen op %s of in %s.",
+			"Volgens onze server is uw IP %s."
+		]
+	},
+	"ui": {
+		"FAQ": "Informatie",
+		"account": "Account en board management",
+		"add": "Toevoegen",
+		"apply": "Toepassen",
+		"assignStaff": "staff toewijzen",
+		"ban": "Verbannen",
+		"bannerSpecs": "Accepteert maximaal 20 JPEG-, PNG-, GIF- of WEBM-bestanden met maximale afmetingen van 300x100, maximale bestandsgrootte van 100 kB en geen geluid.",
+		"by": "Door",
+		"captcha": "Captcha",
+		"changePassword": "Verander wachtwoord",
+		"clear": "Ontruimen",
+		"configureBoard": "board configureren",
+		"configureServer": "Server configureren",
+		"createBoard": "Maak een board",
+		"data": "Data",
+		"deleteBoard": "Verwijder board",
+		"deleteImage": "Verwijder afbeelding",
+		"deletePost": "Verwijder bericht",
+		"duration": "Looptijd",
+		"expires": "Vervalt",
+		"feedback": "Feedback",
+		"fuckOff": "FUCK OFF",
+		"global": "Globaal",
+		"id": "ID",
+		"identity": "Identiteit",
+		"illegal": "Illegaal inhoud",
+		"loadCaptcha": "Click om captcha te laden",
+		"loadingSpecs": "Accepteert een GIF- of WEBM-bestand met maximale afmetingen van 300x300, maximale bestandsgrootte van 100 kB en geen geluid.",
+		"logout": "Uitloggen",
+		"logoutAll": "uitloggen van alle apparaten",
+		"notification": "Notificatie",
+		"options": "Opties",
+		"ownNoBoards": "Je bezit geen boards",
+		"post": "Post",
+		"purgePost": "post/afbeelding uitwissen",
+		"reason": "Reden",
+		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
+		"setBanners": "Zet banners",
+		"setLoading": "Zet ladende animatie",
+		"sortMode": "Sorteer topics op",
+		"spoilerImage": "Spoiler afbeelding",
+		"subject": "Onderwerp",
+		"sync": "Connectie status",
+		"syncCount": "Uniek verbonden actief/totaal IP aantal",
+		"text": "Text",
+		"time": "Tijd",
+		"type": "Type",
+		"unban": "Unban"
+	}
+}
