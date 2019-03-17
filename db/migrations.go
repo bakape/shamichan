@@ -1238,11 +1238,18 @@ var migrations = []func(*sql.Tx) error{
 		// Reload triggers
 		return loadSQL(tx, "triggers/boards")
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(createIndex("post_moderation", "type"))
+		if err != nil {
+			return
+		}
+		return registerFunctions(tx, "delete_posts_by_ip", "assert_can_perform")
+	},
 }
 
 func createIndex(table, column string) string {
-	return fmt.Sprintf(`create index %s_%s on %s (%s)`, table, column, table,
-		column)
+	return fmt.Sprintf(`create index %s_%s_idx on %s (%s)`, table, column,
+		table, column)
 }
 
 // Register triggers and trigger functions for each board in triggers

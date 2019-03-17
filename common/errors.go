@@ -3,9 +3,9 @@ package common
 import (
 	"errors"
 	"fmt"
-	"github.com/bakape/meguca/util"
 	"strings"
 
+	"github.com/bakape/meguca/util"
 	"github.com/gorilla/websocket"
 )
 
@@ -20,6 +20,7 @@ var (
 	ErrInvalidCreds        = ErrAccessDenied("login credentials")
 	ErrBanned              = ErrAccessDenied("you are banned from this board")
 	ErrTooManyConnections  = ErrAccessDenied("too many connections")
+	ErrNoPermissions       = ErrAccessDenied("insufficient permissions")
 
 	// The poster is almost certainly spamming
 	ErrSpamDected = ErrAccessDenied("spam detected")

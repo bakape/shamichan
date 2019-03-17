@@ -266,6 +266,16 @@ func GetSameIPPosts(id uint64, board string, by string) (
 	return
 }
 
+// Delete posts of the same IP as target post on board
+func DeletePostsByIP(id uint64, account string) (err error) {
+	_, err = db.Exec("select delete_posts_by_ip($1::bigint, $2::text)",
+		id, account)
+	if extractException(err) == "access denied" {
+		err = common.ErrNoPermissions
+	}
+	return
+}
+
 // SetThreadSticky sets the sticky field on a thread
 func SetThreadSticky(id uint64, sticky bool) error {
 	_, err := sq.Update("threads").

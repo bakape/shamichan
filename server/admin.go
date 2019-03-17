@@ -602,6 +602,11 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Delete posts of the same IP as target post on board
+func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
+
+}
+
 // Set the sticky flag of a thread
 func setThreadSticky(w http.ResponseWriter, r *http.Request) {
 	handleBoolRequest(w, r, func(id uint64, val bool, _ string) error {
