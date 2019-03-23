@@ -11,7 +11,6 @@ import (
 // Post is for writing new posts to a database. It contains the Password
 // field, which is never exposed publically through Post.
 type Post struct {
-	Deleted bool
 	common.StandalonePost
 	Password []byte
 	IP       string
@@ -104,7 +103,8 @@ func WritePost(tx *sql.Tx, p Post) (err error) {
 	return
 }
 
-// Insert Post into thread and set its ID and creation time.
+// Insert Post into thread and set its ID and creation time and moderation
+// status.
 // Thread OPs must have their post ID set to the thread ID.
 // Any images are to be inserted in a separate call.
 func InsertPost(tx *sql.Tx, p *Post) (err error) {
@@ -126,10 +126,26 @@ func InsertPost(tx *sql.Tx, p *Post) (err error) {
 
 	err = q.
 		Values(args...).
-		Suffix("returning id, time").
+		Suffix("returning id, time, moderated").
 		RunWith(tx).
 		QueryRow().
-		Scan(&p.ID, &p.Time)
+		Scan(&p.ID, &p.Time, &p.Moderated)
+	if err != nil {
+		return
+	}
+
+	if p.Moderated {
+		// Read moderation log, if post deleted on insert
+		//
+		// TODO: Get this in db-side JSON in same query, once we have db-side post
+		// JSON generation.
+		arr := [...]*common.Post{&p.Post}
+		err = injectModeration(arr[:], tx)
+		if err != nil {
+			return
+		}
+
+	}
 	return
 }
 

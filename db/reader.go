@@ -185,24 +185,30 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 			}
 			t.Posts = append(t.Posts, p)
 		}
-		return r.Err()
+		err = r.Err()
+		if err != nil {
+			return
+		}
+
+		// Inject  moderation into affected posts
+		moderated := make([]*common.Post, 0, 64)
+		filterModerated(&moderated, &t.Post)
+		for i := range t.Posts {
+			filterModerated(&moderated, &t.Posts[i])
+		}
+		return injectModeration(moderated, tx)
 	})
 	if err != nil {
 		return
 	}
 
-	// Inject bodies and moderation into open posts
+	// Inject bodies into open posts
 	open := make([]*common.Post, 0, 64)
-	moderated := make([]*common.Post, 0, 64)
-	filterInjectable(&open, &moderated, &t.Post)
+	filterOpen(&open, &t.Post)
 	for i := range t.Posts {
-		filterInjectable(&open, &moderated, &t.Posts[i])
+		filterOpen(&open, &t.Posts[i])
 	}
 	err = injectOpenBodies(open)
-	if err != nil {
-		return
-	}
-	err = injectModeration(moderated)
 	return
 }
 
@@ -281,7 +287,7 @@ func GetPost(id uint64) (res common.StandalonePost, err error) {
 		}
 	}
 	if res.Moderated {
-		err = injectModeration([]*common.Post{&res.Post})
+		err = injectModeration([]*common.Post{&res.Post}, nil)
 		if err != nil {
 			return
 		}
@@ -359,13 +365,15 @@ func scanCatalog(q squirrel.SelectBuilder) (board common.Board, err error) {
 	open := make([]*common.Post, 0, 16)
 	moderated := make([]*common.Post, 0, 16)
 	for i := range board.Threads {
-		filterInjectable(&open, &moderated, &board.Threads[i].Post)
+		ptr := &board.Threads[i].Post
+		filterOpen(&open, ptr)
+		filterModerated(&moderated, ptr)
 	}
 	err = injectOpenBodies(open)
 	if err != nil {
 		return
 	}
-	err = injectModeration(moderated)
+	err = injectModeration(moderated, nil)
 	return
 }
 
@@ -383,11 +391,15 @@ func scanThreadIDs(q squirrel.SelectBuilder) (ids []uint64, err error) {
 	return
 }
 
-// Filter and append a post if it has injectable open bodies and/or moderation
-func filterInjectable(open, moderated *[]*common.Post, p *common.Post) {
+// Filter and append a post if it has injectable open bodies
+func filterOpen(open *[]*common.Post, p *common.Post) {
 	if p.Editing {
 		*open = append(*open, p)
 	}
+}
+
+// Filter and append a post if it has injectable moderation
+func filterModerated(moderated *[]*common.Post, p *common.Post) {
 	if p.Moderated {
 		*moderated = append(*moderated, p)
 	}
@@ -412,8 +424,9 @@ func injectOpenBodies(posts []*common.Post) error {
 	return tx.Rollback()
 }
 
-// Inject moderation information into affected post structs
-func injectModeration(posts []*common.Post) (err error) {
+// Inject moderation information into affected post structs.
+// tx is optional.
+func injectModeration(posts []*common.Post, tx *sql.Tx) (err error) {
 	if len(posts) == 0 {
 		return
 	}
@@ -430,10 +443,13 @@ func injectModeration(posts []*common.Post) (err error) {
 	}
 	set = append(set, ')')
 
-	r, err := sq.Select("post_id", "type", "length", "by", "data").
+	q := sq.Select("post_id", "type", "length", "by", "data").
 		From("post_moderation").
-		Where(fmt.Sprintf("post_id in %s", string(set))).
-		Query()
+		Where(fmt.Sprintf("post_id in %s", string(set)))
+	if tx != nil {
+		q = q.RunWith(tx)
+	}
+	r, err := q.Query()
 	if err != nil {
 		return
 	}

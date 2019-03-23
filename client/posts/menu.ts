@@ -1,8 +1,8 @@
 import { View } from "../base"
 import { Post } from "./model"
-import { getModel, config } from "../state"
+import { getModel } from "../state"
 import { on, postJSON, HTML } from "../util"
-import { FormView, renderCaptchaForm } from "../ui"
+import { FormView } from "../ui"
 import lang from "../lang"
 import { hidePost } from "./hide"
 import { position } from "../mod"
@@ -19,38 +19,91 @@ type ItemSpec = {
 	text: string
 	keepOpen?: boolean // Keep open after click
 	shouldRender: (m: Post) => boolean
-	handler: (m: Post) => void | Promise<void>
+	handler: (m: Post, el: Element) => void | Promise<void>
 }
 
-// Form with one text field for submitting redirects
-class RedirectForm extends FormView {
-	private apiPath: string
-	private parentID: number
+// Form embedded in the popup menu
+abstract class MenuForm extends FormView {
+	protected parentID: number;
 
-	constructor(parent: Element, parentID: number, apiPath: string) {
-		super({ tag: "form" })
-		this.apiPath = apiPath
-		this.parentID = parentID
-		this.el.innerHTML = HTML`
-			<br>
-			<input type=text name=url>
+	constructor(parent: Element, parentID: number, html: string,
+		attrs: { [key: string]: any } = {},
+	) {
+		attrs["tag"] = "form"
+		super(attrs);
+		this.parentID = parentID;
+		this.el.innerHTML = html
+			+ HTML`
 			<br>
 			<input type="submit" value="${lang.ui["submit"]}">
 			<input type="button" name="cancel" value="${lang.ui["cancel"]}">
-			<div class="form-response admin"></div>`
-		parent.querySelector(".control .popup-menu").append(this.el)
+			<div class="form-response admin"></div>`;
+		parent.append(this.el);
+	}
+}
+
+// Form with one text field for submitting redirects
+class RedirectForm extends MenuForm {
+	private apiPath: string;
+
+	constructor(parent: Element, parentID: number, apiPath: string) {
+		super(parent, parentID,
+			HTML`
+			<br>
+			<input type=text name=url>`);
+		this.apiPath = apiPath;
 	}
 
 	protected async send() {
 		let url = (this.el
 			.querySelector("input[type=text]") as HTMLInputElement)
-			.value
-		postJSON
+			.value;
 		await postJSON(`/api/redirect/${this.apiPath}`, {
 			id: this.parentID,
 			url,
-		})
-		this.remove()
+		});
+		this.remove();
+	}
+}
+
+class DeleteByIPForm extends MenuForm {
+	constructor(parent: Element, parentID: number) {
+		let s = HTML`
+		<hr>
+		<span>${lang.ui["keepDeletingFor"]}</span>
+		<br>
+		<br>`;
+		for (let id of ["day", "hour", "minute"]) {
+			let label = lang.plurals[id][1];
+			label = label[0].toUpperCase() + label.slice(1);
+			s += HTML`
+			<input type="number" name="${id}" min="0" placeholder="${label}">
+			<br>`;
+		}
+		s += HTML`
+		<input type="text" name="reason" class="full-width" placeholder="${lang.ui["reason"]}">
+		<hr>`;
+		super(parent, parentID, s, { needCaptcha: true });
+		this.el.style.padding = "0.5em";
+
+		// Reason is required, if duration set
+		this.on("change", () => {
+			const r = this.inputElement("reason");
+			if (this.extractDuration() === 0) {
+				r.removeAttribute("required");
+			} else {
+				r.setAttribute("required", "");
+			}
+		});
+	}
+
+	protected async send() {
+		await postJSON("/api/delete-posts/by-ip", {
+			id: this.parentID,
+			duration: this.extractDuration(),
+			reason: this.inputElement("reason").value,
+		});
+		this.remove();
 	}
 }
 
@@ -82,20 +135,9 @@ const actions: { [key: string]: ItemSpec } = {
 	deleteSameIP: {
 		text: lang.posts["deleteBySameIP"],
 		shouldRender: canModerateIP,
-		handler(m) {
-			const run = async () => {
-				const res = await postJSON("/api/delete-posts/by-ip", {
-					id: m.id,
-				})
-				if (res.status !== 200) {
-					alert(await res.text());
-				}
-			};
-			if (config.captcha) {
-				renderCaptchaForm(run);
-			} else {
-				run();
-			}
+		keepOpen: true,
+		handler(m, el) {
+			new DeleteByIPForm(el, m.id);
 		},
 	},
 	toggleSticky: {
@@ -139,8 +181,8 @@ const actions: { [key: string]: ItemSpec } = {
 		shouldRender(m) {
 			return position >= ModerationLevel.admin && likelyHasIP(m)
 		},
-		handler(m) {
-			new RedirectForm(m.view.el, m.id, "by-ip")
+		handler(m, el) {
+			new RedirectForm(el, m.id, "by-ip")
 		},
 	},
 	redirectByThread: {
@@ -149,8 +191,8 @@ const actions: { [key: string]: ItemSpec } = {
 		shouldRender(m) {
 			return position >= ModerationLevel.admin && m.id === m.op
 		},
-		handler(m) {
-			new RedirectForm(m.view.el, m.id, "by-thread")
+		handler(m, el) {
+			new RedirectForm(el, m.id, "by-thread")
 		},
 	},
 }
@@ -203,7 +245,7 @@ class MenuView extends View<Post> {
 	private handleClick(e: Event) {
 		const act = actions[(e.target as Element).getAttribute('data-id')]
 		if (act) {
-			act.handler(this.model)
+			act.handler(this.model, (e.target as Element).closest("li"))
 			if (!act.keepOpen) {
 				this.remove()
 			}

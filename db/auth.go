@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 )
@@ -130,44 +129,6 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 				return
 			}
 			boards = append(boards, board)
-			return
-		},
-	)
-	return
-}
-
-func getBans() squirrel.SelectBuilder {
-	return sq.Select("ip", "board", "forPost", "reason", "by", "expires").
-		From("bans").
-		Where("expires >= now() at time zone 'utc'")
-}
-
-func scanBanRecord(rs rowScanner) (b auth.BanRecord, err error) {
-	err = rs.Scan(&b.IP, &b.Board, &b.ForPost, &b.Reason, &b.By, &b.Expires)
-	return
-}
-
-// GetBanInfo retrieves information about a specific ban
-func GetBanInfo(ip, board string) (auth.BanRecord, error) {
-	r := getBans().
-		Where("ip = ? and board = ?", ip, board).
-		QueryRow()
-	return scanBanRecord(r)
-}
-
-// GetBoardBans gets all bans on a specific board. "all" counts as a valid board value.
-func GetBoardBans(board string) (b []auth.BanRecord, err error) {
-	b = make([]auth.BanRecord, 0, 64)
-	var rec auth.BanRecord
-	err = queryAll(
-		getBans().Where("board = ?", board),
-		func(r *sql.Rows) (err error) {
-			rec, err = scanBanRecord(r)
-			if err != nil {
-				return
-			}
-			rec.Board = board
-			b = append(b, rec)
 			return
 		},
 	)

@@ -2,12 +2,13 @@ package db
 
 import (
 	"database/sql"
+	"reflect"
+	"testing"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
-	"reflect"
-	"testing"
 )
 
 var sampleModerationEntry = common.ModerationEntry{
@@ -19,7 +20,7 @@ var sampleModerationEntry = common.ModerationEntry{
 
 func prepareThreads(t *testing.T) {
 	t.Helper()
-	assertTableClear(t, "boards", "images")
+	assertTableClear(t, "boards", "images", "continuous_deletions")
 
 	boards := [...]BoardConfigs{
 		{
@@ -146,7 +147,6 @@ func prepareThreads(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 }
 
 func TestReader(t *testing.T) {
@@ -201,8 +201,8 @@ func testGetPost(t *testing.T) {
 func testGetAllBoard(t *testing.T) {
 	t.Parallel()
 
-	std := []common.Thread{
-		{
+	std := map[uint64]common.Thread{
+		3: {
 			Post: common.Post{
 				ID: 3,
 				Links: []common.Link{
@@ -224,7 +224,7 @@ func testGetAllBoard(t *testing.T) {
 			ReplyTime: 3,
 			BumpTime:  5,
 		},
-		{
+		1: {
 			Post: common.Post{
 				ID:         1,
 				Image:      &assets.StdJPEG,
@@ -244,12 +244,16 @@ func testGetAllBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i := range board.Threads {
-		assertImage(t, &board.Threads[i], std[i].Image)
+		thread := &board.Threads[i]
+		std := std[thread.ID]
+		t.Run("assert thread equality", func(t *testing.T) {
+			t.Parallel()
+
+			assertImage(t, thread, std.Image)
+			syncThreadVariables(thread, std)
+			AssertDeepEquals(t, thread, &std)
+		})
 	}
-	for i := range board.Threads {
-		syncThreadVariables(&board.Threads[i], std[i])
-	}
-	AssertDeepEquals(t, board.Threads, std)
 }
 
 // Assert image equality and then override to not compare pointer addresses

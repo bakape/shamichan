@@ -475,7 +475,6 @@
 		"ownNoBoards": "Nie posiadasz żadnego działu",
 		"post": "Post",
 		"purgePost": "Purge post/image",
-		"reason": "Reason",
 		"searchTooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
 		"setBanners": "Set banners",
 		"setLoading": "Set loading animation",

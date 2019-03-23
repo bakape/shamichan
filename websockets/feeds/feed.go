@@ -1,9 +1,9 @@
 package feeds
 
 import (
-	"github.com/bakape/meguca/common"
 	"time"
 
+	"github.com/bakape/meguca/common"
 	"github.com/go-playground/log"
 )
 
@@ -13,8 +13,8 @@ type message struct {
 }
 
 type postCreationMessage struct {
+	post common.Post
 	message
-	cachedPost
 }
 
 type imageInsertionMessage struct {
@@ -123,9 +123,20 @@ func (f *Feed) Start() (err error) {
 
 			// Insert a new post, cache and propagate
 			case msg := <-f.insertPost:
+				src := msg.post
 				f.modifyPost(msg.message, func(p *cachedPost) {
-					*p = msg.cachedPost
+					*p = cachedPost{
+						HasImage:  src.Image != nil,
+						Spoilered: src.Image != nil && src.Image.Spoiler,
+						Time:      src.Time,
+						Closed:    !src.Editing,
+						Body:      src.Body,
+					}
 				})
+				// Post can be automatically deleted on insertion
+				if src.IsDeleted() {
+					f.cache.Moderation[msg.id] = src.Moderation
+				}
 				f.sendIPCount()
 
 			// Set the body of an open post and propagate
@@ -230,13 +241,7 @@ func (f *Feed) InsertPost(p common.Post, msg []byte) {
 			id:  p.ID,
 			msg: msg,
 		},
-		cachedPost: cachedPost{
-			HasImage:  p.Image != nil,
-			Spoilered: p.Image != nil && p.Image.Spoiler,
-			Time:      p.Time,
-			Closed:    !p.Editing,
-			Body:      p.Body,
-		},
+		post: p,
 	}
 }
 

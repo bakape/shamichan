@@ -242,11 +242,11 @@ export class Post extends Model implements PostData {
 	}
 
 	public isDeleted(): boolean {
-		if (!this.moderation) {
+		if (!this.moderation || mine.has(this.id)) {
 			return false;
 		}
 		for (let { type } of this.moderation) {
-			if (type === ModerationAction.banPost) {
+			if (type === ModerationAction.deletePost) {
 				return true;
 			}
 		}

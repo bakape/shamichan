@@ -130,10 +130,14 @@ Render an image or video asset
 
 Render localized table headers by UI translation ID
 {% func tableHeaders(ids ...string) %}{% stripspace %}
-	{% code ln := lang.Get().UI %}
+	{% code ln := lang.Get() %}}
 	<tr>
 		{% for _, id := range ids %}
-			<th>{%s= ln[id] %}</th>
+			{% code label := ln.UI[id] %}
+			{% if label == "" %}
+				{% code label = ln.Common.UI[id] %}}
+			{% endif %}
+			<th>{%s= label %}</th>
 		{% endfor %}
 	</tr>
 {% endstripspace %}{% endfunc %}

@@ -22,6 +22,10 @@ export default class PostView extends ImageHandler {
         const attrs: ViewAttrs = { model }
         if (el) {
             attrs.el = el
+            if (el.classList.contains("deleted") && !model.isDeleted()) {
+                // Hide own deletions
+                el.classList.remove("deleted");
+            }
         } else {
             attrs.class = 'glass'
             if (model.editing) {
@@ -43,6 +47,9 @@ export default class PostView extends ImageHandler {
             this.el.append(importTemplate("article"))
             this.render()
             this.autoExpandImage()
+        } else if (this.model.moderation) {
+            // Localize moderation log
+            this.renderModerationLog();
         }
     }
 
@@ -268,6 +275,10 @@ export default class PostView extends ImageHandler {
                     s = this.format('banned', by, secondsToTime(length).toUpperCase(), data);
                     break;
                 case ModerationAction.deletePost:
+                    if (mine.has(this.model.id)) {
+                        // Hide own deletes from user
+                        continue;
+                    }
                     s = this.format('deleted', by);
                     break;
                 case ModerationAction.deleteImage:
