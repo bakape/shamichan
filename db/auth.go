@@ -73,6 +73,9 @@ func FindPosition(board, userID string) (pos common.ModerationLevel, err error) 
 		OrderBy("position desc").
 		QueryRow().
 		Scan(&pos)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
 	return
 }
 
