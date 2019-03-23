@@ -18,7 +18,7 @@
 		],
 		"audioVolume": [
 			"Audio volume",
-			"Volume of audio in music and video players"
+			"Volume du son pour musique et lecteur vidéo"
 		],
 		"autogif": [
 			"Vignettes GIF animées",
@@ -26,11 +26,11 @@
 		],
 		"bgMute": [
 			"Mute Background Video",
-			"Mute the background video"
+			"Met en sourdine la vidéo d'arrière-plan"
 		],
 		"bgVideo": [
 			"Background Video",
-			"Admin-specified memes piped straight into you're monitor"
+			"Mèmes moulés à la louche par l'admin, livrés directement dans votre moniteur"
 		],
 		"boardExpiry": [
 			"Expiration d'une planche",
@@ -54,11 +54,11 @@
 		],
 		"captchaTags": [
 			"Captcha tags",
-			"Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
+			"Tags à utiliser pour les solutions de captcha. Un tag est choisi aléatoirement pour chaque captcha généré. Contient nécessairement au moins 3 tags."
 		],
 		"charScore": [
-			"Character spam score",
-			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
+			"Score de spam par caractère",
+			"Poids antispam lors de la modification d'un caractère dans un message. Après avoir excédé la limite, l'utilisateur devra remplir un captcha."
 		],
 		"customCSS": [
 			"",
@@ -78,7 +78,7 @@
 		],
 		"desustorage": [
 			"DesuStorage",
-			"desustorage.org image search"
+			"Recheche d'image desustorage.org"
 		],
 		"disableRobots": [
 			"Bloquer les robots",
@@ -97,28 +97,28 @@
 			"Peut contenir 100 questions et un total de 2000 caractères"
 		],
 		"emailErr": [
-			"Email Errors",
-			"Toggle emailing errors."
+			"Courriel d'erreur",
+			"Activer les courriels en cas de bogue."
 		],
 		"emailErrMail": [
-			"Email",
-			"Error email."
+			"Adresse",
+			"Adresse courriel d'erreur."
 		],
 		"emailErrPass": [
-			"Password",
-			"Error email password."
+			"Mot de passe",
+			"Mot de passe de l'adresse courriel."
 		],
 		"emailErrPort": [
-			"Email server port",
-			"Error email server port."
+			"Port serveur courriel",
+			"Port du serveur de courriel d'erreur."
 		],
 		"emailErrSub": [
-			"Email server",
-			"Error email server subdomain."
+			"Serveur courriel",
+			"Sous-domaine du serveur de courriel d'erreur."
 		],
 		"exhentai": [
 			"Exhentai",
-			"exhentai.org image search"
+			"Recherche d'image exhentai.org"
 		],
 		"expandAll": [
 			"Étendre les images",
@@ -146,7 +146,7 @@
 		],
 		"google": [
 			"Google",
-			"Google image search"
+			"Recherche d'image Google"
 		],
 		"hidden": [
 			"Caché : 0",
@@ -182,7 +182,7 @@
 		],
 		"imageScore": [
 			"Image spam score",
-			"Antispam weight of posting an image. After exceeding the limit the user will need to solve a captcha."
+			"Poids antispam lors du téléversement d'une image. Après avoir excédé la limite, l'utilisateur devra remplir un captcha."
 		],
 		"import": [
 			"Importer",
@@ -194,7 +194,7 @@
 		],
 		"iqdb": [
 			"IQDB",
-			"iqdb.org image search"
+			"Recherche d'image iqdb.org"
 		],
 		"janitors": [
 			"Concierges",
@@ -234,11 +234,11 @@
 		],
 		"meguTV": [
 			"MeguTV",
-			"Play random board-specific videos in overlay player"
+			"Joue des vidéos aléatoires et spécifiques à la planche dans un lecteur superposé"
 		],
 		"meguTVShortcut": [
 			"MeguTV",
-			"Play random board-specific videos in overlay player"
+			"Joue des vidéos aléatoires et spécifiques à la planche dans un lecteur superposé"
 		],
 		"moderators": [
 			"Modérateurs",
@@ -266,15 +266,15 @@
 		],
 		"nowPlaying": [
 			"Now Playing Banner",
-			"Currently playing song on r/a/dio or eden and other stream information in the top banner."
+			"Afficher la chanson en cours sur r/a/dio ou eden et d'autres informations sur le stream dans la bannière du haut."
 		],
 		"oldPassword": [
 			"Ancien mot de passe",
 			""
 		],
 		"overrideCaptchaTags": [
-			"Override Captcha Tags",
-			"Mapping of boards to tags to use as the solution on the specified board."
+			"Outrepasser les tags de captcha",
+			"Pairage des planches aux tags à utiliser comme solution de captcha."
 		],
 		"owners": [
 			"Propriétaires",
@@ -286,7 +286,7 @@
 		],
 		"postCreationScore": [
 			"Post creation spam score",
-			"Antispam weight of creating a new post. After exceeding the limit the user will need to solve a captcha."
+			"Poids antispam de la création d'un nouveau message. Après avoir excédé la limite, l'utilisateur devra remplir un captcha."
 		],
 		"postInlineExpand": [
 			"Étendre le message",
@@ -302,11 +302,11 @@
 		],
 		"pyu": [
 			"Slut enabler",
-			"Don't ask"
+			"Pose pas de questions"
 		],
 		"rbText": [
 			"Red/Blue Text",
-			"Display red and blue text if formatted with '^r' or '^b'"
+			"Affiche du texte en rouge ou en bleu si balisé avec '^r' ou '^b'"
 		],
 		"readOnly": [
 			"Lecture seule",
@@ -346,7 +346,7 @@
 		],
 		"saucenao": [
 			"SauceNao",
-			"saucenao.com image search"
+			"Recherche d'image saucenao.com"
 		],
 		"sessionExpiry": [
 			"Expiration d'une session",
@@ -394,7 +394,7 @@
 		],
 		"watchThreadsOnReply": [
 			"Watch threads on reply",
-			"Automatically add thread to watched threads on reply"
+			"Ajouter automatiquement le fil aux fils suivis après envoi d'une réponse"
 		],
 		"webmHover": [
 			"WebM au passage de la souris",
@@ -402,7 +402,7 @@
 		],
 		"whatAnime": [
 			"WhatAnime",
-			"whatanime.ga anime screenshot search"
+			"Recherche de captures d'écran d'anime whatanime.ga"
 		],
 		"workMode": [
 			"Mode travail",
@@ -452,14 +452,14 @@
 		"configureBoard": "Configurer une planche",
 		"configureServer": "Configurer le serveur",
 		"createBoard": "Créer une planche",
-		"data": "Data",
+		"data": "Données",
 		"deleteBoard": "Supprimer une planche",
 		"deleteImage": "Supprimer l'image",
 		"deletePost": "Supprimer le message",
-		"duration": "Duration",
+		"duration": "Durée",
 		"expires": "Expire",
 		"feedback": "Courriel",
-		"fuckOff": "FUCK OFF",
+		"fuckOff": "CASSE TOI",
 		"global": "Global",
 		"id": "ID",
 		"identity": "Identité",
@@ -472,19 +472,19 @@
 		"options": "Paramètres",
 		"ownNoBoards": "Vous ne possédez aucune planche",
 		"post": "Message",
-		"purgePost": "Purge post/image",
-		"reason": "Reason",
+		"purgePost": "Éliminer message/image",
+		"reason": "Raison",
 		"searchTooltip": "Filtre les sujets par titre, message ou nom de planche (exemple : /pol/)",
 		"setBanners": "Bannière",
 		"setLoading": "Image de chargement",
-		"sortMode": "Trier les sujets par",
+		"sortMode": "Trier les fils par",
 		"spoilerImage": "Dissimuler l'image",
 		"subject": "Titre",
 		"sync": "Statut de connexion",
-		"syncCount": "Unique connected active/total IP count",
+		"syncCount": "Nombre d'IPs uniques connectées actives / nombre d'IPs total",
 		"text": "Texte",
 		"time": "Date",
 		"type": "Type",
-		"unban": "Gracier"
+		"unban": "Débannir"
 	}
 }
