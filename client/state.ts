@@ -104,30 +104,56 @@ export function loadFromDB(...threads: number[]) {
 			seenPosts = new Set(ids)),
 		readIDs("hidden", threads).then((ids) =>
 			hidden = new Set(ids)),
-	])
+	]).then(() => {
+		receive("mine", mine);
+		receive("seen", seenReplies);
+		receive("seenPosts", seenPosts);
+		receive("hidden", hidden);
+	})
+}
+
+// Broadcast to other tabs
+function propagate(channel: string, data: any) {
+	if (BroadcastChannel === undefined) {
+		return;
+	}
+	(new BroadcastChannel(channel)).postMessage(data);
+}
+
+// Receive updates from other tabs
+function receive(channel: string, store: Set<number>) {
+	if (BroadcastChannel === undefined) {
+		return;
+	}
+	(new BroadcastChannel(channel)).onmessage = (e: MessageEvent) =>
+		store.add(e.data);
 }
 
 // Store the ID of a post this client created
 export function storeMine(id: number, op: number) {
-	mine.add(id)
-	storeID("mine", id, op, tenDays)
+	mine.add(id);
+	propagate("mine", id);
+	storeID("mine", id, op, tenDays);
 }
 
 // Store the ID of a post that replied to one of the user's posts
 export function storeSeenReply(id: number, op: number) {
-	seenReplies.add(id)
-	storeID("seen", id, op, tenDays)
+	seenReplies.add(id);
+	propagate("seen", id);
+	storeID("seen", id, op, tenDays);
 }
 
 export function storeSeenPost(id: number, op: number) {
-	seenPosts.add(id)
-	storeID("seenPost", id, op, tenDays)
+	seenPosts.add(id);
+	propagate("seenPost", id);
+	storeID("seenPost", id, op, tenDays);
 }
 
 // Store the ID of a post or thread to hide
 export function storeHidden(id: number, op: number) {
-	hidden.add(id)
-	storeID("hidden", id, op, tenDays * 3 * 6)
+	hidden.add(id);
+	propagate("hidden", id);
+	storeID("hidden", id, op, tenDays * 3 * 6);
 }
 
 export function setBoardConfig(c: BoardConfigs) {

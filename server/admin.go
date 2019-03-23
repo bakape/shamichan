@@ -433,7 +433,7 @@ func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		return db.DeletePostsByIP(req.ID, creds.UserID,
-			time.Duration(req.Duration)*time.Second, req.Reason)
+			time.Duration(req.Duration)*time.Minute, req.Reason)
 	}()
 	if err != nil {
 		httpError(w, r, err)

@@ -11,7 +11,6 @@ import (
 // Post is for writing new posts to a database. It contains the Password
 // field, which is never exposed publically through Post.
 type Post struct {
-	Deleted bool
 	common.StandalonePost
 	Password []byte
 	IP       string
