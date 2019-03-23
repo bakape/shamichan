@@ -473,7 +473,6 @@
 		"ownNoBoards": "Vous ne possédez aucune planche",
 		"post": "Message",
 		"purgePost": "Éliminer message/image",
-		"reason": "Raison",
 		"searchTooltip": "Filtre les sujets par titre, message ou nom de planche (exemple : /pol/)",
 		"setBanners": "Bannière",
 		"setLoading": "Image de chargement",

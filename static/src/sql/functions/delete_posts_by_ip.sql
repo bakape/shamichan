@@ -1,4 +1,6 @@
-create or replace function delete_posts_by_ip(id bigint, account text)
+-- length: keep deleting posts of this IP for duration in seconds
+create or replace function delete_posts_by_ip(id bigint, account text,
+	length bigint, reason text)
 returns void as $$
 declare
 	target_board text;
@@ -6,9 +8,8 @@ declare
 	id bigint;
 begin
 	-- Get post board and IP
-	select t.board, p.ip into target_board, target_ip
+	select post_board(p.id), p.ip into target_board, target_ip
 		from posts p
-		join threads t on (p.op = t.id)
 		where p.id = delete_posts_by_ip.id;
 
 	-- Post gone or already past 7 days old
@@ -22,13 +23,19 @@ begin
 	-- Delete the posts
 	for id in (select p.id
 				from posts p
-				join threads t on (p.op = t.id)
 				where p.ip = target_ip
-					and t.board = target_board
+					and post_board(p.id) = target_board
 					-- Ensure not already deleted
 					and not is_deleted(p.id))
 	loop
-		perform delete_post(id, account, target_board);
+		perform delete_post(id, account, target_board, length, reason);
 	end loop;
+
+	-- Keep deleting posts till this expires
+	if length > 0 then
+		insert into continuous_deletions (ip, board, "by", till)
+			values (target_ip, target_board, account,
+				(now() + make_interval(secs := length)) at time zone 'utc');
+	end if;
 end;
 $$ language plpgsql;

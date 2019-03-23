@@ -64,12 +64,19 @@ func IsConflictError(err error) bool {
 	return false
 }
 
-// Listen assigns a function to listen to Postgres notifications on a channel
+// Listen assigns a function to listen to Postgres notifications on a channel.
+// Can't be used in tests.
 func Listen(event string, fn func(msg string) error) (err error) {
 	if common.IsTest {
 		return
 	}
+	return ListenCancelable(event, nil, fn)
+}
 
+// Like listen, but is cancelable. Can be used in tests.
+func ListenCancelable(event string, canceller <-chan struct{},
+	fn func(msg string) error,
+) (err error) {
 	l := pq.NewListener(
 		ConnArgs,
 		time.Second,
@@ -82,15 +89,24 @@ func Listen(event string, fn func(msg string) error) (err error) {
 	}
 
 	go func() {
-		for msg := range l.Notify {
+	again:
+		select {
+		case <-canceller:
+			err := l.UnlistenAll()
+			if err != nil {
+				log.Errorf("unlistening database evenet id=`%s` error=`%s`\n",
+					event, err)
+			}
+		case msg := <-l.Notify:
 			if msg == nil {
-				continue
+				break
 			}
 			if err := fn(msg.Extra); err != nil {
 				log.Errorf(
 					"error on database event id=`%s` msg=`%s` error=`%s`\n",
 					event, msg.Extra, err)
 			}
+			goto again
 		}
 	}()
 

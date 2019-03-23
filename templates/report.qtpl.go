@@ -37,7 +37,7 @@ var (
 //line report.qtpl:8
 func StreamReportForm(qw422016 *qt422016.Writer, id uint64) {
 	//line report.qtpl:9
-	ln := lang.Get().UI
+	ln := lang.Get()
 
 	//line report.qtpl:9
 	qw422016.N().S(`<input type=text name=target value="`)
@@ -46,7 +46,7 @@ func StreamReportForm(qw422016 *qt422016.Writer, id uint64) {
 	//line report.qtpl:10
 	qw422016.N().S(`" hidden><input type=text name=reason placeholder="`)
 	//line report.qtpl:11
-	qw422016.N().S(ln["reason"])
+	qw422016.N().S(ln.Common.UI["reason"])
 	//line report.qtpl:11
 	qw422016.N().S(`" maxlength="`)
 	//line report.qtpl:11
@@ -54,7 +54,7 @@ func StreamReportForm(qw422016 *qt422016.Writer, id uint64) {
 	//line report.qtpl:11
 	qw422016.N().S(`"><br><label><input type=checkbox name=illegal>`)
 	//line report.qtpl:15
-	qw422016.N().S(ln["illegal"])
+	qw422016.N().S(ln.UI["illegal"])
 	//line report.qtpl:15
 	qw422016.N().S(`<br></label>`)
 	//line report.qtpl:18

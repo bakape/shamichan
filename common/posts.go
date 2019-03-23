@@ -59,7 +59,7 @@ type Post struct {
 	Image      *Image            `json:"image"`
 	Links      []Link            `json:"links"`
 	Commands   []Command         `json:"commands"`
-	Moderation []ModerationEntry `json:"moderaion"`
+	Moderation []ModerationEntry `json:"moderation"`
 }
 
 // Return if post has been deleted by staff

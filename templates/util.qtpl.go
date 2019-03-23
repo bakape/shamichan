@@ -620,121 +620,133 @@ func loadingImage(board string) string {
 //line util.qtpl:132
 func streamtableHeaders(qw422016 *qt422016.Writer, ids ...string) {
 	//line util.qtpl:133
-	ln := lang.Get().UI
+	ln := lang.Get()
 
 	//line util.qtpl:133
-	qw422016.N().S(`<tr>`)
+	qw422016.N().S(`}<tr>`)
 	//line util.qtpl:135
 	for _, id := range ids {
-		//line util.qtpl:135
-		qw422016.N().S(`<th>`)
 		//line util.qtpl:136
-		qw422016.N().S(ln[id])
-		//line util.qtpl:136
-		qw422016.N().S(`</th>`)
+		label := ln.UI[id]
+
 		//line util.qtpl:137
+		if label == "" {
+			//line util.qtpl:138
+			label = ln.Common.UI[id]
+
+			//line util.qtpl:138
+			qw422016.N().S(`}`)
+			//line util.qtpl:139
+		}
+		//line util.qtpl:139
+		qw422016.N().S(`<th>`)
+		//line util.qtpl:140
+		qw422016.N().S(label)
+		//line util.qtpl:140
+		qw422016.N().S(`</th>`)
+		//line util.qtpl:141
 	}
-	//line util.qtpl:137
-	qw422016.N().S(`</tr>`)
-//line util.qtpl:139
-}
-
-//line util.qtpl:139
-func writetableHeaders(qq422016 qtio422016.Writer, ids ...string) {
-	//line util.qtpl:139
-	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line util.qtpl:139
-	streamtableHeaders(qw422016, ids...)
-	//line util.qtpl:139
-	qt422016.ReleaseWriter(qw422016)
-//line util.qtpl:139
-}
-
-//line util.qtpl:139
-func tableHeaders(ids ...string) string {
-	//line util.qtpl:139
-	qb422016 := qt422016.AcquireByteBuffer()
-	//line util.qtpl:139
-	writetableHeaders(qb422016, ids...)
-	//line util.qtpl:139
-	qs422016 := string(qb422016.B)
-	//line util.qtpl:139
-	qt422016.ReleaseByteBuffer(qb422016)
-	//line util.qtpl:139
-	return qs422016
-//line util.qtpl:139
-}
-
-//line util.qtpl:141
-func streamthreadWatcherToggle(qw422016 *qt422016.Writer, id uint64) {
 	//line util.qtpl:141
+	qw422016.N().S(`</tr>`)
+//line util.qtpl:143
+}
+
+//line util.qtpl:143
+func writetableHeaders(qq422016 qtio422016.Writer, ids ...string) {
+	//line util.qtpl:143
+	qw422016 := qt422016.AcquireWriter(qq422016)
+	//line util.qtpl:143
+	streamtableHeaders(qw422016, ids...)
+	//line util.qtpl:143
+	qt422016.ReleaseWriter(qw422016)
+//line util.qtpl:143
+}
+
+//line util.qtpl:143
+func tableHeaders(ids ...string) string {
+	//line util.qtpl:143
+	qb422016 := qt422016.AcquireByteBuffer()
+	//line util.qtpl:143
+	writetableHeaders(qb422016, ids...)
+	//line util.qtpl:143
+	qs422016 := string(qb422016.B)
+	//line util.qtpl:143
+	qt422016.ReleaseByteBuffer(qb422016)
+	//line util.qtpl:143
+	return qs422016
+//line util.qtpl:143
+}
+
+//line util.qtpl:145
+func streamthreadWatcherToggle(qw422016 *qt422016.Writer, id uint64) {
+	//line util.qtpl:145
 	qw422016.N().S(`<a class="watcher-toggle svg-link noscript-hide" title="`)
-	//line util.qtpl:142
+	//line util.qtpl:146
 	qw422016.N().S(lang.Get().Common.UI["watchThread"])
-	//line util.qtpl:142
+	//line util.qtpl:146
 	qw422016.N().S(`" data-id="`)
-	//line util.qtpl:142
+	//line util.qtpl:146
 	qw422016.N().S(strconv.FormatUint(id, 10))
-	//line util.qtpl:142
+	//line util.qtpl:146
 	qw422016.N().S(`"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M4.03 0c-2.53 0-4.03 3-4.03 3s1.5 3 4.03 3c2.47 0 3.97-3 3.97-3s-1.5-3-3.97-3zm-.03 1c1.11 0 2 .9 2 2 0 1.11-.89 2-2 2-1.1 0-2-.89-2-2 0-1.1.9-2 2-2zm0 1c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1c0-.1-.04-.19-.06-.28-.08.16-.24.28-.44.28-.28 0-.5-.22-.5-.5 0-.2.12-.36.28-.44-.09-.03-.18-.06-.28-.06z" transform="translate(0 1)" /></svg></a>`)
-//line util.qtpl:147
+//line util.qtpl:151
 }
 
-//line util.qtpl:147
+//line util.qtpl:151
 func writethreadWatcherToggle(qq422016 qtio422016.Writer, id uint64) {
-	//line util.qtpl:147
+	//line util.qtpl:151
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line util.qtpl:147
+	//line util.qtpl:151
 	streamthreadWatcherToggle(qw422016, id)
-	//line util.qtpl:147
+	//line util.qtpl:151
 	qt422016.ReleaseWriter(qw422016)
-//line util.qtpl:147
+//line util.qtpl:151
 }
 
-//line util.qtpl:147
+//line util.qtpl:151
 func threadWatcherToggle(id uint64) string {
-	//line util.qtpl:147
+	//line util.qtpl:151
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line util.qtpl:147
+	//line util.qtpl:151
 	writethreadWatcherToggle(qb422016, id)
-	//line util.qtpl:147
+	//line util.qtpl:151
 	qs422016 := string(qb422016.B)
-	//line util.qtpl:147
+	//line util.qtpl:151
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line util.qtpl:147
+	//line util.qtpl:151
 	return qs422016
-//line util.qtpl:147
+//line util.qtpl:151
 }
 
-//line util.qtpl:149
+//line util.qtpl:153
 func streamcontrolLink(qw422016 *qt422016.Writer) {
-	//line util.qtpl:149
+	//line util.qtpl:153
 	qw422016.N().S(`<a class="control svg-link noscript-hide"><svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8"><path d="M1.5 0l-1.5 1.5 4 4 4-4-1.5-1.5-2.5 2.5-2.5-2.5z" transform="translate(0 1)" /></svg></a>`)
-//line util.qtpl:155
+//line util.qtpl:159
 }
 
-//line util.qtpl:155
+//line util.qtpl:159
 func writecontrolLink(qq422016 qtio422016.Writer) {
-	//line util.qtpl:155
+	//line util.qtpl:159
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line util.qtpl:155
+	//line util.qtpl:159
 	streamcontrolLink(qw422016)
-	//line util.qtpl:155
+	//line util.qtpl:159
 	qt422016.ReleaseWriter(qw422016)
-//line util.qtpl:155
+//line util.qtpl:159
 }
 
-//line util.qtpl:155
+//line util.qtpl:159
 func controlLink() string {
-	//line util.qtpl:155
+	//line util.qtpl:159
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line util.qtpl:155
+	//line util.qtpl:159
 	writecontrolLink(qb422016)
-	//line util.qtpl:155
+	//line util.qtpl:159
 	qs422016 := string(qb422016.B)
-	//line util.qtpl:155
+	//line util.qtpl:159
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line util.qtpl:155
+	//line util.qtpl:159
 	return qs422016
-//line util.qtpl:155
+//line util.qtpl:159
 }

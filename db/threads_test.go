@@ -2,10 +2,11 @@ package db
 
 import (
 	"database/sql"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/test"
 	"testing"
 	"time"
+
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/test"
 )
 
 func TestThreadBools(t *testing.T) {
@@ -25,15 +26,20 @@ func TestDiffPostCount(t *testing.T) {
 	postCountCacheMu.Lock()
 	postCountCache = make(map[uint64]uint64)
 	postCountCacheMu.Unlock()
-
-	common.IsTest = false
-	err := listenForThreadUpdates()
+	prepareThreads(t)
+	err := loadThreadPostCounts()
 	if err != nil {
 		t.Fatal(err)
 	}
-	common.IsTest = true
 
-	prepareThreads(t)
+	canceller := make(chan struct{})
+	defer func() {
+		canceller <- struct{}{}
+	}()
+	err = listenForThreadUpdates(canceller)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	init := map[uint64]uint64{
 		1: 0,
@@ -47,7 +53,9 @@ func TestDiffPostCount(t *testing.T) {
 		Deleted: []uint64{4},
 	}
 
-	assert := func() {
+	assert := func(t *testing.T) {
+		t.Helper()
+
 		// Sleep to ensure notifications fire
 		time.Sleep(time.Millisecond * 100)
 
@@ -58,7 +66,7 @@ func TestDiffPostCount(t *testing.T) {
 		test.AssertDeepEquals(t, res, std)
 	}
 
-	assert()
+	assert(t)
 
 	_, err = sq.Delete("threads").
 		Where("id = 3").
@@ -69,7 +77,7 @@ func TestDiffPostCount(t *testing.T) {
 	// Only allow one deleted to avoid mao reordering issues
 	delete(init, 4)
 	std.Deleted[0] = 3
-	assert()
+	assert(t)
 
 	err = InTransaction(false, func(tx *sql.Tx) error {
 		return WritePost(
@@ -91,7 +99,7 @@ func TestDiffPostCount(t *testing.T) {
 	}
 
 	std.Changed[1] = 4
-	assert()
+	assert(t)
 }
 
 func TestInsertThread(t *testing.T) {

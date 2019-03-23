@@ -421,7 +421,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 			//line index.qtpl:325
 			qw422016.N().S(`<br><input type="text" name="reason" required class="full-width" placeholder="`)
 			//line index.qtpl:327
-			qw422016.N().S(ln.UI["reason"])
+			qw422016.N().S(ln.Common.UI["reason"])
 			//line index.qtpl:327
 			qw422016.N().S(`" disabled><br>`)
 			//line index.qtpl:329
@@ -443,7 +443,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 			//line index.qtpl:337
 			qw422016.N().S(`<div id="purgePost-form" class="hidden"><input type="text" name="purge-reason" required class="full-width" placeholder="`)
 			//line index.qtpl:339
-			qw422016.N().S(ln.UI["reason"])
+			qw422016.N().S(ln.Common.UI["reason"])
 			//line index.qtpl:339
 			qw422016.N().S(`" disabled><br></div><div id="notification-form" class="hidden"><input type="text" name="notification" required class="full-width" placeholder="`)
 			//line index.qtpl:343

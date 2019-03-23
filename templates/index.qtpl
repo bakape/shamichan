@@ -324,7 +324,7 @@
 										<input type="number" name="{%s= id %}" min="0" placeholder="{%s= strings.Title(ln.Common.Plurals[id][1]) %}">
 									{% endfor %}
 									<br>
-									<input type="text" name="reason" required class="full-width" placeholder="{%s= ln.UI["reason"] %}" disabled>
+									<input type="text" name="reason" required class="full-width" placeholder="{%s= ln.Common.UI["reason"] %}" disabled>
 									<br>
 									{% if pos == common.Admin %}
 										<label>
@@ -336,7 +336,7 @@
 							{% endif %}
 							{% if pos == common.Admin %}
 								<div id="purgePost-form" class="hidden">
-									<input type="text" name="purge-reason" required class="full-width" placeholder="{%s= ln.UI["reason"] %}" disabled>
+									<input type="text" name="purge-reason" required class="full-width" placeholder="{%s= ln.Common.UI["reason"] %}" disabled>
 									<br>
 								</div>
 								<div id="notification-form" class="hidden">
