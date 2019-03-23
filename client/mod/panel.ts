@@ -197,23 +197,8 @@ class BanForm extends HidableForm {
 
 	// Get input field values
 	public vals(): { [key: string]: any } {
-		let duration = 0
-		for (let el of this.el.querySelectorAll("input[type=number]")) {
-			let times = 1
-			switch (el.getAttribute("name")) {
-				case "day":
-					times *= 24
-				case "hour":
-					times *= 60
-			}
-			const val = parseInt((el as HTMLInputElement).value)
-			if (val) { // Empty string parses to NaN
-				duration += val * times
-			}
-		}
-
 		const data = {
-			duration,
+			duration: this.extractDuration(),
 			reason: this.inputElement("reason").value,
 		}
 		const g = this.inputElement("global")

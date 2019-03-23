@@ -18,17 +18,17 @@ begin
 	perform assert_can_perform(account, target_board, 1::smallint);
 
 	-- Delete post
-	perform delete_post(id, account, target_board, 0);
+	perform delete_post(id, account, target_board);
 end;
 $$ language plpgsql;
 
 -- Runs the post deletion operation. Authorization checks should already be
 -- completed prior to calling this.
 create or replace function delete_post(id bigint, account text, board text,
-	length bigint)
+	length bigint = 0, reason text = '')
 returns void as $$
 begin
-	insert into mod_log (type, board, post_id, "by", length)
-		values (2, board, id, account, length);
+	insert into mod_log (type, board, post_id, "by", length, data)
+		values (2, board, id, account, length, reason);
 end;
 $$ language plpgsql;

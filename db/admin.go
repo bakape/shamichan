@@ -260,14 +260,15 @@ func GetSameIPPosts(id uint64, board string, by string) (
 // Delete posts of the same IP as target post on board and optionally keep
 // deleting posts by this IP
 func DeletePostsByIP(id uint64, account string, keepDeleting time.Duration,
+	reason string,
 ) (err error) {
 	seconds := 0
 	if keepDeleting != 0 {
 		seconds = int(keepDeleting / time.Second)
 	}
 	_, err = db.Exec(
-		"select delete_posts_by_ip($1::bigint, $2::text, $3::bigint)",
-		id, account, seconds)
+		"select delete_posts_by_ip($1::bigint, $2::text, $3::bigint, $4::text)",
+		id, account, seconds, reason)
 	castPermissionError(&err)
 	return
 }

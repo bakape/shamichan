@@ -66,4 +66,27 @@ export default class View<M extends Model> {
 	public inputElement(name: string): HTMLInputElement {
 		return inputElement(this.el, name)
 	}
+
+	// Extract duration from input elements in seconds
+	protected extractDuration(): number {
+		let duration = 0;
+		for (let el of this.el.querySelectorAll("input[type=number]")) {
+			let times = 1;
+			switch (el.getAttribute("name")) {
+				case "day":
+					times *= 24;
+				case "hour":
+					times *= 60;
+				case "minute":
+					break;
+				default:
+					continue;
+			}
+			const val = parseInt((el as HTMLInputElement).value);
+			if (val) { // Empty string parses to NaN
+				duration += val * times;
+			}
+		}
+		return duration;
+	}
 }

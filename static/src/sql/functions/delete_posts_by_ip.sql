@@ -1,6 +1,6 @@
 -- length: keep deleting posts of this IP for duration in seconds
 create or replace function delete_posts_by_ip(id bigint, account text,
-	length bigint)
+	length bigint, reason text)
 returns void as $$
 declare
 	target_board text;
@@ -28,7 +28,7 @@ begin
 					-- Ensure not already deleted
 					and not is_deleted(p.id))
 	loop
-		perform delete_post(id, account, target_board, length);
+		perform delete_post(id, account, target_board, length, reason);
 	end loop;
 
 	-- Keep deleting posts till this expires

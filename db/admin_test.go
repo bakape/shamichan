@@ -149,7 +149,7 @@ func TestDeletePostsByIP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = DeletePostsByIP(1, "user1", time.Hour)
+	err = DeletePostsByIP(1, "user1", time.Hour, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,7 +233,7 @@ func TestDeletePostsByIP(t *testing.T) {
 			t.Run(c.account, func(t *testing.T) {
 				t.Parallel()
 
-				err := DeletePostsByIP(1, c.account, 0)
+				err := DeletePostsByIP(1, c.account, 0, "")
 				if c.succeed {
 					if err != nil {
 						t.Fatal(err)

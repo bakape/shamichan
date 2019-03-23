@@ -410,12 +410,17 @@ func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var req struct {
-			ID              uint64
-			KeepDeletingFor uint64 `json:"keep_deleting_for"`
+			ID, Duration uint64
+			Reason       string
 		}
 		err = decodeJSON(r, &req)
-		if err != nil {
+		switch {
+		case err != nil:
 			return
+		case req.Duration != 0 && req.Reason == "":
+			return errNoReason
+		case len(req.Reason) > common.MaxLenReason:
+			return errReasonTooLong
 		}
 
 		// Moderation rights are checked in plpgsql
@@ -428,7 +433,7 @@ func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		return db.DeletePostsByIP(req.ID, creds.UserID,
-			time.Duration(req.KeepDeletingFor)*time.Second)
+			time.Duration(req.Duration)*time.Second, req.Reason)
 	}()
 	if err != nil {
 		httpError(w, r, err)
@@ -495,6 +500,9 @@ func purgePost(w http.ResponseWriter, r *http.Request) {
 		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
+		}
+		if len(msg.Reason) > common.MaxLenReason {
+			return errReasonTooLong
 		}
 
 		_, userID, err := canModeratePost(w, r, msg.ID, common.Admin)
