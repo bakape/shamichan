@@ -290,6 +290,8 @@ export default class PostView extends ImageHandler {
                 case ModerationAction.unbanPost:
                     s = this.format('unbanned', by);
                     break;
+                default:
+                    continue;
             }
             const el = document.createElement('b');
             el.setAttribute("class", "admin post-moderation");
