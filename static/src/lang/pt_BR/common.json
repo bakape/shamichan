@@ -7,6 +7,7 @@
 		"newPostsInThread": "%d new posts in thread.",
 		"purgedPost": "POST PURGED BY '%s' FOR \"%s\"",
 		"threadLockToggled": "THREAD %s BY '%s'",
+		"unbanned": "UNBANNED BY '%s'",
 		"viewedSameIP": "POSTS OF THE SAME IP WERE VIEWED BY '%s'"
 	},
 	"forms": {},
