@@ -258,6 +258,9 @@ export default class PostView extends ImageHandler {
     // Render related mod-log status
     public renderModerationLog() {
         this.uncheckModerationBox()
+        if (page.catalog) {
+            return;
+        }
         const pc = this.el.querySelector(".post-container");
         for (let el of Array.from(pc.children)) {
             if (el.classList.contains("post-moderation")) {
