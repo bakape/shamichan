@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/auth"
@@ -256,23 +257,41 @@ func GetSameIPPosts(id uint64, board string, by string) (
 	return
 }
 
-// Delete posts of the same IP as target post on board
-func DeletePostsByIP(id uint64, account string) error {
-	return runDeletion(id, account, "delete_posts_by_ip")
-}
-
-func runDeletion(id uint64, account, function string) (err error) {
-	_, err = db.Exec(fmt.Sprintf("select %s($1::bigint, $2::text)", function),
-		id, account)
-	if extractException(err) == "access denied" {
-		err = common.ErrNoPermissions
+// Delete posts of the same IP as target post on board and optionally keep
+// deleting posts by this IP
+func DeletePostsByIP(id uint64, account string, keepDeleting time.Duration,
+) (err error) {
+	seconds := 0
+	if keepDeleting != 0 {
+		seconds = int(keepDeleting / time.Second)
 	}
+	_, err = db.Exec(
+		"select delete_posts_by_ip($1::bigint, $2::text, $3::bigint)",
+		id, account, seconds)
+	castPermissionError(&err)
 	return
 }
 
+// Clear expired rules to delete posts on insertion
+func clearExpiredContinuosDeletion() (err error) {
+	_, err = sq.Delete("continuous_deletions").
+		Where("till < ?", time.Now().UTC()).
+		Exec()
+	return
+}
+
+func castPermissionError(err *error) {
+	if extractException(*err) == "access denied" {
+		*err = common.ErrNoPermissions
+	}
+}
+
 // DeletePost marks the target post as deleted
-func DeletePost(id uint64, by string) error {
-	return runDeletion(id, by, "delete_post")
+func DeletePost(id uint64, by string) (err error) {
+	_, err = db.Exec("select delete_post($1::bigint, $2::text)",
+		id, by)
+	castPermissionError(&err)
+	return
 }
 
 // SetThreadSticky sets the sticky field on a thread

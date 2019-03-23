@@ -2,12 +2,13 @@ package db
 
 import (
 	"database/sql"
+	"reflect"
+	"testing"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
-	"reflect"
-	"testing"
 )
 
 var sampleModerationEntry = common.ModerationEntry{
@@ -19,7 +20,7 @@ var sampleModerationEntry = common.ModerationEntry{
 
 func prepareThreads(t *testing.T) {
 	t.Helper()
-	assertTableClear(t, "boards", "images")
+	assertTableClear(t, "boards", "images", "continuous_deletions")
 
 	boards := [...]BoardConfigs{
 		{

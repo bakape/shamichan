@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bakape/meguca/auth"
@@ -1085,7 +1086,7 @@ var migrations = []func(*sql.Tx) error{
 			return
 		}
 
-		err = registerTriggers(tx, map[string][]string{
+		err = registerTriggers(tx, false, map[string][]string{
 			"boards":  {"insert", "update", "delete"},
 			"mod_log": {"insert"},
 			"posts":   {"insert", "update"},
@@ -1249,15 +1250,82 @@ var migrations = []func(*sql.Tx) error{
 		return registerFunctions(tx, "is_deleted", "delete_post",
 			"delete_posts_by_ip")
 	},
+	func(tx *sql.Tx) (err error) {
+		err = execAll(tx,
+			`create table continuous_deletions (
+				ip inet not null,
+				board text not null,
+				by text not null,
+				till timestamptz not null
+			)`,
+			createIndex("continuous_deletions", "ip", "board"),
+			createIndex("continuous_deletions", "till"),
+		)
+		if err != nil {
+			return
+		}
+
+		// Reload functions
+		err = registerFunctions(tx, "post_board", "delete_posts_by_ip",
+			"delete_post")
+		if err != nil {
+			return
+		}
+
+		// Make it execute before insert instead
+		err = registerTriggers(tx, true, map[string][]string{
+			"posts": {"insert"},
+		})
+		if err != nil {
+			return
+		}
+		// Enables the above by avoiding constraint violation
+		_, err = tx.Exec(
+			`alter table post_moderation
+			alter constraint post_moderation_post_id_fkey
+			deferrable initially immediate`)
+		if err != nil {
+			return
+		}
+
+		defaults := [...][2]string{
+			{"length", "0"},
+			{"data", "''"},
+		}
+		for _, pair := range defaults {
+			err = setDefault(tx, "post_moderation", pair[0], pair[1])
+			if err != nil {
+				return
+			}
+		}
+
+		return
+	},
 }
 
-func createIndex(table, column string) string {
-	return fmt.Sprintf(`create index %s_%s_idx on %s (%s)`, table, column,
-		table, column)
+func createIndex(table string, columns ...string) string {
+	var w strings.Builder
+	w.WriteString(table)
+	for _, c := range columns {
+		fmt.Fprintf(&w, "_%s", c)
+	}
+	w.WriteString("_idx")
+
+	return fmt.Sprintf(`create index %s on %s (%s)`,
+		w.String(), table, strings.Join(columns, ", "))
+}
+
+func setDefault(tx *sql.Tx, table, column, def string) (err error) {
+	_, err = tx.Exec(
+		fmt.Sprintf("alter table %s alter column %s set default %s",
+			table, column, def),
+	)
+	return
 }
 
 // Register triggers and trigger functions for each board in triggers
-func registerTriggers(tx *sql.Tx, triggers map[string][]string) (err error) {
+func registerTriggers(tx *sql.Tx, before bool, triggers map[string][]string,
+) (err error) {
 	for table, events := range triggers {
 		err = loadSQL(tx, "triggers/"+table)
 		if err != nil {
@@ -1265,12 +1333,25 @@ func registerTriggers(tx *sql.Tx, triggers map[string][]string) (err error) {
 		}
 		for _, e := range events {
 			name := fmt.Sprintf(`on_%s_%s`, table, e)
+
+			_, err = tx.Exec(fmt.Sprintf(`drop trigger if exists %s on %s`,
+				name, table))
+			if err != nil {
+				return
+			}
+
+			var mode string
+			if before {
+				mode = "before"
+			} else {
+				mode = "after"
+			}
 			_, err = tx.Exec(fmt.Sprintf(
 				`create trigger %s
-					after %s on %s
+					%s %s on %s
 					for each row
 					execute procedure %s()`,
-				name, e, table, name))
+				name, mode, e, table, name))
 			if err != nil {
 				return
 			}
@@ -1308,6 +1389,7 @@ func loadSQL(tx *sql.Tx, paths ...string) (err error) {
 		}
 		_, err = tx.Exec(string(buf))
 		if err != nil {
+			err = util.WrapError(p, err)
 			return
 		}
 	}
@@ -1334,8 +1416,8 @@ func runMigrations(from, to int) (err error) {
 			return
 		})
 		if err != nil {
-			return fmt.Errorf("migration error: %d -> %d: %s: %#v",
-				i, i+1, err, err)
+			return fmt.Errorf("migration error: %d -> %d: %s",
+				i, i+1, err)
 		}
 	}
 	return

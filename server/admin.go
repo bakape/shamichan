@@ -410,7 +410,8 @@ func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var req struct {
-			ID uint64
+			ID              uint64
+			KeepDeletingFor uint64 `json:"keep_deleting_for"`
 		}
 		err = decodeJSON(r, &req)
 		if err != nil {
@@ -426,7 +427,8 @@ func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		return db.DeletePostsByIP(req.ID, creds.UserID)
+		return db.DeletePostsByIP(req.ID, creds.UserID,
+			time.Duration(req.KeepDeletingFor)*time.Second)
 	}()
 	if err != nil {
 		httpError(w, r, err)

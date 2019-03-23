@@ -77,49 +77,62 @@ func loadThreadPostCounts() (err error) {
 		return
 	}
 
-	return listenForThreadUpdates()
+	return listenForThreadUpdates(nil)
 }
 
 // Separate function for easier testing
-func listenForThreadUpdates() (err error) {
-	err = Listen("thread_deleted", func(msg string) (err error) {
-		_, id, err := SplitBoardAndID(msg)
-		if err != nil {
-			return
-		}
+func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
+	// Cancel both listeners with one source message
+	var proxy chan struct{}
+	if canceller != nil {
+		proxy = make(chan struct{}, 2)
+		go func() {
+			<-canceller
+			proxy <- struct{}{}
+			proxy <- struct{}{}
+		}()
+	}
 
-		postCountCacheMu.Lock()
-		delete(postCountCache, id)
-		postCountCacheMu.Unlock()
-		return
-	})
+	err = ListenCancelable("thread_deleted", proxy,
+		func(msg string) (err error) {
+			_, id, err := SplitBoardAndID(msg)
+			if err != nil {
+				return
+			}
+
+			postCountCacheMu.Lock()
+			delete(postCountCache, id)
+			postCountCacheMu.Unlock()
+			return
+		})
 	if err != nil {
 		return
 	}
 
-	return Listen("new_post_in_thread", func(msg string) (err error) {
-		retErr := func() error {
-			return fmt.Errorf("invalid message: `%s`", msg)
-		}
+	return ListenCancelable("new_post_in_thread", proxy,
+		func(msg string) (err error) {
+			retErr := func() error {
+				return fmt.Errorf("invalid message: `%s`", msg)
+			}
 
-		split := strings.Split(msg, ",")
-		if len(split) != 2 {
-			return retErr()
-		}
-		id, err := strconv.ParseUint(split[0], 10, 64)
-		if err != nil {
-			return retErr()
-		}
-		postCount, err := strconv.ParseUint(split[1], 10, 64)
-		if err != nil {
-			return retErr()
-		}
+			split := strings.Split(msg, ",")
+			if len(split) != 2 {
+				return retErr()
+			}
+			id, err := strconv.ParseUint(split[0], 10, 64)
+			if err != nil {
+				return retErr()
+			}
+			postCount, err := strconv.ParseUint(split[1], 10, 64)
+			if err != nil {
+				return retErr()
+			}
 
-		postCountCacheMu.Lock()
-		postCountCache[id] = postCount
-		postCountCacheMu.Unlock()
-		return
-	})
+			postCountCacheMu.Lock()
+			postCountCache[id] = postCount
+			postCountCacheMu.Unlock()
+			return
+		})
 }
 
 // Thread is a template for writing new threads to the database

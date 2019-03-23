@@ -12,7 +12,8 @@ import (
 
 func prepareForModeration(t *testing.T) {
 	t.Helper()
-	assertTableClear(t, "accounts", "bans", "mod_log", "boards", "images")
+	assertTableClear(t, "accounts", "bans", "mod_log", "boards", "images",
+		"continuous_deletions")
 
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -148,10 +149,53 @@ func TestDeletePostsByIP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = DeletePostsByIP(1, "user1")
+	err = DeletePostsByIP(1, "user1", time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	assertDeleted := func(t *testing.T, id uint64, std bool) {
+		var deleted bool
+		err := db.QueryRow(
+			`select exists (select 1
+							from post_moderation
+							where post_id = $1 and type = $2)`,
+			id, common.DeletePost).
+			Scan(&deleted)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if deleted != std {
+			t.Error(deleted)
+		}
+	}
+
+	// Assert deletion of next created post on same board
+	t.Run("delete next insert", func(t *testing.T) {
+		post := Post{
+			StandalonePost: common.StandalonePost{
+				Post: common.Post{
+					Time: time.Now().Unix(),
+				},
+				OP:    1,
+				Board: "a",
+			},
+			IP: "::1",
+		}
+		err = InTransaction(false, func(tx *sql.Tx) (err error) {
+			return InsertPost(tx, &post)
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		assertDeleted(t, post.ID, true)
+		if !post.Moderated {
+			t.Error("not marked as moderated")
+		}
+		if len(post.Moderation) == 0 {
+			t.Error("no post moderation entries")
+		}
+	})
 
 	cases := [...]struct {
 		name    string
@@ -168,20 +212,7 @@ func TestDeletePostsByIP(t *testing.T) {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-
-			var deleted bool
-			err := db.QueryRow(
-				`select exists (select 1
-								from post_moderation
-								where post_id = $1 and type = $2)`,
-				c.id, common.DeletePost).
-				Scan(&deleted)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if deleted != c.deleted {
-				t.Fatal(deleted)
-			}
+			assertDeleted(t, c.id, c.deleted)
 		})
 	}
 
@@ -202,7 +233,7 @@ func TestDeletePostsByIP(t *testing.T) {
 			t.Run(c.account, func(t *testing.T) {
 				t.Parallel()
 
-				err := DeletePostsByIP(1, c.account)
+				err := DeletePostsByIP(1, c.account, 0)
 				if c.succeed {
 					if err != nil {
 						t.Fatal(err)
@@ -211,6 +242,14 @@ func TestDeletePostsByIP(t *testing.T) {
 					t.Fatal(err)
 				}
 			})
+		}
+	})
+
+	t.Run("expire deletion rules", func(t *testing.T) {
+		t.Parallel()
+		err := clearExpiredContinuosDeletion()
+		if err != nil {
+			t.Fatal(err)
 		}
 	})
 }
