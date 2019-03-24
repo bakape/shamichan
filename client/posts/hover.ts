@@ -221,14 +221,22 @@ function renderImagePreview(event: MouseEvent) {
 	const el = document.createElement(tag)
 	setAttrs(el, {
 		src: sourcePath(post.image.sha1, post.image.file_type),
-		autoplay: "",
-		loop: "",
-	})
+	});
+	if (tag === 'video') {
+		setAttrs(el, {
+			autoplay: "",
+			loop: "",
+		});
+	}
 	imagePreview = el
 	if (tag === "video") {
 		(el as HTMLVideoElement).volume = options.audioVolume / 100
 	}
 	overlay.append(el)
+
+	// Force Chrome 73+ to do a repaint. Otherwise you get invisible images.
+	el.onload = () =>
+		el.style.transform = "translateZ(1px)";
 }
 
 async function renderPostPreview(event: MouseEvent) {
