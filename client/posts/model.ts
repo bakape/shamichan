@@ -211,7 +211,9 @@ export class Post extends Model implements PostData {
 		const { type, data } = entry;
 		switch (type) {
 			case ModerationAction.deletePost:
-				this.view.el.classList.add("deleted");
+				if (!mine.has(this.id)) {
+					this.view.el.classList.add("deleted");
+				}
 				break;
 			case ModerationAction.deleteImage:
 				if (this.image) {
