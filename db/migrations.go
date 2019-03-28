@@ -1305,6 +1305,21 @@ var migrations = []func(*sql.Tx) error{
 		// Load new versions
 		return registerFunctions(tx, "delete_post", "delete_posts_by_ip")
 	},
+	func(tx *sql.Tx) (err error) {
+		// Fix duplicate functions
+		for _, args := range [...]string{
+			`bigint, text`,
+			`bigint, text, text`,
+			`bigint, text, text, bigint`,
+			`bigint, text, text, bigint, text`,
+		} {
+			err = dropFunctions(tx, fmt.Sprintf("delete_post(%s)", args))
+			if err != nil {
+				return
+			}
+		}
+		return registerFunctions(tx, "delete_post")
+	},
 }
 
 func createIndex(table string, columns ...string) string {
