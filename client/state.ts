@@ -114,10 +114,9 @@ export function loadFromDB(...threads: number[]) {
 
 // Broadcast to other tabs
 function propagate(channel: string, data: any) {
-	if (BroadcastChannel === undefined) {
-		return;
+	if (typeof (BroadcastChannel) === "function") {
+		(new BroadcastChannel(channel)).postMessage(data);
 	}
-	(new BroadcastChannel(channel)).postMessage(data);
 }
 
 // Receive updates from other tabs
