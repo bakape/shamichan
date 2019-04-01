@@ -121,11 +121,10 @@ function propagate(channel: string, data: any) {
 
 // Receive updates from other tabs
 function receive(channel: string, store: Set<number>) {
-	if (BroadcastChannel === undefined) {
-		return;
+	if (typeof (BroadcastChannel) === "function") {
+		(new BroadcastChannel(channel)).onmessage = (e: MessageEvent) =>
+			store.add(e.data);
 	}
-	(new BroadcastChannel(channel)).onmessage = (e: MessageEvent) =>
-		store.add(e.data);
 }
 
 // Store the ID of a post this client created
