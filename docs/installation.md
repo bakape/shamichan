@@ -25,6 +25,9 @@ createuser -P meguca
 createdb -T template0 -E UTF8 -O meguca meguca
 exit
 
+# Increase PostgreSQL connection limit by changing `max_connections` to 1024
+nano /etc/postgresql/11/main/postgresql.conf
+
 # Install Go
 wget -O- https://dl.google.com/go/go1.11.linux-amd64.tar.gz | tar xpz -C /usr/local
 echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
