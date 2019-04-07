@@ -623,7 +623,7 @@ func streamtableHeaders(qw422016 *qt422016.Writer, ids ...string) {
 	ln := lang.Get()
 
 	//line util.qtpl:133
-	qw422016.N().S(`}<tr>`)
+	qw422016.N().S(`<tr>`)
 	//line util.qtpl:135
 	for _, id := range ids {
 		//line util.qtpl:136
@@ -634,8 +634,6 @@ func streamtableHeaders(qw422016 *qt422016.Writer, ids ...string) {
 			//line util.qtpl:138
 			label = ln.Common.UI[id]
 
-			//line util.qtpl:138
-			qw422016.N().S(`}`)
 			//line util.qtpl:139
 		}
 		//line util.qtpl:139

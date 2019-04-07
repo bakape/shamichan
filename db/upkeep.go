@@ -64,8 +64,6 @@ func runHourTasks() {
 		logError("delete dangling open post bodies", cleanUpOpenPostBodies())
 		_, err := db.Exec(`vacuum`)
 		logError("vaccum database", err)
-		logError("post continuos deletion rules",
-			clearExpiredContinuosDeletion())
 	}
 	if config.ImagerMode != config.NoImager {
 		logError("image cleanup", deleteUnusedImages())

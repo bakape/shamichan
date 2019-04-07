@@ -22,6 +22,7 @@ export const enum ModerationAction {
 	deleteBoard,
 	meidoVision,
 	purgePost,
+	shadowBinPost,
 }
 
 // Contains fields of a post moderation log entry

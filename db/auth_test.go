@@ -180,5 +180,6 @@ func TestGetBanRecords(t *testing.T) {
 		t.Fatal(err)
 	}
 	bans[0].Expires = std.Expires
+	std.Type = "classic"
 	AssertDeepEquals(t, bans, []auth.BanRecord{std})
 }

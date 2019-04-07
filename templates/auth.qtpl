@@ -55,10 +55,11 @@ Renders a list of bans for a specific page with optional unbanning API links
 {% func BanList(bans []auth.BanRecord, board string, canUnban bool) %}{% stripspace %}
 	{%= htmlHeader() %}
 	{%= tableStyle() %}
+	{% code ln := lang.Get() %}
 	<form method="post" action="/api/unban/{%s= board %}">
 		<table>
 			{% code headers := []string{
-				"reason", "by", "post", "posterID", "expires",
+				"reason", "by", "post", "posterID", "expires", "type",
 			} %}
 			{% if canUnban %}
 				{% code headers = append(headers, "unban") %}
@@ -75,6 +76,7 @@ Renders a list of bans for a specific page with optional unbanning API links
 					{% code buf = append(buf, b.IP...) %}
 					<td>{%s mnemonic.FantasyName(buf) %}</td>
 					<td>{%s b.Expires.Format(time.UnixDate) %}</td>
+					<td>{%s ln.UI[b.Type] %}</td>
 					{% if canUnban %}
 						<td>
 							<input type="checkbox" name="{%s strconv.FormatUint(b.ForPost, 10) %}">
@@ -120,6 +122,8 @@ Renders a moderation log page
 					{% switch l.Type %}
 					{% case common.BanPost %}
 						{%s ln.UI["ban"] %}
+					{% case common.ShadowBinPost %}
+						{%s ln.UI["shadowBin"] %}
 					{% case common.UnbanPost %}
 						{%s ln.UI["unban"] %}
 					{% case common.DeletePost %}

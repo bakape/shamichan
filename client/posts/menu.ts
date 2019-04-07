@@ -40,6 +40,13 @@ abstract class MenuForm extends FormView {
 			<div class="form-response admin"></div>`;
 		parent.append(this.el);
 	}
+
+	protected closeMenu() {
+		const el = this.el.closest(".control") as ControlButton;
+		if (el && el._popup_menu) {
+			el._popup_menu.remove();
+		}
+	}
 }
 
 // Form with one text field for submitting redirects
@@ -62,6 +69,7 @@ class RedirectForm extends MenuForm {
 			id: this.parentID,
 			url,
 		});
+		this.closeMenu();
 		this.remove();
 	}
 }
@@ -103,6 +111,7 @@ class DeleteByIPForm extends MenuForm {
 			duration: this.extractDuration(),
 			reason: this.inputElement("reason").value,
 		});
+		this.closeMenu();
 		this.remove();
 	}
 }

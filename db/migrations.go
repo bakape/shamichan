@@ -1320,6 +1320,36 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return registerFunctions(tx, "delete_post")
 	},
+	func(tx *sql.Tx) (err error) {
+		err = execAll(tx,
+			`drop table continuous_deletions cascade`,
+			`create type ban_type as enum ('classic', 'shadow')`,
+			`alter table bans
+				add column type ban_type not null default 'classic'`,
+			createIndex("bans", "type"),
+		)
+		if err != nil {
+			return
+		}
+
+		// Clear and re-register functions
+		for _, args := range [...]string{
+			`bigint, text`,
+			`bigint, text, text`,
+			`bigint, text, text, bigint`,
+			`bigint, text, text, bigint, text`,
+		} {
+			err = dropFunctions(tx, fmt.Sprintf("delete_post(%s)", args))
+			if err != nil {
+				return
+			}
+		}
+		err = registerFunctions(tx, "delete_post", "delete_posts_by_ip")
+		if err != nil {
+			return
+		}
+		return loadSQL(tx, "triggers/mod_log", "triggers/posts")
+	},
 }
 
 func createIndex(table string, columns ...string) string {

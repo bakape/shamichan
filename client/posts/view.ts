@@ -275,7 +275,16 @@ export default class PostView extends ImageHandler {
             let s: string;
             switch (type) {
                 case ModerationAction.banPost:
-                    s = this.format('banned', by, secondsToTime(length).toUpperCase(), data);
+                    s = this.format('banned', by, secondsToTime(length)
+                        .toUpperCase(), data);
+                    break;
+                case ModerationAction.shadowBinPost:
+                    if (mine.has(this.model.id)) {
+                        // Hide own deletes from user
+                        continue;
+                    }
+                    s = this.format('shadowBinned', by, secondsToTime(length)
+                        .toUpperCase(), data);
                     break;
                 case ModerationAction.deletePost:
                     if (mine.has(this.model.id)) {

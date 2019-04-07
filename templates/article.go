@@ -3,12 +3,13 @@ package templates
 import (
 	"fmt"
 	"html"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/lang"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/lang"
 
 	"github.com/valyala/quicktemplate"
 )
@@ -130,7 +131,13 @@ func streampostModeration(qw *quicktemplate.Writer, e common.ModerationEntry) {
 	f := ln.Format
 	switch e.Type {
 	case common.BanPost:
-		fmt.Fprintf(w, f["banned"], e.By, strings.ToUpper(secondsToTime(e.Length)), e.Data)
+		fmt.Fprintf(w, f["banned"], e.By,
+			strings.ToUpper(secondsToTime(e.Length)), e.Data)
+	case common.UnbanPost:
+		fmt.Fprintf(w, f["unbanned"], e.By)
+	case common.ShadowBinPost:
+		fmt.Fprintf(w, f["shadowBinned"], e.By,
+			strings.ToUpper(secondsToTime(e.Length)), e.Data)
 	case common.DeletePost:
 		fmt.Fprintf(w, f["deleted"], e.By)
 	case common.DeleteImage:
@@ -163,7 +170,7 @@ func secondsToTime(s uint64) string {
 		plural := lang.Get().Common.Plurals[key][1]
 
 		if strings.Contains(tmp, ".0") {
-			tmp = tmp[:len(tmp) - 2]
+			tmp = tmp[:len(tmp)-2]
 
 			if tmp == "1" {
 				plural = lang.Get().Common.Plurals[key][0]

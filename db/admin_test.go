@@ -2,6 +2,8 @@ package db
 
 import (
 	"database/sql"
+	"reflect"
+	"runtime"
 	"testing"
 	"time"
 
@@ -12,8 +14,7 @@ import (
 
 func prepareForModeration(t *testing.T) {
 	t.Helper()
-	assertTableClear(t, "accounts", "bans", "mod_log", "boards", "images",
-		"continuous_deletions")
+	assertTableClear(t, "accounts", "bans", "mod_log", "boards", "images")
 
 	writeSampleBoard(t)
 	writeSampleThread(t)
@@ -50,9 +51,15 @@ func TestModeratePost(t *testing.T) {
 		DeleteImage,
 		DeletePost,
 	} {
-		if err := f(1, "admin"); err != nil {
-			t.Fatal(err)
-		}
+		p := reflect.ValueOf(f).Pointer()
+		t.Run(runtime.FuncForPC(p).Name(), func(t *testing.T) {
+			t.Parallel()
+
+			err := f(1, "admin")
+			if err != nil {
+				t.Fatalf("%#v", err)
+			}
+		})
 	}
 }
 
@@ -242,14 +249,6 @@ func TestDeletePostsByIP(t *testing.T) {
 					t.Fatal(err)
 				}
 			})
-		}
-	})
-
-	t.Run("expire deletion rules", func(t *testing.T) {
-		t.Parallel()
-		err := clearExpiredContinuosDeletion()
-		if err != nil {
-			t.Fatal(err)
 		}
 	})
 }

@@ -20,7 +20,7 @@ var sampleModerationEntry = common.ModerationEntry{
 
 func prepareThreads(t *testing.T) {
 	t.Helper()
-	assertTableClear(t, "boards", "images", "continuous_deletions")
+	assertTableClear(t, "boards", "images")
 
 	boards := [...]BoardConfigs{
 		{

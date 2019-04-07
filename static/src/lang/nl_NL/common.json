@@ -6,6 +6,7 @@
 		"imageSpoilered": "IMAGE SPOILERED DOOR '%s'",
 		"newPostsInThread": "%d niewe berichten in topic.",
 		"purgedPost": "BERICHT UITGEWIST DOOR '%s' VOOR \"%s\"",
+		"shadowBinned": "SHADOW BINNED BY '%s' FOR %s FOR \"%s\"",
 		"threadLockToggled": "TOPIC %s door '%s'",
 		"unbanned": "UNBANNED BY '%s'",
 		"viewedSameIP": "BERICHTEN VAN DEZELFDE IP ZIJN BEKEKEN DOOR '%s'"

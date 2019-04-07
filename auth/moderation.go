@@ -23,9 +23,9 @@ type Ban struct {
 // BanRecord stores information about a specific ban
 type BanRecord struct {
 	Ban
-	ForPost    uint64
-	Reason, By string
-	Expires    time.Time
+	ForPost          uint64
+	Reason, By, Type string
+	Expires          time.Time
 }
 
 // Report contains data of a reported post

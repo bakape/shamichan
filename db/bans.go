@@ -28,7 +28,6 @@ func writeBan(tx *sql.Tx, ip string, entry auth.ModLogEntry) (err error) {
 		return
 	}
 
-	entry.Type = common.BanPost // Just in case the caller did not set it
 	return logModeration(tx, entry)
 }
 
@@ -143,7 +142,7 @@ func selectBans(colums ...string) squirrel.SelectBuilder {
 	return sq.Select(colums...).
 		Options("distinct on (ip, board)").
 		From("bans").
-		Where("expires > now() at time zone 'utc'").
+		Where("expires > now() at time zone 'utc' and type = 'classic'").
 		OrderBy("ip", "board", "expires desc")
 }
 
@@ -236,37 +235,39 @@ func IsBanned(board, ip string) error {
 	return nil
 }
 
-func getBans() squirrel.SelectBuilder {
-	return sq.Select("ip", "board", "forPost", "reason", "by", "expires").
-		From("bans").
-		Where("expires >= now() at time zone 'utc'")
-}
-
-func scanBanRecord(rs rowScanner) (b auth.BanRecord, err error) {
-	err = rs.Scan(&b.IP, &b.Board, &b.ForPost, &b.Reason, &b.By, &b.Expires)
-	return
-}
-
 // GetBanInfo retrieves information about a specific ban
-func GetBanInfo(ip, board string) (auth.BanRecord, error) {
-	r := getBans().
-		Where("ip = ? and board = ?", ip, board).
-		QueryRow()
-	return scanBanRecord(r)
+func GetBanInfo(ip, board string) (b auth.BanRecord, err error) {
+	err = sq.Select("ip", "board", "forPost", "reason", "by", "expires").
+		From("bans").
+		Where(
+			`expires >= now() at time zone 'utc'
+					and ip = ?
+					and board = ?
+					and type = 'classic'`,
+			ip, board).
+		QueryRow().
+		Scan(&b.IP, &b.Board, &b.ForPost, &b.Reason, &b.By, &b.Expires)
+	return
 }
 
 // GetBoardBans gets all bans on a specific board. "all" counts as a valid board value.
 func GetBoardBans(board string) (b []auth.BanRecord, err error) {
 	b = make([]auth.BanRecord, 0, 64)
-	var rec auth.BanRecord
+	rec := auth.BanRecord{
+		Ban: auth.Ban{
+			Board: board,
+		},
+	}
 	err = queryAll(
-		getBans().Where("board = ?", board),
+		sq.Select("ip", "forPost", "reason", "by", "expires", "type").
+			From("bans").
+			Where("expires >= now() at time zone 'utc' and board = ?", board),
 		func(r *sql.Rows) (err error) {
-			rec, err = scanBanRecord(r)
+			err = r.Scan(&rec.IP, &rec.ForPost, &rec.Reason, &rec.By,
+				&rec.Expires, &rec.Type)
 			if err != nil {
 				return
 			}
-			rec.Board = board
 			b = append(b, rec)
 			return
 		},

@@ -28,13 +28,16 @@ begin
 					-- Ensure not already deleted
 					and not is_deleted(p.id))
 	loop
-		perform delete_post(id, account, target_board, length, reason);
+		insert into mod_log (type, board, post_id, "by")
+			values (2, target_board, id, account);
 	end loop;
 
 	-- Keep deleting posts till this expires
 	if length > 0 then
-		insert into continuous_deletions (ip, board, "by", till)
-			values (target_ip, target_board, account,
+		insert into mod_log (type, board, post_id, "by", data, length)
+			values (9, target_board, id, account, reason, length);
+		insert into bans (ip, board, forPost, reason, "by", type, expires)
+			values (target_ip, target_board, id, reason, account, 'shadow',
 				(now() + make_interval(secs := length)) at time zone 'utc');
 	end if;
 end;

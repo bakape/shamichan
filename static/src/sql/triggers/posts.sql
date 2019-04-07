@@ -9,14 +9,15 @@ begin
 		new.op || ',' || post_count(new.op) + 1);
 
 	-- Delete post, if IP blacklisted
-	select cd.by into to_delete_by
-		from continuous_deletions cd
+	select b.by into to_delete_by
+		from bans b
 		-- Can't use post_board(), because not inserted yet
 		where board = (select t.board
 						from threads t
 						where t.id = new.op)
-			and cd.ip = new.ip
-			and till > now() at time zone 'UTC';
+			and b.ip = new.ip
+			and b.type = 'shadow'
+			and b.expires > now() at time zone 'UTC';
 	if to_delete_by is not null then
 		-- Will fail otherwise, because key is not written to table yet
 		set constraints post_moderation_post_id_fkey deferred;

@@ -193,309 +193,320 @@ func StreamBanList(qw422016 *qt422016.Writer, bans []auth.BanRecord, board strin
 	streamhtmlHeader(qw422016)
 	//line auth.qtpl:57
 	streamtableStyle(qw422016)
-	//line auth.qtpl:57
+	//line auth.qtpl:58
+	ln := lang.Get()
+
+	//line auth.qtpl:58
 	qw422016.N().S(`<form method="post" action="/api/unban/`)
-	//line auth.qtpl:58
+	//line auth.qtpl:59
 	qw422016.N().S(board)
-	//line auth.qtpl:58
+	//line auth.qtpl:59
 	qw422016.N().S(`"><table>`)
-	//line auth.qtpl:60
+	//line auth.qtpl:61
 	headers := []string{
-		"reason", "by", "post", "posterID", "expires",
+		"reason", "by", "post", "posterID", "expires", "type",
 	}
 
-	//line auth.qtpl:63
+	//line auth.qtpl:64
 	if canUnban {
-		//line auth.qtpl:64
+		//line auth.qtpl:65
 		headers = append(headers, "unban")
 
-		//line auth.qtpl:65
+		//line auth.qtpl:66
 	}
-	//line auth.qtpl:66
-	streamtableHeaders(qw422016, headers...)
 	//line auth.qtpl:67
+	streamtableHeaders(qw422016, headers...)
+	//line auth.qtpl:68
 	salt := config.Get().Salt
 
-	//line auth.qtpl:68
+	//line auth.qtpl:69
 	for _, b := range bans {
-		//line auth.qtpl:68
+		//line auth.qtpl:69
 		qw422016.N().S(`<tr><td>`)
-		//line auth.qtpl:70
+		//line auth.qtpl:71
 		qw422016.E().S(b.Reason)
-		//line auth.qtpl:70
-		qw422016.N().S(`</td><td>`)
 		//line auth.qtpl:71
+		qw422016.N().S(`</td><td>`)
+		//line auth.qtpl:72
 		qw422016.E().S(b.By)
-		//line auth.qtpl:71
+		//line auth.qtpl:72
 		qw422016.N().S(`</td><td>`)
-		//line auth.qtpl:72
-		streamstaticPostLink(qw422016, b.ForPost)
-		//line auth.qtpl:72
-		qw422016.N().S(`</td>`)
 		//line auth.qtpl:73
+		streamstaticPostLink(qw422016, b.ForPost)
+		//line auth.qtpl:73
+		qw422016.N().S(`</td>`)
+		//line auth.qtpl:74
 		buf := make([]byte, 0, len(salt)+len(b.IP))
 
-		//line auth.qtpl:74
+		//line auth.qtpl:75
 		buf = append(buf, salt...)
 
-		//line auth.qtpl:75
+		//line auth.qtpl:76
 		buf = append(buf, b.IP...)
 
-		//line auth.qtpl:75
+		//line auth.qtpl:76
 		qw422016.N().S(`<td>`)
-		//line auth.qtpl:76
+		//line auth.qtpl:77
 		qw422016.E().S(mnemonic.FantasyName(buf))
-		//line auth.qtpl:76
+		//line auth.qtpl:77
 		qw422016.N().S(`</td><td>`)
-		//line auth.qtpl:77
-		qw422016.E().S(b.Expires.Format(time.UnixDate))
-		//line auth.qtpl:77
-		qw422016.N().S(`</td>`)
 		//line auth.qtpl:78
+		qw422016.E().S(b.Expires.Format(time.UnixDate))
+		//line auth.qtpl:78
+		qw422016.N().S(`</td><td>`)
+		//line auth.qtpl:79
+		qw422016.E().S(ln.UI[b.Type])
+		//line auth.qtpl:79
+		qw422016.N().S(`</td>`)
+		//line auth.qtpl:80
 		if canUnban {
-			//line auth.qtpl:78
+			//line auth.qtpl:80
 			qw422016.N().S(`<td><input type="checkbox" name="`)
-			//line auth.qtpl:80
-			qw422016.E().S(strconv.FormatUint(b.ForPost, 10))
-			//line auth.qtpl:80
-			qw422016.N().S(`"></td>`)
 			//line auth.qtpl:82
+			qw422016.E().S(strconv.FormatUint(b.ForPost, 10))
+			//line auth.qtpl:82
+			qw422016.N().S(`"></td>`)
+			//line auth.qtpl:84
 		}
-		//line auth.qtpl:82
-		qw422016.N().S(`</tr>`)
 		//line auth.qtpl:84
+		qw422016.N().S(`</tr>`)
+		//line auth.qtpl:86
 	}
-	//line auth.qtpl:84
-	qw422016.N().S(`</table>`)
 	//line auth.qtpl:86
-	if canUnban {
-		//line auth.qtpl:87
-		streamsubmit(qw422016, false)
-		//line auth.qtpl:88
-	}
+	qw422016.N().S(`</table>`)
 	//line auth.qtpl:88
-	qw422016.N().S(`</form>`)
+	if canUnban {
+		//line auth.qtpl:89
+		streamsubmit(qw422016, false)
+		//line auth.qtpl:90
+	}
 	//line auth.qtpl:90
+	qw422016.N().S(`</form>`)
+	//line auth.qtpl:92
 	streamhtmlEnd(qw422016)
-//line auth.qtpl:91
+//line auth.qtpl:93
 }
 
-//line auth.qtpl:91
+//line auth.qtpl:93
 func WriteBanList(qq422016 qtio422016.Writer, bans []auth.BanRecord, board string, canUnban bool) {
-	//line auth.qtpl:91
+	//line auth.qtpl:93
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line auth.qtpl:91
+	//line auth.qtpl:93
 	StreamBanList(qw422016, bans, board, canUnban)
-	//line auth.qtpl:91
+	//line auth.qtpl:93
 	qt422016.ReleaseWriter(qw422016)
-//line auth.qtpl:91
+//line auth.qtpl:93
 }
 
-//line auth.qtpl:91
+//line auth.qtpl:93
 func BanList(bans []auth.BanRecord, board string, canUnban bool) string {
-	//line auth.qtpl:91
+	//line auth.qtpl:93
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line auth.qtpl:91
+	//line auth.qtpl:93
 	WriteBanList(qb422016, bans, board, canUnban)
-	//line auth.qtpl:91
+	//line auth.qtpl:93
 	qs422016 := string(qb422016.B)
-	//line auth.qtpl:91
+	//line auth.qtpl:93
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line auth.qtpl:91
+	//line auth.qtpl:93
 	return qs422016
-//line auth.qtpl:91
+//line auth.qtpl:93
 }
 
 // Common style for plain html tables
 
-//line auth.qtpl:94
+//line auth.qtpl:96
 func streamtableStyle(qw422016 *qt422016.Writer) {
-	//line auth.qtpl:94
+	//line auth.qtpl:96
 	qw422016.N().S(`<style>table, th, td {border: 1px solid black;}.hash-link {display: none;}</style>`)
-//line auth.qtpl:103
+//line auth.qtpl:105
 }
 
-//line auth.qtpl:103
+//line auth.qtpl:105
 func writetableStyle(qq422016 qtio422016.Writer) {
-	//line auth.qtpl:103
+	//line auth.qtpl:105
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line auth.qtpl:103
+	//line auth.qtpl:105
 	streamtableStyle(qw422016)
-	//line auth.qtpl:103
+	//line auth.qtpl:105
 	qt422016.ReleaseWriter(qw422016)
-//line auth.qtpl:103
+//line auth.qtpl:105
 }
 
-//line auth.qtpl:103
+//line auth.qtpl:105
 func tableStyle() string {
-	//line auth.qtpl:103
+	//line auth.qtpl:105
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line auth.qtpl:103
+	//line auth.qtpl:105
 	writetableStyle(qb422016)
-	//line auth.qtpl:103
+	//line auth.qtpl:105
 	qs422016 := string(qb422016.B)
-	//line auth.qtpl:103
+	//line auth.qtpl:105
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line auth.qtpl:103
+	//line auth.qtpl:105
 	return qs422016
-//line auth.qtpl:103
+//line auth.qtpl:105
 }
 
 // Post link, that will redirect to the post from any page
 
-//line auth.qtpl:106
+//line auth.qtpl:108
 func streamstaticPostLink(qw422016 *qt422016.Writer, id uint64) {
-	//line auth.qtpl:107
+	//line auth.qtpl:109
 	streampostLink(qw422016, common.Link{id, id, "all"}, true, true)
-//line auth.qtpl:108
+//line auth.qtpl:110
 }
 
-//line auth.qtpl:108
+//line auth.qtpl:110
 func writestaticPostLink(qq422016 qtio422016.Writer, id uint64) {
-	//line auth.qtpl:108
+	//line auth.qtpl:110
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line auth.qtpl:108
+	//line auth.qtpl:110
 	streamstaticPostLink(qw422016, id)
-	//line auth.qtpl:108
+	//line auth.qtpl:110
 	qt422016.ReleaseWriter(qw422016)
-//line auth.qtpl:108
+//line auth.qtpl:110
 }
 
-//line auth.qtpl:108
+//line auth.qtpl:110
 func staticPostLink(id uint64) string {
-	//line auth.qtpl:108
+	//line auth.qtpl:110
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line auth.qtpl:108
+	//line auth.qtpl:110
 	writestaticPostLink(qb422016, id)
-	//line auth.qtpl:108
+	//line auth.qtpl:110
 	qs422016 := string(qb422016.B)
-	//line auth.qtpl:108
+	//line auth.qtpl:110
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line auth.qtpl:108
+	//line auth.qtpl:110
 	return qs422016
-//line auth.qtpl:108
+//line auth.qtpl:110
 }
 
 // Renders a moderation log page
 
-//line auth.qtpl:111
+//line auth.qtpl:113
 func StreamModLog(qw422016 *qt422016.Writer, log []auth.ModLogEntry) {
-	//line auth.qtpl:112
+	//line auth.qtpl:114
 	streamhtmlHeader(qw422016)
-	//line auth.qtpl:113
+	//line auth.qtpl:115
 	ln := lang.Get()
 
-	//line auth.qtpl:114
-	streamtableStyle(qw422016)
-	//line auth.qtpl:114
-	qw422016.N().S(`<table>`)
 	//line auth.qtpl:116
+	streamtableStyle(qw422016)
+	//line auth.qtpl:116
+	qw422016.N().S(`<table>`)
+	//line auth.qtpl:118
 	streamtableHeaders(qw422016, "type", "by", "post", "time", "data", "duration")
-	//line auth.qtpl:117
+	//line auth.qtpl:119
 	for _, l := range log {
-		//line auth.qtpl:117
+		//line auth.qtpl:119
 		qw422016.N().S(`<tr><td>`)
-		//line auth.qtpl:120
+		//line auth.qtpl:122
 		switch l.Type {
-		//line auth.qtpl:121
-		case common.BanPost:
-			//line auth.qtpl:122
-			qw422016.E().S(ln.UI["ban"])
 		//line auth.qtpl:123
-		case common.UnbanPost:
+		case common.BanPost:
 			//line auth.qtpl:124
-			qw422016.E().S(ln.UI["unban"])
+			qw422016.E().S(ln.UI["ban"])
 		//line auth.qtpl:125
-		case common.DeletePost:
+		case common.ShadowBinPost:
 			//line auth.qtpl:126
-			qw422016.E().S(ln.UI["deletePost"])
+			qw422016.E().S(ln.UI["shadowBin"])
 		//line auth.qtpl:127
-		case common.DeleteImage:
+		case common.UnbanPost:
 			//line auth.qtpl:128
-			qw422016.E().S(ln.UI["deleteImage"])
+			qw422016.E().S(ln.UI["unban"])
 		//line auth.qtpl:129
-		case common.SpoilerImage:
+		case common.DeletePost:
 			//line auth.qtpl:130
-			qw422016.E().S(ln.UI["spoilerImage"])
+			qw422016.E().S(ln.UI["deletePost"])
 		//line auth.qtpl:131
-		case common.LockThread:
+		case common.DeleteImage:
 			//line auth.qtpl:132
-			qw422016.E().S(ln.Common.UI["lockThread"])
+			qw422016.E().S(ln.UI["deleteImage"])
 		//line auth.qtpl:133
-		case common.DeleteBoard:
+		case common.SpoilerImage:
 			//line auth.qtpl:134
-			qw422016.E().S(ln.Common.UI["deleteBoard"])
+			qw422016.E().S(ln.UI["spoilerImage"])
 		//line auth.qtpl:135
-		case common.MeidoVision:
+		case common.LockThread:
 			//line auth.qtpl:136
-			qw422016.E().S(ln.Common.UI["meidoVisionPost"])
+			qw422016.E().S(ln.Common.UI["lockThread"])
 		//line auth.qtpl:137
-		case common.PurgePost:
+		case common.DeleteBoard:
 			//line auth.qtpl:138
-			qw422016.E().S(ln.UI["purgePost"])
-			//line auth.qtpl:139
-		}
+			qw422016.E().S(ln.Common.UI["deleteBoard"])
 		//line auth.qtpl:139
-		qw422016.N().S(`</td><td>`)
+		case common.MeidoVision:
+			//line auth.qtpl:140
+			qw422016.E().S(ln.Common.UI["meidoVisionPost"])
 		//line auth.qtpl:141
-		qw422016.E().S(l.By)
-		//line auth.qtpl:141
-		qw422016.N().S(`</td><td>`)
-		//line auth.qtpl:143
-		if l.ID != 0 {
-			//line auth.qtpl:144
-			streamstaticPostLink(qw422016, l.ID)
-			//line auth.qtpl:145
+		case common.PurgePost:
+			//line auth.qtpl:142
+			qw422016.E().S(ln.UI["purgePost"])
+			//line auth.qtpl:143
 		}
+		//line auth.qtpl:143
+		qw422016.N().S(`</td><td>`)
+		//line auth.qtpl:145
+		qw422016.E().S(l.By)
 		//line auth.qtpl:145
 		qw422016.N().S(`</td><td>`)
 		//line auth.qtpl:147
-		qw422016.E().S(l.Created.Format(time.UnixDate))
-		//line auth.qtpl:147
-		qw422016.N().S(`</td><td>`)
-		//line auth.qtpl:148
-		qw422016.E().S(l.Data)
-		//line auth.qtpl:148
-		qw422016.N().S(`</td><td>`)
-		//line auth.qtpl:150
-		if l.Length != 0 {
-			//line auth.qtpl:151
-			qw422016.E().S((time.Second * time.Duration(l.Length)).String())
-			//line auth.qtpl:152
+		if l.ID != 0 {
+			//line auth.qtpl:148
+			streamstaticPostLink(qw422016, l.ID)
+			//line auth.qtpl:149
 		}
+		//line auth.qtpl:149
+		qw422016.N().S(`</td><td>`)
+		//line auth.qtpl:151
+		qw422016.E().S(l.Created.Format(time.UnixDate))
+		//line auth.qtpl:151
+		qw422016.N().S(`</td><td>`)
 		//line auth.qtpl:152
+		qw422016.E().S(l.Data)
+		//line auth.qtpl:152
+		qw422016.N().S(`</td><td>`)
+		//line auth.qtpl:154
+		if l.Length != 0 {
+			//line auth.qtpl:155
+			qw422016.E().S((time.Second * time.Duration(l.Length)).String())
+			//line auth.qtpl:156
+		}
+		//line auth.qtpl:156
 		qw422016.N().S(`</td></tr>`)
-		//line auth.qtpl:155
+		//line auth.qtpl:159
 	}
-	//line auth.qtpl:155
+	//line auth.qtpl:159
 	qw422016.N().S(`</table>`)
-	//line auth.qtpl:157
+	//line auth.qtpl:161
 	streamhtmlEnd(qw422016)
-//line auth.qtpl:158
+//line auth.qtpl:162
 }
 
-//line auth.qtpl:158
+//line auth.qtpl:162
 func WriteModLog(qq422016 qtio422016.Writer, log []auth.ModLogEntry) {
-	//line auth.qtpl:158
+	//line auth.qtpl:162
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line auth.qtpl:158
+	//line auth.qtpl:162
 	StreamModLog(qw422016, log)
-	//line auth.qtpl:158
+	//line auth.qtpl:162
 	qt422016.ReleaseWriter(qw422016)
-//line auth.qtpl:158
+//line auth.qtpl:162
 }
 
-//line auth.qtpl:158
+//line auth.qtpl:162
 func ModLog(log []auth.ModLogEntry) string {
-	//line auth.qtpl:158
+	//line auth.qtpl:162
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line auth.qtpl:158
+	//line auth.qtpl:162
 	WriteModLog(qb422016, log)
-	//line auth.qtpl:158
+	//line auth.qtpl:162
 	qs422016 := string(qb422016.B)
-	//line auth.qtpl:158
+	//line auth.qtpl:162
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line auth.qtpl:158
+	//line auth.qtpl:162
 	return qs422016
-//line auth.qtpl:158
+//line auth.qtpl:162
 }

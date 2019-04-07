@@ -19,6 +19,7 @@ const (
 	DeleteBoard
 	MeidoVision
 	PurgePost
+	ShadowBinPost
 )
 
 // Contains fields of a post moderation log entry

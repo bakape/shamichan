@@ -273,14 +273,6 @@ func DeletePostsByIP(id uint64, account string, keepDeleting time.Duration,
 	return
 }
 
-// Clear expired rules to delete posts on insertion
-func clearExpiredContinuosDeletion() (err error) {
-	_, err = sq.Delete("continuous_deletions").
-		Where("till < ?", time.Now().UTC()).
-		Exec()
-	return
-}
-
 func castPermissionError(err *error) {
 	if extractException(*err) == "access denied" {
 		*err = common.ErrNoPermissions
