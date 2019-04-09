@@ -39,7 +39,8 @@ func (e fileError) Error() string {
 
 func newFileError(h *multipart.FileHeader, msg string) error {
 	return common.StatusError{
-		Err: fileError{h.Filename, msg},
+		Err:  fileError{h.Filename, msg},
+		Code: 400,
 	}
 }
 
