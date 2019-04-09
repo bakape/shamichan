@@ -226,12 +226,12 @@ func setLoadingAnimation(w http.ResponseWriter, r *http.Request) {
 		case nil:
 			out, err = readAssetFile(w, r, file, h, thumbnailer.Options{
 				MaxSourceDims: thumbnailer.Dims{
-					Width:  300,
-					Height: 300,
+					Width:  400,
+					Height: 400,
 				},
 				ThumbDims: thumbnailer.Dims{
-					Width:  300,
-					Height: 300,
+					Width:  400,
+					Height: 400,
 				},
 				AcceptedMimeTypes: map[string]bool{
 					"image/gif":  true,
