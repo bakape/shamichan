@@ -14,12 +14,12 @@ const inlinedPosts = new PostCollection()
 // Expand or contract linked posts inline
 async function onClick(e: MouseEvent) {
 	const el = e.target as Element,
-	// Don't trigger, when user is trying to open in a new tab, inline
-	// expansion is disabled or the link is temporary
-	bypass = e.which !== 1
-		|| e.ctrlKey
-		|| !options.postInlineExpand
-		|| el.classList.contains("temp")
+		// Don't trigger, when user is trying to open in a new tab, inline
+		// expansion is disabled or the link is temporary
+		bypass = e.which !== 1
+			|| e.ctrlKey
+			|| !options.postInlineExpand
+			|| el.classList.contains("temp")
 
 	if (bypass) {
 		return
@@ -27,14 +27,14 @@ async function onClick(e: MouseEvent) {
 
 	e.preventDefault()
 	const parent = el.parentElement,
-	id = parseInt(el.getAttribute("data-id"))
+		id = parseInt(el.getAttribute("data-id"))
 
 	if (parent.lastElementChild.tagName === "ARTICLE") {
 		return contractPost(id, parent)
 	}
 
 	var model = posts.get(id) || inlinedPosts.get(id),
-	found = false
+		found = false
 
 	if (model) {
 		// Can not create cyclic DOM trees
@@ -105,10 +105,10 @@ function contractPost(id: number, parent: HTMLElement) {
 }
 
 // Highlight or unhighlight links referencing the parent post in the child post
-function toggleLinkReferences(parent: Element, childID: number, on: boolean) {
+export function toggleLinkReferences(parent: Element, childID: number, on: boolean) {
 	const p = parent.closest("article"),
-	ch = document.getElementById(`p${childID}`),
-	pID = p.closest("article").id.slice(1)
+		ch = document.getElementById(`p${childID}`),
+		pID = p.closest("article").id.slice(1)
 
 	for (let el of p.querySelectorAll(".post-link")) {
 		// Check, if not from a post inlined in the child

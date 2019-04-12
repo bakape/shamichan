@@ -168,11 +168,12 @@
 			{% endfor %}
 		</div>
 		{% if c.omit != 0 %}
-			<span class="omit" data-omit="{%d c.omit %}" data-image-omit="{%d c.imageOmit %}">
-				{%s= pluralize(c.omit, "post") %}
-				{% space %}{%s= ln.Common.Posts["and"] %}{% space %}
-				{%s= pluralize(c.imageOmit, "image") %}
-				{% space %}omitted{% space %}
+			<span class="omit spaced" data-omit="{%d c.omit %}" data-image-omit="{%d c.imageOmit %}">
+				{% if c.imageOmit == 0 %}
+					{%s= fmt.Sprintf(ln.Common.Format["postsOmitted"], c.omit) %}
+				{% else %}
+					{%s= fmt.Sprintf(ln.Common.Format["postsAndImagesOmitted"], c.omit, c.imageOmit) %}
+				{% endif %}
 				<span class="act">
 					<a href="{%s= strconv.FormatUint(c.op, 10) %}">
 						{%s= ln.Common.Posts["seeAll"] %}
