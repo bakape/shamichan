@@ -6,8 +6,8 @@ All commands assume to be run by the root user.
 
 ```bash
 # Install C dependencies
-apt-get update
-apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev git
+apt update
+apt install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev git
 apt-get dist-upgrade -y
 
 # Install Node.js
@@ -17,8 +17,8 @@ apt-get install -y nodejs
 # Install and init PostgreSQL
 echo deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -sc)-pgdg main >> /etc/apt/sources.list.d/pgdg.list
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-apt-get update
-apt-get install -y postgresql
+apt update
+apt install -y postgresql
 service postgresql start
 su postgres
 createuser -P meguca
@@ -52,7 +52,7 @@ cd meguca
 git pull
 
 # Rebuild
-make update_deps all
+make all
 
 # Restart running instance
 ./meguca -a :80 restart
