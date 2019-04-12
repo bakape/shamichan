@@ -5,6 +5,8 @@
 		"imageDeleted": "AFBEELDING VERWIJDERD DOOR '%s'",
 		"imageSpoilered": "IMAGE SPOILERED DOOR '%s'",
 		"newPostsInThread": "%d niewe berichten in topic.",
+		"postsAndImagesOmitted": "%d posts(s) and %d image(s) omitted",
+		"postsOmitted": "%d posts(s) omitted",
 		"purgedPost": "BERICHT UITGEWIST DOOR '%s' VOOR \"%s\"",
 		"shadowBinned": "SHADOW BINNED BY '%s' FOR %s FOR \"%s\"",
 		"threadLockToggled": "TOPIC %s door '%s'",
@@ -21,10 +23,6 @@
 			"uur",
 			"uren"
 		],
-		"image": [
-			"afbeelding",
-			"afbeeldingen"
-		],
 		"minute": [
 			"minuut",
 			"minuten"
@@ -32,10 +30,6 @@
 		"month": [
 			"maand",
 			"maanden"
-		],
-		"post": [
-			"post",
-			"posts"
 		],
 		"second": [
 			"seconde",

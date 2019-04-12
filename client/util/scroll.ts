@@ -2,6 +2,7 @@
 
 import { page } from "../state"
 import { trigger } from "./hooks"
+import { lightenThread } from "../posts";
 
 const banner = document.getElementById("banner")
 
@@ -49,14 +50,19 @@ export function checkBottom() {
 		atBottom = false
 		return
 	}
+	const previous = atBottom;
 	atBottom = isAtBottom()
 	const lock = document.getElementById("lock")
 	if (lock) {
 		lock.style.visibility = atBottom ? "visible" : "hidden"
 	}
+	if (!previous && atBottom) {
+		lightenThread();
+	}
 }
 
-function isAtBottom(): boolean {
+// Return, if scrolled to bottom of page
+export function isAtBottom(): boolean {
 	return window.innerHeight
 		+ window.scrollY
 		- document.documentElement.offsetHeight
