@@ -3,16 +3,17 @@ package server
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
 )
 
 const samplePassword = "123456"

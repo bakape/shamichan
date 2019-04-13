@@ -95,14 +95,11 @@ func moderatePost(id uint64, entry common.ModerationEntry,
 }
 
 // DeleteImage permanently deletes an image from a post
-func DeleteImage(id uint64, by string) error {
-	q := sq.Update("posts").Set("SHA1", nil)
-	return moderatePost(id,
-		common.ModerationEntry{
-			Type: common.DeleteImage,
-			By:   by,
-		},
-		&q)
+func DeleteImages(ids []uint64, by string) (err error) {
+	_, err = db.Exec("select delete_images($1::bigint[], $2::text)",
+		encodeUint64Array(ids), by)
+	castPermissionError(&err)
+	return
 }
 
 // DeleteBoard deletes a board and all of its contained threads and posts
@@ -117,14 +114,11 @@ func DeleteBoard(board, by string) error {
 }
 
 // ModSpoilerImage spoilers image as a moderator
-func ModSpoilerImage(id uint64, by string) error {
-	q := sq.Update("posts").Set("spoiler", true)
-	return moderatePost(id,
-		common.ModerationEntry{
-			Type: common.SpoilerImage,
-			By:   by,
-		},
-		&q)
+func ModSpoilerImages(ids []uint64, by string) (err error) {
+	_, err = db.Exec("select spoiler_posts($1::bigint[], $2::text)",
+		encodeUint64Array(ids), by)
+	castPermissionError(&err)
+	return
 }
 
 // WriteStaff writes staff positions of a specific board. Old rows are
@@ -280,9 +274,9 @@ func castPermissionError(err *error) {
 }
 
 // DeletePost marks the target post as deleted
-func DeletePost(id uint64, by string) (err error) {
-	_, err = db.Exec("select delete_post($1::bigint, $2::text)",
-		id, by)
+func DeletePosts(ids []uint64, by string) (err error) {
+	_, err = db.Exec("select delete_posts($1::bigint[], $2::text)",
+		encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return
 }

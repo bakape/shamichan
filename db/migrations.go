@@ -1247,8 +1247,7 @@ var migrations = []func(*sql.Tx) error{
 		return registerFunctions(tx, "delete_posts_by_ip", "assert_can_perform")
 	},
 	func(tx *sql.Tx) (err error) {
-		return registerFunctions(tx, "is_deleted", "delete_post",
-			"delete_posts_by_ip")
+		return registerFunctions(tx, "is_deleted", "delete_posts_by_ip")
 	},
 	func(tx *sql.Tx) (err error) {
 		err = execAll(tx,
@@ -1266,8 +1265,7 @@ var migrations = []func(*sql.Tx) error{
 		}
 
 		// Reload functions
-		err = registerFunctions(tx, "post_board", "delete_posts_by_ip",
-			"delete_post")
+		err = registerFunctions(tx, "post_board", "delete_posts_by_ip")
 		if err != nil {
 			return
 		}
@@ -1303,22 +1301,11 @@ var migrations = []func(*sql.Tx) error{
 	},
 	func(tx *sql.Tx) (err error) {
 		// Load new versions
-		return registerFunctions(tx, "delete_post", "delete_posts_by_ip")
+		return registerFunctions(tx, "delete_posts_by_ip")
 	},
 	func(tx *sql.Tx) (err error) {
-		// Fix duplicate functions
-		for _, args := range [...]string{
-			`bigint, text`,
-			`bigint, text, text`,
-			`bigint, text, text, bigint`,
-			`bigint, text, text, bigint, text`,
-		} {
-			err = dropFunctions(tx, fmt.Sprintf("delete_post(%s)", args))
-			if err != nil {
-				return
-			}
-		}
-		return registerFunctions(tx, "delete_post")
+		// Moved
+		return
 	},
 	func(tx *sql.Tx) (err error) {
 		err = execAll(tx,
@@ -1332,7 +1319,13 @@ var migrations = []func(*sql.Tx) error{
 			return
 		}
 
-		// Clear and re-register functions
+		err = registerFunctions(tx, "delete_posts_by_ip")
+		if err != nil {
+			return
+		}
+		return loadSQL(tx, "triggers/mod_log", "triggers/posts")
+	},
+	func(tx *sql.Tx) (err error) {
 		for _, args := range [...]string{
 			`bigint, text`,
 			`bigint, text, text`,
@@ -1344,11 +1337,8 @@ var migrations = []func(*sql.Tx) error{
 				return
 			}
 		}
-		err = registerFunctions(tx, "delete_post", "delete_posts_by_ip")
-		if err != nil {
-			return
-		}
-		return loadSQL(tx, "triggers/mod_log", "triggers/posts")
+		return registerFunctions(tx, "delete_posts", "delete_images",
+			"spoiler_images")
 	},
 }
 

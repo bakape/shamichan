@@ -4,10 +4,8 @@ package server
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -22,10 +20,6 @@ import (
 )
 
 const (
-	// Body size limit for POST request JSON. Should never exceed 32 KB.
-	// Consider anything bigger an attack.
-	jsonLimit = 1 << 15
-
 	maxAnswers      = 100  // Maximum number of eightball answers
 	maxEightballLen = 2000 // Total chars in eightball
 )
@@ -53,16 +47,6 @@ type boardActionRequest struct {
 type boardCreationRequest struct {
 	auth.Captcha
 	ID, Title string
-}
-
-// Decode JSON sent in a request with a read limit of 8 KB. Returns if the
-// decoding succeeded.
-func decodeJSON(r *http.Request, dest interface{}) (err error) {
-	err = json.NewDecoder(io.LimitReader(r.Body, jsonLimit)).Decode(dest)
-	if err != nil {
-		err = common.StatusError{err, 400}
-	}
-	return
 }
 
 // Set board-specific configurations to the user's owned board
@@ -361,45 +345,7 @@ func deleteBoard(w http.ResponseWriter, r *http.Request) {
 
 		return db.DeleteBoard(msg.Board, creds.UserID)
 	}()
-	if err != nil {
-		httpError(w, r, err)
-	}
-}
-
-// Delete one or multiple posts on a moderated board
-func deletePost(w http.ResponseWriter, r *http.Request) {
-	err := func() (err error) {
-		if !assertNotBanned(w, r, "all") {
-			return
-		}
-
-		var ids []uint64
-		err = decodeJSON(r, &ids)
-		if err != nil {
-			return
-		}
-
-		ip, err := auth.GetIP(r)
-		if err != nil {
-			return
-		}
-		db.IncrementSpamScore(ip, config.Get().CharScore*10)
-
-		creds, err := isLoggedIn(w, r)
-		if err != nil {
-			return
-		}
-		for _, id := range ids {
-			err = db.DeletePost(id, creds.UserID)
-			if err != nil {
-				return
-			}
-		}
-		return
-	}()
-	if err != nil {
-		httpError(w, r, err)
-	}
+	httpError(w, r, err)
 }
 
 // Delete posts of the same IP as target post on board
@@ -440,54 +386,49 @@ func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Perform a moderation action an a single post. If ok == false, the caller
-// should return.
-func moderatePost(w http.ResponseWriter, r *http.Request, id uint64,
-	level common.ModerationLevel, fn func(userID string) error,
-) (
-	err error,
-) {
-	_, userID, err := canModeratePost(w, r, id, level)
-	if err != nil {
-		return
-	}
-	return fn(userID)
-}
-
 // Same as moderatePost, but works on an array of posts
 func moderatePosts(w http.ResponseWriter, r *http.Request,
-	level common.ModerationLevel, fn func(id uint64, userID string) error,
+	fn func(ids []uint64, userID string) error,
 ) {
 	err := func() (err error) {
-		var ids []uint64
-		err = decodeJSON(r, &ids)
+		if !assertNotBanned(w, r, "all") {
+			return
+		}
+
+		ids, err := decodePostIDArray(r)
 		if err != nil {
 			return
 		}
-		for _, id := range ids {
-			err = moderatePost(w, r, id, common.Janitor,
-				func(userID string) error {
-					return fn(id, userID)
-				})
-			if err != nil {
-				return
-			}
+
+		ip, err := auth.GetIP(r)
+		if err != nil {
+			return
 		}
-		return
+		db.IncrementSpamScore(ip,
+			config.Get().PostCreationScore*uint(len(ids)))
+		creds, err := isLoggedIn(w, r)
+		if err != nil {
+			return
+		}
+
+		return fn(ids, creds.UserID)
 	}()
-	if err != nil {
-		httpError(w, r, err)
-	}
+	httpError(w, r, err)
 }
 
 // Permanently delete an image from a post
 func deleteImage(w http.ResponseWriter, r *http.Request) {
-	moderatePosts(w, r, common.Janitor, db.DeleteImage)
+	moderatePosts(w, r, db.DeleteImages)
 }
 
 // Spoiler image as a moderator
 func modSpoilerImage(w http.ResponseWriter, r *http.Request) {
-	moderatePosts(w, r, common.Janitor, db.ModSpoilerImage)
+	moderatePosts(w, r, db.ModSpoilerImages)
+}
+
+// Delete one or multiple posts on a moderated board
+func deletePosts(w http.ResponseWriter, r *http.Request) {
+	moderatePosts(w, r, db.DeletePosts)
 }
 
 // Clear post contents and remove any uploaded image from the server
