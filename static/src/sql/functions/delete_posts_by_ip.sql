@@ -35,10 +35,12 @@ begin
 	-- Keep deleting posts till this expires
 	if length > 0 then
 		insert into mod_log (type, board, post_id, "by", data, length)
-			values (9, target_board, id, account, reason, length);
+			values (9, target_board, delete_posts_by_ip.id, account, reason,
+					length);
 		insert into bans (ip, board, forPost, reason, "by", type, expires)
-			values (target_ip, target_board, id, reason, account, 'shadow',
-				(now() + make_interval(secs := length)) at time zone 'utc');
+			values (target_ip, target_board, delete_posts_by_ip.id, reason,
+					account, 'shadow',
+					(now() + make_interval(secs := length)) at time zone 'utc');
 	end if;
 end;
 $$ language plpgsql;

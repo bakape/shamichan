@@ -1340,6 +1340,9 @@ var migrations = []func(*sql.Tx) error{
 		return registerFunctions(tx, "delete_posts", "delete_images",
 			"spoiler_images")
 	},
+	func(tx *sql.Tx) (err error) {
+		return registerFunctions(tx, "delete_posts_by_ip")
+	},
 }
 
 func createIndex(table string, columns ...string) string {
