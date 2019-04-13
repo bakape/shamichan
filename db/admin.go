@@ -115,7 +115,7 @@ func DeleteBoard(board, by string) error {
 
 // ModSpoilerImage spoilers image as a moderator
 func ModSpoilerImages(ids []uint64, by string) (err error) {
-	_, err = db.Exec("select spoiler_posts($1::bigint[], $2::text)",
+	_, err = db.Exec("select spoiler_images($1::bigint[], $2::text)",
 		encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return
