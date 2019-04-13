@@ -213,6 +213,9 @@ export class Post extends Model implements PostData {
 			case ModerationAction.deletePost:
 				if (!mine.has(this.id)) {
 					this.view.el.classList.add("deleted");
+					if (options.hideBinned) {
+						this.view.el.classList.add("hidden");
+					}
 				}
 				break;
 			case ModerationAction.deleteImage:

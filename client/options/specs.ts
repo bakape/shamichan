@@ -7,6 +7,7 @@ import { render as renderMascot } from "./mascot"
 import initNowPlaying from "./nowPlaying"
 import initTV from "./meguTV"
 import options from "."
+import { toggleHideBinned } from '../posts/hide';
 
 // Types of option models
 export const enum optionType {
@@ -84,6 +85,10 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	// Anonymise all poster names
 	anonymise: {},
+	// Hide all deleted posts
+	hideBinned: {
+		exec: toggleHideBinned,
+	},
 	// Hide posts that linked to a hidden post
 	hideRecursively: {},
 	// Expand post links inline

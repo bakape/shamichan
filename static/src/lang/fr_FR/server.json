@@ -152,6 +152,10 @@
 			"Caché : 0",
 			"Remet à zéro la liste des messages cachés"
 		],
+		"hideBinned": [
+			"Hide Deleted Posts",
+			"Hide all posts that have been deleted"
+		],
 		"hideNSFW": [
 			"Cacher le NSFW sur /all/",
 			"Cache les planches avec du contenu peu recommandable sur /all/"

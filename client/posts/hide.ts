@@ -13,13 +13,40 @@ export function hidePost(model: Post) {
 	trigger("renderHiddenCount", hidden.size)
 }
 
+function hideBinned() {
+	for (let p of posts) {
+		if (p.isDeleted()) {
+			p.hide();
+		}
+	}
+}
+
+function showBinned() {
+	for (let p of posts) {
+		if (p.isDeleted()) {
+			p.unhide();
+		}
+	}
+}
+
+export function toggleHideBinned() {
+	if (options.hideBinned) {
+		hideBinned();
+	} else {
+		showBinned();
+	}
+}
+
 // Clear all hidden posts
 export function clearHidden() {
 	hidden.clear()
 	trigger("renderHiddenCount", 0)
 	clearStore("hidden")
 	for (let p of posts) {
-		p.unhide()
+		// Only unhide manually and recursively hidden posts
+		if (!options.hideBinned || !p.isDeleted()) {
+			p.unhide()
+		}
 	}
 }
 
