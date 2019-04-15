@@ -7,6 +7,7 @@ export * from "./render"
 export { default as PostCollection } from "./collection"
 export { findSyncwatches, serverNow } from "./syncwatch"
 export { sourcePath } from "./images"
+export * from "./lightenThread";
 
 import initEtc from "./etc"
 import initPosting from "./posting"

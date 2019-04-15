@@ -6,8 +6,8 @@ import { findSyncwatches } from "../posts"
 import { config } from "../state"
 import { postSM, postState } from "../posts"
 
-const counters = document.getElementById("thread-post-counters"),
-    threads = document.getElementById("threads")
+const counters = document.getElementById("thread-post-counters");
+const threads = document.getElementById("threads");
 
 let imgCtr = 0,
     bumpTime = 0,

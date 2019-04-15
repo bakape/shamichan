@@ -34,6 +34,11 @@ function render() {
 		document.getElementById("modal-overlay").prepend(cont);
 	}
 
+	if (options.workModeToggle) {
+		cont.removeAttribute("style");
+		return;
+	}
+
 	// Remove old videos and add new ones, while preserving existing one.
 	// Should help caching.
 	const existing: { [sha1: string]: HTMLVideoElement } = {};
@@ -109,4 +114,21 @@ export default function () {
 			}
 		}
 	});
+
+	options.onChange("workModeToggle", on => {
+		const el = document.getElementById("megu-tv");
+		if (el) {
+			if (on) {
+				for (let ch of [...el.children] as HTMLVideoElement[]) {
+					ch.muted = true;
+				}
+				render();
+			} else {
+				render();
+				el.setAttribute("style", "display: block");
+				let ch = el.firstChild as HTMLVideoElement;
+				ch.muted = false;
+			}
+		}
+	})
 }
