@@ -19,6 +19,9 @@ begin
 			checked_boards = checked_boards || jsonb_build_object(board, true);
 		end if;
 
+		update posts as p
+			set spoiler = true
+			where p.id = post_id;
 		insert into mod_log (type, board, post_id, "by")
 			values (4, board, post_id, account);
 	end loop;

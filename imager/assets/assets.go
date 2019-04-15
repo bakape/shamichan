@@ -3,11 +3,12 @@ package assets
 
 import (
 	"io"
+	"os"
+	"path/filepath"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
-	"os"
-	"path/filepath"
 )
 
 // Only used in tests, but we still need them exported
@@ -23,8 +24,7 @@ var (
 			MD5:       "YOQQklgfezKbBXuEAsqopw",
 			Size:      300792,
 		},
-		Name:    "sample.jpg",
-		Spoiler: true,
+		Name: "sample.jpg",
 	}
 
 	// StdDims contains esulting dimentions after thumbnailing sample images.

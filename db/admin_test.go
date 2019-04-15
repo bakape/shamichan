@@ -2,8 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"reflect"
-	"runtime"
 	"testing"
 	"time"
 
@@ -43,23 +41,53 @@ func writeAdminAccount(t *testing.T) {
 	}
 }
 
-func TestModeratePost(t *testing.T) {
+func TestDeleteImages(t *testing.T) {
 	prepareForModeration(t)
 
-	for _, f := range []func([]uint64, string) error{
-		ModSpoilerImages,
-		DeleteImages,
-		DeletePosts,
-	} {
-		p := reflect.ValueOf(f).Pointer()
-		t.Run(runtime.FuncForPC(p).Name(), func(t *testing.T) {
-			t.Parallel()
+	p, err := GetPost(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Image == nil {
+		t.Fatal("no image")
+	}
 
-			err := f([]uint64{1}, "admin")
-			if err != nil {
-				t.Fatalf("%#v", err)
-			}
-		})
+	err = DeleteImages([]uint64{1}, "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p, err = GetPost(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Image != nil {
+		t.Fatal("image not deleted")
+	}
+}
+
+func TestSpoilerImages(t *testing.T) {
+	prepareForModeration(t)
+
+	p, err := GetPost(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Image.Spoiler {
+		t.Fatal("has spoiler")
+	}
+
+	err = ModSpoilerImages([]uint64{1}, "admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	p, err = GetPost(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !p.Image.Spoiler {
+		t.Fatal("no spoiler")
 	}
 }
 
