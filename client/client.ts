@@ -2,7 +2,7 @@
 
 import { handlers, message, connSM, connEvent } from './connection'
 import { posts, page } from './state'
-import { Post, FormModel, PostView } from './posts'
+import { Post, FormModel, PostView, lightenThread } from './posts'
 import { PostLink, Command, PostData, ImageData, ModerationEntry } from "./common"
 import { postAdded } from "./ui"
 import { incrementPostCount } from "./page"
@@ -78,6 +78,7 @@ export function insertPost(data: PostData) {
 
 	postAdded(model)
 	incrementPostCount(true, "image" in data)
+	lightenThread();
 }
 
 export default () => {

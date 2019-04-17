@@ -2,8 +2,11 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"sort"
 	"strconv"
 
 	"github.com/bakape/meguca/auth"
@@ -14,12 +17,26 @@ import (
 	"github.com/go-playground/log"
 )
 
-// Base set of HTTP headers for both HTML and JSON
-var vanillaHeaders = map[string]string{
-	"X-Frame-Options": "sameorigin",
-	"Cache-Control":   "no-cache",
-	"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
-}
+const (
+	// Body size limit for POST request JSON. Should never exceed 32 KB.
+	// Consider anything bigger an attack.
+	jsonLimit = 1 << 15
+)
+
+var (
+	// Base set of HTTP headers for both HTML and JSON
+	vanillaHeaders = map[string]string{
+		"X-Frame-Options": "sameorigin",
+		"Cache-Control":   "no-cache",
+		"Expires":         "Fri, 01 Jan 1990 00:00:00 GMT",
+	}
+)
+
+type uint64Sorter []uint64
+
+func (p uint64Sorter) Len() int           { return len(p) }
+func (p uint64Sorter) Less(i, j int) bool { return p[i] < p[j] }
+func (p uint64Sorter) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // Check if the etag the client provides in the "If-None-Match" header matches
 // the generated etag. If yes, write 304 and return true.
@@ -83,6 +100,10 @@ func text404(w http.ResponseWriter) {
 
 // Send error with code and logging according to error type
 func httpError(w http.ResponseWriter, r *http.Request, err error) {
+	if err == nil {
+		return
+	}
+
 	code := 500
 	switch err.(type) {
 	case common.StatusError:
@@ -146,4 +167,35 @@ func assertNotBanned(w http.ResponseWriter, r *http.Request, board string,
 // Extract URL paramater from request context
 func extractParam(r *http.Request, id string) string {
 	return httptreemux.ContextParams(r.Context())[id]
+}
+
+// Decode JSON sent in a request with a read limit of 8 KB. Returns if the
+// decoding succeeded.
+func decodeJSON(r *http.Request, dest interface{}) (err error) {
+	err = json.NewDecoder(io.LimitReader(r.Body, jsonLimit)).Decode(dest)
+	if err != nil {
+		err = common.StatusError{err, 400}
+	}
+	return
+}
+
+// Decode JSON post ID array from request body.
+// Dedup and sort for faster DB access.
+func decodePostIDArray(r *http.Request) (ids []uint64, err error) {
+	err = decodeJSON(r, &ids)
+	if err != nil {
+		return
+	}
+	if len(ids) > 2 {
+		m := make(map[uint64]struct{}, len(ids))
+		for _, id := range ids {
+			m[id] = struct{}{}
+		}
+		ids = ids[:0]
+		for id := range m {
+			ids = append(ids, id)
+		}
+		sort.Sort(uint64Sorter(ids))
+	}
+	return
 }

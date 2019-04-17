@@ -175,7 +175,7 @@ func createRouter() http.Handler {
 		api.POST("/configure-server", configureServer)
 		api.POST("/create-board", createBoard)
 		api.POST("/delete-board", deleteBoard)
-		api.POST("/delete-posts", deletePost)
+		api.POST("/delete-posts", deletePosts)
 		api.POST("/delete-posts/by-ip", deletePostsByIP)
 		api.POST("/delete-image", deleteImage)
 		api.POST("/spoiler-image", modSpoilerImage)

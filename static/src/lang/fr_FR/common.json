@@ -5,6 +5,8 @@
 		"imageDeleted": "IMAGE DELETED BY '%s'",
 		"imageSpoilered": "IMAGE SPOILERED BY '%s'",
 		"newPostsInThread": "%d new posts in thread.",
+		"postsAndImagesOmitted": "%d posts(s) and %d image(s) omitted",
+		"postsOmitted": "%d posts(s) omitted",
 		"purgedPost": "POST PURGED BY '%s' FOR \"%s\"",
 		"shadowBinned": "SHADOW BINNED BY '%s' FOR %s FOR \"%s\"",
 		"threadLockToggled": "THREAD %s BY '%s'",
@@ -21,10 +23,6 @@
 			"heure",
 			"heures"
 		],
-		"image": [
-			"image",
-			"images"
-		],
 		"minute": [
 			"minute",
 			"minutes"
@@ -32,10 +30,6 @@
 		"month": [
 			"mois",
 			"mois"
-		],
-		"post": [
-			"message",
-			"messages"
 		],
 		"second": [
 			"second",

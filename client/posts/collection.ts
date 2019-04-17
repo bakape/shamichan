@@ -65,4 +65,8 @@ export default class PostCollection extends Model {
 			.map(key =>
 				this.models[key])
 	}
+
+	public size(): number {
+		return Object.keys(this.models).length;
+	}
 }

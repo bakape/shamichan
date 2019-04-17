@@ -176,8 +176,6 @@ func parseAssetForm(w http.ResponseWriter, r *http.Request, maxCount uint,
 
 // Read a file from an asset submition form.
 // If ok == false, caller should return.
-// Call thumbnailer.ReturnBuffer() on out.Data to return the buffer to the
-// memory pool.
 func readAssetFile(w http.ResponseWriter, r *http.Request, f multipart.File,
 	h *multipart.FileHeader, opts thumbnailer.Options,
 ) (

@@ -201,3 +201,15 @@ func extractException(err error) string {
 	}
 	return ""
 }
+
+// Encode []uint64 tom postgres format
+func encodeUint64Array(arr []uint64) string {
+	b := []byte{'{'}
+	for i, j := range arr {
+		if i != 0 {
+			b = append(b, ',')
+		}
+		b = strconv.AppendUint(b, j, 10)
+	}
+	return string(append(b, '}'))
+}

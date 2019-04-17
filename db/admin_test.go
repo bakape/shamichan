@@ -46,16 +46,16 @@ func writeAdminAccount(t *testing.T) {
 func TestModeratePost(t *testing.T) {
 	prepareForModeration(t)
 
-	for _, f := range []func(uint64, string) error{
-		ModSpoilerImage,
-		DeleteImage,
-		DeletePost,
+	for _, f := range []func([]uint64, string) error{
+		ModSpoilerImages,
+		DeleteImages,
+		DeletePosts,
 	} {
 		p := reflect.ValueOf(f).Pointer()
 		t.Run(runtime.FuncForPC(p).Name(), func(t *testing.T) {
 			t.Parallel()
 
-			err := f(1, "admin")
+			err := f([]uint64{1}, "admin")
 			if err != nil {
 				t.Fatalf("%#v", err)
 			}

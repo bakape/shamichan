@@ -68,7 +68,7 @@ async function syncRecentPost(id: number, p: PostState) {
 			model.view.renderImage(false)
 		}
 	}
-	if (p.spoilered && !model.image.spoiler) {
+	if (p.spoilered && model.image && !model.image.spoiler) {
 		model.image.spoiler = true
 		model.view.renderImage(false)
 	}
