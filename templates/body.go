@@ -3,13 +3,14 @@ package templates
 import (
 	"fmt"
 	"html"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/util"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/util"
 
 	"github.com/valyala/quicktemplate"
 )
@@ -379,6 +380,10 @@ func (c *bodyContext) parseFragment(frag string) {
 		leadPunct, word, trailPunct = util.SplitPunctuationString(word)
 		if leadPunct != 0 {
 			c.byte(leadPunct)
+		}
+		if (strings.Count(word, "(") == strings.Count(word, ")")+1) && (trailPunct == ')') && (strings.Contains(word, "http")) {
+			word += ")"
+			trailPunct = ' '
 		}
 
 		if len(word) == 0 {
