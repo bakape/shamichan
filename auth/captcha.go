@@ -2,12 +2,15 @@ package auth
 
 import (
 	"encoding/json"
-	"github.com/bakape/meguca/config"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+
 	"github.com/bakape/captchouli"
+	captchouli_common "github.com/bakape/captchouli/common"
 )
 
 var (
@@ -116,6 +119,7 @@ func LoadCaptchaServices() (err error) {
 	openMu.Lock()
 	defer openMu.Unlock()
 	if !open {
+		captchouli_common.IsTest = common.IsTest
 		err = captchouli.Open()
 		if err != nil {
 			return

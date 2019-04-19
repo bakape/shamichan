@@ -4,14 +4,15 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
 func init() {
 	config.Set(config.Configs{})
+	common.IsTest = true
 }
 
 func TestIsBoard(t *testing.T) {
