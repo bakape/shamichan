@@ -26,27 +26,28 @@ const songMap = new Map([
 
 // Fetch JSON from R/a/dio's or Eden's API and rerender the banner, if different data
 // received
-function radioData(res: any ): RadioData {
-	const { 
-		main: { 
-			np, listeners, 
-			dj:{ 
+function radioData(res: any): RadioData {
+	const {
+		main: {
+			np, listeners,
+			dj: {
 				djname: dj,
 			},
 		},
-	}	= res
-	return {np, listeners,dj} as RadioData
+	} = res
+	return { np, listeners, dj } as RadioData
 }
 
-function edenData(res: any ): RadioData {
-	const { 
+function edenData(res: any): RadioData {
+	const {
 		dj: dj,
 		current: np,
 		listeners: listeners
-	
-	}	= res
-	return {np, listeners,dj} as RadioData
+
+	} = res
+	return { np, listeners, dj } as RadioData
 }
+
 async function fetchData() {
 	let newData = {} as RadioData
 	if (options.nowPlaying === "r/a/dio") {
@@ -54,7 +55,7 @@ async function fetchData() {
 		if (err) {
 			return console.warn(err)
 		}
-	    
+
 		newData = radioData(res)
 	} else if (options.nowPlaying === "eden") {
 		const [res, err] = await fetchJSON<any>('https://edenofthewest.com/ajax/status.php')
@@ -64,8 +65,8 @@ async function fetchData() {
 
 		newData = edenData(res)
 	}
-	else if (options.nowPlaying ==="both"){
-	    let newDataEden = {} as RadioData
+	else if (options.nowPlaying === "both") {
+		let newDataEden = {} as RadioData
 		const [res, err] = await fetchJSON<any>('https://r-a-d.io/api')
 		const [resEden, errEden] = await fetchJSON<any>('https://edenofthewest.com/ajax/status.php')
 		if (err) {
@@ -74,18 +75,15 @@ async function fetchData() {
 		if (errEden) {
 			return console.warn(errEden)
 		}
-		
-		
+
 		newData = radioData(res)
 		newDataEden = edenData(resEden)
 
 		data = newData
 		dataEden = newDataEden
 		render()
-
-
 	}
-	
+
 	if (!isMatch(newData, data) && (options.nowPlaying != "both")) {
 		data = newData
 		render()
@@ -122,7 +120,7 @@ function render() {
 		_posterName = ""
 	}
 
-	if (options.nowPlaying ==="both"){
+	if (options.nowPlaying === "both") {
 		const attrsRadio = {
 			title: lang.ui["googleSong"],
 			href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
@@ -143,7 +141,7 @@ function render() {
 					${escape(data.np)}
 				</b>
 			</a>
-			 | 
+			 |
 			<a href="https://edenofthewest.com/" target="_blank">
 				[${escape(dataEden.listeners.toString())}] ${escape(dataEden.dj)}
 			</a>
@@ -153,17 +151,18 @@ function render() {
 					${escape(dataEden.np)}
 				</b>
 			</a>`
-		
+
 
 	}
-	else {const attrs = {
-		title: lang.ui["googleSong"],
-		href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
-		target: "_blank",
-	}
-	const site = options.nowPlaying === "eden" ? "edenofthewest.com" : "r-a-d.io"
-	el.innerHTML = HTML
-		`<a href="https://${site}/" target="_blank">
+	else {
+		const attrs = {
+			title: lang.ui["googleSong"],
+			href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
+			target: "_blank",
+		}
+		const site = options.nowPlaying === "eden" ? "edenofthewest.com" : "r-a-d.io"
+		el.innerHTML = HTML
+			`<a href="https://${site}/" target="_blank">
 			[${escape(data.listeners.toString())}] ${escape(data.dj)}
 		</a>
 		&nbsp;&nbsp;
@@ -172,7 +171,7 @@ function render() {
 				${escape(data.np)}
 			</b>
 		</a>`
-    }
+	}
 }
 
 // Initialize
