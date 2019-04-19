@@ -417,13 +417,15 @@ func (c *bodyContext) parseFragment(frag string) {
 			// Generic HTTP(S) URLs and magnet links
 			// Checking the first byte is much cheaper than a function call. Do
 			// that first, as most cases won't match.
-			pre, ok := urlPrefixes[stripped[0]]
-			if ok && strings.HasPrefix(stripped, pre) {
-				for i := 0; i < leadingGt; i++ {
-					c.byte('>')
+			if len(stripped) != 0 {
+				pre, ok := urlPrefixes[stripped[0]]
+				if ok && strings.HasPrefix(stripped, pre) {
+					for i := 0; i < leadingGt; i++ {
+						c.byte('>')
+					}
+					c.parseURL(stripped)
+					goto end
 				}
-				c.parseURL(stripped)
-				goto end
 			}
 		}
 

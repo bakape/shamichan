@@ -405,14 +405,16 @@ function parseFragment(frag: string, data: PostData): string {
                 // Generic HTTP(S) URLs, magnet links and embeds
                 // Checking the first byte is much cheaper than a function call.
                 // Do that first, as most cases won't match.
-                const pre = urlPrefixes[stripped[0]]
-                if (pre && stripped.startsWith(pre)) {
-                    for (let i = 0; i < leadingGT; i++) {
-                        html += ">";
+                if (stripped.length) {
+                    const pre = urlPrefixes[stripped[0]];
+                    if (pre && stripped.startsWith(pre)) {
+                        for (let i = 0; i < leadingGT; i++) {
+                            html += ">";
+                        }
+                        html += parseURL(stripped);
+                        matched = true;
+                        break;
                     }
-                    html += parseURL(stripped)
-                    matched = true
-                    break
                 }
         }
 
