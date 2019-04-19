@@ -27,6 +27,8 @@ github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992 h1:n89d5g4t1+7ROr
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992/go.mod h1:+x6GUyBL1gkeUoBPZAEzF9u04TGIFEljjrqMpGT0KVE=
 github.com/bakape/thumbnailer v0.0.0-20190313202626-e737add357f7 h1:DHX8jbvH0n4Hvo1vjfZ3qb9syGtlC5/Gkmcb9l/0C8A=
 github.com/bakape/thumbnailer v0.0.0-20190313202626-e737add357f7/go.mod h1:s7Sm20txJX+qAc11XFnLPqDPXnYShoscD3++dZKTxIc=
+github.com/bakape/thumbnailer v0.0.0-20190419231732-9bd6fcd43d22 h1:42HP+b3orjoOFq7rsg2iJNRXYmy40x/Zg5E/FX3pLHU=
+github.com/bakape/thumbnailer v0.0.0-20190419231732-9bd6fcd43d22/go.mod h1:s7Sm20txJX+qAc11XFnLPqDPXnYShoscD3++dZKTxIc=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/chai2010/webp v1.1.0 h1:4Ei0/BRroMF9FaXDG2e4OxwFcuW2vcXd+A6tyqTJUQQ=
