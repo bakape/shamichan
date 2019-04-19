@@ -36,6 +36,9 @@ export default class PostView extends ImageHandler {
             }
             if (model.isDeleted()) {
                 attrs.class += " deleted"
+                if (options.hideBinned) {
+                    attrs.class += " hidden"
+                }
             }
             attrs.tag = "article"
             attrs.id = "p" + model.id

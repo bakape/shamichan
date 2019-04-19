@@ -2,10 +2,11 @@
 // module loops through the post models and calls the appropriate methods in
 // batches.
 
-import { posts, page } from "../state"
+import { posts, page, hidden } from "../state"
 import options from "."
-import { Post } from "../posts"
+import { Post, hideRecursively } from "../posts"
 import { fileTypes } from "../common"
+import { trigger } from "../util";
 
 // Listen for changes on the options object and call appropriate handlers on
 // all applicable posts
@@ -16,6 +17,7 @@ export default () => {
 		spoilers: toggleSpoilers,
 		autogif: toggleAutoGIF,
 		anonymise: toggleAnonymisation,
+		hideBinned: toggleHideBinned,
 		relativeTime: renderTime,
 	}
 	for (let key in handlers) {
@@ -101,6 +103,22 @@ function toggleAnonymisation() {
 		({ view }) =>
 			view.renderName(),
 	)
+}
+
+// Hide all deleted posts
+function toggleHideBinned() {
+	if (!options.hideBinned) {
+		return;
+	}
+	loopPosts(
+		( post ) => {
+			return post.isDeleted();
+		},
+		( post ) => {
+			hideRecursively(post);
+		}
+	)
+	trigger("renderHiddenCount", hidden.size)
 }
 
 // Rerender all timestamps on posts, if set to relative time

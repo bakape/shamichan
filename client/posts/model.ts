@@ -47,7 +47,13 @@ export class Post extends Model implements PostData {
 	constructor(attrs: PostData) {
 		super()
 		extend(this, attrs)
-		this.seenOnce = seenPosts.has(this.id)
+		if (options.hideBinned && this.isDeleted()) {
+			hidden.add(this.id)
+			storeSeenPost(this.id, this.op)
+			this.seenOnce = true
+		} else{
+			this.seenOnce = seenPosts.has(this.id)
+		}
 
 		// All kinds of interesting races can happen, so best ensure a model
 		// always has the state object defined
@@ -213,6 +219,9 @@ export class Post extends Model implements PostData {
 			case ModerationAction.deletePost:
 				if (!mine.has(this.id)) {
 					this.view.el.classList.add("deleted");
+					if (options.hideBinned) {
+						hideRecursively(this);
+					}
 				}
 				break;
 			case ModerationAction.deleteImage:

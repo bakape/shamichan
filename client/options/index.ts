@@ -32,6 +32,7 @@ interface Options extends ChangeEmitter {
 	bgVideo: string
 	bgMute: boolean
 	horizontalPosting: boolean
+	hideBinned: boolean
 	hideRecursively: boolean
 	replyRight: boolean
 	galleryModeToggle: boolean

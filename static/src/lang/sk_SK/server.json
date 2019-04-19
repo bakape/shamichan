@@ -152,6 +152,10 @@
 			"Schovaných: 0",
 			"Vyčistiť zoznam schovaných plagátov"
 		],
+		"hideBinned": [
+			"Hide Deleted Posts",
+			"Hide all posts that have been deleted"
+		],
 		"hideNSFW": [
 			"Hide NSFW on /all/",
 			"Hide boards tagged as not safe for work from the /all/ metaboard"
