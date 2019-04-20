@@ -1346,6 +1346,13 @@ var migrations = []func(*sql.Tx) error{
 	func(tx *sql.Tx) (err error) {
 		return registerFunctions(tx, "delete_images", "spoiler_images")
 	},
+	func(tx *sql.Tx) (err error) {
+		err = dropFunctions(tx, "bump_thread")
+		if err != nil {
+			return
+		}
+		return registerFunctions(tx, "bump_thread")
+	},
 }
 
 func createIndex(table string, columns ...string) string {

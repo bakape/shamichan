@@ -72,7 +72,7 @@ void render_post_counter()
             // Calculate expiry age
             const auto min = config.thread_expiry_min;
             const auto max = config.thread_expiry_max;
-            const double p = (double)(t.post_ctr) / 5000 - 1;
+            const double p = (double)(t.post_ctr) / 1000 - 1;
             double days = min + (-max + min) * p * p * p;
             if (t.deleted) {
                 days /= 3;

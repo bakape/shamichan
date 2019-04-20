@@ -9,6 +9,8 @@ import { postSM, postState } from "../posts"
 const counters = document.getElementById("thread-post-counters");
 const threads = document.getElementById("threads");
 
+const bumpLimit = 1000;
+
 let imgCtr = 0,
     bumpTime = 0,
     isDeleted = false
@@ -58,7 +60,7 @@ export default function () {
 export function incrementPostCount(post: boolean, hasImage: boolean) {
     if (post) {
         postCount++
-        if (postCount < 5000) {
+        if (postCount < bumpLimit) {
             // An estimate, but good enough
             bumpTime = Math.floor(Date.now() / 1000)
         }
@@ -79,7 +81,7 @@ function renderPostCounter() {
             // Calculate expiry age
             const min = config.threadExpiryMin,
                 max = config.threadExpiryMax
-            let days = min + (-max + min) * (postCount / 5000 - 1) ** 3
+            let days = min + (-max + min) * (postCount / bumpLimit - 1) ** 3
             if (isDeleted) {
                 days /= 3
             }
