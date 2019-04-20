@@ -8,5 +8,6 @@
 	"database": "user=meguca password=meguca dbname=meguca sslmode=disable",
 	"certPath": "",
 	"keyPath": "",
-	"reverseProxyIP": ""
+	"reverseProxyIP": "",
+	"backgroundVideos": "www/videos"
 }

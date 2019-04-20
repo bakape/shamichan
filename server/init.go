@@ -8,7 +8,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	ass "github.com/bakape/meguca/assets"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/cache"
@@ -20,6 +19,7 @@ import (
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/bakape/meguca/websockets/feeds"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
@@ -53,10 +53,10 @@ var (
 // Configs, that can be optionally passed through a JSON configuration file.
 // Flags override this. All fields are optional.
 type serverConfigs struct {
-	SSL, ReverseProxied, Gzip                            *bool
-	ImagerMode                                           *uint
-	CacheSize                                            *float64
-	Address, Database, CertPath, KeyPath, ReverseProxyIP *string
+	SSL, ReverseProxied, Gzip                                              *bool
+	ImagerMode                                                             *uint
+	CacheSize                                                              *float64
+	Address, Database, CertPath, KeyPath, ReverseProxyIP, BackgroundVideos *string
 }
 
 func validateImagerMode(m *uint) {
@@ -102,12 +102,17 @@ func setConfigDefaults(c *serverConfigs) {
 	if c.ReverseProxyIP == nil {
 		c.ReverseProxyIP = new(string)
 	}
+	if c.BackgroundVideos == nil {
+		c.BackgroundVideos = new(string)
+		*c.BackgroundVideos = "www/videos"
+	}
 }
 
 // Start parses command line arguments and initializes the server.
 func Start() error {
 	// Read config file, if any
 	var conf serverConfigs
+	var bgv string
 	buf, err := ioutil.ReadFile("config.json")
 
 	switch {
@@ -164,6 +169,7 @@ func Start() error {
 0	handle image processing and serving and all other functionality (default)
 1	handle all functionality except for image processing and serving
 2	only handle image processing and serving`)
+	flag.StringVar(&bgv, "B", *conf.BackgroundVideos, "path to background videos folder")
 	flag.Usage = printUsage
 
 	// Parse command line arguments
@@ -173,6 +179,7 @@ func Start() error {
 	}
 	validateImagerMode(conf.ImagerMode)
 	config.ImagerMode = config.ImagerModeType(*conf.ImagerMode)
+	ass.SetVideoDir(bgv)
 	arg := flag.Arg(0)
 	if arg == "" {
 		arg = "debug"

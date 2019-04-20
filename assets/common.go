@@ -1,8 +1,11 @@
 package assets
 
 import (
+	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/bakape/meguca/common"
@@ -21,6 +24,8 @@ var (
 	once sync.Once
 	// Prevents data race with generating or getting video names
 	rw sync.RWMutex
+	// Background video directory
+	videoDir string
 	// List of video filenames
 	videoNames []string
 )
@@ -66,14 +71,44 @@ func (s *FileStore) Get(board string) (file File) {
 	return file
 }
 
+//SetVideoDir sets the background video directory to watch
+func SetVideoDir(dir string) {
+	rw.Lock()
+	defer rw.Unlock()
+	videoDir = dir
+}
+
 func generateVideoNames() {
 	rw.Lock()
 	defer rw.Unlock()
 
-	videoNames = []string{"none"}
+	// Clean up old symlinks
 	files, err := ioutil.ReadDir("www/videos")
 
 	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	for _, f := range files {
+		// Only remove symlinks
+		if f.Mode()&os.ModeSymlink != 0 {
+			err = os.RemoveAll(fmt.Sprintf("www/videos/%s", f.Name()))
+
+			if err != nil {
+				log.Error(err)
+				return
+			}
+		}
+	}
+
+	// Gather video names from video directory
+	videoNames = []string{"none"}
+	files, err = ioutil.ReadDir(videoDir)
+
+	if os.IsNotExist(err) {
+		regenVideoDir()
+	} else if err != nil {
 		log.Error(err)
 		return
 	}
@@ -83,9 +118,43 @@ func generateVideoNames() {
 		ext := filepath.Ext(name)
 
 		if ext == ".webm" || ext == ".mp4" {
+			path, err := filepath.Abs(name)
+
+			// If fail, don't append to videoNames
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+
+			// filepath.Abs defaulted to working directory
+			if !strings.Contains(path, videoDir) {
+				path = fmt.Sprintf("%s%s/%s", strings.TrimSuffix(path, name), videoDir, name)
+			}
+
+			// Symlink to www/videos
+			err = os.Symlink(path, fmt.Sprintf("www/videos/%s", name))
+
+			// If fail, don't append to videoNames, ignoring existing (non-symlinked) videos
+			if !os.IsExist(err) && err != nil {
+				log.Error(err)
+				continue
+			}
+
 			videoNames = append(videoNames, name)
 		}
 	}
+}
+
+func regenVideoDir() {
+	log.Warn("Background videos directory not found")
+	err := os.Mkdir(videoDir, 0700)
+
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	log.Info("Created background videos directory")
 }
 
 // GetVideoNames fetches videoNames behind a mutex
@@ -103,7 +172,7 @@ func GetVideoNames() []string {
 	return videoNames
 }
 
-// WatchVideoDir watches the www/videos directory for changes.
+// WatchVideoDir watches the $videoDir directory for changes.
 func WatchVideoDir() {
 	watcher, err := fsnotify.NewWatcher()
 
@@ -135,9 +204,14 @@ func WatchVideoDir() {
 		}
 	}()
 
-	err = watcher.Add("www/videos")
+	// Ensure we don't regen video directory twice
+	rw.Lock()
+	defer rw.Unlock()
+	err = watcher.Add(videoDir)
 
-	if err != nil {
+	if os.IsNotExist(err) {
+		regenVideoDir()
+	} else if err != nil {
 		log.Error(err)
 	}
 }
