@@ -1347,9 +1347,17 @@ var migrations = []func(*sql.Tx) error{
 		return registerFunctions(tx, "delete_images", "spoiler_images")
 	},
 	func(tx *sql.Tx) (err error) {
-		err = dropFunctions(tx, "bump_thread")
-		if err != nil {
-			return
+		for _, args := range [...]string{
+			`bigint, boolean, boolean, boolean`,
+			`bigint, character varying, boolean, boolean`,
+			`bigint, character varying, bytea, boolean, boolean`,
+			`bigint, boolean, boolean`,
+			`bigint, boolean`,
+		} {
+			err = dropFunctions(tx, fmt.Sprintf("bump_thread(%s)", args))
+			if err != nil {
+				return
+			}
 		}
 		return registerFunctions(tx, "bump_thread")
 	},
