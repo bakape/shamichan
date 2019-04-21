@@ -1373,6 +1373,42 @@ var migrations = []func(*sql.Tx) error{
 			},
 		})
 	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`alter table boards alter column id type varchar(10)`,
+			`alter table boards alter column defaultcss type varchar(20)`,
+
+			`alter table banners alter column board type varchar(10)`,
+
+			`alter table bans alter column board type varchar(10)`,
+			`alter table bans alter column reason type varchar(100)`,
+
+			`alter table loading_animations alter column board type varchar(10)`,
+
+			`alter table mod_log alter column board type varchar(10)`,
+			`alter table mod_log alter column board type varchar(100)`,
+
+			`alter table post_moderation alter column by type varchar(20)`,
+			`alter table post_moderation alter column data type varchar(100)`,
+
+			`alter table posts alter column board type varchar(10)`,
+			`alter table posts alter column trip type varchar(100)`,
+			`alter table posts alter column name type varchar(50)`,
+			`alter table posts alter column imagename type varchar(200)`,
+			`alter table posts alter column flag type varchar(2)`,
+
+			`alter table pyu alter column id type varchar(10)`,
+
+			`alter table pyu_limit alter column board type varchar(10)`,
+
+			`alter table reports alter column board type varchar(10)`,
+			`alter table reports alter column reason type varchar(100)`,
+
+			`alter table staff alter column board type varchar(10)`,
+
+			`alter table threads alter column board type varchar(10)`,
+		)
+	},
 }
 
 func createIndex(table string, columns ...string) string {
