@@ -390,6 +390,14 @@ func (c *bodyContext) parseFragment(frag string) {
 			goto end
 		}
 		switch word[0] {
+		case '#': // Hash commands
+			if c.state.quote {
+				goto end
+			}
+			if m := common.CommandRegexp.FindStringSubmatch(word); m != nil {
+				c.parseCommands(string(m[1]))
+				goto end
+			}
 		case '>': // Links
 			if m := linkRegexp.FindStringSubmatch(word); m != nil {
 				// Post links
@@ -400,21 +408,28 @@ func (c *bodyContext) parseFragment(frag string) {
 				c.parseReference(m)
 				goto end
 			}
-		case '#': // Hash commands
-			if c.state.quote {
-				goto end
+			fallthrough
+		default:
+			// Strip leading '>', if any
+			leadingGt := 0
+			stripped := word
+			for len(stripped) != 0 && stripped[0] == '>' {
+				stripped = stripped[1:]
+				leadingGt++
 			}
-			if m := common.CommandRegexp.FindStringSubmatch(word); m != nil {
-				c.parseCommands(string(m[1]))
-				goto end
-			}
-		default: // Generic HTTP(S) URLs and magnet links
+
+			// Generic HTTP(S) URLs and magnet links
 			// Checking the first byte is much cheaper than a function call. Do
 			// that first, as most cases won't match.
-			pre, ok := urlPrefixes[word[0]]
-			if ok && strings.HasPrefix(word, pre) {
-				c.parseURL(word)
-				goto end
+			if len(stripped) != 0 {
+				pre, ok := urlPrefixes[stripped[0]]
+				if ok && strings.HasPrefix(stripped, pre) {
+					for i := 0; i < leadingGt; i++ {
+						c.byte('>')
+					}
+					c.parseURL(stripped)
+					goto end
+				}
 			}
 		}
 

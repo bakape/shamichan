@@ -335,11 +335,11 @@ export default class ImageHandler extends View<Post> {
 					}
 				}
 
-				const v = this.el.querySelector("video")
+				const v = this.el.querySelector("figure video");
 				if (v) {
 					v.remove()
 				}
-				const a = this.el.querySelector("audio")
+				const a = this.el.querySelector("audio");
 				if (a) {
 					a.remove()
 				}

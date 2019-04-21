@@ -1,6 +1,6 @@
 // Hide posts you don't like
 
-import { storeHidden, hidden, posts } from "../state"
+import { storeHidden, hidden, posts, mine } from "../state"
 import { Post } from "./model"
 import { clearStore } from "../db"
 import { trigger } from "../util"
@@ -25,7 +25,7 @@ export function clearHidden() {
 
 // Hide all posts that reply to post recursively
 export function hideRecursively(post: Post) {
-	if (post.hidden) {
+	if (post.hidden || mine.has(post.id)) {
 		return
 	}
 	post.hide()

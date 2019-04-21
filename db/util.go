@@ -58,10 +58,15 @@ func queryAll(q squirrel.SelectBuilder, fn func(r *sql.Rows) error,
 
 // IsConflictError returns if an error is a unique key conflict error
 func IsConflictError(err error) bool {
-	if err, ok := err.(*pq.Error); ok && err.Code.Name() == "unique_violation" {
-		return true
+	return pqErrorCode(err) == "unique_violation"
+}
+
+// Extract error code, if error is a *pq.Error
+func pqErrorCode(err error) string {
+	if err, ok := err.(*pq.Error); ok {
+		return err.Code.Name()
 	}
-	return false
+	return ""
 }
 
 // Listen assigns a function to listen to Postgres notifications on a channel.

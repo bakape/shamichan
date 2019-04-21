@@ -374,6 +374,17 @@ function parseFragment(frag: string, data: PostData): string {
         let m: RegExpMatchArray,
             matched = false
         switch (word[0]) {
+            case "#": // Hash commands
+                if (data.state.quote) {
+                    break
+                }
+                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$/)
+                if (m) {
+                    html += parseCommand(m[1], data)
+                    matched = true
+                    break
+                }
+                break
             case ">":
                 // Post links
                 m = word.match(/^>>(>*)(\d+)$/)
@@ -388,28 +399,30 @@ function parseFragment(frag: string, data: PostData): string {
                 if (m) {
                     html += parseReference(m)
                     matched = true
+                    break;
                 }
-                break
-            case "#": // Hash commands
-                if (data.state.quote) {
-                    break
-                }
-                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$/)
-                if (m) {
-                    html += parseCommand(m[1], data)
-                    matched = true
-                    break
-                }
-                break
             default:
+                // Strip leading '>', if any
+                let leadingGT = 0;
+                let stripped = word;
+                while (stripped.length && stripped[0] === ">") {
+                    stripped = stripped.slice(1);
+                    leadingGT++;
+                }
+
                 // Generic HTTP(S) URLs, magnet links and embeds
                 // Checking the first byte is much cheaper than a function call.
                 // Do that first, as most cases won't match.
-                const pre = urlPrefixes[word[0]]
-                if (pre && word.startsWith(pre)) {
-                    html += parseURL(word)
-                    matched = true
-                    break
+                if (stripped.length) {
+                    const pre = urlPrefixes[stripped[0]];
+                    if (pre && stripped.startsWith(pre)) {
+                        for (let i = 0; i < leadingGT; i++) {
+                            html += ">";
+                        }
+                        html += parseURL(stripped);
+                        matched = true;
+                        break;
+                    }
                 }
         }
 

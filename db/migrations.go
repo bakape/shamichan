@@ -25,13 +25,6 @@ var migrations = []func(*sql.Tx) error{
 	func(tx *sql.Tx) (err error) {
 		// Initialize DB
 		err = execAll(tx,
-			`create table main (
-				id text primary key,
-				val text not null
-			)`,
-			`insert into main (id, val) values
-				('version', '0'),
-				('pyu', '0')`,
 			`create table accounts (
 				id varchar(20) primary key,
 				password bytea not null
@@ -1346,6 +1339,21 @@ var migrations = []func(*sql.Tx) error{
 	func(tx *sql.Tx) (err error) {
 		return registerFunctions(tx, "delete_images", "spoiler_images")
 	},
+	func(tx *sql.Tx) (err error) {
+		for _, args := range [...]string{
+			`bigint, boolean, boolean, boolean`,
+			`bigint, character varying, boolean, boolean`,
+			`bigint, character varying, bytea, boolean, boolean`,
+			`bigint, boolean, boolean`,
+			`bigint, boolean`,
+		} {
+			err = dropFunctions(tx, fmt.Sprintf("bump_thread(%s)", args))
+			if err != nil {
+				return
+			}
+		}
+		return registerFunctions(tx, "bump_thread")
+	},
 }
 
 func createIndex(table string, columns ...string) string {
@@ -1441,38 +1449,56 @@ func loadSQL(tx *sql.Tx, paths ...string) (err error) {
 	return
 }
 
-// Run migrations from version `from`to version `to`
-func runMigrations(from, to int) (err error) {
-	for i := from; i < to; i++ {
-		if !common.IsTest {
-			log.Infof("upgrading database to version %d", i+1)
-		}
+// Run migrations, till the DB version matches the code version
+func runMigrations() (err error) {
+	for {
+		var (
+			currentVersion int
+			done           bool
+		)
 		err = InTransaction(false, func(tx *sql.Tx) (err error) {
-			err = migrations[i](tx)
+			// Lock version column to ensure no migrations from other processes
+			// happen concurrently
+			err = sq.Select("val").
+				From("main").
+				Where("id = 'version'").
+				Suffix("for update").
+				RunWith(tx).
+				QueryRow().
+				Scan(&currentVersion)
+			if err != nil {
+				return
+			}
+			if currentVersion == version {
+				done = true
+				return
+			}
+
+			if !common.IsTest {
+				log.Infof("upgrading database to version %d", currentVersion+1)
+			}
+
+			err = migrations[currentVersion](tx)
 			if err != nil {
 				return
 			}
 
 			// Write new version number
-			_, err = tx.Exec(
-				`update main set val = $1 where id = 'version'`,
-				i+1,
-			)
+			_, err = sq.Update("main").
+				Set("val", currentVersion+1).
+				Where("id = 'version'").
+				RunWith(tx).
+				Exec()
 			return
 		})
 		if err != nil {
 			return fmt.Errorf("migration error: %d -> %d: %s",
-				i, i+1, err)
+				currentVersion, currentVersion+1, err)
+		}
+		if done {
+			return
 		}
 	}
-	return
-}
-
-func rollBack(tx *sql.Tx, err error) error {
-	if rbErr := tx.Rollback(); rbErr != nil {
-		err = util.WrapError(err.Error(), rbErr)
-	}
-	return err
 }
 
 // Patches server configuration during upgrades

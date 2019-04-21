@@ -9,9 +9,9 @@ require (
 	github.com/Sirupsen/logrus v1.4.1 // indirect
 	github.com/aquilax/tripcode v1.0.0
 	github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c
-	github.com/bakape/captchouli v1.0.1
+	github.com/bakape/captchouli v1.1.3
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
-	github.com/bakape/thumbnailer v0.0.0-20190313202626-e737add357f7
+	github.com/bakape/thumbnailer v0.0.0-20190419231732-9bd6fcd43d22
 	github.com/boltdb/bolt v1.3.1
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible

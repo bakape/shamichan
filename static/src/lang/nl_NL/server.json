@@ -152,6 +152,10 @@
 			"Verborgen: 0",
 			"Verwijder verborgen berichten"
 		],
+		"hideBinned": [
+			"Hide Deleted Posts",
+			"Hide all posts that have been deleted"
+		],
 		"hideNSFW": [
 			"NSFW verbergen op / alles /",
 			"Verberg boards die als niet veilig zijn gemarkeerd voor werk vanuit de / alles / metaboard"

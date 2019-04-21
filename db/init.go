@@ -127,7 +127,7 @@ func loadDB(dbSuffix string) (err error) {
 	tasks := make([]func() error, 0, 16)
 	if !exists {
 		tasks = append(tasks, initDB)
-	} else if err = checkVersion(); err != nil {
+	} else if err = runMigrations(); err != nil {
 		return
 	}
 
@@ -162,18 +162,6 @@ func loadDB(dbSuffix string) (err error) {
 	return nil
 }
 
-// Check database version perform any upgrades
-func checkVersion() (err error) {
-	var v int
-	err = db.QueryRow(`select val from main where id = 'version'`).Scan(&v)
-	switch err {
-	case nil, sql.ErrNoRows:
-		return runMigrations(v, version)
-	default:
-		return
-	}
-}
-
 func openBoltDB(dbSuffix string) func() error {
 	return func() (err error) {
 		boltDB, err = bolt.Open(
@@ -193,9 +181,27 @@ func openBoltDB(dbSuffix string) func() error {
 }
 
 // initDB initializes a database
-func initDB() error {
+func initDB() (err error) {
 	log.Info("initializing database")
-	return runMigrations(0, version)
+
+	_, err = db.Exec(
+		`create table main (
+			id text primary key,
+			val text not null
+		)`,
+	)
+	if err != nil {
+		return
+	}
+	_, err = db.Exec(
+		`insert into main (id, val)
+		values ('version', '0'),
+				('pyu', '0')`,
+	)
+	if err != nil {
+		return
+	}
+	return runMigrations()
 }
 
 // CreateAdminAccount writes a fresh admin account with the default password to

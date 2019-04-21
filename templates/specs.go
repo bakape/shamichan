@@ -311,6 +311,7 @@ var optionSpecs = [...][]inputSpec{
 		{ID: "notification"},
 		{ID: "watchThreadsOnReply"},
 		{ID: "anonymise"},
+		{ID: "hideBinned"},
 		{ID: "hideRecursively"},
 		{ID: "postInlineExpand"},
 		{ID: "relativeTime"},
@@ -362,7 +363,7 @@ var optionSpecs = [...][]inputSpec{
 		{
 			ID:      "nowPlaying",
 			Type:    _select,
-			Options: []string{"none", "r/a/dio", "eden"},
+			Options: []string{"none", "r/a/dio", "eden", "both"},
 		},
 		{
 			ID:      "bgVideo",

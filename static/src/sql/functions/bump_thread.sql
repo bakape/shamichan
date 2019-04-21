@@ -6,7 +6,7 @@ begin
 	update threads
 		set replyTime = now_unix
 		where id = op;
-	if bump_thread.bump_time and post_count(bump_thread.op) < 5000 then
+	if bump_thread.bump_time and post_count(bump_thread.op) < 1000 then
 		update threads
 			set bumpTime = now_unix
 			where id = bump_thread.op;
