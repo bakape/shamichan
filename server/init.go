@@ -9,6 +9,11 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"runtime"
+	"strings"
+
+	"github.com/ErikDubbelboer/gspt"
 	ass "github.com/bakape/meguca/assets"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/cache"
@@ -20,12 +25,6 @@ import (
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/bakape/meguca/websockets/feeds"
-	"os"
-	"runtime"
-	"strings"
-	"sync"
-
-	"github.com/ErikDubbelboer/gspt"
 	"github.com/go-playground/log"
 )
 
@@ -243,20 +242,15 @@ func startServer() {
 	}
 
 	load(db.LoadDB, assets.CreateDirs)
+	load(lang.Load)
 
 	// Depend on configs
 	var (
-		wg    sync.WaitGroup
 		tasks []func() error
 	)
 	if config.ImagerMode != config.ImagerOnly {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			load(lang.Load)
-			load(templates.Compile) // Depends on language packs
-		}()
-		tasks = append(tasks, geoip.Load, listenToThreadDeletion)
+		tasks = append(tasks, templates.Compile, geoip.Load,
+			listenToThreadDeletion)
 		go ass.WatchVideoDir()
 	}
 	if config.ImagerMode != config.NoImager {
@@ -264,7 +258,6 @@ func startServer() {
 	}
 	tasks = append(tasks, feeds.Init)
 	load(tasks...)
-	wg.Wait()
 
 	if err := startWebServer(); err != nil {
 		log.Fatal(err)
