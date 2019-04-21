@@ -381,8 +381,8 @@ func (c *bodyContext) parseFragment(frag string) {
 		if leadPunct != 0 {
 			c.byte(leadPunct)
 		}
-		if (strings.Count(word, "(") == strings.Count(word, ")")+1) && 
-		(trailPunct == ')') && (strings.Contains(word, "http")) {
+		if (strings.Count(word, "(") == strings.Count(word, ")")+1) &&
+			(trailPunct == ')') && (strings.Contains(word, "http")) {
 			word += ")"
 			trailPunct = ' '
 		}
