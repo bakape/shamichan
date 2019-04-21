@@ -5,10 +5,10 @@ import (
 	"sync"
 
 	"github.com/bakape/meguca/config"
-
 	"github.com/go-playground/log"
 	"github.com/go-playground/log/handlers/console"
 	"github.com/go-playground/log/handlers/email"
+	"gopkg.in/gomail.v2"
 )
 
 type handler uint8
@@ -49,22 +49,28 @@ func Init(h handler) {
 		log.AddHandler(ConsoleHandler, log.AllLevels...)
 	case Email:
 		conf := config.Get()
-
 		eLog = email.New(conf.EmailErrSub, int(conf.EmailErrPort),
 			conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail,
 			[]string{conf.EmailErrMail})
-
-		eLog.SetEnabled(conf.EmailErr)
-		eLog.SetTimestampFormat(DefaultTimeFormat)
-
-		if conf.EmailErr {
-			once.Do(func() {
-				log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel,
-					log.AlertLevel, log.FatalLevel)
-			})
-		}
+		setEmailHandler()
 	default:
 		log.Fatal("Invalid mlog handler: ", h)
+	}
+}
+
+func setEmailHandler() {
+	conf := config.Get()
+	eLog.SetEmailConfig(conf.EmailErrSub, int(conf.EmailErrPort),
+		conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail,
+		[]string{conf.EmailErrMail})
+	eLog.SetEnabled(conf.EmailErr)
+	eLog.SetFormatFunc(format)
+
+	if conf.EmailErr {
+		once.Do(func() {
+			log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel,
+				log.FatalLevel)
+		})
 	}
 }
 
@@ -73,18 +79,17 @@ func Update() {
 	rw.Lock()
 	defer rw.Unlock()
 
-	conf := config.Get()
+	setEmailHandler()
+}
 
-	eLog.SetEmailConfig(conf.EmailErrSub, int(conf.EmailErrPort),
-		conf.EmailErrMail, conf.EmailErrPass, conf.EmailErrMail,
-		[]string{conf.EmailErrMail})
-
-	eLog.SetEnabled(conf.EmailErr)
-
-	if conf.EmailErr {
-		once.Do(func() {
-			log.AddHandler(eLog, log.ErrorLevel, log.PanicLevel, log.AlertLevel,
-				log.FatalLevel)
-		})
+func format(e *email.Email) email.Formatter {
+	return func(entry log.Entry) *gomail.Message {
+		addr := config.Get().EmailErrMail
+		msg := gomail.NewMessage()
+		msg.SetHeader("From", addr)
+		msg.SetHeader("To", addr)
+		msg.SetHeader("Subject", "meguca error")
+		msg.SetBody("text/plain", entry.Message)
+		return msg
 	}
 }
