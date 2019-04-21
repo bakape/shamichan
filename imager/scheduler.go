@@ -6,13 +6,15 @@ import (
 	"encoding/hex"
 	"hash"
 	"io"
-	"github.com/bakape/meguca/db"
 	"mime/multipart"
 	"sync"
+
+	"github.com/bakape/meguca/db"
 )
 
 var (
-	scheduleJob = make(chan jobRequest, 128)
+	scheduleJob      = make(chan jobRequest, 128)
+	scheduleSmallJob = make(chan jobRequest, 128)
 
 	// Pool of temp buffers used for hashing
 	buf512Pool = sync.Pool{
@@ -36,20 +38,30 @@ type thumbnailingResponse struct {
 // Queues upload processing to prevent resource overuse
 func requestThumbnailing(file multipart.File, size int,
 ) <-chan thumbnailingResponse {
+	// 2 separate queues - one for small and one for bigger files.
+	// Allows for some degree of concurrent thumbnailing without exhausting
+	// server resources.
 	ch := make(chan thumbnailingResponse)
-	scheduleJob <- jobRequest{file, size, ch}
+	req := jobRequest{file, size, ch}
+	if size <= 4<<20 {
+		scheduleSmallJob <- req
+	} else {
+		scheduleJob <- req
+	}
 	return ch
 }
 
 // Queue thumbnailing jobs to reduce resource contention and prevent OOM
 func init() {
-	go func() {
-		for {
-			req := <-scheduleJob
-			id, err := processRequest(req.file, req.size)
-			req.res <- thumbnailingResponse{id, err}
-		}
-	}()
+	for _, ch := range [...]<-chan jobRequest{scheduleJob, scheduleSmallJob} {
+		go func(queue <-chan jobRequest) {
+			for {
+				req := <-queue
+				id, err := processRequest(req.file, req.size)
+				req.res <- thumbnailingResponse{id, err}
+			}
+		}(ch)
+	}
 }
 
 // Hash file to string
