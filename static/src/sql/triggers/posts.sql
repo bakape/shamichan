@@ -1,4 +1,4 @@
-create or replace function on_posts_insert()
+create or replace function before_posts_insert()
 returns trigger as $$
 declare
 	to_delete_by text;
@@ -30,7 +30,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function on_posts_update()
+create or replace function after_posts_update()
 returns trigger as $$
 begin
 	perform bump_thread(new.op);

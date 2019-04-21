@@ -1,4 +1,4 @@
-create or replace function on_mod_log_insert()
+create or replace function after_mod_log_insert()
 returns trigger as $$
 declare
 	op bigint;

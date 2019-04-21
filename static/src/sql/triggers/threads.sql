@@ -1,4 +1,4 @@
-create or replace function on_threads_insert()
+create or replace function after_threads_insert()
 returns trigger as $$
 begin
 	perform bump_thread(new.id);
@@ -10,7 +10,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function on_threads_update()
+create or replace function after_threads_update()
 returns trigger as $$
 begin
 	-- Prevent infinite recursion on timestamp updates
@@ -21,7 +21,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function on_threads_delete()
+create or replace function after_threads_delete()
 returns trigger as $$
 begin
 	perform pg_notify('thread_deleted', old.board || ',' || old.id);
