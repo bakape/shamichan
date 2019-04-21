@@ -122,6 +122,7 @@ var specs = map[string][]inputSpec{
 		{ID: "flags"},
 		{ID: "NSFW"},
 		{ID: "rbText"},
+		{Type: _hr},
 		{ID: "pyu"},
 		{
 			ID:        "title",
@@ -164,7 +165,9 @@ var specs = map[string][]inputSpec{
 	},
 	"configureServer": {
 		{ID: "mature"},
+		{ID: "hideNSFW"},
 		{ID: "disableUserBoards"},
+		{Type: _hr},
 		{ID: "pruneThreads"},
 		{
 			ID:       "threadExpiryMin",
@@ -185,7 +188,7 @@ var specs = map[string][]inputSpec{
 			Min:      1,
 			Required: true,
 		},
-		{ID: "hideNSFW"},
+		{Type: _hr},
 		{
 			ID:   "rootURL",
 			Type: _string,
@@ -194,6 +197,7 @@ var specs = map[string][]inputSpec{
 			ID:   "imageRootOverride",
 			Type: _string,
 		},
+		{Type: _hr},
 		{
 			ID:   "salt",
 			Type: _string,
@@ -231,6 +235,7 @@ var specs = map[string][]inputSpec{
 			Min:      1,
 			Required: true,
 		},
+		{Type: _hr},
 		{ID: "emailErr"},
 		{
 			ID:           "emailErrMail",
@@ -257,6 +262,7 @@ var specs = map[string][]inputSpec{
 			Min:      0,
 			Required: true,
 		},
+		{Type: _hr},
 		{
 			ID:   "feedbackEmail",
 			Type: _string,
@@ -267,6 +273,7 @@ var specs = map[string][]inputSpec{
 			Options: common.Langs,
 		},
 		defaultThemeSpec,
+		{Type: _hr},
 		{
 			ID:       "maxWidth",
 			Type:     _number,
@@ -285,6 +292,7 @@ var specs = map[string][]inputSpec{
 			Min:      1,
 			Required: true,
 		},
+		{Type: _hr},
 		{
 			ID:   "FAQ",
 			Type: _textarea,
@@ -308,11 +316,14 @@ var optionSpecs = [...][]inputSpec{
 			Min:  0,
 			Max:  100,
 		},
+		{Type: _hr},
 		{ID: "notification"},
 		{ID: "watchThreadsOnReply"},
+		{Type: _hr},
 		{ID: "anonymise"},
 		{ID: "hideBinned"},
 		{ID: "hideRecursively"},
+		{Type: _hr},
 		{ID: "postInlineExpand"},
 		{ID: "relativeTime"},
 		{ID: "alwaysLock"},
@@ -327,6 +338,7 @@ var optionSpecs = [...][]inputSpec{
 		{ID: "workModeToggle"},
 		{ID: "autogif"},
 		{ID: "spoilers"},
+		{Type: _hr},
 		{ID: "replyRight"},
 		{ID: "horizontalPosting"},
 		{
@@ -334,6 +346,7 @@ var optionSpecs = [...][]inputSpec{
 			Type:    _select,
 			Options: common.Themes,
 		},
+		{Type: _hr},
 		{ID: "userBG"},
 		{
 			ID:   "userBGImage",

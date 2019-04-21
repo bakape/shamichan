@@ -4,10 +4,10 @@ package templates
 
 import (
 	"html"
-	"github.com/bakape/meguca/lang"
 	"strconv"
 	"strings"
 
+	"github.com/bakape/meguca/lang"
 	"github.com/valyala/quicktemplate"
 )
 
@@ -26,6 +26,7 @@ const (
 	_image
 	_shortcut
 	_range
+	_hr
 )
 
 // Spec of an option passed into the rendering function
@@ -81,6 +82,8 @@ func (w *formWriter) input(spec inputSpec) {
 	case _shortcut:
 		w.N().S("Alt+")
 		cont = true
+	case _hr:
+		w.N().S("<hr>")
 	default:
 		cont = true
 	}
@@ -233,7 +236,9 @@ func streamtable(qw *quicktemplate.Writer, specs []inputSpec) {
 
 	for _, spec := range specs {
 		w.N().S("<tr><td>")
-		w.label(spec, nil)
+		if spec.Type != _hr {
+			w.label(spec, nil)
+		}
 		w.N().S("</td><td>")
 		w.input(spec)
 		w.N().S("</td></tr>")
@@ -270,7 +275,9 @@ func streamoptions(qw *quicktemplate.Writer, specs []inputSpec, ln lang.Pack) {
 	}
 	for _, s := range specs {
 		w.input(s)
-		w.label(s, nil)
-		w.N().S(`<br>`)
+		if s.Type != _hr {
+			w.label(s, nil)
+			w.N().S(`<br>`)
+		}
 	}
 }

@@ -5,10 +5,11 @@ package templates
 import (
 	"fmt"
 	"io"
-	"github.com/bakape/meguca/config"
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/bakape/meguca/config"
 )
 
 // ConfigureBoard renders a form for setting board configurations
@@ -27,6 +28,9 @@ func configurationTable(w io.Writer, v reflect.Value, key string,
 	// Assign values to all specs
 	for i, s := range withValues {
 		key := strings.Title(s.ID)
+		if key == "" { // <hr>
+			continue
+		}
 		v := v.FieldByName(key)
 		if !v.IsValid() {
 			// Programmer error. Should not happen in production.
