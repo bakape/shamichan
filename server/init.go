@@ -199,6 +199,12 @@ func Start() error {
 				args = append(args, arg)
 			}
 		}
+		switch config.ImagerMode {
+		case config.ImagerOnly:
+			args = append(args, "(imager only)")
+		case config.NoImager:
+			args = append(args, "(no imager)")
+		}
 		gspt.SetProcTitle(strings.Join(args, " "))
 
 		handleDaemon(arg)
