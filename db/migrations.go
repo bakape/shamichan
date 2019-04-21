@@ -1079,12 +1079,6 @@ var migrations = []func(*sql.Tx) error{
 			return
 		}
 
-		err = registerTriggers(tx, false, map[string][]string{
-			"boards":  {"insert", "update", "delete"},
-			"mod_log": {"insert"},
-			"posts":   {"insert", "update"},
-			"threads": {"insert", "update", "delete"},
-		})
 		return
 	},
 	func(tx *sql.Tx) (err error) {
@@ -1263,13 +1257,6 @@ var migrations = []func(*sql.Tx) error{
 			return
 		}
 
-		// Make it execute before insert instead
-		err = registerTriggers(tx, true, map[string][]string{
-			"posts": {"insert"},
-		})
-		if err != nil {
-			return
-		}
 		// Enables the above by avoiding constraint violation
 		_, err = tx.Exec(
 			`alter table post_moderation
@@ -1354,6 +1341,38 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return registerFunctions(tx, "bump_thread")
 	},
+	func(tx *sql.Tx) (err error) {
+		// Make trigger naming conform to their execution times
+
+		// Drop old trigger functions and their triggers
+		for _, s := range [...]string{
+			"boards_insert", "boards_update", "boards_delete",
+			"mod_log_insert",
+			"posts_insert", "posts_update",
+			"threads_insert", "threads_update", "threads_delete",
+		} {
+			err = dropFunctions(tx, "on_"+s)
+			if err != nil {
+				return
+			}
+		}
+
+		// Register the new triggers
+		return registerTriggers(tx, map[string][]triggerDescriptor{
+			"boards": {
+				{after, tableInsert},
+				{after, tableUpdate},
+				{after, tableDelete},
+			},
+			"mod_log": {{after, tableInsert}},
+			"posts":   {{before, tableInsert}, {after, tableUpdate}},
+			"threads": {
+				{after, tableInsert},
+				{after, tableUpdate},
+				{after, tableDelete},
+			},
+		})
+	},
 }
 
 func createIndex(table string, columns ...string) string {
@@ -1373,43 +1392,6 @@ func setDefault(tx *sql.Tx, table, column, def string) (err error) {
 		fmt.Sprintf("alter table %s alter column %s set default %s",
 			table, column, def),
 	)
-	return
-}
-
-// Register triggers and trigger functions for each board in triggers
-func registerTriggers(tx *sql.Tx, before bool, triggers map[string][]string,
-) (err error) {
-	for table, events := range triggers {
-		err = loadSQL(tx, "triggers/"+table)
-		if err != nil {
-			return
-		}
-		for _, e := range events {
-			name := fmt.Sprintf(`on_%s_%s`, table, e)
-
-			_, err = tx.Exec(fmt.Sprintf(`drop trigger if exists %s on %s`,
-				name, table))
-			if err != nil {
-				return
-			}
-
-			var mode string
-			if before {
-				mode = "before"
-			} else {
-				mode = "after"
-			}
-			_, err = tx.Exec(fmt.Sprintf(
-				`create trigger %s
-					%s %s on %s
-					for each row
-					execute procedure %s()`,
-				name, mode, e, table, name))
-			if err != nil {
-				return
-			}
-		}
-	}
 	return
 }
 

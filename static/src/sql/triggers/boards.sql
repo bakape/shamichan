@@ -1,4 +1,4 @@
-create or replace function on_boards_insert()
+create or replace function after_boards_insert()
 returns trigger as $$
 begin
 	perform pg_notify('board_updated', new.id);
@@ -10,7 +10,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function on_boards_update()
+create or replace function after_boards_update()
 returns trigger as $$
 begin
 	perform pg_notify('board_updated', new.id);
@@ -18,7 +18,7 @@ begin
 end;
 $$ language plpgsql;
 
-create or replace function on_boards_delete()
+create or replace function after_boards_delete()
 returns trigger as $$
 begin
 	perform pg_notify('board_updated', old.id);
