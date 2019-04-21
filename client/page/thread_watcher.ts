@@ -5,7 +5,7 @@ import * as thread from "./thread";
 import * as options from "../options";
 import * as posts from "../posts";
 import * as util from "../util";
-import * as board from "./board";
+import * as boards from "./board";
 import {BannerModal} from "../base";
 
 interface OpenThreadRecord {
@@ -16,6 +16,7 @@ interface OpenThreadRecord {
 export interface WatchedThreadRecord {
 	id: number;
 	postCount: number;
+	board: string;
 	subject: string;
 	thumbnailURL?: string;
 }
@@ -41,18 +42,22 @@ class WatcherPanel extends BannerModal {
 		for (let i = 0; i < 4; i++) {
 			let tc = tr.insertCell(i)
 			switch (i) {
+				// Board
 				case 0: {
-					tc.innerText = String(thread.id)
+					tc.innerText = `/${thread.board}/`
 					break
 				}
+				// Subject
 				case 1: {
 					tc.innerText = thread.subject
 					break
 				}
+				// Status
 				case 2: {
 					tc.innerText = "seen"
 					break
 				}
+				// Unwatch
 				case 3: {
 					tc.innerText = "[x]"
 				}
@@ -137,7 +142,7 @@ async function fetchWatchedThreads() {
 		const id = parseInt(k);
 
 		// Update post count of watched thread
-		proms.push(watchThread(id, diff.changed[id], watched[id].subject));
+		proms.push(watchThread(id, diff.changed[id], watched[id].board, watched[id].subject));
 
 		if (!opened.has(id)) {
 			toNotify.push(parseInt(k));
@@ -154,7 +159,7 @@ async function fetchWatchedThreads() {
 
 			const opts = options.notificationOpts();
 			const delta = diff.changed[id] - data.postCount;
-			opts.body = `「${data.subject}」`
+			opts.body = `/${data.board}/ - 「${data.subject}」`
 
 			// Persist target, even if browser tab closed
 			opts.data = { id, delta };
@@ -192,7 +197,7 @@ function markThreadOpened() {
 }
 
 export function init() {
-watcherPanel = new WatcherPanel()
+	watcherPanel = new WatcherPanel()
 
 	setInterval(markThreadOpened, 1000);
 	markThreadOpened();
@@ -219,8 +224,8 @@ watcherPanel = new WatcherPanel()
 				if (state.page.thread) {
 					p = watchCurrentThread();
 				} else {
-					const { subject, post_count } = board.threads[id];
-					p = watchThread(id, post_count, subject);
+					const { subject, postCtr, board } = boards.threads[id];
+					p = watchThread(id, postCtr, board, subject);
 				}
 				augmentToggle(el, true);
 			}
@@ -235,13 +240,13 @@ watcherPanel = new WatcherPanel()
 
 // Mark thread as watched
 export async function watchThread(id: number, postCount: number,
-	subject: string,
+	board: string, subject: string,
 ) {
 	if (!options.canNotify()) {
 		return;
 	}
 
-	const data: WatchedThreadRecord = { id, postCount, subject };
+	const data: WatchedThreadRecord = { id, postCount, board, subject };
 	const p = state.posts.get(id);
 	if (p && p.image) {
 		data.thumbnailURL = posts.thumbPath(p.image.sha1, p.image.thumb_type);
@@ -253,7 +258,7 @@ export async function watchThread(id: number, postCount: number,
 // Mark current thread as watched or simply bump post count
 export async function watchCurrentThread() {
 	if (state.page.thread) {
-		await watchThread(state.page.thread, thread.post_count, thread.subject);
+		await watchThread(state.page.thread, thread.postCount, state.page.board ,thread.subject);
 		augmentToggle(document.querySelector(".watcher-toggle"), true);
 	}
 }
