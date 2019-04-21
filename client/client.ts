@@ -51,7 +51,7 @@ export function insertPost(data: PostData) {
 	if (existing) {
 		if (existing instanceof FormModel) {
 			existing.onAllocation(data)
-			incrementPostCount(true, "image" in data)
+			incrementPostCount(true, !!data["image"]);
 		}
 		return
 	}
@@ -77,7 +77,7 @@ export function insertPost(data: PostData) {
 	}
 
 	postAdded(model)
-	incrementPostCount(true, "image" in data)
+	incrementPostCount(true, !!data["image"]);
 	lightenThread();
 }
 
@@ -96,7 +96,7 @@ export default () => {
 	handlers[message.insertImage] = (msg: ImageMessage) =>
 		handle(msg.id, m => {
 			delete msg.id
-			if (!("image" in m)) {
+			if (!m.image) {
 				incrementPostCount(false, true)
 			}
 			m.insertImage(msg)
