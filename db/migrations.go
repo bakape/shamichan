@@ -1491,6 +1491,9 @@ func runMigrations() (err error) {
 				done = true
 				return
 			}
+			if currentVersion > version {
+				log.Fatal("database version ahead of codebase")
+			}
 
 			if !common.IsTest {
 				log.Infof("upgrading database to version %d", currentVersion+1)
