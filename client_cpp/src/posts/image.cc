@@ -56,13 +56,13 @@ Node PostView::render_figcaption()
 // Render a link to the image search provider
 static Node image_search_link(int i, const string& url)
 {
-    const static char* abbrev[7] = { "G", "Iq", "Sn", "Wa", "Yd", "Ds", "Ex" };
+    const static char* abbrev[7] = { "G", "Yd", "Iq", "Sn", "Wa", "Ds", "Ex" };
     const static char* url_starts[7] = {
         "https://www.google.com/searchbyimage?image_url=",
+        "https://yandex.com/images/search?source=collections&rpt=imageview&url=",
         "http://iqdb.org/?url=",
         "http://saucenao.com/search.php?db=999&url=",
         "https://trace.moe/?url=",
-        "https://yandex.com/images/search?source=collections&rpt=imageview&url=",
         "https://desuarchive.org/_/search/image/",
         "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
     };
@@ -112,8 +112,8 @@ Node PostView::render_image_search()
               << '.' << file_extentions.at(typ);
     url << url_encode(unencoded.str());
 
-    const bool enabled[7] = { options.google, options.iqdb, options.sauce_nao,
-        options.what_anime, options.yandex, options.desu_storage, options.exhentai };
+    const bool enabled[7] = { options.google, options.yandex, options.iqdb, options.sauce_nao,
+        options.what_anime, options.desu_storage, options.exhentai };
     for (int i = 0; i < 5; i++) {
         if (enabled[i]) {
             n.children.push_back(image_search_link(i, url.str()));

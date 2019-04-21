@@ -205,6 +205,9 @@ export const specs: { [id: string]: OptionSpec } = {
 		default: true,
 		exec: toggleImageSearch("google"),
 	},
+	yandex: {
+		exec: toggleImageSearch("yandex"),
+	},
 	iqdb: {
 		exec: toggleImageSearch("iqdb"),
 	},
@@ -220,9 +223,6 @@ export const specs: { [id: string]: OptionSpec } = {
 	},
 	exhentai: {
 		exec: toggleImageSearch("exhentai"),
-	},
-	yandex: {
-		exec: toggleImageSearch("yandex"),
 	},
 	// Shortcut keys
 	newPost: {

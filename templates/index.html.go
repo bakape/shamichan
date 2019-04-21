@@ -102,12 +102,12 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 	//line index.html:81
 	engines := [...][2]string{
 		{"google", "G"},
+		{"yandex", "Yd"},
 		{"iqdb", "Iq"},
 		{"saucenao", "Sn"},
 		{"whatAnime", "Wa"},
 		{"desustorage", "Ds"},
 		{"exhentai", "Ex"},
-		{"yandex", "Yd"},
 	}
 
 	//line index.html:90
