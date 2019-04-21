@@ -1,7 +1,7 @@
 import { BannerModal } from "../base"
 
 export default () => {
-	for (let id of ["options", "FAQ", "identity", "account"]) {
+	for (let id of ["options", "FAQ", "identity", "account", "watcher"]) {
 		highlightBanner(id)
 	}
 	new BannerModal(document.getElementById("FAQ"))

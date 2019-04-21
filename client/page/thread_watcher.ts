@@ -6,6 +6,7 @@ import * as options from "../options";
 import * as posts from "../posts";
 import * as util from "../util";
 import * as board from "./board";
+import {BannerModal} from "../base";
 
 interface OpenThreadRecord {
 	id: number;
@@ -22,6 +23,49 @@ export interface WatchedThreadRecord {
 type ThreadPostCountDiff = {
 	changed: { [id: number]: number };
 	deleted: number[];
+}
+
+// Only active WatcherPanel instance
+export let watcherPanel: WatcherPanel
+
+// Thread Watcher panel
+class WatcherPanel extends BannerModal {
+	constructor() {
+		super(document.getElementById("watcher"))
+		this.load()
+	}
+	
+	private addThread(thread: WatchedThreadRecord) {
+		let tb = <HTMLTableElement> this.el.firstElementChild
+		let tr = tb.insertRow(-1)
+		for (let i = 0; i < 4; i++) {
+			let tc = tr.insertCell(i)
+			switch (i) {
+				case 0: {
+					tc.innerText = String(thread.id)
+					break
+				}
+				case 1: {
+					tc.innerText = thread.subject
+					break
+				}
+				case 2: {
+					tc.innerText = "seen"
+					break
+				}
+				case 3: {
+					tc.innerText = "[x]"
+				}
+			}
+		}
+	}
+
+	private async load() {
+		const watched = await getWatchedThreads()
+		for (let id in watched) {
+			this.addThread(watched[id])
+		}
+	}
 }
 
 async function putExpiring(store: string,
@@ -148,6 +192,8 @@ function markThreadOpened() {
 }
 
 export function init() {
+watcherPanel = new WatcherPanel()
+
 	setInterval(markThreadOpened, 1000);
 	markThreadOpened();
 

@@ -497,6 +497,7 @@
 		"text": "Текст",
 		"time": "Время",
 		"type": "Тип",
-		"unban": "Разбанить"
+		"unban": "Разбанить",
+		"watcher": "Thread Watcher"
 	}
 }
