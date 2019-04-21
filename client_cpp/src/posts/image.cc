@@ -56,8 +56,8 @@ Node PostView::render_figcaption()
 // Render a link to the image search provider
 static Node image_search_link(int i, const string& url)
 {
-    const static char* abbrev[6] = { "G", "Iq", "Sn", "Wa", "Ds", "Ex" };
-    const static char* url_starts[6] = {
+    const static char* abbrev[7] = { "G", "Iq", "Sn", "Wa", "Yd", "Ds", "Ex" };
+    const static char* url_starts[7] = {
         "https://www.google.com/searchbyimage?image_url=",
         "http://iqdb.org/?url=",
         "http://saucenao.com/search.php?db=999&url=",
