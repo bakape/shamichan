@@ -1,4 +1,4 @@
-import { storeSeenReply, seenReplies } from "../state"
+import { storeSeenReply, seenReplies, hidden } from "../state"
 import * as options from "../options";
 import lang from "../lang"
 import { thumbPath, Post } from "../posts"
@@ -8,7 +8,7 @@ import { View } from "../base"
 
 // Notify the user that one of their posts has been replied to
 export default function notifyAboutReply(post: Post) {
-	if (seenReplies.has(post.id)) {
+	if (seenReplies.has(post.id) || hidden.has(post.id)) {
 		return
 	}
 	storeSeenReply(post.id, post.op)
