@@ -112,6 +112,16 @@ function isMatch(a: {}, b: {}): boolean {
 	return true
 }
 
+function genAttrs(data: RadioData): string {
+	return makeAttrs({
+		title: lang.ui["googleSong"],
+		// Remove hyphens to prevent google from generating exclusions
+		href: `https://google.com/search?q=`
+			+ encodeURIComponent(data.np.replace(/\-/g, ' ')),
+		target: "_blank",
+	});
+}
+
 // Render the banner message text
 function render() {
 	if (options.nowPlaying === "none") {
@@ -133,21 +143,11 @@ function render() {
 	}
 
 	if (options.nowPlaying === "both") {
-		const attrsRadio = {
-			title: lang.ui["googleSong"],
-			href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
-			target: "_blank",
-		}
-		const attrsEden = {
-			title: lang.ui["googleSong"],
-			href: `https://google.com/search?q=${encodeURIComponent(dataEden.np)}`,
-			target: "_blank",
-		}
 		el.innerHTML = HTML
 			`<a href="https://r-a-d.io/" target="_blank">
 				[${escape(data.listeners.toString())}] ${escape(data.dj)}
 			</a>
-			<a ${makeAttrs(attrsRadio)}>
+			<a ${genAttrs(data)}>
 				<b>
 					${escape(data.np)}
 				</b>
@@ -156,18 +156,13 @@ function render() {
 			<a href="https://edenofthewest.com/" target="_blank">
 				[${escape(dataEden.listeners.toString())}] ${escape(dataEden.dj)}
 			</a>
-			<a ${makeAttrs(attrsEden)}>
+			<a ${genAttrs(dataEden)}>
 				<b>
 					${escape(dataEden.np)}
 				</b>
 			</a>`
 	}
 	else {
-		const attrs = {
-			title: lang.ui["googleSong"],
-			href: `https://google.com/search?q=${encodeURIComponent(data.np)}`,
-			target: "_blank",
-		}
 		const site = options.nowPlaying === "eden"
 			? "edenofthewest.com"
 			: "r-a-d.io";
@@ -175,7 +170,7 @@ function render() {
 			`<a href="https://${site}/" target="_blank">
 			[${escape(data.listeners.toString())}] ${escape(data.dj)}
 		</a>
-		<a ${makeAttrs(attrs)}>
+		<a ${genAttrs(data)}>
 			<b>
 				${escape(data.np)}
 			</b>
