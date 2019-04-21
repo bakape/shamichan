@@ -362,6 +362,14 @@ function parseFragment(frag: string, data: PostData): string {
             }
             continue
         }
+        if ((word.indexOf("(") >= 0) && (word.indexOf("http") >= 0)  ){
+            let countOpen = (word.match(/[(]/g)).length
+            let countClosed = (word.match(/[)]/g) || []).length
+            if ((countOpen == countClosed + 1) && (trailPunct == ")")){
+                word += ")"
+                trailPunct = " "
+            }
+        }
 
         let m: RegExpMatchArray,
             matched = false
