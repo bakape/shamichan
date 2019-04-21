@@ -221,6 +221,9 @@ export const specs: { [id: string]: OptionSpec } = {
 	exhentai: {
 		exec: toggleImageSearch("exhentai"),
 	},
+	yandex: {
+		exec: toggleImageSearch("yandex"),
+	},
 	// Shortcut keys
 	newPost: {
 		default: 78,

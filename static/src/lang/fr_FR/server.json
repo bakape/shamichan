@@ -408,6 +408,10 @@
 			"WhatAnime",
 			"Recherche de captures d'écran d'anime whatanime.ga"
 		],
+		"yandex": [
+			"Yandex",
+			"Yandex image search"
+		],
 		"workMode": [
 			"Mode travail",
 			"Cache toutes les images"

@@ -27,7 +27,7 @@ public:
 
     // Reverse image search engines
     bool google = true, iqdb = false, sauce_nao = true, what_anime = false,
-         desu_storage = false, exhentai = false;
+         yandex = false, desu_storage = false, exhentai = false;
 
     // Keybinding
     unsigned new_post = 78, // Create new post

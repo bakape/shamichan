@@ -226,7 +226,7 @@ export default class ImageHandler extends View<Post> {
 		url = `/assets/images/${root}/${sha1}.${fileTypes[type]}`
 		url = encodeURI(location.origin + url)
 
-		const [google, iqdb, saucenao, whatanime, desuarchive, exhentai] =
+		const [google, iqdb, saucenao, whatanime, desuarchive, exhentai, yandex] =
 			Array.from(el.children) as HTMLElement[]
 		google.setAttribute(
 			"href",
@@ -274,6 +274,11 @@ export default class ImageHandler extends View<Post> {
 					exhentai.remove()
 			}
 		}
+		
+		yandex.setAttribute(
+			"href",
+			"https://yandex.com/images/search?source=collections&rpt=imageview&url=" + url,
+		)
 	}
 
 	public toggleImageExpansion(event: MouseEvent) {

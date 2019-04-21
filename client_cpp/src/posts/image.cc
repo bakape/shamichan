@@ -62,6 +62,7 @@ static Node image_search_link(int i, const string& url)
         "http://iqdb.org/?url=",
         "http://saucenao.com/search.php?db=999&url=",
         "https://trace.moe/?url=",
+        "https://yandex.com/images/search?source=collections&rpt=imageview&url=",
         "https://desuarchive.org/_/search/image/",
         "http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash=",
     };
@@ -111,27 +112,27 @@ Node PostView::render_image_search()
               << '.' << file_extentions.at(typ);
     url << url_encode(unencoded.str());
 
-    const bool enabled[6] = { options.google, options.iqdb, options.sauce_nao,
-        options.what_anime, options.desu_storage, options.exhentai };
-    for (int i = 0; i < 4; i++) {
+    const bool enabled[7] = { options.google, options.iqdb, options.sauce_nao,
+        options.what_anime, options.yandex, options.desu_storage, options.exhentai };
+    for (int i = 0; i < 5; i++) {
         if (enabled[i]) {
             n.children.push_back(image_search_link(i, url.str()));
-        }
-    }
-    if (enabled[4]) {
-        switch (img.file_type) {
-        case FileType::jpg:
-        case FileType::png:
-        case FileType::gif:
-        case FileType::webm:
-            n.children.push_back(image_search_link(4, url.str()));
         }
     }
     if (enabled[5]) {
         switch (img.file_type) {
         case FileType::jpg:
         case FileType::png:
+        case FileType::gif:
+        case FileType::webm:
             n.children.push_back(image_search_link(5, url.str()));
+        }
+    }
+    if (enabled[6]) {
+        switch (img.file_type) {
+        case FileType::jpg:
+        case FileType::png:
+            n.children.push_back(image_search_link(6, url.str()));
         }
     }
 
