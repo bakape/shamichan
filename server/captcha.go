@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/bakape/meguca/config"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
@@ -60,16 +62,25 @@ func authenticateCaptcha(w http.ResponseWriter, r *http.Request) {
 // Create new captcha and write its HTML to w. Colour and background can be left
 // blank to use defaults.
 func serveNewCaptcha(w http.ResponseWriter, r *http.Request) {
-	b := extractParam(r, "board")
-	if !assertNotBanned(w, r, "all") {
+	httpError(w, r, func() (err error) {
+		b := extractParam(r, "board")
+		if !assertNotBanned(w, r, "all") {
+			return
+		}
+
+		ip, err := auth.GetIP(r)
+		if err != nil {
+			return
+		}
+		db.IncrementSpamScore(ip, config.Get().ImageScore)
+
+		s := auth.CaptchaService(b)
+		if s == nil {
+			return errCaptchasNotReady(b)
+		}
+		s.ServeNewCaptcha(w, r)
 		return
-	}
-	s := auth.CaptchaService(b)
-	if s == nil {
-		httpError(w, r, errCaptchasNotReady(b))
-		return
-	}
-	s.ServeNewCaptcha(w, r)
+	}())
 }
 
 // Render a form with nothing but captcha and confirmation buttons
