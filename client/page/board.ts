@@ -15,8 +15,8 @@ const sorts: { [name: string]: SortFunction } = {
 	bump: subtract("bump_time"),
 	lastReply: subtract("update_time"),
 	creation: subtract("time"),
-	replyCount: subtract("postCtr"),
-	fileCount: subtract("imageCtr"),
+	replyCount: subtract("post_count"),
+	fileCount: subtract("image_count"),
 }
 const threadsEl = document.getElementById("threads")
 

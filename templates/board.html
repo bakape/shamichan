@@ -116,9 +116,9 @@ allow caching of generated posts.
 						/{%s= t.Board %}/
 					</b>
 					<span class="counters">
-						{%s= strconv.FormatUint(uint64(t.PostCtr), 10) %}
+						{%s= strconv.FormatUint(uint64(t.PostCount), 10) %}
 						/
-						{%s= strconv.FormatUint(uint64(t.ImageCtr), 10) %}
+						{%s= strconv.FormatUint(uint64(t.ImageCount), 10) %}
 					</span>
 					{% if !hasImage %}
 						{%= expandLink(t.Board, idStr) %}

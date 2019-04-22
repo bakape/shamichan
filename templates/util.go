@@ -2,6 +2,7 @@ package templates
 
 import (
 	"html"
+
 	"github.com/bakape/meguca/common"
 )
 
@@ -15,11 +16,11 @@ func CalculateOmit(t common.Thread) (int, int) {
 	}
 
 	var (
-		omit    = int(t.PostCtr) - (len(t.Posts) + 1)
+		omit    = int(t.PostCount) - (len(t.Posts) + 1)
 		imgOmit uint32
 	)
 	if omit != 0 {
-		imgOmit = t.ImageCtr
+		imgOmit = t.ImageCount
 		if t.Image != nil {
 			imgOmit--
 		}

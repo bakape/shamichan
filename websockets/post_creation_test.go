@@ -2,15 +2,16 @@ package websockets
 
 import (
 	"database/sql"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
 	"github.com/bakape/meguca/websockets/feeds"
-	"strconv"
-	"testing"
-	"time"
 )
 
 var (
@@ -101,10 +102,10 @@ func testCreateThread(t *testing.T) {
 	}
 
 	std := common.Thread{
-		Board:    "c",
-		Subject:  "subject",
-		ImageCtr: 1,
-		PostCtr:  1,
+		Board:      "c",
+		Subject:    "subject",
+		ImageCount: 1,
+		PostCount:  1,
 		Post: common.Post{
 			Name: "name",
 			Image: &common.Image{
@@ -343,8 +344,8 @@ func TestPostCreation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, thread.PostCtr, uint32(2))
-	AssertDeepEquals(t, thread.ImageCtr, uint32(1))
+	AssertDeepEquals(t, thread.PostCount, uint32(2))
+	AssertDeepEquals(t, thread.ImageCount, uint32(1))
 
 	AssertDeepEquals(t, cl.post, openPost{
 		id:          6,

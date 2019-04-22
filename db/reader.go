@@ -158,7 +158,7 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 			cap = lastN
 			limit = &lastN
 		} else {
-			cap = int(t.PostCtr)
+			cap = int(t.PostCount)
 		}
 		r, err := tx.Query(getThreadPostsSQL, id, limit)
 		if err != nil {
@@ -221,7 +221,7 @@ func scanOP(r rowScanner) (t common.Thread, err error) {
 		args  = make([]interface{}, 0, 8+len(pArgs)+len(iArgs))
 	)
 	args = append(args,
-		&t.Sticky, &t.Board, &t.PostCtr, &t.ImageCtr, &t.UpdateTime,
+		&t.Sticky, &t.Board, &t.PostCount, &t.ImageCount, &t.UpdateTime,
 		&t.BumpTime, &t.Subject, &t.Locked,
 	)
 	args = append(args, pArgs...)

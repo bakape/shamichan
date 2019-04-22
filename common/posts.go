@@ -33,8 +33,8 @@ type Thread struct {
 	Abbrev     bool   `json:"abbrev"`
 	Sticky     bool   `json:"sticky"`
 	Locked     bool   `json:"locked"`
-	PostCtr    uint32 `json:"postCtr"`
-	ImageCtr   uint32 `json:"imageCtr"`
+	PostCount  uint32 `json:"post_count"`
+	ImageCount uint32 `json:"image_count"`
 	UpdateTime int64  `json:"update_time"`
 	BumpTime   int64  `json:"bump_time"`
 	Subject    string `json:"subject"`

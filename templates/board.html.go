@@ -309,11 +309,11 @@ func StreamCatalogThreads(qw422016 *qt422016.Writer, b []common.Thread, json []b
 		//line board.html:116
 		qw422016.N().S(`/</b><span class="counters">`)
 		//line board.html:119
-		qw422016.N().S(strconv.FormatUint(uint64(t.PostCtr), 10))
+		qw422016.N().S(strconv.FormatUint(uint64(t.PostCount), 10))
 		//line board.html:119
 		qw422016.N().S(`/`)
 		//line board.html:121
-		qw422016.N().S(strconv.FormatUint(uint64(t.ImageCtr), 10))
+		qw422016.N().S(strconv.FormatUint(uint64(t.ImageCount), 10))
 		//line board.html:121
 		qw422016.N().S(`</span>`)
 		//line board.html:123

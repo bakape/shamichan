@@ -11,11 +11,11 @@ const threads = document.getElementById("threads");
 
 const bumpLimit = 1000;
 
-let imgCtr = 0,
+let image_count = 0,
     bump_time = 0,
     isDeleted = false
 
-export let postCount = 0;
+export let post_count = 0;
 export let subject = "";
 
 // Render the HTML of a thread page
@@ -27,9 +27,9 @@ export default function () {
 
     data.posts = null
 
-    postCount = data.postCtr;
+    post_count = data.post_count;
     subject = data.subject;
-    imgCtr = data.imageCtr
+    image_count = data.image_count
     bump_time = data.bump_time
     if (data.moderation) {
         for (let { type } of data.moderation) {
@@ -59,29 +59,29 @@ export default function () {
 // Increment thread post counters and rerender the indicator in the banner
 export function incrementPostCount(post: boolean, hasImage: boolean) {
     if (post) {
-        postCount++
-        if (postCount < bumpLimit) {
+        post_count++
+        if (post_count < bumpLimit) {
             // An estimate, but good enough
             bump_time = Math.floor(Date.now() / 1000)
         }
     }
     if (hasImage) {
-        imgCtr++
+        image_count++
     }
     renderPostCounter()
 }
 
 function renderPostCounter() {
     let text = ""
-    if (postCount) {
-        text = `${postCount} / ${imgCtr}`
+    if (post_count) {
+        text = `${post_count} / ${image_count}`
 
         // Calculate estimated thread expiry time
         if (config.pruneThreads) {
             // Calculate expiry age
             const min = config.threadExpiryMin,
                 max = config.threadExpiryMax
-            let days = min + (-max + min) * (postCount / bumpLimit - 1) ** 3
+            let days = min + (-max + min) * (post_count / bumpLimit - 1) ** 3
             if (isDeleted) {
                 days /= 3
             }

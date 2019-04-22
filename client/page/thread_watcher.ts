@@ -173,8 +173,8 @@ export function init() {
 				if (state.page.thread) {
 					p = watchCurrentThread();
 				} else {
-					const { subject, postCtr } = board.threads[id];
-					p = watchThread(id, postCtr, subject);
+					const { subject, post_count } = board.threads[id];
+					p = watchThread(id, post_count, subject);
 				}
 				augmentToggle(el, true);
 			}
@@ -207,7 +207,7 @@ export async function watchThread(id: number, postCount: number,
 // Mark current thread as watched or simply bump post count
 export async function watchCurrentThread() {
 	if (state.page.thread) {
-		await watchThread(state.page.thread, thread.postCount, thread.subject);
+		await watchThread(state.page.thread, thread.post_count, thread.subject);
 		augmentToggle(document.querySelector(".watcher-toggle"), true);
 	}
 }

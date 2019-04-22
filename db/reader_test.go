@@ -47,16 +47,16 @@ func prepareThreads(t *testing.T) {
 
 	threads := [...]Thread{
 		{
-			ID:        1,
-			Board:     "a",
+			ID:         1,
+			Board:      "a",
 			UpdateTime: 1,
-			BumpTime:  1,
+			BumpTime:   1,
 		},
 		{
-			ID:        3,
-			Board:     "c",
+			ID:         3,
+			Board:      "c",
 			UpdateTime: 3,
-			BumpTime:  5,
+			BumpTime:   5,
 		},
 	}
 	posts := [...]Post{
@@ -219,10 +219,10 @@ func testGetAllBoard(t *testing.T) {
 					},
 				},
 			},
-			PostCtr:   1,
-			Board:     "c",
+			PostCount:  1,
+			Board:      "c",
 			UpdateTime: 3,
-			BumpTime:  5,
+			BumpTime:   5,
 		},
 		1: {
 			Post: common.Post{
@@ -231,11 +231,11 @@ func testGetAllBoard(t *testing.T) {
 				Moderated:  true,
 				Moderation: []common.ModerationEntry{sampleModerationEntry},
 			},
-			PostCtr:   3,
-			ImageCtr:  1,
-			Board:     "a",
+			PostCount:  3,
+			ImageCount: 1,
+			Board:      "a",
 			UpdateTime: 1,
-			BumpTime:  1,
+			BumpTime:   1,
 		},
 	}
 
@@ -297,10 +297,10 @@ func testGetBoard(t *testing.T) {
 							},
 						},
 					},
-					PostCtr:   1,
-					Board:     "c",
+					PostCount:  1,
+					Board:      "c",
 					UpdateTime: 3,
-					BumpTime:  5,
+					BumpTime:   5,
 				},
 			},
 		},
@@ -344,11 +344,11 @@ func testGetThread(t *testing.T) {
 	t.Parallel()
 
 	thread1 := common.Thread{
-		PostCtr:   3,
-		ImageCtr:  1,
+		PostCount:  3,
+		ImageCount: 1,
 		UpdateTime: 1,
-		BumpTime:  1,
-		Board:     "a",
+		BumpTime:   1,
+		Board:      "a",
 		Post: common.Post{
 			ID:         1,
 			Image:      &assets.StdJPEG,
@@ -391,10 +391,10 @@ func testGetThread(t *testing.T) {
 			name: "no replies ;_;",
 			id:   3,
 			std: common.Thread{
-				Board:     "c",
+				Board:      "c",
 				UpdateTime: 3,
-				BumpTime:  5,
-				PostCtr:   1,
+				BumpTime:   5,
+				PostCount:  1,
 				Post: common.Post{
 					ID: 3,
 					Links: []common.Link{

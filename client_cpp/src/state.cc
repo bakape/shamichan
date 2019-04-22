@@ -263,8 +263,8 @@ ThreadDecoder::ThreadDecoder(json& j)
     // Redundant field on thread pages
     id = page.thread ? page.thread : (unsigned long)(j["id"]);
 
-    post_ctr = j["postCtr"];
-    image_ctr = j["imageCtr"];
+    post_ctr = j["post_count"];
+    image_ctr = j["image_count"];
     time = j["time"];
     reply_time = j["update_time"];
     bump_time = j["bump_time"];

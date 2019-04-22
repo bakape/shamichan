@@ -239,13 +239,13 @@ func deleteOldThreads() (err error) {
 	return InTransaction(false, func(tx *sql.Tx) (err error) {
 		// Find threads to delete
 		var (
-			now         = time.Now().Unix()
-			min         = float64(conf.ThreadExpiryMin * 24 * 3600)
-			max         = float64(conf.ThreadExpiryMax * 24 * 3600)
-			toDel       = make([]uint64, 0, 16)
-			id, postCtr uint64
-			bumpTime    int64
-			deleted     sql.NullBool
+			now           = time.Now().Unix()
+			min           = float64(conf.ThreadExpiryMin * 24 * 3600)
+			max           = float64(conf.ThreadExpiryMax * 24 * 3600)
+			toDel         = make([]uint64, 0, 16)
+			id, postCount uint64
+			bumpTime      int64
+			deleted       sql.NullBool
 		)
 		err = queryAll(
 			sq.
@@ -255,7 +255,7 @@ func deleteOldThreads() (err error) {
 					`(select count(*)
 						from posts
 						where posts.op = threads.id
-						) as postCtr`,
+						) as post_count`,
 					fmt.Sprintf(
 						`(select exists (
 							select 1 from post_moderation
@@ -266,12 +266,13 @@ func deleteOldThreads() (err error) {
 				Join("posts on threads.id = posts.id").
 				RunWith(tx),
 			func(r *sql.Rows) (err error) {
-				err = r.Scan(&id, &bumpTime, &postCtr, &deleted)
+				err = r.Scan(&id, &bumpTime, &postCount, &deleted)
 				if err != nil {
 					return
 				}
 				threshold := min +
-					(-max+min)*math.Pow(float64(postCtr)/common.BumpLimit-1, 3)
+					(-max+min)*
+						math.Pow(float64(postCount)/common.BumpLimit-1, 3)
 				if deleted.Bool {
 					threshold /= 3
 				}
