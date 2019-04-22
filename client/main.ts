@@ -9,6 +9,7 @@ import { postSM, postEvent, FormModel } from "./posts"
 import {
 	renderBoard, extractConfigs, renderThread, init as initPage
 } from './page'
+import * as thread from "./page/thread";
 import initUI from "./ui"
 import {
 	checkBottom, getCookie, deleteCookie, trigger, scrollToBottom,
@@ -16,6 +17,7 @@ import {
 import assignHandlers from "./client"
 import initModeration from "./mod"
 import { persistMessages } from "./options"
+import { watchThread } from './page/thread_watcher';
 
 // Load all stateful modules in dependency order
 async function start() {
@@ -24,14 +26,6 @@ async function start() {
 	await open()
 	if (page.thread) {
 		await loadFromDB(page.thread)
-
-		// Add a stored thread OP, made by the client to "mine"
-		const addMine = getCookie("addMine")
-		if (addMine) {
-			const id = parseInt(addMine)
-			storeMine(id, id)
-			deleteCookie("addMine")
-		}
 	}
 
 	// Check for legacy options and remap
@@ -68,6 +62,16 @@ async function start() {
 		connect()
 		checkBottom()
 		assignHandlers()
+
+		// Add a stored thread OP, made by the client to "mine" and set thread
+		// as watched
+		const addMine = getCookie("addMine");
+		if (addMine) {
+			const id = parseInt(addMine);
+			storeMine(id, id);
+			watchThread(id, 1, thread.subject);
+			deleteCookie("addMine");
+		}
 	} else {
 		await renderBoard()
 	}

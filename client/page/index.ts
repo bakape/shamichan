@@ -8,6 +8,7 @@ export {
 export { render as renderBoard } from "./board"
 export { watchCurrentThread } from "./thread_watcher";
 
+
 export function init() {
 	initNavigation();
 	watcher.init();
