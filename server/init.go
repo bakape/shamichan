@@ -19,7 +19,6 @@ import (
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/geoip"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/lang"
 	"github.com/bakape/meguca/templates"
@@ -255,8 +254,7 @@ func startServer() {
 		tasks []func() error
 	)
 	if config.ImagerMode != config.ImagerOnly {
-		tasks = append(tasks, templates.Compile, geoip.Load,
-			listenToThreadDeletion)
+		tasks = append(tasks, templates.Compile, listenToThreadDeletion)
 		go ass.WatchVideoDir()
 	}
 	if config.ImagerMode != config.NoImager {

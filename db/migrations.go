@@ -1423,6 +1423,13 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return loadSQL(tx, "triggers/threads")
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = sq.Delete("main").
+			Where("id = 'geo_md5'").
+			RunWith(tx).
+			Exec()
+		return
+	},
 }
 
 func createIndex(table string, columns ...string) string {

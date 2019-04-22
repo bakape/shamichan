@@ -7,6 +7,7 @@ require (
 	github.com/Masterminds/squirrel v1.1.0
 	github.com/PuerkitoBio/goquery v1.5.0 // indirect
 	github.com/Sirupsen/logrus v1.4.1 // indirect
+	github.com/abh/geoip v0.0.0-20160510155516-07cea4480daa
 	github.com/aquilax/tripcode v1.0.0
 	github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c
 	github.com/bakape/captchouli v1.1.4
@@ -26,7 +27,6 @@ require (
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/lib/pq v1.0.1-0.20190326042056-d6156e141ac6
-	github.com/oschwald/maxminddb-golang v1.3.0
 	github.com/otium/ytdl v0.5.1
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
 	github.com/rakyll/statik v0.1.6

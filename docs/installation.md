@@ -7,7 +7,7 @@ All commands assume to be run by the root user.
 ```bash
 # Install C dependencies
 apt update
-apt install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev git
+apt install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev libgeoip-dev git
 apt-get dist-upgrade -y
 
 # Install Node.js

@@ -34,6 +34,7 @@ compiled with:
     * libx264
     * libmp3lame
 * OpenCV >= 2
+* libgeoip
 * git
 
 ### Linux and OSX
