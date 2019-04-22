@@ -3,11 +3,12 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"testing"
+	"time"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"testing"
-	"time"
 )
 
 const eightDays = time.Hour * 24 * 8
@@ -275,10 +276,10 @@ func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
 	for _, op := range ops {
 		unix := op.time.Unix()
 		thread := Thread{
-			ID:        op.id,
-			Board:     op.board,
-			ReplyTime: unix,
-			BumpTime:  unix,
+			ID:         op.id,
+			Board:      op.board,
+			UpdateTime: unix,
+			BumpTime:   unix,
 		}
 		post := Post{
 			StandalonePost: common.StandalonePost{
@@ -297,7 +298,7 @@ func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
 		// Override bump time from trigger
 		_, err = sq.Update("threads").
 			SetMap(map[string]interface{}{
-				"bumptime": unix,
+				"bump_time": unix,
 			}).
 			Where("id = ?", op.id).
 			Exec()

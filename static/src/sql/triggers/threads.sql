@@ -14,7 +14,7 @@ create or replace function after_threads_update()
 returns trigger as $$
 begin
 	-- Prevent infinite recursion on timestamp updates
-	if new.replyTime != old.replyTime then
+	if new.update_time != old.update_time then
 		perform bump_thread(new.id);
 	end if;
 	return null;

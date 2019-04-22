@@ -137,15 +137,15 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 
 // Thread is a template for writing new threads to the database
 type Thread struct {
-	ID                  uint64
-	PostCtr, ImageCtr   uint32
-	ReplyTime, BumpTime int64
-	Subject, Board      string
+	ID                   uint64
+	PostCtr, ImageCtr    uint32
+	UpdateTime, BumpTime int64
+	Subject, Board       string
 }
 
 // ThreadCounter retrieves the progress counter of a thread
 func ThreadCounter(id uint64) (uint64, error) {
-	q := sq.Select("replyTime").
+	q := sq.Select("update_time").
 		From("threads").
 		Where("id = ?", id)
 	return getCounter(q)
@@ -188,11 +188,11 @@ func WriteThread(t Thread, p Post) (err error) {
 	return InTransaction(false, func(tx *sql.Tx) (err error) {
 		_, err = sq.
 			Insert("threads").
-			Columns("board", "id", "replyTime", "bumpTime", "subject").
+			Columns("board", "id", "update_time", "bump_time", "subject").
 			Values(
 				t.Board,
 				t.ID,
-				t.ReplyTime,
+				t.UpdateTime,
 				t.BumpTime,
 				t.Subject,
 			).

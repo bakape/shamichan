@@ -580,7 +580,7 @@ func writeSampleThread(t *testing.T) {
 	thread := db.Thread{
 		ID:        1,
 		Board:     "a",
-		ReplyTime: 11,
+		UpdateTime: 11,
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{

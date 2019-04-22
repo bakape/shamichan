@@ -180,7 +180,7 @@ func deleteUnusedBoards() error {
 				From("boards").
 				Where(`created < ?
 					and id != 'all'
-					and (select coalesce(max(bumpTime), 0)
+					and (select coalesce(max(bump_time), 0)
 							from threads
 							where board = boards.id
 						) < ?`,
@@ -227,8 +227,8 @@ func deleteBoard(tx *sql.Tx, id, by, reason string) (err error) {
 	return
 }
 
-// Delete stale threads. Thread retention measured in a bumptime threshold, that
-// is calculated as a function of post count till bump limit with an N days
+// Delete stale threads. Thread retention measured in a bump time threshold,
+// that is calculated as a function of post count till bump limit with an N days
 // floor and ceiling.
 func deleteOldThreads() (err error) {
 	conf := config.Get()
@@ -251,7 +251,7 @@ func deleteOldThreads() (err error) {
 			sq.
 				Select(
 					"threads.id",
-					"bumpTime",
+					"bump_time",
 					`(select count(*)
 						from posts
 						where posts.op = threads.id

@@ -12,7 +12,7 @@ const threads = document.getElementById("threads");
 const bumpLimit = 1000;
 
 let imgCtr = 0,
-    bumpTime = 0,
+    bump_time = 0,
     isDeleted = false
 
 export let postCount = 0;
@@ -30,7 +30,7 @@ export default function () {
     postCount = data.postCtr;
     subject = data.subject;
     imgCtr = data.imageCtr
-    bumpTime = data.bumpTime
+    bump_time = data.bump_time
     if (data.moderation) {
         for (let { type } of data.moderation) {
             if (type === ModerationAction.banPost) {
@@ -62,7 +62,7 @@ export function incrementPostCount(post: boolean, hasImage: boolean) {
         postCount++
         if (postCount < bumpLimit) {
             // An estimate, but good enough
-            bumpTime = Math.floor(Date.now() / 1000)
+            bump_time = Math.floor(Date.now() / 1000)
         }
     }
     if (hasImage) {
@@ -90,7 +90,7 @@ function renderPostCounter() {
             }
 
             // Subtract current bump time
-            days -= (Date.now() / 1000 - bumpTime) / (3600 * 24)
+            days -= (Date.now() / 1000 - bump_time) / (3600 * 24)
 
             text += ` / `
             if (days > 1) {

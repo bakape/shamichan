@@ -43,7 +43,7 @@ func getCounter(q squirrel.SelectBuilder) (uint64, error) {
 
 // BoardCounter retrieves the progress counter of a board
 func BoardCounter(board string) (uint64, error) {
-	q := sq.Select("max(replyTime) + count(*)").
+	q := sq.Select("max(update_time) + count(*)").
 		From("threads").
 		Where("board = ?", board)
 	return getCounter(q)
@@ -51,7 +51,7 @@ func BoardCounter(board string) (uint64, error) {
 
 // AllBoardCounter retrieves the progress counter of the /all/ board
 func AllBoardCounter() (uint64, error) {
-	q := sq.Select("max(replyTime) + count(*)").
+	q := sq.Select("max(update_time) + count(*)").
 		From("threads")
 	return getCounter(q)
 }

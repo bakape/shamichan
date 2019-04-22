@@ -30,15 +30,15 @@ func (b Board) Less(i, j int) bool {
 // its opening post data and its contained posts. The composite type itself is
 // not stored in the database.
 type Thread struct {
-	Abbrev    bool   `json:"abbrev"`
-	Sticky    bool   `json:"sticky"`
-	Locked    bool   `json:"locked"`
-	PostCtr   uint32 `json:"postCtr"`
-	ImageCtr  uint32 `json:"imageCtr"`
-	ReplyTime int64  `json:"replyTime"`
-	BumpTime  int64  `json:"bumpTime"`
-	Subject   string `json:"subject"`
-	Board     string `json:"board"`
+	Abbrev     bool   `json:"abbrev"`
+	Sticky     bool   `json:"sticky"`
+	Locked     bool   `json:"locked"`
+	PostCtr    uint32 `json:"postCtr"`
+	ImageCtr   uint32 `json:"imageCtr"`
+	UpdateTime int64  `json:"update_time"`
+	BumpTime   int64  `json:"bump_time"`
+	Subject    string `json:"subject"`
+	Board      string `json:"board"`
 	Post
 	Posts []Post `json:"posts"`
 }

@@ -37,7 +37,7 @@ func WriteSampleThread(t testing.TB) {
 		Board:     "a",
 		PostCtr:   0,
 		ImageCtr:  1,
-		ReplyTime: now,
+		UpdateTime: now,
 	}
 	op := db.Post{
 		StandalonePost: common.StandalonePost{

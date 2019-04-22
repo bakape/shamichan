@@ -1409,6 +1409,20 @@ var migrations = []func(*sql.Tx) error{
 			`alter table threads alter column board type varchar(10)`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		err = execAll(tx,
+			`alter table threads rename column replytime to update_time`,
+			`alter table threads rename column bumptime to bump_time`,
+		)
+		if err != nil {
+			return
+		}
+		err = registerFunctions(tx, "bump_thread")
+		if err != nil {
+			return
+		}
+		return loadSQL(tx, "triggers/threads")
+	},
 }
 
 func createIndex(table string, columns ...string) string {

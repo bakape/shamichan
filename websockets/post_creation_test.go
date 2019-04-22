@@ -144,8 +144,8 @@ func testCreateThread(t *testing.T) {
 	AssertDeepEquals(t, *thread.Image, *std.Image)
 
 	// Normalize timestamps and pointer fields
-	then := thread.ReplyTime
-	std.ReplyTime = then
+	then := thread.UpdateTime
+	std.UpdateTime = then
 	std.BumpTime = then
 	std.Time = then
 	std.Image = thread.Image

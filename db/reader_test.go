@@ -49,13 +49,13 @@ func prepareThreads(t *testing.T) {
 		{
 			ID:        1,
 			Board:     "a",
-			ReplyTime: 1,
+			UpdateTime: 1,
 			BumpTime:  1,
 		},
 		{
 			ID:        3,
 			Board:     "c",
-			ReplyTime: 3,
+			UpdateTime: 3,
 			BumpTime:  5,
 		},
 	}
@@ -221,7 +221,7 @@ func testGetAllBoard(t *testing.T) {
 			},
 			PostCtr:   1,
 			Board:     "c",
-			ReplyTime: 3,
+			UpdateTime: 3,
 			BumpTime:  5,
 		},
 		1: {
@@ -234,7 +234,7 @@ func testGetAllBoard(t *testing.T) {
 			PostCtr:   3,
 			ImageCtr:  1,
 			Board:     "a",
-			ReplyTime: 1,
+			UpdateTime: 1,
 			BumpTime:  1,
 		},
 	}
@@ -299,7 +299,7 @@ func testGetBoard(t *testing.T) {
 					},
 					PostCtr:   1,
 					Board:     "c",
-					ReplyTime: 3,
+					UpdateTime: 3,
 					BumpTime:  5,
 				},
 			},
@@ -335,7 +335,7 @@ func testGetBoard(t *testing.T) {
 // tested
 func syncThreadVariables(dst *common.Thread, src common.Thread) {
 	dst.ID = src.ID
-	dst.ReplyTime = src.ReplyTime
+	dst.UpdateTime = src.UpdateTime
 	dst.Time = src.Time
 	dst.BumpTime = src.BumpTime
 }
@@ -346,7 +346,7 @@ func testGetThread(t *testing.T) {
 	thread1 := common.Thread{
 		PostCtr:   3,
 		ImageCtr:  1,
-		ReplyTime: 1,
+		UpdateTime: 1,
 		BumpTime:  1,
 		Board:     "a",
 		Post: common.Post{
@@ -392,7 +392,7 @@ func testGetThread(t *testing.T) {
 			id:   3,
 			std: common.Thread{
 				Board:     "c",
-				ReplyTime: 3,
+				UpdateTime: 3,
 				BumpTime:  5,
 				PostCtr:   1,
 				Post: common.Post{

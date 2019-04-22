@@ -266,8 +266,8 @@ ThreadDecoder::ThreadDecoder(json& j)
     post_ctr = j["postCtr"];
     image_ctr = j["imageCtr"];
     time = j["time"];
-    reply_time = j["replyTime"];
-    bump_time = j["bumpTime"];
+    reply_time = j["update_time"];
+    bump_time = j["bump_time"];
     board = j["board"];
     subject = j["subject"];
     if (!page.catalog) {
