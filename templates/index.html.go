@@ -402,7 +402,23 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 	//line index.html:320
 	qw422016.N().S(`</div></div>`)
 	//line index.html:325
-	qw422016.N().S(`<div id="watcher" class="modal glass"><table><thead><tr><th>Board</th><th>Thread</th><th>Status</th><th>Unwatch</th></tr></thead><tbody></tbody></table></div>`)
+	qw422016.N().S(`<div id="watcher" class="modal glass"><table><thead><tr><th>`)
+	//line index.html:330
+	qw422016.N().S(ln.Common.UI["board"])
+	//line index.html:330
+	qw422016.N().S(`</th><th>`)
+	//line index.html:331
+	qw422016.N().S(ln.Common.UI["thread"])
+	//line index.html:331
+	qw422016.N().S(`</th><th>`)
+	//line index.html:332
+	qw422016.N().S(ln.Common.UI["status"])
+	//line index.html:332
+	qw422016.N().S(`</th><th>`)
+	//line index.html:333
+	qw422016.N().S(ln.Common.UI["unwatch"])
+	//line index.html:333
+	qw422016.N().S(`</th></tr></thead><tbody></tbody></table></div>`)
 	//line index.html:340
 	if pos > common.NotStaff {
 		//line index.html:340

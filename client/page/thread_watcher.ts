@@ -7,6 +7,7 @@ import * as posts from "../posts";
 import * as util from "../util";
 import * as boards from "./board";
 import {BannerModal} from "../base";
+import {urlBase} from "../ui/tab";
 
 interface OpenThreadRecord {
 	id: number;
@@ -36,39 +37,55 @@ class WatcherPanel extends BannerModal {
 		this.load()
 	}
 	
-	private addThread(thread: WatchedThreadRecord) {
-		let tb = <HTMLTableElement> this.el.firstElementChild
+	public addRow(thread: WatchedThreadRecord) {
+		let tb = <HTMLTableElement> this.el.firstElementChild.lastElementChild
 		let tr = tb.insertRow(-1)
+		tr.setAttribute("id", String(thread.id))
 		for (let i = 0; i < 4; i++) {
 			let tc = tr.insertCell(i)
 			switch (i) {
 				// Board
 				case 0: {
-					tc.innerText = `/${thread.board}/`
+					tc.innerHTML = `<a href="../${thread.board}">/${thread.board}/</a>`
 					break
 				}
 				// Subject
 				case 1: {
-					tc.innerText = thread.subject
+					tc.innerHTML = `<a href="../all/${thread.id}">${thread.subject}</a>`
 					break
 				}
 				// Status
 				case 2: {
-					tc.innerText = "seen"
+					tc.innerHTML = `<img id="status" src="${urlBase}default.ico">`
 					break
 				}
 				// Unwatch
 				case 3: {
-					tc.innerText = "[x]"
+					tc.innerHTML = `<a>[X]</a>`
+					tc.addEventListener("click", () => {
+						this.removeRow(thread.id)
+						unwatchThread(thread.id)
+						for ( let el of document.querySelectorAll(".watcher-toggle")) {
+							if ( el.getAttribute("data-id") === String(thread.id) ) {
+								augmentToggle(el, false)
+							}
+						}
+					})
+					break
 				}
 			}
 		}
 	}
 
+	public removeRow(id: Number) {
+		let row = document.getElementById(String(id))
+		row.parentElement.removeChild(row)
+	}
+
 	private async load() {
 		const watched = await getWatchedThreads()
 		for (let id in watched) {
-			this.addThread(watched[id])
+			this.addRow(watched[id])
 		}
 	}
 }
@@ -135,7 +152,7 @@ async function fetchWatchedThreads() {
 	const toNotify = [];
 	const opened = await getOpenedThreads();
 	if (state.page.thread) {
-		// Accounts fot some latency between the DB
+		// Accounts for some latency between the DB
 		opened.add(state.page.thread);
 	}
 	for (let k in diff.changed) {
@@ -149,6 +166,7 @@ async function fetchWatchedThreads() {
 		}
 	}
 	for (let id of diff.deleted) {
+		watcherPanel.removeRow(id);
 		proms.push(unwatchThread(id));
 	}
 
@@ -219,6 +237,7 @@ export function init() {
 			let p;
 			if (el.classList.contains("enabled")) {
 				augmentToggle(el, false);
+				watcherPanel.removeRow(id);
 				p = unwatchThread(id);
 			} else {
 				if (state.page.thread) {
@@ -253,6 +272,8 @@ export async function watchThread(id: number, postCount: number,
 	}
 
 	await putExpiring("watchedThreads", id, data);
+
+	watcherPanel.addRow(data)
 }
 
 // Mark current thread as watched or simply bump post count

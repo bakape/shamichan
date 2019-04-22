@@ -98,6 +98,7 @@
 		]
 	},
 	"ui": {
+		"board": "Board",
 		"bottom": "Низ",
 		"cancel": "Отменить",
 		"catalog": "Каталог",
@@ -131,10 +132,13 @@
 		"search": "Поиск",
 		"sessionExpired": "Сессия истекла",
 		"showNotice": "Объявление",
+		"status": "Status",
 		"submit": "Отправить",
+		"thread": "Thread",
 		"thumbnailing": "Генерация превью…",
 		"top": "Верх",
 		"unfinishedPost": "У вас есть незавершённый пост",
+		"unwatch": "Unwatch",
 		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
 		"uploadProgress": "загрузка…",

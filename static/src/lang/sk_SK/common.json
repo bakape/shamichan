@@ -98,6 +98,7 @@
 		]
 	},
 	"ui": {
+		"board": "Board",
 		"bottom": "Dolu",
 		"cancel": "Zrušiť",
 		"catalog": "Katalóg",
@@ -131,10 +132,13 @@
 		"search": "Hľadať",
 		"sessionExpired": "Sedenie vypršalo",
 		"showNotice": "Upozornenie",
+		"status": "Status",
 		"submit": "Odoslať",
+		"thread": "Thread",
 		"thumbnailing": "Odtlačkujem...",
 		"top": "Vrch",
 		"unfinishedPost": "Más nedokončený plagát",
+		"unwatch": "Unwatch",
 		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
 		"uploadProgress": "odoslané...",

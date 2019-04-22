@@ -98,6 +98,7 @@
 		]
 	},
 	"ui": {
+		"board": "Board",
 		"bottom": "Rodapé",
 		"cancel": "Cancelar",
 		"catalog": "Catalog",
@@ -131,10 +132,13 @@
 		"search": "Pesquisa",
 		"sessionExpired": "Login session expired",
 		"showNotice": "Notice",
+		"status": "Status",
 		"submit": "Submit",
+		"thread": "Thread",
 		"thumbnailing": "Thumbnailing...",
 		"top": "Topo",
 		"unfinishedPost": "You have an unfinished post",
+		"unwatch": "Unwatch",
 		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
 		"uploadProgress": "uploaded...",

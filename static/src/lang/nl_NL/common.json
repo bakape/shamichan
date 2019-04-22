@@ -98,6 +98,7 @@
 		]
 	},
 	"ui": {
+		"board": "Board",
 		"bottom": "Bodem",
 		"cancel": "Annuleren",
 		"catalog": "Catalog",
@@ -131,10 +132,13 @@
 		"search": "Zoeken",
 		"sessionExpired": "Login sessie verlopen",
 		"showNotice": "Opmerken",
+		"status": "Status",
 		"submit": "Plaatsen",
+		"thread": "Thread",
 		"thumbnailing": "Thumbnailing...",
 		"top": "Top",
 		"unfinishedPost": "Je hebt een onafgemaakte post",
+		"unwatch": "Unwatch",
 		"unwatchThread": "Unwatch topic",
 		"uploadFile": "Upload bestand",
 		"uploadProgress": "uploaded...",

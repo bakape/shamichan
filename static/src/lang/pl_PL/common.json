@@ -98,6 +98,7 @@
 		]
 	},
 	"ui": {
+		"board": "Board",
 		"bottom": "Na dół",
 		"cancel": "Cofnij",
 		"catalog": "Katalog",
@@ -131,10 +132,13 @@
 		"search": "Wyszukaj",
 		"sessionExpired": "Login session expired",
 		"showNotice": "Powiadomienie",
+		"status": "Status",
 		"submit": "Zatwierdź",
+		"thread": "Thread",
 		"thumbnailing": "Miniaturyzowanie...",
 		"top": "Na górę",
 		"unfinishedPost": "Masz niezakończony post",
+		"unwatch": "Unwatch",
 		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
 		"uploadProgress": "przesłano...",

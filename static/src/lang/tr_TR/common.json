@@ -98,6 +98,7 @@
 		]
 	},
 	"ui": {
+		"board": "Board",
 		"bottom": "Alt",
 		"cancel": "İptal",
 		"catalog": "Catalog",
@@ -131,10 +132,13 @@
 		"search": "Ara",
 		"sessionExpired": "Login session expired",
 		"showNotice": "Notice",
+		"status": "Status",
 		"submit": "Submit",
+		"thread": "Thread",
 		"thumbnailing": "Thumbnailing...",
 		"top": "Üst",
 		"unfinishedPost": "You have an unfinished post",
+		"unwatch": "Unwatch",
 		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
 		"uploadProgress": "uploaded...",

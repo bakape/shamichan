@@ -4,7 +4,7 @@ import { connSM, connState } from "../connection"
 import { Post } from "../posts"
 import { posts } from "../state"
 
-const titleEl = document.head.querySelector("title"),
+export const titleEl = document.head.querySelector("title"),
 	title = titleEl.textContent,
 	faviconEl = document.getElementById("favicon"),
 	urlBase = "/assets/favicons/",

@@ -98,6 +98,7 @@
 		]
 	},
 	"ui": {
+		"board": "Board",
 		"bottom": "Дно",
 		"cancel": "Скасувати",
 		"catalog": "Каталог",
@@ -131,10 +132,13 @@
 		"search": "Пошук",
 		"sessionExpired": "Login session expired",
 		"showNotice": "Повідомлення",
+		"status": "Status",
 		"submit": "Надіслати",
+		"thread": "Thread",
 		"thumbnailing": "Прев'ювання..",
 		"top": "Шапка",
 		"unfinishedPost": "Ви маєте незакінчений пост",
+		"unwatch": "Unwatch",
 		"unwatchThread": "Unwatch thread",
 		"uploadFile": "Upload file",
 		"uploadProgress": "завантаження...",
