@@ -226,11 +226,15 @@ export default class ImageHandler extends View<Post> {
 		url = `/assets/images/${root}/${sha1}.${fileTypes[type]}`
 		url = encodeURI(location.origin + url)
 
-		const [google, iqdb, saucenao, whatanime, desuarchive, exhentai] =
+		const [google, yandex, iqdb, saucenao, whatanime, desuarchive, exhentai] =
 			Array.from(el.children) as HTMLElement[]
 		google.setAttribute(
 			"href",
 			"https://www.google.com/searchbyimage?image_url=" + url,
+		)
+		yandex.setAttribute(
+			"href",
+			"https://yandex.com/images/search?source=collections&rpt=imageview&url=" + url,
 		)
 		iqdb.setAttribute(
 			"href",

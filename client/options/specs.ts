@@ -205,6 +205,9 @@ export const specs: { [id: string]: OptionSpec } = {
 		default: true,
 		exec: toggleImageSearch("google"),
 	},
+	yandex: {
+		exec: toggleImageSearch("yandex"),
+	},
 	iqdb: {
 		exec: toggleImageSearch("iqdb"),
 	},

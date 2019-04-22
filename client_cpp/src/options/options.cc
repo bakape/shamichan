@@ -24,6 +24,7 @@ void Options::load()
     load_bool(mascot, "mascot");
     load_bool(always_lock, "alwaysLock");
     load_bool(google, "google");
+    load_bool(yandex, "yandex");
     load_bool(iqdb, "iqdb");
     load_bool(sauce_nao, "saucenao");
     load_bool(what_anime, "whatAnime");
