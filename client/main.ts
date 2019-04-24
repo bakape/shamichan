@@ -69,7 +69,7 @@ async function start() {
 		if (addMine) {
 			const id = parseInt(addMine);
 			storeMine(id, id);
-			watchThread(id, 1, thread.subject);
+			watchThread(id, 1, page.board, thread.subject);
 			deleteCookie("addMine");
 		}
 	} else {

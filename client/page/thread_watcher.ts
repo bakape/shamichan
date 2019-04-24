@@ -38,9 +38,13 @@ class WatcherPanel extends BannerModal {
 	}
 	
 	public addRow(thread: WatchedThreadRecord) {
+		if (document.getElementById("t" + String(thread.id))) {
+			// Thread already in table
+			return;
+		}
 		let tb = <HTMLTableElement> this.el.firstElementChild.lastElementChild
 		let tr = tb.insertRow(-1)
-		tr.setAttribute("id", String(thread.id))
+		tr.setAttribute("id", "t" + String(thread.id))
 		for (let i = 0; i < 4; i++) {
 			let tc = tr.insertCell(i)
 			switch (i) {
@@ -56,7 +60,7 @@ class WatcherPanel extends BannerModal {
 				}
 				// Status
 				case 2: {
-					tc.innerHTML = `<img id="status" src="${urlBase}default.ico">`
+					tc.innerHTML = `<img class="status" src="${urlBase}default.ico">`
 					break
 				}
 				// Unwatch
@@ -65,8 +69,8 @@ class WatcherPanel extends BannerModal {
 					tc.addEventListener("click", () => {
 						this.removeRow(thread.id)
 						unwatchThread(thread.id)
-						for ( let el of document.querySelectorAll(".watcher-toggle")) {
-							if ( el.getAttribute("data-id") === String(thread.id) ) {
+						for (let el of document.querySelectorAll(".watcher-toggle")) {
+							if (el.getAttribute("data-id") === String(thread.id)) {
 								augmentToggle(el, false)
 							}
 						}
@@ -78,7 +82,7 @@ class WatcherPanel extends BannerModal {
 	}
 
 	public removeRow(id: Number) {
-		let row = document.getElementById(String(id))
+		let row = document.getElementById("t" + String(id))
 		row.parentElement.removeChild(row)
 	}
 
@@ -243,8 +247,8 @@ export function init() {
 				if (state.page.thread) {
 					p = watchCurrentThread();
 				} else {
-					const { subject, postCtr, board } = boards.threads[id];
-					p = watchThread(id, postCtr, board, subject);
+					const { subject, post_count, board } = boards.threads[id];
+					p = watchThread(id, post_count, board, subject);
 				}
 				augmentToggle(el, true);
 			}
@@ -279,7 +283,7 @@ export async function watchThread(id: number, postCount: number,
 // Mark current thread as watched or simply bump post count
 export async function watchCurrentThread() {
 	if (state.page.thread) {
-		await watchThread(state.page.thread, thread.postCount, state.page.board ,thread.subject);
+		await watchThread(state.page.thread, thread.post_count, state.page.board ,thread.subject);
 		augmentToggle(document.querySelector(".watcher-toggle"), true);
 	}
 }
