@@ -11,15 +11,16 @@ import (
 )
 
 func TestSpamScores(t *testing.T) {
+	assertTableClear(t, "spam_scores", "last_solved_captchas", "boards",
+		"accounts")
+	writeAllBoard(t)
+
 	config.Set(config.Configs{
 		CaptchaTags: config.Defaults.CaptchaTags,
 		Public: config.Public{
 			Captcha: true,
 		},
 	})
-	assertTableClear(t, "spam_scores", "last_solved_captchas", "boards",
-		"accounts")
-	writeAllBoard(t)
 	err := auth.LoadCaptchaServices()
 	if err != nil {
 		t.Fatal(err)
