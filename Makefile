@@ -22,19 +22,6 @@ client: client_vendor
 client_deps:
 	npm install --progress false --depth 0
 
-wasm:
-	mkdir -p www/wasm
-	$(MAKE) -C client_cpp
-	rm -f www/wasm/main.*
-	cp client_cpp/*.wasm client_cpp/*.js www/wasm
-ifeq ($(DEBUG),1)
-	cp client_cpp/*.wast client_cpp/*.wasm.map www/wasm
-endif
-
-wasm_clean:
-	$(MAKE) -C client_cpp clean
-	rm -f www/wasm/*.js www/wasm/*.wasm www/wasm/*.map www/wasm/*.wast
-
 watch:
 	$(gulp) -w
 
@@ -55,7 +42,7 @@ server:
 client_clean:
 	rm -rf www/js www/css/*.css www/css/maps node_modules
 
-clean: client_clean wasm_clean
+clean: client_clean
 	rm -rf .build .ffmpeg .package target meguca-*.zip meguca-*.tar.xz meguca meguca.exe server/pkg
 ifeq ($(is_windows), true)
 	rm -rf /.meguca_build *.dll

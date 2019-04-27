@@ -19,11 +19,6 @@ func setHTMLHeaders(w http.ResponseWriter) {
 	head.Set("Content-Type", "text/html")
 }
 
-// Client is requesting the new wasm page
-func isWasm(r *http.Request) bool {
-	return r.URL.Query().Get("wasm") == "true"
-}
-
 // Serves board HTML to regular or noscript clients
 func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 	if !auth.IsBoard(b) {
@@ -35,12 +30,6 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 	}
 
 	theme := resolveTheme(r, b)
-	if isWasm(r) {
-		setHTMLHeaders(w)
-		templates.WriteIndexWasm(w, theme)
-		return
-	}
-
 	html, data, ctr, err := cache.GetHTML(boardCacheArgs(r, b, catalog))
 	switch err {
 	case nil:
@@ -106,12 +95,6 @@ func threadHTML(w http.ResponseWriter, r *http.Request) {
 
 	b := extractParam(r, "board")
 	theme := resolveTheme(r, b)
-	if isWasm(r) {
-		setHTMLHeaders(w)
-		templates.WriteIndexWasm(w, theme)
-		return
-	}
-
 	lastN := detectLastN(r)
 	k := cache.ThreadKey(id, lastN)
 	html, data, ctr, err := cache.GetHTML(k, cache.ThreadFE)

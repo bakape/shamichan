@@ -1,3 +1,0 @@
-[submodule "client_cpp/json"]
-	path = client_cpp/json
-	url = https://github.com/nlohmann/json.git

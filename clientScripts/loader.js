@@ -111,8 +111,10 @@
 		window.crypto.subtle = window.crypto.webkitSubtle;
 	}
 
-	var wasm = /[\?&]wasm=true/.test(location.search),
-		head = document.getElementsByTagName('head')[0];
+	// TODO: Uncomment for WASM client rewrite
+	// var wasm = /[\?&]wasm=true/.test(location.search);
+
+	var head = document.getElementsByTagName('head')[0];
 
 	if (polyfills.length) {
 		for (i = 0; i < polyfills.length; i++) {
@@ -167,22 +169,23 @@
 				Array.prototype[Symbol.iterator];
 		}
 
-		if (wasm) {
-			window.Module = {};
-			fetch("/assets/wasm/main.wasm").then(function (res) {
-				return res.arrayBuffer();
-			}).then(function (bytes) {
-				// TODO: Parallel downloads of main.js and main.wasm
-				var script = document.createElement('script');
-				script.src = "/assets/wasm/main.js";
-				Module.wasmBinary = bytes;
-				document.head.appendChild(script);
-			});
-		} else {
-			loadScript("js/main").onload = function () {
-				require("main");
-			};
-		}
+		// TODO: Uncomment for WASM client rewrite
+		// if (wasm) {
+		// 	window.Module = {};
+		// 	fetch("/assets/wasm/main.wasm").then(function (res) {
+		// 		return res.arrayBuffer();
+		// 	}).then(function (bytes) {
+		// 		// TODO: Parallel downloads of main.js and main.wasm
+		// 		var script = document.createElement('script');
+		// 		script.src = "/assets/wasm/main.js";
+		// 		Module.wasmBinary = bytes;
+		// 		document.head.appendChild(script);
+		// 	});
+		// } else {
+		loadScript("js/main").onload = function () {
+			require("main");
+		};
+		// }
 
 		if ('serviceWorker' in navigator && (
 			location.protocol === "https:" ||
