@@ -5,17 +5,20 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/test"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/bakape/captchouli"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/test"
 )
 
 func TestCaptchaService(t *testing.T) {
+	// Skip to avoid massive booru fetches on DB population
+	test.SkipInCI(t)
+
 	config.Set(config.Configs{
 		CaptchaTags: config.Defaults.CaptchaTags,
 		OverrideCaptchaTags: map[string]string{

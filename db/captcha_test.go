@@ -11,6 +11,9 @@ import (
 )
 
 func TestCaptchas(t *testing.T) {
+	// Skip to avoid massive booru fetches on DB population
+	test.SkipInCI(t)
+
 	assertTableClear(t, "failed_captchas", "last_solved_captchas", "boards",
 		"accounts", "spam_scores")
 	writeAllBoard(t)

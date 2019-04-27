@@ -7,10 +7,13 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 )
 
 func TestSpamScores(t *testing.T) {
+	// Skip to avoid massive booru fetches on DB population
+	test.SkipInCI(t)
+
 	assertTableClear(t, "spam_scores", "last_solved_captchas", "boards",
 		"accounts")
 	writeAllBoard(t)
@@ -87,9 +90,9 @@ func TestSpamScores(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			need, err := NeedCaptcha(c.ip)
 			if err != c.needCaptchaErr {
-				UnexpectedError(t, err)
+				test.UnexpectedError(t, err)
 			}
-			AssertDeepEquals(t, need, c.needCaptcha)
+			test.AssertDeepEquals(t, need, c.needCaptcha)
 		})
 	}
 
@@ -103,7 +106,7 @@ func TestSpamScores(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		AssertDeepEquals(t, need, false)
+		test.AssertDeepEquals(t, need, false)
 	})
 
 	t.Run("expiry", func(t *testing.T) {

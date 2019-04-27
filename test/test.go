@@ -86,3 +86,11 @@ func OpenSample(t *testing.T, name string) *os.File {
 	}
 	return f
 }
+
+// Skip this test, if run in a CI environment
+func SkipInCI(t *testing.T) {
+	t.Helper()
+	if os.Getenv("CI") == "true" {
+		t.Skip()
+	}
+}
