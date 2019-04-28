@@ -98,8 +98,8 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 	}
 
 	ConnArgs = fmt.Sprintf(
-		"postgres://%s@localhost:5432/%s?sslmode=disable&binary_parameters=yes",
-		user, name)
+		"postgres://meguca:meguca@localhost:5432/%s?sslmode=disable&binary_parameters=yes",
+		name)
 	err = loadDB(suffix)
 	return
 }

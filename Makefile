@@ -56,5 +56,5 @@ test_no_race:
 
 test_docker:
 	docker build -t meguca_test .
-	docker run -t --rm --entrypoint scripts/docker_test.sh -e CI meguca_test
+	docker run -t --rm -e CI meguca_test make test
 

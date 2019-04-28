@@ -11,14 +11,15 @@ License: GNU AGPL
 ## Runtime dependencies
 * [PostgresSQL](https://www.postgresql.org/download/) >= 10.0
 
-### Country flags
-
-To enable poster country flags on posts please download GeoLite2-Country.mmdb from https://www.maxmind.com and place it inside meguca's root directory. Country lookup will become available after a server restart.
-
 ## Building from source
+
+
+### Native installation.
+
+For installing meguca directly onto a server follow the steps bellow.
 A reference list of commands can be found in `./docs/installation.md`
 
-### Build dependencies
+#### Build dependencies
 * [Go](https://golang.org/doc/install) >=1.11 (for building server)
 * [Node.js](https://nodejs.org) >=5.0 (for building client)
 * C11 compiler
@@ -37,16 +38,25 @@ compiled with:
 * libgeoip
 * git
 
-### Linux and OSX
+#### Linux and OSX
 * Run `make`
 
-### Windows
+#### Windows
 * Install [MSYS2](https://sourceforge.net/projects/msys2/)
 * Open MSYS2 shell
 * Install dependencies listed above with the `mingw-w64-x86_64-` prefix with
 pacman
 * Navigate to the meguca root directory
 * Run `make`
+
+### Docker
+
+Meguca can be deployed in a self-contained Docker container. Install [Docker](https://www.docker.com/)
+and run
+```
+docker build -t meguca .
+docker run -t -p 8000:8000 meguca
+```
 
 ## Setup
 * See `./meguca help` for server operation
