@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/bakape/meguca/common"
@@ -58,8 +57,6 @@ func assertCode(t *testing.T, res, std int) {
 func newJPEGRequest(t *testing.T) *http.Request {
 	t.Helper()
 
-	var wg sync.WaitGroup
-	wg.Add(1)
 	b, w := newMultiWriter()
 
 	file, err := w.CreateFormFile("image", assets.StdJPEG.Name)
