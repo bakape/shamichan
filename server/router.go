@@ -51,7 +51,11 @@ func startWebServer() (err error) {
 	if ssl {
 		w.WriteByte('s')
 	}
-	fmt.Fprintf(&w, "://%s", address)
+	prettyAddr := address
+	if len(address) != 0 && address[0] == ':' {
+		prettyAddr = "127.0.0.1" + prettyAddr
+	}
+	fmt.Fprintf(&w, "://%s", prettyAddr)
 	log.Info(w.String())
 
 	if ssl {
