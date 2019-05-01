@@ -131,7 +131,7 @@ func TestUploadTooLarge(t *testing.T) {
 	req.Header.Set("Content-Length", "1048577")
 
 	_, err := ParseUpload(req)
-	test.AssertDeepEquals(t, common.StatusError{errTooLarge, 400}, err)
+	test.AssertEquals(t, common.StatusError{errTooLarge, 400}, err)
 }
 
 func TestInvalidForm(t *testing.T) {
@@ -162,7 +162,7 @@ func TestNewThumbnail(t *testing.T) {
 	assertCode(t, rec.Code, 200)
 
 	img := getImageRecord(t, assets.StdJPEG.SHA1)
-	test.AssertDeepEquals(t, img, assets.StdJPEG.ImageCommon)
+	test.AssertEquals(t, img, assets.StdJPEG.ImageCommon)
 	assertFiles(t, "sample.jpg", assets.StdJPEG.SHA1, common.JPEG, common.WEBP)
 }
 
@@ -172,7 +172,7 @@ func TestNoImageUploaded(t *testing.T) {
 	req.Header.Set("Content-Length", "300792")
 
 	_, err := ParseUpload(req)
-	test.AssertDeepEquals(t, common.StatusError{http.ErrMissingFile, 400}, err)
+	test.AssertEquals(t, common.StatusError{http.ErrMissingFile, 400}, err)
 }
 
 func TestThumbNailReuse(t *testing.T) {

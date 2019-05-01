@@ -2,12 +2,13 @@ package parser
 
 import (
 	"database/sql"
+	"testing"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
-	"testing"
 )
 
 func TestParseLinks(t *testing.T) {
@@ -76,7 +77,7 @@ func TestParseLinks(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			AssertDeepEquals(t, links, c.links)
+			AssertEquals(t, links, c.links)
 		})
 	}
 }

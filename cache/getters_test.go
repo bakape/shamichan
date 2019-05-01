@@ -1,9 +1,10 @@
 package cache
 
 import (
-	. "github.com/bakape/meguca/test"
 	"testing"
 	"time"
+
+	. "github.com/bakape/meguca/test"
 )
 
 func TestGetJSON(t *testing.T) {
@@ -33,8 +34,8 @@ func TestGetJSON(t *testing.T) {
 		if err := err; err != nil {
 			t.Fatal(err)
 		}
-		AssertDeepEquals(t, string(json), `"foo"`)
-		AssertDeepEquals(t, ctr, uint64(1))
+		AssertEquals(t, string(json), `"foo"`)
+		AssertEquals(t, ctr, uint64(1))
 	}
 	assertCount(t, "fetched", 1, fetches)
 	assertCount(t, "counter checked", 1, counterChecks)
@@ -70,8 +71,8 @@ func TestGetHTML(t *testing.T) {
 		if err := err; err != nil {
 			t.Fatal(err)
 		}
-		AssertDeepEquals(t, string(json), `bar`)
-		AssertDeepEquals(t, ctr, uint64(1))
+		AssertEquals(t, string(json), `bar`)
+		AssertEquals(t, ctr, uint64(1))
 	}
 	assertCount(t, "fetched", 1, fetches)
 	assertCount(t, "rendered", 1, fetches)

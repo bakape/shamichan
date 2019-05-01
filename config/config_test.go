@@ -18,7 +18,7 @@ func TestSetGet(t *testing.T) {
 	if err := Set(conf); err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, Get(), &conf)
+	AssertEquals(t, Get(), &conf)
 
 	json, hash := GetClient()
 	if json == nil {
@@ -54,7 +54,7 @@ func TestGetBoards(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertDeepEquals(t, GetBoards(), []string{"a"})
+	AssertEquals(t, GetBoards(), []string{"a"})
 }
 
 func TestSetGetAddRemoveBoardConfigs(t *testing.T) {
@@ -81,14 +81,14 @@ func TestSetGetAddRemoveBoardConfigs(t *testing.T) {
 	if conf.JSON == nil {
 		t.Fatal("no JSON generated")
 	}
-	AssertDeepEquals(t, conf.BoardConfigs, std)
+	AssertEquals(t, conf.BoardConfigs, std)
 	if !IsBoard("a") {
 		t.Fatal("board does not exist")
 	}
-	AssertDeepEquals(t, len(GetAllBoardConfigs()), 1)
+	AssertEquals(t, len(GetAllBoardConfigs()), 1)
 
 	RemoveBoard("a")
-	AssertDeepEquals(t, GetBoardConfigs("a"), BoardConfContainer{})
+	AssertEquals(t, GetBoardConfigs("a"), BoardConfContainer{})
 	if IsBoard("a") {
 		t.Fatal("board not deleted")
 	}
@@ -166,7 +166,7 @@ func TestGetBoardTitles(t *testing.T) {
 		}
 	}
 
-	AssertDeepEquals(t, GetBoardTitles(), BoardTitles{
+	AssertEquals(t, GetBoardTitles(), BoardTitles{
 		{
 			ID:    "a",
 			Title: "Animu & Mango",

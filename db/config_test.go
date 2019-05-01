@@ -2,9 +2,10 @@ package db
 
 import (
 	"database/sql"
+	"testing"
+
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"testing"
 )
 
 func TestLoadConfigs(t *testing.T) {
@@ -23,7 +24,7 @@ func TestLoadConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertDeepEquals(t, config.Get(), &std)
+	AssertEquals(t, config.Get(), &std)
 }
 
 func TestUpdateOnRemovedBoard(t *testing.T) {
@@ -37,12 +38,12 @@ func TestUpdateOnRemovedBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertDeepEquals(
+	AssertEquals(
 		t,
 		config.GetBoardConfigs("a"),
 		config.BoardConfContainer{},
 	)
-	AssertDeepEquals(t, config.GetBoards(), []string{})
+	AssertEquals(t, config.GetBoards(), []string{})
 }
 
 func TestUpdateOnAddBoard(t *testing.T) {
@@ -70,12 +71,12 @@ func TestUpdateOnAddBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertDeepEquals(
+	AssertEquals(
 		t,
 		config.GetBoardConfigs("a").BoardConfigs,
 		std.BoardConfigs,
 	)
-	AssertDeepEquals(t, config.GetBoards(), []string{"a"})
+	AssertEquals(t, config.GetBoards(), []string{"a"})
 }
 
 func TestUpdateBoardConfigs(t *testing.T) {
@@ -103,7 +104,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertDeepEquals(
+	AssertEquals(
 		t,
 		config.GetBoardConfigs("a").BoardConfigs,
 		std.BoardConfigs,
@@ -121,7 +122,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 	}
 
 	std.Title = "foo"
-	AssertDeepEquals(
+	AssertEquals(
 		t,
 		config.GetBoardConfigs("a").BoardConfigs,
 		std.BoardConfigs,

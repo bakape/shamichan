@@ -1,9 +1,10 @@
 package db
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/assets"
 	. "github.com/bakape/meguca/test"
-	"testing"
 )
 
 func TestBanners(t *testing.T) {
@@ -35,7 +36,7 @@ func TestBanners(t *testing.T) {
 	if !ok {
 		t.Fatal("banner not saved")
 	}
-	AssertDeepEquals(t, banner, std[0])
+	AssertEquals(t, banner, std[0])
 
 	err = SetBanners("a", []assets.File{})
 	if err != nil {
@@ -71,7 +72,7 @@ func TestLoaadingAnimations(t *testing.T) {
 	}
 
 	f := assets.Loading.Get("a")
-	AssertDeepEquals(t, f, std)
+	AssertEquals(t, f, std)
 
 	err = SetLoadingAnimation("a", assets.File{})
 	if err != nil {

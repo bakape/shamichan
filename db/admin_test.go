@@ -293,9 +293,9 @@ func TestPurgePost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.AssertDeepEquals(t, len(post.Moderation), 1)
-	test.AssertDeepEquals(t, post.Image == nil, true)
-	test.AssertDeepEquals(t, post.Body, "")
+	test.AssertEquals(t, len(post.Moderation), 1)
+	test.AssertEquals(t, post.Image == nil, true)
+	test.AssertEquals(t, post.Body, "")
 }
 
 func TestStickyThread(t *testing.T) {
@@ -355,7 +355,7 @@ func TestStaff(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.AssertDeepEquals(t, res, staff)
+	test.AssertEquals(t, res, staff)
 }
 
 func TestGetSameIPPosts(t *testing.T) {
@@ -429,7 +429,7 @@ func TestCanPerform(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			test.AssertDeepEquals(t, can, c.can)
+			test.AssertEquals(t, can, c.can)
 		})
 	}
 }

@@ -195,7 +195,7 @@ func testGetPost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, post, std)
+	AssertEquals(t, post, std)
 }
 
 func testGetAllBoard(t *testing.T) {
@@ -251,7 +251,7 @@ func testGetAllBoard(t *testing.T) {
 
 			assertImage(t, thread, std.Image)
 			syncThreadVariables(thread, std)
-			AssertDeepEquals(t, thread, &std)
+			AssertEquals(t, thread, &std)
 		})
 	}
 }
@@ -264,7 +264,7 @@ func assertImage(t *testing.T, thread *common.Thread, std *common.Image) {
 		if thread.Image == nil {
 			t.Fatalf("no image on thread %d", thread.ID)
 		}
-		AssertDeepEquals(t, *thread.Image, *std)
+		AssertEquals(t, *thread.Image, *std)
 		thread.Image = std
 	}
 }
@@ -326,7 +326,7 @@ func testGetBoard(t *testing.T) {
 			for i := range board.Threads {
 				syncThreadVariables(&board.Threads[i], c.std[i])
 			}
-			AssertDeepEquals(t, board.Threads, c.std)
+			AssertEquals(t, board.Threads, c.std)
 		})
 	}
 }
@@ -432,7 +432,7 @@ func testGetThread(t *testing.T) {
 			}
 			assertImage(t, &thread, c.std.Image)
 			syncThreadVariables(&thread, c.std)
-			AssertDeepEquals(t, thread, c.std)
+			AssertEquals(t, thread, c.std)
 		})
 	}
 }

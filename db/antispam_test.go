@@ -92,7 +92,7 @@ func TestSpamScores(t *testing.T) {
 			if err != c.needCaptchaErr {
 				test.UnexpectedError(t, err)
 			}
-			test.AssertDeepEquals(t, need, c.needCaptcha)
+			test.AssertEquals(t, need, c.needCaptcha)
 		})
 	}
 
@@ -106,7 +106,7 @@ func TestSpamScores(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		test.AssertDeepEquals(t, need, false)
+		test.AssertEquals(t, need, false)
 	})
 
 	t.Run("expiry", func(t *testing.T) {

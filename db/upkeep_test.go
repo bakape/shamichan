@@ -361,7 +361,15 @@ func TestDeleteBoard(t *testing.T) {
 }
 
 func TestRemoveIdentityInfo(t *testing.T) {
-	p := insertPost(t)
+	p := Post{
+		StandalonePost: common.StandalonePost{
+			OP:    1,
+			Board: "a",
+		},
+		IP:       "::1",
+		Password: []byte("6+53653cs3ds"),
+	}
+	insertPost(t, &p)
 
 	_, err := sq.Update("posts").
 		Set("time", time.Now().Add(-8*24*time.Hour).Unix()).

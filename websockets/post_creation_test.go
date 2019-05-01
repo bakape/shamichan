@@ -82,7 +82,7 @@ func TestInsertThread(t *testing.T) {
 				Board: c.board,
 			}
 			_, err := CreateThread(req, "")
-			AssertDeepEquals(t, c.err, err)
+			AssertEquals(t, c.err, err)
 		})
 	}
 
@@ -142,7 +142,7 @@ func testCreateThread(t *testing.T) {
 	}
 
 	// Pointers have to be dereferenced to be asserted
-	AssertDeepEquals(t, *thread.Image, *std.Image)
+	AssertEquals(t, *thread.Image, *std.Image)
 
 	// Normalize timestamps and pointer fields
 	then := thread.UpdateTime
@@ -151,7 +151,7 @@ func testCreateThread(t *testing.T) {
 	std.Time = then
 	std.Image = thread.Image
 
-	AssertDeepEquals(t, thread, std)
+	AssertEquals(t, thread, std)
 }
 
 func testCreateThreadTextOnly(t *testing.T) {
@@ -201,7 +201,7 @@ func assertIP(t *testing.T, id uint64, ip string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, res, ip)
+	AssertEquals(t, res, ip)
 }
 
 func TestClosePreviousPostOnCreation(t *testing.T) {
@@ -333,10 +333,10 @@ func TestPostCreation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, *post.Image, *stdPost.Image)
+	AssertEquals(t, *post.Image, *stdPost.Image)
 	stdPost.Image = post.Image
 	stdPost.Time = post.Time
-	AssertDeepEquals(t, post, stdPost)
+	AssertEquals(t, post, stdPost)
 
 	assertIP(t, 6, "::1")
 
@@ -344,10 +344,10 @@ func TestPostCreation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, thread.PostCount, uint32(2))
-	AssertDeepEquals(t, thread.ImageCount, uint32(1))
+	AssertEquals(t, thread.PostCount, uint32(2))
+	AssertEquals(t, thread.ImageCount, uint32(1))
 
-	AssertDeepEquals(t, cl.post, openPost{
+	AssertEquals(t, cl.post, openPost{
 		id:          6,
 		op:          1,
 		time:        stdPost.Time,

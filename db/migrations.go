@@ -1430,6 +1430,9 @@ var migrations = []func(*sql.Tx) error{
 			Exec()
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		return loadSQL(tx, "triggers/posts")
+	},
 }
 
 func createIndex(table string, columns ...string) string {

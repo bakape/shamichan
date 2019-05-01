@@ -2,6 +2,9 @@ package websockets
 
 import (
 	"database/sql"
+	"strconv"
+	"testing"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
@@ -9,8 +12,6 @@ import (
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
 	"github.com/bakape/meguca/websockets/feeds"
-	"strconv"
-	"testing"
 
 	"github.com/gorilla/websocket"
 )
@@ -53,7 +54,7 @@ func TestSyncToBoard(t *testing.T) {
 		Board:  "c",
 	}
 	err := cl.synchronise(marshalJSON(t, msg))
-	AssertDeepEquals(t, common.ErrInvalidBoard("c"), err)
+	AssertEquals(t, common.ErrInvalidBoard("c"), err)
 
 	// Valid synchronization
 	msg.Board = "a"
@@ -130,7 +131,7 @@ func TestInvalidThreadSync(t *testing.T) {
 		Board:  "a",
 		Thread: 1,
 	})
-	AssertDeepEquals(t, common.ErrInvalidThread(1, "a").Error(),
+	AssertEquals(t, common.ErrInvalidThread(1, "a").Error(),
 		cl.synchronise(data).Error())
 }
 

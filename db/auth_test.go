@@ -61,7 +61,7 @@ func TestChangePassword(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, pass, samplePasswordHash)
+	AssertEquals(t, pass, samplePasswordHash)
 
 	newHash := []byte{1, 5, 51, 51, 3}
 	err = ChangePassword(sampleUserID, newHash)
@@ -72,7 +72,7 @@ func TestChangePassword(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, pass, newHash)
+	AssertEquals(t, pass, newHash)
 }
 
 func TestLoginLogout(t *testing.T) {
@@ -136,13 +136,13 @@ func TestGetPositions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, pos, common.BoardOwner)
+	AssertEquals(t, pos, common.BoardOwner)
 
 	owned, err := GetOwnedBoards(sampleUserID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, owned, []string{"a"})
+	AssertEquals(t, owned, []string{"a"})
 }
 
 func TestGetBanRecords(t *testing.T) {
@@ -173,7 +173,7 @@ func TestGetBanRecords(t *testing.T) {
 	}
 	// Location is a pointer and can't be compared with reflection
 	ban.Expires = std.Expires
-	AssertDeepEquals(t, ban, std)
+	AssertEquals(t, ban, std)
 
 	bans, err := GetBoardBans(std.Board)
 	if err != nil {
@@ -181,5 +181,5 @@ func TestGetBanRecords(t *testing.T) {
 	}
 	bans[0].Expires = std.Expires
 	std.Type = "classic"
-	AssertDeepEquals(t, bans, []auth.BanRecord{std})
+	AssertEquals(t, bans, []auth.BanRecord{std})
 }

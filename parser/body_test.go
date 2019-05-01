@@ -2,13 +2,14 @@ package parser
 
 import (
 	"database/sql"
+	"testing"
+	"time"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
-	"testing"
-	"time"
 )
 
 func TestParseLine(t *testing.T) {
@@ -83,7 +84,7 @@ func TestParseBody(t *testing.T) {
 	if l := len(com); l != 3 {
 		t.Errorf("unexpected command count: %d", l)
 	}
-	AssertDeepEquals(t, links, []common.Link{
+	AssertEquals(t, links, []common.Link{
 		{8, 1, "a"},
 		{6, 1, "a"},
 	})

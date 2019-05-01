@@ -2,11 +2,12 @@ package db
 
 import (
 	"database/sql"
+	"testing"
+	"time"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
-	"testing"
-	"time"
 )
 
 func TestValidateOp(t *testing.T) {
@@ -76,20 +77,35 @@ func writeSampleThread(t *testing.T) {
 	}
 }
 
-func insertPost(t *testing.T) (p Post) {
+func insertPost(t *testing.T, p *Post) {
+	t.Helper()
+
+	prepareForPostInsertion(t)
+
+	err := InTransaction(false, func(tx *sql.Tx) error {
+		return InsertPost(tx, p)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func prepareForPostInsertion(t *testing.T) {
 	t.Helper()
 
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
 
-	// Prevent key collision
+	// Prevent post ID key collision
 	_, err := sq.Select("nextval('post_id')").Exec()
 	if err != nil {
 		t.Fatal(err)
 	}
+}
 
-	p = Post{
+func TestInsertPost(t *testing.T) {
+	p := Post{
 		StandalonePost: common.StandalonePost{
 			OP:    1,
 			Board: "a",
@@ -97,17 +113,7 @@ func insertPost(t *testing.T) (p Post) {
 		IP:       "::1",
 		Password: []byte("6+53653cs3ds"),
 	}
-	err = InTransaction(false, func(tx *sql.Tx) error {
-		return InsertPost(tx, &p)
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return
-}
-
-func TestInsertPost(t *testing.T) {
-	p := insertPost(t)
+	insertPost(t, &p)
 	if p.Time == 0 {
 		t.Fatal(p.Time)
 	}
@@ -117,10 +123,87 @@ func TestInsertPost(t *testing.T) {
 }
 
 func TestGetPostPassword(t *testing.T) {
-	p := insertPost(t)
+	p := Post{
+		StandalonePost: common.StandalonePost{
+			OP:    1,
+			Board: "a",
+		},
+		IP:       "::1",
+		Password: []byte("6+53653cs3ds"),
+	}
+	insertPost(t, &p)
+
 	res, err := GetPostPassword(p.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.AssertDeepEquals(t, res, p.Password)
+	test.AssertEquals(t, res, p.Password)
+}
+
+func TestSageAndTimestampUpdates(t *testing.T) {
+	prepareForPostInsertion(t)
+
+	var bumpTime, updateTime int64
+
+	// Read initial values
+	thread, err := GetThread(1, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bumpTime = thread.BumpTime
+	updateTime = thread.UpdateTime
+
+	cases := [...]struct {
+		name string
+		sage bool
+	}{
+		{"no sage", false},
+		{"with sage", true},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			time.Sleep(2 * time.Second) // Wait for timestamps to update
+
+			p := Post{
+				StandalonePost: common.StandalonePost{
+					OP:    1,
+					Board: "a",
+					Post: common.Post{
+						Sage: c.sage,
+					},
+				},
+				IP:       "::1",
+				Password: []byte("6+53653cs3ds"),
+			}
+			err := InTransaction(false, func(tx *sql.Tx) error {
+				return InsertPost(tx, &p)
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			thread, err := GetThread(1, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if thread.UpdateTime <= updateTime {
+				t.Error("update time not increased")
+			}
+			updateTime = thread.UpdateTime
+
+			if c.sage {
+				if thread.BumpTime != bumpTime {
+					t.Error("bump time changed")
+				}
+			} else {
+				if thread.BumpTime <= bumpTime {
+					t.Error("bump time not increased")
+				}
+			}
+			bumpTime = thread.BumpTime
+		})
+	}
 }

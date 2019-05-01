@@ -5,13 +5,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io/ioutil"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/test"
 	"os"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/imager/assets"
+	"github.com/bakape/meguca/test"
 )
 
 func writeSampleImage(t *testing.T) {
@@ -170,7 +171,7 @@ func TestInsertImage(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		test.AssertDeepEquals(t, has, std)
+		test.AssertEquals(t, has, std)
 	}
 
 	checkHas(false)
@@ -201,7 +202,7 @@ func TestInsertImage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.AssertDeepEquals(t, img, result{
+	test.AssertEquals(t, img, result{
 		ID:    postID,
 		Image: std,
 	})
@@ -243,7 +244,7 @@ func TestSpoilerImage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.AssertDeepEquals(t, post.Image.Spoiler, true)
+	test.AssertEquals(t, post.Image.Spoiler, true)
 }
 
 func TestVideoPlaylist(t *testing.T) {
@@ -273,7 +274,7 @@ func TestVideoPlaylist(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.AssertDeepEquals(t, videos, []Video{
+	test.AssertEquals(t, videos, []Video{
 		{
 			FileType: common.WEBM,
 			Duration: time.Minute,
@@ -293,7 +294,7 @@ func TestImageExists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.AssertDeepEquals(t, exists, false)
+	test.AssertEquals(t, exists, false)
 
 	writeSampleImage(t)
 
@@ -304,5 +305,5 @@ func TestImageExists(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.AssertDeepEquals(t, exists, true)
+	test.AssertEquals(t, exists, true)
 }

@@ -1,9 +1,10 @@
 package db
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/auth"
 	. "github.com/bakape/meguca/test"
-	"testing"
 )
 
 func TestReports(t *testing.T) {
@@ -28,5 +29,5 @@ func TestReports(t *testing.T) {
 	// Sync dynamic fields
 	std.ID = res[0].ID
 	std.Created = res[0].Created
-	AssertDeepEquals(t, []auth.Report{std}, res)
+	AssertEquals(t, []auth.Report{std}, res)
 }

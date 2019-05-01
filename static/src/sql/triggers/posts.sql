@@ -33,7 +33,7 @@ $$ language plpgsql;
 create or replace function after_posts_update()
 returns trigger as $$
 begin
-	perform bump_thread(new.op);
+	perform bump_thread(new.op, not new.sage);
 	return null;
 end;
 $$ language plpgsql;

@@ -2,8 +2,9 @@ package common
 
 import (
 	"encoding/json"
-	. "github.com/bakape/meguca/test"
 	"testing"
+
+	. "github.com/bakape/meguca/test"
 )
 
 func TestCommandsMarshaling(t *testing.T) {
@@ -35,7 +36,7 @@ func TestCommandsMarshaling(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			AssertDeepEquals(t, res, c.com)
+			AssertEquals(t, res, c.com)
 		})
 	}
 }

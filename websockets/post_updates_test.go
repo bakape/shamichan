@@ -2,14 +2,15 @@ package websockets
 
 import (
 	"database/sql"
+	"testing"
+	"time"
+	"unicode/utf8"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
 	"github.com/bakape/meguca/websockets/feeds"
-	"testing"
-	"time"
-	"unicode/utf8"
 )
 
 // Sample wall of text
@@ -308,7 +309,7 @@ func TestClosePostWithLinks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, post.Links, []common.Link{
+	AssertEquals(t, post.Links, []common.Link{
 		{
 			ID:    22,
 			OP:    21,
@@ -369,7 +370,7 @@ func TestClosePost(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertDeepEquals(t, cl.post, openPost{})
+	AssertEquals(t, cl.post, openPost{})
 	assertBody(t, 2, "abc")
 	assertPostClosed(t, 2)
 }
@@ -439,7 +440,7 @@ func TestSpliceValidityChecks(t *testing.T) {
 				},
 				Text: []rune(c.text),
 			}
-			AssertDeepEquals(t, c.err, cl.spliceText(marshalJSON(t, req)))
+			AssertEquals(t, c.err, cl.spliceText(marshalJSON(t, req)))
 		})
 	}
 }

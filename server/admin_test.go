@@ -132,7 +132,7 @@ func TestBoardConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertDeepEquals(t, res, conf)
+	AssertEquals(t, res, conf)
 }
 
 func TestValidateBoardConfigs(t *testing.T) {
@@ -340,7 +340,7 @@ func TestBoardCreation(t *testing.T) {
 		},
 		Eightball: config.EightballDefaults,
 	}
-	AssertDeepEquals(t, board, std)
+	AssertEquals(t, board, std)
 }
 
 func TestServePrivateServerConfigs(t *testing.T) {
@@ -423,7 +423,7 @@ func TestServerConfigSetting(t *testing.T) {
 	}
 	std := config.Defaults
 	std.DefaultCSS = "ashita"
-	AssertDeepEquals(t, conf, std)
+	AssertEquals(t, conf, std)
 }
 
 func TestDeleteBoard(t *testing.T) {
@@ -578,8 +578,8 @@ func writeSampleThread(t *testing.T) {
 	t.Helper()
 
 	thread := db.Thread{
-		ID:        1,
-		Board:     "a",
+		ID:         1,
+		Board:      "a",
 		UpdateTime: 11,
 	}
 	op := db.Post{

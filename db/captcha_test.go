@@ -60,14 +60,14 @@ func TestCaptchas(t *testing.T) {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			err = ValidateCaptcha(c.captcha, ip)
-			test.AssertDeepEquals(t, err, c.err)
+			test.AssertEquals(t, err, c.err)
 
 			for _, dur := range [...]time.Duration{time.Hour, time.Minute} {
 				has, err := SolvedCaptchaRecently(ip, dur)
 				if err != nil {
 					t.Fatal(err)
 				}
-				test.AssertDeepEquals(t, has, c.hasSolved)
+				test.AssertEquals(t, has, c.hasSolved)
 			}
 		})
 	}

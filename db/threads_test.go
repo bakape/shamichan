@@ -18,7 +18,7 @@ func TestThreadBools(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.AssertDeepEquals(t, false, locked)
+	test.AssertEquals(t, false, locked)
 }
 
 func TestDiffPostCount(t *testing.T) {
@@ -63,7 +63,7 @@ func TestDiffPostCount(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		test.AssertDeepEquals(t, res, std)
+		test.AssertEquals(t, res, std)
 	}
 
 	assert(t)

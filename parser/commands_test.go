@@ -96,7 +96,7 @@ func TestPyu(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			AssertDeepEquals(t, com, common.Command{
+			AssertEquals(t, com, common.Command{
 				Type: com.Type,
 			})
 		}
@@ -131,7 +131,7 @@ func TestPyu(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				AssertDeepEquals(t, com, common.Command{
+				AssertEquals(t, com, common.Command{
 					Type: c.Type,
 					Pyu:  c.Val,
 				})
