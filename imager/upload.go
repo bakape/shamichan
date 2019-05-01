@@ -13,7 +13,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -227,11 +226,24 @@ func ParseUpload(req *http.Request) (string, error) {
 		return "", common.StatusError{errTooLarge, 413}
 	}
 
-	// Reject image sekritpost.
-	buf := make([]byte, 6)
-	_, err = file.ReadAt(buf, head.Size-6)
-
-	if strings.ToLower(string(buf)) == "secret" {
+	// Reject image sekritpost
+	var (
+		buf    [6]byte
+		secret = [6]byte{'s', 'e', 'c', 'r', 'e', 't'}
+		mathes = true
+	)
+	file.ReadAt(buf[:], head.Size-6) // Ignore read errors here
+	for i, b := range buf {
+		// Lowecase all ASCII
+		if 'A' <= b && b <= 'Z' {
+			b += 'a' - 'A'
+		}
+		if b != secret[i] {
+			mathes = false
+			break
+		}
+	}
+	if mathes {
 		return "", common.StatusError{errSecretImage, 400}
 	}
 
