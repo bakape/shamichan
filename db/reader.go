@@ -405,25 +405,6 @@ func filterModerated(moderated *[]*common.Post, p *common.Post) {
 	}
 }
 
-// Inject open post bodies from the embedded database into the posts
-func injectOpenBodies(posts []*common.Post) error {
-	if len(posts) == 0 {
-		return nil
-	}
-
-	tx, err := boltDB.Begin(false)
-	if err != nil {
-		return err
-	}
-
-	buc := tx.Bucket([]byte("open_bodies"))
-	for _, p := range posts {
-		p.Body = string(buc.Get(encodeUint64Heap(p.ID)))
-	}
-
-	return tx.Rollback()
-}
-
 // Inject moderation information into affected post structs.
 // tx is optional.
 func injectModeration(posts []*common.Post, tx *sql.Tx) (err error) {

@@ -33,11 +33,6 @@ type ServerConfigs struct {
 	Server     struct {
 		ReverseProxied bool `json:"reverse_proxied"`
 		Address        string
-		TLS            struct {
-			Enabled  bool
-			CertPath string `json:"cert_path"`
-			KeyPath  string `json:"key_path"`
-		}
 	}
 	Test struct {
 		Database string

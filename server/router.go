@@ -15,8 +15,8 @@ import (
 	"github.com/bakape/meguca/util"
 	"github.com/bakape/meguca/websockets"
 	"github.com/dimfeld/httptreemux"
+	"github.com/facebookgo/grace/gracehttp"
 	"github.com/go-playground/log"
-	"github.com/gorilla/handlers"
 )
 
 var (
@@ -27,14 +27,10 @@ var (
 var webRoot = "www"
 
 func startWebServer() (err error) {
-	r := createRouter()
 	c := config.Server.Server
 
 	var w strings.Builder
 	w.WriteString("listening on http")
-	if c.TLS.Enabled {
-		w.WriteByte('s')
-	}
 	prettyAddr := c.Address
 	if len(c.Address) != 0 && c.Address[0] == ':' {
 		prettyAddr = "127.0.0.1" + prettyAddr
@@ -42,12 +38,11 @@ func startWebServer() (err error) {
 	fmt.Fprintf(&w, "://%s", prettyAddr)
 	log.Info(w.String())
 
-	if config.Server.Server.TLS.Enabled {
-		err = http.ListenAndServeTLS(c.Address, c.TLS.CertPath, c.TLS.KeyPath,
-			r)
-	} else {
-		err = http.ListenAndServe(c.Address, r)
-	}
+	gracehttp.PreStartProcess(db.Close)
+	err = gracehttp.Serve(&http.Server{
+		Addr:    c.Address,
+		Handler: createRouter(),
+	})
 	if err != nil {
 		return util.WrapError("error starting web server", err)
 	}
@@ -190,7 +185,7 @@ func createRouter() http.Handler {
 		assets.GET("/*path", serveAssets)
 	}
 
-	return handlers.CompressHandler(http.Handler(r))
+	return r
 }
 
 // Redirects to / requests to /all/ board

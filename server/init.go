@@ -57,7 +57,7 @@ func Start() (err error) {
 	if err != nil {
 		return
 	}
-	err = util.Parallel(lang.Load)
+	err = lang.Load()
 	if err != nil {
 		return
 	}
