@@ -10,6 +10,7 @@ import (
 
 func TestGetJSON(t *testing.T) {
 	Clear()
+	config.Server.CacheSize = 128 * (1 << 20)
 
 	var fetches, counterChecks int
 	key := ThreadKey(33, 3)
@@ -51,6 +52,7 @@ func assertCount(t *testing.T, action string, std, n int) {
 
 func TestGetHTML(t *testing.T) {
 	Clear()
+	config.Server.CacheSize = 128 * (1 << 20)
 
 	var fetches, renders int
 	f := FrontEnd{
