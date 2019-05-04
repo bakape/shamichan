@@ -3,10 +3,11 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/user"
-	"time"
+	"strings"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/auth"
@@ -18,14 +19,9 @@ import (
 	_ "github.com/lib/pq" // Postgres driver
 )
 
-const (
-	// DefaultConnArgs specifies the default PostgreSQL connection arguments
-	DefaultConnArgs = "user=meguca password=meguca dbname=meguca sslmode=disable binary_parameters=yes"
-)
-
 var (
-	// ConnArgs specifies the PostgreSQL connection arguments
-	ConnArgs string
+	// ConnArgs specifies the PostgreSQL connection URL
+	connectionURL string
 
 	// Stores the postgres database instance
 	db *sql.DB
@@ -39,13 +35,18 @@ var (
 
 // Connects to PostgreSQL database and performs schema upgrades
 func LoadDB() error {
-	return loadDB("")
+	return loadDB(config.Server.Database, "")
 }
 
 // Create and load testing database. Call close() to clean up temporary
 // resources.
 func LoadTestDB(suffix string) (close func() error, err error) {
 	common.IsTest = true
+
+	connURL, err := url.Parse(config.Server.Test.Database)
+	if err != nil {
+		return
+	}
 
 	// If running as root (CI like Travis or something), authenticate as the
 	// postgres user
@@ -55,7 +56,7 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 		return
 	}
 	var sudo []string
-	user := "meguca"
+	user := connURL.User.Username()
 	if u.Name == "root" {
 		sudo = append(sudo, "sudo", "-u", "postgres")
 		user = "postgres"
@@ -69,43 +70,59 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 		return c.Run()
 	}
 
-	suffix = "_" + suffix
-	name := "meguca_test" + suffix
+	dbName := fmt.Sprintf("%s_%s", strings.Trim(connURL.Path, "/"), suffix)
 
 	err = run("psql",
 		"-U", user,
-		"-c", "drop database if exists "+name)
+		"-c", "drop database if exists "+dbName)
 	if err != nil {
 		return
 	}
 
 	close = func() (err error) {
+		_, err = os.Stat("db.db")
+		if err != nil {
+			if os.IsNotExist(err) {
+				return nil
+			}
+			return
+		}
+
 		err = boltDB.Close()
 		if err != nil {
 			return
 		}
-		return os.Remove(fmt.Sprintf("db%s.db", suffix))
+		return os.Remove("db.db")
 	}
 
-	fmt.Println("creating test database:", name)
+	fmt.Println("creating test database:", dbName)
 	err = run("createdb",
 		"-O", "meguca",
 		"-U", user,
 		"-E", "UTF8",
-		name)
+		dbName)
 	if err != nil {
 		return
 	}
 
-	ConnArgs = fmt.Sprintf(
-		"postgres://meguca:meguca@localhost:5432/%s?sslmode=disable&binary_parameters=yes",
-		name)
-	err = loadDB(suffix)
+	connURL.Path = "/" + dbName
+	err = loadDB(connURL.String(), suffix)
 	return
 }
 
-func loadDB(dbSuffix string) (err error) {
-	db, err = sql.Open("postgres", ConnArgs)
+func loadDB(connURL, dbSuffix string) (err error) {
+	// Enable binary parameters for more efficient encoding of []byte
+	u, err := url.Parse(connURL)
+	if err != nil {
+		return
+	}
+	u.Query().Set("binary_parameters", "yes")
+	connURL = u.String()
+
+	// Set, for creating extra connections using Listen()
+	connectionURL = connURL
+
+	db, err = sql.Open("postgres", connURL)
 	if err != nil {
 		return
 	}
@@ -136,9 +153,9 @@ func loadDB(dbSuffix string) (err error) {
 		tasks,
 		func() error {
 			tasks := []func() error{loadConfigs, loadBans, handleSpamScores}
-			if config.ImagerMode != config.ImagerOnly {
-				tasks = append(tasks, openBoltDB(dbSuffix), loadBanners,
-					loadLoadingAnimations, loadThreadPostCounts)
+			if config.Server.ImagerMode != config.ImagerOnly {
+				tasks = append(tasks, loadBanners, loadLoadingAnimations,
+					loadThreadPostCounts)
 			}
 			if err := util.Parallel(tasks...); err != nil {
 				return err
@@ -160,24 +177,6 @@ func loadDB(dbSuffix string) (err error) {
 	}
 
 	return nil
-}
-
-func openBoltDB(dbSuffix string) func() error {
-	return func() (err error) {
-		boltDB, err = bolt.Open(
-			fmt.Sprintf("db%s.db", dbSuffix),
-			0600,
-			&bolt.Options{
-				Timeout: time.Second,
-			})
-		if err != nil {
-			return
-		}
-		return boltDB.Update(func(tx *bolt.Tx) error {
-			_, err := tx.CreateBucketIfNotExists([]byte("open_bodies"))
-			return err
-		})
-	}
 }
 
 // initDB initializes a database
@@ -231,21 +230,23 @@ func CreateSystemAccount(tx *sql.Tx) (err error) {
 func ClearTables(tables ...string) error {
 	for _, t := range tables {
 		// Clear open post body bucket
-		switch t {
-		case "boards", "threads", "posts":
-			err := boltDB.Update(func(tx *bolt.Tx) error {
-				buc := tx.Bucket([]byte("open_bodies"))
-				c := buc.Cursor()
-				for k, _ := c.First(); k != nil; k, _ = c.Next() {
-					err := buc.Delete(k)
-					if err != nil {
-						return err
+		if boltDBisOpen() {
+			switch t {
+			case "boards", "threads", "posts":
+				err := boltDB.Update(func(tx *bolt.Tx) error {
+					buc := tx.Bucket([]byte("open_bodies"))
+					c := buc.Cursor()
+					for k, _ := c.First(); k != nil; k, _ = c.Next() {
+						err := buc.Delete(k)
+						if err != nil {
+							return err
+						}
 					}
+					return nil
+				})
+				if err != nil {
+					return err
 				}
-				return nil
-			})
-			if err != nil {
-				return err
 			}
 		}
 

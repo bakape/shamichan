@@ -22,6 +22,10 @@ var router http.Handler
 var con = console.New(true)
 
 func TestMain(m *testing.M) {
+	err := config.Server.Load()
+	if err != nil {
+		panic(err)
+	}
 	close, err := db.LoadTestDB("server")
 	if err != nil {
 		panic(err)
@@ -78,21 +82,4 @@ func TestPanicHandler(t *testing.T) {
 	r.ServeHTTP(rec, req)
 	assertCode(t, rec, 500)
 	assertBody(t, rec, "500 foo\n")
-}
-
-func TestGzip(t *testing.T) {
-	enableGzip = true
-	defer func() {
-		enableGzip = false
-	}()
-
-	r := createRouter()
-	rec, req := newPair("/json/config")
-	req.Header.Set("Accept-Encoding", "gzip")
-
-	r.ServeHTTP(rec, req)
-
-	if rec.Header().Get("Content-Encoding") != "gzip" {
-		t.Fatal("response not gzipped")
-	}
 }

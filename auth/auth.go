@@ -6,22 +6,13 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"github.com/bakape/meguca/config"
 	"net"
 	"net/http"
 	"strings"
 
+	"github.com/bakape/meguca/config"
+
 	"golang.org/x/crypto/bcrypt"
-)
-
-var (
-	// IsReverseProxied specifies, if the server is deployed behind a reverse
-	// proxy.
-	IsReverseProxied bool
-
-	// ReverseProxyIP specifies the IP of a non-localhost reverse proxy. Used
-	// for filtering in XFF IP determination.
-	ReverseProxyIP string
 )
 
 // IsBoard confirms the string is a valid board
@@ -45,31 +36,26 @@ func GetIP(r *http.Request) (string, error) {
 }
 
 func getIP(req *http.Request) string {
-	if IsReverseProxied {
-		for _, h := range [...]string{"X-Forwarded-For", "X-Real-Ip"} {
-			addresses := strings.Split(req.Header.Get(h), ",")
-
-			// March from right to left until we get a public address.
-			// That will be the address right before our reverse proxy.
-			for i := len(addresses) - 1; i >= 0; i-- {
-				// Header can contain padding spaces
-				ip := strings.TrimSpace(addresses[i])
-
-				// Filter the reverse proxy IPs
-				switch {
-				case ip == ReverseProxyIP:
-				case !net.ParseIP(ip).IsGlobalUnicast():
-				default:
-					return ip
-				}
+	var ip string
+	if config.Server.Server.ReverseProxied {
+		h := req.Header.Get("X-Forwarded-For")
+		if h != "" {
+			if i := strings.LastIndexByte(h, ','); i != -1 {
+				h = h[i+1:]
 			}
+
+			ip = strings.TrimSpace(h) // Header can contain padding spaces
 		}
 	}
-	ip, _, err := net.SplitHostPort(req.RemoteAddr)
-	if err != nil {
-		return req.RemoteAddr // No port in address
+	if ip == "" {
+		ip = req.RemoteAddr
 	}
-	return ip
+
+	split, _, err := net.SplitHostPort(ip)
+	if err != nil {
+		return ip // No port in address
+	}
+	return split
 }
 
 // RandomID generates a randomID of base64 characters of desired byte length

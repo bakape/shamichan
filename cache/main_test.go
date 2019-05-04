@@ -1,17 +1,18 @@
 package cache
 
 import (
-	"github.com/bakape/meguca/test"
 	"sync"
 	"testing"
-
 	"time"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/test"
 )
 
 // Basic test for deadlocks
 func TestConcurrency(t *testing.T) {
 	Clear()
-	Size = 1
+	config.Server.CacheSize = 1
 
 	f := FrontEnd{
 		GetCounter: func(k Key) (uint64, error) {
@@ -43,7 +44,7 @@ func TestConcurrency(t *testing.T) {
 func TestCacheEviction(t *testing.T) {
 	Clear()
 
-	Size = 0.005
+	config.Server.CacheSize = 0.005
 	f := FrontEnd{
 		GetCounter: func(k Key) (uint64, error) {
 			return 1, nil

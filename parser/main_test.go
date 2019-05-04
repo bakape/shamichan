@@ -1,13 +1,18 @@
 package parser
 
 import (
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
 	"os"
 	"testing"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 )
 
 func TestMain(m *testing.M) {
+	err := config.Server.Load()
+	if err != nil {
+		panic(err)
+	}
 	close, err := db.LoadTestDB("parser")
 	if err != nil {
 		panic(err)

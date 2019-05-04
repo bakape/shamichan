@@ -39,14 +39,14 @@ func runCleanupTasks() {
 }
 
 func runMinuteTasks() {
-	if config.ImagerMode != config.ImagerOnly {
+	if config.Server.ImagerMode != config.ImagerOnly {
 		logError("open post cleanup", closeDanglingPosts())
 		expireRows("image_tokens", "bans", "failed_captchas")
 	}
 }
 
 func runHalfTasks() {
-	if config.ImagerMode != config.ImagerOnly {
+	if config.Server.ImagerMode != config.ImagerOnly {
 		logError("unrestrict pyu_limit", FreePyuLimit())
 		logError("expire spam scores", expireSpamScores())
 		logError("expire last solved captcha times", expireLastSolvedCaptchas())
@@ -54,7 +54,7 @@ func runHalfTasks() {
 }
 
 func runHourTasks() {
-	if config.ImagerMode != config.ImagerOnly {
+	if config.Server.ImagerMode != config.ImagerOnly {
 		expireRows("sessions")
 		expireBy("created < now() at time zone 'utc' + '-7 days'",
 			"mod_log", "reports")
@@ -65,7 +65,7 @@ func runHourTasks() {
 		_, err := db.Exec(`vacuum`)
 		logError("vaccum database", err)
 	}
-	if config.ImagerMode != config.NoImager {
+	if config.Server.ImagerMode != config.NoImager {
 		logError("image cleanup", deleteUnusedImages())
 	}
 }

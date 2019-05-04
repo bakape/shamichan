@@ -1,15 +1,20 @@
 package imager
 
 import (
+	"os"
+	"testing"
+
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager/assets"
 	. "github.com/bakape/meguca/test"
-	"os"
-	"testing"
 )
 
 func TestMain(m *testing.M) {
+	err := config.Server.Load()
+	if err != nil {
+		panic(err)
+	}
 	close, err := db.LoadTestDB("imager")
 	if err != nil {
 		panic(err)

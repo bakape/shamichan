@@ -6,6 +6,8 @@ import (
 	"container/list"
 	"sync"
 	"time"
+
+	"github.com/bakape/meguca/config"
 )
 
 // Time for the cache to expire and need counter comparison
@@ -16,9 +18,6 @@ var (
 	ll        = list.New()
 	totalUsed int
 	mu        sync.Mutex
-
-	// Size sets the maximum size of the cache before evicting unread data in MB
-	Size float64 = 1 << 7
 )
 
 // Key stores the ID of either a thread or board page
@@ -82,7 +81,7 @@ func updateUsedSize(k Key, delta int) {
 	}
 	totalUsed += delta
 
-	for totalUsed > int(Size)*(1<<20) {
+	for totalUsed > int(config.Server.CacheSize)*(1<<20) {
 		if last := ll.Back(); last != nil {
 			removeEntry(last)
 		}
