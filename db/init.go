@@ -167,7 +167,7 @@ func loadDB(connURL, dbSuffix string) (err error) {
 func openBoltDB(dbSuffix string) func() error {
 	return func() (err error) {
 		boltDB, err = bolt.Open(
-			fmt.Sprintf("db%s.db", dbSuffix),
+			fmt.Sprintf("db_%s.db", dbSuffix),
 			0600,
 			&bolt.Options{
 				Timeout: time.Second,
