@@ -6,11 +6,10 @@ import (
 	"net/http/httptest"
 	"sync"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-
 	"github.com/bakape/captchouli"
 	captchouli_common "github.com/bakape/captchouli/common"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 )
 
 var (

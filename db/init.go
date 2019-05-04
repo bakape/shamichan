@@ -111,6 +111,14 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 }
 
 func loadDB(connURL, dbSuffix string) (err error) {
+	// Enable binary parameters for more efficient encoding of []byte
+	u, err := url.Parse(connURL)
+	if err != nil {
+		return
+	}
+	u.Query().Set("binary_parameters", "yes")
+	connURL = u.String()
+
 	// Set, for creating extra connections using Listen()
 	connectionURL = connURL
 
