@@ -95,7 +95,7 @@ func TestGetHTML(t *testing.T) {
 
 func TestCounterExpiry(t *testing.T) {
 	Clear()
-	config.Server.CacheSize = 1 << 7
+	config.Server.CacheSize = 128 * (1 << 20)
 
 	var counterChecks, fetches int
 	f := FrontEnd{
