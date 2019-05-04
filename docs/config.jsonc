@@ -1,0 +1,59 @@
+{
+	/*
+		Should the server be running in debug mode. Debug mode has more verbose
+		logging and prints all logs to stdout. If disabled, error logs will be
+		printed to the `errors.log` file.
+	*/
+	"debug": true,
+	/*
+		Sets what functionality this instance of the application server will
+		handle. The functionality is divided around handling image-related
+		processing.
+
+		0: handle image processing and serving and all other functionality
+		1: handle all functionality except for image processing and serving
+		2: only handle image processing and serving
+	*/
+	"imager_mode": 0,
+	/*
+		Database URL to connect to on server start
+	*/
+	"database": "postgres://meguca:meguca@localhost:5432/meguca?sslmode=disable",
+	/*
+		Size limit of internal cache in MB. Once limit is exceeded, the least
+		recently used records from the cache will be evicted.
+	*/
+	"cache_size": 128.0,
+	"server": {
+		/*
+			Address to listen on for incoming connections.
+		*/
+		"address": "127.0.0.1:8000",
+		/*
+			The server can only be accessed by clients through a reverse proxy
+			like NGINX and thus can safely honour "X-Forwarded-For" headers
+			for client IP resolution.
+		*/
+		"reverse_proxied": false
+	},
+	"test": {
+		/*
+			Database URL to use during tests.
+
+			This URL only serves as the base. The actual databases are created
+			and dropped during testing automatically with prefixes for each
+			database according to the submodule using this test database for
+			running unit tests. This division allows database-related for each
+			submodule to be run concurrently, overall reducing the runtime of
+			unit tests.
+
+			To allow database creation during tests the role used must have the
+			necessary PostgreSQL permissions. These can be granted by running
+
+				ALTER USER <user_name> WITH CREATEDB;
+
+			as the administrator postgres user in the psql shell.
+		*/
+		"database": "postgres://meguca:meguca@localhost:5432/meguca_test?sslmode=disable"
+	}
+}
