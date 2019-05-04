@@ -3,7 +3,6 @@
 package server
 
 import (
-	"flag"
 	"os"
 	"strconv"
 
@@ -79,15 +78,4 @@ func Start() (err error) {
 	}
 
 	return startWebServer()
-}
-
-// Constructs and prints the CLI help text
-func printUsage() {
-	os.Stderr.WriteString("Usage: meguca [OPTIONS]...\n")
-	flag.PrintDefaults()
-	os.Stderr.WriteString(
-		"\nConsult the bundled README.md for more information\n",
-	)
-
-	os.Exit(1)
 }
