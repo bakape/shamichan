@@ -2,11 +2,11 @@ package server
 
 import (
 	"bytes"
-	"compress/gzip"
 	"fmt"
 	"net/http"
 	"runtime/debug"
 	"strconv"
+	"strings"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
@@ -20,23 +20,6 @@ import (
 )
 
 var (
-	// Address is the listening address of the HTTP web server
-	address string
-
-	// Defines if HTTPS should be used for listening for incoming connections.
-	// Requires sslCert and sslKey to be set.
-	ssl bool
-
-	// Path to SSL certificate
-	sslCert string
-
-	// Path to SSL key
-	sslKey string
-
-	// Defines, if all traffic should be piped through a gzip compression
-	// -decompression handler
-	enableGzip bool
-
 	healthCheckMsg = []byte("God's in His heaven, all's right with the world")
 )
 
@@ -45,23 +28,25 @@ var webRoot = "www"
 
 func startWebServer() (err error) {
 	r := createRouter()
+	c := config.Server.Server
 
-	var w bytes.Buffer
+	var w strings.Builder
 	w.WriteString("listening on http")
-	if ssl {
+	if c.TLS.Enabled {
 		w.WriteByte('s')
 	}
-	prettyAddr := address
-	if len(address) != 0 && address[0] == ':' {
+	prettyAddr := c.Address
+	if len(c.Address) != 0 && c.Address[0] == ':' {
 		prettyAddr = "127.0.0.1" + prettyAddr
 	}
 	fmt.Fprintf(&w, "://%s", prettyAddr)
 	log.Info(w.String())
 
-	if ssl {
-		err = http.ListenAndServeTLS(address, sslCert, sslKey, r)
+	if config.Server.Server.TLS.Enabled {
+		err = http.ListenAndServeTLS(c.Address, c.TLS.CertPath, c.TLS.KeyPath,
+			r)
 	} else {
-		err = http.ListenAndServe(address, r)
+		err = http.ListenAndServe(c.Address, r)
 	}
 	if err != nil {
 		return util.WrapError("error starting web server", err)
@@ -92,7 +77,7 @@ func createRouter() http.Handler {
 	api := r.NewGroup("/api")
 	api.GET("/health-check", healthCheck)
 	assets := r.NewGroup("/assets")
-	if config.ImagerMode != config.NoImager {
+	if config.Server.ImagerMode != config.NoImager {
 		// All upload images
 		api.POST("/upload", imager.NewImageUpload)
 		api.POST("/upload-hash", imager.UploadImageHash)
@@ -107,7 +92,7 @@ func createRouter() http.Handler {
 		captcha.POST("/:board", authenticateCaptcha)
 		captcha.GET("/confirmation", renderCaptchaConfirmation)
 	}
-	if config.ImagerMode != config.ImagerOnly {
+	if config.Server.ImagerMode != config.ImagerOnly {
 		// HTML
 		r.GET("/", redirectToDefault)
 		r.GET("/:board/", func(w http.ResponseWriter, r *http.Request) {
@@ -205,12 +190,7 @@ func createRouter() http.Handler {
 		assets.GET("/*path", serveAssets)
 	}
 
-	h := http.Handler(r)
-	if enableGzip {
-		h = handlers.CompressHandlerLevel(h, gzip.DefaultCompression)
-	}
-
-	return h
+	return handlers.CompressHandler(http.Handler(r))
 }
 
 // Redirects to / requests to /all/ board

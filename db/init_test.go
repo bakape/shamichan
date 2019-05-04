@@ -3,9 +3,15 @@ package db
 import (
 	"os"
 	"testing"
+
+	"github.com/bakape/meguca/config"
 )
 
 func TestMain(m *testing.M) {
+	err := config.Server.Load()
+	if err != nil {
+		panic(err)
+	}
 	close, err := LoadTestDB("db")
 	if err != nil {
 		panic(err)

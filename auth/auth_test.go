@@ -48,40 +48,38 @@ func TestGetIP(t *testing.T) {
 		ip             = "207.178.71.93"
 		reverseProxyIP = "162.30.251.246"
 	)
-	IsReverseProxied = true
-	ReverseProxyIP = reverseProxyIP
+	config.Server.Server.ReverseProxied = true
 
 	cases := [...]struct {
 		name, xff, out string
 	}{
-		{"valid XFF", "10.121.169.19", "10.121.169.19"},
-		{"no XFF", "", ip},
-		{"invalid XFF", "notip, nope", ip},
 		{
-			"hosted on localhost",
-			"105.124.243.122, 10.168.239.157, 127.0.0.1, ::1",
-			"10.168.239.157",
+			name: "valid XFF",
+			xff:  "10.121.169.19",
+			out:  "10.121.169.19",
 		},
 		{
-			"behind reverse proxy",
-			"105.124.243.122," + reverseProxyIP,
-			"105.124.243.122",
+			name: "no XFF",
+			out:  ip,
 		},
 	}
 
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
+			// t.Parallel()
 
 			req := httptest.NewRequest("GET", "/", nil)
 			req.RemoteAddr = ip
 			if c.xff != "" {
 				req.Header.Set("X-Forwarded-For", c.xff)
 			}
-			if i, _ := GetIP(req); i != c.out {
-				LogUnexpected(t, c.out, ip)
+
+			res, err := GetIP(req)
+			if err != nil {
+				t.Fatal(err)
 			}
+			AssertEquals(t, res, c.out)
 		})
 	}
 }

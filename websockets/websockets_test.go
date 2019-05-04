@@ -4,10 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -16,6 +12,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
 	"github.com/go-playground/log"
 	"github.com/go-playground/log/handlers/console"
 	"github.com/gorilla/websocket"
@@ -41,6 +42,10 @@ type mockWSServer struct {
 }
 
 func TestMain(m *testing.M) {
+	err := config.Server.Load()
+	if err != nil {
+		panic(err)
+	}
 	close, err := db.LoadTestDB("websockets")
 	if err != nil {
 		panic(err)

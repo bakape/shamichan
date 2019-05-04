@@ -1,14 +1,20 @@
 package feeds
 
 import (
+	"os"
+	"testing"
+
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
-	"os"
-	"testing"
 )
 
 func TestMain(m *testing.M) {
+	err := config.Server.Load()
+	if err != nil {
+		panic(err)
+	}
 	close, err := db.LoadTestDB("feeds")
 	if err != nil {
 		panic(err)

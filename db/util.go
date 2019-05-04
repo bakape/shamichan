@@ -83,7 +83,7 @@ func ListenCancelable(event string, canceller <-chan struct{},
 	fn func(msg string) error,
 ) (err error) {
 	l := pq.NewListener(
-		ConnArgs,
+		connectionURL,
 		time.Second,
 		time.Second*10,
 		func(_ pq.ListenerEventType, _ error) {},

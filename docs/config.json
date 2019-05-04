@@ -1,12 +1,18 @@
 {
-	"ssl": false,
-	"reverseProxied": false,
-	"gzip": false,
-	"imagerMode": 0,
-	"cacheSize": 128,
-	"address": "127.0.0.1:8000",
-	"database": "user=meguca password=meguca dbname=meguca sslmode=disable",
-	"certPath": "",
-	"keyPath": "",
-	"reverseProxyIP": ""
+	"debug": true,
+	"imager_mode": 0,
+	"database": "postgres://meguca:meguca@localhost:5432/meguca?sslmode=disable",
+	"cache_size": 128,
+	"server": {
+		"address": "127.0.0.1:8000",
+		"reverse_proxied": false,
+		"tls": {
+			"enabled": false,
+			"cert_path": "",
+			"key_path": ""
+		}
+	},
+	"test": {
+		"database": "postgres://meguca:meguca@localhost:5432/meguca_test?sslmode=disable"
+	}
 }

@@ -3,9 +3,11 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/user"
+	"strings"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -18,14 +20,9 @@ import (
 	_ "github.com/lib/pq" // Postgres driver
 )
 
-const (
-	// DefaultConnArgs specifies the default PostgreSQL connection arguments
-	DefaultConnArgs = "user=meguca password=meguca dbname=meguca sslmode=disable binary_parameters=yes"
-)
-
 var (
-	// ConnArgs specifies the PostgreSQL connection arguments
-	ConnArgs string
+	// ConnArgs specifies the PostgreSQL connection URL
+	connectionURL string
 
 	// Stores the postgres database instance
 	db *sql.DB
@@ -39,13 +36,18 @@ var (
 
 // Connects to PostgreSQL database and performs schema upgrades
 func LoadDB() error {
-	return loadDB("")
+	return loadDB(config.Server.Database, "")
 }
 
 // Create and load testing database. Call close() to clean up temporary
 // resources.
 func LoadTestDB(suffix string) (close func() error, err error) {
 	common.IsTest = true
+
+	connURL, err := url.Parse(config.Server.Test.Database)
+	if err != nil {
+		return
+	}
 
 	// If running as root (CI like Travis or something), authenticate as the
 	// postgres user
@@ -55,7 +57,7 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 		return
 	}
 	var sudo []string
-	user := "meguca"
+	user := connURL.User.Username()
 	if u.Name == "root" {
 		sudo = append(sudo, "sudo", "-u", "postgres")
 		user = "postgres"
@@ -69,12 +71,11 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 		return c.Run()
 	}
 
-	suffix = "_" + suffix
-	name := "meguca_test" + suffix
+	dbName := fmt.Sprintf("%s_%s", strings.Trim(connURL.Path, "/"), suffix)
 
 	err = run("psql",
 		"-U", user,
-		"-c", "drop database if exists "+name)
+		"-c", "drop database if exists "+dbName)
 	if err != nil {
 		return
 	}
@@ -87,25 +88,26 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 		return os.Remove(fmt.Sprintf("db%s.db", suffix))
 	}
 
-	fmt.Println("creating test database:", name)
+	fmt.Println("creating test database:", dbName)
 	err = run("createdb",
 		"-O", "meguca",
 		"-U", user,
 		"-E", "UTF8",
-		name)
+		dbName)
 	if err != nil {
 		return
 	}
 
-	ConnArgs = fmt.Sprintf(
-		"postgres://meguca:meguca@localhost:5432/%s?sslmode=disable&binary_parameters=yes",
-		name)
-	err = loadDB(suffix)
+	connURL.Path = "/" + dbName
+	err = loadDB(connURL.String(), suffix)
 	return
 }
 
-func loadDB(dbSuffix string) (err error) {
-	db, err = sql.Open("postgres", ConnArgs)
+func loadDB(connURL, dbSuffix string) (err error) {
+	// Set, for creating extra connections using Listen()
+	connectionURL = connURL
+
+	db, err = sql.Open("postgres", connURL)
 	if err != nil {
 		return
 	}
@@ -136,7 +138,7 @@ func loadDB(dbSuffix string) (err error) {
 		tasks,
 		func() error {
 			tasks := []func() error{loadConfigs, loadBans, handleSpamScores}
-			if config.ImagerMode != config.ImagerOnly {
+			if config.Server.ImagerMode != config.ImagerOnly {
 				tasks = append(tasks, openBoltDB(dbSuffix), loadBanners,
 					loadLoadingAnimations, loadThreadPostCounts)
 			}

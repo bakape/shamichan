@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
 )
 
@@ -94,6 +95,7 @@ func TestGetHTML(t *testing.T) {
 
 func TestCounterExpiry(t *testing.T) {
 	Clear()
+	config.Server.CacheSize = 1 << 7
 
 	var counterChecks, fetches int
 	f := FrontEnd{
