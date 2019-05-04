@@ -1,0 +1,19 @@
+[Unit]
+Description=meguca imageboard server
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+User=meguca
+Group=meguca
+WorkingDirectory=/home/meguca/server
+ExecStart=/home/meguca/server/meguca
+PIDFile=/home/meguca/server/.pid
+ExecReload=/bin/kill -USR2 $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+
+[Install]
+WantedBy=multi-user.target
+Requires=postgresql.service
+After=postgresql.service
