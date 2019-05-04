@@ -85,7 +85,7 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 		if err != nil {
 			return
 		}
-		return os.Remove(fmt.Sprintf("db%s.db", suffix))
+		return os.Remove(fmt.Sprintf("db_%s.db", suffix))
 	}
 
 	fmt.Println("creating test database:", dbName)
