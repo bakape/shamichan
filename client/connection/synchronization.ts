@@ -161,10 +161,7 @@ handlers[message.synchronise] = async (data: SyncData) => {
 	}
 
 	if (proms.length) {
-		await Promise.all(proms).catch(e => {
-			alert(e)
-			throw e
-		})
+		await Promise.all(proms).catch(console.error)
 	}
 
 	displayLoading(false)
