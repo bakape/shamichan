@@ -93,7 +93,7 @@ func insertPost(t *testing.T, p *Post) {
 func prepareForPostInsertion(t *testing.T) {
 	t.Helper()
 
-	assertTableClear(t, "boards")
+	assertTableClear(t, "boards", "accounts")
 	writeSampleBoard(t)
 	writeSampleThread(t)
 

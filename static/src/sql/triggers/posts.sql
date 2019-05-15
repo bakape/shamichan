@@ -33,7 +33,9 @@ $$ language plpgsql;
 create or replace function after_posts_update()
 returns trigger as $$
 begin
-	perform bump_thread(new.op, not new.sage);
+	if new.editing != old.editing then
+		perform bump_thread(new.op, not new.sage);
+	end if;
 	return null;
 end;
 $$ language plpgsql;

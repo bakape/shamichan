@@ -12,6 +12,9 @@ begin
 			returning posts.op into op;
 		perform pg_notify('post_moderated',
 			concat_ws(',', op, new.id));
+
+		-- Posts bump threads only on creation and closure
+		perform bump_thread(op, true);
 	end if;
 	return null;
 end;
