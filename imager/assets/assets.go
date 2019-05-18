@@ -2,9 +2,11 @@
 package assets
 
 import (
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -121,11 +123,32 @@ func SourcePath(fileType uint8, SHA1 string) string {
 	)
 }
 
+// Return free space on image storage device.
+// Image source file and thumbnail directories must be on the same drive.
+func freeSpace() (n int, err error) {
+	var stats syscall.Statfs_t
+	path, err := filepath.Abs("images")
+	if err != nil {
+		return
+	}
+	err = syscall.Statfs(path, &stats)
+	return int(stats.Bavail), err
+}
+
 // Write writes file assets to disk
 func Write(SHA1 string, fileType, thumbType uint8, src, thumb io.ReadSeeker,
 ) (
 	err error,
 ) {
+	// Assert at least 100 MB of free disk space is available
+	free, err := freeSpace()
+	if err != nil {
+		return
+	}
+	if free < (100 << 20) {
+		return errors.New("not enough disk space")
+	}
+
 	paths := GetFilePaths(SHA1, fileType, thumbType)
 
 	// Write files in parallel
@@ -137,13 +160,9 @@ func Write(SHA1 string, fileType, thumbType uint8, src, thumb io.ReadSeeker,
 			ch <- writeFile(paths[1], thumb)
 		}
 	}()
-
-	for _, err := range [...]error{writeFile(paths[0], src), <-ch} {
-		switch {
-		// Ignore files already written and not cleaned up for some reason
-		case err == nil, os.IsExist(err):
-		default:
-			return err
+	for _, err = range [...]error{writeFile(paths[0], src), <-ch} {
+		if err != nil {
+			return
 		}
 	}
 	return nil

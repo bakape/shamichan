@@ -4,7 +4,7 @@
 # meguca
 anonymous realtime imageboard focused on high performance, free speech and transparent moderation
 
-Platforms: Linux, OSX, Win64
+Platforms: Linux, OSX
 
 License: GNU AGPL
 
@@ -41,15 +41,6 @@ compiled with:
 
 #### Linux and OSX
 
-* Run `make`
-
-#### Windows
-
-* Install [MSYS2](https://sourceforge.net/projects/msys2/)
-* Open MSYS2 shell
-* Install dependencies listed above with the `mingw-w64-x86_64-` prefix with
-pacman
-* Navigate to the meguca root directory
 * Run `make`
 
 ### Docker

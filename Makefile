@@ -1,16 +1,7 @@
 export node_bins=$(PWD)/node_modules/.bin
 export uglifyjs=$(node_bins)/uglifyjs
 export gulp=$(node_bins)/gulp
-export is_windows=false
 export GO111MODULE=on
-
-# Differentiate between Unix-like and mingw builds
-ifeq ($(OS), Windows_NT)
-	export PKG_CONFIG_PATH:=$(PKG_CONFIG_PATH):/mingw64/lib/pkgconfig/
-	export PKG_CONFIG_LIBDIR=/mingw64/lib/pkgconfig/
-	export PATH:=$(PATH):/mingw64/bin/
-	export is_windows=true
-endif
 
 .PHONY: server client imager test
 
@@ -44,9 +35,6 @@ client_clean:
 
 clean: client_clean
 	rm -rf .build .ffmpeg .package target meguca-*.zip meguca-*.tar.xz meguca meguca.exe server/pkg
-ifeq ($(is_windows), true)
-	rm -rf /.meguca_build *.dll
-endif
 
 test:
 	go test --race ./...
