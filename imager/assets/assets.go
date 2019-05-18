@@ -141,12 +141,15 @@ func Write(SHA1 string, fileType, thumbType uint8, src, thumb io.ReadSeeker,
 	err error,
 ) {
 	// Assert at least 100 MB of free disk space is available
-	free, err := freeSpace()
-	if err != nil {
-		return
-	}
-	if free < (100 << 20) {
-		return errors.New("not enough disk space")
+	if !common.IsCI {
+		var free int
+		free, err = freeSpace()
+		if err != nil {
+			return
+		}
+		if free < (100 << 20) {
+			return errors.New("not enough disk space")
+		}
 	}
 
 	paths := GetFilePaths(SHA1, fileType, thumbType)

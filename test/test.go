@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/bakape/meguca/common"
 )
 
 // LogUnexpected fails the test and prints the values in an
@@ -90,7 +92,7 @@ func OpenSample(t *testing.T, name string) *os.File {
 // Skip this test, if run in a CI environment
 func SkipInCI(t *testing.T) {
 	t.Helper()
-	if os.Getenv("CI") == "true" {
+	if common.IsCI {
 		t.Skip()
 	}
 }

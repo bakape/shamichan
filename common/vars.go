@@ -1,6 +1,7 @@
 package common
 
 import (
+	"os"
 	"regexp"
 )
 
@@ -10,8 +11,11 @@ var (
 	// Recompile is a forwarded function from "github.com/bakape/megucatemplates" to avoid circular imports
 	Recompile func() error
 
-	// Project is being uint tested
+	// Project is being unit tested
 	IsTest bool
+
+	// Currently running inside CI
+	IsCI = os.Getenv("CI") == "true"
 )
 
 // Maximum lengths of various input fields
