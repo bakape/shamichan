@@ -14,7 +14,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
 )
 
@@ -132,7 +132,7 @@ func TestBoardConfiguration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertEquals(t, res, conf)
+	test.AssertEquals(t, res, conf)
 }
 
 func TestValidateBoardConfigs(t *testing.T) {
@@ -162,7 +162,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 		{
 			"compound eightball length too big",
 			config.BoardConfigs{
-				Eightball: []string{GenString(maxEightballLen + 1)},
+				Eightball: []string{test.GenString(maxEightballLen + 1)},
 			},
 			errEightballTooLong,
 		},
@@ -170,7 +170,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			"notice too long",
 			config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
-					Notice: GenString(common.MaxLenNotice + 1),
+					Notice: test.GenString(common.MaxLenNotice + 1),
 				},
 			},
 			errNoticeTooLong,
@@ -179,7 +179,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			"rules too long",
 			config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
-					Rules: GenString(common.MaxLenRules + 1),
+					Rules: test.GenString(common.MaxLenRules + 1),
 				},
 			},
 			errRulesTooLong,
@@ -188,7 +188,7 @@ func TestValidateBoardConfigs(t *testing.T) {
 			"title too long",
 			config.BoardConfigs{
 				BoardPublic: config.BoardPublic{
-					Title: GenString(common.MaxLenBoardTitle + 1),
+					Title: test.GenString(common.MaxLenBoardTitle + 1),
 				},
 			},
 			errTitleTooLong,
@@ -227,7 +227,7 @@ func TestValidateBoardCreation(t *testing.T) {
 	}{
 		{
 			name:  "board name too long",
-			id:    GenString(common.MaxLenBoardID + 1),
+			id:    test.GenString(common.MaxLenBoardID + 1),
 			title: "foo",
 			err:   errInvalidBoardName,
 		},
@@ -246,7 +246,7 @@ func TestValidateBoardCreation(t *testing.T) {
 		{
 			name:  "title too long",
 			id:    "b",
-			title: GenString(101),
+			title: test.GenString(101),
 			err:   errTitleTooLong,
 		},
 		{
@@ -340,7 +340,7 @@ func TestBoardCreation(t *testing.T) {
 		},
 		Eightball: config.EightballDefaults,
 	}
-	AssertEquals(t, board, std)
+	test.AssertEquals(t, board, std)
 }
 
 func TestServePrivateServerConfigs(t *testing.T) {
@@ -423,7 +423,7 @@ func TestServerConfigSetting(t *testing.T) {
 	}
 	std := config.Defaults
 	std.DefaultCSS = "ashita"
-	AssertEquals(t, conf, std)
+	test.AssertEquals(t, conf, std)
 }
 
 func TestDeleteBoard(t *testing.T) {
@@ -468,73 +468,7 @@ func TestDeletePost(t *testing.T) {
 	writeSampleThread(t)
 	writeSampleUser(t)
 	writeSampleBoardOwner(t)
-
-	cConfigs := db.BoardConfigs{
-		BoardConfigs: config.BoardConfigs{
-			ID:        "c",
-			Eightball: []string{"yes"},
-		},
-	}
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WriteBoard(tx, cConfigs)
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := config.SetBoardConfigs(cConfigs.BoardConfigs); err != nil {
-		t.Fatal(err)
-	}
-
-	thread := db.Thread{
-		ID:    3,
-		Board: "c",
-	}
-	op := db.Post{
-		StandalonePost: common.StandalonePost{
-			Board: "c",
-			Post: common.Post{
-				ID: 3,
-			},
-			OP: 3,
-		},
-	}
-	err = db.WriteThread(thread, op)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	posts := [...]db.Post{
-		{
-			StandalonePost: common.StandalonePost{
-				Board: "a",
-				Post: common.Post{
-					ID: 2,
-				},
-				OP: 1,
-			},
-		},
-		{
-			StandalonePost: common.StandalonePost{
-				Board: "a",
-				Post: common.Post{
-					ID: 4,
-				},
-				OP: 1,
-			},
-		},
-	}
-	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
-		for _, p := range posts {
-			err = db.WritePost(tx, p)
-			if err != nil {
-				return
-			}
-		}
-		return
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
+	writeExtraSampleBoard(t)
 
 	data := []uint64{2, 4}
 	const url = "/api/delete-posts"
@@ -564,14 +498,84 @@ func TestDeletePost(t *testing.T) {
 			t.Parallel()
 
 			post, err := db.GetPost(c.id)
-			switch {
-			case err != nil:
+			if err != nil {
 				t.Fatal(err)
-			case post.IsDeleted() != c.deleted:
-				LogUnexpected(t, post.IsDeleted(), c.deleted)
 			}
+			test.AssertEquals(t, post.IsDeleted(), c.deleted)
 		})
 	}
+}
+
+func TestBanPosts(t *testing.T) {
+	test_db.ClearTables(t, "accounts", "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+	writeSampleUser(t)
+	writeSampleBoardOwner(t)
+	writeAdminAccount(t)
+	writeAllBoard(t)
+	writeExtraSampleBoard(t)
+
+	data := banRequest{
+		Duration: 100,
+		Reason:   "test",
+		IDs:      []uint64{2, 4},
+	}
+	const url = "/api/ban"
+	rec, req := newJSONPair(t, url, data)
+	setLoginCookies(req, sampleLoginCreds)
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 200)
+
+	data.IDs = []uint64{3}
+	rec, req = newJSONPair(t, url, data)
+	router.ServeHTTP(rec, req)
+	assertCode(t, rec, 403)
+
+	isBanned := func(p common.StandalonePost) bool {
+		for _, l := range p.Moderation {
+			if l.Type == common.BanPost {
+				return true
+			}
+		}
+		return false
+	}
+
+	cases := [...]struct {
+		name   string
+		id     uint64
+		banned bool
+	}{
+		{"from target board", 2, true},
+		{"from target board", 4, true},
+		{"different board", 3, false},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			post, err := db.GetPost(c.id)
+			if err != nil {
+				t.Fatal(err)
+			}
+			test.AssertEquals(t, isBanned(post), c.banned)
+		})
+	}
+
+	t.Run("global", func(t *testing.T) {
+		data := data
+		data.Global = true
+		rec, req := newJSONPair(t, url, data)
+		setLoginCookies(req, adminLoginCreds)
+		router.ServeHTTP(rec, req)
+		assertCode(t, rec, 200)
+
+		post, err := db.GetPost(3)
+		if err != nil {
+			t.Fatal(err)
+		}
+		test.AssertEquals(t, isBanned(post), true)
+	})
 }
 
 func writeSampleThread(t *testing.T) {
@@ -593,6 +597,80 @@ func writeSampleThread(t *testing.T) {
 		},
 	}
 	err := db.WriteThread(thread, op)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeExtraSampleBoard(t *testing.T) {
+	t.Helper()
+
+	cConfigs := db.BoardConfigs{
+		BoardConfigs: config.BoardConfigs{
+			ID:        "c",
+			Eightball: []string{"yes"},
+		},
+	}
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
+		return db.WriteBoard(tx, cConfigs)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := config.SetBoardConfigs(cConfigs.BoardConfigs); err != nil {
+		t.Fatal(err)
+	}
+
+	thread := db.Thread{
+		ID:    3,
+		Board: "c",
+	}
+	op := db.Post{
+		StandalonePost: common.StandalonePost{
+			Board: "c",
+			Post: common.Post{
+				ID: 3,
+			},
+			OP: 3,
+		},
+		IP: "::1",
+	}
+	err = db.WriteThread(thread, op)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	posts := [...]db.Post{
+		{
+			StandalonePost: common.StandalonePost{
+				Board: "a",
+				Post: common.Post{
+					ID: 2,
+				},
+				OP: 1,
+			},
+			IP: "::1",
+		},
+		{
+			StandalonePost: common.StandalonePost{
+				Board: "a",
+				Post: common.Post{
+					ID: 4,
+				},
+				OP: 1,
+			},
+			IP: "::1",
+		},
+	}
+	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+		for _, p := range posts {
+			err = db.WritePost(tx, p)
+			if err != nil {
+				return
+			}
+		}
+		return
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

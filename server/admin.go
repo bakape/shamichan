@@ -49,6 +49,13 @@ type boardCreationRequest struct {
 	ID, Title string
 }
 
+type banRequest struct {
+	Global   bool
+	Duration uint64
+	Reason   string
+	IDs      []uint64 `json:"ids"`
+}
+
 // Set board-specific configurations to the user's owned board
 func configureBoard(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
@@ -459,17 +466,21 @@ func purgePost(w http.ResponseWriter, r *http.Request) {
 
 // Ban a specific IP from a specific board
 func ban(w http.ResponseWriter, r *http.Request) {
-	err := func() (err error) {
-		var msg struct {
-			Global       bool
-			ID, Duration uint64
-			Reason       string
+	httpError(w, r, func() (err error) {
+		if !assertNotBanned(w, r, "all") {
+			return
 		}
+
+		var msg banRequest
 		err = decodeJSON(r, &msg)
 		if err != nil {
 			return
 		}
 
+		err = assertSolvedCaptcha(r)
+		if err != nil {
+			return
+		}
 		creds, err := isLoggedIn(w, r)
 		switch {
 		case err != nil:
@@ -483,28 +494,47 @@ func ban(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
+		// Assert rights to moderate all passed boards
+		var (
+			boards = make(map[string]struct{})
+			board  string
+		)
+		for _, id := range msg.IDs {
+			if msg.Global {
+				board = "all"
+			} else {
+				board, err = db.GetPostBoard(id)
+				if err != nil {
+					return
+				}
+			}
+			if _, ok := boards[board]; !ok {
+				if !auth.IsBoard(board) {
+					return errInvalidBoardName
+				}
+				var can bool
+				can, err = db.CanPerform(creds.UserID, board,
+					common.Moderator)
+				if err != nil {
+					return
+				}
+				if !can {
+					return errAccessDenied
+				}
+				boards[board] = struct{}{}
+			}
+		}
 
-		var board string
-		if msg.Global {
-			board = "all"
-		} else {
-			board, err = db.GetPostBoard(msg.ID)
+		// Apply bans
+		for _, id := range msg.IDs {
+			err = db.Ban(board, msg.Reason, creds.UserID,
+				time.Minute*time.Duration(msg.Duration), id)
 			if err != nil {
 				return
 			}
 		}
-		_, err = canPerform(w, r, board, common.Moderator, false)
-		if err != nil {
-			return
-		}
-
-		// Apply ban
-		return db.Ban(board, msg.Reason, creds.UserID,
-			time.Minute*time.Duration(msg.Duration), msg.ID)
-	}()
-	if err != nil {
-		httpError(w, r, err)
-	}
+		return
+	}())
 }
 
 // Send a textual message to all connected clients

@@ -21,6 +21,7 @@ func assertCode(t *testing.T, rec *httptest.ResponseRecorder, std int) {
 	t.Helper()
 	if rec.Code != std {
 		t.Errorf("unexpected status code: %d : %d", std, rec.Code)
+		t.Logf("body: %s", rec.Body.String())
 	}
 }
 
