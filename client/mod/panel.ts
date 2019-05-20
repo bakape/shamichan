@@ -1,5 +1,5 @@
 import { View } from "../base"
-import { postJSON, toggleHeadStyle } from "../util"
+import { postJSON, toggleHeadStyle, trigger } from "../util"
 import { Post } from "../posts"
 import { getModel } from "../state"
 
@@ -60,7 +60,7 @@ export default class ModPanel extends View<null> {
 		const checked = this.getChecked(),
 			models = [...checked].map(getModel)
 
-		// Send request with post IDs to server
+		// Send multiple requests with post ID to server
 		const sendIDRequests = async (formID: string, url: string) => {
 			if (!checked.length) {
 				return;
@@ -72,26 +72,40 @@ export default class ModPanel extends View<null> {
 			}
 		}
 
+		// Send request with post IDs to server
+		const sendMultiIDRequest = async (
+			path: string,
+			withImages: boolean,
+		) => {
+			if (checked.length) {
+				await this.postJSON(
+					"/api" + path,
+					mapToIDs(
+						withImages
+							? models.filter(m => !!m.image)
+							: models
+					),
+				);
+			}
+		};
+
 		switch (this.getMode()) {
 			case "deletePost":
-				if (checked.length) {
-					await this.postJSON("/api/delete-posts", mapToIDs(models));
-				}
+				await sendMultiIDRequest("/delete-posts", false);
 				break;
 			case "spoilerImage":
-				if (checked.length) {
-					await this.postJSON("/api/spoiler-image",
-						mapToIDs(models.filter(m => !!m.image)));
-				}
+				await sendMultiIDRequest("/spoiler-image", true);
 				break;
 			case "deleteImage":
-				if (checked.length) {
-					await this.postJSON("/api/delete-image",
-						mapToIDs(models.filter(m => !!m.image)));
-				}
+				await sendMultiIDRequest("/delete-image", true);
 				break;
 			case "ban":
-				await sendIDRequests("ban", "/api/ban");
+				if (checked.length) {
+					const args = HidableForm.forms["ban"].vals();
+					args["ids"] = mapToIDs(models);
+					trigger("renderCaptchaForm", () =>
+						this.postJSON("/api/ban", args));
+				}
 				break;
 			case "purgePost":
 				await sendIDRequests("purgePost", "/api/purge-post");
