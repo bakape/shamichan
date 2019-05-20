@@ -125,14 +125,14 @@ func SourcePath(fileType uint8, SHA1 string) string {
 
 // Return free space on image storage device.
 // Image source file and thumbnail directories must be on the same drive.
-func freeSpace() (n int, err error) {
+func freeSpace() (n uint64, err error) {
 	var stats syscall.Statfs_t
-	path, err := filepath.Abs("images")
+	path, err := filepath.Abs("images/src")
 	if err != nil {
 		return
 	}
 	err = syscall.Statfs(path, &stats)
-	return int(stats.Bavail), err
+	return stats.Bavail * uint64(stats.Bsize), err
 }
 
 // Write writes file assets to disk
@@ -142,7 +142,7 @@ func Write(SHA1 string, fileType, thumbType uint8, src, thumb io.ReadSeeker,
 ) {
 	// Assert at least 100 MB of free disk space is available
 	if !common.IsCI {
-		var free int
+		var free uint64
 		free, err = freeSpace()
 		if err != nil {
 			return
