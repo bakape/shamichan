@@ -77,6 +77,9 @@ func Ban(board, reason, by string, length time.Duration, id uint64,
 	ip, err := GetIP(id)
 	switch err {
 	case nil:
+		if ip == "" { // Post already cleared of IP
+			return
+		}
 	case sql.ErrNoRows:
 		return nil
 	default:
