@@ -1443,6 +1443,33 @@ var migrations = []func(*sql.Tx) error{
 			type jsonb using (val::jsonb)`)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		var salt string
+		err = sq.Select("val->>'salt'").
+			From("main").
+			Where("id = 'config'").
+			QueryRow().
+			Scan(&salt)
+		if err != nil {
+			return
+		}
+
+		switch salt {
+		case "", config.Defaults.Salt:
+			salt, err = auth.RandomID(64)
+			if err != nil {
+				return
+			}
+			_, err = tx.Exec(
+				`update main
+				set val = val || jsonb_build_object('salt', $1::text)
+				where id = 'config'`,
+				salt,
+			)
+			return
+		}
+		return
+	},
 }
 
 func createIndex(table string, columns ...string) string {

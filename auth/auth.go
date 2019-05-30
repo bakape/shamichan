@@ -62,7 +62,10 @@ func getIP(req *http.Request) string {
 func RandomID(length int) (string, error) {
 	buf := make([]byte, length)
 	_, err := rand.Read(buf)
-	return base64.RawStdEncoding.EncodeToString(buf), err
+	if err != nil {
+		return "", err
+	}
+	return base64.RawStdEncoding.EncodeToString(buf), nil
 }
 
 // BcryptHash generates a bcrypt hash from the passed string
