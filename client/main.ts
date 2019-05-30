@@ -1,6 +1,6 @@
 // Client entry point
 
-import { loadFromDB, page, posts, storeMine } from './state'
+import { loadFromDB, page, posts, storeMine, storeSeenPost } from './state'
 import { start as connect, connSM, connState } from './connection'
 import { open } from './db'
 import { initOptions } from "./options"
@@ -69,6 +69,7 @@ async function start() {
 		if (addMine) {
 			const id = parseInt(addMine);
 			storeMine(id, id);
+			storeSeenPost(id, id);
 			watchThread(id, 1, thread.subject);
 			deleteCookie("addMine");
 		}
