@@ -60,6 +60,8 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 	if u.Name == "root" {
 		sudo = append(sudo, "sudo", "-u", "postgres")
 		user = "postgres"
+	} else {
+		user = connURL.User.Username()
 	}
 
 	run := func(args ...string) error {
@@ -74,6 +76,7 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 
 	err = run("psql",
 		"-U", user,
+		"-d", "postgres",
 		"-c", "drop database if exists "+dbName)
 	if err != nil {
 		return
@@ -97,7 +100,7 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 
 	fmt.Println("creating test database:", dbName)
 	err = run("createdb",
-		"-O", "meguca",
+		"-O", user,
 		"-U", user,
 		"-E", "UTF8",
 		dbName)
