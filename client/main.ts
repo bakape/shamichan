@@ -43,19 +43,23 @@ async function start() {
 
 		// Open a cross-thread quoting reply
 		connSM.once(connState.synced, () => {
-			const data = localStorage.getItem("openQuote")
-			if (!data) {
-				return
-			}
-			const i = data.indexOf(":"),
-				id = parseInt(data.slice(0, i)),
-				sel = data.slice(i + 1)
-			localStorage.removeItem("openQuote")
-			if (posts.get(id)) {
-				postSM.feed(postEvent.open);
-				(trigger("getPostModel") as FormModel).addReference(id, sel)
-				requestAnimationFrame(scrollToBottom)
-			}
+			// Must run after other state handlers
+			setTimeout(() => {
+				const data = localStorage.getItem("openQuote");
+				if (!data) {
+					return;
+				}
+				const i = data.indexOf(":"),
+					id = parseInt(data.slice(0, i)),
+					sel = data.slice(i + 1);
+				localStorage.removeItem("openQuote");
+				if (posts.get(id)) {
+					postSM.feed(postEvent.open);
+					(trigger("getPostModel") as FormModel)
+						.addReference(id, sel);
+					requestAnimationFrame(scrollToBottom);
+				}
+			}, 100);
 		})
 
 		persistMessages()
