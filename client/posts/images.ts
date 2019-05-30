@@ -2,7 +2,8 @@ import { Post } from "./model"
 import { fileTypes, isExpandable } from "../common"
 import { View } from "../base"
 import {
-	setAttrs, on, trigger, firstChild, importTemplate, escape, pad
+	setAttrs, on, trigger, firstChild, importTemplate, escape, pad, makeEl,
+	HTML,
 } from "../util"
 import options from "../options"
 import { getModel, posts, config } from "../state"
@@ -286,8 +287,15 @@ export default class ImageHandler extends View<Post> {
 			return this.contractImage(event, true)
 		}
 
-		switch (img.file_type) {
+		this.el.querySelector(".fileinfo").after(
+			makeEl(HTML
+				`<span class="act contract-button">
+					<a>Contract</a>
+				</span>`,
+			),
+		);
 
+		switch (img.file_type) {
 			case fileTypes.mp3:
 			case fileTypes.flac:
 				event.preventDefault()
@@ -323,6 +331,14 @@ export default class ImageHandler extends View<Post> {
 	// rendering of the change to the next animation frame.
 	public contractImage(e: MouseEvent | null, scroll: boolean) {
 		const img = this.model.image
+
+		const figcaption = this.getFigcaption();
+		if (figcaption) {
+			const el = figcaption.querySelector(".contract-button");
+			if (el) {
+				el.remove();
+			}
+		}
 
 		switch (img.file_type) {
 			case fileTypes.ogg:
@@ -471,6 +487,16 @@ function handleImageClick(event: MouseEvent) {
 	model.view.toggleImageExpansion(event)
 }
 
+// Contract image after button click
+function contractImage(e: MouseEvent) {
+	const el = event.target as Element;
+	const model = getModel(el);
+	if (!model) {
+		return;
+	}
+	model.view.contractImage(e, true);
+}
+
 // Reveal/hide thumbnail by clicking [Show]/[Hide] in hidden thumbnail mode
 function toggleHiddenThumbnail(event: Event) {
 	const model = getModel(event.target as Element)
@@ -535,4 +561,8 @@ on(document, "click", toggleHiddenThumbnail, {
 on(document, "click", toggleExpandAll, {
 	passive: true,
 	selector: "#expand-images a",
+})
+on(document, "click", contractImage, {
+	passive: true,
+	selector: ".contract-button a",
 })

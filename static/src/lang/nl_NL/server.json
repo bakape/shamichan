@@ -408,10 +408,6 @@
 			"WhatAnime",
 			"whatanime.ga anime screenshot zoeken"
 		],
-		"yandex": [
-			"Yandex",
-			"Yandex image search"
-		],
 		"workMode": [
 			"Work mode",
 			"Verberg afbeeldingen en deactiveert gebruiker achtergrond"
@@ -419,6 +415,10 @@
 		"workModeToggle": [
 			"Werk mode",
 			"Verberg afbeeldingen en deactiveert gebruiker achtergrond"
+		],
+		"yandex": [
+			"Yandex",
+			"Yandex image search"
 		]
 	},
 	"options": {

@@ -408,10 +408,6 @@
 			"WhatAnime",
 			"whatanime.ga anime screenshot search"
 		],
-		"yandex": [
-			"Yandex",
-			"Yandex image search"
-		],
 		"workMode": [
 			"Робочий режим",
 			"Приховує зображення і власний фон"
@@ -419,6 +415,10 @@
 		"workModeToggle": [
 			"Робочий режим",
 			"Приховує зображення і власний фон"
+		],
+		"yandex": [
+			"Yandex",
+			"Yandex image search"
 		]
 	},
 	"options": {

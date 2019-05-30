@@ -408,10 +408,6 @@
 			"WhatAnime",
 			"whatanime.ga поиск по аниме-скриншоту"
 		],
-		"yandex": [
-			"Yandex",
-			"Yandex image search"
-		],
 		"workMode": [
 			"Режим босса",
 			"Скрыть изображения и пользовательский фон"
@@ -419,6 +415,10 @@
 		"workModeToggle": [
 			"Режим босса",
 			"Скрыть изображения и пользовательский фон"
+		],
+		"yandex": [
+			"Yandex",
+			"Yandex image search"
 		]
 	},
 	"options": {

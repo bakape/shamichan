@@ -408,10 +408,6 @@
 			"WhatAnime",
 			"Recherche de captures d'écran d'anime whatanime.ga"
 		],
-		"yandex": [
-			"Yandex",
-			"Yandex image search"
-		],
 		"workMode": [
 			"Mode travail",
 			"Cache toutes les images"
@@ -419,6 +415,10 @@
 		"workModeToggle": [
 			"Mode travail",
 			"Cache toutes les images et désactive le fond personnalisé"
+		],
+		"yandex": [
+			"Yandex",
+			"Yandex image search"
 		]
 	},
 	"options": {

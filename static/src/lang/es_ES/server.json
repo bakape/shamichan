@@ -408,10 +408,6 @@
 			"WhatAnime",
 			"whatanime.ga anime screenshot search"
 		],
-		"yandex": [
-			"Yandex",
-			"Yandex image search"
-		],
 		"workMode": [
 			"Modo de trabajo",
 			"Esconde las imágenes y deshabilita el fondo personalizado."
@@ -419,6 +415,10 @@
 		"workModeToggle": [
 			"Modo de trabajo",
 			"Esconde las imágenes y deshabilita el fondo personalizado."
+		],
+		"yandex": [
+			"Yandex",
+			"Yandex image search"
 		]
 	},
 	"options": {
