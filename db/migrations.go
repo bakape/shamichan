@@ -201,7 +201,7 @@ var migrations = []func(*sql.Tx) error{
 	},
 	// Set default expiry configs, to keep all threads from deleting
 	func(tx *sql.Tx) (err error) {
-		return patchConfigs(tx, func(conf *config.Configs) {
+		return patchConfigsLegacy(tx, func(conf *config.Configs) {
 			conf.ThreadExpiryMin = config.Defaults.ThreadExpiryMin
 			conf.ThreadExpiryMax = config.Defaults.ThreadExpiryMax
 		})
@@ -481,7 +481,7 @@ var migrations = []func(*sql.Tx) error{
 		return
 	},
 	func(tx *sql.Tx) (err error) {
-		return patchConfigs(tx, func(conf *config.Configs) {
+		return patchConfigsLegacy(tx, func(conf *config.Configs) {
 			conf.CharScore = config.Defaults.CharScore
 			conf.PostCreationScore = config.Defaults.PostCreationScore
 			conf.ImageScore = config.Defaults.ImageScore
@@ -708,7 +708,7 @@ var migrations = []func(*sql.Tx) error{
 		)
 	},
 	func(tx *sql.Tx) (err error) {
-		return patchConfigs(tx, func(conf *config.Configs) {
+		return patchConfigsLegacy(tx, func(conf *config.Configs) {
 			conf.EmailErrMail = config.Defaults.EmailErrMail
 			conf.EmailErrPass = config.Defaults.EmailErrPass
 			conf.EmailErrSub = config.Defaults.EmailErrSub
@@ -1025,7 +1025,7 @@ var migrations = []func(*sql.Tx) error{
 		)
 	},
 	func(tx *sql.Tx) (err error) {
-		err = patchConfigs(tx, func(conf *config.Configs) {
+		err = patchConfigsLegacy(tx, func(conf *config.Configs) {
 			conf.CaptchaTags = config.Defaults.CaptchaTags
 			conf.OverrideCaptchaTags = map[string]string{}
 		})
@@ -1436,6 +1436,13 @@ var migrations = []func(*sql.Tx) error{
 	func(tx *sql.Tx) (err error) {
 		return loadSQL(tx, "triggers/posts", "triggers/mod_log")
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`alter table main
+			alter column val
+			type jsonb using (val::jsonb)`)
+		return
+	},
 }
 
 func createIndex(table string, columns ...string) string {
@@ -1549,14 +1556,17 @@ func runMigrations() (err error) {
 	}
 }
 
-// Patches server configuration during upgrades
-func patchConfigs(tx *sql.Tx, fn func(*config.Configs)) (err error) {
+// Patches server configuration during upgrades.
+//
+// Legacy function. Only kept for migrations.
+func patchConfigsLegacy(tx *sql.Tx, fn func(*config.Configs)) (err error) {
 	var s string
 	err = tx.QueryRow("SELECT val FROM main WHERE id = 'config'").Scan(&s)
 	if err != nil {
 		return
 	}
-	conf, err := decodeConfigs(s)
+	var conf config.Configs
+	err = json.Unmarshal([]byte(s), &conf)
 	if err != nil {
 		return
 	}

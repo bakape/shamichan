@@ -35,7 +35,7 @@ func loadConfigs() error {
 
 // GetConfigs retrieves global configurations. Only used in tests.
 func GetConfigs() (c config.Configs, err error) {
-	var enc string
+	var enc []byte
 	err = sq.Select("val").
 		From("main").
 		Where("id = 'config'").
@@ -44,12 +44,7 @@ func GetConfigs() (c config.Configs, err error) {
 	if err != nil {
 		return
 	}
-	c, err = decodeConfigs(enc)
-	return
-}
-
-func decodeConfigs(data string) (c config.Configs, err error) {
-	err = json.Unmarshal([]byte(data), &c)
+	err = json.Unmarshal(enc, &c)
 	return
 }
 
