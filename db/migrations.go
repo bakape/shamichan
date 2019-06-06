@@ -1507,7 +1507,7 @@ var migrations = []func(*sql.Tx) error{
 		}
 		for _, posts := range byThread {
 			for i, id := range posts {
-				_, err = set.Exec((i+1)/100, id)
+				_, err = set.Exec(i/100, id)
 				if err != nil {
 					return
 				}
