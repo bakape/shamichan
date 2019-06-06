@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	postSelectsSQL = `p.editing, p.moderated, p.spoiler, p.sage, p.id,
+	postSelectsSQL = `p.editing, p.moderated, p.spoiler, p.sage, p.id, p.page,
 	p.time, p.body, p.flag, p.name, p.trip, p.auth,
 	(select array_agg((l.target, linked_post.op, linked_thread.board))
 		from links as l
@@ -113,9 +113,9 @@ type postScanner struct {
 
 func (p *postScanner) ScanArgs() []interface{} {
 	return []interface{}{
-		&p.Editing, &p.Moderated, &p.spoiler, &p.Sage, &p.ID, &p.Time, &p.Body,
-		&p.Flag, &p.Name, &p.Trip, &p.Auth, &p.links, &p.commands,
-		&p.imageName,
+		&p.Editing, &p.Moderated, &p.spoiler, &p.Sage, &p.ID, &p.Page,
+		&p.Time, &p.Body, &p.Flag, &p.Name, &p.Trip, &p.Auth, &p.links,
+		&p.commands, &p.imageName,
 	}
 }
 

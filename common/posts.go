@@ -51,6 +51,7 @@ type Post struct {
 	Sage       bool              `json:"sage"`
 	Auth       ModerationLevel   `json:"auth"`
 	ID         uint64            `json:"id"`
+	Page       uint64            `json:"page"`
 	Time       int64             `json:"time"`
 	Body       string            `json:"body"`
 	Flag       string            `json:"flag"`
