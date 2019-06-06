@@ -1470,6 +1470,57 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(`
+			alter table posts add column page int not null default 0`,
+		)
+		if err != nil {
+			return
+		}
+
+		byThread := make(map[uint64][]uint64)
+		r, err := sq.Select("id", "op").
+			From("posts").
+			OrderBy("id").
+			RunWith(tx).
+			Query()
+		if err != nil {
+			return
+		}
+		defer r.Close()
+		var id, op uint64
+		for r.Next() {
+			err = r.Scan(&id, &op)
+			if err != nil {
+				return
+			}
+			byThread[op] = append(byThread[op], id)
+		}
+		err = r.Err()
+		if err != nil {
+			return
+		}
+
+		set, err := tx.Prepare(`update posts set page = $1 where id = $2`)
+		if err != nil {
+			return
+		}
+		for _, posts := range byThread {
+			for i, id := range posts {
+				_, err = set.Exec((i+1)/100, id)
+				if err != nil {
+					return
+				}
+			}
+		}
+
+		_, err = tx.Exec(createIndex("posts", "page"))
+		if err != nil {
+			return
+		}
+
+		return loadSQL(tx, "triggers/posts")
+	},
 }
 
 func createIndex(table string, columns ...string) string {
