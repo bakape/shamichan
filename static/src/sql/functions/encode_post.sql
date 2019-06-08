@@ -4,6 +4,7 @@ returns jsonb as $$
 declare
 	data jsonb;
 	tmp jsonb;
+
 	img images%rowtype;
 begin
 	data = jsonb_build_object(
@@ -34,6 +35,41 @@ begin
 		data = data || jsonb_build_object('auth', p.auth);
 	end if;
 
+	-- Links
+	select into tmp
+		jsonb_object_agg(
+			l.target,
+			jsonb_build_object(
+				'op', lp.op,
+				'board', t.board
+			)
+		)
+		from links l
+		join posts lp on lp.id = l.target
+		join threads t on lp.op = t.id
+		where l.source = p.id;
+	if tmp is not null then
+		data = data || jsonb_build_object('links', tmp);
+	end if;
+
+	-- Backlinks
+	select into tmp
+		jsonb_object_agg(
+			l.source,
+			jsonb_build_object(
+				'op', lp.op,
+				'board', t.board
+			)
+		)
+		from links l
+		join posts lp on lp.id = l.source
+		join threads t on lp.op = t.id
+		where l.target = p.id;
+	if tmp is not null then
+		data = data || jsonb_build_object('backlinks', tmp);
+	end if;
+
+	-- Image
 	if p.sha1 is not null then
 		select i.* into img
 			from images i
@@ -71,6 +107,7 @@ begin
 		data = data || jsonb_build_object('image', tmp);
 	end if;
 
+	-- Moderation
 	if p.moderated then
 		select into tmp
 			jsonb_agg(
