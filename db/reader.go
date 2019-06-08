@@ -12,17 +12,6 @@ import (
 )
 
 const (
-	postSelectsSQL = `p.editing, p.moderated, p.spoiler, p.sage, p.id, p.page,
-	p.time, p.body, p.flag, p.name, p.trip, p.auth,
-	(select array_agg((l.target, linked_post.op, linked_thread.board))
-		from links as l
-		join posts as linked_post on l.target = linked_post.id
-		join threads as linked_thread on linked_post.op = linked_thread.id
-		where l.source = p.id
-	),
-	p.commands, p.imageName,
-	i.*`
-
 	threadSelectsSQL = `t.sticky, t.board,
 	(
 		select count(*)
@@ -205,7 +194,7 @@ func GetThread(id uint64, page int) (t common.Thread, err error) {
 		return
 	}
 
-	// TODO: Consider syncing open posts only though websocket
+	// TODO: Continuously flush open bodies to DB like with spam scores
 
 	// Inject bodies into open posts
 	open := make([]*common.Post, 0, 64)

@@ -1521,6 +1521,22 @@ var migrations = []func(*sql.Tx) error{
 
 		return loadSQL(tx, "triggers/posts")
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`alter table posts
+			alter column commands
+			type jsonb using (commands::jsonb)`)
+		if err != nil {
+			return
+		}
+
+		return registerFunctions(
+			tx,
+			"encode_post",
+			"encode_thread",
+			"get_thread",
+		)
+	},
 }
 
 func createIndex(table string, columns ...string) string {

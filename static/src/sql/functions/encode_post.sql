@@ -49,7 +49,7 @@ begin
 		join threads t on lp.op = t.id
 		where l.source = p.id;
 	if tmp is not null then
-		data = data || jsonb_build_object('links', tmp);
+		data = jsonb_set(data, '{links}', tmp);
 	end if;
 
 	-- Backlinks
@@ -66,7 +66,7 @@ begin
 		join threads t on lp.op = t.id
 		where l.target = p.id;
 	if tmp is not null then
-		data = data || jsonb_build_object('backlinks', tmp);
+		data = jsonb_set(data, '{backlinks}', tmp);
 	end if;
 
 	-- Image
@@ -104,7 +104,7 @@ begin
 			tmp = tmp || jsonb_build_object('artist', img.artist);
 		end if;
 
-		data = data || jsonb_build_object('image', tmp);
+		data = jsonb_set(data, '{image}', tmp);
 	end if;
 
 	-- Moderation
@@ -121,7 +121,7 @@ begin
 			from post_moderation pm
 			where pm.post_id = p.id;
 		if tmp is not null then
-			data = data || jsonb_build_object('moderation', tmp);
+			data = jsonb_set(data, '{moderation}', tmp);
 		end if;
 	end if;
 
