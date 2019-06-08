@@ -139,9 +139,12 @@ type PostStats struct {
 	Body                         []byte
 }
 
-// GetThread retrieves public thread data from the database
-func GetThread(id uint64, lastN int) (t common.Thread, err error) {
+// GetThread retrieves public thread data from the database.
+// page: page of the thread to fetch. -1 to fetch the last page.
+func GetThread(id uint64, page int) (t common.Thread, err error) {
 	err = InTransaction(true, func(tx *sql.Tx) (err error) {
+		// TODO: Do this in plpgsql and output JSON
+
 		// Get thread metadata and OP
 		t, err = scanOP(tx.QueryRow(getOPSQL, id))
 		if err != nil {
@@ -201,6 +204,8 @@ func GetThread(id uint64, lastN int) (t common.Thread, err error) {
 	if err != nil {
 		return
 	}
+
+	// TODO: Consider syncing open posts only though websocket
 
 	// Inject bodies into open posts
 	open := make([]*common.Post, 0, 64)
