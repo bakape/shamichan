@@ -141,12 +141,11 @@ func InsertPost(tx *sql.Tx, p *Post) (err error) {
 		//
 		// TODO: Get this in db-side JSON in same query, once we have db-side
 		// post JSON generation.
-		arr := [...]*common.Post{&p.Post}
-		err = injectModeration(arr[:], tx)
-		if err != nil {
-			return
-		}
-
+		// arr := [...]*common.Post{&p.Post}
+		// err = injectModeration(arr[:], tx)
+		// if err != nil {
+		// 	return
+		// }
 	}
 	return
 }

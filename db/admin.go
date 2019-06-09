@@ -24,22 +24,39 @@ func logModeration(tx *sql.Tx, e auth.ModLogEntry) (err error) {
 
 // Clear post contents and remove any uploaded image from the server
 func PurgePost(id uint64, by, reason string) (err error) {
-	post, err := GetPost(id)
-	if err != nil {
-		return
-	}
+	// TODO: Ensure this is tested with and without image
+
 	return InTransaction(false, func(tx *sql.Tx) (err error) {
-		if post.Image != nil {
-			img := post.Image
+		var (
+			board               string
+			hash                sql.NullString
+			fileType, thumbType sql.NullInt64
+		)
+		err = sq.Select("p.board", "i.sha1", "i.file_type", "i.thumb_type").
+			From("posts p").
+			Join("images i on p.sha1 = i.sha1").
+			Where("p.id = ?", id).
+			RunWith(tx).
+			QueryRow().
+			Scan(&board, &hash, &fileType, &thumbType)
+		if err != nil {
+			return
+		}
+
+		if hash.String != "" {
 			_, err = sq.
 				Delete("images").
-				Where("sha1 = ?", img.SHA1).
+				Where("sha1 = ?", hash.String).
 				RunWith(tx).
 				Exec()
 			if err != nil {
 				return
 			}
-			err = assets.Delete(img.SHA1, img.FileType, img.ThumbType)
+			err = assets.Delete(
+				hash.String,
+				uint8(fileType.Int64),
+				uint8(thumbType.Int64),
+			)
 			if err != nil {
 				return
 			}
@@ -48,7 +65,7 @@ func PurgePost(id uint64, by, reason string) (err error) {
 		_, err = sq.
 			Update("posts").
 			Set("body", "").
-			Where("id = ?", post.ID).
+			Where("id = ?", id).
 			RunWith(tx).
 			Exec()
 		if err != nil {
@@ -56,8 +73,8 @@ func PurgePost(id uint64, by, reason string) (err error) {
 		}
 
 		return logModeration(tx, auth.ModLogEntry{
-			Board: post.Board,
-			ID:    post.ID,
+			Board: board,
+			ID:    id,
 			ModerationEntry: common.ModerationEntry{
 				Type: common.PurgePost,
 				By:   by,
@@ -201,6 +218,8 @@ func CanPerform(account, board string, action common.ModerationLevel) (
 func GetSameIPPosts(id uint64, board string, by string) (
 	posts []common.StandalonePost, err error,
 ) {
+	// TODO: Ensure this is tested
+
 	err = InTransaction(false, func(tx *sql.Tx) (err error) {
 		// Get posts ids
 		ids := make([]uint64, 0, 64)

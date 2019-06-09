@@ -2,8 +2,9 @@ package db
 
 import (
 	"database/sql"
-	"github.com/bakape/meguca/common"
 	"testing"
+
+	"github.com/bakape/meguca/common"
 )
 
 func TestCleanUpOpenPostBodies(t *testing.T) {

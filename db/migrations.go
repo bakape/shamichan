@@ -1532,9 +1532,11 @@ var migrations = []func(*sql.Tx) error{
 
 		return registerFunctions(
 			tx,
+			"get_post_moderation",
 			"encode_post",
 			"encode_thread",
 			"get_thread",
+			"get_board",
 		)
 	},
 }

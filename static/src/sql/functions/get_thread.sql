@@ -2,6 +2,7 @@
 -- page: thread page to fetch.
 -- 	If -1, fetches last page.
 -- 	If -5, fetches last 5 posts.
+--	If -6, fetches only the OP.
 create or replace function get_thread(id bigint, page int)
 returns jsonb as $$
 declare
@@ -15,7 +16,7 @@ begin
 		from posts p
 		where p.op = get_thread.id;
 	if max_page is null or page > max_page then
-		return null;
+		raise exception 'page number overflow';
 	end if;
 	if page = -1 then
 		page = max_page;
@@ -28,23 +29,42 @@ begin
 		return null;
 	end if;
 
-	if page != -5 then
+	case page
+	when -5 then
+		data = data - 'page';
+		select into posts
+			jsonb_agg(encode_post(pp) order by pp.id)
+			from (
+				select *
+				from posts p
+				where p.id = get_thread.id
+				union all
+				select *
+				from (
+					select *
+					from posts p
+					where p.op = get_thread.id and p.id != get_thread.id
+					order by p.id desc
+					limit 5
+				) _
+			) pp;
+	when -6 then
+		data = data - 'page';
+		select into posts
+			jsonb_agg(encode_post(p))
+			from posts p
+			where p.id = get_thread.id;
+	else
+		if page < 0 then
+			raise exception 'invalid page number %', page;
+		end if;
+
 		select into posts
 			jsonb_agg(encode_post(p) order by p.id)
 			from posts p
 			where (p.op = get_thread.id and p.page = get_thread.page)
 				or p.id = get_thread.id;
-	else
-		select into posts
-			jsonb_agg(encode_post(pp))
-			from (
-				select p.*
-				from posts p
-				where p.op = get_thread.id or p.id = get_thread.id
-				order by p.id
-				limit 6
-			) pp;
-	end if;
+	end case;
 	data = jsonb_set(data, '{posts}', posts);
 
 	return data;

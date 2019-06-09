@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"io"
 	"time"
 
@@ -159,16 +160,17 @@ func InsertImage(tx *sql.Tx, postID uint64, token, name string, spoiler bool,
 //
 // Only used in tests.
 func GetImage(sha1 string) (img common.ImageCommon, err error) {
-	var scanner imageScanner
-	err = sq.Select("*").
-		From("images").
+	var buf []byte
+	err = sq.Select("to_jsonb(i)").
+		From("images i").
 		Where("SHA1 = ?", sha1).
 		QueryRow().
-		Scan(scanner.ScanArgs()...)
+		Scan(&buf)
 	if err != nil {
 		return
 	}
-	return scanner.Val().ImageCommon, nil
+	err = json.Unmarshal(buf, &img)
+	return
 }
 
 // SpoilerImage spoilers an already allocated image

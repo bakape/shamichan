@@ -10,6 +10,7 @@ begin
 		where p.op = t.id and p.sha1 is not null;
 
 	data = jsonb_build_object(
+		'id', t.id,
 		'board', t.board,
 		'post_count', post_count(t.id),
 		'image_count', image_count,

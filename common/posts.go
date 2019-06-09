@@ -6,48 +6,32 @@ package common
 // TODO: Clean up this function signature
 var ParseBody func([]byte, string, uint64, uint64, string, bool) ([]Link, []Command, error)
 
-// Board is defined to enable marshalling optimizations and sorting by sticky
-// threads
+// Contains a specific page of the board index
 type Board struct {
+	Page    int      `json:"page"`
 	Pages   int      `json:"pages"`
 	Threads []Thread `json:"threads"`
 }
 
-func (b Board) Len() int {
-	return len(b.Threads)
-}
-
-func (b Board) Swap(i, j int) {
-	b.Threads[i], b.Threads[j] = b.Threads[j], b.Threads[i]
-}
-
-func (b Board) Less(i, j int) bool {
-	// So it gets sorted with sticky threads first
-	return b.Threads[i].Sticky
-}
-
-// Thread is a transport/export wrapper that stores both the thread metadata,
-// its opening post data and its contained posts. The composite type itself is
-// not stored in the database.
+// Stores thread meta-data and contained posts
 type Thread struct {
 	Sticky     bool   `json:"sticky"`
 	Locked     bool   `json:"locked"`
 	PostCount  uint32 `json:"post_count"`
 	ImageCount uint32 `json:"image_count"`
-	Page       int    `json:"page"`
+	Page       uint32 `json:"page"`
+	ID         uint64 `json:"id"`
 	UpdateTime int64  `json:"update_time"`
 	BumpTime   int64  `json:"bump_time"`
 	Subject    string `json:"subject"`
 	Board      string `json:"board"`
-	Post
-	Posts []Post `json:"posts"`
+	Posts      []Post `json:"posts"`
 }
 
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {
 	Editing    bool              `json:"editing"`
-	Moderated  bool              `json:"-"`
 	Sage       bool              `json:"sage"`
 	Auth       ModerationLevel   `json:"auth"`
 	ID         uint64            `json:"id"`

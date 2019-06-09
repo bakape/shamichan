@@ -7,9 +7,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bakape/meguca/common"
 	"github.com/boltdb/bolt"
 )
+
+// TODO: Continuously flush open bodies to DB like with spam scores
 
 const (
 	boltNotOpened = iota //  Not opened yet in this server instance
@@ -118,42 +119,6 @@ func GetOpenBody(id uint64) (body string, err error) {
 	return
 }
 
-func deleteOpenPostBody(id uint64) (err error) {
-	ok, err := tryOpenBoltDB()
-	if err != nil || !ok {
-		return
-	}
-
-	buf := encodeUint64(id)
-	return boltDB.Batch(func(tx *bolt.Tx) error {
-		return bodyBucket(tx).Delete(buf[:])
-	})
-}
-
-// Inject open post bodies from the embedded database into the posts
-func injectOpenBodies(posts []*common.Post) (err error) {
-	if len(posts) == 0 {
-		return
-	}
-
-	ok, err := tryOpenBoltDB()
-	if err != nil || !ok {
-		return
-	}
-
-	tx, err := boltDB.Begin(false)
-	if err != nil {
-		return
-	}
-
-	buc := tx.Bucket([]byte("open_bodies"))
-	for _, p := range posts {
-		p.Body = string(buc.Get(encodeUint64Heap(p.ID)))
-	}
-
-	return tx.Rollback()
-}
-
 // Delete orphaned post bodies, that refer to posts already closed or deleted.
 // This can happen on server restarts, board deletion, etc.
 func cleanUpOpenPostBodies() (err error) {
@@ -214,5 +179,17 @@ func cleanUpOpenPostBodies() (err error) {
 			}
 			return
 		})
+	})
+}
+
+func deleteOpenPostBody(id uint64) (err error) {
+	ok, err := tryOpenBoltDB()
+	if err != nil || !ok {
+		return
+	}
+
+	buf := encodeUint64(id)
+	return boltDB.Batch(func(tx *bolt.Tx) error {
+		return bodyBucket(tx).Delete(buf[:])
 	})
 }

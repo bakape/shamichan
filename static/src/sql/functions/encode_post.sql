@@ -109,17 +109,7 @@ begin
 
 	-- Moderation
 	if p.moderated then
-		select into tmp
-			jsonb_agg(
-				jsonb_build_object(
-					'type', pm.type,
-					'length', pm.length,
-					'by', pm.by,
-					'data', pm.data
-				)
-			)
-			from post_moderation pm
-			where pm.post_id = p.id;
+		select get_post_moderation(p.id) into tmp;
 		if tmp is not null then
 			data = jsonb_set(data, '{moderation}', tmp);
 		end if;
