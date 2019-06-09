@@ -94,8 +94,8 @@ func GetAllBoardCatalog() (buf []byte, err error) {
 }
 
 // Retrieves all threads for a specific board on a specific page
-func GetBoard(board string, page uint) (board []byte, err error) {
-	err = db.QueryRow(`select get_board($1, $2)`, board, page).Scan(&board)
+func GetBoard(board string, page uint) (data []byte, err error) {
+	err = db.QueryRow(`select get_board($1, $2)`, board, page).Scan(&data)
 	return
 }
 

@@ -227,9 +227,6 @@ func TestDeletePostsByIP(t *testing.T) {
 			t.Error("deletion not propagateds after insert")
 		}
 		assertDeleted(t, post.ID, true)
-		if !post.Moderated {
-			t.Error("not marked as moderated")
-		}
 		if len(post.Moderation) == 0 {
 			t.Error("no post moderation entries")
 		}

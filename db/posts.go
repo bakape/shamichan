@@ -128,25 +128,10 @@ func InsertPost(tx *sql.Tx, p *Post) (err error) {
 
 	err = q.
 		Values(args...).
-		Suffix("returning id, time, moderated").
+		Suffix("returning id, time").
 		RunWith(tx).
 		QueryRow().
-		Scan(&p.ID, &p.Time, &p.Moderated)
-	if err != nil {
-		return
-	}
-
-	if p.Moderated {
-		// Read moderation log, if post deleted on insert
-		//
-		// TODO: Get this in db-side JSON in same query, once we have db-side
-		// post JSON generation.
-		// arr := [...]*common.Post{&p.Post}
-		// err = injectModeration(arr[:], tx)
-		// if err != nil {
-		// 	return
-		// }
-	}
+		Scan(&p.ID, &p.Time)
 	return
 }
 

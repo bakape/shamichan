@@ -1537,6 +1537,7 @@ var migrations = []func(*sql.Tx) error{
 			"encode_thread",
 			"get_thread",
 			"get_board",
+			"get_same_ip_posts",
 		)
 	},
 }

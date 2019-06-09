@@ -215,58 +215,9 @@ func CanPerform(account, board string, action common.ModerationLevel) (
 
 // GetSameIPPosts returns posts with the same IP and on the same board as the
 // target post
-func GetSameIPPosts(id uint64, board string, by string) (
-	posts []common.StandalonePost, err error,
-) {
+func GetSameIPPosts(id uint64, by string) (posts []byte, err error) {
 	// TODO: Ensure this is tested
-
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
-		// Get posts ids
-		ids := make([]uint64, 0, 64)
-		err = queryAll(
-			sq.Select("id").
-				From("posts").
-				Where(`ip = (select ip from posts where id = ?) and board = ?`,
-					id, board),
-			func(r *sql.Rows) (err error) {
-				var id uint64
-				err = r.Scan(&id)
-				if err != nil {
-					return
-				}
-				ids = append(ids, id)
-				return
-			},
-		)
-		if err != nil {
-			return
-		}
-
-		// Read the matched posts
-		posts = make([]common.StandalonePost, 0, len(ids))
-		var post common.StandalonePost
-
-		for _, id := range ids {
-			post, err = GetPost(id)
-
-			switch err {
-			case nil:
-				posts = append(posts, post)
-			case sql.ErrNoRows: // Deleted in race
-				err = nil
-			default:
-				return
-			}
-		}
-		return
-	})
-
-	err = moderatePost(id,
-		common.ModerationEntry{
-			Type: common.MeidoVision,
-			By:   by,
-		},
-		nil)
+	err = db.QueryRow(`select get_same_ip_posts($1, $2)`, id, by).Scan(&posts)
 	return
 }
 
