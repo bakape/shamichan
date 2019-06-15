@@ -154,21 +154,14 @@ func Write(SHA1 string, fileType, thumbType uint8, src, thumb io.ReadSeeker,
 
 	paths := GetFilePaths(SHA1, fileType, thumbType)
 
-	// Write files in parallel
-	ch := make(chan error)
-	go func() {
-		if thumb == nil {
-			ch <- nil
-		} else {
-			ch <- writeFile(paths[1], thumb)
-		}
-	}()
-	for _, err = range [...]error{writeFile(paths[0], src), <-ch} {
-		if err != nil {
-			return
-		}
+	// Don't write files in parallel to reduce the amount of threads the Go
+	// runtime needs to spawn.
+	err = writeFile(paths[0], src)
+	if err != nil {
+		return
 	}
-	return nil
+	err = writeFile(paths[1], thumb)
+	return
 }
 
 // Write a single file to disk with the appropriate permissions and flags
