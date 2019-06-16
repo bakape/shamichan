@@ -372,6 +372,13 @@ func TestStaff(t *testing.T) {
 
 func TestGetSameIPPosts(t *testing.T) {
 	prepareForModeration(t)
+	writeSampleUser(t)
+	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+		return WriteStaff(tx, "a", map[common.ModerationLevel][]string{
+			common.BoardOwner: {"admin"},
+			common.Janitor:    {sampleUserID},
+		})
+	})
 
 	buf, err := GetSameIPPosts(1, sampleUserID)
 	if err != nil {
