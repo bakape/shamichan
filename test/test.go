@@ -10,13 +10,16 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 // LogUnexpected fails the test and prints the values in an
 // `expected: X got: Y` format
 func LogUnexpected(t *testing.T, expected, got interface{}) {
 	t.Helper()
-	t.Fatalf("\nexpected: %#v\ngot:      %#v", expected, got)
+
+	t.Fatal("\n" + cmp.Diff(expected, got))
 }
 
 // AssertEquals asserts two values are deeply equal or fails the test, if

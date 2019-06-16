@@ -240,10 +240,12 @@ func TestSpoilerImage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	post, err := GetPost(1)
+	buf, err := GetPost(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var post common.Post
+	decode(t, buf, &post)
 	test.AssertEquals(t, post.Image.Spoiler, true)
 }
 

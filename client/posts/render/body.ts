@@ -362,10 +362,10 @@ function parseFragment(frag: string, data: PostData): string {
             }
             continue
         }
-        if ((word.indexOf("(") >= 0) && (word.indexOf("http") >= 0)  ){
+        if ((word.indexOf("(") >= 0) && (word.indexOf("http") >= 0)) {
             let countOpen = (word.match(/[(]/g)).length
             let countClosed = (word.match(/[)]/g) || []).length
-            if ((countOpen == countClosed + 1) && (trailPunct == ")")){
+            if ((countOpen == countClosed + 1) && (trailPunct == ")")) {
                 word += ")"
                 trailPunct = " "
             }
@@ -378,7 +378,7 @@ function parseFragment(frag: string, data: PostData): string {
                 if (data.state.quote) {
                     break
                 }
-                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$/)
+                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?)$/)
                 if (m) {
                     html += parseCommand(m[1], data)
                     matched = true
@@ -535,17 +535,7 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             switch (commands[state.iDice].type) {
                 case commandType.pyu:
                 case commandType.pcount:
-                case commandType.rcount:
                     inner = commands[state.iDice++].val.toString()
-            }
-
-            break
-        case "roulette":
-            let val = commands[state.iDice++].val
-            inner = val[0].toString() + "/" + val[1].toString()
-            // set formatting if the poster died
-            if (val[0] == 1) {
-                formatting = "<strong class=\"dead\">"
             }
             break
         default:
@@ -591,8 +581,6 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
         "8ball": commandType.eightBall,
         pyu: commandType.pyu,
         pcount: commandType.pcount,
-        rcount: commandType.rcount,
-        roulette: commandType.roulette,
     }
     if (literalMatching
         && commandMatchers[bit] !== commands[state.iDice - 1].type

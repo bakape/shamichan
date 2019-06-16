@@ -9,7 +9,7 @@ begin
 		from threads t
 		where t.board = get_board.board;
 	if max_page is null or page > max_page then
-		raise exception 'page number overflow';
+		return null;
 	end if;
 
 	select into data
@@ -45,7 +45,7 @@ declare
 begin
 	select count(*) / 10 into max_page from threads t;
 	if max_page is null or page > max_page then
-		raise exception 'page number overflow';
+		return null;
 	end if;
 
 	select into data

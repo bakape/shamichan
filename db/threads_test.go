@@ -48,7 +48,7 @@ func TestDiffPostCount(t *testing.T) {
 	}
 	std := ThreadPostCountDiff{
 		Changed: map[uint64]uint64{
-			1: 3,
+			1: 109,
 		},
 		Deleted: []uint64{4},
 	}
@@ -85,20 +85,21 @@ func TestDiffPostCount(t *testing.T) {
 			Post{
 				StandalonePost: common.StandalonePost{
 					Post: common.Post{
-						ID:   7,
+						ID:   999,
 						Time: time.Now().Unix(),
 					},
 					OP:    1,
 					Board: "a",
 				},
 				IP: "::1",
-			})
+			},
+		)
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	std.Changed[1] = 4
+	std.Changed[1] = 110
 	assert(t)
 }
 

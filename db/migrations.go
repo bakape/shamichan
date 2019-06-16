@@ -1525,12 +1525,19 @@ var migrations = []func(*sql.Tx) error{
 		_, err = tx.Exec(
 			`alter table posts
 			alter column commands
-			type jsonb using (commands::jsonb)`)
+			type jsonb[]`)
 		if err != nil {
 			return
 		}
 
-		return registerFunctions(
+		for _, t := range [...]string{"pyu_limit", "roulette"} {
+			_, err = tx.Exec("drop table " + t)
+			if err != nil {
+				return
+			}
+		}
+
+		err = registerFunctions(
 			tx,
 			"get_post_moderation",
 			"encode_post",
@@ -1539,6 +1546,21 @@ var migrations = []func(*sql.Tx) error{
 			"get_board",
 			"get_same_ip_posts",
 		)
+		if err != nil {
+			return
+		}
+
+		err = loadSQL(tx, "triggers/threads", "triggers/posts")
+		if err != nil {
+			return
+		}
+
+		// Needed for tests
+		_, err = tx.Exec(
+			`alter table links
+			alter constraint links_target_fkey deferrable`,
+		)
+		return
 	},
 }
 

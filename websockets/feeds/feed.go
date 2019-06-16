@@ -281,7 +281,8 @@ func (f *Feed) _moderatePost(id uint64, msg []byte,
 	}
 }
 
-// SetOpenBody sets the body of an open post and send update message to clients
+// SetOpenBody sets the body of an open post and sends update message to
+// clients
 func (f *Feed) SetOpenBody(id uint64, body string, msg []byte) {
 	f.setOpenBody <- postBodyModMessage{
 		message: message{

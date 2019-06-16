@@ -72,7 +72,10 @@ func writeSampleThread(t *testing.T) {
 		},
 		IP: "::1",
 	}
-	if err := WriteThread(thread, op); err != nil {
+	err := InTransaction(false, func(tx *sql.Tx) error {
+		return WriteThread(tx, thread, op)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 }
@@ -146,10 +149,12 @@ func TestSageAndTimestampUpdates(t *testing.T) {
 	var bumpTime, updateTime int64
 
 	// Read initial values
-	thread, err := GetThread(1, 0)
+	buf, err := GetThread(1, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var thread common.Thread
+	decode(t, buf, &thread)
 	bumpTime = thread.BumpTime
 	updateTime = thread.UpdateTime
 
@@ -184,10 +189,12 @@ func TestSageAndTimestampUpdates(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			thread, err := GetThread(1, 0)
+			buf, err := GetThread(1, 0)
 			if err != nil {
 				t.Fatal(err)
 			}
+			var thread common.Thread
+			decode(t, buf, &thread)
 
 			if thread.UpdateTime <= updateTime {
 				t.Error("update time not increased")

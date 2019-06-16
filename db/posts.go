@@ -92,7 +92,12 @@ func WritePost(tx *sql.Tx, p Post) (err error) {
 	if err != nil {
 		return
 	}
-	err = writeLinks(tx, p.ID, p.Links)
+
+	links := make([]uint64, len(p.Links))
+	for id := range p.Links {
+		links = append(links, id)
+	}
+	err = writeLinks(tx, p.ID, links)
 	if err != nil {
 		return
 	}

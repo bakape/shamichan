@@ -2,27 +2,28 @@
 package parser
 
 import (
+	"regexp"
+	"strconv"
+	"unicode"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
-	"regexp"
-	"unicode"
 )
 
 var (
 	linkRegexp = regexp.MustCompile(`^>{2,}(\d+)$`)
 )
 
-// Needed to avoid cyclic imports for the 'db' package
-func init() {
-	common.ParseBody = ParseBody
-}
-
 // ParseBody parses the entire post text body for commands and links.
 // internal: function was called by automated upkeep task
-func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, internal bool) (
-	links []common.Link, com []common.Command, err error,
+func ParseBody(body []byte, boardConf config.BoardConfigs, internal bool) (
+	links []uint64,
+	com []common.Command,
+	err error,
 ) {
+	// TODO: Perform link lookup, dice rolls, etc. inside DB module
+
 	err = IsPrintableString(string(body), true)
 	if err != nil {
 		if internal {
@@ -42,12 +43,6 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 
 	start := 0
 	lineStart := 0
-	pyu := config.GetBoardConfigs(board).Pyu
-
-	// Prevent link duplication
-	haveLink := make(map[uint64]bool)
-	// Prevent #pyu duplication
-	isSlut := false
 
 	for i, b := range body {
 		switch b {
@@ -72,20 +67,16 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 			if m == nil {
 				goto next
 			}
-			var l common.Link
-			l, err = parseLink(m)
-			switch {
-			case err != nil:
+			var id uint64
+			id, err = strconv.ParseUint(string(m[1]), 10, 64)
+			if err != nil {
 				return
-			case l.ID != 0:
-				if !haveLink[l.ID] {
-					haveLink[l.ID] = true
-					links = append(links, l)
-				}
 			}
+			links = append(links, id)
 		case '#':
 			// Ignore hash commands in quotes, or #pyu/#pcount if board option disabled
-			if body[lineStart] == '>' || (len(word) > 1 && word[1] == 'p' && !pyu) {
+			if body[lineStart] == '>' ||
+				(len(word) > 1 && word[1] == 'p' && !boardConf.Pyu) {
 				goto next
 			}
 			m := common.CommandRegexp.FindSubmatch(word)
@@ -93,7 +84,7 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 				goto next
 			}
 			var c common.Command
-			c, err = parseCommand(m[1], board, thread, id, ip, &isSlut)
+			c, err = parseCommand(m[1], boardConf)
 			switch err {
 			case nil:
 				com = append(com, c)

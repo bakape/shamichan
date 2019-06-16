@@ -68,11 +68,14 @@ func TestNoBumpOnPostUpdate(t *testing.T) {
 		},
 	}
 
-	thread, err := GetThread(1, 0)
+	buf, err := GetThread(1, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	last := thread.BumpTime
+
+	var lastThread common.Thread
+	decode(t, buf, &lastThread)
+	last := lastThread.BumpTime
 
 	for i := range cases {
 		c := cases[i]
@@ -81,10 +84,12 @@ func TestNoBumpOnPostUpdate(t *testing.T) {
 
 			c.fn(t)
 
-			thread, err := GetThread(1, 0)
+			buf, err := GetThread(1, 0)
 			if err != nil {
 				t.Fatal(err)
 			}
+			var thread common.Thread
+			decode(t, buf, &thread)
 
 			if c.bump {
 				if thread.BumpTime == last {

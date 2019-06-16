@@ -8,7 +8,6 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/test/test_db"
 )
 
 func TestFlip(t *testing.T) {
@@ -78,11 +77,6 @@ func Test8ball(t *testing.T) {
 }
 
 func TestPyu(t *testing.T) {
-	var isSlut bool
-	test_db.ClearTables(t, "boards", "pyu", "pyu_limit")
-	writeSampleBoard(t)
-	writeSampleThread(t)
-
 	t.Run("disabled", func(t *testing.T) {
 		config.SetBoardConfigs(config.BoardConfigs{
 			BoardPublic: config.BoardPublic{
@@ -115,13 +109,8 @@ func TestPyu(t *testing.T) {
 			Type     common.CommandType
 			Val      uint64
 		}{
-			{"count on zero", "pcount", common.Pcount, 0},
-			{"increment", "pyu", common.Pyu, 1},
-			{"count", "pcount", common.Pcount, 1},
-			{"increment with limit set", "pyu", common.Pyu, 2},
-			{"increment with limit set", "pyu", common.Pyu, 3},
-			{"increment with limit set", "pyu", common.Pyu, 4},
-			{"pyu limit reached", "pyu", common.Pyu, 4},
+			{"increment", "pyu", common.Pyu, 0},
+			{"count", "pcount", common.Pcount, 0},
 		}
 
 		for i := range cases {

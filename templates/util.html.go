@@ -96,9 +96,9 @@ func tabButts(names []string) string {
 // Render a link to another post. Can optionally be cross-thread.
 
 //line util.html:20
-func streampostLink(qw422016 *qt422016.Writer, link common.Link, cross, boardPage bool) {
+func streampostLink(qw422016 *qt422016.Writer, id uint64, link common.Link, cross, boardPage bool) {
 	//line util.html:21
-	idBuf := strconv.AppendUint(make([]byte, 0, 16), link.ID, 10)
+	idBuf := strconv.AppendUint(make([]byte, 0, 16), id, 10)
 
 	//line util.html:22
 	url := make([]byte, 0, 64)
@@ -155,22 +155,22 @@ func streampostLink(qw422016 *qt422016.Writer, link common.Link, cross, boardPag
 }
 
 //line util.html:39
-func writepostLink(qq422016 qtio422016.Writer, link common.Link, cross, boardPage bool) {
+func writepostLink(qq422016 qtio422016.Writer, id uint64, link common.Link, cross, boardPage bool) {
 	//line util.html:39
 	qw422016 := qt422016.AcquireWriter(qq422016)
 	//line util.html:39
-	streampostLink(qw422016, link, cross, boardPage)
+	streampostLink(qw422016, id, link, cross, boardPage)
 	//line util.html:39
 	qt422016.ReleaseWriter(qw422016)
 //line util.html:39
 }
 
 //line util.html:39
-func postLink(link common.Link, cross, boardPage bool) string {
+func postLink(id uint64, link common.Link, cross, boardPage bool) string {
 	//line util.html:39
 	qb422016 := qt422016.AcquireByteBuffer()
 	//line util.html:39
-	writepostLink(qb422016, link, cross, boardPage)
+	writepostLink(qb422016, id, link, cross, boardPage)
 	//line util.html:39
 	qs422016 := string(qb422016.B)
 	//line util.html:39

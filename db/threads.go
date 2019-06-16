@@ -184,25 +184,23 @@ func InsertThread(tx *sql.Tx, subject string, p *Post) (err error) {
 }
 
 // WriteThread writes a thread and it's OP to the database. Only used for tests.
-func WriteThread(t Thread, p Post) (err error) {
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
-		_, err = sq.
-			Insert("threads").
-			Columns("board", "id", "update_time", "bump_time", "subject").
-			Values(
-				t.Board,
-				t.ID,
-				t.UpdateTime,
-				t.BumpTime,
-				t.Subject,
-			).
-			RunWith(tx).
-			Exec()
-		if err != nil {
-			return
-		}
-		return WritePost(tx, p)
-	})
+func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
+	_, err = sq.
+		Insert("threads").
+		Columns("board", "id", "update_time", "bump_time", "subject").
+		Values(
+			t.Board,
+			t.ID,
+			t.UpdateTime,
+			t.BumpTime,
+			t.Subject,
+		).
+		RunWith(tx).
+		Exec()
+	if err != nil {
+		return
+	}
+	return WritePost(tx, p)
 }
 
 // CheckThreadLocked checks, if a thread has been locked by a moderator

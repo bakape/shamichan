@@ -5,15 +5,14 @@ package parser
 import (
 	"bytes"
 	"crypto/rand"
-	"database/sql"
 	"math/big"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 )
 
 var (
@@ -33,11 +32,8 @@ func randInt(max int) int {
 }
 
 // Parse a matched hash command
-func parseCommand(match []byte, board string, thread uint64, id uint64, ip string, isSlut *bool) (
-	com common.Command, err error,
-) {
-	boardConfig := config.GetBoardConfigs(board)
-
+func parseCommand(match []byte, boardConf config.BoardConfigs,
+) (com common.Command, err error) {
 	switch {
 
 	// Coin flip
@@ -48,123 +44,24 @@ func parseCommand(match []byte, board string, thread uint64, id uint64, ip strin
 	// 8ball; select random string from the the 8ball answer array
 	case bytes.Equal(match, []byte("8ball")):
 		com.Type = common.EightBall
-		answers := boardConfig.Eightball
+		answers := boardConf.Eightball
 		if len(answers) != 0 {
 			com.Eightball = answers[randInt(len(answers))]
 		}
 
 	// Increment pyu counter
 	case bytes.Equal(match, []byte("pyu")):
-		com.Type = common.Pyu
-
-		if boardConfig.Pyu {
-			err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
-				exists, err := db.PyuLimitExists(tx, ip, board)
-
-				if err != nil {
-					return
-				}
-
-				if !exists {
-					err = db.WritePyuLimit(tx, ip, board)
-
-					if err != nil {
-						return
-					}
-				}
-
-				limit, err := db.GetPyuLimit(tx, ip, board)
-
-				if err != nil {
-					return
-				}
-
-				restricted, err := db.GetPyuLimitRestricted(tx, ip, board)
-
-				if err != nil {
-					return
-				}
-
-				if restricted {
-					com.Pyu, err = db.GetPcountA(tx, board)
-
-					if err != nil {
-						return
-					}
-
-					if !*isSlut {
-						*isSlut = true
-						err = db.Ban(board, "stop being such a slut", "system",
-							time.Hour, id)
-					}
-
-					if err != nil {
-						return
-					}
-				} else {
-					switch limit {
-					case 1:
-						err = db.SetPyuLimitRestricted(tx, ip, board)
-
-						if err != nil {
-							return
-						}
-
-						fallthrough
-					default:
-						com.Pyu, err = db.IncrementPcount(tx, board)
-
-						if err != nil {
-							return
-						}
-
-						err = db.DecrementPyuLimit(tx, ip, board)
-
-						if err != nil {
-							return
-						}
-					}
-				}
-
-				return
-			})
-		} else {
-			com.Pyu, err = db.GetPcount(board)
+		if boardConf.Pyu {
+			com.Type = common.Pyu
 		}
+		// DB queries deferred to post close
 
 	// Return current pyu count
 	case bytes.Equal(match, []byte("pcount")):
-		com.Type = common.Pcount
-		com.Pyu, err = db.GetPcount(board)
-
-	// Roulette
-	case bytes.Equal(match, []byte("roulette")):
-		com.Type = common.Roulette
-		err = db.InTransaction(false, func(tx *sql.Tx) error {
-			max, err := db.DecrementRoulette(tx, thread)
-
-			if err != nil {
-				return err
-			}
-
-			roll := uint8(randInt(int(max)) + 1)
-
-			if roll == 1 {
-				err = db.ResetRoulette(tx, thread)
-			}
-
-			com.Roulette = [2]uint8{roll, max}
-			return err
-		})
-
-	// Return current roulette count
-	case bytes.Equal(match, []byte("rcount")):
-		com.Type = common.Rcount
-		err = db.InTransaction(false, func(tx *sql.Tx) error {
-			rcount, err := db.GetRcount(tx, thread)
-			com.Pyu = uint64(rcount)
-			return err
-		})
+		if boardConf.Pyu {
+			com.Type = common.Pcount
+		}
+		// DB queries deferred to post close
 
 	default:
 		matchStr := string(match)

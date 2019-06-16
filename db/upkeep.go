@@ -11,6 +11,7 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/parser"
 	"github.com/go-playground/log"
 )
 
@@ -47,7 +48,6 @@ func runMinuteTasks() {
 
 func runHalfTasks() {
 	if config.Server.ImagerMode != config.ImagerOnly {
-		logError("unrestrict pyu_limit", FreePyuLimit())
 		logError("expire spam scores", expireSpamScores())
 		logError("expire last solved captcha times", expireLastSolvedCaptchas())
 	}
@@ -107,21 +107,24 @@ func removeIdentityInfo() error {
 // Close any open posts that have not been closed for 30 minutes
 func closeDanglingPosts() error {
 	type post struct {
-		id, op uint64
-		board  string
-		ip     sql.NullString
+		id    uint64
+		board string
 	}
 	var (
-		posts = make([]post, 0, 8)
+		posts []post
 		p     post
 	)
 	err := queryAll(
-		sq.Select("id", "op", "board", "ip").
+		sq.Select("id", "board").
 			From("posts").
-			Where(`editing = true and time
-				< floor(extract(epoch from now() at time zone 'utc')) - 900`),
+			Where(
+				`editing = true
+				and time < floor(extract(epoch from now() at time zone 'utc'))
+							- 900`,
+			).
+			OrderBy("id"), // Sort for less page misses on processing
 		func(r *sql.Rows) (err error) {
-			err = r.Scan(&p.id, &p.op, &p.board, &p.ip)
+			err = r.Scan(&p.id, &p.board)
 			if err != nil {
 				return err
 			}
@@ -140,11 +143,15 @@ func closeDanglingPosts() error {
 			return err
 		}
 
-		links, com, err := common.ParseBody([]byte(body), p.board, p.op, p.id, p.ip.String, true)
-		// Still close posts on invalid input
+		links, com, err := parser.ParseBody(
+			[]byte(body),
+			config.GetBoardConfigs(p.board).BoardConfigs,
+			true,
+		)
 		switch err.(type) {
 		case nil:
 		case common.StatusError:
+			// Still close posts on invalid input
 			if err.(common.StatusError).Code != 400 {
 				return err
 			}
@@ -152,7 +159,7 @@ func closeDanglingPosts() error {
 		default:
 			return err
 		}
-		err = ClosePost(p.id, p.op, body, links, com)
+		err = ClosePost(p.id, p.board, body, links, com)
 		if err != nil {
 			return err
 		}
@@ -180,7 +187,8 @@ func deleteUnusedBoards() error {
 				From("boards").
 				Where(`created < ?
 					and id != 'all'
-					and (select coalesce(max(bump_time), 0)
+					and (
+							select coalesce(max(bump_time), 0)
 							from threads
 							where board = boards.id
 						) < ?`,
@@ -250,20 +258,18 @@ func deleteOldThreads() (err error) {
 		err = queryAll(
 			sq.
 				Select(
-					"threads.id",
+					"t.id",
 					"bump_time",
-					`(select count(*)
-						from posts
-						where posts.op = threads.id
-						) as post_count`,
+					`post_count(t.id)`,
 					fmt.Sprintf(
 						`(select exists (
 							select 1 from post_moderation
-							where post_id = threads.id and type = %d))`,
+							where post_id = t.id and type = %d
+						))`,
 						common.DeletePost),
 				).
-				From("threads").
-				Join("posts on threads.id = posts.id").
+				From("threads t").
+				Join("posts p on t.id = p.id").
 				RunWith(tx),
 			func(r *sql.Rows) (err error) {
 				err = r.Scan(&id, &bumpTime, &postCount, &deleted)

@@ -1,10 +1,16 @@
 package db
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 
 	"github.com/bakape/meguca/config"
+)
+
+var (
+	// Don't reallocate this
+	emptyArray = []byte("[]")
 )
 
 // GetThread retrieves public thread data from the database.
@@ -13,7 +19,16 @@ import (
 // 	-5 to fetch last 5 posts
 func GetThread(id uint64, page int) (thread []byte, err error) {
 	err = db.QueryRow("select get_thread($1, $2)", id, page).Scan(&thread)
+	castNoRows(&thread, &err)
 	return
+}
+
+// The PL/pgSQL functions return null on non-existence. Cast that to
+// sql.ErrNoRows.
+func castNoRows(buf *[]byte, err *error) {
+	if *err == nil && len(*buf) == 0 {
+		*err = sql.ErrNoRows
+	}
 }
 
 // GetPost reads a single post from the database
@@ -30,6 +45,7 @@ func GetPost(id uint64) (post []byte, err error) {
 		Where("p.id = ?", id).
 		QueryRow().
 		Scan(&post)
+	castNoRows(&post, &err)
 	return
 }
 
@@ -46,7 +62,15 @@ func GetBoardCatalog(board string) (buf []byte, err error) {
 		Where("board = ?", board).
 		QueryRow().
 		Scan(&buf)
+	ensureArray(&buf)
 	return
+}
+
+// Ensure buf is always an array
+func ensureArray(buf *[]byte) {
+	if len(*buf) == 0 {
+		*buf = emptyArray
+	}
 }
 
 // GetAllBoardCatalog retrieves all threads for the "/all/" meta-board
@@ -90,17 +114,20 @@ func GetAllBoardCatalog() (buf []byte, err error) {
 	}
 
 	err = q.QueryRow().Scan(&buf)
+	ensureArray(&buf)
 	return
 }
 
 // Retrieves all threads for a specific board on a specific page
 func GetBoard(board string, page uint) (data []byte, err error) {
 	err = db.QueryRow(`select get_board($1, $2)`, board, page).Scan(&data)
+	castNoRows(&data, &err)
 	return
 }
 
 // Retrieves all threads for the "/all/" meta-board on a specific page
 func GetAllBoard(page uint) (board []byte, err error) {
 	err = db.QueryRow(`select get_all_board($1)`, page).Scan(&board)
+	castNoRows(&board, &err)
 	return
 }

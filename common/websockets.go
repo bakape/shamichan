@@ -71,12 +71,6 @@ var (
 
 	// GetClientsByIP returns connected clients with matching ips
 	GetClientsByIP func(ip string) []Client
-
-	// SendTo sends a message to a feed, if it exists
-	SendTo func(id uint64, msg []byte)
-
-	// ClosePost closes a post in a feed, if it exists
-	ClosePost func(id, op uint64, links []Link, commands []Command) error
 )
 
 // Client exposes some globally accessible websocket client functionality

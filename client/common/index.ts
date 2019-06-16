@@ -7,7 +7,6 @@ export const isCuck = navigator.userAgent.toLowerCase().includes("firefox")
 
 // Generic link object containing target post board and thread
 export type PostLink = {
-	id: number
 	op: number
 	board: string
 }
@@ -61,7 +60,7 @@ export interface PostData {
 	board?: string
 	flag?: string
 	state: TextState
-	links?: PostLink[]
+	links?: { [key: number]: PostLink };
 	commands?: Command[]
 	moderation?: ModerationEntry[]
 }
@@ -83,7 +82,7 @@ export type TextState = {
 
 // Types of hash command entries
 export const enum commandType {
-	dice, flip, eightBall, syncWatch, pyu, pcount, roulette, rcount,
+	dice, flip, eightBall, syncWatch, pyu, pcount,
 }
 
 // Single hash command result delivered from the server

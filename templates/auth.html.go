@@ -353,7 +353,7 @@ func tableStyle() string {
 //line auth.html:108
 func streamstaticPostLink(qw422016 *qt422016.Writer, id uint64) {
 	//line auth.html:109
-	streampostLink(qw422016, common.Link{id, id, "all"}, true, true)
+	streampostLink(qw422016, id, common.Link{id, "all"}, true, true)
 //line auth.html:110
 }
 

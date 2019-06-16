@@ -4,11 +4,11 @@ declare
 	to_delete_by text;
 	post_counter bigint;
 begin
+	-- +1, because new post is not inserted yet
 	post_counter = post_count(new.op) + 1;
 	new.page = post_counter / 100;
 
 	perform bump_thread(new.op, not new.sage);
-	-- +1, because new post is not inserted yet
 	perform pg_notify('new_post_in_thread', new.op || ',' || post_counter);
 
 	-- Delete post, if IP blacklisted

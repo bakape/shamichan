@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -44,10 +45,12 @@ func writeAdminAccount(t *testing.T) {
 func TestDeleteImages(t *testing.T) {
 	prepareForModeration(t)
 
-	p, err := GetPost(1)
+	buf, err := GetPost(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var p common.Post
+	decode(t, buf, &p)
 	if p.Image == nil {
 		t.Fatal("no image")
 	}
@@ -57,10 +60,11 @@ func TestDeleteImages(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p, err = GetPost(1)
+	buf, err = GetPost(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	decode(t, buf, &p)
 	if p.Image != nil {
 		t.Fatal("image not deleted")
 	}
@@ -69,10 +73,12 @@ func TestDeleteImages(t *testing.T) {
 func TestSpoilerImages(t *testing.T) {
 	prepareForModeration(t)
 
-	p, err := GetPost(1)
+	buf, err := GetPost(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var p common.Post
+	decode(t, buf, &p)
 	if p.Image.Spoiler {
 		t.Fatal("has spoiler")
 	}
@@ -82,10 +88,11 @@ func TestSpoilerImages(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p, err = GetPost(1)
+	buf, err = GetPost(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	decode(t, buf, &p)
 	if !p.Image.Spoiler {
 		t.Fatal("no spoiler")
 	}
@@ -117,33 +124,35 @@ func TestDeletePostsByIP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = InTransaction(false, func(tx *sql.Tx) error {
-		return WriteBoard(tx, BoardConfigs{
+	err = InTransaction(false, func(tx *sql.Tx) (err error) {
+		err = WriteBoard(tx, BoardConfigs{
 			BoardConfigs: config.BoardConfigs{
 				ID:        "b",
 				Eightball: []string{},
 			},
 		})
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = WriteThread(
-		Thread{
-			ID:    2,
-			Board: "b",
-		},
-		Post{
-			StandalonePost: common.StandalonePost{
-				Post: common.Post{
-					ID:   2,
-					Time: time.Now().Unix(),
-				},
-				OP:    2,
+		if err != nil {
+			return
+		}
+		return WriteThread(
+			tx,
+			Thread{
+				ID:    2,
 				Board: "b",
 			},
-			IP: "::1",
-		})
+			Post{
+				StandalonePost: common.StandalonePost{
+					Post: common.Post{
+						ID:   2,
+						Time: time.Now().Unix(),
+					},
+					OP:    2,
+					Board: "b",
+				},
+				IP: "::1",
+			},
+		)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -289,10 +298,12 @@ func TestPurgePost(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	post, err := GetPost(1)
+	buf, err := GetPost(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var post common.Post
+	decode(t, buf, &post)
 	test.AssertEquals(t, len(post.Moderation), 1)
 	test.AssertEquals(t, post.Image == nil, true)
 	test.AssertEquals(t, post.Body, "")
@@ -361,7 +372,12 @@ func TestStaff(t *testing.T) {
 func TestGetSameIPPosts(t *testing.T) {
 	prepareForModeration(t)
 
-	res, err := GetSameIPPosts(1, "a", sampleUserID)
+	buf, err := GetSameIPPosts(1, sampleUserID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var res []common.Post
+	err = json.Unmarshal(buf, &res)
 	if err != nil {
 		t.Fatal(err)
 	}

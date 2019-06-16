@@ -8,7 +8,7 @@ import (
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 )
 
 const eightDays = time.Hour * 24 * 8
@@ -23,11 +23,6 @@ func TestOpenPostClosing(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	common.ParseBody = func(_ []byte, _ string, _ uint64, _ uint64, _ string, _ bool) (
-		[]common.Link, []common.Command, error,
-	) {
-		return nil, nil, nil
-	}
 
 	tooOld := time.Now().Add(-time.Minute * 31).Unix()
 	posts := [...]Post{
@@ -90,7 +85,7 @@ func TestOpenPostClosing(t *testing.T) {
 				t.Fatal(err)
 			}
 			if editing != c.editing {
-				LogUnexpected(t, c.editing, editing)
+				test.LogUnexpected(t, c.editing, editing)
 			}
 		})
 	}
@@ -109,7 +104,7 @@ func assertDeleted(t *testing.T, q string, del bool) {
 
 	deleted := !exists
 	if deleted != del {
-		LogUnexpected(t, del, deleted)
+		test.LogUnexpected(t, del, deleted)
 	}
 }
 
@@ -290,7 +285,9 @@ func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
 				OP:    op.id,
 			},
 		}
-		err := WriteThread(thread, post)
+		err := InTransaction(false, func(tx *sql.Tx) error {
+			return WriteThread(tx, thread, post)
+		})
 		if err != nil {
 			t.Fatal(err)
 		}

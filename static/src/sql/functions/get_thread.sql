@@ -16,7 +16,7 @@ begin
 		from posts p
 		where p.op = get_thread.id;
 	if max_page is null or page > max_page then
-		raise exception 'page number overflow';
+		return null;
 	end if;
 	if page = -1 then
 		page = max_page;

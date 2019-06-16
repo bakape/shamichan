@@ -2,10 +2,6 @@
 // throughout the project
 package common
 
-// ParseBody forwards parser.ParseBody to avoid cyclic imports in db/upkeep
-// TODO: Clean up this function signature
-var ParseBody func([]byte, string, uint64, uint64, string, bool) ([]Link, []Command, error)
-
 // Contains a specific page of the board index
 type Board struct {
 	Page    int      `json:"page"`
@@ -42,7 +38,7 @@ type Post struct {
 	Name       string            `json:"name"`
 	Trip       string            `json:"trip"`
 	Image      *Image            `json:"image"`
-	Links      []Link            `json:"links"`
+	Links      map[uint64]Link   `json:"links"`
 	Commands   []Command         `json:"commands"`
 	Moderation []ModerationEntry `json:"moderation"`
 }
@@ -57,9 +53,8 @@ func (p *Post) IsDeleted() bool {
 	return false
 }
 
-// Link describes a link from one post to another
+// Link describes the target post of one post linking another
 type Link struct {
-	ID    uint64 `json:"id"`
 	OP    uint64 `json:"op"`
 	Board string `json:"board"`
 }

@@ -3,7 +3,6 @@ package parser
 import (
 	"database/sql"
 	"testing"
-	"time"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -88,44 +87,4 @@ func TestParseBody(t *testing.T) {
 		{8, 1, "a"},
 		{6, 1, "a"},
 	})
-}
-
-func writeSampleBoard(t *testing.T) {
-	t.Helper()
-
-	b := db.BoardConfigs{
-		BoardConfigs: config.BoardConfigs{
-			ID:        "a",
-			Eightball: []string{"yes"},
-		},
-	}
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
-		return db.WriteBoard(tx, b)
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func writeSampleThread(t *testing.T) {
-	t.Helper()
-
-	thread := db.Thread{
-		ID:    1,
-		Board: "a",
-	}
-	op := db.Post{
-		StandalonePost: common.StandalonePost{
-			Post: common.Post{
-				ID:   1,
-				Time: time.Now().Unix(),
-			},
-			OP: 1,
-		},
-		IP: "::1",
-	}
-	err := db.WriteThread(thread, op)
-	if err != nil {
-		t.Fatal(err)
-	}
 }

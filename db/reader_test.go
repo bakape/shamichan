@@ -2,13 +2,13 @@ package db
 
 import (
 	"database/sql"
-	"reflect"
+	"encoding/json"
 	"testing"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/imager/assets"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 )
 
 var sampleModerationEntry = common.ModerationEntry{
@@ -59,13 +59,12 @@ func prepareThreads(t *testing.T) {
 			BumpTime:   5,
 		},
 	}
-	posts := [...]Post{
+	posts := []Post{
 		{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
-					ID:        1,
-					Image:     &assets.StdJPEG,
-					Moderated: true,
+					ID:    1,
+					Image: &assets.StdJPEG,
 				},
 				OP:    1,
 				Board: "a",
@@ -77,9 +76,8 @@ func prepareThreads(t *testing.T) {
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
 					ID: 3,
-					Links: []common.Link{
-						{
-							ID:    1,
+					Links: map[uint64]common.Link{
+						1: {
 							OP:    1,
 							Board: "a",
 						},
@@ -105,26 +103,32 @@ func prepareThreads(t *testing.T) {
 				Board: "a",
 			},
 		},
-		{
+	}
+	for i := uint64(4); i <= 110; i++ {
+		posts = append(posts, Post{
 			StandalonePost: common.StandalonePost{
 				Post: common.Post{
-					ID: 4,
+					ID: i,
 				},
 				OP:    1,
 				Board: "a",
 			},
-		},
+		})
 	}
 
 	if err := WriteImage(assets.StdJPEG.ImageCommon); err != nil {
 		t.Fatal(err)
 	}
-	for i := range threads {
-		if err := WriteThread(threads[i], posts[i]); err != nil {
-			t.Fatal(err)
-		}
-	}
 	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(`set constraints links_target_fkey deferred`)
+		if err != nil {
+			return
+		}
+		for i := range threads {
+			if err := WriteThread(tx, threads[i], posts[i]); err != nil {
+				t.Fatal(err)
+			}
+		}
 		for i := len(threads); i < len(posts); i++ {
 			if err = WritePost(tx, posts[i]); err != nil {
 				return
@@ -152,8 +156,13 @@ func prepareThreads(t *testing.T) {
 func TestReader(t *testing.T) {
 	prepareThreads(t)
 
-	t.Run("GetAllBoard", testGetAllBoard)
-	t.Run("GetBoard", testGetBoard)
+	// TODO: Test getting a board index
+	// TODO: Test getting /all/ board index
+	// TODO: Test getting empty board index
+	// TODO: Test getting empty /all/ board index
+
+	t.Run("GetAllCatalog", testGetAllCatalog)
+	t.Run("GetCatalog", testGetCatalog)
 	t.Run("GetPost", testGetPost)
 	t.Run("GetThread", testGetThread)
 }
@@ -162,21 +171,17 @@ func testGetPost(t *testing.T) {
 	t.Parallel()
 
 	// Does not exist
-	post, err := GetPost(99)
+	_, err := GetPost(9999)
 	if err != sql.ErrNoRows {
-		UnexpectedError(t, err)
-	}
-	if !reflect.DeepEqual(post, common.StandalonePost{}) {
-		t.Errorf("post not empty: %#v", post)
+		test.UnexpectedError(t, err)
 	}
 
 	// Valid read
 	std := common.StandalonePost{
 		Post: common.Post{
 			ID: 3,
-			Links: []common.Link{
-				{
-					ID:    1,
+			Links: map[uint64]common.Link{
+				1: {
 					OP:    1,
 					Board: "a",
 				},
@@ -191,69 +196,87 @@ func testGetPost(t *testing.T) {
 		OP:    3,
 		Board: "c",
 	}
-	post, err = GetPost(3)
+	buf, err := GetPost(3)
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertEquals(t, post, std)
+	var p common.StandalonePost
+	decode(t, buf, &p)
+	test.AssertEquals(t, p, std)
 }
 
-func testGetAllBoard(t *testing.T) {
+func testGetAllCatalog(t *testing.T) {
 	t.Parallel()
 
 	std := map[uint64]common.Thread{
 		3: {
-			Post: common.Post{
-				ID: 3,
-				Links: []common.Link{
-					{
-						ID:    1,
-						OP:    1,
-						Board: "a",
-					},
-				},
-				Commands: []common.Command{
-					{
-						Type: common.Flip,
-						Flip: true,
-					},
-				},
-			},
 			PostCount:  1,
 			Board:      "c",
 			UpdateTime: 3,
 			BumpTime:   5,
+			ID:         3,
+			Posts: []common.Post{
+				{
+					ID: 3,
+					Links: map[uint64]common.Link{
+						1: {
+							OP:    1,
+							Board: "a",
+						},
+					},
+					Commands: []common.Command{
+						{
+							Type: common.Flip,
+							Flip: true,
+						},
+					},
+				},
+			},
 		},
 		1: {
-			Post: common.Post{
-				ID:         1,
-				Image:      &assets.StdJPEG,
-				Moderated:  true,
-				Moderation: []common.ModerationEntry{sampleModerationEntry},
-			},
-			PostCount:  3,
+			ID:         1,
+			PostCount:  109,
 			ImageCount: 1,
 			Board:      "a",
 			UpdateTime: 1,
 			BumpTime:   1,
+			Posts: []common.Post{
+				{
+					ID:         1,
+					Image:      &assets.StdJPEG,
+					Moderation: []common.ModerationEntry{sampleModerationEntry},
+				},
+			},
 		},
 	}
 
-	board, err := GetAllBoardCatalog()
+	buf, err := GetAllBoardCatalog()
 	if err != nil {
 		t.Fatal(err)
 	}
-	for i := range board.Threads {
-		thread := &board.Threads[i]
+	var catalog []common.Thread
+	decode(t, buf, &catalog)
+	for i := range catalog {
+		thread := &catalog[i]
 		std := std[thread.ID]
 		t.Run("assert thread equality", func(t *testing.T) {
 			t.Parallel()
 
-			assertImage(t, thread, std.Image)
+			assertImage(t, thread, std.Posts[0].Image)
 			syncThreadVariables(thread, std)
-			AssertEquals(t, thread, &std)
+			test.AssertEquals(t, thread, &std)
 		})
 	}
+}
+
+func decode(t *testing.T, buf []byte, dst interface{}) {
+	t.Helper()
+
+	err := json.Unmarshal(buf, dst)
+	if err != nil {
+		t.Fatalf("%s:\n%s", err, string(buf))
+	}
+	return
 }
 
 // Assert image equality and then override to not compare pointer addresses
@@ -261,15 +284,15 @@ func testGetAllBoard(t *testing.T) {
 func assertImage(t *testing.T, thread *common.Thread, std *common.Image) {
 	t.Helper()
 	if std != nil {
-		if thread.Image == nil {
+		if len(thread.Posts) == 0 || thread.Posts[0].Image == nil {
 			t.Fatalf("no image on thread %d", thread.ID)
 		}
-		AssertEquals(t, *thread.Image, *std)
-		thread.Image = std
+		test.AssertEquals(t, *thread.Posts[0].Image, *std)
+		thread.Posts[0].Image = std
 	}
 }
 
-func testGetBoard(t *testing.T) {
+func testGetCatalog(t *testing.T) {
 	t.Parallel()
 
 	cases := [...]struct {
@@ -281,26 +304,28 @@ func testGetBoard(t *testing.T) {
 			id:   "c",
 			std: []common.Thread{
 				{
-					Post: common.Post{
-						ID: 3,
-						Links: []common.Link{
-							{
-								ID:    1,
-								OP:    1,
-								Board: "a",
-							},
-						},
-						Commands: []common.Command{
-							{
-								Type: common.Flip,
-								Flip: true,
-							},
-						},
-					},
+					ID:         3,
 					PostCount:  1,
 					Board:      "c",
 					UpdateTime: 3,
 					BumpTime:   5,
+					Posts: []common.Post{
+						{
+							ID: 3,
+							Links: map[uint64]common.Link{
+								1: {
+									OP:    1,
+									Board: "a",
+								},
+							},
+							Commands: []common.Command{
+								{
+									Type: common.Flip,
+									Flip: true,
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -316,17 +341,19 @@ func testGetBoard(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			board, err := GetBoardCatalog(c.id)
+			buf, err := GetBoardCatalog(c.id)
 			if err != nil {
 				t.Fatal(err)
 			}
-			for i := range board.Threads {
-				assertImage(t, &board.Threads[i], c.std[i].Image)
+			var board []common.Thread
+			decode(t, buf, &board)
+			for i := range board {
+				assertImage(t, &board[i], c.std[i].Posts[0].Image)
 			}
-			for i := range board.Threads {
-				syncThreadVariables(&board.Threads[i], c.std[i])
+			for i := range board {
+				syncThreadVariables(&board[i], c.std[i])
 			}
-			AssertEquals(t, board.Threads, c.std)
+			test.AssertEquals(t, board, c.std)
 		})
 	}
 }
@@ -336,7 +363,6 @@ func testGetBoard(t *testing.T) {
 func syncThreadVariables(dst *common.Thread, src common.Thread) {
 	dst.ID = src.ID
 	dst.UpdateTime = src.UpdateTime
-	dst.Time = src.Time
 	dst.BumpTime = src.BumpTime
 }
 
@@ -344,48 +370,76 @@ func testGetThread(t *testing.T) {
 	t.Parallel()
 
 	thread1 := common.Thread{
-		PostCount:  3,
+		PostCount:  109,
 		ImageCount: 1,
 		UpdateTime: 1,
 		BumpTime:   1,
 		Board:      "a",
-		Post: common.Post{
-			ID:         1,
-			Image:      &assets.StdJPEG,
-			Moderated:  true,
-			Moderation: []common.ModerationEntry{sampleModerationEntry},
-		},
+		ID:         1,
 		Posts: []common.Post{
+			{
+				ID:         1,
+				Image:      &assets.StdJPEG,
+				Moderation: []common.ModerationEntry{sampleModerationEntry},
+			},
 			{
 				ID:   2,
 				Body: "foo",
 			},
-			{
-				ID: 4,
-			},
 		},
 	}
-	sliced := thread1
-	sliced.Posts = sliced.Posts[1:]
-	sliced.Abbrev = true
+	for i := uint64(4); i <= 110; i++ {
+		thread1.Posts = append(thread1.Posts, common.Post{
+			ID:   i,
+			Page: (i - 1) / 100,
+		})
+	}
+
+	firstPage := thread1
+	firstPage.Posts = firstPage.Posts[:99]
+
+	last5 := thread1
+	last5.Posts = append(
+		[]common.Post{thread1.Posts[0]},
+		last5.Posts[len(thread1.Posts)-5:]...,
+	)
+
+	lastPage := thread1
+	lastPage.Page = 1
+	lastPage.Posts = append(
+		[]common.Post{thread1.Posts[0]},
+		lastPage.Posts[99:]...,
+	)
 
 	cases := [...]struct {
-		name  string
-		id    uint64
-		lastN int
-		std   common.Thread
-		err   error
+		name string
+		id   uint64
+		page int
+		std  common.Thread
+		err  error
 	}{
 		{
-			name: "full",
+			name: "first page",
 			id:   1,
-			std:  thread1,
+			std:  firstPage,
 		},
 		{
-			name:  "last 1 reply",
-			id:    1,
-			lastN: 1,
-			std:   sliced,
+			name: "second page",
+			id:   1,
+			page: 1,
+			std:  lastPage,
+		},
+		{
+			name: "last page",
+			id:   1,
+			page: -1,
+			std:  lastPage,
+		},
+		{
+			name: "last 5 replies",
+			id:   1,
+			page: -5,
+			std:  last5,
 		},
 		{
 			name: "no replies ;_;",
@@ -395,23 +449,24 @@ func testGetThread(t *testing.T) {
 				UpdateTime: 3,
 				BumpTime:   5,
 				PostCount:  1,
-				Post: common.Post{
-					ID: 3,
-					Links: []common.Link{
-						{
-							ID:    1,
-							OP:    1,
-							Board: "a",
+				ID:         3,
+				Posts: []common.Post{
+					{
+						ID: 3,
+						Links: map[uint64]common.Link{
+							1: {
+								OP:    1,
+								Board: "a",
+							},
 						},
-					},
-					Commands: []common.Command{
-						{
-							Type: common.Flip,
-							Flip: true,
+						Commands: []common.Command{
+							{
+								Type: common.Flip,
+								Flip: true,
+							},
 						},
 					},
 				},
-				Posts: []common.Post{},
 			},
 		},
 		{
@@ -426,13 +481,17 @@ func testGetThread(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			thread, err := GetThread(c.id, c.lastN)
+			buf, err := GetThread(c.id, c.page)
 			if err != c.err {
-				UnexpectedError(t, err)
+				test.UnexpectedError(t, err)
 			}
-			assertImage(t, &thread, c.std.Image)
-			syncThreadVariables(&thread, c.std)
-			AssertEquals(t, thread, c.std)
+			if c.err == nil {
+				var thread common.Thread
+				decode(t, buf, &thread)
+				assertImage(t, &thread, c.std.Posts[0].Image)
+				syncThreadVariables(&thread, c.std)
+				test.AssertEquals(t, thread, c.std)
+			}
 		})
 	}
 }
