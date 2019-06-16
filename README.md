@@ -4,7 +4,7 @@
 # meguca
 anonymous realtime imageboard focused on high performance, free speech and transparent moderation
 
-Platforms: Linux, OSX
+Platforms: Linux
 
 License: GNU AGPL
 
