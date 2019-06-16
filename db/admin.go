@@ -113,8 +113,10 @@ func moderatePost(id uint64, entry common.ModerationEntry,
 
 // DeleteImage permanently deletes an image from a post
 func DeleteImages(ids []uint64, by string) (err error) {
-	_, err = db.Exec("select delete_images($1::bigint[], $2::text)",
-		encodeUint64Array(ids), by)
+	_, err = db.Exec(
+		"select delete_images($1::bigint[], $2::text)",
+		encodeUint64Array(ids), by,
+	)
 	castPermissionError(&err)
 	return
 }

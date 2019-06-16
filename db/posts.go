@@ -3,6 +3,7 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
@@ -117,7 +118,8 @@ func InsertPost(tx *sql.Tx, p *Post) (err error) {
 	args = append(args,
 		p.Editing, p.Board, p.OP, p.Body, p.Flag,
 		p.Name, p.Trip, p.Auth, p.Sage,
-		p.Password, p.IP)
+		p.Password, p.IP,
+	)
 
 	q := sq.Insert("posts").
 		Columns(
@@ -131,12 +133,19 @@ func InsertPost(tx *sql.Tx, p *Post) (err error) {
 		args = append(args, p.ID)
 	}
 
+	var buf []byte
 	err = q.
 		Values(args...).
-		Suffix("returning id, time").
+		Suffix("returning id, time, get_post_moderation(id)").
 		RunWith(tx).
 		QueryRow().
-		Scan(&p.ID, &p.Time)
+		Scan(&p.ID, &p.Time, &buf)
+	if err != nil {
+		return
+	}
+	if len(buf) != 0 {
+		err = json.Unmarshal(buf, &p.Moderation)
+	}
 	return
 }
 

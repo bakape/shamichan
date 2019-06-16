@@ -24,6 +24,7 @@ require (
 	github.com/go-playground/ansi v2.1.0+incompatible // indirect
 	github.com/go-playground/errors v3.3.0+incompatible // indirect
 	github.com/go-playground/log v6.3.0+incompatible
+	github.com/google/go-cmp v0.3.0
 	github.com/gorilla/websocket v1.4.0
 	github.com/lib/pq v1.0.1-0.20190326042056-d6156e141ac6
 	github.com/otium/ytdl v0.5.1

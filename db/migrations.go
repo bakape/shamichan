@@ -1545,6 +1545,7 @@ var migrations = []func(*sql.Tx) error{
 			"get_thread",
 			"get_board",
 			"get_same_ip_posts",
+			"delete_images",
 		)
 		if err != nil {
 			return

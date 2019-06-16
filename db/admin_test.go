@@ -49,7 +49,7 @@ func TestDeleteImages(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var p common.Post
+	var p common.StandalonePost
 	decode(t, buf, &p)
 	if p.Image == nil {
 		t.Fatal("no image")
@@ -64,6 +64,7 @@ func TestDeleteImages(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	p = common.StandalonePost{}
 	decode(t, buf, &p)
 	if p.Image != nil {
 		t.Fatal("image not deleted")
