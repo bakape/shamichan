@@ -346,15 +346,6 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes.flac:
 			case fileTypes.mp4:
 			case fileTypes.webm:
-				// Firefox provides no way of detecting, if the controls where
-				// clicked instead of the video. Estimate this by height.
-				if (e) {
-					const max = (e.target as HTMLElement).offsetHeight - 25
-					if (e.offsetY > max) {
-						return
-					}
-				}
-
 				const v = this.el.querySelector("figure video");
 				if (v) {
 					v.remove()
