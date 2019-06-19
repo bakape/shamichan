@@ -7,7 +7,7 @@ import (
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 )
 
 func init() {
@@ -53,7 +53,7 @@ func TestGetFilePaths(t *testing.T) {
 			t.Parallel()
 
 			if c.got != c.expected {
-				LogUnexpected(t, c.expected, c.got)
+				test.LogUnexpected(t, c.expected, c.got)
 			}
 		})
 	}
@@ -93,7 +93,7 @@ func TestDeleteAssets(t *testing.T) {
 			for _, path := range GetFilePaths(c.name, c.fileType, c.thumbType) {
 				_, err := os.Stat(path)
 				if !os.IsNotExist(err) {
-					UnexpectedError(t, err)
+					test.UnexpectedError(t, err)
 				}
 			}
 		})
@@ -128,6 +128,31 @@ func TestWriteAssets(t *testing.T) {
 	}
 
 	for i, path := range GetFilePaths(name, fileType, thumbType) {
-		AssertFileEquals(t, path, std[i])
+		test.AssertFileEquals(t, path, std[i])
 	}
+}
+
+// Archives and such don't generate thumbnails
+func TestWriteAssetsNotThumb(t *testing.T) {
+	resetDirs(t)
+
+	const (
+		name      = "foo"
+		fileType  = common.MP3
+		thumbType = common.NoFile
+	)
+	std := []byte{1, 2, 3}
+
+	err := Write(
+		name,
+		fileType,
+		thumbType,
+		bytes.NewReader(std),
+		nil,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	test.AssertFileEquals(t, GetFilePaths(name, fileType, thumbType)[0], std)
 }
