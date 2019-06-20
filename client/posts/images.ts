@@ -287,13 +287,15 @@ export default class ImageHandler extends View<Post> {
 			return this.contractImage(event, true)
 		}
 
-		this.el.querySelector(".fileinfo").after(
-			makeEl(HTML
-				`<span class="act contract-button">
-					<a>Contract</a>
-				</span>`,
-			),
-		);
+		if (isExpandable(img.file_type)) {
+			this.el.querySelector(".fileinfo").after(
+				makeEl(HTML
+					`<span class="act contract-button">
+						<a>Contract</a>
+					</span>`,
+				),
+			);
+		}
 
 		switch (img.file_type) {
 			case fileTypes.mp3:
