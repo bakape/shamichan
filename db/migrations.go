@@ -1470,6 +1470,20 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`drop table spam_scores`,
+			`create table spam_scores(
+				token bytea primary key,
+				score bigint not null
+			)`,
+			`drop table last_solved_captchas`,
+			`create table last_solved_captchas(
+				token bytea primary key,
+				time timestamptz not null
+			)`,
+		)
+	},
 }
 
 func createIndex(table string, columns ...string) string {

@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"database/sql/driver"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -18,31 +21,58 @@ var (
 	servicesMu       sync.RWMutex
 	globalService    *captchouli.Service
 	overrideServices map[string]*captchouli.Service
+
+	ErrInvalidToken = common.ErrInvalidInput("invalid token")
 )
 
-// 64 byte ID that JSON en/decodes to a base64 string
-type Base64ID [64]byte
+// 64 byte token that JSON/text en/decodes to a base64 string
+type Base64Token [64]byte
 
-func (b Base64ID) MarshalJSON() ([]byte, error) {
-	return json.Marshal(b[:])
+func (b *Base64Token) MarshalText() ([]byte, error) {
+	buf := make([]byte, 86+2)
+	buf[0] = '"'
+	buf[86+2] = '"'
+	base64.RawURLEncoding.Encode(buf[1:], b[:])
+	return buf, nil
 }
 
-func (b *Base64ID) UnmarshalJSON(buf []byte) (err error) {
-	var m string
-	err = json.Unmarshal(buf, &m)
-	if err != nil {
-		return
+func (b *Base64Token) UnmarshalText(buf []byte) error {
+	if len(buf) != 86 {
+		return ErrInvalidToken
 	}
-	if m != "" {
-		*b, err = captchouli.DecodeID(m)
-	} else {
-		*b = [64]byte{}
+
+	n, err := base64.RawStdEncoding.Decode(b[:], buf)
+	if n != 64 || err != nil {
+		return ErrInvalidToken
 	}
-	return
+	return nil
 }
 
-func (b *Base64ID) FromRequest(r *http.Request) {
-	*b, _ = captchouli.ExtractID(r)
+func (b *Base64Token) Value() (driver.Value, error) {
+	buf := make([]byte, 64)
+	copy(buf, b[:])
+	return buf, nil
+}
+
+func (b *Base64Token) Scan(src interface{}) error {
+	switch src.(type) {
+	case []byte:
+		src := src.([]byte)
+		if len(src) != 64 {
+			return fmt.Errorf("invalid token length: %d", len(src))
+		}
+		copy(b[:], src)
+		return nil
+	case string:
+		src := src.(string)
+		if len(src) != 64 {
+			return fmt.Errorf("invalid token length: %d", len(src))
+		}
+		copy(b[:], src)
+		return nil
+	default:
+		return fmt.Errorf("could not convert %T to Base64Token", src)
+	}
 }
 
 // Solution to a captcha with special JSON en/decoding
@@ -74,20 +104,22 @@ func (s *CaptchaSolution) UnmarshalJSON(buf []byte) (err error) {
 	return
 }
 
-func (s *CaptchaSolution) FromRequest(r *http.Request) {
-	*s, _ = captchouli.ExtractSolution(r)
-}
-
 // Captcha contains the ID and solution of a captcha-protected request
 type Captcha struct {
-	CaptchaID Base64ID
+	CaptchaID Base64Token
 	Solution  CaptchaSolution
 }
 
 // Zeroes c on no captcha in request
-func (c *Captcha) FromRequest(r *http.Request) {
-	c.CaptchaID.FromRequest(r)
-	c.Solution.FromRequest(r)
+// It is up to the caller to decide, if the returned error should or should not
+// be ignored.
+func (c *Captcha) FromRequest(r *http.Request) (err error) {
+	c.CaptchaID, err = captchouli.ExtractID(r)
+	if err != nil {
+		return
+	}
+	c.Solution, err = captchouli.ExtractSolution(r)
+	return
 }
 
 // Retrieve captcha service for specific board

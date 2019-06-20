@@ -20,7 +20,11 @@ const (
 )
 
 // ValidateCaptcha with captcha backend
-func ValidateCaptcha(req auth.Captcha, ip string) (err error) {
+func ValidateCaptcha(
+	req auth.Captcha,
+	session auth.Base64Token,
+	ip string,
+) (err error) {
 	if !config.Get().Captcha {
 		return
 	}
@@ -28,8 +32,8 @@ func ValidateCaptcha(req auth.Captcha, ip string) (err error) {
 	switch err {
 	case nil:
 		_, err = sq.Insert("last_solved_captchas").
-			Columns("ip").
-			Values(ip).
+			Columns("token").
+			Values(session).
 			Suffix(
 				`on conflict (ip) do
 				update set time = now() at time zone 'utc'`).
