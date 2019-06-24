@@ -84,7 +84,7 @@ func returnLargeBuf(buf []byte) {
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	var id string
 	err := func() (err error) {
-		err = validateUploader(r)
+		err = validateUploader(w, r)
 		if err != nil {
 			return
 		}
@@ -96,7 +96,7 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		return incrementSpamScore(r)
+		return incrementSpamScore(w, r)
 	}()
 	if err != nil {
 		LogError(w, r, err)
@@ -106,7 +106,7 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 // Apply security restrictions to uploader
-func validateUploader(r *http.Request) (err error) {
+func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
 	if s := r.Header.Get("Authorization"); s != "" &&
 		s == "Bearer "+config.Get().Salt {
 		// Internal upload bypass
@@ -121,13 +121,20 @@ func validateUploader(r *http.Request) (err error) {
 	if err != nil {
 		return
 	}
-	need, err := db.NeedCaptcha(ip)
+
+	var session auth.Base64Token
+	err = session.EnsureCookie(w, r)
+	if err != nil {
+		return
+	}
+	need, err := db.NeedCaptcha(session, ip)
 	if err != nil {
 		return
 	}
 	if need {
 		return common.StatusError{errors.New("captcha required"), 403}
 	}
+
 	return
 }
 
@@ -138,7 +145,7 @@ func validateUploader(r *http.Request) (err error) {
 // the client.
 func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 	token, err := func() (token string, err error) {
-		err = validateUploader(r)
+		err = validateUploader(w, r)
 		if err != nil {
 			return
 		}
@@ -162,7 +169,7 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		err = incrementSpamScore(r)
+		err = incrementSpamScore(w, r)
 		return
 	}()
 	if err != nil {
@@ -172,12 +179,17 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func incrementSpamScore(r *http.Request) (err error) {
+func incrementSpamScore(w http.ResponseWriter, r *http.Request) (err error) {
 	ip, err := auth.GetIP(r)
 	if err != nil {
 		return
 	}
-	db.IncrementSpamScore(ip, config.Get().ImageScore)
+	var session auth.Base64Token
+	err = session.EnsureCookie(w, r)
+	if err != nil {
+		return
+	}
+	db.IncrementSpamScore(session, ip, config.Get().ImageScore)
 	return
 }
 

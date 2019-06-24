@@ -62,6 +62,9 @@ const (
 	// Used by the client to send it's protocol version and by the server to
 	// send server and board configurations
 	MessageConfigs
+
+	// Set a cookie on the client
+	MessageSetCookie
 )
 
 // Forwarded functions from "github.com/bakape/megucawebsockets/feeds" to avoid circular imports

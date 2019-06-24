@@ -45,7 +45,6 @@ type boardActionRequest struct {
 }
 
 type boardCreationRequest struct {
-	auth.Captcha
 	ID, Title string
 }
 
@@ -94,7 +93,7 @@ func canPerform(w http.ResponseWriter, r *http.Request, board string,
 		return
 	}
 	if needCaptcha {
-		err = assertSolvedCaptcha(r)
+		err = assertSolvedCaptcha(w, r)
 		if err != nil {
 			return
 		}
@@ -264,11 +263,12 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		ip, err := auth.GetIP(r)
+		var session auth.Base64Token
+		err = session.EnsureCookie(w, r)
 		if err != nil {
 			return
 		}
-		has, err := db.SolvedCaptchaRecently(ip, time.Minute)
+		has, err := db.SolvedCaptchaRecently(session, time.Minute)
 		if err != nil {
 			return
 		}
@@ -377,7 +377,7 @@ func deletePostsByIP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Moderation rights are checked in plpgsql
-		err = assertSolvedCaptcha(r)
+		err = assertSolvedCaptcha(w, r)
 		if err != nil {
 			return
 		}
@@ -411,8 +411,16 @@ func moderatePosts(w http.ResponseWriter, r *http.Request,
 		if err != nil {
 			return
 		}
-		db.IncrementSpamScore(ip,
-			config.Get().PostCreationScore*uint(len(ids)))
+		var session auth.Base64Token
+		err = session.EnsureCookie(w, r)
+		if err != nil {
+			return
+		}
+		db.IncrementSpamScore(
+			session,
+			ip,
+			config.Get().PostCreationScore*uint(len(ids)),
+		)
 		creds, err := isLoggedIn(w, r)
 		if err != nil {
 			return
@@ -477,7 +485,7 @@ func ban(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = assertSolvedCaptcha(r)
+		err = assertSolvedCaptcha(w, r)
 		if err != nil {
 			return
 		}

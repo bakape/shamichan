@@ -186,7 +186,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 
-	needCaptcha, err := db.NeedCaptcha(c.ip)
+	needCaptcha, err := db.NeedCaptcha(c.captchaSession, c.ip)
 	if err != nil {
 		return
 	}

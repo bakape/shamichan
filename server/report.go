@@ -1,13 +1,14 @@
 package server
 
 import (
+	"net/http"
+	"strconv"
+	"time"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
-	"net/http"
-	"strconv"
-	"time"
 )
 
 // Report a post for rule violations
@@ -25,8 +26,14 @@ func report(w http.ResponseWriter, r *http.Request) {
 		httpError(w, r, common.StatusError{err, 400})
 		return
 	}
+	var session auth.Base64Token
+	err = session.EnsureCookie(w, r)
+	if err != nil {
+		httpError(w, r, common.StatusError{err, 400})
+		return
+	}
 
-	has, err := db.SolvedCaptchaRecently(ip, time.Minute)
+	has, err := db.SolvedCaptchaRecently(session, time.Minute)
 	if err != nil {
 		httpError(w, r, err)
 		return

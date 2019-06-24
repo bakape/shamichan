@@ -1,18 +1,24 @@
 package auth
 
 import (
-	"database/sql/driver"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync"
+	"time"
 
 	"github.com/bakape/captchouli"
 	captchouli_common "github.com/bakape/captchouli/common"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+)
+
+const (
+	// Name of cookie that holds the captcha session
+	CaptchaCookie = "captcha_session"
 )
 
 var (
@@ -25,14 +31,13 @@ var (
 	ErrInvalidToken = common.ErrInvalidInput("invalid token")
 )
 
-// 64 byte token that JSON/text en/decodes to a base64 string
+// 64 byte token that JSON/text en/decodes to a raw URL-safe encoding base64
+// string
 type Base64Token [64]byte
 
-func (b *Base64Token) MarshalText() ([]byte, error) {
-	buf := make([]byte, 86+2)
-	buf[0] = '"'
-	buf[86+2] = '"'
-	base64.RawURLEncoding.Encode(buf[1:], b[:])
+func (b Base64Token) MarshalText() ([]byte, error) {
+	buf := make([]byte, 86)
+	base64.RawURLEncoding.Encode(buf[:], b[:])
 	return buf, nil
 }
 
@@ -41,38 +46,84 @@ func (b *Base64Token) UnmarshalText(buf []byte) error {
 		return ErrInvalidToken
 	}
 
-	n, err := base64.RawStdEncoding.Decode(b[:], buf)
+	n, err := base64.RawURLEncoding.Decode(b[:], buf)
 	if n != 64 || err != nil {
 		return ErrInvalidToken
 	}
 	return nil
 }
 
-func (b *Base64Token) Value() (driver.Value, error) {
-	buf := make([]byte, 64)
-	copy(buf, b[:])
-	return buf, nil
+// Ensure client has a "captcha_session" cookie.
+// If yes, read it into b.
+// If not, generate new one and set it on the client.
+//
+// For less disruptive toggling of captchas on and off, best always ensure
+// this cookie exists on the client.
+func (b *Base64Token) EnsureCookie(
+	w http.ResponseWriter,
+	r *http.Request,
+) (err error) {
+	c, err := r.Cookie(CaptchaCookie)
+	switch err {
+	case nil:
+		return b.UnmarshalText([]byte(c.Value))
+	case http.ErrNoCookie:
+		*b, err = NewBase64Token()
+		if err != nil {
+			return
+		}
+
+		var text []byte
+		text, err = b.MarshalText()
+		if err != nil {
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:    CaptchaCookie,
+			Value:   string(text),
+			Path:    "/",
+			Expires: time.Now().Add(time.Hour * 24),
+			Domain:  config.RootDomain(),
+		})
+		return
+	default:
+		return fmt.Errorf("auth: reading cookie: %s", err)
+	}
 }
 
-func (b *Base64Token) Scan(src interface{}) error {
-	switch src.(type) {
-	case []byte:
-		src := src.([]byte)
-		if len(src) != 64 {
-			return fmt.Errorf("invalid token length: %d", len(src))
-		}
-		copy(b[:], src)
-		return nil
-	case string:
-		src := src.(string)
-		if len(src) != 64 {
-			return fmt.Errorf("invalid token length: %d", len(src))
-		}
-		copy(b[:], src)
-		return nil
-	default:
-		return fmt.Errorf("could not convert %T to Base64Token", src)
+// Create new Base64Token populated by cryptographically secure random data
+func NewBase64Token() (b Base64Token, err error) {
+	n, err := rand.Read(b[:])
+	if err == nil && n != 64 {
+		err = fmt.Errorf("auth: not enough data read: %d", n)
 	}
+	return
+}
+
+// 64 byte ID that JSON en/decodes to a base64 string
+type CaptchaID [64]byte
+
+func (b CaptchaID) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b[:])
+}
+
+func (b *CaptchaID) UnmarshalJSON(buf []byte) (err error) {
+	var m string
+	err = json.Unmarshal(buf, &m)
+	if err != nil {
+		return
+	}
+	if m != "" {
+		*b, err = captchouli.DecodeID(m)
+	} else {
+		*b = [64]byte{}
+	}
+	return
+}
+
+func (b *CaptchaID) FromRequest(r *http.Request) {
+	*b, _ = captchouli.ExtractID(r)
 }
 
 // Solution to a captcha with special JSON en/decoding
@@ -106,20 +157,16 @@ func (s *CaptchaSolution) UnmarshalJSON(buf []byte) (err error) {
 
 // Captcha contains the ID and solution of a captcha-protected request
 type Captcha struct {
-	CaptchaID Base64Token
-	Solution  CaptchaSolution
+	CaptchaID CaptchaID       `json:"id"`
+	Solution  CaptchaSolution `json:"solution"`
 }
 
 // Zeroes c on no captcha in request
 // It is up to the caller to decide, if the returned error should or should not
 // be ignored.
-func (c *Captcha) FromRequest(r *http.Request) (err error) {
-	c.CaptchaID, err = captchouli.ExtractID(r)
-	if err != nil {
-		return
-	}
-	c.Solution, err = captchouli.ExtractSolution(r)
-	return
+func (c *Captcha) FromRequest(r *http.Request) {
+	c.CaptchaID, _ = captchouli.ExtractID(r)
+	c.Solution, _ = captchouli.ExtractSolution(r)
 }
 
 // Retrieve captcha service for specific board

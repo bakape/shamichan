@@ -3,10 +3,11 @@
 package server
 
 import (
-	"github.com/bakape/meguca/cache"
-	"github.com/bakape/meguca/db"
 	"net/http"
 	"strconv"
+
+	"github.com/bakape/meguca/cache"
+	"github.com/bakape/meguca/db"
 )
 
 // Returns arguments for accessing the board page JSON/HTML cache

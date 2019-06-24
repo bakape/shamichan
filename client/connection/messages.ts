@@ -47,6 +47,9 @@ export const enum message {
 	// Used by the client to send it's protocol version and by the server to
 	// send server and board configurations
 	configs,
+
+	// Set a cookie on the client
+	setCookie,
 }
 
 export type MessageHandler = (msg: {}) => void

@@ -1480,8 +1480,13 @@ var migrations = []func(*sql.Tx) error{
 			`drop table last_solved_captchas`,
 			`create table last_solved_captchas(
 				token bytea primary key,
-				time timestamptz not null
+				time timestamptz not null default now()
 			)`,
+			// Solves potential cookie domain problems
+			`update main
+			set val = val || '{"rootURL":"http://127.0.0.1"}'
+			where id = 'config'
+				and val->>'rootURL' = 'http://localhost'`,
 		)
 	},
 }

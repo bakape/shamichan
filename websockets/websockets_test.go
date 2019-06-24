@@ -96,7 +96,13 @@ func (m *mockWSServer) NewClient() (*Client, *websocket.Conn) {
 	if err != nil {
 		m.t.Fatal(err)
 	}
-	cl, err := newClient(<-m.connSender, r, ip)
+
+	session, err := auth.NewBase64Token()
+	if err != nil {
+		m.t.Fatal(err)
+	}
+
+	cl, err := newClient(<-m.connSender, r, ip, session)
 	if err != nil {
 		m.t.Fatal(err)
 	}

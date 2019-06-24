@@ -2,15 +2,15 @@ package server
 
 import (
 	"database/sql"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -21,14 +21,14 @@ var (
 	errUserIDTaken     = common.ErrInvalidInput("login ID already taken")
 )
 
+// TODO: Include captcha data in all applicable these post request
+
 type loginCreds struct {
 	ID, Password string
-	auth.Captcha
 }
 
 type passwordChangeRequest struct {
 	Old, New string
-	auth.Captcha
 }
 
 // Register a new user account
@@ -44,7 +44,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		err = checkPasswordAndCaptcha(w, r, req.Password, req.Captcha)
+		err = checkPasswordAndCaptcha(w, r, req.Password)
 		if err != nil {
 			return
 		}
@@ -100,12 +100,14 @@ func commitLogin(w http.ResponseWriter, userID string) (err error) {
 		Value:   url.QueryEscape(userID),
 		Path:    "/",
 		Expires: expires,
+		Domain:  config.RootDomain(),
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session",
 		Value:   token,
 		Path:    "/",
 		Expires: expires,
+		Domain:  config.RootDomain(),
 	})
 	return
 }
@@ -120,11 +122,12 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 		trimLoginID(&req.ID)
 
-		ip, err := auth.GetIP(r)
+		var session auth.Base64Token
+		err = session.EnsureCookie(w, r)
 		if err != nil {
 			return
 		}
-		has, err := db.SolvedCaptchaRecently(ip, time.Minute)
+		has, err := db.SolvedCaptchaRecently(session, time.Minute)
 		if err != nil {
 			return
 		}
@@ -205,7 +208,7 @@ func changePassword(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		err = checkPasswordAndCaptcha(w, r, msg.New, msg.Captcha)
+		err = checkPasswordAndCaptcha(w, r, msg.New)
 		if err != nil {
 			return
 		}
@@ -240,19 +243,21 @@ func changePassword(w http.ResponseWriter, r *http.Request) {
 }
 
 // Check password length and authenticate captcha, if needed
-func checkPasswordAndCaptcha(w http.ResponseWriter, r *http.Request,
-	password string, captcha auth.Captcha,
+func checkPasswordAndCaptcha(
+	w http.ResponseWriter, r *http.Request,
+	password string,
 ) (
 	err error,
 ) {
-	ip, err := auth.GetIP(r)
-	if err != nil {
-		return
-	}
 	if password == "" || len(password) > common.MaxLenPassword {
 		return errInvalidPassword
 	}
-	has, err := db.SolvedCaptchaRecently(ip, time.Minute)
+	var session auth.Base64Token
+	err = session.EnsureCookie(w, r)
+	if err != nil {
+		return
+	}
+	has, err := db.SolvedCaptchaRecently(session, time.Minute)
 	if err != nil {
 		return
 	}

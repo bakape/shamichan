@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"testing"
 	"time"
 
@@ -30,30 +31,36 @@ func TestSpamScores(t *testing.T) {
 	}
 	now := time.Now().Round(time.Second)
 
-	for _, ip := range [...]string{
+	var sessions [4]auth.Base64Token
+	for i := 0; i < 4; i++ {
+		sessions[i] = genToken(t)
+	}
+	ips := [...]string{
 		"226.209.126.221",
 		"131.215.1.14",
 		"99.188.17.210",
 		"71.189.25.162",
-	} {
+	}
+
+	for i := 0; i < 4; i++ {
 		c, err := auth.CreateTestCaptcha()
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = ValidateCaptcha(c, ip)
+		err = ValidateCaptcha(c, sessions[i], ips[i])
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	for ip, score := range map[string]int64{
-		"131.215.1.14":  now.Add(-20 * spamDetectionThreshold).Unix(),
-		"99.188.17.210": now.Add(-5 * time.Second).Unix(),
-		"71.189.25.162": now.Add(10 * spamDetectionThreshold).Unix(),
+	for i, score := range [...]int64{
+		now.Add(-20 * spamDetectionThreshold).Unix(),
+		now.Add(-5 * time.Second).Unix(),
+		now.Add(10 * spamDetectionThreshold).Unix(),
 	} {
 		_, err = sq.Insert("spam_scores").
-			Columns("ip", "score").
-			Values(ip, score).
+			Columns("token", "score").
+			Values(sessions[i+1][:], score).
 			Exec()
 		if err != nil {
 			t.Fatal(err)
@@ -61,11 +68,16 @@ func TestSpamScores(t *testing.T) {
 	}
 
 	spamMu.Lock()
-	spamScoreBuffer = map[string]time.Duration{
-		"226.209.126.221": time.Second * 10,
-		"131.215.1.14":    time.Second * 10,
-		"99.188.17.210":   time.Second * 10,
-		"71.189.25.162":   spamDetectionThreshold,
+	spamScoreBuffer = make(map[auth.Base64Token]sessionData)
+	for i := 0; i < 4; i++ {
+		score := time.Second * 10
+		if i == 3 {
+			score = spamDetectionThreshold
+		}
+		spamScoreBuffer[sessions[i]] = sessionData{
+			score: score,
+			ip:    ips[i],
+		}
 	}
 	err = flushSpamScores()
 	spamMu.Unlock()
@@ -75,20 +87,21 @@ func TestSpamScores(t *testing.T) {
 
 	cases := [...]struct {
 		name, ip       string
+		session        auth.Base64Token
 		needCaptcha    bool
 		needCaptchaErr error
 	}{
-		{"fresh write", "226.209.126.221", false, nil},
-		{"overwrite stale value", "131.215.1.14", false, nil},
-		{"increment DB value", "99.188.17.210", true, nil},
-		{"spam", "71.189.25.162", false, common.ErrSpamDected},
-		{"no captcha solved in 3h", "143.195.24.54", true, nil},
+		{"fresh write", ips[0], sessions[0], false, nil},
+		{"overwrite stale value", ips[1], sessions[1], false, nil},
+		{"increment DB value", ips[2], sessions[2], true, nil},
+		{"spam", ips[3], sessions[3], false, common.ErrSpamDected},
+		{"no captcha solved in 3h", "143.195.24.54", genToken(t), true, nil},
 	}
 
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			need, err := NeedCaptcha(c.ip)
+			need, err := NeedCaptcha(c.session, c.ip)
 			if err != c.needCaptchaErr {
 				test.UnexpectedError(t, err)
 			}
@@ -97,12 +110,13 @@ func TestSpamScores(t *testing.T) {
 	}
 
 	t.Run("clear score", func(t *testing.T) {
-		const ip = "99.188.17.210"
-		err := resetSpamScore(ip)
+		err := InTransaction(false, func(tx *sql.Tx) error {
+			return resetSpamScore(tx, sessions[2])
+		})
 		if err != nil {
 			t.Fatal(err)
 		}
-		need, err := NeedCaptcha(ip)
+		need, err := NeedCaptcha(sessions[2], ips[2])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -122,4 +136,89 @@ func TestSpamScores(t *testing.T) {
 			t.Fatal(err)
 		}
 	})
+}
+
+func TestCaptchas(t *testing.T) {
+	// Skip to avoid massive booru fetches on DB population
+	test.SkipInCI(t)
+
+	assertTableClear(t,
+		"failed_captchas",
+		"last_solved_captchas",
+		"boards",
+		"accounts",
+		"spam_scores",
+	)
+	writeAllBoard(t)
+	config.Set(config.Configs{
+		CaptchaTags: config.Defaults.CaptchaTags,
+		Public: config.Public{
+			Captcha: true,
+		},
+	})
+	err := auth.LoadCaptchaServices()
+	if err != nil {
+		t.Fatal(err)
+	}
+	const ip = "::1"
+	session := genToken(t)
+
+	type testCase struct {
+		name      string
+		captcha   auth.Captcha
+		hasSolved bool
+		err       error
+	}
+
+	c1, err := auth.CreateTestCaptcha()
+	if err != nil {
+		t.Fatal(err)
+	}
+	c2, err := auth.CreateTestCaptcha()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cases := []testCase{
+		{"invalid", auth.Captcha{}, false, common.ErrInvalidCaptcha},
+		{"valid", c1, true, nil},
+		{"upsert last solved table", c2, true, nil},
+	}
+	for i := 1; i < incorrectCaptchaLimit-1; i++ {
+		cases = append(cases, testCase{"invalid", auth.Captcha{}, true,
+			common.ErrInvalidCaptcha})
+	}
+	cases = append(cases, testCase{"bot detection", auth.Captcha{}, true,
+		common.ErrBanned})
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			err = ValidateCaptcha(c.captcha, session, ip)
+			test.AssertEquals(t, err, c.err)
+
+			for _, dur := range [...]time.Duration{time.Hour, time.Minute} {
+				has, err := SolvedCaptchaRecently(session, dur)
+				if err != nil {
+					t.Fatal(err)
+				}
+				test.AssertEquals(t, has, c.hasSolved)
+			}
+		})
+	}
+
+	err = expireLastSolvedCaptchas()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+// Generate random auth.Base64Token
+func genToken(t *testing.T) auth.Base64Token {
+	t.Helper()
+
+	b, err := auth.NewBase64Token()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return b
 }
