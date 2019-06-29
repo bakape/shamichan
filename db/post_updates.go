@@ -17,7 +17,7 @@ func ClosePost(
 ) (err error) {
 	// TODO: Propagate this with DB listener
 	// TODO: Propage backlinks through update trigger
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = InTransaction(func(tx *sql.Tx) (err error) {
 		err = populateCommands(tx, board, com)
 		_, err = sq.Update("posts").
 			SetMap(map[string]interface{}{

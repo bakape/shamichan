@@ -2,9 +2,11 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 )
 
@@ -12,6 +14,14 @@ var (
 	// Don't reallocate this
 	emptyArray = []byte("[]")
 )
+
+// Open post meta information
+type OpenPostMeta struct {
+	HasImage  bool   `json:"has_image,omitempty"`
+	Spoilered bool   `json:"spoilered,omitempty"`
+	Page      uint32 `json:"page"`
+	Body      string `json:"body"`
+}
 
 // GetThread retrieves public thread data from the database.
 // page: page of the thread to fetch.
@@ -86,7 +96,8 @@ func GetAllBoardCatalog() (buf []byte, err error) {
 
 	// Hide threads from NSFW boards, if enabled
 	if config.Get().HideNSFW {
-		// TODO:  Test this
+		// TODO:  Move this to plpgsql as congig reads from the database.
+		// TODO: Test this
 
 		var w strings.Builder
 		first := true
@@ -127,7 +138,120 @@ func GetBoard(board string, page uint) (data []byte, err error) {
 
 // Retrieves all threads for the "/all/" meta-board on a specific page
 func GetAllBoard(page uint) (board []byte, err error) {
+	// TODO: Hide threads from NSFW boards, if enabled
 	err = db.QueryRow(`select get_all_board($1)`, page).Scan(&board)
 	castNoRows(&board, &err)
 	return
 }
+
+// Get thread meta-information for initializing thread update feeds
+func GetThreadMeta(thread uint64) (
+	all map[uint64]uint32,
+	open map[uint64]OpenPostMeta,
+	moderation map[uint64][]common.ModerationEntry,
+	err error,
+) {
+	all = make(map[uint64]uint32, 1<<10)
+	open = make(map[uint64]OpenPostMeta)
+	moderation = make(map[uint64][]common.ModerationEntry)
+
+	err = InTransaction(func(tx *sql.Tx) (err error) {
+		var r *sql.Rows
+		defer func() {
+			if r != nil {
+				r.Close()
+			}
+		}()
+
+		r, err = sq.
+			Select("id", "page").
+			From("posts").
+			Where("op = ?", thread).
+			RunWith(tx).
+			Query()
+		if err != nil {
+			return
+		}
+
+		var (
+			id   uint64
+			page uint32
+		)
+		for r.Next() {
+			err = r.Scan(&id, &page)
+			if err != nil {
+				return
+			}
+			all[id] = page
+		}
+		err = r.Err()
+		if err != nil {
+			return
+		}
+		err = r.Close()
+		if err != nil {
+			return
+		}
+
+		r, err = sq.
+			Select("id", "sha1 is not null", "spoiler", "page").
+			From("posts").
+			Where("op = ? and editing = true", thread).
+			RunWith(tx).
+			Query()
+		if err != nil {
+			return
+		}
+
+		var p OpenPostMeta
+		for r.Next() {
+			err = r.Scan(&id, &p.HasImage, &p.Spoilered, &p.Page)
+			if err != nil {
+				return
+			}
+			p.Body, err = GetOpenBody(id)
+			if err != nil {
+				return
+			}
+			open[id] = p
+		}
+		err = r.Err()
+		if err != nil {
+			return
+		}
+		err = r.Close()
+		if err != nil {
+			return
+		}
+
+		r, err = sq.Select("id", "get_post_moderation(id)").
+			From("posts").
+			Where("op = ? and moderated = true", thread).
+			RunWith(tx).
+			Query()
+		if err != nil {
+			return
+		}
+
+		var (
+			buf []byte
+			mod []common.ModerationEntry
+		)
+		for r.Next() {
+			err = r.Scan(&id, &buf)
+			if err != nil {
+				return
+			}
+			err = json.Unmarshal(buf, &mod)
+			if err != nil {
+				return
+			}
+			copy(moderation[id], mod)
+		}
+		err = r.Err()
+		return
+	})
+	return
+}
+
+// TODO: Board meta for board update feeds.

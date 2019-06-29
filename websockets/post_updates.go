@@ -316,7 +316,7 @@ func (c *Client) insertImage(data []byte) (err error) {
 		return
 	}
 	var msg []byte
-	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *sql.Tx) (err error) {
 		msg, err = db.InsertImage(tx, c.post.id, req.Token, req.Name,
 			req.Spoiler)
 		return

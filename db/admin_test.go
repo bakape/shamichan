@@ -28,7 +28,7 @@ func prepareForModeration(t *testing.T) {
 func writeAdminAccount(t *testing.T) {
 	t.Helper()
 
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *sql.Tx) (err error) {
 		err = RegisterAccount(tx, "admin", samplePasswordHash)
 		if err != nil {
 			return
@@ -107,7 +107,7 @@ func TestDeletePostsByIP(t *testing.T) {
 	writeAllBoard(t)
 	writeAdminAccount(t)
 
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *sql.Tx) (err error) {
 		err = RegisterAccount(tx, "user1", samplePasswordHash)
 		if err != nil {
 			return
@@ -125,7 +125,7 @@ func TestDeletePostsByIP(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = InTransaction(func(tx *sql.Tx) (err error) {
 		err = WriteBoard(tx, BoardConfigs{
 			BoardConfigs: config.BoardConfigs{
 				ID:        "b",
@@ -165,7 +165,7 @@ func TestDeletePostsByIP(t *testing.T) {
 	}
 
 	var shouldDelete, shouldSkip uint64
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = InTransaction(func(tx *sql.Tx) (err error) {
 		post := Post{
 			StandalonePost: common.StandalonePost{
 				OP:    1,
@@ -227,7 +227,7 @@ func TestDeletePostsByIP(t *testing.T) {
 			},
 			IP: "::1",
 		}
-		err = InTransaction(false, func(tx *sql.Tx) (err error) {
+		err = InTransaction(func(tx *sql.Tx) (err error) {
 			return InsertPost(tx, &post)
 		})
 		if err != nil {
@@ -356,7 +356,7 @@ func TestStaff(t *testing.T) {
 	prepareForModeration(t)
 
 	staff := map[common.ModerationLevel][]string{common.BoardOwner: {"admin"}}
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *sql.Tx) error {
 		return WriteStaff(tx, "a", staff)
 	})
 	if err != nil {
@@ -373,7 +373,7 @@ func TestStaff(t *testing.T) {
 func TestGetSameIPPosts(t *testing.T) {
 	prepareForModeration(t)
 	writeSampleUser(t)
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *sql.Tx) (err error) {
 		return WriteStaff(tx, "a", map[common.ModerationLevel][]string{
 			common.BoardOwner: {"admin"},
 			common.Janitor:    {sampleUserID},
@@ -421,7 +421,7 @@ func TestGetModLogEntry(t *testing.T) {
 func TestCanPerform(t *testing.T) {
 	prepareForModeration(t)
 	writeSampleUser(t)
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *sql.Tx) error {
 		return WriteStaff(tx, "a", map[common.ModerationLevel][]string{
 			common.Moderator: []string{sampleUserID},
 		})

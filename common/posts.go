@@ -30,8 +30,8 @@ type Post struct {
 	Editing    bool              `json:"editing"`
 	Sage       bool              `json:"sage"`
 	Auth       ModerationLevel   `json:"auth"`
+	Page       uint32            `json:"page"`
 	ID         uint64            `json:"id"`
-	Page       uint64            `json:"page"`
 	Time       int64             `json:"time"`
 	Body       string            `json:"body"`
 	Flag       string            `json:"flag"`

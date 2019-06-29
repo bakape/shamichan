@@ -1628,7 +1628,7 @@ func runMigrations() (err error) {
 			currentVersion int
 			done           bool
 		)
-		err = InTransaction(false, func(tx *sql.Tx) (err error) {
+		err = InTransaction(func(tx *sql.Tx) (err error) {
 			// Lock version column to ensure no migrations from other processes
 			// happen concurrently
 			err = sq.Select("val").

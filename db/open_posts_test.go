@@ -11,7 +11,7 @@ func TestCleanUpOpenPostBodies(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *sql.Tx) (err error) {
 		for _, p := range [...]struct {
 			open bool
 			id   uint64

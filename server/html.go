@@ -31,12 +31,7 @@ func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
 
 	theme := resolveTheme(r, b)
 	html, data, ctr, err := cache.GetHTML(boardCacheArgs(r, b, catalog))
-	switch err {
-	case nil:
-	case cache.ErrPageOverflow:
-		text404(w)
-		return
-	default:
+	if err != nil {
 		httpError(w, r, err)
 		return
 	}

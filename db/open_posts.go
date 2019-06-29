@@ -143,7 +143,7 @@ func cleanUpOpenPostBodies() (err error) {
 
 	// Find bodies with closed parents
 	toDelete := make([]uint64, 0, len(ids))
-	return InTransaction(true, func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *sql.Tx) (err error) {
 		var isOpen bool
 		q, err := tx.Prepare(`select 'true' from posts
 			where id = $1 and editing = 'true'`)

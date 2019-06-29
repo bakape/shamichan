@@ -55,7 +55,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check for collision and write to DB
-		err = db.InTransaction(false, func(tx *sql.Tx) error {
+		err = db.InTransaction(func(tx *sql.Tx) error {
 			return db.RegisterAccount(tx, req.ID, hash)
 		})
 		if err != nil {

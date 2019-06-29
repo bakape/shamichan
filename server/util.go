@@ -53,7 +53,7 @@ func checkClientEtag(
 }
 
 // Combine the progress counter and optional configuration hash into a weak etag
-func formatEtag(ctr uint64, hash string, pos common.ModerationLevel) string {
+func formatEtag(ctr uint64, hash string) string {
 	buf := append(make([]byte, 0, 128), "W/\""...)
 	buf = strconv.AppendUint(buf, ctr, 10)
 

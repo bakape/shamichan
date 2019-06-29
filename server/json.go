@@ -178,8 +178,6 @@ func boardJSON(w http.ResponseWriter, r *http.Request, catalog bool) {
 	switch err {
 	case nil:
 		writeJSON(w, r, formatEtag(ctr, "", common.NotLoggedIn), data)
-	case cache.ErrPageOverflow:
-		text404(w)
 	default:
 		httpError(w, r, err)
 	}

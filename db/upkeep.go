@@ -176,7 +176,7 @@ func deleteUnusedBoards() error {
 		return nil
 	}
 	min := time.Now().Add(-time.Duration(conf.BoardExpiry) * time.Hour * 24)
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *sql.Tx) (err error) {
 		// Get all inactive boards
 		var (
 			boards []string
@@ -244,7 +244,7 @@ func deleteOldThreads() (err error) {
 		return
 	}
 
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *sql.Tx) (err error) {
 		// Find threads to delete
 		var (
 			now           = time.Now().Unix()

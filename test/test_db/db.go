@@ -4,11 +4,12 @@ package test_db
 
 import (
 	"database/sql"
+	"testing"
+	"time"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"testing"
-	"time"
 )
 
 func WriteSampleBoard(t testing.TB) {
@@ -20,7 +21,7 @@ func WriteSampleBoard(t testing.TB) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *sql.Tx) error {
 		return db.WriteBoard(tx, b)
 	})
 	if err != nil {
@@ -33,10 +34,10 @@ func WriteSampleThread(t testing.TB) {
 
 	now := time.Now().Unix()
 	thread := db.Thread{
-		ID:        1,
-		Board:     "a",
-		PostCtr:   0,
-		ImageCtr:  1,
+		ID:         1,
+		Board:      "a",
+		PostCtr:    0,
+		ImageCtr:   1,
 		UpdateTime: now,
 	}
 	op := db.Post{
@@ -48,7 +49,10 @@ func WriteSampleThread(t testing.TB) {
 			OP: 1,
 		},
 	}
-	if err := db.WriteThread(thread, op); err != nil {
+	err := db.InTransaction(func(tx *sql.Tx) error {
+		return db.WriteThread(tx, thread, op)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 }

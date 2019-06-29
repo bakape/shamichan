@@ -18,6 +18,8 @@ github.com/bakape/captchouli v1.1.5 h1:fekFc6jmkMeg2IHn00arrAU354+eMA9uAgC0CizWe
 github.com/bakape/captchouli v1.1.5/go.mod h1:h6OVnTaKH/JeKTZimRmC008ddem3Yj/ZC9J+RK1R0vc=
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992 h1:n89d5g4t1+7ROrwElvy5W/knDo3bUKWOZ77acIdHA04=
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992/go.mod h1:+x6GUyBL1gkeUoBPZAEzF9u04TGIFEljjrqMpGT0KVE=
+github.com/bakape/recache v0.0.0-20190524102257-67e46453405b h1:p48akofs5bGkuKKXgqHitVEuHFFTT68Trc3kGuWM6Rc=
+github.com/bakape/recache v0.0.0-20190524102257-67e46453405b/go.mod h1:6Q0DtB9cTKzWTltqduJPVoleZuUBQRND6poXGv5w4Lw=
 github.com/bakape/thumbnailer v0.0.0-20190501133407-c89db19cab54 h1:gJiZ/+RG8gXyZ+OCaXAr6c3isJyiWOrsoPpN/HPiyDc=
 github.com/bakape/thumbnailer v0.0.0-20190501133407-c89db19cab54/go.mod h1:s7Sm20txJX+qAc11XFnLPqDPXnYShoscD3++dZKTxIc=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=

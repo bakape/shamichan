@@ -26,7 +26,7 @@ func logModeration(tx *sql.Tx, e auth.ModLogEntry) (err error) {
 func PurgePost(id uint64, by, reason string) (err error) {
 	// TODO: Ensure this is tested with and without image
 
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *sql.Tx) (err error) {
 		var (
 			board               string
 			hash                sql.NullString
@@ -94,7 +94,7 @@ func moderatePost(id uint64, entry common.ModerationEntry,
 		return
 	}
 
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *sql.Tx) (err error) {
 		if query != nil {
 			_, err = query.Where("id = ?", id).
 				RunWith(tx).
@@ -126,7 +126,7 @@ func DeleteBoard(board, by string) error {
 	if board == "all" {
 		return common.ErrInvalidInput("can not delete /all/")
 	}
-	return InTransaction(false, func(tx *sql.Tx) error {
+	return InTransaction(func(tx *sql.Tx) error {
 		return deleteBoard(tx, board, by,
 			fmt.Sprintf("board %s deleted by user", board))
 	})

@@ -20,7 +20,7 @@ var (
 func writeSampleUser(t *testing.T) {
 	t.Helper()
 
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *sql.Tx) error {
 		return RegisterAccount(tx, sampleUserID, samplePasswordHash)
 	})
 	if err != nil {
@@ -44,7 +44,7 @@ func TestRegisterAccount(t *testing.T) {
 	writeSampleUser(t)
 
 	// User name already registered
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *sql.Tx) error {
 		return RegisterAccount(tx, sampleUserID, samplePasswordHash)
 	})
 	if err != ErrUserNameTaken {
@@ -123,7 +123,7 @@ func TestGetPositions(t *testing.T) {
 	assertTableClear(t, "accounts", "boards")
 	writeSampleBoard(t)
 	writeSampleUser(t)
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *sql.Tx) error {
 		return WriteStaff(tx, "a", map[common.ModerationLevel][]string{
 			common.BoardOwner: []string{sampleUserID},
 		})

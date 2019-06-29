@@ -34,7 +34,7 @@ type Video struct {
 
 // WriteImage writes a processed image record to the DB. Only used in tests.
 func WriteImage(i common.ImageCommon) error {
-	return InTransaction(false, func(tx *sql.Tx) error {
+	return InTransaction(func(tx *sql.Tx) error {
 		return writeImageTx(tx, i)
 	})
 }

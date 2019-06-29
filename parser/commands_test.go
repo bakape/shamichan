@@ -129,7 +129,7 @@ func TestPyu(t *testing.T) {
 	})
 
 	t.Run("expire limit", func(t *testing.T) {
-		err := db.InTransaction(false, func(tx *sql.Tx) error {
+		err := db.InTransaction(func(tx *sql.Tx) error {
 			return db.FreePyuLimit()
 		})
 		if err != nil {

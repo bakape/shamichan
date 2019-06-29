@@ -37,7 +37,7 @@ func prepareThreads(t *testing.T) {
 		},
 	}
 	for _, b := range boards {
-		err := InTransaction(false, func(tx *sql.Tx) error {
+		err := InTransaction(func(tx *sql.Tx) error {
 			return WriteBoard(tx, b)
 		})
 		if err != nil {
@@ -119,7 +119,7 @@ func prepareThreads(t *testing.T) {
 	if err := WriteImage(assets.StdJPEG.ImageCommon); err != nil {
 		t.Fatal(err)
 	}
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(`set constraints links_target_fkey deferred`)
 		if err != nil {
 			return
@@ -391,7 +391,7 @@ func testGetThread(t *testing.T) {
 	for i := uint64(4); i <= 110; i++ {
 		thread1.Posts = append(thread1.Posts, common.Post{
 			ID:   i,
-			Page: (i - 1) / 100,
+			Page: (uint32(i) - 1) / 100,
 		})
 	}
 

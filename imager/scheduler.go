@@ -103,7 +103,7 @@ func processRequest(file multipart.File, size int) (token string, err error) {
 		return
 	}
 	var exists bool
-	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *sql.Tx) (err error) {
 		exists, err = db.ImageExists(tx, SHA1)
 		if err != nil {
 			return

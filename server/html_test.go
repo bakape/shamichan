@@ -76,7 +76,7 @@ func TestOwnedBoardSelection(t *testing.T) {
 	writeSampleUser(t)
 
 	for _, b := range [...]string{"a", "c"} {
-		err := db.InTransaction(false, func(tx *sql.Tx) error {
+		err := db.InTransaction(func(tx *sql.Tx) error {
 			return db.WriteBoard(tx, db.BoardConfigs{
 				BoardConfigs: config.BoardConfigs{
 					ID:        b,
@@ -108,7 +108,7 @@ func TestOwnedBoardSelection(t *testing.T) {
 			[]string{"admin"},
 		},
 	}
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *sql.Tx) error {
 		for _, s := range staff {
 			err := db.WriteStaff(tx, s.id, map[common.ModerationLevel][]string{
 				common.BoardOwner: s.owners,
@@ -150,7 +150,7 @@ func TestBoardConfigurationForm(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleUser(t)
 
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *sql.Tx) error {
 		return db.WriteStaff(tx, "a", map[common.ModerationLevel][]string{
 			common.BoardOwner: {"user1"},
 		})

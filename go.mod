@@ -12,6 +12,7 @@ require (
 	github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c
 	github.com/bakape/captchouli v1.1.5
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
+	github.com/bakape/recache v0.0.0-20190524102257-67e46453405b
 	github.com/bakape/thumbnailer v0.0.0-20190501133407-c89db19cab54
 	github.com/boltdb/bolt v1.3.1
 	github.com/chai2010/webp v1.1.0

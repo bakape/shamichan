@@ -52,7 +52,7 @@ func handleSpamScores() (err error) {
 
 // Flush spam scores from map to DB
 func flushSpamScores() (err error) {
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *sql.Tx) (err error) {
 		// Prepare statements for modifying spam score
 		get, err := tx.Prepare(`select score from spam_scores where ip = $1`)
 		if err != nil {
@@ -189,7 +189,7 @@ func getSpamScore(ip string) (score time.Time, err error) {
 		return
 	}
 	if isSpam(now, score) {
-		err = InTransaction(false, func(tx *sql.Tx) error {
+		err = InTransaction(func(tx *sql.Tx) error {
 			return banForSpam(tx, ip)
 		})
 		if err != nil {

@@ -45,7 +45,7 @@ func propagateBans(board string, ip string) (err error) {
 
 // Automatically bans an IP
 func SystemBan(ip, reason string, length time.Duration) (err error) {
-	return InTransaction(false, func(tx *sql.Tx) error {
+	return InTransaction(func(tx *sql.Tx) error {
 		return systemBanTx(tx, ip, reason, length)
 	})
 }
@@ -87,7 +87,7 @@ func Ban(board, reason, by string, length time.Duration, id uint64,
 	}
 
 	// Write ban messages to posts and ban table
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = InTransaction(func(tx *sql.Tx) (err error) {
 		return writeBan(tx, ip, auth.ModLogEntry{
 			ModerationEntry: common.ModerationEntry{
 				Type:   common.BanPost,
@@ -108,7 +108,7 @@ func Ban(board, reason, by string, length time.Duration, id uint64,
 
 // Unban lifts a ban from a specific post on a specific board
 func Unban(board string, id uint64, by string) error {
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *sql.Tx) (err error) {
 		_, err = sq.Delete("bans").
 			Where("board = ? and forPost = ?", board, id).
 			RunWith(tx).

@@ -1,9 +1,10 @@
 package feeds
 
 import (
+	"time"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
-	"time"
 )
 
 // One minute higher than post open limit, to reduce border cases
@@ -20,60 +21,16 @@ func retentionThreshold() int64 {
 }
 
 func newThreadCache(id uint64) (c threadCache, err error) {
-	c = threadCache{
-		syncMessage: syncMessage{
-			Recent:     make(map[uint64]cachedPost, 16),
-			Moderation: make(map[uint64][]common.ModerationEntry, 16),
-		},
-	}
-	thread, err := db.GetThread(id, 0)
-	if err != nil {
-		return
-	}
-
-	threshold := retentionThreshold()
-	for _, p := range thread.Posts {
-		if p.Time > threshold {
-			c.Recent[p.ID] = cachedPost{
-				HasImage:  p.Image != nil,
-				Spoilered: p.Image != nil && p.Image.Spoiler,
-				Closed:    !p.Editing,
-				Time:      p.Time,
-				Body:      p.Body,
-			}
-		}
-		if p.Moderated {
-			c.Moderation[p.ID] = p.Moderation
-		}
-	}
-
-	// TODO: Clean up the cache periodically
+	c.All, c.Open, c.Moderation, err = db.GetThreadMeta(id)
 	return
-}
-
-// Evict posts past evictionLimit
-func (c *threadCache) evict() {
-	c.clearMemoized()
-	threshold := retentionThreshold()
-	for id, p := range c.Recent {
-		if p.Time < threshold {
-			delete(c.Recent, id)
-		}
-	}
 }
 
 // Message used for synchronizing clients to the feed state.
 type syncMessage struct {
-	Recent     map[uint64]cachedPost               `json:"recent"`
+	// All posts in thread as (post_id, page) map
+	All        map[uint64]uint32                   `json:"all"`
+	Open       map[uint64]db.OpenPostMeta          `json:"open"`
 	Moderation map[uint64][]common.ModerationEntry `json:"moderation"`
-}
-
-type cachedPost struct {
-	HasImage  bool   `json:"has_image"`
-	Spoilered bool   `json:"spoilered"`
-	Closed    bool   `json:"closed"`
-	Time      int64  `json:"-"`
-	Body      string `json:"body"`
 }
 
 // Generate a message for synchronizing to the current status of the update
@@ -87,8 +44,10 @@ func (c *threadCache) getSyncMessage() ([]byte, error) {
 	}
 
 	var err error
-	c.memoized, err = common.EncodeMessage(common.MessageSynchronise,
-		c.syncMessage)
+	c.memoized, err = common.EncodeMessage(
+		common.MessageSynchronise,
+		c.syncMessage,
+	)
 	return c.memoized, err
 }
 

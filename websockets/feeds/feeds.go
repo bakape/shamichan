@@ -5,22 +5,22 @@ package feeds
 
 import (
 	"errors"
+	"sync"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
-	"sync"
 )
+
+// TODO: Board update feeds.
+// If we follow a single server architecture (at least for all websocket
+// clients), board feeds can just be an aggregation of all current active thread
+// feeds - events, open posts and moderation data.
 
 // Contains and manages all active update feeds
 var feeds = feedMap{
 	// 64 len map to avoid some possible reallocation as the server starts
 	feeds:   make(map[uint64]*Feed, 64),
 	tvFeeds: make(map[string]*tvFeed, 64),
-}
-
-// Export to avoid circular dependency
-func init() {
-	common.SendTo = SendTo
-	common.ClosePost = ClosePost
 }
 
 // Container for managing client<->update-feed assignment and interaction
@@ -133,38 +133,31 @@ func sendIfExists(id uint64, fn func(*Feed) error) error {
 	return nil
 }
 
-// InsertPostInto inserts a post into a tread feed, if it exists. Only use for
-// already closed posts.
-func InsertPostInto(post common.StandalonePost, msg []byte) {
-	sendIfExists(post.OP, func(f *Feed) error {
-		f.InsertPost(post.Post, msg)
-		return nil
-	})
-}
+// TODO: Listed to close events from DB
+//
+// // ClosePost closes a post in a feed, if it exists
+// func ClosePost(id, op uint64, links []common.Link, commands []common.Command,
+// ) (err error) {
+// 	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
+// 		ID       uint64           `json:"id"`
+// 		Links    []common.Link    `json:"links"`
+// 		Commands []common.Command `json:"commands"`
+// 	}{
+// 		ID:       id,
+// 		Links:    links,
+// 		Commands: commands,
+// 	})
+// 	if err != nil {
+// 		return
+// 	}
 
-// ClosePost closes a post in a feed, if it exists
-func ClosePost(id, op uint64, links []common.Link, commands []common.Command,
-) (err error) {
-	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
-		ID       uint64           `json:"id"`
-		Links    []common.Link    `json:"links"`
-		Commands []common.Command `json:"commands"`
-	}{
-		ID:       id,
-		Links:    links,
-		Commands: commands,
-	})
-	if err != nil {
-		return
-	}
+// 	sendIfExists(op, func(f *Feed) error {
+// 		f.ClosePost(id, msg)
+// 		return nil
+// 	})
 
-	sendIfExists(op, func(f *Feed) error {
-		f.ClosePost(id, msg)
-		return nil
-	})
-
-	return
-}
+// 	return
+// }
 
 // Initialize internal runtime
 func Init() (err error) {

@@ -92,7 +92,7 @@ func setLoadingAnimation(board string, files []assets.File) {
 
 // Overwrite any existing assets in the DB
 func setAssets(table, board string, files []assets.File) error {
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *sql.Tx) (err error) {
 		sql, args, err := sq.Delete(table).Where("board = ?", board).ToSql()
 		if err != nil {
 			return
