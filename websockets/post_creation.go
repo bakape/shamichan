@@ -222,17 +222,27 @@ func (c *Client) insertPost(data []byte) (err error) {
 		}
 		c.post.init(post.StandalonePost)
 	}
-	c.feed.InsertPost(post.StandalonePost.Post, msg)
-	err = CheckRouletteBan(post.Commands, post.Board, post.OP, post.ID)
-	if err != nil {
-		return
-	}
+	c.propagatePostInsertion(post.Post, msg)
 
 	conf := config.Get()
 	c.incrementSpamScore(conf.PostCreationScore +
 		conf.CharScore*uint(c.post.len))
 	c.setLastTime()
 	return
+}
+
+// Propagate post inserting to parent feed. msg is optional.
+func (c *Client) propagatePostInsertion(p common.Post, msg []byte) {
+	c.feed.InsertPost(
+		p.ID,
+		db.OpenPostMeta{
+			HasImage:  p.Image != nil,
+			Spoilered: p.Image != nil && p.Image.Spoiler,
+			Page:      p.Page,
+			Body:      p.Body,
+		},
+		msg,
+	)
 }
 
 // If the client has a previous post, close it silently
@@ -331,20 +341,22 @@ func constructPost(
 			return
 		}
 	} else {
-		// TODO: Move DB checks out of the parser. The parser should just parse.
-		// Return slices of pointers to links and commands that need to be
-		// validated.
-		post.Links, post.Commands, err = parser.ParseBody(
-			[]byte(req.Body),
-			conf.ID,
-			post.OP,
-			post.ID,
-			ip,
-			false,
-		)
-		if err != nil {
-			return
-		}
+		// TODO: Redesign thread OP creation. Maybe with websockets.
+
+		// // TODO: Move DB checks out of the parser. The parser should just parse.
+		// // Return slices of pointers to links and commands that need to be
+		// // validated.
+		// post.Links, post.Commands, err = parser.ParseBody(
+		// 	[]byte(req.Body),
+		// 	conf.ID,
+		// 	post.OP,
+		// 	post.ID,
+		// 	ip,
+		// 	false,
+		// )
+		// if err != nil {
+		// 	return
+		// }
 	}
 
 	return

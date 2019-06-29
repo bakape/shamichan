@@ -173,25 +173,27 @@ func (c *Client) closePost() (err error) {
 	}
 
 	var (
-		links []common.Link
+		links []uint64
 		com   []common.Command
 	)
 	if c.post.len != 0 {
-		links, com, err = parser.ParseBody(c.post.body, c.post.board, c.post.op,
-			c.post.id, c.ip, false)
+		links, com, err = parser.ParseBody(
+			c.post.body,
+			config.GetBoardConfigs(c.post.board).BoardConfigs,
+			false,
+		)
 		if err != nil {
 			return
 		}
 	}
 
-	err = db.ClosePost(c.post.id, c.post.op, string(c.post.body), links, com)
-	if err != nil {
-		return
-	}
-
-	err = CheckRouletteBan(com, c.post.board, c.post.op, c.post.id)
-	c.post = openPost{}
-	return
+	return db.ClosePost(
+		c.post.id,
+		c.post.board,
+		string(c.post.body),
+		links,
+		com,
+	)
 }
 
 // Splice the text in the open post
