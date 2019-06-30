@@ -7,7 +7,6 @@ import (
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
 )
 
@@ -32,33 +31,6 @@ func TestServeConfigs(t *testing.T) {
 	req.Header.Set("If-None-Match", etag)
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 304)
-}
-
-func TestDetectLastN(t *testing.T) {
-	t.Parallel()
-
-	cases := [...]struct {
-		name, in string
-		out      int
-	}{
-		{"no query string", "/a/1", 0},
-		{"unparsable", "/a/1?last=addsa", 0},
-		{"5", "/a/1?last=5", 5},
-		{"100", "/a/1?last=100", 100},
-		{"invalid number", "/a/1?last=1000", 0},
-	}
-
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.name, func(t *testing.T) {
-			t.Parallel()
-
-			req := newRequest(c.in)
-			if n := detectLastN(req); n != c.out {
-				LogUnexpected(t, c.out, n)
-			}
-		})
-	}
 }
 
 func TestPostJSON(t *testing.T) {
@@ -87,11 +59,6 @@ func TestPostJSON(t *testing.T) {
 			name: "existing post",
 			url:  "/post/1",
 			code: 200,
-		},
-		{
-			name: "invalid thread board",
-			url:  "/boards/nope/1",
-			code: 404,
 		},
 		{
 			name: "invalid thread number",
@@ -218,4 +185,34 @@ func TestServeExtensionMap(t *testing.T) {
 	rec, req := newPair("/json/extensions")
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 200)
+}
+
+func TestThreadJSON(t *testing.T) {
+	cache.Clear()
+	test_db.ClearTables(t, "boards")
+	writeSampleBoard(t)
+	writeSampleThread(t)
+	setBoards(t, "a")
+
+	cases := [...]struct {
+		name, url string
+		code      int
+	}{
+		{"unparsable thread number", "/www", 404},
+		{"valid thread", "/1", 200},
+		{"invalid page", "/1?page=-2", 404},
+		{"valid page", "/1?page=0", 200},
+		{"last page", "/1?page=-1", 200},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			rec, req := newPair("/json/thread" + c.url)
+			router.ServeHTTP(rec, req)
+			assertCode(t, rec, c.code)
+		})
+	}
 }

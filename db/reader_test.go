@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"encoding/json"
 	"testing"
 
 	"github.com/bakape/meguca/common"
@@ -201,7 +200,7 @@ func testGetPost(t *testing.T) {
 		t.Fatal(err)
 	}
 	var p common.StandalonePost
-	decode(t, buf, &p)
+	test.DecodeJSON(t, buf, &p)
 	test.AssertEquals(t, p, std)
 }
 
@@ -255,7 +254,7 @@ func testGetAllCatalog(t *testing.T) {
 		t.Fatal(err)
 	}
 	var catalog []common.Thread
-	decode(t, buf, &catalog)
+	test.DecodeJSON(t, buf, &catalog)
 	for i := range catalog {
 		thread := &catalog[i]
 		std := std[thread.ID]
@@ -267,16 +266,6 @@ func testGetAllCatalog(t *testing.T) {
 			test.AssertEquals(t, thread, &std)
 		})
 	}
-}
-
-func decode(t *testing.T, buf []byte, dst interface{}) {
-	t.Helper()
-
-	err := json.Unmarshal(buf, dst)
-	if err != nil {
-		t.Fatalf("%s:\n%s", err, string(buf))
-	}
-	return
 }
 
 // Assert image equality and then override to not compare pointer addresses
@@ -346,7 +335,7 @@ func testGetCatalog(t *testing.T) {
 				t.Fatal(err)
 			}
 			var board []common.Thread
-			decode(t, buf, &board)
+			test.DecodeJSON(t, buf, &board)
 			for i := range board {
 				assertImage(t, &board[i], c.std[i].Posts[0].Image)
 			}
@@ -487,7 +476,7 @@ func testGetThread(t *testing.T) {
 			}
 			if c.err == nil {
 				var thread common.Thread
-				decode(t, buf, &thread)
+				test.DecodeJSON(t, buf, &thread)
 				assertImage(t, &thread, c.std.Posts[0].Image)
 				syncThreadVariables(&thread, c.std)
 				test.AssertEquals(t, thread, c.std)

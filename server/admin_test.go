@@ -497,10 +497,12 @@ func TestDeletePost(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			post, err := db.GetPost(c.id)
+			buf, err := db.GetPost(c.id)
 			if err != nil {
 				t.Fatal(err)
 			}
+			var post common.StandalonePost
+			test.DecodeJSON(t, buf, &post)
 			test.AssertEquals(t, post.IsDeleted(), c.deleted)
 		})
 	}
@@ -554,10 +556,12 @@ func TestBanPosts(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			post, err := db.GetPost(c.id)
+			buf, err := db.GetPost(c.id)
 			if err != nil {
 				t.Fatal(err)
 			}
+			var post common.StandalonePost
+			test.DecodeJSON(t, buf, &post)
 			test.AssertEquals(t, isBanned(post), c.banned)
 		})
 	}
@@ -570,10 +574,12 @@ func TestBanPosts(t *testing.T) {
 		router.ServeHTTP(rec, req)
 		assertCode(t, rec, 200)
 
-		post, err := db.GetPost(3)
+		buf, err := db.GetPost(3)
 		if err != nil {
 			t.Fatal(err)
 		}
+		var post common.StandalonePost
+		test.DecodeJSON(t, buf, &post)
 		test.AssertEquals(t, isBanned(post), true)
 	})
 }
@@ -596,7 +602,9 @@ func writeSampleThread(t *testing.T) {
 			Board: "a",
 		},
 	}
-	err := db.WriteThread(thread, op)
+	err := db.InTransaction(func(tx *sql.Tx) (err error) {
+		return db.WriteThread(tx, thread, op)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -635,7 +643,9 @@ func writeExtraSampleBoard(t *testing.T) {
 		},
 		IP: "::1",
 	}
-	err = db.WriteThread(thread, op)
+	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+		return db.WriteThread(tx, thread, op)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -29,17 +29,8 @@
 		localStorage.setItem("termsAccepted", "true");
 	}
 
-	// Really old browser. Run in noscript mode.
+	// Really old browser
 	if (!window.WebAssembly) {
-		var ns = document.getElementsByTagName("noscript");
-
-		while (ns.length) { // Collection is live and changes with DOM updates
-			var el = ns[0],
-				cont = document.createElement("div");
-			cont.innerHTML = el.innerHTML;
-			el.parentNode.replaceChild(cont, el);
-		}
-
 		var bc = document.getElementById("banner-center");
 		bc.classList.add("admin");
 		bc.innerHTML = "UPDATE YOUR FUCKING BROWSER";

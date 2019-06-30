@@ -14,7 +14,7 @@ begin
 			concat_ws(',', op, new.id));
 
 		-- Posts bump threads only on creation and closure
-		perform bump_thread(op, true);
+		perform bump_thread(op, bump_time => true);
 	end if;
 	return null;
 end;

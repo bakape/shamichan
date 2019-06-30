@@ -69,11 +69,7 @@ CaptchaConfirmation renders a confirmation form with an optional captcha
 	{% if !config.Get().Captcha %}
 		{% return %}
 	{% endif %}
-	<div class="captcha-container full-width">
-		<noscript>
-			<iframe width="462" height="525" scrolling="no" marginwidth="0" marginheight="0" src="/api/captcha/{%s= board %}"></iframe>
-		</noscript>
-	</div>
+	<div class="captcha-container full-width"></div>
 {% endstripspace %}{% endfunc %}
 
 Form for inputting key-value map-like data
@@ -148,15 +144,6 @@ Render submit and cancel buttons
 Renders a cancel button
 {% func cancel() %}{% stripspace %}
 	<input type="button" name="cancel" value="{%s= lang.Get().Common.UI["cancel"] %}">
-{% endstripspace %}{% endfunc %}
-
-Render link to request new noscript captcha
-{% func NoscriptCaptchaLink(board string) %}{% stripspace %}
-	<a href="/api/captcha/{%s board %}" style="display: flex; width: 100%; height: 100%;">
-		<span style="align-self: center; margin: auto;">
-			{%s= lang.Get().UI["loadCaptcha"] %}
-		</span>
-	</a>
 {% endstripspace %}{% endfunc %}
 
 {% func BannerForm() %}{% stripspace %}

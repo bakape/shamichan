@@ -1,7 +1,10 @@
 package server
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,9 +22,31 @@ func newPair(url string) (*httptest.ResponseRecorder, *http.Request) {
 
 func assertCode(t *testing.T, rec *httptest.ResponseRecorder, std int) {
 	t.Helper()
+
 	if rec.Code != std {
 		t.Errorf("unexpected status code: %d : %d", std, rec.Code)
-		t.Logf("body: %s", rec.Body.String())
+
+		var body string
+		if rec.HeaderMap.Get("Content-Encoding") == "gzip" {
+			var decoded bytes.Buffer
+			gzr, err := gzip.NewReader(rec.Body)
+			if err != nil {
+				return
+			}
+			_, err = io.Copy(&decoded, gzr)
+			if err != nil {
+				return
+			}
+			err = gzr.Close()
+			if err != nil {
+				return
+			}
+			body = decoded.String()
+		} else {
+			body = rec.Body.String()
+		}
+
+		t.Logf("body: %s", body)
 	}
 }
 
@@ -78,9 +103,7 @@ func setBoards(t *testing.T, boards ...string) {
 }
 
 func TestText404(t *testing.T) {
-	t.Parallel()
-
-	rec, req := newPair("/lalala/")
+	rec, req := newPair("/happi/")
 	router.ServeHTTP(rec, req)
 	assertCode(t, rec, 404)
 	assertBody(t, rec, "404 not found\n")

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/test"
 )
 
 // Only select post updates should bump threads
@@ -74,7 +75,7 @@ func TestNoBumpOnPostUpdate(t *testing.T) {
 	}
 
 	var lastThread common.Thread
-	decode(t, buf, &lastThread)
+	test.DecodeJSON(t, buf, &lastThread)
 	last := lastThread.BumpTime
 
 	for i := range cases {
@@ -89,7 +90,7 @@ func TestNoBumpOnPostUpdate(t *testing.T) {
 				t.Fatal(err)
 			}
 			var thread common.Thread
-			decode(t, buf, &thread)
+			test.DecodeJSON(t, buf, &thread)
 
 			if c.bump {
 				if thread.BumpTime == last {

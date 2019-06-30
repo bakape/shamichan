@@ -8,8 +8,8 @@ begin
 	post_counter = post_count(new.op) + 1;
 	new.page = post_counter / 100;
 
-	perform bump_thread(new.op, not new.sage);
-	perform pg_notify('new_post_in_thread', new.op || ',' || post_counter);
+	perform bump_thread(new.op, bump_time => not new.sage, page => new.page);
+	perform pg_notify('thread.new_post', new.op || ',' || post_counter);
 
 	-- Delete post, if IP blacklisted
 	select b.by into to_delete_by
@@ -37,7 +37,11 @@ create or replace function after_posts_update()
 returns trigger as $$
 begin
 	if new.editing != old.editing then
-		perform bump_thread(new.op, not new.sage);
+		perform bump_thread(
+			new.op,
+			bump_time => not new.sage,
+			page => new.page
+		);
 	end if;
 	return null;
 end;

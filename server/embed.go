@@ -2,13 +2,15 @@ package server
 
 import (
 	"fmt"
-	"github.com/bakape/meguca/common"
 	"net/http"
 	"strings"
 
 	"github.com/badoux/goscraper"
+	"github.com/bakape/meguca/common"
 	"github.com/otium/ytdl"
 )
+
+// TODO: Migrate back to NoEmbed. This is a clusterfuck.
 
 // Get YouTube video information by ID
 func youTubeData(w http.ResponseWriter, r *http.Request) {
@@ -154,5 +156,8 @@ func errNoYoutubeThumb(id string) error {
 }
 
 func errYouTubeGeneric(id string, err string, code int) error {
-	return common.StatusError{fmt.Errorf("YouTube [%s]: %s", id, err), code}
+	return common.StatusError{
+		Err:  fmt.Errorf("YouTube [%s]: %s", id, err),
+		Code: code,
+	}
 }

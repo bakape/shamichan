@@ -4,6 +4,7 @@ package test
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -96,4 +97,15 @@ func SkipInCI(t *testing.T) {
 	if os.Getenv("CI") == "true" {
 		t.Skip()
 	}
+}
+
+// Decode JSON into dst from buffer
+func DecodeJSON(t *testing.T, buf []byte, dst interface{}) {
+	t.Helper()
+
+	err := json.Unmarshal(buf, dst)
+	if err != nil {
+		t.Fatalf("%s:\n%s", err, string(buf))
+	}
+	return
 }

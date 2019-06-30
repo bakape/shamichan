@@ -34,7 +34,8 @@ func TestUpdateOnRemovedBoard(t *testing.T) {
 		ID: "a",
 	})
 
-	if err := updateBoardConfigs("a"); err != nil {
+	err := updateBoardConfigs("a")
+	if err != nil {
 		t.Fatal(err)
 	}
 

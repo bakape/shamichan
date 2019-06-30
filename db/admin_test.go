@@ -50,7 +50,7 @@ func TestDeleteImages(t *testing.T) {
 		t.Fatal(err)
 	}
 	var p common.StandalonePost
-	decode(t, buf, &p)
+	test.DecodeJSON(t, buf, &p)
 	if p.Image == nil {
 		t.Fatal("no image")
 	}
@@ -65,7 +65,7 @@ func TestDeleteImages(t *testing.T) {
 		t.Fatal(err)
 	}
 	p = common.StandalonePost{}
-	decode(t, buf, &p)
+	test.DecodeJSON(t, buf, &p)
 	if p.Image != nil {
 		t.Fatal("image not deleted")
 	}
@@ -79,7 +79,7 @@ func TestSpoilerImages(t *testing.T) {
 		t.Fatal(err)
 	}
 	var p common.Post
-	decode(t, buf, &p)
+	test.DecodeJSON(t, buf, &p)
 	if p.Image.Spoiler {
 		t.Fatal("has spoiler")
 	}
@@ -93,7 +93,7 @@ func TestSpoilerImages(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	decode(t, buf, &p)
+	test.DecodeJSON(t, buf, &p)
 	if !p.Image.Spoiler {
 		t.Fatal("no spoiler")
 	}
@@ -304,7 +304,7 @@ func TestPurgePost(t *testing.T) {
 		t.Fatal(err)
 	}
 	var post common.Post
-	decode(t, buf, &post)
+	test.DecodeJSON(t, buf, &post)
 	test.AssertEquals(t, len(post.Moderation), 1)
 	test.AssertEquals(t, post.Image == nil, true)
 	test.AssertEquals(t, post.Body, "")

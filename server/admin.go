@@ -326,7 +326,10 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(msg.CaptchaTags) < 3 {
-			err = common.StatusError{errors.New("too few captcha tags"), 400}
+			err = common.StatusError{
+				Err:  errors.New("too few captcha tags"),
+				Code: 400,
+			}
 			return
 		}
 		err = db.WriteConfigs(msg)
@@ -619,7 +622,10 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 func extractID(r *http.Request) (uint64, error) {
 	id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
 	if err != nil {
-		err = common.StatusError{err, 400}
+		err = common.StatusError{
+			Err:  err,
+			Code: 400,
+		}
 	}
 	return id, err
 }
@@ -631,17 +637,15 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-
-		board, uid, err := canModeratePost(w, r, id, common.Janitor)
+		creds, err := isLoggedIn(w, r)
 		if err != nil {
 			return
 		}
-
-		posts, err := db.GetSameIPPosts(id, board, uid)
+		posts, err := db.GetSameIPPosts(id, creds.UserID)
 		if err != nil {
 			return
 		}
-		serveJSON(w, r, "", posts)
+		writeJSON(w, r, "", posts)
 		return
 	}()
 	if err != nil {
@@ -743,7 +747,10 @@ func unban(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, jsonLimit)
 		err = r.ParseForm()
 		if err != nil {
-			err = common.StatusError{err, 400}
+			err = common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
 			return
 		}
 		var (
@@ -756,7 +763,10 @@ func unban(w http.ResponseWriter, r *http.Request) {
 			}
 			id, err = strconv.ParseUint(key, 10, 64)
 			if err != nil {
-				err = common.StatusError{err, 400}
+				err = common.StatusError{
+					Err:  err,
+					Code: 400,
+				}
 				return
 			}
 			ids = append(ids, id)
@@ -828,12 +838,18 @@ func redirectByIP(w http.ResponseWriter, r *http.Request) {
 		ip, err := db.GetIP(id)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				err = common.StatusError{errors.New("no such post"), 404}
+				err = common.StatusError{
+					Err:  errors.New("no such post"),
+					Code: 404,
+				}
 			}
 			return
 		}
 		if ip == "" {
-			return common.StatusError{errors.New("no IP on post"), 404}
+			return common.StatusError{
+				Err:  errors.New("no IP on post"),
+				Code: 404,
+			}
 		}
 
 		msg, err := common.EncodeMessage(common.MessageRedirect, url)

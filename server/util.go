@@ -52,25 +52,6 @@ func checkClientEtag(
 	return false
 }
 
-// Combine the progress counter and optional configuration hash into a weak etag
-func formatEtag(ctr uint64, hash string) string {
-	buf := append(make([]byte, 0, 128), "W/\""...)
-	buf = strconv.AppendUint(buf, ctr, 10)
-
-	addOpt := func(s string) {
-		buf = append(buf, '-')
-		buf = append(buf, s...)
-	}
-	if hash != "" {
-		addOpt(hash)
-	}
-	if pos != common.NotLoggedIn {
-		addOpt(pos.String())
-	}
-
-	return string(append(buf, '"'))
-}
-
 // Write a []byte to the client. Must receive the entire response body at once.
 func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
@@ -126,7 +107,10 @@ func assertNotBanned(w http.ResponseWriter, r *http.Request, board string,
 ) bool {
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		httpError(w, r, common.StatusError{err, 400})
+		httpError(w, r, common.StatusError{
+			Err:  err,
+			Code: 400,
+		})
 		return false
 	}
 	err = db.IsBanned(board, ip)
@@ -174,7 +158,10 @@ func extractParam(r *http.Request, id string) string {
 func decodeJSON(r *http.Request, dest interface{}) (err error) {
 	err = json.NewDecoder(io.LimitReader(r.Body, jsonLimit)).Decode(dest)
 	if err != nil {
-		err = common.StatusError{err, 400}
+		err = common.StatusError{
+			Err:  err,
+			Code: 400,
+		}
 	}
 	return
 }

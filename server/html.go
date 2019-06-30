@@ -19,141 +19,39 @@ func setHTMLHeaders(w http.ResponseWriter) {
 	head.Set("Content-Type", "text/html")
 }
 
-// Serves board HTML to regular or noscript clients
-func boardHTML(w http.ResponseWriter, r *http.Request, b string, catalog bool) {
-	if !auth.IsBoard(b) {
+// Serve index page HTML
+func indexHTML(w http.ResponseWriter, r *http.Request) {
+	board := extractParam(r, "board")
+	if !auth.IsBoard(board) {
 		text404(w)
 		return
 	}
-	if !assertNotBanned(w, r, b) {
-		return
-	}
 
-	theme := resolveTheme(r, b)
-	html, data, ctr, err := cache.GetHTML(boardCacheArgs(r, b, catalog))
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
+	httpError(w, r, func() (err error) {
 
-	pos, ok := extractPosition(w, r)
-	if !ok {
-		return
-	}
-
-	_, hash := config.GetClient()
-	etag := formatEtag(ctr, hash, pos)
-	if checkClientEtag(w, r, etag) {
-		return
-	}
-
-	var n, total int
-	if !catalog {
-		p := data.(cache.PageStore)
-		n = p.PageNumber
-		total = p.Data.Pages
-	}
-
-	setHTMLHeaders(w)
-	templates.Board(
-		w,
-		b, theme,
-		n, total,
-		pos,
-		r.URL.Query().Get("minimal") == "true", catalog,
-		html,
-	)
-}
-
-// Resolve theme to render in accordance to client and board settings.
-// Needed to prevent Flash Of Unstyled Content.
-func resolveTheme(r *http.Request, board string) string {
-	if c, err := r.Cookie("theme"); err == nil {
-		for _, t := range common.Themes {
-			if c.Value == t {
-				return c.Value
-			}
-		}
-	}
-	if board == "all" {
-		return config.Get().DefaultCSS
-	}
-	return config.GetBoardConfigs(board).DefaultCSS
-}
-
-// Asserts a thread exists on the specific board and renders the index template
-func threadHTML(w http.ResponseWriter, r *http.Request) {
-	id, ok := validateThread(w, r)
-	if !ok {
-		return
-	}
-
-	b := extractParam(r, "board")
-	theme := resolveTheme(r, b)
-	lastN := detectLastN(r)
-	k := cache.ThreadKey(id, lastN)
-	html, data, ctr, err := cache.GetHTML(k, cache.ThreadFE)
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-
-	pos, ok := extractPosition(w, r)
-	if !ok {
-		return
-	}
-
-	_, hash := config.GetClient()
-	etag := formatEtag(ctr, hash, pos)
-	if checkClientEtag(w, r, etag) {
-		return
-	}
-
-	thread := data.(common.Thread)
-	setHTMLHeaders(w)
-	templates.Thread(
-		w,
-		id,
-		b, thread.Subject, theme,
-		lastN != 0, thread.Locked,
-		pos,
-		html,
-	)
-}
-
-// Extract logged in position for HTML request.
-// If ok == false, caller should return.
-func extractPosition(w http.ResponseWriter, r *http.Request) (
-	pos common.ModerationLevel, ok bool,
-) {
-	ok = true
-	pos = common.NotLoggedIn
-	creds := extractLoginCreds(r)
-	if creds.UserID == "" {
-		return
-	}
-
-	loggedIn, err := db.IsLoggedIn(creds.UserID, creds.Session)
-	switch err {
-	case common.ErrInvalidCreds:
-		return
-	case nil:
-		if loggedIn {
-			board := extractParam(r, "board")
-			pos, err = db.FindPosition(board, creds.UserID)
-			if err != nil {
-				httpError(w, r, err)
-				ok = false
+		pos := common.NotLoggedIn
+		creds := extractLoginCreds(r)
+		if creds.UserID != "" {
+			var loggedIn bool
+			loggedIn, err = db.IsLoggedIn(creds.UserID, creds.Session)
+			switch err {
+			case common.ErrInvalidCreds:
+				err = nil
+			case nil:
+				if loggedIn {
+					pos, err = db.FindPosition(board, creds.UserID)
+					if err != nil {
+						return
+					}
+				}
+			default:
 				return
 			}
 		}
-	default:
-		httpError(w, r, err)
-		ok = false
-		return
-	}
 
-	return
+		setHTMLHeaders(w)
+		return cache.IndexHTML(w, r, pos)
+	}())
 }
 
 // Render a board selection and navigation panel and write HTML to client

@@ -24,9 +24,7 @@ type OpenPostMeta struct {
 }
 
 // GetThread retrieves public thread data from the database.
-// page: page of the thread to fetch.
-// 	-1 to fetch the last page.
-// 	-5 to fetch last 5 posts
+// page: page of the thread to fetch. -1 to fetch the last page.
 func GetThread(id uint64, page int) (thread []byte, err error) {
 	err = db.QueryRow("select get_thread($1, $2)", id, page).Scan(&thread)
 	castNoRows(&thread, &err)
@@ -130,14 +128,14 @@ func GetAllBoardCatalog() (buf []byte, err error) {
 }
 
 // Retrieves all threads for a specific board on a specific page
-func GetBoard(board string, page uint) (data []byte, err error) {
+func GetBoard(board string, page uint32) (data []byte, err error) {
 	err = db.QueryRow(`select get_board($1, $2)`, board, page).Scan(&data)
 	castNoRows(&data, &err)
 	return
 }
 
 // Retrieves all threads for the "/all/" meta-board on a specific page
-func GetAllBoard(page uint) (board []byte, err error) {
+func GetAllBoard(page uint32) (board []byte, err error) {
 	// TODO: Hide threads from NSFW boards, if enabled
 	err = db.QueryRow(`select get_all_board($1)`, page).Scan(&board)
 	castNoRows(&board, &err)

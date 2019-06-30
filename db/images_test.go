@@ -245,7 +245,7 @@ func TestSpoilerImage(t *testing.T) {
 		t.Fatal(err)
 	}
 	var post common.Post
-	decode(t, buf, &post)
+	test.DecodeJSON(t, buf, &post)
 	test.AssertEquals(t, post.Image.Spoiler, true)
 }
 

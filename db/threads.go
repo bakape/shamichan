@@ -93,7 +93,7 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 		}()
 	}
 
-	err = ListenCancelable("thread_deleted", proxy,
+	err = ListenCancelable("thread.deleted", proxy,
 		func(msg string) (err error) {
 			_, id, err := SplitBoardAndID(msg)
 			if err != nil {
@@ -109,7 +109,7 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 		return
 	}
 
-	return ListenCancelable("new_post_in_thread", proxy,
+	return ListenCancelable("thread.new_post", proxy,
 		func(msg string) (err error) {
 			retErr := func() error {
 				return fmt.Errorf("invalid message: `%s`", msg)

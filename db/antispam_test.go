@@ -110,7 +110,7 @@ func TestSpamScores(t *testing.T) {
 	}
 
 	t.Run("clear score", func(t *testing.T) {
-		err := InTransaction(false, func(tx *sql.Tx) error {
+		err := InTransaction(func(tx *sql.Tx) error {
 			return resetSpamScore(tx, sessions[2])
 		})
 		if err != nil {

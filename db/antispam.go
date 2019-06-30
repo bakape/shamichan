@@ -264,7 +264,7 @@ func ValidateCaptcha(
 	err = captchouli.CheckCaptcha(req.CaptchaID, req.Solution)
 	switch err {
 	case nil:
-		return InTransaction(false, func(tx *sql.Tx) (err error) {
+		return InTransaction(func(tx *sql.Tx) (err error) {
 			_, err = sq.Insert("last_solved_captchas").
 				Columns("token").
 				Values(session[:]).
@@ -280,7 +280,7 @@ func ValidateCaptcha(
 		})
 	case captchouli.ErrInvalidSolution:
 		banned := false
-		err = InTransaction(false, func(tx *sql.Tx) (err error) {
+		err = InTransaction(func(tx *sql.Tx) (err error) {
 			_, err = sq.Insert("failed_captchas").
 				Columns("ip", "expires").
 				Values(ip, time.Now().Add(time.Hour)).

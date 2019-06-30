@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 )
 
 func TestWrapError(t *testing.T) {
@@ -51,7 +51,7 @@ func TestWaterfall(t *testing.T) {
 		fn,
 	}
 	if err := Waterfall(fns...); err != stdErr {
-		UnexpectedError(t, err)
+		test.UnexpectedError(t, err)
 	}
 	if wasRun != 2 {
 		t.Fatalf("wrong run number: %d", wasRun)

@@ -141,7 +141,7 @@ func Set(c Configs) (err error) {
 	rootDomain = u.Hostname()
 	globalMu.Unlock()
 
-	return
+	return util.Trigger("config.changed")
 }
 
 // GetClient returns public availability configuration JSON and a truncated

@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/bakape/meguca/cache"
+
 	ass "github.com/bakape/meguca/assets"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
@@ -13,7 +15,6 @@ import (
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/lang"
 	mlog "github.com/bakape/meguca/log"
-	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/bakape/meguca/websockets/feeds"
 )
@@ -65,7 +66,7 @@ func Start() (err error) {
 	// Depend on configs
 	var tasks []func() error
 	if config.Server.ImagerMode != config.ImagerOnly {
-		tasks = append(tasks, templates.Compile, listenToThreadDeletion)
+		tasks = append(tasks, cache.Init)
 		go ass.WatchVideoDir()
 	}
 	if config.Server.ImagerMode != config.NoImager {

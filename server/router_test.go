@@ -7,11 +7,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/templates"
-	"github.com/bakape/meguca/util"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/go-playground/log/handlers/console"
@@ -41,7 +40,13 @@ func TestMain(m *testing.M) {
 			DefaultLang: "en_GB",
 		},
 	})
-	if err := util.Waterfall(lang.Load, templates.Compile); err != nil {
+	config.Server.CacheSize = 100
+	err = cache.Init()
+	if err != nil {
+		return
+	}
+	err = lang.Load()
+	if err != nil {
 		panic(err)
 	}
 

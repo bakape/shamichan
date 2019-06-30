@@ -28,7 +28,10 @@ func authenticateCaptcha(w http.ResponseWriter, r *http.Request) {
 		}
 		err = r.ParseForm()
 		if err != nil {
-			return common.StatusError{err, 400}
+			return common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
 		}
 
 		ip, err := auth.GetIP(r)

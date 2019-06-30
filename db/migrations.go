@@ -1582,6 +1582,18 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(`drop function bump_thread`)
+		if err != nil {
+			return
+		}
+		return loadSQL(tx,
+			"functions/bump_thread",
+			"triggers/threads",
+			"triggers/posts",
+			"triggers/mod_log",
+		)
+	},
 }
 
 func createIndex(table string, columns ...string) string {

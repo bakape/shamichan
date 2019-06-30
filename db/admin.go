@@ -220,6 +220,7 @@ func CanPerform(account, board string, action common.ModerationLevel) (
 func GetSameIPPosts(id uint64, by string) (posts []byte, err error) {
 	// TODO: Ensure this is tested
 	err = db.QueryRow(`select get_same_ip_posts($1, $2)`, id, by).Scan(&posts)
+	castPermissionError(&err)
 	return
 }
 

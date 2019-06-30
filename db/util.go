@@ -148,6 +148,33 @@ fail:
 	return
 }
 
+// Split message containing a board, post/thread ID and page
+func SplitBoardIDPage(msg string) (
+	board string,
+	id uint64,
+	page int,
+	err error,
+) {
+	split := strings.Split(msg, ",")
+	if len(split) != 3 {
+		goto fail
+	}
+	board = split[0]
+	id, err = strconv.ParseUint(split[1], 10, 64)
+	if err != nil {
+		goto fail
+	}
+	page, err = strconv.Atoi(split[2])
+	if err != nil {
+		goto fail
+	}
+	return
+
+fail:
+	err = ErrMsgParse(msg)
+	return
+}
+
 // Split message containing a list of uint64 numbers.
 // Returns error, if message did not contain n integers.
 func SplitUint64s(msg string, n int) (arr []uint64, err error) {

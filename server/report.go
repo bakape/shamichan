@@ -16,20 +16,29 @@ func report(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, jsonLimit)
 	err := r.ParseMultipartForm(0)
 	if err != nil {
-		httpError(w, r, common.StatusError{err, 400})
+		httpError(w, r, common.StatusError{
+			Err:  err,
+			Code: 400,
+		})
 		return
 	}
 	f := r.Form
 
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		httpError(w, r, common.StatusError{err, 400})
+		httpError(w, r, common.StatusError{
+			Err:  err,
+			Code: 400,
+		})
 		return
 	}
 	var session auth.Base64Token
 	err = session.EnsureCookie(w, r)
 	if err != nil {
-		httpError(w, r, common.StatusError{err, 400})
+		httpError(w, r, common.StatusError{
+			Err:  err,
+			Code: 400,
+		})
 		return
 	}
 
@@ -45,7 +54,10 @@ func report(w http.ResponseWriter, r *http.Request) {
 
 	target, err := strconv.ParseUint(f.Get("target"), 10, 64)
 	if err != nil {
-		httpError(w, r, common.StatusError{err, 400})
+		httpError(w, r, common.StatusError{
+			Err:  err,
+			Code: 400,
+		})
 		return
 	}
 
@@ -79,7 +91,10 @@ func report(w http.ResponseWriter, r *http.Request) {
 func reportForm(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
 	if err != nil {
-		httpError(w, r, common.StatusError{err, 400})
+		httpError(w, r, common.StatusError{
+			Err:  err,
+			Code: 400,
+		})
 		return
 	}
 	setHTMLHeaders(w)

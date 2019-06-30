@@ -10,7 +10,6 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	mlog "github.com/bakape/meguca/log"
-	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/lib/pq"
 )
@@ -135,7 +134,7 @@ func updateConfigs(_ string) error {
 	config.Set(conf)
 	mlog.Update()
 
-	return util.Parallel(templates.Recompile, auth.LoadCaptchaServices)
+	return auth.LoadCaptchaServices()
 }
 
 func updateBoardConfigs(board string) error {
@@ -144,7 +143,7 @@ func updateBoardConfigs(board string) error {
 	case nil:
 	case sql.ErrNoRows:
 		config.RemoveBoard(board)
-		return templates.Recompile()
+		return nil
 	default:
 		return err
 	}
@@ -157,16 +156,24 @@ func updateBoardConfigs(board string) error {
 	case err != nil:
 		return util.WrapError("reloading board configuration", err)
 	case changed:
-		return util.Parallel(templates.Recompile, auth.LoadCaptchaServices)
+		return auth.LoadCaptchaServices()
 	default:
 		return nil
 	}
 }
 
 // GetBoardConfigs retrives the configurations of a specific board
-func GetBoardConfigs(board string) (config.BoardConfigs, error) {
-	q := getBoardConfigs().Where("id = ?", board)
-	return scanBoardConfigs(q.QueryRow())
+func GetBoardConfigs(board string) (c config.BoardConfigs, err error) {
+	c, err = scanBoardConfigs(
+		getBoardConfigs().
+			Where("id = ?", board).
+			QueryRow(),
+	)
+	if err != nil {
+		return
+	}
+	c.ID = board
+	return
 }
 
 // WriteConfigs writes new global configurations to the database

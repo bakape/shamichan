@@ -154,7 +154,7 @@ func TestSageAndTimestampUpdates(t *testing.T) {
 		t.Fatal(err)
 	}
 	var thread common.Thread
-	decode(t, buf, &thread)
+	test.DecodeJSON(t, buf, &thread)
 	bumpTime = thread.BumpTime
 	updateTime = thread.UpdateTime
 
@@ -194,7 +194,7 @@ func TestSageAndTimestampUpdates(t *testing.T) {
 				t.Fatal(err)
 			}
 			var thread common.Thread
-			decode(t, buf, &thread)
+			test.DecodeJSON(t, buf, &thread)
 
 			if thread.UpdateTime <= updateTime {
 				t.Error("update time not increased")

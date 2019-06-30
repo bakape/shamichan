@@ -40,24 +40,6 @@ var specs = map[string][]inputSpec{
 			Autocomplete: "off",
 		},
 	},
-	"noscriptPostCreation": {
-		{
-			ID:           "name",
-			Type:         _string,
-			MaxLength:    common.MaxLenName,
-			Placeholder:  true,
-			Autocomplete: "off",
-			NoID:         true,
-		},
-		inputSpec{
-			ID:          "body",
-			Type:        _textarea,
-			Rows:        5,
-			MaxLength:   common.MaxLenBody,
-			Placeholder: true,
-			NoID:        true,
-		},
-	},
 	"login": {
 		{
 			ID:           "id",
