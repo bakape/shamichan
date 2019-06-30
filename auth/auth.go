@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/bakape/meguca/config"
-
 	"golang.org/x/crypto/bcrypt"
 )
 

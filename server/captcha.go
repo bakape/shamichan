@@ -36,9 +36,16 @@ func authenticateCaptcha(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var c auth.Captcha
+		var (
+			c       auth.Captcha
+			session auth.Base64Token
+		)
 		c.FromRequest(r)
-		err = db.ValidateCaptcha(c, ip)
+		err = session.EnsureCookie(w, r)
+		if err != nil {
+			return
+		}
+		err = db.ValidateCaptcha(c, session, ip)
 		if err == common.ErrInvalidCaptcha {
 			b := extractParam(r, "board")
 			s := auth.CaptchaService(b)
@@ -72,7 +79,12 @@ func serveNewCaptcha(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		db.IncrementSpamScore(ip, config.Get().ImageScore)
+		var session auth.Base64Token
+		err = session.EnsureCookie(w, r)
+		if err != nil {
+			return
+		}
+		db.IncrementSpamScore(session, ip, config.Get().ImageScore)
 
 		s := auth.CaptchaService(b)
 		if s == nil {
@@ -90,12 +102,13 @@ func renderCaptchaConfirmation(w http.ResponseWriter, r *http.Request) {
 }
 
 // Assert IP has solved a captcha
-func assertSolvedCaptcha(r *http.Request) (err error) {
-	ip, err := auth.GetIP(r)
+func assertSolvedCaptcha(w http.ResponseWriter, r *http.Request) (err error) {
+	var session auth.Base64Token
+	err = session.EnsureCookie(w, r)
 	if err != nil {
 		return
 	}
-	has, err := db.SolvedCaptchaRecently(ip, time.Minute)
+	has, err := db.SolvedCaptchaRecently(session, time.Minute)
 	if err != nil {
 		return
 	}

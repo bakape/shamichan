@@ -53,27 +53,41 @@ func (e errInvalidFrame) Error() string {
 type Client struct {
 	// Client is requesting only the last 100 posts
 	last100 bool
+
 	// Have received first message, which must be a common.MessageSynchronise
 	gotFirstMessage bool
+
 	// Post currently open by the client
 	post openPost
+
 	// Protects checking and setting interface properties through the
 	// common.Client interface
 	mu sync.RWMutex
+
 	// Currently subscribed to update feed, if any
 	feed *feeds.Feed
+
 	// Underlying websocket connection
 	conn *websocket.Conn
+
 	// Client IP
 	ip string
+
+	// Captcha completion session used for antispam
+	captchaSession auth.Base64Token
+
 	// Client last post time
 	lastTime int64
+
 	// Internal message receiver channel
 	receive chan receivedMessage
+
 	// Only used to pass messages from the Send method.
 	sendExternal chan []byte
+
 	// Redirect client to target board
 	redirect chan string
+
 	// Close the client and free all used resources
 	close chan error
 }
@@ -102,12 +116,18 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 	}
 	defer feeds.UnregisterIP(ip)
 
+	var session auth.Base64Token
+	err = session.EnsureCookie(w, r)
+	if err != nil {
+		return
+	}
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
 	}
 
-	c, err := newClient(conn, r, ip)
+	c, err := newClient(conn, r, ip, session)
 	if err != nil {
 		return
 	}
@@ -115,15 +135,20 @@ func Handler(w http.ResponseWriter, r *http.Request) (err error) {
 }
 
 // newClient creates a new websocket client
-func newClient(conn *websocket.Conn, req *http.Request, ip string,
+func newClient(
+	conn *websocket.Conn,
+	req *http.Request,
+	ip string,
+	captchaSession auth.Base64Token,
 ) (
 	*Client, error,
 ) {
 	return &Client{
-		ip:       ip,
-		close:    make(chan error, 2),
-		receive:  make(chan receivedMessage),
-		redirect: make(chan string),
+		ip:             ip,
+		captchaSession: captchaSession,
+		close:          make(chan error, 2),
+		receive:        make(chan receivedMessage),
+		redirect:       make(chan string),
 		// Allows for ~60 seconds of messages, until the buffer overflows.
 		// A larger gap is more acceptable to shitty connections and mobile
 		// phones, especially while uploading.
@@ -267,7 +292,7 @@ func (c *Client) receiverLoop() {
 }
 
 // handleMessage parses a message received from the client through websockets
-func (c *Client) handleMessage(msgType int, msg []byte) error {
+func (c *Client) handleMessage(msgType int, msg []byte) (err error) {
 	if msgType != websocket.TextMessage {
 		return errInvalidFrame("only text frames allowed")
 	}
@@ -290,7 +315,27 @@ func (c *Client) handleMessage(msgType int, msg []byte) error {
 		// Send current server time on first synchronization
 		err = c.sendMessage(common.MessageServerTime, time.Now().Unix())
 		if err != nil {
-			return err
+			return
+		}
+
+		// And ensure client has the session cookie set
+		var text []byte
+		text, err = c.captchaSession.MarshalText()
+		if err != nil {
+			return
+		}
+		err = c.sendMessage(
+			common.MessageSetCookie,
+			struct {
+				Key   string `json:"key"`
+				Value string `json:"value"`
+			}{
+				auth.CaptchaCookie,
+				string(text),
+			},
+		)
+		if err != nil {
+			return
 		}
 	}
 

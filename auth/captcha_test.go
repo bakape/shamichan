@@ -75,3 +75,12 @@ func TestDecodeCaptcha(t *testing.T) {
 	}
 	test.AssertEquals(t, c, std)
 }
+
+func TestNewToken(t *testing.T) {
+	t.Parallel()
+
+	_, err := NewBase64Token()
+	if err != nil {
+		t.Fatal(err)
+	}
+}

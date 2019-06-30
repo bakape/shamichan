@@ -1,11 +1,11 @@
 package imager
 
 import (
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/test"
 	"strings"
 	"testing"
 
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/test"
 	"github.com/bakape/thumbnailer"
 )
 

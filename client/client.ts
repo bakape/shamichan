@@ -8,6 +8,7 @@ import { postAdded } from "./ui"
 import { incrementPostCount } from "./page"
 import { posterName } from "./options"
 import { OverlayNotification } from "./ui"
+import { setCookie } from './util';
 
 // Message for splicing the contents of the current line
 export type SpliceResponse = {
@@ -30,6 +31,11 @@ interface ImageMessage extends ImageData {
 
 interface ModerationMessage extends ModerationEntry {
 	id: number
+}
+
+interface CookieMessage {
+	key: string;
+	value: string;
 }
 
 // Run a function on a model, if it exists
@@ -139,4 +145,7 @@ export default () => {
 
 	handlers[message.notification] = (text: string) =>
 		new OverlayNotification(text)
+
+	handlers[message.setCookie] = ({ key, value }: CookieMessage) =>
+		setCookie(key, value, 30)
 }

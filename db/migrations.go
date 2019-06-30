@@ -1471,8 +1471,27 @@ var migrations = []func(*sql.Tx) error{
 		return
 	},
 	func(tx *sql.Tx) (err error) {
-		_, err = tx.Exec(`
-			alter table posts add column page int not null default 0`,
+		return execAll(tx,
+			`drop table spam_scores`,
+			`create table spam_scores(
+				token bytea primary key,
+				score bigint not null
+			)`,
+			`drop table last_solved_captchas`,
+			`create table last_solved_captchas(
+				token bytea primary key,
+				time timestamptz not null default now()
+			)`,
+			// Solves potential cookie domain problems
+			`update main
+			set val = val || '{"rootURL":"http://127.0.0.1"}'
+			where id = 'config'
+				and val->>'rootURL' = 'http://localhost'`,
+		)
+	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`alter table posts add column page int not null default 0`,
 		)
 		if err != nil {
 			return

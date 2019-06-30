@@ -160,7 +160,9 @@ func Write(SHA1 string, fileType, thumbType uint8, src, thumb io.ReadSeeker,
 	if err != nil {
 		return
 	}
-	err = writeFile(paths[1], thumb)
+	if thumb != nil { // Archives, audio, etc. can be missing thumbnails
+		err = writeFile(paths[1], thumb)
+	}
 	return
 }
 

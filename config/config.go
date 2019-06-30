@@ -5,6 +5,7 @@ package config
 
 import (
 	"encoding/json"
+	"net/url"
 	"reflect"
 	"sort"
 	"sync"
@@ -21,9 +22,6 @@ var (
 
 	// Map of board IDs to their configuration structs
 	boardConfigs = map[string]BoardConfContainer{}
-
-	// Don't handle image processing and serving in this instance
-	noImager bool
 
 	// AllBoardConfigs stores board-specific configurations for the /all/
 	// metaboard. Constant.
@@ -47,6 +45,9 @@ var (
 	// client.
 	hash string
 
+	// Precalculated root domain of the imageboard
+	rootDomain string
+
 	// Defaults contains the default server configuration values
 	Defaults = Configs{
 		BoardExpiry:       7,
@@ -62,7 +63,7 @@ var (
 		EmailErrPass:      "sluts",
 		EmailErrSub:       "smtp.gmail.com",
 		FeedbackEmail:     "admin@email.com",
-		RootURL:           "http://localhost",
+		RootURL:           "http://127.0.0.1",
 		FAQ:               defaultFAQ,
 		CaptchaTags: []string{"patchouli_knowledge", "cirno",
 			"hakurei_reimu"},
@@ -121,20 +122,26 @@ func Get() *Configs {
 }
 
 // Set sets the internal configuration struct
-func Set(c Configs) error {
+func Set(c Configs) (err error) {
 	client, err := json.Marshal(c.Public)
 	if err != nil {
-		return err
+		return
 	}
 	h := util.HashBuffer(client)
+
+	u, err := url.Parse(c.RootURL)
+	if err != nil {
+		return
+	}
 
 	globalMu.Lock()
 	clientJSON = client
 	global = &c
 	hash = h
+	rootDomain = u.Hostname()
 	globalMu.Unlock()
 
-	return nil
+	return
 }
 
 // GetClient returns public availability configuration JSON and a truncated
@@ -282,4 +289,12 @@ func ClearBoards() {
 	defer boardMu.Unlock()
 
 	boardConfigs = map[string]BoardConfContainer{}
+}
+
+// Returns root domain of the imageboard
+func RootDomain() string {
+	globalMu.Lock()
+	defer globalMu.Unlock()
+
+	return rootDomain
 }

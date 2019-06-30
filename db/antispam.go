@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bakape/captchouli"
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/go-playground/log"
@@ -15,12 +17,24 @@ import (
 const spamDetectionThreshold = time.Minute
 
 var (
-	spamScoreBuffer = make(map[string]time.Duration)
+	spamScoreBuffer = make(map[auth.Base64Token]sessionData)
 	spamMu          sync.RWMutex
+
+	// Period for how long to keep records of any captcha being solved withing
+	// this period
+	lastSolvedCaptchaRetention = time.Hour * 3
+
+	// Limit of allowed incorrect captchas per hour
+	incorrectCaptchaLimit = 10
 )
 
+type sessionData struct {
+	score time.Duration
+	ip    string
+}
+
 // Sync cache and DB spam scores
-// Separated for testing.
+// Separated for easier testing.
 func syncSpamScores() (err error) {
 	spamMu.Lock()
 	defer spamMu.Unlock()
@@ -29,8 +43,8 @@ func syncSpamScores() (err error) {
 		return
 	}
 	err = flushSpamScores()
-	for ip := range spamScoreBuffer {
-		delete(spamScoreBuffer, ip)
+	for session := range spamScoreBuffer {
+		delete(spamScoreBuffer, session)
 	}
 	return
 }
@@ -54,15 +68,15 @@ func handleSpamScores() (err error) {
 func flushSpamScores() (err error) {
 	return InTransaction(func(tx *sql.Tx) (err error) {
 		// Prepare statements for modifying spam score
-		get, err := tx.Prepare(`select score from spam_scores where ip = $1`)
+		get, err := tx.Prepare(`select score from spam_scores where token = $1`)
 		if err != nil {
 			return
 		}
 		upsert, err := tx.Prepare(
-			`insert into spam_scores (ip, score)
+			`insert into spam_scores (token, score)
 			values ($1, $2)
-			on conflict (ip) do update
-				set score = EXCLUDED.score`)
+			on conflict (token)
+			do update set score = EXCLUDED.score`)
 		if err != nil {
 			return
 		}
@@ -72,17 +86,23 @@ func flushSpamScores() (err error) {
 			threshold = now.Add(-spamDetectionThreshold)
 			score     time.Time
 		)
-		for ip, buffered := range spamScoreBuffer {
-			score, err = mergeSpamScore(buffered, threshold, get.QueryRow(ip))
+		for session, data := range spamScoreBuffer {
+			score, err = mergeSpamScore(
+				data.score,
+				threshold,
+				get.QueryRow(session[:]),
+			)
 			if err != nil {
 				return
 			}
-			_, err = upsert.Exec(ip, score.Unix())
+			_, err = upsert.Exec(session[:], score.Unix())
 			if err != nil {
 				return
 			}
 			if isSpam(now, score) {
-				err = banForSpam(tx, ip)
+				// Use latest IP to ban for spam. Makes this a bit more
+				// resilient againt phones migrating towers.
+				err = banForSpam(tx, data.ip)
 				if err != nil {
 					return
 				}
@@ -123,41 +143,50 @@ func mergeSpamScore(buffered time.Duration, threshold time.Time, r rowScanner,
 	return
 }
 
-// IncrementSpamScore increments spam detection score of an IP and sends
-// captcha requests, if score exceeded.
+// IncrementSpamScore increments spam detection score of a captcha session
+// and sends captcha requests, if score exceeded.
+//
+// session: token identifying captcha session
 // ip: IP of client
 // increment: increment amount in milliseconds
-func IncrementSpamScore(ip string, increment uint) {
+func IncrementSpamScore(session auth.Base64Token, ip string, increment uint) {
 	if !config.Get().Captcha {
 		return
 	}
 
 	spamMu.Lock()
 	defer spamMu.Unlock()
-	spamScoreBuffer[ip] += time.Duration(increment) * time.Millisecond
+
+	spamScoreBuffer[session] = sessionData{
+		score: spamScoreBuffer[session].score +
+			time.Duration(increment)*time.Millisecond,
+		ip: ip,
+	}
 }
 
-// resetSpamScore resets a spam score to zero by IP
-func resetSpamScore(ip string) (err error) {
-	if !config.Get().Captcha {
-		return
-	}
+// resetSpamScore resets a spam score to zero for captcha session
+func resetSpamScore(tx *sql.Tx, session auth.Base64Token) (err error) {
 	spamMu.Lock()
 	defer spamMu.Unlock()
-	delete(spamScoreBuffer, ip)
-	_, err = sq.Delete("spam_scores").Where("ip = ?", ip).Exec()
+
+	delete(spamScoreBuffer, session)
+	_, err = sq.
+		Delete("spam_scores").
+		Where("token = ?", session[:]).
+		RunWith(tx).
+		Exec()
 	return
 }
 
 // NeedCaptcha returns, if the user needs a captcha
 // to proceed with usage of server resources
-func NeedCaptcha(ip string) (need bool, err error) {
+func NeedCaptcha(session auth.Base64Token, ip string) (need bool, err error) {
 	if !config.Get().Captcha {
 		return
 	}
 
 	// Require a captcha, if none have been solved in 3 hours
-	has, err := SolvedCaptchaRecently(ip, lastSolvedCaptchaRetention)
+	has, err := SolvedCaptchaRecently(session, lastSolvedCaptchaRetention)
 	if err != nil {
 		return
 	}
@@ -166,7 +195,7 @@ func NeedCaptcha(ip string) (need bool, err error) {
 		return
 	}
 
-	score, err := getSpamScore(ip)
+	score, err := getSpamScore(session, ip)
 	if err != nil {
 		return
 	}
@@ -174,17 +203,26 @@ func NeedCaptcha(ip string) (need bool, err error) {
 }
 
 // Merge cached and DB value and return current score
-func getSpamScore(ip string) (score time.Time, err error) {
+func getSpamScore(
+	session auth.Base64Token,
+	ip string,
+) (
+	score time.Time,
+	err error,
+) {
 	spamMu.RLock()
 	defer spamMu.RUnlock()
 
 	now := time.Now().Round(time.Second)
-	score, err = mergeSpamScore(spamScoreBuffer[ip],
+	score, err = mergeSpamScore(
+		spamScoreBuffer[session].score,
 		now.Add(-spamDetectionThreshold),
-		sq.Select("score").
+		sq.
+			Select("score").
 			From("spam_scores").
-			Where("ip = ?", ip).
-			QueryRow())
+			Where("token = ?", session[:]).
+			QueryRow(),
+	)
 	if err != nil {
 		return
 	}
@@ -201,8 +239,8 @@ func getSpamScore(ip string) (score time.Time, err error) {
 }
 
 // Check if IP is spammer
-func AssertNotSpammer(ip string) (err error) {
-	_, err = getSpamScore(ip)
+func AssertNotSpammer(session auth.Base64Token, ip string) (err error) {
+	_, err = getSpamScore(session, ip)
 	return
 }
 
@@ -212,4 +250,104 @@ func expireSpamScores() error {
 		Where("score < ?", time.Now().Add(-spamDetectionThreshold).Unix()).
 		Exec()
 	return err
+}
+
+// ValidateCaptcha with captcha backend
+func ValidateCaptcha(
+	req auth.Captcha,
+	session auth.Base64Token,
+	ip string,
+) (err error) {
+	if !config.Get().Captcha {
+		return
+	}
+	err = captchouli.CheckCaptcha(req.CaptchaID, req.Solution)
+	switch err {
+	case nil:
+		return InTransaction(false, func(tx *sql.Tx) (err error) {
+			_, err = sq.Insert("last_solved_captchas").
+				Columns("token").
+				Values(session[:]).
+				Suffix(
+					`on conflict (token) do
+					update set time = now()`,
+				).
+				Exec()
+			if err != nil {
+				return
+			}
+			return resetSpamScore(tx, session)
+		})
+	case captchouli.ErrInvalidSolution:
+		banned := false
+		err = InTransaction(false, func(tx *sql.Tx) (err error) {
+			_, err = sq.Insert("failed_captchas").
+				Columns("ip", "expires").
+				Values(ip, time.Now().Add(time.Hour)).
+				RunWith(tx).
+				Exec()
+			if err != nil {
+				return
+			}
+
+			var count int
+			err = sq.Select("count(*)").
+				From("failed_captchas").
+				Where("ip = ? and expires > now() at time zone 'utc'", ip).
+				RunWith(tx).
+				QueryRow().
+				Scan(&count)
+			if err != nil {
+				return
+			}
+			if count >= incorrectCaptchaLimit {
+				err = systemBanTx(tx, ip, "bot detected", time.Hour*48)
+				if err != nil {
+					return
+				}
+				banned = true
+			}
+
+			return
+		})
+		if err != nil {
+			return
+		}
+		if banned {
+			return common.ErrBanned
+		}
+		return common.ErrInvalidCaptcha
+	default:
+		return
+	}
+}
+
+// Returns, if IP has solved a captcha within the last dur
+func SolvedCaptchaRecently(
+	session auth.Base64Token,
+	dur time.Duration,
+) (
+	has bool,
+	err error,
+) {
+	if !config.Get().Captcha {
+		has = true
+		return
+	}
+	err = sq.Select("true").
+		From("last_solved_captchas").
+		Where("token = ? and time > ?", session[:], time.Now().Add(-dur)).
+		QueryRow().
+		Scan(&has)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
+	return
+}
+
+func expireLastSolvedCaptchas() (err error) {
+	_, err = sq.Delete("last_solved_captchas").
+		Where("time < ?", time.Now().Add(-lastSolvedCaptchaRetention)).
+		Exec()
+	return
 }

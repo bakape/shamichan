@@ -2,12 +2,10 @@
 
 package server
 
-// TODO: Clean up all the forms and Nginx route splitting for imager
-
 // // Create a thread with a closed OP
 // func createThread(w http.ResponseWriter, r *http.Request) {
 // 	err := func() (err error) {
-// 		repReq, ip, err := parsePostCreationForm(w, r)
+// 		repReq, ip, session, err := parsePostCreationForm(w, r)
 // 		if err != nil {
 // 			return
 // 		}
@@ -28,13 +26,14 @@ package server
 
 // 		// Let the JS add the ID of the post to "mine"
 // 		http.SetCookie(w, &http.Cookie{
-// 			Name:  "addMine",
-// 			Value: strconv.FormatUint(post.ID, 10),
-// 			Path:  "/",
+// 			Name:   "addMine",
+// 			Value:  strconv.FormatUint(post.ID, 10),
+// 			Path:   "/",
+// 			Domain: config.RootDomain(),
 // 		})
 
 // 		http.Redirect(w, r, fmt.Sprintf(`/%s/%d`, req.Board, post.ID), 303)
-// 		incrementSpamscore(ip, req.Body, true)
+// 		incrementSpamscore(ip, req.Body, session, true)
 
 // 		return
 // 	}()
@@ -44,8 +43,15 @@ package server
 // }
 
 // // ok = false, if failed and caller should return
-// func parsePostCreationForm(w http.ResponseWriter, r *http.Request,
-// ) (req websockets.ReplyCreationRequest, ip string, err error) {
+// func parsePostCreationForm(
+// 	w http.ResponseWriter,
+// 	r *http.Request,
+// ) (
+// 	req websockets.ReplyCreationRequest,
+// 	ip string,
+// 	session auth.Base64Token,
+// 	err error,
+// ) {
 // 	conf := config.Get()
 // 	maxSize := conf.MaxSize<<20 + jsonLimit
 // 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxSize))
@@ -59,10 +65,13 @@ package server
 // 		err = common.StatusError{err, 400}
 // 		return
 // 	}
-
+// 	err = session.EnsureCookie(w, r)
+// 	if err != nil {
+// 		return
+// 	}
 // 	if conf.Captcha {
 // 		var need, has bool
-// 		need, err = db.NeedCaptcha(ip)
+// 		need, err = db.NeedCaptcha(session, ip)
 // 		if err != nil {
 // 			return
 // 		}
@@ -70,7 +79,7 @@ package server
 // 			err = common.ErrInvalidCaptcha
 // 			return
 // 		}
-// 		has, err = db.SolvedCaptchaRecently(ip, 3*time.Minute)
+// 		has, err = db.SolvedCaptchaRecently(session, 3*time.Minute)
 // 		if err != nil {
 // 			return
 // 		}
@@ -121,7 +130,7 @@ package server
 // // Create a closed reply post
 // func createReply(w http.ResponseWriter, r *http.Request) {
 // 	err := func() (err error) {
-// 		req, ip, err := parsePostCreationForm(w, r)
+// 		req, ip, session, err := parsePostCreationForm(w, r)
 // 		if err != nil {
 // 			return
 // 		}
@@ -149,7 +158,7 @@ package server
 // 		feeds.InsertPostInto(post.StandalonePost, msg)
 // 		http.Redirect(w, r,
 // 			fmt.Sprintf(`/%s/%d?last100=true#bottom`, board, op), 303)
-// 		incrementSpamscore(ip, req.Body, false)
+// 		incrementSpamscore(ip, req.Body, session, false)
 
 // 		return
 // 	}()
@@ -158,12 +167,12 @@ package server
 // 	}
 // }
 
-// func incrementSpamscore(ip, body string, isOP bool) {
+// func incrementSpamscore(ip, body string, session auth.Base64Token, isOP bool) {
 // 	conf := config.Get()
 // 	s := conf.CharScore * uint(utf8.RuneCountInString(body))
 // 	s += conf.PostCreationScore
 // 	if isOP {
 // 		s += conf.PostCreationScore * 2
 // 	}
-// 	db.IncrementSpamScore(ip, s)
+// 	db.IncrementSpamScore(session, ip, s)
 // }
