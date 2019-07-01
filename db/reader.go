@@ -23,6 +23,16 @@ type OpenPostMeta struct {
 	Body      string `json:"body"`
 }
 
+// Populate OpenPostMeta from post data
+func OpenPostMetaFromPost(p common.Post) OpenPostMeta {
+	return OpenPostMeta{
+		HasImage:  p.Image != nil,
+		Spoilered: p.Image != nil && p.Image.Spoiler,
+		Page:      p.Page,
+		Body:      p.Body,
+	}
+}
+
 // GetThread retrieves public thread data from the database.
 // page: page of the thread to fetch. -1 to fetch the last page.
 func GetThread(id uint64, page int) (thread []byte, err error) {

@@ -233,16 +233,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 
 // Propagate post inserting to parent feed. msg is optional.
 func (c *Client) propagatePostInsertion(p common.Post, msg []byte) {
-	c.feed.InsertPost(
-		p.ID,
-		db.OpenPostMeta{
-			HasImage:  p.Image != nil,
-			Spoilered: p.Image != nil && p.Image.Spoiler,
-			Page:      p.Page,
-			Body:      p.Body,
-		},
-		msg,
-	)
+	c.feed.InsertPost(p.ID, db.OpenPostMetaFromPost(p), msg)
 }
 
 // If the client has a previous post, close it silently

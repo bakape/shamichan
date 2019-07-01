@@ -1,9 +1,10 @@
 package websockets
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/test/test_db"
 	"github.com/bakape/meguca/websockets/feeds"
-	"testing"
 )
 
 func TestStreamUpdates(t *testing.T) {
@@ -19,7 +20,7 @@ func TestStreamUpdates(t *testing.T) {
 	registerClient(t, cl, 1, "a")
 	go readListenErrors(t, cl, sv)
 
-	assertMessage(t, wcl, `30{"recent":{},"moderation":{}}`)
+	assertMessage(t, wcl, `30{"all":{"1":0},"open":{},"moderation":{}}`)
 	assertMessage(t, wcl, "33[\"35{\\\"active\\\":0,\\\"total\\\":1}\"]")
 
 	// Send message

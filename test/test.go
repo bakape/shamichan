@@ -20,6 +20,15 @@ import (
 func LogUnexpected(t *testing.T, expected, got interface{}) {
 	t.Helper()
 
+	// Allow comparison of structs with private fields
+	cast := func(val *interface{}) {
+		if reflect.TypeOf(*val).Kind() == reflect.Struct {
+			*val = cmp.AllowUnexported(*val)
+		}
+	}
+	cast(&expected)
+	cast(&got)
+
 	t.Fatal("\n" + cmp.Diff(expected, got))
 }
 
