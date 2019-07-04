@@ -16,7 +16,9 @@ var (
 	postCountCache           = make(map[uint64]uint64)
 	postCountCacheMu         sync.RWMutex
 	errTooManyWatchedThreads = common.StatusError{
-		errors.New("too many watched threads"), 400}
+		Err:  errors.New("too many watched threads"),
+		Code: 400,
+	}
 )
 
 // Diff of passed and actual thread posts counts

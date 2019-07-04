@@ -98,7 +98,10 @@ func parseDice(match string) (val []uint16, err error) {
 		switch {
 		case err != nil:
 			if isNumError(err) {
-				err = common.StatusError{err, 400}
+				err = common.StatusError{
+					Err:  err,
+					Code: 400,
+				}
 			}
 			return
 		case rolls > 10:
@@ -110,7 +113,10 @@ func parseDice(match string) (val []uint16, err error) {
 	switch {
 	case err != nil:
 		if isNumError(err) {
-			err = common.StatusError{err, 400}
+			err = common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
 		}
 		return
 	case max > common.MaxDiceSides:

@@ -54,7 +54,7 @@ func systemBanTx(tx *sql.Tx, ip, reason string, length time.Duration,
 ) (
 	err error,
 ) {
-	return writeBan(tx, ip, auth.ModLogEntry{
+	err = writeBan(tx, ip, auth.ModLogEntry{
 		ModerationEntry: common.ModerationEntry{
 			Type:   common.BanPost,
 			Data:   reason,
@@ -136,6 +136,9 @@ func loadBans() error {
 	if err := RefreshBanCache(); err != nil {
 		return err
 	}
+	// TODO: Rename to bans.updated
+	// TODO: Fire event in trigger, not transation. For each statement,
+	// not each row.
 	return Listen("bans_updated", func(_ string) error {
 		return RefreshBanCache()
 	})
