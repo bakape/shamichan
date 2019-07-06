@@ -25,12 +25,16 @@ var (
 
 	// Ensures boltdb is opened only once
 	boltDBOnce sync.Once
+
+	// Embedded database for temporary storage.
+	// Always use getBoltDB() to access this pointer.
+	_boltDB *bolt.DB
 )
 
 // Close DB and release resources
 func Close() (err error) {
 	atomic.StoreUint32(&boltDBState, boltDBClosed)
-	return boltDB.Close()
+	return _boltDB.Close()
 }
 
 // Need to drop any incoming requests, when Db is closed during graceful restart
@@ -41,9 +45,9 @@ func boltDBisOpen() bool {
 // Open boltdb, only when needed. This helps preventing conflicts on swapping
 // the database accessing process during graceful restarts.
 // If boltdb has already been closed, return open=false.
-func tryOpenBoltDB() (open bool, err error) {
+func getBoltDB() (db *bolt.DB, err error) {
 	boltDBOnce.Do(func() {
-		boltDB, err = bolt.Open(
+		_boltDB, err = bolt.Open(
 			"db.db",
 			0600,
 			&bolt.Options{
@@ -53,7 +57,7 @@ func tryOpenBoltDB() (open bool, err error) {
 			return
 		}
 
-		err = boltDB.Update(func(tx *bolt.Tx) error {
+		err = _boltDB.Update(func(tx *bolt.Tx) error {
 			_, err := tx.CreateBucketIfNotExists([]byte("open_bodies"))
 			return err
 		})
@@ -68,19 +72,21 @@ func tryOpenBoltDB() (open bool, err error) {
 		return
 	}
 
-	open = boltDBisOpen()
+	if boltDBisOpen() {
+		db = _boltDB
+	}
 	return
 }
 
 // SetOpenBody sets the open body of a post
 func SetOpenBody(id uint64, body []byte) (err error) {
-	ok, err := tryOpenBoltDB()
-	if err != nil || !ok {
+	db, err := getBoltDB()
+	if err != nil {
 		return
 	}
 
 	buf := encodeUint64(id)
-	return boltDB.Batch(func(tx *bolt.Tx) error {
+	return db.Batch(func(tx *bolt.Tx) error {
 		return bodyBucket(tx).Put(buf[:], body)
 	})
 }
@@ -106,13 +112,13 @@ func encodeUint64Heap(i uint64) []byte {
 
 // GetOpenBody retrieves an open body of a post
 func GetOpenBody(id uint64) (body string, err error) {
-	ok, err := tryOpenBoltDB()
-	if err != nil || !ok {
+	db, err := getBoltDB()
+	if err != nil {
 		return
 	}
 
 	buf := encodeUint64(id)
-	err = boltDB.View(func(tx *bolt.Tx) error {
+	err = db.View(func(tx *bolt.Tx) error {
 		body = string(bodyBucket(tx).Get(buf[:]))
 		return nil
 	})
@@ -122,14 +128,14 @@ func GetOpenBody(id uint64) (body string, err error) {
 // Delete orphaned post bodies, that refer to posts already closed or deleted.
 // This can happen on server restarts, board deletion, etc.
 func cleanUpOpenPostBodies() (err error) {
-	ok, err := tryOpenBoltDB()
-	if err != nil || !ok {
+	db, err := getBoltDB()
+	if err != nil {
 		return
 	}
 
 	// Read IDs of all post bodies
 	var ids []uint64
-	err = boltDB.View(func(tx *bolt.Tx) error {
+	err = db.View(func(tx *bolt.Tx) error {
 		buc := bodyBucket(tx)
 		ids = make([]uint64, 0, buc.Stats().KeyN)
 		return buc.ForEach(func(k, _ []byte) error {
@@ -169,7 +175,7 @@ func cleanUpOpenPostBodies() (err error) {
 		if len(toDelete) == 0 {
 			return
 		}
-		return boltDB.Batch(func(tx *bolt.Tx) (err error) {
+		return db.Batch(func(tx *bolt.Tx) (err error) {
 			buc := bodyBucket(tx)
 			for _, id := range toDelete {
 				err = buc.Delete(encodeUint64Heap(id))
@@ -183,13 +189,13 @@ func cleanUpOpenPostBodies() (err error) {
 }
 
 func deleteOpenPostBody(id uint64) (err error) {
-	ok, err := tryOpenBoltDB()
-	if err != nil || !ok {
+	db, err := getBoltDB()
+	if err != nil {
 		return
 	}
 
 	buf := encodeUint64(id)
-	return boltDB.Batch(func(tx *bolt.Tx) error {
+	return db.Batch(func(tx *bolt.Tx) error {
 		return bodyBucket(tx).Delete(buf[:])
 	})
 }

@@ -28,9 +28,6 @@ var (
 
 	// Statement builder and cacher
 	sq squirrel.StatementBuilderType
-
-	// Embedded database for temporary storage
-	boltDB *bolt.DB
 )
 
 // Connects to PostgreSQL database and performs schema upgrades
@@ -91,7 +88,7 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 			return
 		}
 
-		err = boltDB.Close()
+		err = _boltDB.Close()
 		if err != nil {
 			return
 		}
@@ -236,7 +233,7 @@ func ClearTables(tables ...string) error {
 		if boltDBisOpen() {
 			switch t {
 			case "boards", "threads", "posts":
-				err := boltDB.Update(func(tx *bolt.Tx) error {
+				err := _boltDB.Update(func(tx *bolt.Tx) error {
 					buc := tx.Bucket([]byte("open_bodies"))
 					c := buc.Cursor()
 					for k, _ := c.First(); k != nil; k, _ = c.Next() {
