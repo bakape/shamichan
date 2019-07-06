@@ -3,7 +3,6 @@ package parser
 import (
 	"testing"
 
-	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
 )
@@ -13,22 +12,13 @@ func TestParseLinks(t *testing.T) {
 
 	cases := [...]struct {
 		name, in string
-		links    map[uint64]common.Link
+		links    []uint64
 	}{
 		{"no links", "foo bar baz", nil},
 		{
 			"valid links",
 			" >>6 >>>>8",
-			map[uint64]common.Link{
-				6: {
-					OP:    1,
-					Board: "a",
-				},
-				8: {
-					OP:    1,
-					Board: "a",
-				},
-			},
+			[]uint64{6, 8},
 		},
 	}
 

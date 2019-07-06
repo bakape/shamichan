@@ -48,14 +48,5 @@ func TestParseBody(t *testing.T) {
 	if l := len(com); l != 3 {
 		t.Errorf("unexpected command count: %d", l)
 	}
-	test.AssertEquals(t, links, map[uint64]common.Link{
-		8: {
-			OP:    1,
-			Board: "a",
-		},
-		6: {
-			OP:    1,
-			Board: "a",
-		},
-	})
+	test.AssertEquals(t, links, []uint64{8, 6})
 }
