@@ -116,25 +116,36 @@ func ChangePassword(account string, hash []byte) error {
 
 // GetOwnedBoards returns boards the account holder owns
 func GetOwnedBoards(account string) (boards []string, err error) {
-	// admin account can perform actions on any board
-	if account == "admin" {
+	returnAll := func() ([]string, error) {
 		return append([]string{"all"}, config.GetBoards()...), nil
 	}
 
-	err = queryAll(
-		sq.Select("board").
-			From("staff").
-			Where("account = ? and position = ?", account, common.BoardOwner),
-		func(r *sql.Rows) (err error) {
-			var board string
-			err = r.Scan(&board)
-			if err != nil {
-				return
-			}
-			boards = append(boards, board)
+	// admin account can perform actions on any board
+	if account == "admin" {
+		return returnAll()
+	}
+
+	r, err := sq.Select("board").
+		From("staff").
+		Where("account = ? and position = ?", account, common.BoardOwner).
+		Query()
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	var board string
+	for r.Next() {
+		err = r.Scan(&board)
+		if err != nil {
 			return
-		},
-	)
+		}
+		if board == "all" {
+			return returnAll()
+		}
+		boards = append(boards, board)
+	}
+	err = r.Err()
 	return
 }
 
