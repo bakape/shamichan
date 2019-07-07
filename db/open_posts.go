@@ -81,7 +81,7 @@ func getBoltDB() (db *bolt.DB, err error) {
 // SetOpenBody sets the open body of a post
 func SetOpenBody(id uint64, body []byte) (err error) {
 	db, err := getBoltDB()
-	if err != nil {
+	if err != nil || db == nil {
 		return
 	}
 
@@ -113,7 +113,7 @@ func encodeUint64Heap(i uint64) []byte {
 // GetOpenBody retrieves an open body of a post
 func GetOpenBody(id uint64) (body string, err error) {
 	db, err := getBoltDB()
-	if err != nil {
+	if err != nil || db == nil {
 		return
 	}
 
@@ -129,7 +129,7 @@ func GetOpenBody(id uint64) (body string, err error) {
 // This can happen on server restarts, board deletion, etc.
 func cleanUpOpenPostBodies() (err error) {
 	db, err := getBoltDB()
-	if err != nil {
+	if err != nil || db == nil {
 		return
 	}
 
@@ -190,7 +190,7 @@ func cleanUpOpenPostBodies() (err error) {
 
 func deleteOpenPostBody(id uint64) (err error) {
 	db, err := getBoltDB()
-	if err != nil {
+	if err != nil || db == nil {
 		return
 	}
 
