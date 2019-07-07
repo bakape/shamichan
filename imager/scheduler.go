@@ -7,6 +7,7 @@ import (
 	"hash"
 	"io"
 	"mime/multipart"
+	"runtime"
 	"sync"
 
 	"github.com/bakape/meguca/db"
@@ -55,6 +56,7 @@ func requestThumbnailing(file multipart.File, size int,
 func init() {
 	for _, ch := range [...]<-chan jobRequest{scheduleJob, scheduleSmallJob} {
 		go func(queue <-chan jobRequest) {
+			runtime.LockOSThread()
 			for {
 				req := <-queue
 				id, err := processRequest(req.file, req.size)
