@@ -1,0 +1,18 @@
+version: '3'
+services:
+  meguca:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - images:/meguca/images
+    depends_on:
+    - postgres
+  postgres:
+    build: docker/postgres
+    shm_size: '256MB'
+    volumes:
+      - db:/var/lib/postgresql/data
+volumes:
+  images:
+  db:

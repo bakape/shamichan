@@ -1,0 +1,3 @@
+-- Create role and DB
+CREATE USER meguca WITH LOGIN PASSWORD 'meguca' CREATEDB;
+CREATE DATABASE meguca WITH OWNER meguca ENCODING UTF8;

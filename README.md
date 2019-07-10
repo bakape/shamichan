@@ -4,13 +4,26 @@
 # meguca
 anonymous realtime imageboard focused on high performance, free speech and transparent moderation
 
-Platforms: Linux
+Platforms: Linux, Docker
 
 License: GNU AGPL
 
 ## Runtime dependencies
 
 * [PostgresSQL](https://www.postgresql.org/download/) >= 10.0
+
+## Docker
+
+Meguca can be deployed in a self-contained Docker container.
+Install [Docker](https://www.docker.com/) and
+[Docker Compose](https://docs.docker.com/compose/install/) and run
+
+```
+docker-compose build
+docker-compose up
+```
+
+For more information refer to the [Docker Compose docs](https://docs.docker.com/compose/reference/overview/).
 
 ## Building from source
 
@@ -42,15 +55,6 @@ compiled with:
 #### Linux and OSX
 
 * Run `make`
-
-### Docker
-
-Meguca can be deployed in a self-contained Docker container. Install [Docker](https://www.docker.com/)
-and run
-```
-docker build -t meguca .
-docker run -t -p 8000:8000 meguca
-```
 
 ## Setup
 
