@@ -71,7 +71,6 @@ func createRouter() http.Handler {
 
 	api := r.NewGroup("/api")
 	api.GET("/health-check", healthCheck)
-	api.GET("/pprof/:profile", serverProfile)
 	assets := r.NewGroup("/assets")
 	if config.Server.ImagerMode != config.NoImager {
 		// All upload images
@@ -87,6 +86,9 @@ func createRouter() http.Handler {
 		captcha.GET("/:board", serveNewCaptcha)
 		captcha.POST("/:board", authenticateCaptcha)
 		captcha.GET("/confirmation", renderCaptchaConfirmation)
+
+		// Allow both processes to be profiled separately
+		api.GET("/pprof/imager/:profile", serverProfile)
 	}
 	if config.Server.ImagerMode != config.ImagerOnly {
 		// HTML
@@ -184,6 +186,9 @@ func createRouter() http.Handler {
 		assets.GET("/banners/:board/:id", serveBanner)
 		assets.GET("/loading/:board", serveLoadingAnimation)
 		assets.GET("/*path", serveAssets)
+
+		// Allow both processes to be profiled separately
+		api.GET("/pprof/server/:profile", serverProfile)
 	}
 
 	return r
