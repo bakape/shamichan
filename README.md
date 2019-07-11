@@ -20,7 +20,7 @@ Install [Docker](https://www.docker.com/) and
 
 ```
 docker-compose build
-docker-compose up
+docker-compose up -d
 ```
 
 For more information refer to the [Docker Compose docs](https://docs.docker.com/compose/reference/overview/).

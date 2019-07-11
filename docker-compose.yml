@@ -7,12 +7,16 @@ services:
     volumes:
       - images:/meguca/images
     depends_on:
-    - postgres
+      - postgres
   postgres:
     build: docker/postgres
     shm_size: '256MB'
     volumes:
       - db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=meguca
+      - POSTGRES_PASSWORD=meguca
+      - POSTGRES_DB=meguca
 volumes:
   images:
   db:

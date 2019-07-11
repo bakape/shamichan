@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"os/user"
 	"strings"
 
 	"github.com/Masterminds/squirrel"
@@ -43,41 +42,24 @@ func LoadDB() error {
 func LoadTestDB(suffix string) (close func() error, err error) {
 	common.IsTest = true
 
-	connURL, err := url.Parse(config.Server.Test.Database)
-	if err != nil {
-		return
-	}
-
-	// If running as root (CI like Travis or something), authenticate as the
-	// postgres user
-	var u *user.User
-	u, err = user.Current()
-	if err != nil {
-		return
-	}
-	var sudo []string
-	user := connURL.User.Username()
-	if u.Name == "root" {
-		sudo = append(sudo, "sudo", "-u", "postgres")
-		user = "postgres"
-	} else {
-		user = connURL.User.Username()
-	}
-
-	run := func(args ...string) error {
-		line := append(sudo, args...)
+	run := func(line ...string) error {
 		c := exec.Command(line[0], line[1:]...)
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 		return c.Run()
 	}
-
+	connURL, err := url.Parse(config.Server.Test.Database)
+	if err != nil {
+		return
+	}
+	user := connURL.User.Username()
 	dbName := fmt.Sprintf("%s_%s", strings.Trim(connURL.Path, "/"), suffix)
 
-	err = run("psql",
-		"-U", user,
-		"-d", "postgres",
-		"-c", "drop database if exists "+dbName)
+	err = run(
+		"psql",
+		"-c", "drop database if exists "+dbName,
+		config.Server.Database,
+	)
 	if err != nil {
 		return
 	}
@@ -99,11 +81,15 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 	}
 
 	fmt.Println("creating test database:", dbName)
-	err = run("createdb",
-		"-O", user,
-		"-U", user,
-		"-E", "UTF8",
-		dbName)
+	err = run(
+		"psql",
+		"-c",
+		fmt.Sprintf(
+			"create database %s with owner %s encoding UTF8",
+			dbName, user,
+		),
+		config.Server.Database,
+	)
 	if err != nil {
 		return
 	}
