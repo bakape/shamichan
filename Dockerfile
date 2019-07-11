@@ -25,6 +25,9 @@ RUN mkdir -p /meguca/images
 ENTRYPOINT ["./scripts/with_postgres.sh"]
 CMD ["./meguca", "-a", ":8000"]
 WORKDIR /meguca
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
 COPY . .
 COPY docs/config.json .
 RUN sed -i 's/localhost:5432/postgres:5432/' /meguca/config.json
