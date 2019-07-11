@@ -71,6 +71,7 @@ func createRouter() http.Handler {
 
 	api := r.NewGroup("/api")
 	api.GET("/health-check", healthCheck)
+	api.GET("/pprof/:profile", serverProfile)
 	assets := r.NewGroup("/assets")
 	if config.Server.ImagerMode != config.NoImager {
 		// All upload images
@@ -174,7 +175,6 @@ func createRouter() http.Handler {
 		api.POST("/set-loading", setLoadingAnimation)
 		api.POST("/report", report)
 		api.POST("/purge-post", purgePost)
-		api.GET("/pprof/:profile", serverProfile)
 
 		redir := api.NewGroup("/redirect")
 		redir.POST("/by-ip", redirectByIP)
