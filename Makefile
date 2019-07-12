@@ -43,6 +43,6 @@ test_no_race:
 	go test ./...
 
 test_docker:
-	docker build -t meguca_test .
-	docker run -t --rm -e CI meguca_test make test
+	docker-compose build
+	docker-compose run --rm -e CI=true meguca make test
 

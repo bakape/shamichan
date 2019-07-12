@@ -84,6 +84,9 @@ func createRouter() http.Handler {
 		captcha.GET("/:board", serveNewCaptcha)
 		captcha.POST("/:board", authenticateCaptcha)
 		captcha.GET("/confirmation", renderCaptchaConfirmation)
+
+		// Allow both processes to be profiled separately
+		api.GET("/pprof/imager/:profile", serverProfile)
 	}
 	if config.Server.ImagerMode != config.ImagerOnly {
 		// HTML
@@ -164,7 +167,6 @@ func createRouter() http.Handler {
 		api.POST("/set-loading", setLoadingAnimation)
 		api.POST("/report", report)
 		api.POST("/purge-post", purgePost)
-		api.GET("/pprof/:profile", serverProfile)
 
 		redir := api.NewGroup("/redirect")
 		redir.POST("/by-ip", redirectByIP)
@@ -174,6 +176,9 @@ func createRouter() http.Handler {
 		assets.GET("/banners/:board/:id", serveBanner)
 		assets.GET("/loading/:board", serveLoadingAnimation)
 		assets.GET("/*path", serveAssets)
+
+		// Allow both processes to be profiled separately
+		api.GET("/pprof/server/:profile", serverProfile)
 	}
 
 	return r

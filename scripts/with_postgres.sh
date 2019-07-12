@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Start Postgres inside Docker and execute the arguments
+# Wait until PostgreSQL is started and then execute the arguments
 
-service postgresql start
-echo "Waiting on PostgreSQL server..."
-until pg_isready > /dev/null
+echo "Waiting for PostgreSQL server..."
+until nc -z postgres 5432
 do
     sleep 1
 done
