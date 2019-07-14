@@ -64,7 +64,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-		return commitLogin(w, req.ID)
+		return commitLogin(w, r, req.ID)
 	}()
 	if err != nil {
 		httpError(w, r, err)
@@ -81,7 +81,10 @@ func validateUserID(w http.ResponseWriter, r *http.Request, id string) error {
 
 // If login successful, generate a session token and commit to DB. Otherwise
 // write error message to client.
-func commitLogin(w http.ResponseWriter, userID string) (err error) {
+func commitLogin(
+	w http.ResponseWriter, r *http.Request,
+	userID string,
+) (err error) {
 	token, err := auth.RandomID(128)
 	if err != nil {
 		return
@@ -95,19 +98,20 @@ func commitLogin(w http.ResponseWriter, userID string) (err error) {
 	// deleted
 	expires := time.Now().
 		Add(time.Duration(config.Get().SessionExpiry)*time.Hour*24 - time.Hour)
+	host := common.ExtractCookieHost(r)
 	http.SetCookie(w, &http.Cookie{
 		Name:    "loginID",
 		Value:   url.QueryEscape(userID),
 		Path:    "/",
 		Expires: expires,
-		Domain:  config.RootDomain(),
+		Domain:  host,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session",
 		Value:   token,
 		Path:    "/",
 		Expires: expires,
-		Domain:  config.RootDomain(),
+		Domain:  host,
 	})
 	return
 }
@@ -156,7 +160,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		return commitLogin(w, req.ID)
+		return commitLogin(w, r, req.ID)
 	}()
 	if err != nil {
 		httpError(w, r, err)
