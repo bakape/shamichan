@@ -13,7 +13,6 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
-	"github.com/boltdb/bolt"
 	"github.com/go-playground/log"
 	_ "github.com/lib/pq" // Postgres driver
 )
@@ -34,9 +33,8 @@ func LoadDB() error {
 	return loadDB(config.Server.Database, "")
 }
 
-// Create and load testing database. Call close() to clean up temporary
-// resources.
-func LoadTestDB(suffix string) (close func() error, err error) {
+// Create and load testing database
+func LoadTestDB(suffix string) (err error) {
 	common.IsTest = true
 
 	run := func(line ...string) error {
@@ -59,22 +57,6 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 	)
 	if err != nil {
 		return
-	}
-
-	close = func() (err error) {
-		_, err = os.Stat("db.db")
-		if err != nil {
-			if os.IsNotExist(err) {
-				return nil
-			}
-			return
-		}
-
-		err = _boltDB.Close()
-		if err != nil {
-			return
-		}
-		return os.Remove("db.db")
 	}
 
 	fmt.Println("creating test database:", dbName)
@@ -137,14 +119,18 @@ func loadDB(connURL, dbSuffix string) (err error) {
 	// Run these is parallel
 	tasks = append(
 		tasks,
-		func() error {
-			tasks := []func() error{loadConfigs, loadBans, handleSpamScores}
+		func() (err error) {
+			tasks := []func() error{loadConfigs, loadBans}
 			if config.Server.ImagerMode != config.ImagerOnly {
-				tasks = append(tasks, loadBanners, loadLoadingAnimations,
-					loadThreadPostCounts)
+				tasks = append(tasks,
+					loadBanners,
+					loadLoadingAnimations,
+					loadThreadPostCounts,
+				)
 			}
-			if err := util.Parallel(tasks...); err != nil {
-				return err
+			err = util.Parallel(tasks...)
+			if err != nil {
+				return
 			}
 
 			// Depends on loadBanners and loadLoadingAnimations, so has to be
@@ -189,6 +175,11 @@ func initDB() (err error) {
 	return runMigrations()
 }
 
+// Close DB and release resources
+func Close() (err error) {
+	return db.Close()
+}
+
 // CreateAdminAccount writes a fresh admin account with the default password to
 // the database
 func CreateAdminAccount(tx *sql.Tx) (err error) {
@@ -213,32 +204,16 @@ func CreateSystemAccount(tx *sql.Tx) (err error) {
 }
 
 // ClearTables deletes the contents of specified DB tables. Only used for tests.
-func ClearTables(tables ...string) error {
+func ClearTables(tables ...string) (err error) {
+	err = FlushOpenPostBodies() // Clear Open post cache between tests
+	if err != nil {
+		return
+	}
 	for _, t := range tables {
-		// Clear open post body bucket
-		if boltDBisOpen() {
-			switch t {
-			case "boards", "threads", "posts":
-				err := _boltDB.Update(func(tx *bolt.Tx) error {
-					buc := tx.Bucket([]byte("open_bodies"))
-					c := buc.Cursor()
-					for k, _ := c.First(); k != nil; k, _ = c.Next() {
-						err := buc.Delete(k)
-						if err != nil {
-							return err
-						}
-					}
-					return nil
-				})
-				if err != nil {
-					return err
-				}
-			}
-		}
-
-		if _, err := db.Exec(`DELETE FROM ` + t); err != nil {
-			return err
+		_, err = db.Exec(`DELETE FROM ` + t)
+		if err != nil {
+			return
 		}
 	}
-	return nil
+	return
 }

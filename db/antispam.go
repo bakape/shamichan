@@ -9,7 +9,6 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	"github.com/go-playground/log"
 )
 
 // Initial position of the spam score and the amount, after exceeding which, a
@@ -34,7 +33,6 @@ type sessionData struct {
 }
 
 // Sync cache and DB spam scores
-// Separated for easier testing.
 func syncSpamScores() (err error) {
 	spamMu.Lock()
 	defer spamMu.Unlock()
@@ -47,21 +45,6 @@ func syncSpamScores() (err error) {
 		delete(spamScoreBuffer, session)
 	}
 	return
-}
-
-// Periodically flush buffered spam scores to DB
-func handleSpamScores() (err error) {
-	if !common.IsTest {
-		go func() {
-			for range time.Tick(time.Second) {
-				err := syncSpamScores()
-				if err != nil {
-					log.Errorf("spam score buffer flush: %s", err)
-				}
-			}
-		}()
-	}
-	return nil
 }
 
 // Flush spam scores from map to DB

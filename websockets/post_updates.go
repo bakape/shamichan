@@ -121,16 +121,17 @@ func (c *Client) appendRune(data []byte) (err error) {
 
 	c.post.body = append(c.post.body, string(char)...)
 	c.post.len++
-	return c.updateBody(msg, 1)
+	c.updateBody(msg, 1)
+	return
 }
 
 // Send message to thread update feed and writes the open post's buffer to the
 // embedded database. Requires locking of c.openPost.
 // n specifies the number of characters updated.
-func (c *Client) updateBody(msg []byte, n int) error {
+func (c *Client) updateBody(msg []byte, n int) {
 	c.feed.SetOpenBody(c.post.id, string(c.post.body), msg)
 	c.incrementSpamScore(uint(n) * config.Get().CharScore)
-	return db.SetOpenBody(c.post.id, c.post.body)
+	db.WriteOpenPostBody(c.post.id, string(c.post.body))
 }
 
 // Increment the spam score for this IP by score. If the client requires a new
@@ -140,11 +141,11 @@ func (c *Client) incrementSpamScore(score uint) {
 }
 
 // Remove one character from the end of the line in the open post
-func (c *Client) backspace() error {
+func (c *Client) backspace() (err error) {
 	has, err := c.hasPost()
 	switch {
 	case err != nil:
-		return err
+		return
 	case !has:
 		return nil
 	case c.post.len == 0:
@@ -153,7 +154,7 @@ func (c *Client) backspace() error {
 
 	msg, err := common.EncodeMessage(common.MessageBackspace, c.post.id)
 	if err != nil {
-		return err
+		return
 	}
 
 	r, lastRuneLen := utf8.DecodeLastRune(c.post.body)
@@ -163,7 +164,8 @@ func (c *Client) backspace() error {
 	}
 	c.post.len--
 
-	return c.updateBody(msg, 1)
+	c.updateBody(msg, 1)
+	return
 }
 
 // Close an open post and parse the last line, if needed.
@@ -187,41 +189,43 @@ func (c *Client) closePost() (err error) {
 		}
 	}
 
-	return db.ClosePost(
+	err = db.ClosePost(
 		c.post.id,
 		c.post.board,
 		string(c.post.body),
 		links,
 		com,
 	)
+	if err != nil {
+		return
+	}
+	c.post = openPost{}
+	return
 }
 
 // Splice the text in the open post
-func (c *Client) spliceText(data []byte) error {
-	if has, err := c.hasPost(); err != nil {
-		return err
-	} else if !has {
-		return nil
+func (c *Client) spliceText(data []byte) (err error) {
+	has, err := c.hasPost()
+	if err != nil || !has {
+		return
 	}
 
 	var req spliceRequest
-	err := decodeMessage(data, &req)
+	err = decodeMessage(data, &req)
 	if err != nil {
-		return err
+		return
 	}
 	err = parser.IsPrintableRunes(req.Text, true)
 	if err != nil {
-		return err
+		return
 	}
 
 	// Validate
 	switch {
-	case err != nil:
-		return err
 	case req.Start > common.MaxLenBody,
 		req.Len > common.MaxLenBody,
 		int(req.Start+req.Len) > c.post.len:
-		return &errInvalidSpliceCoords{
+		return errInvalidSpliceCoords{
 			body: string(c.post.body),
 			req: spliceRequestString{
 				spliceCoords: spliceCoords{
@@ -236,7 +240,6 @@ func (c *Client) spliceText(data []byte) error {
 	case len(req.Text) > common.MaxLenBody:
 		return errSpliceTooLong // Nice try, kid
 	}
-
 	for _, r := range req.Text {
 		if r == 0 {
 			return common.ErrContainsNull
@@ -267,7 +270,7 @@ func (c *Client) spliceText(data []byte) error {
 
 	msg, err := common.EncodeMessage(common.MessageSplice, res)
 	if err != nil {
-		return err
+		return
 	}
 
 	// Need to prevent modifications to the original slice, as there might be
@@ -286,7 +289,8 @@ func (c *Client) spliceText(data []byte) error {
 	}
 
 	// +1, so you can't spam zero insert splices to infinity
-	return c.updateBody(msg, len(res.Text)+1)
+	c.updateBody(msg, len(res.Text)+1)
+	return
 }
 
 // Insert and image into an existing open post

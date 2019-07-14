@@ -146,7 +146,10 @@ func CreatePost(
 	case err != nil:
 		return
 	case locked:
-		err = common.StatusError{errors.New("thread is locked"), 400}
+		err = common.StatusError{
+			Err:  errors.New("thread is locked"),
+			Code: 400,
+		}
 		return
 	}
 
@@ -215,13 +218,7 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 
-	if post.Editing {
-		err = db.SetOpenBody(post.ID, []byte(post.Body))
-		if err != nil {
-			return
-		}
-		c.post.init(post.StandalonePost)
-	}
+	c.post.init(post.StandalonePost)
 	c.propagatePostInsertion(post.Post, msg)
 
 	conf := config.Get()

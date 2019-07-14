@@ -21,15 +21,13 @@ func LogUnexpected(t *testing.T, expected, got interface{}) {
 	t.Helper()
 
 	// Allow comparison of structs with private fields
-	cast := func(val *interface{}) {
-		if reflect.TypeOf(*val).Kind() == reflect.Struct {
-			*val = cmp.AllowUnexported(*val)
+	var options []cmp.Option
+	for _, v := range [...]interface{}{expected, got} {
+		if reflect.TypeOf(v).Kind() == reflect.Struct {
+			options = append(options, cmp.AllowUnexported(v))
 		}
 	}
-	cast(&expected)
-	cast(&got)
-
-	t.Fatal("\n" + cmp.Diff(expected, got))
+	t.Fatal("\n" + cmp.Diff(expected, got, options...))
 }
 
 // AssertEquals asserts two values are deeply equal or fails the test, if

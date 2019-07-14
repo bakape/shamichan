@@ -113,12 +113,17 @@ func TestAppendRune(t *testing.T) {
 	}
 
 	assertOpenPost(t, cl, 4, "abcd")
-	awaitFlush()
+	flushBodies(t)
 	assertBody(t, 2, "abcd")
 }
 
-func awaitFlush() {
-	time.Sleep(time.Millisecond * 400)
+func flushBodies(t *testing.T) {
+	t.Helper()
+
+	err := db.FlushOpenPostBodies()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func writeSamplePost(t testing.TB) {
@@ -351,7 +356,7 @@ func TestBackspace(t *testing.T) {
 	}
 
 	assertOpenPost(t, cl, 2, "ab")
-	awaitFlush()
+	flushBodies(t)
 	assertBody(t, 2, "ab")
 }
 
@@ -426,10 +431,11 @@ func TestSpliceValidityChecks(t *testing.T) {
 		err        error
 	}{
 		{
-			"exceeds buffer bounds",
-			2, 1,
-			"", "abc",
-			&errInvalidSpliceCoords{
+			name:  "exceeds buffer bounds",
+			start: 2,
+			len:   1,
+			line:  "abc",
+			err: errInvalidSpliceCoords{
 				body: "",
 				req: spliceRequestString{
 					spliceCoords: spliceCoords{
@@ -440,8 +446,15 @@ func TestSpliceValidityChecks(t *testing.T) {
 				},
 			},
 		},
-		{"NOOP", 0, 0, "", "", errSpliceNOOP},
-		{"too long", 0, 0, tooLong, "", errSpliceTooLong},
+		{
+			name: "NOOP",
+			err:  errSpliceNOOP,
+		},
+		{
+			name: "too long",
+			text: tooLong,
+			err:  errSpliceTooLong,
+		},
 	}
 
 	for i := range cases {
@@ -590,7 +603,7 @@ func TestSplice(t *testing.T) {
 			}
 
 			assertOpenPost(t, cl, utf8.RuneCountInString(c.final), c.final)
-			awaitFlush()
+			flushBodies(t)
 			assertBody(t, 2, c.final)
 		})
 	}

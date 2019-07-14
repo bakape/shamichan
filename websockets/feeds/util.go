@@ -1,8 +1,9 @@
 package feeds
 
 import (
-	"github.com/bakape/meguca/common"
 	"time"
+
+	"github.com/bakape/meguca/common"
 )
 
 // TickerInterval sets the interval of ticker flushes
@@ -75,6 +76,10 @@ func (b *baseFeed) removeClient(c common.Client) bool {
 	delete(b.clients, c)
 
 	if len(b.clients) != 0 {
+		// TODO: Instead of immediately closing the feed, schedule a close in
+		// 10 seconds to reduce overhead of clients switching over threads with
+		// no other listeners. Need to consider the data races and lock
+		// contention in the feed<->feedmap syncing for this.
 		b.remove <- nil
 		return false
 	}

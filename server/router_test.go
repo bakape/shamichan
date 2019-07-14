@@ -21,37 +21,40 @@ var router http.Handler
 var con = console.New(true)
 
 func TestMain(m *testing.M) {
-	err := config.Server.Load()
-	if err != nil {
-		panic(err)
-	}
-	close, err := db.LoadTestDB("server")
-	if err != nil {
-		panic(err)
-	}
+	code := 1
+	err := func() (err error) {
+		err = config.Server.Load()
+		if err != nil {
+			return
+		}
+		err = db.LoadTestDB("server")
+		if err != nil {
+			return
+		}
 
-	log.AddHandler(con, log.AllLevels...)
-	router = createRouter()
-	webRoot = "testdata"
-	imageWebRoot = "testdata"
+		log.AddHandler(con, log.AllLevels...)
+		router = createRouter()
+		webRoot = "testdata"
+		imageWebRoot = "testdata"
 
-	config.Set(config.Configs{
-		Public: config.Public{
-			DefaultLang: "en_GB",
-		},
-	})
-	config.Server.CacheSize = 100
-	err = cache.Init()
-	if err != nil {
+		config.Set(config.Configs{
+			Public: config.Public{
+				DefaultLang: "en_GB",
+			},
+		})
+		config.Server.CacheSize = 100
+		err = cache.Init()
+		if err != nil {
+			return
+		}
+		err = lang.Load()
+		if err != nil {
+			return
+		}
+
+		code = m.Run()
 		return
-	}
-	err = lang.Load()
-	if err != nil {
-		panic(err)
-	}
-
-	code := m.Run()
-	err = close()
+	}()
 	if err != nil {
 		panic(err)
 	}

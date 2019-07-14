@@ -24,11 +24,15 @@ func runCleanupTasks() {
 	runHalfTasks()
 	runHourTasks()
 
+	sec := time.Tick(time.Second)
 	min := time.Tick(time.Minute)
 	half := time.Tick(time.Minute * 30)
 	hour := time.Tick(time.Hour)
 	for {
 		select {
+		case <-sec:
+			logError("flush open post bodies", FlushOpenPostBodies())
+			logError("spam score buffer flush", syncSpamScores())
 		case <-min:
 			runMinuteTasks()
 		case <-half:
@@ -61,7 +65,6 @@ func runHourTasks() {
 		logError("remove identity info", removeIdentityInfo())
 		logError("thread cleanup", deleteOldThreads())
 		logError("board cleanup", deleteUnusedBoards())
-		logError("delete dangling open post bodies", cleanUpOpenPostBodies())
 		_, err := db.Exec(`vacuum`)
 		logError("vaccum database", err)
 	}
@@ -107,15 +110,15 @@ func removeIdentityInfo() error {
 // Close any open posts that have not been closed for 30 minutes
 func closeDanglingPosts() error {
 	type post struct {
-		id    uint64
-		board string
+		id          uint64
+		board, body string
 	}
 	var (
 		posts []post
 		p     post
 	)
 	err := queryAll(
-		sq.Select("id", "board").
+		sq.Select("id", "board", "body").
 			From("posts").
 			Where(
 				`editing = true
@@ -124,7 +127,7 @@ func closeDanglingPosts() error {
 			).
 			OrderBy("id"), // Sort for less page misses on processing
 		func(r *sql.Rows) (err error) {
-			err = r.Scan(&p.id, &p.board)
+			err = r.Scan(&p.id, &p.board, &p.body)
 			if err != nil {
 				return err
 			}
@@ -137,14 +140,8 @@ func closeDanglingPosts() error {
 	}
 
 	for _, p := range posts {
-		// Get post body from BoltDB
-		body, err := GetOpenBody(p.id)
-		if err != nil {
-			return err
-		}
-
 		links, com, err := parser.ParseBody(
-			[]byte(body),
+			[]byte(p.body),
 			config.GetBoardConfigs(p.board).BoardConfigs,
 			true,
 		)
@@ -159,7 +156,7 @@ func closeDanglingPosts() error {
 		default:
 			return err
 		}
-		err = ClosePost(p.id, p.board, body, links, com)
+		err = ClosePost(p.id, p.board, p.body, links, com)
 		if err != nil {
 			return err
 		}

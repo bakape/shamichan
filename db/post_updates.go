@@ -17,7 +17,7 @@ func ClosePost(
 ) (err error) {
 	// TODO: Propagate this with DB listener
 	// TODO: Propage backlinks through update trigger
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *sql.Tx) (err error) {
 		err = populateCommands(tx, board, com)
 		_, err = sq.Update("posts").
 			SetMap(map[string]interface{}{
@@ -35,18 +35,7 @@ func ClosePost(
 		err = writeLinks(tx, id, links)
 		return
 	})
-	if err != nil {
-		return
-	}
-
-	return deleteOpenPostBody(id)
 }
-
-type idSorter []uint64
-
-func (p idSorter) Len() int           { return len(p) }
-func (p idSorter) Less(i, j int) bool { return p[i] < p[j] }
-func (p idSorter) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // Write post links to database. Invalid links are simply not written
 func writeLinks(tx *sql.Tx, source uint64, links []uint64) (err error) {

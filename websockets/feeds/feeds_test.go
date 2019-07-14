@@ -11,17 +11,19 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	err := config.Server.Load()
-	if err != nil {
-		panic(err)
-	}
-	close, err := db.LoadTestDB("feeds")
-	if err != nil {
-		panic(err)
-	}
-
-	code := m.Run()
-	err = close()
+	code := 1
+	err := func() (err error) {
+		err = config.Server.Load()
+		if err != nil {
+			return
+		}
+		err = db.LoadTestDB("feeds")
+		if err != nil {
+			return
+		}
+		code = m.Run()
+		return
+	}()
 	if err != nil {
 		panic(err)
 	}

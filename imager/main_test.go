@@ -11,26 +11,26 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	err := config.Server.Load()
-	if err != nil {
-		panic(err)
-	}
-	close, err := db.LoadTestDB("imager")
-	if err != nil {
-		panic(err)
-	}
+	code := 1
+	err := func() (err error) {
+		err = config.Server.Load()
+		if err != nil {
+			panic(err)
+		}
+		err = db.LoadTestDB("imager")
+		if err != nil {
+			panic(err)
+		}
 
-	config.Set(config.Configs{})
-	if err := assets.CreateDirs(); err != nil {
-		panic(err)
-	}
+		config.Set(config.Configs{})
+		err = assets.CreateDirs()
+		if err != nil {
+			panic(err)
+		}
 
-	code := m.Run()
-	err = close()
-	if err != nil {
-		panic(err)
-	}
-	err = assets.DeleteDirs()
+		code = m.Run()
+		return assets.DeleteDirs()
+	}()
 	if err != nil {
 		panic(err)
 	}

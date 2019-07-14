@@ -98,15 +98,7 @@ func WritePost(tx *sql.Tx, p Post) (err error) {
 	for id := range p.Links {
 		links = append(links, id)
 	}
-	err = writeLinks(tx, p.ID, links)
-	if err != nil {
-		return
-	}
-
-	if p.Editing {
-		err = SetOpenBody(p.ID, []byte(p.Body))
-	}
-	return
+	return writeLinks(tx, p.ID, links)
 }
 
 // Insert Post into thread and set its ID and creation time and moderation

@@ -53,7 +53,7 @@ func handlePanic(w http.ResponseWriter, r *http.Request, err interface{}) {
 	http.Error(w, fmt.Sprintf("500 %s", err), 500)
 	ip, ipErr := auth.GetIP(r)
 	if ipErr != nil {
-		ip = "invalid IP"
+		ip = "0.0.0.0"
 	}
 	log.Errorf("server: %s: %#v\n%s\n", ip, err, debug.Stack())
 }

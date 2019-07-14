@@ -159,6 +159,13 @@ func GetThreadMeta(thread uint64) (
 	moderation map[uint64][]common.ModerationEntry,
 	err error,
 ) {
+	// Ensure any pending post body changes for this thread (and also others,
+	// while we are at it) are flushed to DB before read
+	err = FlushOpenPostBodies()
+	if err != nil {
+		return
+	}
+
 	all = make(map[uint64]uint32, 1<<10)
 	open = make(map[uint64]OpenPostMeta)
 	moderation = make(map[uint64][]common.ModerationEntry)
@@ -214,10 +221,6 @@ func GetThreadMeta(thread uint64) (
 		var p OpenPostMeta
 		for r.Next() {
 			err = r.Scan(&id, &p.HasImage, &p.Spoilered, &p.Page)
-			if err != nil {
-				return
-			}
-			p.Body, err = GetOpenBody(id)
 			if err != nil {
 				return
 			}
