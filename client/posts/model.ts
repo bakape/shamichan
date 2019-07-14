@@ -41,7 +41,7 @@ export class Post extends Model implements PostData {
 			board: string
 		}
 	}
-	public links: PostLink[]
+	public links: { [key: number]: PostLink };
 	public moderation: ModerationEntry[]
 
 	constructor(attrs: PostData) {
@@ -51,7 +51,7 @@ export class Post extends Model implements PostData {
 			hidden.add(this.id)
 			storeSeenPost(this.id, this.op)
 			this.seenOnce = true
-		} else{
+		} else {
 			this.seenOnce = seenPosts.has(this.id)
 		}
 
@@ -137,7 +137,7 @@ export class Post extends Model implements PostData {
 
 	// Extra method for code reuse in post forms
 	protected spliceText({ start, len, text }: SpliceResponse) {
-		// Must use arrays of chars to properly splice multibyte unicode
+		// Must use arrays of chars to properly splice multi byte unicode
 		const arr = [...this.body]
 		arr.splice(start, len, ...text)
 		this.body = arr.join("")
@@ -151,14 +151,17 @@ export class Post extends Model implements PostData {
 			notifyAboutReply(this)
 		}
 		if (this.links) {
-			for (let { id } of this.links) {
-				const post = posts.get(id)
+			for (let _id in this.links) {
+				const id = parseInt(_id);
+				const post = posts.get(id);
 				if (post) {
-					post.insertBacklink({
-						id: this.id,
-						op: this.op,
-						board: this.board,
-					})
+					post.insertBacklink(
+						this.id,
+						{
+							op: this.op,
+							board: this.board,
+						},
+					);
 				}
 				if (options.hideRecursively && hidden.has(id)) {
 					hideRecursively(this)
@@ -172,8 +175,8 @@ export class Post extends Model implements PostData {
 		if (!this.links) {
 			return false
 		}
-		for (let { id } of this.links) {
-			if (mine.has(id)) {
+		for (let id in this.links) {
+			if (mine.has(parseInt(id))) {
 				return true
 			}
 		}
@@ -181,7 +184,7 @@ export class Post extends Model implements PostData {
 	}
 
 	// Insert data about another post linking this post into the model
-	public insertBacklink({ id, op, board }: PostLink) {
+	public insertBacklink(id: number, { op, board }: PostLink) {
 		if (!this.backlinks) {
 			this.backlinks = {}
 		}

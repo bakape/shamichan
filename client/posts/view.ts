@@ -148,11 +148,13 @@ export default class PostView extends ImageHandler {
             rendered.add(id)
             const bl = this.model.backlinks[id]
             html += "<em>"
-                + renderPostLink({
-                    id: id,
-                    op: bl.op,
-                    board: bl.board,
-                })
+                + renderPostLink(
+                    id,
+                    {
+                        op: bl.op,
+                        board: bl.board,
+                    },
+                )
                 + "</em>"
         }
 

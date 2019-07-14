@@ -438,22 +438,16 @@ function parseFragment(frag: string, data: PostData): string {
 }
 
 // Verify and render a link to other posts
-function parsePostLink(m: string[], links: PostLink[]): string {
+function parsePostLink(m: string[], links: { [id: number]: PostLink }): string {
     if (!links) {
-        return m[0]
+        return m[0];
     }
-    const id = parseInt(m[2])
-    let data: PostLink
-    for (let l of links) {
-        if (l.id === id) {
-            data = l
-            break
-        }
-    }
+    const id = parseInt(m[2]);
+    const data = links[id];
     if (!data) {
-        return m[0]
+        return m[0];
     }
-    return m[1] + renderPostLink(data)
+    return m[1] + renderPostLink(id, data)
 }
 
 // Parse internal or customly set reference URL

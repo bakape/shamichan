@@ -91,7 +91,7 @@ function localizeLinks(post: Post) {
 	}
 	let el: HTMLElement,
 		isReply = false
-	for (let id of new Set(post.links.map(l => l.id))) {
+	for (let id of new Set(Object.keys(post.links).map(id => parseInt(id)))) {
 		if (!mine.has(id)) {
 			continue
 		}
