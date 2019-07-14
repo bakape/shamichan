@@ -294,20 +294,31 @@ func TestDeletePostsByIP(t *testing.T) {
 func TestPurgePost(t *testing.T) {
 	prepareForModeration(t)
 
-	err := PurgePost(1, "admin", "test")
-	if err != nil {
-		t.Fatal(err)
-	}
+	// Test initial and repeated purge, when there is no image
+	for i := 0; i < 2; i++ {
+		var name string
+		if i == 0 {
+			name = "with image"
+		} else {
+			name = "without image"
+		}
+		t.Run(name, func(t *testing.T) {
+			err := PurgePost(1, "admin", "test")
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	buf, err := GetPost(1)
-	if err != nil {
-		t.Fatal(err)
+			buf, err := GetPost(1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var post common.Post
+			test.DecodeJSON(t, buf, &post)
+			test.AssertEquals(t, len(post.Moderation), i+1)
+			test.AssertEquals(t, post.Image == nil, true)
+			test.AssertEquals(t, post.Body, "")
+		})
 	}
-	var post common.Post
-	test.DecodeJSON(t, buf, &post)
-	test.AssertEquals(t, len(post.Moderation), 1)
-	test.AssertEquals(t, post.Image == nil, true)
-	test.AssertEquals(t, post.Body, "")
 }
 
 func TestStickyThread(t *testing.T) {

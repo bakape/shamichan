@@ -24,8 +24,6 @@ func logModeration(tx *sql.Tx, e auth.ModLogEntry) (err error) {
 
 // Clear post contents and remove any uploaded image from the server
 func PurgePost(id uint64, by, reason string) (err error) {
-	// TODO: Ensure this is tested with and without image
-
 	return InTransaction(func(tx *sql.Tx) (err error) {
 		var (
 			board               string
@@ -34,7 +32,7 @@ func PurgePost(id uint64, by, reason string) (err error) {
 		)
 		err = sq.Select("p.board", "i.sha1", "i.file_type", "i.thumb_type").
 			From("posts p").
-			Join("images i on p.sha1 = i.sha1").
+			LeftJoin("images i on p.sha1 = i.sha1").
 			Where("p.id = ?", id).
 			RunWith(tx).
 			QueryRow().
@@ -43,7 +41,7 @@ func PurgePost(id uint64, by, reason string) (err error) {
 			return
 		}
 
-		if hash.String != "" {
+		if hash.Valid {
 			_, err = sq.
 				Delete("images").
 				Where("sha1 = ?", hash.String).
