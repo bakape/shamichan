@@ -7,6 +7,8 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/bakape/pg_util"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
 )
@@ -163,8 +165,9 @@ func sendIfExists(id uint64, fn func(*Feed) error) error {
 func Init() (err error) {
 	// TODO: Clean up feeds on thread and board deletion
 
-	return db.Listen("post_moderated", func(msg string) (err error) {
-		return handlePostModeration(msg)
+	return db.Listen(pg_util.ListenOpts{
+		Channel: "post_moderated",
+		OnMsg:   handlePostModeration,
 	})
 }
 

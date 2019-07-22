@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/pg_util"
 	"github.com/go-playground/log"
 	"github.com/lib/pq"
 )
@@ -20,17 +20,7 @@ type rowScanner interface {
 // InTransaction runs a function inside a transaction and handles comminting and rollback on error.
 // readOnly: the DBMS can optimise read-only transactions for better concurrency
 func InTransaction(fn func(*sql.Tx) error) (err error) {
-	tx, err := db.Begin()
-	if err != nil {
-		return
-	}
-
-	err = fn(tx)
-	if err != nil {
-		tx.Rollback()
-		return
-	}
-	return tx.Commit()
+	return pg_util.InTransaction(db, fn)
 }
 
 // Run fn on all returned rows in a query
@@ -64,53 +54,20 @@ func pqErrorCode(err error) string {
 	return ""
 }
 
-// Listen assigns a function to listen to Postgres notifications on a channel.
-// Can't be used in tests.
-func Listen(event string, fn func(msg string) error) (err error) {
-	if common.IsTest {
-		return
-	}
-	return ListenCancelable(event, nil, fn)
+func logListenError(err error) {
+	log.Error(err)
 }
 
-// Like listen, but is cancelable. Can be used in tests.
-func ListenCancelable(event string, canceller <-chan struct{},
-	fn func(msg string) error,
-) (err error) {
-	l := pq.NewListener(
-		connectionURL,
-		time.Second,
-		time.Second*10,
-		func(_ pq.ListenerEventType, _ error) {},
-	)
-	err = l.Listen(event)
-	if err != nil {
+// Listen assigns a function to listen to Postgres notifications on a channel.
+func Listen(opts pg_util.ListenOpts) (err error) {
+	// Don't allow non-cancellable listeners to run  during tests
+	if common.IsTest && opts.Canceller == nil {
 		return
 	}
 
-	go func() {
-	again:
-		select {
-		case <-canceller:
-			err := l.UnlistenAll()
-			if err != nil {
-				log.Errorf("unlistening database evenet id=`%s` error=`%s`\n",
-					event, err)
-			}
-		case msg := <-l.Notify:
-			if msg == nil {
-				break
-			}
-			if err := fn(msg.Extra); err != nil {
-				log.Errorf(
-					"error on database event id=`%s` msg=`%s` error=`%s`\n",
-					event, msg.Extra, err)
-			}
-			goto again
-		}
-	}()
-
-	return
+	opts.ConnectionURL = connectionURL
+	opts.OnError = logListenError
+	return pg_util.Listen(opts)
 }
 
 // Execute all SQL statement strings and return on first error, if any

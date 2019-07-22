@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bakape/pg_util"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
@@ -31,18 +33,6 @@ func writeBan(tx *sql.Tx, ip string, entry auth.ModLogEntry) (err error) {
 	return logModeration(tx, entry)
 }
 
-// Propagate ban updates through DB and disconnect all banned IPs
-func propagateBans(board string, ip string) (err error) {
-	_, err = db.Exec(`notify bans_updated`)
-	if err != nil {
-		return
-	}
-	if !common.IsTest {
-		auth.DisconnectByBoardAndIP(ip, board)
-	}
-	return
-}
-
 // Automatically bans an IP
 func SystemBan(ip, reason string, length time.Duration) (err error) {
 	return InTransaction(func(tx *sql.Tx) error {
@@ -66,7 +56,7 @@ func systemBanTx(tx *sql.Tx, ip, reason string, length time.Duration,
 	if err != nil {
 		return
 	}
-	err = propagateBans("all", ip)
+	auth.DisconnectByBoardAndIP(ip, "all")
 	return
 }
 
@@ -103,7 +93,8 @@ func Ban(board, reason, by string, length time.Duration, id uint64,
 		return
 	}
 
-	return propagateBans(board, ip)
+	auth.DisconnectByBoardAndIP(ip, board)
+	return
 }
 
 // Unban lifts a ban from a specific post on a specific board
@@ -116,7 +107,7 @@ func Unban(board string, id uint64, by string) error {
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, auth.ModLogEntry{
+		return logModeration(tx, auth.ModLogEntry{
 			ModerationEntry: common.ModerationEntry{
 				Type: common.UnbanPost,
 				By:   by,
@@ -124,28 +115,26 @@ func Unban(board string, id uint64, by string) error {
 			Board: board,
 			ID:    id,
 		})
-		if err != nil {
-			return
-		}
-		_, err = tx.Exec("notify bans_updated")
+	})
+}
+
+func loadBans() (err error) {
+	err = RefreshBanCache()
+	if err != nil {
 		return
-	})
-}
-
-func loadBans() error {
-	if err := RefreshBanCache(); err != nil {
-		return err
 	}
-	// TODO: Rename to bans.updated
-	// TODO: Fire event in trigger, not transation. For each statement,
-	// not each row.
-	return Listen("bans_updated", func(_ string) error {
-		return RefreshBanCache()
+	return Listen(pg_util.ListenOpts{
+		DebounceInterval: time.Second,
+		Channel:          "bans.updated",
+		OnMsg: func(_ string) error {
+			return RefreshBanCache()
+		},
+		OnConnectionLoss: RefreshBanCache,
 	})
 }
 
-func selectBans(colums ...string) squirrel.SelectBuilder {
-	return sq.Select(colums...).
+func selectBans(columns ...string) squirrel.SelectBuilder {
+	return sq.Select(columns...).
 		Options("distinct on (ip, board)").
 		From("bans").
 		Where("expires > now() at time zone 'utc' and type = 'classic'").

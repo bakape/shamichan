@@ -8,6 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bakape/pg_util"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
 )
@@ -54,6 +56,14 @@ func DiffThreadPostCounts(old map[uint64]uint64) (
 }
 
 func loadThreadPostCounts() (err error) {
+	err = readThreadPostCounts()
+	if err != nil {
+		return
+	}
+	return listenForThreadUpdates(nil)
+}
+
+func readThreadPostCounts() (err error) {
 	r, err := sq.Select("op, count(*)").
 		From("posts").
 		GroupBy("op").
@@ -74,12 +84,7 @@ func loadThreadPostCounts() (err error) {
 		}
 		postCountCache[thread] = postCount
 	}
-	err = r.Err()
-	if err != nil {
-		return
-	}
-
-	return listenForThreadUpdates(nil)
+	return r.Err()
 }
 
 // Separate function for easier testing
@@ -95,8 +100,10 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 		}()
 	}
 
-	err = ListenCancelable("thread.deleted", proxy,
-		func(msg string) (err error) {
+	err = Listen(pg_util.ListenOpts{
+		Channel:   "thread.deleted",
+		Canceller: proxy,
+		OnMsg: func(msg string) (err error) {
 			_, id, err := SplitBoardAndID(msg)
 			if err != nil {
 				return
@@ -106,13 +113,17 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 			delete(postCountCache, id)
 			postCountCacheMu.Unlock()
 			return
-		})
+		},
+		OnConnectionLoss: readThreadPostCounts,
+	})
 	if err != nil {
 		return
 	}
 
-	return ListenCancelable("thread.new_post", proxy,
-		func(msg string) (err error) {
+	return Listen(pg_util.ListenOpts{
+		Channel:   "thread.new_post",
+		Canceller: proxy,
+		OnMsg: func(msg string) (err error) {
 			retErr := func() error {
 				return fmt.Errorf("invalid message: `%s`", msg)
 			}
@@ -134,7 +145,9 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 			postCountCache[id] = postCount
 			postCountCacheMu.Unlock()
 			return
-		})
+		},
+		OnConnectionLoss: readThreadPostCounts,
+	})
 }
 
 // Thread is a template for writing new threads to the database

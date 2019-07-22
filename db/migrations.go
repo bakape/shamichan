@@ -1594,6 +1594,19 @@ var migrations = []func(*sql.Tx) error{
 			"triggers/mod_log",
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		err = loadSQL(tx, "triggers/bans", "triggers/boards")
+		if err != nil {
+			return
+		}
+		_, err = tx.Exec(
+			`create trigger notify_bans_updated
+			after insert or update or delete
+			on bans
+			for each statement execute procedure notify_bans_updated()`,
+		)
+		return
+	},
 }
 
 func createIndex(table string, columns ...string) string {

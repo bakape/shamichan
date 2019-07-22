@@ -12,6 +12,7 @@ require (
 	github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c
 	github.com/bakape/captchouli v1.1.5
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
+	github.com/bakape/pg_util v0.2.0
 	github.com/bakape/recache v0.0.0-20190524102257-67e46453405b
 	github.com/bakape/thumbnailer v0.0.0-20190501133407-c89db19cab54
 	github.com/boltdb/bolt v1.3.1
@@ -28,7 +29,7 @@ require (
 	github.com/go-playground/log v6.3.0+incompatible
 	github.com/google/go-cmp v0.3.0
 	github.com/gorilla/websocket v1.4.0
-	github.com/lib/pq v1.0.1-0.20190326042056-d6156e141ac6
+	github.com/lib/pq v1.2.0
 	github.com/otium/ytdl v0.5.1
 	github.com/rakyll/statik v0.1.6
 	github.com/sevlyar/go-daemon v0.1.4

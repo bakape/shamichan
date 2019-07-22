@@ -11,6 +11,7 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
+	"github.com/bakape/pg_util"
 	"github.com/bakape/recache"
 )
 
@@ -118,7 +119,19 @@ func Init() (err error) {
 		})
 	}
 
-	err = db.Listen("thread.updated", func(msg string) (err error) {
+	listen := func(ch string, handler func(string) error) error {
+		return db.Listen(pg_util.ListenOpts{
+			DebounceInterval: time.Second,
+			Channel:          "thread.updated",
+			OnMsg:            handler,
+			OnConnectionLoss: func() error {
+				cache.EvictAll()
+				return nil
+			},
+		})
+	}
+
+	err = listen("thread.updated", func(msg string) (err error) {
 		board, thread, page, err := db.SplitBoardIDPage(msg)
 		if err != nil {
 			return
@@ -141,7 +154,7 @@ func Init() (err error) {
 	if err != nil {
 		return
 	}
-	return db.Listen("thread.deleted", func(msg string) (err error) {
+	return listen("thread.deleted", func(msg string) (err error) {
 		board, thread, err := db.SplitBoardAndID(msg)
 		if err != nil {
 			return

@@ -11,6 +11,7 @@ import (
 	"github.com/bakape/meguca/config"
 	mlog "github.com/bakape/meguca/log"
 	"github.com/bakape/meguca/util"
+	"github.com/bakape/pg_util"
 	"github.com/lib/pq"
 )
 
@@ -29,7 +30,13 @@ func loadConfigs() error {
 	config.Set(conf)
 	mlog.Init(mlog.Email)
 
-	return Listen("config_updates", updateConfigs)
+	return Listen(pg_util.ListenOpts{
+		Channel: "configs.updated",
+		OnMsg: func(_ string) error {
+			return updateConfigs()
+		},
+		OnConnectionLoss: updateConfigs,
+	})
 }
 
 // GetConfigs retrieves global configurations. Only used in tests.
@@ -57,19 +64,28 @@ func getBoardConfigs() squirrel.SelectBuilder {
 }
 
 func loadBoardConfigs() (err error) {
-	err = queryAll(getBoardConfigs(), func(r *sql.Rows) (err error) {
-		c, err := scanBoardConfigs(r)
-		if err != nil {
+	updateAll := func() error {
+		return queryAll(getBoardConfigs(), func(r *sql.Rows) (err error) {
+			c, err := scanBoardConfigs(r)
+			if err != nil {
+				return
+			}
+			c.Banners = assets.Banners.FileTypes(c.ID)
+			_, err = config.SetBoardConfigs(c)
 			return
-		}
-		c.Banners = assets.Banners.FileTypes(c.ID)
-		_, err = config.SetBoardConfigs(c)
-		return
-	})
+		})
+	}
+
+	err = updateAll()
 	if err != nil {
 		return
 	}
-	return Listen("board_updated", updateBoardConfigs)
+	return Listen(pg_util.ListenOpts{
+		DebounceInterval: time.Second,
+		Channel:          "boards.updated",
+		OnMsg:            updateBoardConfigs,
+		OnConnectionLoss: updateAll,
+	})
 }
 
 func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
@@ -126,7 +142,7 @@ func UpdateBoard(c config.BoardConfigs) (err error) {
 	return
 }
 
-func updateConfigs(_ string) error {
+func updateConfigs() error {
 	conf, err := GetConfigs()
 	if err != nil {
 		return util.WrapError("reloading configuration", err)
@@ -189,6 +205,6 @@ func WriteConfigs(c config.Configs) (err error) {
 	if err != nil {
 		return
 	}
-	_, err = db.Exec("select pg_notify('config_updates', '')")
+	_, err = db.Exec("select pg_notify('configs.updated', '')")
 	return
 }

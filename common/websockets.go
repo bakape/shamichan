@@ -69,11 +69,23 @@ const (
 
 // Forwarded functions from "github.com/bakape/megucawebsockets/feeds" to avoid circular imports
 var (
-	// GetByIPAndBoard retrieves all Clients that match the passed IP on a board
-	GetByIPAndBoard func(ip, board string) []Client
+	// GetByIPAndBoard retrieves all Clients that match the passed IP on a
+	// board.
+	//
+	// Initialized with default function to ease testing.
+	GetByIPAndBoard func(ip, board string) []Client = func(
+		string,
+		string,
+	) []Client {
+		return nil
+	}
 
-	// GetClientsByIP returns connected clients with matching ips
-	GetClientsByIP func(ip string) []Client
+	// GetClientsByIP returns connected clients with matching ips.
+	//
+	// Initialized with default function to ease testing.
+	GetClientsByIP func(ip string) []Client = func(string) []Client {
+		return nil
+	}
 )
 
 // Client exposes some globally accessible websocket client functionality
