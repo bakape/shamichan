@@ -6,8 +6,6 @@ import (
 	"sync"
 )
 
-// TODO: Continuously flush open bodies to DB like with spam scores
-
 var (
 	// Buffer of pending open post body changes. Used to reduce DB I/O with
 	// rapid open post body changes.
