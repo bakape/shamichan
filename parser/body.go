@@ -22,8 +22,6 @@ func ParseBody(body []byte, boardConf config.BoardConfigs, internal bool) (
 	com []common.Command,
 	err error,
 ) {
-	// TODO: Perform link lookup, dice rolls, etc. inside DB module
-
 	err = IsPrintableString(string(body), true)
 	if err != nil {
 		if internal {
