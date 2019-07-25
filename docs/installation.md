@@ -1,4 +1,4 @@
-List of installation and update commands to set up meguca on Debian stretch.
+List of installation and update commands to set up meguca on Debian buster.
 __Use as a reference. Copy paste at your own risk.__
 All commands assume to be run by the root user.
 
@@ -7,14 +7,8 @@ All commands assume to be run by the root user.
 ```bash
 # Install OS dependencies
 apt update
-apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev libgeoip-dev git lsb-release wget curl sudo
+apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev libgeoip-dev git lsb-release wget curl sudo postgresql nodejs npm
 apt-get dist-upgrade -y
-
-# Install PostgreSQL
-echo deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -sc)-pgdg main >> /etc/apt/sources.list.d/pgdg.list
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-apt update
-apt install -y postgresql
 
 # Increase PostgreSQL connection limit by changing `max_connections` to 1024
 sed -i "/max_connections =/d" /etc/postgresql/11/main/postgresql.conf

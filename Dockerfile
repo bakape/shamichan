@@ -1,4 +1,4 @@
-FROM golang:stretch
+FROM golang
 
 EXPOSE 8000
 
@@ -13,12 +13,10 @@ RUN apt-get install -y \
 	libwebp-dev \
 	libopencv-dev \
 	libgeoip-dev \
+	nodejs npm \
 	git lsb-release wget curl netcat postgresql-client
 RUN apt-get dist-upgrade -y
 
-# Install Node.js
-RUN wget -q -O- https://deb.nodesource.com/setup_10.x | bash -
-RUN apt-get install -y nodejs
 
 RUN mkdir -p /meguca/images
 ENTRYPOINT ["./scripts/with_postgres.sh"]
