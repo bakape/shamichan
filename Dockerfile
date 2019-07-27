@@ -2,6 +2,11 @@ FROM golang
 
 EXPOSE 8000
 
+RUN mkdir -p /meguca/images
+ENTRYPOINT ["./scripts/with_postgres.sh"]
+CMD ["./meguca", "-a", ":8000"]
+WORKDIR /meguca
+
 # Install OS dependencies
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update
@@ -13,15 +18,12 @@ RUN apt-get install -y \
 	libwebp-dev \
 	libopencv-dev \
 	libgeoip-dev \
-	nodejs npm \
 	git lsb-release wget curl netcat postgresql-client
 RUN apt-get dist-upgrade -y
 
-
-RUN mkdir -p /meguca/images
-ENTRYPOINT ["./scripts/with_postgres.sh"]
-CMD ["./meguca", "-a", ":8000"]
-WORKDIR /meguca
+# Install Node.js
+RUN wget -q -O- https://deb.nodesource.com/setup_10.x | bash -
+RUN apt-get install -y nodejs
 
 # Cache dependency downloads, if possible
 COPY go.mod .
