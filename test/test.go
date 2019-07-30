@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/onsi/gomega"
 )
 
 // LogUnexpected fails the test and prints the values in an
@@ -115,4 +117,26 @@ func DecodeJSON(t *testing.T, buf []byte, dst interface{}) {
 		t.Fatalf("%s:\n%s", err, string(buf))
 	}
 	return
+}
+
+func AssertJSON(t *testing.T, r io.Reader, std interface{}) {
+	t.Helper()
+
+	res, err := ioutil.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("json: %s", string(res))
+
+	// Strip trailing newline - encoder artefact
+	if l := len(res); l != 0 && res[l-1] == '\n' {
+		res = res[:l-1]
+	}
+
+	stdJSON, err := json.Marshal(std)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gomega.NewGomegaWithT(t).Expect(res).To(gomega.MatchJSON(stdJSON))
 }

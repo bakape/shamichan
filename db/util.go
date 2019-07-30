@@ -87,43 +87,24 @@ func (e ErrMsgParse) Error() string {
 	return fmt.Sprintf("unparsable message: `%s`", string(e))
 }
 
-// Split message containing a board and post/thread ID
-func SplitBoardAndID(msg string) (board string, id uint64, err error) {
-	split := strings.Split(msg, ",")
-	if len(split) != 2 {
-		goto fail
-	}
-	board = split[0]
-	id, err = strconv.ParseUint(split[1], 10, 64)
-	if err != nil {
-		goto fail
-	}
-	return
-
-fail:
-	err = ErrMsgParse(msg)
-	return
-}
-
-// Split message containing a board, post/thread ID and page
-func SplitBoardIDPage(msg string) (
+// Split message containing a board and a variable amount of int64
+func SplitBoardAndInts(msg string, intCount int) (
 	board string,
-	id uint64,
-	page int,
+	ints []int64,
 	err error,
 ) {
 	split := strings.Split(msg, ",")
-	if len(split) != 3 {
+	if len(split) != intCount+1 {
 		goto fail
 	}
 	board = split[0]
-	id, err = strconv.ParseUint(split[1], 10, 64)
-	if err != nil {
-		goto fail
-	}
-	page, err = strconv.Atoi(split[2])
-	if err != nil {
-		goto fail
+
+	for _, s := range split[1:] {
+		n, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			goto fail
+		}
+		ints = append(ints, n)
 	}
 	return
 

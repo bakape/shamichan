@@ -104,13 +104,13 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 		Channel:   "thread.deleted",
 		Canceller: proxy,
 		OnMsg: func(msg string) (err error) {
-			_, id, err := SplitBoardAndID(msg)
+			_, ints, err := SplitBoardAndInts(msg, 1)
 			if err != nil {
 				return
 			}
 
 			postCountCacheMu.Lock()
-			delete(postCountCache, id)
+			delete(postCountCache, uint64(ints[0]))
 			postCountCacheMu.Unlock()
 			return
 		},

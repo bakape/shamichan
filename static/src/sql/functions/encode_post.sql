@@ -36,18 +36,7 @@ begin
 	end if;
 
 	-- Links
-	select into tmp
-		jsonb_object_agg(
-			l.target,
-			jsonb_build_object(
-				'op', lp.op,
-				'board', t.board
-			)
-		)
-		from links l
-		join posts lp on lp.id = l.target
-		join threads t on lp.op = t.id
-		where l.source = p.id;
+	select get_links(p.id) into tmp;
 	if tmp is not null then
 		data = jsonb_set(data, '{links}', tmp);
 	end if;

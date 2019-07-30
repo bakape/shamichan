@@ -36,11 +36,19 @@ $$ language plpgsql;
 create or replace function after_posts_update()
 returns trigger as $$
 begin
-	if new.editing != old.editing then
+	if old.editing and not new.editing then
 		perform bump_thread(
 			new.op,
 			bump_time => not new.sage,
 			page => new.page
+		);
+
+		-- Propagate post closure to application server, Not passing links and
+		-- commands, because their bite length can exceed the notification
+		-- payload limit.
+		perform pg_notify(
+			'post.closed',
+			concat_ws(',', thread_board(new.op), new.op, new.id)
 		);
 	end if;
 	return null;

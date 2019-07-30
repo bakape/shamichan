@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 )
 
 func TestLoadConfigs(t *testing.T) {
@@ -24,7 +24,7 @@ func TestLoadConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertEquals(t, config.Get(), &std)
+	test.AssertEquals(t, config.Get(), &std)
 }
 
 func TestUpdateOnRemovedBoard(t *testing.T) {
@@ -39,12 +39,12 @@ func TestUpdateOnRemovedBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertEquals(
+	test.AssertEquals(
 		t,
 		config.GetBoardConfigs("a"),
 		config.BoardConfContainer{},
 	)
-	AssertEquals(t, config.GetBoards(), []string{})
+	test.AssertEquals(t, config.GetBoards(), []string{})
 }
 
 func TestUpdateOnAddBoard(t *testing.T) {
@@ -72,12 +72,12 @@ func TestUpdateOnAddBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertEquals(
+	test.AssertEquals(
 		t,
 		config.GetBoardConfigs("a").BoardConfigs,
 		std.BoardConfigs,
 	)
-	AssertEquals(t, config.GetBoards(), []string{"a"})
+	test.AssertEquals(t, config.GetBoards(), []string{"a"})
 }
 
 func TestUpdateBoardConfigs(t *testing.T) {
@@ -105,7 +105,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertEquals(
+	test.AssertEquals(
 		t,
 		config.GetBoardConfigs("a").BoardConfigs,
 		std.BoardConfigs,
@@ -123,7 +123,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 	}
 
 	std.Title = "foo"
-	AssertEquals(
+	test.AssertEquals(
 		t,
 		config.GetBoardConfigs("a").BoardConfigs,
 		std.BoardConfigs,

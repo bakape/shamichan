@@ -10,8 +10,10 @@ begin
 			set moderated = true
 			where id = new.post_id
 			returning posts.op into op;
-		perform pg_notify('post_moderated',
-			concat_ws(',', op, new.id));
+		perform pg_notify(
+			'post.moderated',
+			concat_ws(',', thread_board(op), op, new.id)
+		);
 
 		-- Posts bump threads only on creation and closure
 		perform bump_thread(op, bump_time => true);

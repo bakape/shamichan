@@ -266,3 +266,23 @@ func GetThreadMeta(thread uint64) (
 }
 
 // TODO: Board meta for board update feeds.
+
+// Get data assigned on post closure like links and hash command results
+func GetPostCloseData(id uint64) (data CloseData, err error) {
+	var buf []byte
+	err = sq.
+		Select(
+			`jsonb_build_object(
+				'links', get_links(id),
+				'commands', commands
+			)`,
+		).
+		From("posts").
+		Where("id = ?", id).
+		Scan(&buf)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(buf, &data)
+	return
+}

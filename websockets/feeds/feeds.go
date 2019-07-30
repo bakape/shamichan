@@ -4,13 +4,13 @@
 package feeds
 
 import (
+	"encoding/json"
 	"errors"
 	"sync"
 
-	"github.com/bakape/pg_util"
-
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/pg_util"
 )
 
 // TODO: Board update feeds.
@@ -136,63 +136,126 @@ func sendIfExists(id uint64, fn func(*Feed) error) error {
 }
 
 // TODO: Listed to close events from DB
-//
-// // ClosePost closes a post in a feed, if it exists
-// func ClosePost(id, op uint64, links []common.Link, commands []common.Command,
-// ) (err error) {
-// 	msg, err := common.EncodeMessage(common.MessageClosePost, struct {
-// 		ID       uint64           `json:"id"`
-// 		Links    []common.Link    `json:"links"`
-// 		Commands []common.Command `json:"commands"`
-// 	}{
-// 		ID:       id,
-// 		Links:    links,
-// 		Commands: commands,
-// 	})
-// 	if err != nil {
-// 		return
-// 	}
+// TODO: Propagate links and commands
+// TODO: Propagate backlinks
+func handlePostClosure(msg string) (err error) {
+	// TODO: Propagate to board listeners without any thread listeners
 
-// 	sendIfExists(op, func(f *Feed) error {
-// 		f.ClosePost(id, msg)
-// 		return nil
-// 	})
+	board, ints, err := db.SplitBoardAndInts(msg, 2)
+	if err != nil {
+		return
+	}
+	op := uint64(ints[0])
+	id := uint64(ints[1])
 
-// 	return
-// }
+	// Query for change data and endcode here instead of inside sendIfExists().
+	// This has the overhead of querying post closure, even when nobody is
+	// listening, but the gain is not locking feeds.mu for the duration of the
+	// DB query and endcode. Most of the time a massage will arrive, only when
+	// somebody is listening.
+	data, err := db.GetPostCloseData(id)
+	if err != nil {
+		return
+	}
+	closeMsg, err := common.EncodeMessage(common.MessageClosePost, struct {
+		ID       uint64                 `json:"id"`
+		Links    map[uint64]common.Link `json:"links"`
+		Commands json.RawMessage        `json:"commands"`
+	}{
+		ID:       id,
+		Links:    data.Links,
+		Commands: data.Commands,
+	})
+	if err != nil {
+		return
+	}
+
+	sendIfExists(op, func(f *Feed) (err error) {
+		f.ClosePost(id, closeMsg)
+		return nil
+	})
+
+	// Propagate backlinks to any listeners. Also encode here to reduce feed.mu
+	// mutex contention.
+	source, err := json.Marshal(struct {
+		ID    uint64 `json:"id"`
+		OP    uint64 `json:"op"`
+		Board string `json:"board"`
+	}{
+		ID:    id,
+		OP:    op,
+		Board: board,
+	})
+	if err != nil {
+		return
+	}
+	for targetID, targetData := range data.Links {
+		var msg []byte
+		msg, err = common.EncodeMessage(common.MessageBacklink, struct {
+			ID     uint64 `json:"id"`
+			Source json.RawMessage
+		}{
+			ID:     targetID,
+			Source: json.RawMessage(source), // Reuse common encoded part
+		})
+		if err != nil {
+			return
+		}
+
+		// TODO: Propagate to board listeners without any thread listeners
+
+		sendIfExists(targetData.OP, func(f *Feed) error {
+			f.ClosePost(targetID, msg)
+			return nil
+		})
+	}
+
+	return
+}
 
 // Initialize internal runtime
 func Init() (err error) {
 	// TODO: Clean up feeds on thread and board deletion
+	// TODO: Repopulate feeds on DB disconnect
 
-	return db.Listen(pg_util.ListenOpts{
-		Channel: "post_moderated",
+	err = db.Listen(pg_util.ListenOpts{
+		Channel: "post.moderated",
 		OnMsg:   handlePostModeration,
+	})
+	if err != nil {
+		return
+	}
+	return db.Listen(pg_util.ListenOpts{
+		Channel: "post.closed",
+		OnMsg:   handlePostClosure,
 	})
 }
 
 // Separate function for testing
 func handlePostModeration(msg string) (err error) {
+	// TODO: Propagate to board listeners without any thread listeners
+
 	arr, err := db.SplitUint64s(msg, 2)
 	if err != nil {
 		return
 	}
 	op, logID := arr[0], arr[1]
+
+	// Query performed here to prevent feeds.mu contention
+	e, err := db.GetModLogEntry(logID)
+	if err != nil {
+		return
+	}
+	payload, err := common.EncodeMessage(common.MessageModeratePost, struct {
+		ID uint64 `json:"id"`
+		common.ModerationEntry
+	}{e.ID, e.ModerationEntry})
+	if err != nil {
+		return
+	}
+
 	return sendIfExists(op, func(f *Feed) (err error) {
-		e, err := db.GetModLogEntry(logID)
-		if err != nil {
-			return
-		}
-
-		msg, err := common.EncodeMessage(common.MessageModeratePost, struct {
-			ID uint64 `json:"id"`
-			common.ModerationEntry
-		}{e.ID, e.ModerationEntry})
-		if err != nil {
-			return
-		}
-
-		f._moderatePost(e.ID, msg, e.ModerationEntry)
+		f._moderatePost(e.ID, payload, e.ModerationEntry)
 		return
 	})
 }

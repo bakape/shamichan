@@ -132,10 +132,12 @@ func Init() (err error) {
 	}
 
 	err = listen("thread.updated", func(msg string) (err error) {
-		board, thread, page, err := db.SplitBoardIDPage(msg)
+		board, ints, err := db.SplitBoardAndInts(msg, 2)
 		if err != nil {
 			return
 		}
+		thread := uint64(ints[0])
+		page := int(ints[1])
 
 		evictByBoard(board)
 		threadFrontend.EvictByFunc(func(k recache.Key) (bool, error) {
@@ -155,10 +157,11 @@ func Init() (err error) {
 		return
 	}
 	return listen("thread.deleted", func(msg string) (err error) {
-		board, thread, err := db.SplitBoardAndID(msg)
+		board, ints, err := db.SplitBoardAndInts(msg, 1)
 		if err != nil {
 			return
 		}
+		thread := uint64(ints[0])
 
 		evictByBoard(board)
 		threadFrontend.EvictByFunc(func(k recache.Key) (bool, error) {

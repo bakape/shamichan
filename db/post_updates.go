@@ -2,10 +2,17 @@ package db
 
 import (
 	"database/sql"
+	"encoding/json"
 	"sort"
 
 	"github.com/bakape/meguca/common"
 )
+
+// Data populated on post closure
+type CloseData struct {
+	Links    map[uint64]common.Link
+	Commands json.RawMessage
+}
 
 // ClosePost closes an open post and validates and commits any links and
 // hash commands
@@ -15,8 +22,6 @@ func ClosePost(
 	links []uint64,
 	com []common.Command,
 ) (err error) {
-	// TODO: Propagate this with DB listener
-	// TODO: Propage backlinks through update trigger
 	return InTransaction(func(tx *sql.Tx) (err error) {
 		err = populateCommands(tx, board, com)
 		_, err = sq.Update("posts").

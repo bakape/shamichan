@@ -1,6 +1,7 @@
 package db
 
 import (
+	"bytes"
 	"database/sql"
 	"testing"
 
@@ -164,6 +165,7 @@ func TestReader(t *testing.T) {
 	t.Run("GetCatalog", testGetCatalog)
 	t.Run("GetPost", testGetPost)
 	t.Run("GetThread", testGetThread)
+	t.Run("GetPostCloseData", testGetPostCloseData)
 }
 
 func testGetPost(t *testing.T) {
@@ -483,4 +485,33 @@ func testGetThread(t *testing.T) {
 			}
 		})
 	}
+}
+
+func testGetPostCloseData(t *testing.T) {
+	t.Parallel()
+
+	res, err := GetPostCloseData(3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	test.AssertJSON(t, bytes.NewReader(res.Commands), []common.Command{
+		{
+			Type: common.Flip,
+			Flip: true,
+		},
+	})
+	test.AssertEquals(
+		t,
+		res,
+		CloseData{
+			Links: map[uint64]common.Link{
+				1: {
+					OP:    1,
+					Board: "a",
+				},
+			},
+			Commands: res.Commands,
+		},
+	)
 }

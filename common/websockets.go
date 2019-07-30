@@ -23,6 +23,7 @@ const (
 	MessageInsertImage
 	MessageSpoiler
 	MessageModeratePost
+	MessageBacklink
 )
 
 // >= 30 are miscellaneous and do not write to post models

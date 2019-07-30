@@ -1607,6 +1607,15 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
+	func(tx *sql.Tx) (err error) {
+		return loadSQL(tx,
+			"functions/encode_post",
+			"functions/get_links",
+			"functions/thread_board",
+			"triggers/mod_log",
+			"triggers/posts",
+		)
+	},
 }
 
 func createIndex(table string, columns ...string) string {
