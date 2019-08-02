@@ -27,20 +27,20 @@ type Thread struct {
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {
-	Editing    bool              `json:"editing"`
-	Sage       bool              `json:"sage"`
-	Auth       ModerationLevel   `json:"auth"`
+	Editing    bool              `json:"editing,omitempty"`
+	Sage       bool              `json:"sage,omitempty"`
+	Auth       ModerationLevel   `json:"auth,omitempty"`
 	Page       uint32            `json:"page"`
 	ID         uint64            `json:"id"`
 	Time       int64             `json:"time"`
 	Body       string            `json:"body"`
-	Flag       string            `json:"flag"`
-	Name       string            `json:"name"`
-	Trip       string            `json:"trip"`
-	Image      *Image            `json:"image"`
-	Links      map[uint64]Link   `json:"links"`
-	Commands   []Command         `json:"commands"`
-	Moderation []ModerationEntry `json:"moderation"`
+	Flag       string            `json:"flag,omitempty"`
+	Name       string            `json:"name,omitempty"`
+	Trip       string            `json:"trip,omitempty"`
+	Image      *Image            `json:"image,omitempty"`
+	Links      map[uint64]Link   `json:"links,omitempty"`
+	Commands   []Command         `json:"commands,omitempty"`
+	Moderation []ModerationEntry `json:"moderation,omitempty"`
 }
 
 // Return if post has been deleted by staff

@@ -24,6 +24,9 @@ func ClosePost(
 ) (err error) {
 	return InTransaction(func(tx *sql.Tx) (err error) {
 		err = populateCommands(tx, board, com)
+		if err != nil {
+			return
+		}
 		_, err = sq.Update("posts").
 			SetMap(map[string]interface{}{
 				"editing":  false,

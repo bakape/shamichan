@@ -29,6 +29,7 @@ require (
 	github.com/google/go-cmp v0.3.0
 	github.com/gorilla/websocket v1.4.0
 	github.com/lib/pq v1.2.0
+	github.com/onsi/gomega v1.5.0
 	github.com/otium/ytdl v0.5.1
 	github.com/rakyll/statik v0.1.6
 	github.com/sevlyar/go-daemon v0.1.4

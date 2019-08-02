@@ -9,7 +9,7 @@ import (
 )
 
 // Only select post updates should bump threads
-func TestNoBumpOnPostUpdate(t *testing.T) {
+func TestPostUpdates(t *testing.T) {
 	p := Post{
 		StandalonePost: common.StandalonePost{
 			OP:    1,
