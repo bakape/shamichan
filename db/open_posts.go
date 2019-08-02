@@ -12,13 +12,13 @@ var (
 	openPostBodyBuffer = make(map[uint64]string)
 
 	// Protects openPostBodyBuffer
-	openPostBodyBufferBuffer sync.Mutex
+	openPostBodyBufferMu sync.Mutex
 )
 
 // Flush any buffered open post bodies to DB
 func FlushOpenPostBodies() (err error) {
-	openPostBodyBufferBuffer.Lock()
-	defer openPostBodyBufferBuffer.Unlock()
+	openPostBodyBufferMu.Lock()
+	defer openPostBodyBufferMu.Unlock()
 
 	if len(openPostBodyBuffer) == 0 {
 		return
@@ -54,8 +54,8 @@ func FlushOpenPostBodies() (err error) {
 
 // Clear any buffered open post changes
 func clearOpenPostBuffer() {
-	openPostBodyBufferBuffer.Lock()
-	defer openPostBodyBufferBuffer.Unlock()
+	openPostBodyBufferMu.Lock()
+	defer openPostBodyBufferMu.Unlock()
 
 	for k := range openPostBodyBuffer {
 		delete(openPostBodyBuffer, k)
@@ -64,8 +64,8 @@ func clearOpenPostBuffer() {
 
 // Buffer open post body for eventual writing to DB
 func WriteOpenPostBody(id uint64, body string) {
-	openPostBodyBufferBuffer.Lock()
-	defer openPostBodyBufferBuffer.Unlock()
+	openPostBodyBufferMu.Lock()
+	defer openPostBodyBufferMu.Unlock()
 
 	openPostBodyBuffer[id] = body
 }

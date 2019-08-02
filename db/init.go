@@ -205,10 +205,7 @@ func CreateSystemAccount(tx *sql.Tx) (err error) {
 
 // ClearTables deletes the contents of specified DB tables. Only used for tests.
 func ClearTables(tables ...string) (err error) {
-	err = FlushOpenPostBodies() // Clear Open post cache between tests
-	if err != nil {
-		return
-	}
+	clearOpenPostBuffer() // Clear Open post buffer between tests
 	for _, t := range tables {
 		_, err = db.Exec(`DELETE FROM ` + t)
 		if err != nil {

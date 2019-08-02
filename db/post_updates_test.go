@@ -105,3 +105,36 @@ func TestPostUpdates(t *testing.T) {
 		})
 	}
 }
+
+func TestWriteOpenPostBody(t *testing.T) {
+	p := Post{
+		StandalonePost: common.StandalonePost{
+			OP:    1,
+			Board: "a",
+			Post: common.Post{
+				Editing: true,
+			},
+		},
+		IP: "::1",
+	}
+	insertPost(t, &p)
+
+	WriteOpenPostBody(p.ID, "old")
+	WriteOpenPostBody(p.ID, "new")
+	err := FlushOpenPostBodies()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var body string
+	err = sq.
+		Select("body").
+		From("posts").
+		Where("id = ?", p.ID).
+		QueryRow().
+		Scan(&body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	test.AssertEquals(t, body, "new")
+}

@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/bakape/meguca/test"
-
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/test"
 )
 
 func TestPopulateCommands(t *testing.T) {
