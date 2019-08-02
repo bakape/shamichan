@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
 )
 
@@ -34,27 +33,6 @@ func GetPostParenthood(id uint64) (board string, op uint64, err error) {
 func GetPostBoard(id uint64) (board string, err error) {
 	err = selectPost(id, "board").Scan(&board)
 	return
-}
-
-func getCounter(q squirrel.SelectBuilder) (uint64, error) {
-	var c sql.NullInt64
-	err := q.QueryRow().Scan(&c)
-	return uint64(c.Int64), err
-}
-
-// BoardCounter retrieves the progress counter of a board
-func BoardCounter(board string) (uint64, error) {
-	q := sq.Select("max(update_time) + count(*)").
-		From("threads").
-		Where("board = ?", board)
-	return getCounter(q)
-}
-
-// AllBoardCounter retrieves the progress counter of the /all/ board
-func AllBoardCounter() (uint64, error) {
-	q := sq.Select("max(update_time) + count(*)").
-		From("threads")
-	return getCounter(q)
 }
 
 // WritePost writes a post struct to the database. Only used in tests and

@@ -158,14 +158,6 @@ type Thread struct {
 	Subject, Board       string
 }
 
-// ThreadCounter retrieves the progress counter of a thread
-func ThreadCounter(id uint64) (uint64, error) {
-	q := sq.Select("update_time").
-		From("threads").
-		Where("id = ?", id)
-	return getCounter(q)
-}
-
 // ValidateOP confirms the specified thread exists on specific board
 func ValidateOP(id uint64, board string) (valid bool, err error) {
 	err = sq.Select("true").
