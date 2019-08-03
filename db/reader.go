@@ -3,11 +3,8 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
-	"strings"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 )
 
 var (
@@ -96,46 +93,16 @@ func ensureArray(buf *[]byte) {
 
 // GetAllBoardCatalog retrieves all threads for the "/all/" meta-board
 func GetAllBoardCatalog() (buf []byte, err error) {
-	q := sq.
+	err = sq.
 		Select(
 			`jsonb_agg(
-			get_thread(id, -6) - 'page'
-			order by bump_time desc
-		)`,
+				get_thread(id, -6) - 'page'
+				order by bump_time desc
+			)`,
 		).
-		From("threads")
-
-	// Hide threads from NSFW boards, if enabled
-	if config.Get().HideNSFW {
-		// TODO:  Move this to plpgsql as congig reads from the database.
-		// TODO: Test this
-
-		var w strings.Builder
-		first := true
-		for _, b := range config.GetAllBoardConfigs() {
-			if !b.NSFW {
-				continue
-			}
-			if first {
-				w.WriteByte('(')
-				first = false
-			} else {
-				w.WriteByte(',')
-			}
-			fmt.Fprintf(&w, `'%s'`, b.ID)
-		}
-		if !first {
-			// Don't allocate for empty filter set
-			w.WriteByte(')')
-		}
-
-		if !first {
-			// Something actually written
-			q = q.Where("board not in " + w.String())
-		}
-	}
-
-	err = q.QueryRow().Scan(&buf)
+		From("threads").
+		QueryRow().
+		Scan(&buf)
 	ensureArray(&buf)
 	return
 }
