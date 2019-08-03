@@ -116,7 +116,6 @@ func GetBoard(board string, page uint32) (data []byte, err error) {
 
 // Retrieves all threads for the "/all/" meta-board on a specific page
 func GetAllBoard(page uint32) (board []byte, err error) {
-	// TODO: Hide threads from NSFW boards, if enabled
 	err = db.QueryRow(`select get_all_board($1)`, page).Scan(&board)
 	castNoRows(&board, &err)
 	return
@@ -141,6 +140,8 @@ func GetThreadMeta(thread uint64) (
 	moderation = make(map[uint64][]common.ModerationEntry)
 
 	err = InTransaction(func(tx *sql.Tx) (err error) {
+		// TODO: Move this to SQL or PL/pgSQL
+
 		var r *sql.Rows
 		defer func() {
 			if r != nil {
