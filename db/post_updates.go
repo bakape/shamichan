@@ -69,8 +69,8 @@ func writeLinks(tx *sql.Tx, source uint64, links []uint64) (err error) {
 
 	q, err := tx.Prepare(
 		`insert into links (source, target)
-			select $1, $2
-			where exists (select from posts p where p.id = $2)`,
+		select $1, $2
+		where exists (select from posts p where p.id = $2)`,
 	)
 	if err != nil {
 		return

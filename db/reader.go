@@ -24,13 +24,16 @@ type OpenPostMeta struct {
 }
 
 // Populate OpenPostMeta from post data
-func OpenPostMetaFromPost(p common.Post) OpenPostMeta {
-	return OpenPostMeta{
-		HasImage:  p.Image != nil,
-		Spoilered: p.Image != nil && p.Image.Spoiler,
-		Page:      p.Page,
-		Body:      p.Body,
+func OpenPostMetaFromPost(p common.Post) (m OpenPostMeta) {
+	m = OpenPostMeta{
+		Page: p.Page,
+		Body: p.Body,
 	}
+	if p.Image != nil {
+		m.HasImage = true
+		m.Spoilered = p.Image.Spoiler
+	}
+	return
 }
 
 // GetThread retrieves public thread data from the database.

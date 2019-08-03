@@ -8,10 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/bakape/pg_util"
-
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/pg_util"
 )
 
 var (

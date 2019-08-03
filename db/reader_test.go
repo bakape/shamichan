@@ -515,3 +515,26 @@ func testGetPostCloseData(t *testing.T) {
 		},
 	)
 }
+
+func TestOpenPostMetaFromPost(t *testing.T) {
+	t.Parallel()
+
+	test.AssertEquals(
+		t,
+		OpenPostMetaFromPost(
+			common.Post{
+				Page: 1,
+				Body: "foo",
+				Image: &common.Image{
+					Spoiler: true,
+				},
+			},
+		),
+		OpenPostMeta{
+			Page:      1,
+			Body:      "foo",
+			HasImage:  true,
+			Spoilered: true,
+		},
+	)
+}
