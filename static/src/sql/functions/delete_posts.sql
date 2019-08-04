@@ -1,5 +1,7 @@
 create or replace function delete_posts(ids bigint[], account text)
-returns void as $$
+returns void
+language plpgsql strict
+as $$
 declare
 	board text;
 	checked_boards jsonb = '{}';
@@ -19,13 +21,13 @@ begin
 
 		-- Assert user can delete posts on board, if not already checked
 		if not checked_boards?board then
-			perform assert_can_perform(account, board, 1::smallint);
+			perform call bump_thread(account, board, 1::smallint);
 			checked_boards = checked_boards || jsonb_build_object(board, true);
 		end if;
 
 		-- Delete post
 		insert into mod_log (type, board, post_id, "by")
-			values (2, board, post_id, account);
+			values ('delete_post', board, post_id, account);
 	end loop;
 end;
-$$ language plpgsql;
+$$;

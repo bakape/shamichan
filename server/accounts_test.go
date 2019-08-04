@@ -43,7 +43,7 @@ func writeSampleUser(t *testing.T) {
 func writeAccount(t *testing.T, id string, hash []byte) {
 	t.Helper()
 
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
 		return db.RegisterAccount(tx, id, hash)
 	})
 	if err != nil {

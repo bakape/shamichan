@@ -1,5 +1,7 @@
 create or replace function after_mod_log_insert()
-returns trigger as $$
+returns trigger
+language plpgsql
+as $$
 declare
 	op bigint;
 begin
@@ -20,4 +22,4 @@ begin
 	end if;
 	return null;
 end;
-$$ language plpgsql;
+$$;

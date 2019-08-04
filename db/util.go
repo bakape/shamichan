@@ -1,44 +1,21 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/pg_util"
 	"github.com/go-playground/log"
+	"github.com/jackc/pgx"
 	"github.com/lib/pq"
 )
 
-type rowScanner interface {
-	Scan(dest ...interface{}) error
-}
-
-// InTransaction runs a function inside a transaction and handles comminting and rollback on error.
-// readOnly: the DBMS can optimise read-only transactions for better concurrency
-func InTransaction(fn func(*sql.Tx) error) (err error) {
+// InTransaction runs a function inside a transaction and handles comminting and
+// rollback on error.
+func InTransaction(fn func(*pgx.Tx) error) (err error) {
 	return pg_util.InTransaction(db, fn)
-}
-
-// Run fn on all returned rows in a query
-func queryAll(q squirrel.SelectBuilder, fn func(r *sql.Rows) error,
-) (err error) {
-	r, err := q.Query()
-	if err != nil {
-		return
-	}
-	defer r.Close()
-
-	for r.Next() {
-		err = fn(r)
-		if err != nil {
-			return
-		}
-	}
-	return r.Err()
 }
 
 // IsConflictError returns if an error is a unique key conflict error
@@ -68,16 +45,6 @@ func Listen(opts pg_util.ListenOpts) (err error) {
 	opts.ConnectionURL = connectionURL
 	opts.OnError = logListenError
 	return pg_util.Listen(opts)
-}
-
-// Execute all SQL statement strings and return on first error, if any
-func execAll(tx *sql.Tx, q ...string) error {
-	for _, q := range q {
-		if _, err := tx.Exec(q); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // PostgreSQL notification message parse error
@@ -136,13 +103,8 @@ fail:
 
 // Try to extract an exception message, if err is *pq.Error
 func extractException(err error) string {
-	if err == nil {
-		return ""
-	}
-
-	pqErr, ok := err.(*pq.Error)
-	if ok {
-		return pqErr.Message
+	if err, ok := err.(*pgx.PgError); ok {
+		return err.Message
 	}
 	return ""
 }

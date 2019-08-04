@@ -31,7 +31,7 @@ func FlushOpenPostBodies() (err error) {
 	}
 	sort.Sort(toWrite)
 
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *pgx.Tx) (err error) {
 		q, err := tx.Prepare(
 			`update posts
 			set body = $1

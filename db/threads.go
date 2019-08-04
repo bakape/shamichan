@@ -113,7 +113,6 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 			postCountCacheMu.Unlock()
 			return
 		},
-		OnConnectionLoss: readThreadPostCounts,
 	})
 	if err != nil {
 		return
@@ -145,7 +144,6 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 			postCountCacheMu.Unlock()
 			return
 		},
-		OnConnectionLoss: readThreadPostCounts,
 	})
 }
 
@@ -167,7 +165,7 @@ func ValidateOP(id uint64, board string) (valid bool, err error) {
 		}).
 		QueryRow().
 		Scan(&valid)
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		return false, nil
 	}
 	return
@@ -175,7 +173,7 @@ func ValidateOP(id uint64, board string) (valid bool, err error) {
 
 // InsertThread inserts a new thread into the database.
 // Sets ID, OP and time on inserted post.
-func InsertThread(tx *sql.Tx, subject string, p *Post) (err error) {
+func InsertThread(tx *pgx.Tx, subject string, p *Post) (err error) {
 	err = sq.Insert("threads").
 		Columns("board", "subject").
 		Values(p.Board, subject).
@@ -190,7 +188,7 @@ func InsertThread(tx *sql.Tx, subject string, p *Post) (err error) {
 }
 
 // WriteThread writes a thread and it's OP to the database. Only used for tests.
-func WriteThread(tx *sql.Tx, t Thread, p Post) (err error) {
+func WriteThread(tx *pgx.Tx, t Thread, p Post) (err error) {
 	_, err = sq.
 		Insert("threads").
 		Columns("board", "id", "update_time", "bump_time", "subject").

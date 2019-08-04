@@ -56,7 +56,7 @@ func TestInsertThread(t *testing.T) {
 		if _, err := config.SetBoardConfigs(c.BoardConfigs); err != nil {
 			t.Fatal(err)
 		}
-		err := db.InTransaction(func(tx *sql.Tx) error {
+		err := db.InTransaction(func(tx *pgx.Tx) error {
 			return db.WriteBoard(tx, c)
 		})
 		if err != nil {
@@ -93,7 +93,7 @@ func TestInsertThread(t *testing.T) {
 func testCreateThread(t *testing.T) {
 	writeSampleImage(t)
 	var token string
-	err := db.InTransaction(func(tx *sql.Tx) (err error) {
+	err := db.InTransaction(func(tx *pgx.Tx) (err error) {
 		token, err = db.NewImageToken(tx, stdJPEG.SHA1)
 		return
 	})
@@ -285,7 +285,7 @@ func TestPostCreation(t *testing.T) {
 	setBoardConfigs(t, false)
 	writeSampleImage(t)
 	var token string
-	err := db.InTransaction(func(tx *sql.Tx) (err error) {
+	err := db.InTransaction(func(tx *pgx.Tx) (err error) {
 		token, err = db.NewImageToken(tx, stdJPEG.SHA1)
 		return
 	})

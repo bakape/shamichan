@@ -37,7 +37,7 @@ func GetPostBoard(id uint64) (board string, err error) {
 
 // WritePost writes a post struct to the database. Only used in tests and
 // migrations.
-func WritePost(tx *sql.Tx, p Post) (err error) {
+func WritePost(tx *pgx.Tx, p Post) (err error) {
 	// Don't store empty strings of these in the database. Zero value != NULL.
 	var (
 		img, ip *string
@@ -83,7 +83,7 @@ func WritePost(tx *sql.Tx, p Post) (err error) {
 // status.
 // Thread OPs must have their post ID set to the thread ID.
 // Any images are to be inserted in a separate call.
-func InsertPost(tx *sql.Tx, p *Post) (err error) {
+func InsertPost(tx *pgx.Tx, p *Post) (err error) {
 	args := make([]interface{}, 0, 12)
 	args = append(args,
 		p.Editing, p.Board, p.OP, p.Body, p.Flag,
@@ -122,7 +122,7 @@ func InsertPost(tx *sql.Tx, p *Post) (err error) {
 // GetPostPassword retrieves a post's modification password
 func GetPostPassword(id uint64) (p []byte, err error) {
 	err = sq.Select("password").From("posts").Where("id = ?", id).Scan(&p)
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		err = nil
 	}
 	return

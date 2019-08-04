@@ -65,7 +65,7 @@ func (c commandRow) Value() (driver.Value, error) {
 // Populate command results that need DB access. Commands results that don't
 // need DB access are assigned in the parser.
 func populateCommands(
-	tx *sql.Tx,
+	tx *pgx.Tx,
 	board string,
 	com []common.Command,
 ) (err error) {

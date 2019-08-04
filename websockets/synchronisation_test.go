@@ -228,7 +228,7 @@ func TestReclaimPost(t *testing.T) {
 			Password: hash,
 		},
 	}
-	err = db.InTransaction(func(tx *sql.Tx) error {
+	err = db.InTransaction(func(tx *pgx.Tx) error {
 		for _, p := range posts {
 			err := db.WritePost(tx, p)
 			if err != nil {

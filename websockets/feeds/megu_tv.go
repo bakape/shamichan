@@ -55,7 +55,7 @@ func (f *tvFeed) start(board string) (err error) {
 					needFetch = true
 				} else {
 					var exists bool
-					err = db.InTransaction(func(tx *sql.Tx) (err error) {
+					err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 						exists, err = db.ImageExists(tx, f.playList[1].SHA1)
 						return
 					})

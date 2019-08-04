@@ -1,5 +1,7 @@
 create or replace function spoiler_images(ids bigint[], account text)
-returns void as $$
+returns void
+language plpgsql strict
+as $$
 declare
 	board text;
 	checked_boards jsonb = '{}';
@@ -15,7 +17,7 @@ begin
 		end if;
 
 		if not checked_boards?board then
-			perform assert_can_perform(account, board, 1::smallint);
+			perform call bump_thread(account, board, 1::smallint);
 			checked_boards = checked_boards || jsonb_build_object(board, true);
 		end if;
 
@@ -23,7 +25,7 @@ begin
 			set spoiler = true
 			where p.id = post_id;
 		insert into mod_log (type, board, post_id, "by")
-			values (4, board, post_id, account);
+			values ('spoiler_image', board, post_id, account);
 	end loop;
 end;
-$$ language plpgsql;
+$$;

@@ -1,6 +1,8 @@
 -- Fetch a page of a board index
 create or replace function get_board(board varchar, page int)
-returns jsonb as $$
+returns jsonb
+language plpgsql stable parallel safe strict
+as $$
 declare
 	data jsonb;
 	max_page int;
@@ -34,11 +36,13 @@ begin
 		'threads', data
 	);
 end;
-$$ language plpgsql;
+$$;
 
 -- Fetch a page of the /all/ board index
 create or replace function get_all_board(page int)
-returns jsonb as $$
+returns jsonb
+language plpgsql stable parallel safe strict
+as $$
 declare
 	data jsonb;
 	max_page int;
@@ -69,4 +73,4 @@ begin
 		'threads', data
 	);
 end;
-$$ language plpgsql;
+$$;

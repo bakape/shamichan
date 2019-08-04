@@ -74,7 +74,7 @@ func TestServePrivateBoardConfigs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = db.InTransaction(func(tx *sql.Tx) error {
+	err = db.InTransaction(func(tx *pgx.Tx) error {
 		return db.WriteBoard(tx, conf)
 	})
 	if err != nil {
@@ -112,7 +112,7 @@ func TestBoardConfiguration(t *testing.T) {
 			Eightball: []string{},
 		},
 	}
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
 		return db.WriteBoard(tx, init)
 	})
 	if err != nil {
@@ -285,7 +285,7 @@ func writeSampleBoard(t testing.TB) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
 		return db.WriteBoard(tx, b)
 	})
 	if err != nil {
@@ -298,7 +298,7 @@ func writeSampleBoard(t testing.TB) {
 
 func writeSampleBoardOwner(t *testing.T) {
 	t.Helper()
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
 		return db.WriteStaff(tx, "a", map[common.ModerationLevel][]string{
 			common.BoardOwner: {"user1"},
 		})
@@ -390,7 +390,7 @@ func TestServePrivateServerConfigs(t *testing.T) {
 func writeAdminAccount(t *testing.T) {
 	t.Helper()
 
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
 		return db.CreateAdminAccount(tx)
 	})
 	if err != nil {
@@ -447,7 +447,7 @@ func TestDeleteBoard(t *testing.T) {
 func writeAllBoard(t *testing.T) {
 	t.Helper()
 
-	err := db.InTransaction(func(tx *sql.Tx) (err error) {
+	err := db.InTransaction(func(tx *pgx.Tx) (err error) {
 		err = db.WriteBoard(tx, db.BoardConfigs{
 			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
 			Created:      time.Now().UTC(),
@@ -602,7 +602,7 @@ func writeSampleThread(t *testing.T) {
 			Board: "a",
 		},
 	}
-	err := db.InTransaction(func(tx *sql.Tx) (err error) {
+	err := db.InTransaction(func(tx *pgx.Tx) (err error) {
 		return db.WriteThread(tx, thread, op)
 	})
 	if err != nil {
@@ -619,7 +619,7 @@ func writeExtraSampleBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := db.InTransaction(func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
 		return db.WriteBoard(tx, cConfigs)
 	})
 	if err != nil {
@@ -643,7 +643,7 @@ func writeExtraSampleBoard(t *testing.T) {
 		},
 		IP: "::1",
 	}
-	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 		return db.WriteThread(tx, thread, op)
 	})
 	if err != nil {
@@ -672,7 +672,7 @@ func writeExtraSampleBoard(t *testing.T) {
 			IP: "::1",
 		},
 	}
-	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 		for _, p := range posts {
 			err = db.WritePost(tx, p)
 			if err != nil {

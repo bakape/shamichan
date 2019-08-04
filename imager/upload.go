@@ -159,7 +159,7 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 		}
 		sha1 := string(buf)
 
-		err = db.InTransaction(func(tx *sql.Tx) (err error) {
+		err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 			exists, err := db.ImageExists(tx, sha1)
 			if err != nil {
 				return
@@ -324,7 +324,7 @@ func newThumbnail(f multipart.File, SHA1 string) (
 
 	// Being done in one transaction prevents the image DB record from getting
 	// garbage-collected between the calls
-	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 		var thumbR io.ReadSeeker
 		if thumb != nil {
 			thumbR = bytes.NewReader(thumb)

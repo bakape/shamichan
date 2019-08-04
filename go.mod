@@ -12,7 +12,7 @@ require (
 	github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c
 	github.com/bakape/captchouli v1.1.5
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
-	github.com/bakape/pg_util v0.2.0
+	github.com/bakape/pg_util v0.4.0
 	github.com/bakape/recache v0.0.0-20190524102257-67e46453405b
 	github.com/bakape/thumbnailer v0.0.0-20190501133407-c89db19cab54
 	github.com/chai2010/webp v1.1.0
@@ -27,15 +27,19 @@ require (
 	github.com/go-playground/log v6.3.0+incompatible
 	github.com/google/go-cmp v0.3.0
 	github.com/gorilla/websocket v1.4.0
+	github.com/jackc/pgx v3.5.0+incompatible
 	github.com/klauspost/compress v1.4.1 // indirect
+	github.com/kr/pty v1.1.8 // indirect
 	github.com/lib/pq v1.2.0
 	github.com/onsi/gomega v1.5.0
 	github.com/otium/ytdl v0.5.1
 	github.com/rakyll/statik v0.1.6
 	github.com/ulikunitz/xz v0.5.6
 	github.com/valyala/quicktemplate v1.0.2
-	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
-	golang.org/x/text v0.3.2 // indirect
+	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+	golang.org/x/net v0.0.0-20190724013045-ca1201d0de80 // indirect
+	golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa // indirect
+	golang.org/x/tools v0.0.0-20190802220118-1d1727260058 // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/mholt/archiver.v2 v2.1.0
 	gopkg.in/yaml.v2 v2.2.2 // indirect

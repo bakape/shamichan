@@ -1,6 +1,8 @@
 -- Encode post row to json
 create or replace function encode_post(p posts)
-returns jsonb as $$
+returns jsonb
+language sql stable parallel safe strict
+as $$
 declare
 	data jsonb;
 	tmp jsonb;
@@ -106,4 +108,4 @@ begin
 
 	return data;
 end;
-$$ language plpgsql;
+$$;

@@ -13,44 +13,34 @@ func loadAssets(
 	table string,
 	load func(board string, files []assets.File),
 ) (err error) {
-	loadAllBoards := func() (err error) {
-		byBoard := make(map[string][]assets.File, 64)
-		err = queryAll(
-			sq.Select("board", "data", "mime").From(table),
-			func(r *sql.Rows) (err error) {
-				var (
-					board string
-					file  assets.File
-				)
-				err = r.Scan(&board, &file.Data, &file.Mime)
-				if err != nil {
-					return
-				}
-				byBoard[board] = append(byBoard[board], file)
+	byBoard := make(map[string][]assets.File, 64)
+	err = queryAll(
+		sq.Select("board", "data", "mime").From(table),
+		func(r *sql.Rows) (err error) {
+			var (
+				board string
+				file  assets.File
+			)
+			err = r.Scan(&board, &file.Data, &file.Mime)
+			if err != nil {
 				return
-			},
-		)
-		if err != nil {
+			}
+			byBoard[board] = append(byBoard[board], file)
 			return
-		}
-
-		for board, files := range byBoard {
-			load(board, files)
-		}
-
+		},
+	)
+	if err != nil {
 		return
 	}
 
-	err = loadAllBoards()
-	if err != nil {
-		return
+	for board, files := range byBoard {
+		load(board, files)
 	}
 
 	return Listen(pg_util.ListenOpts{
 		Channel:          table + ".updated",
 		DebounceInterval: time.Second,
 		OnMsg:            updateAssets(table, load),
-		OnConnectionLoss: loadAllBoards,
 	})
 }
 
@@ -109,7 +99,7 @@ func setLoadingAnimation(board string, files []assets.File) {
 
 // Overwrite any existing assets in the DB
 func setAssets(table, board string, files []assets.File) error {
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *pgx.Tx) (err error) {
 		_, err = sq.
 			Delete(table).
 			Where("board = ?", board).

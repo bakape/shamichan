@@ -5,13 +5,13 @@
 -- 	detected computed.
 -- page: page of the thread to bump. Used for cache invalidation.
 -- 	Default bumps all pages.
-create or replace function bump_thread(
+create or replace procedure bump_thread(
 	op bigint,
 	bump_time bool = false,
 	board text = null,
 	page int = -2
 )
-returns void
+language plpgsql
 as $$
 declare
 	now_unix bigint = extract(epoch from now());
@@ -35,4 +35,4 @@ begin
 	end if;
 	perform pg_notify('thread.updated',	concat_ws(',', board, op, page));
 end;
-$$ language plpgsql;
+$$;

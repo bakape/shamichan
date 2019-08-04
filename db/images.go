@@ -34,12 +34,12 @@ type Video struct {
 
 // WriteImage writes a processed image record to the DB. Only used in tests.
 func WriteImage(i common.ImageCommon) error {
-	return InTransaction(func(tx *sql.Tx) error {
+	return InTransaction(func(tx *pgx.Tx) error {
 		return writeImageTx(tx, i)
 	})
 }
 
-func writeImageTx(tx *sql.Tx, i common.ImageCommon) (err error) {
+func writeImageTx(tx *pgx.Tx, i common.ImageCommon) (err error) {
 	_, err = sq.
 		Insert("images").
 		Columns(
@@ -58,7 +58,7 @@ func writeImageTx(tx *sql.Tx, i common.ImageCommon) (err error) {
 
 // NewImageToken inserts a new image allocation token into the DB and returns
 // it's ID
-func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
+func NewImageToken(tx *pgx.Tx, SHA1 string) (token string, err error) {
 	expires := time.Now().Add(tokenTimeout).UTC()
 
 	// Loop in case there is a primary key collision
@@ -86,12 +86,12 @@ func NewImageToken(tx *sql.Tx, SHA1 string) (token string, err error) {
 }
 
 // ImageExists returns, if image exists
-func ImageExists(tx *sql.Tx, sha1 string) (exists bool, err error) {
+func ImageExists(tx *pgx.Tx, sha1 string) (exists bool, err error) {
 	err = sq.Select("1").
 		From("images").
 		Where("sha1 = ?", sha1).
 		Scan(&exists)
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		err = nil
 	}
 	return
@@ -99,7 +99,7 @@ func ImageExists(tx *sql.Tx, sha1 string) (exists bool, err error) {
 
 // AllocateImage allocates an image's file resources to their respective served
 // directories and write its data to the database
-func AllocateImage(tx *sql.Tx, src, thumb io.ReadSeeker, img common.ImageCommon,
+func AllocateImage(tx *pgx.Tx, src, thumb io.ReadSeeker, img common.ImageCommon,
 ) (
 	err error,
 ) {
@@ -131,7 +131,7 @@ func HasImage(id uint64) (has bool, err error) {
 		Where("id = ? and SHA1 IS NOT NULL", id).
 		QueryRow().
 		Scan(&has)
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		err = nil
 	}
 	return
@@ -139,7 +139,7 @@ func HasImage(id uint64) (has bool, err error) {
 
 // InsertImage insert and image into and existing open post and return image
 // JSON
-func InsertImage(tx *sql.Tx, postID uint64, token, name string, spoiler bool,
+func InsertImage(tx *pgx.Tx, postID uint64, token, name string, spoiler bool,
 ) (
 	json []byte, err error,
 ) {

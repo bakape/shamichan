@@ -22,7 +22,7 @@ func ClosePost(
 	links []uint64,
 	com []common.Command,
 ) (err error) {
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *pgx.Tx) (err error) {
 		err = populateCommands(tx, board, com)
 		if err != nil {
 			return
@@ -46,7 +46,7 @@ func ClosePost(
 }
 
 // Write post links to database. Invalid links are simply not written
-func writeLinks(tx *sql.Tx, source uint64, links []uint64) (err error) {
+func writeLinks(tx *pgx.Tx, source uint64, links []uint64) (err error) {
 	if len(links) == 0 {
 		return
 	}

@@ -42,7 +42,7 @@ type triggerDescriptor struct {
 }
 
 // Register triggers and trigger functions for each board in triggers
-func registerTriggers(tx *sql.Tx, triggers map[string][]triggerDescriptor,
+func registerTriggers(tx *pgx.Tx, triggers map[string][]triggerDescriptor,
 ) (err error) {
 	for table, desc := range triggers {
 		err = loadSQL(tx, "triggers/"+table)

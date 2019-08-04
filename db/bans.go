@@ -19,7 +19,7 @@ var (
 	bansMu   sync.RWMutex
 )
 
-func writeBan(tx *sql.Tx, ip string, entry auth.ModLogEntry) (err error) {
+func writeBan(tx *pgx.Tx, ip string, entry auth.ModLogEntry) (err error) {
 	_, err = sq.Insert("bans").
 		Columns("ip", "board", "forPost", "reason", "by", "expires").
 		Values(ip, entry.Board, entry.ID, entry.Data, entry.By,
@@ -35,12 +35,12 @@ func writeBan(tx *sql.Tx, ip string, entry auth.ModLogEntry) (err error) {
 
 // Automatically bans an IP
 func SystemBan(ip, reason string, length time.Duration) (err error) {
-	return InTransaction(func(tx *sql.Tx) error {
+	return InTransaction(func(tx *pgx.Tx) error {
 		return systemBanTx(tx, ip, reason, length)
 	})
 }
 
-func systemBanTx(tx *sql.Tx, ip, reason string, length time.Duration,
+func systemBanTx(tx *pgx.Tx, ip, reason string, length time.Duration,
 ) (
 	err error,
 ) {
@@ -70,14 +70,14 @@ func Ban(board, reason, by string, length time.Duration, id uint64,
 		if ip == "" { // Post already cleared of IP
 			return
 		}
-	case sql.ErrNoRows:
+	case pgx.ErrNoRows:
 		return nil
 	default:
 		return
 	}
 
 	// Write ban messages to posts and ban table
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	err = InTransaction(func(tx *pgx.Tx) (err error) {
 		return writeBan(tx, ip, auth.ModLogEntry{
 			ModerationEntry: common.ModerationEntry{
 				Type:   common.BanPost,
@@ -99,7 +99,7 @@ func Ban(board, reason, by string, length time.Duration, id uint64,
 
 // Unban lifts a ban from a specific post on a specific board
 func Unban(board string, id uint64, by string) error {
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *pgx.Tx) (err error) {
 		_, err = sq.Delete("bans").
 			Where("board = ? and forPost = ?", board, id).
 			RunWith(tx).
@@ -129,7 +129,6 @@ func loadBans() (err error) {
 		OnMsg: func(_ string) error {
 			return RefreshBanCache()
 		},
-		OnConnectionLoss: RefreshBanCache,
 	})
 }
 

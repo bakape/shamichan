@@ -6,6 +6,7 @@ package static
 
 import (
 	"net/http"
+	"path/filepath"
 
 	_ "github.com/bakape/meguca/static/statik"
 	"github.com/rakyll/statik/fs"
@@ -27,4 +28,10 @@ func init() {
 // Read file from embedded file system into buffer
 func ReadFile(path string) (buf []byte, err error) {
 	return fs.ReadFile(FS, path)
+}
+
+// Walk walks the file tree rooted at root,
+// calling fn for each file or directory in the tree, including root.
+func Walk(root string, fn filepath.WalkFunc) (err error) {
+	return fs.Walk(FS, root, fn)
 }

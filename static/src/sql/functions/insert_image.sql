@@ -1,7 +1,9 @@
 -- Inserts image into existing post and return image json
 create function insert_image(post_id bigint, token char(86), name varchar(200),
 	spoiler bool)
-returns jsonb as $$
+returns jsonb
+language plpgsql strict
+as $$
 declare
 	image_id char(40);
 	data jsonb;
@@ -24,4 +26,4 @@ begin
 		'spoiler', spoiler,
 		'name', name);
 end;
-$$ language plpgsql;
+$$;

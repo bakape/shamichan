@@ -1,11 +1,17 @@
 -- Assert account can perform moderation action
-create function assert_can_perform(account text, board text, level smallint)
-returns void as $$
+create or replace function assert_can_perform(
+	account text,
+	board text,
+	level smallint
+)
+returns void
+language plpgsql stable parallel safe strict
+as $$
 declare
 	can bool;
 begin
 	select into can exists (
-		select 1
+		select
 		from staff s
 		where s.board in ('all', assert_can_perform.board)
 			and s.position >= assert_can_perform.level
@@ -15,4 +21,4 @@ begin
 		raise exception 'access denied';
 	end if;
 end;
-$$ language plpgsql;
+$$;

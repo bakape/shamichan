@@ -1,12 +1,44 @@
 package common
 
 var (
-	modLevelStrings = [...]string{"", "janitors", "moderators", "owners",
-		"admin"}
+	modLevelStr = [...]string{
+		"",
+		"janitors",
+		"moderators",
+		"owners",
+		"admin",
+	}
+	modActionStr = [...]string{
+		"ban_post",
+		"unban_post",
+		"delete_post",
+		"delete_image",
+		"spoiler_image",
+		"lock_thread",
+		"delete_board",
+		"meido_vision",
+		"purge_post",
+		"shadow_bin_post",
+	}
 )
 
 // ModerationAction is an action performable by moderation staff
 type ModerationAction uint8
+
+func (m ModerationAction) MarshalText() (text []byte, err error) {
+	return []byte(modActionStr[m]), nil
+}
+
+func (m *ModerationAction) UnmarshalText(text []byte) error {
+	s := string(text)
+	for i, a := range modActionStr {
+		if s == a {
+			*m = ModerationAction(i)
+			return nil
+		}
+	}
+	return ErrInvalidEnum(s)
+}
 
 // All supported moderation actions
 const (
@@ -39,7 +71,22 @@ func (l ModerationLevel) String() string {
 	if l < Janitor {
 		return ""
 	}
-	return modLevelStrings[int(l)]
+	return modLevelStr[int(l)]
+}
+
+func (m ModerationLevel) MarshalText() (text []byte, err error) {
+	return []byte(modLevelStr[m]), nil
+}
+
+func (m *ModerationLevel) UnmarshalText(text []byte) error {
+	s := string(text)
+	for i, a := range modActionStr {
+		if s == a {
+			*m = ModerationLevel(i)
+			return nil
+		}
+	}
+	return ErrInvalidEnum(s)
 }
 
 // All available moderation levels

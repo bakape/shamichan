@@ -51,7 +51,7 @@ func TestAllocateImage(t *testing.T) {
 		FileType: common.JPEG,
 	}
 
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return AllocateImage(tx, files[0], files[1], std)
 	})
 	if err != nil {
@@ -134,7 +134,7 @@ func TestAllocateImage(t *testing.T) {
 			t.Fatal(err)
 		}
 		var exists bool
-		err = InTransaction(func(tx *sql.Tx) (err error) {
+		err = InTransaction(func(tx *pgx.Tx) (err error) {
 			exists, err = ImageExists(tx, id)
 			return
 		})
@@ -150,7 +150,7 @@ func TestAllocateImage(t *testing.T) {
 func newImageToken(t *testing.T, sha1 string) (token string) {
 	t.Helper()
 
-	err := InTransaction(func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *pgx.Tx) (err error) {
 		token, err = NewImageToken(tx, sha1)
 		return
 	})
@@ -180,7 +180,7 @@ func TestInsertImage(t *testing.T) {
 	var buf []byte
 
 	insert := func() error {
-		return InTransaction(func(tx *sql.Tx) (err error) {
+		return InTransaction(func(tx *pgx.Tx) (err error) {
 			buf, err = InsertImage(tx, postID, token, std.Name, std.Spoiler)
 			return
 		})
@@ -218,7 +218,7 @@ func insertSampleImage(t *testing.T) {
 	t.Helper()
 
 	token := newImageToken(t, assets.StdJPEG.SHA1)
-	err := InTransaction(func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *pgx.Tx) (err error) {
 		std := assets.StdJPEG
 		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler)
 		return
@@ -264,7 +264,7 @@ func TestVideoPlaylist(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	token := newImageToken(t, std.SHA1)
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	err = InTransaction(func(tx *pgx.Tx) (err error) {
 		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler)
 		return
 	})
@@ -289,7 +289,7 @@ func TestImageExists(t *testing.T) {
 	assertTableClear(t, "images")
 
 	var exists bool
-	err := InTransaction(func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *pgx.Tx) (err error) {
 		exists, err = ImageExists(tx, assets.StdJPEG.SHA1)
 		return
 	})
@@ -300,7 +300,7 @@ func TestImageExists(t *testing.T) {
 
 	writeSampleImage(t)
 
-	err = InTransaction(func(tx *sql.Tx) (err error) {
+	err = InTransaction(func(tx *pgx.Tx) (err error) {
 		exists, err = ImageExists(tx, assets.StdJPEG.SHA1)
 		return
 	})

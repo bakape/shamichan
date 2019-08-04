@@ -1,71 +1,57 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"strconv"
 	"time"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
+	"github.com/jackc/pgx"
 )
 
 // Write moderation action to board-level and post-level logs
-func logModeration(tx *sql.Tx, e auth.ModLogEntry) (err error) {
-	_, err = sq.Insert("mod_log").
-		Columns("type", "board", "post_id", "by", "length", "data").
-		Values(e.Type, e.Board, e.ID, e.By, e.Length, e.Data).
-		RunWith(tx).
-		Exec()
+func logModeration(tx *pgx.Tx, e auth.ModLogEntry) (err error) {
+	_, err = tx.Exec(
+		"log_moderation",
+		e.Type, e.Board, e.ID, e.By, e.Length, e.Data,
+	)
 	return
 }
 
 // Clear post contents and remove any uploaded image from the server
 func PurgePost(id uint64, by, reason string) (err error) {
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *pgx.Tx) (err error) {
 		var (
 			board               string
-			hash                sql.NullString
-			fileType, thumbType sql.NullInt64
+			hash                *string
+			fileType, thumbType *uint8
 		)
-		err = sq.Select("p.board", "i.sha1", "i.file_type", "i.thumb_type").
-			From("posts p").
-			LeftJoin("images i on p.sha1 = i.sha1").
-			Where("p.id = ?", id).
-			RunWith(tx).
-			QueryRow().
+		err = tx.
+			QueryRow("purge_post", id).
 			Scan(&board, &hash, &fileType, &thumbType)
 		if err != nil {
 			return
 		}
 
-		if hash.Valid {
-			_, err = sq.
-				Delete("images").
-				Where("sha1 = ?", hash.String).
-				RunWith(tx).
-				Exec()
+		if hash != nil {
+			_, err = tx.Exec("delete_image", *hash)
 			if err != nil {
 				return
 			}
+
 			err = assets.Delete(
-				hash.String,
-				uint8(fileType.Int64),
-				uint8(thumbType.Int64),
+				*hash,
+				*fileType,
+				*thumbType,
 			)
 			if err != nil {
 				return
 			}
 		}
 
-		_, err = sq.
-			Update("posts").
-			Set("body", "").
-			Where("id = ?", id).
-			RunWith(tx).
-			Exec()
+		_, err = tx.Exec("delete_post_body", id)
 		if err != nil {
 			return
 		}
@@ -82,39 +68,9 @@ func PurgePost(id uint64, by, reason string) (err error) {
 	})
 }
 
-// Apply post moderation, log and propagate to connected clients.
-// query: optional query to execute on the post
-func moderatePost(id uint64, entry common.ModerationEntry,
-	query *squirrel.UpdateBuilder,
-) (err error) {
-	board, err := GetPostBoard(id)
-	if err != nil {
-		return
-	}
-
-	return InTransaction(func(tx *sql.Tx) (err error) {
-		if query != nil {
-			_, err = query.Where("id = ?", id).
-				RunWith(tx).
-				Exec()
-			if err != nil {
-				return
-			}
-		}
-		return logModeration(tx, auth.ModLogEntry{
-			ModerationEntry: entry,
-			ID:              id,
-			Board:           board,
-		})
-	})
-}
-
 // DeleteImage permanently deletes an image from a post
 func DeleteImages(ids []uint64, by string) (err error) {
-	_, err = db.Exec(
-		"select delete_images($1::bigint[], $2::text)",
-		encodeUint64Array(ids), by,
-	)
+	_, err = db.Exec("delete_images", encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return
 }
@@ -124,43 +80,40 @@ func DeleteBoard(board, by string) error {
 	if board == "all" {
 		return common.ErrInvalidInput("can not delete /all/")
 	}
-	return InTransaction(func(tx *sql.Tx) error {
-		return deleteBoard(tx, board, by,
-			fmt.Sprintf("board %s deleted by user", board))
+	return InTransaction(func(tx *pgx.Tx) error {
+		return deleteBoard(
+			tx,
+			board,
+			by,
+			fmt.Sprintf("board %s deleted by user", board),
+		)
 	})
 }
 
 // ModSpoilerImage spoilers image as a moderator
 func ModSpoilerImages(ids []uint64, by string) (err error) {
-	_, err = db.Exec("select spoiler_images($1::bigint[], $2::text)",
-		encodeUint64Array(ids), by)
+	_, err = db.Exec("spoiler_images", encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return
 }
 
 // WriteStaff writes staff positions of a specific board. Old rows are
 // overwritten.
-func WriteStaff(tx *sql.Tx, board string,
+func WriteStaff(
+	tx *pgx.Tx,
+	board string,
 	staff map[common.ModerationLevel][]string,
 ) (err error) {
 	// Remove previous staff entries
-	_, err = sq.Delete("staff").
-		Where("board  = ?", board).
-		RunWith(tx).
-		Exec()
+	_, err = tx.Exec("delete_staff", board)
 	if err != nil {
 		return
 	}
 
 	// Write new ones
-	q, err := tx.Prepare(`insert into staff (board, account, position)
-		values($1, $2, $3)`)
-	if err != nil {
-		return
-	}
 	for pos, accounts := range staff {
 		for _, a := range accounts {
-			_, err = q.Exec(board, a, pos)
+			_, err = tx.Exec("insert_staff", board, a, pos)
 			if err != nil {
 				return
 			}
@@ -171,25 +124,32 @@ func WriteStaff(tx *sql.Tx, board string,
 }
 
 // GetStaff retrieves all staff positions of a specific board
-func GetStaff(board string,
-) (staff map[common.ModerationLevel][]string, err error) {
+func GetStaff(
+	board string,
+) (
+	staff map[common.ModerationLevel][]string,
+	err error,
+) {
 	staff = make(map[common.ModerationLevel][]string, 3)
-	err = queryAll(
-		sq.Select("account", "position").
-			From("staff").
-			Where("board = ?", board),
-		func(r *sql.Rows) (err error) {
-			var (
-				acc string
-				pos common.ModerationLevel
-			)
-			err = r.Scan(&acc, &pos)
-			if err != nil {
-				return
-			}
-			staff[pos] = append(staff[pos], acc)
+
+	r, err := db.Query("get_staff", board)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	var (
+		acc string
+		pos common.ModerationLevel
+	)
+	for r.Next() {
+		err = r.Scan(&acc, &pos)
+		if err != nil {
 			return
-		})
+		}
+		staff[pos] = append(staff[pos], acc)
+	}
+	err = r.Err()
 	return
 }
 
@@ -207,7 +167,7 @@ func CanPerform(account, board string, action common.ModerationLevel) (
 
 	pos, err := FindPosition(board, account)
 	can = pos >= action
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		err = nil
 	}
 	return
@@ -216,7 +176,7 @@ func CanPerform(account, board string, action common.ModerationLevel) (
 // GetSameIPPosts returns posts with the same IP and on the same board as the
 // target post
 func GetSameIPPosts(id uint64, by string) (posts []byte, err error) {
-	err = db.QueryRow(`select get_same_ip_posts($1, $2)`, id, by).Scan(&posts)
+	err = db.QueryRow(`get_same_ip_posts`, id, by).Scan(&posts)
 	castPermissionError(&err)
 	return
 }
@@ -245,66 +205,50 @@ func castPermissionError(err *error) {
 
 // DeletePost marks the target post as deleted
 func DeletePosts(ids []uint64, by string) (err error) {
-	_, err = db.Exec("select delete_posts($1::bigint[], $2::text)",
-		encodeUint64Array(ids), by)
+	_, err = db.Exec("delete_posts", encodeUint64Array(ids), by)
 	castPermissionError(&err)
 	return
 }
 
 // SetThreadSticky sets the sticky field on a thread
 func SetThreadSticky(id uint64, sticky bool) error {
-	_, err := sq.Update("threads").
-		Set("sticky", sticky).
-		Where("id = ?", id).
-		Exec()
+	_, err := db.Exec("set_thread_sticky", id, sticky)
 	return err
 }
 
 // SetThreadLock sets the ability of users to post in a specific thread
-func SetThreadLock(id uint64, locked bool, by string) error {
-	q := sq.Update("threads").
-		Set("locked", locked).
-		Where("id = ?", id)
-	return moderatePost(id,
-		common.ModerationEntry{
-			Type: common.LockThread,
-			By:   by,
-			Data: strconv.FormatBool(locked),
-		},
-		&q)
+func SetThreadLock(id uint64, locked bool, by string) (err error) {
+	board, err := GetPostBoard(id)
+	if err != nil {
+		return
+	}
+	return InTransaction(func(tx *pgx.Tx) (err error) {
+		_, err = tx.Exec("set_thread_lock", id, locked)
+		if err != nil {
+			return
+		}
+		return logModeration(tx, auth.ModLogEntry{
+			ID:    id,
+			Board: board,
+			ModerationEntry: common.ModerationEntry{
+				Type: common.LockThread,
+				By:   by,
+				Data: strconv.FormatBool(locked),
+			},
+		})
+	})
 }
 
 // GetModLog retrieves the moderation log for a specific board
-func GetModLog(board string) (log []auth.ModLogEntry, err error) {
-	log = make([]auth.ModLogEntry, 0, 64)
-	e := auth.ModLogEntry{Board: board}
-	err = queryAll(
-		sq.Select("type", "post_id", "by", "created", "length", "data").
-			From("mod_log").
-			Where("board = ?", board).
-			OrderBy("created desc"),
-		func(r *sql.Rows) (err error) {
-			err = r.Scan(&e.Type, &e.ID, &e.By, &e.Created, &e.Length,
-				&e.Data)
-			if err != nil {
-				return
-			}
-			log = append(log, e)
-			return
-		},
-	)
+func GetModLog(board string) (log []byte, err error) {
+	err = db.QueryRow("get_mod_log", board).Scan(&log)
+	ensureArray(&log)
 	return
 }
 
 // GetModLog retrieves the moderation log entry by ID
-func GetModLogEntry(id uint64) (e auth.ModLogEntry, err error) {
-	err = sq.
-		Select("type", "board", "post_id", "by", "created", "length",
-			"data").
-		From("mod_log").
-		Where("id = ?", id).
-		QueryRow().
-		Scan(&e.Type, &e.Board, &e.ID, &e.By, &e.Created, &e.Length,
-			&e.Data)
+
+func GetModLogEntry(id uint64) (entry []byte, err error) {
+	err = db.QueryRow("get_mod_log_entry", id).Scan(&entry)
 	return
 }

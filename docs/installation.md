@@ -10,10 +10,6 @@ apt update
 apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev libgeoip-dev git lsb-release wget curl sudo postgresql
 apt-get dist-upgrade -y
 
-# Increase PostgreSQL connection limit by changing `max_connections` to 1024
-sed -i "/max_connections =/d" /etc/postgresql/11/main/postgresql.conf
-echo max_connections = 1024 >> /etc/postgresql/11/main/postgresql.conf
-
 # Create users and DBS
 service postgresql start
 su postgres

@@ -4,7 +4,9 @@
 -- 	If -5, fetches last 5 posts.
 --	If -6, fetches only the OP.
 create or replace function get_thread(id bigint, page int)
-returns jsonb as $$
+returns jsonb
+language plpgsql stable parallel safe strict
+as $$
 declare
 	max_page int;
 	thread threads%rowtype;
@@ -69,4 +71,4 @@ begin
 
 	return data;
 end;
-$$ language plpgsql;
+$$;

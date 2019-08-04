@@ -37,7 +37,7 @@ func prepareThreads(t *testing.T) {
 		},
 	}
 	for _, b := range boards {
-		err := InTransaction(func(tx *sql.Tx) error {
+		err := InTransaction(func(tx *pgx.Tx) error {
 			return WriteBoard(tx, b)
 		})
 		if err != nil {
@@ -119,7 +119,7 @@ func prepareThreads(t *testing.T) {
 	if err := WriteImage(assets.StdJPEG.ImageCommon); err != nil {
 		t.Fatal(err)
 	}
-	err := InTransaction(func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(`set constraints links_target_fkey deferred`)
 		if err != nil {
 			return
@@ -173,7 +173,7 @@ func testGetPost(t *testing.T) {
 
 	// Does not exist
 	_, err := GetPost(9999)
-	if err != sql.ErrNoRows {
+	if err != pgx.ErrNoRows {
 		test.UnexpectedError(t, err)
 	}
 
@@ -463,7 +463,7 @@ func testGetThread(t *testing.T) {
 		{
 			name: "nonexistent thread",
 			id:   99,
-			err:  sql.ErrNoRows,
+			err:  pgx.ErrNoRows,
 		},
 	}
 

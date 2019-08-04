@@ -1,6 +1,8 @@
 -- Encode thread column into struct
 create or replace function encode_thread(t threads, page int)
-returns jsonb as $$
+returns jsonb
+language plpgsql stable parallel safe strict
+as $$
 declare
 	data jsonb;
 	image_count bigint;
@@ -29,4 +31,4 @@ begin
 
 	return data;
 end;
-$$ language plpgsql;
+$$;

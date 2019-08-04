@@ -35,7 +35,6 @@ func loadConfigs() error {
 		OnMsg: func(_ string) error {
 			return updateConfigs()
 		},
-		OnConnectionLoss: updateConfigs,
 	})
 }
 
@@ -84,7 +83,6 @@ func loadBoardConfigs() (err error) {
 		DebounceInterval: time.Second,
 		Channel:          "boards.updated",
 		OnMsg:            updateBoardConfigs,
-		OnConnectionLoss: updateAll,
 	})
 }
 
@@ -100,7 +98,7 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 }
 
 // WriteBoard writes a board complete with configurations to the database
-func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
+func WriteBoard(tx *pgx.Tx, c BoardConfigs) error {
 	_, err := sq.Insert("boards").
 		Columns(
 			"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
@@ -157,7 +155,7 @@ func updateBoardConfigs(board string) error {
 	conf, err := GetBoardConfigs(board)
 	switch err {
 	case nil:
-	case sql.ErrNoRows:
+	case pgx.ErrNoRows:
 		config.RemoveBoard(board)
 		return nil
 	default:

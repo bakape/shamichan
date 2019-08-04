@@ -11,6 +11,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/jackc/pgx"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -55,7 +56,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Check for collision and write to DB
-		err = db.InTransaction(func(tx *sql.Tx) error {
+		err = db.InTransaction(func(tx *pgx.Tx) error {
 			return db.RegisterAccount(tx, req.ID, hash)
 		})
 		if err != nil {
@@ -143,7 +144,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		hash, err := db.GetPassword(req.ID)
 		switch err {
 		case nil:
-		case sql.ErrNoRows:
+		case pgx.ErrNoRows:
 			err = common.ErrInvalidCreds
 			return
 		default:

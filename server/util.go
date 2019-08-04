@@ -1,7 +1,6 @@
 package server
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,6 +14,7 @@ import (
 	"github.com/bakape/meguca/templates"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
+	"github.com/jackc/pgx"
 )
 
 const (
@@ -90,7 +90,7 @@ func httpError(w http.ResponseWriter, r *http.Request, err error) {
 	case common.StatusError:
 		code = err.(common.StatusError).Code
 	default:
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			code = 404
 		}
 	}
@@ -135,7 +135,7 @@ func assertNotBanned(w http.ResponseWriter, r *http.Request, board string,
 		head.Set("Cache-Control", "no-store")
 		templates.WriteBanPage(w, rec)
 		return false
-	case sql.ErrNoRows:
+	case pgx.ErrNoRows:
 		// If there is no row, that means the ban cache has not been updated
 		// yet with a cleared ban. Force a ban cache refresh.
 		if err := db.RefreshBanCache(); err != nil {

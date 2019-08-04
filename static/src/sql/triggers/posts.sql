@@ -1,5 +1,7 @@
 create or replace function before_posts_insert()
-returns trigger as $$
+returns trigger
+language plpgsql
+as $$
 declare
 	to_delete_by text;
 	post_counter bigint;
@@ -31,10 +33,12 @@ begin
 
 	return new;
 end;
-$$ language plpgsql;
+$$;
 
 create or replace function after_posts_update()
-returns trigger as $$
+returns trigger
+language plpgsql
+as $$
 begin
 	if old.editing and not new.editing then
 		perform bump_thread(
@@ -53,4 +57,4 @@ begin
 	end if;
 	return null;
 end;
-$$ language plpgsql;
+$$;

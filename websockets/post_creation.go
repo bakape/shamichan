@@ -72,7 +72,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 
 	// Must ensure image token usage is done atomically, as not to cause
 	// possible data races with unused image cleanup
-	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 		err = db.InsertThread(tx, subject, &post)
 		if err != nil {
 			return
@@ -92,7 +92,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 }
 
 // Insert image into a post on post creation
-func insertImage(tx *sql.Tx, req ImageRequest, p *db.Post) (err error) {
+func insertImage(tx *pgx.Tx, req ImageRequest, p *db.Post) (err error) {
 	err = formatImageName(&req.Name)
 	if err != nil {
 		return
@@ -162,7 +162,7 @@ func CreatePost(
 
 	// Must ensure image token usage is done atomically, as not to cause
 	// possible data races with unused image cleanup
-	err = db.InTransaction(func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 		err = db.InsertPost(tx, &post)
 		if err != nil {
 			return

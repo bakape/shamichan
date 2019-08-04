@@ -8,6 +8,7 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+	"github.com/jackc/pgx"
 )
 
 // Common errors
@@ -27,7 +28,7 @@ func IsLoggedIn(user, session string) (loggedIn bool, err error) {
 		Where("account = ? and token = ?", user, session).
 		QueryRow().
 		Scan(&loggedIn)
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		err = nil
 	}
 	return
@@ -35,7 +36,7 @@ func IsLoggedIn(user, session string) (loggedIn bool, err error) {
 
 // RegisterAccount writes the ID and password hash of a new user account to the
 // database
-func RegisterAccount(tx *sql.Tx, id string, hash []byte) error {
+func RegisterAccount(tx *pgx.Tx, id string, hash []byte) error {
 	_, err := sq.Insert("accounts").
 		Columns("id", "password").
 		Values(id, hash).
@@ -73,7 +74,7 @@ func FindPosition(board, userID string) (pos common.ModerationLevel, err error) 
 		OrderBy("position desc").
 		QueryRow().
 		Scan(&pos)
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		err = nil
 	}
 	return

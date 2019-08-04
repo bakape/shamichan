@@ -1,5 +1,7 @@
 create or replace function delete_images(ids bigint[], account text)
-returns void as $$
+returns void
+language plpgsql strict
+as $$
 declare
 	board text;
 	checked_boards jsonb = '[]';
@@ -22,7 +24,7 @@ begin
 			set sha1 = null
 			where p.id = post_id;
 		insert into mod_log (type, board, post_id, "by")
-			values (3, board, post_id, account);
+			values ('delete_images', board, post_id, account);
 	end loop;
 end;
-$$ language plpgsql;
+$$;

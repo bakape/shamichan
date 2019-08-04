@@ -79,7 +79,7 @@ func TestDiffPostCount(t *testing.T) {
 	std.Deleted[0] = 3
 	assert(t)
 
-	err = InTransaction(func(tx *sql.Tx) error {
+	err = InTransaction(func(tx *pgx.Tx) error {
 		return WritePost(
 			tx,
 			Post{
@@ -114,7 +114,7 @@ func TestInsertThread(t *testing.T) {
 		IP:       "::1",
 		Password: []byte("6+53653cs3ds"),
 	}
-	err := InTransaction(func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *pgx.Tx) (err error) {
 		return InsertThread(tx, "test", &p)
 	})
 	if err != nil {

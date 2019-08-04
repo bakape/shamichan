@@ -42,10 +42,10 @@ func GetThread(id uint64, page int) (thread []byte, err error) {
 }
 
 // The PL/pgSQL functions return null on non-existence. Cast that to
-// sql.ErrNoRows.
+// pgx.ErrNoRows.
 func castNoRows(buf *[]byte, err *error) {
 	if *err == nil && len(*buf) == 0 {
-		*err = sql.ErrNoRows
+		*err = pgx.ErrNoRows
 	}
 }
 
@@ -135,12 +135,23 @@ func GetThreadMeta(thread uint64) (
 		return
 	}
 
+	// TODO: Move this to SQL or PL/pgSQL
+	// var buf [3][]byte
+	// err = db.
+	// 	QueryRow(
+	// 		`select
+	// 		(),
+	// 		(),
+	// 		()`,
+	// 	).
+	// 	Scan(&buf[0], &buf[1], &buf[2])
+	// return
+
 	all = make(map[uint64]uint32, 1<<10)
 	open = make(map[uint64]OpenPostMeta)
 	moderation = make(map[uint64][]common.ModerationEntry)
 
-	err = InTransaction(func(tx *sql.Tx) (err error) {
-		// TODO: Move this to SQL or PL/pgSQL
+	err = InTransaction(func(tx *pgx.Tx) (err error) {
 
 		var r *sql.Rows
 		defer func() {

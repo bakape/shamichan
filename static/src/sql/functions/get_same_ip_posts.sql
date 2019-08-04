@@ -1,6 +1,8 @@
 -- Returns posts with the same IP and on the same board as the target post
 create or replace function get_same_ip_posts(id bigint, account text)
-returns jsonb as $$
+returns jsonb
+language plpgsql stable parallel safe strict
+as $$
 declare
 	data jsonb;
 
@@ -15,7 +17,7 @@ begin
 		return null;
 	end if;
 
-	perform assert_can_perform(account, target_board, 1::smallint);
+	perform call bump_thread(account, target_board, 1::smallint);
 
 	insert into mod_log (type, board, post_id, "by")
 		values (7, target_board, id, account);
@@ -34,4 +36,4 @@ begin
 		where p.ip = post_ip and t.board = target_board;
 	return data;
 end;
-$$ language plpgsql;
+$$;

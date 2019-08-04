@@ -18,6 +18,7 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/websockets/feeds"
+	"github.com/jackc/pgx"
 )
 
 const (
@@ -278,7 +279,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = db.InTransaction(func(tx *sql.Tx) (err error) {
+		err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 			err = db.WriteBoard(tx, db.BoardConfigs{
 				Created: time.Now().UTC(),
 				BoardConfigs: config.BoardConfigs{
@@ -605,7 +606,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		return db.InTransaction(func(tx *sql.Tx) error {
+		return db.InTransaction(func(tx *pgx.Tx) error {
 			return db.WriteStaff(tx, msg.Board,
 				map[common.ModerationLevel][]string{
 					common.BoardOwner: msg.Owners,
@@ -778,7 +779,7 @@ func unban(w http.ResponseWriter, r *http.Request) {
 			err = db.Unban(board, id, creds.UserID)
 			switch err {
 			case nil:
-			case sql.ErrNoRows:
+			case pgx.ErrNoRows:
 				err = nil
 			default:
 				return
@@ -801,13 +802,14 @@ func modLog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log, err := db.GetModLog(board)
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-	setHTMLHeaders(w)
-	templates.WriteModLog(w, log)
+	// TODO: Serve as JSON
+	// log, err := db.GetModLog(board)
+	// if err != nil {
+	// 	httpError(w, r, err)
+	// 	return
+	// }
+	// setHTMLHeaders(w)
+	// templates.WriteModLog(w, log)
 }
 
 // Decodes params for client forced redirection
@@ -838,7 +840,7 @@ func redirectByIP(w http.ResponseWriter, r *http.Request) {
 
 		ip, err := db.GetIP(id)
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if err == pgx.ErrNoRows {
 				err = common.StatusError{
 					Err:  errors.New("no such post"),
 					Code: 404,

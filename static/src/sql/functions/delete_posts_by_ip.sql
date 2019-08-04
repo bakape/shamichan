@@ -1,7 +1,13 @@
 -- length: keep deleting posts of this IP for duration in seconds
-create or replace function delete_posts_by_ip(id bigint, account text,
-	length bigint, reason text)
-returns void as $$
+create or replace function delete_posts_by_ip(
+	id bigint,
+	account text,
+	length bigint,
+	reason text
+)
+returns void
+language plpgsql strict
+as $$
 declare
 	target_board text;
 	target_ip inet;
@@ -18,7 +24,7 @@ begin
 	end if;
 
 	-- Assert user can delete posts on board
-	perform assert_can_perform(account, target_board, 1::smallint);
+	perform call bump_thread(account, target_board, 1::smallint);
 
 	-- Delete the posts
 	for id in (select p.id
@@ -29,18 +35,45 @@ begin
 					and not is_deleted(p.id))
 	loop
 		insert into mod_log (type, board, post_id, "by")
-			values (2, target_board, id, account);
+			values ('delete_post', target_board, id, account);
 	end loop;
 
 	-- Keep deleting posts till this expires
 	if length > 0 then
-		insert into mod_log (type, board, post_id, "by", data, length)
-			values (9, target_board, delete_posts_by_ip.id, account, reason,
-					length);
-		insert into bans (ip, board, forPost, reason, "by", type, expires)
-			values (target_ip, target_board, delete_posts_by_ip.id, reason,
-					account, 'shadow',
-					(now() + make_interval(secs := length)) at time zone 'utc');
+		insert into mod_log (
+				type,
+				board,
+				post_id,
+				"by",
+				data,
+				length
+			)
+			values (
+				'shadow_bin_post',
+				target_board,
+				delete_posts_by_ip.id,
+				account,
+				reason,
+				length
+			);
+		insert into bans (
+				ip,
+				board,
+				forPost,
+				reason,
+				"by",
+				type,
+				expires
+			)
+			values (
+				target_ip,
+				target_board,
+				delete_posts_by_ip.id,
+				reason,
+				account,
+				'shadow',
+				(now() + make_interval(secs := length)) at time zone 'utc'
+			);
 	end if;
 end;
-$$ language plpgsql;
+$$;

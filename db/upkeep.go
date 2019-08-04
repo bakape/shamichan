@@ -13,55 +13,43 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/parser"
 	"github.com/go-playground/log"
+	"github.com/jackc/pgx"
 )
 
 // Run database clean up tasks at server start and regular intervals. Must be
 // launched in separate goroutine.
 func runCleanupTasks() {
-	// To ensure even the once an hour tasks are run shortly after server start
-	time.Sleep(time.Minute)
-	runMinuteTasks()
-	runHalfTasks()
-	runHourTasks()
 
 	sec := time.Tick(time.Second)
 	min := time.Tick(time.Minute)
-	half := time.Tick(time.Minute * 30)
 	hour := time.Tick(time.Hour)
+
+	// To ensure even the once an hour tasks are run shortly after server start
+	go func() {
+		time.Sleep(time.Minute)
+		runHourTasks()
+	}()
+
 	for {
 		select {
 		case <-sec:
 			logError("flush open post bodies", FlushOpenPostBodies())
 			logError("spam score buffer flush", syncSpamScores())
 		case <-min:
-			runMinuteTasks()
-		case <-half:
-			runHalfTasks()
+			if config.Server.ImagerMode != config.ImagerOnly {
+				logError("open post cleanup", closeDanglingPosts())
+			}
+
+			_, err := db.Exec("clean_up_expiries")
+			logError("expired row cleanup", err)
 		case <-hour:
 			runHourTasks()
 		}
 	}
 }
 
-func runMinuteTasks() {
-	if config.Server.ImagerMode != config.ImagerOnly {
-		logError("open post cleanup", closeDanglingPosts())
-		expireRows("image_tokens", "bans", "failed_captchas")
-	}
-}
-
-func runHalfTasks() {
-	if config.Server.ImagerMode != config.ImagerOnly {
-		logError("expire spam scores", expireSpamScores())
-		logError("expire last solved captcha times", expireLastSolvedCaptchas())
-	}
-}
-
 func runHourTasks() {
 	if config.Server.ImagerMode != config.ImagerOnly {
-		expireRows("sessions")
-		expireBy("created < now() at time zone 'utc' + '-7 days'",
-			"mod_log", "reports")
 		logError("remove identity info", removeIdentityInfo())
 		logError("thread cleanup", deleteOldThreads())
 		logError("board cleanup", deleteUnusedBoards())
@@ -77,22 +65,6 @@ func logError(prefix string, err error) {
 	if err != nil {
 		log.Errorf("%s: %s: %#v", prefix, err, err)
 	}
-}
-
-func expireBy(criterion string, tables ...string) {
-	for _, t := range tables {
-		_, err := sq.Delete(t).
-			Where(criterion).
-			Exec()
-		if err != nil {
-			logError(fmt.Sprintf("expiring table %s rows", t), err)
-		}
-	}
-}
-
-// Expire table rows by expiry timestamp
-func expireRows(tables ...string) {
-	expireBy("expires < now() at time zone 'utc'", tables...)
 }
 
 // Remove poster-identifying info from posts older than 7 days
@@ -173,7 +145,7 @@ func deleteUnusedBoards() error {
 		return nil
 	}
 	min := time.Now().Add(-time.Duration(conf.BoardExpiry) * time.Hour * 24)
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *pgx.Tx) (err error) {
 		// Get all inactive boards
 		var (
 			boards []string
@@ -216,8 +188,8 @@ func deleteUnusedBoards() error {
 	})
 }
 
-func deleteBoard(tx *sql.Tx, id, by, reason string) (err error) {
-	_, err = sq.Delete("boards").Where("id = ?", id).RunWith(tx).Exec()
+func deleteBoard(tx *pgx.Tx, id, by, reason string) (err error) {
+	_, err = tx.Exec("delete_board", id)
 	if err != nil {
 		return
 	}
@@ -241,7 +213,7 @@ func deleteOldThreads() (err error) {
 		return
 	}
 
-	return InTransaction(func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *pgx.Tx) (err error) {
 		// Find threads to delete
 		var (
 			now           = time.Now().Unix()

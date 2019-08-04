@@ -8,24 +8,22 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/Masterminds/squirrel"
+	"github.com/bakape/meguca/static"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 	"github.com/go-playground/log"
-	_ "github.com/lib/pq" // Postgres driver
+	"github.com/jackc/pgx"
 )
 
 var (
 	// ConnArgs specifies the PostgreSQL connection URL
 	connectionURL string
 
-	// Stores the postgres database instance
-	db *sql.DB
-
-	// Statement builder and cacher
-	sq squirrel.StatementBuilderType
+	// Postgres connection pool
+	db *pgx.ConnPool
 )
 
 // Connects to PostgreSQL database and performs schema upgrades
@@ -90,14 +88,36 @@ func loadDB(connURL, dbSuffix string) (err error) {
 	// Set, for creating extra connections using Listen()
 	connectionURL = connURL
 
-	db, err = sql.Open("postgres", connURL)
+	connOpts, err := pgx.ParseURI(connURL)
 	if err != nil {
 		return
 	}
+	db, err = pgx.NewConnPool(pgx.ConnPoolConfig{
+		ConnConfig:     connOpts,
+		MaxConnections: 50,
+		AfterConnect: func(c *pgx.Conn) (err error) {
+			return static.Walk(
+				"/prepared_statements",
+				func(path string, info os.FileInfo, wlkErr error) (err error) {
+					if wlkErr != nil {
+						return wlkErr
+					}
+					if info.IsDir() {
+						return
+					}
 
-	sq = squirrel.StatementBuilder.
-		RunWith(squirrel.NewStmtCacheProxy(db)).
-		PlaceholderFormat(squirrel.Dollar)
+					buf, err := static.ReadFile(path)
+					if err != nil {
+						return
+					}
+					name := info.Name()
+					i := strings.LastIndexByte(name, '.')
+					_, err = c.Prepare(name[:i], string(buf))
+					return
+				},
+			)
+		},
+	})
 
 	var exists bool
 	const q = `select exists (
@@ -177,12 +197,13 @@ func initDB() (err error) {
 
 // Close DB and release resources
 func Close() (err error) {
-	return db.Close()
+	db.Close()
+	return nil
 }
 
 // CreateAdminAccount writes a fresh admin account with the default password to
 // the database
-func CreateAdminAccount(tx *sql.Tx) (err error) {
+func CreateAdminAccount(tx *pgx.Tx) (err error) {
 	hash, err := auth.BcryptHash("password", 10)
 	if err != nil {
 		return err
@@ -191,7 +212,7 @@ func CreateAdminAccount(tx *sql.Tx) (err error) {
 }
 
 // CreateSystemAccount create an inaccessible account used for automatic internal purposes
-func CreateSystemAccount(tx *sql.Tx) (err error) {
+func CreateSystemAccount(tx *pgx.Tx) (err error) {
 	password, err := auth.RandomID(32)
 	if err != nil {
 		return

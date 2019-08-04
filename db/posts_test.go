@@ -47,7 +47,7 @@ func writeSampleBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return WriteBoard(tx, b)
 	})
 	if err != nil {
@@ -72,7 +72,7 @@ func writeSampleThread(t *testing.T) {
 		},
 		IP: "::1",
 	}
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return WriteThread(tx, thread, op)
 	})
 	if err != nil {
@@ -85,7 +85,7 @@ func insertPost(t *testing.T, p *Post) {
 
 	prepareForPostInsertion(t)
 
-	err := InTransaction(func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return InsertPost(tx, p)
 	})
 	if err != nil {
@@ -182,7 +182,7 @@ func TestSageAndTimestampUpdates(t *testing.T) {
 				IP:       "::1",
 				Password: []byte("6+53653cs3ds"),
 			}
-			err := InTransaction(func(tx *sql.Tx) error {
+			err := InTransaction(func(tx *pgx.Tx) error {
 				return InsertPost(tx, &p)
 			})
 			if err != nil {

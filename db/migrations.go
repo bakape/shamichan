@@ -15,16 +15,18 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/static"
 	"github.com/bakape/meguca/util"
+	"github.com/bakape/pg_util"
 	"github.com/go-playground/log"
+	"github.com/jackc/pgx"
 	"github.com/lib/pq"
 )
 
 var version = len(migrations)
 
-var migrations = []func(*sql.Tx) error{
-	func(tx *sql.Tx) (err error) {
+var migrations = []func(*pgx.Tx) error{
+	func(tx *pgx.Tx) (err error) {
 		// Initialize DB
-		err = execAll(tx,
+		err = pg_util.ExecAll(tx,
 			`create table accounts (
 				id varchar(20) primary key,
 				password bytea not null
@@ -145,9 +147,9 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return CreateSystemAccount(tx)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		// Delete legacy columns
-		return execAll(tx,
+		return pg_util.ExecAll(tx,
 			`ALTER TABLE threads
 				DROP COLUMN locked`,
 			`ALTER TABLE boards
@@ -155,14 +157,14 @@ var migrations = []func(*sql.Tx) error{
 				DROP COLUMN codeTags`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE threads
 				DROP COLUMN log`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				DROP COLUMN ctr`,
@@ -170,7 +172,7 @@ var migrations = []func(*sql.Tx) error{
 		return
 	},
 	// Restore correct image counters after incorrect updates
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`UPDATE threads
 				SET imageCtr = (SELECT COUNT(*) FROM posts
@@ -180,7 +182,7 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE images
 				ADD COLUMN Title varchar(100) not null default '',
@@ -188,47 +190,47 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE posts
 				ADD COLUMN sage bool`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(`DROP INDEX deleted`)
 		return
 	},
 	// Set default expiry configs, to keep all threads from deleting
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		return patchConfigsLegacy(tx, func(conf *config.Configs) {
 			conf.ThreadExpiryMin = config.Defaults.ThreadExpiryMin
 			conf.ThreadExpiryMax = config.Defaults.ThreadExpiryMax
 		})
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN disableRobots bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE threads
 				ADD COLUMN sticky bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE bans
 				ADD COLUMN forPost bigint default 0`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`create table mod_log (
 				type smallint not null,
 				board varchar(3) not null,
@@ -240,18 +242,18 @@ var migrations = []func(*sql.Tx) error{
 			`create index mod_log_created on mod_log (created)`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(`create index sticky on threads (sticky)`)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE posts
 				DROP COLUMN backlinks`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`create table banners (
 				board varchar(3) not null references boards on delete cascade,
@@ -262,8 +264,8 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) error {
-		return execAll(tx,
+	func(tx *pgx.Tx) error {
+		return pg_util.ExecAll(tx,
 			`alter table boards
 				alter column id type text`,
 			`alter table bans
@@ -280,7 +282,7 @@ var migrations = []func(*sql.Tx) error{
 				alter column board type text`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`create table loading_animations (
 				board text primary key references boards on delete cascade,
@@ -290,43 +292,43 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN defaultCSS text default 'moe'`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE posts
 				ADD COLUMN flag char(2)`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN flags bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`alter table images
 				alter column title type varchar(200)`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN NSFW bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) error {
-		return execAll(tx,
+	func(tx *pgx.Tx) error {
+		return pg_util.ExecAll(tx,
 			`create table reports (
 				id bigserial primary key,
 				target bigint not null,
@@ -340,42 +342,42 @@ var migrations = []func(*sql.Tx) error{
 			`create index report_created on reports (created)`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN nonLive bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE threads
 				ADD COLUMN nonLive bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN posterIDs bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE posts
 				ADD COLUMN posterID text`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE threads
 				ADD COLUMN locked bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN js varchar(5000) default ''`,
@@ -383,7 +385,7 @@ var migrations = []func(*sql.Tx) error{
 		return
 	},
 	// Fix consequences of bug in init.sql
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		q := `SELECT EXISTS (SELECT 1
 			FROM information_schema.columns
 			WHERE table_schema='public'
@@ -410,15 +412,15 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				DROP COLUMN js`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`DROP INDEX editing`,
 			`ALTER TABLE boards
 				DROP COLUMN nonLive`,
@@ -426,15 +428,15 @@ var migrations = []func(*sql.Tx) error{
 				DROP COLUMN editing`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE posts
 				DROP COLUMN password`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`ALTER TABLE boards
 				ADD COLUMN nonLive bool default false`,
 			`ALTER TABLE posts
@@ -442,20 +444,20 @@ var migrations = []func(*sql.Tx) error{
 			`create index editing on posts (editing);`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE posts
 				ADD COLUMN password bytea`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`INSERT INTO main VALUES ('roulette', '6')`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		// Fuck any wise guy trying to create an account nad block an upgrade
 		_, err = tx.Exec(
 			`DELETE FROM accounts
@@ -480,14 +482,14 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		return patchConfigsLegacy(tx, func(conf *config.Configs) {
 			conf.CharScore = config.Defaults.CharScore
 			conf.PostCreationScore = config.Defaults.PostCreationScore
 			conf.ImageScore = config.Defaults.ImageScore
 		})
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		var rcount string
 		err = tx.QueryRow(
 			`SELECT COUNT(*) FROM mod_log WHERE board != 'all' AND by = 'system' AND type = 0`,
@@ -501,8 +503,8 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		pg_util.ExecAll(tx,
 			`create table links (
 				source bigint not null references posts on delete cascade,
 				target bigint not null references posts on delete cascade,
@@ -570,12 +572,12 @@ var migrations = []func(*sql.Tx) error{
 
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(`ALTER TABLE banners DROP COLUMN id`)
 		return
 	},
-	func(tx *sql.Tx) error {
-		return execAll(tx,
+	func(tx *pgx.Tx) error {
+		return pg_util.ExecAll(tx,
 			`DELETE FROM mod_log`,
 			`DELETE FROM bans`,
 			`ALTER TABLE mod_log ADD CONSTRAINT mod_log_board_fkey
@@ -584,33 +586,33 @@ var migrations = []func(*sql.Tx) error{
 			FOREIGN KEY (board) REFERENCES boards(id) ON DELETE CASCADE`,
 		)
 	},
-	func(tx *sql.Tx) error {
-		return execAll(tx,
+	func(tx *pgx.Tx) error {
+		return pg_util.ExecAll(tx,
 			`ALTER TABLE threads DROP COLUMN postCtr`,
 			`ALTER TABLE threads DROP COLUMN imageCtr`,
 		)
 	},
-	func(tx *sql.Tx) error {
-		return execAll(tx,
+	func(tx *pgx.Tx) error {
+		return pg_util.ExecAll(tx,
 			`ALTER TABLE mod_log ADD COLUMN length bigint default 0`,
 			`ALTER TABLE mod_log ADD COLUMN reason text default ''`,
 		)
 	},
-	func(tx *sql.Tx) error {
-		return execAll(tx,
+	func(tx *pgx.Tx) error {
+		return pg_util.ExecAll(tx,
 			`create index image_fileType on images (fileType)`,
 			`create index image_audio on images (audio)`,
 			`create index post_board on posts (board)`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN rbText bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		// Read all commands
 		var (
 			comms = make(map[uint64][]common.Command, 1024)
@@ -666,18 +668,18 @@ var migrations = []func(*sql.Tx) error{
 
 		return
 	},
-	func(tx *sql.Tx) error {
+	func(tx *pgx.Tx) error {
 		_, err := sq.Delete("main").Where("id = 'pyu'").RunWith(tx).Exec()
 		return err
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN pyu bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`create table pyu (
 				id text primary key references boards on delete cascade,
@@ -695,19 +697,19 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		// Reverted migration
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		// Revert changes
-		return execAll(tx,
+		return pg_util.ExecAll(tx,
 			`alter table boards drop column pyu`,
 			`drop table pyu`,
 			`drop table pyu_limit`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		return patchConfigsLegacy(tx, func(conf *config.Configs) {
 			conf.EmailErrMail = config.Defaults.EmailErrMail
 			conf.EmailErrPass = config.Defaults.EmailErrPass
@@ -716,7 +718,7 @@ var migrations = []func(*sql.Tx) error{
 		})
 	},
 	// Fixes global moderation
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		c := BoardConfigs{
 			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
 			Created:      time.Now().UTC(),
@@ -740,7 +742,7 @@ var migrations = []func(*sql.Tx) error{
 		}
 
 		// Legacy function
-		writeStaff := func(tx *sql.Tx, board string,
+		writeStaff := func(tx *pgx.Tx, board string,
 			staff map[string][]string,
 		) (err error) {
 			// Remove previous staff entries
@@ -774,14 +776,14 @@ var migrations = []func(*sql.Tx) error{
 			"owners": {"admin", "system"},
 		})
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`ALTER TABLE boards
 				ADD COLUMN pyu bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`create table pyu (
 				id text primary key references boards on delete cascade,
@@ -799,7 +801,7 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		r, err := tx.Query(`select id from boards`)
 		if err != nil {
 			return
@@ -833,14 +835,14 @@ var migrations = []func(*sql.Tx) error{
 
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`alter table pyu_limit drop column expires`,
 			`alter table pyu_limit add column restricted bool default false`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`create table captchas (
 				id text primary key not null,
 				solution text not null,
@@ -852,12 +854,12 @@ var migrations = []func(*sql.Tx) error{
 			)`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`create index failed_captchas_ip on failed_captchas (ip)`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		var tasks []string
 		for _, t := range [...]string{
 			"image_tokens", "bans", "captchas", "failed_captchas",
@@ -865,15 +867,15 @@ var migrations = []func(*sql.Tx) error{
 			tasks = append(tasks, createIndex(t, "expires"))
 		}
 		tasks = append(tasks, createIndex("posts", "time"))
-		return execAll(tx, tasks...)
+		return pg_util.ExecAll(tx, tasks...)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`INSERT INTO main VALUES ('geo_md5', 'initial value, ignore')`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = sq.Delete("main").Where("id = 'roulette'").RunWith(tx).Exec()
 		if err != nil {
 			return
@@ -881,7 +883,7 @@ var migrations = []func(*sql.Tx) error{
 		_, err = sq.Delete("main").Where("id = 'rcount'").RunWith(tx).Exec()
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`create table roulette (
 				id bigint primary key references threads on delete cascade,
@@ -892,7 +894,7 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		var threads []uint64
 		r, err := tx.Query(`select id from threads`)
 
@@ -936,7 +938,7 @@ var migrations = []func(*sql.Tx) error{
 
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`create table spam_scores (
 				ip inet primary key,
@@ -945,19 +947,19 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`alter table boards drop column nonLive`,
 			`alter table threads drop column nonLive`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`alter table posts add column meidoVision bool default false`,
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		var tasks []string
 
 		for _, col := range [...]string{"deleted", "banned", "meidovision"} {
@@ -975,9 +977,9 @@ var migrations = []func(*sql.Tx) error{
 			createIndex("post_moderation", "post_id"),
 		)
 
-		return execAll(tx, tasks...)
+		return pg_util.ExecAll(tx, tasks...)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		var tasks []string
 		setNotNull := func(col, typ, def string) {
 			tasks = append(tasks, fmt.Sprintf(
@@ -1005,9 +1007,9 @@ var migrations = []func(*sql.Tx) error{
 			setNotNull(col, "text", `''::text`)
 		}
 
-		return execAll(tx, tasks...)
+		return pg_util.ExecAll(tx, tasks...)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		for _, t := range [...]string{"mod_log", "post_moderation"} {
 			_, err = tx.Exec(
 				fmt.Sprintf(`alter table %s rename column reason to data`, t))
@@ -1017,14 +1019,14 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`alter table bans drop constraint bans_pkey`,
 			createIndex("bans", "ip"),
 			createIndex("bans", "board"),
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		err = patchConfigsLegacy(tx, func(conf *config.Configs) {
 			conf.CaptchaTags = config.Defaults.CaptchaTags
 			conf.OverrideCaptchaTags = map[string]string{}
@@ -1035,8 +1037,8 @@ var migrations = []func(*sql.Tx) error{
 		_, err = tx.Exec(`drop table captchas`)
 		return
 	},
-	func(tx *sql.Tx) error {
-		return execAll(tx,
+	func(tx *pgx.Tx) error {
+		return pg_util.ExecAll(tx,
 			`create table last_solved_captchas (
 				ip inet primary key,
 				time timestamp not null default (now() at time zone 'utc')
@@ -1044,19 +1046,19 @@ var migrations = []func(*sql.Tx) error{
 			createIndex("last_solved_captchas", "time"),
 		)
 	},
-	func(tx *sql.Tx) error {
+	func(tx *pgx.Tx) error {
 		// Moved
 		return nil
 	},
-	func(tx *sql.Tx) error {
+	func(tx *pgx.Tx) error {
 		// Moved
 		return nil
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(`alter table images drop column apng`)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		// Drop legacy functions and triggers
 		err = dropFunctions(tx, "notify_thread_post_count",
 			"notify_thread_deleted")
@@ -1081,8 +1083,8 @@ var migrations = []func(*sql.Tx) error{
 
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`alter table posts
 				alter column id set default nextval('post_id'),
 				alter column time set default extract(epoch from now()),
@@ -1095,13 +1097,13 @@ var migrations = []func(*sql.Tx) error{
 				drop column posterIDs`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`alter table images rename column fileType to file_type`,
 			`alter table images rename column thumbType to thumb_type`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		modLevels := map[string]common.ModerationLevel{
 			"janitors":   common.Janitor,
 			"moderators": common.Moderator,
@@ -1110,7 +1112,7 @@ var migrations = []func(*sql.Tx) error{
 		}
 
 		modTable := func(table, column string) (err error) {
-			return execAll(tx,
+			return pg_util.ExecAll(tx,
 				fmt.Sprintf(`alter table %s drop column %s`, table, column),
 				fmt.Sprintf(
 					`alter table %s
@@ -1222,22 +1224,22 @@ var migrations = []func(*sql.Tx) error{
 
 		return
 	},
-	func(tx *sql.Tx) error {
+	func(tx *pgx.Tx) error {
 		// Reload triggers
 		return loadSQL(tx, "triggers/boards")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(createIndex("post_moderation", "type"))
 		if err != nil {
 			return
 		}
 		return registerFunctions(tx, "delete_posts_by_ip", "assert_can_perform")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		return registerFunctions(tx, "is_deleted", "delete_posts_by_ip")
 	},
-	func(tx *sql.Tx) (err error) {
-		err = execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		err = pg_util.ExecAll(tx,
 			`create table continuous_deletions (
 				ip inet not null,
 				board text not null,
@@ -1279,16 +1281,16 @@ var migrations = []func(*sql.Tx) error{
 
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		// Load new versions
 		return registerFunctions(tx, "delete_posts_by_ip")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		// Moved
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		err = execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		err = pg_util.ExecAll(tx,
 			`drop table continuous_deletions cascade`,
 			`create type ban_type as enum ('classic', 'shadow')`,
 			`alter table bans
@@ -1305,7 +1307,7 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return loadSQL(tx, "triggers/mod_log", "triggers/posts")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		for _, args := range [...]string{
 			`bigint, text`,
 			`bigint, text, text`,
@@ -1320,13 +1322,13 @@ var migrations = []func(*sql.Tx) error{
 		return registerFunctions(tx, "delete_posts", "delete_images",
 			"spoiler_images")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		return registerFunctions(tx, "delete_posts_by_ip")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		return registerFunctions(tx, "delete_images", "spoiler_images")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		for _, args := range [...]string{
 			`bigint, boolean, boolean, boolean`,
 			`bigint, character varying, boolean, boolean`,
@@ -1341,7 +1343,7 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return registerFunctions(tx, "bump_thread")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		// Make trigger naming conform to their execution times
 
 		// Drop old trigger functions and their triggers
@@ -1373,8 +1375,8 @@ var migrations = []func(*sql.Tx) error{
 			},
 		})
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`alter table boards alter column id type varchar(10)`,
 			`alter table boards alter column defaultcss type varchar(20)`,
 
@@ -1409,8 +1411,8 @@ var migrations = []func(*sql.Tx) error{
 			`alter table threads alter column board type varchar(10)`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
-		err = execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		err = pg_util.ExecAll(tx,
 			`alter table threads rename column replytime to update_time`,
 			`alter table threads rename column bumptime to bump_time`,
 		)
@@ -1423,27 +1425,27 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return loadSQL(tx, "triggers/threads")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = sq.Delete("main").
 			Where("id = 'geo_md5'").
 			RunWith(tx).
 			Exec()
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		return loadSQL(tx, "triggers/posts")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		return loadSQL(tx, "triggers/posts", "triggers/mod_log")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`alter table main
 			alter column val
 			type jsonb using (val::jsonb)`)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		var salt string
 		err = sq.Select("val->>'salt'").
 			From("main").
@@ -1470,8 +1472,8 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return
 	},
-	func(tx *sql.Tx) (err error) {
-		return execAll(tx,
+	func(tx *pgx.Tx) (err error) {
+		return pg_util.ExecAll(tx,
 			`drop table spam_scores`,
 			`create table spam_scores(
 				token bytea primary key,
@@ -1489,7 +1491,7 @@ var migrations = []func(*sql.Tx) error{
 				and val->>'rootURL' = 'http://localhost'`,
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`alter table posts add column page int not null default 0`,
 		)
@@ -1540,7 +1542,7 @@ var migrations = []func(*sql.Tx) error{
 
 		return loadSQL(tx, "triggers/posts")
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			`alter table posts
 			alter column commands
@@ -1582,7 +1584,7 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(`drop function bump_thread`)
 		if err != nil {
 			return
@@ -1594,7 +1596,7 @@ var migrations = []func(*sql.Tx) error{
 			"triggers/mod_log",
 		)
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		err = loadSQL(tx, "triggers/bans", "triggers/boards")
 		if err != nil {
 			return
@@ -1607,13 +1609,80 @@ var migrations = []func(*sql.Tx) error{
 		)
 		return
 	},
-	func(tx *sql.Tx) (err error) {
+	func(tx *pgx.Tx) (err error) {
 		return loadSQL(tx,
 			"functions/encode_post",
 			"functions/get_links",
 			"functions/thread_board",
 			"triggers/mod_log",
 			"triggers/posts",
+		)
+	},
+	func(tx *pgx.Tx) (err error) {
+		err = loadSQL(tx,
+			"functions/encode_mod_log",
+			// TODO: Reload all functions
+		)
+		if err != nil {
+			return
+		}
+		return pg_util.ExecAll(tx,
+			`create type moderation_action as enum (
+				'ban_post',
+				'unban_post',
+				'delete_post',
+				'delete_image',
+				'spoiler_image',
+				'lock_thread',
+				'delete_board',
+				'meido_vision',
+				'purge_post',
+				'shadow_bin_post'
+			)`,
+			`delete from mod_log`,
+			`alter table mod_log drop column type`,
+			`alter table mod_log add column type moderation_action not null`,
+
+			// More centralized expiry
+
+			`create table expiries (
+				expires timestamptz not null
+			)`,
+			createIndex("expiries", "expires"),
+
+			`delete from failed_captchas`,
+			`alter table failed_captchas alter column expires type timestamptz`,
+			`alter table failed_captchas inherit expiries`,
+			`drop index failed_captchas_expires_idx`,
+
+			`delete from image_tokens`,
+			`alter table image_tokens alter column expires type timestamptz`,
+			`alter table image_tokens inherit expiries`,
+			`drop index image_tokens_expires_idx`,
+
+			`delete from last_solved_captchas`,
+			`alter table last_solved_captchas
+				add column expires timestamptz not null`,
+			`alter table last_solved_captchas inherit expiries`,
+
+			`delete from mod_log`,
+			`alter table mod_log
+				add column expires timestamptz not null`,
+			`alter table mod_log inherit expiries`,
+
+			`delete from reports`,
+			`alter table reports
+				add column expires timestamptz not null`,
+			`alter table reports inherit expiries`,
+
+			`delete from sessions`,
+			`alter table sessions alter column expires type timestamptz`,
+			`alter table sessions inherit expiries`,
+
+			`delete from spam_scores`,
+			`alter table spam_scores
+				add column expires timestamptz not null`,
+			`alter table spam_scores inherit expiries`,
 		)
 	},
 }
@@ -1630,7 +1699,7 @@ func createIndex(table string, columns ...string) string {
 		w.String(), table, strings.Join(columns, ", "))
 }
 
-func setDefault(tx *sql.Tx, table, column, def string) (err error) {
+func setDefault(tx *pgx.Tx, table, column, def string) (err error) {
 	_, err = tx.Exec(
 		fmt.Sprintf("alter table %s alter column %s set default %s",
 			table, column, def),
@@ -1638,7 +1707,7 @@ func setDefault(tx *sql.Tx, table, column, def string) (err error) {
 	return
 }
 
-func registerFunctions(tx *sql.Tx, files ...string) (err error) {
+func registerFunctions(tx *pgx.Tx, files ...string) (err error) {
 	for _, f := range files {
 		err = loadSQL(tx, "functions/"+f)
 		if err != nil {
@@ -1648,7 +1717,7 @@ func registerFunctions(tx *sql.Tx, files ...string) (err error) {
 	return
 }
 
-func dropFunctions(tx *sql.Tx, names ...string) (err error) {
+func dropFunctions(tx *pgx.Tx, names ...string) (err error) {
 	for _, n := range names {
 		_, err = tx.Exec(fmt.Sprintf("drop function if exists %s cascade", n))
 		if err != nil {
@@ -1658,7 +1727,7 @@ func dropFunctions(tx *sql.Tx, names ...string) (err error) {
 	return
 }
 
-func loadSQL(tx *sql.Tx, paths ...string) (err error) {
+func loadSQL(tx *pgx.Tx, paths ...string) (err error) {
 	var buf []byte
 	for _, p := range paths {
 		buf, err = static.ReadFile(fmt.Sprintf("/sql/%s.sql", p))
@@ -1681,7 +1750,7 @@ func runMigrations() (err error) {
 			currentVersion int
 			done           bool
 		)
-		err = InTransaction(func(tx *sql.Tx) (err error) {
+		err = InTransaction(func(tx *pgx.Tx) (err error) {
 			// Lock version column to ensure no migrations from other processes
 			// happen concurrently
 			err = sq.Select("val").
@@ -1732,7 +1801,7 @@ func runMigrations() (err error) {
 // Patches server configuration during upgrades.
 //
 // Legacy function. Only kept for migrations.
-func patchConfigsLegacy(tx *sql.Tx, fn func(*config.Configs)) (err error) {
+func patchConfigsLegacy(tx *pgx.Tx, fn func(*config.Configs)) (err error) {
 	var s string
 	err = tx.QueryRow("SELECT val FROM main WHERE id = 'config'").Scan(&s)
 	if err != nil {
