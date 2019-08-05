@@ -1,11 +1,11 @@
 package db
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
+	"github.com/jackc/pgx"
 )
 
 func TestLoadConfigs(t *testing.T) {

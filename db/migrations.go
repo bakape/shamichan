@@ -1719,11 +1719,40 @@ var migrations = []func(*pgx.Tx) error{
 			return
 		}
 
-		return registerTriggers(tx, map[string][]triggerDescriptor{
+		err = registerTriggers(tx, map[string][]triggerDescriptor{
 			"bans": {
 				{after, tableInsert},
 			},
+			"main": {
+				{after, tableUpdate},
+			},
 		})
+		if err != nil {
+			return
+		}
+
+		// Rename board fields to be more canonical
+		for from, to := range map[string]string{
+			"readOnly":      "read_only",
+			"textOnly":      "text_only",
+			"forcedAnon":    "forced_anon",
+			"disableRobots": "disable_robots",
+			"rbText":        "rb_text",
+			"defaultCSS":    "default_css",
+			"NSFW":          "nsfw",
+		} {
+			_, err = tx.Exec(
+				fmt.Sprintf(
+					`alter table boards rename column %s to %s`,
+					from, to,
+				),
+			)
+			if err != nil {
+				return
+			}
+		}
+
+		return
 	},
 }
 
