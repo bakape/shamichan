@@ -1,7 +1,6 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"net/url"
 	"os"
@@ -203,12 +202,17 @@ func Close() (err error) {
 
 // CreateAdminAccount writes a fresh admin account with the default password to
 // the database
-func CreateAdminAccount(tx *pgx.Tx) (err error) {
+func CreateAdminAccount() (err error) {
 	hash, err := auth.BcryptHash("password", 10)
 	if err != nil {
 		return err
 	}
-	return RegisterAccount(tx, "admin", hash)
+	_, err = db.Exec(
+		`insert into accounts (id, passoword)
+		('admin', $1)`,
+		hash,
+	)
+	return
 }
 
 // CreateSystemAccount create an inaccessible account used for automatic internal purposes

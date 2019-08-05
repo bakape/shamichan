@@ -1,11 +1,9 @@
 package db
 
 import (
-	"database/sql"
 	"errors"
-	"time"
+	"net"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/jackc/pgx"
@@ -23,25 +21,14 @@ func IsLoggedIn(user, session string) (loggedIn bool, err error) {
 		return
 	}
 
-	err = sq.Select("true").
-		From("sessions").
-		Where("account = ? and token = ?", user, session).
-		QueryRow().
-		Scan(&loggedIn)
-	if err == pgx.ErrNoRows {
-		err = nil
-	}
+	err = db.QueryRow("is_logged_in", user, session).Scan(&loggedIn)
 	return
 }
 
 // RegisterAccount writes the ID and password hash of a new user account to the
 // database
-func RegisterAccount(tx *pgx.Tx, id string, hash []byte) error {
-	_, err := sq.Insert("accounts").
-		Columns("id", "password").
-		Values(id, hash).
-		RunWith(tx).
-		Exec()
+func RegisterAccount(id string, hash []byte) error {
+	_, err := db.Exec("register_account", id, hash)
 	if IsConflictError(err) {
 		return ErrUserNameTaken
 	}
@@ -50,30 +37,23 @@ func RegisterAccount(tx *pgx.Tx, id string, hash []byte) error {
 
 // GetPassword retrieves the login password hash of the registered user account
 func GetPassword(id string) (hash []byte, err error) {
-	err = sq.Select("password").
-		From("accounts").
-		Where("id = ?", id).
-		QueryRow().
-		Scan(&hash)
+	err = db.QueryRow("get_password", id).Scan(&hash)
 	return
 }
 
 // FindPosition returns the highest matching position of a user on a certain
 // board. As a special case the admin user will always return "admin".
-func FindPosition(board, userID string) (pos common.ModerationLevel, err error) {
+func FindPosition(
+	board, userID string,
+) (
+	pos common.ModerationLevel,
+	err error,
+) {
 	if userID == "admin" {
 		return common.Admin, nil
 	}
 
-	err = sq.Select("position").
-		From("staff").
-		Where(squirrel.Eq{
-			"account": userID,
-			"board":   []string{board, "all"},
-		}).
-		OrderBy("position desc").
-		QueryRow().
-		Scan(&pos)
+	err = db.QueryRow("find_position", userID, board).Scan(&pos)
 	if err == pgx.ErrNoRows {
 		err = nil
 	}
@@ -82,36 +62,25 @@ func FindPosition(board, userID string) (pos common.ModerationLevel, err error) 
 
 // WriteLoginSession writes a new user login session to the DB
 func WriteLoginSession(account, token string) error {
-	expiryTime := time.Duration(config.Get().SessionExpiry) * time.Hour * 24
-	_, err := sq.Insert("sessions").
-		Columns("account", "token", "expires").
-		Values(account, token, time.Now().Add(expiryTime)).
-		Exec()
+	_, err := db.Exec("insert_session", account, token)
 	return err
 }
 
 // LogOut logs the account out of one specific session
 func LogOut(account, token string) error {
-	_, err := sq.Delete("sessions").
-		Where("account = ? and token = ?", account, token).
-		Exec()
+	_, err := db.Exec("log_out", account, token)
 	return err
 }
 
 // LogOutAll logs an account out of all user sessions
 func LogOutAll(account string) error {
-	_, err := sq.Delete("sessions").
-		Where("account = ?", account).
-		Exec()
+	_, err := db.Exec("log_out_all", account)
 	return err
 }
 
 // ChangePassword changes an existing user's login password
 func ChangePassword(account string, hash []byte) error {
-	_, err := sq.Update("accounts").
-		Set("password", hash).
-		Where("id = ?", account).
-		Exec()
+	_, err := db.Exec("change_password", account, hash)
 	return err
 }
 
@@ -126,10 +95,7 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 		return returnAll()
 	}
 
-	r, err := sq.Select("board").
-		From("staff").
-		Where("account = ? and position = ?", account, common.BoardOwner).
-		Query()
+	r, err := db.Query("get_owned_boards", account)
 	if err != nil {
 		return
 	}
@@ -152,12 +118,14 @@ func GetOwnedBoards(account string) (boards []string, err error) {
 
 // GetIP returns an IP of the poster that created a post. Posts older than 7
 // days will not have this information.
-func GetIP(id uint64) (string, error) {
-	var ip sql.NullString
-	err := sq.Select("ip").
-		From("posts").
-		Where("id = ?", id).
-		QueryRow().
-		Scan(&ip)
-	return ip.String, err
+func GetPostIP(id uint64) (net.IP, error) {
+	var s *string
+	err := db.QueryRow("get_post_ip", id).Scan(&s)
+	if err != nil {
+		return nil, err
+	}
+	if s == nil {
+		return nil, nil
+	}
+	return net.ParseIP(*s), nil
 }
