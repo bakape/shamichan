@@ -1597,6 +1597,7 @@ var migrations = []func(*pgx.Tx) error{
 			"functions/delete_posts.sql",
 			"functions/get_board.sql",
 			"functions/get_same_ip_posts.sql",
+			"functions/insert_post.sql",
 			"triggers/posts.sql",
 			"triggers/threads.sql",
 			"triggers/bans.sql",
@@ -1668,6 +1669,8 @@ var migrations = []func(*pgx.Tx) error{
 			`delete from bans`,
 			`alter table bans alter column expires type timestamptz`,
 			`alter table bans inherit expiries`,
+
+			`alter table posts drop column board`,
 		)
 		if err != nil {
 			return

@@ -1,9 +1,10 @@
 package db
 
 import (
-	"database/sql"
 	"sort"
 	"sync"
+
+	"github.com/jackc/pgx"
 )
 
 var (
@@ -32,17 +33,8 @@ func FlushOpenPostBodies() (err error) {
 	sort.Sort(toWrite)
 
 	return InTransaction(func(tx *pgx.Tx) (err error) {
-		q, err := tx.Prepare(
-			`update posts
-			set body = $1
-			where id = $2 and editing = true`,
-		)
-		if err != nil {
-			return
-		}
-
 		for _, id := range toWrite {
-			_, err = q.Exec(openPostBodyBuffer[id], id)
+			_, err = tx.Exec("set_post_body", openPostBodyBuffer[id], id)
 			if err != nil {
 				return
 			}

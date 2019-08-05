@@ -1,11 +1,11 @@
 package db
 
 import (
-	"database/sql"
 	"encoding/json"
 	"sort"
 
 	"github.com/bakape/meguca/common"
+	"github.com/jackc/pgx"
 )
 
 // Data populated on post closure
@@ -27,16 +27,12 @@ func ClosePost(
 		if err != nil {
 			return
 		}
-		_, err = sq.Update("posts").
-			SetMap(map[string]interface{}{
-				"editing":  false,
-				"body":     body,
-				"commands": commandRow(com),
-				"password": nil,
-			}).
-			Where("id = ?", id).
-			RunWith(tx).
-			Exec()
+		_, err = tx.Exec(
+			`close_post`,
+			id,
+			body,
+			commandRow(com),
+		)
 		if err != nil {
 			return
 		}
@@ -67,17 +63,8 @@ func writeLinks(tx *pgx.Tx, source uint64, links []uint64) (err error) {
 	// Sort for less page missed on the DB side
 	sort.Sort(idSorter(links))
 
-	q, err := tx.Prepare(
-		`insert into links (source, target)
-		select $1, $2
-		where exists (select from posts p where p.id = $2)`,
-	)
-	if err != nil {
-		return
-	}
-
 	for _, id := range links {
-		_, err = q.Exec(source, id)
+		_, err = tx.Exec("insert_link", source, id)
 		if err != nil {
 			return
 		}

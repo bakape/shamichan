@@ -33,11 +33,12 @@ func TestPostUpdates(t *testing.T) {
 		{
 			name: "IP deletion",
 			fn: func(t *testing.T) {
-				_, err := sq.
-					Update("posts").
-					Set("ip", nil).
-					Where("id = ?", p.ID).
-					Exec()
+				_, err := db.Exec(
+					`update posts
+					set ip = null
+					where id = $1`,
+					p.ID,
+				)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -47,11 +48,12 @@ func TestPostUpdates(t *testing.T) {
 			name: "close post",
 			bump: true,
 			fn: func(t *testing.T) {
-				_, err := sq.
-					Update("posts").
-					Set("editing", false).
-					Where("id = ?", p.ID).
-					Exec()
+				_, err := db.Exec(
+					`update posts
+					set editing = false
+					where id = $1`,
+					p.ID,
+				)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -127,11 +129,13 @@ func TestWriteOpenPostBody(t *testing.T) {
 	}
 
 	var body string
-	err = sq.
-		Select("body").
-		From("posts").
-		Where("id = ?", p.ID).
-		QueryRow().
+	err = db.
+		QueryRow(
+			`select body
+			from posts
+			where id = $1`,
+			p.ID,
+		).
 		Scan(&body)
 	if err != nil {
 		t.Fatal(err)

@@ -1,13 +1,13 @@
 package db
 
 import (
-	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
+	"github.com/jackc/pgx"
 )
 
 func TestValidateOp(t *testing.T) {
@@ -101,7 +101,7 @@ func prepareForPostInsertion(t *testing.T) {
 	writeSampleThread(t)
 
 	// Prevent post ID key collision
-	_, err := sq.Select("nextval('post_id')").Exec()
+	_, err := db.Exec("select nextval('post_id')")
 	if err != nil {
 		t.Fatal(err)
 	}
