@@ -112,18 +112,32 @@ export function loadFromDB(...threads: number[]) {
 	})
 }
 
+
+const channels: Map<string, BroadcastChannel | null> = new Map();
+
+function getChannel(name: string) {
+	if (channels.has(name)) {
+		return channels.get(name);
+	}
+
+	const newChannel = typeof BroadcastChannel === 'function' ? new BroadcastChannel(name) : null;
+	channels.set(name, newChannel);
+	return newChannel;
+}
+
 // Broadcast to other tabs
 function propagate(channel: string, data: any) {
-	if (typeof (BroadcastChannel) === "function") {
-		(new BroadcastChannel(channel)).postMessage(data);
-	}
+	const chan = getChannel(channel);
+	chan && chan.postMessage(data);
 }
 
 // Receive updates from other tabs
 function receive(channel: string, store: Set<number>) {
-	if (typeof (BroadcastChannel) === "function") {
-		(new BroadcastChannel(channel)).onmessage = (e: MessageEvent) =>
+	const chan = getChannel(channel);
+	if (chan) {
+		chan.onmessage = (e: MessageEvent) => {
 			store.add(e.data);
+		};
 	}
 }
 
