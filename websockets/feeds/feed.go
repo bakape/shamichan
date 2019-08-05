@@ -208,7 +208,7 @@ func (f *Feed) sendIPCount() {
 	pastHour := time.Now().Add(-time.Hour).Unix()
 
 	for c := range f.clients {
-		ip := c.IP()
+		ip := c.IP().String()
 		if _, ok := ips[ip]; !ok && c.LastTime() >= pastHour {
 			active++
 		}
@@ -262,7 +262,9 @@ func (f *Feed) SpoilerImage(id uint64, msg []byte) {
 	f.spoilerImage <- message{id, msg}
 }
 
-func (f *Feed) _moderatePost(id uint64, msg []byte,
+func (f *Feed) _moderatePost(
+	id uint64,
+	msg []byte,
 	entry common.ModerationEntry,
 ) {
 	f.moderatePost <- moderationMessage{

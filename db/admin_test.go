@@ -1,7 +1,6 @@
 package db
 
 import (
-	"database/sql"
 	"encoding/json"
 	"testing"
 	"time"
@@ -29,11 +28,11 @@ func prepareForModeration(t *testing.T) {
 func writeAdminAccount(t *testing.T) {
 	t.Helper()
 
-	err := InTransaction(func(tx *pgx.Tx) (err error) {
-		err = RegisterAccount(tx, "admin", samplePasswordHash)
-		if err != nil {
-			return
-		}
+	err := RegisterAccount("admin", samplePasswordHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = InTransaction(func(tx *pgx.Tx) (err error) {
 		return WriteStaff(tx, "all", map[common.ModerationLevel][]string{
 			common.BoardOwner: {"admin"},
 		})
@@ -108,19 +107,18 @@ func TestDeletePostsByIP(t *testing.T) {
 	writeAllBoard(t)
 	writeAdminAccount(t)
 
-	err := InTransaction(func(tx *pgx.Tx) (err error) {
-		err = RegisterAccount(tx, "user1", samplePasswordHash)
-		if err != nil {
-			return
-		}
-		err = WriteStaff(tx, "a", map[common.ModerationLevel][]string{
+	err := RegisterAccount("user1", samplePasswordHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = RegisterAccount("user2", samplePasswordHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = InTransaction(func(tx *pgx.Tx) (err error) {
+		return WriteStaff(tx, "a", map[common.ModerationLevel][]string{
 			common.BoardOwner: {"user1"},
 		})
-		if err != nil {
-			return
-		}
-
-		return RegisterAccount(tx, "user2", samplePasswordHash)
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -419,7 +417,13 @@ func TestGetModLogEntry(t *testing.T) {
 	t.Run("ban_unban", TestBanUnban) // So we have something in the log
 
 	var id uint64
-	err := sq.Select("id").From("mod_log").Limit(1).QueryRow().Scan(&id)
+	err := db.
+		QueryRow(
+			`select id
+			from mod_log
+			limit 1`,
+		).
+		Scan(&id)
 	if err != nil {
 		t.Fatal(err)
 	}

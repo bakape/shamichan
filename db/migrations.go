@@ -1620,13 +1620,40 @@ var migrations = []func(*pgx.Tx) error{
 	},
 	func(tx *pgx.Tx) (err error) {
 		err = loadSQL(tx,
-			"functions/encode_mod_log",
-			// TODO: Reload all functions
+			"functions/encode_post.sql",
+			"functions/post_count.sql",
+			"functions/is_deleted.sql",
+			"functions/thread_board.sql",
+			"functions/encode_mod_log.sql",
+			"functions/get_thread.sql",
+			"functions/encode_thread.sql",
+			"functions/spoiler_images.sql",
+			"functions/record_invalid_captcha.sql",
+			"functions/delete_posts_by_ip.sql",
+			"functions/insert_image.sql",
+			"functions/validate_captcha.sql",
+			"functions/post_op.sql",
+			"functions/assert_can_perform.sql",
+			"functions/bump_thread.sql",
+			"functions/get_post_moderation.sql",
+			"functions/get_links.sql",
+			"functions/delete_images.sql",
+			"functions/use_image_token.sql",
+			"functions/post_board.sql",
+			"functions/delete_posts.sql",
+			"functions/get_board.sql",
+			"functions/get_same_ip_posts.sql",
+			"triggers/posts.sql",
+			"triggers/threads.sql",
+			"triggers/bans.sql",
+			"triggers/mod_log.sql",
+			"triggers/boards.sql",
 		)
 		if err != nil {
 			return
 		}
-		return pg_util.ExecAll(tx,
+
+		err = pg_util.ExecAll(tx,
 			`create type moderation_action as enum (
 				'ban_post',
 				'unban_post',
@@ -1683,7 +1710,20 @@ var migrations = []func(*pgx.Tx) error{
 			`alter table spam_scores
 				add column expires timestamptz not null`,
 			`alter table spam_scores inherit expiries`,
+
+			`delete from bans`,
+			`alter table bans alter column expires type timestamptz`,
+			`alter table bans inherit expiries`,
 		)
+		if err != nil {
+			return
+		}
+
+		return registerTriggers(tx, map[string][]triggerDescriptor{
+			"bans": {
+				{after, tableInsert},
+			},
+		})
 	},
 }
 

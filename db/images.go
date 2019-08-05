@@ -10,6 +10,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/util"
+	"github.com/jackc/pgx"
 	"github.com/lib/pq"
 )
 

@@ -1,7 +1,7 @@
 package db
 
 import (
-	"database/sql"
+	"net"
 	"testing"
 	"time"
 
@@ -35,11 +35,11 @@ func TestSpamScores(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		sessions[i] = genToken(t)
 	}
-	ips := [...]string{
-		"226.209.126.221",
-		"131.215.1.14",
-		"99.188.17.210",
-		"71.189.25.162",
+	ips := [...]net.IP{
+		net.ParseIP("226.209.126.221"),
+		net.ParseIP("131.215.1.14"),
+		net.ParseIP("99.188.17.210"),
+		net.ParseIP("71.189.25.162"),
 	}
 
 	for i := 0; i < 4; i++ {
@@ -58,10 +58,11 @@ func TestSpamScores(t *testing.T) {
 		now.Add(-5 * time.Second).Unix(),
 		now.Add(10 * spamDetectionThreshold).Unix(),
 	} {
-		_, err = sq.Insert("spam_scores").
-			Columns("token", "score").
-			Values(sessions[i+1][:], score).
-			Exec()
+		_, err = db.Exec(
+			`insert into spam_scores (token, score)
+			values ($1, $2)`,
+			sessions[i+1][:], score,
+		)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -86,16 +87,40 @@ func TestSpamScores(t *testing.T) {
 	}
 
 	cases := [...]struct {
-		name, ip       string
+		name           string
+		ip             net.IP
 		session        auth.Base64Token
 		needCaptcha    bool
 		needCaptchaErr error
 	}{
-		{"fresh write", ips[0], sessions[0], false, nil},
-		{"overwrite stale value", ips[1], sessions[1], false, nil},
-		{"increment DB value", ips[2], sessions[2], true, nil},
-		{"spam", ips[3], sessions[3], false, common.ErrSpamDected},
-		{"no captcha solved in 3h", "143.195.24.54", genToken(t), true, nil},
+		{
+			name:    "fresh write",
+			ip:      ips[0],
+			session: sessions[0],
+		},
+		{
+			name:    "overwrite stale value",
+			ip:      ips[1],
+			session: sessions[1],
+		},
+		{
+			name:        "increment DB value",
+			ip:          ips[2],
+			session:     sessions[2],
+			needCaptcha: true,
+		},
+		{
+			name:           "spam",
+			ip:             ips[3],
+			session:        sessions[3],
+			needCaptchaErr: common.ErrSpamDected,
+		},
+		{
+			name:        "no captcha solved in 3h",
+			ip:          net.ParseIP("143.195.24.54"),
+			session:     genToken(t),
+			needCaptcha: true,
+		},
 	}
 
 	for i := range cases {
@@ -110,9 +135,7 @@ func TestSpamScores(t *testing.T) {
 	}
 
 	t.Run("clear score", func(t *testing.T) {
-		err := InTransaction(func(tx *pgx.Tx) error {
-			return resetSpamScore(tx, sessions[2])
-		})
+		err := recordValidCaptcha(sessions[2])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -121,13 +144,6 @@ func TestSpamScores(t *testing.T) {
 			t.Fatal(err)
 		}
 		test.AssertEquals(t, need, false)
-	})
-
-	t.Run("expiry", func(t *testing.T) {
-		err := expireSpamScores()
-		if err != nil {
-			t.Fatal(err)
-		}
 	})
 
 	t.Run("sync", func(t *testing.T) {
@@ -160,7 +176,7 @@ func TestCaptchas(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	const ip = "::1"
+	ip := net.ParseIP("::1")
 	session := genToken(t)
 
 	type testCase struct {
@@ -204,11 +220,6 @@ func TestCaptchas(t *testing.T) {
 				test.AssertEquals(t, has, c.hasSolved)
 			}
 		})
-	}
-
-	err = expireLastSolvedCaptchas()
-	if err != nil {
-		t.Fatal(err)
 	}
 }
 

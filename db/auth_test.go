@@ -1,7 +1,7 @@
 package db
 
 import (
-	"database/sql"
+	"net"
 	"testing"
 	"time"
 
@@ -9,6 +9,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
+	"github.com/jackc/pgx"
 )
 
 var (
@@ -20,9 +21,7 @@ var (
 func writeSampleUser(t *testing.T) {
 	t.Helper()
 
-	err := InTransaction(func(tx *pgx.Tx) error {
-		return RegisterAccount(tx, sampleUserID, samplePasswordHash)
-	})
+	err := RegisterAccount(sampleUserID, samplePasswordHash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,9 +43,7 @@ func TestRegisterAccount(t *testing.T) {
 	writeSampleUser(t)
 
 	// User name already registered
-	err := InTransaction(func(tx *pgx.Tx) error {
-		return RegisterAccount(tx, sampleUserID, samplePasswordHash)
-	})
+	err := RegisterAccount(sampleUserID, samplePasswordHash)
 	if err != ErrUserNameTaken {
 		UnexpectedError(t, err)
 	}
@@ -154,7 +151,7 @@ func TestGetBanRecords(t *testing.T) {
 	const length = time.Hour * 20
 	std := auth.BanRecord{
 		Ban: auth.Ban{
-			IP:    "::1",
+			IP:    net.ParseIP("::1"),
 			Board: "a",
 		},
 		ForPost: 1,

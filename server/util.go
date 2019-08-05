@@ -103,6 +103,8 @@ func httpError(w http.ResponseWriter, r *http.Request, err error) {
 
 // Check client is not banned on specific board. Returns true, if all clear.
 // Renders ban page and returns false otherwise.
+//
+// TODO: Don't ever return the ban page and instead return JSON
 func assertNotBanned(w http.ResponseWriter, r *http.Request, board string,
 ) bool {
 	ip, err := auth.GetIP(r)

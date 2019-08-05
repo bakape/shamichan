@@ -3,10 +3,11 @@
 package feeds
 
 import (
-	"database/sql"
+	"time"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
-	"time"
+	"github.com/jackc/pgx"
 
 	"github.com/go-playground/log"
 )

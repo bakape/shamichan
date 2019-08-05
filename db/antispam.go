@@ -1,6 +1,7 @@
 package db
 
 import (
+	"net"
 	"sync"
 	"time"
 
@@ -29,7 +30,7 @@ var (
 
 type sessionData struct {
 	score time.Duration
-	ip    string
+	ip    net.IP
 }
 
 // Sync cache and DB spam scores
@@ -81,7 +82,7 @@ func flushSpamScores() (err error) {
 	})
 }
 
-func banForSpam(tx *pgx.Tx, ip string) error {
+func banForSpam(tx *pgx.Tx, ip net.IP) error {
 	return systemBanTx(tx, ip, "spam detected", time.Hour*48)
 }
 
@@ -124,7 +125,7 @@ func mergeSpamScore(
 // session: token identifying captcha session
 // ip: IP of client
 // increment: increment amount in milliseconds
-func IncrementSpamScore(session auth.Base64Token, ip string, increment uint) {
+func IncrementSpamScore(session auth.Base64Token, ip net.IP, increment uint) {
 	if !config.Get().Captcha {
 		return
 	}
@@ -141,7 +142,7 @@ func IncrementSpamScore(session auth.Base64Token, ip string, increment uint) {
 
 // NeedCaptcha returns, if the user needs a captcha
 // to proceed with usage of server resources
-func NeedCaptcha(session auth.Base64Token, ip string) (need bool, err error) {
+func NeedCaptcha(session auth.Base64Token, ip net.IP) (need bool, err error) {
 	if !config.Get().Captcha {
 		return
 	}
@@ -166,7 +167,7 @@ func NeedCaptcha(session auth.Base64Token, ip string) (need bool, err error) {
 // Merge cached and DB value and return current score
 func getSpamScore(
 	session auth.Base64Token,
-	ip string,
+	ip net.IP,
 ) (
 	score time.Time,
 	err error,
@@ -196,8 +197,18 @@ func getSpamScore(
 }
 
 // Check if IP is spammer
-func AssertNotSpammer(session auth.Base64Token, ip string) (err error) {
+func AssertNotSpammer(session auth.Base64Token, ip net.IP) (err error) {
 	_, err = getSpamScore(session, ip)
+	return
+}
+
+// Separated for unit tests
+func recordValidCaptcha(session auth.Base64Token) (err error) {
+	spamMu.Lock()
+	defer spamMu.Unlock()
+
+	delete(spamScoreBuffer, session)
+	_, err = db.Exec("validate_captcha", session[:])
 	return
 }
 
@@ -205,7 +216,7 @@ func AssertNotSpammer(session auth.Base64Token, ip string) (err error) {
 func ValidateCaptcha(
 	req auth.Captcha,
 	session auth.Base64Token,
-	ip string,
+	ip net.IP,
 ) (err error) {
 	if !config.Get().Captcha {
 		return
@@ -213,12 +224,7 @@ func ValidateCaptcha(
 	err = captchouli.CheckCaptcha(req.CaptchaID, req.Solution)
 	switch err {
 	case nil:
-		spamMu.Lock()
-		defer spamMu.Unlock()
-
-		delete(spamScoreBuffer, session)
-		_, err = db.Exec("validate_captcha", session[:])
-		return
+		return recordValidCaptcha(session)
 	case captchouli.ErrInvalidSolution:
 		var count int
 		err = db.QueryRow("record_invalid_captcha", ip).Scan(&count)

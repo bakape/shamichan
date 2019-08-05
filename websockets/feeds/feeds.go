@@ -6,6 +6,8 @@ package feeds
 import (
 	"encoding/json"
 	"errors"
+	"net"
+	"strings"
 	"sync"
 
 	"github.com/bakape/meguca/common"
@@ -216,48 +218,91 @@ func handlePostClosure(msg string) (err error) {
 // Initialize internal runtime
 func Init() (err error) {
 	// TODO: Clean up feeds on thread and board deletion
-	// TODO: Repopulate feeds on DB disconnect
 
-	err = db.Listen(pg_util.ListenOpts{
-		Channel: "post.moderated",
-		OnMsg:   handlePostModeration,
-	})
-	if err != nil {
-		return
+	for _, o := range [...]pg_util.ListenOpts{
+		{
+			Channel: "post.moderated",
+			OnMsg:   handlePostModeration,
+		},
+		{
+			Channel: "post.closed",
+			OnMsg:   handlePostClosure,
+		},
+		{
+			Channel: "clients.disconnect",
+			OnMsg:   handleClientDisconnecting,
+		},
+	} {
+		err = db.Listen(o)
+		if err != nil {
+			return
+		}
 	}
-	return db.Listen(pg_util.ListenOpts{
-		Channel: "post.closed",
-		OnMsg:   handlePostClosure,
-	})
+	return
 }
 
-// Separate function for testing
+// Separate function for unit tests
 func handlePostModeration(msg string) (err error) {
 	// TODO: Propagate to board listeners without any thread listeners
 
-	arr, err := db.SplitUint64s(msg, 2)
+	_, arr, err := db.SplitBoardAndInts(msg, 3)
 	if err != nil {
 		return
 	}
-	op, logID := arr[0], arr[1]
+	op, post, logID := arr[0], arr[1], arr[2]
 
 	// Query performed here to prevent feeds.mu contention
-	e, err := db.GetModLogEntry(logID)
+	payload, err := db.GetModLogEntry(uint64(logID))
 	if err != nil {
 		return
 	}
-	payload, err := common.EncodeMessage(common.MessageModeratePost, struct {
-		ID uint64 `json:"id"`
-		common.ModerationEntry
-	}{e.ID, e.ModerationEntry})
+	var entry common.ModerationEntry
+	err = json.Unmarshal(payload, &entry)
 	if err != nil {
 		return
 	}
 
-	return sendIfExists(op, func(f *Feed) (err error) {
-		f._moderatePost(e.ID, payload, e.ModerationEntry)
+	return sendIfExists(uint64(op), func(f *Feed) (err error) {
+		f._moderatePost(
+			uint64(post),
+			common.PrependMessageType(common.MessageModeratePost, payload),
+			entry,
+		)
 		return
 	})
+}
+
+// Separate function for unit tests
+func handleClientDisconnecting(msg string) (err error) {
+	split := strings.Split(msg, ",")
+	if len(split) != 2 {
+		return db.ErrMsgParse(msg)
+	}
+	board := split[0]
+	ip := net.ParseIP(split[1])
+	if ip == nil {
+		return db.ErrMsgParse(msg)
+	}
+
+	payload, err := common.EncodeMessage(
+		common.MessageInvalid,
+		common.ErrBanned.Error(),
+	)
+	if err != nil {
+		return
+	}
+
+	var cls []common.Client
+	if board == "all" {
+		cls = GetByIP(ip)
+	} else {
+		cls = GetByIPAndBoard(ip, board)
+	}
+	for _, cl := range cls {
+		cl.Send(payload)
+		cl.Close(nil)
+	}
+	return
 }
 
 // Clear removes all existing feeds and clients. Used only in tests.
