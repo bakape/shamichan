@@ -1,11 +1,12 @@
 package db
 
 import (
-	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/bakape/meguca/assets"
 	"github.com/bakape/pg_util"
+	"github.com/jackc/pgx"
 )
 
 // Load all assets from and pass them to load. Start listening for changes.
@@ -13,22 +14,30 @@ func loadAssets(
 	table string,
 	load func(board string, files []assets.File),
 ) (err error) {
-	byBoard := make(map[string][]assets.File, 64)
-	err = queryAll(
-		sq.Select("board", "data", "mime").From(table),
-		func(r *sql.Rows) (err error) {
-			var (
-				board string
-				file  assets.File
-			)
-			err = r.Scan(&board, &file.Data, &file.Mime)
-			if err != nil {
-				return
-			}
-			byBoard[board] = append(byBoard[board], file)
-			return
-		},
+	byBoard := make(map[string][]assets.File)
+
+	r, err := db.Query(`select board, data, mime from ` + table)
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	var (
+		board string
+		file  assets.File
 	)
+	for r.Next() {
+		// Avoid sharing the same buffer
+		file.Data = nil
+
+		err = r.Scan(&board, &file.Data, &file.Mime)
+		if err != nil {
+			return
+		}
+
+		byBoard[board] = append(byBoard[board], file)
+	}
+	err = r.Err()
 	if err != nil {
 		return
 	}
@@ -46,31 +55,44 @@ func loadAssets(
 
 // Returns function for reading assets from db on board asset updates.
 // Not inlined to ease testing.
-func updateAssets(table string,
+func updateAssets(
+	table string,
 	load func(board string, files []assets.File),
 ) func(string) error {
 	return func(board string) (err error) {
 		files := make([]assets.File, 0, 16)
-		err = queryAll(
-			sq.Select("data", "mime").
-				From(table).
-				Where("board  = ?", board),
-			func(r *sql.Rows) (err error) {
-				var (
-					data []byte
-					mime string
-				)
-				err = r.Scan(&data, &mime)
-				if err != nil {
-					return
-				}
-				files = append(files, assets.File{
-					Data: data,
-					Mime: mime,
-				})
-				return
-			},
+
+		r, err := db.Query(
+			fmt.Sprintf(
+				`select data, mime
+				from %s
+				where board = $1`,
+				table,
+			),
+			board,
 		)
+		if err != nil {
+			return
+		}
+		defer r.Close()
+
+		var (
+			data []byte
+			mime string
+		)
+		for r.Next() {
+			data = nil // Avoid sharing buffer
+
+			err = r.Scan(&data, &mime)
+			if err != nil {
+				return
+			}
+			files = append(files, assets.File{
+				Data: data,
+				Mime: mime,
+			})
+		}
+		err = r.Err()
 		if err != nil {
 			return
 		}
@@ -100,28 +122,35 @@ func setLoadingAnimation(board string, files []assets.File) {
 // Overwrite any existing assets in the DB
 func setAssets(table, board string, files []assets.File) error {
 	return InTransaction(func(tx *pgx.Tx) (err error) {
-		_, err = sq.
-			Delete(table).
-			Where("board = ?", board).
-			RunWith(tx).
-			Exec()
+		_, err = tx.Exec(
+			fmt.Sprintf(`delete from %s where board = $1`, table),
+			board,
+		)
 		if err != nil {
 			return
 		}
 
 		if len(files) != 0 {
-			q := sq.
-				Insert(table).
-				Columns("board", "data", "mime").
-				RunWith(tx)
-			for _, f := range files {
-				if f.Data != nil {
-					q = q.Values(board, f.Data, f.Mime)
-				}
-			}
-			_, err = q.Exec()
+			name := "insert_" + table
+			_, err = tx.Prepare(
+				name,
+				fmt.Sprintf(
+					`insert into %s (board, data, mime)
+					values ($1, $2, $3)`,
+				),
+			)
 			if err != nil {
 				return
+			}
+
+			for _, f := range files {
+				if f.Data == nil {
+					continue
+				}
+				_, err = tx.Exec(name, board, f.Data, f.Mime)
+				if err != nil {
+					return
+				}
 			}
 		}
 
