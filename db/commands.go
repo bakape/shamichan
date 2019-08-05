@@ -1,12 +1,12 @@
 package db
 
 import (
-	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 
 	"github.com/bakape/meguca/common"
+	"github.com/jackc/pgx"
 	"github.com/lib/pq"
 )
 
@@ -72,24 +72,12 @@ func populateCommands(
 	for i := range com {
 		switch com[i].Type {
 		case common.Pyu:
-			err = tx.
-				QueryRow(
-					`update pyu
-					set pcount = pcount + 1
-					where id = $1
-					returning pcount`,
-					board,
-				).
-				Scan(&com[i].Pyu)
+			err = tx.QueryRow("increment_pyu", board).Scan(&com[i].Pyu)
 			if err != nil {
 				return
 			}
 		case common.Pcount:
-			err = sq.Select("pcount").
-				From("pyu").
-				Where("id = ?", board).
-				RunWith(tx).
-				Scan(&com[i].Pyu)
+			err = tx.QueryRow("get_pcount", board).Scan(&com[i].Pyu)
 			if err != nil {
 				return
 			}
