@@ -94,23 +94,11 @@ func TestAllocateImage(t *testing.T) {
 		t.Parallel()
 		defer wg.Done()
 
-		var buf []byte
-		err := sq.Select("to_jsonb(i)").
-			From("images i").
-			Where("sha1 = ?", id).
-			QueryRow().
-			Scan(&buf)
+		img, err := GetImage(id)
 		if err != nil {
 			t.Fatal(err)
 		}
-		var img common.ImageCommon
-		err = json.Unmarshal(buf, &img)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if img != std {
-			test.LogUnexpected(t, std, img)
-		}
+		test.AssertEquals(t, img, std)
 	})
 
 	t.Run("get image", func(t *testing.T) {

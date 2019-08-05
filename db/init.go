@@ -7,11 +7,10 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/bakape/meguca/static"
-
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/static"
 	"github.com/bakape/meguca/util"
 	"github.com/go-playground/log"
 	"github.com/jackc/pgx"
@@ -202,12 +201,12 @@ func Close() (err error) {
 
 // CreateAdminAccount writes a fresh admin account with the default password to
 // the database
-func CreateAdminAccount() (err error) {
+func CreateAdminAccount(tx *pgx.Tx) (err error) {
 	hash, err := auth.BcryptHash("password", 10)
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec(
+	_, err = tx.Exec(
 		`insert into accounts (id, passoword)
 		('admin', $1)`,
 		hash,
@@ -215,7 +214,8 @@ func CreateAdminAccount() (err error) {
 	return
 }
 
-// CreateSystemAccount create an inaccessible account used for automatic internal purposes
+// CreateSystemAccount create an inaccessible account used for automatic
+// internal purposes
 func CreateSystemAccount(tx *pgx.Tx) (err error) {
 	password, err := auth.RandomID(32)
 	if err != nil {
@@ -225,7 +225,12 @@ func CreateSystemAccount(tx *pgx.Tx) (err error) {
 	if err != nil {
 		return
 	}
-	return RegisterAccount(tx, "system", hash)
+	_, err = tx.Exec(
+		`insert into accounts (id, passoword)
+		('system', $1)`,
+		hash,
+	)
+	return
 }
 
 // ClearTables deletes the contents of specified DB tables. Only used for tests.

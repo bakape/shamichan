@@ -106,6 +106,9 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 
 // WriteBoard writes a board complete with configurations to the database
 func WriteBoard(tx *pgx.Tx, c BoardConfigs) (err error) {
+	if c.Created.IsZero() {
+		c.Created = time.Now().UTC()
+	}
 	_, err = tx.Exec(
 		"insert_board",
 		c.ID,

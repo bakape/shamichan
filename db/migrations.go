@@ -18,7 +18,6 @@ import (
 	"github.com/bakape/pg_util"
 	"github.com/go-playground/log"
 	"github.com/jackc/pgx"
-	"github.com/lib/pq"
 )
 
 var version = len(migrations)
@@ -128,15 +127,11 @@ var migrations = []func(*pgx.Tx) error{
 			return
 		}
 
-		data, err := json.Marshal(config.Defaults)
-		if err != nil {
-			return
-		}
-		_, err = sq.Insert("main").
-			Columns("id", "val").
-			Values("config", string(data)).
-			RunWith(tx).
-			Exec()
+		_, err = tx.Exec(
+			`insert into main (id, val)
+			values ('config', $1)`,
+			config.Defaults,
+		)
 		if err != nil {
 			return
 		}
@@ -553,7 +548,8 @@ var migrations = []func(*pgx.Tx) error{
 		}
 
 		// Write only verified links to new table
-		q, err := tx.Prepare(
+		_, err = tx.Prepare(
+			"_insert_link",
 			`insert into links (source, target)
 			values ($1, $2)`,
 		)
@@ -564,7 +560,7 @@ var migrations = []func(*pgx.Tx) error{
 			if !posts[source] || !posts[target] {
 				continue
 			}
-			_, err = q.Exec(source, target)
+			_, err = tx.Exec("_insert_link", source, target)
 			if err != nil {
 				return
 			}
@@ -614,33 +610,35 @@ var migrations = []func(*pgx.Tx) error{
 	},
 	func(tx *pgx.Tx) (err error) {
 		// Read all commands
-		var (
-			comms = make(map[uint64][]common.Command, 1024)
-			id    uint64
-		)
-		err = queryAll(
-			sq.Select("id", "commands").
-				From("posts").
-				Where("commands is not null").
-				RunWith(tx),
-			func(r *sql.Rows) (err error) {
-				var com commandRow
-				err = r.Scan(&id, &com)
-				if err != nil {
-					return
-				}
-				comms[id] = []common.Command(com)
-				return
-			},
+		r, err := db.Query(
+			`select id, commands
+			from posts
+			where commands is not null`,
 		)
 		if err != nil {
 			return
 		}
+		defer r.Close()
 
-		prep, err := tx.Prepare(
+		var (
+			comms = make(map[uint64][]common.Command, 1024)
+			id    uint64
+		)
+		for r.Next() {
+			var com commandRow
+			err = r.Scan(&id, &com)
+			if err != nil {
+				return
+			}
+			comms[id] = []common.Command(com)
+		}
+
+		_, err = tx.Prepare(
+			"_migrate_commands",
 			`update posts
 			set commands = $2
-			where id = $1`)
+			where id = $1`,
+		)
 		if err != nil {
 			return
 		}
@@ -660,7 +658,7 @@ var migrations = []func(*pgx.Tx) error{
 			if len(new) == 0 {
 				val = nil
 			}
-			_, err = prep.Exec(id, val)
+			_, err = tx.Exec("_migrate_commands", id, val)
 			if err != nil {
 				return
 			}
@@ -669,7 +667,7 @@ var migrations = []func(*pgx.Tx) error{
 		return
 	},
 	func(tx *pgx.Tx) error {
-		_, err := sq.Delete("main").Where("id = 'pyu'").RunWith(tx).Exec()
+		_, err := tx.Exec(`delete from main where id = 'pyu'`)
 		return err
 	},
 	func(tx *pgx.Tx) (err error) {
@@ -719,62 +717,20 @@ var migrations = []func(*pgx.Tx) error{
 	},
 	// Fixes global moderation
 	func(tx *pgx.Tx) (err error) {
-		c := BoardConfigs{
+		err = WriteBoard(tx, BoardConfigs{
 			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
 			Created:      time.Now().UTC(),
-		}
-
-		_, err = sq.Insert("boards").
-			Columns(
-				"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
-				"flags", "NSFW",
-				"rbText", "created", "defaultCSS", "title",
-				"notice", "rules", "eightball").
-			Values(
-				c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
-				c.Flags, c.NSFW, c.RbText,
-				c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
-				pq.StringArray(c.Eightball)).
-			RunWith(tx).
-			Exec()
+		})
 		if err != nil {
 			return
 		}
 
-		// Legacy function
-		writeStaff := func(tx *pgx.Tx, board string,
-			staff map[string][]string,
-		) (err error) {
-			// Remove previous staff entries
-			_, err = sq.Delete("staff").
-				Where("board  = ?", board).
-				RunWith(tx).
-				Exec()
-			if err != nil {
-				return
-			}
-
-			// Write new ones
-			q, err := tx.Prepare(`insert into staff (board, account, position)
-				values($1, $2, $3)`)
-			if err != nil {
-				return
-			}
-			for pos, accounts := range staff {
-				for _, a := range accounts {
-					_, err = q.Exec(board, a, pos)
-					if err != nil {
-						return
-					}
-				}
-			}
-
-			return
-		}
-
-		return writeStaff(tx, "all", map[string][]string{
-			"owners": {"admin", "system"},
-		})
+		return pg_util.ExecAll(tx,
+			`delete from staff where board = 'all'`,
+			`insert into staff (board, account, position)
+				values ('all', 'admin', 'owners'),
+					('all', 'system', 'owners')`,
+		)
 	},
 	func(tx *pgx.Tx) (err error) {
 		_, err = tx.Exec(
@@ -822,12 +778,15 @@ var migrations = []func(*pgx.Tx) error{
 			return
 		}
 
-		q, err := tx.Prepare(`insert into pyu (id, pcount) values ($1, 0)`)
+		_, err = tx.Prepare(
+			"_insert_pyu",
+			`insert into pyu (id, pcount) values ($1, 0)`,
+		)
 		if err != nil {
 			return
 		}
 		for _, b := range boards {
-			_, err = q.Exec(b)
+			_, err = tx.Exec("_insert_pyu", b)
 			if err != nil {
 				return
 			}
@@ -876,11 +835,10 @@ var migrations = []func(*pgx.Tx) error{
 		return
 	},
 	func(tx *pgx.Tx) (err error) {
-		_, err = sq.Delete("main").Where("id = 'roulette'").RunWith(tx).Exec()
-		if err != nil {
-			return
-		}
-		_, err = sq.Delete("main").Where("id = 'rcount'").RunWith(tx).Exec()
+		_, err = tx.Exec(
+			`delete from main
+			where id in ('roulette', 'rcount')`,
+		)
 		return
 	},
 	func(tx *pgx.Tx) (err error) {
@@ -897,40 +855,31 @@ var migrations = []func(*pgx.Tx) error{
 	func(tx *pgx.Tx) (err error) {
 		var threads []uint64
 		r, err := tx.Query(`select id from threads`)
-
 		if err != nil {
 			return
 		}
-
 		defer r.Close()
 
 		for r.Next() {
 			var thread uint64
 			err = r.Scan(&thread)
-
 			if err != nil {
 				return
 			}
-
 			threads = append(threads, thread)
 		}
 
 		err = r.Err()
-
-		if err != nil {
-			return
-		}
-
-		q, err := tx.Prepare(
-			`insert into roulette (id, scount, rcount) values ($1, 6, 0)`)
-
 		if err != nil {
 			return
 		}
 
 		for _, t := range threads {
-			_, err = q.Exec(t)
-
+			_, err = tx.Exec(
+				`insert into roulette (id, scount, rcount)
+				values ($1, 6, 0)`,
+				t,
+			)
 			if err != nil {
 				return
 			}
@@ -1125,12 +1074,12 @@ var migrations = []func(*pgx.Tx) error{
 		{
 			titles := make(map[uint64]common.ModerationLevel)
 
-			var r *sql.Rows
-			r, err = sq.Select("id", "auth").
-				From("posts").
-				Where("auth is not null").
-				RunWith(tx).
-				Query()
+			var r *pgx.Rows
+			r, err = tx.Query(
+				`select id, auth
+				from posts
+				where auth is not null`,
+			)
 			if err != nil {
 				return
 			}
@@ -1161,11 +1110,12 @@ var migrations = []func(*pgx.Tx) error{
 			}
 
 			for id, pos := range titles {
-				_, err = sq.Update("posts").
-					Set("auth", int(pos)).
-					Where("id = ?", id).
-					RunWith(tx).
-					Exec()
+				_, err = tx.Exec(
+					`update posts
+					set auth = $2
+					where id = $1`,
+					id, pos,
+				)
 				if err != nil {
 					return
 				}
@@ -1179,13 +1129,14 @@ var migrations = []func(*pgx.Tx) error{
 				position       common.ModerationLevel
 			}
 
-			var positions []row
-
-			var r *sql.Rows
-			r, err = sq.Delete("staff").
-				Suffix("returning account, board, position").
-				RunWith(tx).
-				Query()
+			var (
+				positions []row
+				r         *pgx.Rows
+			)
+			r, err = tx.Query(
+				`delete from staff
+				returning account, board, position`,
+			)
 			if err != nil {
 				return
 			}
@@ -1211,11 +1162,11 @@ var migrations = []func(*pgx.Tx) error{
 			}
 
 			for _, r := range positions {
-				_, err = sq.Insert("staff").
-					Columns("account", "board", "position").
-					Values(r.account, r.board, r.position).
-					RunWith(tx).
-					Exec()
+				_, err = tx.Exec(
+					`insert into staff (account, board, position)
+					values ($1, $2, $3)`,
+					r.account, r.board, r.position,
+				)
 				if err != nil {
 					return
 				}
@@ -1426,10 +1377,7 @@ var migrations = []func(*pgx.Tx) error{
 		return loadSQL(tx, "triggers/threads")
 	},
 	func(tx *pgx.Tx) (err error) {
-		_, err = sq.Delete("main").
-			Where("id = 'geo_md5'").
-			RunWith(tx).
-			Exec()
+		_, err = tx.Exec(`delete from main where id = 'geo_md5'`)
 		return
 	},
 	func(tx *pgx.Tx) (err error) {
@@ -1447,10 +1395,12 @@ var migrations = []func(*pgx.Tx) error{
 	},
 	func(tx *pgx.Tx) (err error) {
 		var salt string
-		err = sq.Select("val->>'salt'").
-			From("main").
-			Where("id = 'config'").
-			QueryRow().
+		err = tx.
+			QueryRow(
+				`select val->>'salt'
+				from main
+				where id = 'config'`,
+			).
 			Scan(&salt)
 		if err != nil {
 			return
@@ -1499,17 +1449,20 @@ var migrations = []func(*pgx.Tx) error{
 			return
 		}
 
-		byThread := make(map[uint64][]uint64)
-		r, err := sq.Select("id", "op").
-			From("posts").
-			OrderBy("id").
-			RunWith(tx).
-			Query()
+		r, err := tx.Query(
+			`select id, op
+			from posts
+			order by od`,
+		)
 		if err != nil {
 			return
 		}
 		defer r.Close()
-		var id, op uint64
+
+		var (
+			id, op   uint64
+			byThread = make(map[uint64][]uint64)
+		)
 		for r.Next() {
 			err = r.Scan(&id, &op)
 			if err != nil {
@@ -1522,13 +1475,14 @@ var migrations = []func(*pgx.Tx) error{
 			return
 		}
 
-		set, err := tx.Prepare(`update posts set page = $1 where id = $2`)
-		if err != nil {
-			return
-		}
 		for _, posts := range byThread {
 			for i, id := range posts {
-				_, err = set.Exec(i/100, id)
+				_, err = tx.Exec(
+					`update posts
+					set page = $1
+					where id = $2`,
+					i/100, id,
+				)
 				if err != nil {
 					return
 				}
@@ -1822,12 +1776,13 @@ func runMigrations() (err error) {
 		err = InTransaction(func(tx *pgx.Tx) (err error) {
 			// Lock version column to ensure no migrations from other processes
 			// happen concurrently
-			err = sq.Select("val").
-				From("main").
-				Where("id = 'version'").
-				Suffix("for update").
-				RunWith(tx).
-				QueryRow().
+			err = tx.
+				QueryRow(
+					`select val
+					from main
+					where id = 'version'
+					for update`,
+				).
 				Scan(&currentVersion)
 			if err != nil {
 				return
@@ -1850,11 +1805,12 @@ func runMigrations() (err error) {
 			}
 
 			// Write new version number
-			_, err = sq.Update("main").
-				Set("val", currentVersion+1).
-				Where("id = 'version'").
-				RunWith(tx).
-				Exec()
+			_, err = tx.Exec(
+				`update main
+				set val = $1
+				where id = 'version'`,
+				currentVersion+1,
+			)
 			return
 		})
 		if err != nil {
