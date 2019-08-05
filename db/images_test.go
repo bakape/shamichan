@@ -2,7 +2,6 @@ package db
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -13,6 +12,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/test"
+	"github.com/jackc/pgx"
 )
 
 func writeSampleImage(t *testing.T) {

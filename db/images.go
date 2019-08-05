@@ -1,8 +1,6 @@
 package db
 
 import (
-	"database/sql"
-	"encoding/json"
 	"io"
 	"time"
 
@@ -11,12 +9,6 @@ import (
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/util"
 	"github.com/jackc/pgx"
-	"github.com/lib/pq"
-)
-
-const (
-	// Time it takes for an image allocation token to expire
-	tokenTimeout = time.Minute
 )
 
 var (
@@ -41,27 +33,26 @@ func WriteImage(i common.ImageCommon) error {
 }
 
 func writeImageTx(tx *pgx.Tx, i common.ImageCommon) (err error) {
-	_, err = sq.
-		Insert("images").
-		Columns(
-			"audio", "video", "file_type", "thumb_type", "dims", "length",
-			"size", "MD5", "SHA1", "Title", "Artist",
-		).
-		Values(
-			i.Audio, i.Video, int(i.FileType), int(i.ThumbType),
-			pq.GenericArray{A: i.Dims}, i.Length, i.Size, i.MD5, i.SHA1,
-			i.Title, i.Artist,
-		).
-		RunWith(tx).
-		Exec()
+	_, err = tx.Exec(
+		"insert_image",
+		i.Audio,
+		i.Video,
+		i.FileType,
+		i.ThumbType,
+		i.Dims,
+		i.Length,
+		i.Size,
+		i.MD5,
+		i.SHA1,
+		i.Title,
+		i.Artist,
+	)
 	return
 }
 
 // NewImageToken inserts a new image allocation token into the DB and returns
 // it's ID
 func NewImageToken(tx *pgx.Tx, SHA1 string) (token string, err error) {
-	expires := time.Now().Add(tokenTimeout).UTC()
-
 	// Loop in case there is a primary key collision
 	for {
 		token, err = auth.RandomID(64)
@@ -69,12 +60,7 @@ func NewImageToken(tx *pgx.Tx, SHA1 string) (token string, err error) {
 			return
 		}
 
-		_, err = sq.
-			Insert("image_tokens").
-			Columns("token", "SHA1", "expires").
-			Values(token, SHA1, expires).
-			RunWith(tx).
-			Exec()
+		_, err = tx.Exec("insert_image_token", token, SHA1)
 		switch {
 		case err == nil:
 			return
@@ -88,19 +74,17 @@ func NewImageToken(tx *pgx.Tx, SHA1 string) (token string, err error) {
 
 // ImageExists returns, if image exists
 func ImageExists(tx *pgx.Tx, sha1 string) (exists bool, err error) {
-	err = sq.Select("1").
-		From("images").
-		Where("sha1 = ?", sha1).
-		Scan(&exists)
-	if err == pgx.ErrNoRows {
-		err = nil
-	}
+	err = tx.QueryRow("image_exists", sha1).Scan(&exists)
 	return
 }
 
 // AllocateImage allocates an image's file resources to their respective served
 // directories and write its data to the database
-func AllocateImage(tx *pgx.Tx, src, thumb io.ReadSeeker, img common.ImageCommon,
+func AllocateImage(
+	tx *pgx.Tx,
+	src,
+	thumb io.ReadSeeker,
+	img common.ImageCommon,
 ) (
 	err error,
 ) {
@@ -127,29 +111,28 @@ func cleanUpFailedAllocation(img common.ImageCommon, err error) error {
 
 // HasImage returns, if the post has an image allocated. Only used in tests.
 func HasImage(id uint64) (has bool, err error) {
-	err = sq.Select("true").
-		From("posts").
-		Where("id = ? and SHA1 IS NOT NULL", id).
-		QueryRow().
-		Scan(&has)
-	if err == pgx.ErrNoRows {
-		err = nil
-	}
+	err = db.QueryRow("has_image", id).Scan(&has)
 	return
 }
 
 // InsertImage insert and image into and existing open post and return image
 // JSON
-func InsertImage(tx *pgx.Tx, postID uint64, token, name string, spoiler bool,
+func InsertImage(
+	tx *pgx.Tx,
+	postID uint64,
+	token, name string,
+	spoiler bool,
 ) (
 	json []byte, err error,
 ) {
-	err = tx.QueryRow(
-		`select insert_image($1::bigint,
-			$2::char(86),
-			$3::varchar(200),
-			$4::bool)`,
-		postID, token, name, spoiler).
+	err = tx.
+		QueryRow(
+			"insert_image_into_post",
+			postID,
+			token,
+			name,
+			spoiler,
+		).
 		Scan(&json)
 	if extractException(err) == "invalid image token" {
 		err = ErrInvalidToken
@@ -161,83 +144,62 @@ func InsertImage(tx *pgx.Tx, postID uint64, token, name string, spoiler bool,
 //
 // Only used in tests.
 func GetImage(sha1 string) (img common.ImageCommon, err error) {
-	var buf []byte
-	err = sq.Select("to_jsonb(i)").
-		From("images i").
-		Where("SHA1 = ?", sha1).
-		QueryRow().
-		Scan(&buf)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal(buf, &img)
+	err = db.
+		QueryRow(
+			`select to_jsonb(i)
+			from images i
+			where sha1 = $1`,
+			sha1,
+		).
+		Scan(&img)
 	return
 }
 
 // SpoilerImage spoilers an already allocated image
 func SpoilerImage(id, op uint64) error {
-	_, err := sq.Update("posts").
-		Set("spoiler", true).
-		Where("id = ?", id).
-		Exec()
+	_, err := db.Exec("spoiler_image", id)
 	return err
 }
 
 // VideoPlaylist returns a video playlist for a board
 func VideoPlaylist(board string) (videos []Video, err error) {
 	videos = make([]Video, 0, 128)
-	var (
-		v   Video
-		dur uint64
-	)
-	err = queryAll(
-		sq.Select("i.SHA1", "i.file_type", "i.length").
-			From("images as i").
-			Where(`
-				exists(select 1
-					from posts as p
-					where p.sha1 = i.sha1 and p.board = ?)
-				and file_type in (?, ?)
-				and audio = true
-				and video = true
-				and length between 10 and 600`,
-				board,
-				int(common.WEBM),
-				int(common.MP4),
-			).
-			OrderBy("random()"),
-		func(r *sql.Rows) (err error) {
-			err = r.Scan(&v.SHA1, &v.FileType, &dur)
-			if err != nil {
-				return
-			}
-			v.Duration = time.Duration(dur) * time.Second
-			videos = append(videos, v)
-			return
-		},
-	)
-	return
-}
 
-// Delete images not used in any posts
-func deleteUnusedImages() (err error) {
-	r, err := db.Query(`
-		delete from images
-		where (
-			(select count(*) from posts where SHA1 = images.SHA1)
-			+ (select count(*) from image_tokens where SHA1 = images.SHA1)
-		) = 0
-		returning SHA1, file_type, thumb_type`)
+	r, err := db.Query("get_video_playlist", board)
 	if err != nil {
 		return
 	}
 	defer r.Close()
 
+	var (
+		v   Video
+		dur uint64
+	)
 	for r.Next() {
-		var (
-			sha1                string
-			fileType, thumbType uint8
-		)
+		err = r.Scan(&v.SHA1, &v.FileType, &dur)
+		if err != nil {
+			return
+		}
+		v.Duration = time.Duration(dur) * time.Second
+		videos = append(videos, v)
+	}
+	err = r.Err()
+	return
+}
+
+// Delete images not used in any posts
+func deleteUnusedImages() (err error) {
+	r, err := db.Query("delete_unused_images")
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	var (
+		sha1                string
+		fileType, thumbType uint8
+	)
+	for r.Next() {
 		err = r.Scan(&sha1, &fileType, &thumbType)
 		if err != nil {
 			return
@@ -247,6 +209,5 @@ func deleteUnusedImages() (err error) {
 			return
 		}
 	}
-
 	return r.Err()
 }
