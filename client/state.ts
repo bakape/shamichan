@@ -1,7 +1,7 @@
 // Stores the central state of the web application
 
 import { Post, PostCollection } from './posts'
-import { getClosestID } from './util'
+import { getClosestID, timedAggregate } from './util'
 import { readIDs, storeID } from './db'
 import { send } from './connection'
 
@@ -115,7 +115,7 @@ export function loadFromDB(...threads: number[]) {
 
 const channels: Map<string, BroadcastChannel | null> = new Map();
 
-function getChannel(name: string) {
+function getChannel(name: string): BroadcastChannel | null {
 	if (channels.has(name)) {
 		return channels.get(name);
 	}
@@ -126,7 +126,7 @@ function getChannel(name: string) {
 }
 
 // Broadcast to other tabs
-function propagate(channel: string, data: any) {
+function propagate(channel: string, ...data: any[]) {
 	const chan = getChannel(channel);
 	chan && chan.postMessage(data);
 }
@@ -136,35 +136,43 @@ function receive(channel: string, store: Set<number>) {
 	const chan = getChannel(channel);
 	if (chan) {
 		chan.onmessage = (e: MessageEvent) => {
-			store.add(e.data);
+			for (const el of e.data) {
+				store.add(el);
+			}
 		};
 	}
 }
 
+// batch ids and send at most every 200ms to avoid spamming broadcasts
+const batchedPropagateMine = timedAggregate<number>(propagate.bind(null, "mine"));
+const batchedPropagateSeen = timedAggregate<number>(propagate.bind(null, "seen"));
+const batchedPropagateSeenPost = timedAggregate<number>(propagate.bind(null, "seenPost"));
+const batchedPropagateHidden = timedAggregate<number>(propagate.bind(null, "hidden"));
+
 // Store the ID of a post this client created
 export function storeMine(id: number, op: number) {
 	mine.add(id);
-	propagate("mine", id);
+	batchedPropagateMine(id);
 	storeID("mine", id, op, tenDays);
 }
 
 // Store the ID of a post that replied to one of the user's posts
 export function storeSeenReply(id: number, op: number) {
 	seenReplies.add(id);
-	propagate("seen", id);
+	batchedPropagateSeen(id);
 	storeID("seen", id, op, tenDays);
 }
 
 export function storeSeenPost(id: number, op: number) {
 	seenPosts.add(id);
-	propagate("seenPost", id);
+	batchedPropagateSeenPost(id);
 	storeID("seenPost", id, op, tenDays);
 }
 
 // Store the ID of a post or thread to hide
 export function storeHidden(id: number, op: number) {
 	hidden.add(id);
-	propagate("hidden", id);
+	batchedPropagateHidden(id);
 	storeID("hidden", id, op, tenDays * 3 * 6);
 }
 
