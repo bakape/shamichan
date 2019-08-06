@@ -144,36 +144,34 @@ function receive(channel: string, store: Set<number>) {
 }
 
 // batch ids and send at most every 200ms to avoid spamming broadcasts
-const batchedPropagateMine = timedAggregate<number>(propagate.bind(null, "mine"));
-const batchedPropagateSeen = timedAggregate<number>(propagate.bind(null, "seen"));
 const batchedPropagateSeenPost = timedAggregate<number>(propagate.bind(null, "seenPost"));
-const batchedPropagateHidden = timedAggregate<number>(propagate.bind(null, "hidden"));
+const batchedStoreSeenPost = timedAggregate<{id: number, op: number}>(storeID.bind(null, "seenPost", tenDays));
 
 // Store the ID of a post this client created
 export function storeMine(id: number, op: number) {
 	mine.add(id);
-	batchedPropagateMine(id);
-	storeID("mine", id, op, tenDays);
+	propagate("mine", id);
+	storeID("mine", tenDays, {id, op});
 }
 
 // Store the ID of a post that replied to one of the user's posts
 export function storeSeenReply(id: number, op: number) {
 	seenReplies.add(id);
-	batchedPropagateSeen(id);
-	storeID("seen", id, op, tenDays);
+	propagate("seen", id);
+	storeID("seen", tenDays, {id, op});
 }
 
 export function storeSeenPost(id: number, op: number) {
 	seenPosts.add(id);
 	batchedPropagateSeenPost(id);
-	storeID("seenPost", id, op, tenDays);
+	batchedStoreSeenPost({id, op});
 }
 
 // Store the ID of a post or thread to hide
 export function storeHidden(id: number, op: number) {
 	hidden.add(id);
-	batchedPropagateHidden(id);
-	storeID("hidden", id, op, tenDays * 3 * 6);
+	propagate("hidden", id);
+	storeID("hidden", tenDays * 3 * 6, {id, op});
 }
 
 export function setBoardConfig(c: BoardConfigs) {
