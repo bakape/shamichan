@@ -1,0 +1,144 @@
+{
+	"format": {
+		"banned": "被 '%s' 封鎖，原因: %s、時長: \"%s\"",
+		"deleted": "被 '%s' 刪除",
+		"imageDeleted": "圖片被 '%s' 刪除",
+		"imageSpoilered": "圖片被 '%s' 標上劇透標記",
+		"newPostsInThread": "%d 則新貼文在討論串。",
+		"postsAndImagesOmitted": "已省略 %d 則貼文和 %d 張照片",
+		"postsOmitted": "已省略 %d 則貼文",
+		"purgedPost": "貼文被 '%s' 清除，原因: \"%s\"",
+		"shadowBinned": "被 '%s' 隱藏，原因: %s、時長: \"%s\"",
+		"threadLockToggled": "討論串已被 %s ，由 '%s'",
+		"unbanned": "被 '%s' 解除封鎖",
+		"viewedSameIP": "'%s' 查看了相同 IP 的貼文"
+	},
+	"forms": {},
+	"plurals": {
+		"day": [
+			"日",
+			"日"
+		],
+		"hour": [
+			"小時",
+			"小時"
+		],
+		"minute": [
+			"分鐘",
+			"分鐘"
+		],
+		"month": [
+			"月",
+			"月"
+		],
+		"second": [
+			"秒",
+			"秒"
+		],
+		"year": [
+			"年",
+			"年"
+		]
+	},
+	"posts": {
+		"admin": "管理員",
+		"ago": "前",
+		"and": "和",
+		"anon": "匿名",
+		"contract": "收縮",
+		"contractImages": "收縮圖片",
+		"deleteBySameIP": "從 IP 刪除全部",
+		"expand": "展開",
+		"expandImages": "展開圖片",
+		"hide": "隱藏",
+		"in": "在",
+		"janitors": "板務助理",
+		"justNow": "現在",
+		"locked": "鎖定",
+		"moderators": "板主",
+		"omitted": "省略",
+		"owners": "看板擁有者",
+		"seeAll": "查看全部",
+		"show": "顯示",
+		"spoiler": "劇透標記",
+		"toggleSticky": "置頂",
+		"unlocked": "解鎖",
+		"viewBySameIP": "相同 IP",
+		"you": "（你）"
+	},
+	"sync": [
+		"斷線",
+		"連線中",
+		"同步中",
+		"已同步",
+		"解除同步"
+	],
+	"time": {
+		"calendar": [
+			"ㄧ月",
+			"二月",
+			"三月",
+			"四月",
+			"五月",
+			"六月",
+			"七月",
+			"八月",
+			"九月",
+			"十月",
+			"十一月",
+			"十二月"
+		],
+		"week": [
+			"星期日",
+			"星期一",
+			"星期二",
+			"星期三",
+			"星期四",
+			"星期五",
+			"星期六"
+		]
+	},
+	"ui": {
+		"bottom": "按鈕",
+		"cancel": "取消",
+		"catalog": "目錄",
+		"clickToCancel": "點擊以取消",
+		"deleteBoard": "刪除看板",
+		"done": "完成",
+		"fileTooLarge": "檔案太大",
+		"finished": "完成",
+		"googleSong": "點擊 google 歌曲",
+		"importCorrupt": "匯入失敗。檔案已損毀。",
+		"importDone": "匯入成功。頁面將會重新整理。",
+		"invalidCaptcha": "驗證碼無效",
+		"keepDeletingFor": "繼續刪除",
+		"last": "最後",
+		"lockThread": "切換討論串鎖定",
+		"lockedToBottom": "鎖定在最下面",
+		"meidoVisionPost": "板務視角",
+		"mustMatch": "密碼必須一樣",
+		"newThread": "新討論串",
+		"pointToCatalog": "指向目錄",
+		"postsImages": "貼文/圖片/TTL",
+		"quoted": "你被引用了",
+		"reason": "原因",
+		"redirectByIP": "從 IP 重新導向全部",
+		"redirectByThread": "從討論串重新導向全部",
+		"refresh": "重新整理",
+		"reply": "回應",
+		"report": "回報",
+		"return": "返回",
+		"rules": "顯示規則",
+		"search": "搜尋",
+		"sessionExpired": "登入會話已過期",
+		"showNotice": "公告",
+		"submit": "提交",
+		"thumbnailing": "縮圖產生中⋯⋯",
+		"top": "最上面",
+		"unfinishedPost": "你有一則未完成的貼文",
+		"unwatchThread": "取消關注討論串",
+		"uploadFile": "上傳檔案",
+		"uploadProgress": "已上傳⋯⋯",
+		"watchThread": "關注討論串"
+	}
+}
