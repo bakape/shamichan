@@ -3,12 +3,15 @@ package common
 import (
 	"os"
 	"regexp"
+	"sort"
 )
 
 var (
-	// GetVideoNames is a forwarded function from "github.com/bakape/megucaassets" to avoid circular imports
+	// GetVideoNames is a forwarded function
+	// from "github.com/bakape/megucaassets" to avoid circular imports
 	GetVideoNames func() []string
-	// Recompile is a forwarded function from "github.com/bakape/megucatemplates" to avoid circular imports
+	// Recompile is a forwarded function
+	// from "github.com/bakape/megucatemplates" to avoid circular imports
 	Recompile func() error
 
 	// Project is being unit tested
@@ -49,12 +52,35 @@ const (
 // Available language packs and themes. Change this, when adding any new ones.
 var (
 	Langs = []string{
-		"en_GB", "es_ES", "fr_FR", "nl_NL", "pl_PL", "pt_BR", "sk_SK", "tr_TR",
-		"uk_UA", "ru_RU",
+		"en_GB",
+		"es_ES",
+		"fr_FR",
+		"nl_NL",
+		"pl_PL",
+		"pt_BR",
+		"ru_RU",
+		"sk_SK",
+		"tr_TR",
+		"uk_UA",
+    "zh_TW",
 	}
 	Themes = []string{
-		"ashita", "console", "egophobe", "gar", "glass", "gowno", "higan",
-		"inumi", "mawaru", "moe", "moon", "ocean", "rave", "tavern", "tea", "win95",
+		"ashita",
+		"console",
+		"egophobe",
+		"gar",
+		"glass",
+		"gowno",
+		"higan",
+		"inumi",
+		"mawaru",
+		"moe",
+		"moon",
+		"ocean",
+		"rave",
+		"tavern",
+		"tea",
+		"win95",
 	}
 )
 
@@ -63,3 +89,8 @@ var (
 	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$`)
 	DiceRegexp    = regexp.MustCompile(`(\d*)d(\d+)`)
 )
+
+func init() {
+	sort.Strings(Langs)
+	sort.Strings(Themes)
+}
