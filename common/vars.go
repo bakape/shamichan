@@ -62,6 +62,7 @@ var (
 		"sk_SK",
 		"tr_TR",
 		"uk_UA",
+    "zh_TW",
 	}
 	Themes = []string{
 		"ashita",
