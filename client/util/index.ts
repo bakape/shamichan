@@ -6,6 +6,7 @@ export * from "./hooks"
 export * from "./scroll"
 export * from "./render"
 export * from "./changes"
+export * from "./eventBatching"
 
 // Options for the on() addEventListener() wrapper
 export interface OnOptions extends EventListenerOptions {
