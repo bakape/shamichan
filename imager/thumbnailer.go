@@ -4,7 +4,7 @@ import (
 	"image"
 	"io"
 
-	"github.com/bakape/thumbnailer"
+	"github.com/bakape/thumbnailer/v2"
 )
 
 const mimePDF = "application/pdf"

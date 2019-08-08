@@ -6,7 +6,7 @@ import (
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/test"
-	"github.com/bakape/thumbnailer"
+	"github.com/bakape/thumbnailer/v2"
 )
 
 var (
