@@ -197,7 +197,7 @@ func Delete(SHA1 string, fileType, thumbType uint8) error {
 func CreateDirs() error {
 	for _, dir := range [...]string{"src", "thumb"} {
 		path := filepath.Join("images", dir)
-		if err := os.MkdirAll(path, 0700); err != nil {
+		if err := os.MkdirAll(path, 0705); err != nil {
 			return err
 		}
 	}

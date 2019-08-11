@@ -10,7 +10,6 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/lang"
-
 	"github.com/valyala/quicktemplate"
 )
 
