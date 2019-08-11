@@ -239,16 +239,17 @@ export async function forEach<T>(store: string, fn: (data: T) => void) {
 }
 
 // Asynchronously insert a new expiring post id object into a postStore
-export function storeID(store: string, id: number, op: number, expiry: number) {
+export function storeID(store: string, expiry: number, ...items: {id: number; op: number}[]) {
 	if (hasErred) {
 		return;
 	}
-	putObj(store,
-		{
-			id, op,
-			expires: Date.now() + expiry,
-		},
-		id);
+
+	const expires = Date.now() + expiry;
+	putAll(store, items.map(item => {
+		const obj: any = Object.assign({}, item);
+		obj.expires = expires;
+		return { obj: item, key: item.id }
+	}));
 }
 
 // Clear the target object store asynchronously
@@ -290,6 +291,23 @@ export function putObj(store: string, obj: any, key: any = undefined,
 		r.onsuccess = () =>
 			resolve()
 	})
+}
+
+export function putAll(store: string, toAdd: {obj: any, key?: any}[]): Promise<void> {
+	if (hasErred) {
+		return Promise.resolve(undefined)
+	}
+
+	return new Promise<void>((resolve, reject) => {
+		const objStore = newTransaction(store, true), transaction = objStore.transaction;
+
+		for (const {obj, key} of toAdd) {
+			objStore.put(obj, key);
+		}
+
+		transaction.oncomplete = () => resolve();
+		transaction.onerror = () => reject(transaction.error);
+	});
 }
 
 // Delete an object from a store by ID

@@ -84,7 +84,6 @@ func (b *Base64Token) EnsureCookie(
 			Value:   string(text),
 			Path:    "/",
 			Expires: time.Now().Add(time.Hour * 24),
-			Domain:  common.ExtractCookieHost(r),
 		})
 		return
 	default:

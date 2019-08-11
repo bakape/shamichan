@@ -99,20 +99,17 @@ func commitLogin(
 	// deleted
 	expires := time.Now().
 		Add(time.Duration(config.Get().SessionExpiry)*time.Hour*24 - time.Hour)
-	host := common.ExtractCookieHost(r)
 	http.SetCookie(w, &http.Cookie{
 		Name:    "loginID",
 		Value:   url.QueryEscape(userID),
 		Path:    "/",
 		Expires: expires,
-		Domain:  host,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session",
 		Value:   token,
 		Path:    "/",
 		Expires: expires,
-		Domain:  host,
 	})
 	return
 }

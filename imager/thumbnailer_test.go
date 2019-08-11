@@ -2,16 +2,16 @@ package imager
 
 import (
 	"fmt"
-	"io/ioutil"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/test"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/bakape/thumbnailer"
+	"github.com/bakape/thumbnailer/v2"
 )
 
 func TestImageProcessing(t *testing.T) {

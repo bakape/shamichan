@@ -14,7 +14,7 @@ require (
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
 	github.com/bakape/pg_util v0.4.0
 	github.com/bakape/recache v0.0.0-20190524102257-67e46453405b
-	github.com/bakape/thumbnailer v0.0.0-20190501133407-c89db19cab54
+	github.com/bakape/thumbnailer/v2 v2.4.1
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect

@@ -6,6 +6,7 @@ export * from "./hooks"
 export * from "./scroll"
 export * from "./render"
 export * from "./changes"
+export * from "./eventBatching"
 
 // Options for the on() addEventListener() wrapper
 export interface OnOptions extends EventListenerOptions {
@@ -173,18 +174,7 @@ export function inputElement(
 export function setCookie(key: string, val: string, days: number) {
 	let date = new Date()
 	date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
-	let cookie = `${key}=${val}; expires=${date.toUTCString()}; path=/;`
-
-	// Localhost a bitch with cookies
-	switch (location.hostname) {
-		case "localhost":
-		case "127.0.0.1":
-			break;
-		default:
-			cookie += ` domain=.${location.hostname};`
-	}
-
-	document.cookie = cookie;
+	document.cookie = `${key}=${val}; expires=${date.toUTCString()}; path=/;`;
 }
 
 // Get a cookie value by name. Returns empty string, if none.
