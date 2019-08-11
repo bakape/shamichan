@@ -15,7 +15,20 @@ License: GNU AGPL
 ## Docker
 
 Meguca can be deployed in a self-contained Docker container.
-Install [Docker](https://www.docker.com/) and
+
+First, run 
+
+```
+git clone git://github.com/bakape/meguca.git
+```
+
+Second, navigate to the folder that was just created with
+
+```
+cd meguca
+```
+
+Then, install [Docker](https://www.docker.com/) and
 [Docker Compose](https://docs.docker.com/compose/install/) and run
 
 ```
