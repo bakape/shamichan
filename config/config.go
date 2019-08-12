@@ -5,7 +5,6 @@ package config
 
 import (
 	"encoding/json"
-	"net/url"
 	"reflect"
 	"sort"
 	"sync"
@@ -44,9 +43,6 @@ var (
 	// Hash of the global configs. Used for live reloading configuration on the
 	// client.
 	hash string
-
-	// Precalculated root domain of the imageboard
-	rootDomain string
 
 	// Defaults contains the default server configuration values
 	Defaults = Configs{
@@ -129,16 +125,10 @@ func Set(c Configs) (err error) {
 	}
 	h := util.HashBuffer(client)
 
-	u, err := url.Parse(c.RootURL)
-	if err != nil {
-		return
-	}
-
 	globalMu.Lock()
 	clientJSON = client
 	global = &c
 	hash = h
-	rootDomain = u.Hostname()
 	globalMu.Unlock()
 
 	return
@@ -289,12 +279,4 @@ func ClearBoards() {
 	defer boardMu.Unlock()
 
 	boardConfigs = map[string]BoardConfContainer{}
-}
-
-// Returns root domain of the imageboard
-func RootDomain() string {
-	globalMu.Lock()
-	defer globalMu.Unlock()
-
-	return rootDomain
 }

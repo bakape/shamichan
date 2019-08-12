@@ -28,7 +28,7 @@ Second, navigate to the folder that was just created with
 cd meguca
 ```
 
-Install [Docker](https://www.docker.com/) and
+Then, install [Docker](https://www.docker.com/) and
 [Docker Compose](https://docs.docker.com/compose/install/) and run
 
 ```
