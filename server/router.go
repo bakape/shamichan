@@ -17,6 +17,9 @@ import (
 	"github.com/dimfeld/httptreemux"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/go-playground/log"
+
+	// Add profiling to default server mux
+	_ "net/http/pprof"
 )
 
 var (
@@ -27,6 +30,11 @@ var (
 var webRoot = "www"
 
 func startWebServer() (err error) {
+	go func() {
+		// Bind pprof to random localhost-only address
+		http.ListenAndServe("localhost:0", nil)
+	}()
+
 	c := config.Server.Server
 
 	var w strings.Builder
@@ -86,9 +94,6 @@ func createRouter() http.Handler {
 		captcha.GET("/:board", serveNewCaptcha)
 		captcha.POST("/:board", authenticateCaptcha)
 		captcha.GET("/confirmation", renderCaptchaConfirmation)
-
-		// Allow both processes to be profiled separately
-		api.GET("/pprof/imager/:profile", serverProfile)
 	}
 	if config.Server.ImagerMode != config.ImagerOnly {
 		// HTML
@@ -186,9 +191,6 @@ func createRouter() http.Handler {
 		assets.GET("/banners/:board/:id", serveBanner)
 		assets.GET("/loading/:board", serveLoadingAnimation)
 		assets.GET("/*path", serveAssets)
-
-		// Allow both processes to be profiled separately
-		api.GET("/pprof/server/:profile", serverProfile)
 	}
 
 	return r
