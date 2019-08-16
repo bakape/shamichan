@@ -1,11 +1,16 @@
 package common
 
+// #cgo pkg-config: libavformat
+// #cgo CFLAGS: -std=c11 -g
+// #include <libavformat/avformat.h>
+import "C"
 import (
 	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/bakape/meguca/util"
+	"github.com/bakape/thumbnailer/v2"
 	"github.com/gorilla/websocket"
 )
 
@@ -102,6 +107,14 @@ recheck:
 		}
 	case *websocket.CloseError:
 		return true
+	case thumbnailer.AVError:
+		switch err.(thumbnailer.AVError).Code() {
+		case C.AVERROR_INVALIDDATA, // Invalid uploaded data need not be logged
+			C.AVERROR_EXTERNAL: // Not much can be done about unspecified errors
+			return true
+		default:
+			return false
+		}
 	case util.WrappedError:
 		err = err.(util.WrappedError).Inner
 		goto recheck
