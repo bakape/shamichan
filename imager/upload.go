@@ -93,10 +93,17 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, int64(config.Get().MaxSize<<20))
 
 		id, err = ParseUpload(r)
-		if err != nil {
+		switch err {
+		case nil:
+			return incrementSpamScore(w, r)
+		case io.EOF:
+			return common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
+		default:
 			return
 		}
-		return incrementSpamScore(w, r)
 	}()
 	if err != nil {
 		LogError(w, r, err)
