@@ -38,6 +38,27 @@ docker-compose up -d
 
 For more information refer to the [Docker Compose docs](https://docs.docker.com/compose/reference/overview/).
 
+### Update
+
+If you ever want to update meguca to the newest version, stop the container with
+
+```
+docker-compose down
+```
+
+Then, pull the changes with
+
+```
+git pull origin
+```
+
+Finally, rebuild and start the container with
+
+```
+docker-compose build
+docker-compose up -d
+```
+
 ## Building from source
 
 ### Native installation.
