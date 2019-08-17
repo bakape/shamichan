@@ -1,3 +1,5 @@
+import { QuerySelector } from "../common";
+
 // Various utility functions
 
 export { default as FSM } from "./fsm"
@@ -164,7 +166,7 @@ export function firstChild(
 
 // Returns an input element inside the parent by name
 export function inputElement(
-	parent: NodeSelector,
+	parent: QuerySelector,
 	name: string,
 ): HTMLInputElement {
 	return parent.querySelector(`input[name="${name}"]`) as HTMLInputElement

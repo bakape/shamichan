@@ -1,6 +1,7 @@
 import lang from "../lang"
 import { pad } from "../util"
 import { handlers, message } from "../connection"
+import { QuerySelector } from "../common";
 
 let offset = 0
 
@@ -61,8 +62,8 @@ class Syncwatch {
 }
 
 // Find and start any non-running synchronized time counters
-export function findSyncwatches(ns: NodeSelector) {
-	for (let el of ns.querySelectorAll(".syncwatch:not(.ticking)") as NodeListOf<HTMLElement>) {
+export function findSyncwatches(qs: QuerySelector) {
+	for (let el of qs.querySelectorAll(".syncwatch:not(.ticking)")) {
 		new Syncwatch(el)
 	}
 }

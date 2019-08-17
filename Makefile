@@ -18,7 +18,6 @@ watch:
 
 client_vendor: client_deps
 	mkdir -p www/js/vendor
-	cp node_modules/dom4/build/dom4.js node_modules/core-js/client/core.min.js node_modules/core-js/client/core.min.js.map www/js/vendor
 	$(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
 
 css:

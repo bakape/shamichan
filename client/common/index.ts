@@ -157,3 +157,8 @@ export function isExpandable(t: fileTypes): boolean {
 			return true;
 	}
 }
+
+export interface QuerySelector {
+	querySelector(query: string): HTMLElement | null;
+	querySelectorAll(query: string): NodeListOf<HTMLElement>;
+}

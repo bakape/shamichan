@@ -44,7 +44,7 @@ export async function getWatchedThreads()
 
 // Return set of opened threads across all tabs
 async function getOpenedThreads(): Promise<Set<number>> {
-	const opened = new Set();
+	const opened = new Set<number>();
 	await db.forEach<OpenThreadRecord>("openThreads", ({ id, time }) => {
 		// Use 3 times the write interval to account for some latency.
 		if (time >= Date.now() - 3 * 1000) {
