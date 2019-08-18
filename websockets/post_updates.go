@@ -312,6 +312,10 @@ func (c *Client) spliceText(data []byte) error {
 // Note: Spam score is now incremented on image thumbnailing, not assignment to
 // post.
 func (c *Client) insertImage(data []byte) (err error) {
+	// Ensure this can not be spammed, as this function can be resolved into a
+	// NOP branch. It is generally good to have some spam protection either way.
+	c.incrementSpamScore(config.Get().CharScore)
+
 	has, err := c.hasPost()
 	switch {
 	case err != nil:
@@ -319,7 +323,8 @@ func (c *Client) insertImage(data []byte) (err error) {
 	case !has:
 		return errNoPostOpen
 	case c.post.hasImage:
-		return errHasImage
+		// Can be caused by network latency - NOP it
+		return nil
 	}
 
 	var req ImageRequest
@@ -355,6 +360,10 @@ func (c *Client) insertImage(data []byte) (err error) {
 
 // Spoiler an already inserted image in an unclosed post
 func (c *Client) spoilerImage() (err error) {
+	// Ensure this can not be spammed, as this function can be resolved into a
+	// NOP branch. It is generally good to have some spam protection either way.
+	c.incrementSpamScore(config.Get().CharScore)
+
 	has, err := c.hasPost()
 	switch {
 	case err != nil:
@@ -364,7 +373,8 @@ func (c *Client) spoilerImage() (err error) {
 	case !c.post.hasImage:
 		return errors.New("post does not have an image")
 	case c.post.isSpoilered:
-		return errors.New("already spoilered")
+		// Can be caused by network latency - NOP it
+		return nil
 	}
 
 	err = db.SpoilerImage(c.post.id, c.post.op)
