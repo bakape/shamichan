@@ -51,6 +51,20 @@ export class OverlayNotification extends View<null> {
 		this.on("click", () =>
 			this.remove())
 		this.el.querySelector("b").textContent = text
-		document.getElementById("modal-overlay").prepend(this.el)
+
+		const cont = document.getElementById("modal-overlay");
+		let last: HTMLElement;
+		for (let i = cont.children.length - 1; i >= 0; i--) {
+			const el = cont.children[i];
+			if (el.classList.contains("notification")) {
+				last = el as HTMLElement;
+				break;
+			}
+		}
+		if (last) {
+			last.after(this.el);
+		} else {
+			cont.prepend(this.el);
+		}
 	}
 }
