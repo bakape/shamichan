@@ -1,6 +1,6 @@
 // Login/logout/registration facilities for the account system
 
-import { postJSON, deleteCookie } from '../util'
+import { postJSON } from '../util'
 import { FormView } from "../ui"
 import { TabbedModal } from "../base"
 import { validatePasswordMatch } from "./common"
@@ -70,12 +70,6 @@ class AccountPanel extends TabbedModal {
 			.style
 			.display = show ? "block" : "none"
 	}
-}
-
-// Reset the views and module to its not-logged-id state
-export function reset() {
-	deleteCookie("loginID")
-	deleteCookie("session")
 }
 
 // Terminate the user session(s) server-side and reset the panel

@@ -16,17 +16,18 @@ export class ServerConfigForm extends AccountForm {
 		const res = await fetch("/html/configure-server", {
 			method: "POST",
 			credentials: "include",
-		})
+		});
+		const body = await res.text();
 		switch (res.status) {
 			case 200:
-				this.el.append(makeFrag(await res.text()))
+				this.el.append(makeFrag(body))
 				super.render()
 				break
 			case 403:
-				this.handle403()
+				this.handle403(body);
 				break
 			default:
-				throw await res.text()
+				throw body;
 		}
 	}
 

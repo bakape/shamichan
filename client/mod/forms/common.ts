@@ -1,8 +1,7 @@
 import lang from "../../lang"
-import { reset } from ".."
 import { FormView } from "../../ui"
 import { accountPanel } from ".."
-import { postJSON, makeFrag } from "../../util"
+import { postJSON, makeFrag, deleteCookie } from "../../util"
 
 // Generic input form that is embedded into AccountPanel
 export abstract class AccountForm extends FormView {
@@ -17,16 +16,17 @@ export abstract class AccountForm extends FormView {
 	// submit any private information
 	protected async renderPublicForm(url: string) {
 		const res = await fetch(url)
+		const body = await res.text();
 		switch (res.status) {
 			case 200:
-				this.el.append(makeFrag(await res.text()))
+				this.el.append(makeFrag(body));
 				this.render()
 				break
 			case 403:
-				this.handle403()
+				this.handle403(body);
 				break
 			default:
-				throw await res.text()
+				throw body;
 		}
 	}
 
@@ -47,15 +47,16 @@ export abstract class AccountForm extends FormView {
 
 	// Handle the response of a POST request
 	protected async handlePostResponse(res: Response) {
+		const body = await res.text();
 		switch (res.status) {
 			case 200:
 				this.remove()
 				break
 			case 403:
-				this.handle403()
+				this.handle403(body)
 				break
 			default:
-				this.renderFormResponse(await res.text())
+				this.renderFormResponse(body)
 		}
 	}
 
@@ -113,9 +114,13 @@ export abstract class AccountForm extends FormView {
 	// Reset any views and state on 403, which means an inconsistency between
 	// the client's assumptions about its permissions and the actual permissions
 	// stored in the database (likely because of session expiry).
-	public handle403() {
-		this.remove()
-		reset()
-		alert(lang.ui["sessionExpired"])
+	public handle403(body: string) {
+		this.remove();
+		if (body.includes("missing permissions")) {
+			alert(lang.ui["sessionExpired"]);
+			deleteCookie("loginID");
+			deleteCookie("session");
+			location.reload(true);
+		}
 	}
 }

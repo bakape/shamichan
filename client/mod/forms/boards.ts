@@ -18,16 +18,17 @@ class OwnedBoardSelection extends View<null> {
 
 	private async render() {
 		const res = await fetch(`/html/owned-boards/${loginID()}`)
+		const body = await res.text();
 		switch (res.status) {
 			case 200:
-				this.el.append(makeFrag(await res.text()))
+				this.el.append(makeFrag(body))
 				this.parent.el.append(this.el)
 				break
 			case 403:
-				this.parent.handle403()
+				this.parent.handle403(body)
 				break
 			default:
-				throw await res.text()
+				throw body
 		}
 	}
 
@@ -68,16 +69,17 @@ export class BoardConfigForm extends SelectedBoardForm {
 	// Render the configuration input elements
 	public async renderNext(board: string) {
 		const res = await postJSON(`/html/configure-board/${board}`, null)
+		const body = await res.text();
 		switch (res.status) {
 			case 200:
-				const frag = makeFrag(await res.text())
+				const frag = makeFrag(body)
 				this.el.append(frag)
 				break
 			case 403:
-				this.handle403()
+				this.handle403(body)
 				break
 			default:
-				throw await res.text()
+				throw body
 		}
 	}
 
