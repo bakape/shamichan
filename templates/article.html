@@ -140,7 +140,7 @@
 						{% case img.ThumbType == common.NoFile %}
 							{% code var file string %}
 							{% switch img.FileType %}
-							{% case common.MP4, common.MP3, common.OGG, common.FLAC %}
+							{% case common.WEBM, common.MP4, common.MP3, common.OGG, common.FLAC %}
 								{% code file = "audio" %}
 							{% default %}
 								{% code file = "file" %}

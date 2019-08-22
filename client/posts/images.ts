@@ -84,6 +84,7 @@ export default class ImageHandler extends View<Post> {
 			// No thumbnail exists
 			let file: string
 			switch (file_type) {
+				case fileTypes.webm:
 				case fileTypes.mp4:
 				case fileTypes.mp3:
 				case fileTypes.ogg:
@@ -141,7 +142,7 @@ export default class ImageHandler extends View<Post> {
 					el.textContent = data.artist
 					break
 				case "has-audio":
-					el.hidden = !data.audio
+					el.style.display = data.audio ? "" : "none";
 					break
 				case "media-length":
 					const len = data.length
@@ -174,8 +175,9 @@ export default class ImageHandler extends View<Post> {
 				case "dims":
 					const [w, h] = data.dims
 					if (!w && !h) {
-						el.hidden = true
+						el.style.display = "none";
 					} else {
+						el.style.display = "";
 						el.textContent = `${w}x${h}`
 					}
 					break
@@ -302,6 +304,7 @@ export default class ImageHandler extends View<Post> {
 			case fileTypes.flac:
 				event.preventDefault()
 				return this.renderAudio()
+			case fileTypes.webm:
 			case fileTypes.mp4:
 			case fileTypes.ogg:
 				if (!this.model.image.video) {

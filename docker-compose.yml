@@ -1,7 +1,8 @@
-version: '3'
+version: "3"
 services:
   meguca:
     build: .
+    restart: always
     ports:
       - "8000:8000"
     volumes:
@@ -10,7 +11,7 @@ services:
       - postgres
   postgres:
     build: docker/postgres
-    shm_size: '256MB'
+    shm_size: "256MB"
     volumes:
       - db:/var/lib/postgresql/data
     environment:

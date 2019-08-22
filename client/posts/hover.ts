@@ -197,14 +197,9 @@ function renderImagePreview(event: MouseEvent) {
 	if (isExpandable(post.image.file_type)) {
 		switch (post.image.file_type) {
 			case fileTypes.webm:
-				if (!options.webmHover) {
-					return clear()
-				}
-				tag = "video"
-				break
 			case fileTypes.mp4:
 			case fileTypes.ogg:
-				// No video OGG and MP4 are treated just like MP3
+				// Video containers without video streams are treated like audio
 				if (!options.webmHover || !post.image.video) {
 					return clear()
 				}

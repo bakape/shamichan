@@ -18,12 +18,41 @@ interface LoadProgress {
     loaded: number
 }
 
+const micSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
+    <path d="M2.91-.03a1 1 0 0 0-.13.03 1 1 0 0 0-.78 1v2a1 1 0 1 0 2 0v-2a1 1 0 0 0-1.09-1.03zm-2.56 2.03a.5.5 0 0 0-.34.5v.5c0 1.48 1.09 2.69 2.5 2.94v1.06h-.5c-.55 0-1 .45-1 1h4.01c0-.55-.45-1-1-1h-.5v-1.06c1.41-.24 2.5-1.46 2.5-2.94v-.5a.5.5 0 1 0-1 0v.5c0 1.11-.89 2-2 2-1.11 0-2-.89-2-2v-.5a.5.5 0 0 0-.59-.5.5.5 0 0 0-.06 0z"
+transform="translate(1)" />
+</svg>`;
+const stopSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8" viewBox="0 0 8 8">
+    <path d="M0 0v6h6v-6h-6z" transform="translate(1 1)" />
+</svg>`;
+
+declare class MediaRecorder {
+    state: string;
+    ondataavailable: (e: MessageEvent) => void;
+    onpause: () => void;
+    onstop: () => void;
+    onerror: (e: any) => void;
+
+    constructor(stream: MediaStream);
+    start(): void;
+    stop(): void;
+
+    static isTypeSupported(mime: string): boolean;
+}
+
 // View for handling file uploads
 export default class UploadForm extends View<Post> {
     private isUploading: boolean;
+
     private spoiler: HTMLElement;
     private button: HTMLElement;
+
+    private micButton: HTMLElement | null;
+    private audioChunks: any[] = [];
+    private recorder: MediaRecorder | null;
+
     private hiddenInput: HTMLInputElement;
+
     private xhr: XMLHttpRequest;
     private bufferedFile: File; // In case we need to resubmit a file
 
@@ -36,18 +65,78 @@ export default class UploadForm extends View<Post> {
             .querySelector("input[name=image]") as HTMLInputElement;
         this.button = el.querySelector("button");
 
-        this.button.addEventListener("click", () => {
-            if (this.isUploading) {
-                this.reset();
-            } else if (this.canAllocImage()) {
-                this.hiddenInput.click();
-            }
-        }, { passive: true });
-        this.hiddenInput.addEventListener("change", () => {
-            if (this.canAllocImage() && this.hiddenInput.files.length) {
-                trigger("getPostModel").uploadFile(this.hiddenInput.files[0]);
-            }
-        }, { passive: true });
+        this.button.addEventListener(
+            "click",
+            () => {
+                if (this.isUploading) {
+                    this.reset();
+                } else if (this.canAllocImage()) {
+                    this.hiddenInput.click();
+                }
+            },
+            { passive: true },
+        );
+        this.hiddenInput.addEventListener(
+            "change",
+            () => {
+                if (this.canAllocImage() && this.hiddenInput.files.length) {
+                    trigger("getPostModel").
+                        uploadFile(this.hiddenInput.files[0]);
+                }
+            },
+            { passive: true },
+        );
+
+        if (navigator.mediaDevices
+            && navigator.mediaDevices.getUserMedia
+        ) {
+            this.micButton = document.createElement("a");
+            this.micButton.classList.add("record-button", "svg-link");
+            this.micButton.innerHTML = micSVG;
+            el.children[0].after(this.micButton);
+
+            this.micButton.addEventListener(
+                "click",
+                () => {
+                    if (!this.recorder) {
+                        navigator
+                            .mediaDevices
+                            .getUserMedia({
+                                audio: true,
+                            })
+                            .then(stream => {
+                                this.recorder = new MediaRecorder(stream);
+                                this.recorder.start();
+                                this.micButton.innerHTML = stopSVG;
+
+                                this.recorder.ondataavailable = ({ data }) =>
+                                    this.audioChunks.push(data);
+                                this.recorder.onerror = ({ error }) => {
+                                    this.recorder = null;
+                                    console.error(error);
+                                    alert(error);
+                                    this.reset();
+                                };
+                                this.recorder.onpause = () =>
+                                    this.recorder.stop();
+                                this.recorder.onstop = () => {
+                                    trigger("getPostModel").uploadFile(
+                                        new File(
+                                            this.audioChunks,
+                                            "recording.ogg",
+                                        ),
+                                    );
+                                    this.micButton.hidden = true;
+                                    this.recorder = null;
+                                    this.audioChunks = [];
+                                };
+                            });
+                    } else {
+                        this.recorder.stop();
+                    }
+                }
+            )
+        }
     }
 
     private canAllocImage(): boolean {
@@ -202,6 +291,12 @@ export default class UploadForm extends View<Post> {
         this.displayStatus(status);
         this.spoiler.hidden = false;
         this.button.hidden = false;
+
+        this.audioChunks = [];
+        if (this.micButton) {
+            this.micButton.hidden = false;
+            this.micButton.innerHTML = micSVG;
+        }
     }
 
     // Hide the checkbox used to toggle spoilering the image
@@ -212,6 +307,9 @@ export default class UploadForm extends View<Post> {
     // Hide the upload and cancellation button
     public hideButton() {
         this.button.hidden = true;
+        if (this.micButton) {
+            this.micButton.hidden = true;
+        }
     }
 
     // Render client-side upload progress
