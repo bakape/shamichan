@@ -6,8 +6,18 @@ type OEmbedDoc = {
 	error?: string
 }
 
+type InvidiousUrl = {
+	url: string
+}
+
+type InvidiousRes = {
+	title: string
+	videoThumbnails: [ InvidiousUrl ]
+	formatStreams: [ InvidiousUrl ]
+}
+
 // Types of different embeds by provider
-enum provider { YouTube, SoundCloud, Vimeo, Coub, BitChute }
+enum provider { YouTube, SoundCloud, Vimeo, Coub, BitChute, Invidious }
 
 // Matching patterns and their respective providers
 const patterns: [provider, RegExp][] = [
@@ -31,6 +41,10 @@ const patterns: [provider, RegExp][] = [
 		provider.BitChute,
 		/https?:\/\/(?:[^\.]+\.)?(?:bitchute\.com\/embed\/|bitchute\.com\/video\/)[a-zA-Z0-9_-]+/,
 	],
+	[
+		provider.Invidious,
+		/https?:\/\/(?:www\.)?invidio\.us\/watch(.*&|\?)v=.+/,
+	],
 ]
 
 // Map of providers to formatter functions
@@ -39,7 +53,7 @@ const formatters: { [key: number]: (s: string) => string } = {}
 // Map of providers to information fetcher functions
 const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
 
-for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub", "BitChute"]) {
+for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub", "BitChute", "Invidious"]) {
 	const id = (provider as any)[p] as number
 	formatters[id] = formatProvider(id)
 	switch (id) {
@@ -48,6 +62,9 @@ for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub", "BitChute"]) {
 			break
 		case provider.BitChute:
 			fetchers[id] = fetchBitChute
+			break
+		case provider.Invidious:
+			fetchers[id] = fetchInvidious
 			break
 		default:
 			fetchers[id] = fetchNoEmbed(id)
@@ -153,6 +170,35 @@ async function fetchBitChute(el: Element): Promise<void> {
 
 function strip(s: string[]): string {
 	return s.pop().split('&').shift().split('#').shift().split('?').shift()
+}
+
+// fetcher for the invidio.us provider
+async function fetchInvidious(el: Element): Promise<void> {
+	const url = new URL(el.getAttribute("href")),
+		id = url.searchParams.get("v"),
+		[data, err] = await fetchJSON<InvidiousRes>(
+			`https://invidio.us/api/v1/videos/${id}?fields=title,formatStreams,videoThumbnails`)
+
+	if (err) {
+		el.textContent = format(err, provider.Invidious)
+		el.classList.add("erred")
+		console.error(err)
+		return
+	}
+
+	el.textContent = format(data.title, provider.Invidious)
+	const thumb = data.videoThumbnails[0].url,
+		video = data.formatStreams[0].url,
+		title = data.title
+	el.textContent = format(title, provider.Invidious)
+	const t = url.searchParams.get("t"),
+		start = url.searchParams.get("start"),
+		tparam = t ? `#t=${t}` : start ? `#t=${start}` : ''
+	el.setAttribute("data-html", encodeURIComponent(
+		`<video width="480" height="270" poster="${thumb}" `
+		+ (url.searchParams.get("loop") === "1" ? "loop " : '') +
+		`controls><source src="${video}${tparam}" />`
+	))
 }
 
 // fetcher for the noembed.com meta-provider

@@ -22,6 +22,7 @@ const (
 	vimeo
 	coub
 	bitChute
+	invidious
 )
 
 var (
@@ -34,6 +35,7 @@ var (
 		vimeo:      "Vimeo",
 		coub:       "Coub",
 		bitChute:   "BitChute",
+		invidious:  "Invidious",
 	}
 	embedPatterns = [...]struct {
 		typ  int
@@ -58,6 +60,10 @@ var (
 		{
 			bitChute,
 			regexp.MustCompile(`https?:\/\/(?:[^\.]+\.)?(?:bitchute\.com\/embed\/|bitchute\.com\/video\/)[a-zA-Z0-9_-]+`),
+		},
+		{
+			invidious,
+			regexp.MustCompile(`https?:\/\/(?:www\.)?invidio\.us\/watch(.*&|\?)v=.+`),
 		},
 	}
 
