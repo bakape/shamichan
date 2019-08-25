@@ -407,20 +407,11 @@ func moderatePosts(w http.ResponseWriter, r *http.Request,
 			return
 		}
 
-		ip, err := auth.GetIP(r)
-		if err != nil {
-			return
-		}
 		var session auth.Base64Token
 		err = session.EnsureCookie(w, r)
 		if err != nil {
 			return
 		}
-		db.IncrementSpamScore(
-			session,
-			ip,
-			config.Get().PostCreationScore*uint(len(ids)),
-		)
 		creds, err := isLoggedIn(w, r)
 		if err != nil {
 			return
