@@ -88,6 +88,7 @@ class CaptchaForm extends FormView {
 			case 200:
 				if (t !== "OK") {
 					this.el.innerHTML = t;
+					this.focus();
 				} else {
 					this.remove();
 					this.onSuccess();
