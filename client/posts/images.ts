@@ -132,7 +132,54 @@ export default class ImageHandler extends View<Post> {
 			hToggle.textContent = lang.posts[reveal ? 'hide' : 'show']
 		}
 
-		const data = this.model.image
+		const data = this.model.image;
+		const arr = [];
+
+		if (data.audio) {
+			arr.push("♫");
+		}
+
+		if (data.length) {
+			let s: string;
+			if (data.length < 60) {
+				s = `0:${pad(data.length)}`;
+			} else {
+				const min = Math.floor(data.length / 60);
+				s = `${pad(min)}:${pad(data.length - min * 60)}`;
+			}
+			arr.push(s);
+		}
+
+		const { size } = data;
+		let s: string;
+		if (size < (1 << 10)) {
+			s = size + ' B';
+		} else if (size < (1 << 20)) {
+			s = Math.round(size / (1 << 10)) + ' KB';
+		} else {
+			const text = Math.round(size / (1 << 20) * 10).toString();
+			s = `${text.slice(0, -1)}.${text.slice(-1)} MB`;
+		}
+		arr.push(s);
+
+		const [w, h] = data.dims;
+		if (w || h) {
+			arr.push(`${w}x${h}`);
+		}
+
+		if (data.artist) {
+			arr.push(data.artist);
+		}
+		if (data.title) {
+			arr.push(data.title);
+		}
+
+		let html = "";
+		for (let s of arr) {
+			html += `<span>${s}</span>`;
+		}
+		info.innerHTML = html;
+
 		for (let el of Array.from(info.children) as HTMLElement[]) {
 			switch (el.className) {
 				case "media-title":

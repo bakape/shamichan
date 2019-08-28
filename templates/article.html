@@ -88,23 +88,13 @@
 					{%= imageSearch(c.root, img) %}
 				</span>
 				<span class="fileinfo">
-					{% if img.Artist != "" %}
-						<span class="media-artist">
-							{%s img.Artist %}
-						</span>
-					{% endif %}
-					{% if img.Title != "" %}
-						<span class="media-title">
-							{%s img.Title %}
-						</span>
-					{% endif %}
 					{% if img.Audio %}
-						<span class="has-audio">
+						<span>
 							♫
 						</span>
 					{% endif %}
 					{% if img.Length != 0 %}
-						<span class="media-length">
+						<span>
 							{% code l := img.Length %}
 							{% if l < 60 %}
 								{%s= fmt.Sprintf("0:%02d", l) %}
@@ -114,14 +104,24 @@
 							{% endif %}
 						</span>
 					{% endif %}
-					<span class="filesize">
+					<span>
 						{%s= readableFileSize(img.Size) %}
 					</span>
 					{% if img.Dims != [4]uint16{} %}
-						<span class="dims">
+						<span>
 							{%s= strconv.FormatUint(uint64(img.Dims[0]), 10) %}
 							x
 							{%s= strconv.FormatUint(uint64(img.Dims[1]), 10) %}
+						</span>
+					{% endif %}
+					{% if img.Artist != "" %}
+						<span>
+							{%s img.Artist %}
+						</span>
+					{% endif %}
+					{% if img.Title != "" %}
+						<span>
+							{%s img.Title %}
 						</span>
 					{% endif %}
 				</span>

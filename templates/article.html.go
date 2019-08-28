@@ -239,71 +239,71 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, c articleCont
 //line article.html:88
 		qw422016.N().S(`</span><span class="fileinfo">`)
 //line article.html:91
-		if img.Artist != "" {
+		if img.Audio {
 //line article.html:91
-			qw422016.N().S(`<span class="media-artist">`)
-//line article.html:93
-			qw422016.E().S(img.Artist)
-//line article.html:93
-			qw422016.N().S(`</span>`)
+			qw422016.N().S(`<span>♫</span>`)
 //line article.html:95
 		}
 //line article.html:96
-		if img.Title != "" {
-//line article.html:96
-			qw422016.N().S(`<span class="media-title">`)
-//line article.html:98
-			qw422016.E().S(img.Title)
-//line article.html:98
-			qw422016.N().S(`</span>`)
-//line article.html:100
-		}
-//line article.html:101
-		if img.Audio {
-//line article.html:101
-			qw422016.N().S(`<span class="has-audio">♫</span>`)
-//line article.html:105
-		}
-//line article.html:106
 		if img.Length != 0 {
-//line article.html:106
-			qw422016.N().S(`<span class="media-length">`)
-//line article.html:108
+//line article.html:96
+			qw422016.N().S(`<span>`)
+//line article.html:98
 			l := img.Length
 
-//line article.html:109
+//line article.html:99
 			if l < 60 {
-//line article.html:110
+//line article.html:100
 				qw422016.N().S(fmt.Sprintf("0:%02d", l))
-//line article.html:111
+//line article.html:101
 			} else {
-//line article.html:112
+//line article.html:102
 				min := l / 60
 
-//line article.html:113
+//line article.html:103
 				qw422016.N().S(fmt.Sprintf("%02d:%02d", min, l-min*60))
-//line article.html:114
+//line article.html:104
 			}
+//line article.html:104
+			qw422016.N().S(`</span>`)
+//line article.html:106
+		}
+//line article.html:106
+		qw422016.N().S(`<span>`)
+//line article.html:108
+		qw422016.N().S(readableFileSize(img.Size))
+//line article.html:108
+		qw422016.N().S(`</span>`)
+//line article.html:110
+		if img.Dims != [4]uint16{} {
+//line article.html:110
+			qw422016.N().S(`<span>`)
+//line article.html:112
+			qw422016.N().S(strconv.FormatUint(uint64(img.Dims[0]), 10))
+//line article.html:112
+			qw422016.N().S(`x`)
+//line article.html:114
+			qw422016.N().S(strconv.FormatUint(uint64(img.Dims[1]), 10))
 //line article.html:114
 			qw422016.N().S(`</span>`)
 //line article.html:116
 		}
-//line article.html:116
-		qw422016.N().S(`<span class="filesize">`)
-//line article.html:118
-		qw422016.N().S(readableFileSize(img.Size))
-//line article.html:118
-		qw422016.N().S(`</span>`)
-//line article.html:120
-		if img.Dims != [4]uint16{} {
-//line article.html:120
-			qw422016.N().S(`<span class="dims">`)
+//line article.html:117
+		if img.Artist != "" {
+//line article.html:117
+			qw422016.N().S(`<span>`)
+//line article.html:119
+			qw422016.E().S(img.Artist)
+//line article.html:119
+			qw422016.N().S(`</span>`)
+//line article.html:121
+		}
 //line article.html:122
-			qw422016.N().S(strconv.FormatUint(uint64(img.Dims[0]), 10))
+		if img.Title != "" {
 //line article.html:122
-			qw422016.N().S(`x`)
+			qw422016.N().S(`<span>`)
 //line article.html:124
-			qw422016.N().S(strconv.FormatUint(uint64(img.Dims[1]), 10))
+			qw422016.E().S(img.Title)
 //line article.html:124
 			qw422016.N().S(`</span>`)
 //line article.html:126
