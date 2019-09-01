@@ -86,7 +86,7 @@ compiled with:
 * libgeoip
 * git
 
-NB: Ubuntu patches to ffmpeg on some Ubuntu versions break this library.
+NB: Ubuntu patches to ffmpeg on some Ubuntu versions break image processing.
 If running on Ubuntu, please compile from unmodified ffmpeg sources using:
 
 ```
