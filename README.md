@@ -16,7 +16,7 @@ License: GNU AGPL
 
 Meguca can be deployed in a self-contained Docker container.
 
-First, run 
+First, run
 
 ```
 git clone git://github.com/bakape/meguca.git
@@ -85,6 +85,18 @@ compiled with:
 * OpenCV >= 2
 * libgeoip
 * git
+
+NB: Ubuntu patches to ffmpeg on some Ubuntu versions break this library.
+If running on Ubuntu, please compile from unmodified ffmpeg sources using:
+
+```
+sudo apt build-dep ffmpeg
+git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
+cd ffmpeg
+git checkout n4.1
+./configure
+make -j`nproc`
+```
 
 #### Linux and OSX
 
