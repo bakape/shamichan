@@ -363,5 +363,10 @@ func formatImageName(name *string) (err error) {
 			*name = (*name)[:len(*name)-4]
 		}
 	}
+
+	if !utf8.ValidString(*name) {
+		*name = strings.ToValidUTF8(*name, string(utf8.RuneError))
+	}
+
 	return
 }

@@ -68,7 +68,7 @@ A reference list of commands can be found in `./docs/installation.md`
 
 #### Build dependencies
 
-* [Go](https://golang.org/doc/install) >=1.11 (for building server)
+* [Go](https://golang.org/doc/install) >=1.13 (for building server)
 * [Node.js](https://nodejs.org) >=5.0 (for building client)
 * C11 compiler
 * make
