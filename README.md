@@ -2,7 +2,8 @@
 [![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=master)](https://travis-ci.org/bakape/meguca)
 
 # meguca
-anonymous realtime imageboard focused on high performance, free speech and transparent moderation
+anonymous realtime imageboard with user-created boards focused on high
+performance, free speech and transparent moderation
 
 Platforms: Linux, Docker
 
@@ -74,7 +75,7 @@ A reference list of commands can be found in `./docs/installation.md`
 * make
 * pkg-config
 * pthread
-* ffmpeg 3.2 / 4.1+ libraries (libavcodec, libavutil, libavformat, libswscale)
+* ffmpeg 3.2+ libraries (libavcodec, libavutil, libavformat, libswscale)
 compiled with:
     * libvpx
     * libvorbis
