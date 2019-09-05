@@ -15,7 +15,7 @@
 	}
 
 	// Display mature content warning
-	if (!isBot && !localStorage.getItem("termsAccepted")) {
+	if (!isBot && config.mature && !localStorage.getItem("termsAccepted")) {
 		var confirmText =
 			"To access this website you understand and agree to the following:\n\n" +
 			"1. The content of this website is for mature audiences only and may not be suitable for minors. If you are a minor or it is illegal for you to access mature images and language, do not proceed.\n\n" +
