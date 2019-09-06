@@ -78,6 +78,12 @@ export let hidden: Set<number>
 // Debug mode with more verbose logging
 export let debug: boolean = /[\?&]debug=true/.test(location.href)
 
+// Currently existing downloaded youtube video info
+export const ytVids = new Map()
+
+// Currently existing downloaded bitchute video title
+export const bcVids = new Map()
+
 // Read page state by parsing a URL
 function read(href: string): PageState {
 	const u = new URL(href, location.origin),

@@ -1489,6 +1489,21 @@ var migrations = []func(*sql.Tx) error{
 				and val->>'rootURL' = 'http://localhost'`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`create table youtube_videos (
+				id text primary key,
+				title text not null,
+				thumb text not null,
+				video text not null,
+				videoHigh text not null
+			)`,
+			`create table bitchute_videos (
+				id text primary key,
+				title text not null
+			)`,
+		)
+	},
 }
 
 func createIndex(table string, columns ...string) string {

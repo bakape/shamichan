@@ -1,3 +1,5 @@
+import { ytVids } from "../../state"
+
 // Switch src attribute if in fullscreen mode
 // Handle fullscreen activation
 function onFullscreen(e: Event) {
@@ -21,27 +23,11 @@ function onFullscreen(e: Event) {
                 return
             }
 
-            const res = await fetch("/api/youtube-data/"
-                + el.getAttribute("poster").split("vi/").pop().split('/').shift()),
-                video = (await res.text()).split("\n").pop(),
+            const video = ytVids.get(el.getAttribute("poster").split("vi/").pop().split('/').shift())[3],
                 oldTime = el.currentTime
 
-            switch (res.status) {
-                case 200:
-                    break
-                case 415:
-                    console.error("Error 415: YouTube video is a livestream")
-                    return
-                case 500:
-                    console.error("Error 500: YouTube is not available")
-                    return
-                default:
-                    console.error(`Error ${res.status}: ${res.statusText}`)
-                    return
-            }
-
             if (!video) {
-                console.error("Error: Empty googlevideo URL")
+                console.error("Error: Empty googlevideo URL from ytVids map")
                 return
             }
 

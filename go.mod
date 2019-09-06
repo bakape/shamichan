@@ -16,6 +16,7 @@ require (
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
 	github.com/bakape/thumbnailer/v2 v2.5.2
 	github.com/boltdb/bolt v1.3.1
+	github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23 // indirect
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
@@ -32,14 +33,15 @@ require (
 	github.com/klauspost/cpuid v1.2.1 // indirect
 	github.com/lib/pq v1.0.1-0.20190326042056-d6156e141ac6
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
-	github.com/otium/ytdl v0.5.1
 	github.com/rakyll/statik v0.1.6
 	github.com/sevlyar/go-daemon v0.1.4
+	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/ulikunitz/xz v0.5.6
 	github.com/valyala/fasthttp v1.4.0 // indirect
 	github.com/valyala/quicktemplate v1.1.1
+	github.com/xenking/ytdl v0.5.2-0.20190811072849-a587bb432772
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7 // indirect
 	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a // indirect

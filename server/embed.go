@@ -2,17 +2,35 @@ package server
 
 import (
 	"fmt"
-	"github.com/bakape/meguca/common"
-	"net/http"
 	"strings"
+	"database/sql"
+	"net/http"
+
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
 
 	"github.com/badoux/goscraper"
-	"github.com/otium/ytdl"
+	"github.com/xenking/ytdl"
 )
 
 // Get YouTube video information by ID
 func youTubeData(w http.ResponseWriter, r *http.Request) {
-	info, err := getYouTubeInfo(extractParam(r, "id"))
+	var info string
+	id := extractParam(r, "id")
+	err := db.InTransaction(false, func(tx *sql.Tx) error {
+		title, thumb, video, videoHigh, err := db.GetYouTubeInfo(tx, id)
+
+		if err != nil {
+			title, thumb, video, videoHigh, err = getYouTubeInfo(tx, id)
+
+			if err != nil {
+				return err
+			}
+		}
+
+		info = fmt.Sprintf("%s\n%s\n%s\n%s", title, thumb, video, videoHigh)
+		return nil
+	})
 
 	if err != nil {
 		httpError(w, r, err)
@@ -24,30 +42,54 @@ func youTubeData(w http.ResponseWriter, r *http.Request) {
 
 // Get BitChute video title by ID
 func bitChuteTitle(w http.ResponseWriter, r *http.Request) {
-	s, err := goscraper.Scrape("https://www.bitchute.com/embed/"+extractParam(r, "id"), 3)
+	var title string
+	id := extractParam(r, "id")
+	err := db.InTransaction(false, func(tx *sql.Tx) (err error) {
+		title, err = db.GetBitChuteTitle(tx, id)
+
+		if err != nil {
+			pTitle, err := goscraper.Scrape("https://www.bitchute.com/embed/"+id, 3)
+
+			if err != nil {
+				return err
+			}
+
+			title = pTitle.Preview.Description
+			err = db.WriteBitChuteTitle(tx, id, title)
+
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 
 	if err != nil {
 		httpError(w, r, err)
 		return
 	}
 
-	w.Write([]byte(s.Preview.Description))
+	w.Write([]byte(title))
 }
 
 // Return YouTube video info and handle errors
-func getYouTubeInfo(id string) (ret string, err error) {
+func getYouTubeInfo(tx *sql.Tx, id string) (sTitle string, sThumb string, sVideo string, sVideoHigh string, err error) {
 	var ok bool
 	info, err := ytdl.GetVideoInfoFromID(id)
 
 	if err != nil {
-		return ret, errYouTube(id, err)
+		err = errYouTube(id, err)
+		return
 	} else if info.Duration == 0 {
-		return ret, errYouTubeLive(id)
+		err = errYouTubeLive(id)
+		return
 	}
 
 	for _, val := range info.Keywords {
 		if strings.Contains(val, "live") || strings.Contains(val, "stream") {
-			return ret, errYouTubeLive(id)
+			err = errYouTubeLive(id)
+			return
 		}
 	}
 
@@ -75,7 +117,8 @@ func getYouTubeInfo(id string) (ret string, err error) {
 	}
 
 	if !ok {
-		return ret, errNoYoutubeThumb(id)
+		err = errNoYoutubeThumb(id)
+		return
 	}
 
 	vidFormats := info.Formats.
@@ -101,7 +144,8 @@ func getYouTubeInfo(id string) (ret string, err error) {
 				Best(ytdl.FormatVideoEncodingKey)
 
 			if len(vidFormats) == 0 {
-				return ret, errNoYoutubeVideo(id)
+				err = errNoYoutubeVideo(id)
+				return
 			}
 		}
 	}
@@ -109,7 +153,8 @@ func getYouTubeInfo(id string) (ret string, err error) {
 	video, err := info.GetDownloadURL(vidFormats[0])
 
 	if err != nil {
-		return ret, errYouTube(id, err)
+		err = errYouTube(id, err)
+		return
 	}
 
 	// Unfortunately, in some cases you cannot get 720p with only webm
@@ -119,22 +164,30 @@ func getYouTubeInfo(id string) (ret string, err error) {
 		Best(ytdl.FormatVideoEncodingKey)
 
 	if len(vidFormats) == 0 {
-		return ret, errNoYoutubeVideo(id)
+		err = errNoYoutubeVideo(id)
+		return
 	}
 
 	videoHigh, err := info.GetDownloadURL(vidFormats[0])
 
 	if err != nil {
-		return ret, errYouTube(id, err)
+		err = errYouTube(id, err)
+		return
 	}
 
-	return fmt.Sprintf(
-		"%s\n%s\n%s\n%s",
-		info.Title,
-		strings.Replace(thumb.String(), "http://", "https://", 1),
-		video.String(),
-		videoHigh.String(),
-	), nil
+	sTitle = info.Title
+	sThumb = strings.Replace(thumb.String(), "http://", "https://", 1)
+	sVideo = video.String()
+	sVideoHigh = videoHigh.String()
+
+	err = db.WriteYouTubeInfo(tx, id, sTitle, sThumb, sVideo, sVideoHigh)
+
+	if err != nil {
+		err = errYouTube(id, err)
+		return
+	}
+
+	return
 }
 
 func errYouTube(id string, err error) error {

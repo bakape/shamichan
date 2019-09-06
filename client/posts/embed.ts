@@ -1,4 +1,5 @@
 import { makeAttrs, makeFrag, escape, on, fetchJSON } from "../util"
+import { ytVids, bcVids } from "../state"
 
 type OEmbedDoc = {
 	title?: string
@@ -88,37 +89,44 @@ function formatProvider(type: provider): (s: string) => string {
 // fetcher for the YouTube provider
 async function fetchYouTube(el: Element): Promise<void> {
 	const ref = el.getAttribute("href"),
-		id = strip(ref.split(".be/").pop().split("embed/").pop().split("watch?v=")),
-		res = await fetch(`/api/youtube-data/${id}`),
-		[title, thumb, video, videoHigh] = (await res.text()).split("\n")
+		id = strip(ref.split(".be/").pop().split("embed/").pop().split("watch?v="))
 
-	if (res.status != 200) {
-		return fetchNoEmbed(provider.YouTube)(el)
+	if (!ytVids.has(id)) {
+		const res = await fetch(`/api/youtube-data/${id}`),
+			[title, thumb, video, videoHigh] = (await res.text()).split("\n")
+
+		if (res.status != 200) {
+			return fetchNoEmbed(provider.YouTube)(el)
+		}
+
+		if (!title) {
+			el.textContent = format("Error: Title does not exist", provider.YouTube)
+			el.classList.add("erred")
+			return
+		}
+
+		if (!thumb) {
+			el.textContent = format("Error: Thumbnail does not exist", provider.YouTube)
+			el.classList.add("erred")
+			return
+		}
+
+		if (!video) {
+			el.textContent = format("Error: Empty googlevideo URL", provider.YouTube)
+			el.classList.add("erred")
+			return
+		}
+
+		if (!videoHigh) {
+			el.textContent = format("Error: Empty googlevideo (high res) URL", provider.YouTube)
+			el.classList.add("erred")
+			return
+		}
+
+		ytVids.set(id, [title, thumb, video, videoHigh])
 	}
-	
-	if (!title) {
-		el.textContent = format("Error: Title does not exist", provider.YouTube)
-		el.classList.add("erred")
-		return
-	}
-	
-	if (!thumb) {
-		el.textContent = format("Error: Thumbnail does not exist", provider.YouTube)
-		el.classList.add("erred")
-		return
-	}
-	
-	if (!video) {
-		el.textContent = format("Error: Empty googlevideo URL", provider.YouTube)
-		el.classList.add("erred")
-		return
-	}
-	
-	if (!videoHigh) {
-		el.textContent = format("Error: Empty googlevideo (high res) URL", provider.YouTube)
-		el.classList.add("erred")
-		return
-	}
+
+	const [title, thumb, video] = ytVids.get(id)
 
 	el.textContent = format(title, provider.YouTube)
 	el.setAttribute("data-html", encodeURIComponent(
@@ -136,32 +144,36 @@ async function fetchYouTube(el: Element): Promise<void> {
 // fetcher for the BitChute provider
 async function fetchBitChute(el: Element): Promise<void> {
 	const ref = el.getAttribute("href"),
-		id = strip(ref.split("embed/").pop().split("video/")),
-		res = await fetch(`/api/bitchute-title/${id}`),
-		title = await res.text()
+		id = strip(ref.split("embed/").pop().split("video/"))
 
-	switch (res.status) {
-		case 200:
-			el.textContent = format(title, provider.BitChute)
-			break
-		case 500:
-			el.textContent = format("Error 500: BitChute is not available", provider.BitChute)
-			el.classList.add("errored")
-			return
-		default:
-			const errmsg = `Error ${res.status}: ${res.statusText}`
-			el.textContent = format(errmsg, provider.BitChute)
-			el.classList.add("errored")
-			console.error(errmsg)
-			return
+	if (!bcVids.has(id)) {
+		const res = await fetch(`/api/bitchute-title/${id}`),
+			title = await res.text()
+
+		switch (res.status) {
+			case 200:
+				if (!title) {
+					el.textContent = format("Error: Title does not exist", provider.BitChute)
+					el.classList.add("errored")
+					return
+				}
+
+				bcVids.set(id, title)
+				break
+			case 500:
+				el.textContent = format("Error 500: BitChute is not available", provider.BitChute)
+				el.classList.add("errored")
+				return
+			default:
+				const errmsg = `Error ${res.status}: ${res.statusText}`
+				el.textContent = format(errmsg, provider.BitChute)
+				el.classList.add("errored")
+				console.error(errmsg)
+				return
+		}
 	}
 
-	if (!title) {
-		el.textContent = format("Error: Title does not exist", provider.BitChute)
-		el.classList.add("errored")
-		return
-	}
-
+	el.textContent = format(bcVids.get(id), provider.BitChute)
 	el.setAttribute("data-html", encodeURIComponent(
 		`<iframe width="480" height="270" src="https://bitchute.com/embed/${id}" `
 		+ `referrerpolicy="no-referrer" sandbox="allow-scripts" allowfullscreen></iframe>`
