@@ -4,6 +4,10 @@
 			"信息面板的文字",
 			"常見問題列表的橫幅和信息面板的文字"
 		],
+		"JPEGThumbnails": [
+			"JPEG thumbnails",
+			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+		],
 		"NSFW": [
 			"Not Safe For Work",
 			"允許成人內容的看板"
