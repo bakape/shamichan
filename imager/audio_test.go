@@ -1,10 +1,11 @@
 package imager
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/test"
-	"testing"
 )
 
 const mp3Length uint32 = 1

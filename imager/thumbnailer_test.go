@@ -2,14 +2,16 @@ package imager
 
 import (
 	"fmt"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/test"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+	"unicode/utf8"
+
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/imager/assets"
+	"github.com/bakape/meguca/test"
 
 	"github.com/bakape/thumbnailer/v2"
 )
@@ -21,22 +23,45 @@ func TestImageProcessing(t *testing.T) {
 	})
 
 	cases := [...]struct {
-		ext  string
-		dims [4]uint16
+		noThumb    bool
+		name, file string
+		dims       [4]uint16
 	}{
-		{"jpg", assets.StdDims["jpeg"]},
-		{"png", assets.StdDims["png"]},
-		{"webp", assets.StdDims["png"]},
-		{"gif", assets.StdDims["gif"]},
+		{
+			name: "jpg",
+			file: "sample.jpg",
+			dims: assets.StdDims["jpeg"],
+		},
+		{
+			name: "png",
+			file: "sample.png",
+			dims: assets.StdDims["png"],
+		},
+		{
+			name: "webp",
+			file: "sample.webp",
+			dims: assets.StdDims["png"],
+		},
+		{
+			name: "gif",
+			file: "sample.gif",
+			dims: assets.StdDims["gif"],
+		},
+		{
+			name:    "invalid UTF-8 in metdata",
+			file:    "invalid_utf8.mp3",
+			dims:    [4]uint16{},
+			noThumb: true,
+		},
 	}
 
 	for i := range cases {
 		c := cases[i]
-		t.Run(c.ext, func(t *testing.T) {
+		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
 			var img common.ImageCommon
-			f := test.OpenSample(t, "sample."+c.ext)
+			f := test.OpenSample(t, c.file)
 			defer f.Close()
 			thumb, err := processFile(f, &img, thumbnailer.Options{
 				ThumbDims: thumbnailer.Dims{
@@ -50,10 +75,19 @@ func TestImageProcessing(t *testing.T) {
 
 			assertThumbnail(t, thumb)
 			assertDims(t, img.Dims, c.dims)
-			assertFileType(t, img.ThumbType, common.WEBP)
+
+			ft := common.WEBP
+			if c.noThumb {
+				ft = common.NoFile
+			}
+			assertFileType(t, img.ThumbType, ft)
+
+			for _, s := range [...]string{img.Artist, img.Title} {
+				test.AssertEquals(t, utf8.ValidString(s), true)
+			}
 
 			t.Logf(`dims: %dx%d`, img.Dims[2], img.Dims[3])
-			writeSample(t, fmt.Sprintf("thumb_%s.webp", c.ext), thumb)
+			writeSample(t, fmt.Sprintf("thumb_%s.webp", c.file), thumb)
 		})
 	}
 }
