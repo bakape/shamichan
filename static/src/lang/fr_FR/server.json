@@ -4,6 +4,10 @@
 			"Panneau d'information",
 			"Message à afficher dans la Foire Aux Questions"
 		],
+		"JPEGThumbnails": [
+			"JPEG thumbnails",
+			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+		],
 		"NSFW": [
 			"NSFW",
 			"Cette planche autorise du contenu qui n'est pas recommandé dans un environnement de travail"

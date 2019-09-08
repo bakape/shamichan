@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"image"
+	"image/jpeg"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -322,6 +323,8 @@ func processFile(f multipart.File, img *common.ImageCommon,
 ) (
 	thumb []byte, err error,
 ) {
+	jpegThumb := config.Get().JPEGThumbnails
+
 	src, thumbImage, err := thumbnailer.Process(f, opts)
 	defer func() {
 		// Add image internal buffer to pool
@@ -336,7 +339,11 @@ func processFile(f multipart.File, img *common.ImageCommon,
 	}()
 	switch err {
 	case nil:
-		img.ThumbType = common.WEBP
+		if jpegThumb {
+			img.ThumbType = common.JPEG
+		} else {
+			img.ThumbType = common.WEBP
+		}
 	case thumbnailer.ErrCantThumbnail:
 		err = nil
 		img.ThumbType = common.NoFile
@@ -376,10 +383,16 @@ func processFile(f multipart.File, img *common.ImageCommon,
 
 	if thumbImage != nil {
 		w := bytes.NewBuffer(largeBufPool.Get().([]byte))
-		err = webp.Encode(w, thumbImage, &webp.Options{
-			Lossless: false,
-			Quality:  90,
-		})
+		if jpegThumb {
+			err = jpeg.Encode(w, thumbImage, &jpeg.Options{
+				Quality: 90,
+			})
+		} else {
+			err = webp.Encode(w, thumbImage, &webp.Options{
+				Lossless: false,
+				Quality:  90,
+			})
+		}
 		if err != nil {
 			return
 		}

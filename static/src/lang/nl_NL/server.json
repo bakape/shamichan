@@ -4,6 +4,10 @@
 			"Informatie panel text",
 			"Invoer voor de lijst met veelgestelde vragen en de informatie modal"
 		],
+		"JPEGThumbnails": [
+			"JPEG thumbnails",
+			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+		],
 		"NSFW": [
 			"Niet veilig voor werk",
 			"Bord staat materiaal toe dat niet veilig is om te worden bekeken in een werkomgeving"

@@ -4,6 +4,10 @@
 			"Інформаційни блок тексту",
 			"Записи для баннеру списку ФАК та інформаційни модальних вікон"
 		],
+		"JPEGThumbnails": [
+			"JPEG thumbnails",
+			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+		],
 		"NSFW": [
 			"Not Safe For Work",
 			"Board allows material, that are not safe to be viewed in a work environment"
