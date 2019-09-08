@@ -78,12 +78,6 @@ export let hidden: Set<number>
 // Debug mode with more verbose logging
 export let debug: boolean = /[\?&]debug=true/.test(location.href)
 
-// Currently existing downloaded youtube video info
-export const ytVids = new Map()
-
-// Currently existing downloaded bitchute video title
-export const bcVids = new Map()
-
 // Read page state by parsing a URL
 function read(href: string): PageState {
 	const u = new URL(href, location.origin),
@@ -151,33 +145,33 @@ function receive(channel: string, store: Set<number>) {
 
 // batch ids and send at most every 200ms to avoid spamming broadcasts
 const batchedPropagateSeenPost = timedAggregate<number>(propagate.bind(null, "seenPost"));
-const batchedStoreSeenPost = timedAggregate<{id: number, op: number}>(storeID.bind(null, "seenPost", tenDays));
+const batchedStoreSeenPost = timedAggregate<{ id: number, op: number }>(storeID.bind(null, "seenPost", tenDays));
 
 // Store the ID of a post this client created
 export function storeMine(id: number, op: number) {
 	mine.add(id);
 	propagate("mine", id);
-	storeID("mine", tenDays, {id, op});
+	storeID("mine", tenDays, { id, op });
 }
 
 // Store the ID of a post that replied to one of the user's posts
 export function storeSeenReply(id: number, op: number) {
 	seenReplies.add(id);
 	propagate("seen", id);
-	storeID("seen", tenDays, {id, op});
+	storeID("seen", tenDays, { id, op });
 }
 
 export function storeSeenPost(id: number, op: number) {
 	seenPosts.add(id);
 	batchedPropagateSeenPost(id);
-	batchedStoreSeenPost({id, op});
+	batchedStoreSeenPost({ id, op });
 }
 
 // Store the ID of a post or thread to hide
 export function storeHidden(id: number, op: number) {
 	hidden.add(id);
 	propagate("hidden", id);
-	storeID("hidden", tenDays * 3 * 6, {id, op});
+	storeID("hidden", tenDays * 3 * 6, { id, op });
 }
 
 export function setBoardConfig(c: BoardConfigs) {

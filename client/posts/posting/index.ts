@@ -9,7 +9,6 @@ import identity, { initIdentity } from "./identity"
 import * as state from "../../state";
 import initDrop from "./drop"
 import initPaste from "./paste"
-import initFullScreen from "./fullscreen"
 import initImageErr from "./image"
 import initThreads from "./threads"
 import { renderCaptchaForm, captchaLoaded } from "../../ui/captcha";
@@ -404,7 +403,6 @@ export default () => {
 
 	initDrop()
 	initPaste()
-	initFullScreen()
 	initImageErr()
 	initThreads()
 	initIdentity()

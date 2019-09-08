@@ -1,5 +1,4 @@
 import { makeAttrs, makeFrag, escape, on, fetchJSON } from "../util"
-import { ytVids, bcVids } from "../state"
 
 type OEmbedDoc = {
 	title?: string
@@ -13,9 +12,15 @@ type InvidiousUrl = {
 
 type InvidiousRes = {
 	title: string
-	videoThumbnails: [ InvidiousUrl ]
-	formatStreams: [ InvidiousUrl ]
+	videoThumbnails: [InvidiousUrl]
+	formatStreams: [InvidiousUrl]
 }
+
+// Currently existing downloaded youtube video info
+const youtubeCache = new Map<string, OEmbedDoc>();
+
+// Currently existing downloaded bitchute video title
+const bitchuteCache = new Map<string, string>()
 
 // Types of different embeds by provider
 enum provider { YouTube, SoundCloud, Vimeo, Coub, BitChute, Invidious }
@@ -52,9 +57,16 @@ const patterns: [provider, RegExp][] = [
 const formatters: { [key: number]: (s: string) => string } = {}
 
 // Map of providers to information fetcher functions
-const fetchers: { [key: number]: (el: Element) => Promise<void> } = {}
+const fetchers: { [key: number]: (el: Element) => Promise<any> } = {}
 
-for (let p of ["YouTube", "SoundCloud", "Vimeo", "Coub", "BitChute", "Invidious"]) {
+for (let p of [
+	"YouTube",
+	"SoundCloud",
+	"Vimeo",
+	"Coub",
+	"BitChute",
+	"Invidious",
+]) {
 	const id = (provider as any)[p] as number
 	formatters[id] = formatProvider(id)
 	switch (id) {
@@ -86,67 +98,12 @@ function formatProvider(type: provider): (s: string) => string {
 	}
 }
 
-// fetcher for the YouTube provider
-async function fetchYouTube(el: Element): Promise<void> {
-	const ref = el.getAttribute("href"),
-		id = strip(ref.split(".be/").pop().split("embed/").pop().split("watch?v="))
-
-	if (!ytVids.has(id)) {
-		const res = await fetch(`/api/youtube-data/${id}`),
-			[title, thumb, video, videoHigh] = (await res.text()).split("\n")
-
-		if (res.status != 200) {
-			return fetchNoEmbed(provider.YouTube)(el)
-		}
-
-		if (!title) {
-			el.textContent = format("Error: Title does not exist", provider.YouTube)
-			el.classList.add("erred")
-			return
-		}
-
-		if (!thumb) {
-			el.textContent = format("Error: Thumbnail does not exist", provider.YouTube)
-			el.classList.add("erred")
-			return
-		}
-
-		if (!video) {
-			el.textContent = format("Error: Empty googlevideo URL", provider.YouTube)
-			el.classList.add("erred")
-			return
-		}
-
-		if (!videoHigh) {
-			el.textContent = format("Error: Empty googlevideo (high res) URL", provider.YouTube)
-			el.classList.add("erred")
-			return
-		}
-
-		ytVids.set(id, [title, thumb, video, videoHigh])
-	}
-
-	const [title, thumb, video] = ytVids.get(id)
-
-	el.textContent = format(title, provider.YouTube)
-	el.setAttribute("data-html", encodeURIComponent(
-		`<video width="480" height="270" poster="${thumb}" `
-		+ (ref.includes("loop=1") ? "loop " : '') + `controls><source src="${video}`
-		+ (!ref.includes(`t=`) ? check("start") : '') + check("t") + `" type="`
-		+ (video.includes("mime=video%2Fwebm") ? "video/webm" : "video/mp4") + `"/>`
-	))
-
-	function check(s: string): string {
-		return ref.includes(`${s}=`) ? `#t=` + strip(ref.split(`${s}=`)) : ''
-	}
-}
-
 // fetcher for the BitChute provider
 async function fetchBitChute(el: Element): Promise<void> {
 	const ref = el.getAttribute("href"),
 		id = strip(ref.split("embed/").pop().split("video/"))
 
-	if (!bcVids.has(id)) {
+	if (!bitchuteCache.has(id)) {
 		const res = await fetch(`/api/bitchute-title/${id}`),
 			title = await res.text()
 
@@ -158,7 +115,7 @@ async function fetchBitChute(el: Element): Promise<void> {
 					return
 				}
 
-				bcVids.set(id, title)
+				bitchuteCache.set(id, title)
 				break
 			case 500:
 				el.textContent = format("Error 500: BitChute is not available", provider.BitChute)
@@ -173,11 +130,25 @@ async function fetchBitChute(el: Element): Promise<void> {
 		}
 	}
 
-	el.textContent = format(bcVids.get(id), provider.BitChute)
+	el.textContent = format(bitchuteCache.get(id), provider.BitChute)
 	el.setAttribute("data-html", encodeURIComponent(
 		`<iframe width="480" height="270" src="https://bitchute.com/embed/${id}" `
 		+ `referrerpolicy="no-referrer" sandbox="allow-scripts" allowfullscreen></iframe>`
 	))
+}
+
+async function fetchYouTube(el: Element): Promise<void> {
+	const href = el.getAttribute("href");
+	const cached = youtubeCache.get(href);
+	if (cached) {
+		setNoembedData(el, provider.YouTube, cached);
+		return;
+	}
+
+	const data = await fetchNoEmbed(provider.YouTube)(el);
+	if (data) {
+		youtubeCache.set(href, data);
+	}
 }
 
 function strip(s: string[]): string {
@@ -214,7 +185,9 @@ async function fetchInvidious(el: Element): Promise<void> {
 }
 
 // fetcher for the noembed.com meta-provider
-function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
+function fetchNoEmbed(
+	type: provider,
+): (el: Element) => Promise<OEmbedDoc | null> {
 	return async (el: Element) => {
 		const url = "https://noembed.com/embed?url=" + el.getAttribute("href"),
 			[data, err] = await fetchJSON<OEmbedDoc>(url)
@@ -232,9 +205,14 @@ function fetchNoEmbed(type: provider): (el: Element) => Promise<void> {
 			return
 		}
 
-		el.textContent = format(data.title, type)
-		el.setAttribute("data-html", encodeURIComponent(data.html.trim()))
+		setNoembedData(el, type, data);
+		return data;
 	}
+}
+
+function setNoembedData(el: Element, type: provider, data: OEmbedDoc) {
+	el.textContent = format(data.title, type);
+	el.setAttribute("data-html", encodeURIComponent(data.html.trim()));
 }
 
 function format(s: string, type: provider): string {

@@ -154,7 +154,6 @@ func createRouter() http.Handler {
 				httpError(w, r, err)
 			}
 		})
-		api.GET("/youtube-data/:id", youTubeData)
 		api.GET("/bitchute-title/:id", bitChuteTitle)
 		api.POST("/register", register)
 		api.POST("/login", login)
