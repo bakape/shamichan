@@ -97,6 +97,7 @@ cd ffmpeg
 git checkout n4.1
 ./configure
 make -j`nproc`
+sudo make install
 ```
 
 #### Linux and OSX
