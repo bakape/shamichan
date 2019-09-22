@@ -82,6 +82,9 @@
 			{%s= ln.Common.UI["lockedToBottom"] %}
 		</span>
 	</span>
+	<script id="board-configs" type="application/json">
+		{%z= config.GetBoardConfigs(board).JSON %}
+	</script>
 	{%= loadingImage(board) %}
 {% endstripspace %}{% endfunc %}
 
@@ -96,9 +99,6 @@ caching of generated posts.
 		</script>
 		{%= encodeBacklinks(bls) %}
 	</section>
-	<script id="board-configs" type="application/json">
-		{%z= config.GetBoardConfigs(t.Board).JSON %}
-	</script>
 {% endstripspace %}{% endfunc %}
 
 Common functionality between index board pages and threads pages
