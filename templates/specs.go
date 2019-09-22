@@ -122,6 +122,7 @@ var specs = map[string][]inputSpec{
 		{ID: "flags"},
 		{ID: "NSFW"},
 		{ID: "rbText"},
+		{ID: "cinemaEnabled"},
 		{Type: _hr},
 		{ID: "pyu"},
 		{
@@ -231,6 +232,12 @@ var specs = map[string][]inputSpec{
 			Required: true,
 		},
 		{
+			ID:       "cinemaPushScore",
+			Type:     _number,
+			Min:      0,
+			Required: true,
+		},
+		{
 			ID:       "sessionExpiry",
 			Type:     _number,
 			Min:      1,
@@ -303,6 +310,10 @@ var specs = map[string][]inputSpec{
 		{
 			ID:   "links",
 			Type: _map,
+		},
+		{
+			ID:   "cinemaRawDomains",
+			Type: _array,
 		},
 	},
 }
@@ -388,6 +399,7 @@ var optionSpecs = [...][]inputSpec{
 		},
 		{ID: "bgMute"},
 		{ID: "meguTV"},
+		{ID: "cinema"},
 	},
 	{
 		{

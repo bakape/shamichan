@@ -41,6 +41,10 @@ func (c *Client) runHandler(typ common.MessageType, msg []byte) error {
 		return c.spoilerImage()
 	case common.MessageMeguTV:
 		return feeds.SubscribeToMeguTV(c)
+	case common.MessageCinemaSubscription:
+		return feeds.CinemaSubscription(c)
+	case common.MessageCinemaCancelSubscription:
+		return feeds.CinemaCancelSubscription(c)
 	default:
 		return errInvalidPayload(msg)
 	}

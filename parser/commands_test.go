@@ -15,7 +15,7 @@ func TestFlip(t *testing.T) {
 	var isSlut bool
 	t.Parallel()
 
-	com, err := parseCommand([]byte("flip"), "a", 1, 1, "::1", &isSlut)
+	com, err := parseCommand("flip", "a", 1, 1, "::1", &isSlut)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,7 +41,7 @@ func TestDice(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			com, err := parseCommand([]byte(c.in), "a", 1, 1, "::1", &isSlut)
+			com, err := parseCommand(c.in, "a", 1, 1, "::1", &isSlut)
 			if err != c.err {
 				t.Fatalf("unexpected error: %s : %s", c.err, err)
 			} else {
@@ -64,7 +64,7 @@ func Test8ball(t *testing.T) {
 		Eightball: answers,
 	})
 
-	com, err := parseCommand([]byte("8ball"), "a", 1, 1, "::1", &isSlut)
+	com, err := parseCommand("8ball", "a", 1, 1, "::1", &isSlut)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +92,7 @@ func TestPyu(t *testing.T) {
 		})
 
 		for _, in := range [...]string{"pyu", "pcount"} {
-			com, err := parseCommand([]byte(in), "a", 1, 1, "::1", &isSlut)
+			com, err := parseCommand(in, "a", 1, 1, "::1", &isSlut)
 			if err != nil {
 				t.Error(err)
 			}
@@ -127,7 +127,7 @@ func TestPyu(t *testing.T) {
 		for i := range cases {
 			c := cases[i]
 			t.Run(c.name, func(t *testing.T) {
-				com, err := parseCommand([]byte(c.in), "a", 1, 1, "::1", &isSlut)
+				com, err := parseCommand(c.in, "a", 1, 1, "::1", &isSlut)
 				if err != nil {
 					t.Fatal(err)
 				}

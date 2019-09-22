@@ -178,11 +178,13 @@ func (c *Client) closePost() (err error) {
 		com   []common.Command
 	)
 	if c.post.len != 0 {
-		links, com, err = parser.ParseBody(c.post.body, c.post.board, c.post.op,
+		var spamScore uint
+		links, com, spamScore, err = parser.ParseBody(c.post.body, c.post.board, c.post.op,
 			c.post.id, c.ip, false)
 		if err != nil {
 			return
 		}
+		db.IncrementSpamScore(c.captchaSession, c.ip, spamScore)
 	}
 
 	err = db.ClosePost(c.post.id, c.post.op, string(c.post.body), links, com)

@@ -33,9 +33,10 @@ type ThreadCreationRequest struct {
 // creation
 type ReplyCreationRequest struct {
 	Sage, Open bool
-	Image      ImageRequest
+	Image ImageRequest
 	auth.SessionCreds
 	Name, Password, Body string
+	CaptchaSession auth.Base64Token
 }
 
 // ImageRequest contains data for allocating an image
@@ -334,7 +335,8 @@ func constructPost(
 		// TODO: Move DB checks out of the parser. The parser should just parse.
 		// Return slices of pointers to links and commands that need to be
 		// validated.
-		post.Links, post.Commands, err = parser.ParseBody(
+		var spamScore uint
+		post.Links, post.Commands, spamScore, err = parser.ParseBody(
 			[]byte(req.Body),
 			conf.ID,
 			post.OP,
@@ -345,6 +347,7 @@ func constructPost(
 		if err != nil {
 			return
 		}
+		db.IncrementSpamScore(req.CaptchaSession, ip, spamScore)
 	}
 
 	return

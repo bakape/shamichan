@@ -16,6 +16,7 @@ import (
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/bakape/meguca/websockets/feeds"
+	"github.com/bakape/meguca/common"
 )
 
 // Start parses command line arguments and initializes the server.
@@ -63,6 +64,7 @@ func Start() (err error) {
 	}
 
 	// Depend on configs
+	common.Update()
 	var tasks []func() error
 	if config.Server.ImagerMode != config.ImagerOnly {
 		tasks = append(tasks, templates.Compile, listenToThreadDeletion)

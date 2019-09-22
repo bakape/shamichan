@@ -102,6 +102,8 @@
 		"bottom": "Bottom",
 		"cancel": "Cancel",
 		"catalog": "Catalog",
+		"cinemaStatusOneSpectatorTitle": "1 spectator is watching ",
+		"cinemaStatusMultipleSpectatorsTitle": " spectators are watching ",
 		"clickToCancel": "Click to cancel",
 		"deleteBoard": "Delete board",
 		"done": "Done",

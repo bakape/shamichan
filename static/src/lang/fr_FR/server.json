@@ -64,6 +64,22 @@
 			"Score de spam par caractère",
 			"Poids antispam lors de la modification d'un caractère dans un message. Après avoir excédé la limite, l'utilisateur devra remplir un captcha."
 		],
+		"cinema": [
+			"Cinema",
+			"Enqueue and watch videos together with other anons in thread."
+		],
+		"cinemaEnabled": [
+			"Enable Cinema",
+			"Enable Cinema"
+		],
+		"cinemaPushScore": [
+			"Cinema push spam score",
+			"Antispam weight of posting a push to cinema. After exceeding the limit the user will need to solve a captcha."
+		],
+		"cinemaRawDomains": [
+			"Cinema raw domains",
+			"List of trusted domains from which raw videos will be accepted."
+		],
 		"customCSS": [
 			"",
 			"Feuille de style personnalisée à charger par dessus le thème sélectionné"
@@ -466,6 +482,9 @@
 		"changePassword": "Mot de passe",
 		"classic": "classic",
 		"clear": "Vider",
+		"cinemaPlaylistEmpty": "empty playlist",
+		"cinemaPush": "push",
+		"cinemaSkip": "skip",
 		"configureBoard": "Configurer une planche",
 		"configureServer": "Configurer le serveur",
 		"createBoard": "Créer une planche",

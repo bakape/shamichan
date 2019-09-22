@@ -329,6 +329,15 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 			err = common.StatusError{errors.New("too few captcha tags"), 400}
 			return
 		}
+
+		correct := []string{}
+		for _, domain := range msg.CinemaRawDomains {
+			if common.DomainRegexp.MatchString(domain) {
+				correct = append(correct, domain)
+			}
+		}
+		msg.CinemaRawDomains = correct
+
 		err = db.WriteConfigs(msg)
 		return
 	}()

@@ -50,6 +50,10 @@ export const enum message {
 
 	// Set a cookie on the client
 	setCookie,
+
+	cinemaSubscription,
+
+	cinemaCancelSubscription,
 }
 
 export type MessageHandler = (msg: {}) => void

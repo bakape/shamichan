@@ -1,5 +1,6 @@
 // Time related aids
 import lang from '../lang'
+import { pad } from './index'
 
 export function secondsToTime(s: number): string {
     const divide = [60, 60, 24, 30, 12]
@@ -30,4 +31,20 @@ export function secondsToTime(s: number): string {
     }
 
     return format("year")
+}
+
+export function secondsToTimeExact(s: number): string {
+	let time: string
+	const hours = Math.floor(s/3600),
+		minutes = Math.floor((s-hours*3600)/60),
+		seconds = Math.round((s-hours*3600-minutes*60))
+	time = hours + ":" + minutes + ":" + seconds
+	if (hours) {
+		time = hours + ":" + pad(minutes) + ":" + pad(seconds)
+	} else if(minutes) {
+		time = minutes + ":" + pad(seconds)
+	} else {
+		time = "00:" + pad(seconds)
+	}
+	return time
 }

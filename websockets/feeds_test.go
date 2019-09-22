@@ -20,7 +20,7 @@ func TestStreamUpdates(t *testing.T) {
 	go readListenErrors(t, cl, sv)
 
 	assertMessage(t, wcl, `30{"recent":{},"moderation":{}}`)
-	assertMessage(t, wcl, "33[\"35{\\\"active\\\":0,\\\"total\\\":1}\"]")
+	assertMessage(t, wcl, "33[\"35{\\\"active\\\":0,\\\"total\\\":1,\\\"cinemaWatching\\\":0,\\\"cinemaPlaying\\\":\\\"\\\"}\"]")
 
 	// Send message
 	feeds.SendTo(1, []byte("foo"))

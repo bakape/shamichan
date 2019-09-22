@@ -103,6 +103,8 @@
 		"cancel": "Annuler",
 		"catalog": "Catalogue",
 		"clickToCancel": "Click to cancel",
+		"cinemaStatusOneSpectatorTitle": "1 spectator is watching ",
+		"cinemaStatusMultipleSpectatorsTitle": " spectators are watching ",
 		"deleteBoard": "Supprimer une planche",
 		"done": "Terminer",
 		"fileTooLarge": "file too large",

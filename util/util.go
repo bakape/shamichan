@@ -5,6 +5,7 @@ package util
 import (
 	"crypto/md5"
 	"encoding/base64"
+	"unicode"
 )
 
 // WrapError wraps error types to create compound error chains
@@ -122,6 +123,10 @@ func isPunctuation(b byte) bool {
 	default:
 		return false
 	}
+}
+
+func IsWordDelimiter(r rune) bool {
+	return unicode.IsSpace(r) || (unicode.IsPunct(r) && r != '#')
 }
 
 // SplitPunctuationString splits off one byte of leading and trailing

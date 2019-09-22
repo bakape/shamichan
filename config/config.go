@@ -53,6 +53,7 @@ var (
 		CharScore:         170,
 		PostCreationScore: 15000,
 		ImageScore:        15000,
+		CinemaPushScore:   120000,
 		EmailErrPort:      587,
 		Salt:              "LALALALALALALALALALALALALALALALALALALALA",
 		EmailErrMail:      "admin@email.com",
@@ -65,12 +66,13 @@ var (
 			"hakurei_reimu"},
 		OverrideCaptchaTags: map[string]string{},
 		Public: Public{
-			DefaultCSS:      "moe",
-			DefaultLang:     "en_GB",
-			ThreadExpiryMin: 7,
-			ThreadExpiryMax: 14,
-			MaxSize:         5,
-			Links:           map[string]string{"4chan": "http://www.4chan.org/"},
+			DefaultCSS:       "moe",
+			DefaultLang:      "en_GB",
+			ThreadExpiryMin:  7,
+			ThreadExpiryMax:  14,
+			MaxSize:          5,
+			Links:            map[string]string{"4chan": "http://www.4chan.org/"},
+			CinemaRawDomains: []string{},
 		},
 	}
 
@@ -98,7 +100,10 @@ const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, 
 #d100 #2d100 - Roll dice
 #flip - Coin flip
 #8ball - An 8ball
-#sw24:30 #sw2:24:30 #sw24:30+30 #sw24:30-30 - "Syncwatch" synchronized time counter`
+#sw24:30 #sw2:24:30 #sw24:30+30 #sw24:30-30 - "Syncwatch" synchronized time counter
+<hr>Cinema commands:
+!push {url} – enqueue video, supported sources: invidio.us, meguca.org
+!skip – vote skip`
 
 // Generate /all/ board configs
 func init() {

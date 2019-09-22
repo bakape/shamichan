@@ -64,6 +64,22 @@
 			"字元濫發分數",
 			"在貼文中編輯一個字元的防濫發權重。超過限制後，用戶需要解決驗證碼。"
 		],
+		"cinema": [
+			"Cinema",
+			"Enqueue and watch videos together with other anons in thread."
+		],
+		"cinemaEnabled": [
+			"Enable Cinema",
+			"Enable Cinema"
+		],
+		"cinemaPushScore": [
+			"Cinema push spam score",
+			"Antispam weight of posting a push to cinema. After exceeding the limit the user will need to solve a captcha."
+		],
+		"cinemaRawDomains": [
+			"Cinema raw domains",
+			"List of trusted domains from which raw videos will be accepted."
+		],
 		"customCSS": [
 			"",
 			"加載在所選主題之上的用戶自定義 CSS 規則"
@@ -466,6 +482,9 @@
 		"by": "由",
 		"captcha": "驗證碼",
 		"changePassword": "更改密碼",
+		"cinemaPlaylistEmpty": "empty playlist",
+		"cinemaPush": "push",
+		"cinemaSkip": "skip",
 		"classic": "經典",
 		"clear": "清除",
 		"configureBoard": "配置看板",

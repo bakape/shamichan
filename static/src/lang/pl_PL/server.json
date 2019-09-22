@@ -64,6 +64,22 @@
 			"Character spam score",
 			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
 		],
+		"cinema": [
+			"Kino",
+			"Kolejkuj i oglądaj filmy razem z innymi anonami w wątku."
+		],
+		"cinemaEnabled": [
+			"Odblokuj opcję Kina",
+			"Odblokuj opcję Kina"
+		],
+		"cinemaPushScore": [
+			"Kara spamowa za kolejkowane w kinie",
+			"Waga antyspamowa komendy kolejkującej wideo do kina. Po przekroczeniu limitu użytkownik będzie musiał rozwiązać captche."
+		],
+		"cinemaRawDomains": [
+			"Cinema raw domains",
+			"List of trusted domains from which raw videos will be accepted."
+		],
 		"customCSS": [
 			"",
 			"User-defined CSS rules loaded on top of the selected theme"
@@ -466,6 +482,9 @@
 		"by": "By",
 		"captcha": "Captcha",
 		"changePassword": "Zmień hasło",
+		"cinemaPlaylistEmpty": "kolejka filmów pusta",
+		"cinemaPush": "wepchnij",
+		"cinemaSkip": "omiń",
 		"classic": "classic",
 		"clear": "Clear",
 		"configureBoard": "Konfiguracja działu",

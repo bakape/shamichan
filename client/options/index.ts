@@ -12,6 +12,7 @@ export { store as storeMascot } from "./mascot"
 export * from "./specs"
 export { posterName } from "./nowPlaying"
 export { persistMessages } from "./meguTV"
+export { initCinema } from "./cinema"
 
 // Delete legacy options localStorage entry, if any
 localStorage.removeItem("options")
@@ -51,6 +52,7 @@ interface Options extends ChangeEmitter {
 	inlineFit: string
 	theme: string
 	customCSS: string
+	cinema: boolean
 }
 
 // Central options storage model

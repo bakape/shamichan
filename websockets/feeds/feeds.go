@@ -7,6 +7,7 @@ import (
 	"errors"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/config"
 	"sync"
 )
 
@@ -15,6 +16,7 @@ var feeds = feedMap{
 	// 64 len map to avoid some possible reallocation as the server starts
 	feeds:   make(map[uint64]*Feed, 64),
 	tvFeeds: make(map[string]*tvFeed, 64),
+	cinemaFeeds: make(map[uint64]*cinemaFeed, 1024),
 }
 
 // Export to avoid circular dependency
@@ -25,9 +27,10 @@ func init() {
 
 // Container for managing client<->update-feed assignment and interaction
 type feedMap struct {
-	feeds   map[uint64]*Feed
+	feeds map[uint64]*Feed
 	tvFeeds map[string]*tvFeed
-	mu      sync.RWMutex
+	cinemaFeeds map[uint64]*cinemaFeed
+	mu sync.RWMutex
 }
 
 // Add client to feed and send it the current status of the feed for
@@ -45,14 +48,15 @@ func addToFeed(id uint64, board string, c common.Client) (
 		if !ok {
 			feed = &Feed{
 				id:            id,
-				send:          make(chan []byte),
-				insertPost:    make(chan postCreationMessage),
-				closePost:     make(chan message),
-				spoilerImage:  make(chan message),
-				moderatePost:  make(chan moderationMessage),
-				setOpenBody:   make(chan postBodyModMessage),
-				insertImage:   make(chan imageInsertionMessage),
-				messageBuffer: make([]string, 0, 64),
+				send:            make(chan []byte),
+				insertPost:      make(chan postCreationMessage),
+				closePost:       make(chan message),
+				spoilerImage:    make(chan message),
+				moderatePost:    make(chan moderationMessage),
+				setOpenBody:     make(chan postBodyModMessage),
+				insertImage:     make(chan imageInsertionMessage),
+				messageBuffer:   make([]string, 0, 64),
+				sendIPCountChan: make(chan cinemaStatus, 16),
 			}
 
 			feed.baseFeed.init()
@@ -93,6 +97,15 @@ func SubscribeToMeguTV(c common.Client) (err error) {
 	return
 }
 
+func removeFromCinemaFeed(thread uint64, c common.Client) {
+	if feed := feeds.cinemaFeeds[thread]; feed != nil {
+		feed.remove <- c
+		if nil != <-feed.remove {
+			delete(feeds.cinemaFeeds, thread)
+		}
+	}
+}
+
 // Remove client from a subscribed feed
 func removeFromFeed(id uint64, board string, c common.Client) {
 	feeds.mu.Lock()
@@ -112,6 +125,8 @@ func removeFromFeed(id uint64, board string, c common.Client) {
 			delete(feeds.tvFeeds, feed.board)
 		}
 	}
+
+	removeFromCinemaFeed(id, c)
 }
 
 // SendTo sends a message to a feed, if it exists
@@ -204,4 +219,44 @@ func Clear() {
 	feeds.mu.Lock()
 	defer feeds.mu.Unlock()
 	feeds.feeds = make(map[uint64]*Feed, 32)
+}
+
+func CinemaSubscription(c common.Client) (err error) {
+	feeds.mu.Lock()
+	defer feeds.mu.Unlock()
+	sync, op, board := GetSync(c)
+	if !sync {
+		return errors.New("Cinema: not synced")
+	}
+	if !config.GetBoardConfigs(board).CinemaEnabled {
+		return errors.New("Cinema: not enabled in board config")
+	}
+	cf, ok := feeds.cinemaFeeds[op]
+	if !ok {
+		if mainFeed := feeds.feeds[op]; mainFeed != nil {
+			cf = newCinemaFeed(op, mainFeed)
+			feeds.cinemaFeeds[op] = cf
+			err = cf.start()
+			if err != nil {
+				return
+			}
+			cf.add <- c
+		} else {
+			return errors.New("Cinema: no corresponding thread feed")
+		}
+	} else {
+		cf.add <- c
+	}
+	return
+}
+
+func CinemaCancelSubscription(c common.Client) (err error) {
+	sync, op, _ := GetSync(c)
+	if !sync {
+		return errors.New("Cinema: not synced")
+	}
+	feeds.mu.Lock()
+	defer feeds.mu.Unlock()
+	removeFromCinemaFeed(op, c)
+	return
 }

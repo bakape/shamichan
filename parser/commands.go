@@ -3,7 +3,6 @@
 package parser
 
 import (
-	"bytes"
 	"crypto/rand"
 	"database/sql"
 	"math/big"
@@ -33,20 +32,20 @@ func randInt(max int) int {
 }
 
 // Parse a matched hash command
-func parseCommand(match []byte, board string, thread uint64, id uint64, ip string, isSlut *bool) (
+func parseCommand(match string, board string, thread uint64, id uint64, ip string, isSlut *bool) (
 	com common.Command, err error,
 ) {
 	boardConfig := config.GetBoardConfigs(board)
 
-	switch {
+	switch match {
 
 	// Coin flip
-	case bytes.Equal(match, []byte("flip")):
+	case "flip":
 		com.Type = common.Flip
 		com.Flip = randInt(2) == 1
 
 	// 8ball; select random string from the the 8ball answer array
-	case bytes.Equal(match, []byte("8ball")):
+	case "8ball":
 		com.Type = common.EightBall
 		answers := boardConfig.Eightball
 		if len(answers) != 0 {
@@ -54,7 +53,7 @@ func parseCommand(match []byte, board string, thread uint64, id uint64, ip strin
 		}
 
 	// Increment pyu counter
-	case bytes.Equal(match, []byte("pyu")):
+	case "pyu":
 		com.Type = common.Pyu
 
 		if boardConfig.Pyu {
@@ -133,12 +132,12 @@ func parseCommand(match []byte, board string, thread uint64, id uint64, ip strin
 		}
 
 	// Return current pyu count
-	case bytes.Equal(match, []byte("pcount")):
+	case "pcount":
 		com.Type = common.Pcount
 		com.Pyu, err = db.GetPcount(board)
 
 	// Roulette
-	case bytes.Equal(match, []byte("roulette")):
+	case "roulette":
 		com.Type = common.Roulette
 		err = db.InTransaction(false, func(tx *sql.Tx) error {
 			max, err := db.DecrementRoulette(tx, thread)
@@ -158,7 +157,7 @@ func parseCommand(match []byte, board string, thread uint64, id uint64, ip strin
 		})
 
 	// Return current roulette count
-	case bytes.Equal(match, []byte("rcount")):
+	case "rcount":
 		com.Type = common.Rcount
 		err = db.InTransaction(false, func(tx *sql.Tx) error {
 			rcount, err := db.GetRcount(tx, thread)
@@ -167,18 +166,16 @@ func parseCommand(match []byte, board string, thread uint64, id uint64, ip strin
 		})
 
 	default:
-		matchStr := string(match)
-
 		// Synchronized time counter
-		if strings.HasPrefix(matchStr, "sw") {
+		if strings.HasPrefix(match, "sw") {
 			com.Type = common.SyncWatch
-			com.SyncWatch = parseSyncWatch(matchStr)
+			com.SyncWatch = parseSyncWatch(match)
 			return
 		}
 
 		// Dice throw
 		com.Type = common.Dice
-		com.Dice, err = parseDice(matchStr)
+		com.Dice, err = parseDice(match)
 	}
 
 	return

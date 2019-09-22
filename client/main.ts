@@ -1,6 +1,6 @@
 // Client entry point
 
-import { loadFromDB, page, posts, storeMine, storeSeenPost } from './state'
+import { loadFromDB, page, posts, storeMine, storeSeenPost, boardConfig } from './state'
 import { start as connect, connSM, connState } from './connection'
 import { open } from './db'
 import { initOptions } from "./options"
@@ -16,7 +16,7 @@ import {
 } from "./util"
 import assignHandlers from "./client"
 import initModeration from "./mod"
-import { persistMessages } from "./options"
+import { persistMessages, initCinema } from "./options"
 import { watchThread } from './page/thread_watcher';
 
 // Load all stateful modules in dependency order
@@ -63,6 +63,9 @@ async function start() {
 		})
 
 		persistMessages()
+		if (boardConfig.cinemaEnabled) {
+			initCinema()
+		}
 		connect()
 		checkBottom()
 		assignHandlers()

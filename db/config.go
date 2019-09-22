@@ -13,6 +13,7 @@ import (
 	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
 	"github.com/lib/pq"
+	"github.com/bakape/meguca/common"
 )
 
 // BoardConfigs contains extra fields not exposed on database reads
@@ -52,7 +53,7 @@ func getBoardConfigs() squirrel.SelectBuilder {
 	return sq.Select(
 		"readOnly", "textOnly", "forcedAnon", "disableRobots", "flags", "NSFW",
 		"rbText", "pyu", "id", "defaultCSS", "title", "notice",
-		"rules", "eightball",
+		"rules", "cinemaEnabled", "eightball",
 	).
 		From("boards")
 }
@@ -77,8 +78,8 @@ func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
 	var eightball pq.StringArray
 	err = r.Scan(
 		&c.ReadOnly, &c.TextOnly, &c.ForcedAnon, &c.DisableRobots, &c.Flags,
-		&c.NSFW, &c.RbText, &c.Pyu,
-		&c.ID, &c.DefaultCSS, &c.Title, &c.Notice, &c.Rules, &eightball,
+		&c.NSFW, &c.RbText, &c.Pyu, &c.ID, &c.DefaultCSS, &c.Title, &c.Notice,
+		&c.Rules, &c.CinemaEnabled, &eightball,
 	)
 	c.Eightball = []string(eightball)
 	return
@@ -89,14 +90,13 @@ func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
 	_, err := sq.Insert("boards").
 		Columns(
 			"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
-			"flags", "NSFW",
-			"rbText", "pyu", "created", "defaultCSS", "title",
-			"notice", "rules", "eightball",
+			"flags", "NSFW", "rbText", "pyu", "created", "defaultCSS",
+			"title", "notice", "rules", "cinemaEnabled", "eightball",
 		).
 		Values(
 			c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
-			c.Flags, c.NSFW, c.RbText, c.Pyu,
-			c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
+			c.Flags, c.NSFW, c.RbText, c.Pyu, c.Created, c.DefaultCSS,
+			c.Title, c.Notice, c.Rules, c.CinemaEnabled,
 			pq.StringArray(c.Eightball),
 		).
 		RunWith(tx).
@@ -120,6 +120,7 @@ func UpdateBoard(c config.BoardConfigs) (err error) {
 			"title":         c.Title,
 			"notice":        c.Notice,
 			"rules":         c.Rules,
+			"cinemaEnabled": c.CinemaEnabled,
 			"eightball":     pq.StringArray(c.Eightball),
 		}).
 		Where("id = ?", c.ID).
@@ -135,7 +136,8 @@ func updateConfigs(_ string) error {
 	config.Set(conf)
 	mlog.Update()
 
-	return util.Parallel(templates.Recompile, auth.LoadCaptchaServices)
+	return util.Parallel(templates.Recompile, auth.LoadCaptchaServices,
+		common.Update)
 }
 
 func updateBoardConfigs(board string) error {

@@ -1497,6 +1497,13 @@ var migrations = []func(*sql.Tx) error{
 			)`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(
+			`ALTER TABLE boards
+				ADD COLUMN cinemaEnabled bool default false`,
+		)
+		return
+	},
 }
 
 func createIndex(table string, columns ...string) string {

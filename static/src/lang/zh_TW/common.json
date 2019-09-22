@@ -103,6 +103,8 @@
 		"cancel": "取消",
 		"catalog": "目錄",
 		"clickToCancel": "點擊以取消",
+		"cinemaStatusOneSpectatorTitle": "1 spectator is watching ",
+		"cinemaStatusMultipleSpectatorsTitle": " spectators are watching ",
 		"deleteBoard": "刪除看板",
 		"done": "完成",
 		"fileTooLarge": "檔案太大",

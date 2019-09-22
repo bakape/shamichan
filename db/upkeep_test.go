@@ -24,9 +24,9 @@ func TestOpenPostClosing(t *testing.T) {
 	writeSampleBoard(t)
 	writeSampleThread(t)
 	common.ParseBody = func(_ []byte, _ string, _ uint64, _ uint64, _ string, _ bool) (
-		[]common.Link, []common.Command, error,
+		[]common.Link, []common.Command, uint, error,
 	) {
-		return nil, nil, nil
+		return nil, nil, 0, nil
 	}
 
 	tooOld := time.Now().Add(-time.Minute * 31).Unix()

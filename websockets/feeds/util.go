@@ -89,3 +89,11 @@ func (b *baseFeed) sendToAll(msg []byte) {
 		c.Send(msg)
 	}
 }
+
+func (f *baseFeed) uniqueIPs() int {
+	uniqueIPs := make(map[string]struct{})
+	for c := range f.clients {
+		uniqueIPs[c.IP()] = struct{}{}
+	}
+	return len(uniqueIPs)
+}

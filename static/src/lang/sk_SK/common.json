@@ -103,6 +103,8 @@
 		"cancel": "Zrušiť",
 		"catalog": "Katalóg",
 		"clickToCancel": "Click to cancel",
+		"cinemaStatusOneSpectatorTitle": "1 spectator is watching ",
+		"cinemaStatusMultipleSpectatorsTitle": " spectators are watching ",
 		"deleteBoard": "Zmazať dosku",
 		"done": "Importované. Stránka sa načíta znovu.",
 		"fileTooLarge": "file too large",

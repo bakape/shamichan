@@ -103,6 +103,8 @@
 		"cancel": "Отменить",
 		"catalog": "Каталог",
 		"clickToCancel": "Click to cancel",
+		"cinemaStatusOneSpectatorTitle": "1 spectator is watching ",
+		"cinemaStatusMultipleSpectatorsTitle": " spectators are watching ",
 		"deleteBoard": "Удалить доску",
 		"done": "Готово",
 		"fileTooLarge": "file too large",

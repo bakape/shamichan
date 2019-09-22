@@ -91,6 +91,7 @@ func TestInsertThread(t *testing.T) {
 }
 
 func testCreateThread(t *testing.T) {
+	common.Update()
 	writeSampleImage(t)
 	var token string
 	err := db.InTransaction(false, func(tx *sql.Tx) (err error) {

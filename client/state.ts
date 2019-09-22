@@ -31,6 +31,7 @@ export interface BoardConfigs {
 	notice: string
 	rules: string
 	[index: string]: any
+	cinemaEnabled: boolean
 }
 
 // The current state of a board or thread page

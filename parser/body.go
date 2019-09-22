@@ -5,7 +5,9 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
+	"github.com/bakape/meguca/websockets/feeds"
 	"regexp"
+	"strings"
 	"unicode"
 )
 
@@ -21,7 +23,7 @@ func init() {
 // ParseBody parses the entire post text body for commands and links.
 // internal: function was called by automated upkeep task
 func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, internal bool) (
-	links []common.Link, com []common.Command, err error,
+	links []common.Link, com []common.Command, spamScore uint, err error,
 ) {
 	err = IsPrintableString(string(body), true)
 	if err != nil {
@@ -40,76 +42,63 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 		}
 	}
 
-	start := 0
-	lineStart := 0
-	pyu := config.GetBoardConfigs(board).Pyu
+	bodyStr := strings.Trim(string(body), "\n")
+	boardConfig := config.GetBoardConfigs(board)
 
 	// Prevent link duplication
 	haveLink := make(map[uint64]bool)
 	// Prevent #pyu duplication
 	isSlut := false
+	// Prevent many cinema pushes in one post
+	pushedAlready := false
 
-	for i, b := range body {
-		switch b {
-		case '\n', ' ', '\t':
-		default:
-			if i == len(body)-1 {
-				i++
-			} else {
-				continue
-			}
-		}
-
-		_, word, _ := util.SplitPunctuation(body[start:i])
-		start = i + 1
-		if len(word) == 0 {
-			goto next
-		}
-
-		switch word[0] {
-		case '>':
-			m := linkRegexp.FindSubmatch(word)
-			if m == nil {
-				goto next
-			}
-			var l common.Link
-			l, err = parseLink(m)
-			switch {
-			case err != nil:
-				return
-			case l.ID != 0:
-				if !haveLink[l.ID] {
-					haveLink[l.ID] = true
-					links = append(links, l)
+	for _, line := range strings.Split(bodyStr, "\n") {
+		if boardConfig.CinemaEnabled && !internal {
+			if !pushedAlready {
+				if match := common.GetCinemaPushRegexp().FindStringSubmatch(line) ;
+				match != nil {
+					feeds.PushToCinema(thread, match[1], ip)
+					spamScore = config.Get().CinemaPushScore
+					pushedAlready = true
 				}
 			}
-		case '#':
-			// Ignore hash commands in quotes, or #pyu/#pcount if board option disabled
-			if body[lineStart] == '>' || (len(word) > 1 && word[1] == 'p' && !pyu) {
-				goto next
-			}
-			m := common.CommandRegexp.FindSubmatch(word)
-			if m == nil {
-				goto next
-			}
-			var c common.Command
-			c, err = parseCommand(m[1], board, thread, id, ip, &isSlut)
-			switch err {
-			case nil:
-				com = append(com, c)
-			case errTooManyRolls, errDieTooBig:
-				// Consider command invalid
-				err = nil
-			default:
-				return
+			if common.GetCinemaSkipRegexp().MatchString(line) {
+				feeds.CinemaVoteSkip(thread, ip)
 			}
 		}
-	next:
-		if b == '\n' {
-			lineStart = i + 1
+		for _, word := range strings.FieldsFunc(line, util.IsWordDelimiter) {
+			if match := linkRegexp.FindStringSubmatch(word) ; match != nil {
+				var l common.Link
+				l, err = parseLink(match[1])
+				switch {
+				case err != nil:
+					return
+				case l.ID != 0:
+					if !haveLink[l.ID] {
+						haveLink[l.ID] = true
+						links = append(links, l)
+					}
+				}
+			} else if match := common.CommandRegexp.FindStringSubmatch(word) ; match != nil {
+				// Ignore hash commands in quotes, or #pyu/#pcount if board option disabled
+				if line[0] == '>' || (len(word) > 1 && word[1] == 'p' && !boardConfig.Pyu) {
+					continue
+				}
+				var c common.Command
+				c, err = parseCommand(match[1], board, thread, id, ip, &isSlut)
+				switch err {
+				case nil:
+					com = append(com, c)
+				case errTooManyRolls, errDieTooBig:
+					// Consider command invalid
+					err = nil
+				default:
+					return
+				}
+			}
 		}
-	}
 
+	}
 	return
 }
 

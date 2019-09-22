@@ -35,6 +35,8 @@ type moderationMessage struct {
 type syncCount struct {
 	Active int `json:"active"`
 	Total  int `json:"total"`
+	CinemaWatching int `json:"cinemaWatching"`
+	CinemaPlaying string `json:"cinemaPlaying"`
 }
 
 // Feed is a feed with synchronization logic of a certain thread
@@ -65,6 +67,10 @@ type Feed struct {
 	moderatePost chan moderationMessage
 	// Let sent sync counter
 	lastSyncCount syncCount
+	// trigger sending IP count/cinema status, fired from cinema feed loop
+	sendIPCountChan chan cinemaStatus
+	// corresponding cinema feed status
+	statusCinema cinemaStatus
 }
 
 // Start read existing posts into cache and start main loop
@@ -177,6 +183,8 @@ func (f *Feed) Start() (err error) {
 				})
 				f.cache.Moderation[msg.id] = append(f.cache.Moderation[msg.id],
 					msg.entry)
+			case f.statusCinema = <-f.sendIPCountChan:
+				f.sendIPCount()
 			}
 		}
 	}()
@@ -221,10 +229,11 @@ func (f *Feed) sendIPCount() {
 		}
 		ips[ip] = struct{}{}
 	}
-
 	new := syncCount{
 		Active: active,
 		Total:  len(ips),
+		CinemaWatching: f.statusCinema.watching,
+		CinemaPlaying: f.statusCinema.playing,
 	}
 	if new != f.lastSyncCount {
 		f.lastSyncCount = new

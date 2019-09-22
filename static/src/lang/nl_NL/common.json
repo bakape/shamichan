@@ -103,6 +103,8 @@
 		"cancel": "Annuleren",
 		"catalog": "Catalog",
 		"clickToCancel": "Click om te annuleren",
+		"cinemaStatusOneSpectatorTitle": "1 spectator is watching ",
+		"cinemaStatusMultipleSpectatorsTitle": " spectators are watching ",
 		"deleteBoard": "Verwijder board",
 		"done": "Klaar",
 		"fileTooLarge": "bestand is te groot",

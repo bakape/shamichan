@@ -16,6 +16,7 @@ type Configs struct {
 	CharScore           uint   `json:"charScore"`
 	PostCreationScore   uint   `json:"postCreationScore"`
 	ImageScore          uint   `json:"imageScore"`
+	CinemaPushScore     uint   `json:"cinemaPushScore"`
 	RootURL             string `json:"rootURL"`
 	Salt                string `json:"salt"`
 	EmailErrMail        string `json:"emailErrMail"`
@@ -40,6 +41,7 @@ type Public struct {
 	DefaultCSS        string            `json:"defaultCSS"`
 	ImageRootOverride string            `json:"imageRootOverride"`
 	Links             map[string]string `json:"links"`
+	CinemaRawDomains  []string          `json:"cinemaRawDomains"`
 }
 
 // BoardConfigs stores board-specific configuration
@@ -66,6 +68,7 @@ type BoardPublic struct {
 
 	// Can't use []uint8, because it marshals to string
 	Banners []uint16 `json:"banners"`
+	CinemaEnabled bool `json:"cinemaEnabled"`
 }
 
 // BoardConfContainer contains configurations for an individual board as well

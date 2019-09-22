@@ -22,7 +22,7 @@ import (
 // Create a thread with a closed OP
 func createThread(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
-		repReq, ip, session, err := parsePostCreationForm(w, r)
+		repReq, ip, err := parsePostCreationForm(w, r)
 		if err != nil {
 			return
 		}
@@ -49,7 +49,7 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		})
 
 		http.Redirect(w, r, fmt.Sprintf(`/%s/%d`, req.Board, post.ID), 303)
-		incrementSpamscore(ip, req.Body, session, true)
+		incrementSpamscore(ip, req.Body, req.CaptchaSession, true)
 
 		return
 	}()
@@ -65,7 +65,6 @@ func parsePostCreationForm(
 ) (
 	req websockets.ReplyCreationRequest,
 	ip string,
-	session auth.Base64Token,
 	err error,
 ) {
 	conf := config.Get()
@@ -81,13 +80,14 @@ func parsePostCreationForm(
 		err = common.StatusError{err, 400}
 		return
 	}
-	err = session.EnsureCookie(w, r)
+	var captchaSession auth.Base64Token
+	err = captchaSession.EnsureCookie(w, r)
 	if err != nil {
 		return
 	}
 	if conf.Captcha {
 		var need, has bool
-		need, err = db.NeedCaptcha(session, ip)
+		need, err = db.NeedCaptcha(captchaSession, ip)
 		if err != nil {
 			return
 		}
@@ -95,7 +95,7 @@ func parsePostCreationForm(
 			err = common.ErrInvalidCaptcha
 			return
 		}
-		has, err = db.SolvedCaptchaRecently(session, 3*time.Minute)
+		has, err = db.SolvedCaptchaRecently(captchaSession, 3*time.Minute)
 		if err != nil {
 			return
 		}
@@ -112,6 +112,7 @@ func parsePostCreationForm(
 		Body: strings.Replace(f.Get("body"), "\r", "", -1),
 		Name: f.Get("name"),
 		Sage: f.Get("sage") == "on",
+		CaptchaSession: captchaSession,
 	}
 	if f.Get("staffTitle") == "on" {
 		req.SessionCreds = extractLoginCreds(r)
@@ -146,7 +147,7 @@ func parsePostCreationForm(
 // Create a closed reply post
 func createReply(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
-		req, ip, session, err := parsePostCreationForm(w, r)
+		req, ip, err := parsePostCreationForm(w, r)
 		if err != nil {
 			return
 		}
@@ -174,7 +175,7 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 		feeds.InsertPostInto(post.StandalonePost, msg)
 		http.Redirect(w, r,
 			fmt.Sprintf(`/%s/%d?last100=true#bottom`, board, op), 303)
-		incrementSpamscore(ip, req.Body, session, false)
+		incrementSpamscore(ip, req.Body, req.CaptchaSession, false)
 
 		return
 	}()

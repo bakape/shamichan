@@ -244,3 +244,16 @@ export function modPaste(old: string, sel: string, pos: number): Paste {
 
 	return { body: s, pos: b ? pos + s.length - 1 : pos + s.length }
 }
+
+// shortens string to max n signs
+export function truncateString(str: string, n: number): string {
+	const strlen = str.length
+	if (str.length <= n) {
+		return str
+	}
+	if (n < 5) {
+		return str.substring(0, n)
+	}
+	const padlen = Math.floor((n-3)/2)
+	return str.substring(0, padlen) + "..." + str.substring(strlen-padlen, strlen)
+}

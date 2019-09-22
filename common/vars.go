@@ -4,6 +4,11 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strings"
+	"sync"
+
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/lang"
 )
 
 var (
@@ -62,7 +67,7 @@ var (
 		"sk_SK",
 		"tr_TR",
 		"uk_UA",
-    "zh_TW",
+		"zh_TW",
 	}
 	Themes = []string{
 		"ashita",
@@ -88,7 +93,60 @@ var (
 var (
 	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$`)
 	DiceRegexp    = regexp.MustCompile(`(\d*)d(\d+)`)
+
+	DomainRegexp = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$`)
+
+	invidiousUrlRegexpStr = `https?:\/\/(?:www\.)?invidio\.us\/watch(?:.*&|\?)v=(.+)(?:\?.+)*`
+	InvidiousUrlRegexp = regexp.MustCompile(invidiousUrlRegexpStr)
+	youtubeUrlRegexpStr = `https?:\/\/(?:www\.)?youtube\.com\/watch(?:.*&|\?)v=(.+)(?:\?.+)*`
+	YoutubeUrlRegexp = regexp.MustCompile(youtubeUrlRegexpStr)
+	updateMutex sync.RWMutex
+	rawVideoUrlRegexp *regexp.Regexp
+	cinemaPushRegexp *regexp.Regexp
+	cinemaSkipRegexp *regexp.Regexp
 )
+
+func GetRawVideoUrlRegexp() *regexp.Regexp {
+	updateMutex.RLock()
+	defer updateMutex.RUnlock()
+	return rawVideoUrlRegexp
+}
+
+func GetCinemaPushRegexp() *regexp.Regexp {
+	updateMutex.RLock()
+	defer updateMutex.RUnlock()
+	return cinemaPushRegexp
+}
+
+func GetCinemaSkipRegexp() *regexp.Regexp {
+	updateMutex.RLock()
+	defer updateMutex.RUnlock()
+	return cinemaSkipRegexp
+}
+
+func Update() (err error) {
+	updateMutex.Lock()
+	defer updateMutex.Unlock()
+	cinemaSources := []string{invidiousUrlRegexpStr, youtubeUrlRegexpStr}
+
+	conf := config.Get()
+	if len(conf.CinemaRawDomains) > 0 {
+		rawVideoUrlRegexpStr := `https?:\/\/(?:www\.)?[^\/]*(` +
+			strings.ReplaceAll(strings.Join(conf.CinemaRawDomains, `|`), `.`, `\.`) +
+			`)\/.*\.(webm|mp4|ogg|ogv)`
+		rawVideoUrlRegexp = regexp.MustCompile(rawVideoUrlRegexpStr)
+		cinemaSources = append(cinemaSources, rawVideoUrlRegexpStr)
+	} else {
+		rawVideoUrlRegexp = regexp.MustCompile(`^\b$`) // hacky way to never match
+	}
+
+	ln := lang.Get()
+	cinemaPushRegexp = regexp.MustCompile(`^!` + ln.UI["cinemaPush"] +
+		` (`+ strings.Join(cinemaSources, `|`) +`)$`)
+	cinemaSkipRegexp =  regexp.MustCompile(`^!` + ln.UI["cinemaSkip"] + `$`)
+
+	return
+}
 
 func init() {
 	sort.Strings(Langs)

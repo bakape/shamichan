@@ -122,6 +122,10 @@ export const specs: { [id: string]: OptionSpec } = {
 		noExecOnStart: true,
 		exec: initTV,
 	},
+
+	// Demanded video player
+	cinema: {},
+
 	// Tile posts horizontally too
 	horizontalPosting: {
 		exec: toggleHeadStyle(

@@ -179,6 +179,7 @@
 				<span>
 					<b id="sync" class="banner-float svg-link noscript-hide" title="{%s= ln.UI["sync"] %}"></b>
 					<b id="sync-counter" class="act hide-empty banner-float svg-link noscript-hide" title="{%s= ln.UI["syncCount"] %}"></b>
+					<b id="status-cinema" class="act hide-empty banner-float svg-link noscript-hide"></b>
 					<b id="thread-post-counters" class="act hide-empty banner-float svg-link noscript-hide" title="{%s= ln.Common.UI["postsImages"] %}"></b>
 					<span id="banner-extensions" class="hide-empty banner-float svg-link noscript-hide"></span>
 					<a id="banner-feedback" href="mailto:{%s conf.FeedbackEmail %}" target="_blank" class="banner-float svg-link noscript-hide" title="{%s= ln.UI["feedback"] %}">
@@ -285,6 +286,14 @@
 							{% endif %}
 						</div>
 					{% endif %}
+				</div>
+				{% comment %}Cinema panel{% endcomment %}
+				<div id="cinema-panel" class="modal glass" style="display: none;">
+					<div id="cinema-player"></div>
+					<div id="cinema-playlist"></div>
+					<div id="cinema-playlist-empty" hidden="">
+						{%s= ln.UI["cinemaPlaylistEmpty"] %}
+					</div>
 				</div>
 				{% comment %}
 					Options panel

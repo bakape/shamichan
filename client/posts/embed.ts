@@ -155,33 +155,40 @@ function strip(s: string[]): string {
 	return s.pop().split('&').shift().split('#').shift().split('?').shift()
 }
 
+export async function getInvidiousData(url: URL): Promise<InvidiousRes> {
+	const id = url.searchParams.get("v"),
+		[data, err] = await fetchJSON<InvidiousRes>(`https://invidio.us/api/v1/videos/`+
+			`${id}?fields=title,formatStreams,videoThumbnails`)
+	if (err) {
+		throw new Error(err)
+	}
+	return data
+}
+
 // fetcher for the invidio.us provider
 async function fetchInvidious(el: Element): Promise<void> {
-	const url = new URL(el.getAttribute("href")),
-		id = url.searchParams.get("v"),
-		[data, err] = await fetchJSON<InvidiousRes>(
-			`https://invidio.us/api/v1/videos/${id}?fields=title,formatStreams,videoThumbnails`)
-
-	if (err) {
+	const url = new URL(el.getAttribute("href"))
+	try {
+		const data = await getInvidiousData(url)
+		el.textContent = format(data.title, provider.Invidious)
+		const thumb = data.videoThumbnails[0].url,
+			video = data.formatStreams[0].url,
+			title = data.title
+		el.textContent = format(title, provider.Invidious)
+		const t = url.searchParams.get("t"),
+			start = url.searchParams.get("start"),
+			tparam = t ? `#t=${t}` : start ? `#t=${start}` : ''
+		el.setAttribute("data-html", encodeURIComponent(
+			`<video width="480" height="270" poster="${thumb}" `
+			+ (url.searchParams.get("loop") === "1" ? "loop " : '') +
+			`controls><source src="${video}${tparam}" />`
+		))
+	} catch (err) {
 		el.textContent = format(err, provider.Invidious)
 		el.classList.add("erred")
 		console.error(err)
 		return
 	}
-
-	el.textContent = format(data.title, provider.Invidious)
-	const thumb = data.videoThumbnails[0].url,
-		video = data.formatStreams[0].url,
-		title = data.title
-	el.textContent = format(title, provider.Invidious)
-	const t = url.searchParams.get("t"),
-		start = url.searchParams.get("start"),
-		tparam = t ? `#t=${t}` : start ? `#t=${start}` : ''
-	el.setAttribute("data-html", encodeURIComponent(
-		`<video width="480" height="270" poster="${thumb}" `
-		+ (url.searchParams.get("loop") === "1" ? "loop " : '') +
-		`controls><source src="${video}${tparam}" />`
-	))
 }
 
 // fetcher for the noembed.com meta-provider

@@ -65,6 +65,10 @@ const (
 
 	// Set a cookie on the client
 	MessageSetCookie
+
+	MessageCinemaSubscription
+
+	MessageCinemaCancelSubscription
 )
 
 // Forwarded functions from "github.com/bakape/megucawebsockets/feeds" to avoid circular imports

@@ -103,6 +103,8 @@
 		"cancel": "İptal",
 		"catalog": "Catalog",
 		"clickToCancel": "Click to cancel",
+		"cinemaStatusOneSpectatorTitle": "1 spectator is watching ",
+		"cinemaStatusMultipleSpectatorsTitle": " spectators are watching ",
 		"deleteBoard": "Delete board",
 		"done": "Import successfull. The page will now reload.",
 		"fileTooLarge": "file too large",

@@ -10,8 +10,8 @@ import (
 
 // Extract post links from a text fragment, verify and retrieve their
 // parenthood
-func parseLink(match [][]byte) (link common.Link, err error) {
-	id, err := strconv.ParseUint(string(match[1]), 10, 64)
+func parseLink(match string) (link common.Link, err error) {
+	id, err := strconv.ParseUint(match, 10, 64)
 	if err != nil {
 		return
 	}
