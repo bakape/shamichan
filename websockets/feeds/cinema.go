@@ -300,6 +300,8 @@ func parseUrl(url string) (cv cinemaVideo, err error) {
 		cv, err = getInfoInvidious(url)
 	case common.GetRawVideoUrlRegexp().MatchString(url):
 		cv, err = getInfoRawFile(url)
+	case common.YoutubeUrlRegexp.MatchString(url):
+		cv, err = getInfoYoutube(url)
 	default:
 		err = errors.New("no matching url pattern")
 		return

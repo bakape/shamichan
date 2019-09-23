@@ -30,6 +30,10 @@ source /etc/profile
 wget -qO- https://deb.nodesource.com/setup_10.x | bash -
 apt-get install -y nodejs
 
+# Install youtube-dl
+wget https://yt-dl.org/downloads/latest/youtube-dl -O /usr/local/bin/youtube-dl
+chmod a+rx /usr/local/bin/youtube-dl
+
 # Clone and build meguca
 git clone https://github.com/bakape/meguca.git meguca
 cd meguca

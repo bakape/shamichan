@@ -26,6 +26,10 @@ RUN apt-get dist-upgrade -y
 RUN wget -q -O- https://deb.nodesource.com/setup_10.x | bash -
 RUN apt-get install -y nodejs
 
+# Install youtube-dl
+RUN wget https://yt-dl.org/downloads/latest/youtube-dl -O /usr/local/bin/youtube-dl
+RUN chmod a+rx /usr/local/bin/youtube-dl
+
 # Cache dependency downloads, if possible
 COPY go.mod .
 COPY go.sum .

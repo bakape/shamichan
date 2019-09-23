@@ -102,7 +102,7 @@ const defaultFAQ = `Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, 
 #8ball - An 8ball
 #sw24:30 #sw2:24:30 #sw24:30+30 #sw24:30-30 - "Syncwatch" synchronized time counter
 <hr>Cinema commands:
-!push {url} – enqueue video, supported sources: invidio.us, meguca.org
+!push {url} – enqueue video, supported sources: invidio.us, meguca.org, youtube.com
 !skip – vote skip`
 
 // Generate /all/ board configs

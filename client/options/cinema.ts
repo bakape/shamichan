@@ -5,6 +5,7 @@ import { handlers, message, connSM, connState, send } from "../connection"
 import { getInvidiousData } from "../posts/embed"
 import { truncateString } from "../util"
 import { secondsToTimeExact } from "../util/time"
+declare var YT: any
 
 type Msg = {
 	cmd: string
@@ -39,6 +40,7 @@ const cinemaDiv = document.getElementById("cinema-panel"),
 		playerDiv = document.getElementById("cinema-player"),
 		playlistDiv = document.getElementById("cinema-playlist"),
 		playlistEmptyDiv = document.getElementById("cinema-playlist-empty")
+let ytAPI: HTMLElement = null
 
 // update initial state of containers
 // should be called only on connection start
@@ -72,12 +74,13 @@ function updatePlaylist() {
 }
 
 // functions appending element with video and creating callback for synchronizing time
-const embedders: { [key: string]: (url: string) => Promise<HTMLElement> } = {
+const embedders: { [key: string]: (url: string) => any } = {
 	"invidious": embedInvidious,
 	"raw": embedRaw,
+	"youtube": embedYoutube,
 }
 
-async function embedInvidious(url: string): Promise<HTMLElement> {
+async function embedInvidious(url: string): Promise<void> {
 	const data = await getInvidiousData(new URL(url))
 	const vidEl = document.createElement("video") as HTMLVideoElement
 	setAttrs(vidEl, {
@@ -86,17 +89,18 @@ async function embedInvidious(url: string): Promise<HTMLElement> {
 		autoplay: "true",
 		controls: "true",
 	})
-	vidEl.volume = options.audioVolume / 100
+	playerDiv.append(vidEl)
 	timeSyncCallback = (currentTime: number) => {
 		const vidEl = document.getElementById("cinema-video") as HTMLVideoElement
 		if (Math.abs(vidEl.currentTime-currentTime) > 1) {
 			vidEl.currentTime = currentTime
 		}
 	}
-	return vidEl
+	syncVideo()
+	vidEl.volume = options.audioVolume / 100
 }
 
-function embedRaw(url: string): Promise<HTMLElement> {
+function embedRaw(url: string) {
 	const vidEl = document.createElement("video") as HTMLVideoElement
 	setAttrs(vidEl, {
 		id: "cinema-video",
@@ -104,31 +108,72 @@ function embedRaw(url: string): Promise<HTMLElement> {
 		autoplay: "true",
 		controls: "true",
 	})
-	vidEl.volume = options.audioVolume / 100
+	playerDiv.append(vidEl)
 	timeSyncCallback = (currentTime: number) => {
 		const vidEl = document.getElementById("cinema-video") as HTMLVideoElement
-		if (Math.abs(vidEl.currentTime-currentTime) > 2) {
+		if (Math.abs(vidEl.currentTime-currentTime) > 1) {
 			vidEl.currentTime = currentTime
 		}
 	}
-	return new Promise((resolve, reject) => resolve(vidEl))
+	syncVideo()
+	vidEl.volume = options.audioVolume / 100
+}
+
+function embedYoutube(url: string) {
+	const vidEl = document.createElement("div")
+	vidEl.setAttribute("id", "cinema-video")
+	playerDiv.append(vidEl)
+
+	let player: any
+	function initPlayer() {
+		player = new YT.Player("cinema-video", {
+			videoId: new URL(url).searchParams.get("v"),
+			playerVars: {
+				"autoplay": 1,
+				"iv_load_policy": 3
+			},
+			events: {
+				onReady: onPlayerReady
+			}
+		})
+	}
+	function onPlayerReady() {
+		player.setVolume(options.audioVolume)
+		timeSyncCallback = (currentTime: number) => {
+			if (Math.abs(player.getCurrentTime()-currentTime) > 1) {
+				player.seekTo(currentTime)
+			}
+		}
+		syncVideo()
+	}
+	if (ytAPI) {
+		initPlayer()
+	} else {
+		ytAPI = document.createElement("script")
+		setAttrs(ytAPI, {
+			src: "https://www.youtube.com/iframe_api",
+			type: "text/javascript"
+		})
+		document.getElementsByTagName("head")[0].appendChild(ytAPI)
+		function onAPIReadyCallback() {
+			initPlayer()
+		}
+		(window as any).onYouTubeIframeAPIReady = onAPIReadyCallback
+	}
 }
 
 // deletes current video and embeds next from playlist if there is any using embedders
-async function updateVideo(): Promise<void> {
+function updateVideo() {
 	let vidEl = document.getElementById("cinema-video")
 	if (vidEl) {
 		vidEl.remove()
 	}
 	timeSyncCallback = null
-	currentTime = 0
 	if (playlist.length == 0) {
 		return
 	}
 	const vid = playlist[0] as Video
-	vidEl = await embedders[vid.type](vid.url)
-	playerDiv.appendChild(vidEl)
-	syncVideo()
+	embedders[vid.type](vid.url)
 }
 
 // if playing video is present sets its time to server-synced value
@@ -165,6 +210,7 @@ function messageHandler(msg: Msg) {
 			const video = (msg.data as DataPush).video
 			playlist.push(video)
 			if (playlist.length == 1) {
+				currentTime = 0
 				updateVideo()
 			}
 			updatePlaylist()
@@ -173,6 +219,7 @@ function messageHandler(msg: Msg) {
 		}
 		case "pop": {
 			playlist.shift()
+			currentTime = 0
 			updateVideo()
 			updatePlaylist()
 			updateErrors()

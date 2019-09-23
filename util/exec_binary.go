@@ -8,7 +8,7 @@ import (
 	"context"
 )
 
-func ExecBinary(binPath string, args []string, timeout time.Duration) (output string, err error) {
+func ExecBinary(binPath string, args []string, timeout time.Duration) (output []byte, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	cmd := exec.Command(binPath, args...)
@@ -41,6 +41,6 @@ func ExecBinary(binPath string, args []string, timeout time.Duration) (output st
 			return
 		}
 	}
-	output = outputBuf.String()
+	output = outputBuf.Bytes()
 	return
 }

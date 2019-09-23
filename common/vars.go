@@ -129,6 +129,10 @@ func Update() (err error) {
 	defer updateMutex.Unlock()
 	cinemaSources := []string{invidiousUrlRegexpStr, youtubeUrlRegexpStr}
 
+	youtubeUrlRegexpStr := `https?:\/\/(?:www\.)?youtube\.com\/watch(?:.*&|\?)v=(.+)(?:\?.+)*`
+	YoutubeUrlRegexp = regexp.MustCompile(youtubeUrlRegexpStr)
+	cinemaSources = append(cinemaSources, youtubeUrlRegexpStr)
+
 	conf := config.Get()
 	if len(conf.CinemaRawDomains) > 0 {
 		rawVideoUrlRegexpStr := `https?:\/\/(?:www\.)?[^\/]*(` +
