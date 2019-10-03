@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/bakape/meguca/assets"
@@ -69,9 +68,7 @@ func cleanJoin(a, b string) string {
 
 // Server static assets
 func serveAssets(w http.ResponseWriter, r *http.Request) {
-	if strings.HasSuffix(r.RequestURI, "worker.js") {
-		w.Header().Set("Service-Worker-Allowed", "/")
-	}
+	w.Header().Set("Service-Worker-Allowed", "/")
 	serveFile(w, r, cleanJoin(webRoot, extractParam(r, "path")))
 }
 
