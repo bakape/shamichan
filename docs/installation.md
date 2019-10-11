@@ -35,9 +35,12 @@ git clone https://github.com/bakape/meguca.git meguca
 cd meguca
 make
 
+# Edit instance configs
+cp docs/config.json .
+nano config.json
+
 # Run meguca
-./meguca help
-./meguca -a :80
+./meguca
 ```
 
 ## Update
@@ -51,6 +54,9 @@ git pull
 # Rebuild
 make
 
-# Restart running instance
-./meguca -a :80 restart
+# Restart running meguca instance.
+# This step depends on how your meguca instance is being managed.
+#
+# A running meguca instance can be gracefully reloaded by sending it the USR2
+# signal.
 ```
