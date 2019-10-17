@@ -148,6 +148,10 @@
 			"Režim galérie",
 			"Zobrazí len príspevky s obrázkami"
 		],
+		"globalDisableRobots": [
+			"Prevent crawlers globally",
+			"Prevent automated website crawlers, such as search engine indexers, from accessing this website."
+		],
 		"google": [
 			"Google",
 			"Google image search"

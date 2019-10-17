@@ -7,6 +7,7 @@ type Configs struct {
 	HideNSFW            bool   `json:"hideNSFW"`
 	EmailErr            bool   `json:"emailErr"`
 	JPEGThumbnails      bool   `json:"JPEGThumbnails"`
+	GlobalDisableRobots bool   `json:"globalDisableRobots"`
 	MaxWidth            uint16 `json:"maxWidth"`
 	MaxHeight           uint16 `json:"maxHeight"`
 	BoardExpiry         uint   `json:"boardExpiry"`
