@@ -203,14 +203,22 @@ func redirectToDefault(w http.ResponseWriter, r *http.Request) {
 // Generate a robots.txt with only select boards preventing indexing
 func serveRobotsTXT(w http.ResponseWriter, r *http.Request) {
 	var buf bytes.Buffer
-	// Would be pointles without the /all/ board disallowed.
-	// Also, this board can be huge. Don't want bots needlessly crawling it.
-	buf.WriteString("User-agent: *\nDisallow: /all/\n")
-	for _, c := range config.GetAllBoardConfigs() {
-		if c.DisableRobots {
-			fmt.Fprintf(&buf, "Disallow: /%s/\n", c.ID)
+	buf.WriteString("User-agent: *\n")
+
+	if config.Get().GlobalDisableRobots {
+		buf.WriteString("Disallow: /\n")
+	} else {
+		// Would be pointles without the /all/ board disallowed.
+		// Also, this board can be huge. Don't want bots needlessly crawling it.
+		buf.WriteString("Disallow: /all/\n")
+
+		for _, c := range config.GetAllBoardConfigs() {
+			if c.DisableRobots {
+				fmt.Fprintf(&buf, "Disallow: /%s/\n", c.ID)
+			}
 		}
 	}
+
 	w.Header().Set("Content-Type", "text/plain")
 	buf.WriteTo(w)
 }

@@ -148,6 +148,10 @@
 			"Gallery Mode",
 			"Only show posts containing images"
 		],
+		"globalDisableRobots": [
+			"Prevent crawlers globally",
+			"Prevent automated website crawlers, such as search engine indexers, from accessing this website."
+		],
 		"google": [
 			"Google",
 			"Google resim arama"

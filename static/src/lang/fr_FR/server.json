@@ -148,6 +148,10 @@
 			"Mode galerie",
 			"Affiche uniquement les publications avec des images"
 		],
+		"globalDisableRobots": [
+			"Prevent crawlers globally",
+			"Prevent automated website crawlers, such as search engine indexers, from accessing this website."
+		],
 		"google": [
 			"Google",
 			"Recherche d'image Google"

@@ -148,6 +148,10 @@
 			"Galerij Mode",
 			"Toon alleen berichten met afbeeldingen"
 		],
+		"globalDisableRobots": [
+			"Prevent crawlers globally",
+			"Prevent automated website crawlers, such as search engine indexers, from accessing this website."
+		],
 		"google": [
 			"Google",
 			"Google afbeelding zoeken"
