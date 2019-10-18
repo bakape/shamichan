@@ -37,5 +37,6 @@ RUN npm install
 COPY . .
 COPY docs/config.json .
 RUN sed -i 's/localhost:5432/postgres:5432/' config.json
+RUN sed -i 's/"reverse_proxied": false/"reverse_proxied": true/' config.json
 RUN sed -i 's/127\.0\.0\.1:8000/:8000/' config.json
 RUN make
