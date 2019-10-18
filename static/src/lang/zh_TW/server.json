@@ -148,6 +148,10 @@
 			"圖庫模式",
 			"僅顯示包含圖片的貼文"
 		],
+		"globalDisableRobots": [
+			"Prevent crawlers globally",
+			"Prevent automated website crawlers, such as search engine indexers, from accessing this website."
+		],
 		"google": [
 			"Google",
 			"Google 圖片搜尋"
