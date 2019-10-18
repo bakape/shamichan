@@ -22,7 +22,7 @@ func TestReports(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, err := GetReports(std.Board)
+	res, err := GetReports(std.Board, false)
 	if err != nil {
 		t.Fatal(err)
 	}
