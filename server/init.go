@@ -69,13 +69,19 @@ func Start() (err error) {
 		go ass.WatchVideoDir()
 	}
 	if config.Server.ImagerMode != config.NoImager {
-		tasks = append(tasks, auth.LoadCaptchaServices)
+		tasks = append(tasks, auth.InitLoadCaptchaServices)
 	}
 	tasks = append(tasks, feeds.Init)
 	err = util.Parallel(tasks...)
 	if err != nil {
 		return
 	}
+
+	go func() {
+		if err = auth.LoadCaptchaServices(); err != nil {
+			panic(err)
+		}
+	}()
 
 	return startWebServer()
 }

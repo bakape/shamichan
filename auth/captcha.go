@@ -187,7 +187,7 @@ func CaptchaService(board string) *captchouli.Service {
 // Initialize captcha services, if not already running, and launch a service for
 // the configured tags with optional additional services for select boards.
 // This function blocks until all services are initialized.
-func LoadCaptchaServices() (err error) {
+func loadCaptchaServices(init bool) (err error) {
 	conf := config.Get()
 	if !conf.Captcha || config.Server.ImagerMode == config.NoImager {
 		return
@@ -218,7 +218,14 @@ func LoadCaptchaServices() (err error) {
 	}
 
 	setRatings("all")
-	g, err := captchouli.NewService(opts)
+	var g *captchouli.Service
+	if init {
+		preOpts := opts
+		preOpts.Tags = opts.Tags[0:2]
+		g, err = captchouli.NewService(preOpts)
+	} else {
+		g, err = captchouli.NewService(opts)
+	}
 	if err != nil {
 		return
 	}
@@ -238,6 +245,14 @@ func LoadCaptchaServices() (err error) {
 	overrideServices = over
 
 	return
+}
+
+func LoadCaptchaServices() error {
+	return loadCaptchaServices(false)
+}
+
+func InitLoadCaptchaServices() error {
+	return loadCaptchaServices(true)
 }
 
 // Create a sample captcha for testing purposes and return it with its solution
