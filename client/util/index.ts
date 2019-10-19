@@ -228,7 +228,7 @@ export function modPaste(old: string, sel: string, pos: number): Paste {
 
 		if (sel.includes('\n')) {
 			for (let line of sel.split('\n')) {
-				s += normalizePostQuote(line)
+				s += line == '' ? '\n' : normalizePostQuote(line)
 			}
 		} else {
 			s += normalizePostQuote(sel)
@@ -243,7 +243,7 @@ export function modPaste(old: string, sel: string, pos: number): Paste {
 				s += '\n'
 		}
 	} else {
-		if (!old.startsWith('\n', pos) && sel.includes("\n>")) {
+		if (!sel.endsWith('\n') && sel.includes("\n>")) {
 			s += `${sel}\n`
 		} else {
 			s += sel
@@ -256,7 +256,7 @@ export function modPaste(old: string, sel: string, pos: number): Paste {
 function normalizePostQuote(s: string): string {
 	if (s.startsWith(">>") && !isNaN(+s.charAt(2))) {
 		return `${s}\n`
-	} else {
-		return `>${s}\n`
 	}
+
+	return `>${s}\n`
 }
