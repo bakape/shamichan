@@ -217,7 +217,7 @@ export function modPaste(old: string, sel: string, pos: number): Paste {
 		return
 	}
 
-	if (sel.charAt(0) == '>') {
+	if (sel.startsWith('>')) {
 		switch (old.charAt(pos - 1)) {
 			case '':
 			case '\n':
@@ -226,8 +226,12 @@ export function modPaste(old: string, sel: string, pos: number): Paste {
 				s = '\n'
 		}
 
-		for (let line of sel.split('\n')) {
-			s += `>${line}\n`
+		if (sel.includes('\n')) {
+			for (let line of sel.split('\n')) {
+				s += normalizePostQuote(line)
+			}
+		} else {
+			s += normalizePostQuote(sel)
 		}
 
 		switch (old.charAt(pos)) {
@@ -239,8 +243,20 @@ export function modPaste(old: string, sel: string, pos: number): Paste {
 				s += '\n'
 		}
 	} else {
-		s += sel
+		if (!old.startsWith('\n', pos) && sel.includes("\n>")) {
+			s += `${sel}\n`
+		} else {
+			s += sel
+		}
 	}
 
 	return { body: s, pos: b ? pos + s.length - 1 : pos + s.length }
+}
+
+function normalizePostQuote(s: string): string {
+	if (s.startsWith(">>") && !isNaN(+s.charAt(2))) {
+		return `${s}\n`
+	} else {
+		return `>${s}\n`
+	}
 }
