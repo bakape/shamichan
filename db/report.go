@@ -35,11 +35,7 @@ func GetReports(board string, illegal bool) (rep []auth.Report, err error) {
 		Board: board,
 	}
 	if illegal {
-		if board == "all" {
-			where = "illegal = true"
-		} else {
-			where = fmt.Sprintf("board = '%s' and illegal = true", board)
-		}
+		where = "illegal = true"
 	} else {
 		where = fmt.Sprintf("board = '%s'", board)
 	}
