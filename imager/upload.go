@@ -56,8 +56,7 @@ var (
 	// MIME types from thumbnailer to accept
 	allowedMimeTypes map[string]bool
 
-	errTooLarge    = errors.New("file too large")
-	errSecretImage = errors.New("image secret post detected")
+	errTooLarge = errors.New("file too large")
 
 	// Large buffer pool of length=0 capacity=12+KB
 	largeBufPool = sync.Pool{
@@ -244,27 +243,6 @@ func ParseUpload(req *http.Request) (string, error) {
 	defer file.Close()
 	if uint(head.Size) > max {
 		return "", common.StatusError{errTooLarge, 413}
-	}
-
-	// Reject image sekritpost
-	var (
-		buf    [6]byte
-		secret = [6]byte{'s', 'e', 'c', 'r', 'e', 't'}
-		mathes = true
-	)
-	file.ReadAt(buf[:], head.Size-6) // Ignore read errors here
-	for i, b := range buf {
-		// Lowecase all ASCII
-		if 'A' <= b && b <= 'Z' {
-			b += 'a' - 'A'
-		}
-		if b != secret[i] {
-			mathes = false
-			break
-		}
-	}
-	if mathes {
-		return "", common.StatusError{errSecretImage, 400}
 	}
 
 	res := <-requestThumbnailing(file, int(head.Size))
