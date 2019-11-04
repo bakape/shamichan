@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
@@ -25,25 +26,35 @@ func Report(id uint64, board, reason, ip string, illegal bool) error {
 	return err
 }
 
-// GetReports reads reports for a specific board. Pass "all" for global reports.
+// GetReports reads reports for a specific board.
+// Pass "all" for global reports.
 func GetReports(board string) (rep []auth.Report, err error) {
-	tmp := auth.Report{
-		Board: board,
-	}
+	var where string
 	rep = make([]auth.Report, 0, 64)
+	tmp := auth.Report{Board: board}
+
+	if board == "all" {
+		where = "illegal = true"
+	} else {
+		where = fmt.Sprintf("board = '%s'", board)
+	}
+
 	err = queryAll(
 		sq.Select("id", "target", "reason", "created").
 			From("reports").
-			Where("board = ?", board).
+			Where(where).
 			OrderBy("created desc"),
 		func(r *sql.Rows) (err error) {
 			err = r.Scan(&tmp.ID, &tmp.Target, &tmp.Reason, &tmp.Created)
+
 			if err != nil {
 				return
 			}
+
 			rep = append(rep, tmp)
 			return
 		},
 	)
+
 	return
 }
