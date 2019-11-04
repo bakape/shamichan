@@ -53,7 +53,8 @@ function render() {
 			el = document.createElement("video");
 			el.setAttribute("data-sha1", playlist[i].sha1);
 			el.setAttribute("style", "max-width:30vw");
-			el.controls = true;
+			el.onmouseenter = () => el.controls = true;
+			el.onmouseleave = () => el.controls = false;
 			el.src = sourcePath(playlist[i].sha1, playlist[i].file_type);
 			el.volume = options.audioVolume / 100;
 		}
