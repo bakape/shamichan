@@ -1511,7 +1511,10 @@ var migrations = []func(*sql.Tx) error{
 	},
 	func(tx *sql.Tx) (err error) {
 		_, err = tx.Exec(`drop table roulette`)
-		return
+		if err != nil {
+			return
+		}
+		return loadSQL(tx, "triggers/threads")
 	},
 }
 

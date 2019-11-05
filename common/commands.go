@@ -71,7 +71,7 @@ func (c Command) MarshalJSON() ([]byte, error) {
 	switch c.Type {
 	case Flip:
 		b = strconv.AppendBool(b, c.Flip)
-	case Pyu, Pcount:
+	case Pyu, Pcount, Autobahn:
 		appendUint(c.Pyu)
 	case SyncWatch:
 		appendByte('[')
