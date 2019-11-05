@@ -5,10 +5,10 @@ import (
 	"io"
 	"time"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/util"
+	"github.com/Chiiruno/meguca/auth"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/imager/assets"
+	"github.com/Chiiruno/meguca/util"
 	"github.com/lib/pq"
 )
 

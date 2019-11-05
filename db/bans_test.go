@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/common"
-	. "github.com/bakape/meguca/test"
+	"github.com/Chiiruno/meguca/common"
+	. "github.com/Chiiruno/meguca/test"
 )
 
 func TestBanUnban(t *testing.T) {

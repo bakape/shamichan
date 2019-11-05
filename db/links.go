@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/bakape/meguca/common"
+	"github.com/Chiiruno/meguca/common"
 )
 
 // Decodes post links from Postgres array aggregations

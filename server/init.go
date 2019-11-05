@@ -6,16 +6,16 @@ import (
 	"os"
 	"strconv"
 
-	ass "github.com/bakape/meguca/assets"
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/lang"
-	mlog "github.com/bakape/meguca/log"
-	"github.com/bakape/meguca/templates"
-	"github.com/bakape/meguca/util"
-	"github.com/bakape/meguca/websockets/feeds"
+	ass "github.com/Chiiruno/meguca/assets"
+	"github.com/Chiiruno/meguca/auth"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/db"
+	"github.com/Chiiruno/meguca/imager/assets"
+	"github.com/Chiiruno/meguca/lang"
+	mlog "github.com/Chiiruno/meguca/log"
+	"github.com/Chiiruno/meguca/templates"
+	"github.com/Chiiruno/meguca/util"
+	"github.com/Chiiruno/meguca/websockets/feeds"
 )
 
 // Start parses command line arguments and initializes the server.

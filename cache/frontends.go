@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/templates"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/db"
+	"github.com/Chiiruno/meguca/templates"
 )
 
 // ErrPageOverflow is an error detailing that the page was not found

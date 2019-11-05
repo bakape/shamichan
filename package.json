@@ -5,7 +5,7 @@
   "main": "www/js/main.js",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bakape/meguca.git"
+    "url": "https://github.com/Chiiruno/meguca.git"
   },
   "devDependencies": {
     "jshint": "^2.9.6",

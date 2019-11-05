@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/util"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/util"
 )
 
 // Only used in tests, but we still need them exported

@@ -12,8 +12,8 @@ import (
 
 	"github.com/bakape/captchouli"
 	captchouli_common "github.com/bakape/captchouli/common"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/config"
 )
 
 const (

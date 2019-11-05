@@ -4,7 +4,7 @@ package mlog
 import (
 	"sync"
 
-	"github.com/bakape/meguca/config"
+	"github.com/Chiiruno/meguca/config"
 	"github.com/go-playground/log"
 	"github.com/go-playground/log/handlers/console"
 	"github.com/go-playground/log/handlers/email"

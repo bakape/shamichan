@@ -3,12 +3,12 @@ package server
 import (
 	"net/http"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/cache"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/templates"
+	"github.com/Chiiruno/meguca/auth"
+	"github.com/Chiiruno/meguca/cache"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/db"
+	"github.com/Chiiruno/meguca/templates"
 )
 
 func setHTMLHeaders(w http.ResponseWriter) {

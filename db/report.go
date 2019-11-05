@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/config"
+	"github.com/Chiiruno/meguca/auth"
+	"github.com/Chiiruno/meguca/config"
 	"github.com/go-playground/log"
 )
 

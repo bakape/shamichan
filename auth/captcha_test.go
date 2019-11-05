@@ -11,8 +11,8 @@ import (
 	"testing"
 
 	"github.com/bakape/captchouli"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/test"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/test"
 )
 
 func TestCaptchaService(t *testing.T) {

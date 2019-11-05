@@ -3,7 +3,7 @@
 package templates
 
 import (
-	"github.com/bakape/meguca/common"
+	"github.com/Chiiruno/meguca/common"
 )
 
 // NOTE: After adding inputSpec structs with new ID fields, be sure to add the

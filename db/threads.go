@@ -9,7 +9,7 @@ import (
 	"sync"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/bakape/meguca/common"
+	"github.com/Chiiruno/meguca/common"
 )
 
 var (

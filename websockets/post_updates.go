@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"unicode/utf8"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/parser"
-	"github.com/bakape/meguca/util"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/db"
+	"github.com/Chiiruno/meguca/parser"
+	"github.com/Chiiruno/meguca/util"
 )
 
 var (

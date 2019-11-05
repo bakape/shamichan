@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/common"
+	"github.com/Chiiruno/meguca/common"
 )
 
 // Only select post updates should bump threads

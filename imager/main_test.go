@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/imager/assets"
-	. "github.com/bakape/meguca/test"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/db"
+	"github.com/Chiiruno/meguca/imager/assets"
+	. "github.com/Chiiruno/meguca/test"
 )
 
 func TestMain(m *testing.M) {

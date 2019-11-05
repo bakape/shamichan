@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/config"
 	"github.com/lib/pq"
 )
 

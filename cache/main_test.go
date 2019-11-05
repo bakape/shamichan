@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/test"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/test"
 )
 
 // Basic test for deadlocks

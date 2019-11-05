@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/util"
-	"github.com/bakape/meguca/websockets/feeds"
+	"github.com/Chiiruno/meguca/auth"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/db"
+	"github.com/Chiiruno/meguca/util"
+	"github.com/Chiiruno/meguca/websockets/feeds"
 	"github.com/go-playground/log"
 	"github.com/gorilla/websocket"
 )

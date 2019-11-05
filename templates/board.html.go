@@ -11,19 +11,19 @@ import "strconv"
 import "fmt"
 
 //line board.html:3
-import "github.com/bakape/meguca/config"
+import "github.com/Chiiruno/meguca/config"
 
 //line board.html:4
-import "github.com/bakape/meguca/common"
+import "github.com/Chiiruno/meguca/common"
 
 //line board.html:5
-import "github.com/bakape/meguca/lang"
+import "github.com/Chiiruno/meguca/lang"
 
 //line board.html:6
-import "github.com/bakape/meguca/imager/assets"
+import "github.com/Chiiruno/meguca/imager/assets"
 
 //line board.html:7
-import ass "github.com/bakape/meguca/assets"
+import ass "github.com/Chiiruno/meguca/assets"
 
 //line board.html:9
 import (

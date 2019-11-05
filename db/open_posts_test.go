@@ -2,7 +2,7 @@ package db
 
 import (
 	"database/sql"
-	"github.com/bakape/meguca/common"
+	"github.com/Chiiruno/meguca/common"
 	"testing"
 )
 

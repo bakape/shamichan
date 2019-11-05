@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/bakape/meguca/cache"
-	"github.com/bakape/meguca/db"
+	"github.com/Chiiruno/meguca/cache"
+	"github.com/Chiiruno/meguca/db"
 )
 
 // Returns arguments for accessing the board page JSON/HTML cache

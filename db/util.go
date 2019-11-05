@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/bakape/meguca/common"
+	"github.com/Chiiruno/meguca/common"
 	"github.com/go-playground/log"
 	"github.com/lib/pq"
 )

@@ -1,9 +1,9 @@
 package templates
 
 import (
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/util"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/lang"
+	"github.com/Chiiruno/meguca/util"
 	"testing"
 )
 

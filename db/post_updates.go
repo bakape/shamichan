@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 
-	"github.com/bakape/meguca/common"
+	"github.com/Chiiruno/meguca/common"
 )
 
 // ClosePost closes an open post and commits any links and hash commands

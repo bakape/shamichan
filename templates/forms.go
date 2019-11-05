@@ -9,7 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/bakape/meguca/config"
+	"github.com/Chiiruno/meguca/config"
 )
 
 // ConfigureBoard renders a form for setting board configurations

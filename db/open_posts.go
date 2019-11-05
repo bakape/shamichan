@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/bakape/meguca/common"
+	"github.com/Chiiruno/meguca/common"
 	"github.com/boltdb/bolt"
 )
 

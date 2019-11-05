@@ -7,7 +7,7 @@ package static
 import (
 	"net/http"
 
-	_ "github.com/bakape/meguca/static/statik"
+	_ "github.com/Chiiruno/meguca/static/statik"
 	"github.com/rakyll/statik/fs"
 )
 

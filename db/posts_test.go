@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/test"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/test"
 )
 
 func TestValidateOp(t *testing.T) {

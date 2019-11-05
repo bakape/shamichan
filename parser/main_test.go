@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
+	"github.com/Chiiruno/meguca/config"
+	"github.com/Chiiruno/meguca/db"
 )
 
 func TestMain(m *testing.M) {

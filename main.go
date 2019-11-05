@@ -2,7 +2,7 @@
 
 package main
 
-import "github.com/bakape/meguca/server"
+import "github.com/Chiiruno/meguca/server"
 
 func main() {
 	err := server.Start()

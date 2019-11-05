@@ -9,10 +9,10 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/templates"
+	"github.com/Chiiruno/meguca/auth"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/db"
+	"github.com/Chiiruno/meguca/templates"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 )

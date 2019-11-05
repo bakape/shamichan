@@ -2,8 +2,8 @@ package parser
 
 import (
 	"errors"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/config"
 	"strings"
 
 	"github.com/aquilax/tripcode"

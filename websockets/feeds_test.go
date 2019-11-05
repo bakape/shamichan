@@ -1,8 +1,8 @@
 package websockets
 
 import (
-	"github.com/bakape/meguca/test/test_db"
-	"github.com/bakape/meguca/websockets/feeds"
+	"github.com/Chiiruno/meguca/test/test_db"
+	"github.com/Chiiruno/meguca/websockets/feeds"
 	"testing"
 )
 

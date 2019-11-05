@@ -1,7 +1,7 @@
 package feeds
 
 import (
-	"github.com/bakape/meguca/common"
+	"github.com/Chiiruno/meguca/common"
 	"sync"
 )
 

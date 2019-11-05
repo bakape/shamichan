@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"github.com/Chiiruno/meguca/config"
+	. "github.com/Chiiruno/meguca/test"
 )
 
 func TestLoadConfigs(t *testing.T) {

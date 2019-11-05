@@ -3,8 +3,8 @@ package db
 import (
 	"testing"
 
-	"github.com/bakape/meguca/auth"
-	. "github.com/bakape/meguca/test"
+	"github.com/Chiiruno/meguca/auth"
+	. "github.com/Chiiruno/meguca/test"
 )
 
 func TestReports(t *testing.T) {

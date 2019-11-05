@@ -6,11 +6,11 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/test/test_db"
-	"github.com/bakape/meguca/websockets/feeds"
+	"github.com/Chiiruno/meguca/common"
+	"github.com/Chiiruno/meguca/db"
+	. "github.com/Chiiruno/meguca/test"
+	"github.com/Chiiruno/meguca/test/test_db"
+	"github.com/Chiiruno/meguca/websockets/feeds"
 )
 
 // Sample wall of text

@@ -3,7 +3,7 @@ package auth
 import (
 	"time"
 
-	"github.com/bakape/meguca/common"
+	"github.com/Chiiruno/meguca/common"
 	"github.com/go-playground/log"
 )
 
