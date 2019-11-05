@@ -533,6 +533,12 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
             if (!boardConfig.pyu) {
                 break
             }
+            switch (commands[state.iDice].type) {
+                case commandType.pyu:
+                case commandType.pcount:
+                    inner = commands[state.iDice++].val.toString()
+            }
+            break
         default:
             literalMatching = false;
             if (bit.startsWith("sw")) {
