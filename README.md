@@ -1,5 +1,5 @@
-[![GoDoc](https://godoc.org/github.com/bakape/meguca?status.svg)](https://godoc.org/github.com/bakape/meguca)
-[![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=master)](https://travis-ci.org/bakape/meguca)
+[![GoDoc](https://godoc.org/github.com/Chiiruno/meguca?status.svg)](https://godoc.org/github.com/Chiiruno/meguca)
+[![Build Status](https://travis-ci.org/Chiiruno/meguca.svg?branch=master)](https://travis-ci.org/Chiiruno/meguca)
 
 # meguca
 anonymous realtime imageboard with user-created boards focused on high
@@ -20,7 +20,7 @@ Meguca can be deployed in a self-contained Docker container.
 First, run
 
 ```
-git clone git://github.com/bakape/meguca.git
+git clone git://github.com/Chiiruno/meguca.git
 ```
 
 Second, navigate to the folder that was just created with
