@@ -2,11 +2,12 @@
 package parser
 
 import (
+	"regexp"
+	"unicode"
+
 	"github.com/Chiiruno/meguca/common"
 	"github.com/Chiiruno/meguca/config"
 	"github.com/Chiiruno/meguca/util"
-	"regexp"
-	"unicode"
 )
 
 var (
@@ -48,6 +49,8 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 	haveLink := make(map[uint64]bool)
 	// Prevent #pyu duplication
 	isSlut := false
+	// Prevent #autobahn duplication
+	isDead := false
 
 	for i, b := range body {
 		switch b {
@@ -93,7 +96,7 @@ func ParseBody(body []byte, board string, thread uint64, id uint64, ip string, i
 				goto next
 			}
 			var c common.Command
-			c, err = parseCommand(m[1], board, thread, id, ip, &isSlut)
+			c, err = parseCommand(m[1], board, thread, id, ip, &isSlut, &isDead)
 			switch err {
 			case nil:
 				com = append(com, c)

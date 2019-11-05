@@ -34,7 +34,15 @@ func randInt(max int) int {
 }
 
 // Parse a matched hash command
-func parseCommand(match []byte, board string, thread uint64, id uint64, ip string, isSlut *bool) (
+func parseCommand(
+	match []byte,
+	board string,
+	thread uint64,
+	id uint64,
+	ip string,
+	isSlut *bool,
+	isDead *bool,
+) (
 	com common.Command, err error,
 ) {
 	boardConfig := config.GetBoardConfigs(board)
@@ -141,7 +149,10 @@ func parseCommand(match []byte, board string, thread uint64, id uint64, ip strin
 	// Autobahn
 	case bytes.Equal(match, []byte("autobahn")):
 		com.Type = common.Autobahn
-		err = db.Ban(board, "brum brum", "system", time.Hour, id)
+		if !*isDead {
+			*isDead = true
+			err = db.Ban(board, "brum brum", "system", time.Hour, id)
+		}
 
 	default:
 		matchStr := string(match)
