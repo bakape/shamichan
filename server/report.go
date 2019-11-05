@@ -89,19 +89,15 @@ func reportForm(w http.ResponseWriter, r *http.Request) {
 // Render a list of reports for the board
 func reportList(w http.ResponseWriter, r *http.Request) {
 	board := extractParam(r, "board")
-
 	if !auth.IsBoard(board) {
 		text404(w)
 		return
 	}
-
 	rep, err := db.GetReports(board)
-
 	if err != nil {
 		httpError(w, r, err)
 		return
 	}
-
 	setHTMLHeaders(w)
 	templates.WriteReportList(w, rep)
 }

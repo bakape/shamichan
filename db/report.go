@@ -32,13 +32,11 @@ func GetReports(board string) (rep []auth.Report, err error) {
 	var where string
 	rep = make([]auth.Report, 0, 64)
 	tmp := auth.Report{Board: board}
-
 	if board == "all" {
 		where = "illegal = true"
 	} else {
 		where = fmt.Sprintf("board = '%s'", board)
 	}
-
 	err = queryAll(
 		sq.Select("id", "target", "reason", "created").
 			From("reports").
@@ -46,15 +44,12 @@ func GetReports(board string) (rep []auth.Report, err error) {
 			OrderBy("created desc"),
 		func(r *sql.Rows) (err error) {
 			err = r.Scan(&tmp.ID, &tmp.Target, &tmp.Reason, &tmp.Created)
-
 			if err != nil {
 				return
 			}
-
 			rep = append(rep, tmp)
 			return
 		},
 	)
-
 	return
 }
