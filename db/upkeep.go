@@ -41,7 +41,7 @@ func runCleanupTasks() {
 func runMinuteTasks() {
 	if config.Server.ImagerMode != config.ImagerOnly {
 		logError("open post cleanup", closeDanglingPosts())
-		expireRows("image_tokens", "bans", "failed_captchas")
+		expireRows("image_tokens", "bans", "failed_captchas", "attempted_logins")
 	}
 }
 
@@ -62,8 +62,9 @@ func runHourTasks() {
 		logError("thread cleanup", deleteOldThreads())
 		logError("board cleanup", deleteUnusedBoards())
 		logError("delete dangling open post bodies", cleanUpOpenPostBodies())
+		logError("decrement all login attempts", decrementAllLoginAttempts())
 		_, err := db.Exec(`vacuum`)
-		logError("vaccum database", err)
+		logError("vacuum database", err)
 	}
 	if config.Server.ImagerMode != config.NoImager {
 		logError("image cleanup", deleteUnusedImages())

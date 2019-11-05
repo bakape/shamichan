@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -13,6 +14,7 @@ import (
 // Common errors
 var (
 	ErrUserNameTaken = errors.New("user name already taken")
+	mu               sync.RWMutex
 )
 
 // IsLoggedIn check if the user is logged in with the specified session
@@ -103,6 +105,89 @@ func LogOutAll(account string) error {
 		Where("account = ?", account).
 		Exec()
 	return err
+}
+
+// IncrementLoginAttempts increments or creates the login attempt counter for
+// user
+func IncrementLoginAttempts(ip, account string) (attempts uint8, err error) {
+	mu.Lock()
+	defer mu.Unlock()
+	// Get login attempts counter
+	err = sq.Select("attempts").
+		From("attempted_logins").
+		Where("ip = ? and account = ?", ip, account).
+		Scan(&attempts)
+	switch err {
+	case nil:
+		// Don't increment if over 5 attempts
+		if attempts > 5 {
+			return
+		}
+		// Increment the counter
+		attempts++
+		_, err = sq.Update("attempted_logins").
+			Set("attempts", attempts).
+			Where("ip = ? and account = ?", ip, account).
+			Exec()
+	case sql.ErrNoRows:
+		// If not, create it
+		attempts = 1
+		_, err = sq.Insert("attempted_logins").
+			Columns("ip", "account", "attempts", "expires").
+			Values(ip, account, attempts, time.Now().Add(time.Hour*24).UTC()).
+			Exec()
+	}
+	return
+}
+
+// ClearLoginAttempts clears login attempts for account for IP
+func ClearLoginAttempts(ip, account string) error {
+	mu.Lock()
+	defer mu.Unlock()
+	return clearLoginAttempts(ip, account)
+}
+
+func clearLoginAttempts(ip, account string) error {
+	_, err := sq.Delete("attempted_logins").
+		Where("ip = ? and account = ?", ip, account).
+		Exec()
+	return err
+}
+
+// Decrements all login attempt counts, deletes if under 2
+func decrementAllLoginAttempts() (err error) {
+	var ip, account string
+	var attempts uint8
+	mu.Lock()
+	defer mu.Unlock()
+	r, err := sq.Select("ip", "account", "attempts").
+		From("attempted_logins").
+		Query()
+	if err != nil {
+		return
+	}
+	defer r.Close()
+	for r.Next() {
+		err = r.Scan(&ip, &account, &attempts)
+		if err != nil {
+			return
+		}
+		if attempts < 2 {
+			err = clearLoginAttempts(ip, account)
+			if err != nil {
+				return
+			}
+			continue
+		}
+		_, err = sq.Update("attempted_logins").
+			Set("attempts", attempts-1).
+			Where("ip = ? and account = ?", ip, account).
+			Exec()
+		if err != nil {
+			return
+		}
+	}
+	return r.Err()
 }
 
 // ChangePassword changes an existing user's login password

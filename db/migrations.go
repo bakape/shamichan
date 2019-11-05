@@ -1497,6 +1497,18 @@ var migrations = []func(*sql.Tx) error{
 			)`,
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`create table attempted_logins (
+				ip inet not null,
+				account varchar(20) not null,
+				attempts smallint not null,
+				expires timestamp not null,
+				primary key (ip, account)
+			)`,
+			createIndex("attempted_logins", "expires"),
+		)
+	},
 }
 
 func createIndex(table string, columns ...string) string {

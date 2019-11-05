@@ -19,6 +19,7 @@ var (
 	errInvalidPassword = common.ErrInvalidInput("password")
 	errInvalidUserID   = common.ErrInvalidInput("login ID")
 	errUserIDTaken     = common.ErrInvalidInput("login ID already taken")
+	errTooManyAttempts = common.ErrAccessDenied("too many login attempts")
 )
 
 // TODO: Include captcha data in all applicable these post request
@@ -64,7 +65,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-		return commitLogin(w, r, req.ID)
+		return commitLogin(w, "", req.ID)
 	}()
 	if err != nil {
 		httpError(w, r, err)
@@ -81,10 +82,7 @@ func validateUserID(w http.ResponseWriter, r *http.Request, id string) error {
 
 // If login successful, generate a session token and commit to DB. Otherwise
 // write error message to client.
-func commitLogin(
-	w http.ResponseWriter, r *http.Request,
-	userID string,
-) (err error) {
+func commitLogin(w http.ResponseWriter, ip, userID string) (err error) {
 	token, err := auth.RandomID(128)
 	if err != nil {
 		return
@@ -93,7 +91,12 @@ func commitLogin(
 	if err != nil {
 		return
 	}
-
+	if ip != "" {
+		err = db.ClearLoginAttempts(ip, userID)
+		if err != nil {
+			return
+		}
+	}
 	// One hour less, so the cookie expires a bit before the DB session gets
 	// deleted
 	expires := time.Now().
@@ -117,13 +120,12 @@ func commitLogin(
 func login(w http.ResponseWriter, r *http.Request) {
 	err := func() (err error) {
 		var req loginCreds
+		var session auth.Base64Token
 		err = decodeJSON(r, &req)
 		if err != nil {
 			return
 		}
 		trimLoginID(&req.ID)
-
-		var session auth.Base64Token
 		err = session.EnsureCookie(w, r)
 		if err != nil {
 			return
@@ -136,7 +138,18 @@ func login(w http.ResponseWriter, r *http.Request) {
 			err = errInvalidCaptcha
 			return
 		}
-
+		ip, err := auth.GetIP(r)
+		if err != nil {
+			return
+		}
+		attempts, err := db.IncrementLoginAttempts(ip, req.ID)
+		if err != nil {
+			return
+		}
+		if attempts > 5 {
+			err = errTooManyAttempts
+			return
+		}
 		hash, err := db.GetPassword(req.ID)
 		switch err {
 		case nil:
@@ -146,7 +159,6 @@ func login(w http.ResponseWriter, r *http.Request) {
 		default:
 			return
 		}
-
 		err = auth.BcryptCompare(req.Password, hash)
 		switch err {
 		case nil:
@@ -156,8 +168,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		default:
 			return
 		}
-
-		return commitLogin(w, r, req.ID)
+		return commitLogin(w, ip, req.ID)
 	}()
 	if err != nil {
 		httpError(w, r, err)
