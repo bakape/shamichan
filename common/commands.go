@@ -30,12 +30,8 @@ const (
 	// Pcount - don't ask
 	Pcount
 
-	// Roulette is Russian Roulette, first poster has a 1/6 chance of dying, then 1/5, etc
-	// resets to 1/6 chance after someone dies
-	Roulette
-
-	// Rcount - number of bans handed out from #roulette
-	Rcount
+	// Autobahn - self ban. brum brum
+	Autobahn
 )
 
 // Command contains the type and value array of hash commands, such as dice
@@ -46,7 +42,6 @@ const (
 // SyncWatch: [5]uint64
 // Pyu: uint64
 // Pcount: uint64
-// Roulette: [2]uint8
 type Command struct {
 	Type      CommandType
 	Flip      bool
@@ -54,7 +49,6 @@ type Command struct {
 	SyncWatch [5]uint64
 	Eightball string
 	Dice      []uint16
-	Roulette  [2]uint8
 }
 
 // MarshalJSON implements json.Marshaler
@@ -77,7 +71,7 @@ func (c Command) MarshalJSON() ([]byte, error) {
 	switch c.Type {
 	case Flip:
 		b = strconv.AppendBool(b, c.Flip)
-	case Pyu, Pcount, Rcount:
+	case Pyu, Pcount:
 		appendUint(c.Pyu)
 	case SyncWatch:
 		appendByte('[')
@@ -93,15 +87,6 @@ func (c Command) MarshalJSON() ([]byte, error) {
 	case Dice:
 		appendByte('[')
 		for i, v := range c.Dice {
-			if i != 0 {
-				appendByte(',')
-			}
-			appendUint(uint64(v))
-		}
-		appendByte(']')
-	case Roulette:
-		appendByte('[')
-		for i, v := range c.Roulette {
 			if i != 0 {
 				appendByte(',')
 			}
@@ -147,12 +132,8 @@ func (c *Command) UnmarshalJSON(data []byte) error {
 	case Dice:
 		c.Type = Dice
 		err = json.Unmarshal(data, &c.Dice)
-	case Roulette:
-		c.Type = Roulette
-		err = json.Unmarshal(data, &c.Roulette)
-	case Rcount:
-		c.Type = Rcount
-		err = json.Unmarshal(data, &c.Pyu)
+	case Autobahn:
+		c.Type = Autobahn
 	default:
 		return fmt.Errorf("unknown command type: %d", typ)
 	}

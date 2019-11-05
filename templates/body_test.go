@@ -1,10 +1,11 @@
 package templates
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	. "github.com/bakape/meguca/test"
-	"testing"
 
 	"github.com/valyala/quicktemplate"
 )
@@ -142,37 +143,10 @@ func TestRenderBody(t *testing.T) {
 			},
 		},
 		{
-			name: "live roulette",
-			in:   "#roulette",
-			out:  "<strong>#roulette (5/6)</strong>",
-			commands: []common.Command{
-				{
-					Type:     common.Roulette,
-					Roulette: [2]uint8{5, 6},
-				},
-			},
-		},
-		{
-			name: "dead roulette",
-			in:   "#roulette",
-			out:  "<strong class=\"dead\">#roulette (1/6)</strong>",
-			commands: []common.Command{
-				{
-					Type:     common.Roulette,
-					Roulette: [2]uint8{1, 6},
-				},
-			},
-		},
-		{
-			name: "#rcount",
-			in:   "#rcount",
-			out:  "<strong>#rcount (2)</strong>",
-			commands: []common.Command{
-				{
-					Type: common.Rcount,
-					Pyu:  2,
-				},
-			},
+			name:     "#autobahn",
+			in:       "#autobahn",
+			out:      "<strong class=\"dead\">#autobahn</strong>",
+			commands: []common.Command{{Type: common.Autobahn}},
 		},
 		{
 			name: "single roll dice",

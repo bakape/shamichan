@@ -580,7 +580,7 @@ func (c *bodyContext) parseCommands(bit string) {
 	case "8ball":
 		inner = append(inner, html.EscapeString(val.Eightball)...)
 		c.state.iDice++
-	case "pyu", "pcount", "rcount":
+	case "pyu", "pcount":
 		switch val.Type {
 		case common.Pyu, common.Pcount:
 			// Protect from index shifts on boardConfig.pyu toggle
@@ -588,23 +588,17 @@ func (c *bodyContext) parseCommands(bit string) {
 				c.writeInvalidCommand(bit)
 				return
 			}
-			fallthrough
-		case common.Rcount:
 			inner = strconv.AppendUint(inner, val.Pyu, 10)
 			c.state.iDice++
 			break
 		default:
 			c.writeInvalidCommand(bit)
 		}
-	case "roulette":
-		inner = strconv.AppendUint(inner, uint64(val.Roulette[0]), 10)
-		inner = append(inner, "/"...)
-		inner = strconv.AppendUint(inner, uint64(val.Roulette[1]), 10)
-		// set formatting if the poster died
-		if val.Roulette[0] == 1 {
-			formatting = "<strong class=\"dead\">"
-		}
-		c.state.iDice++
+	case "autobahn":
+		c.string("<strong class=\"dead\">#")
+		c.string(bit)
+		c.string(`</strong>`)
+		return
 	default:
 		if strings.HasPrefix(bit, "sw") {
 			c.formatSyncwatch(val.SyncWatch)

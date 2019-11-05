@@ -7,13 +7,14 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"math/big"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 )
 
 var (
@@ -137,34 +138,10 @@ func parseCommand(match []byte, board string, thread uint64, id uint64, ip strin
 		com.Type = common.Pcount
 		com.Pyu, err = db.GetPcount(board)
 
-	// Roulette
-	case bytes.Equal(match, []byte("roulette")):
-		com.Type = common.Roulette
-		err = db.InTransaction(false, func(tx *sql.Tx) error {
-			max, err := db.DecrementRoulette(tx, thread)
-
-			if err != nil {
-				return err
-			}
-
-			roll := uint8(randInt(int(max)) + 1)
-
-			if roll == 1 {
-				err = db.ResetRoulette(tx, thread)
-			}
-
-			com.Roulette = [2]uint8{roll, max}
-			return err
-		})
-
-	// Return current roulette count
-	case bytes.Equal(match, []byte("rcount")):
-		com.Type = common.Rcount
-		err = db.InTransaction(false, func(tx *sql.Tx) error {
-			rcount, err := db.GetRcount(tx, thread)
-			com.Pyu = uint64(rcount)
-			return err
-		})
+	// Autobahn
+	case bytes.Equal(match, []byte("autobahn")):
+		com.Type = common.Autobahn
+		err = db.Ban(board, "brum brum", "system", time.Hour, id)
 
 	default:
 		matchStr := string(match)

@@ -2,10 +2,6 @@ create or replace function after_threads_insert()
 returns trigger as $$
 begin
 	perform bump_thread(new.id);
-
-	-- Init Russian roulette
-	insert into roulette (id, scount, rcount) values (new.id, 6, 0);
-
 	return null;
 end;
 $$ language plpgsql;

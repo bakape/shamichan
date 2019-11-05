@@ -1509,6 +1509,10 @@ var migrations = []func(*sql.Tx) error{
 			createIndex("attempted_logins", "expires"),
 		)
 	},
+	func(tx *sql.Tx) (err error) {
+		_, err = tx.Exec(`drop table roulette`)
+		return
+	},
 }
 
 func createIndex(table string, columns ...string) string {

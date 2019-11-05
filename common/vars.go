@@ -62,7 +62,7 @@ var (
 		"sk_SK",
 		"tr_TR",
 		"uk_UA",
-    "zh_TW",
+		"zh_TW",
 	}
 	Themes = []string{
 		"ashita",
@@ -86,7 +86,7 @@ var (
 
 // Common Regex expressions
 var (
-	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$`)
+	CommandRegexp = regexp.MustCompile(`^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|autobahn)$`)
 	DiceRegexp    = regexp.MustCompile(`(\d*)d(\d+)`)
 )
 

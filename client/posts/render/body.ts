@@ -378,7 +378,7 @@ function parseFragment(frag: string, data: PostData): string {
                 if (data.state.quote) {
                     break
                 }
-                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|roulette|rcount)$/)
+                m = word.match(/^#(flip|\d*d\d+|8ball|pyu|pcount|sw(?:\d+:)?\d+:\d+(?:[+-]\d+)?|autobahn)$/)
                 if (m) {
                     html += parseCommand(m[1], data)
                     matched = true
@@ -525,29 +525,14 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
         case "8ball":
             inner = escape(commands[state.iDice++].val.toString())
             break
+        case "autobahn":
+            return `<strong class=\"dead\">#${bit}</strong>`
         case "pyu":
         case "pcount":
             // Protect from index shifts on boardConfig.pyu toggle
             if (!boardConfig.pyu) {
                 break
             }
-        case "rcount":
-            switch (commands[state.iDice].type) {
-                case commandType.pyu:
-                case commandType.pcount:
-                case commandType.rcount:
-                    inner = commands[state.iDice++].val.toString()
-            }
-
-            break
-        case "roulette":
-            let val = commands[state.iDice++].val
-            inner = val[0].toString() + "/" + val[1].toString()
-            // set formatting if the poster died
-            if (val[0] == 1) {
-                formatting = "<strong class=\"dead\">"
-            }
-            break
         default:
             literalMatching = false;
             if (bit.startsWith("sw")) {
@@ -590,9 +575,7 @@ function parseCommand(bit: string, { commands, state }: PostData): string {
         flip: commandType.flip,
         "8ball": commandType.eightBall,
         pyu: commandType.pyu,
-        pcount: commandType.pcount,
-        rcount: commandType.rcount,
-        roulette: commandType.roulette,
+        pcount: commandType.pcount
     }
     if (literalMatching
         && commandMatchers[bit] !== commands[state.iDice - 1].type
