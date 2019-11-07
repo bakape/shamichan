@@ -1,1 +1,7 @@
 .vscode
+
+server/target
+client/target
+common/target
+
+www/client/*
