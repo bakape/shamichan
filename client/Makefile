@@ -1,4 +1,5 @@
 all:
+	npm install --progress false --depth 0
 	npm run build
 	mkdir -p ../www/client
 	rm -rf ../www/client/*
