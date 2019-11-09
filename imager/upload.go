@@ -139,7 +139,10 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
 		return
 	}
 	if need {
-		return common.StatusError{errors.New("captcha required"), 403}
+		return common.StatusError{
+			Err:  errors.New("captcha required"),
+			Code: 403,
+		}
 	}
 
 	return
@@ -163,7 +166,7 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 		}
 		sha1 := string(buf)
 
-		err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+		err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 			exists, err := db.ImageExists(tx, sha1)
 			if err != nil {
 				return
@@ -222,27 +225,47 @@ func LogError(w http.ResponseWriter, r *http.Request, err error) {
 // handling and reusability.
 // Returns the HTTP status code of the response, the ID of the generated image
 // and an error, if any.
-func ParseUpload(req *http.Request) (string, error) {
+func ParseUpload(req *http.Request) (id string, err error) {
 	max := config.Get().MaxSize << 20
 	length, err := strconv.ParseUint(req.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
-		return "", common.StatusError{err, 413}
+		err = common.StatusError{
+			Err:  err,
+			Code: 413,
+		}
+		return
 	}
 	if uint(length) > max {
-		return "", common.StatusError{errTooLarge, 400}
+		err = common.StatusError{
+			Err:  errTooLarge,
+			Code: 400,
+		}
+		return
 	}
 	err = req.ParseMultipartForm(0)
 	if err != nil {
-		return "", common.StatusError{err, 400}
+		err = common.StatusError{
+			Err:  err,
+			Code: 400,
+		}
+		return
 	}
 
 	file, head, err := req.FormFile("image")
 	if err != nil {
-		return "", common.StatusError{err, 400}
+		err = common.StatusError{
+			Err:  err,
+			Code: 400,
+		}
+		return
 	}
 	defer file.Close()
 	if uint(head.Size) > max {
-		return "", common.StatusError{errTooLarge, 413}
+		err = common.StatusError{
+			Err:  errTooLarge,
+			Code: 413,
+		}
+		return
 	}
 
 	res := <-requestThumbnailing(file, int(head.Size))
@@ -273,14 +296,17 @@ func newThumbnail(f multipart.File, SHA1 string) (
 	if err != nil {
 		switch err.(type) {
 		case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage:
-			err = common.StatusError{err, 400}
+			err = common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
 		}
 		return
 	}
 
 	// Being done in one transaction prevents the image DB record from getting
 	// garbage-collected between the calls
-	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 		var thumbR io.ReadSeeker
 		if thumb != nil {
 			thumbR = bytes.NewReader(thumb)

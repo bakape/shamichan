@@ -164,10 +164,6 @@
 			"Hide Deleted Posts",
 			"Hide all posts that have been deleted"
 		],
-		"hideNSFW": [
-			"NSFW verbergen op / alles /",
-			"Verberg boards die als niet veilig zijn gemarkeerd voor werk vanuit de / alles / metaboard"
-		],
 		"hideRecursively": [
 			"Recursieve post verbergen",
 			"Verberg alle berichten die recursief op een verborgen bericht hebben geantwoord"

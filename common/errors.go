@@ -89,6 +89,11 @@ func ErrInvalidBoard(board string) error {
 	return StatusError{fmt.Errorf("board `%s` does not exist", board), 404}
 }
 
+// Enum decoding error
+func ErrInvalidEnum(s string) error {
+	return StatusError{fmt.Errorf("invalid enum: %s", s), 400}
+}
+
 // CanIgnoreClientError returns, if client-caused error can be safely ignored and not logged
 func CanIgnoreClientError(err error) bool {
 recheck:

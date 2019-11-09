@@ -4,9 +4,8 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/bakape/meguca/db"
-
 	"github.com/badoux/goscraper"
+	"github.com/bakape/meguca/db"
 )
 
 // Get BitChute video title by ID

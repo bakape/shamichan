@@ -42,19 +42,22 @@ type mockWSServer struct {
 }
 
 func TestMain(m *testing.M) {
-	err := config.Server.Load()
-	if err != nil {
-		panic(err)
-	}
-	close, err := db.LoadTestDB("websockets")
-	if err != nil {
-		panic(err)
-	}
+	code := 1
+	err := func() (err error) {
+		err = config.Server.Load()
+		if err != nil {
+			return
+		}
+		err = db.LoadTestDB("websockets")
+		if err != nil {
+			return
+		}
 
-	log.AddHandler(con, log.AllLevels...)
+		log.AddHandler(con, log.AllLevels...)
 
-	code := m.Run()
-	err = close()
+		code = m.Run()
+		return
+	}()
 	if err != nil {
 		panic(err)
 	}

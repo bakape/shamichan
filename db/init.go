@@ -1,35 +1,27 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"net/url"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/static"
 	"github.com/bakape/meguca/util"
-	"github.com/boltdb/bolt"
 	"github.com/go-playground/log"
-	_ "github.com/lib/pq" // Postgres driver
+	"github.com/jackc/pgx"
 )
 
 var (
 	// ConnArgs specifies the PostgreSQL connection URL
 	connectionURL string
 
-	// Stores the postgres database instance
-	db *sql.DB
-
-	// Statement builder and cacher
-	sq squirrel.StatementBuilderType
-
-	// Embedded database for temporary storage
-	boltDB *bolt.DB
+	// Postgres connection pool
+	db *pgx.ConnPool
 )
 
 // Connects to PostgreSQL database and performs schema upgrades
@@ -37,9 +29,8 @@ func LoadDB() error {
 	return loadDB(config.Server.Database, "")
 }
 
-// Create and load testing database. Call close() to clean up temporary
-// resources.
-func LoadTestDB(suffix string) (close func() error, err error) {
+// Create and load testing database
+func LoadTestDB(suffix string) (err error) {
 	common.IsTest = true
 
 	run := func(line ...string) error {
@@ -62,22 +53,6 @@ func LoadTestDB(suffix string) (close func() error, err error) {
 	)
 	if err != nil {
 		return
-	}
-
-	close = func() (err error) {
-		_, err = os.Stat("db.db")
-		if err != nil {
-			if os.IsNotExist(err) {
-				return nil
-			}
-			return
-		}
-
-		err = boltDB.Close()
-		if err != nil {
-			return
-		}
-		return os.Remove("db.db")
 	}
 
 	fmt.Println("creating test database:", dbName)
@@ -111,14 +86,36 @@ func loadDB(connURL, dbSuffix string) (err error) {
 	// Set, for creating extra connections using Listen()
 	connectionURL = connURL
 
-	db, err = sql.Open("postgres", connURL)
+	connOpts, err := pgx.ParseURI(connURL)
 	if err != nil {
 		return
 	}
+	db, err = pgx.NewConnPool(pgx.ConnPoolConfig{
+		ConnConfig:     connOpts,
+		MaxConnections: 50,
+		AfterConnect: func(c *pgx.Conn) (err error) {
+			return static.Walk(
+				"/prepared_statements",
+				func(path string, info os.FileInfo, wlkErr error) (err error) {
+					if wlkErr != nil {
+						return wlkErr
+					}
+					if info.IsDir() {
+						return
+					}
 
-	sq = squirrel.StatementBuilder.
-		RunWith(squirrel.NewStmtCacheProxy(db)).
-		PlaceholderFormat(squirrel.Dollar)
+					buf, err := static.ReadFile(path)
+					if err != nil {
+						return
+					}
+					name := info.Name()
+					i := strings.LastIndexByte(name, '.')
+					_, err = c.Prepare(name[:i], string(buf))
+					return
+				},
+			)
+		},
+	})
 
 	var exists bool
 	const q = `select exists (
@@ -140,14 +137,18 @@ func loadDB(connURL, dbSuffix string) (err error) {
 	// Run these is parallel
 	tasks = append(
 		tasks,
-		func() error {
-			tasks := []func() error{loadConfigs, loadBans, handleSpamScores}
+		func() (err error) {
+			tasks := []func() error{loadConfigs, loadBans}
 			if config.Server.ImagerMode != config.ImagerOnly {
-				tasks = append(tasks, loadBanners, loadLoadingAnimations,
-					loadThreadPostCounts)
+				tasks = append(tasks,
+					loadBanners,
+					loadLoadingAnimations,
+					loadThreadPostCounts,
+				)
 			}
-			if err := util.Parallel(tasks...); err != nil {
-				return err
+			err = util.Parallel(tasks...)
+			if err != nil {
+				return
 			}
 
 			// Depends on loadBanners and loadLoadingAnimations, so has to be
@@ -192,18 +193,30 @@ func initDB() (err error) {
 	return runMigrations()
 }
 
+// Close DB and release resources
+func Close() (err error) {
+	db.Close()
+	return nil
+}
+
 // CreateAdminAccount writes a fresh admin account with the default password to
 // the database
-func CreateAdminAccount(tx *sql.Tx) (err error) {
+func CreateAdminAccount(tx *pgx.Tx) (err error) {
 	hash, err := auth.BcryptHash("password", 10)
 	if err != nil {
 		return err
 	}
-	return RegisterAccount(tx, "admin", hash)
+	_, err = tx.Exec(
+		`insert into accounts (id, passoword)
+		('admin', $1)`,
+		hash,
+	)
+	return
 }
 
-// CreateSystemAccount create an inaccessible account used for automatic internal purposes
-func CreateSystemAccount(tx *sql.Tx) (err error) {
+// CreateSystemAccount create an inaccessible account used for automatic
+// internal purposes
+func CreateSystemAccount(tx *pgx.Tx) (err error) {
 	password, err := auth.RandomID(32)
 	if err != nil {
 		return
@@ -212,36 +225,22 @@ func CreateSystemAccount(tx *sql.Tx) (err error) {
 	if err != nil {
 		return
 	}
-	return RegisterAccount(tx, "system", hash)
+	_, err = tx.Exec(
+		`insert into accounts (id, passoword)
+		('system', $1)`,
+		hash,
+	)
+	return
 }
 
 // ClearTables deletes the contents of specified DB tables. Only used for tests.
-func ClearTables(tables ...string) error {
+func ClearTables(tables ...string) (err error) {
+	clearOpenPostBuffer() // Clear Open post buffer between tests
 	for _, t := range tables {
-		// Clear open post body bucket
-		if boltDBisOpen() {
-			switch t {
-			case "boards", "threads", "posts":
-				err := boltDB.Update(func(tx *bolt.Tx) error {
-					buc := tx.Bucket([]byte("open_bodies"))
-					c := buc.Cursor()
-					for k, _ := c.First(); k != nil; k, _ = c.Next() {
-						err := buc.Delete(k)
-						if err != nil {
-							return err
-						}
-					}
-					return nil
-				})
-				if err != nil {
-					return err
-				}
-			}
-		}
-
-		if _, err := db.Exec(`DELETE FROM ` + t); err != nil {
-			return err
+		_, err = db.Exec(`DELETE FROM ` + t)
+		if err != nil {
+			return
 		}
 	}
-	return nil
+	return
 }

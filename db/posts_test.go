@@ -1,13 +1,13 @@
 package db
 
 import (
-	"database/sql"
 	"testing"
 	"time"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
+	"github.com/jackc/pgx"
 )
 
 func TestValidateOp(t *testing.T) {
@@ -47,7 +47,7 @@ func writeSampleBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return WriteBoard(tx, b)
 	})
 	if err != nil {
@@ -72,7 +72,10 @@ func writeSampleThread(t *testing.T) {
 		},
 		IP: "::1",
 	}
-	if err := WriteThread(thread, op); err != nil {
+	err := InTransaction(func(tx *pgx.Tx) error {
+		return WriteThread(tx, thread, op)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 }
@@ -82,7 +85,7 @@ func insertPost(t *testing.T, p *Post) {
 
 	prepareForPostInsertion(t)
 
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return InsertPost(tx, p)
 	})
 	if err != nil {
@@ -98,7 +101,7 @@ func prepareForPostInsertion(t *testing.T) {
 	writeSampleThread(t)
 
 	// Prevent post ID key collision
-	_, err := sq.Select("nextval('post_id')").Exec()
+	_, err := db.Exec("select nextval('post_id')")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,10 +149,12 @@ func TestSageAndTimestampUpdates(t *testing.T) {
 	var bumpTime, updateTime int64
 
 	// Read initial values
-	thread, err := GetThread(1, 0)
+	buf, err := GetThread(1, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var thread common.Thread
+	test.DecodeJSON(t, buf, &thread)
 	bumpTime = thread.BumpTime
 	updateTime = thread.UpdateTime
 
@@ -177,17 +182,19 @@ func TestSageAndTimestampUpdates(t *testing.T) {
 				IP:       "::1",
 				Password: []byte("6+53653cs3ds"),
 			}
-			err := InTransaction(false, func(tx *sql.Tx) error {
+			err := InTransaction(func(tx *pgx.Tx) error {
 				return InsertPost(tx, &p)
 			})
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			thread, err := GetThread(1, 0)
+			buf, err := GetThread(1, 0)
 			if err != nil {
 				t.Fatal(err)
 			}
+			var thread common.Thread
+			test.DecodeJSON(t, buf, &thread)
 
 			if thread.UpdateTime <= updateTime {
 				t.Error("update time not increased")

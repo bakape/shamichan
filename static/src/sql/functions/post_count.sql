@@ -1,11 +1,8 @@
-create function post_count(op bigint)
-returns bigint as $$
-declare
-	c bigint;
-begin
-	select count(*) into c
-		from posts
-		where posts.op = post_count.op;
-	return c;
-end;
-$$ language plpgsql;
+create or replace function post_count(op bigint)
+returns bigint
+language sql stable parallel safe strict
+as $$
+	select count(*)
+	from posts
+	where posts.op = post_count.op;
+$$;

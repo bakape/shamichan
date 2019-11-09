@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
 	"github.com/go-playground/log"
 )
 
@@ -13,7 +14,8 @@ type message struct {
 }
 
 type postCreationMessage struct {
-	post common.Post
+	post       db.OpenPostMeta
+	moderation []common.ModerationEntry
 	message
 }
 
@@ -80,14 +82,8 @@ func (f *Feed) Start() (err error) {
 		f.start()
 		defer f.pause()
 
-		evictionTimer := time.NewTicker(time.Minute)
-		defer evictionTimer.Stop()
-
 		for {
 			select {
-
-			case <-evictionTimer.C:
-				f.cache.evict()
 
 			// Add client
 			case c := <-f.add:
@@ -123,47 +119,42 @@ func (f *Feed) Start() (err error) {
 
 			// Insert a new post, cache and propagate
 			case msg := <-f.insertPost:
-				src := msg.post
-				f.modifyPost(msg.message, func(p *cachedPost) {
-					*p = cachedPost{
-						HasImage:  src.Image != nil,
-						Spoilered: src.Image != nil && src.Image.Spoiler,
-						Time:      src.Time,
-						Closed:    !src.Editing,
-						Body:      src.Body,
-					}
+				f.modifyPost(msg.message, func(p *db.OpenPostMeta) {
+					*p = msg.post
 				})
+				f.cache.All[msg.id] = msg.post.Page
 				// Post can be automatically deleted on insertion
-				if src.IsDeleted() {
-					f.cache.Moderation[msg.id] = src.Moderation
+				if len(msg.moderation) != 0 {
+					f.cache.Moderation[msg.id] = msg.moderation
 				}
 				f.sendIPCount()
 
 			// Set the body of an open post and propagate
 			case msg := <-f.setOpenBody:
-				f.modifyPost(msg.message, func(p *cachedPost) {
+				f.modifyPost(msg.message, func(p *db.OpenPostMeta) {
 					p.Body = msg.body
 				})
 
 			case msg := <-f.insertImage:
-				f.modifyPost(msg.message, func(p *cachedPost) {
+				f.modifyPost(msg.message, func(p *db.OpenPostMeta) {
 					p.HasImage = true
 					p.Spoilered = msg.spoilered
 				})
 
 			case msg := <-f.spoilerImage:
-				f.modifyPost(msg, func(p *cachedPost) {
+				f.modifyPost(msg, func(p *db.OpenPostMeta) {
 					p.Spoilered = true
 				})
 
 			case msg := <-f.closePost:
-				f.modifyPost(msg, func(p *cachedPost) {
-					p.Closed = true
-				})
+				f.startIfPaused()
+				delete(f.cache.Open, msg.id)
+				f.write(msg.msg)
+				f.cache.clearMemoized()
 
 			// Posts being moderated
 			case msg := <-f.moderatePost:
-				f.modifyPost(msg.message, func(p *cachedPost) {
+				f.modifyPost(msg.message, func(p *db.OpenPostMeta) {
 					switch msg.entry.Type {
 					case common.PurgePost:
 						p.Body = ""
@@ -175,8 +166,10 @@ func (f *Feed) Start() (err error) {
 						p.Spoilered = true
 					}
 				})
-				f.cache.Moderation[msg.id] = append(f.cache.Moderation[msg.id],
-					msg.entry)
+				f.cache.Moderation[msg.id] = append(
+					f.cache.Moderation[msg.id],
+					msg.entry,
+				)
 			}
 		}
 	}()
@@ -184,12 +177,12 @@ func (f *Feed) Start() (err error) {
 	return
 }
 
-func (f *Feed) modifyPost(msg message, fn func(*cachedPost)) {
+func (f *Feed) modifyPost(msg message, fn func(*db.OpenPostMeta)) {
 	f.startIfPaused()
 
-	p := f.cache.Recent[msg.id]
+	p := f.cache.Open[msg.id]
 	fn(&p)
-	f.cache.Recent[msg.id] = p
+	f.cache.Open[msg.id] = p
 
 	if msg.msg != nil {
 		f.write(msg.msg)
@@ -215,7 +208,7 @@ func (f *Feed) sendIPCount() {
 	pastHour := time.Now().Add(-time.Hour).Unix()
 
 	for c := range f.clients {
-		ip := c.IP()
+		ip := c.IP().String()
 		if _, ok := ips[ip]; !ok && c.LastTime() >= pastHour {
 			active++
 		}
@@ -233,12 +226,12 @@ func (f *Feed) sendIPCount() {
 	}
 }
 
-// InsertPost inserts a new post into the thread or reclaim an open post after disconnect
-// and propagate to listeners
-func (f *Feed) InsertPost(p common.Post, msg []byte) {
+// Inserts a new post into the thread or reclaims an open post after disconnect
+// and propagates to listeners
+func (f *Feed) InsertPost(id uint64, p db.OpenPostMeta, msg []byte) {
 	f.insertPost <- postCreationMessage{
 		message: message{
-			id:  p.ID,
+			id:  id,
 			msg: msg,
 		},
 		post: p,
@@ -269,7 +262,9 @@ func (f *Feed) SpoilerImage(id uint64, msg []byte) {
 	f.spoilerImage <- message{id, msg}
 }
 
-func (f *Feed) _moderatePost(id uint64, msg []byte,
+func (f *Feed) _moderatePost(
+	id uint64,
+	msg []byte,
 	entry common.ModerationEntry,
 ) {
 	f.moderatePost <- moderationMessage{
@@ -281,7 +276,8 @@ func (f *Feed) _moderatePost(id uint64, msg []byte,
 	}
 }
 
-// SetOpenBody sets the body of an open post and send update message to clients
+// SetOpenBody sets the body of an open post and sends update message to
+// clients
 func (f *Feed) SetOpenBody(id uint64, body string, msg []byte) {
 	f.setOpenBody <- postBodyModMessage{
 		message: message{

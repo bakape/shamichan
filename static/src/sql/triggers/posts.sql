@@ -1,12 +1,17 @@
 create or replace function before_posts_insert()
-returns trigger as $$
+returns trigger
+language plpgsql
+as $$
 declare
 	to_delete_by text;
+	post_counter bigint;
 begin
-	perform bump_thread(new.op, not new.sage);
 	-- +1, because new post is not inserted yet
-	perform pg_notify('new_post_in_thread',
-		new.op || ',' || post_count(new.op) + 1);
+	post_counter = post_count(new.op) + 1;
+	new.page = post_counter / 100;
+
+	perform bump_thread(new.op, bump_time => not new.sage, page => new.page);
+	perform pg_notify('thread.new_post', new.op || ',' || post_counter);
 
 	-- Delete post, if IP blacklisted
 	select b.by into to_delete_by
@@ -28,14 +33,28 @@ begin
 
 	return new;
 end;
-$$ language plpgsql;
+$$;
 
 create or replace function after_posts_update()
-returns trigger as $$
+returns trigger
+language plpgsql
+as $$
 begin
-	if new.editing != old.editing then
-		perform bump_thread(new.op, not new.sage);
+	if old.editing and not new.editing then
+		perform bump_thread(
+			new.op,
+			bump_time => not new.sage,
+			page => new.page
+		);
+
+		-- Propagate post closure to application server, Not passing links and
+		-- commands, because their bite length can exceed the notification
+		-- payload limit.
+		perform pg_notify(
+			'post.closed',
+			concat_ws(',', thread_board(new.op), new.op, new.id)
+		);
 	end if;
 	return null;
 end;
-$$ language plpgsql;
+$$;

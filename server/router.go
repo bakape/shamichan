@@ -61,7 +61,7 @@ func handlePanic(w http.ResponseWriter, r *http.Request, err interface{}) {
 	http.Error(w, fmt.Sprintf("500 %s", err), 500)
 	ip, ipErr := auth.GetIP(r)
 	if ipErr != nil {
-		ip = "invalid IP"
+		ip = "0.0.0.0"
 	}
 	log.Errorf("server: %s: %#v\n%s\n", ip, err, debug.Stack())
 }
@@ -84,8 +84,6 @@ func createRouter() http.Handler {
 		// All upload images
 		api.POST("/upload", imager.NewImageUpload)
 		api.POST("/upload-hash", imager.UploadImageHash)
-		api.POST("/create-thread", createThread)
-		api.POST("/create-reply", createReply)
 
 		assets.GET("/images/*path", serveImages)
 
@@ -98,18 +96,9 @@ func createRouter() http.Handler {
 	if config.Server.ImagerMode != config.ImagerOnly {
 		// HTML
 		r.GET("/", redirectToDefault)
-		r.GET("/:board/", func(w http.ResponseWriter, r *http.Request) {
-			boardHTML(w, r, extractParam(r, "board"), false)
-		})
-		r.GET("/:board/catalog", func(w http.ResponseWriter, r *http.Request) {
-			boardHTML(w, r, extractParam(r, "board"), true)
-		})
-		// Needs override, because it conflicts with crossRedirect
-		r.GET("/all/catalog", func(w http.ResponseWriter, r *http.Request) {
-			// Artificially set board to "all"
-			boardHTML(w, r, "all", true)
-		})
-		r.GET("/:board/:thread", threadHTML)
+		r.GET("/:board/", indexHTML)
+		r.GET("/:board/catalog", indexHTML)
+		r.GET("/:board/:thread", indexHTML)
 		r.GET("/all/:id", crossRedirect)
 
 		html := r.NewGroup("/html")
@@ -146,6 +135,7 @@ func createRouter() http.Handler {
 		json.GET("/board-list", serveBoardList)
 		json.GET("/ip-count", serveIPCount)
 		json.POST("/thread-updates", serveThreadUpdates)
+		json.GET("/thread/:thread", threadJSON)
 
 		// Internal API
 		api.GET("/socket", func(w http.ResponseWriter, r *http.Request) {

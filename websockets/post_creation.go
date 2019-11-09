@@ -72,7 +72,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 
 	// Must ensure image token usage is done atomically, as not to cause
 	// possible data races with unused image cleanup
-	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 		err = db.InsertThread(tx, subject, &post)
 		if err != nil {
 			return
@@ -92,7 +92,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 }
 
 // Insert image into a post on post creation
-func insertImage(tx *sql.Tx, req ImageRequest, p *db.Post) (err error) {
+func insertImage(tx *pgx.Tx, req ImageRequest, p *db.Post) (err error) {
 	err = formatImageName(&req.Name)
 	if err != nil {
 		return
@@ -146,7 +146,10 @@ func CreatePost(
 	case err != nil:
 		return
 	case locked:
-		err = common.StatusError{errors.New("thread is locked"), 400}
+		err = common.StatusError{
+			Err:  errors.New("thread is locked"),
+			Code: 400,
+		}
 		return
 	}
 
@@ -159,7 +162,7 @@ func CreatePost(
 
 	// Must ensure image token usage is done atomically, as not to cause
 	// possible data races with unused image cleanup
-	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 		err = db.InsertPost(tx, &post)
 		if err != nil {
 			return
@@ -215,24 +218,19 @@ func (c *Client) insertPost(data []byte) (err error) {
 		return
 	}
 
-	if post.Editing {
-		err = db.SetOpenBody(post.ID, []byte(post.Body))
-		if err != nil {
-			return
-		}
-		c.post.init(post.StandalonePost)
-	}
-	c.feed.InsertPost(post.StandalonePost.Post, msg)
-	err = CheckRouletteBan(post.Commands, post.Board, post.OP, post.ID)
-	if err != nil {
-		return
-	}
+	c.post.init(post.StandalonePost)
+	c.propagatePostInsertion(post.Post, msg)
 
 	conf := config.Get()
 	c.incrementSpamScore(conf.PostCreationScore +
 		conf.CharScore*uint(c.post.len))
 	c.setLastTime()
 	return
+}
+
+// Propagate post inserting to parent feed. msg is optional.
+func (c *Client) propagatePostInsertion(p common.Post, msg []byte) {
+	c.feed.InsertPost(p.ID, db.OpenPostMetaFromPost(p), msg)
 }
 
 // If the client has a previous post, close it silently
@@ -331,20 +329,22 @@ func constructPost(
 			return
 		}
 	} else {
-		// TODO: Move DB checks out of the parser. The parser should just parse.
-		// Return slices of pointers to links and commands that need to be
-		// validated.
-		post.Links, post.Commands, err = parser.ParseBody(
-			[]byte(req.Body),
-			conf.ID,
-			post.OP,
-			post.ID,
-			ip,
-			false,
-		)
-		if err != nil {
-			return
-		}
+		// TODO: Redesign thread OP creation. Maybe with websockets.
+
+		// // TODO: Move DB checks out of the parser. The parser should just parse.
+		// // Return slices of pointers to links and commands that need to be
+		// // validated.
+		// post.Links, post.Commands, err = parser.ParseBody(
+		// 	[]byte(req.Body),
+		// 	conf.ID,
+		// 	post.OP,
+		// 	post.ID,
+		// 	ip,
+		// 	false,
+		// )
+		// if err != nil {
+		// 	return
+		// }
 	}
 
 	return

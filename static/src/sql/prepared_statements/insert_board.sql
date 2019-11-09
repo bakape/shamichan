@@ -1,0 +1,31 @@
+insert into boards (
+	id,
+	read_only,
+	text_only,
+	forced_anon,
+	disable_robots,
+	flags,
+	nsfw,
+	rb_text,
+	pyu,
+	default_css,
+	title,
+	notice,
+	rules,
+	eightball
+)
+values (
+	$1,
+	$2,
+	$3,
+	$4,
+	$5,
+	$6,
+	$7,
+	$8,
+	$9,
+	$10,
+	$11,
+	$12,
+	$13
+)

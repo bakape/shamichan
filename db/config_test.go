@@ -1,11 +1,11 @@
 package db
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
+	"github.com/jackc/pgx"
 )
 
 func TestLoadConfigs(t *testing.T) {
@@ -24,7 +24,7 @@ func TestLoadConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertEquals(t, config.Get(), &std)
+	test.AssertEquals(t, config.Get(), &std)
 }
 
 func TestUpdateOnRemovedBoard(t *testing.T) {
@@ -34,16 +34,17 @@ func TestUpdateOnRemovedBoard(t *testing.T) {
 		ID: "a",
 	})
 
-	if err := updateBoardConfigs("a"); err != nil {
+	err := updateBoardConfigs("a")
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	AssertEquals(
+	test.AssertEquals(
 		t,
 		config.GetBoardConfigs("a"),
 		config.BoardConfContainer{},
 	)
-	AssertEquals(t, config.GetBoards(), []string{})
+	test.AssertEquals(t, config.GetBoards(), []string{})
 }
 
 func TestUpdateOnAddBoard(t *testing.T) {
@@ -60,7 +61,7 @@ func TestUpdateOnAddBoard(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return WriteBoard(tx, std)
 	})
 	if err != nil {
@@ -71,12 +72,12 @@ func TestUpdateOnAddBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertEquals(
+	test.AssertEquals(
 		t,
 		config.GetBoardConfigs("a").BoardConfigs,
 		std.BoardConfigs,
 	)
-	AssertEquals(t, config.GetBoards(), []string{"a"})
+	test.AssertEquals(t, config.GetBoards(), []string{"a"})
 }
 
 func TestUpdateBoardConfigs(t *testing.T) {
@@ -93,7 +94,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 			Eightball: []string{"yes"},
 		},
 	}
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return WriteBoard(tx, std)
 	})
 	if err != nil {
@@ -104,7 +105,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	AssertEquals(
+	test.AssertEquals(
 		t,
 		config.GetBoardConfigs("a").BoardConfigs,
 		std.BoardConfigs,
@@ -122,7 +123,7 @@ func TestUpdateBoardConfigs(t *testing.T) {
 	}
 
 	std.Title = "foo"
-	AssertEquals(
+	test.AssertEquals(
 		t,
 		config.GetBoardConfigs("a").BoardConfigs,
 		std.BoardConfigs,

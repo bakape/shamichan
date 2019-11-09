@@ -54,14 +54,18 @@ func writeJSON(
 		return
 	}
 
+	setJSONHeaders(w)
+	w.Header().Set("ETag", etag)
+
+	writeData(w, r, buf)
+}
+
+func setJSONHeaders(w http.ResponseWriter) {
 	head := w.Header()
 	for key, val := range vanillaHeaders {
 		head.Set(key, val)
 	}
-	head.Set("ETag", etag)
 	head.Set("Content-Type", "application/json")
-
-	writeData(w, r, buf)
 }
 
 // Validate the client's last N posts to display setting. To allow for better
@@ -87,7 +91,10 @@ func serveConfigs(w http.ResponseWriter, r *http.Request) {
 func servePost(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(extractParam(r, "post"), 10, 64)
 	if err != nil {
-		httpError(w, r, common.StatusError{err, 400})
+		httpError(w, r, common.StatusError{
+			Err:  err,
+			Code: 400,
+		})
 		return
 	}
 
@@ -120,69 +127,70 @@ func serveBoardConfigs(
 
 // Serves thread page JSON
 func threadJSON(w http.ResponseWriter, r *http.Request) {
-	id, ok := validateThread(w, r)
+	var (
+		page   int
+		thread uint64
+	)
+	ok := func() (ok bool) {
+		var err error
+		thread, err = strconv.ParseUint(extractParam(r, "thread"), 10, 64)
+		if err != nil {
+			return
+		}
+
+		if s := r.URL.Query().Get("page"); s != "" {
+			page, err = strconv.Atoi(s)
+			if err != nil || page < -1 {
+				return
+			}
+		}
+
+		ok = true
+		return
+	}()
 	if !ok {
+		text404(w)
 		return
 	}
 
-	k := cache.ThreadKey(id, detectLastN(r))
-	data, _, ctr, err := cache.GetJSONAndData(k, cache.ThreadFE)
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-
-	writeJSON(w, r, formatEtag(ctr, "", common.NotLoggedIn), data)
-}
-
-// Confirms a the thread exists on the board and returns its ID. If an error
-// occurred and the calling function should return, ok = false.
-func validateThread(w http.ResponseWriter, r *http.Request) (uint64, bool) {
-	board := extractParam(r, "board")
-
-	if !assertNotBanned(w, r, board) {
-		return 0, false
-	}
-
-	id, err := strconv.ParseUint(extractParam(r, "thread"), 10, 64)
-	if err != nil {
-		text404(w)
-		return 0, false
-	}
-
-	valid, err := db.ValidateOP(id, board)
-	if err != nil {
-		httpError(w, r, err)
-		return 0, false
-	}
-	if !valid {
-		text404(w)
-		return 0, false
-	}
-
-	return id, true
+	httpError(w, r, func() (err error) {
+		setJSONHeaders(w)
+		return cache.Thread(w, r, thread, page)
+	}())
 }
 
 // Serves board page JSON
 func boardJSON(w http.ResponseWriter, r *http.Request, catalog bool) {
-	b := extractParam(r, "board")
-	if !auth.IsBoard(b) {
-		text404(w)
+	var (
+		page  uint64
+		board string
+	)
+	ok := func() (ok bool) {
+		board = extractParam(r, "board")
+		if !auth.IsBoard(board) {
+			return
+		}
+
+		if s := r.URL.Query().Get("page"); s != "" {
+			var err error
+			page, err = strconv.ParseUint(s, 10, 32)
+			if err != nil {
+				return
+			}
+		}
+
+		ok = true
 		return
-	}
-	if !assertNotBanned(w, r, b) {
+	}()
+	if !ok {
+		text404(w)
 		return
 	}
 
-	data, _, ctr, err := cache.GetJSONAndData(boardCacheArgs(r, b, catalog))
-	switch err {
-	case nil:
-		writeJSON(w, r, formatEtag(ctr, "", common.NotLoggedIn), data)
-	case cache.ErrPageOverflow:
-		text404(w)
-	default:
-		httpError(w, r, err)
-	}
+	httpError(w, r, func() (err error) {
+		setJSONHeaders(w)
+		return cache.Board(w, r, board, uint32(page))
+	}())
 }
 
 // Serve a JSON array of all available boards and their titles

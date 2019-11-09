@@ -131,7 +131,14 @@ func TestUploadTooLarge(t *testing.T) {
 	req.Header.Set("Content-Length", "1048577")
 
 	_, err := ParseUpload(req)
-	test.AssertEquals(t, common.StatusError{errTooLarge, 400}, err)
+	test.AssertEquals(
+		t,
+		common.StatusError{
+			Err:  errTooLarge,
+			Code: 400,
+		},
+		err,
+	)
 }
 
 func TestInvalidForm(t *testing.T) {
@@ -172,7 +179,14 @@ func TestNoImageUploaded(t *testing.T) {
 	req.Header.Set("Content-Length", "300792")
 
 	_, err := ParseUpload(req)
-	test.AssertEquals(t, common.StatusError{http.ErrMissingFile, 400}, err)
+	test.AssertEquals(
+		t,
+		common.StatusError{
+			Err:  http.ErrMissingFile,
+			Code: 400,
+		},
+		err,
+	)
 }
 
 func TestThumbNailReuse(t *testing.T) {

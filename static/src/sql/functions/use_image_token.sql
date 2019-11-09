@@ -1,6 +1,8 @@
 -- Uses up an image allocation token and returns the image's ID
 create function use_image_token(token char(86))
-returns char(40) as $$
+returns char(40)
+language plpgsql strict
+as $$
 declare
 	sha1 char(40);
 begin
@@ -12,4 +14,4 @@ begin
 	end if;
 	return sha1;
 end;
-$$ language plpgsql;
+$$;

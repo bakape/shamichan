@@ -7,11 +7,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/lang"
-	"github.com/bakape/meguca/templates"
-	"github.com/bakape/meguca/util"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/go-playground/log/handlers/console"
@@ -22,31 +21,40 @@ var router http.Handler
 var con = console.New(true)
 
 func TestMain(m *testing.M) {
-	err := config.Server.Load()
-	if err != nil {
-		panic(err)
-	}
-	close, err := db.LoadTestDB("server")
-	if err != nil {
-		panic(err)
-	}
+	code := 1
+	err := func() (err error) {
+		err = config.Server.Load()
+		if err != nil {
+			return
+		}
+		err = db.LoadTestDB("server")
+		if err != nil {
+			return
+		}
 
-	log.AddHandler(con, log.AllLevels...)
-	router = createRouter()
-	webRoot = "testdata"
-	imageWebRoot = "testdata"
+		log.AddHandler(con, log.AllLevels...)
+		router = createRouter()
+		webRoot = "testdata"
+		imageWebRoot = "testdata"
 
-	config.Set(config.Configs{
-		Public: config.Public{
-			DefaultLang: "en_GB",
-		},
-	})
-	if err := util.Waterfall(lang.Load, templates.Compile); err != nil {
-		panic(err)
-	}
+		config.Set(config.Configs{
+			Public: config.Public{
+				DefaultLang: "en_GB",
+			},
+		})
+		config.Server.CacheSize = 100
+		err = cache.Init()
+		if err != nil {
+			return
+		}
+		err = lang.Load()
+		if err != nil {
+			return
+		}
 
-	code := m.Run()
-	err = close()
+		code = m.Run()
+		return
+	}()
 	if err != nil {
 		panic(err)
 	}

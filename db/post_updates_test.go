@@ -5,10 +5,11 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/test"
 )
 
 // Only select post updates should bump threads
-func TestNoBumpOnPostUpdate(t *testing.T) {
+func TestPostUpdates(t *testing.T) {
 	p := Post{
 		StandalonePost: common.StandalonePost{
 			OP:    1,
@@ -32,11 +33,12 @@ func TestNoBumpOnPostUpdate(t *testing.T) {
 		{
 			name: "IP deletion",
 			fn: func(t *testing.T) {
-				_, err := sq.
-					Update("posts").
-					Set("ip", nil).
-					Where("id = ?", p.ID).
-					Exec()
+				_, err := db.Exec(
+					`update posts
+					set ip = null
+					where id = $1`,
+					p.ID,
+				)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -46,11 +48,12 @@ func TestNoBumpOnPostUpdate(t *testing.T) {
 			name: "close post",
 			bump: true,
 			fn: func(t *testing.T) {
-				_, err := sq.
-					Update("posts").
-					Set("editing", false).
-					Where("id = ?", p.ID).
-					Exec()
+				_, err := db.Exec(
+					`update posts
+					set editing = false
+					where id = $1`,
+					p.ID,
+				)
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -68,11 +71,14 @@ func TestNoBumpOnPostUpdate(t *testing.T) {
 		},
 	}
 
-	thread, err := GetThread(1, 0)
+	buf, err := GetThread(1, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	last := thread.BumpTime
+
+	var lastThread common.Thread
+	test.DecodeJSON(t, buf, &lastThread)
+	last := lastThread.BumpTime
 
 	for i := range cases {
 		c := cases[i]
@@ -81,10 +87,12 @@ func TestNoBumpOnPostUpdate(t *testing.T) {
 
 			c.fn(t)
 
-			thread, err := GetThread(1, 0)
+			buf, err := GetThread(1, 0)
 			if err != nil {
 				t.Fatal(err)
 			}
+			var thread common.Thread
+			test.DecodeJSON(t, buf, &thread)
 
 			if c.bump {
 				if thread.BumpTime == last {
@@ -98,4 +106,39 @@ func TestNoBumpOnPostUpdate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestWriteOpenPostBody(t *testing.T) {
+	p := Post{
+		StandalonePost: common.StandalonePost{
+			OP:    1,
+			Board: "a",
+			Post: common.Post{
+				Editing: true,
+			},
+		},
+		IP: "::1",
+	}
+	insertPost(t, &p)
+
+	WriteOpenPostBody(p.ID, "old")
+	WriteOpenPostBody(p.ID, "new")
+	err := FlushOpenPostBodies()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var body string
+	err = db.
+		QueryRow(
+			`select body
+			from posts
+			where id = $1`,
+			p.ID,
+		).
+		Scan(&body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	test.AssertEquals(t, body, "new")
 }

@@ -1,7 +1,6 @@
 package db
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
@@ -10,13 +9,16 @@ import (
 
 	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/pg_util"
 )
 
 var (
 	postCountCache           = make(map[uint64]uint64)
 	postCountCacheMu         sync.RWMutex
 	errTooManyWatchedThreads = common.StatusError{
-		errors.New("too many watched threads"), 400}
+		Err:  errors.New("too many watched threads"),
+		Code: 400,
+	}
 )
 
 // Diff of passed and actual thread posts counts
@@ -52,6 +54,14 @@ func DiffThreadPostCounts(old map[uint64]uint64) (
 }
 
 func loadThreadPostCounts() (err error) {
+	err = readThreadPostCounts()
+	if err != nil {
+		return
+	}
+	return listenForThreadUpdates(nil)
+}
+
+func readThreadPostCounts() (err error) {
 	r, err := sq.Select("op, count(*)").
 		From("posts").
 		GroupBy("op").
@@ -72,12 +82,7 @@ func loadThreadPostCounts() (err error) {
 		}
 		postCountCache[thread] = postCount
 	}
-	err = r.Err()
-	if err != nil {
-		return
-	}
-
-	return listenForThreadUpdates(nil)
+	return r.Err()
 }
 
 // Separate function for easier testing
@@ -93,24 +98,29 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 		}()
 	}
 
-	err = ListenCancelable("thread_deleted", proxy,
-		func(msg string) (err error) {
-			_, id, err := SplitBoardAndID(msg)
+	err = Listen(pg_util.ListenOpts{
+		Channel:   "thread.deleted",
+		Canceller: proxy,
+		OnMsg: func(msg string) (err error) {
+			_, ints, err := SplitBoardAndInts(msg, 1)
 			if err != nil {
 				return
 			}
 
 			postCountCacheMu.Lock()
-			delete(postCountCache, id)
+			delete(postCountCache, uint64(ints[0]))
 			postCountCacheMu.Unlock()
 			return
-		})
+		},
+	})
 	if err != nil {
 		return
 	}
 
-	return ListenCancelable("new_post_in_thread", proxy,
-		func(msg string) (err error) {
+	return Listen(pg_util.ListenOpts{
+		Channel:   "thread.new_post",
+		Canceller: proxy,
+		OnMsg: func(msg string) (err error) {
 			retErr := func() error {
 				return fmt.Errorf("invalid message: `%s`", msg)
 			}
@@ -132,7 +142,8 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 			postCountCache[id] = postCount
 			postCountCacheMu.Unlock()
 			return
-		})
+		},
+	})
 }
 
 // Thread is a template for writing new threads to the database
@@ -141,14 +152,6 @@ type Thread struct {
 	PostCtr, ImageCtr    uint32
 	UpdateTime, BumpTime int64
 	Subject, Board       string
-}
-
-// ThreadCounter retrieves the progress counter of a thread
-func ThreadCounter(id uint64) (uint64, error) {
-	q := sq.Select("update_time").
-		From("threads").
-		Where("id = ?", id)
-	return getCounter(q)
 }
 
 // ValidateOP confirms the specified thread exists on specific board
@@ -161,7 +164,7 @@ func ValidateOP(id uint64, board string) (valid bool, err error) {
 		}).
 		QueryRow().
 		Scan(&valid)
-	if err == sql.ErrNoRows {
+	if err == pgx.ErrNoRows {
 		return false, nil
 	}
 	return
@@ -169,7 +172,7 @@ func ValidateOP(id uint64, board string) (valid bool, err error) {
 
 // InsertThread inserts a new thread into the database.
 // Sets ID, OP and time on inserted post.
-func InsertThread(tx *sql.Tx, subject string, p *Post) (err error) {
+func InsertThread(tx *pgx.Tx, subject string, p *Post) (err error) {
 	err = sq.Insert("threads").
 		Columns("board", "subject").
 		Values(p.Board, subject).
@@ -184,25 +187,23 @@ func InsertThread(tx *sql.Tx, subject string, p *Post) (err error) {
 }
 
 // WriteThread writes a thread and it's OP to the database. Only used for tests.
-func WriteThread(t Thread, p Post) (err error) {
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
-		_, err = sq.
-			Insert("threads").
-			Columns("board", "id", "update_time", "bump_time", "subject").
-			Values(
-				t.Board,
-				t.ID,
-				t.UpdateTime,
-				t.BumpTime,
-				t.Subject,
-			).
-			RunWith(tx).
-			Exec()
-		if err != nil {
-			return
-		}
-		return WritePost(tx, p)
-	})
+func WriteThread(tx *pgx.Tx, t Thread, p Post) (err error) {
+	_, err = sq.
+		Insert("threads").
+		Columns("board", "id", "update_time", "bump_time", "subject").
+		Values(
+			t.Board,
+			t.ID,
+			t.UpdateTime,
+			t.BumpTime,
+			t.Subject,
+		).
+		RunWith(tx).
+		Exec()
+	if err != nil {
+		return
+	}
+	return WritePost(tx, p)
 }
 
 // CheckThreadLocked checks, if a thread has been locked by a moderator
@@ -213,8 +214,4 @@ func CheckThreadLocked(id uint64) (locked bool, err error) {
 		QueryRow().
 		Scan(&locked)
 	return
-}
-
-func Read() {
-
 }

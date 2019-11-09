@@ -131,7 +131,7 @@ func Set(c Configs) (err error) {
 	hash = h
 	globalMu.Unlock()
 
-	return
+	return util.Trigger("config.changed")
 }
 
 // GetClient returns public availability configuration JSON and a truncated

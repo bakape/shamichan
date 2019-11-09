@@ -48,7 +48,7 @@ func TestDiffPostCount(t *testing.T) {
 	}
 	std := ThreadPostCountDiff{
 		Changed: map[uint64]uint64{
-			1: 3,
+			1: 109,
 		},
 		Deleted: []uint64{4},
 	}
@@ -79,26 +79,27 @@ func TestDiffPostCount(t *testing.T) {
 	std.Deleted[0] = 3
 	assert(t)
 
-	err = InTransaction(false, func(tx *sql.Tx) error {
+	err = InTransaction(func(tx *pgx.Tx) error {
 		return WritePost(
 			tx,
 			Post{
 				StandalonePost: common.StandalonePost{
 					Post: common.Post{
-						ID:   7,
+						ID:   999,
 						Time: time.Now().Unix(),
 					},
 					OP:    1,
 					Board: "a",
 				},
 				IP: "::1",
-			})
+			},
+		)
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	std.Changed[1] = 4
+	std.Changed[1] = 110
 	assert(t)
 }
 
@@ -113,7 +114,7 @@ func TestInsertThread(t *testing.T) {
 		IP:       "::1",
 		Password: []byte("6+53653cs3ds"),
 	}
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *pgx.Tx) (err error) {
 		return InsertThread(tx, "test", &p)
 	})
 	if err != nil {

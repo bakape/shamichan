@@ -3,13 +3,13 @@
 package websockets
 
 import (
+	"encoding/json"
+
 	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/websockets/feeds"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -82,16 +82,9 @@ func (c *Client) registerSync(req syncRequest) (err error) {
 		return c.sendMessage(common.MessageSynchronise, nil)
 	}
 
-	// Send board post data over websocket
-	key := cache.BoardKey(req.Board, int64(req.Page), !req.Catalog)
-	var f cache.FrontEnd
-	if req.Catalog {
-		f = cache.CatalogFE
-	} else {
-		f = cache.BoardPageFE
-	}
-	json, _, _, err := cache.GetJSONAndData(key, f)
-	return c.send(common.PrependMessageType(common.MessageSynchronise, json))
+	// TODO: Board page synchronization
+
+	return
 }
 
 // Reclaim an open post after connection loss or navigating away.
@@ -99,42 +92,50 @@ func (c *Client) registerSync(req syncRequest) (err error) {
 // TODO: Technically there is no locking performed so a single post may be open
 // by multiple clients. This opens us up to some exploits, but nothing severe.
 // Still need to think of a solution.
-func (c *Client) reclaimPost(data []byte) error {
-	if err := c.closePreviousPost(); err != nil {
-		return err
+func (c *Client) reclaimPost(data []byte) (err error) {
+	err = c.closePreviousPost()
+	if err != nil {
+		return
 	}
 
 	var req reclaimRequest
-	if err := decodeMessage(data, &req); err != nil {
-		return err
+	err = decodeMessage(data, &req)
+	if err != nil {
+		return
 	}
 
 	hash, err := db.GetPostPassword(req.ID)
 	switch {
 	case err != nil:
-		return err
+		return
 	case hash == nil:
 		return c.sendMessage(common.MessageReclaim, 1)
 	}
 
-	switch err = auth.BcryptCompare(req.Password, hash); err {
+	err = auth.BcryptCompare(req.Password, hash)
+	switch err {
 	case nil:
 	case bcrypt.ErrMismatchedHashAndPassword:
 		return c.sendMessage(common.MessageReclaim, 1)
 	default:
-		return err
+		return
 	}
 
-	post, err := db.GetPost(req.ID)
-	switch {
-	case err != nil:
-		return err
-	case !post.Editing:
+	buf, err := db.GetPost(req.ID)
+	if err != nil {
+		return
+	}
+	var post common.StandalonePost
+	err = json.Unmarshal(buf, &post)
+	if err != nil {
+		return
+	}
+	if !post.Editing {
 		return c.sendMessage(common.MessageReclaim, 1)
 	}
 
 	c.post.init(post)
-	c.feed.InsertPost(post.Post, nil)
+	c.propagatePostInsertion(post.Post, nil)
 
 	return c.sendMessage(common.MessageReclaim, 0)
 }

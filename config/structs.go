@@ -4,7 +4,6 @@ package config
 type Configs struct {
 	Public
 	PruneBoards         bool   `json:"pruneBoards"`
-	HideNSFW            bool   `json:"hideNSFW"`
 	EmailErr            bool   `json:"emailErr"`
 	JPEGThumbnails      bool   `json:"JPEGThumbnails"`
 	GlobalDisableRobots bool   `json:"globalDisableRobots"`

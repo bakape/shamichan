@@ -8,7 +8,7 @@ import (
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 )
 
 const eightDays = time.Hour * 24 * 8
@@ -23,11 +23,6 @@ func TestOpenPostClosing(t *testing.T) {
 	assertTableClear(t, "boards")
 	writeSampleBoard(t)
 	writeSampleThread(t)
-	common.ParseBody = func(_ []byte, _ string, _ uint64, _ uint64, _ string, _ bool) (
-		[]common.Link, []common.Command, error,
-	) {
-		return nil, nil, nil
-	}
 
 	tooOld := time.Now().Add(-time.Minute * 31).Unix()
 	posts := [...]Post{
@@ -52,7 +47,7 @@ func TestOpenPostClosing(t *testing.T) {
 			},
 		},
 	}
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		for _, p := range posts {
 			err := WritePost(tx, p)
 			if err != nil {
@@ -90,7 +85,7 @@ func TestOpenPostClosing(t *testing.T) {
 				t.Fatal(err)
 			}
 			if editing != c.editing {
-				LogUnexpected(t, c.editing, editing)
+				test.LogUnexpected(t, c.editing, editing)
 			}
 		})
 	}
@@ -109,7 +104,7 @@ func assertDeleted(t *testing.T, q string, del bool) {
 
 	deleted := !exists
 	if deleted != del {
-		LogUnexpected(t, del, deleted)
+		test.LogUnexpected(t, del, deleted)
 	}
 }
 
@@ -164,7 +159,7 @@ func patchBoardCreationTime(t *testing.T, id string, ti time.Time) {
 func writeAllBoard(t *testing.T) {
 	t.Helper()
 
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
+	err := InTransaction(func(tx *pgx.Tx) (err error) {
 		err = WriteBoard(tx, BoardConfigs{
 			BoardConfigs: config.AllBoardConfigs.BoardConfigs,
 			Created:      time.Now().UTC(),
@@ -182,7 +177,7 @@ func writeAllBoard(t *testing.T) {
 func testBoardNoThreads(t *testing.T) {
 	(*config.Get()).PruneBoards = true
 
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return WriteBoard(tx, BoardConfigs{
 			BoardConfigs: config.BoardConfigs{
 				ID:        "l",
@@ -204,7 +199,7 @@ func testBoardNoThreads(t *testing.T) {
 func testBoardPruningDisabled(t *testing.T) {
 	(*config.Get()).PruneBoards = false
 
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return WriteBoard(tx, BoardConfigs{
 			BoardConfigs: config.BoardConfigs{
 				ID:        "x",
@@ -229,7 +224,7 @@ func testDeleteUnusedBoards(t *testing.T) {
 	expired := fresh.Add(-eightDays)
 
 	for _, id := range [...]string{"a", "c"} {
-		err := InTransaction(false, func(tx *sql.Tx) error {
+		err := InTransaction(func(tx *pgx.Tx) error {
 			return WriteBoard(tx, BoardConfigs{
 				BoardConfigs: config.BoardConfigs{
 					ID:        id,
@@ -290,7 +285,9 @@ func writeExpiringThreads(t *testing.T, ops threadExpiryCases) {
 				OP:    op.id,
 			},
 		}
-		err := WriteThread(thread, post)
+		err := InTransaction(func(tx *pgx.Tx) error {
+			return WriteThread(tx, thread, post)
+		})
 		if err != nil {
 			t.Fatal(err)
 		}

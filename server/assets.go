@@ -162,7 +162,10 @@ func parseAssetForm(w http.ResponseWriter, r *http.Request, maxCount uint,
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxCount)*common.MaxAssetSize)
 	err = r.ParseMultipartForm(0)
 	if err != nil {
-		err = common.StatusError{err, 400}
+		err = common.StatusError{
+			Err:  err,
+			Code: 400,
+		}
 		return
 	}
 

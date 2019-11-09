@@ -1,5 +1,7 @@
 create or replace function after_mod_log_insert()
-returns trigger as $$
+returns trigger
+language plpgsql
+as $$
 declare
 	op bigint;
 begin
@@ -10,12 +12,14 @@ begin
 			set moderated = true
 			where id = new.post_id
 			returning posts.op into op;
-		perform pg_notify('post_moderated',
-			concat_ws(',', op, new.id));
+		perform pg_notify(
+			'post.moderated',
+			concat_ws(',', thread_board(op), op, post_id, new.id)
+		);
 
 		-- Posts bump threads only on creation and closure
-		perform bump_thread(op, true);
+		perform bump_thread(op, bump_time => true);
 	end if;
 	return null;
 end;
-$$ language plpgsql;
+$$;

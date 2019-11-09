@@ -26,12 +26,14 @@ func IsNonMetaBoard(b string) bool {
 }
 
 // GetIP extracts the IP of a request, honouring reverse proxies, if set
-func GetIP(r *http.Request) (string, error) {
-	ip := getIP(r)
-	if net.ParseIP(ip) == nil {
-		return "", fmt.Errorf("invalid IP: %s", ip)
+func GetIP(r *http.Request) (ip net.IP, err error) {
+	s := getIP(r)
+	ip = net.ParseIP(s)
+	if ip == nil {
+		err = fmt.Errorf("invalid IP: %s", s)
+		return
 	}
-	return ip, nil
+	return
 }
 
 func getIP(req *http.Request) string {

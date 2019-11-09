@@ -9,7 +9,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
 	"github.com/bakape/meguca/websockets/feeds"
 )
@@ -56,7 +56,7 @@ func TestInsertThread(t *testing.T) {
 		if _, err := config.SetBoardConfigs(c.BoardConfigs); err != nil {
 			t.Fatal(err)
 		}
-		err := db.InTransaction(false, func(tx *sql.Tx) error {
+		err := db.InTransaction(func(tx *pgx.Tx) error {
 			return db.WriteBoard(tx, c)
 		})
 		if err != nil {
@@ -82,7 +82,7 @@ func TestInsertThread(t *testing.T) {
 				Board: c.board,
 			}
 			_, err := CreateThread(req, "")
-			AssertEquals(t, c.err, err)
+			test.AssertEquals(t, c.err, err)
 		})
 	}
 
@@ -93,7 +93,7 @@ func TestInsertThread(t *testing.T) {
 func testCreateThread(t *testing.T) {
 	writeSampleImage(t)
 	var token string
-	err := db.InTransaction(false, func(tx *sql.Tx) (err error) {
+	err := db.InTransaction(func(tx *pgx.Tx) (err error) {
 		token, err = db.NewImageToken(tx, stdJPEG.SHA1)
 		return
 	})
@@ -106,15 +106,16 @@ func testCreateThread(t *testing.T) {
 		Subject:    "subject",
 		ImageCount: 1,
 		PostCount:  1,
-		Post: common.Post{
-			Name: "name",
-			Image: &common.Image{
-				Spoiler:     true,
-				ImageCommon: stdJPEG,
-				Name:        "foo",
+		Posts: []common.Post{
+			{
+				Name: "name",
+				Image: &common.Image{
+					Spoiler:     true,
+					ImageCommon: stdJPEG,
+					Name:        "foo",
+				},
 			},
 		},
-		Posts: []common.Post{},
 	}
 
 	req := ThreadCreationRequest{
@@ -136,22 +137,25 @@ func testCreateThread(t *testing.T) {
 	}
 	std.ID = p.ID
 
-	thread, err := db.GetThread(p.ID, 0)
+	buf, err := db.GetThread(p.ID, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var thread common.Thread
+	test.DecodeJSON(t, buf, &thread)
 
 	// Pointers have to be dereferenced to be asserted
-	AssertEquals(t, *thread.Image, *std.Image)
+	test.AssertEquals(t, *thread.Posts[0].Image, *std.Posts[0].Image)
 
 	// Normalize timestamps and pointer fields
 	then := thread.UpdateTime
 	std.UpdateTime = then
 	std.BumpTime = then
-	std.Time = then
-	std.Image = thread.Image
+	std.Posts[0].Image = thread.Posts[0].Image
+	std.Posts[0].Time = thread.Posts[0].Time
+	std.Posts[0].ID = thread.Posts[0].ID
 
-	AssertEquals(t, thread, std)
+	test.AssertEquals(t, thread, std)
 }
 
 func testCreateThreadTextOnly(t *testing.T) {
@@ -201,7 +205,7 @@ func assertIP(t *testing.T, id uint64, ip string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertEquals(t, res, ip)
+	test.AssertEquals(t, res, ip)
 }
 
 func TestClosePreviousPostOnCreation(t *testing.T) {
@@ -269,7 +273,7 @@ func TestPostCreationValidations(t *testing.T) {
 			}
 			err := cl.insertPost(marshalJSON(t, req))
 			if err != errNoTextOrImage {
-				UnexpectedError(t, err)
+				test.UnexpectedError(t, err)
 			}
 		})
 	}
@@ -281,7 +285,7 @@ func TestPostCreation(t *testing.T) {
 	setBoardConfigs(t, false)
 	writeSampleImage(t)
 	var token string
-	err := db.InTransaction(false, func(tx *sql.Tx) (err error) {
+	err := db.InTransaction(func(tx *pgx.Tx) (err error) {
 		token, err = db.NewImageToken(tx, stdJPEG.SHA1)
 		return
 	})
@@ -329,25 +333,29 @@ func TestPostCreation(t *testing.T) {
 		Board: "a",
 	}
 
-	post, err := db.GetPost(6)
+	buf, err := db.GetPost(6)
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertEquals(t, *post.Image, *stdPost.Image)
+	var post common.StandalonePost
+	test.DecodeJSON(t, buf, &post)
+	test.AssertEquals(t, *post.Image, *stdPost.Image)
 	stdPost.Image = post.Image
 	stdPost.Time = post.Time
-	AssertEquals(t, post, stdPost)
+	test.AssertEquals(t, post, stdPost)
 
 	assertIP(t, 6, "::1")
 
-	thread, err := db.GetThread(1, 0)
+	buf, err = db.GetThread(1, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertEquals(t, thread.PostCount, uint32(2))
-	AssertEquals(t, thread.ImageCount, uint32(1))
+	var thread common.Thread
+	test.DecodeJSON(t, buf, &thread)
+	test.AssertEquals(t, thread.PostCount, uint32(2))
+	test.AssertEquals(t, thread.ImageCount, uint32(1))
 
-	AssertEquals(t, cl.post, openPost{
+	test.AssertEquals(t, cl.post, openPost{
 		id:          6,
 		op:          1,
 		time:        stdPost.Time,
@@ -474,10 +482,13 @@ func TestPostCreationForcedAnon(t *testing.T) {
 	}
 
 	// Assert no name or trip in post
-	post, err := db.GetPost(6)
+
+	buf, err := db.GetPost(6)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var post common.StandalonePost
+	test.DecodeJSON(t, buf, &post)
 	if post.Trip != "" || post.Name != "" {
 		t.Fatal("not anonymous")
 	}

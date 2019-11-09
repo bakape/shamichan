@@ -1,11 +1,12 @@
 package db
 
 import (
+	"net"
 	"testing"
 	"time"
 
 	"github.com/bakape/meguca/common"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 )
 
 func TestBanUnban(t *testing.T) {
@@ -21,10 +22,8 @@ func TestBanUnban(t *testing.T) {
 	}
 
 	for _, board := range [...]string{"a", "all"} {
-		err = IsBanned(board, "::1")
-		if err != common.ErrBanned {
-			UnexpectedError(t, err)
-		}
+		err = IsBanned(board, net.ParseIP("::1"))
+		test.AssertEquals(t, err, common.ErrBanned)
 	}
 	err = Unban("a", 1, "admin")
 	if err != nil {

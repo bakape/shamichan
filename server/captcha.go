@@ -5,12 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bakape/meguca/config"
-
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/templates"
 )
 
 // Signifies captcha service is not yet loaded
@@ -28,7 +26,10 @@ func authenticateCaptcha(w http.ResponseWriter, r *http.Request) {
 		}
 		err = r.ParseForm()
 		if err != nil {
-			return common.StatusError{err, 400}
+			return common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
 		}
 
 		ip, err := auth.GetIP(r)
@@ -93,12 +94,6 @@ func serveNewCaptcha(w http.ResponseWriter, r *http.Request) {
 		s.ServeNewCaptcha(w, r)
 		return
 	}())
-}
-
-// Render a form with nothing but captcha and confirmation buttons
-func renderCaptchaConfirmation(w http.ResponseWriter, r *http.Request) {
-	setHTMLHeaders(w)
-	templates.WriteCaptchaConfirmation(w)
 }
 
 // Assert IP has solved a captcha

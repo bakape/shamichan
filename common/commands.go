@@ -29,13 +29,6 @@ const (
 
 	// Pcount - don't ask
 	Pcount
-
-	// Roulette is Russian Roulette, first poster has a 1/6 chance of dying, then 1/5, etc
-	// resets to 1/6 chance after someone dies
-	Roulette
-
-	// Rcount - number of bans handed out from #roulette
-	Rcount
 )
 
 // Command contains the type and value array of hash commands, such as dice
@@ -77,7 +70,7 @@ func (c Command) MarshalJSON() ([]byte, error) {
 	switch c.Type {
 	case Flip:
 		b = strconv.AppendBool(b, c.Flip)
-	case Pyu, Pcount, Rcount:
+	case Pyu, Pcount:
 		appendUint(c.Pyu)
 	case SyncWatch:
 		appendByte('[')
@@ -99,15 +92,6 @@ func (c Command) MarshalJSON() ([]byte, error) {
 			appendUint(uint64(v))
 		}
 		appendByte(']')
-	case Roulette:
-		appendByte('[')
-		for i, v := range c.Roulette {
-			if i != 0 {
-				appendByte(',')
-			}
-			appendUint(uint64(v))
-		}
-		appendByte(']')
 	}
 
 	b = append(b, '}')
@@ -117,18 +101,18 @@ func (c Command) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON decodes a dynamically-typed JSON-encoded command into the
 // statically-typed Command struct
-func (c *Command) UnmarshalJSON(data []byte) error {
-	if len(data) < 18 {
-		return fmt.Errorf("data too short: %s", string(data))
+func (c *Command) UnmarshalJSON(data []byte) (err error) {
+	var abstract struct {
+		Type CommandType
+		Val  json.RawMessage
 	}
-
-	typ, err := strconv.ParseUint(string(data[8]), 10, 8)
+	err = json.Unmarshal(data, &abstract)
 	if err != nil {
-		return err
+		return
 	}
+	data = []byte(abstract.Val)
 
-	data = data[16 : len(data)-1]
-	switch CommandType(typ) {
+	switch abstract.Type {
 	case Flip:
 		c.Type = Flip
 		err = json.Unmarshal(data, &c.Flip)
@@ -147,14 +131,8 @@ func (c *Command) UnmarshalJSON(data []byte) error {
 	case Dice:
 		c.Type = Dice
 		err = json.Unmarshal(data, &c.Dice)
-	case Roulette:
-		c.Type = Roulette
-		err = json.Unmarshal(data, &c.Roulette)
-	case Rcount:
-		c.Type = Rcount
-		err = json.Unmarshal(data, &c.Pyu)
 	default:
-		return fmt.Errorf("unknown command type: %d", typ)
+		err = fmt.Errorf("unknown command type: %d", abstract.Type)
 	}
-	return err
+	return
 }

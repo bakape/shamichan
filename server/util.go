@@ -1,7 +1,6 @@
 package server
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,9 +11,9 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/templates"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
+	"github.com/jackc/pgx"
 )
 
 const (
@@ -50,25 +49,6 @@ func checkClientEtag(
 		return true
 	}
 	return false
-}
-
-// Combine the progress counter and optional configuration hash into a weak etag
-func formatEtag(ctr uint64, hash string, pos common.ModerationLevel) string {
-	buf := append(make([]byte, 0, 128), "W/\""...)
-	buf = strconv.AppendUint(buf, ctr, 10)
-
-	addOpt := func(s string) {
-		buf = append(buf, '-')
-		buf = append(buf, s...)
-	}
-	if hash != "" {
-		addOpt(hash)
-	}
-	if pos != common.NotLoggedIn {
-		addOpt(pos.String())
-	}
-
-	return string(append(buf, '"'))
 }
 
 // Write a []byte to the client. Must receive the entire response body at once.
@@ -109,7 +89,7 @@ func httpError(w http.ResponseWriter, r *http.Request, err error) {
 	case common.StatusError:
 		code = err.(common.StatusError).Code
 	default:
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			code = 404
 		}
 	}
@@ -122,11 +102,16 @@ func httpError(w http.ResponseWriter, r *http.Request, err error) {
 
 // Check client is not banned on specific board. Returns true, if all clear.
 // Renders ban page and returns false otherwise.
+//
+// TODO: Don't ever return the ban page and instead return JSON
 func assertNotBanned(w http.ResponseWriter, r *http.Request, board string,
 ) bool {
 	ip, err := auth.GetIP(r)
 	if err != nil {
-		httpError(w, r, common.StatusError{err, 400})
+		httpError(w, r, common.StatusError{
+			Err:  err,
+			Code: 400,
+		})
 		return false
 	}
 	err = db.IsBanned(board, ip)
@@ -149,9 +134,10 @@ func assertNotBanned(w http.ResponseWriter, r *http.Request, board string,
 		}
 		head.Set("Content-Type", "text/html")
 		head.Set("Cache-Control", "no-store")
-		templates.WriteBanPage(w, rec)
+
+		http.Error(w, common.ErrBanned.Error(), 403)
 		return false
-	case sql.ErrNoRows:
+	case pgx.ErrNoRows:
 		// If there is no row, that means the ban cache has not been updated
 		// yet with a cleared ban. Force a ban cache refresh.
 		if err := db.RefreshBanCache(); err != nil {
@@ -174,7 +160,10 @@ func extractParam(r *http.Request, id string) string {
 func decodeJSON(r *http.Request, dest interface{}) (err error) {
 	err = json.NewDecoder(io.LimitReader(r.Body, jsonLimit)).Decode(dest)
 	if err != nil {
-		err = common.StatusError{err, 400}
+		err = common.StatusError{
+			Err:  err,
+			Code: 400,
+		}
 	}
 	return
 }

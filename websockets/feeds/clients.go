@@ -1,8 +1,10 @@
 package feeds
 
 import (
-	"github.com/bakape/meguca/common"
+	"net"
 	"sync"
+
+	"github.com/bakape/meguca/common"
 )
 
 var (
@@ -21,11 +23,6 @@ var (
 		ips: make(map[string]int, 128),
 	}
 )
-
-func init() {
-	common.GetByIPAndBoard = GetByIPAndBoard
-	common.GetClientsByIP = GetByIP
-}
 
 // syncID contains the board and thread the client are currently synced to. If
 // the client is on the board page, thread = 0.
@@ -109,13 +106,13 @@ func GetSync(cl common.Client) (synced bool, op uint64, board string) {
 }
 
 // GetByIPAndBoard retrieves all Clients that match the passed IP on a board
-func GetByIPAndBoard(ip, board string) []common.Client {
+func GetByIPAndBoard(ip net.IP, board string) []common.Client {
 	clients.RLock()
 	defer clients.RUnlock()
 
 	cls := make([]common.Client, 0, 16)
 	for cl, sync := range clients.clients {
-		if cl.IP() == ip && (board == "all" || sync.board == board) {
+		if (board == "all" || sync.board == board) && cl.IP().Equal(ip) {
 			cls = append(cls, cl)
 		}
 	}
@@ -123,13 +120,13 @@ func GetByIPAndBoard(ip, board string) []common.Client {
 }
 
 // GetByIP returns all clients matching the specified IP
-func GetByIP(ip string) []common.Client {
+func GetByIP(ip net.IP) []common.Client {
 	clients.RLock()
 	defer clients.RUnlock()
 
 	cls := make([]common.Client, 0, 16)
 	for cl := range clients.clients {
-		if cl.IP() == ip {
+		if cl.IP().Equal(ip) {
 			cls = append(cls, cl)
 		}
 	}

@@ -5,7 +5,7 @@ import (
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 )
 
 func TestParseName(t *testing.T) {
@@ -32,20 +32,16 @@ func TestParseName(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if name != c.name {
-				LogUnexpected(t, c.name, name)
-			}
-			if trip != c.trip {
-				LogUnexpected(t, c.trip, trip)
-			}
+			test.AssertEquals(t, name, c.name)
+			test.AssertEquals(t, trip, c.trip)
 		})
 	}
 
 	t.Run("name too long", func(t *testing.T) {
 		t.Parallel()
-		_, _, err := ParseName(GenString(common.MaxLenName + 1))
+		_, _, err := ParseName(test.GenString(common.MaxLenName + 1))
 		if err != common.ErrNameTooLong {
-			UnexpectedError(t, err)
+			test.UnexpectedError(t, err)
 		}
 	})
 }
@@ -58,16 +54,18 @@ func TestParseSubject(t *testing.T) {
 		err           error
 	}{
 		{
-			"no subject",
-			"", "", errNoSubject,
+			name: "no subject",
+			err:  errNoSubject,
 		},
 		{
-			"subject too long",
-			GenString(common.MaxLenSubject + 1), "", common.ErrSubjectTooLong,
+			name: "subject too long",
+			in:   test.GenString(common.MaxLenSubject + 1),
+			err:  common.ErrSubjectTooLong,
 		},
 		{
-			"valid",
-			" abc ", "abc", nil,
+			name: "valid",
+			in:   " abc ",
+			out:  "abc",
 		},
 	}
 
@@ -75,13 +73,9 @@ func TestParseSubject(t *testing.T) {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			sub, err := ParseSubject(c.in)
-			if err != c.err {
-				UnexpectedError(t, err)
-			}
+			test.AssertEquals(t, err, c.err)
 			if c.err == nil {
-				if sub != c.out {
-					LogUnexpected(t, c.out, sub)
-				}
+				test.AssertEquals(t, sub, c.out)
 			}
 		})
 	}
@@ -95,28 +89,25 @@ func TestVerifyPostPassword(t *testing.T) {
 		err      error
 	}{
 		{
-			"no password",
-			"",
-			errNoPostPassword,
+			name: "no password",
+			err:  errNoPostPassword,
 		},
 		{
-			"too long",
-			GenString(common.MaxLenPostPassword + 1),
-			common.ErrPostPasswordTooLong,
+			name: "too long",
+			in:   test.GenString(common.MaxLenPostPassword + 1),
+			err:  common.ErrPostPasswordTooLong,
 		},
 		{
-			"valid",
-			GenString(common.MaxLenPostPassword),
-			nil,
+			name: "valid",
+			in:   test.GenString(common.MaxLenPostPassword),
+			err:  nil,
 		},
 	}
 
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			if err := VerifyPostPassword(c.in); err != c.err {
-				UnexpectedError(t, err)
-			}
+			test.AssertEquals(t, VerifyPostPassword(c.in), c.err)
 		})
 	}
 }

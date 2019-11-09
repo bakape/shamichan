@@ -1,21 +1,17 @@
 package parser
 
 import (
-	"database/sql"
 	"testing"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/test/test_db"
+	"github.com/bakape/meguca/test"
 )
 
 func TestFlip(t *testing.T) {
-	var isSlut bool
 	t.Parallel()
 
-	com, err := parseCommand([]byte("flip"), "a", 1, 1, "::1", &isSlut)
+	com, err := parseCommand([]byte("flip"), config.BoardConfigs{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +21,6 @@ func TestFlip(t *testing.T) {
 }
 
 func TestDice(t *testing.T) {
-	var isSlut bool
 	t.Parallel()
 
 	cases := [...]struct {
@@ -41,7 +36,7 @@ func TestDice(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			com, err := parseCommand([]byte(c.in), "a", 1, 1, "::1", &isSlut)
+			com, err := parseCommand([]byte(c.in), config.BoardConfigs{})
 			if err != c.err {
 				t.Fatalf("unexpected error: %s : %s", c.err, err)
 			} else {
@@ -49,7 +44,7 @@ func TestDice(t *testing.T) {
 					t.Fatalf("unexpected command type: %d", com.Type)
 				}
 				if l := len(com.Dice); l != c.rolls {
-					LogUnexpected(t, c.rolls, l)
+					test.LogUnexpected(t, c.rolls, l)
 				}
 			}
 		})
@@ -57,14 +52,18 @@ func TestDice(t *testing.T) {
 }
 
 func Test8ball(t *testing.T) {
-	var isSlut bool
-	answers := []string{"Yes", "No"}
-	config.SetBoardConfigs(config.BoardConfigs{
-		ID:        "a",
-		Eightball: answers,
-	})
+	t.Parallel()
 
-	com, err := parseCommand([]byte("8ball"), "a", 1, 1, "::1", &isSlut)
+	answers := []string{"Yes", "No"}
+
+	com, err := parseCommand(
+		[]byte("8ball"),
+		config.BoardConfigs{
+			ID:        "a",
+			Eightball: answers,
+		},
+	)
+
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,76 +74,4 @@ func Test8ball(t *testing.T) {
 	if val != answers[0] && val != answers[1] {
 		t.Fatalf("unexpected answer: %s", val)
 	}
-}
-
-func TestPyu(t *testing.T) {
-	var isSlut bool
-	test_db.ClearTables(t, "boards", "pyu", "pyu_limit")
-	writeSampleBoard(t)
-	writeSampleThread(t)
-
-	t.Run("disabled", func(t *testing.T) {
-		config.SetBoardConfigs(config.BoardConfigs{
-			BoardPublic: config.BoardPublic{
-				Pyu: false,
-			},
-			ID: "a",
-		})
-
-		for _, in := range [...]string{"pyu", "pcount"} {
-			com, err := parseCommand([]byte(in), "a", 1, 1, "::1", &isSlut)
-			if err != nil {
-				t.Error(err)
-			}
-			AssertEquals(t, com, common.Command{
-				Type: com.Type,
-			})
-		}
-	})
-
-	t.Run("enabled", func(t *testing.T) {
-		config.SetBoardConfigs(config.BoardConfigs{
-			BoardPublic: config.BoardPublic{
-				Pyu: true,
-			},
-			ID: "a",
-		})
-
-		cases := [...]struct {
-			name, in string
-			Type     common.CommandType
-			Val      uint64
-		}{
-			{"count on zero", "pcount", common.Pcount, 0},
-			{"increment", "pyu", common.Pyu, 1},
-			{"count", "pcount", common.Pcount, 1},
-			{"increment with limit set", "pyu", common.Pyu, 2},
-			{"increment with limit set", "pyu", common.Pyu, 3},
-			{"increment with limit set", "pyu", common.Pyu, 4},
-			{"pyu limit reached", "pyu", common.Pyu, 4},
-		}
-
-		for i := range cases {
-			c := cases[i]
-			t.Run(c.name, func(t *testing.T) {
-				com, err := parseCommand([]byte(c.in), "a", 1, 1, "::1", &isSlut)
-				if err != nil {
-					t.Fatal(err)
-				}
-				AssertEquals(t, com, common.Command{
-					Type: c.Type,
-					Pyu:  c.Val,
-				})
-			})
-		}
-	})
-
-	t.Run("expire limit", func(t *testing.T) {
-		err := db.InTransaction(false, func(tx *sql.Tx) error {
-			return db.FreePyuLimit()
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
 }

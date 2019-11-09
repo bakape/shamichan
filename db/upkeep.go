@@ -11,57 +11,48 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/parser"
 	"github.com/go-playground/log"
+	"github.com/jackc/pgx"
 )
 
 // Run database clean up tasks at server start and regular intervals. Must be
 // launched in separate goroutine.
 func runCleanupTasks() {
-	// To ensure even the once an hour tasks are run shortly after server start
-	time.Sleep(time.Minute)
-	runMinuteTasks()
-	runHalfTasks()
-	runHourTasks()
 
+	sec := time.Tick(time.Second)
 	min := time.Tick(time.Minute)
-	half := time.Tick(time.Minute * 30)
 	hour := time.Tick(time.Hour)
+
+	// To ensure even the once an hour tasks are run shortly after server start
+	go func() {
+		time.Sleep(time.Minute)
+		runHourTasks()
+	}()
+
 	for {
 		select {
+		case <-sec:
+			logError("flush open post bodies", FlushOpenPostBodies())
+			logError("spam score buffer flush", syncSpamScores())
 		case <-min:
-			runMinuteTasks()
-		case <-half:
-			runHalfTasks()
+			if config.Server.ImagerMode != config.ImagerOnly {
+				logError("open post cleanup", closeDanglingPosts())
+			}
+
+			_, err := db.Exec("clean_up_expiries")
+			logError("expired row cleanup", err)
 		case <-hour:
 			runHourTasks()
 		}
 	}
 }
 
-func runMinuteTasks() {
-	if config.Server.ImagerMode != config.ImagerOnly {
-		logError("open post cleanup", closeDanglingPosts())
-		expireRows("image_tokens", "bans", "failed_captchas")
-	}
-}
-
-func runHalfTasks() {
-	if config.Server.ImagerMode != config.ImagerOnly {
-		logError("unrestrict pyu_limit", FreePyuLimit())
-		logError("expire spam scores", expireSpamScores())
-		logError("expire last solved captcha times", expireLastSolvedCaptchas())
-	}
-}
-
 func runHourTasks() {
 	if config.Server.ImagerMode != config.ImagerOnly {
-		expireRows("sessions")
-		expireBy("created < now() at time zone 'utc' + '-7 days'",
-			"mod_log", "reports")
 		logError("remove identity info", removeIdentityInfo())
 		logError("thread cleanup", deleteOldThreads())
 		logError("board cleanup", deleteUnusedBoards())
-		logError("delete dangling open post bodies", cleanUpOpenPostBodies())
 		_, err := db.Exec(`vacuum`)
 		logError("vaccum database", err)
 	}
@@ -74,22 +65,6 @@ func logError(prefix string, err error) {
 	if err != nil {
 		log.Errorf("%s: %s: %#v", prefix, err, err)
 	}
-}
-
-func expireBy(criterion string, tables ...string) {
-	for _, t := range tables {
-		_, err := sq.Delete(t).
-			Where(criterion).
-			Exec()
-		if err != nil {
-			logError(fmt.Sprintf("expiring table %s rows", t), err)
-		}
-	}
-}
-
-// Expire table rows by expiry timestamp
-func expireRows(tables ...string) {
-	expireBy("expires < now() at time zone 'utc'", tables...)
 }
 
 // Remove poster-identifying info from posts older than 7 days
@@ -107,21 +82,24 @@ func removeIdentityInfo() error {
 // Close any open posts that have not been closed for 30 minutes
 func closeDanglingPosts() error {
 	type post struct {
-		id, op uint64
-		board  string
-		ip     sql.NullString
+		id          uint64
+		board, body string
 	}
 	var (
-		posts = make([]post, 0, 8)
+		posts []post
 		p     post
 	)
 	err := queryAll(
-		sq.Select("id", "op", "board", "ip").
+		sq.Select("id", "board", "body").
 			From("posts").
-			Where(`editing = true and time
-				< floor(extract(epoch from now() at time zone 'utc')) - 900`),
+			Where(
+				`editing = true
+				and time < floor(extract(epoch from now() at time zone 'utc'))
+							- 900`,
+			).
+			OrderBy("id"), // Sort for less page misses on processing
 		func(r *sql.Rows) (err error) {
-			err = r.Scan(&p.id, &p.op, &p.board, &p.ip)
+			err = r.Scan(&p.id, &p.board, &p.body)
 			if err != nil {
 				return err
 			}
@@ -134,17 +112,15 @@ func closeDanglingPosts() error {
 	}
 
 	for _, p := range posts {
-		// Get post body from BoltDB
-		body, err := GetOpenBody(p.id)
-		if err != nil {
-			return err
-		}
-
-		links, com, err := common.ParseBody([]byte(body), p.board, p.op, p.id, p.ip.String, true)
-		// Still close posts on invalid input
+		links, com, err := parser.ParseBody(
+			[]byte(p.body),
+			config.GetBoardConfigs(p.board).BoardConfigs,
+			true,
+		)
 		switch err.(type) {
 		case nil:
 		case common.StatusError:
+			// Still close posts on invalid input
 			if err.(common.StatusError).Code != 400 {
 				return err
 			}
@@ -152,7 +128,7 @@ func closeDanglingPosts() error {
 		default:
 			return err
 		}
-		err = ClosePost(p.id, p.op, body, links, com)
+		err = ClosePost(p.id, p.board, p.body, links, com)
 		if err != nil {
 			return err
 		}
@@ -169,7 +145,7 @@ func deleteUnusedBoards() error {
 		return nil
 	}
 	min := time.Now().Add(-time.Duration(conf.BoardExpiry) * time.Hour * 24)
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *pgx.Tx) (err error) {
 		// Get all inactive boards
 		var (
 			boards []string
@@ -180,7 +156,8 @@ func deleteUnusedBoards() error {
 				From("boards").
 				Where(`created < ?
 					and id != 'all'
-					and (select coalesce(max(bump_time), 0)
+					and (
+							select coalesce(max(bump_time), 0)
 							from threads
 							where board = boards.id
 						) < ?`,
@@ -211,8 +188,8 @@ func deleteUnusedBoards() error {
 	})
 }
 
-func deleteBoard(tx *sql.Tx, id, by, reason string) (err error) {
-	_, err = sq.Delete("boards").Where("id = ?", id).RunWith(tx).Exec()
+func deleteBoard(tx *pgx.Tx, id, by, reason string) (err error) {
+	_, err = tx.Exec("delete_board", id)
 	if err != nil {
 		return
 	}
@@ -236,7 +213,7 @@ func deleteOldThreads() (err error) {
 		return
 	}
 
-	return InTransaction(false, func(tx *sql.Tx) (err error) {
+	return InTransaction(func(tx *pgx.Tx) (err error) {
 		// Find threads to delete
 		var (
 			now           = time.Now().Unix()
@@ -250,20 +227,18 @@ func deleteOldThreads() (err error) {
 		err = queryAll(
 			sq.
 				Select(
-					"threads.id",
+					"t.id",
 					"bump_time",
-					`(select count(*)
-						from posts
-						where posts.op = threads.id
-						) as post_count`,
+					`post_count(t.id)`,
 					fmt.Sprintf(
 						`(select exists (
 							select 1 from post_moderation
-							where post_id = threads.id and type = %d))`,
+							where post_id = t.id and type = %d
+						))`,
 						common.DeletePost),
 				).
-				From("threads").
-				Join("posts on threads.id = posts.id").
+				From("threads t").
+				Join("posts p on t.id = p.id").
 				RunWith(tx),
 			func(r *sql.Rows) (err error) {
 				err = r.Scan(&id, &bumpTime, &postCount, &deleted)

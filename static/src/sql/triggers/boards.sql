@@ -1,27 +1,34 @@
 create or replace function after_boards_insert()
-returns trigger as $$
+returns trigger
+language plpgsql
+as $$
 begin
-	perform pg_notify('board_updated', new.id);
+
+	perform pg_notify('boards.updated', new.id);
 
 	-- Init pyu value
 	insert into pyu (id, pcount) values (new.id, 0);
 
 	return null;
 end;
-$$ language plpgsql;
+$$;
 
 create or replace function after_boards_update()
-returns trigger as $$
+returns trigger
+language plpgsql
+as $$
 begin
-	perform pg_notify('board_updated', new.id);
+	perform pg_notify('boards.updated', new.id);
 	return null;
 end;
-$$ language plpgsql;
+$$;
 
 create or replace function after_boards_delete()
-returns trigger as $$
+returns trigger
+language plpgsql
+as $$
 begin
-	perform pg_notify('board_updated', old.id);
+	perform pg_notify('boards.updated', old.id);
 	return null;
 end;
-$$ language plpgsql;
+$$;

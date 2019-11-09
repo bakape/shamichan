@@ -4,19 +4,32 @@ package test
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/onsi/gomega"
 )
 
 // LogUnexpected fails the test and prints the values in an
 // `expected: X got: Y` format
 func LogUnexpected(t *testing.T, expected, got interface{}) {
 	t.Helper()
-	t.Fatalf("\nexpected: %#v\ngot:      %#v", expected, got)
+
+	// Allow comparison of structs with private fields
+	var options []cmp.Option
+	for _, v := range [...]interface{}{expected, got} {
+		if reflect.TypeOf(v).Kind() == reflect.Struct {
+			options = append(options, cmp.AllowUnexported(v))
+		}
+	}
+	t.Fatal("\n" + cmp.Diff(expected, got, options...))
 }
 
 // AssertEquals asserts two values are deeply equal or fails the test, if
@@ -93,4 +106,37 @@ func SkipInCI(t *testing.T) {
 	if os.Getenv("CI") == "true" {
 		t.Skip()
 	}
+}
+
+// Decode JSON into dst from buffer
+func DecodeJSON(t *testing.T, buf []byte, dst interface{}) {
+	t.Helper()
+
+	err := json.Unmarshal(buf, dst)
+	if err != nil {
+		t.Fatalf("%s:\n%s", err, string(buf))
+	}
+	return
+}
+
+func AssertJSON(t *testing.T, r io.Reader, std interface{}) {
+	t.Helper()
+
+	res, err := ioutil.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("json: %s", string(res))
+
+	// Strip trailing newline - encoder artefact
+	if l := len(res); l != 0 && res[l-1] == '\n' {
+		res = res[:l-1]
+	}
+
+	stdJSON, err := json.Marshal(std)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	gomega.NewGomegaWithT(t).Expect(res).To(gomega.MatchJSON(stdJSON))
 }

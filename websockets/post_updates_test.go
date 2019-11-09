@@ -8,7 +8,7 @@ import (
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 	"github.com/bakape/meguca/test/test_db"
 	"github.com/bakape/meguca/websockets/feeds"
 )
@@ -83,7 +83,7 @@ func TestAppendBodyTooLong(t *testing.T) {
 		len:  common.MaxLenBody,
 	}
 	if err := cl.appendRune(nil); err != common.ErrBodyTooLong {
-		UnexpectedError(t, err)
+		test.UnexpectedError(t, err)
 	}
 }
 
@@ -107,22 +107,28 @@ func TestAppendRune(t *testing.T) {
 		body:  []byte("abc"),
 	}
 
-	if err := cl.appendRune([]byte("100")); err != nil {
+	err := cl.appendRune([]byte("100"))
+	if err != nil {
 		t.Fatal(err)
 	}
 
 	assertOpenPost(t, cl, 4, "abcd")
-	awaitFlush()
+	flushBodies(t)
 	assertBody(t, 2, "abcd")
 }
 
-func awaitFlush() {
-	time.Sleep(time.Millisecond * 400)
+func flushBodies(t *testing.T) {
+	t.Helper()
+
+	err := db.FlushOpenPostBodies()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func writeSamplePost(t testing.TB) {
 	t.Helper()
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
 		return db.WritePost(tx, samplePost)
 	})
 	if err != nil {
@@ -143,12 +149,14 @@ func assertOpenPost(t *testing.T, cl *Client, len int, buf string) {
 func assertBody(t *testing.T, id uint64, body string) {
 	t.Helper()
 
-	post, err := db.GetPost(id)
+	buf, err := db.GetPost(id)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var post common.StandalonePost
+	test.DecodeJSON(t, buf, &post)
 	if post.Body != body {
-		LogUnexpected(t, body, post.Body)
+		test.LogUnexpected(t, body, post.Body)
 	}
 }
 
@@ -194,7 +202,7 @@ func TestClosePostWithHashCommand(t *testing.T) {
 			OP: 1,
 		},
 	}
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
 		return db.WritePost(tx, post)
 	})
 	if err != nil {
@@ -220,10 +228,12 @@ func TestClosePostWithHashCommand(t *testing.T) {
 	t.Run("command type", func(t *testing.T) {
 		t.Parallel()
 
-		post, err := db.GetPost(2)
+		buf, err := db.GetPost(2)
 		if err != nil {
 			t.Fatal(err)
 		}
+		var post common.StandalonePost
+		test.DecodeJSON(t, buf, &post)
 		if len(post.Commands) == 0 {
 			t.Fatal("no commands written")
 		}
@@ -251,7 +261,10 @@ func TestClosePostWithLinks(t *testing.T) {
 			OP: 21,
 		},
 	}
-	if err := db.WriteThread(thread, op); err != nil {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
+		return db.WriteThread(tx, thread, op)
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -276,7 +289,7 @@ func TestClosePostWithLinks(t *testing.T) {
 			},
 		},
 	}
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
+	err = db.InTransaction(func(tx *pgx.Tx) error {
 		for _, p := range posts {
 			if err := db.WritePost(tx, p); err != nil {
 				return err
@@ -305,13 +318,14 @@ func TestClosePostWithLinks(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	post, err := db.GetPost(2)
+	buf, err := db.GetPost(2)
 	if err != nil {
 		t.Fatal(err)
 	}
-	AssertEquals(t, post.Links, []common.Link{
-		{
-			ID:    22,
+	var post common.StandalonePost
+	test.DecodeJSON(t, buf, &post)
+	test.AssertEquals(t, post.Links, map[uint64]common.Link{
+		22: {
 			OP:    21,
 			Board: "a",
 		},
@@ -342,7 +356,7 @@ func TestBackspace(t *testing.T) {
 	}
 
 	assertOpenPost(t, cl, 2, "ab")
-	awaitFlush()
+	flushBodies(t)
 	assertBody(t, 2, "ab")
 }
 
@@ -364,13 +378,18 @@ func TestClosePost(t *testing.T) {
 		board: "a",
 		body:  []byte("abc"),
 	}
-	cl.feed.InsertPost(samplePost.Post, nil)
+	cl.feed.InsertPost(
+		samplePost.ID,
+		db.OpenPostMetaFromPost(samplePost.Post),
+		nil,
+	)
 
-	if err := cl.closePost(); err != nil {
+	err := cl.closePost()
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	AssertEquals(t, cl.post, openPost{})
+	test.AssertEquals(t, cl.post, openPost{})
 	assertBody(t, 2, "abc")
 	assertPostClosed(t, 2)
 }
@@ -378,10 +397,12 @@ func TestClosePost(t *testing.T) {
 func assertPostClosed(t *testing.T, id uint64) {
 	t.Helper()
 
-	post, err := db.GetPost(id)
+	buf, err := db.GetPost(id)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var post common.StandalonePost
+	test.DecodeJSON(t, buf, &post)
 	if post.Editing {
 		t.Error("post not closed")
 	}
@@ -410,10 +431,11 @@ func TestSpliceValidityChecks(t *testing.T) {
 		err        error
 	}{
 		{
-			"exceeds buffer bounds",
-			2, 1,
-			"", "abc",
-			&errInvalidSpliceCoords{
+			name:  "exceeds buffer bounds",
+			start: 2,
+			len:   1,
+			line:  "abc",
+			err: errInvalidSpliceCoords{
 				body: "",
 				req: spliceRequestString{
 					spliceCoords: spliceCoords{
@@ -424,8 +446,15 @@ func TestSpliceValidityChecks(t *testing.T) {
 				},
 			},
 		},
-		{"NOOP", 0, 0, "", "", errSpliceNOOP},
-		{"too long", 0, 0, tooLong, "", errSpliceTooLong},
+		{
+			name: "NOOP",
+			err:  errSpliceNOOP,
+		},
+		{
+			name: "too long",
+			text: tooLong,
+			err:  errSpliceTooLong,
+		},
 	}
 
 	for i := range cases {
@@ -440,7 +469,7 @@ func TestSpliceValidityChecks(t *testing.T) {
 				},
 				Text: []rune(c.text),
 			}
-			AssertEquals(t, c.err, cl.spliceText(marshalJSON(t, req)))
+			test.AssertEquals(t, c.err, cl.spliceText(marshalJSON(t, req)))
 		})
 	}
 }
@@ -543,7 +572,7 @@ func TestSplice(t *testing.T) {
 					OP:    1,
 				},
 			}
-			err := db.InTransaction(false, func(tx *sql.Tx) error {
+			err := db.InTransaction(func(tx *pgx.Tx) error {
 				return db.WritePost(tx, post)
 			})
 			if err != nil {
@@ -574,7 +603,7 @@ func TestSplice(t *testing.T) {
 			}
 
 			assertOpenPost(t, cl, utf8.RuneCountInString(c.final), c.final)
-			awaitFlush()
+			flushBodies(t)
 			assertBody(t, 2, c.final)
 		})
 	}
@@ -597,7 +626,7 @@ func TestCloseOldOpenPost(t *testing.T) {
 			OP: 1,
 		},
 	}
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
 		return db.WritePost(tx, post)
 	})
 	if err != nil {
@@ -635,7 +664,9 @@ func TestInsertImageIntoPostWithImage(t *testing.T) {
 		time:     time.Now().Unix(),
 		hasImage: true,
 	}
-	AssertEquals(t, cl.insertImage(nil), nil)
+	if err := cl.insertImage(nil); err != errHasImage {
+		test.UnexpectedError(t, err)
+	}
 }
 
 func TestInsertImageOnTextOnlyBoard(t *testing.T) {
@@ -655,7 +686,7 @@ func TestInsertImageOnTextOnlyBoard(t *testing.T) {
 		Token: "123",
 	}
 	if err := cl.insertImage(marshalJSON(t, req)); err != errTextOnly {
-		UnexpectedError(t, err)
+		test.UnexpectedError(t, err)
 	}
 }
 
@@ -676,7 +707,7 @@ func TestInsertImage(t *testing.T) {
 			OP:    1,
 		},
 	}
-	err := db.InTransaction(false, func(tx *sql.Tx) error {
+	err := db.InTransaction(func(tx *pgx.Tx) error {
 		return db.WritePost(tx, post)
 	})
 	if err != nil {
@@ -684,7 +715,7 @@ func TestInsertImage(t *testing.T) {
 	}
 
 	var token string
-	err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 		token, err = db.NewImageToken(tx, stdJPEG.SHA1)
 		return
 	})

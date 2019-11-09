@@ -1,24 +1,26 @@
 package db
 
 import (
-	"database/sql"
 	"encoding/json"
 	"time"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/assets"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	mlog "github.com/bakape/meguca/log"
-	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/util"
-	"github.com/lib/pq"
+	"github.com/bakape/pg_util"
+	"github.com/jackc/pgx"
 )
 
 // BoardConfigs contains extra fields not exposed on database reads
 type BoardConfigs struct {
 	config.BoardConfigs
 	Created time.Time
+}
+
+type rowScanner interface {
+	Scan(...interface{}) error
 }
 
 // Load configs from the database and update on each change
@@ -30,134 +32,144 @@ func loadConfigs() error {
 	config.Set(conf)
 	mlog.Init(mlog.Email)
 
-	return Listen("config_updates", updateConfigs)
+	return Listen(pg_util.ListenOpts{
+		Channel: "configs.updated",
+		OnMsg: func(_ string) error {
+			conf, err := GetConfigs()
+			if err != nil {
+				return util.WrapError("reloading configuration", err)
+			}
+			config.Set(conf)
+			mlog.Update()
+
+			return auth.LoadCaptchaServices()
+		},
+	})
 }
 
 // GetConfigs retrieves global configurations. Only used in tests.
 func GetConfigs() (c config.Configs, err error) {
-	var enc []byte
-	err = sq.Select("val").
-		From("main").
-		Where("id = 'config'").
-		QueryRow().
-		Scan(&enc)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal(enc, &c)
+	err = db.QueryRow("get_configs").Scan(&c)
 	return
 }
 
-func getBoardConfigs() squirrel.SelectBuilder {
-	return sq.Select(
-		"readOnly", "textOnly", "forcedAnon", "disableRobots", "flags", "NSFW",
-		"rbText", "pyu", "id", "defaultCSS", "title", "notice",
-		"rules", "eightball",
-	).
-		From("boards")
-}
-
 func loadBoardConfigs() (err error) {
-	err = queryAll(getBoardConfigs(), func(r *sql.Rows) (err error) {
-		c, err := scanBoardConfigs(r)
-		if err != nil {
-			return
-		}
-		c.Banners = assets.Banners.FileTypes(c.ID)
-		_, err = config.SetBoardConfigs(c)
-		return
-	})
+	r, err := db.Query("get_all_board_configs")
 	if err != nil {
 		return
 	}
-	return Listen("board_updated", updateBoardConfigs)
+	defer r.Close()
+
+	var c config.BoardConfigs
+	for r.Next() {
+		c, err = scanBoardConfigs(r)
+		if err != nil {
+			return
+		}
+		_, err = config.SetBoardConfigs(c)
+		if err != nil {
+			return
+		}
+	}
+	err = r.Err()
+	if err != nil {
+		return
+	}
+
+	return Listen(pg_util.ListenOpts{
+		DebounceInterval: time.Second,
+		Channel:          "boards.updated",
+		OnMsg:            updateBoardConfigs,
+	})
 }
 
 func scanBoardConfigs(r rowScanner) (c config.BoardConfigs, err error) {
-	var eightball pq.StringArray
 	err = r.Scan(
-		&c.ReadOnly, &c.TextOnly, &c.ForcedAnon, &c.DisableRobots, &c.Flags,
-		&c.NSFW, &c.RbText, &c.Pyu,
-		&c.ID, &c.DefaultCSS, &c.Title, &c.Notice, &c.Rules, &eightball,
+		&c.ID,
+		&c.ReadOnly,
+		&c.TextOnly,
+		&c.ForcedAnon,
+		&c.DisableRobots,
+		&c.Flags,
+		&c.NSFW,
+		&c.RbText,
+		&c.Pyu,
+		&c.DefaultCSS,
+		&c.Title,
+		&c.Notice,
+		&c.Rules,
+		&c.Eightball,
 	)
-	c.Eightball = []string(eightball)
+	c.Banners = assets.Banners.FileTypes(c.ID)
 	return
 }
 
 // WriteBoard writes a board complete with configurations to the database
-func WriteBoard(tx *sql.Tx, c BoardConfigs) error {
-	_, err := sq.Insert("boards").
-		Columns(
-			"id", "readOnly", "textOnly", "forcedAnon", "disableRobots",
-			"flags", "NSFW",
-			"rbText", "pyu", "created", "defaultCSS", "title",
-			"notice", "rules", "eightball",
-		).
-		Values(
-			c.ID, c.ReadOnly, c.TextOnly, c.ForcedAnon, c.DisableRobots,
-			c.Flags, c.NSFW, c.RbText, c.Pyu,
-			c.Created, c.DefaultCSS, c.Title, c.Notice, c.Rules,
-			pq.StringArray(c.Eightball),
-		).
-		RunWith(tx).
-		Exec()
-	return err
+func WriteBoard(tx *pgx.Tx, c BoardConfigs) (err error) {
+	if c.Created.IsZero() {
+		c.Created = time.Now().UTC()
+	}
+	_, err = tx.Exec(
+		"insert_board",
+		c.ID,
+		c.ReadOnly,
+		c.TextOnly,
+		c.ForcedAnon,
+		c.DisableRobots,
+		c.Flags,
+		c.NSFW,
+		c.RbText,
+		c.Pyu,
+		c.Created,
+		c.DefaultCSS,
+		c.Title,
+		c.Notice,
+		c.Rules,
+		c.Eightball,
+	)
+	return
 }
 
 // UpdateBoard updates board configurations
 func UpdateBoard(c config.BoardConfigs) (err error) {
-	_, err = sq.Update("boards").
-		SetMap(map[string]interface{}{
-			"readOnly":      c.ReadOnly,
-			"textOnly":      c.TextOnly,
-			"forcedAnon":    c.ForcedAnon,
-			"disableRobots": c.DisableRobots,
-			"flags":         c.Flags,
-			"NSFW":          c.NSFW,
-			"rbText":        c.RbText,
-			"pyu":           c.Pyu,
-			"defaultCSS":    c.DefaultCSS,
-			"title":         c.Title,
-			"notice":        c.Notice,
-			"rules":         c.Rules,
-			"eightball":     pq.StringArray(c.Eightball),
-		}).
-		Where("id = ?", c.ID).
-		Exec()
+	_, err = db.Exec(
+		"update_board",
+		c.ID,
+		c.ReadOnly,
+		c.TextOnly,
+		c.ForcedAnon,
+		c.DisableRobots,
+		c.Flags,
+		c.NSFW,
+		c.RbText,
+		c.Pyu,
+		c.DefaultCSS,
+		c.Title,
+		c.Notice,
+		c.Rules,
+		c.Eightball,
+	)
 	return
 }
 
-func updateConfigs(_ string) error {
-	conf, err := GetConfigs()
-	if err != nil {
-		return util.WrapError("reloading configuration", err)
-	}
-	config.Set(conf)
-	mlog.Update()
-
-	return util.Parallel(templates.Recompile, auth.LoadCaptchaServices)
-}
-
+// Separated for easier unit testing
 func updateBoardConfigs(board string) error {
 	conf, err := GetBoardConfigs(board)
 	switch err {
 	case nil:
-	case sql.ErrNoRows:
+	case pgx.ErrNoRows:
 		config.RemoveBoard(board)
-		return templates.Recompile()
+		return nil
 	default:
 		return err
 	}
-
-	// Inject banners into configuration struct
-	conf.Banners = assets.Banners.FileTypes(board)
 
 	changed, err := config.SetBoardConfigs(conf)
 	switch {
 	case err != nil:
 		return util.WrapError("reloading board configuration", err)
 	case changed:
-		return util.Parallel(templates.Recompile, auth.LoadCaptchaServices)
+		return auth.LoadCaptchaServices()
 	default:
 		return nil
 	}
@@ -165,8 +177,7 @@ func updateBoardConfigs(board string) error {
 
 // GetBoardConfigs retrives the configurations of a specific board
 func GetBoardConfigs(board string) (config.BoardConfigs, error) {
-	q := getBoardConfigs().Where("id = ?", board)
-	return scanBoardConfigs(q.QueryRow())
+	return scanBoardConfigs(db.QueryRow("get_board_configs", board))
 }
 
 // WriteConfigs writes new global configurations to the database
@@ -175,13 +186,11 @@ func WriteConfigs(c config.Configs) (err error) {
 	if err != nil {
 		return
 	}
-	_, err = sq.Update("main").
-		Set("val", string(data)).
-		Where("id = 'config'").
-		Exec()
-	if err != nil {
-		return
-	}
-	_, err = db.Exec("select pg_notify('config_updates', '')")
+	_, err = db.Exec(
+		`update main
+		set val = $1
+		where key = 'config'`,
+		data,
+	)
 	return
 }

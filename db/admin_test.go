@@ -1,13 +1,14 @@
 package db
 
 import (
-	"database/sql"
+	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
+	"github.com/jackc/pgx"
 )
 
 func prepareForModeration(t *testing.T) {
@@ -27,11 +28,11 @@ func prepareForModeration(t *testing.T) {
 func writeAdminAccount(t *testing.T) {
 	t.Helper()
 
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
-		err = RegisterAccount(tx, "admin", samplePasswordHash)
-		if err != nil {
-			return
-		}
+	err := RegisterAccount("admin", samplePasswordHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = InTransaction(func(tx *pgx.Tx) (err error) {
 		return WriteStaff(tx, "all", map[common.ModerationLevel][]string{
 			common.BoardOwner: {"admin"},
 		})
@@ -44,10 +45,12 @@ func writeAdminAccount(t *testing.T) {
 func TestDeleteImages(t *testing.T) {
 	prepareForModeration(t)
 
-	p, err := GetPost(1)
+	buf, err := GetPost(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var p common.StandalonePost
+	test.DecodeJSON(t, buf, &p)
 	if p.Image == nil {
 		t.Fatal("no image")
 	}
@@ -57,10 +60,12 @@ func TestDeleteImages(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p, err = GetPost(1)
+	buf, err = GetPost(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	p = common.StandalonePost{}
+	test.DecodeJSON(t, buf, &p)
 	if p.Image != nil {
 		t.Fatal("image not deleted")
 	}
@@ -69,10 +74,12 @@ func TestDeleteImages(t *testing.T) {
 func TestSpoilerImages(t *testing.T) {
 	prepareForModeration(t)
 
-	p, err := GetPost(1)
+	buf, err := GetPost(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	var p common.Post
+	test.DecodeJSON(t, buf, &p)
 	if p.Image.Spoiler {
 		t.Fatal("has spoiler")
 	}
@@ -82,10 +89,11 @@ func TestSpoilerImages(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p, err = GetPost(1)
+	buf, err = GetPost(1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	test.DecodeJSON(t, buf, &p)
 	if !p.Image.Spoiler {
 		t.Fatal("no spoiler")
 	}
@@ -99,51 +107,52 @@ func TestDeletePostsByIP(t *testing.T) {
 	writeAllBoard(t)
 	writeAdminAccount(t)
 
-	err := InTransaction(false, func(tx *sql.Tx) (err error) {
-		err = RegisterAccount(tx, "user1", samplePasswordHash)
-		if err != nil {
-			return
-		}
-		err = WriteStaff(tx, "a", map[common.ModerationLevel][]string{
+	err := RegisterAccount("user1", samplePasswordHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = RegisterAccount("user2", samplePasswordHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = InTransaction(func(tx *pgx.Tx) (err error) {
+		return WriteStaff(tx, "a", map[common.ModerationLevel][]string{
 			common.BoardOwner: {"user1"},
 		})
-		if err != nil {
-			return
-		}
-
-		return RegisterAccount(tx, "user2", samplePasswordHash)
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = InTransaction(false, func(tx *sql.Tx) error {
-		return WriteBoard(tx, BoardConfigs{
+	err = InTransaction(func(tx *pgx.Tx) (err error) {
+		err = WriteBoard(tx, BoardConfigs{
 			BoardConfigs: config.BoardConfigs{
 				ID:        "b",
 				Eightball: []string{},
 			},
 		})
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	err = WriteThread(
-		Thread{
-			ID:    2,
-			Board: "b",
-		},
-		Post{
-			StandalonePost: common.StandalonePost{
-				Post: common.Post{
-					ID:   2,
-					Time: time.Now().Unix(),
-				},
-				OP:    2,
+		if err != nil {
+			return
+		}
+		return WriteThread(
+			tx,
+			Thread{
+				ID:    2,
 				Board: "b",
 			},
-			IP: "::1",
-		})
+			Post{
+				StandalonePost: common.StandalonePost{
+					Post: common.Post{
+						ID:   2,
+						Time: time.Now().Unix(),
+					},
+					OP:    2,
+					Board: "b",
+				},
+				IP: "::1",
+			},
+		)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,7 +164,7 @@ func TestDeletePostsByIP(t *testing.T) {
 	}
 
 	var shouldDelete, shouldSkip uint64
-	err = InTransaction(false, func(tx *sql.Tx) (err error) {
+	err = InTransaction(func(tx *pgx.Tx) (err error) {
 		post := Post{
 			StandalonePost: common.StandalonePost{
 				OP:    1,
@@ -217,16 +226,16 @@ func TestDeletePostsByIP(t *testing.T) {
 			},
 			IP: "::1",
 		}
-		err = InTransaction(false, func(tx *sql.Tx) (err error) {
+		err = InTransaction(func(tx *pgx.Tx) (err error) {
 			return InsertPost(tx, &post)
 		})
 		if err != nil {
 			t.Fatal(err)
 		}
-		assertDeleted(t, post.ID, true)
-		if !post.Moderated {
-			t.Error("not marked as moderated")
+		if !post.IsDeleted() {
+			t.Error("deletion not propagateds after insert")
 		}
+		assertDeleted(t, post.ID, true)
 		if len(post.Moderation) == 0 {
 			t.Error("no post moderation entries")
 		}
@@ -284,18 +293,31 @@ func TestDeletePostsByIP(t *testing.T) {
 func TestPurgePost(t *testing.T) {
 	prepareForModeration(t)
 
-	err := PurgePost(1, "admin", "test")
-	if err != nil {
-		t.Fatal(err)
-	}
+	// Test initial and repeated purge, when there is no image
+	for i := 0; i < 2; i++ {
+		var name string
+		if i == 0 {
+			name = "with image"
+		} else {
+			name = "without image"
+		}
+		t.Run(name, func(t *testing.T) {
+			err := PurgePost(1, "admin", "test")
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	post, err := GetPost(1)
-	if err != nil {
-		t.Fatal(err)
+			buf, err := GetPost(1)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var post common.Post
+			test.DecodeJSON(t, buf, &post)
+			test.AssertEquals(t, len(post.Moderation), i+1)
+			test.AssertEquals(t, post.Image == nil, true)
+			test.AssertEquals(t, post.Body, "")
+		})
 	}
-	test.AssertEquals(t, len(post.Moderation), 1)
-	test.AssertEquals(t, post.Image == nil, true)
-	test.AssertEquals(t, post.Body, "")
 }
 
 func TestStickyThread(t *testing.T) {
@@ -344,7 +366,7 @@ func TestStaff(t *testing.T) {
 	prepareForModeration(t)
 
 	staff := map[common.ModerationLevel][]string{common.BoardOwner: {"admin"}}
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return WriteStaff(tx, "a", staff)
 	})
 	if err != nil {
@@ -360,8 +382,20 @@ func TestStaff(t *testing.T) {
 
 func TestGetSameIPPosts(t *testing.T) {
 	prepareForModeration(t)
+	writeSampleUser(t)
+	err := InTransaction(func(tx *pgx.Tx) (err error) {
+		return WriteStaff(tx, "a", map[common.ModerationLevel][]string{
+			common.BoardOwner: {"admin"},
+			common.Janitor:    {sampleUserID},
+		})
+	})
 
-	res, err := GetSameIPPosts(1, "a", sampleUserID)
+	buf, err := GetSameIPPosts(1, sampleUserID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var res []common.Post
+	err = json.Unmarshal(buf, &res)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -383,7 +417,13 @@ func TestGetModLogEntry(t *testing.T) {
 	t.Run("ban_unban", TestBanUnban) // So we have something in the log
 
 	var id uint64
-	err := sq.Select("id").From("mod_log").Limit(1).QueryRow().Scan(&id)
+	err := db.
+		QueryRow(
+			`select id
+			from mod_log
+			limit 1`,
+		).
+		Scan(&id)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -397,7 +437,7 @@ func TestGetModLogEntry(t *testing.T) {
 func TestCanPerform(t *testing.T) {
 	prepareForModeration(t)
 	writeSampleUser(t)
-	err := InTransaction(false, func(tx *sql.Tx) error {
+	err := InTransaction(func(tx *pgx.Tx) error {
 		return WriteStaff(tx, "a", map[common.ModerationLevel][]string{
 			common.Moderator: []string{sampleUserID},
 		})

@@ -3,7 +3,6 @@
 package server
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -15,8 +14,8 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/templates"
 	"github.com/bakape/meguca/websockets/feeds"
+	"github.com/jackc/pgx"
 )
 
 const (
@@ -277,7 +276,7 @@ func createBoard(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
+		err = db.InTransaction(func(tx *pgx.Tx) (err error) {
 			err = db.WriteBoard(tx, db.BoardConfigs{
 				Created: time.Now().UTC(),
 				BoardConfigs: config.BoardConfigs{
@@ -326,7 +325,10 @@ func configureServer(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(msg.CaptchaTags) < 3 {
-			err = common.StatusError{errors.New("too few captcha tags"), 400}
+			err = common.StatusError{
+				Err:  errors.New("too few captcha tags"),
+				Code: 400,
+			}
 			return
 		}
 		err = db.WriteConfigs(msg)
@@ -592,7 +594,7 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		return db.InTransaction(false, func(tx *sql.Tx) error {
+		return db.InTransaction(func(tx *pgx.Tx) error {
 			return db.WriteStaff(tx, msg.Board,
 				map[common.ModerationLevel][]string{
 					common.BoardOwner: msg.Owners,
@@ -610,7 +612,10 @@ func assignStaff(w http.ResponseWriter, r *http.Request) {
 func extractID(r *http.Request) (uint64, error) {
 	id, err := strconv.ParseUint(extractParam(r, "id"), 10, 64)
 	if err != nil {
-		err = common.StatusError{err, 400}
+		err = common.StatusError{
+			Err:  err,
+			Code: 400,
+		}
 	}
 	return id, err
 }
@@ -622,17 +627,15 @@ func getSameIPPosts(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-
-		board, uid, err := canModeratePost(w, r, id, common.Janitor)
+		creds, err := isLoggedIn(w, r)
 		if err != nil {
 			return
 		}
-
-		posts, err := db.GetSameIPPosts(id, board, uid)
+		posts, err := db.GetSameIPPosts(id, creds.UserID)
 		if err != nil {
 			return
 		}
-		serveJSON(w, r, "", posts)
+		writeJSON(w, r, "", posts)
 		return
 	}()
 	if err != nil {
@@ -679,25 +682,6 @@ func setThreadLock(w http.ResponseWriter, r *http.Request) {
 	handleBoolRequest(w, r, db.SetThreadLock)
 }
 
-// Render list of bans on a board with unban links for authenticated staff
-func banList(w http.ResponseWriter, r *http.Request) {
-	board := extractParam(r, "board")
-	if !auth.IsBoard(board) {
-		text404(w)
-		return
-	}
-
-	bans, err := db.GetBoardBans(board)
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-
-	setHTMLHeaders(w)
-	templates.WriteBanList(w, bans, board,
-		detectCanPerform(r, board, common.Moderator))
-}
-
 // Detect, if a  client can perform moderation on a board. Unlike canPerform,
 // this will not send any errors to the client, if no access rights detected.
 func detectCanPerform(
@@ -734,7 +718,10 @@ func unban(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, jsonLimit)
 		err = r.ParseForm()
 		if err != nil {
-			err = common.StatusError{err, 400}
+			err = common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
 			return
 		}
 		var (
@@ -747,7 +734,10 @@ func unban(w http.ResponseWriter, r *http.Request) {
 			}
 			id, err = strconv.ParseUint(key, 10, 64)
 			if err != nil {
-				err = common.StatusError{err, 400}
+				err = common.StatusError{
+					Err:  err,
+					Code: 400,
+				}
 				return
 			}
 			ids = append(ids, id)
@@ -758,7 +748,7 @@ func unban(w http.ResponseWriter, r *http.Request) {
 			err = db.Unban(board, id, creds.UserID)
 			switch err {
 			case nil:
-			case sql.ErrNoRows:
+			case pgx.ErrNoRows:
 				err = nil
 			default:
 				return
@@ -771,23 +761,6 @@ func unban(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httpError(w, r, err)
 	}
-}
-
-// Serve moderation log for a specific board
-func modLog(w http.ResponseWriter, r *http.Request) {
-	board := extractParam(r, "board")
-	if !auth.IsBoard(board) {
-		text404(w)
-		return
-	}
-
-	log, err := db.GetModLog(board)
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-	setHTMLHeaders(w)
-	templates.WriteModLog(w, log)
 }
 
 // Decodes params for client forced redirection
@@ -818,13 +791,19 @@ func redirectByIP(w http.ResponseWriter, r *http.Request) {
 
 		ip, err := db.GetIP(id)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				err = common.StatusError{errors.New("no such post"), 404}
+			if err == pgx.ErrNoRows {
+				err = common.StatusError{
+					Err:  errors.New("no such post"),
+					Code: 404,
+				}
 			}
 			return
 		}
 		if ip == "" {
-			return common.StatusError{errors.New("no IP on post"), 404}
+			return common.StatusError{
+				Err:  errors.New("no IP on post"),
+				Code: 404,
+			}
 		}
 
 		msg, err := common.EncodeMessage(common.MessageRedirect, url)
