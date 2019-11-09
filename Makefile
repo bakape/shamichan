@@ -1,25 +1,16 @@
-export node_bins=$(PWD)/node_modules/.bin
-export gulp=$(node_bins)/gulp
-
 .PHONY: server client imager test
 
 all: server client
 
-client: client_vendor
-	$(gulp)
+client:
+	$(MAKE) -C client all
 
-client_deps:
-	npm install --progress false --depth 0
+install_tools:
+	$(MAKE) -C client
 
-watch:
-	$(gulp) -w
-
-client_vendor: client_deps
-	mkdir -p www/js/vendor
-	$(uglifyjs) node_modules/almond/almond.js -o www/js/vendor/almond.js
-
-css:
-	$(gulp) css
+# TODO: Build without gulp
+# css:
+# 	$(gulp) css
 
 generate:
 	go generate ./...
@@ -41,5 +32,5 @@ test_no_race:
 
 test_docker:
 	docker-compose build
-	docker-compose run --rm -e CI=true meguca make test
+	docker-compose ru` --rm -e CI=true meguca make test
 
