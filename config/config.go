@@ -9,7 +9,7 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/Chiiruno/meguca/util"
+	"github.com/bakape/meguca/util"
 )
 
 var (

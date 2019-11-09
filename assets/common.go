@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/util"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/util"
 	"github.com/fsnotify/fsnotify"
 	"github.com/go-playground/log"
 )

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/Chiiruno/meguca/db"
+	"github.com/bakape/meguca/db"
 
 	"github.com/badoux/goscraper"
 )

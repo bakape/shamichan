@@ -8,13 +8,13 @@ package templates
 import "strconv"
 
 //line thread.html:2
-import "github.com/Chiiruno/meguca/lang"
+import "github.com/bakape/meguca/lang"
 
 //line thread.html:3
-import "github.com/Chiiruno/meguca/common"
+import "github.com/bakape/meguca/common"
 
 //line thread.html:4
-import "github.com/Chiiruno/meguca/config"
+import "github.com/bakape/meguca/config"
 
 //line thread.html:5
 import "encoding/json"

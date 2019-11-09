@@ -1,9 +1,9 @@
 package imager
 
 import (
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/imager/assets"
-	"github.com/Chiiruno/meguca/test"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/imager/assets"
+	"github.com/bakape/meguca/test"
 	"testing"
 )
 

@@ -11,13 +11,13 @@ import "strconv"
 import "fmt"
 
 //line util.html:3
-import "github.com/Chiiruno/meguca/common"
+import "github.com/bakape/meguca/common"
 
 //line util.html:4
-import "github.com/Chiiruno/meguca/assets"
+import "github.com/bakape/meguca/assets"
 
 //line util.html:5
-import "github.com/Chiiruno/meguca/lang"
+import "github.com/bakape/meguca/lang"
 
 // Renders the tab selection butts in tabbed windows
 

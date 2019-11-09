@@ -5,10 +5,10 @@
 package templates
 
 //line forms.html:1
-import "github.com/Chiiruno/meguca/config"
+import "github.com/bakape/meguca/config"
 
 //line forms.html:2
-import "github.com/Chiiruno/meguca/lang"
+import "github.com/bakape/meguca/lang"
 
 // OwnedBoard renders a form for selecting one of several boards owned by the user
 

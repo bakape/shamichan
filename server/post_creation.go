@@ -10,13 +10,13 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/Chiiruno/meguca/auth"
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/config"
-	"github.com/Chiiruno/meguca/db"
-	"github.com/Chiiruno/meguca/imager"
-	"github.com/Chiiruno/meguca/websockets"
-	"github.com/Chiiruno/meguca/websockets/feeds"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager"
+	"github.com/bakape/meguca/websockets"
+	"github.com/bakape/meguca/websockets/feeds"
 )
 
 // Create a thread with a closed OP

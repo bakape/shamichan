@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/test"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/test"
 )
 
 func TestThreadBools(t *testing.T) {

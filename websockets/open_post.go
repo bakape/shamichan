@@ -1,7 +1,7 @@
 package websockets
 
 import (
-	"github.com/Chiiruno/meguca/common"
+	"github.com/bakape/meguca/common"
 	"unicode/utf8"
 )
 

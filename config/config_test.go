@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	. "github.com/Chiiruno/meguca/test"
+	. "github.com/bakape/meguca/test"
 )
 
 func TestSetGet(t *testing.T) {

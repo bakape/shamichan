@@ -14,16 +14,16 @@ import "time"
 import "strconv"
 
 //line auth.html:4
-import "strings"
+import "github.com/bakape/meguca/auth"
 
 //line auth.html:5
-import "github.com/Chiiruno/meguca/auth"
+import "github.com/bakape/meguca/config"
 
 //line auth.html:6
-import "github.com/Chiiruno/meguca/config"
+import "github.com/bakape/meguca/lang"
 
 //line auth.html:7
-import "github.com/Chiiruno/meguca/lang"
+import "github.com/bakape/meguca/common"
 
 //line auth.html:8
 import "github.com/Chiiruno/meguca/common"

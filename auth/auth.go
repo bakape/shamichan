@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Chiiruno/meguca/config"
+	"github.com/bakape/meguca/config"
 	"golang.org/x/crypto/bcrypt"
 )
 

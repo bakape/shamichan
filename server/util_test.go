@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/Chiiruno/meguca/config"
+	"github.com/bakape/meguca/config"
 )
 
 func newRequest(url string) *http.Request {

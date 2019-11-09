@@ -8,10 +8,10 @@ import (
 
 var (
 	// GetVideoNames is a forwarded function
-	// from "github.com/Chiiruno/megucaassets" to avoid circular imports
+	// from "github.com/bakape/megucaassets" to avoid circular imports
 	GetVideoNames func() []string
 	// Recompile is a forwarded function
-	// from "github.com/Chiiruno/megucatemplates" to avoid circular imports
+	// from "github.com/bakape/megucatemplates" to avoid circular imports
 	Recompile func() error
 
 	// Project is being unit tested

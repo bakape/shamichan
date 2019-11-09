@@ -3,8 +3,8 @@ package db
 import (
 	"testing"
 
-	"github.com/Chiiruno/meguca/assets"
-	. "github.com/Chiiruno/meguca/test"
+	"github.com/bakape/meguca/assets"
+	. "github.com/bakape/meguca/test"
 )
 
 func TestBanners(t *testing.T) {

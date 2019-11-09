@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	. "github.com/Chiiruno/meguca/test"
+	. "github.com/bakape/meguca/test"
 )
 
 func TestCommandsMarshaling(t *testing.T) {

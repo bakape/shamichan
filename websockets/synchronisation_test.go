@@ -5,13 +5,13 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/Chiiruno/meguca/auth"
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/db"
-	"github.com/Chiiruno/meguca/imager/assets"
-	. "github.com/Chiiruno/meguca/test"
-	"github.com/Chiiruno/meguca/test/test_db"
-	"github.com/Chiiruno/meguca/websockets/feeds"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/imager/assets"
+	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test/test_db"
+	"github.com/bakape/meguca/websockets/feeds"
 
 	"github.com/gorilla/websocket"
 )

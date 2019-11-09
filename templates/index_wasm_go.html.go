@@ -8,10 +8,10 @@ package templates
 import "encoding/json"
 
 //line index_wasm_go.html:2
-import "github.com/Chiiruno/meguca/config"
+import "github.com/bakape/meguca/config"
 
 //line index_wasm_go.html:3
-import "github.com/Chiiruno/meguca/lang"
+import "github.com/bakape/meguca/lang"
 
 //line index_wasm_go.html:5
 import (

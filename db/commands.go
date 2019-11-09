@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Chiiruno/meguca/common"
+	"github.com/bakape/meguca/common"
 	"github.com/lib/pq"
 )
 

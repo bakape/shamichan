@@ -11,13 +11,13 @@ import "strconv"
 import "time"
 
 //line report.html:3
-import "github.com/Chiiruno/meguca/lang"
+import "github.com/bakape/meguca/lang"
 
 //line report.html:4
-import "github.com/Chiiruno/meguca/auth"
+import "github.com/bakape/meguca/auth"
 
 //line report.html:5
-import "github.com/Chiiruno/meguca/common"
+import "github.com/bakape/meguca/common"
 
 // Report submission form
 

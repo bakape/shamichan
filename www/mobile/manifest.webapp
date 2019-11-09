@@ -3,7 +3,7 @@
     "description": "Realtime imageboard",
     "developer": {
         "name": "bakape",
-        "url": "https://github.com/Chiiruno/meguca"
+        "url": "https://github.com/bakape/meguca"
     },
     "launch_path": "/",
     "icons": {

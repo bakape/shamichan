@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Chiiruno/meguca/config"
-	"github.com/Chiiruno/meguca/static"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/static"
 )
 
 var (

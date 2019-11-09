@@ -3,7 +3,7 @@ package templates
 import (
 	"html"
 
-	"github.com/Chiiruno/meguca/common"
+	"github.com/bakape/meguca/common"
 )
 
 // CalculateOmit returns the omitted post and image counts for a thread

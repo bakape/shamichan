@@ -8,10 +8,10 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/config"
-	"github.com/Chiiruno/meguca/imager/assets"
-	"github.com/Chiiruno/meguca/test"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/imager/assets"
+	"github.com/bakape/meguca/test"
 
 	"github.com/bakape/thumbnailer/v2"
 )

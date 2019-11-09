@@ -4,8 +4,8 @@ package feeds
 
 import (
 	"database/sql"
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/db"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
 	"time"
 
 	"github.com/go-playground/log"

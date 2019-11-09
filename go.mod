@@ -1,4 +1,4 @@
-module github.com/Chiiruno/meguca
+module github.com/bakape/meguca
 
 go 1.13
 

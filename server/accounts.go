@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Chiiruno/meguca/auth"
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/config"
-	"github.com/Chiiruno/meguca/db"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
 	"golang.org/x/crypto/bcrypt"
 )
 

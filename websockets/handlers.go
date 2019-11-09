@@ -4,8 +4,8 @@ package websockets
 
 import (
 	"encoding/json"
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/websockets/feeds"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/websockets/feeds"
 )
 
 // Decode message JSON into the supplied type. Will augment, once we switch to

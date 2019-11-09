@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/Chiiruno/meguca/auth"
-	"github.com/Chiiruno/meguca/common"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/go-playground/log"
 )
 

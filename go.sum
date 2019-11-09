@@ -11,7 +11,6 @@ github.com/bakape/boorufetch v1.0.2 h1:vNj0V5Mgn+66OfNGYl5CH4y+v9vKaWJTpYsdBGLLL
 github.com/bakape/boorufetch v1.0.2/go.mod h1:2W7Hvc2VN/yybdYXQQhJr8bumSeLuiqnmHwo9BkPzSA=
 github.com/bakape/captchouli v1.2.0 h1:ePK4vL54UF2ywnZRypujiOolczo80cac7pw2eXGEqFc=
 github.com/bakape/captchouli v1.2.0/go.mod h1:1/3+lAfv5iLEak06STMcSdTUaX/yET0vqasFxLTSjlU=
-github.com/bakape/meguca v4.4.0+incompatible h1:xrG6o1LVhV1xjAZWR7BMJUbfEIc3asqv7gqm04gg3KI=
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992 h1:n89d5g4t1+7ROrwElvy5W/knDo3bUKWOZ77acIdHA04=
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992/go.mod h1:+x6GUyBL1gkeUoBPZAEzF9u04TGIFEljjrqMpGT0KVE=
 github.com/bakape/thumbnailer/v2 v2.5.2 h1:b3VfbMY4ysCn4YyG5clFZK3Wog5mLI0WO+xlQZpSU0s=

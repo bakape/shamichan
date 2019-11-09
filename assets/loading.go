@@ -4,8 +4,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/Chiiruno/meguca/static"
-	"github.com/Chiiruno/meguca/util"
+	"github.com/bakape/meguca/static"
+	"github.com/bakape/meguca/util"
 )
 
 // Loading stores board-specific loading images

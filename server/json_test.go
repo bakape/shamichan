@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Chiiruno/meguca/cache"
-	"github.com/Chiiruno/meguca/config"
-	"github.com/Chiiruno/meguca/db"
-	. "github.com/Chiiruno/meguca/test"
-	"github.com/Chiiruno/meguca/test/test_db"
+	"github.com/bakape/meguca/cache"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/db"
+	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test/test_db"
 )
 
 func removeIndentation(s string) string {

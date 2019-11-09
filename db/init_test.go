@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Chiiruno/meguca/config"
+	"github.com/bakape/meguca/config"
 )
 
 func TestMain(m *testing.M) {

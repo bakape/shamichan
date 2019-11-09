@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	. "github.com/Chiiruno/meguca/test"
+	. "github.com/bakape/meguca/test"
 )
 
 func marshalJSON(t testing.TB, msg interface{}) []byte {

@@ -11,16 +11,16 @@ import "encoding/json"
 import "strings"
 
 //line index.html:3
-import "github.com/Chiiruno/meguca/config"
+import "github.com/bakape/meguca/config"
 
 //line index.html:4
-import "github.com/Chiiruno/meguca/lang"
+import "github.com/bakape/meguca/lang"
 
 //line index.html:5
-import "github.com/Chiiruno/meguca/common"
+import "github.com/bakape/meguca/common"
 
 //line index.html:6
-import "github.com/Chiiruno/meguca/assets"
+import "github.com/bakape/meguca/assets"
 
 //line index.html:8
 import (
@@ -243,7 +243,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 //line index.html:224
 	qw422016.N().S(` `)
 //line index.html:224
-	qw422016.N().S(`<a href="https://github.com/Chiiruno/meguca" target="_blank">github.com/Chiiruno/meguca</a><hr>`)
+	qw422016.N().S(`<a href="https://github.com/bakape/meguca" target="_blank">github.com/bakape/meguca</a><hr>`)
 //line index.html:229
 	qw422016.N().S(strings.Replace(conf.FAQ, "\n", "<br>", -1))
 //line index.html:229

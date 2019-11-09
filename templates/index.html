@@ -1,9 +1,9 @@
 {% import "encoding/json" %}
 {% import "strings" %}
-{% import "github.com/Chiiruno/meguca/config" %}
-{% import "github.com/Chiiruno/meguca/lang" %}
-{% import "github.com/Chiiruno/meguca/common" %}
-{% import "github.com/Chiiruno/meguca/assets" %}
+{% import "github.com/bakape/meguca/config" %}
+{% import "github.com/bakape/meguca/lang" %}
+{% import "github.com/bakape/meguca/common" %}
+{% import "github.com/bakape/meguca/assets" %}
 
 {% func renderIndex(pos common.ModerationLevel) %}{% stripspace %}
 	{% code conf := config.Get() %}
@@ -222,8 +222,8 @@
 					</a>
 					<br>
 					Source code repository:{% space %}
-					<a href="https://github.com/Chiiruno/meguca" target="_blank">
-						github.com/Chiiruno/meguca
+					<a href="https://github.com/bakape/meguca" target="_blank">
+						github.com/bakape/meguca
 					</a>
 					<hr>
 					{%s= strings.Replace(conf.FAQ, "\n", "<br>", -1) %}

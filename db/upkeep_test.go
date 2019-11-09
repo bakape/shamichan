@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/config"
-	. "github.com/Chiiruno/meguca/test"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	. "github.com/bakape/meguca/test"
 )
 
 const eightDays = time.Hour * 24 * 8

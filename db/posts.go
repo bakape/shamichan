@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/Chiiruno/meguca/common"
+	"github.com/bakape/meguca/common"
 )
 
 // Post is for writing new posts to a database. It contains the Password

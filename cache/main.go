@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Chiiruno/meguca/config"
+	"github.com/bakape/meguca/config"
 )
 
 // Time for the cache to expire and need counter comparison

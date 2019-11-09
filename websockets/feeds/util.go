@@ -1,7 +1,7 @@
 package feeds
 
 import (
-	"github.com/Chiiruno/meguca/common"
+	"github.com/bakape/meguca/common"
 	"time"
 )
 

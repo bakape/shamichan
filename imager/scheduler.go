@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/Chiiruno/meguca/db"
+	"github.com/bakape/meguca/db"
 )
 
 var (

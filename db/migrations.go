@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Chiiruno/meguca/auth"
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/config"
-	"github.com/Chiiruno/meguca/static"
-	"github.com/Chiiruno/meguca/util"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/config"
+	"github.com/bakape/meguca/static"
+	"github.com/bakape/meguca/util"
 	"github.com/go-playground/log"
 	"github.com/lib/pq"
 )

@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Chiiruno/meguca/util"
+	"github.com/bakape/meguca/util"
 	"github.com/bakape/thumbnailer/v2"
 	"github.com/gorilla/websocket"
 )

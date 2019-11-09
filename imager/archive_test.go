@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Chiiruno/meguca/common"
-	"github.com/Chiiruno/meguca/test"
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/test"
 	"github.com/bakape/thumbnailer/v2"
 )
 

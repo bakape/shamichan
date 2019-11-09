@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/Chiiruno/meguca/assets"
-	"github.com/Chiiruno/meguca/auth"
-	"github.com/Chiiruno/meguca/config"
-	mlog "github.com/Chiiruno/meguca/log"
-	"github.com/Chiiruno/meguca/templates"
-	"github.com/Chiiruno/meguca/util"
+	"github.com/bakape/meguca/assets"
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
+	mlog "github.com/bakape/meguca/log"
+	"github.com/bakape/meguca/templates"
+	"github.com/bakape/meguca/util"
 	"github.com/lib/pq"
 )
 

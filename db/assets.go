@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 
-	"github.com/Chiiruno/meguca/assets"
+	"github.com/bakape/meguca/assets"
 )
 
 // Load all assets from and pass them to load. Start listening for changes.

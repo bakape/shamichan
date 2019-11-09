@@ -2,10 +2,10 @@ package parser
 
 import (
 	"database/sql"
-	"github.com/Chiiruno/meguca/common"
+	"github.com/bakape/meguca/common"
 	"strconv"
 
-	"github.com/Chiiruno/meguca/db"
+	"github.com/bakape/meguca/db"
 )
 
 // Extract post links from a text fragment, verify and retrieve their

@@ -3,7 +3,7 @@ package feeds
 import (
 	"time"
 
-	"github.com/Chiiruno/meguca/common"
+	"github.com/bakape/meguca/common"
 	"github.com/go-playground/log"
 )
 
