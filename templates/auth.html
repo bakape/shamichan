@@ -30,7 +30,7 @@ BanPage renders a ban page for a banned user
 	{% if len(ln) < 3 %}
 		{% code panic(fmt.Errorf("invalid ban format strings: %v", ln)) %}
 	{% endif %}
-	{% if rec.By == "system" && strings.Contains("brum brum", rec.Reason) %}
+	{% if rec.By == "system" && rec.Reason == "brum brum" %}
 		<img src="/assets/autobahn.gif" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-100;"/>
 		<audio src="/assets/autobahn.mp3" style="display:none" autoplay loop></audio>
 	{% endif %}
