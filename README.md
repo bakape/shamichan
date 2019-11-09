@@ -9,6 +9,9 @@ Platforms: Linux, Docker
 
 License: GNU AGPL
 
+
+__The master branch is currently undergoing active breaking changes towards meguca v7. If you intend to deploy meguca, please use the v6 branch.__
+
 ## Runtime dependencies
 
 * [PostgresSQL](https://www.postgresql.org/download/) >= 10.0
