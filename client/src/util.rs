@@ -9,3 +9,8 @@ pub fn window() -> web_sys::Window {
 pub fn document() -> web_sys::Document {
 	window().document().expect("document undefined")
 }
+
+// Get page body
+pub fn body() -> web_sys::HtmlElement {
+	document().body().expect("body undefined")
+}

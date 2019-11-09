@@ -14,7 +14,7 @@ pub fn main_js() -> Result<(), JsValue> {
 		text: "TESTO",
 		..Default::default()
 	})
-	.append_to(util::document().body().expect("body undefined").into())?;
+	.append_to(util::body().into())?;
 
 	Ok(())
 }

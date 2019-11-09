@@ -24,7 +24,6 @@ module.exports = {
 
 		new WasmPackPlugin({
 			crateDirectory: __dirname,
-			extraArgs: "--out-name index",
 		}),
 	],
 };
