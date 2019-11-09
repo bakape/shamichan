@@ -7,3 +7,5 @@ common/target
 www/client/*
 node_modules
 meguca
+
+/config.json
