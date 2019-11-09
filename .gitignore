@@ -10,6 +10,7 @@ scripts/*.local.sh
 www/css/*.css
 www/css/maps
 www/js
+www/client
 www/wasm
 www/lang
 www/videos

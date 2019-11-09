@@ -1,7 +1,5 @@
 export node_bins=$(PWD)/node_modules/.bin
-export uglifyjs=$(node_bins)/uglifyjs
 export gulp=$(node_bins)/gulp
-export GO111MODULE=on
 
 .PHONY: server client imager test
 
