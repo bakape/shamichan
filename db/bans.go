@@ -116,16 +116,27 @@ func Unban(board string, id uint64, by string) error {
 		if err != nil {
 			return
 		}
-		err = logModeration(tx, auth.ModLogEntry{
-			ModerationEntry: common.ModerationEntry{
-				Type: common.UnbanPost,
-				By:   by,
-			},
-			Board: board,
-			ID:    id,
-		})
-		if err != nil {
+		exists := false
+		err = sq.Select("true").
+			From("posts").
+			Where("id = ? and board = ?", id, board).
+			QueryRow().
+			Scan(&exists)
+		if err != nil && err != sql.ErrNoRows {
 			return
+		}
+		if exists {
+			err = logModeration(tx, auth.ModLogEntry{
+				ModerationEntry: common.ModerationEntry{
+					Type: common.UnbanPost,
+					By:   by,
+				},
+				Board: board,
+				ID:    id,
+			})
+			if err != nil {
+				return
+			}
 		}
 		_, err = tx.Exec("notify bans_updated")
 		return
