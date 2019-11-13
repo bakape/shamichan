@@ -12,13 +12,13 @@ import (
 var Loading = FileStore{
 	m: make(map[string]File, 64),
 	def: File{
-		Mime: "image/gif",
+		Mime: "video/webm",
 	},
 }
 
 func init() {
 	err := func() (err error) {
-		f, err := static.FS.Open(filepath.Join("/assets", "loading.gif"))
+		f, err := static.FS.Open(filepath.Join("/assets", "loading.webm"))
 		if err != nil {
 			return
 		}
