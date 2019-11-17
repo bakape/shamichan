@@ -99,6 +99,10 @@ func loadDB(connURL, dbSuffix string) (err error) {
 	if err != nil {
 		return
 	}
+	err = loadConfigs()
+	if err != nil {
+		return
+	}
 
 	// TODO: Reenable this
 	// err = loadThreadPostCounts()

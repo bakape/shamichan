@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 		if err != nil {
 			panic(err)
 		}
-		err = db.LoadTestDB("imager")
+		err = db.LoadTestDB()
 		if err != nil {
 			panic(err)
 		}

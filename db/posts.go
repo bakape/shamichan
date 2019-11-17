@@ -47,9 +47,8 @@ func GetPostBoard(id uint64) (board string, err error) {
 // Any images are to be inserted in a separate call.
 func InsertPost(tx *pgx.Tx, p *Post) (err error) {
 	var res struct {
-		ID         uint64
-		Time       int64
-		Moderation []common.ModerationEntry
+		ID, Page uint64
+		Time     int64
 	}
 	err = tx.
 		QueryRow(
@@ -65,7 +64,6 @@ func InsertPost(tx *pgx.Tx, p *Post) (err error) {
 			p.Flag,
 			p.Name,
 			p.Trip,
-			p.Auth,
 			p.Sage,
 			p.Password,
 			p.IP,
@@ -76,6 +74,6 @@ func InsertPost(tx *pgx.Tx, p *Post) (err error) {
 	}
 	p.ID = res.ID
 	p.Time = res.Time
-	p.Moderation = res.Moderation
+	p.Page = res.Page
 	return
 }

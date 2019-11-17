@@ -5,9 +5,8 @@ create or replace function insert_post(
 	flag text,
 	name text,
 	trip text,
-	auth smallint,
 	sage bool,
-	password bytea,
+	user_id uuid,
 	ip inet
 )
 returns jsonb
@@ -15,6 +14,7 @@ language strict
 as $$
 declare
 	creation_time bigint;
+	page bigint;
 begin
 	-- Thread OPs will have a predefined id, but all others need one generated
 	if id = 0 then
@@ -28,9 +28,8 @@ begin
 			flag,
 			name,
 			trip,
-			auth,,
 			sage,
-			password,
+			user_id,
 			ip
 		)
 		values (
@@ -40,17 +39,16 @@ begin
 			flag,
 			name,
 			trip,
-			auth,,
 			sage,
-			password,
+			user_id,
 			ip
 		)
-		returning time into creation_time;
+		returning time, page into creation_time, page;
 
 	return jsonb_build_object(
 		'id', id,
 		'time', creation_time,
-		'moderation', get_post_moderation(id)
+		'page', page
 	);
 end;
 $$;

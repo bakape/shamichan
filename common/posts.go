@@ -2,8 +2,11 @@
 // throughout the project
 package common
 
-// Contains a specific page of the board index
-type Board struct {
+// Contains a specific page of the thread index.
+//
+// A thread index can either contain all threads on the page or filtered by
+// specific tags.
+type ThreadIndex struct {
 	Page    int      `json:"page"`
 	Pages   int      `json:"pages"`
 	Threads []Thread `json:"threads"`
@@ -11,51 +14,35 @@ type Board struct {
 
 // Stores thread meta-data and contained posts
 type Thread struct {
-	Sticky     bool   `json:"sticky"`
 	Locked     bool   `json:"locked"`
 	PostCount  uint32 `json:"post_count"`
 	ImageCount uint32 `json:"image_count"`
-	Page       uint32 `json:"page"`
+	Page       uint64 `json:"page"`
 	ID         uint64 `json:"id"`
 	UpdateTime int64  `json:"update_time"`
 	BumpTime   int64  `json:"bump_time"`
 	Subject    string `json:"subject"`
-	Board      string `json:"board"`
 	Posts      []Post `json:"posts"`
 }
 
 // Post is a generic post exposed publically through the JSON API. Either OP or
 // reply.
 type Post struct {
-	Editing    bool              `json:"editing,omitempty"`
-	Sage       bool              `json:"sage,omitempty"`
-	Auth       ModerationLevel   `json:"auth,omitempty"`
-	Page       uint32            `json:"page"`
-	ID         uint64            `json:"id"`
-	Time       int64             `json:"time"`
-	Body       string            `json:"body"`
-	Flag       string            `json:"flag,omitempty"`
-	Name       string            `json:"name,omitempty"`
-	Trip       string            `json:"trip,omitempty"`
-	Image      *Image            `json:"image,omitempty"`
-	Links      map[uint64]uint64 `json:"links,omitempty"`
-	Commands   []Command         `json:"commands,omitempty"`
-	Moderation []ModerationEntry `json:"moderation,omitempty"`
+	Editing bool   `json:"editing,omitempty"`
+	Sage    bool   `json:"sage,omitempty"`
+	ID      uint64 `json:"id"`
+	Page    uint64 `json:"page"`
+	Time    int64  `json:"time"`
+	Flag    string `json:"flag,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Trip    string `json:"trip,omitempty"`
+	Body    []byte `json:"body"`
+	Image   *Image `json:"image,omitempty"`
 }
 
-// Return if post has been deleted by staff
-func (p *Post) IsDeleted() bool {
-	for _, l := range p.Moderation {
-		if l.Type == DeletePost {
-			return true
-		}
-	}
-	return false
-}
-
-// StandalonePost is a post view that includes the "op" and "board" fields,
-// which are not exposed though Post, but are required for retrieving a post
-// with unknown parenthood.
+// StandalonePost is a post view that includes the "op" field, which are not
+// exposed though Post, but are required for retrieving a post  with unknown
+// parenthood.
 type StandalonePost struct {
 	Post
 	OP uint64 `json:"op"`

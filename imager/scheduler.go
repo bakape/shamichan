@@ -2,7 +2,6 @@ package imager
 
 import (
 	"crypto/sha1"
-	"database/sql"
 	"encoding/hex"
 	"hash"
 	"io"
@@ -11,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/bakape/meguca/db"
+	"github.com/jackc/pgx"
 )
 
 var (

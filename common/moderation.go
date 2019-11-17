@@ -91,8 +91,7 @@ func (m *ModerationLevel) UnmarshalText(text []byte) error {
 
 // All available moderation levels
 const (
-	NotLoggedIn ModerationLevel = iota - 1
-	NotStaff
+	NotStaff ModerationLevel = iota - 1
 	Janitor
 	Moderator
 	BoardOwner

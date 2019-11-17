@@ -6,17 +6,15 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/bakape/meguca/cache"
-
 	ass "github.com/bakape/meguca/assets"
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/lang"
 	mlog "github.com/bakape/meguca/log"
 	"github.com/bakape/meguca/util"
-	"github.com/bakape/meguca/websockets/feeds"
 )
 
 // Start parses command line arguments and initializes the server.
@@ -42,8 +40,11 @@ func Start() (err error) {
 
 	if !config.Server.Debug {
 		var f *os.File
-		f, err = os.OpenFile("errors.log",
-			os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600)
+		f, err = os.OpenFile(
+			"errors.log",
+			os.O_WRONLY|os.O_APPEND|os.O_CREATE,
+			0600,
+		)
 		if err != nil {
 			return
 		}
@@ -72,7 +73,6 @@ func Start() (err error) {
 	if config.Server.ImagerMode != config.NoImager {
 		tasks = append(tasks, auth.LoadCaptchaServices)
 	}
-	tasks = append(tasks, feeds.Init)
 	err = util.Parallel(tasks...)
 	if err != nil {
 		return

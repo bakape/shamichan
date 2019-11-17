@@ -1,13 +1,11 @@
 package db
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/static"
 	"github.com/go-playground/log"
 	"github.com/jackc/pgx"
@@ -33,9 +31,6 @@ func runMigrations() (err error) {
 		return
 	}
 	target := len(migrations)
-
-	buf, _ := json.Marshal(config.Defaults)
-	println(string(buf))
 
 	// Init main table, if not done yet
 	var exists bool
@@ -120,7 +115,7 @@ func runMigrations() (err error) {
 		if err != nil {
 			return fmt.Errorf(
 				"migration error: %s: %s",
-				migrations[current+1],
+				migrations[current],
 				err,
 			)
 		}

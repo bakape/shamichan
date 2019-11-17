@@ -1,12 +1,10 @@
 package db
 
 import (
-	"database/sql"
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/test"
 )
 
@@ -192,51 +190,51 @@ func assertThreadDeleted(t *testing.T, id uint64, del bool) {
 // 	})
 // }
 
-func TestRemoveIdentityInfo(t *testing.T) {
-	p := Post{
-		StandalonePost: common.StandalonePost{
-			OP: 1,
-		},
-		IP:       "::1",
-		Password: []byte("6+53653cs3ds"),
-	}
-	insertPost(t, &p)
+// func TestRemoveIdentityInfo(t *testing.T) {
+// 	p := Post{
+// 		StandalonePost: common.StandalonePost{
+// 			OP: 1,
+// 		},
+// 		IP:       "::1",
+// 		Password: []byte("6+53653cs3ds"),
+// 	}
+// 	insertPost(t, &p)
 
-	_, err := db.Exec(
-		`update posts
-		set time = $1
-		where id = $2`,
-		time.Now().Add(-8*24*time.Hour).Unix(),
-		p.ID,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	_, err := db.Exec(
+// 		`update posts
+// 		set time = $1
+// 		where id = $2`,
+// 		time.Now().Add(-8*24*time.Hour).Unix(),
+// 		p.ID,
+// 	)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	err = removeIdentityInfo()
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	err = removeIdentityInfo()
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	var (
-		ip sql.NullString
-		pw []byte
-	)
-	err = db.
-		QueryRow(
-			`select ip, password
-			from posts
-			where id = $1`,
-			p.ID,
-		).
-		Scan(&ip, &pw)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if ip.String != "" {
-		t.Fatal(ip.String)
-	}
-	if pw != nil {
-		t.Fatal(pw)
-	}
-}
+// 	var (
+// 		ip sql.NullString
+// 		pw []byte
+// 	)
+// 	err = db.
+// 		QueryRow(
+// 			`select ip, password
+// 			from posts
+// 			where id = $1`,
+// 			p.ID,
+// 		).
+// 		Scan(&ip, &pw)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	if ip.String != "" {
+// 		t.Fatal(ip.String)
+// 	}
+// 	if pw != nil {
+// 		t.Fatal(pw)
+// 	}
+// }

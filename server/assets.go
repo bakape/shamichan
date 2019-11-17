@@ -12,7 +12,6 @@ import (
 
 	"github.com/bakape/meguca/assets"
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
 	"github.com/bakape/thumbnailer/v2"
 )
 
@@ -98,82 +97,6 @@ func serveFile(w http.ResponseWriter, r *http.Request, path string) {
 	http.ServeContent(w, r, path, modTime, file)
 }
 
-// Set the banners of a board
-func setBanners(w http.ResponseWriter, r *http.Request) {
-	err := func() (err error) {
-		board, err := parseAssetForm(w, r, common.MaxNumBanners)
-		if err != nil {
-			return
-		}
-
-		var (
-			opts = thumbnailer.Options{
-				MaxSourceDims: thumbnailer.Dims{
-					Width:  300,
-					Height: 100,
-				},
-				ThumbDims: thumbnailer.Dims{
-					Width:  300,
-					Height: 100,
-				},
-				AcceptedMimeTypes: map[string]bool{
-					"image/jpeg": true,
-					"image/png":  true,
-					"image/gif":  true,
-					"video/webm": true,
-				},
-			}
-			banners = make([]assets.File, 0, common.MaxNumBanners)
-			files   = r.MultipartForm.File["banners"]
-			file    multipart.File
-			h       *multipart.FileHeader
-			out     assets.File
-		)
-
-		for i := 0; i < common.MaxNumBanners && i < len(files); i++ {
-			h = files[i]
-			file, err = h.Open()
-			if err != nil {
-				err = newFileError(h, err.Error())
-				return
-			}
-
-			out, err = readAssetFile(w, r, file, h, opts)
-			if err != nil {
-				return
-			}
-			banners = append(banners, out)
-		}
-
-		return db.SetBanners(board, banners)
-	}()
-	if err != nil {
-		httpError(w, r, err)
-	}
-}
-
-// Parse form for uploading file assets for a board.
-// maxSize specifies maximum number of common.MaxAssetSize to accept.
-// If ok == false, caller should return.
-func parseAssetForm(w http.ResponseWriter, r *http.Request, maxCount uint,
-) (
-	board string, err error,
-) {
-	r.Body = http.MaxBytesReader(w, r.Body, int64(maxCount)*common.MaxAssetSize)
-	err = r.ParseMultipartForm(0)
-	if err != nil {
-		err = common.StatusError{
-			Err:  err,
-			Code: 400,
-		}
-		return
-	}
-
-	board = r.Form.Get("board")
-	_, err = canPerform(w, r, board, common.BoardOwner, true)
-	return
-}
-
 // Read a file from an asset submition form.
 // If ok == false, caller should return.
 func readAssetFile(w http.ResponseWriter, r *http.Request, f multipart.File,
@@ -209,83 +132,4 @@ func readAssetFile(w http.ResponseWriter, r *http.Request, f multipart.File,
 		}
 	}
 	return
-}
-
-func setLoadingAnimation(w http.ResponseWriter, r *http.Request) {
-	err := func() (err error) {
-		board, err := parseAssetForm(w, r, 1)
-		if err != nil {
-			return
-		}
-
-		var out assets.File
-		file, h, err := r.FormFile("image")
-		switch err {
-		case nil:
-			out, err = readAssetFile(w, r, file, h, thumbnailer.Options{
-				MaxSourceDims: thumbnailer.Dims{
-					Width:  400,
-					Height: 400,
-				},
-				ThumbDims: thumbnailer.Dims{
-					Width:  400,
-					Height: 400,
-				},
-				AcceptedMimeTypes: map[string]bool{
-					"image/gif":  true,
-					"video/webm": true,
-				},
-			})
-			if err != nil {
-				return
-			}
-		case http.ErrMissingFile:
-			err = nil
-		default:
-			err = newFileError(h, err.Error())
-			return
-		}
-
-		return db.SetLoadingAnimation(board, out)
-	}()
-	if err != nil {
-		httpError(w, r, err)
-	}
-}
-
-// Serve board-specific image banner files
-func serveBanner(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(extractParam(r, "id"))
-	if err != nil {
-		text404(w)
-		return
-	}
-
-	f, ok := assets.Banners.Get(extractParam(r, "board"), id)
-	if !ok {
-		text404(w)
-		return
-	}
-	serveAssetFromMemory(w, r, f)
-}
-
-func serveAssetFromMemory(
-	w http.ResponseWriter,
-	r *http.Request,
-	f assets.File,
-) {
-	if checkClientEtag(w, r, f.Hash) {
-		return
-	}
-
-	h := w.Header()
-	h.Set("ETag", f.Hash)
-	h.Set("Content-Type", f.Mime)
-	h.Set("Content-Length", strconv.Itoa(len(f.Data)))
-	w.Write(f.Data)
-}
-
-// Serve board-specific loading animation
-func serveLoadingAnimation(w http.ResponseWriter, r *http.Request) {
-	serveAssetFromMemory(w, r, assets.Loading.Get(extractParam(r, "board")))
 }

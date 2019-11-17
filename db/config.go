@@ -44,7 +44,7 @@ func GetConfigs() (c config.Configs, err error) {
 		QueryRow(
 			`select val
 			from main
-			where id = 'config'`,
+			where key = 'config'`,
 		).
 		Scan(&c)
 	return

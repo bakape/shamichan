@@ -4,7 +4,6 @@ package imager
 import (
 	"bytes"
 	"crypto/md5"
-	"database/sql"
 	"encoding/base64"
 	"errors"
 	"image"
@@ -12,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"net"
 	"net/http"
 	"strconv"
 	"sync"
@@ -24,6 +24,7 @@ import (
 	"github.com/bakape/thumbnailer/v2"
 	"github.com/chai2010/webp"
 	"github.com/go-playground/log"
+	"github.com/jackc/pgx"
 )
 
 // Minimal capacity of large buffers in the pool
@@ -124,10 +125,12 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return
 	}
-	err = db.IsBanned("all", ip)
-	if err != nil {
-		return
-	}
+
+	// TODO
+	// err = db.IsBanned("all", ip)
+	// if err != nil {
+	// 	return
+	// }
 
 	var session auth.Base64Token
 	err = session.EnsureCookie(w, r)
@@ -216,7 +219,7 @@ func LogError(w http.ResponseWriter, r *http.Request, err error) {
 	}
 	ip, ipErr := auth.GetIP(r)
 	if ipErr != nil {
-		ip = "invalid IP"
+		ip = net.IPv4zero
 	}
 	log.Errorf("upload error: by %s: %s: %#v", ip, err, err)
 }
@@ -244,6 +247,7 @@ func ParseUpload(req *http.Request) (id string, err error) {
 	}
 	err = req.ParseMultipartForm(0)
 	if err != nil {
+		// TODO
 		err = common.StatusError{
 			Err:  err,
 			Code: 400,

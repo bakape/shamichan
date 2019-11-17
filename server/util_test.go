@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/bakape/meguca/config"
 )
 
 func newRequest(url string) *http.Request {
@@ -86,20 +84,6 @@ func marshalJSON(t *testing.T, msg interface{}) []byte {
 		t.Fatal(err)
 	}
 	return data
-}
-
-func setBoards(t *testing.T, boards ...string) {
-	t.Helper()
-
-	config.ClearBoards()
-	for _, b := range boards {
-		_, err := config.SetBoardConfigs(config.BoardConfigs{
-			ID: b,
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
 }
 
 func TestText404(t *testing.T) {

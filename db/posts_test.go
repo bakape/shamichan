@@ -13,7 +13,7 @@ func writeSampleThread(t *testing.T) (op Post) {
 	op = Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
-				Body: "Slut!",
+				Body: []byte("Slut!"),
 			},
 		},
 		IP: "::1",

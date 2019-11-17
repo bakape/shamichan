@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 		if err != nil {
 			return
 		}
-		err = db.LoadTestDB("server")
+		err = db.LoadTestDB()
 		if err != nil {
 			return
 		}

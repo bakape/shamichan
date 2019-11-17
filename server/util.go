@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"sort"
 	"strconv"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
 	"github.com/jackc/pgx"
@@ -37,20 +37,6 @@ func (p uint64Sorter) Len() int           { return len(p) }
 func (p uint64Sorter) Less(i, j int) bool { return p[i] < p[j] }
 func (p uint64Sorter) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-// Check if the etag the client provides in the "If-None-Match" header matches
-// the generated etag. If yes, write 304 and return true.
-func checkClientEtag(
-	w http.ResponseWriter,
-	r *http.Request,
-	etag string,
-) bool {
-	if etag == r.Header.Get("If-None-Match") {
-		w.WriteHeader(304)
-		return true
-	}
-	return false
-}
-
 // Write a []byte to the client. Must receive the entire response body at once.
 func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 	w.Header().Set("Content-Length", strconv.Itoa(len(data)))
@@ -68,7 +54,7 @@ func logError(r *http.Request, err interface{}) {
 
 	ip, ipErr := auth.GetIP(r)
 	if ipErr != nil {
-		ip = "invalid IP"
+		ip = net.IPv4zero
 	}
 	log.Errorf(`server: ip="%s" url="%s" err="%s"`, ip, r.URL.String(), err)
 }
@@ -97,56 +83,6 @@ func httpError(w http.ResponseWriter, r *http.Request, err error) {
 	http.Error(w, fmt.Sprintf("%d %s", code, err), code)
 	if code >= 500 && code < 600 {
 		logError(r, err)
-	}
-}
-
-// Check client is not banned on specific board. Returns true, if all clear.
-// Renders ban page and returns false otherwise.
-//
-// TODO: Don't ever return the ban page and instead return JSON
-func assertNotBanned(w http.ResponseWriter, r *http.Request, board string,
-) bool {
-	ip, err := auth.GetIP(r)
-	if err != nil {
-		httpError(w, r, common.StatusError{
-			Err:  err,
-			Code: 400,
-		})
-		return false
-	}
-	err = db.IsBanned(board, ip)
-	switch err {
-	case nil:
-		return true
-	case common.ErrBanned:
-	default:
-		httpError(w, r, err)
-		return false
-	}
-
-	rec, err := db.GetBanInfo(ip, board)
-	switch err {
-	case nil:
-		w.WriteHeader(403)
-		head := w.Header()
-		for key, val := range vanillaHeaders {
-			head.Set(key, val)
-		}
-		head.Set("Content-Type", "text/html")
-		head.Set("Cache-Control", "no-store")
-
-		http.Error(w, common.ErrBanned.Error(), 403)
-		return false
-	case pgx.ErrNoRows:
-		// If there is no row, that means the ban cache has not been updated
-		// yet with a cleared ban. Force a ban cache refresh.
-		if err := db.RefreshBanCache(); err != nil {
-			log.Errorf("refreshing ban cache: %s", err)
-		}
-		return true
-	default:
-		httpError(w, r, err)
-		return false
 	}
 }
 
