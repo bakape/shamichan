@@ -34,7 +34,13 @@ func FlushOpenPostBodies() (err error) {
 
 	return InTransaction(func(tx *pgx.Tx) (err error) {
 		for _, id := range toWrite {
-			_, err = tx.Exec("set_post_body", openPostBodyBuffer[id], id)
+			_, err = tx.Exec(
+				`update posts
+				set body = $1
+				where id = $2 and editing = true`,
+				openPostBodyBuffer[id],
+				id,
+			)
 			if err != nil {
 				return
 			}

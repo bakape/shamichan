@@ -1,15 +1,16 @@
 package db
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/Masterminds/squirrel"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/pg_util"
+	"github.com/jackc/pgx"
 )
 
 var (
@@ -62,10 +63,11 @@ func loadThreadPostCounts() (err error) {
 }
 
 func readThreadPostCounts() (err error) {
-	r, err := sq.Select("op, count(*)").
-		From("posts").
-		GroupBy("op").
-		Query()
+	r, err := db.Query(
+		`select op, count(*)
+		from posts
+		group by op`,
+	)
 	if err != nil {
 		return
 	}
@@ -86,29 +88,18 @@ func readThreadPostCounts() (err error) {
 }
 
 // Separate function for easier testing
-func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
-	// Cancel both listeners with one source message
-	var proxy chan struct{}
-	if canceller != nil {
-		proxy = make(chan struct{}, 2)
-		go func() {
-			<-canceller
-			proxy <- struct{}{}
-			proxy <- struct{}{}
-		}()
-	}
-
+func listenForThreadUpdates(ctx context.Context) (err error) {
 	err = Listen(pg_util.ListenOpts{
-		Channel:   "thread.deleted",
-		Canceller: proxy,
+		Channel: "thread.deleted",
+		Context: ctx,
 		OnMsg: func(msg string) (err error) {
-			_, ints, err := SplitBoardAndInts(msg, 1)
+			thread, err := strconv.ParseUint(msg, 10, 64)
 			if err != nil {
 				return
 			}
 
 			postCountCacheMu.Lock()
-			delete(postCountCache, uint64(ints[0]))
+			delete(postCountCache, thread)
 			postCountCacheMu.Unlock()
 			return
 		},
@@ -118,8 +109,8 @@ func listenForThreadUpdates(canceller <-chan struct{}) (err error) {
 	}
 
 	return Listen(pg_util.ListenOpts{
-		Channel:   "thread.new_post",
-		Canceller: proxy,
+		Channel: "thread.new_post",
+		Context: ctx,
 		OnMsg: func(msg string) (err error) {
 			retErr := func() error {
 				return fmt.Errorf("invalid message: `%s`", msg)
@@ -151,33 +142,20 @@ type Thread struct {
 	ID                   uint64
 	PostCtr, ImageCtr    uint32
 	UpdateTime, BumpTime int64
-	Subject, Board       string
-}
-
-// ValidateOP confirms the specified thread exists on specific board
-func ValidateOP(id uint64, board string) (valid bool, err error) {
-	err = sq.Select("true").
-		From("threads").
-		Where(squirrel.Eq{
-			"id":    id,
-			"board": board,
-		}).
-		QueryRow().
-		Scan(&valid)
-	if err == pgx.ErrNoRows {
-		return false, nil
-	}
-	return
+	Subject              string
 }
 
 // InsertThread inserts a new thread into the database.
 // Sets ID, OP and time on inserted post.
+//
+// TODO: Tags
 func InsertThread(tx *pgx.Tx, subject string, p *Post) (err error) {
-	err = sq.Insert("threads").
-		Columns("board", "subject").
-		Values(p.Board, subject).
-		Suffix("returning id").
-		RunWith(tx).
+	err = tx.
+		QueryRow(
+			`insert (subject)
+			into threads
+			returning id`,
+		).
 		Scan(&p.ID)
 	if err != nil {
 		return
@@ -186,32 +164,15 @@ func InsertThread(tx *pgx.Tx, subject string, p *Post) (err error) {
 	return InsertPost(tx, p)
 }
 
-// WriteThread writes a thread and it's OP to the database. Only used for tests.
-func WriteThread(tx *pgx.Tx, t Thread, p Post) (err error) {
-	_, err = sq.
-		Insert("threads").
-		Columns("board", "id", "update_time", "bump_time", "subject").
-		Values(
-			t.Board,
-			t.ID,
-			t.UpdateTime,
-			t.BumpTime,
-			t.Subject,
-		).
-		RunWith(tx).
-		Exec()
-	if err != nil {
-		return
-	}
-	return WritePost(tx, p)
-}
-
 // CheckThreadLocked checks, if a thread has been locked by a moderator
 func CheckThreadLocked(id uint64) (locked bool, err error) {
-	err = sq.Select("locked").
-		From("threads").
-		Where("id = ?", id).
-		QueryRow().
+	err = db.
+		QueryRow(
+			`select locked
+			from threads
+			where id = $1`,
+			id,
+		).
 		Scan(&locked)
 	return
 }

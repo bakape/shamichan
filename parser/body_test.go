@@ -4,20 +4,13 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
 )
 
 func TestParseLine(t *testing.T) {
 	t.Parallel()
 
-	links, com, err := ParseBody(
-		[]byte("#flip,"),
-		config.BoardConfigs{
-			ID: "a",
-		},
-		false,
-	)
+	links, com, err := ParseBody([]byte("#flip,"), false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,9 +30,6 @@ func TestParseBody(t *testing.T) {
 
 	links, com, err := ParseBody(
 		[]byte("#flip?\n>>8\n>>>6 \n(#flip)\n>foo #flip bar \n#flip"),
-		config.BoardConfigs{
-			ID: "a",
-		},
 		false,
 	)
 	if err != nil {

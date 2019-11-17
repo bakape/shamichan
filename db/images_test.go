@@ -150,7 +150,7 @@ func newImageToken(t *testing.T, sha1 string) (token string) {
 
 func TestInsertImage(t *testing.T) {
 	assertTableClear(t, "images", "boards")
-	prepareThreads(t)
+	op, _ := prepareThread(t)
 	token := newImageToken(t, assets.StdJPEG.SHA1)
 	const postID = 3
 
@@ -169,7 +169,7 @@ func TestInsertImage(t *testing.T) {
 
 	insert := func() error {
 		return InTransaction(func(tx *pgx.Tx) (err error) {
-			buf, err = InsertImage(tx, postID, token, std.Name, std.Spoiler)
+			buf, err = InsertImage(tx, op.ID, token, std.Name, std.Spoiler)
 			return
 		})
 	}
@@ -219,7 +219,6 @@ func insertSampleImage(t *testing.T) {
 func TestSpoilerImage(t *testing.T) {
 	assertTableClear(t, "images", "boards")
 	writeSampleImage(t)
-	writeSampleBoard(t)
 	writeSampleThread(t)
 	insertSampleImage(t)
 
@@ -249,7 +248,6 @@ func TestVideoPlaylist(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeSampleBoard(t)
 	writeSampleThread(t)
 	token := newImageToken(t, std.SHA1)
 	err = InTransaction(func(tx *pgx.Tx) (err error) {

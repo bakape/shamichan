@@ -7,7 +7,6 @@ import (
 	"unicode"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
 )
 
@@ -17,7 +16,7 @@ var (
 
 // ParseBody parses the entire post text body for commands and links.
 // internal: function was called by automated upkeep task
-func ParseBody(body []byte, boardConf config.BoardConfigs, internal bool) (
+func ParseBody(body []byte, internal bool) (
 	links []uint64,
 	com []common.Command,
 	err error,
@@ -73,8 +72,7 @@ func ParseBody(body []byte, boardConf config.BoardConfigs, internal bool) (
 			links = append(links, id)
 		case '#':
 			// Ignore hash commands in quotes, or #pyu/#pcount if board option disabled
-			if body[lineStart] == '>' ||
-				(len(word) > 1 && word[1] == 'p' && !boardConf.Pyu) {
+			if body[lineStart] == '>' || (len(word) > 1 && word[1] == 'p') {
 				goto next
 			}
 			m := common.CommandRegexp.FindSubmatch(word)
@@ -82,7 +80,7 @@ func ParseBody(body []byte, boardConf config.BoardConfigs, internal bool) (
 				goto next
 			}
 			var c common.Command
-			c, err = parseCommand(m[1], boardConf)
+			c, err = parseCommand(m[1])
 			switch err {
 			case nil:
 				com = append(com, c)

@@ -10,7 +10,7 @@ import (
 
 // Data populated on post closure
 type CloseData struct {
-	Links    map[uint64]common.Link
+	Links    map[uint64]uint64
 	Commands json.RawMessage
 }
 
@@ -23,12 +23,17 @@ func ClosePost(
 	com []common.Command,
 ) (err error) {
 	return InTransaction(func(tx *pgx.Tx) (err error) {
-		err = populateCommands(tx, board, com)
+		err = populateCommands(tx, com)
 		if err != nil {
 			return
 		}
 		_, err = tx.Exec(
-			`close_post`,
+			`update posts
+			set editing = false,
+				body = $2,
+				commands = $3,
+				password = null
+			where id = $1`,
 			id,
 			body,
 			commandRow(com),
@@ -64,7 +69,12 @@ func writeLinks(tx *pgx.Tx, source uint64, links []uint64) (err error) {
 	sort.Sort(idSorter(links))
 
 	for _, id := range links {
-		_, err = tx.Exec("insert_link", source, id)
+		_, err = tx.Exec(
+			`insert into links (source, target)
+			values ($1, $2)`,
+			source,
+			id,
+		)
 		if err != nil {
 			return
 		}

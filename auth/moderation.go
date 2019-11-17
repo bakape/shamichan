@@ -17,8 +17,8 @@ type ModLogEntry struct {
 
 // Ban holds an entry of an IP being banned from a board
 type Ban struct {
-	IP    net.IP `json:"ban"`
-	Board string `json:"board"`
+	IP     net.IP `json:"ban"`
+	Thread uint64 `json:"thread"` // 0, if global ban
 }
 
 // BanRecord stores information about a specific ban

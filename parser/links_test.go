@@ -3,7 +3,6 @@ package parser
 import (
 	"testing"
 
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
 )
 
@@ -27,13 +26,7 @@ func TestParseLinks(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			links, _, err := ParseBody(
-				[]byte(c.in),
-				config.BoardConfigs{
-					ID: "a",
-				},
-				false,
-			)
+			links, _, err := ParseBody([]byte(c.in), false)
 			if err != nil {
 				t.Fatal(err)
 			}

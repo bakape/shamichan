@@ -4,6 +4,7 @@ package cache
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/bakape/meguca/common"
@@ -98,20 +99,6 @@ func Init() (err error) {
 		return nil
 	})
 
-	evictByBoard := func(board string) {
-		catalogFrontend.Evict(board)
-		catalogFrontend.Evict("all")
-
-		boardFrontend.EvictByFunc(func(k recache.Key) (bool, error) {
-			switch k.(boardKey).board {
-			case "all", board:
-				return true, nil
-			default:
-				return false, nil
-			}
-		})
-	}
-
 	listen := func(ch string, handler func(string) error) error {
 		return db.Listen(pg_util.ListenOpts{
 			DebounceInterval: time.Second,
@@ -125,14 +112,13 @@ func Init() (err error) {
 	}
 
 	err = listen("thread.updated", func(msg string) (err error) {
-		board, ints, err := db.SplitBoardAndInts(msg, 2)
+		ints, err := db.SplitUint64s(msg, 2)
 		if err != nil {
 			return
 		}
-		thread := uint64(ints[0])
+		thread := ints[0]
 		page := int(ints[1])
 
-		evictByBoard(board)
 		threadFrontend.EvictByFunc(func(k recache.Key) (bool, error) {
 			key := k.(threadKey)
 			if key.id == thread {
@@ -150,13 +136,11 @@ func Init() (err error) {
 		return
 	}
 	return listen("thread.deleted", func(msg string) (err error) {
-		board, ints, err := db.SplitBoardAndInts(msg, 1)
+		thread, err := strconv.ParseUint(msg, 10, 64)
 		if err != nil {
 			return
 		}
-		thread := uint64(ints[0])
 
-		evictByBoard(board)
 		threadFrontend.EvictByFunc(func(k recache.Key) (bool, error) {
 			return k.(threadKey).id == thread, nil
 		})

@@ -4,14 +4,13 @@ import (
 	"testing"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
 )
 
 func TestFlip(t *testing.T) {
 	t.Parallel()
 
-	com, err := parseCommand([]byte("flip"), config.BoardConfigs{})
+	com, err := parseCommand([]byte("flip"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +35,7 @@ func TestDice(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			com, err := parseCommand([]byte(c.in), config.BoardConfigs{})
+			com, err := parseCommand([]byte(c.in))
 			if err != c.err {
 				t.Fatalf("unexpected error: %s : %s", c.err, err)
 			} else {
@@ -54,16 +53,7 @@ func TestDice(t *testing.T) {
 func Test8ball(t *testing.T) {
 	t.Parallel()
 
-	answers := []string{"Yes", "No"}
-
-	com, err := parseCommand(
-		[]byte("8ball"),
-		config.BoardConfigs{
-			ID:        "a",
-			Eightball: answers,
-		},
-	)
-
+	com, err := parseCommand([]byte("8ball"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +61,11 @@ func Test8ball(t *testing.T) {
 		t.Fatalf("unexpected command type: %d", com.Type)
 	}
 	val := com.Eightball
-	if val != answers[0] && val != answers[1] {
-		t.Fatalf("unexpected answer: %s", val)
+	for _, a := range eightBallAnswers {
+		if val == a {
+			goto end
+		}
 	}
+	t.Fatalf("unexpected answer: %s", val)
+end:
 }

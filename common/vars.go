@@ -40,7 +40,6 @@ const (
 	MaxNumBanners      = 20
 	MaxAssetSize       = 100 << 10
 	MaxDiceSides       = 10000
-	BumpLimit          = 1000
 )
 
 // Various cryptographic token exact lengths
@@ -62,7 +61,7 @@ var (
 		"sk_SK",
 		"tr_TR",
 		"uk_UA",
-    "zh_TW",
+		"zh_TW",
 	}
 	Themes = []string{
 		"ashita",

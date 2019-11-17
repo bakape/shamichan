@@ -3,95 +3,34 @@ package config
 // Configs stores the global server configuration
 type Configs struct {
 	Public
-	PruneBoards         bool   `json:"pruneBoards"`
-	EmailErr            bool   `json:"emailErr"`
-	JPEGThumbnails      bool   `json:"JPEGThumbnails"`
-	GlobalDisableRobots bool   `json:"globalDisableRobots"`
-	MaxWidth            uint16 `json:"maxWidth"`
-	MaxHeight           uint16 `json:"maxHeight"`
-	BoardExpiry         uint   `json:"boardExpiry"`
-	SessionExpiry       uint   `json:"sessionExpiry"`
-	EmailErrPort        uint   `json:"emailErrPort"`
-	CharScore           uint   `json:"charScore"`
-	PostCreationScore   uint   `json:"postCreationScore"`
-	ImageScore          uint   `json:"imageScore"`
-	RootURL             string `json:"rootURL"`
+	EmailErr            bool   `json:"email_errors"`
+	JPEGThumbnails      bool   `json:"JPEG_thumbnails"`
+	GlobalDisableRobots bool   `json:"disable_robots"`
+	MaxWidth            uint16 `json:"max_width"`
+	MaxHeight           uint16 `json:"max_height"`
+	EmailErrPort        uint   `json:"email_errors_server_port"`
+	CharScore           uint   `json:"char_score"`
+	PostCreationScore   uint   `json:"post_creation_score"`
+	ImageScore          uint   `json:"image_score"`
+	RootURL             string `json:"root_URL"`
 	Salt                string `json:"salt"`
-	EmailErrMail        string `json:"emailErrMail"`
-	EmailErrPass        string `json:"emailErrPass"`
-	EmailErrSub         string `json:"emailErrSub"`
-	FeedbackEmail       string `json:"feedbackEmail"`
+	EmailErrMail        string `json:"email_errors_address"`
+	EmailErrPass        string `json:"email_errors_password"`
+	EmailErrSub         string `json:"email_errors_server_address"`
+	FeedbackEmail       string `json:"feedback_email"`
 	FAQ                 string
-	CaptchaTags         []string          `json:"captchaTags"`
-	OverrideCaptchaTags map[string]string `json:"overrideCaptchaTags"`
+	CaptchaTags         []string `json:"captcha_tags"`
 }
 
 // Public contains configurations exposeable through public availability APIs
 type Public struct {
 	Captcha           bool              `json:"captcha"`
 	Mature            bool              `json:"mature"`
-	DisableUserBoards bool              `json:"disableUserBoards"`
-	PruneThreads      bool              `json:"pruneThreads"`
-	ThreadExpiryMin   uint              `json:"threadExpiryMin"`
-	ThreadExpiryMax   uint              `json:"threadExpiryMax"`
-	MaxSize           uint              `json:"maxSize"`
-	DefaultLang       string            `json:"defaultLang"`
-	DefaultCSS        string            `json:"defaultCSS"`
-	ImageRootOverride string            `json:"imageRootOverride"`
+	PruneThreads      bool              `json:"prune_threads"`
+	ThreadExpiry      uint              `json:"thread_expiry"`
+	MaxSize           uint              `json:"max_size"`
+	DefaultLang       string            `json:"default_lang"`
+	DefaultCSS        string            `json:"default_theme"`
+	ImageRootOverride string            `json:"image_root_override"`
 	Links             map[string]string `json:"links"`
-}
-
-// BoardConfigs stores board-specific configuration
-type BoardConfigs struct {
-	BoardPublic
-	DisableRobots bool     `json:"disableRobots"`
-	ID            string   `json:"id"`
-	Eightball     []string `json:"eightball"`
-}
-
-// BoardPublic contains publically accessible board-specific configurations
-type BoardPublic struct {
-	ReadOnly   bool `json:"readOnly"`
-	TextOnly   bool `json:"textOnly"`
-	ForcedAnon bool `json:"forcedAnon"`
-	Flags      bool `json:"flags"`
-	NSFW       bool
-	RbText     bool   `json:"rbText"`
-	Pyu        bool   `json:"pyu"`
-	DefaultCSS string `json:"defaultCSS"`
-	Title      string `json:"title"`
-	Notice     string `json:"notice"`
-	Rules      string `json:"rules"`
-
-	// Can't use []uint8, because it marshals to string
-	Banners []uint16 `json:"banners"`
-}
-
-// BoardConfContainer contains configurations for an individual board as well
-// as pregenerated public JSON and it's hash
-type BoardConfContainer struct {
-	BoardConfigs
-	JSON []byte
-	Hash string
-}
-
-// BoardTitle contains a board's ID and title
-type BoardTitle struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-}
-
-// BoardTitles implements sort.Interface
-type BoardTitles []BoardTitle
-
-func (b BoardTitles) Len() int {
-	return len(b)
-}
-
-func (b BoardTitles) Less(i, j int) bool {
-	return b[i].ID < b[j].ID
-}
-
-func (b BoardTitles) Swap(i, j int) {
-	b[i], b[j] = b[j], b[i]
 }

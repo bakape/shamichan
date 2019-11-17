@@ -11,7 +11,7 @@ require (
 	github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c
 	github.com/bakape/captchouli v1.2.0
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
-	github.com/bakape/pg_util v0.4.0
+	github.com/bakape/pg_util v0.5.0
 	github.com/bakape/recache v0.0.0-20190524102257-67e46453405b
 	github.com/bakape/thumbnailer/v2 v2.5.2
 	github.com/chai2010/webp v1.1.0

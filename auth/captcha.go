@@ -22,11 +22,10 @@ const (
 )
 
 var (
-	openMu           sync.Mutex
-	open             bool
-	servicesMu       sync.RWMutex
-	globalService    *captchouli.Service
-	overrideServices map[string]*captchouli.Service
+	openMu        sync.Mutex
+	open          bool
+	servicesMu    sync.RWMutex
+	globalService *captchouli.Service
 
 	ErrInvalidToken = common.ErrInvalidInput("invalid token")
 )
@@ -168,20 +167,11 @@ func (c *Captcha) FromRequest(r *http.Request) {
 	c.Solution, _ = captchouli.ExtractSolution(r)
 }
 
-// Retrieve captcha service for specific board
+// Retrieve captcha service. Could be nil, if service not instantiated yet.
 func CaptchaService(board string) *captchouli.Service {
 	servicesMu.RLock()
 	defer servicesMu.RUnlock()
-
-	if globalService == nil { // Not initialized yet
-		return nil
-	}
-
-	s := overrideServices[board]
-	if s == nil {
-		s = globalService
-	}
-	return s
+	return globalService
 }
 
 // Initialize captcha services, if not already running, and launch a service for
@@ -208,34 +198,15 @@ func LoadCaptchaServices() (err error) {
 		Quiet: true,
 		Tags:  conf.CaptchaTags,
 	}
-	setRatings := func(board string) {
-		if config.GetBoardConfigs(board).NSFW {
-			opts.Explicitness = []captchouli.Rating{captchouli.Safe,
-				captchouli.Questionable, captchouli.Explicit}
-		} else {
-			opts.Explicitness = nil
-		}
-	}
 
-	setRatings("all")
 	g, err := captchouli.NewService(opts)
 	if err != nil {
 		return
 	}
-	over := make(map[string]*captchouli.Service, len(conf.OverrideCaptchaTags))
-	for b, tags := range conf.OverrideCaptchaTags {
-		opts.Tags = []string{tags}
-		setRatings(b)
-		over[b], err = captchouli.NewService(opts)
-		if err != nil {
-			return
-		}
-	}
 
 	servicesMu.Lock()
-	defer servicesMu.Unlock()
 	globalService = g
-	overrideServices = over
+	servicesMu.Unlock()
 
 	return
 }

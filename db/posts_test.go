@@ -2,89 +2,36 @@ package db
 
 import (
 	"testing"
-	"time"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/test"
 	"github.com/jackc/pgx"
 )
 
-func TestValidateOp(t *testing.T) {
-	assertTableClear(t, "boards")
-	writeSampleBoard(t)
-	writeSampleThread(t)
-
-	cases := [...]struct {
-		id      uint64
-		board   string
-		isValid bool
-	}{
-		{1, "a", true},
-		{15, "a", false},
-	}
-
-	for i := range cases {
-		c := cases[i]
-		t.Run("", func(t *testing.T) {
-			t.Parallel()
-			valid, err := ValidateOP(c.id, c.board)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if valid != c.isValid {
-				t.Fatal("unexpected result")
-			}
-		})
-	}
-}
-
-func writeSampleBoard(t *testing.T) {
+func writeSampleThread(t *testing.T) (op Post) {
 	t.Helper()
-	b := BoardConfigs{
-		BoardConfigs: config.BoardConfigs{
-			ID:        "a",
-			Eightball: []string{"yes"},
-		},
-	}
-	err := InTransaction(func(tx *pgx.Tx) error {
-		return WriteBoard(tx, b)
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
 
-func writeSampleThread(t *testing.T) {
-	t.Helper()
-	thread := Thread{
-		ID:    1,
-		Board: "a",
-	}
-	op := Post{
+	op = Post{
 		StandalonePost: common.StandalonePost{
 			Post: common.Post{
-				ID:   1,
-				Time: time.Now().Unix(),
+				Body: "Slut!",
 			},
-			OP:    1,
-			Board: "a",
 		},
 		IP: "::1",
 	}
 	err := InTransaction(func(tx *pgx.Tx) error {
-		return WriteThread(tx, thread, op)
+		return InsertThread(tx, "test", &op)
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	return
 }
 
 func insertPost(t *testing.T, p *Post) {
 	t.Helper()
 
-	prepareForPostInsertion(t)
-
+	prepareForPostInsertion(t, p)
 	err := InTransaction(func(tx *pgx.Tx) error {
 		return InsertPost(tx, p)
 	})
@@ -93,25 +40,18 @@ func insertPost(t *testing.T, p *Post) {
 	}
 }
 
-func prepareForPostInsertion(t *testing.T) {
+func prepareForPostInsertion(t *testing.T, p *Post) {
 	t.Helper()
 
-	assertTableClear(t, "boards", "accounts")
-	writeSampleBoard(t)
-	writeSampleThread(t)
-
-	// Prevent post ID key collision
-	_, err := db.Exec("select nextval('post_id')")
-	if err != nil {
-		t.Fatal(err)
-	}
+	assertTableClear(t, "accounts")
+	op := writeSampleThread(t)
+	p.OP = op.ID
 }
 
 func TestInsertPost(t *testing.T) {
 	p := Post{
 		StandalonePost: common.StandalonePost{
-			OP:    1,
-			Board: "a",
+			OP: 1,
 		},
 		IP:       "::1",
 		Password: []byte("6+53653cs3ds"),
@@ -125,92 +65,73 @@ func TestInsertPost(t *testing.T) {
 	}
 }
 
-func TestGetPostPassword(t *testing.T) {
-	p := Post{
-		StandalonePost: common.StandalonePost{
-			OP:    1,
-			Board: "a",
-		},
-		IP:       "::1",
-		Password: []byte("6+53653cs3ds"),
-	}
-	insertPost(t, &p)
+// func TestSageAndTimestampUpdates(t *testing.T) {
+// 	prepareForPostInsertion(t)
 
-	res, err := GetPostPassword(p.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	test.AssertEquals(t, res, p.Password)
-}
+// 	var bumpTime, updateTime int64
 
-func TestSageAndTimestampUpdates(t *testing.T) {
-	prepareForPostInsertion(t)
+// 	// Read initial values
+// 	buf, err := GetThread(1, 0)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	var thread common.Thread
+// 	test.DecodeJSON(t, buf, &thread)
+// 	bumpTime = thread.BumpTime
+// 	updateTime = thread.UpdateTime
 
-	var bumpTime, updateTime int64
+// 	cases := [...]struct {
+// 		name string
+// 		sage bool
+// 	}{
+// 		{"no sage", false},
+// 		{"with sage", true},
+// 	}
 
-	// Read initial values
-	buf, err := GetThread(1, 0)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var thread common.Thread
-	test.DecodeJSON(t, buf, &thread)
-	bumpTime = thread.BumpTime
-	updateTime = thread.UpdateTime
+// 	for i := range cases {
+// 		c := cases[i]
+// 		t.Run(c.name, func(t *testing.T) {
+// 			time.Sleep(2 * time.Second) // Wait for timestamps to update
 
-	cases := [...]struct {
-		name string
-		sage bool
-	}{
-		{"no sage", false},
-		{"with sage", true},
-	}
+// 			p := Post{
+// 				StandalonePost: common.StandalonePost{
+// 					OP: 1,
+// 					Post: common.Post{
+// 						Sage: c.sage,
+// 					},
+// 				},
+// 				IP:       "::1",
+// 				Password: []byte("6+53653cs3ds"),
+// 			}
+// 			err := InTransaction(func(tx *pgx.Tx) error {
+// 				return InsertPost(tx, &p)
+// 			})
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
 
-	for i := range cases {
-		c := cases[i]
-		t.Run(c.name, func(t *testing.T) {
-			time.Sleep(2 * time.Second) // Wait for timestamps to update
+// 			buf, err := GetThread(1, 0)
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+// 			var thread common.Thread
+// 			test.DecodeJSON(t, buf, &thread)
 
-			p := Post{
-				StandalonePost: common.StandalonePost{
-					OP:    1,
-					Board: "a",
-					Post: common.Post{
-						Sage: c.sage,
-					},
-				},
-				IP:       "::1",
-				Password: []byte("6+53653cs3ds"),
-			}
-			err := InTransaction(func(tx *pgx.Tx) error {
-				return InsertPost(tx, &p)
-			})
-			if err != nil {
-				t.Fatal(err)
-			}
+// 			if thread.UpdateTime <= updateTime {
+// 				t.Error("update time not increased")
+// 			}
+// 			updateTime = thread.UpdateTime
 
-			buf, err := GetThread(1, 0)
-			if err != nil {
-				t.Fatal(err)
-			}
-			var thread common.Thread
-			test.DecodeJSON(t, buf, &thread)
-
-			if thread.UpdateTime <= updateTime {
-				t.Error("update time not increased")
-			}
-			updateTime = thread.UpdateTime
-
-			if c.sage {
-				if thread.BumpTime != bumpTime {
-					t.Error("bump time changed")
-				}
-			} else {
-				if thread.BumpTime <= bumpTime {
-					t.Error("bump time not increased")
-				}
-			}
-			bumpTime = thread.BumpTime
-		})
-	}
-}
+// 			if c.sage {
+// 				if thread.BumpTime != bumpTime {
+// 					t.Error("bump time changed")
+// 				}
+// 			} else {
+// 				if thread.BumpTime <= bumpTime {
+// 					t.Error("bump time not increased")
+// 				}
+// 			}
+// 			bumpTime = thread.BumpTime
+// 		})
+// 	}
+// }

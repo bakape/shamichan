@@ -4,15 +4,11 @@
 			"Informatie panel text",
 			"Invoer voor de lijst met veelgestelde vragen en de informatie modal"
 		],
-		"JPEGThumbnails": [
+		"JPEG_thumbnails": [
 			"JPEG thumbnails",
 			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
-		"NSFW": [
-			"Niet veilig voor werk",
-			"Bord staat materiaal toe dat niet veilig is om te worden bekeken in een werkomgeving"
-		],
-		"alwaysLock": [
+		"always_lock_to_bottom": [
 			"Always Lock to Bottom",
 			"Vergrendel scrollen naar pagina onderaan, zelfs als het tabblad verborgen is"
 		],
@@ -20,33 +16,17 @@
 			"Anonimiseren",
 			"Toon alle posts als anoniem"
 		],
-		"audioVolume": [
+		"audio_volume": [
 			"Audio volume",
 			"Volume van audio in muziek- en videospelers."
 		],
-		"autogif": [
-			"Animated GIF Thumbnails",
-			"Animate GIF thumbnails"
-		],
-		"bgMute": [
-			"Mute Achtergrond Video",
-			"Mute de achtergrond video"
-		],
-		"bgVideo": [
+		"background_video": [
 			"Achtergrond Video",
 			"Admin-specified memes piped straight into you're monitor"
 		],
-		"boardExpiry": [
-			"Board vervaldatum",
-			"Aantal dagen zonder nieuwe berichten voordat een bord is verwijderd"
-		],
-		"boardName": [
-			"Board naam",
-			"Naam van het board. Kan tot 10 Latijnse letters of cijfers in kleine letters bevatten."
-		],
-		"boardTitle": [
-			"Board titel",
-			"Titel van het nieuwe board, net als 'Animu & Mango'. Tot 100 tekens lang."
+		"background_video_mute": [
+			"Mute Achtergrond Video",
+			"Mute de achtergrond video"
 		],
 		"body": [
 			"Body",
@@ -56,41 +36,37 @@
 			"Captcha",
 			"Vraag gebruikers een captcha te voltooien voor bepaalde taken, zoals registratie en het maken van threads"
 		],
-		"captchaTags": [
+		"captcha_tags": [
 			"Captcha tags",
 			"Tags die worden gebruikt voor captcha-oplossingen. Eén tag wordt willekeurig gekozen voor elke gegenereerde captcha. Vereist om minimaal 3 verschillende tags te bevatten."
 		],
-		"charScore": [
+		"char_score": [
 			"Karakter spam score",
 			"Antispam van het wijzigen van een teken in een bericht. Na overschrijding van de limiet moet de gebruiker een captcha oplossen."
 		],
-		"customCSS": [
+		"custom_CSS": [
 			"",
 			"Door de gebruiker gedefinieerde CSS-regels die boven het geselecteerde thema zijn geladen"
 		],
-		"customCSSToggle": [
+		"custom_CSS_enable": [
 			"Custom CSS",
 			"Toggle use of custom CSS"
 		],
-		"defaultCSS": [
-			"Standaard thema",
-			"Thema dat standaard wordt geladen, wanneer er geen is ingesteld door de client"
-		],
-		"defaultLang": [
+		"default_language": [
 			"Standaard taal",
 			"Taal pakket by standaard laden"
+		],
+		"default_theme": [
+			"Standaard thema",
+			"Thema dat standaard wordt geladen, wanneer er geen is ingesteld door de client"
 		],
 		"desustorage": [
 			"DesuStorage",
 			"desustorage.org afbeelding zoeken"
 		],
-		"disableRobots": [
+		"disable_robots": [
 			"Crawlers voorkomen",
 			"Voorkomen dat geautomatiseerde website-crawlers, zoals indexeerders voor zoekmachines, toegang krijgen tot dit forum."
-		],
-		"disableUserBoards": [
-			"Schakel het maken van niet-beheerdersborden uit",
-			"Voorkomt dat een ander account dan het 'admin'account nieuwe boards maakt"
 		],
 		"done": [
 			"Voltooi bericht",
@@ -100,31 +76,31 @@
 			"#8ball antwoorden",
 			"Lijst met antwoorden voor de #8ball hash command. Kan maximaal 100 antwoorden en 2000 tekens bevatten."
 		],
-		"emailErr": [
+		"email_errors": [
 			"Email fouten",
 			"Toggle emailing fouten."
 		],
-		"emailErrMail": [
+		"email_errors_address": [
 			"Email",
 			"Fout email."
 		],
-		"emailErrPass": [
+		"email_errors_password": [
 			"Wachtwoord",
 			"Fout email wachtwoord."
 		],
-		"emailErrPort": [
-			"Email server port",
-			"Fout email server port."
-		],
-		"emailErrSub": [
+		"email_errors_server_address": [
 			"Email server",
 			"Fout email server subdomain."
+		],
+		"email_errors_server_port": [
+			"Email server port",
+			"Fout email server port."
 		],
 		"exhentai": [
 			"Exhentai",
 			"exhentai.org afbeelding zoeken"
 		],
-		"expandAll": [
+		"expand_all": [
 			"Alle afbeeldingen uitbreiden",
 			"Alle afbeeldingen uitbreiden. Webm, PDF en MP3 en je eigen bericht worden niet beïnvloed. Nieuwe bericht afbeeldingen worden ook uitgebreid."
 		],
@@ -132,7 +108,7 @@
 			"Exporteren",
 			"Exporteer opties naar bestand"
 		],
-		"feedbackEmail": [
+		"feedback_email": [
 			"Feedback email",
 			"E-mail met gebruikersfeedback om in de bovenste balk weer te geven"
 		],
@@ -140,17 +116,13 @@
 			"Landen vlaggen",
 			"Toon poster land vlaggen op berichten"
 		],
-		"forcedAnon": [
+		"forced_anonymity": [
 			"Geforceerd Anoniem",
 			"Schakel gebruikersnamen, tripcodes en e-mails op berichten uit"
 		],
-		"galleryMode": [
+		"gallery_mode": [
 			"Galerij Mode",
 			"Toon alleen berichten met afbeeldingen"
-		],
-		"globalDisableRobots": [
-			"Prevent crawlers globally",
-			"Prevent automated website crawlers, such as search engine indexers, from accessing this website."
 		],
 		"google": [
 			"Google",
@@ -160,19 +132,19 @@
 			"Verborgen: 0",
 			"Verwijder verborgen berichten"
 		],
-		"hideBinned": [
+		"hide_binned": [
 			"Hide Deleted Posts",
 			"Hide all posts that have been deleted"
 		],
-		"hideRecursively": [
+		"hide_recursively": [
 			"Recursieve post verbergen",
 			"Verberg alle berichten die recursief op een verborgen bericht hebben geantwoord"
 		],
-		"hideThumbs": [
+		"hide_thumbnails": [
 			"Thumbnails verbergen",
 			"Geef een [Show] knop weer in plaats van thumbnails"
 		],
-		"horizontalPosting": [
+		"horizontal_posting": [
 			"Horizontaal Posting",
 			"38chan nostalgia"
 		],
@@ -180,15 +152,15 @@
 			"Inloggen",
 			""
 		],
-		"imageHover": [
+		"image_hover_preview": [
 			"Beeldverlenging Uitbreiding",
 			"Geef previews van beelden"
 		],
-		"imageRootOverride": [
+		"image_root_override": [
 			"Afbeelding root overschrijden",
 			"Als u afbeeldingen van een andere locatie zoals een CDN wilt hosten, voert u hier het volledige root-adres in. Laat leeg om het standaard adres te gebruiken. Voorbeeld: 'https://images.meguca.org' "
 		],
-		"imageScore": [
+		"image_score": [
 			"Afbeeldingen spam score",
 			"Antispam van het plaatsen van een afbeelding. Na overschrijding van de limiet moet de gebruiker een captcha oplossen."
 		],
@@ -196,7 +168,7 @@
 			"Importeren",
 			"Importeer opties van bestand"
 		],
-		"inlineFit": [
+		"inline_fit": [
 			"Uitbreiding",
 			"Breid afbeeldingen uit in het bovenliggende bericht en wijzig het formaat volgens de instellingen"
 		],
@@ -208,7 +180,7 @@
 			"Janitors",
 			"Janitor account IDs. Janitors kunnen bericht alleen verwijderen."
 		],
-		"lang": [
+		"language": [
 			"Taal",
 			"Verander interface taal"
 		],
@@ -220,7 +192,7 @@
 			"Mascot",
 			"Toggle mascot display"
 		],
-		"mascotImage": [
+		"mascot_image": [
 			"",
 			"Afbeelding gebruiken voor de mascot"
 		],
@@ -228,15 +200,15 @@
 			"Volwassen inhoud",
 			"Informeer de gebruiker dat de website tijdens het eerste bezoek inhoud met een volwassen karakter bevat"
 		],
-		"maxHeight": [
+		"max_height": [
 			"Afbeelding height limiet",
 			"Maximaal height van geüpload afbeeldingen"
 		],
-		"maxSize": [
+		"max_size": [
 			"Afbeelding grootte limiet",
 			"Maximaal grootte om afbeeldingen te uploaden in MB"
 		],
-		"maxWidth": [
+		"max_width": [
 			"Afbeelding width limiet",
 			"Maximaal width van geüpload afbeeldingen"
 		],
@@ -244,7 +216,7 @@
 			"MeguTV",
 			"Speel willekeurige bordspecifieke video's in de overlay-speler"
 		],
-		"meguTVShortcut": [
+		"meguTV_shortcut": [
 			"MeguTV",
 			"Speel willekeurige bordspecifieke video's in de overlay-speler"
 		],
@@ -256,11 +228,7 @@
 			"Naam",
 			"Naam die aan nieuwe berichten moet worden toegevoegd"
 		],
-		"newPassword": [
-			"Niewe wachtwoord",
-			""
-		],
-		"newPost": [
+		"new_post": [
 			"Nieuwe bericht",
 			"Open nieuwe bericht"
 		],
@@ -272,39 +240,23 @@
 			"Desktop Notificaties",
 			"Ontvang bureaubladmeldingen wanneer deze worden geciteerd of een syncwatch gaat beginnen"
 		],
-		"nowPlaying": [
+		"now_playing": [
 			"Nu banner aan het spelen",
 			"Momenteel speelt het nummer op r / a / dio of eden en andere streaminformatie in de bovenste balk."
-		],
-		"oldPassword": [
-			"Oud wachtwoord",
-			""
-		],
-		"overrideCaptchaTags": [
-			"Captcha Tags Overschrijden",
-			"Mapping of boards to tags to use as the solution on the specified board."
 		],
 		"owners": [
 			"Eigenaars",
 			"Eigenaar account IDs. Eigenaars hebben volledige toegang tot alle besturingselementen op het bord. Moet ten minste één bevatten."
 		],
-		"password": [
-			"Wachtwoord",
-			""
-		],
-		"postCreationScore": [
+		"post_creation_score": [
 			"Postcreatie spamscore",
 			"Antispam bij het maken van een nieuw bericht. Na overschrijding van de limiet moet de gebruiker een captcha oplossen."
 		],
-		"postInlineExpand": [
+		"post_inline_expansion": [
 			"Inline uitbreiding van berichtkoppeling",
 			"Inline gekoppelde post onder de berichtlink op klik. Wanneer uitgeschakeld, navigeert u naar het gekoppelde bericht."
 		],
-		"pruneBoards": [
-			"Boards uitwissen",
-			"Verwijder borden die N dagen geen nieuwe berichten hebben gehad"
-		],
-		"pruneThreads": [
+		"prune_threads": [
 			"Topics uitwissen",
 			"Verwijder topics die gedurende N dagen geen berichten hebben gehad"
 		],
@@ -312,37 +264,17 @@
 			"Slet enabler",
 			"Vraag niet"
 		],
-		"rbText": [
-			"Red/Blue Text",
-			"Rode en blauwe tekst weergeven als deze is opgemaakt met '^r' of '^b'"
-		],
-		"readOnly": [
-			"Alleen lezen",
-			"Schakel het maken van berichten uit"
-		],
-		"register": [
-			"Registreren",
-			""
-		],
-		"relativeTime": [
+		"relative_timestamps": [
 			"Relatieve tijdstempels",
 			"Relatieve bericht tijdstempels. vb.: '1 uur geleden'"
 		],
-		"repeat": [
-			"Herhaal",
-			""
-		],
-		"replyRight": [
+		"reply_right": [
 			"[Reply] aan Rechts",
 			"Verplaats antwoordknop aan de rechterkant van de pagina"
 		],
-		"rootURL": [
+		"root_URL": [
 			"Root URL",
 			"Root URL van de imageboard. Vereist voor sommige image search-providers om te werken."
-		],
-		"rules": [
-			"Regels",
-			"Board regels om weer te geven in het regelmodaal venster"
 		],
 		"sage": [
 			"Sage",
@@ -350,25 +282,21 @@
 		],
 		"salt": [
 			"Secure salt",
-			"Salt voor veilige tripcode en mnemonic generatie. Aanbevolen om minimaal 40 tekens lang te zijn."
+			"Salt voor veilige tripcode en mnemonic generatie. Aanbevolen om minimaal 40 tekens language te zijn."
 		],
 		"saucenao": [
 			"SauceNao",
 			"saucenao.com afbeelding zoeken"
 		],
-		"sessionExpiry": [
-			"Account sessie verstrijken",
-			"Tijd in dagen totdat gebruikersaccounts automatisch worden afgemeld"
-		],
 		"spoilers": [
 			"Afbeelding Spoilers",
 			"Spoiler afbeeldingen niet"
 		],
-		"staffTitle": [
+		"staff_title": [
 			"Staff Titel",
 			"Toon de titel van uw personeel in de berichtkop"
 		],
-		"textOnly": [
+		"text_only": [
 			"Text alleen",
 			"Disable bestanden uploads"
 		],
@@ -376,48 +304,44 @@
 			"Thema",
 			"Kies CSS thema"
 		],
-		"threadExpiryMax": [
-			"Maximaal topic verval tijd",
-			"Aantal dagen zonder nieuwe berichten voordat een topic is verwijderd"
-		],
-		"threadExpiryMin": [
-			"Minimaal topic verval tijd",
-			"Aantal dagen zonder nieuwe berichten voordat een topic is verwijderd"
+		"thread_expiry": [
+			"Thread expiry time",
+			"Number of days without bumping posts before a thread is deleted"
 		],
 		"title": [
 			"Board titel",
 			"Korte beschrijvende titel van het board"
 		],
-		"toggleSpoiler": [
+		"toggle_spoiler": [
 			"Afbeelding Spoiler",
 			"Toggle spoiler in de opening van een bericht"
 		],
-		"userBG": [
+		"user_background": [
 			"Eigen Achtergrond",
 			"Toggle eigen pagina achtergrond"
 		],
-		"userBGImage": [
+		"user_background_image": [
 			"",
 			"Afbeelding om te gebruiken als achtergrond."
 		],
-		"watchThreadsOnReply": [
+		"watch_threads_on_reply": [
 			"Bekijk topics op replies",
 			"Automatisch topcis toevoegen aan gekeken discussies op replies"
 		],
-		"webmHover": [
+		"webm_hover_preview": [
 			"WebM Hover uitbreiding",
 			"WebM-voorbeelden weergeven op hover. Vereist Image Hover Uitbreiding ingeschakeld."
 		],
-		"whatAnime": [
+		"what_anime": [
 			"WhatAnime",
 			"whatanime.ga anime screenshot zoeken"
 		],
-		"workMode": [
-			"Work mode",
+		"work_mode": [
+			"Werk mode",
 			"Verberg afbeeldingen en deactiveert gebruiker achtergrond"
 		],
-		"workModeToggle": [
-			"Werk mode",
+		"work_mode_shortcut": [
+			"Work mode",
 			"Verberg afbeeldingen en deactiveert gebruiker achtergrond"
 		],
 		"yandex": [

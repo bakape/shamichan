@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/bakape/meguca/common"
 	"github.com/bakape/pg_util"
 	"github.com/go-playground/log"
 	"github.com/jackc/pgx"
@@ -19,11 +18,13 @@ func InTransaction(fn func(*pgx.Tx) error) (err error) {
 }
 
 // IsConflictError returns if an error is a unique key conflict error
+// TODO: Patch for pgx
 func IsConflictError(err error) bool {
 	return pqErrorCode(err) == "unique_violation"
 }
 
 // Extract error code, if error is a *pq.Error
+// TODO: Patch for pgx
 func pqErrorCode(err error) string {
 	if err, ok := err.(*pq.Error); ok {
 		return err.Code.Name()
@@ -37,11 +38,6 @@ func logListenError(err error) {
 
 // Listen assigns a function to listen to Postgres notifications on a channel.
 func Listen(opts pg_util.ListenOpts) (err error) {
-	// Don't allow non-cancellable listeners to run  during tests
-	if common.IsTest && opts.Canceller == nil {
-		return
-	}
-
 	opts.ConnectionURL = connectionURL
 	opts.OnError = logListenError
 	return pg_util.Listen(opts)
@@ -52,32 +48,6 @@ type ErrMsgParse string
 
 func (e ErrMsgParse) Error() string {
 	return fmt.Sprintf("unparsable message: `%s`", string(e))
-}
-
-// Split message containing a board and a variable amount of int64
-func SplitBoardAndInts(msg string, intCount int) (
-	board string,
-	ints []int64,
-	err error,
-) {
-	split := strings.Split(msg, ",")
-	if len(split) != intCount+1 {
-		goto fail
-	}
-	board = split[0]
-
-	for _, s := range split[1:] {
-		n, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			goto fail
-		}
-		ints = append(ints, n)
-	}
-	return
-
-fail:
-	err = ErrMsgParse(msg)
-	return
 }
 
 // Split message containing a list of uint64 numbers.

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
 )
 
 var (
@@ -20,6 +19,16 @@ var (
 
 	errTooManyRolls = common.ErrInvalidInput("too many rolls")
 	errDieTooBig    = common.ErrInvalidInput("die too big")
+
+	// TODO: Per-thread 8ball config
+	eightBallAnswers = [...]string{
+		"Yes",
+		"No",
+		"Maybe",
+		"It can't be helped",
+		"Hell yeah, motherfucker!",
+		"Anta baka?",
+	}
 )
 
 // Returns a cryptographically secure pseudorandom int in the interval [0;max)
@@ -32,8 +41,7 @@ func randInt(max int) int {
 }
 
 // Parse a matched hash command
-func parseCommand(match []byte, boardConf config.BoardConfigs,
-) (com common.Command, err error) {
+func parseCommand(match []byte) (com common.Command, err error) {
 	switch {
 
 	// Coin flip
@@ -44,23 +52,16 @@ func parseCommand(match []byte, boardConf config.BoardConfigs,
 	// 8ball; select random string from the the 8ball answer array
 	case bytes.Equal(match, []byte("8ball")):
 		com.Type = common.EightBall
-		answers := boardConf.Eightball
-		if len(answers) != 0 {
-			com.Eightball = answers[randInt(len(answers))]
-		}
+		com.Eightball = eightBallAnswers[randInt(len(eightBallAnswers))]
 
 	// Increment pyu counter
 	case bytes.Equal(match, []byte("pyu")):
-		if boardConf.Pyu {
-			com.Type = common.Pyu
-		}
+		com.Type = common.Pyu
 		// DB queries deferred to post close
 
 	// Return current pyu count
 	case bytes.Equal(match, []byte("pcount")):
-		if boardConf.Pyu {
-			com.Type = common.Pcount
-		}
+		com.Type = common.Pcount
 		// DB queries deferred to post close
 
 	default:

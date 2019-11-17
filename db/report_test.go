@@ -8,8 +8,7 @@ import (
 )
 
 func TestReports(t *testing.T) {
-	assertTableClear(t, "boards", "reports")
-	writeSampleBoard(t)
+	assertTableClear(t, "reports")
 	writeSampleThread(t)
 
 	std := auth.Report{

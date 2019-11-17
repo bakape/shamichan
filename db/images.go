@@ -7,7 +7,6 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/util"
 	"github.com/jackc/pgx"
 )
 
@@ -34,7 +33,31 @@ func WriteImage(i common.ImageCommon) error {
 
 func writeImageTx(tx *pgx.Tx, i common.ImageCommon) (err error) {
 	_, err = tx.Exec(
-		"insert_image",
+		`insert into images (
+			audio,
+			video,
+			file_type,
+			thumb_type,
+			dims,
+			length,
+			size,
+			md5,
+			sha1,
+			title,
+			artist
+		)
+		values (
+			$1,
+			$2,
+			$3,
+			$4,
+			$5,
+			$6,
+			$7,
+			$8,
+			$9,
+			$10
+		)`,
 		i.Audio,
 		i.Video,
 		i.FileType,
@@ -60,7 +83,12 @@ func NewImageToken(tx *pgx.Tx, SHA1 string) (token string, err error) {
 			return
 		}
 
-		_, err = tx.Exec("insert_image_token", token, SHA1)
+		_, err = tx.Exec(
+			`insert into image_tokens (token, sha1, expires)
+			values ($1, $2, now() + interval '1 minute')`,
+			token,
+			SHA1,
+		)
 		switch {
 		case err == nil:
 			return
@@ -74,7 +102,16 @@ func NewImageToken(tx *pgx.Tx, SHA1 string) (token string, err error) {
 
 // ImageExists returns, if image exists
 func ImageExists(tx *pgx.Tx, sha1 string) (exists bool, err error) {
-	err = tx.QueryRow("image_exists", sha1).Scan(&exists)
+	err = tx.
+		QueryRow(
+			`select exists (
+				select
+				from images
+				where sha1 = $1
+			)`,
+			sha1,
+		).
+		Scan(&exists)
 	return
 }
 
@@ -92,26 +129,21 @@ func AllocateImage(
 	if err != nil {
 		return err
 	}
-
-	err = assets.Write(img.SHA1, img.FileType, img.ThumbType, src, thumb)
-	if err != nil {
-		return cleanUpFailedAllocation(img, err)
-	}
-	return nil
-}
-
-// Delete any dangling image files in case of a failed image allocation
-func cleanUpFailedAllocation(img common.ImageCommon, err error) error {
-	delErr := assets.Delete(img.SHA1, img.FileType, img.ThumbType)
-	if delErr != nil {
-		err = util.WrapError(err.Error(), delErr)
-	}
-	return err
+	return assets.Write(img.SHA1, img.FileType, img.ThumbType, src, thumb)
 }
 
 // HasImage returns, if the post has an image allocated. Only used in tests.
 func HasImage(id uint64) (has bool, err error) {
-	err = db.QueryRow("has_image", id).Scan(&has)
+	err = db.
+		QueryRow(
+			`select exists (
+				select
+				from posts
+				where id = $1 and sha1 is not null
+			)`,
+			id,
+		).
+		Scan(&has)
 	return
 }
 
@@ -127,7 +159,12 @@ func InsertImage(
 ) {
 	err = tx.
 		QueryRow(
-			"insert_image_into_post",
+			`select insert_image(
+				$1::bigint,
+				$2::char(86),
+				$3::varchar(200),
+				$4::bool
+			)`,
 			postID,
 			token,
 			name,
@@ -157,7 +194,12 @@ func GetImage(sha1 string) (img common.ImageCommon, err error) {
 
 // SpoilerImage spoilers an already allocated image
 func SpoilerImage(id, op uint64) error {
-	_, err := db.Exec("spoiler_image", id)
+	_, err := db.Exec(
+		`update posts
+		set spoiler = true
+		where id = $1`,
+		id,
+	)
 	return err
 }
 
@@ -189,7 +231,23 @@ func VideoPlaylist(board string) (videos []Video, err error) {
 
 // Delete images not used in any posts
 func deleteUnusedImages() (err error) {
-	r, err := db.Query("delete_unused_images")
+	r, err := db.Query(
+		`delete from images as i
+		where
+			(
+				(
+					select count(*)
+					from posts p
+					where p.sha1 = i.sha1
+				)
+				+ (
+					select count(*)
+					from image_tokens it
+					where it.sha1 = i.sha1
+				)
+			) = 0
+		returning i.SHA1, i.file_type, i.thumb_type`,
+	)
 	if err != nil {
 		return
 	}

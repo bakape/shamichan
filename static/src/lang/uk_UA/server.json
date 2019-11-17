@@ -4,15 +4,11 @@
 			"Інформаційни блок тексту",
 			"Записи для баннеру списку ФАК та інформаційни модальних вікон"
 		],
-		"JPEGThumbnails": [
+		"JPEG_thumbnails": [
 			"JPEG thumbnails",
 			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
-		"NSFW": [
-			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
-		],
-		"alwaysLock": [
+		"always_lock_to_bottom": [
 			"Завжди прив'язувати до дна",
 			"Коли вкладка неактивна, прив'язувати до дна"
 		],
@@ -20,33 +16,17 @@
 			"Анонімізувати",
 			"Показувати всіх постерів як анонімів"
 		],
-		"audioVolume": [
+		"audio_volume": [
 			"Audio volume",
 			"Volume of audio in music and video players"
 		],
-		"autogif": [
-			"Анімовані прев'ю GIFок",
-			"Анімувати прев'ю GIFок"
-		],
-		"bgMute": [
-			"Mute Background Video",
-			"Mute the background video"
-		],
-		"bgVideo": [
+		"background_video": [
 			"Background Video",
 			"Admin-specified memes piped straight into you're monitor"
 		],
-		"boardExpiry": [
-			"Board expiry time",
-			"Number of days without new posts before a board is deleted"
-		],
-		"boardName": [
-			"Назва борди",
-			"Назва нової дошки. Може ввімащати до 10 маленьких латинських літер"
-		],
-		"boardTitle": [
-			"Заголовок дошки",
-			"Заголовок нової дошки наприклад 'Аніме та Манга'. Не більше 100 символів"
+		"background_video_mute": [
+			"Mute Background Video",
+			"Mute the background video"
 		],
 		"body": [
 			"Body",
@@ -56,41 +36,37 @@
 			"Капча",
 			"Питати користувачів при регістрації та створенні тхреду"
 		],
-		"captchaTags": [
+		"captcha_tags": [
 			"Captcha tags",
 			"Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
 		],
-		"charScore": [
+		"char_score": [
 			"Character spam score",
 			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
 		],
-		"customCSS": [
+		"custom_CSS": [
 			"",
 			"User-defined CSS rules loaded on top of the selected theme"
 		],
-		"customCSSToggle": [
+		"custom_CSS_enable": [
 			"Custom CSS",
 			"Toggle use of custom CSS"
 		],
-		"defaultCSS": [
-			"Дефолтна тема",
-			"Тема що завантажується по дефолту, коли в користувача не вказано свою."
-		],
-		"defaultLang": [
+		"default_language": [
 			"Дефолтна мова",
 			"Мова що відображається по дефолту"
+		],
+		"default_theme": [
+			"Дефолтна тема",
+			"Тема що завантажується по дефолту, коли в користувача не вказано свою."
 		],
 		"desustorage": [
 			"DesuStorage",
 			"Пошук зображень по desustorage.org"
 		],
-		"disableRobots": [
+		"disable_robots": [
 			"Prevent crawlers",
 			"Prevent automated website crawlers, such as search engine indexers, from accessing this board."
-		],
-		"disableUserBoards": [
-			"Disable non-admin board creation",
-			"Prevents any account apart from the 'admin' account from creating new boards"
 		],
 		"done": [
 			"Закінчити пост",
@@ -100,31 +76,31 @@
 			"#8ball відповіді",
 			"Список відповідей для #8ball хеш команд. Може містити до 100 відповідей та 2000 знаків загало."
 		],
-		"emailErr": [
+		"email_errors": [
 			"Email Errors",
 			"Toggle emailing errors."
 		],
-		"emailErrMail": [
+		"email_errors_address": [
 			"Email",
 			"Error email."
 		],
-		"emailErrPass": [
+		"email_errors_password": [
 			"Password",
 			"Error email password."
 		],
-		"emailErrPort": [
-			"Email server port",
-			"Error email server port."
-		],
-		"emailErrSub": [
+		"email_errors_server_address": [
 			"Email server",
 			"Error email server subdomain."
+		],
+		"email_errors_server_port": [
+			"Email server port",
+			"Error email server port."
 		],
 		"exhentai": [
 			"Exhentai",
 			"Пошук зображень по exhentai.org"
 		],
-		"expandAll": [
+		"expand_all": [
 			"Розгорнути Всі Зображення",
 			"Розгорнути всі зображення. Файли формату Webm, PDF і MP3 не розгортаються. Зображення у нових постах також будуть розгортатися."
 		],
@@ -132,7 +108,7 @@
 			"Експорт",
 			"Експортувати настройки як файл"
 		],
-		"feedbackEmail": [
+		"feedback_email": [
 			"Зворотня пошта",
 			"Пошта користувача для зворотнього звязку"
 		],
@@ -140,17 +116,13 @@
 			"Country flags",
 			"Display poster country flags on posts"
 		],
-		"forcedAnon": [
+		"forced_anonymity": [
 			"Насильно Анонімно",
 			"Вимикає імя користувачів, тріпкоди та емейли для постах"
 		],
-		"galleryMode": [
+		"gallery_mode": [
 			"Gallery Mode",
 			"Only show posts containing images"
-		],
-		"globalDisableRobots": [
-			"Prevent crawlers globally",
-			"Prevent automated website crawlers, such as search engine indexers, from accessing this website."
 		],
 		"google": [
 			"Гугель",
@@ -160,19 +132,19 @@
 			"Сховано: 0",
 			"Очистити сховані пости"
 		],
-		"hideBinned": [
+		"hide_binned": [
 			"Hide Deleted Posts",
 			"Hide all posts that have been deleted"
 		],
-		"hideRecursively": [
+		"hide_recursively": [
 			"Recursive post hiding",
 			"Hide all posts, that replied to a hidden post recursively"
 		],
-		"hideThumbs": [
+		"hide_thumbnails": [
 			"Приховати прев'ю",
 			"Показувати кнопку [Show] замість прев'ю"
 		],
-		"horizontalPosting": [
+		"horizontal_posting": [
 			"Горизонтальний постинг",
 			"Потинг як на 38chan"
 		],
@@ -180,15 +152,15 @@
 			"Login",
 			""
 		],
-		"imageHover": [
+		"image_hover_preview": [
 			"Розгортання зображень",
 			"Зображення розгротається при наведенні мишки на нього."
 		],
-		"imageRootOverride": [
+		"image_root_override": [
 			"Image root override",
 			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
 		],
-		"imageScore": [
+		"image_score": [
 			"Image spam score",
 			"Antispam weight of posting an image. After exceeding the limit the user will need to solve a captcha."
 		],
@@ -196,7 +168,7 @@
 			"Імпорт",
 			"Імпортувати настройки з файлу"
 		],
-		"inlineFit": [
+		"inline_fit": [
 			"Розширення",
 			"Розгорнути зображення і змінити розмір залежно до настройок."
 		],
@@ -208,7 +180,7 @@
 			"Janitors",
 			"Janitor account IDs. Janitors can only delete posts."
 		],
-		"lang": [
+		"language": [
 			"Мова",
 			"Змінити мову інтерфейсу"
 		],
@@ -220,7 +192,7 @@
 			"Mascot",
 			"Toggle mascot display"
 		],
-		"mascotImage": [
+		"mascot_image": [
 			"",
 			"Image to use as the mascot"
 		],
@@ -228,15 +200,15 @@
 			"Mature content",
 			"Inform the user the website contains mature content on first visit"
 		],
-		"maxHeight": [
+		"max_height": [
 			"Ліміт висоти зоюраження",
 			"Максимальна висота зображення для завантажених зображень"
 		],
-		"maxSize": [
+		"max_size": [
 			"Ліміт розміру зображень",
 			"Максимальний розмір зображень в мегабайтах (MB)"
 		],
-		"maxWidth": [
+		"max_width": [
 			"Ліміт ширини зображення",
 			"Максимальна ширина зображення для завантажених зображень"
 		],
@@ -244,7 +216,7 @@
 			"MeguTV",
 			"Play random board-specific videos in overlay player"
 		],
-		"meguTVShortcut": [
+		"meguTV_shortcut": [
 			"MeguTV",
 			"Play random board-specific videos in overlay player"
 		],
@@ -256,11 +228,7 @@
 			"Ім'я",
 			"Ім'я на постах"
 		],
-		"newPassword": [
-			"New password",
-			""
-		],
-		"newPost": [
+		"new_post": [
 			"Новий Пост",
 			"Відкрити новий пост"
 		],
@@ -272,39 +240,23 @@
 			"Повідомлення на робочий стіл",
 			"Отримувати повідомлення коли цитовано ваш пост або синхронізація почалась."
 		],
-		"nowPlaying": [
+		"now_playing": [
 			"Зараз показується Banner",
 			"Зараз програється пісня на р/a/діо або eden, інша інформація у банері зверху"
-		],
-		"oldPassword": [
-			"Old password",
-			""
-		],
-		"overrideCaptchaTags": [
-			"Override Captcha Tags",
-			"Mapping of boards to tags to use as the solution on the specified board."
 		],
 		"owners": [
 			"Owners",
 			"Owner account IDs. Board owners have full access to all board controls. Must contain at least one."
 		],
-		"password": [
-			"Password",
-			""
-		],
-		"postCreationScore": [
+		"post_creation_score": [
 			"Post creation spam score",
 			"Antispam weight of creating a new post. After exceeding the limit the user will need to solve a captcha."
 		],
-		"postInlineExpand": [
+		"post_inline_expansion": [
 			"Inline Post Link Expansion",
 			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
 		],
-		"pruneBoards": [
-			"Prune boards",
-			"Delete boards that have not had any new posts for N days"
-		],
-		"pruneThreads": [
+		"prune_threads": [
 			"Prune threads",
 			"Delete threads that have not had any posts in N days"
 		],
@@ -312,37 +264,17 @@
 			"Slut enabler",
 			"Don't ask"
 		],
-		"rbText": [
-			"Red/Blue Text",
-			"Display red and blue text if formatted with '^r' or '^b'"
-		],
-		"readOnly": [
-			"Лише читати",
-			"Вимикає створення постів"
-		],
-		"register": [
-			"Register",
-			""
-		],
-		"relativeTime": [
+		"relative_timestamps": [
 			"Відносні часові межі",
 			"Відносні часові межі постів. Ex.: 'Годину тому'"
 		],
-		"repeat": [
-			"Repeat",
-			""
-		],
-		"replyRight": [
+		"reply_right": [
 			"[Відповісти] справа",
 			"Посунути кнопку [Відповісти] направо"
 		],
-		"rootURL": [
+		"root_URL": [
 			"Root URL",
 			"Root URL of the imageboard. Required for some image search providers to work."
-		],
-		"rules": [
-			"Правила",
-			"Правила борди відображаються в модальному вікні "
 		],
 		"sage": [
 			"Sage",
@@ -356,19 +288,15 @@
 			"SauceNao",
 			"Пошук зображень по  saucenao.com"
 		],
-		"sessionExpiry": [
-			"Час дії сесії",
-			"Час в днях поки аккаунт буде автоматично розлогінено"
-		],
 		"spoilers": [
 			"Текстові спойлери",
 			"Вмикає використання ** для блоків спойлерів"
 		],
-		"staffTitle": [
+		"staff_title": [
 			"Staff Title",
 			"Display your staff title in the post header"
 		],
-		"textOnly": [
+		"text_only": [
 			"Лише текст",
 			"Вимикає завантаження файлів користувачами"
 		],
@@ -376,47 +304,43 @@
 			"Тема",
 			"Вибрати CSS тему"
 		],
-		"threadExpiryMax": [
-			"Maximal thread expiry time",
-			"Number of days without new posts before a thread is deleted"
-		],
-		"threadExpiryMin": [
-			"Minimal thread expiry time",
-			"Number of days without new posts before a thread is deleted"
+		"thread_expiry": [
+			"Thread expiry time",
+			"Number of days without bumping posts before a thread is deleted"
 		],
 		"title": [
 			"Заговок дошки",
 			"Короткий місткий заголовк дошки"
 		],
-		"toggleSpoiler": [
+		"toggle_spoiler": [
 			"Приховування зображення",
 			"Перемкнути приховування зображень"
 		],
-		"userBG": [
+		"user_background": [
 			"Власний фон сторінки",
 			"Перемкнути власний фон сторінки"
 		],
-		"userBGImage": [
+		"user_background_image": [
 			"",
 			"Власна картинка на фон сторінки"
 		],
-		"watchThreadsOnReply": [
+		"watch_threads_on_reply": [
 			"Watch threads on reply",
 			"Automatically add thread to watched threads on reply"
 		],
-		"webmHover": [
+		"webm_hover_preview": [
 			"Розгортання webm",
 			"WebMки розгротаються при наведенні мишки"
 		],
-		"whatAnime": [
+		"what_anime": [
 			"WhatAnime",
 			"whatanime.ga anime screenshot search"
 		],
-		"workMode": [
+		"work_mode": [
 			"Робочий режим",
 			"Приховує зображення і власний фон"
 		],
-		"workModeToggle": [
+		"work_mode_shortcut": [
 			"Робочий режим",
 			"Приховує зображення і власний фон"
 		],

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	. "github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test"
 )
 
 func TestSetGet(t *testing.T) {
@@ -18,7 +18,7 @@ func TestSetGet(t *testing.T) {
 	if err := Set(conf); err != nil {
 		t.Fatal(err)
 	}
-	AssertEquals(t, Get(), &conf)
+	test.AssertEquals(t, Get(), &conf)
 
 	json, hash := GetClient()
 	if json == nil {
@@ -37,147 +37,9 @@ func TestSetGetClient(t *testing.T) {
 
 	json, jsonHash := GetClient()
 	if !bytes.Equal(json, std) {
-		LogUnexpected(t, std, json)
+		test.LogUnexpected(t, std, json)
 	}
 	if jsonHash != hash {
-		LogUnexpected(t, hash, jsonHash)
+		test.LogUnexpected(t, hash, jsonHash)
 	}
-}
-
-func TestGetBoards(t *testing.T) {
-	ClearBoards()
-
-	_, err := SetBoardConfigs(BoardConfigs{
-		ID: "a",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	AssertEquals(t, GetBoards(), []string{"a"})
-}
-
-func TestSetGetAddRemoveBoardConfigs(t *testing.T) {
-	ClearBoards()
-	std := BoardConfigs{
-		ID: "a",
-		BoardPublic: BoardPublic{
-			ForcedAnon: true,
-		},
-	}
-
-	changed, err := SetBoardConfigs(std)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !changed {
-		t.Fatal("configs not changed")
-	}
-
-	conf := GetBoardConfigs("a")
-	if conf.Hash == "" {
-		t.Fatal("no hash generated")
-	}
-	if conf.JSON == nil {
-		t.Fatal("no JSON generated")
-	}
-	AssertEquals(t, conf.BoardConfigs, std)
-	if !IsBoard("a") {
-		t.Fatal("board does not exist")
-	}
-	AssertEquals(t, len(GetAllBoardConfigs()), 1)
-
-	RemoveBoard("a")
-	AssertEquals(t, GetBoardConfigs("a"), BoardConfContainer{})
-	if IsBoard("a") {
-		t.Fatal("board not deleted")
-	}
-}
-
-func TestSetMatchingBoardConfigs(t *testing.T) {
-	ClearBoards()
-
-	conf := BoardConfigs{
-		ID: "a",
-		BoardPublic: BoardPublic{
-			ForcedAnon: true,
-		},
-	}
-
-	for i := 0; i < 2; i++ {
-		changed, err := SetBoardConfigs(conf)
-		if err != nil {
-			t.Fatal(err)
-		}
-		expected := i == 0
-		if changed != expected {
-			LogUnexpected(t, expected, changed)
-		}
-	}
-}
-
-func TestSetDifferentBoardConfigs(t *testing.T) {
-	ClearBoards()
-
-	conf := BoardConfigs{
-		ID: "a",
-		BoardPublic: BoardPublic{
-			ForcedAnon: true,
-		},
-	}
-
-	testBoardConfChange(t, conf)
-	conf.Notice = "foo"
-	testBoardConfChange(t, conf)
-}
-
-func testBoardConfChange(t *testing.T, conf BoardConfigs) {
-	t.Helper()
-
-	changed, err := SetBoardConfigs(conf)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !changed {
-		t.Fatal("expected change")
-	}
-}
-
-func TestGetBoardTitles(t *testing.T) {
-	ClearBoards()
-
-	conf := [...]BoardConfigs{
-		{
-			ID: "g",
-			BoardPublic: BoardPublic{
-				Title: "Techloligy",
-			},
-		},
-		{
-			ID: "a",
-			BoardPublic: BoardPublic{
-				Title: "Animu & Mango",
-			},
-		},
-	}
-	for _, c := range conf {
-		if _, err := SetBoardConfigs(c); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	AssertEquals(t, GetBoardTitles(), BoardTitles{
-		{
-			ID:    "a",
-			Title: "Animu & Mango",
-		},
-		{
-			ID:    "all",
-			Title: "Aggregator metaboard",
-		},
-		{
-			ID:    "g",
-			Title: "Techloligy",
-		},
-	})
 }

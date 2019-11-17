@@ -60,12 +60,22 @@ func flushSpamScores() (err error) {
 			score, err = mergeSpamScore(
 				data.score,
 				threshold,
-				tx.QueryRow("get_spam_score", session[:]),
+				tx.QueryRow(
+					"select score from spam_scores where token = $1",
+					session[:],
+				),
 			)
 			if err != nil {
 				return
 			}
-			_, err = tx.Exec("upsert_spam_score", session[:], score.Unix())
+			_, err = tx.Exec(
+				`insert into spam_scores (token, score)
+				values ($1, $2)
+				on conflict (token)
+				do update set score = EXCLUDED.score`,
+				session[:],
+				score.Unix(),
+			)
 			if err != nil {
 				return
 			}
@@ -83,7 +93,9 @@ func flushSpamScores() (err error) {
 }
 
 func banForSpam(tx *pgx.Tx, ip net.IP) error {
-	return systemBanTx(tx, ip, "spam detected", time.Hour*48)
+	// TODO
+	// return systemBanTx(tx, ip, "spam detected", time.Hour*48)
+	return nil
 }
 
 // This surely is not done by normal human interaction
@@ -179,7 +191,10 @@ func getSpamScore(
 	score, err = mergeSpamScore(
 		spamScoreBuffer[session].score,
 		now.Add(-spamDetectionThreshold),
-		db.QueryRow("get_spam_score", session[:]),
+		db.QueryRow(
+			"select score from spam_scores where token = $1",
+			session[:],
+		),
 	)
 	if err != nil {
 		return
@@ -208,7 +223,7 @@ func recordValidCaptcha(session auth.Base64Token) (err error) {
 	defer spamMu.Unlock()
 
 	delete(spamScoreBuffer, session)
-	_, err = db.Exec("validate_captcha", session[:])
+	_, err = db.Exec("select validate_captcha($1::bytea)", session[:])
 	return
 }
 
@@ -227,15 +242,21 @@ func ValidateCaptcha(
 		return recordValidCaptcha(session)
 	case captchouli.ErrInvalidSolution:
 		var count int
-		err = db.QueryRow("record_invalid_captcha", ip).Scan(&count)
+		err = db.
+			QueryRow(
+				"select record_invalid_captcha($1::inet)",
+				ip,
+			).
+			Scan(&count)
 		if err != nil {
 			return
 		}
 		if count >= incorrectCaptchaLimit {
-			err = SystemBan(ip, "bot detected", time.Hour*48)
-			if err != nil {
-				return
-			}
+			// TODO
+			// err = SystemBan(ip, "bot detected", time.Hour*48)
+			// if err != nil {
+			// 	return
+			// }
 			return common.ErrBanned
 		}
 		return common.ErrInvalidCaptcha
@@ -257,7 +278,15 @@ func SolvedCaptchaRecently(
 		return
 	}
 	err = db.
-		QueryRow("solved_captcha_recently", session[:], time.Now().Add(-dur)).
+		QueryRow(
+			`select exists (
+				select
+				from last_solved_captchas
+				where token = $1 and time > $2
+			)`,
+			session[:],
+			time.Now().Add(-dur),
+		).
 		Scan(&has)
 	return
 }

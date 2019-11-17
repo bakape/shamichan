@@ -16,13 +16,29 @@ type Post struct {
 
 // GetPostParenthood retrieves the board and OP of a post
 func GetPostParenthood(id uint64) (board string, op uint64, err error) {
-	err = db.QueryRow("get_post_parenthood", id).Scan(&board, &op)
+	err = db.
+		QueryRow(
+			`select board, op
+			from posts p
+			join threads t on t.id = p.op
+			where p.id = $1`,
+			id,
+		).
+		Scan(&board, &op)
 	return
 }
 
 // GetPostBoard retrieves the board of a post by ID
 func GetPostBoard(id uint64) (board string, err error) {
-	err = db.QueryRow("get_post_parenthood", id).Scan(&board)
+	err = db.
+		QueryRow(
+			`select board, op
+			from posts p
+			join threads t on t.id = p.op
+			where p.id = $1`,
+			id,
+		).
+		Scan(&board)
 	return
 }
 
@@ -37,7 +53,12 @@ func InsertPost(tx *pgx.Tx, p *Post) (err error) {
 	}
 	err = tx.
 		QueryRow(
-			`insert_post`,
+			`select insert_image(
+				$1::bigint,
+				$2::char(86),
+				$3::varchar(200),
+				$4::bool
+			)`,
 			p.OP,
 			p.ID,
 			p.Body,
@@ -57,17 +78,4 @@ func InsertPost(tx *pgx.Tx, p *Post) (err error) {
 	p.Time = res.Time
 	p.Moderation = res.Moderation
 	return
-}
-
-// GetPostPassword retrieves a post's modification password
-func GetPostPassword(id uint64) (p []byte, err error) {
-	err = db.QueryRow("get_post_password", id).Scan(&p)
-	return
-}
-
-// SetPostCounter sets the post counter.
-// Should only be used in tests.
-func SetPostCounter(c uint64) error {
-	_, err := db.Exec(`SELECT setval('post_id', $1)`, c)
-	return err
 }

@@ -64,20 +64,29 @@ func (c commandRow) Value() (driver.Value, error) {
 
 // Populate command results that need DB access. Commands results that don't
 // need DB access are assigned in the parser.
-func populateCommands(
-	tx *pgx.Tx,
-	board string,
-	com []common.Command,
-) (err error) {
+func populateCommands(tx *pgx.Tx, com []common.Command) (err error) {
 	for i := range com {
 		switch com[i].Type {
 		case common.Pyu:
-			err = tx.QueryRow("increment_pyu", board).Scan(&com[i].Pyu)
+			err = tx.
+				QueryRow(
+					`update main
+					set val = val::bigint + 1
+					where id = 'pyu'
+					returning val::bigint`,
+				).
+				Scan(&com[i].Pyu)
 			if err != nil {
 				return
 			}
 		case common.Pcount:
-			err = tx.QueryRow("get_pcount", board).Scan(&com[i].Pyu)
+			err = tx.
+				QueryRow(
+					`select val::bigint
+					from main
+					where id = 'pyu'`,
+				).
+				Scan(&com[i].Pyu)
 			if err != nil {
 				return
 			}

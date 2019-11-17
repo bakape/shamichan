@@ -12,8 +12,7 @@ import (
 func TestPostUpdates(t *testing.T) {
 	p := Post{
 		StandalonePost: common.StandalonePost{
-			OP:    1,
-			Board: "a",
+			OP: 1,
 			Post: common.Post{
 				Editing: true,
 			},
@@ -21,9 +20,6 @@ func TestPostUpdates(t *testing.T) {
 		IP: "::1",
 	}
 	insertPost(t, &p)
-
-	writeAllBoard(t)
-	writeAdminAccount(t)
 
 	cases := [...]struct {
 		name string
@@ -59,16 +55,16 @@ func TestPostUpdates(t *testing.T) {
 				}
 			},
 		},
-		{
-			name: "moderate post",
-			bump: true,
-			fn: func(t *testing.T) {
-				err := DeletePosts([]uint64{p.ID}, "admin")
-				if err != nil {
-					t.Fatal(err)
-				}
-			},
-		},
+		// {
+		// 	name: "moderate post",
+		// 	bump: true,
+		// 	fn: func(t *testing.T) {
+		// 		err := DeletePosts([]uint64{p.ID}, "admin")
+		// 		if err != nil {
+		// 			t.Fatal(err)
+		// 		}
+		// 	},
+		// },
 	}
 
 	buf, err := GetThread(1, 0)
@@ -111,8 +107,7 @@ func TestPostUpdates(t *testing.T) {
 func TestWriteOpenPostBody(t *testing.T) {
 	p := Post{
 		StandalonePost: common.StandalonePost{
-			OP:    1,
-			Board: "a",
+			OP: 1,
 			Post: common.Post{
 				Editing: true,
 			},

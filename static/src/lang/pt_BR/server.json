@@ -4,15 +4,11 @@
 			"Information panel text",
 			"Entries for the banner's Frequently Asked Questions list and information modal"
 		],
-		"JPEGThumbnails": [
+		"JPEG_thumbnails": [
 			"JPEG thumbnails",
 			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
-		"NSFW": [
-			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
-		],
-		"alwaysLock": [
+		"always_lock_to_bottom": [
 			"Sempre travar no rodapé",
 			"Trava o scroll da página no rodapé mesmo com a aba no fundo."
 		],
@@ -20,33 +16,17 @@
 			"Anonimizar",
 			"Mostra todos os postadores como anônimos"
 		],
-		"audioVolume": [
+		"audio_volume": [
 			"Audio volume",
 			"Volume of audio in music and video players"
 		],
-		"autogif": [
-			"Miniaturas de GIF animadas",
-			"Miniaturas de GIF animadas"
-		],
-		"bgMute": [
-			"Mute Background Video",
-			"Mute the background video"
-		],
-		"bgVideo": [
+		"background_video": [
 			"Background Video",
 			"Admin-specified memes piped straight into you're monitor"
 		],
-		"boardExpiry": [
-			"Board expiry time",
-			"Number of days without new posts before a board is deleted"
-		],
-		"boardName": [
-			"Board name",
-			"Name of the new board. Can contain up to 10 lowercase Latin letters or numbers."
-		],
-		"boardTitle": [
-			"Board title",
-			"Title of the new board, such as 'Animu & Mango'. Up to 100 characters long."
+		"background_video_mute": [
+			"Mute Background Video",
+			"Mute the background video"
 		],
 		"body": [
 			"Body",
@@ -56,41 +36,37 @@
 			"Captcha",
 			"Ask users to complete a captcha for certain tasks like registration and thread creation"
 		],
-		"captchaTags": [
+		"captcha_tags": [
 			"Captcha tags",
 			"Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
 		],
-		"charScore": [
+		"char_score": [
 			"Character spam score",
 			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
 		],
-		"customCSS": [
+		"custom_CSS": [
 			"",
 			"User-defined CSS rules loaded on top of the selected theme"
 		],
-		"customCSSToggle": [
+		"custom_CSS_enable": [
 			"Custom CSS",
 			"Toggle use of custom CSS"
 		],
-		"defaultCSS": [
-			"Default theme",
-			"Theme to load by default, when none is set by the client"
-		],
-		"defaultLang": [
+		"default_language": [
 			"Default language",
 			"Language pack to load by default"
+		],
+		"default_theme": [
+			"Default theme",
+			"Theme to load by default, when none is set by the client"
 		],
 		"desustorage": [
 			"DesuStorage",
 			"desustorage.org pesquisa de Imagens"
 		],
-		"disableRobots": [
+		"disable_robots": [
 			"Prevent crawlers",
 			"Prevent automated website crawlers, such as search engine indexers, from accessing this board."
-		],
-		"disableUserBoards": [
-			"Disable non-admin board creation",
-			"Prevents any account apart from the 'admin' account from creating new boards"
 		],
 		"done": [
 			"Terminar post",
@@ -100,31 +76,31 @@
 			"#8ball answers",
 			"List of answers for the #8ball hash command. Can contain up to 100 answers and 2000 characters total."
 		],
-		"emailErr": [
+		"email_errors": [
 			"Email Errors",
 			"Toggle emailing errors."
 		],
-		"emailErrMail": [
+		"email_errors_address": [
 			"Email",
 			"Error email."
 		],
-		"emailErrPass": [
+		"email_errors_password": [
 			"Password",
 			"Error email password."
 		],
-		"emailErrPort": [
-			"Email server port",
-			"Error email server port."
-		],
-		"emailErrSub": [
+		"email_errors_server_address": [
 			"Email server",
 			"Error email server subdomain."
+		],
+		"email_errors_server_port": [
+			"Email server port",
+			"Error email server port."
 		],
 		"exhentai": [
 			"Exhentai",
 			"exhentai.org pesquisa de Imagens"
 		],
-		"expandAll": [
+		"expand_all": [
 			"Expandir Todas Imagens",
 			"Expande todas as imagens. Webm, PDF, MP3 e seu próprio post não são afetados. Novos posts de imagem também são expandidos"
 		],
@@ -132,7 +108,7 @@
 			"Exportar",
 			"Exportar opções para arquivo"
 		],
-		"feedbackEmail": [
+		"feedback_email": [
 			"Feedback email",
 			"User feedback email to display in the top banner"
 		],
@@ -140,17 +116,13 @@
 			"Country flags",
 			"Display poster country flags on posts"
 		],
-		"forcedAnon": [
+		"forced_anonymity": [
 			"Forced Anonymous",
 			"Disable user names, tripcodes and emails on posts"
 		],
-		"galleryMode": [
+		"gallery_mode": [
 			"Gallery Mode",
 			"Only show posts containing images"
-		],
-		"globalDisableRobots": [
-			"Prevent crawlers globally",
-			"Prevent automated website crawlers, such as search engine indexers, from accessing this website."
 		],
 		"google": [
 			"Google",
@@ -160,19 +132,19 @@
 			"Escondidos: 0",
 			"Limpa os posts escondidos"
 		],
-		"hideBinned": [
+		"hide_binned": [
 			"Hide Deleted Posts",
 			"Hide all posts that have been deleted"
 		],
-		"hideRecursively": [
+		"hide_recursively": [
 			"Recursive post hiding",
 			"Hide all posts, that replied to a hidden post recursively"
 		],
-		"hideThumbs": [
+		"hide_thumbnails": [
 			"Hide thumbnails",
 			"Display a [Show] button in place of thumbnails"
 		],
-		"horizontalPosting": [
+		"horizontal_posting": [
 			"Postagem Horizontal",
 			"Nostalgia do 38chan"
 		],
@@ -180,15 +152,15 @@
 			"Login",
 			""
 		],
-		"imageHover": [
+		"image_hover_preview": [
 			"Expansão de Imagem ao Pairar",
 			"Mostra prévias de imagens ao pairar"
 		],
-		"imageRootOverride": [
+		"image_root_override": [
 			"Image root override",
 			"If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
 		],
-		"imageScore": [
+		"image_score": [
 			"Image spam score",
 			"Antispam weight of posting an image. After exceeding the limit the user will need to solve a captcha."
 		],
@@ -196,7 +168,7 @@
 			"Importar",
 			"Importar opções de arquivo"
 		],
-		"inlineFit": [
+		"inline_fit": [
 			"Miniaturas",
 			"Escolha o tipo de miniatura:\nPequena: 125x125, tamanho de arquivo pequeno;\nSharp: 125x125, mais detalhada;\nEsconder: esconde todas as imagens;"
 		],
@@ -208,7 +180,7 @@
 			"Janitors",
 			"Janitor account IDs. Janitors can only delete posts."
 		],
-		"lang": [
+		"language": [
 			"Linguagem",
 			"Mudar a linguagem da interface"
 		],
@@ -220,7 +192,7 @@
 			"Mascot",
 			"Toggle mascot display"
 		],
-		"mascotImage": [
+		"mascot_image": [
 			"",
 			"Image to use as the mascot"
 		],
@@ -228,15 +200,15 @@
 			"Mature content",
 			"Inform the user the website contains mature content on first visit"
 		],
-		"maxHeight": [
+		"max_height": [
 			"Image height limit",
 			"Maximum height of uploaded images"
 		],
-		"maxSize": [
+		"max_size": [
 			"Image size limit",
 			"Maximum size of uploaded images in MB"
 		],
-		"maxWidth": [
+		"max_width": [
 			"Image width limit",
 			"Maximum width of uploaded images"
 		],
@@ -244,7 +216,7 @@
 			"MeguTV",
 			"Play random board-specific videos in overlay player"
 		],
-		"meguTVShortcut": [
+		"meguTV_shortcut": [
 			"MeguTV",
 			"Play random board-specific videos in overlay player"
 		],
@@ -256,11 +228,7 @@
 			"Name",
 			"Name to attach to new posts"
 		],
-		"newPassword": [
-			"New password",
-			""
-		],
-		"newPost": [
+		"new_post": [
 			"Novo post",
 			"Abre um novo post"
 		],
@@ -272,39 +240,23 @@
 			"Notificações de Desktop",
 			"Tenha notificações no desktop ao ser quotado ou quando o syncwatch começar"
 		],
-		"nowPlaying": [
+		"now_playing": [
 			"Tocando agora",
 			"Música atual da r/a/dio ou eden e outras informações de stream no banner superior"
-		],
-		"oldPassword": [
-			"Old password",
-			""
-		],
-		"overrideCaptchaTags": [
-			"Override Captcha Tags",
-			"Mapping of boards to tags to use as the solution on the specified board."
 		],
 		"owners": [
 			"Owners",
 			"Owner account IDs. Board owners have full access to all board controls. Must contain at least one."
 		],
-		"password": [
-			"Password",
-			""
-		],
-		"postCreationScore": [
+		"post_creation_score": [
 			"Post creation spam score",
 			"Antispam weight of creating a new post. After exceeding the limit the user will need to solve a captcha."
 		],
-		"postInlineExpand": [
+		"post_inline_expansion": [
 			"Inline Post Link Expansion",
 			"Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
 		],
-		"pruneBoards": [
-			"Prune boards",
-			"Delete boards that have not had any new posts for N days"
-		],
-		"pruneThreads": [
+		"prune_threads": [
 			"Prune threads",
 			"Delete threads that have not had any posts in N days"
 		],
@@ -312,37 +264,17 @@
 			"Slut enabler",
 			"Don't ask"
 		],
-		"rbText": [
-			"Red/Blue Text",
-			"Display red and blue text if formatted with '^r' or '^b'"
-		],
-		"readOnly": [
-			"Read only",
-			"Disable post creation"
-		],
-		"register": [
-			"Register",
-			""
-		],
-		"relativeTime": [
+		"relative_timestamps": [
 			"Estampas de tempo relativas",
 			"Estampas de tempo relativas. Ex.: '1 hora atrás'"
 		],
-		"repeat": [
-			"Repeat",
-			""
-		],
-		"replyRight": [
+		"reply_right": [
 			"[Postar] à direita",
 			"Move o botão de Postar para a direita da página"
 		],
-		"rootURL": [
+		"root_URL": [
 			"Root URL",
 			"Root URL of the imageboard. Required for some image search providers to work."
-		],
-		"rules": [
-			"Rules",
-			"Board rules to display in the rule modal window"
 		],
 		"sage": [
 			"Sage",
@@ -356,19 +288,15 @@
 			"SauceNao",
 			"saucenao.com pesquisa de Imagens"
 		],
-		"sessionExpiry": [
-			"Account session expiry",
-			"Time in days until user accoubts are automatically logged out"
-		],
 		"spoilers": [
 			"Text spoilers",
 			"Enable use of ** to spoiler blocks of text"
 		],
-		"staffTitle": [
+		"staff_title": [
 			"Staff Title",
 			"Display your staff title in the post header"
 		],
-		"textOnly": [
+		"text_only": [
 			"Text only",
 			"Disable file uploads"
 		],
@@ -376,47 +304,43 @@
 			"Tema",
 			"Selecione o tema CSS"
 		],
-		"threadExpiryMax": [
-			"Maximal thread expiry time",
-			"Number of days without new posts before a thread is deleted"
-		],
-		"threadExpiryMin": [
-			"Minimal thread expiry time",
-			"Number of days without new posts before a thread is deleted"
+		"thread_expiry": [
+			"Thread expiry time",
+			"Number of days without bumping posts before a thread is deleted"
 		],
 		"title": [
 			"Board title",
 			"Short descriptive title of the board"
 		],
-		"toggleSpoiler": [
+		"toggle_spoiler": [
 			"Spoiler na imagem",
 			"Ativa spoiler no post aberto"
 		],
-		"userBG": [
+		"user_background": [
 			"Fundo personalizado",
 			"Ativa o fundo personalizado da página"
 		],
-		"userBGImage": [
+		"user_background_image": [
 			"",
 			"Imagem para usar como fundo"
 		],
-		"watchThreadsOnReply": [
+		"watch_threads_on_reply": [
 			"Watch threads on reply",
 			"Automatically add thread to watched threads on reply"
 		],
-		"webmHover": [
+		"webm_hover_preview": [
 			"Expansão de WebM ao pairar",
 			"Mostra prévias de WebM ao pairar. Requer Expansão de Imagem ao Pairar ativado."
 		],
-		"whatAnime": [
+		"what_anime": [
 			"WhatAnime",
 			"whatanime.ga anime screenshot search"
 		],
-		"workMode": [
+		"work_mode": [
 			"Work mode",
 			"Hides images and disables user background"
 		],
-		"workModeToggle": [
+		"work_mode_shortcut": [
 			"Work mode",
 			"Hides images and disables user background"
 		],

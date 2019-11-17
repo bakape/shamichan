@@ -4,15 +4,11 @@
 			"FAQ",
 			"Текст FAQ"
 		],
-		"JPEGThumbnails": [
+		"JPEG_thumbnails": [
 			"JPEG thumbnails",
 			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
-		"NSFW": [
-			"Not Safe For Work",
-			"Board allows material, that are not safe to be viewed in a work environment"
-		],
-		"alwaysLock": [
+		"always_lock_to_bottom": [
 			"Закрепить внизу",
 			"Всегда проматывать к низу страницу даже если вкладка неактивна"
 		],
@@ -20,33 +16,17 @@
 			"Анонимизация",
 			"Отображать всех постеров анонимами"
 		],
-		"audioVolume": [
+		"audio_volume": [
 			"Audio volume",
 			"Volume of audio in music and video players"
 		],
-		"autogif": [
-			"Анимированные GIF-превью",
-			"Анимированные GIF-превью"
-		],
-		"bgMute": [
-			"Mute Background Video",
-			"Mute the background video"
-		],
-		"bgVideo": [
+		"background_video": [
 			"Background Video",
 			"Admin-specified memes piped straight into you're monitor"
 		],
-		"boardExpiry": [
-			"Время жизни доски",
-			"Число дней без постов до автоудаления доски"
-		],
-		"boardName": [
-			"Имя доски",
-			"Имя новой доски, может содержать до 10 латинских букв и цифр в нижнем регистре"
-		],
-		"boardTitle": [
-			"Заголовок доски",
-			"Заголовок новый доски, например «Аниме и манга», максимум 100 символов"
+		"background_video_mute": [
+			"Mute Background Video",
+			"Mute the background video"
 		],
 		"body": [
 			"Body",
@@ -56,41 +36,37 @@
 			"Капча",
 			"Заставлять пользователей вводить капчу для некоторых действий, например при регистрации и создании треда"
 		],
-		"captchaTags": [
+		"captcha_tags": [
 			"Captcha tags",
 			"Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
 		],
-		"charScore": [
+		"char_score": [
 			"Character spam score",
 			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
 		],
-		"customCSS": [
+		"custom_CSS": [
 			"",
 			"Определяемые пользователем CSS-правила, применяемые поверх выбранной темы"
 		],
-		"customCSSToggle": [
+		"custom_CSS_enable": [
 			"Пользовательский CSS",
 			"Активировать пользовательский CSS"
 		],
-		"defaultCSS": [
-			"Тема по умолчанию",
-			"Используемая по умолчанию тема"
-		],
-		"defaultLang": [
+		"default_language": [
 			"Язык по умолчанию",
 			"Используемый по умолчанию язык"
+		],
+		"default_theme": [
+			"Тема по умолчанию",
+			"Используемая по умолчанию тема"
 		],
 		"desustorage": [
 			"DesuStorage",
 			"desustorage.org поиск по картинкам"
 		],
-		"disableRobots": [
+		"disable_robots": [
 			"Блокировать роботов",
 			"Запретить ботам и поисковым роботам доступ к доске"
-		],
-		"disableUserBoards": [
-			"Только админ может создавать доски",
-			"Запретить всем, кроме админа, создавать новые доски"
 		],
 		"done": [
 			"Завершить пост",
@@ -100,31 +76,31 @@
 			"#8ball ответы",
 			"Список ответов для команды #8ball, может содержать до 100 ответов и 2000 символов всего"
 		],
-		"emailErr": [
+		"email_errors": [
 			"Email Errors",
 			"Toggle emailing errors."
 		],
-		"emailErrMail": [
+		"email_errors_address": [
 			"Email",
 			"Error email."
 		],
-		"emailErrPass": [
+		"email_errors_password": [
 			"Password",
 			"Error email password."
 		],
-		"emailErrPort": [
-			"Email server port",
-			"Error email server port."
-		],
-		"emailErrSub": [
+		"email_errors_server_address": [
 			"Email server",
 			"Error email server subdomain."
+		],
+		"email_errors_server_port": [
+			"Email server port",
+			"Error email server port."
 		],
 		"exhentai": [
 			"Exhentai",
 			"exhentai.org поиск по картинкам"
 		],
-		"expandAll": [
+		"expand_all": [
 			"Развернуть все изображения",
 			"Развернуть все изображения (не влияет на WebM, PDF, MP3 и собственные посты)"
 		],
@@ -132,7 +108,7 @@
 			"Экспортировать",
 			"Экспортировать настройки в файл"
 		],
-		"feedbackEmail": [
+		"feedback_email": [
 			"Обратная связь",
 			"Почта, отображаемая в верхнем баннере"
 		],
@@ -140,17 +116,13 @@
 			"Country flags",
 			"Display poster country flags on posts"
 		],
-		"forcedAnon": [
+		"forced_anonymity": [
 			"Форсированная анонимность",
 			"Отключить имена, трипкоды и почту у постов"
 		],
-		"galleryMode": [
+		"gallery_mode": [
 			"Режим галереи",
 			"Показывать только посты с изображениями"
-		],
-		"globalDisableRobots": [
-			"Prevent crawlers globally",
-			"Prevent automated website crawlers, such as search engine indexers, from accessing this website."
 		],
 		"google": [
 			"Google",
@@ -160,19 +132,19 @@
 			"Скрыто: 0",
 			"Очистить список скрытого"
 		],
-		"hideBinned": [
+		"hide_binned": [
 			"Hide Deleted Posts",
 			"Hide all posts that have been deleted"
 		],
-		"hideRecursively": [
+		"hide_recursively": [
 			"Recursive post hiding",
 			"Hide all posts, that replied to a hidden post recursively"
 		],
-		"hideThumbs": [
+		"hide_thumbnails": [
 			"Скрыть превью",
 			"Отображать кнопку [Показать] на месте превью"
 		],
-		"horizontalPosting": [
+		"horizontal_posting": [
 			"Горизонтальный постинг",
 			"Ностальгия по 38chan"
 		],
@@ -180,15 +152,15 @@
 			"Логин",
 			""
 		],
-		"imageHover": [
+		"image_hover_preview": [
 			"Раскрытие изображений по наведению",
 			"Раскрывать изображения при наведении"
 		],
-		"imageRootOverride": [
+		"image_root_override": [
 			"Нестандартный хост изображений",
 			"Для размещения изображений на отдельном хосте (например для CDN) введите его полный адрес, например «https://images.meguca.org»"
 		],
-		"imageScore": [
+		"image_score": [
 			"Image spam score",
 			"Antispam weight of posting an image. After exceeding the limit the user will need to solve a captcha."
 		],
@@ -196,7 +168,7 @@
 			"Импорт",
 			"Импорт настроек из файла"
 		],
-		"inlineFit": [
+		"inline_fit": [
 			"Раскрытие",
 			"Разворачивать изображения внутри родительского поста"
 		],
@@ -208,7 +180,7 @@
 			"Помощники",
 			"Аккаунты помощников (могут только удалять посты)"
 		],
-		"lang": [
+		"language": [
 			"Язык",
 			"Изменить язык интерфейса"
 		],
@@ -220,7 +192,7 @@
 			"Маскот",
 			"Отображать маскота"
 		],
-		"mascotImage": [
+		"mascot_image": [
 			"",
 			"Изображения маскота"
 		],
@@ -228,15 +200,15 @@
 			"Взрослое содержимое",
 			"Информировать пользователя при первом визите о взрослом содержимом сайта"
 		],
-		"maxHeight": [
+		"max_height": [
 			"Максимальная высота изображения",
 			"Максимальная высота загружаемого изображения"
 		],
-		"maxSize": [
+		"max_size": [
 			"Максимальный размер изображения",
 			"Максимальный размер загружаемого изображения в мегабайтах"
 		],
-		"maxWidth": [
+		"max_width": [
 			"Максимальная ширина изображения",
 			"Максимальная ширина загружаемого изображения"
 		],
@@ -244,7 +216,7 @@
 			"MeguTV",
 			"Play random board-specific videos in overlay player"
 		],
-		"meguTVShortcut": [
+		"meguTV_shortcut": [
 			"MeguTV",
 			"Play random board-specific videos in overlay player"
 		],
@@ -256,11 +228,7 @@
 			"Имя",
 			"Отображать имя у новых постов"
 		],
-		"newPassword": [
-			"Новый пароль",
-			""
-		],
-		"newPost": [
+		"new_post": [
 			"Новый пост",
 			"Открыть новый пост"
 		],
@@ -272,39 +240,23 @@
 			"Уведомления",
 			"Получать уведомления при цитированиях или перед синхронизацией"
 		],
-		"nowPlaying": [
+		"now_playing": [
 			"Баннер «сейчас играет»",
 			"Текущая проигрываемая песня на р/а/дио или eden и прочая информация в верхнем баннере"
-		],
-		"oldPassword": [
-			"Старый пароль",
-			""
-		],
-		"overrideCaptchaTags": [
-			"Override Captcha Tags",
-			"Mapping of boards to tags to use as the solution on the specified board."
 		],
 		"owners": [
 			"Владелец",
 			"Аккаунты владельцев доски (имеет доступ ко всем функциям доски, должен как хотя бы один)"
 		],
-		"password": [
-			"Пароль",
-			""
-		],
-		"postCreationScore": [
+		"post_creation_score": [
 			"Post creation spam score",
 			"Antispam weight of creating a new post. After exceeding the limit the user will need to solve a captcha."
 		],
-		"postInlineExpand": [
+		"post_inline_expansion": [
 			"Раскрытие ссылок на посты",
 			"Раскрывать ссылки на посты по клику, иначе переместиться к указанному посту"
 		],
-		"pruneBoards": [
-			"Автоочистка досок",
-			"Удалять доски на которых давно не было постов"
-		],
-		"pruneThreads": [
+		"prune_threads": [
 			"Автоочистка тредов",
 			"Удалять треды в которых давно не было постов"
 		],
@@ -312,37 +264,17 @@
 			"Slut enabler",
 			"Don't ask"
 		],
-		"rbText": [
-			"Red/Blue Text",
-			"Display red and blue text if formatted with '^r' or '^b'"
-		],
-		"readOnly": [
-			"Только чтение",
-			"Запретить отправку постов"
-		],
-		"register": [
-			"Зарегистрировать",
-			""
-		],
-		"relativeTime": [
+		"relative_timestamps": [
 			"Относительное время",
 			"Относительное время постов, например «1 час назад»"
 		],
-		"repeat": [
-			"Повторить",
-			""
-		],
-		"replyRight": [
+		"reply_right": [
 			"[Ответ] справа",
 			"Переместить кнопку ответа в правую часть страницы"
 		],
-		"rootURL": [
+		"root_URL": [
 			"Корневой URL",
 			"Корневой URL борды, необходим для некоторых сайтов поиска по картинкам"
-		],
-		"rules": [
-			"Правила",
-			"Правила доски, отображаемые в модальном окне"
 		],
 		"sage": [
 			"Сажа",
@@ -356,19 +288,15 @@
 			"SauceNao",
 			"saucenao.com поиск по картинкам"
 		],
-		"sessionExpiry": [
-			"Время устаревания сессии",
-			"Число дней до автоматического разлогинивания из аккаунта"
-		],
 		"spoilers": [
 			"Спойлеры изображений",
 			"Не ставить спойлеры на изображения"
 		],
-		"staffTitle": [
+		"staff_title": [
 			"Метка модератора",
 			"Отображать модераторский статус в посте"
 		],
-		"textOnly": [
+		"text_only": [
 			"Только текст",
 			"Запретить загрузку файлов"
 		],
@@ -376,47 +304,43 @@
 			"Тема",
 			"Выбрать тему сайта"
 		],
-		"threadExpiryMax": [
-			"Максимальное время жизни треда",
-			"Число дней без новых постов перед удалением треда"
-		],
-		"threadExpiryMin": [
-			"Минимальное время жизни треда",
-			"Число дней без новых постов перед удалением треда"
+		"thread_expiry": [
+			"Thread expiry time",
+			"Number of days without bumping posts before a thread is deleted"
 		],
 		"title": [
 			"Заголовок доски",
 			"Короткий заголовок доски"
 		],
-		"toggleSpoiler": [
+		"toggle_spoiler": [
 			"Спойлер изображения",
 			"Включить спойлер для открытого поста"
 		],
-		"userBG": [
+		"user_background": [
 			"Пользовательский фон",
 			"Использовать пользовательский фон"
 		],
-		"userBGImage": [
+		"user_background_image": [
 			"",
 			"Фоновое изображение"
 		],
-		"watchThreadsOnReply": [
+		"watch_threads_on_reply": [
 			"Watch threads on reply",
 			"Automatically add thread to watched threads on reply"
 		],
-		"webmHover": [
+		"webm_hover_preview": [
 			"Раскрытие WebM по наведению",
 			"Раскрывать вебмки по наведению, раскрытие изображений также должно быть включено"
 		],
-		"whatAnime": [
+		"what_anime": [
 			"WhatAnime",
 			"whatanime.ga поиск по аниме-скриншоту"
 		],
-		"workMode": [
+		"work_mode": [
 			"Режим босса",
 			"Скрыть изображения и пользовательский фон"
 		],
-		"workModeToggle": [
+		"work_mode_shortcut": [
 			"Режим босса",
 			"Скрыть изображения и пользовательский фон"
 		],

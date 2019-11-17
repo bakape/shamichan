@@ -11,19 +11,7 @@ import (
 	"strings"
 
 	"github.com/bakape/meguca/config"
-	"golang.org/x/crypto/bcrypt"
 )
-
-// IsBoard confirms the string is a valid board
-func IsBoard(board string) bool {
-	return board == "all" || IsNonMetaBoard(board)
-}
-
-// IsNonMetaBoard returns whether a valid board is a classic board and not
-// some other path that emulates a board
-func IsNonMetaBoard(b string) bool {
-	return b != "all" && config.IsBoard(b)
-}
 
 // GetIP extracts the IP of a request, honouring reverse proxies, if set
 func GetIP(r *http.Request) (ip net.IP, err error) {
@@ -67,9 +55,4 @@ func RandomID(length int) (string, error) {
 		return "", err
 	}
 	return base64.RawStdEncoding.EncodeToString(buf), nil
-}
-
-// BcryptHash generates a bcrypt hash from the passed string
-func BcryptHash(password string, rounds int) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(password), rounds)
 }

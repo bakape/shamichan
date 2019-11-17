@@ -11,8 +11,7 @@ import (
 func TestPopulateCommands(t *testing.T) {
 	p := Post{
 		StandalonePost: common.StandalonePost{
-			OP:    1,
-			Board: "a",
+			OP: 1,
 			Post: common.Post{
 				Editing: true,
 			},
@@ -48,8 +47,7 @@ func TestPopulateCommands(t *testing.T) {
 		t.Fatal(err)
 	}
 	test.AssertJSON(t, bytes.NewReader(buf), common.StandalonePost{
-		OP:    1,
-		Board: "a",
+		OP: 1,
 		Post: common.Post{
 			ID:   p.ID,
 			Time: p.Time,

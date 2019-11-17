@@ -15,9 +15,13 @@ func TestSpamScores(t *testing.T) {
 	// Skip to avoid massive booru fetches on DB population
 	test.SkipInCI(t)
 
-	assertTableClear(t, "spam_scores", "last_solved_captchas", "boards",
-		"accounts")
-	writeAllBoard(t)
+	assertTableClear(
+		t,
+		"spam_scores",
+		"last_solved_captchas",
+		"boards",
+		"accounts",
+		``)
 
 	config.Set(config.Configs{
 		CaptchaTags: config.Defaults.CaptchaTags,
@@ -165,7 +169,6 @@ func TestCaptchas(t *testing.T) {
 		"accounts",
 		"spam_scores",
 	)
-	writeAllBoard(t)
 	config.Set(config.Configs{
 		CaptchaTags: config.Defaults.CaptchaTags,
 		Public: config.Public{

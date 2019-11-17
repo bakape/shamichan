@@ -4,15 +4,11 @@
 			"信息面板的文字",
 			"常見問題列表的橫幅和信息面板的文字"
 		],
-		"JPEGThumbnails": [
+		"JPEG_thumbnails": [
 			"JPEG thumbnails",
 			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
 		],
-		"NSFW": [
-			"Not Safe For Work",
-			"允許成人內容的看板"
-		],
-		"alwaysLock": [
+		"always_lock_to_bottom": [
 			"永遠鎖定在最下面",
 			"即使隱藏了標籤，也會鎖定滾動到頁面底部"
 		],
@@ -20,33 +16,17 @@
 			"匿名化",
 			"將所有發文者顯示為匿名"
 		],
-		"audioVolume": [
+		"audio_volume": [
 			"音量",
 			"音樂和影片播放器中的音量。"
 		],
-		"autogif": [
-			"動畫 GIF 縮圖",
-			"動畫 GIF 縮圖"
-		],
-		"bgMute": [
-			"將背景影片靜音",
-			"將背景影片靜音"
-		],
-		"bgVideo": [
+		"background_video": [
 			"背景影片",
 			"管理員專屬的迷因直輸你的螢幕"
 		],
-		"boardExpiry": [
-			"看板逾期時間",
-			"在刪除看板前沒有任何新貼文的天數"
-		],
-		"boardName": [
-			"看板名稱",
-			"新看板的名稱。最多可包含 10 個小寫拉丁字母或數字。"
-		],
-		"boardTitle": [
-			"看板標題",
-			"新看板的標題，像是 'Animu & Mango'。最多 100 個字符。"
+		"background_video_mute": [
+			"將背景影片靜音",
+			"將背景影片靜音"
 		],
 		"body": [
 			"內文",
@@ -56,41 +36,37 @@
 			"驗證碼",
 			"要求用戶完成驗證碼以進行特定的事情，像是註冊或是發文"
 		],
-		"captchaTags": [
+		"captcha_tags": [
 			"驗證碼標籤",
 			"用於驗證碼解決方案的標籤。每個生成的驗證碼將隨機選擇一個標籤。要求包含至少 3 個不同的標籤。"
 		],
-		"charScore": [
+		"char_score": [
 			"字元濫發分數",
 			"在貼文中編輯一個字元的防濫發權重。超過限制後，用戶需要解決驗證碼。"
 		],
-		"customCSS": [
+		"custom_CSS": [
 			"",
 			"加載在所選主題之上的用戶自定義 CSS 規則"
 		],
-		"customCSSToggle": [
+		"custom_CSS_enable": [
 			"自定義 CSS",
 			"切換自定義 CSS 的使用"
 		],
-		"defaultCSS": [
-			"預設主題",
-			"預設情況下加載的主題，當客戶端沒有設置時"
-		],
-		"defaultLang": [
+		"default_language": [
 			"預設語言",
 			"預設情況下要加載的語言包"
+		],
+		"default_theme": [
+			"預設主題",
+			"預設情況下加載的主題，當客戶端沒有設置時"
 		],
 		"desustorage": [
 			"DesuStorage",
 			"desustorage.org 圖片搜尋"
 		],
-		"disableRobots": [
+		"disable_robots": [
 			"防止爬蟲",
 			"防止自動網站抓取工具（如搜尋引擎索引器）訪問此看板。"
-		],
-		"disableUserBoards": [
-			"禁止非管理員創建看板",
-			"防止 'admin' 帳戶之外的任何帳戶創建新的看板"
 		],
 		"done": [
 			"完成貼文",
@@ -100,31 +76,31 @@
 			"#8ball 答案",
 			"#8ball hash 指令的答案列表。最多可包含 100 個答案和 2000 個字符。"
 		],
-		"emailErr": [
+		"email_errors": [
 			"Email 錯誤",
 			"切換寄送錯誤 Email。"
 		],
-		"emailErrMail": [
+		"email_errors_address": [
 			"Email",
 			"錯誤 email。"
 		],
-		"emailErrPass": [
+		"email_errors_password": [
 			"密碼",
 			"錯誤 email 的密碼。"
 		],
-		"emailErrPort": [
-			"Email 伺服器通訊埠",
-			"錯誤 email 伺服器的通訊埠。"
-		],
-		"emailErrSub": [
+		"email_errors_server_address": [
 			"Email 伺服器",
 			"錯誤 email 伺服器的子網域。"
+		],
+		"email_errors_server_port": [
+			"Email 伺服器通訊埠",
+			"錯誤 email 伺服器的通訊埠。"
 		],
 		"exhentai": [
 			"Exhentai",
 			"exhentai.org 圖片搜尋"
 		],
-		"expandAll": [
+		"expand_all": [
 			"展開所有圖片",
 			"展開所有圖片。Webm、PDF 和 MP3 以及你自己的貼文不會受到影響。新貼文的圖片也會被展開。"
 		],
@@ -132,7 +108,7 @@
 			"匯出",
 			"將選項匯出到檔案"
 		],
-		"feedbackEmail": [
+		"feedback_email": [
 			"反饋郵箱",
 			"顯示在頂部橫幅中的用戶反饋電子郵件"
 		],
@@ -140,17 +116,13 @@
 			"國旗",
 			"顯示發文者的國旗在貼文上"
 		],
-		"forcedAnon": [
+		"forced_anonymity": [
 			"強制匿名",
 			"禁用貼文上的用戶名、tripcodes 和電子郵件"
 		],
-		"galleryMode": [
+		"gallery_mode": [
 			"圖庫模式",
 			"僅顯示包含圖片的貼文"
-		],
-		"globalDisableRobots": [
-			"Prevent crawlers globally",
-			"Prevent automated website crawlers, such as search engine indexers, from accessing this website."
 		],
 		"google": [
 			"Google",
@@ -160,23 +132,19 @@
 			"隱藏： 0",
 			"清除隱藏的貼文"
 		],
-		"hideBinned": [
+		"hide_binned": [
 			"隱藏已刪除的貼文",
 			"隱藏已刪除的所有貼文"
 		],
-		"hideNSFW": [
-			"隱藏 NSFW 內容在 /all/",
-			"從 /all/ 元看板中隱藏被標記為 not safe for work 的看板"
-		],
-		"hideRecursively": [
+		"hide_recursively": [
 			"遞迴貼文隱藏",
 			"遞迴隱藏所有回應到隱藏貼文的貼文"
 		],
-		"hideThumbs": [
+		"hide_thumbnails": [
 			"隱藏縮圖",
 			"顯示［顯示］按鈕來代替縮圖"
 		],
-		"horizontalPosting": [
+		"horizontal_posting": [
 			"橫向貼文",
 			"38chan 懷舊之情"
 		],
@@ -184,15 +152,15 @@
 			"登入",
 			""
 		],
-		"imageHover": [
+		"image_hover_preview": [
 			"圖片滑過展開",
 			"當滑過去時顯示圖片預覽"
 		],
-		"imageRootOverride": [
+		"image_root_override": [
 			"圖片根目錄複寫",
 			"如果你希望將圖片託管於一個不同的位置，像是 CDN，輸入完整的根位置在這裡。留空以使用預設位置。範例：'https://images.meguca.org'"
 		],
-		"imageScore": [
+		"image_score": [
 			"圖片濫發分數",
 			"發布一張圖片的防濫發權重。超過限制後，用戶需要解決驗證碼。"
 		],
@@ -200,7 +168,7 @@
 			"匯入",
 			"從檔案匯入選項"
 		],
-		"inlineFit": [
+		"inline_fit": [
 			"展開",
 			"展開父貼文中的圖像並根據設定調整大小"
 		],
@@ -212,7 +180,7 @@
 			"板務助理",
 			"板務助理的帳號 ID。板務助理只可以刪除貼文。"
 		],
-		"lang": [
+		"language": [
 			"語言",
 			"更改界面語言"
 		],
@@ -224,7 +192,7 @@
 			"吉祥物",
 			"切換吉祥物顯示"
 		],
-		"mascotImage": [
+		"mascot_image": [
 			"",
 			"要使用為吉祥物的圖片"
 		],
@@ -232,15 +200,15 @@
 			"成人內容",
 			"在用戶首次訪問時告知該網站包含成人內容"
 		],
-		"maxHeight": [
+		"max_height": [
 			"圖片高度限制",
 			"上傳圖片的最大高度"
 		],
-		"maxSize": [
+		"max_size": [
 			"圖片大小限制",
 			"上傳圖片的最大大小（MB）"
 		],
-		"maxWidth": [
+		"max_width": [
 			"圖片寬度限制",
 			"上傳圖片的最大寬度"
 		],
@@ -248,7 +216,7 @@
 			"MeguTV",
 			"播放看板特定的隨機影片在重疊播放器"
 		],
-		"meguTVShortcut": [
+		"meguTV_shortcut": [
 			"MeguTV",
 			"播放看板特定的隨機影片在重疊播放器"
 		],
@@ -260,11 +228,7 @@
 			"名稱",
 			"要附加到新貼文的名稱"
 		],
-		"newPassword": [
-			"新密碼",
-			""
-		],
-		"newPost": [
+		"new_post": [
 			"新貼文",
 			"打開新貼文"
 		],
@@ -276,39 +240,23 @@
 			"桌面通知",
 			"在被引用或即將開始 syncwatch 時獲取桌面通知"
 		],
-		"nowPlaying": [
+		"now_playing": [
 			"正在播放橫幅",
 			"目前正在 r/a/dio 或 eden 播放的歌曲以及其他串流訊息在置頂橫幅。"
-		],
-		"oldPassword": [
-			"舊密碼",
-			""
-		],
-		"overrideCaptchaTags": [
-			"覆蓋驗證碼標籤",
-			"板與標籤的對應列表來用於特定看板的驗證碼解決方案。"
 		],
 		"owners": [
 			"看板擁有者",
 			"看板擁有者的帳號 ID。看板擁有者可以完全訪問看板的所有控制。必須至少包含一個。"
 		],
-		"password": [
-			"密碼",
-			""
-		],
-		"postCreationScore": [
+		"post_creation_score": [
 			"貼文建立濫發分數",
 			"建立一則貼文的防濫發權重。超過限制後，用戶需要解決驗證碼。"
 		],
-		"postInlineExpand": [
+		"post_inline_expansion": [
 			"於內嵌展開貼文連結",
 			"當點擊貼文連結時在下方內嵌連結的貼文。當關閉時，則導向到連結的貼文。"
 		],
-		"pruneBoards": [
-			"刪除看板",
-			"刪除沒有新貼文達 N 天的看板"
-		],
-		"pruneThreads": [
+		"prune_threads": [
 			"刪除討論串",
 			"刪除沒有任何貼文達 N 天的討論串"
 		],
@@ -316,37 +264,17 @@
 			"蕩婦啟動器",
 			"不要問"
 		],
-		"rbText": [
-			"紅/藍 文字",
-			"顯示紅和藍的文字如果該文字用 '^r' 或 '^b' 格式化"
-		],
-		"readOnly": [
-			"唯讀",
-			"關閉貼文建立"
-		],
-		"register": [
-			"註冊",
-			""
-		],
-		"relativeTime": [
+		"relative_timestamps": [
 			"相對時間戳",
 			"相對時間戳。例如：「1 小時以前」"
 		],
-		"repeat": [
-			"重複",
-			""
-		],
-		"replyRight": [
+		"reply_right": [
 			"[回覆] 在右邊",
 			"將回覆按鈕移動到頁面右側"
 		],
-		"rootURL": [
+		"root_URL": [
 			"根 URL",
 			"貼圖討論版的根 URL. 有些圖片搜尋提供商需要它才可以運作。"
-		],
-		"rules": [
-			"規則",
-			"要在規則模組窗口顯示的板規"
 		],
 		"sage": [
 			"聖人",
@@ -360,19 +288,15 @@
 			"SauceNao",
 			"saucenao.com 圖片搜尋"
 		],
-		"sessionExpiry": [
-			"帳戶會話到期時長",
-			"用戶帳戶自動登出以前的天數"
-		],
 		"spoilers": [
 			"圖片劇透標記",
 			"別將圖片標上劇透標記"
 		],
-		"staffTitle": [
+		"staff_title": [
 			"板務職位",
 			"在貼文標題中顯示你的板務職位"
 		],
-		"textOnly": [
+		"text_only": [
 			"僅限文字",
 			"關閉檔案上傳"
 		],
@@ -380,47 +304,43 @@
 			"主題",
 			"選擇 CSS 主題"
 		],
-		"threadExpiryMax": [
-			"最大討論串到期時間",
-			"刪除討論串之前沒有新貼文的天數"
-		],
-		"threadExpiryMin": [
-			"最小討論串到期時間",
-			"刪除討論串之前沒有新貼文的天數"
+		"thread_expiry": [
+			"Thread expiry time",
+			"Number of days without bumping posts before a thread is deleted"
 		],
 		"title": [
 			"看板標題",
 			"看板的簡短描述性標題"
 		],
-		"toggleSpoiler": [
+		"toggle_spoiler": [
 			"圖片劇透標籤",
 			"在開啟的貼文切換劇透標籤"
 		],
-		"userBG": [
+		"user_background": [
 			"自定義背景",
 			"切換自定義背景"
 		],
-		"userBGImage": [
+		"user_background_image": [
 			"",
 			"用作背景的圖片"
 		],
-		"watchThreadsOnReply": [
+		"watch_threads_on_reply": [
 			"在回覆時關注討論串",
 			"在回覆時自動將討論串添加到關注的討論串中"
 		],
-		"webmHover": [
+		"webm_hover_preview": [
 			"WebM 滑過展開",
 			"當滑過去時顯示 WebM 預覽。需要打開「圖片滑過展開」。"
 		],
-		"whatAnime": [
+		"what_anime": [
 			"WhatAnime",
 			"whatanime.ga 動漫截圖搜尋"
 		],
-		"workMode": [
+		"work_mode": [
 			"工作模式",
 			"隱藏圖片和關閉用戶背景"
 		],
-		"workModeToggle": [
+		"work_mode_shortcut": [
 			"工作模式",
 			"隱藏圖片和關閉用戶背景"
 		],

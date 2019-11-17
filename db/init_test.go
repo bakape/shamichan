@@ -14,7 +14,7 @@ func TestMain(m *testing.M) {
 		if err != nil {
 			return
 		}
-		err = LoadTestDB("db")
+		err = LoadTestDB()
 		if err != nil {
 			return
 		}

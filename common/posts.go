@@ -38,7 +38,7 @@ type Post struct {
 	Name       string            `json:"name,omitempty"`
 	Trip       string            `json:"trip,omitempty"`
 	Image      *Image            `json:"image,omitempty"`
-	Links      map[uint64]Link   `json:"links,omitempty"`
+	Links      map[uint64]uint64 `json:"links,omitempty"`
 	Commands   []Command         `json:"commands,omitempty"`
 	Moderation []ModerationEntry `json:"moderation,omitempty"`
 }
@@ -53,17 +53,10 @@ func (p *Post) IsDeleted() bool {
 	return false
 }
 
-// Link describes the target post of one post linking another
-type Link struct {
-	OP    uint64 `json:"op"`
-	Board string `json:"board"`
-}
-
 // StandalonePost is a post view that includes the "op" and "board" fields,
 // which are not exposed though Post, but are required for retrieving a post
 // with unknown parenthood.
 type StandalonePost struct {
 	Post
-	OP    uint64 `json:"op"`
-	Board string `json:"board"`
+	OP uint64 `json:"op"`
 }
