@@ -7,10 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/util"
 	"github.com/bakape/pg_util"
 	"github.com/bakape/recache"
 )
@@ -18,17 +16,8 @@ import (
 var (
 	cache *recache.Cache
 
-	// Cache frontend for retreiving board catalog page JSON
-	catalogFrontend *recache.Frontend
-
-	// Cache frontend for retreiving board index page JSON
-	boardFrontend *recache.Frontend
-
 	// Cache frontend for retreiving thread page JSON
 	threadFrontend *recache.Frontend
-
-	// Index page HTML frontend
-	indexFrontend *recache.Frontend
 )
 
 // Key for identifying board index pages
@@ -50,38 +39,8 @@ func Init() (err error) {
 		LRULimit:    time.Hour,
 	})
 
-	catalogFrontend = cache.NewFrontend(
-		func(k recache.Key, rw *recache.RecordWriter) (err error) {
-			board := k.(string)
-			var buf []byte
-			if board == "all" {
-				buf, err = db.GetAllBoardCatalog()
-			} else {
-				buf, err = db.GetBoardCatalog(board)
-			}
-			if err != nil {
-				return
-			}
-			rw.Write(buf)
-			return
-		},
-	)
-	boardFrontend = cache.NewFrontend(
-		func(k recache.Key, rw *recache.RecordWriter) (err error) {
-			key := k.(boardKey)
-			var buf []byte
-			if key.board == "all" {
-				buf, err = db.GetAllBoard(key.page)
-			} else {
-				buf, err = db.GetBoard(key.board, key.page)
-			}
-			if err != nil {
-				return
-			}
-			rw.Write(buf)
-			return
-		},
-	)
+	// TODO: Global post index frontend
+
 	threadFrontend = cache.NewFrontend(
 		func(k recache.Key, rw *recache.RecordWriter) (err error) {
 			key := k.(threadKey)
@@ -94,20 +53,12 @@ func Init() (err error) {
 		},
 	)
 
-	util.Hook("config.changed", func() error {
-		indexFrontend.EvictAll()
-		return nil
-	})
-
 	listen := func(ch string, handler func(string) error) error {
 		return db.Listen(pg_util.ListenOpts{
 			DebounceInterval: time.Second,
 			Channel:          "thread.updated",
 			OnMsg:            handler,
-			OnConnectionLoss: func() error {
-				cache.EvictAll()
-				return nil
-			},
+			OnConnectionLoss: cache.EvictAll,
 		})
 	}
 
@@ -154,22 +105,6 @@ func Clear() {
 	cache.EvictAll()
 }
 
-// Write catalog page JSON to w
-func Catalog(w http.ResponseWriter, r *http.Request, board string) (err error) {
-	_, err = catalogFrontend.WriteHTTP(board, w, r)
-	return
-}
-
-// Write board index page JSON to w
-func Board(
-	w http.ResponseWriter, r *http.Request,
-	board string,
-	page uint32,
-) (err error) {
-	_, err = boardFrontend.WriteHTTP(boardKey{page, board}, w, r)
-	return
-}
-
 // Write thread page JSON to w
 // page: page of the thread to fetch. -1 to fetch the last page.
 func Thread(
@@ -178,14 +113,5 @@ func Thread(
 	page int,
 ) (err error) {
 	_, err = threadFrontend.WriteHTTP(threadKey{id, page}, w, r)
-	return
-}
-
-// Write index page HTML to w
-func IndexHTML(
-	w http.ResponseWriter, r *http.Request,
-	pos common.ModerationLevel,
-) (err error) {
-	_, err = indexFrontend.WriteHTTP(pos, w, r)
 	return
 }
