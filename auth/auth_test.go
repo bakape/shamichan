@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"net"
 	"net/http/httptest"
 	"testing"
 
@@ -50,7 +51,7 @@ func TestGetIP(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			AssertEquals(t, res, c.out)
+			AssertEquals(t, res, net.ParseIP(c.out))
 		})
 	}
 }
