@@ -9,6 +9,7 @@ node_modules
 scripts/*.local.sh
 www/css/*.css
 www/css/maps
+www/*.m3u
 www/js
 www/wasm
 www/lang
