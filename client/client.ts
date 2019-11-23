@@ -141,7 +141,7 @@ export default () => {
 			m.applyModeration(msg))
 
 	handlers[message.redirect] = (url: string) =>
-		location.href = url
+		location.href = url.replace(/shamik\.ooo|megu\.ca/, location.hostname) || url
 
 	handlers[message.notification] = (text: string) =>
 		new OverlayNotification(text)
