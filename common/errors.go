@@ -11,7 +11,6 @@ import (
 
 	"github.com/bakape/meguca/util"
 	"github.com/bakape/thumbnailer/v2"
-	"github.com/gorilla/websocket"
 )
 
 // Commonly used errors
@@ -97,11 +96,6 @@ func ErrInvalidEnum(s string) error {
 // CanIgnoreClientError returns, if client-caused error can be safely ignored and not logged
 func CanIgnoreClientError(err error) bool {
 recheck:
-	switch err {
-	case websocket.ErrCloseSent, nil:
-		return true
-	}
-
 	switch err.(type) {
 	case StatusError:
 		err := err.(StatusError)
@@ -110,8 +104,6 @@ recheck:
 			strings.HasPrefix(err.Err.Error(), "YouTube") {
 			return true
 		}
-	case *websocket.CloseError:
-		return true
 	case thumbnailer.AVError:
 		switch err.(thumbnailer.AVError).Code() {
 		case C.AVERROR_INVALIDDATA, // Invalid uploaded data need not be logged
