@@ -4,10 +4,12 @@ version = "0.1.0"
 authors = ["bakape <bakape@gmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["staticlib"]
 
 [dependencies]
 libc = "0.2.65"
+rayon = "1.2.1"
 
 [profile.release]
 opt-level = 3

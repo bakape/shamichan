@@ -1,4 +1,4 @@
-.PHONY: server client imager test
+.PHONY: server client imager test websockets
 
 all: server client
 
@@ -15,7 +15,10 @@ install_tools:
 generate:
 	go generate ./...
 
-server:
+websockets:
+	$(MAKE) -C websockets/websockets
+
+server: websockets
 	go build -v
 
 client_clean:

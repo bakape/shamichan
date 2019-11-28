@@ -38,3 +38,8 @@ where
 	init();
 	cb(unsafe { CLIENTS.as_ref().unwrap().write().unwrap().borrow_mut() })
 }
+
+// Remove client from collection
+pub fn remove_client(id: u64) {
+	write(|c| c.remove(&id));
+}

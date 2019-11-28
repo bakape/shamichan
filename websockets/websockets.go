@@ -3,6 +3,7 @@
 package websockets
 
 // #cgo CFLAGS: -std=c11
+// #cgo LDFLAGS: -L${SRCDIR} -lwebsockets -ldl
 // #include "bindings.h"
 // #include <stdlib.h>
 import "C"
@@ -42,7 +43,7 @@ type client struct {
 	receive chan []byte
 
 	// Used to send messages to the client
-	send chan C.ws_message
+	send chan *C.WSMessage
 
 	// Forcefully disconnect client with optional error.
 	// This channel can receive a maximum of 2 messages during its lifetime,
@@ -77,7 +78,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 		//
 		// All calls to send must be non-blocking to reduce thread
 		// contention.
-		send: make(chan C.ws_message, (time.Second*60)/(time.Millisecond*100)),
+		send: make(chan *C.WSMessage, (time.Second*60)/(time.Millisecond*100)),
 
 		// This channel can receive a maximum of 2 messages during its lifetime,
 		// so a buffer of 2 prevents any goroutine sending on this channel from
@@ -89,7 +90,12 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 
 		ip: ip,
 	}
-	defer unregister(register(c))
+
+	id, err := register(c)
+	if err != nil {
+		return
+	}
+	defer unregister(id)
 
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
@@ -158,7 +164,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 					),
 				),
 			)
-			C.ws_unref_message(msg.handle)
+			C.ws_unref_message(msg)
 			if err != nil {
 				return
 			}
@@ -167,7 +173,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 }
 
 // Register client and return its ID
-func register(c client) (id uint64) {
+func register(c client) (id uint64, err error) {
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
 
@@ -184,8 +190,11 @@ try:
 
 	ip := C.CString(c.ip.String())
 	defer C.free(unsafe.Pointer(ip))
-	C.ws_register_client(C.uint64_t(id), ip)
-
+	errC := C.ws_register_client(C.uint64_t(id), ip)
+	defer C.free(unsafe.Pointer(errC))
+	if errC != nil {
+		err = errors.New(C.GoString(errC))
+	}
 	return
 }
 
@@ -202,7 +211,7 @@ func unregister(id uint64) {
 }
 
 //export ws_write_message
-func ws_write_message(clientID C.uint64_t, msg C.ws_message) {
+func ws_write_message(clientID C.uint64_t, msg *C.WSMessage) {
 	clientsMu.RLock()
 	defer clientsMu.RUnlock()
 
