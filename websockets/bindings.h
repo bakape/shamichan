@@ -10,10 +10,8 @@ typedef struct {
     void* handle;
 } ws_message;
 
-// Register a websocket client by ID and its IP as a string reference.
-//
-// Returns any error encoded as a C string.
-char* ws_register_client(uint64_t id, const char* ip);
+// Register a websocket client with a unique ID
+char* ws_register_client(uint64_t id, const char* ip, char** err);
 
 // Remove client from registry
 void ws_unregister_client(uint64_t id);
