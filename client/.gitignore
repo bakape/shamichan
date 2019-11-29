@@ -3,4 +3,3 @@ node_modules
 /target
 /pkg
 /wasm-pack.log
-/target
