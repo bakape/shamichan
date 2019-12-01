@@ -27,7 +27,8 @@ client_clean:
 clean: client_clean
 	rm -rf .build .ffmpeg .package target meguca-*.zip meguca-*.tar.xz meguca meguca.exe server/pkg
 
-test:
+test: websockets
+	cargo test
 	go test --race ./...
 
 test_no_race:

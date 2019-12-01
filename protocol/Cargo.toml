@@ -7,7 +7,10 @@ edition = "2018"
 [dependencies]
 serde = { version = "1.0.103", features = ["derive"]}
 bincode = "1.2.0"
-compress = { version = "0.1.2", features = ["lz4"]}
+num-derive = "0.3.0"
+num-traits = "0.2.10"
+num = "0.2.0"
+flate2 = "1.0.13"
 
 [profile.release]
 opt-level = 3

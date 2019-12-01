@@ -35,3 +35,4 @@ debug.test
 /config.json
 db_*.db
 /websockets/websockets/target
+/target
