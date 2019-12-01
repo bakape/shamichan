@@ -153,9 +153,6 @@ impl Decoder {
                     .get(self.off + 1)
                     .unwrap_or(&self.splitter.buf.len());
                 let buf = &self.splitter.buf[*i..to];
-                if cfg!(test) {
-                    println!("passing to bincode: {:?}", buf);
-                }
                 let res = bincode::deserialize(buf).map_err(|err| {
                     io::Error::new(io::ErrorKind::InvalidData, err.to_string())
                 })?;
@@ -270,7 +267,6 @@ mod tests {
         let buf = &enc.finish()?;
 
         let mut dec = super::Decoder::new(buf)?;
-        println!("splitter: {:?}", dec.splitter);
         for i in 1..=4 {
             assert_eq!(dec.peek_type(), num::FromPrimitive::from_u64(i));
             let res: SimpleMessage = dec.read_next()?;
