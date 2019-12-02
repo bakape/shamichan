@@ -16,10 +16,11 @@ import (
 	"net/http"
 	"reflect"
 	"sync"
-	"time"
 	"unsafe"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
+	"github.com/go-playground/log"
 	"nhooyr.io/websocket"
 )
 
@@ -39,20 +40,31 @@ type client struct {
 	// Remote IP of client
 	ip net.IP
 
-	// Used to receive from the client
+	// Used to receive from the client.
+	//
+	// To prevent infinite blocking all sends to this channel must be done in
+	// a select including a <-ctx.Done() case.
 	receive chan []byte
 
-	// Used to send messages to the client
-	send chan *C.WSMessage
+	// Used to send messages to the client.
+	//
+	// To prevent infinite blocking all sends to this channel must be done in
+	// a select including a <-ctx.Done() case.
+	send chan *C.WSBuffer
 
 	// Forcefully disconnect client with optional error.
-	// This channel can receive a maximum of 2 messages during its lifetime,
+	//
+	// To prevent infinite blocking all sends to this channel must be done in
+	// a select including a <-ctx.Done() case.
 	close chan error
+
+	// Context of the client build from context of upgrade request.
+	// Needed to ensure resource deallocation in all scenarios.
+	ctx context.Context
 }
 
 // http.HandleFunc that responds to new websocket connection requests
 func Handle(w http.ResponseWriter, r *http.Request) (err error) {
-	// TODO: Pass IP to Rust
 	ip, err := auth.GetIP(r)
 	if err != nil {
 		return
@@ -72,35 +84,31 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 	defer conn.Close(websocket.StatusNormalClosure, "")
 
 	c := client{
-		// Allows for ~60 seconds of messages, until the buffer overflows.
-		// A larger gap is more acceptable to shitty connections and mobile
-		// phones, especially while uploading.
-		//
-		// All calls to send must be non-blocking to reduce thread
-		// contention.
-		send: make(chan *C.WSMessage, (time.Second*60)/(time.Millisecond*100)),
+		// This channel passes a reference-counted pointer from the Rust side.
+		// Said pointer must be unreferenced at all scenarios, thus there can
+		// not exist an ownership uncertainty over this pointer.
+		// To ensure atomic ownership passage the channel can not be buffering.
+		// Failure to do so intoduces a race between the sender and receiver
+		// goroutine, which can result in the pointer never being unreferenced
+		// and thus leaked.
+		send: make(chan *C.WSBuffer),
 
-		// This channel can receive a maximum of 2 messages during its lifetime,
-		// so a buffer of 2 prevents any goroutine sending on this channel from
-		// ever being blocked and leaking.
-		close: make(chan error, 2),
-
-		// Only ever called from one goroutine, so no bufferring needed
+		close:   make(chan error),
 		receive: make(chan []byte),
-
-		ip: ip,
+		ip:      ip,
 	}
 
+	var cancel context.CancelFunc
+	c.ctx, cancel = context.WithCancel(r.Context())
+	defer cancel()
+
 	id, err := register(c)
+	// Client is registered on the Go side even in case of error and thus must
+	// be unregistered
+	defer unregister(id)
 	if err != nil {
 		return
 	}
-	defer unregister(id)
-
-	ctx, cancel := context.WithCancel(r.Context())
-	defer cancel()
-
-	// TODO: defer unregister client
 
 	go func() {
 		var (
@@ -110,7 +118,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 			err error
 		)
 		for {
-			typ, r, err = conn.Reader(ctx)
+			typ, r, err = conn.Reader(c.ctx)
 			if err != nil {
 				goto fail
 			}
@@ -125,12 +133,18 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 				goto fail
 			}
 
-			// TODO: Synchronously pass message to Rust
+			// Synchronously pass message to Rust
+			buf := w.Bytes()
+			h := (*reflect.SliceHeader)(unsafe.Pointer(&buf))
+			C.ws_receive_message(id, C.WSBuffer{
+				(*C.uint8_t)(unsafe.Pointer(h.Data)),
+				C.size_t(h.Len),
+			})
 		}
 
 	fail:
 		select {
-		case <-ctx.Done():
+		case <-c.ctx.Done():
 		case c.close <- err:
 		}
 	}()
@@ -141,18 +155,22 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 			return
 		case err = <-c.close:
 			if err != nil {
+				if !common.CanIgnoreClientError(err) {
+					log.Errorf("websockets: by %s: %s: %#v", c.ip, err, err)
+				}
+
 				s := err.Error()
 				if len(s) > 125 { // Max close message length
 					s = s[:125]
 				}
-				// Ignore the close error. We don't care, if the client actually
-				// receives the close message.
+				// Ignore the close error. We can't always assert, if the client
+				// actually receives the close message.
 				conn.Close(websocket.StatusProtocolError, s)
 			}
 			return
 		case msg := <-c.send:
 			err = conn.Write(
-				ctx,
+				c.ctx,
 				websocket.MessageBinary,
 				*(*[]byte)(
 					unsafe.Pointer(
@@ -174,8 +192,10 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 
 // Register client and return its ID
 func register(c client) (id uint64, err error) {
+	// Not using deferred unlock to prevent possible deadlocks between the Go
+	// and Rust client collection mutexes. These must be freed as soon as
+	// possible.
 	clientsMu.Lock()
-	defer clientsMu.Unlock()
 
 	// Account for counter overflow
 try:
@@ -185,39 +205,62 @@ try:
 	if ok {
 		goto try
 	}
-
 	clients[id] = c
+	clientsMu.Unlock()
 
-	ip := C.CString(c.ip.String())
-	defer C.free(unsafe.Pointer(ip))
-	errC := C.ws_register_client(C.uint64_t(id), ip)
-	defer C.free(unsafe.Pointer(errC))
+	// Zero copy string passing
+	ip := c.ip.String()
+	h := (*reflect.StringHeader)(unsafe.Pointer(&ip))
+	errC := C.ws_register_client(C.uint64_t(id), C.WSBuffer{
+		(*C.uint8_t)(unsafe.Pointer(h.Data)),
+		C.size_t(h.Len),
+	})
 	if errC != nil {
 		err = errors.New(C.GoString(errC))
 	}
+	C.free(unsafe.Pointer(errC))
 	return
 }
 
 // Unregister client by ID
 func unregister(id uint64) {
+	// Not using deferred unlock to prevent possible deadlocks between the Go
+	// and Rust client collection mutexes. These must be freed as soon as
+	// possible.
 	clientsMu.Lock()
-	defer clientsMu.Unlock()
 
 	_, ok := clients[id]
 	if ok {
+		// Must be only place a client can be deleted from the map to prevent
+		// state (including mutex state) branching.
 		delete(clients, id)
+		clientsMu.Unlock()
+
 		C.ws_unregister_client(C.uint64_t(id))
+	} else {
+		clientsMu.Unlock()
 	}
 }
 
 //export ws_write_message
-func ws_write_message(clientID C.uint64_t, msg *C.WSMessage) {
+func ws_write_message(clientID C.uint64_t, msg *C.WSBuffer) {
+	// Not using deferred unlock to prevent possible deadlocks between the Go
+	// and Rust client collection mutexes. These must be freed as soon as
+	// possible.
 	clientsMu.RLock()
-	defer clientsMu.RUnlock()
-
 	c, ok := clients[uint64(clientID)]
+	clientsMu.RUnlock()
+
 	if ok {
-		c.send <- msg
+		select {
+		case c.send <- msg:
+		case <-c.ctx.Done():
+			// Client is dead - need to unreference in its stead
+			C.ws_unref_message(msg)
+		}
+	} else {
+		// No client, so unreference immediately
+		C.ws_unref_message(msg)
 	}
 }
 
@@ -227,21 +270,19 @@ func ws_close_client(clientID C.uint64_t, err *C.char) {
 		defer C.free(unsafe.Pointer(err))
 	}
 
+	// Not using deferred unlock to not block on channel send
 	clientsMu.Lock()
-	defer clientsMu.Unlock()
-
 	c, ok := clients[uint64(clientID)]
+	clientsMu.Unlock()
+
 	if ok {
 		var e error
 		if err != nil {
 			e = errors.New(C.GoString(err))
 		}
-		c.close <- e
-
-		// Make sure close is only ever written to once by the Rust bindings.
-		// The client must be immediately unregistered after a close message has
-		// been sent. The deferred unregister in the handler should NOP after
-		// this.
-		delete(clients, uint64(clientID))
+		select {
+		case c.close <- e:
+		case <-c.ctx.Done():
+		}
 	}
 }

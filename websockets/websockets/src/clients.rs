@@ -1,18 +1,22 @@
 use std::borrow::{Borrow, BorrowMut};
 use std::collections::HashMap;
-use std::sync::{Once, RwLock};
+use std::rc::Rc;
+use std::sync::{Mutex, Once, RwLock};
+
+// TODO: Thread subscriber map to ID set
+// TODO: IP->ID set map
 
 static INIT: Once = Once::new();
 static mut CLIENTS: Option<RwLock<Clients>> = None;
 
-// Maps to a websocket client on the Go side
-pub struct Client {
-	pub id: u64,
-	pub ip: std::net::IpAddr,
-}
-
-// Shorthand
-pub type Clients = HashMap<u64, Client>;
+// Shorthand.
+//
+// Client is wrapped in Mutex to guard against modifications of client internal
+// state only. Any global collections should never acquire this lock.
+//
+// However, accessing global collections from within a help mutex client is
+// permitted. This ensures a mutex acquiring order and thus prevents deadlocks.
+pub type Clients = HashMap<u64, Rc<Mutex<super::client::Client>>>;
 
 #[inline]
 fn init() {
