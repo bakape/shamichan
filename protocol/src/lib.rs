@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate num_derive;
+#[macro_use]
+extern crate serde_big_array;
 
 use bincode;
 use flate2::write::{ZlibDecoder, ZlibEncoder};
@@ -8,10 +10,13 @@ use std::io;
 use std::io::Write;
 
 // Version of protocol. Increment this on change.
-pub const VERSION: u32 = 0;
+pub const VERSION: u16 = 0;
 
 // Byte used for marking the start of a message
 const HEADER: u8 = 174;
+
+mod payloads;
+pub use payloads::*;
 
 // Types of messages passed through websockets
 #[repr(u8)]
@@ -27,7 +32,7 @@ const HEADER: u8 = 174;
     std::fmt::Debug,
 )]
 pub enum MessageType {
-    Invalid = 1,
+    Handshake = 1,
     Synchronize,
     CreateThread,
     InsertPost,
