@@ -10,7 +10,7 @@ services:
     depends_on:
       - postgres
   postgres:
-    image: postgres:11
+    image: postgres
     restart: always
     shm_size: "256MB"
     volumes:
