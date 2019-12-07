@@ -1,7 +1,7 @@
 use libc;
 use std::borrow::Cow;
 use std::ffi::CStr;
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_void};
 use std::ptr::null_mut;
 use std::rc::Rc;
 
@@ -22,7 +22,7 @@ impl AsRef<[u8]> for WSBuffer {
 #[repr(C)]
 pub struct WSRcBuffer {
 	inner: WSBuffer,
-	src: *const Vec<u8>,
+	src: *const c_void,
 }
 
 impl From<Rc<Vec<u8>>> for WSRcBuffer {
@@ -32,7 +32,7 @@ impl From<Rc<Vec<u8>>> for WSRcBuffer {
 				data: src.as_ptr(),
 				size: src.len(),
 			},
-			src: Rc::into_raw(src),
+			src: Rc::into_raw(src) as *const c_void,
 		}
 	}
 }
@@ -106,8 +106,8 @@ extern "C" fn ws_unregister_client(id: u64) {
 
 // Unref and potentially free a message source on the Rust side
 #[no_mangle]
-extern "C" fn ws_unref_message(src: *const Vec<u8>) {
-	unsafe { Rc::<Vec<u8>>::from_raw(src) }; // Drop it
+extern "C" fn ws_unref_message(src: *const c_void) {
+	unsafe { Rc::<Vec<u8>>::from_raw(src as *const Vec<u8>) }; // Drop it
 }
 
 // Send close message with optional error to client and unregister it

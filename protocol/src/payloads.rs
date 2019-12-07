@@ -52,7 +52,6 @@ pub struct ThreadCreationReq {
 // Common to both thread and post creation
 #[derive(Serialize, Deserialize)]
 pub struct PostCreationReqCommon {
-	pub staff_title: bool,
 	pub name: String,
 	pub body: String,
 	pub image: Option<ImageInsertReq>,
