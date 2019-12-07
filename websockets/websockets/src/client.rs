@@ -1,7 +1,11 @@
 use super::common::DynResult;
+use super::{bindings, registry, str_err};
 use protocol::AuthKey;
 use protocol::*;
+use serde::Serialize;
+use std::io;
 use std::net::IpAddr;
+use std::rc::Rc;
 
 // Maps to a websocket client on the Go side
 pub struct Client {
@@ -13,16 +17,6 @@ pub struct Client {
 
 	// Used to authenticate the client
 	key: Option<AuthKey>,
-}
-
-// Return a string as error
-macro_rules! str_err {
-	($msg:expr) => {
-		return Err($msg.into());
-	};
-	($fmt:expr, $( $args:tt )* ) => {
-		str_err!(format!($fmt, $($args)*))
-    };
 }
 
 impl Client {
@@ -38,7 +32,7 @@ impl Client {
 	// Handle received message
 	pub fn receive_message(&mut self, buf: &[u8]) -> DynResult {
 		let mut dec = Decoder::new(buf)?;
-		let mut typ = match dec.peek_type() {
+		let typ = match dec.peek_type() {
 			Some(t) => t,
 			None => str_err!("empty message received"),
 		};
@@ -51,7 +45,7 @@ impl Client {
 			if msg.protocol_version != VERSION {
 				str_err!("protocol version mismatch: {}", msg.protocol_version);
 			}
-			super::registry::set_client_key(self.id, &msg.key);
+			registry::set_client_key(self.id, &msg.key);
 			self.key = Some(msg.key);
 
 			if dec.peek_type() != Some(MessageType::Synchronize) {
@@ -60,18 +54,42 @@ impl Client {
 			self.synchronize(&mut dec)?;
 		}
 
-		unimplemented!("other message batch processing")
+		loop {
+			match dec.peek_type() {
+				None => return Ok(()),
+				Some(t) => match t {
+					MessageType::CreateThread => {
+						self.create_thread(&mut dec)?
+					}
+					_ => str_err!("unhandled message type: {:?}", t),
+				},
+			}
+		}
+	}
+
+	// Send a private message to only this client
+	fn send(&self, t: MessageType, payload: &impl Serialize) -> io::Result<()> {
+		let mut enc = Encoder::new(Vec::new());
+		enc.write_message(t, payload)?;
+		bindings::write_message(self.id, Rc::new(enc.finish()?));
+		Ok(())
 	}
 
 	// Synchronize to a specific thread or board index
 	fn synchronize(&mut self, dec: &mut Decoder) -> DynResult {
-		let msg: SyncRequest = dec.read_next()?;
+		let thread: u64 = dec.read_next()?;
+		if thread != 0 && !bindings::thread_exists(thread)? {
+			str_err!("invalid thread: {}", thread);
+		}
 
-		// TODO: Check thread exists against DB.
-		// bool ws_thread_exists(uint64_t id, char** err)
+		// Thread init data will be sent on the next pulse
+		registry::set_client_thread(self.id, thread);
 
-		super::registry::set_client_thread(self.id, msg.thread);
+		Ok(())
+	}
 
-		unimplemented!("register + sync to thread/board feed")
+	fn create_thread(&mut self, dec: &mut Decoder) -> DynResult {
+		// TODO: Create thread and pass ID back to client
+		unimplemented!()
 	}
 }

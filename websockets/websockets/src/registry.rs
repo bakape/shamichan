@@ -1,4 +1,5 @@
 use super::client::Client;
+use super::common;
 use protocol::AuthKey;
 use std::borrow::{Borrow, BorrowMut};
 use std::collections::{HashMap, HashSet};
@@ -6,9 +7,6 @@ use std::hash::Hash;
 use std::net::IpAddr;
 use std::rc::Rc;
 use std::sync::{Mutex, Once, RwLock};
-
-// TODO: Thread subscriber map to ID set
-// TODO: IP->ID set map
 
 static INIT: Once = Once::new();
 static mut REGISTRY: Option<RwLock<Registry>> = None;
@@ -101,7 +99,7 @@ impl<K: Hash + Eq + Clone> SetMap<K> {
 }
 
 fn init() {
-	INIT.call_once(|| unsafe { REGISTRY = Some(Default::default()) });
+	unsafe { common::init_once(&INIT, &mut REGISTRY) };
 }
 
 // Open registry for reading

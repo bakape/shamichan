@@ -50,7 +50,7 @@ type client struct {
 	//
 	// To prevent infinite blocking all sends to this channel must be done in
 	// a select including a <-ctx.Done() case.
-	send chan *C.WSBuffer
+	send chan *C.WSRcBuffer
 
 	// Forcefully disconnect client with optional error.
 	//
@@ -91,7 +91,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 		// Failure to do so intoduces a race between the sender and receiver
 		// goroutine, which can result in the pointer never being unreferenced
 		// and thus leaked.
-		send: make(chan *C.WSBuffer),
+		send: make(chan *C.WSRcBuffer),
 
 		close:   make(chan error),
 		receive: make(chan []byte),
@@ -136,7 +136,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 			// Synchronously pass message to Rust
 			buf := w.Bytes()
 			h := (*reflect.SliceHeader)(unsafe.Pointer(&buf))
-			C.ws_receive_message(id, C.WSBuffer{
+			C.ws_receive_message(C.uint64_t(id), C.WSBuffer{
 				(*C.uint8_t)(unsafe.Pointer(h.Data)),
 				C.size_t(h.Len),
 			})
@@ -151,7 +151,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 
 	for {
 		select {
-		case <-ctx.Done():
+		case <-c.ctx.Done():
 			return
 		case err = <-c.close:
 			if err != nil {
@@ -175,14 +175,14 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 				*(*[]byte)(
 					unsafe.Pointer(
 						&reflect.SliceHeader{
-							Data: uintptr(unsafe.Pointer(msg.data)),
-							Len:  int(msg.size),
-							Cap:  int(msg.size),
+							Data: uintptr(unsafe.Pointer(msg.inner.data)),
+							Len:  int(msg.inner.size),
+							Cap:  int(msg.inner.size),
 						},
 					),
 				),
 			)
-			C.ws_unref_message(msg)
+			C.ws_unref_message(msg.src)
 			if err != nil {
 				return
 			}
@@ -239,50 +239,5 @@ func unregister(id uint64) {
 		C.ws_unregister_client(C.uint64_t(id))
 	} else {
 		clientsMu.Unlock()
-	}
-}
-
-//export ws_write_message
-func ws_write_message(clientID C.uint64_t, msg *C.WSBuffer) {
-	// Not using deferred unlock to prevent possible deadlocks between the Go
-	// and Rust client collection mutexes. These must be freed as soon as
-	// possible.
-	clientsMu.RLock()
-	c, ok := clients[uint64(clientID)]
-	clientsMu.RUnlock()
-
-	if ok {
-		select {
-		case c.send <- msg:
-		case <-c.ctx.Done():
-			// Client is dead - need to unreference in its stead
-			C.ws_unref_message(msg)
-		}
-	} else {
-		// No client, so unreference immediately
-		C.ws_unref_message(msg)
-	}
-}
-
-//export ws_close_client
-func ws_close_client(clientID C.uint64_t, err *C.char) {
-	if err != nil {
-		defer C.free(unsafe.Pointer(err))
-	}
-
-	// Not using deferred unlock to not block on channel send
-	clientsMu.Lock()
-	c, ok := clients[uint64(clientID)]
-	clientsMu.Unlock()
-
-	if ok {
-		var e error
-		if err != nil {
-			e = errors.New(C.GoString(err))
-		}
-		select {
-		case c.close <- e:
-		case <-c.ctx.Done():
-		}
 	}
 }

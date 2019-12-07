@@ -10,3 +10,7 @@ install_tools:
 
 watch:
 	npm run start
+
+clean:
+	cargo clean
+	rm -rf dist pkg node_modules

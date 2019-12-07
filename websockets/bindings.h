@@ -7,6 +7,12 @@ typedef struct {
     size_t size;
 } WSBuffer;
 
+// Like WSBuffer, but with pointer for reference counting on Rust side
+typedef struct {
+    WSBuffer inner;
+    void* src;
+} WSRcBuffer;
+
 // Register a websocket client with a unique ID and return any error as owned
 // string.
 //
@@ -16,8 +22,8 @@ char* ws_register_client(uint64_t id, WSBuffer ip);
 // Remove client from registry
 void ws_unregister_client(uint64_t id);
 
-// Unref and potentially free a message on the Rust side
-void ws_unref_message(WSBuffer* msg);
+// Unref and potentially free a message source on the Rust side
+void ws_unref_message(void* src);
 
 // Pass received message to Rust side. This operation never returns an error to
 // simplify error propagation. All errors are propagated back to Go only using

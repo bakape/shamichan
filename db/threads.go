@@ -1,5 +1,9 @@
 package db
 
+// #cgo CFLAGS: -std=c11
+// #include <stdlib.h>
+// #include <stdint.h>
+import "C"
 import (
 	"context"
 	"errors"
@@ -174,5 +178,20 @@ func CheckThreadLocked(id uint64) (locked bool, err error) {
 			id,
 		).
 		Scan(&locked)
+	return
+}
+
+// Check, if thread exists in the database
+func ThreadExists(id uint64) (exists bool, err error) {
+	err = db.
+		QueryRow(
+			`select exists (
+				select
+				from threads
+				where id = $1
+			)`,
+			id,
+		).
+		Scan(&exists)
 	return
 }

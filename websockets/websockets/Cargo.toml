@@ -11,14 +11,4 @@ crate-type = ["staticlib"]
 libc = "0.2.65"
 rayon = "1.2.1"
 protocol = { path = "../../protocol" }
-
-[profile.release]
-opt-level = 3
-debug = false
-rpath = false
-lto = true
-debug-assertions = false
-codegen-units = 1
-panic = 'abort'
-incremental = false
-overflow-checks = false
+serde = { version = "1.0.103", features = ["derive"]}

@@ -32,9 +32,16 @@ pub use payloads::*;
     std::fmt::Debug,
 )]
 pub enum MessageType {
+    // Initial handshake with server
     Handshake = 1,
+
+    // Request and response to synchronize with a thread or thread index
     Synchronize,
+
+    // Request or response to create a new thread
     CreateThread,
+
+    // Request or response to create a new post
     InsertPost,
 }
 

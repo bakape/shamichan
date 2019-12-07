@@ -13,6 +13,7 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
 	"github.com/bakape/meguca/util"
+	"github.com/bakape/meguca/websockets"
 	"github.com/dimfeld/httptreemux"
 	"github.com/facebookgo/grace/gracehttp"
 	"github.com/go-playground/log"
@@ -102,6 +103,10 @@ func createRouter() http.Handler {
 		// captcha.POST("/:board", authenticateCaptcha)
 	}
 	if config.Server.ImagerMode != config.ImagerOnly {
+		api.GET("/socket", func(w http.ResponseWriter, r *http.Request) {
+			httpError(w, r, websockets.Handle(w, r))
+		})
+
 		// TODO: Serve index page
 		// r.GET("/", )
 

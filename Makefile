@@ -6,7 +6,7 @@ client:
 	$(MAKE) -C client all
 
 install_tools:
-	$(MAKE) -C client
+	$(MAKE) -C client install_tools
 
 # TODO: Build without gulp
 # css:
@@ -17,16 +17,16 @@ generate:
 
 websockets:
 	cargo build --release
-	cp target/release/libwebsockets.d websockets/libwebsockets.a
+	cp target/release/libwebsockets.a websockets/
 
-server: websockets
+server: generate websockets
 	go build -v
 
-client_clean:
+clean:
+	rm -rf meguca
+	cargo clean
 	rm -rf www/js www/css/*.css www/css/maps node_modules
-
-clean: client_clean
-	rm -rf target meguca
+	$(MAKE) -C client clean
 
 test: websockets
 	cargo test
