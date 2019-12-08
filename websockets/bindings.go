@@ -21,24 +21,27 @@ func ws_thread_exists(id C.uint64_t, err **C.char) (exists bool) {
 
 //export ws_write_message
 func ws_write_message(clientID C.uint64_t, msg *C.WSRcBuffer) {
-	// Not using deferred unlock to prevent possible deadlocks between the Go
-	// and Rust client collection mutexes. These must be freed as soon as
-	// possible.
-	clientsMu.RLock()
-	c, ok := clients[uint64(clientID)]
-	clientsMu.RUnlock()
+	// Spawning separate goroutine to not block the pulsar thread pool
+	go func() {
+		// Not using deferred unlock to prevent possible deadlocks between the Go
+		// and Rust client collection mutexes. These must be freed as soon as
+		// possible.
+		clientsMu.RLock()
+		c, ok := clients[uint64(clientID)]
+		clientsMu.RUnlock()
 
-	if ok {
-		select {
-		case c.send <- msg:
-		case <-c.ctx.Done():
-			// Client is dead - need to unreference in its stead
+		if ok {
+			select {
+			case c.send <- msg:
+			case <-c.ctx.Done():
+				// Client is dead - need to unreference in its stead
+				C.ws_unref_message(msg.src)
+			}
+		} else {
+			// No client, so unreference immediately
 			C.ws_unref_message(msg.src)
 		}
-	} else {
-		// No client, so unreference immediately
-		C.ws_unref_message(msg.src)
-	}
+	}()
 }
 
 //export ws_close_client
