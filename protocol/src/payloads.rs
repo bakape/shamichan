@@ -46,28 +46,12 @@ pub struct Handshake {
 pub struct ThreadCreationReq {
 	pub subject: String,
 	pub tags: Vec<String>,
-	pub common: PostCreationReqCommon,
-}
-
-// Common to both thread and post creation
-#[derive(Serialize, Deserialize)]
-pub struct PostCreationReqCommon {
-	pub name: String,
-	pub body: String,
-	pub image: Option<ImageInsertReq>,
-}
-
-// Request to insert an image into a post
-#[derive(Serialize, Deserialize)]
-pub struct ImageInsertReq {
-	pub spoiler: bool,
-	pub token: String,
-	pub name: String,
 }
 
 // Request for creating a new post
 #[derive(Serialize, Deserialize)]
 pub struct PostCreationReq {
 	pub thread: u64,
-	pub common: PostCreationReqCommon,
+	pub name: String,
+	pub body: String,
 }

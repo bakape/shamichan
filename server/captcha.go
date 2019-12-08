@@ -1,12 +1,5 @@
 package server
 
-// // Signifies captcha service is not yet loaded
-// type errCaptchasNotReady string
-
-// func (e errCaptchasNotReady) Error() string {
-// 	return fmt.Sprintf("captchas not initialized for board %s", string(e))
-// }
-
 // // Authenticate a captcha solution
 // func authenticateCaptcha(w http.ResponseWriter, r *http.Request) {
 // 	err := func() (err error) {
@@ -28,7 +21,7 @@ package server
 
 // 		var (
 // 			c       auth.Captcha
-// 			session auth.Base64Token
+// 			session auth.AuthToken
 // 		)
 // 		c.FromRequest(r)
 // 		err = session.EnsureCookie(w, r)
@@ -56,11 +49,10 @@ package server
 // 	}
 // }
 
-// // Create new captcha and write its HTML to w. Colour and background can be left
-// // blank to use defaults.
+// // Create new captcha and write its HTML to w.
+// // Colour and background can be left blank to use defaults.
 // func serveNewCaptcha(w http.ResponseWriter, r *http.Request) {
 // 	httpError(w, r, func() (err error) {
-// 		b := extractParam(r, "board")
 // 		if !assertNotBanned(w, r, "all") {
 // 			return
 // 		}
@@ -69,7 +61,7 @@ package server
 // 		if err != nil {
 // 			return
 // 		}
-// 		var session auth.Base64Token
+// 		var session auth.AuthToken
 // 		err = session.EnsureCookie(w, r)
 // 		if err != nil {
 // 			return
@@ -83,21 +75,4 @@ package server
 // 		s.ServeNewCaptcha(w, r)
 // 		return
 // 	}())
-// }
-
-// // Assert IP has solved a captcha
-// func assertSolvedCaptcha(w http.ResponseWriter, r *http.Request) (err error) {
-// 	var session auth.Base64Token
-// 	err = session.EnsureCookie(w, r)
-// 	if err != nil {
-// 		return
-// 	}
-// 	has, err := db.SolvedCaptchaRecently(session, time.Minute)
-// 	if err != nil {
-// 		return
-// 	}
-// 	if !has {
-// 		err = errInvalidCaptcha
-// 	}
-// 	return
 // }

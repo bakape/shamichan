@@ -8,7 +8,6 @@ import (
 	"github.com/bakape/pg_util"
 	"github.com/go-playground/log"
 	"github.com/jackc/pgx"
-	"github.com/lib/pq"
 )
 
 // InTransaction runs a function inside a transaction and handles comminting and
@@ -18,18 +17,8 @@ func InTransaction(fn func(*pgx.Tx) error) (err error) {
 }
 
 // IsConflictError returns if an error is a unique key conflict error
-// TODO: Patch for pgx
 func IsConflictError(err error) bool {
-	return pqErrorCode(err) == "unique_violation"
-}
-
-// Extract error code, if error is a *pq.Error
-// TODO: Patch for pgx
-func pqErrorCode(err error) string {
-	if err, ok := err.(*pq.Error); ok {
-		return err.Code.Name()
-	}
-	return ""
+	return extractException(err) == "unique_violation"
 }
 
 func logListenError(err error) {
@@ -77,18 +66,6 @@ func extractException(err error) string {
 		return err.Message
 	}
 	return ""
-}
-
-// Encode []uint64 tom postgres format
-func encodeUint64Array(arr []uint64) string {
-	b := []byte{'{'}
-	for i, j := range arr {
-		if i != 0 {
-			b = append(b, ',')
-		}
-		b = strconv.AppendUint(b, j, 10)
-	}
-	return string(append(b, '}'))
 }
 
 type idSorter []uint64

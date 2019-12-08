@@ -1,297 +1,282 @@
 package db
 
-import (
-	"bytes"
-	"encoding/json"
-	"io/ioutil"
-	"os"
-	"sync"
-	"testing"
-	"time"
+// func writeSampleImage(t *testing.T) {
+// 	t.Helper()
+// 	if err := WriteImage(assets.StdJPEG.ImageCommon); err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/test"
-	"github.com/jackc/pgx"
-)
+// func setupImageDirs(t *testing.T) func() {
+// 	t.Helper()
+// 	if err := assets.CreateDirs(); err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	return func() {
+// 		if err := assets.DeleteDirs(); err != nil {
+// 			t.Fatal(err)
+// 		}
+// 	}
+// }
 
-func writeSampleImage(t *testing.T) {
-	t.Helper()
-	if err := WriteImage(assets.StdJPEG.ImageCommon); err != nil {
-		t.Fatal(err)
-	}
-}
+// func TestAllocateImage(t *testing.T) {
+// 	assertTableClear(t, "images")
+// 	cleanUp := setupImageDirs(t)
 
-func setupImageDirs(t *testing.T) func() {
-	t.Helper()
-	if err := assets.CreateDirs(); err != nil {
-		t.Fatal(err)
-	}
-	return func() {
-		if err := assets.DeleteDirs(); err != nil {
-			t.Fatal(err)
-		}
-	}
-}
+// 	var wg sync.WaitGroup
+// 	wg.Add(3)
+// 	id := test.GenString(40)
+// 	var files [2]*os.File
+// 	for i, name := range [...]string{"sample", "thumb"} {
+// 		files[i] = test.OpenSample(t, name+".jpg")
+// 	}
+// 	std := common.ImageCommon{
+// 		SHA1:     id,
+// 		MD5:      test.GenString(22),
+// 		FileType: common.JPEG,
+// 	}
 
-func TestAllocateImage(t *testing.T) {
-	assertTableClear(t, "images")
-	cleanUp := setupImageDirs(t)
+// 	err := InTransaction(func(tx *pgx.Tx) error {
+// 		return AllocateImage(tx, files[0], files[1], std)
+// 	})
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	var wg sync.WaitGroup
-	wg.Add(3)
-	id := test.GenString(40)
-	var files [2]*os.File
-	for i, name := range [...]string{"sample", "thumb"} {
-		files[i] = test.OpenSample(t, name+".jpg")
-	}
-	std := common.ImageCommon{
-		SHA1:     id,
-		MD5:      test.GenString(22),
-		FileType: common.JPEG,
-	}
+// 	// Assert files and remove them
+// 	t.Run("files", func(t *testing.T) {
+// 		t.Parallel()
+// 		defer wg.Done()
 
-	err := InTransaction(func(tx *pgx.Tx) error {
-		return AllocateImage(tx, files[0], files[1], std)
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
+// 		defer func() {
+// 			for _, f := range files {
+// 				f.Close()
+// 			}
+// 		}()
 
-	// Assert files and remove them
-	t.Run("files", func(t *testing.T) {
-		t.Parallel()
-		defer wg.Done()
+// 		for i, path := range assets.GetFilePaths(id, common.JPEG, common.JPEG) {
+// 			buf, err := ioutil.ReadFile(path)
+// 			if err != nil {
+// 				t.Error(err)
+// 			}
 
-		defer func() {
-			for _, f := range files {
-				f.Close()
-			}
-		}()
+// 			_, err = files[i].Seek(0, 0)
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+// 			res, err := ioutil.ReadAll(files[i])
+// 			if err != nil {
+// 				t.Fatal(err)
+// 			}
+// 			if !bytes.Equal(buf, res) {
+// 				t.Error("invalid file")
+// 			}
+// 		}
+// 	})
 
-		for i, path := range assets.GetFilePaths(id, common.JPEG, common.JPEG) {
-			buf, err := ioutil.ReadFile(path)
-			if err != nil {
-				t.Error(err)
-			}
+// 	// Assert database record
+// 	t.Run("db row", func(t *testing.T) {
+// 		t.Parallel()
+// 		defer wg.Done()
 
-			_, err = files[i].Seek(0, 0)
-			if err != nil {
-				t.Fatal(err)
-			}
-			res, err := ioutil.ReadAll(files[i])
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !bytes.Equal(buf, res) {
-				t.Error("invalid file")
-			}
-		}
-	})
+// 		img, err := GetImage(id)
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 		test.AssertEquals(t, img, std)
+// 	})
 
-	// Assert database record
-	t.Run("db row", func(t *testing.T) {
-		t.Parallel()
-		defer wg.Done()
+// 	t.Run("get image", func(t *testing.T) {
+// 		t.Parallel()
+// 		defer wg.Done()
 
-		img, err := GetImage(id)
-		if err != nil {
-			t.Fatal(err)
-		}
-		test.AssertEquals(t, img, std)
-	})
+// 		_, err := GetImage(id)
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 	})
 
-	t.Run("get image", func(t *testing.T) {
-		t.Parallel()
-		defer wg.Done()
+// 	// Minor cleanup test
+// 	t.Run("delete unused", func(t *testing.T) {
+// 		t.Parallel()
+// 		wg.Wait()
+// 		defer cleanUp()
 
-		_, err := GetImage(id)
-		if err != nil {
-			t.Fatal(err)
-		}
-	})
+// 		err := deleteUnusedImages()
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 		var exists bool
+// 		err = InTransaction(func(tx *pgx.Tx) (err error) {
+// 			exists, err = ImageExists(tx, id)
+// 			return
+// 		})
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 		if exists {
+// 			t.Fatal("image not deleted")
+// 		}
+// 	})
+// }
 
-	// Minor cleanup test
-	t.Run("delete unused", func(t *testing.T) {
-		t.Parallel()
-		wg.Wait()
-		defer cleanUp()
+// func newImageToken(t *testing.T, sha1 string) (token string) {
+// 	t.Helper()
 
-		err := deleteUnusedImages()
-		if err != nil {
-			t.Fatal(err)
-		}
-		var exists bool
-		err = InTransaction(func(tx *pgx.Tx) (err error) {
-			exists, err = ImageExists(tx, id)
-			return
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-		if exists {
-			t.Fatal("image not deleted")
-		}
-	})
-}
+// 	err := InTransaction(func(tx *pgx.Tx) (err error) {
+// 		token, err = NewImageToken(tx, sha1)
+// 		return
+// 	})
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	return
+// }
 
-func newImageToken(t *testing.T, sha1 string) (token string) {
-	t.Helper()
+// func TestInsertImage(t *testing.T) {
+// 	assertTableClear(t, "images", "boards")
+// 	op, _ := prepareThread(t)
+// 	token := newImageToken(t, assets.StdJPEG.SHA1)
+// 	const postID = 3
 
-	err := InTransaction(func(tx *pgx.Tx) (err error) {
-		token, err = NewImageToken(tx, sha1)
-		return
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	return
-}
+// 	checkHas := func(std bool) {
+// 		has, err := HasImage(postID)
+// 		if err != nil {
+// 			t.Fatal(err)
+// 		}
+// 		test.AssertEquals(t, has, std)
+// 	}
 
-func TestInsertImage(t *testing.T) {
-	assertTableClear(t, "images", "boards")
-	op, _ := prepareThread(t)
-	token := newImageToken(t, assets.StdJPEG.SHA1)
-	const postID = 3
+// 	checkHas(false)
 
-	checkHas := func(std bool) {
-		has, err := HasImage(postID)
-		if err != nil {
-			t.Fatal(err)
-		}
-		test.AssertEquals(t, has, std)
-	}
+// 	std := assets.StdJPEG
+// 	var buf []byte
 
-	checkHas(false)
+// 	insert := func() error {
+// 		return InTransaction(func(tx *pgx.Tx) (err error) {
+// 			buf, err = InsertImage(tx, op.ID, token, std.Name, std.Spoiler)
+// 			return
+// 		})
+// 	}
 
-	std := assets.StdJPEG
-	var buf []byte
+// 	err := insert()
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	checkHas(true)
 
-	insert := func() error {
-		return InTransaction(func(tx *pgx.Tx) (err error) {
-			buf, err = InsertImage(tx, op.ID, token, std.Name, std.Spoiler)
-			return
-		})
-	}
+// 	type result struct {
+// 		common.Image
+// 		ID uint64
+// 	}
 
-	err := insert()
-	if err != nil {
-		t.Fatal(err)
-	}
-	checkHas(true)
+// 	var img result
+// 	err = json.Unmarshal(buf, &img)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	test.AssertEquals(t, img, result{
+// 		ID:    postID,
+// 		Image: std,
+// 	})
 
-	type result struct {
-		common.Image
-		ID uint64
-	}
+// 	// Test token is properly expended
+// 	err = insert()
+// 	if err != ErrInvalidToken {
+// 		t.Fatal(err)
+// 	}
+// }
 
-	var img result
-	err = json.Unmarshal(buf, &img)
-	if err != nil {
-		t.Fatal(err)
-	}
-	test.AssertEquals(t, img, result{
-		ID:    postID,
-		Image: std,
-	})
+// func insertSampleImage(t *testing.T) {
+// 	t.Helper()
 
-	// Test token is properly expended
-	err = insert()
-	if err != ErrInvalidToken {
-		t.Fatal(err)
-	}
-}
+// 	token := newImageToken(t, assets.StdJPEG.SHA1)
+// 	err := InTransaction(func(tx *pgx.Tx) (err error) {
+// 		std := assets.StdJPEG
+// 		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler)
+// 		return
+// 	})
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// }
 
-func insertSampleImage(t *testing.T) {
-	t.Helper()
+// func TestSpoilerImage(t *testing.T) {
+// 	assertTableClear(t, "images", "boards")
+// 	writeSampleImage(t)
+// 	writeSampleThread(t)
+// 	insertSampleImage(t)
 
-	token := newImageToken(t, assets.StdJPEG.SHA1)
-	err := InTransaction(func(tx *pgx.Tx) (err error) {
-		std := assets.StdJPEG
-		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler)
-		return
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
+// 	err := SpoilerImage(1, 1)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-func TestSpoilerImage(t *testing.T) {
-	assertTableClear(t, "images", "boards")
-	writeSampleImage(t)
-	writeSampleThread(t)
-	insertSampleImage(t)
+// 	buf, err := GetPost(1)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	var post common.Post
+// 	test.DecodeJSON(t, buf, &post)
+// 	test.AssertEquals(t, post.Image.Spoiler, true)
+// }
 
-	err := SpoilerImage(1, 1)
-	if err != nil {
-		t.Fatal(err)
-	}
+// func TestVideoPlaylist(t *testing.T) {
+// 	std := assets.StdJPEG
+// 	std.FileType = common.WEBM
+// 	std.Audio = true
+// 	std.Video = true
+// 	std.Length = 60
 
-	buf, err := GetPost(1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var post common.Post
-	test.DecodeJSON(t, buf, &post)
-	test.AssertEquals(t, post.Image.Spoiler, true)
-}
+// 	assertTableClear(t, "images", "boards")
+// 	err := WriteImage(std.ImageCommon)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	writeSampleThread(t)
+// 	token := newImageToken(t, std.SHA1)
+// 	err = InTransaction(func(tx *pgx.Tx) (err error) {
+// 		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler)
+// 		return
+// 	})
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-func TestVideoPlaylist(t *testing.T) {
-	std := assets.StdJPEG
-	std.FileType = common.WEBM
-	std.Audio = true
-	std.Video = true
-	std.Length = 60
+// 	videos, err := VideoPlaylist("a")
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	test.AssertEquals(t, videos, []Video{
+// 		{
+// 			FileType: common.WEBM,
+// 			Duration: time.Minute,
+// 			SHA1:     std.SHA1,
+// 		},
+// 	})
+// }
 
-	assertTableClear(t, "images", "boards")
-	err := WriteImage(std.ImageCommon)
-	if err != nil {
-		t.Fatal(err)
-	}
-	writeSampleThread(t)
-	token := newImageToken(t, std.SHA1)
-	err = InTransaction(func(tx *pgx.Tx) (err error) {
-		_, err = InsertImage(tx, 1, token, std.Name, std.Spoiler)
-		return
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
+// func TestImageExists(t *testing.T) {
+// 	assertTableClear(t, "images")
 
-	videos, err := VideoPlaylist("a")
-	if err != nil {
-		t.Fatal(err)
-	}
-	test.AssertEquals(t, videos, []Video{
-		{
-			FileType: common.WEBM,
-			Duration: time.Minute,
-			SHA1:     std.SHA1,
-		},
-	})
-}
+// 	var exists bool
+// 	err := InTransaction(func(tx *pgx.Tx) (err error) {
+// 		exists, err = ImageExists(tx, assets.StdJPEG.SHA1)
+// 		return
+// 	})
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	test.AssertEquals(t, exists, false)
 
-func TestImageExists(t *testing.T) {
-	assertTableClear(t, "images")
+// 	writeSampleImage(t)
 
-	var exists bool
-	err := InTransaction(func(tx *pgx.Tx) (err error) {
-		exists, err = ImageExists(tx, assets.StdJPEG.SHA1)
-		return
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	test.AssertEquals(t, exists, false)
-
-	writeSampleImage(t)
-
-	err = InTransaction(func(tx *pgx.Tx) (err error) {
-		exists, err = ImageExists(tx, assets.StdJPEG.SHA1)
-		return
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	test.AssertEquals(t, exists, true)
-}
+// 	err = InTransaction(func(tx *pgx.Tx) (err error) {
+// 		exists, err = ImageExists(tx, assets.StdJPEG.SHA1)
+// 		return
+// 	})
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
+// 	test.AssertEquals(t, exists, true)
+// }

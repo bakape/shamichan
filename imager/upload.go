@@ -132,7 +132,7 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
 	// 	return
 	// }
 
-	var session auth.Base64Token
+	var session auth.AuthToken
 	err = session.EnsureCookie(w, r)
 	if err != nil {
 		return
@@ -197,7 +197,7 @@ func incrementSpamScore(w http.ResponseWriter, r *http.Request) (err error) {
 	if err != nil {
 		return
 	}
-	var session auth.Base64Token
+	var session auth.AuthToken
 	err = session.EnsureCookie(w, r)
 	if err != nil {
 		return

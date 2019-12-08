@@ -38,11 +38,17 @@ pub enum MessageType {
     // Request and response to synchronize with a thread or thread index
     Synchronize,
 
-    // Request or response to create a new thread
+    // Request to create a new thread or new thread creation event
     CreateThread,
 
-    // Request or response to create a new post
+    // Acknowledgment of thread creation. Response to CreateThread from server.
+    CreateThreadAck,
+
+    // Request to create a new post or post creation event
     InsertPost,
+
+    // Acknowledgment of thread creation. Response to InsertPost from server.
+    InsertPostAck,
 }
 
 // Appends 0 after HEADER byte to distinguish it from a message start

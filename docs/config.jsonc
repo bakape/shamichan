@@ -6,16 +6,6 @@
 	*/
 	"debug": true,
 	/*
-		Sets what functionality this instance of the application server will
-		handle. The functionality is divided around handling image-related
-		processing.
-
-		0: handle image processing and serving and all other functionality
-		1: handle all functionality except for image processing and serving
-		2: only handle image processing and serving
-	*/
-	"imager_mode": 0,
-	/*
 		Database URL to connect to on server start
 	*/
 	"database": "postgres://meguca:meguca@localhost:5432/meguca?sslmode=disable",

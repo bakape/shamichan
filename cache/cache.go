@@ -3,13 +3,9 @@
 package cache
 
 import (
-	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/pg_util"
 	"github.com/bakape/recache"
 )
 
@@ -19,12 +15,6 @@ var (
 	// Cache frontend for retreiving thread page JSON
 	threadFrontend *recache.Frontend
 )
-
-// Key for identifying board index pages
-type boardKey struct {
-	page  uint32
-	board string
-}
 
 // Key for identifying thread pages
 type threadKey struct {
@@ -41,63 +31,64 @@ func Init() (err error) {
 
 	// TODO: Global post index frontend
 
-	threadFrontend = cache.NewFrontend(
-		func(k recache.Key, rw *recache.RecordWriter) (err error) {
-			key := k.(threadKey)
-			buf, err := db.GetThread(key.id, key.page)
-			if err != nil {
-				return
-			}
-			rw.Write(buf)
-			return
-		},
-	)
+	// threadFrontend = cache.NewFrontend(
+	// 	func(k recache.Key, rw *recache.RecordWriter) (err error) {
+	// 		key := k.(threadKey)
+	// 		buf, err := db.GetThread(key.id, key.page)
+	// 		if err != nil {
+	// 			return
+	// 		}
+	// 		rw.Write(buf)
+	// 		return
+	// 	},
+	// )
 
-	listen := func(ch string, handler func(string) error) error {
-		return db.Listen(pg_util.ListenOpts{
-			DebounceInterval: time.Second,
-			Channel:          "thread.updated",
-			OnMsg:            handler,
-			OnConnectionLoss: cache.EvictAll,
-		})
-	}
+	// listen := func(ch string, handler func(string) error) error {
+	// 	return db.Listen(pg_util.ListenOpts{
+	// 		DebounceInterval: time.Second,
+	// 		Channel:          "thread.updated",
+	// 		OnMsg:            handler,
+	// 		OnConnectionLoss: cache.EvictAll,
+	// 	})
+	// }
 
-	err = listen("thread.updated", func(msg string) (err error) {
-		ints, err := db.SplitUint64s(msg, 2)
-		if err != nil {
-			return
-		}
-		thread := ints[0]
-		page := int(ints[1])
+	// err = listen("thread.updated", func(msg string) (err error) {
+	// 	ints, err := db.SplitUint64s(msg, 2)
+	// 	if err != nil {
+	// 		return
+	// 	}
+	// 	thread := ints[0]
+	// 	page := int(ints[1])
 
-		threadFrontend.EvictByFunc(func(k recache.Key) (bool, error) {
-			key := k.(threadKey)
-			if key.id == thread {
-				switch page {
-				case -2, key.page:
-					return true, nil
-				}
-			}
-			return false, nil
-		})
+	// 	threadFrontend.EvictByFunc(func(k recache.Key) (bool, error) {
+	// 		key := k.(threadKey)
+	// 		if key.id == thread {
+	// 			switch page {
+	// 			case -2, key.page:
+	// 				return true, nil
+	// 			}
+	// 		}
+	// 		return false, nil
+	// 	})
 
-		return
-	})
-	if err != nil {
-		return
-	}
-	return listen("thread.deleted", func(msg string) (err error) {
-		thread, err := strconv.ParseUint(msg, 10, 64)
-		if err != nil {
-			return
-		}
+	// 	return
+	// })
+	// if err != nil {
+	// 	return
+	// }
+	// return listen("thread.deleted", func(msg string) (err error) {
+	// 	thread, err := strconv.ParseUint(msg, 10, 64)
+	// 	if err != nil {
+	// 		return
+	// 	}
 
-		threadFrontend.EvictByFunc(func(k recache.Key) (bool, error) {
-			return k.(threadKey).id == thread, nil
-		})
+	// 	threadFrontend.EvictByFunc(func(k recache.Key) (bool, error) {
+	// 		return k.(threadKey).id == thread, nil
+	// 	})
 
-		return
-	})
+	// 	return
+	// })
+	return
 }
 
 // Clear entire cache
@@ -105,13 +96,13 @@ func Clear() {
 	cache.EvictAll()
 }
 
-// Write thread page JSON to w
-// page: page of the thread to fetch. -1 to fetch the last page.
-func Thread(
-	w http.ResponseWriter, r *http.Request,
-	id uint64,
-	page int,
-) (err error) {
-	_, err = threadFrontend.WriteHTTP(threadKey{id, page}, w, r)
-	return
-}
+// // Write thread page JSON to w
+// // page: page of the thread to fetch. -1 to fetch the last page.
+// func Thread(
+// 	w http.ResponseWriter, r *http.Request,
+// 	id uint64,
+// 	page int,
+// ) (err error) {
+// 	_, err = threadFrontend.WriteHTTP(threadKey{id, page}, w, r)
+// 	return
+// }

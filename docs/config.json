@@ -1,6 +1,5 @@
 {
 	"debug": true,
-	"imager_mode": 0,
 	"database": "postgres://meguca:meguca@localhost:5432/meguca?sslmode=disable",
 	"cache_size": 128.0,
 	"server": {

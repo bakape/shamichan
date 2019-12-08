@@ -2,68 +2,57 @@
 
 package db
 
-// // Run database clean up tasks at server start and regular intervals. Must be
-// // launched in separate goroutine.
-// func runCleanupTasks() {
-// 	sec := time.Tick(time.Second)
-// 	min := time.Tick(time.Minute)
-// 	hour := time.Tick(time.Hour)
+import (
+	"time"
 
-// 	// To ensure even the once an hour tasks are run shortly after server start
-// 	go func() {
-// 		time.Sleep(time.Minute)
-// 		runHourTasks()
-// 	}()
+	"github.com/go-playground/log"
+)
 
-// 	for {
-// 		select {
-// 		case <-sec:
-// 			logError("flush open post bodies", FlushOpenPostBodies())
-// 			logError("spam score buffer flush", syncSpamScores())
-// 		case <-min:
-// 			if config.Server.ImagerMode != config.ImagerOnly {
-// 				logError("open post cleanup", closeDanglingPosts())
-// 			}
+// Run database clean up tasks at server start and regular intervals. Must be
+// launched in separate goroutine.
+func runCleanupTasks() {
+	sec := time.Tick(time.Second)
+	min := time.Tick(time.Minute)
+	hour := time.Tick(time.Hour)
 
-// 			_, err := db.Exec(`delete from expiries where expires < now()`)
-// 			logError("expired row cleanup", err)
-// 		case <-hour:
-// 			runHourTasks()
-// 		}
-// 	}
-// }
+	// To ensure even the once an hour tasks are run shortly after server start
+	go func() {
+		time.Sleep(time.Minute)
+		runHourTasks()
+	}()
 
-// func runHourTasks() {
-// 	if config.Server.ImagerMode != config.ImagerOnly {
-// 		logError("remove identity info", removeIdentityInfo())
-// 		// logError("thread cleanup", deleteOldThreads())
-// 		_, err := db.Exec(`vacuum`)
-// 		logError("vaccum database", err)
-// 	}
-// 	if config.Server.ImagerMode != config.NoImager {
-// 		logError("image cleanup", deleteUnusedImages())
-// 	}
-// }
+	for {
+		select {
+		case <-sec:
+			// TODO
+			// logError("flush open post bodies", FlushOpenPostBodies())
+			logError("spam score buffer flush", syncSpamScores)
+		case <-min:
+			// TODO:
+			// logError("open post cleanup", closeDanglingPosts())
 
-// func logError(prefix string, err error) {
-// 	if err != nil {
-// 		log.Errorf("%s: %s: %#v", prefix, err, err)
-// 	}
-// }
+			logError("expired row cleanup", func() error {
+				_, err := db.Exec(`delete from expiries where expires < now()`)
+				return err
+			})
+		case <-hour:
+			runHourTasks()
+		}
+	}
+}
 
-// // Remove poster-identifying info from posts older than 7 days
-// func removeIdentityInfo() (err error) {
-// 	_, err = db.Exec(
-// 		`update posts
-// 		set ip = null,
-// 			password = null
-// 		where
-// 			time < extract(epoch from now() at time zone 'utc'
-// 				- interval '7 days
-// 			and ip is not null`,
-// 	)
-// 	return
-// }
+func runHourTasks() {
+	// TODO
+	// logError("thread cleanup", deleteOldThreads())
+	// logError("image cleanup", deleteUnusedImages())
+}
+
+func logError(prefix string, fn func() error) {
+	err := fn()
+	if err != nil {
+		log.Errorf("%s: %s: %#v", prefix, err, err)
+	}
+}
 
 // // Close any open posts that have not been closed for 30 minutes
 // func closeDanglingPosts() (err error) {

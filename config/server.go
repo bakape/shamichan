@@ -26,11 +26,10 @@ const (
 
 // Configurations of this specific instance passed from config file
 type ServerConfigs struct {
-	Debug      bool
-	ImagerMode ImagerModeType `json:"imager_mode"`
-	Database   string
-	CacheSize  float64 `json:"cache_size"`
-	Server     struct {
+	Debug     bool
+	Database  string
+	CacheSize float64 `json:"cache_size"`
+	Server    struct {
 		ReverseProxied bool `json:"reverse_proxied"`
 		Address        string
 	}

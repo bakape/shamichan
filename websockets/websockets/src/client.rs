@@ -12,11 +12,23 @@ pub struct Client {
 	// ID of client used in various registries
 	id: u64,
 
+	// Expendable solved captcha count
+	solved_captchas: i16,
+
 	// IP of client connection
 	ip: IpAddr,
 
 	// Used to authenticate the client
 	key: Option<AuthKey>,
+}
+
+// Assert collection length greater than 1 and smaller than $max
+macro_rules! assert_max_len {
+	($val:expr, $max:expr) => {
+		if $val.len() == 0 || $val.len() > $max {
+			str_err!("invalid {} length: {}", stringify!(val), $val.len());
+			}
+	};
 }
 
 impl Client {
@@ -25,6 +37,7 @@ impl Client {
 		Self {
 			id: id,
 			ip: ip,
+			solved_captchas: 0,
 			key: None,
 		}
 	}
@@ -88,8 +101,29 @@ impl Client {
 		Ok(())
 	}
 
+	// Decrease available solved captcha count
+	pub fn consume_captcha(&mut self) -> DynResult {
+		self.solved_captchas -= 1;
+		if self.solved_captchas < 0 {
+			str_err!("no solved captchas in buffer");
+		}
+		Ok(())
+	}
+
 	fn create_thread(&mut self, dec: &mut Decoder) -> DynResult {
-		// TODO: Create thread and pass ID back to client
-		unimplemented!()
+		self.consume_captcha()?;
+
+		let req: ThreadCreationReq = dec.read_next()?;
+		assert_max_len!(req.subject, 100);
+		assert_max_len!(req.tags, 3);
+		for tag in req.tags {
+			assert_max_len!(tag, 20);
+		}
+
+		// TODO: Create thread id DB
+		let id = 1;
+
+		self.send(MessageType::CreateThreadAck, &id)?;
+		Ok(())
 	}
 }

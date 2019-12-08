@@ -109,9 +109,9 @@ func loadDB(connURL, dbSuffix string) (err error) {
 	// if err != nil {
 	// 	return
 	// }
-	// if !common.IsTest {
-	// 	go runCleanupTasks()
-	// }
+	if !common.IsTest {
+		go runCleanupTasks()
+	}
 
 	return
 }

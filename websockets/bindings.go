@@ -63,3 +63,8 @@ func ws_close_client(clientID C.uint64_t, err *C.char) {
 		}
 	}
 }
+
+//export ws_insert_thread
+func ws_insert_thread() {
+
+}
