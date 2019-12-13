@@ -1,11 +1,14 @@
-create domain post_id as bigint check (value > 0);
 create domain auth_key as bytea check (octet_length(value) = 64);
 create domain timestamptz_auto_now as timestamptz not null default now();
 
 create sequence post_id_seq as bigint;
 
 create table post_common (
-	id post_id default nextval('post_id_seq'::regclass)
+	id
+		bigint
+		not null
+		default nextval('post_id_seq'::regclass)
+		check (id > 0)
 );
 
 create table threads (
@@ -20,7 +23,7 @@ create index threads_tags_idx on threads using gin (tags);
 
 create table posts (
 	primary key (id),
-	thread post_id not null references threads on delete cascade,
+	thread bigint not null references threads on delete cascade,
 	created_on timestamptz_auto_now,
 	auth_key auth_key not null,
 	body bytea

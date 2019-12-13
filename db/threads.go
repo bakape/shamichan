@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/bakape/meguca/auth"
 	"github.com/jackc/pgx"
 )
 
@@ -129,7 +130,7 @@ import (
 // }
 
 // Insert thread and empty post into DB and return the post ID
-func InsertThread(subject string, tags []string, authKey [32]byte) (
+func InsertThread(subject string, tags []string, authKey auth.Token) (
 	id uint64, err error,
 ) {
 	err = InTransaction(func(tx *pgx.Tx) (err error) {
@@ -150,7 +151,7 @@ func InsertThread(subject string, tags []string, authKey [32]byte) (
 			`insert into posts (id, thread, auth_key)
 			values ($1, $1, $2)`,
 			id,
-			authKey[:],
+			authKey,
 		)
 		return
 	})

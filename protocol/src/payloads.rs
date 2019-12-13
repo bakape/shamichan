@@ -11,6 +11,13 @@ pub struct AuthKey {
 	inner: [u8; 64],
 }
 
+impl AuthKey {
+	// Return pointer to inner array
+	pub fn as_ptr(&self) -> *const u8 {
+		&self.inner[0] as *const u8
+	}
+}
+
 impl Hash for AuthKey {
 	fn hash<H: Hasher>(&self, state: &mut H) {
 		(&self.inner).hash(state);
@@ -46,6 +53,7 @@ pub struct Handshake {
 pub struct ThreadCreationReq {
 	pub subject: String,
 	pub tags: Vec<String>,
+	pub captcha_solution: Vec<u8>,
 }
 
 // Request for creating a new post

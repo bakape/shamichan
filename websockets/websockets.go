@@ -2,8 +2,6 @@
 // from and sent to them
 package websockets
 
-// #cgo CFLAGS: -std=c11
-// #cgo LDFLAGS: -L${SRCDIR} -lwebsockets -ldl
 // #include "bindings.h"
 // #include <stdlib.h>
 import "C"
@@ -172,15 +170,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 			err = conn.Write(
 				c.ctx,
 				websocket.MessageBinary,
-				*(*[]byte)(
-					unsafe.Pointer(
-						&reflect.SliceHeader{
-							Data: uintptr(unsafe.Pointer(msg.inner.data)),
-							Len:  int(msg.inner.size),
-							Cap:  int(msg.inner.size),
-						},
-					),
-				),
+				toSlice(msg.inner.data, msg.inner.size),
 			)
 			C.ws_unref_message(msg.src)
 			if err != nil {

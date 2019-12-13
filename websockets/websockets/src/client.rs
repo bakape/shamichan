@@ -1,4 +1,5 @@
 use super::common::DynResult;
+use super::config;
 use super::{bindings, registry, str_err};
 use protocol::AuthKey;
 use protocol::*;
@@ -12,9 +13,6 @@ pub struct Client {
 	// ID of client used in various registries
 	id: u64,
 
-	// Expendable solved captcha count
-	solved_captchas: i16,
-
 	// IP of client connection
 	ip: IpAddr,
 
@@ -22,13 +20,18 @@ pub struct Client {
 	key: Option<AuthKey>,
 }
 
-// Assert collection length greater than 1 and smaller than $max
-macro_rules! assert_max_len {
+macro_rules! check_len {
+	// Assert collection length greater than 1 and smaller than $max
 	($val:expr, $max:expr) => {
-		if $val.len() == 0 || $val.len() > $max {
-			str_err!("invalid {} length: {}", stringify!(val), $val.len());
-			}
+		check_len!($val, 1, $max)
 	};
+	// Assert collection length greater than $min and smaller than $max
+	($val:expr, $min:expr, $max:expr) => {{
+		let l = $val.len();
+		if l < $min || l > $max {
+			str_err!("invalid {} length: {}", stringify!(val), l);
+			}
+		}};
 }
 
 impl Client {
@@ -37,7 +40,6 @@ impl Client {
 		Self {
 			id: id,
 			ip: ip,
-			solved_captchas: 0,
 			key: None,
 		}
 	}
@@ -101,29 +103,32 @@ impl Client {
 		Ok(())
 	}
 
-	// Decrease available solved captcha count
-	pub fn consume_captcha(&mut self) -> DynResult {
-		self.solved_captchas -= 1;
-		if self.solved_captchas < 0 {
-			str_err!("no solved captchas in buffer");
+	// Decrease available solved captcha count, if available
+	pub fn check_captcha(&mut self, solution: &[u8]) -> DynResult {
+		if config::read(|c| c.captcha) {
+			unimplemented!()
 		}
 		Ok(())
 	}
 
+	// Create a new thread and pass its ID to client
 	fn create_thread(&mut self, dec: &mut Decoder) -> DynResult {
-		self.consume_captcha()?;
-
 		let req: ThreadCreationReq = dec.read_next()?;
-		assert_max_len!(req.subject, 100);
-		assert_max_len!(req.tags, 3);
-		for tag in req.tags {
-			assert_max_len!(tag, 20);
+		check_len!(req.subject, 100);
+		check_len!(req.tags, 3);
+		for tag in req.tags.iter() {
+			check_len!(tag, 20);
 		}
+		self.check_captcha(&req.captcha_solution)?;
 
-		// TODO: Create thread id DB
-		let id = 1;
-
-		self.send(MessageType::CreateThreadAck, &id)?;
+		self.send(
+			MessageType::CreateThreadAck,
+			&bindings::insert_thread(
+				req.subject,
+				req.tags,
+				self.key.as_ref().unwrap(),
+			)?,
+		)?;
 		Ok(())
 	}
 }

@@ -65,15 +65,8 @@ func Start() (err error) {
 	}
 
 	// Depend on configs
-	var tasks []func() error
-	if config.Server.ImagerMode != config.ImagerOnly {
-		tasks = append(tasks, cache.Init)
-		go ass.WatchVideoDir()
-	}
-	if config.Server.ImagerMode != config.NoImager {
-		tasks = append(tasks, auth.LoadCaptchaServices)
-	}
-	err = util.Parallel(tasks...)
+	go ass.WatchVideoDir()
+	err = util.Parallel(cache.Init, auth.LoadCaptchaServices)
 	if err != nil {
 		return
 	}

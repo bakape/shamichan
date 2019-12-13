@@ -49,6 +49,12 @@ pub enum MessageType {
 
     // Acknowledgment of thread creation. Response to InsertPost from server.
     InsertPostAck,
+
+    // Submit captcha or pass result captcha authentication
+    Captcha,
+
+    // Notify client a captcha is required for a previously attempted request
+    NeedCaptcha,
 }
 
 // Appends 0 after HEADER byte to distinguish it from a message start

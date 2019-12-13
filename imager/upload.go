@@ -85,7 +85,7 @@ func returnLargeBuf(buf []byte) {
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 	var id string
 	err := func() (err error) {
-		err = validateUploader(w, r)
+		user, err := validateUploader(w, r)
 		if err != nil {
 			return
 		}
@@ -96,7 +96,8 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 		id, err = ParseUpload(r)
 		switch err {
 		case nil:
-			return incrementSpamScore(w, r)
+			incrementSpamScore(user)
+			return
 		case io.EOF:
 			return common.StatusError{
 				Err:  err,
@@ -114,40 +115,24 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 // Apply security restrictions to uploader
-func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
-	if s := r.Header.Get("Authorization"); s != "" &&
-		s == "Bearer "+config.Get().Salt {
-		// Internal upload bypass
-		return nil
-	}
-
-	ip, err := auth.GetIP(r)
+func validateUploader(w http.ResponseWriter, r *http.Request) (
+	user auth.Token,
+	err error,
+) {
+	user, err = auth.ExtractToken(r)
 	if err != nil {
 		return
 	}
-
-	// TODO
-	// err = db.IsBanned("all", ip)
-	// if err != nil {
-	// 	return
-	// }
-
-	var session auth.AuthToken
-	err = session.EnsureCookie(w, r)
-	if err != nil {
-		return
-	}
-	need, err := db.NeedCaptcha(session, ip)
+	need, err := db.NeedCaptcha(user)
 	if err != nil {
 		return
 	}
 	if need {
-		return common.StatusError{
+		err = common.StatusError{
 			Err:  errors.New("captcha required"),
 			Code: 403,
 		}
 	}
-
 	return
 }
 
@@ -158,7 +143,7 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (err error) {
 // the client.
 func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 	token, err := func() (token string, err error) {
-		err = validateUploader(w, r)
+		user, err := validateUploader(w, r)
 		if err != nil {
 			return
 		}
@@ -182,7 +167,8 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
-		err = incrementSpamScore(w, r)
+
+		incrementSpamScore(user)
 		return
 	}()
 	if err != nil {
@@ -192,18 +178,8 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func incrementSpamScore(w http.ResponseWriter, r *http.Request) (err error) {
-	ip, err := auth.GetIP(r)
-	if err != nil {
-		return
-	}
-	var session auth.AuthToken
-	err = session.EnsureCookie(w, r)
-	if err != nil {
-		return
-	}
-	db.IncrementSpamScore(session, ip, config.Get().ImageScore)
-	return
+func incrementSpamScore(user auth.Token) {
+	db.IncrementSpamScore(user, config.Get().ImageScore)
 }
 
 // LogError send the client file upload errors and logs them server-side

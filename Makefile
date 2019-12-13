@@ -1,6 +1,6 @@
 .PHONY: server client imager test websockets
 
-all: server client
+all: server client css
 
 client:
 	$(MAKE) -C client all
@@ -8,9 +8,9 @@ client:
 install_tools:
 	$(MAKE) -C client install_tools
 
-# TODO: Build without gulp
-# css:
-# 	$(gulp) css
+css:
+	npm install --progress false --depth 0
+	$(MAKE) -C less
 
 generate:
 	go generate ./...
@@ -25,8 +25,10 @@ server: generate websockets
 clean:
 	rm -rf meguca
 	cargo clean
-	rm -rf www/js www/css/*.css www/css/maps node_modules
+	rm -rf www/css/*.css www/css/*.css.map node_modules
 	$(MAKE) -C client clean
+
+# TODO: Compress language pack JSON
 
 test: websockets
 	cargo test

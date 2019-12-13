@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -29,3 +30,12 @@ void ws_unref_message(void* src);
 // simplify error propagation. All errors are propagated back to Go only using
 // ws_close_client.
 void ws_receive_message(uint64_t client_id, WSBuffer msg);
+
+// Configurations passed to Rust from Go
+typedef struct {
+    // Enable captcha and antispam systems
+    bool captcha;
+} WSConfig;
+
+// Propagate select configuration changes to Rust side
+void ws_set_config(WSConfig);

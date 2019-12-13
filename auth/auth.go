@@ -5,47 +5,48 @@ package auth
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"strings"
 
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/jackc/pgx/pgtype"
 )
 
 // GetIP extracts the IP of a request, honouring reverse proxies, if set
 func GetIP(r *http.Request) (ip net.IP, err error) {
-	s := getIP(r)
-	ip = net.ParseIP(s)
-	if ip == nil {
-		err = fmt.Errorf("invalid IP: %s", s)
-		return
-	}
-	return
-}
+	var s string
 
-func getIP(req *http.Request) string {
-	var ip string
 	if config.Server.Server.ReverseProxied {
-		h := req.Header.Get("X-Forwarded-For")
+		h := r.Header.Get("X-Forwarded-For")
 		if h != "" {
 			if i := strings.LastIndexByte(h, ','); i != -1 {
 				h = h[i+1:]
 			}
 
-			ip = strings.TrimSpace(h) // Header can contain padding spaces
+			s = strings.TrimSpace(h) // Header can contain padding spaces
 		}
 	}
-	if ip == "" {
-		ip = req.RemoteAddr
+	if s == "" {
+		s = r.RemoteAddr
 	}
 
-	split, _, err := net.SplitHostPort(ip)
-	if err != nil {
-		return ip // No port in address
+	split, _, err := net.SplitHostPort(s)
+	if err == nil {
+		// Port in address
+		s = split
+	} else {
+		err = nil
 	}
-	return split
+
+	ip = net.ParseIP(s)
+	if ip == nil {
+		err = fmt.Errorf("invalid IP: %s", s)
+	}
+	return
 }
 
 // RandomID generates a randomID of base64 characters of desired byte length
@@ -60,20 +61,20 @@ func RandomID(length int) (string, error) {
 
 // 64 byte token that JSON/text en/decodes to a raw URL-safe encoding base64
 // string
-type AuthToken [64]byte
+type Token [64]byte
 
-func (b AuthToken) MarshalText() ([]byte, error) {
+func (t Token) MarshalText() ([]byte, error) {
 	buf := make([]byte, 86)
-	base64.RawURLEncoding.Encode(buf[:], b[:])
+	base64.RawURLEncoding.Encode(buf[:], t[:])
 	return buf, nil
 }
 
-func (b *AuthToken) UnmarshalText(buf []byte) error {
+func (t *Token) UnmarshalText(buf []byte) error {
 	if len(buf) != 86 {
 		return ErrInvalidToken
 	}
 
-	n, err := base64.RawURLEncoding.Decode(b[:], buf)
+	n, err := base64.RawURLEncoding.Decode(t[:], buf)
 	if n != 64 || err != nil {
 		return ErrInvalidToken
 	}
@@ -81,17 +82,36 @@ func (b *AuthToken) UnmarshalText(buf []byte) error {
 }
 
 // Implement pgtype.Encoder
-func (b AuthToken) EncodeBinary(ci *pgtype.ConnInfo, buf []byte) (
+func (t Token) EncodeBinary(ci *pgtype.ConnInfo, buf []byte) (
 	[]byte, error,
 ) {
-	return append(buf, b[:]...), nil
+	return append(buf, t[:]...), nil
 }
 
-// Create new AuthToken populated by cryptographically secure random data
-func NewAuthToken() (b AuthToken, err error) {
-	n, err := rand.Read(b[:])
+// Create new Token populated by cryptographically secure random data
+func NewAuthToken() (t Token, err error) {
+	n, err := rand.Read(t[:])
 	if err == nil && n != 64 {
 		err = fmt.Errorf("auth: not enough data read: %d", n)
+	}
+	return
+}
+
+// Extract user auth token from request
+func ExtractToken(r *http.Request) (user Token, err error) {
+	err = user.UnmarshalText(
+		[]byte(
+			strings.TrimPrefix(
+				r.Header.Get("Authorization"),
+				"Bearer ",
+			),
+		),
+	)
+	if err != nil {
+		err = common.StatusError{
+			Err:  errors.New("invalid authentication key"),
+			Code: 403,
+		}
 	}
 	return
 }

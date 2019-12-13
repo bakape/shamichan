@@ -25,9 +25,6 @@ var (
 	ErrBanned              = ErrAccessDenied("you are banned from this board")
 	ErrTooManyConnections  = ErrAccessDenied("too many connections")
 	ErrNoPermissions       = ErrAccessDenied("insufficient permissions")
-
-	// The poster is almost certainly spamming
-	ErrSpamDected = ErrAccessDenied("spam detected")
 )
 
 // StatusError is a simple error with HTTP status code attached

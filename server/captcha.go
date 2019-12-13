@@ -21,7 +21,7 @@ package server
 
 // 		var (
 // 			c       auth.Captcha
-// 			session auth.AuthToken
+// 			session auth.Token
 // 		)
 // 		c.FromRequest(r)
 // 		err = session.EnsureCookie(w, r)
@@ -61,7 +61,7 @@ package server
 // 		if err != nil {
 // 			return
 // 		}
-// 		var session auth.AuthToken
+// 		var session auth.Token
 // 		err = session.EnsureCookie(w, r)
 // 		if err != nil {
 // 			return

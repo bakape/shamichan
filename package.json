@@ -1,0 +1,22 @@
+{
+  "name": "meguca",
+  "version": "1.0.0",
+  "description": "meguca CSS builder",
+  "main": "index.js",
+  "directories": {},
+  "dependencies": {},
+  "devDependencies": {
+    "less": "^3.10.3",
+    "less-plugin-clean-css": "^1.5.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bakape/meguca.git"
+  },
+  "author": "bakape <bakape@gmail.com> (https://github.com/bakape)",
+  "license": "AGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/bakape/meguca/issues"
+  },
+  "homepage": "https://github.com/bakape/meguca#readme"
+}

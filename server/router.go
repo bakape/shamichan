@@ -75,6 +75,10 @@ func createRouter() http.Handler {
 	}
 	r.PanicHandler = handlePanic
 
+	r.GET("/", func(w http.ResponseWriter, r *http.Request) {
+		serveFile(w, r, "www/client/index.html")
+	})
+
 	r.GET("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		var buf bytes.Buffer
 		buf.WriteString("User-agent: *\n")
@@ -89,31 +93,22 @@ func createRouter() http.Handler {
 	api.GET("/health-check", func(w http.ResponseWriter, r *http.Request) {
 		w.Write(healthCheckMsg)
 	})
+
+	// All upload images
+	api.POST("/upload", imager.NewImageUpload)
+	api.POST("/upload-hash", imager.UploadImageHash)
+
 	assets := r.NewGroup("/assets")
-	if config.Server.ImagerMode != config.NoImager {
-		// All upload images
-		api.POST("/upload", imager.NewImageUpload)
-		api.POST("/upload-hash", imager.UploadImageHash)
+	assets.GET("/images/*path", serveImages)
+	assets.GET("/*path", serveAssets)
 
-		assets.GET("/images/*path", serveImages)
-
-		// // Captcha API
-		// captcha := api.NewGroup("/captcha")
-		// captcha.GET("/:board", serveNewCaptcha)
-		// captcha.POST("/:board", authenticateCaptcha)
-	}
-	if config.Server.ImagerMode != config.ImagerOnly {
-		api.GET("/socket", func(w http.ResponseWriter, r *http.Request) {
-			httpError(w, r, websockets.Handle(w, r))
-		})
-
-		// TODO: Serve index page
-		// r.GET("/", )
-
-		// JSON API
-		// json := r.NewGroup("/json")
-		// json.GET("/post/:post", servePost)
-	}
+	// // Captcha API
+	// captcha := api.NewGroup("/captcha")
+	// captcha.GET("/:board", serveNewCaptcha)
+	// captcha.POST("/:board", authenticateCaptcha)
+	api.GET("/socket", func(w http.ResponseWriter, r *http.Request) {
+		httpError(w, r, websockets.Handle(w, r))
+	})
 
 	return r
 }

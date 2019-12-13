@@ -1,22 +1,52 @@
 package websockets
 
+// #cgo CFLAGS: -std=c11
+// #cgo LDFLAGS: -L${SRCDIR} -lwebsockets -ldl
 // #include "bindings.h"
 // #include <stdlib.h>
 import "C"
 import (
 	"errors"
+	"reflect"
 	"unsafe"
 
+	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/util"
 )
 
+func init() {
+	util.Hook("config.updated", func() error {
+		c := config.Get()
+		C.ws_set_config(C.WSConfig{
+			captcha: C.bool(c.Captcha),
+		})
+		return nil
+	})
+}
+
+// Construct byte slice from C pointer and size
+func toSlice(ptr *C.uint8_t, size C.size_t) []byte {
+	return *(*[]byte)(
+		unsafe.Pointer(
+			&reflect.SliceHeader{
+				Data: uintptr(unsafe.Pointer(ptr)),
+				Len:  int(size),
+				Cap:  int(size),
+			},
+		),
+	)
+}
+
 //export ws_thread_exists
-func ws_thread_exists(id C.uint64_t, err **C.char) (exists bool) {
-	exists, _err := db.ThreadExists(uint64(id))
-	if _err != nil {
-		*err = C.CString(_err.Error())
+func ws_thread_exists(id C.uint64_t, exists *bool) *C.char {
+	_exists, err := db.ThreadExists(uint64(id))
+	if err != nil {
+		return C.CString(err.Error())
 	}
-	return
+	*exists = _exists
+	return nil
 }
 
 //export ws_write_message
@@ -68,6 +98,36 @@ func ws_close_client(clientID C.uint64_t, err *C.char) {
 }
 
 //export ws_insert_thread
-func ws_insert_thread() {
+func ws_insert_thread(
+	subject *C.char,
+	tags []*C.char,
+	tags_size C.size_t,
+	auth_key *C.uint8_t,
+	id *C.uint64_t,
+) *C.char {
+	_tags := make([]string, int(tags_size))
+	for i := range _tags {
+		_tags[i] = C.GoString(tags[i])
+	}
 
+	_id, err := db.InsertThread(
+		C.GoString(subject),
+		_tags,
+		*(*auth.Token)(unsafe.Pointer(auth_key)),
+	)
+	if err != nil {
+		return C.CString(err.Error())
+	}
+	*id = C.uint64_t(_id)
+	return nil
+}
+
+//export ws_validate_captcha
+func ws_validate_captcha(
+	id *C.uint8_t, // Always 64 bytes
+	solution *C.uint8_t,
+	size C.size_t,
+) *C.char {
+	// TODO: user-specific captchas after captchouli port to Postgres
+	return nil
 }

@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	spamScoreBuffer = make(map[auth.AuthToken]time.Duration)
+	spamScoreBuffer = make(map[auth.Token]time.Duration)
 	spamMu          sync.RWMutex
 )
 
@@ -64,18 +64,12 @@ func flushSpamScores() (err error) {
 	})
 }
 
-func banForSpam(tx *pgx.Tx, user auth.AuthToken) error {
-	// TODO
-	// return systemBanTx(tx, user, "spam detected", time.Hour*48)
-	return nil
-}
-
 // IncrementSpamScore increments spam detection score of a captcha session
 // and sends captcha requests, if score exceeded.
 //
 // user: token identifying user
 // increment: increment amount in milliseconds
-func IncrementSpamScore(user auth.AuthToken, increment uint) {
+func IncrementSpamScore(user auth.Token, increment uint) {
 	if !config.Get().Captcha {
 		return
 	}
@@ -87,7 +81,7 @@ func IncrementSpamScore(user auth.AuthToken, increment uint) {
 
 // NeedCaptcha returns, if the user needs a captcha to proceed with usage
 // of server resources
-func NeedCaptcha(user auth.AuthToken) (need bool, err error) {
+func NeedCaptcha(user auth.Token) (need bool, err error) {
 	if !config.Get().Captcha {
 		return
 	}
@@ -110,7 +104,7 @@ func NeedCaptcha(user auth.AuthToken) (need bool, err error) {
 }
 
 // Merge cached and DB value and return current score
-func getSpamScore(user auth.AuthToken) (
+func getSpamScore(user auth.Token) (
 	score time.Time,
 	err error,
 ) {
@@ -137,28 +131,17 @@ func getSpamScore(user auth.AuthToken) (
 
 	score.Add(spamScoreBuffer[user])
 
-	// This surely is not done by normal human interaction
-	if score.After(now.Add(spamDetectionThreshold * 10)) {
-		err = InTransaction(func(tx *pgx.Tx) error {
-			return banForSpam(tx, user)
-		})
-		if err != nil {
-			return
-		}
-		err = common.ErrSpamDected
-	}
-
 	return
 }
 
 // Check if user is spammer
-func AssertNotSpammer(user auth.AuthToken) (err error) {
+func AssertNotSpammer(user auth.Token) (err error) {
 	_, err = getSpamScore(user)
 	return
 }
 
 // Separated for unit tests
-func recordValidCaptcha(user auth.AuthToken) (err error) {
+func recordValidCaptcha(user auth.Token) (err error) {
 	spamMu.Lock()
 	defer spamMu.Unlock()
 
@@ -185,7 +168,7 @@ func recordValidCaptcha(user auth.AuthToken) (err error) {
 }
 
 // ValidateCaptcha with captcha backend
-func ValidateCaptcha(req auth.Captcha, user auth.AuthToken) (err error) {
+func ValidateCaptcha(req auth.Captcha, user auth.Token) (err error) {
 	if !config.Get().Captcha {
 		return
 	}
@@ -195,30 +178,6 @@ func ValidateCaptcha(req auth.Captcha, user auth.AuthToken) (err error) {
 	case nil:
 		return recordValidCaptcha(user)
 	case captchouli.ErrInvalidSolution:
-		var exceeded bool
-		err = db.
-			QueryRow(
-				`insert into failed_captchas as i (auth_key, expires)
-				values ($1, now() + interval '1 hour')
-				returning (
-					select count(*) > 10
-					from failed_captchas e
-					where auth_key = $1 and e.expires > now()
-				)`,
-				user,
-			).
-			Scan(&exceeded)
-		if err != nil {
-			return
-		}
-		if exceeded {
-			// TODO
-			// err = SystemBan(ip, "bot detected", time.Hour*48)
-			// if err != nil {
-			// 	return
-			// }
-			return common.ErrBanned
-		}
 		return common.ErrInvalidCaptcha
 	default:
 		return
@@ -226,7 +185,7 @@ func ValidateCaptcha(req auth.Captcha, user auth.AuthToken) (err error) {
 }
 
 // Returns, if user has solved a captcha within the last 3 hours
-func SolvedCaptchaRecently(user auth.AuthToken) (
+func SolvedCaptchaRecently(user auth.Token) (
 	has bool,
 	err error,
 ) {

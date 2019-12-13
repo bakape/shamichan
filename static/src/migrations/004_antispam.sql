@@ -23,6 +23,3 @@ create table last_solved_captchas (
 	primary key (auth_key)
 )
 inherits (auth_expiries);
-
--- Incorrectly submitted captchas
-create table failed_captchas () inherits (auth_expiries);

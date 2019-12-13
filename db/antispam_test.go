@@ -32,7 +32,7 @@ func TestSpamScores(t *testing.T) {
 	}
 	now := time.Now().Round(time.Second)
 
-	var tokens [4]auth.AuthToken
+	var tokens [4]auth.Token
 	for i := 0; i < 4; i++ {
 		tokens[i] = genToken(t)
 	}
@@ -66,7 +66,7 @@ func TestSpamScores(t *testing.T) {
 	}
 
 	spamMu.Lock()
-	spamScoreBuffer = make(map[auth.AuthToken]time.Duration)
+	spamScoreBuffer = make(map[auth.Token]time.Duration)
 	for i := 0; i < 4; i++ {
 		score := time.Second * 10
 		if i == 3 {
@@ -82,7 +82,7 @@ func TestSpamScores(t *testing.T) {
 
 	cases := [...]struct {
 		name           string
-		token          auth.AuthToken
+		token          auth.Token
 		needCaptcha    bool
 		needCaptchaErr error
 	}{
@@ -98,11 +98,6 @@ func TestSpamScores(t *testing.T) {
 			name:        "increment DB value",
 			token:       tokens[2],
 			needCaptcha: true,
-		},
-		{
-			name:           "spam",
-			token:          tokens[3],
-			needCaptchaErr: common.ErrSpamDected,
 		},
 		{
 			name:        "no captcha solved in 3h",
@@ -147,7 +142,6 @@ func TestCaptchas(t *testing.T) {
 	test.SkipInCI(t)
 
 	assertTableClear(t,
-		"failed_captchas",
 		"last_solved_captchas",
 		"spam_scores",
 	)
@@ -224,8 +218,8 @@ func TestCaptchas(t *testing.T) {
 	}
 }
 
-// Generate random auth.AuthToken
-func genToken(t *testing.T) auth.AuthToken {
+// Generate random auth.Token
+func genToken(t *testing.T) auth.Token {
 	t.Helper()
 
 	b, err := auth.NewAuthToken()

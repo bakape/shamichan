@@ -1,33 +1,22 @@
 <!doctype html>
-
 <html>
-<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width">
-	<meta name="application-name" content="meguca">
-	<meta name="description" content="Realtime imageboard">
-	<!-- <link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico"> -->
-	<title id="page-title">meguca</title>
-	<!-- <link rel="manifest" href="/assets/mobile/manifest.json"> -->
-	<!-- <link rel="stylesheet" href="/assets/css/base.css"> -->
-	<!-- <link rel="stylesheet" id="theme-css" href="/assets/css/$$$.css"> -->
-	<!-- <style id="user-background-style"></style> -->
-	<!-- <script>
-			var config = {%z= confJSON %},
-				configHash = '{%s= confHash %}',
-				{% code boardJSON, _ := json.Marshal(boards) %}
-				boards = {%z= boardJSON %},
-				position = {%d int(pos) %},
-				{% code videosJSON, _ := json.Marshal(assets.GetVideoNames()) %}
-				bgVideos = {%z= videosJSON %};
-			if (localStorage.theme !== config.DefaultCSS) {
-				document.getElementById('theme-css').href = '/assets/css/' + localStorage.theme + '.css'
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width">
+		<meta name="application-name" content="meguca">
+		<meta name="description" content="Realtime imageboard">
+		<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico">
+		<title id="page-title">meguca</title>
+		<link rel="manifest" href="/assets/mobile/manifest.json">
+		<link rel="stylesheet" href="/assets/css/base.css" type="text/css">
+		<link rel="stylesheet" id="theme-css" href="/assets/css/ashita.css" type="text/css">
+		<style id="user-background-style"></style>
+		<script>
+			if (localStorage.theme && localStorage.theme !== "ashita") {
+				document.getElementById('theme-css').href = '/assets/css/' + localStorage.theme + '.css';
 			}
-		</script> -->
-	<script src="/assets/client/index.js"></script>
-</head>
-
-<body>
-</body>
-
+		</script>
+		<script src="/assets/client/index.js"></script>
+	</head>
+	<body></body>
 </html>

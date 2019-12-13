@@ -1,19 +1,14 @@
 use super::client::Client;
-use super::common;
 use protocol::AuthKey;
-use std::borrow::{Borrow, BorrowMut};
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::net::IpAddr;
 use std::rc::Rc;
-use std::sync::{Mutex, Once, RwLock};
-
-static INIT: Once = Once::new();
-static mut REGISTRY: Option<RwLock<Registry>> = None;
+use std::sync::Mutex;
 
 // Keeps state and feed subscription of all clients
 #[derive(Default)]
-struct Registry {
+pub struct Registry {
 	by_id: HashMap<u64, ClientDescriptor>,
 
 	// Maps for quick lookup of client sets
@@ -35,6 +30,8 @@ impl Registry {
 		}
 	}
 }
+
+super::gen_global_rwlock!(Registry);
 
 // Stores client state that needs to be accessed by outer services along with
 // a smart pointer to the client itself
@@ -96,28 +93,6 @@ impl<K: Hash + Eq + Clone> SetMap<K> {
 			}
 		}
 	}
-}
-
-fn init() {
-	unsafe { common::init_once(&INIT, &mut REGISTRY) };
-}
-
-// Open registry for reading
-fn read<F, R>(cb: F) -> R
-where
-	F: FnOnce(&Registry) -> R,
-{
-	init();
-	cb(unsafe { REGISTRY.as_ref().unwrap().read().unwrap().borrow() })
-}
-
-// Open registry for writing
-fn write<F, R>(cb: F) -> R
-where
-	F: FnOnce(&mut Registry) -> R,
-{
-	init();
-	cb(unsafe { REGISTRY.as_ref().unwrap().write().unwrap().borrow_mut() })
 }
 
 // Remove client from registry
