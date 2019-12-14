@@ -140,4 +140,25 @@ impl<S: Eq + Hash + Default + Copy, E: Eq + Hash + Default + Copy> FSM<S, E> {
 			self.feed(app_state, event);
 		}
 	}
+
+	// Return current state of FSM
+	pub fn state(&self) -> S {
+		self.state
+	}
+}
+
+#[test]
+fn basic_operation() {
+	let mut fsm: FSM<u8, u8> = FSM::new(0);
+	let mut app_state = State::default();
+
+	fn handle(_app_state: &mut State, state: u8, event: u8) -> u8 {
+		assert_eq!(state, 0);
+		assert_eq!(event, 1);
+		3
+	}
+
+	fsm.set_transitions(&[0], &[1], handle);
+	fsm.feed(&mut app_state, 1);
+	assert_eq!(fsm.state(), 3);
 }
