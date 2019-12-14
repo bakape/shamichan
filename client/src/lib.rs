@@ -1,3 +1,8 @@
+#[macro_use]
+extern crate lazy_static;
+
+mod fsm;
+mod state;
 mod util;
 
 use brunhild::*;
