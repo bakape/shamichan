@@ -15,7 +15,6 @@ crate-type = ["cdylib"]
 wasm-bindgen = "0.2.54"
 brunhild = {git = "https://github.com/bakape/brunhild.git"}
 protocol = { path = "../protocol" }
-lazy_static = "1.4.0"
 
 [dependencies.web-sys]
 version = "0.3.31"
@@ -26,6 +25,11 @@ features = [
   'Element',
   'Node',
   "console",
+  "CloseEvent",
+  "ErrorEvent",
+  "MessageEvent",
+  "WebSocket",
+  "Location",
 ]
 
 [target."cfg(debug_assertions)".dependencies]
