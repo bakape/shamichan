@@ -2,7 +2,6 @@ use super::fsm::FSM;
 use super::state;
 use super::state::State;
 use super::util;
-use std::sync::Once;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{CloseEvent, ErrorEvent, MessageEvent};
@@ -97,36 +96,28 @@ fn connect(s: &mut State) {
 	})
 	.expect("could not create websocket instance");
 
-	static mut ON_OPEN: Option<Closure<dyn Fn()>> = None;
-	static mut ON_CLOSE: Option<Closure<dyn Fn(CloseEvent)>> = None;
-	static mut ON_ERROR: Option<Closure<dyn Fn(ErrorEvent)>> = None;
-	static mut ON_MESSAGE: Option<Closure<dyn Fn(MessageEvent)>> = None;
-	static ONCE: Once = Once::new();
-	ONCE.call_once(|| {
-		macro_rules! wrap {
-			($var:ident, $fn:ident) => {
-				unsafe { $var = Some(Closure::wrap(Box::new(&$fn))) };
-			};
-		}
-
-		wrap!(ON_OPEN, on_open);
-		wrap!(ON_CLOSE, on_close);
-		wrap!(ON_ERROR, on_error);
-		wrap!(ON_MESSAGE, on_message);
-	});
-
+	#[rustfmt::skip]
 	macro_rules! set {
-		($prop:ident, $var:ident) => {
-			socket.$prop(Some(unsafe {
-				$var.as_ref().unwrap().as_ref().unchecked_ref()
-			}));
+		($prop:ident,  $fn:ident, $type:ty) => {
+			unsafe {
+				static mut CACHED: Option<Closure<$type>> = None;
+
+				if CACHED.is_none() {
+					CACHED = Some(Closure::wrap(Box::new(&$fn)));
+				}
+				socket.$prop(
+					Some(
+						CACHED.as_ref().unwrap().as_ref().unchecked_ref(),
+					),
+				);
+			}
 		};
 	}
 
-	set!(set_onopen, ON_OPEN);
-	set!(set_onclose, ON_CLOSE);
-	set!(set_onerror, ON_ERROR);
-	set!(set_onerror, ON_MESSAGE);
+	set!(set_onopen, on_open, dyn Fn());
+	set!(set_onclose, on_close, dyn Fn(CloseEvent));
+	set!(set_onerror, on_error, dyn Fn(ErrorEvent));
+	set!(set_onerror, on_message, dyn Fn(MessageEvent));
 
 	s.socket = Some(socket);
 }
