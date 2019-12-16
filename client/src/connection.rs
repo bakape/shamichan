@@ -101,7 +101,6 @@ fn connect(s: &mut State) {
 		($prop:ident,  $fn:ident, $type:ty) => {
 			unsafe {
 				static mut CACHED: Option<Closure<$type>> = None;
-
 				if CACHED.is_none() {
 					CACHED = Some(Closure::wrap(Box::new(&$fn)));
 				}

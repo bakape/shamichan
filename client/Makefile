@@ -1,6 +1,6 @@
-all:
+all: reset
 	npm install --progress false --depth 0
-	npm run build
+	./node_modules/.bin/webpack $(if $(DEBUG),-d,)
 	mkdir -p ../www/client
 	rm -rf ../www/client/*
 	cp dist/* ../www/client/
@@ -8,8 +8,15 @@ all:
 install_tools:
 	cargo install -f wasm-pack
 
-watch:
-	npm run start
+reset:
+	rm -rf dist pkg
+	mkdir pkg dist
+
+watch: reset
+	webpack-dev-server --open -d
+
+test:
+	cargo test && wasm-pack test --headless
 
 clean:
 	cargo clean

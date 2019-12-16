@@ -16,8 +16,8 @@ generate:
 	go generate ./...
 
 websockets:
-	cargo build --release
-	cp target/release/libwebsockets.a websockets/
+	cargo build $(if $(DEBUG),, --release)
+	cp target/$(if $(DEBUG),debug,release)/libwebsockets.a websockets/
 
 server: generate websockets
 	go build -v
