@@ -27,11 +27,13 @@ macro_rules! gen_global {
 		where
 			F: FnOnce(&mut $type) -> R,
 		{
-			static ONCE: std::sync::Once = std::sync::Once::new();
-			static mut GLOBAL: Option<$type> = None;
-			ONCE.call_once(|| unsafe { GLOBAL = Some($default) });
-
-			cb(unsafe { GLOBAL.as_mut().unwrap() })
+			unsafe {
+				static mut GLOBAL: Option<$type> = None;
+				if GLOBAL.is_none() {
+					GLOBAL = Some($default);
+				}
+				cb(unsafe { GLOBAL.as_mut().unwrap() })
+			}
 		}
 	};
 	($type:ty) => {
