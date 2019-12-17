@@ -1,5 +1,7 @@
 all: reset
+ifneq ($(NO_DEPS),1)
 	npm install --progress false --depth 0
+endif
 	./node_modules/.bin/webpack $(if $(DEBUG),-d,)
 	mkdir -p ../www/client
 	rm -rf ../www/client/*

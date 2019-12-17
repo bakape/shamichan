@@ -9,7 +9,9 @@ install_tools:
 	$(MAKE) -C client install_tools
 
 css:
+ifneq ($(NO_DEPS),1)
 	npm install --progress false --depth 0
+endif
 	$(MAKE) -C less
 
 generate:

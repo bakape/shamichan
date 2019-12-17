@@ -139,6 +139,8 @@ the password "password"
 * See `./docs` for more documentation
 * `make server` and `make client` build the server and client separately
 * Pass `DEBUG=1` before make command to build in debug mode
+* Pass `NO_DEPS=1` before make command to not install dependencies with npm on
+each build
 * `make clean` removes files from the previous compilation
 * `make {test,test_no_race,test_docker}` run regular, without data race
 detection and Dockerized test suites, respectively

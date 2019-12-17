@@ -17,7 +17,7 @@ pub fn main_js() -> Result<(), JsValue> {
 	.append_to(util::body().into())?;
 
 	state::with(|s| {
-		connection::start(s);
+		connection::init(s);
 	});
 
 	Ok(())
