@@ -6,6 +6,8 @@ client:
 	$(MAKE) -C client all
 
 install_tools:
+	go get -u github.com/valyala/quicktemplate
+	go get -u github.com/valyala/quicktemplate/qtc
 	$(MAKE) -C client install_tools
 
 css:

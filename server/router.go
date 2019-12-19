@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"github.com/bakape/meguca/templates"
 	"net"
 	"net/http"
 	"runtime/debug"
@@ -76,7 +77,9 @@ func createRouter() http.Handler {
 	r.PanicHandler = handlePanic
 
 	r.GET("/", func(w http.ResponseWriter, r *http.Request) {
-		serveFile(w, r, "www/client/index.html")
+		// TODO: Cache it
+		setHTMLHeaders(w)
+		templates.WriteMain(w, *config.Get())
 	})
 
 	r.GET("/robots.txt", func(w http.ResponseWriter, r *http.Request) {

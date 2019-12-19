@@ -137,6 +137,7 @@ the password "password"
 ## Development
 
 * See `./docs` for more documentation
+* `make install_tools` to install required build tools
 * `make server` and `make client` build the server and client separately
 * Pass `DEBUG=1` before make command to build in debug mode
 * Pass `NO_DEPS=1` before make command to not install dependencies with npm on

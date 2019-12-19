@@ -46,6 +46,14 @@ func writeData(w http.ResponseWriter, r *http.Request, data []byte) {
 	}
 }
 
+func setHTMLHeaders(w http.ResponseWriter) {
+	head := w.Header()
+	for key, val := range vanillaHeaders {
+		head.Set(key, val)
+	}
+	head.Set("Content-Type", "text/html")
+}
+
 // Log an error together with the client's IP
 func logError(r *http.Request, err interface{}) {
 	if err, ok := err.(error); ok && common.CanIgnoreClientError(err) {
