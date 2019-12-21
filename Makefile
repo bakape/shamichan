@@ -6,8 +6,9 @@ client:
 	$(MAKE) -C client all
 
 install_tools:
-	go get -u github.com/valyala/quicktemplate
-	go get -u github.com/valyala/quicktemplate/qtc
+	go get -u github.com/valyala/quicktemplate \
+		github.com/rakyll/statik \
+		github.com/valyala/quicktemplate/qtc
 	$(MAKE) -C client install_tools
 
 css:
@@ -23,7 +24,7 @@ websockets:
 	cargo build $(if $(DEBUG),, --release)
 	cp target/$(if $(DEBUG),debug,release)/libwebsockets.a websockets/
 
-server: generate websockets
+server: websockets
 	go build -v
 
 clean:
@@ -32,7 +33,7 @@ clean:
 	rm -rf www/css/*.css www/css/*.css.map node_modules
 	$(MAKE) -C client clean
 
-# TODO: Compress language pack JSON
+# TODO: Minify language pack JSON
 
 test: websockets
 	cargo test
