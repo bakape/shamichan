@@ -42,18 +42,19 @@ impl<'de> serde::de::Visitor<'de> for TokenVisitor {
 	where
 		E: serde::de::Error,
 	{
-		let mut out: Vec<Token> = Vec::new();
+		let mut out = Vec::new();
 		while s.len() > 0 {
 			if match s.chars().position(|b| b == '{') {
 				None => true,
 				Some(start) => {
 					if start != 0 {
 						out.push(Token::Text(s[..start].into()));
+						s = &s[start..];
 					}
 					match s.chars().position(|b| b == '}') {
 						None => true,
 						Some(end) => {
-							out.push(Token::Variable(s[start + 1..end].into()));
+							out.push(Token::Variable(s[1..end].into()));
 							s = &s[end + 1..];
 							false
 						}
@@ -128,14 +129,14 @@ fn test_localization() {
 	with(|l| {
 		l.format_strings.insert(
 			"test".into(),
-			serde_json::from_str(r#""{name} a {adjective}""#).unwrap(),
+			serde_json::from_str(r#""that {name} a {adjective}""#).unwrap(),
 		);
 		l.literals.insert("test".into(), "anon a BWAAKA".into());
 	});
 
 	assert_eq!(
 		localize!("test", {"name" => "anon", "adjective"=> "BWAAKA"}),
-		String::from("anon a BWAAKA")
+		String::from("that anon a BWAAKA")
 	);
 	assert_eq!(localize!("test"), "anon a BWAAKA");
 }
