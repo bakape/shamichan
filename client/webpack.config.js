@@ -19,6 +19,7 @@ module.exports = {
 	},
 	plugins: [
 		new WasmPackPlugin({
+			extraArgs: "--no-typescript",
 			crateDirectory: __dirname,
 		}),
 	],
