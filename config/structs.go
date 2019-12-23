@@ -17,7 +17,6 @@ type Configs struct {
 	EmailErrMail      string `json:"email_errors_address"`
 	EmailErrPass      string `json:"email_errors_password"`
 	EmailErrSub       string `json:"email_errors_server_address"`
-	FeedbackEmail     string `json:"feedback_email"`
 	FAQ               string
 	CaptchaTags       []string `json:"captcha_tags"`
 }
