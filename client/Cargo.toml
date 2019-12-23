@@ -29,6 +29,7 @@ features = [
   'HtmlElement',
   'Element',
   'Node',
+  "NodeList",
   "console",
   "CloseEvent",
   "ErrorEvent",

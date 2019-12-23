@@ -1,4 +1,3 @@
-use super::state::State;
 use super::util;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -141,6 +140,18 @@ fn test_localization() {
 	assert_eq!(localize!("test"), "anon a BWAAKA");
 }
 
+fn query_selector_all_iter<F>(sel: &str, mut f: F) -> Result<(), JsValue>
+where
+	F: FnMut(&web_sys::Element) -> Result<(), JsValue>,
+{
+	let els = util::document().query_selector_all(sel)?;
+	for i in 0..els.length() {
+		f(&els.get(i).unwrap().dyn_into::<web_sys::Element>().unwrap())?;
+	}
+
+	Ok(())
+}
+
 pub async fn load_language_pack() -> Result<(), JsValue> {
 	async fn run(l: &mut LanguagePack) -> Result<(), JsValue> {
 		*l = serde_json::from_str(&String::from(
@@ -149,10 +160,26 @@ pub async fn load_language_pack() -> Result<(), JsValue> {
 					.dyn_into::<js_sys::Promise>()?,
 			)
 			.await?
-			.dyn_ref::<js_sys::JsString>()
-			.ok_or_else(|| JsValue::from("language pack not found"))?,
+			.dyn_into::<js_sys::JsString>()?,
 		))
 		.map_err(|e| JsValue::from(e.to_string()))?;
+
+		// Apply localization to static DOM elements
+		query_selector_all_iter("[lang-content]", |el| {
+			el.set_text_content(Some(localize! {
+				&el
+				.get_attribute("lang-content")
+				.unwrap()
+			}));
+			Ok(())
+		})?;
+		query_selector_all_iter("[lang-title]", |el| {
+			el.set_attribute(
+				"title",
+				localize!(&el.get_attribute("lang-title").unwrap()),
+			)
+		})?;
+
 		Ok(())
 	}
 
