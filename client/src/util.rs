@@ -1,4 +1,3 @@
-use super::state;
 use wasm_bindgen::JsCast;
 use web_sys;
 
@@ -10,9 +9,9 @@ macro_rules! gen_global {
 	($type:ty, $default:expr) => {
 		// Open global for writing
 		#[allow(unused)]
-		pub fn with<F, R>(mut cb: F) -> R
+		pub fn with<'a, F, R>(mut cb: F) -> R
 		where
-			F: FnMut(&mut $type) -> R,
+			F: FnMut(&'a mut $type) -> R,
 		{
 			unsafe {
 				static mut GLOBAL: Option<$type> = None;

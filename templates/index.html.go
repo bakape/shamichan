@@ -7,58 +7,74 @@ package templates
 //line index.html:1
 import "github.com/bakape/meguca/config"
 
-// TODO: Default language
+//  TODO: Default language
 
-//line index.html:4
+//line index.html:1
 import (
 	qtio422016 "io"
 
 	qt422016 "github.com/valyala/quicktemplate"
 )
 
-//line index.html:4
+//line index.html:1
 var (
 	_ = qtio422016.Copy
 	_ = qt422016.AcquireByteBuffer
 )
 
-//line index.html:4
+//line index.html:1
 func StreamMain(qw422016 *qt422016.Writer, c config.Configs) {
-//line index.html:4
-	qw422016.N().S(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="application-name" content="meguca"><meta name="description" content="Realtime imageboard"><link type="image/x-icon" rel="shortcut icon" id="favicon"href="/assets/favicons/default.ico"><title id="page-title">meguca</title><link rel="manifest" href="/assets/mobile/manifest.json"><link rel="stylesheet" href="/assets/css/base.css" type="text/css"><link rel="stylesheet" id="theme-css"href="/assets/css/`)
-//line index.html:18
+//line index.html:1
+	qw422016.N().S(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="application-name" content="meguca"><meta name="description" content="Realtime imageboard"><link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico"><title id="page-title">meguca</title><link rel="manifest" href="/assets/mobile/manifest.json"><link rel="stylesheet" href="/assets/css/base.css" type="text/css"><link rel="stylesheet" id="theme-css" href="/assets/css/`)
+//line index.html:13
 	qw422016.N().S(c.DefaultCSS)
-//line index.html:18
+//line index.html:13
 	qw422016.N().S(`.css" type="text/css"><style id="user-background-style"></style><script>if (localStorage.theme&& localStorage.theme !== "`)
-//line index.html:22
+//line index.html:17
 	qw422016.N().S(c.DefaultCSS)
-//line index.html:22
-	qw422016.N().S(`") {document.getElementById('theme-css').href ='/assets/css/'+ localStorage.theme+ '.css';}</script><script src="/assets/client/index.js"></script></head><body></body></html>`)
-//line index.html:34
+//line index.html:17
+	qw422016.N().S(`") {document.getElementById('theme-css').href =`)
+//line index.html:17
+	qw422016.N().S("`")
+//line index.html:17
+	qw422016.N().S(`/assets/css/${localStorage.theme}.css`)
+//line index.html:17
+	qw422016.N().S("`")
+//line index.html:17
+	qw422016.N().S(`;}window.language_pack = new Promise((resolve, reject) => {fetch(`)
+//line index.html:17
+	qw422016.N().S("`")
+//line index.html:17
+	qw422016.N().S(`/assets/lang/${localStorage.lang || "en_GB"}.json`)
+//line index.html:17
+	qw422016.N().S("`")
+//line index.html:17
+	qw422016.N().S(`).then(r => r.text()).then(resolve).catch(reject)});</script><script src="/assets/client/index.js"></script></head><body></body></html>`)
+//line index.html:33
 }
 
-//line index.html:34
+//line index.html:33
 func WriteMain(qq422016 qtio422016.Writer, c config.Configs) {
-//line index.html:34
+//line index.html:33
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line index.html:34
+//line index.html:33
 	StreamMain(qw422016, c)
-//line index.html:34
+//line index.html:33
 	qt422016.ReleaseWriter(qw422016)
-//line index.html:34
+//line index.html:33
 }
 
-//line index.html:34
+//line index.html:33
 func Main(c config.Configs) string {
-//line index.html:34
+//line index.html:33
 	qb422016 := qt422016.AcquireByteBuffer()
-//line index.html:34
+//line index.html:33
 	WriteMain(qb422016, c)
-//line index.html:34
+//line index.html:33
 	qs422016 := string(qb422016.B)
-//line index.html:34
+//line index.html:33
 	qt422016.ReleaseByteBuffer(qb422016)
-//line index.html:34
+//line index.html:33
 	return qs422016
-//line index.html:34
+//line index.html:33
 }

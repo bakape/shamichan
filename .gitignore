@@ -12,7 +12,6 @@ www/css/maps
 www/js
 www/client
 www/wasm
-www/lang
 www/videos
 thumb_*.png
 thumb_*.jpg

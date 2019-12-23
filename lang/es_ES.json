@@ -1,0 +1,506 @@
+{
+  "format_strings": {},
+  "labels": {
+    "always_lock_to_bottom": [
+      "Siempre bloquear a la parte inferior",
+      "Bloquea scrolling a la parte inferior de la pagina incluso cuando la pestaña esta escondida"
+    ],
+    "anonymise": [
+      "Anonimizar",
+      "Muestra todos los posters como anónimo"
+    ],
+    "audio_volume": [
+      "Audio volume",
+      "Volume of audio in music and video players"
+    ],
+    "background_video": [
+      "Background Video",
+      "Admin-specified memes piped straight into you're monitor"
+    ],
+    "background_video_mute": [
+      "Mute Background Video",
+      "Mute the background video"
+    ],
+    "body": [
+      "Body",
+      "Text body of the post"
+    ],
+    "captcha": [
+      "Captcha",
+      "Ask users to complete a captcha for certain tasks like registration and thread creation"
+    ],
+    "captcha_tags": [
+      "Captcha tags",
+      "Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
+    ],
+    "char_score": [
+      "Character spam score",
+      "Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
+    ],
+    "custom_css": [
+      "",
+      "User-defined CSS rules loaded on top of the selected theme"
+    ],
+    "custom_css_enable": [
+      "Custom CSS",
+      "Toggle use of custom CSS"
+    ],
+    "default_language": [
+      "Default language",
+      "Language pack to load by default"
+    ],
+    "default_theme": [
+      "Default theme",
+      "Theme to load by default, when none is set by the client"
+    ],
+    "desustorage": [
+      "DesuStorage",
+      "desustorage.org búsqueda de imágenes"
+    ],
+    "disable_robots": [
+      "Prevent crawlers",
+      "Prevent automated website crawlers, such as search engine indexers, from accessing this board."
+    ],
+    "done": [
+      "Cierra post",
+      "Cierra el post abierto"
+    ],
+    "eightball": [
+      "#8ball answers",
+      "List of answers for the #8ball hash command. Can contain up to 100 answers and 2000 characters total."
+    ],
+    "email_errors": [
+      "Email Errors",
+      "Toggle emailing errors."
+    ],
+    "email_errors_address": [
+      "Email",
+      "Error email."
+    ],
+    "email_errors_password": [
+      "Password",
+      "Error email password."
+    ],
+    "email_errors_server_address": [
+      "Email server",
+      "Error email server subdomain."
+    ],
+    "email_errors_server_port": [
+      "Email server port",
+      "Error email server port."
+    ],
+    "exhentai": [
+      "Exhentai",
+      "exhentai.org búsqueda de imágenes"
+    ],
+    "expand_all": [
+      "Expandir todas las imágenes",
+      "Expande todas las imagenes. Webm, PDF y MP3 y tu propio post no son afectados. Nuevos posts también son expandidos."
+    ],
+    "export": [
+      "Exportar",
+      "Exportar opciones a archivo"
+    ],
+    "faq": [
+      "Information panel text",
+      "Entries for the banner's Frequently Asked Questions list and information modal"
+    ],
+    "feedback_email": [
+      "Feedback email",
+      "User feedback email to display in the top banner"
+    ],
+    "flags": [
+      "Country flags",
+      "Display poster country flags on posts"
+    ],
+    "forced_anonymity": [
+      "Forced Anonymous",
+      "Disable user names, tripcodes and emails on posts"
+    ],
+    "gallery_mode": [
+      "Gallery Mode",
+      "Only show posts containing images"
+    ],
+    "google": [
+      "Google",
+      "Google búsqueda de imágenes"
+    ],
+    "hidden": [
+      "Escondido: 0",
+      "Limpiar posts escondidos"
+    ],
+    "hide_binned": [
+      "Hide Deleted Posts",
+      "Hide all posts that have been deleted"
+    ],
+    "hide_recursively": [
+      "Recursive post hiding",
+      "Hide all posts, that replied to a hidden post recursively"
+    ],
+    "hide_thumbnails": [
+      "Hide thumbnails",
+      "Display a [Show] button in place of thumbnails"
+    ],
+    "horizontal_posting": [
+      "Posting horizontal",
+      "Nostalgia de 38chan"
+    ],
+    "id": [
+      "Login",
+      ""
+    ],
+    "image_hover_preview": [
+      "Expansion de imagen al pasar el ratón",
+      "Muestra una previsualización de la imagen al pasar"
+    ],
+    "image_root_override": [
+      "Image root override",
+      "If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
+    ],
+    "image_score": [
+      "Image spam score",
+      "Antispam weight of posting an image. After exceeding the limit the user will need to solve a captcha."
+    ],
+    "import": [
+      "Importar",
+      "Importar opciones desde archivo"
+    ],
+    "inline_fit": [
+      "Expansion",
+      "Expand images inside the parent post and resize according to setting"
+    ],
+    "iqdb": [
+      "IQDB",
+      "iqdb.org búsqueda de imágenes"
+    ],
+    "janitors": [
+      "Janitors",
+      "Janitor account IDs. Janitors can only delete posts."
+    ],
+    "jpeg_thumbnails": [
+      "JPEG thumbnails",
+      "meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+    ],
+    "language": [
+      "Idioma",
+      "Cambia a diferentes idiomas"
+    ],
+    "links": [
+      "External links",
+      "Add, remove or edit external >>>/4chan/-type references"
+    ],
+    "mascot": [
+      "Mascot",
+      "Toggle mascot display"
+    ],
+    "mascot_image": [
+      "",
+      "Image to use as the mascot"
+    ],
+    "mature": [
+      "Mature content",
+      "Inform the user the website contains mature content on first visit"
+    ],
+    "max_height": [
+      "Image height limit",
+      "Maximum height of uploaded images"
+    ],
+    "max_size": [
+      "Image size limit",
+      "Maximum size of uploaded images in MB"
+    ],
+    "max_width": [
+      "Image width limit",
+      "Maximum width of uploaded images"
+    ],
+    "megu_tv": [
+      "MeguTV",
+      "Play random board-specific videos in overlay player"
+    ],
+    "megu_tv_shortcut": [
+      "MeguTV",
+      "Play random board-specific videos in overlay player"
+    ],
+    "moderators": [
+      "Moderators",
+      "Moderator account IDs. Moderators can delete posts, ban posters and distinguish posters by their mnemonic IDs."
+    ],
+    "name": [
+      "Name",
+      "Name to attach to new posts"
+    ],
+    "new_post": [
+      "Nuevo post",
+      "Abre nuevo post"
+    ],
+    "notice": [
+      "Notice",
+      "Short informational message displayed at the top of the page"
+    ],
+    "notification": [
+      "Notificaciones de escritorio",
+      "Recibe notificaciones de escritorio cuando eres citado o un syncwatch esta a punto de comenzar"
+    ],
+    "now_playing": [
+      "Reproducción actual Banner",
+      "La canción reproduciéndose ahora en r/a/dio o eden y otra información sobre el stream en el banner de encima."
+    ],
+    "owners": [
+      "Owners",
+      "Owner account IDs. Board owners have full access to all board controls. Must contain at least one."
+    ],
+    "post_creation_score": [
+      "Post creation spam score",
+      "Antispam weight of creating a new post. After exceeding the limit the user will need to solve a captcha."
+    ],
+    "post_inline_expansion": [
+      "Inline Post Link Expansion",
+      "Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
+    ],
+    "prune_threads": [
+      "Prune threads",
+      "Delete threads that have not had any posts in N days"
+    ],
+    "pyu": [
+      "Slut enabler",
+      "Don't ask"
+    ],
+    "relative_timestamps": [
+      "Estampas de tiempo relativas",
+      "Estampas de tempo relativas. Ex.: '1 hora atrás'"
+    ],
+    "reply_right": [
+      "[Responder] a la derecha",
+      " Mueve el botón Responder a la derecha de la pagina"
+    ],
+    "root_url": [
+      "Root URL",
+      "Root URL of the imageboard. Required for some image search providers to work."
+    ],
+    "sage": [
+      "Sage",
+      "Do not bump the thread to the top of the board on post creation."
+    ],
+    "salt": [
+      "Secure salt",
+      "Salt for secure tripcode and mnemonic generation. Recommended to be at least 40 characters long."
+    ],
+    "saucenao": [
+      "SauceNao",
+      "saucenao.com búsqueda de imágenes"
+    ],
+    "spoilers": [
+      "Text spoilers",
+      "Enable use of ** to spoiler blocks of text"
+    ],
+    "staff_title": [
+      "Staff Title",
+      "Display your staff title in the post header"
+    ],
+    "text_only": [
+      "Text only",
+      "Disable file uploads"
+    ],
+    "theme": [
+      "Tema",
+      "Selecciona tema de CSS"
+    ],
+    "thread_expiry": [
+      "Thread expiry time",
+      "Number of days without bumping posts before a thread is deleted"
+    ],
+    "title": [
+      "Board title",
+      "Short descriptive title of the board"
+    ],
+    "toggle_spoiler": [
+      "Spoiler de imagen",
+      "Activa spoiler en el post abierto"
+    ],
+    "user_background": [
+      "Fondo personalizado",
+      "Activa fondo de pagina personalizado"
+    ],
+    "user_background_image": [
+      "",
+      "Imagen para usar como fondo personalizado"
+    ],
+    "watch_threads_on_reply": [
+      "Watch threads on reply",
+      "Automatically add thread to watched threads on reply"
+    ],
+    "webm_hover_preview": [
+      "Expansión de WebM al pasar el ratón",
+      "Muestra una previsualización del WebM al pasar. Requiere tener Expansion de imagen al pasar el ratón activado."
+    ],
+    "what_anime": [
+      "WhatAnime",
+      "whatanime.ga anime screenshot search"
+    ],
+    "work_mode": [
+      "Modo de trabajo",
+      "Esconde las imágenes y deshabilita el fondo personalizado."
+    ],
+    "work_mode_shortcut": [
+      "Modo de trabajo",
+      "Esconde las imágenes y deshabilita el fondo personalizado."
+    ],
+    "yandex": [
+      "Yandex",
+      "Yandex image search"
+    ]
+  },
+  "literals": {
+    "account": "Account and board management",
+    "add": "Add",
+    "admin": "Admin",
+    "ago": "ago",
+    "and": "and",
+    "anon": "Anónimo",
+    "apply": "Apply",
+    "april": "Abr",
+    "assign_staff": "Assign staff",
+    "august": "Ago",
+    "ban": "Ban",
+    "banner_specs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
+    "bottom": "Abajo",
+    "by": "By",
+    "cancel": "Cancelar",
+    "captcha": "Captcha",
+    "catalog": "Catalog",
+    "change_password": "Change password",
+    "classic": "classic",
+    "clear": "Clear",
+    "click_to_cancel": "Click to cancel",
+    "configure_board": "Configure board",
+    "configure_server": "Configure server",
+    "connecting": "connecting",
+    "contract": "Contract",
+    "contract_images": "Contract Images",
+    "create_board": "Create board",
+    "data": "Data",
+    "december": "Dic",
+    "delete_board": "Delete board",
+    "delete_by_same_ip": "Delete all by IP",
+    "delete_image": "Delete image",
+    "delete_post": "Delete post",
+    "desynced": "desynced",
+    "disconnected": "disconnected",
+    "done": "Import successfull. The page will now reload.",
+    "duration": "Duration",
+    "expand": "Ampliar",
+    "expand_images": "Expand Images",
+    "expires": "Expires",
+    "faq": "Information",
+    "february": "Feb",
+    "feedback": "Feedback",
+    "file_too_large": "file too large",
+    "finished": "Terminado",
+    "fit_none": "ninguno",
+    "fit_screen": "fit to screen",
+    "fit_width": "ajustar a anchura",
+    "friday": "Vie",
+    "fuck_off": "FUCK OFF",
+    "global": "Global",
+    "google_song": "Clock para googlear la cancion",
+    "hide": "Hide",
+    "id": "ID",
+    "identity": "Identity",
+    "illegal": "Illegal content",
+    "import_corrupt": "Import failed. File corrupt",
+    "import_done": "Import successful. The page will now reload.",
+    "in": "in",
+    "invalid_captcha": "Invalid captcha",
+    "janitors": "Meido",
+    "january": "Ene",
+    "july": "Jul",
+    "june": "Jun",
+    "just_now": "ahora mismo",
+    "keep_deleting_for": "Keep deleting for",
+    "last": "Últimos",
+    "load_captcha": "Click to load captcha",
+    "loading_specs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
+    "lock_thread": "Toggle thread lock",
+    "locked": "locked",
+    "locked_to_bottom": "Pegado al fondo",
+    "logout": "Logout",
+    "logout_all": "Log out all devices",
+    "march": "Mar",
+    "may": "May",
+    "meido_vision_post": "Meido vision",
+    "moderators": "Moderator",
+    "monday": "Lun",
+    "must_match": "Passwords must match",
+    "new_thread": "Nuevo Hilo",
+    "notification": "Notification",
+    "november": "Nov",
+    "october": "Oct",
+    "omitted": "omitted",
+    "options": "Options",
+    "own_no_boards": "You don't own any boards",
+    "owners": "Board Owner",
+    "point_to_catalog": "Point to Catalog",
+    "post": "Post",
+    "posts_images": "Posts/Images/TTL",
+    "purge_post": "Purge post/image",
+    "quoted": "Has sido citado",
+    "reason": "Reason",
+    "redirect_by_ip": "Redirect all by IP",
+    "redirect_by_thread": "Redirect all by thread",
+    "refresh": "Refresh",
+    "reply": "Respuesta",
+    "report": "Reportar",
+    "return": "Regresar",
+    "rules": "Rules",
+    "saturday": "Sab",
+    "search": "Buscar",
+    "search_tooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
+    "see_all": "Mostrar todos",
+    "september": "Sep",
+    "session_expired": "Login session expired",
+    "set_banners": "Set banners",
+    "set_loading": "Set loading animation",
+    "shadow": "shadow",
+    "shadow_bin": "Shadow bin",
+    "show": "Mostrar",
+    "show_notice": "Notice",
+    "sort_bump": "Bump time",
+    "sort_creation": "Creation time",
+    "sort_file_count": "File count",
+    "sort_last_reply": "Last reply time",
+    "sort_mode": "Sort threads by",
+    "sort_reply_count": "Reply count",
+    "spoiler": "Spoiler",
+    "spoiler_image": "Spoiler image",
+    "subject": "Sujeto",
+    "submit": "Submit",
+    "sunday": "Dom",
+    "sync": "Connection status",
+    "sync_count": "Unique connected active/total IP count",
+    "synced": "synced",
+    "syncing": "syncing",
+    "tab_fun": "Entretenimiento",
+    "tab_general": "General",
+    "tab_image_search": "Búsqueda",
+    "tab_shortcuts": "Atajos",
+    "tab_style": "Estilo",
+    "text": "Text",
+    "thumbnailing": "Thumbnailing...",
+    "thursday": "Jue",
+    "time": "Time",
+    "toggle_sticky": "Toggle sticky",
+    "top": "Arriba",
+    "tuesday": "Mar",
+    "type": "Type",
+    "unban": "Unban",
+    "unfinished_post": "You have an unfinished post",
+    "unlocked": "unlocked",
+    "unwatch_thread": "Unwatch thread",
+    "upload_file": "Upload file",
+    "upload_progress": "uploaded...",
+    "view_by_same_ip": "Same IP",
+    "watch_thread": "Watch thread",
+    "wednesday": "Mie",
+    "you": "(Tu)"
+  }
+}

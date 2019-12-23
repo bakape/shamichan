@@ -1,5 +1,3 @@
-use web_sys;
-
 // Global state singleton
 #[derive(Default)]
 pub struct State {

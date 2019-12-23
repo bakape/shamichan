@@ -3,6 +3,7 @@
 all: server client css
 
 client:
+	$(MAKE) -C lang all
 	$(MAKE) -C client all
 
 install_tools:

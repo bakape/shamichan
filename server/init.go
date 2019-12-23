@@ -12,7 +12,6 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager/assets"
-	"github.com/bakape/meguca/lang"
 	mlog "github.com/bakape/meguca/log"
 	"github.com/bakape/meguca/util"
 )
@@ -56,10 +55,6 @@ func Start() (err error) {
 	mlog.ConsoleHandler.SetDisplayColor(config.Server.Debug)
 
 	err = util.Parallel(db.LoadDB, assets.CreateDirs)
-	if err != nil {
-		return
-	}
-	err = lang.Load()
 	if err != nil {
 		return
 	}

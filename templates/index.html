@@ -1,7 +1,4 @@
-{% import "github.com/bakape/meguca/config" %}
-
-TODO: Default language
-{% func Main(c config.Configs) %}{% stripspace %}
+{% import "github.com/bakape/meguca/config" %} TODO: Default language {% func Main(c config.Configs) %}{% stripspace %}
 <!doctype html>
 <html>
 	<head>
@@ -9,26 +6,28 @@ TODO: Default language
 		<meta name="viewport" content="width=device-width">
 		<meta name="application-name" content="meguca">
 		<meta name="description" content="Realtime imageboard">
-		<link type="image/x-icon" rel="shortcut icon" id="favicon"
-			href="/assets/favicons/default.ico">
+		<link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico">
 		<title id="page-title">meguca</title>
 		<link rel="manifest" href="/assets/mobile/manifest.json">
 		<link rel="stylesheet" href="/assets/css/base.css" type="text/css">
-		<link rel="stylesheet" id="theme-css"
-			href="/assets/css/{%s= c.DefaultCSS %}.css" type="text/css">
+		<link rel="stylesheet" id="theme-css" href="/assets/css/{%s= c.DefaultCSS %}.css" type="text/css">
 		<style id="user-background-style"></style>
 		<script>
 			if (localStorage.theme
 				&& localStorage.theme !== "{%s= c.DefaultCSS %}"
 			) {
 				document.getElementById('theme-css').href =
-					'/assets/css/'
-					+ localStorage.theme
-					+ '.css';
+					`/assets/css/${localStorage.theme}.css`;
 			}
+
+			window.language_pack = new Promise((resolve, reject) => {
+				fetch(`/assets/lang/${localStorage.lang || "en_GB"}.json`)
+					.then(r => r.text())
+					.then(resolve)
+					.catch(reject)
+			});
 		</script>
 		<script src="/assets/client/index.js"></script>
 	</head>
 	<body></body>
-</html>
-{% endstripspace %}{% endfunc %}
+</html> {% endstripspace %}{% endfunc %}

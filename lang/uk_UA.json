@@ -1,0 +1,506 @@
+{
+  "format_strings": {},
+  "labels": {
+    "always_lock_to_bottom": [
+      "Завжди прив'язувати до дна",
+      "Коли вкладка неактивна, прив'язувати до дна"
+    ],
+    "anonymise": [
+      "Анонімізувати",
+      "Показувати всіх постерів як анонімів"
+    ],
+    "audio_volume": [
+      "Audio volume",
+      "Volume of audio in music and video players"
+    ],
+    "background_video": [
+      "Background Video",
+      "Admin-specified memes piped straight into you're monitor"
+    ],
+    "background_video_mute": [
+      "Mute Background Video",
+      "Mute the background video"
+    ],
+    "body": [
+      "Body",
+      "Text body of the post"
+    ],
+    "captcha": [
+      "Капча",
+      "Питати користувачів при регістрації та створенні тхреду"
+    ],
+    "captcha_tags": [
+      "Captcha tags",
+      "Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
+    ],
+    "char_score": [
+      "Character spam score",
+      "Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
+    ],
+    "custom_css": [
+      "",
+      "User-defined CSS rules loaded on top of the selected theme"
+    ],
+    "custom_css_enable": [
+      "Custom CSS",
+      "Toggle use of custom CSS"
+    ],
+    "default_language": [
+      "Дефолтна мова",
+      "Мова що відображається по дефолту"
+    ],
+    "default_theme": [
+      "Дефолтна тема",
+      "Тема що завантажується по дефолту, коли в користувача не вказано свою."
+    ],
+    "desustorage": [
+      "DesuStorage",
+      "Пошук зображень по desustorage.org"
+    ],
+    "disable_robots": [
+      "Prevent crawlers",
+      "Prevent automated website crawlers, such as search engine indexers, from accessing this board."
+    ],
+    "done": [
+      "Закінчити пост",
+      "Закрити відкритий пост"
+    ],
+    "eightball": [
+      "#8ball відповіді",
+      "Список відповідей для #8ball хеш команд. Може містити до 100 відповідей та 2000 знаків загало."
+    ],
+    "email_errors": [
+      "Email Errors",
+      "Toggle emailing errors."
+    ],
+    "email_errors_address": [
+      "Email",
+      "Error email."
+    ],
+    "email_errors_password": [
+      "Password",
+      "Error email password."
+    ],
+    "email_errors_server_address": [
+      "Email server",
+      "Error email server subdomain."
+    ],
+    "email_errors_server_port": [
+      "Email server port",
+      "Error email server port."
+    ],
+    "exhentai": [
+      "Exhentai",
+      "Пошук зображень по exhentai.org"
+    ],
+    "expand_all": [
+      "Розгорнути Всі Зображення",
+      "Розгорнути всі зображення. Файли формату Webm, PDF і MP3 не розгортаються. Зображення у нових постах також будуть розгортатися."
+    ],
+    "export": [
+      "Експорт",
+      "Експортувати настройки як файл"
+    ],
+    "faq": [
+      "Інформаційни блок тексту",
+      "Записи для баннеру списку ФАК та інформаційни модальних вікон"
+    ],
+    "feedback_email": [
+      "Зворотня пошта",
+      "Пошта користувача для зворотнього звязку"
+    ],
+    "flags": [
+      "Country flags",
+      "Display poster country flags on posts"
+    ],
+    "forced_anonymity": [
+      "Насильно Анонімно",
+      "Вимикає імя користувачів, тріпкоди та емейли для постах"
+    ],
+    "gallery_mode": [
+      "Gallery Mode",
+      "Only show posts containing images"
+    ],
+    "google": [
+      "Гугель",
+      "Пошук зображень у гугелі"
+    ],
+    "hidden": [
+      "Сховано: 0",
+      "Очистити сховані пости"
+    ],
+    "hide_binned": [
+      "Hide Deleted Posts",
+      "Hide all posts that have been deleted"
+    ],
+    "hide_recursively": [
+      "Recursive post hiding",
+      "Hide all posts, that replied to a hidden post recursively"
+    ],
+    "hide_thumbnails": [
+      "Приховати прев'ю",
+      "Показувати кнопку [Show] замість прев'ю"
+    ],
+    "horizontal_posting": [
+      "Горизонтальний постинг",
+      "Потинг як на 38chan"
+    ],
+    "id": [
+      "Login",
+      ""
+    ],
+    "image_hover_preview": [
+      "Розгортання зображень",
+      "Зображення розгротається при наведенні мишки на нього."
+    ],
+    "image_root_override": [
+      "Image root override",
+      "If you wish to host images from a separate location like a CDN, enter the full root address here. Leave empty to use the default address. Example: 'https://images.meguca.org'"
+    ],
+    "image_score": [
+      "Image spam score",
+      "Antispam weight of posting an image. After exceeding the limit the user will need to solve a captcha."
+    ],
+    "import": [
+      "Імпорт",
+      "Імпортувати настройки з файлу"
+    ],
+    "inline_fit": [
+      "Розширення",
+      "Розгорнути зображення і змінити розмір залежно до настройок."
+    ],
+    "iqdb": [
+      "IQDB",
+      "Пошук зображень по iqdb.org"
+    ],
+    "janitors": [
+      "Janitors",
+      "Janitor account IDs. Janitors can only delete posts."
+    ],
+    "jpeg_thumbnails": [
+      "JPEG thumbnails",
+      "meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+    ],
+    "language": [
+      "Мова",
+      "Змінити мову інтерфейсу"
+    ],
+    "links": [
+      "Зовнніші посилання",
+      "Додавати видаляти та редагувати зовнішні посилання >>>/4chan/"
+    ],
+    "mascot": [
+      "Mascot",
+      "Toggle mascot display"
+    ],
+    "mascot_image": [
+      "",
+      "Image to use as the mascot"
+    ],
+    "mature": [
+      "Mature content",
+      "Inform the user the website contains mature content on first visit"
+    ],
+    "max_height": [
+      "Ліміт висоти зоюраження",
+      "Максимальна висота зображення для завантажених зображень"
+    ],
+    "max_size": [
+      "Ліміт розміру зображень",
+      "Максимальний розмір зображень в мегабайтах (MB)"
+    ],
+    "max_width": [
+      "Ліміт ширини зображення",
+      "Максимальна ширина зображення для завантажених зображень"
+    ],
+    "megu_tv": [
+      "MeguTV",
+      "Play random board-specific videos in overlay player"
+    ],
+    "megu_tv_shortcut": [
+      "MeguTV",
+      "Play random board-specific videos in overlay player"
+    ],
+    "moderators": [
+      "Moderators",
+      "Moderator account IDs. Moderators can delete posts, ban posters and distinguish posters by their mnemonic IDs."
+    ],
+    "name": [
+      "Ім'я",
+      "Ім'я на постах"
+    ],
+    "new_post": [
+      "Новий Пост",
+      "Відкрити новий пост"
+    ],
+    "notice": [
+      "Повістка",
+      "Коротке інформаційне повідомлення що зявляється на верху сторінки"
+    ],
+    "notification": [
+      "Повідомлення на робочий стіл",
+      "Отримувати повідомлення коли цитовано ваш пост або синхронізація почалась."
+    ],
+    "now_playing": [
+      "Зараз показується Banner",
+      "Зараз програється пісня на р/a/діо або eden, інша інформація у банері зверху"
+    ],
+    "owners": [
+      "Owners",
+      "Owner account IDs. Board owners have full access to all board controls. Must contain at least one."
+    ],
+    "post_creation_score": [
+      "Post creation spam score",
+      "Antispam weight of creating a new post. After exceeding the limit the user will need to solve a captcha."
+    ],
+    "post_inline_expansion": [
+      "Inline Post Link Expansion",
+      "Inline linked post under the post link on click. When disabled, navigates to the linked post instead."
+    ],
+    "prune_threads": [
+      "Prune threads",
+      "Delete threads that have not had any posts in N days"
+    ],
+    "pyu": [
+      "Slut enabler",
+      "Don't ask"
+    ],
+    "relative_timestamps": [
+      "Відносні часові межі",
+      "Відносні часові межі постів. Ex.: 'Годину тому'"
+    ],
+    "reply_right": [
+      "[Відповісти] справа",
+      "Посунути кнопку [Відповісти] направо"
+    ],
+    "root_url": [
+      "Root URL",
+      "Root URL of the imageboard. Required for some image search providers to work."
+    ],
+    "sage": [
+      "Sage",
+      "Do not bump the thread to the top of the board on post creation."
+    ],
+    "salt": [
+      "Сіль",
+      "Сіль для безпечних тріпкодів та мнемонічної генерації. Рекомендовано хоча б 40 символи"
+    ],
+    "saucenao": [
+      "SauceNao",
+      "Пошук зображень по  saucenao.com"
+    ],
+    "spoilers": [
+      "Текстові спойлери",
+      "Вмикає використання ** для блоків спойлерів"
+    ],
+    "staff_title": [
+      "Staff Title",
+      "Display your staff title in the post header"
+    ],
+    "text_only": [
+      "Лише текст",
+      "Вимикає завантаження файлів користувачами"
+    ],
+    "theme": [
+      "Тема",
+      "Вибрати CSS тему"
+    ],
+    "thread_expiry": [
+      "Thread expiry time",
+      "Number of days without bumping posts before a thread is deleted"
+    ],
+    "title": [
+      "Заговок дошки",
+      "Короткий місткий заголовк дошки"
+    ],
+    "toggle_spoiler": [
+      "Приховування зображення",
+      "Перемкнути приховування зображень"
+    ],
+    "user_background": [
+      "Власний фон сторінки",
+      "Перемкнути власний фон сторінки"
+    ],
+    "user_background_image": [
+      "",
+      "Власна картинка на фон сторінки"
+    ],
+    "watch_threads_on_reply": [
+      "Watch threads on reply",
+      "Automatically add thread to watched threads on reply"
+    ],
+    "webm_hover_preview": [
+      "Розгортання webm",
+      "WebMки розгротаються при наведенні мишки"
+    ],
+    "what_anime": [
+      "WhatAnime",
+      "whatanime.ga anime screenshot search"
+    ],
+    "work_mode": [
+      "Робочий режим",
+      "Приховує зображення і власний фон"
+    ],
+    "work_mode_shortcut": [
+      "Робочий режим",
+      "Приховує зображення і власний фон"
+    ],
+    "yandex": [
+      "Yandex",
+      "Yandex image search"
+    ]
+  },
+  "literals": {
+    "account": "Аккаунт і менеджмент борди",
+    "add": "Додати",
+    "admin": "Admin",
+    "ago": "тому",
+    "and": "та",
+    "anon": "Анонім",
+    "apply": "Прийняти",
+    "april": "Квітня",
+    "assign_staff": "Assign staff",
+    "august": "Серпня",
+    "ban": "Ban",
+    "banner_specs": "Accepts up to 20 JPEG, PNG, GIF or WEBM files with maximum dimensions of 300x100, maximum file size of 100 KB and no sound.",
+    "bottom": "Дно",
+    "by": "By",
+    "cancel": "Скасувати",
+    "captcha": "Captcha",
+    "catalog": "Каталог",
+    "change_password": "Змінити пароль",
+    "classic": "classic",
+    "clear": "Clear",
+    "click_to_cancel": "Click to cancel",
+    "configure_board": "Налаштувати борду",
+    "configure_server": "Налаштувати сервер",
+    "connecting": "Приєднуємось",
+    "contract": "Contract",
+    "contract_images": "Contract Images",
+    "create_board": "Створити борду",
+    "data": "Data",
+    "december": "Груденя",
+    "delete_board": "Delete board",
+    "delete_by_same_ip": "Delete all by IP",
+    "delete_image": "Delete image",
+    "delete_post": "Delete post",
+    "desynced": "Розсинхронізовано",
+    "disconnected": "Від'єднано",
+    "done": "Імпорт успішний. Зараз сторінка перезавантажиться.",
+    "duration": "Duration",
+    "expand": "Розгорнути",
+    "expand_images": "Expand Images",
+    "expires": "Expires",
+    "faq": "ФАКю",
+    "february": "Лютого",
+    "feedback": "Відгуки",
+    "file_too_large": "file too large",
+    "finished": "Готово.",
+    "fit_none": "жодного",
+    "fit_screen": "підігнати по екрану",
+    "fit_width": "підігнати по ширині",
+    "friday": "Пт",
+    "fuck_off": "FUCK OFF",
+    "global": "Global",
+    "google_song": "Клікніть для гугль пісні",
+    "hide": "Сховати",
+    "id": "ID",
+    "identity": "Особистість",
+    "illegal": "Illegal content",
+    "import_corrupt": "Import failed. File corrupt",
+    "import_done": "Import successful. The page will now reload.",
+    "in": "у",
+    "invalid_captcha": "Invalid captcha",
+    "janitors": "Meido",
+    "january": "Січеня",
+    "july": "Липня",
+    "june": "Червня",
+    "just_now": "щойно",
+    "keep_deleting_for": "Keep deleting for",
+    "last": "Останні",
+    "load_captcha": "Click to load captcha",
+    "loading_specs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
+    "lock_thread": "Toggle thread lock",
+    "locked": "locked",
+    "locked_to_bottom": "Прив'язано до дна",
+    "logout": "Вийти",
+    "logout_all": "Вийти на всіх пристроях",
+    "march": "Березня",
+    "may": "Травня",
+    "meido_vision_post": "Meido vision",
+    "moderators": "Moderator",
+    "monday": "Пн",
+    "must_match": "Паролі мають співпадати",
+    "new_thread": "Новий тред",
+    "notification": "Notification",
+    "november": "Листопада",
+    "october": "Жовтеня",
+    "omitted": "пропущенно",
+    "options": "Опції",
+    "own_no_boards": "Ви не маєте жодних борд.",
+    "owners": "Board Owner",
+    "point_to_catalog": "Point to Catalog",
+    "post": "Post",
+    "posts_images": "Posts/Images/TTL",
+    "purge_post": "Purge post/image",
+    "quoted": "Вас було процитовано",
+    "reason": "Reason",
+    "redirect_by_ip": "Redirect all by IP",
+    "redirect_by_thread": "Redirect all by thread",
+    "refresh": "Оновити",
+    "reply": "Відповісти",
+    "report": "Зарепортити",
+    "return": "Повернутися",
+    "rules": "Правила",
+    "saturday": "Сб",
+    "search": "Пошук",
+    "search_tooltip": "Filter threads by subject, body or board name encased in backslashes. Accepts Regular expressions.",
+    "see_all": "Показати все",
+    "september": "Вересня",
+    "session_expired": "Login session expired",
+    "set_banners": "Set banners",
+    "set_loading": "Set loading animation",
+    "shadow": "shadow",
+    "shadow_bin": "Shadow bin",
+    "show": "Показати",
+    "show_notice": "Повідомлення",
+    "sort_bump": "Час бампу",
+    "sort_creation": "Час створення",
+    "sort_file_count": "Кількість файлів",
+    "sort_last_reply": "Час з останньої відповіді",
+    "sort_mode": "Відсортувати треди за",
+    "sort_reply_count": "Кількість відповідей",
+    "spoiler": "Спойлер",
+    "spoiler_image": "Spoiler image",
+    "subject": "Тема",
+    "submit": "Надіслати",
+    "sunday": "Нд",
+    "sync": "Статус зв'язку",
+    "sync_count": "Unique connected active/total IP count",
+    "synced": "Синхронізовано",
+    "syncing": "Синхронізуємо",
+    "tab_fun": "Fun",
+    "tab_general": "Головна",
+    "tab_image_search": "Пошук зображень",
+    "tab_shortcuts": "Шорткати",
+    "tab_style": "Стиль",
+    "text": "Text",
+    "thumbnailing": "Прев'ювання..",
+    "thursday": "Чт",
+    "time": "Time",
+    "toggle_sticky": "Toggle sticky",
+    "top": "Шапка",
+    "tuesday": "Вт",
+    "type": "Type",
+    "unban": "Unban",
+    "unfinished_post": "Ви маєте незакінчений пост",
+    "unlocked": "unlocked",
+    "unwatch_thread": "Unwatch thread",
+    "upload_file": "Upload file",
+    "upload_progress": "завантаження...",
+    "view_by_same_ip": "Same IP",
+    "watch_thread": "Watch thread",
+    "wednesday": "Ср",
+    "you": "(Ви)"
+  }
+}
