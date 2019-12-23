@@ -351,7 +351,6 @@
 		]
 	},
 	"literals": {
-		"account": "Account and board management",
 		"add": "Add",
 		"admin": "Admin",
 		"anon": "Anon",
@@ -416,6 +415,7 @@
 		"keep_deleting_for": "Keep deleting for",
 		"last": "Son",
 		"load_captcha": "Click to load captcha",
+		"loading": "loading",
 		"loading_specs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
 		"lock_thread": "Toggle thread lock",
 		"locked": "locked",
@@ -473,7 +473,7 @@
 		"submit": "Submit",
 		"sunday": "Paz",
 		"sync": "Connection status",
-		"sync_count": "Unique connected active/total IP count",
+		"sync_count": "Unique connected client count",
 		"synced": "synced",
 		"syncing": "syncing",
 		"tab_fun": "Eğlence",

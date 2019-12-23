@@ -351,7 +351,6 @@
 		]
 	},
 	"literals": {
-		"account": "Account en board management",
 		"add": "Toevoegen",
 		"admin": "Admin",
 		"anon": "Anoniem",
@@ -416,6 +415,7 @@
 		"keep_deleting_for": "Keep deleting for",
 		"last": "Laatste",
 		"load_captcha": "Click om captcha te laden",
+		"loading": "loading",
 		"loading_specs": "Accepteert een GIF- of WEBM-bestand met maximale afmetingen van 300x300, maximale bestandsgrootte van 100 kB en geen geluid.",
 		"lock_thread": "Schakel topic vergrendeling in",
 		"locked": "gesloten",
@@ -473,7 +473,7 @@
 		"submit": "Plaatsen",
 		"sunday": "Zon",
 		"sync": "Connectie status",
-		"sync_count": "Uniek verbonden actief/totaal IP aantal",
+		"sync_count": "Unique connected client count",
 		"synced": "gesynchroniseerd",
 		"syncing": "synchroniseren",
 		"tab_fun": "Pret",

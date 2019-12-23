@@ -351,7 +351,6 @@
 		]
 	},
 	"literals": {
-		"account": "Správa účtu a dosky",
 		"add": "Pridať",
 		"admin": "Admin",
 		"anon": "Janonymous",
@@ -416,6 +415,7 @@
 		"keep_deleting_for": "Keep deleting for",
 		"last": "Posledné",
 		"load_captcha": "Klikni pre načítanie kapči",
+		"loading": "loading",
 		"loading_specs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
 		"lock_thread": "Prepni uzamknutie vlákna",
 		"locked": "locked",
@@ -473,7 +473,7 @@
 		"submit": "Odoslať",
 		"sunday": "Nedeľa",
 		"sync": "Stav pripojenia",
-		"sync_count": "Unique connected active/total IP count",
+		"sync_count": "Unique connected client count",
 		"synced": "zosynchronizovaný",
 		"syncing": "synchronizuje sa",
 		"tab_fun": "Zábava",

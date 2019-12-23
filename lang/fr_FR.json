@@ -351,7 +351,6 @@
 		]
 	},
 	"literals": {
-		"account": "Compte",
 		"add": "Ajouter",
 		"admin": "Administrateur",
 		"anon": "Anonyme",
@@ -416,6 +415,7 @@
 		"keep_deleting_for": "Keep deleting for",
 		"last": "derniers",
 		"load_captcha": "Charger le captcha",
+		"loading": "loading",
 		"loading_specs": "Accepte les fichiers GIF ou WEBM sans son (dimension : 300x300, taille : 100 KB).",
 		"lock_thread": "Verrouiller",
 		"locked": "locked",
@@ -473,7 +473,7 @@
 		"submit": "Envoyer",
 		"sunday": "Dim",
 		"sync": "Statut de connexion",
-		"sync_count": "Nombre d'IPs uniques connectées actives / nombre d'IPs total",
+		"sync_count": "Unique connected client count",
 		"synced": "Direct",
 		"syncing": "Synchro...",
 		"tab_fun": "Fun",

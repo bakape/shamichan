@@ -351,7 +351,6 @@
 		]
 	},
 	"literals": {
-		"account": "Управление аккаунтом и доской",
 		"add": "Добавить",
 		"admin": "Админ",
 		"anon": "Аноним",
@@ -416,6 +415,7 @@
 		"keep_deleting_for": "Keep deleting for",
 		"last": "Последний",
 		"load_captcha": "Кликните для загрузки капчи",
+		"loading": "loading",
 		"loading_specs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
 		"lock_thread": "Toggle thread lock",
 		"locked": "locked",
@@ -473,7 +473,7 @@
 		"submit": "Отправить",
 		"sunday": "Вск",
 		"sync": "Статус соединения",
-		"sync_count": "Unique connected active/total IP count",
+		"sync_count": "Unique connected client count",
 		"synced": "синхронизирован",
 		"syncing": "синхронизация",
 		"tab_fun": "Развлечения",

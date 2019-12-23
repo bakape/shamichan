@@ -7,15 +7,6 @@ use web_sys::{CloseEvent, ErrorEvent, MessageEvent};
 
 super::gen_global!(FSM<ConnState, ConnEvent>, FSM::new(ConnState::Loading));
 
-// Websocket connection and synchronization with server states
-enum SyncStatus {
-	Disconnected,
-	Connecting,
-	Syncing,
-	Synced,
-	Desynced,
-}
-
 // States of the connection finite state machine
 #[repr(u8)]
 #[derive(Eq, PartialEq, Hash, Copy, Clone)]
@@ -42,7 +33,17 @@ pub enum ConnEvent {
 }
 
 fn render_status(s: ConnState) {
-	// TODO: Actually render the status according to language pack
+	super::cache_el!("sync").set_text_content(Some(super::localize! {
+		match s {
+			ConnState::Loading => "loading",
+			ConnState::Connecting => "connecting",
+			ConnState::Desynced => "desynced",
+			ConnState::Dropped => "disconnected",
+			ConnState::Reconnecting => "connecting",
+			ConnState::Synced => "synced",
+			ConnState::Syncing => "syncing",
+		}
+	}))
 }
 
 fn close_socket(s: &mut State) {

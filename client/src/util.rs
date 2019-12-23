@@ -44,19 +44,58 @@ macro_rules! cache_cb {
 	};
 }
 
+// Cache element lookup by ID.
+//
+// Panics, if element not found.
+#[macro_export]
+macro_rules! cache_el {
+	($id:expr) => {
+		$crate::cache_variable! {
+			web_sys::Element,
+			|| match $crate::util::document().get_element_by_id($id) {
+				Some(el) => el,
+				None => panic!(format!("element not found: #{}", $id))
+			}
+		}
+	};
+}
+
+// Cache global JS variable lookup
+#[macro_export]
+macro_rules! cache_variable {
+	($type:ty, $get:expr) => {{
+		static mut CACHED: Option<$type> = None;
+		unsafe {
+			if CACHED.is_none() {
+				CACHED = Some($get());
+				}
+			CACHED.clone().unwrap()
+			}
+		}};
+}
+
 // Get JS window global
 pub fn window() -> web_sys::Window {
-	web_sys::window().expect("window undefined")
+	cache_variable! {
+		web_sys::Window,
+		|| web_sys::window().expect("window undefined")
+	}
 }
 
 // Get page document
 pub fn document() -> web_sys::Document {
-	window().document().expect("document undefined")
+	cache_variable! {
+		web_sys::Document,
+		|| window().document().expect("document undefined")
+	}
 }
 
 // Get page body
 pub fn body() -> web_sys::HtmlElement {
-	document().body().expect("body undefined")
+	cache_variable! {
+		web_sys::HtmlElement,
+		|| document().body().expect("body undefined")
+	}
 }
 
 // Wrap and cache static Rust callback closure as DOM event handler

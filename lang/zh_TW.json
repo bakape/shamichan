@@ -351,7 +351,6 @@
 		]
 	},
 	"literals": {
-		"account": "帳號和看板管理",
 		"add": "新增",
 		"admin": "管理員",
 		"anon": "匿名",
@@ -416,6 +415,7 @@
 		"keep_deleting_for": "繼續刪除",
 		"last": "最後",
 		"load_captcha": "單擊以加載驗證碼",
+		"loading": "loading",
 		"loading_specs": "接受最大尺寸為 300x300，最大文件大小為 100 KB 且無聲音的 GIF 或 WEBM 文件。",
 		"lock_thread": "切換討論串鎖定",
 		"locked": "鎖定",
@@ -473,7 +473,7 @@
 		"submit": "提交",
 		"sunday": "星期日",
 		"sync": "連接狀態",
-		"sync_count": "不重複的 活躍/總共 連線 IP 數量",
+		"sync_count": "Unique connected client count",
 		"synced": "已同步",
 		"syncing": "同步中",
 		"tab_fun": "有趣的",
