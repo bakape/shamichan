@@ -2,11 +2,11 @@ package db
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	mlog "github.com/bakape/meguca/log"
-	"github.com/bakape/meguca/util"
 	"github.com/bakape/pg_util"
 )
 
@@ -28,7 +28,7 @@ func loadConfigs() error {
 		OnMsg: func(_ string) error {
 			conf, err := GetConfigs()
 			if err != nil {
-				return util.WrapError("reloading configuration", err)
+				return fmt.Errorf("reloading configuration: %w", err)
 			}
 			config.Set(conf)
 			mlog.Update()

@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bakape/meguca/util"
 	"github.com/bakape/thumbnailer/v2"
+	"nhooyr.io/websocket"
 )
 
 // Commonly used errors
@@ -92,7 +92,10 @@ func ErrInvalidEnum(s string) error {
 
 // CanIgnoreClientError returns, if client-caused error can be safely ignored and not logged
 func CanIgnoreClientError(err error) bool {
-recheck:
+	if err == nil {
+		return true
+	}
+
 	switch err.(type) {
 	case StatusError:
 		err := err.(StatusError)
@@ -109,25 +112,13 @@ recheck:
 		default:
 			return false
 		}
-	case util.WrappedError:
-		err = err.(util.WrappedError).Inner
-		goto recheck
+	case websocket.CloseError:
+		return true
 	}
 
-	// Ignore
-	// client-side connection loss
-	s := err.Error()
-	for _, suff := range [...]string{
-		"connection reset by peer",
-		"broken pipe",
-		"Error extracting sts from embedded url response",
-		"Error parsing signature tokens",
-		"\": invalid syntax",
-	} {
-		if strings.HasSuffix(s, suff) {
-			return true
-		}
+	err = errors.Unwrap(err)
+	if err != nil {
+		return CanIgnoreClientError(err)
 	}
-
 	return false
 }

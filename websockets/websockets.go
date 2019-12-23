@@ -63,6 +63,19 @@ type client struct {
 
 // http.HandleFunc that responds to new websocket connection requests
 func Handle(w http.ResponseWriter, r *http.Request) (err error) {
+	// Prevent websocket close errors from leaving module
+	defer func() {
+		_err := err
+		for _err != nil {
+			_, ok := _err.(websocket.CloseError)
+			if ok {
+				err = nil
+				break
+			}
+			_err = errors.Unwrap(_err)
+		}
+	}()
+
 	ip, err := auth.GetIP(r)
 	if err != nil {
 		return

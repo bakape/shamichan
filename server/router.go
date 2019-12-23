@@ -3,17 +3,17 @@ package server
 import (
 	"bytes"
 	"fmt"
-	"github.com/bakape/meguca/templates"
 	"net"
 	"net/http"
 	"runtime/debug"
 	"strings"
 
+	"github.com/bakape/meguca/templates"
+
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager"
-	"github.com/bakape/meguca/util"
 	"github.com/bakape/meguca/websockets"
 	"github.com/dimfeld/httptreemux"
 	"github.com/facebookgo/grace/gracehttp"
@@ -53,7 +53,7 @@ func startWebServer() (err error) {
 		Handler: createRouter(),
 	})
 	if err != nil {
-		return util.WrapError("error starting web server", err)
+		return fmt.Errorf("error starting web server: %w", err)
 	}
 	return
 }

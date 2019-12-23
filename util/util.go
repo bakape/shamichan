@@ -7,28 +7,6 @@ import (
 	"encoding/base64"
 )
 
-// WrapError wraps error types to create compound error chains
-func WrapError(text string, err error) error {
-	return WrappedError{
-		Text:  text,
-		Inner: err,
-	}
-}
-
-// WrappedError wraps error types to create compound error chains
-type WrappedError struct {
-	Text  string
-	Inner error
-}
-
-func (e WrappedError) Error() string {
-	text := e.Text
-	if e.Inner != nil {
-		text += ": " + e.Inner.Error()
-	}
-	return text
-}
-
 // Waterfall executes a slice of functions until the first error returned. This
 // error, if any, is returned to the caller.
 func Waterfall(fns ...func() error) (err error) {
