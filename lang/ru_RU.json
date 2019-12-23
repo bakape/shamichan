@@ -1,506 +1,503 @@
 {
-  "format_strings": {},
-  "labels": {
-    "always_lock_to_bottom": [
-      "Закрепить внизу",
-      "Всегда проматывать к низу страницу даже если вкладка неактивна"
-    ],
-    "anonymise": [
-      "Анонимизация",
-      "Отображать всех постеров анонимами"
-    ],
-    "audio_volume": [
-      "Audio volume",
-      "Volume of audio in music and video players"
-    ],
-    "background_video": [
-      "Background Video",
-      "Admin-specified memes piped straight into you're monitor"
-    ],
-    "background_video_mute": [
-      "Mute Background Video",
-      "Mute the background video"
-    ],
-    "body": [
-      "Body",
-      "Text body of the post"
-    ],
-    "captcha": [
-      "Капча",
-      "Заставлять пользователей вводить капчу для некоторых действий, например при регистрации и создании треда"
-    ],
-    "captcha_tags": [
-      "Captcha tags",
-      "Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
-    ],
-    "char_score": [
-      "Character spam score",
-      "Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
-    ],
-    "custom_css": [
-      "",
-      "Определяемые пользователем CSS-правила, применяемые поверх выбранной темы"
-    ],
-    "custom_css_enable": [
-      "Пользовательский CSS",
-      "Активировать пользовательский CSS"
-    ],
-    "default_language": [
-      "Язык по умолчанию",
-      "Используемый по умолчанию язык"
-    ],
-    "default_theme": [
-      "Тема по умолчанию",
-      "Используемая по умолчанию тема"
-    ],
-    "desustorage": [
-      "DesuStorage",
-      "desustorage.org поиск по картинкам"
-    ],
-    "disable_robots": [
-      "Блокировать роботов",
-      "Запретить ботам и поисковым роботам доступ к доске"
-    ],
-    "done": [
-      "Завершить пост",
-      "Закрыть открытый пост"
-    ],
-    "eightball": [
-      "#8ball ответы",
-      "Список ответов для команды #8ball, может содержать до 100 ответов и 2000 символов всего"
-    ],
-    "email_errors": [
-      "Email Errors",
-      "Toggle emailing errors."
-    ],
-    "email_errors_address": [
-      "Email",
-      "Error email."
-    ],
-    "email_errors_password": [
-      "Password",
-      "Error email password."
-    ],
-    "email_errors_server_address": [
-      "Email server",
-      "Error email server subdomain."
-    ],
-    "email_errors_server_port": [
-      "Email server port",
-      "Error email server port."
-    ],
-    "exhentai": [
-      "Exhentai",
-      "exhentai.org поиск по картинкам"
-    ],
-    "expand_all": [
-      "Развернуть все изображения",
-      "Развернуть все изображения (не влияет на WebM, PDF, MP3 и собственные посты)"
-    ],
-    "export": [
-      "Экспортировать",
-      "Экспортировать настройки в файл"
-    ],
-    "faq": [
-      "FAQ",
-      "Текст FAQ"
-    ],
-    "feedback_email": [
-      "Обратная связь",
-      "Почта, отображаемая в верхнем баннере"
-    ],
-    "flags": [
-      "Country flags",
-      "Display poster country flags on posts"
-    ],
-    "forced_anonymity": [
-      "Форсированная анонимность",
-      "Отключить имена, трипкоды и почту у постов"
-    ],
-    "gallery_mode": [
-      "Режим галереи",
-      "Показывать только посты с изображениями"
-    ],
-    "google": [
-      "Google",
-      "Google поиск по картинкам"
-    ],
-    "hidden": [
-      "Скрыто: 0",
-      "Очистить список скрытого"
-    ],
-    "hide_binned": [
-      "Hide Deleted Posts",
-      "Hide all posts that have been deleted"
-    ],
-    "hide_recursively": [
-      "Recursive post hiding",
-      "Hide all posts, that replied to a hidden post recursively"
-    ],
-    "hide_thumbnails": [
-      "Скрыть превью",
-      "Отображать кнопку [Показать] на месте превью"
-    ],
-    "horizontal_posting": [
-      "Горизонтальный постинг",
-      "Ностальгия по 38chan"
-    ],
-    "id": [
-      "Логин",
-      ""
-    ],
-    "image_hover_preview": [
-      "Раскрытие изображений по наведению",
-      "Раскрывать изображения при наведении"
-    ],
-    "image_root_override": [
-      "Нестандартный хост изображений",
-      "Для размещения изображений на отдельном хосте (например для CDN) введите его полный адрес, например «https://images.meguca.org»"
-    ],
-    "image_score": [
-      "Image spam score",
-      "Antispam weight of posting an image. After exceeding the limit the user will need to solve a captcha."
-    ],
-    "import": [
-      "Импорт",
-      "Импорт настроек из файла"
-    ],
-    "inline_fit": [
-      "Раскрытие",
-      "Разворачивать изображения внутри родительского поста"
-    ],
-    "iqdb": [
-      "IQDB",
-      "iqdb.org поиск по картинкам"
-    ],
-    "janitors": [
-      "Помощники",
-      "Аккаунты помощников (могут только удалять посты)"
-    ],
-    "jpeg_thumbnails": [
-      "JPEG thumbnails",
-      "meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
-    ],
-    "language": [
-      "Язык",
-      "Изменить язык интерфейса"
-    ],
-    "links": [
-      "Внешние ссылки",
-      "Добавить, удалить или редактировать внешние ссылки типа >>>/4chan/"
-    ],
-    "mascot": [
-      "Маскот",
-      "Отображать маскота"
-    ],
-    "mascot_image": [
-      "",
-      "Изображения маскота"
-    ],
-    "mature": [
-      "Взрослое содержимое",
-      "Информировать пользователя при первом визите о взрослом содержимом сайта"
-    ],
-    "max_height": [
-      "Максимальная высота изображения",
-      "Максимальная высота загружаемого изображения"
-    ],
-    "max_size": [
-      "Максимальный размер изображения",
-      "Максимальный размер загружаемого изображения в мегабайтах"
-    ],
-    "max_width": [
-      "Максимальная ширина изображения",
-      "Максимальная ширина загружаемого изображения"
-    ],
-    "megu_tv": [
-      "MeguTV",
-      "Play random board-specific videos in overlay player"
-    ],
-    "megu_tv_shortcut": [
-      "MeguTV",
-      "Play random board-specific videos in overlay player"
-    ],
-    "moderators": [
-      "Модераторы",
-      "Аккаунты модераторов (могут удалять посты, банить и видеть ID постеров)"
-    ],
-    "name": [
-      "Имя",
-      "Отображать имя у новых постов"
-    ],
-    "new_post": [
-      "Новый пост",
-      "Открыть новый пост"
-    ],
-    "notice": [
-      "Объявление",
-      "Краткое информационное сообщение, отображаемое сверху страницы"
-    ],
-    "notification": [
-      "Уведомления",
-      "Получать уведомления при цитированиях или перед синхронизацией"
-    ],
-    "now_playing": [
-      "Баннер «сейчас играет»",
-      "Текущая проигрываемая песня на р/а/дио или eden и прочая информация в верхнем баннере"
-    ],
-    "owners": [
-      "Владелец",
-      "Аккаунты владельцев доски (имеет доступ ко всем функциям доски, должен как хотя бы один)"
-    ],
-    "post_creation_score": [
-      "Post creation spam score",
-      "Antispam weight of creating a new post. After exceeding the limit the user will need to solve a captcha."
-    ],
-    "post_inline_expansion": [
-      "Раскрытие ссылок на посты",
-      "Раскрывать ссылки на посты по клику, иначе переместиться к указанному посту"
-    ],
-    "prune_threads": [
-      "Автоочистка тредов",
-      "Удалять треды в которых давно не было постов"
-    ],
-    "pyu": [
-      "Slut enabler",
-      "Don't ask"
-    ],
-    "relative_timestamps": [
-      "Относительное время",
-      "Относительное время постов, например «1 час назад»"
-    ],
-    "reply_right": [
-      "[Ответ] справа",
-      "Переместить кнопку ответа в правую часть страницы"
-    ],
-    "root_url": [
-      "Корневой URL",
-      "Корневой URL борды, необходим для некоторых сайтов поиска по картинкам"
-    ],
-    "sage": [
-      "Сажа",
-      "Не бампать тред"
-    ],
-    "salt": [
-      "Криптографическая соль",
-      "Соль для генерации трипкодов и мнемоник, рекомендуемо не менее 40 символов в длину"
-    ],
-    "saucenao": [
-      "SauceNao",
-      "saucenao.com поиск по картинкам"
-    ],
-    "spoilers": [
-      "Спойлеры изображений",
-      "Не ставить спойлеры на изображения"
-    ],
-    "staff_title": [
-      "Метка модератора",
-      "Отображать модераторский статус в посте"
-    ],
-    "text_only": [
-      "Только текст",
-      "Запретить загрузку файлов"
-    ],
-    "theme": [
-      "Тема",
-      "Выбрать тему сайта"
-    ],
-    "thread_expiry": [
-      "Thread expiry time",
-      "Number of days without bumping posts before a thread is deleted"
-    ],
-    "title": [
-      "Заголовок доски",
-      "Короткий заголовок доски"
-    ],
-    "toggle_spoiler": [
-      "Спойлер изображения",
-      "Включить спойлер для открытого поста"
-    ],
-    "user_background": [
-      "Пользовательский фон",
-      "Использовать пользовательский фон"
-    ],
-    "user_background_image": [
-      "",
-      "Фоновое изображение"
-    ],
-    "watch_threads_on_reply": [
-      "Watch threads on reply",
-      "Automatically add thread to watched threads on reply"
-    ],
-    "webm_hover_preview": [
-      "Раскрытие WebM по наведению",
-      "Раскрывать вебмки по наведению, раскрытие изображений также должно быть включено"
-    ],
-    "what_anime": [
-      "WhatAnime",
-      "whatanime.ga поиск по аниме-скриншоту"
-    ],
-    "work_mode": [
-      "Режим босса",
-      "Скрыть изображения и пользовательский фон"
-    ],
-    "work_mode_shortcut": [
-      "Режим босса",
-      "Скрыть изображения и пользовательский фон"
-    ],
-    "yandex": [
-      "Yandex",
-      "Yandex image search"
-    ]
-  },
-  "literals": {
-    "account": "Управление аккаунтом и доской",
-    "add": "Добавить",
-    "admin": "Админ",
-    "ago": "тому",
-    "and": "и",
-    "anon": "Аноним",
-    "apply": "Применить",
-    "april": "Апр",
-    "assign_staff": "Назначить модератора",
-    "august": "Авг",
-    "ban": "Бан",
-    "banner_specs": "Возможно указать до 20 JPEG, PNG, GIF или WEBM файлов с максимальным разрешением 300×100, размером в 100 KB и без звука",
-    "bottom": "Низ",
-    "by": "От",
-    "cancel": "Отменить",
-    "captcha": "Капча",
-    "catalog": "Каталог",
-    "change_password": "Сменить пароль",
-    "classic": "classic",
-    "clear": "Очистить",
-    "click_to_cancel": "Click to cancel",
-    "configure_board": "Настроить доску",
-    "configure_server": "Настроить борду",
-    "connecting": "соединение",
-    "contract": "Contract",
-    "contract_images": "Свернуть изображения",
-    "create_board": "Создать доску",
-    "data": "Data",
-    "december": "Дек",
-    "delete_board": "Удалить доску",
-    "delete_by_same_ip": "Удалить все с этого IP",
-    "delete_image": "Удалить изображение",
-    "delete_post": "Удалить пост",
-    "desynced": "рассинхронизирован",
-    "disconnected": "отключён",
-    "done": "Готово",
-    "duration": "Duration",
-    "expand": "Развернуть",
-    "expand_images": "Развернуть изображения",
-    "expires": "Истекает",
-    "faq": "FAQ",
-    "february": "Фев",
-    "feedback": "Обратная связь",
-    "file_too_large": "file too large",
-    "finished": "Завершено",
-    "fit_none": "нет",
-    "fit_screen": "подогнать по экрану",
-    "fit_width": "подогнать по ширине",
-    "friday": "Птн",
-    "fuck_off": "FUCK OFF",
-    "global": "Глобальный",
-    "google_song": "Нажмите чтобы искать песню",
-    "hide": "Скрыть",
-    "id": "ID",
-    "identity": "Личность",
-    "illegal": "Illegal content",
-    "import_corrupt": "Импорт не удался. Файл повреждён.",
-    "import_done": "Импорт завершён. Страница будет перезагружена.",
-    "in": "в",
-    "invalid_captcha": "Неверная капча",
-    "janitors": "Помощник",
-    "january": "Янв",
-    "july": "Июл",
-    "june": "Июн",
-    "just_now": "только что",
-    "keep_deleting_for": "Keep deleting for",
-    "last": "Последний",
-    "load_captcha": "Кликните для загрузки капчи",
-    "loading_specs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
-    "lock_thread": "Toggle thread lock",
-    "locked": "locked",
-    "locked_to_bottom": "Закрепить внизу",
-    "logout": "Выход",
-    "logout_all": "Разлогинить все сессии",
-    "march": "Мар",
-    "may": "Май",
-    "meido_vision_post": "Meido vision",
-    "moderators": "Модератор",
-    "monday": "Пнд",
-    "must_match": "Пароли должны совпадать",
-    "new_thread": "Новый тред",
-    "notification": "Уведомление",
-    "november": "Ноя",
-    "october": "Окт",
-    "omitted": "пропущено",
-    "options": "Опции",
-    "own_no_boards": "Вы не владеете ни одной доской",
-    "owners": "Владелец доски",
-    "point_to_catalog": "Перейти к каталогу",
-    "post": "Пост",
-    "posts_images": "Посты/Картинки/TTL",
-    "purge_post": "Purge post/image",
-    "quoted": "Вас процитировали",
-    "reason": "Reason",
-    "redirect_by_ip": "Redirect all by IP",
-    "redirect_by_thread": "Redirect all by thread",
-    "refresh": "Обновить",
-    "reply": "Ответить",
-    "report": "Пожаловаться",
-    "return": "Назад",
-    "rules": "Показать правила",
-    "saturday": "Сбт",
-    "search": "Поиск",
-    "search_tooltip": "Фильтровать треды по теме, содержанию и имени доски (обрамлённую бэкслэшами), допустимы регулярные выражения",
-    "see_all": "Смотреть все",
-    "september": "Сеп",
-    "session_expired": "Сессия истекла",
-    "set_banners": "Добавить баннеры",
-    "set_loading": "Set loading animation",
-    "shadow": "shadow",
-    "shadow_bin": "Shadow bin",
-    "show": "Показать",
-    "show_notice": "Объявление",
-    "sort_bump": "Время бампа",
-    "sort_creation": "Время создания",
-    "sort_file_count": "Число файлов",
-    "sort_last_reply": "Время последнего ответа",
-    "sort_mode": "Сортировать треды по",
-    "sort_reply_count": "Число ответов",
-    "spoiler": "Спойлер",
-    "spoiler_image": "Спойлер для изображения",
-    "subject": "Тема",
-    "submit": "Отправить",
-    "sunday": "Вск",
-    "sync": "Статус соединения",
-    "sync_count": "Unique connected active/total IP count",
-    "synced": "синхронизирован",
-    "syncing": "синхронизация",
-    "tab_fun": "Развлечения",
-    "tab_general": "Основное",
-    "tab_image_search": "Поиск изображений",
-    "tab_shortcuts": "Горячие клавиши",
-    "tab_style": "Стили",
-    "text": "Текст",
-    "thumbnailing": "Генерация превью…",
-    "thursday": "Чтв",
-    "time": "Время",
-    "toggle_sticky": "Прикрепить",
-    "top": "Верх",
-    "tuesday": "Втр",
-    "type": "Тип",
-    "unban": "Разбанить",
-    "unfinished_post": "У вас есть незавершённый пост",
-    "unlocked": "unlocked",
-    "unwatch_thread": "Unwatch thread",
-    "upload_file": "Upload file",
-    "upload_progress": "загрузка…",
-    "view_by_same_ip": "Тот же IP",
-    "watch_thread": "Watch thread",
-    "wednesday": "Срд",
-    "you": "(Вы)"
-  }
+	"format_strings": {},
+	"labels": {
+		"always_lock_to_bottom": [
+			"Закрепить внизу",
+			"Всегда проматывать к низу страницу даже если вкладка неактивна"
+		],
+		"anonymise": [
+			"Анонимизация",
+			"Отображать всех постеров анонимами"
+		],
+		"audio_volume": [
+			"Audio volume",
+			"Volume of audio in music and video players"
+		],
+		"background_video": [
+			"Background Video",
+			"Admin-specified memes piped straight into you're monitor"
+		],
+		"background_video_mute": [
+			"Mute Background Video",
+			"Mute the background video"
+		],
+		"body": [
+			"Body",
+			"Text body of the post"
+		],
+		"captcha": [
+			"Капча",
+			"Заставлять пользователей вводить капчу для некоторых действий, например при регистрации и создании треда"
+		],
+		"captcha_tags": [
+			"Captcha tags",
+			"Tags to source for captcha solutions. One tag is randomly chosen for each generated captcha. Required to contain at least 3 different tags."
+		],
+		"char_score": [
+			"Character spam score",
+			"Antispam weight of modifying a character in a post. After exceeding the limit the user will need to solve a captcha."
+		],
+		"custom_css": [
+			"",
+			"Определяемые пользователем CSS-правила, применяемые поверх выбранной темы"
+		],
+		"custom_css_enable": [
+			"Пользовательский CSS",
+			"Активировать пользовательский CSS"
+		],
+		"default_language": [
+			"Язык по умолчанию",
+			"Используемый по умолчанию язык"
+		],
+		"default_theme": [
+			"Тема по умолчанию",
+			"Используемая по умолчанию тема"
+		],
+		"desustorage": [
+			"DesuStorage",
+			"desustorage.org поиск по картинкам"
+		],
+		"disable_robots": [
+			"Блокировать роботов",
+			"Запретить ботам и поисковым роботам доступ к доске"
+		],
+		"done": [
+			"Завершить пост",
+			"Закрыть открытый пост"
+		],
+		"eightball": [
+			"#8ball ответы",
+			"Список ответов для команды #8ball, может содержать до 100 ответов и 2000 символов всего"
+		],
+		"email_errors": [
+			"Email Errors",
+			"Toggle emailing errors."
+		],
+		"email_errors_address": [
+			"Email",
+			"Error email."
+		],
+		"email_errors_password": [
+			"Password",
+			"Error email password."
+		],
+		"email_errors_server_address": [
+			"Email server",
+			"Error email server subdomain."
+		],
+		"email_errors_server_port": [
+			"Email server port",
+			"Error email server port."
+		],
+		"exhentai": [
+			"Exhentai",
+			"exhentai.org поиск по картинкам"
+		],
+		"expand_all": [
+			"Развернуть все изображения",
+			"Развернуть все изображения (не влияет на WebM, PDF, MP3 и собственные посты)"
+		],
+		"export": [
+			"Экспортировать",
+			"Экспортировать настройки в файл"
+		],
+		"faq": [
+			"FAQ",
+			"Текст FAQ"
+		],
+		"feedback_email": [
+			"Обратная связь",
+			"Почта, отображаемая в верхнем баннере"
+		],
+		"flags": [
+			"Country flags",
+			"Display poster country flags on posts"
+		],
+		"forced_anonymity": [
+			"Форсированная анонимность",
+			"Отключить имена, трипкоды и почту у постов"
+		],
+		"gallery_mode": [
+			"Режим галереи",
+			"Показывать только посты с изображениями"
+		],
+		"google": [
+			"Google",
+			"Google поиск по картинкам"
+		],
+		"hidden": [
+			"Скрыто: 0",
+			"Очистить список скрытого"
+		],
+		"hide_binned": [
+			"Hide Deleted Posts",
+			"Hide all posts that have been deleted"
+		],
+		"hide_recursively": [
+			"Recursive post hiding",
+			"Hide all posts, that replied to a hidden post recursively"
+		],
+		"hide_thumbnails": [
+			"Скрыть превью",
+			"Отображать кнопку [Показать] на месте превью"
+		],
+		"horizontal_posting": [
+			"Горизонтальный постинг",
+			"Ностальгия по 38chan"
+		],
+		"id": [
+			"Логин",
+			""
+		],
+		"image_hover_preview": [
+			"Раскрытие изображений по наведению",
+			"Раскрывать изображения при наведении"
+		],
+		"image_root_override": [
+			"Нестандартный хост изображений",
+			"Для размещения изображений на отдельном хосте (например для CDN) введите его полный адрес, например «https://images.meguca.org»"
+		],
+		"image_score": [
+			"Image spam score",
+			"Antispam weight of posting an image. After exceeding the limit the user will need to solve a captcha."
+		],
+		"import": [
+			"Импорт",
+			"Импорт настроек из файла"
+		],
+		"inline_fit": [
+			"Раскрытие",
+			"Разворачивать изображения внутри родительского поста"
+		],
+		"iqdb": [
+			"IQDB",
+			"iqdb.org поиск по картинкам"
+		],
+		"janitors": [
+			"Помощники",
+			"Аккаунты помощников (могут только удалять посты)"
+		],
+		"jpeg_thumbnails": [
+			"JPEG thumbnails",
+			"meguca uses WebP thumbnails by default. Enable this, if you want to support older browsers, Safari or Apple devices at the expense of no thumbnail transparency."
+		],
+		"language": [
+			"Язык",
+			"Изменить язык интерфейса"
+		],
+		"links": [
+			"Внешние ссылки",
+			"Добавить, удалить или редактировать внешние ссылки типа >>>/4chan/"
+		],
+		"mascot": [
+			"Маскот",
+			"Отображать маскота"
+		],
+		"mascot_image": [
+			"",
+			"Изображения маскота"
+		],
+		"mature": [
+			"Взрослое содержимое",
+			"Информировать пользователя при первом визите о взрослом содержимом сайта"
+		],
+		"max_height": [
+			"Максимальная высота изображения",
+			"Максимальная высота загружаемого изображения"
+		],
+		"max_size": [
+			"Максимальный размер изображения",
+			"Максимальный размер загружаемого изображения в мегабайтах"
+		],
+		"max_width": [
+			"Максимальная ширина изображения",
+			"Максимальная ширина загружаемого изображения"
+		],
+		"megu_tv": [
+			"MeguTV",
+			"Play random board-specific videos in overlay player"
+		],
+		"megu_tv_shortcut": [
+			"MeguTV",
+			"Play random board-specific videos in overlay player"
+		],
+		"moderators": [
+			"Модераторы",
+			"Аккаунты модераторов (могут удалять посты, банить и видеть ID постеров)"
+		],
+		"name": [
+			"Имя",
+			"Отображать имя у новых постов"
+		],
+		"new_post": [
+			"Новый пост",
+			"Открыть новый пост"
+		],
+		"notice": [
+			"Объявление",
+			"Краткое информационное сообщение, отображаемое сверху страницы"
+		],
+		"notification": [
+			"Уведомления",
+			"Получать уведомления при цитированиях или перед синхронизацией"
+		],
+		"now_playing": [
+			"Баннер «сейчас играет»",
+			"Текущая проигрываемая песня на р/а/дио или eden и прочая информация в верхнем баннере"
+		],
+		"owners": [
+			"Владелец",
+			"Аккаунты владельцев доски (имеет доступ ко всем функциям доски, должен как хотя бы один)"
+		],
+		"post_creation_score": [
+			"Post creation spam score",
+			"Antispam weight of creating a new post. After exceeding the limit the user will need to solve a captcha."
+		],
+		"post_inline_expansion": [
+			"Раскрытие ссылок на посты",
+			"Раскрывать ссылки на посты по клику, иначе переместиться к указанному посту"
+		],
+		"prune_threads": [
+			"Автоочистка тредов",
+			"Удалять треды в которых давно не было постов"
+		],
+		"pyu": [
+			"Slut enabler",
+			"Don't ask"
+		],
+		"relative_timestamps": [
+			"Относительное время",
+			"Относительное время постов, например «1 час назад»"
+		],
+		"reply_right": [
+			"[Ответ] справа",
+			"Переместить кнопку ответа в правую часть страницы"
+		],
+		"root_url": [
+			"Корневой URL",
+			"Корневой URL борды, необходим для некоторых сайтов поиска по картинкам"
+		],
+		"sage": [
+			"Сажа",
+			"Не бампать тред"
+		],
+		"salt": [
+			"Криптографическая соль",
+			"Соль для генерации трипкодов и мнемоник, рекомендуемо не менее 40 символов в длину"
+		],
+		"saucenao": [
+			"SauceNao",
+			"saucenao.com поиск по картинкам"
+		],
+		"spoilers": [
+			"Спойлеры изображений",
+			"Не ставить спойлеры на изображения"
+		],
+		"staff_title": [
+			"Метка модератора",
+			"Отображать модераторский статус в посте"
+		],
+		"text_only": [
+			"Только текст",
+			"Запретить загрузку файлов"
+		],
+		"theme": [
+			"Тема",
+			"Выбрать тему сайта"
+		],
+		"thread_expiry": [
+			"Thread expiry time",
+			"Number of days without bumping posts before a thread is deleted"
+		],
+		"title": [
+			"Заголовок доски",
+			"Короткий заголовок доски"
+		],
+		"toggle_spoiler": [
+			"Спойлер изображения",
+			"Включить спойлер для открытого поста"
+		],
+		"user_background": [
+			"Пользовательский фон",
+			"Использовать пользовательский фон"
+		],
+		"user_background_image": [
+			"",
+			"Фоновое изображение"
+		],
+		"watch_threads_on_reply": [
+			"Watch threads on reply",
+			"Automatically add thread to watched threads on reply"
+		],
+		"webm_hover_preview": [
+			"Раскрытие WebM по наведению",
+			"Раскрывать вебмки по наведению, раскрытие изображений также должно быть включено"
+		],
+		"what_anime": [
+			"WhatAnime",
+			"whatanime.ga поиск по аниме-скриншоту"
+		],
+		"work_mode": [
+			"Режим босса",
+			"Скрыть изображения и пользовательский фон"
+		],
+		"work_mode_shortcut": [
+			"Режим босса",
+			"Скрыть изображения и пользовательский фон"
+		],
+		"yandex": [
+			"Yandex",
+			"Yandex image search"
+		]
+	},
+	"literals": {
+		"account": "Управление аккаунтом и доской",
+		"add": "Добавить",
+		"admin": "Админ",
+		"anon": "Аноним",
+		"apply": "Применить",
+		"april": "Апр",
+		"assign_staff": "Назначить модератора",
+		"august": "Авг",
+		"ban": "Бан",
+		"banner_specs": "Возможно указать до 20 JPEG, PNG, GIF или WEBM файлов с максимальным разрешением 300×100, размером в 100 KB и без звука",
+		"bottom": "Низ",
+		"by": "От",
+		"cancel": "Отменить",
+		"captcha": "Капча",
+		"catalog": "Каталог",
+		"change_password": "Сменить пароль",
+		"classic": "classic",
+		"clear": "Очистить",
+		"click_to_cancel": "Click to cancel",
+		"configure_board": "Настроить доску",
+		"configure_server": "Настроить борду",
+		"connecting": "соединение",
+		"contract": "Contract",
+		"contract_images": "Свернуть изображения",
+		"create_board": "Создать доску",
+		"data": "Data",
+		"december": "Дек",
+		"delete_board": "Удалить доску",
+		"delete_by_same_ip": "Удалить все с этого IP",
+		"delete_image": "Удалить изображение",
+		"delete_post": "Удалить пост",
+		"desynced": "рассинхронизирован",
+		"disconnected": "отключён",
+		"done": "Готово",
+		"duration": "Duration",
+		"expand": "Развернуть",
+		"expand_images": "Развернуть изображения",
+		"expires": "Истекает",
+		"faq": "FAQ",
+		"february": "Фев",
+		"feedback": "Обратная связь",
+		"file_too_large": "file too large",
+		"finished": "Завершено",
+		"fit_none": "нет",
+		"fit_screen": "подогнать по экрану",
+		"fit_width": "подогнать по ширине",
+		"friday": "Птн",
+		"fuck_off": "FUCK OFF",
+		"global": "Глобальный",
+		"google_song": "Нажмите чтобы искать песню",
+		"hide": "Скрыть",
+		"id": "ID",
+		"identity": "Личность",
+		"illegal": "Illegal content",
+		"import_corrupt": "Импорт не удался. Файл повреждён.",
+		"import_done": "Импорт завершён. Страница будет перезагружена.",
+		"invalid_captcha": "Неверная капча",
+		"janitors": "Помощник",
+		"january": "Янв",
+		"july": "Июл",
+		"june": "Июн",
+		"just_now": "только что",
+		"keep_deleting_for": "Keep deleting for",
+		"last": "Последний",
+		"load_captcha": "Кликните для загрузки капчи",
+		"loading_specs": "Accepts a GIF or WEBM file with maximum dimensions of 300x300, maximum file size of 100 KB and no sound.",
+		"lock_thread": "Toggle thread lock",
+		"locked": "locked",
+		"locked_to_bottom": "Закрепить внизу",
+		"logout": "Выход",
+		"logout_all": "Разлогинить все сессии",
+		"march": "Мар",
+		"may": "Май",
+		"meido_vision_post": "Meido vision",
+		"moderators": "Модератор",
+		"monday": "Пнд",
+		"must_match": "Пароли должны совпадать",
+		"new_thread": "Новый тред",
+		"notification": "Уведомление",
+		"november": "Ноя",
+		"october": "Окт",
+		"omitted": "пропущено",
+		"options": "Опции",
+		"own_no_boards": "Вы не владеете ни одной доской",
+		"owners": "Владелец доски",
+		"point_to_catalog": "Перейти к каталогу",
+		"post": "Пост",
+		"posts_images": "Посты/Картинки/TTL",
+		"purge_post": "Purge post/image",
+		"quoted": "Вас процитировали",
+		"reason": "Reason",
+		"redirect_by_ip": "Redirect all by IP",
+		"redirect_by_thread": "Redirect all by thread",
+		"refresh": "Обновить",
+		"reply": "Ответить",
+		"report": "Пожаловаться",
+		"return": "Назад",
+		"rules": "Показать правила",
+		"saturday": "Сбт",
+		"search": "Поиск",
+		"search_tooltip": "Фильтровать треды по теме, содержанию и имени доски (обрамлённую бэкслэшами), допустимы регулярные выражения",
+		"see_all": "Смотреть все",
+		"september": "Сеп",
+		"session_expired": "Сессия истекла",
+		"set_banners": "Добавить баннеры",
+		"set_loading": "Set loading animation",
+		"shadow": "shadow",
+		"shadow_bin": "Shadow bin",
+		"show": "Показать",
+		"show_notice": "Объявление",
+		"sort_bump": "Время бампа",
+		"sort_creation": "Время создания",
+		"sort_file_count": "Число файлов",
+		"sort_last_reply": "Время последнего ответа",
+		"sort_mode": "Сортировать треды по",
+		"sort_reply_count": "Число ответов",
+		"spoiler": "Спойлер",
+		"spoiler_image": "Спойлер для изображения",
+		"subject": "Тема",
+		"submit": "Отправить",
+		"sunday": "Вск",
+		"sync": "Статус соединения",
+		"sync_count": "Unique connected active/total IP count",
+		"synced": "синхронизирован",
+		"syncing": "синхронизация",
+		"tab_fun": "Развлечения",
+		"tab_general": "Основное",
+		"tab_image_search": "Поиск изображений",
+		"tab_shortcuts": "Горячие клавиши",
+		"tab_style": "Стили",
+		"text": "Текст",
+		"thumbnailing": "Генерация превью…",
+		"thursday": "Чтв",
+		"time": "Время",
+		"toggle_sticky": "Прикрепить",
+		"top": "Верх",
+		"tuesday": "Втр",
+		"type": "Тип",
+		"unban": "Разбанить",
+		"unfinished_post": "У вас есть незавершённый пост",
+		"unlocked": "unlocked",
+		"unwatch_thread": "Unwatch thread",
+		"upload_file": "Upload file",
+		"upload_progress": "загрузка…",
+		"view_by_same_ip": "Тот же IP",
+		"watch_thread": "Watch thread",
+		"wednesday": "Срд",
+		"you": "(Вы)"
+	}
 }

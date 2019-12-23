@@ -5,44 +5,33 @@
 
 const fs = require("fs");
 
-const root = "static/src/lang";
-const en = {
-    server: readJSON(`${root}/en_GB/server.json`, "utf8"),
-    common: readJSON(`${root}/en_GB/common.json`, "utf8"),
-}
+const root = "lang";
+const en = readJSON(`${root}/en_GB.json`);
 const targets = fs.readdirSync(root).filter(n =>
-    n !== "en_GB" && /^\w{2}_\w{2}$/.test(n))
+    n !== "en_GB.json" && /^\w{2}_\w{2}.json$/.test(n));
 
-for (let key in en) {
-    sortMaps(en[key])
-    const path = `${root}/en_GB/${key}.json`
-    fs.unlinkSync(path)
-    fs.writeFileSync(path, JSON.stringify(en[key], null, "\t"))
-}
+sortMaps(en);
+const path = `${root}/en_GB.json`;
+fs.unlinkSync(path)
+fs.writeFileSync(path, JSON.stringify(en, null, "\t"));
 
 for (let t of targets) {
     const source = {
         arrays: {},
         strings: {},
-    }
-    const dir = `${root}/${t}`
+    };
+    const path = `${root}/${t}`;
 
-    for (let f of fs.readdirSync(dir)) {
-        const path = `${dir}/${f}`
-        traverse(source, "_lang", readJSON(path))
-        fs.unlinkSync(path)
-    }
+    traverse(source, "_lang", readJSON(path));
+    fs.unlinkSync(path);
 
     const dest = JSON.parse(JSON.stringify(en)) // Deep clone
-    traverseCopy(source, dest)
-    for (let key in dest) {
-        const path = `${dir}/${key}.json`
-        fs.writeFileSync(path, JSON.stringify(dest[key], null, "\t"))
-    }
+    traverseCopy(source, dest);
+    fs.writeFileSync(path, JSON.stringify(dest, null, "\t"));
 }
 
 function readJSON(path) {
-    return JSON.parse(fs.readFileSync(path, "utf8"))
+    return JSON.parse(fs.readFileSync(path, "utf8"));
 }
 
 function traverse(map, key, val) {
@@ -51,44 +40,44 @@ function traverse(map, key, val) {
             traverse(map, key, val[key])
         }
     } else {
-        const dict = map[Array.isArray(val) ? "arrays" : "strings"]
-        dict[key] = val
+        const dict = map[Array.isArray(val) ? "arrays" : "strings"];
+        dict[key] = val;
     }
 }
 
 function traverseCopy(src, dest) {
     for (let key in dest) {
-        const val = dest[key]
+        const val = dest[key];
         if (isMap(val)) {
-            traverseCopy(src, val)
-            continue
+            traverseCopy(src, val);
+            continue;
         }
 
-        const dict = src[Array.isArray(val) ? "arrays" : "strings"]
+        const dict = src[Array.isArray(val) ? "arrays" : "strings"];
         if (key in dict) {
-            dest[key] = dict[key]
+            dest[key] = dict[key];
         }
     }
 }
 
 function isMap(val) {
-    return typeof val === "object" && !Array.isArray(val)
+    return typeof val === "object" && !Array.isArray(val);
 }
 
 // Resort objects for cleaner language packs
 function sortMaps(val) {
     if (!isMap(val)) {
-        return
+        return;
     }
-    const keys = Object.keys(val).sort()
-    const copy = JSON.parse(JSON.stringify(val))
+    const keys = Object.keys(val).sort();
+    const copy = JSON.parse(JSON.stringify(val));
     for (let key of keys) {
-        delete val[key]
+        delete val[key];
     }
     for (let key of keys) {
-        val[key] = copy[key]
+        val[key] = copy[key];
     }
     for (let key in val) {
-        sortMaps(val[key])
+        sortMaps(val[key]);
     }
 }
