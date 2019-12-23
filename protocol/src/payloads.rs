@@ -16,6 +16,21 @@ impl AuthKey {
 	pub fn as_ptr(&self) -> *const u8 {
 		&self.inner[0] as *const u8
 	}
+
+	// Return mutable reference to inner slice
+	pub fn as_mut_slice(&mut self) -> &mut [u8] {
+		&mut self.inner
+	}
+
+	// Read contents from vector
+	pub fn read_from(&mut self, buf: Vec<u8>) {
+		for (i, b) in buf.into_iter().enumerate() {
+			if i >= 30 {
+				break;
+			}
+			self.inner[i] = b;
+		}
+	}
 }
 
 impl Hash for AuthKey {

@@ -1,5 +1,9 @@
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys;
+
+// Shorthand for most commonly used Result type
+pub type JSResult<T = ()> = Result<T, JsValue>;
 
 // Generate functions for safely accessing global variable.
 //
@@ -95,6 +99,14 @@ pub fn body() -> web_sys::HtmlElement {
 	cache_variable! {
 		web_sys::HtmlElement,
 		|| document().body().expect("body undefined")
+	}
+}
+
+// Get local storage manager
+pub fn local_storage() -> web_sys::Storage {
+	cache_variable! {
+		web_sys::Storage,
+		|| window().local_storage().unwrap().unwrap()
 	}
 }
 

@@ -140,9 +140,9 @@ fn test_localization() {
 	assert_eq!(localize!("test"), "anon a BWAAKA");
 }
 
-fn query_selector_all_iter<F>(sel: &str, mut f: F) -> Result<(), JsValue>
+fn query_selector_all_iter<F>(sel: &str, mut f: F) -> util::JSResult
 where
-	F: FnMut(&web_sys::Element) -> Result<(), JsValue>,
+	F: FnMut(&web_sys::Element) -> util::JSResult,
 {
 	let els = util::document().query_selector_all(sel)?;
 	for i in 0..els.length() {
@@ -152,8 +152,8 @@ where
 	Ok(())
 }
 
-pub async fn load_language_pack() -> Result<(), JsValue> {
-	async fn run(l: &mut LanguagePack) -> Result<(), JsValue> {
+pub async fn load_language_pack() -> util::JSResult {
+	async fn run(l: &mut LanguagePack) -> util::JSResult {
 		*l = serde_json::from_str(&String::from(
 			wasm_bindgen_futures::JsFuture::from(
 				js_sys::Reflect::get(&util::window(), &"language_pack".into())?
