@@ -6,6 +6,12 @@ use web_sys;
 #[derive(Debug)]
 pub struct Error(String);
 
+impl Error {
+	pub fn new(msg: String) -> Self {
+		Self(msg)
+	}
+}
+
 impl Into<JsValue> for Error {
 	fn into(self) -> JsValue {
 		JsValue::from(&self.0)

@@ -43,6 +43,7 @@ features = [
   "Event",
   "Storage",
   "Crypto",
+  "BinaryType",
 ]
 
 [target."cfg(debug_assertions)".dependencies]

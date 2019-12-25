@@ -16,16 +16,32 @@ impl AuthKey {
 	pub fn as_ptr(&self) -> *const u8 {
 		&self.inner[0] as *const u8
 	}
+}
 
-	// Return mutable reference to inner slice
-	pub fn as_mut_slice(&mut self) -> &mut [u8] {
+impl AsRef<[u8]> for AuthKey {
+	fn as_ref(&self) -> &[u8] {
+		&self.inner
+	}
+}
+
+impl AsMut<[u8]> for AuthKey {
+	fn as_mut(&mut self) -> &mut [u8] {
 		&mut self.inner
 	}
 }
 
 impl std::fmt::Debug for AuthKey {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{:?}", &self.inner as &[u8])
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		write!(f, "{:x}", self)
+	}
+}
+
+impl std::fmt::LowerHex for AuthKey {
+	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+		for i in self.inner.iter() {
+			write!(f, "{:x}", i)?;
+		}
+		Ok(())
 	}
 }
 

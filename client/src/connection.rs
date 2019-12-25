@@ -4,6 +4,7 @@ use super::fsm::FSM;
 use super::state;
 use super::state::State;
 use super::util;
+use wasm_bindgen::prelude::*;
 use web_sys::{CloseEvent, ErrorEvent, MessageEvent};
 
 super::gen_global!(FSM<ConnState, ConnEvent>, FSM::new(ConnState::Loading));
@@ -49,10 +50,10 @@ fn render_status(s: ConnState) -> util::Result {
 }
 
 fn close_socket(s: &mut State) {
-	if let Some(s) = &s.socket {
+	if let Some(s) = &s.conn.socket {
 		s.close().expect("failed to closed socket");
 	}
-	s.socket = None;
+	s.conn.socket = None;
 }
 
 // Run closure with application and connection state as arguments
@@ -77,7 +78,7 @@ macro_rules! encode_batch {
 
 // Send message batch to server. Use encode_batch! to encode a message batch.
 pub fn send(s: &mut State, payload: &mut [u8]) -> util::Result {
-	if let Some(ref soc) = s.socket {
+	if let Some(ref soc) = s.conn.socket {
 		soc.send_with_u8_array(payload)?;
 	}
 	Ok(())
@@ -106,6 +107,8 @@ fn connect(s: &mut State) {
 	})
 	.expect("could not open websocket connection");
 
+	socket.set_binary_type(web_sys::BinaryType::Arraybuffer);
+
 	macro_rules! set {
 		($prop:ident, $type:ty, $fn:expr) => {
 			socket.$prop(Some(cache_cb!($type, $fn)));
@@ -132,11 +135,39 @@ fn connect(s: &mut State) {
 		});
 	});
 	set!(set_onmessage, dyn Fn(MessageEvent), |e: MessageEvent| {
-		// TODO
-		web_sys::console::log_1(e.unchecked_ref());
+		with_state(|s, c| {
+			util::log_error_res(on_message(s, c, e.data()));
+		});
 	});
 
-	s.socket = Some(socket);
+	s.conn.socket = Some(socket);
+}
+
+fn on_message(
+	s: &mut State,
+	c: &mut FSM<ConnState, ConnEvent>,
+	data: JsValue,
+) -> util::Result {
+	use protocol::*;
+
+	let mut dec = Decoder::new(&js_sys::Uint8Array::new(&data).to_vec())?;
+	loop {
+		match dec.peek_type() {
+			None => return Ok(()),
+			Some(t) => match t {
+				MessageType::Synchronize => {
+					s.thread = dec.read_next()?;
+					c.feed(s, ConnEvent::Sync)?;
+				}
+				_ => {
+					return Err(util::Error::new(format!(
+						"unhandled message type: {:?}",
+						t
+					)))
+				}
+			},
+		};
+	}
 }
 
 // Reset module state
@@ -146,15 +177,15 @@ fn reset(s: &mut State) {
 }
 
 fn reset_reconn_timer(s: &mut State) {
-	if s.reconn_timer != 0 {
-		util::window().clear_timeout_with_handle(s.reconn_timer);
-		s.reconn_timer = 0;
+	if s.conn.reconn_timer != 0 {
+		util::window().clear_timeout_with_handle(s.conn.reconn_timer);
+		s.conn.reconn_timer = 0;
 	}
 }
 
 fn reset_reconn_attempts(s: &mut State) {
 	reset_reconn_timer(s);
-	s.reconn_attempts = 0;
+	s.conn.reconn_attempts = 0;
 }
 
 // Initiate websocket connection to server
@@ -166,7 +197,7 @@ pub fn init(state: &mut State) -> util::Result {
 			&[ConnState::Loading],
 			&[ConnEvent::Start],
 			&|s, _, _| {
-				s.reconn_attempts = 0;
+				s.conn.reconn_attempts = 0;
 				connect(s);
 				Ok(ConnState::Connecting)
 			},
@@ -189,7 +220,7 @@ pub fn init(state: &mut State) -> util::Result {
 						},
 						MessageType::Synchronize,
 						// TODO: Send actual thread number
-						&0
+						&0u64
 					),
 				)?;
 				Ok(ConnState::Syncing)
@@ -205,7 +236,7 @@ pub fn init(state: &mut State) -> util::Result {
 		c.set_any_state_transitions(&[ConnEvent::Close], &|s, state, _| {
 			reset(s);
 
-			s.reconn_attempts += 1;
+			s.conn.reconn_attempts += 1;
 			util::window()
 				.set_timeout_with_callback_and_timeout_and_arguments_0(
 					cache_cb!(dyn Fn(), || {
@@ -215,8 +246,10 @@ pub fn init(state: &mut State) -> util::Result {
 					}),
 					// Maxes out at ~1min
 					(500f32
-						* 1.5f32.powi(std::cmp::min(s.reconn_attempts / 2, 12)))
-						as i32,
+						* 1.5f32.powi(std::cmp::min(
+							s.conn.reconn_attempts / 2,
+							12,
+						))) as i32,
 				)
 				.unwrap();
 

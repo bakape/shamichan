@@ -22,14 +22,7 @@ pub use payloads::*;
 #[repr(u8)]
 #[serde(untagged)]
 #[derive(
-    Serialize,
-    Deserialize,
-    FromPrimitive,
-    Copy,
-    Clone,
-    Eq,
-    PartialEq,
-    std::fmt::Debug,
+    Serialize, Deserialize, FromPrimitive, Copy, Clone, Eq, PartialEq, Debug,
 )]
 pub enum MessageType {
     // Initial handshake with server
@@ -169,7 +162,6 @@ impl Decoder {
     pub fn read_next<'a, 's: 'a, T: Deserialize<'a>>(
         &'s mut self,
     ) -> io::Result<T> {
-        // debug_log!("decoder state", self);
         match self.splitter.message_starts.get(self.off) {
             None => Err(io::Error::from(io::ErrorKind::NotFound)),
             Some(i) => {
@@ -313,11 +305,16 @@ mod tests {
 
 #[macro_export]
 macro_rules! debug_log {
+    ($arg:expr) => {
+        if cfg!(debug_assertions) {
+            eprintln!("{}", &$arg);
+            }
+    };
 	($label:expr, $arg:expr) => {
 		if cfg!(debug_assertions) {
 			eprintln!("{}: {:?}", $label, &$arg);
 			}
-	};
+    };
 	($label:expr, $arg:expr, $($more:expr),+) => {
 		if cfg!(debug_assertions) {
 			eprintln!("{}: {:?}", $label, (&$arg $(, &$more)+));

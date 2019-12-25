@@ -2,9 +2,9 @@ use super::util;
 use std::mem::MaybeUninit;
 use std::str;
 
-// Global state singleton
+// Connection state
 #[derive(Default)]
-pub struct State {
+pub struct ConnState {
 	// Reconnection attempts
 	pub reconn_attempts: i32,
 
@@ -13,9 +13,19 @@ pub struct State {
 
 	// Connection to server
 	pub socket: Option<web_sys::WebSocket>,
+}
+
+// Global state singleton
+#[derive(Default)]
+pub struct State {
+	// Connection state
+	pub conn: ConnState,
 
 	// Authentication key
 	pub auth_key: protocol::AuthKey,
+
+	// Currently subscribed to thread. 0 == global thread index
+	pub thread: u64,
 }
 
 super::gen_global!(pub, State);
@@ -30,17 +40,17 @@ impl State {
 				base64::decode_config_slice(
 					&v,
 					base64::STANDARD,
-					self.auth_key.as_mut_slice(),
+					self.auth_key.as_mut(),
 				)?;
 			}
 			None => {
-				util::window().crypto()?.get_random_values_with_u8_array(
-					self.auth_key.as_mut_slice(),
-				)?;
+				util::window()
+					.crypto()?
+					.get_random_values_with_u8_array(self.auth_key.as_mut())?;
 				let mut buf: [u8; 88] =
 					unsafe { MaybeUninit::uninit().assume_init() };
 				base64::encode_config_slice(
-					self.auth_key.as_mut_slice(),
+					self.auth_key.as_mut(),
 					base64::STANDARD,
 					&mut buf,
 				);
