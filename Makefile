@@ -1,6 +1,6 @@
 .PHONY: server client imager test websockets
 
-all: server client css
+all: server client css websockets
 
 client:
 	$(MAKE) -C lang all
@@ -24,6 +24,7 @@ generate:
 websockets:
 # Generate a hash and add it to LDFLAGS of the binary to force a rebuild on the
 # Go side
+	rm -f websockets/libwebsockets*.a
 	cargo build $(if $(DEBUG),, --release)
 	SRC=target/$(if $(DEBUG),debug,release)/libwebsockets.a; \
 	HASH=$$(md5sum $$SRC | cut -c 1-4); \
