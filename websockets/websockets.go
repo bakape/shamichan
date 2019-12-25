@@ -62,7 +62,7 @@ type client struct {
 }
 
 // http.HandleFunc that responds to new websocket connection requests
-func Handle(w http.ResponseWriter, r *http.Request) (err error) {
+func Handle(w http.ResponseWriter, r *http.Request) (loopStarted bool, err error) {
 	// Prevent websocket close errors from leaving module
 	defer func() {
 		_err := err
@@ -160,6 +160,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (err error) {
 		}
 	}()
 
+	loopStarted = true
 	for {
 		select {
 		case <-c.ctx.Done():

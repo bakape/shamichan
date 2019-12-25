@@ -110,7 +110,15 @@ func createRouter() http.Handler {
 	// captcha.GET("/:board", serveNewCaptcha)
 	// captcha.POST("/:board", authenticateCaptcha)
 	api.GET("/socket", func(w http.ResponseWriter, r *http.Request) {
-		httpError(w, r, websockets.Handle(w, r))
+		// Prevent double logging, if websocket loop started. It has its own
+		// error logging.
+		loopStarted, err := websockets.Handle(w, r)
+		if err != nil && !loopStarted {
+			code := errStatusCode(err)
+			if code >= 500 && code < 600 {
+				logError(r, err)
+			}
+		}
 	})
 
 	return r

@@ -1,7 +1,7 @@
 package websockets
 
 // #cgo CFLAGS: -std=c11
-// #cgo LDFLAGS: -L${SRCDIR} -lwebsockets -ldl
+// #cgo LDFLAGS: -ldl -lm
 // #include "bindings.h"
 // #include <stdlib.h>
 import "C"
@@ -53,8 +53,8 @@ func ws_thread_exists(id C.uint64_t, exists *bool) *C.char {
 func ws_write_message(clientID C.uint64_t, msg *C.WSRcBuffer) {
 	// Spawning separate goroutine to not block the pulsar thread pool
 	go func() {
-		// Not using deferred unlock to prevent possible deadlocks between the Go
-		// and Rust client collection mutexes. These must be freed as soon as
+		// Not using deferred unlock to prevent possible deadlocks between the
+		// Go and Rust client collection mutexes. These must be freed as soon as
 		// possible.
 		clientsMu.RLock()
 		c, ok := clients[uint64(clientID)]

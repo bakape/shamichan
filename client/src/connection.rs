@@ -1,4 +1,5 @@
 use super::cache_cb;
+use super::event_handler;
 use super::fsm::FSM;
 use super::state;
 use super::state::State;
@@ -32,7 +33,7 @@ pub enum ConnEvent {
 	Sync,
 }
 
-fn render_status(s: ConnState) {
+fn render_status(s: ConnState) -> util::Result {
 	super::cache_el!("sync").set_text_content(Some(super::localize! {
 		match s {
 			ConnState::Loading => "loading",
@@ -43,7 +44,8 @@ fn render_status(s: ConnState) {
 			ConnState::Synced => "synced",
 			ConnState::Syncing => "syncing",
 		}
-	}))
+	}));
+	Ok(())
 }
 
 fn close_socket(s: &mut State) {
@@ -53,20 +55,32 @@ fn close_socket(s: &mut State) {
 	s.socket = None;
 }
 
-fn alert_error(reason: &str) {
-	if reason != "" {
-		util::window()
-			.alert_with_message(&format!("connection closed: {}", reason,))
-			.expect("alert failed");
-	}
+// Run closure with application and connection state as arguments
+fn with_state<F, R>(f: F) -> R
+where
+	F: Fn(&mut State, &mut FSM<ConnState, ConnEvent>) -> R,
+{
+	state::with(|s| with(|c| f(s, c)))
 }
 
-// Run closure with application and connection state as arguments
-fn with_state<F>(f: F)
-where
-	F: Fn(&mut State, &mut FSM<ConnState, ConnEvent>),
-{
-	state::with(|s| with(|c| f(s, c)));
+// Encode a batch of protocol::MessageType and Serialize pairs
+#[macro_export]
+macro_rules! encode_batch {
+	($($type:expr, $payload:expr),+) => {{
+		let mut enc =  protocol::Encoder::new(Vec::new());
+		$(
+			enc.write_message($type, $payload)?;
+		)+
+		&mut enc.finish()?
+	}};
+}
+
+// Send message batch to server. Use encode_batch! to encode a message batch.
+pub fn send(s: &mut State, payload: &mut [u8]) -> util::Result {
+	if let Some(ref soc) = s.socket {
+		soc.send_with_u8_array(payload)?;
+	}
+	Ok(())
 }
 
 fn connect(s: &mut State) {
@@ -90,7 +104,7 @@ fn connect(s: &mut State) {
 			loc.host().expect("could not get host"),
 		)
 	})
-	.unwrap();
+	.expect("could not open websocket connection");
 
 	macro_rules! set {
 		($prop:ident, $type:ty, $fn:expr) => {
@@ -99,23 +113,25 @@ fn connect(s: &mut State) {
 	}
 
 	set!(set_onopen, dyn Fn(), || {
-		with_state(|s, c| c.feed(s, ConnEvent::Open))
+		with_state(|s, c| {
+			util::log_error_res(c.feed(s, ConnEvent::Open));
+		})
 	});
 	set!(set_onclose, dyn Fn(CloseEvent), |e: CloseEvent| {
 		with_state(|s, c| {
 			if e.code() != 1000 {
-				alert_error(&e.reason());
+				util::log_error(e.reason());
 			}
-			c.feed(s, ConnEvent::Close);
+			util::log_error_res(c.feed(s, ConnEvent::Close));
 		})
 	});
 	set!(set_onerror, dyn Fn(ErrorEvent), |e: ErrorEvent| {
 		with_state(|s, c| {
-			alert_error(&e.message());
-			c.feed(s, ConnEvent::Error);
-		})
+			util::log_error(e.message());
+			util::log_error_res(c.feed(s, ConnEvent::Error));
+		});
 	});
-	set!(set_onerror, dyn Fn(MessageEvent), |e: MessageEvent| {
+	set!(set_onmessage, dyn Fn(MessageEvent), |e: MessageEvent| {
 		// TODO
 		web_sys::console::log_1(e.unchecked_ref());
 	});
@@ -142,7 +158,7 @@ fn reset_reconn_attempts(s: &mut State) {
 }
 
 // Initiate websocket connection to server
-pub fn init(state: &mut State) {
+pub fn init(state: &mut State) -> util::Result {
 	with(|c| {
 		c.on_change(&|_, s| render_status(s));
 
@@ -152,7 +168,7 @@ pub fn init(state: &mut State) {
 			&|s, _, _| {
 				s.reconn_attempts = 0;
 				connect(s);
-				ConnState::Connecting
+				Ok(ConnState::Connecting)
 			},
 		);
 
@@ -160,17 +176,30 @@ pub fn init(state: &mut State) {
 			&[ConnState::Connecting, ConnState::Reconnecting],
 			&[ConnEvent::Open],
 			&|s, _, _| {
-				// TODO: Synchronize
+				use protocol::*;
 
 				reset_reconn_attempts(s);
-				ConnState::Syncing
+				send(
+					s,
+					encode_batch!(
+						MessageType::Handshake,
+						&Handshake {
+							protocol_version: VERSION,
+							key: s.auth_key.clone(),
+						},
+						MessageType::Synchronize,
+						// TODO: Send actual thread number
+						&0
+					),
+				)?;
+				Ok(ConnState::Syncing)
 			},
 		);
 
 		c.set_transitions(
 			&[ConnState::Syncing],
 			&[ConnEvent::Sync],
-			&|_, _, _| ConnState::Synced,
+			&|_, _, _| Ok(ConnState::Synced),
 		);
 
 		c.set_any_state_transitions(&[ConnEvent::Close], &|s, state, _| {
@@ -180,7 +209,9 @@ pub fn init(state: &mut State) {
 			util::window()
 				.set_timeout_with_callback_and_timeout_and_arguments_0(
 					cache_cb!(dyn Fn(), || {
-						with_state(|s, c| c.feed(s, ConnEvent::Retry))
+						with_state(|s, c| {
+							util::log_error_res(c.feed(s, ConnEvent::Retry));
+						});
 					}),
 					// Maxes out at ~1min
 					(500f32
@@ -189,44 +220,44 @@ pub fn init(state: &mut State) {
 				)
 				.unwrap();
 
-			if state == ConnState::Desynced {
+			Ok(if state == ConnState::Desynced {
 				ConnState::Desynced
 			} else {
 				ConnState::Dropped
-			}
+			})
 		});
 
 		c.set_transitions(
 			&[ConnState::Dropped],
 			&[ConnEvent::Retry],
 			&|s, _, _| {
-				if util::window().navigator().on_line() {
+				Ok(if util::window().navigator().on_line() {
 					connect(s);
 					ConnState::Reconnecting
 				} else {
 					ConnState::Dropped
-				}
+				})
 			},
 		);
 
 		c.set_any_state_transitions(&[ConnEvent::Error], &|s, _, _| {
 			reset(s);
-			ConnState::Desynced
+			Ok(ConnState::Desynced)
 		});
 
-		c.feed(state, ConnEvent::Start);
+		c.feed(state, ConnEvent::Start)?;
 
 		// Work around browser slowing down/suspending tabs and keep the FSM up
 		// to date with the actual tab status
 		util::add_listener(
 			util::document(),
 			"visibilitychange",
-			super::event_handler!(|_| {
+			event_handler!(|_| {
 				with_state(|s, c| {
 					if util::document().hidden()
 						|| !util::window().navigator().on_line()
 					{
-						return;
+						return Ok(());
 					}
 					match c.state() {
 						// Ensure still connected, in case the computer went
@@ -234,30 +265,31 @@ pub fn init(state: &mut State) {
 						// was suspended
 						ConnState::Synced => {
 							// TODO: Send ping to server
+							Ok(())
 						}
-						ConnState::Desynced => return,
+						ConnState::Desynced => Ok(()),
 						_ => c.feed(s, ConnEvent::Retry),
-					};
-				});
+					}
+				})
 			}),
 		);
 
 		util::add_listener(
 			util::window(),
 			"online",
-			super::event_handler!(|_| {
+			event_handler!(|_| {
 				with_state(|s, c| {
 					reset_reconn_attempts(s);
-					c.feed(s, ConnEvent::Retry);
+					c.feed(s, ConnEvent::Retry)
 				})
 			}),
 		);
 		util::add_listener(
 			util::window(),
 			"offline",
-			super::event_handler!(|_| {
-				with_state(|s, c| c.feed(s, ConnEvent::Close))
-			}),
+			event_handler!(|_| with_state(|s, c| c.feed(s, ConnEvent::Close))),
 		);
-	});
+
+		Ok(())
+	})
 }

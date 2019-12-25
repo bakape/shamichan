@@ -134,6 +134,7 @@ impl<W: Write> Encoder<W> {
 }
 
 // Decompresses and decodes message batch.
+#[derive(Debug)]
 pub struct Decoder {
     splitter: MessageSplitter,
     off: usize,
@@ -168,6 +169,7 @@ impl Decoder {
     pub fn read_next<'a, 's: 'a, T: Deserialize<'a>>(
         &'s mut self,
     ) -> io::Result<T> {
+        // debug_log!("decoder state", self);
         match self.splitter.message_starts.get(self.off) {
             None => Err(io::Error::from(io::ErrorKind::NotFound)),
             Some(i) => {
@@ -307,4 +309,18 @@ mod tests {
 
         Ok(())
     }
+}
+
+#[macro_export]
+macro_rules! debug_log {
+	($label:expr, $arg:expr) => {
+		if cfg!(debug_assertions) {
+			eprintln!("{}: {:?}", $label, &$arg);
+			}
+	};
+	($label:expr, $arg:expr, $($more:expr),+) => {
+		if cfg!(debug_assertions) {
+			eprintln!("{}: {:?}", $label, (&$arg $(, &$more)+));
+			}
+	};
 }

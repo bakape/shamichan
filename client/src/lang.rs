@@ -3,7 +3,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Write;
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsCast;
 
 #[derive(Deserialize, Default)]
 struct LanguagePack {
@@ -140,9 +140,9 @@ fn test_localization() {
 	assert_eq!(localize!("test"), "anon a BWAAKA");
 }
 
-fn query_selector_all_iter<F>(sel: &str, mut f: F) -> util::JSResult
+fn query_selector_all_iter<F>(sel: &str, mut f: F) -> util::Result
 where
-	F: FnMut(&web_sys::Element) -> util::JSResult,
+	F: FnMut(&web_sys::Element) -> util::Result,
 {
 	let els = util::document().query_selector_all(sel)?;
 	for i in 0..els.length() {
@@ -152,8 +152,8 @@ where
 	Ok(())
 }
 
-pub async fn load_language_pack() -> util::JSResult {
-	async fn run(l: &mut LanguagePack) -> util::JSResult {
+pub async fn load_language_pack() -> util::Result {
+	async fn run(l: &mut LanguagePack) -> util::Result {
 		*l = serde_json::from_str(&String::from(
 			wasm_bindgen_futures::JsFuture::from(
 				js_sys::Reflect::get(&util::window(), &"language_pack".into())?
@@ -161,8 +161,7 @@ pub async fn load_language_pack() -> util::JSResult {
 			)
 			.await?
 			.dyn_into::<js_sys::JsString>()?,
-		))
-		.map_err(|e| JsValue::from(e.to_string()))?;
+		))?;
 
 		// Apply localization to static DOM elements
 		query_selector_all_iter("[lang-content]", |el| {
@@ -177,7 +176,8 @@ pub async fn load_language_pack() -> util::JSResult {
 			el.set_attribute(
 				"title",
 				localize!(&el.get_attribute("lang-title").unwrap()),
-			)
+			)?;
+			Ok(())
 		})?;
 
 		Ok(())

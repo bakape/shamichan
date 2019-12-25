@@ -21,15 +21,11 @@ impl AuthKey {
 	pub fn as_mut_slice(&mut self) -> &mut [u8] {
 		&mut self.inner
 	}
+}
 
-	// Read contents from vector
-	pub fn read_from(&mut self, buf: Vec<u8>) {
-		for (i, b) in buf.into_iter().enumerate() {
-			if i >= 30 {
-				break;
-			}
-			self.inner[i] = b;
-		}
+impl std::fmt::Debug for AuthKey {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{:?}", &self.inner as &[u8])
 	}
 }
 
@@ -54,7 +50,7 @@ impl Default for AuthKey {
 }
 
 // Authenticate with the server
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Handshake {
 	// Protocol version the client implements
 	pub protocol_version: u16,
@@ -64,7 +60,7 @@ pub struct Handshake {
 }
 
 // Request for creating a new thread
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ThreadCreationReq {
 	pub subject: String,
 	pub tags: Vec<String>,
@@ -72,7 +68,7 @@ pub struct ThreadCreationReq {
 }
 
 // Request for creating a new post
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PostCreationReq {
 	pub thread: u64,
 	pub name: String,

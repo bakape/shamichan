@@ -9,6 +9,7 @@ use std::rc::Rc;
 
 // Wrapper for passing buffer references over the FFI
 #[repr(C)]
+#[derive(Debug)]
 pub struct WSBuffer {
 	data: *const u8,
 	size: usize,
@@ -22,6 +23,7 @@ impl AsRef<[u8]> for WSBuffer {
 
 // Like WSBuffer, but with pointer for reference counting on Rust side
 #[repr(C)]
+#[derive(Debug)]
 pub struct WSRcBuffer {
 	inner: WSBuffer,
 	src: *const c_void,

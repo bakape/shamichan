@@ -121,11 +121,11 @@ pub fn add_client(id: u64, ip: IpAddr) {
 }
 
 // Set client auth key on first sync. Must only be done once per client.
-pub fn set_client_key(id: u64, key: &AuthKey) {
+pub fn set_client_key(id: u64, key: AuthKey) {
 	write(|c| {
 		if let Some(desc) = c.by_id.get_mut(&id) {
-			desc.key = Some(key.clone());
-			c.by_key.insert(key, id);
+			c.by_key.insert(&key, id);
+			desc.key = Some(key);
 		}
 	});
 }

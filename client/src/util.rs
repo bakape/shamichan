@@ -1,19 +1,57 @@
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::prelude::JsValue;
 use wasm_bindgen::JsCast;
 use web_sys;
 
-// Shorthand for most commonly used Result type
-pub type JSResult<T = ()> = Result<T, JsValue>;
+// Simple string error type for passing between subsystems and FFI
+#[derive(Debug)]
+pub struct Error(String);
 
-// Generate functions for safely accessing global variable.
-//
-// $type must be public
+impl Into<JsValue> for Error {
+	fn into(self) -> JsValue {
+		JsValue::from(&self.0)
+	}
+}
+
+impl Into<String> for Error {
+	fn into(self) -> String {
+		self.0
+	}
+}
+
+impl From<JsValue> for Error {
+	fn from(v: JsValue) -> Error {
+		Error(format!("{:?}", v))
+	}
+}
+
+// Trait specialization when?
+macro_rules! from_display {
+	($($type:ty),+) => {
+		$(
+			impl From<$type> for Error {
+				fn from(err: $type) -> Error {
+					Error(err.to_string())
+				}
+			}
+		)+
+	};
+}
+from_display!(
+	serde_json::error::Error,
+	base64::DecodeError,
+	std::io::Error
+);
+
+// Shorthand for most commonly used Result type
+pub type Result<T = ()> = std::result::Result<T, Error>;
+
+// Generate functions for safely accessing a global variable
 #[macro_export]
 macro_rules! gen_global {
-	($type:ty, $default:expr) => {
+	($visibility:vis, $type:ty, $default:expr) => {
 		// Open global for writing
 		#[allow(unused)]
-		pub fn with<'a, F, R>(mut cb: F) -> R
+		$visibility fn with<'a, F, R>(mut cb: F) -> R
 		where
 			F: FnMut(&'a mut $type) -> R,
 		{
@@ -27,7 +65,13 @@ macro_rules! gen_global {
 		}
 	};
 	($type:ty) => {
-		super::gen_global!($type, Default::default());
+		$crate::gen_global!(, $type, Default::default());
+	};
+	($visibility:vis, $type:ty) => {
+		$crate::gen_global!($visibility, $type, Default::default());
+	};
+	($type:ty, $default:expr) => {
+		$crate::gen_global!(, $type, $default);
 	};
 }
 
@@ -94,14 +138,6 @@ pub fn document() -> web_sys::Document {
 	}
 }
 
-// Get page body
-pub fn body() -> web_sys::HtmlElement {
-	cache_variable! {
-		web_sys::HtmlElement,
-		|| document().body().expect("body undefined")
-	}
-}
-
 // Get local storage manager
 pub fn local_storage() -> web_sys::Storage {
 	cache_variable! {
@@ -111,11 +147,15 @@ pub fn local_storage() -> web_sys::Storage {
 }
 
 // Wrap and cache static Rust callback closure as DOM event handler
+//
+// fn: handler with signature Fn(web_sys::Event) -> util::Result
 #[macro_export]
 macro_rules! event_handler {
 	($fn:expr) => {{
 		use web_sys;
-		cache_cb!(dyn Fn(web_sys::Event), |e| { $fn(e) })
+		cache_cb!(dyn Fn(web_sys::Event), |e| {
+			$crate::util::log_error_res($fn(e));
+			})
 		}};
 }
 
@@ -138,4 +178,22 @@ where
 			},
 		)
 		.unwrap();
+}
+
+// Log any error to both console and alert
+pub fn log_error_res<T>(res: Result<T>) {
+	if let Err(err) = res {
+		log_error(err);
+	}
+}
+
+// Log error to both console and alert
+pub fn log_error<T: Into<String>>(err: T) {
+	let s = err.into();
+	if s.len() != 0 {
+		window()
+			.alert_with_message(&format!("error: {}", s))
+			.expect("alert failed");
+		web_sys::console::error_1(&JsValue::from(&s));
+	}
 }

@@ -22,14 +22,19 @@ generate:
 	go generate ./...
 
 websockets:
+# Generate a hash and add it to LDFLAGS of the binary to force a rebuild on the
+# Go side
 	cargo build $(if $(DEBUG),, --release)
-	cp target/$(if $(DEBUG),debug,release)/libwebsockets.a websockets/
+	SRC=target/$(if $(DEBUG),debug,release)/libwebsockets.a; \
+	HASH=$$(md5sum $$SRC | cut -c 1-4); \
+	cp $$SRC websockets/libwebsockets_$$HASH.a  && \
+	echo -e "package websockets\n\n// #cgo LDFLAGS: -L\$${SRCDIR} -lwebsockets_$$HASH\nimport \"C\"" > ./websockets/lib_hash.go
 
 server: websockets
 	go build -v
 
 clean:
-	rm -rf meguca
+	rm -rf meguca websockets/libwebsockets*.a
 	cargo clean
 	rm -rf www/css/*.css www/css/*.css.map node_modules
 	$(MAKE) -C client clean

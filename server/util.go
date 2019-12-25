@@ -78,6 +78,15 @@ func httpError(w http.ResponseWriter, r *http.Request, err error) {
 		return
 	}
 
+	code := errStatusCode(err)
+	http.Error(w, fmt.Sprintf("%d %s", code, err), code)
+	if code >= 500 && code < 600 {
+		logError(r, err)
+	}
+}
+
+// Determine HTTP status code of error
+func errStatusCode(err error) int {
 	code := 500
 	switch err.(type) {
 	case common.StatusError:
@@ -87,11 +96,7 @@ func httpError(w http.ResponseWriter, r *http.Request, err error) {
 			code = 404
 		}
 	}
-
-	http.Error(w, fmt.Sprintf("%d %s", code, err), code)
-	if code >= 500 && code < 600 {
-		logError(r, err)
-	}
+	return code
 }
 
 // Extract URL paramater from request context

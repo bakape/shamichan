@@ -8,6 +8,13 @@ use std::io;
 use std::net::IpAddr;
 use std::rc::Rc;
 
+// Client initialization state
+enum InitState {
+	Connected,
+	SentHandshake,
+	Synced,
+}
+
 // Maps to a websocket client on the Go side
 pub struct Client {
 	// ID of client used in various registries
@@ -16,8 +23,11 @@ pub struct Client {
 	// IP of client connection
 	ip: IpAddr,
 
+	// Client initialization state
+	init_state: InitState,
+
 	// Used to authenticate the client
-	key: Option<AuthKey>,
+	key: AuthKey,
 }
 
 macro_rules! check_len {
@@ -40,44 +50,57 @@ impl Client {
 		Self {
 			id: id,
 			ip: ip,
-			key: None,
+			init_state: InitState::Connected,
+			key: Default::default(),
 		}
 	}
 
 	// Handle received message
 	pub fn receive_message(&mut self, buf: &[u8]) -> DynResult {
 		let mut dec = Decoder::new(buf)?;
-		let typ = match dec.peek_type() {
-			Some(t) => t,
-			None => str_err!("empty message received"),
-		};
-
-		if self.key.is_none() {
-			if typ != MessageType::Handshake {
-				str_err!("first message must be handshake");
-			}
-			let msg: Handshake = dec.read_next()?;
-			if msg.protocol_version != VERSION {
-				str_err!("protocol version mismatch: {}", msg.protocol_version);
-			}
-			registry::set_client_key(self.id, &msg.key);
-			self.key = Some(msg.key);
-
-			if dec.peek_type() != Some(MessageType::Synchronize) {
-				str_err!("second message in first batch must be sync request");
-			}
-			self.synchronize(&mut dec)?;
-		}
-
+		let mut first = true;
 		loop {
 			match dec.peek_type() {
-				None => return Ok(()),
-				Some(t) => match t {
-					MessageType::CreateThread => {
-						self.create_thread(&mut dec)?
+				None => {
+					if first {
+						str_err!("empty message received");
 					}
-					_ => str_err!("unhandled message type: {:?}", t),
-				},
+					return Ok(());
+				}
+				Some(t) => {
+					first = false;
+					match self.init_state {
+						InitState::Connected => {
+							if t != MessageType::Handshake {
+								str_err!("first message must be handshake");
+							}
+							let msg: Handshake = dec.read_next()?;
+							debug_log!("received handshake", msg);
+							if msg.protocol_version != VERSION {
+								str_err!(
+									"protocol version mismatch: {}",
+									msg.protocol_version
+								);
+							}
+							registry::set_client_key(self.id, msg.key.clone());
+							self.key = msg.key;
+							self.init_state = InitState::SentHandshake;
+						}
+						InitState::SentHandshake => {
+							if t != MessageType::Synchronize {
+								str_err!("second message must be sync request");
+							}
+							self.synchronize(&mut dec)?;
+							self.init_state = InitState::Synced;
+						}
+						InitState::Synced => match t {
+							MessageType::CreateThread => {
+								self.create_thread(&mut dec)?
+							}
+							_ => str_err!("unhandled message type: {:?}", t),
+						},
+					}
+				}
 			}
 		}
 	}
@@ -93,6 +116,7 @@ impl Client {
 	// Synchronize to a specific thread or board index
 	fn synchronize(&mut self, dec: &mut Decoder) -> DynResult {
 		let thread: u64 = dec.read_next()?;
+		debug_log!("received sync req", thread);
 		if thread != 0 && !bindings::thread_exists(thread)? {
 			str_err!("invalid thread: {}", thread);
 		}
@@ -100,6 +124,8 @@ impl Client {
 		// Thread init data will be sent on the next pulse
 		registry::set_client_thread(self.id, thread);
 
+		// TODO: Send open post and moderation data
+		self.send(MessageType::Synchronize, &thread)?;
 		Ok(())
 	}
 
@@ -123,11 +149,7 @@ impl Client {
 
 		self.send(
 			MessageType::CreateThreadAck,
-			&bindings::insert_thread(
-				req.subject,
-				req.tags,
-				self.key.as_ref().unwrap(),
-			)?,
+			&bindings::insert_thread(req.subject, req.tags, &self.key)?,
 		)?;
 		Ok(())
 	}

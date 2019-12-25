@@ -1,5 +1,5 @@
 use super::util;
-use std::mem::{self, MaybeUninit};
+use std::mem::MaybeUninit;
 use std::str;
 
 // Global state singleton
@@ -18,11 +18,11 @@ pub struct State {
 	pub auth_key: protocol::AuthKey,
 }
 
-super::gen_global!(State);
+super::gen_global!(pub, State);
 
 impl State {
 	// Read saved or generate a new authentication key
-	pub fn load_auth_key(&mut self) -> util::JSResult {
+	pub fn load_auth_key(&mut self) -> util::Result {
 		let ls = util::local_storage();
 		const KEY: &str = "auth_key";
 		match ls.get_item(KEY)? {
@@ -31,8 +31,7 @@ impl State {
 					&v,
 					base64::STANDARD,
 					self.auth_key.as_mut_slice(),
-				)
-				.map_err(|e| e.to_string())?;
+				)?;
 			}
 			None => {
 				util::window().crypto()?.get_random_values_with_u8_array(
