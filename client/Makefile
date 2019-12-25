@@ -2,7 +2,7 @@ all: reset
 ifneq ($(NO_DEPS),1)
 	npm install --progress false --depth 0
 endif
-	./node_modules/.bin/webpack $(if $(DEBUG),-d,)
+	./node_modules/.bin/webpack $(if $(filter 1,$(DEBUG)),-d,)
 	mkdir -p ../www/client
 	rm -rf ../www/client/*
 	cp dist/* ../www/client/
