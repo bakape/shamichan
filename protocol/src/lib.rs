@@ -31,6 +31,9 @@ pub enum MessageType {
     // Request and response to synchronize with a thread or thread index
     Synchronize,
 
+    // Feed initialization data sent from server
+    FeedInit,
+
     // Request to create a new thread or new thread creation event
     CreateThread,
 
@@ -88,8 +91,16 @@ impl<W: Write> Write for Escaper<W> {
 }
 
 // Streaming message set encoder
+#[derive(Debug)]
 pub struct Encoder<W: Write> {
     w: ZlibEncoder<W>,
+    started: bool,
+}
+
+impl Default for Encoder<Vec<u8>> {
+    fn default() -> Encoder<Vec<u8>> {
+        Self::new(Vec::new())
+    }
 }
 
 impl<W: Write> Encoder<W> {
@@ -98,6 +109,7 @@ impl<W: Write> Encoder<W> {
     pub fn new(w: W) -> Encoder<W> {
         Self {
             w: ZlibEncoder::new(w, flate2::Compression::default()),
+            started: false,
         }
     }
 
@@ -112,6 +124,7 @@ impl<W: Write> Encoder<W> {
         t: MessageType,
         payload: &T,
     ) -> io::Result<()> {
+        self.started = true;
         self.w.write_all(&[HEADER, t as u8])?;
         bincode::serialize_into(&mut Escaper::new(&mut self.w), payload)
             .map_err(|err| {
@@ -123,6 +136,21 @@ impl<W: Write> Encoder<W> {
     // underlying writer
     pub fn finish(self) -> io::Result<W> {
         self.w.finish()
+    }
+
+    // Resets the state of this encoder entirely, swapping out the output
+    // stream for another.
+    //
+    // This function will finish encoding the current stream into the current
+    // output stream before swapping out the two output streams.
+    pub fn reset(&mut self, w: W) -> io::Result<W> {
+        self.started = false;
+        self.w.reset(w)
+    }
+
+    // Return, if encoder has not been written to yet since last reset or init
+    pub fn empty(&self) -> bool {
+        !self.started
     }
 }
 

@@ -48,7 +48,7 @@ type client struct {
 	//
 	// To prevent infinite blocking all sends to this channel must be done in
 	// a select including a <-ctx.Done() case.
-	send chan *C.WSRcBuffer
+	send chan C.WSRcBuffer
 
 	// Forcefully disconnect client with optional error.
 	//
@@ -102,7 +102,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (loopStarted bool, err error
 		// Failure to do so intoduces a race between the sender and receiver
 		// goroutine, which can result in the pointer never being unreferenced
 		// and thus leaked.
-		send: make(chan *C.WSRcBuffer),
+		send: make(chan C.WSRcBuffer),
 
 		close:   make(chan error),
 		receive: make(chan []byte),
@@ -145,12 +145,7 @@ func Handle(w http.ResponseWriter, r *http.Request) (loopStarted bool, err error
 			}
 
 			// Synchronously pass message to Rust
-			buf := w.Bytes()
-			h := (*reflect.SliceHeader)(unsafe.Pointer(&buf))
-			C.ws_receive_message(C.uint64_t(id), C.WSBuffer{
-				(*C.uint8_t)(unsafe.Pointer(h.Data)),
-				C.size_t(h.Len),
-			})
+			C.ws_receive_message(C.uint64_t(id), toWSBuffer(w.Bytes()))
 		}
 
 	fail:

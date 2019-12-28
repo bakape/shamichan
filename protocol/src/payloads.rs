@@ -90,3 +90,10 @@ pub struct PostCreationReq {
 	pub name: String,
 	pub body: String,
 }
+
+// Feed initialization data
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct FeedData {
+	pub feed: u64,
+	// TODO: Data
+}

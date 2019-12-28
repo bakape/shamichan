@@ -4,4 +4,4 @@ pub struct Config {
 	pub captcha: bool,
 }
 
-super::gen_global_rwlock!(Config);
+super::gen_global_rwlock!(pub, Config);

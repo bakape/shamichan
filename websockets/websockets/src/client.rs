@@ -6,7 +6,7 @@ use protocol::*;
 use serde::Serialize;
 use std::io;
 use std::net::IpAddr;
-use std::rc::Rc;
+use std::sync::Arc;
 
 // Client initialization state
 enum InitState {
@@ -109,7 +109,7 @@ impl Client {
 	fn send(&self, t: MessageType, payload: &impl Serialize) -> io::Result<()> {
 		let mut enc = Encoder::new(Vec::new());
 		enc.write_message(t, payload)?;
-		bindings::write_message(self.id, Rc::new(enc.finish()?));
+		bindings::write_message(self.id, Arc::new(enc.finish()?));
 		Ok(())
 	}
 
@@ -130,8 +130,9 @@ impl Client {
 	}
 
 	// Decrease available solved captcha count, if available
-	pub fn check_captcha(&mut self, solution: &[u8]) -> DynResult {
+	pub fn check_captcha(&mut self, _solution: &[u8]) -> DynResult {
 		if config::read(|c| c.captcha) {
+			// TODO: Use IP for spam detection bans
 			unimplemented!()
 		}
 		Ok(())

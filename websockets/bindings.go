@@ -7,6 +7,7 @@ package websockets
 import "C"
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"unsafe"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
+	"github.com/go-playground/log"
 )
 
 func init() {
@@ -50,7 +52,7 @@ func ws_thread_exists(id C.uint64_t, exists *bool) *C.char {
 }
 
 //export ws_write_message
-func ws_write_message(clientID C.uint64_t, msg *C.WSRcBuffer) {
+func ws_write_message(clientID C.uint64_t, msg C.WSRcBuffer) {
 	// Spawning separate goroutine to not block the pulsar thread pool
 	go func() {
 		// Not using deferred unlock to prevent possible deadlocks between the
@@ -76,10 +78,6 @@ func ws_write_message(clientID C.uint64_t, msg *C.WSRcBuffer) {
 
 //export ws_close_client
 func ws_close_client(clientID C.uint64_t, err *C.char) {
-	if err != nil {
-		defer C.free(unsafe.Pointer(err))
-	}
-
 	// Not using deferred unlock to not block on channel send
 	clientsMu.Lock()
 	c, ok := clients[uint64(clientID)]
@@ -130,4 +128,27 @@ func ws_validate_captcha(
 ) *C.char {
 	// TODO: user-specific captchas after captchouli port to Postgres
 	return nil
+}
+
+//export ws_log_error
+func ws_log_error(err *C.char) {
+	log.Errorf("websockets: %s", C.GoString(err))
+}
+
+//export ws_get_feed_data
+func ws_get_feed_data(id uint64) {
+	go func() {
+		// TODO: Read data from DB
+		buf := []byte(fmt.Sprintf(`{"feed":%d}`, id))
+		C.ws_receive_feed_data(C.uint64_t(id), toWSBuffer(buf), nil)
+	}()
+}
+
+// Cast []bytes to WSBuffer without copy
+func toWSBuffer(buf []byte) C.WSBuffer {
+	h := (*reflect.SliceHeader)(unsafe.Pointer(&buf))
+	return C.WSBuffer{
+		(*C.uint8_t)(unsafe.Pointer(h.Data)),
+		C.size_t(h.Len),
+	}
 }

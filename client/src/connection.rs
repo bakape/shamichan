@@ -159,6 +159,10 @@ fn on_message(
 					s.thread = dec.read_next()?;
 					c.feed(s, ConnEvent::Sync)?;
 				}
+				MessageType::FeedInit => {
+					// TODO: Use it
+					dec.skip_next();
+				}
 				_ => {
 					return Err(util::Error::new(format!(
 						"unhandled message type: {:?}",
