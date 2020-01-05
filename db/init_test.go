@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -27,7 +28,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func assertTableClear(t *testing.T, tables ...string) {
+func clearTables(t *testing.T, tables ...string) {
 	t.Helper()
 	if err := ClearTables(tables...); err != nil {
 		t.Fatal(err)
@@ -36,7 +37,7 @@ func assertTableClear(t *testing.T, tables ...string) {
 
 func assertExec(t *testing.T, q string, args ...interface{}) {
 	t.Helper()
-	_, err := db.Exec(q, args...)
+	_, err := db.Exec(context.Background(), q, args...)
 	if err != nil {
 		t.Fatal(err)
 	}

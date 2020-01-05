@@ -1,10 +1,11 @@
 package db
 
 import (
+	"context"
 	"sort"
 	"sync"
 
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 )
 
 var (
@@ -32,9 +33,10 @@ func FlushOpenPostBodies() (err error) {
 	}
 	sort.Sort(toWrite)
 
-	return InTransaction(func(tx *pgx.Tx) (err error) {
+	return InTransaction(nil, func(tx pgx.Tx) (err error) {
 		for _, id := range toWrite {
 			_, err = tx.Exec(
+				context.Background(),
 				`update posts
 				set body = $1
 				where id = $2 and editing = true`,

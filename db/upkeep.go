@@ -3,6 +3,7 @@
 package db
 
 import (
+	"context"
 	"time"
 
 	"github.com/go-playground/log"
@@ -32,7 +33,10 @@ func runCleanupTasks() {
 			// logError("open post cleanup", closeDanglingPosts())
 
 			logError("expired row cleanup", func() error {
-				_, err := db.Exec(`delete from expiries where expires < now()`)
+				_, err := db.Exec(
+					context.Background(),
+					`delete from expiries where expires < now()`,
+				)
 				return err
 			})
 		case <-hour:
@@ -72,7 +76,6 @@ func logError(prefix string, fn func() error) {
 // 	if err != nil {
 // 		return
 // 	}
-// 	defer r.Close()
 
 // 	var (
 // 		posts []post

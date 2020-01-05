@@ -7,7 +7,7 @@ replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.0
 require (
 	github.com/Masterminds/squirrel v1.1.0 // indirect
 	github.com/bakape/captchouli v1.2.0
-	github.com/bakape/pg_util v0.6.1
+	github.com/bakape/pg_util v0.7.3
 	github.com/bakape/recache v0.0.0-20190524102257-67e46453405b
 	github.com/bakape/thumbnailer/v2 v2.5.4
 	github.com/chai2010/webp v1.1.0
@@ -25,16 +25,18 @@ require (
 	github.com/go-playground/errors v3.3.0+incompatible // indirect
 	github.com/go-playground/log v6.3.0+incompatible
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
-	github.com/gofrs/uuid v3.2.0+incompatible // indirect
 	github.com/google/go-cmp v0.3.1
+	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
+	github.com/jackc/pgconn v1.1.0
+	github.com/jackc/pgtype v1.0.3
 	github.com/jackc/pgx v3.6.0+incompatible
+	github.com/jackc/pgx/v4 v4.1.2
 	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect
 	github.com/onsi/gomega v1.5.0
 	github.com/rakyll/statik v0.1.6
 	github.com/ulikunitz/xz v0.5.6
 	github.com/valyala/quicktemplate v1.4.1
-	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413 // indirect
 	golang.org/x/net v0.0.0-20191207000613-e7e4b65ae663 // indirect
 	golang.org/x/sys v0.0.0-20191206220618-eeba5f6aabab // indirect
 	google.golang.org/appengine v1.6.5 // indirect

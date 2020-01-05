@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"os"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 var (
@@ -19,7 +20,7 @@ var (
 	connectionURL string
 
 	// Postgres connection pool
-	db *pgx.ConnPool
+	db *pgxpool.Pool
 )
 
 // Connects to PostgreSQL database and performs schema upgrades
@@ -83,14 +84,15 @@ func loadDB(connURL, dbSuffix string) (err error) {
 	// Set, for creating extra connections using Listen()
 	connectionURL = connURL
 
-	connOpts, err := pgx.ParseURI(connURL)
+	u, err := url.Parse(connURL)
 	if err != nil {
 		return
 	}
-	db, err = pgx.NewConnPool(pgx.ConnPoolConfig{
-		ConnConfig:     connOpts,
-		MaxConnections: 50,
-	})
+	q := u.Query()
+	q.Set("pool_max_conns", "50")
+	u.RawQuery = q.Encode()
+
+	db, err = pgxpool.Connect(context.Background(), u.String())
 	if err != nil {
 		return
 	}
@@ -104,11 +106,6 @@ func loadDB(connURL, dbSuffix string) (err error) {
 		return
 	}
 
-	// TODO: Reenable this
-	// err = loadThreadPostCounts()
-	// if err != nil {
-	// 	return
-	// }
 	if !common.IsTest {
 		go runCleanupTasks()
 	}
@@ -126,7 +123,7 @@ func Close() (err error) {
 func ClearTables(tables ...string) (err error) {
 	clearOpenPostBuffer() // Clear Open post buffer between tests
 	for _, t := range tables {
-		_, err = db.Exec(`DELETE FROM ` + t)
+		_, err = db.Exec(context.Background(), `DELETE FROM `+t)
 		if err != nil {
 			return
 		}

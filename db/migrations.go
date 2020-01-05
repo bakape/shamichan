@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -8,7 +9,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/static"
 	"github.com/go-playground/log"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 )
 
 // Run migrations, till the DB version matches the code version
@@ -32,14 +33,17 @@ func runMigrations() (err error) {
 	}
 	target := len(migrations)
 
+	b := context.Background()
+
 	// Init main table, if not done yet
 	var exists bool
-	err = db.QueryRow(`select to_regclass('main') is not null`).Scan(&exists)
+	err = db.QueryRow(b, `select to_regclass('main') is not null`).Scan(&exists)
 	if err != nil {
 		return
 	}
 	if !exists {
 		_, err = db.Exec(
+			b,
 			`create table main (
 				key text primary key,
 				val jsonb not null
@@ -49,6 +53,7 @@ func runMigrations() (err error) {
 			return
 		}
 		_, err = db.Exec(
+			b,
 			`insert into main (key, val)
 			values ('version', '0');`,
 		)
@@ -62,13 +67,14 @@ func runMigrations() (err error) {
 			current int
 			done    bool
 		)
-		err = InTransaction(func(tx *pgx.Tx) (err error) {
+		err = InTransaction(nil, func(tx pgx.Tx) (err error) {
 			var _current string
 
 			// Lock version column to ensure no migrations from other processes
 			// happen concurrently
 			err = tx.
 				QueryRow(
+					b,
 					`select val
 					from main
 					where key = 'version'
@@ -98,13 +104,14 @@ func runMigrations() (err error) {
 			if err != nil {
 				return
 			}
-			_, err = tx.Exec(string(buf))
+			_, err = tx.Exec(b, string(buf))
 			if err != nil {
 				return
 			}
 
 			// Write new version number
 			_, err = tx.Exec(
+				b,
 				`update main
 				set val = $1
 				where key = 'version'`,

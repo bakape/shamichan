@@ -24,7 +24,7 @@ import (
 	"github.com/bakape/thumbnailer/v2"
 	"github.com/chai2010/webp"
 	"github.com/go-playground/log"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 )
 
 // Minimal capacity of large buffers in the pool
@@ -116,10 +116,10 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 
 // Apply security restrictions to uploader
 func validateUploader(w http.ResponseWriter, r *http.Request) (
-	user auth.Token,
+	user auth.AuthKey,
 	err error,
 ) {
-	user, err = auth.ExtractToken(r)
+	user, err = auth.ExtractAuthKey(r)
 	if err != nil {
 		return
 	}
@@ -178,7 +178,7 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func incrementSpamScore(user auth.Token) {
+func incrementSpamScore(user auth.AuthKey) {
 	db.IncrementSpamScore(user, config.Get().ImageScore)
 }
 

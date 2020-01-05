@@ -13,7 +13,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/dimfeld/httptreemux"
 	"github.com/go-playground/log"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 )
 
 const (

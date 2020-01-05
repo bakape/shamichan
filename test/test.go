@@ -25,7 +25,7 @@ func LogUnexpected(t *testing.T, expected, got interface{}) {
 	// Allow comparison of structs with private fields
 	var options []cmp.Option
 	for _, v := range [...]interface{}{expected, got} {
-		if reflect.TypeOf(v).Kind() == reflect.Struct {
+		if v != nil && reflect.TypeOf(v).Kind() == reflect.Struct {
 			options = append(options, cmp.AllowUnexported(v))
 		}
 	}

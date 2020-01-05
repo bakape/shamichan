@@ -24,17 +24,26 @@ create index threads_tags_idx on threads using gin (tags);
 create table posts (
 	primary key (id),
 	thread bigint not null references threads on delete cascade,
-	page bigint not null check(page >= 0),
+	page bigint check (page >= 0),
 
 	created_on timestamptz_auto_now,
-	auth_key auth_key not null,
-	body bytea
+	open bool not null default true,
+	auth_key auth_key,
+
+	body jsonb,
+
+	image bytea references images,
+	image_name varchar(200) not null default '',
+	image_spoilered bool not null default false
 )
 inherits (post_common);
 
 create index posts_thread_idx on posts (thread);
 create index posts_page_idx on posts (page);
+create index posts_open_idx on posts (open);
+create index posts_created_on_idx on posts (created_on);
 create index posts_auth_key_idx on posts (auth_key);
+create index posts_image_idx on posts (image);
 
 create or replace function post_count(thread bigint)
 returns bigint
@@ -44,7 +53,6 @@ as $$
 	from posts
 	where posts.thread = post_count.thread;
 $$;
-
 
 create or replace function before_posts_insert()
 returns trigger
@@ -82,3 +90,17 @@ begin
 	return new;
 end;
 $$;
+
+create or replace function merge_jsonb_obj_st(in out s jsonb, item jsonb)
+language plpgsql stable parallel safe strict
+as $$
+begin
+	s = s || item;
+end;
+$$;
+
+create aggregate merge_jsonb_obj(item jsonb) (
+	sfunc = merge_jsonb_obj_st,
+	stype = jsonb,
+	initcond = '{}'
+);

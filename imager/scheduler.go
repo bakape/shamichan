@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/bakape/meguca/db"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v4"
 )
 
 var (

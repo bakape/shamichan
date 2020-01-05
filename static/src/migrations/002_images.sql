@@ -1,4 +1,3 @@
-
 create type file_type as enum (
 	'JPEG',
 	'PNG',

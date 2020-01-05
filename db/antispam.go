@@ -1,6 +1,8 @@
 package db
 
 import (
+	"context"
+	"encoding/base64"
 	"sync"
 	"time"
 
@@ -8,7 +10,8 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v4"
 )
 
 const (
@@ -17,7 +20,7 @@ const (
 )
 
 var (
-	spamScoreBuffer = make(map[auth.Token]time.Duration)
+	spamScoreBuffer = make(map[auth.AuthKey]time.Duration)
 	spamMu          sync.RWMutex
 )
 
@@ -38,9 +41,10 @@ func syncSpamScores() (err error) {
 
 // Flush spam scores from buffer to DB
 func flushSpamScores() (err error) {
-	return InTransaction(func(tx *pgx.Tx) (err error) {
+	return InTransaction(nil, func(tx pgx.Tx) (err error) {
 		for user, buffered := range spamScoreBuffer {
 			_, err = tx.Exec(
+				context.Background(),
 				`insert into spam_scores as s (auth_key, expires)
 				values ($1, now() + $2)
 				on conflict (auth_key)
@@ -69,7 +73,7 @@ func flushSpamScores() (err error) {
 //
 // user: token identifying user
 // increment: increment amount in milliseconds
-func IncrementSpamScore(user auth.Token, increment uint) {
+func IncrementSpamScore(user auth.AuthKey, increment uint) {
 	if !config.Get().Captcha {
 		return
 	}
@@ -81,13 +85,16 @@ func IncrementSpamScore(user auth.Token, increment uint) {
 
 // NeedCaptcha returns, if the user needs a captcha to proceed with usage
 // of server resources
-func NeedCaptcha(user auth.Token) (need bool, err error) {
+func NeedCaptcha(
+	ctx context.Context,
+	user auth.AuthKey,
+) (need bool, err error) {
 	if !config.Get().Captcha {
 		return
 	}
 
 	// Require a captcha, if none have been solved in 3 hours
-	has, err := SolvedCaptchaRecently(user)
+	has, err := SolvedCaptchaRecently(ctx, user)
 	if err != nil {
 		return
 	}
@@ -96,7 +103,7 @@ func NeedCaptcha(user auth.Token) (need bool, err error) {
 		return
 	}
 
-	score, err := getSpamScore(user)
+	score, err := getSpamScore(ctx, user)
 	if err != nil {
 		return
 	}
@@ -104,7 +111,7 @@ func NeedCaptcha(user auth.Token) (need bool, err error) {
 }
 
 // Merge cached and DB value and return current score
-func getSpamScore(user auth.Token) (
+func getSpamScore(ctx context.Context, user auth.AuthKey) (
 	score time.Time,
 	err error,
 ) {
@@ -114,6 +121,7 @@ func getSpamScore(user auth.Token) (
 	now := time.Now()
 	err = db.
 		QueryRow(
+			ctx,
 			`select expires
 			from spam_scores
 			where auth_key = $1 and expires > now()`,
@@ -135,20 +143,21 @@ func getSpamScore(user auth.Token) (
 }
 
 // Check if user is spammer
-func AssertNotSpammer(user auth.Token) (err error) {
-	_, err = getSpamScore(user)
+func AssertNotSpammer(ctx context.Context, user auth.AuthKey) (err error) {
+	_, err = getSpamScore(ctx, user)
 	return
 }
 
 // Separated for unit tests
-func recordValidCaptcha(user auth.Token) (err error) {
+func recordValidCaptcha(ctx context.Context, user auth.AuthKey) (err error) {
 	spamMu.Lock()
 	defer spamMu.Unlock()
 
 	delete(spamScoreBuffer, user)
 
-	return InTransaction(func(tx *pgx.Tx) (err error) {
+	return InTransaction(ctx, func(tx pgx.Tx) (err error) {
 		_, err = tx.Exec(
+			ctx,
 			`insert into last_solved_captchas (auth_key, expires)
 			values ($1, now() + interval '3 hours')
 			on conflict (auth_key)
@@ -159,6 +168,7 @@ func recordValidCaptcha(user auth.Token) (err error) {
 			return
 		}
 		_, err = tx.Exec(
+			ctx,
 			`delete from spam_scores
 			where auth_key = $1`,
 			user,
@@ -168,7 +178,11 @@ func recordValidCaptcha(user auth.Token) (err error) {
 }
 
 // ValidateCaptcha with captcha backend
-func ValidateCaptcha(req auth.Captcha, user auth.Token) (err error) {
+func ValidateCaptcha(
+	ctx context.Context,
+	req auth.Captcha,
+	user auth.AuthKey,
+) (err error) {
 	if !config.Get().Captcha {
 		return
 	}
@@ -176,7 +190,7 @@ func ValidateCaptcha(req auth.Captcha, user auth.Token) (err error) {
 	err = captchouli.CheckCaptcha(req.CaptchaID, req.Solution)
 	switch err {
 	case nil:
-		return recordValidCaptcha(user)
+		return recordValidCaptcha(ctx, user)
 	case captchouli.ErrInvalidSolution:
 		return common.ErrInvalidCaptcha
 	default:
@@ -184,8 +198,35 @@ func ValidateCaptcha(req auth.Captcha, user auth.Token) (err error) {
 	}
 }
 
+// 64 byte token that JSON/text en/decodes to a raw URL-safe encoding base64
+// string
+type AuthKey [64]byte
+
+func (t AuthKey) MarshalText() ([]byte, error) {
+	buf := make([]byte, 86)
+	base64.RawURLEncoding.Encode(buf[:], t[:])
+	return buf, nil
+}
+
+func (t AuthKey) UnmarshalText(buf []byte) error {
+	if len(buf) != 86 {
+		return ErrInvalidToken
+	}
+
+	n, err := base64.RawURLEncoding.Decode(t[:], buf)
+	if n != 64 || err != nil {
+		return ErrInvalidToken
+	}
+	return nil
+}
+
+// Implement pgtype.Encoder
+func (t AuthKey) EncodeBinary(_ *pgtype.ConnInfo, buf []byte) ([]byte, error) {
+	return append(buf, t[:]...), nil
+}
+
 // Returns, if user has solved a captcha within the last 3 hours
-func SolvedCaptchaRecently(user auth.Token) (
+func SolvedCaptchaRecently(ctx context.Context, user auth.AuthKey) (
 	has bool,
 	err error,
 ) {
@@ -196,6 +237,7 @@ func SolvedCaptchaRecently(user auth.Token) (
 
 	err = db.
 		QueryRow(
+			ctx,
 			`select exists (
 				select
 				from last_solved_captchas

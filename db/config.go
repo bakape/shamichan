@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -42,6 +43,7 @@ func loadConfigs() error {
 func GetConfigs() (c config.Configs, err error) {
 	err = db.
 		QueryRow(
+			context.Background(),
 			`select val
 			from main
 			where key = 'config'`,
@@ -57,6 +59,7 @@ func WriteConfigs(c config.Configs) (err error) {
 		return
 	}
 	_, err = db.Exec(
+		context.Background(),
 		`update main
 		set val = $1
 		where key = 'config'`,

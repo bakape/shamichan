@@ -13,7 +13,7 @@ import (
 
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	"github.com/jackc/pgx/pgtype"
+	"github.com/jackc/pgtype"
 )
 
 // GetIP extracts the IP of a request, honouring reverse proxies, if set
@@ -61,15 +61,15 @@ func RandomID(length int) (string, error) {
 
 // 64 byte token that JSON/text en/decodes to a raw URL-safe encoding base64
 // string
-type Token [64]byte
+type AuthKey [64]byte
 
-func (t Token) MarshalText() ([]byte, error) {
+func (t AuthKey) MarshalText() ([]byte, error) {
 	buf := make([]byte, 86)
 	base64.RawURLEncoding.Encode(buf[:], t[:])
 	return buf, nil
 }
 
-func (t *Token) UnmarshalText(buf []byte) error {
+func (t AuthKey) UnmarshalText(buf []byte) error {
 	if len(buf) != 86 {
 		return ErrInvalidToken
 	}
@@ -82,14 +82,12 @@ func (t *Token) UnmarshalText(buf []byte) error {
 }
 
 // Implement pgtype.Encoder
-func (t Token) EncodeBinary(ci *pgtype.ConnInfo, buf []byte) (
-	[]byte, error,
-) {
+func (t AuthKey) EncodeBinary(_ *pgtype.ConnInfo, buf []byte) ([]byte, error) {
 	return append(buf, t[:]...), nil
 }
 
-// Create new Token populated by cryptographically secure random data
-func NewAuthToken() (t Token, err error) {
+// Create new AuthKey populated by cryptographically secure random data
+func NewAuthKey() (t AuthKey, err error) {
 	n, err := rand.Read(t[:])
 	if err == nil && n != 64 {
 		err = fmt.Errorf("auth: not enough data read: %d", n)
@@ -98,7 +96,7 @@ func NewAuthToken() (t Token, err error) {
 }
 
 // Extract user auth token from request
-func ExtractToken(r *http.Request) (user Token, err error) {
+func ExtractAuthKey(r *http.Request) (user AuthKey, err error) {
 	err = user.UnmarshalText(
 		[]byte(
 			strings.TrimPrefix(

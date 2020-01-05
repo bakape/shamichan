@@ -1,167 +1,56 @@
 package db
 
 import (
-	"github.com/bakape/meguca/auth"
-	"github.com/jackc/pgx"
+	"context"
+
+	"github.com/bakape/pg_util"
+	"github.com/jackc/pgx/v4"
 )
 
-// var (
-// 	postCountCache           = make(map[uint64]uint64)
-// 	postCountCacheMu         sync.RWMutex
-// 	errTooManyWatchedThreads = common.StatusError{
-// 		Err:  errors.New("too many watched threads"),
-// 		Code: 400,
-// 	}
-// )
+type ThreadInsertParams struct {
+	Subject string
 
-// // Diff of passed and actual thread posts counts
-// type ThreadPostCountDiff struct {
-// 	Changed map[uint64]uint64 `json:"changed"`
-// 	Deleted []uint64          `json:"deleted"`
-// }
+	// Must include between 1 and 3 tags
+	Tags []string
 
-// // Return diff of passed and actual thread post counts
-// func DiffThreadPostCounts(old map[uint64]uint64) (
-// 	diff ThreadPostCountDiff, err error,
-// ) {
-// 	if len(old) > 1000 {
-// 		err = errTooManyWatchedThreads
-// 		return
-// 	}
+	PostInsertParamsCommon `db:"-"`
+}
 
-// 	postCountCacheMu.RLock()
-// 	defer postCountCacheMu.RUnlock()
-
-// 	diff.Changed = make(map[uint64]uint64, len(old))
-// 	diff.Deleted = make([]uint64, 0)
-// 	for thread, count := range old {
-// 		actual, ok := postCountCache[thread]
-// 		if !ok {
-// 			diff.Deleted = append(diff.Deleted, thread)
-// 		} else if actual != count {
-// 			diff.Changed[thread] = actual
-// 		}
-// 	}
-
-// 	return
-// }
-
-// func loadThreadPostCounts() (err error) {
-// 	err = readThreadPostCounts()
-// 	if err != nil {
-// 		return
-// 	}
-// 	return listenForThreadUpdates(nil)
-// }
-
-// func readThreadPostCounts() (err error) {
-// 	r, err := db.Query(
-// 		`select op, count(*)
-// 		from posts
-// 		group by op`,
-// 	)
-// 	if err != nil {
-// 		return
-// 	}
-// 	defer r.Close()
-
-// 	postCountCacheMu.Lock()
-// 	defer postCountCacheMu.Unlock()
-
-// 	var thread, postCount uint64
-// 	for r.Next() {
-// 		err = r.Scan(&thread, &postCount)
-// 		if err != nil {
-// 			return
-// 		}
-// 		postCountCache[thread] = postCount
-// 	}
-// 	return r.Err()
-// }
-
-// // Separate function for easier testing
-// func listenForThreadUpdates(ctx context.Context) (err error) {
-// 	err = Listen(pg_util.ListenOpts{
-// 		Channel: "thread.deleted",
-// 		Context: ctx,
-// 		OnMsg: func(msg string) (err error) {
-// 			thread, err := strconv.ParseUint(msg, 10, 64)
-// 			if err != nil {
-// 				return
-// 			}
-
-// 			postCountCacheMu.Lock()
-// 			delete(postCountCache, thread)
-// 			postCountCacheMu.Unlock()
-// 			return
-// 		},
-// 	})
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	return Listen(pg_util.ListenOpts{
-// 		Channel: "thread.new_post",
-// 		Context: ctx,
-// 		OnMsg: func(msg string) (err error) {
-// 			retErr := func() error {
-// 				return fmt.Errorf("invalid message: `%s`", msg)
-// 			}
-
-// 			split := strings.Split(msg, ",")
-// 			if len(split) != 2 {
-// 				return retErr()
-// 			}
-// 			id, err := strconv.ParseUint(split[0], 10, 64)
-// 			if err != nil {
-// 				return retErr()
-// 			}
-// 			postCount, err := strconv.ParseUint(split[1], 10, 64)
-// 			if err != nil {
-// 				return retErr()
-// 			}
-
-// 			postCountCacheMu.Lock()
-// 			postCountCache[id] = postCount
-// 			postCountCacheMu.Unlock()
-// 			return
-// 		},
-// 	})
-// }
-
-// Insert thread and empty post into DB and return the post ID
-func InsertThread(subject string, tags []string, authKey auth.Token) (
+// Insert thread and empty post into DB and return the post ID.
+//
+// authKey is optional, in case this is a migration of a legacy post
+func InsertThread(ctx context.Context, p ThreadInsertParams) (
 	id uint64, err error,
 ) {
-	err = InTransaction(func(tx *pgx.Tx) (err error) {
-		err = tx.
-			QueryRow(
-				`insert into threads (subject, tags)
-				values ($1, $2)
-				returning id`,
-				subject,
-				tags,
-			).
-			Scan(&id)
+	err = InTransaction(nil, func(tx pgx.Tx) (err error) {
+		q, args := pg_util.BuildInsert(pg_util.InsertOpts{
+			Table:  "threads",
+			Data:   p,
+			Suffix: "returning id",
+		})
+		defer pg_util.ResuseArgs(args)
+		err = tx.QueryRow(ctx, q, args...).Scan(&id)
 		if err != nil {
 			return
 		}
 
-		_, err = tx.Exec(
-			`insert into posts (id, thread, auth_key)
-			values ($1, $1, $2)`,
-			id,
-			authKey,
-		)
+		_, err = InsertPost(ctx, tx, OPInsertparams{
+			ID: id,
+			ReplyInsertParams: ReplyInsertParams{
+				Thread:                 id,
+				PostInsertParamsCommon: p.PostInsertParamsCommon,
+			},
+		})
 		return
 	})
 	return
 }
 
 // Check, if thread exists in the database
-func ThreadExists(id uint64) (exists bool, err error) {
+func ThreadExists(ctx context.Context, id uint64) (exists bool, err error) {
 	err = db.
 		QueryRow(
+			ctx,
 			`select exists (
 				select
 				from threads
@@ -170,5 +59,52 @@ func ThreadExists(id uint64) (exists bool, err error) {
 			id,
 		).
 		Scan(&exists)
+	return
+}
+
+// Read feed data for initializing Pulsar as JSON
+func GetFeedData() (buf []byte, err error) {
+	err = db.
+		QueryRow(
+			context.Background(),
+			`select jsonb_object_agg(thread, val)
+			from (
+				select thread, merge_jsonb_obj(val) val
+				from (
+					select
+						thread,
+						jsonb_build_object(
+							'recent_posts', jsonb_object_agg(id, time)
+						) val
+					from posts
+					where created_on > now() - interval '16 minutes'
+					group by thread
+
+					union all
+
+					select
+						thread,
+						jsonb_build_object(
+							'open_posts', jsonb_object_agg(
+								id,
+								jsonb_build_object(
+									'has_image', image is not null,
+									'image_spoilered', image_spoilered,
+									'created_on', extract(
+										epoch from created_on
+									),
+									'thread', thread,
+									'body', body
+								)
+							)
+						) val
+					from posts
+					where open
+					group by thread
+				) as d
+				group by thread
+			) as d`,
+		).
+		Scan(&buf)
 	return
 }

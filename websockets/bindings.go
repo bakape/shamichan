@@ -111,7 +111,7 @@ func ws_insert_thread(
 	_id, err := db.InsertThread(
 		C.GoString(subject),
 		_tags,
-		*(*auth.Token)(unsafe.Pointer(auth_key)),
+		*(*auth.AuthKey)(unsafe.Pointer(auth_key)),
 	)
 	if err != nil {
 		return C.CString(err.Error())

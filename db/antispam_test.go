@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -14,7 +15,7 @@ func TestSpamScores(t *testing.T) {
 	// Skip to avoid massive booru fetches on DB population
 	test.SkipInCI(t)
 
-	assertTableClear(
+	clearTables(
 		t,
 		"spam_scores",
 		"last_solved_captchas",
@@ -32,7 +33,7 @@ func TestSpamScores(t *testing.T) {
 	}
 	now := time.Now().Round(time.Second)
 
-	var tokens [4]auth.Token
+	var tokens [4]auth.AuthKey
 	for i := 0; i < 4; i++ {
 		tokens[i] = genToken(t)
 	}
@@ -42,7 +43,7 @@ func TestSpamScores(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = ValidateCaptcha(c, tokens[i])
+		err = ValidateCaptcha(context.Background(), c, tokens[i])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -55,6 +56,7 @@ func TestSpamScores(t *testing.T) {
 		threshold.Add(10 * spamDetectionThreshold),
 	} {
 		_, err = db.Exec(
+			context.Background(),
 			`insert into spam_scores (auth_key, expires)
 			values ($1, $2)`,
 			tokens[i+1],
@@ -66,7 +68,7 @@ func TestSpamScores(t *testing.T) {
 	}
 
 	spamMu.Lock()
-	spamScoreBuffer = make(map[auth.Token]time.Duration)
+	spamScoreBuffer = make(map[auth.AuthKey]time.Duration)
 	for i := 0; i < 4; i++ {
 		score := time.Second * 10
 		if i == 3 {
@@ -82,7 +84,7 @@ func TestSpamScores(t *testing.T) {
 
 	cases := [...]struct {
 		name           string
-		token          auth.Token
+		token          auth.AuthKey
 		needCaptcha    bool
 		needCaptchaErr error
 	}{
@@ -109,7 +111,7 @@ func TestSpamScores(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			need, err := NeedCaptcha(c.token)
+			need, err := NeedCaptcha(context.Background(), c.token)
 			if err != c.needCaptchaErr {
 				test.UnexpectedError(t, err)
 			}
@@ -118,11 +120,11 @@ func TestSpamScores(t *testing.T) {
 	}
 
 	t.Run("clear score", func(t *testing.T) {
-		err := recordValidCaptcha(tokens[2])
+		err := recordValidCaptcha(context.Background(), tokens[2])
 		if err != nil {
 			t.Fatal(err)
 		}
-		need, err := NeedCaptcha(tokens[2])
+		need, err := NeedCaptcha(context.Background(), tokens[2])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -141,7 +143,7 @@ func TestCaptchas(t *testing.T) {
 	// Skip to avoid massive booru fetches on DB population
 	test.SkipInCI(t)
 
-	assertTableClear(t,
+	clearTables(t,
 		"last_solved_captchas",
 		"spam_scores",
 	)
@@ -206,10 +208,10 @@ func TestCaptchas(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			err = ValidateCaptcha(c.captcha, token)
+			err = ValidateCaptcha(context.Background(), c.captcha, token)
 			test.AssertEquals(t, err, c.err)
 
-			has, err := SolvedCaptchaRecently(token)
+			has, err := SolvedCaptchaRecently(context.Background(), token)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -218,11 +220,11 @@ func TestCaptchas(t *testing.T) {
 	}
 }
 
-// Generate random auth.Token
-func genToken(t *testing.T) auth.Token {
+// Generate random auth.AuthKey
+func genToken(t *testing.T) auth.AuthKey {
 	t.Helper()
 
-	b, err := auth.NewAuthToken()
+	b, err := auth.NewAuthKey()
 	if err != nil {
 		t.Fatal(err)
 	}

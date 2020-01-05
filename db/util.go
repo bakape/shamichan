@@ -1,19 +1,21 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/bakape/pg_util"
 	"github.com/go-playground/log"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
 )
 
 // InTransaction runs a function inside a transaction and handles comminting and
 // rollback on error.
-func InTransaction(fn func(*pgx.Tx) error) (err error) {
-	return pg_util.InTransaction(db, fn)
+func InTransaction(ctx context.Context, fn func(pgx.Tx) error) (err error) {
+	return pg_util.InTransaction(ctx, db, fn)
 }
 
 // IsConflictError returns if an error is a unique key conflict error
@@ -21,14 +23,12 @@ func IsConflictError(err error) bool {
 	return extractException(err) == "unique_violation"
 }
 
-func logListenError(err error) {
-	log.Error(err)
-}
-
 // Listen assigns a function to listen to Postgres notifications on a channel.
 func Listen(opts pg_util.ListenOpts) (err error) {
 	opts.ConnectionURL = connectionURL
-	opts.OnError = logListenError
+	opts.OnError = func(err error) {
+		log.Error(err)
+	}
 	return pg_util.Listen(opts)
 }
 
@@ -62,7 +62,7 @@ fail:
 
 // Try to extract an exception message, if err is *pq.Error
 func extractException(err error) string {
-	if err, ok := err.(*pgx.PgError); ok {
+	if err, ok := err.(*pgconn.PgError); ok {
 		return err.Message
 	}
 	return ""

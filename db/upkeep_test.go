@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,7 +13,7 @@ func assertDeleted(t *testing.T, q string, del bool) {
 
 	q = fmt.Sprintf(`select exists (select 1 %s)`, q)
 	var exists bool
-	err := db.QueryRow(q).Scan(&exists)
+	err := db.QueryRow(context.Background(), q).Scan(&exists)
 	if err != nil {
 		t.Fatal(err)
 	}

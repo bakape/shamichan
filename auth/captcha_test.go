@@ -76,7 +76,7 @@ func TestDecodeCaptcha(t *testing.T) {
 func TestNewToken(t *testing.T) {
 	t.Parallel()
 
-	_, err := NewAuthToken()
+	_, err := NewAuthKey()
 	if err != nil {
 		t.Fatal(err)
 	}
