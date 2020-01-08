@@ -74,7 +74,10 @@ func GetFeedData() (buf []byte, err error) {
 					select
 						thread,
 						jsonb_build_object(
-							'recent_posts', jsonb_object_agg(id, time)
+							'recent_posts', jsonb_object_agg(
+								id,
+								to_unix(created_on)
+							)
 						) val
 					from posts
 					where created_on > now() - interval '16 minutes'
@@ -90,9 +93,7 @@ func GetFeedData() (buf []byte, err error) {
 								jsonb_build_object(
 									'has_image', image is not null,
 									'image_spoilered', image_spoilered,
-									'created_on', extract(
-										epoch from created_on
-									),
+									'created_on', to_unix(created_on),
 									'thread', thread,
 									'body', body
 								)

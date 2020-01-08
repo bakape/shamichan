@@ -1,7 +1,7 @@
 use super::client::Client;
 use super::common::SetMap;
 use protocol::AuthKey;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::net::IpAddr;
 use std::rc::Rc;
 use std::sync::Mutex;
@@ -17,7 +17,7 @@ pub struct Registry {
 	by_key: SetMap<AuthKey, u64>,
 
 	// Have not yet had their feed initialization messages sent.
-	// Mapped by thread.
+	// Mapped by feed.
 	need_init: SetMap<u64, u64>,
 }
 
@@ -32,7 +32,7 @@ impl Registry {
 }
 
 // Also start pulsar on first registry access
-super::gen_global_rwlock!(,Registry, || super::pulsar::init());
+super::gen_global_rwlock!(,Registry);
 
 // Stores client state that needs to be accessed by outer services along with
 // a smart pointer to the client itself
@@ -106,12 +106,12 @@ pub fn set_client_thread(client: u64, thread: u64) {
 }
 
 // Sync snapshot of thread data. This clears the need_init map.
-pub fn snapshot_threads(
-	by_thread: &mut SetMap<u64, u64>,
-	need_init: &mut SetMap<u64, u64>,
-) {
+pub fn snapshot_threads<F>(by_thread: &mut SetMap<u64, u64>, drainer: F)
+where
+	F: FnMut(u64, HashSet<u64>),
+{
 	write(|c| {
 		*by_thread = c.by_thread.clone();
-		need_init.drain_from(&mut c.need_init);
+		c.need_init.drain(drainer);
 	})
 }

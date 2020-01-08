@@ -12,23 +12,10 @@ import (
 type PostInsertParamsCommon struct {
 	// Client authorization key
 	AuthKey auth.AuthKey `db:"auth_key"`
-
-	// Post text body encoded into binary. Nil indicates an empty post body.
-	Body []byte
-
-	// Optional SHA1 hash of image to instert in the post
-	Image *[20]byte
-
-	// Inserted image name
-	ImageName string `db:"image_name"`
-
-	// Is the inserted image spoilered on insertion
-	ImageSpoilered bool `db:"image_spoilered"`
 }
 
 // For inserting a thread reply
 type ReplyInsertParams struct {
-
 	// Parent thread
 	Thread uint64
 

@@ -21,6 +21,8 @@ pub struct Client {
 	id: u64,
 
 	// IP of client connection
+	//
+	// TODO: Use this for bans
 	ip: IpAddr,
 
 	// Client initialization state
@@ -125,6 +127,9 @@ impl Client {
 		registry::set_client_thread(self.id, thread);
 
 		// TODO: Send open post and moderation data
+		// TODO: Lookup, if client has any open posts in thread and send their
+		// dat, if any
+
 		self.send(MessageType::Synchronize, &thread)?;
 		Ok(())
 	}

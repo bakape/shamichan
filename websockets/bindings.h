@@ -14,6 +14,9 @@ typedef struct {
     void* src;
 } WSRcBuffer;
 
+// Initialize module. Must be passed feed data read from databae as JSON.
+void ws_init(WSBuffer feed_data);
+
 // Register a websocket client with a unique ID and return any error as owned
 // string.
 //
@@ -39,6 +42,3 @@ typedef struct {
 
 // Propagate select configuration changes to Rust side
 void ws_set_config(WSConfig);
-
-// Receive previously requested thread data encoded as JSON
-void ws_receive_feed_data(uint64_t id, WSBuffer data, const char* err);

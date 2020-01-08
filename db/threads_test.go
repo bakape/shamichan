@@ -1,10 +1,13 @@
 package db
 
 import (
+	"bytes"
 	"context"
 	"testing"
+	"time"
 
 	"github.com/bakape/meguca/test"
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -50,36 +53,90 @@ func TestGetFeedData(t *testing.T) {
 	var (
 		threads, replies [2]uint64
 		err              error
+		ctx              = context.Background()
+		now              = time.Now()
 	)
 	for i := range threads {
 		threads[i] = insertSampleThread(t)
 		_, err = db.Exec(
-			context.Background(),
+			ctx,
 			`update posts
 			set open = false,
-				created_on = created_on - interval '1 hour'
+				created_on = $2
 			where id = $1`,
 			threads[i],
+			pgtype.Timestamptz{
+				Time:   now.Add(-time.Hour),
+				Status: pgtype.Present,
+			},
 		)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		err = InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
-			replies[i], err = InsertPost(context.Background(),
-				tx, ReplyInsertParams{
-					Thread: threads[i],
-					PostInsertParamsCommon: PostInsertParamsCommon{
-						AuthKey: genToken(t),
-					},
+		err = InTransaction(ctx, func(tx pgx.Tx) (err error) {
+			replies[i], err = InsertPost(ctx, tx, ReplyInsertParams{
+				Thread: threads[i],
+				PostInsertParamsCommon: PostInsertParamsCommon{
+					AuthKey: genToken(t),
 				},
-			)
+			})
 			return
 		})
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		// Correct to match timestamp
+		_, err = db.Exec(
+			ctx,
+			`update posts
+			set created_on = $2
+			where id = $1`,
+			replies[i],
+			pgtype.Timestamptz{
+				Time:   now,
+				Status: pgtype.Present,
+			},
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
-	t.Fatal(`TODO: verify feed data`)
+	buf, err := GetFeedData()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ut := now.Unix()
+	test.AssertJSON(t, bytes.NewReader(buf), map[uint64]interface{}{
+		threads[0]: map[string]interface{}{
+			"open_posts": map[uint64]interface{}{
+				replies[0]: map[string]interface{}{
+					"body":            nil,
+					"thread":          threads[0],
+					"has_image":       false,
+					"created_on":      ut,
+					"image_spoilered": false,
+				},
+			},
+			"recent_posts": map[uint64]int64{
+				replies[0]: ut,
+			},
+		},
+		threads[1]: map[string]interface{}{
+			"open_posts": map[uint64]interface{}{
+				replies[1]: map[string]interface{}{
+					"body":            nil,
+					"thread":          threads[1],
+					"has_image":       false,
+					"created_on":      ut,
+					"image_spoilered": false,
+				},
+			},
+			"recent_posts": map[uint64]int64{
+				replies[1]: ut,
+			},
+		},
+	})
 }

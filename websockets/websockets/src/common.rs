@@ -121,10 +121,17 @@ where
 		self.0.remove(k);
 	}
 
-	// Drain src into self, merging the 2 maps
-	pub fn drain_from(&mut self, src: &mut SetMap<K, V>) {
-		for (k, v) in src.0.drain() {
-			self.0.entry(k).or_default().extend(v)
+	pub fn contains_key(&self, k: &K) -> bool {
+		self.0.contains_key(k)
+	}
+
+	// Drain map and call f on each key-value pair
+	pub fn drain<F>(&mut self, mut f: F)
+	where
+		F: FnMut(K, HashSet<V>),
+	{
+		for (k, v) in self.0.drain() {
+			f(k, v);
 		}
 	}
 

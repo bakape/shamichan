@@ -190,29 +190,17 @@ extern "C" fn ws_set_config(wsc: WSConfig) {
 	config::write(|c| *c = wsc.into());
 }
 
+// Initialize module
+#[no_mangle]
+extern "C" fn ws_init(feed_data: WSBuffer) {
+	if let Err(err) = pulsar::init(feed_data.as_ref()) {
+		panic!(format!("could not start pulsar: {}", err));
+	}
+}
+
 // Request an async fetch for feed data
 pub fn get_feed_data(id: u64) {
 	unsafe { ws_get_feed_data(id) };
-}
-
-// Receive previously requested thread data encoded as JSON
-#[no_mangle]
-extern "C" fn ws_receive_feed_data(
-	id: u64,
-	data: WSBuffer,
-	err: *const c_char,
-) {
-	pulsar::receive_feed_data(
-		id,
-		if err == std::ptr::null() {
-			Ok(data.as_ref())
-		} else {
-			Err(unsafe { CStr::from_ptr(err) }
-				.to_str()
-				.expect("invalid UTF-8")
-				.into())
-		},
-	)
 }
 
 // Linked from Go

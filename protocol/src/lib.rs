@@ -16,6 +16,7 @@ pub const VERSION: u16 = 0;
 const HEADER: u8 = 174;
 
 mod payloads;
+pub use payloads::post_body;
 pub use payloads::*;
 
 // Types of messages passed through websockets
@@ -92,25 +93,51 @@ impl<W: Write> Write for Escaper<W> {
 
 // Streaming message set encoder
 #[derive(Debug)]
-pub struct Encoder<W: Write> {
-    w: ZlibEncoder<W>,
+pub struct Encoder {
+    w: ZlibEncoder<Vec<u8>>,
     started: bool,
 }
 
-impl Default for Encoder<Vec<u8>> {
-    fn default() -> Encoder<Vec<u8>> {
-        Self::new(Vec::new())
-    }
-}
-
-impl<W: Write> Encoder<W> {
+impl Encoder {
     // Create new encoder for building message streams, which will have its
     // output written to the passed output stream.
-    pub fn new(w: W) -> Encoder<W> {
+    pub fn new(mut w: Vec<u8>) -> Self {
+        Self::init_single_message(&mut w);
         Self {
             w: ZlibEncoder::new(w, flate2::Compression::default()),
             started: false,
         }
+    }
+
+    // Indicate this is single message and not a concatenated vector of
+    // messages
+    fn init_single_message(w: &mut Vec<u8>) {
+        w.truncate(0);
+        w.push(0);
+    }
+
+    // Join already encoded messages into a single stream
+    pub fn join<I, A>(encoded: I) -> Vec<u8>
+    where
+        I: AsRef<[A]>,
+        A: AsRef<[u8]>,
+    {
+        let enc = encoded.as_ref();
+        let mut w = Vec::with_capacity(
+            enc.iter().map(|b| b.as_ref().len()).sum::<usize>()
+                + (enc.len() * 4)
+                + 1,
+        );
+
+        // Indicates this is a concatenated vector of messages
+        w.push(1);
+
+        for msg in enc.iter() {
+            w.extend((msg.as_ref().len() as i32).to_le_bytes().iter());
+            w.extend(msg.as_ref().iter());
+        }
+
+        w
     }
 
     // Flush any pending data to output stream
@@ -134,7 +161,7 @@ impl<W: Write> Encoder<W> {
 
     // Consumes this encoder, flushing the output stream and returning the
     // underlying writer
-    pub fn finish(self) -> io::Result<W> {
+    pub fn finish(self) -> io::Result<Vec<u8>> {
         self.w.finish()
     }
 
@@ -143,8 +170,9 @@ impl<W: Write> Encoder<W> {
     //
     // This function will finish encoding the current stream into the current
     // output stream before swapping out the two output streams.
-    pub fn reset(&mut self, w: W) -> io::Result<W> {
+    pub fn reset(&mut self, mut w: Vec<u8>) -> io::Result<Vec<u8>> {
         self.started = false;
+        Self::init_single_message(&mut w);
         self.w.reset(w)
     }
 
@@ -162,14 +190,75 @@ pub struct Decoder {
 }
 
 impl Decoder {
-    // Create new decoder for reading the passed stream
+    // Create new decoder for reading the passed buffer
     pub fn new(r: &[u8]) -> Result<Self, io::Error> {
-        let mut zd = ZlibDecoder::new(MessageSplitter::new());
-        zd.write_all(r)?;
         Ok(Self {
-            splitter: zd.finish()?,
+            splitter: Self::fill_splitter(MessageSplitter::new(), r)?,
             off: 0,
         })
+    }
+
+    // Decode buffer into an existing message splitter and return it on success
+    fn fill_splitter(
+        mut dst: MessageSplitter,
+        mut r: &[u8],
+    ) -> Result<MessageSplitter, io::Error> {
+        use std::io::{Error, ErrorKind};
+
+        macro_rules! error {
+            ($kind:ident, $msg:expr) => {
+                return Err(Error::new(ErrorKind::$kind, $msg));
+            };
+        }
+
+        if r.len() == 0 {
+            error!(UnexpectedEof, "zero length buffer");
+        }
+
+        match r[0] {
+            0 => {
+                // Single compressed message
+                let mut zd = ZlibDecoder::new(dst);
+                zd.write_all(&r[1..])?;
+                Ok(zd.finish()?)
+            }
+            1 => {
+                // Vector of compressed messages
+                r = &r[1..];
+                while r.len() > 0 {
+                    macro_rules! check_len {
+                        ($n:expr) => {
+                            if r.len() < $n {
+                                error!(
+                                    InvalidData,
+                                    format!(
+                                        concat!(
+                                            "incomplete message in vector: ",
+                                            "min_length={} msg={:?}"
+                                        ),
+                                        $n, r,
+                                    )
+                                );
+                            }
+                        };
+                    }
+
+                    check_len!(4);
+                    let len = i32::from_le_bytes({
+                        let mut arr: [u8; 4] = Default::default();
+                        arr.copy_from_slice(&r[..4]);
+                        arr
+                    }) as usize;
+                    r = &r[4..];
+
+                    check_len!(len);
+                    dst = Self::fill_splitter(dst, &r[..len])?;
+                    r = &r[len..];
+                }
+                Ok(dst)
+            }
+            _ => error!(InvalidData, format!("invalid header byte: {}", r[0])),
+        }
     }
 
     // Return next message type, if any.
@@ -285,7 +374,7 @@ impl Write for MessageSplitter {
 mod tests {
     use serde::{Deserialize, Serialize};
 
-    type Result = std::result::Result<(), Box<dyn std::error::Error>>;
+    type Result<T = ()> = std::result::Result<T, Box<dyn std::error::Error>>;
 
     #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
     struct SimpleMessage<'a> {
@@ -294,12 +383,24 @@ mod tests {
         buf: &'a [u8],
     }
 
+    const WITH_HEADER: [u8; 6] = [1, 2, 3, super::HEADER, 1, 3];
+
     #[test]
     fn simple_message_stream() -> Result {
-        const WITH_HEADER: [u8; 6] = [1, 2, 3, super::HEADER, 1, 3];
+        assert_decoded(&gen_message(1, 4)?)
+    }
 
+    #[test]
+    fn encoded_message_vector() -> Result {
+        assert_decoded(&super::Encoder::join(&[
+            gen_message(1, 2)?,
+            gen_message(3, 4)?,
+        ]))
+    }
+
+    fn gen_message(from: u64, to: u64) -> Result<Vec<u8>> {
         let mut enc = super::Encoder::new(Vec::<u8>::new());
-        for i in 1..=4 {
+        for i in from..=to {
             enc.write_message(
                 num::FromPrimitive::from_u64(i).unwrap(),
                 &SimpleMessage {
@@ -310,8 +411,11 @@ mod tests {
                 },
             )?;
         }
-        let buf = &enc.finish()?;
 
+        Ok(enc.finish()?)
+    }
+
+    fn assert_decoded(buf: &[u8]) -> Result {
         let mut dec = super::Decoder::new(buf)?;
         for i in 1..=4 {
             assert_eq!(dec.peek_type(), num::FromPrimitive::from_u64(i));

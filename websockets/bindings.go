@@ -4,10 +4,11 @@ package websockets
 // #cgo LDFLAGS: -ldl -lm
 // #include "bindings.h"
 // #include <stdlib.h>
+// #include <string.h>
 import "C"
 import (
+	"context"
 	"errors"
-	"fmt"
 	"reflect"
 	"unsafe"
 
@@ -28,6 +29,16 @@ func init() {
 	})
 }
 
+// Initialize module. Must be run after DB is online.
+func Init() (err error) {
+	buf, err := db.GetFeedData()
+	if err != nil {
+		return
+	}
+	C.ws_init(toWSBuffer(buf))
+	return
+}
+
 // Construct byte slice from C pointer and size
 func toSlice(ptr *C.uint8_t, size C.size_t) []byte {
 	return *(*[]byte)(
@@ -43,7 +54,7 @@ func toSlice(ptr *C.uint8_t, size C.size_t) []byte {
 
 //export ws_thread_exists
 func ws_thread_exists(id C.uint64_t, exists *bool) *C.char {
-	_exists, err := db.ThreadExists(uint64(id))
+	_exists, err := db.ThreadExists(context.Background(), uint64(id))
 	if err != nil {
 		return C.CString(err.Error())
 	}
@@ -109,9 +120,14 @@ func ws_insert_thread(
 	}
 
 	_id, err := db.InsertThread(
-		C.GoString(subject),
-		_tags,
-		*(*auth.AuthKey)(unsafe.Pointer(auth_key)),
+		context.Background(),
+		db.ThreadInsertParams{
+			Subject: C.GoString(subject),
+			Tags:    _tags,
+			PostInsertParamsCommon: db.PostInsertParamsCommon{
+				*(*auth.AuthKey)(unsafe.Pointer(auth_key)),
+			},
+		},
 	)
 	if err != nil {
 		return C.CString(err.Error())
@@ -133,15 +149,6 @@ func ws_validate_captcha(
 //export ws_log_error
 func ws_log_error(err *C.char) {
 	log.Errorf("websockets: %s", C.GoString(err))
-}
-
-//export ws_get_feed_data
-func ws_get_feed_data(id uint64) {
-	go func() {
-		// TODO: Read data from DB
-		buf := []byte(fmt.Sprintf(`{"feed":%d}`, id))
-		C.ws_receive_feed_data(C.uint64_t(id), toWSBuffer(buf), nil)
-	}()
 }
 
 // Cast []bytes to WSBuffer without copy

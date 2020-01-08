@@ -59,9 +59,9 @@ func Start() (err error) {
 		return
 	}
 
-	// Depend on configs
+	// Depend on configs or DB
 	go ass.WatchVideoDir()
-	err = util.Parallel(cache.Init, auth.LoadCaptchaServices)
+	err = util.Parallel(cache.Init, auth.LoadCaptchaServices, websockets.Init)
 	if err != nil {
 		return
 	}

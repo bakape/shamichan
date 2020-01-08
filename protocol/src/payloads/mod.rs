@@ -1,4 +1,7 @@
+pub mod post_body;
+
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 
 // Helper for big array serialization
@@ -65,35 +68,61 @@ impl Default for AuthKey {
 	}
 }
 
+// Define a public payload struct will public fields
+macro_rules! payload {
+    ($name:ident {$($field:ident: $t:ty,)*}) => {
+        #[derive(Serialize, Deserialize, Default, Debug, Clone)]
+        pub struct $name {
+            $(pub $field: $t),*
+        }
+    }
+}
+
 // Authenticate with the server
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Handshake {
+payload! { Handshake {
 	// Protocol version the client implements
-	pub protocol_version: u16,
+	protocol_version: u16,
 
 	// Used to authenticate the client
-	pub key: AuthKey,
-}
+	key: AuthKey,
+}}
 
 // Request for creating a new thread
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ThreadCreationReq {
-	pub subject: String,
-	pub tags: Vec<String>,
-	pub captcha_solution: Vec<u8>,
-}
+payload! { ThreadCreationReq {
+	subject: String,
+	tags: Vec<String>,
+	captcha_solution: Vec<u8>,
+}}
 
 // Request for creating a new post
-#[derive(Serialize, Deserialize, Debug)]
-pub struct PostCreationReq {
-	pub thread: u64,
-	pub name: String,
-	pub body: String,
-}
+payload! { PostCreationReq {
+	thread: u64,
+	name: String,
+	body: String,
+}}
+
+// State of an open post. Used to diff the current state of the client against
+// the server feed's state.
+payload! { OpenPost {
+	has_image: bool,
+	spoilered_image: bool,
+	created_on: u64,
+	thread: u64,
+	body: post_body::Node,
+}}
 
 // Feed initialization data
-#[derive(Serialize, Deserialize, Default, Debug)]
-pub struct FeedData {
-	pub feed: u64,
-	// TODO: Data
-}
+payload! { FeedData {
+	// Thread this feed refers to
+	thread: u64,
+
+	// Posts created in the last 16 minutes (open post CD + 1 minute to ensure
+	// there is no overlap due to latency).
+	// <post_id: post_creation_unix_timestamp>
+	recent_posts: HashMap<u64,u64>,
+
+	// Posts currently open. Mapped by ID.
+	open_posts: HashMap<u64, OpenPost>,
+
+	// TODO: Applied moderation
+}}
