@@ -15,6 +15,9 @@ pub const VERSION: u16 = 0;
 // Byte used for marking the start of a message
 const HEADER: u8 = 174;
 
+// Byte used for escaping HEADER in massages
+const ESCAPE: u8 = 255;
+
 mod payloads;
 pub use payloads::post_body;
 pub use payloads::*;
@@ -27,7 +30,7 @@ pub use payloads::*;
 )]
 pub enum MessageType {
     // Initial handshake with server
-    Handshake = 1,
+    Handshake = 0,
 
     // Request and response to synchronize with a thread or thread index
     Synchronize,
@@ -73,7 +76,7 @@ impl<W: Write> Write for Escaper<W> {
             match buf.iter().position(|b| *b == HEADER) {
                 Some(i) => {
                     self.w.write_all(&buf[..i])?;
-                    self.w.write_all(&[HEADER, 0])?;
+                    self.w.write_all(&[HEADER, ESCAPE])?;
                     buf = &buf[i + 1..];
                 }
                 None => {
@@ -334,7 +337,7 @@ impl Write for MessageSplitter {
                     }
 
                     let next = buf[i + 1];
-                    if next != 0 {
+                    if next != ESCAPE {
                         // Found next message
                         match num::FromPrimitive::from_u8(next) {
                             Some(typ) => {
@@ -387,14 +390,14 @@ mod tests {
 
     #[test]
     fn simple_message_stream() -> Result {
-        assert_decoded(&gen_message(1, 4)?)
+        assert_decoded(&gen_message(0, 3)?)
     }
 
     #[test]
     fn encoded_message_vector() -> Result {
         assert_decoded(&super::Encoder::join(&[
-            gen_message(1, 2)?,
-            gen_message(3, 4)?,
+            gen_message(0, 1)?,
+            gen_message(2, 3)?,
         ]))
     }
 
@@ -417,7 +420,7 @@ mod tests {
 
     fn assert_decoded(buf: &[u8]) -> Result {
         let mut dec = super::Decoder::new(buf)?;
-        for i in 1..=4 {
+        for i in 0..=3 {
             assert_eq!(dec.peek_type(), num::FromPrimitive::from_u64(i));
             let res: SimpleMessage = dec.read_next()?;
             assert_eq!(
