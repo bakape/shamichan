@@ -105,13 +105,16 @@ pub fn set_client_thread(client: u64, thread: u64) {
 	});
 }
 
-// Sync snapshot of thread data. This clears the need_init map.
-pub fn snapshot_threads<F>(by_thread: &mut SetMap<u64, u64>, drainer: F)
+// Sync snapshot of client and thread data. This clears the need_init map.
+//
+// Reads client that need to be initialized with drainer.
+// Returns global set of connected clients and clients mapped by thread.
+pub fn snapshot_threads<F>(drainer: F) -> (HashSet<u64>, SetMap<u64, u64>)
 where
 	F: FnMut(u64, HashSet<u64>),
 {
 	write(|c| {
-		*by_thread = c.by_thread.clone();
 		c.need_init.drain(drainer);
+		(c.clients.keys().cloned().collect(), c.by_thread.clone())
 	})
 }

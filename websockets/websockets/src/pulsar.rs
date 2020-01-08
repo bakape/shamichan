@@ -319,26 +319,31 @@ impl Pulsar {
 		// last 15 min
 
 		// Need a snapshot of the required registry fields for atomicity
-		let mut clients_by_feed = SetMap::new();
-		registry::snapshot_threads(&mut clients_by_feed, |thread, clients| {
-			// Account for clients arriving before a thread has been
-			// initialized
-			match self.feeds.entry(thread) {
-				hash_map::Entry::Occupied(mut e) => {
-					e.get_mut().common.need_init.extend(clients);
+		let (all_clients, clients_by_feed) =
+			registry::snapshot_threads(|feed, clients| {
+				if feed == 0 {
+					self.global.need_init.extend(clients);
+					return;
 				}
-				hash_map::Entry::Vacant(e) => {
-					e.insert(Feed {
-						thread: thread,
-						common: FeedCommon {
-							need_init: clients,
+
+				// Account for clients arriving before a thread has been
+				// initialized
+				match self.feeds.entry(feed) {
+					hash_map::Entry::Occupied(mut e) => {
+						e.get_mut().common.need_init.extend(clients);
+					}
+					hash_map::Entry::Vacant(e) => {
+						e.insert(Feed {
+							thread: feed,
+							common: FeedCommon {
+								need_init: clients,
+								..Default::default()
+							},
 							..Default::default()
-						},
-						..Default::default()
-					});
+						});
+					}
 				}
-			}
-		});
+			});
 
 		// Used for aggregation of messages in parallel
 		#[derive(Default)]
@@ -521,11 +526,23 @@ impl Pulsar {
 		if let Some(pending) = self.global.pending.take() {
 			match pending.finish() {
 				Ok(buf) => {
-					messages_by_client.par_iter_mut().for_each(|(_, queued)| {
-						*queued =
-							Encoder::join(&[queued.as_ref(), buf.as_ref()])
-								.into();
-					})
+					messages_by_client.par_iter_mut().for_each(
+						|(_, queued)| {
+							*queued = Msg::new(Encoder::join(&[
+								queued.as_ref(),
+								buf.as_ref(),
+							]));
+						},
+					);
+					let msg = Msg::new(buf);
+					for c in all_clients
+						.iter()
+						.filter(|c| !messages_by_client.contains_key(&c))
+						.cloned()
+						.collect::<Vec<_>>()
+					{
+						messages_by_client.insert(c, msg.clone());
+					}
 				}
 				Err(err) => Self::log_encode_error("global", err),
 			};
