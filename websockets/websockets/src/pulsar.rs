@@ -173,34 +173,29 @@ impl Feed {
 				let msg = Msg::new({
 					let mut enc = Encoder::new(Vec::new());
 
+					let data = self.data.as_ref().unwrap();
+					macro_rules! filter_recent {
+						($key:ident) => {
+							data.$key
+								.iter()
+								.filter(|(id, _)| self.include_in_global(**id))
+								.map(|(k, v)| (*k, v.clone()))
+								.collect()
+						};
+					}
+					let res = rayon::join(
+						|| filter_recent!(recent_posts),
+						|| filter_recent!(open_posts),
+					);
+
 					enc.write_message(
 						MessageType::FeedInit,
 						&FeedData {
 							thread: self.thread,
-
-							// Only need post data from up to the last 5
-							// posts and OP
-							recent_posts: self
-								.data
-								.as_ref()
-								.unwrap()
-								.recent_posts
-								.iter()
-								.filter(|(id, _)| self.include_in_global(**id))
-								.map(|(k, v)| (*k, *v))
-								.collect(),
-							open_posts: self
-								.data
-								.as_ref()
-								.unwrap()
-								.open_posts
-								.iter()
-								.filter(|(id, _)| self.include_in_global(**id))
-								.map(|(k, v)| (*k, v.clone()))
-								.collect(),
+							recent_posts: res.0,
+							open_posts: res.1,
 						},
 					)?;
-
 					enc.finish()?
 				});
 				self.global_init_msg_part = Some(msg.clone());
@@ -356,7 +351,7 @@ impl Pulsar {
 
 			// Aggregated into one message for I/O efficiency inside the main
 			// filter_map(), as most of the time, global messages will not be
-			// mixed concatenated
+			// concatenated with them.
 			thread_messages: HashMap<u64, Msg>,
 		}
 
