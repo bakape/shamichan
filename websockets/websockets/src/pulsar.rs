@@ -68,6 +68,10 @@ pub fn init(feed_data: &[u8]) -> serde_json::Result<()> {
 	Ok(())
 }
 
+// Holds the IDs of up to the last 5 posts
+type Last5Posts =
+	heapless::BinaryHeap<u64, heapless::consts::U5, heapless::binary_heap::Min>;
+
 // Common to both thread feeds and the global Feed
 #[derive(Default, Debug)]
 struct FeedCommon {
@@ -95,7 +99,7 @@ struct Feed {
 	pending_global: Option<Encoder>,
 
 	// Last 5 post IDs in thread
-	last_5_posts: VecDeque<u64>,
+	last_5_posts: Last5Posts,
 
 	// Current active feed data.
 	//
@@ -140,17 +144,21 @@ impl Feed {
 	}
 
 	// Find last 5 posts added to thread
-	fn find_last_5(recent_posts: &HashMap<u64, u64>) -> VecDeque<u64> {
-		let mut last_5 = [0u64; 6];
+	fn find_last_5(recent_posts: &HashMap<u64, u64>) -> Last5Posts {
+		let mut arr = [0u64; 6];
 		for id in recent_posts.keys() {
-			last_5[5] = *id;
-			last_5.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap().reverse());
-			last_5[5] = 0;
+			arr[5] = *id;
+			arr.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap().reverse());
+			arr[5] = 0;
 		}
-		last_5[..last_5.iter().position(|x| *x == 0).unwrap_or(5)]
+		let mut last = Last5Posts::default();
+		for id in arr[..arr.iter().position(|x| *x == 0).unwrap_or(5)]
 			.iter()
 			.cloned()
-			.collect()
+		{
+			unsafe { last.push_unchecked(id) };
+		}
+		last
 	}
 
 	// Return, if post should be included in global thread index
