@@ -7,16 +7,6 @@ import (
 	"github.com/bakape/meguca/test"
 )
 
-func TestWrapError(t *testing.T) {
-	t.Parallel()
-
-	err := errors.New("foo")
-	wrapped := WrapError("bar", err)
-	if s := wrapped.Error(); s != "bar: foo" {
-		t.Fatalf("unexpected error: `%s`", s)
-	}
-}
-
 func TestHashBuffer(t *testing.T) {
 	t.Parallel()
 
