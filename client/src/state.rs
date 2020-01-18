@@ -1,5 +1,4 @@
 use super::util;
-use std::mem::MaybeUninit;
 use std::str;
 
 // Connection state
@@ -48,7 +47,7 @@ impl State {
 					.crypto()?
 					.get_random_values_with_u8_array(self.auth_key.as_mut())?;
 				let mut buf: [u8; 88] =
-					unsafe { MaybeUninit::uninit().assume_init() };
+					unsafe { std::mem::MaybeUninit::uninit().assume_init() };
 				base64::encode_config_slice(
 					self.auth_key.as_mut(),
 					base64::STANDARD,
