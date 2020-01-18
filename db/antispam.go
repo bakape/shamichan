@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"encoding/base64"
 	"sync"
 	"time"
 
@@ -10,7 +9,6 @@ import (
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
-	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -41,7 +39,7 @@ func syncSpamScores() (err error) {
 
 // Flush spam scores from buffer to DB
 func flushSpamScores() (err error) {
-	return InTransaction(nil, func(tx pgx.Tx) (err error) {
+	return InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
 		for user, buffered := range spamScoreBuffer {
 			_, err = tx.Exec(
 				context.Background(),
@@ -196,33 +194,6 @@ func ValidateCaptcha(
 	default:
 		return
 	}
-}
-
-// 64 byte token that JSON/text en/decodes to a raw URL-safe encoding base64
-// string
-type AuthKey [64]byte
-
-func (t AuthKey) MarshalText() ([]byte, error) {
-	buf := make([]byte, 86)
-	base64.RawURLEncoding.Encode(buf[:], t[:])
-	return buf, nil
-}
-
-func (t AuthKey) UnmarshalText(buf []byte) error {
-	if len(buf) != 86 {
-		return ErrInvalidToken
-	}
-
-	n, err := base64.RawURLEncoding.Decode(t[:], buf)
-	if n != 64 || err != nil {
-		return ErrInvalidToken
-	}
-	return nil
-}
-
-// Implement pgtype.Encoder
-func (t AuthKey) EncodeBinary(_ *pgtype.ConnInfo, buf []byte) ([]byte, error) {
-	return append(buf, t[:]...), nil
 }
 
 // Returns, if user has solved a captcha within the last 3 hours

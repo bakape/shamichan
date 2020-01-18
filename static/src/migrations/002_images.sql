@@ -9,7 +9,7 @@ create type file_type as enum (
 	'MP3',
 	'OGG',
 	'ZIP',
-	'7z',
+	'7Z',
 	'TGZ',
 	'TXZ',
 	'FLAC',
@@ -38,7 +38,8 @@ create table images (
 	thumb_width uint15 not null,
 	thumb_height uint15 not null,
 
-	size int not null check (size > 0),
+	size bigint not null check (size > 0),
+	duration int not null check (duration >= 0),
 
 	title varchar(200) not null,
 	artist varchar(100) not null

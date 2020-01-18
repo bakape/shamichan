@@ -67,7 +67,7 @@ func runMigrations() (err error) {
 			current int
 			done    bool
 		)
-		err = InTransaction(nil, func(tx pgx.Tx) (err error) {
+		err = InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
 			var _current string
 
 			// Lock version column to ensure no migrations from other processes

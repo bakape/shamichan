@@ -22,13 +22,12 @@ type ThreadInsertParams struct {
 func InsertThread(ctx context.Context, p ThreadInsertParams) (
 	id uint64, err error,
 ) {
-	err = InTransaction(nil, func(tx pgx.Tx) (err error) {
+	err = InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
 		q, args := pg_util.BuildInsert(pg_util.InsertOpts{
 			Table:  "threads",
 			Data:   p,
 			Suffix: "returning id",
 		})
-		defer pg_util.ResuseArgs(args)
 		err = tx.QueryRow(ctx, q, args...).Scan(&id)
 		if err != nil {
 			return

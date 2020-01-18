@@ -11,7 +11,7 @@ import (
 var (
 	// Buffer of pending open post body changes. Used to reduce DB I/O with
 	// rapid open post body changes.
-	openPostBodyBuffer = make(map[uint64]string)
+	openPostBodyBuffer = make(map[uint64][]byte)
 
 	// Protects openPostBodyBuffer
 	openPostBodyBufferMu sync.Mutex
@@ -33,7 +33,7 @@ func FlushOpenPostBodies() (err error) {
 	}
 	sort.Sort(toWrite)
 
-	return InTransaction(nil, func(tx pgx.Tx) (err error) {
+	return InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
 		for _, id := range toWrite {
 			_, err = tx.Exec(
 				context.Background(),
@@ -63,7 +63,7 @@ func clearOpenPostBuffer() {
 }
 
 // Buffer open post body for eventual writing to DB
-func WriteOpenPostBody(id uint64, body string) {
+func WriteOpenPostBody(id uint64, body []byte) {
 	openPostBodyBufferMu.Lock()
 	defer openPostBodyBufferMu.Unlock()
 

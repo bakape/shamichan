@@ -123,7 +123,7 @@ func Close() (err error) {
 func ClearTables(tables ...string) (err error) {
 	clearOpenPostBuffer() // Clear Open post buffer between tests
 	for _, t := range tables {
-		_, err = db.Exec(context.Background(), `DELETE FROM `+t)
+		_, err = db.Exec(context.Background(), `delete from `+t)
 		if err != nil {
 			return
 		}

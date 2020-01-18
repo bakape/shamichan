@@ -14,7 +14,7 @@ create table post_common (
 create table threads (
 	primary key (id),
 	subject varchar(100) not null,
-	bump_time timestamptz_auto_now,
+	bumped_on timestamptz_auto_now,
 	tags varchar(20)[] not null check (array_length(tags, 1) between 1 and 3)
 )
 inherits (post_common);
@@ -27,6 +27,7 @@ create table posts (
 	page bigint check (page >= 0),
 
 	created_on timestamptz_auto_now,
+	sage bool not null default false,
 	open bool not null default true,
 	auth_key auth_key,
 
@@ -60,36 +61,16 @@ language plpgsql
 as $$
 begin
 	-- +1, because new post is not inserted yet
-	new.page =  (post_count(new.op) + 1) / 100;
-
-	-- TODO: Bump thread
-	-- perform bump_thread(new.op, bump_time => not new.sage, page => new.page);
-
-	-- TODO: Moderation
-	-- -- Delete post, if IP blacklisted
-	-- select b.by into to_delete_by
-	-- 	from bans b
-	-- 	-- Can't use post_board(), because not inserted yet
-	-- 	where
-	-- 		board = (
-	-- 			select t.board
-	-- 			from threads t
-	-- 			where t.id = new.op
-	-- 		)
-	-- 		and b.ip = new.ip
-	-- 		and b.type = 'shadow'
-	-- 		and b.expires > now() at time zone 'UTC';
-	-- if to_delete_by is not null then
-	-- 	-- Will fail otherwise, because key is not written to table yet
-	-- 	set constraints post_moderation_post_id_fkey deferred;
-	-- 	insert into post_moderation (post_id, type, "by")
-	-- 		values (new.id, 2, to_delete_by);
-	-- 	new.moderated = true;
-	-- end if;
+	new.page =  (post_count(new.thread) + 1) / 100;
+	call bump_thread(new.thread, not new.sage, new.page);
 
 	return new;
 end;
 $$;
+
+create trigger before_posts_insert
+before insert on posts
+for each row execute procedure before_posts_insert();
 
 create or replace function merge_jsonb_obj_st(in out s jsonb, item jsonb)
 language plpgsql stable parallel safe strict
@@ -104,3 +85,27 @@ create aggregate merge_jsonb_obj(item jsonb) (
 	stype = jsonb,
 	initcond = '{}'
 );
+
+-- Bump a thread and propagate it has been updated
+--
+-- op: id of thread being bumped
+-- bump_time: also update the thread's bumped_on
+-- page: page of the thread to bump. Used for cache invalidation.
+create or replace procedure bump_thread(
+	id bigint,
+	bump_time bool = false,
+	page bigint = -2
+)
+language plpgsql
+as $$
+begin
+	if bump_thread.bump_time then
+		update threads as t
+			set bumped_on = now()
+			where t.id = bump_thread.id;
+	end if;
+
+	perform pg_notify('thread.updated',	concat_ws(',', id, page));
+end;
+$$;
+

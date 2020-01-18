@@ -54,8 +54,11 @@ func TestGetFeedData(t *testing.T) {
 		threads, replies [2]uint64
 		err              error
 		ctx              = context.Background()
-		now              = time.Now()
+
+		// Postgres seems to have different timestamp rounding
+		now = time.Now().Round(time.Second)
 	)
+
 	for i := range threads {
 		threads[i] = insertSampleThread(t)
 		_, err = db.Exec(

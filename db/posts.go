@@ -16,6 +16,9 @@ type PostInsertParamsCommon struct {
 
 // For inserting a thread reply
 type ReplyInsertParams struct {
+	// Post was saged
+	Sage bool
+
 	// Parent thread
 	Thread uint64
 
@@ -43,7 +46,6 @@ func InsertPost(
 		Data:   params,
 		Suffix: "returning id",
 	})
-	defer pg_util.ResuseArgs(args)
 	err = tx.QueryRow(ctx, q, args...).Scan(&id)
 	return
 }

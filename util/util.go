@@ -44,19 +44,6 @@ func HashBuffer(buf []byte) string {
 	return base64.RawStdEncoding.EncodeToString(hash[:])
 }
 
-// ConcatStrings efficiently concatenates strings with only one extra allocation
-func ConcatStrings(s ...string) string {
-	l := 0
-	for _, s := range s {
-		l += len(s)
-	}
-	b := make([]byte, 0, l)
-	for _, s := range s {
-		b = append(b, s...)
-	}
-	return string(b)
-}
-
 // CloneBytes creates a copy of b
 func CloneBytes(b []byte) []byte {
 	cp := make([]byte, len(b))

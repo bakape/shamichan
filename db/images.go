@@ -3,213 +3,130 @@ package db
 import (
 	"context"
 	"io"
-	"time"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
+	"github.com/bakape/pg_util"
 	"github.com/jackc/pgx/v4"
 )
-
-var (
-	// ErrInvalidToken occurs, when trying to retrieve an image with an
-	// non-existent token. The token might have expired (60 to 119 seconds) or
-	// the client could have provided an invalid token to begin with.
-	ErrInvalidToken = common.ErrInvalidInput("invalid image token")
-)
-
-// Video structure
-type Video struct {
-	FileType uint8         `json:"file_type"`
-	Duration time.Duration `json:"-"`
-	SHA1     string        `json:"sha1"`
-}
-
-// WriteImage writes a processed image record to the DB. Only used in tests.
-func WriteImage(i common.ImageCommon) error {
-	return InTransaction(nil, func(tx pgx.Tx) error {
-		return writeImageTx(context.Background(), tx, i)
-	})
-}
-
-func writeImageTx(
-	ctx context.Context,
-	tx pgx.Tx,
-	i common.ImageCommon,
-) (err error) {
-	_, err = tx.Exec(
-		ctx,
-		`insert into images (
-			audio,
-			video,
-			file_type,
-			thumb_type,
-			dims,
-			length,
-			size,
-			md5,
-			sha1,
-			title,
-			artist
-		)
-		values (
-			$1,
-			$2,
-			$3,
-			$4,
-			$5,
-			$6,
-			$7,
-			$8,
-			$9,
-			$10
-		)`,
-		i.Audio,
-		i.Video,
-		i.FileType,
-		i.ThumbType,
-		i.Dims,
-		i.Length,
-		i.Size,
-		i.MD5,
-		i.SHA1,
-		i.Title,
-		i.Artist,
-	)
-	return
-}
-
-// NewImageToken inserts a new image allocation token into the DB and returns
-// it's ID
-func NewImageToken(
-	ctx context.Context,
-	tx pgx.Tx,
-	SHA1 string,
-) (token string, err error) {
-	// Loop in case there is a primary key collision
-	for {
-		token, err = auth.RandomID(64)
-		if err != nil {
-			return
-		}
-
-		_, err = tx.Exec(
-			ctx,
-			`insert into image_tokens (token, sha1, expires)
-			values ($1, $2, now() + interval '1 minute')`,
-			token,
-			SHA1,
-		)
-		switch {
-		case err == nil:
-			return
-		case IsConflictError(err):
-			continue
-		default:
-			return
-		}
-	}
-}
-
-// ImageExists returns, if image exists
-func ImageExists(
-	ctx context.Context,
-	tx pgx.Tx,
-	sha1 string,
-) (exists bool, err error) {
-	err = tx.
-		QueryRow(
-			ctx,
-			`select exists (
-				select
-				from images
-				where sha1 = $1
-			)`,
-			sha1,
-		).
-		Scan(&exists)
-	return
-}
 
 // AllocateImage allocates an image's file resources to their respective served
 // directories and write its data to the database
 func AllocateImage(
 	ctx context.Context,
 	tx pgx.Tx,
-	src,
-	thumb io.ReadSeeker,
 	img common.ImageCommon,
+	src, thumb io.ReadSeeker,
 ) (
 	err error,
 ) {
-	err = writeImageTx(ctx, tx, img)
+	q, args := pg_util.BuildInsert(pg_util.InsertOpts{
+		Table: "images",
+		Data:  img,
+	})
+	// for i := range args {
+	// 	_, ok := args[i].(uint16)
+	// 	if ok {
+	// 		args[i] = fmt.Sprint(args[i])
+	// 	}
+	// }
+	_, err = tx.Exec(ctx, q, args...)
 	if err != nil {
-		return err
+		return
 	}
 	return assets.Write(img.SHA1, img.FileType, img.ThumbType, src, thumb)
 }
 
-// HasImage returns, if the post has an image allocated. Only used in tests.
-func HasImage(ctx context.Context, id uint64) (has bool, err error) {
-	err = db.
-		QueryRow(
-			ctx,
-			`select exists (
-				select
-				from posts
-				where id = $1 and sha1 is not null
-			)`,
-			id,
-		).
-		Scan(&has)
-	return
-}
-
-// InsertImage insert and image into and existing open post and return image
-// JSON
+// Insert and image into and existing open post.
+//
+// Returns pgx.ErrNoRows, if no open post for the target user was found.
 func InsertImage(
 	ctx context.Context,
 	tx pgx.Tx,
-	postID uint64,
-	token, name string,
-	spoiler bool,
-) (
-	json []byte, err error,
-) {
-	err = tx.
-		QueryRow(
-			ctx,
-			`select insert_image(
-				$1::bigint,
-				$2::char(86),
-				$3::varchar(200),
-				$4::bool
-			)`,
-			postID,
-			token,
-			name,
-			spoiler,
-		).
-		Scan(&json)
-	if extractException(err) == "invalid image token" {
-		err = ErrInvalidToken
+	user auth.AuthKey,
+	img common.SHA1Hash,
+	name string,
+	spoilered bool,
+) (err error) {
+	res, err := tx.Exec(
+		ctx,
+		`update posts
+		set image = $1,
+			image_name = $2,
+			image_spoilered = $3
+		where open and auth_key = $4`,
+		img,
+		name,
+		spoilered,
+		user,
+	)
+	if err != nil {
+		return
+	}
+	if res.RowsAffected() == 0 {
+		return pgx.ErrNoRows
 	}
 	return
 }
 
-// GetImage retrieves a thumbnailed image record from the DB.
-//
-// Only used in tests.
-func GetImage(sha1 string) (img common.ImageCommon, err error) {
+// Retrieves a thumbnailed image record from the DB.
+// Protects it from possible concurrent deletes until the transaction closes.
+func GetImage(ctx context.Context, tx pgx.Tx, id common.SHA1Hash) (
+	img common.ImageCommon,
+	err error,
+) {
 	err = db.
 		QueryRow(
 			context.Background(),
-			`select to_jsonb(i)
-			from images i
-			where sha1 = $1`,
-			sha1,
+			`select
+				md5,
+
+				audio,
+				video,
+
+				file_type,
+				thumb_type,
+
+				width,
+				height,
+				thumb_width,
+				thumb_height,
+
+				size,
+				duration,
+
+				title,
+				artist
+			from images
+			where sha1 = $1
+			for update`,
+			id,
 		).
-		Scan(&img)
+		Scan(
+			&img.MD5,
+
+			&img.Audio,
+			&img.Video,
+
+			&img.FileType,
+			&img.ThumbType,
+
+			&img.Width,
+			&img.Height,
+			&img.ThumbWidth,
+			&img.ThumbHeight,
+
+			&img.Size,
+			&img.Duration,
+
+			&img.Artist,
+			&img.Title,
+		)
+	if err != nil {
+		return
+	}
+	img.SHA1 = id
 	return
 }
 
@@ -225,60 +142,24 @@ func SpoilerImage(ctx context.Context, id uint64) error {
 	return err
 }
 
-// VideoPlaylist returns a video playlist for a board
-func VideoPlaylist(board string) (videos []Video, err error) {
-	videos = make([]Video, 0, 128)
-
-	r, err := db.Query(
-		context.Background(),
-		"get_video_playlist",
-		board,
-	)
-	if err != nil {
-		return
-	}
-	var (
-		v   Video
-		dur uint64
-	)
-	for r.Next() {
-		err = r.Scan(&v.SHA1, &v.FileType, &dur)
-		if err != nil {
-			return
-		}
-		v.Duration = time.Duration(dur) * time.Second
-		videos = append(videos, v)
-	}
-	err = r.Err()
-	return
-}
-
 // Delete images not used in any posts
 func deleteUnusedImages() (err error) {
 	r, err := db.Query(
 		context.Background(),
 		`delete from images as i
-		where
-			(
-				(
-					select count(*)
-					from posts p
-					where p.sha1 = i.sha1
-				)
-				+ (
-					select count(*)
-					from image_tokens it
-					where it.sha1 = i.sha1
-				)
-			) = 0
-		returning i.SHA1, i.file_type, i.thumb_type`,
+		where not exists (
+			select
+			from posts p
+			where p.image = i.sha1
+		)
+		returning i.sha1, i.file_type, i.thumb_type`,
 	)
 	if err != nil {
 		return
 	}
 	var (
-		sha1                string
-		fileType, thumbType uint8
+		sha1                common.SHA1Hash
+		fileType, thumbType common.FileType
 	)
 	for r.Next() {
 		err = r.Scan(&sha1, &fileType, &thumbType)

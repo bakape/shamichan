@@ -70,11 +70,15 @@ func AssertBufferEquals(t *testing.T, buf, std []byte) {
 
 // GenString produces a random base64 string of passed length
 func GenString(len int) string {
-	buf := make([]byte, len)
-	for i := 0; i < len; i++ {
-		buf[i] = byte(rand.Intn(256))
-	}
+	buf := GenBuf(base64.RawURLEncoding.DecodedLen(len + 1))
 	return base64.RawURLEncoding.EncodeToString(buf)[:len]
+}
+
+// Produces a random buffer of passed length
+func GenBuf(len int) []byte {
+	buf := make([]byte, len)
+	rand.Read(buf)
+	return buf
 }
 
 // ReadSample reads a sample file of passed file name
