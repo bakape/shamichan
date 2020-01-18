@@ -199,8 +199,8 @@ type ImageCommon struct {
 	ThumbHeight uint16   `json:"thumb_height" db:"thumb_height,string"`
 	Duration    uint32   `json:"duration"`
 	Size        uint64   `json:"size"`
-	Artist      string   `json:"artist"`
-	Title       string   `json:"title"`
+	Artist      *string  `json:"artist"`
+	Title       *string  `json:"title"`
 	MD5         MD5Hash  `json:"md5"`
 	SHA1        SHA1Hash `json:"sha1"`
 }

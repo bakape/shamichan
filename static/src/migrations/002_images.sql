@@ -41,6 +41,6 @@ create table images (
 	size bigint not null check (size > 0),
 	duration int not null check (duration >= 0),
 
-	title varchar(200) not null,
-	artist varchar(100) not null
+	title varchar(200),
+	artist varchar(100)
 );

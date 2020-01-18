@@ -11,7 +11,16 @@ import (
 // Common params for both post and thread insertion
 type PostInsertParamsCommon struct {
 	// Client authorization key
-	AuthKey auth.AuthKey `db:"auth_key"`
+	AuthKey *auth.AuthKey `db:"auth_key"`
+
+	// Name set by poster
+	Name *string
+
+	// Tripcode
+	Trip *string
+
+	// Country flag to attach to poster
+	Flag *string
 }
 
 // For inserting a thread reply

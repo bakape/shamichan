@@ -25,12 +25,6 @@ func AllocateImage(
 		Table: "images",
 		Data:  img,
 	})
-	// for i := range args {
-	// 	_, ok := args[i].(uint16)
-	// 	if ok {
-	// 		args[i] = fmt.Sprint(args[i])
-	// 	}
-	// }
 	_, err = tx.Exec(ctx, q, args...)
 	if err != nil {
 		return

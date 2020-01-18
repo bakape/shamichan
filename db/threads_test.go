@@ -6,20 +6,22 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/test"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 )
 
 // Insert sample thread and return its ID
-func insertSampleThread(t *testing.T) (id uint64) {
+func insertSampleThread(t *testing.T) (id uint64, authKey auth.AuthKey) {
 	t.Helper()
 
+	authKey = genToken(t)
 	id, err := InsertThread(context.Background(), ThreadInsertParams{
 		Subject: "test",
 		Tags:    []string{"animu", "mango"},
 		PostInsertParamsCommon: PostInsertParamsCommon{
-			AuthKey: genToken(t),
+			AuthKey: &authKey,
 		},
 	})
 	if err != nil {
@@ -32,7 +34,7 @@ func insertSampleThread(t *testing.T) (id uint64) {
 }
 
 func TestInsertThread(t *testing.T) {
-	id := insertSampleThread(t)
+	id, _ := insertSampleThread(t)
 
 	exists, err := ThreadExists(context.Background(), id)
 	if err != nil {
@@ -60,7 +62,7 @@ func TestGetFeedData(t *testing.T) {
 	)
 
 	for i := range threads {
-		threads[i] = insertSampleThread(t)
+		threads[i], _ = insertSampleThread(t)
 		_, err = db.Exec(
 			ctx,
 			`update posts
@@ -77,11 +79,12 @@ func TestGetFeedData(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		authKey := genToken(t)
 		err = InTransaction(ctx, func(tx pgx.Tx) (err error) {
 			replies[i], err = InsertPost(ctx, tx, ReplyInsertParams{
 				Thread: threads[i],
 				PostInsertParamsCommon: PostInsertParamsCommon{
-					AuthKey: genToken(t),
+					AuthKey: &authKey,
 				},
 			})
 			return

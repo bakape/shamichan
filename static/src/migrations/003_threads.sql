@@ -27,8 +27,13 @@ create table posts (
 	page bigint check (page >= 0),
 
 	created_on timestamptz_auto_now,
-	sage bool not null default false,
 	open bool not null default true,
+
+	sage bool not null default false,
+	name varchar(100),
+	trip varchar(100),
+	flag char(2),
+
 	auth_key auth_key,
 
 	body jsonb,
