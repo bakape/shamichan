@@ -145,20 +145,23 @@ impl Feed {
 
 	// Find last 5 posts added to thread
 	fn find_last_5(recent_posts: &HashMap<u64, u64>) -> Last5Posts {
-		let mut arr = [0u64; 6];
+		let mut l5 = Last5Posts::default();
 		for id in recent_posts.keys() {
-			arr[5] = *id;
-			arr.sort_unstable_by(|a, b| a.partial_cmp(b).unwrap().reverse());
-			arr[5] = 0;
+			if match l5.peek() {
+				Some(min) => {
+					if min < id {
+						l5.pop();
+						true
+					} else {
+						false
+					}
+				}
+				None => true,
+			} {
+				unsafe { l5.push_unchecked(*id) };
+			}
 		}
-		let mut last = Last5Posts::default();
-		for id in arr[..arr.iter().position(|x| *x == 0).unwrap_or(5)]
-			.iter()
-			.cloned()
-		{
-			unsafe { last.push_unchecked(id) };
-		}
-		last
+		l5
 	}
 
 	// Return, if post should be included in global thread index
