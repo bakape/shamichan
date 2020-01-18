@@ -248,7 +248,7 @@ impl Decoder {
 
                     check_len!(4);
                     let len = i32::from_le_bytes({
-                        let mut arr: [u8; 4] = Default::default();
+                        let mut arr: [u8; 4] = unsafe { std::mem::zeroed() };
                         arr.copy_from_slice(&r[..4]);
                         arr
                     }) as usize;
