@@ -100,12 +100,6 @@ pub enum Command {
 		end: u64,
 	},
 
-	// Don't ask
-	Pyu(u64),
-
-	// Don't ask
-	Pcount(u64),
-
 	// Self ban for N hours
 	AutoBahn(u16),
 }
