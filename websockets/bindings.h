@@ -42,3 +42,8 @@ typedef struct {
 
 // Propagate select configuration changes to Rust side
 void ws_set_config(WSConfig);
+
+// Register image insertion into an open post.
+//
+// image: JSON-encoded inserted image data
+char* ws_insert_image(uint64_t thread, uint64_t post, WSBuffer image);

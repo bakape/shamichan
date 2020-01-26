@@ -210,14 +210,13 @@ try:
 	// Zero copy string passing
 	ip := c.ip.String()
 	h := (*reflect.StringHeader)(unsafe.Pointer(&ip))
-	errC := C.ws_register_client(C.uint64_t(id), C.WSBuffer{
-		(*C.uint8_t)(unsafe.Pointer(h.Data)),
-		C.size_t(h.Len),
-	})
-	if errC != nil {
-		err = errors.New(C.GoString(errC))
-	}
-	C.free(unsafe.Pointer(errC))
+	err = fromCError(C.ws_register_client(
+		C.uint64_t(id),
+		C.WSBuffer{
+			(*C.uint8_t)(unsafe.Pointer(h.Data)),
+			C.size_t(h.Len),
+		},
+	))
 	return
 }
 

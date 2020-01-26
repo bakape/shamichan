@@ -50,6 +50,9 @@ pub enum MessageType {
     // Acknowledgment of thread creation. Response to InsertPost from server.
     InsertPostAck,
 
+    // Image inserted into an open post
+    InsertImage,
+
     // Submit captcha or pass result captcha authentication
     Captcha,
 
@@ -149,10 +152,10 @@ impl Encoder {
     }
 
     // Write message to underlying writer
-    pub fn write_message<T: Serialize>(
+    pub fn write_message(
         &mut self,
         t: MessageType,
-        payload: &T,
+        payload: &impl Serialize,
     ) -> io::Result<()> {
         self.started = true;
         self.w.write_all(&[HEADER, t as u8])?;

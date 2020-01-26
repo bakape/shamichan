@@ -63,7 +63,7 @@ macro_rules! gen_global_rwlock {
 
 // Map of K to sets of V
 #[derive(Clone)]
-pub struct SetMap<K, V>(HashMap<K, HashSet<V>>)
+pub struct SetMap<K, V>(pub HashMap<K, HashSet<V>>)
 where
 	K: Hash + Eq + Clone,
 	V: Hash + Eq + Clone;
@@ -123,16 +123,6 @@ where
 
 	pub fn contains_key(&self, k: &K) -> bool {
 		self.0.contains_key(k)
-	}
-
-	// Drain map and call f on each key-value pair
-	pub fn drain<F>(&mut self, mut f: F)
-	where
-		F: FnMut(K, HashSet<V>),
-	{
-		for (k, v) in self.0.drain() {
-			f(k, v);
-		}
 	}
 
 	pub fn keys(&self) -> std::collections::hash_map::Keys<K, HashSet<V>> {

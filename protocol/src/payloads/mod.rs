@@ -1,5 +1,6 @@
 pub mod post_body;
 
+use hex_buffer_serde::{Hex, HexForm};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -68,14 +69,14 @@ impl Default for AuthKey {
 	}
 }
 
-// Define a public payload struct will public fields
+// Define a public payload struct with public fields
 macro_rules! payload {
     ($name:ident {$($field:ident: $t:ty,)*}) => {
         #[derive(Serialize, Deserialize, Default, Debug, Clone)]
         pub struct $name {
             $(pub $field: $t),*
         }
-    }
+	}
 }
 
 // Authenticate with the server
@@ -119,10 +120,107 @@ payload! { FeedData {
 	// Posts created in the last 16 minutes (open post CD + 1 minute to ensure
 	// there is no overlap due to latency).
 	// <post_id: post_creation_unix_timestamp>
-	recent_posts: HashMap<u64,u64>,
+	recent_posts: HashMap<u64, u64>,
 
 	// Posts currently open. Mapped by ID.
 	open_posts: HashMap<u64, OpenPost>,
 
 	// TODO: Applied moderation
+}}
+
+// Supported file types
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum FileType {
+	JPEG,
+	PNG,
+	GIF,
+	WEBM,
+	PDF,
+	SVG,
+	MP4,
+	MP3,
+	OGG,
+	ZIP,
+
+	#[serde(rename = "7Z")]
+	SevenZip,
+
+	TGZ,
+	TXZ,
+	FLAC,
+
+	#[serde(rename = "NO_FILE")]
+	NoFile,
+
+	TXT,
+	WEBP,
+	RAR,
+	CBZ,
+	CBR,
+}
+
+impl Default for FileType {
+	fn default() -> Self {
+		FileType::NoFile
+	}
+}
+
+// Image data common to both binary and JSON representations
+payload! { ImageCommon {
+	audio: bool,
+	video: bool,
+
+	file_type: FileType,
+	thumb_type: FileType,
+
+	width: u16,
+	height: u16,
+	thumb_width: u16,
+	thumb_height: u16,
+
+	duration: u32,
+	size: u64,
+
+	artist: Option<String>,
+	title: Option<String>,
+
+	name: String,
+	spoilered: bool,
+}}
+
+// Image data JSON representation
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct ImageJSON {
+	#[serde(flatten)]
+	pub common: ImageCommon,
+
+	#[serde(with = "HexForm::<[u8; 20]>")]
+	pub sha1: [u8; 20],
+
+	#[serde(with = "HexForm::<[u8; 16]>")]
+	pub md5: [u8; 16],
+}
+
+impl Into<Image> for ImageJSON {
+	fn into(self) -> Image {
+		Image {
+			common: self.common,
+			sha1: self.sha1,
+			md5: self.md5,
+		}
+	}
+}
+
+// Image data inserted into an open post
+payload! { Image {
+	common: ImageCommon,
+	sha1: [u8; 20],
+	md5: [u8; 16],
+}}
+
+// Insert image into an open post
+payload! { InsertImage {
+	post: u64,
+	image: Image,
 }}

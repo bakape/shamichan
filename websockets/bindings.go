@@ -125,7 +125,7 @@ func ws_insert_thread(
 			Subject: C.GoString(subject),
 			Tags:    _tags,
 			PostInsertParamsCommon: db.PostInsertParamsCommon{
-				*(*auth.AuthKey)(unsafe.Pointer(auth_key)),
+				AuthKey: (*auth.AuthKey)(unsafe.Pointer(auth_key)),
 			},
 		},
 	)
@@ -158,4 +158,24 @@ func toWSBuffer(buf []byte) C.WSBuffer {
 		(*C.uint8_t)(unsafe.Pointer(h.Data)),
 		C.size_t(h.Len),
 	}
+}
+
+// Register image insertion into an open post.
+//
+// image: JSON-encoded inserted image data
+func InsertImage(thread, post uint64, image []byte) error {
+	return fromCError(C.ws_insert_image(
+		C.uint64_t(thread),
+		C.uint64_t(post),
+		toWSBuffer(image),
+	))
+}
+
+// Cast any owned C error to Go and free it
+func fromCError(errC *C.char) (err error)  {
+	if errC != nil {
+		err = errors.New(C.GoString(errC))
+	}
+	C.free(unsafe.Pointer(errC))
+	return
 }

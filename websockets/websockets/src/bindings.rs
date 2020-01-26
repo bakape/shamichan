@@ -44,8 +44,7 @@ impl From<Arc<Vec<u8>>> for WSRcBuffer {
 // Register a websocket client with a unique ID and return any error
 #[no_mangle]
 extern "C" fn ws_register_client(id: u64, ip: WSBuffer) -> *mut c_char {
-	// Wrapper to enable usage of ?
-	fn wrapped(id: u64, ip: WSBuffer) -> Result<(), String> {
+	cast_to_c_error(|| -> Result<(), String> {
 		super::registry::add_client(
 			id,
 			std::str::from_utf8(ip.as_ref())
@@ -54,11 +53,19 @@ extern "C" fn ws_register_client(id: u64, ip: WSBuffer) -> *mut c_char {
 				.map_err(|err| format!("{}", err))?,
 		);
 		Ok(())
-	}
+	})
+}
 
-	match wrapped(id, ip) {
+// Cast error to owned C error and return it, if any
+fn cast_to_c_error<E, F>(f: F) -> *mut c_char
+where
+	E: std::fmt::Display,
+	F: FnOnce() -> Result<(), E>,
+{
+	match f() {
 		Ok(_) => null_mut(),
-		Err(err) => {
+		Err(src) => {
+			let err = src.to_string();
 			let size = err.len();
 			if size == 0 {
 				null_mut()
@@ -198,9 +205,24 @@ extern "C" fn ws_init(feed_data: WSBuffer) {
 	}
 }
 
-// Request an async fetch for feed data
-pub fn get_feed_data(id: u64) {
-	unsafe { ws_get_feed_data(id) };
+// Register image insertion into an open post.
+//
+// image: JSON-encoded inserted image data
+#[no_mangle]
+extern "C" fn ws_insert_image(
+	thread: u64,
+	post: u64,
+	image: WSBuffer,
+) -> *mut c_char {
+	cast_to_c_error(|| -> DynResult {
+		pulsar::insert_image(
+			thread,
+			post,
+			serde_json::from_slice::<protocol::ImageJSON>(image.as_ref())?
+				.into(),
+		)?;
+		Ok(())
+	})
 }
 
 // Linked from Go
@@ -209,7 +231,6 @@ extern "C" {
 	fn ws_close_client(clientID: u64, err: *const c_char);
 	fn ws_thread_exists(id: u64, exists: *mut bool) -> *mut c_char;
 	fn ws_log_error(err: *const c_char);
-	fn ws_get_feed_data(id: u64);
 	fn ws_insert_thread(
 		subject: *const c_char,
 		tags: *const *const c_char,
