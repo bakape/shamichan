@@ -2,6 +2,8 @@ package assets
 
 import (
 	"bytes"
+	"encoding/hex"
+	"fmt"
 	"os"
 	"testing"
 
@@ -32,19 +34,42 @@ func resetDirs(t *testing.T) {
 	}
 }
 
+func genID() (id [20]byte, idHex string) {
+	copy(id[:], test.GenBuf(20))
+	idHex = hex.EncodeToString(id[:])
+	return
+}
+
 func TestGetFilePaths(t *testing.T) {
 	t.Parallel()
 
-	webm := GetFilePaths("jingai", common.WEBM, common.PNG)
-	jpeg := GetFilePaths("modoki", common.JPEG, common.JPEG)
+	id, idHex := genID()
+	webm := GetFilePaths(id, common.WEBM, common.PNG)
+	jpeg := GetFilePaths(id, common.JPEG, common.JPEG)
 
 	cases := [...]struct {
 		name, got, expected string
 	}{
-		{"not JPEG src", webm[0], "images/src/jingai.webm"},
-		{"not JPEG thumb", webm[1], "images/thumb/jingai.png"},
-		{"JPEG src", jpeg[0], "images/src/modoki.jpg"},
-		{"JPEG thumb", jpeg[1], "images/thumb/modoki.jpg"},
+		{
+			"not JPEG src",
+			webm[0],
+			"images/src/%s.webm",
+		},
+		{
+			"not JPEG thumb",
+			webm[1],
+			"images/thumb/%s.png",
+		},
+		{
+			"JPEG src",
+			jpeg[0],
+			"images/src/%s.jpg",
+		},
+		{
+			"JPEG thumb",
+			jpeg[1],
+			"images/thumb/%s.jpg",
+		},
 	}
 
 	for i := range cases {
@@ -52,9 +77,7 @@ func TestGetFilePaths(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
 
-			if c.got != c.expected {
-				test.LogUnexpected(t, c.expected, c.got)
-			}
+			test.AssertEquals(t, c.got, fmt.Sprintf(c.expected, idHex))
 		})
 	}
 }
@@ -64,7 +87,7 @@ func TestDeleteAssets(t *testing.T) {
 
 	cases := [...]struct {
 		testName, name      string
-		fileType, thumbType uint8
+		fileType, thumbType common.FileType
 	}{
 		{"JPEG", "foo", common.JPEG, common.JPEG},
 		{"PNG", "bar", common.PNG, common.PNG},
@@ -75,8 +98,10 @@ func TestDeleteAssets(t *testing.T) {
 		t.Run(c.testName, func(t *testing.T) {
 			t.Parallel()
 
+			id, _ := genID()
+
 			// Create files
-			for _, path := range GetFilePaths(c.name, c.fileType, c.thumbType) {
+			for _, path := range GetFilePaths(id, c.fileType, c.thumbType) {
 				file, err := os.Create(path)
 				if err != nil {
 					t.Fatal(err)
@@ -87,10 +112,11 @@ func TestDeleteAssets(t *testing.T) {
 			}
 
 			// Delete them and check, if deleted
-			if err := Delete(c.name, c.fileType, c.thumbType); err != nil {
+			err := Delete(id, c.fileType, c.thumbType)
+			if err != nil {
 				t.Fatal(err)
 			}
-			for _, path := range GetFilePaths(c.name, c.fileType, c.thumbType) {
+			for _, path := range GetFilePaths(id, c.fileType, c.thumbType) {
 				_, err := os.Stat(path)
 				if !os.IsNotExist(err) {
 					test.UnexpectedError(t, err)
@@ -103,7 +129,10 @@ func TestDeleteAssets(t *testing.T) {
 func TestDeleteMissingAssets(t *testing.T) {
 	resetDirs(t)
 
-	if err := Delete("akarin", common.PNG, common.PNG); err != nil {
+	id, _ := genID()
+
+	err := Delete(id, common.PNG, common.PNG)
+	if err != nil {
 		t.Fatal(err)
 	}
 }
@@ -112,22 +141,27 @@ func TestWriteAssets(t *testing.T) {
 	resetDirs(t)
 
 	const (
-		name      = "foo"
 		fileType  = common.JPEG
 		thumbType = common.JPEG
 	)
+	id, _ := genID()
 	std := [...][]byte{
 		{1, 2, 3},
 		{4, 5, 6},
 	}
 
-	err := Write(name, fileType, thumbType, bytes.NewReader(std[0]),
-		bytes.NewReader(std[1]))
+	err := Write(
+		id,
+		fileType,
+		thumbType,
+		bytes.NewReader(std[0]),
+		bytes.NewReader(std[1]),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	for i, path := range GetFilePaths(name, fileType, thumbType) {
+	for i, path := range GetFilePaths(id, fileType, thumbType) {
 		test.AssertFileEquals(t, path, std[i])
 	}
 }
@@ -137,14 +171,14 @@ func TestWriteAssetsNotThumb(t *testing.T) {
 	resetDirs(t)
 
 	const (
-		name      = "foo"
 		fileType  = common.MP3
 		thumbType = common.NoFile
 	)
+	id, _ := genID()
 	std := []byte{1, 2, 3}
 
 	err := Write(
-		name,
+		id,
 		fileType,
 		thumbType,
 		bytes.NewReader(std),
@@ -154,5 +188,5 @@ func TestWriteAssetsNotThumb(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	test.AssertFileEquals(t, GetFilePaths(name, fileType, thumbType)[0], std)
+	test.AssertFileEquals(t, GetFilePaths(id, fileType, thumbType)[0], std)
 }

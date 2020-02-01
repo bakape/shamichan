@@ -25,7 +25,7 @@ func GetFilePaths(
 	paths[1] = fmt.Sprintf(
 		"/images/thumb/%s.%s",
 		SHA1,
-		common.Extensions[fileType],
+		common.Extensions[thumbType],
 	)
 	for i := range paths {
 		paths[i] = filepath.FromSlash(paths[i][1:])
