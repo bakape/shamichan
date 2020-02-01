@@ -23,6 +23,8 @@ github.com/bakape/recache v0.0.0-20190524102257-67e46453405b h1:p48akofs5bGkuKKX
 github.com/bakape/recache v0.0.0-20190524102257-67e46453405b/go.mod h1:6Q0DtB9cTKzWTltqduJPVoleZuUBQRND6poXGv5w4Lw=
 github.com/bakape/thumbnailer/v2 v2.5.4 h1:aLiN/af5qi/p+5ghSSlmSsfTVyDaP2EFZG5kWYffEQs=
 github.com/bakape/thumbnailer/v2 v2.5.4/go.mod h1:MUwB3tkHBRRCVmwCsd0a+vP7RNMMuHSiP4lSaA6awUE=
+github.com/bakape/thumbnailer/v2 v2.5.6 h1:VRWe/vC4NeVEUasf87/yqImMJGMTltsFSOrWly/H2UA=
+github.com/bakape/thumbnailer/v2 v2.5.6/go.mod h1:MUwB3tkHBRRCVmwCsd0a+vP7RNMMuHSiP4lSaA6awUE=
 github.com/chai2010/webp v1.1.0 h1:4Ei0/BRroMF9FaXDG2e4OxwFcuW2vcXd+A6tyqTJUQQ=
 github.com/chai2010/webp v1.1.0/go.mod h1:LP12PG5IFmLGHUU26tBiCBKnghxx3toZFwDjOYvd3Ow=
 github.com/cockroachdb/apd v1.1.0 h1:3LFP3629v+1aKXU5Q37mxmRxX/pIu1nijXydLShEq5I=

@@ -25,6 +25,7 @@ func TestUpload(t *testing.T) {
 	var (
 		invalidTitle  = "ti�"
 		invalidArtist = "art\x01�"
+		title         = "Puella Magi Madoka Magica Part III - Rebellion"
 	)
 
 	cases := [...]struct {
@@ -186,7 +187,6 @@ func TestUpload(t *testing.T) {
 			downloadName: "sample",
 			code:         200,
 			img: common.ImageCommon{
-				Video:       true,
 				FileType:    common.JPEG,
 				ThumbType:   common.WEBP,
 				Width:       0x043c,
@@ -410,6 +410,100 @@ func TestUpload(t *testing.T) {
 				ThumbType: common.NoFile,
 				Duration:  0x05,
 				Size:      0xafcc,
+			},
+		},
+		{
+			name:         "PNG",
+			fileName:     "sample.png",
+			downloadName: "sample",
+			code:         200,
+			img: common.ImageCommon{
+				FileType:    common.PNG,
+				ThumbType:   common.WEBP,
+				Width:       0x0500,
+				Height:      0x02d0,
+				ThumbWidth:  0x96,
+				ThumbHeight: 0x54,
+				Size:        0x09af2e,
+			},
+		},
+		{
+			name:         "APNG",
+			fileName:     "sample.apng",
+			downloadName: "sample",
+			code:         200,
+			img: common.ImageCommon{
+				FileType:    common.PNG,
+				ThumbType:   common.WEBP,
+				Width:       0x64,
+				Height:      0x64,
+				ThumbWidth:  0x64,
+				ThumbHeight: 0x64,
+				Size:        0x010017,
+			},
+		},
+		{
+			name:         "GIF",
+			fileName:     "sample.gif",
+			downloadName: "sample",
+			code:         200,
+			img: common.ImageCommon{
+				FileType:    common.GIF,
+				ThumbType:   common.WEBP,
+				Width:       0x0248,
+				Height:      0x02d0,
+				ThumbWidth:  0x79,
+				ThumbHeight: 0x96,
+				Size:        0x0367bb,
+			},
+		},
+		{
+			name:         "too small to thumbnail",
+			fileName:     "too_small.png",
+			downloadName: "too_small",
+			code:         200,
+			img: common.ImageCommon{
+				FileType:    common.PNG,
+				ThumbType:   common.WEBP,
+				Width:       0x79,
+				Height:      0x96,
+				ThumbWidth:  0x79,
+				ThumbHeight: 0x96,
+				Size:        0x5cb2,
+			},
+		},
+		{
+			name:         "WEBM",
+			fileName:     "sample.webm",
+			downloadName: "sample",
+			code:         200,
+			img: common.ImageCommon{
+				Audio:       true,
+				Video:       true,
+				FileType:    common.WEBM,
+				ThumbType:   common.WEBP,
+				Width:       0x0500,
+				Height:      0x02d0,
+				ThumbWidth:  0x96,
+				ThumbHeight: 0x54,
+				Duration:    0x01,
+				Size:        0x026910,
+				Title:       &title,
+			},
+		},
+		{
+			name:         "WEBP",
+			fileName:     "sample.webp",
+			downloadName: "sample",
+			code:         200,
+			img: common.ImageCommon{
+				FileType:    common.WEBP,
+				ThumbType:   common.WEBP,
+				Width:       0x0500,
+				Height:      0x02d0,
+				ThumbWidth:  0x96,
+				ThumbHeight: 0x54,
+				Size:        0x530e,
 			},
 		},
 	}
