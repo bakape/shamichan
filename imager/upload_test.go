@@ -506,6 +506,17 @@ func TestUpload(t *testing.T) {
 				Size:        0x530e,
 			},
 		},
+		{
+			name:         "TXT",
+			fileName:     "sample.txt",
+			downloadName: "sample",
+			code:         200,
+			img: common.ImageCommon{
+				FileType:  common.TXT,
+				ThumbType: common.NoFile,
+				Size:      0x11,
+			},
+		},
 	}
 
 	for i := range cases {
