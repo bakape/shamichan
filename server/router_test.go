@@ -56,19 +56,6 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestAllBoardRedirect(t *testing.T) {
-	t.Parallel()
-
-	rec, req := newPair("/")
-	router.ServeHTTP(rec, req)
-	assertCode(t, rec, 301)
-
-	loc := rec.Header().Get("Location")
-	if loc != "/all/" {
-		t.Fatalf("unexpected redirect result: %s", loc)
-	}
-}
-
 func TestPanicHandler(t *testing.T) {
 	r := httptreemux.NewContextMux()
 	h := func(_ http.ResponseWriter, _ *http.Request) {
