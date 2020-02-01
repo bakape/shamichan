@@ -44,7 +44,9 @@ func requestThumbnailing(req thumbnailingRequest) <-chan error {
 func init() {
 	for _, ch := range [...]<-chan jobRequest{_scheduleJob, _scheduleSmallJob} {
 		go func(queue <-chan jobRequest) {
+			// Prevents needless spawning of more threads by the Go runtime
 			runtime.LockOSThread()
+
 			for req := range queue {
 				// Check, if client still there, before and after thumbnailing
 				select {
@@ -57,7 +59,7 @@ func init() {
 				}
 
 				// Always deallocate file in the same spot to not cause
-				// dataraces
+				// data races
 				req.file.Close()
 			}
 		}(ch)
