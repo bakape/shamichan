@@ -22,6 +22,11 @@ import (
 func TestUpload(t *testing.T) {
 	t.Parallel()
 
+	var (
+		invalidTitle  = "ti�"
+		invalidArtist = "art\x01�"
+	)
+
 	cases := [...]struct {
 		name, fileName, downloadName string
 		img                          common.ImageCommon
@@ -203,6 +208,21 @@ func TestUpload(t *testing.T) {
 			code:     400,
 			err:      "invalid input: invalid image: image too wide\n",
 		},
+		{
+			name:         "MP3 with invalid UTF-8 in meta",
+			fileName:     "invalid_utf8.mp3",
+			downloadName: "invalid_utf8",
+			code:         200,
+			img: common.ImageCommon{
+				Audio:     true,
+				FileType:  common.MP3,
+				ThumbType: common.NoFile,
+				Duration:  1,
+				Size:      0x7c89,
+				Title:     &invalidTitle,
+				Artist:    &invalidArtist,
+			},
+		},
 	}
 
 	for i := range cases {
@@ -255,8 +275,8 @@ func TestUpload(t *testing.T) {
 				return
 			} else if rec.Code != 200 {
 				t.Fatalf("failed thumbnailing: %s", rec.Body.String())
+				test.AssertEquals(t, rec.Code, c.code)
 			}
-			test.AssertEquals(t, rec.Code, c.code)
 
 			var img common.ImageCommon
 			err = db.InTransaction(context.Background(), func(tx pgx.Tx) (err error) {

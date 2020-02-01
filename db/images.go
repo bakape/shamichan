@@ -114,8 +114,8 @@ func GetImage(ctx context.Context, tx pgx.Tx, id common.SHA1Hash) (
 			&img.Size,
 			&img.Duration,
 
-			&img.Artist,
 			&img.Title,
+			&img.Artist,
 		)
 	if err != nil {
 		return
