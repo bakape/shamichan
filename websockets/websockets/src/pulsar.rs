@@ -646,7 +646,7 @@ impl Pulsar {
 	}
 }
 
-struct ImageInsertionReq {
+pub struct ImageInsertionReq {
 	thread: u64,
 	post: u64,
 	img: Image,
