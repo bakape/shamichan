@@ -39,6 +39,7 @@ Then, install [Docker](https://www.docker.com/) and
 docker-compose build
 docker-compose up -d
 ```
+Grab a coffee. This will take a while.
 
 For more information refer to the [Docker Compose docs](https://docs.docker.com/compose/reference/overview/).
 
@@ -89,6 +90,7 @@ compiled with:
     * libmp3lame
 * OpenCV >= 2
 * libgeoip
+* OpenSSL
 * git
 
 NB: Ubuntu patches to ffmpeg on some Ubuntu versions <19.10 break image processing.

@@ -18,19 +18,61 @@ RUN apt-get install -y \
 	libwebp-dev \
 	libopencv-dev \
 	libgeoip-dev \
-	git lsb-release wget curl netcat postgresql-client
+	git lsb-release wget curl netcat postgresql-client \
+	libssl-dev
 RUN apt-get dist-upgrade -y
+
+# Compile newer FFmpeg and deps
+RUN echo deb-src \
+	http://ftp.debian.org/debian/ \
+	stable main contrib non-free \
+	>> /etc/apt/sources.list
+RUN echo deb-src \
+	http://ftp.debian.org/debian/ \
+	stable-updates main contrib non-free \
+	>> /etc/apt/sources.list
+RUN echo deb-src \
+	http://security.debian.org/debian-security \
+	buster/updates main contrib non-free \
+	>> /etc/apt/sources.list
+RUN apt-get update
+RUN apt-get build-dep -y libwebp ffmpeg
+RUN mkdir /src
+RUN git clone \
+	--branch 1.0.3 \
+	--depth 1 \
+	https://chromium.googlesource.com/webm/libwebp \
+	/src/libwebp
+RUN git clone \
+	--branch release/4.2 \
+	--depth 1 \
+	https://github.com/FFmpeg/FFmpeg.git \
+	/src/FFmpeg
+WORKDIR /src/libwebp
+RUN ./autogen.sh
+RUN ./configure
+RUN make -j $(nproc)
+RUN make install
+WORKDIR /src/FFmpeg
+RUN ./configure
+RUN make -j $(nproc)
+RUN make install
+WORKDIR /meguca
 
 # Install Node.js
 RUN wget -q -O- https://deb.nodesource.com/setup_10.x | bash -
 RUN apt-get install -y nodejs
 
-# Cache dependency downloads, if possible
-COPY go.mod .
-COPY go.sum .
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH=$PATH:/root/.cargo/bin
+
+
+# Cache dependencies, if possible
+RUN cargo install wasm-pack
+COPY go.mod go.sum ./
 RUN go mod download
-COPY package.json .
-COPY package-lock.json .
+COPY package.json package-lock.json ./
 RUN npm install
 
 # Copy and build meguca
