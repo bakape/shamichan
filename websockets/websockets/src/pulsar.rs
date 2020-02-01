@@ -2,7 +2,7 @@ use super::{bindings, registry};
 use protocol::*;
 use rayon::prelude::*;
 use serde::Serialize;
-use std::collections::{hash_map, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::sync::{
 	mpsc::{channel, SendError, Sender},
 	Arc, Mutex,
@@ -59,8 +59,13 @@ pub fn init(feed_data: &[u8]) -> serde_json::Result<()> {
 
 			// Sleep thread to save resources.
 			// Compensate for a possibly long tick.
-			let dur = Duration::from_millis(10) - (Instant::now() - started);
-			if dur.as_millis() > 0 {
+			let elapsed = Instant::now() - started;
+			let mut dur = Duration::from_millis(10);
+			// Duration can not be negative
+			if elapsed < dur {
+				dur -= elapsed;
+			}
+			if dur.as_millis() != 0 {
 				std::thread::sleep(dur);
 			}
 		}
