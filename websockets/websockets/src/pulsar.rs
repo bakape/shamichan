@@ -165,8 +165,6 @@ impl Feed {
 	}
 
 	// Encode and cache feed init message or return cached one.
-	//
-	// Panics, if self.data is None.
 	fn get_init_msg(&mut self) -> std::io::Result<Msg> {
 		match &mut self.common.init_msg_cache {
 			Some(msg) => Ok(msg.clone()),
@@ -188,8 +186,6 @@ impl Feed {
 	}
 
 	// Encode and cache global feed init message part or return cached one.
-	//
-	// Panics, if self.data is None.
 	fn get_global_init_msg_part(&mut self) -> std::io::Result<Msg> {
 		match &mut self.global_init_msg_part {
 			Some(msg) => Ok(msg.clone()),
