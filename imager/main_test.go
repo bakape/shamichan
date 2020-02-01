@@ -52,11 +52,3 @@ func resetDirs(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-
-// How do we assert a thumbnail?
-func assertThumbnail(t *testing.T, thumb []byte) {
-	t.Helper()
-	if thumb != nil && len(thumb) < 100 {
-		t.Fatal("thumbnail too small")
-	}
-}

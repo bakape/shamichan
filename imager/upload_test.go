@@ -151,6 +151,16 @@ func TestUpload(t *testing.T) {
 				Size:      0x39ed,
 			},
 		},
+		{
+			name:         "big file path",
+			fileName:     "testdata.zip",
+			downloadName: "testdata",
+			img: common.ImageCommon{
+				FileType:  common.ZIP,
+				ThumbType: common.NoFile,
+				Size:      0xe64fb9,
+			},
+		},
 	}
 
 	for i := range cases {
