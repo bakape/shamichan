@@ -185,7 +185,7 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (
 	return
 }
 
-func (req insertionRequest) Validate() (err error) {
+func (req *insertionRequest) Validate() (err error) {
 	errStr := func() string {
 		if len(req.Name) > 200 {
 			return "image name too long"

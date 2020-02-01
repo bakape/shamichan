@@ -1,224 +1,233 @@
 package imager
 
-// func newMultiWriter() (*bytes.Buffer, *multipart.Writer) {
-// 	body := new(bytes.Buffer)
-// 	writer := multipart.NewWriter(body)
-// 	return body, writer
-// }
+import (
+	"bytes"
+	"context"
+	"crypto/md5"
+	"crypto/sha1"
+	"encoding/json"
+	"io"
+	"mime/multipart"
+	"net/http/httptest"
+	"strconv"
+	"testing"
 
-// func newRequest(
-// 	t *testing.T,
-// 	body io.Reader,
-// 	w *multipart.Writer,
-// ) *http.Request {
-// 	t.Helper()
+	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/test/test_db"
+	"github.com/jackc/pgx/v4"
+)
 
-// 	req := httptest.NewRequest("PUT", "/", body)
-// 	if err := w.Close(); err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	req.Header.Set("Content-Type", w.FormDataContentType())
-// 	return req
-// }
+func TestUpload(t *testing.T) {
+	t.Parallel()
 
-// func setHeaders(req *http.Request, headers map[string]string) {
-// 	for key, val := range headers {
-// 		req.Header.Set(key, val)
-// 	}
-// }
+	cases := [...]struct {
+		name, fileName, downloadName string
+		img                          common.ImageCommon
+	}{
+		{
+			name:         "MP3 no cover",
+			fileName:     "sample.mp3",
+			downloadName: "sample",
+			img: common.ImageCommon{
+				Audio:     true,
+				FileType:  common.MP3,
+				ThumbType: common.NoFile,
+				Duration:  1,
+				Size:      0x782c,
+			},
+		},
+		{
+			name:         "already processed file",
+			fileName:     "sample.mp3",
+			downloadName: "sample",
+			img: common.ImageCommon{
+				Audio:     true,
+				FileType:  common.MP3,
+				ThumbType: common.NoFile,
+				Duration:  1,
+				Size:      0x782c,
+			},
+		},
+		{
+			name:         "MP3 with cover",
+			fileName:     "with_cover.mp3",
+			downloadName: "with_cover",
+			img: common.ImageCommon{
+				Audio:       true,
+				Video:       true,
+				FileType:    common.MP3,
+				ThumbType:   common.WEBP,
+				Duration:    1,
+				Size:        0x0a8b82,
+				Width:       0x0500,
+				Height:      0x02d0,
+				ThumbWidth:  0x96,
+				ThumbHeight: 0x54,
+			},
+		},
+		{
+			name:         "ZIP",
+			fileName:     "sample.zip",
+			downloadName: "sample",
+			img: common.ImageCommon{
+				FileType:  common.ZIP,
+				ThumbType: common.NoFile,
+				Size:      0x096941,
+			},
+		},
+		{
+			name:         "CBZ",
+			fileName:     "manga.zip",
+			downloadName: "manga",
+			img: common.ImageCommon{
+				FileType:    common.CBZ,
+				ThumbType:   common.WEBP,
+				Size:        0x0968a9,
+				ThumbWidth:  0x96,
+				ThumbHeight: 0x54,
+			},
+		},
+		{
+			name:         "RAR",
+			fileName:     "sample.rar",
+			downloadName: "sample",
+			img: common.ImageCommon{
+				FileType:  common.RAR,
+				ThumbType: common.NoFile,
+				Size:      0x096bb2,
+			},
+		},
+		{
+			name:         "CBR",
+			fileName:     "manga.rar",
+			downloadName: "manga",
+			img: common.ImageCommon{
+				FileType:    common.CBR,
+				ThumbType:   common.WEBP,
+				Size:        0x096b18,
+				ThumbWidth:  0x96,
+				ThumbHeight: 0x54,
+			},
+		},
+		{
+			name:         "7Z",
+			fileName:     "sample.7z",
+			downloadName: "sample",
+			img: common.ImageCommon{
+				FileType:  common.SevenZip,
+				ThumbType: common.NoFile,
+				Size:      0x0181,
+			},
+		},
+		{
+			name:         "tar.gz",
+			fileName:     "sample.tar.gz",
+			downloadName: "sample",
+			img: common.ImageCommon{
+				FileType:  common.TGZ,
+				ThumbType: common.NoFile,
+				Size:      0x096a28,
+			},
+		},
+		{
+			name:         "tar.xz",
+			fileName:     "sample.tar.xz",
+			downloadName: "sample",
+			img: common.ImageCommon{
+				FileType:  common.TXZ,
+				ThumbType: common.NoFile,
+				Size:      0x096b6c,
+			},
+		},
+		{
+			name:         "PDF",
+			fileName:     "sample.pdf",
+			downloadName: "sample",
+			img: common.ImageCommon{
+				FileType:  common.PDF,
+				ThumbType: common.NoFile,
+				Size:      0x39ed,
+			},
+		},
+	}
 
-// func assertCode(t *testing.T, res, std int) {
-// 	t.Helper()
-// 	if res != std {
-// 		t.Errorf("unexpected status code: %d : %d", std, res)
-// 	}
-// }
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
 
-// func newJPEGRequest(t *testing.T) *http.Request {
-// 	t.Helper()
+			thread, user := test_db.InsertSampleThread(t)
 
-// 	b, w := newMultiWriter()
+			body := new(bytes.Buffer)
+			w := multipart.NewWriter(body)
+			fw, err := w.CreateFormFile("image", c.fileName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			f := test.OpenSample(t, c.fileName)
+			_, err = io.Copy(fw, f)
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = w.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 	file, err := w.CreateFormFile("image", assets.StdJPEG.Name)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	_, err = file.Write(test.ReadSample(t, assets.StdJPEG.Name))
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+			var sha1Hash [20]byte
+			_, err = hashFile(sha1Hash[:], f, sha1.New())
+			if err != nil {
+				t.Fatal(err)
+			}
+			var md5Hash [16]byte
+			_, err = hashFile(md5Hash[:], f, md5.New())
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = f.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
 
-// 	req := newRequest(t, b, w)
-// 	req.Header.Set("Content-Length", "300792")
+			req := httptest.NewRequest("POST", "/", body)
+			req.Header.Set("Authorization", "Bearer "+user.String())
+			req.Header.Set("Content-Length", strconv.Itoa(body.Len()))
+			req.Header.Set("Content-Type", w.FormDataContentType())
+			rec := httptest.NewRecorder()
+			NewImageUpload(rec, req)
+			if rec.Code != 200 {
+				t.Fatalf("failed thumbnailing: %s", rec.Body.String())
+			}
 
-// 	return req
-// }
+			var img common.ImageCommon
+			err = db.InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
+				img, err = db.GetImage(context.Background(), tx, sha1Hash)
+				return
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			c.img.SHA1 = sha1Hash
+			c.img.MD5 = md5Hash
+			test.AssertEquals(t, img, c.img)
 
-// func getImageRecord(t *testing.T, id string) common.ImageCommon {
-// 	t.Helper()
-
-// 	img, err := db.GetImage(id)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// 	return img
-// }
-
-// // Assert image file assets were created with the correct paths
-// func assertFiles(
-// 	t *testing.T,
-// 	src string,
-// 	id common.SHA1Hash,
-// 	fileType, thumbType common.FileType,
-// ) {
-// 	t.Helper()
-
-// 	var (
-// 		paths [3]string
-// 		data  [3][]byte
-// 	)
-// 	paths[0] = filepath.Join("testdata", src)
-// 	destPaths := assets.GetFilePaths(id, fileType, thumbType)
-// 	paths[1], paths[2] = destPaths[0], destPaths[1]
-
-// 	for i := range paths {
-// 		var err error
-// 		data[i], err = ioutil.ReadFile(paths[i])
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 	}
-
-// 	test.AssertBufferEquals(t, data[0], data[1])
-// 	if len(data[1]) < len(data[2]) {
-// 		t.Error("unexpected file size difference")
-// 	}
-// }
-
-// func TestInvalidContentLengthHeader(t *testing.T) {
-// 	b, w := newMultiWriter()
-// 	req := newRequest(t, b, w)
-// 	setHeaders(req, map[string]string{
-// 		"Content-Length": "KAWFEE",
-// 	})
-
-// 	_, err := newImageUpload(req)
-// 	if s := fmt.Sprint(err); !strings.Contains(s, "invalid syntax") {
-// 		test.UnexpectedError(t, err)
-// 	}
-// }
-
-// func TestUploadTooLarge(t *testing.T) {
-// 	conf := config.Get()
-// 	(*conf).MaxSize = 1
-// 	b, w := newMultiWriter()
-// 	req := newRequest(t, b, w)
-// 	req.Header.Set("Content-Length", "1048577")
-
-// 	_, err := newImageUpload(req)
-// 	test.AssertEquals(
-// 		t,
-// 		common.StatusError{
-// 			Err:  errTooLarge,
-// 			Code: 400,
-// 		},
-// 		err,
-// 	)
-// }
-
-// func TestInvalidForm(t *testing.T) {
-// 	b, w := newMultiWriter()
-// 	req := newRequest(t, b, w)
-// 	setHeaders(req, map[string]string{
-// 		"Content-Length": "1024",
-// 		"Content-Type":   "GWEEN TEA",
-// 	})
-
-// 	if _, err := newImageUpload(req); err == nil {
-// 		t.Fatal("expected an error")
-// 	}
-// }
-
-// func TestNewThumbnail(t *testing.T) {
-// 	test_db.ClearTables(t, "images")
-// 	resetDirs(t)
-// 	config.Set(config.Configs{
-// 		Public: config.Public{
-// 			MaxSize: 10,
-// 		},
-// 	})
-
-// 	req := newJPEGRequest(t)
-// 	rec := httptest.NewRecorder()
-// 	NewImageUpload(rec, req)
-// 	assertCode(t, rec.Code, 200)
-
-// 	img := getImageRecord(t, assets.StdJPEG.SHA1)
-// 	test.AssertEquals(t, img, assets.StdJPEG.ImageCommon)
-// 	assertFiles(t, "sample.jpg", assets.StdJPEG.SHA1, common.JPEG, common.WEBP)
-// }
-
-// func TestNoImageUploaded(t *testing.T) {
-// 	b, w := newMultiWriter()
-// 	req := newRequest(t, b, w)
-// 	req.Header.Set("Content-Length", "300792")
-
-// 	_, err := newImageUpload(req)
-// 	test.AssertEquals(
-// 		t,
-// 		common.StatusError{
-// 			Err:  http.ErrMissingFile,
-// 			Code: 400,
-// 		},
-// 		err,
-// 	)
-// }
-
-// func TestThumbNailReuse(t *testing.T) {
-// 	test_db.ClearTables(t, "images")
-// 	resetDirs(t)
-
-// 	for i := 1; i <= 2; i++ {
-// 		req := newJPEGRequest(t)
-// 		_, err := newImageUpload(req)
-// 		if err != nil {
-// 			t.Fatal(err)
-// 		}
-// 	}
-// }
-
-// func TestUploadImageHash(t *testing.T) {
-// 	test_db.ClearTables(t, "images")
-// 	resetDirs(t)
-
-// 	std := assets.StdJPEG
-
-// 	req := newJPEGRequest(t)
-// 	_, err := newImageUpload(req)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	rec := httptest.NewRecorder()
-// 	b := bytes.NewReader([]byte(std.SHA1))
-// 	req = httptest.NewRequest("POST", "/", b)
-// 	UploadImageHash(rec, req)
-// 	if rec.Code != 200 {
-// 		t.Errorf("unexpected status code: %d", rec.Code)
-// 	}
-// }
-
-// func TestUploadImageHashNoHash(t *testing.T) {
-// 	test_db.ClearTables(t, "images")
-
-// 	rec := httptest.NewRecorder()
-// 	b := bytes.NewReader([]byte(assets.StdJPEG.SHA1))
-// 	req := httptest.NewRequest("POST", "/", b)
-// 	UploadImageHash(rec, req)
-// 	if rec.Code != 200 {
-// 		t.Errorf("unexpected status code: %d", rec.Code)
-// 	}
-// 	if s := rec.Body.String(); s != "" {
-// 		t.Errorf("unexpected response body: `%s`", s)
-// 	}
-// }
+			var post struct {
+				Image *common.Image
+			}
+			buf, err := db.GetPost(context.Background(), thread)
+			if err != nil {
+				t.Fatal(err)
+			}
+			err = json.Unmarshal(buf, &post)
+			if err != nil {
+				t.Fatal(err)
+			}
+			test.AssertEquals(t, post.Image, &common.Image{
+				Name:        c.downloadName,
+				ImageCommon: c.img,
+			})
+		})
+	}
+}
