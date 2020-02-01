@@ -4,10 +4,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/bakape/meguca/websockets"
+
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager/assets"
-	. "github.com/bakape/meguca/test"
 )
 
 func TestMain(m *testing.M) {
@@ -15,17 +16,25 @@ func TestMain(m *testing.M) {
 	err := func() (err error) {
 		err = config.Server.Load()
 		if err != nil {
-			panic(err)
+			return
 		}
 		err = db.LoadTestDB()
 		if err != nil {
-			panic(err)
+			return
 		}
 
-		config.Set(config.Configs{})
+		config.Set(config.Configs{
+			Public: config.Public{
+				MaxSize: 20,
+			},
+		})
 		err = assets.CreateDirs()
 		if err != nil {
-			panic(err)
+			return
+		}
+		err = websockets.Init()
+		if err != nil {
+			return
 		}
 
 		code = m.Run()
@@ -49,12 +58,5 @@ func assertThumbnail(t *testing.T, thumb []byte) {
 	t.Helper()
 	if thumb != nil && len(thumb) < 100 {
 		t.Fatal("thumbnail too small")
-	}
-}
-
-func assertDims(t *testing.T, res, std [4]uint16) {
-	t.Helper()
-	if res != std {
-		LogUnexpected(t, std, res)
 	}
 }

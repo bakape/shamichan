@@ -91,6 +91,8 @@ func NeedCaptcha(
 		return
 	}
 
+	// TODO: Check, if globally banned
+
 	// Require a captcha, if none have been solved in 3 hours
 	has, err := SolvedCaptchaRecently(ctx, user)
 	if err != nil {

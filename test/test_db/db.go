@@ -3,38 +3,33 @@
 package test_db
 
 import (
+	"context"
 	"testing"
 
+	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
 )
 
-// func WriteSampleThread(t testing.TB) {
-// 	t.Helper()
+// Insert sample thread and return its ID
+func InsertSampleThread(t *testing.T) (id uint64, authKey auth.AuthKey) {
+	t.Helper()
 
-// 	now := time.Now().Unix()
-// 	thread := db.Thread{
-// 		ID:         1,
-// 		Board:      "a",
-// 		PostCtr:    0,
-// 		ImageCtr:   1,
-// 		UpdateTime: now,
-// 	}
-// 	op := db.Post{
-// 		StandalonePost: common.StandalonePost{
-// 			Post: common.Post{
-// 				ID:   1,
-// 				Time: time.Now().Unix(),
-// 			},
-// 			OP: 1,
-// 		},
-// 	}
-// 	err := db.InTransaction(func(tx *pgx.Tx) error {
-// 		return db.WriteThread(tx, thread, op)
-// 	})
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
+	authKey = genToken(t)
+	id, err := db.InsertThread(context.Background(), db.ThreadInsertParams{
+		Subject: "test",
+		Tags:    []string{"animu", "mango"},
+		PostInsertParamsCommon: db.PostInsertParamsCommon{
+			AuthKey: &authKey,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id == 0 {
+		t.Fatal("id not set")
+	}
+	return
+}
 
 func ClearTables(t testing.TB, tables ...string) {
 	t.Helper()
@@ -42,4 +37,15 @@ func ClearTables(t testing.TB, tables ...string) {
 	if err := db.ClearTables(tables...); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// Generate random auth.AuthKey
+func genToken(t *testing.T) auth.AuthKey {
+	t.Helper()
+
+	b, err := auth.NewAuthKey()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return b
 }

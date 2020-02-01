@@ -14,6 +14,7 @@ import (
 	"github.com/bakape/meguca/imager/assets"
 	mlog "github.com/bakape/meguca/log"
 	"github.com/bakape/meguca/util"
+	"github.com/bakape/meguca/websockets"
 )
 
 // Start parses command line arguments and initializes the server.

@@ -32,7 +32,7 @@ func AllocateImage(
 	return assets.Write(img.SHA1, img.FileType, img.ThumbType, src, thumb)
 }
 
-// Insert and image into and existing open post.
+// Insert and image into and existing open post. Returns image ID and thread.
 //
 // Returns pgx.ErrNoRows, if no open post for the target user was found.
 func InsertImage(
@@ -42,25 +42,25 @@ func InsertImage(
 	img common.SHA1Hash,
 	name string,
 	spoilered bool,
-) (err error) {
-	res, err := tx.Exec(
-		ctx,
-		`update posts
-		set image = $1,
-			image_name = $2,
-			image_spoilered = $3
-		where open and auth_key = $4`,
-		img,
-		name,
-		spoilered,
-		user,
-	)
-	if err != nil {
-		return
-	}
-	if res.RowsAffected() == 0 {
-		return pgx.ErrNoRows
-	}
+) (
+	post, thread uint64,
+	err error,
+) {
+	err = tx.
+		QueryRow(
+			ctx,
+			`update posts
+			set image = $1,
+				image_name = $2,
+				image_spoilered = $3
+			where open and auth_key = $4 and image is null
+			returning id, thread`,
+			img,
+			name,
+			spoilered,
+			user,
+		).
+		Scan(&post, &thread)
 	return
 }
 
@@ -129,11 +129,28 @@ func SpoilerImage(ctx context.Context, id uint64) error {
 	_, err := db.Exec(
 		ctx,
 		`update posts
-		set spoiler = true
-		where id = $1`,
+		set image_spoilered = true
+		where id = $1 and image is not null`,
 		id,
 	)
 	return err
+}
+
+// Return, if user has any post that an image can be inserted into
+func CanInsertImage(ctx context.Context, user auth.AuthKey,
+) (can bool, err error) {
+	err = db.
+		QueryRow(
+			ctx,
+			`select exists (
+				select
+				from posts
+				where open and auth_key = $1 and image is null
+			)`,
+			user,
+		).
+		Scan(&can)
+	return
 }
 
 // Delete images not used in any posts

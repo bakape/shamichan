@@ -69,7 +69,12 @@ func (t AuthKey) MarshalText() ([]byte, error) {
 	return buf, nil
 }
 
-func (t AuthKey) UnmarshalText(buf []byte) error {
+func (t AuthKey) String() string {
+	b, _ := t.MarshalText()
+	return string(b)
+}
+
+func (t *AuthKey) UnmarshalText(buf []byte) error {
 	if len(buf) != 86 {
 		return ErrInvalidToken
 	}

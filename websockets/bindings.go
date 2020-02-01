@@ -8,11 +8,13 @@ package websockets
 import "C"
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"reflect"
 	"unsafe"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
@@ -163,16 +165,20 @@ func toWSBuffer(buf []byte) C.WSBuffer {
 // Register image insertion into an open post.
 //
 // image: JSON-encoded inserted image data
-func InsertImage(thread, post uint64, image []byte) error {
+func InsertImage(thread, post uint64, img common.Image) (err error) {
+	buf, err := json.Marshal(img)
+	if err != nil {
+		return
+	}
 	return fromCError(C.ws_insert_image(
 		C.uint64_t(thread),
 		C.uint64_t(post),
-		toWSBuffer(image),
+		toWSBuffer(buf),
 	))
 }
 
 // Cast any owned C error to Go and free it
-func fromCError(errC *C.char) (err error)  {
+func fromCError(errC *C.char) (err error) {
 	if errC != nil {
 		err = errors.New(C.GoString(errC))
 	}

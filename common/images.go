@@ -181,7 +181,7 @@ func (h SHA1Hash) String() string {
 
 // Image contains a post's image and thumbnail data
 type Image struct {
-	Spoiler bool `json:"spoiler"`
+	Spoilered bool `json:"spoilered"`
 	ImageCommon
 	Name string `json:"name"`
 }

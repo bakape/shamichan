@@ -7,7 +7,7 @@ replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.0
 require (
 	github.com/Masterminds/squirrel v1.1.0 // indirect
 	github.com/bakape/captchouli v1.2.0
-	github.com/bakape/pg_util v0.10.0
+	github.com/bakape/pg_util v0.11.0
 	github.com/bakape/recache v0.0.0-20190524102257-67e46453405b
 	github.com/bakape/thumbnailer/v2 v2.5.4
 	github.com/chai2010/webp v1.1.0

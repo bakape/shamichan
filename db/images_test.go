@@ -129,8 +129,20 @@ func TestInsertImage(t *testing.T) {
 
 	const name = "fuko_da.jpeg"
 
+	assertCanInsert := func(std bool) {
+		t.Helper()
+
+		can, err := CanInsertImage(context.Background(), authKey)
+		if err != nil {
+			t.Fatal(err)
+		}
+		test.AssertEquals(t, can, std)
+	}
+
+	assertCanInsert(true)
+
 	err := InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
-		return InsertImage(
+		resPost, resThread, err := InsertImage(
 			context.Background(),
 			tx,
 			authKey,
@@ -138,51 +150,73 @@ func TestInsertImage(t *testing.T) {
 			name,
 			false,
 		)
+		if err != nil {
+			return
+		}
+
+		test.AssertEquals(t, resPost, thread)
+		test.AssertEquals(t, resThread, thread)
+
+		return
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	res, err := GetPost(context.Background(), thread)
-	if err != nil {
-		t.Fatal(err)
+	assertCanInsert(false)
+
+	assertPost := func(spoilered bool) {
+		t.Helper()
+
+		res, err := GetPost(context.Background(), thread)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		var co struct {
+			Created_on int
+		}
+		err = json.Unmarshal(res, &co)
+		if err != nil {
+			t.Fatal(err)
+		}
+		test.AssertJSON(t, bytes.NewReader(res), map[string]interface{}{
+			"id":   thread,
+			"body": nil,
+			"flag": nil,
+			"name": nil,
+			"open": true,
+			"page": 0,
+			"sage": false,
+			"trip": nil,
+			"image": map[string]interface{}{
+				"md5":          hex.EncodeToString(img.MD5[:]),
+				"name":         "fuko_da.jpeg",
+				"sha1":         hex.EncodeToString(img.SHA1[:]),
+				"size":         1048576,
+				"audio":        false,
+				"title":        nil,
+				"video":        false,
+				"width":        300,
+				"artist":       nil,
+				"height":       300,
+				"duration":     0,
+				"file_type":    "JPEG",
+				"spoilered":    spoilered,
+				"thumb_type":   "JPEG",
+				"thumb_width":  150,
+				"thumb_height": 150,
+			},
+			"thread":     thread,
+			"created_on": co.Created_on,
+		})
 	}
 
-	var co struct {
-		Created_on int
-	}
-	err = json.Unmarshal(res, &co)
+	assertPost(false)
+
+	err = SpoilerImage(context.Background(), thread)
 	if err != nil {
 		t.Fatal(err)
 	}
-	test.AssertJSON(t, bytes.NewReader(res), map[string]interface{}{
-		"id":   thread,
-		"body": nil,
-		"flag": nil,
-		"name": nil,
-		"open": true,
-		"page": 0,
-		"sage": false,
-		"trip": nil,
-		"image": map[string]interface{}{
-			"md5":          hex.EncodeToString(img.MD5[:]),
-			"name":         "fuko_da.jpeg",
-			"sha1":         hex.EncodeToString(img.SHA1[:]),
-			"size":         1048576,
-			"audio":        false,
-			"title":        nil,
-			"video":        false,
-			"width":        300,
-			"artist":       nil,
-			"height":       300,
-			"duration":     0,
-			"file_type":    "JPEG",
-			"spoilered":    false,
-			"thumb_type":   "JPEG",
-			"thumb_width":  150,
-			"thumb_height": 150,
-		},
-		"thread":     thread,
-		"created_on": co.Created_on,
-	})
+	assertPost(true)
 }

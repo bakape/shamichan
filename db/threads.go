@@ -106,5 +106,11 @@ func GetFeedData() (buf []byte, err error) {
 			) as d`,
 		).
 		Scan(&buf)
+	if err != nil {
+		return
+	}
+	if len(buf) == 0 {
+		buf = []byte(`{}`)
+	}
 	return
 }

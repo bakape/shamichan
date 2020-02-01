@@ -3,36 +3,35 @@ package imager
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
-	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"image"
 	"image/jpeg"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net"
 	"net/http"
 	"strconv"
-	"sync"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/websockets"
 	"github.com/bakape/thumbnailer/v2"
 	"github.com/chai2010/webp"
 	"github.com/go-playground/log"
 	"github.com/jackc/pgx/v4"
 )
 
-// Minimal capacity of large buffers in the pool
-const largeBufCap = 12 << 10
-
 var (
 	// Map of MIME types to the constants used internally
-	mimeTypes = map[string]uint8{
+	mimeTypes = map[string]common.FileType{
 		"image/jpeg":                    common.JPEG,
 		"image/png":                     common.PNG,
 		"image/gif":                     common.GIF,
@@ -57,13 +56,17 @@ var (
 	// MIME types from thumbnailer to accept
 	allowedMimeTypes map[string]bool
 
-	errTooLarge = errors.New("file too large")
-
-	// Large buffer pool of length=0 capacity=12+KB
-	largeBufPool = sync.Pool{
-		New: func() interface{} {
-			return make([]byte, 0, largeBufCap)
-		},
+	errTooLarge = common.StatusError{
+		Err:  errors.New("file too large"),
+		Code: 400,
+	}
+	errNoCandidatePost = common.StatusError{
+		Err:  errors.New("no open post without image"),
+		Code: 404,
+	}
+	errNotProcessed = common.StatusError{
+		Err:  errors.New("hash not in database"),
+		Code: 404,
 	}
 )
 
@@ -74,44 +77,88 @@ func init() {
 	}
 }
 
-// Return large buffer pool, if eligable
-func returnLargeBuf(buf []byte) {
-	if cap(buf) >= largeBufCap {
-		largeBufPool.Put(buf[:0])
-	}
+// Request to insert an image into the client's open post
+type insertionRequest struct {
+	Spoiler bool
+	Name    string
+	ctx     context.Context
+	user    auth.AuthKey
 }
 
-// NewImageUpload  handles the clients' image (or other file) upload request
+// Handles the clients' image (or other file) upload request
 func NewImageUpload(w http.ResponseWriter, r *http.Request) {
-	var id string
-	err := func() (err error) {
-		user, err := validateUploader(w, r)
+	handleError(w, r, func() (err error) {
+		var req insertionRequest
+		req.ctx = r.Context()
+
+		req.user, err = validateUploader(w, r)
 		if err != nil {
 			return
 		}
+		can, err := db.CanInsertImage(r.Context(), req.user)
+		if err != nil {
+			return
+		}
+		if !can {
+			return errNoCandidatePost
+		}
 
 		// Limit data received to the maximum uploaded file size limit
-		r.Body = http.MaxBytesReader(w, r.Body, int64(config.Get().MaxSize<<20))
+		max := config.Get().MaxSize<<20 + 1<<10
+		r.Body = http.MaxBytesReader(w, r.Body, int64(max))
 
-		id, err = ParseUpload(r)
-		switch err {
-		case nil:
-			incrementSpamScore(user)
-			return
-		case io.EOF:
+		length, err := strconv.ParseUint(r.Header.Get("Content-Length"), 10, 64)
+		if err != nil {
+			return common.StatusError{
+				Err:  err,
+				Code: 413,
+			}
+		}
+		if uint(length) > max {
+			return errTooLarge
+		}
+		err = r.ParseMultipartForm(0)
+		if err != nil {
 			return common.StatusError{
 				Err:  err,
 				Code: 400,
 			}
-		default:
+		}
+
+		file, head, err := r.FormFile("image")
+		if err != nil {
+			return common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
+		}
+		req.Name = head.Filename
+		if uint(head.Size) > max {
+			return errTooLarge
+		}
+		req.Spoiler = r.FormValue("spoiler") == "true"
+		err = req.Validate()
+		if err != nil {
 			return
 		}
-	}()
-	if err != nil {
-		LogError(w, r, err)
-	}
 
-	w.Write([]byte(id))
+		select {
+		case err = <-requestThumbnailing(thumbnailingRequest{
+			insertionRequest: req,
+			file:             file,
+			size:             int(head.Size),
+		}):
+		case <-req.ctx.Done():
+			return
+		}
+		if err == io.EOF {
+			err = common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
+		}
+		return
+	})
 }
 
 // Apply security restrictions to uploader
@@ -123,7 +170,7 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (
 	if err != nil {
 		return
 	}
-	need, err := db.NeedCaptcha(user)
+	need, err := db.NeedCaptcha(r.Context(), user)
 	if err != nil {
 		return
 	}
@@ -132,8 +179,39 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (
 			Err:  errors.New("captcha required"),
 			Code: 403,
 		}
+		return
 	}
+	db.IncrementSpamScore(user, config.Get().ImageScore)
 	return
+}
+
+func (req insertionRequest) Validate() (err error) {
+	errStr := func() string {
+		if len(req.Name) > 200 {
+			return "image name too long"
+		}
+		req.Name = strings.TrimSpace(req.Name)
+		if i := strings.LastIndexByte(req.Name, '.'); i != -1 {
+			req.Name = req.Name[:i]
+			if strings.HasSuffix(req.Name, ".tar") {
+				req.Name = req.Name[:len(req.Name)-4]
+			}
+		}
+		if !utf8.ValidString(req.Name) {
+			req.Name = strings.ToValidUTF8(req.Name, string(utf8.RuneError))
+		}
+		if len(req.Name) == 0 {
+			return "no image name"
+		}
+		return ""
+	}()
+	if errStr != "" {
+		return common.StatusError{
+			Err:  errors.New(errStr),
+			Code: 400,
+		}
+	}
+	return nil
 }
 
 // UploadImageHash attempts to skip image upload, if the file has already
@@ -142,48 +220,85 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (
 // thumbnailed. If yes, generates and sends a new image allocation token to
 // the client.
 func UploadImageHash(w http.ResponseWriter, r *http.Request) {
-	token, err := func() (token string, err error) {
-		user, err := validateUploader(w, r)
+	handleError(w, r, func() (err error) {
+		var req struct {
+			insertionRequest
+			ID common.SHA1Hash
+		}
+		req.ctx = r.Context()
+
+		req.user, err = validateUploader(w, r)
 		if err != nil {
 			return
 		}
 
-		buf, err := ioutil.ReadAll(http.MaxBytesReader(w, r.Body, 40))
+		err = json.
+			NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).
+			Decode(&req)
+		if err != nil {
+			return common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
+		}
+		err = req.Validate()
 		if err != nil {
 			return
 		}
-		sha1 := string(buf)
 
-		err = db.InTransaction(func(tx *pgx.Tx) (err error) {
-			exists, err := db.ImageExists(tx, sha1)
-			if err != nil {
-				return
-			}
-			if exists {
-				token, err = db.NewImageToken(tx, sha1)
-			}
+		return tryInsertExisting(req.insertionRequest, req.ID)
+	})
+}
+
+// Try finding and inserting an already processed image into the post
+func tryInsertExisting(req insertionRequest, id common.SHA1Hash,
+) error {
+	return db.InTransaction(req.ctx, func(tx pgx.Tx) (err error) {
+		img, err := db.GetImage(req.ctx, tx, id)
+		switch err {
+		case nil:
+			return insertImage(tx, req, img)
+		case pgx.ErrNoRows:
+			return errNotProcessed
+		default:
 			return
+		}
+	})
+}
+
+// Try inserting an image into the post
+func insertImage(tx pgx.Tx, req insertionRequest, img common.ImageCommon,
+) (err error) {
+	var post, thread uint64
+	post, thread, err = db.InsertImage(
+		req.ctx,
+		tx,
+		req.user,
+		img.SHA1,
+		req.Name,
+		req.Spoiler,
+	)
+	switch err {
+	case nil:
+		return websockets.InsertImage(thread, post, common.Image{
+			ImageCommon: img,
+			Spoilered:   req.Spoiler,
+			Name:        req.Name,
 		})
-		if err != nil {
-			return
-		}
-
-		incrementSpamScore(user)
+	case pgx.ErrNoRows:
+		return errNoCandidatePost
+	default:
 		return
-	}()
-	if err != nil {
-		LogError(w, r, err)
-	} else if token != "" {
-		w.Write([]byte(token))
 	}
 }
 
-func incrementSpamScore(user auth.AuthKey) {
-	db.IncrementSpamScore(user, config.Get().ImageScore)
-}
+// handleError sends the client file upload errors and logs them server-side
+func handleError(w http.ResponseWriter, r *http.Request, f func() error) {
+	err := f()
+	if err == nil {
+		return
+	}
 
-// LogError send the client file upload errors and logs them server-side
-func LogError(w http.ResponseWriter, r *http.Request, err error) {
 	code := 500
 	if err, ok := err.(common.StatusError); ok {
 		code = err.Code
@@ -200,68 +315,14 @@ func LogError(w http.ResponseWriter, r *http.Request, err error) {
 	log.Errorf("upload error: by %s: %s: %#v", ip, err, err)
 }
 
-// ParseUpload parses the upload form. Separate function for cleaner error
-// handling and reusability.
-// Returns the HTTP status code of the response, the ID of the generated image
-// and an error, if any.
-func ParseUpload(req *http.Request) (id string, err error) {
-	max := config.Get().MaxSize << 20
-	length, err := strconv.ParseUint(req.Header.Get("Content-Length"), 10, 64)
-	if err != nil {
-		err = common.StatusError{
-			Err:  err,
-			Code: 413,
-		}
-		return
-	}
-	if uint(length) > max {
-		err = common.StatusError{
-			Err:  errTooLarge,
-			Code: 400,
-		}
-		return
-	}
-	err = req.ParseMultipartForm(0)
-	if err != nil {
-		// TODO
-		err = common.StatusError{
-			Err:  err,
-			Code: 400,
-		}
-		return
-	}
-
-	file, head, err := req.FormFile("image")
-	if err != nil {
-		err = common.StatusError{
-			Err:  err,
-			Code: 400,
-		}
-		return
-	}
-	defer file.Close()
-	if uint(head.Size) > max {
-		err = common.StatusError{
-			Err:  errTooLarge,
-			Code: 413,
-		}
-		return
-	}
-
-	res := <-requestThumbnailing(file, int(head.Size))
-	return res.imageID, res.err
-}
-
-// Create a new thumbnail, commit its resources to the DB and filesystem, and
-// pass the image data to the client.
-func newThumbnail(f multipart.File, SHA1 string) (
-	token string, err error,
-) {
+// Create a new thumbnail, commit its resources to the DB and filesystem,
+// insert it into an open post and send insertion even to listening clients
+func insertNewThumbnail(req thumbnailingRequest, id common.SHA1Hash) (err error) {
 	var img common.ImageCommon
-	img.SHA1 = SHA1
+	img.SHA1 = id
 
 	conf := config.Get()
-	thumb, err := processFile(f, &img, thumbnailer.Options{
+	thumb, err := processFile(req.file, &img, thumbnailer.Options{
 		MaxSourceDims: thumbnailer.Dims{
 			Width:  uint(conf.MaxWidth),
 			Height: uint(conf.MaxHeight),
@@ -272,7 +333,11 @@ func newThumbnail(f multipart.File, SHA1 string) (
 		},
 		AcceptedMimeTypes: allowedMimeTypes,
 	})
-	defer returnLargeBuf(thumb)
+	defer func() {
+		if thumb != nil {
+			putThumbBuffer(thumb)
+		}
+	}()
 	if err != nil {
 		switch err.(type) {
 		case thumbnailer.ErrUnsupportedMIME, thumbnailer.ErrInvalidImage:
@@ -286,44 +351,41 @@ func newThumbnail(f multipart.File, SHA1 string) (
 
 	// Being done in one transaction prevents the image DB record from getting
 	// garbage-collected between the calls
-	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
+	err = db.InTransaction(req.ctx, func(tx pgx.Tx) (err error) {
 		var thumbR io.ReadSeeker
 		if thumb != nil {
 			thumbR = bytes.NewReader(thumb)
 		}
-		err = db.AllocateImage(tx, f, thumbR, img)
-		if err != nil && !db.IsConflictError(err) {
+		err = db.AllocateImage(req.ctx, tx, img, req.file, thumbR)
+		if err != nil {
 			return
 		}
-		token, err = db.NewImageToken(tx, img.SHA1)
-		return
+		return insertImage(tx, req.insertionRequest, img)
 	})
 	return
 }
 
 // Separate function for easier testability
-func processFile(f multipart.File, img *common.ImageCommon,
+func processFile(
+	f multipart.File,
+	img *common.ImageCommon,
 	opts thumbnailer.Options,
 ) (
-	thumb []byte, err error,
+	thumb []byte,
+	err error,
 ) {
-	jpegThumb := config.Get().JPEGThumbnails
-
 	src, thumbImage, err := thumbnailer.Process(f, opts)
 	defer func() {
-		// Add image internal buffer to pool
-		if thumbImage == nil {
-			return
-		}
-		// Only image type used in thumbnailer by default
+		// Add image internal buffer to pool.
+		// Only image type used in thumbnailer by default.
 		img, ok := thumbImage.(*image.RGBA)
 		if ok {
-			returnLargeBuf(img.Pix)
+			putThumbBuffer(img.Pix)
 		}
 	}()
 	switch err {
 	case nil:
-		if jpegThumb {
+		if config.Get().JPEGThumbnails {
 			img.ThumbType = common.JPEG
 		} else {
 			img.ThumbType = common.WEBP
@@ -339,39 +401,45 @@ func processFile(f multipart.File, img *common.ImageCommon,
 
 	img.Audio = src.HasAudio
 	img.Video = src.HasVideo
-	img.Length = uint32(src.Length / time.Second)
+	img.Duration = uint32(src.Length / time.Second)
 
 	// Some media has retardedly long meta strings. Just truncate them, instead
 	// of rejecting.
-	img.Artist = src.Artist
-	img.Title = src.Title
-	if len(img.Artist) > 100 {
-		img.Artist = img.Artist[:100]
+	if len(src.Artist) > 100 {
+		src.Artist = src.Artist[:100]
 	}
-	if len(img.Title) > 200 {
-		img.Title = img.Title[:200]
+	if len(src.Title) > 200 {
+		src.Title = src.Title[:200]
+	}
+	if src.Artist != "" {
+		img.Artist = &src.Artist
+	}
+	if src.Title != "" {
+		img.Title = &src.Title
 	}
 
-	img.Dims = [4]uint16{uint16(src.Width), uint16(src.Height), 0, 0}
+	img.Width = uint16(src.Width)
+	img.Height = uint16(src.Height)
 	if thumbImage != nil {
 		b := thumbImage.Bounds()
-		img.Dims[2] = uint16(b.Dx())
-		img.Dims[3] = uint16(b.Dy())
+		img.ThumbWidth = uint16(b.Dx())
+		img.ThumbHeight = uint16(b.Dy())
 	}
 
-	img.MD5, img.Size, err = hashFile(f, md5.New(),
-		base64.RawURLEncoding.EncodeToString)
+	n, err := hashFile(img.MD5[:], f, md5.New())
 	if err != nil {
 		return
 	}
+	img.Size = uint64(n)
 
 	if thumbImage != nil {
-		w := bytes.NewBuffer(largeBufPool.Get().([]byte))
-		if jpegThumb {
+		w := bytes.NewBuffer(getThumbBuffer())
+		switch img.ThumbType {
+		case common.JPEG:
 			err = jpeg.Encode(w, thumbImage, &jpeg.Options{
 				Quality: 90,
 			})
-		} else {
+		case common.WEBP:
 			err = webp.Encode(w, thumbImage, &webp.Options{
 				Lossless: false,
 				Quality:  90,

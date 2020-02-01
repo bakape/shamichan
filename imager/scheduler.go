@@ -2,85 +2,88 @@ package imager
 
 import (
 	"crypto/sha1"
-	"encoding/hex"
 	"hash"
 	"io"
 	"mime/multipart"
 	"runtime"
-	"sync"
-
-	"github.com/bakape/meguca/db"
-	"github.com/jackc/pgx/v4"
 )
 
 var (
-	scheduleJob      = make(chan jobRequest, 128)
-	scheduleSmallJob = make(chan jobRequest, 128)
-
-	// Pool of temp buffers used for hashing
-	buf512Pool = sync.Pool{
-		New: func() interface{} {
-			return make([]byte, 512)
-		},
-	}
+	_scheduleJob      = make(chan jobRequest, 128)
+	_scheduleSmallJob = make(chan jobRequest, 128)
 )
 
-type jobRequest struct {
+type thumbnailingRequest struct {
+	insertionRequest
 	file multipart.File
 	size int
-	res  chan<- thumbnailingResponse
 }
 
-type thumbnailingResponse struct {
-	imageID string
-	err     error
+type jobRequest struct {
+	thumbnailingRequest
+	res chan<- error
 }
 
-// Queues upload processing to prevent resource overuse
-func requestThumbnailing(file multipart.File, size int,
-) <-chan thumbnailingResponse {
+// Queues upload processing to prevent resource overuse.
+// Takes ownership of `req.file`.
+func requestThumbnailing(req thumbnailingRequest) <-chan error {
 	// 2 separate queues - one for small and one for bigger files.
 	// Allows for some degree of concurrent thumbnailing without exhausting
 	// server resources.
-	ch := make(chan thumbnailingResponse)
-	req := jobRequest{file, size, ch}
-	if size <= 4<<20 {
-		scheduleSmallJob <- req
+	ch := make(chan error)
+	jReq := jobRequest{req, ch}
+	if req.size <= 4<<20 {
+		_scheduleSmallJob <- jReq
 	} else {
-		scheduleJob <- req
+		_scheduleJob <- jReq
 	}
 	return ch
 }
 
 // Queue thumbnailing jobs to reduce resource contention and prevent OOM
 func init() {
-	for _, ch := range [...]<-chan jobRequest{scheduleJob, scheduleSmallJob} {
+	for _, ch := range [...]<-chan jobRequest{_scheduleJob, _scheduleSmallJob} {
 		go func(queue <-chan jobRequest) {
 			runtime.LockOSThread()
-			for {
-				req := <-queue
-				id, err := processRequest(req.file, req.size)
-				req.res <- thumbnailingResponse{id, err}
+			for req := range queue {
+				// Check, if client still there, before and after thumbnailing
+				select {
+				case <-req.ctx.Done():
+				default:
+					select {
+					case <-req.ctx.Done():
+					case req.res <- processRequest(req.thumbnailingRequest):
+					}
+				}
+
+				// Always deallocate file in the same spot to not cause
+				// dataraces
+				req.file.Close()
 			}
 		}(ch)
 	}
 }
 
-// Hash file to string
-func hashFile(rs io.ReadSeeker, h hash.Hash, encode func([]byte) string,
+// Hash file from disk in 4KB chunks
+func hashFile(
+	dst []byte,
+	rs io.ReadSeeker,
+	h hash.Hash,
 ) (
-	hash string, read int, err error,
+	read int,
+	err error,
 ) {
-
 	_, err = rs.Seek(0, 0)
 	if err != nil {
 		return
 	}
-	buf := buf512Pool.Get().([]byte)
-	defer buf512Pool.Put(buf)
 
+	var (
+		arr [4 << 10]byte
+		buf = arr[:]
+	)
 	for {
-		buf = buf[:512] // Reset slicing
+		buf = buf[:4<<10] // Reset slicing
 
 		var n int
 		n, err = rs.Read(buf)
@@ -91,7 +94,7 @@ func hashFile(rs io.ReadSeeker, h hash.Hash, encode func([]byte) string,
 			h.Write(buf)
 		case io.EOF:
 			err = nil
-			hash = encode(h.Sum(buf))
+			copy(dst, h.Sum(buf))
 			return
 		default:
 			return
@@ -99,27 +102,16 @@ func hashFile(rs io.ReadSeeker, h hash.Hash, encode func([]byte) string,
 	}
 }
 
-func processRequest(file multipart.File, size int) (token string, err error) {
-	SHA1, _, err := hashFile(file, sha1.New(), hex.EncodeToString)
+func processRequest(req thumbnailingRequest) (err error) {
+	var id [20]byte
+	_, err = hashFile(id[:], req.file, sha1.New())
 	if err != nil {
 		return
 	}
-	var exists bool
-	err = db.InTransaction(func(tx *pgx.Tx) (err error) {
-		exists, err = db.ImageExists(tx, SHA1)
-		if err != nil {
-			return
-		}
-		if exists { // Already have a thumbnail
-			token, err = db.NewImageToken(tx, SHA1)
-		}
-		return
-	})
-	if err != nil {
+
+	err = tryInsertExisting(req.insertionRequest, id)
+	if err != errNotProcessed {
 		return
 	}
-	if !exists {
-		token, err = newThumbnail(file, SHA1)
-	}
-	return
+	return insertNewThumbnail(req, id)
 }
