@@ -25,11 +25,14 @@ func TestUpload(t *testing.T) {
 	cases := [...]struct {
 		name, fileName, downloadName string
 		img                          common.ImageCommon
+		code                         int
+		err                          string
 	}{
 		{
 			name:         "MP3 no cover",
 			fileName:     "sample.mp3",
 			downloadName: "sample",
+			code:         200,
 			img: common.ImageCommon{
 				Audio:     true,
 				FileType:  common.MP3,
@@ -42,6 +45,7 @@ func TestUpload(t *testing.T) {
 			name:         "already processed file",
 			fileName:     "sample.mp3",
 			downloadName: "sample",
+			code:         200,
 			img: common.ImageCommon{
 				Audio:     true,
 				FileType:  common.MP3,
@@ -54,6 +58,7 @@ func TestUpload(t *testing.T) {
 			name:         "MP3 with cover",
 			fileName:     "with_cover.mp3",
 			downloadName: "with_cover",
+			code:         200,
 			img: common.ImageCommon{
 				Audio:       true,
 				Video:       true,
@@ -71,6 +76,7 @@ func TestUpload(t *testing.T) {
 			name:         "ZIP",
 			fileName:     "sample.zip",
 			downloadName: "sample",
+			code:         200,
 			img: common.ImageCommon{
 				FileType:  common.ZIP,
 				ThumbType: common.NoFile,
@@ -81,6 +87,7 @@ func TestUpload(t *testing.T) {
 			name:         "CBZ",
 			fileName:     "manga.zip",
 			downloadName: "manga",
+			code:         200,
 			img: common.ImageCommon{
 				FileType:    common.CBZ,
 				ThumbType:   common.WEBP,
@@ -93,6 +100,7 @@ func TestUpload(t *testing.T) {
 			name:         "RAR",
 			fileName:     "sample.rar",
 			downloadName: "sample",
+			code:         200,
 			img: common.ImageCommon{
 				FileType:  common.RAR,
 				ThumbType: common.NoFile,
@@ -103,6 +111,7 @@ func TestUpload(t *testing.T) {
 			name:         "CBR",
 			fileName:     "manga.rar",
 			downloadName: "manga",
+			code:         200,
 			img: common.ImageCommon{
 				FileType:    common.CBR,
 				ThumbType:   common.WEBP,
@@ -115,6 +124,7 @@ func TestUpload(t *testing.T) {
 			name:         "7Z",
 			fileName:     "sample.7z",
 			downloadName: "sample",
+			code:         200,
 			img: common.ImageCommon{
 				FileType:  common.SevenZip,
 				ThumbType: common.NoFile,
@@ -125,6 +135,7 @@ func TestUpload(t *testing.T) {
 			name:         "tar.gz",
 			fileName:     "sample.tar.gz",
 			downloadName: "sample",
+			code:         200,
 			img: common.ImageCommon{
 				FileType:  common.TGZ,
 				ThumbType: common.NoFile,
@@ -135,6 +146,7 @@ func TestUpload(t *testing.T) {
 			name:         "tar.xz",
 			fileName:     "sample.tar.xz",
 			downloadName: "sample",
+			code:         200,
 			img: common.ImageCommon{
 				FileType:  common.TXZ,
 				ThumbType: common.NoFile,
@@ -145,6 +157,7 @@ func TestUpload(t *testing.T) {
 			name:         "PDF",
 			fileName:     "sample.pdf",
 			downloadName: "sample",
+			code:         200,
 			img: common.ImageCommon{
 				FileType:  common.PDF,
 				ThumbType: common.NoFile,
@@ -155,11 +168,40 @@ func TestUpload(t *testing.T) {
 			name:         "big file path",
 			fileName:     "testdata.zip",
 			downloadName: "testdata",
+			code:         200,
 			img: common.ImageCommon{
 				FileType:  common.ZIP,
 				ThumbType: common.NoFile,
 				Size:      0xe64fb9,
 			},
+		},
+		{
+			name:         "JPEG",
+			fileName:     "sample.jpg",
+			downloadName: "sample",
+			code:         200,
+			img: common.ImageCommon{
+				Video:       true,
+				FileType:    common.JPEG,
+				ThumbType:   common.WEBP,
+				Width:       0x043c,
+				Height:      0x0371,
+				ThumbWidth:  0x96,
+				ThumbHeight: 0x79,
+				Size:        0x0496f8,
+			},
+		},
+		{
+			name:     "too tall",
+			fileName: "too_tall.jpg",
+			code:     400,
+			err:      "invalid input: invalid image: image too tall\n",
+		},
+		{
+			name:     "too wide", // No such thing
+			fileName: "too_wide.jpg",
+			code:     400,
+			err:      "invalid input: invalid image: image too wide\n",
 		},
 	}
 
@@ -207,9 +249,14 @@ func TestUpload(t *testing.T) {
 			req.Header.Set("Content-Type", w.FormDataContentType())
 			rec := httptest.NewRecorder()
 			NewImageUpload(rec, req)
-			if rec.Code != 200 {
+			if c.err != "" {
+				test.AssertEquals(t, rec.Body.String(), c.err)
+				test.AssertEquals(t, rec.Code, c.code)
+				return
+			} else if rec.Code != 200 {
 				t.Fatalf("failed thumbnailing: %s", rec.Body.String())
 			}
+			test.AssertEquals(t, rec.Code, c.code)
 
 			var img common.ImageCommon
 			err = db.InTransaction(context.Background(), func(tx pgx.Tx) (err error) {

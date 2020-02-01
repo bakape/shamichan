@@ -24,6 +24,8 @@ func TestMain(m *testing.M) {
 		}
 
 		config.Set(config.Configs{
+			MaxHeight: 2000,
+			MaxWidth:  2000,
 			Public: config.Public{
 				MaxSize: 20,
 			},
