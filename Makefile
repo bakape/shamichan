@@ -10,7 +10,6 @@ install_tools:
 	go get -u github.com/valyala/quicktemplate \
 		github.com/rakyll/statik \
 		github.com/valyala/quicktemplate/qtc
-	$(MAKE) -C client install_tools
 
 css:
 ifneq ($(NO_DEPS),1)

@@ -75,7 +75,7 @@ A reference list of commands can be found in `./docs/installation.md`
 
 * [Go](https://golang.org/doc/install) >=1.13 (for building server)
 * [Node.js](https://nodejs.org) >=12.0 (for building client)
-* [Rust](https://www.rust-lang.org/) >= 1.38
+* [Rust](https://www.rust-lang.org/) >= 1.40
 * C11 compiler
 * make
 * pkg-config
