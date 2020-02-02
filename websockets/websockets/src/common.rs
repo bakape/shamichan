@@ -83,10 +83,6 @@ where
 	K: Hash + Eq + Clone,
 	V: Hash + Eq + Clone,
 {
-	pub fn new() -> Self {
-		Default::default()
-	}
-
 	pub fn insert(&mut self, k: K, v: V) {
 		match self.0.get_mut(&k) {
 			Some(set) => {
@@ -111,22 +107,6 @@ where
 				self.0.remove(k);
 			}
 		}
-	}
-
-	pub fn remove_key(&mut self, k: &K)
-	where
-		K: Hash + Eq + Clone,
-		V: Hash + Eq + Clone,
-	{
-		self.0.remove(k);
-	}
-
-	pub fn contains_key(&self, k: &K) -> bool {
-		self.0.contains_key(k)
-	}
-
-	pub fn keys(&self) -> std::collections::hash_map::Keys<K, HashSet<V>> {
-		self.0.keys()
 	}
 
 	pub fn get(&self, k: &K) -> Option<&HashSet<V>> {
