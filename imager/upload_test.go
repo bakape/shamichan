@@ -9,7 +9,9 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/bakape/meguca/common"
@@ -18,6 +20,13 @@ import (
 	"github.com/bakape/meguca/test/test_db"
 	"github.com/jackc/pgx/v4"
 )
+
+type uploadCase struct {
+	name, fileName, downloadName string
+	img                          common.ImageCommon
+	code                         int
+	err                          string
+}
 
 func TestUpload(t *testing.T) {
 	t.Parallel()
@@ -28,12 +37,7 @@ func TestUpload(t *testing.T) {
 		title         = "Puella Magi Madoka Magica Part III - Rebellion"
 	)
 
-	cases := [...]struct {
-		name, fileName, downloadName string
-		img                          common.ImageCommon
-		code                         int
-		err                          string
-	}{
+	cases := [...]uploadCase{
 		{
 			name:         "MP3 no cover",
 			fileName:     "sample.mp3",
@@ -523,82 +527,151 @@ func TestUpload(t *testing.T) {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
 			t.Parallel()
-
-			thread, user := test_db.InsertSampleThread(t)
-
-			body := new(bytes.Buffer)
-			w := multipart.NewWriter(body)
-			fw, err := w.CreateFormFile("image", c.fileName)
-			if err != nil {
-				t.Fatal(err)
-			}
-			f := test.OpenSample(t, c.fileName)
-			_, err = io.Copy(fw, f)
-			if err != nil {
-				t.Fatal(err)
-			}
-			err = w.Close()
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			var sha1Hash [20]byte
-			_, err = hashFile(sha1Hash[:], f, sha1.New())
-			if err != nil {
-				t.Fatal(err)
-			}
-			var md5Hash [16]byte
-			_, err = hashFile(md5Hash[:], f, md5.New())
-			if err != nil {
-				t.Fatal(err)
-			}
-			err = f.Close()
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			req := httptest.NewRequest("POST", "/", body)
-			req.Header.Set("Authorization", "Bearer "+user.String())
-			req.Header.Set("Content-Length", strconv.Itoa(body.Len()))
-			req.Header.Set("Content-Type", w.FormDataContentType())
-			rec := httptest.NewRecorder()
-			NewImageUpload(rec, req)
-			if c.err != "" {
-				test.AssertEquals(t, rec.Body.String(), c.err)
-				test.AssertEquals(t, rec.Code, c.code)
-				return
-			} else if rec.Code != 200 {
-				t.Fatalf("failed thumbnailing: %s", rec.Body.String())
-				test.AssertEquals(t, rec.Code, c.code)
-			}
-
-			var img common.ImageCommon
-			err = db.InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
-				img, err = db.GetImage(context.Background(), tx, sha1Hash)
-				return
-			})
-			if err != nil {
-				t.Fatal(err)
-			}
-			c.img.SHA1 = sha1Hash
-			c.img.MD5 = md5Hash
-			test.AssertEquals(t, img, c.img)
-
-			var post struct {
-				Image *common.Image
-			}
-			buf, err := db.GetPost(context.Background(), thread)
-			if err != nil {
-				t.Fatal(err)
-			}
-			err = json.Unmarshal(buf, &post)
-			if err != nil {
-				t.Fatal(err)
-			}
-			test.AssertEquals(t, post.Image, &common.Image{
-				Name:        c.downloadName,
-				ImageCommon: c.img,
-			})
+			testUpload(t, c)
 		})
 	}
+}
+
+func testUpload(t *testing.T, c uploadCase) {
+	thread, user := test_db.InsertSampleThread(t)
+
+	body := new(bytes.Buffer)
+	w := multipart.NewWriter(body)
+	fw, err := w.CreateFormFile("image", c.fileName)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := test.OpenSample(t, c.fileName)
+	defer f.Close()
+	_, err = io.Copy(fw, f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = w.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sha1Hash, md5Hash := hashImage(t, f)
+
+	req := httptest.NewRequest("POST", "/", body)
+	req.Header.Set("Authorization", "Bearer "+user.String())
+	req.Header.Set("Content-Length", strconv.Itoa(body.Len()))
+	req.Header.Set("Content-Type", w.FormDataContentType())
+	rec := httptest.NewRecorder()
+	NewImageUpload(rec, req)
+	if c.err != "" {
+		test.AssertEquals(t, rec.Body.String(), c.err)
+		test.AssertEquals(t, rec.Code, c.code)
+		return
+	} else if rec.Code != 200 {
+		t.Fatalf("failed thumbnailing: %s", rec.Body.String())
+		test.AssertEquals(t, rec.Code, c.code)
+	}
+
+	c.img.SHA1 = sha1Hash
+	c.img.MD5 = md5Hash
+	assertImage(t, thread, common.Image{
+		ImageCommon: c.img,
+		Name:        c.downloadName,
+	})
+}
+
+func hashImage(t *testing.T, rs io.ReadSeeker) (
+	sha1_ common.SHA1Hash,
+	md5_ common.MD5Hash,
+) {
+	t.Helper()
+
+	_, err := hashFile(sha1_[:], rs, sha1.New())
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = hashFile(md5_[:], rs, md5.New())
+	if err != nil {
+		t.Fatal(err)
+	}
+	return
+}
+
+func assertImage(t *testing.T, postID uint64, std common.Image) {
+	t.Helper()
+
+	var img common.ImageCommon
+	err := db.InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
+		img, err = db.GetImage(context.Background(), tx, std.SHA1)
+		return
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	test.AssertEquals(t, img, std.ImageCommon)
+
+	var post struct {
+		Image *common.Image
+	}
+	buf, err := db.GetPost(context.Background(), postID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = json.Unmarshal(buf, &post)
+	if err != nil {
+		t.Fatal(err)
+	}
+	test.AssertEquals(t, post.Image, &std)
+}
+
+func TestUploadHash(t *testing.T) {
+	t.Parallel()
+
+	c := uploadCase{
+		name:         "PNG",
+		fileName:     "sample.png",
+		downloadName: "sample",
+		code:         200,
+		img: common.ImageCommon{
+			FileType:    common.PNG,
+			ThumbType:   common.WEBP,
+			Width:       0x0500,
+			Height:      0x02d0,
+			ThumbWidth:  0x96,
+			ThumbHeight: 0x54,
+			Size:        0x09af2e,
+		},
+	}
+
+	t.Run("initial upload", func(t *testing.T) {
+		testUpload(t, c)
+	})
+
+	t.Run("hash upload", func(t *testing.T) {
+		thread, user := test_db.InsertSampleThread(t)
+
+		f := test.OpenSample(t, c.fileName)
+		defer f.Close()
+		sha1Hash, md5Hash := hashImage(t, f)
+
+		body := url.Values{
+			"id":   {sha1Hash.String()},
+			"name": {c.fileName},
+		}.
+			Encode()
+		req := httptest.NewRequest("POST", "/", strings.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+user.String())
+		req.Header.Set("Content-Length", strconv.Itoa(len(body)))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		rec := httptest.NewRecorder()
+		UploadImageHash(rec, req)
+		if rec.Code != 200 {
+			t.Fatalf("failed hash upload: %s", rec.Body.String())
+		}
+
+		c.img.SHA1 = sha1Hash
+		c.img.MD5 = md5Hash
+		assertImage(t, thread, common.Image{
+			ImageCommon: c.img,
+			Name:        c.downloadName,
+		})
+	})
 }

@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/json"
 	"errors"
 	"image"
 	"image/jpeg"
@@ -132,12 +131,10 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 				Code: 400,
 			}
 		}
-		req.Name = head.Filename
 		if uint(head.Size) > max {
 			return errTooLarge
 		}
-		req.Spoiler = r.FormValue("spoiler") == "true"
-		err = req.Validate()
+		err = req.extract(r, head.Filename)
 		if err != nil {
 			return
 		}
@@ -185,7 +182,10 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (
 	return
 }
 
-func (req *insertionRequest) Validate() (err error) {
+// Extract and validate common request data from request
+func (req *insertionRequest) extract(r *http.Request, name string) (err error) {
+	req.Spoiler = r.FormValue("spoiler") == "true"
+	req.Name = name
 	errStr := func() string {
 		if len(req.Name) > 200 {
 			return "image name too long"
@@ -223,7 +223,7 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 	handleError(w, r, func() (err error) {
 		var req struct {
 			insertionRequest
-			ID common.SHA1Hash
+			id common.SHA1Hash
 		}
 		req.ctx = r.Context()
 
@@ -232,21 +232,27 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = json.
-			NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).
-			Decode(&req)
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<10)
+		err = r.ParseForm()
 		if err != nil {
 			return common.StatusError{
 				Err:  err,
 				Code: 400,
 			}
 		}
-		err = req.Validate()
+		err = req.id.UnmarshalText([]byte(r.FormValue("id")))
+		if err != nil {
+			return common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
+		}
+		err = req.extract(r, r.FormValue("name"))
 		if err != nil {
 			return
 		}
 
-		return tryInsertExisting(req.insertionRequest, req.ID)
+		return tryInsertExisting(req.insertionRequest, req.id)
 	})
 }
 
