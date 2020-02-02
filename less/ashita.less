@@ -1,78 +1,97 @@
 @import "mixins/common.less";
-@body: #c5c8c6;
-@link: #81a2be;
-@em: #b5bd68;
-@del: black;
+@body  : #c5c8c6;
+@link  : #81a2be;
+@em    : #b5bd68;
+@del   : black;
 @postBG: #282a2e;
 @border: 1px solid #282a2e;
-@bold: #c5c8c6;
-@admin: #f00000;
-@mod: #9b5cff;
-@red: @admin;
-@blue: #57e8ed;
+@bold  : #c5c8c6;
+@admin : #f00000;
+@mod   : #9b5cff;
+@red   : @admin;
+@blue  : #57e8ed;
 
 blockquote a:hover {
 	color: #81a2be;
 }
 
-a:hover, blockquote a {
+a:hover,
+blockquote a {
 	color: #5f89ac;
 }
 
-article, aside, .modal {
+article,
+aside,
+.modal {
 	background-color: @postBG;
-	border: @border;
+	border          : @border;
 }
 
 article article {
 	border-color: fade(@link, 10%);
 }
 
-article.highlight, article:target, .popup-menu {
+article.highlight,
+article:target,
+.popup-menu {
 	background-color: #1d1d21;
-	border-color: #111;
+	border-color    : #111;
 }
 
 .preview {
 	&:not(.editing) {
 		background-color: #1d1d21;
 	}
+
 	border-color: #111;
 }
 
 .editing-mixin() {
 	background-color: #cec952;
-	border-color: #aa3;
-	color: black;
+	border-color    : #aa3;
+	color           : black;
+
 	.red {
 		color: #9a0000;
 	}
+
 	.blue {
 		color: #1048ff;
 	}
-	& > header, & > figcaption {
-		a, b:not(.admin):not(.sage) {
+
+	&>header,
+	&>figcaption {
+
+		a,
+		b:not(.admin):not(.sage) {
 			color: #222;
 		}
 	}
-	& > .post-container > blockquote, & > .backlinks {
-		& > em > a, & > a {
+
+	&>.post-container>blockquote,
+	&>.backlinks {
+
+		&>em>a,
+		&>a {
 			color: #222;
 		}
-		& > em {
+
+		&>em {
 			color: #656d28;
 		}
 	}
+
 	code.code-tag {
 		background: #222;
 	}
 }
 
-#threads {
-	&:not(.custom-BG) section > article.editing:not(.op) {
+#main {
+	&:not(.custom-BG) section>article.editing:not(.op) {
 		.editing-mixin;
 	}
-	&.custom-BG section > article.editing {
+
+	&.custom-BG section>article.editing {
 		.editing-mixin;
 	}
 }
@@ -83,8 +102,8 @@ article.preview.editing {
 
 body {
 	background-color: #1d1f21;
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 10pt;
+	font-family     : Arial, Helvetica, sans-serif;
+	font-size       : 10pt;
 }
 
 .embed {
@@ -92,7 +111,7 @@ body {
 }
 
 h1 {
-	font: bolder 28px Tahoma;
+	font          : bolder 28px Tahoma;
 	letter-spacing: -2px;
 }
 
@@ -111,6 +130,7 @@ hr {
 .popup-menu {
 	// Need extra override for open posts
 	color: @body;
+
 	li:hover {
 		background-color: #136;
 	}

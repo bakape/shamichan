@@ -1,110 +1,118 @@
 @import "mixins/common.less";
-@body: black;
-@link: @blue;
-@border: @gray;
-@bold: @body;
-@admin: @red;
-@postBG: @gray;
-@em: green;
-@del: @body;
-@mod: @blue;
-@red: #dc143c;
-@gray: #c0c0c0;
-@blue: #0000aa;
+@body      : black;
+@link      : @blue;
+@border    : @gray;
+@bold      : @body;
+@admin     : @red;
+@postBG    : @gray;
+@em        : green;
+@del       : @body;
+@mod       : @blue;
+@red       : #dc143c;
+@gray      : #c0c0c0;
+@blue      : #0000aa;
 @background: #327c7d;
-@editing: #b5b5b5;
+@editing   : #b5b5b5;
 
-.window
-{
-	background: @gray;
-    border-style: solid;
-    border-width: 1px;
-    border-right-color: black;
-    border-bottom-color: black;
-    border-top-color: white;
-    border-left-color: white
-}
-
-.modal, .popup-menu, .preview, .reply-form
-{
-    box-shadow: none !important;
-}
-body
-{
-    font-family: Tahoma, serif;
-    font-size: 10pt;
-    background: @background;
-}
-#banner
-{
-    width: calc(~"100% - 12px");
-    background: linear-gradient(to right, #0a246a, #a3c7ed);
-    border: 3px solid @gray;
-    padding: 3px;
-    & *
-    {
-        color: white;
-    }
-}
-blockquote strong
-{
-	color: @body;
-}
-.name
-{
-	color: @blue;
+.window {
+  background         : @gray;
+  border-style       : solid;
+  border-width       : 1px;
+  border-right-color : black;
+  border-bottom-color: black;
+  border-top-color   : white;
+  border-left-color  : white;
 }
 
-a:not(.svg-link):hover, #banner a:hover, .popup-menu li:hover
-{
-	color: @red;
+.modal,
+.popup-menu,
+.preview,
+.reply-form {
+  box-shadow: none !important;
 }
 
-.banner-float.svg-link  svg
-{
-	margin-top: 2px;
-	&:hover
-	{
+body {
+  font-family: Tahoma, serif;
+  font-size  : 10pt;
+  background : @background;
+}
+
+#banner {
+  width     : calc(~"100% - 12px");
+  background: linear-gradient(to right, #0a246a, #a3c7ed);
+  border    : 3px solid @gray;
+  padding   : 3px;
+
+  & * {
+    color: white;
+  }
+}
+
+blockquote strong {
+  color: @body;
+}
+
+.name {
+  color: @blue;
+}
+
+a:not(.svg-link):hover,
+#banner a:hover,
+.popup-menu li:hover {
+  color: @red;
+}
+
+.banner-float.svg-link svg {
+  margin-top: 2px;
+
+  &:hover {
     fill: @blue;
-	}
+  }
 }
-h1
-{
-    font: bolder 28px Tahoma;
-    margin: 40px;
+
+h1 {
+  font  : bolder 28px Tahoma;
+  margin: 40px;
 }
-h3, b.board, h1
-{
-    color: @red;
+
+h3,
+b.board,
+h1 {
+  color: @red;
 }
-.popup-menu, .overlay>div, aside, audio
-{
-	.window;
+
+.popup-menu,
+.overlay>div,
+aside,
+audio {
+  .window;
 }
-.editing
-{
-    background: @editing;
+
+.editing {
+  background: @editing;
 }
-#thread-container, .index-thread
-{
-	.window;
-    margin: 5px;
+
+.thread-container {
+  .window;
+  margin: 5px;
 }
-article
-{
-	.window;
-    margin: 2px;
+
+article {
+  .window;
+  margin: 2px;
 }
-audio
-{
-	.window;
-	margin-top: 7px;
+
+audio {
+  .window;
+  margin-top: 7px;
 }
-#thread-container, .index-thread, .aside-container
-{
-    padding: 5px;
+
+.thread-container,
+.aside-container {
+  padding: 5px;
 }
-.modal hr, hr
-{
-    border-top: 1px solid darken(@gray, 10%);
+
+.modal hr,
+hr {
+  border-top: 1px solid darken(@gray, 10%);
 }

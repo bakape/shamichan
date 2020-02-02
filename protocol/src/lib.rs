@@ -443,21 +443,35 @@ mod tests {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+#[macro_export]
+macro_rules! _debug_log_inner {
+    ($arg:expr) => {
+        eprintln!("{}", &$arg);
+    };
+}
+
+#[cfg(target_arch = "wasm32")]
+#[macro_export]
+macro_rules! _debug_log_inner {
+    ($arg:expr) => {{
+        use wasm_bindgen::prelude::*;
+
+        web_sys::console::log_1(&JsValue::from(&format!("{}", $arg)));
+    }};
+}
+
 #[macro_export]
 macro_rules! debug_log {
     ($arg:expr) => {
         if cfg!(debug_assertions) {
-            eprintln!("{}", &$arg);
-            }
+            $crate::_debug_log_inner!($arg);
+        }
     };
 	($label:expr, $arg:expr) => {
-		if cfg!(debug_assertions) {
-			eprintln!("{}: {:?}", $label, &$arg);
-			}
+        debug_log!(format!("{}: {:?}", $label, &$arg));
     };
 	($label:expr, $arg:expr, $($more:expr),+) => {
-		if cfg!(debug_assertions) {
-			eprintln!("{}: {:?}", $label, (&$arg $(, &$more)+));
-			}
+        debug_log!("{}: {:?}", $label, (&$arg $(, &$more)+));
 	};
 }

@@ -126,9 +126,8 @@ impl Client {
 		// Thread init data will be sent on the next pulse
 		registry::set_client_thread(self.id, thread);
 
-		// TODO: Send open post and moderation data
-		// TODO: Lookup, if client has any open posts in thread and send their
-		// dat, if any
+		// TODO: Lookup, if client has any open posts in thread and link them to
+		// client
 
 		self.send(MessageType::Synchronize, &thread)?;
 		Ok(())

@@ -13,7 +13,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = "0.2.54"
-brunhild = {git = "https://github.com/bakape/brunhild.git"}
+brunhild = "0.5.3"
 protocol = { path = "../protocol" }
 js-sys = "0.3.32"
 wasm-bindgen-futures = "0.4.6"

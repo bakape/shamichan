@@ -42,11 +42,12 @@ macro_rules! from_display {
 		)+
 	};
 }
-from_display!(
+from_display! {
 	serde_json::error::Error,
 	base64::DecodeError,
-	std::io::Error
-);
+	std::io::Error,
+	std::num::ParseIntError
+}
 
 // Shorthand for most commonly used Result type
 pub type Result<T = ()> = std::result::Result<T, Error>;
@@ -98,6 +99,14 @@ macro_rules! cache_cb {
 	};
 }
 
+// Get element by ID or panic
+pub fn get_el(id: &str) -> web_sys::Element {
+	match document().get_element_by_id(id) {
+		Some(el) => el,
+		None => panic!(format!("element not found: #{}", id)),
+	}
+}
+
 // Cache element lookup by ID.
 //
 // Panics, if element not found.
@@ -106,10 +115,7 @@ macro_rules! cache_el {
 	($id:expr) => {
 		$crate::cache_variable! {
 			web_sys::Element,
-			|| match $crate::util::document().get_element_by_id($id) {
-				Some(el) => el,
-				None => panic!(format!("element not found: #{}", $id))
-			}
+			|| $crate::util::get_el($id)
 		}
 	};
 }
@@ -128,28 +134,32 @@ macro_rules! cache_variable {
 		}};
 }
 
+// Define function that caches global JS variable lookup
+#[macro_export]
+macro_rules! def_cached_getter {
+	($visibility:vis, $name:ident, $type:ty, $get:expr) => {
+		$visibility fn $name() -> $type {
+			$crate::cache_variable! { $type, $get }
+		}
+	};
+	($name:ident, $type:ty, $get:expr) => {
+		def_cached_getter! { , $name,$type, $expr }
+	};
+}
+
 // Get JS window global
-pub fn window() -> web_sys::Window {
-	cache_variable! {
-		web_sys::Window,
-		|| web_sys::window().expect("window undefined")
-	}
+def_cached_getter! { pub, window, web_sys::Window,
+	|| web_sys::window().expect("window undefined")
 }
 
 // Get page document
-pub fn document() -> web_sys::Document {
-	cache_variable! {
-		web_sys::Document,
-		|| window().document().expect("document undefined")
-	}
+def_cached_getter! { pub, document, web_sys::Document,
+	|| window().document().expect("document undefined")
 }
 
 // Get local storage manager
-pub fn local_storage() -> web_sys::Storage {
-	cache_variable! {
-		web_sys::Storage,
-		|| window().local_storage().unwrap().unwrap()
-	}
+def_cached_getter! { pub, local_storage, web_sys::Storage,
+	|| window().local_storage().unwrap().unwrap()
 }
 
 // Wrap and cache static Rust callback closure as DOM event handler

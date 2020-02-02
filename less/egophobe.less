@@ -1,41 +1,48 @@
 @import "mixins/common.less";
-@body: #222;
-@link: #555;
-@em: #789922;
-@del: #222;
+@body  : #222;
+@link  : #555;
+@em    : #789922;
+@del   : #222;
 @postBG: #fff;
 @border: 1px solid #ddd;
-@bold: #117743;
-@admin: #f00000;
-@mod: purple;
-@red: @admin;
-@blue: #1048ff;
+@bold  : #117743;
+@admin : #f00000;
+@mod   : purple;
+@red   : @admin;
+@blue  : #1048ff;
 
-a:hover, blockquote a {
+a:hover,
+blockquote a {
 	color: #0274be;
 }
 
-article, aside {
+article,
+aside {
 	background-color: @postBG;
-	box-shadow: 0px 0px 1px 0px rgba(50, 50, 50, 0.1);
+	box-shadow      : 0px 0px 1px 0px rgba(50, 50, 50, 0.1);
 }
 
 article {
 	article {
-		border: @border;
+		border    : @border;
 		box-shadow: none;
 	}
-	&.highlight:not(.editing), &:target {
+
+	&.highlight:not(.editing),
+	&:target {
 		background-color: #FDE2E2;
+
 		article {
-			border: solid 1px #FFDBDB;
+			border    : solid 1px #FFDBDB;
 			box-shadow: none;
 		}
 	}
+
 	&.editing {
 		background-color: #D8EBCE;
+
 		article {
-			border: solid 1px #DEF1BF;
+			border    : solid 1px #DEF1BF;
 			box-shadow: none;
 		}
 	}
@@ -43,19 +50,19 @@ article {
 
 body {
 	background-color: #eee;
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 10pt;
+	font-family     : Arial, Helvetica, sans-serif;
+	font-size       : 10pt;
 }
 
 h1 {
-	color: @body;
-	font: bolder 28px Tahoma,sans-serif;
+	color         : @body;
+	font          : bolder 28px Tahoma, sans-serif;
 	letter-spacing: -2px;
 }
 
 h2 {
-	color: @body;
-	font-family: Tahoma,sans-serif;
+	color      : @body;
+	font-family: Tahoma, sans-serif;
 }
 
 h3 {
@@ -66,19 +73,23 @@ header nav a {
 	color: @body;
 }
 
-hr, .modal hr {
+hr,
+.modal hr {
 	border-top: @border;
 }
 
 .popup-menu li:hover {
-	color: #fff;
+	color           : #fff;
 	background-color: @body;
 }
 
-.modal, .preview:not(.editing), .popup-menu, .reply-form {
+.modal,
+.preview:not(.editing),
+.popup-menu,
+.reply-form {
 	background-color: #fff;
-	box-shadow: 0px 2px 1px 0px rgba(50, 50, 50, 0.2);
-	border: none;
+	box-shadow      : 0px 2px 1px 0px rgba(50, 50, 50, 0.2);
+	border          : none;
 }
 
 a.tab-sel {
@@ -93,11 +104,12 @@ a.tab-sel {
 
 #banner {
 	background-color: @body;
-	border:none;
-	box-shadow:none;
+	border          : none;
+	box-shadow      : none;
 }
 
-#board-navigation, b#thread-post-counters {
+#board-navigation,
+b#thread-post-counters {
 	color: #777;
 }
 
@@ -109,8 +121,8 @@ a.tab-sel {
 	margin-left: 0ex;
 }
 
-#threads:not(.custom-BG) section > article.op {
-	box-shadow:none;
+#main:not(.custom-BG) section>article.op {
+	box-shadow: none;
 }
 
 b#sync {
@@ -123,9 +135,9 @@ b#sync-counter {
 
 .embed {
 	border: 1px solid rgba(0, 0, 0, 0.1);
-	color: @body;
+	color : @body;
 }
 
-.banner-float.svg-link  svg {
+.banner-float.svg-link svg {
 	padding: .05em 0 0.05em 0;
 }

@@ -353,8 +353,10 @@ impl Pulsar {
 	fn remove_thread(&mut self, id: u64) {
 		self.global.clear_cache();
 
-		todo!("Remove feed data and redirect clients on thread deletion");
-		todo!("pass message to global feed")
+		todo!(concat!(
+			"Remove feed data, redirect clients on thread deletion and ",
+			" pass message to global feed"
+		))
 	}
 
 	// Log an item has not been found

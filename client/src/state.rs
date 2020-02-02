@@ -1,4 +1,5 @@
 use super::util;
+use brunhild::Node;
 use std::str;
 
 // Connection state
@@ -14,11 +15,25 @@ pub struct ConnState {
 	pub socket: Option<web_sys::WebSocket>,
 }
 
+// Container for all views in the application
+#[derive(Default)]
+pub struct Views {
+	// Widget row on page bottom
+	pub aside_top: Node,
+
+	// Widget row on page bottom
+	pub aside_bottom: Node,
+	// TODO: Vector of dyn thread views
+}
+
 // Global state singleton
 #[derive(Default)]
 pub struct State {
 	// Connection state
 	pub conn: ConnState,
+
+	// Container for all views in the application
+	pub views: Views,
 
 	// Authentication key
 	pub auth_key: protocol::AuthKey,
