@@ -120,7 +120,7 @@ impl Agent for Connection {
 			}
 			Event::Close(e) => {
 				self.reset_socket_and_timer();
-				if e.code() != 1000 {
+				if e.code() != 1000 && e.reason() != "" {
 					util::log_error(e.reason());
 					util::window()
 						.alert_with_message(&format!("error: {}", e.reason()))
