@@ -1,65 +1,20 @@
+// For html macro
+#![recursion_limit = "256"]
+
 #[macro_use]
 mod lang;
+mod banner;
 mod connection;
 mod state;
+mod user_bg;
 mod util;
+mod widgets;
 
 // #[macro_use]
 // extern crate protocol;
 
 use wasm_bindgen::prelude::*;
 use yew::{html, Component, ComponentLink, Html};
-
-struct UserBackground {}
-
-impl Component for UserBackground {
-	type Message = ();
-	type Properties = ();
-
-	fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-		Self {}
-	}
-
-	fn update(&mut self, _: Self::Message) -> bool {
-		false
-	}
-
-	fn view(&self) -> Html {
-		html! {
-			<>
-				<div id="user-background"></div>
-			</>
-		}
-	}
-}
-
-struct Banner {}
-
-impl Component for Banner {
-	type Message = ();
-	type Properties = ();
-
-	fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-		Self {}
-	}
-
-	fn update(&mut self, _: Self::Message) -> bool {
-		false
-	}
-
-	fn view(&self) -> Html {
-		html! {
-			<>
-				<span id="banner" class="glass">
-					<b id="banner-center" class="spaced"></b>
-					<span>
-						<connection::SyncCounter />
-					</span>
-				</span>
-			</>
-		}
-	}
-}
 
 struct App {}
 
@@ -78,10 +33,15 @@ impl Component for App {
 	fn view(&self) -> Html {
 		html! {
 			<section>
-				<UserBackground />
+				<user_bg::Background />
 				<div class="overlay-container">
-					<Banner />
+					<banner::Banner />
 				</div>
+				<section id="main">
+					<widgets::AsideRow is_top={true} />
+					<section>{"TODO"}</section>
+					<widgets::AsideRow />
+				</section>
 			</section>
 		}
 	}
