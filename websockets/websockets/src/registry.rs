@@ -62,7 +62,9 @@ pub fn remove_client(id: u64) {
 	write(|c| {
 		if let Some(desc) = c.clients.remove(&id) {
 			c.by_ip.remove(&desc.ip, &id);
-			c.by_key.remove(&desc.key.unwrap(), &id);
+			if let Some(key) = desc.key {
+				c.by_key.remove(&key, &id);
+			}
 			c.remove_from_thread(id, desc.thread);
 		}
 	});

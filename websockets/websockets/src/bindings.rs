@@ -119,7 +119,11 @@ pub fn close_client(id: u64, err: &str) {
 	// will prevent any further message write attempts to it.
 	super::registry::remove_client(id);
 
-	unsafe { ws_close_client(id, CString::new(err).unwrap().as_ptr()) };
+	unsafe { ws_close_client(id, to_c_char(err)) };
+}
+
+fn to_c_char(s: &str) -> *const c_char {
+	CString::new(s).expect("null in Rust string").as_ptr()
 }
 
 // Check, if thread exists in DB
@@ -174,7 +178,7 @@ pub fn insert_thread(
 
 // Log error on Go side
 pub fn log_error(err: &str) {
-	unsafe { ws_log_error(CString::new(err).unwrap().as_ptr()) };
+	unsafe { ws_log_error(to_c_char(err)) };
 }
 
 #[repr(C)]

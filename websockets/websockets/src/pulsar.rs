@@ -1,3 +1,4 @@
+use super::common::DynResult;
 use super::{bindings, registry};
 use protocol::*;
 use rayon::prelude::*;
@@ -18,58 +19,60 @@ use std::time::{Duration, Instant, SystemTime};
 static mut REQUEST: Option<Mutex<Sender<Request>>> = None;
 
 // Init module state
-pub fn init(feed_data: &[u8]) -> serde_json::Result<()> {
+pub fn init(feed_data: &[u8]) -> DynResult {
 	let (sdr, recv) = channel();
 	unsafe {
 		REQUEST = Some(Mutex::new(sdr));
 	}
 	let mut p: Pulsar = Default::default();
 	p.init(feed_data)?;
-	std::thread::spawn(move || {
-		const SEND_INTERVAL: Duration = Duration::from_millis(100);
-		const CLEANUP_INTERVAL: Duration = Duration::from_secs(10);
+	std::thread::Builder::new()
+		.name("pulsar".into())
+		.spawn(move || {
+			const SEND_INTERVAL: Duration = Duration::from_millis(100);
+			const CLEANUP_INTERVAL: Duration = Duration::from_secs(10);
 
-		let now = Instant::now();
-		let mut last_send = now;
-		let mut last_cleanup = now;
+			let now = Instant::now();
+			let mut last_send = now;
+			let mut last_cleanup = now;
 
-		loop {
-			let started = Instant::now();
+			loop {
+				let started = Instant::now();
 
-			// Process all pending requests
-			for req in recv.try_iter() {
-				match req {
-					Request::CreateThread(data) => p.create_thread(data),
-					Request::RemoveThread(id) => p.remove_thread(id),
-					Request::InsertImage(req) => p.insert_image(req),
+				// Process all pending requests
+				for req in recv.try_iter() {
+					match req {
+						Request::CreateThread(data) => p.create_thread(data),
+						Request::RemoveThread(id) => p.remove_thread(id),
+						Request::InsertImage(req) => p.insert_image(req),
+					}
+				}
+
+				if started - last_send > SEND_INTERVAL {
+					last_send = now;
+
+					// Block until messages are sent to the Go side to guarantee
+					// sequentiality
+					p.send_messages();
+				}
+				if started - last_cleanup > CLEANUP_INTERVAL {
+					last_cleanup = now;
+					p.clean_up();
+				}
+
+				// Sleep thread to save resources.
+				// Compensate for a possibly long tick.
+				let elapsed = Instant::now() - started;
+				let mut dur = Duration::from_millis(10);
+				// Duration can not be negative
+				if elapsed < dur {
+					dur -= elapsed;
+				}
+				if dur.as_millis() != 0 {
+					std::thread::sleep(dur);
 				}
 			}
-
-			if started - last_send > SEND_INTERVAL {
-				last_send = now;
-
-				// Block until messages are sent to the Go side to guarantee
-				// sequentiality
-				p.send_messages();
-			}
-			if started - last_cleanup > CLEANUP_INTERVAL {
-				last_cleanup = now;
-				p.clean_up();
-			}
-
-			// Sleep thread to save resources.
-			// Compensate for a possibly long tick.
-			let elapsed = Instant::now() - started;
-			let mut dur = Duration::from_millis(10);
-			// Duration can not be negative
-			if elapsed < dur {
-				dur -= elapsed;
-			}
-			if dur.as_millis() != 0 {
-				std::thread::sleep(dur);
-			}
-		}
-	});
+		})?;
 	Ok(())
 }
 
@@ -228,7 +231,7 @@ impl Feed {
 	fn insert_post(&mut self, id: u64) {
 		let now = SystemTime::now()
 			.duration_since(SystemTime::UNIX_EPOCH)
-			.unwrap()
+			.expect("negative Unix timestamp")
 			.as_secs();
 
 		self.data.recent_posts.insert(id, now);
@@ -247,6 +250,17 @@ impl Feed {
 		);
 	}
 
+	// Get or init new Encoder and return it
+	fn get_encoder(enc: &mut Option<Encoder>) -> &mut Encoder {
+		match enc {
+			Some(e) => e,
+			None => {
+				*enc = Some(Encoder::new(vec![]));
+				enc.as_mut().unwrap()
+			}
+		}
+	}
+
 	// Write post-related message to thread and possibly global feed
 	fn encode_post_message(
 		&mut self,
@@ -260,10 +274,8 @@ impl Feed {
 				if $dst.is_none() {
 					$dst = Some(Encoder::new(Vec::new()));
 				}
-				if let Err(err) = $dst
-					.as_mut()
-					.unwrap()
-					.write_message(typ, payload)
+				if let Err(err) =
+					Self::get_encoder(&mut $dst).write_message(typ, payload)
 				{
 					self.common.log_encode_error(err);
 				}
@@ -407,7 +419,7 @@ impl Pulsar {
 	fn clean_up(&mut self) {
 		let threshold = (SystemTime::now() - Duration::from_secs(60 * 15))
 			.elapsed()
-			.unwrap()
+			.unwrap_or(Duration::from_secs(0))
 			.as_secs();
 		self.feeds.par_iter_mut().for_each(|(_, feed)| {
 			feed.data
