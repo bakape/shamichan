@@ -117,7 +117,7 @@ h3 {
 		content: ' ';
 	}
 
-	&>.act:not(.expanded):before {
+	&>.act:before {
 		content: " [";
 	}
 }
@@ -146,14 +146,12 @@ hr {
 }
 
 .act {
-	&:not(.expanded) {
-		&:before {
-			content: "[";
-		}
+	&:before {
+		content: "[";
+	}
 
-		&:after {
-			content: "]";
-		}
+	&:after {
+		content: "]";
 	}
 
 	&+& {
@@ -221,9 +219,11 @@ td {
 }
 
 .aside-container {
-	display    : flex;
-	flex-wrap  : wrap;
-	align-items: flex-end;
+	display      : flex;
+	flex-wrap    : wrap;
+	align-items  : flex-end;
+	margin-top   : 1.5em;
+	margin-bottom: 1.5em;
 }
 
 #catalog-controls {

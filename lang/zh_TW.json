@@ -352,6 +352,7 @@
 	},
 	"literals": {
 		"add": "新增",
+		"add_tag": "Add Tag",
 		"admin": "管理員",
 		"anon": "匿名",
 		"apply": "應用",
@@ -480,6 +481,7 @@
 		"tab_image_search": "圖片搜尋",
 		"tab_shortcuts": "捷徑",
 		"tab_style": "風格",
+		"tag": "Tag",
 		"text": "文字",
 		"thumbnailing": "縮圖產生中⋯⋯",
 		"thursday": "星期四",

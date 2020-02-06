@@ -352,6 +352,7 @@
 	},
 	"literals": {
 		"add": "Ajouter",
+		"add_tag": "Add Tag",
 		"admin": "Administrateur",
 		"anon": "Anonyme",
 		"apply": "Appliquer",
@@ -480,6 +481,7 @@
 		"tab_image_search": "Raccourcis",
 		"tab_shortcuts": "Shortcuts",
 		"tab_style": "Style",
+		"tag": "Tag",
 		"text": "Texte",
 		"thumbnailing": "Miniaturisation...",
 		"thursday": "Jeu",

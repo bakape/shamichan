@@ -352,6 +352,7 @@
 	},
 	"literals": {
 		"add": "Добавить",
+		"add_tag": "Add Tag",
 		"admin": "Админ",
 		"anon": "Аноним",
 		"apply": "Применить",
@@ -480,6 +481,7 @@
 		"tab_image_search": "Поиск изображений",
 		"tab_shortcuts": "Горячие клавиши",
 		"tab_style": "Стили",
+		"tag": "Tag",
 		"text": "Текст",
 		"thumbnailing": "Генерация превью…",
 		"thursday": "Чтв",

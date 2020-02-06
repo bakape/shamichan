@@ -352,6 +352,7 @@
 	},
 	"literals": {
 		"add": "Add",
+		"add_tag": "Add Tag",
 		"admin": "Admin",
 		"anon": "Anónimo",
 		"apply": "Apply",
@@ -480,6 +481,7 @@
 		"tab_image_search": "Búsqueda",
 		"tab_shortcuts": "Atajos",
 		"tab_style": "Estilo",
+		"tag": "Tag",
 		"text": "Text",
 		"thumbnailing": "Thumbnailing...",
 		"thursday": "Jue",

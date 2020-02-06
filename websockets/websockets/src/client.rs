@@ -142,12 +142,23 @@ impl Client {
 		Ok(())
 	}
 
+	// Trim and replace String
+	fn trim(src: &mut String) {
+		let t = src.trim();
+		// Don't always reallocate
+		if src.len() != t.len() {
+			*src = t.into();
+		}
+	}
+
 	// Create a new thread and pass its ID to client
 	fn create_thread(&mut self, dec: &mut Decoder) -> DynResult {
-		let req: ThreadCreationReq = dec.read_next()?;
+		let mut req: ThreadCreationReq = dec.read_next()?;
+		Self::trim(&mut req.subject);
 		check_len!(req.subject, 100);
 		check_len!(req.tags, 3);
-		for tag in req.tags.iter() {
+		for mut tag in req.tags.iter_mut() {
+			Self::trim(&mut tag);
 			check_len!(tag, 20);
 		}
 		self.check_captcha(&req.captcha_solution)?;

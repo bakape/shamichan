@@ -39,8 +39,6 @@ clean:
 	rm -rf www/css/*.css www/css/*.css.map node_modules
 	$(MAKE) -C client clean
 
-# TODO: Minify language pack JSON
-
 test: websockets
 	cargo test
 	$(MAKE) -C client test
