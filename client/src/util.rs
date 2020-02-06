@@ -173,9 +173,6 @@ pub fn log_error_res<T, E: Into<Error>>(res: std::result::Result<T, E>) {
 pub fn log_error<T: Into<String>>(err: T) {
 	let s = err.into();
 	if s.len() != 0 {
-		window()
-			.alert_with_message(&format!("error: {}", s))
-			.expect("alert failed");
 		web_sys::console::error_1(&JsValue::from(&s));
 	}
 }

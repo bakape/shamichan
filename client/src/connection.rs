@@ -16,7 +16,6 @@ pub enum State {
 	Syncing,
 	Synced,
 	Dropped,
-	Desynced,
 }
 
 // Agent controlling global websocket connection
@@ -123,15 +122,16 @@ impl Agent for Connection {
 				self.reset_socket_and_timer();
 				if e.code() != 1000 {
 					util::log_error(e.reason());
-					self.set_state(State::Desynced);
-				} else {
-					self.handle_disconnect();
+					util::window()
+						.alert_with_message(&format!("error: {}", e.reason()))
+						.expect("alert failed");
 				}
+				self.handle_disconnect();
 			}
 			Event::Error(e) => {
 				self.reset_socket_and_timer();
 				util::log_error(format!("{:?}", e));
-				self.set_state(State::Desynced);
+				self.set_state(State::Dropped);
 			}
 			Event::TryReconnecting => {
 				if self.state == State::Dropped {
@@ -157,7 +157,6 @@ impl Agent for Connection {
 
 							// TODO: Send ping to server
 						}
-						State::Desynced => (),
 						_ => self.connect(),
 					}
 				}
@@ -253,8 +252,7 @@ impl Connection {
 	}
 
 	fn connect(&mut self) {
-		self.reset_socket_and_timer();
-
+		self.close_socket();
 		if !util::window().navigator().on_line() {
 			return;
 		}
@@ -304,6 +302,7 @@ impl Connection {
 			Ok(s) => {
 				self.set_state(State::Connecting);
 				self.socket = Some(s);
+				self.reset_reconn_timer();
 			}
 			Err(e) => {
 				ConsoleService::new().error(e.as_ref());
@@ -382,7 +381,6 @@ impl Component for SyncCounter {
 						match self.current {
 							State::Loading => "loading",
 							State::Connecting => "connecting",
-							State::Desynced => "desynced",
 							State::Dropped => "disconnected",
 							State::Synced => "synced",
 							State::Syncing => "syncing",
