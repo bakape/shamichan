@@ -24,6 +24,12 @@ impl Into<String> for Error {
 	}
 }
 
+impl AsRef<str> for Error {
+	fn as_ref(&self) -> &str {
+		&self.0
+	}
+}
+
 impl From<JsValue> for Error {
 	fn from(v: JsValue) -> Error {
 		Error(format!("{:?}", v))
@@ -43,6 +49,7 @@ macro_rules! from_display {
 	};
 }
 from_display! {
+	String,
 	serde_json::error::Error,
 	base64::DecodeError,
 	std::io::Error,
@@ -55,10 +62,10 @@ pub type Result<T = ()> = std::result::Result<T, Error>;
 // Generate functions for safely accessing a global variable
 #[macro_export]
 macro_rules! gen_global {
-	($visibility:vis, $type:ty, $default:expr) => {
+	($visibility:vis, $type:ty, $default:expr, $getter:ident) => {
 		// Open global for writing
 		#[allow(unused)]
-		$visibility fn with<'a, F, R>(mut cb: F) -> R
+		$visibility fn $getter<'a, F, R>(mut cb: F) -> R
 		where
 			F: FnMut(&'a mut $type) -> R,
 		{
@@ -71,6 +78,9 @@ macro_rules! gen_global {
 			}
 		}
 	};
+	($visibility:vis, $type:ty, $default:expr) => {
+		$crate::gen_global!($visibility, $type, $default, with);
+	};
 	($type:ty) => {
 		$crate::gen_global!(, $type, Default::default());
 	};
@@ -79,44 +89,6 @@ macro_rules! gen_global {
 	};
 	($type:ty, $default:expr) => {
 		$crate::gen_global!(, $type, $default);
-	};
-}
-
-// Wrap and cache static Rust callback closure
-#[macro_export]
-macro_rules! cache_cb {
-	($type:ty, $fn:expr) => {
-		unsafe {
-			use wasm_bindgen::prelude::*;
-			use wasm_bindgen::JsCast;
-
-			static mut CACHED: Option<Closure<$type>> = None;
-			if CACHED.is_none() {
-				CACHED = Some(Closure::wrap(Box::from(&$fn)));
-				}
-			CACHED.as_ref().unwrap().as_ref().unchecked_ref()
-			}
-	};
-}
-
-// Get element by ID or panic
-pub fn get_el(id: &str) -> web_sys::Element {
-	match document().get_element_by_id(id) {
-		Some(el) => el,
-		None => panic!(format!("element not found: #{}", id)),
-	}
-}
-
-// Cache element lookup by ID.
-//
-// Panics, if element not found.
-#[macro_export]
-macro_rules! cache_el {
-	($id:expr) => {
-		$crate::cache_variable! {
-			web_sys::Element,
-			|| $crate::util::get_el($id)
-		}
 	};
 }
 
@@ -162,31 +134,22 @@ def_cached_getter! { pub, local_storage, web_sys::Storage,
 	|| window().local_storage().unwrap().unwrap()
 }
 
-// Wrap and cache static Rust callback closure as DOM event handler
-//
-// fn: handler with signature Fn(web_sys::Event) -> util::Result
-#[macro_export]
-macro_rules! event_handler {
-	($fn:expr) => {{
-		use web_sys;
-		cache_cb!(dyn Fn(web_sys::Event), |e| {
-			$crate::util::log_error_res($fn(e));
-			})
-		}};
-}
-
-// Add static passive DOM event listener.
-//
-// Use event_handler! to construct event handler.
-pub fn add_listener<E>(target: E, typ: &str, handler: &js_sys::Function)
-where
-	E: JsCast,
+// Add static passive DOM event listener
+pub fn add_static_listener<E>(
+	target: &impl AsRef<web_sys::EventTarget>,
+	event: &str,
+	cb: yew::Callback<E>,
+) where
+	E: wasm_bindgen::convert::FromWasmAbi + 'static,
 {
+	use wasm_bindgen::prelude::*;
+
+	let cl = Closure::wrap(Box::new(move |e: E| cb.emit(e)) as Box<dyn Fn(E)>);
 	target
-		.unchecked_ref::<web_sys::HtmlElement>()
+		.as_ref()
 		.add_event_listener_with_callback_and_add_event_listener_options(
-			typ,
-			handler,
+			event,
+			cl.as_ref().unchecked_ref(),
 			&{
 				let mut opts = web_sys::AddEventListenerOptions::new();
 				opts.passive(true);
@@ -194,12 +157,15 @@ where
 			},
 		)
 		.unwrap();
+
+	// Never drop the closure as this event handler is static
+	cl.forget();
 }
 
 // Log any error to both console and alert
-pub fn log_error_res<T>(res: Result<T>) {
+pub fn log_error_res<T, E: Into<Error>>(res: std::result::Result<T, E>) {
 	if let Err(err) = res {
-		log_error(err);
+		log_error(err.into());
 	}
 }
 

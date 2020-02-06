@@ -1,44 +1,13 @@
 use super::util;
-use brunhild::Node;
 use std::str;
-
-// Connection state
-#[derive(Default)]
-pub struct ConnState {
-	// Reconnection attempts
-	pub reconn_attempts: i32,
-
-	// Reconnection timer ID
-	pub reconn_timer: i32,
-
-	// Connection to server
-	pub socket: Option<web_sys::WebSocket>,
-}
-
-// Container for all views in the application
-#[derive(Default)]
-pub struct Views {
-	// Widget row on page bottom
-	pub aside_top: Node,
-
-	// Widget row on page bottom
-	pub aside_bottom: Node,
-	// TODO: Vector of dyn thread views
-}
 
 // Global state singleton
 #[derive(Default)]
 pub struct State {
-	// Connection state
-	pub conn: ConnState,
-
-	// Container for all views in the application
-	pub views: Views,
-
 	// Authentication key
 	pub auth_key: protocol::AuthKey,
 
-	// Currently subscribed to thread. 0 == global thread index
+	// Currently subscribed to thread. 0 = global thread index
 	pub thread: u64,
 }
 
