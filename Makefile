@@ -43,6 +43,7 @@ clean:
 
 test: websockets
 	cargo test
+	$(MAKE) -C client test
 	go test --race ./...
 
 test_no_race:

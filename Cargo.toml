@@ -1,8 +1,10 @@
 [workspace]
 members = [
-    "client",
     "websockets/websockets",
     "protocol",
+]
+exclude = [
+    "client",
 ]
 
 [profile.release]

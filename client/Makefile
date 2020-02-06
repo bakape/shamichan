@@ -16,7 +16,7 @@ watch: reset
 	webpack-dev-server --open -d
 
 test:
-	cargo test && wasm-pack test --headless
+	cargo test
 
 clean:
 	cargo clean
