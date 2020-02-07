@@ -1,4 +1,4 @@
-use yew::{html, Component, ComponentLink, Html, Properties};
+use yew::{html, Component, ComponentLink, Html, InputData, Properties};
 
 pub struct AsideRow {
 	props: Props,
@@ -54,6 +54,9 @@ struct NewThreadForm {
 
 enum Msg {
 	Toggle(bool),
+	InputTag(usize, String),
+	RemoveTag(usize),
+	AddTag,
 }
 
 impl Component for NewThreadForm {
@@ -65,7 +68,7 @@ impl Component for NewThreadForm {
 			link: link,
 			expanded: false,
 			available_tags: vec![],
-			selected_tags: vec![],
+			selected_tags: vec!["".into()],
 		}
 
 		// TODO: Fetch tag list from DB
@@ -75,6 +78,32 @@ impl Component for NewThreadForm {
 		match msg {
 			Msg::Toggle(expand) => {
 				self.expanded = expand;
+				true
+			}
+			Msg::InputTag(i, val) => {
+				if let Some(t) = self.selected_tags.get_mut(i) {
+					*t = val;
+				}
+				false
+			}
+			Msg::RemoveTag(i) => {
+				if self.selected_tags.len() == 1 {
+					self.selected_tags[0].clear();
+				} else {
+					self.selected_tags = self
+						.selected_tags
+						.iter()
+						.enumerate()
+						.filter(|(j, _)| *j != i)
+						.map(|(_, s)| s.clone())
+						.collect();
+				}
+				true
+			}
+			Msg::AddTag => {
+				if self.selected_tags.len() < 3 {
+					self.selected_tags.push("".into());
+				}
 				true
 			}
 		}
@@ -130,16 +159,30 @@ impl NewThreadForm {
 						required=true
 						type="text"
 						maxlength="100"
+						style="width: 100%"
 					/>
+					<hr></hr>
 					{self.render_tags()}
-					<input type="submit" />
+					<hr></hr>
+					<span>
+						<input
+							type="submit"
+							style="width: 50%"
+						/>
+						<input
+							type="button"
+							value={localize!("cancel")}
+							style="width: 50%"
+							onclick={self.link.callback(|_| Msg::Toggle(false))}
+						/>
+					</span>
 					<datalist id="available-tags">
 						{
 							for self
 								.available_tags
 								.iter()
 								.filter(|t|
-									self.selected_tags.iter().any(|s| &s == t)
+									!self.selected_tags.iter().any(|s| &s == t)
 								)
 								.map(|t| {
 									html! {
@@ -158,31 +201,45 @@ impl NewThreadForm {
 		for (i, t) in self.selected_tags.iter().enumerate() {
 			v.push(self.render_tag(t, i));
 		}
-		if v.is_empty() {
-			v.push(self.render_tag("", 0));
-		}
 		if v.len() < 3 {
 			// TODO: Click handler
 			v.push(html! {
-				<input type="button" value={localize!("add_tag")}></input>
+				<input
+					type="button"
+					value={localize!("add_tag")}
+					onclick={self.link.callback(|_| Msg::AddTag)}
+				>
+				</input>
 			});
 		}
 		v.into_iter().collect()
 	}
 
 	fn render_tag(&self, tag: &str, id: usize) -> Html {
-		// TODO: Input handler
 		html! {
-			<input
-				placeholder={localize!{"tag"}}
-				required=true
-				type="text"
-				maxlength="100"
-				minlength="1"
-				value={tag}
-				list="available-tags"
-				// TODO: Pass tag value and position in message
-			/>
+			<span>
+				<input
+					placeholder={localize!{"tag"}}
+					required=true
+					type="text"
+					maxlength="20"
+					minlength="1"
+					value={tag}
+					list="available-tags"
+					oninput={
+						self.link
+						.callback(move |e: InputData|
+							Msg::InputTag(id, e.value)
+						)
+					}
+				/>
+				<a
+					class="act"
+					onclick={self.link.callback(move |_| Msg::RemoveTag(id))}
+				>
+					{"X"}
+				</a>
+			</span>
 		}
 	}
 }
