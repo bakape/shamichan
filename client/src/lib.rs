@@ -51,15 +51,12 @@ impl Component for App {
 pub async fn main_js() -> util::Result {
 	console_error_panic_hook::set_once();
 
-	async fn run(s: &mut state::State) -> util::Result {
-		s.thread = util::window().location().hash()?.parse().unwrap_or(0);
-		s.load_auth_key()?;
-		lang::load_language_pack().await?;
-		yew::start_app::<App>();
-		Ok(())
-	}
+	let s = state::get();
+	s.thread = util::window().location().hash()?.parse().unwrap_or(0);
+	s.load_auth_key()?;
 
-	state::with(run).await?;
+	lang::load_language_pack().await?;
+	yew::start_app::<App>();
 
 	Ok(())
 }

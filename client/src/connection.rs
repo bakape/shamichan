@@ -103,17 +103,16 @@ impl Agent for Connection {
 			Event::Open => {
 				self.reset_reconn_attempts();
 				util::log_error_res(|| -> util::Result {
-					self.send(state::with(|s| -> util::Result<Vec<u8>> {
-						super::encode_batch!(
-							MessageType::Handshake,
-							&Handshake {
-								protocol_version: VERSION,
-								key: s.auth_key.clone(),
-							},
-							MessageType::Synchronize,
-							&s.thread
-						)
-					})?)?;
+					let s = state::get();
+					self.send(super::encode_batch!(
+						MessageType::Handshake,
+						&Handshake {
+							protocol_version: VERSION,
+							key: s.auth_key.clone(),
+						},
+						MessageType::Synchronize,
+						&s.thread
+					)?)?;
 					self.set_state(State::Syncing);
 					Ok(())
 				}());
@@ -317,10 +316,7 @@ impl Connection {
 				None => return Ok(()),
 				Some(t) => match t {
 					MessageType::Synchronize => {
-						state::with(|s| -> std::io::Result<()> {
-							s.thread = dec.read_next()?;
-							Ok(())
-						})?;
+						state::get().thread = dec.read_next()?;
 						self.set_state(State::Synced);
 					}
 					MessageType::FeedInit => {
@@ -400,6 +396,6 @@ macro_rules! encode_batch {
 		$(
 			enc.write_message($type, $payload)?;
 		)+
-		enc.finish().map_err(|e| e.into())
+		enc.finish()
 	}};
 }

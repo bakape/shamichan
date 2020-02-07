@@ -65,21 +65,18 @@ macro_rules! gen_global {
 	($visibility:vis, $type:ty, $default:expr, $getter:ident) => {
 		// Open global for writing
 		#[allow(unused)]
-		$visibility fn $getter<'a, F, R>(mut cb: F) -> R
-		where
-			F: FnMut(&'a mut $type) -> R,
-		{
+		$visibility fn $getter() -> &'static mut $type  {
 			unsafe {
 				static mut GLOBAL: Option<$type> = None;
 				if GLOBAL.is_none() {
 					GLOBAL = Some($default);
 				}
-				cb(unsafe { GLOBAL.as_mut().unwrap() })
+				GLOBAL.as_mut().unwrap()
 			}
 		}
 	};
 	($visibility:vis, $type:ty, $default:expr) => {
-		$crate::gen_global!($visibility, $type, $default, with);
+		$crate::gen_global!($visibility, $type, $default, get);
 	};
 	($type:ty) => {
 		$crate::gen_global!(, $type, Default::default());

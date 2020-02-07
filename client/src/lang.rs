@@ -93,15 +93,15 @@ macro_rules! localize {
 
 // Localize string literal
 pub fn localize_literal(key: &str) -> &'static str {
-	with(|l| match l.literals.get(key) {
+	match get().literals.get(key) {
 		Some(v) => v,
 		None => "localization not found",
-	})
+	}
 }
 
 // Insert key-value pairs into parsed localization format string
 pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
-	with(|l| match l.format_strings.get(key) {
+	match get().format_strings.get(key) {
 		Some(fmt) => {
 			let mut w = String::new();
 			for t in fmt.0.iter() {
@@ -120,18 +120,17 @@ pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
 			w
 		}
 		None => format!("localization not found: {}", key),
-	})
+	}
 }
 
 #[test]
 fn test_localization() {
-	with(|l| {
-		l.format_strings.insert(
-			"test".into(),
-			serde_json::from_str(r#""that {name} a {adjective}""#).unwrap(),
-		);
-		l.literals.insert("test".into(), "anon a BWAAKA".into());
-	});
+	let l = get();
+	l.format_strings.insert(
+		"test".into(),
+		serde_json::from_str(r#""that {name} a {adjective}""#).unwrap(),
+	);
+	l.literals.insert("test".into(), "anon a BWAAKA".into());
 
 	assert_eq!(
 		localize!("test", {"name" => "anon", "adjective"=> "BWAAKA"}),
@@ -153,35 +152,31 @@ where
 }
 
 pub async fn load_language_pack() -> util::Result {
-	async fn run(l: &mut LanguagePack) -> util::Result {
-		*l = serde_json::from_str(&String::from(
-			wasm_bindgen_futures::JsFuture::from(
-				js_sys::Reflect::get(&util::window(), &"language_pack".into())?
-					.dyn_into::<js_sys::Promise>()?,
-			)
-			.await?
-			.dyn_into::<js_sys::JsString>()?,
-		))?;
+	*get() = serde_json::from_str(&String::from(
+		wasm_bindgen_futures::JsFuture::from(
+			js_sys::Reflect::get(&util::window(), &"language_pack".into())?
+				.dyn_into::<js_sys::Promise>()?,
+		)
+		.await?
+		.dyn_into::<js_sys::JsString>()?,
+	))?;
 
-		// Apply localization to static DOM elements
-		query_selector_all_iter("[lang-content]", |el| {
-			el.set_text_content(Some(localize! {
-				&el
-				.get_attribute("lang-content")
-				.unwrap()
-			}));
-			Ok(())
-		})?;
-		query_selector_all_iter("[lang-title]", |el| {
-			el.set_attribute(
-				"title",
-				localize!(&el.get_attribute("lang-title").unwrap()),
-			)?;
-			Ok(())
-		})?;
-
+	// Apply localization to static DOM elements
+	query_selector_all_iter("[lang-content]", |el| {
+		el.set_text_content(Some(localize! {
+			&el
+			.get_attribute("lang-content")
+			.unwrap()
+		}));
 		Ok(())
-	}
+	})?;
+	query_selector_all_iter("[lang-title]", |el| {
+		el.set_attribute(
+			"title",
+			localize!(&el.get_attribute("lang-title").unwrap()),
+		)?;
+		Ok(())
+	})?;
 
-	with(run).await
+	Ok(())
 }
