@@ -66,51 +66,50 @@ func GetFeedData() (buf []byte, err error) {
 	err = db.
 		QueryRow(
 			context.Background(),
-			`select jsonb_object_agg(thread, val)
-			from (
-				select thread, merge_jsonb_obj(val) val
-				from (
-					select
-						thread,
+			`select
+				jsonb_agg(
+					jsonb_build_object(
+						'thread', t.id,
+						'recent_posts', coalesce(r.val, '{}'::jsonb),
+						'open_posts', coalesce(o.val, '{}'::jsonb)
+					)
+				)
+			from threads t
+			left join (
+				select
+					r.thread,
+					jsonb_object_agg(
+						r.id,
+						to_unix(r.created_on)
+					) val
+				from posts r
+				where r.created_on > now() - interval '16 minutes'
+				group by r.thread
+			) r on r.thread = t.id
+			left join (
+				select
+					o.thread,
+					jsonb_object_agg(
+						o.id,
 						jsonb_build_object(
-							'recent_posts', jsonb_object_agg(
-								id,
-								to_unix(created_on)
-							)
-						) val
-					from posts
-					where created_on > now() - interval '16 minutes'
-					group by thread
-
-					union all
-
-					select
-						thread,
-						jsonb_build_object(
-							'open_posts', jsonb_object_agg(
-								id,
-								jsonb_build_object(
-									'has_image', image is not null,
-									'image_spoilered', image_spoilered,
-									'created_on', to_unix(created_on),
-									'thread', thread,
-									'body', body
-								)
-							)
-						) val
-					from posts
-					where open
-					group by thread
-				) as d
-				group by thread
-			) as d`,
+							'has_image', o.image is not null,
+							'image_spoilered', o.image_spoilered,
+							'created_on', to_unix(o.created_on),
+							'thread', o.thread,
+							'body', o.body
+						)
+					) val
+				from posts o
+				where o.open
+				group by o.thread
+			) o on o.thread = t.id`,
 		).
 		Scan(&buf)
 	if err != nil {
 		return
 	}
 	if len(buf) == 0 {
-		buf = []byte(`{}`)
+		buf = []byte(`[]`)
 	}
 	return
 }

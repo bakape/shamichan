@@ -31,6 +31,7 @@ serde_json = "1.0.44"
 flate2 = "1.0.13"
 base64 = "0.11.0"
 yew = "0.11.0"
+stdweb = "0.4.20"
 
 [dependencies.web-sys]
 version = "0.3.31"

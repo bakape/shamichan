@@ -1,6 +1,7 @@
 use super::common::DynResult;
 use super::{config, pulsar};
 use libc;
+use protocol::debug_log;
 use std::borrow::Cow;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
@@ -119,11 +120,16 @@ pub fn close_client(id: u64, err: &str) {
 	// will prevent any further message write attempts to it.
 	super::registry::remove_client(id);
 
-	unsafe { ws_close_client(id, to_c_char(err)) };
+	debug_log!("closing client", err);
+	with_borrowed_c_char(err, |err| unsafe { ws_close_client(id, err) });
 }
 
-fn to_c_char(s: &str) -> *const c_char {
-	CString::new(s).expect("null in Rust string").as_ptr()
+// Casts &str to borrowed C string and runs f() with it as an argument
+fn with_borrowed_c_char<R>(s: &str, f: impl FnOnce(*const c_char) -> R) -> R {
+	// Putting it on the stack here ensures this is not dropped until the call
+	// to ws_close_client() returns
+	let cs = CString::new(s).expect("null in Rust string");
+	f(cs.as_ptr())
 }
 
 // Check, if thread exists in DB
@@ -153,13 +159,13 @@ pub fn write_message(client_id: u64, msg: Arc<Vec<u8>>) {
 
 // Create a new thread and return it's ID
 pub fn insert_thread(
-	subject: String,
-	tags: Vec<String>,
+	subject: &str,
+	tags: &[String],
 	auth_key: &protocol::AuthKey,
 ) -> DynResult<u64> {
 	let mut _tags: Vec<CString> = Vec::with_capacity(tags.len());
 	for t in tags {
-		_tags.push(CString::new(t)?);
+		_tags.push(CString::new(String::from(t))?);
 	}
 	let __tags: Vec<*const c_char> = _tags.iter().map(|x| x.as_ptr()).collect();
 
@@ -178,7 +184,7 @@ pub fn insert_thread(
 
 // Log error on Go side
 pub fn log_error(err: &str) {
-	unsafe { ws_log_error(to_c_char(err)) };
+	with_borrowed_c_char(err, |err| unsafe { ws_log_error(err) });
 }
 
 #[repr(C)]

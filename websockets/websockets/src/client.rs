@@ -1,5 +1,6 @@
 use super::common::DynResult;
 use super::config;
+use super::pulsar;
 use super::{bindings, registry, str_err};
 use protocol::AuthKey;
 use protocol::*;
@@ -77,7 +78,7 @@ impl Client {
 								str_err!("first message must be handshake");
 							}
 							let msg: Handshake = dec.read_next()?;
-							debug_log!("received handshake", msg);
+							debug_log!(">>> handshake", msg);
 							if msg.protocol_version != VERSION {
 								str_err!(
 									"protocol version mismatch: {}",
@@ -118,7 +119,7 @@ impl Client {
 	// Synchronize to a specific thread or board index
 	fn synchronize(&mut self, dec: &mut Decoder) -> DynResult {
 		let thread: u64 = dec.read_next()?;
-		debug_log!("received sync req", thread);
+		debug_log!(">>> sync req", thread);
 		if thread != 0 && !bindings::thread_exists(thread)? {
 			str_err!("invalid thread: {}", thread);
 		}
@@ -154,6 +155,8 @@ impl Client {
 	// Create a new thread and pass its ID to client
 	fn create_thread(&mut self, dec: &mut Decoder) -> DynResult {
 		let mut req: ThreadCreationReq = dec.read_next()?;
+		debug_log!(">>>", req);
+
 		Self::trim(&mut req.subject);
 		check_len!(req.subject, 100);
 		check_len!(req.tags, 3);
@@ -163,10 +166,14 @@ impl Client {
 		}
 		self.check_captcha(&req.captcha_solution)?;
 
-		self.send(
-			MessageType::CreateThreadAck,
-			&bindings::insert_thread(req.subject, req.tags, &self.key)?,
-		)?;
+		let id = bindings::insert_thread(&req.subject, &req.tags, &self.key)?;
+		pulsar::create_thread(ThreadCreationNotice {
+			id: id,
+			subject: req.subject,
+			tags: req.tags,
+		})?;
+
+		self.send(MessageType::CreateThreadAck, &id)?;
 		Ok(())
 	}
 }

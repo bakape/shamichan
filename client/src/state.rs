@@ -7,8 +7,8 @@ pub struct State {
 	// Authentication key
 	pub auth_key: protocol::AuthKey,
 
-	// Currently subscribed to thread. 0 = global thread index
-	pub thread: u64,
+	// Currently subscribed to thread or 0  (global thread index)
+	pub feed: u64,
 }
 
 super::gen_global!(pub, State);

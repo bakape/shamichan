@@ -10,16 +10,16 @@ use std::sync::{
 };
 use std::time::{Duration, Instant, SystemTime};
 
-// TODO: Optimise global feed with partial init message caching
-// TODO: Ensure client does not try to mutate feed data before it has been
-// initialized Those NOP on the server.
-// TODO: Add feed data on thread creation
-
 // For sending requests to Pulsar. Clone to use.
 static mut REQUEST: Option<Mutex<Sender<Request>>> = None;
 
 // Init module state
 pub fn init(feed_data: &[u8]) -> DynResult {
+	debug_log!(
+		">>> feed init data",
+		std::str::from_utf8(feed_data).unwrap()
+	);
+
 	let (sdr, recv) = channel();
 	unsafe {
 		REQUEST = Some(Mutex::new(sdr));
@@ -41,10 +41,21 @@ pub fn init(feed_data: &[u8]) -> DynResult {
 
 				// Process all pending requests
 				for req in recv.try_iter() {
-					match req {
+					if let Err(err) = match &req {
 						Request::CreateThread(data) => p.create_thread(data),
-						Request::RemoveThread(id) => p.remove_thread(id),
-						Request::InsertImage(req) => p.insert_image(req),
+						Request::RemoveThread(id) => {
+							p.remove_thread(*id);
+							Ok(())
+						}
+						Request::InsertImage(req) => {
+							p.insert_image(req);
+							Ok(())
+						}
+					} {
+						bindings::log_error(&format!(
+							"pulsar: request={:?} error={:?}",
+							req, err
+						));
 					}
 				}
 
@@ -127,6 +138,17 @@ struct Feed {
 
 	// Current active feed data.
 	data: FeedData,
+}
+
+// Get or init new Encoder and return it
+fn get_encoder(enc: &mut Option<Encoder>) -> &mut Encoder {
+	match enc {
+		Some(e) => e,
+		None => {
+			*enc = Some(Encoder::new(vec![]));
+			enc.as_mut().unwrap()
+		}
+	}
 }
 
 impl Feed {
@@ -250,17 +272,6 @@ impl Feed {
 		);
 	}
 
-	// Get or init new Encoder and return it
-	fn get_encoder(enc: &mut Option<Encoder>) -> &mut Encoder {
-		match enc {
-			Some(e) => e,
-			None => {
-				*enc = Some(Encoder::new(vec![]));
-				enc.as_mut().unwrap()
-			}
-		}
-	}
-
 	// Write post-related message to thread and possibly global feed
 	fn encode_post_message(
 		&mut self,
@@ -275,7 +286,7 @@ impl Feed {
 					$dst = Some(Encoder::new(Vec::new()));
 				}
 				if let Err(err) =
-					Self::get_encoder(&mut $dst).write_message(typ, payload)
+					get_encoder(&mut $dst).write_message(typ, payload)
 				{
 					self.common.log_encode_error(err);
 				}
@@ -339,26 +350,29 @@ struct Pulsar {
 impl Pulsar {
 	// Initialize with feed data as JSON
 	fn init(&mut self, feed_data: &[u8]) -> serde_json::Result<()> {
-		self.feeds =
-			serde_json::from_slice::<HashMap<u64, FeedData>>(feed_data)?
-				.into_iter()
-				.map(|(thread, data)| (thread, Feed::new(data)))
-				.collect();
+		self.feeds = serde_json::from_slice::<Vec<FeedData>>(feed_data)?
+			.into_iter()
+			.map(|d| (d.thread, Feed::new(d)))
+			.collect();
 		Ok(())
 	}
 
 	// Register a new thread and allocate its resources
-	fn create_thread(&mut self, thread: u64) {
+	fn create_thread(
+		&mut self,
+		data: &ThreadCreationNotice,
+	) -> std::io::Result<()> {
 		self.global.clear_cache();
 
 		let mut f = Feed::new(FeedData {
-			thread: thread,
+			thread: data.id,
 			..Default::default()
 		});
-		f.insert_post(thread);
-		self.feeds.insert(thread, f);
+		f.insert_post(data.id);
+		self.feeds.insert(data.id, f);
 
-		todo!("pass message to global feed")
+		get_encoder(&mut self.global.pending)
+			.write_message(MessageType::CreateThread, data)
 	}
 
 	// Deallocate thread resources and redirect all of its clients
@@ -393,18 +407,18 @@ impl Pulsar {
 	}
 
 	// Insert an image into an allocated post
-	fn insert_image(&mut self, req: ImageInsertionReq) {
+	fn insert_image(&mut self, req: &ImageInsertionReq) {
 		self.mod_thread(req.thread, |f| {
 			match f.data.open_posts.get_mut(&req.post) {
 				Some(p) => {
 					p.has_image = true;
-					p.spoilered_image = req.img.common.spoilered;
+					p.image_spoilered = req.img.common.spoilered;
 					f.encode_post_message(
 						req.post,
 						MessageType::InsertImage,
 						&InsertImage {
 							post: req.post,
-							image: req.img,
+							image: req.img.clone(),
 						},
 					);
 				}
@@ -660,6 +674,7 @@ impl Pulsar {
 	}
 }
 
+#[derive(Debug)]
 pub struct ImageInsertionReq {
 	thread: u64,
 	post: u64,
@@ -667,9 +682,10 @@ pub struct ImageInsertionReq {
 }
 
 // Request to pulsar
+#[derive(Debug)]
 pub enum Request {
 	// Initialize a freshly-created thread
-	CreateThread(u64),
+	CreateThread(ThreadCreationNotice),
 
 	// Deallocate thread resources and redirect all of its clients
 	RemoveThread(u64),
@@ -686,8 +702,8 @@ fn send_request(req: Request) -> SendResult {
 }
 
 // Initialize a freshly-created thread
-pub fn create_thread(id: u64) -> SendResult {
-	send_request(Request::CreateThread(id))
+pub fn create_thread(data: ThreadCreationNotice) -> SendResult {
+	send_request(Request::CreateThread(data))
 }
 
 // Deallocate thread resources and redirect all of its clients

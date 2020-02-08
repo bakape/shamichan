@@ -2,11 +2,27 @@ use super::{state, util};
 use protocol::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::fmt::Debug;
 use yew::agent::{Agent, AgentLink, Context, HandlerId};
 use yew::services::console::ConsoleService;
 use yew::services::timeout::{TimeoutService, TimeoutTask};
 use yew::services::Task;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
+
+// Encode a batch of (protocol::MessageType, Serialize) pairs
+#[macro_export]
+macro_rules! encode_message {
+	($($type:expr, $payload:expr),+) => {{
+		use protocol::debug_log;
+
+		let mut enc =  protocol::Encoder::new(Vec::new());
+		$(
+			debug_log!(format!("<<< {:?}: {:?}", $type, $payload));
+			enc.write_message($type, $payload)?;
+		)+
+		enc.finish()
+	}};
+}
 
 // States of the connection finite state machine
 #[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
@@ -51,19 +67,10 @@ pub enum Event {
 	WentOffline,
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum Request {
-	CurrentState,
-
-	// Send encoded message or message batch to server.
-	// Use encode_batch! to encode a message batch.
-	SendMsg(Vec<u8>),
-}
-
 impl Agent for Connection {
 	type Reach = Context;
 	type Message = Event;
-	type Input = Request;
+	type Input = Vec<u8>;
 	type Output = State;
 
 	fn create(link: AgentLink<Self>) -> Self {
@@ -102,28 +109,26 @@ impl Agent for Connection {
 		match msg {
 			Event::Open => {
 				self.reset_reconn_attempts();
-				util::log_error_res(|| -> util::Result {
+				util::with_logging(|| {
 					let s = state::get();
-					self.send(super::encode_batch!(
+					self.send(encode_message!(
 						MessageType::Handshake,
 						&Handshake {
 							protocol_version: VERSION,
 							key: s.auth_key.clone(),
 						},
 						MessageType::Synchronize,
-						&s.thread
+						&s.feed
 					)?)?;
 					self.set_state(State::Syncing);
 					Ok(())
-				}());
+				});
 			}
 			Event::Close(e) => {
 				self.reset_socket_and_timer();
 				if e.code() != 1000 && e.reason() != "" {
 					util::log_error(e.reason());
-					util::window()
-						.alert_with_message(&format!("error: {}", e.reason()))
-						.expect("alert failed");
+					util::alert(&e.reason());
 				}
 				self.handle_disconnect();
 			}
@@ -169,21 +174,15 @@ impl Agent for Connection {
 
 	fn connected(&mut self, id: HandlerId) {
 		self.subscribers.insert(id);
+		self.send_current_state(id);
 	}
 
 	fn disconnected(&mut self, id: HandlerId) {
 		self.subscribers.remove(&id);
 	}
 
-	fn handle_input(&mut self, req: Self::Input, id: HandlerId) {
-		match req {
-			Request::CurrentState => {
-				self.link.respond(id, self.state);
-			}
-			Request::SendMsg(msg) => {
-				util::log_error_res(self.send(msg));
-			}
-		}
+	fn handle_input(&mut self, msg: Self::Input, _: HandlerId) {
+		util::log_error_res(self.send(msg));
 	}
 }
 
@@ -192,8 +191,12 @@ impl Connection {
 	fn set_state(&mut self, new: State) {
 		self.state = new;
 		for id in self.subscribers.iter() {
-			self.link.respond(*id, self.state)
+			self.send_current_state(*id);
 		}
+	}
+
+	fn send_current_state(&self, subscriber: HandlerId) {
+		self.link.respond(subscriber, self.state)
 	}
 
 	fn handle_disconnect(&mut self) {
@@ -310,33 +313,93 @@ impl Connection {
 	}
 
 	fn on_message(&mut self, data: Vec<u8>) -> util::Result {
+		// Helper to make message handling through decode!() more terse
+		struct HandlerResult(util::Result);
+
+		impl From<()> for HandlerResult {
+			fn from(_: ()) -> HandlerResult {
+				HandlerResult(Ok(()))
+			}
+		}
+
+		impl From<util::Result> for HandlerResult {
+			fn from(v: util::Result) -> HandlerResult {
+				HandlerResult(v)
+			}
+		}
+
+		impl Into<util::Result> for HandlerResult {
+			fn into(self) -> util::Result {
+				self.0
+			}
+		}
+
+		// Separate function to enable type inference of payload type from
+		// lambda argument type
+		fn _decode<'de, T, R>(
+			dec: &'de mut Decoder,
+			typ: MessageType,
+			mut handler: impl FnMut(T) -> R,
+		) -> util::Result
+		where
+			T: Deserialize<'de> + Debug,
+			R: Into<HandlerResult>,
+		{
+			let payload: T = dec.read_next()?;
+			debug_log!(format!(">>> {:?}", typ), payload);
+			(handler(payload).into() as HandlerResult).into()
+		}
+
 		let mut dec = Decoder::new(&data)?;
-		loop {
-			match dec.peek_type() {
-				None => return Ok(()),
-				Some(t) => match t {
-					MessageType::Synchronize => {
-						state::get().thread = dec.read_next()?;
-						self.set_state(State::Synced);
-					}
-					MessageType::FeedInit => {
-						// TODO: Use it
-						dec.skip_next();
-					}
+		macro_rules! decode {
+			($type:expr, $($msg_type:ident => $handler:expr)+) => {
+				match $type {
+					$(
+						MessageType::$msg_type => {
+							_decode(&mut dec, MessageType::$msg_type, $handler)?
+						}
+					)+
 					_ => {
 						return Err(util::Error::new(format!(
 							"unhandled message type: {:?}",
-							t
+							$type
 						)))
 					}
+				}
+			};
+		}
+
+		loop {
+			match dec.peek_type() {
+				Some(t) => decode! { t,
+					Synchronize => |p: u64| {
+						state::get().feed = p;
+						self.set_state(State::Synced);
+					}
+					FeedInit => |_: FeedData| {
+						// TODO: Sync to feed
+					}
+					CreateThreadAck => |_: u64| {
+						// TODO: Save thread as owned and navigate to it
+					}
+					CreateThread => |_: ThreadCreationNotice| {
+						if state::get().feed != 0 {
+							// TODO: Insert thread into registry and rerender
+							// page, if needed
+						}
+					}
 				},
+				None => return Ok(()),
 			};
 		}
 	}
 }
 
 pub struct SyncCounter {
+	// Ensures connection agent is never dropped
+	#[allow(unused)]
 	conn: Box<dyn Bridge<Connection>>,
+
 	current: State,
 }
 
@@ -349,11 +412,6 @@ impl Component for SyncCounter {
 			conn: Connection::bridge(link.callback(|s| s)),
 			current: State::Loading,
 		}
-	}
-
-	fn mounted(&mut self) -> bool {
-		self.conn.send(Request::CurrentState);
-		false
 	}
 
 	fn update(&mut self, new: State) -> bool {
@@ -371,7 +429,7 @@ impl Component for SyncCounter {
 				<b
 					id="sync"
 					class="banner-float svg-link"
-					title={localize!("sync")}
+					title=localize!("sync")
 				>{
 					localize! {
 						match self.current {
@@ -386,16 +444,4 @@ impl Component for SyncCounter {
 			</>
 		}
 	}
-}
-
-// Encode a batch of protocol::MessageType and Serialize pairs
-#[macro_export]
-macro_rules! encode_batch {
-	($($type:expr, $payload:expr),+) => {{
-		let mut enc =  protocol::Encoder::new(Vec::new());
-		$(
-			enc.write_message($type, $payload)?;
-		)+
-		enc.finish()
-	}};
 }

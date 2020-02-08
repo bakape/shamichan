@@ -95,6 +95,12 @@ payload! { ThreadCreationReq {
 	captcha_solution: Vec<u8>,
 }}
 
+payload! { ThreadCreationNotice {
+	id: u64,
+	subject: String,
+	tags: Vec<String>,
+}}
+
 // Request for creating a new post
 payload! { PostCreationReq {
 	thread: u64,
@@ -106,10 +112,10 @@ payload! { PostCreationReq {
 // the server feed's state.
 payload! { OpenPost {
 	has_image: bool,
-	spoilered_image: bool,
+	image_spoilered: bool,
 	created_on: u64,
 	thread: u64,
-	body: post_body::Node,
+	body: Option<post_body::Node>,
 }}
 
 // Feed initialization data

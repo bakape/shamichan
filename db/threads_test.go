@@ -115,10 +115,11 @@ func TestGetFeedData(t *testing.T) {
 		t.Fatal(err)
 	}
 	ut := now.Unix()
-	test.AssertJSON(t, bytes.NewReader(buf), map[uint64]interface{}{
-		threads[0]: map[string]interface{}{
-			"open_posts": map[uint64]interface{}{
-				replies[0]: map[string]interface{}{
+	test.AssertJSON(t, bytes.NewReader(buf), []map[string]interface{}{
+		{
+			"thread": threads[0],
+			"open_posts": map[uint64]map[string]interface{}{
+				replies[0]: {
 					"body":            nil,
 					"thread":          threads[0],
 					"has_image":       false,
@@ -130,9 +131,10 @@ func TestGetFeedData(t *testing.T) {
 				replies[0]: ut,
 			},
 		},
-		threads[1]: map[string]interface{}{
-			"open_posts": map[uint64]interface{}{
-				replies[1]: map[string]interface{}{
+		{
+			"thread": threads[1],
+			"open_posts": map[uint64]map[string]interface{}{
+				replies[1]: {
 					"body":            nil,
 					"thread":          threads[1],
 					"has_image":       false,

@@ -1,8 +1,9 @@
 // For html macro
-#![recursion_limit = "256"]
+#![recursion_limit = "1024"]
 
 #[macro_use]
 mod lang;
+#[macro_use]
 mod banner;
 mod connection;
 mod state;
@@ -38,7 +39,7 @@ impl Component for App {
 					<banner::Banner />
 				</div>
 				<section id="main">
-					<widgets::AsideRow is_top={true} />
+					<widgets::AsideRow is_top=true />
 					<section>{"TODO"}</section>
 					<widgets::AsideRow />
 				</section>
@@ -52,7 +53,7 @@ pub async fn main_js() -> util::Result {
 	console_error_panic_hook::set_once();
 
 	let s = state::get();
-	s.thread = util::window().location().hash()?.parse().unwrap_or(0);
+	s.feed = util::window().location().hash()?.parse().unwrap_or(0);
 	s.load_auth_key()?;
 
 	lang::load_language_pack().await?;

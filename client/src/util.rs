@@ -36,6 +36,12 @@ impl From<JsValue> for Error {
 	}
 }
 
+impl std::fmt::Display for Error {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.0)
+	}
+}
+
 // Trait specialization when?
 macro_rules! from_display {
 	($($type:ty),+) => {
@@ -159,17 +165,32 @@ pub fn add_static_listener<E>(
 	cl.forget();
 }
 
-// Log any error to both console and alert
+// Log any error to console
 pub fn log_error_res<T, E: Into<Error>>(res: std::result::Result<T, E>) {
 	if let Err(err) = res {
 		log_error(err.into());
 	}
 }
 
-// Log error to both console and alert
+// Log error to console
 pub fn log_error<T: Into<String>>(err: T) {
 	let s = err.into();
 	if s.len() != 0 {
 		web_sys::console::error_1(&JsValue::from(&s));
 	}
+}
+
+// Run closure, logging any errors to both console error log and alert dialogs
+pub fn with_logging(f: impl FnOnce() -> Result) {
+	if let Err(e) = f() {
+		alert(&e);
+		log_error(e);
+	}
+}
+
+// Display error alert message
+pub fn alert(msg: &impl std::fmt::Display) {
+	window()
+		.alert_with_message(&format!("error: {}", msg))
+		.expect("alert failed")
 }

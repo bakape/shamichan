@@ -111,14 +111,19 @@ func ws_close_client(clientID C.uint64_t, err *C.char) {
 //export ws_insert_thread
 func ws_insert_thread(
 	subject *C.char,
-	tags []*C.char,
+	tags **C.char,
 	tags_size C.size_t,
 	auth_key *C.uint8_t,
 	id *C.uint64_t,
 ) *C.char {
 	_tags := make([]string, int(tags_size))
+	size := unsafe.Sizeof(subject)
 	for i := range _tags {
-		_tags[i] = C.GoString(tags[i])
+		_tags[i] = C.GoString(
+			*(**C.char)(unsafe.Pointer(
+				uintptr(unsafe.Pointer(tags)) + size*uintptr(i)),
+			),
+		)
 	}
 
 	_id, err := db.InsertThread(

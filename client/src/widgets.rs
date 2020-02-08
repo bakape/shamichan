@@ -1,4 +1,11 @@
-use yew::{html, Component, ComponentLink, Html, InputData, Properties};
+use super::connection;
+use super::util;
+use stdweb::web::event::{IEvent, SubmitEvent};
+use stdweb::web::{Element, FormData, FormDataEntry};
+use yew::agent::{Bridge, Bridged};
+use yew::{
+	html, Component, ComponentLink, Html, InputData, NodeRef, Properties,
+};
 
 pub struct AsideRow {
 	props: Props,
@@ -46,10 +53,13 @@ impl Component for AsideRow {
 }
 
 struct NewThreadForm {
+	el: NodeRef,
 	link: ComponentLink<Self>,
 	expanded: bool,
 	available_tags: Vec<String>,
 	selected_tags: Vec<String>,
+	conn: Box<dyn Bridge<connection::Connection>>,
+	conn_state: connection::State,
 }
 
 enum Msg {
@@ -57,6 +67,8 @@ enum Msg {
 	InputTag(usize, String),
 	RemoveTag(usize),
 	AddTag,
+	Submit,
+	ConnState(connection::State),
 }
 
 impl Component for NewThreadForm {
@@ -65,10 +77,15 @@ impl Component for NewThreadForm {
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
 		Self {
+			conn: connection::Connection::bridge(
+				link.callback(|s| Msg::ConnState(s)),
+			),
+			el: NodeRef::default(),
 			link: link,
 			expanded: false,
 			available_tags: vec![],
 			selected_tags: vec!["".into()],
+			conn_state: connection::State::Loading,
 		}
 
 		// TODO: Fetch tag list from DB
@@ -106,6 +123,39 @@ impl Component for NewThreadForm {
 				}
 				true
 			}
+			Msg::Submit => {
+				util::with_logging(|| {
+					let f = FormData::from_element(
+						&(self.el.try_into::<Element>()).unwrap(),
+					)
+					.unwrap();
+					self.conn.send(super::encode_message!(
+						protocol::MessageType::CreateThread,
+						&protocol::ThreadCreationReq {
+							subject: match f.get("subject") {
+								Some(FormDataEntry::String(s)) => s,
+								_ => "".into(),
+							},
+							tags: f
+								.get_all("tag")
+								.into_iter()
+								.filter_map(|t| match t {
+									FormDataEntry::String(s) => Some(s),
+									_ => None,
+								})
+								.collect(),
+							// TODO
+							captcha_solution: vec![],
+						}
+					)?);
+					Ok(())
+				});
+				false
+			}
+			Msg::ConnState(s) => {
+				self.conn_state = s;
+				true
+			}
 		}
 	}
 
@@ -113,15 +163,7 @@ impl Component for NewThreadForm {
 		html! {
 			<>
 				<aside id="thread-form-container">
-					<span
-						class={
-							if !self.expanded {
-								"act"
-							} else {
-								""
-							}
-						}
-					>
+					<span class={if !self.expanded { "act" } else { "" }}>
 						{
 							if self.expanded {
 								self.render_form()
@@ -152,28 +194,37 @@ impl NewThreadForm {
 			<>
 				<form
 					id="new-thread-form"
+					ref=self.el.clone()
 					style="display: flex; flex-direction: column;"
+					onsubmit={self.link.callback(|e: SubmitEvent| {
+						e.prevent_default();
+						Msg::Submit
+					})}
 				>
 					<input
-						placeholder={localize!{"subject"}}
+						placeholder=localize!{"subject"}
+						name="subject"
 						required=true
 						type="text"
 						maxlength="100"
 						style="width: 100%"
 					/>
-					<hr></hr>
+					<hr />
 					{self.render_tags()}
-					<hr></hr>
+					<hr />
 					<span>
 						<input
 							type="submit"
 							style="width: 50%"
+							disabled={
+								self.conn_state != connection::State::Synced
+							}
 						/>
 						<input
 							type="button"
-							value={localize!("cancel")}
+							value=localize!("cancel")
 							style="width: 50%"
-							onclick={self.link.callback(|_| Msg::Toggle(false))}
+							onclick=self.link.callback(|_| Msg::Toggle(false))
 						/>
 					</span>
 					<datalist id="available-tags">
@@ -186,7 +237,7 @@ impl NewThreadForm {
 								)
 								.map(|t| {
 									html! {
-										<option value={t}></option>
+										<option value=t></option>
 									}
 								})
 						}
@@ -202,12 +253,11 @@ impl NewThreadForm {
 			v.push(self.render_tag(t, i));
 		}
 		if v.len() < 3 {
-			// TODO: Click handler
 			v.push(html! {
 				<input
 					type="button"
-					value={localize!("add_tag")}
-					onclick={self.link.callback(|_| Msg::AddTag)}
+					value=localize!("add_tag")
+					onclick=self.link.callback(|_| Msg::AddTag)
 				>
 				</input>
 			});
@@ -219,12 +269,13 @@ impl NewThreadForm {
 		html! {
 			<span>
 				<input
-					placeholder={localize!{"tag"}}
+					placeholder=localize!{"tag"}
 					required=true
 					type="text"
 					maxlength="20"
 					minlength="1"
 					value={tag}
+					name="tag"
 					list="available-tags"
 					oninput={
 						self.link
@@ -235,7 +286,7 @@ impl NewThreadForm {
 				/>
 				<a
 					class="act"
-					onclick={self.link.callback(move |_| Msg::RemoveTag(id))}
+					onclick=self.link.callback(move |_| Msg::RemoveTag(id))
 				>
 					{"X"}
 				</a>
