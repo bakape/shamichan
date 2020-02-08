@@ -52,7 +52,7 @@ func TestSpamScores(t *testing.T) {
 	threshold := now.Add(spamDetectionThreshold)
 	for i, score := range [...]time.Time{
 		threshold.Add(-20 * spamDetectionThreshold),
-		threshold.Add(-5 * time.Second),
+		threshold.Add(-1 * time.Second),
 		threshold.Add(10 * spamDetectionThreshold),
 	} {
 		_, err = db.Exec(
