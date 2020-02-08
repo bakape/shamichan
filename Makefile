@@ -34,7 +34,7 @@ server: websockets
 	go build -v
 
 clean:
-	rm -rf meguca websockets/libwebsockets*.a
+	rm -rf meguca websockets/libwebsockets*.a www/client www/js
 	cargo clean
 	rm -rf www/css/*.css www/css/*.css.map node_modules
 	$(MAKE) -C client clean
