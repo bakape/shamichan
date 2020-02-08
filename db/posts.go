@@ -58,3 +58,18 @@ func InsertPost(
 	err = tx.QueryRow(ctx, q, args...).Scan(&id)
 	return
 }
+
+// GetPost reads a single post from the database
+func GetPost(ctx context.Context, id uint64) (post []byte, err error) {
+	err = db.
+		QueryRow(
+			ctx,
+			`select encode(p)
+			from posts p
+			where p.id = $1`,
+			id,
+		).
+		Scan(&post)
+	castNoRows(&post, &err)
+	return
+}

@@ -8,7 +8,8 @@ create table post_common (
 		bigint
 		not null
 		default nextval('post_id_seq'::regclass)
-		check (id > 0)
+		check (id > 0),
+	created_on timestamptz_auto_now
 );
 
 create table threads (
@@ -24,9 +25,8 @@ create index threads_tags_idx on threads using gin (tags);
 create table posts (
 	primary key (id),
 	thread bigint not null references threads on delete cascade,
-	page bigint check (page >= 0),
+	page bigint not null default 0 check (page >= 0),
 
-	created_on timestamptz_auto_now,
 	open bool not null default true,
 
 	sage bool not null default false,
@@ -64,9 +64,15 @@ create or replace function before_posts_insert()
 returns trigger
 language plpgsql
 as $$
+declare
+	posts_in_thread bigint;
 begin
-	-- +1, because new post is not inserted yet
-	new.page =  (post_count(new.thread) + 1) / 100;
+	posts_in_thread = post_count(new.thread);
+	new.page = case
+		when posts_in_thread = 0 then 0
+		else posts_in_thread / 100
+	end;
+
 	call bump_thread(new.thread, not new.sage, new.page);
 
 	return new;
@@ -93,7 +99,7 @@ create aggregate merge_jsonb_obj(item jsonb) (
 
 -- Bump a thread and propagate it has been updated
 --
--- op: id of thread being bumped
+-- id: id of thread being bumped
 -- bump_time: also update the thread's bumped_on
 -- page: page of the thread to bump. Used for cache invalidation.
 create or replace procedure bump_thread(
@@ -109,8 +115,6 @@ begin
 			set bumped_on = now()
 			where t.id = bump_thread.id;
 	end if;
-
-	perform pg_notify('thread.updated',	concat_ws(',', id, page));
 end;
 $$;
 

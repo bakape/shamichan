@@ -113,3 +113,21 @@ func GetFeedData() (buf []byte, err error) {
 	}
 	return
 }
+
+// Retrieve public thread data from the database.
+//
+// page: page of the thread to fetch;
+// 		 -1 to fetch the last page or;
+// 		 -5 to fetch last 5 posts;
+func GetThread(id uint64, page int) (thread []byte, err error) {
+	err = db.
+		QueryRow(
+			context.Background(),
+			"select get_thread($1, $2)",
+			id,
+			page,
+		).
+		Scan(&thread)
+	castNoRows(&thread, &err)
+	return
+}

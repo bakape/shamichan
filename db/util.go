@@ -73,3 +73,11 @@ type idSorter []uint64
 func (p idSorter) Len() int           { return len(p) }
 func (p idSorter) Less(i, j int) bool { return p[i] < p[j] }
 func (p idSorter) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+// The PL/pgSQL functions return null on non-existence. Cast that to
+// pgx.ErrNoRows.
+func castNoRows(buf *[]byte, err *error) {
+	if *err == nil && len(*buf) == 0 {
+		*err = pgx.ErrNoRows
+	}
+}

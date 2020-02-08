@@ -3,6 +3,7 @@ package db
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"testing"
 	"time"
 
@@ -34,6 +35,8 @@ func insertSampleThread(t *testing.T) (id uint64, authKey auth.AuthKey) {
 }
 
 func TestInsertThread(t *testing.T) {
+	t.Parallel()
+
 	id, _ := insertSampleThread(t)
 
 	exists, err := ThreadExists(context.Background(), id)
@@ -147,4 +150,230 @@ func TestGetFeedData(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestGetThread(t *testing.T) {
+	img, _, closeFiles := prepareSampleImage(t)
+	closeFiles()
+	thread, user := insertSampleThread(t)
+	thread2, _ := insertSampleThread(t)
+
+	const imageName = "fuko_da.jpeg"
+	// Postgres seems to have different timestamp rounding
+	now := time.Now().Round(time.Second)
+	unix := now.Unix()
+
+	genPost := func(id, thread, page uint64) map[string]interface{} {
+		return map[string]interface{}{
+			"id":         id,
+			"thread":     thread,
+			"page":       page,
+			"created_on": unix,
+			"open":       true,
+			"sage":       false,
+			"name":       nil,
+			"trip":       nil,
+			"flag":       nil,
+			"body":       nil,
+			"image":      nil,
+		}
+	}
+	genThread := func(id, postCount, imageCount uint64) map[string]interface{} {
+		return map[string]interface{}{
+			"id":          id,
+			"post_count":  postCount,
+			"image_count": imageCount,
+			"page":        0,
+			"created_on":  unix,
+			"bumped_on":   unix,
+			"subject":     "test",
+			"tags":        []string{"animu", "mango"},
+			"posts":       []map[string]interface{}{genPost(id, id, 0)},
+		}
+	}
+
+	std := genThread(thread, 109, 1)
+	std["page"] = 0
+	std["posts"] = []map[string]interface{}{
+		map[string]interface{}{
+			"id":         thread,
+			"thread":     thread,
+			"page":       0,
+			"created_on": unix,
+			"open":       true,
+			"sage":       false,
+			"name":       nil,
+			"trip":       nil,
+			"flag":       nil,
+			"body":       nil,
+			"image": map[string]interface{}{
+				"md5":          hex.EncodeToString(img.MD5[:]),
+				"name":         imageName,
+				"sha1":         hex.EncodeToString(img.SHA1[:]),
+				"size":         1048576,
+				"audio":        false,
+				"title":        nil,
+				"video":        false,
+				"width":        300,
+				"artist":       nil,
+				"height":       300,
+				"duration":     0,
+				"file_type":    "JPEG",
+				"spoilered":    false,
+				"thumb_type":   "JPEG",
+				"thumb_width":  150,
+				"thumb_height": 150,
+			},
+		},
+	}
+
+	err := InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
+		_, _, err = InsertImage(
+			context.Background(),
+			tx,
+			user,
+			img.SHA1,
+			imageName,
+			false,
+		)
+		return
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Patch all timestamps to simplify comparison
+	nowPgt := pgtype.Timestamptz{
+		Time:   now,
+		Status: pgtype.Present,
+	}
+	_, err = db.Exec(
+		context.Background(),
+		"update posts set created_on = $1",
+		nowPgt,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = db.Exec(
+		context.Background(),
+		"update threads set bumped_on = $1",
+		nowPgt,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
+		var id uint64
+		for i := 1; i < 109; i++ {
+			id, err = InsertPost(context.Background(), tx, ReplyInsertParams{
+				Thread: thread,
+				PostInsertParamsCommon: PostInsertParamsCommon{
+					AuthKey: &user,
+				},
+			})
+			if err != nil {
+				return
+			}
+			page := uint64(0)
+			if i >= 100 {
+				page = 1
+			}
+			std["posts"] = append(
+				std["posts"].([]map[string]interface{}),
+				genPost(id, thread, page),
+			)
+		}
+		return
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cloneStd := func() map[string]interface{} {
+		re := make(map[string]interface{})
+		for k, v := range std {
+			re[k] = v
+		}
+		return re
+	}
+
+	firstPage := cloneStd()
+	posts := std["posts"].([]map[string]interface{})
+	firstPage["posts"] = posts[:100]
+
+	lastPage := cloneStd()
+	lastPage["page"] = 1
+	lastPage["posts"] = append(
+		[]map[string]interface{}{
+			posts[0],
+		},
+		posts[100:]...,
+	)
+
+	last5 := cloneStd()
+	last5["posts"] = append(
+		[]map[string]interface{}{
+			posts[0],
+		},
+		posts[len(posts)-5:]...,
+	)
+
+	cases := [...]struct {
+		name string
+		id   uint64
+		page int
+		std  map[string]interface{}
+		err  error
+	}{
+		{
+			name: "first page",
+			id:   thread,
+			std:  firstPage,
+		},
+		{
+			name: "second page",
+			id:   thread,
+			page: 1,
+			std:  lastPage,
+		},
+		{
+			name: "last page",
+			id:   thread,
+			page: -1,
+			std:  lastPage,
+		},
+		{
+			name: "last 5 replies",
+			id:   thread,
+			page: -5,
+			std:  last5,
+		},
+		{
+			name: "no replies ;_;",
+			id:   thread2,
+			std:  genThread(thread2, 1, 0),
+		},
+		{
+			name: "nonexistent thread",
+			id:   9999999,
+			err:  pgx.ErrNoRows,
+		},
+	}
+
+	for i := range cases {
+		c := cases[i]
+		t.Run(c.name, func(t *testing.T) {
+			t.Parallel()
+
+			buf, err := GetThread(c.id, c.page)
+			if err != c.err {
+				test.UnexpectedError(t, err)
+			}
+			if c.err == nil {
+				test.AssertJSON(t, bytes.NewReader(buf), c.std)
+			}
+		})
+	}
 }
