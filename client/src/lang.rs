@@ -86,7 +86,7 @@ macro_rules! localize {
 	};
 
 	// Insert key-value pairs into localization format string
-	($key:expr { $($k:expr => $v:expr)+ }) => {
+	($key:expr, { $($k:expr => $v:expr)+ }) => {
 		$crate::lang::localize_format($key, &[$(($k, $v),)+])
 	};
 }
@@ -133,7 +133,7 @@ fn test_localization() {
 	l.literals.insert("test".into(), "anon a BWAAKA".into());
 
 	assert_eq!(
-		localize!("test" {"name" => "anon" "adjective" => "BWAAKA"}),
+		localize!("test", {"name" => "anon" "adjective" => "BWAAKA"}),
 		String::from("that anon a BWAAKA")
 	);
 	assert_eq!(localize!("test"), "anon a BWAAKA");
