@@ -1,6 +1,3 @@
-use std::collections::{HashMap, HashSet};
-use std::hash::Hash;
-
 // Boxed error result type shorthand
 pub type DynResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
 
@@ -59,57 +56,4 @@ macro_rules! gen_global_rwlock {
 	($vis:vis, $type:ident) => {
 		$crate::gen_global_rwlock!($vis, $type, || {});
 	};
-}
-
-// Map of K to sets of V
-#[derive(Clone)]
-pub struct SetMap<K, V>(pub HashMap<K, HashSet<V>>)
-where
-	K: Hash + Eq + Clone,
-	V: Hash + Eq + Clone;
-
-impl<K, V> Default for SetMap<K, V>
-where
-	K: Hash + Eq + Clone,
-	V: Hash + Eq + Clone,
-{
-	fn default() -> Self {
-		Self(HashMap::new())
-	}
-}
-
-impl<K, V> SetMap<K, V>
-where
-	K: Hash + Eq + Clone,
-	V: Hash + Eq + Clone,
-{
-	pub fn insert(&mut self, k: K, v: V) {
-		match self.0.get_mut(&k) {
-			Some(set) => {
-				set.insert(v);
-			}
-			None => {
-				let mut set = HashSet::new();
-				set.insert(v);
-				self.0.insert(k, set);
-			}
-		}
-	}
-
-	pub fn remove(&mut self, k: &K, v: &V)
-	where
-		K: Hash + Eq + Clone,
-		V: Hash + Eq + Clone,
-	{
-		if let Some(set) = self.0.get_mut(k) {
-			set.remove(v);
-			if set.len() == 0 {
-				self.0.remove(k);
-			}
-		}
-	}
-
-	pub fn get(&self, k: &K) -> Option<&HashSet<V>> {
-		self.0.get(k)
-	}
 }

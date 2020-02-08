@@ -7,6 +7,7 @@ mod lang;
 mod banner;
 mod connection;
 mod state;
+mod threads;
 mod user_bg;
 mod util;
 mod widgets;
@@ -15,16 +16,25 @@ mod widgets;
 // extern crate protocol;
 
 use wasm_bindgen::prelude::*;
-use yew::{html, Component, ComponentLink, Html};
+use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 
-struct App {}
+struct App {
+	// Keep here to load global state first
+	#[allow(unused)]
+	link: ComponentLink<Self>,
+	#[allow(unused)]
+	state: Box<dyn Bridge<state::State>>,
+}
 
 impl Component for App {
 	type Message = ();
 	type Properties = ();
 
-	fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
-		Self {}
+	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+		Self {
+			state: state::State::bridge(link.callback(|_| ())),
+			link: link,
+		}
 	}
 
 	fn update(&mut self, _: Self::Message) -> bool {
@@ -40,7 +50,7 @@ impl Component for App {
 				</div>
 				<section id="main">
 					<widgets::AsideRow is_top=true />
-					<section>{"TODO"}</section>
+					<threads::Threads />
 					<widgets::AsideRow />
 				</section>
 			</section>
@@ -51,10 +61,6 @@ impl Component for App {
 #[wasm_bindgen(start)]
 pub async fn main_js() -> util::Result {
 	console_error_panic_hook::set_once();
-
-	let s = state::get();
-	s.feed = util::window().location().hash()?.parse().unwrap_or(0);
-	s.load_auth_key()?;
 
 	lang::load_language_pack().await?;
 	yew::start_app::<App>();

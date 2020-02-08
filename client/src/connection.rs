@@ -42,6 +42,15 @@ pub struct Connection {
 	// Connection state machine
 	state: State,
 
+	// Link to global application state
+	app_state: Box<dyn Bridge<state::State>>,
+
+	// Feed ID currently subscribed to
+	feed: u64,
+
+	// Authentication key used for the server
+	auth_key: AuthKey,
+
 	// Reconnection attempts since last connect, if any
 	reconn_attempts: i32,
 
@@ -65,6 +74,9 @@ pub enum Event {
 	VisibilityChanged,
 	WentOnline,
 	WentOffline,
+
+	FeedChanged(u64),
+	AuthKey(AuthKey),
 }
 
 impl Agent for Connection {
@@ -74,7 +86,15 @@ impl Agent for Connection {
 	type Output = State;
 
 	fn create(link: AgentLink<Self>) -> Self {
+		use state::{Request, Response, SubscriptionType};
+
 		let mut s = Self {
+			app_state: state::State::bridge(link.callback(|u| match u {
+				Response::FeedID(id) => Event::FeedChanged(id),
+				Response::AuthKey(k) => Event::AuthKey(k),
+			})),
+			feed: 0,
+			auth_key: AuthKey::default(),
 			link: link,
 			state: State::Loading,
 			reconn_attempts: 0,
@@ -83,6 +103,10 @@ impl Agent for Connection {
 			subscribers: HashSet::new(),
 		};
 
+		s.app_state
+			.send(Request::Subscribe(SubscriptionType::FeedID));
+		s.app_state
+			.send(Request::Subscribe(SubscriptionType::AuthKey));
 		s.connect();
 
 		#[rustfmt::skip]
@@ -110,15 +134,14 @@ impl Agent for Connection {
 			Event::Open => {
 				self.reset_reconn_attempts();
 				util::with_logging(|| {
-					let s = state::get();
 					self.send(encode_message!(
 						MessageType::Handshake,
 						&Handshake {
 							protocol_version: VERSION,
-							key: s.auth_key.clone(),
+							key: self.auth_key.clone(),
 						},
 						MessageType::Synchronize,
-						&s.feed
+						&self.feed
 					)?)?;
 					self.set_state(State::Syncing);
 					Ok(())
@@ -169,6 +192,8 @@ impl Agent for Connection {
 				self.connect();
 			}
 			Event::WentOffline => self.handle_disconnect(),
+			Event::FeedChanged(id) => self.feed = id,
+			Event::AuthKey(k) => self.auth_key = k,
 		};
 	}
 
@@ -384,7 +409,7 @@ impl Connection {
 						// TODO: Save thread as owned and navigate to it
 					}
 					CreateThread => |_: ThreadCreationNotice| {
-						if state::get().feed != 0 {
+						if self.feed != 0 {
 							// TODO: Insert thread into registry and rerender
 							// page, if needed
 						}

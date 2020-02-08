@@ -449,7 +449,7 @@ impl Pulsar {
 		// Need a snapshot of the required registry fields for atomicity
 		let (all_clients, clients_by_feed) = registry::snapshot_threads(|sm| {
 			let mut not_ready = Vec::<(u64, HashSet<u64>)>::new();
-			for (feed, clients) in sm.0.drain() {
+			for (feed, clients) in sm.drain() {
 				if feed == 0 {
 					self.global.need_init.extend(clients);
 					continue;
@@ -460,7 +460,7 @@ impl Pulsar {
 				};
 			}
 			if not_ready.len() != 0 {
-				sm.0 = not_ready.into_iter().collect();
+				*sm = not_ready.into_iter().collect();
 			}
 		});
 

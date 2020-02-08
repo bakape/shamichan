@@ -1,6 +1,5 @@
 use super::client::Client;
-use super::common::SetMap;
-use protocol::AuthKey;
+use protocol::*;
 use std::collections::{HashMap, HashSet};
 use std::net::IpAddr;
 use std::rc::Rc;
