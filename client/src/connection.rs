@@ -372,8 +372,9 @@ impl Connection {
 		loop {
 			match dec.peek_type() {
 				Some(t) => decode! { t,
-					Synchronize => |p: u64| {
-						state::get().feed = p;
+					Synchronize => |_: u64| {
+						// Feed ID should already be set to the new one at this
+						// point, if the client was navigating away
 						self.set_state(State::Synced);
 					}
 					FeedInit => |_: FeedData| {
