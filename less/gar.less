@@ -1,41 +1,48 @@
 @import "mixins/common.less";
-@body: black;
-@link: #a00;
-@em: #992278;
-@del: black;
+@body  : black;
+@link  : #a00;
+@em    : #992278;
+@del   : black;
 @postBG: #e9e0c9;
-@border:  1px solid #d1c29b;
-@bold: #555;
-@admin: #ff2385;
-@mod: #128e3c;
-@red: #DF0101;
-@blue: #1048ff;
+@border: 1px solid #d1c29b;
+@bold  : #555;
+@admin : #ff2385;
+@mod   : #128e3c;
+@red   : #DF0101;
+@blue  : #1048ff;
 
-a:hover, blockquote a {
+a:hover,
+blockquote a {
 	color: #513fd3;
 }
 
-article, aside {
+article,
+aside {
 	background-color: @postBG;
-	border-right: @border;
-	border-bottom: @border;
+	border-right    : @border;
+	border-bottom   : @border;
 }
 
 article {
 	article {
 		border: @border;
 	}
-	&.highlight:not(.editing), &:target {
+
+	&.highlight:not(.editing),
+	&:target {
 		background-color: #ffb8d5;
-		border-color: #ef93c5;
+		border-color    : #ef93c5;
+
 		article {
 			border: solid 1px #ef93c5;
 		}
 	}
+
 	&.editing {
-		background: #b7bbb6 url('chevrons.png');
-		border-color: gray;
+		background           : #b7bbb6 url('chevrons.png');
+		border-color         : gray;
 		background-attachment: fixed;
+
 		article {
 			border: solid 1px gray;
 		}
@@ -43,20 +50,20 @@ article {
 }
 
 body {
-	background: #eee url('scales.png');
+	background           : #eee url('scales.png');
 	background-attachment: fixed;
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 10pt;
+	font-family          : Arial, Helvetica, sans-serif;
+	font-size            : 10pt;
 }
 
 h1 {
-	color: black;
-	font: bolder 28px Tahoma;
+	color         : black;
+	font          : bolder 28px Tahoma;
 	letter-spacing: -2px;
 }
 
 h2 {
-	color: black;
+	color      : black;
 	font-family: Tahoma;
 }
 
@@ -64,7 +71,9 @@ h3 {
 	color: #730;
 }
 
-header, header nav a, .backlinks {
+header,
+header nav a,
+.backlinks {
 	color: #444;
 }
 
@@ -76,10 +85,11 @@ hr {
 	background-color: #f5f5f5;
 }
 
-.modal, .popup-menu {
+.modal,
+.popup-menu {
 	background-color: white;
-	border-right: 1px solid #eee;
-	border-bottom: 1px solid #eee;
+	border-right    : 1px solid #eee;
+	border-bottom   : 1px solid #eee;
 }
 
 a.tab-sel {
@@ -90,7 +100,8 @@ a.tab-sel {
 	&:not(.editing) {
 		background-color: #f9f0d9;
 	}
-	border-right: 1px solid #e9e0c9;
+
+	border-right : 1px solid #e9e0c9;
 	border-bottom: 1px solid #e9e0c9;
 }
 

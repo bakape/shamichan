@@ -1,43 +1,49 @@
 .form-response {
-	text-align: center;
+	text-align : center;
 	font-weight: bold;
 }
 
 #moderation-panel {
 	align-self: flex-end;
 	margin-top: auto;
-	#modal-overlay > & {
+
+	#modal-overlay>& {
 		display: inline-block;
 	}
+
 	&:not(.keep-visible) {
-		transform: translateX(100%);
-		opacity: 0.5;
+		transform          : translateX(100%);
+		opacity            : 0.5;
 		transition-duration: 0.3s;
-		transition-delay: 0.1s;
+		transition-delay   : 0.1s;
 		transition-property: all;
+
 		&:hover {
 			transform: translateX(0);
-			opacity: 1;
-			border: 0;
+			opacity  : 1;
+			border   : 0;
+
 			form {
 				max-height: 85vh;
-				max-width: 85vw;
+				max-width : 85vw;
 			}
 		}
+
 		&:not(:hover) {
-			border-left: 1em solid;
-			border-right: 0;
-			border-bottom: 0;
-			border-top: 0;
-			border-top-left-radius: 1em;
+			border-left              : 1em solid;
+			border-right             : 0;
+			border-bottom            : 0;
+			border-top               : 0;
+			border-top-left-radius   : 1em;
 			border-bottom-left-radius: 1em;
 		}
+
 		form {
-			max-width: 1em;
-			max-height: 1em;
-			overflow: hidden;
+			max-width          : 1em;
+			max-height         : 1em;
+			overflow           : hidden;
 			transition-duration: 0.3s;
-			transition-delay: 0.1s;
+			transition-delay   : 0.1s;
 			transition-property: max-width, max-height;
 		}
 	}
@@ -49,34 +55,38 @@
 
 .ban-page {
 	margin-top: 2em;
-	padding: 1em;
+	padding   : 1em;
 	text-align: center;
 }
 
 .deleted-toggle {
 	-webkit-appearance: none;
-	-moz-appearance: none;
-	appearance: none;
-	cursor: pointer;
-	margin: 0;
-	background-image: url(/assets/css/ui/deleted.svg);
-	width: 1.1em;
-	height: 1.1em;
-	background-repeat: no-repeat;
-	background-size: contain;
+	-moz-appearance   : none;
+	appearance        : none;
+	cursor            : pointer;
+	margin            : 0;
+	background-image  : url(/assets/css/ui/deleted.svg);
+	width             : 1.1em;
+	height            : 1.1em;
+	background-repeat : no-repeat;
+	background-size   : contain;
 }
 
-.deleted > .deleted-toggle {
-	& > header:before, .thread-links:before {
+.deleted>.deleted-toggle {
+
+	&>header:before,
+	.thread-links:before {
 		display: inline-block;
 	}
-	&:not(:checked) ~ *:not(hr) {
+
+	&:not(:checked)~*:not(hr) {
 		display: none;
 	}
 }
 
-article, section {
-	&:not(.deleted) > .deleted-toggle {
+article,
+section {
+	&:not(.deleted)>.deleted-toggle {
 		display: none;
 	}
 }

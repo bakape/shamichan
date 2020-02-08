@@ -1,47 +1,53 @@
 @import "mixins/common.less";
-@body: white;
-@link: #C8C8D9;
-@em: #b5bd68;
-@del: black;
+@body  : white;
+@link  : #C8C8D9;
+@em    : #b5bd68;
+@del   : black;
 @postBG: rgba(40, 42, 46, 0.9);
 @border: 1px solid fade(@link, 5%);
-@bold: white;
-@admin: #f00000;
-@mod: #b288ff;
-@red: @admin;
-@blue: #57e8ed;
+@bold  : white;
+@admin : #f00000;
+@mod   : #b288ff;
+@red   : @admin;
+@blue  : #57e8ed;
 
 a:hover {
 	color: lighten(@link, 10%);
 }
 
-article, aside, .popup-menu, .modal {
+article,
+aside,
+.popup-menu,
+.modal {
 	background-color: @postBG;
-	border: @border;
+	border          : @border;
 }
 
 article {
 	&.editing {
 		background-color: rgba(105, 105, 105, 0.9);
 	}
-	&.highlight:not(.editing), &:target {
+
+	&.highlight:not(.editing),
+	&:target {
 		background-color: lighten(@postBG, 10%);
 	}
 }
 
 body {
-    background: url("/assets/css/glass-bg.jpg") no-repeat fixed center;
+	background     : url("/assets/css/glass-bg.jpg") no-repeat fixed center;
 	background-size: cover;
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 10pt;
+	font-family    : Arial, Helvetica, sans-serif;
+	font-size      : 10pt;
 }
 
-.embed, .embed:hover {
+.embed,
+.embed:hover {
 	color: black;
 }
 
 h1 {
-	font: bolder 28px Tahoma;
+	font          : bolder 28px Tahoma;
 	letter-spacing: -2px;
 }
 
@@ -62,6 +68,6 @@ hr {
 }
 
 a.tab-sel {
-	background-color: rgba(255,255,255,0.2);
-	color: #EAEAF0;
+	background-color: rgba(255, 255, 255, 0.2);
+	color           : #EAEAF0;
 }

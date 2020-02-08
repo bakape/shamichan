@@ -1,15 +1,15 @@
 @import "mixins/common.less";
-@body: #999999;
-@link: #99225c;
-@em: #859900;
-@del: black;
-@postBG: rgba(46,46,46,.95);
+@body  : #999999;
+@link  : #99225c;
+@em    : #859900;
+@del   : black;
+@postBG: rgba(46, 46, 46, .95);
 @border: 1px solid #262626;
-@bold: #808080;
-@admin: #dc322f;
-@mod: #5f5faf;
-@red: @admin;
-@blue: #57e8ed;
+@bold  : #808080;
+@admin : #dc322f;
+@mod   : #5f5faf;
+@red   : @admin;
+@blue  : #57e8ed;
 
 blockquote a {
 	color: #99225c;
@@ -19,29 +19,36 @@ a:hover {
 	color: #af005f;
 }
 
-article, aside {
+article,
+aside {
 	background-color: @postBG;
-	border-right: @border;
-	border-bottom: @border;
+	border-right    : @border;
+	border-bottom   : @border;
 }
 
 article {
 	article {
 		border: @border;
 	}
-	&.highlight:not(.editing), &:target {
-		background-color: rgba(44,44,51,.95);
-		border-color: #21212c;
+
+	&.highlight:not(.editing),
+	&:target {
+		background-color: rgba(44, 44, 51, .95);
+		border-color    : #21212c;
+
 		article {
 			border: solid 1px #21212c;
 		}
 	}
+
 	&.editing {
-		background-color: rgba(51,41,41,.95);
-		border-color: #2c2121;
+		background-color: rgba(51, 41, 41, .95);
+		border-color    : #2c2121;
+
 		article {
 			border: solid 1px #2c2121;
 		}
+
 		.red {
 			color: #ae0000;
 		}
@@ -49,26 +56,26 @@ article {
 }
 
 body {
-	background-color: #1e1e1e;
-	background-image: url('higan.jpg');
-	background-repeat: no-repeat;
-	background-size: contain;
+	background-color     : #1e1e1e;
+	background-image     : url('higan.jpg');
+	background-repeat    : no-repeat;
+	background-size      : contain;
 	background-attachment: fixed;
-	background-position: right bottom;
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-size: 10pt;
+	background-position  : right bottom;
+	font-family          : "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size            : 10pt;
 }
 
 h1 {
-	color: #731a19;
-	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
-	font-size: 30px;
-	text-shadow: #590030 1px 1px 0px;
+	color         : #731a19;
+	font-family   : "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
+	font-size     : 30px;
+	text-shadow   : #590030 1px 1px 0px;
 	letter-spacing: 1px;
 }
 
 h2 {
-	color: #731a19;
+	color      : #731a19;
 	font-family: Tahoma;
 }
 
@@ -92,10 +99,11 @@ hr {
 	background-color: #e4e4e4;
 }
 
-.modal, .popup-menu {
+.modal,
+.popup-menu {
 	background-color: #262626;
-	border-right: 1px solid #212121;
-	border-bottom: 1px solid #212121;
+	border-right    : 1px solid #212121;
+	border-bottom   : 1px solid #212121;
 }
 
 .omit {

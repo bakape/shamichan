@@ -1,40 +1,48 @@
 @import "mixins/common.less";
-@body: #eee;
-@link: #c22;
-@em:  #a00;
-@del: black;
+@body  : #eee;
+@link  : #c22;
+@em    : #a00;
+@del   : black;
 @postBG: #222;
 @border: 1px solid #111;
-@bold: #666;
-@admin: #f00;
-@mod: #ffff33;
-@red: @admin;
-@blue: #57e8ed;
+@bold  : #666;
+@admin : #f00;
+@mod   : #ffff33;
+@red   : @admin;
+@blue  : #57e8ed;
 
-a:hover, blockquote a {
+a:hover,
+blockquote a {
 	color: #513fd3;
 }
 
-article, aside, .modal {
+article,
+aside,
+.modal {
 	background-color: @postBG;
-	border-right: @border;
-	border-bottom: @border;
+	border-right    : @border;
+	border-bottom   : @border;
 }
 
 article {
 	article {
 		border: @border;
 	}
-	&.highlight:not(.editing), &:target {
+
+	&.highlight:not(.editing),
+	&:target {
 		background-color: #333;
-		border-color: #222;
+		border-color    : #222;
+
 		article {
 			border: solid 1px #222;
 		}
 	}
+
 	&.editing {
 		background-color: #311;
-		border-color: #200;
+		border-color    : #200;
+
 		article {
 			border: solid 1px #200;
 		}
@@ -42,20 +50,20 @@ article {
 }
 
 body {
-	background: black url('95.png');
+	background           : black url('95.png');
 	background-attachment: fixed;
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 10pt;
+	font-family          : Arial, Helvetica, sans-serif;
+	font-size            : 10pt;
 }
 
 h1 {
-	color: #900;
-	font: bolder 28px Tahoma;
+	color         : #900;
+	font          : bolder 28px Tahoma;
 	letter-spacing: -2px;
 }
 
 h2 {
-	color: #900;
+	color      : #900;
 	font-family: Tahoma;
 }
 
@@ -63,7 +71,11 @@ h3 {
 	color: #b388ff;
 }
 
-header, figcaption, figcaption a, .backlinks, .act {
+header,
+figcaption,
+figcaption a,
+.backlinks,
+.act {
 	color: #555;
 }
 
@@ -77,15 +89,16 @@ hr {
 
 .popup-menu {
 	background-color: #111;
-	border-right: 1px solid #000;
-	border-bottom: 1px solid #000;
+	border-right    : 1px solid #000;
+	border-bottom   : 1px solid #000;
 }
 
 .preview {
 	&:not(.editing) {
 		background-color: #111;
 	}
-	border-right: 1px solid #000;
+
+	border-right : 1px solid #000;
 	border-bottom: 1px solid #000;
 }
 
@@ -96,4 +109,3 @@ hr {
 a.tab-sel {
 	color: pink;
 }
-

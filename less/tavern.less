@@ -1,51 +1,61 @@
 @import "mixins/common.less";
-@body: white;
-@link: #ef9d6a;
-@em: #b5bd68;
-@del: black;
+@body  : white;
+@link  : #ef9d6a;
+@em    : #b5bd68;
+@del   : black;
 @postBG: @del;
 @border: 1px solid #282a2e;
-@bold: #c5c8c6;
-@admin: #f00000;
-@mod: @link;
-@red: @admin;
-@blue: #57e8ed;
-@wood: rgba(40, 25, 20, 0.8);
+@bold  : #c5c8c6;
+@admin : #f00000;
+@mod   : @link;
+@red   : @admin;
+@blue  : #57e8ed;
+@wood  : rgba(40, 25, 20, 0.8);
 
 blockquote a:hover {
 	color: @link;
 }
 
-a:hover, blockquote a, article.editing a:hover {
+a:hover,
+blockquote a,
+article.editing a:hover {
 	color: url("/assets/css/wood.jpg");
 }
 
-article, aside, .popup-menu, .modal {
+article,
+aside,
+.popup-menu,
+.modal {
 	background-color: @wood;
-	color: @body;
+	color           : @body;
 }
 
-article.highlight, .preview, .popup-menu {
+article.highlight,
+.preview,
+.popup-menu {
 	background-color: @wood;
-	color: @body;
+	color           : @body;
 }
 
 article.editing {
 	background:
-		linear-gradient(
-			rgba(239, 157, 106, 0.25),
-			rgba(239, 157, 106, 0.25)
-		), @wood;
+		linear-gradient(rgba(239, 157, 106, 0.25),
+			rgba(239, 157, 106, 0.25)), @wood;
 	color: @body;
-	a, header {
+
+	a,
+	header {
 		color: @body;
 	}
+
 	em {
 		color: #B7BA3E
 	}
+
 	li {
 		color: @body;
 	}
+
 	.themed {
 		color: @body;
 	}
@@ -56,22 +66,25 @@ article.editing {
 }
 
 body {
-	background: url(tavern.jpg) no-repeat center;
-	background-size:cover;
+	background           : url(tavern.jpg) no-repeat center;
+	background-size      : cover;
 	background-attachment: fixed;
-	height: 100%;
+	height               : 100%;
 }
 
-body, pre, .themed, a>b {
+body,
+pre,
+.themed,
+a>b {
 	font-family: Arial, Helvetica, sans-serif;
-	font-size: 10pt;
+	font-size  : 10pt;
 	text-shadow: -1px 0 @postBG, 0 1px @postBG, 1px 0 @postBG, 0 -1px @postBG;
-	color: @body
+	color      : @body
 }
 
 .embed {
 	background-color: @body;
-	text-shadow: none;
+	text-shadow     : none;
 }
 
 em {
@@ -79,14 +92,14 @@ em {
 }
 
 h1 {
-	font: bolder 28px Tahoma;
+	font          : bolder 28px Tahoma;
 	letter-spacing: -2px;
-	color: @body;
+	color         : @body;
 }
 
 h2 {
 	font-family: Tahoma;
-	color: @body;
+	color      : @body;
 }
 
 h3 {
@@ -99,7 +112,7 @@ hr {
 
 .popup-menu li:hover {
 	background-color: #136;
-	color: @body;
+	color           : @body;
 }
 
 .omit {
@@ -116,5 +129,5 @@ a.tab-sel {
 
 #banner {
 	background-color: @wood;
-	border-color: @wood;
+	border-color    : @wood;
 }

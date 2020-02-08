@@ -1,26 +1,28 @@
 @import "mixins/common.less";
-@body: #ccc;
-@link: white;
-@em: #b200b2;
-@del: white;
+@body  : #ccc;
+@link  : white;
+@em    : #b200b2;
+@del   : white;
 @postBG: black;
 @border: 1px solid white;
-@bold: white;
-@admin: red;
-@mod: pink;
-@red: @admin;
-@blue: #57e8ed;
+@bold  : white;
+@admin : red;
+@mod   : pink;
+@red   : @admin;
+@blue  : #57e8ed;
 
 .act a {
 	color: white;
 }
 
-a:hover, #sync {
+a:hover,
+#sync {
 	color: #e50000;
 }
 
-article, aside {
-	margin: 0;
+article,
+aside {
+	margin : 0;
 	padding: 10pt;
 }
 
@@ -28,15 +30,21 @@ article {
 	form {
 		margin-top: 10pt;
 	}
-	&.highlight:not(.editing), &:target {
+
+	&.highlight:not(.editing),
+	&:target {
 		background-color: #222;
 	}
+
 	&.editing {
 		background-color: #0000b2;
-		header, b {
+
+		header,
+		b {
 			color: white;
 		}
 	}
+
 	article {
 		border: @border;
 	}
@@ -47,27 +55,33 @@ b {
 }
 
 b.admin {
-	&, code {
+
+	&,
+	code {
 		background-color: #e50000;
-		color: black;
+		color           : black;
 	}
 }
 
 b.moderator {
-	&, code {
+
+	&,
+	code {
 		background-color: #00e500;
-		color: black;
+		color           : black;
 	}
 }
 
 blockquote {
-	margin: 10pt 0 0 0;
+	margin   : 10pt 0 0 0;
 	max-width: 80em;
+
 	a {
 		color: #00e5e5;
 	}
+
 	strong {
-		color: #00e500;
+		color      : #00e500;
 		font-weight: normal;
 	}
 }
@@ -78,19 +92,19 @@ header a {
 
 body {
 	background-color: #050505;
-	margin: 0;
-	padding: 0;
-	font-family: Monaco, "Andale Mono", Courier, monospace;
-	font-size: 10pt;
+	margin          : 0;
+	padding         : 0;
+	font-family     : Monaco, "Andale Mono", Courier, monospace;
+	font-size       : 10pt;
 }
 
 .embed {
-	background-color: rgba(255, 255, 255, 0.25);
-	border-radius: 0;
-	-moz-border-radius: 0;
+	background-color     : rgba(255, 255, 255, 0.25);
+	border-radius        : 0;
+	-moz-border-radius   : 0;
 	-webkit-border-radius: 0;
-	margin: 0;
-	padding: 0;
+	margin               : 0;
+	padding              : 0;
 }
 
 code {
@@ -98,8 +112,10 @@ code {
 }
 
 figcaption {
-	&, a {
-		color: #989800;
+
+	&,
+	a {
+		color         : #989800;
 		text-transform: lowercase;
 	}
 }
@@ -108,9 +124,10 @@ header {
 	color: gray;
 }
 
-h1, h2 {
-	color: white;
-	font-size: inherit;
+h1,
+h2 {
+	color      : white;
+	font-size  : inherit;
 	font-weight: bold;
 }
 
@@ -118,6 +135,7 @@ h1 {
 	&:before {
 		content: "= ";
 	}
+
 	&:after {
 		content: " =";
 	}
@@ -137,13 +155,15 @@ hr {
 
 .backlinks {
 	font-size: 10pt;
-	color: #444;
+	color    : #444;
+
 	a {
 		color: #666;
 	}
 }
 
-.act, .omit {
+.act,
+.omit {
 	color: #444;
 }
 
@@ -155,8 +175,10 @@ hr {
 	content: "<";
 }
 
-.modal, .preview:not(.editing), .popup-menu {
-	border: @border;
+.modal,
+.preview:not(.editing),
+.popup-menu {
+	border    : @border;
 	background: black;
 }
 
@@ -164,6 +186,7 @@ hr {
 	&:not(.editing) {
 		background: black;
 	}
+
 	border: @border;
 }
 

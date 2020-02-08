@@ -1,22 +1,22 @@
 @import "mixins/common.less";
-@body: #389EB6;
-@link: #B5C8FF;
-@em: #12BD7C;
-@del: black;
-@bold: lightblue;
-@postBG: rgba(28,29,34,0.78);
+@body  : #389EB6;
+@link  : #B5C8FF;
+@em    : #12BD7C;
+@del   : black;
+@bold  : lightblue;
+@postBG: rgba(28, 29, 34, 0.78);
 @border: 1px solid #262626;
-@admin: #15CFFA;
-@mod: #5f5faf;
-@red: #bc0000;
-@blue: #5793ed;
+@admin : #15CFFA;
+@mod   : #5f5faf;
+@red   : #bc0000;
+@blue  : #5793ed;
 
 a.referenced {
     text-decoration: none;
-    border-bottom: 1px dashed currentColor;
+    border-bottom  : 1px dashed currentColor;
 }
 
-.banner-float.svg-link  a {
+.banner-float.svg-link a {
     color: #64C0E8;
 }
 
@@ -25,7 +25,7 @@ a.referenced {
 }
 
 #banner {
-    background: rgba(46, 46, 46, .7);
+    background   : rgba(46, 46, 46, .7);
     border-bottom: 1px solid #262626;
 }
 
@@ -37,54 +37,62 @@ a:hover {
     color: #af005f;
 }
 
-article, aside {
+article,
+aside {
     background-color: @postBG;
-    border-right: @border;
-    border-bottom: @border;
+    border-right    : @border;
+    border-bottom   : @border;
 }
 
 article {
     article {
         border: @border;
     }
-    &.highlight:not(.editing), &:target {
+
+    &.highlight:not(.editing),
+    &:target {
         background-color: rgba(44, 44, 51, 0.88);
-        border-color: #21212c;
+        border-color    : #21212c;
+
         article {
-			border: solid 1px #21212c;
-		}
+            border: solid 1px #21212c;
+        }
     }
+
     &.editing {
         background-color: rgba(44, 57, 71, 0.88);
-        border-color: #2c2121;
+        border-color    : #2c2121;
+
         article {
-			border: solid 1px #2c2121;
-		}
+            border: solid 1px #2c2121;
+        }
     }
 }
 
 body {
-    background-color: #1e1e1e;
-    background-image: url(oceanKoi.png);
-    background-repeat: no-repeat;
+    background-color     : #1e1e1e;
+    background-image     : url(oceanKoi.png);
+    background-repeat    : no-repeat;
     background-attachment: fixed;
-    background-position: right bottom;
-    font-size: 10pt;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background-position  : right bottom;
+    font-size            : 10pt;
+    font-family          : "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-.embed, .popup-menu li:hover {
+.embed,
+.popup-menu li:hover {
     background-color: #e4e4e4;
 }
 
-h1, h2 {
+h1,
+h2 {
     color: #357EDD;
 }
 
 h1 {
-    font-family: "MS Pã‚´ã‚·ãƒƒã‚¯", "MS PGothic", Mona, "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
-    font-size: 30px;
-    text-shadow: #074854 1px 1px 0;
+    font-family   : "MS Pã‚´ã‚·ãƒƒã‚¯", "MS PGothic", Mona, "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
+    font-size     : 30px;
+    text-shadow   : #074854 1px 1px 0;
     letter-spacing: 1px;
 }
 
@@ -104,10 +112,11 @@ hr {
     border-top: 1px solid #2e2e2e;
 }
 
-.modal, .popup-menu {
+.modal,
+.popup-menu {
     background-color: #262626;
-    border-right: 1px solid #212121;
-    border-bottom: 1px solid #212121;
+    border-right    : 1px solid #212121;
+    border-bottom   : 1px solid #212121;
 }
 
 .omit {

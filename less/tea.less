@@ -1,15 +1,15 @@
 @import "mixins/common.less";
-@body: #0a0a0a;
-@link: #54578c;
-@em: #6e9e06;
-@del: black;
+@body  : #0a0a0a;
+@link  : #54578c;
+@em    : #6e9e06;
+@del   : black;
 @postBG: #d9f0d6;
 @border: 1px solid #b9d9b7;
-@bold: #1a8522;
-@admin: #d60000;
-@mod: #7800b3;
-@red: @admin;
-@blue: #1048ff;
+@bold  : #1a8522;
+@admin : #d60000;
+@mod   : #7800b3;
+@red   : @admin;
+@blue  : #1048ff;
 
 blockquote a {
 	color: #54578c;
@@ -19,26 +19,32 @@ a:hover {
 	color: #d17c43;
 }
 
-article, aside {
+article,
+aside {
 	background-color: @postBG;
-	border-right: @border;
-	border-bottom: @border;
+	border-right    : @border;
+	border-bottom   : @border;
 }
 
 article {
 	article {
 		border: solid @border;
 	}
-	&.highlight:not(.editing), &:target {
+
+	&.highlight:not(.editing),
+	&:target {
 		background-color: #b9ccb4;
-		border-color: #9fbf9d;
+		border-color    : #9fbf9d;
+
 		article {
 			border: solid 1px #9fbf9d;
 		}
 	}
+
 	&.editing {
 		background-color: #f0e5ba;
-		border-color: #dbd1aa;
+		border-color    : #dbd1aa;
+
 		article {
 			border: solid 1px #dbd1aa
 		}
@@ -47,20 +53,20 @@ article {
 
 body {
 	background-color: #f4ffee;
-	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-	font-size: 10pt;
+	font-family     : "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size       : 10pt;
 }
 
 h1 {
-	color: #b32407;
-	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
-	font-size: 30px;
-	text-shadow: #8e3523 1px 1px 0px;
+	color         : #b32407;
+	font-family   : "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
+	font-size     : 30px;
+	text-shadow   : #8e3523 1px 1px 0px;
 	letter-spacing: 1px;
 }
 
 h2 {
-	color: #b32407;
+	color      : #b32407;
 	font-family: "MS Pゴシック", "MS PGothic", "Mona", "Hiragino Kaku Gothic Pro", Helvetica, sans-serif;
 	text-shadow: #8e3523 1px 1px 0px;
 }
@@ -81,10 +87,12 @@ hr {
 	background-color: #f9fcf7;
 }
 
-.modal, .preview:not(.editing), .popup-menu {
+.modal,
+.preview:not(.editing),
+.popup-menu {
 	background-color: #f6faf3;
-	border-right: 1px solid #e5e8e2;
-	border-bottom: 1px solid #e5e8e2;
+	border-right    : 1px solid #e5e8e2;
+	border-bottom   : 1px solid #e5e8e2;
 }
 
 a.tab-sel {
