@@ -53,7 +53,7 @@ impl<'de> serde::de::Visitor<'de> for TokenVisitor {
 					match s.chars().position(|b| b == '}') {
 						None => true,
 						Some(end) => {
-							out.push(Token::Variable(s[1..end].into()));
+							out.push(Token::Variable(s[1..end].trim().into()));
 							s = &s[end + 1..];
 							false
 						}
@@ -128,7 +128,7 @@ fn test_localization() {
 	let l = get();
 	l.format_strings.insert(
 		"test".into(),
-		serde_json::from_str(r#""that {name} a {adjective}""#).unwrap(),
+		serde_json::from_str(r#""that {name} a { adjective }""#).unwrap(),
 	);
 	l.literals.insert("test".into(), "anon a BWAAKA".into());
 
