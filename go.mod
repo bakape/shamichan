@@ -8,7 +8,9 @@ require (
 	github.com/Masterminds/squirrel v1.1.0 // indirect
 	github.com/bakape/captchouli v1.2.0
 	github.com/bakape/pg_util v0.11.0
-	github.com/bakape/recache v0.0.0-20190524102257-67e46453405b
+	github.com/bakape/recache v1.0.1 // indirect
+	github.com/bakape/recache/v4 v4.0.2
+	github.com/bakape/recache/v5 v5.0.2
 	github.com/bakape/thumbnailer/v2 v2.5.6
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
@@ -26,10 +28,8 @@ require (
 	github.com/go-playground/log v6.3.0+incompatible
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
 	github.com/google/go-cmp v0.3.1
-	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgconn v1.2.0
 	github.com/jackc/pgtype v1.1.0
-	github.com/jackc/pgx v3.6.0+incompatible
 	github.com/jackc/pgx/v4 v4.2.0
 	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect

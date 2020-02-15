@@ -34,3 +34,4 @@ debug.test
 /config.json
 db_*.db
 /target
+vendor

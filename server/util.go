@@ -67,13 +67,8 @@ func logError(r *http.Request, err interface{}) {
 	log.Errorf(`server: ip="%s" url="%s" err="%s"`, ip, r.URL.String(), err)
 }
 
-// Text-only 404 response
-func text404(w http.ResponseWriter) {
-	http.Error(w, "404 not found", 404)
-}
-
-// Send error with code and logging according to error type
-func httpError(w http.ResponseWriter, r *http.Request, err error) {
+func handleError(w http.ResponseWriter, r *http.Request, fn func() error) {
+	err := fn()
 	if err == nil {
 		return
 	}

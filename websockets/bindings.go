@@ -14,6 +14,7 @@ import (
 	"unsafe"
 
 	"github.com/bakape/meguca/auth"
+	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
@@ -140,6 +141,9 @@ func ws_insert_thread(
 		return C.CString(err.Error())
 	}
 	*id = C.uint64_t(_id)
+
+	cache.EvictThreadList()
+
 	return nil
 }
 

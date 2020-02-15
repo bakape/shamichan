@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"mime/multipart"
 	"net/http"
@@ -45,20 +46,25 @@ func newFileError(h *multipart.FileHeader, msg string) error {
 // More performant handler for serving image assets. These are immutable
 // (except deletion), so we can also set separate caching policies for them.
 func serveImages(w http.ResponseWriter, r *http.Request) {
-	path := extractParam(r, "path")
-	file, err := os.Open(cleanJoin(imageWebRoot, path))
-	if err != nil {
-		text404(w)
+	handleError(w, r, func() (err error) {
+		path := extractParam(r, "path")
+		file, err := os.Open(cleanJoin(imageWebRoot, path))
+		if err != nil {
+			return common.StatusError{
+				Err:  err,
+				Code: 404,
+			}
+		}
+		defer file.Close()
+
+		head := w.Header()
+		for key, val := range imageHeaders {
+			head.Set(key, val)
+		}
+
+		http.ServeContent(w, r, path, time.Time{}, file)
 		return
-	}
-	defer file.Close()
-
-	head := w.Header()
-	for key, val := range imageHeaders {
-		head.Set(key, val)
-	}
-
-	http.ServeContent(w, r, path, time.Time{}, file)
+	})
 }
 
 func cleanJoin(a, b string) string {
@@ -72,29 +78,35 @@ func serveAssets(w http.ResponseWriter, r *http.Request) {
 }
 
 func serveFile(w http.ResponseWriter, r *http.Request, path string) {
-	file, err := os.Open(path)
-	if err != nil {
-		text404(w)
-		return
-	}
-	defer file.Close()
+	handleError(w, r, func() (err error) {
+		file, err := os.Open(path)
+		if err != nil {
+			return common.StatusError{
+				Err:  err,
+				Code: 404,
+			}
+		}
+		defer file.Close()
 
-	stats, err := file.Stat()
-	if err != nil {
-		httpError(w, r, err)
-		return
-	}
-	if stats.IsDir() {
-		text404(w)
-		return
-	}
-	modTime := stats.ModTime()
-	etag := strconv.FormatInt(modTime.Unix(), 10)
+		stats, err := file.Stat()
+		if err != nil {
+			return
+		}
+		if stats.IsDir() {
+			return common.StatusError{
+				Err:  errors.New("path point to directory"),
+				Code: 404,
+			}
+		}
+		modTime := stats.ModTime()
+		etag := strconv.FormatInt(modTime.Unix(), 10)
 
-	head := w.Header()
-	head.Set("Cache-Control", "no-cache")
-	head.Set("ETag", etag)
-	http.ServeContent(w, r, path, modTime, file)
+		head := w.Header()
+		head.Set("Cache-Control", "no-cache")
+		head.Set("ETag", etag)
+		http.ServeContent(w, r, path, modTime, file)
+		return
+	})
 }
 
 // Read a file from an asset submition form.

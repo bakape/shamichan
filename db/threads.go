@@ -131,3 +131,37 @@ func GetThread(id uint64, page int) (thread []byte, err error) {
 	castNoRows(&thread, &err)
 	return
 }
+
+// Get all existing thread IDs
+func GetThreadIDs() (ids []uint64, err error) {
+	r, err := db.Query(context.Background(), "select id from threads")
+	if err != nil {
+		return
+	}
+	defer r.Close()
+
+	for r.Next() {
+		var id uint64
+		err = r.Scan(&id)
+		if err != nil {
+			return
+		}
+		ids = append(ids, id)
+	}
+	err = r.Err()
+	return
+}
+
+// Get the number of the last page of a thread
+func GetLastPage(id uint64) (n int, err error) {
+	err = db.
+		QueryRow(
+			context.Background(),
+			`select coalesce(max(page), 0)
+			from posts
+			where thread = $1`,
+			id,
+		).
+		Scan(&n)
+	return
+}

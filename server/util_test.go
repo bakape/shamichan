@@ -85,10 +85,3 @@ func marshalJSON(t *testing.T, msg interface{}) []byte {
 	}
 	return data
 }
-
-func TestText404(t *testing.T) {
-	rec, req := newPair("/happi/")
-	router.ServeHTTP(rec, req)
-	assertCode(t, rec, 404)
-	assertBody(t, rec, "404 not found\n")
-}

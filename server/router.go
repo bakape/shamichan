@@ -71,9 +71,6 @@ func handlePanic(w http.ResponseWriter, r *http.Request, err interface{}) {
 // function for easier testability.
 func createRouter() http.Handler {
 	r := httptreemux.NewContextMux()
-	r.NotFoundHandler = func(w http.ResponseWriter, _ *http.Request) {
-		text404(w)
-	}
 	r.PanicHandler = handlePanic
 
 	r.GET("/", func(w http.ResponseWriter, r *http.Request) {
@@ -120,6 +117,10 @@ func createRouter() http.Handler {
 			}
 		}
 	})
+
+	json := api.NewGroup("/json")
+	json.GET("/threads/:thread/:page", serveThread)
+	json.GET("/index", serveIndex)
 
 	return r
 }

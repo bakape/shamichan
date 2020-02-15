@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"fmt"
+	"sort"
 	"testing"
 	"time"
 
@@ -153,6 +155,8 @@ func TestGetFeedData(t *testing.T) {
 }
 
 func TestGetThread(t *testing.T) {
+	clearTables(t, "threads")
+
 	img, _, closeFiles := prepareSampleImage(t)
 	closeFiles()
 	thread, user := insertSampleThread(t)
@@ -376,4 +380,56 @@ func TestGetThread(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("get thread IDs", func(t *testing.T) {
+		t.Parallel()
+
+		ids, err := GetThreadIDs()
+		if err != nil {
+			t.Fatal(err)
+		}
+		sort.Sort(idSorter(ids))
+		fmt.Println(ids, []uint64{thread, thread2})
+		test.AssertEquals(t, ids, []uint64{thread, thread2})
+	})
+
+	t.Run("get page counts", func(t *testing.T) {
+		t.Parallel()
+
+		cases := [...]struct {
+			name   string
+			thread uint64
+			last   int
+		}{
+			{
+				name:   "small",
+				thread: thread2,
+				last:   0,
+			},
+			{
+				name:   "bigger",
+				thread: thread,
+				last:   1,
+			},
+			{
+				name:   "no thread",
+				thread: thread2 + 20,
+				last:   0,
+			},
+		}
+
+		for i := range cases {
+			c := cases[i]
+			t.Run(c.name, func(t *testing.T) {
+				t.Parallel()
+
+				last, err := GetLastPage(c.thread)
+				if err != nil {
+					t.Fatal(err)
+				}
+				test.AssertEquals(t, c.last, last)
+			})
+		}
+
+	})
 }
