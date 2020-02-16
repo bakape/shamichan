@@ -1,5 +1,8 @@
 {
-	"format_strings": {},
+	"format_strings": {
+		"time_ago": "{number} {unit} ago",
+		"time_in": "in {number} {unit}"
+	},
 	"labels": {
 		"always_lock_to_bottom": [
 			"永遠鎖定在最下面",
@@ -500,5 +503,31 @@
 		"watch_thread": "關注討論串",
 		"wednesday": "星期三",
 		"you": "（你）"
+	},
+	"plurals": {
+		"day": [
+			"day",
+			"days"
+		],
+		"hour": [
+			"hour",
+			"hours"
+		],
+		"minute": [
+			"minute",
+			"minutes"
+		],
+		"month": [
+			"month",
+			"months"
+		],
+		"second": [
+			"second",
+			"seconds"
+		],
+		"year": [
+			"year",
+			"years"
+		]
 	}
 }

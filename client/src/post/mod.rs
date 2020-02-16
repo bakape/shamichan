@@ -69,26 +69,33 @@ impl Component for Post {
 
 impl Post {
 	fn render_header(&self, p: &Data) -> Html {
-		let mut w: Vec<Html> = Vec::with_capacity(6);
-
-		if p.id == p.thread {
-			if let Some(t) = state::get().threads.get(&p.thread) {
-				for t in t.tags.iter() {
-					w.push(html! {
-						<b>{format!("/{}/", t)}</b>
-					});
-				}
-				w.push(html! {
-					<h3>{format!("「{}」", t.subject)}</h3>
-				});
-			}
-		}
-
-		w.push(self.render_name(p));
-
+		let s = state::get();
 		html! {
 			<header class="spaced">
-				{w.into_iter().collect::<Html>()}
+				{
+					match (p.id == p.thread, s.threads.get(&p.thread)) {
+						(true, Some(t)) => {
+							html! {
+								<>
+									{
+										for t.tags.iter().map(|t| {
+											html! {
+												<b>{format!("/{}/", t)}</b>
+											}
+										})
+									}
+									<h3>{format!("「{}」", t.subject)}</h3>
+								</>
+							}
+						},
+						_ => html! {}
+					}
+				}
+				{self.render_name(p)}
+				<crate::time::view::View
+					time=p.created_on
+					relative=s.options.relative_timestamps
+				/>
 			</header>
 		}
 	}

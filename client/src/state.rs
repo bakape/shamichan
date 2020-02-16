@@ -64,8 +64,8 @@ pub struct Thread {
 	pub subject: String,
 	pub tags: Vec<String>,
 
-	pub bumped_on: u64,
-	pub created_on: u64,
+	pub bumped_on: u32,
+	pub created_on: u32,
 	pub post_count: u64,
 	pub image_count: u64,
 }
@@ -77,7 +77,7 @@ pub struct Post {
 	pub page: u32,
 	pub thread: u64,
 
-	pub created_on: u64,
+	pub created_on: u32,
 	pub open: bool,
 
 	pub name: Option<String>,

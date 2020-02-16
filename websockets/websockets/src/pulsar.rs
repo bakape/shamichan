@@ -256,7 +256,7 @@ impl Feed {
 			.expect("negative Unix timestamp")
 			.as_secs();
 
-		self.data.recent_posts.insert(id, now);
+		self.data.recent_posts.insert(id, now as u32);
 		if self.last_5_posts.len() == 5 {
 			unsafe { self.last_5_posts.pop_unchecked() };
 		}
@@ -438,7 +438,7 @@ impl Pulsar {
 		self.feeds.par_iter_mut().for_each(|(_, feed)| {
 			feed.data
 				.recent_posts
-				.retain(|_, created_on| *created_on > threshold)
+				.retain(|_, created_on| *created_on > threshold as u32)
 		})
 	}
 

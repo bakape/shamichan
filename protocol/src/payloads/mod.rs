@@ -126,7 +126,7 @@ payload! { FeedData {
 	// Posts created in the last 16 minutes (open post CD + 1 minute to ensure
 	// there is no overlap due to latency).
 	// <post_id: post_creation_unix_timestamp>
-	recent_posts: HashMap<u64, u64>,
+	recent_posts: HashMap<u64, u32>,
 
 	// Posts currently open. Mapped by ID.
 	open_posts: HashMap<u64, OpenPost>,

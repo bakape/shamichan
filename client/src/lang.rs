@@ -15,6 +15,9 @@ struct LanguagePack {
 
 	// (label, title) tuples
 	pub labels: HashMap<String, (String, String)>,
+
+	// (singular, plural) tuples
+	pub plurals: HashMap<String, (String, String)>,
 }
 
 super::gen_global! {, LanguagePack, get, get_mut}
@@ -99,6 +102,23 @@ pub fn localize_literal(key: &str) -> &'static str {
 	}
 }
 
+// Localize pluralizable string literal
+pub fn pluralize<T>(key: &str, n: T) -> &'static str
+where
+	T: std::cmp::Ord + From<u8>,
+{
+	match get().plurals.get(key) {
+		Some(v) => {
+			if n == 1.into() {
+				&v.0
+			} else {
+				&v.1
+			}
+		}
+		None => "localization not found",
+	}
+}
+
 // Insert key-value pairs into parsed localization format string
 pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
 	match get().format_strings.get(key) {
@@ -131,12 +151,17 @@ fn test_localization() {
 		serde_json::from_str(r#""that {name} a { adjective }""#).unwrap(),
 	);
 	l.literals.insert("test".into(), "anon a BWAAKA".into());
+	l.plurals
+		.insert("post".into(), ("post".into(), "posts".into()));
 
 	assert_eq!(
 		localize!("test", {"name" => "anon" "adjective" => "BWAAKA"}),
 		String::from("that anon a BWAAKA")
 	);
 	assert_eq!(localize!("test"), "anon a BWAAKA");
+
+	assert_eq!(pluralize("post", 1), "post");
+	assert_eq!(pluralize("post", 2), "posts");
 }
 
 pub async fn load_language_pack() -> util::Result {

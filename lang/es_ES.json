@@ -1,5 +1,8 @@
 {
-	"format_strings": {},
+	"format_strings": {
+		"time_ago": "{number} {unit} ago",
+		"time_in": "in {number} {unit}"
+	},
 	"labels": {
 		"always_lock_to_bottom": [
 			"Siempre bloquear a la parte inferior",
@@ -500,5 +503,31 @@
 		"watch_thread": "Watch thread",
 		"wednesday": "Mie",
 		"you": "(Tu)"
+	},
+	"plurals": {
+		"day": [
+			"day",
+			"days"
+		],
+		"hour": [
+			"hour",
+			"hours"
+		],
+		"minute": [
+			"minute",
+			"minutes"
+		],
+		"month": [
+			"month",
+			"months"
+		],
+		"second": [
+			"second",
+			"seconds"
+		],
+		"year": [
+			"year",
+			"years"
+		]
 	}
 }
