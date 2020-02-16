@@ -1,7 +1,7 @@
 use super::util;
 use protocol::*;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 use std::str;
 use yew::agent::{AgentLink, Context, HandlerId};
@@ -9,6 +9,13 @@ use yew::services::fetch;
 
 // Key used to store AuthKey in local storage
 const AUTH_KEY: &str = "auth_key";
+
+// Global user-set options
+#[derive(Serialize, Deserialize, Default)]
+pub struct Options {
+	pub forced_anonymity: bool,
+	pub relative_timestamps: bool,
+}
 
 // Stored separately from the agent to avoid needless serialization on change
 // propagation. The entire application has read-only access to this singleton.
@@ -29,6 +36,14 @@ pub struct State {
 
 	// Authentication key
 	pub auth_key: AuthKey,
+
+	// Global user-set options
+	pub options: Options,
+
+	// Posts this user has made
+	// TODO: Menu option to mark any post as mine
+	// TODO: Persistance to indexedDB
+	pub mine: HashSet<u64>,
 }
 
 impl State {
@@ -45,7 +60,10 @@ super::gen_global! {pub, State, get, get_mut}
 pub struct Thread {
 	pub id: u64,
 	pub page: u32,
+
 	pub subject: String,
+	pub tags: Vec<String>,
+
 	pub bumped_on: u64,
 	pub created_on: u64,
 	pub post_count: u64,

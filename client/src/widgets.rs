@@ -53,7 +53,7 @@ impl Component for AsideRow {
 						}
 					}
 					<aside class="act glass">
-						<a href="catalog">{localize!("catalog")}</a>
+						<a>{localize!("catalog")}</a>
 					</aside>
 				</span>
 			</>

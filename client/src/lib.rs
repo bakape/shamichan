@@ -10,6 +10,7 @@ mod post;
 mod state;
 mod thread;
 mod thread_index;
+mod time;
 mod user_bg;
 mod util;
 mod widgets;

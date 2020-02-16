@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"fmt"
 	"sort"
 	"testing"
 	"time"
@@ -389,7 +388,6 @@ func TestGetThread(t *testing.T) {
 			t.Fatal(err)
 		}
 		sort.Sort(idSorter(ids))
-		fmt.Println(ids, []uint64{thread, thread2})
 		test.AssertEquals(t, ids, []uint64{thread, thread2})
 	})
 

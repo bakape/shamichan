@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sort"
 
 	"github.com/bakape/pg_util"
 	"github.com/jackc/pgx/v4"
@@ -22,6 +23,7 @@ type ThreadInsertParams struct {
 func InsertThread(ctx context.Context, p ThreadInsertParams) (
 	id uint64, err error,
 ) {
+	sort.Strings(p.Tags)
 	err = InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
 		q, args := pg_util.BuildInsert(pg_util.InsertOpts{
 			Table:  "threads",
