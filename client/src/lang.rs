@@ -17,7 +17,7 @@ struct LanguagePack {
 	pub labels: HashMap<String, (String, String)>,
 }
 
-super::gen_global! {, LanguagePack, get, write}
+super::gen_global! {, LanguagePack, get, get_mut}
 
 // Component of a localization formatting expression
 enum Token {
@@ -125,7 +125,7 @@ pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
 
 #[test]
 fn test_localization() {
-	let l = get();
+	let l = get_mut();
 	l.format_strings.insert(
 		"test".into(),
 		serde_json::from_str(r#""that {name} a { adjective }""#).unwrap(),
@@ -139,20 +139,8 @@ fn test_localization() {
 	assert_eq!(localize!("test"), "anon a BWAAKA");
 }
 
-fn query_selector_all_iter<F>(sel: &str, mut f: F) -> util::Result
-where
-	F: FnMut(&web_sys::Element) -> util::Result,
-{
-	let els = util::document().query_selector_all(sel)?;
-	for i in 0..els.length() {
-		f(&els.get(i).unwrap().dyn_into::<web_sys::Element>().unwrap())?;
-	}
-
-	Ok(())
-}
-
 pub async fn load_language_pack() -> util::Result {
-	*write() = serde_json::from_str(&String::from(
+	*get_mut() = serde_json::from_str(&String::from(
 		wasm_bindgen_futures::JsFuture::from(
 			js_sys::Reflect::get(&util::window(), &"language_pack".into())?
 				.dyn_into::<js_sys::Promise>()?,
@@ -160,23 +148,6 @@ pub async fn load_language_pack() -> util::Result {
 		.await?
 		.dyn_into::<js_sys::JsString>()?,
 	))?;
-
-	// Apply localization to static DOM elements
-	query_selector_all_iter("[lang-content]", |el| {
-		el.set_text_content(Some(localize! {
-			&el
-			.get_attribute("lang-content")
-			.unwrap()
-		}));
-		Ok(())
-	})?;
-	query_selector_all_iter("[lang-title]", |el| {
-		el.set_attribute(
-			"title",
-			localize!(&el.get_attribute("lang-title").unwrap()),
-		)?;
-		Ok(())
-	})?;
 
 	Ok(())
 }

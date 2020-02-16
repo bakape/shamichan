@@ -1,6 +1,5 @@
 use super::state;
-use state::{Post, Thread};
-use std::cmp::PartialOrd;
+use state::Thread;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 
 // Central thread container

@@ -81,9 +81,9 @@ macro_rules! gen_global {
 
 		// Open global for reading
 		#[allow(unused)]
-		$vis fn $read() -> &'static mut $type {
+		$vis fn $read() -> &'static $type {
 			__init_global();
-			unsafe { __GLOBAL.as_mut().unwrap() }
+			unsafe { __GLOBAL.as_ref().unwrap() }
 		}
 
 		// Open global for writing
