@@ -10,11 +10,41 @@ use yew::services::fetch;
 // Key used to store AuthKey in local storage
 const AUTH_KEY: &str = "auth_key";
 
+// Stored separately from the agent to avoid needless serialization on change
+// propagation. The entire application has read-only access to this singleton.
+// Writes have to be coordinated through the agent to ensure propagation.
+#[derive(Default)]
+pub struct State {
+	// Currently subscribed to thread or 0  (global thread index)
+	pub feed: u64,
+
+	// All registered threads
+	pub threads: HashMap<u64, Thread>,
+
+	// All registered posts from any sources
+	pub posts: HashMap<u64, Post>,
+
+	// Map for quick lookup of post IDs by thread
+	pub posts_by_thread: SetMap<u64, u64>,
+
+	// Authentication key
+	pub auth_key: AuthKey,
+}
+
+impl State {
+	fn insert_post(&mut self, p: Post) {
+		self.posts_by_thread.insert(p.thread, p.id);
+		self.posts.insert(p.id, p);
+	}
+}
+
+super::gen_global! {pub, State, get, get_mut}
+
 // Thread information container
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Thread {
 	pub id: u64,
-	pub page: u64,
+	pub page: u32,
 	pub subject: String,
 	pub bumped_on: u64,
 	pub created_on: u64,
@@ -26,7 +56,7 @@ pub struct Thread {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Post {
 	pub id: u64,
-	pub page: u64,
+	pub page: u32,
 	pub thread: u64,
 
 	pub created_on: u64,
@@ -49,36 +79,6 @@ pub struct ThreadDecoder {
 
 	posts: Vec<Post>,
 }
-
-// Stored separately from the agent to avoid needless serialization on change
-// propagation. The entire application has read-only access to this singleton.
-// Writes have to be coordinated through the agent to ensure propagation.
-#[derive(Default)]
-pub struct State {
-	// All registered threads
-	pub threads: HashMap<u64, Thread>,
-
-	// All registered posts from any sources
-	pub posts: HashMap<u64, Post>,
-
-	// Map for quick lookup of post IDs by thread
-	pub posts_by_thread: SetMap<u64, u64>,
-
-	// Authentication key
-	pub auth_key: AuthKey,
-
-	// Currently subscribed to thread or 0  (global thread index)
-	pub feed: u64,
-}
-
-impl State {
-	fn insert_post(&mut self, p: Post) {
-		self.posts_by_thread.insert(p.thread, p.id);
-		self.posts.insert(p.id, p);
-	}
-}
-
-super::gen_global! {pub, State, get, get_mut}
 
 // Global state storage and propagation agent
 pub struct Agent {

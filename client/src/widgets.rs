@@ -33,7 +33,16 @@ impl Component for AsideRow {
 
 		html! {
 			<>
-				<span class="aside-container">
+				<span
+					class="aside-container"
+					style={
+						if self.props.is_top {
+							"margin-top: 1.5em;"
+						} else {
+							""
+						}
+					}
+				>
 					{
 						if self.props.is_top {
 							html! {

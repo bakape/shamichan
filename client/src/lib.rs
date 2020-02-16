@@ -6,8 +6,10 @@ mod lang;
 #[macro_use]
 mod banner;
 mod connection;
+mod post;
 mod state;
-mod threads;
+mod thread;
+mod thread_index;
 mod user_bg;
 mod util;
 mod widgets;
@@ -55,7 +57,9 @@ impl Component for App {
 				</div>
 				<section id="main">
 					<widgets::AsideRow is_top=true />
-					<threads::Threads />
+					<hr></hr>
+					<thread_index::Threads />
+					<hr></hr>
 					<widgets::AsideRow />
 				</section>
 			</section>
