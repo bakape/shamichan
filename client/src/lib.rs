@@ -23,7 +23,7 @@ struct App {
 	#[allow(unused)]
 	link: ComponentLink<Self>,
 	#[allow(unused)]
-	state: Box<dyn Bridge<state::State>>,
+	state: Box<dyn Bridge<state::Agent>>,
 }
 
 impl Component for App {
@@ -31,8 +31,13 @@ impl Component for App {
 	type Properties = ();
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+		let mut s = state::Agent::bridge(link.callback(|_| ()));
+		s.send(state::Request::FetchFeed {
+			id: state::get().feed,
+			sync: false,
+		});
 		Self {
-			state: state::State::bridge(link.callback(|_| ())),
+			state: s,
 			link: link,
 		}
 	}
@@ -62,7 +67,9 @@ impl Component for App {
 pub async fn main_js() -> util::Result {
 	console_error_panic_hook::set_once();
 
+	state::init();
 	lang::load_language_pack().await?;
+
 	yew::start_app::<App>();
 
 	Ok(())

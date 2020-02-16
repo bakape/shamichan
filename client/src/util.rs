@@ -68,30 +68,30 @@ pub type Result<T = ()> = std::result::Result<T, Error>;
 // Generate functions for safely accessing a global variable
 #[macro_export]
 macro_rules! gen_global {
-	($visibility:vis, $type:ty, $default:expr, $getter:ident) => {
-		// Open global for writing
-		#[allow(unused)]
-		$visibility fn $getter() -> &'static mut $type  {
+	($vis:vis, $type:ty, $read:ident, $write:ident) => {
+		static mut __GLOBAL: Option<$type> = None;
+
+		fn __init_global() {
 			unsafe {
-				static mut GLOBAL: Option<$type> = None;
-				if GLOBAL.is_none() {
-					GLOBAL = Some($default);
+				if __GLOBAL.is_none() {
+					__GLOBAL = Some(Default::default());
 				}
-				GLOBAL.as_mut().unwrap()
 			}
 		}
-	};
-	($visibility:vis, $type:ty, $default:expr) => {
-		$crate::gen_global!($visibility, $type, $default, get);
-	};
-	($type:ty) => {
-		$crate::gen_global!(, $type, Default::default());
-	};
-	($visibility:vis, $type:ty) => {
-		$crate::gen_global!($visibility, $type, Default::default());
-	};
-	($type:ty, $default:expr) => {
-		$crate::gen_global!(, $type, $default);
+
+		// Open global for reading
+		#[allow(unused)]
+		$vis fn $read() -> &'static mut $type {
+			__init_global();
+			unsafe { __GLOBAL.as_mut().unwrap() }
+		}
+
+		// Open global for writing
+		#[allow(unused)]
+		fn $write() -> &'static mut $type {
+			__init_global();
+			unsafe { __GLOBAL.as_mut().unwrap() }
+		}
 	};
 }
 

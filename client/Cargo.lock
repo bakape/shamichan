@@ -116,6 +116,7 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "console_error_panic_hook",
+ "failure",
  "flate2",
  "futures",
  "js-sys",

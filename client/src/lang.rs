@@ -17,7 +17,7 @@ struct LanguagePack {
 	pub labels: HashMap<String, (String, String)>,
 }
 
-super::gen_global!(LanguagePack);
+super::gen_global! {, LanguagePack, get, write}
 
 // Component of a localization formatting expression
 enum Token {
@@ -152,7 +152,7 @@ where
 }
 
 pub async fn load_language_pack() -> util::Result {
-	*get() = serde_json::from_str(&String::from(
+	*write() = serde_json::from_str(&String::from(
 		wasm_bindgen_futures::JsFuture::from(
 			js_sys::Reflect::get(&util::window(), &"language_pack".into())?
 				.dyn_into::<js_sys::Promise>()?,
