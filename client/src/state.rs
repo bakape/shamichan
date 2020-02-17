@@ -11,10 +11,19 @@ use yew::services::fetch;
 const AUTH_KEY: &str = "auth_key";
 
 // Global user-set options
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct Options {
 	pub forced_anonymity: bool,
 	pub relative_timestamps: bool,
+}
+
+impl Default for Options {
+	fn default() -> Self {
+		Self {
+			forced_anonymity: false,
+			relative_timestamps: true,
+		}
+	}
 }
 
 // Stored separately from the agent to avoid needless serialization on change
@@ -123,6 +132,9 @@ pub enum Subscription {
 
 	// Subscribe to changes of the list of threads
 	ThreadListChange,
+
+	// Change to any field of Options
+	OptionsChange,
 }
 
 #[derive(Serialize, Deserialize)]
