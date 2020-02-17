@@ -42,6 +42,8 @@ impl Component for Threads {
 	}
 
 	fn view(&self) -> Html {
+		use super::thread as view;
+
 		// TODO: Routing + switch on page type
 
 		let mut threads: Vec<&Thread> = state::get().threads.values().collect();
@@ -56,7 +58,7 @@ impl Component for Threads {
 				});
 			}
 			w.push(html! {
-				<super::thread::Thread id={t.id} />
+				<view::Thread id=t.id pages=view::PageSet::Last5Posts />
 			});
 		}
 
