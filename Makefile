@@ -3,6 +3,9 @@
 all: server client css websockets
 
 client:
+ifneq ($(NO_DEPS),1)
+	npm install --progress false --depth 0
+endif
 	$(MAKE) -C lang all
 	$(MAKE) -C client all
 
