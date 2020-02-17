@@ -1,7 +1,7 @@
 package websockets
 
 // #cgo CFLAGS: -std=c11
-// #cgo LDFLAGS: -ldl -lm
+// #cgo LDFLAGS: -Wl,--no-as-needed -ldl -lm
 // #include "bindings.h"
 // #include <stdlib.h>
 // #include <string.h>
