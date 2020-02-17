@@ -20,6 +20,7 @@ pub enum Message {
 
 #[derive(Clone, Properties)]
 pub struct Props {
+	#[props(required)]
 	pub id: u64,
 }
 
@@ -92,10 +93,7 @@ impl Post {
 					}
 				}
 				{self.render_name(p)}
-				<crate::time::view::View
-					time=p.created_on
-					relative=s.options.relative_timestamps
-				/>
+				<crate::time::view::View time=p.created_on />
 			</header>
 		}
 	}

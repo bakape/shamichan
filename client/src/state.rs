@@ -123,6 +123,9 @@ pub enum Subscription {
 
 	// Subscribe to changes of the list of threads
 	ThreadListChange,
+
+	// Change to any field of Options
+	OptionsChange,
 }
 
 #[derive(Serialize, Deserialize)]

@@ -15,9 +15,6 @@ reset:
 watch: reset
 	webpack-dev-server --open -d
 
-test:
-	cargo test
-
 clean:
 	cargo clean
 	rm -rf dist pkg node_modules

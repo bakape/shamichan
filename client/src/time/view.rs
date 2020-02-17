@@ -1,46 +1,40 @@
-use crate::lang::pluralize;
+use super::scheduler::{Response, Scheduler};
 use js_sys::Date;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html, Properties};
 
 // Central thread container
 pub struct View {
+	#[allow(unused)]
 	link: ComponentLink<Self>,
-	time: u32,
-	relative: bool,
-}
 
-pub enum Message {
-	Tick,
-	RelativeChanged(bool),
+	time: u32,
+	current: Response,
+	scheduler: Box<dyn Bridge<Scheduler>>,
 }
 
 #[derive(Clone, Properties)]
 pub struct Props {
+	#[props(required)]
 	pub time: u32,
-	pub relative: bool,
 }
 
 impl Component for View {
-	type Message = Message;
+	type Message = Response;
 	type Properties = Props;
 
 	fn create(p: Self::Properties, link: ComponentLink<Self>) -> Self {
-		// TODO: Link to agent
-		// TODO: Have agent send first tick on creation
-		Self {
+		let mut s = Self {
+			scheduler: Scheduler::bridge(link.callback(|u| u)),
 			time: p.time,
-			relative: p.relative,
 			link: link,
-		}
+			current: Default::default(),
+		};
+		s.scheduler.send(s.time);
+		s
 	}
 
-	fn update(&mut self, msg: Self::Message) -> bool {
-		match msg {
-			Message::Tick => (),
-			Message::RelativeChanged(r) => {
-				self.relative = r;
-			}
-		}
+	fn update(&mut self, new: Self::Message) -> bool {
+		self.current = new;
 		true
 	}
 
@@ -81,19 +75,19 @@ impl Component for View {
 			d.get_seconds(),
 		);
 
-		let rel = self.format_relative();
+		let rel = self.current.diff.to_string();
 
 		html! {
 			<>
 				<time
-					title=if self.relative {
+					title=if self.current.use_relative {
 						&abs
 					} else {
 						&rel
 					}
 				>
 					{
-						if self.relative {
+						if self.current.use_relative {
 							&rel
 						} else {
 							&abs
@@ -102,44 +96,5 @@ impl Component for View {
 				</time>
 			</>
 		}
-	}
-}
-
-impl View {
-	fn format_relative(&self) -> String {
-		let now = (Date::now() / 1000.0) as i64;
-		let mut time = (now - self.time as i64) / 60;
-		let mut is_future = false;
-		if time < 0 {
-			time = -time;
-			is_future = true;
-		}
-
-		macro_rules! format {
-			($unit:expr) => {
-				return localize!(
-					if is_future {
-						"time_in"
-					} else {
-						"time_ago"
-					},
-					{
-						"number" => &time.to_string()
-						"unit" => pluralize($unit, time)
-					}
-				);
-			};
-		}
-
-		static UNITS: [(&str, i64); 4] =
-			[("minute", 60), ("hour", 24), ("day", 30), ("month", 12)];
-		for u in UNITS.iter() {
-			if time < u.1 {
-				format!(u.0);
-			}
-			time /= u.1;
-		}
-
-		format!("year")
 	}
 }
