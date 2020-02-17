@@ -11,7 +11,7 @@ require (
 	github.com/bakape/recache v1.0.1 // indirect
 	github.com/bakape/recache/v4 v4.0.2
 	github.com/bakape/recache/v5 v5.0.2
-	github.com/bakape/thumbnailer/v2 v2.5.6
+	github.com/bakape/thumbnailer/v2 v2.5.7
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect

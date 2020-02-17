@@ -32,8 +32,8 @@ func TestUpload(t *testing.T) {
 	t.Parallel()
 
 	var (
-		invalidTitle  = "ti�"
-		invalidArtist = "art\x01�"
+		invalidTitle  = "ti?"
+		invalidArtist = "art\x01?"
 		title         = "Puella Magi Madoka Magica Part III - Rebellion"
 	)
 

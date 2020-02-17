@@ -198,7 +198,8 @@ func (req *insertionRequest) extract(r *http.Request, name string) (err error) {
 			}
 		}
 		if !utf8.ValidString(req.Name) {
-			req.Name = strings.ToValidUTF8(req.Name, string(utf8.RuneError))
+			// Need to replace invalid UTF-8 with a valid UTF-8 marker
+			req.Name = strings.ToValidUTF8(req.Name, "?")
 		}
 		if len(req.Name) == 0 {
 			return "no image name"
