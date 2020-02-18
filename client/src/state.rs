@@ -10,8 +10,12 @@ use yew::services::fetch;
 // Key used to store AuthKey in local storage
 const AUTH_KEY: &str = "auth_key";
 
+// Key used to store Options in local storage
+const OPTIONS_KEY: &str = "options";
+
 // Global user-set options
 #[derive(Serialize, Deserialize)]
+#[serde(default)]
 pub struct Options {
 	pub forced_anonymity: bool,
 	pub relative_timestamps: bool,
@@ -321,4 +325,11 @@ pub fn init() {
 		}
 		None => create_auth_key(),
 	};
+
+	// Read saved options, if any
+	if let Some(v) = ls.get_item(OPTIONS_KEY).unwrap() {
+		if let Ok(opts) = serde_json::from_str(&v) {
+			s.options = opts;
+		}
+	}
 }

@@ -198,7 +198,7 @@ impl Agent for Scheduler {
 				_ => Message::NOP,
 			})),
 			link,
-			use_relative: false,
+			use_relative: state::get().options.relative_timestamps,
 			now: now(),
 			queue: Default::default(),
 		}
