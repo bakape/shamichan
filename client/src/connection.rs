@@ -148,7 +148,7 @@ impl Agent for Connection {
 			}
 			Event::Error(e) => {
 				self.reset_socket_and_timer();
-				util::log_error(format!("{:?}", e));
+				util::log_error(&e.message());
 				self.set_state(State::Dropped);
 			}
 			Event::TryReconnecting => {

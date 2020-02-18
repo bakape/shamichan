@@ -190,7 +190,6 @@ pub fn with_logging(f: impl FnOnce() -> Result) {
 
 // Display error alert message
 pub fn alert(msg: &impl std::fmt::Display) {
-	window()
-		.alert_with_message(&format!("error: {}", msg))
-		.expect("alert failed")
+	// Ignore result
+	window().alert_with_message(&format!("error: {}", msg)).ok();
 }
