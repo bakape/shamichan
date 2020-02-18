@@ -39,10 +39,7 @@ impl Component for App {
 			id: state::get().feed,
 			sync: false,
 		});
-		Self {
-			state: s,
-			link: link,
-		}
+		Self { state: s, link }
 	}
 
 	fn update(&mut self, _: Self::Message) -> bool {

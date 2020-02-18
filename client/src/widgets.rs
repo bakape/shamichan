@@ -21,7 +21,7 @@ impl Component for AsideRow {
 	type Properties = Props;
 
 	fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
-		Self { props: props }
+		Self { props }
 	}
 
 	fn update(&mut self, _: Self::Message) -> bool {
@@ -90,7 +90,7 @@ impl Component for NewThreadForm {
 				link.callback(|s| Msg::ConnState(s)),
 			),
 			el: NodeRef::default(),
-			link: link,
+			link,
 			expanded: false,
 			available_tags: vec![],
 			selected_tags: vec!["".into()],

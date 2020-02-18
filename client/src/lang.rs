@@ -45,7 +45,7 @@ impl<'de> serde::de::Visitor<'de> for TokenVisitor {
 		E: serde::de::Error,
 	{
 		let mut out = Vec::new();
-		while s.len() > 0 {
+		while !s.is_empty() {
 			if match s.chars().position(|b| b == '{') {
 				None => true,
 				Some(start) => {

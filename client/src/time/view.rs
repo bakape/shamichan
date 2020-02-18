@@ -26,7 +26,7 @@ impl Component for View {
 		let mut s = Self {
 			scheduler: Scheduler::bridge(link.callback(|u| u)),
 			time: p.time,
-			link: link,
+			link,
 			current: Default::default(),
 		};
 		s.scheduler.send(s.time);

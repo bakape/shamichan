@@ -59,7 +59,7 @@ impl Component for Thread {
 			id: props.id,
 			pages: props.pages,
 			state: s,
-			link: link,
+			link,
 		}
 	}
 
@@ -83,7 +83,7 @@ impl Component for Thread {
 						.collect();
 					v.sort_unstable();
 					if v.len() > 5 {
-						v[v.len() - 5..].into_iter().copied().collect()
+						v[v.len() - 5..].iter().copied().collect()
 					} else {
 						v
 					}

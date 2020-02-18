@@ -166,7 +166,7 @@ impl yew::agent::Agent for Agent {
 
 	fn create(link: AgentLink<Self>) -> Self {
 		Self {
-			link: link,
+			link,
 			subscribers: DoubleSetMap::default(),
 			fetch_task: None,
 		}
@@ -235,7 +235,7 @@ impl yew::agent::Agent for Agent {
 										Json(Ok(body)) => {
 											Message::FetchedThreadIndex {
 												data: body,
-												sync: sync,
+												sync,
 											}
 										}
 										_ => Message::FetchFailed(format!(

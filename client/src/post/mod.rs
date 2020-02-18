@@ -39,7 +39,7 @@ impl Component for Post {
 		Self {
 			id: props.id,
 			state: s,
-			link: link,
+			link,
 		}
 	}
 

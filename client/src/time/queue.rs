@@ -83,10 +83,7 @@ struct Node<T: PartialOrd> {
 
 impl<T: PartialOrd> Node<T> {
 	fn new(val: T) -> Self {
-		Self {
-			val: val,
-			next: None,
-		}
+		Self { val, next: None }
 	}
 }
 

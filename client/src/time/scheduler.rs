@@ -140,7 +140,7 @@ impl PartialEq for Tick {
 
 impl PartialOrd for Tick {
 	fn partial_cmp(&self, other: &Tick) -> Option<std::cmp::Ordering> {
-		self.pending_on.partial_cmp(&other.pending_on).into()
+		self.pending_on.partial_cmp(&other.pending_on)
 	}
 }
 
@@ -148,8 +148,8 @@ impl Tick {
 	// Create a new tick at the current moment in time
 	fn new(id: HandlerId, val: u32, now: u32) -> Self {
 		Self {
-			id: id,
-			val: val,
+			id,
+			val,
 			pending_on: now,
 			diff: RelativeTime::new(now, val),
 		}
@@ -197,7 +197,7 @@ impl Agent for Scheduler {
 				state::Subscription::OptionsChange => Message::OptionsChange,
 				_ => Message::NOP,
 			})),
-			link: link,
+			link,
 			use_relative: false,
 			now: now(),
 			queue: Default::default(),

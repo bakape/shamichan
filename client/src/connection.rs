@@ -88,7 +88,7 @@ impl Agent for Connection {
 				Subscription::AuthKey => Event::AuthKeyChanged,
 				_ => Event::NOP,
 			})),
-			link: link,
+			link,
 			state: State::Loading,
 			reconn_attempts: 0,
 			reconn_timer: None,
