@@ -54,7 +54,7 @@ impl Component for Threads {
 		for (i, t) in threads.into_iter().enumerate() {
 			if i != 0 {
 				w.push(html! {
-					<hr></hr>
+					<hr />
 				});
 			}
 			w.push(html! {

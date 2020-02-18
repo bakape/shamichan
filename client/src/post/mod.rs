@@ -94,6 +94,12 @@ impl Post {
 				}
 				{self.render_name(p)}
 				<crate::time::view::View time=p.created_on />
+				<nav class="spaced">
+					// TODO: focus this post
+					<a>{"#"}</a>
+					// TODO: quote this post
+					<a>{p.id}</a>
+				</nav>
 			</header>
 		}
 	}

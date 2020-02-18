@@ -55,9 +55,9 @@ impl Component for App {
 				</div>
 				<section id="main">
 					<widgets::AsideRow is_top=true />
-					<hr></hr>
+					<hr />
 					<thread_index::Threads />
-					<hr></hr>
+					<hr />
 					<widgets::AsideRow />
 				</section>
 			</section>
