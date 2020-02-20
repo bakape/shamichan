@@ -5,6 +5,7 @@
 mod lang;
 #[macro_use]
 mod banner;
+mod buttons;
 mod connection;
 mod post;
 mod state;

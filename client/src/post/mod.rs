@@ -1,3 +1,5 @@
+mod page_selector;
+
 use super::state;
 use state::Post as Data;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html, Properties};
@@ -59,22 +61,25 @@ impl Component for Post {
 		};
 
 		html! {
-			<>
-				<article id={format!("p-{}", self.id)}>
-					{self.render_header(p)}
-				</article>
-			</>
+			<article id={format!("p-{}", self.id)}>
+				{self.render_header(p)}
+			</article>
 		}
 	}
 }
 
 impl Post {
 	fn render_header(&self, p: &Data) -> Html {
-		let s = state::get();
+		let is_op = p.id == p.thread;
+		let thread = if is_op {
+			state::get().threads.get(&p.thread)
+		} else {
+			None
+		};
 		html! {
 			<header class="spaced">
 				{
-					match (p.id == p.thread, s.threads.get(&p.thread)) {
+					match (is_op, thread) {
 						(true, Some(t)) => {
 							html! {
 								<>
@@ -100,6 +105,15 @@ impl Post {
 					// TODO: quote this post
 					<a>{p.id}</a>
 				</nav>
+				{
+					if is_op {
+						html! {
+							<page_selector::PageSelector thread=self.id />
+						}
+					} else {
+						html! {}
+					}
+				}
 			</header>
 		}
 	}

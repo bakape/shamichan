@@ -16,14 +16,12 @@ impl Component for Banner {
 
 	fn view(&self) -> Html {
 		html! {
-			<>
-				<span id="banner" class="glass">
-					<b id="banner-center" class="spaced"></b>
-					<span>
-						<super::connection::SyncCounter />
-					</span>
+			<span id="banner" class="glass">
+				<b id="banner-center" class="spaced"></b>
+				<span>
+					<super::connection::SyncCounter />
 				</span>
-			</>
+			</span>
 		}
 	}
 }

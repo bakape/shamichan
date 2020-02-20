@@ -445,12 +445,12 @@ impl Component for SyncCounter {
 
 	fn view(&self) -> Html {
 		html! {
-			<>
-				<b
-					id="sync"
-					class="banner-float svg-link"
-					title=localize!("sync")
-				>{
+			<b
+				id="sync"
+				class="banner-float svg-link"
+				title=localize!("sync")
+			>
+				{
 					localize! {
 						match self.current {
 							State::Loading => "loading",
@@ -460,8 +460,8 @@ impl Component for SyncCounter {
 							State::Syncing => "syncing",
 						}
 					}
-				}</b>
-			</>
+				}
+			</b>
 		}
 	}
 }

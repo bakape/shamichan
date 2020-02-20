@@ -8,6 +8,7 @@ use yew::{
 };
 
 pub struct AsideRow {
+	link: ComponentLink<Self>,
 	props: Props,
 }
 
@@ -20,8 +21,8 @@ impl Component for AsideRow {
 	type Message = ();
 	type Properties = Props;
 
-	fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
-		Self { props }
+	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+		Self { props, link }
 	}
 
 	fn update(&mut self, _: Self::Message) -> bool {
@@ -32,31 +33,31 @@ impl Component for AsideRow {
 		// TODO: Routing + switch on page type
 
 		html! {
-			<>
-				<span
-					class="aside-container"
-					style={
-						if self.props.is_top {
-							"margin-top: 1.5em;"
-						} else {
-							""
-						}
+			<span
+				class="aside-container"
+				style={
+					if self.props.is_top {
+						"margin-top: 1.5em;"
+					} else {
+						""
 					}
-				>
-					{
-						if self.props.is_top {
-							html! {
-								<NewThreadForm />
-							}
-						} else {
-							html! {}
+				}
+			>
+				{
+					if self.props.is_top {
+						html! {
+							<NewThreadForm />
 						}
+					} else {
+						html! {}
 					}
-					<aside class="act glass">
-						<a>{localize!("catalog")}</a>
-					</aside>
-				</span>
-			</>
+				}
+				// TODO
+				<super::buttons::AsideButton
+					text="catalog"
+					on_click=self.link.callback(|_| ())
+				/>
+			</span>
 		}
 	}
 }
@@ -170,29 +171,27 @@ impl Component for NewThreadForm {
 
 	fn view(&self) -> Html {
 		html! {
-			<>
-				<aside id="thread-form-container">
-					<span class={if !self.expanded { "act" } else { "" }}>
-						{
-							if self.expanded {
-								self.render_form()
-							} else {
-								html! {
-									<a
-										class="new-thread-button"
-										onclick={
-											self.link
-											.callback(|_| Msg::Toggle(true))
-										}
-									>
-										{localize!("new_thread")}
-									</a>
-								}
+			<aside id="thread-form-container">
+				<span class={if !self.expanded { "act" } else { "" }}>
+					{
+						if self.expanded {
+							self.render_form()
+						} else {
+							html! {
+								<a
+									class="new-thread-button"
+									onclick={
+										self.link
+										.callback(|_| Msg::Toggle(true))
+									}
+								>
+									{localize!("new_thread")}
+								</a>
 							}
 						}
-					</span>
-				</aside>
-			</>
+					}
+				</span>
+			</aside>
 		}
 	}
 }
@@ -200,59 +199,55 @@ impl Component for NewThreadForm {
 impl NewThreadForm {
 	fn render_form(&self) -> Html {
 		html! {
-			<>
-				<form
-					id="new-thread-form"
-					ref=self.el.clone()
-					style="display: flex; flex-direction: column;"
-					onsubmit={self.link.callback(|e: SubmitEvent| {
-						e.prevent_default();
-						Msg::Submit
-					})}
-				>
+			<form
+				id="new-thread-form"
+				ref=self.el.clone()
+				style="display: flex; flex-direction: column;"
+				onsubmit={self.link.callback(|e: SubmitEvent| {
+					e.prevent_default();
+					Msg::Submit
+				})}
+			>
+				<input
+					placeholder=localize!{"subject"}
+					name="subject"
+					required=true
+					type="text"
+					maxlength="100"
+					style="width: 100%"
+				/>
+				<hr />
+				{self.render_tags()}
+				<hr />
+				<span>
 					<input
-						placeholder=localize!{"subject"}
-						name="subject"
-						required=true
-						type="text"
-						maxlength="100"
-						style="width: 100%"
+						type="submit"
+						style="width: 50%"
+						disabled=self.conn_state != connection::State::Synced
 					/>
-					<hr />
-					{self.render_tags()}
-					<hr />
-					<span>
-						<input
-							type="submit"
-							style="width: 50%"
-							disabled={
-								self.conn_state != connection::State::Synced
-							}
-						/>
-						<input
-							type="button"
-							value=localize!("cancel")
-							style="width: 50%"
-							onclick=self.link.callback(|_| Msg::Toggle(false))
-						/>
-					</span>
-					<datalist id="available-tags">
-						{
-							for self
-								.available_tags
-								.iter()
-								.filter(|t|
-									!self.selected_tags.iter().any(|s| &s == t)
-								)
-								.map(|t| {
-									html! {
-										<option value=t></option>
-									}
-								})
-						}
-					</datalist>
-				</form>
-			</>
+					<input
+						type="button"
+						value=localize!("cancel")
+						style="width: 50%"
+						onclick=self.link.callback(|_| Msg::Toggle(false))
+					/>
+				</span>
+				<datalist id="available-tags">
+					{
+						for self
+							.available_tags
+							.iter()
+							.filter(|t|
+								!self.selected_tags.iter().any(|s| &s == t)
+							)
+							.map(|t| {
+								html! {
+									<option value=t></option>
+								}
+							})
+					}
+				</datalist>
+			</form>
 		}
 	}
 
@@ -267,8 +262,7 @@ impl NewThreadForm {
 					type="button"
 					value=localize!("add_tag")
 					onclick=self.link.callback(|_| Msg::AddTag)
-				>
-				</input>
+				/>
 			});
 		}
 		v.into_iter().collect()
@@ -286,12 +280,9 @@ impl NewThreadForm {
 					value={tag}
 					name="tag"
 					list="available-tags"
-					oninput={
-						self.link
-						.callback(move |e: InputData|
-							Msg::InputTag(id, e.value)
-						)
-					}
+					oninput=self.link.callback(move |e: InputData|
+						Msg::InputTag(id, e.value)
+					)
 				/>
 				<a
 					class="act"

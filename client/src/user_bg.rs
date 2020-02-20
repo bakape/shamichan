@@ -16,9 +16,7 @@ impl Component for Background {
 
 	fn view(&self) -> Html {
 		html! {
-			<>
-				<div id="user-background"></div>
-			</>
+			<div id="user-background"></div>
 		}
 	}
 }

@@ -1,3 +1,4 @@
+use super::buttons;
 use super::state;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html, Properties};
 
@@ -71,60 +72,60 @@ impl Component for Thread {
 	}
 
 	fn view(&self) -> Html {
-		let s = state::get();
 		// TODO: Filter hidden posts
-		let posts: Vec<u64> = match s.posts_by_thread.get(&self.id) {
-			Some(set) => match self.pages {
-				PageSet::Last5Posts => {
-					let mut v: Vec<u64> = set
-						.iter()
-						.filter(|id| **id != self.id)
-						.copied()
-						.collect();
-					v.sort_unstable();
-					if v.len() > 5 {
-						v[v.len() - 5..].iter().copied().collect()
-					} else {
-						v
-					}
+
+		let posts: Vec<u64> = match self.pages {
+			PageSet::Last5Posts => {
+				let mut v = Vec::with_capacity(5);
+				let page_count =
+					state::get().page_counts.get(&self.id).unwrap_or(&1);
+				self.read_page_posts(&mut v, page_count - 1);
+				if v.len() < 5 && page_count > &1 {
+					self.read_page_posts(&mut v, page_count - 2);
 				}
-				PageSet::Pages(pages) => {
-					let mut v: Vec<u64> = set
-						.iter()
-						.filter(|id| {
-							**id != self.id
-								&& match s.posts.get(*id) {
-									Some(p) => {
-										pages.iter().any(|page| *page == p.page)
-									}
-									None => false,
-								}
-						})
-						.copied()
-						.collect();
-					v.sort_unstable();
+				v.sort_unstable();
+				if v.len() > 5 {
+					v[v.len() - 5..].iter().copied().collect()
+				} else {
 					v
 				}
-			},
-			None => vec![],
+			}
+			PageSet::Pages(pages) => {
+				let mut v = Vec::with_capacity(300);
+				for p in pages.iter() {
+					self.read_page_posts(&mut v, *p);
+				}
+				v.sort_unstable();
+				v
+			}
 		};
 
 		html! {
-			<>
-				<section class="thread-container">
-					<super::post::Post id={self.id} />
-					{
-						for posts.into_iter().map(|id| {
-							html! {
-								<super::post::Post id={id} />
-							}
-						})
-					}
-					<aside>
-						{"TODO: Reply"}
-					</aside>
-				</section>
-			</>
+			<section class="thread-container">
+				<super::post::Post id=self.id />
+				{
+					for posts.into_iter().map(|id| {
+						html! {
+							<super::post::Post id={id} />
+						}
+					})
+				}
+				<buttons::AsideButton
+					text="TODO: Reply"
+					on_click=self.link.callback(|_| Message::NOP)
+				/>
+			</section>
+		}
+	}
+}
+
+impl Thread {
+	// Read the post IDs of a page, excluding the OP, into dst
+	fn read_page_posts(&self, dst: &mut Vec<u64>, page: u32) {
+		if let Some(posts) =
+			state::get().posts_by_thread_page.get(&(self.id, page))
+		{
+			dst.extend(posts);
 		}
 	}
 }

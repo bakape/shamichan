@@ -47,7 +47,7 @@ impl Component for Threads {
 		// TODO: Routing + switch on page type
 
 		let mut threads: Vec<&Thread> = state::get().threads.values().collect();
-		// TODO: Different sort orders as match inside Reverse()
+		// TODO: Different sort orders
 		threads.sort_unstable_by_key(|t| std::cmp::Reverse(t.bumped_on));
 
 		let mut w = Vec::with_capacity(threads.len() * 2);
@@ -63,11 +63,9 @@ impl Component for Threads {
 		}
 
 		html! {
-			<>
-				<section>
-					{w.into_iter().collect::<Html>()}
-				</section>
-			</>
+			<section>
+				{w.into_iter().collect::<Html>()}
+			</section>
 		}
 	}
 }

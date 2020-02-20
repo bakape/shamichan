@@ -41,11 +41,14 @@ pub struct State {
 	// All registered threads
 	pub threads: HashMap<u64, Thread>,
 
+	// Page count of threads
+	pub page_counts: HashMap<u64, u32>,
+
 	// All registered posts from any sources
 	pub posts: HashMap<u64, Post>,
 
-	// Map for quick lookup of post IDs by thread
-	pub posts_by_thread: SetMap<u64, u64>,
+	// Map for quick lookup of post IDs by a (thread, page) tuple
+	pub posts_by_thread_page: SetMap<(u64, u32), u64>,
 
 	// Authentication key
 	pub auth_key: AuthKey,
@@ -61,7 +64,17 @@ pub struct State {
 
 impl State {
 	fn insert_post(&mut self, p: Post) {
-		self.posts_by_thread.insert(p.thread, p.id);
+		self.posts_by_thread_page.insert((p.thread, p.page), p.id);
+		match self.page_counts.get_mut(&p.thread) {
+			Some(l) => {
+				if &p.page >= l {
+					*l = p.page + 1;
+				}
+			}
+			None => {
+				self.page_counts.insert(p.thread, p.page + 1);
+			}
+		};
 		self.posts.insert(p.id, p);
 	}
 }
@@ -183,14 +196,13 @@ impl yew::agent::Agent for Agent {
 
 				let s = get_mut();
 				for t in data {
+					let thread = t.thread_data.id;
+					s.threads.insert(t.thread_data.id, t.thread_data);
 					for p in t.posts {
 						self.send_change(Subscription::PostChange(p.id));
 						s.insert_post(p);
 					}
-					self.send_change(Subscription::ThreadChange(
-						t.thread_data.id,
-					));
-					s.threads.insert(t.thread_data.id, t.thread_data);
+					self.send_change(Subscription::ThreadChange(thread));
 				}
 				self.send_change(Subscription::ThreadListChange);
 				self.fetch_task = None;

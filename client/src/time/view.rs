@@ -78,23 +78,21 @@ impl Component for View {
 		let rel = self.current.diff.to_string();
 
 		html! {
-			<>
-				<time
-					title=if self.current.use_relative {
-						&abs
-					} else {
+			<time
+				title=if self.current.use_relative {
+					&abs
+				} else {
+					&rel
+				}
+			>
+				{
+					if self.current.use_relative {
 						&rel
+					} else {
+						&abs
 					}
-				>
-					{
-						if self.current.use_relative {
-							&rel
-						} else {
-							&abs
-						}
-					}
-				</time>
-			</>
+				}
+			</time>
 		}
 	}
 }
