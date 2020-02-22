@@ -56,9 +56,9 @@
 			"Default theme",
 			"Theme to load by default, when none is set by the client"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org resim arama"
+		"desuarchive": [
+			"DesuArchive",
+			"desuarchive.org resim arama"
 		],
 		"disable_robots": [
 			"Prevent crawlers",
@@ -336,9 +336,9 @@
 			"Üstündeyken genişlet(WebM)",
 			"Fare üstüne geldiğinde WebMleri genişlet. Resim ayarı açık olmalıdır"
 		],
-		"what_anime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
+		"trace": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
 		],
 		"work_mode": [
 			"İş modu",

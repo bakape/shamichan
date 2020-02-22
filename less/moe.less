@@ -28,7 +28,7 @@ article {
 		border: @border;
 	}
 
-	&.highlight:not(.editing),
+	&.highlight:not(.open),
 	&:target {
 		background-color: #d6bad0;
 		border-color    : #ba9dbf;
@@ -38,7 +38,7 @@ article {
 		}
 	}
 
-	&.editing {
+	&.open {
 		background-color: #fa6;
 		border-color    : #e95;
 
@@ -82,7 +82,7 @@ hr {
 }
 
 .modal,
-.preview:not(.editing),
+.preview:not(.open),
 .popup-menu {
 	background-color: white;
 	border-right    : 1px solid #eee;

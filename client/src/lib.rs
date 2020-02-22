@@ -16,9 +16,6 @@ mod user_bg;
 mod util;
 mod widgets;
 
-// #[macro_use]
-// extern crate protocol;
-
 use wasm_bindgen::prelude::*;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 

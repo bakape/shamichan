@@ -1,3 +1,4 @@
+use std::fmt::Write;
 use wasm_bindgen::prelude::JsValue;
 use wasm_bindgen::JsCast;
 use web_sys;
@@ -192,4 +193,26 @@ pub fn with_logging(f: impl FnOnce() -> Result) {
 pub fn alert(msg: &impl std::fmt::Display) {
 	// Ignore result
 	window().alert_with_message(&format!("error: {}", msg)).ok();
+}
+
+// Format a duration into hours:mins:secs with padding and stripping headers,
+// as needed
+pub fn format_duration(secs: impl Into<u64>) -> String {
+	let secs_ = secs.into();
+	let mut w = String::new();
+
+	#[rustfmt::skip]
+	macro_rules! write_bound {
+		($bound:expr) => {
+			if secs_ >= $bound {
+				write!(&mut w, "{:0>2}:", secs_ / $bound).unwrap();
+			}
+		};
+	}
+
+	write_bound!(60 * 60);
+	write_bound!(60);
+	write!(&mut w, "{:0>2}", secs_ % 60).unwrap();
+
+	w
 }

@@ -1,4 +1,5 @@
-use super::util;
+use crate::post::image_search::Provider;
+use crate::util;
 use protocol::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -19,6 +20,9 @@ const OPTIONS_KEY: &str = "options";
 pub struct Options {
 	pub forced_anonymity: bool,
 	pub relative_timestamps: bool,
+	pub hide_thumbnails: bool,
+	pub work_mode: bool,
+	pub enabled_image_search: Vec<Provider>,
 }
 
 impl Default for Options {
@@ -26,6 +30,18 @@ impl Default for Options {
 		Self {
 			forced_anonymity: false,
 			relative_timestamps: true,
+			hide_thumbnails: false,
+			work_mode: false,
+			enabled_image_search: [
+				Provider::Google,
+				Provider::Yandex,
+				Provider::IQDB,
+				Provider::Trace,
+				Provider::ExHentai,
+			]
+			.iter()
+			.copied()
+			.collect(),
 		}
 	}
 }

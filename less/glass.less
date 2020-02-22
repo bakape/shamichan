@@ -24,11 +24,11 @@ aside,
 }
 
 article {
-	&.editing {
+	&.open {
 		background-color: rgba(105, 105, 105, 0.9);
 	}
 
-	&.highlight:not(.editing),
+	&.highlight:not(.open),
 	&:target {
 		background-color: lighten(@postBG, 10%);
 	}

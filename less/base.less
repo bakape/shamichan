@@ -249,7 +249,7 @@ td {
 	border     : 1px solid black;
 }
 
-.fileinfo {
+.file-info {
 	margin-left: 1ex;
 
 	&::before {
@@ -260,16 +260,8 @@ td {
 		content: ")";
 	}
 
-	&>span::empty {
-		display: none;
-	}
-
-	&>span:not(:empty):not([hidden])~span::before {
+	&>span~span::before {
 		content: ", ";
-	}
-
-	&>span.media-artist:not(:empty)+span.media-title::before {
-		content: "\00a0-\00a0";
 	}
 }
 

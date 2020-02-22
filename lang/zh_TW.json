@@ -56,9 +56,9 @@
 			"預設主題",
 			"預設情況下加載的主題，當客戶端沒有設置時"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org 圖片搜尋"
+		"desuarchive": [
+			"DesuArchive",
+			"desuarchive.org 圖片搜尋"
 		],
 		"disable_robots": [
 			"防止爬蟲",
@@ -336,9 +336,9 @@
 			"WebM 滑過展開",
 			"當滑過去時顯示 WebM 預覽。需要打開「圖片滑過展開」。"
 		],
-		"what_anime": [
-			"WhatAnime",
-			"whatanime.ga 動漫截圖搜尋"
+		"trace": [
+			"trace.moe",
+			"trace.moe 動漫截圖搜尋"
 		],
 		"work_mode": [
 			"工作模式",

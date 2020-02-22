@@ -56,9 +56,9 @@
 			"Дефолтна тема",
 			"Тема що завантажується по дефолту, коли в користувача не вказано свою."
 		],
-		"desustorage": [
-			"DesuStorage",
-			"Пошук зображень по desustorage.org"
+		"desuarchive": [
+			"DesuArchive",
+			"Пошук зображень по desuarchive.org"
 		],
 		"disable_robots": [
 			"Prevent crawlers",
@@ -336,9 +336,9 @@
 			"Розгортання webm",
 			"WebMки розгротаються при наведенні мишки"
 		],
-		"what_anime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
+		"trace": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
 		],
 		"work_mode": [
 			"Робочий режим",

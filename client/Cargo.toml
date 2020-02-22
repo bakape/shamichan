@@ -22,6 +22,7 @@ base64 = "0.11.0"
 yew = "0.11.0"
 stdweb = "0.4.20"
 failure = "0.1.6"
+hex = "0.4.2"
 
 [dependencies.web-sys]
 version = "0.3.31"

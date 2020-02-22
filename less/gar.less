@@ -28,7 +28,7 @@ article {
 		border: @border;
 	}
 
-	&.highlight:not(.editing),
+	&.highlight:not(.open),
 	&:target {
 		background-color: #ffb8d5;
 		border-color    : #ef93c5;
@@ -38,7 +38,7 @@ article {
 		}
 	}
 
-	&.editing {
+	&.open {
 		background           : #b7bbb6 url('chevrons.png');
 		border-color         : gray;
 		background-attachment: fixed;
@@ -97,7 +97,7 @@ a.tab-sel {
 }
 
 .preview {
-	&:not(.editing) {
+	&:not(.open) {
 		background-color: #f9f0d9;
 	}
 

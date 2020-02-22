@@ -111,7 +111,7 @@ impl Component for Thread {
 					})
 				}
 				<buttons::AsideButton
-					text="TODO: Reply"
+					text="reply"
 					on_click=self.link.callback(|_| Message::NOP)
 				/>
 			</section>

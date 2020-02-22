@@ -20,12 +20,12 @@ article {
 		border: @border;
 	}
 
-	&.highlight:not(.editing),
+	&.highlight:not(.open),
 	&:target {
 		background-color: #f5f5f5;
 	}
 
-	&.editing {
+	&.open {
 		background-color: #fa6;
 	}
 }
@@ -52,7 +52,7 @@ nav a {
 }
 
 .modal,
-.preview:not(.editing),
+.preview:not(.open),
 .popup-menu {
 	background-color: #f5f5f5;
 }
@@ -74,7 +74,7 @@ a.tab-sel {
 	}
 }
 
-.reply-form:not(.editing) {
+.reply-form:not(.open) {
 	background: white;
 }
 

@@ -42,14 +42,14 @@ article:target,
 }
 
 .preview {
-	&:not(.editing) {
+	&:not(.open) {
 		background-color: #27221a;
 	}
 
 	border-color: #111;
 }
 
-.editing-mixin() {
+.open-mixin() {
 	background-color: #dab680;
 	border-color    : #352915;
 	color           : black;
@@ -86,17 +86,17 @@ article:target,
 }
 
 #main {
-	&:not(.custom-BG) section>article.editing:not(.op) {
-		.editing-mixin;
+	&:not(.custom-BG) section>article.open:not(.op) {
+		.open-mixin;
 	}
 
-	&.custom-BG section>article.editing {
-		.editing-mixin;
+	&.custom-BG section>article.open {
+		.open-mixin;
 	}
 }
 
-article.preview.editing {
-	.editing-mixin;
+article.preview.open {
+	.open-mixin;
 }
 
 body {

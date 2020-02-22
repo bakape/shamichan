@@ -28,7 +28,7 @@ article {
 		box-shadow: none;
 	}
 
-	&.highlight:not(.editing),
+	&.highlight:not(.open),
 	&:target {
 		background-color: #FDE2E2;
 
@@ -38,7 +38,7 @@ article {
 		}
 	}
 
-	&.editing {
+	&.open {
 		background-color: #D8EBCE;
 
 		article {
@@ -84,7 +84,7 @@ hr,
 }
 
 .modal,
-.preview:not(.editing),
+.preview:not(.open),
 .popup-menu,
 .reply-form {
 	background-color: #fff;
@@ -117,7 +117,7 @@ b#thread-post-counters {
 	color: #fff;
 }
 
-.fileinfo {
+.file-info {
 	margin-left: 0ex;
 }
 

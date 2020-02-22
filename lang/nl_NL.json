@@ -56,9 +56,9 @@
 			"Standaard thema",
 			"Thema dat standaard wordt geladen, wanneer er geen is ingesteld door de client"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org afbeelding zoeken"
+		"desuarchive": [
+			"DesuArchive",
+			"desuarchive.org afbeelding zoeken"
 		],
 		"disable_robots": [
 			"Crawlers voorkomen",
@@ -336,9 +336,9 @@
 			"WebM Hover uitbreiding",
 			"WebM-voorbeelden weergeven op hover. Vereist Image Hover Uitbreiding ingeschakeld."
 		],
-		"what_anime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot zoeken"
+		"trace": [
+			"trace.moe",
+			"trace.moe anime screenshot zoeken"
 		],
 		"work_mode": [
 			"Werk mode",

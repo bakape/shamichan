@@ -102,6 +102,7 @@ var Extensions = map[FileType]string{
 	RAR:      "rar",
 	CBZ:      "cbz",
 	CBR:      "cbr",
+	SVG:      "svg",
 }
 
 type errInvalidHashLen int

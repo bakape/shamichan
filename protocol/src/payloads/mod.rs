@@ -171,6 +171,34 @@ impl Default for FileType {
 	}
 }
 
+impl FileType {
+	// Return canonical extension for file type
+	pub fn extension(&self) -> &'static str {
+		match self {
+			Self::JPEG => "jpg",
+			Self::PNG => "png",
+			Self::GIF => "gif",
+			Self::WEBP => "webp",
+			Self::MP3 => "mp3",
+			Self::MP4 => "mp4",
+			Self::WEBM => "webm",
+			Self::OGG => "ogg",
+			Self::PDF => "pdf",
+			Self::ZIP => "zip",
+			Self::SevenZip => "7z",
+			Self::TGZ => "tar.gz",
+			Self::TXZ => "tar.xz",
+			Self::FLAC => "flac",
+			Self::TXT => "txt",
+			Self::RAR => "rar",
+			Self::CBZ => "cbz",
+			Self::CBR => "cbr",
+			Self::SVG => "svg",
+			Self::NoFile => "",
+		}
+	}
+}
+
 // Image data common to both binary and JSON representations
 payload! { ImageCommon {
 	audio: bool,

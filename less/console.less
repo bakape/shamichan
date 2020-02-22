@@ -31,12 +31,12 @@ article {
 		margin-top: 10pt;
 	}
 
-	&.highlight:not(.editing),
+	&.highlight:not(.open),
 	&:target {
 		background-color: #222;
 	}
 
-	&.editing {
+	&.open {
 		background-color: #0000b2;
 
 		header,
@@ -176,14 +176,14 @@ hr {
 }
 
 .modal,
-.preview:not(.editing),
+.preview:not(.open),
 .popup-menu {
 	border    : @border;
 	background: black;
 }
 
 .preview {
-	&:not(.editing) {
+	&:not(.open) {
 		background: black;
 	}
 

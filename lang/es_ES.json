@@ -56,9 +56,9 @@
 			"Default theme",
 			"Theme to load by default, when none is set by the client"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"desustorage.org búsqueda de imágenes"
+		"desuarchive": [
+			"DesuArchive",
+			"desuarchive.org búsqueda de imágenes"
 		],
 		"disable_robots": [
 			"Prevent crawlers",
@@ -336,9 +336,9 @@
 			"Expansión de WebM al pasar el ratón",
 			"Muestra una previsualización del WebM al pasar. Requiere tener Expansion de imagen al pasar el ratón activado."
 		],
-		"what_anime": [
-			"WhatAnime",
-			"whatanime.ga anime screenshot search"
+		"trace": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
 		],
 		"work_mode": [
 			"Modo de trabajo",

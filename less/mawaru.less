@@ -29,7 +29,7 @@ article {
 		border: @border;
 	}
 
-	&.highlight:not(.editing),
+	&.highlight:not(.open),
 	&:target {
 		background-color: #333;
 		border-color    : #222;
@@ -39,7 +39,7 @@ article {
 		}
 	}
 
-	&.editing {
+	&.open {
 		background-color: #311;
 		border-color    : #200;
 
@@ -94,7 +94,7 @@ hr {
 }
 
 .preview {
-	&:not(.editing) {
+	&:not(.open) {
 		background-color: #111;
 	}
 

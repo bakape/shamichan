@@ -54,7 +54,7 @@ aside {
     border       : none;
 }
 
-.editing-mixin() {
+.open-mixin() {
     background-color: #fa9cfd;
     border-color    : #bc5dc5;
     color           : #000;
@@ -95,17 +95,17 @@ aside {
 }
 
 #main {
-    &:not(.custom-BG) section>article.editing:not(.op) {
-        .editing-mixin;
+    &:not(.custom-BG) section>article.open:not(.op) {
+        .open-mixin;
     }
 
-    &.custom-BG section>article.editing {
-        .editing-mixin;
+    &.custom-BG section>article.open {
+        .open-mixin;
     }
 }
 
-article.preview.editing {
-    .editing-mixin;
+article.preview.open {
+    .open-mixin;
 }
 
 #banner,
@@ -166,7 +166,7 @@ article:target {
     border-color: none;
 }
 
-.preview:not(.editing) {
+.preview:not(.open) {
     background-color: #1d1d21;
 }
 

@@ -1,5 +1,5 @@
 use crate::state;
-use yew::{html, Bridge, Bridged, Component, ComponentLink, Html, Properties};
+use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 
 pub struct Menu {
 	link: ComponentLink<Self>,

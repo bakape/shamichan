@@ -31,7 +31,7 @@ article {
 		border: @border;
 	}
 
-	&.highlight:not(.editing),
+	&.highlight:not(.open),
 	&:target {
 		background-color: rgba(44, 44, 51, .95);
 		border-color    : #21212c;
@@ -41,7 +41,7 @@ article {
 		}
 	}
 
-	&.editing {
+	&.open {
 		background-color: rgba(51, 41, 41, .95);
 		border-color    : #2c2121;
 

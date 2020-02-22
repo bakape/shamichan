@@ -56,9 +56,9 @@
 			"Thème",
 			"Thème à charger par défaut si l'utilisateur n'en a sélectionné aucun"
 		],
-		"desustorage": [
-			"DesuStorage",
-			"Recheche d'image desustorage.org"
+		"desuarchive": [
+			"DesuArchive",
+			"Recheche d'image desuarchive.org"
 		],
 		"disable_robots": [
 			"Bloquer les robots",
@@ -336,9 +336,9 @@
 			"WebM au passage de la souris",
 			"Affiche une prévisualisation du WebM au passage de la souris (nécessite l'option du dessus)"
 		],
-		"what_anime": [
-			"WhatAnime",
-			"Recherche de captures d'écran d'anime whatanime.ga"
+		"trace": [
+			"trace.moe",
+			"Recherche de captures d'écran d'anime trace.moe"
 		],
 		"work_mode": [
 			"Mode travail",
