@@ -57,6 +57,7 @@ impl Component for AsideRow {
 					text="catalog"
 					on_click=self.link.callback(|_| ())
 				/>
+				// TODO: page selector on thread pages. Top only.
 			</span>
 		}
 	}

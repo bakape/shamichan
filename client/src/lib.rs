@@ -7,6 +7,7 @@ mod lang;
 mod banner;
 mod buttons;
 mod connection;
+mod page_selector;
 mod post;
 mod state;
 mod thread;

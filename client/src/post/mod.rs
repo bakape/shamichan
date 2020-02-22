@@ -1,9 +1,9 @@
 mod countries;
 pub mod image_search;
 mod menu;
-mod page_selector;
 
 use super::state;
+use crate::buttons::SpanButton;
 use crate::util;
 use protocol::{FileType, Image};
 use state::Post as Data;
@@ -151,7 +151,21 @@ impl Post {
 				{
 					if thread.is_some() {
 						html! {
-							<page_selector::PageSelector thread=self.id />
+							// TODO
+							<>
+								<SpanButton
+									text="top"
+									on_click=self.link.callback(|_|
+										Message::NOP
+									)
+								/>
+								<SpanButton
+									text="bottom"
+									on_click=self.link.callback(|_|
+										Message::NOP
+									)
+								/>
+							</>
 						}
 					} else {
 						html! {}
