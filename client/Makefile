@@ -17,4 +17,4 @@ watch: reset
 
 clean:
 	cargo clean
-	rm -rf dist pkg node_modules
+	rm -rf target dist pkg node_modules
