@@ -92,6 +92,11 @@ impl Component for Post {
 						None => html! {},
 					}
 				}
+				<div class="post-container">
+					// TODO
+				</div>
+				// TODO: post moderation log
+				// TODO: backlinks
 			</article>
 		}
 	}

@@ -85,7 +85,7 @@ impl Agent for Connection {
 
 		let mut s = Self {
 			app_state: state::Agent::bridge(link.callback(|u| match u {
-				Subscription::AuthKey => Event::AuthKeyChanged,
+				Subscription::AuthKeyChange => Event::AuthKeyChanged,
 				_ => Event::NOP,
 			})),
 			link,
@@ -96,7 +96,8 @@ impl Agent for Connection {
 			subscribers: HashSet::new(),
 		};
 
-		s.app_state.send(Request::Subscribe(Subscription::AuthKey));
+		s.app_state
+			.send(Request::Subscribe(Subscription::AuthKeyChange));
 		s.connect();
 
 		#[rustfmt::skip]

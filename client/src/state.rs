@@ -153,8 +153,11 @@ pub struct Agent {
 // Value changes to subscribe to
 #[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Clone)]
 pub enum Subscription {
-	FeedID,
-	AuthKey,
+	// Change of post feed the client is subscribed to
+	FeedChange,
+
+	// Auth key has been set by user
+	AuthKeyChange,
 
 	// Subscribe to any changes to a post
 	PostChange(u64),
@@ -244,7 +247,7 @@ impl yew::agent::Agent for Agent {
 			}
 			Request::SetAuthKey(key) => {
 				get_mut().auth_key = key;
-				self.send_change(Subscription::AuthKey);
+				self.send_change(Subscription::AuthKeyChange);
 			}
 			Request::FetchFeed { id, sync } => match id {
 				0 => {

@@ -1,5 +1,4 @@
-use super::connection;
-use super::util;
+use crate::{buttons::AsideButton, connection, state, util};
 use stdweb::web::event::{IEvent, SubmitEvent};
 use stdweb::web::{Element, FormData, FormDataEntry};
 use yew::agent::{Bridge, Bridged};
@@ -10,6 +9,9 @@ use yew::{
 pub struct AsideRow {
 	link: ComponentLink<Self>,
 	props: Props,
+
+	#[allow(unused)]
+	state: Box<dyn Bridge<state::Agent>>,
 }
 
 #[derive(Clone, Properties)]
@@ -17,12 +19,28 @@ pub struct Props {
 	pub is_top: bool,
 }
 
+pub enum Message {
+	FeedChange,
+	NOP,
+}
+
 impl Component for AsideRow {
-	type Message = ();
+	type Message = Message;
 	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		Self { props, link }
+		use state::{Agent, Request, Subscription};
+
+		let mut s = Agent::bridge(link.callback(|u| match u {
+			Subscription::FeedChange => Message::FeedChange,
+			_ => Message::NOP,
+		}));
+		s.send(Request::Subscribe(Subscription::FeedChange));
+		Self {
+			props,
+			link,
+			state: s,
+		}
 	}
 
 	fn update(&mut self, _: Self::Message) -> bool {
@@ -30,7 +48,8 @@ impl Component for AsideRow {
 	}
 
 	fn view(&self) -> Html {
-		// TODO: Routing + switch on page type
+		let feed = state::get().feed;
+		let is_thread = feed != 0;
 
 		html! {
 			<span
@@ -44,7 +63,7 @@ impl Component for AsideRow {
 				}
 			>
 				{
-					if self.props.is_top {
+					if !is_thread && self.props.is_top {
 						html! {
 							<NewThreadForm />
 						}
@@ -52,12 +71,25 @@ impl Component for AsideRow {
 						html! {}
 					}
 				}
-				// TODO
-				<super::buttons::AsideButton
-					text="catalog"
-					on_click=self.link.callback(|_| ())
+				// TODO: swap between index and catalog. Persist last mode to
+				// local storage.
+				<AsideButton
+					text=if is_thread {
+						"return"
+					} else {
+						"catalog"
+					}
+					on_click=self.link.callback(|_| Message::NOP)
 				/>
-				// TODO: page selector on thread pages. Top only.
+				{
+					if is_thread {
+						html! {
+							<crate::page_selector::PageSelector thread=feed />
+						}
+					} else {
+						html! {}
+					}
+				}
 			</span>
 		}
 	}
