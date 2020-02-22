@@ -1,3 +1,4 @@
+mod menu;
 mod page_selector;
 
 use super::state;
@@ -114,6 +115,7 @@ impl Post {
 						html! {}
 					}
 				}
+				<menu::Menu id=self.id />
 			</header>
 		}
 	}
