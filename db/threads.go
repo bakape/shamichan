@@ -167,3 +167,18 @@ func GetLastPage(id uint64) (n int, err error) {
 		Scan(&n)
 	return
 }
+
+// Get list of all existing tags as JSON array
+func GetTagList(ctx context.Context) (out []byte, err error) {
+	err = db.
+		QueryRow(
+			ctx,
+			`select coalesce(jsonb_agg(distinct tag order by tag), '[]'::jsonb)
+			from (
+				select unnest(tags) tag
+				from threads
+			) _`,
+		).
+		Scan(&out)
+	return
+}

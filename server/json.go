@@ -87,10 +87,22 @@ func serveThread(w http.ResponseWriter, r *http.Request) {
 
 // Serves thread index page JSON
 func serveIndex(w http.ResponseWriter, r *http.Request) {
+	serverJSONFromCache(w, r, cache.WriteIndex)
+}
+
+func serverJSONFromCache(
+	w http.ResponseWriter, r *http.Request,
+	src func(w http.ResponseWriter, r *http.Request) error,
+) {
 	handleError(w, r, func() (err error) {
 		setJSONHeaders(w)
-		return cache.WriteIndex(w, r)
+		return src(w, r)
 	})
+}
+
+// Serve list of currently used thread tags
+func serverUsedTags(w http.ResponseWriter, r *http.Request) {
+	serverJSONFromCache(w, r, cache.WriteUsedTags)
 }
 
 // func serveThreadUpdates(w http.ResponseWriter, r *http.Request) {

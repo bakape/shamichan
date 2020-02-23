@@ -3,6 +3,7 @@
 package cache
 
 import (
+	"context"
 	"encoding/gob"
 	"net/http"
 	"time"
@@ -27,6 +28,9 @@ var (
 	// Stores the threads IDs pf all threads.
 	// Contrains only one record.
 	threadIDFrontend *recache.Frontend
+
+	// List of currently used tags
+	usedTagsFrontend *recache.Frontend
 )
 
 // Key for identifying thread pages
@@ -103,6 +107,22 @@ func Init() (err error) {
 		return
 	})
 
+	usedTagsFrontend = cache.NewFrontend(func(
+		_ recache.Key,
+		rw *recache.RecordWriter,
+	) (err error) {
+		_, err = rw.Bind(threadIDFrontend, struct{}{})
+		if err != nil {
+			return
+		}
+		buf, err := db.GetTagList(context.Background())
+		if err != nil {
+			return
+		}
+		_, err = rw.Write(buf)
+		return
+	})
+
 	return
 }
 
@@ -166,5 +186,11 @@ func WriteThread(
 // Write thread index JSON to w
 func WriteIndex(w http.ResponseWriter, r *http.Request) (err error) {
 	_, err = indexFrontend.WriteHTTP(struct{}{}, w, r)
+	return
+}
+
+// Write List of currently used thread tags
+func WriteUsedTags(w http.ResponseWriter, r *http.Request) (err error) {
+	_, err = usedTagsFrontend.WriteHTTP(struct{}{}, w, r)
 	return
 }

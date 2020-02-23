@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"sort"
 	"testing"
 	"time"
@@ -429,5 +430,20 @@ func TestGetThread(t *testing.T) {
 			})
 		}
 
+	})
+
+	t.Run("get tag list", func(t *testing.T) {
+		t.Parallel()
+
+		var res []string
+		buf, err := GetTagList(context.Background())
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = json.Unmarshal(buf, &res)
+		if err != nil {
+			t.Fatal(err)
+		}
+		test.AssertEquals(t, res, []string{"animu", "mango"})
 	})
 }

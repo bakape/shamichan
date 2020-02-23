@@ -121,6 +121,7 @@ func createRouter() http.Handler {
 	json := api.NewGroup("/json")
 	json.GET("/threads/:thread/:page", serveThread)
 	json.GET("/index", serveIndex)
+	json.GET("/used-tags", serverUsedTags)
 
 	return r
 }

@@ -1,9 +1,13 @@
 use crate::{buttons::AsideButton, connection, state, util};
-use stdweb::web::event::{IEvent, SubmitEvent};
-use stdweb::web::{Element, FormData, FormDataEntry};
-use yew::agent::{Bridge, Bridged};
+use stdweb::web::{
+	event::{IEvent, SubmitEvent},
+	Element, FormData, FormDataEntry,
+};
 use yew::{
-	html, Component, ComponentLink, Html, InputData, NodeRef, Properties,
+	agent::{Bridge, Bridged},
+	html,
+	services::fetch::FetchTask,
+	Component, ComponentLink, Html, InputData, NodeRef, Properties,
 };
 
 pub struct AsideRow {
@@ -103,6 +107,7 @@ struct NewThreadForm {
 	selected_tags: Vec<String>,
 	conn: Box<dyn Bridge<connection::Connection>>,
 	conn_state: connection::State,
+	fetch_task: FetchTask,
 }
 
 enum Msg {
@@ -112,6 +117,8 @@ enum Msg {
 	AddTag,
 	Submit,
 	ConnState(connection::State),
+	FetchedUsedTags(Vec<String>),
+	NOP,
 }
 
 impl Component for NewThreadForm {
@@ -119,19 +126,31 @@ impl Component for NewThreadForm {
 	type Properties = ();
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+		use yew::format::{Json, Nothing};
+		use yew::services::fetch::{FetchService, Request, Response};
+
 		Self {
 			conn: connection::Connection::bridge(
 				link.callback(|s| Msg::ConnState(s)),
 			),
 			el: NodeRef::default(),
+			fetch_task: FetchService::new().fetch(
+				Request::get("/api/json/used-tags").body(Nothing).unwrap(),
+				link.callback(
+					|res: Response<
+						Json<Result<Vec<String>, failure::Error>>,
+					>| match res.into_body() {
+						Json(Ok(tags)) => Msg::FetchedUsedTags(tags),
+						_ => Msg::NOP,
+					},
+				),
+			),
 			link,
 			expanded: false,
 			available_tags: vec![],
 			selected_tags: vec!["".into()],
 			conn_state: connection::State::Loading,
 		}
-
-		// TODO: Fetch tag list from DB
 	}
 
 	fn update(&mut self, msg: Self::Message) -> bool {
@@ -197,6 +216,11 @@ impl Component for NewThreadForm {
 			}
 			Msg::ConnState(s) => {
 				self.conn_state = s;
+				true
+			}
+			Msg::NOP => false,
+			Msg::FetchedUsedTags(tags) => {
+				self.available_tags = tags;
 				true
 			}
 		}
@@ -305,12 +329,12 @@ impl NewThreadForm {
 		html! {
 			<span>
 				<input
-					placeholder=localize!{"tag"}
+					placeholder=localize!("tag")
 					required=true
 					type="text"
 					maxlength="20"
 					minlength="1"
-					value={tag}
+					value=tag
 					name="tag"
 					list="available-tags"
 					oninput=self.link.callback(move |e: InputData|
