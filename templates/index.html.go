@@ -7,74 +7,82 @@ package templates
 //line index.html:1
 import "github.com/bakape/meguca/config"
 
-//  TODO: Default language
+//line index.html:2
+import "encoding/json"
 
-//line index.html:1
+//line index.html:4
 import (
 	qtio422016 "io"
 
 	qt422016 "github.com/valyala/quicktemplate"
 )
 
-//line index.html:1
+//line index.html:4
 var (
 	_ = qtio422016.Copy
 	_ = qt422016.AcquireByteBuffer
 )
 
-//line index.html:1
+//line index.html:4
 func StreamMain(qw422016 *qt422016.Writer, c config.Configs) {
-//line index.html:1
+//line index.html:4
 	qw422016.N().S(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><meta name="application-name" content="meguca"><meta name="description" content="Realtime imageboard"><link type="image/x-icon" rel="shortcut icon" id="favicon" href="/assets/favicons/default.ico"><title id="page-title">meguca</title><link rel="stylesheet" href="/assets/css/base.css" type="text/css"><link rel="stylesheet" id="theme-css" href="/assets/css/`)
-//line index.html:12
+//line index.html:15
 	qw422016.N().S(c.DefaultCSS)
-//line index.html:12
+//line index.html:15
 	qw422016.N().S(`.css" type="text/css"><style id="user-background-style"></style><script>if (localStorage.theme&& localStorage.theme !== "`)
-//line index.html:16
+//line index.html:19
 	qw422016.N().S(c.DefaultCSS)
-//line index.html:16
+//line index.html:19
 	qw422016.N().S(`") {document.getElementById('theme-css').href =`)
-//line index.html:16
+//line index.html:19
 	qw422016.N().S("`")
-//line index.html:16
+//line index.html:19
 	qw422016.N().S(`/assets/css/${localStorage.theme}.css`)
-//line index.html:16
+//line index.html:19
 	qw422016.N().S("`")
-//line index.html:16
+//line index.html:19
 	qw422016.N().S(`;}window.language_pack = new Promise((resolve, reject) => {fetch(`)
-//line index.html:16
+//line index.html:19
 	qw422016.N().S("`")
-//line index.html:16
+//line index.html:19
 	qw422016.N().S(`/assets/lang/${localStorage.lang || "en_GB"}.json`)
-//line index.html:16
+//line index.html:19
 	qw422016.N().S("`")
-//line index.html:16
-	qw422016.N().S(`).then(r => r.text()).then(resolve).catch(reject)});</script><script src="/assets/client/index.js"></script></head><body></body></html>`)
-//line index.html:32
+//line index.html:19
+	qw422016.N().S(`).then(r => r.text()).then(resolve).catch(reject)});</script><script id="config-data" type="application/json">`)
+//line index.html:33
+	buf, _ := json.Marshal(c.Public)
+
+//line index.html:34
+	qw422016.N().Z(buf)
+//line index.html:34
+	qw422016.N().S(`</script><script src="/assets/client/index.js"></script></head><body></body></html>`)
+//line index.html:40
 }
 
-//line index.html:32
+//line index.html:40
 func WriteMain(qq422016 qtio422016.Writer, c config.Configs) {
-//line index.html:32
+//line index.html:40
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line index.html:32
+//line index.html:40
 	StreamMain(qw422016, c)
-//line index.html:32
+//line index.html:40
 	qt422016.ReleaseWriter(qw422016)
-//line index.html:32
+//line index.html:40
 }
 
-//line index.html:32
+//line index.html:40
 func Main(c config.Configs) string {
-//line index.html:32
+//line index.html:40
 	qb422016 := qt422016.AcquireByteBuffer()
-//line index.html:32
+//line index.html:40
 	WriteMain(qb422016, c)
-//line index.html:32
+//line index.html:40
 	qs422016 := string(qb422016.B)
-//line index.html:32
+//line index.html:40
 	qt422016.ReleaseByteBuffer(qb422016)
-//line index.html:32
+//line index.html:40
 	return qs422016
-//line index.html:32
+//line index.html:40
 }

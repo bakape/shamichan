@@ -100,6 +100,10 @@
 			"Étendre les images",
 			"Étend toutes les images"
 		],
+		"expand_gif_thumbnails": [
+			"Animated GIF thumbnails",
+			"Load entire GIF image even in thumbnail view"
+		],
 		"export": [
 			"Exporter",
 			"Télécharge le fichier des paramètres"
@@ -276,6 +280,10 @@
 			"[Répondre] à droite",
 			"Déplace le bouton pour répondre à droite de l'écran"
 		],
+		"reveal_image_spoilers": [
+			"Reveal Image Spoilers",
+			"Automatically reveal spoilered images"
+		],
 		"root_url": [
 			"URL",
 			"Racine du site"
@@ -291,10 +299,6 @@
 		"saucenao": [
 			"SauceNao",
 			"Recherche d'image saucenao.com"
-		],
-		"spoilers": [
-			"Spoiler",
-			"Dissimule les images avec l'option spoiler"
 		],
 		"staff_title": [
 			"Grade",
@@ -320,6 +324,10 @@
 			"Dissimuler l'image",
 			"Active l'option spoiler du message ouvert"
 		],
+		"trace": [
+			"trace.moe",
+			"Recherche de captures d'écran d'anime trace.moe"
+		],
 		"user_background": [
 			"Fond personnalisé",
 			"Active le fond personnalisé"
@@ -335,10 +343,6 @@
 		"webm_hover_preview": [
 			"WebM au passage de la souris",
 			"Affiche une prévisualisation du WebM au passage de la souris (nécessite l'option du dessus)"
-		],
-		"trace": [
-			"trace.moe",
-			"Recherche de captures d'écran d'anime trace.moe"
 		],
 		"work_mode": [
 			"Mode travail",

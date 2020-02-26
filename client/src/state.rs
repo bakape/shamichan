@@ -22,6 +22,8 @@ pub struct Options {
 	pub relative_timestamps: bool,
 	pub hide_thumbnails: bool,
 	pub work_mode: bool,
+	pub reveal_image_spoilers: bool,
+	pub expand_gif_thumbnails: bool,
 	pub enabled_image_search: Vec<Provider>,
 }
 
@@ -32,6 +34,8 @@ impl Default for Options {
 			relative_timestamps: true,
 			hide_thumbnails: false,
 			work_mode: false,
+			reveal_image_spoilers: false,
+			expand_gif_thumbnails: false,
 			enabled_image_search: [
 				Provider::Google,
 				Provider::Yandex,
@@ -44,6 +48,22 @@ impl Default for Options {
 			.collect(),
 		}
 	}
+}
+
+// Exported public server configurations
+//
+// TODO: Get config updates though websocket
+#[derive(Serialize, Deserialize, Default)]
+pub struct Configs {
+	pub captcha: bool,
+	pub mature: bool,
+	pub prune_threads: bool,
+	pub thread_expiry: u32,
+	pub max_size: u64,
+	pub default_lang: String,
+	pub default_theme: String,
+	pub image_root_override: String,
+	pub links: HashMap<String, String>,
 }
 
 // Stored separately from the agent to avoid needless serialization on change
@@ -71,6 +91,9 @@ pub struct State {
 
 	// Global user-set options
 	pub options: Options,
+
+	// Exported public server configurations
+	pub configs: Configs,
 
 	// Posts this user has made
 	// TODO: Menu option to mark any post as mine
@@ -171,6 +194,9 @@ pub enum Subscription {
 
 	// Change to any field of Options
 	OptionsChange,
+
+	// Change to any field of Configs
+	ConfigsChange,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -320,7 +346,7 @@ fn write_auth_key(key: &mut AuthKey) {
 }
 
 // Initialize application state
-pub fn init() {
+pub fn init() -> util::Result {
 	fn create_auth_key() -> AuthKey {
 		let mut key = AuthKey::default();
 		util::window()
@@ -363,4 +389,14 @@ pub fn init() {
 			s.options = opts;
 		}
 	}
+
+	// Read configs from JSON embedded in the HTML
+	s.configs = serde_json::from_str(
+		&util::document()
+			.get_element_by_id("config-data")
+			.ok_or("inline configs not found")?
+			.inner_html(),
+	)?;
+
+	Ok(())
 }

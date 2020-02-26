@@ -107,6 +107,8 @@ struct NewThreadForm {
 	selected_tags: Vec<String>,
 	conn: Box<dyn Bridge<connection::Connection>>,
 	conn_state: connection::State,
+
+	#[allow(unused)]
 	fetch_task: FetchTask,
 }
 

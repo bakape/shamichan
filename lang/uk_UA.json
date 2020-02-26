@@ -100,6 +100,10 @@
 			"Розгорнути Всі Зображення",
 			"Розгорнути всі зображення. Файли формату Webm, PDF і MP3 не розгортаються. Зображення у нових постах також будуть розгортатися."
 		],
+		"expand_gif_thumbnails": [
+			"Animated GIF thumbnails",
+			"Load entire GIF image even in thumbnail view"
+		],
 		"export": [
 			"Експорт",
 			"Експортувати настройки як файл"
@@ -276,6 +280,10 @@
 			"[Відповісти] справа",
 			"Посунути кнопку [Відповісти] направо"
 		],
+		"reveal_image_spoilers": [
+			"Reveal Image Spoilers",
+			"Automatically reveal spoilered images"
+		],
 		"root_url": [
 			"Root URL",
 			"Root URL of the imageboard. Required for some image search providers to work."
@@ -291,10 +299,6 @@
 		"saucenao": [
 			"SauceNao",
 			"Пошук зображень по  saucenao.com"
-		],
-		"spoilers": [
-			"Текстові спойлери",
-			"Вмикає використання ** для блоків спойлерів"
 		],
 		"staff_title": [
 			"Staff Title",
@@ -320,6 +324,10 @@
 			"Приховування зображення",
 			"Перемкнути приховування зображень"
 		],
+		"trace": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
+		],
 		"user_background": [
 			"Власний фон сторінки",
 			"Перемкнути власний фон сторінки"
@@ -335,10 +343,6 @@
 		"webm_hover_preview": [
 			"Розгортання webm",
 			"WebMки розгротаються при наведенні мишки"
-		],
-		"trace": [
-			"trace.moe",
-			"trace.moe anime screenshot search"
 		],
 		"work_mode": [
 			"Робочий режим",

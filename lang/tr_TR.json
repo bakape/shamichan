@@ -100,6 +100,10 @@
 			"Bütün resimleri genişlet",
 			"Yeni girdiler dahil bütün resimleri genişletir."
 		],
+		"expand_gif_thumbnails": [
+			"Animated GIF thumbnails",
+			"Load entire GIF image even in thumbnail view"
+		],
 		"export": [
 			"Dışarı al",
 			"Ayarları dosyayı al"
@@ -276,6 +280,10 @@
 			"[Cevapla] sağ tarafta",
 			"Cevapla tuşuna sağ alta gönder"
 		],
+		"reveal_image_spoilers": [
+			"Reveal Image Spoilers",
+			"Automatically reveal spoilered images"
+		],
 		"root_url": [
 			"Root URL",
 			"Root URL of the imageboard. Required for some image search providers to work."
@@ -291,10 +299,6 @@
 		"saucenao": [
 			"SauceNao",
 			"saucenao.com resim arama"
-		],
-		"spoilers": [
-			"Text spoilers",
-			"Enable use of ** to spoiler blocks of text"
 		],
 		"staff_title": [
 			"Staff Title",
@@ -320,6 +324,10 @@
 			"Resim spoiler",
 			"Spoiler ekle"
 		],
+		"trace": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
+		],
 		"user_background": [
 			"Kişisel arkaplan",
 			"Kişisel arkaplanı ayarla"
@@ -335,10 +343,6 @@
 		"webm_hover_preview": [
 			"Üstündeyken genişlet(WebM)",
 			"Fare üstüne geldiğinde WebMleri genişlet. Resim ayarı açık olmalıdır"
-		],
-		"trace": [
-			"trace.moe",
-			"trace.moe anime screenshot search"
 		],
 		"work_mode": [
 			"İş modu",

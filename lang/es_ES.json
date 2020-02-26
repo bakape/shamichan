@@ -100,6 +100,10 @@
 			"Expandir todas las imágenes",
 			"Expande todas las imagenes. Webm, PDF y MP3 y tu propio post no son afectados. Nuevos posts también son expandidos."
 		],
+		"expand_gif_thumbnails": [
+			"Animated GIF thumbnails",
+			"Load entire GIF image even in thumbnail view"
+		],
 		"export": [
 			"Exportar",
 			"Exportar opciones a archivo"
@@ -276,6 +280,10 @@
 			"[Responder] a la derecha",
 			" Mueve el botón Responder a la derecha de la pagina"
 		],
+		"reveal_image_spoilers": [
+			"Reveal Image Spoilers",
+			"Automatically reveal spoilered images"
+		],
 		"root_url": [
 			"Root URL",
 			"Root URL of the imageboard. Required for some image search providers to work."
@@ -291,10 +299,6 @@
 		"saucenao": [
 			"SauceNao",
 			"saucenao.com búsqueda de imágenes"
-		],
-		"spoilers": [
-			"Text spoilers",
-			"Enable use of ** to spoiler blocks of text"
 		],
 		"staff_title": [
 			"Staff Title",
@@ -320,6 +324,10 @@
 			"Spoiler de imagen",
 			"Activa spoiler en el post abierto"
 		],
+		"trace": [
+			"trace.moe",
+			"trace.moe anime screenshot search"
+		],
 		"user_background": [
 			"Fondo personalizado",
 			"Activa fondo de pagina personalizado"
@@ -335,10 +343,6 @@
 		"webm_hover_preview": [
 			"Expansión de WebM al pasar el ratón",
 			"Muestra una previsualización del WebM al pasar. Requiere tener Expansion de imagen al pasar el ratón activado."
-		],
-		"trace": [
-			"trace.moe",
-			"trace.moe anime screenshot search"
 		],
 		"work_mode": [
 			"Modo de trabajo",

@@ -57,6 +57,7 @@ macro_rules! from_display {
 }
 from_display! {
 	String,
+	&str,
 	serde_json::error::Error,
 	base64::DecodeError,
 	std::io::Error,
@@ -105,7 +106,7 @@ macro_rules! cache_variable {
 			if CACHED.is_none() {
 				CACHED = Some($get());
 				}
-			CACHED.clone().unwrap()
+			CACHED.as_ref().unwrap()
 			}
 		}};
 }
@@ -114,7 +115,7 @@ macro_rules! cache_variable {
 #[macro_export]
 macro_rules! def_cached_getter {
 	($visibility:vis, $name:ident, $type:ty, $get:expr) => {
-		$visibility fn $name() -> $type {
+		$visibility fn $name() -> &'static $type {
 			$crate::cache_variable! { $type, $get }
 		}
 	};
@@ -136,6 +137,11 @@ def_cached_getter! { pub, document, web_sys::Document,
 // Get local storage manager
 def_cached_getter! { pub, local_storage, web_sys::Storage,
 	|| window().local_storage().unwrap().unwrap()
+}
+
+// Get the host part of the current location
+def_cached_getter! { pub, host, String,
+	|| window().location().host().unwrap()
 }
 
 // Add static passive DOM event listener

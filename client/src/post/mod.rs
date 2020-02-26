@@ -20,12 +20,14 @@ pub struct Post {
 	id: u64,
 
 	reveal_image: bool,
+	expand_image: bool,
 }
 
 pub enum Message {
 	PostChange,
 	OptionsChange,
 	ImageHideToggle,
+	ImageExpandToggle,
 	NOP,
 }
 
@@ -48,11 +50,15 @@ impl Component for Post {
 			_ => Message::NOP,
 		}));
 		s.send(Request::Subscribe(Subscription::PostChange(props.id)));
+		s.send(Request::Subscribe(Subscription::OptionsChange));
+		s.send(Request::Subscribe(Subscription::ConfigsChange));
+
 		Self {
 			id: props.id,
 			state: s,
 			link,
 			reveal_image: false,
+			expand_image: false,
 		}
 	}
 
@@ -62,6 +68,10 @@ impl Component for Post {
 			Message::NOP => false,
 			Message::ImageHideToggle => {
 				self.reveal_image = !self.reveal_image;
+				true
+			}
+			Message::ImageExpandToggle => {
+				self.expand_image = !self.expand_image;
 				true
 			}
 		}
@@ -93,7 +103,12 @@ impl Component for Post {
 					}
 				}
 				<div class="post-container">
-					// TODO
+					{
+						match &p.image {
+							Some(img) => self.render_figure(img),
+							None => html! {},
+						}
+					}
 				</div>
 				// TODO: post moderation log
 				// TODO: backlinks
@@ -266,8 +281,8 @@ impl Post {
 			file_info.push(t.clone());
 		}
 
-		let ext = img.common.file_type.extension();
-		let name = format!("{}.{}", img.common.name, ext);
+		let name =
+			format!("{}.{}", img.common.name, img.common.file_type.extension());
 
 		html! {
 			<figcaption class="spaced">
@@ -299,14 +314,7 @@ impl Post {
 						})
 					}
 				</span>
-				<a
-					href=format!(
-						"/assets/images/src/{}.{}",
-						hex::encode(&img.sha1),
-						ext
-					)
-					download=name
-				>
+				<a href=source_path(img) download=name>
 					{name}
 				</a>
 			</figcaption>
@@ -332,7 +340,7 @@ impl Post {
 			};
 		let url = format!(
 			"{}/assets/images/{}/{}.{}",
-			util::window().location().host().unwrap(),
+			util::host(),
 			root,
 			hex::encode(&img.sha1),
 			typ.extension(),
@@ -364,4 +372,90 @@ impl Post {
 			</span>
 		}
 	}
+
+	fn render_figure(&self, img: &Image) -> Html {
+		let opts = &state::get().options;
+		if !self.reveal_image && (opts.hide_thumbnails || opts.work_mode) {
+			return html! {};
+		}
+
+		let src = source_path(img);
+
+		if !self.expand_image {
+			let url: String;
+			let mut w = img.common.thumb_width;
+			let mut h = img.common.thumb_height;
+			if img.common.thumb_type == FileType::NoFile {
+				// No thumbnail exists
+				url = match img.common.file_type {
+					FileType::WEBM
+					| FileType::MP4
+					| FileType::MP3
+					| FileType::OGG
+					| FileType::FLAC => "/assets/audio.png",
+					_ => "/assets/file.png",
+				}
+				.into();
+				w = 150;
+				h = 150;
+			} else if img.common.spoilered && !opts.reveal_image_spoilers {
+				// Spoilered and spoilers enabled
+				url = "/assets/spoil/default.jpg".into();
+				w = 150;
+				h = 150;
+			} else if img.common.file_type == FileType::GIF
+				&& opts.expand_gif_thumbnails
+			{
+				// Animated GIF thumbnails
+				url = src.clone();
+			} else {
+				url = thumb_path(img);
+			}
+
+			html! {
+				<a target="_blank" href=src>
+					<img
+						src=url
+						width=w
+						height=h
+						onclick=self.link.callback(|_|
+							Message::ImageExpandToggle
+						)
+					/>
+				</a>
+			}
+		} else {
+			todo!()
+		}
+	}
+}
+
+// Returns root url for storing images
+fn image_root<'a>() -> &'a str {
+	let over = &state::get().configs.image_root_override;
+	if over.is_empty() {
+		"/assets/images"
+	} else {
+		over
+	}
+}
+
+// Get the thumbnail path of an upload
+fn thumb_path(img: &Image) -> String {
+	format!(
+		"{}/thumb/{}.{}",
+		image_root(),
+		hex::encode(&img.sha1),
+		img.common.thumb_type.extension()
+	)
+}
+
+// Resolve the path to the source file of an upload
+fn source_path(img: &Image) -> String {
+	format!(
+		"{}/thumb/{}.{}",
+		image_root(),
+		hex::encode(&img.sha1),
+		img.common.file_type.extension()
+	)
 }

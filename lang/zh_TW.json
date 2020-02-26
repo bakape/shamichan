@@ -100,6 +100,10 @@
 			"展開所有圖片",
 			"展開所有圖片。Webm、PDF 和 MP3 以及你自己的貼文不會受到影響。新貼文的圖片也會被展開。"
 		],
+		"expand_gif_thumbnails": [
+			"Animated GIF thumbnails",
+			"Load entire GIF image even in thumbnail view"
+		],
 		"export": [
 			"匯出",
 			"將選項匯出到檔案"
@@ -276,6 +280,10 @@
 			"[回覆] 在右邊",
 			"將回覆按鈕移動到頁面右側"
 		],
+		"reveal_image_spoilers": [
+			"Reveal Image Spoilers",
+			"Automatically reveal spoilered images"
+		],
 		"root_url": [
 			"根 URL",
 			"貼圖討論版的根 URL. 有些圖片搜尋提供商需要它才可以運作。"
@@ -291,10 +299,6 @@
 		"saucenao": [
 			"SauceNao",
 			"saucenao.com 圖片搜尋"
-		],
-		"spoilers": [
-			"圖片劇透標記",
-			"別將圖片標上劇透標記"
 		],
 		"staff_title": [
 			"板務職位",
@@ -320,6 +324,10 @@
 			"圖片劇透標籤",
 			"在開啟的貼文切換劇透標籤"
 		],
+		"trace": [
+			"trace.moe",
+			"trace.moe 動漫截圖搜尋"
+		],
 		"user_background": [
 			"自定義背景",
 			"切換自定義背景"
@@ -335,10 +343,6 @@
 		"webm_hover_preview": [
 			"WebM 滑過展開",
 			"當滑過去時顯示 WebM 預覽。需要打開「圖片滑過展開」。"
-		],
-		"trace": [
-			"trace.moe",
-			"trace.moe 動漫截圖搜尋"
 		],
 		"work_mode": [
 			"工作模式",

@@ -100,6 +100,10 @@
 			"Alle afbeeldingen uitbreiden",
 			"Alle afbeeldingen uitbreiden. Webm, PDF en MP3 en je eigen bericht worden niet beïnvloed. Nieuwe bericht afbeeldingen worden ook uitgebreid."
 		],
+		"expand_gif_thumbnails": [
+			"Animated GIF thumbnails",
+			"Load entire GIF image even in thumbnail view"
+		],
 		"export": [
 			"Exporteren",
 			"Exporteer opties naar bestand"
@@ -276,6 +280,10 @@
 			"[Reply] aan Rechts",
 			"Verplaats antwoordknop aan de rechterkant van de pagina"
 		],
+		"reveal_image_spoilers": [
+			"Reveal Image Spoilers",
+			"Automatically reveal spoilered images"
+		],
 		"root_url": [
 			"Root URL",
 			"Root URL van de imageboard. Vereist voor sommige image search-providers om te werken."
@@ -291,10 +299,6 @@
 		"saucenao": [
 			"SauceNao",
 			"saucenao.com afbeelding zoeken"
-		],
-		"spoilers": [
-			"Afbeelding Spoilers",
-			"Spoiler afbeeldingen niet"
 		],
 		"staff_title": [
 			"Staff Titel",
@@ -320,6 +324,10 @@
 			"Afbeelding Spoiler",
 			"Toggle spoiler in de opening van een bericht"
 		],
+		"trace": [
+			"trace.moe",
+			"trace.moe anime screenshot zoeken"
+		],
 		"user_background": [
 			"Eigen Achtergrond",
 			"Toggle eigen pagina achtergrond"
@@ -335,10 +343,6 @@
 		"webm_hover_preview": [
 			"WebM Hover uitbreiding",
 			"WebM-voorbeelden weergeven op hover. Vereist Image Hover Uitbreiding ingeschakeld."
-		],
-		"trace": [
-			"trace.moe",
-			"trace.moe anime screenshot zoeken"
 		],
 		"work_mode": [
 			"Werk mode",

@@ -66,7 +66,7 @@ impl Component for App {
 
 #[wasm_bindgen(start)]
 pub async fn main_js() -> util::Result {
-	state::init();
+	state::init()?;
 	lang::load_language_pack().await?;
 
 	yew::start_app::<App>();
