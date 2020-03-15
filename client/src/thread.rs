@@ -123,7 +123,7 @@ impl Thread {
 		if let Some(posts) =
 			state::get().posts_by_thread_page.get(&(self.id, page))
 		{
-			dst.extend(posts);
+			dst.extend(posts.iter().filter(|id| **id != self.id));
 		}
 	}
 }
