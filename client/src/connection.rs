@@ -3,11 +3,15 @@ use protocol::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fmt::Debug;
-use yew::agent::{Agent, AgentLink, Context, HandlerId};
-use yew::services::console::ConsoleService;
-use yew::services::timeout::{TimeoutService, TimeoutTask};
-use yew::services::Task;
-use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
+use yew::{
+	agent::{Agent, AgentLink, Context, HandlerId},
+	html,
+	services::{
+		console::ConsoleService,
+		timeout::{TimeoutService, TimeoutTask},
+	},
+	Bridge, Bridged, Component, ComponentLink, Html,
+};
 
 // Encode a batch of (protocol::MessageType, Serialize) pairs
 #[macro_export]
@@ -247,9 +251,7 @@ impl Connection {
 	}
 
 	fn reset_reconn_timer(&mut self) {
-		if let Some(mut t) = self.reconn_timer.take() {
-			t.cancel();
-		}
+		self.reconn_timer = None;
 	}
 
 	fn reset_socket_and_timer(&mut self) {

@@ -61,7 +61,8 @@ from_display! {
 	serde_json::error::Error,
 	base64::DecodeError,
 	std::io::Error,
-	std::num::ParseIntError
+	std::num::ParseIntError,
+	anyhow::Error
 }
 
 // Shorthand for most commonly used Result type
@@ -180,11 +181,8 @@ pub fn log_error_res<T, E: Into<Error>>(res: std::result::Result<T, E>) {
 }
 
 // Log error to console
-pub fn log_error<T: Into<String>>(err: T) {
-	let s = err.into();
-	if !s.is_empty() {
-		web_sys::console::error_1(&JsValue::from(&s));
-	}
+pub fn log_error<T: std::fmt::Display>(err: T) {
+	web_sys::console::error_1(&JsValue::from(err.to_string()));
 }
 
 // Run closure, logging any errors to both console error log and alert dialogs

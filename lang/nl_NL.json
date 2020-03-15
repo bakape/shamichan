@@ -156,6 +156,10 @@
 			"Inloggen",
 			""
 		],
+		"image_expansion_mode": [
+			"Expansion",
+			"Expand images inside the parent post and resize according to setting"
+		],
 		"image_hover_preview": [
 			"Beeldverlenging Uitbreiding",
 			"Geef previews van beelden"
@@ -171,10 +175,6 @@
 		"import": [
 			"Importeren",
 			"Importeer opties van bestand"
-		],
-		"inline_fit": [
-			"Uitbreiding",
-			"Breid afbeeldingen uit in het bovenliggende bericht en wijzig het formaat volgens de instellingen"
 		],
 		"iqdb": [
 			"IQDB",

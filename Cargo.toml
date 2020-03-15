@@ -2,6 +2,8 @@
 members = [
     "websockets/websockets",
     "protocol",
+]
+exclude = [
     "client",
 ]
 

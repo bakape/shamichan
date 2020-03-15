@@ -1,8 +1,4 @@
 use crate::{buttons::AsideButton, connection, state, util};
-use stdweb::web::{
-	event::{IEvent, SubmitEvent},
-	Element, FormData, FormDataEntry,
-};
 use yew::{
 	agent::{Bridge, Bridged},
 	html,
@@ -20,6 +16,7 @@ pub struct AsideRow {
 
 #[derive(Clone, Properties)]
 pub struct Props {
+	#[prop_or_default]
 	pub is_top: bool,
 }
 
@@ -109,7 +106,7 @@ struct NewThreadForm {
 	conn_state: connection::State,
 
 	#[allow(unused)]
-	fetch_task: FetchTask,
+	fetch_task: Option<FetchTask>,
 }
 
 enum Msg {
@@ -136,17 +133,19 @@ impl Component for NewThreadForm {
 				link.callback(|s| Msg::ConnState(s)),
 			),
 			el: NodeRef::default(),
-			fetch_task: FetchService::new().fetch(
-				Request::get("/api/json/used-tags").body(Nothing).unwrap(),
-				link.callback(
-					|res: Response<
-						Json<Result<Vec<String>, failure::Error>>,
-					>| match res.into_body() {
-						Json(Ok(tags)) => Msg::FetchedUsedTags(tags),
-						_ => Msg::NOP,
-					},
-				),
-			),
+			fetch_task: FetchService::new()
+				.fetch(
+					Request::get("/api/json/used-tags").body(Nothing).unwrap(),
+					link.callback(
+						|res: Response<
+							Json<Result<Vec<String>, anyhow::Error>>,
+						>| match res.into_body() {
+							Json(Ok(tags)) => Msg::FetchedUsedTags(tags),
+							_ => Msg::NOP,
+						},
+					),
+				)
+				.ok(),
 			link,
 			expanded: false,
 			available_tags: vec![],
@@ -189,24 +188,23 @@ impl Component for NewThreadForm {
 			}
 			Msg::Submit => {
 				util::with_logging(|| {
-					let f = FormData::from_element(
-						&(self.el.try_into::<Element>()).unwrap(),
+					use web_sys::{FormData, HtmlFormElement};
+
+					let f = FormData::new_with_form(
+						&(self.el.cast::<HtmlFormElement>()).unwrap(),
 					)
 					.unwrap();
 					self.conn.send(super::encode_message!(
 						protocol::MessageType::CreateThread,
 						&protocol::ThreadCreationReq {
-							subject: match f.get("subject") {
-								Some(FormDataEntry::String(s)) => s,
-								_ => "".into(),
-							},
+							subject: f
+								.get("subject")
+								.as_string()
+								.unwrap_or_default(),
 							tags: f
 								.get_all("tag")
-								.into_iter()
-								.filter_map(|t| match t {
-									FormDataEntry::String(s) => Some(s),
-									_ => None,
-								})
+								.iter()
+								.filter_map(|t| t.as_string())
 								.collect(),
 							// TODO
 							captcha_solution: vec![],
@@ -262,7 +260,7 @@ impl NewThreadForm {
 				id="new-thread-form"
 				ref=self.el.clone()
 				style="display: flex; flex-direction: column;"
-				onsubmit={self.link.callback(|e: SubmitEvent| {
+				onsubmit={self.link.callback(|e: yew::events::Event| {
 					e.prevent_default();
 					Msg::Submit
 				})}

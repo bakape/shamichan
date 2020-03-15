@@ -14,6 +14,15 @@ const AUTH_KEY: &str = "auth_key";
 // Key used to store Options in local storage
 const OPTIONS_KEY: &str = "options";
 
+#[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum ImageExpansionMode {
+	None,
+	FitWidth,
+	FitHeight,
+	FitScreen,
+}
+
 // Global user-set options
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
@@ -25,6 +34,8 @@ pub struct Options {
 	pub reveal_image_spoilers: bool,
 	pub expand_gif_thumbnails: bool,
 	pub enabled_image_search: Vec<Provider>,
+	pub image_expansion_mode: ImageExpansionMode,
+	pub audio_volume: u8,
 }
 
 impl Default for Options {
@@ -36,6 +47,8 @@ impl Default for Options {
 			work_mode: false,
 			reveal_image_spoilers: false,
 			expand_gif_thumbnails: false,
+			audio_volume: 100,
+			image_expansion_mode: ImageExpansionMode::FitWidth,
 			enabled_image_search: [
 				Provider::Google,
 				Provider::Yandex,
@@ -276,7 +289,7 @@ impl yew::agent::Agent for Agent {
 				self.send_change(Subscription::AuthKeyChange);
 			}
 			Request::FetchFeed { id, sync } => match id {
-				0 => {
+				0 => util::with_logging(|| {
 					self.fetch_task = fetch::FetchService::new()
 						.fetch(
 							fetch::Request::get("/api/json/index")
@@ -287,7 +300,7 @@ impl yew::agent::Agent for Agent {
 									Json<
 										Result<
 											Vec<ThreadDecoder>,
-											failure::Error,
+											anyhow::Error,
 										>,
 									>,
 								>| {
@@ -309,9 +322,10 @@ impl yew::agent::Agent for Agent {
 									}
 								},
 							),
-						)
+						)?
 						.into();
-				}
+					Ok(())
+				}),
 				_ => todo!("fetch thread"),
 			},
 		};

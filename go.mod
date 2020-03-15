@@ -34,7 +34,7 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible // indirect
 	github.com/onsi/gomega v1.5.0
-	github.com/rakyll/statik v0.1.6
+	github.com/rakyll/statik v0.1.7
 	github.com/ulikunitz/xz v0.5.6
 	github.com/valyala/quicktemplate v1.4.1
 	golang.org/x/crypto v0.0.0-20200109152110-61a87790db17 // indirect

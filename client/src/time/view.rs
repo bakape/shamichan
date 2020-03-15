@@ -14,7 +14,6 @@ pub struct View {
 
 #[derive(Clone, Properties)]
 pub struct Props {
-	#[props(required)]
 	pub time: u32,
 }
 

@@ -15,7 +15,7 @@ serde-big-array = "0.2.0"
 hex-buffer-serde = "0.2.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
-version = "0.3.31"
+version = "0.3.36"
 features = [
   "console",
 ]

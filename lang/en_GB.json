@@ -156,6 +156,10 @@
 			"Login",
 			""
 		],
+		"image_expansion_mode": [
+			"Expansion",
+			"Expand images inside the parent post and resize according to setting"
+		],
 		"image_hover_preview": [
 			"Image Hover Expansion",
 			"Display image previews on hover"
@@ -171,10 +175,6 @@
 		"import": [
 			"Import",
 			"Import options from file"
-		],
-		"inline_fit": [
-			"Expansion",
-			"Expand images inside the parent post and resize according to setting"
 		],
 		"iqdb": [
 			"IQDB",

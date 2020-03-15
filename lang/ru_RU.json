@@ -156,6 +156,10 @@
 			"Логин",
 			""
 		],
+		"image_expansion_mode": [
+			"Expansion",
+			"Expand images inside the parent post and resize according to setting"
+		],
 		"image_hover_preview": [
 			"Раскрытие изображений по наведению",
 			"Раскрывать изображения при наведении"
@@ -171,10 +175,6 @@
 		"import": [
 			"Импорт",
 			"Импорт настроек из файла"
-		],
-		"inline_fit": [
-			"Раскрытие",
-			"Разворачивать изображения внутри родительского поста"
 		],
 		"iqdb": [
 			"IQDB",

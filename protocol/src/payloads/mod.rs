@@ -135,7 +135,7 @@ payload! { FeedData {
 }}
 
 // Supported file types
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
 pub enum FileType {
 	JPEG,
 	PNG,

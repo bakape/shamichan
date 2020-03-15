@@ -38,9 +38,7 @@ impl Default for PageSet {
 
 #[derive(Clone, Properties)]
 pub struct Props {
-	#[props(required)]
 	pub id: u64,
-	#[props(required)]
 	pub pages: PageSet,
 }
 

@@ -156,6 +156,10 @@
 			"Login",
 			""
 		],
+		"image_expansion_mode": [
+			"Expansion",
+			"Expand images inside the parent post and resize according to setting"
+		],
 		"image_hover_preview": [
 			"Üstündeyken genişlet(Resim)",
 			"Fare üstüne geldiğinde resimleri genişlet"
@@ -171,10 +175,6 @@
 		"import": [
 			"İçeri al",
 			"Ayarları dosyadan al"
-		],
-		"inline_fit": [
-			"Genişler",
-			"İlk gönderideki resimleri genişlet ve ayarlara göre boyutlandır"
 		],
 		"iqdb": [
 			"IQDB",

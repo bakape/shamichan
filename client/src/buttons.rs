@@ -2,11 +2,8 @@ use yew::{html, Callback, Component, ComponentLink, Html, Properties};
 
 #[derive(Clone, Properties)]
 pub struct Props {
-	#[props(required)]
 	pub text: &'static str,
-
-	#[props(required)]
-	pub on_click: Callback<stdweb::web::event::ClickEvent>,
+	pub on_click: Callback<yew::events::MouseEvent>,
 }
 
 pub struct Anchor {
