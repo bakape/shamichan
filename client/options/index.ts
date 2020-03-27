@@ -135,6 +135,9 @@ class OptionModel {
 
 	// Write value to localStorage, if needed
 	public set(val: any) {
+		if (this.id === "meguTV") {
+			return;
+		}
 		if (val !== this.spec.default || this.read()) {
 			localStorage.setItem(this.id, val.toString())
 		}
