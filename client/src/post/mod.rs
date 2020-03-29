@@ -52,11 +52,14 @@ impl Component for Post {
 	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		use state::{Agent, Request, Subscription};
+		use state::{Agent, Request, Response, Subscription};
 
 		let mut s = Agent::bridge(link.callback(|u| match u {
-			Subscription::PostChange(_) => Message::PostChange,
-			Subscription::OptionsChange => Message::OptionsChange,
+			Response::NoPayload(res) => match res {
+				Subscription::PostChange(_) => Message::PostChange,
+				Subscription::OptionsChange => Message::OptionsChange,
+				_ => Message::NOP,
+			},
 			_ => Message::NOP,
 		}));
 		s.send(Request::Subscribe(Subscription::PostChange(props.id)));
@@ -248,7 +251,6 @@ impl Post {
 				{
 					if thread.is_some() {
 						html! {
-							// TODO
 							<>
 								<SpanButton
 									text="top"

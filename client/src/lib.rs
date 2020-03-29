@@ -33,12 +33,11 @@ impl Component for App {
 	type Properties = ();
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-		let mut s = state::Agent::bridge(link.callback(|_| ()));
-		s.send(state::Request::FetchFeed {
-			id: state::get().feed,
-			sync: false,
-		});
-		Self { state: s, link }
+		use state::{get, Agent, Request};
+
+		let mut a = Agent::bridge(link.callback(|_| ()));
+		a.send(Request::FetchFeed(get().location.clone()));
+		Self { state: a, link }
 	}
 
 	fn update(&mut self, _: Self::Message) -> bool {

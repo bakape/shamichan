@@ -188,13 +188,17 @@ impl Agent for Scheduler {
 	type Output = Response;
 
 	fn create(link: AgentLink<Self>) -> Self {
+		use state::{Agent, Response, Subscription};
+
 		Self {
 			interval: IntervalService::new().spawn(
 				std::time::Duration::from_secs(1),
 				link.callback(|_| Message::Tick),
 			),
-			app_state: state::Agent::bridge(link.callback(|u| match u {
-				state::Subscription::OptionsChange => Message::OptionsChange,
+			app_state: Agent::bridge(link.callback(|u| match u {
+				Response::NoPayload(Subscription::OptionsChange) => {
+					Message::OptionsChange
+				}
 				_ => Message::NOP,
 			})),
 			link,

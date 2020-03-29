@@ -100,6 +100,9 @@ impl Client {
 							MessageType::CreateThread => {
 								self.create_thread(&mut dec)?
 							}
+							MessageType::Synchronize => {
+								self.synchronize(&mut dec)?
+							}
 							_ => str_err!("unhandled message type: {:?}", t),
 						},
 					}

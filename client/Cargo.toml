@@ -49,6 +49,7 @@ features = [
   "HtmlFormElement",
   "HtmlAnchorElement",
   "HtmlAudioElement",
+  "UrlSearchParams",
 ]
 
 [dev-dependencies]

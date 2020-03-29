@@ -73,11 +73,13 @@ func createRouter() http.Handler {
 	r := httptreemux.NewContextMux()
 	r.PanicHandler = handlePanic
 
-	r.GET("/", func(w http.ResponseWriter, r *http.Request) {
+	serveApp := func(w http.ResponseWriter, r *http.Request) {
 		// TODO: Cache it
 		setHTMLHeaders(w)
 		templates.WriteMain(w, *config.Get())
-	})
+	}
+	r.GET("/", serveApp)
+	r.GET("/threads/:thread/:page", serveApp)
 
 	r.GET("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		var buf bytes.Buffer

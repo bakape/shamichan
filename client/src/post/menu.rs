@@ -23,8 +23,12 @@ impl Component for Menu {
 	type Properties = super::Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		let mut s = state::Agent::bridge(link.callback(|u| match u {
-			state::Subscription::PostChange(_) => Message::PostChange,
+		use state::{Agent, Response, Subscription};
+
+		let mut s = Agent::bridge(link.callback(|u| match u {
+			Response::NoPayload(Subscription::PostChange(_)) => {
+				Message::PostChange
+			}
 			_ => Message::NOP,
 		}));
 		s.send(state::Request::Subscribe(state::Subscription::PostChange(

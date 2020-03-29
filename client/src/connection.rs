@@ -1,10 +1,13 @@
-use super::{state, util};
+use super::{
+	state::{self, FeedID},
+	util,
+};
 use protocol::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fmt::Debug;
 use yew::{
-	agent::{Agent, AgentLink, Context, HandlerId},
+	agent::{Agent, AgentLink, Context, Dispatched, HandlerId},
 	html,
 	services::{
 		console::ConsoleService,
@@ -13,29 +16,48 @@ use yew::{
 	Bridge, Bridged, Component, ComponentLink, Html,
 };
 
-// Encode a batch of (protocol::MessageType, Serialize) pairs
-#[macro_export]
-macro_rules! encode_message {
-	($($type:expr, $payload:expr),+) => {{
-		use protocol::debug_log;
+fn encode_msg<T>(
+	enc: &mut Encoder,
+	t: MessageType,
+	payload: &T,
+) -> std::io::Result<()>
+where
+	T: Serialize + Debug,
+{
+	debug_log!(format!("<<< {:?}: {:?}", t, payload));
+	enc.write_message(t, payload)
+}
 
-		let mut enc =  protocol::Encoder::new(Vec::new());
-		$(
-			debug_log!(format!("<<< {:?}: {:?}", $type, $payload));
-			enc.write_message($type, $payload)?;
-		)+
-		enc.finish()
-	}};
+// Send a message over websocket.
+// Log any encoding errors (there should not be any) to console and alert.
+pub fn send<T>(t: MessageType, payload: &T)
+where
+	T: Serialize + Debug,
+{
+	util::with_logging(|| {
+		let mut enc = protocol::Encoder::new(Vec::new());
+		encode_msg(&mut enc, t, payload)?;
+		enc.write_message(t, payload)?;
+		Connection::dispatcher().send(enc.finish()?);
+		Ok(())
+	});
 }
 
 // States of the connection finite state machine
-#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Debug)]
 pub enum State {
 	Loading,
 	Connecting,
+	Handshaking,
 	Syncing,
 	Synced,
 	Dropped,
+}
+
+enum MessageCategory {
+	Handshake,
+	Synchronize,
+	General,
 }
 
 // Agent controlling global websocket connection
@@ -74,6 +96,7 @@ pub enum Event {
 	WentOffline,
 
 	AuthKeyChanged,
+	ChangeFeed(FeedID),
 
 	NOP,
 }
@@ -85,11 +108,27 @@ impl Agent for Connection {
 	type Output = State;
 
 	fn create(link: AgentLink<Self>) -> Self {
-		use state::{Request, Subscription};
+		use state::{Request, Response, Subscription};
 
 		let mut s = Self {
 			app_state: state::Agent::bridge(link.callback(|u| match u {
-				Subscription::AuthKeyChange => Event::AuthKeyChanged,
+				Response::NoPayload(Subscription::AuthKeyChange) => {
+					Event::AuthKeyChanged
+				}
+				Response::LocationChange { old, new } => {
+					// There is only one feed for any page of a thread
+					if old.feed != new.feed
+						&& match (&old.feed, &new.feed) {
+							(FeedID::Thread(old), FeedID::Thread(new)) => {
+								old.id != new.id
+							}
+							_ => true,
+						} {
+						Event::ChangeFeed(new.feed)
+					} else {
+						Event::NOP
+					}
+				}
 				_ => Event::NOP,
 			})),
 			link,
@@ -129,20 +168,42 @@ impl Agent for Connection {
 			Event::Open => {
 				self.reset_reconn_attempts();
 				util::with_logging(|| {
-					let s = state::get();
-					self.send(encode_message!(
+					let mut enc = protocol::Encoder::new(Vec::new());
+					encode_msg(
+						&mut enc,
 						MessageType::Handshake,
 						&Handshake {
 							protocol_version: VERSION,
-							key: s.auth_key.clone(),
+							key: state::get().auth_key.clone(),
 						},
+					)?;
+					encode_msg(
+						&mut enc,
 						MessageType::Synchronize,
-						&s.feed
-					)?)?;
-					self.set_state(State::Syncing);
+						&match &state::get().location.feed {
+							FeedID::Index => 0,
+							FeedID::Thread(f) => f.id,
+						},
+					)?;
+					self.send(MessageCategory::Handshake, enc.finish()?)?;
+					self.set_state(State::Handshaking);
 					Ok(())
 				});
 			}
+			Event::ChangeFeed(feed) => util::with_logging(|| {
+				let mut enc = protocol::Encoder::new(Vec::new());
+				encode_msg(
+					&mut enc,
+					MessageType::Synchronize,
+					&match feed {
+						FeedID::Index => 0,
+						FeedID::Thread(f) => f.id,
+					},
+				)?;
+				self.send(MessageCategory::Synchronize, enc.finish()?)?;
+				self.set_state(State::Syncing);
+				Ok(())
+			}),
 			Event::Close(e) => {
 				self.reset_socket_and_timer();
 				if e.code() != 1000 && e.reason() != "" {
@@ -206,7 +267,7 @@ impl Agent for Connection {
 	}
 
 	fn handle_input(&mut self, msg: Self::Input, _: HandlerId) {
-		util::log_error_res(self.send(msg));
+		util::log_error_res(self.send(MessageCategory::General, msg));
 	}
 }
 
@@ -259,9 +320,35 @@ impl Connection {
 		self.reset_reconn_timer();
 	}
 
-	fn send(&mut self, mut msg: Vec<u8>) -> util::Result {
-		if let Some(soc) = self.socket.as_ref() {
-			soc.send_with_u8_array(&mut msg)?;
+	fn send(&self, cat: MessageCategory, mut msg: Vec<u8>) -> util::Result {
+		match (
+			match self.state {
+				State::Connecting => matches!(cat, MessageCategory::Handshake),
+				State::Handshaking => {
+					matches!(cat, MessageCategory::Synchronize)
+				}
+				State::Synced | State::Syncing => true,
+				_ => false,
+			},
+			self.socket.as_ref(),
+		) {
+			(true, Some(soc)) => {
+				soc.send_with_u8_array(&mut msg)?;
+			}
+			_ => {
+				return Err(format!(
+					concat!(
+						"sending message when connection not ready: ",
+						"state={:?} socket_state={}"
+					),
+					self.state,
+					self.socket
+						.as_ref()
+						.map(|s| s.ready_state() as isize)
+						.unwrap_or(-1)
+				)
+				.into());
+			}
 		}
 		Ok(())
 	}
@@ -396,20 +483,21 @@ impl Connection {
 				Some(t) => decode! { t,
 					Synchronize => |_: u64| {
 						// Feed ID should already be set to the new one at this
-						// point, if the client was navigating away
+						// point
 						self.set_state(State::Synced);
 					}
 					FeedInit => |_: FeedData| {
-						// TODO: Sync to feed
+						// TODO: Patch existing post data with more up to date
+						// patch set. The patch set needs to be stored in
+						// state::State and applied to the data fetch via the
+						// JSON API, no matter which request arrives first.
 					}
 					CreateThreadAck => |_: u64| {
 						// TODO: Save thread as owned and navigate to it
 					}
 					CreateThread => |_: ThreadCreationNotice| {
-						if state::get().feed != 0 {
 							// TODO: Insert thread into registry and rerender
 							// page, if needed
-						}
 					}
 				},
 				None => return Ok(()),
@@ -461,6 +549,7 @@ impl Component for SyncCounter {
 							State::Dropped => "disconnected",
 							State::Synced => "synced",
 							State::Syncing => "syncing",
+							State::Handshaking => "handshaking"
 						}
 					}
 				}

@@ -11,7 +11,7 @@ pub struct Thread {
 	link: ComponentLink<Self>,
 
 	id: u64,
-	pages: PageSet,
+	pages: PostSet,
 }
 
 pub enum Message {
@@ -19,18 +19,17 @@ pub enum Message {
 	NOP,
 }
 
-// Pages to display in a thread
+// Posts to display in a thread
 #[derive(Clone)]
-pub enum PageSet {
+pub enum PostSet {
 	// Display OP + last 5 posts
 	Last5Posts,
 
-	// Display OP + selected pages.
-	// If page set is smaller than 3, insert zeroes.
-	Pages([u32; 3]),
+	// Display OP + selected page
+	Page(u32),
 }
 
-impl Default for PageSet {
+impl Default for PostSet {
 	fn default() -> Self {
 		Self::Last5Posts
 	}
@@ -39,7 +38,7 @@ impl Default for PageSet {
 #[derive(Clone, Properties)]
 pub struct Props {
 	pub id: u64,
-	pub pages: PageSet,
+	pub pages: PostSet,
 }
 
 impl Component for Thread {
@@ -47,13 +46,15 @@ impl Component for Thread {
 	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		let mut s = state::Agent::bridge(link.callback(|u| match u {
-			state::Subscription::ThreadChange(_) => Message::ThreadChange,
+		use state::{Agent, Request, Response, Subscription};
+
+		let mut s = Agent::bridge(link.callback(|u| match u {
+			Response::NoPayload(Subscription::ThreadChange(_)) => {
+				Message::ThreadChange
+			}
 			_ => Message::NOP,
 		}));
-		s.send(state::Request::Subscribe(
-			state::Subscription::ThreadChange(props.id),
-		));
+		s.send(Request::Subscribe(Subscription::ThreadChange(props.id)));
 		Self {
 			id: props.id,
 			pages: props.pages,
@@ -73,7 +74,7 @@ impl Component for Thread {
 		// TODO: Filter hidden posts
 
 		let posts: Vec<u64> = match self.pages {
-			PageSet::Last5Posts => {
+			PostSet::Last5Posts => {
 				let mut v = Vec::with_capacity(5);
 				let page_count =
 					state::get().page_counts.get(&self.id).unwrap_or(&1);
@@ -88,11 +89,9 @@ impl Component for Thread {
 					v
 				}
 			}
-			PageSet::Pages(pages) => {
+			PostSet::Page(page) => {
 				let mut v = Vec::with_capacity(300);
-				for p in pages.iter() {
-					self.read_page_posts(&mut v, *p);
-				}
+				self.read_page_posts(&mut v, page);
 				v.sort_unstable();
 				v
 			}
@@ -108,6 +107,9 @@ impl Component for Thread {
 						}
 					})
 				}
+				// TODO: Reply button that opens a reply creation modal on both
+				// the thread index and individual thread pages (allow posting
+				// from thread index).
 				<buttons::AsideButton
 					text="reply"
 					on_click=self.link.callback(|_| Message::NOP)

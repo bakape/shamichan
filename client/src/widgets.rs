@@ -1,4 +1,4 @@
-use crate::{buttons::AsideButton, connection, state, util};
+use crate::{buttons::AsideButton, connection, state};
 use yew::{
 	agent::{Bridge, Bridged},
 	html,
@@ -30,13 +30,19 @@ impl Component for AsideRow {
 	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		use state::{Agent, Request, Subscription};
+		use state::{Agent, Request, Response, Subscription};
 
 		let mut s = Agent::bridge(link.callback(|u| match u {
-			Subscription::FeedChange => Message::FeedChange,
+			Response::LocationChange { old, new } => {
+				if old.feed != new.feed {
+					Message::FeedChange
+				} else {
+					Message::NOP
+				}
+			}
 			_ => Message::NOP,
 		}));
-		s.send(Request::Subscribe(Subscription::FeedChange));
+		s.send(Request::Subscribe(Subscription::LocationChange));
 		Self {
 			props,
 			link,
@@ -49,8 +55,10 @@ impl Component for AsideRow {
 	}
 
 	fn view(&self) -> Html {
-		let feed = state::get().feed;
-		let is_thread = feed != 0;
+		use state::FeedID;
+
+		let feed = &state::get().location.feed;
+		let is_thread = matches!(feed, FeedID::Thread(_));
 
 		html! {
 			<span
@@ -83,12 +91,11 @@ impl Component for AsideRow {
 					on_click=self.link.callback(|_| Message::NOP)
 				/>
 				{
-					if is_thread {
-						html! {
-							<crate::page_selector::PageSelector thread=feed />
-						}
-					} else {
-						html! {}
+					match feed {
+						FeedID::Thread(f) => html! {
+							<crate::page_selector::PageSelector thread=f.id />
+						},
+						_ => html! {},
 					}
 				}
 			</span>
@@ -102,11 +109,12 @@ struct NewThreadForm {
 	expanded: bool,
 	available_tags: Vec<String>,
 	selected_tags: Vec<String>,
-	conn: Box<dyn Bridge<connection::Connection>>,
 	conn_state: connection::State,
 
 	#[allow(unused)]
 	fetch_task: Option<FetchTask>,
+	#[allow(unused)]
+	conn: Box<dyn Bridge<connection::Connection>>,
 }
 
 enum Msg {
@@ -187,31 +195,29 @@ impl Component for NewThreadForm {
 				true
 			}
 			Msg::Submit => {
-				util::with_logging(|| {
-					use web_sys::{FormData, HtmlFormElement};
+				use web_sys::{FormData, HtmlFormElement};
 
-					let f = FormData::new_with_form(
-						&(self.el.cast::<HtmlFormElement>()).unwrap(),
-					)
-					.unwrap();
-					self.conn.send(super::encode_message!(
-						protocol::MessageType::CreateThread,
-						&protocol::ThreadCreationReq {
-							subject: f
-								.get("subject")
-								.as_string()
-								.unwrap_or_default(),
-							tags: f
-								.get_all("tag")
-								.iter()
-								.filter_map(|t| t.as_string())
-								.collect(),
-							// TODO
-							captcha_solution: vec![],
-						}
-					)?);
-					Ok(())
-				});
+				let f = FormData::new_with_form(
+					&(self.el.cast::<HtmlFormElement>()).unwrap(),
+				)
+				.unwrap();
+				connection::send(
+					protocol::MessageType::CreateThread,
+					&protocol::ThreadCreationReq {
+						subject: f
+							.get("subject")
+							.as_string()
+							.unwrap_or_default(),
+						tags: f
+							.get_all("tag")
+							.iter()
+							.filter_map(|t| t.as_string())
+							.collect(),
+						// TODO
+						captcha_solution: vec![],
+					},
+				);
+
 				false
 			}
 			Msg::ConnState(s) => {

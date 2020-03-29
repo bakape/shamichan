@@ -29,11 +29,13 @@ impl Component for PageSelector {
 	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		use state::{Request, Subscription};
+		use state::{Agent, Request, Response, Subscription};
 
 		let mut s = Self {
-			state: state::Agent::bridge(link.callback(|s| match s {
-				Subscription::ThreadChange(_) => Message::ThreadUpdate,
+			state: Agent::bridge(link.callback(|s| match s {
+				Response::NoPayload(Subscription::ThreadChange(_)) => {
+					Message::ThreadUpdate
+				}
 				_ => Message::NOP,
 			})),
 			thread: props.thread,
@@ -73,7 +75,7 @@ impl Component for PageSelector {
 
 				self.offset != old
 			}
-			Message::SelectPage(u32) => todo!("page navigation"),
+			Message::SelectPage(_) => todo!("page navigation"),
 			Message::ThreadUpdate => {
 				let old = self.page_count;
 				self.fetch_page_count();
