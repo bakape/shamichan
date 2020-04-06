@@ -88,8 +88,6 @@ where
 {
 	// Apply change to data and send change notification to all subscribers
 	fn apply_change(&mut self) {
-		debug_log!("sending changes");
-
 		let msg = Message::Update {
 			old: {
 				let mut mv = self.new_data.clone().into();
@@ -167,7 +165,6 @@ impl<A: Agent> Link for AgentLink<A> {
 		PA: PartialAgent,
 		F: Fn(Message<PA::Data>) -> Self::Output + 'static,
 	{
-		debug_log!("creating agent callback");
 		self.callback(conv)
 	}
 }
@@ -180,7 +177,6 @@ impl<C: Component> Link for ComponentLink<C> {
 		PA: PartialAgent,
 		F: Fn(Message<PA::Data>) -> Self::Output + 'static,
 	{
-		debug_log!("creating component callback");
 		self.callback(conv)
 	}
 }
@@ -239,7 +235,6 @@ pub trait Subscribe {
 		L: Link,
 		F: Fn(Message<<Self::PA as PartialAgent>::Data>) -> L::Output + 'static,
 	{
-		debug_log!("subscribed");
 		Subscription::<Self::PA>::bridge(link, conv)
 	}
 }

@@ -58,7 +58,7 @@ impl Default for Options {
 	}
 }
 
-// User-set option management agent
+// Partial subscription agent
 #[derive(Default)]
 pub struct PAgent();
 

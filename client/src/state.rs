@@ -19,22 +19,6 @@ const PUSH_STATE: u8 = 1;
 const SET_STATE: u8 = 1 << 1;
 const FETCHED_JSON: u8 = 1 << 2;
 
-// Exported public server configurations
-//
-// TODO: Get config updates though websocket
-#[derive(Serialize, Deserialize, Default)]
-pub struct Configs {
-	pub captcha: bool,
-	pub mature: bool,
-	pub prune_threads: bool,
-	pub thread_expiry: u32,
-	pub max_size: u64,
-	pub default_lang: String,
-	pub default_theme: String,
-	pub image_root_override: String,
-	pub links: HashMap<String, String>,
-}
-
 // Stored separately from the agent to avoid needless serialization of post data
 // on change propagation. The entire application has read-only access to this
 // singleton. Writes have to be coordinated through the agent to ensure
@@ -43,9 +27,6 @@ pub struct Configs {
 pub struct State {
 	// Location the app is currently navigated to
 	pub location: Location,
-
-	// Exported public server configurations
-	pub configs: Configs,
 
 	// All registered threads
 	pub threads: HashMap<u64, Thread>,
@@ -686,14 +667,6 @@ pub fn init() -> util::Result {
 	util::window()
 		.history()?
 		.set_scroll_restoration(web_sys::ScrollRestoration::Manual)?;
-
-	// Read configs from JSON embedded in the HTML
-	s.configs = serde_json::from_str(
-		&util::document()
-			.get_element_by_id("config-data")
-			.ok_or("inline configs not found")?
-			.inner_html(),
-	)?;
 
 	Ok(())
 }

@@ -4,6 +4,8 @@ use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 pub struct Menu {
 	link: ComponentLink<Self>,
 
+	// TODO: use it
+	#[allow(unused)]
 	post: u64,
 
 	#[allow(unused)]

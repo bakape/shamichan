@@ -6,6 +6,7 @@ mod lang;
 #[macro_use]
 mod banner;
 mod buttons;
+mod config;
 mod connection;
 mod options;
 mod page_selector;
