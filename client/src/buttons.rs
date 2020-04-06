@@ -4,6 +4,7 @@ use yew::{html, Callback, Component, ComponentLink, Html, Properties};
 pub struct Props {
 	pub text: &'static str,
 	pub on_click: Callback<yew::events::MouseEvent>,
+	// TODO: Optional middle click handler for opening in a new tab
 }
 
 pub struct Anchor {

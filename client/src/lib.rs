@@ -7,9 +7,11 @@ mod lang;
 mod banner;
 mod buttons;
 mod connection;
+mod options;
 mod page_selector;
 mod post;
 mod state;
+mod subs;
 mod thread;
 mod thread_index;
 mod time;
@@ -21,11 +23,13 @@ use wasm_bindgen::prelude::*;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 
 struct App {
-	// Keep here to load global state first
+	// Keep here to load global state and connection agents first
 	#[allow(unused)]
 	link: ComponentLink<Self>,
 	#[allow(unused)]
 	state: Box<dyn Bridge<state::Agent>>,
+	#[allow(unused)]
+	conn: Box<dyn Bridge<connection::Connection>>,
 }
 
 impl Component for App {
@@ -37,7 +41,11 @@ impl Component for App {
 
 		let mut a = Agent::bridge(link.callback(|_| ()));
 		a.send(Request::FetchFeed(get().location.clone()));
-		Self { state: a, link }
+		Self {
+			state: a,
+			conn: connection::Connection::bridge(link.callback(|_| ())),
+			link,
+		}
 	}
 
 	fn update(&mut self, _: Self::Message) -> bool {
@@ -65,6 +73,10 @@ impl Component for App {
 
 #[wasm_bindgen(start)]
 pub async fn main_js() -> util::Result {
+	if cfg!(debug_assertions) {
+		console_error_panic_hook::set_once();
+	}
+
 	state::init()?;
 	lang::load_language_pack().await?;
 

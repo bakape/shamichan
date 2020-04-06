@@ -11,24 +11,21 @@ pub struct Threads {
 	link: ComponentLink<Self>,
 }
 
-pub enum Message {
-	ThreadListChange,
-	NOP,
-}
-
 impl Component for Threads {
-	type Message = Message;
+	type Message = bool;
 	type Properties = ();
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
 		use state::{Agent, Request, Response, Subscription};
 
-		let mut s = Agent::bridge(link.callback(|u| match u {
-			Response::NoPayload(Subscription::ThreadListChange) => {
-				Message::ThreadListChange
-			}
-			_ => Message::NOP,
+		let mut s = Agent::bridge(link.callback(|u| {
+			matches!(
+				u,
+				Response::NoPayload(Subscription::ThreadListChange)
+					| Response::LocationChange{..}
+			)
 		}));
+		s.send(Request::Subscribe(Subscription::ThreadListChange));
 		s.send(Request::Subscribe(Subscription::ThreadListChange));
 		Self {
 			state: s,
@@ -36,11 +33,8 @@ impl Component for Threads {
 		}
 	}
 
-	fn update(&mut self, msg: Self::Message) -> bool {
-		match msg {
-			Message::ThreadListChange => true,
-			Message::NOP => false,
-		}
+	fn update(&mut self, rerender: Self::Message) -> bool {
+		rerender
 	}
 
 	fn view(&self) -> Html {
@@ -73,11 +67,14 @@ impl Component for Threads {
 					</section>
 				}
 			}
-			FeedID::Thread(f) => {
+			FeedID::Catalog => html! {
+				<span>{"TODO"}</span>
+			},
+			FeedID::Thread { id, page } => {
 				html! {
 					<view::Thread
-						id=f.id
-						pages=view::PostSet::Page(f.page as u32)
+						id=id
+						pages=view::PostSet::Page(*page as u32)
 					/>
 				}
 			}

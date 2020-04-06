@@ -1,4 +1,8 @@
-use crate::{buttons::AsideButton, connection, state};
+use crate::{
+	buttons::AsideButton,
+	connection,
+	state::{self, FeedID, Focus, Location},
+};
 use yew::{
 	agent::{Bridge, Bridged},
 	html,
@@ -20,28 +24,16 @@ pub struct Props {
 	pub is_top: bool,
 }
 
-pub enum Message {
-	FeedChange,
-	NOP,
-}
-
 impl Component for AsideRow {
-	type Message = Message;
+	type Message = bool;
 	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		use state::{Agent, Request, Response, Subscription};
 
-		let mut s = Agent::bridge(link.callback(|u| match u {
-			Response::LocationChange { old, new } => {
-				if old.feed != new.feed {
-					Message::FeedChange
-				} else {
-					Message::NOP
-				}
-			}
-			_ => Message::NOP,
-		}));
+		let mut s = Agent::bridge(
+			link.callback(|u| matches!(u, Response::LocationChange { .. })),
+		);
 		s.send(Request::Subscribe(Subscription::LocationChange));
 		Self {
 			props,
@@ -50,15 +42,29 @@ impl Component for AsideRow {
 		}
 	}
 
-	fn update(&mut self, _: Self::Message) -> bool {
-		false
+	fn update(&mut self, rerender: Self::Message) -> bool {
+		rerender
 	}
 
 	fn view(&self) -> Html {
-		use state::FeedID;
+		let loc = &state::get().location;
+		let is_thread = loc.is_thread();
+		let (label, focus) = if self.props.is_top {
+			("bottom", Focus::Bottom)
+		} else {
+			("top", Focus::Top)
+		};
 
-		let feed = &state::get().location.feed;
-		let is_thread = matches!(feed, FeedID::Thread(_));
+		#[rustfmt::skip]
+		macro_rules! navi_button {
+			($pat:pat, $label:expr, $loc:expr) => {
+				if !matches!(loc.feed, $pat) {
+					self.render_navigation_button($label, $loc)
+				} else {
+					html! {}
+				}
+			};
+		}
 
 		html! {
 			<span
@@ -80,25 +86,53 @@ impl Component for AsideRow {
 						html! {}
 					}
 				}
-				// TODO: swap between index and catalog. Persist last mode to
-				// local storage.
-				<AsideButton
-					text=if is_thread {
-						"return"
-					} else {
-						"catalog"
-					}
-					on_click=self.link.callback(|_| Message::NOP)
-				/>
 				{
-					match feed {
-						FeedID::Thread(f) => html! {
-							<crate::page_selector::PageSelector thread=f.id />
+					self.render_navigation_button(label, Location {
+						feed: loc.feed.clone(),
+						focus: Some(focus),
+					})
+				}
+				{
+					navi_button!(FeedID::Index, "index", Location{
+						feed: FeedID::Index,
+						focus: None,
+					})
+				}
+				{
+					navi_button!(FeedID::Catalog, "catalog", Location{
+						feed: FeedID::Catalog,
+						focus: None,
+					})
+				}
+				{
+					match &loc.feed {
+						FeedID::Thread { id, .. } => html! {
+							<aside class="glass">
+								<crate::page_selector::PageSelector thread=id />
+							</aside>
 						},
 						_ => html! {},
 					}
 				}
 			</span>
+		}
+	}
+}
+
+impl AsideRow {
+	fn render_navigation_button(
+		&self,
+		label: &'static str,
+		loc: Location,
+	) -> Html {
+		html! {
+			<AsideButton
+				text=label
+				on_click=self.link.callback(move |_| {
+					state::navigate_to(loc.clone());
+					false
+				})
+			/>
 		}
 	}
 }

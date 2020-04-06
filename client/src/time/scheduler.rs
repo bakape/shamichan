@@ -1,12 +1,15 @@
 // Centralized agent for efficiently scheduling timer updates
 
 use super::queue::Queue;
-use crate::state;
+use crate::{
+	options::Options,
+	subs::{self, Subscribe, Subscription},
+};
 use js_sys::Date;
 use serde::{Deserialize, Serialize};
+use std::rc::Rc;
 use yew::agent::{Agent, AgentLink, Context, HandlerId};
 use yew::services::interval::{IntervalService, IntervalTask};
-use yew::{Bridge, Bridged};
 
 // Unit division/multiplication array for computing a time unit from seconds
 static UNITS: [(Unit, u8); 5] = [
@@ -21,12 +24,9 @@ static UNITS: [(Unit, u8); 5] = [
 // their current resolution or options changed
 pub struct Scheduler {
 	link: AgentLink<Self>,
-	use_relative: bool,
 	now: u32,
+	options: Subscription<<Options as Subscribe>::PA>,
 
-	// Prevent dropping
-	#[allow(unused)]
-	app_state: Box<dyn Bridge<state::Agent>>,
 	#[allow(unused)]
 	interval: IntervalTask,
 
@@ -35,7 +35,7 @@ pub struct Scheduler {
 
 pub enum Message {
 	Tick,
-	OptionsChange,
+	OptionsChange(Rc<Options>),
 	NOP,
 }
 
@@ -188,21 +188,22 @@ impl Agent for Scheduler {
 	type Output = Response;
 
 	fn create(link: AgentLink<Self>) -> Self {
-		use state::{Agent, Response, Subscription};
-
 		Self {
 			interval: IntervalService::new().spawn(
 				std::time::Duration::from_secs(1),
 				link.callback(|_| Message::Tick),
 			),
-			app_state: Agent::bridge(link.callback(|u| match u {
-				Response::NoPayload(Subscription::OptionsChange) => {
-					Message::OptionsChange
+			options: Options::subscribe(&link, |u| match u {
+				subs::Message::Initial(d) => Message::OptionsChange(d.into()),
+				subs::Message::Update { old, new } => {
+					if old.relative_timestamps != new.relative_timestamps {
+						Message::OptionsChange(new.into())
+					} else {
+						Message::NOP
+					}
 				}
-				_ => Message::NOP,
-			})),
+			}),
 			link,
-			use_relative: state::get().options.relative_timestamps,
 			now: now(),
 			queue: Default::default(),
 		}
@@ -210,12 +211,8 @@ impl Agent for Scheduler {
 
 	fn update(&mut self, msg: Self::Message) {
 		match msg {
-			Message::OptionsChange => {
-				let new = state::get().options.relative_timestamps;
-				if new == self.use_relative {
-					return;
-				}
-				self.use_relative = new;
+			Message::OptionsChange(o) => {
+				self.options.set(o);
 				for t in self.queue.iter() {
 					self.send(&t);
 				}
@@ -258,7 +255,7 @@ impl Scheduler {
 			t.id,
 			Response {
 				diff: t.diff,
-				use_relative: self.use_relative,
+				use_relative: self.options.relative_timestamps,
 			},
 		);
 	}

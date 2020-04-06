@@ -96,7 +96,7 @@ pub enum Event {
 	WentOffline,
 
 	AuthKeyChanged,
-	ChangeFeed(FeedID),
+	Synchronize(FeedID),
 
 	NOP,
 }
@@ -116,15 +116,22 @@ impl Agent for Connection {
 					Event::AuthKeyChanged
 				}
 				Response::LocationChange { old, new } => {
-					// There is only one feed for any page of a thread
-					if old.feed != new.feed
-						&& match (&old.feed, &new.feed) {
-							(FeedID::Thread(old), FeedID::Thread(new)) => {
-								old.id != new.id
-							}
-							_ => true,
-						} {
-						Event::ChangeFeed(new.feed)
+					if match (&old.feed, &new.feed) {
+						// There is only one feed for any page of a thread
+						(
+							FeedID::Thread { id: old_id, .. },
+							FeedID::Thread { id: new_id, .. },
+						) => new_id != old_id,
+
+						// Index/Catalog and Thread transitions always need a
+						// resync
+						(FeedID::Thread { .. }, _)
+						| (_, FeedID::Thread { .. }) => true,
+
+						// Catalog and Index transition are the same feed
+						_ => false,
+					} {
+						Event::Synchronize(new.feed)
 					} else {
 						Event::NOP
 					}
@@ -139,8 +146,14 @@ impl Agent for Connection {
 			subscribers: HashSet::new(),
 		};
 
-		s.app_state
-			.send(Request::Subscribe(Subscription::AuthKeyChange));
+		macro_rules! sub {
+			($key:ident) => {
+				s.app_state.send(Request::Subscribe(Subscription::$key));
+			};
+		}
+		sub!(AuthKeyChange);
+		sub!(LocationChange);
+
 		s.connect();
 
 		#[rustfmt::skip]
@@ -181,8 +194,8 @@ impl Agent for Connection {
 						&mut enc,
 						MessageType::Synchronize,
 						&match &state::get().location.feed {
-							FeedID::Index => 0,
-							FeedID::Thread(f) => f.id,
+							FeedID::Index | FeedID::Catalog => 0,
+							FeedID::Thread { id, .. } => *id,
 						},
 					)?;
 					self.send(MessageCategory::Handshake, enc.finish()?)?;
@@ -190,14 +203,14 @@ impl Agent for Connection {
 					Ok(())
 				});
 			}
-			Event::ChangeFeed(feed) => util::with_logging(|| {
+			Event::Synchronize(feed) => util::with_logging(|| {
 				let mut enc = protocol::Encoder::new(Vec::new());
 				encode_msg(
 					&mut enc,
 					MessageType::Synchronize,
 					&match feed {
-						FeedID::Index => 0,
-						FeedID::Thread(f) => f.id,
+						FeedID::Index | FeedID::Catalog => 0,
+						FeedID::Thread { id, .. } => id,
 					},
 				)?;
 				self.send(MessageCategory::Synchronize, enc.finish()?)?;
@@ -359,6 +372,7 @@ impl Connection {
 		E: wasm_bindgen::convert::FromWasmAbi + 'static,
 		F: Fn(E) -> Event + 'static,
 	{
+		debug_log!("adding connection listener");
 		util::add_static_listener(target, event, self.link.callback(mapper));
 	}
 
@@ -496,8 +510,8 @@ impl Connection {
 						// TODO: Save thread as owned and navigate to it
 					}
 					CreateThread => |_: ThreadCreationNotice| {
-							// TODO: Insert thread into registry and rerender
-							// page, if needed
+						// TODO: Insert thread into registry and rerender
+						// page, if needed
 					}
 				},
 				None => return Ok(()),

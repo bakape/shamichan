@@ -414,6 +414,7 @@
 		"illegal": "Illegal content",
 		"import_corrupt": "Импорт не удался. Файл повреждён.",
 		"import_done": "Импорт завершён. Страница будет перезагружена.",
+		"index": "Index",
 		"invalid_captcha": "Неверная капча",
 		"janitors": "Помощник",
 		"january": "Янв",

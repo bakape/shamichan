@@ -103,7 +103,7 @@ impl Component for PageSelector {
 					}
 				}
 				{
-					for (self.offset..self.page_count).map(|i| html! {
+					for (self.offset..self.page_count).take(10).map(|i| html! {
 						<a
 							onclick=self.link.callback(move |_|
 								Message::SelectPage(i)
@@ -141,10 +141,11 @@ impl PageSelector {
 
 	// Fetch and set new page count value for thread from global state
 	fn fetch_page_count(&mut self) {
-		self.page_count = state::get()
-			.page_counts
-			.get(&self.thread)
-			.copied()
-			.unwrap_or(1);
+		// self.page_count = state::get()
+		// 	.page_counts
+		// 	.get(&self.thread)
+		// 	.copied()
+		// 	.unwrap_or(1);
+		self.page_count = 20;
 	}
 }

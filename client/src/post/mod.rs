@@ -2,11 +2,15 @@ mod countries;
 pub mod image_search;
 mod menu;
 
-use super::state;
-use crate::buttons::SpanButton;
-use crate::util;
+use crate::{
+	buttons::SpanButton,
+	options::Options,
+	state::{self, Location, Post as Data},
+	subs::{Subscribe, Subscription},
+	util,
+};
 use protocol::{FileType, Image};
-use state::Post as Data;
+use std::rc::Rc;
 use yew::{
 	html, Bridge, Bridged, Component, ComponentLink, Html, NodeRef, Properties,
 };
@@ -19,8 +23,11 @@ pub struct Post {
 	#[allow(unused)]
 	link: ComponentLink<Self>,
 
+	options: Subscription<<Options as Subscribe>::PA>,
+
 	id: u64,
 
+	outside_thread: bool,
 	reveal_image: bool,
 	expand_image: bool,
 	tall_image: bool,
@@ -31,20 +38,25 @@ pub struct Post {
 
 pub enum Message {
 	PostChange,
-	OptionsChange,
+	Options(Rc<Options>),
 	ImageHideToggle,
 	ImageContract,
 	ImageExpand,
 	ImageDownload,
 	SetVolume,
-	ScrollTo,
 	CheckTallImage,
 	NOP,
 }
 
 #[derive(Clone, Properties)]
 pub struct Props {
+	// Post ID
 	pub id: u64,
+
+	// Post rendered outside of thread content and thus should not be navigable
+	// hash-navigable to
+	#[prop_or_default]
+	pub outside_thread: bool,
 }
 
 impl Component for Post {
@@ -57,18 +69,18 @@ impl Component for Post {
 		let mut s = Agent::bridge(link.callback(|u| match u {
 			Response::NoPayload(res) => match res {
 				Subscription::PostChange(_) => Message::PostChange,
-				Subscription::OptionsChange => Message::OptionsChange,
 				_ => Message::NOP,
 			},
 			_ => Message::NOP,
 		}));
 		s.send(Request::Subscribe(Subscription::PostChange(props.id)));
-		s.send(Request::Subscribe(Subscription::OptionsChange));
 		s.send(Request::Subscribe(Subscription::ConfigsChange));
 
 		Self {
 			id: props.id,
+			outside_thread: props.outside_thread,
 			state: s,
+			options: Options::subscribe(&link, |u| Message::Options(u.into())),
 			link,
 			reveal_image: false,
 			expand_image: false,
@@ -81,7 +93,11 @@ impl Component for Post {
 
 	fn update(&mut self, msg: Self::Message) -> bool {
 		match msg {
-			Message::PostChange | Message::OptionsChange => true,
+			Message::PostChange => true,
+			Message::Options(o) => {
+				self.options.set(o);
+				true
+			}
 			Message::NOP => false,
 			Message::ImageHideToggle => {
 				self.reveal_image = !self.reveal_image;
@@ -115,9 +131,7 @@ impl Component for Post {
 				if let Some(el) =
 					self.media_el.cast::<web_sys::HtmlAudioElement>()
 				{
-					el.set_volume(
-						state::get().options.audio_volume as f64 / 100_f64,
-					);
+					el.set_volume(self.options.audio_volume as f64 / 100_f64);
 				}
 				false
 			}
@@ -138,10 +152,6 @@ impl Component for Post {
 						self.scroll_to();
 					}
 				}
-				false
-			}
-			Message::ScrollTo => {
-				self.scroll_to();
 				false
 			}
 		}
@@ -165,7 +175,11 @@ impl Component for Post {
 
 		html! {
 			<article
-				id=format!("p-{}", self.id)
+				id=if !self.outside_thread {
+					format!("p-{}", self.id)
+				} else {
+					"".into()
+				}
 				class=cls.join(" ")
 				ref=self.el.clone()
 			>
@@ -199,8 +213,11 @@ impl Post {
 	}
 
 	fn render_header(&self, p: &Data) -> Html {
+		use state::{FeedID, Focus};
+
+		let s = state::get();
 		let thread = if p.id == p.thread {
-			state::get().threads.get(&p.thread)
+			s.threads.get(&p.thread)
 		} else {
 			None
 		};
@@ -249,20 +266,35 @@ impl Post {
 					<a>{p.id}</a>
 				</nav>
 				{
-					if thread.is_some() {
+					if thread.is_some() && !s.location.is_thread() {
+						let id = self.id;
 						html! {
 							<>
 								<SpanButton
 									text="top"
-									on_click=self.link.callback(|_|
+									on_click=self.link.callback(move |_| {
+										state::navigate_to(Location{
+											feed: FeedID::Thread{
+												id,
+												page: 0,
+											},
+											focus: Some(Focus::Top),
+										});
 										Message::NOP
-									)
+									})
 								/>
 								<SpanButton
 									text="bottom"
-									on_click=self.link.callback(|_|
+									on_click=self.link.callback(move |_| {
+										state::navigate_to(Location{
+											feed: FeedID::Thread{
+												id,
+												page: -1,
+											},
+											focus: Some(Focus::Bottom),
+										});
 										Message::NOP
-									)
+									})
 								/>
 							</>
 						}
@@ -281,7 +313,8 @@ impl Post {
 		let mut w: Vec<Html> = Default::default();
 		let s = state::get();
 
-		if s.options.forced_anonymity || (p.name.is_none() && p.trip.is_none())
+		if self.options.forced_anonymity
+			|| (p.name.is_none() && p.trip.is_none())
 		{
 			w.push(html! {
 				<span>{localize!("anon")}</span>
@@ -318,7 +351,7 @@ impl Post {
 	}
 
 	fn render_figcaption(&self, img: &Image) -> Html {
-		let opts = &state::get().options;
+		let opts = &self.options;
 		let mut file_info = Vec::<String>::new();
 
 		#[rustfmt::skip]
@@ -443,7 +476,7 @@ impl Post {
 		);
 
 		let mut v = Vec::<(&'static str, String)>::new();
-		for p in state::get().options.enabled_image_search.iter() {
+		for p in self.options.enabled_image_search.iter() {
 			if let Some(u) = p.url(img, &url) {
 				v.push((p.symbol(), u));
 			}
@@ -470,9 +503,10 @@ impl Post {
 	}
 
 	fn render_figure(&self, img: &Image) -> Html {
+		use crate::options::ImageExpansionMode;
 		use yew::events::MouseEvent;
 
-		let opts = &state::get().options;
+		let opts = &self.options;
 		if !self.reveal_image && (opts.hide_thumbnails || opts.work_mode) {
 			return html! {};
 		}
@@ -521,8 +555,6 @@ impl Post {
 		};
 
 		if self.expand_image && !is_audio {
-			use state::ImageExpansionMode;
-
 			let mut cls = vec!["expanded"];
 			match opts.image_expansion_mode {
 				ImageExpansionMode::FitWidth => {
@@ -576,8 +608,7 @@ impl Post {
 				}
 			};
 		} else {
-			let no_mode =
-				opts.image_expansion_mode == state::ImageExpansionMode::None;
+			let no_mode = opts.image_expansion_mode == ImageExpansionMode::None;
 			let is_expandable = is_expandable(img.common.file_type);
 			let on_click = self.link.callback(move |e: MouseEvent| {
 				if no_mode || e.button() != 0 {
