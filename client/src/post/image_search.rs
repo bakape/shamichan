@@ -24,8 +24,6 @@ pub enum Provider {
 }
 
 impl Provider {
-	// TODO: Use it
-	#[allow(unused)]
 	// Return string identifier of this provider
 	pub fn key(&self) -> &'static str {
 		match self {

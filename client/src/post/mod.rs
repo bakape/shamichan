@@ -4,7 +4,6 @@ mod menu;
 
 use crate::{
 	buttons::SpanButton,
-	config::Configs,
 	options::Options,
 	state::{self, Location, Post as Data},
 	subs::{Subscribe, Subscription},
@@ -25,7 +24,6 @@ pub struct Post {
 	link: ComponentLink<Self>,
 
 	options: Subscription<<Options as Subscribe>::PA>,
-	configs: Subscription<<Configs as Subscribe>::PA>,
 
 	id: u64,
 
@@ -41,7 +39,6 @@ pub struct Post {
 pub enum Message {
 	PostChange,
 	Options(Rc<Options>),
-	Configs(Rc<Configs>),
 	ImageHideToggle,
 	ImageContract,
 	ImageExpand,
@@ -84,7 +81,6 @@ impl Component for Post {
 			outside_thread: props.outside_thread,
 			state: s,
 			options: Options::subscribe(&link, |u| Message::Options(u.into())),
-			configs: Configs::subscribe(&link, |u| Message::Configs(u.into())),
 			link,
 			reveal_image: false,
 			expand_image: false,
@@ -100,10 +96,6 @@ impl Component for Post {
 			Message::PostChange => true,
 			Message::Options(o) => {
 				self.options.set(o);
-				true
-			}
-			Message::Configs(c) => {
-				self.configs.set(c);
 				true
 			}
 			Message::NOP => false,
@@ -448,7 +440,7 @@ impl Post {
 					}
 				}
 				<a
-					href=self.source_path(img)
+					href=source_path(img)
 					download=name
 					ref=self.image_download_button.clone()
 				>
@@ -519,7 +511,7 @@ impl Post {
 			return html! {};
 		}
 
-		let src = self.source_path(img);
+		let src = source_path(img);
 		let thumb: Html;
 		let is_audio = match img.common.file_type {
 			FileType::MP3 | FileType::FLAC => true,
@@ -555,7 +547,7 @@ impl Post {
 				(
 					img.common.thumb_width,
 					img.common.thumb_height,
-					self.thumb_path(img),
+					thumb_path(img),
 				)
 			}
 		} else {
@@ -665,36 +657,36 @@ impl Post {
 			</figure>
 		}
 	}
+}
 
-	// Returns root url for storing images
-	fn image_root(&self) -> &str {
-		let over = &self.configs.image_root_override;
-		if over.is_empty() {
-			"/assets/images"
-		} else {
-			over
-		}
+// Returns root url for storing images
+fn image_root<'a>() -> &'a str {
+	let over = &state::get().configs.image_root_override;
+	if over.is_empty() {
+		"/assets/images"
+	} else {
+		over
 	}
+}
 
-	// Get the thumbnail path of an upload
-	fn thumb_path(&self, img: &Image) -> String {
-		format!(
-			"{}/thumb/{}.{}",
-			self.image_root(),
-			hex::encode(&img.sha1),
-			img.common.thumb_type.extension()
-		)
-	}
+// Get the thumbnail path of an upload
+fn thumb_path(img: &Image) -> String {
+	format!(
+		"{}/thumb/{}.{}",
+		image_root(),
+		hex::encode(&img.sha1),
+		img.common.thumb_type.extension()
+	)
+}
 
-	// Resolve the path to the source file of an upload
-	fn source_path(&self, img: &Image) -> String {
-		format!(
-			"{}/thumb/{}.{}",
-			self.image_root(),
-			hex::encode(&img.sha1),
-			img.common.file_type.extension()
-		)
-	}
+// Resolve the path to the source file of an upload
+fn source_path(img: &Image) -> String {
+	format!(
+		"{}/thumb/{}.{}",
+		image_root(),
+		hex::encode(&img.sha1),
+		img.common.file_type.extension()
+	)
 }
 
 fn is_expandable(t: FileType) -> bool {
