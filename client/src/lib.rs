@@ -20,7 +20,6 @@ mod user_bg;
 mod util;
 mod widgets;
 
-use time::scheduler::Scheduler;
 use wasm_bindgen::prelude::*;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 
@@ -32,12 +31,6 @@ struct App {
 	state: Box<dyn Bridge<state::Agent>>,
 	#[allow(unused)]
 	conn: Box<dyn Bridge<connection::Connection>>,
-
-	// XXX: Not storing this here causes Scheduler to go into an infinite loop,
-	// when Scheduler creates a Bridge to Options.
-	// https://github.com/yewstack/yew/issues/1080
-	#[allow(unused)]
-	timer: Box<dyn Bridge<Scheduler>>,
 }
 
 impl Component for App {
@@ -52,7 +45,6 @@ impl Component for App {
 		Self {
 			state: a,
 			conn: connection::Connection::bridge(link.callback(|_| ())),
-			timer: Scheduler::bridge(link.callback(|_| ())),
 			link,
 		}
 	}
