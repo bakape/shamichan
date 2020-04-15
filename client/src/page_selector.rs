@@ -1,12 +1,15 @@
 use crate::state;
 use serde::{Deserialize, Serialize};
-use yew::{html, Bridge, Bridged, Component, ComponentLink, Html, Properties};
+use yew::{html, Component, ComponentLink, Html, Properties};
 
 // Used to select a certain page of a thread
 pub struct PageSelector {
-	thread: u64,
-	state: Box<dyn Bridge<state::Agent>>,
+	#[allow(unused)]
+	bridge: state::HookBridge,
+
 	link: ComponentLink<Self>,
+
+	thread: u64,
 	offset: u32,
 	page_count: u32,
 }
@@ -29,23 +32,18 @@ impl Component for PageSelector {
 	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		use state::{Agent, Request, Response, Subscription};
-
 		let mut s = Self {
-			state: Agent::bridge(link.callback(|s| match s {
-				Response::NoPayload(Subscription::ThreadChange(_)) => {
-					Message::ThreadUpdate
-				}
-				_ => Message::NOP,
-			})),
+			bridge: state::hook(
+				&link,
+				&[state::Change::Thread(props.thread)],
+				|_| Message::ThreadUpdate,
+			),
 			thread: props.thread,
 			link,
 			offset: 0,
 			page_count: 0,
 		};
 		s.fetch_page_count();
-		s.state
-			.send(Request::Subscribe(Subscription::ThreadChange(s.thread)));
 		s
 	}
 
@@ -103,7 +101,7 @@ impl Component for PageSelector {
 					}
 				}
 				{
-					for (self.offset..self.page_count).take(10).map(|i| html! {
+					for (self.offset..self.page_count).map(|i| html! {
 						<a
 							onclick=self.link.callback(move |_|
 								Message::SelectPage(i)
@@ -141,11 +139,11 @@ impl PageSelector {
 
 	// Fetch and set new page count value for thread from global state
 	fn fetch_page_count(&mut self) {
-		// self.page_count = state::get()
-		// 	.page_counts
-		// 	.get(&self.thread)
-		// 	.copied()
-		// 	.unwrap_or(1);
-		self.page_count = 20;
+		self.page_count = state::read(|s| {
+			s.threads
+				.get(&self.thread)
+				.map(|t| t.last_page + 1)
+				.unwrap_or(1)
+		});
 	}
 }

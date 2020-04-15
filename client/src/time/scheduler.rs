@@ -1,13 +1,9 @@
 // Centralized agent for efficiently scheduling timer updates
 
 use super::queue::Queue;
-use crate::{
-	options::Options,
-	subs::{self, Subscribe, Subscription},
-};
+use crate::state;
 use js_sys::Date;
 use serde::{Deserialize, Serialize};
-use std::rc::Rc;
 use yew::agent::{Agent, AgentLink, Context, HandlerId};
 use yew::services::interval::{IntervalService, IntervalTask};
 
@@ -24,9 +20,12 @@ static UNITS: [(Unit, u8); 5] = [
 // their current resolution or options changed
 pub struct Scheduler {
 	link: AgentLink<Self>,
+	use_relative: bool,
 	now: u32,
-	options: Subscription<<Options as Subscribe>::PA>,
 
+	// Prevent dropping
+	#[allow(unused)]
+	bridge: state::HookBridge,
 	#[allow(unused)]
 	interval: IntervalTask,
 
@@ -35,8 +34,7 @@ pub struct Scheduler {
 
 pub enum Message {
 	Tick,
-	OptionsChange(Rc<Options>),
-	NOP,
+	OptionsChange,
 }
 
 #[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq)]
@@ -193,17 +191,11 @@ impl Agent for Scheduler {
 				std::time::Duration::from_secs(1),
 				link.callback(|_| Message::Tick),
 			),
-			options: Options::subscribe(&link, |u| match u {
-				subs::Message::Initial(d) => Message::OptionsChange(d.into()),
-				subs::Message::Update { old, new } => {
-					if old.relative_timestamps != new.relative_timestamps {
-						Message::OptionsChange(new.into())
-					} else {
-						Message::NOP
-					}
-				}
+			bridge: state::hook(&link, &[state::Change::Options], |_| {
+				Message::OptionsChange
 			}),
 			link,
+			use_relative: state::read(|s| s.options.relative_timestamps),
 			now: now(),
 			queue: Default::default(),
 		}
@@ -211,8 +203,12 @@ impl Agent for Scheduler {
 
 	fn update(&mut self, msg: Self::Message) {
 		match msg {
-			Message::OptionsChange(o) => {
-				self.options.set(o);
+			Message::OptionsChange => {
+				let new = state::read(|s| s.options.relative_timestamps);
+				if new == self.use_relative {
+					return;
+				}
+				self.use_relative = new;
 				for t in self.queue.iter() {
 					self.send(&t);
 				}
@@ -235,7 +231,6 @@ impl Agent for Scheduler {
 					}
 				}
 			}
-			Message::NOP => (),
 		}
 	}
 
@@ -255,7 +250,7 @@ impl Scheduler {
 			t.id,
 			Response {
 				diff: t.diff,
-				use_relative: self.options.relative_timestamps,
+				use_relative: self.use_relative,
 			},
 		);
 	}

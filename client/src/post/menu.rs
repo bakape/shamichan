@@ -1,21 +1,18 @@
-use crate::state;
-use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
+use crate::state::{hook, Change, HookBridge};
+use yew::{html, Component, ComponentLink, Html};
 
 pub struct Menu {
-	link: ComponentLink<Self>,
-
 	post: u64,
-
-	#[allow(unused)]
-	state: Box<dyn Bridge<state::Agent>>,
-
 	expanded: bool,
+
+	link: ComponentLink<Self>,
+	#[allow(unused)]
+	hook: HookBridge,
 }
 
 pub enum Message {
-	PostChange,
+	Rerender,
 	ToggleExpand,
-	NOP,
 }
 
 impl Component for Menu {
@@ -23,20 +20,10 @@ impl Component for Menu {
 	type Properties = super::Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		use state::{Agent, Response, Subscription};
-
-		let mut s = Agent::bridge(link.callback(|u| match u {
-			Response::NoPayload(Subscription::PostChange(_)) => {
-				Message::PostChange
-			}
-			_ => Message::NOP,
-		}));
-		s.send(state::Request::Subscribe(state::Subscription::PostChange(
-			props.id,
-		)));
 		Self {
 			post: props.id,
-			state: s,
+			// Not used right now, but will be needed for menu items
+			hook: hook(&link, &[Change::Post(props.id)], |_| Message::Rerender),
 			link,
 			expanded: false,
 		}
@@ -44,8 +31,7 @@ impl Component for Menu {
 
 	fn update(&mut self, msg: Self::Message) -> bool {
 		match msg {
-			Message::PostChange => true,
-			Message::NOP => false,
+			Message::Rerender => true,
 			Message::ToggleExpand => {
 				self.expanded = !self.expanded;
 				true

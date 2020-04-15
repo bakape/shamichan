@@ -31,7 +31,7 @@ impl Registry {
 }
 
 // Also start pulsar on first registry access
-super::gen_global_rwlock!(,Registry);
+protocol::gen_global!(, , Registry);
 
 // Stores client state that needs to be accessed by outer services along with
 // a smart pointer to the client itself

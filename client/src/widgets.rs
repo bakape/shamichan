@@ -15,7 +15,7 @@ pub struct AsideRow {
 	props: Props,
 
 	#[allow(unused)]
-	state: Box<dyn Bridge<state::Agent>>,
+	bridge: state::HookBridge,
 }
 
 #[derive(Clone, Properties)]
@@ -29,16 +29,10 @@ impl Component for AsideRow {
 	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		use state::{Agent, Request, Response, Subscription};
-
-		let mut s = Agent::bridge(
-			link.callback(|u| matches!(u, Response::LocationChange { .. })),
-		);
-		s.send(Request::Subscribe(Subscription::LocationChange));
 		Self {
+			bridge: state::hook(&link, &[state::Change::Location], |_| true),
 			props,
 			link,
-			state: s,
 		}
 	}
 
@@ -47,75 +41,79 @@ impl Component for AsideRow {
 	}
 
 	fn view(&self) -> Html {
-		let loc = &state::get().location;
-		let is_thread = loc.is_thread();
-		let (label, focus) = if self.props.is_top {
-			("bottom", Focus::Bottom)
-		} else {
-			("top", Focus::Top)
-		};
-
-		#[rustfmt::skip]
-		macro_rules! navi_button {
-			($pat:pat, $label:expr, $loc:expr) => {
-				if !matches!(loc.feed, $pat) {
-					self.render_navigation_button($label, $loc)
-				} else {
-					html! {}
-				}
+		state::read(|s| {
+			let loc = &s.location;
+			let is_thread = loc.is_thread();
+			let (label, focus) = if self.props.is_top {
+				("bottom", Focus::Bottom)
+			} else {
+				("top", Focus::Top)
 			};
-		}
 
-		html! {
-			<span
-				class="aside-container"
-				style={
-					if self.props.is_top {
-						"margin-top: 1.5em;"
-					} else {
-						""
-					}
-				}
-			>
-				{
-					if !is_thread && self.props.is_top {
-						html! {
-							<NewThreadForm />
-						}
+			#[rustfmt::skip]
+			macro_rules! navi_button {
+				($pat:pat, $label:expr, $loc:expr) => {
+					if !matches!(loc.feed, $pat) {
+						self.render_navigation_button($label, $loc)
 					} else {
 						html! {}
 					}
-				}
-				{
-					self.render_navigation_button(label, Location {
-						feed: loc.feed.clone(),
-						focus: Some(focus),
-					})
-				}
-				{
-					navi_button!(FeedID::Index, "index", Location{
-						feed: FeedID::Index,
-						focus: None,
-					})
-				}
-				{
-					navi_button!(FeedID::Catalog, "catalog", Location{
-						feed: FeedID::Catalog,
-						focus: None,
-					})
-				}
-				{
-					match &loc.feed {
-						FeedID::Thread { id, .. } => html! {
-							<aside class="glass">
-								<crate::page_selector::PageSelector thread=id />
-							</aside>
-						},
-						_ => html! {},
+				};
+			}
+
+			html! {
+				<span
+					class="aside-container"
+					style={
+						if self.props.is_top {
+							"margin-top: 1.5em;"
+						} else {
+							""
+						}
 					}
-				}
-			</span>
-		}
+				>
+					{
+						if !is_thread && self.props.is_top {
+							html! {
+								<NewThreadForm />
+							}
+						} else {
+							html! {}
+						}
+					}
+					{
+						self.render_navigation_button(label, Location {
+							feed: loc.feed.clone(),
+							focus: Some(focus),
+						})
+					}
+					{
+						navi_button!(FeedID::Index, "index", Location{
+							feed: FeedID::Index,
+							focus: None,
+						})
+					}
+					{
+						navi_button!(FeedID::Catalog, "catalog", Location{
+							feed: FeedID::Catalog,
+							focus: None,
+						})
+					}
+					{
+						match &loc.feed {
+							FeedID::Thread { id, .. } => html! {
+								<aside class="glass">
+									<crate::page_selector::PageSelector
+										thread=id
+									/>
+								</aside>
+							},
+							_ => html! {},
+						}
+					}
+				</span>
+			}
+		})
 	}
 }
 

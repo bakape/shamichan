@@ -1,5 +1,5 @@
-use crate::util;
-use protocol::*;
+use crate::{post::image_search::Provider, util};
+use protocol::{debug_log, post_body, AuthKey, DoubleSetMap, Image, SetMap};
 use serde::{Deserialize, Serialize};
 use std::{
 	collections::{HashMap, HashSet},
@@ -7,17 +7,71 @@ use std::{
 	str,
 };
 use yew::{
-	agent::{AgentLink, Context, HandlerId},
+	agent::{AgentLink, Bridge, Context, HandlerId},
 	services::render::{RenderService, RenderTask},
+	Callback, Component, ComponentLink,
 };
 
 // Key used to store AuthKey in local storage
 const AUTH_KEY: &str = "auth_key";
 
+// Key used to store Options in local storage
+const OPTIONS_KEY: &str = "options";
+
 // Location setting flags
 const PUSH_STATE: u8 = 1;
 const SET_STATE: u8 = 1 << 1;
 const FETCHED_JSON: u8 = 1 << 2;
+const NO_TRIGGER: u8 = 1 << 3;
+
+#[derive(Serialize, Deserialize, Clone, Copy, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum ImageExpansionMode {
+	None,
+	FitWidth,
+	FitHeight,
+	FitScreen,
+}
+
+// Global user-set options
+#[derive(Serialize, Deserialize)]
+#[serde(default)]
+pub struct Options {
+	pub forced_anonymity: bool,
+	pub relative_timestamps: bool,
+	pub hide_thumbnails: bool,
+	pub work_mode: bool,
+	pub reveal_image_spoilers: bool,
+	pub expand_gif_thumbnails: bool,
+	pub enabled_image_search: Vec<Provider>,
+	pub image_expansion_mode: ImageExpansionMode,
+	pub audio_volume: u8,
+}
+
+impl Default for Options {
+	fn default() -> Self {
+		Self {
+			forced_anonymity: false,
+			relative_timestamps: true,
+			hide_thumbnails: false,
+			work_mode: false,
+			reveal_image_spoilers: false,
+			expand_gif_thumbnails: false,
+			audio_volume: 100,
+			image_expansion_mode: ImageExpansionMode::FitWidth,
+			enabled_image_search: [
+				Provider::Google,
+				Provider::Yandex,
+				Provider::IQDB,
+				Provider::Trace,
+				Provider::ExHentai,
+			]
+			.iter()
+			.copied()
+			.collect(),
+		}
+	}
+}
 
 // Exported public server configurations
 //
@@ -50,9 +104,6 @@ pub struct State {
 	// All registered threads
 	pub threads: HashMap<u64, Thread>,
 
-	// Page count of threads
-	pub page_counts: HashMap<u64, u32>,
-
 	// All registered posts from any sources
 	//
 	// TODO: Some kind of post eviction algorithm.
@@ -66,45 +117,23 @@ pub struct State {
 	// Authentication key
 	pub auth_key: AuthKey,
 
+	// Global user-set options
+	pub options: Options,
+
 	// Posts this user has made
 	// TODO: Menu option to mark any post as mine
 	// TODO: Persistance to indexedDB
 	pub mine: HashSet<u64>,
 }
 
-impl State {
-	fn insert_post(&mut self, p: Post) {
-		self.posts_by_thread_page.insert((p.thread, p.page), p.id);
-		match self.page_counts.get_mut(&p.thread) {
-			Some(l) => {
-				if &p.page >= l {
-					*l = p.page + 1;
-				}
-			}
-			None => {
-				self.page_counts.insert(p.thread, p.page + 1);
-			}
-		};
-		self.posts.insert(p.id, p);
-	}
-
-	// Clear all thread data.
-	//
-	// Post data is still retained for now to ease UI building until more
-	// concrete lifetime requirements are determined.
-	fn clear_threads(&mut self) {
-		self.threads.clear();
-		self.page_counts.clear();
-	}
-}
-
-super::gen_global! {pub, State, get, get_mut}
+protocol::gen_global! {pub, , State}
 
 // Thread information container
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Thread {
 	pub id: u64,
 	pub page: u32,
+	pub last_page: u32,
 
 	pub subject: String,
 	pub tags: Vec<String>,
@@ -146,19 +175,15 @@ pub struct ThreadDecoder {
 // Global state storage and propagation agent
 pub struct Agent {
 	link: AgentLink<Self>,
-
-	// Subscriber registry
-	subscribers: DoubleSetMap<Subscription, HandlerId>,
-
+	hooks: DoubleSetMap<Change, HandlerId>,
 	fetch_task: Option<yew::services::fetch::FetchTask>,
-
 	render_task: Option<RenderTask>,
 }
 
 #[derive(Serialize, Deserialize)]
 pub enum Request {
 	// Subscribe to updates of a value type
-	Subscribe(Subscription),
+	NotifyChange(Change),
 
 	// Set the client authorization key
 	SetAuthKey(AuthKey),
@@ -167,42 +192,87 @@ pub enum Request {
 	FetchFeed(Location),
 
 	// Navigate to the app to a different feed
-	//
-	// TODO: also focus post after render
 	NavigateTo { loc: Location, flags: u8 },
 }
 
-// Value changes to subscribe to
-#[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Clone, Debug)]
-pub enum Subscription {
+// Selective changes of global state to be notified on
+#[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone)]
+pub enum Change {
 	// Change of location the app is navigated to
-	LocationChange,
+	Location,
 
 	// Auth key has been set by user
-	AuthKeyChange,
+	AuthKey,
 
-	// Subscribe to any changes to a post
-	PostChange(u64),
+	// Change to any field of Options
+	Options,
+
+	// Change to any field of the Configs
+	Configs,
+
+	// Subscribe to changes of the list of threads
+	ThreadList,
 
 	// Subscribe to thread data changes, excluding the post content level.
 	// This includes changes to the post set of threads.
-	ThreadChange(u64),
+	Thread(u64),
 
-	// Subscribe to changes of the list of threads
-	ThreadListChange,
-
-	// Change to any field of Configs
-	ConfigsChange,
+	// Subscribe to any changes to a post
+	Post(u64),
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum Response {
-	// Change of location the app is navigated to
-	LocationChange { old: Location, new: Location },
+// Abstraction over AgentLink and ComponentLink
+pub trait Link {
+	type Message;
 
-	// Response with no payload that simply identifies what Subscription
-	// triggered it
-	NoPayload(Subscription),
+	fn make_callback<F>(&self, f: F) -> Callback<()>
+	where
+		F: Fn(()) -> Self::Message + 'static;
+}
+
+impl<A: yew::agent::Agent> Link for AgentLink<A> {
+	type Message = A::Message;
+
+	fn make_callback<F>(&self, f: F) -> Callback<()>
+	where
+		F: Fn(()) -> Self::Message + 'static,
+	{
+		self.callback(f)
+	}
+}
+
+impl<C: Component> Link for ComponentLink<C> {
+	type Message = C::Message;
+
+	fn make_callback<F>(&self, f: F) -> Callback<()>
+	where
+		F: Fn(()) -> Self::Message + 'static,
+	{
+		self.callback(f)
+	}
+}
+
+// Helper for storing a hook into state updates in the client struct
+pub struct HookBridge {
+	#[allow(unused)]
+	bridge: Box<dyn Bridge<Agent>>,
+}
+
+// Crate hooks into
+pub fn hook<L, F>(link: &L, changes: &[Change], f: F) -> HookBridge
+where
+	L: Link,
+	F: Fn(()) -> L::Message + 'static,
+{
+	use yew::agent::Bridged;
+
+	let mut b = HookBridge {
+		bridge: Agent::bridge(link.make_callback(f)),
+	};
+	for c in changes {
+		b.bridge.send(Request::NotifyChange(*c))
+	}
+	b
 }
 
 // Identifies a global index or thread feed
@@ -315,7 +385,6 @@ impl Location {
 		matches!(self.feed, FeedID::Thread { .. })
 	}
 }
-
 pub enum Message {
 	FetchedThreadIndex {
 		loc: Location,
@@ -336,10 +405,9 @@ impl yew::agent::Agent for Agent {
 	type Reach = Context;
 	type Message = Message;
 	type Input = Request;
-	type Output = Response;
+	type Output = ();
 
 	fn create(link: AgentLink<Self>) -> Self {
-		debug_log!("adding popstate listener");
 		util::add_static_listener(
 			util::window(),
 			"popstate",
@@ -348,7 +416,7 @@ impl yew::agent::Agent for Agent {
 
 		Self {
 			link,
-			subscribers: DoubleSetMap::default(),
+			hooks: DoubleSetMap::default(),
 			fetch_task: None,
 			render_task: None,
 		}
@@ -406,7 +474,6 @@ impl yew::agent::Agent for Agent {
 				);
 			}
 			Message::PoppedState => {
-				debug_log!("popped state", util::window().location().href());
 				self.set_location(Location::from_path(), SET_STATE)
 			}
 		}
@@ -414,11 +481,11 @@ impl yew::agent::Agent for Agent {
 
 	fn handle_input(&mut self, req: Self::Input, id: HandlerId) {
 		match req {
-			Request::Subscribe(t) => self.subscribers.insert(t, id),
+			Request::NotifyChange(h) => self.hooks.insert(h, id),
 			Request::SetAuthKey(mut key) => util::with_logging(|| {
 				write_auth_key(&mut key)?;
-				get_mut().auth_key = key;
-				self.send_change_no_payload(Subscription::AuthKeyChange);
+				write(|s| s.auth_key = key);
+				self.trigger(Change::AuthKey);
 				Ok(())
 			}),
 			Request::NavigateTo { loc, flags } => self.set_location(loc, flags),
@@ -427,99 +494,87 @@ impl yew::agent::Agent for Agent {
 	}
 
 	fn disconnected(&mut self, id: HandlerId) {
-		self.subscribers.remove_by_value(&id);
+		self.hooks.remove_by_value(&id);
 	}
 }
-
 impl Agent {
-	// Send change notification to all subscribers of sub
-	fn send_change(&self, sub: Subscription, res: Response) {
-		if let Some(subs) = self.subscribers.get_by_key(&sub) {
+	// Send change notification to hooked clients
+	fn trigger(&self, h: Change) {
+		if let Some(subs) = self.hooks.get_by_key(&h) {
 			for id in subs.iter() {
-				self.link.respond(*id, res.clone());
+				self.link.respond(*id, ());
 			}
 		}
 	}
 
 	// Set app location and propagate changes
 	fn set_location(&mut self, new: Location, flags: u8) {
-		let s = get_mut();
-		debug_log!(
-			"set_location",
-			format!("{:?} -> {:?}, flags={}", s.location, new, flags)
-		);
-
-		let old = s.location.clone();
-		let need_fetch = flags & FETCHED_JSON == 0
-			&& match (&old.feed, &new.feed) {
-				(
-					FeedID::Thread {
-						id: old_id,
-						page: old_page,
-					},
-					FeedID::Thread {
-						id: new_id,
-						page: new_page,
-					},
-				) => {
-					new_id != old_id
-						|| (old_page != new_page
-					// Page number corrections do not need a refetch
-						&& !(old_page == &-1 && new_page != &-1))
-				}
-
-				// Index/Catalog and Thread transitions always need a fetch
-				(FeedID::Thread { .. }, _) | (_, FeedID::Thread { .. }) => true,
-
-				// Catalog and Index transition do not need a fetch
-				_ => false,
-			};
-		debug_log!("need_fetch", need_fetch);
-		if need_fetch {
-			self.fetch_feed_data(new, flags);
-			return;
-		}
-
-		if flags & SET_STATE != 0 {
-			debug_log!("setting location", new);
-
-			s.location = new.clone();
-			self.send_change(
-				Subscription::LocationChange,
-				Response::LocationChange {
-					old,
-					new: new.clone(),
-				},
+		write(|s| {
+			debug_log!(
+				"set_location",
+				format!("{:?} -> {:?}, flags={}", s.location, new, flags)
 			);
-			if let Some(f) = new.focus.clone() {
-				self.render_task = RenderService::new()
-					.request_animation_frame(
-						self.link.callback(move |_| Message::Focus(f.clone())),
-					)
-					.into();
+
+			let old = s.location.clone();
+			let need_fetch = flags & FETCHED_JSON == 0
+				&& match (&old.feed, &new.feed) {
+					(
+						FeedID::Thread {
+							id: old_id,
+							page: old_page,
+						},
+						FeedID::Thread {
+							id: new_id,
+							page: new_page,
+						},
+					) => {
+						new_id != old_id
+							|| (old_page != new_page
+						// Page number corrections do not need a refetch
+							&& !(old_page == &-1 && new_page != &-1))
+					}
+
+					// Index/Catalog and Thread transitions always need a fetch
+					(FeedID::Thread { .. }, _) | (_, FeedID::Thread { .. }) => {
+						true
+					}
+
+					// Catalog and Index transition do not need a fetch
+					_ => false,
+				};
+			if need_fetch {
+				self.fetch_feed_data(new, flags);
+				return;
 			}
-		}
 
-		if flags & PUSH_STATE != 0 {
-			debug_log!("pushing history state", new);
+			if flags & SET_STATE != 0 {
+				s.location = new.clone();
+				if flags & NO_TRIGGER != 0 {
+					self.trigger(Change::Location);
+				}
+				if let Some(f) = new.focus.clone() {
+					self.render_task = RenderService::new()
+						.request_animation_frame(
+							self.link
+								.callback(move |_| Message::Focus(f.clone())),
+						)
+						.into();
+				}
+			}
 
-			// TODO: Set last scroll position on back and hash navigation using
-			// replace_state()
-			util::with_logging(|| {
-				util::window().history()?.push_state_with_url(
-					&wasm_bindgen::JsValue::NULL,
-					"",
-					Some(&new.path()),
-				)?;
-				Ok(())
-			});
-		}
-	}
-
-	// Send change notification to all subscribers of sub with no payload
-	fn send_change_no_payload(&self, sub: Subscription) {
-		let res = Response::NoPayload(sub.clone());
-		self.send_change(sub, res);
+			if flags & PUSH_STATE != 0 {
+				// TODO: Set last scroll position on back and hash navigation
+				// using replace_state()
+				util::with_logging(|| {
+					util::window().history()?.push_state_with_url(
+						&wasm_bindgen::JsValue::NULL,
+						"",
+						Some(&new.path()),
+					)?;
+					Ok(())
+				});
+			}
+		});
 	}
 
 	// Fetch feed data from JSON API!
@@ -610,23 +665,62 @@ impl Agent {
 		debug_log!("fetched", threads);
 		self.fetch_task = None;
 
-		// Trigger these updates first to cause any upper level components
-		// to switch rendering modes and not cause needless updates on deleted
-		// child components.
-		flags |= FETCHED_JSON;
-		self.set_location(loc, flags);
-		self.send_change_no_payload(Subscription::ThreadListChange);
-
-		let s = get_mut();
-		s.clear_threads();
-		for t in threads {
-			let id = t.thread_data.id;
-			self.send_change_no_payload(Subscription::ThreadChange(id));
-			s.threads.insert(id, t.thread_data);
-			for p in t.posts {
-				self.send_change_no_payload(Subscription::PostChange(p.id));
-				s.insert_post(p);
+		// Trigger these updates in hierarchical order to make any upper level
+		// components to switch rendering modes and not cause needless updates
+		// on deleted child components.
+		//
+		// Buffer and dedup hooks to be fired and handlers to be notified until
+		// update is complete.
+		let mut changes = vec![];
+		let mut changes_set = HashSet::new();
+		let mut add_hook = |h: Change| {
+			if !changes_set.contains(&h) {
+				changes.push(h);
+				changes_set.insert(h);
 			}
+		};
+
+		flags |= FETCHED_JSON | NO_TRIGGER;
+		self.set_location(loc, flags);
+		add_hook(Change::Location);
+
+		write(|s| {
+			add_hook(Change::ThreadList);
+			for (id, _) in s.threads.drain() {
+				add_hook(Change::Thread(id));
+			}
+			for (id, _) in s.posts.drain() {
+				add_hook(Change::Thread(id));
+			}
+			s.posts_by_thread_page.clear();
+
+			for t in threads {
+				let t_id = t.thread_data.id;
+				add_hook(Change::Thread(t_id));
+				s.threads.insert(t_id, t.thread_data);
+				for p in t.posts {
+					add_hook(Change::Post(p.id));
+					s.posts_by_thread_page.insert((t_id, p.page), p.id);
+					s.posts.insert(p.id, p);
+				}
+			}
+		});
+
+		// Dedup hooked handlers to trigger
+		let mut handlers = Vec::with_capacity(changes.len());
+		let mut handlers_set = HashSet::with_capacity(changes.len());
+		for c in changes {
+			if let Some(reg) = self.hooks.get_by_key(&c) {
+				for r in reg.iter() {
+					if !handlers_set.contains(r) {
+						handlers_set.insert(*r);
+						handlers.push(*r);
+					}
+				}
+			}
+		}
+		for h in handlers {
+			self.link.respond(h, ());
 		}
 	}
 }
@@ -662,38 +756,46 @@ pub fn init() -> util::Result {
 		Ok(key)
 	}
 
-	let mut s = get_mut();
-	s.location = Location::from_path();
+	write(|s| {
+		s.location = Location::from_path();
 
-	// Read saved or generate a new authentication key
-	let ls = util::local_storage();
-	s.auth_key = match ls.get_item(AUTH_KEY).unwrap() {
-		Some(v) => {
-			let mut key = AuthKey::default();
-			match base64::decode_config_slice(
-				&v,
-				base64::STANDARD,
-				key.as_mut(),
-			) {
-				Ok(_) => key,
-				_ => create_auth_key()?,
+		// Read saved or generate a new authentication key
+		let ls = util::local_storage();
+		s.auth_key = match ls.get_item(AUTH_KEY).unwrap() {
+			Some(v) => {
+				let mut key = AuthKey::default();
+				match base64::decode_config_slice(
+					&v,
+					base64::STANDARD,
+					key.as_mut(),
+				) {
+					Ok(_) => key,
+					_ => create_auth_key()?,
+				}
+			}
+			None => create_auth_key()?,
+		};
+
+		// Read saved options, if any
+		if let Some(v) = ls.get_item(OPTIONS_KEY).unwrap() {
+			if let Ok(opts) = serde_json::from_str(&v) {
+				s.options = opts;
 			}
 		}
-		None => create_auth_key()?,
-	};
 
-	// Manage scrolling ourselves
-	util::window()
-		.history()?
-		.set_scroll_restoration(web_sys::ScrollRestoration::Manual)?;
+		// Manage scrolling ourselves
+		util::window()
+			.history()?
+			.set_scroll_restoration(web_sys::ScrollRestoration::Manual)?;
 
-	// Read configs from JSON embedded in the HTML
-	s.configs = serde_json::from_str(
-		&util::document()
-			.get_element_by_id("config-data")
-			.ok_or("inline configs not found")?
-			.inner_html(),
-	)?;
+		// Read configs from JSON embedded in the HTML
+		s.configs = serde_json::from_str(
+			&util::document()
+				.get_element_by_id("config-data")
+				.ok_or("inline configs not found")?
+				.inner_html(),
+		)?;
 
-	Ok(())
+		Ok(())
+	})
 }

@@ -2,28 +2,19 @@ mod countries;
 pub mod image_search;
 mod menu;
 
-use crate::{
-	buttons::SpanButton,
-	options::Options,
-	state::{self, Location, Post as Data},
-	subs::{Subscribe, Subscription},
-	util,
-};
+use super::state::{self, FeedID, Focus, Location, Post as Data, State};
+use crate::buttons::SpanButton;
+use crate::util;
 use protocol::{FileType, Image};
-use std::rc::Rc;
-use yew::{
-	html, Bridge, Bridged, Component, ComponentLink, Html, NodeRef, Properties,
-};
+use yew::{html, Component, ComponentLink, Html, NodeRef, Properties};
 
 // Central thread container
 pub struct Post {
 	#[allow(unused)]
-	state: Box<dyn Bridge<state::Agent>>,
+	bridge: state::HookBridge,
 
 	#[allow(unused)]
 	link: ComponentLink<Self>,
-
-	options: Subscription<<Options as Subscribe>::PA>,
 
 	id: u64,
 
@@ -37,8 +28,7 @@ pub struct Post {
 }
 
 pub enum Message {
-	PostChange,
-	Options(Rc<Options>),
+	Rerender,
 	ImageHideToggle,
 	ImageContract,
 	ImageExpand,
@@ -53,8 +43,8 @@ pub struct Props {
 	// Post ID
 	pub id: u64,
 
-	// Post rendered outside of thread content and thus should not be navigable
-	// hash-navigable to
+	// Post rendered outside of thread content and thus should not be
+	// anchor-navigable to
 	#[prop_or_default]
 	pub outside_thread: bool,
 }
@@ -64,24 +54,17 @@ impl Component for Post {
 	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		use state::{Agent, Request, Response, Subscription};
-
-		let mut s = Agent::bridge(link.callback(|u| match u {
-			Response::NoPayload(res) => match res {
-				Subscription::PostChange(_) => Message::PostChange,
-				_ => Message::NOP,
-			},
-			_ => Message::NOP,
-		}));
-		s.send(Request::Subscribe(Subscription::PostChange(props.id)));
-		s.send(Request::Subscribe(Subscription::ConfigsChange));
+		use state::{hook, Change};
 
 		Self {
 			id: props.id,
-			outside_thread: props.outside_thread,
-			state: s,
-			options: Options::subscribe(&link, |u| Message::Options(u.into())),
+			bridge: hook(
+				&link,
+				&[Change::Configs, Change::Options, Change::Post(props.id)],
+				|_| Message::Rerender,
+			),
 			link,
+			outside_thread: false,
 			reveal_image: false,
 			expand_image: false,
 			tall_image: false,
@@ -93,11 +76,7 @@ impl Component for Post {
 
 	fn update(&mut self, msg: Self::Message) -> bool {
 		match msg {
-			Message::PostChange => true,
-			Message::Options(o) => {
-				self.options.set(o);
-				true
-			}
+			Message::Rerender => true,
 			Message::NOP => false,
 			Message::ImageHideToggle => {
 				self.reveal_image = !self.reveal_image;
@@ -131,77 +110,82 @@ impl Component for Post {
 				if let Some(el) =
 					self.media_el.cast::<web_sys::HtmlAudioElement>()
 				{
-					el.set_volume(self.options.audio_volume as f64 / 100_f64);
+					el.set_volume(state::read(|s| {
+						s.options.audio_volume as f64 / 100_f64
+					}));
 				}
 				false
 			}
 			Message::CheckTallImage => {
-				if let (Some(img), Some(wh)) = (
-					state::get()
-						.posts
-						.get(&self.id)
-						.map(|p| p.image.as_ref())
-						.flatten(),
-					util::window()
-						.inner_height()
-						.ok()
-						.map(|h| h.as_f64())
-						.flatten(),
-				) {
-					if img.common.width as f64 > wh {
-						self.scroll_to();
+				state::read(|s| {
+					if let (Some(img), Some(wh)) = (
+						s.posts
+							.get(&self.id)
+							.map(|p| p.image.as_ref())
+							.flatten(),
+						util::window()
+							.inner_height()
+							.ok()
+							.map(|h| h.as_f64())
+							.flatten(),
+					) {
+						if img.common.width as f64 > wh {
+							self.scroll_to();
+						}
 					}
-				}
+				});
 				false
 			}
 		}
 	}
 
 	fn view(&self) -> Html {
-		let p = match state::get().posts.get(&self.id) {
-			Some(p) => p,
-			None => {
-				return html! {};
+		state::read(|s| {
+			let p = match s.posts.get(&self.id) {
+				Some(p) => p,
+				None => {
+					return html! {};
+				}
+			};
+
+			let mut cls = vec!["glass"];
+			if p.open {
+				cls.push("open");
 			}
-		};
+			if p.id == p.thread {
+				cls.push("op");
+			}
 
-		let mut cls = vec!["glass"];
-		if p.open {
-			cls.push("open");
-		}
-		if p.id == p.thread {
-			cls.push("op");
-		}
-
-		html! {
-			<article
-				id=if !self.outside_thread {
-					format!("p-{}", self.id)
-				} else {
-					"".into()
-				}
-				class=cls.join(" ")
-				ref=self.el.clone()
-			>
-				{self.render_header(p)}
-				{
-					match &p.image {
-						Some(img) => self.render_figcaption(img),
-						None => html! {},
+			html! {
+				<article
+					id=if !self.outside_thread {
+						format!("p-{}", self.id)
+					} else {
+						"".into()
 					}
-				}
-				<div class="post-container">
+					class=cls.join(" ")
+					ref=self.el.clone()
+				>
+					{self.render_header(s, p)}
 					{
 						match &p.image {
-							Some(img) => self.render_figure(img),
+							Some(img) => self.render_figcaption(s, img),
 							None => html! {},
 						}
 					}
-				</div>
-				// TODO: post moderation log
-				// TODO: backlinks
-			</article>
-		}
+					<div class="post-container">
+						{
+							match &p.image {
+								Some(img) => self.render_figure(s, img),
+								None => html! {},
+							}
+						}
+					</div>
+					// TODO: post moderation log
+					// TODO: backlinks
+				</article>
+			}
+		})
 	}
 }
 
@@ -212,10 +196,7 @@ impl Post {
 		}
 	}
 
-	fn render_header(&self, p: &Data) -> Html {
-		use state::{FeedID, Focus};
-
-		let s = state::get();
+	fn render_header(&self, s: &State, p: &Data) -> Html {
 		let thread = if p.id == p.thread {
 			s.threads.get(&p.thread)
 		} else {
@@ -242,7 +223,7 @@ impl Post {
 						_ => html! {}
 					}
 				}
-				{self.render_name(p)}
+				{self.render_name(s, p)}
 				{
 					match &p.flag {
 						Some(code) => match countries::get_name(&code) {
@@ -266,7 +247,9 @@ impl Post {
 					<a>{p.id}</a>
 				</nav>
 				{
-					if thread.is_some() && !s.location.is_thread() {
+					if thread.is_some()
+					   && !state::read(|s| s.location.is_thread())
+					{
 						let id = self.id;
 						html! {
 							<>
@@ -307,14 +290,12 @@ impl Post {
 		}
 	}
 
-	fn render_name(&self, p: &Data) -> Html {
+	fn render_name(&self, s: &State, p: &Data) -> Html {
 		// TODO: Staff titles
 
 		let mut w: Vec<Html> = Default::default();
-		let s = state::get();
 
-		if self.options.forced_anonymity
-			|| (p.name.is_none() && p.trip.is_none())
+		if s.options.forced_anonymity || (p.name.is_none() && p.trip.is_none())
 		{
 			w.push(html! {
 				<span>{localize!("anon")}</span>
@@ -350,8 +331,7 @@ impl Post {
 		}
 	}
 
-	fn render_figcaption(&self, img: &Image) -> Html {
-		let opts = &self.options;
+	fn render_figcaption(&self, s: &State, img: &Image) -> Html {
 		let mut file_info = Vec::<String>::new();
 
 		#[rustfmt::skip]
@@ -399,7 +379,7 @@ impl Post {
 		html! {
 			<figcaption class="spaced">
 				{
-					if opts.hide_thumbnails || opts.work_mode {
+					if s.options.hide_thumbnails || s.options.work_mode {
 						html! {
 							<crate::buttons::SpanButton
 								text=if self.reveal_image {
@@ -416,7 +396,7 @@ impl Post {
 						html! {}
 					}
 				}
-				{self.render_image_search(img)}
+				{self.render_image_search(s, img)}
 				<span class="file-info">
 					{
 						for file_info.into_iter().map(|s| html!{
@@ -440,7 +420,7 @@ impl Post {
 					}
 				}
 				<a
-					href=source_path(img)
+					href=source_path(s, img)
 					download=name
 					ref=self.image_download_button.clone()
 				>
@@ -450,7 +430,7 @@ impl Post {
 		}
 	}
 
-	fn render_image_search(&self, img: &Image) -> Html {
+	fn render_image_search(&self, s: &State, img: &Image) -> Html {
 		match img.common.thumb_type {
 			FileType::NoFile | FileType::PDF => return html! {},
 			_ => (),
@@ -476,7 +456,7 @@ impl Post {
 		);
 
 		let mut v = Vec::<(&'static str, String)>::new();
-		for p in self.options.enabled_image_search.iter() {
+		for p in s.options.enabled_image_search.iter() {
 			if let Some(u) = p.url(img, &url) {
 				v.push((p.symbol(), u));
 			}
@@ -502,16 +482,16 @@ impl Post {
 		}
 	}
 
-	fn render_figure(&self, img: &Image) -> Html {
-		use crate::options::ImageExpansionMode;
+	fn render_figure(&self, s: &State, img: &Image) -> Html {
 		use yew::events::MouseEvent;
 
-		let opts = &self.options;
-		if !self.reveal_image && (opts.hide_thumbnails || opts.work_mode) {
+		if !self.reveal_image
+			&& (s.options.hide_thumbnails || s.options.work_mode)
+		{
 			return html! {};
 		}
 
-		let src = source_path(img);
+		let src = source_path(s, img);
 		let thumb: Html;
 		let is_audio = match img.common.file_type {
 			FileType::MP3 | FileType::FLAC => true,
@@ -535,11 +515,11 @@ impl Post {
 					}
 					.to_string(),
 				)
-			} else if img.common.spoilered && !opts.reveal_image_spoilers {
+			} else if img.common.spoilered && !s.options.reveal_image_spoilers {
 				// Spoilered and spoilers enabled
 				(150, 150, "/assets/spoil/default.jpg".into())
 			} else if img.common.file_type == FileType::GIF
-				&& opts.expand_gif_thumbnails
+				&& s.options.expand_gif_thumbnails
 			{
 				// Animated GIF thumbnails
 				(img.common.thumb_width, img.common.thumb_height, src.clone())
@@ -547,7 +527,7 @@ impl Post {
 				(
 					img.common.thumb_width,
 					img.common.thumb_height,
-					thumb_path(img),
+					thumb_path(s, img),
 				)
 			}
 		} else {
@@ -555,8 +535,10 @@ impl Post {
 		};
 
 		if self.expand_image && !is_audio {
+			use state::ImageExpansionMode;
+
 			let mut cls = vec!["expanded"];
-			match opts.image_expansion_mode {
+			match s.options.image_expansion_mode {
 				ImageExpansionMode::FitWidth => {
 					self.link.send_message(Message::CheckTallImage);
 					cls.push("fit-to-width");
@@ -608,7 +590,8 @@ impl Post {
 				}
 			};
 		} else {
-			let no_mode = opts.image_expansion_mode == ImageExpansionMode::None;
+			let no_mode = s.options.image_expansion_mode
+				== state::ImageExpansionMode::None;
 			let is_expandable = is_expandable(img.common.file_type);
 			let on_click = self.link.callback(move |e: MouseEvent| {
 				if no_mode || e.button() != 0 {
@@ -660,8 +643,8 @@ impl Post {
 }
 
 // Returns root url for storing images
-fn image_root<'a>() -> &'a str {
-	let over = &state::get().configs.image_root_override;
+fn image_root(s: &State) -> &str {
+	let over = &s.configs.image_root_override;
 	if over.is_empty() {
 		"/assets/images"
 	} else {
@@ -670,20 +653,20 @@ fn image_root<'a>() -> &'a str {
 }
 
 // Get the thumbnail path of an upload
-fn thumb_path(img: &Image) -> String {
+fn thumb_path(s: &State, img: &Image) -> String {
 	format!(
 		"{}/thumb/{}.{}",
-		image_root(),
+		image_root(s),
 		hex::encode(&img.sha1),
 		img.common.thumb_type.extension()
 	)
 }
 
 // Resolve the path to the source file of an upload
-fn source_path(img: &Image) -> String {
+fn source_path(s: &State, img: &Image) -> String {
 	format!(
 		"{}/thumb/{}.{}",
-		image_root(),
+		image_root(s),
 		hex::encode(&img.sha1),
 		img.common.file_type.extension()
 	)

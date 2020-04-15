@@ -68,8 +68,15 @@ pub struct Connection {
 	// Connection state machine
 	state: State,
 
+	// Feed currently synced to
+	synced_to: Option<FeedID>,
+
+	// Connection currently authenticated with
+	authed_with: Option<AuthKey>,
+
 	// Link to global application state
-	app_state: Box<dyn Bridge<state::Agent>>,
+	#[allow(unused)]
+	bridge: state::HookBridge,
 
 	// Reconnection attempts since last connect, if any
 	reconn_attempts: i32,
@@ -95,10 +102,7 @@ pub enum Event {
 	WentOnline,
 	WentOffline,
 
-	AuthKeyChanged,
-	Synchronize(FeedID),
-
-	NOP,
+	CheckUpdates,
 }
 
 impl Agent for Connection {
@@ -108,36 +112,16 @@ impl Agent for Connection {
 	type Output = State;
 
 	fn create(link: AgentLink<Self>) -> Self {
-		use state::{Request, Response, Subscription};
+		use state::Change;
 
 		let mut s = Self {
-			app_state: state::Agent::bridge(link.callback(|u| match u {
-				Response::NoPayload(Subscription::AuthKeyChange) => {
-					Event::AuthKeyChanged
-				}
-				Response::LocationChange { old, new } => {
-					if match (&old.feed, &new.feed) {
-						// There is only one feed for any page of a thread
-						(
-							FeedID::Thread { id: old_id, .. },
-							FeedID::Thread { id: new_id, .. },
-						) => new_id != old_id,
-
-						// Index/Catalog and Thread transitions always need a
-						// resync
-						(FeedID::Thread { .. }, _)
-						| (_, FeedID::Thread { .. }) => true,
-
-						// Catalog and Index transition are the same feed
-						_ => false,
-					} {
-						Event::Synchronize(new.feed)
-					} else {
-						Event::NOP
-					}
-				}
-				_ => Event::NOP,
-			})),
+			bridge: state::hook(
+				&link,
+				&[Change::AuthKey, Change::Location],
+				|_| Event::CheckUpdates,
+			),
+			synced_to: None,
+			authed_with: None,
 			link,
 			state: State::Loading,
 			reconn_attempts: 0,
@@ -145,14 +129,6 @@ impl Agent for Connection {
 			socket: None,
 			subscribers: HashSet::new(),
 		};
-
-		macro_rules! sub {
-			($key:ident) => {
-				s.app_state.send(Request::Subscribe(Subscription::$key));
-			};
-		}
-		sub!(AuthKeyChange);
-		sub!(LocationChange);
 
 		s.connect();
 
@@ -181,42 +157,91 @@ impl Agent for Connection {
 			Event::Open => {
 				self.reset_reconn_attempts();
 				util::with_logging(|| {
-					let mut enc = protocol::Encoder::new(Vec::new());
-					encode_msg(
-						&mut enc,
-						MessageType::Handshake,
-						&Handshake {
-							protocol_version: VERSION,
-							key: state::get().auth_key.clone(),
-						},
-					)?;
-					encode_msg(
-						&mut enc,
-						MessageType::Synchronize,
-						&match &state::get().location.feed {
-							FeedID::Index | FeedID::Catalog => 0,
-							FeedID::Thread { id, .. } => *id,
-						},
-					)?;
-					self.send(MessageCategory::Handshake, enc.finish()?)?;
-					self.set_state(State::Handshaking);
-					Ok(())
+					state::read(|s| {
+						// TODO: Asymmetric authentication:
+						// - Send either a registered pub key by UUID with a nonce
+						// (both concatenated and signed) or the public key,
+						// if it has not been registered yet.
+						// - Return UUID on successful initial handshake.
+						// - Identify all posts with public key UUID.
+						// - Use 2048 bit private key
+						// - Log last used timestamp of all pub keys.
+						// - Limit size of public key.
+						// - Sign image SHA-1 hash (because we compute that
+						// anyway) with public key on image uploads.
+						let mut enc = protocol::Encoder::new(Vec::new());
+						encode_msg(
+							&mut enc,
+							MessageType::Handshake,
+							&Handshake {
+								protocol_version: VERSION,
+								key: s.auth_key.clone(),
+							},
+						)?;
+						encode_msg(
+							&mut enc,
+							MessageType::Synchronize,
+							&match &s.location.feed {
+								FeedID::Index | FeedID::Catalog => 0,
+								FeedID::Thread { id, .. } => *id,
+							},
+						)?;
+						self.send(MessageCategory::Handshake, enc.finish()?)?;
+
+						// TODO: Change state to State::Handshaking, when
+						// asymmetric authentication is implemented
+						self.set_state(State::Synced);
+						self.authed_with = s.auth_key.clone().into();
+						self.synced_to = s.location.feed.clone().into();
+
+						Ok(())
+					})
 				});
 			}
-			Event::Synchronize(feed) => util::with_logging(|| {
-				let mut enc = protocol::Encoder::new(Vec::new());
-				encode_msg(
-					&mut enc,
-					MessageType::Synchronize,
-					&match feed {
-						FeedID::Index | FeedID::Catalog => 0,
-						FeedID::Thread { id, .. } => id,
-					},
-				)?;
-				self.send(MessageCategory::Synchronize, enc.finish()?)?;
-				self.set_state(State::Syncing);
-				Ok(())
-			}),
+			Event::CheckUpdates => {
+				util::log_error_res(state::read(|s| -> util::Result {
+					if Some(&s.auth_key) != self.authed_with.as_ref() {
+						// Reconnect with new key
+						self.connect();
+						return Ok(());
+					}
+
+					if match &self.synced_to {
+						Some(old) => match (&old, &s.location.feed) {
+							// There is only one feed for any page of a thread
+							(
+								FeedID::Thread { id: old_id, .. },
+								FeedID::Thread { id: new_id, .. },
+							) => new_id != old_id,
+
+							// Index/Catalog and Thread transitions always need
+							// a resync
+							(FeedID::Thread { .. }, _)
+							| (_, FeedID::Thread { .. }) => true,
+
+							// Catalog and Index transition are the same feed
+							_ => false,
+						},
+						None => true,
+					} {
+						let mut enc = protocol::Encoder::new(Vec::new());
+						encode_msg(
+							&mut enc,
+							MessageType::Synchronize,
+							&match s.location.feed {
+								FeedID::Index | FeedID::Catalog => 0,
+								FeedID::Thread { id, .. } => id,
+							},
+						)?;
+						self.send(MessageCategory::Synchronize, enc.finish()?)?;
+						self.set_state(State::Syncing);
+						self.synced_to =
+							state::read(|s| s.location.feed.clone().into());
+					}
+
+					Ok(())
+				}))
+			}
 			Event::Close(e) => {
 				self.reset_socket_and_timer();
 				if e.code() != 1000 && e.reason() != "" {
@@ -258,15 +283,8 @@ impl Agent for Connection {
 					}
 				}
 			}
-			Event::WentOnline => {
-				self.connect();
-			}
+			Event::WentOnline => self.connect(),
 			Event::WentOffline => self.handle_disconnect(),
-			Event::AuthKeyChanged => {
-				// Reconnect with new key
-				self.connect()
-			}
-			Event::NOP => (),
 		};
 	}
 
@@ -372,7 +390,6 @@ impl Connection {
 		E: wasm_bindgen::convert::FromWasmAbi + 'static,
 		F: Fn(E) -> Event + 'static,
 	{
-		debug_log!("adding connection listener");
 		util::add_static_listener(target, event, self.link.callback(mapper));
 	}
 
@@ -510,8 +527,8 @@ impl Connection {
 						// TODO: Save thread as owned and navigate to it
 					}
 					CreateThread => |_: ThreadCreationNotice| {
-						// TODO: Insert thread into registry and rerender
-						// page, if needed
+							// TODO: Insert thread into registry and rerender
+							// page, if needed
 					}
 				},
 				None => return Ok(()),

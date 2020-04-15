@@ -20,7 +20,7 @@ struct LanguagePack {
 	pub plurals: HashMap<String, (String, String)>,
 }
 
-super::gen_global! {, LanguagePack, get, get_mut}
+protocol::gen_global! {, , LanguagePack}
 
 // Component of a localization formatting expression
 enum Token {
@@ -94,12 +94,18 @@ macro_rules! localize {
 	};
 }
 
+// Language pack is immutable after load, so this is fine
+fn to_static_str(s: &String) -> &'static str {
+	unsafe { std::mem::transmute(s.as_str()) }
+}
+
 // Localize string literal
 pub fn localize_literal(key: &str) -> &'static str {
-	match get().literals.get(key) {
-		Some(v) => v,
+	read(|l| match l.literals.get(key) {
+		// Language pack is immutable after load, so this is fine
+		Some(v) => to_static_str(v),
 		None => "localization not found",
-	}
+	})
 }
 
 // Localize pluralizable string literal
@@ -107,21 +113,16 @@ pub fn pluralize<T>(key: &str, n: T) -> &'static str
 where
 	T: std::cmp::Ord + From<u8>,
 {
-	match get().plurals.get(key) {
-		Some(v) => {
-			if n == 1.into() {
-				&v.0
-			} else {
-				&v.1
-			}
-		}
+	read(|l| match l.plurals.get(key) {
+		// Language pack is immutable after load, so this is fine
+		Some(v) => to_static_str(if n == 1.into() { &v.0 } else { &v.1 }),
 		None => "localization not found",
-	}
+	})
 }
 
 // Insert key-value pairs into parsed localization format string
 pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
-	match get().format_strings.get(key) {
+	read(|l| match l.format_strings.get(key) {
 		Some(fmt) => {
 			let mut w = String::new();
 			for t in fmt.0.iter() {
@@ -140,19 +141,20 @@ pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
 			w
 		}
 		None => format!("localization not found: {}", key),
-	}
+	})
 }
 
 #[test]
 fn test_localization() {
-	let l = get_mut();
-	l.format_strings.insert(
-		"test".into(),
-		serde_json::from_str(r#""that {name} a { adjective }""#).unwrap(),
-	);
-	l.literals.insert("test".into(), "anon a BWAAKA".into());
-	l.plurals
-		.insert("post".into(), ("post".into(), "posts".into()));
+	write(|l| {
+		l.format_strings.insert(
+			"test".into(),
+			serde_json::from_str(r#""that {name} a { adjective }""#).unwrap(),
+		);
+		l.literals.insert("test".into(), "anon a BWAAKA".into());
+		l.plurals
+			.insert("post".into(), ("post".into(), "posts".into()));
+	});
 
 	assert_eq!(
 		localize!("test", {"name" => "anon" "adjective" => "BWAAKA"}),
@@ -165,7 +167,8 @@ fn test_localization() {
 }
 
 pub async fn load_language_pack() -> util::Result {
-	*get_mut() = serde_json::from_str(&String::from(
+	// Async closures still unstable as of writing
+	let lp = serde_json::from_str(&String::from(
 		wasm_bindgen_futures::JsFuture::from(
 			js_sys::Reflect::get(&util::window(), &"language_pack".into())?
 				.dyn_into::<js_sys::Promise>()?,
@@ -173,6 +176,8 @@ pub async fn load_language_pack() -> util::Result {
 		.await?
 		.dyn_into::<js_sys::JsString>()?,
 	))?;
+
+	write(|l| *l = lp);
 
 	Ok(())
 }

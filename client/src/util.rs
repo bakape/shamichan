@@ -68,36 +68,6 @@ from_display! {
 // Shorthand for most commonly used Result type
 pub type Result<T = ()> = std::result::Result<T, Error>;
 
-// Generate functions for safely accessing a global variable
-#[macro_export]
-macro_rules! gen_global {
-	($vis:vis, $type:ty, $read:ident, $write:ident) => {
-		static mut __GLOBAL: Option<$type> = None;
-
-		fn __init_global() {
-			unsafe {
-				if __GLOBAL.is_none() {
-					__GLOBAL = Some(Default::default());
-				}
-			}
-		}
-
-		// Open global for reading
-		#[allow(unused)]
-		$vis fn $read() -> &'static $type {
-			__init_global();
-			unsafe { __GLOBAL.as_ref().unwrap() }
-		}
-
-		// Open global for writing
-		#[allow(unused)]
-		fn $write() -> &'static mut $type {
-			__init_global();
-			unsafe { __GLOBAL.as_mut().unwrap() }
-		}
-	};
-}
-
 // Cache global JS variable lookup
 #[macro_export]
 macro_rules! cache_variable {
