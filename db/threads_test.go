@@ -182,12 +182,15 @@ func TestGetThread(t *testing.T) {
 			"image":      nil,
 		}
 	}
-	genThread := func(id, postCount, imageCount uint64) map[string]interface{} {
+	genThread := func(
+		id, postCount, imageCount, lastPage uint64,
+	) map[string]interface{} {
 		return map[string]interface{}{
 			"id":          id,
 			"post_count":  postCount,
 			"image_count": imageCount,
 			"page":        0,
+			"last_page":   lastPage,
 			"created_on":  unix,
 			"bumped_on":   unix,
 			"subject":     "test",
@@ -196,10 +199,10 @@ func TestGetThread(t *testing.T) {
 		}
 	}
 
-	std := genThread(thread, 109, 1)
+	std := genThread(thread, 109, 1, 1)
 	std["page"] = 0
 	std["posts"] = []map[string]interface{}{
-		map[string]interface{}{
+		{
 			"id":         thread,
 			"thread":     thread,
 			"page":       0,
@@ -357,7 +360,7 @@ func TestGetThread(t *testing.T) {
 		{
 			name: "no replies ;_;",
 			id:   thread2,
-			std:  genThread(thread2, 1, 0),
+			std:  genThread(thread2, 1, 0, 0),
 		},
 		{
 			name: "nonexistent thread",
