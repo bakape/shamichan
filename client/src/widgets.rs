@@ -2,6 +2,7 @@ use crate::{
 	buttons::AsideButton,
 	connection,
 	state::{self, FeedID, Focus, Location},
+	util,
 };
 use yew::{
 	agent::{Bridge, Bridged},
@@ -139,6 +140,7 @@ struct NewThreadForm {
 	el: NodeRef,
 	link: ComponentLink<Self>,
 	expanded: bool,
+	sending: bool,
 	available_tags: Vec<String>,
 	selected_tags: Vec<String>,
 	conn_state: connection::State,
@@ -188,6 +190,7 @@ impl Component for NewThreadForm {
 				.ok(),
 			link,
 			expanded: false,
+			sending: false,
 			available_tags: vec![],
 			selected_tags: vec!["".into()],
 			conn_state: connection::State::Loading,
@@ -229,31 +232,44 @@ impl Component for NewThreadForm {
 			Msg::Submit => {
 				use web_sys::{FormData, HtmlFormElement};
 
-				let f = FormData::new_with_form(
-					&(self.el.cast::<HtmlFormElement>()).unwrap(),
-				)
-				.unwrap();
-				connection::send(
-					protocol::MessageType::CreateThread,
-					&protocol::ThreadCreationReq {
-						subject: f
-							.get("subject")
-							.as_string()
-							.unwrap_or_default(),
-						tags: f
-							.get_all("tag")
-							.iter()
-							.filter_map(|t| t.as_string())
-							.collect(),
-						// TODO
-						captcha_solution: vec![],
-					},
-				);
+				if self.sending {
+					return false;
+				}
+				self.sending = true;
 
-				false
+				util::with_logging(|| {
+					let f = FormData::new_with_form(
+						&self
+							.el
+							.cast::<HtmlFormElement>()
+							.ok_or("could not convert to HtmlFormElement")?,
+					)?;
+					connection::send(
+						protocol::MessageType::CreateThread,
+						&protocol::ThreadCreationReq {
+							subject: f
+								.get("subject")
+								.as_string()
+								.ok_or("could not convert subject to string")?,
+							tags: f
+								.get_all("tag")
+								.iter()
+								.filter_map(|t| t.as_string())
+								.collect(),
+							// TODO
+							captcha_solution: vec![],
+						},
+					);
+					Ok(())
+				});
+
+				true
 			}
 			Msg::ConnState(s) => {
 				self.conn_state = s;
+				if s != connection::State::Synced {
+					self.sending = false;
+				}
 				true
 			}
 			Msg::NOP => false,
@@ -319,12 +335,14 @@ impl NewThreadForm {
 						type="submit"
 						style="width: 50%"
 						disabled=self.conn_state != connection::State::Synced
+								 || self.sending
 					/>
 					<input
 						type="button"
 						value=localize!("cancel")
 						style="width: 50%"
 						onclick=self.link.callback(|_| Msg::Toggle(false))
+						disabled=self.sending
 					/>
 				</span>
 				<datalist id="available-tags">
