@@ -16,8 +16,14 @@ impl Component for Threads {
 	type Properties = ();
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+		use state::Change;
+
 		Self {
-			bridge: state::hook(&link, &[state::Change::ThreadList], |_| ()),
+			bridge: state::hook(
+				&link,
+				&[Change::Location, Change::ThreadList],
+				|_| (),
+			),
 			link: link,
 		}
 	}

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
 // Maps of K to sets of V
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SetMap<K, V>(HashMap<K, HashSet<V>>)
 where
 	K: Hash + Eq + Clone,
@@ -62,6 +62,7 @@ where
 }
 
 // Maps of K to sets of V and V to sets of K simultaneously
+#[derive(Debug)]
 pub struct DoubleSetMap<K, V>
 where
 	K: Hash + Eq + Clone,

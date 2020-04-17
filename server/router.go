@@ -80,6 +80,7 @@ func createRouter() http.Handler {
 	}
 	r.GET("/", serveApp)
 	r.GET("/threads/:thread/:page", serveApp)
+	r.GET("/catalog", serveApp)
 
 	r.GET("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		var buf bytes.Buffer

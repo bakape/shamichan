@@ -196,7 +196,7 @@ pub enum Request {
 }
 
 // Selective changes of global state to be notified on
-#[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone, Debug)]
 pub enum Change {
 	// Change of location the app is navigated to
 	Location,
@@ -510,12 +510,16 @@ impl Agent {
 	// Set app location and propagate changes
 	fn set_location(&mut self, new: Location, flags: u8) {
 		write(|s| {
+			let old = s.location.clone();
+			if old == new {
+				return;
+			}
+
 			debug_log!(
 				"set_location",
 				format!("{:?} -> {:?}, flags={}", s.location, new, flags)
 			);
 
-			let old = s.location.clone();
 			let need_fetch = flags & FETCHED_JSON == 0
 				&& match (&old.feed, &new.feed) {
 					(
@@ -543,13 +547,14 @@ impl Agent {
 					_ => false,
 				};
 			if need_fetch {
+				debug_log!("fetching");
 				self.fetch_feed_data(new, flags);
 				return;
 			}
 
 			if flags & SET_STATE != 0 {
 				s.location = new.clone();
-				if flags & NO_TRIGGER != 0 {
+				if flags & NO_TRIGGER == 0 {
 					self.trigger(Change::Location);
 				}
 				if let Some(f) = new.focus.clone() {
