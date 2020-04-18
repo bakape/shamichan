@@ -452,7 +452,7 @@ impl Connection {
 	}
 
 	fn on_message(&mut self, data: Vec<u8>) -> util::Result {
-		// Helper to make message handling through decode!() more terse
+		// Helper to make message handling through route!() more terse
 		struct HandlerResult(util::Result);
 
 		impl From<()> for HandlerResult {
@@ -475,7 +475,7 @@ impl Connection {
 
 		// Separate function to enable type inference of payload type from
 		// lambda argument type
-		fn _decode<'de, T, R>(
+		fn _route<'de, T, R>(
 			dec: &'de mut Decoder,
 			typ: MessageType,
 			mut handler: impl FnMut(T) -> R,
@@ -490,12 +490,13 @@ impl Connection {
 		}
 
 		let mut dec = Decoder::new(&data)?;
-		macro_rules! decode {
+
+		macro_rules! route {
 			($type:expr, $($msg_type:ident => $handler:expr)+) => {
 				match $type {
 					$(
 						MessageType::$msg_type => {
-							_decode(&mut dec, MessageType::$msg_type, $handler)?
+							_route(&mut dec, MessageType::$msg_type, $handler)?
 						}
 					)+
 					_ => {
@@ -512,7 +513,7 @@ impl Connection {
 			use protocol::payloads::{FeedData, ThreadCreationNotice};
 
 			match dec.peek_type() {
-				Some(t) => decode! { t,
+				Some(t) => route! { t,
 					Synchronize => |_: u64| {
 						// Feed ID should already be set to the new one at this
 						// point

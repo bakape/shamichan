@@ -2,7 +2,11 @@ use super::common::DynResult;
 use super::config;
 use super::pulsar;
 use super::{bindings, registry, str_err};
-use protocol::{debug_log, payloads::AuthKey, Decoder, Encoder, MessageType};
+use protocol::{
+	debug_log,
+	payloads::{AuthKey, ThreadCreationReq},
+	Decoder, Encoder, MessageType,
+};
 use serde::Serialize;
 use std::io;
 use std::net::IpAddr;
@@ -47,9 +51,6 @@ macro_rules! check_len {
 }
 
 macro_rules! log_msg_in {
-	($msg:expr) => {
-		debug_log!(format!(">>> {:?}", $msg))
-	};
 	($type:expr, $msg:expr) => {
 		debug_log!(format!(">>> {:?}: {:?}", $type, $msg))
 	};
@@ -68,7 +69,58 @@ impl Client {
 
 	// Handle received message
 	pub fn receive_message(&mut self, buf: &[u8]) -> DynResult {
+		// Helper to make message handling through route!() more terse
+		struct HandlerResult(DynResult);
+
+		impl From<()> for HandlerResult {
+			fn from(_: ()) -> HandlerResult {
+				HandlerResult(Ok(()))
+			}
+		}
+
+		impl From<DynResult> for HandlerResult {
+			fn from(v: DynResult) -> HandlerResult {
+				HandlerResult(v)
+			}
+		}
+
+		impl Into<DynResult> for HandlerResult {
+			fn into(self) -> DynResult {
+				self.0
+			}
+		}
+
+		// Separate function to enable type inference of payload type from
+		// lambda argument type
+		fn _route<'de, T, R>(
+			dec: &'de mut Decoder,
+			typ: MessageType,
+			mut handler: impl FnMut(T) -> R,
+		) -> DynResult
+		where
+			T: serde::Deserialize<'de> + std::fmt::Debug,
+			R: Into<HandlerResult>,
+		{
+			let payload: T = dec.read_next()?;
+			log_msg_in!(typ, payload);
+			(handler(payload).into() as HandlerResult).into()
+		}
+
 		let mut dec = Decoder::new(buf)?;
+
+		macro_rules! route {
+			($type:expr, $($msg_type:ident => $handler:expr)+) => {
+				match $type {
+					$(
+						MessageType::$msg_type => {
+							_route(&mut dec, MessageType::$msg_type, $handler)?
+						}
+					)+
+					_ => str_err!("unhandled message type: {:?}", $type),
+				}
+			};
+		}
+
 		let mut first = true;
 		loop {
 			match dec.peek_type() {
@@ -87,7 +139,7 @@ impl Client {
 							}
 							let msg: protocol::payloads::Handshake =
 								dec.read_next()?;
-							log_msg_in!(msg);
+							log_msg_in!(MessageType::Handshake, msg);
 							if msg.protocol_version != protocol::VERSION {
 								str_err!(
 									"protocol version mismatch: {}",
@@ -102,17 +154,18 @@ impl Client {
 							if t != MessageType::Synchronize {
 								str_err!("second message must be sync request");
 							}
-							self.synchronize(&mut dec)?;
+							let feed = dec.read_next()?;
+							log_msg_in!(MessageType::Synchronize, feed);
+							self.synchronize(feed)?;
 							self.init_state = InitState::Synced;
 						}
-						InitState::Synced => match t {
-							MessageType::CreateThread => {
-								self.create_thread(&mut dec)?
+						InitState::Synced => route! { t,
+							CreateThread => |req: ThreadCreationReq| {
+								self.create_thread(req)
 							}
-							MessageType::Synchronize => {
-								self.synchronize(&mut dec)?
+							Synchronize => |feed: u64| {
+								self.synchronize(feed)
 							}
-							_ => str_err!("unhandled message type: {:?}", t),
 						},
 					}
 				}
@@ -134,20 +187,18 @@ impl Client {
 	}
 
 	// Synchronize to a specific thread or board index
-	fn synchronize(&mut self, dec: &mut Decoder) -> DynResult {
-		let thread: u64 = dec.read_next()?;
-		log_msg_in!(MessageType::Synchronize, thread);
-		if thread != 0 && !bindings::thread_exists(thread)? {
-			str_err!("invalid thread: {}", thread);
+	fn synchronize(&mut self, feed: u64) -> DynResult {
+		if feed != 0 && !bindings::thread_exists(feed)? {
+			str_err!("invalid thread: {}", feed);
 		}
 
 		// Thread init data will be sent on the next pulse
-		registry::set_client_thread(self.id, thread);
+		registry::set_client_thread(self.id, feed);
 
 		// TODO: Lookup, if client has any open posts in thread and link them to
 		// client
 
-		self.send(MessageType::Synchronize, &thread)?;
+		self.send(MessageType::Synchronize, &feed)?;
 		Ok(())
 	}
 
@@ -170,10 +221,7 @@ impl Client {
 	}
 
 	// Create a new thread and pass its ID to client
-	fn create_thread(&mut self, dec: &mut Decoder) -> DynResult {
-		let mut req: protocol::payloads::ThreadCreationReq = dec.read_next()?;
-		log_msg_in!(req);
-
+	fn create_thread(&mut self, mut req: ThreadCreationReq) -> DynResult {
 		Self::trim(&mut req.subject);
 		check_len!(req.subject, 100);
 		check_len!(req.tags, 3);
