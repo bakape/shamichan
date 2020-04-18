@@ -47,6 +47,15 @@ macro_rules! check_len {
 		}};
 }
 
+macro_rules! log_msg_in {
+	($msg:expr) => {
+		debug_log!(format!(">>> {:?}", $msg))
+	};
+	($type:expr, $msg:expr) => {
+		debug_log!(format!(">>> {:?}: {:?}", $type, $msg))
+	};
+}
+
 impl Client {
 	// Create fresh unconnected client
 	pub fn new(id: u64, ip: IpAddr) -> Self {
@@ -78,7 +87,7 @@ impl Client {
 								str_err!("first message must be handshake");
 							}
 							let msg: Handshake = dec.read_next()?;
-							debug_log!(">>> handshake", msg);
+							log_msg_in!(msg);
 							if msg.protocol_version != VERSION {
 								str_err!(
 									"protocol version mismatch: {}",
@@ -112,7 +121,12 @@ impl Client {
 	}
 
 	// Send a private message to only this client
-	fn send(&self, t: MessageType, payload: &impl Serialize) -> io::Result<()> {
+	fn send<T>(&self, t: MessageType, payload: &T) -> io::Result<()>
+	where
+		T: Serialize + std::fmt::Debug,
+	{
+		debug_log!(format!("<<< {:?}: {:?}", t, payload));
+
 		let mut enc = Encoder::new(Vec::new());
 		enc.write_message(t, payload)?;
 		bindings::write_message(self.id, Arc::new(enc.finish()?));
@@ -122,7 +136,7 @@ impl Client {
 	// Synchronize to a specific thread or board index
 	fn synchronize(&mut self, dec: &mut Decoder) -> DynResult {
 		let thread: u64 = dec.read_next()?;
-		debug_log!(">>> sync req", thread);
+		log_msg_in!(MessageType::Synchronize, thread);
 		if thread != 0 && !bindings::thread_exists(thread)? {
 			str_err!("invalid thread: {}", thread);
 		}
@@ -158,7 +172,7 @@ impl Client {
 	// Create a new thread and pass its ID to client
 	fn create_thread(&mut self, dec: &mut Decoder) -> DynResult {
 		let mut req: ThreadCreationReq = dec.read_next()?;
-		debug_log!(">>>", req);
+		log_msg_in!(req);
 
 		Self::trim(&mut req.subject);
 		check_len!(req.subject, 100);

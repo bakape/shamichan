@@ -183,6 +183,7 @@ impl Decoder {
 				// Vector of compressed messages
 				r = &r[1..];
 				while r.len() > 0 {
+					#[rustfmt::skip]
 					macro_rules! check_len {
 						($n:expr) => {
 							if r.len() < $n {
@@ -194,9 +195,9 @@ impl Decoder {
 											"min_length={} msg={:?}"
 										),
 										$n, r,
-										)
-									);
-								}
+									)
+								);
+							}
 						};
 					}
 
@@ -226,7 +227,7 @@ impl Decoder {
 	// This method does not advance the decoder. Either read_next() or
 	// skip_next() need to be called to advance it.
 	pub fn peek_type(&mut self) -> Option<MessageType> {
-		self.splitter.message_types.get(self.off).map(|t| *t)
+		self.splitter.message_types.get(self.off).copied()
 	}
 
 	// Skip reading next message and advance the decoder
@@ -389,6 +390,11 @@ mod tests {
 				},
 			);
 		}
+		assert_eq!(dec.peek_type(), None);
+		assert_eq!(
+			(dec.read_next() as std::io::Result<u64>).map_err(|e| e.kind()),
+			Err(std::io::ErrorKind::NotFound)
+		);
 
 		Ok(())
 	}

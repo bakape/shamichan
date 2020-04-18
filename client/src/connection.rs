@@ -37,7 +37,6 @@ where
 	util::with_logging(|| {
 		let mut enc = protocol::Encoder::new(Vec::new());
 		encode_msg(&mut enc, t, payload)?;
-		enc.write_message(t, payload)?;
 		Connection::dispatcher().send(enc.finish()?);
 		Ok(())
 	});
