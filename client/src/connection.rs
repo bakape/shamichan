@@ -2,7 +2,7 @@ use super::{
 	state::{self, FeedID},
 	util,
 };
-use protocol::*;
+use protocol::{debug_log, Decoder, Encoder, MessageType};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fmt::Debug;
@@ -71,7 +71,7 @@ pub struct Connection {
 	synced_to: Option<FeedID>,
 
 	// Connection currently authenticated with
-	authed_with: Option<AuthKey>,
+	authed_with: Option<protocol::payloads::AuthKey>,
 
 	// Link to global application state
 	#[allow(unused)]
@@ -172,8 +172,8 @@ impl Agent for Connection {
 						encode_msg(
 							&mut enc,
 							MessageType::Handshake,
-							&Handshake {
-								protocol_version: VERSION,
+							&protocol::payloads::Handshake {
+								protocol_version: protocol::VERSION,
 								key: s.auth_key.clone(),
 							},
 						)?;
@@ -509,6 +509,8 @@ impl Connection {
 		}
 
 		loop {
+			use protocol::payloads::{FeedData, ThreadCreationNotice};
+
 			match dec.peek_type() {
 				Some(t) => decode! { t,
 					Synchronize => |_: u64| {

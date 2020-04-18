@@ -1,7 +1,7 @@
 use super::common::DynResult;
 use super::{config, pulsar};
 use libc;
-use protocol::debug_log;
+use protocol::{debug_log, payloads::AuthKey};
 use std::borrow::Cow;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
@@ -161,7 +161,7 @@ pub fn write_message(client_id: u64, msg: Arc<Vec<u8>>) {
 pub fn insert_thread(
 	subject: &str,
 	tags: &[String],
-	auth_key: &protocol::AuthKey,
+	auth_key: &AuthKey,
 ) -> DynResult<u64> {
 	let mut _tags: Vec<CString> = Vec::with_capacity(tags.len());
 	for t in tags {
@@ -228,8 +228,10 @@ extern "C" fn ws_insert_image(
 		pulsar::insert_image(
 			thread,
 			post,
-			serde_json::from_slice::<protocol::ImageJSON>(image.as_ref())?
-				.into(),
+			serde_json::from_slice::<protocol::payloads::ImageJSON>(
+				image.as_ref(),
+			)?
+			.into(),
 		)?;
 		Ok(())
 	})

@@ -5,7 +5,7 @@ mod menu;
 use super::state::{self, FeedID, Focus, Location, Post as Data, State};
 use crate::buttons::SpanButton;
 use crate::util;
-use protocol::{FileType, Image};
+use protocol::payloads::{FileType, Image};
 use yew::{html, Component, ComponentLink, Html, NodeRef, Properties};
 
 // Central thread container

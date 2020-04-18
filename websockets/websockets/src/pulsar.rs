@@ -1,6 +1,10 @@
 use super::common::DynResult;
 use super::{bindings, registry};
-use protocol::*;
+use protocol::{
+	debug_log,
+	payloads::{FeedData, Image, ThreadCreationNotice},
+	Encoder, MessageType,
+};
 use rayon::prelude::*;
 use serde::Serialize;
 use std::collections::{HashMap, HashSet};
@@ -251,6 +255,8 @@ impl Feed {
 
 	// Insert new blank open post
 	fn insert_post(&mut self, id: u64) {
+		use protocol::payloads::OpenPost;
+
 		let now = SystemTime::now()
 			.duration_since(SystemTime::UNIX_EPOCH)
 			.expect("negative Unix timestamp")
@@ -416,7 +422,7 @@ impl Pulsar {
 					f.encode_post_message(
 						req.post,
 						MessageType::InsertImage,
-						&InsertImage {
+						&protocol::payloads::InsertImage {
 							post: req.post,
 							image: req.img.clone(),
 						},

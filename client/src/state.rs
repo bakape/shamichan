@@ -1,5 +1,9 @@
 use crate::{post::image_search::Provider, util};
-use protocol::{debug_log, post_body, AuthKey, DoubleSetMap, Image, SetMap};
+use protocol::{
+	debug_log,
+	payloads::{post_body::Node, AuthKey, Image},
+	util::{DoubleSetMap, SetMap},
+};
 use serde::{Deserialize, Serialize};
 use std::{
 	collections::{HashMap, HashSet},
@@ -159,7 +163,7 @@ pub struct Post {
 	pub flag: Option<String>,
 	pub sage: bool,
 
-	pub body: Option<post_body::Node>,
+	pub body: Option<Node>,
 	pub image: Option<Image>,
 }
 

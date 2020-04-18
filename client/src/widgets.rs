@@ -246,7 +246,7 @@ impl Component for NewThreadForm {
 					)?;
 					connection::send(
 						protocol::MessageType::CreateThread,
-						&protocol::ThreadCreationReq {
+						&protocol::payloads::ThreadCreationReq {
 							subject: f
 								.get("subject")
 								.as_string()

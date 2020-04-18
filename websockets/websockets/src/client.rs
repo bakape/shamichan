@@ -2,8 +2,7 @@ use super::common::DynResult;
 use super::config;
 use super::pulsar;
 use super::{bindings, registry, str_err};
-use protocol::AuthKey;
-use protocol::*;
+use protocol::{debug_log, payloads::AuthKey, Decoder, Encoder, MessageType};
 use serde::Serialize;
 use std::io;
 use std::net::IpAddr;
@@ -86,9 +85,10 @@ impl Client {
 							if t != MessageType::Handshake {
 								str_err!("first message must be handshake");
 							}
-							let msg: Handshake = dec.read_next()?;
+							let msg: protocol::payloads::Handshake =
+								dec.read_next()?;
 							log_msg_in!(msg);
-							if msg.protocol_version != VERSION {
+							if msg.protocol_version != protocol::VERSION {
 								str_err!(
 									"protocol version mismatch: {}",
 									msg.protocol_version
@@ -171,7 +171,7 @@ impl Client {
 
 	// Create a new thread and pass its ID to client
 	fn create_thread(&mut self, dec: &mut Decoder) -> DynResult {
-		let mut req: ThreadCreationReq = dec.read_next()?;
+		let mut req: protocol::payloads::ThreadCreationReq = dec.read_next()?;
 		log_msg_in!(req);
 
 		Self::trim(&mut req.subject);
@@ -184,7 +184,7 @@ impl Client {
 		self.check_captcha(&req.captcha_solution)?;
 
 		let id = bindings::insert_thread(&req.subject, &req.tags, &self.key)?;
-		pulsar::create_thread(ThreadCreationNotice {
+		pulsar::create_thread(protocol::payloads::ThreadCreationNotice {
 			id: id,
 			subject: req.subject,
 			tags: req.tags,
