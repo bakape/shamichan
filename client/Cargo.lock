@@ -82,13 +82,16 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64",
+ "bincode",
  "console_error_panic_hook",
  "flate2",
+ "futures",
  "hex",
  "js-sys",
  "protocol",
  "serde",
  "serde_json",
+ "uuid",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -495,7 +498,7 @@ dependencies = [
  "num-derive",
  "num-traits",
  "serde",
- "serde-big-array",
+ "uuid",
  "web-sys",
 ]
 
@@ -520,16 +523,6 @@ version = "1.0.106"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36df6ac6412072f67cf767ebbde4133a5b2e88e76dc6187fa7104cd16f783399"
 dependencies = [
- "serde_derive",
-]
-
-[[package]]
-name = "serde-big-array"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "883eee5198ea51720eab8be52a36cf6c0164ac90eea0ed95b649d5e35382404e"
-dependencies = [
- "serde",
  "serde_derive",
 ]
 
@@ -597,6 +590,15 @@ name = "unicode-xid"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "826e7639553986605ec5979c7dd957c7895e93eabed50ab2ffa7f6128a75097c"
+
+[[package]]
+name = "uuid"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fde2f6a4bea1d6e007c4ad38c6839fa71cbb63b6dbf5b595aa38dc9b1093c11"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "wasm-bindgen"

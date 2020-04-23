@@ -1,6 +1,6 @@
 use super::MessageType;
 use bincode;
-use flate2::write::{ZlibDecoder, ZlibEncoder};
+use flate2::write::{DeflateDecoder, DeflateEncoder};
 use serde::{Deserialize, Serialize};
 use std::io;
 use std::io::Write;
@@ -51,7 +51,7 @@ impl<W: Write> Write for Escaper<W> {
 // Streaming message set encoder
 #[derive(Debug)]
 pub struct Encoder {
-	w: ZlibEncoder<Vec<u8>>,
+	w: DeflateEncoder<Vec<u8>>,
 	started: bool,
 }
 
@@ -61,7 +61,7 @@ impl Encoder {
 	pub fn new(mut w: Vec<u8>) -> Self {
 		Self::init_single_message(&mut w);
 		Self {
-			w: ZlibEncoder::new(w, flate2::Compression::default()),
+			w: DeflateEncoder::new(w, flate2::Compression::default()),
 			started: false,
 		}
 	}
@@ -175,9 +175,9 @@ impl Decoder {
 		match r[0] {
 			0 => {
 				// Single compressed message
-				let mut zd = ZlibDecoder::new(dst);
-				zd.write_all(&r[1..])?;
-				Ok(zd.finish()?)
+				let mut dd = DeflateDecoder::new(dst);
+				dd.write_all(&r[1..])?;
+				Ok(dd.finish()?)
 			}
 			1 => {
 				// Vector of compressed messages

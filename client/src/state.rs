@@ -1,7 +1,7 @@
 use crate::{post::image_search::Provider, util};
 use protocol::{
 	debug_log,
-	payloads::{post_body::Node, AuthKey, Image},
+	payloads::{post_body::Node, Image},
 	util::{DoubleSetMap, SetMap},
 };
 use serde::{Deserialize, Serialize};
@@ -10,14 +10,15 @@ use std::{
 	hash::Hash,
 	str,
 };
+use wasm_bindgen::JsCast;
 use yew::{
 	agent::{AgentLink, Bridge, Context, HandlerId},
 	services::render::{RenderService, RenderTask},
 	Callback, Component, ComponentLink,
 };
 
-// Key used to store AuthKey in local storage
-const AUTH_KEY: &str = "auth_key";
+// Key used to store authentication key pair in local storage
+const KEY_PAIR_KEY: &str = "key_pair";
 
 // Key used to store Options in local storage
 const OPTIONS_KEY: &str = "options";
@@ -93,6 +94,171 @@ pub struct Configs {
 	pub links: HashMap<String, String>,
 }
 
+// Key pair used to authenticate with server
+#[derive(Serialize, Deserialize, Default, Clone, Eq, PartialEq)]
+pub struct KeyPair {
+	pub private: Vec<u8>,
+	pub public: Vec<u8>,
+
+	// ID the key is registered to on the server
+	pub id: Option<uuid::Uuid>,
+}
+
+impl KeyPair {
+	// Store in local storage
+	fn store(&self) -> util::Result {
+		let mut dst = Vec::with_capacity(1 << 10);
+		{
+			// Block causes drop of encoders and thus releases dst reference
+			let mut b64_w =
+				base64::write::EncoderWriter::new(&mut dst, base64::STANDARD);
+			let mut w = flate2::write::DeflateEncoder::new(
+				&mut b64_w,
+				flate2::Compression::default(),
+			);
+			bincode::serialize_into(&mut w, self)?;
+			w.finish()?;
+			b64_w.finish()?;
+		}
+
+		util::local_storage()
+			.set_item(KEY_PAIR_KEY, &String::from_utf8(dst)?)?;
+		Ok(())
+	}
+
+	// Load from local storage
+	fn load() -> util::Result<Option<KeyPair>> {
+		Ok(match util::local_storage().get_item(KEY_PAIR_KEY)? {
+			Some(s) => Some(bincode::deserialize_from(
+				flate2::read::DeflateDecoder::new(
+					base64::read::DecoderReader::new(
+						&mut s.as_bytes(),
+						base64::STANDARD,
+					),
+				),
+			)?),
+			None => None,
+		})
+
+		// Ok(bincode::deserialize_from(reader: R))
+	}
+
+	fn crypto() -> util::Result<web_sys::SubtleCrypto> {
+		Ok(util::window().crypto()?.subtle())
+	}
+
+	// Return dict describing the key pair algorithm
+	fn algo_dict() -> util::Result<js_sys::Object> {
+		let algo = js_sys::Object::new();
+
+		#[rustfmt::skip]
+		macro_rules! set {
+			($k:expr, $v:expr) => {
+				js_sys::Reflect::set(
+					&algo,
+					&$k.into(),
+					&$v.into(),
+				)?;
+			};
+		}
+
+		set!("name", "RSASSA-PKCS1-v1_5");
+		set!("modulusLength", 4096);
+		set!(
+			"publicExponent",
+			js_sys::Uint8Array::new(
+				&util::into_js_array(
+					[1_u8, 0, 1].iter().map(|n| js_sys::Number::from(*n))
+				)
+				.into()
+			)
+		);
+		set!("hash", "SHA-256");
+
+		Ok(algo)
+	}
+
+	// Return key usage array to pass to JS
+	fn usages() -> wasm_bindgen::JsValue {
+		util::into_js_array(Some("sign")).into()
+	}
+
+	// Generate a new key pair
+	async fn generate() -> util::Result<KeyPair> {
+		let pair = wasm_bindgen_futures::JsFuture::from(
+			Self::crypto()?.generate_key_with_object(
+				&Self::algo_dict()?,
+				true,
+				&Self::usages(),
+			)?,
+		)
+		.await?
+		.dyn_into::<js_sys::Object>()?;
+
+		async fn get_vec(
+			pair: &js_sys::Object,
+			prop: &str,
+			format: &str,
+		) -> util::Result<Vec<u8>> {
+			Ok(js_sys::Uint8Array::new(
+				&wasm_bindgen_futures::JsFuture::from(
+					KeyPair::crypto()?.export_key(
+						format,
+						&js_sys::Reflect::get(&pair, &prop.into())?
+							.dyn_into::<web_sys::CryptoKey>()?,
+					)?,
+				)
+				.await?
+				.into(),
+			)
+			.to_vec())
+		}
+
+		Ok(KeyPair {
+			private: get_vec(&pair, "private_key", "pkcs8").await?,
+			public: get_vec(&pair, "public_key", "spki").await?,
+			id: None,
+		})
+	}
+
+	// Sign SHA-256 digest of passed buffer
+	pub async fn sign(&self, buf: &mut [u8]) -> util::Result<Vec<u8>> {
+		use js_sys::Uint8Array;
+		use wasm_bindgen_futures::JsFuture;
+
+		let crypto = Self::crypto()?;
+
+		Ok(Uint8Array::new(
+			&JsFuture::from(crypto.sign_with_str_and_u8_array(
+				"RSASSA-PKCS1-v1_5",
+				{
+					&JsFuture::from(
+						crypto.import_key_with_object(
+							"pkcs8",
+							&Uint8Array::new(
+								&util::into_js_array(
+									self.private.iter().copied(),
+								)
+								.into(),
+							)
+							.into(),
+							&Self::algo_dict()?,
+							true,
+							&Self::usages(),
+						)?,
+					)
+					.await?
+					.dyn_into::<web_sys::CryptoKey>()?
+				},
+				buf,
+			)?)
+			.await?
+			.into(),
+		)
+		.to_vec())
+	}
+}
+
 // Stored separately from the agent to avoid needless serialization of post data
 // on change propagation. The entire application has read-only access to this
 // singleton. Writes have to be coordinated through the agent to ensure
@@ -118,8 +284,11 @@ pub struct State {
 	// Map for quick lookup of post IDs by a (thread, page) tuple
 	pub posts_by_thread_page: SetMap<(u64, u32), u64>,
 
-	// Authentication key
-	pub auth_key: AuthKey,
+	// Authentication key pair
+	pub key_pair: KeyPair,
+
+	// Public key UUID stored on the server
+	pub key_id: Option<uuid::Uuid>,
 
 	// Global user-set options
 	pub options: Options,
@@ -189,14 +358,14 @@ pub enum Request {
 	// Subscribe to updates of a value type
 	NotifyChange(Change),
 
-	// Set the client authorization key
-	SetAuthKey(AuthKey),
-
 	// Fetch feed data
 	FetchFeed(Location),
 
 	// Navigate to the app to a different feed
 	NavigateTo { loc: Location, flags: u8 },
+
+	// Set the ID of the currently used KeyPair
+	SetKeyID(uuid::Uuid),
 }
 
 // Selective changes of global state to be notified on
@@ -205,8 +374,8 @@ pub enum Change {
 	// Change of location the app is navigated to
 	Location,
 
-	// Auth key has been set by user
-	AuthKey,
+	// Authentication key pair has been set by user
+	KeyPair,
 
 	// Change to any field of Options
 	Options,
@@ -290,6 +459,16 @@ pub enum FeedID {
 impl Default for FeedID {
 	fn default() -> FeedID {
 		FeedID::Index
+	}
+}
+
+impl FeedID {
+	// Return corresponding integer feed code use by the server
+	pub fn as_u64(&self) -> u64 {
+		match self {
+			Self::Index | Self::Catalog => 0,
+			Self::Thread { id, .. } => *id,
+		}
 	}
 }
 
@@ -442,7 +621,6 @@ impl yew::agent::Agent for Agent {
 			}
 			Message::Focus(f) => {
 				use util::document;
-				use wasm_bindgen::JsCast;
 				use web_sys::HtmlElement;
 
 				fn banner_height() -> f64 {
@@ -486,14 +664,15 @@ impl yew::agent::Agent for Agent {
 	fn handle_input(&mut self, req: Self::Input, id: HandlerId) {
 		match req {
 			Request::NotifyChange(h) => self.hooks.insert(h, id),
-			Request::SetAuthKey(mut key) => util::with_logging(|| {
-				write_auth_key(&mut key)?;
-				write(|s| s.auth_key = key);
-				self.trigger(Change::AuthKey);
-				Ok(())
-			}),
 			Request::NavigateTo { loc, flags } => self.set_location(loc, flags),
 			Request::FetchFeed(loc) => self.fetch_feed_data(loc, 0),
+			Request::SetKeyID(id) => util::with_logging(|| {
+				write(|s| {
+					s.key_pair.id = Some(id);
+					s.key_pair.store()?;
+					Ok(())
+				})
+			}),
 		};
 	}
 
@@ -501,6 +680,7 @@ impl yew::agent::Agent for Agent {
 		self.hooks.remove_by_value(&id);
 	}
 }
+
 impl Agent {
 	// Send change notification to hooked clients
 	fn trigger(&self, h: Change) {
@@ -744,49 +924,23 @@ pub fn navigate_to(loc: Location) {
 	});
 }
 
-fn write_auth_key(key: &mut AuthKey) -> util::Result {
-	let mut buf: [u8; 88] =
-		unsafe { std::mem::MaybeUninit::uninit().assume_init() };
-	base64::encode_config_slice(key, base64::STANDARD, &mut buf);
-
-	util::local_storage()
-		.set_item(AUTH_KEY, unsafe { str::from_utf8_unchecked(&buf) })?;
-	Ok(())
-}
-
 // Initialize application state
-pub fn init() -> util::Result {
-	fn create_auth_key() -> util::Result<AuthKey> {
-		let mut key = AuthKey::default();
-		util::window()
-			.crypto()?
-			.get_random_values_with_u8_array(key.as_mut())?;
-		write_auth_key(&mut key)?;
-		Ok(key)
-	}
+pub async fn init() -> util::Result {
+	let kp = match KeyPair::load()? {
+		Some(kp) => kp,
+		None => {
+			let kp = KeyPair::generate().await?;
+			kp.store()?;
+			kp
+		}
+	};
 
 	write(|s| {
+		s.key_pair = kp;
 		s.location = Location::from_path();
 
-		// Read saved or generate a new authentication key
-		let ls = util::local_storage();
-		s.auth_key = match ls.get_item(AUTH_KEY).unwrap() {
-			Some(v) => {
-				let mut key = AuthKey::default();
-				match base64::decode_config_slice(
-					&v,
-					base64::STANDARD,
-					key.as_mut(),
-				) {
-					Ok(_) => key,
-					_ => create_auth_key()?,
-				}
-			}
-			None => create_auth_key()?,
-		};
-
 		// Read saved options, if any
-		if let Some(v) = ls.get_item(OPTIONS_KEY).unwrap() {
+		if let Some(v) = util::local_storage().get_item(OPTIONS_KEY).unwrap() {
 			if let Ok(opts) = serde_json::from_str(&v) {
 				s.options = opts;
 			}
@@ -804,7 +958,6 @@ pub fn init() -> util::Result {
 				.ok_or("inline configs not found")?
 				.inner_html(),
 		)?;
-
 		Ok(())
 	})
 }

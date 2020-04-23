@@ -3,89 +3,58 @@ pub mod post_body;
 use hex_buffer_serde::{Hex, HexForm};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
-
-// Helper for big array serialization
-big_array! { BigArray; }
-
-// Client authentication key type
-#[derive(Serialize, Deserialize, Clone)]
-pub struct AuthKey {
-	#[serde(with = "BigArray")]
-	inner: [u8; 64],
-}
-
-impl AuthKey {
-	// Return pointer to inner array
-	pub fn as_ptr(&self) -> *const u8 {
-		&self.inner[0] as *const u8
-	}
-}
-
-impl AsRef<[u8]> for AuthKey {
-	fn as_ref(&self) -> &[u8] {
-		&self.inner
-	}
-}
-
-impl AsMut<[u8]> for AuthKey {
-	fn as_mut(&mut self) -> &mut [u8] {
-		&mut self.inner
-	}
-}
-
-impl std::fmt::Debug for AuthKey {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		write!(f, "{:x}", self)
-	}
-}
-
-impl std::fmt::LowerHex for AuthKey {
-	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-		for i in self.inner.iter() {
-			write!(f, "{:x}", i)?;
-		}
-		Ok(())
-	}
-}
-
-impl Hash for AuthKey {
-	fn hash<H: Hasher>(&self, state: &mut H) {
-		(&self.inner).hash(state);
-	}
-}
-
-impl PartialEq for AuthKey {
-	fn eq(&self, other: &AuthKey) -> bool {
-		(&self.inner) as &[u8] == (&other.inner) as &[u8]
-	}
-}
-
-impl Eq for AuthKey {}
-
-impl Default for AuthKey {
-	fn default() -> Self {
-		Self { inner: [0; 64] }
-	}
-}
 
 // Define a public payload struct with public fields
 macro_rules! payload {
     ($name:ident {$($field:ident: $t:ty,)*}) => {
-        #[derive(Serialize, Deserialize, Default, Debug, Clone)]
+        #[derive(Serialize, Deserialize, Debug, Clone)]
         pub struct $name {
             $(pub $field: $t),*
         }
 	}
 }
 
+// Authentication creds sent to the server during a handshake
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum Authorization {
+	// New public key registration
+	//
+	// TODO: validate no more than a KB
+	// TODO: If already exists, request another handshake with a signature
+	// TODO: Only allow this variant to be sent once per session
+	NewPubKey(Vec<u8>),
+
+	// Key already persisted on the server
+	Saved {
+		// ID of pub key on the server
+		id: uuid::Uuid,
+
+		// Nonce to hash along with id
+		nonce: [u8; 32],
+
+		// SHA-256 signature of id + nonce
+		//
+		// TODO: validate no more than 512 bytes
+		signature: Vec<u8>,
+	},
+}
+
 // Authenticate with the server
-payload! { Handshake {
+payload! { HandshakeReq {
 	// Protocol version the client implements
 	protocol_version: u16,
 
 	// Used to authenticate the client
-	key: AuthKey,
+	auth: Authorization,
+}}
+
+payload! { HandshakeRes {
+	// Key already saved in database. Need to confirm it's the same private key
+	// by sending a HandshakeReq with Authentication::Saved.
+	need_resend: bool,
+
+	// ID of key on the server
+	id: uuid::Uuid,
 }}
 
 // Request for creating a new thread
@@ -165,12 +134,6 @@ pub enum FileType {
 	CBR,
 }
 
-impl Default for FileType {
-	fn default() -> Self {
-		FileType::NoFile
-	}
-}
-
 impl FileType {
 	// Return canonical extension for file type
 	pub fn extension(&self) -> &'static str {
@@ -223,7 +186,7 @@ payload! { ImageCommon {
 }}
 
 // Image data JSON representation
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ImageJSON {
 	#[serde(flatten)]
 	pub common: ImageCommon,

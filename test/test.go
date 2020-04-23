@@ -120,7 +120,6 @@ func DecodeJSON(t *testing.T, buf []byte, dst interface{}) {
 	if err != nil {
 		t.Fatalf("%s:\n%s", err, string(buf))
 	}
-	return
 }
 
 func AssertJSON(t *testing.T, r io.Reader, std interface{}) {

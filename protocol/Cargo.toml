@@ -11,8 +11,8 @@ num-derive = "0.3.0"
 num-traits = "0.2.10"
 num = "0.2.0"
 flate2 = "1.0.14"
-serde-big-array = "0.2.0"
 hex-buffer-serde = "0.2.1"
+uuid = { version = "0.8.1", features = ["serde"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
 version = "0.3.37"

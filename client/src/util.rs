@@ -62,7 +62,9 @@ from_display! {
 	base64::DecodeError,
 	std::io::Error,
 	std::num::ParseIntError,
-	anyhow::Error
+	anyhow::Error,
+	bincode::Error,
+	std::string::FromUtf8Error
 }
 
 // Shorthand for most commonly used Result type
@@ -163,6 +165,18 @@ pub fn with_logging(f: impl FnOnce() -> Result) {
 	}
 }
 
+// Run async function, logging any errors to both console error log and alert
+// dialogs
+pub async fn with_logging_async<R, A>(f: impl FnOnce(A) -> R, arg: A)
+where
+	R: futures::Future<Output = Result>,
+{
+	if let Err(e) = f(arg).await {
+		alert(&e);
+		log_error(e);
+	}
+}
+
 // Display error alert message
 pub fn alert(msg: &impl std::fmt::Display) {
 	// Ignore result
@@ -189,4 +203,17 @@ pub fn format_duration(secs: impl Into<u64>) -> String {
 	write!(&mut w, "{:0>2}", secs_ % 60).unwrap();
 
 	w
+}
+
+// Build a JS array from convertible item iterator
+pub fn into_js_array<T, I>(it: I) -> js_sys::Array
+where
+	T: Into<JsValue>,
+	I: IntoIterator<Item = T>,
+{
+	let arr = js_sys::Array::new();
+	for i in it {
+		arr.push(&i.into());
+	}
+	arr
 }

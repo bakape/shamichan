@@ -1,11 +1,10 @@
 use super::{
-	state::{self, FeedID},
+	state::{self, KeyPair},
 	util,
 };
 use protocol::{debug_log, Decoder, Encoder, MessageType};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
-use std::fmt::Debug;
+use std::{collections::HashSet, fmt::Debug};
 use yew::{
 	agent::{Agent, AgentLink, Context, Dispatched, HandlerId},
 	html,
@@ -37,7 +36,7 @@ where
 	util::with_logging(|| {
 		let mut enc = protocol::Encoder::new(Vec::new());
 		encode_msg(&mut enc, t, payload)?;
-		Connection::dispatcher().send(enc.finish()?);
+		Connection::dispatcher().send(Request::Regular(enc.finish()?));
 		Ok(())
 	});
 }
@@ -53,12 +52,6 @@ pub enum State {
 	Dropped,
 }
 
-enum MessageCategory {
-	Handshake,
-	Synchronize,
-	General,
-}
-
 // Agent controlling global websocket connection
 pub struct Connection {
 	// Link to any subscribers
@@ -67,11 +60,11 @@ pub struct Connection {
 	// Connection state machine
 	state: State,
 
-	// Feed currently synced to
-	synced_to: Option<FeedID>,
+	// Feed currently being synced
+	syncing_to: Option<u64>,
 
 	// Connection currently authenticated with
-	authed_with: Option<protocol::payloads::AuthKey>,
+	authed_with: Option<uuid::Uuid>,
 
 	// Link to global application state
 	#[allow(unused)]
@@ -104,10 +97,32 @@ pub enum Event {
 	CheckUpdates,
 }
 
+#[derive(Serialize, Deserialize)]
+pub enum MessageCategory {
+	Handshake,
+	Synchronize,
+	Regular,
+}
+
+// Request to send a message
+#[derive(Serialize, Deserialize)]
+pub enum Request {
+	// Send a regular message
+	Regular(Vec<u8>),
+
+	// Send a handshake message
+	Handshake {
+		// Send key used to generate message to prevent async race conditions
+		with_key_pair: KeyPair,
+
+		message: Vec<u8>,
+	},
+}
+
 impl Agent for Connection {
 	type Reach = Context;
 	type Message = Event;
-	type Input = Vec<u8>;
+	type Input = Request;
 	type Output = State;
 
 	fn create(link: AgentLink<Self>) -> Self {
@@ -116,10 +131,10 @@ impl Agent for Connection {
 		let mut s = Self {
 			bridge: state::hook(
 				&link,
-				&[Change::AuthKey, Change::Location],
+				&[Change::KeyPair, Change::Location],
 				|_| Event::CheckUpdates,
 			),
-			synced_to: None,
+			syncing_to: None,
 			authed_with: None,
 			link,
 			state: State::Loading,
@@ -142,7 +157,7 @@ impl Agent for Connection {
 			};
 		}
 
-		// Work around browser slowing down/suspending tabs
+		// Work around browser slowing down or suspending tabs
 		bind!(document, "visibilitychange", VisibilityChanged);
 
 		bind!(window, "online", WentOnline);
@@ -155,87 +170,28 @@ impl Agent for Connection {
 		match msg {
 			Event::Open => {
 				self.reset_reconn_attempts();
-				util::with_logging(|| {
-					state::read(|s| {
-						// TODO: Asymmetric authentication:
-						// - Send either a registered pub key by UUID with a nonce
-						// (both concatenated and signed) or the public key,
-						// if it has not been registered yet.
-						// - Return UUID on successful initial handshake.
-						// - Identify all posts with public key UUID.
-						// - Use 2048 bit private key
-						// - Log last used timestamp of all pub keys.
-						// - Limit size of public key.
-						// - Sign image SHA-1 hash (because we compute that
-						// anyway) with public key on image uploads.
-						let mut enc = protocol::Encoder::new(Vec::new());
-						encode_msg(
-							&mut enc,
-							MessageType::Handshake,
-							&protocol::payloads::Handshake {
-								protocol_version: protocol::VERSION,
-								key: s.auth_key.clone(),
-							},
-						)?;
-						encode_msg(
-							&mut enc,
-							MessageType::Synchronize,
-							&match &s.location.feed {
-								FeedID::Index | FeedID::Catalog => 0,
-								FeedID::Thread { id, .. } => *id,
-							},
-						)?;
-						self.send(MessageCategory::Handshake, enc.finish()?)?;
-
-						// TODO: Change state to State::Handshaking, when
-						// asymmetric authentication is implemented
-						self.set_state(State::Synced);
-						self.authed_with = s.auth_key.clone().into();
-						self.synced_to = s.location.feed.clone().into();
-
-						Ok(())
-					})
-				});
+				Self::send_handshake_req(state::read(|s| s.key_pair.clone()))
 			}
 			Event::CheckUpdates => {
 				util::log_error_res(state::read(|s| -> util::Result {
-					if Some(&s.auth_key) != self.authed_with.as_ref() {
+					if match (&s.key_pair.id, &self.authed_with) {
+						(Some(new), Some(old)) => new != old,
+						_ => false,
+					} {
 						// Reconnect with new key
 						self.connect();
 						return Ok(());
 					}
 
-					if match &self.synced_to {
-						Some(old) => match (&old, &s.location.feed) {
-							// There is only one feed for any page of a thread
-							(
-								FeedID::Thread { id: old_id, .. },
-								FeedID::Thread { id: new_id, .. },
-							) => new_id != old_id,
-
-							// Index/Catalog and Thread transitions always need
-							// a resync
-							(FeedID::Thread { .. }, _)
-							| (_, FeedID::Thread { .. }) => true,
-
-							// Catalog and Index transition are the same feed
+					let feed_u64 = s.location.feed.as_u64();
+					if match &self.syncing_to {
+						Some(old) => *old != feed_u64,
+						None => match self.state {
+							State::Synced | State::Syncing => true,
 							_ => false,
 						},
-						None => true,
 					} {
-						let mut enc = protocol::Encoder::new(Vec::new());
-						encode_msg(
-							&mut enc,
-							MessageType::Synchronize,
-							&match s.location.feed {
-								FeedID::Index | FeedID::Catalog => 0,
-								FeedID::Thread { id, .. } => id,
-							},
-						)?;
-						self.send(MessageCategory::Synchronize, enc.finish()?)?;
-						self.set_state(State::Syncing);
-						self.synced_to =
-							state::read(|s| s.location.feed.clone().into());
+						self.synchronize(feed_u64)?;
 					}
 
 					Ok(())
@@ -296,17 +252,41 @@ impl Agent for Connection {
 		self.subscribers.remove(&id);
 	}
 
-	fn handle_input(&mut self, msg: Self::Input, _: HandlerId) {
-		util::log_error_res(self.send(MessageCategory::General, msg));
+	fn handle_input(&mut self, req: Self::Input, _: HandlerId) {
+		util::with_logging(|| {
+			match req {
+				Request::Regular(msg) => {
+					self.send(MessageCategory::Regular, msg)?;
+				}
+				Request::Handshake {
+					with_key_pair,
+					message,
+				} => {
+					// Prevent async race conditions on key pair change
+					if state::read(|s| s.key_pair != with_key_pair) {
+						return Ok(());
+					}
+
+					self.send(MessageCategory::Handshake, message)?;
+
+					// Set state here, because the handshake message is
+					// generated async and thus does not have access to self
+					self.set_state(State::Handshaking);
+				}
+			};
+			Ok(())
+		})
 	}
 }
 
 impl Connection {
 	// Set new state and send it to all subscribers
 	fn set_state(&mut self, new: State) {
-		self.state = new;
-		for id in self.subscribers.iter() {
-			self.send_current_state(*id);
+		if self.state != new {
+			self.state = new;
+			for id in self.subscribers.iter() {
+				self.send_current_state(*id);
+			}
 		}
 	}
 
@@ -334,6 +314,8 @@ impl Connection {
 			util::log_error_res(s.close());
 		}
 		self.socket = None;
+		self.syncing_to = None;
+		self.authed_with = None;
 	}
 
 	fn reset_reconn_attempts(&mut self) {
@@ -510,20 +492,47 @@ impl Connection {
 		}
 
 		loop {
-			use protocol::payloads::{FeedData, ThreadCreationNotice};
+			use protocol::payloads::{
+				FeedData, HandshakeRes, ThreadCreationNotice,
+			};
 
 			match dec.peek_type() {
 				Some(t) => route! { t,
-					Synchronize => |_: u64| {
-						// Feed ID should already be set to the new one at this
-						// point
-						self.set_state(State::Synced);
+					Synchronize => |id: u64| {
+						// Guard against rapid successive feed changes
+						if id == state::read(|s| s.location.feed.as_u64()) {
+							self.set_state(State::Synced);
+						}
+					}
+					Handshake => |req: HandshakeRes| {
+						self.authed_with = Some(req.id.clone());
+						if state::read(|s| s.key_pair.id.is_none()) {
+							state::Agent::dispatcher()
+								.send(state::Request::SetKeyID(req.id.clone()));
+						}
+
+						if req.need_resend {
+							// Key already saved in database. Need to confirm
+							// it's the same private key by sending a
+							// HandshakeReq with Authentication::Saved.
+							let mut kp = state::read(|s| s.key_pair.clone());
+							kp.id = req.id.into();
+							Self::send_handshake_req(kp);
+						} else {
+							util::log_error_res(
+								self.synchronize(
+									state::read(|s| s.location.feed.as_u64()),
+								),
+							);
+						}
 					}
 					FeedInit => |_: FeedData| {
 						// TODO: Patch existing post data with more up to date
 						// patch set. The patch set needs to be stored in
-						// state::State and applied to the data fetch via the
+						// state::Agent and applied to the data fetch via the
 						// JSON API, no matter which request arrives first.
+						// Also need to account for data races on feed
+						// switching.
 					}
 					CreateThreadAck => |_: u64| {
 						// TODO: Save thread as owned and navigate to it
@@ -536,6 +545,70 @@ impl Connection {
 				None => return Ok(()),
 			};
 		}
+	}
+
+	// Asynchronously generate and send a handshake request message
+	fn send_handshake_req(key_pair: state::KeyPair) {
+		use protocol::payloads::Authorization;
+
+		async fn inner(key_pair: state::KeyPair) -> util::Result {
+			let crypto = util::window().crypto()?;
+			let mut enc = protocol::Encoder::new(Vec::new());
+			encode_msg(
+				&mut enc,
+				MessageType::Handshake,
+				&protocol::payloads::HandshakeReq {
+					protocol_version: protocol::VERSION,
+					auth: match &key_pair.id {
+						Some(id) => {
+							let mut nonce: [u8; 32] = Default::default();
+							crypto
+								.get_random_values_with_u8_array(&mut nonce)?;
+
+							Authorization::Saved {
+								id: id.clone(),
+								nonce,
+								signature: key_pair
+									.sign(&mut {
+										let mut buf =
+											Vec::with_capacity(16 + 32);
+										buf.extend(id.as_bytes());
+										buf.extend(&nonce);
+										buf
+									})
+									.await?,
+							}
+						}
+						None => {
+							Authorization::NewPubKey(key_pair.public.clone())
+						}
+					},
+				},
+			)?;
+
+			Connection::dispatcher().send(Request::Handshake {
+				with_key_pair: key_pair,
+				message: enc.finish()?,
+			});
+
+			Ok(())
+		}
+
+		wasm_bindgen_futures::spawn_local(util::with_logging_async(
+			inner, key_pair,
+		));
+	}
+
+	// Send request to synchronize with a feed
+	fn synchronize(&mut self, feed: u64) -> util::Result {
+		let mut enc = protocol::Encoder::new(Vec::new());
+		encode_msg(&mut enc, MessageType::Synchronize, &feed)?;
+		self.send(MessageCategory::Synchronize, enc.finish()?)?;
+
+		self.set_state(State::Syncing);
+		self.syncing_to = feed.into();
+
+		Ok(())
 	}
 }
 

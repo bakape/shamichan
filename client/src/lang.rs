@@ -5,6 +5,8 @@ use std::fmt;
 use std::fmt::Write;
 use wasm_bindgen::JsCast;
 
+// TODO: Live language pack updates
+
 #[derive(Deserialize, Default)]
 struct LanguagePack {
 	// One to one mapping of string literals

@@ -2,9 +2,7 @@
 members = [
     "websockets/websockets",
     "protocol",
-]
-exclude = [
-    "client",
+    "client"
 ]
 
 [profile.release]

@@ -69,8 +69,10 @@ pub async fn main_js() -> util::Result {
 		console_error_panic_hook::set_once();
 	}
 
-	state::init()?;
-	lang::load_language_pack().await?;
+	let (err1, err2) =
+		futures::future::join(state::init(), lang::load_language_pack()).await;
+	err1?;
+	err2?;
 
 	yew::start_app::<App>();
 
