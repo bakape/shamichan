@@ -360,7 +360,7 @@ func formatImageName(name *string) (err error) {
 	}
 
 	if !utf8.ValidString(*name) {
-		*name = strings.ToValidUTF8(*name, string(utf8.RuneError))
+		*name = strings.ToValidUTF8(*name, "?")
 	}
 
 	return

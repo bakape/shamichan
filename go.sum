@@ -15,6 +15,8 @@ github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992 h1:n89d5g4t1+7ROr
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992/go.mod h1:+x6GUyBL1gkeUoBPZAEzF9u04TGIFEljjrqMpGT0KVE=
 github.com/bakape/thumbnailer/v2 v2.5.2 h1:b3VfbMY4ysCn4YyG5clFZK3Wog5mLI0WO+xlQZpSU0s=
 github.com/bakape/thumbnailer/v2 v2.5.2/go.mod h1:MUwB3tkHBRRCVmwCsd0a+vP7RNMMuHSiP4lSaA6awUE=
+github.com/bakape/thumbnailer/v2 v2.5.9 h1:aY+7uiq8rKljIy8GNie2pv795T0pH8HiR6Shj/QSxHo=
+github.com/bakape/thumbnailer/v2 v2.5.9/go.mod h1:MUwB3tkHBRRCVmwCsd0a+vP7RNMMuHSiP4lSaA6awUE=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/chai2010/webp v1.1.0 h1:4Ei0/BRroMF9FaXDG2e4OxwFcuW2vcXd+A6tyqTJUQQ=
