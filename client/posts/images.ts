@@ -176,7 +176,7 @@ export default class ImageHandler extends View<Post> {
 
 		let html = "";
 		for (let s of arr) {
-			html += `<span>${s}</span>`;
+			html += `<span>${escape(s)}</span>`;
 		}
 		info.innerHTML = html;
 
