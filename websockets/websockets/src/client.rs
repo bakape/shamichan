@@ -52,6 +52,7 @@ pub struct Client {
 	conn_state: ConnState,
 }
 
+#[rustfmt::skip]
 macro_rules! check_len {
 	// Assert collection length greater than 1 and smaller than $max
 	($val:expr, $max:expr) => {
@@ -62,8 +63,8 @@ macro_rules! check_len {
 		let l = $val.len();
 		if l < $min || l > $max {
 			str_err!("invalid {} length: {}", stringify!(val), l);
-			}
-		}};
+		}
+	}};
 }
 
 macro_rules! log_msg_in {
