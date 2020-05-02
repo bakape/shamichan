@@ -156,14 +156,14 @@ func ws_register_public_key(
 	pub_id *C.uint8_t, // UUID exposed to clients
 	fresh *C.bool, // freshly registered (did not exist before this)
 ) *C.char {
-	pub_id_, priv_id_, fresh_, err := db.RegisterPublicKey(
+	priv_id_, pub_id_, fresh_, err := db.RegisterPublicKey(
 		toSlice(pub_key.data, pub_key.size),
 	)
 	if err != nil {
 		return C.CString(err.Error())
 	}
-	*pub_id = C.uint8_t(pub_id_)
-	C.memcpy(unsafe.Pointer(priv_id), unsafe.Pointer(&priv_id_[0]), 16)
+	*priv_id = C.uint64_t(priv_id_)
+	C.memcpy(unsafe.Pointer(pub_id), unsafe.Pointer(&pub_id_[0]), 16)
 	*fresh = C.bool(fresh_)
 	return nil
 }
