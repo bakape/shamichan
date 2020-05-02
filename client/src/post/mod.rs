@@ -1,8 +1,10 @@
+mod common;
 mod countries;
+mod header;
 pub mod image_search;
 mod menu;
 
-use super::state::{self, FeedID, Focus, Location, Post as Data, State};
+use super::state::{self, State};
 use crate::buttons::SpanButton;
 use crate::util;
 use protocol::payloads::{FileType, Image};
@@ -16,7 +18,7 @@ pub struct Post {
 	#[allow(unused)]
 	link: ComponentLink<Self>,
 
-	props: Props,
+	props: RootProps,
 
 	reveal_image: bool,
 	expand_image: bool,
@@ -37,8 +39,8 @@ pub enum Message {
 	NOP,
 }
 
-#[derive(Clone, Properties, PartialEq, Eq)]
-pub struct Props {
+#[derive(Properties, PartialEq, Eq, Clone)]
+pub struct RootProps {
 	// Post ID
 	pub id: u64,
 
@@ -49,7 +51,7 @@ pub struct Props {
 }
 
 impl Component for Post {
-	comp_prop_change! {Props}
+	comp_prop_change! {RootProps}
 	type Message = Message;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
@@ -164,7 +166,7 @@ impl Component for Post {
 					class=cls.join(" ")
 					ref=self.el.clone()
 				>
-					{self.render_header(s, p)}
+					<header::Header id=self.props.id/>
 					{
 						match &p.image {
 							Some(img) => self.render_figcaption(s, img),
@@ -191,141 +193,6 @@ impl Post {
 	fn scroll_to(&self) {
 		if let Some(el) = self.el.cast::<web_sys::Element>() {
 			el.scroll_into_view();
-		}
-	}
-
-	fn render_header(&self, s: &State, p: &Data) -> Html {
-		let thread = if p.id == p.thread {
-			s.threads.get(&p.thread)
-		} else {
-			None
-		};
-		html! {
-			<header class="spaced">
-				{
-					match thread {
-						Some(t) => {
-							html! {
-								<>
-									{
-										for t.tags.iter().map(|t| {
-											html! {
-												<b>{format!("/{}/", t)}</b>
-											}
-										})
-									}
-									<h3>{format!("「{}」", t.subject)}</h3>
-								</>
-							}
-						},
-						_ => html! {}
-					}
-				}
-				{self.render_name(s, p)}
-				{
-					match &p.flag {
-						Some(code) => match countries::get_name(&code) {
-							Some(name) => html! {
-								<img
-									class="flag"
-									src=format!("/assets/flags/{}.svg", &code)
-									title=name
-								/>
-							},
-							None => html! {},
-						}
-						None => html! {},
-					}
-				}
-				<crate::time::view::View time=p.created_on />
-				<nav class="spaced">
-					// TODO: focus this post
-					<a>{"#"}</a>
-					// TODO: quote this post
-					<a>{p.id}</a>
-				</nav>
-				{
-					if thread.is_some()
-					   && !state::read(|s| s.location.is_thread())
-					{
-						let id = self.props.id;
-						html! {
-							<>
-								<SpanButton
-									text="top"
-									on_click=self.link.callback(move |_| {
-										state::navigate_to(Location{
-											feed: FeedID::Thread{
-												id,
-												page: 0,
-											},
-											focus: Some(Focus::Top),
-										});
-										Message::NOP
-									})
-								/>
-								<SpanButton
-									text="bottom"
-									on_click=self.link.callback(move |_| {
-										state::navigate_to(Location{
-											feed: FeedID::Thread{
-												id,
-												page: -1,
-											},
-											focus: Some(Focus::Bottom),
-										});
-										Message::NOP
-									})
-								/>
-							</>
-						}
-					} else {
-						html! {}
-					}
-				}
-				<menu::Menu id=self.props.id />
-			</header>
-		}
-	}
-
-	fn render_name(&self, s: &State, p: &Data) -> Html {
-		// TODO: Staff titles
-
-		let mut w: Vec<Html> = Default::default();
-
-		if s.options.forced_anonymity || (p.name.is_none() && p.trip.is_none())
-		{
-			w.push(html! {
-				<span>{localize!("anon")}</span>
-			});
-		} else {
-			if let Some(name) = &p.name {
-				w.push(html! {
-					<span>{name}</span>
-				});
-			}
-			if let Some(trip) = &p.trip {
-				w.push(html! {
-					<code>{trip}</code>
-				});
-			}
-		}
-		if s.mine.contains(&self.props.id) {
-			w.push(html! {
-				<i>{localize!("you")}</i>
-			});
-		}
-
-		let mut cls = vec!["name"];
-		if p.sage {
-			cls.push("sage");
-		}
-		// TODO: Add admin class, if staff title
-
-		html! {
-			<b class=cls.join(" ")>
-				{w.into_iter().collect::<Html>()}
-			</b>
 		}
 	}
 

@@ -236,6 +236,19 @@ macro_rules! comp_prop_change {
 	};
 }
 
+// Generate partial Component implementation for components with no possible
+// property changes
+#[macro_export]
+macro_rules! comp_no_prop_change {
+	($props:ty) => {
+		type Properties = $props;
+
+		fn change(&mut self, _: Self::Properties) -> bool {
+			false
+		}
+	};
+}
+
 // Generate partial Component implementation with no properties
 #[macro_export]
 macro_rules! comp_no_props {
@@ -265,14 +278,10 @@ macro_rules! comp_message_rerender {
 #[macro_export]
 macro_rules! comp_static {
 	($props:ty) => {
+		$crate::comp_no_prop_change! {$props}
 		type Message = ();
-		type Properties = $props;
 
 		fn update(&mut self, _: Self::Message) -> bool {
-			false
-		}
-
-		fn change(&mut self, _: Self::Properties) -> bool {
 			false
 		}
 	};
