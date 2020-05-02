@@ -632,12 +632,8 @@ impl Component for SyncCounter {
 	}
 
 	fn update(&mut self, new: State) -> bool {
-		if self.current != new {
-			self.current = new;
-			true
-		} else {
-			false
-		}
+		self.current = new;
+		true
 	}
 
 	fn view(&self) -> Html {
