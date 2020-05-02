@@ -67,6 +67,12 @@ RUN apt-get install -y nodejs
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH=$PATH:/root/.cargo/bin
 
+# Cache config update
+COPY docs/config.json .
+RUN sed -i 's/localhost:5432/postgres:5432/' config.json
+RUN sed -i 's/"reverse_proxied": false/"reverse_proxied": true/' config.json
+RUN sed -i 's/127\.0\.0\.1:8000/:8000/' config.json
+
 # Cache dependencies, if possible
 RUN cargo install wasm-pack
 RUN go get -u github.com/valyala/quicktemplate \
@@ -79,8 +85,4 @@ RUN npm install
 
 # Copy and build meguca
 COPY . .
-COPY docs/config.json .
-RUN sed -i 's/localhost:5432/postgres:5432/' config.json
-RUN sed -i 's/"reverse_proxied": false/"reverse_proxied": true/' config.json
-RUN sed -i 's/127\.0\.0\.1:8000/:8000/' config.json
 RUN make
