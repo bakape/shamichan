@@ -13,14 +13,14 @@ import (
 	"reflect"
 	"unsafe"
 
-	uuid "github.com/satori/go.uuid"
-
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/util"
 	"github.com/go-playground/log"
+	"github.com/jackc/pgx/v4"
+	uuid "github.com/satori/go.uuid"
 )
 
 func init() {
@@ -178,6 +178,9 @@ func ws_get_public_key(
 	C.memcpy(unsafe.Pointer(&pub_id_[0]), unsafe.Pointer(pub_id), 16)
 	priv_id_, pub_key_, err := db.GetPubKey(pub_id_)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return C.CString("unknown public key ID")
+		}
 		return C.CString(err.Error())
 	}
 	*priv_id = C.uint64_t(priv_id_)

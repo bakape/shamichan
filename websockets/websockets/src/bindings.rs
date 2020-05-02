@@ -309,11 +309,13 @@ pub fn get_public_key(
 ) -> Result<(u64, WSBufferOwned), String> {
 	let mut priv_id = 0_u64;
 	let mut pub_key = WSBufferOwned::default();
-	cast_c_err(unsafe{ ws_get_public_key(
-		pub_id.as_bytes().as_ptr(),
-		&mut priv_id as *mut u64,
-		&mut pub_key as *mut WSBufferOwned,
-	)})?;
+	cast_c_err(unsafe {
+		ws_get_public_key(
+			pub_id.as_bytes().as_ptr(),
+			&mut priv_id as *mut u64,
+			&mut pub_key as *mut WSBufferOwned,
+		)
+	})?;
 	Ok((priv_id, pub_key))
 }
 
