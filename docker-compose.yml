@@ -7,6 +7,7 @@ services:
       - "8000:8000"
     volumes:
       - images:/meguca/images
+      - videos:/meguca/www/videos
     depends_on:
       - postgres
   postgres:
@@ -22,3 +23,4 @@ services:
 volumes:
   images:
   db:
+  videos:
