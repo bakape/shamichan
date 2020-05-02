@@ -14,14 +14,23 @@ macro_rules! payload {
 	}
 }
 
+// Helper for big array serialization
+big_array! { BigArray; }
+
+// Wrapper to enable logging and serialization
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Signature(#[serde(with = "BigArray")] pub [u8; 512]);
+
+impl std::fmt::Debug for Signature {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", hex::encode(&self.0 as &[u8]))
+	}
+}
+
 // Authentication creds sent to the server during a handshake
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Authorization {
 	// New public key registration
-	//
-	// TODO: validate no more than a KB
-	// TODO: If already exists, request another handshake with a signature
-	// TODO: Only allow this variant to be sent once per session
 	NewPubKey(Vec<u8>),
 
 	// Key already persisted on the server
@@ -32,10 +41,8 @@ pub enum Authorization {
 		// Nonce to hash along with id
 		nonce: [u8; 32],
 
-		// SHA-256 signature of id + nonce
-		//
-		// TODO: validate no more than 512 bytes
-		signature: Vec<u8>,
+		// SHA3-256 signature of id + nonce
+		signature: Signature,
 	},
 }
 
@@ -86,6 +93,18 @@ payload! { OpenPost {
 	thread: u64,
 	body: Option<post_body::Node>,
 }}
+
+impl OpenPost {
+	pub fn new(thread: u64, created_on: u64) -> Self {
+		Self {
+			has_image: Default::default(),
+			image_spoilered: Default::default(),
+			created_on,
+			thread,
+			body: Default::default(),
+		}
+	}
+}
 
 // Feed initialization data
 payload! { FeedData {

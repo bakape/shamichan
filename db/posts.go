@@ -3,15 +3,14 @@ package db
 import (
 	"context"
 
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/pg_util"
 	"github.com/jackc/pgx/v4"
 )
 
 // Common params for both post and thread insertion
 type PostInsertParamsCommon struct {
-	// Client authorization key
-	AuthKey *auth.AuthKey `db:"auth_key"`
+	// Client authentication public key ID
+	PublicKey *uint64 `db:"public_key"`
 
 	// Name set by poster
 	Name *string

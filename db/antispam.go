@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	spamScoreBuffer = make(map[auth.AuthKey]time.Duration)
+	spamScoreBuffer = make(map[uint64]time.Duration)
 	spamMu          sync.RWMutex
 )
 
@@ -31,8 +31,8 @@ func syncSpamScores() (err error) {
 		return
 	}
 	err = flushSpamScores()
-	for user := range spamScoreBuffer {
-		delete(spamScoreBuffer, user)
+	for pubKey := range spamScoreBuffer {
+		delete(spamScoreBuffer, pubKey)
 	}
 	return
 }
@@ -40,12 +40,12 @@ func syncSpamScores() (err error) {
 // Flush spam scores from buffer to DB
 func flushSpamScores() (err error) {
 	return InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
-		for user, buffered := range spamScoreBuffer {
+		for pubKey, buffered := range spamScoreBuffer {
 			_, err = tx.Exec(
 				context.Background(),
-				`insert into spam_scores as s (auth_key, expires)
+				`insert into spam_scores as s (public_key, expires)
 				values ($1, now() + $2)
-				on conflict (auth_key)
+				on conflict (public_key)
 				do update set expires = (
 					(
 						case
@@ -55,7 +55,7 @@ func flushSpamScores() (err error) {
 					)
 					+ $2
 				)`,
-				user,
+				pubKey,
 				buffered,
 			)
 			if err != nil {
@@ -69,24 +69,21 @@ func flushSpamScores() (err error) {
 // IncrementSpamScore increments spam detection score of a captcha session
 // and sends captcha requests, if score exceeded.
 //
-// user: token identifying user
+// pubKey: token identifying pubKey
 // increment: increment amount in milliseconds
-func IncrementSpamScore(user auth.AuthKey, increment uint) {
+func IncrementSpamScore(pubKey uint64, increment uint) {
 	if !config.Get().Captcha {
 		return
 	}
 
 	spamMu.Lock()
-	spamScoreBuffer[user] += time.Duration(increment) * time.Millisecond
+	spamScoreBuffer[pubKey] += time.Duration(increment) * time.Millisecond
 	spamMu.Unlock()
 }
 
-// NeedCaptcha returns, if the user needs a captcha to proceed with usage
+// NeedCaptcha returns, if the pubKey needs a captcha to proceed with usage
 // of server resources
-func NeedCaptcha(
-	ctx context.Context,
-	user auth.AuthKey,
-) (need bool, err error) {
+func NeedCaptcha(ctx context.Context, pubKey uint64) (need bool, err error) {
 	if !config.Get().Captcha {
 		return
 	}
@@ -94,7 +91,7 @@ func NeedCaptcha(
 	// TODO: Check, if globally banned
 
 	// Require a captcha, if none have been solved in 3 hours
-	has, err := SolvedCaptchaRecently(ctx, user)
+	has, err := SolvedCaptchaRecently(ctx, pubKey)
 	if err != nil {
 		return
 	}
@@ -103,7 +100,7 @@ func NeedCaptcha(
 		return
 	}
 
-	score, err := getSpamScore(ctx, user)
+	score, err := getSpamScore(ctx, pubKey)
 	if err != nil {
 		return
 	}
@@ -111,7 +108,7 @@ func NeedCaptcha(
 }
 
 // Merge cached and DB value and return current score
-func getSpamScore(ctx context.Context, user auth.AuthKey) (
+func getSpamScore(ctx context.Context, pubKey uint64) (
 	score time.Time,
 	err error,
 ) {
@@ -124,8 +121,8 @@ func getSpamScore(ctx context.Context, user auth.AuthKey) (
 			ctx,
 			`select expires
 			from spam_scores
-			where auth_key = $1 and expires > now()`,
-			user,
+			where public_key = $1 and expires > now()`,
+			pubKey,
 		).
 		Scan(&score)
 	switch err {
@@ -137,32 +134,32 @@ func getSpamScore(ctx context.Context, user auth.AuthKey) (
 		return
 	}
 
-	score.Add(spamScoreBuffer[user])
+	score.Add(spamScoreBuffer[pubKey])
 
 	return
 }
 
-// Check if user is spammer
-func AssertNotSpammer(ctx context.Context, user auth.AuthKey) (err error) {
-	_, err = getSpamScore(ctx, user)
+// Check if pubKey is spammer
+func AssertNotSpammer(ctx context.Context, pubKey uint64) (err error) {
+	_, err = getSpamScore(ctx, pubKey)
 	return
 }
 
 // Separated for unit tests
-func recordValidCaptcha(ctx context.Context, user auth.AuthKey) (err error) {
+func recordValidCaptcha(ctx context.Context, pubKey uint64) (err error) {
 	spamMu.Lock()
 	defer spamMu.Unlock()
 
-	delete(spamScoreBuffer, user)
+	delete(spamScoreBuffer, pubKey)
 
 	return InTransaction(ctx, func(tx pgx.Tx) (err error) {
 		_, err = tx.Exec(
 			ctx,
-			`insert into last_solved_captchas (auth_key, expires)
+			`insert into last_solved_captchas (public_key, expires)
 			values ($1, now() + interval '3 hours')
-			on conflict (auth_key)
+			on conflict (public_key)
 			do update set expires = excluded.expires`,
-			user,
+			pubKey,
 		)
 		if err != nil {
 			return
@@ -170,8 +167,8 @@ func recordValidCaptcha(ctx context.Context, user auth.AuthKey) (err error) {
 		_, err = tx.Exec(
 			ctx,
 			`delete from spam_scores
-			where auth_key = $1`,
-			user,
+			where public_key = $1`,
+			pubKey,
 		)
 		return
 	})
@@ -181,7 +178,7 @@ func recordValidCaptcha(ctx context.Context, user auth.AuthKey) (err error) {
 func ValidateCaptcha(
 	ctx context.Context,
 	req auth.Captcha,
-	user auth.AuthKey,
+	pubKey uint64,
 ) (err error) {
 	if !config.Get().Captcha {
 		return
@@ -190,7 +187,7 @@ func ValidateCaptcha(
 	err = captchouli.CheckCaptcha(req.CaptchaID, req.Solution)
 	switch err {
 	case nil:
-		return recordValidCaptcha(ctx, user)
+		return recordValidCaptcha(ctx, pubKey)
 	case captchouli.ErrInvalidSolution:
 		return common.ErrInvalidCaptcha
 	default:
@@ -198,8 +195,8 @@ func ValidateCaptcha(
 	}
 }
 
-// Returns, if user has solved a captcha within the last 3 hours
-func SolvedCaptchaRecently(ctx context.Context, user auth.AuthKey) (
+// Returns, if pubKey has solved a captcha within the last 3 hours
+func SolvedCaptchaRecently(ctx context.Context, pubKey uint64) (
 	has bool,
 	err error,
 ) {
@@ -214,9 +211,9 @@ func SolvedCaptchaRecently(ctx context.Context, user auth.AuthKey) (
 			`select exists (
 				select
 				from last_solved_captchas
-				where auth_key = $1 and expires > now()
+				where public_key = $1 and expires > now()
 			)`,
-			user,
+			pubKey,
 		).
 		Scan(&has)
 	return

@@ -4,22 +4,40 @@ package test_db
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
 	"testing"
 
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/db"
+	uuid "github.com/satori/go.uuid"
 )
 
+// Key pair used by clients to authenticate handshakes and file uploads
+type KeyPair struct {
+	PrivID uint64
+	PubID  uuid.UUID
+	Key    *rsa.PrivateKey
+}
+
 // Insert sample thread and return its ID
-func InsertSampleThread(t *testing.T) (id uint64, authKey auth.AuthKey) {
+func InsertSampleThread(t *testing.T) (id uint64, keyPair KeyPair) {
 	t.Helper()
 
-	authKey = genToken(t)
-	id, err := db.InsertThread(context.Background(), db.ThreadInsertParams{
+	var err error
+	keyPair.Key, err = rsa.GenerateKey(rand.Reader, 4096)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	keyPair.PrivID, keyPair.PubID, _, err = db.RegisterPublicKey(
+		x509.MarshalPKCS1PublicKey(&keyPair.Key.PublicKey),
+	)
+	id, err = db.InsertThread(context.Background(), db.ThreadInsertParams{
 		Subject: "test",
 		Tags:    []string{"animu", "mango"},
 		PostInsertParamsCommon: db.PostInsertParamsCommon{
-			AuthKey: &authKey,
+			PublicKey: &keyPair.PrivID,
 		},
 	})
 	if err != nil {
@@ -37,15 +55,4 @@ func ClearTables(t testing.TB, tables ...string) {
 	if err := db.ClearTables(tables...); err != nil {
 		t.Fatal(err)
 	}
-}
-
-// Generate random auth.AuthKey
-func genToken(t *testing.T) auth.AuthKey {
-	t.Helper()
-
-	b, err := auth.NewAuthKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-	return b
 }

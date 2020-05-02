@@ -21,8 +21,6 @@ var (
 	ErrBodyTooLong         = ErrTooLong("post body")
 	ErrContainsNull        = ErrInvalidInput("null byte in message")
 	ErrInvalidCaptcha      = ErrInvalidInput("captcha")
-	ErrInvalidCreds        = ErrAccessDenied("login credentials")
-	ErrBanned              = ErrAccessDenied("you are banned from this board")
 	ErrTooManyConnections  = ErrAccessDenied("too many connections")
 	ErrNoPermissions       = ErrAccessDenied("insufficient permissions")
 )
@@ -57,6 +55,18 @@ func ErrTooLong(s string) error {
 // ErrInvalidInput is an error that invalid user input was supplied
 func ErrInvalidInput(s string) error {
 	return StatusError{errors.New(s), 400}
+}
+
+// Wrap and return any error returned by f as a StatusError with the passed code
+func WrapError(code int, f func() (err error)) (err error) {
+	err = f()
+	if err != nil {
+		err = StatusError{
+			Err:  err,
+			Code: code,
+		}
+	}
+	return
 }
 
 // ErrAccessDenied is an error that user does not have enough access rights

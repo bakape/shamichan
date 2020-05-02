@@ -33,9 +33,12 @@ func TestSpamScores(t *testing.T) {
 	}
 	now := time.Now().Round(time.Second)
 
-	var tokens [4]auth.AuthKey
-	for i := 0; i < 4; i++ {
-		tokens[i] = genToken(t)
+	var users [5]uint64
+	for i := 0; i < 5; i++ {
+		users[i], _ = insertSamplePubKey(t)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	for i := 0; i < 4; i++ {
@@ -43,7 +46,7 @@ func TestSpamScores(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		err = ValidateCaptcha(context.Background(), c, tokens[i])
+		err = ValidateCaptcha(context.Background(), c, users[i])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -57,9 +60,9 @@ func TestSpamScores(t *testing.T) {
 	} {
 		_, err = db.Exec(
 			context.Background(),
-			`insert into spam_scores (auth_key, expires)
+			`insert into spam_scores (public_key, expires)
 			values ($1, $2)`,
-			tokens[i+1],
+			users[i+1],
 			score,
 		)
 		if err != nil {
@@ -68,13 +71,13 @@ func TestSpamScores(t *testing.T) {
 	}
 
 	spamMu.Lock()
-	spamScoreBuffer = make(map[auth.AuthKey]time.Duration)
+	spamScoreBuffer = make(map[uint64]time.Duration)
 	for i := 0; i < 4; i++ {
 		score := time.Second * 10
 		if i == 3 {
 			score = spamDetectionThreshold
 		}
-		spamScoreBuffer[tokens[i]] = score
+		spamScoreBuffer[users[i]] = score
 	}
 	err = flushSpamScores()
 	spamMu.Unlock()
@@ -84,26 +87,26 @@ func TestSpamScores(t *testing.T) {
 
 	cases := [...]struct {
 		name           string
-		token          auth.AuthKey
+		pubKey         uint64
 		needCaptcha    bool
 		needCaptchaErr error
 	}{
 		{
-			name:  "fresh write",
-			token: tokens[0],
+			name:   "fresh write",
+			pubKey: users[0],
 		},
 		{
-			name:  "overwrite stale value",
-			token: tokens[1],
+			name:   "overwrite stale value",
+			pubKey: users[1],
 		},
 		{
 			name:        "increment DB value",
-			token:       tokens[2],
+			pubKey:      users[2],
 			needCaptcha: true,
 		},
 		{
 			name:        "no captcha solved in 3h",
-			token:       genToken(t),
+			pubKey:      users[4],
 			needCaptcha: true,
 		},
 	}
@@ -111,7 +114,7 @@ func TestSpamScores(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			need, err := NeedCaptcha(context.Background(), c.token)
+			need, err := NeedCaptcha(context.Background(), c.pubKey)
 			if err != c.needCaptchaErr {
 				test.UnexpectedError(t, err)
 			}
@@ -120,11 +123,11 @@ func TestSpamScores(t *testing.T) {
 	}
 
 	t.Run("clear score", func(t *testing.T) {
-		err := recordValidCaptcha(context.Background(), tokens[2])
+		err := recordValidCaptcha(context.Background(), users[2])
 		if err != nil {
 			t.Fatal(err)
 		}
-		need, err := NeedCaptcha(context.Background(), tokens[2])
+		need, err := NeedCaptcha(context.Background(), users[2])
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -157,7 +160,7 @@ func TestCaptchas(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	token := genToken(t)
+	user, _ := insertSamplePubKey(t)
 
 	type testCase struct {
 		name      string
@@ -208,25 +211,14 @@ func TestCaptchas(t *testing.T) {
 	for i := range cases {
 		c := cases[i]
 		t.Run(c.name, func(t *testing.T) {
-			err = ValidateCaptcha(context.Background(), c.captcha, token)
+			err = ValidateCaptcha(context.Background(), c.captcha, user)
 			test.AssertEquals(t, err, c.err)
 
-			has, err := SolvedCaptchaRecently(context.Background(), token)
+			has, err := SolvedCaptchaRecently(context.Background(), user)
 			if err != nil {
 				t.Fatal(err)
 			}
 			test.AssertEquals(t, has, c.hasSolved)
 		})
 	}
-}
-
-// Generate random auth.AuthKey
-func genToken(t *testing.T) auth.AuthKey {
-	t.Helper()
-
-	b, err := auth.NewAuthKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-	return b
 }

@@ -72,12 +72,3 @@ func TestDecodeCaptcha(t *testing.T) {
 	}
 	test.AssertEquals(t, c, std)
 }
-
-func TestNewToken(t *testing.T) {
-	t.Parallel()
-
-	_, err := NewAuthKey()
-	if err != nil {
-		t.Fatal(err)
-	}
-}

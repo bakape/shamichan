@@ -222,13 +222,17 @@ impl KeyPair {
 	}
 
 	// Sign SHA-256 digest of passed buffer
-	pub async fn sign(&self, buf: &mut [u8]) -> util::Result<Vec<u8>> {
+	pub async fn sign(
+		&self,
+		buf: &mut [u8],
+	) -> util::Result<protocol::payloads::Signature> {
 		use js_sys::Uint8Array;
 		use wasm_bindgen_futures::JsFuture;
 
 		let crypto = Self::crypto()?;
-
-		Ok(Uint8Array::new(
+		let mut arr: [u8; 512] =
+			unsafe { std::mem::MaybeUninit::uninit().assume_init() };
+		let js_arr = Uint8Array::new(
 			&JsFuture::from(crypto.sign_with_str_and_u8_array(
 				"RSASSA-PKCS1-v1_5",
 				{
@@ -254,8 +258,16 @@ impl KeyPair {
 			)?)
 			.await?
 			.into(),
-		)
-		.to_vec())
+		);
+		if js_arr.length() != 512 {
+			return Err(format!(
+				"unexpected signature length: {}",
+				js_arr.length()
+			)
+			.into());
+		}
+		js_arr.copy_to(&mut arr);
+		Ok(protocol::payloads::Signature(arr))
 	}
 }
 
@@ -611,8 +623,11 @@ impl yew::agent::Agent for Agent {
 				self.process_successful_feed_fetch(loc, data, flags);
 			}
 			Message::FetchedThread { loc, data, flags } => {
-				// Option<T> implements IntoIterator<Item=T>
-				self.process_successful_feed_fetch(loc, Some(data), flags);
+				self.process_successful_feed_fetch(
+					loc,
+					std::iter::once(data),
+					flags,
+				);
 			}
 			Message::FetchFailed(s) => {
 				util::log_error(&s);

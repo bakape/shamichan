@@ -1,7 +1,7 @@
 use super::common::DynResult;
 use super::{config, pulsar};
 use libc;
-use protocol::{debug_log, payloads::AuthKey};
+use protocol::debug_log;
 use std::borrow::Cow;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
@@ -19,6 +19,53 @@ pub struct WSBuffer {
 impl AsRef<[u8]> for WSBuffer {
 	fn as_ref(&self) -> &[u8] {
 		unsafe { std::slice::from_raw_parts(self.data, self.size) }
+	}
+}
+
+impl From<&[u8]> for WSBuffer {
+	fn from(s: &[u8]) -> WSBuffer {
+		Self {
+			data: s.as_ptr(),
+			size: s.len(),
+		}
+	}
+}
+
+// Like WSBuffer, but points to malloced data and frees itself on drop
+#[repr(C)]
+#[derive(Debug)]
+pub struct WSBufferOwned {
+	data: *mut u8,
+	size: usize,
+}
+
+impl Default for WSBufferOwned {
+	fn default() -> Self {
+		Self {
+			data: null_mut(),
+			size: 0,
+		}
+	}
+}
+
+impl AsRef<[u8]> for WSBufferOwned {
+	fn as_ref(&self) -> &[u8] {
+		unsafe {
+			std::slice::from_raw_parts(
+				if self.data != null_mut() {
+					self.data
+				} else {
+					std::ptr::NonNull::dangling().as_ptr()
+				},
+				self.size,
+			)
+		}
+	}
+}
+
+impl Drop for WSBufferOwned {
+	fn drop(&mut self) {
+		unsafe { libc::free(self.data as *mut libc::c_void) };
 	}
 }
 
@@ -161,7 +208,7 @@ pub fn write_message(client_id: u64, msg: Arc<Vec<u8>>) {
 pub fn insert_thread(
 	subject: &str,
 	tags: &[String],
-	auth_key: &AuthKey,
+	public_key: u64,
 ) -> DynResult<u64> {
 	let mut _tags: Vec<CString> = Vec::with_capacity(tags.len());
 	for t in tags {
@@ -175,7 +222,7 @@ pub fn insert_thread(
 			CString::new(subject)?.as_ptr(),
 			__tags.as_ptr(),
 			__tags.len(),
-			auth_key.as_ptr(),
+			public_key,
 			&mut id as *mut u64,
 		)
 	})?;
@@ -237,6 +284,39 @@ extern "C" fn ws_insert_image(
 	})
 }
 
+// Register public key in the DB (if not already registered) and return its
+// private ID, public ID and if the key was freshly registered
+pub fn register_public_key(
+	pub_key: &[u8],
+) -> Result<(u64, uuid::Uuid, bool), String> {
+	let mut priv_id = 0_u64;
+	let mut pub_id: [u8; 16] = Default::default();
+	let mut fresh = false;
+	cast_c_err(unsafe {
+		ws_register_public_key(
+			pub_key.into(),
+			&mut priv_id as *mut u64,
+			&mut pub_id[0] as *mut u8,
+			&mut fresh as *mut bool,
+		)
+	})?;
+	Ok((priv_id, uuid::Uuid::from_bytes(pub_id), fresh))
+}
+
+// Get public key by its public ID together with its private ID
+pub fn get_public_key(
+	pub_id: uuid::Uuid,
+) -> Result<(u64, WSBufferOwned), String> {
+	let mut priv_id = 0_u64;
+	let mut pub_key = WSBufferOwned::default();
+	cast_c_err(unsafe{ ws_get_public_key(
+		pub_id.as_bytes().as_ptr(),
+		&mut priv_id as *mut u64,
+		&mut pub_key as *mut WSBufferOwned,
+	)})?;
+	Ok((priv_id, pub_key))
+}
+
 // Linked from Go
 extern "C" {
 	fn ws_write_message(client_id: u64, msg: WSRcBuffer);
@@ -247,7 +327,18 @@ extern "C" {
 		subject: *const c_char,
 		tags: *const *const c_char,
 		tags_size: usize,
-		auth_key: *const u8,
+		public_key: u64,
 		id: *mut u64,
+	) -> *mut c_char;
+	fn ws_register_public_key(
+		pub_key: WSBuffer,
+		priv_id: *mut u64,
+		pub_id: *mut u8,
+		fresh: *mut bool,
+	) -> *mut c_char;
+	fn ws_get_public_key(
+		pub_id: *const u8,
+		priv_id: *mut u64,
+		pub_key: *mut WSBufferOwned,
 	) -> *mut c_char;
 }

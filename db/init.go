@@ -49,7 +49,7 @@ func LoadTestDB() (err error) {
 	if err != nil {
 		return
 	}
-	user := connURL.User.Username()
+	pubKey := connURL.User.Username()
 	dbName := fmt.Sprintf("%s_%s", strings.Trim(connURL.Path, "/"), suffix)
 
 	err = run(
@@ -67,7 +67,7 @@ func LoadTestDB() (err error) {
 		"-c",
 		fmt.Sprintf(
 			"create database %s with owner %s encoding UTF8",
-			dbName, user,
+			dbName, pubKey,
 		),
 		config.Server.Database,
 	)

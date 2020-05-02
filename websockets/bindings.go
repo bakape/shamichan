@@ -13,7 +13,8 @@ import (
 	"reflect"
 	"unsafe"
 
-	"github.com/bakape/meguca/auth"
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -114,36 +115,74 @@ func ws_insert_thread(
 	subject *C.char,
 	tags **C.char,
 	tags_size C.size_t,
-	auth_key *C.uint8_t,
+	public_key C.uint64_t,
 	id *C.uint64_t,
 ) *C.char {
-	_tags := make([]string, int(tags_size))
+	tags_ := make([]string, int(tags_size))
 	size := unsafe.Sizeof(subject)
-	for i := range _tags {
-		_tags[i] = C.GoString(
+	for i := range tags_ {
+		tags_[i] = C.GoString(
 			*(**C.char)(unsafe.Pointer(
 				uintptr(unsafe.Pointer(tags)) + size*uintptr(i)),
 			),
 		)
 	}
 
-	_id, err := db.InsertThread(
+	pk := uint64(public_key)
+	id_, err := db.InsertThread(
 		context.Background(),
 		db.ThreadInsertParams{
 			Subject: C.GoString(subject),
-			Tags:    _tags,
+			Tags:    tags_,
 			PostInsertParamsCommon: db.PostInsertParamsCommon{
-				AuthKey: (*auth.AuthKey)(unsafe.Pointer(auth_key)),
+				PublicKey: &pk,
 			},
 		},
 	)
 	if err != nil {
 		return C.CString(err.Error())
 	}
-	*id = C.uint64_t(_id)
+	*id = C.uint64_t(id_)
 
 	cache.EvictThreadList()
 
+	return nil
+}
+
+//export ws_register_public_key
+func ws_register_public_key(
+	pub_key C.WSBuffer,
+	priv_id *C.uint64_t,
+	pub_id *C.uint8_t, // UUID exposed to clients
+	fresh *C.bool, // freshly registered (did not exist before this)
+) *C.char {
+	pub_id_, priv_id_, fresh_, err := db.RegisterPublicKey(
+		toSlice(pub_key.data, pub_key.size),
+	)
+	if err != nil {
+		return C.CString(err.Error())
+	}
+	*pub_id = C.uint8_t(pub_id_)
+	C.memcpy(unsafe.Pointer(priv_id), unsafe.Pointer(&priv_id_[0]), 16)
+	*fresh = C.bool(fresh_)
+	return nil
+}
+
+//export ws_get_public_key
+func ws_get_public_key(
+	pub_id *C.uint8_t, // UUID exposed to clients; used for lookup
+	priv_id *C.uint64_t,
+	pub_key *C.WSBuffer, // Owned by caller and must be freed
+) *C.char {
+	var pub_id_ uuid.UUID
+	C.memcpy(unsafe.Pointer(&pub_id_[0]), unsafe.Pointer(pub_id), 16)
+	priv_id_, pub_key_, err := db.GetPubKey(pub_id_)
+	if err != nil {
+		return C.CString(err.Error())
+	}
+	*priv_id = C.uint64_t(priv_id_)
+	pub_key.data = (*C.uint8_t)(C.CBytes(pub_key_))
+	pub_key.size = C.size_t(len(pub_key_))
 	return nil
 }
 

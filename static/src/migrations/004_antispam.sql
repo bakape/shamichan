@@ -1,4 +1,4 @@
--- Parent table fro all expiring tables
+-- Parent table for all expiring tables
 create table expiries (
 	expires timestamptz not null
 );
@@ -6,20 +6,14 @@ create table expiries (
 -- For faster cleanup calls
 create index expiries_expires_idx on expiries (expires);
 
--- Parent table fro all expiring tables with an auth_key column
-create table auth_expiries (
-	auth_key auth_key not null
+-- Sliding antispam scores
+create table spam_scores (
+	public_key bigint primary key references public_keys
 )
 inherits (expiries);
 
--- Sliding antispam scores
-create table spam_scores (
-	primary key (auth_key)
-)
-inherits (auth_expiries);
-
 -- Last solved captcha for user
 create table last_solved_captchas (
-	primary key (auth_key)
+	public_key bigint primary key references public_keys
 )
-inherits (auth_expiries);
+inherits (expiries);

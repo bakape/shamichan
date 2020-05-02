@@ -64,7 +64,7 @@ func AssertBufferEquals(t *testing.T, buf, std []byte) {
 	t.Helper()
 
 	if !bytes.Equal(buf, std) {
-		t.Fatalf("files not equal: `%s` : `%s`", string(std), string(buf))
+		t.Fatalf("buffers not equal: `%s` : `%s`", string(std), string(buf))
 	}
 }
 

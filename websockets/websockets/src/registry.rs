@@ -1,5 +1,5 @@
 use super::client::Client;
-use protocol::{payloads::AuthKey, util::SetMap};
+use protocol::util::SetMap;
 use std::collections::{HashMap, HashSet};
 use std::net::IpAddr;
 use std::rc::Rc;
@@ -13,7 +13,7 @@ pub struct Registry {
 	// Maps for quick lookup of client sets
 	by_thread: SetMap<u64, u64>,
 	by_ip: SetMap<IpAddr, u64>,
-	by_key: SetMap<AuthKey, u64>,
+	by_pub_key: SetMap<u64, u64>,
 
 	// Have not yet had their feed initialization messages sent.
 	// Mapped by feed.
@@ -40,7 +40,7 @@ struct ClientDescriptor {
 	// message is received.
 	thread: Option<u64>,
 
-	key: Option<AuthKey>,
+	pub_key: Option<u64>,
 	ip: IpAddr,
 	client: Rc<Mutex<Client>>,
 }
@@ -50,7 +50,7 @@ impl ClientDescriptor {
 		Self {
 			ip: ip,
 			thread: None,
-			key: None,
+			pub_key: None,
 			client: Rc::new(Mutex::new(Client::new(id, ip))),
 		}
 	}
@@ -61,8 +61,8 @@ pub fn remove_client(id: u64) {
 	write(|c| {
 		if let Some(desc) = c.clients.remove(&id) {
 			c.by_ip.remove(&desc.ip, &id);
-			if let Some(key) = desc.key {
-				c.by_key.remove(&key, &id);
+			if let Some(pub_key) = desc.pub_key {
+				c.by_pub_key.remove(&pub_key, &id);
 			}
 			c.remove_from_thread(id, desc.thread);
 		}
@@ -83,12 +83,12 @@ pub fn add_client(id: u64, ip: IpAddr) {
 	});
 }
 
-// Set client auth key on first sync. Must only be done once per client.
-pub fn set_client_key(id: u64, key: AuthKey) {
+// Set client public key ID on first sync. Must only be done once per client.
+pub fn set_client_key(id: u64, pub_key: u64) {
 	write(|c| {
 		if let Some(desc) = c.clients.get_mut(&id) {
-			c.by_key.insert(key.clone(), id);
-			desc.key = Some(key);
+			c.by_pub_key.insert(pub_key, id);
+			desc.pub_key = Some(pub_key);
 		}
 	});
 }

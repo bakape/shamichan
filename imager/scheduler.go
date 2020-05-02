@@ -82,14 +82,12 @@ func hashFile(
 
 	var (
 		arr [4 << 10]byte
-		buf = arr[:]
+		buf []byte
+		n   int
 	)
 	for {
-		buf = buf[:4<<10] // Reset slicing
-
-		var n int
-		n, err = rs.Read(buf)
-		buf = buf[:n]
+		n, err = rs.Read(arr[:])
+		buf = arr[:n]
 		read += n
 		switch err {
 		case nil:

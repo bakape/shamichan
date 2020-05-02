@@ -4,7 +4,7 @@ use super::pulsar;
 use super::{bindings, registry, str_err};
 use protocol::{
 	debug_log,
-	payloads::{AuthKey, ThreadCreationReq},
+	payloads::{Authorization, HandshakeReq, Signature, ThreadCreationReq},
 	Decoder, Encoder, MessageType,
 };
 use serde::Serialize;
@@ -12,11 +12,30 @@ use std::io;
 use std::net::IpAddr;
 use std::sync::Arc;
 
-// Client initialization state
-enum InitState {
+// Public key public and private ID set
+#[derive(Clone)]
+struct PubKeyDesc {
+	// Public key private ID used to sign messages by the client
+	priv_id: u64,
+
+	// Public key public ID used to sign messages by the client
+	pub_id: uuid::Uuid,
+}
+
+// Client connection state
+enum ConnState {
+	// Freshly established a WS connection
 	Connected,
-	SentHandshake,
-	Synced,
+
+	// Sent handshake message and it was accepted
+	AcceptedHandshake(PubKeyDesc),
+
+	// Public key already registered. Requested client to send a HandshakeReq
+	// with Authorization::Saved.
+	RequestedReshake { desc: PubKeyDesc, pub_key: Vec<u8> },
+
+	// Client successfully synchronized to a feed
+	Synced(PubKeyDesc),
 }
 
 // Maps to a websocket client on the Go side
@@ -29,11 +48,8 @@ pub struct Client {
 	// TODO: Use this for bans
 	ip: IpAddr,
 
-	// Client initialization state
-	init_state: InitState,
-
-	// Used to authenticate the client
-	key: AuthKey,
+	// Client connection state
+	conn_state: ConnState,
 }
 
 macro_rules! check_len {
@@ -62,8 +78,7 @@ impl Client {
 		Self {
 			id: id,
 			ip: ip,
-			init_state: InitState::Connected,
-			key: Default::default(),
+			conn_state: ConnState::Connected,
 		}
 	}
 
@@ -131,35 +146,38 @@ impl Client {
 					return Ok(());
 				}
 				Some(t) => {
+					#[rustfmt::skip]
+					macro_rules! expect {
+						($type:ident) => {
+							if t != MessageType::$type {
+								str_err!(concat!(
+									"expected ",
+									stringify!(MessageType::$type)
+								));
+							}
+						};
+					}
+
 					first = false;
-					match self.init_state {
-						InitState::Connected => {
-							if t != MessageType::Handshake {
-								str_err!("first message must be handshake");
-							}
-							let msg: protocol::payloads::Handshake =
-								dec.read_next()?;
-							log_msg_in!(MessageType::Handshake, msg);
-							if msg.protocol_version != protocol::VERSION {
-								str_err!(
-									"protocol version mismatch: {}",
-									msg.protocol_version
-								);
-							}
-							registry::set_client_key(self.id, msg.key.clone());
-							self.key = msg.key;
-							self.init_state = InitState::SentHandshake;
+					match &self.conn_state {
+						ConnState::Connected => {
+							expect!(Handshake);
+							self.handle_handshake(&mut dec)?;
 						}
-						InitState::SentHandshake => {
-							if t != MessageType::Synchronize {
-								str_err!("second message must be sync request");
-							}
+						ConnState::RequestedReshake { desc, pub_key } => {
+							expect!(Handshake);
+							let desc = desc.clone();
+							let pub_key = pub_key.clone();
+							self.handle_reshake(&mut dec, desc, pub_key)?;
+						}
+						ConnState::AcceptedHandshake(desc) => {
+							expect!(Synchronize);
 							let feed = dec.read_next()?;
 							log_msg_in!(MessageType::Synchronize, feed);
+							self.conn_state = ConnState::Synced(desc.clone());
 							self.synchronize(feed)?;
-							self.init_state = InitState::Synced;
 						}
-						InitState::Synced => route! { t,
+						ConnState::Synced(_) => route! { t,
 							CreateThread => |req: ThreadCreationReq| {
 								self.create_thread(req)
 							}
@@ -197,8 +215,8 @@ impl Client {
 
 		// TODO: Lookup, if client has any open posts in thread and link them to
 		// client
-
 		self.send(MessageType::Synchronize, &feed)?;
+
 		Ok(())
 	}
 
@@ -231,7 +249,11 @@ impl Client {
 		}
 		self.check_captcha(&req.captcha_solution)?;
 
-		let id = bindings::insert_thread(&req.subject, &req.tags, &self.key)?;
+		let id = bindings::insert_thread(
+			&req.subject,
+			&req.tags,
+			self.public_key_id()?,
+		)?;
 		pulsar::create_thread(protocol::payloads::ThreadCreationNotice {
 			id: id,
 			subject: req.subject,
@@ -239,6 +261,122 @@ impl Client {
 		})?;
 
 		self.send(MessageType::CreateThreadAck, &id)?;
+		Ok(())
+	}
+
+	// Get public key private ID, if client is synchronized
+	fn public_key_id(&self) -> Result<u64, &'static str> {
+		match &self.conn_state {
+			ConnState::Synced(desc) => Ok(desc.priv_id),
+			_ => Err("client not synchronized"),
+		}
+	}
+
+	fn decode_handshake(dec: &mut Decoder) -> DynResult<HandshakeReq> {
+		let req: HandshakeReq = dec.read_next()?;
+		log_msg_in!(MessageType::Handshake, req);
+		if req.protocol_version != protocol::VERSION {
+			str_err!("protocol version mismatch: {}", req.protocol_version);
+		}
+		Ok(req)
+	}
+
+	fn handle_handshake(&mut self, dec: &mut Decoder) -> DynResult {
+		match Self::decode_handshake(dec)?.auth {
+			Authorization::NewPubKey(pub_key) => {
+				check_len!(pub_key, 1 << 10);
+				let (priv_id, pub_id, fresh) =
+					bindings::register_public_key(&pub_key)?;
+
+				let desc = PubKeyDesc {
+					priv_id,
+					pub_id: pub_id.clone(),
+				};
+				if fresh {
+					registry::set_client_key(self.id, priv_id);
+					self.conn_state = ConnState::AcceptedHandshake(desc);
+				} else {
+					self.conn_state =
+						ConnState::RequestedReshake { pub_key, desc };
+				}
+
+				self.send(
+					MessageType::Handshake,
+					&protocol::payloads::HandshakeRes {
+						need_resend: !fresh,
+						id: pub_id,
+					},
+				)?;
+			}
+			Authorization::Saved {
+				id: pub_id,
+				nonce,
+				signature,
+			} => {
+				let (priv_id, pub_key) = bindings::get_public_key(pub_id)?;
+				self.handle_auth_saved(
+					PubKeyDesc { priv_id, pub_id },
+					nonce,
+					signature,
+					pub_key.as_ref(),
+				)?;
+			}
+		}
+		Ok(())
+	}
+
+	// Handle Authorization::Saved in handshake request
+	fn handle_auth_saved(
+		&mut self,
+		desc: PubKeyDesc,
+		nonce: [u8; 32],
+		signature: Signature,
+		pub_key: &[u8],
+	) -> DynResult {
+		let pk = openssl::pkey::PKey::from_rsa(
+			openssl::rsa::Rsa::public_key_from_der(pub_key)?,
+		)?;
+		let mut v = openssl::sign::Verifier::new(
+			openssl::hash::MessageDigest::sha256(),
+			&pk,
+		)?;
+		v.update(desc.pub_id.as_bytes())?;
+		v.update(&nonce)?;
+		if !v.verify(&signature.0)? {
+			str_err!("invalid signature");
+		}
+
+		self.send(
+			MessageType::Handshake,
+			&protocol::payloads::HandshakeRes {
+				need_resend: false,
+				id: desc.pub_id,
+			},
+		)?;
+		self.conn_state = ConnState::AcceptedHandshake(desc);
+		Ok(())
+	}
+
+	// Handle repeated handshake after request by server
+	fn handle_reshake(
+		&mut self,
+		mut dec: &mut Decoder,
+		desc: PubKeyDesc,
+		pub_key: Vec<u8>,
+	) -> DynResult {
+		match Self::decode_handshake(&mut dec)?.auth {
+			Authorization::Saved {
+				id: pub_id,
+				nonce,
+				signature,
+			} => {
+				if pub_id != desc.pub_id {
+					str_err!("different public key public id in reshake");
+				}
+				self.handle_auth_saved(desc, nonce, signature, &pub_key)?;
+			}
+			_ => str_err!("invalid authorization variant"),
+		}
 		Ok(())
 	}
 }

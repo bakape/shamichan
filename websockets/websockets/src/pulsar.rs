@@ -112,6 +112,15 @@ struct FeedCommon {
 }
 
 impl FeedCommon {
+	fn new(id: u64) -> Self {
+		Self {
+			id,
+			need_init: Default::default(),
+			init_msg_cache: Default::default(),
+			pending: Default::default(),
+		}
+	}
+
 	// Clear all cached values
 	fn clear_cache(&mut self) {
 		self.init_msg_cache = None;
@@ -128,7 +137,7 @@ impl FeedCommon {
 }
 
 // Update feed. Either a thread feed or the global thread index feed.
-#[derive(Default, Debug)]
+#[derive(Debug)]
 struct Feed {
 	common: FeedCommon,
 
@@ -177,13 +186,11 @@ impl Feed {
 		}
 
 		Self {
-			common: FeedCommon {
-				id: data.thread,
-				..Default::default()
-			},
+			common: FeedCommon::new(data.thread),
+			global_init_msg_part: None,
+			pending_global: None,
 			last_5_posts: l5,
 			data: data,
-			..Default::default()
 		}
 	}
 
@@ -268,14 +275,9 @@ impl Feed {
 		}
 		unsafe { self.last_5_posts.push_unchecked(id) };
 
-		self.data.open_posts.insert(
-			id,
-			OpenPost {
-				thread: self.common.id,
-				created_on: now,
-				..Default::default()
-			},
-		);
+		self.data
+			.open_posts
+			.insert(id, OpenPost::new(self.common.id, now));
 	}
 
 	// Write post-related message to thread and possibly global feed
@@ -372,7 +374,8 @@ impl Pulsar {
 
 		let mut f = Feed::new(FeedData {
 			thread: data.id,
-			..Default::default()
+			recent_posts: Default::default(),
+			open_posts: Default::default(),
 		});
 		f.insert_post(data.id);
 		self.feeds.insert(data.id, f);

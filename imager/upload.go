@@ -4,8 +4,14 @@ package imager
 import (
 	"bytes"
 	"context"
+	"crypto"
 	"crypto/md5"
+	"crypto/rsa"
+	"crypto/sha256"
+	"crypto/x509"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"image"
 	"image/jpeg"
 	"io"
@@ -26,6 +32,7 @@ import (
 	"github.com/chai2010/webp"
 	"github.com/go-playground/log"
 	"github.com/jackc/pgx/v4"
+	uuid "github.com/satori/go.uuid"
 )
 
 var (
@@ -51,6 +58,8 @@ var (
 		"application/vnd.comicbook+zip": common.CBZ,
 		"application/vnd.comicbook-rar": common.CBR,
 	}
+
+	pubKeyCache = common.NewCacheMap()
 
 	// MIME types from thumbnailer to accept
 	allowedMimeTypes map[string]bool
@@ -78,10 +87,10 @@ func init() {
 
 // Request to insert an image into the client's open post
 type insertionRequest struct {
-	Spoiler bool
-	Name    string
+	spoiler bool
+	pubKey  uint64
+	name    string
 	ctx     context.Context
-	user    auth.AuthKey
 }
 
 // Handles the clients' image (or other file) upload request
@@ -90,11 +99,11 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 		var req insertionRequest
 		req.ctx = r.Context()
 
-		req.user, err = validateUploader(w, r)
+		req.pubKey, err = validateUploader(w, r)
 		if err != nil {
 			return
 		}
-		can, err := db.CanInsertImage(r.Context(), req.user)
+		can, err := db.CanInsertImage(r.Context(), req.pubKey)
 		if err != nil {
 			return
 		}
@@ -160,14 +169,104 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 
 // Apply security restrictions to uploader
 func validateUploader(w http.ResponseWriter, r *http.Request) (
-	user auth.AuthKey,
+	pubKeyID uint64,
 	err error,
 ) {
-	user, err = auth.ExtractAuthKey(r)
+	type keyStore struct {
+		id  uint64
+		key *rsa.PublicKey
+	}
+
+	var (
+		nonce     [32]byte
+		signature [512]byte
+		pubID     uuid.UUID
+	)
+	err = common.WrapError(400, func() (err error) {
+		pubID, err = uuid.FromString(r.Header.Get("X-Public-Key-ID"))
+		if err != nil {
+			return
+		}
+
+		decode := func(dst []byte, key string) (err error) {
+			n, err := base64.StdEncoding.Decode(
+				dst,
+				[]byte(r.Header.Get(key)),
+			)
+			if err != nil {
+				return
+			}
+			if n != len(dst) {
+				return fmt.Errorf("invalid %s length: %d", key, n)
+			}
+			return
+		}
+
+		err = decode(nonce[:], "X-Nonce")
+		if err != nil {
+			return
+		}
+		return decode(signature[:], "X-Signature")
+	})
 	if err != nil {
 		return
 	}
-	need, err := db.NeedCaptcha(r.Context(), user)
+
+	store_, err := pubKeyCache.GetOrGen(
+		pubID,
+		func() (val interface{}, err error) {
+			id, der, err := db.GetPubKey(pubID)
+			switch err {
+			case nil:
+			case pgx.ErrNoRows:
+				err = common.ErrAccessDenied("unknown public key ID")
+				return
+			default:
+				return
+			}
+
+			pubKey, err := x509.ParsePKCS1PublicKey(der)
+			if err != nil {
+				err = common.StatusError{
+					Err:  err,
+					Code: 400,
+				}
+				return
+			}
+
+			val = keyStore{
+				id:  id,
+				key: pubKey,
+			}
+			return
+		},
+	)
+	if err != nil {
+		return
+	}
+	store := store_.(keyStore)
+	pubKeyID = store.id
+
+	h := sha256.New()
+	_, err = h.Write(pubID[:])
+	if err != nil {
+		return
+	}
+	_, err = h.Write(nonce[:])
+	if err != nil {
+		return
+	}
+	digest := h.Sum(nil)
+	err = rsa.VerifyPKCS1v15(store.key, crypto.SHA256, digest, signature[:])
+	if err != nil {
+		err = common.StatusError{
+			Err:  err,
+			Code: 403,
+		}
+		return
+	}
+
+	need, err := db.NeedCaptcha(r.Context(), pubKeyID)
 	if err != nil {
 		return
 	}
@@ -178,30 +277,30 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (
 		}
 		return
 	}
-	db.IncrementSpamScore(user, config.Get().ImageScore)
+	db.IncrementSpamScore(pubKeyID, config.Get().ImageScore)
 	return
 }
 
 // Extract and validate common request data from request
 func (req *insertionRequest) extract(r *http.Request, name string) (err error) {
-	req.Spoiler = r.FormValue("spoiler") == "true"
-	req.Name = name
+	req.spoiler = r.FormValue("spoiler") == "true"
+	req.name = name
 	errStr := func() string {
-		if len(req.Name) > 200 {
+		if len(req.name) > 200 {
 			return "image name too long"
 		}
-		req.Name = strings.TrimSpace(req.Name)
-		if i := strings.LastIndexByte(req.Name, '.'); i != -1 {
-			req.Name = req.Name[:i]
-			if strings.HasSuffix(req.Name, ".tar") {
-				req.Name = req.Name[:len(req.Name)-4]
+		req.name = strings.TrimSpace(req.name)
+		if i := strings.LastIndexByte(req.name, '.'); i != -1 {
+			req.name = req.name[:i]
+			if strings.HasSuffix(req.name, ".tar") {
+				req.name = req.name[:len(req.name)-4]
 			}
 		}
-		if !utf8.ValidString(req.Name) {
+		if !utf8.ValidString(req.name) {
 			// Need to replace invalid UTF-8 with a valid UTF-8 marker
-			req.Name = strings.ToValidUTF8(req.Name, "?")
+			req.name = strings.ToValidUTF8(req.name, "?")
 		}
-		if len(req.Name) == 0 {
+		if len(req.name) == 0 {
 			return "no image name"
 		}
 		return ""
@@ -228,7 +327,7 @@ func UploadImageHash(w http.ResponseWriter, r *http.Request) {
 		}
 		req.ctx = r.Context()
 
-		req.user, err = validateUploader(w, r)
+		req.pubKey, err = validateUploader(w, r)
 		if err != nil {
 			return
 		}
@@ -280,17 +379,17 @@ func insertImage(tx pgx.Tx, req insertionRequest, img common.ImageCommon,
 	post, thread, err = db.InsertImage(
 		req.ctx,
 		tx,
-		req.user,
+		req.pubKey,
 		img.SHA1,
-		req.Name,
-		req.Spoiler,
+		req.name,
+		req.spoiler,
 	)
 	switch err {
 	case nil:
 		return websockets.InsertImage(thread, post, common.Image{
 			ImageCommon: img,
-			Spoilered:   req.Spoiler,
-			Name:        req.Name,
+			Spoilered:   req.spoiler,
+			Name:        req.name,
 		})
 	case pgx.ErrNoRows:
 		return errNoCandidatePost

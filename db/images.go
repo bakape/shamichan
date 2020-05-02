@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/pg_util"
@@ -34,11 +33,11 @@ func AllocateImage(
 
 // Insert and image into and existing open post. Returns image ID and thread.
 //
-// Returns pgx.ErrNoRows, if no open post for the target user was found.
+// Returns pgx.ErrNoRows, if no open post for the target pubKey was found.
 func InsertImage(
 	ctx context.Context,
 	tx pgx.Tx,
-	user auth.AuthKey,
+	pubKey uint64,
 	img common.SHA1Hash,
 	name string,
 	spoilered bool,
@@ -53,12 +52,12 @@ func InsertImage(
 			set image = $1,
 				image_name = $2,
 				image_spoilered = $3
-			where open and auth_key = $4 and image is null
+			where open and public_key = $4 and image is null
 			returning id, thread`,
 			img,
 			name,
 			spoilered,
-			user,
+			pubKey,
 		).
 		Scan(&post, &thread)
 	return
@@ -136,18 +135,17 @@ func SpoilerImage(ctx context.Context, id uint64) error {
 	return err
 }
 
-// Return, if user has any post that an image can be inserted into
-func CanInsertImage(ctx context.Context, user auth.AuthKey,
-) (can bool, err error) {
+// Return, if pubKey has any post that an image can be inserted into
+func CanInsertImage(ctx context.Context, pubKey uint64) (can bool, err error) {
 	err = db.
 		QueryRow(
 			ctx,
 			`select exists (
 				select
 				from posts
-				where open and auth_key = $1 and image is null
+				where open and public_key = $1 and image is null
 			)`,
-			user,
+			pubKey,
 		).
 		Scan(&can)
 	return

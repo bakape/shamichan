@@ -1,4 +1,3 @@
-create domain auth_key as bytea check (octet_length(value) = 64);
 create domain timestamptz_auto_now as timestamptz not null default now();
 
 create sequence post_id_seq as bigint;
@@ -22,6 +21,12 @@ inherits (post_common);
 
 create index threads_tags_idx on threads using gin (tags);
 
+create table public_keys (
+	id bigserial primary key,
+	public_id uuid unique not null,
+	public_key bytea unique not null check (octet_length(public_key) <= 1024)
+);
+
 create table posts (
 	primary key (id),
 	thread bigint not null references threads on delete cascade,
@@ -34,7 +39,7 @@ create table posts (
 	trip varchar(100),
 	flag char(2),
 
-	auth_key auth_key,
+	public_key bigint references public_keys,
 
 	body jsonb,
 
@@ -48,7 +53,7 @@ create index posts_thread_idx on posts (thread);
 create index posts_page_idx on posts (page);
 create index posts_open_idx on posts (open);
 create index posts_created_on_idx on posts (created_on);
-create index posts_auth_key_idx on posts (auth_key);
+create index posts_public_key_idx on posts (public_key);
 create index posts_image_idx on posts (image);
 
 create or replace function post_count(thread bigint)

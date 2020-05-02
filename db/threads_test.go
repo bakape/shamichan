@@ -9,22 +9,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/test"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 )
 
 // Insert sample thread and return its ID
-func insertSampleThread(t *testing.T) (id uint64, authKey auth.AuthKey) {
+func insertSampleThread(t *testing.T) (id uint64, pubKey uint64) {
 	t.Helper()
 
-	authKey = genToken(t)
+	pubKey, _ = insertSamplePubKey(t)
 	id, err := InsertThread(context.Background(), ThreadInsertParams{
 		Subject: "test",
 		Tags:    []string{"animu", "mango"},
 		PostInsertParamsCommon: PostInsertParamsCommon{
-			AuthKey: &authKey,
+			PublicKey: &pubKey,
 		},
 	})
 	if err != nil {
@@ -84,12 +83,12 @@ func TestGetFeedData(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		authKey := genToken(t)
+		pubKey, _ := insertSamplePubKey(t)
 		err = InTransaction(ctx, func(tx pgx.Tx) (err error) {
 			replies[i], err = InsertPost(ctx, tx, ReplyInsertParams{
 				Thread: threads[i],
 				PostInsertParamsCommon: PostInsertParamsCommon{
-					AuthKey: &authKey,
+					PublicKey: &pubKey,
 				},
 			})
 			return
@@ -159,7 +158,7 @@ func TestGetThread(t *testing.T) {
 
 	img, _, closeFiles := prepareSampleImage(t)
 	closeFiles()
-	thread, user := insertSampleThread(t)
+	thread, pubKey := insertSampleThread(t)
 	thread2, _ := insertSampleThread(t)
 
 	const imageName = "fuko_da.jpeg"
@@ -238,7 +237,7 @@ func TestGetThread(t *testing.T) {
 		_, _, err = InsertImage(
 			context.Background(),
 			tx,
-			user,
+			pubKey,
 			img.SHA1,
 			imageName,
 			false,
@@ -277,7 +276,7 @@ func TestGetThread(t *testing.T) {
 			id, err = InsertPost(context.Background(), tx, ReplyInsertParams{
 				Thread: thread,
 				PostInsertParamsCommon: PostInsertParamsCommon{
-					AuthKey: &user,
+					PublicKey: &pubKey,
 				},
 			})
 			if err != nil {

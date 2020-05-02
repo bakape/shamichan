@@ -3,11 +3,17 @@ package imager
 import (
 	"bytes"
 	"context"
+	"crypto"
 	"crypto/md5"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha1"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strconv"
@@ -532,8 +538,34 @@ func TestUpload(t *testing.T) {
 	}
 }
 
+func setAuthHeaders(t *testing.T, req *http.Request, kp test_db.KeyPair) {
+	t.Helper()
+
+	var nonce [32]byte
+	_, err := rand.Read(nonce[:])
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := sha256.New()
+	_, err = h.Write(kp.PubID[:])
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = h.Write(nonce[:])
+	if err != nil {
+		t.Fatal(err)
+	}
+	sig, err := rsa.SignPKCS1v15(rand.Reader, kp.Key, crypto.SHA256, h.Sum(nil))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("X-Public-Key-ID", kp.PubID.String())
+	req.Header.Set("X-Nonce", base64.StdEncoding.EncodeToString(nonce[:]))
+	req.Header.Set("X-Signature", base64.StdEncoding.EncodeToString(sig))
+}
+
 func testUpload(t *testing.T, c uploadCase) {
-	thread, user := test_db.InsertSampleThread(t)
+	thread, kp := test_db.InsertSampleThread(t)
 
 	body := new(bytes.Buffer)
 	w := multipart.NewWriter(body)
@@ -552,13 +584,12 @@ func testUpload(t *testing.T, c uploadCase) {
 		t.Fatal(err)
 	}
 
-	sha1Hash, md5Hash := hashImage(t, f)
-
 	req := httptest.NewRequest("POST", "/", body)
-	req.Header.Set("Authorization", "Bearer "+user.String())
+	setAuthHeaders(t, req, kp)
 	req.Header.Set("Content-Length", strconv.Itoa(body.Len()))
 	req.Header.Set("Content-Type", w.FormDataContentType())
 	rec := httptest.NewRecorder()
+
 	NewImageUpload(rec, req)
 	if c.err != "" {
 		test.AssertEquals(t, rec.Body.String(), c.err)
@@ -569,6 +600,7 @@ func testUpload(t *testing.T, c uploadCase) {
 		test.AssertEquals(t, rec.Code, c.code)
 	}
 
+	sha1Hash, md5Hash := hashImage(t, f)
 	c.img.SHA1 = sha1Hash
 	c.img.MD5 = md5Hash
 	assertImage(t, thread, common.Image{
@@ -645,7 +677,7 @@ func TestUploadHash(t *testing.T) {
 	})
 
 	t.Run("hash upload", func(t *testing.T) {
-		thread, user := test_db.InsertSampleThread(t)
+		thread, kp := test_db.InsertSampleThread(t)
 
 		f := test.OpenSample(t, c.fileName)
 		defer f.Close()
@@ -657,7 +689,7 @@ func TestUploadHash(t *testing.T) {
 		}.
 			Encode()
 		req := httptest.NewRequest("POST", "/", strings.NewReader(body))
-		req.Header.Set("Authorization", "Bearer "+user.String())
+		setAuthHeaders(t, req, kp)
 		req.Header.Set("Content-Length", strconv.Itoa(len(body)))
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
