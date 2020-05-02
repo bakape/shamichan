@@ -17,6 +17,7 @@ mod user_bg;
 mod util;
 mod widgets;
 
+use protocol::debug_log;
 use wasm_bindgen::prelude::*;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 
@@ -74,6 +75,7 @@ pub async fn main_js() -> util::Result {
 	err1?;
 	err2?;
 
+	debug_log!("starting app");
 	yew::start_app::<App>();
 
 	Ok(())

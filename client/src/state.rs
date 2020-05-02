@@ -214,9 +214,14 @@ impl KeyPair {
 			.to_vec())
 		}
 
+		let (priv_key, pub_key) = futures::future::join(
+			get_vec(&pair, "privateKey", "pkcs8"),
+			get_vec(&pair, "publicKey", "spki"),
+		)
+		.await;
 		Ok(KeyPair {
-			private: get_vec(&pair, "private_key", "pkcs8").await?,
-			public: get_vec(&pair, "public_key", "spki").await?,
+			private: priv_key?,
+			public: pub_key?,
 			id: None,
 		})
 	}
