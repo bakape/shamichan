@@ -5,6 +5,8 @@
 mod lang;
 #[macro_use]
 mod banner;
+#[macro_use]
+mod util;
 mod buttons;
 mod connection;
 mod page_selector;
@@ -14,7 +16,6 @@ mod thread;
 mod thread_index;
 mod time;
 mod user_bg;
-mod util;
 mod widgets;
 
 use protocol::debug_log;
@@ -30,8 +31,7 @@ struct App {
 }
 
 impl Component for App {
-	type Message = ();
-	type Properties = ();
+	comp_static! {}
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
 		let mut a = state::Agent::bridge(link.callback(|_| ()));
@@ -39,10 +39,6 @@ impl Component for App {
 			a.send(state::Request::FetchFeed(s.location.clone()));
 		});
 		Self { state: a, link }
-	}
-
-	fn update(&mut self, _: Self::Message) -> bool {
-		false
 	}
 
 	fn view(&self) -> Html {

@@ -12,8 +12,8 @@ pub struct Threads {
 }
 
 impl Component for Threads {
-	type Message = ();
-	type Properties = ();
+	comp_message_rerender! {}
+	comp_no_props! {}
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
 		use state::Change;
@@ -26,10 +26,6 @@ impl Component for Threads {
 			),
 			link: link,
 		}
-	}
-
-	fn update(&mut self, _: Self::Message) -> bool {
-		true
 	}
 
 	fn view(&self) -> Html {

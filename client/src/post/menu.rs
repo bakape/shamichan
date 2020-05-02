@@ -2,7 +2,7 @@ use crate::state::{hook, Change, HookBridge};
 use yew::{html, Component, ComponentLink, Html};
 
 pub struct Menu {
-	post: u64,
+	props: super::Props,
 	expanded: bool,
 
 	link: ComponentLink<Self>,
@@ -16,14 +16,14 @@ pub enum Message {
 }
 
 impl Component for Menu {
+	comp_prop_change! {super::Props}
 	type Message = Message;
-	type Properties = super::Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		Self {
-			post: props.id,
-			// Not used right now, but will be needed for menu items
 			hook: hook(&link, &[Change::Post(props.id)], |_| Message::Rerender),
+			// Not used right now, but will be needed for menu items
+			props,
 			link,
 			expanded: false,
 		}

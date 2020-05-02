@@ -632,8 +632,8 @@ pub struct SyncCounter {
 }
 
 impl Component for SyncCounter {
+	comp_no_props! {}
 	type Message = State;
-	type Properties = ();
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
 		Self {

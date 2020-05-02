@@ -3,15 +3,10 @@ use yew::{html, Component, ComponentLink, Html};
 pub struct Banner {}
 
 impl Component for Banner {
-	type Message = ();
-	type Properties = ();
+	crate::comp_static! {}
 
 	fn create(_: Self::Properties, _: ComponentLink<Self>) -> Self {
 		Self {}
-	}
-
-	fn update(&mut self, _: Self::Message) -> bool {
-		false
 	}
 
 	fn view(&self) -> Html {

@@ -7,83 +7,52 @@ pub struct Props {
 	// TODO: Optional middle click handler for opening in a new tab
 }
 
-pub struct Anchor {
-	props: Props,
-}
-
-impl Component for Anchor {
-	type Message = ();
-	type Properties = Props;
-
-	fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
-		Self { props }
-	}
-
-	fn update(&mut self, _: Self::Message) -> bool {
-		false
-	}
-
-	fn view(&self) -> Html {
-		html! {
-			<a onclick=self.props.on_click.clone()>
-				{localize!(self.props.text)}
-			</a>
+macro_rules! impl_button {
+	($name:ident, $view:expr) => {
+		pub struct $name {
+			props: Props,
 		}
-	}
-}
 
-pub struct SpanButton {
-	props: Props,
-}
+		impl Component for $name {
+			comp_static! {Props}
 
-impl Component for SpanButton {
-	type Message = ();
-	type Properties = Props;
+			fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
+				Self { props }
+			}
 
-	fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
-		Self { props }
-	}
-
-	fn update(&mut self, _: Self::Message) -> bool {
-		false
-	}
-
-	fn view(&self) -> Html {
-		html! {
-			<span class="act">
-				<Anchor
-					on_click=self.props.on_click.clone()
-					text=self.props.text
-				/>
-			</span>
+			fn view(&self) -> Html {
+				$view(&self.props)
+			}
 		}
-	}
+	};
 }
 
-pub struct AsideButton {
-	props: Props,
-}
-
-impl Component for AsideButton {
-	type Message = ();
-	type Properties = Props;
-
-	fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
-		Self { props }
+impl_button! { Anchor, |props: &Props| {
+	html! {
+		<a onclick=props.on_click.clone()>
+			{localize!(props.text)}
+		</a>
 	}
+}}
 
-	fn update(&mut self, _: Self::Message) -> bool {
-		false
+impl_button! { SpanButton, |props: &Props| {
+	html! {
+		<span class="act">
+			<Anchor
+				on_click=props.on_click.clone()
+				text=props.text
+			/>
+		</span>
 	}
+}}
 
-	fn view(&self) -> Html {
-		html! {
-			<aside class="act glass" >
-				<Anchor
-					on_click=self.props.on_click.clone()
-					text=self.props.text
-				/>
-			</aside>
-		}
+impl_button! { AsideButton, |props: &Props| {
+	html! {
+		<aside class="act glass" >
+			<Anchor
+				on_click=props.on_click.clone()
+				text=props.text
+			/>
+		</aside>
 	}
-}
+}}

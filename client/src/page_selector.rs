@@ -9,12 +9,12 @@ pub struct PageSelector {
 
 	link: ComponentLink<Self>,
 
-	thread: u64,
+	props: Props,
 	offset: u32,
 	page_count: u32,
 }
 
-#[derive(Clone, Properties)]
+#[derive(Clone, Properties, Eq, PartialEq)]
 pub struct Props {
 	pub thread: u64,
 }
@@ -28,8 +28,8 @@ pub enum Message {
 }
 
 impl Component for PageSelector {
+	comp_prop_change! {Props}
 	type Message = Message;
-	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		let mut s = Self {
@@ -38,7 +38,7 @@ impl Component for PageSelector {
 				&[state::Change::Thread(props.thread)],
 				|_| Message::ThreadUpdate,
 			),
-			thread: props.thread,
+			props,
 			link,
 			offset: 0,
 			page_count: 0,
@@ -141,7 +141,7 @@ impl PageSelector {
 	fn fetch_page_count(&mut self) {
 		self.page_count = state::read(|s| {
 			s.threads
-				.get(&self.thread)
+				.get(&self.props.thread)
 				.map(|t| t.last_page + 1)
 				.unwrap_or(1)
 		});

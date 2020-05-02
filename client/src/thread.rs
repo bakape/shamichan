@@ -10,12 +10,11 @@ pub struct Thread {
 	#[allow(unused)]
 	link: ComponentLink<Self>,
 
-	id: u64,
-	pages: PostSet,
+	props: Props,
 }
 
 // Posts to display in a thread
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum PostSet {
 	// Display OP + last 5 posts
 	Last5Posts,
@@ -30,15 +29,15 @@ impl Default for PostSet {
 	}
 }
 
-#[derive(Clone, Properties)]
+#[derive(Clone, Properties, Eq, PartialEq)]
 pub struct Props {
 	pub id: u64,
 	pub pages: PostSet,
 }
 
 impl Component for Thread {
-	type Message = ();
-	type Properties = Props;
+	comp_message_rerender! {}
+	comp_prop_change! {Props}
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		Self {
@@ -47,25 +46,20 @@ impl Component for Thread {
 				&[state::Change::Thread(props.id)],
 				|_| (),
 			),
-			id: props.id,
-			pages: props.pages,
+			props,
 			link,
 		}
-	}
-
-	fn update(&mut self, _: Self::Message) -> bool {
-		true
 	}
 
 	fn view(&self) -> Html {
 		// TODO: Filter hidden posts
 
-		let posts: Vec<u64> = state::read(|s| match self.pages {
+		let posts: Vec<u64> = state::read(|s| match self.props.pages {
 			PostSet::Last5Posts => {
 				let mut v = Vec::with_capacity(5);
 				let page_count = s
 					.threads
-					.get(&self.id)
+					.get(&self.props.id)
 					.map(|t| t.last_page + 1)
 					.unwrap_or(1);
 				self.read_page_posts(&mut v, page_count - 1, s);
@@ -89,7 +83,7 @@ impl Component for Thread {
 
 		html! {
 			<section class="thread-container">
-				<super::post::Post id=self.id />
+				<super::post::Post id=self.props.id />
 				{
 					for posts.into_iter().map(|id| {
 						html! {
@@ -112,8 +106,9 @@ impl Component for Thread {
 impl Thread {
 	// Read the post IDs of a page, excluding the OP, into dst
 	fn read_page_posts(&self, dst: &mut Vec<u64>, page: u32, s: &state::State) {
-		if let Some(posts) = s.posts_by_thread_page.get(&(self.id, page)) {
-			dst.extend(posts.iter().filter(|id| **id != self.id));
+		if let Some(posts) = s.posts_by_thread_page.get(&(self.props.id, page))
+		{
+			dst.extend(posts.iter().filter(|id| **id != self.props.id));
 		}
 	}
 }

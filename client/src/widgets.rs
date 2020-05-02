@@ -19,15 +19,15 @@ pub struct AsideRow {
 	bridge: state::HookBridge,
 }
 
-#[derive(Clone, Properties)]
+#[derive(Clone, Properties, Eq, PartialEq)]
 pub struct Props {
 	#[prop_or_default]
 	pub is_top: bool,
 }
 
 impl Component for AsideRow {
+	comp_prop_change! {Props}
 	type Message = bool;
-	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		Self {
@@ -163,8 +163,8 @@ enum Msg {
 }
 
 impl Component for NewThreadForm {
+	comp_no_props! {}
 	type Message = Msg;
-	type Properties = ();
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
 		use yew::format::{Json, Nothing};

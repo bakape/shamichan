@@ -16,9 +16,8 @@ pub struct Post {
 	#[allow(unused)]
 	link: ComponentLink<Self>,
 
-	id: u64,
+	props: Props,
 
-	outside_thread: bool,
 	reveal_image: bool,
 	expand_image: bool,
 	tall_image: bool,
@@ -38,7 +37,7 @@ pub enum Message {
 	NOP,
 }
 
-#[derive(Clone, Properties)]
+#[derive(Clone, Properties, PartialEq, Eq)]
 pub struct Props {
 	// Post ID
 	pub id: u64,
@@ -50,21 +49,20 @@ pub struct Props {
 }
 
 impl Component for Post {
+	comp_prop_change! {Props}
 	type Message = Message;
-	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		use state::{hook, Change};
 
 		Self {
-			id: props.id,
 			bridge: hook(
 				&link,
 				&[Change::Configs, Change::Options, Change::Post(props.id)],
 				|_| Message::Rerender,
 			),
+			props,
 			link,
-			outside_thread: false,
 			reveal_image: false,
 			expand_image: false,
 			tall_image: false,
@@ -120,7 +118,7 @@ impl Component for Post {
 				state::read(|s| {
 					if let (Some(img), Some(wh)) = (
 						s.posts
-							.get(&self.id)
+							.get(&self.props.id)
 							.map(|p| p.image.as_ref())
 							.flatten(),
 						util::window()
@@ -141,7 +139,7 @@ impl Component for Post {
 
 	fn view(&self) -> Html {
 		state::read(|s| {
-			let p = match s.posts.get(&self.id) {
+			let p = match s.posts.get(&self.props.id) {
 				Some(p) => p,
 				None => {
 					return html! {};
@@ -158,8 +156,8 @@ impl Component for Post {
 
 			html! {
 				<article
-					id=if !self.outside_thread {
-						format!("p-{}", self.id)
+					id=if !self.props.outside_thread {
+						format!("p-{}", self.props.id)
 					} else {
 						"".into()
 					}
@@ -250,7 +248,7 @@ impl Post {
 					if thread.is_some()
 					   && !state::read(|s| s.location.is_thread())
 					{
-						let id = self.id;
+						let id = self.props.id;
 						html! {
 							<>
 								<SpanButton
@@ -285,7 +283,7 @@ impl Post {
 						html! {}
 					}
 				}
-				<menu::Menu id=self.id />
+				<menu::Menu id=self.props.id />
 			</header>
 		}
 	}
@@ -312,7 +310,7 @@ impl Post {
 				});
 			}
 		}
-		if s.mine.contains(&self.id) {
+		if s.mine.contains(&self.props.id) {
 			w.push(html! {
 				<i>{localize!("you")}</i>
 			});

@@ -7,28 +7,29 @@ pub struct View {
 	#[allow(unused)]
 	link: ComponentLink<Self>,
 
-	time: u32,
+	props: Props,
+
 	current: Response,
 	scheduler: Box<dyn Bridge<Scheduler>>,
 }
 
-#[derive(Clone, Properties)]
+#[derive(Clone, Properties, Eq, PartialEq)]
 pub struct Props {
 	pub time: u32,
 }
 
 impl Component for View {
+	comp_prop_change! {Props}
 	type Message = Response;
-	type Properties = Props;
 
-	fn create(p: Self::Properties, link: ComponentLink<Self>) -> Self {
+	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		let mut s = Self {
 			scheduler: Scheduler::bridge(link.callback(|u| u)),
-			time: p.time,
+			props,
 			link,
 			current: Default::default(),
 		};
-		s.scheduler.send(s.time);
+		s.scheduler.send(s.props.time);
 		s
 	}
 
@@ -62,7 +63,7 @@ impl Component for View {
 			"saturday",
 		];
 
-		let d = Date::new(&(self.time as f64 * 1000.0).into());
+		let d = Date::new(&(self.props.time as f64 * 1000.0).into());
 		let abs = format!(
 			"{:0>2} {} {} ({}) {:0>2}:{:0>2}:{:0>2}",
 			d.get_date(),
