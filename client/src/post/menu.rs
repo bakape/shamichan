@@ -40,10 +40,12 @@ impl Component for Menu {
 	}
 
 	fn view(&self) -> Html {
+		let toggle = self.link.callback(|_| Message::ToggleExpand);
+
 		html! {
-			<a class="svg-link control">
+			<a class="svg-link control" onclick=toggle.clone()>
 				<svg
-					onclick=self.link.callback(|_| Message::ToggleExpand)
+					onclick=toggle
 					xmlns="http://www.w3.org/2000/svg"
 					width="8"
 					height="8"
