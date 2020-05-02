@@ -69,6 +69,9 @@ ENV PATH=$PATH:/root/.cargo/bin
 
 # Cache dependencies, if possible
 RUN cargo install wasm-pack
+RUN go get -u github.com/valyala/quicktemplate \
+	github.com/rakyll/statik \
+	github.com/valyala/quicktemplate/qtc
 COPY go.mod go.sum ./
 RUN go mod download
 COPY package.json package-lock.json ./
