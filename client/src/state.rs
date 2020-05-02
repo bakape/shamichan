@@ -381,8 +381,8 @@ pub enum Request {
 	// Navigate to the app to a different feed
 	NavigateTo { loc: Location, flags: u8 },
 
-	// Set the ID of the currently used KeyPair
-	SetKeyID(uuid::Uuid),
+	// Set or delete the ID of the currently used KeyPair
+	SetKeyID(Option<uuid::Uuid>),
 }
 
 // Selective changes of global state to be notified on
@@ -688,7 +688,7 @@ impl yew::agent::Agent for Agent {
 			Request::FetchFeed(loc) => self.fetch_feed_data(loc, 0),
 			Request::SetKeyID(id) => util::with_logging(|| {
 				write(|s| {
-					s.key_pair.id = Some(id);
+					s.key_pair.id = id;
 					s.key_pair.store()?;
 					Ok(())
 				})

@@ -200,8 +200,13 @@ impl Agent for Connection {
 			Event::Close(e) => {
 				self.reset_socket_and_timer();
 				if e.code() != 1000 && e.reason() != "" {
-					util::log_error(e.reason());
-					util::alert(&e.reason());
+					if e.reason() == "unknown public key ID" {
+						state::Agent::dispatcher()
+							.send(state::Request::SetKeyID(None));
+					} else {
+						util::log_error(e.reason());
+						util::alert(&e.reason());
+					}
 				}
 				self.handle_disconnect();
 			}
@@ -336,9 +341,10 @@ impl Connection {
 		match (
 			match self.state {
 				State::Connecting => matches!(cat, MessageCategory::Handshake),
-				State::Handshaking => {
-					matches!(cat, MessageCategory::Synchronize)
-				}
+				State::Handshaking => matches!(
+					cat,
+					MessageCategory::Handshake | MessageCategory::Synchronize
+				),
 				State::Synced | State::Syncing => true,
 				_ => false,
 			},
@@ -508,7 +514,12 @@ impl Connection {
 						self.authed_with = Some(req.id.clone());
 						if state::read(|s| s.key_pair.id.is_none()) {
 							state::Agent::dispatcher()
-								.send(state::Request::SetKeyID(req.id.clone()));
+								.send(state::Request::SetKeyID(
+									req
+									.id
+									.clone()
+									.into(),
+								));
 						}
 
 						if req.need_resend {
