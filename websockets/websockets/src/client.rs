@@ -34,8 +34,8 @@ enum ConnState {
 	// with Authorization::Saved.
 	RequestedReshake { desc: PubKeyDesc, pub_key: Vec<u8> },
 
-	// Client successfully synchronized to a feed
-	Synced(PubKeyDesc),
+	// Client synchronizing to a feed
+	Synchronizing(PubKeyDesc),
 }
 
 // Maps to a websocket client on the Go side
@@ -174,10 +174,11 @@ impl Client {
 							expect!(Synchronize);
 							let feed = dec.read_next()?;
 							log_msg_in!(MessageType::Synchronize, feed);
-							self.conn_state = ConnState::Synced(desc.clone());
+							self.conn_state =
+								ConnState::Synchronizing(desc.clone());
 							self.synchronize(feed)?;
 						}
-						ConnState::Synced(_) => route! { t,
+						ConnState::Synchronizing(_) => route! { t,
 							CreateThread => |req: ThreadCreationReq| {
 								self.create_thread(req)
 							}
@@ -267,8 +268,8 @@ impl Client {
 	// Get public key private ID, if client is synchronized
 	fn public_key_id(&self) -> Result<u64, &'static str> {
 		match &self.conn_state {
-			ConnState::Synced(desc) => Ok(desc.priv_id),
-			_ => Err("client not synchronized"),
+			ConnState::Synchronizing(desc) => Ok(desc.priv_id),
+			_ => Err("client not synchronizing"),
 		}
 	}
 
