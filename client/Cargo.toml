@@ -59,4 +59,5 @@ features = [
   "UrlSearchParams",
   "History",
   "ScrollRestoration",
+  "DomTokenList",
 ]

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type", content = "content")]
 pub enum Node {
-	// Contains unformatted text
+	// Contains unformatted text. Can include newlines.
 	Text(String),
 
 	// Link to another post
@@ -22,32 +22,27 @@ pub enum Node {
 	// URL to embedadble resource
 	Embed(String),
 
-	// Quoted Node list. Results from line starting with `>`.
-	Quoted(Vec<Node>),
+	// Programming code tags
+	//
+	// TODO: Run code highlighting using syntect server-side
+	// TODO: Allow `` to be followed by a supported language. Example: ``rust.
+	// TODO: Fallback to plaintext
+	Code(String),
 
 	// Spoiler tags
+	//
+	// TODO: make spoilers the top level tag (after code) to enable revealing
+	// it all on click or hover
 	Spoiler(Vec<Node>),
 
-	// Programming code tags
-	Code(Vec<Node>),
+	// Quoted Node list. Results from line starting with `>`.
+	Quoted(Vec<Node>),
 
 	// Bold formatting tags
 	Bold(Vec<Node>),
 
 	// Italic formatting tags
 	Italic(Vec<Node>),
-
-	// Red text formatting tags
-	Red(Vec<Node>),
-
-	// Blue text formatting tags
-	Blue(Vec<Node>),
-}
-
-impl Default for Node {
-	fn default() -> Self {
-		Node::Text(Default::default())
-	}
 }
 
 macro_rules! variant {
@@ -63,6 +58,7 @@ macro_rules! variant {
 variant! { PostLink {
 	id: u64,
 	thread: u64,
+	page: u32,
 }}
 
 // Hash command result
@@ -87,17 +83,11 @@ pub enum Command {
 	// #8ball random answer dispenser
 	EightBall(String),
 
-	// Synchronized timer command type for synchronizing episode time during
-	// group anime watching and such
-	SyncWatch {
-		// Requested time duration in seconds
-		duration: u64,
-
-		// Timer start Unix timestamp
-		start: u64,
-
-		// Timer end Unix timestamp
-		end: u64,
+	// Synchronized countdown timer
+	Countdown {
+		// Unix timestamps
+		start: u32,
+		end: u32,
 	},
 
 	// Self ban for N hours

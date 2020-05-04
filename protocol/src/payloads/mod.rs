@@ -89,18 +89,18 @@ payload! { PostCreationReq {
 payload! { OpenPost {
 	has_image: bool,
 	image_spoilered: bool,
-	created_on: u64,
+	created_on: u32,
 	thread: u64,
 	body: Option<post_body::Node>,
 }}
 
 impl OpenPost {
-	pub fn new(thread: u64, created_on: u64) -> Self {
+	pub fn new(thread: u64, created_on: u32) -> Self {
 		Self {
-			has_image: Default::default(),
-			image_spoilered: Default::default(),
 			created_on,
 			thread,
+			has_image: Default::default(),
+			image_spoilered: Default::default(),
 			body: Default::default(),
 		}
 	}

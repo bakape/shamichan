@@ -1,5 +1,5 @@
 use super::common::{PostCommon, PostComponent, RenderCtx};
-use yew::{html, Html};
+use yew::Html;
 
 #[derive(Default)]
 pub struct Inner {}
@@ -15,6 +15,6 @@ impl PostComponent for Inner {
 	}
 
 	fn render_body<'s, 'c>(&self, c: &RenderCtx<'s, 'c, Self>) -> Html {
-		html! {"TODO"}
+		super::body::render(c)
 	}
 }

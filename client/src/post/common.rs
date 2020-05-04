@@ -36,6 +36,14 @@ pub trait PostComponent: Default {
 	fn render_after<'s, 'c>(&self, c: &RenderCtx<'s, 'c, Self>) -> Html {
 		html! {}
 	}
+
+	// Return, if this component is a preview of a post and thus should not
+	// spawn its own previews.
+	//
+	// Value must be static.
+	fn is_preview() -> bool {
+		false
+	}
 }
 
 // Context passed to PostComponent implementors on render contents
@@ -297,6 +305,7 @@ where
 				</nav>
 				{
 					if thread.is_some()
+					   && !PC::is_preview()
 					   && !state::read(|s| c.app.location.is_thread())
 					{
 						let id = self.props.id;

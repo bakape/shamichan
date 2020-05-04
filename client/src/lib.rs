@@ -23,9 +23,9 @@ use wasm_bindgen::prelude::*;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 
 struct App {
-	// Keep here to load global state first
-	#[allow(unused)]
 	link: ComponentLink<Self>,
+
+	// Keep here to load global state first
 	#[allow(unused)]
 	state: Box<dyn Bridge<state::Agent>>,
 }
@@ -38,7 +38,35 @@ impl Component for App {
 		state::read(|s| {
 			a.send(state::Request::FetchFeed(s.location.clone()));
 		});
-		Self { state: a, link }
+
+		let s = Self { state: a, link };
+
+		// Static global event listeners. Put here to avoid overhead of spamming
+		// a lot of event listeners and handlers on posts.
+		util::add_static_listener(
+			util::document(),
+			"click",
+			s.link.callback(|e: yew::events::MouseEvent| {
+				util::with_logging(|| {
+					use wasm_bindgen::JsCast;
+
+					if let Some(el) = e
+						.target()
+						.map(|el| el.dyn_into::<web_sys::Element>().ok())
+						.flatten()
+					{
+						if el.tag_name() == "DEL" {
+							el.class_list().toggle("reveal")?;
+						}
+					}
+					Ok(())
+				});
+
+				()
+			}),
+		);
+
+		s
 	}
 
 	fn view(&self) -> Html {

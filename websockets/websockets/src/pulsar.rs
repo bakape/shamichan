@@ -267,9 +267,9 @@ impl Feed {
 		let now = SystemTime::now()
 			.duration_since(SystemTime::UNIX_EPOCH)
 			.expect("negative Unix timestamp")
-			.as_secs();
+			.as_secs() as u32;
 
-		self.data.recent_posts.insert(id, now as u32);
+		self.data.recent_posts.insert(id, now);
 		if self.last_5_posts.len() == 5 {
 			unsafe { self.last_5_posts.pop_unchecked() };
 		}
