@@ -901,7 +901,6 @@ impl Agent {
 			for (id, _) in s.posts.drain() {
 				add_hook(Change::Thread(id));
 			}
-			s.posts_by_thread_page.clear();
 
 			for t in threads {
 				let t_id = t.thread_data.id;

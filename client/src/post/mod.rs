@@ -163,7 +163,7 @@ impl Component for Post {
 					} else {
 						"".into()
 					}
-					class=cls.join(" ")
+					class=cls
 					ref=self.el.clone()
 				>
 					<header::Header id=self.props.id/>
