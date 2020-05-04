@@ -52,6 +52,8 @@ impl Component for Thread {
 	}
 
 	fn view(&self) -> Html {
+		use super::post::ThreadPost;
+
 		// TODO: Filter hidden posts
 
 		let posts: Vec<u64> = state::read(|s| match self.props.pages {
@@ -83,11 +85,11 @@ impl Component for Thread {
 
 		html! {
 			<section class="thread-container">
-				<super::post::Post id=self.props.id />
+				<ThreadPost id=self.props.id />
 				{
 					for posts.into_iter().map(|id| {
 						html! {
-							<super::post::Post id={id} />
+							<ThreadPost id=id />
 						}
 					})
 				}
