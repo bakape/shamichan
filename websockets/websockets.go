@@ -62,7 +62,8 @@ type client struct {
 }
 
 // http.HandleFunc that responds to new websocket connection requests
-func Handle(w http.ResponseWriter, r *http.Request) (loopStarted bool, err error) {
+func Handle(w http.ResponseWriter, r *http.Request,
+) (loopStarted bool, err error) {
 	// Prevent websocket close errors from leaving module
 	defer func() {
 		_err := err
@@ -229,8 +230,8 @@ func unregister(id uint64) {
 
 	_, ok := clients[id]
 	if ok {
-		// Must be only place a client can be deleted from the map to prevent
-		// state (including mutex state) branching.
+		// Must be the only place a client can be deleted from the map to
+		// prevent state (including mutex state) branching
 		delete(clients, id)
 		clientsMu.Unlock()
 

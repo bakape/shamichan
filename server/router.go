@@ -105,7 +105,7 @@ func createRouter() http.Handler {
 	assets.GET("/images/*path", serveImages)
 	assets.GET("/*path", serveAssets)
 
-	// // Captcha API
+	// TODO: Captcha API
 	// captcha := api.NewGroup("/captcha")
 	// captcha.GET("/:board", serveNewCaptcha)
 	// captcha.POST("/:board", authenticateCaptcha)

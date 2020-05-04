@@ -26,7 +26,7 @@ char* ws_register_client(uint64_t id, WSBuffer ip);
 // Remove client from registry
 void ws_unregister_client(uint64_t id);
 
-// Unref and potentially free a message source on the Rust side
+// Unref and potentially free a message on the Rust side
 void ws_unref_message(void* src);
 
 // Pass received message to Rust side. This operation never returns an error to
