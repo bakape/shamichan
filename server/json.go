@@ -75,7 +75,7 @@ func serveThread(w http.ResponseWriter, r *http.Request) {
 
 		setJSONHeaders(w)
 		err = cache.WriteThread(w, r, thread, page)
-		if err != pgx.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			err = common.StatusError{
 				Err:  err,
 				Code: 404,
