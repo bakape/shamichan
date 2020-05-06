@@ -9,7 +9,7 @@ require (
 	github.com/abh/geoip v0.0.0-20160510155516-07cea4480daa
 	github.com/aquilax/tripcode v1.0.0
 	github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c
-	github.com/bakape/captchouli v1.2.0
+	github.com/bakape/captchouli v1.2.2
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
 	github.com/bakape/thumbnailer/v2 v2.5.9
 	github.com/boltdb/bolt v1.3.1
