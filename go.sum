@@ -19,6 +19,8 @@ github.com/bakape/captchouli v1.3.0 h1:OoieIVuGh8M+BsNdZkI1FqISSZc7zZKqtYZXajHJH
 github.com/bakape/captchouli v1.3.0/go.mod h1:jn7zdT7dg0L8kBhKEbhT5iI70tDkMGV4DgTrPOiXack=
 github.com/bakape/captchouli v1.4.0 h1:uIdjLT3ZvKz0onKPHkniYN8YIvFPK4T0PG+0TNgkN6A=
 github.com/bakape/captchouli v1.4.0/go.mod h1:jn7zdT7dg0L8kBhKEbhT5iI70tDkMGV4DgTrPOiXack=
+github.com/bakape/captchouli v1.4.1 h1:2JiD0OyS0JTP8SCPjdadczhzK+LB4KrCFpSoCTNtuX0=
+github.com/bakape/captchouli v1.4.1/go.mod h1:jn7zdT7dg0L8kBhKEbhT5iI70tDkMGV4DgTrPOiXack=
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992 h1:n89d5g4t1+7ROrwElvy5W/knDo3bUKWOZ77acIdHA04=
 github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992/go.mod h1:+x6GUyBL1gkeUoBPZAEzF9u04TGIFEljjrqMpGT0KVE=
 github.com/bakape/thumbnailer/v2 v2.5.2 h1:b3VfbMY4ysCn4YyG5clFZK3Wog5mLI0WO+xlQZpSU0s=
