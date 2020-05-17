@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bakape/captchouli"
+	"github.com/bakape/captchouli/v2"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
