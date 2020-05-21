@@ -3,10 +3,13 @@ returns trigger
 language plpgsql
 as $$
 begin
-	if (old.image is null and new.image is not null)
-		or (old.open and not new.open)
+	if not new.sage
+		and (
+			(old.image is null and not new.image is null)
+			or (old.open and not new.open)
+		)
 	then
-		call bump_thread(id => new.thread, page => new.page);
+		call bump_thread(new.thread);
 	end if;
 end;
 $$;

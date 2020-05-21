@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bakape/captchouli"
+	"github.com/bakape/captchouli/v2"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/test"
 )

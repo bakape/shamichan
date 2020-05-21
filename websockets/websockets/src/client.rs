@@ -1,16 +1,14 @@
-use super::common::DynResult;
-use super::config;
-use super::pulsar;
-use super::{bindings, registry, str_err};
+use crate::{bindings, common::DynResult, config, pulsar, registry, str_err};
 use protocol::{
 	debug_log,
-	payloads::{Authorization, HandshakeReq, Signature, ThreadCreationReq},
+	payloads::{
+		post_body::TextPatch, Authorization, HandshakeReq, Signature,
+		ThreadCreationReq,
+	},
 	Decoder, Encoder, MessageType,
 };
 use serde::Serialize;
-use std::io;
-use std::net::IpAddr;
-use std::sync::Arc;
+use std::{net::IpAddr, sync::Arc};
 
 // Public key public and private ID set
 #[derive(Clone)]
@@ -38,6 +36,24 @@ enum ConnState {
 	Synchronizing(PubKeyDesc),
 }
 
+struct OpenPost {
+	id: u64,
+	thread: u64,
+	body: String,
+	char_length: isize,
+}
+
+impl OpenPost {
+	fn new(id: u64, thread: u64) -> Self {
+		Self {
+			id,
+			thread,
+			body: String::new(),
+			char_length: 0,
+		}
+	}
+}
+
 // Maps to a websocket client on the Go side
 pub struct Client {
 	// ID of client used in various registries
@@ -50,8 +66,19 @@ pub struct Client {
 
 	// Client connection state
 	conn_state: ConnState,
+
+	// Post the client is currently editing
+	open_post: Option<OpenPost>,
 }
 
+// Return with invalid length error
+macro_rules! err_invalid_length {
+	($val:expr, $len:expr) => {
+		str_err!("invalid {} length: {}", stringify!($val), $len);
+	};
+}
+
+// Assert collection length
 #[rustfmt::skip]
 macro_rules! check_len {
 	// Assert collection length greater than 1 and smaller than $max
@@ -62,8 +89,25 @@ macro_rules! check_len {
 	($val:expr, $min:expr, $max:expr) => {{
 		let l = $val.len();
 		if l < $min || l > $max {
-			str_err!("invalid {} length: {}", stringify!(val), l);
+			err_invalid_length!($val, l)
 		}
+	}};
+}
+
+// Assert unicode string character length. Returns the length.
+#[rustfmt::skip]
+macro_rules! check_unicode_len {
+	// Assert string length greater than 1 and smaller than $max
+	($val:expr, $max:expr) => {
+		check_unicode_len!($val, 1, $max)
+	};
+	// Assert string length greater than $min and smaller than $max
+	($val:expr, $min:expr, $max:expr) => {{
+		let l = $val.chars().count();
+		if l < $min || l > $max {
+			err_invalid_length!($val, l)
+		}
+		l
 	}};
 }
 
@@ -80,6 +124,7 @@ impl Client {
 			id: id,
 			ip: ip,
 			conn_state: ConnState::Connected,
+			open_post: Default::default(),
 		}
 	}
 
@@ -147,13 +192,16 @@ impl Client {
 					return Ok(());
 				}
 				Some(t) => {
+					use ConnState::*;
+					use MessageType::*;
+
 					#[rustfmt::skip]
 					macro_rules! expect {
-						($type:ident) => {
-							if t != MessageType::$type {
+						($type:tt) => {
+							if t != $type {
 								str_err!(concat!(
 									"expected ",
-									stringify!(MessageType::$type)
+									stringify!($type)
 								));
 							}
 						};
@@ -161,30 +209,42 @@ impl Client {
 
 					first = false;
 					match &self.conn_state {
-						ConnState::Connected => {
+						Connected => {
 							expect!(Handshake);
 							self.handle_handshake(&mut dec)?;
 						}
-						ConnState::RequestedReshake { desc, pub_key } => {
+						RequestedReshake { desc, pub_key } => {
 							expect!(Handshake);
 							let desc = desc.clone();
 							let pub_key = pub_key.clone();
 							self.handle_reshake(&mut dec, desc, pub_key)?;
 						}
-						ConnState::AcceptedHandshake(desc) => {
+						AcceptedHandshake(desc) => {
 							expect!(Synchronize);
 							let feed = dec.read_next()?;
 							log_msg_in!(MessageType::Synchronize, feed);
-							self.conn_state =
-								ConnState::Synchronizing(desc.clone());
+							self.conn_state = Synchronizing(desc.clone());
 							self.synchronize(feed)?;
 						}
-						ConnState::Synchronizing(_) => route! { t,
+						Synchronizing(_) => route! { t,
 							CreateThread => |req: ThreadCreationReq| {
 								self.create_thread(req)
 							}
 							Synchronize => |feed: u64| {
 								self.synchronize(feed)
+							}
+							Append => |s: String| {
+								let n = check_unicode_len!(s, 2000);
+								self.update_body(n as isize, n, |b| {
+									*b += &s;
+									Ok(())
+								})
+							}
+							Backspace => |n: u16| {
+								self.backspace(n as usize)
+							}
+							PatchPostBody => |req: TextPatch| {
+								self.patch_body(req)
 							}
 						},
 					}
@@ -194,7 +254,7 @@ impl Client {
 	}
 
 	// Send a private message to only this client
-	fn send<T>(&self, t: MessageType, payload: &T) -> io::Result<()>
+	fn send<T>(&self, t: MessageType, payload: &T) -> std::io::Result<()>
 	where
 		T: Serialize + std::fmt::Debug,
 	{
@@ -225,8 +285,8 @@ impl Client {
 	// Decrease available solved captcha count, if available
 	pub fn check_captcha(&mut self, _solution: &[u8]) -> DynResult {
 		if config::read(|c| c.captcha) {
-			// TODO: Use IP for spam detection bans
-			unimplemented!()
+			// TODO: Use pub key for spam detection bans
+			todo!()
 		}
 		Ok(())
 	}
@@ -243,11 +303,11 @@ impl Client {
 	// Create a new thread and pass its ID to client
 	fn create_thread(&mut self, mut req: ThreadCreationReq) -> DynResult {
 		Self::trim(&mut req.subject);
-		check_len!(req.subject, 100);
+		check_unicode_len!(req.subject, 100);
 		check_len!(req.tags, 3);
 		for mut tag in req.tags.iter_mut() {
 			Self::trim(&mut tag);
-			check_len!(tag, 20);
+			check_unicode_len!(tag, 20);
 		}
 		self.check_captcha(&req.captcha_solution)?;
 
@@ -255,7 +315,12 @@ impl Client {
 			&req.subject,
 			&req.tags,
 			self.public_key_id()?,
+			Self::empty_body_json(),
 		)?;
+
+		// Ensures old post non-existence records do not persist indefinitely.
+		crate::body::cache_location(id, id, 0);
+
 		pulsar::create_thread(protocol::payloads::ThreadCreationNotice {
 			id: id,
 			subject: req.subject,
@@ -263,7 +328,126 @@ impl Client {
 		})?;
 
 		self.send(MessageType::CreateThreadAck, &id)?;
+		self.open_post = OpenPost::new(id, id).into();
 		Ok(())
+	}
+
+	// Reduce open post text body size by n chars from the back
+	fn backspace(&mut self, n: usize) -> DynResult {
+		if n == 0 {
+			str_err!("backspace size must be at least 1")
+		}
+		self.update_body(-(n as isize), n, |s| {
+			let mut removed = 0;
+			for (i, b) in s.as_bytes().iter().enumerate().rev() {
+				if Self::is_char_start(*b) {
+					removed += 1;
+					if removed == n {
+						s.truncate(i);
+						return Ok(());
+					}
+				}
+			}
+			Ok(())
+		})
+	}
+
+	// Reports whether the byte could be the first byte of an encoded,
+	// possibly invalid character. Second and subsequent bytes always have the
+	// top two bits set to 10.
+	fn is_char_start(b: u8) -> bool {
+		b & 0xC0 != 0x80
+	}
+
+	// Apply diff to text body
+	fn patch_body(&mut self, req: TextPatch) -> DynResult {
+		let insert_len = check_unicode_len!(req.insert, 2000);
+		if insert_len == 0 && req.remove == 0 {
+			str_err!("patch is a NOP")
+		}
+		self.update_body(
+			insert_len as isize - req.remove as isize,
+			insert_len + req.remove as usize,
+			|s| {
+				// Get the byte position of the requested character position
+				fn byte_pos(s: &str, needed_char_pos: usize) -> Option<usize> {
+					let mut char_pos: isize = -1;
+					for (i, b) in s.as_bytes().iter().enumerate() {
+						if Client::is_char_start(*b) {
+							char_pos += 1;
+							if char_pos as usize == needed_char_pos {
+								return Some(i);
+							}
+						}
+					}
+					None
+				}
+
+				let end = s.split_off(
+					byte_pos(&s, req.position as usize)
+						.ok_or("patch position out of bounds")?,
+				);
+				*s += &req.insert;
+				*s += &end[..byte_pos(&end, req.remove as usize)
+					.ok_or("char count to remove out of bounds")?];
+				Ok(())
+			},
+		)
+	}
+
+	// Update post body, sync to various services and DB and performs error
+	// handling
+	//
+	// len_diff: how much in Unicode chars would the length of the body change
+	// affected: number of Unicode characters affected by the mutation
+	// modify: modifies text body
+	fn update_body(
+		&mut self,
+		len_diff: isize,
+		affected: usize,
+		modify: impl Fn(&mut String) -> Result<(), &'static str>,
+	) -> DynResult {
+		let p = match &mut self.open_post {
+			Some(p) => p,
+			None => return Err("no post open".into()),
+		};
+
+		p.char_length += len_diff;
+		if p.char_length < 0 || p.char_length > 2000 {
+			str_err!("body length would exceed bounds")
+		}
+
+		modify(&mut p.body)?;
+
+		pulsar::set_open_body(p.id, p.thread, p.body.clone())?;
+		bindings::increment_spam_score(
+			self.public_key_id()?,
+			affected * crate::config::read(|c| c.spam_scores.character),
+		);
+
+		Ok(())
+	}
+
+	// Cached empty body JSON representation
+	//
+	// Non-useless const fn when?
+	fn empty_body_json() -> &'static [u8] {
+		use std::sync::Once;
+
+		static ONCE: Once = Once::new();
+		static mut BODY: Option<Vec<u8>> = None;
+		ONCE.call_once(|| {
+			unsafe {
+				BODY = Some(
+					serde_json::to_vec(
+						&protocol::payloads::post_body::Node::Empty,
+					)
+					.expect("failed to generate empty body JSON"),
+				)
+			};
+		});
+
+		unsafe { BODY.as_ref().unwrap() }
 	}
 
 	// Get public key private ID, if client is synchronized

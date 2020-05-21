@@ -24,12 +24,12 @@ import (
 )
 
 func init() {
-	util.Hook("config.updated", func() error {
-		c := config.Get()
-		C.ws_set_config(C.WSConfig{
-			captcha: C.bool(c.Captcha),
-		})
-		return nil
+	util.Hook("config.updated", func() (err error) {
+		buf, err := json.Marshal(config.Get())
+		if err != nil {
+			return
+		}
+		return fromCError(C.ws_set_config(toWSBuffer(buf)))
 	})
 }
 
@@ -39,8 +39,7 @@ func Init() (err error) {
 	if err != nil {
 		return
 	}
-	C.ws_init(toWSBuffer(buf))
-	return
+	return fromCError(C.ws_init(toWSBuffer(buf)))
 }
 
 // Construct byte slice from C pointer and size
@@ -116,6 +115,7 @@ func ws_insert_thread(
 	tags **C.char,
 	tags_size C.size_t,
 	public_key C.uint64_t,
+	body C.WSBuffer,
 	id *C.uint64_t,
 ) *C.char {
 	tags_ := make([]string, int(tags_size))
@@ -136,6 +136,7 @@ func ws_insert_thread(
 			Tags:    tags_,
 			PostInsertParamsCommon: db.PostInsertParamsCommon{
 				PublicKey: &pk,
+				Body:      toSlice(body.data, body.size),
 			},
 		},
 	)
@@ -186,6 +187,35 @@ func ws_get_public_key(
 	*priv_id = C.uint64_t(priv_id_)
 	pub_key.data = (*C.uint8_t)(C.CBytes(pub_key_))
 	pub_key.size = C.size_t(len(pub_key_))
+	return nil
+}
+
+//export ws_get_post_parenthood
+func ws_get_post_parenthood(
+	id C.uint64_t,
+	thread *C.uint64_t,
+	page *C.uint32_t,
+) *C.char {
+	thread_, page_, err := db.GetPostParenthood(uint64(id))
+	if err != nil {
+		return C.CString(err.Error())
+	}
+	*thread = C.uint64_t(thread_)
+	*page = C.uint32_t(page_)
+	return nil
+}
+
+//export ws_increment_spam_score
+func ws_increment_spam_score(pub_key C.uint64_t, score C.uint64_t) {
+	db.IncrementSpamScore(uint64(pub_key), uint64(score))
+}
+
+//export ws_write_open_post_bodies
+func ws_write_open_post_bodies(buf C.WSBuffer) *C.char {
+	err := db.WriteOpenPostBodies(toSlice(buf.data, buf.size))
+	if err != nil {
+		return C.CString(err.Error())
+	}
 	return nil
 }
 

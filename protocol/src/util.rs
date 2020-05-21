@@ -127,7 +127,13 @@ where
 // $extra_init: extra initialization lambda to execute
 #[macro_export]
 macro_rules! gen_global {
-	($vis_read:vis, $vis_write:vis, $type:ident) => {
+	(
+		$vis_read:vis,
+		$fn_read:ident,
+		$vis_write:vis,
+		$fn_write:ident,
+		$type:ty
+	) => {
 		static __ONCE: std::sync::Once = std::sync::Once::new();
 		static mut __GLOBAL: Option<std::sync::RwLock<$type>> = None;
 
@@ -139,7 +145,7 @@ macro_rules! gen_global {
 
 		// Open global for reading
 		#[allow(unused)]
-		$vis_read fn read<F, R>(cb: F) -> R
+		$vis_read fn $fn_read<F, R>(cb: F) -> R
 		where
 			F: FnOnce(&$type) -> R,
 		{
@@ -149,13 +155,16 @@ macro_rules! gen_global {
 
 		// Open global for writing
 		#[allow(unused)]
-		$vis_write fn write<F, R>(cb: F) -> R
+		$vis_write fn $fn_write<F, R>(cb: F) -> R
 		where
 			F: FnOnce(&mut $type) -> R,
 		{
 			__init();
 			cb(&mut *unsafe { __GLOBAL.as_ref().unwrap().write().unwrap() })
 		}
+	};
+	($vis_read:vis, $vis_write:vis, $type:ty) => {
+		$crate::gen_global!{$vis_read, read, $vis_write, write, $type}
 	};
 }
 

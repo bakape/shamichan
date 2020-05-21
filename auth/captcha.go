@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"sync"
 
-	"github.com/bakape/captchouli"
-	captchouli_common "github.com/bakape/captchouli/common"
+	"github.com/bakape/captchouli/v2"
+	captchouli_common "github.com/bakape/captchouli/v2/common"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 )

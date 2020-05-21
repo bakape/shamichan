@@ -25,8 +25,6 @@ func runCleanupTasks() {
 	for {
 		select {
 		case <-sec:
-			// TODO
-			// logError("flush open post bodies", FlushOpenPostBodies())
 			logError("spam score buffer flush", syncSpamScores)
 		case <-min:
 			// TODO:

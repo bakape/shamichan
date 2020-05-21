@@ -1,5 +1,3 @@
-use std::mem::swap;
-
 // Simple min-queue with ability to remove arbitrary nodes by a unique key
 pub struct Queue<T: PartialOrd> {
 	head: Option<Box<Node<T>>>,
@@ -16,7 +14,7 @@ fn insert_before<T: PartialOrd>(current: &mut Option<Box<Node<T>>>, val: T) {
 		Some(current) => {
 			if val < current.val {
 				let mut new = Node::new(val);
-				swap(&mut new, current);
+				std::mem::swap(&mut new, current);
 				current.next = Some(Box::new(new));
 			} else {
 				insert_before(&mut current.next, val);

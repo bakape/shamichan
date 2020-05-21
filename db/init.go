@@ -121,7 +121,6 @@ func Close() (err error) {
 
 // ClearTables deletes the contents of specified DB tables. Only used for tests.
 func ClearTables(tables ...string) (err error) {
-	clearOpenPostBuffer() // Clear Open post buffer between tests
 	for _, t := range tables {
 		_, err = db.Exec(context.Background(), `delete from `+t)
 		if err != nil {

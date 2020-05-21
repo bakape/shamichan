@@ -66,6 +66,16 @@ impl Encoder {
 		}
 	}
 
+	// Utility for only encoding a single message without any batching
+	pub fn encode(
+		typ: MessageType,
+		payload: &impl Serialize,
+	) -> io::Result<Vec<u8>> {
+		let mut enc = Encoder::new(Vec::new());
+		enc.write_message(typ, payload)?;
+		enc.finish()
+	}
+
 	// Indicate this is single message and not a concatenated vector of
 	// messages
 	fn init_single_message(w: &mut Vec<u8>) {

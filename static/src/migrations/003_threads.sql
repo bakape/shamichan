@@ -41,7 +41,7 @@ create table posts (
 
 	public_key bigint references public_keys,
 
-	body jsonb,
+	body jsonb not null,
 
 	image bytea references images,
 	image_name varchar(200) not null default '',
@@ -78,7 +78,9 @@ begin
 		else posts_in_thread / 100
 	end;
 
-	call bump_thread(new.thread, not new.sage, new.page);
+	if not new.sage then
+		call bump_thread(new.thread);
+	end if;
 
 	return new;
 end;
@@ -88,38 +90,12 @@ create trigger before_posts_insert
 before insert on posts
 for each row execute procedure before_posts_insert();
 
-create or replace function merge_jsonb_obj_st(in out s jsonb, item jsonb)
-language plpgsql stable parallel safe strict
+-- Bump a thread to top of index
+create or replace procedure bump_thread(id bigint)
+language sql
 as $$
-begin
-	s = s || item;
-end;
-$$;
-
-create aggregate merge_jsonb_obj(item jsonb) (
-	sfunc = merge_jsonb_obj_st,
-	stype = jsonb,
-	initcond = '{}'
-);
-
--- Bump a thread and propagate it has been updated
---
--- id: id of thread being bumped
--- bump_time: also update the thread's bumped_on
--- page: page of the thread to bump. Used for cache invalidation.
-create or replace procedure bump_thread(
-	id bigint,
-	bump_time bool = false,
-	page bigint = -2
-)
-language plpgsql
-as $$
-begin
-	if bump_thread.bump_time then
-		update threads as t
-			set bumped_on = now()
-			where t.id = bump_thread.id;
-	end if;
-end;
+	update threads as t
+	set bumped_on = now()
+	where t.id = bump_thread.id;
 $$;
 

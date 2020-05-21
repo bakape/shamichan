@@ -15,7 +15,9 @@ typedef struct {
 } WSRcBuffer;
 
 // Initialize module. Must be passed feed data read from databae as JSON.
-void ws_init(WSBuffer feed_data);
+//
+// Error must be freed by caller, if not null.
+char* ws_init(WSBuffer feed_data);
 
 // Register a websocket client with a unique ID and return any error as owned
 // string.
@@ -34,14 +36,10 @@ void ws_unref_message(void* src);
 // ws_close_client.
 void ws_receive_message(uint64_t client_id, WSBuffer msg);
 
-// Configurations passed to Rust from Go
-typedef struct {
-    // Enable captcha and antispam systems
-    bool captcha;
-} WSConfig;
-
-// Propagate select configuration changes to Rust side
-void ws_set_config(WSConfig);
+// Propagate select configuration changes to Rust side via non-owned JSON.
+//
+// Error must be freed by caller, if not null.
+char* ws_set_config(WSBuffer);
 
 // Register image insertion into an open post.
 //

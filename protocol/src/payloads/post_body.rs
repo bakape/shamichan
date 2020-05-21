@@ -1,9 +1,23 @@
 use serde::{Deserialize, Serialize};
+use std::hash::Hash;
 
 // Node of the post body tree
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 #[serde(tag = "type", content = "content")]
 pub enum Node {
+	// No content
+	Empty,
+
+	// Start a new line
+	NewLine,
+
+	// Contains a node and its next sibling. Allows building Node binary trees.
+	//
+	// Using a binary tree structure instead of vectors of nodes allows writing
+	// a cleaner multithreaded parser and differ with less for loops with
+	// complicated exit conditions.
+	Siblings([Box<Node>; 2]),
+
 	// Contains unformatted text. Can include newlines.
 	Text(String),
 
@@ -19,50 +33,82 @@ pub enum Node {
 	// Configured reference to URL
 	Reference { label: String, url: String },
 
-	// URL to embedadble resource
-	Embed(String),
+	// Link to embedadble resource
+	Embed(Embed),
 
 	// Programming code tags
-	//
-	// TODO: Run code highlighting using syntect server-side
-	// TODO: Allow `` to be followed by a supported language. Example: ``rust.
-	// TODO: Fallback to plaintext
 	Code(String),
 
 	// Spoiler tags
 	//
 	// TODO: make spoilers the top level tag (after code) to enable revealing
 	// it all on click or hover
-	Spoiler(Vec<Node>),
-
-	// Quoted Node list. Results from line starting with `>`.
-	Quoted(Vec<Node>),
+	Spoiler(Box<Node>),
 
 	// Bold formatting tags
-	Bold(Vec<Node>),
+	Bold(Box<Node>),
 
 	// Italic formatting tags
-	Italic(Vec<Node>),
+	Italic(Box<Node>),
+
+	// Quoted Node list. Results from line starting with `>`.
+	Quoted(Box<Node>),
+
+	// Node dependant on some database access or processing and pending
+	// finalization.
+	// Used by the server. These must never make it to the client.
+	Pending(PendingNode),
 }
 
-macro_rules! variant {
-    ($name:ident {$($field:ident: $t:ty,)*}) => {
-        #[derive(Serialize, Deserialize, Debug, Clone)]
-        pub struct $name {
-            $(pub $field: $t),*
-        }
-    }
+impl Default for Node {
+	fn default() -> Self {
+		Self::Empty
+	}
+}
+
+// Node dependant on some database access or processing and pending
+// finalization.
+// Used by the server. These must never make it to the client.
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+#[serde(tag = "type", content = "content")]
+pub enum PendingNode {
+	Flip,
+	EightBall,
+	Pyu,
+	PCount,
+
+	// Seconds to count down
+	Countdown(u64),
+
+	// Hours to ban self for
+	Autobahn(u16),
+
+	Dice {
+		// Amount to offset the sum of all throws by
+		offset: i16,
+
+		// Faces of the die
+		faces: u16,
+
+		// Rolls to perform
+		rolls: u8,
+	},
 }
 
 // Link to another post
-variant! { PostLink {
-	id: u64,
-	thread: u64,
-	page: u32,
-}}
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct PostLink {
+	pub id: u64,
+
+	// If thread = 0, link has not had it's parenthood looked up yet on the
+	// server
+	pub thread: u64,
+
+	pub page: u32,
+}
 
 // Hash command result
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
 #[serde(tag = "type", content = "content")]
 pub enum Command {
 	// Describes the parameters and results of one dice throw
@@ -85,11 +131,62 @@ pub enum Command {
 
 	// Synchronized countdown timer
 	Countdown {
-		// Unix timestamps
-		start: u32,
-		end: u32,
+		start: u32, // Unix timestamp
+		secs: u32,
 	},
 
 	// Self ban for N hours
-	AutoBahn(u16),
+	Autobahn(u16),
+
+	// Don't ask
+	Pyu(u64),
+
+	// Don't ask
+	PCount(u64),
+}
+
+// Embedded content providers
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub enum EmbedProvider {
+	YouTube,
+	SoundCloud,
+	Vimeo,
+	Coub,
+	Twitter,
+	Imgur,
+	BitChute,
+	Invidious,
+}
+
+// Describes and identifies a specific embedadble resource
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
+pub struct Embed {
+	pub provider: EmbedProvider,
+	pub data: String,
+}
+
+// Patch to apply to an existing node
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+pub enum PatchNode {
+	// Replace node with new one
+	Replace(Node),
+
+	// Descend deeper to patch one or both of the siblings
+	Siblings([Option<Box<PatchNode>>; 2]),
+
+	// Partially modify an existing Code, Text or URL Node
+	Patch(TextPatch),
+}
+
+// Partially modify an existing string
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
+pub struct TextPatch {
+	// Position to start the mutation at
+	pub position: u16,
+
+	// Number of characters to remove after position
+	pub remove: u16,
+
+	// Text to insert at position after removal
+	pub insert: String,
 }

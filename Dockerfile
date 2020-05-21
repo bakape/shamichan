@@ -1,4 +1,4 @@
-FROM golang
+FROM golang:buster
 
 EXPOSE 8000
 

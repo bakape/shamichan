@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 use yew::agent::{Agent, AgentLink, Context, HandlerId};
 use yew::services::interval::{IntervalService, IntervalTask};
 
+// TODO: apply correction from server clock
+
 // Unit division/multiplication array for computing a time unit from seconds
 static UNITS: [(Unit, u8); 5] = [
 	(Unit::Seconds, 60),

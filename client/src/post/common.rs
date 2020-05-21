@@ -125,20 +125,22 @@ where
 	}
 
 	fn update(&mut self, msg: Self::Message) -> bool {
+		use Message::*;
+
 		match msg {
-			Message::Rerender => true,
-			Message::NOP => false,
-			Message::Extra(e) => self.inner.update_extra(e),
-			Message::ImageHideToggle => {
+			Rerender => true,
+			NOP => false,
+			Extra(e) => self.inner.update_extra(e),
+			ImageHideToggle => {
 				self.reveal_image = !self.reveal_image;
 				true
 			}
-			Message::ImageExpand => {
+			ImageExpand => {
 				self.expand_image = true;
 				// TODO: Hide any hover previews
 				true
 			}
-			Message::ImageContract => {
+			ImageContract => {
 				self.expand_image = false;
 				if self.tall_image {
 					// TODO: Check this does not need to be deferred to next
@@ -148,7 +150,7 @@ where
 				self.tall_image = false;
 				true
 			}
-			Message::ImageDownload => {
+			ImageDownload => {
 				if let Some(el) = self
 					.image_download_button
 					.cast::<web_sys::HtmlAnchorElement>()
@@ -157,7 +159,7 @@ where
 				}
 				false
 			}
-			Message::SetVolume => {
+			SetVolume => {
 				if let Some(el) =
 					self.media_el.cast::<web_sys::HtmlAudioElement>()
 				{
@@ -167,7 +169,7 @@ where
 				}
 				false
 			}
-			Message::CheckTallImage => {
+			CheckTallImage => {
 				state::read(|s| {
 					if let (Some(img), Some(wh)) = (
 						s.posts
@@ -499,8 +501,10 @@ where
 		c: &RenderCtx<'s, 'c, PC>,
 		img: &Image,
 	) -> Html {
+		use FileType::*;
+
 		match img.common.thumb_type {
-			FileType::NoFile | FileType::PDF => return html! {},
+			NoFile | PDF => return html! {},
 			_ => (),
 		};
 
@@ -510,9 +514,9 @@ where
 		// 8 MB is the size limit on many engines.
 		let (root, typ) =
 			match (&img.common.file_type, img.common.size < 8 << 20) {
-				(FileType::JPEG, true)
-				| (FileType::PNG, true)
-				| (FileType::GIF, true) => ("src", &img.common.file_type),
+				(JPEG, true) | (PNG, true) | (GIF, true) => {
+					("src", &img.common.file_type)
+				}
 				_ => ("thumb", &img.common.thumb_type),
 			};
 		let url = format!(
@@ -556,6 +560,7 @@ where
 		img: &Image,
 	) -> Html {
 		use yew::events::MouseEvent;
+		use FileType::*;
 
 		if !self.reveal_image
 			&& (c.app.options.hide_thumbnails || c.app.options.work_mode)
@@ -566,23 +571,19 @@ where
 		let src = source_path(c.app, img);
 		let thumb: Html;
 		let is_audio = match img.common.file_type {
-			FileType::MP3 | FileType::FLAC => true,
-			FileType::WEBM | FileType::MP4 | FileType::OGG => !img.common.video,
+			MP3 | FLAC => true,
+			WEBM | MP4 | OGG => !img.common.video,
 			_ => false,
 		};
 
 		let (w, h, url) = if !self.expand_image || is_audio {
-			if img.common.thumb_type == FileType::NoFile {
+			if img.common.thumb_type == NoFile {
 				// No thumbnail exists
 				(
 					150,
 					150,
 					match img.common.file_type {
-						FileType::WEBM
-						| FileType::MP4
-						| FileType::MP3
-						| FileType::OGG
-						| FileType::FLAC => "/assets/audio.png",
+						WEBM | MP4 | MP3 | OGG | FLAC => "/assets/audio.png",
 						_ => "/assets/file.png",
 					}
 					.to_string(),
@@ -592,7 +593,7 @@ where
 			{
 				// Spoilered and spoilers enabled
 				(150, 150, "/assets/spoil/default.jpg".into())
-			} else if img.common.file_type == FileType::GIF
+			} else if img.common.file_type == GIF
 				&& c.app.options.expand_gif_thumbnails
 			{
 				// Animated GIF thumbnails
@@ -637,7 +638,7 @@ where
 			});
 
 			thumb = match img.common.file_type {
-				FileType::OGG | FileType::MP4 | FileType::WEBM => {
+				OGG | MP4 | WEBM => {
 					self.link.send_message(Message::SetVolume);
 					html! {
 						<video
@@ -747,19 +748,12 @@ fn source_path(s: &State, img: &Image) -> String {
 }
 
 fn is_expandable(t: FileType) -> bool {
+	use FileType::*;
+
 	match t {
 		// Nothing to preview for these
-		FileType::PDF
-		| FileType::MP3
-		| FileType::FLAC
-		| FileType::ZIP
-		| FileType::SevenZip
-		| FileType::TXZ
-		| FileType::TGZ
-		| FileType::TXT
-		| FileType::RAR
-		| FileType::CBR
-		| FileType::CBZ => false,
+		PDF | MP3 | FLAC | ZIP | SevenZip | TXZ | TGZ | TXT | RAR | CBR
+		| CBZ => false,
 		_ => true,
 	}
 }

@@ -1,24 +1,29 @@
 package config
 
+// Amounts to increase spam score by for a user action
+type SpamScores struct {
+	Char         uint64 `json:"character"`
+	Image        uint64 `json:"image"`
+	PostCreation uint64 `json:"post_creation"`
+}
+
 // Configs stores the global server configuration
 type Configs struct {
 	Public
-	EmailErr          bool   `json:"email_errors"`
-	JPEGThumbnails    bool   `json:"JPEG_thumbnails"`
-	DisableRobots     bool   `json:"disable_robots"`
-	MaxWidth          uint16 `json:"max_width"`
-	MaxHeight         uint16 `json:"max_height"`
-	EmailErrPort      uint   `json:"email_errors_server_port"`
-	CharScore         uint   `json:"char_score"`
-	PostCreationScore uint   `json:"post_creation_score"`
-	ImageScore        uint   `json:"image_score"`
-	RootURL           string `json:"root_URL"`
-	Salt              string `json:"salt"`
-	EmailErrMail      string `json:"email_errors_address"`
-	EmailErrPass      string `json:"email_errors_password"`
-	EmailErrSub       string `json:"email_errors_server_address"`
-	FAQ               string
-	CaptchaTags       []string `json:"captcha_tags"`
+	EmailErr       bool   `json:"email_errors"`
+	JPEGThumbnails bool   `json:"JPEG_thumbnails"`
+	DisableRobots  bool   `json:"disable_robots"`
+	MaxWidth       uint16 `json:"max_width"`
+	MaxHeight      uint16 `json:"max_height"`
+	EmailErrPort   uint   `json:"email_errors_server_port"`
+	RootURL        string `json:"root_URL"`
+	Salt           string `json:"salt"`
+	EmailErrMail   string `json:"email_errors_address"`
+	EmailErrPass   string `json:"email_errors_password"`
+	EmailErrSub    string `json:"email_errors_server_address"`
+	FAQ            string
+	CaptchaTags    []string   `json:"captcha_tags"`
+	SpamScores     SpamScores `json:"spam_scores"`
 }
 
 // Public contains configurations exposeable through public availability APIs

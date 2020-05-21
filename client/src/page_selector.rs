@@ -48,8 +48,10 @@ impl Component for PageSelector {
 	}
 
 	fn update(&mut self, msg: Self::Message) -> bool {
+		use Message::*;
+
 		match msg {
-			Message::Scroll { left, to_end } => {
+			Scroll { left, to_end } => {
 				let old = self.offset;
 				let max = if self.page_count > 5 {
 					self.page_count - 5
@@ -73,13 +75,13 @@ impl Component for PageSelector {
 
 				self.offset != old
 			}
-			Message::SelectPage(_) => todo!("page navigation"),
-			Message::ThreadUpdate => {
+			SelectPage(_) => todo!("page navigation"),
+			ThreadUpdate => {
 				let old = self.page_count;
 				self.fetch_page_count();
 				old != self.page_count
 			}
-			Message::NOP => false,
+			NOP => false,
 		}
 	}
 

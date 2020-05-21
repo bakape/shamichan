@@ -24,6 +24,7 @@ func insertSampleThread(t *testing.T) (id uint64, pubKey uint64) {
 		Tags:    []string{"animu", "mango"},
 		PostInsertParamsCommon: PostInsertParamsCommon{
 			PublicKey: &pubKey,
+			Body:      []byte("{}"),
 		},
 	})
 	if err != nil {
@@ -89,6 +90,7 @@ func TestGetFeedData(t *testing.T) {
 				Thread: threads[i],
 				PostInsertParamsCommon: PostInsertParamsCommon{
 					PublicKey: &pubKey,
+					Body:      []byte("{}"),
 				},
 			})
 			return
@@ -124,7 +126,7 @@ func TestGetFeedData(t *testing.T) {
 			"thread": threads[0],
 			"open_posts": map[uint64]map[string]interface{}{
 				replies[0]: {
-					"body":            nil,
+					"body":            map[string]interface{}{},
 					"thread":          threads[0],
 					"has_image":       false,
 					"created_on":      ut,
@@ -139,7 +141,7 @@ func TestGetFeedData(t *testing.T) {
 			"thread": threads[1],
 			"open_posts": map[uint64]map[string]interface{}{
 				replies[1]: {
-					"body":            nil,
+					"body":            map[string]interface{}{},
 					"thread":          threads[1],
 					"has_image":       false,
 					"created_on":      ut,
@@ -153,7 +155,7 @@ func TestGetFeedData(t *testing.T) {
 	})
 }
 
-func TestGetThread(t *testing.T) {
+func TestReadThreads(t *testing.T) {
 	clearTables(t, "threads")
 
 	img, _, closeFiles := prepareSampleImage(t)
@@ -177,7 +179,7 @@ func TestGetThread(t *testing.T) {
 			"name":       nil,
 			"trip":       nil,
 			"flag":       nil,
-			"body":       nil,
+			"body":       map[string]interface{}{},
 			"image":      nil,
 		}
 	}
@@ -211,7 +213,7 @@ func TestGetThread(t *testing.T) {
 			"name":       nil,
 			"trip":       nil,
 			"flag":       nil,
-			"body":       nil,
+			"body":       map[string]interface{}{},
 			"image": map[string]interface{}{
 				"md5":          hex.EncodeToString(img.MD5[:]),
 				"name":         imageName,
@@ -277,6 +279,7 @@ func TestGetThread(t *testing.T) {
 				Thread: thread,
 				PostInsertParamsCommon: PostInsertParamsCommon{
 					PublicKey: &pubKey,
+					Body:      []byte("{}"),
 				},
 			})
 			if err != nil {
@@ -447,5 +450,16 @@ func TestGetThread(t *testing.T) {
 			t.Fatal(err)
 		}
 		test.AssertEquals(t, res, []string{"animu", "mango"})
+	})
+
+	t.Run("get post parenthood", func(t *testing.T) {
+		t.Parallel()
+
+		threadRes, page, err := GetPostParenthood(posts[1]["id"].(uint64))
+		if err != nil {
+			t.Fatal(err)
+		}
+		test.AssertEquals(t, thread, threadRes)
+		test.AssertEquals(t, page, uint32(0))
 	})
 }

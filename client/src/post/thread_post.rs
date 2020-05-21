@@ -15,6 +15,6 @@ impl PostComponent for Inner {
 	}
 
 	fn render_body<'s, 'c>(&self, c: &RenderCtx<'s, 'c, Self>) -> Html {
-		super::body::render(c)
+		super::body::render(c, &c.post.body)
 	}
 }

@@ -20,6 +20,9 @@ type PostInsertParamsCommon struct {
 
 	// Country flag to attach to poster
 	Flag *string
+
+	// Text body as JSON AST
+	Body []byte
 }
 
 // For inserting a thread reply
@@ -70,5 +73,19 @@ func GetPost(ctx context.Context, id uint64) (post []byte, err error) {
 		).
 		Scan(&post)
 	castNoRows(&post, &err)
+	return
+}
+
+// Get thread and page numbers a post is in
+func GetPostParenthood(id uint64) (thread uint64, page uint32, err error) {
+	err = db.
+		QueryRow(
+			context.Background(),
+			`select thread, page
+			from posts
+			where id = $1`,
+			id,
+		).
+		Scan(&thread, &page)
 	return
 }

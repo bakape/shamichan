@@ -13,6 +13,8 @@ import (
 	"github.com/bakape/recache/v5"
 )
 
+// TODO: Evict from cache on post and thread updates
+
 const evictionTimer = time.Second * 10
 
 var (

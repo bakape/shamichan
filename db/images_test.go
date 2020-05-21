@@ -182,7 +182,7 @@ func TestInsertImage(t *testing.T) {
 		}
 		test.AssertJSON(t, bytes.NewReader(res), map[string]interface{}{
 			"id":   thread,
-			"body": nil,
+			"body": map[string]interface{}{},
 			"flag": nil,
 			"name": nil,
 			"open": true,

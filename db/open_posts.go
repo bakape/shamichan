@@ -2,33 +2,24 @@ package db
 
 import (
 	"context"
+	"encoding/json"
 	"sort"
-	"sync"
 
 	"github.com/jackc/pgx/v4"
 )
 
-var (
-	// Buffer of pending open post body changes. Used to reduce DB I/O with
-	// rapid open post body changes.
-	openPostBodyBuffer = make(map[uint64][]byte)
-
-	// Protects openPostBodyBuffer
-	openPostBodyBufferMu sync.Mutex
-)
-
-// Flush any buffered open post bodies to DB
-func FlushOpenPostBodies() (err error) {
-	openPostBodyBufferMu.Lock()
-	defer openPostBodyBufferMu.Unlock()
-
-	if len(openPostBodyBuffer) == 0 {
+// Write open post bodies to DB.
+// Bodies must be in map[string]Body JSON map format.
+func WriteOpenPostBodies(buf []byte) (err error) {
+	var bodies map[uint64]json.RawMessage
+	err = json.Unmarshal(buf, &bodies)
+	if err != nil {
 		return
 	}
 
 	// Sort IDs for more sequential DB access
-	toWrite := make(idSorter, 0, len(openPostBodyBuffer))
-	for id := range openPostBodyBuffer {
+	toWrite := make(idSorter, 0, len(bodies))
+	for id := range bodies {
 		toWrite = append(toWrite, id)
 	}
 	sort.Sort(toWrite)
@@ -40,32 +31,13 @@ func FlushOpenPostBodies() (err error) {
 				`update posts
 				set body = $1
 				where id = $2 and editing = true`,
-				openPostBodyBuffer[id],
+				bodies[id],
 				id,
 			)
 			if err != nil {
 				return
 			}
-			delete(openPostBodyBuffer, id)
 		}
 		return
 	})
-}
-
-// Clear any buffered open post changes
-func clearOpenPostBuffer() {
-	openPostBodyBufferMu.Lock()
-	defer openPostBodyBufferMu.Unlock()
-
-	for k := range openPostBodyBuffer {
-		delete(openPostBodyBuffer, k)
-	}
-}
-
-// Buffer open post body for eventual writing to DB
-func WriteOpenPostBody(id uint64, body []byte) {
-	openPostBodyBufferMu.Lock()
-	defer openPostBodyBufferMu.Unlock()
-
-	openPostBodyBuffer[id] = body
 }

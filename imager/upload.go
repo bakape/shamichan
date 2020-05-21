@@ -277,7 +277,7 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (
 		}
 		return
 	}
-	db.IncrementSpamScore(pubKeyID, config.Get().ImageScore)
+	db.IncrementSpamScore(pubKeyID, config.Get().SpamScores.Image)
 	return
 }
 

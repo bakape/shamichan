@@ -26,15 +26,17 @@ var (
 
 	// Defaults contains the default server configuration values
 	Defaults = Configs{
-		MaxHeight:         6000,
-		MaxWidth:          6000,
-		CharScore:         170,
-		PostCreationScore: 15000,
-		ImageScore:        15000,
-		EmailErrPort:      587,
-		Salt:              "LALALALALALALALALALALALALALALALALALALALA",
-		RootURL:           "http://127.0.0.1",
-		FAQ:               defaultFAQ,
+		MaxHeight:    6000,
+		MaxWidth:     6000,
+		EmailErrPort: 587,
+		Salt:         "LALALALALALALALALALALALALALALALALALALALA",
+		RootURL:      "http://127.0.0.1",
+		FAQ:          defaultFAQ,
+		SpamScores: SpamScores{
+			Char:         170,
+			PostCreation: 15000,
+			Image:        15000,
+		},
 		CaptchaTags: []string{
 			"patchouli_knowledge",
 			"cirno",

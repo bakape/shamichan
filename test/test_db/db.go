@@ -38,6 +38,7 @@ func InsertSampleThread(t *testing.T) (id uint64, keyPair KeyPair) {
 		Tags:    []string{"animu", "mango"},
 		PostInsertParamsCommon: db.PostInsertParamsCommon{
 			PublicKey: &keyPair.PrivID,
+			Body:      []byte("{}"),
 		},
 	})
 	if err != nil {

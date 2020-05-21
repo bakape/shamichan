@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bakape/captchouli"
+	"github.com/bakape/captchouli/v2"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
@@ -66,12 +66,12 @@ func flushSpamScores() (err error) {
 	})
 }
 
-// IncrementSpamScore increments spam detection score of a captcha session
-// and sends captcha requests, if score exceeded.
+// Increments spam detection score of a public key and sends captcha requests,
+// if score exceeded.
 //
-// pubKey: token identifying pubKey
+// pubKey: private ID of user publick key
 // increment: increment amount in milliseconds
-func IncrementSpamScore(pubKey uint64, increment uint) {
+func IncrementSpamScore(pubKey uint64, increment uint64) {
 	if !config.Get().Captcha {
 		return
 	}

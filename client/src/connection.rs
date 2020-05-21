@@ -167,12 +167,14 @@ impl Agent for Connection {
 	}
 
 	fn update(&mut self, msg: Event) {
+		use Event::*;
+
 		match msg {
-			Event::Open => {
+			Open => {
 				self.reset_reconn_attempts();
 				Self::send_handshake_req(state::read(|s| s.key_pair.clone()))
 			}
-			Event::CheckUpdates => {
+			CheckUpdates => {
 				util::log_error_res(state::read(|s| -> util::Result {
 					if match (&s.key_pair.id, &self.authed_with) {
 						(Some(new), Some(old)) => new != old,
@@ -197,7 +199,7 @@ impl Agent for Connection {
 					Ok(())
 				}))
 			}
-			Event::Close(e) => {
+			Close(e) => {
 				self.reset_socket_and_timer();
 				if e.code() != 1000 && e.reason() != "" {
 					if e.reason() == "unknown public key ID" {
@@ -210,24 +212,24 @@ impl Agent for Connection {
 				}
 				self.handle_disconnect();
 			}
-			Event::Error(e) => {
+			Error(e) => {
 				self.reset_socket_and_timer();
 				util::log_error(&e.message());
 				self.set_state(State::Dropped);
 			}
-			Event::TryReconnecting => {
+			TryReconnecting => {
 				if self.state == State::Dropped {
 					self.connect();
 				}
 			}
-			Event::Receive(e) => {
+			Receive(e) => {
 				util::log_error_res(
 					self.on_message(
 						js_sys::Uint8Array::new(&e.data()).to_vec(),
 					),
 				);
 			}
-			Event::VisibilityChanged => {
+			VisibilityChanged => {
 				if util::document().hidden()
 					|| !util::window().navigator().on_line()
 				{
@@ -243,8 +245,8 @@ impl Agent for Connection {
 					}
 				}
 			}
-			Event::WentOnline => self.connect(),
-			Event::WentOffline => self.handle_disconnect(),
+			WentOnline => self.connect(),
+			WentOffline => self.handle_disconnect(),
 		};
 	}
 
@@ -338,14 +340,14 @@ impl Connection {
 	}
 
 	fn send(&self, cat: MessageCategory, mut msg: Vec<u8>) -> util::Result {
+		use MessageCategory::*;
+		use State::*;
+
 		match (
 			match self.state {
-				State::Connecting => matches!(cat, MessageCategory::Handshake),
-				State::Handshaking => matches!(
-					cat,
-					MessageCategory::Handshake | MessageCategory::Synchronize
-				),
-				State::Synced | State::Syncing => true,
+				Connecting => matches!(cat, Handshake),
+				Handshaking => matches!(cat, Handshake | Synchronize),
+				Synced | Syncing => true,
 				_ => false,
 			},
 			self.socket.as_ref(),
@@ -440,6 +442,8 @@ impl Connection {
 	}
 
 	fn on_message(&mut self, data: Vec<u8>) -> util::Result {
+		use MessageType::*;
+
 		// Helper to make message handling through route!() more terse
 		struct HandlerResult(util::Result);
 
@@ -480,11 +484,11 @@ impl Connection {
 		let mut dec = Decoder::new(&data)?;
 
 		macro_rules! route {
-			($type:expr, $($msg_type:ident => $handler:expr)+) => {
+			($type:expr, $($msg_type:tt => $handler:expr)+) => {
 				match $type {
 					$(
-						MessageType::$msg_type => {
-							_route(&mut dec, MessageType::$msg_type, $handler)?
+						$msg_type => {
+							_route(&mut dec, $msg_type, $handler)?
 						}
 					)+
 					_ => {
@@ -549,8 +553,8 @@ impl Connection {
 						// TODO: Save thread as owned and navigate to it
 					}
 					CreateThread => |_: ThreadCreationNotice| {
-							// TODO: Insert thread into registry and rerender
-							// page, if needed
+						// TODO: Insert thread into registry and rerender
+						// page, if needed
 					}
 				},
 				None => return Ok(()),
@@ -648,6 +652,8 @@ impl Component for SyncCounter {
 	}
 
 	fn view(&self) -> Html {
+		use State::*;
+
 		html! {
 			<b
 				id="sync"
@@ -657,12 +663,12 @@ impl Component for SyncCounter {
 				{
 					localize! {
 						match self.current {
-							State::Loading => "loading",
-							State::Connecting => "connecting",
-							State::Dropped => "disconnected",
-							State::Synced => "synced",
-							State::Syncing => "syncing",
-							State::Handshaking => "handshaking"
+							Loading => "loading",
+							Connecting => "connecting",
+							Dropped => "disconnected",
+							Synced => "synced",
+							Syncing => "syncing",
+							Handshaking => "handshaking"
 						}
 					}
 				}

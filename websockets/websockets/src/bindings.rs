@@ -209,6 +209,7 @@ pub fn insert_thread(
 	subject: &str,
 	tags: &[String],
 	public_key: u64,
+	body: &[u8],
 ) -> DynResult<u64> {
 	let mut _tags: Vec<CString> = Vec::with_capacity(tags.len());
 	for t in tags {
@@ -223,6 +224,7 @@ pub fn insert_thread(
 			__tags.as_ptr(),
 			__tags.len(),
 			public_key,
+			body.into(),
 			&mut id as *mut u64,
 		)
 	})?;
@@ -234,32 +236,24 @@ pub fn log_error(err: &str) {
 	with_borrowed_c_char(err, |err| unsafe { ws_log_error(err) });
 }
 
-#[repr(C)]
-struct WSConfig {
-	captcha: bool,
-}
-
-// Pointless for now, but will add properties with some conversion needed later
-impl Into<config::Config> for WSConfig {
-	fn into(self) -> config::Config {
-		config::Config {
-			captcha: self.captcha,
-		}
-	}
-}
-
 // Propagate select configuration changes to Rust side
 #[no_mangle]
-extern "C" fn ws_set_config(wsc: WSConfig) {
-	config::write(|c| *c = wsc.into());
+extern "C" fn ws_set_config(buf: WSBuffer) -> *mut c_char {
+	cast_to_c_error(|| -> Result<(), serde_json::Error> {
+		let new = serde_json::from_slice(buf.as_ref())?;
+		config::write(|c| *c = new);
+		Ok(())
+	})
 }
 
 // Initialize module
 #[no_mangle]
-extern "C" fn ws_init(feed_data: WSBuffer) {
-	if let Err(err) = pulsar::init(feed_data.as_ref()) {
-		panic!(format!("could not start pulsar: {}", err));
-	}
+extern "C" fn ws_init(feed_data: WSBuffer) -> *mut c_char {
+	cast_to_c_error(|| -> Result<(), String> {
+		pulsar::init(feed_data.as_ref())
+			.map_err(|e| format!("could not start pulsar: {}", e))?;
+		Ok(())
+	})
 }
 
 // Register image insertion into an open post.
@@ -319,6 +313,43 @@ pub fn get_public_key(
 	Ok((priv_id, pub_key))
 }
 
+// Get thread and page numbers a post is in.
+// Returns OK(None), if post does not exist.
+pub fn get_post_parenthood(id: u64) -> Result<Option<(u64, u32)>, String> {
+	let mut thread = 0;
+	let mut page = 0;
+	match cast_c_err(unsafe {
+		ws_get_post_parenthood(
+			id,
+			&mut thread as *mut u64,
+			&mut page as *mut u32,
+		)
+	}) {
+		Ok(_) => Ok(Some((thread, page))),
+		Err(err) => {
+			if err == "no rows in result set" {
+				Ok(None)
+			} else {
+				Err(err)
+			}
+		}
+	}
+}
+
+// Increments spam detection score of a public key and sends captcha requests,
+// if score exceeded.
+pub fn increment_spam_score(pub_key: u64, score: usize) {
+	unsafe {
+		ws_increment_spam_score(pub_key, score as u64);
+	}
+}
+
+// Write open post bodies to DB.
+// Bodies must be in map[string]Body JSON map format.
+pub fn write_open_post_bodies(buf: &[u8]) -> Result<(), String> {
+	cast_c_err(unsafe { ws_write_open_post_bodies(buf.into()) })
+}
+
 // Linked from Go
 extern "C" {
 	fn ws_write_message(client_id: u64, msg: WSRcBuffer);
@@ -330,6 +361,7 @@ extern "C" {
 		tags: *const *const c_char,
 		tags_size: usize,
 		public_key: u64,
+		body: WSBuffer,
 		id: *mut u64,
 	) -> *mut c_char;
 	fn ws_register_public_key(
@@ -343,4 +375,11 @@ extern "C" {
 		priv_id: *mut u64,
 		pub_key: *mut WSBufferOwned,
 	) -> *mut c_char;
+	fn ws_get_post_parenthood(
+		id: u64,
+		thread: *mut u64,
+		page: *mut u32,
+	) -> *mut c_char;
+	fn ws_increment_spam_score(pub_key: u64, score: u64);
+	fn ws_write_open_post_bodies(buf: WSBuffer) -> *mut c_char;
 }

@@ -349,7 +349,7 @@ pub struct Post {
 	pub flag: Option<String>,
 	pub sage: bool,
 
-	pub body: Option<Node>,
+	pub body: Node,
 	pub image: Option<Image>,
 }
 
@@ -482,9 +482,11 @@ impl Default for FeedID {
 impl FeedID {
 	// Return corresponding integer feed code use by the server
 	pub fn as_u64(&self) -> u64 {
+		use FeedID::*;
+
 		match self {
-			Self::Index | Self::Catalog => 0,
-			Self::Thread { id, .. } => *id,
+			Index | Catalog => 0,
+			Thread { id, .. } => *id,
 		}
 	}
 }
@@ -557,20 +559,23 @@ impl Location {
 	}
 
 	fn path(&self) -> String {
+		use FeedID::*;
+		use Focus::*;
+
 		let mut w: String = match &self.feed {
-			FeedID::Index => "/".into(),
-			FeedID::Catalog => "/catalog".into(),
-			FeedID::Thread { id, page } => format!("/threads/{}/{}", id, page),
+			Index => "/".into(),
+			Catalog => "/catalog".into(),
+			Thread { id, page } => format!("/threads/{}/{}", id, page),
 		};
 		if let Some(f) = &self.focus {
 			match f {
-				Focus::Bottom => {
+				Bottom => {
 					w += "#bottom";
 				}
-				Focus::Top => {
+				Top => {
 					w += "#top";
 				}
-				Focus::Post(id) => {
+				Post(id) => {
 					use std::fmt::Write;
 
 					write!(w, "#p-{}", id).unwrap();
@@ -623,23 +628,26 @@ impl yew::agent::Agent for Agent {
 	}
 
 	fn update(&mut self, msg: Self::Message) {
+		use Message::*;
+
 		match msg {
-			Message::FetchedThreadIndex { loc, data, flags } => {
+			FetchedThreadIndex { loc, data, flags } => {
 				self.process_successful_feed_fetch(loc, data, flags);
 			}
-			Message::FetchedThread { loc, data, flags } => {
+			FetchedThread { loc, data, flags } => {
 				self.process_successful_feed_fetch(
 					loc,
 					std::iter::once(data),
 					flags,
 				);
 			}
-			Message::FetchFailed(s) => {
+			FetchFailed(s) => {
 				util::log_error(&s);
 				util::alert(&s);
 				self.fetch_task = None;
 			}
-			Message::Focus(f) => {
+			Focus(f) => {
+				use self::Focus::*;
 				use util::document;
 				use web_sys::HtmlElement;
 
@@ -658,12 +666,12 @@ impl yew::agent::Agent for Agent {
 				util::window().scroll_with_x_and_y(
 					0.0,
 					match f {
-						Focus::Top => banner_height(),
-						Focus::Bottom => document()
+						Top => banner_height(),
+						Bottom => document()
 							.document_element()
 							.map(|el| el.scroll_height())
 							.unwrap_or_default() as f64,
-						Focus::Post(id) => document()
+						Post(id) => document()
 							.get_element_by_id(&format!("p-{}", id))
 							.map(|el| {
 								el.dyn_into::<HtmlElement>().ok().map(|el| {
@@ -675,18 +683,18 @@ impl yew::agent::Agent for Agent {
 					},
 				);
 			}
-			Message::PoppedState => {
-				self.set_location(Location::from_path(), SET_STATE)
-			}
+			PoppedState => self.set_location(Location::from_path(), SET_STATE),
 		}
 	}
 
 	fn handle_input(&mut self, req: Self::Input, id: HandlerId) {
+		use Request::*;
+
 		match req {
-			Request::NotifyChange(h) => self.hooks.insert(h, id),
-			Request::NavigateTo { loc, flags } => self.set_location(loc, flags),
-			Request::FetchFeed(loc) => self.fetch_feed_data(loc, 0),
-			Request::SetKeyID(id) => util::with_logging(|| {
+			NotifyChange(h) => self.hooks.insert(h, id),
+			NavigateTo { loc, flags } => self.set_location(loc, flags),
+			FetchFeed(loc) => self.fetch_feed_data(loc, 0),
+			SetKeyID(id) => util::with_logging(|| {
 				write(|s| {
 					s.key_pair.id = id;
 					s.key_pair.store()?;
@@ -714,6 +722,8 @@ impl Agent {
 	// Set app location and propagate changes
 	fn set_location(&mut self, new: Location, flags: u8) {
 		write(|s| {
+			use FeedID::*;
+
 			let old = s.location.clone();
 			if old == new {
 				return;
@@ -727,11 +737,11 @@ impl Agent {
 			let need_fetch = flags & FETCHED_JSON == 0
 				&& match (&old.feed, &new.feed) {
 					(
-						FeedID::Thread {
+						Thread {
 							id: old_id,
 							page: old_page,
 						},
-						FeedID::Thread {
+						Thread {
 							id: new_id,
 							page: new_page,
 						},
@@ -743,9 +753,7 @@ impl Agent {
 					}
 
 					// Index/Catalog and Thread transitions always need a fetch
-					(FeedID::Thread { .. }, _) | (_, FeedID::Thread { .. }) => {
-						true
-					}
+					(Thread { .. }, _) | (_, Thread { .. }) => true,
 
 					// Catalog and Index transition do not need a fetch
 					_ => false,
@@ -786,7 +794,7 @@ impl Agent {
 		});
 	}
 
-	// Fetch feed data from JSON API!
+	// Fetch feed data from JSON API
 	fn fetch_feed_data(&mut self, loc: Location, flags: u8) {
 		util::with_logging(|| {
 			use anyhow::Error;
@@ -896,9 +904,6 @@ impl Agent {
 		write(|s| {
 			add_hook(Change::ThreadList);
 			for (id, _) in s.threads.drain() {
-				add_hook(Change::Thread(id));
-			}
-			for (id, _) in s.posts.drain() {
 				add_hook(Change::Thread(id));
 			}
 

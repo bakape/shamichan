@@ -124,20 +124,20 @@ where
 
 // Insert key-value pairs into parsed localization format string
 pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
+	use Token::*;
+
 	read(|l| match l.format_strings.get(key) {
 		Some(fmt) => {
 			let mut w = String::new();
 			for t in fmt.0.iter() {
 				match t {
-					Token::Text(t) => w += &t,
-					Token::Variable(k) => {
-						match args.iter().find(|kv| kv.0 == k) {
-							Some(kv) => w += kv.1,
-							None => {
-								write!(w, "{{{}}}", k).unwrap();
-							}
+					Text(t) => w += &t,
+					Variable(k) => match args.iter().find(|kv| kv.0 == k) {
+						Some(kv) => w += kv.1,
+						None => {
+							write!(w, "{{{}}}", k).unwrap();
 						}
-					}
+					},
 				};
 			}
 			w

@@ -53,11 +53,12 @@ impl Component for Thread {
 
 	fn view(&self) -> Html {
 		use super::post::ThreadPost;
+		use PostSet::*;
 
 		// TODO: Filter hidden posts
 
 		let posts: Vec<u64> = state::read(|s| match self.props.pages {
-			PostSet::Last5Posts => {
+			Last5Posts => {
 				let mut v = Vec::with_capacity(5);
 				let page_count = s
 					.threads
@@ -75,7 +76,7 @@ impl Component for Thread {
 					v
 				}
 			}
-			PostSet::Page(page) => {
+			Page(page) => {
 				let mut v = Vec::with_capacity(300);
 				self.read_page_posts(&mut v, page, s);
 				v.sort_unstable();
