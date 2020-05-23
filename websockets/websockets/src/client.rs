@@ -282,11 +282,11 @@ impl Client {
 		Ok(())
 	}
 
-	// Decrease available solved captcha count, if available
+	// Validates a solved captcha
 	pub fn check_captcha(&mut self, _solution: &[u8]) -> DynResult {
 		if config::read(|c| c.captcha) {
 			// TODO: Use pub key for spam detection bans
-			todo!()
+			// TODO: validate solution
 		}
 		Ok(())
 	}

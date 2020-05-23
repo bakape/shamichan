@@ -89,7 +89,13 @@ func Handle(w http.ResponseWriter, r *http.Request,
 	// 	return
 	// }
 
-	conn, err := websocket.Accept(w, r, nil)
+	// TODO: read origin from configs
+	// TODO: prompt origin on first page access
+	// TODO: prompt admin password on first page access
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		InsecureSkipVerify: true,
+		CompressionMode:    websocket.CompressionDisabled,
+	})
 	if err != nil {
 		return
 	}

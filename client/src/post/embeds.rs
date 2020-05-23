@@ -26,7 +26,9 @@ protocol::gen_global! {, , HashMap<Descriptor, Data>}
 
 // Render link to embedadble resource
 pub fn render(e: Embed) -> Html {
-	todo!()
+	html! {
+		<span>{"TODO: embed rendering"}</span>
+	}
 }
 
 // Fetches and formats an embed's title and inner HTML content
