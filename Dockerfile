@@ -51,11 +51,11 @@ RUN git clone \
 WORKDIR /src/libwebp
 RUN ./autogen.sh
 RUN ./configure
-RUN make -j $(nproc)
+RUN nice -n 19 make -j $(nproc)
 RUN make install
 WORKDIR /src/FFmpeg
 RUN ./configure
-RUN make -j $(nproc)
+RUN nice -n 19 make -j $(nproc)
 RUN make install
 WORKDIR /meguca
 
@@ -74,15 +74,40 @@ RUN sed -i 's/"reverse_proxied": false/"reverse_proxied": true/' config.json
 RUN sed -i 's/127\.0\.0\.1:8000/:8000/' config.json
 
 # Cache dependencies, if possible
-RUN cargo install wasm-pack
-RUN go get -u github.com/valyala/quicktemplate \
+RUN nice -n 19 cargo install wasm-pack
+RUN nice -n 19 go get -u github.com/valyala/quicktemplate \
 	github.com/rakyll/statik \
 	github.com/valyala/quicktemplate/qtc
 COPY go.mod go.sum ./
 RUN go mod download
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm install --progress false --depth 0
+RUN mkdir client
+COPY client/package-lock.json client/package.json client/
+RUN cd client && npm install --progress false --depth 0
 
-# Copy and build meguca
+# Cache Rust dependencies by faking a project structure
+COPY Cargo.toml Cargo.lock ./
+RUN mkdir -p client/js client/src www/client
+COPY client/Cargo.toml client/.cargo client/webpack.config.js client/
+COPY client/js client/js
+COPY docker/dummy.rs client/src/lib.rs
+RUN mkdir -p websockets/websockets/src
+COPY websockets/websockets/Cargo.toml websockets/websockets
+COPY docker/dummy.rs websockets/websockets/src/lib.rs
+RUN mkdir -p protocol/src
+COPY protocol/Cargo.toml protocol
+COPY docker/dummy.rs protocol/src/lib.rs
+RUN nice -n 19 cargo build --release
+RUN cd client && nice -n 19 ./node_modules/.bin/webpack
+RUN rm -r \
+	client/src websockets/websockets/src protocol/src \
+	target/release/deps/libwebsockets* \
+	target/release/deps/libclient* \
+	target/release/deps/libprotocol* \
+	target/wasm32-unknown-unknown/release/deps/libprotocol* \
+	client/dist client/pkg
+
+# Build meguca
 COPY . .
-RUN make
+RUN NO_DEPS=1 nice -n 19 make

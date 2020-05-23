@@ -28,7 +28,7 @@ websockets:
 # Go side
 	rm -f websockets/libwebsockets*.a
 	cargo build $(if $(filter 1,$(DEBUG)),, --release)
-		SRC=target/$(if $(filter 1,$(DEBUG)),debug,release)/libwebsockets.a; \
+	SRC=target/$(if $(filter 1,$(DEBUG)),debug,release)/libwebsockets.a; \
 		HASH=$$(md5sum $$SRC | cut -c 1-4); \
 		cp $$SRC websockets/libwebsockets_$$HASH.a  && \
 		/bin/echo -e "package websockets\n\n// #cgo LDFLAGS: -L\$${SRCDIR} -lwebsockets_$$HASH\nimport \"C\"" > ./websockets/lib_hash.go
