@@ -6,8 +6,8 @@ github.com/bakape/captchouli/v2 v2.0.2 h1:QzE1J0RodbAmwPQE51yYTfOuJ5Jmpu4dnMXAM6
 github.com/bakape/captchouli/v2 v2.0.2/go.mod h1:EbDWSyOyyYCc/BK5YCH9q3E/N9hjbP8PV481+nJPJE8=
 github.com/bakape/pg_util v0.11.0 h1:rQJQRFX5mvQJSzb8iXjgijGMJdMyjH0XPsSxflmQ5Ok=
 github.com/bakape/pg_util v0.11.0/go.mod h1:YwrcftQsa/pgIzDFEhqoLtdqfZUsjx4hdLCsRhuYvsM=
-github.com/bakape/recache/v5 v5.1.0 h1:6FnPJWcm0F2xGxFni97yV0qf4WWtBjRxE12WusOwLok=
-github.com/bakape/recache/v5 v5.1.0/go.mod h1:GPqiYrySAppLsDAmz//7El2yPiKUOqp7ES12zcV+1GI=
+github.com/bakape/recache/v6 v6.0.0 h1:7AGckt8p1gcctCkLeSdIBVLshrs08PS41N4cJVpWdcI=
+github.com/bakape/recache/v6 v6.0.0/go.mod h1:+4rEU6+uhLc30jAT9N+nGu6jgzMaDi2IcLKpAo6oXqQ=
 github.com/bakape/thumbnailer/v2 v2.5.9 h1:aY+7uiq8rKljIy8GNie2pv795T0pH8HiR6Shj/QSxHo=
 github.com/bakape/thumbnailer/v2 v2.5.9/go.mod h1:MUwB3tkHBRRCVmwCsd0a+vP7RNMMuHSiP4lSaA6awUE=
 github.com/chai2010/webp v1.1.0 h1:4Ei0/BRroMF9FaXDG2e4OxwFcuW2vcXd+A6tyqTJUQQ=

@@ -10,7 +10,7 @@ import (
 
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
-	"github.com/bakape/recache/v5"
+	"github.com/bakape/recache/v6"
 )
 
 // TODO: Evict from cache on post and thread updates

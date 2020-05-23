@@ -7,7 +7,7 @@ replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.0
 require (
 	github.com/bakape/captchouli/v2 v2.0.2
 	github.com/bakape/pg_util v0.11.0
-	github.com/bakape/recache/v5 v5.1.0
+	github.com/bakape/recache/v6 v6.0.0
 	github.com/bakape/thumbnailer/v2 v2.5.9
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
