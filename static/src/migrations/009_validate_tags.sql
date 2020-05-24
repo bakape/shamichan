@@ -25,7 +25,7 @@ begin
 			select count(*)
 			from (
 				select distinct x
-				from unnest(tags)
+				from unnest(tags) x
 			) _
 		)
 		!= len
