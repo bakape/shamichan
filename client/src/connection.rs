@@ -664,11 +664,7 @@ impl Component for SyncCounter {
 		use State::*;
 
 		html! {
-			<b
-				id="sync"
-				class="banner-float svg-link"
-				title=localize!("sync")
-			>
+			<b id="sync" class="banner-float" title=localize!("sync")>
 				{
 					localize! {
 						match self.current {
