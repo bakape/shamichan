@@ -283,8 +283,10 @@ impl Client {
 	}
 
 	// Validates a solved captcha
-	pub fn check_captcha(&mut self, _solution: &[u8]) -> DynResult {
+	pub fn check_captcha(&mut self, solution: &[u8]) -> DynResult {
 		if config::read(|c| c.captcha) {
+			check_len!(solution, 4);
+
 			// TODO: Use pub key for spam detection bans
 			// TODO: validate solution
 		}
@@ -304,11 +306,23 @@ impl Client {
 	fn create_thread(&mut self, mut req: ThreadCreationReq) -> DynResult {
 		Self::trim(&mut req.subject);
 		check_unicode_len!(req.subject, 100);
+
 		check_len!(req.tags, 3);
 		for mut tag in req.tags.iter_mut() {
 			Self::trim(&mut tag);
+			*tag = tag.to_lowercase();
 			check_unicode_len!(tag, 20);
 		}
+		if req
+			.tags
+			.iter()
+			.collect::<std::collections::BTreeSet<_>>()
+			.len() != req.tags.len()
+		{
+			str_err!("tag set contains duplicates")
+		}
+		req.tags.sort();
+
 		self.check_captcha(&req.captcha_solution)?;
 
 		let id = bindings::insert_thread(

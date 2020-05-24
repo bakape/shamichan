@@ -237,31 +237,44 @@ impl Component for NewThreadForm {
 				}
 				self.sending = true;
 
-				util::with_logging(|| {
-					let f = FormData::new_with_form(
-						&self
-							.el
-							.cast::<HtmlFormElement>()
-							.ok_or("could not convert to HtmlFormElement")?,
-					)?;
-					connection::send(
-						protocol::MessageType::CreateThread,
-						&protocol::payloads::ThreadCreationReq {
-							subject: f
-								.get("subject")
-								.as_string()
-								.ok_or("could not convert subject to string")?,
-							tags: f
-								.get_all("tag")
-								.iter()
-								.filter_map(|t| t.as_string())
-								.collect(),
-							// TODO
-							captcha_solution: vec![],
-						},
-					);
-					Ok(())
-				});
+				if let Err(err) =
+					|| -> util::Result {
+						let f = FormData::new_with_form(
+							&self.el.cast::<HtmlFormElement>().ok_or(
+								"could not convert to HtmlFormElement",
+							)?,
+						)?;
+
+						let tags: Vec<String> = f
+							.get_all("tag")
+							.iter()
+							.filter_map(|t| t.as_string())
+							.map(|s| s.to_lowercase())
+							.collect();
+						if tags
+							.iter()
+							.collect::<std::collections::BTreeSet<_>>()
+							.len() != tags.len()
+						{
+							Err("tag set contains duplicates")?;
+						}
+
+						connection::send(
+							protocol::MessageType::CreateThread,
+							&protocol::payloads::ThreadCreationReq {
+								subject: f.get("subject").as_string().ok_or(
+									"could not convert subject to string",
+								)?,
+								tags,
+								// TODO
+								captcha_solution: vec![],
+							},
+						);
+						Ok(())
+					}() {
+					self.sending = false;
+					util::alert(&err);
+				}
 
 				true
 			}
