@@ -549,8 +549,15 @@ impl Connection {
 						// Also need to account for data races on feed
 						// switching.
 					}
-					CreateThreadAck => |_: u64| {
-						// TODO: Save thread as owned and navigate to it
+					CreateThreadAck => |id: u64| {
+						// TODO: Save thread as owned
+						state::navigate_to(state::Location{
+							feed: state::FeedID::Thread{
+								id,
+								page: 0,
+							},
+							focus: None,
+						})
 					}
 					CreateThread => |n: ThreadCreationNotice| {
 						state::Agent::dispatcher()
