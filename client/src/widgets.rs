@@ -31,7 +31,7 @@ impl Component for AsideRow {
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		Self {
-			bridge: state::hook(&link, &[state::Change::Location], |_| true),
+			bridge: state::hook(&link, vec![state::Change::Location], |_| true),
 			props,
 			link,
 		}

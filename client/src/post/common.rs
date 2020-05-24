@@ -1,10 +1,11 @@
 use crate::{
 	buttons::SpanButton,
+	comp_util,
 	state::{self, FeedID, Focus, Location, State},
 	util,
 };
 use protocol::payloads::{FileType, Image};
-use yew::{html, Component, ComponentLink, Html, NodeRef, Properties};
+use yew::{html, ComponentLink, Html, NodeRef, Properties};
 
 #[derive(Clone, Properties, PartialEq, Eq)]
 pub struct Props {
@@ -62,19 +63,15 @@ where
 }
 
 // Common behavior for all post PostComponents as a wrapper
-pub struct PostCommon<PC>
+pub type PostCommon<PC> = comp_util::HookedComponent<PostCommonInner<PC>>;
+
+// Implements comp_util::Inner for PostCommon
+#[derive(Default)]
+pub struct PostCommonInner<PC>
 where
 	PC: PostComponent + 'static,
 {
-	#[allow(unused)]
-	bridge: state::HookBridge,
-
-	#[allow(unused)]
-	link: ComponentLink<Self>,
-
 	inner: PC,
-
-	props: Props,
 
 	reveal_image: bool,
 	expand_image: bool,
@@ -96,35 +93,28 @@ pub enum Message<E> {
 	Extra(E),
 }
 
-impl<PC> Component for PostCommon<PC>
+impl<PC> comp_util::Inner for PostCommonInner<PC>
 where
 	PC: PostComponent + 'static,
 {
-	comp_prop_change! {Props}
+	type Properties = Props;
 	type Message = Message<PC::MessageExtra>;
 
-	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		use state::{hook, Change};
-
-		Self {
-			bridge: hook(
-				&link,
-				&[Change::Configs, Change::Options, Change::Post(props.id)],
-				|_| Message::Rerender,
-			),
-			props,
-			link,
-			reveal_image: false,
-			expand_image: false,
-			tall_image: false,
-			el: Default::default(),
-			image_download_button: Default::default(),
-			media_el: Default::default(),
-			inner: Default::default(),
-		}
+	fn update_message() -> Self::Message {
+		Message::Rerender
 	}
 
-	fn update(&mut self, msg: Self::Message) -> bool {
+	fn subscribe_to(props: &Self::Properties) -> Vec<state::Change> {
+		use state::Change;
+
+		vec![Change::Configs, Change::Options, Change::Post(props.id)]
+	}
+
+	fn update<'a>(
+		&mut self,
+		c: comp_util::Ctx<'a, Self>,
+		msg: Self::Message,
+	) -> bool {
 		use Message::*;
 
 		match msg {
@@ -173,7 +163,7 @@ where
 				state::read(|s| {
 					if let (Some(img), Some(wh)) = (
 						s.posts
-							.get(&self.props.id)
+							.get(&c.props.id)
 							.map(|p| p.image.as_ref())
 							.flatten(),
 						util::window()
@@ -192,12 +182,12 @@ where
 		}
 	}
 
-	fn view(&self) -> Html {
+	fn view<'a>(&self, c: comp_util::Ctx<'a, Self>) -> Html {
 		state::read(|s| {
 			let c = RenderCtx {
 				app: s,
-				link: &self.link,
-				post: match s.posts.get(&self.props.id) {
+				link: c.link,
+				post: match s.posts.get(&c.props.id) {
 					Some(p) => p,
 					None => {
 						return html! {};
@@ -244,7 +234,7 @@ where
 	}
 }
 
-impl<PC> PostCommon<PC>
+impl<PC> PostCommonInner<PC>
 where
 	PC: PostComponent + 'static,
 {
@@ -310,12 +300,12 @@ where
 					   && !PC::is_preview()
 					   && !state::read(|s| c.app.location.is_thread())
 					{
-						let id = self.props.id;
+						let id = c.post.id;
 						html! {
 							<>
 								<SpanButton
 									text="top"
-									on_click=self.link.callback(move |_| {
+									on_click=c.link.callback(move |_| {
 										state::navigate_to(Location{
 											feed: FeedID::Thread{
 												id,
@@ -328,7 +318,7 @@ where
 								/>
 								<SpanButton
 									text="bottom"
-									on_click=self.link.callback(move |_| {
+									on_click=c.link.callback(move |_| {
 										state::navigate_to(Location{
 											feed: FeedID::Thread{
 												id,
@@ -373,7 +363,7 @@ where
 				});
 			}
 		}
-		if c.app.mine.contains(&self.props.id) {
+		if c.app.mine.contains(&c.post.id) {
 			w.push(html! {
 				<i>{localize!("you")}</i>
 			});
@@ -453,7 +443,7 @@ where
 								} else {
 									"show"
 								}
-								on_click=self.link.callback(|_|
+								on_click=c.link.callback(|_|
 									Message::ImageHideToggle
 								)
 							/>
@@ -476,7 +466,7 @@ where
 						html! {
 							<SpanButton
 								text="contract"
-								on_click=self.link.callback(|_|
+								on_click=c.link.callback(|_|
 									Message::ImageContract
 								)
 							/>
@@ -615,7 +605,7 @@ where
 			let mut cls = vec!["expanded"];
 			match c.app.options.image_expansion_mode {
 				ImageExpansionMode::FitWidth => {
-					self.link.send_message(Message::CheckTallImage);
+					c.link.send_message(Message::CheckTallImage);
 					cls.push("fit-to-width");
 				}
 				ImageExpansionMode::FitHeight => {
@@ -628,7 +618,7 @@ where
 			};
 			let cls_joined = cls.join(" ");
 
-			let contract = self.link.callback(move |e: MouseEvent| {
+			let contract = c.link.callback(move |e: MouseEvent| {
 				if e.button() != 0 {
 					Message::NOP
 				} else {
@@ -639,7 +629,7 @@ where
 
 			thumb = match img.common.file_type {
 				OGG | MP4 | WEBM => {
-					self.link.send_message(Message::SetVolume);
+					c.link.send_message(Message::SetVolume);
 					html! {
 						<video
 							ref=self.media_el.clone()
@@ -668,7 +658,7 @@ where
 			let no_mode = c.app.options.image_expansion_mode
 				== state::ImageExpansionMode::None;
 			let is_expandable = is_expandable(img.common.file_type);
-			let on_click = self.link.callback(move |e: MouseEvent| {
+			let on_click = c.link.callback(move |e: MouseEvent| {
 				if no_mode || e.button() != 0 {
 					Message::NOP
 				} else {
@@ -698,7 +688,7 @@ where
 				{
 					if self.expand_image && is_audio {
 						// Change volume after render
-						self.link.send_message(Message::SetVolume);
+						c.link.send_message(Message::SetVolume);
 						html! {
 							<audio
 								ref=self.media_el.clone()

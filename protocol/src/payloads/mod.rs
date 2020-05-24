@@ -75,6 +75,7 @@ payload! { ThreadCreationNotice {
 	id: u64,
 	subject: String,
 	tags: Vec<String>,
+	time: u32,
 }}
 
 // Request for creating a new post

@@ -21,7 +21,7 @@ impl Component for Threads {
 		Self {
 			bridge: state::hook(
 				&link,
-				&[Change::Location, Change::ThreadList],
+				vec![Change::Location, Change::ThreadList],
 				|_| (),
 			),
 			link: link,

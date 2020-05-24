@@ -1,18 +1,15 @@
-use crate::state;
+use crate::{comp_util, state};
 use serde::{Deserialize, Serialize};
-use yew::{html, Component, ComponentLink, Html, Properties};
+use yew::{html, Html, Properties};
 
-// Used to select a certain page of a thread
-pub struct PageSelector {
-	#[allow(unused)]
-	bridge: state::HookBridge,
-
-	link: ComponentLink<Self>,
-
-	props: Props,
+#[derive(Default)]
+pub struct Inner {
 	offset: u32,
 	page_count: u32,
 }
+
+// Used to select a certain page of a thread
+pub type PageSelector = comp_util::HookedComponent<Inner>;
 
 #[derive(Clone, Properties, Eq, PartialEq)]
 pub struct Props {
@@ -27,27 +24,27 @@ pub enum Message {
 	NOP,
 }
 
-impl Component for PageSelector {
-	comp_prop_change! {Props}
+impl comp_util::Inner for Inner {
 	type Message = Message;
+	type Properties = Props;
 
-	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		let mut s = Self {
-			bridge: state::hook(
-				&link,
-				&[state::Change::Thread(props.thread)],
-				|_| Message::ThreadUpdate,
-			),
-			props,
-			link,
-			offset: 0,
-			page_count: 0,
-		};
-		s.fetch_page_count();
-		s
+	fn init<'a>(&mut self, c: comp_util::Ctx<'a, Self>) {
+		self.fetch_page_count(c.props.thread);
 	}
 
-	fn update(&mut self, msg: Self::Message) -> bool {
+	fn update_message() -> Self::Message {
+		Message::ThreadUpdate
+	}
+
+	fn subscribe_to(props: &Self::Properties) -> Vec<state::Change> {
+		vec![state::Change::Thread(props.thread)]
+	}
+
+	fn update<'a>(
+		&mut self,
+		c: comp_util::Ctx<'a, Self>,
+		msg: Self::Message,
+	) -> bool {
 		use Message::*;
 
 		match msg {
@@ -78,23 +75,23 @@ impl Component for PageSelector {
 			SelectPage(_) => todo!("page navigation"),
 			ThreadUpdate => {
 				let old = self.page_count;
-				self.fetch_page_count();
+				self.fetch_page_count(c.props.thread);
 				old != self.page_count
 			}
 			NOP => false,
 		}
 	}
 
-	fn view(&self) -> Html {
+	fn view<'a>(&self, c: comp_util::Ctx<'a, Self>) -> Html {
 		html! {
 			<span class="spaced mono no-select">
-				{self.render_scroll_button("<<", Message::Scroll{
+				{self.render_scroll_button(&c, "<<", Message::Scroll{
 					left: true,
 					to_end: true,
 				})}
 				{
 					if self.page_count > 5 {
-						self.render_scroll_button("<", Message::Scroll{
+						self.render_scroll_button(&c, "<", Message::Scroll{
 							left: true,
 							to_end: false,
 						})
@@ -105,7 +102,7 @@ impl Component for PageSelector {
 				{
 					for (self.offset..self.page_count).map(|i| html! {
 						<a
-							onclick=self.link.callback(move |_|
+							onclick=c.link.callback(move |_|
 								Message::SelectPage(i)
 							)
 						>
@@ -115,7 +112,7 @@ impl Component for PageSelector {
 				}
 				{
 					if self.page_count > 5 {
-						self.render_scroll_button(">", Message::Scroll{
+						self.render_scroll_button(&c, ">", Message::Scroll{
 							left: false,
 							to_end: false,
 						})
@@ -123,7 +120,7 @@ impl Component for PageSelector {
 						html! {}
 					}
 				}
-				{self.render_scroll_button(">>", Message::Scroll{
+				{self.render_scroll_button(&c, ">>", Message::Scroll{
 					left: false,
 					to_end: true,
 				})}
@@ -132,20 +129,22 @@ impl Component for PageSelector {
 	}
 }
 
-impl PageSelector {
-	fn render_scroll_button(&self, text: &str, msg: Message) -> Html {
+impl Inner {
+	fn render_scroll_button<'a>(
+		&self,
+		c: &comp_util::Ctx<'a, Self>,
+		text: &str,
+		msg: Message,
+	) -> Html {
 		html! {
-			<a onclick=self.link.callback(move |_| msg.clone())>{text}</a>
+			<a onclick=c.link.callback(move |_| msg.clone())>{text}</a>
 		}
 	}
 
 	// Fetch and set new page count value for thread from global state
-	fn fetch_page_count(&mut self) {
+	fn fetch_page_count(&mut self, thread: u64) {
 		self.page_count = state::read(|s| {
-			s.threads
-				.get(&self.props.thread)
-				.map(|t| t.last_page + 1)
-				.unwrap_or(1)
+			s.threads.get(&thread).map(|t| t.last_page + 1).unwrap_or(1)
 		});
 	}
 }

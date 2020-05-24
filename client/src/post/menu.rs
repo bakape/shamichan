@@ -1,35 +1,35 @@
-use crate::state::{hook, Change, HookBridge};
-use yew::{html, Component, ComponentLink, Html};
+use crate::{comp_util, state::Change};
+use yew::{html, Html};
 
-pub struct Menu {
-	props: super::common::Props,
+#[derive(Default)]
+pub struct Inner {
 	expanded: bool,
-
-	link: ComponentLink<Self>,
-	#[allow(unused)]
-	hook: HookBridge,
 }
+
+pub type Menu = comp_util::HookedComponent<Inner>;
 
 pub enum Message {
 	Rerender,
 	ToggleExpand,
 }
 
-impl Component for Menu {
-	comp_prop_change! {super::common::Props}
+impl comp_util::Inner for Inner {
+	type Properties = super::common::Props;
 	type Message = Message;
 
-	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		Self {
-			hook: hook(&link, &[Change::Post(props.id)], |_| Message::Rerender),
-			// Not used right now, but will be needed for menu items
-			props,
-			link,
-			expanded: false,
-		}
+	fn update_message() -> Self::Message {
+		Message::Rerender
 	}
 
-	fn update(&mut self, msg: Self::Message) -> bool {
+	fn subscribe_to(props: &Self::Properties) -> Vec<Change> {
+		vec![Change::Post(props.id)]
+	}
+
+	fn update<'a>(
+		&mut self,
+		_: comp_util::Ctx<'a, Self>,
+		msg: Self::Message,
+	) -> bool {
 		match msg {
 			Message::Rerender => true,
 			Message::ToggleExpand => {
@@ -39,8 +39,8 @@ impl Component for Menu {
 		}
 	}
 
-	fn view(&self) -> Html {
-		let toggle = self.link.callback(|_| Message::ToggleExpand);
+	fn view<'a>(&self, c: comp_util::Ctx<'a, Self>) -> Html {
+		let toggle = c.link.callback(|_| Message::ToggleExpand);
 
 		html! {
 			<a class="svg-link control" onclick=toggle.clone()>

@@ -28,7 +28,8 @@ impl Component for Countdown {
 			link,
 			current: Default::default(),
 		};
-		s.scheduler.send(s.props.end);
+		s.scheduler
+			.send(crate::time::scheduler::Request::Register(s.props.end));
 		s
 	}
 

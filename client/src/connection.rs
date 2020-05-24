@@ -131,7 +131,7 @@ impl Agent for Connection {
 		let mut s = Self {
 			bridge: state::hook(
 				&link,
-				&[Change::KeyPair, Change::Location],
+				vec![Change::KeyPair, Change::Location],
 				|_| Event::CheckUpdates,
 			),
 			syncing_to: None,
@@ -552,9 +552,9 @@ impl Connection {
 					CreateThreadAck => |_: u64| {
 						// TODO: Save thread as owned and navigate to it
 					}
-					CreateThread => |_: ThreadCreationNotice| {
-						// TODO: Insert thread into registry and rerender
-						// page, if needed
+					CreateThread => |n: ThreadCreationNotice| {
+						state::Agent::dispatcher()
+							.send(state::Request::InsertThread(n))
 					}
 				},
 				None => return Ok(()),
@@ -576,7 +576,9 @@ impl Connection {
 					protocol_version: protocol::VERSION,
 					auth: match &key_pair.id {
 						Some(id) => {
-							let mut nonce: [u8; 32] = Default::default();
+							let mut nonce: [u8; 32] = unsafe {
+								std::mem::MaybeUninit::uninit().assume_init()
+							};
 							crypto
 								.get_random_values_with_u8_array(&mut nonce)?;
 

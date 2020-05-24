@@ -52,7 +52,12 @@ impl<W: Write> Write for Escaper<W> {
 #[derive(Debug)]
 pub struct Encoder {
 	w: DeflateEncoder<Vec<u8>>,
-	started: bool,
+}
+
+impl Default for Encoder {
+	fn default() -> Self {
+		Self::new(Default::default())
+	}
 }
 
 impl Encoder {
@@ -62,7 +67,6 @@ impl Encoder {
 		Self::init_single_message(&mut w);
 		Self {
 			w: DeflateEncoder::new(w, flate2::Compression::default()),
-			started: false,
 		}
 	}
 
@@ -79,7 +83,6 @@ impl Encoder {
 	// Indicate this is single message and not a concatenated vector of
 	// messages
 	fn init_single_message(w: &mut Vec<u8>) {
-		w.truncate(0);
 		w.push(0);
 	}
 
@@ -91,17 +94,16 @@ impl Encoder {
 	{
 		let enc = encoded.as_ref();
 		let mut w = Vec::with_capacity(
-			enc.iter().map(|b| b.as_ref().len()).sum::<usize>()
-				+ (enc.len() * 4)
-				+ 1,
+			enc.iter().map(|b| b.as_ref().len() + 4).sum::<usize>() + 1,
 		);
 
 		// Indicates this is a concatenated vector of messages
 		w.push(1);
 
 		for msg in enc.iter() {
-			w.extend((msg.as_ref().len() as i32).to_le_bytes().iter());
-			w.extend(msg.as_ref().iter());
+			let s = msg.as_ref();
+			w.extend((s.len() as i32).to_le_bytes().iter());
+			w.extend(s.iter());
 		}
 
 		w
@@ -118,7 +120,6 @@ impl Encoder {
 		t: MessageType,
 		payload: &impl Serialize,
 	) -> io::Result<()> {
-		self.started = true;
 		self.w.write_all(&[HEADER, t as u8])?;
 		bincode::serialize_into(&mut Escaper::new(&mut self.w), payload)
 			.map_err(|err| {
@@ -138,14 +139,8 @@ impl Encoder {
 	// This function will finish encoding the current stream into the current
 	// output stream before swapping out the two output streams.
 	pub fn reset(&mut self, mut w: Vec<u8>) -> io::Result<Vec<u8>> {
-		self.started = false;
 		Self::init_single_message(&mut w);
 		self.w.reset(w)
-	}
-
-	// Return, if encoder has not been written to yet since last reset or init
-	pub fn empty(&self) -> bool {
-		!self.started
 	}
 }
 

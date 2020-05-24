@@ -19,8 +19,8 @@ pub struct Props {
 }
 
 impl Component for View {
-	comp_prop_change! {Props}
 	type Message = Response;
+	type Properties = Props;
 
 	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
 		let mut s = Self {
@@ -29,13 +29,27 @@ impl Component for View {
 			link,
 			current: Default::default(),
 		};
-		s.scheduler.send(s.props.time);
+		s.scheduler
+			.send(super::scheduler::Request::Register(s.props.time));
 		s
 	}
 
 	fn update(&mut self, new: Self::Message) -> bool {
 		self.current = new;
 		true
+	}
+
+	fn change(&mut self, props: Self::Properties) -> bool {
+		if self.props != props {
+			self.props = props;
+			self.scheduler
+				.send(super::scheduler::Request::ChangeTimestamp(
+					self.props.time,
+				));
+			true
+		} else {
+			false
+		}
 	}
 
 	fn view(&self) -> Html {

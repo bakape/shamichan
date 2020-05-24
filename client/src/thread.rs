@@ -1,17 +1,11 @@
-use super::buttons;
-use super::state;
-use yew::{html, Component, ComponentLink, Html, Properties};
+use super::{buttons, comp_util, state};
+use yew::{html, Html, Properties};
 
 // Central thread container
-pub struct Thread {
-	#[allow(unused)]
-	bridge: state::HookBridge,
+pub type Thread = comp_util::HookedComponent<Inner>;
 
-	#[allow(unused)]
-	link: ComponentLink<Self>,
-
-	props: Props,
-}
+#[derive(Default)]
+pub struct Inner {}
 
 // Posts to display in a thread
 #[derive(Clone, Eq, PartialEq)]
@@ -35,39 +29,43 @@ pub struct Props {
 	pub pages: PostSet,
 }
 
-impl Component for Thread {
-	comp_message_rerender! {}
-	comp_prop_change! {Props}
+impl comp_util::Inner for Inner {
+	type Message = ();
+	type Properties = Props;
 
-	fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
-		Self {
-			bridge: state::hook(
-				&link,
-				&[state::Change::Thread(props.id)],
-				|_| (),
-			),
-			props,
-			link,
-		}
+	fn update_message() -> Self::Message {
+		()
 	}
 
-	fn view(&self) -> Html {
+	fn subscribe_to(props: &Self::Properties) -> Vec<state::Change> {
+		vec![state::Change::Thread(props.id)]
+	}
+
+	fn update<'a>(
+		&mut self,
+		_: comp_util::Ctx<'a, Self>,
+		_: Self::Message,
+	) -> bool {
+		true
+	}
+
+	fn view<'a>(&self, c: comp_util::Ctx<'a, Self>) -> Html {
 		use super::post::ThreadPost;
 		use PostSet::*;
 
 		// TODO: Filter hidden posts
 
-		let posts: Vec<u64> = state::read(|s| match self.props.pages {
+		let posts: Vec<u64> = state::read(|s| match c.props.pages {
 			Last5Posts => {
 				let mut v = Vec::with_capacity(5);
 				let page_count = s
 					.threads
-					.get(&self.props.id)
+					.get(&c.props.id)
 					.map(|t| t.last_page + 1)
 					.unwrap_or(1);
-				self.read_page_posts(&mut v, page_count - 1, s);
+				self.read_page_posts(&mut v, c.props.id, page_count - 1, s);
 				if v.len() < 5 && page_count > 1 {
-					self.read_page_posts(&mut v, page_count - 2, s);
+					self.read_page_posts(&mut v, c.props.id, page_count - 2, s);
 				}
 				v.sort_unstable();
 				if v.len() > 5 {
@@ -78,7 +76,7 @@ impl Component for Thread {
 			}
 			Page(page) => {
 				let mut v = Vec::with_capacity(300);
-				self.read_page_posts(&mut v, page, s);
+				self.read_page_posts(&mut v, c.props.id, page, s);
 				v.sort_unstable();
 				v
 			}
@@ -86,7 +84,7 @@ impl Component for Thread {
 
 		html! {
 			<section class="thread-container">
-				<ThreadPost id=self.props.id />
+				<ThreadPost id=c.props.id />
 				{
 					for posts.into_iter().map(|id| {
 						html! {
@@ -99,19 +97,24 @@ impl Component for Thread {
 				// from thread index).
 				<buttons::AsideButton
 					text="reply"
-					on_click=self.link.callback(|_| ())
+					on_click=c.link.callback(|_| ())
 				/>
 			</section>
 		}
 	}
 }
 
-impl Thread {
+impl Inner {
 	// Read the post IDs of a page, excluding the OP, into dst
-	fn read_page_posts(&self, dst: &mut Vec<u64>, page: u32, s: &state::State) {
-		if let Some(posts) = s.posts_by_thread_page.get(&(self.props.id, page))
-		{
-			dst.extend(posts.iter().filter(|id| **id != self.props.id));
+	fn read_page_posts(
+		&self,
+		dst: &mut Vec<u64>,
+		thread: u64,
+		page: u32,
+		s: &state::State,
+	) {
+		if let Some(posts) = s.posts_by_thread_page.get(&(thread, page)) {
+			dst.extend(posts.iter().filter(|id| **id != thread));
 		}
 	}
 }

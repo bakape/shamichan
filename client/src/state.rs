@@ -1,7 +1,7 @@
 use crate::{post::image_search::Provider, util};
 use protocol::{
 	debug_log,
-	payloads::{post_body::Node, Image},
+	payloads::{post_body::Node, Image, ThreadCreationNotice},
 	util::{DoubleSetMap, SetMap},
 };
 use serde::{Deserialize, Serialize};
@@ -316,6 +316,14 @@ pub struct State {
 	pub mine: HashSet<u64>,
 }
 
+impl State {
+	// Insert a post into the registry
+	fn register_post(&mut self, p: Post) {
+		self.posts_by_thread_page.insert((p.thread, p.page), p.id);
+		self.posts.insert(p.id, p);
+	}
+}
+
 protocol::gen_global! {pub, , State}
 
 // Thread information container
@@ -335,7 +343,7 @@ pub struct Thread {
 }
 
 // Post data
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Post {
 	pub id: u64,
 	pub page: u32,
@@ -373,16 +381,28 @@ pub struct Agent {
 #[derive(Serialize, Deserialize)]
 pub enum Request {
 	// Subscribe to updates of a value type
-	NotifyChange(Change),
+	NotifyChange(Vec<Change>),
+
+	// Change the current notifications a client is subscribed to
+	ChangeNotifications {
+		remove: Vec<Change>,
+		add: Vec<Change>,
+	},
 
 	// Fetch feed data
 	FetchFeed(Location),
 
 	// Navigate to the app to a different feed
-	NavigateTo { loc: Location, flags: u8 },
+	NavigateTo {
+		loc: Location,
+		flags: u8,
+	},
 
 	// Set or delete the ID of the currently used KeyPair
 	SetKeyID(Option<uuid::Uuid>),
+
+	// Insert a new thread into the registry
+	InsertThread(ThreadCreationNotice),
 }
 
 // Selective changes of global state to be notified on
@@ -448,8 +468,14 @@ pub struct HookBridge {
 	bridge: Box<dyn Bridge<Agent>>,
 }
 
-// Crate hooks into
-pub fn hook<L, F>(link: &L, changes: &[Change], f: F) -> HookBridge
+impl HookBridge {
+	pub fn send(&mut self, req: Request) {
+		self.bridge.send(req);
+	}
+}
+
+// Crate hooks into state changes
+pub fn hook<L, F>(link: &L, changes: Vec<Change>, f: F) -> HookBridge
 where
 	L: Link,
 	F: Fn(()) -> L::Message + 'static,
@@ -459,8 +485,8 @@ where
 	let mut b = HookBridge {
 		bridge: Agent::bridge(link.make_callback(f)),
 	};
-	for c in changes {
-		b.bridge.send(Request::NotifyChange(*c))
+	if !changes.is_empty() {
+		b.bridge.send(Request::NotifyChange(changes));
 	}
 	b
 }
@@ -691,7 +717,19 @@ impl yew::agent::Agent for Agent {
 		use Request::*;
 
 		match req {
-			NotifyChange(h) => self.hooks.insert(h, id),
+			NotifyChange(h) => {
+				for h in h {
+					self.hooks.insert(h, id);
+				}
+			}
+			ChangeNotifications { remove, add } => {
+				for h in remove {
+					self.hooks.remove_by_key_value(&h, &id);
+				}
+				for h in add {
+					self.hooks.insert(h, id);
+				}
+			}
 			NavigateTo { loc, flags } => self.set_location(loc, flags),
 			FetchFeed(loc) => self.fetch_feed_data(loc, 0),
 			SetKeyID(id) => util::with_logging(|| {
@@ -701,6 +739,34 @@ impl yew::agent::Agent for Agent {
 					Ok(())
 				})
 			}),
+			InsertThread(n) => {
+				write(|s| {
+					s.threads.insert(
+						n.id,
+						Thread {
+							id: n.id,
+							page: 0,
+							last_page: 0,
+							subject: n.subject,
+							tags: n.tags,
+							bumped_on: n.time,
+							created_on: n.time,
+							post_count: 1,
+							image_count: 0,
+						},
+					);
+					s.register_post(Post {
+						id: n.id,
+						thread: n.id,
+						created_on: n.time,
+						open: true,
+						..Default::default()
+					});
+					self.trigger(Change::ThreadList);
+					self.trigger(Change::Thread(n.id));
+					self.trigger(Change::Post(n.id));
+				});
+			}
 		};
 	}
 
@@ -913,27 +979,22 @@ impl Agent {
 				s.threads.insert(t_id, t.thread_data);
 				for p in t.posts {
 					add_hook(Change::Post(p.id));
-					s.posts_by_thread_page.insert((t_id, p.page), p.id);
-					s.posts.insert(p.id, p);
+					s.register_post(p);
 				}
 			}
 		});
 
 		// Dedup hooked handlers to trigger
-		let mut handlers = Vec::with_capacity(changes.len());
-		let mut handlers_set = HashSet::with_capacity(changes.len());
+		let mut sent = HashSet::with_capacity(changes.len());
 		for c in changes {
 			if let Some(reg) = self.hooks.get_by_key(&c) {
 				for r in reg.iter() {
-					if !handlers_set.contains(r) {
-						handlers_set.insert(*r);
-						handlers.push(*r);
+					if !sent.contains(r) {
+						sent.insert(*r);
+						self.link.respond(*r, ());
 					}
 				}
 			}
-		}
-		for h in handlers {
-			self.link.respond(h, ());
 		}
 	}
 }

@@ -181,10 +181,19 @@ pub struct Response {
 	pub use_relative: bool,
 }
 
+#[derive(Serialize, Deserialize, Clone)]
+pub enum Request {
+	// Register a new timer with passed Unix timestamp
+	Register(u32),
+
+	// Change unix timestamp on an exiting timer
+	ChangeTimestamp(u32),
+}
+
 impl Agent for Scheduler {
 	type Reach = Context;
 	type Message = Message;
-	type Input = u32;
+	type Input = Request;
 	type Output = Response;
 
 	fn create(link: AgentLink<Self>) -> Self {
@@ -193,7 +202,7 @@ impl Agent for Scheduler {
 				std::time::Duration::from_secs(1),
 				link.callback(|_| Message::Tick),
 			),
-			bridge: state::hook(&link, &[state::Change::Options], |_| {
+			bridge: state::hook(&link, vec![state::Change::Options], |_| {
 				Message::OptionsChange
 			}),
 			link,
@@ -236,12 +245,20 @@ impl Agent for Scheduler {
 		}
 	}
 
-	fn handle_input(&mut self, time: Self::Input, id: HandlerId) {
-		self.refresh_tick(Tick::new(id, time, self.now));
+	fn handle_input(&mut self, req: Self::Input, id: HandlerId) {
+		use Request::*;
+
+		match req {
+			Register(time) => self.refresh_tick(Tick::new(id, time, self.now)),
+			ChangeTimestamp(time) => {
+				self.remove(id);
+				self.refresh_tick(Tick::new(id, time, self.now));
+			}
+		}
 	}
 
 	fn disconnected(&mut self, id: HandlerId) {
-		self.queue.remove(&HandlerIDKey(&id));
+		self.remove(id);
 	}
 }
 
@@ -262,6 +279,11 @@ impl Scheduler {
 		self.send(&t);
 		t.set_next_tick(self.now);
 		self.queue.insert(t);
+	}
+
+	// Remove a registered listener
+	fn remove(&mut self, id: HandlerId) {
+		self.queue.remove(&HandlerIDKey(&id));
 	}
 }
 

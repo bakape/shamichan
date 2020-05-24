@@ -7,6 +7,8 @@ mod lang;
 mod banner;
 #[macro_use]
 mod util;
+#[macro_use]
+mod comp_util;
 mod buttons;
 mod connection;
 mod page_selector;

@@ -118,6 +118,14 @@ where
 			}
 		}
 	}
+
+	pub fn remove_by_key_value(&mut self, k: &K, v: &V) {
+		if let Some(set) = self.by_key.0.get_mut(&k) {
+			if set.remove(&v) {
+				self.by_value.remove(&v, &k);
+			}
+		}
+	}
 }
 
 // Generate functions for safely accessing global variable behind a RWLock.
