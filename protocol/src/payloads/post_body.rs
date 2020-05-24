@@ -3,7 +3,6 @@ use std::hash::Hash;
 
 // Node of the post body tree
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
-#[serde(tag = "type", content = "content")]
 pub enum Node {
 	// No content
 	Empty,
@@ -70,7 +69,6 @@ impl Default for Node {
 // finalization.
 // Used by the server. These must never make it to the client.
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
-#[serde(tag = "type", content = "content")]
 pub enum PendingNode {
 	Flip,
 	EightBall,
@@ -109,7 +107,6 @@ pub struct PostLink {
 
 // Hash command result
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, PartialEq)]
-#[serde(tag = "type", content = "content")]
 pub enum Command {
 	// Describes the parameters and results of one dice throw
 	Dice {
