@@ -21,7 +21,7 @@ func Waterfall(fns ...func() error) (err error) {
 
 // Parallel executes functions in parallel. The first error is returned, if any.
 func Parallel(fns ...func() error) error {
-	ch := make(chan error)
+	ch := make(chan error, len(fns)) // Don't leak goroutines on error
 	for i := range fns {
 		fn := fns[i]
 		go func() {
