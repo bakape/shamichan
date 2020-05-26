@@ -68,14 +68,19 @@ func Write(
 
 	paths := GetFilePaths(SHA1, fileType, thumbType)
 
-	// Don't write files in parallel to reduce the amount of threads the Go
-	// runtime needs to spawn.
+	var ch chan error
+	if thumb != nil { // Archives, audio, etc. can be missing thumbnails
+		ch = make(chan error, 1) // Buffered to not leak on early return
+		go func() {
+			ch <- writeFile(paths[1], thumb)
+		}()
+	}
 	err = writeFile(paths[0], src)
 	if err != nil {
 		return
 	}
-	if thumb != nil { // Archives, audio, etc. can be missing thumbnails
-		err = writeFile(paths[1], thumb)
+	if thumb != nil {
+		err = <-ch
 	}
 	return
 }
