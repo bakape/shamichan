@@ -144,14 +144,14 @@ func EvictThread(id uint64) {
 }
 
 // Evict a single page of a thread
-func EvictThreadPage(id uint64, page uint) {
+func EvictThreadPage(id uint64, page uint32) {
 	threadFrontend.Evict(evictionTimer, threadKey{
 		id:   id,
 		page: int(page),
 	})
 
 	// Always evict last 5 posts as the change is most likely to happen in those
-	// anyway. We can omit cheking this page is actually includes them.
+	// anyway. We can omit cheking this page actually includes them.
 	threadFrontend.Evict(evictionTimer, threadKey{
 		id:   id,
 		page: -5,

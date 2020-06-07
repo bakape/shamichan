@@ -23,7 +23,7 @@ char* ws_init(WSBuffer feed_data);
 // string.
 //
 // Error must be freed by caller, if not null.
-char* ws_register_client(uint64_t id, WSBuffer ip);
+char* ws_register_client(uint64_t id);
 
 // Remove client from registry
 void ws_unregister_client(uint64_t id);
@@ -34,14 +34,14 @@ void ws_unref_message(void* src);
 // Pass received message to Rust side. This operation never returns an error to
 // simplify error propagation. All errors are propagated back to Go only using
 // ws_close_client.
-void ws_receive_message(uint64_t client_id, WSBuffer msg);
+void ws_receive_message(uint64_t client_id, const WSBuffer msg);
 
 // Propagate select configuration changes to Rust side via non-owned JSON.
 //
 // Error must be freed by caller, if not null.
-char* ws_set_config(WSBuffer);
+char* ws_set_config(const WSBuffer);
 
 // Register image insertion into an open post.
 //
 // image: JSON-encoded inserted image data
-char* ws_insert_image(uint64_t thread, uint64_t post, WSBuffer image);
+char* ws_insert_image(uint64_t thread, uint64_t post, const WSBuffer image);

@@ -2,8 +2,7 @@ use super::common::DynResult;
 use super::{config, pulsar};
 use libc;
 use protocol::debug_log;
-use std::borrow::Cow;
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::os::raw::{c_char, c_void};
 use std::ptr::null_mut;
 use std::sync::Arc;
@@ -14,6 +13,15 @@ use std::sync::Arc;
 pub struct WSBuffer {
 	data: *const u8,
 	size: usize,
+}
+
+impl Default for WSBuffer {
+	fn default() -> Self {
+		Self {
+			data: std::ptr::null(),
+			size: 0,
+		}
+	}
 }
 
 impl AsRef<[u8]> for WSBuffer {
@@ -31,24 +39,36 @@ impl From<&[u8]> for WSBuffer {
 	}
 }
 
+impl From<&str> for WSBuffer {
+	fn from(s: &str) -> WSBuffer {
+		s.as_bytes().into()
+	}
+}
+
+impl From<&String> for WSBuffer {
+	fn from(s: &String) -> WSBuffer {
+		s.as_bytes().into()
+	}
+}
+
 // Like WSBuffer, but points to malloced data and frees itself on drop
 #[repr(C)]
 #[derive(Debug)]
-pub struct WSBufferOwned {
+pub struct WSBufferMut {
 	data: *mut u8,
 	size: usize,
 }
 
-impl Default for WSBufferOwned {
+impl Default for WSBufferMut {
 	fn default() -> Self {
-		Self {
+		WSBufferMut {
 			data: null_mut(),
 			size: 0,
 		}
 	}
 }
 
-impl AsRef<[u8]> for WSBufferOwned {
+impl AsRef<[u8]> for WSBufferMut {
 	fn as_ref(&self) -> &[u8] {
 		unsafe {
 			std::slice::from_raw_parts(
@@ -63,7 +83,7 @@ impl AsRef<[u8]> for WSBufferOwned {
 	}
 }
 
-impl Drop for WSBufferOwned {
+impl Drop for WSBufferMut {
 	fn drop(&mut self) {
 		unsafe { libc::free(self.data as *mut libc::c_void) };
 	}
@@ -91,15 +111,9 @@ impl From<Arc<Vec<u8>>> for WSRcBuffer {
 
 // Register a websocket client with a unique ID and return any error
 #[no_mangle]
-extern "C" fn ws_register_client(id: u64, ip: WSBuffer) -> *mut c_char {
+extern "C" fn ws_register_client(id: u64) -> *mut c_char {
 	cast_to_c_error(|| -> Result<(), String> {
-		super::registry::add_client(
-			id,
-			std::str::from_utf8(ip.as_ref())
-				.map_err(|err| format!("could not read IP string: {}", err))?
-				.parse()
-				.map_err(|err| format!("{}", err))?,
-		);
+		super::registry::add_client(id);
 		Ok(())
 	})
 }
@@ -168,15 +182,7 @@ pub fn close_client(id: u64, err: &str) {
 	super::registry::remove_client(id);
 
 	debug_log!("closing client", err);
-	with_borrowed_c_char(err, |err| unsafe { ws_close_client(id, err) });
-}
-
-// Casts &str to borrowed C string and runs f() with it as an argument
-fn with_borrowed_c_char<R>(s: &str, f: impl FnOnce(*const c_char) -> R) -> R {
-	// Putting it on the stack here ensures this is not dropped until the call
-	// to ws_close_client() returns
-	let cs = CString::new(s).expect("null in Rust string");
-	f(cs.as_ptr())
+	unsafe { ws_close_client(id, err.into()) };
 }
 
 // Check, if thread exists in DB
@@ -189,10 +195,9 @@ pub fn thread_exists(id: u64) -> Result<bool, String> {
 // Cast owned C error to Result
 fn cast_c_err(err: *mut c_char) -> Result<(), String> {
 	if err != null_mut() {
-		let s: String = match unsafe { CStr::from_ptr(err) }.to_string_lossy() {
-			Cow::Borrowed(e) => e.into(),
-			Cow::Owned(e) => e,
-		};
+		let s: String = unsafe { CStr::from_ptr(err) }
+			.to_string_lossy()
+			.into_owned();
 		unsafe { libc::free(err as *mut libc::c_void) };
 		return Err(s);
 	}
@@ -204,26 +209,30 @@ pub fn write_message(client_id: u64, msg: Arc<Vec<u8>>) {
 	unsafe { ws_write_message(client_id, msg.into()) };
 }
 
+// Cast reference to a Option<String> to WSBuffer
+fn ref_option(src: &Option<String>) -> WSBuffer {
+	src.as_ref().map(|s| s.into()).unwrap_or_default()
+}
+
 // Create a new thread and return it's ID
 pub fn insert_thread(
 	subject: &str,
 	tags: &[String],
 	public_key: u64,
+	name: &Option<String>,
+	trip: &Option<String>,
 	body: &[u8],
-) -> DynResult<u64> {
-	let mut _tags: Vec<CString> = Vec::with_capacity(tags.len());
-	for t in tags {
-		_tags.push(CString::new(String::from(t))?);
-	}
-	let __tags: Vec<*const c_char> = _tags.iter().map(|x| x.as_ptr()).collect();
-
+) -> Result<u64, String> {
+	let tags_: Vec<WSBuffer> = tags.iter().map(|t| t.into()).collect();
 	let mut id: u64 = 0;
 	cast_c_err(unsafe {
 		ws_insert_thread(
-			CString::new(subject)?.as_ptr(),
-			__tags.as_ptr(),
-			__tags.len(),
+			subject.into(),
+			tags_.as_ptr(),
+			tags_.len(),
 			public_key,
+			ref_option(name),
+			ref_option(trip),
 			body.into(),
 			&mut id as *mut u64,
 		)
@@ -231,9 +240,33 @@ pub fn insert_thread(
 	Ok(id)
 }
 
+// Create a new post and return it's ID and page
+pub fn insert_post(
+	thread: u64,
+	public_key: u64,
+	name: &Option<String>,
+	trip: &Option<String>,
+	body: &[u8],
+) -> Result<(u64, u32), String> {
+	let mut id: u64 = 0;
+	let mut page: u32 = 0;
+	cast_c_err(unsafe {
+		ws_insert_post(
+			thread,
+			public_key,
+			ref_option(name),
+			ref_option(trip),
+			body.into(),
+			&mut id as *mut u64,
+			&mut page as *mut u32,
+		)
+	})?;
+	Ok((id, page))
+}
+
 // Log error on Go side
 pub fn log_error(err: &str) {
-	with_borrowed_c_char(err, |err| unsafe { ws_log_error(err) });
+	unsafe { ws_log_error(err.into()) };
 }
 
 // Propagate select configuration changes to Rust side
@@ -252,6 +285,8 @@ extern "C" fn ws_init(feed_data: WSBuffer) -> *mut c_char {
 	cast_to_c_error(|| -> Result<(), String> {
 		pulsar::init(feed_data.as_ref())
 			.map_err(|e| format!("could not start pulsar: {}", e))?;
+		crate::body::init()
+			.map_err(|e| format!("could not start post body runtime: {}", e))?;
 		Ok(())
 	})
 }
@@ -265,15 +300,17 @@ extern "C" fn ws_insert_image(
 	post: u64,
 	image: WSBuffer,
 ) -> *mut c_char {
-	cast_to_c_error(|| -> DynResult {
+	cast_to_c_error(|| -> Result<(), String> {
 		pulsar::insert_image(
 			thread,
 			post,
 			serde_json::from_slice::<protocol::payloads::ImageJSON>(
 				image.as_ref(),
-			)?
+			)
+			.map_err(|e| e.to_string())?
 			.into(),
-		)?;
+		)
+		.map_err(|e| e.to_string())?;
 		Ok(())
 	})
 }
@@ -300,14 +337,14 @@ pub fn register_public_key(
 // Get public key by its public ID together with its private ID
 pub fn get_public_key(
 	pub_id: uuid::Uuid,
-) -> Result<(u64, WSBufferOwned), String> {
+) -> Result<(u64, WSBufferMut), String> {
 	let mut priv_id = 0_u64;
-	let mut pub_key = WSBufferOwned::default();
+	let mut pub_key = WSBufferMut::default();
 	cast_c_err(unsafe {
 		ws_get_public_key(
 			pub_id.as_bytes().as_ptr(),
 			&mut priv_id as *mut u64,
-			&mut pub_key as *mut WSBufferOwned,
+			&mut pub_key as *mut WSBufferMut,
 		)
 	})?;
 	Ok((priv_id, pub_key))
@@ -344,25 +381,41 @@ pub fn increment_spam_score(pub_key: u64, score: usize) {
 	}
 }
 
-// Write open post bodies to DB.
-// Bodies must be in map[string]Body JSON map format.
-pub fn write_open_post_bodies(buf: &[u8]) -> Result<(), String> {
-	cast_c_err(unsafe { ws_write_open_post_bodies(buf.into()) })
+// Check, if user needs to solve a captcha
+pub fn need_captcha(pub_key: u64) -> Result<bool, String> {
+	if !crate::config::read(|c| c.captcha) {
+		return Ok(false);
+	}
+
+	let mut need = false;
+	cast_c_err(unsafe { ws_need_captcha(pub_key, &mut need as *mut bool) })?;
+	Ok(need)
 }
 
 // Linked from Go
 extern "C" {
 	fn ws_write_message(client_id: u64, msg: WSRcBuffer);
-	fn ws_close_client(clientID: u64, err: *const c_char);
+	fn ws_close_client(clientID: u64, err: WSBuffer);
 	fn ws_thread_exists(id: u64, exists: *mut bool) -> *mut c_char;
-	fn ws_log_error(err: *const c_char);
+	fn ws_log_error(err: WSBuffer);
 	fn ws_insert_thread(
-		subject: *const c_char,
-		tags: *const *const c_char,
+		subject: WSBuffer,
+		tags: *const WSBuffer,
 		tags_size: usize,
 		public_key: u64,
+		name: WSBuffer,
+		trip: WSBuffer,
 		body: WSBuffer,
 		id: *mut u64,
+	) -> *mut c_char;
+	fn ws_insert_post(
+		thread: u64,
+		public_key: u64,
+		name: WSBuffer,
+		trip: WSBuffer,
+		body: WSBuffer,
+		id: *mut u64,
+		page: *mut u32,
 	) -> *mut c_char;
 	fn ws_register_public_key(
 		pub_key: WSBuffer,
@@ -373,7 +426,7 @@ extern "C" {
 	fn ws_get_public_key(
 		pub_id: *const u8,
 		priv_id: *mut u64,
-		pub_key: *mut WSBufferOwned,
+		pub_key: *mut WSBufferMut,
 	) -> *mut c_char;
 	fn ws_get_post_parenthood(
 		id: u64,
@@ -381,5 +434,5 @@ extern "C" {
 		page: *mut u32,
 	) -> *mut c_char;
 	fn ws_increment_spam_score(pub_key: u64, score: u64);
-	fn ws_write_open_post_bodies(buf: WSBuffer) -> *mut c_char;
+	fn ws_need_captcha(pub_key: u64, need: *mut bool) -> *mut c_char;
 }

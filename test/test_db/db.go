@@ -3,7 +3,6 @@
 package test_db
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -33,7 +32,7 @@ func InsertSampleThread(t *testing.T) (id uint64, keyPair KeyPair) {
 	keyPair.PrivID, keyPair.PubID, _, err = db.RegisterPublicKey(
 		x509.MarshalPKCS1PublicKey(&keyPair.Key.PublicKey),
 	)
-	id, err = db.InsertThread(context.Background(), db.ThreadInsertParams{
+	id, err = db.InsertThread(db.ThreadInsertParams{
 		Subject: "test",
 		Tags:    []string{"animu", "mango"},
 		PostInsertParamsCommon: db.PostInsertParamsCommon{

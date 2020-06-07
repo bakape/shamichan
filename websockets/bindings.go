@@ -10,7 +10,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"reflect"
 	"unsafe"
 
 	"github.com/bakape/meguca/cache"
@@ -25,7 +24,15 @@ import (
 
 func init() {
 	util.Hook("config.updated", func() (err error) {
-		buf, err := json.Marshal(config.Get())
+		buf, err := json.Marshal(
+			struct {
+				*config.Configs
+				DB string `json:"db_url"`
+			}{
+				config.Get(),
+				config.Server.Database,
+			},
+		)
 		if err != nil {
 			return
 		}
@@ -40,19 +47,6 @@ func Init() (err error) {
 		return
 	}
 	return fromCError(C.ws_init(toWSBuffer(buf)))
-}
-
-// Construct byte slice from C pointer and size
-func toSlice(ptr *C.uint8_t, size C.size_t) []byte {
-	return *(*[]byte)(
-		unsafe.Pointer(
-			&reflect.SliceHeader{
-				Data: uintptr(unsafe.Pointer(ptr)),
-				Len:  int(size),
-				Cap:  int(size),
-			},
-		),
-	)
 }
 
 //export ws_thread_exists
@@ -91,7 +85,7 @@ func ws_write_message(clientID C.uint64_t, msg C.WSRcBuffer) {
 }
 
 //export ws_close_client
-func ws_close_client(clientID C.uint64_t, err *C.char) {
+func ws_close_client(clientID C.uint64_t, err C.WSBuffer) {
 	// Not using deferred unlock to not block on channel send
 	clientsMu.Lock()
 	c, ok := clients[uint64(clientID)]
@@ -99,8 +93,10 @@ func ws_close_client(clientID C.uint64_t, err *C.char) {
 
 	if ok {
 		var e error
-		if err != nil {
-			e = errors.New(C.GoString(err))
+		if err.data != nil {
+			// Need to copy as ownership is required because of the async error
+			// passing
+			e = errors.New(toStringCopy(err))
 		}
 		select {
 		case c.close <- e:
@@ -111,33 +107,32 @@ func ws_close_client(clientID C.uint64_t, err *C.char) {
 
 //export ws_insert_thread
 func ws_insert_thread(
-	subject *C.char,
-	tags **C.char,
-	tags_size C.size_t,
+	subject C.WSBuffer,
+	tags *C.WSBuffer, tags_size C.size_t,
 	public_key C.uint64_t,
-	body C.WSBuffer,
+	name, trip, body C.WSBuffer,
 	id *C.uint64_t,
 ) *C.char {
 	tags_ := make([]string, int(tags_size))
-	size := unsafe.Sizeof(subject)
+	size := unsafe.Sizeof(C.WSBuffer{})
 	for i := range tags_ {
-		tags_[i] = C.GoString(
-			*(**C.char)(unsafe.Pointer(
+		tags_[i] = toString(
+			*(*C.WSBuffer)(unsafe.Pointer(
 				uintptr(unsafe.Pointer(tags)) + size*uintptr(i)),
 			),
 		)
 	}
 
-	pk := uint64(public_key)
 	id_, err := db.InsertThread(
-		context.Background(),
 		db.ThreadInsertParams{
-			Subject: C.GoString(subject),
+			Subject: toString(subject),
 			Tags:    tags_,
-			PostInsertParamsCommon: db.PostInsertParamsCommon{
-				PublicKey: &pk,
-				Body:      toSlice(body.data, body.size),
-			},
+			PostInsertParamsCommon: makePostInsertParamsCommon(
+				public_key,
+				name,
+				trip,
+				body,
+			),
 		},
 	)
 	if err != nil {
@@ -150,6 +145,42 @@ func ws_insert_thread(
 	return nil
 }
 
+//export ws_insert_post
+func ws_insert_post(
+	sage C.bool,
+	thread, public_key C.uint64_t,
+	name, trip, body C.WSBuffer,
+	id *C.uint64_t,
+	page *C.uint32_t,
+) *C.char {
+	var (
+		id_   uint64
+		page_ uint32
+	)
+	err := db.InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
+		id_, page_, err = db.InsertPost(tx, db.ReplyInsertParams{
+			Sage:   bool(sage),
+			Thread: uint64(thread),
+			PostInsertParamsCommon: makePostInsertParamsCommon(
+				public_key,
+				name,
+				trip,
+				body,
+			),
+		})
+		return
+	})
+	if err != nil {
+		return C.CString(err.Error())
+	}
+	*id = C.uint64_t(id_)
+	*page = C.uint32_t(page_)
+
+	cache.EvictThreadPage(uint64(thread), page_)
+
+	return nil
+}
+
 //export ws_register_public_key
 func ws_register_public_key(
 	pub_key C.WSBuffer,
@@ -158,7 +189,7 @@ func ws_register_public_key(
 	fresh *C.bool, // freshly registered (did not exist before this)
 ) *C.char {
 	priv_id_, pub_id_, fresh_, err := db.RegisterPublicKey(
-		toSlice(pub_key.data, pub_key.size),
+		toSlice(pub_key),
 	)
 	if err != nil {
 		return C.CString(err.Error())
@@ -173,7 +204,7 @@ func ws_register_public_key(
 func ws_get_public_key(
 	pub_id *C.uint8_t, // UUID exposed to clients; used for lookup
 	priv_id *C.uint64_t,
-	pub_key *C.WSBuffer, // Owned by caller and must be freed
+	pub_key *C.WSBuffer,
 ) *C.char {
 	var pub_id_ uuid.UUID
 	C.memcpy(unsafe.Pointer(&pub_id_[0]), unsafe.Pointer(pub_id), 16)
@@ -210,15 +241,6 @@ func ws_increment_spam_score(pub_key C.uint64_t, score C.uint64_t) {
 	db.IncrementSpamScore(uint64(pub_key), uint64(score))
 }
 
-//export ws_write_open_post_bodies
-func ws_write_open_post_bodies(buf C.WSBuffer) *C.char {
-	err := db.WriteOpenPostBodies(toSlice(buf.data, buf.size))
-	if err != nil {
-		return C.CString(err.Error())
-	}
-	return nil
-}
-
 //export ws_validate_captcha
 func ws_validate_captcha(
 	id *C.uint8_t, // Always 64 bytes
@@ -230,17 +252,18 @@ func ws_validate_captcha(
 }
 
 //export ws_log_error
-func ws_log_error(err *C.char) {
-	log.Errorf("websockets: %s", C.GoString(err))
+func ws_log_error(err C.WSBuffer) {
+	log.Errorf("websockets: %s", toString(err))
 }
 
-// Cast []bytes to WSBuffer without copy
-func toWSBuffer(buf []byte) C.WSBuffer {
-	h := (*reflect.SliceHeader)(unsafe.Pointer(&buf))
-	return C.WSBuffer{
-		(*C.uint8_t)(unsafe.Pointer(h.Data)),
-		C.size_t(h.Len),
+//export ws_need_captcha
+func ws_need_captcha(pub_key C.uint64_t, need *C.bool) *C.char {
+	need_, err := db.NeedCaptcha(context.Background(), uint64(pub_key))
+	if err != nil {
+		return C.CString(err.Error())
 	}
+	*need = C.bool(need_)
+	return nil
 }
 
 // Register image insertion into an open post.
@@ -256,13 +279,4 @@ func InsertImage(thread, post uint64, img common.Image) (err error) {
 		C.uint64_t(post),
 		toWSBuffer(buf),
 	))
-}
-
-// Cast any owned C error to Go and free it
-func fromCError(errC *C.char) (err error) {
-	if errC != nil {
-		err = errors.New(C.GoString(errC))
-	}
-	C.free(unsafe.Pointer(errC))
-	return
 }

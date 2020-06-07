@@ -49,3 +49,13 @@ pub fn parse(body: &str, open: bool) -> Result {
 		code::parse_code(&body, flags)
 	}
 }
+
+// Initialize module runtime tasks
+pub fn init() -> crate::common::DynResult {
+	std::thread::Builder::new()
+		.name("open body flusher".into())
+		.spawn(|| {
+			crate::common::run_future(persist::flush_open_bodies());
+		})?;
+	Ok(())
+}

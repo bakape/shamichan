@@ -24,6 +24,9 @@ pub struct Config {
 
 	// Amounts to increase spam score by for a user action
 	pub spam_scores: SpamScores,
+
+	// Database access URL
+	pub db_url: String,
 }
 
 protocol::gen_global!(pub, pub, Config);

@@ -19,7 +19,7 @@ func insertSampleThread(t *testing.T) (id uint64, pubKey uint64) {
 	t.Helper()
 
 	pubKey, _ = insertSamplePubKey(t)
-	id, err := InsertThread(context.Background(), ThreadInsertParams{
+	id, err := InsertThread(ThreadInsertParams{
 		Subject: "test",
 		Tags:    []string{"animu", "mango"},
 		PostInsertParamsCommon: PostInsertParamsCommon{
@@ -86,7 +86,7 @@ func TestGetFeedData(t *testing.T) {
 
 		pubKey, _ := insertSamplePubKey(t)
 		err = InTransaction(ctx, func(tx pgx.Tx) (err error) {
-			replies[i], err = InsertPost(ctx, tx, ReplyInsertParams{
+			replies[i], _, err = InsertPost(tx, ReplyInsertParams{
 				Thread: threads[i],
 				PostInsertParamsCommon: PostInsertParamsCommon{
 					PublicKey: &pubKey,
@@ -275,7 +275,7 @@ func TestReadThreads(t *testing.T) {
 	err = InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
 		var id uint64
 		for i := 1; i < 109; i++ {
-			id, err = InsertPost(context.Background(), tx, ReplyInsertParams{
+			id, _, err = InsertPost(tx, ReplyInsertParams{
 				Thread: thread,
 				PostInsertParamsCommon: PostInsertParamsCommon{
 					PublicKey: &pubKey,

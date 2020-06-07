@@ -9,7 +9,9 @@ import (
 
 // Common params for both post and thread insertion
 type PostInsertParamsCommon struct {
-	// Client authentication public key ID
+	// Client authentication public key ID.
+	//
+	// Optional, to enable migrations of legacy data.
 	PublicKey *uint64 `db:"public_key"`
 
 	// Name set by poster
@@ -44,20 +46,17 @@ type OPInsertparams struct {
 	ReplyInsertParams
 }
 
-// Insert a new post into a specific thread. Returns post ID.
+// Insert a new post into a specific thread. Returns post ID and page.
 //
 // params: either ReplyInsertParams or OPInsertparams.
-func InsertPost(
-	ctx context.Context,
-	tx pgx.Tx,
-	params interface{},
-) (id uint64, err error) {
+func InsertPost(tx pgx.Tx, params interface{},
+) (id uint64, page uint32, err error) {
 	q, args := pg_util.BuildInsert(pg_util.InsertOpts{
 		Table:  "posts",
 		Data:   params,
-		Suffix: "returning id",
+		Suffix: "returning id, page",
 	})
-	err = tx.QueryRow(ctx, q, args...).Scan(&id)
+	err = tx.QueryRow(context.Background(), q, args...).Scan(&id, &page)
 	return
 }
 

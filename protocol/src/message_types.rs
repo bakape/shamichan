@@ -17,10 +17,10 @@ pub enum MessageType {
 	FeedInit,
 
 	// Request to create a new thread or new thread creation event
-	CreateThread,
+	InsertThread,
 
-	// Acknowledgment of thread creation. Response to CreateThread from server.
-	CreateThreadAck,
+	// Acknowledgment of thread creation. Response to InsertThread from server.
+	InsertThreadAck,
 
 	// Request to create a new post or post creation event
 	InsertPost,

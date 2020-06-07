@@ -90,6 +90,7 @@ func loadDB(connURL, dbSuffix string) (err error) {
 	}
 	q := u.Query()
 	q.Set("pool_max_conns", "50")
+	q.Set("sslmode", "disable")
 	u.RawQuery = q.Encode()
 
 	db, err = pgxpool.Connect(context.Background(), u.String())

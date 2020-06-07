@@ -1,7 +1,7 @@
 use crate::{bindings, common::DynResult, registry};
 use protocol::{
 	debug_log,
-	payloads::{FeedData, Image, ThreadCreationNotice},
+	payloads::{FeedData, Image, PostCreationNotice, ThreadCreationNotice},
 	util::SetMap,
 	Encoder, MessageType,
 };
@@ -38,7 +38,7 @@ pub fn init(feed_data: &[u8]) -> DynResult {
 		.name("pulsar".into())
 		.spawn(move || {
 			const SEND_INTERVAL: Duration = Duration::from_millis(100);
-			const CLEANUP_INTERVAL: Duration = Duration::from_secs(10);
+			const CLEANUP_INTERVAL: Duration = Duration::from_secs(60);
 
 			let now = Instant::now();
 			let mut last_send = now;
@@ -51,21 +51,14 @@ pub fn init(feed_data: &[u8]) -> DynResult {
 				for req in recv.try_iter() {
 					use Request::*;
 
-					if let Err(err) = || -> DynResult<()> {
-						match req {
-							CreateThread(data) => p.create_thread(data)?,
-							RemoveThread(id) => p.remove_thread(id),
-							InsertImage(req) => p.insert_image(req),
-							SetOpenBody { post, thread, body } => {
-								p.enqueue_open_body(post, thread, body)
-							}
-						};
-						Ok(())
-					}() {
-						bindings::log_error(&format!(
-							"pulsar: error={:?}",
-							err
-						));
+					match req {
+						InsertThread(data) => p.insert_thread(data),
+						InsertPost(data) => p.insert_post(data),
+						RemoveThread(id) => p.remove_thread(id),
+						InsertImage(req) => p.insert_image(req),
+						SetOpenBody { post, thread, body } => {
+							p.enqueue_open_body(post, thread, body)
+						}
 					}
 				}
 
@@ -84,7 +77,7 @@ pub fn init(feed_data: &[u8]) -> DynResult {
 				// Sleep thread to save resources.
 				// Compensate for a possibly long tick.
 				let elapsed = Instant::now() - started;
-				let mut dur = Duration::from_millis(10);
+				let mut dur = Duration::from_millis(30);
 				// Duration can not be negative
 				if elapsed < dur {
 					dur -= elapsed;
@@ -270,24 +263,18 @@ impl Feed {
 		}
 	}
 
-	// Insert new blank open post
-	fn insert_post(&mut self, id: u64) {
-		use protocol::payloads::OpenPost;
-
-		let now = SystemTime::now()
-			.duration_since(SystemTime::UNIX_EPOCH)
-			.expect("negative Unix timestamp")
-			.as_secs() as u32;
-
-		self.data.recent_posts.insert(id, now);
+	// Insert new blank open post into the registry
+	fn insert_post(&mut self, id: u64, time: u32) {
+		self.data.recent_posts.insert(id, time);
 		if self.last_5_posts.len() == 5 {
 			unsafe { self.last_5_posts.pop_unchecked() };
 		}
 		unsafe { self.last_5_posts.push_unchecked(id) };
 
-		self.data
-			.open_posts
-			.insert(id, OpenPost::new(self.common.id, now));
+		self.data.open_posts.insert(
+			id,
+			protocol::payloads::OpenPost::new(self.common.id, time),
+		);
 	}
 
 	// Write post-related message to thread and possibly global feed
@@ -406,6 +393,14 @@ struct MessageSet {
 	thread_messages: HashMap<u64, Msg>,
 }
 
+impl MessageSet {
+	fn is_empty(&self) -> bool {
+		self.global_init_parts.is_empty()
+			&& self.global_feed_messages.is_empty()
+			&& self.thread_messages.is_empty()
+	}
+}
+
 // Buffering update dispatcher singleton.
 //
 // Never access Pulsar from the Registry, as Pulsar accesses it. Can result in
@@ -430,10 +425,7 @@ impl Pulsar {
 	}
 
 	// Register a new thread and allocate its resources
-	fn create_thread(
-		&mut self,
-		data: ThreadCreationNotice,
-	) -> std::io::Result<()> {
+	fn insert_thread(&mut self, data: ThreadCreationNotice) {
 		self.global.clear_cache();
 
 		let mut f = Feed::new(FeedData {
@@ -441,11 +433,22 @@ impl Pulsar {
 			recent_posts: Default::default(),
 			open_posts: Default::default(),
 		});
-		f.insert_post(data.id);
+		f.insert_post(data.id, data.time);
 		self.feeds.insert(data.id, f);
 
-		get_encoder(&mut self.global.pending)
-			.write_message(MessageType::CreateThread, &data)
+		if let Err(e) = get_encoder(&mut self.global.pending)
+			.write_message(MessageType::InsertThread, &data)
+		{
+			self.global.log_encode_error(e);
+		}
+	}
+
+	// Register a new post and allocate its resources
+	fn insert_post(&mut self, data: PostCreationNotice) {
+		self.mod_thread(data.thread, |f| {
+			f.insert_post(data.id, data.time);
+			f.encode_post_message(data.id, MessageType::InsertPost, &data);
+		});
 	}
 
 	// Deallocate thread resources and redirect all of its clients
@@ -453,8 +456,8 @@ impl Pulsar {
 		self.global.clear_cache();
 
 		todo!(concat!(
-			"Remove feed data, redirect clients on thread deletion and ",
-			" pass message to global feed"
+			"Remove feed data, redirect clients on thread deletion, ",
+			"clear cache, pass message to global feed"
 		))
 	}
 
@@ -550,6 +553,10 @@ impl Pulsar {
 				&& self.global.init_msg_cache.is_none(),
 			&clients_by_feed,
 		);
+		if messages.is_empty() && self.global.pending.is_none() {
+			// Nothing to send
+			return;
+		}
 
 		let mut messages_by_client = HashMap::new();
 
@@ -805,8 +812,11 @@ pub struct ImageInsertionReq {
 // Request to pulsar
 #[derive(Debug)]
 pub enum Request {
-	// Initialize a freshly-created thread
-	CreateThread(ThreadCreationNotice),
+	// Register a freshly-created thread
+	InsertThread(ThreadCreationNotice),
+
+	// Register a freshly-created post
+	InsertPost(PostCreationNotice),
 
 	// Deallocate thread resources and redirect all of its clients
 	RemoveThread(u64),
@@ -830,8 +840,8 @@ fn send_request(req: Request) -> SendResult {
 }
 
 // Initialize a freshly-created thread
-pub fn create_thread(data: ThreadCreationNotice) -> SendResult {
-	send_request(Request::CreateThread(data))
+pub fn insert_thread(data: ThreadCreationNotice) -> SendResult {
+	send_request(Request::InsertThread(data))
 }
 
 // Deallocate thread resources and redirect all of its clients
@@ -851,4 +861,9 @@ pub fn insert_image(thread: u64, post: u64, img: Image) -> SendResult {
 		post: post,
 		img: img,
 	}))
+}
+
+// Initialize a freshly-created post
+pub fn insert_post(data: PostCreationNotice) -> SendResult {
+	send_request(Request::InsertPost(data))
 }

@@ -12,9 +12,7 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"reflect"
 	"sync"
-	"unsafe"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/common"
@@ -82,16 +80,6 @@ func Handle(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	// TODO: Handle globally banned clients
-	// // Prevents connection spam
-	// err = db.IsBanned("all", ip)
-	// if err != nil {
-	// 	return
-	// }
-
-	// TODO: read origin from configs
-	// TODO: prompt origin on first page access
-	// TODO: prompt admin password on first page access
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		InsecureSkipVerify: true,
 		CompressionMode:    websocket.CompressionDisabled,
@@ -186,7 +174,7 @@ func Handle(w http.ResponseWriter, r *http.Request,
 			err = conn.Write(
 				c.ctx,
 				websocket.MessageBinary,
-				toSlice(msg.inner.data, msg.inner.size),
+				toSlice(msg.inner),
 			)
 			C.ws_unref_message(msg.src)
 			if err != nil {
@@ -214,16 +202,7 @@ try:
 	clients[id] = c
 	clientsMu.Unlock()
 
-	// Zero copy string passing
-	ip := c.ip.String()
-	h := (*reflect.StringHeader)(unsafe.Pointer(&ip))
-	err = fromCError(C.ws_register_client(
-		C.uint64_t(id),
-		C.WSBuffer{
-			(*C.uint8_t)(unsafe.Pointer(h.Data)),
-			C.size_t(h.Len),
-		},
-	))
+	err = fromCError(C.ws_register_client(C.uint64_t(id)))
 	return
 }
 

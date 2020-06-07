@@ -1,7 +1,6 @@
 use super::client::Client;
 use protocol::util::SetMap;
 use std::collections::{HashMap, HashSet};
-use std::net::IpAddr;
 use std::rc::Rc;
 use std::sync::Mutex;
 
@@ -12,7 +11,6 @@ pub struct Registry {
 
 	// Maps for quick lookup of client sets
 	by_thread: SetMap<u64, u64>,
-	by_ip: SetMap<IpAddr, u64>,
 	by_pub_key: SetMap<u64, u64>,
 
 	// Have not yet had their feed initialization messages sent.
@@ -41,17 +39,15 @@ struct ClientDescriptor {
 	thread: Option<u64>,
 
 	pub_key: Option<u64>,
-	ip: IpAddr,
 	client: Rc<Mutex<Client>>,
 }
 
 impl ClientDescriptor {
-	fn new(id: u64, ip: IpAddr) -> Self {
+	fn new(id: u64) -> Self {
 		Self {
-			ip: ip,
 			thread: None,
 			pub_key: None,
-			client: Rc::new(Mutex::new(Client::new(id, ip))),
+			client: Rc::new(Mutex::new(Client::new(id))),
 		}
 	}
 }
@@ -60,7 +56,6 @@ impl ClientDescriptor {
 pub fn remove_client(id: u64) {
 	write(|c| {
 		if let Some(desc) = c.clients.remove(&id) {
-			c.by_ip.remove(&desc.ip, &id);
 			if let Some(pub_key) = desc.pub_key {
 				c.by_pub_key.remove(&pub_key, &id);
 			}
@@ -76,10 +71,9 @@ pub fn get_client(id: u64) -> Option<Rc<Mutex<super::client::Client>>> {
 }
 
 // Register a freshly created client with no messages received yet
-pub fn add_client(id: u64, ip: IpAddr) {
+pub fn add_client(id: u64) {
 	write(|c| {
-		c.by_ip.insert(ip, id);
-		c.clients.insert(id, ClientDescriptor::new(id, ip));
+		c.clients.insert(id, ClientDescriptor::new(id));
 	});
 }
 

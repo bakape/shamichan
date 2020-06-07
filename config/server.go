@@ -10,20 +10,6 @@ import (
 // Immutable after loading.
 var Server ServerConfigs
 
-// ImagerModeType is the imager functionality setting for this meguca process
-type ImagerModeType int
-
-const (
-	// IntegratedImager is regular and imager functionality both handled by this process
-	IntegratedImager ImagerModeType = iota
-
-	// NoImager is imager functionality not handled by this process
-	NoImager
-
-	// ImagerOnly is only imager functionality handled by this process
-	ImagerOnly
-)
-
 // Configurations of this specific instance passed from config file
 type ServerConfigs struct {
 	Debug     bool

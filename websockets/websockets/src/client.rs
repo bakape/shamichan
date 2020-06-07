@@ -2,16 +2,16 @@ use crate::{bindings, common::DynResult, config, pulsar, registry, str_err};
 use protocol::{
 	debug_log,
 	payloads::{
-		post_body::TextPatch, Authorization, HandshakeReq, Signature,
-		ThreadCreationReq,
+		post_body::TextPatch, Authorization, HandshakeReq, PostCreationReq,
+		Signature, ThreadCreationReq,
 	},
 	Decoder, Encoder, MessageType,
 };
 use serde::Serialize;
-use std::{net::IpAddr, sync::Arc};
+use std::sync::Arc;
 
 // Public key public and private ID set
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct PubKeyDesc {
 	// Public key private ID used to sign messages by the client
 	priv_id: u64,
@@ -26,14 +26,14 @@ enum ConnState {
 	Connected,
 
 	// Sent handshake message and it was accepted
-	AcceptedHandshake(PubKeyDesc),
+	AcceptedHandshake,
 
 	// Public key already registered. Requested client to send a HandshakeReq
 	// with Authorization::Saved.
-	RequestedReshake { desc: PubKeyDesc, pub_key: Vec<u8> },
+	RequestedReshake { pub_key: Vec<u8> },
 
 	// Client synchronizing to a feed
-	Synchronizing(PubKeyDesc),
+	Synchronizing,
 }
 
 struct OpenPost {
@@ -59,16 +59,17 @@ pub struct Client {
 	// ID of client used in various registries
 	id: u64,
 
-	// IP of client connection
-	//
-	// TODO: Use this for bans
-	ip: IpAddr,
-
 	// Client connection state
 	conn_state: ConnState,
 
 	// Post the client is currently editing
 	open_post: Option<OpenPost>,
+
+	// First synchronization of this client occurred
+	synced_once: bool,
+
+	// Public key public and private ID set
+	pub_key: PubKeyDesc,
 }
 
 // Return with invalid length error
@@ -119,12 +120,13 @@ macro_rules! log_msg_in {
 
 impl Client {
 	// Create fresh unconnected client
-	pub fn new(id: u64, ip: IpAddr) -> Self {
+	pub fn new(id: u64) -> Self {
 		Self {
-			id: id,
-			ip: ip,
+			id,
 			conn_state: ConnState::Connected,
 			open_post: Default::default(),
+			synced_once: Default::default(),
+			pub_key: Default::default(),
 		}
 	}
 
@@ -213,25 +215,27 @@ impl Client {
 							expect!(Handshake);
 							self.handle_handshake(&mut dec)?;
 						}
-						RequestedReshake { desc, pub_key } => {
+						RequestedReshake { pub_key } => {
 							expect!(Handshake);
-							let desc = desc.clone();
-							let pub_key = pub_key.clone();
-							self.handle_reshake(&mut dec, desc, pub_key)?;
+							let pk = pub_key.clone();
+							self.handle_reshake(&mut dec, &pk)?;
 						}
-						AcceptedHandshake(desc) => {
+						AcceptedHandshake => {
 							expect!(Synchronize);
 							let feed = dec.read_next()?;
 							log_msg_in!(MessageType::Synchronize, feed);
-							self.conn_state = Synchronizing(desc.clone());
+							self.conn_state = Synchronizing;
 							self.synchronize(feed)?;
 						}
-						Synchronizing(_) => route! { t,
-							CreateThread => |req: ThreadCreationReq| {
-								self.create_thread(req)
+						Synchronizing => route! { t,
+							InsertThread => |req: ThreadCreationReq| {
+								self.insert_thread(req)
 							}
 							Synchronize => |feed: u64| {
 								self.synchronize(feed)
+							}
+							InsertPost => |req: PostCreationReq| {
+								self.insert_post(req)
 							}
 							Append => |s: String| {
 								let n = check_unicode_len!(s, 2000);
@@ -275,8 +279,17 @@ impl Client {
 		// Thread init data will be sent on the next pulse
 		registry::set_client_thread(self.id, feed);
 
-		// TODO: Lookup, if client has any open posts in thread and link them to
-		// client
+		if !self.synced_once {
+			self.synced_once = true;
+
+			// TODO: Lookup, if user has any open post (globally) and link
+			// them to client, if they are not already locked by some other
+			// client
+			// TODO: ensure reconnecting clients with open posts do not steal
+			// this post back
+
+			// TODO: Send server time so the client can sync its clock somewhat
+		}
 		self.send(MessageType::Synchronize, &feed)?;
 
 		Ok(())
@@ -302,14 +315,25 @@ impl Client {
 		}
 	}
 
+	// Assert client does not already have an open post
+	fn assert_no_open_post(&self) -> Result<(), String> {
+		if self.open_post.is_some() {
+			str_err!("already have open post")
+		}
+		Ok(())
+	}
+
 	// Create a new thread and pass its ID to client
-	fn create_thread(&mut self, mut req: ThreadCreationReq) -> DynResult {
+	fn insert_thread(&mut self, mut req: ThreadCreationReq) -> DynResult {
+		// TODO: Lock new thread form, if postform is open
+		self.assert_no_open_post()?;
+
 		Self::trim(&mut req.subject);
 		check_unicode_len!(req.subject, 100);
 
 		check_len!(req.tags, 3);
-		for mut tag in req.tags.iter_mut() {
-			Self::trim(&mut tag);
+		for tag in req.tags.iter_mut() {
+			Self::trim(tag);
 			*tag = tag.to_lowercase();
 			check_unicode_len!(tag, 20);
 		}
@@ -323,30 +347,70 @@ impl Client {
 		}
 		req.tags.sort();
 
+		let [name, trip] = Self::parse_name(req.opts.name)?;
 		self.check_captcha(&req.captcha_solution)?;
-
 		let id = bindings::insert_thread(
 			&req.subject,
 			&req.tags,
-			self.public_key_id()?,
+			self.pub_key.priv_id,
+			&name,
+			&trip,
 			Self::empty_body_json(),
 		)?;
 
 		// Ensures old post non-existence records do not persist indefinitely.
 		crate::body::cache_location(id, id, 0);
 
-		pulsar::create_thread(protocol::payloads::ThreadCreationNotice {
+		pulsar::insert_thread(protocol::payloads::ThreadCreationNotice {
 			id: id,
 			subject: req.subject,
 			tags: req.tags,
-			time: std::time::SystemTime::now()
-				.duration_since(std::time::UNIX_EPOCH)
-				.unwrap()
-				.as_secs() as u32,
+			time: Self::now(),
 		})?;
 
-		self.send(MessageType::CreateThreadAck, &id)?;
+		self.send(MessageType::InsertThreadAck, &id)?;
 		self.open_post = OpenPost::new(id, id).into();
+		Ok(())
+	}
+
+	// Return current Unix timestamp
+	fn now() -> u32 {
+		std::time::SystemTime::now()
+			.duration_since(std::time::UNIX_EPOCH)
+			.unwrap()
+			.as_secs() as u32
+	}
+
+	// Create a new post in a thread and pass its ID to client
+	fn insert_post(&mut self, req: PostCreationReq) -> DynResult {
+		self.assert_no_open_post()?;
+
+		if bindings::need_captcha(self.pub_key.priv_id)? {
+			self.send(MessageType::NeedCaptcha, &())?;
+			return Ok(());
+		}
+
+		let [name, trip] = Self::parse_name(req.opts.name)?;
+		let (id, page) = bindings::insert_post(
+			req.thread,
+			req.thread,
+			&name,
+			&trip,
+			Self::empty_body_json(),
+		)?;
+
+		// Ensures old post non-existence records do not persist indefinitely.
+		crate::body::cache_location(id, req.thread, page);
+
+		pulsar::insert_post(protocol::payloads::PostCreationNotice {
+			id,
+			thread: req.thread,
+			page,
+			time: Self::now(),
+		})?;
+
+		self.send(MessageType::InsertPostAck, &id)?;
+		self.open_post = OpenPost::new(id, req.thread).into();
 		Ok(())
 	}
 
@@ -439,7 +503,7 @@ impl Client {
 
 		pulsar::set_open_body(p.id, p.thread, p.body.clone())?;
 		bindings::increment_spam_score(
-			self.public_key_id()?,
+			self.pub_key.priv_id,
 			affected * crate::config::read(|c| c.spam_scores.character),
 		);
 
@@ -450,30 +514,14 @@ impl Client {
 	//
 	// Non-useless const fn when?
 	fn empty_body_json() -> &'static [u8] {
-		use std::sync::Once;
-
-		static ONCE: Once = Once::new();
-		static mut BODY: Option<Vec<u8>> = None;
-		ONCE.call_once(|| {
-			unsafe {
-				BODY = Some(
-					serde_json::to_vec(
-						&protocol::payloads::post_body::Node::Empty,
-					)
-					.expect("failed to generate empty body JSON"),
-				)
-			};
-		});
-
-		unsafe { BODY.as_ref().unwrap() }
-	}
-
-	// Get public key private ID, if client is synchronized
-	fn public_key_id(&self) -> Result<u64, &'static str> {
-		match &self.conn_state {
-			ConnState::Synchronizing(desc) => Ok(desc.priv_id),
-			_ => Err("client not synchronizing"),
+		lazy_static! {
+			static ref BODY: Vec<u8> = serde_json::to_vec(
+				&protocol::payloads::post_body::Node::Empty,
+			)
+			.expect("failed to generate empty body JSON");
 		}
+
+		&*BODY
 	}
 
 	fn decode_handshake(dec: &mut Decoder) -> DynResult<HandshakeReq> {
@@ -492,16 +540,15 @@ impl Client {
 				let (priv_id, pub_id, fresh) =
 					bindings::register_public_key(&pub_key)?;
 
-				let desc = PubKeyDesc {
+				self.pub_key = PubKeyDesc {
 					priv_id,
 					pub_id: pub_id.clone(),
 				};
 				if fresh {
 					registry::set_client_key(self.id, priv_id);
-					self.conn_state = ConnState::AcceptedHandshake(desc);
+					self.conn_state = ConnState::AcceptedHandshake;
 				} else {
-					self.conn_state =
-						ConnState::RequestedReshake { pub_key, desc };
+					self.conn_state = ConnState::RequestedReshake { pub_key };
 				}
 
 				self.send(
@@ -518,12 +565,8 @@ impl Client {
 				signature,
 			} => {
 				let (priv_id, pub_key) = bindings::get_public_key(pub_id)?;
-				self.handle_auth_saved(
-					PubKeyDesc { priv_id, pub_id },
-					nonce,
-					signature,
-					pub_key.as_ref(),
-				)?;
+				self.pub_key = PubKeyDesc { priv_id, pub_id };
+				self.handle_auth_saved(nonce, signature, pub_key.as_ref())?;
 			}
 		}
 		Ok(())
@@ -532,7 +575,6 @@ impl Client {
 	// Handle Authorization::Saved in handshake request
 	fn handle_auth_saved(
 		&mut self,
-		desc: PubKeyDesc,
 		nonce: [u8; 32],
 		signature: Signature,
 		pub_key: &[u8],
@@ -544,7 +586,7 @@ impl Client {
 			openssl::hash::MessageDigest::sha256(),
 			&pk,
 		)?;
-		v.update(desc.pub_id.as_bytes())?;
+		v.update(self.pub_key.pub_id.as_bytes())?;
 		v.update(&nonce)?;
 		if !v.verify(&signature.0)? {
 			str_err!("invalid signature");
@@ -554,10 +596,10 @@ impl Client {
 			MessageType::Handshake,
 			&protocol::payloads::HandshakeRes {
 				need_resend: false,
-				id: desc.pub_id,
+				id: self.pub_key.pub_id,
 			},
 		)?;
-		self.conn_state = ConnState::AcceptedHandshake(desc);
+		self.conn_state = ConnState::AcceptedHandshake;
 		Ok(())
 	}
 
@@ -565,8 +607,7 @@ impl Client {
 	fn handle_reshake(
 		&mut self,
 		mut dec: &mut Decoder,
-		desc: PubKeyDesc,
-		pub_key: Vec<u8>,
+		pub_key: &[u8],
 	) -> DynResult {
 		match Self::decode_handshake(&mut dec)?.auth {
 			Authorization::Saved {
@@ -574,13 +615,36 @@ impl Client {
 				nonce,
 				signature,
 			} => {
-				if pub_id != desc.pub_id {
+				if pub_id != self.pub_key.pub_id {
 					str_err!("different public key public id in reshake");
 				}
-				self.handle_auth_saved(desc, nonce, signature, &pub_key)?;
+				self.handle_auth_saved(nonce, signature, pub_key)?;
 			}
 			_ => str_err!("invalid authorization variant"),
 		}
 		Ok(())
+	}
+
+	// Parse post name field in to name and tripcode
+	fn parse_name(
+		mut src: String,
+	) -> Result<[Option<String>; 2], &'static str> {
+		use tripcode::{FourchanNonescaping, TripcodeGenerator};
+
+		Ok(match src.len() {
+			0 => Default::default(),
+			l if l > 50 => Err("name too long")?,
+			_ => {
+				Self::trim(&mut src);
+				match src.as_bytes().iter().position(|b| b == &b'#') {
+					Some(i) if i != src.len() - 1 => {
+						let trip = FourchanNonescaping::generate(&src[i + 1..]);
+						src.truncate(i);
+						[Some(src), Some(trip)]
+					}
+					_ => [Some(src), None],
+				}
+			}
+		})
 	}
 }

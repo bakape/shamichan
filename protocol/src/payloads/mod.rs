@@ -69,6 +69,13 @@ payload! { ThreadCreationReq {
 	subject: String,
 	tags: Vec<String>,
 	captcha_solution: Vec<u8>,
+	opts: NewPostOpts,
+}}
+
+// Options for creating new posts (both OPs and replies)
+payload! { NewPostOpts {
+	name: String,
+	// TODO: staff titles
 }}
 
 payload! { ThreadCreationNotice {
@@ -78,11 +85,18 @@ payload! { ThreadCreationNotice {
 	time: u32,
 }}
 
-// Request for creating a new post
+// Request to insert a new post into a thread
 payload! { PostCreationReq {
+	sage: bool,
 	thread: u64,
-	name: String,
-	body: String,
+	opts: NewPostOpts,
+}}
+
+payload! { PostCreationNotice {
+	id: u64,
+	thread: u64,
+	time: u32,
+	page: u32,
 }}
 
 // State of an open post. Used to diff the current state of the client against

@@ -3,6 +3,7 @@ mod body;
 mod client;
 mod common;
 mod config;
+mod db;
 mod pulsar;
 mod registry;
 

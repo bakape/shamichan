@@ -12,32 +12,24 @@ pub fn parse_code(body: &str, flags: u8) -> Result {
 }
 
 fn highlight_code(frag: &str, _: u8) -> Result {
-	use std::sync::Once;
-	use syntect::{
-		highlighting::{Theme, ThemeSet},
-		parsing::SyntaxSet,
-	};
+	use syntect::parsing::SyntaxSet;
 
-	static ONCE: Once = Once::new();
-	static mut SYNTAX_SET: Option<SyntaxSet> = None;
-	static mut THEME: Option<Theme> = None;
-	ONCE.call_once(|| unsafe {
-		SYNTAX_SET = SyntaxSet::load_defaults_nonewlines().into();
-		THEME = ThemeSet::load_defaults()
-			.themes
-			.remove("base16-eighties.dark");
-	});
+	lazy_static! {
+		static ref SYNTAX_SET: SyntaxSet =
+			SyntaxSet::load_defaults_nonewlines();
+	}
 
-	let ss = unsafe { SYNTAX_SET.as_ref().unwrap() };
 	Ok(protocol::payloads::post_body::Node::Code(
 		match frag
 			.find(' ')
-			.map(|pos| ss.find_syntax_by_token(&frag[..pos]))
+			.map(|pos| SYNTAX_SET.find_syntax_by_token(&frag[..pos]))
 			.flatten()
 		{
 			Some(syntax) => {
-				let mut gen =
-					syntect::html::ClassedHTMLGenerator::new(syntax, ss);
+				let mut gen = syntect::html::ClassedHTMLGenerator::new(
+					syntax,
+					&SYNTAX_SET,
+				);
 				for line in frag.lines() {
 					gen.parse_html_for_line(&line);
 				}

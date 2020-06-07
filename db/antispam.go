@@ -88,8 +88,6 @@ func NeedCaptcha(ctx context.Context, pubKey uint64) (need bool, err error) {
 		return
 	}
 
-	// TODO: Check, if globally banned
-
 	// Require a captcha, if none have been solved in 3 hours
 	has, err := SolvedCaptchaRecently(ctx, pubKey)
 	if err != nil {

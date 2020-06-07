@@ -18,11 +18,7 @@ type ThreadInsertParams struct {
 }
 
 // Insert thread and empty post into DB and return the post ID.
-//
-// authKey is optional, in case this is a migration of a legacy post
-func InsertThread(ctx context.Context, p ThreadInsertParams) (
-	id uint64, err error,
-) {
+func InsertThread(p ThreadInsertParams) (id uint64, err error) {
 	sort.Strings(p.Tags)
 	err = InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
 		q, args := pg_util.BuildInsert(pg_util.InsertOpts{
@@ -30,12 +26,12 @@ func InsertThread(ctx context.Context, p ThreadInsertParams) (
 			Data:   p,
 			Suffix: "returning id",
 		})
-		err = tx.QueryRow(ctx, q, args...).Scan(&id)
+		err = tx.QueryRow(context.Background(), q, args...).Scan(&id)
 		if err != nil {
 			return
 		}
 
-		_, err = InsertPost(ctx, tx, OPInsertparams{
+		_, _, err = InsertPost(tx, OPInsertparams{
 			ID: id,
 			ReplyInsertParams: ReplyInsertParams{
 				Thread:                 id,
