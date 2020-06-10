@@ -11,7 +11,7 @@ require (
 	github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c
 	github.com/bakape/captchouli/v2 v2.0.2
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
-	github.com/bakape/thumbnailer/v2 v2.5.9
+	github.com/bakape/thumbnailer/v2 v2.6.1
 	github.com/boltdb/bolt v1.3.1
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
@@ -31,6 +31,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lib/pq v1.0.1-0.20190326042056-d6156e141ac6
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
+	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/rakyll/statik v0.1.6
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/ulikunitz/xz v0.5.6
