@@ -50,7 +50,7 @@ async function onDrop(e: DragEvent) {
 				return;
 			}
 
-			const name = u.pathname.slice(u.pathname.lastIndexOf("/") + 1);
+			const name = decodeURI(u.href.slice(u.href.lastIndexOf("/") + 1));
 			file = new File([await (await fetch(url)).blob()], name);
 		} catch (err) {
 			alert(err);
