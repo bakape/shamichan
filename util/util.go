@@ -5,6 +5,8 @@ package util
 import (
 	"crypto/md5"
 	"encoding/base64"
+	"strings"
+	"unicode/utf8"
 )
 
 // WrapError wraps error types to create compound error chains
@@ -154,4 +156,15 @@ func SplitPunctuationString(word string) (
 	}
 
 	return
+}
+
+// Trim string, while making sure it's still valid unicode, in case a rune was
+// split in half
+func TrimString(s *string, maxLen int) {
+	if len(*s) > maxLen {
+		*s = (*s)[:maxLen]
+		if !utf8.ValidString(*s) {
+			*s = strings.ToValidUTF8(*s, "?")
+		}
+	}
 }

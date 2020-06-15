@@ -13,13 +13,13 @@ import (
 	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/geoip"
 	"github.com/bakape/meguca/parser"
+	"github.com/bakape/meguca/util"
 	"github.com/bakape/meguca/websockets/feeds"
 )
 
 var (
 	errReadOnly          = common.ErrInvalidInput("read only board")
 	errInvalidImageToken = common.ErrInvalidInput("image token")
-	errImageNameTooLong  = common.ErrTooLong("image name")
 	errNoTextOrImage     = common.ErrInvalidInput("no text or image")
 )
 
@@ -93,10 +93,7 @@ func CreateThread(req ThreadCreationRequest, ip string) (
 
 // Insert image into a post on post creation
 func insertImage(tx *sql.Tx, req ImageRequest, p *db.Post) (err error) {
-	err = formatImageName(&req.Name)
-	if err != nil {
-		return
-	}
+	formatImageName(&req.Name)
 
 	// TODO: Get rid of this redundant decoding once we switch to a JSON-only
 	// application server
@@ -347,10 +344,8 @@ func constructPost(
 
 // Trim on the last dot in the file name, but also strip for .tar.gz and
 // .tar.xz as special cases.
-func formatImageName(name *string) (err error) {
-	if len(*name) > 200 {
-		return errImageNameTooLong
-	}
+func formatImageName(name *string) {
+	util.TrimString(name, 200)
 
 	if i := strings.LastIndexByte(*name, '.'); i != -1 {
 		*name = (*name)[:i]
@@ -358,10 +353,4 @@ func formatImageName(name *string) (err error) {
 			*name = (*name)[:len(*name)-4]
 		}
 	}
-
-	if !utf8.ValidString(*name) {
-		*name = strings.ToValidUTF8(*name, "?")
-	}
-
-	return
 }

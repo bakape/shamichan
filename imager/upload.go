@@ -21,6 +21,7 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/db"
+	"github.com/bakape/meguca/util"
 	"github.com/bakape/thumbnailer/v2"
 	"github.com/chai2010/webp"
 	"github.com/go-playground/log"
@@ -336,15 +337,12 @@ func processFile(f multipart.File, img *common.ImageCommon,
 	img.Length = uint32(src.Length / time.Second)
 
 	// Some media has retardedly long meta strings. Just truncate them, instead
-	// of rejecting.
+	// of rejecting. Must ensure it's still valid unicode after trancation,
+	// incase a rune was split.
 	img.Artist = src.Artist
 	img.Title = src.Title
-	if len(img.Artist) > 100 {
-		img.Artist = img.Artist[:100]
-	}
-	if len(img.Title) > 200 {
-		img.Title = img.Title[:200]
-	}
+	util.TrimString(&img.Artist, 100)
+	util.TrimString(&img.Title, 200)
 
 	img.Dims = [4]uint16{uint16(src.Width), uint16(src.Height), 0, 0}
 	if thumbImage != nil {
