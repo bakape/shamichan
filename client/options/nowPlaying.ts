@@ -41,20 +41,27 @@ function radioData(res: any): RadioData {
 
 function edenData(res: any): RadioData {
 	const {
-		dj: dj,
-		current: np,
-		listeners: listeners
-
+		listeners: {
+			current: listeners,
+		},
+		now_playing: {
+			streamer: dj,
+			song: {
+				text: np,
+			},
+		},
 	} = res
 	return { np, listeners, dj } as RadioData
 }
 
 async function fetchData() {
+	const radioURL = 'https://r-a-d.io/api';
+	const edenURL = 'https://www.edenofthewest.com/api/live/nowplaying/eden_radio';
 	let newData = {} as RadioData;
 	switch (options.nowPlaying) {
 		case "r/a/dio":
 			{
-				const [res, err] = await fetchJSON<any>('https://r-a-d.io/api');
+				const [res, err] = await fetchJSON<any>(radioURL);
 				if (err) {
 					return console.warn(err);
 				}
@@ -64,8 +71,7 @@ async function fetchData() {
 			break;
 		case "eden":
 			{
-				const [res, err] = await fetchJSON<any>(
-					'https://edenofthewest.com/ajax/status.php');
+				const [res, err] = await fetchJSON<any>(edenURL);
 				if (err) {
 					return console.warn(err);
 				}
@@ -76,9 +82,8 @@ async function fetchData() {
 		case "both":
 			{
 				let newDataEden = {} as RadioData;
-				const [res, err] = await fetchJSON<any>('https://r-a-d.io/api');
-				const [resEden, errEden] = await fetchJSON<any>(
-					'https://edenofthewest.com/ajax/status.php');
+				const [res, err] = await fetchJSON<any>(radioURL);
+				const [resEden, errEden] = await fetchJSON<any>(edenURL);
 				if (err) {
 					return console.warn(err);
 				}
