@@ -20,6 +20,8 @@ github.com/bakape/thumbnailer/v2 v2.6.1 h1:mmfT4L5PzoDPJ58a0Ge1wJsDT4AzynJ6jgZrO
 github.com/bakape/thumbnailer/v2 v2.6.1/go.mod h1:+yOYrfZmQ3VO7uqVHxTr3p5J74WRjP5MeQQXaU6GBjY=
 github.com/bakape/thumbnailer/v2 v2.6.2 h1:5eqWSdmXR2RstU3kVkrZLAsNQ8cuw2eaTHXpRaM8CqE=
 github.com/bakape/thumbnailer/v2 v2.6.2/go.mod h1:+yOYrfZmQ3VO7uqVHxTr3p5J74WRjP5MeQQXaU6GBjY=
+github.com/bakape/thumbnailer/v2 v2.6.3 h1:MMVoSOHxzZMndFH2AdrDnANu5PZCA59058+EKAOjicI=
+github.com/bakape/thumbnailer/v2 v2.6.3/go.mod h1:+yOYrfZmQ3VO7uqVHxTr3p5J74WRjP5MeQQXaU6GBjY=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/chai2010/webp v1.1.0 h1:4Ei0/BRroMF9FaXDG2e4OxwFcuW2vcXd+A6tyqTJUQQ=
