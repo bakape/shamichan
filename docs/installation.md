@@ -31,7 +31,7 @@ wget -qO- https://deb.nodesource.com/setup_10.x | bash -
 apt-get install -y nodejs
 
 # Clone and build meguca
-git clone https://github.com/bakape/meguca.git meguca
+git clone -b v6 https://github.com/bakape/meguca.git meguca
 cd meguca
 make
 
