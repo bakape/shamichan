@@ -186,20 +186,20 @@ function render() {
 // Initialize
 export default function () {
 	if (started) {
-		return
+		return;
 	}
-	started = true
-	fetchData()
+	started = true;
+	fetchData();
 
 	// Handle toggling of the option
-	let timer = setInterval(fetchData, 10000)
+	let timer = setInterval(fetchData, 10000);
 	options.onChange("nowPlaying", selection => {
+		clearInterval(timer);
 		if (selection === "none") {
-			clearInterval(timer)
-			render()
+			render();
 		} else {
-			timer = setInterval(fetchData, 10000)
-			fetchData()
+			timer = setInterval(fetchData, 10000);
+			fetchData().then(render);
 		}
 	})
 }
