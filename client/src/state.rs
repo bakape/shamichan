@@ -17,6 +17,8 @@ use yew::{
 	Callback, Component, ComponentLink,
 };
 
+// TODO: break up into submodules
+
 // Key used to store authentication key pair in local storage
 const KEY_PAIR_KEY: &str = "key_pair";
 
@@ -265,15 +267,19 @@ impl KeyPair {
 			.into(),
 		);
 		if js_arr.length() != 512 {
-			return Err(format!(
-				"unexpected signature length: {}",
-				js_arr.length()
-			)
-			.into());
+			Err(format!("unexpected signature length: {}", js_arr.length()))?;
 		}
 		js_arr.copy_to(&mut arr);
 		Ok(protocol::payloads::Signature(arr))
 	}
+}
+
+// Optional flags and contents for creating new posts (including OPs)
+#[derive(Default)]
+pub struct NewPostOpts {
+	pub sage: bool,
+	pub name: String,
+	// TODO: staff titles
 }
 
 // Stored separately from the agent to avoid needless serialization of post data
@@ -314,6 +320,9 @@ pub struct State {
 	// TODO: Menu option to mark any post as mine
 	// TODO: Persistance to indexedDB
 	pub mine: HashSet<u64>,
+
+	// Optional flags and contents for creating new posts (including OPs)
+	pub new_post_opts: NewPostOpts,
 }
 
 impl State {
@@ -403,6 +412,9 @@ pub enum Request {
 
 	// Insert a new thread into the registry
 	InsertThread(ThreadCreationNotice),
+
+	// Set post as created by this user
+	SetMine(u64),
 }
 
 // Selective changes of global state to be notified on
@@ -506,7 +518,7 @@ impl Default for FeedID {
 }
 
 impl FeedID {
-	// Return corresponding integer feed code use by the server
+	// Return corresponding integer feed code used by the server
 	pub fn as_u64(&self) -> u64 {
 		use FeedID::*;
 
@@ -762,10 +774,14 @@ impl yew::agent::Agent for Agent {
 						open: true,
 						..Default::default()
 					});
-					self.trigger(Change::ThreadList);
-					self.trigger(Change::Thread(n.id));
-					self.trigger(Change::Post(n.id));
+					self.trigger(&Change::ThreadList);
+					self.trigger(&Change::Thread(n.id));
+					self.trigger(&Change::Post(n.id));
 				});
+			}
+			SetMine(id) => {
+				// TODO: persist to DB
+				write(|s| s.mine.insert(id));
 			}
 		};
 	}
@@ -777,8 +793,8 @@ impl yew::agent::Agent for Agent {
 
 impl Agent {
 	// Send change notification to hooked clients
-	fn trigger(&self, h: Change) {
-		if let Some(subs) = self.hooks.get_by_key(&h) {
+	fn trigger(&self, h: &Change) {
+		if let Some(subs) = self.hooks.get_by_key(h) {
 			for id in subs.iter() {
 				self.link.respond(*id, ());
 			}
@@ -833,7 +849,7 @@ impl Agent {
 			if flags & SET_STATE != 0 {
 				s.location = new.clone();
 				if flags & NO_TRIGGER == 0 {
-					self.trigger(Change::Location);
+					self.trigger(&Change::Location);
 				}
 				if let Some(f) = new.focus.clone() {
 					self.render_task = RenderService::new()

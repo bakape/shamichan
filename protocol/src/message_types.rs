@@ -45,4 +45,7 @@ pub enum MessageType {
 
 	// Shorten post body by one Unicode character
 	Backspace,
+
+	// Send server's current Unix timestamp
+	CurrentTime,
 }

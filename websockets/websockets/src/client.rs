@@ -281,14 +281,7 @@ impl Client {
 
 		if !self.synced_once {
 			self.synced_once = true;
-
-			// TODO: Lookup, if user has any open post (globally) and link
-			// them to client, if they are not already locked by some other
-			// client
-			// TODO: ensure reconnecting clients with open posts do not steal
-			// this post back
-
-			// TODO: Send server time so the client can sync its clock somewhat
+			self.send(MessageType::CurrentTime, &Self::now())?;
 		}
 		self.send(MessageType::Synchronize, &feed)?;
 

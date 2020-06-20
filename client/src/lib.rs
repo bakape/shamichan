@@ -9,6 +9,8 @@ mod banner;
 mod util;
 #[macro_use]
 mod comp_util;
+#[macro_use]
+mod agent_util;
 mod buttons;
 mod connection;
 mod page_selector;

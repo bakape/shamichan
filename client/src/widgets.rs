@@ -260,12 +260,17 @@ impl Component for NewThreadForm {
 						}
 
 						connection::send(
-							protocol::MessageType::CreateThread,
+							protocol::MessageType::InsertThread,
 							&protocol::payloads::ThreadCreationReq {
 								subject: f.get("subject").as_string().ok_or(
 									"could not convert subject to string",
 								)?,
 								tags,
+								opts: state::read(|s| {
+									protocol::payloads::NewPostOpts {
+										name: s.new_post_opts.name.clone(),
+									}
+								}),
 								// TODO
 								captcha_solution: vec![],
 							},

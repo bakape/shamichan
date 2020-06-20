@@ -60,4 +60,5 @@ features = [
   "History",
   "ScrollRestoration",
   "DomTokenList",
+  "Selection",
 ]

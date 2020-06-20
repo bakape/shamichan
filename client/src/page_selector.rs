@@ -2,6 +2,10 @@ use crate::{comp_util, state};
 use serde::{Deserialize, Serialize};
 use yew::{html, Html, Properties};
 
+// TODO: rewrite to a simpler `<a>1</a> <b>2<b> <a>3</a>` page selector with
+// only 3 pages displayed at a time and a <select> at the end to navigate to
+// a specific page
+
 #[derive(Default)]
 pub struct Inner {
 	offset: u32,
