@@ -13,9 +13,9 @@ import (
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/config"
 	"github.com/bakape/meguca/util"
-	"github.com/boltdb/bolt"
 	"github.com/go-playground/log"
 	_ "github.com/lib/pq" // Postgres driver
+	"go.etcd.io/bbolt"
 )
 
 var (
@@ -29,7 +29,7 @@ var (
 	sq squirrel.StatementBuilderType
 
 	// Embedded database for temporary storage
-	boltDB *bolt.DB
+	boltDB *bbolt.DB
 )
 
 // Connects to PostgreSQL database and performs schema upgrades
@@ -222,7 +222,7 @@ func ClearTables(tables ...string) error {
 		if boltDBisOpen() {
 			switch t {
 			case "boards", "threads", "posts":
-				err := boltDB.Update(func(tx *bolt.Tx) error {
+				err := boltDB.Update(func(tx *bbolt.Tx) error {
 					buc := tx.Bucket([]byte("open_bodies"))
 					c := buc.Cursor()
 					for k, _ := c.First(); k != nil; k, _ = c.Next() {

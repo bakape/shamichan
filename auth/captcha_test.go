@@ -21,9 +21,6 @@ func TestCaptchaService(t *testing.T) {
 
 	config.Set(config.Configs{
 		CaptchaTags: config.Defaults.CaptchaTags,
-		OverrideCaptchaTags: map[string]string{
-			"a": "sakura_kyouko",
-		},
 		Public: config.Public{
 			Captcha: true,
 		},

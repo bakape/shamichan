@@ -11,8 +11,7 @@ require (
 	github.com/badoux/goscraper v0.0.0-20181207103713-9b4686c4b62c
 	github.com/bakape/captchouli/v2 v2.0.2
 	github.com/bakape/mnemonics v0.0.0-20170918165711-056d8d325992
-	github.com/bakape/thumbnailer/v2 v2.6.1
-	github.com/boltdb/bolt v1.3.1
+	github.com/bakape/thumbnailer/v2 v2.6.2
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
@@ -36,7 +35,9 @@ require (
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/ulikunitz/xz v0.5.6
 	github.com/valyala/quicktemplate v1.5.0
+	go.etcd.io/bbolt v1.3.5
 	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+	golang.org/x/sys v0.0.0-20200615200032-f1bc736245b1 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect

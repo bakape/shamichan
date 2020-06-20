@@ -31,7 +31,7 @@ COPY go.sum .
 RUN go mod download
 COPY package.json .
 COPY package-lock.json .
-RUN npm install
+RUN npm install --dev
 
 # Copy and build meguca
 COPY . .

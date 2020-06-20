@@ -1,10 +1,11 @@
 package imager
 
 import (
+	"testing"
+
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/imager/assets"
 	"github.com/bakape/meguca/test"
-	"testing"
 )
 
 func TestProcessWebm(t *testing.T) {
@@ -99,13 +100,6 @@ func TestProcessOGG(t *testing.T) {
 			audio:  true,
 			length: 5,
 			dims:   [4]uint16{0x0, 0x0, 0x0, 0x0},
-		},
-		{
-			name:   "with cover art",
-			file:   "with_cover",
-			audio:  true,
-			length: 5,
-			dims:   assets.StdJPEG.Dims,
 		},
 	}
 

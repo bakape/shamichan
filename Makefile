@@ -11,7 +11,7 @@ client: client_vendor
 	$(gulp)
 
 client_deps:
-	npm install --progress false --depth 0
+	npm install --dev --progress false --depth 0
 
 watch:
 	$(gulp) -w

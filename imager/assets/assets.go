@@ -18,7 +18,6 @@ var (
 	//  StdJPEG is a JPEG sample image standard struct. Only used in tests.
 	StdJPEG = common.Image{
 		ImageCommon: common.ImageCommon{
-			Video:     true,
 			SHA1:      "012a2f912c9ee93ceb0ccb8684a29ec571990a94",
 			FileType:  common.JPEG,
 			ThumbType: common.WEBP,
@@ -34,7 +33,7 @@ var (
 	StdDims = map[string][4]uint16{
 		"jpeg": {0x43c, 0x371, 0x96, 0x79},
 		"png":  {0x500, 0x2d0, 0x96, 0x54},
-		"gif":  {0x248, 0x2d0, 0x79, 0x96},
+		"gif":  {0x248, 0x2d0, 0x7a, 0x96},
 		"pdf":  {0x253, 0x34a, 0x69, 0x96},
 	}
 )

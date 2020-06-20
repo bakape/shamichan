@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/bakape/meguca/common"
-	"github.com/boltdb/bolt"
+	"go.etcd.io/bbolt"
 )
 
 const (
@@ -42,17 +42,17 @@ func boltDBisOpen() bool {
 // If boltdb has already been closed, return open=false.
 func tryOpenBoltDB() (open bool, err error) {
 	boltDBOnce.Do(func() {
-		boltDB, err = bolt.Open(
+		boltDB, err = bbolt.Open(
 			"db.db",
 			0600,
-			&bolt.Options{
+			&bbolt.Options{
 				Timeout: time.Second,
 			})
 		if err != nil {
 			return
 		}
 
-		err = boltDB.Update(func(tx *bolt.Tx) error {
+		err = boltDB.Update(func(tx *bbolt.Tx) error {
 			_, err := tx.CreateBucketIfNotExists([]byte("open_bodies"))
 			return err
 		})
@@ -79,12 +79,12 @@ func SetOpenBody(id uint64, body []byte) (err error) {
 	}
 
 	buf := encodeUint64(id)
-	return boltDB.Batch(func(tx *bolt.Tx) error {
+	return boltDB.Batch(func(tx *bbolt.Tx) error {
 		return bodyBucket(tx).Put(buf[:], body)
 	})
 }
 
-func bodyBucket(tx *bolt.Tx) *bolt.Bucket {
+func bodyBucket(tx *bbolt.Tx) *bbolt.Bucket {
 	return tx.Bucket([]byte("open_bodies"))
 }
 
@@ -111,7 +111,7 @@ func GetOpenBody(id uint64) (body string, err error) {
 	}
 
 	buf := encodeUint64(id)
-	err = boltDB.View(func(tx *bolt.Tx) error {
+	err = boltDB.View(func(tx *bbolt.Tx) error {
 		body = string(bodyBucket(tx).Get(buf[:]))
 		return nil
 	})
@@ -125,7 +125,7 @@ func deleteOpenPostBody(id uint64) (err error) {
 	}
 
 	buf := encodeUint64(id)
-	return boltDB.Batch(func(tx *bolt.Tx) error {
+	return boltDB.Batch(func(tx *bbolt.Tx) error {
 		return bodyBucket(tx).Delete(buf[:])
 	})
 }
@@ -164,7 +164,7 @@ func cleanUpOpenPostBodies() (err error) {
 
 	// Read IDs of all post bodies
 	var ids []uint64
-	err = boltDB.View(func(tx *bolt.Tx) error {
+	err = boltDB.View(func(tx *bbolt.Tx) error {
 		buc := bodyBucket(tx)
 		ids = make([]uint64, 0, buc.Stats().KeyN)
 		return buc.ForEach(func(k, _ []byte) error {
@@ -204,7 +204,7 @@ func cleanUpOpenPostBodies() (err error) {
 		if len(toDelete) == 0 {
 			return
 		}
-		return boltDB.Batch(func(tx *bolt.Tx) (err error) {
+		return boltDB.Batch(func(tx *bbolt.Tx) (err error) {
 			buc := bodyBucket(tx)
 			for _, id := range toDelete {
 				err = buc.Delete(encodeUint64Heap(id))
