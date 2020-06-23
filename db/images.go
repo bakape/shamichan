@@ -96,6 +96,18 @@ func ImageExists(tx *sql.Tx, sha1 string) (exists bool, err error) {
 	return
 }
 
+// ImageVisible returns if the image is attached to any non-deleted posts on the board
+func ImageVisible(sha1, board string) (visible bool, err error) {
+	err = sq.Select("1").
+		From("posts").
+		Where("sha1 = ? and board = ? and not is_deleted(id)", sha1, board).
+		Scan(&visible)
+	if err == sql.ErrNoRows {
+		err = nil
+	}
+	return
+}
+
 // AllocateImage allocates an image's file resources to their respective served
 // directories and write its data to the database
 func AllocateImage(tx *sql.Tx, src, thumb io.ReadSeeker, img common.ImageCommon,
@@ -193,7 +205,7 @@ func VideoPlaylist(board string) (videos []Video, err error) {
 			Where(`
 				exists(select 1
 					from posts as p
-					where p.sha1 = i.sha1 and p.board = ?)
+					where p.sha1 = i.sha1 and p.board = ? and not is_deleted(p.id))
 				and file_type in (?, ?)
 				and audio = true
 				and video = true
