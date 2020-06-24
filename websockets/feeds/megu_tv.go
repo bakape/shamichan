@@ -3,7 +3,6 @@
 package feeds
 
 import (
-	"database/sql"
 	"github.com/bakape/meguca/common"
 	"github.com/bakape/meguca/db"
 	"time"
@@ -54,16 +53,13 @@ func (f *tvFeed) start(board string) (err error) {
 				if len(f.playList) < 2 {
 					needFetch = true
 				} else {
-					var exists bool
-					err = db.InTransaction(false, func(tx *sql.Tx) (err error) {
-						exists, err = db.ImageExists(tx, f.playList[1].SHA1)
-						return
-					})
+					var visible bool
+					visible, err = db.ImageVisible(f.playList[1].SHA1, board)
 					if err != nil {
-						log.Warnf("verifying video exists: %s\n", err)
+						log.Warnf("verifying video is visible: %s\n", err)
 						continue
 					}
-					needFetch = !exists
+					needFetch = !visible
 				}
 				if needFetch {
 					err := f.readPlaylist()
