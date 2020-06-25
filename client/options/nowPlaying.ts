@@ -44,8 +44,10 @@ function edenData(res: any): RadioData {
 		listeners: {
 			current: listeners,
 		},
+		live: {
+			streamer_name: dj,
+		},
 		now_playing: {
-			streamer: dj,
 			song: {
 				text: np,
 			},
