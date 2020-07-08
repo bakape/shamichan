@@ -236,9 +236,10 @@ func TestReadThreads(t *testing.T) {
 	}
 
 	err := InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
-		_, _, err = InsertImage(
+		_, err = InsertImage(
 			context.Background(),
 			tx,
+			thread,
 			pubKey,
 			img.SHA1,
 			imageName,

@@ -402,11 +402,16 @@ func TestUpload(t *testing.T) {
 			downloadName: "with_cover",
 			code:         200,
 			img: common.ImageCommon{
-				Audio:     true,
-				FileType:  common.OGG,
-				ThumbType: common.NoFile,
-				Duration:  0x05,
-				Size:      0x06d8e4,
+				Audio:       true,
+				Video:       true,
+				FileType:    common.OGG,
+				ThumbType:   common.WEBP,
+				Width:       1084,
+				Height:      881,
+				ThumbWidth:  150,
+				ThumbHeight: 121,
+				Duration:    0x05,
+				Size:        0x06d8e4,
 			},
 		},
 		{
@@ -462,7 +467,7 @@ func TestUpload(t *testing.T) {
 				ThumbType:   common.WEBP,
 				Width:       0x0248,
 				Height:      0x02d0,
-				ThumbWidth:  0x79,
+				ThumbWidth:  122,
 				ThumbHeight: 0x96,
 				Size:        0x0367bb,
 			},
@@ -579,6 +584,10 @@ func testUpload(t *testing.T, c uploadCase) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	err = w.WriteField("post", strconv.FormatUint(thread, 10))
+	if err != nil {
+		t.Fatal(err)
+	}
 	err = w.Close()
 	if err != nil {
 		t.Fatal(err)
@@ -686,6 +695,7 @@ func TestUploadHash(t *testing.T) {
 		body := url.Values{
 			"id":   {sha1Hash.String()},
 			"name": {c.fileName},
+			"post": {strconv.FormatUint(thread, 10)},
 		}.
 			Encode()
 		req := httptest.NewRequest("POST", "/", strings.NewReader(body))

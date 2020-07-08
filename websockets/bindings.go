@@ -269,7 +269,7 @@ func ws_need_captcha(pub_key C.uint64_t, need *C.bool) *C.char {
 // Register image insertion into an open post.
 //
 // image: JSON-encoded inserted image data
-func InsertImage(thread, post uint64, img common.Image) (err error) {
+func InsertImage(thread, post, pubKey uint64, img common.Image) (err error) {
 	buf, err := json.Marshal(img)
 	if err != nil {
 		return
@@ -277,6 +277,7 @@ func InsertImage(thread, post uint64, img common.Image) (err error) {
 	return fromCError(C.ws_insert_image(
 		C.uint64_t(thread),
 		C.uint64_t(post),
+		C.uint64_t(pubKey),
 		toWSBuffer(buf),
 	))
 }

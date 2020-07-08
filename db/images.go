@@ -31,18 +31,18 @@ func AllocateImage(
 	return assets.Write(img.SHA1, img.FileType, img.ThumbType, src, thumb)
 }
 
-// Insert and image into and existing open post. Returns image ID and thread.
+// Insert and image into and existing open post. Returns the post's thread.
 //
 // Returns pgx.ErrNoRows, if no open post for the target pubKey was found.
 func InsertImage(
 	ctx context.Context,
 	tx pgx.Tx,
-	pubKey uint64,
+	post, pubKey uint64,
 	img common.SHA1Hash,
 	name string,
 	spoilered bool,
 ) (
-	post, thread uint64,
+	thread uint64,
 	err error,
 ) {
 	err = tx.
@@ -52,14 +52,15 @@ func InsertImage(
 			set image = $1,
 				image_name = $2,
 				image_spoilered = $3
-			where open and public_key = $4 and image is null
-			returning id, thread`,
+			where open and public_key = $4 and id = $5 and image is null
+			returning thread`,
 			img,
 			name,
 			spoilered,
 			pubKey,
+			post,
 		).
-		Scan(&post, &thread)
+		Scan(&thread)
 	return
 }
 

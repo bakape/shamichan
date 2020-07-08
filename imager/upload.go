@@ -69,7 +69,7 @@ var (
 		Code: 400,
 	}
 	errNoCandidatePost = common.StatusError{
-		Err:  errors.New("no open post without image"),
+		Err:  errors.New("no post found for image insertion"),
 		Code: 404,
 	}
 	errNotProcessed = common.StatusError{
@@ -87,10 +87,10 @@ func init() {
 
 // Request to insert an image into the client's open post
 type insertionRequest struct {
-	spoiler bool
-	pubKey  uint64
-	name    string
-	ctx     context.Context
+	spoiler      bool
+	post, pubKey uint64
+	name         string
+	ctx          context.Context
 }
 
 // Handles the clients' image (or other file) upload request
@@ -263,21 +263,7 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (
 			Err:  err,
 			Code: 403,
 		}
-		return
 	}
-
-	need, err := db.NeedCaptcha(r.Context(), pubKeyID)
-	if err != nil {
-		return
-	}
-	if need {
-		err = common.StatusError{
-			Err:  errors.New("captcha required"),
-			Code: 403,
-		}
-		return
-	}
-	db.IncrementSpamScore(pubKeyID, config.Get().SpamScores.Image)
 	return
 }
 
@@ -302,6 +288,10 @@ func (req *insertionRequest) extract(r *http.Request, name string) (err error) {
 		}
 		if len(req.name) == 0 {
 			return "no image name"
+		}
+		req.post, err = strconv.ParseUint(r.FormValue("post"), 10, 64)
+		if err != nil {
+			return "invalid post number"
 		}
 		return ""
 	}()
@@ -375,10 +365,11 @@ func tryInsertExisting(req insertionRequest, id common.SHA1Hash,
 // Try inserting an image into the post
 func insertImage(tx pgx.Tx, req insertionRequest, img common.ImageCommon,
 ) (err error) {
-	var post, thread uint64
-	post, thread, err = db.InsertImage(
+	var thread uint64
+	thread, err = db.InsertImage(
 		req.ctx,
 		tx,
+		req.post,
 		req.pubKey,
 		img.SHA1,
 		req.name,
@@ -386,11 +377,16 @@ func insertImage(tx pgx.Tx, req insertionRequest, img common.ImageCommon,
 	)
 	switch err {
 	case nil:
-		return websockets.InsertImage(thread, post, common.Image{
-			ImageCommon: img,
-			Spoilered:   req.spoiler,
-			Name:        req.name,
-		})
+		return websockets.InsertImage(
+			thread,
+			req.post,
+			req.pubKey,
+			common.Image{
+				ImageCommon: img,
+				Spoilered:   req.spoiler,
+				Name:        req.name,
+			},
+		)
 	case pgx.ErrNoRows:
 		return errNoCandidatePost
 	default:

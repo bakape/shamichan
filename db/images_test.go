@@ -142,9 +142,10 @@ func TestInsertImage(t *testing.T) {
 	assertCanInsert(true)
 
 	err := InTransaction(context.Background(), func(tx pgx.Tx) (err error) {
-		resPost, resThread, err := InsertImage(
+		resThread, err := InsertImage(
 			context.Background(),
 			tx,
+			thread,
 			authKey,
 			img.SHA1,
 			name,
@@ -154,7 +155,6 @@ func TestInsertImage(t *testing.T) {
 			return
 		}
 
-		test.AssertEquals(t, resPost, thread)
 		test.AssertEquals(t, resThread, thread)
 
 		return

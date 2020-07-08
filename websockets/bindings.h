@@ -44,4 +44,5 @@ char* ws_set_config(const WSBuffer);
 // Register image insertion into an open post.
 //
 // image: JSON-encoded inserted image data
-char* ws_insert_image(uint64_t thread, uint64_t post, const WSBuffer image);
+char* ws_insert_image(
+    uint64_t thread, uint64_t post, uint64_t pub_key, const WSBuffer image);

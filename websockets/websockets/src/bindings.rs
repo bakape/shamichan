@@ -1,4 +1,3 @@
-use super::common::DynResult;
 use super::{config, pulsar};
 use libc;
 use protocol::debug_log;
@@ -298,9 +297,14 @@ extern "C" fn ws_init(feed_data: WSBuffer) -> *mut c_char {
 extern "C" fn ws_insert_image(
 	thread: u64,
 	post: u64,
+	pub_key: u64,
 	image: WSBuffer,
 ) -> *mut c_char {
 	cast_to_c_error(|| -> Result<(), String> {
+		increment_spam_score(
+			pub_key,
+			crate::config::read(|c| c.spam_scores.image),
+		);
 		pulsar::insert_image(
 			thread,
 			post,

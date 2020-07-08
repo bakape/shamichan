@@ -12,6 +12,8 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+// TODO: move this to Rust as images now don't check the spam score
+
 const (
 	// Amount of score, after exceeding which, a captcha solution is requested
 	spamDetectionThreshold = time.Minute
