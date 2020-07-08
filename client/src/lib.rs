@@ -9,8 +9,6 @@ mod banner;
 mod util;
 #[macro_use]
 mod comp_util;
-#[macro_use]
-mod agent_util;
 mod buttons;
 mod connection;
 mod page_selector;
@@ -32,6 +30,10 @@ struct App {
 	// Keep here to load global state first
 	#[allow(unused)]
 	state: Box<dyn Bridge<state::Agent>>,
+
+	// Keep here to keep agent from dropping
+	#[allow(unused)]
+	post_creation_agent: Box<dyn Bridge<post::post_form::Agent>>,
 }
 
 impl Component for App {
@@ -43,7 +45,13 @@ impl Component for App {
 			a.send(state::Request::FetchFeed(s.location.clone()));
 		});
 
-		let s = Self { state: a, link };
+		let s = Self {
+			state: a,
+			post_creation_agent: post::post_form::Agent::bridge(
+				link.callback(|_| ()),
+			),
+			link,
+		};
 
 		// Static global event listeners. Put here to avoid overhead of spamming
 		// a lot of event listeners and handlers on posts.

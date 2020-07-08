@@ -64,7 +64,8 @@ from_display! {
 	std::num::ParseIntError,
 	anyhow::Error,
 	bincode::Error,
-	std::string::FromUtf8Error
+	std::string::FromUtf8Error,
+	std::fmt::Error
 }
 
 // Shorthand for most commonly used Result type
@@ -157,11 +158,17 @@ pub fn log_error<T: std::fmt::Display>(err: T) {
 	web_sys::console::error_1(&JsValue::from(err.to_string()));
 }
 
-// Run closure, logging any errors to both console error log and alert dialogs
-pub fn with_logging(f: impl FnOnce() -> Result) {
-	if let Err(e) = f() {
-		alert(&e);
-		log_error(e);
+// Run closure, logging any errors to both console error log and alert dialogs.
+//
+// Returns default value in case of an error.
+pub fn with_logging<T: Default>(f: impl FnOnce() -> Result<T>) -> T {
+	match f() {
+		Ok(v) => v,
+		Err(e) => {
+			alert(&e);
+			log_error(e);
+			Default::default()
+		}
 	}
 }
 

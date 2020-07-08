@@ -44,33 +44,13 @@ fn diff_text(old: &str, new: &str) -> Option<PatchNode> {
 	// Hot path - most strings won't change and this will compare by length
 	// first anyway
 	if old == new {
-		return None;
+		None
+	} else {
+		Some(PatchNode::Patch(
+			protocol::payloads::post_body::TextPatch::new(
+				&old.chars().collect::<Vec<char>>(),
+				&new.chars().collect::<Vec<char>>(),
+			),
+		))
 	}
-
-	// Split into chars for multibyte unicode compatibility
-	let old_r = old.chars().collect::<Vec<char>>();
-	let new_r = new.chars().collect::<Vec<char>>();
-
-	// Find the first differing character in 2 character iterators
-	fn diff_i<'a, 'b>(
-		mut a: impl Iterator<Item = &'a char>,
-		mut b: impl Iterator<Item = &'b char>,
-	) -> usize {
-		let mut i = 0;
-		loop {
-			if a.next() != b.next() {
-				return i;
-			}
-			i += 1;
-		}
-	}
-
-	let start = diff_i(old_r.iter(), new_r.iter());
-	let end = diff_i(old_r[start..].iter().rev(), new_r[start..].iter());
-
-	Some(PatchNode::Patch(protocol::payloads::post_body::TextPatch {
-		position: start as u16,
-		remove: (old_r.len() - end - start) as u16,
-		insert: new_r[start..new_r.len() - end].into_iter().collect(),
-	}))
 }

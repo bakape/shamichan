@@ -61,4 +61,7 @@ features = [
   "ScrollRestoration",
   "DomTokenList",
   "Selection",
+  "HtmlInputElement",
+  "HtmlTextAreaElement",
+  "CssStyleDeclaration",
 ]

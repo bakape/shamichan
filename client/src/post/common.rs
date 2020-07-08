@@ -17,17 +17,23 @@ pub trait PostComponent: Default {
 	// Message used to handle additional logic
 	type MessageExtra;
 
+	// Extra initialization logic
+	#[allow(unused_variables)]
+	fn init(&mut self, link: &ComponentLink<PostCommon<Self>>) {}
+
 	// MessageExtra handler. Returns, if component should be rerendered
 	#[allow(unused_variables)]
-	fn update_extra(&mut self, msg: Self::MessageExtra) -> bool {
+	fn update_extra<'s, 'c>(
+		&mut self,
+		link: &ComponentLink<PostCommon<Self>>,
+		msg: Self::MessageExtra,
+	) -> bool {
 		false
 	}
 
-	// Render (or not) root element id property
+	// Render root element id property
 	#[allow(unused_variables)]
-	fn render_id<'s, 'c>(&self, c: &RenderCtx<'s, 'c, Self>) -> String {
-		String::new()
-	}
+	fn render_id<'s, 'c>(&self, c: &RenderCtx<'s, 'c, Self>) -> String;
 
 	// Render post's text body
 	fn render_body<'s, 'c>(&self, c: &RenderCtx<'s, 'c, Self>) -> Html;
@@ -100,6 +106,10 @@ where
 	type Properties = Props;
 	type Message = Message<PC::MessageExtra>;
 
+	fn init<'a>(&mut self, c: comp_util::Ctx<'a, Self>) {
+		self.inner.init(&c.link);
+	}
+
 	fn update_message() -> Self::Message {
 		Message::Rerender
 	}
@@ -120,7 +130,7 @@ where
 		match msg {
 			Rerender => true,
 			NOP => false,
-			Extra(e) => self.inner.update_extra(e),
+			Extra(e) => self.inner.update_extra(c.link, e),
 			ImageHideToggle => {
 				self.reveal_image = !self.reveal_image;
 				true
@@ -160,22 +170,21 @@ where
 				false
 			}
 			CheckTallImage => {
-				state::read(|s| {
-					if let (Some(img), Some(wh)) = (
-						s.posts
-							.get(&c.props.id)
-							.map(|p| p.image.as_ref())
-							.flatten(),
-						util::window()
-							.inner_height()
-							.ok()
-							.map(|h| h.as_f64())
-							.flatten(),
-					) {
-						if img.common.width as f64 > wh {
-							self.scroll_to();
+				util::with_logging(|| {
+					state::read(|s| {
+						if let (Some(img), Some(wh)) = (
+							s.posts
+								.get(&c.props.id)
+								.map(|p| p.image.as_ref())
+								.flatten(),
+							util::window().inner_height()?.as_f64(),
+						) {
+							if img.common.width as f64 > wh {
+								self.scroll_to();
+							}
 						}
-					}
+						Ok(())
+					})
 				});
 				false
 			}
@@ -293,7 +302,7 @@ where
 					// TODO: focus this post
 					<a>{"#"}</a>
 					// TODO: quote this post
-					<a>{c.post.id}</a>
+					<a class="quote">{c.post.id}</a>
 				</nav>
 				{
 					if thread.is_some()

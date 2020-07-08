@@ -1,11 +1,10 @@
-use crate::{
-	agent_util::SingleSubscription,
+use super::{
 	state::{self, KeyPair},
 	util,
 };
 use protocol::{debug_log, Decoder, Encoder, MessageType};
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
+use std::{collections::HashSet, fmt::Debug};
 use yew::{
 	agent::{Agent, AgentLink, Context, Dispatched, HandlerId},
 	html,
@@ -55,7 +54,11 @@ pub enum State {
 
 // Agent controlling global websocket connection
 pub struct Connection {
-	sub: SingleSubscription<Self, State>,
+	// Link to any subscribers
+	link: AgentLink<Self>,
+
+	// Connection state machine
+	state: State,
 
 	// Feed currently being synced
 	syncing_to: Option<u64>,
@@ -75,6 +78,9 @@ pub struct Connection {
 
 	// Connection to server
 	socket: Option<web_sys::WebSocket>,
+
+	// Active subscribers to connection state change
+	subscribers: HashSet<HandlerId>,
 }
 
 pub enum Event {
@@ -114,10 +120,10 @@ pub enum Request {
 }
 
 impl Agent for Connection {
-	crate::agent_single_sub! {State}
 	type Reach = Context;
 	type Message = Event;
 	type Input = Request;
+	type Output = State;
 
 	fn create(link: AgentLink<Self>) -> Self {
 		use state::Change;
@@ -130,10 +136,12 @@ impl Agent for Connection {
 			),
 			syncing_to: None,
 			authed_with: None,
-			sub: SingleSubscription::new(link, State::Loading),
+			link,
+			state: State::Loading,
 			reconn_attempts: 0,
 			reconn_timer: None,
 			socket: None,
+			subscribers: HashSet::new(),
 		};
 
 		s.connect();
@@ -180,7 +188,7 @@ impl Agent for Connection {
 					let feed_u64 = s.location.feed.as_u64();
 					if match &self.syncing_to {
 						Some(old) => *old != feed_u64,
-						None => match self.sub.get_value() {
+						None => match self.state {
 							State::Synced | State::Syncing => true,
 							_ => false,
 						},
@@ -207,10 +215,10 @@ impl Agent for Connection {
 			Error(e) => {
 				self.reset_socket_and_timer();
 				util::log_error(&e.message());
-				self.sub.set_value(State::Dropped);
+				self.set_state(State::Dropped);
 			}
 			TryReconnecting => {
-				if self.sub.get_value() == &State::Dropped {
+				if self.state == State::Dropped {
 					self.connect();
 				}
 			}
@@ -225,7 +233,7 @@ impl Agent for Connection {
 				if util::document().hidden()
 					|| !util::window().navigator().on_line()
 				{
-					match self.sub.get_value() {
+					match self.state {
 						State::Synced => {
 							// Ensure still connected, in case the computer went
 							// to sleep or hibernate or the mobile browser tab
@@ -240,6 +248,15 @@ impl Agent for Connection {
 			WentOnline => self.connect(),
 			WentOffline => self.handle_disconnect(),
 		};
+	}
+
+	fn connected(&mut self, id: HandlerId) {
+		self.subscribers.insert(id);
+		self.send_current_state(id);
+	}
+
+	fn disconnected(&mut self, id: HandlerId) {
+		self.subscribers.remove(&id);
 	}
 
 	fn handle_input(&mut self, req: Self::Input, _: HandlerId) {
@@ -261,7 +278,7 @@ impl Agent for Connection {
 
 					// Set state here, because the handshake message is
 					// generated async and thus does not have access to self
-					self.sub.set_value(State::Handshaking);
+					self.set_state(State::Handshaking);
 				}
 			};
 			Ok(())
@@ -270,6 +287,20 @@ impl Agent for Connection {
 }
 
 impl Connection {
+	// Set new state and send it to all subscribers
+	fn set_state(&mut self, new: State) {
+		if self.state != new {
+			self.state = new;
+			for id in self.subscribers.iter() {
+				self.send_current_state(*id);
+			}
+		}
+	}
+
+	fn send_current_state(&self, subscriber: HandlerId) {
+		self.link.respond(subscriber, self.state)
+	}
+
 	fn handle_disconnect(&mut self) {
 		self.reconn_attempts += 1;
 		self.reconn_timer = Some(TimeoutService::new().spawn(
@@ -279,10 +310,10 @@ impl Connection {
 					* 1.5f32.powi(std::cmp::min(self.reconn_attempts / 2, 12)))
 					as u64,
 			),
-			self.sub.link.callback(|_| Event::TryReconnecting),
+			self.link.callback(|_| Event::TryReconnecting),
 		));
 
-		self.sub.set_value(State::Dropped);
+		self.set_state(State::Dropped);
 	}
 
 	fn close_socket(&mut self) {
@@ -313,7 +344,7 @@ impl Connection {
 		use State::*;
 
 		match (
-			match self.sub.get_value() {
+			match self.state {
 				Connecting => matches!(cat, Handshake),
 				Handshaking => matches!(cat, Handshake | Synchronize),
 				Synced | Syncing => true,
@@ -330,7 +361,7 @@ impl Connection {
 						"sending message when connection not ready: ",
 						"state={:?} socket_state={}"
 					),
-					*self.sub.get_value(),
+					self.state,
 					self.socket
 						.as_ref()
 						.map(|s| s.ready_state() as isize)
@@ -348,11 +379,7 @@ impl Connection {
 		E: wasm_bindgen::convert::FromWasmAbi + 'static,
 		F: Fn(E) -> Event + 'static,
 	{
-		util::add_static_listener(
-			target,
-			event,
-			self.sub.link.callback(mapper),
-		);
+		util::add_static_listener(target, event, self.link.callback(mapper));
 	}
 
 	fn connect(&mut self) {
@@ -404,7 +431,7 @@ impl Connection {
 			Ok(socket)
 		}() {
 			Ok(s) => {
-				self.sub.set_value(State::Connecting);
+				self.set_state(State::Connecting);
 				self.socket = Some(s);
 				self.reset_reconn_timer();
 			}
@@ -479,12 +506,13 @@ impl Connection {
 				FeedData, HandshakeRes, ThreadCreationNotice,
 			};
 
+			// TODO: Handle version mismatch with a localized alert and reload
 			match dec.peek_type() {
 				Some(t) => route! { t,
 					Synchronize => |id: u64| {
 						// Guard against rapid successive feed changes
 						if id == state::read(|s| s.location.feed.as_u64()) {
-							self.sub.set_value(State::Synced);
+							self.set_state(State::Synced);
 						}
 					}
 					Handshake => |req: HandshakeRes| {
@@ -523,6 +551,8 @@ impl Connection {
 						// switching.
 					}
 					InsertThreadAck => |id: u64| {
+						use crate::post::post_form;
+
 						state::Agent::dispatcher()
 							.send(state::Request::SetMine(id));
 						state::navigate_to(state::Location{
@@ -531,7 +561,10 @@ impl Connection {
 								page: 0,
 							},
 							focus: None,
-						})
+						});
+
+						post_form::Agent::dispatcher()
+							.send(post_form::Request::OpenOPForm(id));
 					}
 					InsertThread => |n: ThreadCreationNotice| {
 						state::Agent::dispatcher()
@@ -603,7 +636,7 @@ impl Connection {
 		encode_msg(&mut enc, MessageType::Synchronize, &feed)?;
 		self.send(MessageCategory::Synchronize, enc.finish()?)?;
 
-		self.sub.set_value(State::Syncing);
+		self.set_state(State::Syncing);
 		self.syncing_to = feed.into();
 
 		Ok(())

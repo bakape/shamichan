@@ -39,8 +39,7 @@ enum ConnState {
 struct OpenPost {
 	id: u64,
 	thread: u64,
-	body: String,
-	char_length: isize,
+	body: Vec<char>,
 }
 
 impl OpenPost {
@@ -48,8 +47,7 @@ impl OpenPost {
 		Self {
 			id,
 			thread,
-			body: String::new(),
-			char_length: 0,
+			body: Default::default(),
 		}
 	}
 }
@@ -237,15 +235,17 @@ impl Client {
 							InsertPost => |req: PostCreationReq| {
 								self.insert_post(req)
 							}
-							Append => |s: String| {
-								let n = check_unicode_len!(s, 2000);
-								self.update_body(n as isize, n, |b| {
-									*b += &s;
+							Append => |ch: char| {
+								self.update_body(1, |b| {
+									b.push(ch);
 									Ok(())
 								})
 							}
-							Backspace => |n: u16| {
-								self.backspace(n as usize)
+							Backspace => |_: ()| {
+								self.update_body(1, |b| {
+									b.pop();
+									Ok(())
+								})
 							}
 							PatchPostBody => |req: TextPatch| {
 								self.patch_body(req)
@@ -407,100 +407,56 @@ impl Client {
 		Ok(())
 	}
 
-	// Reduce open post text body size by n chars from the back
-	fn backspace(&mut self, n: usize) -> DynResult {
-		if n == 0 {
-			str_err!("backspace size must be at least 1")
-		}
-		self.update_body(-(n as isize), n, |s| {
-			let mut removed = 0;
-			for (i, b) in s.as_bytes().iter().enumerate().rev() {
-				if Self::is_char_start(*b) {
-					removed += 1;
-					if removed == n {
-						s.truncate(i);
-						return Ok(());
-					}
-				}
-			}
-			Ok(())
-		})
-	}
-
-	// Reports whether the byte could be the first byte of an encoded,
-	// possibly invalid character. Second and subsequent bytes always have the
-	// top two bits set to 10.
-	fn is_char_start(b: u8) -> bool {
-		b & 0xC0 != 0x80
-	}
-
 	// Apply diff to text body
 	fn patch_body(&mut self, req: TextPatch) -> DynResult {
-		let insert_len = check_unicode_len!(req.insert, 2000);
-		if insert_len == 0 && req.remove == 0 {
+		if req.insert.len() > 2000 {
+			str_err!("patch too long")
+		}
+		if req.insert.len() == 0 && req.remove == 0 {
 			str_err!("patch is a NOP")
 		}
-		self.update_body(
-			insert_len as isize - req.remove as isize,
-			insert_len + req.remove as usize,
-			|s| {
-				// Get the byte position of the requested character position
-				fn byte_pos(s: &str, needed_char_pos: usize) -> Option<usize> {
-					let mut char_pos: isize = -1;
-					for (i, b) in s.as_bytes().iter().enumerate() {
-						if Client::is_char_start(*b) {
-							char_pos += 1;
-							if char_pos as usize == needed_char_pos {
-								return Some(i);
-							}
-						}
-					}
-					None
-				}
-
-				let end = s.split_off(
-					byte_pos(&s, req.position as usize)
-						.ok_or("patch position out of bounds")?,
-				);
-				*s += &req.insert;
-				*s += &end[..byte_pos(&end, req.remove as usize)
-					.ok_or("char count to remove out of bounds")?];
-				Ok(())
-			},
-		)
+		self.update_body(req.insert.len() + req.remove as usize, |b| {
+			if req.position as usize > b.len() {
+				return Err(format!(
+					"splice position {} exceeds body length {}",
+					req.position,
+					b.len()
+				));
+			}
+			let end = b.split_off(req.position as usize);
+			b.extend(req.insert.iter());
+			b.extend(end);
+			Ok(())
+		})
 	}
 
 	// Update post body, sync to various services and DB and performs error
 	// handling
 	//
-	// len_diff: how much in Unicode chars would the length of the body change
 	// affected: number of Unicode characters affected by the mutation
 	// modify: modifies text body
 	fn update_body(
 		&mut self,
-		len_diff: isize,
 		affected: usize,
-		modify: impl Fn(&mut String) -> Result<(), &'static str>,
+		modify: impl Fn(&mut Vec<char>) -> Result<(), String>,
 	) -> DynResult {
-		let p = match &mut self.open_post {
-			Some(p) => p,
-			None => return Err("no post open".into()),
-		};
+		match &mut self.open_post {
+			Some(p) => {
+				modify(&mut p.body)?;
+				if p.body.len() > 2000 {
+					str_err!("body length exceeds bounds")
+				}
 
-		p.char_length += len_diff;
-		if p.char_length < 0 || p.char_length > 2000 {
-			str_err!("body length would exceed bounds")
+				pulsar::set_open_body(p.id, p.thread, p.body.iter().collect())?;
+				bindings::increment_spam_score(
+					self.pub_key.priv_id,
+					affected * crate::config::read(|c| c.spam_scores.character),
+				);
+
+				Ok(())
+			}
+			None => Err("no post open".into()),
 		}
-
-		modify(&mut p.body)?;
-
-		pulsar::set_open_body(p.id, p.thread, p.body.clone())?;
-		bindings::increment_spam_score(
-			self.pub_key.priv_id,
-			affected * crate::config::read(|c| c.spam_scores.character),
-		);
-
-		Ok(())
 	}
 
 	// Cached empty body JSON representation

@@ -185,5 +185,31 @@ pub struct TextPatch {
 	pub remove: u16,
 
 	// Text to insert at position after removal
-	pub insert: String,
+	pub insert: Vec<char>,
+}
+
+impl TextPatch {
+	// Generate a patch from 2 versions of a string split into chars for
+	// multibyte unicode compatibility
+	pub fn new(old: &[char], new: &[char]) -> Self {
+		// Find the first differing character in 2 character iterators
+		fn diff_i<'a, 'b>(
+			mut a: impl Iterator<Item = &'a char>,
+			mut b: impl Iterator<Item = &'b char>,
+		) -> usize {
+			let mut i = 0;
+			while a.next() == b.next() {
+				i += 1;
+			}
+			return i;
+		}
+
+		let start = diff_i(old.iter(), new.iter());
+		let end = diff_i(old[start..].iter().rev(), new[start..].iter());
+		Self {
+			position: start as u16,
+			remove: (old.len() - end - start) as u16,
+			insert: new[start..new.len() - end].iter().copied().collect(),
+		}
+	}
 }
