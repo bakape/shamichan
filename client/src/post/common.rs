@@ -25,23 +25,35 @@ pub trait PostComponent: Default {
 	#[allow(unused_variables)]
 	fn update_extra<'s, 'c>(
 		&mut self,
-		link: &ComponentLink<PostCommon<Self>>,
+		ctx: &mut CtxMut<'s, 'c, Self>,
 		msg: Self::MessageExtra,
 	) -> bool {
 		false
 	}
 
-	// Render root element id property
+	// Should post even render?
 	#[allow(unused_variables)]
-	fn render_id<'s, 'c>(&self, c: &RenderCtx<'s, 'c, Self>) -> String;
+	fn should_render(&self, props: &Props) -> bool {
+		true
+	}
+
+	// Render root element id property
+	fn render_id<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> String {
+		format!("p-{}", c.post.id)
+	}
 
 	// Render post's text body
-	fn render_body<'s, 'c>(&self, c: &RenderCtx<'s, 'c, Self>) -> Html;
+	fn render_body<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> Html;
 
 	// Append extra HTML to the end of the post's root element
 	#[allow(unused_variables)]
-	fn render_after<'s, 'c>(&self, c: &RenderCtx<'s, 'c, Self>) -> Html {
+	fn render_after<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> Html {
 		html! {}
+	}
+
+	// Extra classes to assign to the post's root element
+	fn extra_classes(&self) -> &'static [&'static str] {
+		Default::default()
 	}
 
 	// Return, if this component is a preview of a post and thus should not
@@ -53,19 +65,31 @@ pub trait PostComponent: Default {
 	}
 }
 
-// Context passed to PostComponent implementors on render contents
-pub struct RenderCtx<'s, 'c, PC>
+// Context passed to PostComponent implementors
+pub struct Ctx<'s, 'c, PC>
 where
 	PC: PostComponent + 'static,
 {
 	// Global state reference
 	pub app: &'s state::State,
 
-	// Link to the component for yew integrations
-	pub link: &'c ComponentLink<PostCommon<PC>>,
-
 	// Post data of target post
 	pub post: &'s state::Post,
+
+	// comp_util::Ctx passed from upstream
+	pub ctx: &'c comp_util::Ctx<PostCommonInner<PC>>,
+}
+
+// Partially mutable context passed to PostComponent implementors
+pub struct CtxMut<'s, 'c, PC>
+where
+	PC: PostComponent + 'static,
+{
+	// Global state reference
+	pub app: &'s state::State,
+
+	// comp_util::Ctx passed from upstream
+	pub ctx: &'c mut comp_util::Ctx<PostCommonInner<PC>>,
 }
 
 // Common behavior for all post PostComponents as a wrapper
@@ -106,7 +130,7 @@ where
 	type Properties = Props;
 	type Message = Message<PC::MessageExtra>;
 
-	fn init<'a>(&mut self, c: comp_util::Ctx<'a, Self>) {
+	fn init(&mut self, c: &mut comp_util::Ctx<Self>) {
 		self.inner.init(&c.link);
 	}
 
@@ -120,9 +144,9 @@ where
 		vec![Change::Configs, Change::Options, Change::Post(props.id)]
 	}
 
-	fn update<'a>(
+	fn update(
 		&mut self,
-		c: comp_util::Ctx<'a, Self>,
+		c: &mut comp_util::Ctx<Self>,
 		msg: Self::Message,
 	) -> bool {
 		use Message::*;
@@ -130,7 +154,9 @@ where
 		match msg {
 			Rerender => true,
 			NOP => false,
-			Extra(e) => self.inner.update_extra(c.link, e),
+			Extra(e) => state::read(|s| {
+				self.inner.update_extra(&mut CtxMut { app: s, ctx: c }, e)
+			}),
 			ImageHideToggle => {
 				self.reveal_image = !self.reveal_image;
 				true
@@ -174,7 +200,7 @@ where
 					state::read(|s| {
 						if let (Some(img), Some(wh)) = (
 							s.posts
-								.get(&c.props.id)
+								.get(&c.props().id)
 								.map(|p| p.image.as_ref())
 								.flatten(),
 							util::window().inner_height()?.as_f64(),
@@ -191,12 +217,16 @@ where
 		}
 	}
 
-	fn view<'a>(&self, c: comp_util::Ctx<'a, Self>) -> Html {
+	fn view(&self, c: &comp_util::Ctx<Self>) -> Html {
+		if !self.inner.should_render(c.props()) {
+			return html! {};
+		}
+
 		state::read(|s| {
-			let c = RenderCtx {
+			let c = Ctx {
 				app: s,
-				link: c.link,
-				post: match s.posts.get(&c.props.id) {
+				ctx: c,
+				post: match s.posts.get(&c.props().id) {
 					Some(p) => p,
 					None => {
 						return html! {};
@@ -205,6 +235,7 @@ where
 			};
 
 			let mut cls = vec!["glass"];
+			cls.extend(self.inner.extra_classes());
 			if c.post.open {
 				cls.push("open");
 			}
@@ -253,7 +284,7 @@ where
 		}
 	}
 
-	fn render_header<'s, 'c>(&self, c: &RenderCtx<'s, 'c, PC>) -> Html {
+	fn render_header<'s, 'c>(&self, c: &Ctx<'s, 'c, PC>) -> Html {
 		let thread = if c.post.id == c.post.thread {
 			c.app.threads.get(&c.post.thread)
 		} else {
@@ -314,7 +345,7 @@ where
 							<>
 								<SpanButton
 									text="top"
-									on_click=c.link.callback(move |_| {
+									on_click=c.ctx.link.callback(move |_| {
 										state::navigate_to(Location{
 											feed: FeedID::Thread{
 												id,
@@ -327,7 +358,7 @@ where
 								/>
 								<SpanButton
 									text="bottom"
-									on_click=c.link.callback(move |_| {
+									on_click=c.ctx.link.callback(move |_| {
 										state::navigate_to(Location{
 											feed: FeedID::Thread{
 												id,
@@ -349,7 +380,7 @@ where
 		}
 	}
 
-	fn render_name<'s, 'c>(&self, c: &RenderCtx<'s, 'c, PC>) -> Html {
+	fn render_name<'s, 'c>(&self, c: &Ctx<'s, 'c, PC>) -> Html {
 		// TODO: Staff titles
 
 		let mut w: Vec<Html> = Default::default();
@@ -393,7 +424,7 @@ where
 
 	fn render_figcaption<'s, 'c>(
 		&self,
-		c: &RenderCtx<'s, 'c, PC>,
+		c: &Ctx<'s, 'c, PC>,
 		img: &Image,
 	) -> Html {
 		let mut file_info = Vec::<String>::new();
@@ -452,7 +483,7 @@ where
 								} else {
 									"show"
 								}
-								on_click=c.link.callback(|_|
+								on_click=c.ctx.link.callback(|_|
 									Message::ImageHideToggle
 								)
 							/>
@@ -475,7 +506,7 @@ where
 						html! {
 							<SpanButton
 								text="contract"
-								on_click=c.link.callback(|_|
+								on_click=c.ctx.link.callback(|_|
 									Message::ImageContract
 								)
 							/>
@@ -497,7 +528,7 @@ where
 
 	fn render_image_search<'s, 'c>(
 		&self,
-		c: &RenderCtx<'s, 'c, PC>,
+		c: &Ctx<'s, 'c, PC>,
 		img: &Image,
 	) -> Html {
 		use FileType::*;
@@ -553,11 +584,7 @@ where
 		}
 	}
 
-	fn render_figure<'s, 'c>(
-		&self,
-		c: &RenderCtx<'s, 'c, PC>,
-		img: &Image,
-	) -> Html {
+	fn render_figure<'s, 'c>(&self, c: &Ctx<'s, 'c, PC>, img: &Image) -> Html {
 		use yew::events::MouseEvent;
 		use FileType::*;
 
@@ -614,7 +641,7 @@ where
 			let mut cls = vec!["expanded"];
 			match c.app.options.image_expansion_mode {
 				ImageExpansionMode::FitWidth => {
-					c.link.send_message(Message::CheckTallImage);
+					c.ctx.link.send_message(Message::CheckTallImage);
 					cls.push("fit-to-width");
 				}
 				ImageExpansionMode::FitHeight => {
@@ -627,7 +654,7 @@ where
 			};
 			let cls_joined = cls.join(" ");
 
-			let contract = c.link.callback(move |e: MouseEvent| {
+			let contract = c.ctx.link.callback(move |e: MouseEvent| {
 				if e.button() != 0 {
 					Message::NOP
 				} else {
@@ -638,7 +665,7 @@ where
 
 			thumb = match img.common.file_type {
 				OGG | MP4 | WEBM => {
-					c.link.send_message(Message::SetVolume);
+					c.ctx.link.send_message(Message::SetVolume);
 					html! {
 						<video
 							ref=self.media_el.clone()
@@ -667,7 +694,7 @@ where
 			let no_mode = c.app.options.image_expansion_mode
 				== state::ImageExpansionMode::None;
 			let is_expandable = is_expandable(img.common.file_type);
-			let on_click = c.link.callback(move |e: MouseEvent| {
+			let on_click = c.ctx.link.callback(move |e: MouseEvent| {
 				if no_mode || e.button() != 0 {
 					Message::NOP
 				} else {
@@ -697,7 +724,7 @@ where
 				{
 					if self.expand_image && is_audio {
 						// Change volume after render
-						c.link.send_message(Message::SetVolume);
+						c.ctx.link.send_message(Message::SetVolume);
 						html! {
 							<audio
 								ref=self.media_el.clone()

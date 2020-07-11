@@ -316,6 +316,9 @@ pub struct State {
 	// Global user-set options
 	pub options: Options,
 
+	// ID of currently open allocated post, if any
+	pub open_post_id: Option<u64>,
+
 	// Posts this user has made
 	// TODO: Menu option to mark any post as mine
 	// TODO: Persistance to indexedDB
@@ -388,8 +391,8 @@ pub struct Agent {
 }
 
 #[derive(Serialize, Deserialize)]
+// Subscribe to updates of a value type
 pub enum Request {
-	// Subscribe to updates of a value type
 	NotifyChange(Vec<Change>),
 
 	// Change the current notifications a client is subscribed to
@@ -415,6 +418,9 @@ pub enum Request {
 
 	// Set post as created by this user
 	SetMine(u64),
+
+	// Set ID of currently open post
+	SetOpenPostID(Option<u64>),
 }
 
 // Selective changes of global state to be notified on
@@ -783,6 +789,25 @@ impl yew::agent::Agent for Agent {
 				// TODO: persist to DB
 				write(|s| s.mine.insert(id));
 			}
+			SetOpenPostID(id) => {
+				write(|s| {
+					s.open_post_id = id;
+					if let Some(id) = s.open_post_id {
+						use super::post::posting;
+						use yew::agent::Dispatched;
+
+						posting::Agent::dispatcher()
+							.send(posting::Request::SetAllocated(id));
+						if let Some(affected) =
+							self.hooks.get_by_key(&Change::Post(id))
+						{
+							for h in affected {
+								self.link.respond(*h, ());
+							}
+						}
+					}
+				});
+			}
 		};
 	}
 
@@ -973,9 +998,8 @@ impl Agent {
 		let mut changes = vec![];
 		let mut changes_set = HashSet::new();
 		let mut add_hook = |h: Change| {
-			if !changes_set.contains(&h) {
+			if changes_set.insert(h) {
 				changes.push(h);
-				changes_set.insert(h);
 			}
 		};
 

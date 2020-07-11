@@ -1,4 +1,4 @@
-use super::{buttons, comp_util, state};
+use super::{buttons, comp_util, post::posting, state};
 use yew::{html, Html, Properties};
 
 // Central thread container
@@ -41,31 +41,36 @@ impl comp_util::Inner for Inner {
 		vec![state::Change::Thread(props.id)]
 	}
 
-	fn update<'a>(
+	fn update(
 		&mut self,
-		_: comp_util::Ctx<'a, Self>,
+		_: &mut comp_util::Ctx<Self>,
 		_: Self::Message,
 	) -> bool {
 		true
 	}
 
-	fn view<'a>(&self, c: comp_util::Ctx<'a, Self>) -> Html {
+	fn view(&self, c: &comp_util::Ctx<Self>) -> Html {
 		use super::post::ThreadPost;
 		use PostSet::*;
 
 		// TODO: Filter hidden posts
 
-		let posts: Vec<u64> = state::read(|s| match c.props.pages {
+		let posts: Vec<u64> = state::read(|s| match c.props().pages {
 			Last5Posts => {
 				let mut v = Vec::with_capacity(5);
 				let page_count = s
 					.threads
-					.get(&c.props.id)
+					.get(&c.props().id)
 					.map(|t| t.last_page + 1)
 					.unwrap_or(1);
-				self.read_page_posts(&mut v, c.props.id, page_count - 1, s);
+				self.read_page_posts(&mut v, c.props().id, page_count - 1, s);
 				if v.len() < 5 && page_count > 1 {
-					self.read_page_posts(&mut v, c.props.id, page_count - 2, s);
+					self.read_page_posts(
+						&mut v,
+						c.props().id,
+						page_count - 2,
+						s,
+					);
 				}
 				v.sort_unstable();
 				if v.len() > 5 {
@@ -76,7 +81,7 @@ impl comp_util::Inner for Inner {
 			}
 			Page(page) => {
 				let mut v = Vec::with_capacity(300);
-				self.read_page_posts(&mut v, c.props.id, page, s);
+				self.read_page_posts(&mut v, c.props().id, page, s);
 				v.sort_unstable();
 				v
 			}
@@ -84,7 +89,7 @@ impl comp_util::Inner for Inner {
 
 		html! {
 			<section class="thread-container">
-				<ThreadPost id=c.props.id />
+				<ThreadPost id=c.props().id />
 				{
 					for posts.into_iter().map(|id| {
 						html! {
@@ -92,13 +97,6 @@ impl comp_util::Inner for Inner {
 						}
 					})
 				}
-				// TODO: Reply button that opens a reply creation modal on both
-				// the thread index and individual thread pages (allow posting
-				// from thread index).
-				<buttons::AsideButton
-					text="reply"
-					on_click=c.link.callback(|_| ())
-				/>
 			</section>
 		}
 	}
@@ -115,6 +113,83 @@ impl Inner {
 	) {
 		if let Some(posts) = s.posts_by_thread_page.get(&(thread, page)) {
 			dst.extend(posts.iter().filter(|id| **id != thread));
+		}
+	}
+}
+
+#[derive(Properties, Eq, PartialEq, Clone)]
+struct ReplyProps {
+	thread: u64,
+}
+
+struct ReplyButton {
+	props: ReplyProps,
+	link: yew::ComponentLink<Self>,
+	posting: Box<dyn yew::agent::Bridge<posting::Agent>>,
+	state: posting::State,
+}
+
+enum ReplyMessage {
+	SetState(posting::State),
+	Clicked,
+	NOP,
+}
+
+impl yew::Component for ReplyButton {
+	super::comp_prop_change! {ReplyProps}
+	type Message = ReplyMessage;
+
+	fn create(props: Self::Properties, link: yew::ComponentLink<Self>) -> Self {
+		use yew::agent::Bridged;
+
+		Self {
+			props,
+			posting: posting::Agent::bridge(link.callback(|msg| match msg {
+				posting::Response::State(s) => ReplyMessage::SetState(s),
+				_ => ReplyMessage::NOP,
+			})),
+			link,
+			state: Default::default(),
+		}
+	}
+
+	fn update(&mut self, msg: Self::Message) -> bool {
+		use ReplyMessage::*;
+
+		match msg {
+			SetState(s) => {
+				self.state = s;
+				true
+			}
+			Clicked => {
+				if self.state == posting::State::Ready {
+					self.posting
+						.send(posting::Request::OpenDraft(self.props.thread))
+				}
+				false
+			}
+			NOP => false,
+		}
+	}
+
+	fn view(&self) -> yew::Html {
+		use posting::State::*;
+
+		match self.state {
+			Ready | Locked => html! {
+				<buttons::AsideButton
+					text="reply"
+					disabled=matches!(self.state, Locked),
+					on_click=self.link.callback(|e: yew::events::MouseEvent| {
+						if e.button() == 0 {
+							ReplyMessage::Clicked
+						} else {
+							ReplyMessage::NOP
+						}
+					})
+				/>
+			},
+			_ => html! {},
 		}
 	}
 }

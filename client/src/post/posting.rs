@@ -1,6 +1,6 @@
-use super::common::{PostCommon, PostComponent, RenderCtx};
+use super::common::{Ctx, PostCommon, PostComponent};
 use crate::{connection, state, util};
-use protocol::MessageType;
+use protocol::{debug_log, MessageType};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use wasm_bindgen::JsCast;
@@ -40,6 +40,9 @@ pub enum FormMessage {
 	// Quote a post and include any selected text`
 	QuotePost(PostQuoteReq),
 
+	// Set ID of post being edited
+	SetID(u64),
+
 	// Focus the textarea at position
 	Focus {
 		// Position of cursor
@@ -55,17 +58,30 @@ impl PostComponent for Inner {
 
 	fn init(&mut self, link: &ComponentLink<PostCommon<Self>>) {
 		use super::common::Message::Extra;
+		use Response::*;
 
-		self.agent = Agent::bridge(link.callback(|msg| match msg {
-			Response::State(s) => Extra(FormMessage::SetState(s)),
-			Response::RenderQuoted(req) => Extra(FormMessage::QuotePost(req)),
-		}))
-		.into();
+		let mut a = Agent::bridge(link.callback(|msg| match msg {
+			State(s) => Extra(FormMessage::SetState(s)),
+			RenderQuoted(req) => Extra(FormMessage::QuotePost(req)),
+			SetID(id) => Extra(FormMessage::SetID(id)),
+		}));
+		a.send(Request::SubViewUpdates);
+		self.agent = a.into();
 	}
 
-	fn update_extra(
+	fn should_render(&self, p: &super::common::Props) -> bool {
+		use State::*;
+
+		match self.state {
+			Draft(_) | Allocated | Allocating(_) | NeedCaptcha(_) | Stalled
+			| Erred => true,
+			Ready | Locked => false,
+		}
+	}
+
+	fn update_extra<'s, 'c>(
 		&mut self,
-		link: &ComponentLink<PostCommon<Self>>,
+		ctx: &mut super::common::CtxMut<'s, 'c, Self>,
 		msg: Self::MessageExtra,
 	) -> bool {
 		util::with_logging(|| {
@@ -73,8 +89,15 @@ impl PostComponent for Inner {
 
 			Ok(match msg {
 				SetState(s) => {
+					debug_log!("updated state", s);
 					self.state = s;
 					true
+				}
+				SetID(id) => {
+					debug_log!("updated id", id);
+					let mut old = ctx.ctx.props().clone();
+					old.id = id;
+					ctx.ctx.set_props(old)
 				}
 				QuotePost(req) => {
 					use std::fmt::Write;
@@ -130,7 +153,7 @@ impl PostComponent for Inner {
 					let s_chars: Vec<_> = s.chars().collect();
 					let s_chars_len = s_chars.len();
 					self.replace_text(
-						link,
+						&ctx.ctx.link,
 						{
 							// Combine new body
 							let old_len = old.len();
@@ -152,7 +175,7 @@ impl PostComponent for Inner {
 						},
 						// Don't commit a quote, if it is the only input in a
 						// post
-						self.state != State::Draft || old.is_empty(),
+						matches!(self.state, State::Draft(_)) || old.is_empty(),
 					)?;
 
 					true
@@ -165,7 +188,7 @@ impl PostComponent for Inner {
 					// Because Firefox refocuses the clicked <a> on quote
 					if first {
 						self.on_next_frame(
-							link,
+							&ctx.ctx.link,
 							FormMessage::Focus { pos, first: false },
 						);
 					} else {
@@ -178,19 +201,19 @@ impl PostComponent for Inner {
 		})
 	}
 
-	fn render_id<'s, 'c>(&self, _: &RenderCtx<'s, 'c, Self>) -> String {
-		"post-form".into()
+	fn extra_classes(&self) -> &'static [&'static str] {
+		&["post-form"]
 	}
 
-	fn render_body<'s, 'c>(&self, _: &RenderCtx<'s, 'c, Self>) -> Html {
+	fn render_body<'s, 'c>(&self, _: &Ctx<'s, 'c, Self>) -> Html {
 		html! {
-			<textarea ref=self.text_area.clone()>
+			<textarea id="post-form-input" ref=self.text_area.clone()>
 				{"TODO: body updates"}
 			</textarea>
 		}
 	}
 
-	fn render_after<'s, 'c>(&self, _: &RenderCtx<'s, 'c, Self>) -> Html {
+	fn render_after<'s, 'c>(&self, _: &Ctx<'s, 'c, Self>) -> Html {
 		html! {
 			<span>{"TODO: controls"}</span>
 		}
@@ -275,7 +298,7 @@ impl Inner {
 }
 
 // State oif the agent FSM
-#[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Debug)]
 pub enum State {
 	// Ready to create posts
 	Ready,
@@ -283,22 +306,22 @@ pub enum State {
 	// Post creation controls locked
 	Locked,
 
-	// Sent a request to allocate a post
-	Allocating,
+	// Sent a request to allocate a post on target thread
+	Allocating(u64),
 
 	// Post open and allocated to the server
 	Allocated,
 
-	// Captcha solution required to proceed.
+	// Captcha solution required to allocate to target thread.
 	// This can only take place as an interrupt from the server during
 	// Allocating.
-	NeedCaptcha,
+	NeedCaptcha(u64),
 
 	// Allocated post during loss of connectivity
 	Stalled,
 
-	// Post open but not yet allocating
-	Draft,
+	// Post open but not yet allocating to target thread
+	Draft(u64),
 
 	// Suffered unrecoverable error
 	Erred,
@@ -333,8 +356,11 @@ pub enum Request {
 	// Commit text body changes
 	CommitText(String),
 
-	// Open OP for editing. Accepts post ID.
-	OpenOPForm(u64),
+	// Set postform post as allocated and it's ID
+	SetAllocated(u64),
+
+	// Open a draft postform for a target thread
+	OpenDraft(u64),
 }
 
 enum Subscription {
@@ -342,13 +368,16 @@ enum Subscription {
 	ViewUpdates,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub enum Response {
 	// Agent state update
 	State(State),
 
 	// Render quoted post in view
 	RenderQuoted(PostQuoteReq),
+
+	// Set ID of post being edited
+	SetID(u64),
 }
 
 // Only one PostForm can exist at a time so this agent manages it
@@ -410,9 +439,17 @@ impl yew::agent::Agent for Agent {
 			ConnStateUpdate(cs) => {
 				self.conn_state = cs;
 				match self.state {
-					S::Allocating => match cs {
+					S::Locked => match cs {
+						CS::Synced => self.set_state(S::Ready),
+						_ => (),
+					},
+					S::Ready => match cs {
 						CS::Synced | CS::Syncing => (),
-						_ => self.set_state(S::Draft),
+						_ => self.set_state(S::Locked),
+					},
+					S::Allocating(thread) => match cs {
+						CS::Synced | CS::Syncing => (),
+						_ => self.set_state(S::Draft(thread)),
 					},
 					S::Allocated => match cs {
 						CS::Syncing => (),
@@ -430,13 +467,13 @@ impl yew::agent::Agent for Agent {
 						}
 						_ => (),
 					},
-					S::Draft => match cs {
+					S::Draft(_) => match cs {
 						CS::Synced => self.commit_pending(),
 						_ => (),
 					},
-					S::NeedCaptcha => match cs {
+					S::NeedCaptcha(thread) => match cs {
 						CS::Synced => (),
-						_ => self.set_state(S::Draft),
+						_ => self.set_state(S::Draft(thread)),
 					},
 					_ => (),
 				}
@@ -511,10 +548,14 @@ impl yew::agent::Agent for Agent {
 				self.subscribers.insert(h, Subscription::ViewUpdates);
 			}
 			CommitText(new) => self.commit_text(new.chars().collect()),
-			OpenOPForm(id) => {
-				// TODO: hide post currently being edited
-
-				todo!()
+			SetAllocated(id) => {
+				self.set_state(State::Allocated);
+				self.send_to_views(&Response::SetID(id));
+			}
+			OpenDraft(thread) => {
+				if self.state == State::Ready {
+					self.set_state(State::Draft(thread));
+				}
 			}
 		}
 	}
@@ -524,6 +565,10 @@ impl Agent {
 	// Set new state and send it to all subscribers
 	fn set_state(&mut self, new: State) {
 		if self.state != new {
+			debug_log!(format!(
+				"set postform state: {:?} -> {:?}",
+				self.state, new
+			));
 			self.state = new;
 			if self.state == State::Allocated {
 				self.commit_pending();
@@ -538,13 +583,24 @@ impl Agent {
 		self.link.respond(subscriber, Response::State(self.state));
 	}
 
+	// Send a message only to view subscribers
+	fn send_to_views(&self, msg: &Response) {
+		for h in self
+			.subscribers
+			.iter()
+			.filter(|(_, s)| matches!(s, Subscription::ViewUpdates))
+		{
+			self.link.respond(*h.0, msg.clone())
+		}
+	}
+
 	// Try allocating a post, if it is eligible and not yet allocated.
 	// Returns, if a post is allocated or allocating.
 	fn try_alloc(&mut self) -> bool {
 		use State::*;
 
 		match self.state {
-			Ready | Draft => state::read(|s| {
+			Draft(thread) => state::read(|s| {
 				if !s.location.is_thread() {
 					return false;
 				}
@@ -552,17 +608,17 @@ impl Agent {
 				connection::send(
 					MessageType::InsertPost,
 					&protocol::payloads::PostCreationReq {
+						thread,
 						sage: s.new_post_opts.sage,
-						thread: s.location.feed.as_u64(),
 						opts: protocol::payloads::NewPostOpts {
 							name: s.new_post_opts.name.clone(),
 						},
 					},
 				);
-				self.set_state(Allocating);
+				self.set_state(Allocating(thread));
 				true
 			}),
-			Allocating | Allocated | Stalled => true,
+			Allocating(_) | Allocated | Stalled => true,
 			_ => false,
 		}
 	}
@@ -608,19 +664,10 @@ impl Agent {
 				_ => Default::default(),
 			};
 
-			for h in self
-				.subscribers
-				.iter()
-				.filter(|(_, s)| matches!(s, Subscription::ViewUpdates))
-			{
-				self.link.respond(
-					*h.0,
-					Response::RenderQuoted(PostQuoteReq {
-						id: post,
-						text: sel_text.clone(),
-					}),
-				)
-			}
+			self.send_to_views(&Response::RenderQuoted(PostQuoteReq {
+				id: post,
+				text: sel_text,
+			}));
 
 			Ok(())
 		});

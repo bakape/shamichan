@@ -1,10 +1,10 @@
-use super::common::{Message, PostComponent, RenderCtx};
+use super::common::{Ctx, Message, PostComponent};
 use crate::state;
 use protocol::payloads::post_body::{Command, Node, PostLink};
 use std::fmt::Write;
 use yew::{html, Html};
 
-pub fn render<'s, 'c, PC>(c: &RenderCtx<'s, 'c, PC>, n: &Node) -> Html
+pub fn render<'s, 'c, PC>(c: &Ctx<'s, 'c, PC>, n: &Node) -> Html
 where
 	PC: PostComponent + 'static,
 {
@@ -54,7 +54,7 @@ where
 	}
 }
 
-fn render_post_link<'s, 'c, PC>(c: &RenderCtx<'s, 'c, PC>, l: PostLink) -> Html
+fn render_post_link<'s, 'c, PC>(c: &Ctx<'s, 'c, PC>, l: PostLink) -> Html
 where
 	PC: PostComponent + 'static,
 {
@@ -91,7 +91,7 @@ where
 				}
 			</a>
 			<a
-				onclick=c.link.callback(move |_| {
+				onclick=c.ctx.link.callback(move |_| {
 					// TODO:  Handle middle click
 
 					state::navigate_to(state::Location{

@@ -52,6 +52,12 @@ pub enum State {
 	Dropped,
 }
 
+impl Default for State {
+	fn default() -> Self {
+		Self::Loading
+	}
+}
+
 // Agent controlling global websocket connection
 pub struct Connection {
 	// Link to any subscribers
@@ -551,10 +557,11 @@ impl Connection {
 						// switching.
 					}
 					InsertThreadAck => |id: u64| {
-						use crate::post::post_form;
+						use state::{Request, Agent};
 
-						state::Agent::dispatcher()
-							.send(state::Request::SetMine(id));
+						let mut d = Agent::dispatcher();
+						d.send(Request::SetMine(id));
+						d.send(Request::SetOpenPostID(id.into()));
 						state::navigate_to(state::Location{
 							feed: state::FeedID::Thread{
 								id,
@@ -562,9 +569,6 @@ impl Connection {
 							},
 							focus: None,
 						});
-
-						post_form::Agent::dispatcher()
-							.send(post_form::Request::OpenOPForm(id));
 					}
 					InsertThread => |n: ThreadCreationNotice| {
 						state::Agent::dispatcher()

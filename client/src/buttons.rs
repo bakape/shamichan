@@ -3,7 +3,12 @@ use yew::{html, Callback, Component, ComponentLink, Html, Properties};
 #[derive(Clone, Properties)]
 pub struct Props {
 	pub text: &'static str,
+
+	#[prop_or_default]
+	pub disabled: bool,
+
 	pub on_click: Callback<yew::events::MouseEvent>,
+	//
 	// TODO: Optional middle click handler for opening in a new tab
 }
 
@@ -14,7 +19,8 @@ macro_rules! impl_button {
 		}
 
 		impl Component for $name {
-			comp_static! {Props}
+			comp_no_update! {}
+			type Properties = Props;
 
 			fn create(props: Self::Properties, _: ComponentLink<Self>) -> Self {
 				Self { props }
@@ -22,6 +28,12 @@ macro_rules! impl_button {
 
 			fn view(&self) -> Html {
 				$view(&self.props)
+			}
+
+			fn change(&mut self, props: Self::Properties) -> bool {
+				// Can't compare callbacks for equality so always rerender
+				self.props = props;
+				true
 			}
 		}
 	};

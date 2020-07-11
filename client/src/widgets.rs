@@ -1,6 +1,7 @@
 use crate::{
 	buttons::AsideButton,
 	connection,
+	post::posting,
 	state::{self, FeedID, Focus, Location},
 	util,
 };
@@ -140,15 +141,18 @@ struct NewThreadForm {
 	el: NodeRef,
 	link: ComponentLink<Self>,
 	expanded: bool,
-	sending: bool,
 	available_tags: Vec<String>,
 	selected_tags: Vec<String>,
-	conn_state: connection::State,
+
+	// TODO: remove sending and sync to postform Draft and allocating flow
+	sending: bool,
+
+	post_form_state: posting::State,
 
 	#[allow(unused)]
 	fetch_task: Option<FetchTask>,
 	#[allow(unused)]
-	conn: Box<dyn Bridge<connection::Connection>>,
+	posting: Box<dyn Bridge<posting::Agent>>,
 }
 
 enum Msg {
@@ -157,7 +161,7 @@ enum Msg {
 	RemoveTag(usize),
 	AddTag,
 	Submit,
-	ConnState(connection::State),
+	PostFormState(posting::State),
 	FetchedUsedTags(Vec<String>),
 	NOP,
 }
@@ -171,9 +175,10 @@ impl Component for NewThreadForm {
 		use yew::services::fetch::{FetchService, Request, Response};
 
 		Self {
-			conn: connection::Connection::bridge(
-				link.callback(|s| Msg::ConnState(s)),
-			),
+			posting: posting::Agent::bridge(link.callback(|msg| match msg {
+				posting::Response::State(s) => Msg::PostFormState(s),
+				_ => Msg::NOP,
+			})),
 			el: NodeRef::default(),
 			fetch_task: FetchService::new()
 				.fetch(
@@ -193,7 +198,7 @@ impl Component for NewThreadForm {
 			sending: false,
 			available_tags: vec![],
 			selected_tags: vec!["".into()],
-			conn_state: connection::State::Loading,
+			post_form_state: Default::default(),
 		}
 	}
 
@@ -283,11 +288,8 @@ impl Component for NewThreadForm {
 
 				true
 			}
-			Msg::ConnState(s) => {
-				self.conn_state = s;
-				if s != connection::State::Synced {
-					self.sending = false;
-				}
+			Msg::PostFormState(s) => {
+				self.post_form_state = s;
 				true
 			}
 			Msg::NOP => false,
@@ -352,8 +354,9 @@ impl NewThreadForm {
 					<input
 						type="submit"
 						style="width: 50%"
-						disabled=self.conn_state != connection::State::Synced
-								 || self.sending
+						disabled=self.sending
+									|| self.post_form_state
+										!= posting::State::Ready
 					/>
 					<input
 						type="button"

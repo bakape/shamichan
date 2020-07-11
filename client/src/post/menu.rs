@@ -25,9 +25,9 @@ impl comp_util::Inner for Inner {
 		vec![Change::Post(props.id)]
 	}
 
-	fn update<'a>(
+	fn update(
 		&mut self,
-		_: comp_util::Ctx<'a, Self>,
+		_: &mut comp_util::Ctx<Self>,
 		msg: Self::Message,
 	) -> bool {
 		match msg {
@@ -39,7 +39,7 @@ impl comp_util::Inner for Inner {
 		}
 	}
 
-	fn view<'a>(&self, c: comp_util::Ctx<'a, Self>) -> Html {
+	fn view(&self, c: &comp_util::Ctx<Self>) -> Html {
 		let toggle = c.link.callback(|_| Message::ToggleExpand);
 
 		html! {
@@ -59,7 +59,7 @@ impl comp_util::Inner for Inner {
 				{
 					if self.expanded {
 						html! {
-							<ul class="popup-menu glass">
+							<ul class="popup-menu glass no-select">
 								<li>{"TODO"}</li>
 							</ul>
 						}

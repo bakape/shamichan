@@ -30,10 +30,6 @@ struct App {
 	// Keep here to load global state first
 	#[allow(unused)]
 	state: Box<dyn Bridge<state::Agent>>,
-
-	// Keep here to keep agent from dropping
-	#[allow(unused)]
-	post_creation_agent: Box<dyn Bridge<post::post_form::Agent>>,
 }
 
 impl Component for App {
@@ -45,13 +41,7 @@ impl Component for App {
 			a.send(state::Request::FetchFeed(s.location.clone()));
 		});
 
-		let s = Self {
-			state: a,
-			post_creation_agent: post::post_form::Agent::bridge(
-				link.callback(|_| ()),
-			),
-			link,
-		};
+		let s = Self { state: a, link };
 
 		// Static global event listeners. Put here to avoid overhead of spamming
 		// a lot of event listeners and handlers on posts.
@@ -87,6 +77,16 @@ impl Component for App {
 				<user_bg::Background />
 				<div class="overlay-container">
 					<banner::Banner />
+					// z-index increases down
+					<div class="overlay" id="post-form-overlay">
+						<post::posting::PostForm id=0 />
+					</div>
+					<div class="overlay" id="modal-overlay">
+						// TODO: modals
+					</div>
+					<div class="overlay" id="hover-overlay">
+						// TODO: hover previews (post and image)
+					</div>
 				</div>
 				<section id="main">
 					<widgets::AsideRow is_top=true />

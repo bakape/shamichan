@@ -32,8 +32,8 @@ impl comp_util::Inner for Inner {
 	type Message = Message;
 	type Properties = Props;
 
-	fn init<'a>(&mut self, c: comp_util::Ctx<'a, Self>) {
-		self.fetch_page_count(c.props.thread);
+	fn init(&mut self, c: &mut comp_util::Ctx<Self>) {
+		self.fetch_page_count(c.props().thread);
 	}
 
 	fn update_message() -> Self::Message {
@@ -44,9 +44,9 @@ impl comp_util::Inner for Inner {
 		vec![state::Change::Thread(props.thread)]
 	}
 
-	fn update<'a>(
+	fn update(
 		&mut self,
-		c: comp_util::Ctx<'a, Self>,
+		c: &mut comp_util::Ctx<Self>,
 		msg: Self::Message,
 	) -> bool {
 		use Message::*;
@@ -79,14 +79,14 @@ impl comp_util::Inner for Inner {
 			SelectPage(_) => todo!("page navigation"),
 			ThreadUpdate => {
 				let old = self.page_count;
-				self.fetch_page_count(c.props.thread);
+				self.fetch_page_count(c.props().thread);
 				old != self.page_count
 			}
 			NOP => false,
 		}
 	}
 
-	fn view<'a>(&self, c: comp_util::Ctx<'a, Self>) -> Html {
+	fn view(&self, c: &comp_util::Ctx<Self>) -> Html {
 		html! {
 			<span class="spaced mono no-select">
 				{self.render_scroll_button(&c, "<<", Message::Scroll{
@@ -134,9 +134,9 @@ impl comp_util::Inner for Inner {
 }
 
 impl Inner {
-	fn render_scroll_button<'a>(
+	fn render_scroll_button(
 		&self,
-		c: &comp_util::Ctx<'a, Self>,
+		c: &comp_util::Ctx<Self>,
 		text: &str,
 		msg: Message,
 	) -> Html {
