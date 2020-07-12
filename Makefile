@@ -10,13 +10,14 @@ endif
 	$(MAKE) -C client all
 
 client_watch:
-	while : ; do \
-		$(MAKE) css client; \
-		inotifywait \
-			-e modify,delete \
-			-q \
-			-r \
-			client/src protocol/src less; \
+	DEBUG=1 $(MAKE) css client
+	while inotifywait \
+		-e modify,delete \
+		-q \
+		-r \
+		client/src protocol/src less; \
+	do \
+		DEBUG=1 NO_DEPS=1 $(MAKE) css client; \
 	done
 
 install_tools:
