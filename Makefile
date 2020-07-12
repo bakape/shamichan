@@ -9,6 +9,16 @@ endif
 	$(MAKE) -C lang all
 	$(MAKE) -C client all
 
+client_watch:
+	while : ; do \
+		$(MAKE) css client; \
+		inotifywait \
+			-e modify,delete \
+			-q \
+			-r \
+			client/src protocol/src less; \
+	done
+
 install_tools:
 	go get -u github.com/valyala/quicktemplate \
 		github.com/rakyll/statik \
