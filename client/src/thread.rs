@@ -88,7 +88,7 @@ impl comp_util::Inner for Inner {
 		});
 
 		html! {
-			<section class="thread-container">
+			<section class="thread-container" key=c.props().id>
 				<ThreadPost id=c.props().id />
 				{
 					for posts.into_iter().map(|id| {

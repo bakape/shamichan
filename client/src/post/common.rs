@@ -257,6 +257,7 @@ where
 				<article
 					id=self.inner.render_id(&c)
 					class=cls
+					key=c.ctx.props().id
 					ref=self.el.clone()
 				>
 					{self.render_header(&c)}
