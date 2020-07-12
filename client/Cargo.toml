@@ -11,24 +11,24 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
-wasm-bindgen = "0.2.62"
+wasm-bindgen = "0.2.64"
 protocol = { path = "../protocol" }
-js-sys = "0.3.39"
-serde = { version = "1.0.106", features = ["rc"] }
-serde_json = "1.0.52"
-flate2 = "1.0.14"
-base64 = "0.12.0"
-yew = "0.15.0"
+js-sys = "0.3.41"
+serde = { version = "1.0.114", features = ["rc"] }
+serde_json = "1.0.56"
+flate2 = "1.0.16"
+base64 = "0.12.3"
+yew = "0.17.2"
 hex = "0.4.2"
-anyhow = "1.0.28"
-wasm-bindgen-futures = "0.4.12"
+anyhow = "1.0.31"
+wasm-bindgen-futures = "0.4.14"
 console_error_panic_hook = "0.1.6"
-bincode = "1.2.1"
-futures = "0.3.4"
+bincode = "1.3.1"
+futures = "0.3.5"
 uuid = "0.8.1"
 
 [dependencies.web-sys]
-version = "0.3.39"
+version = "0.3.41"
 features = [
   'Document',
   'Window',
