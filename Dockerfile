@@ -13,12 +13,9 @@ RUN apt-get update
 RUN apt-get install -y \
 	build-essential \
 	pkg-config \
-	libpth-dev \
-	libavcodec-dev libavutil-dev libavformat-dev libswscale-dev \
-	libwebp-dev \
 	libopencv-dev \
 	libgeoip-dev \
-	git lsb-release wget curl netcat postgresql-client \
+	git wget curl netcat postgresql-client \
 	libssl-dev
 RUN apt-get dist-upgrade -y
 
@@ -44,7 +41,7 @@ RUN git clone \
 	https://chromium.googlesource.com/webm/libwebp \
 	/src/libwebp
 RUN git clone \
-	--branch release/4.2 \
+	--branch release/4.3 \
 	--depth 1 \
 	https://github.com/FFmpeg/FFmpeg.git \
 	/src/FFmpeg
