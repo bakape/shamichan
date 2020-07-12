@@ -42,7 +42,7 @@ where
 }
 
 // States of the connection finite state machine
-#[derive(Serialize, Deserialize, Eq, PartialEq, Copy, Clone, Debug)]
+#[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum State {
 	Loading,
 	Connecting,
@@ -111,7 +111,6 @@ pub enum MessageCategory {
 }
 
 // Request to send a message
-#[derive(Serialize, Deserialize)]
 pub enum Request {
 	// Send a regular message
 	Regular(Vec<u8>),
@@ -126,7 +125,7 @@ pub enum Request {
 }
 
 impl Agent for Connection {
-	type Reach = Context;
+	type Reach = Context<Self>;
 	type Message = Event;
 	type Input = Request;
 	type Output = State;
@@ -309,7 +308,7 @@ impl Connection {
 
 	fn handle_disconnect(&mut self) {
 		self.reconn_attempts += 1;
-		self.reconn_timer = Some(TimeoutService::new().spawn(
+		self.reconn_timer = Some(TimeoutService::spawn(
 			// Maxes out at ~1min
 			std::time::Duration::from_millis(
 				(500f32
@@ -442,7 +441,7 @@ impl Connection {
 				self.reset_reconn_timer();
 			}
 			Err(e) => {
-				ConsoleService::new().error(e.as_ref());
+				ConsoleService::error(e.as_ref());
 			}
 		};
 	}

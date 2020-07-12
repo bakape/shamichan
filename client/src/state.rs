@@ -390,7 +390,6 @@ pub struct Agent {
 	render_task: Option<RenderTask>,
 }
 
-#[derive(Serialize, Deserialize)]
 // Subscribe to updates of a value type
 pub enum Request {
 	NotifyChange(Vec<Change>),
@@ -651,7 +650,7 @@ pub enum Message {
 }
 
 impl yew::agent::Agent for Agent {
-	type Reach = Context;
+	type Reach = Context<Self>;
 	type Message = Message;
 	type Input = Request;
 	type Output = ();
@@ -877,12 +876,10 @@ impl Agent {
 					self.trigger(&Change::Location);
 				}
 				if let Some(f) = new.focus.clone() {
-					self.render_task = RenderService::new()
-						.request_animation_frame(
-							self.link
-								.callback(move |_| Message::Focus(f.clone())),
-						)
-						.into();
+					self.render_task = RenderService::request_animation_frame(
+						self.link.callback(move |_| Message::Focus(f.clone())),
+					)
+					.into();
 				}
 			}
 
@@ -911,7 +908,7 @@ impl Agent {
 			};
 
 			self.fetch_task = match loc.feed.clone() {
-				FeedID::Index | FeedID::Catalog => FetchService::new().fetch(
+				FeedID::Index | FeedID::Catalog => FetchService::fetch(
 					Request::get("/api/json/index").body(Nothing).unwrap(),
 					self.link.callback(
 						move |res: Response<
@@ -935,7 +932,7 @@ impl Agent {
 						},
 					),
 				)?,
-				FeedID::Thread { id, page } => FetchService::new().fetch(
+				FeedID::Thread { id, page } => FetchService::fetch(
 					Request::get(&format!("/api/json/threads/{}/{}", id, page))
 						.body(Nothing)
 						.unwrap(),

@@ -175,13 +175,13 @@ impl Tick {
 
 // The current time + bool does not actually take more memory as an enum, so
 // might as well send both on each Scheduler
-#[derive(Serialize, Deserialize, Clone, Default)]
+#[derive(Clone, Default)]
 pub struct Response {
 	pub diff: RelativeTime,
 	pub use_relative: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone)]
 pub enum Request {
 	// Register a new timer with passed Unix timestamp
 	Register(u32),
@@ -191,14 +191,14 @@ pub enum Request {
 }
 
 impl Agent for Scheduler {
-	type Reach = Context;
+	type Reach = Context<Self>;
 	type Message = Message;
 	type Input = Request;
 	type Output = Response;
 
 	fn create(link: AgentLink<Self>) -> Self {
 		Self {
-			interval: IntervalService::new().spawn(
+			interval: IntervalService::spawn(
 				std::time::Duration::from_secs(1),
 				link.callback(|_| Message::Tick),
 			),

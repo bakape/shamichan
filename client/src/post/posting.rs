@@ -255,12 +255,10 @@ impl Inner {
 		link: &ComponentLink<PostCommon<Self>>,
 		msg: FormMessage,
 	) {
-		self.render_task =
-			RenderService::new()
-				.request_animation_frame(link.callback(move |_| {
-					super::common::Message::Extra(msg.clone())
-				}))
-				.into();
+		self.render_task = RenderService::request_animation_frame(
+			link.callback(move |_| super::common::Message::Extra(msg.clone())),
+		)
+		.into();
 	}
 
 	// Commit body changes to server
@@ -345,7 +343,6 @@ struct Selection {
 	text: String,
 }
 
-#[derive(Serialize, Deserialize)]
 pub enum Request {
 	// Quote a post and any selected text
 	QuotePost { post: u64, el_id: String },
@@ -368,7 +365,7 @@ enum Subscription {
 	ViewUpdates,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone)]
 pub enum Response {
 	// Agent state update
 	State(State),
@@ -400,7 +397,7 @@ pub struct Agent {
 }
 
 impl yew::agent::Agent for Agent {
-	type Reach = yew::agent::Context;
+	type Reach = yew::agent::Context<Self>;
 	type Message = Message;
 	type Input = Request;
 	type Output = Response;

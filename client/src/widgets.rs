@@ -180,19 +180,18 @@ impl Component for NewThreadForm {
 				_ => Msg::NOP,
 			})),
 			el: NodeRef::default(),
-			fetch_task: FetchService::new()
-				.fetch(
-					Request::get("/api/json/used-tags").body(Nothing).unwrap(),
-					link.callback(
-						|res: Response<
-							Json<Result<Vec<String>, anyhow::Error>>,
-						>| match res.into_body() {
-							Json(Ok(tags)) => Msg::FetchedUsedTags(tags),
-							_ => Msg::NOP,
-						},
-					),
-				)
-				.ok(),
+			fetch_task: FetchService::fetch(
+				Request::get("/api/json/used-tags").body(Nothing).unwrap(),
+				link.callback(
+					|res: Response<
+						Json<Result<Vec<String>, anyhow::Error>>,
+					>| match res.into_body() {
+						Json(Ok(tags)) => Msg::FetchedUsedTags(tags),
+						_ => Msg::NOP,
+					},
+				),
+			)
+			.ok(),
 			link,
 			expanded: false,
 			sending: false,
@@ -334,7 +333,7 @@ impl NewThreadForm {
 				id="new-thread-form"
 				ref=self.el.clone()
 				style="display: flex; flex-direction: column;"
-				onsubmit={self.link.callback(|e: yew::events::Event| {
+				onsubmit={self.link.callback(|e: yew::events::FocusEvent| {
 					e.prevent_default();
 					Msg::Submit
 				})}
