@@ -43,7 +43,9 @@ function render() {
 	// Should help caching.
 	const existing: { [sha1: string]: HTMLVideoElement } = {};
 	for (let ch of [...cont.children] as HTMLVideoElement[]) {
-		ch.pause();
+		if (!ch.paused) {
+			ch.pause();
+		}
 		ch.remove();
 		existing[ch.getAttribute("data-sha1")] = ch;
 	}
@@ -53,6 +55,7 @@ function render() {
 			el = document.createElement("video");
 			el.setAttribute("data-sha1", playlist[i].sha1);
 			el.setAttribute("style", "max-width:30vw");
+			el.setAttribute("preload", "auto")
 			el.onmouseenter = () => el.controls = true;
 			el.onmouseleave = () => el.controls = false;
 			el.src = sourcePath(playlist[i].sha1, playlist[i].file_type);
