@@ -11,8 +11,7 @@ type Data = {
 };
 
 type Video = {
-	sha1?: string
-	url?: string
+	url: string
 	file_type: fileTypes
 };
 
@@ -42,22 +41,23 @@ function render() {
 
 	// Remove old videos and add new ones, while preserving existing one.
 	// Should help caching.
-	const existing: { [sha1: string]: HTMLVideoElement } = {};
+	const existing: { [url: string]: HTMLVideoElement } = {};
 	for (let ch of [...cont.children] as HTMLVideoElement[]) {
 		ch.pause();
 		ch.remove();
-		existing[ch.getAttribute("data-sha1")] = ch;
+		existing[ch.getAttribute("data-url")] = ch;
 	}
 	for (let i = 0; i < playlist.length; i++) {
-		let el = existing[playlist[i].sha1];
+		const p = playlist[i];
+		let el = existing[p.url];
 		if (!el) {
+
 			el = document.createElement("video");
-			el.setAttribute("data-sha1", playlist[i].sha1);
-			el.setAttribute("style", "max-width:30vw");
+			el.setAttribute("data-url", p.url);
+			el.setAttribute("style", "max-width:50vw");
 			el.onmouseenter = () => el.controls = true;
 			el.onmouseleave = () => el.controls = false;
-			const p = playlist[i];
-			el.src = p.sha1 ? sourcePath(playlist[i].sha1, playlist[i].file_type) : p.url;
+			el.src = p.url;
 			el.volume = options.audioVolume / 100;
 		}
 
