@@ -43,9 +43,6 @@ function render() {
 	// Should help caching.
 	const existing: { [url: string]: HTMLVideoElement } = {};
 	for (let ch of [...cont.children] as HTMLVideoElement[]) {
-		if (!ch.paused) {
-			ch.pause();
-		}
 		ch.remove();
 		existing[ch.getAttribute("data-url")] = ch;
 	}
