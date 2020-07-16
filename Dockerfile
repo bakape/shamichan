@@ -30,7 +30,7 @@ COPY go.mod .
 COPY go.sum .
 RUN go mod download
 COPY package.json .
-COPY package-lock.json .
+COPY package-lock.json npm-shrinkwrap.json ./
 RUN npm install --dev
 
 # Copy and build meguca

@@ -3,22 +3,51 @@
 package feeds
 
 import (
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
+	"fmt"
 	"time"
+
+	"github.com/bakape/meguca/common"
 
 	"github.com/go-playground/log"
 )
+
+type video struct {
+	FileType uint8         `json:"file_type"`
+	Duration time.Duration `json:"-"`
+	URL      string        `json:"url"`
+}
 
 type tvFeed struct {
 	baseFeed
 	board     string
 	startedAt time.Time
-	playList  []db.Video
+	pos       int
+	playList  []video
 }
 
 func (f *tvFeed) readPlaylist() (err error) {
-	f.playList, err = db.VideoPlaylist(f.board)
+	durs := [...]float64{
+		1437.113000,
+		1437.113000,
+		1437.113000,
+		1437.113000,
+		1437.113000,
+		1437.777000,
+		1437.113000,
+		1437.113000,
+		1437.113000,
+		1437.113000,
+		1437.113000,
+		1545.223000,
+	}
+	f.playList = make([]video, len(durs))
+	for i, d := range durs {
+		f.playList[i] = video{
+			FileType: common.WEBM,
+			Duration: time.Duration(float64(time.Second) * d),
+			URL:      fmt.Sprintf("/assets/videos/shakunetsu_%d.webm", i+1),
+		}
+	}
 	return
 }
 
@@ -48,36 +77,11 @@ func (f *tvFeed) start(board string) (err error) {
 					return
 				}
 			case <-timer.C:
-				// Refetch playlist, if too short or file missing
-				needFetch := false
-				if len(f.playList) < 2 {
-					needFetch = true
-				} else {
-					var visible bool
-					visible, err = db.ImageVisible(f.playList[1].SHA1, board)
-					if err != nil {
-						log.Warnf("verifying video is visible: %s\n", err)
-						continue
-					}
-					needFetch = !visible
-				}
-				if needFetch {
-					err := f.readPlaylist()
-					if err != nil {
-						log.Warnf("fetching video playlist: %s\n", err)
-						continue
-					}
-				} else {
-					// Otherwise decrease list by one
-					f.playList = f.playList[1:]
-				}
+				f.pos++
+				f.pos %= 12
 				f.startedAt = time.Now()
 				f.sendToAll(f.encodePlaylist())
-				dur := time.Hour // If empty playlist
-				if len(f.playList) != 0 {
-					dur = f.playList[0].Duration
-				}
-				timer.Reset(dur)
+				timer.Reset(f.playList[0].Duration)
 			}
 		}
 	}()
@@ -86,16 +90,17 @@ func (f *tvFeed) start(board string) (err error) {
 }
 
 func (f *tvFeed) encodePlaylist() []byte {
-	i := 2
-	if len(f.playList) < 2 {
-		i = len(f.playList)
+	current := make([]video, 3)
+	for i := 0; i < 3; i++ {
+		current[i] = f.playList[(f.pos+i)%12]
 	}
+
 	msg, err := common.EncodeMessage(common.MessageMeguTV, struct {
-		Elapsed  float64    `json:"elapsed"`
-		Playlist []db.Video `json:"playlist"`
+		Elapsed  float64 `json:"elapsed"`
+		Playlist []video `json:"playlist"`
 	}{
 		Elapsed:  time.Now().Sub(f.startedAt).Seconds(),
-		Playlist: f.playList[:i],
+		Playlist: current,
 	})
 	if err != nil {
 		log.Warnf("video playlist encoding: %s\n", err)

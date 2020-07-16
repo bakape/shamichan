@@ -11,7 +11,8 @@ type Data = {
 };
 
 type Video = {
-	sha1: string
+	sha1?: string
+	url?: string
 	file_type: fileTypes
 };
 
@@ -55,7 +56,8 @@ function render() {
 			el.setAttribute("style", "max-width:30vw");
 			el.onmouseenter = () => el.controls = true;
 			el.onmouseleave = () => el.controls = false;
-			el.src = sourcePath(playlist[i].sha1, playlist[i].file_type);
+			const p = playlist[i];
+			el.src = p.sha1 ? sourcePath(playlist[i].sha1, playlist[i].file_type) : p.url;
 			el.volume = options.audioVolume / 100;
 		}
 
