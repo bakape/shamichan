@@ -43,7 +43,9 @@ function render() {
 	// Should help caching.
 	const existing: { [url: string]: HTMLVideoElement } = {};
 	for (let ch of [...cont.children] as HTMLVideoElement[]) {
-		ch.pause();
+		if (!ch.paused) {
+			ch.pause();
+		}
 		ch.remove();
 		existing[ch.getAttribute("data-url")] = ch;
 	}
@@ -55,6 +57,7 @@ function render() {
 			el = document.createElement("video");
 			el.setAttribute("data-url", p.url);
 			el.setAttribute("style", "max-width:50vw");
+			el.setAttribute("preload", "auto")
 			el.onmouseenter = () => el.controls = true;
 			el.onmouseleave = () => el.controls = false;
 			el.src = p.url;
