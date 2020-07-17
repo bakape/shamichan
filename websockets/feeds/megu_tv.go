@@ -27,25 +27,25 @@ type tvFeed struct {
 
 func (f *tvFeed) readPlaylist() (err error) {
 	durs := [...]float64{
-		1437.113000,
-		1437.113000,
-		1437.113000,
-		1437.113000,
-		1437.113000,
-		1437.777000,
-		1437.113000,
-		1437.113000,
-		1437.113000,
-		1437.113000,
-		1437.113000,
-		1545.223000,
+		1446.001000,
+		1446.081000,
+		1448.007000,
+		1446.001000,
+		1448.007000,
+		1448.057000,
+		1448.007000,
+		1445.961000,
+		1446.041000,
+		1446.001000,
+		1446.041000,
+		1430.981000,
 	}
 	f.playList = make([]video, len(durs))
 	for i, d := range durs {
 		f.playList[i] = video{
 			FileType: common.WEBM,
 			Duration: time.Duration(float64(time.Second) * d),
-			URL:      fmt.Sprintf("/assets/videos/shakunetsu_%d.webm", i+1),
+			URL:      fmt.Sprintf("/assets/videos/shamiko_%d.webm", i+1),
 		}
 	}
 	return
