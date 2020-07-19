@@ -2,8 +2,7 @@
 [![Build Status](https://travis-ci.org/bakape/meguca.svg?branch=master)](https://travis-ci.org/bakape/meguca)
 
 # meguca
-anonymous realtime imageboard with user-created boards focused on high
-performance, free speech and transparent moderation
+anonymous realtime imageboard focused on high performance, free speech and transparent moderation
 
 Platforms: Linux, Docker
 
