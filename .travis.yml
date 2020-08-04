@@ -6,7 +6,7 @@ cache:
   directories:
     - docker_images
 before_install:
-  - (gunzip | docker load) < docker_images/meguca.img.gz
+  - (gunzip | docker load) < docker_images/meguca.img.gz || true
 before_cache:
   - docker save meguca | gzip -1 > docker_images/meguca.img.gz
 install:
