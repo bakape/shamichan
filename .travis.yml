@@ -2,8 +2,15 @@ dist: bionic
 services:
   - docker
   - postgresql
+cache:
+  directories:
+    - docker_images
+before_install:
+  - (gunzip | docker load) < docker_images/meguca.img.gz
+before_cache:
+  - docker save meguca | gzip -1 > docker_images/meguca.img.gz
 install:
   - psql -c 'create database meguca;' -U postgres
 script:
-  - docker build -t meguca_test .
-  - docker run --rm --network host -e CI=true meguca_test make test TEST_DB="postgres://postgres@localhost:5432/meguca"
+  - docker build -t meguca .
+  - docker run --rm --network host -e CI=true meguca make test TEST_DB="postgres://postgres@localhost:5432/meguca"
