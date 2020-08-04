@@ -39,23 +39,28 @@ func LoadTestDB() (err error) {
 
 	common.IsTest = true
 
+	srcURL := os.Getenv("TEST_DB")
+	if srcURL == "" {
+		srcURL = config.Server.Database
+	}
+	connURL, err := url.Parse(srcURL)
+	if err != nil {
+		return
+	}
+
 	run := func(line ...string) error {
 		c := exec.Command(line[0], line[1:]...)
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 		return c.Run()
 	}
-	connURL, err := url.Parse(config.Server.Test.Database)
-	if err != nil {
-		return
-	}
-	pubKey := connURL.User.Username()
-	dbName := fmt.Sprintf("%s_%s", strings.Trim(connURL.Path, "/"), suffix)
+	user := connURL.User.Username()
+	dbName := fmt.Sprintf("%s_test_%s", strings.Trim(connURL.Path, "/"), suffix)
 
 	err = run(
 		"psql",
 		"-c", "drop database if exists "+dbName,
-		config.Server.Database,
+		srcURL,
 	)
 	if err != nil {
 		return
@@ -67,9 +72,9 @@ func LoadTestDB() (err error) {
 		"-c",
 		fmt.Sprintf(
 			"create database %s with owner %s encoding UTF8",
-			dbName, pubKey,
+			dbName, user,
 		),
-		config.Server.Database,
+		srcURL,
 	)
 	if err != nil {
 		return

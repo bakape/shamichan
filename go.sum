@@ -1,3 +1,5 @@
+github.com/ErikDubbelboer/gspt v0.0.0-20190125194910-e68493906b83 h1:AUxmql2hgJxZTbfYZlRlXvCakS55HMd4BDsu6Hsqomo=
+github.com/ErikDubbelboer/gspt v0.0.0-20190125194910-e68493906b83/go.mod h1:01yGrV5aDnYieX2hSBoKGMaRiqHvnLoUy4ngWGZ/owg=
 github.com/Masterminds/squirrel v1.4.0 h1:he5i/EXixZxrBUWcxzDYMiju9WZ3ld/l7QBNuo/eN3w=
 github.com/Masterminds/squirrel v1.4.0/go.mod h1:yaPeOnPG5ZRwL9oKdTsO/prlkPbXWZlRVMQ/gGlzIuA=
 github.com/bakape/boorufetch v1.1.1 h1:OMXM0pjPLhAmVkA83UFXs+1rdDNcXpU5Xg8EDtED8KM=

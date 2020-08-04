@@ -1,3 +1,14 @@
-services: docker
+services:
+  - docker
+  - postgresql
+addons:
+  postgresql: "12"
+  apt:
+    packages:
+      - postgresql-12
+      - postgresql-client-12
+before_script:
+  - psql -c 'create database meguca;' -U postgres
 script:
-  - make test_docker
+  - docker build -t meguca_test .
+  - docker run --rm --network host -e CI=true meguca_test make test TEST_DB="postgres://postgres@localhost:5432/meguca"

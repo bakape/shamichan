@@ -3,9 +3,12 @@
 package server
 
 import (
+	"flag"
 	"os"
 	"strconv"
+	"strings"
 
+	"github.com/ErikDubbelboer/gspt"
 	ass "github.com/bakape/meguca/assets"
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/cache"
@@ -24,6 +27,47 @@ func Start() (err error) {
 		return
 	}
 
+	flag.StringVar(
+		&config.Server.Database,
+		"d",
+		config.Server.Database,
+		"PostgreSQL database URL to connect to",
+	)
+	flag.Float64Var(
+		&config.Server.CacheSize,
+		"c",
+		config.Server.CacheSize,
+		`size limit of internal cache in MB`,
+	)
+	flag.BoolVar(
+		&config.Server.Server.ReverseProxied,
+		"r",
+		config.Server.Server.ReverseProxied,
+		`the server can only be accessed by clients through a reverse proxy and
+thus can safely honour "X-Forwarded-For" headers for client IP
+resolution`,
+	)
+	flag.StringVar(
+		&config.Server.Server.Address,
+		"a",
+		config.Server.Server.Address,
+		`address to listen on for incoming connections`,
+	)
+	flag.Parse()
+
+	// Censor DB connection string, if any
+	args := make([]string, 0, len(os.Args))
+	for i := 0; i < len(os.Args); i++ {
+		arg := os.Args[i]
+		if strings.HasSuffix(arg, "-d") { // To match both -d and --d
+			args = append(args, arg, "****")
+			i++ // Jump to args after password
+		} else {
+			args = append(args, arg)
+		}
+	}
+	gspt.SetProcTitle(strings.Join(args, " "))
+
 	// Write PID file
 	f, err := os.Create(".pid")
 	if err != nil {
@@ -38,23 +82,6 @@ func Start() (err error) {
 		return
 	}
 
-	if !config.Server.Debug {
-		var f *os.File
-		f, err = os.OpenFile(
-			"errors.log",
-			os.O_WRONLY|os.O_APPEND|os.O_CREATE,
-			0600,
-		)
-		if err != nil {
-			return
-		}
-		defer f.Close()
-		os.Stdout = f
-		os.Stderr = f
-	}
-	mlog.Init(mlog.Console)
-	mlog.ConsoleHandler.SetDisplayColor(config.Server.Debug)
-
 	err = util.Parallel(db.LoadDB, assets.CreateDirs)
 	if err != nil {
 		return
@@ -62,7 +89,15 @@ func Start() (err error) {
 
 	// Depend on configs or DB
 	go ass.WatchVideoDir()
-	err = util.Parallel(cache.Init, auth.LoadCaptchaServices, websockets.Init)
+	err = util.Parallel(
+		cache.Init,
+		auth.LoadCaptchaServices,
+		websockets.Init,
+		func() error {
+			mlog.Init(mlog.Console)
+			return nil
+		},
+	)
 	if err != nil {
 		return
 	}

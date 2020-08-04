@@ -5,6 +5,7 @@ go 1.13
 replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.0
 
 require (
+	github.com/ErikDubbelboer/gspt v0.0.0-20190125194910-e68493906b83
 	github.com/bakape/captchouli/v2 v2.0.2
 	github.com/bakape/pg_util v0.11.0
 	github.com/bakape/recache/v6 v6.0.0

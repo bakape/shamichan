@@ -1,12 +1,8 @@
 {
-	"debug": true,
 	"database": "postgres://meguca:meguca@localhost:5432/meguca?sslmode=disable",
 	"cache_size": 128.0,
 	"server": {
 		"address": "127.0.0.1:8000",
 		"reverse_proxied": false
-	},
-	"test": {
-		"database": "postgres://meguca:meguca@localhost:5432/meguca_test?sslmode=disable"
 	}
 }

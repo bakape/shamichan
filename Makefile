@@ -57,10 +57,12 @@ test: websockets
 	cargo test
 	go test --race ./...
 
-test_no_race:
+test_no_race: websockets
+	cargo test
 	go test ./...
 
-test_docker:
-	docker-compose build
-	docker-compose run --rm -e CI=true meguca make test
-
+release: test
+	docker build -t meguca .
+	docker tag meguca bakape/meguca:`git describe --tags`
+	docker tag meguca bakape/meguca:latest
+	docker push bakape/meguca

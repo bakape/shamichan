@@ -17,51 +17,18 @@ __The master branch is currently undergoing active breaking changes towards megu
 
 ## Docker
 
-Meguca can be deployed in a self-contained Docker container.
+Meguca can be deployed in a self-contained [Docker](https://www.docker.com/)
+container.
 
-First, run
-
-```
-git clone git://github.com/bakape/meguca.git
-```
-
-Second, navigate to the folder that was just created with
+Simply run
 
 ```
-cd meguca
+docker run --network host --mount $image_dir:/meguca/images bakape/meguca ./meguca -d $DB
 ```
 
-Then, install [Docker](https://www.docker.com/) and
-[Docker Compose](https://docs.docker.com/compose/install/) and run
-
-```
-docker-compose build
-docker-compose up -d
-```
-Grab a coffee. This will take a while.
-
-For more information refer to the [Docker Compose docs](https://docs.docker.com/compose/reference/overview/).
-
-### Update
-
-If you ever want to update meguca to the newest version, stop the container with
-
-```
-docker-compose down
-```
-
-Then, pull the changes with
-
-```
-git pull origin
-```
-
-Finally, rebuild and start the container with
-
-```
-docker-compose build
-docker-compose up -d
-```
+where:
+- $image_dir is the directory to store uploaded images
+- $DB is the URL to a PostgreSQL database to use for data storage
 
 ## Building from source
 
@@ -105,9 +72,9 @@ make -j`nproc`
 sudo make install
 ```
 
-#### Linux and OSX
+#### Compilation
 
-* Run `make`
+Run `make`
 
 ## Setup
 
@@ -129,11 +96,7 @@ found in `docs/`.
 
 ### Initial instance configuration
 
-* Login into the "admin" account via the infinity symbol in the top banner with
-the password "password"
-* Change the default password
-* Create a board from the administration panel
-* Configure server from the administration panel
+* TODO: grant first user to go to a URL admin rights
 
 ## Development
 
@@ -144,7 +107,6 @@ the password "password"
 * Pass `NO_DEPS=1` before make command to not install dependencies with npm on
 each build
 * `make clean` removes files from the previous compilation
-* `make {test,test_no_race,test_docker}` run regular, without data race
-detection and Dockerized test suites, respectively
-* To run server unit tests (unless Dockerized) add database creation rights to
-your PostgreSQL role
+* `make {test,test_no_race}` run regular test and tests without data race
+detection, respectively
+* To run server unit tests add database creation rights to your PostgreSQL role

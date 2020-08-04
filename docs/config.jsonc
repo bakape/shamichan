@@ -1,12 +1,16 @@
 {
 	/*
-		Should the server be running in debug mode. Debug mode has more verbose
-		logging and prints all logs to stdout. If disabled, error logs will be
-		printed to the `errors.log` file.
-	*/
-	"debug": true,
-	/*
-		Database URL to connect to on server start
+		PostgreSQL database URL to connect to.
+
+		Also serves as the base URL for database instances created for unit
+		tests.
+
+		To allow database creation during tests the role used must have the
+		necessary PostgreSQL permissions. These can be granted by running
+
+			ALTER USER <user_name> WITH CREATEDB;
+
+		as the administrator postgres user in the psql shell.
 	*/
 	"database": "postgres://meguca:meguca@localhost:5432/meguca?sslmode=disable",
 	/*
@@ -25,25 +29,5 @@
 			for client IP resolution.
 		*/
 		"reverse_proxied": false
-	},
-	"test": {
-		/*
-			Database URL to use during tests.
-
-			This URL only serves as the base. The actual databases are created
-			and dropped during testing automatically with prefixes for each
-			database according to the submodule using this test database for
-			running unit tests. This division allows database-related for each
-			submodule to be run concurrently, overall reducing the runtime of
-			unit tests.
-
-			To allow database creation during tests the role used must have the
-			necessary PostgreSQL permissions. These can be granted by running
-
-				ALTER USER <user_name> WITH CREATEDB;
-
-			as the administrator postgres user in the psql shell.
-		*/
-		"database": "postgres://meguca:meguca@localhost:5432/meguca_test?sslmode=disable"
 	}
 }

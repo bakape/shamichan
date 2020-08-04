@@ -12,15 +12,11 @@ var Server ServerConfigs
 
 // Configurations of this specific instance passed from config file
 type ServerConfigs struct {
-	Debug     bool
 	Database  string
 	CacheSize float64 `json:"cache_size"`
 	Server    struct {
 		ReverseProxied bool `json:"reverse_proxied"`
 		Address        string
-	}
-	Test struct {
-		Database string
 	}
 }
 
@@ -59,9 +55,7 @@ try:
 }
 
 func (c *ServerConfigs) setDefaults() {
-	c.Debug = true
 	c.Database = "postgres://meguca:meguca@localhost:5432/meguca?sslmode=disable"
 	c.CacheSize = 128
 	c.Server.Address = ":8000"
-	c.Test.Database = "postgres://meguca:meguca@localhost:5432/meguca_test?sslmode=disable"
 }
