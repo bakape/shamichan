@@ -1,11 +1,6 @@
 services:
   - docker
-addons:
-  postgresql: "12"
-  apt:
-    packages:
-      - postgresql-12
-      - postgresql-client-12
+  - postgresql
 install:
   - psql -c 'create database meguca;' -U postgres
 script:
