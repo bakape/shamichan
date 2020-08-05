@@ -6,10 +6,10 @@ replace github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.0
 
 require (
 	github.com/ErikDubbelboer/gspt v0.0.0-20190125194910-e68493906b83
-	github.com/bakape/captchouli/v2 v2.0.2
-	github.com/bakape/pg_util v0.11.0
-	github.com/bakape/recache/v6 v6.0.0
-	github.com/bakape/thumbnailer/v2 v2.6.3
+	github.com/bakape/captchouli/v2 v2.0.3
+	github.com/bakape/pg_util v1.1.1
+	github.com/bakape/recache/v6 v6.0.2
+	github.com/bakape/thumbnailer/v2 v2.6.4
 	github.com/chai2010/webp v1.1.0
 	github.com/dimfeld/httptreemux v5.0.1+incompatible
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
@@ -24,15 +24,15 @@ require (
 	github.com/go-playground/ansi v2.1.0+incompatible // indirect
 	github.com/go-playground/errors v3.3.0+incompatible // indirect
 	github.com/go-playground/log v6.3.0+incompatible
-	github.com/google/go-cmp v0.4.1
-	github.com/jackc/pgconn v1.5.0
-	github.com/jackc/pgtype v1.3.0
-	github.com/jackc/pgx/v4 v4.6.0
+	github.com/google/go-cmp v0.5.1
+	github.com/jackc/pgconn v1.6.4
+	github.com/jackc/pgtype v1.4.2
+	github.com/jackc/pgx/v4 v4.8.1
 	github.com/onsi/gomega v1.10.1
 	github.com/rakyll/statik v0.1.7
 	github.com/satori/go.uuid v1.2.0
 	github.com/ulikunitz/xz v0.5.7
-	github.com/valyala/quicktemplate v1.5.0
+	github.com/valyala/quicktemplate v1.6.0
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	nhooyr.io/websocket v1.8.6
