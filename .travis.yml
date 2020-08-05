@@ -7,8 +7,10 @@ cache:
     - docker_images
 before_install:
   - (gunzip | docker load) < docker_images/meguca.img.gz || true
+  - psql -U postgres -c "alter user postgres with password 'postgres';"
+  - psql -U postgres -c "create database meguca;"
 before_cache:
   - docker save meguca | gzip -1 > docker_images/meguca.img.gz
 script:
   - docker build -t meguca .
-  - docker run --rm --network host -e CI=true meguca make test TEST_DB="postgres://postgres@localhost:5432/meguca"
+  - docker run --rm --network host -e CI=true meguca make test TEST_DB="postgres://postgres:postgres@localhost:5432/meguca"
