@@ -1,7 +1,6 @@
 dist: bionic
 services:
   - docker
-  - postgresql
 cache:
   directories:
     - docker_images
@@ -9,6 +8,12 @@ before_install:
   - (gunzip | docker load) < docker_images/meguca.img.gz || true
 before_cache:
   - docker save meguca | gzip -1 > docker_images/meguca.img.gz
+addons:
+  postgresql: "12"
+  apt:
+    packages:
+      - postgresql-12
+      - postgresql-client-12
 install:
   - psql -c 'create database meguca;' -U postgres
 script:
