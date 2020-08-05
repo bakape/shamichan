@@ -14,6 +14,10 @@ addons:
     packages:
       - postgresql-12
       - postgresql-client-12
+env:
+  global:
+    - PGVER=12
+    - PGPORT=5433
 install:
   - psql -c 'create database meguca;' -U postgres
 script:
