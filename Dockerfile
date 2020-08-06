@@ -28,8 +28,9 @@ RUN apt-get install -y \
 	libgeoip-dev \
 	git wget curl \
 	postgresql-client \
-	libssl-dev
-RUN apt-get dist-upgrade -y
+	libssl-dev && \
+		apt-get clean
+RUN apt-get dist-upgrade -y && apt-get clean
 
 # Compile newer FFmpeg and deps.
 # Put inside script to not produce intermediate containers with dep source code
@@ -40,7 +41,7 @@ RUN rm build_ffmpeg.sh
 
 # Install Node.js
 RUN wget -q -O- https://deb.nodesource.com/setup_10.x | bash -
-RUN apt-get install -y nodejs
+RUN apt-get install -y nodejs && apt-get clean
 
 # Install Rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y

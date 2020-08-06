@@ -27,5 +27,6 @@ cd /src/FFmpeg
 nice -n 19 make -j $(nproc)
 make install
 
-# Don't include build needless sources in docker image
+# Don't include build needless sources and binaries in docker image
 rm -rf /src
+apt-get clean
