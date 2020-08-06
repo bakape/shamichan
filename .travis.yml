@@ -12,5 +12,5 @@ before_install:
 before_cache:
   - docker save meguca | gzip -1 > docker_images/meguca.img.gz
 script:
-  - docker build -t meguca .
+  - docker build --cache-from meguca -t meguca .
   - docker run --rm --network host -e CI=true meguca make test TEST_DB="postgres://postgres:postgres@localhost:5432/meguca"
