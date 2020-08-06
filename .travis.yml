@@ -2,15 +2,10 @@ dist: focal
 services:
   - docker
   - postgresql
-cache:
-  directories:
-    - docker_images
 before_install:
-  - (gunzip | docker load) < docker_images/meguca.img.gz || true
   - psql -U postgres -c "alter user postgres with password 'postgres';"
   - psql -U postgres -c "create database meguca;"
-before_cache:
-  - docker save meguca | gzip -1 > docker_images/meguca.img.gz
 script:
-  - docker build --cache-from meguca -t meguca .
+  - docker pull bakape/meguca
+  - docker build --cache-from bakape/meguca -t meguca .
   - docker run --rm --network host -e CI=true meguca make test TEST_DB="postgres://postgres:postgres@localhost:5432/meguca"
