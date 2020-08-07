@@ -505,6 +505,7 @@
 		"text": "Text",
 		"time": "Time",
 		"type": "Type",
-		"unban": "Unban"
+		"unban": "Unban",
+		"watcher": "Thread Watcher"
 	}
 }

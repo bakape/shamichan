@@ -505,6 +505,7 @@
 		"text": "文字",
 		"time": "時間",
 		"type": "類型",
-		"unban": "解除封鎖"
+		"unban": "解除封鎖",
+		"watcher": "Thread Watcher"
 	}
 }

@@ -1,6 +1,6 @@
 // IndexedDB database controller
 
-const dbVersion = 12;
+const dbVersion = 13;
 
 let db: IDBDatabase
 
@@ -119,6 +119,10 @@ function upgradeDB(event: IDBVersionChangeEvent) {
 			createExpiringStore(db, "watchedThreads", true);
 
 			createExpiringStore(db, "openThreads", true);
+		case 12:
+			// Reset and recreate
+			db.deleteObjectStore("watchedThreads");
+			createExpiringStore(db, "watchedThreads", true);
 	}
 }
 

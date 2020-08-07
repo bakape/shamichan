@@ -7,8 +7,9 @@ import { posts } from "../state"
 const titleEl = document.head.querySelector("title"),
 	title = titleEl.textContent,
 	faviconEl = document.getElementById("favicon"),
-	urlBase = "/assets/favicons/",
 	queue: Post[] = []
+
+export const urlBase = "/assets/favicons/";
 
 // All possible favicon states
 const enum states { default, disconnected, error, unread, replied }
