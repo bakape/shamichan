@@ -30,7 +30,7 @@ export default function notifyAboutReply(post: Post) {
 			opts.icon = thumbPath(sha1, thumbType);
 		}
 	}
-	opts.body = post.body;
+	opts.body = 'On board /${post.board}/:\n${post.body}';
 	opts.data = post.id; // Persist target, even if browser tab closed
 	const n = new Notification(lang.ui["quoted"], opts)
 	n.onclick = function () {

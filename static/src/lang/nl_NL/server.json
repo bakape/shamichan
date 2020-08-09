@@ -505,6 +505,7 @@
 		"text": "Text",
 		"time": "Tijd",
 		"type": "Type",
-		"unban": "Unban"
+		"unban": "Unban",
+		"watcher": "Thread Watcher"
 	}
 }

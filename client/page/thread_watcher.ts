@@ -5,7 +5,9 @@ import * as thread from "./thread";
 import * as options from "../options";
 import * as posts from "../posts";
 import * as util from "../util";
-import * as board from "./board";
+import * as boards from "./board";
+import { BannerModal } from "../base";
+import { urlBase } from "../ui/tab";
 
 interface OpenThreadRecord {
 	id: number;
@@ -15,6 +17,8 @@ interface OpenThreadRecord {
 export interface WatchedThreadRecord {
 	id: number;
 	postCount: number;
+	unseen: number;
+	board: string;
 	subject: string;
 	thumbnailURL?: string;
 }
@@ -22,6 +26,104 @@ export interface WatchedThreadRecord {
 type ThreadPostCountDiff = {
 	changed: { [id: number]: number };
 	deleted: number[];
+}
+
+// Only active WatcherPanel instance
+export let watcherPanel: WatcherPanel;
+
+// Thread Watcher panel
+class WatcherPanel extends BannerModal {
+	constructor() {
+		super(document.getElementById("watcher"));
+		this.load();
+	}
+
+	public addRow(thread: WatchedThreadRecord) {
+		let row = this.el.querySelector(`#t${thread.id}`);
+		if (row) {
+			// Thread already in table. Update status
+			this.update(row, thread.unseen);
+			return;
+		}
+		let tb = this.el.querySelector("tbody");
+		let tr = tb.insertRow(-1);
+		tr.setAttribute("id", `t${thread.id}`);
+		for (let i = 0; i < 5; i++) {
+			let tc = tr.insertCell(i);
+			switch (i) {
+				// Board
+				case 0:
+					tc.innerHTML = `<a href="../${thread.board}">/${thread.board}/</a>`;
+					break;
+				// Subject
+				case 1:
+					tc.innerHTML = `<a href="../all/${thread.id}">${thread.subject}</a>`;
+					break;
+				// Status
+				case 2:
+					if (thread.unseen === 0) {
+						tc.innerHTML = `<img class="status" title="No unseen posts" src="${urlBase}default.ico">`;
+					}
+					else if (thread.unseen > 0) {
+						tc.innerHTML = `<img class="status" title="${thread.unseen} unseen posts" src="${urlBase}unread.ico">`;
+					}
+					break;
+				// Mark as seen
+				case 3:
+					tc.innerHTML = '<a>[X]</a>';
+					tc.addEventListener("click", () => {
+						watchThread(thread.id, thread.postCount, 0, thread.board, thread.subject);
+					});
+					break;
+				// Unwatch
+				case 4:
+					tc.innerHTML = '<a>[X]</a>';
+					tc.addEventListener("click", () => {
+						unwatchThread(thread.id);
+						for (let el of document.querySelectorAll(".watcher-toggle")) {
+							if (el.getAttribute("data-id") === String(thread.id)) {
+								augmentToggle(el, false);
+							}
+						}
+					});
+					break;
+			}
+		}
+	}
+
+	public removeRow(id: number) {
+		const row = this.el.querySelector(`#t${id}`);
+		if (row) {
+			row.parentElement.removeChild(row);
+		}
+	}
+
+	private async update(row: Element ,unseen: number) {
+		if (unseen === 0) {
+			let stat = (row.querySelector(".status") as HTMLImageElement);
+			stat.src = `${urlBase}default.ico`;
+			stat.title = "No unseen posts";
+		}
+		else if (unseen > 0) {
+			let stat = (row.querySelector(".status") as HTMLImageElement);
+			stat.src = `${urlBase}unread.ico`;
+			stat.title = `${unseen} unseen posts`;
+		}
+	}
+
+	private async load() {
+		const watched = await getWatchedThreads();
+		for (let id in watched) {
+			if (parseInt(id) === state.page.thread) {
+				// Clear unseen count, add row, and propagate change to other tabs
+				watchThread(parseInt(id), watched[id].postCount, 0,
+					watched[id].board, watched[id].subject);
+			}
+			else {
+				this.addRow(watched[id]);
+			} 
+		}
+	}
 }
 
 async function putExpiring(store: string,
@@ -86,18 +188,23 @@ async function fetchWatchedThreads() {
 	const toNotify = [];
 	const opened = await getOpenedThreads();
 	if (state.page.thread) {
-		// Accounts fot some latency between the DB
+		// Accounts for some latency between the DB
 		opened.add(state.page.thread);
 	}
 	for (let k in diff.changed) {
 		const id = parseInt(k);
-
-		// Update post count of watched thread
-		proms.push(watchThread(id, diff.changed[id], watched[id].subject));
-
+		let unseen = 0;
+		// Update fn-local thread record to avoid recomputing later
+		watched[id].unseen = watched[id].unseen + diff.changed[id] - watched[id].postCount;
+		
 		if (!opened.has(id)) {
 			toNotify.push(parseInt(k));
+			unseen = watched[id].unseen;
 		}
+		
+		// Update post count of watched thread
+		proms.push(watchThread(id, diff.changed[id], unseen, watched[id].board,
+			watched[id].subject));
 	}
 	for (let id of diff.deleted) {
 		proms.push(unwatchThread(id));
@@ -109,8 +216,8 @@ async function fetchWatchedThreads() {
 			const id = data.id; // Ensure heap allocation
 
 			const opts = options.notificationOpts();
-			const delta = diff.changed[id] - data.postCount;
-			opts.body = `「${data.subject}」`
+			const delta = data.unseen;
+			opts.body = `/${data.board}/ - 「${data.subject}」`
 
 			// Persist target, even if browser tab closed
 			opts.data = { id, delta };
@@ -148,6 +255,8 @@ function markThreadOpened() {
 }
 
 export function init() {
+	watcherPanel = new WatcherPanel();
+
 	setInterval(markThreadOpened, 1000);
 	markThreadOpened();
 
@@ -173,8 +282,8 @@ export function init() {
 				if (state.page.thread) {
 					p = watchCurrentThread();
 				} else {
-					const { subject, post_count } = board.threads[id];
-					p = watchThread(id, post_count, subject);
+					const { subject, post_count, board } = boards.threads[id];
+					p = watchThread(id, post_count, 0, board, subject);
 				}
 				augmentToggle(el, true);
 			}
@@ -189,25 +298,25 @@ export function init() {
 
 // Mark thread as watched
 export async function watchThread(id: number, postCount: number,
-	subject: string,
+	unseen: number, board: string, subject: string,
 ) {
-	if (!options.canNotify()) {
-		return;
-	}
-
-	const data: WatchedThreadRecord = { id, postCount, subject };
+	const data: WatchedThreadRecord = { id, postCount, unseen, board, subject };
 	const p = state.posts.get(id);
 	if (p && p.image) {
 		data.thumbnailURL = posts.thumbPath(p.image.sha1, p.image.thumb_type);
 	}
 
 	await putExpiring("watchedThreads", id, data);
+
+	watcherPanel.addRow(data);
+	propagateWatch(data);
 }
 
 // Mark current thread as watched or simply bump post count
 export async function watchCurrentThread() {
 	if (state.page.thread) {
-		await watchThread(state.page.thread, thread.post_count, thread.subject);
+		await watchThread(state.page.thread, thread.post_count,
+			0, state.page.board, thread.subject);
 		augmentToggle(document.querySelector(".watcher-toggle"), true);
 	}
 }
@@ -215,6 +324,8 @@ export async function watchCurrentThread() {
 // Unmark thread as watched or simply bump post count
 export async function unwatchThread(id: number) {
 	await db.deleteObj("watchedThreads", id);
+	watcherPanel.removeRow(id);
+	propagateUnwatch(id);
 }
 
 // Toggle all thread watching buttons according to DB state
@@ -233,3 +344,45 @@ function augmentToggle(el: Element, enabled: boolean) {
 	el.setAttribute("title",
 		lang.ui[enabled ? "unwatchThread" : "watchThread"]);
 }
+
+// Update localStorage to trigger event that updates thread watcher panel
+// in other meguca tabs. Add timestamp to "ensure" localstorage updates
+function propagateWatch(thread: WatchedThreadRecord) {
+	let message = { stamp: Date.now(), thread: thread, func: "watch" };
+	localStorage.setItem("toggle", JSON.stringify(message));
+}
+
+function propagateUnwatch(id: number) {
+	let message = { stamp: Date.now(), thread: id, func: "unwatch" };
+	localStorage.setItem("toggle", JSON.stringify(message));
+}
+
+// Proxy observer for IndexedDB until that gets proper observers
+// Updates thread watcher panel when threads are (un)watched in other tabs
+// TODO: replace this with IndexedDB observer if/when it gets browser support
+util.on(window,
+	"storage",
+	(e: StorageEvent) => {
+		if (e.key != "toggle") {
+			return;
+		}
+		let message = JSON.parse(e.newValue);
+		switch (message.func) {
+			case "watch":
+				watcherPanel.addRow(message.thread);
+				for (let el of document.querySelectorAll(".watcher-toggle")) {
+					if (message.thread.id === Number(el.getAttribute("data-id"))) {
+						augmentToggle(el, true);
+					}
+				}
+				break;
+			case "unwatch":
+				for (let el of document.querySelectorAll(".watcher-toggle")) {
+					if (message.thread === Number(el.getAttribute("data-id"))) {
+						augmentToggle(el, false);
+					}
+				}
+				watcherPanel.removeRow(message.thread);
+				break;
+		}
+	});

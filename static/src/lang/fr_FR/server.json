@@ -503,6 +503,7 @@
 		"text": "Texte",
 		"time": "Date",
 		"type": "Type",
-		"unban": "Débannir"
+		"unban": "Débannir",
+		"watcher": "Thread Watcher"
 	}
 }
