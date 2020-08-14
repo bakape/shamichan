@@ -134,6 +134,44 @@ export default () => {
 				m.commands = commands
 			}
 			m.closePost()
+
+			if (m.body.indexOf('#slap') !== -1) {
+				for (let { id } of m.links) {
+					const target = posts.get(id);
+					if (!target || !target.view || !target.view.el) {
+						continue;
+					}
+					slap(target.view.el)
+				}
+			}
+
+			function slap(el: HTMLElement) {
+				var s = "transform: rotate3d("
+				for (var i = 0; i < 3; i++) {
+					s += random(1) + ","
+				}
+				s += random(360) + "deg)"
+					+ " scale(" + (Math.abs(random(1.5)) + 0.5) + "," + (Math.abs(random(1.5)) + 0.5) + ");"
+					+ "; transition-duration: " + Math.abs(random(0.1) + 0.1) + "s;"
+				s += "; translate3d("
+				for (var i = 0; i < 3; i++) {
+					s += random(100) + "%"
+					if (i != 2) {
+						s += ","
+					}
+				}
+				s += ");"
+				el.setAttribute("style", s)
+
+				function random(max: number): number {
+					var n = Math.floor(Math.random() * max * 10) / 10;
+					if (Math.random() > 0.5) {
+						n = -n
+					}
+					return n
+				}
+			}
+
 		})
 
 	handlers[message.moderatePost] = (msg: ModerationMessage) =>
