@@ -32,7 +32,7 @@ require (
 	github.com/rakyll/statik v0.1.7
 	github.com/satori/go.uuid v1.2.0
 	github.com/ulikunitz/xz v0.5.7
-	github.com/valyala/quicktemplate v1.6.0
+	github.com/valyala/quicktemplate v1.6.2
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	nhooyr.io/websocket v1.8.6
