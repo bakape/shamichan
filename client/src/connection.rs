@@ -103,7 +103,6 @@ pub enum Event {
 	CheckUpdates,
 }
 
-#[derive(Serialize, Deserialize)]
 pub enum MessageCategory {
 	Handshake,
 	Synchronize,

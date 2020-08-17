@@ -1,7 +1,6 @@
 use super::common::{Ctx, PostCommon, PostComponent};
 use crate::{connection, state, util};
 use protocol::{debug_log, MessageType};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use wasm_bindgen::JsCast;
 use yew::{
@@ -26,7 +25,7 @@ pub struct Inner {
 	state: State,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone)]
 pub struct PostQuoteReq {
 	id: u64,
 	text: String,
@@ -69,7 +68,7 @@ impl PostComponent for Inner {
 		self.agent = a.into();
 	}
 
-	fn should_render(&self, p: &super::common::Props) -> bool {
+	fn should_render(&self, _: &super::common::Props) -> bool {
 		use State::*;
 
 		match self.state {
@@ -296,7 +295,7 @@ impl Inner {
 }
 
 // State oif the agent FSM
-#[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum State {
 	// Ready to create posts
 	Ready,

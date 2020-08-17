@@ -3,7 +3,6 @@
 use super::queue::Queue;
 use crate::state;
 use js_sys::Date;
-use serde::{Deserialize, Serialize};
 use yew::agent::{Agent, AgentLink, Context, HandlerId};
 use yew::services::interval::{IntervalService, IntervalTask};
 
@@ -39,7 +38,7 @@ pub enum Message {
 	OptionsChange,
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq)]
 pub enum Unit {
 	Seconds,
 	Minutes,
@@ -55,7 +54,7 @@ impl Default for Unit {
 	}
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Default)]
+#[derive(Copy, Clone, Default)]
 pub struct RelativeTime {
 	pub is_future: bool,
 	pub duration: u8,
