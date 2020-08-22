@@ -79,32 +79,29 @@ async fn get_client() -> DynResult<deadpool_postgres::Client> {
 pub async fn write_open_post_bodies(
 	bodies: HashMap<u64, Arc<Node>>,
 ) -> DynResult {
-	let mut vals = bodies
-		.into_iter()
-		.map(|(id, body)| Ok((id, serde_json::to_vec(&body)?)))
-		.collect::<Result<Vec<(u64, Vec<u8>)>, serde_json::Error>>()?;
+	let mut bodies: Vec<(u64, Arc<Node>)> = bodies.into_iter().collect();
 
 	// Sort by ID for more sequential DB access
-	vals.sort_unstable_by(|(a, _), (b, _)| a.cmp(b));
+	bodies.sort_unstable_by(|(a, _), (b, _)| a.cmp(b));
 
 	let mut cl = get_client().await?;
 	let tx = cl.transaction().await?;
 	let q = tx
 		.prepare(
 			r#"update posts
-			set body = $1
-			where id = $2 and editing = true"#,
+			set body = $2
+			where id = $1 and open = true"#,
 		)
 		.await?;
 
-	for (id, body) in vals {
+	for (id, body) in bodies {
 		use tokio_postgres::types::ToSql;
 
 		tx.execute(
 			&q,
 			&[
 				&(id as i64) as &(dyn ToSql + Sync),
-				&body as &(dyn ToSql + Sync),
+				&tokio_postgres::types::Json(body) as &(dyn ToSql + Sync),
 			],
 		)
 		.await?;
