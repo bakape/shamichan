@@ -113,6 +113,11 @@ where
 						add: new,
 					});
 			}
+			protocol::debug_log!(format! {
+				"setting props: {:?} -> {:?}",
+				self.props,
+				props
+			});
 			self.props = props;
 			true
 		} else {
@@ -123,7 +128,7 @@ where
 
 // Inner logic for HookedComponent
 pub trait Inner: Default {
-	type Properties: yew::Properties + Eq;
+	type Properties: yew::Properties + Eq + std::fmt::Debug;
 	type Message: 'static;
 
 	// Extra initialization logic

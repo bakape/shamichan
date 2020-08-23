@@ -659,6 +659,7 @@ impl yew::agent::Agent for Agent {
 		util::add_static_listener(
 			util::window(),
 			"popstate",
+			true,
 			link.callback(|_: web_sys::Event| Message::PoppedState),
 		);
 

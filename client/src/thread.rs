@@ -8,7 +8,7 @@ pub type Thread = comp_util::HookedComponent<Inner>;
 pub struct Inner {}
 
 // Posts to display in a thread
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub enum PostSet {
 	// Display OP + last 5 posts
 	Last5Posts,
@@ -23,7 +23,7 @@ impl Default for PostSet {
 	}
 }
 
-#[derive(Clone, Properties, Eq, PartialEq)]
+#[derive(Clone, Properties, Eq, PartialEq, Debug)]
 pub struct Props {
 	pub id: u64,
 	pub pages: PostSet,

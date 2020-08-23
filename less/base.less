@@ -510,6 +510,21 @@ form {
 	pointer-events: all;
 }
 
+.draggable {
+	cursor     : grab;
+	user-select: none;
+
+	& nav {
+		cursor     : auto;
+		user-select: text;
+	}
+}
+
+
+.dragging {
+	cursor: grabbing !important;
+}
+
 .overlay>*,
 .popup-menu {
 	box-shadow: 3px 3px 3px 0 rgba(0, 0, 0, 0.5);
@@ -726,7 +741,7 @@ header {
 }
 
 
-#post-form-input {
+.post-form-input {
 	color           : inherit;
 	font-size       : inherit;
 	border          : 0;
@@ -765,7 +780,7 @@ header {
 }
 
 // Make OPs stand out, if no custom background set
-#main:not(.custom-BG) section>article.op {
+#main:not(.custom-BG) section>article.no-border {
 	margin-left : 0;
 	padding-left: 0;
 	border      : none;

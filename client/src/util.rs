@@ -122,6 +122,7 @@ def_cached_getter! { pub, host, String,
 pub fn add_static_listener<E>(
 	target: &impl AsRef<web_sys::EventTarget>,
 	event: &str,
+	passive: bool,
 	cb: yew::Callback<E>,
 ) where
 	E: wasm_bindgen::convert::FromWasmAbi + 'static,
@@ -136,7 +137,7 @@ pub fn add_static_listener<E>(
 			cl.as_ref().unchecked_ref(),
 			&{
 				let mut opts = web_sys::AddEventListenerOptions::new();
-				opts.passive(true);
+				opts.passive(passive);
 				opts
 			},
 		)

@@ -153,6 +153,7 @@ impl Client {
 
 		// Separate function to enable type inference of payload type from
 		// lambda argument type
+		#[allow(unused_variables)]
 		fn _route<'de, T, R>(
 			dec: &'de mut Decoder,
 			typ: MessageType,

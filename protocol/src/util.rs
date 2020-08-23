@@ -186,12 +186,13 @@ macro_rules! _debug_log_inner {
 
 #[cfg(target_arch = "wasm32")]
 #[macro_export]
+#[rustfmt::skip]
 macro_rules! _debug_log_inner {
 	($arg:expr) => {{
 		use wasm_bindgen::prelude::*;
 
 		web_sys::console::log_1(&JsValue::from(&format!("{}", $arg)));
-		}};
+	}};
 }
 
 #[macro_export]

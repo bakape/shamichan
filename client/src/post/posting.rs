@@ -42,6 +42,9 @@ pub enum FormMessage {
 	// Set ID of post being edited
 	SetID(u64),
 
+	// Textarea contents changed
+	TextInput(String),
+
 	// Focus the textarea at position
 	Focus {
 		// Position of cursor
@@ -78,6 +81,10 @@ impl PostComponent for Inner {
 		}
 	}
 
+	fn is_draggable(_: &super::common::Props) -> bool {
+		true
+	}
+
 	fn update_extra<'s, 'c>(
 		&mut self,
 		ctx: &mut super::common::CtxMut<'s, 'c, Self>,
@@ -93,10 +100,14 @@ impl PostComponent for Inner {
 					true
 				}
 				SetID(id) => {
-					debug_log!("updated id", id);
 					let mut old = ctx.ctx.props().clone();
 					old.id = id;
 					ctx.ctx.set_props(old)
+				}
+				TextInput(s) => {
+					self.resize_textarea()?;
+					self.commit(s);
+					false
 				}
 				QuotePost(req) => {
 					use std::fmt::Write;
@@ -204,10 +215,15 @@ impl PostComponent for Inner {
 		&["post-form"]
 	}
 
-	fn render_body<'s, 'c>(&self, _: &Ctx<'s, 'c, Self>) -> Html {
+	fn render_body<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> Html {
 		html! {
-			<textarea id="post-form-input" ref=self.text_area.clone()>
-				{"TODO: body updates"}
+			<textarea
+				class="post-form-input"
+				ref=self.text_area.clone()
+				oninput=c.ctx.link.callback(|yew::html::InputData{value}| {
+					super::common::Message::Extra(FormMessage::TextInput(value))
+				})
+			>
 			</textarea>
 		}
 	}
@@ -344,7 +360,10 @@ struct Selection {
 
 pub enum Request {
 	// Quote a post and any selected text
-	QuotePost { post: u64, el_id: String },
+	QuotePost {
+		post: u64,
+		target_post: web_sys::Node,
+	},
 
 	// Register as a post form view
 	SubViewUpdates,
@@ -405,6 +424,7 @@ impl yew::agent::Agent for Agent {
 		util::add_static_listener(
 			util::document(),
 			"selectionchange",
+			true,
 			link.callback(|_: web_sys::Event| Message::SelectionChange),
 		);
 
@@ -537,8 +557,8 @@ impl yew::agent::Agent for Agent {
 		use Request::*;
 
 		match req {
-			QuotePost { post, el_id } => {
-				self.quote_post(post, el_id);
+			QuotePost { post, target_post } => {
+				self.quote_post(post, target_post);
 			}
 			SubViewUpdates => {
 				self.subscribers.insert(h, Subscription::ViewUpdates);
@@ -619,17 +639,14 @@ impl Agent {
 		}
 	}
 
-	fn quote_post(&mut self, post: u64, el_id: String) {
+	fn quote_post(&mut self, post: u64, target_post: web_sys::Node) {
 		util::with_logging(|| {
 			if !self.try_alloc() {
 				return Ok(());
 			}
 
-			let sel_text = match (
-				&util::document().get_element_by_id(&el_id),
-				&self.last_selection,
-			) {
-				(Some(target_post), Some(sel)) => {
+			let sel_text = match &self.last_selection {
+				Some(sel) => {
 					// Check, if selection bound is mid-post
 					let in_middle =
 						|el: &web_sys::Element| -> util::Result<bool> {
@@ -637,21 +654,23 @@ impl Agent {
 								&& el
 									.closest("article")?
 									.map(|el| {
-										el.is_same_node(target_post.dyn_ref())
+										el.is_same_node(Some(&target_post))
 									})
 									.unwrap_or(false))
 						};
 
-					if (in_middle(&sel.start)?
-						|| sel.start.is_same_node(target_post.dyn_ref()))
-						&& (in_middle(&sel.end)?
-							|| match (
-								sel.end.closest("article")?,
-								target_post.next_sibling(),
-							) {
-								(Some(a), Some(b)) => a.is_same_node(Some(&b)),
-								_ => false,
-							}) {
+					if in_middle(&sel.start)?
+						|| sel.start.is_same_node(Some(&target_post))
+							&& (in_middle(&sel.end)?
+								|| match (
+									sel.end.closest("article")?,
+									target_post.next_sibling(),
+								) {
+									(Some(a), Some(b)) => {
+										a.is_same_node(Some(&b))
+									}
+									_ => false,
+								}) {
 						sel.text.clone()
 					} else {
 						Default::default()
@@ -688,7 +707,7 @@ impl Agent {
 		} else if len_diff == -1
 			&& &self.post_body[..self.post_body.len() - 1] == new.as_slice()
 		{
-			// Send a message removing the last character of the line to
+			// Send a message removing the last character of the line
 			connection::send(MessageType::Backspace, &());
 		} else {
 			// Commit any other text body change that is not an append or

@@ -15,7 +15,7 @@ pub struct Inner {
 // Used to select a certain page of a thread
 pub type PageSelector = comp_util::HookedComponent<Inner>;
 
-#[derive(Clone, Properties, Eq, PartialEq)]
+#[derive(Clone, Properties, Eq, PartialEq, Debug)]
 pub struct Props {
 	pub thread: u64,
 }

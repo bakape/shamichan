@@ -11,6 +11,7 @@ mod util;
 mod comp_util;
 mod buttons;
 mod connection;
+mod mouse;
 mod page_selector;
 mod post;
 mod state;
@@ -27,27 +28,47 @@ use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 struct App {
 	link: ComponentLink<Self>,
 
-	// Keep here to load global state first
+	dragging: bool,
+
+	// Keep here to load global state first and never drop the agents
 	#[allow(unused)]
 	state: Box<dyn Bridge<state::Agent>>,
+
+	#[allow(unused)]
+	mouse: Box<dyn Bridge<mouse::Agent>>,
+}
+
+enum Message {
+	DraggingChange(bool),
+	NOP,
 }
 
 impl Component for App {
-	comp_static! {}
+	comp_no_props! {}
+	type Message = Message;
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-		let mut a = state::Agent::bridge(link.callback(|_| ()));
+		let mut a = state::Agent::bridge(link.callback(|_| Message::NOP));
 		state::read(|s| {
 			a.send(state::Request::FetchFeed(s.location.clone()));
 		});
 
-		let s = Self { state: a, link };
+		let s = Self {
+			state: a,
+			mouse: mouse::Agent::bridge(link.callback(|msg| match msg {
+				mouse::Response::IsDragging(d) => Message::DraggingChange(d),
+				_ => Message::NOP,
+			})),
+			dragging: false,
+			link,
+		};
 
 		// Static global event listeners. Put here to avoid overhead of spamming
 		// a lot of event listeners and handlers on posts.
 		util::add_static_listener(
 			util::document(),
 			"click",
+			true,
 			s.link.callback(|e: yew::events::MouseEvent| {
 				util::with_logging(|| {
 					use wasm_bindgen::JsCast;
@@ -64,22 +85,39 @@ impl Component for App {
 					Ok(())
 				});
 
-				()
+				Message::NOP
 			}),
 		);
 
 		s
 	}
 
+	fn update(&mut self, msg: Self::Message) -> bool {
+		match msg {
+			Message::NOP => false,
+			Message::DraggingChange(d) => {
+				self.dragging = d;
+				true
+			}
+		}
+	}
+
 	fn view(&self) -> Html {
+		let mut cls = vec![];
+		if self.dragging {
+			cls.push("dragging");
+		}
+
 		html! {
-			<section>
+			<section class=cls>
 				<user_bg::Background />
 				<div class="overlay-container">
 					<banner::Banner />
 					// z-index increases down
 					<div class="overlay" id="post-form-overlay">
-						<post::posting::PostForm id=0 />
+						<post::posting::PostForm
+							id=state::read(|s| s.open_post_id.unwrap_or(0))
+						/>
 					</div>
 					<div class="overlay" id="modal-overlay">
 						// TODO: modals
@@ -102,9 +140,8 @@ impl Component for App {
 
 #[wasm_bindgen(start)]
 pub async fn main_js() -> util::Result {
-	if cfg!(debug_assertions) {
-		console_error_panic_hook::set_once();
-	}
+	#[cfg(debug_assertions)]
+	console_error_panic_hook::set_once();
 
 	let (err1, err2) =
 		futures::future::join(state::init(), lang::load_language_pack()).await;

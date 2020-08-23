@@ -20,4 +20,9 @@ impl PostComponent for Inner {
 			None => true,
 		})
 	}
+
+	fn is_draggable(_: &super::common::Props) -> bool {
+		// TODO: inlined posts should never be draggable
+		crate::state::read(|s| s.location.is_thread())
+	}
 }

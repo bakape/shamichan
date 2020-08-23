@@ -1,13 +1,17 @@
 use crate::{
 	buttons::SpanButton,
 	comp_util,
+	mouse::Coordinates,
 	state::{self, FeedID, Focus, Location, State},
 	util,
 };
-use protocol::payloads::{FileType, Image};
+use protocol::{
+	debug_log,
+	payloads::{FileType, Image},
+};
 use yew::{html, ComponentLink, Html, NodeRef, Properties};
 
-#[derive(Clone, Properties, PartialEq, Eq)]
+#[derive(Clone, Properties, PartialEq, Eq, Debug)]
 pub struct Props {
 	// Post ID
 	pub id: u64,
@@ -37,9 +41,20 @@ pub trait PostComponent: Default {
 		true
 	}
 
-	// Render root element id property
-	fn render_id<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> String {
-		format!("p-{}", c.post.id)
+	// Return, if this component is a preview of a post and thus should not
+	// spawn its own previews.
+	//
+	// Value must be static.
+	fn is_preview() -> bool {
+		false
+	}
+
+	// Can be dragged and repositioned across the screen
+	fn is_draggable(props: &Props) -> bool;
+
+	// Extra classes to assign to the post's root element
+	fn extra_classes(&self) -> &'static [&'static str] {
+		Default::default()
 	}
 
 	// Render post's text body
@@ -49,19 +64,6 @@ pub trait PostComponent: Default {
 	#[allow(unused_variables)]
 	fn render_after<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> Html {
 		html! {}
-	}
-
-	// Extra classes to assign to the post's root element
-	fn extra_classes(&self) -> &'static [&'static str] {
-		Default::default()
-	}
-
-	// Return, if this component is a preview of a post and thus should not
-	// spawn its own previews.
-	//
-	// Value must be static.
-	fn is_preview() -> bool {
-		false
 	}
 }
 
@@ -106,6 +108,12 @@ where
 	reveal_image: bool,
 	expand_image: bool,
 	tall_image: bool,
+
+	// None, if not currently dragging
+	drag_agent: Option<Box<dyn yew::agent::Bridge<crate::mouse::Agent>>>,
+	last_mouse_coordinates: Coordinates,
+	translation: Coordinates,
+
 	image_download_button: NodeRef,
 	media_el: NodeRef,
 	el: NodeRef,
@@ -119,6 +127,9 @@ pub enum Message<E> {
 	ImageDownload,
 	SetVolume,
 	CheckTallImage,
+	DragStart(Coordinates),
+	MouseMove(Coordinates),
+	QuoteSelf,
 	NOP,
 	Extra(E),
 }
@@ -214,11 +225,54 @@ where
 				});
 				false
 			}
+			DragStart(coords) => {
+				use crate::mouse;
+				use yew::agent::Bridged;
+
+				if !PC::is_draggable(c.props()) {
+					return false;
+				}
+
+				self.last_mouse_coordinates = coords;
+				let mut b =
+					mouse::Agent::bridge(c.link.callback(|msg| match msg {
+						mouse::Response::Coordinates(c) => {
+							Message::MouseMove(c)
+						}
+						_ => Message::NOP,
+					}));
+				b.send(mouse::Request::StartDragging);
+				self.drag_agent = Some(b);
+
+				true
+			}
+			QuoteSelf => {
+				use super::posting::{Agent, Request};
+				use yew::agent::Dispatched;
+
+				if let Some(el) = self.el.cast::<web_sys::Node>() {
+					Agent::dispatcher().send(Request::QuotePost {
+						post: c.props().id,
+						target_post: el,
+					});
+				}
+				false
+			}
+			MouseMove(coords) => {
+				if self.drag_agent.is_none() || !PC::is_draggable(c.props()) {
+					return false;
+				}
+
+				self.translation += coords - self.last_mouse_coordinates;
+				self.last_mouse_coordinates = coords;
+				true
+			}
 		}
 	}
 
 	fn view(&self, c: &comp_util::Ctx<Self>) -> Html {
 		if !self.inner.should_render(c.props()) {
+			debug_log!("post specified to not render", c.props().id);
 			return html! {};
 		}
 
@@ -229,6 +283,10 @@ where
 				post: match s.posts.get(&c.props().id) {
 					Some(p) => p,
 					None => {
+						debug_log!(
+							"post not found in collection",
+							c.props().id
+						);
 						return html! {};
 					}
 				},
@@ -239,8 +297,17 @@ where
 			if c.post.open {
 				cls.push("open");
 			}
-			if c.post.id == c.post.thread {
-				cls.push("op");
+
+			let mut style = String::new();
+			if !self.translation.is_zero() {
+				style = format!(
+					"transform: translate({}px, {}px);",
+					self.translation.x, self.translation.y
+				);
+				cls.push("translated");
+			} else if c.post.id == c.post.thread {
+				// Moved OPs need to not blend into the background
+				cls.push("no-border");
 			}
 
 			#[rustfmt::skip]
@@ -255,10 +322,10 @@ where
 
 			html! {
 				<article
-					id=self.inner.render_id(&c)
 					class=cls
 					key=c.ctx.props().id
 					ref=self.el.clone()
+					style=style
 				>
 					{self.render_header(&c)}
 					{with_image!(render_figcaption)}
@@ -292,8 +359,8 @@ where
 			None
 		};
 
-		html! {
-			<header class="spaced">
+		let inner = html! {
+			<>
 				{
 					match thread {
 						Some(t) => {
@@ -333,13 +400,17 @@ where
 				<nav class="spaced">
 					// TODO: focus this post
 					<a>{"#"}</a>
-					// TODO: quote this post
-					<a class="quote">{c.post.id}</a>
+					<a
+						class="quote"
+						onclick=c.ctx.link.callback(|_| Message::QuoteSelf)
+					>
+						{c.post.id}
+					</a>
 				</nav>
 				{
 					if thread.is_some()
-					   && !PC::is_preview()
-					   && !state::read(|s| c.app.location.is_thread())
+					&& !PC::is_preview()
+					&& !state::read(|s| c.app.location.is_thread())
 					{
 						let id = c.post.id;
 						html! {
@@ -377,7 +448,29 @@ where
 					}
 				}
 				<super::menu::Menu id=c.post.id />
-			</header>
+			</>
+		};
+
+		// TODO: return to original position on double click
+		if PC::is_draggable(c.ctx.props()) {
+			html! {
+				<header
+					class="spaced draggable"
+					ondragstart=c.ctx.link.callback(|e: web_sys::DragEvent| {
+						e.prevent_default();
+						Message::DragStart(Coordinates::from(&*e))
+					})
+					draggable="true"
+				>
+					{inner}
+				</header>
+			}
+		} else {
+			html! {
+				<header class="spaced">
+					{inner}
+				</header>
+			}
 		}
 	}
 
@@ -417,7 +510,7 @@ where
 		// TODO: Add admin class, if staff title
 
 		html! {
-			<b class=cls.join(" ")>
+			<b class=cls>
 				{w.into_iter().collect::<Html>()}
 			</b>
 		}

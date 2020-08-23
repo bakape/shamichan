@@ -66,7 +66,7 @@ func logError(prefix string, fn func() error) {
 // 	r, err := db.Query(
 // 		`select id, body
 // 		from posts
-// 		where editing = true
+// 		where open = true
 // 			and time
 // 				< floor(extract(epoch from now() at time zone 'utc')) - 900
 // 		order by id`,

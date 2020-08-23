@@ -383,7 +383,12 @@ impl Connection {
 		E: wasm_bindgen::convert::FromWasmAbi + 'static,
 		F: Fn(E) -> Event + 'static,
 	{
-		util::add_static_listener(target, event, self.link.callback(mapper));
+		util::add_static_listener(
+			target,
+			event,
+			true,
+			self.link.callback(mapper),
+		);
 	}
 
 	fn connect(&mut self) {
@@ -471,6 +476,7 @@ impl Connection {
 
 		// Separate function to enable type inference of payload type from
 		// lambda argument type
+		#[allow(unused_variables)]
 		fn _route<'de, T, R>(
 			dec: &'de mut Decoder,
 			typ: MessageType,
