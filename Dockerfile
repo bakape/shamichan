@@ -93,12 +93,11 @@ COPY websockets/websockets/Cargo.toml websockets/websockets
 COPY docker/dummy.rs websockets/websockets/src/lib.rs
 COPY protocol/Cargo.toml protocol
 COPY docker/dummy.rs protocol/src/lib.rs
-RUN nice -n 19 cargo build --release
+RUN nice -n 19 cargo build --release --workspace --exclude client
 RUN cd client && nice -n 19 ./node_modules/.bin/webpack
 RUN rm -r \
 	client/src websockets/websockets/src protocol/src \
 	target/release/deps/libwebsockets* \
-	target/release/deps/libclient* \
 	target/release/deps/libprotocol* \
 	target/wasm32-unknown-unknown/release/deps/libprotocol* \
 	client/dist client/pkg
