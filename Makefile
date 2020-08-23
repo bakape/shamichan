@@ -65,7 +65,13 @@ test_no_race: websockets
 	go test ./...
 
 release: test
-	docker build -t meguca .
+	docker build -t meguca-dev .
+	docker tag meguca-dev bakape/meguca-dev:`git describe --tags`
+	docker tag meguca-dev bakape/meguca-dev:latest
+	docker push bakape/meguca-dev
+
+	docker build -t meguca -f Dockerfile.prod .
 	docker tag meguca bakape/meguca:`git describe --tags`
 	docker tag meguca bakape/meguca:latest
 	docker push bakape/meguca
+

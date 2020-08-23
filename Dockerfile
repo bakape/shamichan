@@ -3,17 +3,18 @@ FROM golang:buster
 EXPOSE 8000
 
 RUN mkdir -p /meguca/images /meguca/www/videos /src
-CMD ["./meguca", "-a", ":8000"]
+CMD ["-a", ":8000"]
+ENTRYPOINT ["./meguca"]
 
 # Install OS dependencies
 ENV DEBIAN_FRONTEND=noninteractive
 RUN echo deb-src \
 	http://ftp.debian.org/debian/ \
-	stable main contrib non-free \
+	buster main contrib non-free \
 	>> /etc/apt/sources.list
 RUN echo deb-src \
 	http://ftp.debian.org/debian/ \
-	stable-updates main contrib non-free \
+	buster-updates main contrib non-free \
 	>> /etc/apt/sources.list
 RUN echo deb-src \
 	http://security.debian.org/debian-security \

@@ -1,0 +1,38 @@
+# Leaner image for only running meguca, not building it
+
+FROM bakape/meguca-dev
+
+FROM debian:buster
+
+RUN mkdir -p /meguca/images /meguca/www/videos
+WORKDIR /meguca
+CMD ["-a", ":8000"]
+ENTRYPOINT ["./meguca"]
+
+# Install OS dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+RUN echo deb-src \
+	http://ftp.debian.org/debian/ \
+	buster main contrib non-free \
+	>> /etc/apt/sources.list
+RUN echo deb-src \
+	http://ftp.debian.org/debian/ \
+	buster-updates main contrib non-free \
+	>> /etc/apt/sources.list
+RUN echo deb-src \
+	http://security.debian.org/debian-security \
+	buster/updates main contrib non-free \
+	>> /etc/apt/sources.list
+RUN apt-get update
+RUN apt-get install -y \
+	libopencv-dev \
+	libgeoip-dev \
+	libssl-dev && \
+		apt-get clean
+RUN apt-get build-dep -y libwebp ffmpeg && apt-get clean
+RUN apt-get dist-upgrade -y && apt-get clean
+
+# Copy compiled files from dev image
+COPY --from=0 /usr/local /usr/local
+COPY --from=0 /meguca/meguca /meguca/meguca
+COPY --from=0 /meguca/www /meguca/www
