@@ -38,7 +38,10 @@ websockets:
 # Generate a hash and add it to LDFLAGS of the binary to force a rebuild on the
 # Go side
 	rm -f websockets/libwebsockets*.a
-	cargo build $(if $(filter 1,$(DEBUG)),, --release)
+	cargo build \
+		--workspace \
+		--exclude client\
+		$(if $(filter 1,$(DEBUG)),, --release)
 	SRC=target/$(if $(filter 1,$(DEBUG)),debug,release)/libwebsockets.a; \
 		HASH=$$(md5sum $$SRC | cut -c 1-4); \
 		cp $$SRC websockets/libwebsockets_$$HASH.a  && \
