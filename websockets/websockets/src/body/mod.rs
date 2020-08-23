@@ -1,8 +1,6 @@
-// Multithreaded recursive decent post text body parser and differ
-
+/// Multithreaded recursive decent post text body parser and differ
 // TODO: port parser tests from v6
 // TODO: Write differ tests
-
 mod code;
 mod commands;
 mod diff;
@@ -19,23 +17,23 @@ pub use persist::persist_open_body;
 
 use protocol::payloads::post_body::Node;
 
-// Flags post as open
+/// Flags post as open
 const OPEN: u8 = 1;
 
-// Flags current fragment as quoted
+/// Flags current fragment as quoted
 const QUOTED: u8 = 1 << 1;
 
-// Currently parser at the start of the body
+/// Currently parser at the start of the body
 const AT_LINE_START: u8 = 1 << 2;
 
 const COUNTDOWN_PREFIX: &str = "countdown";
 const AUTOBAHN_PREFIX: &str = "autobahn";
 
-// Parsing result shorthand
+/// Parsing result shorthand
 pub type Result<T = Node> = std::result::Result<T, String>;
 
-// Parse post body into a Node tree. Different behavior for open and closed
-// posts.
+/// Parse post body into a Node tree. Different behavior for open and closed
+/// posts.
 pub fn parse(body: &str, open: bool) -> Result {
 	if body.len() > 2000 {
 		Err("post body too long".into())
@@ -50,7 +48,7 @@ pub fn parse(body: &str, open: bool) -> Result {
 	}
 }
 
-// Initialize module runtime tasks
+/// Initialize module runtime tasks
 pub fn init() -> crate::common::DynResult {
 	std::thread::Builder::new()
 		.name("open body flusher".into())

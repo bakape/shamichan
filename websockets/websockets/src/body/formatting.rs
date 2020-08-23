@@ -1,7 +1,7 @@
 use super::Result;
 use protocol::payloads::post_body::Node;
 
-// Implements a function that wraps matched content in a tag
+/// Implements a function that wraps matched content in a tag
 macro_rules! impl_wrapper {
 	($vis:vis, $name:ident, $delimiter:expr, $tag:ident, $inner:expr) => {
 		$vis fn $name(frag: &str, flags: u8) -> Result {

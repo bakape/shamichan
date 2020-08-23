@@ -1,19 +1,19 @@
 use super::{buttons, comp_util, post::posting, state};
 use yew::{html, Html, Properties};
 
-// Central thread container
+/// Central thread container
 pub type Thread = comp_util::HookedComponent<Inner>;
 
 #[derive(Default)]
 pub struct Inner {}
 
-// Posts to display in a thread
+/// Posts to display in a thread
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub enum PostSet {
-	// Display OP + last 5 posts
+	/// Display OP + last 5 posts
 	Last5Posts,
 
-	// Display OP + selected page
+	/// Display OP + selected page
 	Page(u32),
 }
 
@@ -54,7 +54,6 @@ impl comp_util::Inner for Inner {
 		use PostSet::*;
 
 		// TODO: Filter hidden posts
-
 		let posts: Vec<u64> = state::read(|s| match c.props().pages {
 			Last5Posts => {
 				let mut v = Vec::with_capacity(5);
@@ -103,7 +102,7 @@ impl comp_util::Inner for Inner {
 }
 
 impl Inner {
-	// Read the post IDs of a page, excluding the OP, into dst
+	/// Read the post IDs of a page, excluding the OP, into dst
 	fn read_page_posts(
 		&self,
 		dst: &mut Vec<u64>,

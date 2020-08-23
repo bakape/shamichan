@@ -11,5 +11,5 @@ extern crate num_derive;
 #[macro_use]
 extern crate serde_big_array;
 
-// Version of protocol. Increment this on change.
+/// Version of protocol. Increment this on change.
 pub const VERSION: u16 = 1;

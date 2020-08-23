@@ -24,7 +24,7 @@ pub enum Provider {
 }
 
 impl Provider {
-	// Return string identifier of this provider
+	/// Return string identifier of this provider
 	pub fn key(&self) -> &'static str {
 		use Provider::*;
 
@@ -39,7 +39,7 @@ impl Provider {
 		}
 	}
 
-	// Return short string symbol of this provider
+	/// Return short string symbol of this provider
 	pub fn symbol(&self) -> &'static str {
 		use Provider::*;
 
@@ -54,7 +54,7 @@ impl Provider {
 		}
 	}
 
-	// Return url for querying the image search provider, if available
+	/// Return url for querying the image search provider, if available
 	pub fn url(&self, img: &Image, img_url: &str) -> Option<String> {
 		use FileType::*;
 		use Provider::*;

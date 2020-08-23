@@ -27,8 +27,8 @@ where
 	enc.write_message(t, payload)
 }
 
-// Send a message over websocket.
-// Log any encoding errors (there should not be any) to console and alert.
+/// Send a message over websocket.
+/// Log any encoding errors (there should not be any) to console and alert.
 pub fn send<T>(t: MessageType, payload: &T)
 where
 	T: Serialize + Debug,
@@ -41,7 +41,7 @@ where
 	});
 }
 
-// States of the connection finite state machine
+/// States of the connection finite state machine
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]
 pub enum State {
 	Loading,
@@ -58,34 +58,34 @@ impl Default for State {
 	}
 }
 
-// Agent controlling global websocket connection
+/// Agent controlling global websocket connection
 pub struct Connection {
-	// Link to any subscribers
+	/// Link to any subscribers
 	link: AgentLink<Self>,
 
-	// Connection state machine
+	/// Connection state machine
 	state: State,
 
-	// Feed currently being synced
+	/// Feed currently being synced
 	syncing_to: Option<u64>,
 
-	// Connection currently authenticated with
+	/// Connection currently authenticated with
 	authed_with: Option<uuid::Uuid>,
 
-	// Link to global application state
+	/// Link to global application state
 	#[allow(unused)]
 	bridge: state::HookBridge,
 
-	// Reconnection attempts since last connect, if any
+	/// Reconnection attempts since last connect, if any
 	reconn_attempts: i32,
 
-	// Reconnection timer
+	/// Reconnection timer
 	reconn_timer: Option<TimeoutTask>,
 
-	// Connection to server
+	/// Connection to server
 	socket: Option<web_sys::WebSocket>,
 
-	// Active subscribers to connection state change
+	/// Active subscribers to connection state change
 	subscribers: HashSet<HandlerId>,
 }
 
@@ -109,16 +109,17 @@ pub enum MessageCategory {
 	Regular,
 }
 
-// Request to send a message
+/// Request to send a message
 pub enum Request {
-	// Send a regular message
+	/// Send a regular message
 	Regular(Vec<u8>),
 
-	// Send a handshake message
+	/// Send a handshake message
 	Handshake {
-		// Send key used to generate message to prevent async race conditions
+		/// Send key used to generate message to prevent async race conditions
 		with_key_pair: KeyPair,
 
+		/// Message to send
 		message: Vec<u8>,
 	},
 }
@@ -291,7 +292,7 @@ impl Agent for Connection {
 }
 
 impl Connection {
-	// Set new state and send it to all subscribers
+	/// Set new state and send it to all subscribers
 	fn set_state(&mut self, new: State) {
 		if self.state != new {
 			self.state = new;
@@ -453,7 +454,7 @@ impl Connection {
 	fn on_message(&mut self, data: Vec<u8>) -> util::Result {
 		use MessageType::*;
 
-		// Helper to make message handling through route!() more terse
+		/// Helper to make message handling through route!() more terse
 		struct HandlerResult(util::Result);
 
 		impl From<()> for HandlerResult {
@@ -584,7 +585,7 @@ impl Connection {
 		}
 	}
 
-	// Asynchronously generate and send a handshake request message
+	/// Asynchronously generate and send a handshake request message
 	fn send_handshake_req(key_pair: state::KeyPair) {
 		use protocol::payloads::Authorization;
 
@@ -638,7 +639,7 @@ impl Connection {
 		));
 	}
 
-	// Send request to synchronize with a feed
+	/// Send request to synchronize with a feed
 	fn synchronize(&mut self, feed: u64) -> util::Result {
 		let mut enc = protocol::Encoder::new(Vec::new());
 		encode_msg(&mut enc, MessageType::Synchronize, &feed)?;
@@ -652,7 +653,7 @@ impl Connection {
 }
 
 pub struct SyncCounter {
-	// Ensures connection agent is never dropped
+	/// Ensures connection agent is never dropped
 	#[allow(unused)]
 	conn: Box<dyn Bridge<Connection>>,
 

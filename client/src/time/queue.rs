@@ -1,4 +1,4 @@
-// Simple min-queue with ability to remove arbitrary nodes by a unique key
+/// Simple min-queue with ability to remove arbitrary nodes by a unique key
 pub struct Queue<T: PartialOrd> {
 	head: Option<Box<Node<T>>>,
 }
@@ -41,12 +41,12 @@ fn remove<T: PartialOrd>(
 }
 
 impl<T: PartialOrd> Queue<T> {
-	// Insert a new value into the queue
+	/// Insert a new value into the queue
 	pub fn insert(&mut self, val: T) {
 		insert_before(&mut self.head, val);
 	}
 
-	// Peek smallest value
+	/// Peek smallest value
 	pub fn peek<'n, 'l: 'n>(&'l self) -> Option<&'n T> {
 		match &self.head {
 			Some(n) => Some(&n.val),
@@ -54,7 +54,7 @@ impl<T: PartialOrd> Queue<T> {
 		}
 	}
 
-	// Remove smallest value
+	/// Remove smallest value
 	pub fn pop(&mut self) -> Option<T> {
 		self.head.take().map(|node| {
 			self.head = node.next;
@@ -62,7 +62,7 @@ impl<T: PartialOrd> Queue<T> {
 		})
 	}
 
-	// Remove a Node by unique key, if any
+	/// Remove a Node by unique key, if any
 	pub fn remove(&mut self, key: &impl PartialEq<T>) {
 		remove(&mut self.head, key);
 	}
@@ -85,7 +85,7 @@ impl<T: PartialOrd> Node<T> {
 	}
 }
 
-// Iterates over all nodes in the Queue
+/// Iterates over all nodes in the Queue
 pub struct Iter<'a, T: PartialOrd> {
 	current: Option<&'a Node<T>>,
 }

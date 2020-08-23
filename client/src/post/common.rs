@@ -13,19 +13,19 @@ use yew::{html, ComponentLink, Html, NodeRef, Properties};
 
 #[derive(Clone, Properties, PartialEq, Eq, Debug)]
 pub struct Props {
-	// Post ID
+	/// Post ID
 	pub id: u64,
 }
 
 pub trait PostComponent: Default {
-	// Message used to handle additional logic
+	/// Message used to handle additional logic
 	type MessageExtra;
 
-	// Extra initialization logic
+	/// Extra initialization logic
 	#[allow(unused_variables)]
 	fn init(&mut self, link: &ComponentLink<PostCommon<Self>>) {}
 
-	// MessageExtra handler. Returns, if component should be rerendered
+	/// MessageExtra handler. Returns, if component should be rerendered
 	#[allow(unused_variables)]
 	fn update_extra<'s, 'c>(
 		&mut self,
@@ -35,69 +35,69 @@ pub trait PostComponent: Default {
 		false
 	}
 
-	// Should post even render?
+	/// Should post even render?
 	#[allow(unused_variables)]
 	fn should_render(&self, props: &Props) -> bool {
 		true
 	}
 
-	// Return, if this component is a preview of a post and thus should not
-	// spawn its own previews.
+	/// Return, if this component is a preview of a post and thus should not
+	/// spawn its own previews.
 	//
-	// Value must be static.
+	/// Value must be static.
 	fn is_preview() -> bool {
 		false
 	}
 
-	// Can be dragged and repositioned across the screen
+	/// Can be dragged and repositioned across the screen
 	fn is_draggable(props: &Props) -> bool;
 
-	// Extra classes to assign to the post's root element
+	/// Extra classes to assign to the post's root element
 	fn extra_classes(&self) -> &'static [&'static str] {
 		Default::default()
 	}
 
-	// Render post's text body
+	/// Render post's text body
 	fn render_body<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> Html;
 
-	// Append extra HTML to the end of the post's root element
+	/// Append extra HTML to the end of the post's root element
 	#[allow(unused_variables)]
 	fn render_after<'s, 'c>(&self, c: &Ctx<'s, 'c, Self>) -> Html {
 		html! {}
 	}
 }
 
-// Context passed to PostComponent implementors
+/// Context passed to PostComponent implementors
 pub struct Ctx<'s, 'c, PC>
 where
 	PC: PostComponent + 'static,
 {
-	// Global state reference
+	/// Global state reference
 	pub app: &'s state::State,
 
-	// Post data of target post
+	/// Post data of target post
 	pub post: &'s state::Post,
 
-	// comp_util::Ctx passed from upstream
+	/// comp_util::Ctx passed from upstream
 	pub ctx: &'c comp_util::Ctx<PostCommonInner<PC>>,
 }
 
-// Partially mutable context passed to PostComponent implementors
+/// Partially mutable context passed to PostComponent implementors
 pub struct CtxMut<'s, 'c, PC>
 where
 	PC: PostComponent + 'static,
 {
-	// Global state reference
+	/// Global state reference
 	pub app: &'s state::State,
 
-	// comp_util::Ctx passed from upstream
+	/// comp_util::Ctx passed from upstream
 	pub ctx: &'c mut comp_util::Ctx<PostCommonInner<PC>>,
 }
 
-// Common behavior for all post PostComponents as a wrapper
+/// Common behavior for all post PostComponents as a wrapper
 pub type PostCommon<PC> = comp_util::HookedComponent<PostCommonInner<PC>>;
 
-// Implements comp_util::Inner for PostCommon
+/// Implements comp_util::Inner for PostCommon
 #[derive(Default)]
 pub struct PostCommonInner<PC>
 where
@@ -109,7 +109,7 @@ where
 	expand_image: bool,
 	tall_image: bool,
 
-	// None, if not currently dragging
+	/// None, if not currently dragging
 	drag_agent: Option<Box<dyn yew::agent::Bridge<crate::mouse::Agent>>>,
 	last_mouse_coordinates: Coordinates,
 	translation: Coordinates,
@@ -181,7 +181,6 @@ where
 				self.expand_image = false;
 				if self.tall_image {
 					// TODO: Check this does not need to be deferred to next
-					// frame
 					self.scroll_to();
 				}
 				self.tall_image = false;
@@ -476,7 +475,6 @@ where
 
 	fn render_name<'s, 'c>(&self, c: &Ctx<'s, 'c, PC>) -> Html {
 		// TODO: Staff titles
-
 		let mut w: Vec<Html> = Default::default();
 
 		if c.app.options.forced_anonymity
@@ -837,7 +835,7 @@ where
 	}
 }
 
-// Returns root url for storing images
+/// Returns root url for storing images
 fn image_root(s: &State) -> &str {
 	let over = &s.configs.image_root_override;
 	if over.is_empty() {
@@ -847,7 +845,7 @@ fn image_root(s: &State) -> &str {
 	}
 }
 
-// Get the thumbnail path of an upload
+/// Get the thumbnail path of an upload
 fn thumb_path(s: &State, img: &Image) -> String {
 	format!(
 		"{}/thumb/{}.{}",
@@ -857,7 +855,7 @@ fn thumb_path(s: &State, img: &Image) -> String {
 	)
 }
 
-// Resolve the path to the source file of an upload
+/// Resolve the path to the source file of an upload
 fn source_path(s: &State, img: &Image) -> String {
 	format!(
 		"{}/thumb/{}.{}",

@@ -1,4 +1,4 @@
-// For html macro
+// For html! macro
 #![recursion_limit = "1024"]
 
 #[macro_use]

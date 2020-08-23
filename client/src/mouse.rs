@@ -51,7 +51,7 @@ impl From<&web_sys::MouseEvent> for Coordinates {
 	}
 }
 
-// Global mouse tracking agent. Sends new mouse Coordinates on mousemove.
+/// Global mouse tracking agent. Sends new mouse Coordinates on mousemove.
 pub struct Agent {
 	link: AgentLink<Self>,
 	current: Coordinates,
@@ -75,13 +75,13 @@ pub enum Request {
 
 #[derive(Clone)]
 pub enum Response {
-	// Is any element being dragged?
+	/// Is any element being dragged?
 	IsDragging(bool),
 
-	// Mouse coordinates to drag element to
+	/// Mouse coordinates to drag element to
 	Coordinates(Coordinates),
 
-	// Signals a dragging view it no longer is being dragged
+	/// Signals a dragging view it no longer is being dragged
 	StoppedDragging,
 }
 

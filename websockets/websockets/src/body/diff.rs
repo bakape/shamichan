@@ -1,6 +1,6 @@
 use protocol::payloads::post_body::{Node, PatchNode};
 
-// Diff the new post body against the old
+/// Diff the new post body against the old
 pub fn diff(old: &Node, new: &Node) -> Option<PatchNode> {
 	use Node::*;
 
@@ -38,8 +38,8 @@ pub fn diff(old: &Node, new: &Node) -> Option<PatchNode> {
 	}
 }
 
-// Diff text and return patching instructions to enable at least some
-// differential compression for string updates
+/// Diff text and return patching instructions to enable at least some
+/// differential compression for string updates
 fn diff_text(old: &str, new: &str) -> Option<PatchNode> {
 	// Hot path - most strings won't change and this will compare by length
 	// first anyway

@@ -1,5 +1,4 @@
-// Centralized agent for efficiently scheduling timer updates
-
+/// Centralized agent for efficiently scheduling timer updates
 use super::queue::Queue;
 use crate::state;
 use js_sys::Date;
@@ -8,7 +7,7 @@ use yew::services::interval::{IntervalService, IntervalTask};
 
 // TODO: apply correction from server clock
 
-// Unit division/multiplication array for computing a time unit from seconds
+/// Unit division/multiplication array for computing a time unit from seconds
 static UNITS: [(Unit, u8); 5] = [
 	(Unit::Seconds, 60),
 	(Unit::Minutes, 60),
@@ -17,8 +16,8 @@ static UNITS: [(Unit, u8); 5] = [
 	(Unit::Months, 12),
 ];
 
-// Agent that updates all Time components, if their value changed within
-// their current resolution or options changed
+/// Agent that updates all Time components, if their value changed within
+/// their current resolution or options changed
 pub struct Scheduler {
 	link: AgentLink<Self>,
 	use_relative: bool,
@@ -92,7 +91,7 @@ impl std::fmt::Display for RelativeTime {
 }
 
 impl RelativeTime {
-	// Compute current relative timestamp
+	/// Compute current relative timestamp
 	fn new(now: u32, val: u32) -> Self {
 		let mut time = now as i64 - val as i64;
 		let mut is_future = false;
@@ -123,12 +122,16 @@ impl RelativeTime {
 	}
 }
 
-// A clock update pending at a known time
+/// A clock update pending at a known time
 struct Tick {
-	id: HandlerId,      // Subscriber ID
-	val: u32,           // Value of subscriber
-	pending_on: u32,    // Time of next update
-	diff: RelativeTime, // Value of next update
+	/// Subscriber ID
+	id: HandlerId,
+	/// Value of subscriber
+	val: u32,
+	/// Time of next update
+	pending_on: u32,
+	/// Value of next update
+	diff: RelativeTime,
 }
 
 impl PartialEq for Tick {
@@ -144,7 +147,7 @@ impl PartialOrd for Tick {
 }
 
 impl Tick {
-	// Create a new tick at the current moment in time
+	/// Create a new tick at the current moment in time
 	fn new(id: HandlerId, val: u32, now: u32) -> Self {
 		Self {
 			id,
@@ -154,7 +157,7 @@ impl Tick {
 		}
 	}
 
-	// Compute relative timestamp at next tick and next tick pending time
+	/// Compute relative timestamp at next tick and next tick pending time
 	fn set_next_tick(&mut self, mut now: u32) {
 		// Floor the current timestamp to the minimum point of the current tick
 		// and then add the full tick time
@@ -172,8 +175,8 @@ impl Tick {
 	}
 }
 
-// The current time + bool does not actually take more memory as an enum, so
-// might as well send both on each Scheduler
+/// The current time + bool does not actually take more memory as an enum, so
+/// might as well send both on each Scheduler
 #[derive(Clone, Default)]
 pub struct Response {
 	pub diff: RelativeTime,
@@ -182,10 +185,10 @@ pub struct Response {
 
 #[derive(Clone)]
 pub enum Request {
-	// Register a new timer with passed Unix timestamp
+	/// Register a new timer with passed Unix timestamp
 	Register(u32),
 
-	// Change unix timestamp on an exiting timer
+	/// Change unix timestamp on an exiting timer
 	ChangeTimestamp(u32),
 }
 
@@ -262,7 +265,7 @@ impl Agent for Scheduler {
 }
 
 impl Scheduler {
-	// Send a tick to a subscriber
+	/// Send a tick to a subscriber
 	fn send(&self, t: &Tick) {
 		self.link.respond(
 			t.id,
@@ -273,14 +276,14 @@ impl Scheduler {
 		);
 	}
 
-	// Send the current Tick and queue the next Tick
+	/// Send the current Tick and queue the next Tick
 	fn refresh_tick(&mut self, mut t: Tick) {
 		self.send(&t);
 		t.set_next_tick(self.now);
 		self.queue.insert(t);
 	}
 
-	// Remove a registered listener
+	/// Remove a registered listener
 	fn remove(&mut self, id: HandlerId) {
 		self.queue.remove(&HandlerIDKey(&id));
 	}
@@ -290,7 +293,7 @@ fn now() -> u32 {
 	(Date::now() / 1000.0) as u32
 }
 
-// Enables eviction of queued Ticks by HandlerId
+/// Enables eviction of queued Ticks by HandlerId
 struct HandlerIDKey<'a>(&'a HandlerId);
 
 impl<'a> PartialEq<Tick> for HandlerIDKey<'a> {

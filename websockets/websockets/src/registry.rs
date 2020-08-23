@@ -4,22 +4,22 @@ use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::sync::Mutex;
 
-// Keeps state and feed subscription of all clients
+/// Keeps state and feed subscription of all clients
 #[derive(Default)]
 pub struct Registry {
 	clients: HashMap<u64, ClientDescriptor>,
 
-	// Maps for quick lookup of client sets
+	/// Maps for quick lookup of client sets
 	by_thread: SetMap<u64, u64>,
 	by_pub_key: SetMap<u64, u64>,
 
-	// Have not yet had their feed initialization messages sent.
-	// Mapped by feed.
+	/// Have not yet had their feed initialization messages sent.
+	/// Mapped by feed.
 	need_init: SetMap<u64, u64>,
 }
 
 impl Registry {
-	// Remove client's registration with a thread
+	/// Remove client's registration with a thread
 	fn remove_from_thread(&mut self, client: u64, thread: Option<u64>) {
 		if let Some(t) = thread {
 			self.by_thread.remove(&t, &client);
@@ -28,14 +28,19 @@ impl Registry {
 	}
 }
 
-// Also start pulsar on first registry access
-protocol::gen_global!(, , Registry);
+protocol::gen_global! {
+	/// Global client registry
+	Registry {
+		fn read();
+		fn write();
+	}
+}
 
-// Stores client state that needs to be accessed by outer services along with
-// a smart pointer to the client itself
+/// Stores client state that needs to be accessed by outer services along with
+/// a smart pointer to the client itself
 struct ClientDescriptor {
-	// Zero denotes thread catalog. Is unset (default) - before the first sync
-	// message is received.
+	/// Zero denotes thread catalog. Is unset (default) - before the first sync
+	/// message is received.
 	thread: Option<u64>,
 
 	pub_key: Option<u64>,
@@ -52,7 +57,7 @@ impl ClientDescriptor {
 	}
 }
 
-// Remove client from registry
+/// Remove client from registry
 pub fn remove_client(id: u64) {
 	write(|c| {
 		if let Some(desc) = c.clients.remove(&id) {
@@ -64,20 +69,20 @@ pub fn remove_client(id: u64) {
 	});
 }
 
-// Get a client by ID, if any
+/// Get a client by ID, if any
 pub fn get_client(id: u64) -> Option<Rc<Mutex<super::client::Client>>> {
 	// Release lock on global collection as soon as possible.
 	read(|r| r.clients.get(&id).map(|c| c.client.clone()))
 }
 
-// Register a freshly created client with no messages received yet
+/// Register a freshly created client with no messages received yet
 pub fn add_client(id: u64) {
 	write(|c| {
 		c.clients.insert(id, ClientDescriptor::new(id));
 	});
 }
 
-// Set client public key ID on first sync. Must only be done once per client.
+/// Set client public key ID on first sync. Must only be done once per client.
 pub fn set_client_key(id: u64, pub_key: u64) {
 	write(|c| {
 		if let Some(desc) = c.clients.get_mut(&id) {
@@ -87,7 +92,7 @@ pub fn set_client_key(id: u64, pub_key: u64) {
 	});
 }
 
-// Set or change the thread a client is synced to
+/// Set or change the thread a client is synced to
 pub fn set_client_thread(client: u64, thread: u64) {
 	write(|c| {
 		if let Some(desc) = c.clients.get_mut(&client) {
@@ -100,10 +105,10 @@ pub fn set_client_thread(client: u64, thread: u64) {
 	});
 }
 
-// Sync snapshot of client and thread data.
+/// Sync snapshot of client and thread data.
 //
-// Reads client that need to be initialized with drainer.
-// Returns global set of connected clients and clients mapped by thread.
+/// Reads client that need to be initialized with drainer.
+/// Returns global set of connected clients and clients mapped by thread.
 pub fn snapshot_threads<F>(drainer: F) -> (HashSet<u64>, SetMap<u64, u64>)
 where
 	F: FnOnce(&mut SetMap<u64, u64>),

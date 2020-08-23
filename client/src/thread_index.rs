@@ -2,7 +2,7 @@ use super::state;
 use state::Thread;
 use yew::{html, Component, ComponentLink, Html};
 
-// Central thread container
+/// Central thread container
 pub struct Threads {
 	#[allow(unused)]
 	bridge: state::HookBridge,

@@ -62,7 +62,6 @@ where
 	// if not passed from server
 	// TODO: Persist all single post fetches from server in global post
 	// collection
-
 	let mut extra = String::new();
 	if match &c.app.location.feed {
 		// If thread = 0, link has not had it's parenthood looked up yet on the

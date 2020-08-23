@@ -18,21 +18,20 @@ impl Default for PostLocation {
 	}
 }
 
-// Can't pass generic types to the macro
+/// Can't pass generic types to the macro
 type PostLocationCache = HashMap<u64, Arc<RwLock<PostLocation>>>;
 
-// Cache of post locations for post links
 protocol::gen_global! {
-	,
-	__read_cache, // Not used
-	,
-	with_location_cache,
-	PostLocationCache
+	/// Cache of post locations for post links
+	PostLocationCache {
+		fn __read_cache(); // Not used
+		fn with_location_cache();
+	}
 }
 
-// Read post location from cache or DB.
-//
-// fetch: fetch location from DB, if not yet in cache
+/// Read post location from cache or DB.
+///
+/// fetch: fetch location from DB, if not yet in cache
 pub fn post_location(id: u64, fetch: bool) -> Result<PostLocation> {
 	use PostLocation::*;
 
@@ -67,7 +66,7 @@ pub fn post_location(id: u64, fetch: bool) -> Result<PostLocation> {
 	})
 }
 
-// Insert a post location into the cache
+/// Insert a post location into the cache
 pub fn cache_location(id: u64, thread: u64, page: u32) {
 	with_location_cache(|c| {
 		c.insert(
@@ -77,7 +76,7 @@ pub fn cache_location(id: u64, thread: u64, page: u32) {
 	});
 }
 
-// Parse post links and configured references
+/// Parse post links and configured references
 pub fn parse_link(word: &str, flags: u8) -> Result<Option<Node>> {
 	if !word.starts_with(">>") {
 		return Ok(None);

@@ -1,9 +1,8 @@
-// Helpers for more easily implementing components
-
+/// Helpers for more easily implementing components
 use std::cell::RefCell;
 
-// Generate partial Component implementation for self.props as Self::Properties
-// updates
+/// Generate partial Component implementation for self.props as Self::Properties
+/// updates
 #[macro_export]
 macro_rules! comp_prop_change {
 	($props:ty) => {
@@ -20,8 +19,8 @@ macro_rules! comp_prop_change {
 	};
 }
 
-// Generate partial Component implementation for components with no possible
-// property changes
+/// Generate partial Component implementation for components with no possible
+/// property changes
 #[macro_export]
 macro_rules! comp_no_prop_change {
 	($props:ty) => {
@@ -33,7 +32,7 @@ macro_rules! comp_no_prop_change {
 	};
 }
 
-// Generate partial Component implementation with no properties
+/// Generate partial Component implementation with no properties
 #[macro_export]
 macro_rules! comp_no_props {
 	() => {
@@ -45,8 +44,8 @@ macro_rules! comp_no_props {
 	};
 }
 
-// Generate partial Component implementation for components with only a
-// rerender message
+/// Generate partial Component implementation for components with only a
+/// rerender message
 #[macro_export]
 macro_rules! comp_message_rerender {
 	() => {
@@ -58,7 +57,7 @@ macro_rules! comp_message_rerender {
 	};
 }
 
-// Generate Component update methods for components with no update messages
+/// Generate Component update methods for components with no update messages
 #[macro_export]
 macro_rules! comp_no_update {
 	() => {
@@ -70,7 +69,7 @@ macro_rules! comp_no_update {
 	};
 }
 
-// Generate Component update methods for static components
+/// Generate Component update methods for static components
 #[macro_export]
 macro_rules! comp_static {
 	($props:ty) => {
@@ -82,7 +81,7 @@ macro_rules! comp_static {
 	};
 }
 
-// Parameters passed to Inner method calls
+/// Parameters passed to Inner method calls
 pub struct Ctx<I>
 where
 	I: Inner + 'static,
@@ -96,12 +95,12 @@ impl<I> Ctx<I>
 where
 	I: Inner + 'static,
 {
-	// Get reference to component properties
+	/// Get reference to component properties
 	pub fn props(&self) -> &I::Properties {
 		&self.props
 	}
 
-	// Set component properties. Returns, if properties where altered.
+	/// Set component properties. Returns, if properties where altered.
 	pub fn set_props(&mut self, props: I::Properties) -> bool {
 		if self.props != props {
 			let old = I::subscribe_to(&self.props);
@@ -126,33 +125,33 @@ where
 	}
 }
 
-// Inner logic for HookedComponent
+/// Inner logic for HookedComponent
 pub trait Inner: Default {
 	type Properties: yew::Properties + Eq + std::fmt::Debug;
 	type Message: 'static;
 
-	// Extra initialization logic
+	/// Extra initialization logic
 	#[allow(unused_variables)]
 	fn init(&mut self, c: &mut Ctx<Self>) {}
 
-	// Return Self::Message to pass to HookedInner to signal global state has
-	// updated
+	/// Return Self::Message to pass to HookedInner to signal global state has
+	/// updated
 	fn update_message() -> Self::Message;
 
-	// Vector of global state changes to subscribe to
+	/// Vector of global state changes to subscribe to
 	#[allow(unused_variables)]
 	fn subscribe_to(props: &Self::Properties) -> Vec<crate::state::Change> {
 		Default::default()
 	}
 
-	// Same as for yew::Component
+	/// Same as for yew::Component
 	fn update(&mut self, c: &mut Ctx<Self>, msg: Self::Message) -> bool;
 
-	// Same as for yew::Component
+	/// Same as for yew::Component
 	fn view(&self, c: &Ctx<Self>) -> yew::Html;
 }
 
-// Component that is hooked into global state updates
+/// Component that is hooked into global state updates
 pub struct HookedComponent<I>
 where
 	I: Inner + 'static,

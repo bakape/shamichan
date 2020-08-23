@@ -1,7 +1,9 @@
 use crate::{bindings, common::DynResult, registry};
 use protocol::{
 	debug_log,
-	payloads::{FeedData, Image, PostCreationNotice, ThreadCreationNotice},
+	payloads::{
+		FeedData, Image, PostCreationNotification, ThreadCreationNotice,
+	},
 	util::SetMap,
 	Encoder, MessageType,
 };
@@ -19,7 +21,7 @@ use std::{
 // TODO: Asynchronously lookup all unresolved post links during post body
 // reparse as to not block pulsar
 
-// For sending requests to Pulsar. Clone to use.
+/// For sending requests to Pulsar. Clone to use.
 static mut REQUEST: Option<Mutex<Sender<Request>>> = None;
 
 pub fn init(feed_data: &[u8]) -> DynResult {
@@ -90,23 +92,23 @@ pub fn init(feed_data: &[u8]) -> DynResult {
 	Ok(())
 }
 
-// Holds the IDs of up to the last 5 posts
+/// Holds the IDs of up to the last 5 posts
 type Last5Posts =
 	heapless::BinaryHeap<u64, heapless::consts::U5, heapless::binary_heap::Min>;
 
-// Common to both thread feeds and the global Feed
+/// Common to both thread feeds and the global Feed
 #[derive(Default, Debug)]
 struct FeedCommon {
-	// Thread ID or 0 for global feed
+	/// Thread ID or 0 for global feed
 	id: u64,
 
-	// Clients needing an init message sent
+	/// Clients needing an init message sent
 	need_init: HashSet<u64>,
 
-	// Cached encoded initialization message buffer
+	/// Cached encoded initialization message buffer
 	init_msg_cache: Option<Msg>,
 
-	// Pending message streaming encoder
+	/// Pending message streaming encoder
 	pending: Option<Encoder>,
 }
 
@@ -120,13 +122,13 @@ impl FeedCommon {
 		}
 	}
 
-	// Clear all cached values
+	/// Clear all cached values
 	fn clear_cache(&mut self) {
 		self.init_msg_cache = None;
 	}
 
-	// This should never happen, but log it and halt execution, if it does.
-	// Caller should abort execution.
+	/// This should never happen, but log it and halt execution, if it does.
+	/// Caller should abort execution.
 	fn log_encode_error(&self, err: std::io::Error) {
 		bindings::log_error(&format!(
 			"could not encode feed data: feed_id={} err={:?}",
@@ -135,27 +137,27 @@ impl FeedCommon {
 	}
 }
 
-// Update feed. Either a thread feed or the global thread index feed.
+/// Update feed. Either a thread feed or the global thread index feed.
 #[derive(Debug)]
 struct Feed {
 	common: FeedCommon,
 
 	global_init_msg_part: Option<Msg>,
 
-	// Pending messages for global thread index feed
+	/// Pending messages for global thread index feed
 	pending_global: Option<Encoder>,
 
-	// Last 5 post IDs in thread
+	/// Last 5 post IDs in thread
 	last_5_posts: Last5Posts,
 
-	// Current active feed data.
+	/// Current active feed data.
 	data: FeedData,
 
-	// Open bodies pending parsing and diffing
+	/// Open bodies pending parsing and diffing
 	pending_open_bodies: HashMap<u64, String>,
 }
 
-// Get or init new Encoder and return it
+/// Get or init new Encoder and return it
 fn get_encoder(enc: &mut Option<Encoder>) -> &mut Encoder {
 	match enc {
 		Some(e) => e,
@@ -167,7 +169,7 @@ fn get_encoder(enc: &mut Option<Encoder>) -> &mut Encoder {
 }
 
 impl Feed {
-	// Create new wrapped Feed initialized with data
+	/// Create new wrapped Feed initialized with data
 	fn new(data: FeedData) -> Self {
 		// Find last 5 posts added to thread
 		let mut l5 = Last5Posts::default();
@@ -197,13 +199,13 @@ impl Feed {
 		}
 	}
 
-	// Clear all cached values
+	/// Clear all cached values
 	fn clear_cache(&mut self) {
 		self.global_init_msg_part = None;
 		self.common.clear_cache()
 	}
 
-	// Encode and cache feed init message or return cached one.
+	/// Encode and cache feed init message or return cached one.
 	fn get_init_msg(&mut self) -> std::io::Result<Msg> {
 		match &mut self.common.init_msg_cache {
 			Some(msg) => Ok(msg.clone()),
@@ -219,12 +221,12 @@ impl Feed {
 		}
 	}
 
-	// Return, if post should be included in global thread index
+	/// Return, if post should be included in global thread index
 	fn include_in_global(&self, id: u64) -> bool {
 		id == self.data.thread || self.last_5_posts.iter().any(|x| id == *x)
 	}
 
-	// Encode and cache global feed init message part or return cached one.
+	/// Encode and cache global feed init message part or return cached one.
 	fn get_global_init_msg_part(&mut self) -> std::io::Result<Msg> {
 		match &mut self.global_init_msg_part {
 			Some(msg) => Ok(msg.clone()),
@@ -263,7 +265,7 @@ impl Feed {
 		}
 	}
 
-	// Insert new blank open post into the registry
+	/// Insert new blank open post into the registry
 	fn insert_post(&mut self, id: u64, time: u32) {
 		self.data.recent_posts.insert(id, time);
 		if self.last_5_posts.len() == 5 {
@@ -277,7 +279,7 @@ impl Feed {
 		);
 	}
 
-	// Write post-related message to thread and possibly global feed
+	/// Write post-related message to thread and possibly global feed
 	fn encode_post_message(
 		&mut self,
 		post: u64,
@@ -304,8 +306,8 @@ impl Feed {
 		}
 	}
 
-	// Diff pending open post body changes in parallel and write messages to
-	// encoders
+	/// Diff pending open post body changes in parallel and write messages to
+	/// encoders
 	fn diff_open_bodies(&mut self) {
 		use protocol::payloads::post_body::{Node, PatchNode};
 
@@ -344,7 +346,7 @@ impl Feed {
 	}
 }
 
-// Reusable message buffer wrapper with AsRef[u8]
+/// Reusable message buffer wrapper with AsRef[u8]
 #[derive(Clone, Debug)]
 struct Msg(Arc<Vec<u8>>);
 
@@ -378,18 +380,18 @@ impl Into<Arc<Vec<u8>>> for Msg {
 	}
 }
 
-// Used for aggregation of messages in parallel
+/// Used for aggregation of messages in parallel
 #[derive(Default)]
 struct MessageSet {
-	// Each aggregated into one message for I/O efficiency after the
-	// main filter_map(). Doing it inside would create too much
-	// nesting and require more reallocations.
+	/// Each aggregated into one message for I/O efficiency after the
+	/// main filter_map(). Doing it inside would create too much
+	/// nesting and require more reallocations.
 	global_init_parts: Vec<Msg>,
 	global_feed_messages: Vec<Vec<u8>>,
 
-	// Aggregated into one message for I/O efficiency inside the main
-	// filter_map(), as most of the time, global messages will not be
-	// concatenated with them.
+	/// Aggregated into one message for I/O efficiency inside the main
+	/// filter_map(), as most of the time, global messages will not be
+	/// concatenated with them.
 	thread_messages: HashMap<u64, Msg>,
 }
 
@@ -401,21 +403,21 @@ impl MessageSet {
 	}
 }
 
-// Buffering update dispatcher singleton.
-//
-// Never access Pulsar from the Registry, as Pulsar accesses it. Can result in
-// deadlocks.
+/// Buffering update dispatcher singleton.
+///
+/// Never access Pulsar from the Registry, as Pulsar accesses it. Can result in
+/// deadlocks.
 #[derive(Default)]
 struct Pulsar {
-	// Active feeds
+	/// Active feeds
 	feeds: HashMap<u64, Feed>,
 
-	// Global feed instance
+	/// Global feed instance
 	global: FeedCommon,
 }
 
 impl Pulsar {
-	// Initialize with feed data as JSON
+	/// Initialize with feed data as JSON
 	fn init(&mut self, feed_data: &[u8]) -> serde_json::Result<()> {
 		self.feeds = serde_json::from_slice::<Vec<FeedData>>(feed_data)?
 			.into_iter()
@@ -424,7 +426,7 @@ impl Pulsar {
 		Ok(())
 	}
 
-	// Register a new thread and allocate its resources
+	/// Register a new thread and allocate its resources
 	fn insert_thread(&mut self, data: ThreadCreationNotice) {
 		self.global.clear_cache();
 
@@ -443,15 +445,15 @@ impl Pulsar {
 		}
 	}
 
-	// Register a new post and allocate its resources
-	fn insert_post(&mut self, data: PostCreationNotice) {
+	/// Register a new post and allocate its resources
+	fn insert_post(&mut self, data: PostCreationNotification) {
 		self.mod_thread(data.thread, |f| {
 			f.insert_post(data.id, data.time);
 			f.encode_post_message(data.id, MessageType::InsertPost, &data);
 		});
 	}
 
-	// Deallocate thread resources and redirect all of its clients
+	/// Deallocate thread resources and redirect all of its clients
 	fn remove_thread(&mut self, id: u64) {
 		self.global.clear_cache();
 
@@ -461,7 +463,7 @@ impl Pulsar {
 		))
 	}
 
-	// Log an item has not been found
+	/// Log an item has not been found
 	fn log_not_found(label: &str, id: impl std::fmt::Debug) {
 		bindings::log_error(&format!(
 			"{} not found: {:?}\n{:?}",
@@ -482,7 +484,7 @@ impl Pulsar {
 		}
 	}
 
-	// Insert an image into an allocated post
+	/// Insert an image into an allocated post
 	fn insert_image(&mut self, req: ImageInsertionReq) {
 		self.mod_thread(req.thread, |f| {
 			match f.data.open_posts.get_mut(&req.post) {
@@ -505,14 +507,14 @@ impl Pulsar {
 		})
 	}
 
-	// Enqueue open body for parsing and diffing on next pulse
+	/// Enqueue open body for parsing and diffing on next pulse
 	fn enqueue_open_body(&mut self, post: u64, thread: u64, body: String) {
 		self.mod_thread(thread, |f| {
 			f.pending_open_bodies.insert(post, body);
 		});
 	}
 
-	// Clean up expired recent posts
+	/// Clean up expired recent posts
 	fn clean_up(&mut self) {
 		let threshold = (SystemTime::now() - Duration::from_secs(60 * 15))
 			.elapsed()
@@ -525,7 +527,7 @@ impl Pulsar {
 		})
 	}
 
-	// Generate, aggregate and send buffered messages to clients
+	/// Generate, aggregate and send buffered messages to clients
 	fn send_messages(&mut self) {
 		// TODO: Make client filter recent posts by creation timestamp to the
 		// last 15 min
@@ -584,7 +586,7 @@ impl Pulsar {
 			})
 	}
 
-	// Aggregate feed messages to send for all thread feeds and the global feed
+	/// Aggregate feed messages to send for all thread feeds and the global feed
 	fn aggregate_feed_messages(
 		&mut self,
 		build_global_init: bool,
@@ -712,7 +714,7 @@ impl Pulsar {
 			)
 	}
 
-	// Assign global feed messages to clients on the global feed
+	/// Assign global feed messages to clients on the global feed
 	fn assign_global_feed_messages(
 		&mut self,
 		mut global_init_parts: Vec<Msg>,
@@ -768,8 +770,8 @@ impl Pulsar {
 		self.global.need_init.clear();
 	}
 
-	// Merge server-wide messages to all clients.
-	// Not very efficient, but that is fine. These happen rarely.
+	/// Merge server-wide messages to all clients.
+	/// Not very efficient, but that is fine. These happen rarely.
 	fn merge_server_wide_messages(
 		&mut self,
 		all_clients: &HashSet<u64>,
@@ -809,22 +811,22 @@ pub struct ImageInsertionReq {
 	img: Image,
 }
 
-// Request to pulsar
+/// Request to pulsar
 #[derive(Debug)]
 pub enum Request {
-	// Register a freshly-created thread
+	/// Register a freshly-created thread
 	InsertThread(ThreadCreationNotice),
 
-	// Register a freshly-created post
-	InsertPost(PostCreationNotice),
+	/// Register a freshly-created post
+	InsertPost(PostCreationNotification),
 
-	// Deallocate thread resources and redirect all of its clients
+	/// Deallocate thread resources and redirect all of its clients
 	RemoveThread(u64),
 
-	// Insert an image into an allocated post
+	/// Insert an image into an allocated post
 	InsertImage(ImageInsertionReq),
 
-	// Set the body of an open post
+	/// Set the body of an open post
 	SetOpenBody {
 		post: u64,
 		thread: u64,
@@ -832,29 +834,29 @@ pub enum Request {
 	},
 }
 
-// Alias Result for sending a request to Pulsar
+/// Alias Result for sending a request to Pulsar
 pub type SendResult = Result<(), SendError<Request>>;
 
 fn send_request(req: Request) -> SendResult {
 	unsafe { REQUEST.as_ref().unwrap().lock().unwrap().clone() }.send(req)
 }
 
-// Initialize a freshly-created thread
+/// Initialize a freshly-created thread
 pub fn insert_thread(data: ThreadCreationNotice) -> SendResult {
 	send_request(Request::InsertThread(data))
 }
 
-// Deallocate thread resources and redirect all of its clients
+/// Deallocate thread resources and redirect all of its clients
 pub fn remove_thread(id: u64) -> SendResult {
 	send_request(Request::RemoveThread(id))
 }
 
-// Set the body of an open post
+/// Set the body of an open post
 pub fn set_open_body(post: u64, thread: u64, body: String) -> SendResult {
 	send_request(Request::SetOpenBody { post, thread, body })
 }
 
-// Insert an image into an allocated post
+/// Insert an image into an allocated post
 pub fn insert_image(thread: u64, post: u64, img: Image) -> SendResult {
 	send_request(Request::InsertImage(ImageInsertionReq {
 		thread: thread,
@@ -863,7 +865,7 @@ pub fn insert_image(thread: u64, post: u64, img: Image) -> SendResult {
 	}))
 }
 
-// Initialize a freshly-created post
-pub fn insert_post(data: PostCreationNotice) -> SendResult {
+/// Initialize a freshly-created post
+pub fn insert_post(data: PostCreationNotification) -> SendResult {
 	send_request(Request::InsertPost(data))
 }

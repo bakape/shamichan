@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 use std::io;
 use std::io::Write;
 
-// Byte used for marking the start of a message
+/// Byte used for marking the start of a message
 const HEADER: u8 = 174;
 
-// Byte used for escaping HEADER in massages
+/// Byte used for escaping HEADER in massages
 const ESCAPE: u8 = 255;
 
-// Appends 0 after HEADER byte to distinguish it from a message start
+/// Appends 0 after HEADER byte to distinguish it from a message start
 struct Escaper<W: Write> {
 	w: W,
 }
@@ -48,7 +48,7 @@ impl<W: Write> Write for Escaper<W> {
 	}
 }
 
-// Streaming message set encoder
+/// Streaming message set encoder
 #[derive(Debug)]
 pub struct Encoder {
 	w: DeflateEncoder<Vec<u8>>,
@@ -61,8 +61,8 @@ impl Default for Encoder {
 }
 
 impl Encoder {
-	// Create new encoder for building message streams, which will have its
-	// output written to the passed output stream.
+	/// Create new encoder for building message streams, which will have its
+	/// output written to the passed output stream.
 	pub fn new(mut w: Vec<u8>) -> Self {
 		Self::init_single_message(&mut w);
 		Self {
@@ -70,7 +70,7 @@ impl Encoder {
 		}
 	}
 
-	// Utility for only encoding a single message without any batching
+	/// Utility for only encoding a single message without any batching
 	pub fn encode(
 		typ: MessageType,
 		payload: &impl Serialize,
@@ -80,13 +80,13 @@ impl Encoder {
 		enc.finish()
 	}
 
-	// Indicate this is single message and not a concatenated vector of
-	// messages
+	/// Indicate this is single message and not a concatenated vector of
+	/// messages
 	fn init_single_message(w: &mut Vec<u8>) {
 		w.push(0);
 	}
 
-	// Join already encoded messages into a single stream
+	/// Join already encoded messages into a single stream
 	pub fn join<I, A>(encoded: I) -> Vec<u8>
 	where
 		I: AsRef<[A]>,
@@ -109,12 +109,12 @@ impl Encoder {
 		w
 	}
 
-	// Flush any pending data to output stream
+	/// Flush any pending data to output stream
 	pub fn flush(&mut self) -> io::Result<()> {
 		self.w.flush()
 	}
 
-	// Write message to underlying writer
+	/// Write message to underlying writer
 	pub fn write_message(
 		&mut self,
 		t: MessageType,
@@ -127,24 +127,24 @@ impl Encoder {
 			})
 	}
 
-	// Consumes this encoder, flushing the output stream and returning the
-	// underlying writer
+	/// Consumes this encoder, flushing the output stream and returning the
+	/// underlying writer
 	pub fn finish(self) -> io::Result<Vec<u8>> {
 		self.w.finish()
 	}
 
-	// Resets the state of this encoder entirely, swapping out the output
-	// stream for another.
-	//
-	// This function will finish encoding the current stream into the current
-	// output stream before swapping out the two output streams.
+	/// Resets the state of this encoder entirely, swapping out the output
+	/// stream for another.
+	///
+	/// This function will finish encoding the current stream into the current
+	/// output stream before swapping out the two output streams.
 	pub fn reset(&mut self, mut w: Vec<u8>) -> io::Result<Vec<u8>> {
 		Self::init_single_message(&mut w);
 		self.w.reset(w)
 	}
 }
 
-// Decompresses and decodes message batch.
+/// Decompresses and decodes message batch.
 #[derive(Debug)]
 pub struct Decoder {
 	splitter: MessageSplitter,
@@ -152,7 +152,7 @@ pub struct Decoder {
 }
 
 impl Decoder {
-	// Create new decoder for reading the passed buffer
+	/// Create new decoder for reading the passed buffer
 	pub fn new(r: &[u8]) -> Result<Self, io::Error> {
 		Ok(Self {
 			splitter: Self::fill_splitter(MessageSplitter::new(), r)?,
@@ -160,7 +160,7 @@ impl Decoder {
 		})
 	}
 
-	// Decode buffer into an existing message splitter and return it on success
+	/// Decode buffer into an existing message splitter and return it on success
 	fn fill_splitter(
 		mut dst: MessageSplitter,
 		mut r: &[u8],
@@ -226,21 +226,21 @@ impl Decoder {
 		}
 	}
 
-	// Return next message type, if any.
-	// Returns None, if entire message stream has been consumed.
-	//
-	// This method does not advance the decoder. Either read_next() or
-	// skip_next() need to be called to advance it.
+	/// Return next message type, if any.
+	/// Returns None, if entire message stream has been consumed.
+	///
+	/// This method does not advance the decoder. Either read_next() or
+	/// skip_next() need to be called to advance it.
 	pub fn peek_type(&mut self) -> Option<MessageType> {
 		self.splitter.message_types.get(self.off).copied()
 	}
 
-	// Skip reading next message and advance the decoder
+	/// Skip reading next message and advance the decoder
 	pub fn skip_next(&mut self) {
 		self.off += 1;
 	}
 
-	// Read, decode and return next message payload from stream
+	/// Read, decode and return next message payload from stream
 	pub fn read_next<'a, 's: 'a, T: Deserialize<'a>>(
 		&'s mut self,
 	) -> io::Result<T> {
@@ -263,7 +263,7 @@ impl Decoder {
 	}
 }
 
-// Splits and unescapes messages
+/// Splits and unescapes messages
 #[derive(Debug)]
 struct MessageSplitter {
 	buf: Vec<u8>,

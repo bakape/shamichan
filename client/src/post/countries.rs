@@ -250,7 +250,7 @@ static COUNTRIES: [([u8; 2], &str); 249] = [
 	([b'z', b'w'], "Zimbabwe"),
 ];
 
-// Get country name by ISO 3166 lowercase alpha-2 code
+/// Get country name by ISO 3166 lowercase alpha-2 code
 pub fn get_name(code: &str) -> Option<&'static str> {
 	if code.len() != 2 {
 		return None;

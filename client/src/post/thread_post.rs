@@ -4,7 +4,7 @@ use yew::Html;
 #[derive(Default)]
 pub struct Inner {}
 
-// A post rendered inside a a thread
+/// A post rendered inside a a thread
 pub type ThreadPost = PostCommon<Inner>;
 
 impl PostComponent for Inner {

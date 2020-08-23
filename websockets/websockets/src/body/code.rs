@@ -1,6 +1,6 @@
 use super::Result;
 
-// Programming code tags are top level and can override everything else
+/// Programming code tags are top level and can override everything else
 pub fn parse_code(body: &str, flags: u8) -> Result {
 	super::util::split_and_parse(
 		&body,
@@ -26,9 +26,12 @@ fn highlight_code(frag: &str, _: u8) -> Result {
 			.flatten()
 		{
 			Some(syntax) => {
-				let mut gen = syntect::html::ClassedHTMLGenerator::new(
+				use syntect::html::{ClassStyle, ClassedHTMLGenerator};
+
+				let mut gen = ClassedHTMLGenerator::new_with_class_style(
 					syntax,
 					&SYNTAX_SET,
+					ClassStyle::Spaced,
 				);
 				for line in frag.lines() {
 					gen.parse_html_for_line(&line);

@@ -9,28 +9,33 @@ use wasm_bindgen::JsCast;
 
 #[derive(Deserialize, Default)]
 struct LanguagePack {
-	// One to one mapping of string literals
+	/// One to one mapping of string literals
 	pub literals: HashMap<String, String>,
 
-	// Parametric format strings
+	/// Parametric format strings
 	pub format_strings: HashMap<String, FormatStr>,
 
-	// (label, title) tuples
+	/// (label, title) tuples
 	pub labels: HashMap<String, (String, String)>,
 
-	// (singular, plural) tuples
+	/// (singular, plural) tuples
 	pub plurals: HashMap<String, (String, String)>,
 }
 
-protocol::gen_global! {, , LanguagePack}
+protocol::gen_global! {
+	LanguagePack {
+		fn read();
+		fn write();
+	}
+}
 
-// Component of a localization formatting expression
+/// Component of a localization formatting expression
 enum Token {
 	Text(String),
 	Variable(String),
 }
 
-// Parsed format string used for localization
+/// Parsed format string used for localization
 struct FormatStr(Vec<Token>);
 
 struct TokenVisitor();
@@ -82,7 +87,7 @@ impl<'de> Deserialize<'de> for FormatStr {
 	}
 }
 
-// Localize strings by key
+/// Localize strings by key
 #[macro_export]
 macro_rules! localize {
 	// Localize string literal
@@ -96,12 +101,12 @@ macro_rules! localize {
 	};
 }
 
-// Language pack is immutable after load, so this is fine
+/// Language pack is immutable after load, so this is fine
 fn to_static_str(s: &String) -> &'static str {
 	unsafe { std::mem::transmute(s.as_str()) }
 }
 
-// Localize string literal
+/// Localize string literal
 pub fn localize_literal(key: &str) -> &'static str {
 	read(|l| match l.literals.get(key) {
 		// Language pack is immutable after load, so this is fine
@@ -110,7 +115,7 @@ pub fn localize_literal(key: &str) -> &'static str {
 	})
 }
 
-// Localize pluralizable string literal
+/// Localize pluralizable string literal
 pub fn pluralize<T>(key: &str, n: T) -> &'static str
 where
 	T: std::cmp::Ord + From<u8>,
@@ -122,7 +127,7 @@ where
 	})
 }
 
-// Insert key-value pairs into parsed localization format string
+/// Insert key-value pairs into parsed localization format string
 pub fn localize_format(key: &str, args: &[(&str, &str)]) -> String {
 	use Token::*;
 

@@ -3,30 +3,36 @@ use std::collections::HashMap;
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct SpamScores {
-	// Score per unicode character for any post body modification
+	/// Score per unicode character for any post body modification
 	pub character: usize,
 
-	// Score for inserting an image into the post
+	/// Score for inserting an image into the post
 	pub image: usize,
 
-	// Score for creating a post
+	/// Score for creating a post
 	pub post_creation: usize,
 }
 
-// Global server configurations
+/// Global server configurations
 #[derive(Default, Serialize, Deserialize)]
 pub struct Config {
-	// Enable captchas and antispam
+	/// Enable captchas and antispam
 	pub captcha: bool,
 
-	// Configured labeled links to resources
+	/// Configured labeled links to resources
 	pub links: HashMap<String, String>,
 
-	// Amounts to increase spam score by for a user action
+	/// Amounts to increase spam score by for a user action
 	pub spam_scores: SpamScores,
 
-	// Database access URL
+	/// Database access URL
 	pub db_url: String,
 }
 
-protocol::gen_global!(pub, pub, Config);
+protocol::gen_global!(
+	// Server-wide configurations
+	Config {
+		pub fn read();
+		pub fn write();
+	}
+);

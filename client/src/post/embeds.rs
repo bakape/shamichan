@@ -7,33 +7,38 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use yew::{html, Component, ComponentLink, Html, Properties};
 
-// All the data required to render and expand an embed
+/// All the data required to render and expand an embed
 struct Data {
 	title: String,
 	url: String,
 	contents: String,
 }
 
-// Describes and identifies a specific embed target
+/// Describes and identifies a specific embed target
 #[derive(std::hash::Hash, PartialEq, Eq)]
 struct Descriptor {
 	typ: EmbedProvider,
 	target: String,
 }
 
-// Fetched embed data cache
-protocol::gen_global! {, , HashMap<Descriptor, Data>}
+protocol::gen_global! {
+	/// Fetched embed data cache
+	HashMap<Descriptor, Data> {
+		fn read();
+		fn write();
+	}
+}
 
-// Render link to embedadble resource
+/// Render link to embedadble resource
 pub fn render(e: Embed) -> Html {
 	html! {
 		<span>{"TODO: embed rendering"}</span>
 	}
 }
 
-// Fetches and formats an embed's title and inner HTML content
+/// Fetches and formats an embed's title and inner HTML content
 trait Fetch: Default {
-	// Fetches embed data and send it to View over link
+	/// Fetches embed data and send it to View over link
 	fn fetch(&mut self, e: Embed, link: ComponentLink<View<Self>>) -> Result;
 }
 

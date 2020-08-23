@@ -1,7 +1,7 @@
 use super::{Result, AT_LINE_START};
 use protocol::payloads::post_body::Node;
 
-// Parse a split sibling pair (if resources allow)
+/// Parse a split sibling pair (if resources allow)
 pub fn parse_siblings(
 	left: impl FnOnce() -> Result + Send,
 	right: impl FnOnce() -> Result + Send,
@@ -18,8 +18,11 @@ pub fn parse_siblings(
 	})
 }
 
-// Split by delimiter and run parsing function on the matched and unmatched
-// segments
+/// Split by delimiter and run parsing function on the matched and unmatched
+/// segments
+///
+/// Always inlined, because it is only used in very small function that only
+/// call this split_and_parse().
 #[inline(always)]
 pub fn split_and_parse(
 	frag: &str,

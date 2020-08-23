@@ -2,7 +2,7 @@ use super::scheduler::{Response, Scheduler};
 use js_sys::Date;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html, Properties};
 
-// Central thread container
+/// Central thread container
 pub struct View {
 	#[allow(unused)]
 	link: ComponentLink<Self>,

@@ -34,7 +34,7 @@ pub fn parse_fragment(frag: &str, flags: u8) -> Result {
 					};
 					use protocol::payloads::post_body::PendingNode::*;
 
-					// Generate a command node pending finalization
+					/// Generate a command node pending finalization
 					macro_rules! gen_pending {
 						($comm:tt) => {
 							Some(Node::Pending($comm))
@@ -121,9 +121,9 @@ pub fn parse_fragment(frag: &str, flags: u8) -> Result {
 	}))
 }
 
-// Split off one byte of leading and trailing punctuation, if any, and returns
-// the 3 split parts. If there is no edge punctuation, the respective byte is
-// zero.
+/// Split off one byte of leading and trailing punctuation, if any, and returns
+/// the 3 split parts. If there is no edge punctuation, the respective byte is
+/// zero.
 fn split_punctuation(word: &str) -> (char, &str, char) {
 	fn is_punctuation(b: char) -> bool {
 		match b {

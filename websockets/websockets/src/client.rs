@@ -10,29 +10,29 @@ use protocol::{
 use serde::Serialize;
 use std::sync::Arc;
 
-// Public key public and private ID set
+/// Public key public and private ID set
 #[derive(Clone, Default)]
 struct PubKeyDesc {
-	// Public key private ID used to sign messages by the client
+	/// Public key private ID used to sign messages by the client
 	priv_id: u64,
 
-	// Public key public ID used to sign messages by the client
+	/// Public key public ID used to sign messages by the client
 	pub_id: uuid::Uuid,
 }
 
-// Client connection state
+/// Client connection state
 enum ConnState {
-	// Freshly established a WS connection
+	/// Freshly established a WS connection
 	Connected,
 
-	// Sent handshake message and it was accepted
+	/// Sent handshake message and it was accepted
 	AcceptedHandshake,
 
-	// Public key already registered. Requested client to send a HandshakeReq
-	// with Authorization::Saved.
+	/// Public key already registered. Requested client to send a HandshakeReq
+	/// with Authorization::Saved.
 	RequestedReshake { pub_key: Vec<u8> },
 
-	// Client synchronizing to a feed
+	/// Client synchronizing to a feed
 	Synchronizing,
 }
 
@@ -52,39 +52,41 @@ impl OpenPost {
 	}
 }
 
-// Maps to a websocket client on the Go side
+/// Maps to a websocket client on the Go side
 pub struct Client {
-	// ID of client used in various registries
+	/// ID of client used in various registries
 	id: u64,
 
-	// Client connection state
+	/// Client connection state
 	conn_state: ConnState,
 
-	// Post the client is currently editing
+	/// Post the client is currently editing
 	open_post: Option<OpenPost>,
 
-	// First synchronization of this client occurred
+	/// First synchronization of this client occurred
 	synced_once: bool,
 
-	// Public key public and private ID set
+	/// Public key public and private ID set
 	pub_key: PubKeyDesc,
 }
 
-// Return with invalid length error
+/// Return with invalid length error
 macro_rules! err_invalid_length {
 	($val:expr, $len:expr) => {
 		str_err!("invalid {} length: {}", stringify!($val), $len);
 	};
 }
 
-// Assert collection length
+/// Assert collection length
+///
+/// $val: expression to check length of
+/// $min: minimum length; defaults to 1
+/// $max: maximum length
 #[rustfmt::skip]
 macro_rules! check_len {
-	// Assert collection length greater than 1 and smaller than $max
 	($val:expr, $max:expr) => {
 		check_len!($val, 1, $max)
 	};
-	// Assert collection length greater than $min and smaller than $max
 	($val:expr, $min:expr, $max:expr) => {{
 		let l = $val.len();
 		if l < $min || l > $max {
@@ -93,14 +95,16 @@ macro_rules! check_len {
 	}};
 }
 
-// Assert unicode string character length. Returns the length.
+/// Assert unicode string character length. Returns the length.
+///
+/// $val: expression to check length of
+/// $min: minimum length; defaults to 1
+/// $max: maximum length
 #[rustfmt::skip]
 macro_rules! check_unicode_len {
-	// Assert string length greater than 1 and smaller than $max
 	($val:expr, $max:expr) => {
 		check_unicode_len!($val, 1, $max)
 	};
-	// Assert string length greater than $min and smaller than $max
 	($val:expr, $min:expr, $max:expr) => {{
 		let l = $val.chars().count();
 		if l < $min || l > $max {
@@ -117,7 +121,7 @@ macro_rules! log_msg_in {
 }
 
 impl Client {
-	// Create fresh unconnected client
+	/// Create fresh unconnected client
 	pub fn new(id: u64) -> Self {
 		Self {
 			id,
@@ -128,9 +132,9 @@ impl Client {
 		}
 	}
 
-	// Handle received message
+	/// Handle received message
 	pub fn receive_message(&mut self, buf: &[u8]) -> DynResult {
-		// Helper to make message handling through route!() more terse
+		/// Helper to make message handling through route!() more terse
 		struct HandlerResult(DynResult);
 
 		impl From<()> for HandlerResult {
@@ -153,7 +157,6 @@ impl Client {
 
 		// Separate function to enable type inference of payload type from
 		// lambda argument type
-		#[allow(unused_variables)]
 		fn _route<'de, T, R>(
 			dec: &'de mut Decoder,
 			typ: MessageType,
@@ -258,7 +261,7 @@ impl Client {
 		}
 	}
 
-	// Send a private message to only this client
+	/// Send a private message to only this client
 	fn send<T>(&self, t: MessageType, payload: &T) -> std::io::Result<()>
 	where
 		T: Serialize + std::fmt::Debug,
@@ -271,7 +274,7 @@ impl Client {
 		Ok(())
 	}
 
-	// Synchronize to a specific thread or board index
+	/// Synchronize to a specific thread or board index
 	fn synchronize(&mut self, feed: u64) -> DynResult {
 		if feed != 0 && !bindings::thread_exists(feed)? {
 			str_err!("invalid thread: {}", feed);
@@ -289,7 +292,7 @@ impl Client {
 		Ok(())
 	}
 
-	// Validates a solved captcha
+	/// Validates a solved captcha
 	pub fn check_captcha(&mut self, solution: &[u8]) -> DynResult {
 		if config::read(|c| c.captcha) {
 			check_len!(solution, 4);
@@ -300,7 +303,7 @@ impl Client {
 		Ok(())
 	}
 
-	// Trim and replace String
+	/// Trim and replace String
 	fn trim(src: &mut String) {
 		let t = src.trim();
 		// Don't always reallocate
@@ -309,7 +312,7 @@ impl Client {
 		}
 	}
 
-	// Assert client does not already have an open post
+	/// Assert client does not already have an open post
 	fn assert_no_open_post(&self) -> Result<(), String> {
 		if self.open_post.is_some() {
 			str_err!("already have open post")
@@ -317,7 +320,7 @@ impl Client {
 		Ok(())
 	}
 
-	// Create a new thread and pass its ID to client
+	/// Create a new thread and pass its ID to client
 	fn insert_thread(&mut self, mut req: ThreadCreationReq) -> DynResult {
 		// TODO: Lock new thread form, if postform is open
 		self.assert_no_open_post()?;
@@ -367,7 +370,7 @@ impl Client {
 		Ok(())
 	}
 
-	// Return current Unix timestamp
+	/// Return current Unix timestamp
 	fn now() -> u32 {
 		std::time::SystemTime::now()
 			.duration_since(std::time::UNIX_EPOCH)
@@ -375,7 +378,7 @@ impl Client {
 			.as_secs() as u32
 	}
 
-	// Create a new post in a thread and pass its ID to client
+	/// Create a new post in a thread and pass its ID to client
 	fn insert_post(&mut self, req: PostCreationReq) -> DynResult {
 		self.assert_no_open_post()?;
 
@@ -396,7 +399,7 @@ impl Client {
 		// Ensures old post non-existence records do not persist indefinitely.
 		crate::body::cache_location(id, req.thread, page);
 
-		pulsar::insert_post(protocol::payloads::PostCreationNotice {
+		pulsar::insert_post(protocol::payloads::PostCreationNotification {
 			id,
 			thread: req.thread,
 			page,
@@ -408,7 +411,7 @@ impl Client {
 		Ok(())
 	}
 
-	// Apply diff to text body
+	/// Apply diff to text body
 	fn patch_body(&mut self, req: TextPatch) -> DynResult {
 		if req.insert.len() > 2000 {
 			str_err!("patch too long")
@@ -431,11 +434,11 @@ impl Client {
 		})
 	}
 
-	// Update post body, sync to various services and DB and performs error
-	// handling
+	/// Update post body, sync to various services and DB and performs error
+	/// handling
 	//
-	// affected: number of Unicode characters affected by the mutation
-	// modify: modifies text body
+	/// affected: number of Unicode characters affected by the mutation
+	/// modify: modifies text body
 	fn update_body(
 		&mut self,
 		affected: usize,
@@ -460,9 +463,9 @@ impl Client {
 		}
 	}
 
-	// Cached empty body JSON representation
+	/// Cached empty body JSON representation
 	//
-	// Non-useless const fn when?
+	/// Non-useless const fn when?
 	fn empty_body_json() -> &'static [u8] {
 		lazy_static! {
 			static ref BODY: Vec<u8> = serde_json::to_vec(
@@ -522,7 +525,7 @@ impl Client {
 		Ok(())
 	}
 
-	// Handle Authorization::Saved in handshake request
+	/// Handle Authorization::Saved in handshake request
 	fn handle_auth_saved(
 		&mut self,
 		nonce: [u8; 32],
@@ -553,7 +556,7 @@ impl Client {
 		Ok(())
 	}
 
-	// Handle repeated handshake after request by server
+	/// Handle repeated handshake after request by server
 	fn handle_reshake(
 		&mut self,
 		mut dec: &mut Decoder,
@@ -575,7 +578,7 @@ impl Client {
 		Ok(())
 	}
 
-	// Parse post name field in to name and tripcode
+	/// Parse post name field in to name and tripcode
 	fn parse_name(
 		mut src: String,
 	) -> Result<[Option<String>; 2], &'static str> {

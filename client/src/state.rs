@@ -19,13 +19,13 @@ use yew::{
 
 // TODO: break up into submodules
 
-// Key used to store authentication key pair in local storage
+/// Key used to store authentication key pair in local storage
 const KEY_PAIR_KEY: &str = "key_pair";
 
-// Key used to store Options in local storage
+/// Key used to store Options in local storage
 const OPTIONS_KEY: &str = "options";
 
-// Location setting flags
+/// Location setting flags
 const PUSH_STATE: u8 = 1;
 const SET_STATE: u8 = 1 << 1;
 const FETCHED_JSON: u8 = 1 << 2;
@@ -40,7 +40,7 @@ pub enum ImageExpansionMode {
 	FitScreen,
 }
 
-// Global user-set options
+/// Global user-set options
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 pub struct Options {
@@ -80,7 +80,7 @@ impl Default for Options {
 	}
 }
 
-// Exported public server configurations
+/// Exported public server configurations
 //
 // TODO: Get config updates though websocket
 #[derive(Serialize, Deserialize, Default)]
@@ -96,18 +96,21 @@ pub struct Configs {
 	pub links: HashMap<String, String>,
 }
 
-// Key pair used to authenticate with server
+/// Key pair used to authenticate with server
 #[derive(Serialize, Deserialize, Default, Clone, Eq, PartialEq)]
 pub struct KeyPair {
+	/// Private key
 	pub private: Vec<u8>,
+
+	/// Public key
 	pub public: Vec<u8>,
 
-	// ID the key is registered to on the server
+	/// ID the key is registered to on the server
 	pub id: Option<uuid::Uuid>,
 }
 
 impl KeyPair {
-	// Store in local storage
+	/// Store in local storage
 	fn store(&self) -> util::Result {
 		let mut dst = Vec::with_capacity(1 << 10);
 		{
@@ -128,7 +131,7 @@ impl KeyPair {
 		Ok(())
 	}
 
-	// Load from local storage
+	/// Load from local storage
 	fn load() -> util::Result<Option<KeyPair>> {
 		Ok(match util::local_storage().get_item(KEY_PAIR_KEY)? {
 			Some(s) => Some(bincode::deserialize_from(
@@ -141,15 +144,13 @@ impl KeyPair {
 			)?),
 			None => None,
 		})
-
-		// Ok(bincode::deserialize_from(reader: R))
 	}
 
 	fn crypto() -> util::Result<web_sys::SubtleCrypto> {
 		Ok(util::window().crypto()?.subtle())
 	}
 
-	// Return dict describing the key pair algorithm
+	/// Return dict describing the key pair algorithm
 	fn algo_dict() -> util::Result<js_sys::Object> {
 		let algo = js_sys::Object::new();
 
@@ -180,12 +181,12 @@ impl KeyPair {
 		Ok(algo)
 	}
 
-	// Return key usage array to pass to JS
+	/// Return key usage array to pass to JS
 	fn usages() -> wasm_bindgen::JsValue {
 		util::into_js_array(Some("sign")).into()
 	}
 
-	// Generate a new key pair
+	/// Generate a new key pair
 	async fn generate() -> util::Result<KeyPair> {
 		let pair = wasm_bindgen_futures::JsFuture::from(
 			Self::crypto()?.generate_key_with_object(
@@ -228,7 +229,7 @@ impl KeyPair {
 		})
 	}
 
-	// Sign SHA-256 digest of passed buffer
+	/// Sign SHA-256 digest of passed buffer
 	pub async fn sign(
 		&self,
 		buf: &mut [u8],
@@ -274,7 +275,7 @@ impl KeyPair {
 	}
 }
 
-// Optional flags and contents for creating new posts (including OPs)
+/// Optional flags and contents for creating new posts (including OPs)
 #[derive(Default)]
 pub struct NewPostOpts {
 	pub sage: bool,
@@ -282,63 +283,68 @@ pub struct NewPostOpts {
 	// TODO: staff titles
 }
 
-// Stored separately from the agent to avoid needless serialization of post data
-// on change propagation. The entire application has read-only access to this
-// singleton. Writes have to be coordinated through the agent to ensure
-// propagation.
+/// Stored separately from the agent to avoid needless serialization of post data
+/// on change propagation. The entire application has read-only access to this
+/// singleton. Writes have to be coordinated through the agent to ensure
+/// propagation.
 #[derive(Default)]
 pub struct State {
-	// Location the app is currently navigated to
+	/// Location the app is currently navigated to
 	pub location: Location,
 
-	// Exported public server configurations
+	/// Exported public server configurations
 	pub configs: Configs,
 
-	// All registered threads
+	/// All registered threads
 	pub threads: HashMap<u64, Thread>,
 
-	// All registered posts from any sources
+	/// All registered posts from any sources
 	//
 	// TODO: Some kind of post eviction algorithm.
 	// For now posts are never removed from memory for easing implementation of
 	// a more persistent cross-feed UI.
 	pub posts: HashMap<u64, Post>,
 
-	// Map for quick lookup of post IDs by a (thread, page) tuple
+	/// Map for quick lookup of post IDs by a (thread, page) tuple
 	pub posts_by_thread_page: SetMap<(u64, u32), u64>,
 
-	// Authentication key pair
+	/// Authentication key pair
 	pub key_pair: KeyPair,
 
-	// Public key UUID stored on the server
+	/// Public key UUID stored on the server
 	pub key_id: Option<uuid::Uuid>,
 
-	// Global user-set options
+	/// Global user-set options
 	pub options: Options,
 
-	// ID of currently open allocated post, if any
+	/// ID of currently open allocated post, if any
 	pub open_post_id: Option<u64>,
 
-	// Posts this user has made
+	/// Posts this user has made
 	// TODO: Menu option to mark any post as mine
 	// TODO: Persistance to indexedDB
 	pub mine: HashSet<u64>,
 
-	// Optional flags and contents for creating new posts (including OPs)
+	/// Optional flags and contents for creating new posts (including OPs)
 	pub new_post_opts: NewPostOpts,
 }
 
 impl State {
-	// Insert a post into the registry
+	/// Insert a post into the registry
 	fn register_post(&mut self, p: Post) {
 		self.posts_by_thread_page.insert((p.thread, p.page), p.id);
 		self.posts.insert(p.id, p);
 	}
 }
 
-protocol::gen_global! {pub, , State}
+protocol::gen_global! {
+	State {
+		pub fn read();
+		pub fn write();
+	}
+}
 
-// Thread information container
+/// Thread information container
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Thread {
 	pub id: u64,
@@ -354,7 +360,7 @@ pub struct Thread {
 	pub image_count: u64,
 }
 
-// Post data
+/// Post data
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Post {
 	pub id: u64,
@@ -373,7 +379,7 @@ pub struct Post {
 	pub image: Option<Image>,
 }
 
-// Decodes thread data received from the server as JSON
+/// Decodes thread data received from the server as JSON
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ThreadDecoder {
 	#[serde(flatten)]
@@ -382,7 +388,7 @@ pub struct ThreadDecoder {
 	posts: Vec<Post>,
 }
 
-// Global state storage and propagation agent
+/// Global state storage and propagation agent
 pub struct Agent {
 	link: AgentLink<Self>,
 	hooks: DoubleSetMap<Change, HandlerId>,
@@ -390,65 +396,65 @@ pub struct Agent {
 	render_task: Option<RenderTask>,
 }
 
-// Subscribe to updates of a value type
+/// Subscribe to updates of a value type
 pub enum Request {
 	NotifyChange(Vec<Change>),
 
-	// Change the current notifications a client is subscribed to
+	/// Change the current notifications a client is subscribed to
 	ChangeNotifications {
 		remove: Vec<Change>,
 		add: Vec<Change>,
 	},
 
-	// Fetch feed data
+	/// Fetch feed data
 	FetchFeed(Location),
 
-	// Navigate to the app to a different feed
+	/// Navigate to the app to a different feed
 	NavigateTo {
 		loc: Location,
 		flags: u8,
 	},
 
-	// Set or delete the ID of the currently used KeyPair
+	/// Set or delete the ID of the currently used KeyPair
 	SetKeyID(Option<uuid::Uuid>),
 
-	// Insert a new thread into the registry
+	/// Insert a new thread into the registry
 	InsertThread(ThreadCreationNotice),
 
-	// Set post as created by this user
+	/// Set post as created by this user
 	SetMine(u64),
 
-	// Set ID of currently open post
+	/// Set ID of currently open post
 	SetOpenPostID(Option<u64>),
 }
 
-// Selective changes of global state to be notified on
+/// Selective changes of global state to be notified on
 #[derive(Serialize, Deserialize, Eq, PartialEq, Hash, Copy, Clone, Debug)]
 pub enum Change {
-	// Change of location the app is navigated to
+	/// Change of location the app is navigated to
 	Location,
 
-	// Authentication key pair has been set by user
+	/// Authentication key pair has been set by user
 	KeyPair,
 
-	// Change to any field of Options
+	/// Change to any field of Options
 	Options,
 
-	// Change to any field of the Configs
+	/// Change to any field of the Configs
 	Configs,
 
-	// Subscribe to changes of the list of threads
+	/// Subscribe to changes of the list of threads
 	ThreadList,
 
-	// Subscribe to thread data changes, excluding the post content level.
-	// This includes changes to the post set of threads.
+	/// Subscribe to thread data changes, excluding the post content level.
+	/// This includes changes to the post set of threads.
 	Thread(u64),
 
-	// Subscribe to any changes to a post
+	/// Subscribe to any changes to a post
 	Post(u64),
 }
 
-// Abstraction over AgentLink and ComponentLink
+/// Abstraction over AgentLink and ComponentLink
 pub trait Link {
 	type Message;
 
@@ -479,7 +485,7 @@ impl<C: Component> Link for ComponentLink<C> {
 	}
 }
 
-// Helper for storing a hook into state updates in the client struct
+/// Helper for storing a hook into state updates in the client struct
 pub struct HookBridge {
 	#[allow(unused)]
 	bridge: Box<dyn Bridge<Agent>>,
@@ -491,7 +497,7 @@ impl HookBridge {
 	}
 }
 
-// Crate hooks into state changes
+/// Crate hooks into state changes
 pub fn hook<L, F>(link: &L, changes: Vec<Change>, f: F) -> HookBridge
 where
 	L: Link,
@@ -508,7 +514,7 @@ where
 	b
 }
 
-// Identifies a global index or thread feed
+/// Identifies a global index or thread feed
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum FeedID {
 	Index,
@@ -523,7 +529,7 @@ impl Default for FeedID {
 }
 
 impl FeedID {
-	// Return corresponding integer feed code used by the server
+	/// Return corresponding integer feed code used by the server
 	pub fn as_u64(&self) -> u64 {
 		use FeedID::*;
 
@@ -534,7 +540,7 @@ impl FeedID {
 	}
 }
 
-// Post or page margin to scroll to
+/// Post or page margin to scroll to
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug)]
 pub enum Focus {
 	Top,
@@ -548,12 +554,12 @@ impl Default for Focus {
 	}
 }
 
-// Location the app can navigate to
+/// Location the app can navigate to
 #[derive(Default, Serialize, Deserialize, Clone, Eq, PartialEq, Debug)]
 pub struct Location {
 	pub feed: FeedID,
 
-	// Focus a post after a successful render
+	/// Focus a post after a successful render
 	pub focus: Option<Focus>,
 }
 
@@ -628,7 +634,7 @@ impl Location {
 		w
 	}
 
-	// Returns, if this is a single thread page
+	/// Returns, if this is a single thread page
 	pub fn is_thread(&self) -> bool {
 		matches!(self.feed, FeedID::Thread { .. })
 	}
@@ -817,7 +823,7 @@ impl yew::agent::Agent for Agent {
 }
 
 impl Agent {
-	// Send change notification to hooked clients
+	/// Send change notification to hooked clients
 	fn trigger(&self, h: &Change) {
 		if let Some(subs) = self.hooks.get_by_key(h) {
 			for id in subs.iter() {
@@ -826,7 +832,7 @@ impl Agent {
 		}
 	}
 
-	// Set app location and propagate changes
+	/// Set app location and propagate changes
 	fn set_location(&mut self, new: Location, flags: u8) {
 		write(|s| {
 			use FeedID::*;
@@ -899,7 +905,7 @@ impl Agent {
 		});
 	}
 
-	// Fetch feed data from JSON API
+	/// Fetch feed data from JSON API
 	fn fetch_feed_data(&mut self, loc: Location, flags: u8) {
 		util::with_logging(|| {
 			use anyhow::Error;
@@ -1037,7 +1043,7 @@ impl Agent {
 	}
 }
 
-// Navigate to the app to a different location
+/// Navigate to the app to a different location
 pub fn navigate_to(loc: Location) {
 	use yew::agent::Dispatched;
 
@@ -1047,7 +1053,7 @@ pub fn navigate_to(loc: Location) {
 	});
 }
 
-// Initialize application state
+/// Initialize application state
 pub async fn init() -> util::Result {
 	let kp = match KeyPair::load()? {
 		Some(kp) => kp,
@@ -1069,7 +1075,8 @@ pub async fn init() -> util::Result {
 			}
 		}
 
-		// Manage scrolling ourselves
+		// Manage scrolling ourselves because of the dynamic nature of page
+		// generation
 		util::window()
 			.history()?
 			.set_scroll_restoration(web_sys::ScrollRestoration::Manual)?;

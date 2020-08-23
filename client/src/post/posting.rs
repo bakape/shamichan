@@ -10,12 +10,12 @@ use yew::{
 	ComponentLink, Html, NodeRef,
 };
 
-// A post actively being edited by the user
+/// A post actively being edited by the user
 pub type PostForm = PostCommon<Inner>;
 
 #[derive(Default)]
 pub struct Inner {
-	// Must not be None after init() has been called
+	/// Must not be None after init() has been called
 	#[allow(unused)]
 	agent: Option<Box<dyn Bridge<Agent>>>,
 
@@ -33,24 +33,24 @@ pub struct PostQuoteReq {
 
 #[derive(Clone)]
 pub enum FormMessage {
-	// Set agent state
+	/// Set agent state
 	SetState(State),
 
-	// Quote a post and include any selected text`
+	/// Quote a post and include any selected text`
 	QuotePost(PostQuoteReq),
 
-	// Set ID of post being edited
+	/// Set ID of post being edited
 	SetID(u64),
 
-	// Textarea contents changed
+	/// Textarea contents changed
 	TextInput(String),
 
-	// Focus the textarea at position
+	/// Focus the textarea at position
 	Focus {
-		// Position of cursor
+		/// Position of cursor
 		pos: u32,
 
-		// First of 2 sequential requests
+		/// First of 2 sequential requests
 		first: bool,
 	},
 }
@@ -236,7 +236,7 @@ impl PostComponent for Inner {
 }
 
 impl Inner {
-	// Return input textarea element
+	/// Return input textarea element
 	fn text_area(&self) -> util::Result<web_sys::HtmlTextAreaElement> {
 		match self.text_area.get() {
 			Some(el) => {
@@ -246,8 +246,8 @@ impl Inner {
 		}
 	}
 
-	// Replace the current body and set the cursor to the input's end.
-	// commit: commit any changes to the server
+	/// Replace the current body and set the cursor to the input's end.
+	/// commit: commit any changes to the server
 	fn replace_text(
 		&mut self,
 		link: &ComponentLink<PostCommon<Self>>,
@@ -264,7 +264,7 @@ impl Inner {
 		Ok(())
 	}
 
-	// Send message to execute on the next animation frame
+	/// Send message to execute on the next animation frame
 	fn on_next_frame(
 		&mut self,
 		link: &ComponentLink<PostCommon<Self>>,
@@ -276,12 +276,12 @@ impl Inner {
 		.into();
 	}
 
-	// Commit body changes to server
+	/// Commit body changes to server
 	fn commit(&mut self, body: String) {
 		self.agent.as_mut().unwrap().send(Request::CommitText(body));
 	}
 
-	// Resize textarea to content width and adjust height
+	/// Resize textarea to content width and adjust height
 	fn resize_textarea(&mut self) -> util::Result {
 		let ta = self.text_area()?;
 		let s = ta.style();
@@ -310,33 +310,33 @@ impl Inner {
 	}
 }
 
-// State oif the agent FSM
+/// State oif the agent FSM
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum State {
-	// Ready to create posts
+	/// Ready to create posts
 	Ready,
 
-	// Post creation controls locked
+	/// Post creation controls locked
 	Locked,
 
-	// Sent a request to allocate a post on target thread
+	/// Sent a request to allocate a post on target thread
 	Allocating(u64),
 
-	// Post open and allocated to the server
+	/// Post open and allocated to the server
 	Allocated,
 
-	// Captcha solution required to allocate to target thread.
-	// This can only take place as an interrupt from the server during
-	// Allocating.
+	/// Captcha solution required to allocate to target thread.
+	/// This can only take place as an interrupt from the server during
+	/// Allocating.
 	NeedCaptcha(u64),
 
-	// Allocated post during loss of connectivity
+	/// Allocated post during loss of connectivity
 	Stalled,
 
-	// Post open but not yet allocating to target thread
+	/// Post open but not yet allocating to target thread
 	Draft(u64),
 
-	// Suffered unrecoverable error
+	/// Suffered unrecoverable error
 	Erred,
 }
 
@@ -351,7 +351,7 @@ pub enum Message {
 	SelectionChange,
 }
 
-// Currently selected text and elements
+/// Currently selected text and elements
 struct Selection {
 	start: web_sys::Element,
 	end: web_sys::Element,
@@ -359,22 +359,22 @@ struct Selection {
 }
 
 pub enum Request {
-	// Quote a post and any selected text
+	/// Quote a post and any selected text
 	QuotePost {
 		post: u64,
 		target_post: web_sys::Node,
 	},
 
-	// Register as a post form view
+	/// Register as a post form view
 	SubViewUpdates,
 
-	// Commit text body changes
+	/// Commit text body changes
 	CommitText(String),
 
-	// Set postform post as allocated and it's ID
+	/// Set postform post as allocated and it's ID
 	SetAllocated(u64),
 
-	// Open a draft postform for a target thread
+	/// Open a draft postform for a target thread
 	OpenDraft(u64),
 }
 
@@ -385,17 +385,17 @@ enum Subscription {
 
 #[derive(Clone)]
 pub enum Response {
-	// Agent state update
+	/// Agent state update
 	State(State),
 
-	// Render quoted post in view
+	/// Render quoted post in view
 	RenderQuoted(PostQuoteReq),
 
-	// Set ID of post being edited
+	/// Set ID of post being edited
 	SetID(u64),
 }
 
-// Only one PostForm can exist at a time so this agent manages it
+/// Only one PostForm can exist at a time so this agent manages it
 pub struct Agent {
 	state: State,
 	link: AgentLink<Self>,
@@ -406,11 +406,11 @@ pub struct Agent {
 
 	conn_state: connection::State,
 
-	// Store last selected range, so we can access it after a mouse click on
-	// quote links, which cause that link to become selected
+	/// Store last selected range, so we can access it after a mouse click on
+	/// quote links, which cause that link to become selected
 	last_selection: Option<Selection>,
 
-	// Current state of the open post body text
+	/// Current state of the open post body text
 	post_body: Vec<char>,
 }
 
@@ -578,7 +578,7 @@ impl yew::agent::Agent for Agent {
 }
 
 impl Agent {
-	// Set new state and send it to all subscribers
+	/// Set new state and send it to all subscribers
 	fn set_state(&mut self, new: State) {
 		if self.state != new {
 			debug_log!(format!(
@@ -599,7 +599,7 @@ impl Agent {
 		self.link.respond(subscriber, Response::State(self.state));
 	}
 
-	// Send a message only to view subscribers
+	/// Send a message only to view subscribers
 	fn send_to_views(&self, msg: &Response) {
 		for h in self
 			.subscribers
@@ -610,8 +610,8 @@ impl Agent {
 		}
 	}
 
-	// Try allocating a post, if it is eligible and not yet allocated.
-	// Returns, if a post is allocated or allocating.
+	/// Try allocating a post, if it is eligible and not yet allocated.
+	/// Returns, if a post is allocated or allocating.
 	fn try_alloc(&mut self) -> bool {
 		use State::*;
 
@@ -688,7 +688,7 @@ impl Agent {
 		});
 	}
 
-	// Diff and commit text changes to server
+	/// Diff and commit text changes to server
 	fn commit_text(&mut self, new: Vec<char>) {
 		if !self.try_alloc() || self.state != State::Allocated {
 			// Buffer post body till alloc
@@ -724,7 +724,7 @@ impl Agent {
 		self.post_body = new;
 	}
 
-	// Commit any pending text or images
+	/// Commit any pending text or images
 	fn commit_pending(&mut self) {
 		if !self.post_body.is_empty() {
 			let b = std::mem::take(&mut self.post_body);

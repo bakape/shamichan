@@ -12,7 +12,7 @@ pub struct Inner {
 	page_count: u32,
 }
 
-// Used to select a certain page of a thread
+/// Used to select a certain page of a thread
 pub type PageSelector = comp_util::HookedComponent<Inner>;
 
 #[derive(Clone, Properties, Eq, PartialEq, Debug)]
@@ -145,7 +145,7 @@ impl Inner {
 		}
 	}
 
-	// Fetch and set new page count value for thread from global state
+	/// Fetch and set new page count value for thread from global state
 	fn fetch_page_count(&mut self, thread: u64) {
 		self.page_count = state::read(|s| {
 			s.threads.get(&thread).map(|t| t.last_page + 1).unwrap_or(1)

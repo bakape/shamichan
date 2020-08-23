@@ -1,7 +1,7 @@
-// Boxed error result type shorthand
+/// Boxed error result type shorthand
 pub type DynResult<T = ()> = Result<T, Box<dyn std::error::Error>>;
 
-// Return a string as error
+/// Return a string as error
 #[macro_export]
 macro_rules! str_err {
 	($msg:expr) => {
@@ -12,7 +12,7 @@ macro_rules! str_err {
     };
 }
 
-// Run future within tokio runtime, blocking until it completes
+/// Run future within tokio runtime, blocking until it completes
 pub fn run_future<F>(f: F) -> F::Output
 where
 	F: futures::prelude::Future,

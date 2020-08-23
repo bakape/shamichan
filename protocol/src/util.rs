@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
-// Maps of K to sets of V
+/// Maps of K to sets of V
 #[derive(Clone, Debug)]
 pub struct SetMap<K, V>(HashMap<K, HashSet<V>>)
 where
@@ -61,7 +61,7 @@ where
 	}
 }
 
-// Maps of K to sets of V and V to sets of K simultaneously
+/// Maps of K to sets of V and V to sets of K simultaneously
 #[derive(Debug)]
 pub struct DoubleSetMap<K, V>
 where
@@ -128,19 +128,15 @@ where
 	}
 }
 
-// Generate functions for safely accessing global variable behind a RWLock.
-//
-// $vis: accessor visibility
-// $type: type to store; must implement Default
-// $extra_init: extra initialization lambda to execute
+/// Generate functions for safely accessing global variable behind a RWLock
 #[macro_export]
 macro_rules! gen_global {
 	(
-		$vis_read:vis,
-		$fn_read:ident,
-		$vis_write:vis,
-		$fn_write:ident,
-		$type:ty
+		$(#[$meta:meta])*
+		$type:ty {
+			$vis_read:vis fn $fn_read:ident();
+			$vis_write:vis fn $fn_write:ident();
+		}
 	) => {
 		static __ONCE: std::sync::Once = std::sync::Once::new();
 		static mut __GLOBAL: Option<std::sync::RwLock<$type>> = None;
@@ -151,8 +147,8 @@ macro_rules! gen_global {
 			});
 		}
 
-		// Open global for reading
 		#[allow(unused)]
+		$(#[$meta])*
 		$vis_read fn $fn_read<F, R>(cb: F) -> R
 		where
 			F: FnOnce(&$type) -> R,
@@ -161,8 +157,8 @@ macro_rules! gen_global {
 			cb(&*unsafe { __GLOBAL.as_ref().unwrap().read().unwrap() })
 		}
 
-		// Open global for writing
 		#[allow(unused)]
+		$(#[$meta])*
 		$vis_write fn $fn_write<F, R>(cb: F) -> R
 		where
 			F: FnOnce(&mut $type) -> R,
@@ -170,9 +166,6 @@ macro_rules! gen_global {
 			__init();
 			cb(&mut *unsafe { __GLOBAL.as_ref().unwrap().write().unwrap() })
 		}
-	};
-	($vis_read:vis, $vis_write:vis, $type:ty) => {
-		$crate::gen_global!{$vis_read, read, $vis_write, write, $type}
 	};
 }
 

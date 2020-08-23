@@ -6,7 +6,7 @@ use std::os::raw::{c_char, c_void};
 use std::ptr::null_mut;
 use std::sync::Arc;
 
-// Wrapper for passing buffer references over the FFI
+/// Wrapper for passing buffer references over the FFI
 #[repr(C)]
 #[derive(Debug)]
 pub struct WSBuffer {
@@ -50,7 +50,7 @@ impl From<&String> for WSBuffer {
 	}
 }
 
-// Like WSBuffer, but points to malloced data and frees itself on drop
+/// Like WSBuffer, but points to malloced data and frees itself on drop
 #[repr(C)]
 #[derive(Debug)]
 pub struct WSBufferMut {
@@ -88,7 +88,7 @@ impl Drop for WSBufferMut {
 	}
 }
 
-// Like WSBuffer, but with pointer for reference counting on Rust side
+/// Like WSBuffer, but with pointer for reference counting on Rust side
 #[repr(C)]
 #[derive(Debug)]
 pub struct WSRcBuffer {
@@ -108,7 +108,7 @@ impl From<Arc<Vec<u8>>> for WSRcBuffer {
 	}
 }
 
-// Register a websocket client with a unique ID and return any error
+/// Register a websocket client with a unique ID and return any error
 #[no_mangle]
 extern "C" fn ws_register_client(id: u64) -> *mut c_char {
 	cast_to_c_error(|| -> Result<(), String> {
@@ -117,7 +117,7 @@ extern "C" fn ws_register_client(id: u64) -> *mut c_char {
 	})
 }
 
-// Cast error to owned C error and return it, if any
+/// Cast error to owned C error and return it, if any
 fn cast_to_c_error<E, F>(f: F) -> *mut c_char
 where
 	E: std::fmt::Display,
@@ -146,9 +146,9 @@ where
 	}
 }
 
-// Pass received message to Rust side. This operation never returns an error to
-// simplify error propagation. All errors are propagated back to Go only using
-// ws_close_client.
+/// Pass received message to Rust side. This operation never returns an error to
+/// simplify error propagation. All errors are propagated back to Go only using
+/// ws_close_client.
 #[no_mangle]
 extern "C" fn ws_receive_message(client_id: u64, msg: WSBuffer) {
 	// Client could be not found due to a race between the main client
@@ -162,19 +162,19 @@ extern "C" fn ws_receive_message(client_id: u64, msg: WSBuffer) {
 	}
 }
 
-// Remove client from registry
+/// Remove client from registry
 #[no_mangle]
 extern "C" fn ws_unregister_client(id: u64) {
 	super::registry::remove_client(id);
 }
 
-// Unref and potentially free a message source on the Rust side
+/// Unref and potentially free a message source on the Rust side
 #[no_mangle]
 extern "C" fn ws_unref_message(src: *const c_void) {
 	unsafe { Arc::<Vec<u8>>::from_raw(src as *const Vec<u8>) }; // Drop it
 }
 
-// Send close message with optional error to client and unregister it
+/// Send close message with optional error to client and unregister it
 pub fn close_client(id: u64, err: &str) {
 	// Go would still unregister the client eventually, but removing it early
 	// will prevent any further message write attempts to it.
@@ -184,14 +184,14 @@ pub fn close_client(id: u64, err: &str) {
 	unsafe { ws_close_client(id, err.into()) };
 }
 
-// Check, if thread exists in DB
+/// Check, if thread exists in DB
 pub fn thread_exists(id: u64) -> Result<bool, String> {
 	let mut exists = false;
 	cast_c_err(unsafe { ws_thread_exists(id, &mut exists as *mut bool) })?;
 	return Ok(exists);
 }
 
-// Cast owned C error to Result
+/// Cast owned C error to Result
 fn cast_c_err(err: *mut c_char) -> Result<(), String> {
 	if err != null_mut() {
 		let s: String = unsafe { CStr::from_ptr(err) }
@@ -203,17 +203,17 @@ fn cast_c_err(err: *mut c_char) -> Result<(), String> {
 	Ok(())
 }
 
-// Write message to specific client
+/// Write message to specific client
 pub fn write_message(client_id: u64, msg: Arc<Vec<u8>>) {
 	unsafe { ws_write_message(client_id, msg.into()) };
 }
 
-// Cast reference to a Option<String> to WSBuffer
+/// Cast reference to a Option<String> to WSBuffer
 fn ref_option(src: &Option<String>) -> WSBuffer {
 	src.as_ref().map(|s| s.into()).unwrap_or_default()
 }
 
-// Create a new thread and return it's ID
+/// Create a new thread and return it's ID
 pub fn insert_thread(
 	subject: &str,
 	tags: &[String],
@@ -239,7 +239,7 @@ pub fn insert_thread(
 	Ok(id)
 }
 
-// Create a new post and return it's ID and page
+/// Create a new post and return it's ID and page
 pub fn insert_post(
 	thread: u64,
 	public_key: u64,
@@ -263,12 +263,12 @@ pub fn insert_post(
 	Ok((id, page))
 }
 
-// Log error on Go side
+/// Log error on Go side
 pub fn log_error(err: &str) {
 	unsafe { ws_log_error(err.into()) };
 }
 
-// Propagate select configuration changes to Rust side
+/// Propagate select configuration changes to Rust side
 #[no_mangle]
 extern "C" fn ws_set_config(buf: WSBuffer) -> *mut c_char {
 	cast_to_c_error(|| -> Result<(), serde_json::Error> {
@@ -278,7 +278,7 @@ extern "C" fn ws_set_config(buf: WSBuffer) -> *mut c_char {
 	})
 }
 
-// Initialize module
+/// Initialize module
 #[no_mangle]
 extern "C" fn ws_init(feed_data: WSBuffer) -> *mut c_char {
 	cast_to_c_error(|| -> Result<(), String> {
@@ -290,9 +290,9 @@ extern "C" fn ws_init(feed_data: WSBuffer) -> *mut c_char {
 	})
 }
 
-// Register image insertion into an open post.
+/// Register image insertion into an open post.
 //
-// image: JSON-encoded inserted image data
+/// image: JSON-encoded inserted image data
 #[no_mangle]
 extern "C" fn ws_insert_image(
 	thread: u64,
@@ -319,8 +319,8 @@ extern "C" fn ws_insert_image(
 	})
 }
 
-// Register public key in the DB (if not already registered) and return its
-// private ID, public ID and if the key was freshly registered
+/// Register public key in the DB (if not already registered) and return its
+/// private ID, public ID and if the key was freshly registered
 pub fn register_public_key(
 	pub_key: &[u8],
 ) -> Result<(u64, uuid::Uuid, bool), String> {
@@ -338,7 +338,7 @@ pub fn register_public_key(
 	Ok((priv_id, uuid::Uuid::from_bytes(pub_id), fresh))
 }
 
-// Get public key by its public ID together with its private ID
+/// Get public key by its public ID together with its private ID
 pub fn get_public_key(
 	pub_id: uuid::Uuid,
 ) -> Result<(u64, WSBufferMut), String> {
@@ -354,8 +354,8 @@ pub fn get_public_key(
 	Ok((priv_id, pub_key))
 }
 
-// Get thread and page numbers a post is in.
-// Returns OK(None), if post does not exist.
+/// Get thread and page numbers a post is in.
+/// Returns OK(None), if post does not exist.
 pub fn get_post_parenthood(id: u64) -> Result<Option<(u64, u32)>, String> {
 	let mut thread = 0;
 	let mut page = 0;
@@ -377,15 +377,15 @@ pub fn get_post_parenthood(id: u64) -> Result<Option<(u64, u32)>, String> {
 	}
 }
 
-// Increments spam detection score of a public key and sends captcha requests,
-// if score exceeded.
+/// Increments spam detection score of a public key and sends captcha requests,
+/// if score exceeded.
 pub fn increment_spam_score(pub_key: u64, score: usize) {
 	unsafe {
 		ws_increment_spam_score(pub_key, score as u64);
 	}
 }
 
-// Check, if user needs to solve a captcha
+/// Check, if user needs to solve a captcha
 pub fn need_captcha(pub_key: u64) -> Result<bool, String> {
 	if !crate::config::read(|c| c.captcha) {
 		return Ok(false);
@@ -396,7 +396,7 @@ pub fn need_captcha(pub_key: u64) -> Result<bool, String> {
 	Ok(need)
 }
 
-// Linked from Go
+/// Linked from Go
 extern "C" {
 	fn ws_write_message(client_id: u64, msg: WSRcBuffer);
 	fn ws_close_client(clientID: u64, err: WSBuffer);

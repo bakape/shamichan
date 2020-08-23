@@ -14,8 +14,8 @@ macro_rules! comp_pat {
 	};
 }
 
-// Patterns for matching supported providers
 lazy_static! {
+	/// Patterns for matching supported providers
 	static ref PATTERNS: [(EmbedProvider, Regex); 8] = comp_pat! {
 		YouTube => r#"https?:\/\/(?:[^\.]+\.)?(?:youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/watch\?v=)[a-zA-Z0-9_-]+"#
 		Twitter => r#"https?://(?:www|mobile\\.)?twitter\\.com/(?:#!/)?([^/]+)/status(?:es)?/(\\d+)"#
@@ -28,7 +28,7 @@ lazy_static! {
 	};
 }
 
-// Parse a HTTP or HTTPS URL that also might be an embed
+/// Parse a HTTP or HTTPS URL that also might be an embed
 pub fn parse_http_url(word: &str, flags: u8) -> Option<Node> {
 	if !url::Url::parse(word).is_ok() {
 		return None;

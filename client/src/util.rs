@@ -3,7 +3,7 @@ use wasm_bindgen::prelude::JsValue;
 use wasm_bindgen::JsCast;
 use web_sys;
 
-// Simple string error type for passing between subsystems and FFI
+/// Simple string error type for passing between subsystems and FFI
 #[derive(Debug)]
 pub struct Error(String);
 
@@ -43,7 +43,7 @@ impl std::fmt::Display for Error {
 	}
 }
 
-// Trait specialization when?
+/// Trait specialization when?
 macro_rules! from_display {
 	($($type:ty),+) => {
 		$(
@@ -68,10 +68,10 @@ from_display! {
 	std::fmt::Error
 }
 
-// Shorthand for most commonly used Result type
+/// Shorthand for most commonly used Result type
 pub type Result<T = ()> = std::result::Result<T, Error>;
 
-// Cache global JS variable lookup
+/// Cache global JS variable lookup
 #[macro_export]
 macro_rules! cache_variable {
 	($type:ty, $get:expr) => {{
@@ -85,40 +85,51 @@ macro_rules! cache_variable {
 		}};
 }
 
-// Define function that caches global JS variable lookup
+/// Define function that caches global JS variable lookup
 #[macro_export]
 macro_rules! def_cached_getter {
-	($visibility:vis, $name:ident, $type:ty, $get:expr) => {
-		$visibility fn $name() -> &'static $type {
-			$crate::cache_variable! { $type, $get }
+	(
+		$(#[$meta:meta])*
+		$vis:vis $name:ident() -> $type:ty {
+			$get:expr
+		}
+	) => {
+		$(#[$meta])*
+		$vis fn $name() -> &'static $type {
+			$crate::cache_variable! { $type, || $get }
 		}
 	};
-	($name:ident, $type:ty, $get:expr) => {
-		def_cached_getter! { , $name,$type, $expr }
-	};
 }
 
-// Get JS window global
-def_cached_getter! { pub, window, web_sys::Window,
-	|| web_sys::window().expect("window undefined")
+def_cached_getter! {
+	/// Get JS window global
+	pub window() -> web_sys::Window {
+		web_sys::window().expect("window undefined")
+	}
 }
 
-// Get page document
-def_cached_getter! { pub, document, web_sys::Document,
-	|| window().document().expect("document undefined")
+def_cached_getter! {
+	/// Get page document
+	pub document() -> web_sys::Document {
+		window().document().expect("document undefined")
+	}
 }
 
-// Get local storage manager
-def_cached_getter! { pub, local_storage, web_sys::Storage,
-	|| window().local_storage().unwrap().unwrap()
+def_cached_getter! {
+	/// Get local storage manager
+	pub local_storage() -> web_sys::Storage {
+		window().local_storage().unwrap().unwrap()
+	}
 }
 
-// Get the host part of the current location
-def_cached_getter! { pub, host, String,
-	|| window().location().host().unwrap()
+def_cached_getter! {
+	/// Get the host part of the current location
+	pub host() -> String {
+		window().location().host().unwrap()
+	}
 }
 
-// Add static passive DOM event listener
+/// Add static passive DOM event listener
 pub fn add_static_listener<E>(
 	target: &impl AsRef<web_sys::EventTarget>,
 	event: &str,
@@ -147,21 +158,21 @@ pub fn add_static_listener<E>(
 	cl.forget();
 }
 
-// Log any error to console
+/// Log any error to console
 pub fn log_error_res<T, E: Into<Error>>(res: std::result::Result<T, E>) {
 	if let Err(err) = res {
 		log_error(err.into());
 	}
 }
 
-// Log error to console
+/// Log error to console
 pub fn log_error<T: std::fmt::Display>(err: T) {
 	web_sys::console::error_1(&JsValue::from(err.to_string()));
 }
 
-// Run closure, logging any errors to both console error log and alert dialogs.
+/// Run closure, logging any errors to both console error log and alert dialogs.
 //
-// Returns default value in case of an error.
+/// Returns default value in case of an error.
 pub fn with_logging<T: Default>(f: impl FnOnce() -> Result<T>) -> T {
 	match f() {
 		Ok(v) => v,
@@ -173,8 +184,8 @@ pub fn with_logging<T: Default>(f: impl FnOnce() -> Result<T>) -> T {
 	}
 }
 
-// Run async function, logging any errors to both console error log and alert
-// dialogs
+/// Run async function, logging any errors to both console error log and alert
+/// dialogs
 pub async fn with_logging_async<R, A>(f: impl FnOnce(A) -> R, arg: A)
 where
 	R: futures::Future<Output = Result>,
@@ -185,14 +196,14 @@ where
 	}
 }
 
-// Display error alert message
+/// Display error alert message
 pub fn alert(msg: &impl std::fmt::Display) {
 	// Ignore result
 	window().alert_with_message(&format!("error: {}", msg)).ok();
 }
 
-// Format a duration into hours:mins:secs with padding and stripping headers,
-// as needed
+/// Format a duration into hours:mins:secs with padding and stripping headers,
+/// as needed
 pub fn format_duration(secs: impl Into<u64>) -> String {
 	let secs_ = secs.into();
 	let mut w = String::new();
@@ -213,7 +224,7 @@ pub fn format_duration(secs: impl Into<u64>) -> String {
 	w
 }
 
-// Build a JS array from convertible item iterator
+/// Build a JS array from convertible item iterator
 pub fn into_js_array<T, I>(it: I) -> js_sys::Array
 where
 	T: Into<JsValue>,

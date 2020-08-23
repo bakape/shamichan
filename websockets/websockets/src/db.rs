@@ -2,7 +2,7 @@ use crate::common::DynResult;
 use protocol::payloads::post_body::Node;
 use std::{collections::HashMap, sync::Arc};
 
-// Get a client corresponding to a connection from the connection pool
+/// Get a client corresponding to a connection from the connection pool
 async fn get_client() -> DynResult<deadpool_postgres::Client> {
 	// TODO: prepared statement cache
 
