@@ -22,8 +22,10 @@ type ServerConfigs struct {
 
 // Load configs from JSON or defaults, if none present
 func (c *ServerConfigs) Load() (err error) {
-	path := "config.json"
-	prefix := ""
+	var (
+		prefix, abs string
+		path        = "config.json"
+	)
 try:
 	f, err := os.Open(filepath.Join(prefix, path))
 	if err != nil {
@@ -35,6 +37,15 @@ try:
 				c.setDefaults()
 				return
 			case os.IsNotExist(err):
+				if prefix != "" {
+					abs, err = filepath.Abs(prefix)
+					if err != nil {
+						return
+					}
+					if abs == "/" {
+						return
+					}
+				}
 				// Go up one dir
 				prefix = filepath.Join("..", prefix)
 				goto try
