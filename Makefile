@@ -78,3 +78,5 @@ release: test
 	docker tag meguca bakape/meguca:latest
 	docker push bakape/meguca
 
+	git push
+
