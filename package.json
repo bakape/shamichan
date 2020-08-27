@@ -8,7 +8,7 @@
     "json-minify": "^1.0.0"
   },
   "devDependencies": {
-    "less": "^3.10.3",
+    "less": "^3.12.2",
     "less-plugin-clean-css": "^1.5.1"
   },
   "repository": {
