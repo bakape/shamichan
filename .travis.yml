@@ -8,4 +8,4 @@ before_install:
 script:
   - docker pull bakape/meguca-dev:latest
   - docker build --cache-from bakape/meguca-dev:latest -t meguca .
-  - docker run --rm --network host -e CI=true meguca make test TEST_DB="postgres://postgres:postgres@localhost:5432/meguca"
+  - docker run --rm --network host -e CI=true --entrypoint="" meguca make test TEST_DB="postgres://postgres:postgres@localhost:5432/meguca"
