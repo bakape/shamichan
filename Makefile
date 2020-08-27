@@ -65,7 +65,7 @@ test_no_race: websockets
 	go test ./...
 
 release: test
-	docker build -t meguca-dev .
+	docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t meguca-dev .
 	docker tag meguca-dev bakape/meguca-dev:`git describe --tags`
 	docker tag meguca-dev bakape/meguca-dev:latest
 	docker push bakape/meguca-dev
