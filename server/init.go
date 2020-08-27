@@ -22,35 +22,36 @@ import (
 
 // Start parses command line arguments and initializes the server.
 func Start() (err error) {
-	err = config.Server.Load()
+	c := &config.Server
+	err = c.Load()
 	if err != nil {
 		return
 	}
 
 	flag.StringVar(
-		&config.Server.Database,
+		&c.Database,
 		"d",
-		config.Server.Database,
+		c.Database,
 		"PostgreSQL database URL to connect to",
 	)
 	flag.Float64Var(
-		&config.Server.CacheSize,
+		&c.CacheSize,
 		"c",
-		config.Server.CacheSize,
+		c.CacheSize,
 		`size limit of internal cache in MB`,
 	)
 	flag.BoolVar(
-		&config.Server.Server.ReverseProxied,
+		&c.Server.ReverseProxied,
 		"r",
-		config.Server.Server.ReverseProxied,
+		c.Server.ReverseProxied,
 		`the server can only be accessed by clients through a reverse proxy and
 thus can safely honour "X-Forwarded-For" headers for client IP
 resolution`,
 	)
 	flag.StringVar(
-		&config.Server.Server.Address,
+		&c.Server.Address,
 		"a",
-		config.Server.Server.Address,
+		c.Server.Address,
 		`address to listen on for incoming connections`,
 	)
 	flag.Parse()

@@ -22,6 +22,8 @@ type ServerConfigs struct {
 
 // Load configs from JSON or defaults, if none present
 func (c *ServerConfigs) Load() (err error) {
+	c.setDefaults()
+
 	var (
 		prefix, abs string
 		path        = "config.json"
@@ -33,9 +35,7 @@ try:
 			_, err = os.Stat(filepath.Join(prefix, "go.mod"))
 			switch {
 			case err == nil:
-				// Reached the root dir
-				c.setDefaults()
-				return
+				return // Reached the project root dir
 			case os.IsNotExist(err):
 				if prefix != "" {
 					abs, err = filepath.Abs(prefix)
@@ -43,7 +43,7 @@ try:
 						return
 					}
 					if abs == "/" {
-						return
+						return // Reached the system root dir
 					}
 				}
 				// Go up one dir
