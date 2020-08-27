@@ -65,6 +65,9 @@ test_no_race: websockets
 	go test ./...
 
 release: test
+	docker images bakape/meguca -q | xargs docker rmi || true
+	docker images bakape/meguca-dev -q | xargs docker rmi || true
+
 	DOCKER_BUILDKIT=1 docker build \
 		--build-arg BUILDKIT_INLINE_CACHE=1 \
 		-t meguca-dev \
