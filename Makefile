@@ -68,10 +68,7 @@ release: test
 	docker images bakape/meguca -q | xargs docker rmi -f || true
 	docker images bakape/meguca-dev -q | xargs docker rmi -f || true
 
-	DOCKER_BUILDKIT=1 docker build \
-		--build-arg BUILDKIT_INLINE_CACHE=1 \
-		-t meguca-dev \
-		.
+	docker build  -t meguca-dev .
 	docker tag meguca-dev bakape/meguca-dev:`git describe --tags`
 	docker tag meguca-dev bakape/meguca-dev:latest
 	docker push bakape/meguca-dev
