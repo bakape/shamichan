@@ -1,13 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="480" width="640" viewBox="0 0 640 480">
-  <defs>
-    <clipPath id="a">
-      <path fill-opacity=".67" d="M-32 0h682.67v512H-32z"/>
-    </clipPath>
-  </defs>
-  <g fill-rule="evenodd" clip-path="url(#a)" transform="translate(30) scale(.94)">
-    <path fill="#0050f0" d="M-32 0h768v512H-32z"/>
-    <path fill="#fff" d="M-32 102.4h768v102.4H-32zm0 204.8h768v102.4H-32z"/>
-    <path d="M-32 0l440.69 255.67L-32 511.01V0z" fill="#ed0000"/>
-    <path d="M161.75 325.47l-47.447-35.432-47.214 35.78 17.56-58.144-47.13-35.904 58.306-.5 18.084-57.97 18.472 57.836 58.305.077-46.886 36.243 17.948 58.016z" fill="#fff"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 10 5" fill="#fff">
+	<title>Flag of Cuba</title>
+	<path fill="#002a8f" d="m0 0h10v5H0z"/>
+	<path d="m1 1h9v1H3v1h7v1H1z"/>
+	<path fill="#cf142b" d="m4.33 2.5L0 5V0z"/>
+	<path d="m1.443 1.75-.44 1.357 1.154-.839H.73l1.154 .839z"/>
 </svg>

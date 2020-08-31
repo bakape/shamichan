@@ -1,6 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="480" width="640" viewBox="0 0 640 480">
-  <g fill-rule="evenodd">
-    <path fill="#fff" d="M640 480H0V0h640z"/>
-    <path fill="#dc143c" d="M640 480H0V240h640z"/>
-  </g>
+<?xml version="1.0"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 8 5">
+<rect width="8" height="5" fill="#dc143c"/>
+<rect width="8" height="2.5" fill="#fff"/>
 </svg>

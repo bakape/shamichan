@@ -1,14 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="480" width="640" viewBox="0 0 640 480">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="660" height="480" viewBox="0 0 220 160">
+  <desc>Flag of Israel</desc>
   <defs>
-    <clipPath id="a">
-      <path fill-opacity=".67" d="M-87.62 0h682.67v512H-87.62z"/>
-    </clipPath>
+    <!-- Specs are taken from "The Provisional Council of State Proclamation of
+      the Flag of the State of Israel," 25 Tishrei 5709 (28 October 1948)
+    For Magen David, the "Israel Science and Technology Homepage" at
+      http://www.science.co.il/Israel-flag.asp specifies each side as 60 cm.
+      Outer radius is then 30 / cos(30) = 20 * sqrt(3)
+    For equilateral triangles, middle radius = outer radius - width:
+      20 * sqrt(3) - 5.5
+    Coordinates for upward-pointing triangle relative to center are then:
+      (                            0,-(20*sqrt(3) - 5.5)          )
+      (-(20*sqrt(3) - 5.5) * cos(30), (20*sqrt(3) - 5.5) * sin(30))
+      ( (20*sqrt(3) - 5.5) * cos(30), (20*sqrt(3) - 5.5) * sin(30)) -->
+    <polygon id="triangle" points="0,-29.1410161513775421
+                -25.2368602791855814, 14.5705080756887710
+                 25.2368602791855814, 14.5705080756887710"
+      stroke="#0038b8" stroke-width="5.5" fill-opacity="0"/>
   </defs>
-  <g fill-rule="evenodd" clip-path="url(#a)" transform="translate(82.14) scale(.94)">
-    <path fill="#fff" d="M619.43 512H-112V0h731.43z"/>
-    <path fill="#00c" d="M619.43 115.23H-112V48.003h731.43zm0 350.45H-112v-67.227h731.43zm-483-274.9l110.12 191.54 112.49-190.75-222.61-.79z"/>
-    <path d="M225.75 317.81l20.95 35.506 21.4-35.36-42.35-.145z" fill="#fff"/>
-    <path d="M136.02 320.58l110.13-191.54 112.48 190.75-222.61.79z" fill="#00c"/>
-    <path d="M225.75 191.61l20.95-35.506 21.4 35.36-42.35.145zm-43.78 79.5l-21.64 35.982 40.9-.127-19.26-35.855zm-21.27-66.5l41.225.29-19.834 36.26-21.39-36.55zm151.24 66.91l20.83 35.576-41.71-.533 20.88-35.043zm20.45-66.91l-41.225.29L311 241.16l21.39-36.55zm-114.27-.04l-28.394 51.515 28.8 50.297 52.73 1.217 32.044-51.515-29.61-51.92-55.572.405z" fill="#fff"/>
-  </g>
+  <!-- "The flag is 220 cm long and 160 cm wide.  The background is white" -->
+  <rect width="220" height="160" fill="white"/>
+  <!-- "...two stripes of dark sky-blue, 25 cm broad, over the whole length of
+    the flag, at a distance of 15 cm from the top and from the bottom..."
+    Legislation does not specify exact shade of blue; "#0038b8" is typical of
+    flags used in Israel -->
+  <rect width="220" height="25" fill="#0038b8" y="15"/>
+  <rect width="220" height="25" fill="#0038b8" y="120"/>
+  <use xlink:href="#triangle" transform="translate(110,80)"/>
+  <use xlink:href="#triangle" transform="translate(110,80) rotate(180)"/>
 </svg>

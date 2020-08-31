@@ -1,5 +1,6 @@
 {% import "fmt" %}
 {% import "strconv" %}
+{% import "strings" %}
 {% import "github.com/bakape/meguca/common" %}
 {% import "github.com/bakape/meguca/lang" %}
 {% import "github.com/bakape/meguca/imager/assets" %}
@@ -49,6 +50,13 @@
 				{% code title, ok := countryMap[p.Flag] %}
 				{% if !ok %}
 					{% code title = p.Flag %}
+				{% endif %}
+				{% if strings.Contains(p.Flag, "us-") %}
+					{% code title2, ok2 := countryMap["us"] %}
+					{% if !ok2 %}
+						{% code title2 = "us" %}
+					{% endif %}
+					<img class="flag" src="/assets/flags/us.svg" title="{%s= title2 %}">
 				{% endif %}
 				<img class="flag" src="/assets/flags/{%s= p.Flag %}.svg" title="{%s= title %}">
 			{% endif %}

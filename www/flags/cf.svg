@@ -1,15 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="480" width="640" viewBox="0 0 640 480">
-  <defs>
-    <clipPath id="a">
-      <path fill-opacity=".67" d="M-12.355 32h640v480h-640z"/>
-    </clipPath>
-  </defs>
-  <g clip-path="url(#a)" fill-rule="evenodd" transform="translate(12.355 -32)">
-    <path fill="#00f" d="M-52 32h719.29v118.94H-52z"/>
-    <path fill="#ff0" d="M-52 391.65h719.29V512H-52z"/>
-    <path fill="#009a00" d="M-52 271.3h719.29v120.35H-52z"/>
-    <path fill="#fff" d="M-52 150.94h719.29v120.35H-52z"/>
-    <path fill="red" d="M247.7 32.474h119.88v479.53H247.7z"/>
-    <path fill="#ff0" d="M99.253 137.653L67.837 115.93l-31.314 21.937 10.87-36.717-30.457-23.118 38.14-.968 12.49-36.22 12.702 36.113 38.173.732-30.284 23.288"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 12 8">
+	<title>Flag of the Central African Republic</title>
+	<path fill="#fff" d="m0 0h12v8H0z"/>
+	<path fill="#003082" d="m0 0h12v2H0z"/>
+	<path fill="#289728" d="m0 4h12v4H0z"/>
+	<path fill="#ffce00" d="m0 6h12v2H0zM2 .187l.529 1.626L1.145.808h1.71L1.471 1.813z"/>
+	<path fill="#d21034" d="m5 0h2v8H5z"/>
 </svg>
