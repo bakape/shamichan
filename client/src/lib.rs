@@ -48,7 +48,7 @@ impl Component for App {
 	type Message = Message;
 
 	fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-		let mut a = state::Agent::bridge(link.callback(|_| Message::NOP));
+		let mut a = state::Agent::bridge(yew::Callback::noop());
 		state::read(|s| {
 			a.send(state::Request::FetchFeed(s.location.clone()));
 		});
