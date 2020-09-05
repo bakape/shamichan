@@ -54,13 +54,13 @@ compiled with:
     * libtheora
     * libx264
     * libmp3lame
-* OpenCV >= 2
+* OpenCV 2-3
 * libgeoip
 * OpenSSL
 * git
 
-NB: Ubuntu patches to ffmpeg on some Ubuntu versions <19.10 break image processing.
-In that case please compile from unmodified ffmpeg sources using:
+NB: Ubuntu patches to ffmpeg on some Ubuntu versions <19.10 break image
+processing. In that case please compile from unmodified ffmpeg sources using:
 
 ```
 sudo apt build-dep ffmpeg

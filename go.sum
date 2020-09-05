@@ -266,8 +266,6 @@ github.com/valyala/fasthttp v1.12.0/go.mod h1:229t1eWu9UXTPmoUkbpN/fctKPBY4IJoFX
 github.com/valyala/fasthttp v1.15.1/go.mod h1:YOKImeEosDdBPnxc0gy7INqi3m1zK6A+xl6TwOBhHCA=
 github.com/valyala/quicktemplate v1.5.0 h1:2CUbkvZbxZ9m51wp5a2vzrbnv38Iocp0bMJomSmHyg0=
 github.com/valyala/quicktemplate v1.5.0/go.mod h1:v7yYWpBEiutDyNfVaph6oC/yKwejzVyTX/2cwwHxyok=
-github.com/valyala/quicktemplate v1.6.0 h1:9fKw4ebNjg3jzbfLSTu6i0tgqhpS80h2uN6brwbweKg=
-github.com/valyala/quicktemplate v1.6.0/go.mod h1:v7yYWpBEiutDyNfVaph6oC/yKwejzVyTX/2cwwHxyok=
 github.com/valyala/quicktemplate v1.6.2 h1:k0vgK7zlmFzqAoIBIOrhrfmZ6JoTGJlLRPLbkPGr2/M=
 github.com/valyala/quicktemplate v1.6.2/go.mod h1:mtEJpQtUiBV0SHhMX6RtiJtqxncgrfmjcUy5T68X8TM=
 github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a/go.mod h1:v3UYOV9WzVtRmSR+PDvWpU/qWl4Wa5LApYYX4ZtKbio=

@@ -18,11 +18,12 @@ jobs:
     steps:
       - name: Checkout commit
         uses: actions/checkout@v2
-      - name: Create DB user
-        run: psql -U postgres -c "alter user postgres with password 'postgres';"
       - name: Create DB
-        run: psql -U postgres -c "create database meguca;"
+        run: psql postgres://postgres:postgres@postgres:5432/postgres -c "create database meguca;"
       - name: Build Docker image
         run: DOCKER_BUILDKIT=1 docker build --cache-from bakape/meguca-dev:latest -t meguca .
-      - name: Run tests
+      - name: Run Rust tests
+        run: docker run --rm --network host -e CI=true -e TEST_DB="postgres://postgres:postgres@postgres:5432/meguca" --entrypoint="" cargo test
+      - name: Run Go tests
         run: docker run --rm --network host -e CI=true -e TEST_DB="postgres://postgres:postgres@postgres:5432/meguca" --entrypoint="" meguca make test
+# TODO: code vetting

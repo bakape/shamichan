@@ -70,7 +70,7 @@ RUN nice -n 19 cargo install wasm-pack
 
 # Install Go
 RUN wget -O- \
-	"https://dl.google.com/go/$(curl https://golang.org/VERSION?m=text).linux-amd64.tar.gz"` \
+	"https://dl.google.com/go/$(curl https://golang.org/VERSION?m=text).linux-amd64.tar.gz" \
 	| tar xpz -C /usr/local
 ENV PATH=$PATH:/usr/local/go/bin
 
