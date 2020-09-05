@@ -72,13 +72,13 @@ RUN nice -n 19 go get -u github.com/valyala/quicktemplate \
 	github.com/valyala/quicktemplate/qtc
 
 # Download go deps
-COPY go.mod go.sum ./
+COPY --chown=root:root go.mod go.sum ./
 RUN go mod download
 
 # Cache Node.js deps
-COPY package.json package-lock.json ./
+COPY --chown=root:root package.json package-lock.json ./
 RUN npm install --progress false --depth 0
-COPY client/package-lock.json client/package.json client/
+COPY --chown=root:root client/package-lock.json client/package.json client/
 RUN cd client && npm install --progress false --depth 0
 
 # Cache Rust dependencies by faking a project structure
@@ -86,14 +86,14 @@ RUN mkdir -p \
 	client/js client/src www/client \
 	websockets/websockets/src \
 	protocol/src
-COPY Cargo.toml Cargo.lock ./
-COPY client/Cargo.toml client/.cargo client/webpack.config.js client/
-COPY client/js client/js
-COPY docker/dummy.rs client/src/lib.rs
-COPY websockets/websockets/Cargo.toml websockets/websockets
-COPY docker/dummy.rs websockets/websockets/src/lib.rs
-COPY protocol/Cargo.toml protocol
-COPY docker/dummy.rs protocol/src/lib.rs
+COPY --chown=root:root Cargo.toml Cargo.lock ./
+COPY --chown=root:root client/Cargo.toml client/.cargo client/webpack.config.js client/
+COPY --chown=root:root client/js client/js
+COPY --chown=root:root docker/dummy.rs client/src/lib.rs
+COPY --chown=root:root websockets/websockets/Cargo.toml websockets/websockets
+COPY --chown=root:root docker/dummy.rs websockets/websockets/src/lib.rs
+COPY --chown=root:root protocol/Cargo.toml protocol
+COPY --chown=root:root docker/dummy.rs protocol/src/lib.rs
 RUN nice -n 19 cargo build --release --workspace --exclude client
 RUN cd client && nice -n 19 ./node_modules/.bin/webpack
 RUN rm -r \
@@ -104,5 +104,5 @@ RUN rm -r \
 	client/dist client/pkg
 
 # Build meguca
-COPY . .
+COPY --chown=root:root . .
 RUN NO_DEPS=1 nice -n 19 make
