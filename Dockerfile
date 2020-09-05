@@ -1,4 +1,4 @@
-FROM golang:buster
+FROM debian:buster
 
 EXPOSE 8000
 
@@ -65,20 +65,26 @@ RUN apt-get install -y nodejs && apt-get clean
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH=$PATH:/root/.cargo/bin
 
-# Build compilers and preprocessors
+# Build WASM build tools
 RUN nice -n 19 cargo install wasm-pack
+
+# Install go
+RUN wget -O- wget "https://dl.google.com/go/$(curl https://golang.org/VERSION?m=text).linux-amd64.tar.gz" | tar xpz -C /usr/local
+ENV PATH=$PATH:/usr/local/go/bin
+
+# Install Go build tools
 RUN nice -n 19 go get -u github.com/valyala/quicktemplate \
 	github.com/rakyll/statik \
 	github.com/valyala/quicktemplate/qtc
 
 # Download go deps
-COPY --chown=root:root go.mod go.sum ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Cache Node.js deps
-COPY --chown=root:root package.json package-lock.json ./
+COPY package.json package-lock.json ./
 RUN npm install --progress false --depth 0
-COPY --chown=root:root client/package-lock.json client/package.json client/
+COPY client/package-lock.json client/package.json client/
 RUN cd client && npm install --progress false --depth 0
 
 # Cache Rust dependencies by faking a project structure
@@ -86,14 +92,14 @@ RUN mkdir -p \
 	client/js client/src www/client \
 	websockets/websockets/src \
 	protocol/src
-COPY --chown=root:root Cargo.toml Cargo.lock ./
-COPY --chown=root:root client/Cargo.toml client/.cargo client/webpack.config.js client/
-COPY --chown=root:root client/js client/js
-COPY --chown=root:root docker/dummy.rs client/src/lib.rs
-COPY --chown=root:root websockets/websockets/Cargo.toml websockets/websockets
-COPY --chown=root:root docker/dummy.rs websockets/websockets/src/lib.rs
-COPY --chown=root:root protocol/Cargo.toml protocol
-COPY --chown=root:root docker/dummy.rs protocol/src/lib.rs
+COPY Cargo.toml Cargo.lock ./
+COPY client/Cargo.toml client/.cargo client/webpack.config.js client/
+COPY client/js client/js
+COPY docker/dummy.rs client/src/lib.rs
+COPY websockets/websockets/Cargo.toml websockets/websockets
+COPY docker/dummy.rs websockets/websockets/src/lib.rs
+COPY protocol/Cargo.toml protocol
+COPY docker/dummy.rs protocol/src/lib.rs
 RUN nice -n 19 cargo build --release --workspace --exclude client
 RUN cd client && nice -n 19 ./node_modules/.bin/webpack
 RUN rm -r \
@@ -104,5 +110,5 @@ RUN rm -r \
 	client/dist client/pkg
 
 # Build meguca
-COPY --chown=root:root . .
+COPY . .
 RUN NO_DEPS=1 nice -n 19 make
