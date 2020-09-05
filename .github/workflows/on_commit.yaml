@@ -74,10 +74,10 @@ jobs:
   build-prod-image:
     name: Build and push prod image
     runs-on: ubuntu-latest
-    if: ${{ github.ref == 'master' }}
     needs:
       - build-dev-image
       - test
+    if: success() && github.ref == 'refs/heads/master'
     steps:
       - name: Checkout commit
         uses: actions/checkout@v2
