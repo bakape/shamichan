@@ -19,7 +19,7 @@ jobs:
       - name: Checkout commit
         uses: actions/checkout@v2
       - name: Create DB
-        run: psql postgres://postgres:postgres@postgres:5432/postgres -c "create database meguca;"
+        run: psql postgres://postgres:postgres@localhost:5432/postgres -c "create database meguca;"
       - name: Build Docker image
         run: DOCKER_BUILDKIT=1 docker build --cache-from bakape/meguca-dev:latest -t meguca .
       - name: Run Rust tests
