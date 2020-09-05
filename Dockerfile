@@ -69,7 +69,9 @@ ENV PATH=$PATH:/root/.cargo/bin
 RUN nice -n 19 cargo install wasm-pack
 
 # Install Go
-RUN wget -q -O- wget "https://dl.google.com/go/$(curl https://golang.org/VERSION?m=text).linux-amd64.tar.gz" | tar xpz -C /usr/local
+RUN wget -O- \
+	"https://dl.google.com/go/$(curl https://golang.org/VERSION?m=text).linux-amd64.tar.gz"` \
+	| tar xpz -C /usr/local
 ENV PATH=$PATH:/usr/local/go/bin
 
 # Install Go build tools
