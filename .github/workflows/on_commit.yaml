@@ -41,13 +41,34 @@ jobs:
       - name: Checkout commit
         uses: actions/checkout@v2
       - name: Create DB
-        run: psql postgres://postgres:postgres@localhost:5432/postgres -c "create database meguca;"
+        run: >-
+          psql
+            postgres://postgres:postgres@localhost:5432/postgres
+            -c "create database meguca;"
       - name: Build dev image
-        run: DOCKER_BUILDKIT=1 docker build --cache-from bakape/meguca-dev -t meguca .
+        run: >-
+          DOCKER_BUILDKIT=1 docker build
+            --cache-from bakape/meguca-dev
+            -t meguca
+            .
       - name: Run Rust tests
-        run: docker run --rm --network host -e CI=true -e TEST_DB="postgres://postgres:postgres@localhost:5432/meguca" --entrypoint="" cargo test
+        run: >-
+          docker run
+            --rm
+            --network host
+            -e CI=true
+            -e TEST_DB="postgres://postgres:postgres@localhost:5432/meguca"
+            --entrypoint=""
+            cargo test
       - name: Run Go tests
-        run: docker run --rm --network host -e CI=true -e TEST_DB="postgres://postgres:postgres@localhost:5432/meguca" --entrypoint="" go test --race ./...
+        run: >-
+          docker run
+            --rm
+            --network host
+            -e CI=true
+            -e TEST_DB="postgres://postgres:postgres@localhost:5432/meguca"
+            --entrypoint=""
+            go test --race ./...
   build-prod-image:
     name: Build and push prod image
     runs-on: ubuntu-latest
