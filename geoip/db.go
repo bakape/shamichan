@@ -111,5 +111,5 @@ func LookUp(ip string) (country string) {
 		}
 	}
 
-	return denpa
+	return country
 }
