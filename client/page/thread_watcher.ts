@@ -57,7 +57,12 @@ class WatcherPanel extends BannerModal {
 					break;
 				// Subject
 				case 1:
-					tc.innerHTML = `<a href="../all/${thread.id}">${thread.subject}</a>`;
+					if (thread.unseen > 100) {
+						tc.innerHTML = `<a class="thread-link" href="../all/${thread.id}">${thread.subject}</a>`;
+					}
+					else {
+						tc.innerHTML = `<a class="thread-link" href="../all/${thread.id}?last=100">${thread.subject}</a>`;
+					}
 					break;
 				// Status
 				case 2:
@@ -100,11 +105,19 @@ class WatcherPanel extends BannerModal {
 
 	private async update(row: Element ,unseen: number) {
 		if (unseen === 0) {
+			let link = (row.querySelector(".thread-link") as HTMLAnchorElement);
+			link.setAttribute("href", link.href.concat("?last=100"));
+
 			let stat = (row.querySelector(".status") as HTMLImageElement);
 			stat.src = `${urlBase}default.ico`;
 			stat.title = "No unseen posts";
 		}
 		else if (unseen > 0) {
+			if (unseen > 100) {
+				// Remove ?last=100
+				let link = (row.querySelector(".thread-link") as HTMLAnchorElement);
+				link.setAttribute("href", link.href.substring(0, link.href.indexOf("?")));
+			}
 			let stat = (row.querySelector(".status") as HTMLImageElement);
 			stat.src = `${urlBase}unread.ico`;
 			stat.title = `${unseen} unseen posts`;
