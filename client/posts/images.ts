@@ -124,7 +124,8 @@ export default class ImageHandler extends View<Post> {
 			this.el.querySelector("header").after(el)
 		}
 
-		const [hToggle, , info, link] = Array.from(el.children) as HTMLElement[]
+		const [hToggle, , info, ...tmp] = Array.from(el.children) as HTMLElement[]
+		let link = tmp[tmp.length - 1];
 		if (!options.hideThumbs && !options.workModeToggle) {
 			hToggle.hidden = true
 		} else {
@@ -179,57 +180,6 @@ export default class ImageHandler extends View<Post> {
 			html += `<span>${escape(s)}</span>`;
 		}
 		info.innerHTML = html;
-
-		for (let el of Array.from(info.children) as HTMLElement[]) {
-			switch (el.className) {
-				case "media-title":
-					el.textContent = data.title
-					break;
-				case "media-artist":
-					el.textContent = data.artist
-					break
-				case "has-audio":
-					el.style.display = data.audio ? "" : "none";
-					break
-				case "media-length":
-					const len = data.length
-					if (len) {
-						let s: string
-						if (len < 60) {
-							s = `0:${pad(len)}`
-						} else {
-							const min = Math.floor(len / 60),
-								sec = len - min * 60
-							s = `${pad(min)}:${pad(sec)}`
-						}
-						el.textContent = s
-					}
-					break
-				case "filesize":
-					const { size } = data
-					let s: string
-					if (size < (1 << 10)) {
-						s = size + ' B'
-					} else if (size < (1 << 20)) {
-						s = Math.round(size / (1 << 10)) + ' KB'
-					} else {
-						const text = Math.round(size / (1 << 20) * 10)
-							.toString()
-						s = `${text.slice(0, -1)}.${text.slice(-1)} MB`
-					}
-					el.textContent = s
-					break
-				case "dims":
-					const [w, h] = data.dims
-					if (!w && !h) {
-						el.style.display = "none";
-					} else {
-						el.style.display = "";
-						el.textContent = `${w}x${h}`
-					}
-					break
-			}
-		}
 
 		// Render a name + download link of an image
 		const ext = fileTypes[data.file_type],
