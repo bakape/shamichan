@@ -73,7 +73,10 @@ release: test release_dev
 	git push
 
 release_dev: test
-	docker build  -t meguca-dev .
+	DOCKER_BUILDKIT=1 docker build \
+		-t meguca-dev \
+		--build-arg BUILDKIT_INLINE_CACHE=1 \
+		.
 	docker tag meguca-dev bakape/meguca-dev:`git describe --tags`
 	docker tag meguca-dev bakape/meguca-dev:latest
 	docker push bakape/meguca-dev
