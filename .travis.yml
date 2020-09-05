@@ -3,8 +3,12 @@ services:
   - docker
   - postgresql
 before_install:
+  - sudo docker run -d --privileged -p 1234:1234 --name buildkit moby/buildkit:latest --addr tcp://0.0.0.0:1234
+  - sudo docker cp buildkit:/usr/bin/buildctl /usr/bin/
+  - export BUILDKIT_HOST=tcp://0.0.0.0:1234
   - psql -U postgres -c "alter user postgres with password 'postgres';"
   - psql -U postgres -c "create database meguca;"
 script:
   - DOCKER_BUILDKIT=1 docker build --cache-from bakape/meguca-dev:latest -t meguca .
+  - buildctl build --frontend dockerfile.v0 --local context=. --local dockerfile=. --opt target=ci
   - docker run --rm --network host -e CI=true -e TEST_DB="postgres://postgres:postgres@localhost:5432/meguca" --entrypoint="" meguca make test
