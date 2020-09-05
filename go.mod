@@ -30,10 +30,12 @@ require (
 	github.com/lib/pq v1.8.0
 	github.com/mattn/go-sqlite3 v1.14.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/oschwald/geoip2-golang v1.4.0
+	github.com/oschwald/maxminddb-golang v1.7.0
 	github.com/rakyll/statik v0.1.7
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/ulikunitz/xz v0.5.7
-	github.com/valyala/quicktemplate v1.6.0
+	github.com/valyala/quicktemplate v1.6.2
 	go.etcd.io/bbolt v1.3.5
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de
 	golang.org/x/sys v0.0.0-20200802091954-4b90ce9b60b3 // indirect

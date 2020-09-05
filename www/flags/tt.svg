@@ -1,5 +1,2 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="480" width="640" viewBox="0 0 640 480">
-  <path fill="#fff" d="M0 0h640v480H0z"/>
-  <path d="M463.663 480L.05 1.003 0 479.747l463.663.253zM176.337 0L639.95 478.997 640 .253 176.337 0z" fill-rule="evenodd" fill="#e00000"/>
-  <path d="M27.74.23h118.597l468.176 479.315h-122.35L27.738.229z" fill-rule="evenodd"/>
-</svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 30 18"><rect fill="#da1a35" width="30" height="18"/><polygon fill="#FFF" points="0,0 20.824734,18 30,18 9.175266,0"/><polygon points="1.52921,0 22.353945,18 28.470789,18 7.646055,0"/></svg>

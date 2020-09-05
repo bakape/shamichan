@@ -1,0 +1,23 @@
+<svg viewBox="0 0 36 24" width="750" height="500" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+<defs>
+<path id="cross" transform="scale(.024)" d="M0,215 a32 32 0 0 0 32 -32 v-16 h31 a32 32 0 0 0 0 -64 h-31 V32 H231 v31 a32 32 0 0 0 64 0 v-31 h28 a32 32 0 0 0 32 -32 L0,0 z"/>
+</defs>
+
+<rect fill="#000" width="36" height="24"/>
+<path fill="#eaaa00" d="M0,24 V2 L3,4 V24 h3 V0 h3 V24 h3 V0 h3 V24 h3 V0 h3 V24 h3 V0 h3 V24 h3 V0 h3 V24 h3 V22 L3,0 V4 L33,24 z"/>
+
+<g id="q2">
+<path fill="#fff" d="M18,0 h9 v12 h9 v-6 h-18 z"/>
+<path fill="#9d2235" d="M27,0 h9 v6 h-18 v6 h9 z"/>
+<g transform="translate(27,6)">
+<use fill="#9d2235" xlink:href="#cross"/>
+<use fill="#fff" transform="scale(-1 1)" xlink:href="#cross"/>
+<use fill="#fff" transform="scale(1 -1)" xlink:href="#cross"/>
+<use fill="#9d2235" transform="scale(-1)" xlink:href="#cross"/>
+</g>
+</g>
+
+<use id="q3" x="-18" y="12" xlink:href="#q2"/>
+
+</svg>

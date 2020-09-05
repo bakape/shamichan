@@ -184,6 +184,12 @@ export default class PostView extends ImageHandler {
             el.setAttribute("src", `/assets/flags/${flag}.svg`)
             el.setAttribute("title", countries[flag] || flag)
             el.hidden = false
+            if (flag.includes("us-")) {
+                const sec = el.cloneNode(true) as HTMLElement
+                sec.setAttribute("src", `/assets/flags/us.svg`)
+                sec.setAttribute("title", countries["us"] || "us")
+                el.insertAdjacentElement("beforebegin", sec)
+            }
         }
     }
 

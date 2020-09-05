@@ -1,6 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="480" width="640" viewBox="0 0 640 480">
-  <path fill="#006b3f" d="M0 0h640v480H0z"/>
-  <path fill="#fcd116" d="M0 0h640v320H0z"/>
-  <path fill="#ce1126" d="M0 0h640v160H0z"/>
-  <path d="M320 160l51.987 160-136.104-98.885h168.234L268.013 320z"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 9 6">
+	<title>Flag of Ghana</title>
+	<path fill="#006b3f" d="m0 0h9v6H0z"/>
+	<path fill="#fcd116" d="m0 0h9v4H0z"/>
+	<path fill="#ce1126" d="m0 0h9v2H0z"/>
+	<path d="m4.5 2 .6498 2-1.7013-1.2361h2.103L3.8502 4z"/>
 </svg>
