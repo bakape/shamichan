@@ -59,6 +59,7 @@ jobs:
             -e CI=true \
             -e TEST_DB="postgres://postgres:postgres@localhost:5432/meguca" \
             --entrypoint="" \
+            meguca \
             cargo test
       - name: Run Go tests
         run: >
@@ -68,6 +69,7 @@ jobs:
             -e CI=true \
             -e TEST_DB="postgres://postgres:postgres@localhost:5432/meguca" \
             --entrypoint="" \
+            meguca \
             go test --race ./...
   build-prod-image:
     name: Build and push prod image
