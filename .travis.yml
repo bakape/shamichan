@@ -14,4 +14,4 @@ before_cache:
 script:
   - docker pull bakape/meguca-dev:latest
   - docker build --cache-from bakape/meguca-dev:latest --cache-from meguca -t meguca .
-  - docker run --rm --network host -e CI=true --entrypoint="" meguca make test TEST_DB="postgres://postgres:postgres@localhost:5432/meguca"
+  - docker run --rm --network host -e CI=true -e TEST_DB="postgres://postgres:postgres@localhost:5432/meguca" --entrypoint="" meguca make test

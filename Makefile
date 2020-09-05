@@ -64,15 +64,7 @@ test_no_race: websockets
 	cargo test
 	go test ./...
 
-release: test
-	docker images bakape/meguca -q | xargs docker rmi -f || true
-	docker images bakape/meguca-dev -q | xargs docker rmi -f || true
-
-	docker build  -t meguca-dev .
-	docker tag meguca-dev bakape/meguca-dev:`git describe --tags`
-	docker tag meguca-dev bakape/meguca-dev:latest
-	docker push bakape/meguca-dev
-
+release: test release_dev
 	docker build -t meguca -f Dockerfile.prod .
 	docker tag meguca bakape/meguca:`git describe --tags`
 	docker tag meguca bakape/meguca:latest
@@ -80,3 +72,8 @@ release: test
 
 	git push
 
+release_dev: test
+	docker build  -t meguca-dev .
+	docker tag meguca-dev bakape/meguca-dev:`git describe --tags`
+	docker tag meguca-dev bakape/meguca-dev:latest
+	docker push bakape/meguca-dev
