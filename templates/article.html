@@ -51,7 +51,7 @@
 				{% if !ok %}
 					{% code title = p.Flag %}
 				{% endif %}
-				{% if strings.Contains(p.Flag, "us-") %}
+				{% if strings.HasPrefix(p.Flag, "us-") %}
 					{% code title2, ok2 := countryMap["us"] %}
 					{% if !ok2 %}
 						{% code title2 = "us" %}

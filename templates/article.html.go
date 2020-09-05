@@ -161,7 +161,7 @@ func streamrenderArticle(qw422016 *qt422016.Writer, p common.Post, c articleCont
 //line article.html:53
 		}
 //line article.html:54
-		if strings.Contains(p.Flag, "us-") {
+		if strings.HasPrefix(p.Flag, "us-") {
 //line article.html:55
 			title2, ok2 := countryMap["us"]
 

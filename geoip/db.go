@@ -10,6 +10,8 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
+const denpa = "denpa"
+
 var (
 	once     sync.Once      // Ensure we only try to load the database once
 	gdb      *geoip2.Reader // db-ip database
@@ -81,19 +83,19 @@ func LookUp(ip string) (country string) {
 	dec := net.ParseIP(ip)
 	if dec == nil || gdb == nil {
 		// All IPs, that make it here should be valid, but best to be safe
-		return "denpa"
+		return denpa
 	}
 
 	record, err := gdb.City(dec)
 	if err != nil {
 		log.Warnf("geoip: could not lookup %s's country code: %s", ip, err)
-		return "denpa"
+		return denpa
 	}
 
 	country = strings.ToLower(record.Country.IsoCode)
 	if len(country) < 2 {
 		log.Warnf("could not lookup country for %s: %s", ip, country)
-		return "denpa"
+		return denpa
 	}
 
 	// Keep things safe, theoretically always just one result
@@ -105,9 +107,9 @@ func LookUp(ip string) (country string) {
 			}
 
 			log.Warnf("could not lookup state for %s: %s", ip, country)
-			return "denpa"
+			return denpa
 		}
 	}
 
-	return "denpa"
+	return denpa
 }
