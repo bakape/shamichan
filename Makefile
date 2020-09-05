@@ -64,15 +64,7 @@ test_no_race: websockets
 	cargo test
 	go test ./...
 
-release: test release_dev
-	docker build -t meguca -f Dockerfile.prod .
-	docker tag meguca bakape/meguca:`git describe --tags`
-	docker tag meguca bakape/meguca:latest
-	docker push bakape/meguca
-
-	git push
-
-release_dev: test
+release_dev_build:
 	DOCKER_BUILDKIT=1 docker build \
 		-t meguca-dev \
 		--build-arg BUILDKIT_INLINE_CACHE=1 \
@@ -80,3 +72,14 @@ release_dev: test
 	docker tag meguca-dev bakape/meguca-dev:`git describe --tags`
 	docker tag meguca-dev bakape/meguca-dev:latest
 	docker push bakape/meguca-dev
+
+release: test release_dev_build
+	docker build -t meguca -f Dockerfile.prod .
+	docker tag meguca bakape/meguca:`git describe --tags`
+	docker tag meguca bakape/meguca:latest
+	docker push bakape/meguca
+
+	git push
+
+release_dev: test release_dev_build
+	git push
