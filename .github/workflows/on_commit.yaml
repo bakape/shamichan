@@ -48,7 +48,7 @@ jobs:
   build-prod-image:
     name: Build and push prod image
     runs-on: ubuntu-latest
-    if: ${{ github.ref == master }}
+    if: ${{ github.ref == 'master' }}
     needs:
       - build-dev-image
       - test
