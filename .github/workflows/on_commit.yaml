@@ -1,0 +1,28 @@
+name: On commit checks
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout commit
+        uses: actions/checkout@v2
+      - name: Create DB user
+        run: psql -U postgres -c "alter user postgres with password 'postgres';"
+      - name: Create DB
+        run: psql -U postgres -c "create database meguca;"
+      - name: Build Docker image
+        run: DOCKER_BUILDKIT=1 docker build --cache-from bakape/meguca-dev:latest -t meguca .
+      - name: Run tests
+        run: docker run --rm --network host -e CI=true -e TEST_DB="postgres://postgres:postgres@postgres:5432/meguca" --entrypoint="" meguca make test
