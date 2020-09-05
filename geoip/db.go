@@ -5,6 +5,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-playground/log"
 	"github.com/oschwald/geoip2-golang"
@@ -13,6 +14,7 @@ import (
 const denpa = "denpa"
 
 var (
+	NY       *time.Location // NY location
 	once     sync.Once      // Ensure we only try to load the database once
 	gdb      *geoip2.Reader // db-ip database
 	stateMap = map[string]string{
@@ -99,15 +101,24 @@ func LookUp(ip string) (country string) {
 	}
 
 	// Keep things safe, theoretically always just one result
-	if country == "us" && len(record.Subdivisions) >= 1 {
-		for _, v := range record.Subdivisions {
-			state := v.Names["en"]
-			if state != "" {
-				return fmt.Sprintf("%s-%s", country, stateMap[state])
+	if country == "us" {
+		if NY != nil {
+			t := time.Now().In(NY)
+			if t.Month() == time.July && t.Day() == 4 {
+				return "il"
 			}
+		}
 
-			log.Warnf("could not lookup state for %s: %s", ip, country)
-			return denpa
+		if len(record.Subdivisions) >= 1 {
+			for _, v := range record.Subdivisions {
+				state := v.Names["en"]
+				if state != "" {
+					return fmt.Sprintf("%s-%s", country, stateMap[state])
+				}
+
+				log.Warnf("could not lookup state for %s: %s", ip, country)
+				return denpa
+			}
 		}
 	}
 
