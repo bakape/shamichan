@@ -7,7 +7,7 @@ All commands assume to be run by the root user.
 ```bash
 # Install OS dependencies
 apt update
-apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev libgeoip-dev git lsb-release wget curl sudo postgresql
+apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev libgeoip-dev git lsb-release wget curl sudo postgresql gunzip
 apt-get dist-upgrade -y
 
 # Increase PostgreSQL connection limit by changing `max_connections` to 1024
@@ -30,9 +30,14 @@ source /etc/profile
 wget -qO- https://deb.nodesource.com/setup_10.x | bash -
 apt-get install -y nodejs
 
-# Clone and build meguca
+# Clone meguca
 git clone -b v6 https://github.com/bakape/meguca.git meguca
 cd meguca
+
+# Install extra shitposting flags
+curl https://download.db-ip.com/free/dbip-city-lite-2020-08.mmdb.gz | gunzip > dbip-city-lite.mmdb
+
+# Build meguca
 make
 
 # Edit instance configs

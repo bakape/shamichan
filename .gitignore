@@ -26,6 +26,7 @@ imager/images
 db.db
 easyjson-bootstrap*.go
 GeoLite2-Country.mmdb
+dbip-city-lite.mmdb
 *.wasm
 *.wast
 *.map
