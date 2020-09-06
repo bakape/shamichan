@@ -18,7 +18,7 @@ RUN apt-get install -y \
 	libwebp-dev \
 	libopencv-dev \
 	libgeoip-dev \
-	git lsb-release wget curl netcat postgresql-client gunzip
+	git lsb-release wget curl netcat postgresql-client gzip
 RUN apt-get dist-upgrade -y
 
 # Install Node.js
