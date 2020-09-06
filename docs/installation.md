@@ -7,7 +7,7 @@ All commands assume to be run by the root user.
 ```bash
 # Install OS dependencies
 apt update
-apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev libgeoip-dev git lsb-release wget curl sudo postgresql gunzip
+apt-get install -y build-essential pkg-config libpth-dev libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libwebp-dev libopencv-dev libgeoip-dev git lsb-release wget curl sudo postgresql gzip
 apt-get dist-upgrade -y
 
 # Increase PostgreSQL connection limit by changing `max_connections` to 1024
