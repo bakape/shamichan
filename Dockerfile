@@ -25,6 +25,9 @@ RUN apt-get dist-upgrade -y
 RUN wget -q -O- https://deb.nodesource.com/setup_10.x | bash -
 RUN apt-get install -y nodejs
 
+RUN curl https://download.db-ip.com/free/dbip-city-lite-2020-08.mmdb.gz \
+	| gunzip > dbip-city-lite.mmdb
+
 # Cache dependency downloads, if possible
 COPY go.mod .
 COPY go.sum .
@@ -39,8 +42,5 @@ COPY docs/config.json .
 RUN sed -i 's/localhost:5432/postgres:5432/' config.json
 RUN sed -i 's/"reverse_proxied": false/"reverse_proxied": true/' config.json
 RUN sed -i 's/127\.0\.0\.1:8000/:8000/' config.json
-
-# Install extra shitposting flags
-RUN set -o pipefail && curl https://download.db-ip.com/free/dbip-city-lite-2020-08.mmdb.gz | gunzip > dbip-city-lite.mmdb
 
 RUN make
