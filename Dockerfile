@@ -18,7 +18,7 @@ RUN apt-get install -y \
 	libwebp-dev \
 	libopencv-dev \
 	libgeoip-dev \
-	git lsb-release wget curl netcat postgresql-client
+	git lsb-release wget curl netcat postgresql-client gunzip
 RUN apt-get dist-upgrade -y
 
 # Install Node.js
@@ -39,4 +39,8 @@ COPY docs/config.json .
 RUN sed -i 's/localhost:5432/postgres:5432/' config.json
 RUN sed -i 's/"reverse_proxied": false/"reverse_proxied": true/' config.json
 RUN sed -i 's/127\.0\.0\.1:8000/:8000/' config.json
+
+# Install extra shitposting flags
+RUN set -o pipefail && curl https://download.db-ip.com/free/dbip-city-lite-2020-08.mmdb.gz | gunzip > dbip-city-lite.mmdb
+
 RUN make

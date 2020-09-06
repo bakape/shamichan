@@ -27,7 +27,6 @@ generate:
 	go generate ./...
 
 server:
-	curl https://download.db-ip.com/free/dbip-city-lite-2020-08.mmdb.gz | gunzip > dbip-city-lite.mmdb
 	go build -v
 
 client_clean:
