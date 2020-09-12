@@ -106,7 +106,9 @@ class WatcherPanel extends BannerModal {
 	private async update(row: Element ,unseen: number) {
 		if (unseen === 0) {
 			let link = (row.querySelector(".thread-link") as HTMLAnchorElement);
-			link.setAttribute("href", link.href.concat("?last=100"));
+			if (link.href.indexOf("?") === -1) {
+				link.setAttribute("href", link.href.concat("?last=100"));
+			}
 
 			let stat = (row.querySelector(".status") as HTMLImageElement);
 			stat.src = `${urlBase}default.ico`;
