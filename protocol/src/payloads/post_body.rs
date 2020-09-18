@@ -195,14 +195,10 @@ impl TextPatch {
 	pub fn new(old: &[char], new: &[char]) -> Self {
 		/// Find the first differing character in 2 character iterators
 		fn diff_i<'a, 'b>(
-			mut a: impl Iterator<Item = &'a char>,
-			mut b: impl Iterator<Item = &'b char>,
+			a: impl Iterator<Item = &'a char>,
+			b: impl Iterator<Item = &'b char>,
 		) -> usize {
-			let mut i = 0;
-			while a.next() == b.next() {
-				i += 1;
-			}
-			return i;
+			a.zip(b).take_while(|(a, b)| a == b).count()
 		}
 
 		let start = diff_i(old.iter(), new.iter());
