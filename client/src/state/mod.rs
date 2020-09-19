@@ -6,11 +6,11 @@ pub mod options;
 pub use agent::{
 	hook, navigate_to, Agent, Change, HookBridge, Link, Message, Request,
 };
+pub use key_pair::KeyPair;
 pub use location::{FeedID, Focus, Location};
 pub use options::{ImageExpansionMode, Options};
 
 use crate::util;
-use key_pair::KeyPair;
 use protocol::{
 	payloads::{post_body::Node, Image},
 	util::SetMap,
