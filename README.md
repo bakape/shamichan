@@ -1,5 +1,5 @@
 [![GoDoc](https://godoc.org/github.com/bakape/meguca?status.svg)](https://godoc.org/github.com/bakape/meguca)
-![Build status](https://github.com/bakape/meguca/workflows/Build/badge.svg?branch=master)
+[![Build](https://github.com/bakape/meguca/workflows/Build/badge.svg?branch=master)](https://github.com/bakape/meguca/actions?query=workflow%3ABuild+branch%3Amaster)
 
 # meguca
 anonymous realtime imageboard focused on high performance, free speech and transparent moderation
