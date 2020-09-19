@@ -4,28 +4,6 @@ use hex_buffer_serde::{Hex, HexForm};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, sync::Arc};
 
-/// Define a public payload struct with public fields
-macro_rules! payload {
-    (
-		$(#[$struct_meta:meta])*
-		$name:ident {
-			$(
-				$(#[$field_meta:meta])*
-				$field:ident: $t:ty,
-			)*
-		}
-	) => {
-		$(#[$struct_meta])*
-        #[derive(Serialize, Deserialize, Debug, Clone)]
-        pub struct $name {
-            $(
-				$(#[$field_meta])*
-				pub $field: $t
-			),*
-        }
-	}
-}
-
 // Helper for big array serialization
 big_array! { BigArray; }
 
@@ -58,83 +36,76 @@ pub enum Authorization {
 	},
 }
 
-payload! {
-	/// Authenticate with the server
-	HandshakeReq {
-		/// Protocol version the client implements
-		protocol_version: u16,
+/// Authenticate with the server
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct HandshakeReq {
+	/// Protocol version the client implements
+	pub protocol_version: u16,
 
-		/// Used to authenticate the client
-		auth: Authorization,
-	}
+	/// Used to authenticate the client
+	pub auth: Authorization,
 }
 
-payload! {
-	HandshakeRes {
-		/// Key already saved in database. Need to confirm it's the same private key
-		/// by sending a HandshakeReq with Authentication::Saved.
-		need_resend: bool,
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct HandshakeRes {
+	/// Key already saved in database. Need to confirm it's the same private key
+	/// by sending a HandshakeReq with Authentication::Saved.
+	pub need_resend: bool,
 
-		/// ID of key on the server
-		id: uuid::Uuid,
-	}
+	/// ID of key on the server
+	pub id: uuid::Uuid,
 }
 
-payload! {
-	/// Request for creating a new thread
-	ThreadCreationReq {
-		subject: String,
-		tags: Vec<String>,
-		captcha_solution: Vec<u8>,
-		opts: NewPostOpts,
-	}
+/// Request for creating a new thread
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ThreadCreationReq {
+	pub subject: String,
+	pub tags: Vec<String>,
+	pub captcha_solution: Vec<u8>,
+	pub opts: NewPostOpts,
 }
 
-payload! {
-	/// Options for creating new posts (both OPs and replies)
-	NewPostOpts {
-		name: String,
-		// TODO: staff titles
-	}
+/// Options for creating new posts (both OPs and replies)
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct NewPostOpts {
+	pub name: String,
+	pub trip: String,
+	// TODO: staff titles
 }
 
-payload! {
-	ThreadCreationNotice {
-		id: u64,
-		subject: String,
-		tags: Vec<String>,
-		time: u32,
-	}
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ThreadCreationNotice {
+	pub id: u64,
+	pub subject: String,
+	pub tags: Vec<String>,
+	pub time: u32,
 }
 
-payload! {
-	/// Request to insert a new post into a thread
-	PostCreationReq {
-		sage: bool,
-		thread: u64,
-		opts: NewPostOpts,
-	}
+/// Request to insert a new post into a thread
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PostCreationReq {
+	pub sage: bool,
+	pub thread: u64,
+	pub opts: NewPostOpts,
 }
 
-payload! {
-	PostCreationNotification {
-		id: u64,
-		thread: u64,
-		time: u32,
-		page: u32,
-	}
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PostCreationNotification {
+	pub id: u64,
+	pub thread: u64,
+	pub time: u32,
+	pub page: u32,
 }
 
-payload! {
-	/// State of an open post. Used to diff the current state of the client
-	/// against the server feed's state.
-	OpenPost {
-		has_image: bool,
-		image_spoilered: bool,
-		created_on: u32,
-		thread: u64,
-		body: Arc<post_body::Node>,
-	}
+/// State of an open post. Used to diff the current state of the client
+/// against the server feed's state.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct OpenPost {
+	pub has_image: bool,
+	pub image_spoilered: bool,
+	pub created_on: u32,
+	pub thread: u64,
+	pub body: Arc<post_body::Node>,
 }
 
 impl OpenPost {
@@ -149,23 +120,20 @@ impl OpenPost {
 	}
 }
 
-payload! {
-	/// Feed initialization data
-	#[derive(Default)]
-	FeedData {
-		/// Thread this feed refers to
-		thread: u64,
+/// Feed initialization data
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct FeedData {
+	/// Thread this feed refers to
+	pub thread: u64,
 
-		/// Posts created in the last 16 minutes (open post CD + 1 minute to ensure
-		/// there is no overlap due to latency).
-		/// <post_id: post_creation_unix_timestamp>
-		recent_posts: HashMap<u64, u32>,
+	/// Posts created in the last 16 minutes (open post CD + 1 minute to ensure
+	/// there is no overlap due to latency).
+	/// <post_id: post_creation_unix_timestamp>
+	pub recent_posts: HashMap<u64, u32>,
 
-		/// Posts currently open. Mapped by ID.
-		open_posts: HashMap<u64, OpenPost>,
-
-		// TODO: Applied moderation
-	}
+	/// Posts currently open. Mapped by ID.
+	pub open_posts: HashMap<u64, OpenPost>,
+	// TODO: Applied moderation
 }
 
 /// Supported file types
@@ -229,43 +197,41 @@ impl FileType {
 	}
 }
 
-payload! {
-	/// Image data common to both binary and JSON representations
-	ImageCommon {
-		audio: bool,
-		video: bool,
+/// Image data common to both binary and JSON representations
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ImageCommon {
+	pub audio: bool,
+	pub video: bool,
 
-		file_type: FileType,
-		thumb_type: FileType,
+	pub file_type: FileType,
+	pub thumb_type: FileType,
 
-		width: u16,
-		height: u16,
-		thumb_width: u16,
-		thumb_height: u16,
+	pub width: u16,
+	pub height: u16,
+	pub thumb_width: u16,
+	pub thumb_height: u16,
 
-		duration: u32,
-		size: u64,
+	pub duration: u32,
+	pub size: u64,
 
-		artist: Option<String>,
-		title: Option<String>,
+	pub artist: Option<String>,
+	pub title: Option<String>,
 
-		name: String,
-		spoilered: bool,
-	}
+	pub name: String,
+	pub spoilered: bool,
 }
 
-payload! {
-	/// Image data JSON representation
-	ImageJSON {
-		#[serde(flatten)]
-		common: ImageCommon,
+/// Image data JSON representation
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ImageJSON {
+	#[serde(flatten)]
+	pub common: ImageCommon,
 
-		#[serde(with = "HexForm::<[u8; 20]>")]
-		sha1: [u8; 20],
+	#[serde(with = "HexForm::<[u8; 20]>")]
+	pub sha1: [u8; 20],
 
-		#[serde(with = "HexForm::<[u8; 16]>")]
-		md5: [u8; 16],
-	}
+	#[serde(with = "HexForm::<[u8; 16]>")]
+	pub md5: [u8; 16],
 }
 
 impl Into<Image> for ImageJSON {
@@ -278,19 +244,17 @@ impl Into<Image> for ImageJSON {
 	}
 }
 
-payload! {
-	/// Image data inserted into an open post
-	Image {
-		common: ImageCommon,
-		sha1: [u8; 20],
-		md5: [u8; 16],
-	}
+/// Image data inserted into an open post
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Image {
+	pub common: ImageCommon,
+	pub sha1: [u8; 20],
+	pub md5: [u8; 16],
 }
 
-payload! {
-	/// Insert image into an open post
-	InsertImage {
-		post: u64,
-		image: Image,
-	}
+/// Insert image into an open post
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct InsertImage {
+	pub post: u64,
+	pub image: Image,
 }
