@@ -231,8 +231,13 @@ impl Decoder {
 	///
 	/// This method does not advance the decoder. Either read_next() or
 	/// skip_next() need to be called to advance it.
-	pub fn peek_type(&mut self) -> Option<MessageType> {
+	pub fn peek_type(&self) -> Option<MessageType> {
 		self.splitter.message_types.get(self.off).copied()
+	}
+
+	/// Return all message types decoded
+	pub fn all_types(&self) -> &[MessageType] {
+		&self.splitter.message_types
 	}
 
 	/// Skip reading next message and advance the decoder
@@ -382,6 +387,14 @@ mod tests {
 
 	fn assert_decoded(buf: &[u8]) -> Result {
 		let mut dec = super::Decoder::new(buf)?;
+
+		assert_eq!(
+			dec.all_types().iter().map(|t| Some(*t)).collect::<Vec<_>>(),
+			(0..=3)
+				.map(|i| num::FromPrimitive::from_u64(i))
+				.collect::<Vec<_>>()
+		);
+
 		for i in 0..=3 {
 			assert_eq!(dec.peek_type(), num::FromPrimitive::from_u64(i));
 			let res: SimpleMessage = dec.read_next()?;

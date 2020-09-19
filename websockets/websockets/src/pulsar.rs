@@ -5,7 +5,7 @@ use protocol::{
 		FeedData, Image, PostCreationNotification, ThreadCreationNotice,
 	},
 	util::SetMap,
-	Encoder, MessageType,
+	Decoder, Encoder, MessageType,
 };
 use rayon::prelude::*;
 use serde::Serialize;
@@ -17,6 +17,8 @@ use std::{
 	},
 	time::{Duration, Instant, SystemTime},
 };
+
+// TODO: split this file into submodules
 
 // TODO: Asynchronously lookup all unresolved post links during post body
 // reparse as to not block pulsar
@@ -116,9 +118,7 @@ impl FeedCommon {
 	fn new(id: u64) -> Self {
 		Self {
 			id,
-			need_init: Default::default(),
-			init_msg_cache: Default::default(),
-			pending: Default::default(),
+			..Default::default()
 		}
 	}
 
@@ -135,17 +135,34 @@ impl FeedCommon {
 			self.id, err
 		));
 	}
+
+	/// Unwrap or init new Encoder and return it
+	fn get_encoder(enc: &mut Option<Encoder>) -> &mut Encoder {
+		match enc {
+			Some(e) => e,
+			None => {
+				*enc = Some(Encoder::new(vec![]));
+				enc.as_mut().unwrap()
+			}
+		}
+	}
+
+	/// Unwrap or init new Encoder for pending messages and return it
+	fn get_pending_encoder(&mut self) -> &mut Encoder {
+		Self::get_encoder(&mut self.pending)
+	}
 }
 
 /// Update feed. Either a thread feed or the global thread index feed.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct Feed {
 	common: FeedCommon,
 
-	global_init_msg_part: Option<Msg>,
+	/// Cached encoded initialization message buffer for the global thread index
+	global_init_msg_cache: Option<Msg>,
 
 	/// Pending messages for global thread index feed
-	pending_global: Option<Encoder>,
+	global_pending: Option<Encoder>,
 
 	/// Last 5 post IDs in thread
 	last_5_posts: Last5Posts,
@@ -155,17 +172,6 @@ struct Feed {
 
 	/// Open bodies pending parsing and diffing
 	pending_open_bodies: HashMap<u64, String>,
-}
-
-/// Get or init new Encoder and return it
-fn get_encoder(enc: &mut Option<Encoder>) -> &mut Encoder {
-	match enc {
-		Some(e) => e,
-		None => {
-			*enc = Some(Encoder::new(vec![]));
-			enc.as_mut().unwrap()
-		}
-	}
 }
 
 impl Feed {
@@ -191,18 +197,20 @@ impl Feed {
 
 		Self {
 			common: FeedCommon::new(data.thread),
-			global_init_msg_part: None,
-			pending_global: None,
 			last_5_posts: l5,
 			data: data,
-			pending_open_bodies: Default::default(),
+			..Default::default()
 		}
 	}
 
 	/// Clear all cached values
 	fn clear_cache(&mut self) {
-		self.global_init_msg_part = None;
-		self.common.clear_cache()
+		self.global_init_msg_cache = None;
+		self.common.clear_cache();
+	}
+
+	fn log_encode_error(&self, err: std::io::Error) {
+		self.common.log_encode_error(err)
 	}
 
 	/// Encode and cache feed init message or return cached one.
@@ -228,7 +236,7 @@ impl Feed {
 
 	/// Encode and cache global feed init message part or return cached one.
 	fn get_global_init_msg_part(&mut self) -> std::io::Result<Msg> {
-		match &mut self.global_init_msg_part {
+		match &mut self.global_init_msg_cache {
 			Some(msg) => Ok(msg.clone()),
 			None => {
 				let msg = Msg::new({
@@ -259,7 +267,7 @@ impl Feed {
 					)?;
 					enc.finish()?
 				});
-				self.global_init_msg_part = Some(msg.clone());
+				self.global_init_msg_cache = Some(msg.clone());
 				Ok(msg)
 			}
 		}
@@ -286,23 +294,19 @@ impl Feed {
 		typ: MessageType,
 		payload: &impl Serialize,
 	) {
-		#[rustfmt::skip]
-		macro_rules! encode {
-			($dst:expr) => {
-				if $dst.is_none() {
-					$dst = Some(Encoder::new(Vec::new()));
-				}
-				if let Err(err) =
-					get_encoder(&mut $dst).write_message(typ, payload)
-				{
-					self.common.log_encode_error(err);
-				}
-			};
+		if let Err(err) = self
+			.common
+			.get_pending_encoder()
+			.write_message(typ, payload)
+		{
+			self.log_encode_error(err);
 		}
-
-		encode!(self.common.pending);
 		if self.include_in_global(post) {
-			encode!(self.pending_global);
+			if let Err(err) = FeedCommon::get_encoder(&mut self.global_pending)
+				.write_message(typ, payload)
+			{
+				self.log_encode_error(err);
+			}
 		}
 	}
 
@@ -347,12 +351,20 @@ impl Feed {
 }
 
 /// Reusable message buffer wrapper with AsRef[u8]
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 struct Msg(Arc<Vec<u8>>);
 
 impl Msg {
 	fn new(buf: Vec<u8>) -> Self {
 		Arc::new(buf).into()
+	}
+
+	fn append(&self, msg: impl AsRef<[u8]>) -> Self {
+		Encoder::join(&[self.as_ref(), msg.as_ref()]).into()
+	}
+
+	fn prepend(&self, msg: impl AsRef<[u8]>) -> Self {
+		Encoder::join(&[msg.as_ref(), self.as_ref()]).into()
 	}
 }
 
@@ -380,26 +392,45 @@ impl Into<Arc<Vec<u8>>> for Msg {
 	}
 }
 
-/// Used for aggregation of messages in parallel
-#[derive(Default)]
-struct MessageSet {
-	/// Each aggregated into one message for I/O efficiency after the
-	/// main filter_map(). Doing it inside would create too much
-	/// nesting and require more reallocations.
-	global_init_parts: Vec<Msg>,
-	global_feed_messages: Vec<Vec<u8>>,
+impl std::fmt::Debug for Msg {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		let d = match Decoder::new(self.as_ref()) {
+			Ok(d) => d,
+			Err(e) => return write!(f, "Msg (failed to decode: {})", e),
+		};
 
-	/// Aggregated into one message for I/O efficiency inside the main
-	/// filter_map(), as most of the time, global messages will not be
-	/// concatenated with them.
-	thread_messages: HashMap<u64, Msg>,
+		write!(f, "Msg [")?;
+		for (i, t) in d.all_types().iter().enumerate() {
+			if i != 0 {
+				write!(f, ", ")?;
+			}
+			write!(f, "{:?}", t)?;
+		}
+		write!(f, "]")
+	}
+}
+
+/// Messages to be sent to a specific client
+#[derive(Debug)]
+struct ClientMessage {
+	client: u64,
+	msg: Msg,
+}
+
+/// Used for aggregation of messages in parallel
+#[derive(Default, Debug)]
+struct MessageSet {
+	/// Messages to be sent on the global thread index feed
+	global_feed_messages: Vec<Msg>,
+
+	/// Messages to be sent to specific clients on specific threads
+	thread_messages: Vec<ClientMessage>,
 }
 
 impl MessageSet {
+	#[allow(unused)]
 	fn is_empty(&self) -> bool {
-		self.global_init_parts.is_empty()
-			&& self.global_feed_messages.is_empty()
-			&& self.thread_messages.is_empty()
+		self.global_feed_messages.is_empty() && self.thread_messages.is_empty()
 	}
 }
 
@@ -438,7 +469,9 @@ impl Pulsar {
 		f.insert_post(data.id, data.time);
 		self.feeds.insert(data.id, f);
 
-		if let Err(e) = get_encoder(&mut self.global.pending)
+		if let Err(e) = self
+			.global
+			.get_pending_encoder()
 			.write_message(MessageType::InsertThread, &data)
 		{
 			self.global.log_encode_error(e);
@@ -454,7 +487,7 @@ impl Pulsar {
 	}
 
 	/// Deallocate thread resources and redirect all of its clients
-	fn remove_thread(&mut self, id: u64) {
+	fn remove_thread(&mut self, _id: u64) {
 		self.global.clear_cache();
 
 		todo!(concat!(
@@ -532,8 +565,8 @@ impl Pulsar {
 		// TODO: Make client filter recent posts by creation timestamp to the
 		// last 15 min
 
-		// Need a snapshot of the required registry fields for atomicity
-		let (all_clients, clients_by_feed) = registry::snapshot_threads(|sm| {
+		// Need a partial snapshot of the registry for atomicity
+		let clients_by_feed = registry::snapshot_threads(|sm| {
 			let mut not_ready = Vec::<(u64, HashSet<u64>)>::new();
 			for (feed, clients) in sm.drain() {
 				if feed == 0 {
@@ -550,33 +583,30 @@ impl Pulsar {
 			}
 		});
 
-		let messages = self.aggregate_feed_messages(
-			!self.global.need_init.is_empty()
-				&& self.global.init_msg_cache.is_none(),
-			&clients_by_feed,
-		);
-		if messages.is_empty() && self.global.pending.is_none() {
-			// Nothing to send
-			return;
-		}
+		let messages = self.aggregate_feed_messages(&clients_by_feed);
 
 		let mut messages_by_client = HashMap::new();
 
 		// Assign thread feed messages to all thread feed clients
-		for (thread, msg) in messages.thread_messages {
-			if let Some(clients) = clients_by_feed.get(&thread) {
-				for c in clients {
-					messages_by_client.insert(*c, msg.clone());
-				}
-			}
+		for thread_message in messages.thread_messages {
+			messages_by_client
+				.insert(thread_message.client, thread_message.msg);
 		}
+
 		self.assign_global_feed_messages(
-			messages.global_init_parts,
 			messages.global_feed_messages,
 			clients_by_feed.get(&0),
 			&mut messages_by_client,
 		);
-		self.merge_server_wide_messages(&all_clients, &mut messages_by_client);
+		self.merge_server_wide_messages(
+			&clients_by_feed,
+			&mut messages_by_client,
+		);
+
+		#[cfg(debug_assertions)]
+		if !messages_by_client.is_empty() {
+			debug_log!("messages by client", messages_by_client);
+		}
 
 		// Send all messages in parallel to maximize parallelism of the Go side
 		messages_by_client
@@ -589,100 +619,102 @@ impl Pulsar {
 	/// Aggregate feed messages to send for all thread feeds and the global feed
 	fn aggregate_feed_messages(
 		&mut self,
-		build_global_init: bool,
 		clients_by_feed: &SetMap<u64, u64>,
 	) -> MessageSet {
 		self.feeds
 			.par_iter_mut()
 			.filter_map(|(id, f)| -> Option<MessageSet> {
-				if !build_global_init
-					&& f.common.need_init.is_empty()
+				if f.common.need_init.is_empty()
 					&& clients_by_feed.get(id).is_none()
 				{
 					return None;
 				}
 
-				// Compute splice messages from stored post body.
-				// string pairs first as those can append to pending message
-				// encoders.
+				// Compute splice messages from stored post body string pairs
+				// first as those can append to pending message encoders
 				f.diff_open_bodies();
 
 				#[rustfmt::skip]
-				macro_rules! try_encode {
-					($result:expr) => {{
-						match $result {
+				macro_rules! handle_error {
+					($res:expr) => {
+						match $res {
 							Ok(v) => v,
 							Err(err) => {
-								f.common.log_encode_error(err);
+								f.log_encode_error(err);
 								return None;
 							}
 						}
+					};
+				}
+
+				#[rustfmt::skip]
+				macro_rules! make_msg {
+					($res:expr) => {{
+						Msg::new(handle_error!($res))
 					}};
 				}
 
-				let thread_messages: HashMap<u64, Msg> = match (
-					f.common.need_init.len() != 0,
+				let thread_messages: Vec<ClientMessage> = match (
+					!f.common.need_init.is_empty(),
 					f.common.pending.take(),
 					clients_by_feed.get(id),
 				) {
 					(true, None, Some(clients)) => {
-						let msg = try_encode!(f.get_init_msg());
+						let msg = handle_error!(f.get_init_msg());
 						f.common
 							.need_init
 							.drain()
 							.filter(|c| clients.contains(&c))
-							.map(|c| (c, msg.clone()))
+							.map(|c| ClientMessage {
+								client: c,
+								msg: msg.clone(),
+							})
 							.collect()
 					}
 					(true, Some(pending), Some(clients)) => {
-						let msg = try_encode!(pending.finish());
+						let single = make_msg!(pending.finish());
 						// Init messages should be sent first to maintain
 						// event sequentiality
 						let with_init = Msg::new(Encoder::join(&[
-							try_encode!(f.get_init_msg()).as_ref(),
-							msg.as_slice(),
+							&handle_error!(f.get_init_msg()),
+							&single,
 						]));
-						let single = Msg::new(msg);
 
 						clients
 							.iter()
-							.map(|c| {
-								(
-									*c,
-									if f.common.need_init.contains(c) {
-										with_init.clone()
-									} else {
-										single.clone()
-									},
-								)
+							.map(|c| ClientMessage {
+								client: *c,
+								msg: if f.common.need_init.contains(c) {
+									with_init.clone()
+								} else {
+									single.clone()
+								},
 							})
 							.collect()
 					}
 					(false, Some(pending), Some(clients)) => {
-						let msg = Msg::new(try_encode!(pending.finish()));
+						let msg = make_msg!(pending.finish());
 						clients
 							.iter()
 							.cloned()
-							.map(|c| (c, msg.clone()))
+							.map(|c| ClientMessage {
+								client: c,
+								msg: msg.clone(),
+							})
 							.collect()
 					}
 					// If no clients, simply drop the full encoder
 					_ => Default::default(),
 				};
 				// Always clear clients needing init, as they were either
-				// handled above or ignored due to navigating away or
-				// disconnecting
+				// handled above or ignored due to having navigated away or
+				// disconnected
 				f.common.need_init.clear();
 
 				Some(MessageSet {
 					thread_messages: thread_messages,
-					global_init_parts: if build_global_init {
-						vec![try_encode!(f.get_global_init_msg_part())]
-					} else {
-						Default::default()
-					},
-					global_feed_messages: match f.pending_global.take() {
-						Some(pending) => vec![try_encode!(pending.finish())],
+					global_feed_messages: match f.global_pending.take() {
+						Some(pending) => vec![make_msg!(pending.finish())],
 						None => Default::default(),
 					},
 				})
@@ -704,99 +736,106 @@ impl Pulsar {
 						};
 					}
 
-					merge!(
-						global_init_parts,
-						global_feed_messages,
-						thread_messages
-					);
+					merge!(global_feed_messages, thread_messages);
 					a
 				},
 			)
 	}
 
+	/// Add message to all clients either before or after any existing messages
+	#[inline]
+	fn add_to_clients(
+		messages_by_client: &mut HashMap<u64, Msg>,
+		msg: &Msg,
+		clients: impl IntoIterator<Item = u64>,
+		before: bool,
+	) {
+		// For clients with messages
+		messages_by_client.par_iter_mut().for_each(|(_, queued)| {
+			*queued = if before {
+				queued.prepend(&msg)
+			} else {
+				queued.append(&msg)
+			};
+		});
+		// For clients without messages
+		for c in clients {
+			if !messages_by_client.contains_key(&c) {
+				messages_by_client.insert(c, msg.clone());
+			}
+		}
+	}
+
 	/// Assign global feed messages to clients on the global feed
 	fn assign_global_feed_messages(
 		&mut self,
-		mut global_init_parts: Vec<Msg>,
-		global_feed_messages: Vec<Vec<u8>>,
+		global_feed_messages: Vec<Msg>,
 		global_clients: Option<&HashSet<u64>>,
 		messages_by_client: &mut HashMap<u64, Msg>,
 	) {
-		// Assign global feed messages to clients
-		match (
-			!global_init_parts.is_empty(),
-			!global_feed_messages.is_empty(),
-			global_clients,
-		) {
-			(true, false, Some(clients)) => {
-				let msg = Msg::new(Encoder::join(global_init_parts));
-				for c in self
-					.global
-					.need_init
-					.drain()
-					.filter(|c| clients.contains(&c))
-				{
-					messages_by_client.insert(c, msg.clone());
+		// Assign init messages to clients needing them
+		if !self.global.need_init.is_empty() {
+			println!("need init on global: {:?}", self.global.need_init);
+			let msg = match &mut self.global.init_msg_cache {
+				Some(msg) => msg.clone(),
+				None => {
+					let msg = Msg::from(Encoder::join(
+						&self
+							.feeds
+							.par_iter_mut()
+							.filter_map(|(_, f)| {
+								match f.get_global_init_msg_part() {
+									Ok(msg) => Some(msg),
+									Err(e) => {
+										f.log_encode_error(e);
+										None
+									}
+								}
+							})
+							.collect::<Vec<_>>(),
+					));
+					self.global.init_msg_cache = msg.clone().into();
+					msg
 				}
-			}
-			(true, true, Some(clients)) => {
-				let single = Msg::new(Encoder::join(global_feed_messages));
-				// Init messages should be sent first to maintain
-				// event sequentiality
-				global_init_parts.push(single.clone());
-				let with_init = Msg::new(Encoder::join(global_init_parts));
+			};
 
-				for c in clients.iter().cloned() {
-					messages_by_client.insert(
-						c,
-						if self.global.need_init.contains(&c) {
-							with_init.clone()
-						} else {
-							single.clone()
-						},
-					);
-				}
-			}
-			(false, true, Some(clients)) => {
-				let msg = Msg::new(Encoder::join(global_feed_messages));
-				for c in clients.iter().cloned() {
-					messages_by_client.insert(c, msg.clone());
-				}
-			}
-			_ => (),
+			Self::add_to_clients(
+				messages_by_client,
+				&msg,
+				self.global.need_init.drain(),
+				// Init messages should be processed first to maintain event
+				// sequentiality
+				true,
+			);
 		}
-		// Always clear clients needing init, as they were either handled above
-		// or ignored due to navigating away or disconnecting
-		self.global.need_init.clear();
+
+		// Assign global feed messages to clients
+		if let (true, Some(clients)) =
+			(!global_feed_messages.is_empty(), global_clients)
+		{
+			let msg = Msg::new(Encoder::join(global_feed_messages));
+			for c in clients.iter().cloned() {
+				messages_by_client.insert(c, msg.clone());
+			}
+		}
 	}
 
 	/// Merge server-wide messages to all clients.
 	/// Not very efficient, but that is fine. These happen rarely.
 	fn merge_server_wide_messages(
 		&mut self,
-		all_clients: &HashSet<u64>,
+		clients_by_feed: &SetMap<u64, u64>,
 		messages_by_client: &mut HashMap<u64, Msg>,
 	) {
 		if let Some(pending) = self.global.pending.take() {
 			match pending.finish() {
 				Ok(buf) => {
-					messages_by_client.par_iter_mut().for_each(
-						|(_, queued)| {
-							*queued = Msg::new(Encoder::join(&[
-								queued.as_ref(),
-								buf.as_ref(),
-							]));
-						},
+					Self::add_to_clients(
+						messages_by_client,
+						&buf.into(),
+						clients_by_feed.values().copied(),
+						false,
 					);
-					let msg = Msg::new(buf);
-					for c in all_clients
-						.iter()
-						.filter(|c| !messages_by_client.contains_key(&c))
-						.copied()
-						.collect::<Vec<_>>()
-					{
-						messages_by_client.insert(c, msg.clone());
-					}
 				}
 				Err(err) => self.global.log_encode_error(err),
 			};
@@ -847,6 +886,7 @@ pub fn insert_thread(data: ThreadCreationNotice) -> SendResult {
 }
 
 /// Deallocate thread resources and redirect all of its clients
+#[allow(unused)] // TODO: remove this
 pub fn remove_thread(id: u64) -> SendResult {
 	send_request(Request::RemoveThread(id))
 }

@@ -25,6 +25,7 @@ pub enum Provider {
 
 impl Provider {
 	/// Return string identifier of this provider
+	#[allow(unused)] // TODO: remove it
 	pub fn key(&self) -> &'static str {
 		use Provider::*;
 

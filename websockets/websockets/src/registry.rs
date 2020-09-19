@@ -1,6 +1,6 @@
 use super::client::Client;
 use protocol::util::SetMap;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Mutex;
 
@@ -108,13 +108,13 @@ pub fn set_client_thread(client: u64, thread: u64) {
 /// Sync snapshot of client and thread data.
 //
 /// Reads client that need to be initialized with drainer.
-/// Returns global set of connected clients and clients mapped by thread.
-pub fn snapshot_threads<F>(drainer: F) -> (HashSet<u64>, SetMap<u64, u64>)
+/// Returns connected clients mapped by thread.
+pub fn snapshot_threads<F>(drainer: F) -> SetMap<u64, u64>
 where
 	F: FnOnce(&mut SetMap<u64, u64>),
 {
 	write(|c| {
 		drainer(&mut c.need_init);
-		(c.clients.keys().cloned().collect(), c.by_thread.clone())
+		c.by_thread.clone()
 	})
 }

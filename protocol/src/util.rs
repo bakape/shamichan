@@ -2,16 +2,16 @@ use std::collections::{HashMap, HashSet};
 use std::hash::Hash;
 
 /// Maps of K to sets of V
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone)]
 pub struct SetMap<K, V>(HashMap<K, HashSet<V>>)
 where
-	K: Hash + Eq + Clone,
-	V: Hash + Eq + Clone;
+	K: Hash + Eq,
+	V: Hash + Eq;
 
 impl<K, V> Default for SetMap<K, V>
 where
-	K: Hash + Eq + Clone,
-	V: Hash + Eq + Clone,
+	K: Hash + Eq,
+	V: Hash + Eq,
 {
 	fn default() -> Self {
 		Self(HashMap::new())
@@ -20,8 +20,8 @@ where
 
 impl<K, V> SetMap<K, V>
 where
-	K: Hash + Eq + Clone,
-	V: Hash + Eq + Clone,
+	K: Hash + Eq,
+	V: Hash + Eq,
 {
 	pub fn insert(&mut self, k: K, v: V) {
 		self.0.entry(k).or_default().insert(v);
@@ -48,6 +48,14 @@ where
 		&mut self,
 	) -> std::collections::hash_map::Drain<'_, K, HashSet<V>> {
 		self.0.drain()
+	}
+
+	pub fn keys(&self) -> impl Iterator<Item = &K> {
+		self.0.keys()
+	}
+
+	pub fn values(&self) -> impl Iterator<Item = &V> {
+		self.0.values().map(|s| s.iter()).flatten()
 	}
 }
 

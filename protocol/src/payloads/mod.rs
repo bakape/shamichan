@@ -151,6 +151,7 @@ impl OpenPost {
 
 payload! {
 	/// Feed initialization data
+	#[derive(Default)]
 	FeedData {
 		/// Thread this feed refers to
 		thread: u64,

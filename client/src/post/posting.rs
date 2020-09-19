@@ -328,6 +328,7 @@ pub enum State {
 	/// Captcha solution required to allocate to target thread.
 	/// This can only take place as an interrupt from the server during
 	/// Allocating.
+	#[allow(unused)] // TODO: remove it
 	NeedCaptcha(u64),
 
 	/// Allocated post during loss of connectivity
