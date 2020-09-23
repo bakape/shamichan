@@ -96,6 +96,10 @@
 			"Voltooi bericht",
 			"Open bericht sluiten"
 		],
+		"eden": [
+			"eden",
+			""
+		],
 		"eightball": [
 			"#8ball antwoorden",
 			"Lijst met antwoorden voor de #8ball hash command. Kan maximaal 100 antwoorden en 2000 tekens bevatten."
@@ -315,6 +319,10 @@
 		"pyu": [
 			"Slet enabler",
 			"Vraag niet"
+		],
+		"radio": [
+			"r/a/dio",
+			""
 		],
 		"rbText": [
 			"Red/Blue Text",

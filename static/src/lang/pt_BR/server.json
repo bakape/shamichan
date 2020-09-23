@@ -96,6 +96,10 @@
 			"Terminar post",
 			"Fecha o post aberto"
 		],
+		"eden": [
+			"eden",
+			""
+		],
 		"eightball": [
 			"#8ball answers",
 			"List of answers for the #8ball hash command. Can contain up to 100 answers and 2000 characters total."
@@ -315,6 +319,10 @@
 		"pyu": [
 			"Slut enabler",
 			"Don't ask"
+		],
+		"radio": [
+			"r/a/dio",
+			""
 		],
 		"rbText": [
 			"Red/Blue Text",
