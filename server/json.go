@@ -7,6 +7,7 @@ import (
 
 	"github.com/bakape/meguca/cache"
 	"github.com/bakape/meguca/common"
+	"github.com/bakape/meguca/db"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -18,26 +19,26 @@ func setJSONHeaders(w http.ResponseWriter) {
 	head.Set("Content-Type", "application/json")
 }
 
-// // Serve a single post as JSON
-// func servePost(w http.ResponseWriter, r *http.Request) {
-// 	httpError(w, r, func() (err error) {
-// 		id, err := strconv.ParseUint(extractParam(r, "post"), 10, 64)
-// 		if err != nil {
-// 			httpError(w, r, common.StatusError{
-// 				Err:  err,
-// 				Code: 400,
-// 			})
-// 			return
-// 		}
+// Serve a single post as JSON
+func servePost(w http.ResponseWriter, r *http.Request) {
+	handleError(w, r, func() (err error) {
+		id, err := strconv.ParseUint(extractParam(r, "post"), 10, 64)
+		if err != nil {
+			return common.StatusError{
+				Err:  err,
+				Code: 400,
+			}
+		}
 
-// 		post, err := db.GetPost(id)
-// 		if err != nil {
-// 			httpError(w, r, err)
-// 			return
-// 		}
-// 		serveJSON(w, r, "", post)
-// 	}())
-// }
+		post, err := db.GetPost(r.Context(), id)
+		if err != nil {
+			return
+		}
+		setJSONHeaders(w)
+		w.Write(post)
+		return
+	})
+}
 
 // Serves thread page JSON
 func serveThread(w http.ResponseWriter, r *http.Request) {

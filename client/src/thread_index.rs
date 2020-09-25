@@ -39,7 +39,7 @@ impl Component for Threads {
 						<span>{"TODO"}</span>
 					}
 				}
-				FeedID::Index => {
+				FeedID::Unset | FeedID::Index => {
 					let mut threads: Vec<&Thread> =
 						s.threads.values().collect();
 					// TODO: Different sort orders

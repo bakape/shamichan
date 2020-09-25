@@ -110,7 +110,8 @@ impl Inner {
 		page: u32,
 		s: &state::State,
 	) {
-		if let Some(posts) = s.posts_by_thread_page.get(&(thread, page)) {
+		if let Some(posts) = s.posts_by_thread_page.get_by_key(&(thread, page))
+		{
 			dst.extend(posts.iter().filter(|id| **id != thread));
 		}
 	}

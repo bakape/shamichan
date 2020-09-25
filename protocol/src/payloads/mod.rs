@@ -69,7 +69,6 @@ pub struct ThreadCreationReq {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewPostOpts {
 	pub name: String,
-	pub trip: String,
 	// TODO: staff titles
 }
 
@@ -197,9 +196,14 @@ impl FileType {
 	}
 }
 
-/// Image data common to both binary and JSON representations
+/// Image data inserted into a open post
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ImageCommon {
+pub struct Image {
+	#[serde(with = "HexForm::<[u8; 20]>")]
+	pub sha1: [u8; 20],
+	#[serde(with = "HexForm::<[u8; 16]>")]
+	pub md5: [u8; 16],
+
 	pub audio: bool,
 	pub video: bool,
 
@@ -221,38 +225,7 @@ pub struct ImageCommon {
 	pub spoilered: bool,
 }
 
-/// Image data JSON representation
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ImageJSON {
-	#[serde(flatten)]
-	pub common: ImageCommon,
-
-	#[serde(with = "HexForm::<[u8; 20]>")]
-	pub sha1: [u8; 20],
-
-	#[serde(with = "HexForm::<[u8; 16]>")]
-	pub md5: [u8; 16],
-}
-
-impl Into<Image> for ImageJSON {
-	fn into(self) -> Image {
-		Image {
-			common: self.common,
-			sha1: self.sha1,
-			md5: self.md5,
-		}
-	}
-}
-
-/// Image data inserted into an open post
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Image {
-	pub common: ImageCommon,
-	pub sha1: [u8; 20],
-	pub md5: [u8; 16],
-}
-
-/// Insert image into an open post
+/// Request to insert image into an open post
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct InsertImage {
 	pub post: u64,

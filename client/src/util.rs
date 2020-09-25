@@ -161,13 +161,30 @@ pub fn add_static_listener<E>(
 /// Log any error to console
 pub fn log_error_res<T, E: Into<Error>>(res: std::result::Result<T, E>) {
 	if let Err(err) = res {
-		log_error(err.into());
+		log_error(&err.into());
 	}
 }
 
 /// Log error to console
-pub fn log_error<T: std::fmt::Display>(err: T) {
+pub fn log_error(err: &impl std::fmt::Display) {
 	web_sys::console::error_1(&JsValue::from(err.to_string()));
+}
+
+/// Log a warning Message
+pub fn log_warn(msg: impl AsRef<str>) {
+	web_sys::console::warn_1(&msg.as_ref().into());
+}
+
+/// Display error alert message
+pub fn alert(msg: &impl std::fmt::Display) {
+	// Ignore result
+	window().alert_with_message(&format!("error: {}", msg)).ok();
+}
+
+/// Log error to console and display it in an alert message
+pub fn log_and_alert_error(err: &impl std::fmt::Display) {
+	log_error(&err);
+	alert(&err);
 }
 
 /// Run closure, logging any errors to both console error log and alert dialogs.
@@ -177,8 +194,7 @@ pub fn with_logging<T: Default>(f: impl FnOnce() -> Result<T>) -> T {
 	match f() {
 		Ok(v) => v,
 		Err(e) => {
-			alert(&e);
-			log_error(e);
+			log_and_alert_error(&e);
 			Default::default()
 		}
 	}
@@ -191,15 +207,8 @@ where
 	R: futures::Future<Output = Result>,
 {
 	if let Err(e) = f(arg).await {
-		alert(&e);
-		log_error(e);
+		log_error(&e);
 	}
-}
-
-/// Display error alert message
-pub fn alert(msg: &impl std::fmt::Display) {
-	// Ignore result
-	window().alert_with_message(&format!("error: {}", msg)).ok();
 }
 
 /// Format a duration into hours:mins:secs with padding and stripping headers,
@@ -235,4 +244,24 @@ where
 		arr.push(&i.into());
 	}
 	arr
+}
+
+/// Fetch json from the server
+pub async fn fetch_json<T>(url: impl AsRef<str>) -> Result<T>
+where
+	T: for<'d> serde::Deserialize<'d>,
+{
+	use wasm_bindgen_futures::JsFuture;
+
+	Ok(serde_json::from_str(
+		&JsFuture::from(
+			JsFuture::from(window().fetch_with_str(url.as_ref()))
+				.await?
+				.dyn_into::<web_sys::Response>()?
+				.text()?,
+		)
+		.await?
+		.as_string()
+		.ok_or("could not decode response string")?,
+	)?)
 }

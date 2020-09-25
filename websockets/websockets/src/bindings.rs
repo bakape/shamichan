@@ -308,11 +308,8 @@ extern "C" fn ws_insert_image(
 		pulsar::insert_image(
 			thread,
 			post,
-			serde_json::from_slice::<protocol::payloads::ImageJSON>(
-				image.as_ref(),
-			)
-			.map_err(|e| e.to_string())?
-			.into(),
+			serde_json::from_slice::<protocol::payloads::Image>(image.as_ref())
+				.map_err(|e| e.to_string())?,
 		)
 		.map_err(|e| e.to_string())?;
 		Ok(())

@@ -523,7 +523,7 @@ impl Pulsar {
 			match f.data.open_posts.get_mut(&req.post) {
 				Some(p) => {
 					p.has_image = true;
-					p.image_spoilered = req.img.common.spoilered;
+					p.image_spoilered = req.img.spoilered;
 					f.encode_post_message(
 						req.post,
 						MessageType::InsertImage,

@@ -1,10 +1,15 @@
 use super::{write, FeedID, Focus, Location, Post, Thread};
 use crate::util;
-use protocol::{debug_log, payloads::ThreadCreationNotice, util::DoubleSetMap};
+use protocol::{
+	debug_log,
+	payloads::{FeedData, ThreadCreationNotice},
+	util::DoubleSetMap,
+};
 use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use wasm_bindgen::JsCast;
 use yew::{
-	agent::{AgentLink, Bridge, Context, HandlerId},
+	agent::{AgentLink, Bridge, Context, Dispatched, HandlerId},
 	services::render::{RenderService, RenderTask},
 	Callback, Component, ComponentLink,
 };
@@ -22,14 +27,6 @@ pub struct ThreadDecoder {
 	thread_data: Thread,
 
 	posts: Vec<Post>,
-}
-
-/// Global state storage and propagation agent
-pub struct Agent {
-	link: AgentLink<Self>,
-	hooks: DoubleSetMap<Change, HandlerId>,
-	fetch_task: Option<yew::services::fetch::FetchTask>,
-	render_task: Option<RenderTask>,
 }
 
 /// Subscribe to updates of a value type
@@ -62,6 +59,18 @@ pub enum Request {
 
 	/// Set ID of currently open post
 	SetOpenPostID(Option<u64>),
+
+	/// Store feed initialization data for syncing to a feed
+	StoreFeedInitData {
+		feed: u64,
+		data: HashMap<u64, FeedData>,
+	},
+
+	/// Handle FeedSync synchronization routine result
+	SyncFeed {
+		loc: Location,
+		result: util::Result<(Vec<ThreadDecoder>, Vec<Post>)>,
+	},
 }
 
 /// Selective changes of global state to be notified on
@@ -166,6 +175,70 @@ pub enum Message {
 	PoppedState,
 }
 
+/// Feed synchronization state
+#[derive(Debug)]
+enum FeedSync {
+	/// No feed data received yet
+	NoData,
+
+	/// Only have the posts data from teh JSON API fetched
+	JSONFetched {
+		loc: Location,
+		flags: u8,
+		data: Vec<ThreadDecoder>,
+	},
+
+	/// Only have the feed init data from the websocket
+	WebsocketReceived {
+		feed: u64,
+		data: HashMap<u64, FeedData>,
+		//
+		// TODO: buffer post update messages till this resolves
+	},
+
+	/// Syncing discrepancies between the websocket feed init data data and
+	/// API post JSON
+	Syncing {
+		loc: Location,
+		flags: u8,
+		threads: HashMap<u64, Thread>,
+		posts: HashMap<u64, Post>,
+		patches: HashMap<u64, FeedData>,
+	},
+
+	/// Fully synced to server feed
+	Synced {
+		feed: u64,
+		/// Patches to apply on the downloaded JSON post data
+		// TODO: keep updating this to keep it current in case of a same feed
+		// page navigation
+		patches: HashMap<u64, FeedData>,
+	},
+}
+
+impl Default for FeedSync {
+	fn default() -> Self {
+		Self::NoData
+	}
+}
+
+/// Arguments used for merging a feed from websocket and JSON API data
+struct FeedMergeArgs {
+	loc: Location,
+	flags: u8,
+	from_json: Vec<ThreadDecoder>,
+	from_websocket: HashMap<u64, FeedData>,
+}
+
+/// Global state storage and propagation agent
+pub struct Agent {
+	link: AgentLink<Self>,
+	hooks: DoubleSetMap<Change, HandlerId>,
+	fetch_task: Option<yew::services::fetch::FetchTask>,
+	render_task: Option<RenderTask>,
+	feed_sync: FeedSync,
+}
+
 impl yew::agent::Agent for Agent {
 	type Reach = Context<Self>;
 	type Message = Message;
@@ -185,6 +258,7 @@ impl yew::agent::Agent for Agent {
 			hooks: DoubleSetMap::default(),
 			fetch_task: None,
 			render_task: None,
+			feed_sync: Default::default(),
 		}
 	}
 
@@ -196,15 +270,10 @@ impl yew::agent::Agent for Agent {
 				self.process_successful_feed_fetch(loc, data, flags);
 			}
 			FetchedThread { loc, data, flags } => {
-				self.process_successful_feed_fetch(
-					loc,
-					std::iter::once(data),
-					flags,
-				);
+				self.process_successful_feed_fetch(loc, vec![data], flags);
 			}
 			FetchFailed(s) => {
-				util::log_error(&s);
-				util::alert(&s);
+				util::log_and_alert_error(&s);
 				self.fetch_task = None;
 			}
 			Focus(f) => {
@@ -266,7 +335,77 @@ impl yew::agent::Agent for Agent {
 				}
 			}
 			NavigateTo { loc, flags } => self.set_location(loc, flags),
-			FetchFeed(loc) => self.fetch_feed_data(loc, 0),
+			FetchFeed(loc) => {
+				// Only called on app start, so pass FeedID::Unset
+				self.fetch_feed_data(loc, &Default::default(), 0);
+			}
+			StoreFeedInitData { feed, data } => {
+				self.merge_feed_data(FeedSync::WebsocketReceived {
+					feed,
+					data,
+				});
+			}
+			SyncFeed { loc, result } => {
+				let (fetched_threads, fetched_posts) = match result {
+					Ok(t) => t,
+					Err(e) => {
+						util::log_and_alert_error(&e);
+						return;
+					}
+				};
+				let args = match &mut self.feed_sync {
+					FeedSync::Syncing {
+						loc: stored_loc,
+						flags,
+						threads,
+						posts,
+						patches,
+					} if stored_loc == &loc => {
+						use std::collections::hash_map::Entry::{
+							Occupied, Vacant,
+						};
+						use std::mem::{swap, take};
+
+						for t in fetched_threads {
+							if let Vacant(e) = threads.entry(t.thread_data.id) {
+								e.insert(t.thread_data);
+								for p in t.posts {
+									if let Vacant(e) = posts.entry(p.id) {
+										e.insert(p);
+									}
+								}
+							}
+						}
+						for mut p in fetched_posts {
+							match posts.entry(p.id) {
+								Vacant(e) => {
+									e.insert(p);
+								}
+								Occupied(mut e) => {
+									let ptr = e.get_mut();
+									if ptr.image.is_none() && p.image.is_some()
+									{
+										swap(&mut ptr.image, &mut p.image);
+									}
+								}
+							};
+						}
+
+						Some((
+							*flags,
+							take(threads),
+							take(posts),
+							take(patches),
+						))
+					}
+					_ => None,
+				};
+				if let Some((flags, threads, posts, patches)) = args {
+					self.complete_feed_sync(
+						loc, flags, threads, posts, patches,
+					);
+				}
+			}
 			SetKeyID(id) => util::with_logging(|| {
 				write(|s| {
 					s.key_pair.id = id;
@@ -311,7 +450,6 @@ impl yew::agent::Agent for Agent {
 					s.open_post_id = id;
 					if let Some(id) = s.open_post_id {
 						use crate::post::posting;
-						use yew::agent::Dispatched;
 
 						posting::Agent::dispatcher()
 							.send(posting::Request::SetAllocated(id));
@@ -384,7 +522,7 @@ impl Agent {
 				};
 			if need_fetch {
 				debug_log!("fetching");
-				self.fetch_feed_data(new, flags);
+				self.fetch_feed_data(new, &s.location, flags);
 				return;
 			}
 
@@ -416,8 +554,293 @@ impl Agent {
 		});
 	}
 
+	/// Merge feed data fetched through the JSON API and websocket
+	fn merge_feed_data(&mut self, mut rhs: FeedSync) {
+		use std::mem::take;
+		use FeedSync::*;
+
+		let args = match (&mut self.feed_sync, &mut rhs) {
+			// Fresh connection
+			(NoData, JSONFetched { .. })
+			| (NoData, WebsocketReceived { .. }) => {
+				self.feed_sync = rhs;
+				None
+			}
+
+			// Syncing after feed change.
+			// If feed IDs do not match, it's a race condition and should be
+			// ignored.
+			(
+				JSONFetched {
+					loc,
+					flags,
+					data: from_json,
+				},
+				WebsocketReceived {
+					feed,
+					data: from_websocket,
+				},
+			)
+			| (
+				WebsocketReceived {
+					feed,
+					data: from_websocket,
+				},
+				JSONFetched {
+					loc,
+					flags,
+					data: from_json,
+				},
+			) if *feed == loc.feed.as_u64() => Some(FeedMergeArgs {
+				loc: take(loc),
+				flags: *flags,
+				from_json: take(from_json),
+				from_websocket: take(from_websocket),
+			}),
+
+			// Changed page without changing feed
+			(
+				Synced { feed, patches },
+				JSONFetched {
+					loc,
+					flags,
+					data: from_json,
+				},
+			) if *feed == loc.feed.as_u64() => Some(FeedMergeArgs {
+				loc: take(loc),
+				flags: *flags,
+				from_json: take(from_json),
+				from_websocket: take(patches),
+			}),
+
+			// Everything else is due to race conditions or programming errors
+			(dst @ _, src @ _) => {
+				util::log_warn(format!(
+					"failed to merge feed data: {:?} into {:?}",
+					dst, src
+				));
+				None
+			}
+		};
+		if let Some(args) = args {
+			self.merge_feed_sync(args);
+		}
+	}
+
+	/// Merge feed data from the JSON and websocket APIs, possibly fetching
+	/// missing data from the JSON API
+	fn merge_feed_sync(&mut self, args: FeedMergeArgs) {
+		use futures::Future;
+
+		let FeedMergeArgs {
+			loc,
+			flags,
+			from_json,
+			from_websocket,
+		} = args;
+
+		let mut threads =
+			HashMap::<u64, Thread>::with_capacity(from_json.len());
+		let mut posts = HashMap::<u64, Post>::new();
+		for t in from_json {
+			use std::collections::hash_map::Entry::*;
+
+			match threads.entry(t.thread_data.id) {
+				Occupied(mut e) => {
+					// Can contain multiple entries per thread due to fetching
+					// several pages
+					let ptr = e.get_mut();
+					ptr.page = std::cmp::max(ptr.page, t.thread_data.page);
+				}
+				Vacant(e) => {
+					e.insert(t.thread_data);
+				}
+			}
+			posts.extend(t.posts.into_iter().map(|p| (p.id, p)));
+		}
+
+		let mut threads_to_fetch = vec![];
+		let mut posts_to_fetch = vec![];
+		let mut fetching_posts = HashSet::new();
+		let mut fetch_post = |id: u64| {
+			if fetching_posts.insert(id) {
+				posts_to_fetch
+					.push(util::fetch_json(format!("/api/json/posts/{}", id)));
+			}
+		};
+		for thread in from_websocket.values() {
+			// Handle missing threads on index pages
+			if !loc.is_thread() && !threads.contains_key(&thread.thread) {
+				threads_to_fetch.push(util::fetch_json(format!(
+					"/api/json/threads/{}/-5",
+					thread.thread
+				)));
+			}
+
+			for id in thread.recent_posts.keys() {
+				if !posts.contains_key(id) {
+					fetch_post(*id);
+				}
+			}
+			for (id, open_post) in thread.open_posts.iter() {
+				if posts
+					.get(&id)
+					.map(|p| open_post.has_image && p.image.is_none())
+					.unwrap_or(true)
+				{
+					fetch_post(*id);
+				}
+			}
+		}
+
+		if threads_to_fetch.is_empty() && posts_to_fetch.is_empty() {
+			self.complete_feed_sync(loc, flags, threads, posts, from_websocket);
+			return;
+		}
+
+		self.feed_sync = FeedSync::Syncing {
+			loc: loc.clone(),
+			flags,
+			threads,
+			posts,
+			patches: from_websocket,
+		};
+
+		async fn run_fetches(
+			loc: Location,
+			threads: Vec<impl Future<Output = util::Result<ThreadDecoder>>>,
+			posts: Vec<impl Future<Output = util::Result<Post>>>,
+		) {
+			use futures::future::{try_join, try_join_all};
+
+			Agent::dispatcher().send(Request::SyncFeed {
+				loc,
+				result: try_join(try_join_all(threads), try_join_all(posts))
+					.await,
+			});
+		}
+		wasm_bindgen_futures::spawn_local(run_fetches(
+			loc,
+			threads_to_fetch,
+			posts_to_fetch,
+		));
+	}
+
+	/// Complete syncing the feed using the received patch set
+	fn complete_feed_sync(
+		&mut self,
+		loc: Location,
+		mut flags: u8,
+		threads: HashMap<u64, Thread>,
+		posts: HashMap<u64, Post>,
+		patches: HashMap<u64, FeedData>,
+	) {
+		// Apply patches received from the websocket to open posts received from
+		// JSON
+		write(|s| {
+			for patch in patches.values() {
+				for (id, created_on) in patch.recent_posts.iter() {
+					if let Some(p) = s.posts.get_mut(&id) {
+						p.created_on = *created_on;
+					}
+				}
+				for (id, op) in patch.open_posts.iter() {
+					if let Some(p) = s.posts.get_mut(&id) {
+						p.created_on = op.created_on;
+						p.body = (*op.body).clone();
+						if let Some(img) = &mut p.image {
+							img.spoilered = op.image_spoilered;
+						}
+					}
+				}
+			}
+		});
+
+		self.feed_sync = FeedSync::Synced {
+			feed: loc.feed.as_u64(),
+			patches,
+		};
+
+		// Trigger these updates in hierarchical order to make any upper level
+		// components switch rendering modes and not cause needless updates
+		// on deleted child components.
+		//
+		// Buffer and dedup hooks to be fired and handlers to be notified until
+		// update is complete.
+		let mut changes = vec![];
+		let mut changes_set = HashSet::new();
+		let mut add_hook = |h: Change| {
+			if changes_set.insert(h) {
+				changes.push(h);
+			}
+		};
+
+		flags |= FETCHED_JSON | NO_TRIGGER;
+		self.set_location(loc, flags);
+		add_hook(Change::Location);
+
+		write(|s| {
+			add_hook(Change::ThreadList);
+			for (id, _) in s.threads.drain() {
+				add_hook(Change::Thread(id));
+			}
+			for (id, _) in s.posts.drain() {
+				add_hook(Change::Post(id));
+			}
+
+			for id in threads.keys() {
+				add_hook(Change::Thread(*id));
+			}
+			s.threads = threads;
+
+			for p in posts.values() {
+				add_hook(Change::Post(p.id));
+				s.register_post_location(p);
+			}
+			s.posts = posts;
+		});
+
+		// Dedup hooked handlers to trigger
+		let mut sent = HashSet::with_capacity(changes.len());
+		for c in changes {
+			if let Some(reg) = self.hooks.get_by_key(&c) {
+				for r in reg.iter() {
+					if !sent.contains(r) {
+						sent.insert(*r);
+						self.link.respond(*r, ());
+					}
+				}
+			}
+		}
+	}
+
 	/// Fetch feed data from JSON API
-	fn fetch_feed_data(&mut self, loc: Location, flags: u8) {
+	// TODO: fetch several pages at once for thread fetches where page!=0
+	fn fetch_feed_data(&mut self, new: Location, old: &Location, flags: u8) {
+		let new_feed = new.feed.as_u64();
+
+		// Clear any previous feed sync state, if feed changed
+		match &self.feed_sync {
+			// If feed did not change, this is a page navigation within the
+			// same feed. Keep the init data as there won't be any new received.
+			FeedSync::WebsocketReceived { feed, .. }
+			| FeedSync::Synced { feed, .. }
+				if *feed == new_feed =>
+			{
+				()
+			}
+			_ => {
+				self.feed_sync = Default::default();
+			}
+		};
+
+		// Start the websocket syncing process
+		if old.feed.as_u64() != new_feed {
+			use crate::connection::{Connection, Request};
+
+			Connection::dispatcher().send(Request::Synchronize(new_feed));
+		}
+
 		util::with_logging(|| {
 			use anyhow::Error;
 			use yew::{
@@ -425,7 +848,7 @@ impl Agent {
 				services::fetch::{FetchService, Request, Response},
 			};
 
-			self.fetch_task = match loc.feed.clone() {
+			self.fetch_task = match new.feed.clone() {
 				FeedID::Index | FeedID::Catalog => FetchService::fetch(
 					Request::get("/api/json/index").body(Nothing).unwrap(),
 					self.link.callback(
@@ -437,7 +860,7 @@ impl Agent {
 								Json(Ok(body)) => Message::FetchedThreadIndex {
 									data: body,
 									flags,
-									loc: loc.clone(),
+									loc: new.clone(),
 								},
 								_ => Message::FetchFailed(format!(
 									concat!(
@@ -463,7 +886,7 @@ impl Agent {
 								Json(Ok(body)) => {
 									// Convert -1 (last page) to actual page
 									// number
-									let mut loc = loc.clone();
+									let mut loc = new.clone();
 									loc.feed = FeedID::Thread {
 										id: body.thread_data.id,
 										page: body.thread_data.page as i32,
@@ -486,6 +909,7 @@ impl Agent {
 						},
 					),
 				)?,
+				FeedID::Unset => unreachable!("move to Unset FeedID requested"),
 			}
 			.into();
 
@@ -493,73 +917,24 @@ impl Agent {
 		})
 	}
 
-	fn process_successful_feed_fetch<T>(
+	fn process_successful_feed_fetch(
 		&mut self,
 		loc: Location,
-		threads: T,
-		mut flags: u8,
-	) where
-		T: IntoIterator<Item = ThreadDecoder> + std::fmt::Debug,
-	{
-		use std::collections::HashSet;
-
+		threads: Vec<ThreadDecoder>,
+		flags: u8,
+	) {
 		debug_log!("fetched", threads);
 		self.fetch_task = None;
-
-		// Trigger these updates in hierarchical order to make any upper level
-		// components to switch rendering modes and not cause needless updates
-		// on deleted child components.
-		//
-		// Buffer and dedup hooks to be fired and handlers to be notified until
-		// update is complete.
-		let mut changes = vec![];
-		let mut changes_set = HashSet::new();
-		let mut add_hook = |h: Change| {
-			if changes_set.insert(h) {
-				changes.push(h);
-			}
-		};
-
-		flags |= FETCHED_JSON | NO_TRIGGER;
-		self.set_location(loc, flags);
-		add_hook(Change::Location);
-
-		write(|s| {
-			add_hook(Change::ThreadList);
-			for (id, _) in s.threads.drain() {
-				add_hook(Change::Thread(id));
-			}
-
-			for t in threads {
-				let t_id = t.thread_data.id;
-				add_hook(Change::Thread(t_id));
-				s.threads.insert(t_id, t.thread_data);
-				for p in t.posts {
-					add_hook(Change::Post(p.id));
-					s.register_post(p);
-				}
-			}
+		self.merge_feed_data(FeedSync::JSONFetched {
+			loc,
+			flags,
+			data: threads,
 		});
-
-		// Dedup hooked handlers to trigger
-		let mut sent = HashSet::with_capacity(changes.len());
-		for c in changes {
-			if let Some(reg) = self.hooks.get_by_key(&c) {
-				for r in reg.iter() {
-					if !sent.contains(r) {
-						sent.insert(*r);
-						self.link.respond(*r, ());
-					}
-				}
-			}
-		}
 	}
 }
 
 /// Navigate to the app to a different location
 pub fn navigate_to(loc: Location) {
-	use yew::agent::Dispatched;
-
 	Agent::dispatcher().send(Request::NavigateTo {
 		loc,
 		flags: PUSH_STATE | SET_STATE,

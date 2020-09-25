@@ -13,7 +13,7 @@ pub use options::{ImageExpansionMode, Options};
 use crate::util;
 use protocol::{
 	payloads::{post_body::Node, Image},
-	util::SetMap,
+	util::DoubleSetMap,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -57,15 +57,12 @@ pub struct State {
 	/// All registered threads
 	pub threads: HashMap<u64, Thread>,
 
-	/// All registered posts from any sources
-	//
-	// TODO: Some kind of post eviction algorithm.
-	// For now posts are never removed from memory for easing implementation of
-	// a more persistent cross-feed UI.
+	/// All registered posts for the current feed
 	pub posts: HashMap<u64, Post>,
 
-	/// Map for quick lookup of post IDs by a (thread, page) tuple
-	pub posts_by_thread_page: SetMap<(u64, u32), u64>,
+	/// Map for quick lookup of post IDs by a (thread, page) tuple and vice
+	/// versa
+	pub posts_by_thread_page: DoubleSetMap<(u64, u32), u64>,
 
 	/// Authentication key pair
 	pub key_pair: KeyPair,
@@ -90,9 +87,14 @@ pub struct State {
 
 impl State {
 	/// Insert a post into the registry
-	fn register_post(&mut self, p: Post) {
-		self.posts_by_thread_page.insert((p.thread, p.page), p.id);
+	pub fn register_post(&mut self, p: Post) {
+		self.register_post_location(&p);
 		self.posts.insert(p.id, p);
+	}
+
+	/// Register which page and thread a post belongs to
+	pub fn register_post_location(&mut self, p: &Post) {
+		self.posts_by_thread_page.insert((p.thread, p.page), p.id);
 	}
 }
 
@@ -129,10 +131,10 @@ pub struct Post {
 	pub created_on: u32,
 	pub open: bool,
 
+	pub sage: bool,
 	pub name: Option<String>,
 	pub trip: Option<String>,
 	pub flag: Option<String>,
-	pub sage: bool,
 
 	pub body: Node,
 	pub image: Option<Image>,

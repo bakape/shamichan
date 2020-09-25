@@ -61,8 +61,8 @@ where
 
 impl<K, V> std::iter::FromIterator<(K, HashSet<V>)> for SetMap<K, V>
 where
-	K: Hash + Eq + Clone,
-	V: Hash + Eq + Clone,
+	K: Hash + Eq,
+	V: Hash + Eq,
 {
 	fn from_iter<T: IntoIterator<Item = (K, HashSet<V>)>>(iter: T) -> Self {
 		Self(HashMap::<K, HashSet<V>>::from_iter(iter))

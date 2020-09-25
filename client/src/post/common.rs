@@ -180,7 +180,8 @@ where
 			ImageContract => {
 				self.expand_image = false;
 				if self.tall_image {
-					// TODO: Check this does not need to be deferred to next
+					// TODO: Check, if this does not need to be deferred to next
+					// AF
 					self.scroll_to();
 				}
 				self.tall_image = false;
@@ -215,7 +216,7 @@ where
 								.flatten(),
 							util::window().inner_height()?.as_f64(),
 						) {
-							if img.common.width as f64 > wh {
+							if img.width as f64 > wh {
 								self.scroll_to();
 							}
 						}
@@ -530,13 +531,10 @@ where
 			};
 		}
 
-		push_if!(img.common.audio, "♫".into());
-		push_if!(
-			img.common.duration != 0,
-			util::format_duration(img.common.duration)
-		);
+		push_if!(img.audio, "♫".into());
+		push_if!(img.duration != 0, util::format_duration(img.duration));
 		file_info.push({
-			let s = img.common.size;
+			let s = img.size;
 			if s < 1 << 10 {
 				format!("{} B", s)
 			} else if s < 1 << 20 {
@@ -546,22 +544,21 @@ where
 			}
 		});
 		push_if!(
-			img.common.width != 0 || img.common.height != 0,
-			format!("{}x{}", img.common.width, img.common.height)
+			img.width != 0 || img.height != 0,
+			format!("{}x{}", img.width, img.height)
 		);
 
-		if let Some(a) = &img.common.artist {
+		if let Some(a) = &img.artist {
 			file_info.push(a.clone());
-			if img.common.title.is_some() {
+			if img.title.is_some() {
 				file_info.push(" - ".into());
 			}
 		}
-		if let Some(t) = &img.common.title {
+		if let Some(t) = &img.title {
 			file_info.push(t.clone());
 		}
 
-		let name =
-			format!("{}.{}", img.common.name, img.common.file_type.extension());
+		let name = format!("{}.{}", img.name, img.file_type.extension());
 
 		html! {
 			<figcaption class="spaced">
@@ -593,7 +590,7 @@ where
 					}
 				</span>
 				{
-					if self.expand_image && is_expandable(img.common.file_type)
+					if self.expand_image && is_expandable(img.file_type)
 					{
 						html! {
 							<SpanButton
@@ -625,7 +622,7 @@ where
 	) -> Html {
 		use FileType::*;
 
-		match img.common.thumb_type {
+		match img.thumb_type {
 			NoFile | PDF => return html! {},
 			_ => (),
 		};
@@ -634,13 +631,10 @@ where
 		// image file.
 		//
 		// 8 MB is the size limit on many engines.
-		let (root, typ) =
-			match (&img.common.file_type, img.common.size < 8 << 20) {
-				(JPEG, true) | (PNG, true) | (GIF, true) => {
-					("src", &img.common.file_type)
-				}
-				_ => ("thumb", &img.common.thumb_type),
-			};
+		let (root, typ) = match (&img.file_type, img.size < 8 << 20) {
+			(JPEG, true) | (PNG, true) | (GIF, true) => ("src", &img.file_type),
+			_ => ("thumb", &img.thumb_type),
+		};
 		let url = format!(
 			"{}/assets/images/{}/{}.{}",
 			util::host(),
@@ -688,43 +682,37 @@ where
 
 		let src = source_path(c.app, img);
 		let thumb: Html;
-		let is_audio = match img.common.file_type {
+		let is_audio = match img.file_type {
 			MP3 | FLAC => true,
-			WEBM | MP4 | OGG => !img.common.video,
+			WEBM | MP4 | OGG => !img.video,
 			_ => false,
 		};
 
 		let (w, h, url) = if !self.expand_image || is_audio {
-			if img.common.thumb_type == NoFile {
+			if img.thumb_type == NoFile {
 				// No thumbnail exists
 				(
 					150,
 					150,
-					match img.common.file_type {
+					match img.file_type {
 						WEBM | MP4 | MP3 | OGG | FLAC => "/assets/audio.png",
 						_ => "/assets/file.png",
 					}
 					.to_string(),
 				)
-			} else if img.common.spoilered
-				&& !c.app.options.reveal_image_spoilers
-			{
+			} else if img.spoilered && !c.app.options.reveal_image_spoilers {
 				// Spoilered and spoilers enabled
 				(150, 150, "/assets/spoil/default.jpg".into())
-			} else if img.common.file_type == GIF
+			} else if img.file_type == GIF
 				&& c.app.options.expand_gif_thumbnails
 			{
 				// Animated GIF thumbnails
-				(img.common.thumb_width, img.common.thumb_height, src.clone())
+				(img.thumb_width, img.thumb_height, src.clone())
 			} else {
-				(
-					img.common.thumb_width,
-					img.common.thumb_height,
-					thumb_path(c.app, img),
-				)
+				(img.thumb_width, img.thumb_height, thumb_path(c.app, img))
 			}
 		} else {
-			(img.common.width, img.common.height, src.clone())
+			(img.width, img.height, src.clone())
 		};
 
 		if self.expand_image && !is_audio {
@@ -755,7 +743,7 @@ where
 				}
 			});
 
-			thumb = match img.common.file_type {
+			thumb = match img.file_type {
 				OGG | MP4 | WEBM => {
 					c.ctx.link.send_message(Message::SetVolume);
 					html! {
@@ -785,7 +773,7 @@ where
 		} else {
 			let no_mode = c.app.options.image_expansion_mode
 				== state::ImageExpansionMode::None;
-			let is_expandable = is_expandable(img.common.file_type);
+			let is_expandable = is_expandable(img.file_type);
 			let on_click = c.ctx.link.callback(move |e: MouseEvent| {
 				if no_mode || e.button() != 0 {
 					Message::NOP
@@ -851,7 +839,7 @@ fn thumb_path(s: &State, img: &Image) -> String {
 		"{}/thumb/{}.{}",
 		image_root(s),
 		hex::encode(&img.sha1),
-		img.common.thumb_type.extension()
+		img.thumb_type.extension()
 	)
 }
 
@@ -861,7 +849,7 @@ fn source_path(s: &State, img: &Image) -> String {
 		"{}/thumb/{}.{}",
 		image_root(s),
 		hex::encode(&img.sha1),
-		img.common.file_type.extension()
+		img.file_type.extension()
 	)
 }
 

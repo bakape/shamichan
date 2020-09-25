@@ -61,7 +61,7 @@ impl Provider {
 		use Provider::*;
 
 		match self {
-			DesuArchive => match img.common.file_type {
+			DesuArchive => match img.file_type {
 				JPEG
 				| PNG
 				| GIF
@@ -72,7 +72,7 @@ impl Provider {
 				.into(),
 				_ => None,
 			},
-			ExHentai => match img.common.file_type {
+			ExHentai => match img.file_type {
 				JPEG | PNG => format!(
 					"http://exhentai.org/?fs_similar=1&fs_exp=1&f_shash={}",
 					hex::encode(&img.md5)

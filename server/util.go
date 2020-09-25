@@ -75,7 +75,7 @@ func handleError(w http.ResponseWriter, r *http.Request, fn func() error) {
 
 	code := errStatusCode(err)
 	http.Error(w, fmt.Sprintf("%d %s", code, err), code)
-	if code >= 500 && code < 600 {
+	if code/100 == 5 {
 		logError(r, err)
 	}
 }

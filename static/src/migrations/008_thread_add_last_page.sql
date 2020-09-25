@@ -7,18 +7,20 @@ as $$
 begin
 	return jsonb_build_object(
 		'id', t.id,
+		'page', page,
+		'last_page', last_page,
+
+		'subject', t.subject,
+		'tags', t.tags,
+
+		'bumped_on', to_unix(t.bumped_on),
+		'created_on', to_unix(t.created_on),
 		'post_count', post_count(t.id),
 		'image_count', (
 			select count(*)
 			from posts p
 			where p.thread = t.id and p.image is not null
-		),
-		'page', page,
-		'last_page', last_page,
-		'created_on', to_unix(t.created_on),
-		'bumped_on', to_unix(t.bumped_on),
-		'subject', t.subject,
-		'tags', t.tags
+		)
 	);
 end;
 $$;
