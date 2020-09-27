@@ -377,10 +377,12 @@ var optionSpecs = [...][]inputSpec{
 	},
 	{
 		{
-			ID:      "nowPlaying",
-			Type:    _select,
-			Options: []string{"none", "r/a/dio", "eden", "both"},
+			ID:   "nowPlaying",
+			Type: _aggregate,
 		},
+		{ID: "radio"},
+		{ID: "eden"},
+		{Type: _hr},
 		{
 			ID:      "bgVideo",
 			Type:    _select,

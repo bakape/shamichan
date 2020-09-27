@@ -27,6 +27,7 @@ const (
 	_shortcut
 	_range
 	_hr
+	_aggregate
 )
 
 // Spec of an option passed into the rendering function
@@ -137,6 +138,10 @@ func (w *formWriter) input(spec inputSpec) {
 	case _shortcut:
 		w.attr("maxlength", "1")
 		w.attr("class", "shortcut")
+	case _aggregate:
+		w.typ("number")
+		w.attr("class", "hidden")
+		w.attr("readonly", "true")
 	}
 
 	w.N().S(`>`)
