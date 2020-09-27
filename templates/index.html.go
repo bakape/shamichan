@@ -165,7 +165,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 //line index.html:149
 	qw422016.N().S(`</head><body><div id="user-background"></div><div class="overlay-container">`)
 //line index.html:156
-	qw422016.N().S(`<span id="banner" class="glass"><nav id="board-navigation"><noscript>[`)
+	qw422016.N().S(`<span id="banner" class="glass"><nav id="board-navigation" class="center-vertically"><noscript>[`)
 //line index.html:161
 	for i, b := range boards {
 //line index.html:162
@@ -195,7 +195,7 @@ func streamrenderIndex(qw422016 *qt422016.Writer, pos common.ModerationLevel) {
 //line index.html:174
 	qw422016.N().S(`<b id="banner-center" class="spaced"></b>`)
 //line index.html:178
-	qw422016.N().S(`<span><b id="sync" class="banner-float svg-link noscript-hide" title="`)
+	qw422016.N().S(`<span class="center-vertically"><b id="sync" class="banner-float svg-link noscript-hide" title="`)
 //line index.html:180
 	qw422016.N().S(ln.UI["sync"])
 //line index.html:180

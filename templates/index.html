@@ -155,7 +155,7 @@
 				Top banner
 			{% endcomment %}
 			<span id="banner" class="glass">
-				<nav id="board-navigation">
+				<nav id="board-navigation" class="center-vertically">
 					<noscript>
 						[
 						{% for i, b := range boards %}
@@ -176,7 +176,7 @@
 				{% comment %}
 					Various buttons, that unhide modal windows
 				{% endcomment %}
-				<span>
+				<span class="center-vertically">
 					<b id="sync" class="banner-float svg-link noscript-hide" title="{%s= ln.UI["sync"] %}"></b>
 					<b id="sync-counter" class="act hide-empty banner-float svg-link noscript-hide" title="{%s= ln.UI["syncCount"] %}"></b>
 					<b id="thread-post-counters" class="act hide-empty banner-float svg-link noscript-hide" title="{%s= ln.Common.UI["postsImages"] %}"></b>
