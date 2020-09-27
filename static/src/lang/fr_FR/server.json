@@ -96,10 +96,6 @@
 			"Terminer le message",
 			"Termine le message ouvert"
 		],
-		"eden": [
-			"eden",
-			""
-		],
 		"eightball": [
 			"Questions #8ball",
 			"Peut contenir 100 questions et un total de 2000 caractères"
@@ -319,10 +315,6 @@
 		"pyu": [
 			"Slut enabler",
 			"Pose pas de questions"
-		],
-		"radio": [
-			"r/a/dio",
-			""
 		],
 		"rbText": [
 			"Red/Blue Text",

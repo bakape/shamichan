@@ -27,9 +27,6 @@ export type OptionSpec = {
 
 	// Should the function not be executed on model population?
 	noExecOnStart?: boolean
-
-	// Function used to retrieve data under a different key
-	getfn?: () => boolean
 }
 
 function renderBackground(_: boolean) {
@@ -103,18 +100,10 @@ export const specs: { [id: string]: OptionSpec } = {
 	relativeTime: {},
 	// R/a/dio or Eden now playing banner
 	nowPlaying: {
-		type: optionType.number,
-		default: 0,
+		type: optionType.menu,
+		default: "none",
 		noExecOnStart: true,
 		exec: initNowPlaying,
-	},
-	radio: {
-		exec: overrideSet("nowPlaying", 1 << 0),
-		getfn: overrideGet("nowPlaying", 1 << 0),
-	},
-	eden: {
-		exec: overrideSet("nowPlaying", 1 << 1),
-		getfn: overrideGet("nowPlaying", 1 << 1),
 	},
 	// User-specified video in the background
 	bgVideo: {
@@ -325,24 +314,5 @@ function toggleHeadStyle(
 		// The disabled property only exists on elements in the DOM, so we do
 		// another query
 		(document.getElementById(id) as any).disabled = !toggle
-	}
-}
-
-// Set and get option values as bitflags under different key
-function overrideSet(key: string, flag: number): () => void {
-	return () => {
-		let data = parseInt(localStorage.getItem(key));
-		let store = document.getElementById(key) as HTMLInputElement;
-		store.valueAsNumber = data ^ flag;
-		// Have to manually trigger change event
-		let evt = new Event("change", {bubbles: true});
-		store.dispatchEvent(evt);
-	}
-}
-
-function overrideGet(key: string, flag: number): () => boolean {
-	return () => {
-		let data = parseInt(localStorage.getItem(key));
-		return (data & flag) > 0;
 	}
 }

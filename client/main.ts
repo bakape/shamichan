@@ -30,21 +30,10 @@ async function start() {
 
 	// Check for legacy options and remap
 	const oldNowPlaying = localStorage.getItem("nowPlaying")
-	switch (oldNowPlaying) {
-	case "false":
-	case "none":
-		localStorage.setItem("nowPlaying", "" + (0 ^ 0));
-		break;
-	case "true":
-	case "r/a/dio":
-		localStorage.setItem("nowPlaying", "" + (0 ^ 1));
-		break;
-	case "eden":
-		localStorage.setItem("nowPlaying", "" + (0 ^ 2));
-		break;
-	case "both":
-		localStorage.setItem("nowPlaying", "" + (0 ^ 1 ^ 2));
-		break;
+	if (oldNowPlaying === "true") {
+		localStorage.setItem("nowPlaying", "r/a/dio")
+	} else if (oldNowPlaying === "false") {
+		localStorage.setItem("nowPlaying", "none")
 	}
 
 	initOptions()

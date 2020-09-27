@@ -35,7 +35,7 @@ export default class OptionsPanel extends TabbedModal {
 		this.renderHidden(hidden.size)
 		this.assignValues()
 
-		hook("renderOptionValue", (id, type, val) =>
+		hook("renderOptionValue", ([id, type, val]) =>
 			this.assignValue(id, type, val))
 		hook("renderHiddenCount", n =>
 			this.renderHidden(n))

@@ -11,89 +11,101 @@ type RadioData = {
 	[index: string]: string | number
 }
 
-type RadioRecord = {
-	urlBase: string
-	urlPath: string
-	data: RadioData
-	unmarshalfn: Function	// Unmarshal JSON response into RadioData object
-}
-
-// Entries must be in the same order as their option buttons
-const radios: RadioRecord[] = [
-	{
-		urlBase: 'https://r-a-d.io/',
-		urlPath: 'api',
-		data: {} as RadioData,
-		unmarshalfn: (res: any) => {
-			const {
-				main: {
-					np, listeners,
-					dj: {
-						djname: dj,
-					},
-				},
-			} = res;
-			return { np, listeners, dj } as RadioData;
-		},
-	} as RadioRecord,
-	{
-		urlBase: 'https://www.edenofthewest.com/',
-		urlPath: 'api/live/nowplaying/eden_radio',
-		data: {} as RadioData,
-		unmarshalfn: (res: any) => {
-			const {
-				listeners: {
-					current: listeners,
-				},
-				live: {
-					streamer_name: dj,
-				},
-				now_playing: {
-					song: {
-						text: np,
-					},
-				},
-			} = res;
-			return { np, listeners, dj } as RadioData;
-		},
-	} as RadioRecord,
-];
-
 let el = document.getElementById('banner-center'),
-	started = false;
+	data: RadioData = {} as RadioData,
+	started = false,
+	dataEden: RadioData = {} as RadioData;
 
 // Replacement new post names based on currently playing song
 export const posterName = () =>
-	_posterName;
-let _posterName = "";
+	_posterName
+let _posterName = ""
 const songMap = new Map([
 	[/Girls,? Be Ambitious/i, 'Joe'],
 	[/Super Special/i, 'Super Special'],
-]);
+])
 
-// Fetch JSON from enabled radio stations' API and rerender the banner, if different
+// Fetch JSON from R/a/dio's or Eden's API and rerender the banner, if different
 // data received
-async function fetchData(refresh: boolean = false) {
-	let enabled: number[] = [];
-	let matched = false;
-	for (let i = 0; i < radios.length; i++) {
-		// If station enabled
-		if ((i + 1) & options.nowPlaying) {
-			enabled.push(i);
-			const [res, err] = await fetchJSON<any>(radios[i].urlBase + radios[i].urlPath);
-			if (err) {
-				console.warn(err);
-				continue;
+function radioData(res: any): RadioData {
+	const {
+		main: {
+			np, listeners,
+			dj: {
+				djname: dj,
+			},
+		},
+	} = res
+	return { np, listeners, dj } as RadioData
+}
+
+function edenData(res: any): RadioData {
+	const {
+		listeners: {
+			current: listeners,
+		},
+		live: {
+			streamer_name: dj,
+		},
+		now_playing: {
+			song: {
+				text: np,
+			},
+		},
+	} = res
+	return { np, listeners, dj } as RadioData
+}
+
+async function fetchData() {
+	const radioURL = 'https://r-a-d.io/api';
+	const edenURL = 'https://www.edenofthewest.com/api/live/nowplaying/eden_radio';
+	let newData = {} as RadioData;
+	switch (options.nowPlaying) {
+		case "r/a/dio":
+			{
+				const [res, err] = await fetchJSON<any>(radioURL);
+				if (err) {
+					return console.warn(err);
+				}
+
+				newData = radioData(res);
 			}
-			let newData = radios[i].unmarshalfn(res);
-			if (!isMatch(newData, radios[i].data)) {
-				matched = true;
-				radios[i].data = newData;
+			break;
+		case "eden":
+			{
+				const [res, err] = await fetchJSON<any>(edenURL);
+				if (err) {
+					return console.warn(err);
+				}
+
+				newData = edenData(res);
 			}
-		}
+			break;
+		case "both":
+			{
+				let newDataEden = {} as RadioData;
+				const [res, err] = await fetchJSON<any>(radioURL);
+				const [resEden, errEden] = await fetchJSON<any>(edenURL);
+				if (err) {
+					return console.warn(err);
+				}
+				if (errEden) {
+					return console.warn(errEden);
+				}
+
+				newData = radioData(res);
+				newDataEden = edenData(resEden);
+
+				data = newData;
+				dataEden = newDataEden;
+				render();
+			}
+			break;
 	}
-	if (matched || refresh) {
-		render(enabled);
+
+	if (!isMatch(newData, data) && (options.nowPlaying != "both")) {
+		data = newData
+		render()
 	}
 }
 
@@ -101,10 +113,10 @@ async function fetchData(refresh: boolean = false) {
 function isMatch(a: {}, b: {}): boolean {
 	for (let key in a) {
 		if (a[key] !== b[key]) {
-			return false;
+			return false
 		}
 	}
-	return true;
+	return true
 }
 
 function genAttrs(data: RadioData): string {
@@ -118,41 +130,59 @@ function genAttrs(data: RadioData): string {
 }
 
 // Render the banner message text
-function render(enabled: number[]) {
-	if (options.nowPlaying & 0) {
-		el.innerHTML = _posterName = "";
-		return;
+function render() {
+	if (options.nowPlaying === "none") {
+		el.innerHTML = _posterName = ""
+		return
 	}
 
-	let matched = false;
-	let s: string[] = [];
-	for (const i of enabled) {
-		// Check for song matches
-		if (!matched) {
-			for (let [patt, rep] of songMap) {
-				if (patt.test(radios[i].data.np)) {
-					matched = true;
-					_posterName = rep;
-					break;
-				}
-			}
+	// Check for song matches
+	let matched = false
+	for (let [patt, rep] of songMap) {
+		if (patt.test(data.np)) {
+			matched = true
+			_posterName = rep
+			break
 		}
-		s.push(HTML
-		`<div class="stream-info spaced">
-			<a href="${radios[i].urlBase}" target="_blank">
-				[${escape(radios[i].data.listeners.toString())}] ${escape(radios[i].data.dj)}
-			</a>
-			<a ${genAttrs(radios[i].data)}>
-				<b>
-					${escape(radios[i].data.np)}
-				</b>
-			</a>
-		</div>`);
 	}
 	if (!matched) {
-		_posterName = "";
+		_posterName = ""
 	}
-	el.innerHTML = s.join("");
+
+	if (options.nowPlaying === "both") {
+		el.innerHTML = HTML
+			`<a href="https://r-a-d.io/" target="_blank">
+				[${escape(data.listeners.toString())}] ${escape(data.dj)}
+			</a>
+			<a ${genAttrs(data)}>
+				<b>
+					${escape(data.np)}
+				</b>
+			</a>
+			 |
+			<a href="https://edenofthewest.com/" target="_blank">
+				[${escape(dataEden.listeners.toString())}] ${escape(dataEden.dj)}
+			</a>
+			<a ${genAttrs(dataEden)}>
+				<b>
+					${escape(dataEden.np)}
+				</b>
+			</a>`
+	}
+	else {
+		const site = options.nowPlaying === "eden"
+			? "edenofthewest.com"
+			: "r-a-d.io";
+		el.innerHTML = HTML
+			`<a href="https://${site}/" target="_blank">
+			[${escape(data.listeners.toString())}] ${escape(data.dj)}
+		</a>
+		<a ${genAttrs(data)}>
+			<b>
+				${escape(data.np)}
+			</b>
+		</a>`
+	}
 }
 
 // Initialize
@@ -167,12 +197,11 @@ export default function () {
 	let timer = setInterval(fetchData, 10000);
 	options.onChange("nowPlaying", selection => {
 		clearInterval(timer);
-		if (selection == 0) {
-			render([]);
+		if (selection === "none") {
+			render();
 		} else {
 			timer = setInterval(fetchData, 10000);
-			// Force rerender even if all RadioData is the same
-			fetchData(true);
+			fetchData().then(render);
 		}
-	});
+	})
 }
