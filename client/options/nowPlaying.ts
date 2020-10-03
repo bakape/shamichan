@@ -75,10 +75,10 @@ const songMap = new Map([
 // data received
 async function fetchData(refresh: boolean = false) {
 	let enabled: number[] = [];
-	let matched = false;
+	let changed = false;
 	for (let i = 0; i < radios.length; i++) {
 		// If station enabled
-		if ((i + 1) & options.nowPlaying) {
+		if ((1 << i) & options.nowPlaying) {
 			enabled.push(i);
 			const [res, err] = await fetchJSON<any>(radios[i].urlBase + radios[i].urlPath);
 			if (err) {
@@ -87,12 +87,12 @@ async function fetchData(refresh: boolean = false) {
 			}
 			let newData = radios[i].unmarshalfn(res);
 			if (!isMatch(newData, radios[i].data)) {
-				matched = true;
+				changed = true;
 				radios[i].data = newData;
 			}
 		}
 	}
-	if (matched || refresh) {
+	if (changed || refresh) {
 		render(enabled);
 	}
 }
@@ -118,8 +118,8 @@ function genAttrs(data: RadioData): string {
 }
 
 // Render the banner message text
-function render(enabled: number[]) {
-	if (options.nowPlaying & 0) {
+function render(enabled: number[] = []) {
+	if (options.nowPlaying == 0) {
 		el.innerHTML = _posterName = "";
 		return;
 	}
@@ -168,7 +168,7 @@ export default function () {
 	options.onChange("nowPlaying", selection => {
 		clearInterval(timer);
 		if (selection == 0) {
-			render([]);
+			render();
 		} else {
 			timer = setInterval(fetchData, 10000);
 			// Force rerender even if all RadioData is the same
