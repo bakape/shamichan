@@ -2,6 +2,7 @@ package server
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/bakape/meguca/auth"
 	"github.com/bakape/meguca/cache"
@@ -169,7 +170,11 @@ func boardNavigation(w http.ResponseWriter, r *http.Request) {
 
 // Serve a form for selecting one of several boards owned by the user
 func ownedBoardSelection(w http.ResponseWriter, r *http.Request) {
-	userID := extractParam(r, "userID")
+	userID, err := url.QueryUnescape(extractParam(r, "userID"))
+	if err != nil {
+		httpError(w, r, err)
+		return
+	}
 	owned, err := db.GetOwnedBoards(userID)
 	if err != nil {
 		httpError(w, r, err)

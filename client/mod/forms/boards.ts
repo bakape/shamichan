@@ -17,7 +17,9 @@ class OwnedBoardSelection extends View<null> {
 	}
 
 	private async render() {
-		const res = await fetch(`/html/owned-boards/${loginID()}`)
+		const res = await fetch(
+			`/html/owned-boards/${encodeURIComponent(loginID())}`,
+		);
 		const body = await res.text();
 		switch (res.status) {
 			case 200:
