@@ -1,8 +1,6 @@
 github.com/Masterminds/squirrel v1.4.0 h1:he5i/EXixZxrBUWcxzDYMiju9WZ3ld/l7QBNuo/eN3w=
 github.com/Masterminds/squirrel v1.4.0/go.mod h1:yaPeOnPG5ZRwL9oKdTsO/prlkPbXWZlRVMQ/gGlzIuA=
 github.com/PuerkitoBio/goquery v1.5.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
-github.com/abh/geoip v0.0.0-20160510155516-07cea4480daa h1:o7+BnQZpdqHPCc9F2fTWPCM9Y9AyUHBWbTL+pCrCdb0=
-github.com/abh/geoip v0.0.0-20160510155516-07cea4480daa/go.mod h1:N2q9pP3q4thAewFqmOB/DL8EsWimMuDOx4KduwXMT5A=
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
 github.com/andybalholm/cascadia v1.1.0/go.mod h1:GsXiBklL0woXo1j/WYWtSYYC4ouU9PqHO0sqidkEA4Y=
 github.com/aquilax/tripcode v1.0.0 h1:uPW1T2brVth0t6YiDPlouncHXFGneflsAvkh4zEBN58=
@@ -104,8 +102,6 @@ github.com/valyala/fasthttp v1.12.0/go.mod h1:229t1eWu9UXTPmoUkbpN/fctKPBY4IJoFX
 github.com/valyala/fasthttp v1.15.1/go.mod h1:YOKImeEosDdBPnxc0gy7INqi3m1zK6A+xl6TwOBhHCA=
 github.com/valyala/quicktemplate v1.5.0 h1:2CUbkvZbxZ9m51wp5a2vzrbnv38Iocp0bMJomSmHyg0=
 github.com/valyala/quicktemplate v1.5.0/go.mod h1:v7yYWpBEiutDyNfVaph6oC/yKwejzVyTX/2cwwHxyok=
-github.com/valyala/quicktemplate v1.6.0 h1:9fKw4ebNjg3jzbfLSTu6i0tgqhpS80h2uN6brwbweKg=
-github.com/valyala/quicktemplate v1.6.0/go.mod h1:v7yYWpBEiutDyNfVaph6oC/yKwejzVyTX/2cwwHxyok=
 github.com/valyala/quicktemplate v1.6.2 h1:k0vgK7zlmFzqAoIBIOrhrfmZ6JoTGJlLRPLbkPGr2/M=
 github.com/valyala/quicktemplate v1.6.2/go.mod h1:mtEJpQtUiBV0SHhMX6RtiJtqxncgrfmjcUy5T68X8TM=
 github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a/go.mod h1:v3UYOV9WzVtRmSR+PDvWpU/qWl4Wa5LApYYX4ZtKbio=

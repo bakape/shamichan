@@ -96,6 +96,10 @@
 			"Finish Post",
 			"Close open post"
 		],
+		"eden": [
+			"eden",
+			""
+		],
 		"eightball": [
 			"Odpowiedzi #8ball",
 			"Lista odpowiedzi komendy #8ball. Może zawierać maksymalnie 100 odpowiedzi i 2000 znaków."
@@ -315,6 +319,10 @@
 		"pyu": [
 			"Slut enabler",
 			"Don't ask"
+		],
+		"radio": [
+			"r/a/dio",
+			""
 		],
 		"rbText": [
 			"Red/Blue Text",
