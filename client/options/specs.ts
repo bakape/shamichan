@@ -268,8 +268,13 @@ export const specs: { [id: string]: OptionSpec } = {
 			.fileinfo,
 			blockquote,
 			.backlinks,
-			header {
+			header > :not(nav),
+			header .quote,
+			header .mod-checkbox {
 				display: none;
+			}
+			header, figcaption {
+				display: inline-block;
 			}
 			#thread-container, article:not(.reply-form) {
 				display: inline-table;
@@ -290,8 +295,12 @@ export const specs: { [id: string]: OptionSpec } = {
 				padding: 0.5em;
 				width: fit-content;
 			}
-			a[download] {
+			a[download], header nav {
 				font-size: 0;
+			}
+			header nav a:first-child::before {
+				content: "# ";
+				font-size: 15px;
 			}
 			a[download]::before {
 				content: " 🡇";
