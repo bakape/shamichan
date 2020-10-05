@@ -120,10 +120,11 @@ export default class FormView extends PostView {
     // Handle input events on this.input
     public onInput() {
         if (!this.input) {
-            return
+            return;
         }
-        this.resizeInput()
-        this.model.parseInput(this.input.value)
+        this.model.parseInput(this.input.value);
+        this.resizeInput();
+        this.renderCounter();
     }
 
     // Resize textarea to content width and adjust height
@@ -279,5 +280,26 @@ export default class FormView extends PostView {
         }
         el.disabled = disable;
         el.value = text;
+    }
+
+    // Update the character counter on an editing post
+    private renderCounter() {
+        const el = this.el.querySelector("#char-count") as HTMLDivElement;
+        if (!el) {
+            return;
+        }
+        const cnt = this.input.value.length;
+        if (cnt < 1000) {
+            el.style.display = "none";
+            return;
+        }
+        el.style.display = "flex";
+        (el.firstChild as HTMLDivElement).innerText = "" + cnt;
+        if (cnt > 1900) {
+            el.classList.add("admin");
+        }
+        else {
+            el.classList.remove("admin");
+        }
     }
 }
