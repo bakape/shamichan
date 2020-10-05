@@ -26,6 +26,9 @@ source /etc/profile
 wget -qO- https://deb.nodesource.com/setup_10.x | bash -
 apt-get install -y nodejs
 
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
 # Clone and build meguca
 git clone https://github.com/bakape/meguca.git meguca
 cd meguca
