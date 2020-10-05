@@ -474,6 +474,7 @@
 		"by": "由",
 		"captcha": "驗證碼",
 		"changePassword": "更改密碼",
+		"charCount": "Amount of characters in the post body",
 		"classic": "經典",
 		"clear": "清除",
 		"configureBoard": "配置看板",
