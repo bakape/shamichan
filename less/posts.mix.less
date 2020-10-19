@@ -1,56 +1,65 @@
 a.referenced {
 	text-decoration: none;
-	border-bottom: 1px dashed currentColor;
+	border-bottom  : 1px dashed currentColor;
 }
 
 .erred {
-	&, * {
+
+	&,
+	* {
 		color: red !important;
 	}
 }
 
-#thread-container, .index-thread, article {
-	display: flex;
+#thread-container,
+.index-thread,
+article {
+	display       : flex;
 	flex-direction: column;
-	align-items: flex-start;
+	align-items   : flex-start;
 }
 
 article {
 	word-break: break-word;
-	word-wrap: break-word;
-	max-width: 95vw;
+	word-wrap : break-word;
+	max-width : 95vw;
+
 	ul {
-		word-wrap: normal;
-    	word-break: normal;
+		word-wrap : normal;
+		word-break: normal;
 	}
+
 	article {
 		display: table;
+
 		.post-container {
-			display: flex;
+			display       : flex;
 			flex-direction: column;
 		}
 	}
 }
 
 .post-container {
-	width: 100%;
+	width   : 100%;
 	overflow: hidden; // Prevents vertical zalgo
 }
 
-.backlinks > em > a {
+.backlinks>em>a {
 	font-size: smaller;
 }
 
 blockquote {
 	min-width: 25em;
+
 	b {
 		color: inherit;
 	}
 }
 
 audio {
-	width: 300px;
+	width : 300px;
 	height: 3em;
+
 	&::-webkit-media-controls-panel {
 		background: none;
 	}
@@ -61,24 +70,26 @@ h3 {
 }
 
 code.code-tag {
-	margin: 0;
+	margin     : 0;
 	white-space: pre-wrap;
 }
 
 .embed {
 	background-color: rgba(255, 255, 255, 0.5);
-	border-radius: 4px;
-	display: inline-block;
-	font-style: normal;
-	margin: 0.1em;
-	padding: 2px;
-	color: black;
+	border-radius   : 4px;
+	display         : inline-block;
+	font-style      : normal;
+	margin          : 0.1em;
+	padding         : 2px;
+	color           : black;
+
 	&.expanded {
 		max-width: 480px;
 	}
-	& > iframe {
-		display: block;
-		margin: auto;
+
+	&>iframe {
+		display     : block;
+		margin      : auto;
 		border-style: none;
 	}
 }
@@ -97,17 +108,19 @@ figcaption {
 
 .image-search {
 	font-weight: bold;
-	display: none;
+	display    : none;
 }
 
 figure {
-	float: left;
-	margin: 3px 20px 0 0;
+	float  : left;
+	margin : 3px 20px 0 0;
 	padding: 0.3em;
+
 	a {
-		display: block;
+		display    : block;
 		line-height: 0px;
 	}
+
 	img {
 		border: 0;
 	}
@@ -116,46 +129,50 @@ figure {
 .fit-to-width {
 	max-width: 100%;
 }
+
 .fit-to-screen {
-	max-width: 100%;
+	max-width : 100%;
 	max-height: 100vh;
 }
 
 header {
-	margin-left: -14px;
+	margin-left : -14px;
 	padding-left: 14px;
+
 	nav {
 		display: initial;
 	}
+
 	code {
 		font-family: inherit;
 		font-weight: normal;
 	}
-	&.temporary > *:not(.name) {
+
+	&.temporary>*:not(.name) {
 		display: none;
 	}
 }
 
 .svg-link {
 	// Widen click area
-	width: 1em;
+	width : 1em;
 	height: 1em;
 
 	svg {
-		width: 0.7em;
+		width : 0.7em;
 		height: 0.7em;
 	}
 
 	header & {
-		position: relative;
+		position   : relative;
 		margin-left: 0.5em;
-		float: right;
+		float      : right;
 	}
 }
 
 .control .popup-menu {
 	position: absolute;
-	right: 0;
+	right   : 0;
 }
 
 .omit {
@@ -168,57 +185,66 @@ header {
 
 #thread-form-container.expanded {
 	padding: 0.7em;
-	& > span.act {
+
+	&>span.act {
 		display: none;
 	}
-	& > form {
+
+	&>form {
 		display: block;
 	}
 }
 
-#new-thread-form, #new-reply-form {
-	input[type=text], textarea {
+#new-thread-form,
+#new-reply-form {
+
+	input[type=text],
+	textarea {
 		width: 20em;
 	}
 }
 
 #new-thread-form input[name=sage] {
-	&, & + br {
+
+	&,
+	&+br {
 		display: none;
 	}
 }
 
 #text-input {
-	color: inherit;
-	font-size: inherit;
-	border: 0;
-	padding: 0;
+	color           : inherit;
+	font-size       : inherit;
+	border          : 0;
+	padding         : 0;
 	background-color: transparent;
-	outline: none;
-	width: 100%;
-	max-height: 85vh;
-	max-width: 100%;
-	resize: none;
-	overflow: hidden;
-	overflow-wrap: break-word;
-	word-break: break-word;
-	word-wrap: break-word;
+	outline         : none;
+	width           : 100%;
+	max-height      : 85vh;
+	max-width       : 100%;
+	resize          : none;
+	overflow        : hidden;
+	overflow-wrap   : break-word;
+	word-break      : break-word;
+	word-wrap       : break-word;
 }
 
 @media screen and (min-height: 200px) {
 	.reply-form:not(.preview) {
 		position: fixed;
-		z-index: 15;
-		bottom: 0;
-		left: 0;
-		margin: 1em;
+		z-index : 15;
+		bottom  : 0;
+		left    : 0;
+		margin  : 1em;
+
 		.post-container {
 			max-height: 80vh;
-			max-width: 80vw;
-			display: flex;
-			flex-wrap: nowrap;
+			max-width : 80vw;
+			display   : flex;
+			flex-wrap : nowrap;
 		}
-		figure ~ blockquote {
+
+		figure~blockquote {
 			margin-left: 0px;
 		}
 	}
@@ -226,20 +252,28 @@ header {
 
 #post-controls {
 	padding: 0.3em 0 0.3em 0;
+	width  : 100%;
+}
+
+#char-count {
+	display    : none;
+	float      : right;
+	padding-top: inherit;
 }
 
 // Make OPs stand out, if no custom background set
-#threads:not(.custom-BG) section > article.op {
-	margin-left: 0;
+#threads:not(.custom-BG) section>article.op {
+	margin-left : 0;
 	padding-left: 0;
-	border: none;
-	background: none;
+	border      : none;
+	background  : none;
 }
 
-#threads  {
+#threads {
 	hr {
 		width: 100%;
 	}
+
 	section:last-child hr {
 		display: none;
 	}
@@ -247,31 +281,37 @@ header {
 
 #catalog {
 	margin: 0 0.85em;
+
 	article {
-		width: 160px;
-		max-height: 300px;
-		display: inline-block;
-		text-align: center;
-		overflow: hidden;
+		width         : 160px;
+		max-height    : 300px;
+		display       : inline-block;
+		text-align    : center;
+		overflow      : hidden;
 		vertical-align: top;
-		padding: 0.6em;
-		margin: 0.15em;
-		&.deleted .deleted-toggle:checked ~ .thread-links {
-			clear: none;
+		padding       : 0.6em;
+		margin        : 0.15em;
+
+		&.deleted .deleted-toggle:checked~.thread-links {
+			clear  : none;
 			display: inline-block;
 		}
 	}
+
 	blockquote {
 		&:empty {
 			display: none;
 		}
+
 		min-width: initial;
-		margin: 0;
-		padding: 0;
+		margin   : 0;
+		padding  : 0;
 	}
+
 	figure {
-		float: none;
+		float : none;
 		margin: 0;
+
 		img {
 			margin: 0;
 		}
@@ -279,7 +319,7 @@ header {
 }
 
 // Prevent double <hr> at bottom
-#index-thread-container > section:last-of-type hr {
+#index-thread-container>section:last-of-type hr {
 	display: none;
 }
 
@@ -291,8 +331,8 @@ header {
 	white-space: nowrap;
 }
 
-header > svg {
-	width: 1em;
+header>svg {
+	width : 1em;
 	height: 1em;
 }
 
@@ -301,8 +341,8 @@ a.strikethrough {
 }
 
 .record-button.svg-link svg {
-	width: 1.2em;
-	height: 1.2em;
-	padding-left: 0.2em;
+	width        : 1.2em;
+	height       : 1.2em;
+	padding-left : 0.2em;
 	padding-right: 0.2em;
 }

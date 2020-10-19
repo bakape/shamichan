@@ -474,6 +474,7 @@
 		"by": "Door",
 		"captcha": "Captcha",
 		"changePassword": "Verander wachtwoord",
+		"charCount": "Amount of characters in the post body",
 		"classic": "classic",
 		"clear": "Ontruimen",
 		"configureBoard": "board configureren",

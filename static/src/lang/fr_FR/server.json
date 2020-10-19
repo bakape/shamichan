@@ -472,6 +472,7 @@
 		"by": "Par",
 		"captcha": "Captcha",
 		"changePassword": "Mot de passe",
+		"charCount": "Amount of characters in the post body",
 		"classic": "classic",
 		"clear": "Vider",
 		"configureBoard": "Configurer une planche",

@@ -474,6 +474,7 @@
 		"by": "By",
 		"captcha": "Captcha",
 		"changePassword": "Zmień hasło",
+		"charCount": "Amount of characters in the post body",
 		"classic": "classic",
 		"clear": "Clear",
 		"configureBoard": "Konfiguracja działu",

@@ -474,6 +474,7 @@
 		"by": "От",
 		"captcha": "Капча",
 		"changePassword": "Сменить пароль",
+		"charCount": "Amount of characters in the post body",
 		"classic": "classic",
 		"clear": "Очистить",
 		"configureBoard": "Настроить доску",
