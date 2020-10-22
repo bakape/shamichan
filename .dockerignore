@@ -37,3 +37,4 @@ debug.test
 db_*.db
 target
 vendor
+.mypy_cache/

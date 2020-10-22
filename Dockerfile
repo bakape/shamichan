@@ -18,6 +18,7 @@ RUN apt-get install -y \
 	libwebp-dev \
 	libopencv-dev \
 	libgeoip-dev \
+	python3 python3-requests \
 	git lsb-release wget curl netcat postgresql-client gzip
 RUN apt-get dist-upgrade -y
 
@@ -25,8 +26,9 @@ RUN apt-get dist-upgrade -y
 RUN wget -q -O- https://deb.nodesource.com/setup_10.x | bash -
 RUN apt-get install -y nodejs
 
-RUN curl https://download.db-ip.com/free/dbip-city-lite-2020-08.mmdb.gz \
-	| gunzip > dbip-city-lite.mmdb
+COPY scripts/download_geoloc_db.py .
+RUN python3 download_geoloc_db.py
+RUN rm download_geoloc_db.py
 
 # Cache dependency downloads, if possible
 COPY go.mod .
