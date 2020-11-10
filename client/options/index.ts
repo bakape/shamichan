@@ -31,6 +31,7 @@ interface Options extends ChangeEmitter {
 	nowPlaying: number
 	radio: boolean
 	eden: boolean
+	shami: boolean
 	bgVideo: string
 	bgMute: boolean
 	horizontalPosting: boolean

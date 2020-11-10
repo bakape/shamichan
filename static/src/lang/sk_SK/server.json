@@ -372,6 +372,10 @@
 			"Vypršanie sedenia pre účet",
 			"Čas v počte dňoch, kedy sa uživateľské účty automaticky odhlásia"
 		],
+		"shami": [
+			"shamiradio",
+			""
+		],
 		"spoilers": [
 			"Textové spojlere",
 			"Povoľ používanie ** na spojlerovanie blokov textu"

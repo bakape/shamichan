@@ -372,6 +372,10 @@
 			"Wygaśnięcie sesji konta",
 			"Czas w dniach, po jakim konta są automatycznie wylogowywane"
 		],
+		"shami": [
+			"shamiradio",
+			""
+		],
 		"spoilers": [
 			"Image Spoilers",
 			"Don't spoiler images"

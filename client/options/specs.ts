@@ -116,6 +116,10 @@ export const specs: { [id: string]: OptionSpec } = {
 		exec: overrideSet("nowPlaying", 1 << 1),
 		getfn: overrideGet("nowPlaying", 1 << 1),
 	},
+	shami: {
+		exec: overrideSet("nowPlaying", 1 << 2),
+		getfn: overrideGet("nowPlaying", 1 << 2),
+	},
 	// User-specified video in the background
 	bgVideo: {
 		type: optionType.menu,

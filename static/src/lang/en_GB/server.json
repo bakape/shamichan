@@ -372,6 +372,10 @@
 			"Account session expiry",
 			"Time in days until user accounts are automatically logged out"
 		],
+		"shami": [
+			"shamiradio",
+			""
+		],
 		"spoilers": [
 			"Image Spoilers",
 			"Don't spoiler images"
