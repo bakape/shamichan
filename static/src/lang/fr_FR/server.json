@@ -372,6 +372,10 @@
 			"Expiration d'une session",
 			"Nombre de jours avant la déconnexion automatique d'un utilisateur"
 		],
+		"shami": [
+			"shamiradio",
+			""
+		],
 		"spoilers": [
 			"Spoiler",
 			"Dissimule les images avec l'option spoiler"

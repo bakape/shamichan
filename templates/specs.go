@@ -382,6 +382,7 @@ var optionSpecs = [...][]inputSpec{
 		},
 		{ID: "radio"},
 		{ID: "eden"},
+		{ID: "shami"},
 		{Type: _hr},
 		{
 			ID:      "bgVideo",
