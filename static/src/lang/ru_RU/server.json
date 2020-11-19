@@ -96,6 +96,10 @@
 			"Завершить пост",
 			"Закрыть открытый пост"
 		],
+		"eden": [
+			"eden",
+			""
+		],
 		"eightball": [
 			"#8ball ответы",
 			"Список ответов для команды #8ball, может содержать до 100 ответов и 2000 символов всего"
@@ -316,6 +320,10 @@
 			"Slut enabler",
 			"Don't ask"
 		],
+		"radio": [
+			"r/a/dio",
+			""
+		],
 		"rbText": [
 			"Red/Blue Text",
 			"Display red and blue text if formatted with '^r' or '^b'"
@@ -363,6 +371,10 @@
 		"sessionExpiry": [
 			"Время устаревания сессии",
 			"Число дней до автоматического разлогинивания из аккаунта"
+		],
+		"shami": [
+			"shamiradio",
+			""
 		],
 		"spoilers": [
 			"Спойлеры изображений",
@@ -466,6 +478,7 @@
 		"by": "От",
 		"captcha": "Капча",
 		"changePassword": "Сменить пароль",
+		"charCount": "Amount of characters in the post body",
 		"classic": "classic",
 		"clear": "Очистить",
 		"configureBoard": "Настроить доску",

@@ -1,6 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="480" width="640" viewBox="0 0 640 480">
-  <g fill-rule="evenodd" stroke-width="1pt">
-    <path fill="#fff" d="M0 0h639.98v479.998H0z"/>
-    <path fill="#36a100" d="M426.654 0H639.98v479.998H426.654zM0 0h213.327v479.998H0z"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 6 3">
+	<title>Flag of Nigeria</title>
+	<path fill="#008751" d="m0 0h6v3H0z"/>
+	<path fill="#fff" d="m2 0h2v3H2z"/>
 </svg>

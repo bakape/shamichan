@@ -96,6 +96,10 @@
 			"Finish Post",
 			"Close open post"
 		],
+		"eden": [
+			"eden",
+			""
+		],
 		"eightball": [
 			"Odpowiedzi #8ball",
 			"Lista odpowiedzi komendy #8ball. Może zawierać maksymalnie 100 odpowiedzi i 2000 znaków."
@@ -316,6 +320,10 @@
 			"Slut enabler",
 			"Don't ask"
 		],
+		"radio": [
+			"r/a/dio",
+			""
+		],
 		"rbText": [
 			"Red/Blue Text",
 			"Display red and blue text if formatted with '^r' or '^b'"
@@ -363,6 +371,10 @@
 		"sessionExpiry": [
 			"Wygaśnięcie sesji konta",
 			"Czas w dniach, po jakim konta są automatycznie wylogowywane"
+		],
+		"shami": [
+			"shamiradio",
+			""
 		],
 		"spoilers": [
 			"Image Spoilers",
@@ -466,6 +478,7 @@
 		"by": "By",
 		"captcha": "Captcha",
 		"changePassword": "Zmień hasło",
+		"charCount": "Amount of characters in the post body",
 		"classic": "classic",
 		"clear": "Clear",
 		"configureBoard": "Konfiguracja działu",

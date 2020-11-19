@@ -96,6 +96,10 @@
 			"Закінчити пост",
 			"Закрити відкритий пост"
 		],
+		"eden": [
+			"eden",
+			""
+		],
 		"eightball": [
 			"#8ball відповіді",
 			"Список відповідей для #8ball хеш команд. Може містити до 100 відповідей та 2000 знаків загало."
@@ -316,6 +320,10 @@
 			"Slut enabler",
 			"Don't ask"
 		],
+		"radio": [
+			"r/a/dio",
+			""
+		],
 		"rbText": [
 			"Red/Blue Text",
 			"Display red and blue text if formatted with '^r' or '^b'"
@@ -363,6 +371,10 @@
 		"sessionExpiry": [
 			"Час дії сесії",
 			"Час в днях поки аккаунт буде автоматично розлогінено"
+		],
+		"shami": [
+			"shamiradio",
+			""
 		],
 		"spoilers": [
 			"Текстові спойлери",
@@ -466,6 +478,7 @@
 		"by": "By",
 		"captcha": "Captcha",
 		"changePassword": "Змінити пароль",
+		"charCount": "Amount of characters in the post body",
 		"classic": "classic",
 		"clear": "Clear",
 		"configureBoard": "Налаштувати борду",

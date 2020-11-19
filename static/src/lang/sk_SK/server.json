@@ -96,6 +96,10 @@
 			"Dokončiť plagát",
 			"Zatvoriť otvorený plagát"
 		],
+		"eden": [
+			"eden",
+			""
+		],
 		"eightball": [
 			"#8ball odpoveďe",
 			"List of answers for the #8ball hash command. Can contain up to 100 answers and 2000 characters total."
@@ -316,6 +320,10 @@
 			"Slut enabler",
 			"Don't ask"
 		],
+		"radio": [
+			"r/a/dio",
+			""
+		],
 		"rbText": [
 			"Red/Blue Text",
 			"Display red and blue text if formatted with '^r' or '^b'"
@@ -363,6 +371,10 @@
 		"sessionExpiry": [
 			"Vypršanie sedenia pre účet",
 			"Čas v počte dňoch, kedy sa uživateľské účty automaticky odhlásia"
+		],
+		"shami": [
+			"shamiradio",
+			""
 		],
 		"spoilers": [
 			"Textové spojlere",
@@ -466,6 +478,7 @@
 		"by": "By",
 		"captcha": "Kapča",
 		"changePassword": "Zmeniť heslo",
+		"charCount": "Amount of characters in the post body",
 		"classic": "classic",
 		"clear": "Vyčisti",
 		"configureBoard": "Nastaviť dosku",

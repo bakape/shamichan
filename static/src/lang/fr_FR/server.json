@@ -96,6 +96,10 @@
 			"Terminer le message",
 			"Termine le message ouvert"
 		],
+		"eden": [
+			"eden",
+			""
+		],
 		"eightball": [
 			"Questions #8ball",
 			"Peut contenir 100 questions et un total de 2000 caractères"
@@ -316,6 +320,10 @@
 			"Slut enabler",
 			"Pose pas de questions"
 		],
+		"radio": [
+			"r/a/dio",
+			""
+		],
 		"rbText": [
 			"Red/Blue Text",
 			"Affiche du texte en rouge ou en bleu si balisé avec '^r' ou '^b'"
@@ -363,6 +371,10 @@
 		"sessionExpiry": [
 			"Expiration d'une session",
 			"Nombre de jours avant la déconnexion automatique d'un utilisateur"
+		],
+		"shami": [
+			"shamiradio",
+			""
 		],
 		"spoilers": [
 			"Spoiler",
@@ -464,6 +476,7 @@
 		"by": "Par",
 		"captcha": "Captcha",
 		"changePassword": "Mot de passe",
+		"charCount": "Amount of characters in the post body",
 		"classic": "classic",
 		"clear": "Vider",
 		"configureBoard": "Configurer une planche",

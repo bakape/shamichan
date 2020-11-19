@@ -96,6 +96,10 @@
 			"完成貼文",
 			"關閉打開的貼文"
 		],
+		"eden": [
+			"eden",
+			""
+		],
 		"eightball": [
 			"#8ball 答案",
 			"#8ball hash 指令的答案列表。最多可包含 100 個答案和 2000 個字符。"
@@ -316,6 +320,10 @@
 			"蕩婦啟動器",
 			"不要問"
 		],
+		"radio": [
+			"r/a/dio",
+			""
+		],
 		"rbText": [
 			"紅/藍 文字",
 			"顯示紅和藍的文字如果該文字用 '^r' 或 '^b' 格式化"
@@ -363,6 +371,10 @@
 		"sessionExpiry": [
 			"帳戶會話到期時長",
 			"用戶帳戶自動登出以前的天數"
+		],
+		"shami": [
+			"shamiradio",
+			""
 		],
 		"spoilers": [
 			"圖片劇透標記",
@@ -466,6 +478,7 @@
 		"by": "由",
 		"captcha": "驗證碼",
 		"changePassword": "更改密碼",
+		"charCount": "Amount of characters in the post body",
 		"classic": "經典",
 		"clear": "清除",
 		"configureBoard": "配置看板",

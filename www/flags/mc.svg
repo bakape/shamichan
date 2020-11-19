@@ -1,6 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="480" width="640" viewBox="0 0 640 480">
-  <g fill-rule="evenodd" stroke-width="1pt">
-    <path fill="#f31830" d="M0 0h640v240H0z"/>
-    <path fill="#fff" d="M0 240h640v240H0z"/>
-  </g>
-</svg>
+<?xml version="1.0" encoding="UTF-8"?><svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800"><path fill="#FFF" d="M0,0h1000V800H0z"/><path fill="#CE1126" d="M0,0h1000V400H0z"/></svg>

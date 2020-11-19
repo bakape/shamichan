@@ -1,7 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="480" width="640" viewBox="0 0 640 480">
-  <g fill-rule="evenodd" stroke-width="1pt" transform="scale(1.25 .9375)">
-    <rect rx="0" ry="0" height="509.76" width="512" fill="#fff"/>
-    <rect rx="0" ry="0" height="169.92" width="512" y="342.08" fill="#21468b"/>
-    <path fill="#ae1c28" d="M0 0h512v169.92H0z"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 9 6">
+<rect fill="#21468B"	width="9" height="6"/>
+<rect fill="#FFF" width="9" height="4"/>
+<rect fill="#AE1C28"	width="9" height="2"/>
 </svg>

@@ -126,6 +126,7 @@
 					</span>
 					<input type="file" hidden name="image" accept="image/png, image/gif, image/jpeg, video/webm, video/ogg, audio/ogg, application/ogg, video/mp4, audio/mp4, audio/mp3, application/zip, application/x-7z-compressed, application/x-xz, application/x-gzip, audio/x-flac, text/plain, application/pdf, video/quicktime, audio/x-flac">
 				</span>
+				<div id="char-count" title="{%s= ln.UI["charCount"] %}"><div></div><div>/2000</div></div>
 			</div>
 		</template>
 		<template name="notification">
@@ -155,7 +156,7 @@
 				Top banner
 			{% endcomment %}
 			<span id="banner" class="glass">
-				<nav id="board-navigation">
+				<nav id="board-navigation" class="center-vertically">
 					<noscript>
 						[
 						{% for i, b := range boards %}
@@ -176,7 +177,7 @@
 				{% comment %}
 					Various buttons, that unhide modal windows
 				{% endcomment %}
-				<span>
+				<span class="center-vertically">
 					<b id="sync" class="banner-float svg-link noscript-hide" title="{%s= ln.UI["sync"] %}"></b>
 					<b id="sync-counter" class="act hide-empty banner-float svg-link noscript-hide" title="{%s= ln.UI["syncCount"] %}"></b>
 					<b id="thread-post-counters" class="act hide-empty banner-float svg-link noscript-hide" title="{%s= ln.Common.UI["postsImages"] %}"></b>

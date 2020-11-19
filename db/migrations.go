@@ -1516,6 +1516,11 @@ var migrations = []func(*sql.Tx) error{
 		}
 		return loadSQL(tx, "triggers/threads")
 	},
+	func(tx *sql.Tx) (err error) {
+		return execAll(tx,
+			`alter table posts alter column flag type varchar(5)`,
+		)
+	},
 }
 
 func createIndex(table string, columns ...string) string {
