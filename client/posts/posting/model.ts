@@ -28,15 +28,13 @@ let suffixes = [
 	"cocks~",
 	"de geso~",
 	" XD",
-	" #slap",
-	" #d7777"
 ];
 if (location.pathname.includes("/tragsguca/")) {
 	suffixes.push("waggle~");
 	suffixes.push("talex~");
 }
 const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
-const is_emoji = [" :^)", " XD", " #slap", " #d7777"].includes(suffix);
+const is_emoji = [" :^)", " XD"].includes(suffix);
 
 // Form Model of an OP post
 export default class FormModel extends Post {
