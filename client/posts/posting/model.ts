@@ -9,6 +9,35 @@ import { SpliceResponse } from "../../client"
 import { FileData } from "./upload"
 import { newAllocRequest } from "./identity"
 
+let suffixes = [
+	"nya~",
+	"de gozaru.",
+	"cough.",
+	"desu no~",
+	"desu.",
+	"desu wa~",
+	"pon.",
+	"poi~",
+	"dattebayo!",
+	"fam.",
+	"senpai.",
+	"nyaron~",
+	"tehe.",
+	"dess.",
+	" :^)",
+	"cocks~",
+	"de geso~",
+	" XD",
+	" #slap",
+	" #d7777"
+];
+if (location.pathname.includes("/tragsguca/")) {
+	suffixes.push("waggle~");
+	suffixes.push("talex~");
+}
+const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
+const is_emoji = [" :^)", " XD", " #slap", " #d7777"].includes(suffix);
+
 // Form Model of an OP post
 export default class FormModel extends Post {
 	public inputBody = ""
@@ -151,7 +180,27 @@ export default class FormModel extends Post {
 	// Close the form and revert to regular post. Cancel also erases all post
 	// contents.
 	public commitClose() {
-		this.parseInput(this.view.input.value)
+		let s = this.view.input.value.trim();
+		if (s) {
+			s = s.trim();
+			const last = s[s.length - 1];
+			if (s && [',', '.', '?', '!'].includes(last)) {
+				s = s.slice(0, -1);
+			}
+			if (s) {
+				if (!is_emoji) {
+					s += ", ";
+				}
+				s += suffix.slice(0, -1);
+				if (last === '?' && !is_emoji) {
+					s += "?";
+				} else {
+					s += suffix[suffix.length - 1];
+				}
+			}
+		}
+
+		this.parseInput(s)
 		this.abandon()
 		this.send(message.closePost, null)
 	}
