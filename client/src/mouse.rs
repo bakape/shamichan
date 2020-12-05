@@ -1,4 +1,4 @@
-use protocol::debug_log;
+use common::debug_log;
 use yew::{
 	agent::{AgentLink, HandlerId},
 	services::render::{RenderService, RenderTask},

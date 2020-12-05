@@ -2,7 +2,7 @@ use super::{
 	state::{self, KeyPair},
 	util,
 };
-use protocol::{debug_log, Decoder, Encoder, MessageType};
+use common::{debug_log, Decoder, Encoder, MessageType};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, fmt::Debug};
 use yew::{
@@ -36,7 +36,7 @@ where
 	T: Serialize + Debug,
 {
 	util::with_logging(|| {
-		let mut enc = protocol::Encoder::new(Vec::new());
+		let mut enc = common::Encoder::new(Vec::new());
 		encode_msg(&mut enc, t, payload)?;
 		Connection::dispatcher().send(Request::Send(enc.finish()?));
 		Ok(())
@@ -393,13 +393,13 @@ impl Connection {
 				&format!(
 					"{}://{}/api/socket",
 					{
-						let p = loc.protocol().unwrap();
+						let p = loc.common().unwrap();
 						match p.as_str() {
 							"https:" => "wss",
 							"http:" => "ws",
 							_ => {
 								return Err(format!(
-									"unsupported protocol: {}",
+									"unsupported common: {}",
 									p
 								)
 								.into());
@@ -441,7 +441,6 @@ impl Connection {
 	}
 
 	fn on_message(&mut self, data: Vec<u8>) -> util::Result {
-		use protocol::payloads::FeedData;
 		use MessageType::*;
 
 		/// Helper to make message handling through route!() more terse
@@ -502,10 +501,11 @@ impl Connection {
 			};
 		}
 
+		// TODO: port
 		// Buffer feed data to send in one batch
-		let mut feed_data = std::collections::HashMap::<u64, FeedData>::new();
+		// let mut feed_data = std::collections::HashMap::<u64, FeedData>::new();
 		loop {
-			use protocol::payloads::{HandshakeRes, ThreadCreationNotice};
+			use common::payloads::{HandshakeRes, ThreadCreationNotice};
 
 			// TODO: Handle version mismatch with a localized alert and reload
 			match dec.peek_type() {
@@ -543,9 +543,10 @@ impl Connection {
 							);
 						}
 					}
-					FeedInit => |d: FeedData| {
-						feed_data.insert(d.thread, d);
-					}
+					// TODO: port
+					// FeedInit => |d: FeedData| {
+					// 	feed_data.insert(d.thread, d);
+					// }
 					InsertThreadAck => |id: u64| {
 						use state::{Request, Agent};
 
@@ -566,18 +567,19 @@ impl Connection {
 					}
 				},
 				None => {
-					if !feed_data.is_empty() {
-						state::Agent::dispatcher().send(
-							state::Request::StoreFeedInitData {
-								feed: if feed_data.len() == 1 {
-									feed_data.values().next().unwrap().thread
-								} else {
-									0
-								},
-								data: feed_data,
-							},
-						);
-					}
+					// TODO: port
+					// if !feed_data.is_empty() {
+					// 	state::Agent::dispatcher().send(
+					// 		state::Request::StoreFeedInitData {
+					// 			feed: if feed_data.len() == 1 {
+					// 				feed_data.values().next().unwrap().thread
+					// 			} else {
+					// 				0
+					// 			},
+					// 			data: feed_data,
+					// 		},
+					// 	);
+					// }
 					return Ok(());
 				}
 			};
@@ -586,16 +588,16 @@ impl Connection {
 
 	/// Asynchronously generate and send a handshake request message
 	fn send_handshake_req(key_pair: KeyPair) {
-		use protocol::payloads::Authorization;
+		use common::payloads::Authorization;
 
 		async fn inner(key_pair: KeyPair) -> util::Result {
 			let crypto = util::window().crypto()?;
-			let mut enc = protocol::Encoder::new(Vec::new());
+			let mut enc = common::Encoder::new(Vec::new());
 			encode_msg(
 				&mut enc,
 				MessageType::Handshake,
-				&protocol::payloads::HandshakeReq {
-					protocol_version: protocol::VERSION,
+				&common::payloads::HandshakeReq {
+					protocol_version: common::VERSION,
 					auth: match &key_pair.id {
 						Some(id) => {
 							let mut nonce: [u8; 32] = unsafe {
@@ -640,7 +642,7 @@ impl Connection {
 
 	/// Send request to synchronize with a feed
 	fn synchronize(&mut self, feed: u64) -> util::Result {
-		let mut enc = protocol::Encoder::new(Vec::new());
+		let mut enc = common::Encoder::new(Vec::new());
 		encode_msg(&mut enc, MessageType::Synchronize, &feed)?;
 		self.send(MessageCategory::Synchronize, enc.finish()?)?;
 

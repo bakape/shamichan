@@ -4,17 +4,18 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bakape/meguca/websockets"
-
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
 	"github.com/bakape/meguca/imager/assets"
+	"github.com/bakape/meguca/imager/config"
+	"github.com/bakape/meguca/imager/db"
+	"github.com/jessevdk/go-flags"
 )
 
 func TestMain(m *testing.M) {
 	code := 1
 	err := func() (err error) {
-		err = config.Server.Load()
+		_, err = flags.
+			NewParser(&config.Server, flags.Default|flags.IgnoreUnknown).
+			Parse()
 		if err != nil {
 			return
 		}
@@ -23,18 +24,18 @@ func TestMain(m *testing.M) {
 			return
 		}
 
-		config.Set(config.Configs{
-			MaxHeight: 2000,
-			MaxWidth:  2000,
+		config.Set(config.Config{
 			Public: config.Public{
-				MaxSize: 20,
+				Uploads: config.Uploads{
+					Max: config.UploadMaximums{
+						Height: 2000,
+						Width:  2000,
+						Size:   20,
+					},
+				},
 			},
 		})
 		err = assets.CreateDirs()
-		if err != nil {
-			return
-		}
-		err = websockets.Init()
 		if err != nil {
 			return
 		}

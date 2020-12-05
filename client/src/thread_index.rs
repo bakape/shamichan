@@ -1,5 +1,5 @@
 use super::state;
-use state::Thread;
+use common::payloads::Thread;
 use yew::{html, Component, ComponentLink, Html};
 
 /// Central thread container

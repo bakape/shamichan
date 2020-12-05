@@ -21,7 +21,7 @@ mod time;
 mod user_bg;
 mod widgets;
 
-use protocol::debug_log;
+use common::debug_log;
 use wasm_bindgen::prelude::*;
 use yew::{html, Bridge, Bridged, Component, ComponentLink, Html};
 

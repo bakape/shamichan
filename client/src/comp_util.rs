@@ -112,7 +112,7 @@ where
 						add: new,
 					});
 			}
-			protocol::debug_log!(format! {
+			common::debug_log!(format! {
 				"setting props: {:?} -> {:?}",
 				self.props,
 				props

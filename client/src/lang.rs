@@ -22,7 +22,7 @@ struct LanguagePack {
 	pub plurals: HashMap<String, (String, String)>,
 }
 
-protocol::gen_global! {
+common::gen_global! {
 	LanguagePack {
 		fn read();
 		fn write();

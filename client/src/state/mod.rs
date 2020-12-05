@@ -11,8 +11,8 @@ pub use location::{FeedID, Focus, Location};
 pub use options::{ImageExpansionMode, Options};
 
 use crate::util;
-use protocol::{
-	payloads::{post_body::Node, Image},
+use common::{
+	payloads::{Post, Thread},
 	util::DoubleSetMap,
 };
 use serde::{Deserialize, Serialize};
@@ -98,46 +98,11 @@ impl State {
 	}
 }
 
-protocol::gen_global! {
+common::gen_global! {
 	State {
 		pub fn read();
 		pub fn write();
 	}
-}
-
-/// Thread information container
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Thread {
-	pub id: u64,
-	pub page: u32,
-	pub last_page: u32,
-
-	pub subject: String,
-	pub tags: Vec<String>,
-
-	pub bumped_on: u32,
-	pub created_on: u32,
-	pub post_count: u64,
-	pub image_count: u64,
-}
-
-/// Post data
-#[derive(Serialize, Deserialize, Debug, Default)]
-pub struct Post {
-	pub id: u64,
-	pub page: u32,
-	pub thread: u64,
-
-	pub created_on: u32,
-	pub open: bool,
-
-	pub sage: bool,
-	pub name: Option<String>,
-	pub trip: Option<String>,
-	pub flag: Option<String>,
-
-	pub body: Node,
-	pub image: Option<Image>,
 }
 
 /// Initialize application state

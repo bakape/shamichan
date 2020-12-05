@@ -1,4 +1,4 @@
-use protocol::payloads::{FileType, Image};
+use common::payloads::{FileType, Image};
 
 #[derive(
 	serde::Serialize,
