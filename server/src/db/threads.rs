@@ -1,6 +1,7 @@
 use super::{pool, PostInsertParams};
 use crate::util::DynResult;
 use common::payloads::{Post, ThreadWithPosts};
+use futures::StreamExt;
 
 /// Parameters for inserting a thread and its OP
 pub struct ThreadInsertParams<'a> {

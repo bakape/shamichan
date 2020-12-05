@@ -19,12 +19,7 @@ enum MessageHandling {
 	Handling(SpawnHandle),
 }
 
-/// Maps to a websocket client on the Go side
-//
-// TODO: Split into mutable and immutable state and state passed back and
-// forth between message handlers via enum. The enum is to be used to
-// guarantee message handling exclusivity.
-#[derive(Debug)]
+/// Client instance controller
 pub struct Client {
 	/// Immutable client state set on client creation
 	state: Rc<super::State>,

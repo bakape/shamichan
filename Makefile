@@ -46,6 +46,11 @@ test:
 	cargo test
 	# go test --race ./...
 
+# Prepare offline version of checked queries for compilation without a connected
+# database
+db_prepare_offline:
+	cargo sqlx prepare -- --package server
+
 test_no_race:
 	cargo test
 	# go test ./...

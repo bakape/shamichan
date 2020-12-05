@@ -16,9 +16,9 @@ create table pending_images (
 			when 'failed' then error is not null
 			else error is null
 		end
-	)
+	),
 
-	image references images,
+	image bigint references images,
 	constraint image_null_validity check (
 		case status
 			when 'successful' then image is not null

@@ -34,5 +34,14 @@ url = "2.1.1"
 uuid = "0.8.1"
 
 [dependencies.sqlx]
-features = ["postgres", "macros", "json", "uuid", "tls", "runtime-actix-rustls"]
-version = "0.4.0"
+features = [
+  "postgres",
+  "macros",
+  "json",
+  "uuid",
+  "tls",
+  "runtime-actix-rustls",
+  "migrate",
+  "offline",
+]
+git = "https://github.com/launchbadge/sqlx.git"

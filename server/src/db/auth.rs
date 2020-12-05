@@ -1,6 +1,7 @@
 use super::pool;
 use crate::util::DynResult;
 use rand::prelude::*;
+use sqlx::prelude::*;
 use uuid::Uuid;
 
 /// Write public key to DB, if not already written.

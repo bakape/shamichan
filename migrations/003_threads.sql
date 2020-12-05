@@ -43,7 +43,7 @@ create table posts (
 
 	body jsonb not null,
 
-	image bytea references images,
+	image bigint references images,
 	image_name varchar(200) not null default '',
 	image_spoilered bool not null default false
 )

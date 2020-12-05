@@ -49,7 +49,7 @@ impl Default for SpamScores {
 }
 
 /// Global server configurations
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct Config {
 	/// Global server configurations exposed to the client
 	pub public: common::config::Public,
@@ -62,6 +62,21 @@ pub struct Config {
 
 	/// Booru tags for the captcha pool
 	pub captcha_tags: Vec<String>,
+}
+
+impl Default for Config {
+	fn default() -> Self {
+		Self {
+			public: Default::default(),
+			disable_robots: Default::default(),
+			spam_scores: Default::default(),
+			captcha_tags: vec![
+				"patchouli_knowledge".into(),
+				"cirno".into(),
+				"hakurei_reimu".into(),
+			],
+		}
+	}
 }
 
 common::gen_global!(

@@ -393,13 +393,13 @@ impl Connection {
 				&format!(
 					"{}://{}/api/socket",
 					{
-						let p = loc.common().unwrap();
+						let p = loc.protocol().unwrap();
 						match p.as_str() {
 							"https:" => "wss",
 							"http:" => "ws",
 							_ => {
 								return Err(format!(
-									"unsupported common: {}",
+									"unsupported protocol: {}",
 									p
 								)
 								.into());

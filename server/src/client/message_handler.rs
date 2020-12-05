@@ -242,7 +242,7 @@ impl MessageHandler {
 		}
 	}
 
-	/// Send a private message to only this client
+	/// Buffer a private message to be sent only to this client
 	fn send<T>(&mut self, t: MessageType, payload: &T) -> std::io::Result<()>
 	where
 		T: Serialize + std::fmt::Debug,

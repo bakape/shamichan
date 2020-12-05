@@ -24,7 +24,9 @@ create type file_type as enum (
 create domain uint15 as smallint check (value >= 0);
 
 create table images (
-	sha1 bytea primary key check (octet_length(sha1) = 20),
+	id bigserial primary key,
+
+	sha1 bytea not null check (octet_length(sha1) = 20),
 	md5 bytea not null check (octet_length(md5) = 16),
 
 	audio bool not null,
