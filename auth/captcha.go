@@ -80,10 +80,12 @@ func (b *Base64Token) EnsureCookie(
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:    CaptchaCookie,
-			Value:   string(text),
-			Path:    "/",
-			Expires: time.Now().Add(time.Hour * 24),
+			Name:     CaptchaCookie,
+			Value:    string(text),
+			Path:     "/",
+			Expires:  time.Now().Add(time.Hour * 24),
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
 		})
 		return
 	default:
