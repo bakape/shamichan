@@ -401,7 +401,9 @@ impl ThreadFeed {
 			}
 		}
 
-		self.body_flusher.send(PersistBodies(mutation_batch)).await;
+		self.body_flusher
+			.send(PersistBodies(mutation_batch))
+			.await?;
 
 		Ok(())
 	}

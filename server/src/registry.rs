@@ -336,15 +336,3 @@ impl Handler<InsertThread> for Registry {
 		addr
 	}
 }
-
-impl Handler<feeds::InsertPost> for Registry {
-	type Result = ();
-
-	fn handle(
-		&mut self,
-		req: feeds::InsertPost,
-		ctx: &mut Self::Context,
-	) -> Self::Result {
-		todo!()
-	}
-}
