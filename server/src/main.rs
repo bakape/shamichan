@@ -38,7 +38,7 @@ async fn connect(
     )
 }
 
-// TODO: asset and image routes
+// TODO: asset routes
 // TODO: /robots.txt
 // TODO: /health-check
 

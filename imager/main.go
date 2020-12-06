@@ -17,6 +17,8 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
+// TODO: serve images (pull the old code out of git)
+
 func main() {
 	err := func() (err error) {
 		_, err = flags.Parse(&config.Server)
