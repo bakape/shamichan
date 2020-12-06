@@ -146,7 +146,7 @@ impl KeyPair {
 	pub async fn sign(
 		&self,
 		buf: &mut [u8],
-	) -> util::Result<protocol::payloads::Signature> {
+	) -> util::Result<common::payloads::Signature> {
 		use js_sys::Uint8Array;
 		use wasm_bindgen_futures::JsFuture;
 
@@ -184,6 +184,6 @@ impl KeyPair {
 			Err(format!("unexpected signature length: {}", js_arr.length()))?;
 		}
 		js_arr.copy_to(&mut arr);
-		Ok(protocol::payloads::Signature(arr))
+		Ok(common::payloads::Signature(arr))
 	}
 }

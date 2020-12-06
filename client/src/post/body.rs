@@ -1,6 +1,6 @@
 use super::common::{Ctx, Message, PostComponent};
 use crate::state;
-use protocol::payloads::post_body::{Command, Node, PostLink};
+use common::payloads::post_body::{Command, Node, PostLink};
 use std::fmt::Write;
 use yew::{html, Html};
 
@@ -13,7 +13,7 @@ where
 	macro_rules! wrap_node {
 		($tag:ident, $children:expr) => {
 			html! {
-				<$tag>{render(c, ch)}</$tag>
+				<$tag>{render(c, $children)}</$tag>
 			}
 		};
 	}

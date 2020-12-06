@@ -1,5 +1,7 @@
 {
 	"format_strings": {
+		"info_header": "meguca is licensed under the GNU Affero General Public License\nSource code repository: github.com/bakape/meguca<hr>Supported upload file types are JPEG, PNG, APNG, WEBM, MP3, FLAC, MP4, OGG, PDF, ZIP, 7Z, TAR.GZ, TAR.XZ, RAR, CBZ, CBR.\nUploads up to {max_upload_size} and {max_width}x{max_height} pixels are supported.<hr>Encase text in:\n  ** for spoilers\n  @@ for bold\n  ~~ for italics\n  ``L for programing code highlighting, where L is an optional name of the programming language to highlight the text as<hr>Hash commands:\n#d100 #2d100 - Roll dice\n#flip - Coin flip\n#8ball - An 8ball\n#countdown(N) - Start countdown timer for N seconds\n#autobahn(N) - ban self for N hours<hr>{thread_expiry}",
+		"thread_expiry": "Threads that have not been bumped in {days} day(s) are automatically deleted",
 		"time_ago": "{number} {unit} ago",
 		"time_in": "in {number} {unit}"
 	},

@@ -80,6 +80,8 @@ Run `make`
 
 ### Deployment
 
+<!-- TODO: update -->
+
 meguca can be started in debug mode simply with `./meguca`.
 Configurations are split between meguca instance configurations
 and server instance configurations, which are required to start
@@ -99,6 +101,8 @@ found in `docs/`.
 * TODO: grant first user to go to a URL admin rights
 
 ## Development
+
+TODO: note about compile-time query checking and how to support it
 
 * See `./docs` for more documentation
 * `make install_tools` to install required build tools

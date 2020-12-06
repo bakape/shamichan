@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/test"
+	"github.com/bakape/meguca/imager/common"
+	"github.com/bakape/meguca/imager/config"
+	"github.com/bakape/meguca/imager/test"
 )
 
 func init() {

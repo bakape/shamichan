@@ -2,7 +2,7 @@
 #![allow(unused)]
 
 use crate::util::Result;
-use protocol::payloads::post_body::{Embed, EmbedProvider};
+use common::payloads::post_body::{Embed, EmbedProvider};
 use serde::Deserialize;
 use std::collections::HashMap;
 use yew::{html, Component, ComponentLink, Html, Properties};
@@ -21,7 +21,7 @@ struct Descriptor {
 	target: String,
 }
 
-protocol::gen_global! {
+common::gen_global! {
 	/// Fetched embed data cache
 	HashMap<Descriptor, Data> {
 		fn read();

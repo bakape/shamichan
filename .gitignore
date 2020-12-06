@@ -35,3 +35,4 @@ debug.test
 db_*.db
 target
 vendor
+.env

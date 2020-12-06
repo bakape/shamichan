@@ -6,6 +6,7 @@ github.com/Masterminds/squirrel v1.4.0/go.mod h1:yaPeOnPG5ZRwL9oKdTsO/prlkPbXWZl
 github.com/andybalholm/brotli v1.0.0/go.mod h1:loMXtMfwqflxFJPmdbJO0a3KNoPuLBgiu3qAvBg8x/Y=
 github.com/bakape/boorufetch v1.1.1 h1:OMXM0pjPLhAmVkA83UFXs+1rdDNcXpU5Xg8EDtED8KM=
 github.com/bakape/boorufetch v1.1.1/go.mod h1:xswMjqJ3hp2UAsE0XOidw/qkKHoA7mwF/4dfykxYUu0=
+github.com/bakape/captchouli v1.5.0 h1:ltU+sPy/JsQ2cRj+3hco/qtacMZUWIC4hQ2yCZzDzfw=
 github.com/bakape/captchouli/v2 v2.0.3 h1:o4Z82J1kAYiNJEEl32wywmW4ZvqnRYE7HfmN+h5ZJTI=
 github.com/bakape/captchouli/v2 v2.0.3/go.mod h1:EbDWSyOyyYCc/BK5YCH9q3E/N9hjbP8PV481+nJPJE8=
 github.com/bakape/pg_util v1.1.1 h1:l8LbWENdQ96Lf8qNb6w3df1eRDfHW0qIKBXgqewfG0s=
@@ -159,6 +160,8 @@ github.com/jackc/puddle v1.1.0 h1:musOWczZC/rSbqut475Vfcczg7jJsdUQf0D6oKPLgNU=
 github.com/jackc/puddle v1.1.0/go.mod h1:m4B5Dj62Y0fbyuIc15OsIqK0+JU8nkqQjsgx7dvjSWk=
 github.com/jackc/puddle v1.1.1 h1:PJAw7H/9hoWC4Kf3J8iNmL1SwA6E8vfsLqBiL+F6CtI=
 github.com/jackc/puddle v1.1.1/go.mod h1:m4B5Dj62Y0fbyuIc15OsIqK0+JU8nkqQjsgx7dvjSWk=
+github.com/jessevdk/go-flags v1.4.0 h1:4IU2WS7AumrZ/40jfhf4QVDMsQwqA7VEHozFRrGARJA=
+github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
 github.com/json-iterator/go v1.1.9 h1:9yzud/Ht36ygwatGx56VwCZtlI/2AD15T1X2sjSuGns=
 github.com/json-iterator/go v1.1.9/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
 github.com/julienschmidt/httprouter v1.3.0 h1:U0609e9tgbseu3rBINet9P48AI/D3oJs4dN7jwJOQ1U=

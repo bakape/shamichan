@@ -20,10 +20,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/test"
-	"github.com/bakape/meguca/test/test_db"
+	"github.com/bakape/meguca/imager/common"
+	"github.com/bakape/meguca/imager/db"
+	"github.com/bakape/meguca/imager/test"
+	"github.com/bakape/meguca/imager/test/test_db"
 	"github.com/jackc/pgx/v4"
 )
 

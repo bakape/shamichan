@@ -1,6 +1,6 @@
 use super::common::{Ctx, PostCommon, PostComponent};
 use crate::{connection, state, util};
-use protocol::{debug_log, MessageType};
+use common::{debug_log, MessageType};
 use std::collections::HashMap;
 use wasm_bindgen::JsCast;
 use yew::{
@@ -624,10 +624,10 @@ impl Agent {
 
 				connection::send(
 					MessageType::InsertPost,
-					&protocol::payloads::PostCreationReq {
+					&common::payloads::PostCreationReq {
 						thread,
 						sage: s.new_post_opts.sage,
-						opts: protocol::payloads::NewPostOpts {
+						opts: common::payloads::NewPostOpts {
 							name: s.new_post_opts.name.clone(),
 						},
 					},
@@ -715,7 +715,7 @@ impl Agent {
 			// backspace
 			connection::send(
 				MessageType::PatchPostBody,
-				&protocol::payloads::post_body::TextPatch::new(
+				&common::payloads::post_body::TextPatch::new(
 					&self.post_body,
 					&new,
 				),

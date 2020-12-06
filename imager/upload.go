@@ -16,24 +16,33 @@ import (
 	"image/jpeg"
 	"io"
 	"mime/multipart"
-	"net"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
 
-	"github.com/bakape/meguca/auth"
-	"github.com/bakape/meguca/common"
-	"github.com/bakape/meguca/config"
-	"github.com/bakape/meguca/db"
-	"github.com/bakape/meguca/websockets"
+	"github.com/bakape/meguca/imager/common"
+	"github.com/bakape/meguca/imager/config"
+	"github.com/bakape/meguca/imager/db"
 	"github.com/bakape/thumbnailer/v2"
 	"github.com/chai2010/webp"
 	"github.com/go-playground/log"
 	"github.com/jackc/pgx/v4"
 	uuid "github.com/satori/go.uuid"
 )
+
+// TODO: listen to watched for comletion
+// TODO: pending image table with unique reference to open images
+// TODO: handle deletion of pending images
+// TODO: read processed images by listening to the table from Rust
+// TODO: handle pending image existing on post closure by closing the post
+// only after the image has finished processing. Do this with an exists check.
+// TODO: increment spam score on receiving the request.
+// TODO: t/o upload request after 3 minutes
+// TODO: In Rust, if post is already closed then simply NOP
+// TODO: separate processing indicator on the client for files that are already
+// submitted but still processing
 
 var (
 	// Map of MIME types to the constants used internally
@@ -59,7 +68,7 @@ var (
 		"application/vnd.comicbook-rar": common.CBR,
 	}
 
-	pubKeyCache = common.NewCacheMap()
+	pubKeyCache = newCacheMap()
 
 	// MIME types from thumbnailer to accept
 	allowedMimeTypes map[string]bool
@@ -112,7 +121,7 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Limit data received to the maximum uploaded file size limit
-		max := config.Get().MaxSize<<20 + 1<<10
+		max := uint64(config.Get().Public.Uploads.Max.Size*(1024*1024)) + 1<<10
 		r.Body = http.MaxBytesReader(w, r.Body, int64(max))
 
 		length, err := strconv.ParseUint(r.Header.Get("Content-Length"), 10, 64)
@@ -122,7 +131,7 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 				Code: 413,
 			}
 		}
-		if uint(length) > max {
+		if uint64(length) > max {
 			return errTooLarge
 		}
 		err = r.ParseMultipartForm(0)
@@ -140,7 +149,7 @@ func NewImageUpload(w http.ResponseWriter, r *http.Request) {
 				Code: 400,
 			}
 		}
-		if uint(head.Size) > max {
+		if uint64(head.Size) > max {
 			return errTooLarge
 		}
 		err = req.extract(r, head.Filename)
@@ -264,6 +273,9 @@ func validateUploader(w http.ResponseWriter, r *http.Request) (
 			Code: 403,
 		}
 	}
+
+	// TODO: increment spam score here
+
 	return
 }
 
@@ -377,16 +389,18 @@ func insertImage(tx pgx.Tx, req insertionRequest, img common.ImageCommon,
 	)
 	switch err {
 	case nil:
-		return websockets.InsertImage(
-			thread,
-			req.post,
-			req.pubKey,
-			common.Image{
-				ImageCommon: img,
-				Spoilered:   req.spoiler,
-				Name:        req.name,
-			},
-		)
+		// TODO: write to notified DB queue instead
+		panic("TODO")
+		// return websockets.InsertImage(
+		// 	thread,
+		// 	req.post,
+		// 	req.pubKey,
+		// 	common.Image{
+		// 		ImageCommon: img,
+		// 		Spoilered:   req.spoiler,
+		// 		Name:        req.name,
+		// 	},
+		// )
 	case pgx.ErrNoRows:
 		return errNoCandidatePost
 	default:
@@ -410,11 +424,7 @@ func handleError(w http.ResponseWriter, r *http.Request, f func() error) {
 	if common.IsTest || common.CanIgnoreClientError(err) {
 		return
 	}
-	ip, ipErr := auth.GetIP(r)
-	if ipErr != nil {
-		ip = net.IPv4zero
-	}
-	log.Errorf("upload error: by %s: %s: %#v", ip, err, err)
+	log.Errorf("upload error:  %s: %#v", err, err)
 }
 
 // Create a new thumbnail, commit its resources to the DB and filesystem,

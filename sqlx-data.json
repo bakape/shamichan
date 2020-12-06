@@ -1,0 +1,191 @@
+{
+  "db": "PostgreSQL",
+  "07c72823db4be04261491ba67d07a4839fa4bca5dc6bb7e39e2fa666778fab3a": {
+    "query": "update posts\n\t\t\tset body = $1\n\t\t\twhere id = $2 and open = true",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Jsonb",
+          "Int8"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "1c732bcd1c6fa3d98d3f68da2f4b376284883fb73a2e2a7fa0ccde93e21a853d": {
+    "query": "select get_thread(id, -5) thread from threads",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "thread",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": []
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "1d7d17ae7d5312e70167355c05aac8c59fe2f39a0a7ab0aaa4ef44e640212e40": {
+    "query": "insert into posts (\n\t\t\tid,\n\t\t\tthread,\n\t\t\tpublic_key,\n\t\t\tname,\n\t\t\ttrip,\n\t\t\tflag,\n\t\t\tbody\n\t\t)\n\t\tvalues (\n\t\t\t$1,\n\t\t\t$2,\n\t\t\t$3,\n\t\t\t$4,\n\t\t\t$5,\n\t\t\t$6,\n\t\t\t$7\n\t\t)",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Int8",
+          "Varchar",
+          "Varchar",
+          "Bpchar",
+          "Jsonb"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "9a2377b1205512e891c9efe0d05c053ad59120fbe569593f9ea48d75be015ee5": {
+    "query": "select id, public_key\n\t\tfrom public_keys\n\t\twhere public_id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "public_key",
+          "type_info": "Bytea"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  },
+  "9c45a8366908a78e07d8fc7662da2ec21a645bb2c6d5744e4b80ed45a8f4244a": {
+    "query": "select jsonb_agg(encode(p)) page\n\t\t\tfrom posts p\n\t\t\twhere thread = $1 and page = $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "page",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int4"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "a1c98ed14ba5da600831b43a90c931f1c70a3d2bcfacb24e2b153f48264169fe": {
+    "query": "insert into posts (\n\t\t\tthread,\n\t\t\tpublic_key,\n\t\t\tname,\n\t\t\ttrip,\n\t\t\tflag,\n\t\t\tsage,\n\t\t\tbody\n\t\t)\n\t\tvalues (\n\t\t\t$1,\n\t\t\t$2,\n\t\t\t$3,\n\t\t\t$4,\n\t\t\t$5,\n\t\t\t$6,\n\t\t\t$7\n\t\t)\n\t\treturning id, page",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "page",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Varchar",
+          "Varchar",
+          "Bpchar",
+          "Bool",
+          "Jsonb"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  },
+  "a45011942910e1e68ba62a8c93b2b4d0d87197c95129b46be0574d597e36a50a": {
+    "query": "insert into public_keys (public_id, public_key)\n\t\tvalues ($1, $2)\n\t\ton conflict (public_key) do nothing",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Bytea"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "bb3567331186c548d82f1269b1c8ac127e9e29b2a94992807ca0176a80fa1a25": {
+    "query": "select id, public_id\n\t\tfrom public_keys\n\t\twhere public_key = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "public_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Bytea"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  },
+  "cd7f9f0d0977f5105742cf3b842b69eb6e6888e7a262f8383e6b33c1ab1644ac": {
+    "query": "insert into threads (subject, tags)\n\t\tvalues ($1, $2)\n\t\treturning id",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Varchar",
+          "VarcharArray"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  }
+}
