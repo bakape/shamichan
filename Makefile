@@ -32,9 +32,8 @@ server:
 	cargo build \
 		--workspace \
 		--exclude client\
-		$(if $(filter 1,$(DEBUG)),, --release)
-	SRC=target/$(if $(filter 1,$(DEBUG)),debug,release)/libwebsockets.a; \
-		cp $$SRC meguca &&
+		$(if $(filter 1,$(DEBUG)),,--release)
+	cp target/$(if $(filter 1,$(DEBUG)),debug,release)/server meguca
 
 clean:
 	rm -rf meguca www/client www/js
