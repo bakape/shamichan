@@ -112,13 +112,13 @@ pub fn parse_fragment(frag: &str, flags: u8) -> Result {
 	}
 
 	// Pack vector as siblings
-	Ok(out.into_iter().rev().fold(Node::Empty, |right, left| {
-		if matches!(right, Node::Empty) {
-			left
-		} else {
-			Node::Siblings([left.into(), right.into()])
-		}
-	}))
+	Ok(out
+		.into_iter()
+		.rev()
+		.fold(Node::Empty, |right, left| match right {
+			Node::Empty => left,
+			_ => Node::Siblings([left.into(), right.into()]),
+		}))
 }
 
 /// Split off one byte of leading and trailing punctuation, if any, and returns
