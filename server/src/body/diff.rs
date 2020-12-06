@@ -1,5 +1,9 @@
 use common::payloads::post_body::{Node, PatchNode};
 
+// TODO: keep original text for expensive to parse fragments that can not fail
+// (like code tags) and first perform a simple source string comparison to
+// ascertain regeneration is in fact needed.
+
 /// Diff the new post body against the old
 pub fn diff(old: &Node, new: &Node) -> Option<PatchNode> {
 	use Node::*;

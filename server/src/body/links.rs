@@ -145,17 +145,15 @@ pub fn parse_link(word: &str, flags: u8) -> Result<Option<Node>> {
 			return None;
 		}
 
-		crate::config::read(|c| {
-			let id = &word[start..end];
-			c.public.links.get(id).map(|url| {
-				prepend_extra_gt(
-					Node::Reference {
-						label: id.into(),
-						url: url.into(),
-					},
-					extra_gt,
-				)
-			})
+		let id = &word[start..end];
+		crate::config::get().public.links.get(id).map(|url| {
+			prepend_extra_gt(
+				Node::Reference {
+					label: id.into(),
+					url: url.into(),
+				},
+				extra_gt,
+			)
 		})
 	};
 

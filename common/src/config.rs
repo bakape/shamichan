@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Upload size constraints
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct UploadMaximums {
 	/// Max size in MB
 	pub size: f64,
@@ -25,7 +25,7 @@ impl Default for UploadMaximums {
 }
 
 /// Upload configurations
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Uploads {
 	/// Use JPEG thumbnails instead of WEBP
 	pub jpeg_thumbnails: bool,
@@ -36,7 +36,7 @@ pub struct Uploads {
 
 /// Available user interface languages
 #[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize, Hash, Eq, PartialEq)]
+#[derive(Serialize, Deserialize, Hash, Eq, PartialEq, Debug, Clone)]
 pub enum Language {
 	en_GB,
 	es_ES,
@@ -59,7 +59,7 @@ impl Default for Language {
 
 /// Available user interface themes
 #[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Theme {
 	ashita,
 	console,
@@ -86,7 +86,7 @@ impl Default for Theme {
 }
 
 /// Global server configurations exposed to the client
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Public {
 	/// Mark site content for mature audiences
 	pub mature: bool,

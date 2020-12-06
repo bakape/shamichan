@@ -48,4 +48,7 @@ pub enum MessageType {
 
 	/// Request or send a page of a thread
 	Page,
+
+	// Send configs from the server
+	Config,
 }

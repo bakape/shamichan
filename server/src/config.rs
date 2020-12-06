@@ -1,11 +1,15 @@
 use clap::Clap;
 use serde::{Deserialize, Serialize};
+use std::sync::{Arc, RwLock};
 
 // TODO: read configs from DB or fallback to default, if none
 
 lazy_static::lazy_static! {
 	/// Configurations for this specific application server
 	pub static ref SERVER: Server = Server::parse();
+
+	/// Global configurations. Wrapped for swapping whole.
+	static ref CONFIG: RwLock<Arc<Config>> = Default::default();
 }
 
 /// Configurations for this specific application server
@@ -26,7 +30,7 @@ pub struct Server {
 }
 
 /// Antispam scores for various client actions
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SpamScores {
 	/// Score per unicode character for any post body modification
 	pub character: usize,
@@ -49,7 +53,7 @@ impl Default for SpamScores {
 }
 
 /// Global server configurations
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
 	/// Global server configurations exposed to the client
 	pub public: common::config::Public,
@@ -79,10 +83,14 @@ impl Default for Config {
 	}
 }
 
-common::gen_global!(
-	// Global configurations
-	Config {
-		pub fn read();
-		pub fn write();
-	}
-);
+/// Get a snapshot of the current configuration
+pub fn get() -> Arc<Config> {
+	CONFIG.read().unwrap().clone()
+}
+
+/// Set the configurations to a new value
+pub fn set(c: Config) {
+	// TODO: send new configs to all clients
+	let c = Arc::new(c);
+	*CONFIG.write().unwrap() = c;
+}

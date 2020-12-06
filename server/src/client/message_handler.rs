@@ -1,6 +1,6 @@
 use super::{str_err, ConnState, OpenPost};
 use crate::{
-	db, feeds, registry,
+	config, db, feeds, registry,
 	util::{self, DynResult},
 };
 use actix::prelude::*;
@@ -173,6 +173,7 @@ impl MessageHandler {
 							expect!(Handshake);
 							self.handle_handshake(&mut dec).await?;
 							self.send(CurrentTime, &util::now())?;
+							self.send(Config, &config::get().public)?;
 						}
 						RequestedReshake { pub_key } => {
 							expect!(Handshake);
@@ -257,6 +258,9 @@ impl MessageHandler {
 
 	/// Synchronize to a specific thread or board index
 	async fn synchronize(&mut self, feed: u64) -> DynResult {
+		// TODO: attempt to reclaim an open post lost to disconnection, if any
+		//  specified by client
+
 		// Thread init data will be sent on the next feed pulse
 		let ref s = *self.state;
 		self.mut_state.conn_state = ConnState::Synchronized {
@@ -274,7 +278,7 @@ impl MessageHandler {
 
 	/// Validates a solved captcha
 	pub fn check_captcha(&mut self, solution: &[u8]) -> DynResult {
-		if crate::config::read(|c| c.public.enable_antispam) {
+		if config::get().public.enable_antispam {
 			check_len!(solution, 4);
 
 			// TODO: Use pub key for spam detection bans
@@ -295,7 +299,7 @@ impl MessageHandler {
 	/// Assert client does not already have an open post
 	fn assert_no_open_post(&self) -> Result<(), String> {
 		if self.mut_state.open_post.is_some() {
-			str_err!("already have open post")
+			str_err!("already have an open post")
 		}
 		Ok(())
 	}
@@ -339,7 +343,7 @@ impl MessageHandler {
 		})
 		.await?;
 
-		// Ensures old post non-existence records do not persist indefinitely.
+		// Ensures old post non-existence records do not persist indefinitely
 		crate::body::cache_location(id, id, 0);
 
 		let feed = self
@@ -391,7 +395,7 @@ impl MessageHandler {
 		)
 		.await?;
 
-		// Ensures old post non-existence records do not persist indefinitely.
+		// Ensures old post non-existence records do not persist indefinitely
 		crate::body::cache_location(id, req.thread, page);
 
 		// Don't fetch feed address, if open post in same feed as synced

@@ -20,6 +20,7 @@ enum MessageHandling {
 }
 
 /// Client instance controller
+#[derive(Debug)]
 pub struct Client {
 	/// Immutable client state set on client creation
 	state: Rc<super::State>,
