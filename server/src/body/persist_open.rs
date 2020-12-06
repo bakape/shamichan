@@ -54,42 +54,25 @@ impl Handler<Pulse> for BodyFlusher {
 			return;
 		}
 
-		/// Runs flushing in a separate task with a passed snapshot to prevent
-		/// lock contention on I/O
-		async fn flush(
-			addr: Addr<BodyFlusher>,
-			bodies: HashMap<u64, Arc<Node>>,
-		) {
-			addr.send(FlushFinished(
-				crate::db::write_open_post_bodies(bodies).await,
-			));
-		}
-
+		// Runs flushing in a separate task with a passed snapshot to prevent
+		// lock contention on I/O
 		self.flush_task = Some(
 			ctx.spawn(
-				flush(ctx.address(), std::mem::take(&mut self.bodies))
-					.into_actor(self),
+				crate::db::write_open_post_bodies(std::mem::take(
+					&mut self.bodies,
+				))
+				.into_actor(self)
+				.then(|res, this, _| {
+					if let Err(err) = res {
+						log::error!(
+							"failed to flush open post bodies: {}",
+							err
+						);
+					}
+					this.flush_task = None;
+					fut::ready(())
+				}),
 			),
 		);
-	}
-}
-
-/// Notify a flush has finished
-#[derive(Message)]
-#[rtype(result = "()")]
-struct FlushFinished(crate::util::DynResult);
-
-impl Handler<FlushFinished> for BodyFlusher {
-	type Result = ();
-
-	fn handle(
-		&mut self,
-		res: FlushFinished,
-		_: &mut Self::Context,
-	) -> Self::Result {
-		self.flush_task = None;
-		if let Err(e) = res.0 {
-			log::error!("failed to flush open post bodies: {}", e);
-		}
 	}
 }
