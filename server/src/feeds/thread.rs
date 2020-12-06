@@ -230,11 +230,7 @@ impl ThreadFeed {
 	/// This should never happen, but log it and halt execution, if it does.
 	/// Caller should abort execution.
 	fn log_encode_error(&self, err: std::io::Error) {
-		log::error!(
-			"could not encode message on feed {}: {:?}",
-			self.thread_meta.id,
-			err
-		);
+		self.common.log_encode_error(self.thread_meta.id, err);
 	}
 
 	/// Schedule buffered state processing

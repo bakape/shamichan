@@ -67,6 +67,12 @@ where
 				ctx.notify_later(Pulse, Duration::from_millis(100)).into();
 		}
 	}
+
+	/// This should never happen, but log it and halt execution, if it does.
+	/// Caller should abort execution.
+	fn log_encode_error(&self, feed: u64, err: std::io::Error) {
+		log::error!("could not encode message on feed {}: {:?}", feed, err);
+	}
 }
 
 /// Implements common feed functionality for types that embed FeedCommon
