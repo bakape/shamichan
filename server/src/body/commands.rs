@@ -2,7 +2,6 @@ use super::{AUTOBAHN_PREFIX, COUNTDOWN_PREFIX};
 use common::payloads::post_body::{Node, PendingNode};
 
 /// Read command with an optional argument enclosed in ()
-#[inline(always)]
 fn parse_argument_command<T>(
 	word: &str,
 	prefix: &str,

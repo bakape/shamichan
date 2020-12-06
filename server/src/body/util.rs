@@ -23,7 +23,6 @@ pub fn parse_siblings(
 ///
 /// Always inlined, because it is only used in very small function that only
 /// call this split_and_parse().
-#[inline(always)]
 pub fn split_and_parse(
 	frag: &str,
 	flags: u8,
