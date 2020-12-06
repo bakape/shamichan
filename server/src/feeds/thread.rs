@@ -39,11 +39,16 @@ enum PageRecord {
 impl PageRecord {
 	async fn new(page: Page) -> DynResult<Self> {
 		Ok(if !Self::can_be_made_immutable(&page) {
-			Self::Mutable(page.into())
+			Self::new_mutable(page)
 		} else {
 			Self::new_immutable(&Encoder::encode(MessageType::Page, &page)?)
 				.await?
 		})
+	}
+
+	/// Construct new mutable PageRecord
+	fn new_mutable(page: Page) -> Self {
+		Self::Mutable(page.into())
 	}
 
 	/// Construct new immutable PageRecord
@@ -142,15 +147,49 @@ impl Handler<super::InsertPost> for ThreadFeed {
 		req: super::InsertPost,
 		ctx: &mut Self::Context,
 	) -> Self::Result {
+		use std::collections::hash_map::Entry;
+
 		self.schedule_pulse(ctx);
 		self.push_to_last_5(req.id);
 
+		let now = util::now();
 		let payload = common::payloads::PostCreationNotification {
 			id: req.id,
 			page: req.page,
 			thread: self.thread_meta.id,
-			time: util::now(),
+			time: now,
 		};
+		let post =
+			Post::new(req.id, req.thread, req.page, now, req.opts.clone());
+
+		match self.pages.entry(req.page) {
+			Entry::Occupied(mut e) => match e.get_mut() {
+				PageRecord::Immutable(_) => {
+					log::error!(
+						"trying to insert post {} into immutable page {} in thread {}",
+						req.id,
+						 req.page,
+						  req.thread
+						);
+					return;
+				}
+				PageRecord::Mutable(r) => {
+					r.posts.insert(req.id, post);
+				}
+			},
+			Entry::Vacant(e) => {
+				e.insert(PageRecord::new_mutable(Page {
+					thread: req.thread,
+					page: req.page,
+					posts: {
+						let mut h = HashMap::new();
+						h.insert(req.id, post);
+						h
+					},
+				}));
+			}
+		}
+
 		self.write_message(MessageType::InsertPost, &payload);
 		self.write_global_change(
 			MessageType::InsertPost,
