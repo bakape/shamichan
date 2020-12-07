@@ -176,7 +176,7 @@ export function inputElement(
 export function setCookie(key: string, val: string, days: number) {
 	let date = new Date()
 	date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000))
-	document.cookie = `${key}=${val}; expires=${date.toUTCString()}; path=/;`;
+	document.cookie = `${key}=${val}; expires=${date.toUTCString()}; path=/; samesite=none; secure;`;
 }
 
 // Get a cookie value by name. Returns empty string, if none.

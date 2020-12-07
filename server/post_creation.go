@@ -43,9 +43,11 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 
 		// Let the JS add the ID of the post to "mine"
 		http.SetCookie(w, &http.Cookie{
-			Name:  "addMine",
-			Value: strconv.FormatUint(post.ID, 10),
-			Path:  "/",
+			Name:     "addMine",
+			Value:    strconv.FormatUint(post.ID, 10),
+			Path:     "/",
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
 		})
 
 		http.Redirect(w, r, fmt.Sprintf(`/%s/%d`, req.Board, post.ID), 303)
