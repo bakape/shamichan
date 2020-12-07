@@ -29,9 +29,9 @@ endif
 	$(MAKE) -C less
 
 server:
-	cargo build \
+	SQLX_OFFLINE=true cargo build \
 		--workspace \
-		--exclude client\
+		--exclude client \
 		$(if $(filter 1,$(DEBUG)),,--release)
 	cp target/$(if $(filter 1,$(DEBUG)),debug,release)/server meguca
 
@@ -49,6 +49,7 @@ test:
 # database
 db_prepare_offline:
 	cargo sqlx prepare -- --package server
+	mv sqlx-data.json server/
 
 test_no_race:
 	cargo test
