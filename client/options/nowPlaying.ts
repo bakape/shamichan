@@ -62,17 +62,17 @@ const radios: RadioRecord[] = [
 		urlPath: 'status-json.xsl',
 		data: {} as RadioData,
 		unmarshalfn: (res: any) => {
-			const streams = res.icestats.source.map(s => ({
+			const streams = (!Array.isArray(res.icestats.source) ? [res.icestats.source] : res.icestats.source).map(s => ({
 				np: s.title,
 				listeners: s.listeners,
 				dj: s.server_name,
 			}));
 			// streams[0] is fallback, streams[1] is used by DJ
-			if (streams[1].dj === undefined) {
+			if (streams.length === 1 || streams[1].dj === undefined) {
 				// Nobody streaming
 				return streams[0] as RadioData;
 			}
-			if (streams[1].np === undefined) {
+			if (streams.length >= 1 && streams[1].np === undefined) {
 				streams[1].np = "oh dear, tags aren't set";
 			}
 			return streams[1] as RadioData;
