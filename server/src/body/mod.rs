@@ -34,7 +34,7 @@ pub type Result<T = Node> = std::result::Result<T, String>;
 /// Parse post body into a Node tree. Different behavior for open and closed
 /// posts.
 // TODO: finalization on post closure should be done with a separate async
-// traversal function
+// traversal function run by the Client
 pub fn parse(body: &str, open: bool) -> Result {
 	if body.len() > 2000 {
 		// Best have an extra guard just in case to protect from parsing large

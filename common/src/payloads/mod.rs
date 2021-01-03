@@ -115,7 +115,7 @@ pub struct PostCreationNotification {
 }
 
 /// Post from a thread
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Post {
 	pub id: u64,
 	pub page: u32,
@@ -130,6 +130,7 @@ pub struct Post {
 	/// Post text body. Wrapped in an Arc to enable cheap copying on both the
 	/// server and client
 	pub body: Arc<Node>,
+
 	pub image: Option<Image>,
 }
 
@@ -172,15 +173,28 @@ impl Post {
 /// Thread information container
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Thread {
+	/// Unique thread ID
 	pub id: u64,
-	pub last_page: u32,
 
+	/// Unix timestamp of thread creation time
+	pub created_on: u32,
+
+	/// Unix timestamp of the last time the thread was bumped
+	pub bumped_on: u32,
+
+	/// Thread subject
 	pub subject: String,
+
+	/// Tags applied to thread
 	pub tags: Vec<String>,
 
-	pub bumped_on: u32,
-	pub created_on: u32,
+	/// Number of page sin the thread
+	pub page_count: u32,
+
+	/// Number of posts in the thread, including the OP
 	pub post_count: u64,
+
+	/// Number of images in the thread
 	pub image_count: u64,
 }
 
@@ -194,10 +208,10 @@ impl Thread {
 	) -> Self {
 		Self {
 			id,
-			last_page: 0,
 			subject,
 			tags,
 			created_on,
+			page_count: 1,
 			bumped_on: created_on,
 			post_count: 1,
 			image_count: 0,
@@ -211,15 +225,15 @@ pub struct ThreadWithPosts {
 	#[serde(flatten)]
 	pub thread_data: Thread,
 
-	pub posts: Vec<Post>,
+	pub posts: HashMap<u64, Post>,
 }
 
-/// Posts of a single thread page
+/// Posts of a single immutable thread page
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Page {
+pub struct ImmutablePage {
 	pub thread: u64,
 	pub page: u32,
-	pub posts: HashMap<u64, Post>,
+	pub posts: Vec<Post>,
 }
 
 /// Supported file types

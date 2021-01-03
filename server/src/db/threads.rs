@@ -81,7 +81,7 @@ pub async fn get_all_threads_short() -> DynResult<Vec<ThreadWithPosts>> {
 pub async fn get_page(thread: u64, page: u32) -> DynResult<Vec<Post>> {
 	Ok(serde_json::from_value(
 		sqlx::query!(
-			"select jsonb_agg(encode(p)) page
+			"select jsonb_agg(encode(p) order by id) page
 			from posts p
 			where thread = $1 and page = $2",
 			thread as i64,

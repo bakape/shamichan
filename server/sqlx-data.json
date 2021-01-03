@@ -49,6 +49,27 @@
       "nullable": []
     }
   },
+  "74f108a187a6365ffd07b0810fb88268827fdc3c82ef2a2c290ecb842c609520": {
+    "query": "select jsonb_agg(encode(p) order by id) page\n\t\t\tfrom posts p\n\t\t\twhere thread = $1 and page = $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "page",
+          "type_info": "Jsonb"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int4"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
   "9a2377b1205512e891c9efe0d05c053ad59120fbe569593f9ea48d75be015ee5": {
     "query": "select id, public_key\n\t\tfrom public_keys\n\t\twhere public_id = $1",
     "describe": {
@@ -72,27 +93,6 @@
       "nullable": [
         false,
         false
-      ]
-    }
-  },
-  "9c45a8366908a78e07d8fc7662da2ec21a645bb2c6d5744e4b80ed45a8f4244a": {
-    "query": "select jsonb_agg(encode(p)) page\n\t\t\tfrom posts p\n\t\t\twhere thread = $1 and page = $2",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "page",
-          "type_info": "Jsonb"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Int8",
-          "Int4"
-        ]
-      },
-      "nullable": [
-        null
       ]
     }
   },

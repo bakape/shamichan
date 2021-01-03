@@ -1,5 +1,5 @@
 use bytes::Bytes;
-use common::{Decoder, Encoder};
+use common::Decoder;
 
 /// Reusable message buffer wrapper with AsRef[u8]
 #[derive(Clone)]
@@ -8,14 +8,6 @@ pub struct Message(Bytes);
 impl Message {
 	pub fn new(buf: impl Into<Bytes>) -> Self {
 		Self(buf.into())
-	}
-
-	pub fn append(&self, msg: impl AsRef<[u8]>) -> Self {
-		Encoder::join(&[self.as_ref(), msg.as_ref()]).into()
-	}
-
-	pub fn prepend(&self, msg: impl AsRef<[u8]>) -> Self {
-		Encoder::join(&[msg.as_ref(), self.as_ref()]).into()
 	}
 }
 

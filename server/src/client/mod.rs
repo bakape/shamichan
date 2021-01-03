@@ -1,10 +1,11 @@
 mod client;
 mod message_handler;
-pub use client::Client;
+pub use client::{Client, Disconnect, SendMessage, SendMessageBatch};
 
 use crate::{
 	feeds::{self, AnyFeed, ThreadFeed},
 	message::Message,
+	mt_context::MTAddr,
 	registry::Registry,
 	str_err,
 	util::DynResult,
@@ -50,7 +51,7 @@ struct OpenPost {
 	thread: u64,
 	loc: feeds::PostLocation,
 	body: Vec<char>,
-	feed: Addr<ThreadFeed>,
+	feed: MTAddr<ThreadFeed>,
 }
 
 /// Immutable client state set on client creation

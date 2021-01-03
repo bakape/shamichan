@@ -1,6 +1,6 @@
 
 -- Encode thread column into struct
-create or replace function encode(t threads, page bigint, last_page bigint)
+create or replace function encode(t threads, page bigint, page_count bigint)
 returns jsonb
 language plpgsql stable parallel safe strict
 as $$
@@ -8,7 +8,7 @@ begin
 	return jsonb_build_object(
 		'id', t.id,
 		'page', page,
-		'last_page', last_page,
+		'page_count', page_count,
 
 		'subject', t.subject,
 		'tags', t.tags,
@@ -52,7 +52,7 @@ begin
 		page = max_page;
 	end if;
 
-	select encode(t, page, max_page) into data
+	select encode(t, page, max_page + 1) into data
 		from threads t
 		where t.id = get_thread.id;
 	if data is null then

@@ -2,16 +2,16 @@ use crate::{
 	body::persist_open::BodyFlusher,
 	client::Client,
 	feeds::{self, AnyFeed, IndexFeed, ThreadFeed},
-	util,
+	mt_context::{run, MTAddr},
+	util::{self, SnapshotSource, WakeUp},
 };
+use actix::dev::{MessageResponse, ResponseChannel};
 use actix::prelude::*;
 use common::{
 	payloads::{Thread, ThreadWithPosts},
 	util::SetMap,
 };
-use std::{collections::HashMap, sync::Arc};
-
-// TODO: remove clients with disconnected addresses on send
+use std::collections::HashMap;
 
 /// Stores client state and address
 #[derive(Debug)]
@@ -27,32 +27,6 @@ struct ClientDescriptor {
 	addr: Addr<Client>,
 }
 
-/// Snapshot of all clients contained in a fedd
-#[derive(Debug, Clone, Default)]
-pub struct FeedClientSnapshot {
-	/// Incremented on any modification to clients for cheap comparison
-	pub update_counter: usize,
-
-	/// The collection is wrapped in Arc to reduce snapshoting overhead as
-	/// these are not likely to change as often as a feed demands a snapshot.
-	pub clients: Arc<HashMap<u64, Addr<Client>>>,
-}
-
-impl FeedClientSnapshot {
-	/// Set the contents of the snapshot
-	fn set(&mut self, clients: HashMap<u64, Addr<Client>>) {
-		self.update_counter += 1;
-		self.clients = clients.into();
-	}
-
-	/// Modify the contents of the snapshot using f
-	fn modify(&mut self, f: impl FnOnce(&mut HashMap<u64, Addr<Client>>)) {
-		let mut new = (*self.clients).clone();
-		f(&mut new);
-		self.set(new);
-	}
-}
-
 /// Keeps state and feed subscription of all clients
 #[derive(Debug)]
 pub struct Registry {
@@ -60,23 +34,59 @@ pub struct Registry {
 	clients: HashMap<u64, ClientDescriptor>,
 
 	/// Maps feed ID to clients that are synced to that feed
-	feed_clients: HashMap<u64, FeedClientSnapshot>,
+	feed_clients: HashMap<u64, SnapshotSource<HashMap<u64, Addr<Client>>>>,
 
 	/// Maps client public key ID to a set of clients using that ID
 	by_pub_key: SetMap<u64, u64>,
 
 	/// Thread index feed
-	index_feed: Addr<IndexFeed>,
+	index_feed: MTAddr<IndexFeed>,
 
 	/// Batching open post body flusher
-	body_flusher: Addr<BodyFlusher>,
+	body_flusher: MTAddr<BodyFlusher>,
 
 	/// All thread feeds in the system. One per existing thread.
-	feeds: HashMap<u64, Addr<ThreadFeed>>,
+	feeds: HashMap<u64, MTAddr<ThreadFeed>>,
 }
 
 impl Actor for Registry {
-	type Context = actix::Context<Self>;
+	type Context = Context<Self>;
+
+	fn started(&mut self, ctx: &mut Self::Context) {
+		// This is a central synchronization point.
+		// The default of 16 is not enough.
+		ctx.set_mailbox_capacity(1 << 10);
+	}
+}
+
+/// Get reference to client or return error.
+///
+/// Macro, because Rust does not have partial self borrows in methods but it
+/// does in inline code.
+#[rustfmt::skip]
+macro_rules! get_client {
+	($self:expr, $id:expr) => {{
+		$self.clients
+		.get_mut($id)
+		.ok_or_else(|| format!("client not found: {}", $id))
+	}};
+}
+
+/// Notify a feed it ahs updates and should check them
+///
+/// Macro, because Rust does not have partial self borrows in methods but it
+/// does in inline code.
+#[rustfmt::skip]
+macro_rules! wake_up_feed {
+	($self:expr, $id:expr) => {
+		if $id == 0 {
+			$self.index_feed.do_send(WakeUp);
+		} else {
+			if let Some(f) = $self.feeds.get(&$id) {
+				f.do_send(WakeUp);
+			}
+		}
+	};
 }
 
 impl Registry {
@@ -90,12 +100,12 @@ impl Registry {
 			.map(|t| {
 				(
 					t.thread_data.clone(),
-					t.posts.iter().map(|p| p.id).collect::<Vec<u64>>(),
+					t.posts.keys().copied().collect::<Vec<u64>>(),
 				)
 			})
 			.collect();
-		let index_feed = IndexFeed::new(threads, ctx.address()).start();
-		let body_flusher = BodyFlusher::start_default();
+		let index_feed = run(IndexFeed::new(threads, ctx.address()));
+		let body_flusher = run(BodyFlusher::default());
 
 		Self {
 			clients: Default::default(),
@@ -108,17 +118,14 @@ impl Registry {
 				.map(move |(t, last_5)| {
 					(
 						t.id,
-						ThreadFeed::create(|tf_ctx| {
-							ThreadFeed::new(
-								tf_ctx,
-								t,
-								last_5,
-								None,
-								ctx.address(),
-								index_feed.clone(),
-								body_flusher.clone(),
-							)
-						}),
+						run(ThreadFeed::new(
+							t,
+							last_5,
+							None,
+							ctx.address(),
+							index_feed.clone(),
+							body_flusher.clone(),
+						)),
 					)
 				})
 				.collect(),
@@ -130,13 +137,19 @@ impl Registry {
 		&mut self,
 		id: &u64,
 	) -> Result<&mut ClientDescriptor, String> {
-		self.clients
-			.get_mut(id)
-			.ok_or_else(|| format!("client not found: {}", id))
+		get_client!(self, id)
 	}
 
-	/// Get address of feed or return error
-	fn get_feed(&self, id: &u64) -> Result<Addr<ThreadFeed>, String> {
+	/// Notify a feed it ahs updates and should check them
+	fn wake_up_feed(&self, id: u64) {
+		wake_up_feed!(self, id);
+	}
+
+	/// Get address of a thread feed or return error
+	fn get_thread_feed_addr(
+		&self,
+		id: &u64,
+	) -> Result<MTAddr<ThreadFeed>, String> {
 		Ok(self
 			.feeds
 			.get(id)
@@ -193,6 +206,7 @@ impl Handler<UnregisterClient> for Registry {
 						s.remove(&client);
 					});
 				}
+				self.wake_up_feed(feed);
 			}
 			if let Some(pub_key) = desc.pub_key {
 				self.by_pub_key.remove(&pub_key, &client);
@@ -213,35 +227,48 @@ impl Handler<SetFeed> for Registry {
 	type Result = Result<AnyFeed, String>;
 
 	fn handle(&mut self, msg: SetFeed, _: &mut Self::Context) -> Self::Result {
-		let desc = self.get_client(&msg.client)?;
+		use std::collections::hash_map::Entry::*;
 
-		#[rustfmt::skip]
-		macro_rules! get_feed {
-			($id:expr) => {
-				if $id == &0 {
-					AnyFeed::Index(self.index_feed.clone())
-				} else {
-					AnyFeed::Thread(self.get_feed($id)?)
-				}
-			};
-		}
+		let new_feed = if msg.feed == 0 {
+			AnyFeed::Index(self.index_feed.clone())
+		} else {
+			AnyFeed::Thread(self.get_thread_feed_addr(&msg.feed)?)
+		};
+		let desc = get_client!(self, &msg.client)?;
 
+		// Clean up client registration on the old feed
 		if let Some(old_feed) = &desc.feed {
 			if old_feed == &msg.feed {
-				let old = *old_feed;
-				return Ok(get_feed!(&old));
+				// Nothing changed
+				return Ok(new_feed);
 			}
-			if let Some(feed) = desc.feed.take() {
-				if let Some(snapshot) = self.feed_clients.get_mut(&feed) {
-					snapshot.modify(|s| {
-						s.remove(&msg.client);
-					});
-				}
+			if let Some(s) = self.feed_clients.get_mut(old_feed) {
+				s.modify(|s| {
+					s.remove(&msg.client);
+				});
+			}
+			wake_up_feed!(self, *old_feed);
+		}
+
+		// Record client registration on the new feed
+		desc.feed = msg.feed.into();
+		match self.feed_clients.entry(msg.feed) {
+			Occupied(mut e) => {
+				e.get_mut().modify(|s| {
+					s.insert(msg.client, desc.addr.clone());
+				});
+			}
+			Vacant(e) => {
+				e.insert(SnapshotSource::new({
+					let mut h = HashMap::new();
+					h.insert(msg.client, desc.addr.clone());
+					h
+				}));
 			}
 		}
 
-		let new_feed = get_feed!(&msg.feed);
 		new_feed.wake_up();
+		new_feed.do_send(feeds::FetchFeedData(desc.addr.clone()));
 		Ok(new_feed)
 	}
 }
@@ -271,28 +298,43 @@ impl Handler<SetPublicKey> for Registry {
 
 /// Retrieve a ThreadFeed address from the registry
 #[derive(Message)]
-#[rtype(result = "Result<Addr<ThreadFeed>, String>")]
+#[rtype(result = "Result<MTAddr<ThreadFeed>, String>")]
 pub struct GetFeed(pub u64);
 
 impl Handler<GetFeed> for Registry {
-	type Result = Result<Addr<ThreadFeed>, String>;
+	type Result = Result<MTAddr<ThreadFeed>, String>;
 
 	fn handle(
 		&mut self,
 		GetFeed(id): GetFeed,
 		_: &mut Self::Context,
 	) -> Self::Result {
-		self.get_feed(&id)
+		self.get_thread_feed_addr(&id)
 	}
 }
 
 /// Create a Feed instance for a new thread
-#[derive(Message)]
-#[rtype(result = "Addr<ThreadFeed>")]
 pub struct InsertThread(pub feeds::InsertThread);
 
+impl Message for InsertThread {
+	type Result = MTAddr<ThreadFeed>;
+}
+
+// Implemented here because it's not derivable
+impl MessageResponse<Registry, InsertThread> for MTAddr<ThreadFeed> {
+	fn handle<R: ResponseChannel<InsertThread>>(
+		self,
+		_: &mut <Registry as Actor>::Context,
+		tx: Option<R>,
+	) {
+		if let Some(tx) = tx {
+			tx.send(self);
+		}
+	}
+}
+
 impl Handler<InsertThread> for Registry {
-	type Result = Addr<ThreadFeed>;
+	type Result = MTAddr<ThreadFeed>;
 
 	fn handle(
 		&mut self,
@@ -302,37 +344,53 @@ impl Handler<InsertThread> for Registry {
 		use common::payloads;
 
 		let now = util::now();
-		let addr = ThreadFeed::create(|tf_ctx| {
-			ThreadFeed::new(
-				tf_ctx,
-				Thread::new(req.id, now, req.subject.clone(), req.tags.clone()),
-				vec![req.id],
-				Some(payloads::Page {
-					thread: req.id,
-					page: 0,
-					posts: {
-						let mut m = HashMap::new();
-						m.insert(
-							req.id,
-							payloads::Post::new_op(
-								req.id,
-								now,
-								req.opts.clone(),
-							),
-						);
-						m
-					},
-				}),
-				ctx.address(),
-				self.index_feed.clone(),
-				self.body_flusher.clone(),
-			)
-		});
+		let addr = run(ThreadFeed::new(
+			Thread::new(req.id, now, req.subject.clone(), req.tags.clone()),
+			None,
+			Some(vec![payloads::Post::new_op(req.id, now, req.opts.clone())]),
+			ctx.address(),
+			self.index_feed.clone(),
+			self.body_flusher.clone(),
+		));
 		self.feeds.insert(req.id, addr.clone());
 
-		// don't block registry on index feed
 		self.index_feed.do_send(req);
 
 		addr
+	}
+}
+
+/// Request a snapshot of the current clients of a feed
+pub struct SnapshotClients(pub u64);
+
+impl Message for SnapshotClients {
+	type Result = feeds::Clients;
+}
+
+// Implemented here because it's not derivable
+impl MessageResponse<Registry, SnapshotClients> for feeds::Clients {
+	fn handle<R: ResponseChannel<SnapshotClients>>(
+		self,
+		_: &mut <Registry as Actor>::Context,
+		tx: Option<R>,
+	) {
+		if let Some(tx) = tx {
+			tx.send(self);
+		}
+	}
+}
+
+impl Handler<SnapshotClients> for Registry {
+	type Result = feeds::Clients;
+
+	fn handle(
+		&mut self,
+		req: SnapshotClients,
+		_: &mut Self::Context,
+	) -> Self::Result {
+		self.feed_clients
+			.get(&req.0)
+			.map(|s| s.snapshot())
+			.unwrap_or_default()
 	}
 }
