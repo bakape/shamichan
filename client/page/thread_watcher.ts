@@ -323,7 +323,9 @@ export async function watchThread(id: number, postCount: number,
 
 	await putExpiring("watchedThreads", id, data);
 
-	watcherPanel.addRow(data);
+	if (watcherPanel) {
+		watcherPanel.addRow(data);
+	}
 	propagateWatch(data);
 }
 
