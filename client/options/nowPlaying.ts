@@ -100,7 +100,6 @@ async function fetchData(refresh: boolean = false) {
 	for (let i = 0; i < radios.length; i++) {
 		// If station enabled
 		if ((1 << i) & options.nowPlaying) {
-			enabled.push(i);
 			const [res, err] = await fetchJSON<any>(radios[i].urlBase + radios[i].urlPath);
 			if (err) {
 				console.warn(err);
@@ -111,6 +110,7 @@ async function fetchData(refresh: boolean = false) {
 				changed = true;
 				radios[i].data = newData;
 			}
+			enabled.push(i);
 		}
 	}
 	if (changed || refresh) {
